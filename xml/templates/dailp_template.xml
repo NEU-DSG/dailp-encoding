@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-model href="../schema/out/dailp_odd.rng" type="application/xml" schematypens="http://relaxng.org/ns/structure/1.0"?>
+<TEI xmlns="http://www.tei-c.org/ns/1.0" xmlns:d="https://dsg.northeastern.edu/ns/dailp/1/0">
+   <teiHeader>
+      <fileDesc>
+         <titleStmt>
+            <title>Title</title>
+         </titleStmt>
+         <publicationStmt>
+            <p>Publication Information</p>
+         </publicationStmt>
+         <sourceDesc>
+            <p>Information about the source</p>
+         </sourceDesc>
+      </fileDesc>
+      <encodingDesc>
+         <listPrefixDef>
+            <prefixDef matchPattern="" replacementPattern="" ident="lex">
+               <p>This prefix resolves references to the lexical data source.</p>
+            </prefixDef>
+            <prefixDef matchPattern="" replacementPattern="" ident="drs">
+               <p>This prefix resolves references to the Digital Repository Service.</p>
+            </prefixDef>
+         </listPrefixDef>
+      </encodingDesc>
+      <profileDesc>
+         <particDesc>
+            <person xml:id="dolly_duncan">
+               <persName>Dolly Duncan</persName>
+            </person>
+         </particDesc>
+      </profileDesc>
+   </teiHeader>
+
+   <text>
+
+      <group>
+         <text type="source" xml:lang="chr">
+            <body>
+               <pb facs="drs:page01"/>
+               <ab>
+                  <seg type="idea_unit" xml:id="s01" corresp="#s01_trans">
+                     <w xml:id="textID.w01" lemmaRef="lex:id">
+                        <choice>
+                           <orig>ᎪᏪᎵ</orig>
+                           <reg>ᎪᏪᎵᎠ</reg>
+                           <seg type="sp">gohweliʔa</seg>
+                           <seg type="morphemic_segmentation">3G-write-IND</seg>
+                           <seg type="gloss">he wrote</seg>
+                        </choice>
+                     </w>
+                     <gap reason="illegible" extent="1 word"/>
+                  </seg>
+               </ab>
+            </body>
+         </text>
+
+         <text type="translation" xml:lang="en">
+            <body>
+               <ab>
+                  <seg xml:id="s01_trans">The dog lay on the mat.</seg>
+               </ab>
+            </body>
+         </text>
+      </group>
+   </text>
+   <standOff>
+      <d:noteBlock>
+         <note/>
+      </d:noteBlock>
+   </standOff>
+</TEI>
