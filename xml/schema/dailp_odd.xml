@@ -80,7 +80,7 @@
             </classSpec>
             
             <!-- adding new elements -->
-            <elementSpec ident="noteBlock" ns="https://dsg.northeastern.edu/ns/dailp/1/0" mode="add">
+            <elementSpec ident="noteBlock" ns="https://dsg.northeastern.edu/dailp/ns/1.0" mode="add">
                <classes mode="replace">
                   <memberOf key="model.standOffPart"/>
                </classes>
