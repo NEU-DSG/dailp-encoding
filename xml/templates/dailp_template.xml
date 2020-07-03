@@ -50,6 +50,16 @@
                            <seg type="gloss">he wrote</seg>
                         </choice>
                      </w>
+                     <w xml:id="textID.w02" lemmaRef="lex:id">
+                       <choice>
+                           <orig>ᎪᏪᎵ</orig>
+                           <reg>ᎪᏪᎵᎠ</reg>
+                           <seg type="sp">gohweliʔa</seg>
+                           <seg type="morphemic_segmentation">3G-write-IND</seg>
+                           <seg type="gloss">he wrote</seg>
+                        </choice>                        
+                     </w>
+                     
                      <gap reason="illegible" extent="1 word"/>
                   </seg>
                </ab>
@@ -67,7 +77,8 @@
    </text>
    <standOff>
       <d:noteBlock>
-         <note/>
+         <note target="#textID.w01">This word is being used in an unusual way...</note>
+         <note target="#textID.w01 #textID.w02">These words appear to be duplicates...</note>
       </d:noteBlock>
    </standOff>
 </TEI>
