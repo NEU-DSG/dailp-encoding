@@ -69,7 +69,7 @@
          <text type="translation" xml:lang="en" resp="#dolly_duncan">
             <body>
                <ab>
-                  <seg xml:id="s01_trans">The dog lay on the mat.</seg>
+                  <seg type="trans" xml:id="s01_trans">The dog lay on the mat.</seg>
                </ab>
             </body>
          </text>
