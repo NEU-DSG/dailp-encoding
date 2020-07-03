@@ -39,6 +39,7 @@
             <body>
                <pb facs="drs:page01"/>
                <ab>
+                  <lb n="1"/>
                   <seg type="idea_unit" xml:id="s01" corresp="#s01_trans">
                      <w xml:id="textID.w01" lemmaRef="lex:id">
                         <choice>
