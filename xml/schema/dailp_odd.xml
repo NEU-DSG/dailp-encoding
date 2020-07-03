@@ -90,7 +90,53 @@
                    </alternate>
                </content>
             </elementSpec>
-            
+            <elementSpec ident="gap" module="core" mode="change">
+               <attList>
+                  <attDef ident="reason" mode="replace">
+                     <valList type="closed">
+                        <valItem ident="illegible">
+                           <desc>Indicates that the omitted text is illegible</desc>
+                        </valItem>
+                        <valItem ident="omitted">
+                           <desc>Indicates that the text is omitted because it does not fall within the scope of DAILP transcription policy (for instance, annotations by librarians)</desc>
+                        </valItem>
+                     </valList>
+                  </attDef>
+               </attList>
+            </elementSpec>
+            <elementSpec ident="seg" module="linking" mode="change">
+               <attList>
+                  <attDef ident="type" mode="replace">
+                     <valList type="closed">
+                        <valItem ident="idea_unit">
+                           <desc>(sentence-level) Indicates that the segment is a single sentence-level unit in the source transcription</desc>
+                        </valItem>
+                        <valItem ident="trans">
+                           <desc>(sentence-level) Indicates that the segment is a single sentence-level unit in the free translation</desc>
+                        </valItem>
+                        <valItem ident="simple_phonetics"><desc>(word-level) Indicates that the segment is a simple phonetics representation of the word</desc></valItem>
+                        <valItem ident="morphemic_segmentation"><desc>(word-level) Indicates that the segment is a morphemic segmentation of the word</desc></valItem>
+                        <valItem ident="gloss"><desc>(word-level) Indicates that the segment is a gloss of the word</desc></valItem>
+                     </valList>
+                  </attDef>
+               </attList>
+            </elementSpec>
+             <elementSpec ident="text" module="textstructure" mode="change">
+               <attList>
+                  <attDef ident="type" mode="replace">
+                     <valList type="closed">
+                        <valItem ident="source">
+                           <desc>Indicates that this is the source text</desc>
+                        </valItem>
+                        <valItem ident="translation">
+                           <desc>Indicates that this is a free translation of the source</desc>
+                        </valItem>
+                     </valList>
+                  </attDef>
+               </attList>
+            </elementSpec>
+
+
          </schemaSpec>
       </body>
   </text>
