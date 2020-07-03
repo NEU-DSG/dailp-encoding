@@ -45,7 +45,7 @@
                         <choice>
                            <orig>ᎪᏪᎵ</orig>
                            <reg>ᎪᏪᎵᎠ</reg>
-                           <seg type="sp">gohweliʔa</seg>
+                           <seg type="simple_phonetics">gohweliʔa</seg>
                            <seg type="morphemic_segmentation">3G-write-IND</seg>
                            <seg type="gloss">he wrote</seg>
                         </choice>
@@ -54,7 +54,7 @@
                        <choice>
                            <orig>ᎪᏪᎵ</orig>
                            <reg>ᎪᏪᎵᎠ</reg>
-                           <seg type="sp">gohweliʔa</seg>
+                           <seg type="simple_phonetics">gohweliʔa</seg>
                            <seg type="morphemic_segmentation">3G-write-IND</seg>
                            <seg type="gloss">he wrote</seg>
                         </choice>                        
