@@ -1,0 +1,75 @@
+{% import "macros.xml" as macros %}
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-model href="../schema/out/dailp_odd.rng" type="application/xml" schematypens="http://relaxng.org/ns/structure/1.0"?>
+<TEI xmlns="http://www.tei-c.org/ns/1.0" xmlns:d="https://dsg.northeastern.edu/dailp/ns/1.0">
+  <teiHeader>
+    <fileDesc>
+      <titleStmt>
+        <title>{{ title }}</title>
+      </titleStmt>
+      <publicationStmt>
+        <p>Publication Information</p>
+      </publicationStmt>
+      <sourceDesc>
+        <p>Information about the source</p>
+      </sourceDesc>
+    </fileDesc>
+    <encodingDesc>
+      <listPrefixDef>
+        <prefixDef matchPattern="" replacementPattern="" ident="lex">
+          <p>This prefix resolves references to the lexical data source.</p>
+        </prefixDef>
+        <prefixDef matchPattern="" replacementPattern="" ident="drs">
+          <p>This prefix resolves references to the Digital Repository Service.</p>
+        </prefixDef>
+      </listPrefixDef>
+    </encodingDesc>
+    <profileDesc>
+      <particDesc>
+        <person xml:id="dolly_duncan">
+          <persName>Dolly Duncan</persName>
+        </person>
+      </particDesc>
+    </profileDesc>
+  </teiHeader>
+
+  <text>
+    <group>
+      <text type="source" xml:lang="chr">
+        <body>
+          <pb facs="drs:page01"/>
+          <ab>
+            {% for segment in segments %}
+              {% if segment.type == "LineBreak" %}
+                <lb n="{{segment.index}}"/>
+              {% elif segment.type == "Phrase" %}
+                {{ macros::phrase(segment=segment)  }}
+              {% elif segment.type == "Word" %}
+                {{ macros::word(segment=segment)  }}
+              {% endif %}
+            {% endfor %}
+          </ab>
+        </body>
+      </text>
+
+      <text type="translation" xml:lang="en">
+        <body>
+          <ab>
+            <seg type="trans" xml:id="s01_trans">The dog lay on the mat.</seg>
+          </ab>
+        </body>
+      </text>
+    </group>
+  </text>
+
+  {# Commentary is included for some words to capture extra information or uncertainty. #}
+  <standOff>
+    <d:noteBlock>
+      {% for segment in segments %}
+        {% if segment.type == "Word" and segment.commentary %}
+          <note target="#textID.w0">{{segment.commentary}}</note>
+        {% endif %}
+      {% endfor %}
+    </d:noteBlock>
+  </standOff>
+</TEI>
