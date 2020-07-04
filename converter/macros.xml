@@ -1,0 +1,36 @@
+
+{% macro word(segment) %}
+  <w xml:id="textID.w0" lemmaRef="lex:id">
+    <choice>
+      <orig>{{segment.source}}</orig>
+      <reg>{{segment.source}}</reg>
+      {% if segment.simple_phonetics %}
+        <seg type="simple_phonetics">{{segment.simple_phonetics}}</seg>
+      {% endif %}
+      {% if segment.phonemic %}
+        <seg type="phonemic">{{segment.phonemic}}</seg>
+      {% endif %}
+      {% if segment.morphemic_segmentation %}
+        <seg type="morphemic_segmentation">{{segment.morphemic_segmentation}}</seg>
+      {% endif %}
+      {% if segment.morpheme_gloss %}
+        <seg type="morpheme_gloss">{{segment.morpheme_gloss}}</seg>
+      {% endif %}
+      {% if segment.english_gloss %}
+        <seg type="gloss">{{segment.english_gloss}}</seg>
+      {% endif %}
+    </choice>
+  </w>
+{% endmacro word %}
+
+{% macro phrase(segment) %}
+  <seg type="idea_unit" xml:id="s01" corresp="#s01_trans">
+    {% for child in segment.parts %}
+      {% if child.type == "Phrase" %}
+        {{ self::phrase(segment=child) }}
+        {% elif child.type == "Word" %}
+        {{ self::word(segment=child)  }}
+      {% endif %}
+    {% endfor %}
+  </seg>
+{% endmacro phrase %}
