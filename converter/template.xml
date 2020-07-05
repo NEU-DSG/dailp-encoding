@@ -67,7 +67,7 @@
     <d:noteBlock>
       {% for segment in segments %}
         {% if segment.type == "Word" and segment.commentary %}
-          <note target="#textID.w0">{{segment.commentary}}</note>
+            <note target="#textID.w{{segment.index + 1}}">{{segment.commentary}}</note>
         {% endif %}
       {% endfor %}
     </d:noteBlock>

@@ -1,6 +1,6 @@
 
 {% macro word(segment) %}
-  <w xml:id="textID.w0" lemmaRef="lex:id">
+  <w xml:id="textID.w{{segment.index + 1}}" lemmaRef="lex:id">
     <choice>
       <orig>{{segment.source}}</orig>
       <reg>{{segment.source}}</reg>
@@ -23,12 +23,12 @@
   </w>
 {% endmacro word %}
 
-{% macro phrase(segment) %}
+{% macro phrase(segment, start_idx=0) %}
   <seg type="idea_unit" xml:id="s01" corresp="#s01_trans">
     {% for child in segment.parts %}
       {% if child.type == "Phrase" %}
         {{ self::phrase(segment=child) }}
-        {% elif child.type == "Word" %}
+      {% elif child.type == "Word" %}
         {{ self::word(segment=child)  }}
       {% endif %}
     {% endfor %}

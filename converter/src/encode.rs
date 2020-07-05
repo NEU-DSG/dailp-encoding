@@ -45,6 +45,7 @@ impl<'a> AnnotatedLine<'a> {
         let words = (0..num_words)
             .filter(|i| line.rows.get(0).and_then(|r| r.items.get(*i)).is_some())
             .map(|i| AnnotatedWord {
+                index: i,
                 source: &line.rows[0].items[i].trim(),
                 normalized_source: &line.rows[0].items[i].trim(),
                 simple_phonetics: line.rows[2].items.get(i).map(|x| &**x),
@@ -66,8 +67,18 @@ impl<'a> AnnotatedLine<'a> {
         let mut segments = Vec::<AnnotatedSeg>::new();
         let mut stack = Vec::<AnnotatedPhrase>::new();
         let mut line_num = 0;
+        let mut word_idx = 0;
         for (line_idx, line) in lines.into_iter().enumerate() {
             for word in line.words {
+                // Give the word an index within the whole document.
+                let word = AnnotatedWord {
+                    index: word_idx,
+                    ..word
+                };
+
+                // Keep a global word index for the whole document.
+                word_idx += 1;
+
                 // Account for mid-word line breaks.
                 if word.line_break.is_some() {
                     line_num += 1;
@@ -119,6 +130,7 @@ struct AnnotatedPhrase<'a> {
 
 #[derive(Serialize)]
 struct AnnotatedWord<'a> {
+    index: usize,
     source: &'a str,
     normalized_source: &'a str,
     simple_phonetics: Option<&'a str>,
