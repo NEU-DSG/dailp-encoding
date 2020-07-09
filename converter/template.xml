@@ -5,14 +5,18 @@
   <teiHeader>
     <fileDesc>
       <titleStmt>
-        <title>{{ title }}</title>
+        <title>{{ meta.title }}</title>
       </titleStmt>
-      <publicationStmt>
-        <p>Publication Information</p>
-      </publicationStmt>
-      <sourceDesc>
-        <p>Information about the source</p>
-      </sourceDesc>
+      {% if meta.publication %}
+        <publicationStmt>
+          <p>{{meta.publication}}</p>
+        </publicationStmt>
+      {% endif %}
+      {% if meta.source %}
+        <sourceDesc>
+          <p>{{meta.source}}</p>
+        </sourceDesc>
+      {% endif %}
     </fileDesc>
     <encodingDesc>
       <listPrefixDef>
@@ -26,9 +30,11 @@
     </encodingDesc>
     <profileDesc>
       <particDesc>
-        <person xml:id="dolly_duncan">
-          <persName>Dolly Duncan</persName>
-        </person>
+        {% for person in meta.people %}
+          <person xml:id="{{person | slugify}}">
+            <persName>{{person}}</persName>
+          </person>
+        {% endfor %}
       </particDesc>
     </profileDesc>
   </teiHeader>
@@ -40,13 +46,7 @@
           <pb facs="drs:page01"/>
           <ab>
             {% for segment in segments %}
-              {% if segment.type == "LineBreak" %}
-                <lb n="{{segment.index}}"/>
-              {% elif segment.type == "Phrase" %}
-                {{ macros::phrase(segment=segment)  }}
-              {% elif segment.type == "Word" %}
-                {{ macros::word(segment=segment)  }}
-              {% endif %}
+              {{ macros::any_segment(segment=segment) }}
             {% endfor %}
           </ab>
         </body>
@@ -67,7 +67,9 @@
     <d:noteBlock>
       {% for segment in segments %}
         {% if segment.type == "Word" and segment.commentary %}
-            <note target="#textID.w{{segment.index + 1}}">{{segment.commentary}}</note>
+          <note target="#textID.w{{segment.index + 1}}">
+            <p>{{segment.commentary}}</p>
+          </note>
         {% endif %}
       {% endfor %}
     </d:noteBlock>

@@ -2,6 +2,7 @@ mod encode;
 mod retrieve;
 
 use anyhow::Result;
+use encode::DocumentMetadata;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -10,6 +11,14 @@ async fn main() -> Result<()> {
         .await?
         .split_into_lines();
 
-    encode::write_to_file("Story of Switch Striker", sheet)?;
+    encode::write_to_file(
+        DocumentMetadata {
+            title: "Story of Switch Striker",
+            publication: None,
+            source: None,
+            people: vec!["Dolly Duncan"],
+        },
+        sheet,
+    )?;
     Ok(())
 }

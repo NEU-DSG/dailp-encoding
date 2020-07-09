@@ -1,6 +1,5 @@
 use crate::retrieve::SemanticLine;
 use anyhow::Result;
-use quick_xml::se::to_writer;
 use serde::{Deserialize, Serialize};
 use std::fs::File;
 use std::io::Write;
@@ -10,24 +9,33 @@ const PHRASE_START: &str = "[";
 const PHRASE_END: &str = "]";
 const LINE_BREAK: char = '\\';
 
-pub fn write_to_file(title: &str, lines: Vec<SemanticLine>) -> Result<()> {
+pub fn write_to_file(meta: DocumentMetadata, lines: Vec<SemanticLine>) -> Result<()> {
     let tera = Tera::new("*")?;
     let annotated = lines.iter().map(|line| AnnotatedLine::from_semantic(line));
+    let file_name = format!("{}.xml", meta.title);
     let contents = tera.render(
         "template.xml",
         &tera::Context::from_serialize(AnnotatedDoc {
-            title,
+            meta,
             segments: AnnotatedLine::to_segments(annotated.collect()),
         })?,
     )?;
-    let mut f = File::create(format!("{}.xml", title))?;
+    let mut f = File::create(file_name)?;
     f.write(contents.as_bytes())?;
     Ok(())
 }
 
 #[derive(Serialize)]
+pub struct DocumentMetadata<'a> {
+    pub title: &'a str,
+    pub publication: Option<&'a str>,
+    pub source: Option<&'a str>,
+    pub people: Vec<&'a str>,
+}
+
+#[derive(Serialize)]
 struct AnnotatedDoc<'a> {
-    title: &'a str,
+    meta: DocumentMetadata<'a>,
     segments: Vec<AnnotatedSeg<'a>>,
 }
 
@@ -68,6 +76,7 @@ impl<'a> AnnotatedLine<'a> {
         let mut stack = Vec::<AnnotatedPhrase>::new();
         let mut line_num = 0;
         let mut word_idx = 0;
+        let mut seg_idx = 0;
         for (line_idx, line) in lines.into_iter().enumerate() {
             for word in line.words {
                 // Give the word an index within the whole document.
@@ -84,29 +93,39 @@ impl<'a> AnnotatedLine<'a> {
                     line_num += 1;
                 }
 
-                if word.source.starts_with(PHRASE_START) {
+                let mut source = &word.source[..];
+                // Check for the start of a phrase.
+                while source.starts_with(PHRASE_START) {
+                    source = &source[1..];
                     stack.push(AnnotatedPhrase {
-                        parts: vec![AnnotatedSeg::Word(AnnotatedWord {
-                            // Get rid of the leading bracket in the output.
-                            source: &word.source[1..],
-                            // Otherwise, use the rest of the annotation as-is.
-                            ..word
-                        })],
+                        index: seg_idx,
+                        parts: Vec::new(),
                     });
-                } else if word.source.ends_with(PHRASE_END) {
-                    if let Some(mut p) = stack.pop() {
-                        p.parts.push(AnnotatedSeg::Word(AnnotatedWord {
-                            // Get rid of the trailing bracket.
-                            source: &word.source[..word.source.len() - 1],
-                            // Otherwise, use the rest of the annotation as-is.
-                            ..word
-                        }));
-                        segments.push(AnnotatedSeg::Phrase(p));
-                    }
-                } else if let Some(p) = stack.last_mut() {
-                    p.parts.push(AnnotatedSeg::Word(word));
+                    seg_idx += 1;
+                }
+                // Remove all ending brackets from the source.
+                let mut count_to_pop = 0;
+                while source.ends_with(PHRASE_END) {
+                    source = &source[..source.len() - 1];
+                    count_to_pop += 1;
+                }
+                // Add the current word to the top phrase or the root document.
+                let finished_word = AnnotatedSeg::Word(AnnotatedWord { source, ..word });
+                if let Some(p) = stack.last_mut() {
+                    p.parts.push(finished_word);
                 } else {
-                    segments.push(AnnotatedSeg::Word(word));
+                    segments.push(finished_word);
+                }
+                // Check for the end of phrase(s).
+                for _ in 0..count_to_pop {
+                    if let Some(p) = stack.pop() {
+                        let finished_p = AnnotatedSeg::Phrase(p);
+                        if let Some(top) = stack.last_mut() {
+                            top.parts.push(finished_p);
+                        } else {
+                            segments.push(finished_p);
+                        }
+                    }
                 }
             }
 
@@ -135,6 +154,7 @@ enum AnnotatedSeg<'a> {
 
 #[derive(Serialize)]
 struct AnnotatedPhrase<'a> {
+    index: usize,
     parts: Vec<AnnotatedSeg<'a>>,
 }
 

@@ -67,6 +67,22 @@ impl SheetResult {
                 current_result.push(row);
             }
         }
+        // Add the last line to the output.
+        if !current_result.is_empty() {
+            all_lines.push(SemanticLine {
+                number: current_result[0][0].clone(),
+                rows: current_result
+                    .into_iter()
+                    .map(|mut row| {
+                        row.remove(0);
+                        AnnotationRow {
+                            title: row.remove(0),
+                            items: row,
+                        }
+                    })
+                    .collect(),
+            });
+        }
         // Remove trailing empty lines.
         let last_best = all_lines.iter().rposition(|l| !l.is_empty()).unwrap_or(0);
         all_lines.truncate(last_best + 1);
