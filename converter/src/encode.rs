@@ -86,11 +86,21 @@ impl<'a> AnnotatedLine<'a> {
 
                 if word.source.starts_with(PHRASE_START) {
                     stack.push(AnnotatedPhrase {
-                        parts: vec![AnnotatedSeg::Word(word)],
+                        parts: vec![AnnotatedSeg::Word(AnnotatedWord {
+                            // Get rid of the leading bracket in the output.
+                            source: &word.source[1..],
+                            // Otherwise, use the rest of the annotation as-is.
+                            ..word
+                        })],
                     });
                 } else if word.source.ends_with(PHRASE_END) {
                     if let Some(mut p) = stack.pop() {
-                        p.parts.push(AnnotatedSeg::Word(word));
+                        p.parts.push(AnnotatedSeg::Word(AnnotatedWord {
+                            // Get rid of the trailing bracket.
+                            source: &word.source[..word.source.len() - 1],
+                            // Otherwise, use the rest of the annotation as-is.
+                            ..word
+                        }));
                         segments.push(AnnotatedSeg::Phrase(p));
                     }
                 } else if let Some(p) = stack.last_mut() {

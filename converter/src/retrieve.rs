@@ -47,7 +47,6 @@ impl SheetResult {
         let mut all_lines = Vec::<SemanticLine>::new();
         for row in self.values {
             if row.is_empty() {
-                println!("{:?}", current_result);
                 if !current_result.is_empty() {
                     all_lines.push(SemanticLine {
                         number: current_result[0][0].clone(),
