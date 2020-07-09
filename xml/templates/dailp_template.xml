@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-model href="../schema/out/dailp_odd.rng" type="application/xml" schematypens="http://relaxng.org/ns/structure/1.0"?>
+<TEI xmlns="http://www.tei-c.org/ns/1.0" xmlns:d="https://dsg.northeastern.edu/dailp/ns/1.0">
+   <teiHeader>
+      <fileDesc>
+         <titleStmt>
+            <title>Title</title>
+         </titleStmt>
+         <publicationStmt>
+            <p>Publication Information</p>
+         </publicationStmt>
+         <sourceDesc>
+            <p>Information about the source</p>
+         </sourceDesc>
+      </fileDesc>
+      <encodingDesc>
+         <listPrefixDef>
+            <prefixDef matchPattern="" replacementPattern="" ident="lex">
+               <p>This prefix resolves references to the lexical data source.</p>
+            </prefixDef>
+            <prefixDef matchPattern="" replacementPattern="" ident="drs">
+               <p>This prefix resolves references to the Digital Repository Service.</p>
+            </prefixDef>
+         </listPrefixDef>
+      </encodingDesc>
+      <profileDesc>
+         <particDesc>
+            <person xml:id="[firstname_lastname]">
+               <persName>[Firstname Lastname]</persName>
+            </person>
+         </particDesc>
+      </profileDesc>
+   </teiHeader>
+
+   <text xml:id="[text ID]">
+      <!-- the text ID can only contain alphabetic characters and numbers, hyphen, underscore, and period. It must start with a letter, not a number. It must be unique across the DAILP collection. It will be used as the base for the identifiers later on in the document. -->
+
+      <group>
+         <text type="source" xml:lang="chr">
+            <body>
+               <pb facs="drs:[textID]_page01"/>
+               <!-- use the textID as the basis for the file naming of the source page images -->
+               <ab>
+               <lb n="1"/>
+                  <seg type="idea_unit" xml:id="s01" corresp="#s01_trans">
+                     <w xml:id="textID.w01" lemmaRef="lex:id">
+                        <!-- use the textID as the basis for the word-level identifiers -->
+                        <choice>
+                           <orig></orig>
+                           <reg></reg>
+                           <seg type="simple_phonetics"></seg>
+                           <seg type="morphemic_segmentation"></seg>
+                           <seg type="gloss"></seg>
+                        </choice>
+                     </w>
+                  </seg>
+               </ab>
+            </body>
+         </text>
+
+         <text type="translation" xml:lang="en">
+            <body>
+               <ab>
+                  <seg xml:id="s01_trans"></seg>
+               </ab>
+            </body>
+         </text>
+      </group>
+   </text>
+   <standOff>
+      <d:noteBlock>
+         <note target="#textID.w01">
+            <p>Text of the note goes here. Multiparagraph notes are permitted.</p>
+         </note>
+      </d:noteBlock>
+   </standOff>
+</TEI>
