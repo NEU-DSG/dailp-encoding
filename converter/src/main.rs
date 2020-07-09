@@ -10,7 +10,6 @@ async fn main() -> Result<()> {
         .await?
         .split_into_lines();
 
-    println!("response: {:#?}", sheet);
     encode::write_to_file("Story of Switch Striker", sheet)?;
     Ok(())
 }
