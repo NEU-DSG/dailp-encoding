@@ -1,3 +1,4 @@
+{# -*- mode: web; -*- #}
 {% import "macros.xml" as macros %}
 <?xml version="1.0" encoding="UTF-8"?>
 <?xml-model href="../schema/out/dailp_odd.rng" type="application/xml" schematypens="http://relaxng.org/ns/structure/1.0"?>
@@ -7,16 +8,12 @@
       <titleStmt>
         <title>{{ meta.title }}</title>
       </titleStmt>
-      {% if meta.publication %}
         <publicationStmt>
           <p>{{meta.publication}}</p>
         </publicationStmt>
-      {% endif %}
-      {% if meta.source %}
         <sourceDesc>
           <p>{{meta.source}}</p>
         </sourceDesc>
-      {% endif %}
     </fileDesc>
     <encodingDesc>
       <listPrefixDef>

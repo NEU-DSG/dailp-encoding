@@ -14,7 +14,7 @@ pub fn write_to_file(meta: DocumentMetadata, lines: Vec<SemanticLine>) -> Result
     let annotated = lines.iter().map(|line| AnnotatedLine::from_semantic(line));
     let file_name = format!("{}.xml", meta.title);
     let contents = tera.render(
-        "template.xml",
+        "template.tera.xml",
         &tera::Context::from_serialize(AnnotatedDoc {
             meta,
             segments: AnnotatedLine::to_segments(annotated.collect()),
