@@ -7,14 +7,8 @@
       {% if segment.simple_phonetics %}
         <seg type="simple_phonetics">{{segment.simple_phonetics}}</seg>
       {% endif %}
-      {% if segment.phonemic %}
-        <seg type="phonemic">{{segment.phonemic}}</seg>
-      {% endif %}
       {% if segment.morphemic_segmentation %}
         <seg type="morphemic_segmentation">{{segment.morphemic_segmentation}}</seg>
-      {% endif %}
-      {% if segment.morpheme_gloss %}
-        <seg type="morpheme_gloss">{{segment.morpheme_gloss}}</seg>
       {% endif %}
       {% if segment.english_gloss %}
         <seg type="gloss">{{segment.english_gloss}}</seg>
