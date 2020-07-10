@@ -10,7 +10,7 @@
                         <scenarioAssociation-array>
                             <scenarioAssociation>
                                 <field name="url">
-                                    <String>xml/test.xml</String>
+                                    <String>xml/stylesheets/xhtml.xsl</String>
                                 </field>
                                 <field name="scenarioIds">
                                     <list>
@@ -31,6 +31,26 @@
                             <scenarioAssociation>
                                 <field name="url">
                                     <String>xml/templates/dailp_sample.xml</String>
+                                </field>
+                                <field name="scenarioIds">
+                                    <list>
+                                        <String>DAILP TEI XHTML</String>
+                                    </list>
+                                </field>
+                                <field name="scenarioTypes">
+                                    <list>
+                                        <String>XSL</String>
+                                    </list>
+                                </field>
+                                <field name="scenarioStorageLocations">
+                                    <list>
+                                        <Byte>2</Byte>
+                                    </list>
+                                </field>
+                            </scenarioAssociation>
+                            <scenarioAssociation>
+                                <field name="url">
+                                    <String>xml/test.xml</String>
                                 </field>
                                 <field name="scenarioIds">
                                     <list>
