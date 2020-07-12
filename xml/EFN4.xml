@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-model href="schema/out/dailp_odd.rng" type="application/xml" schematypens="http://relaxng.org/ns/structure/1.0"?>
+<TEI xmlns="http://www.tei-c.org/ns/1.0" xmlns:d="https://dsg.northeastern.edu/dailp/ns/1.0">
+    <teiHeader>
+        <fileDesc>
+            <titleStmt>
+                <title>Funeral Notice for a child of Tse:ghwisi</title>
+            </titleStmt>
+            <publicationStmt>
+                <p>Publication Information</p>
+            </publicationStmt>
+            <sourceDesc>
+                <p>Information about the source</p>
+            </sourceDesc>
+        </fileDesc>
+        <encodingDesc>
+            <listPrefixDef>
+                <prefixDef matchPattern="" replacementPattern="" ident="lex">
+                    <p>This prefix resolves references to the lexical data source.</p>
+                </prefixDef>
+                <prefixDef matchPattern="" replacementPattern="" ident="drs">
+                    <p>This prefix resolves references to the Digital Repository Service.</p>
+                </prefixDef>
+            </listPrefixDef>
+        </encodingDesc>
+        <profileDesc>
+            <particDesc>
+                <person xml:id="dolly_duncan">
+                    <persName>Dolly Duncan</persName>
+                </person>
+            </particDesc>
+        </profileDesc>
+    </teiHeader>
+    <text>
+        <group>
+            <text type="source" xml:lang="chr">
+                <body>
+                    <pb facs="drs:page01"/>
+                    <ab>
+                        <!-- I've modified the encoding to use <seg> to enclose "idea units" 
+                            for alignment with the free translation,
+                            and to use <lb> instead of <l> to mark line breaks,
+                            so that the lineation doesn't conflict with the encoding of idea units.
+                            I'm not sure I have the boundaries of the idea units correct; please adjust as needed.
+                                -Julia Flanders -->
+                        <lb n="1"/>
+                        <gap reason="omitted" extent="4 words"/>
+                        <lb n="2"/>
+                        <gap reason="omitted" extent="1 word"/>
+                        <seg type="idea_unit" xml:id="s01" corresp="#s01_trans">
+                            <w xml:id="textID.w01">May</w>
+                            <w xml:id="textID.w02">28th</w>
+                            <w xml:id="textID.w03">1926</w>
+                        </seg>
+                        <lb n="3"/>
+                        <seg type="idea_unit" xml:id="s02" corresp="#s02_trans">
+                            <w xml:id="textID.w04" lemmaRef="lex:id">
+                                <choice>
+                                    <orig>ᏤᏈᏏ</orig>
+                                    <seg type="simple_phonetics">jekwsi</seg>
+                                </choice>
+                            </w>
+                            <w xml:id="textID.w05">Jeff</w>
+                            <w xml:id="textID.w06">Tindle</w>
+                            <w xml:id="textID.w07" lemmaRef="lex:id">
+                                <choice>
+                                    <orig>ᎤᏂᏲᎱᏏ</orig>
+                                    <seg type="simple_phonetics">uniyohusi</seg>
+                                </choice>
+                            </w>
+                            <w xml:id="textID.w08" lemmaRef="lex:id">
+                                <choice>
+                                    <orig>ᎤᏍᏗᎢ</orig>
+                                    <seg type="simple_phonetics">usdiʔi</seg>
+                                </choice>
+                            </w>
+                            <lb n="4"/>
+                            <w xml:id="textID.w09">
+                                <choice>
+                                    <orig>ᎪᎯ</orig>
+                                    <seg type="simple_phonetics">kohi</seg>
+                                </choice>
+                            </w>
+                            <w xml:id="textID.w10">
+                                <choice>
+                                    <orig>ᏑᎾᎴᎢ</orig>
+                                    <seg type="simple_phonetics">sunaleʔi</seg>
+                                </choice>
+                            </w>
+                            <w xml:id="textID.w11">
+                                <choice>
+                                    <orig>ᏑᎾᎴᎢ</orig>
+                                    <seg type="simple_phonetics">sunaleʔi</seg>
+                                </choice>
+                            </w>
+                            <w xml:id="textID.w12">
+                                <choice>
+                                    <orig>ᎢᎪᎯ</orig>
+                                    <seg type="simple_phonetics">igohi</seg>
+                                </choice>
+                            </w>
+                        </seg>
+                        <seg type="idea_unit" corresp="#idno_s03_trans">
+                            <lb xml:id="l05"/>
+                            <w xml:id="textID.w13">
+                                <choice>
+                                    <orig>ᏥᎨᏎᏍᏗ</orig>
+                                    <seg type="simple_phonetics">jigesesdi</seg>
+                                </choice>
+                            </w>
+                            <w xml:id="textID.w14">
+                                <choice>
+                                    <orig>ᎬᏩᏃᏴᏍᏗ</orig>
+                                    <seg type="simple_phonetics">gvwanoyvʔsdi</seg>
+                                </choice>
+                            </w>
+                            <w xml:id="textID.w15">
+                                <choice>
+                                    <orig>ᎢᏦᏗ</orig>
+                                    <seg type="simple_phonetics">ijodi</seg>
+                                </choice>
+                            </w>
+                            <!-- Grammatical sentence wraps line, text doesnt break sentences, <s> is definitely wrong here.-->
+                            <!-- With empty element <lb>, line breaks can be marked in the middle of grammatical sentences -->
+                            <lb n="6"/>
+                            <w xml:id="textID.w16">
+                                <choice>
+                                    <orig>ᏧᎾᏓᏂᏐᏗᎢ</orig>
+                                    <seg type="simple_phonetics">junadanisohdiʔi</seg>
+                                </choice>
+                            </w>
+                            <w xml:id="textID.w17">
+                                <choice>
+                                    <orig>ᎢᏣᏍᎪᏍᎩᏃ</orig>
+                                    <seg type="simple_phonetics">itsgosgihno</seg>
+                                </choice>
+                            </w>
+                            <lb n="7"/>
+                            <w xml:id="textID.w18">
+                                <choice>
+                                    <orig>ᎢᏣᏛᏅᏍᏕᏍᏗ</orig>
+                                    <seg type="simple_phonetics">ijadvnvsdesdi</seg>
+                                </choice>
+                            </w>
+                        </seg>
+                        <lb n="8"/>
+                        <gap reason="omitted" extent="1 line"/>
+                        <lb n="9"/>
+                        <gap reason="omitted" extent="1 line"/>
+                        <lb n="10"/>
+                        <gap reason="omitted" extent="1 line"/>
+                    </ab>
+                </body>
+            </text>
+            <!-- Using free translations without a 1:1 correspondence to source is necessary -->
+            <text type="translation" xml:lang="en">
+                <body>
+                    <ab>
+                        <seg type="trans" xml:id="s01_trans">May 28, 1926.</seg>
+                        <seg type="trans" xml:id="s02_trans">The family of
+                            Tse:ghw(i)s(i) (Jeff Tindle) lost a small child this
+                            morning<pc>.</pc></seg>
+                        <seg type="trans" xml:id="s03_trans">It will be buried
+                            tomorrow in Echota Cemetery, and you diggers must make
+                            preparation.</seg>
+                    </ab>
+                </body>
+            </text>
+        </group>
+    </text>
+</TEI>
