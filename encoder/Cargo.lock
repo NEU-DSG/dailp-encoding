@@ -130,19 +130,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "converter"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "itertools",
- "reqwest",
- "serde",
- "serde_json",
- "tera",
- "tokio",
-]
-
-[[package]]
 name = "core-foundation"
 version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -167,6 +154,19 @@ dependencies = [
  "autocfg",
  "cfg-if",
  "lazy_static",
+]
+
+[[package]]
+name = "dailp-encoder"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "itertools",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "tera",
+ "tokio",
 ]
 
 [[package]]

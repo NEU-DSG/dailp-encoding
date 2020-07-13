@@ -1,5 +1,5 @@
 [package]
-name = "converter"
+name = "dailp-encoder"
 version = "0.1.0"
 authors = ["Taylor Snead <taylorsnead@gmail.com>"]
 edition = "2018"
