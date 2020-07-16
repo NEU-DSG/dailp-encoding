@@ -2,110 +2,102 @@
 <xsl:stylesheet version="2.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
     xmlns:d="https://dsg.northeastern.edu/dailp/ns/1.0"
     xpath-default-namespace="http://www.tei-c.org/ns/1.0" xmlns="http://www.w3.org/1999/xhtml">
-
-    <!-- TEI => html -->
-    <xsl:template match="TEI">
+    <xsl:template match="/">
         <html>
-            <head>
-                <title>DAILP Document Viewer</title>
-            </head>
-            <body>
-                <xsl:apply-templates/>
-            </body>
+            <xsl:apply-templates/>
         </html>
     </xsl:template>
-
-    <!-- teiHeader => [nothing, for now] -->
-    <xsl:template match="teiHeader"/>
-
-    <!-- text => [just move on, for now] -->
-    <xsl:template match="text">
-        <xsl:apply-templates/>
+    <xsl:template match="TEI">
+        <!-- <xsl:text disable-output-escaping="yes">&#10;&lt;!DOCTYPE html&gt;&#10;</xsl:text>-->
+        <head>
+            <title>DAILP Document Viewer</title>
+        </head>
+        <body>
+            <xsl:apply-templates/>
+        </body>
     </xsl:template>
-
-    <!-- group => div -->
+    <xsl:template match="teiHeader"/>
+    <!-- TODO: text -->
     <xsl:template match="group">
         <div id="doc_interface">
             <xsl:apply-templates/>
         </div>
     </xsl:template>
-
-    <!-- group/text => div (id = type) -->
     <xsl:template match="group/text">
-        <!-- id = text type -->
-        <div class="doc_layer" id="{@type}">
-            <xsl:apply-templates/>
-        </div>
+        <div class="doc_layer" id="{@type}"><xsl:apply-templates/></div>
     </xsl:template>
-
-    <!-- body => div -->
     <xsl:template match="body">
         <div class="doc_container">
-            <xsl:apply-templates select="pb"/>
+            <!-- Is there a more elegant handling of this? -->
+            <xsl:choose>
+                <xsl:when test="exists(child::pb)">
+                    <xsl:apply-templates select="pb"/>
+                </xsl:when>
+                <xsl:otherwise>
+                    <xsl:apply-templates/>
+                </xsl:otherwise>
+            </xsl:choose>
+
         </div>
     </xsl:template>
-
-    <!-- pb => div -->
+    <!-- This allows the output tree to encapsulate pages for pagination -->
     <xsl:template match="pb">
         <div class="doc_page">
             <xsl:apply-templates select="following-sibling::ab"/>
         </div>
     </xsl:template>
-
-    <!-- ab => p -->
     <xsl:template match="ab">
         <p>
             <xsl:apply-templates/>
         </p>
     </xsl:template>
-
-    <!-- lb => br -->
     <xsl:template match="lb">
         <br id="{@n}"/>
     </xsl:template>
-
-    <!-- seg (idea) => span -->
     <xsl:template match="ab/seg">
-        <span class="idea_unit" id="{@xml:id}"></span>
+        <span class="idea_unit" id="{@xml:id}">
+            <xsl:apply-templates/>
+        </span>
     </xsl:template>
-
-    <!-- w => -->
-    <!--    <xsl:template match="w"></xsl:template>-->
-
-    <!-- choice => -->
-    <!--    <xsl:template match="choice"></xsl:template>-->
-
-    <!-- orig => -->
-    <!--    <xsl:template match="orig"></xsl:template>-->
-
-    <!-- reg => -->
-    <!--    <xsl:template match="reg"></xsl:template>-->
-
-    <!-- seg => -->
-    <!--    <xsl:template match="seg"></xsl:template>-->
-
-    <!-- gap => -->
-    <!--    <xsl:template match="gap"></xsl:template>-->
-
-    <!-- text (translataion) => -->
-    <!--    <xsl:template match="text"></xsl:template>-->
-
-    <!-- body => -->
-    <!--    <xsl:template match="body"></xsl:template>-->
-
-    <!-- ab => -->
-    <!--    <xsl:template match="ab"></xsl:template>-->
-
-    <!-- seg => -->
-    <!--    <xsl:template match="seg"></xsl:template>-->
-
-    <!-- standOff => -->
-    <!--    <xsl:template match="standOff"></xsl:template>-->
-
-    <!-- noteBlock => -->
-    <!--    <xsl:template match="d:noteBlock"></xsl:template>-->
-
-    <!-- note => -->
-    <!--    <xsl:template match="note"></xsl:template>-->
-
+    <xsl:template match="w">
+        <div class="word" id="{@xml:id}">
+            <xsl:apply-templates/>
+        </div>
+    </xsl:template>
+    <xsl:template match="choice">
+        <div class="igt">
+            <xsl:apply-templates/>
+        </div>
+    </xsl:template>
+    <xsl:template match="orig">
+        <div class="orig" lang="chr">
+            <xsl:apply-templates/>
+        </div>
+    </xsl:template>
+    <xsl:template match="reg">
+        <div class="reg">
+            <xsl:apply-templates/>
+        </div>
+    </xsl:template>
+    <xsl:template match="choice/seg">
+        <div class="{@type}">
+            <xsl:apply-templates/>
+        </div>
+    </xsl:template>
+    <!-- TODO: gap -->
+    <xsl:template match="standOff">
+        <div class="standoff">
+            <xsl:apply-templates/>
+        </div>
+    </xsl:template>
+    <xsl:template match="d:noteBlock">
+        <div class="noteBlock">
+            <xsl:apply-templates/>
+        </div>
+    </xsl:template>
+    <xsl:template match="note">
+        <div class="note" id="{@target}">
+            <xsl:apply-templates/>
+        </div>
+    </xsl:template>
 </xsl:stylesheet>
