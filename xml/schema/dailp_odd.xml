@@ -114,8 +114,11 @@
                         <valItem ident="trans">
                            <desc>(sentence-level) Indicates that the segment is a single sentence-level unit in the free translation</desc>
                         </valItem>
+                        <valItem ident="romanization"><desc>(word-level) Indicates that the segment is a romanization of the word</desc></valItem>
                         <valItem ident="simple_phonetics"><desc>(word-level) Indicates that the segment is a simple phonetics representation of the word</desc></valItem>
+                        <valItem ident="phonemic_form"><desc>(word-level) Indicates that the segment is a phonemic representation of the word</desc></valItem>
                         <valItem ident="morphemic_segmentation"><desc>(word-level) Indicates that the segment is a morphemic segmentation of the word</desc></valItem>
+                        <valItem ident="morphemic_gloss"><desc>(word-level) Indicates that the segment is a morpheme-by-morpheme gloss of the word</desc></valItem>
                         <valItem ident="gloss"><desc>(word-level) Indicates that the segment is a gloss of the word</desc></valItem>
                      </valList>
                   </attDef>
