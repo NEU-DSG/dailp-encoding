@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-model href="schema/out/dailp_odd.rng" type="application/xml" schematypens="http://relaxng.org/ns/structure/1.0"?>
+<TEI xmlns="http://www.tei-c.org/ns/1.0" xmlns:d="https://dsg.northeastern.edu/dailp/ns/1.0">
+    <teiHeader>
+        <fileDesc>
+            <titleStmt>
+                <title>Story of Switch Striker</title>
+            </titleStmt>
+            <publicationStmt>
+                <p>Publication Information</p>
+            </publicationStmt>
+            <sourceDesc>
+                <p>Information about the source</p>
+            </sourceDesc>
+        </fileDesc>
+        <encodingDesc>
+            <listPrefixDef>
+                <prefixDef matchPattern="" replacementPattern="" ident="lex">
+                    <p>This prefix resolves references to the lexical data source.</p>
+                </prefixDef>
+                <prefixDef matchPattern="" replacementPattern="" ident="drs">
+                    <p>This prefix resolves references to the Digital Repository Service.</p>
+                </prefixDef>
+            </listPrefixDef>
+        </encodingDesc>
+        <profileDesc>
+            <particDesc>
+                <person xml:id="switch_striker">
+                    <persName>Tse:ghwisi</persName>
+                </person>
+            </particDesc>
+        </profileDesc>
+    </teiHeader>
+    <text>
+        <group>
+            <text type="source" xml:lang="chr">
+                <body>
+                    <pb facs="drs:page01"/>
+                    <ab>
+                        <!-- DocumentPage Encoding -->
+                    </ab>
+                </body>
+            </text>
+            <text type="translation" xml:lang="en">
+                <body>
+                    <ab>
+                        <!-- Translation Segments -->
+                    </ab>
+                </body>
+            </text>
+        </group>
+    </text>
+    <standOff>
+        <d:noteBlock>
+            <!-- Annotation Notes -->
+        </d:noteBlock>
+    </standOff>
+</TEI>
