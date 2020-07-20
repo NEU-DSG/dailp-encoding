@@ -1,14 +1,32 @@
 
+{% macro any_segment(segment) %}
+  {% if segment.type == "LineBreak" %}
+    <lb n="{{segment.index + 1}}"/>
+  {% elif segment.type == "Phrase" %}
+    {{ self::phrase(segment=segment) }}
+  {% elif segment.type == "Block" %}
+    {{ self::block(segment=segment) }}
+  {% elif segment.type == "Word" %}
+    {{ self::word(segment=segment)  }}
+  {% endif %}
+{% endmacro any_segment %}
+
 {% macro word(segment) %}
-  <w xml:id="textID.w{{segment.index + 1}}" lemmaRef="lex:id">
+  <w xml:id="w{{segment.index + 1}}" lemmaRef="lex:id">
     <choice>
       <orig>{{segment.source}}</orig>
-      <reg>{{segment.source}}</reg>
+      <reg></reg>
       {% if segment.simple_phonetics %}
         <seg type="simple_phonetics">{{segment.simple_phonetics}}</seg>
       {% endif %}
+      {% if segment.phonemic %}
+        <seg type="phonemic_form">{{segment.phonemic}}</seg>
+      {% endif %}
       {% if segment.morphemic_segmentation %}
         <seg type="morphemic_segmentation">{{segment.morphemic_segmentation}}</seg>
+      {% endif %}
+      {% if segment.morpheme_gloss %}
+        <seg type="morphemic_gloss">{{segment.morpheme_gloss}}</seg>
       {% endif %}
       {% if segment.english_gloss %}
         <seg type="gloss">{{segment.english_gloss}}</seg>
@@ -18,19 +36,18 @@
 {% endmacro word %}
 
 {% macro phrase(segment) %}
-  <seg type="idea_unit" xml:id="s{{segment.index + 1}}" corresp="#s{{segment.index + 1}}_trans">
+  <phr xml:id="p{{segment.index + 1}}">
     {% for child in segment.parts %}
       {{ self::any_segment(segment=child) }}
     {% endfor %}
-  </seg>
+  </phr>
 {% endmacro phrase %}
 
-{% macro any_segment(segment) %}
-  {% if segment.type == "LineBreak" %}
-    <lb n="{{segment.index + 1}}"/>
-  {% elif segment.type == "Phrase" %}
-    {{ self::phrase(segment=segment) }}
-  {% elif segment.type == "Word" %}
-    {{ self::word(segment=segment)  }}
-  {% endif %}
-{% endmacro any_segment %}
+{% macro block(segment) %}
+  <ab xml:id="b{{segment.index + 1}}" corresp="#b{{segment.index + 1}}_trans">
+    {% for child in segment.parts %}
+      {{ self::any_segment(segment=child) }}
+    {% endfor %}
+  </ab>
+{% endmacro phrase %}
+
