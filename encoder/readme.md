@@ -1,17 +1,21 @@
 # Document Encoder
-This program takes a spreadsheet hosted on Google Drive annotating a source
-document with linguistic information and transforms it into an equivalent TEI
-XML document.
+This program encodes a spreadsheet hosted on Google Drive annotating a source document with linguistic information into an equivalent TEI XML document.
+
+## Development
+To run this program, you need to have [rust](https://www.rust-lang.org/tools/install) and it's associated tooling installed.
+Then, simply navigate to this directory in a terminal and run the following:
+
+```sh
+cargo run
+```
 
 ## Spreadsheet Standards
-All of the current markings are placed on the first row of each annotation line,
-which corresponds with the original source text in Cherokee syllabary.
+All of the current markings are placed on the first row of each annotation line, which corresponds with the original source text in Cherokee syllabary.
 This leaves other rows untouched for capturing source document formatting.
 
 ### Phrases
 Square brackets `[]` delimit phrases and can be nested to any degree.
-For example, the following table produces a three word phrase with a two word
-phrase nested inside of it:
+For example, the following table produces a three word phrase with a two word phrase nested inside of it:
 
 |        |                  |           |          |           |
 | -----  | ---------------  | --------- | -------- | --------- |
@@ -20,12 +24,9 @@ phrase nested inside of it:
 |        | ...              |           |          |           |
 
 ### Line Breaks
-Generally, line breaks are implicit in the division of our spreadsheets into
-sets of rows marked as "Line 1", "Line 2", etc.
-However, when there are line breaks in the source document that occur in the
-middle of a word, we annotate the whole word in the row that it starts on.
-To mark the position of the line break in these cases, place a backslash `\`
-within the syllabary text where the break occurs.
+Generally, line breaks are implicit in the division of our spreadsheets into sets of rows marked as "Line 1", "Line 2", etc.
+However, when there are line breaks in the source document that occur in the middle of a word, we annotate the whole word in the row that it starts on.
+To mark the position of the line break in these cases, place a backslash `\` within the syllabary text where the break occurs.
 
 For example:
 
@@ -37,9 +38,8 @@ For example:
 
 ### Page Breaks
 Page breaks may occur at the end of a line or in the middle of a word.
-Taking inspiration from the last section about line breaks, we use two
-backslashes `\\` to represent a page break, which can be marked mid-word
-like so:
+Taking inspiration from the last section about line breaks, we use two backslashes `\\` to represent a page break.
+This can be marked mid-word like so:
 
 |        |                  |             |
 |--------|------------------|-------------|
@@ -47,8 +47,7 @@ like so:
 |        | Simple Phonetics | ⁠u⁠da⁠k⁠se⁠sdiyu |
 |        | ...              |             |
 
-If a page break occurs between lines, then filling the first cell of the empty
-row between the lines with two backslashes `\\` will mark that page break.
+If a page break occurs between lines, then filling the first cell of the empty row between the lines with two backslashes `\\` will mark that page break.
 
 |        |                  |             |
 |--------|------------------|-------------|
