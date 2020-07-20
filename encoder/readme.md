@@ -61,7 +61,28 @@ row between the lines with two backslashes `\\` will mark that page break.
 |        | ...              |             |
 
 ### Blocks
-We haven't decided on a syntax for marking blocks yet.
+While phrases are too granular to correspond directly to a section of our loose translations, blocks are larger units of text that do this correspondence.
+We contain a block of text with curly brackets `{}` in both the source text and the translation.
+These occur in the syllabary row rather than between lines because a block may not fall exactly on line boundaries.
 
-### Paragraphs
-We haven't decided on a syntax for marking paragraphs yet.
+These will be matched up in the encoding process by pairing blocks in order,
+such that the fourth block in the annotation spreadsheet corresponds to the fourth block in the translation.
+
+The following example represents a block that starts with the first word of line 2, and ends with the first word of line 3.
+
+|        |                  |         |     |
+|--------|------------------|---------|-----|
+| Line 2 | Syllabary        | {ᎩᎶᎢ    | ... |
+|        | Simple Phonetics | ⁠kiloʔi  |     |
+|        | ...              |         |     |
+| Line 3 | Syllabary        | ᎨᏎᏍᏗ}   | ... |
+|        | Simple Phonetics | ⁠gesesdi |     |
+|        | ...              |         |     |
+
+Here is a corresponding loose translation:
+
+> He was called Switch Striker.
+> {One who heals others must take care of themselves.}
+> You must not go around eating different women's cooking.
+
+Generally, blocks will be closer to paragraph length as opposed to this sentence length example.
