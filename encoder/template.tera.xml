@@ -41,11 +41,9 @@
       <text type="source" xml:lang="chr">
         <body>
           <pb facs="drs:page01"/>
-          <ab>
             {% for segment in segments %}
               {{ macros::any_segment(segment=segment) }}
             {% endfor %}
-          </ab>
         </body>
       </text>
 

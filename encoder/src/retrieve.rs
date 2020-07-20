@@ -34,7 +34,7 @@ pub struct SheetResult {
 impl SheetResult {
     pub async fn from_sheet(sheet_id: &str) -> Result<Self> {
         Ok(reqwest::get(&format!(
-            "https://sheets.googleapis.com/v4/spreadsheets/{}/values/A2:Z?key={}",
+            "https://sheets.googleapis.com/v4/spreadsheets/{}/values/A2:Z1000?key={}",
             sheet_id, GOOGLE_API_KEY
         ))
         .await?
