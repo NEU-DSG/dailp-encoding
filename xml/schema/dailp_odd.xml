@@ -7,10 +7,10 @@
       <fileDesc>
          <titleStmt>
             <title>DAILP transcription language</title>
-            <author>Julia Flanders</author>
-            <author>Ellen Cushman</author>
-            <author>Jeffrey Bourns</author>
-            <author>Caleb Trevino</author>
+            <author xml:id="jhf">Julia Flanders</author>
+            <author xml:id="ec">Ellen Cushman</author>
+            <author xml:id="jb">Jeffrey Bourns</author>
+            <author xml:id="ct">Caleb Trevino</author>
          </titleStmt>
          <publicationStmt>
         <p>In development; freely available</p>
@@ -19,6 +19,10 @@
             <p>born digital</p>
          </sourceDesc>
       </fileDesc>
+     <revisionDesc>
+        <change when="2020-07-16" who="#jct">Added values for <gi>type</gi> on <gi>seg</gi></change>
+        <change when="2020-07-12" who="#jhf">Created initial schema</change>
+     </revisionDesc>
   </teiHeader>
   <text>
       <body>
