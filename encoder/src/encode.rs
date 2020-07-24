@@ -1,4 +1,4 @@
-use crate::retrieve::SemanticLine;
+use crate::retrieve::{DocumentMetadata, SemanticLine};
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use std::fs::File;
@@ -12,10 +12,13 @@ const PAGE_BREAK: &str = "\\\\";
 const BLOCK_START: &str = "{";
 const BLOCK_END: &str = "}";
 
+/// Takes an unprocessed document with metadata, passing it through our TEI
+/// template to produce an xml document named like the given title.
 pub fn write_to_file(meta: DocumentMetadata, lines: Vec<SemanticLine>) -> Result<()> {
     let tera = Tera::new("*")?;
     let annotated = lines.iter().map(|line| AnnotatedLine::from_semantic(line));
     let file_name = format!("{}.xml", meta.title);
+    println!("writing to {}", file_name);
     let contents = tera.render(
         "template.tera.xml",
         &tera::Context::from_serialize(AnnotatedDoc {
@@ -29,16 +32,8 @@ pub fn write_to_file(meta: DocumentMetadata, lines: Vec<SemanticLine>) -> Result
 }
 
 #[derive(Serialize)]
-pub struct DocumentMetadata<'a> {
-    pub title: &'a str,
-    pub publication: Option<&'a str>,
-    pub source: Option<&'a str>,
-    pub people: Vec<&'a str>,
-}
-
-#[derive(Serialize)]
 struct AnnotatedDoc<'a> {
-    meta: DocumentMetadata<'a>,
+    meta: DocumentMetadata,
     segments: Vec<AnnotatedSeg<'a>>,
 }
 
