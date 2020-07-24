@@ -93,5 +93,6 @@ So far, that ordering is as follows:
 
 - Genre
 - Source Text
+- Title
 - Page # in Source Text
 - Page Count
