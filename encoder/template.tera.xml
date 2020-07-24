@@ -1,0 +1,72 @@
+{# -*- mode: web; -*- #}
+{% import "macros.xml" as macros %}
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-model href="../schema/out/dailp_odd.rng" type="application/xml" schematypens="http://relaxng.org/ns/structure/1.0"?>
+<TEI xmlns="http://www.tei-c.org/ns/1.0" xmlns:d="https://dsg.northeastern.edu/dailp/ns/1.0">
+  <teiHeader>
+    <fileDesc>
+      <titleStmt>
+        <title>{{ meta.title }}</title>
+      </titleStmt>
+        <publicationStmt>
+          <p>{{meta.publication}}</p>
+        </publicationStmt>
+        <sourceDesc>
+          <p>{{meta.source}}</p>
+        </sourceDesc>
+    </fileDesc>
+    <encodingDesc>
+      <listPrefixDef>
+        <prefixDef matchPattern="" replacementPattern="" ident="lex">
+          <p>This prefix resolves references to the lexical data source.</p>
+        </prefixDef>
+        <prefixDef matchPattern="" replacementPattern="" ident="drs">
+          <p>This prefix resolves references to the Digital Repository Service.</p>
+        </prefixDef>
+      </listPrefixDef>
+    </encodingDesc>
+    <profileDesc>
+      <particDesc>
+        {% for person in meta.people %}
+          <person xml:id="{{person | slugify}}">
+            <persName>{{person}}</persName>
+          </person>
+        {% endfor %}
+      </particDesc>
+    </profileDesc>
+  </teiHeader>
+
+  <text>
+    <group>
+      <text type="source" xml:lang="chr">
+        <body>
+          <pb facs="drs:page01"/>
+            {% for segment in segments %}
+              {{ macros::any_segment(segment=segment) }}
+            {% endfor %}
+        </body>
+      </text>
+
+      <text type="translation" xml:lang="en">
+        <body>
+          <ab>
+            <seg type="trans" xml:id="s01_trans">The dog lay on the mat.</seg>
+          </ab>
+        </body>
+      </text>
+    </group>
+  </text>
+
+  {# Commentary is included for some words to capture extra information or uncertainty. #}
+  <standOff>
+    <d:noteBlock>
+      {% for segment in segments %}
+        {% if segment.type == "Word" and segment.commentary %}
+          <note target="#textID.w{{segment.index + 1}}">
+            <p>{{segment.commentary}}</p>
+          </note>
+        {% endif %}
+      {% endfor %}
+    </d:noteBlock>
+  </standOff>
+</TEI>
