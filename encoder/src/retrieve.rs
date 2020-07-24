@@ -5,6 +5,17 @@ use std::collections::HashMap;
 
 const GOOGLE_API_KEY: &str = "AIzaSyBqqPrkht_OeYUSNkSf_sc6UzNaFhzOVNI";
 
+
+#[derive(Debug, Serialize)]
+pub struct DocumentMetadata {
+    /// Title of the annotated document.
+    pub title: String,
+    pub publication: Option<String>,
+    /// Where the source document came from, maybe the name of a collection.
+    pub source: Option<String>,
+    /// The people involved in collecting, translating, annotating.
+    pub people: Vec<String>,
+}
 #[derive(Debug, Serialize, Deserialize)]
 pub struct AnnotationRow {
     pub title: String,
@@ -32,16 +43,33 @@ pub struct SheetResult {
     values: Vec<Vec<String>>,
 }
 impl SheetResult {
-    pub async fn from_sheet(sheet_id: &str) -> Result<Self> {
+    pub async fn from_sheet(sheet_id: &str, sheet_name: Option<&str>) -> Result<Self> {
+        let sheet_name = sheet_name.map_or_else(|| String::new(), |n| format!("{}!", n));
         Ok(reqwest::get(&format!(
-            "https://sheets.googleapis.com/v4/spreadsheets/{}/values/A2:Z1000?key={}",
-            sheet_id, GOOGLE_API_KEY
+            "https://sheets.googleapis.com/v4/spreadsheets/{}/values/{}A1:Z?key={}",
+            sheet_id, sheet_name, GOOGLE_API_KEY
         ))
         .await?
         .json::<SheetResult>()
         .await?)
     }
-    pub fn split_into_lines(self) -> Vec<SemanticLine> {
+    pub fn into_metadata(mut self) -> DocumentMetadata {
+        // Meta order: genre, source, title, source page #, page count, translation
+        // First column is the name of the field, useless when parsing so we ignore it.
+        let _genre = self.values.remove(0);
+        let mut source = self.values.remove(0);
+        let mut title = self.values.remove(0);
+        DocumentMetadata {
+            title: title.remove(1),
+            publication: None,
+            people: Vec::new(),
+            source: Some(source.remove(1)),
+        }
+    }
+    pub fn split_into_lines(mut self) -> Vec<SemanticLine> {
+        // The header line is useless in encoding.
+        self.values.remove(0);
+
         // Firstly, split up groups of rows delimited by an empty row.
         let mut current_result: Vec<Vec<String>> = Vec::new();
         let mut all_lines = Vec::<SemanticLine>::new();

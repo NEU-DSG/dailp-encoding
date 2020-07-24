@@ -85,3 +85,13 @@ Here is a corresponding loose translation:
 > You must not go around eating different women's cooking.
 
 Generally, blocks will be closer to paragraph length as opposed to this sentence length example.
+
+### Metadata
+The document metadata must be listed in a sub-sheet titled exactly `Metadata`.
+The order of fields should always stay the same based on our spreadsheet template.
+So far, that ordering is as follows: 
+
+- Genre
+- Source Text
+- Page # in Source Text
+- Page Count
