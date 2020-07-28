@@ -5,7 +5,6 @@ use std::collections::HashMap;
 
 const GOOGLE_API_KEY: &str = "AIzaSyBqqPrkht_OeYUSNkSf_sc6UzNaFhzOVNI";
 
-
 #[derive(Debug, Serialize)]
 pub struct DocumentMetadata {
     /// Title of the annotated document.

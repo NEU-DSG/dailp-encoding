@@ -1,9 +1,10 @@
 use crate::retrieve::{DocumentMetadata, SemanticLine};
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::fs::File;
 use std::io::Write;
-use tera::Tera;
+use tera::{self, Tera};
 
 const PHRASE_START: &str = "[";
 const PHRASE_END: &str = "]";
@@ -15,10 +16,12 @@ const BLOCK_END: &str = "}";
 /// Takes an unprocessed document with metadata, passing it through our TEI
 /// template to produce an xml document named like the given title.
 pub fn write_to_file(meta: DocumentMetadata, lines: Vec<SemanticLine>) -> Result<()> {
-    let tera = Tera::new("*")?;
+    let mut tera = Tera::new("*")?;
     let annotated = lines.iter().map(|line| AnnotatedLine::from_semantic(line));
     let file_name = format!("{}.xml", meta.title);
     println!("writing to {}", file_name);
+    tera.autoescape_on(Vec::new());
+    tera.register_filter("convert_breaks", convert_breaks);
     let contents = tera.render(
         "template.tera.xml",
         &tera::Context::from_serialize(AnnotatedDoc {
@@ -29,6 +32,41 @@ pub fn write_to_file(meta: DocumentMetadata, lines: Vec<SemanticLine>) -> Result
     let mut f = File::create(file_name)?;
     f.write(contents.as_bytes())?;
     Ok(())
+}
+
+fn convert_breaks(
+    value: &tera::Value,
+    context: &HashMap<String, tera::Value>,
+) -> tera::Result<tera::Value> {
+    if let tera::Value::String(s) = value {
+        let pb_tag = context.get("pb").and_then(|page_num| {
+            if let tera::Value::Number(num) = page_num {
+                Some(format!("<pb n=\"{}\" />", num))
+            } else {
+                None
+            }
+        });
+        let lb_tag = context.get("lb").and_then(|line_num| {
+            if let tera::Value::Number(num) = line_num {
+                Some(format!("<lb n=\"{}\" />", num))
+            } else {
+                None
+            }
+        });
+        let mut replaced = if let Some(pb_tag) = pb_tag {
+            s.replace("\\\\", &pb_tag)
+        } else {
+            s.to_owned()
+        };
+        replaced = if let Some(lb_tag) = lb_tag {
+            replaced.replace("\\", &lb_tag)
+        } else {
+            replaced
+        };
+        Ok(tera::Value::String(replaced))
+    } else {
+        Ok(value.clone())
+    }
 }
 
 #[derive(Serialize)]
@@ -54,18 +92,19 @@ impl<'a> AnnotatedLine<'a> {
             .map(|i| {
                 let pb = line.rows[0].items[i].find(PAGE_BREAK);
                 AnnotatedWord {
-                index: i,
-                source: &line.rows[0].items[i].trim(),
-                normalized_source: &line.rows[0].items[i].trim(),
-                simple_phonetics: line.rows[2].items.get(i).map(|x| &**x),
-                phonemic: line.rows[3].items.get(i).map(|x| &**x),
-                morphemic_segmentation: line.rows[4].items.get(i).map(|x| &**x),
-                morpheme_gloss: line.rows[5].items.get(i).map(|x| &**x),
-                english_gloss: line.rows[6].items.get(i).map(|x| x.trim()),
-                commentary: line.rows[7].items.get(i).map(|x| &**x),
-                page_break: pb,
-                line_break: pb.or_else(|| line.rows[0].items[i].find(LINE_BREAK)),
-            }})
+                    index: i,
+                    source: &line.rows[0].items[i].trim(),
+                    normalized_source: &line.rows[0].items[i].trim(),
+                    simple_phonetics: line.rows[2].items.get(i).map(|x| &**x),
+                    phonemic: line.rows[3].items.get(i).map(|x| &**x),
+                    morphemic_segmentation: line.rows[4].items.get(i).map(|x| &**x),
+                    morpheme_gloss: line.rows[5].items.get(i).map(|x| &**x),
+                    english_gloss: line.rows[6].items.get(i).map(|x| x.trim()),
+                    commentary: line.rows[7].items.get(i).map(|x| &**x),
+                    page_break: pb,
+                    line_break: pb.or_else(|| line.rows[0].items[i].find(LINE_BREAK)),
+                }
+            })
             .collect();
         Self {
             number: &line.number,
@@ -141,7 +180,12 @@ impl<'a> AnnotatedLine<'a> {
                     count_to_pop += 1;
                 }
                 // Add the current word to the top phrase or the root document.
-                let finished_word = AnnotatedSeg::Word(AnnotatedWord { source, ..word });
+                let finished_word = AnnotatedSeg::Word(AnnotatedWord {
+                    source,
+                    line_break: word.line_break.map(|_| line_num),
+                    page_break: word.page_break.map(|_| page_num),
+                    ..word
+                });
                 if let Some(p) = stack.last_mut() {
                     p.parts.push(finished_word);
                 } else {
