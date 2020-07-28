@@ -1,6 +1,6 @@
 use crate::retrieve::{DocumentMetadata, SemanticLine};
 use anyhow::Result;
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::Write;
@@ -20,7 +20,6 @@ pub fn write_to_file(meta: DocumentMetadata, lines: Vec<SemanticLine>) -> Result
     let annotated = lines.iter().map(|line| AnnotatedLine::from_semantic(line));
     let file_name = format!("{}.xml", meta.title);
     println!("writing to {}", file_name);
-    tera.autoescape_on(Vec::new());
     tera.register_filter("convert_breaks", convert_breaks);
     let contents = tera.render(
         "template.tera.xml",
@@ -32,41 +31,6 @@ pub fn write_to_file(meta: DocumentMetadata, lines: Vec<SemanticLine>) -> Result
     let mut f = File::create(file_name)?;
     f.write(contents.as_bytes())?;
     Ok(())
-}
-
-fn convert_breaks(
-    value: &tera::Value,
-    context: &HashMap<String, tera::Value>,
-) -> tera::Result<tera::Value> {
-    if let tera::Value::String(s) = value {
-        let pb_tag = context.get("pb").and_then(|page_num| {
-            if let tera::Value::Number(num) = page_num {
-                Some(format!("<pb n=\"{}\" />", num))
-            } else {
-                None
-            }
-        });
-        let lb_tag = context.get("lb").and_then(|line_num| {
-            if let tera::Value::Number(num) = line_num {
-                Some(format!("<lb n=\"{}\" />", num))
-            } else {
-                None
-            }
-        });
-        let mut replaced = if let Some(pb_tag) = pb_tag {
-            s.replace("\\\\", &pb_tag)
-        } else {
-            s.to_owned()
-        };
-        replaced = if let Some(lb_tag) = lb_tag {
-            replaced.replace("\\", &lb_tag)
-        } else {
-            replaced
-        };
-        Ok(tera::Value::String(replaced))
-    } else {
-        Ok(value.clone())
-    }
 }
 
 #[derive(Serialize)]
@@ -253,4 +217,40 @@ struct AnnotatedWord<'a> {
     /// The character index of a mid-word line break, if there is one here.
     line_break: Option<usize>,
     page_break: Option<usize>,
+}
+
+/// Encode all mid-word line breaks as `lb` tags and page breaks as `pb` tags.
+fn convert_breaks(
+    value: &tera::Value,
+    context: &HashMap<String, tera::Value>,
+) -> tera::Result<tera::Value> {
+    if let tera::Value::String(s) = value {
+        let pb_tag = context.get("pb").and_then(|page_num| {
+            if let tera::Value::Number(num) = page_num {
+                Some(format!("<pb n=\"{}\" />", num))
+            } else {
+                None
+            }
+        });
+        let lb_tag = context.get("lb").and_then(|line_num| {
+            if let tera::Value::Number(num) = line_num {
+                Some(format!("<lb n=\"{}\" />", num))
+            } else {
+                None
+            }
+        });
+        let mut replaced = if let Some(pb_tag) = pb_tag {
+            s.replace("\\\\", &pb_tag)
+        } else {
+            s.to_owned()
+        };
+        replaced = if let Some(lb_tag) = lb_tag {
+            replaced.replace("\\", &lb_tag)
+        } else {
+            replaced
+        };
+        Ok(tera::Value::String(replaced))
+    } else {
+        Ok(value.clone())
+    }
 }
