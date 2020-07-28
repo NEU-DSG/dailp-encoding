@@ -14,7 +14,7 @@
 {% macro word(segment) %}
   <w xml:id="w{{segment.index + 1}}" lemmaRef="lex:id">
     <choice>
-      <orig>{{segment.source}}</orig>
+      <orig>{{segment.source | convert_breaks(lb=segment.line_break, pb=segment.page_break)}}</orig>
       <reg></reg>
       {% if segment.simple_phonetics %}
         <seg type="simple_phonetics">{{segment.simple_phonetics}}</seg>
