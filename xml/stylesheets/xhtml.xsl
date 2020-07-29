@@ -60,29 +60,29 @@
         </span>
     </xsl:template>
     <xsl:template match="w">
-        <div class="word" id="{@xml:id}">
+        <span class="word" id="{@xml:id}">
             <xsl:apply-templates/>
-        </div>
+        </span>
     </xsl:template>
     <xsl:template match="choice">
-        <div class="igt">
+        <span class="igt">
             <xsl:apply-templates/>
-        </div>
+        </span>
     </xsl:template>
     <xsl:template match="orig">
-        <div class="orig" lang="chr">
+        <span class="orig" lang="chr-Cher">
             <xsl:apply-templates/>
-        </div>
+        </span>
     </xsl:template>
     <xsl:template match="reg">
-        <div class="reg">
+        <span class="reg" lang="chr-Cher">
             <xsl:apply-templates/>
-        </div>
+        </span>
     </xsl:template>
     <xsl:template match="choice/seg">
-        <div class="{@type}">
+        <span class="{@type}">
             <xsl:apply-templates/>
-        </div>
+        </span>
     </xsl:template>
     <!-- TODO: gap -->
     <xsl:template match="standOff">
@@ -96,8 +96,8 @@
         </div>
     </xsl:template>
     <xsl:template match="note">
-        <div class="note" id="{@target}">
+        <span class="note" id="{@target}" lang="en">
             <xsl:apply-templates/>
-        </div>
+        </span>
     </xsl:template>
 </xsl:stylesheet>
