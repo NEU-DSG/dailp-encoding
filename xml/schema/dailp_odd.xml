@@ -33,10 +33,11 @@
             
             <!-- Specification of modules -->
             <moduleRef key="tei"/>
-            <moduleRef key="core" include="abbr author bibl cb choice corr date del desc distinct editor emph expan foreign gap gloss graphic head hi item lb lg list name note orig p pb publisher q reg resp respStmt rs sic title unclear"/>
+            <moduleRef key="core" include="abbr address addrLine author bibl cb choice corr date del desc distinct editor emph expan foreign gap gloss graphic head hi item lb lg list name note orig p pb publisher q reg resp respStmt rs sic title unclear"/>
             <moduleRef key="header" except="appInfo biblFull calendar calendarDesc styleDefDecl unitDecl unitDef"/>
             <moduleRef key="textstructure" except="div1 div2 div3 div4 div5 div6 div7 docAuthor docDate docEdition docImprint docTitle epigraph imprimatur titlePage titlePart"/>
             <moduleRef key="analysis" except="span spanGrp"/>
+            <moduleRef key="msdescription" include="msContents msDesc msIdentifier msItem physDesc repository"></moduleRef>
             <moduleRef key="linking" except="alt altGrp join joinGrp link linkGrp timeline when"/>
             <moduleRef key="corpus" include="particDesc"/>
             <moduleRef key="namesdates" include="listPerson listPlace persName person personGrp place placeName"></moduleRef>
