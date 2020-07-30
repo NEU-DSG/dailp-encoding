@@ -43,6 +43,7 @@ struct AnnotatedDoc<'a> {
 struct AnnotatedLine<'a> {
     number: &'a str,
     words: Vec<AnnotatedWord<'a>>,
+    ends_page: bool,
 }
 
 impl<'a> AnnotatedLine<'a> {
@@ -73,10 +74,10 @@ impl<'a> AnnotatedLine<'a> {
         Self {
             number: &line.number,
             words,
+            ends_page: line.ends_page,
         }
     }
     fn to_segments(lines: Vec<Self>) -> Vec<AnnotatedSeg<'a>> {
-        // Chunk words into phrases based on bracket delimiters.
         let mut segments = Vec::<AnnotatedSeg>::new();
         let mut stack = Vec::<AnnotatedPhrase>::new();
         let mut line_num = 0;
@@ -84,6 +85,11 @@ impl<'a> AnnotatedLine<'a> {
         let mut word_idx = 0;
         let mut seg_idx = 0;
         let mut block_idx = 0;
+
+        // The first page needs a break.
+        segments.push(AnnotatedSeg::PageBreak { index: page_num });
+
+        // Process each line into a series of segments.
         for (line_idx, line) in lines.into_iter().enumerate() {
             // Only add a line break if there wasn't an explicit one mid-word.
             if line_idx == line_num {
@@ -178,6 +184,10 @@ impl<'a> AnnotatedLine<'a> {
                     }
                 }
             }
+            if line.ends_page {
+                page_num += 1;
+                segments.push(AnnotatedSeg::PageBreak { index: page_num });
+            }
         }
 
         while let Some(p) = stack.pop() {
@@ -195,6 +205,7 @@ enum AnnotatedSeg<'a> {
     Phrase(AnnotatedPhrase<'a>),
     Word(AnnotatedWord<'a>),
     LineBreak { index: usize },
+    PageBreak { index: usize },
 }
 
 #[derive(Debug, Serialize)]
