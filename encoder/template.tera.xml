@@ -48,9 +48,13 @@
 
       <text type="translation" xml:lang="en">
         <body>
-          <ab>
-            <seg type="trans" xml:id="s01_trans">The dog lay on the mat.</seg>
+          {% for block in meta.translation.blocks %}
+          <ab xml:id="b{{block.index}}_trans">
+            {% for segment in block.segments %}
+            <seg>{{segment}}</seg>
+            {% endfor %}
           </ab>
+          {% endfor %}
         </body>
       </text>
     </group>

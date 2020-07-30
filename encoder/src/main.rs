@@ -1,5 +1,8 @@
 mod encode;
 mod retrieve;
+mod translation;
+
+pub const GOOGLE_API_KEY: &str = "AIzaSyBqqPrkht_OeYUSNkSf_sc6UzNaFhzOVNI";
 
 use anyhow::Result;
 
@@ -11,7 +14,8 @@ async fn main() -> Result<()> {
         .split_into_lines();
     let meta = retrieve::SheetResult::from_sheet(sheet_id, Some("Metadata"))
         .await?
-        .into_metadata();
+        .into_metadata()
+        .await?;
 
     encode::write_to_file(meta, sheet)?;
     Ok(())
