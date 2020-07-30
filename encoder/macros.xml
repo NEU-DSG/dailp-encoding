@@ -2,6 +2,8 @@
 {% macro any_segment(segment) %}
   {% if segment.type == "LineBreak" %}
     <lb n="{{segment.index + 1}}"/>
+  {% elif segment.type == "PageBreak" %}
+    <pb facs="drs:page{{segment.index + 1}}"/>
   {% elif segment.type == "Phrase" %}
     {{ self::phrase(segment=segment) }}
   {% elif segment.type == "Block" %}

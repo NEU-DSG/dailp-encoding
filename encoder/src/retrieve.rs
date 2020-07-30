@@ -1,7 +1,6 @@
 use anyhow::Result;
 use reqwest;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 
 const GOOGLE_API_KEY: &str = "AIzaSyBqqPrkht_OeYUSNkSf_sc6UzNaFhzOVNI";
 
@@ -24,6 +23,7 @@ pub struct AnnotationRow {
 pub struct SemanticLine {
     pub number: String,
     pub rows: Vec<AnnotationRow>,
+    pub ends_page: bool,
 }
 impl SemanticLine {
     /// Is this line devoid of any source or annotation information?
@@ -73,7 +73,11 @@ impl SheetResult {
         let mut current_result: Vec<Vec<String>> = Vec::new();
         let mut all_lines = Vec::<SemanticLine>::new();
         for row in self.values {
-            if row.is_empty() {
+            // Empty rows mark a line break.
+            // Rows starting with one cell containing just "\\" mark a page break.
+            // All other rows are part of an annotated line.
+            let is_page_break = !row.is_empty() && row[0].starts_with("\\\\");
+            if row.is_empty() || is_page_break {
                 if !current_result.is_empty() {
                     all_lines.push(SemanticLine {
                         number: current_result[0][0].clone(),
@@ -87,6 +91,7 @@ impl SheetResult {
                                 }
                             })
                             .collect(),
+                        ends_page: is_page_break,
                     });
                 }
                 current_result = Vec::new();
@@ -108,6 +113,7 @@ impl SheetResult {
                         }
                     })
                     .collect(),
+                ends_page: false,
             });
         }
         // Remove trailing empty lines.
