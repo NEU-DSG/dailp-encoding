@@ -40,10 +40,9 @@
     <group>
       <text type="source" xml:lang="chr">
         <body>
-          <pb facs="drs:page01"/>
-            {% for segment in segments %}
-              {{ macros::any_segment(segment=segment) }}
-            {% endfor %}
+          {% for segment in segments %}
+            {{ macros::any_segment(segment=segment) }}
+          {% endfor %}
         </body>
       </text>
 
@@ -61,11 +60,7 @@
   <standOff>
     <d:noteBlock>
       {% for segment in segments %}
-        {% if segment.type == "Word" and segment.commentary %}
-          <note target="#textID.w{{segment.index + 1}}">
-            <p>{{segment.commentary}}</p>
-          </note>
-        {% endif %}
+        {{macros::commentary(segment=segment)}}
       {% endfor %}
     </d:noteBlock>
   </standOff>

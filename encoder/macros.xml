@@ -2,6 +2,8 @@
 {% macro any_segment(segment) %}
   {% if segment.type == "LineBreak" %}
     <lb n="{{segment.index + 1}}"/>
+  {% elif segment.type == "PageBreak" %}
+    <pb facs="drs:page{{segment.index + 1}}"/>
   {% elif segment.type == "Phrase" %}
     {{ self::phrase(segment=segment) }}
   {% elif segment.type == "Block" %}
@@ -14,7 +16,7 @@
 {% macro word(segment) %}
   <w xml:id="w{{segment.index + 1}}" lemmaRef="lex:id">
     <choice>
-      <orig>{{segment.source}}</orig>
+      <orig>{{segment.source | convert_breaks(lb=segment.line_break, pb=segment.page_break) | safe}}</orig>
       <reg></reg>
       {% if segment.simple_phonetics %}
         <seg type="simple_phonetics">{{segment.simple_phonetics}}</seg>
@@ -51,3 +53,14 @@
   </ab>
 {% endmacro phrase %}
 
+{% macro commentary(segment) %}
+  {% if segment.type == "Word" and segment.commentary %}
+    <note target="#w{{segment.index + 1}}">
+      <p>{{segment.commentary}}</p>
+    </note>
+  {% elif segment.parts %}
+    {% for segment in segment.parts %}
+      {{ self::commentary(segment=segment) }}
+    {% endfor %}
+  {% endif %}
+{% endmacro commentary %}
