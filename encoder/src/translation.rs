@@ -38,7 +38,8 @@ impl DocResult {
         let text_runs = self
             .body
             // Split the translation text by lines.
-            .split_terminator("\r\n")
+            .lines()
+            .map(|s| s.trim())
             // Group consecutive non-empty lines together.
             .group_by(|s| s.is_empty());
         let blocks = text_runs
@@ -52,14 +53,18 @@ impl DocResult {
                 }
             })
             // Ignore text past the first horizontal line.
-            .take_while(|text| !text[0].starts_with("__________"))
+            .take_while(|text| !text[0].starts_with("________"))
             // Split sentences into separate segments.
             .map(|text| text.into_iter().flat_map(|s| s.split(".")))
             // Include the block index.
             .enumerate()
             .map(|(index, content)| Block {
                 index: index + 1,
-                segments: content.into_iter().map(|s| s.to_owned()).collect(),
+                segments: content
+                    .into_iter()
+                    .filter(|s| !s.is_empty())
+                    .map(|s| s.to_owned())
+                    .collect(),
             });
 
         Translation {

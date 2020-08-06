@@ -531,13 +531,11 @@ xmlns:d="https://dsg.northeastern.edu/dailp/ns/1.0">
           </ab>
           <ab xml:id="b2_trans">
             <seg>Gvdusati told this story</seg>
-            <seg></seg>
           </ab>
           <ab xml:id="b3_trans">
             <seg>He always talked about what happened in the war
             that his grandfather fought in</seg>
             <seg>His grandfather was wounded</seg>
-            <seg></seg>
           </ab>
           <ab xml:id="b4_trans">
             <seg>Gvdusati told that they were sitting around some
@@ -545,7 +543,6 @@ xmlns:d="https://dsg.northeastern.edu/dailp/ns/1.0">
             <seg>When they ran out of coffee, they caught tomato
             roller bugs, toasted them over the fire and ground them
             up</seg>
-            <seg></seg>
           </ab>
           <ab xml:id="b5_trans">
             <seg>Gvdusati told about once when they fought by the
@@ -554,7 +551,6 @@ xmlns:d="https://dsg.northeastern.edu/dailp/ns/1.0">
             apart when they began shooting at each other</seg>
             <seg>They fought back really hard at this place named
             Cowskin Prairie</seg>
-            <seg></seg>
           </ab>
         </body>
       </text>
