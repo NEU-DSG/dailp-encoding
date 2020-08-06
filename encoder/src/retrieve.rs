@@ -6,6 +6,8 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize)]
 pub struct DocumentMetadata {
+    /// Official short identifier for this document.
+    pub id: String,
     /// Title of the annotated document.
     pub title: String,
     pub publication: Option<String>,
@@ -56,6 +58,7 @@ impl SheetResult {
     pub async fn into_metadata(mut self) -> Result<DocumentMetadata> {
         // Meta order: genre, source, title, source page #, page count, translation
         // First column is the name of the field, useless when parsing so we ignore it.
+        let mut doc_id = self.values.remove(0);
         let _genre = self.values.remove(0);
         let mut source = self.values.remove(0);
         let mut title = self.values.remove(0);
@@ -63,6 +66,7 @@ impl SheetResult {
         let _page_count = self.values.remove(0);
         let mut translations = self.values.remove(0);
         Ok(DocumentMetadata {
+            id: doc_id.remove(1),
             title: title.remove(1),
             publication: None,
             people: Vec::new(),

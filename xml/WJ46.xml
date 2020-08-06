@@ -1,0 +1,1227 @@
+<?xml version="1.0" encoding="utf-8"?>
+<?xml-model href="../schema/out/dailp_odd.rng" type="application/xml" schematypens="http://relaxng.org/ns/structure/1.0"?>
+<TEI xmlns="http://www.tei-c.org/ns/1.0"
+xmlns:d="https://dsg.northeastern.edu/dailp/ns/1.0">
+  <teiHeader>
+    <fileDesc>
+      <titleStmt>
+        <title>Story of Switch Striker</title>
+      </titleStmt>
+      <publicationStmt>
+        <p></p>
+      </publicationStmt>
+      <sourceDesc>
+        <p>Willie Jumper Manuscripts</p>
+      </sourceDesc>
+    </fileDesc>
+    <encodingDesc>
+      <listPrefixDef>
+        <prefixDef matchPattern="" replacementPattern=""
+        ident="lex">
+          <p>This prefix resolves references to the lexical data
+          source.</p>
+        </prefixDef>
+        <prefixDef matchPattern="" replacementPattern=""
+        ident="drs">
+          <p>This prefix resolves references to the Digital
+          Repository Service.</p>
+        </prefixDef>
+      </listPrefixDef>
+    </encodingDesc>
+    <profileDesc>
+      <particDesc></particDesc>
+    </profileDesc>
+  </teiHeader>
+  <text>
+    <group>
+      <text type="source" xml:lang="chr">
+        <body>
+          <pb facs="drs:page1" />
+          <lb n="1" />
+          <ab xml:id="b1" corresp="#b1_trans">
+            <w xml:id="w1" lemmaRef="lex:id">
+              <choice>
+                <orig>ᏚᏙᎥᎢ</orig>
+                <seg type="simple_phonetics">dudoʔvʔi</seg>
+                <seg type="phonemic_form">tùùtóóʔ-vv́ʔi</seg>
+                <seg type="morphemic_segmentation">
+                t-uu-atoo-ʔ-vv́ʔi</seg>
+                <seg type="morphemic_gloss">
+                DIST1-be.named-IMPF-ASR</seg>
+                <seg type="gloss">he was called</seg>
+              </choice>
+            </w>
+            <w xml:id="w2" lemmaRef="lex:id">
+              <choice>
+                <orig>ᎦᎾᏍᏓ</orig>
+                <seg type="simple_phonetics">gansda</seg>
+                <seg type="phonemic_form">kansta</seg>
+                <seg type="morphemic_segmentation">kansta</seg>
+                <seg type="morphemic_gloss">stick</seg>
+                <seg type="gloss">Switch</seg>
+              </choice>
+            </w>
+            <w xml:id="w3" lemmaRef="lex:id">
+              <choice>
+                <orig>ᏗᏥᏯ</orig>
+                <seg type="simple_phonetics">di⁠ji⁠ya⁠</seg>
+                <seg type="phonemic_form">ticiya</seg>
+                <seg type="morphemic_segmentation">
+                ti-ciiya-híh-hih-i</seg>
+                <seg type="morphemic_gloss">
+                DIST2-1SG&gt;AN-kill-IMPF-NOM/SH</seg>
+                <seg type="gloss">killer (of many)</seg>
+              </choice>
+            </w>
+            <w xml:id="w4" lemmaRef="lex:id">
+              <choice>
+                <orig>ᏥᏴᏂᎦ</orig>
+                <seg type="simple_phonetics">⁠ji⁠yv⁠ni⁠ga⁠</seg>
+                <seg type="phonemic_form">ciiyvvnììka</seg>
+                <seg type="morphemic_segmentation">
+                ciiy-vvn-ihk-a</seg>
+                <seg type="morphemic_gloss">
+                1SG&gt;AN-hit-PCT-IND</seg>
+                <seg type="gloss">I strike (him)</seg>
+              </choice>
+            </w>
+            <w xml:id="w5" lemmaRef="lex:id">
+              <choice>
+                <orig>ᎤᏬᏂᏒᎯ</orig>
+                <seg type="simple_phonetics">⁠u⁠wo⁠ni⁠sv⁠hi⁠</seg>
+                <seg type="phonemic_form">ùùwóóniisvv́ʔi</seg>
+                <seg type="morphemic_segmentation">
+                uu-wooʔn-iis-vv́ʔi</seg>
+                <seg type="morphemic_gloss">
+                3SG.B-speak-PFT-ASR</seg>
+                <seg type="gloss">he spoke thus</seg>
+              </choice>
+            </w>
+          </ab>
+          <lb n="2" />
+          <ab xml:id="b2" corresp="#b2_trans">
+            <w xml:id="w6" lemmaRef="lex:id">
+              <choice>
+                <orig>ᎩᎶᎢ</orig>
+                <seg type="simple_phonetics">ki⁠loʔ⁠i</seg>
+                <seg type="phonemic_form">khiloőʔi</seg>
+                <seg type="morphemic_segmentation">khilooʔi</seg>
+                <seg type="morphemic_gloss">someone</seg>
+                <seg type="gloss">one</seg>
+              </choice>
+            </w>
+            <w xml:id="w7" lemmaRef="lex:id">
+              <choice>
+                <orig>ᏥᏓᏓᏅᏫᏍᎪᎢ</orig>
+                <seg type="simple_phonetics">
+                ⁠ji⁠da⁠da⁠hnv⁠wi⁠s⁠goʔ⁠i⁠</seg>
+                <seg type="phonemic_form">
+                citatahnvv́wíískóóʔi</seg>
+                <seg type="morphemic_segmentation">
+                ci-t-Ø-ataa-hnvvw-iiʔsk-oóʔi</seg>
+                <seg type="morphemic_gloss">
+                REL-DIST1-3SG.A-REFL-heal-IMPF-HAB</seg>
+                <seg type="gloss">who heals others</seg>
+              </choice>
+            </w>
+            <w xml:id="w8" lemmaRef="lex:id">
+              <choice>
+                <orig>ᎤᏓᎦᏎ
+                <lb n="3" />ᏍᏗᏳ</orig>
+                <seg type="simple_phonetics">⁠u⁠da⁠k⁠se⁠sdiyu</seg>
+                <seg type="phonemic_form">ùùtaksestiyu</seg>
+                <seg type="morphemic_segmentation">
+                uu-at-akasest-Ø-i-yu</seg>
+                <seg type="morphemic_gloss">
+                3SG.B-REFL-take.care.of-PRS-IND=?</seg>
+                <seg type="gloss">takes care of himself</seg>
+              </choice>
+            </w>
+            <w xml:id="w9" lemmaRef="lex:id">
+              <choice>
+                <orig>ᎨᏎᏍᏗ</orig>
+                <seg type="simple_phonetics">⁠ge⁠se⁠s⁠di⁠</seg>
+                <seg type="phonemic_form">kèèséésti</seg>
+                <seg type="morphemic_segmentation">
+                kèès-eeʔsti</seg>
+                <seg type="morphemic_gloss"></seg>
+                <seg type="gloss">must</seg>
+              </choice>
+            </w>
+            <w xml:id="w10" lemmaRef="lex:id">
+              <choice>
+                <orig>ᎩᎶᎢ</orig>
+                <seg type="simple_phonetics">ki⁠loʔ⁠i</seg>
+                <seg type="phonemic_form">khiloőʔi</seg>
+                <seg type="morphemic_segmentation">khilooʔi</seg>
+                <seg type="morphemic_gloss">someone</seg>
+                <seg type="gloss">one</seg>
+              </choice>
+            </w>
+            <w xml:id="w11" lemmaRef="lex:id">
+              <choice>
+                <orig>ᏄᏬᏘ</orig>
+                <seg type="simple_phonetics">⁠nuwo⁠ti⁠</seg>
+                <seg type="phonemic_form">nvvwóothi</seg>
+                <seg type="morphemic_segmentation">nvvwoothi</seg>
+                <seg type="morphemic_gloss">medicine</seg>
+                <seg type="gloss">medicine</seg>
+              </choice>
+            </w>
+            <w xml:id="w12" lemmaRef="lex:id">
+              <choice>
+                <orig>ᎠᎦᏔᎮᏍᏗ</orig>
+                <seg type="simple_phonetics">⁠a⁠kta⁠he⁠s⁠di</seg>
+                <seg type="phonemic_form">akthahéésti</seg>
+                <seg type="morphemic_segmentation">
+                a-kahtha-h-eeʔsti</seg>
+                <seg type="morphemic_gloss">
+                3SG.A-know.how-IMPF-FUT.PROG</seg>
+                <seg type="gloss">will be knowing</seg>
+              </choice>
+            </w>
+            <lb n="4" />
+            <w xml:id="w13" lemmaRef="lex:id">
+              <choice>
+                <orig>ᏧᏓᏅᏬᏗᎢ</orig>
+                <seg type="simple_phonetics">
+                ju⁠da⁠hnvwodi⁠ʔi⁠</seg>
+                <seg type="phonemic_form">
+                cuutaahnvv́wóoti⁠i̋ʔi</seg>
+                <seg type="morphemic_segmentation">
+                c-uu-ataa-hnvvw-oʔt-i⁠i̋ʔi</seg>
+                <seg type="morphemic_gloss">
+                REL-3SG.B-REFL-heal-INF-NOM/SH</seg>
+                <seg type="gloss">one who is to heal
+                (someone)</seg>
+              </choice>
+            </w>
+            <w xml:id="w14" lemmaRef="lex:id">
+              <choice>
+                <orig>ᎮᏍᏗ</orig>
+                <seg type="simple_phonetics">⁠he⁠s⁠di</seg>
+                <seg type="phonemic_form">hèèsti</seg>
+                <seg type="morphemic_segmentation">heesti</seg>
+                <seg type="morphemic_gloss">do.not</seg>
+                <seg type="gloss">must not</seg>
+              </choice>
+            </w>
+            <lb n="5" />
+            <w xml:id="w15" lemmaRef="lex:id">
+              <choice>
+                <orig>ᏧᎾᏓᎴᏅᏓ</orig>
+                <seg type="simple_phonetics">
+                ju⁠na⁠da⁠le⁠hnv⁠da⁠</seg>
+                <seg type="phonemic_form">cuunataleehnvv̋ta</seg>
+                <seg type="morphemic_segmentation">
+                c-uun-ataleehnvv̋ta</seg>
+                <seg type="morphemic_gloss">
+                DIST2-3PL.B-different</seg>
+                <seg type="gloss">(several) different</seg>
+              </choice>
+            </w>
+            <w xml:id="w16" lemmaRef="lex:id">
+              <choice>
+                <orig>ᎠᏂᎨᏴ</orig>
+                <seg type="simple_phonetics">⁠a⁠ni⁠ge⁠hyv⁠</seg>
+                <seg type="phonemic_form">aniikeéhya</seg>
+                <seg type="morphemic_segmentation">
+                anii-keéhya</seg>
+                <seg type="morphemic_gloss">3PL.A-woman</seg>
+                <seg type="gloss">women</seg>
+              </choice>
+            </w>
+            <w xml:id="w17" lemmaRef="lex:id">
+              <choice>
+                <orig>ᎤᎾᏓᏍᏓᏴᏅᎯ</orig>
+                <seg type="simple_phonetics">
+                ⁠u⁠na⁠da⁠s⁠da⁠yv⁠hnv⁠hi⁠</seg>
+                <seg type="phonemic_form">
+                ùùnààtaastááyvvhnvv̋ʔi</seg>
+                <seg type="morphemic_segmentation">
+                uun-aataastaʔyvv-hn-vv̋ʔi</seg>
+                <seg type="morphemic_gloss">
+                3PL.B-cook.meal-PFT-ASR/SH</seg>
+                <seg type="gloss">cooking</seg>
+              </choice>
+            </w>
+            <lb n="6" />
+            <w xml:id="w18" lemmaRef="lex:id">
+              <choice>
+                <orig>ᏱᏣᎵᏍᏓᏴᏂᏙᎮᏍᏗ</orig>
+                <seg type="simple_phonetics">
+                yi⁠ja⁠ls⁠da⁠yv⁠hni⁠do⁠he⁠s⁠di⁠</seg>
+                <seg type="phonemic_form">
+                yicálstààyvvhniitoohéésti</seg>
+                <seg type="morphemic_segmentation">
+                yi-c-ali-staʔyvv-hn-iitooʔh-eeʔsti</seg>
+                <seg type="morphemic_gloss">
+                IRR-2SG.B-eat.meal-PFT-AMB:IMPF-FUT.PROG</seg>
+                <seg type="gloss">you (must not) be going around
+                eating</seg>
+              </choice>
+            </w>
+            <w xml:id="w19" lemmaRef="lex:id">
+              <choice>
+                <orig>ᎤᏙᎯᏳᎯᏯᎢ</orig>
+                <seg type="simple_phonetics">
+                ⁠u⁠do⁠hi⁠yu⁠hi⁠yaʔ⁠i⁠</seg>
+                <seg type="phonemic_form">uudoohiyuuhiyaa̋ʔi</seg>
+                <seg type="morphemic_segmentation">
+                uutoohiyuuhiiyaa̋ʔi</seg>
+                <seg type="gloss">truly</seg>
+              </choice>
+            </w>
+            <lb n="7" />
+            <w xml:id="w20" lemmaRef="lex:id">
+              <choice>
+                <orig>ᎨᏒᎢ</orig>
+                <seg type="simple_phonetics">ge⁠svʔ⁠i⁠</seg>
+                <seg type="phonemic_form">kèèsvv́ʔi</seg>
+                <seg type="morphemic_segmentation">kees-vvʔi</seg>
+                <seg type="morphemic_gloss">be-ASR</seg>
+                <seg type="gloss">being</seg>
+              </choice>
+            </w>
+            <w xml:id="w21" lemmaRef="lex:id">
+              <choice>
+                <orig>ᎢᏣᏓᎵᏏᏂᏗᏳᎢ</orig>
+                <seg type="simple_phonetics">
+                ⁠i⁠ja⁠da⁠li⁠si⁠ni⁠di⁠yuʔ⁠i⁠</seg>
+                <seg type="phonemic_form">
+                iicatalisiinitiyuʔ⁠i⁠</seg>
+                <seg type="morphemic_segmentation">
+                ii-c-at-alisiin-iti-yu-ʔ⁠i⁠</seg>
+                <seg type="morphemic_gloss">
+                ITER1-2SG.B-REFL-careful=yu</seg>
+                <seg type="gloss">always careful</seg>
+              </choice>
+            </w>
+            <w xml:id="w22" lemmaRef="lex:id">
+              <choice>
+                <orig>ᎨᏎᏍᏗ</orig>
+                <seg type="simple_phonetics">⁠ge⁠se⁠s⁠di⁠</seg>
+                <seg type="phonemic_form">kèèséésti</seg>
+                <seg type="morphemic_segmentation">kèès-éésti</seg>
+                <seg type="morphemic_gloss">be-FUT.PROG</seg>
+                <seg type="gloss">will be</seg>
+              </choice>
+            </w>
+            <lb n="8" />
+            <w xml:id="w23" lemmaRef="lex:id">
+              <choice>
+                <orig>ᎪᎱᏍᏗ</orig>
+                <seg type="simple_phonetics">go⁠hu⁠s⁠di⁠</seg>
+                <seg type="phonemic_form">koohuűsti</seg>
+                <seg type="morphemic_segmentation">koohuűsti</seg>
+                <seg type="morphemic_gloss">something</seg>
+                <seg type="gloss">something</seg>
+              </choice>
+            </w>
+            <w xml:id="w24" lemmaRef="lex:id">
+              <choice>
+                <orig>ᎢᏣᏓᎵᏍᏓᏴᎾᏁᎲᎢ</orig>
+                <seg type="simple_phonetics">
+                ⁠i⁠ja⁠da⁠li⁠s⁠da⁠yv⁠hna⁠ne⁠hvʔ⁠i⁠</seg>
+                <seg type="phonemic_form">
+                iicatààlistáayvvhnahneehvv̋ʔi</seg>
+                <seg type="morphemic_segmentation">
+                ii-c-at-aalistaayvv-hn-ahn-eeh-vvʔi</seg>
+                <seg type="morphemic_gloss">
+                ITER1-2SG.B-REFL-eat.meal-PFT-MLT:PFT-ASR/SH</seg>
+                <seg type="gloss">whenever you repeatedly eat
+                meals</seg>
+              </choice>
+            </w>
+          </ab>
+          <lb n="9" />
+          <ab xml:id="b3" corresp="#b3_trans">
+            <w xml:id="w25" lemmaRef="lex:id">
+              <choice>
+                <orig>ᎢᎸᎯᏳᎾᏏ</orig>
+                <seg type="simple_phonetics">
+                i⁠lv⁠hi⁠yu⁠hna⁠si⁠</seg>
+                <seg type="phonemic_form">ilvv́híyuuhnasi</seg>
+                <seg type="morphemic_segmentation">
+                ilvvhiyuu=hna=s</seg>
+                <seg type="morphemic_gloss">ever=CN-?</seg>
+                <seg type="gloss">and (there may be) times
+                when</seg>
+              </choice>
+            </w>
+            <w xml:id="w26" lemmaRef="lex:id">
+              <choice>
+                <orig>ᎠᏂᎨᏴ</orig>
+                <seg type="simple_phonetics">⁠a⁠ni⁠gehyv⁠</seg>
+                <seg type="phonemic_form">aniigeéhya</seg>
+                <seg type="morphemic_segmentation">
+                anii-geehya</seg>
+                <seg type="morphemic_gloss">3PL.A-woman</seg>
+                <seg type="gloss">women</seg>
+              </choice>
+            </w>
+            <w xml:id="w27" lemmaRef="lex:id">
+              <choice>
+                <orig>ᏥᏕᎩᎧᎭ</orig>
+                <seg type="simple_phonetics">⁠ji⁠de⁠gi⁠kaha⁠</seg>
+                <seg type="gloss">?</seg>
+              </choice>
+            </w>
+            <lb n="10" />
+            <w xml:id="w28" lemmaRef="lex:id">
+              <choice>
+                <orig>ᏅᏙᎢ</orig>
+                <seg type="simple_phonetics">nv⁠doʔ⁠i⁠</seg>
+                <seg type="phonemic_form">nvvtooʔ⁠i⁠</seg>
+                <seg type="morphemic_segmentation">
+                nvvtoo-ʔ⁠i⁠</seg>
+                <seg type="morphemic_gloss">moon-LOC/SH</seg>
+                <seg type="gloss">during the (new) moon</seg>
+              </choice>
+            </w>
+            <w xml:id="w29" lemmaRef="lex:id">
+              <choice>
+                <orig>ᎢᏤᎢ</orig>
+                <seg type="simple_phonetics">⁠i⁠je⁠ʔi⁠</seg>
+                <seg type="phonemic_form">ijee̋ʔi</seg>
+                <seg type="morphemic_segmentation">ijeeʔi</seg>
+                <seg type="morphemic_gloss">new</seg>
+                <seg type="gloss">new (moon)</seg>
+              </choice>
+            </w>
+            <w xml:id="w30" lemmaRef="lex:id">
+              <choice>
+                <orig>ᏫᎸᏤᎬᎢ</orig>
+                <seg type="simple_phonetics">
+                ⁠hwi⁠lv⁠je⁠gvʔ⁠i⁠</seg>
+                <seg type="phonemic_form">
+                hwihtlv́v́ceeʔkvv̋ʔi</seg>
+                <seg type="morphemic_segmentation">
+                hwi-Ø-htlvv-c-eeʔk-vv̋ʔi</seg>
+                <seg type="morphemic_gloss">
+                TRNSL-3SG.A-be.sick-PFT-AND:IMPF-ASR/SH</seg>
+                <seg type="gloss">while (going around) sick with
+                periodic illness</seg>
+              </choice>
+            </w>
+            <w xml:id="w31" lemmaRef="lex:id">
+              <choice>
+                <orig>ᏚᏂᏢᎪᎢ</orig>
+                <seg type="simple_phonetics">⁠du⁠nidlv⁠go⁠ʔi⁠</seg>
+                <seg type="phonemic_form">tuuniitlv́v́kóóʔi</seg>
+                <seg type="morphemic_segmentation">
+                t-uunii-htlvv-ʔk-ooʔi</seg>
+                <seg type="morphemic_gloss">
+                DIST1-3PL.B-be.sick-IMPF-HAB</seg>
+                <seg type="gloss">they are sick (habitually)</seg>
+              </choice>
+            </w>
+            <lb n="11" />
+            <w xml:id="w32" lemmaRef="lex:id">
+              <choice>
+                <orig>ᎤᏅᏌ</orig>
+                <seg type="simple_phonetics">u⁠nv⁠sa⁠</seg>
+                <seg type="phonemic_form">uunvv̋sa</seg>
+                <seg type="morphemic_segmentation">uun-vv̋sa</seg>
+                <seg type="morphemic_gloss">3PL.B-self</seg>
+                <seg type="gloss">they themselves</seg>
+              </choice>
+            </w>
+            <w xml:id="w33" lemmaRef="lex:id">
+              <choice>
+                <orig>ᎤᏁᎲᎢ</orig>
+                <seg type="simple_phonetics">⁠u⁠ne⁠hvʔ⁠i⁠</seg>
+                <seg type="phonemic_form">ùùneehvv̋ʔi</seg>
+                <seg type="morphemic_segmentation">
+                uun-ee-h-vv̋ʔi</seg>
+                <seg type="morphemic_gloss">
+                3PL.B-live-IMPF-ASR</seg>
+                <seg type="gloss">while residing, while being</seg>
+              </choice>
+            </w>
+            <w xml:id="w34" lemmaRef="lex:id">
+              <choice>
+                <orig>ᎤᏂᏢᎪᎢ</orig>
+                <seg type="simple_phonetics">⁠u⁠ni⁠dlv⁠goʔ⁠i⁠</seg>
+                <seg type="phonemic_form">uuniidlv́v́kóóʔi</seg>
+                <seg type="morphemic_segmentation">
+                uunii-htlvv-ʔk-ooʔi</seg>
+                <seg type="morphemic_gloss">
+                3PL.B-be.sick-IMPF-HAB</seg>
+                <seg type="gloss">they are sick (habitually)</seg>
+              </choice>
+            </w>
+            <lb n="12" />
+            <w xml:id="w35" lemmaRef="lex:id">
+              <choice>
+                <orig>ᎾᏍᎩᏃ</orig>
+                <seg type="simple_phonetics">nasgi⁠hno</seg>
+                <seg type="phonemic_form">nààskihno</seg>
+                <seg type="morphemic_segmentation">naaski-hno</seg>
+                <seg type="morphemic_gloss">those-CN</seg>
+                <seg type="gloss">and that's (why)</seg>
+              </choice>
+            </w>
+            <w xml:id="w36" lemmaRef="lex:id">
+              <choice>
+                <orig>ᎢᏳᏍᏗ</orig>
+                <seg type="simple_phonetics">⁠i⁠yu⁠s⁠di⁠</seg>
+                <seg type="phonemic_form">iyuűsti</seg>
+                <seg type="morphemic_segmentation">iyuusti</seg>
+                <seg type="gloss">(see previous word)</seg>
+              </choice>
+            </w>
+            <w xml:id="w37" lemmaRef="lex:id">
+              <choice>
+                <orig>ᎤᏓᏍᏓᏴᏅᎯ</orig>
+                <seg type="simple_phonetics">
+                ⁠u⁠da⁠s⁠da⁠yv⁠hnv⁠hi⁠</seg>
+                <seg type="phonemic_form">
+                ùùtaastáayvvhnvv̋ʔi</seg>
+                <seg type="morphemic_segmentation">
+                uu-t-aastaʔyvv-hn-vv̋ʔi</seg>
+                <seg type="morphemic_gloss">
+                3SG.B-REFL-cook.meal-PFT-ASR/SH</seg>
+                <seg type="gloss">something cooked (by them), their
+                cooking, a meal</seg>
+              </choice>
+            </w>
+            <lb n="13" />
+            <w xml:id="w38" lemmaRef="lex:id">
+              <choice>
+                <orig>ᎪᎱᏍᏗ</orig>
+                <seg type="simple_phonetics">go⁠hu⁠s⁠di⁠</seg>
+                <seg type="phonemic_form">koohuűsti</seg>
+                <seg type="morphemic_segmentation">koohuusti</seg>
+                <seg type="morphemic_gloss">something</seg>
+                <seg type="gloss">something</seg>
+              </choice>
+            </w>
+            <w xml:id="w39" lemmaRef="lex:id">
+              <choice>
+                <orig>ᏴᏓᎵᏍᏓᏴᎾᏁᎭ</orig>
+                <seg type="simple_phonetics">
+                ⁠yv⁠da⁠l⁠s⁠da⁠yv⁠hna⁠ne⁠ha⁠</seg>
+                <seg type="phonemic_form">
+                yvvtààlstáayvvhnahnhééha</seg>
+                <seg type="morphemic_segmentation">
+                y-vv-t-aalistaayvv-hn-ahn-heeh-a</seg>
+                <seg type="morphemic_gloss">
+                IRR-3A.IP-REFL-eat.meal-PFT-?-DAT.IMPF-IND</seg>
+                <seg type="gloss">if one eats</seg>
+              </choice>
+            </w>
+            <w xml:id="w40" lemmaRef="lex:id">
+              <choice>
+                <orig>ᎾᏍᎩ</orig>
+                <seg type="simple_phonetics">⁠na⁠s⁠gi⁠</seg>
+                <seg type="phonemic_form">nààski</seg>
+                <seg type="morphemic_segmentation">naaski</seg>
+                <seg type="morphemic_gloss">that</seg>
+                <seg type="gloss">that</seg>
+              </choice>
+            </w>
+            <lb n="14" />
+            <w xml:id="w41" lemmaRef="lex:id">
+              <choice>
+                <orig>ᎠᏓᎯᎯ</orig>
+                <seg type="simple_phonetics">a⁠da⁠hi⁠hi⁠</seg>
+                <seg type="phonemic_form">ataáhihi</seg>
+                <seg type="morphemic_segmentation">
+                a-ataa-híh-híh-i</seg>
+                <seg type="morphemic_gloss">
+                3SG.A-REFL-kill-IMPF-NOM/SH</seg>
+                <seg type="gloss">(is) a killer (of); that
+                kills</seg>
+              </choice>
+            </w>
+            <w xml:id="w42" lemmaRef="lex:id">
+              <choice>
+                <orig>ᏅᏬᏘ</orig>
+                <seg type="simple_phonetics">⁠nv⁠woti⁠</seg>
+                <seg type="phonemic_form">nvvwóothi</seg>
+                <seg type="morphemic_segmentation">nvvwóothi</seg>
+                <seg type="morphemic_gloss">medicine</seg>
+                <seg type="gloss">medicine</seg>
+              </choice>
+            </w>
+            <w xml:id="w43" lemmaRef="lex:id">
+              <choice>
+                <orig>ᏴᎦᏔᎭ</orig>
+                <seg type="simple_phonetics">⁠yv⁠kta⁠ha⁠</seg>
+                <seg type="phonemic_form">yvvkthaha</seg>
+                <seg type="morphemic_segmentation">
+                y-vv-kahtha-h-a</seg>
+                <seg type="morphemic_gloss">
+                IRR-3A.IP-know.how-IMPF-CVB</seg>
+                <seg type="gloss">(that) one may know</seg>
+              </choice>
+            </w>
+            <lb n="15" />
+            <w xml:id="w44" lemmaRef="lex:id">
+              <choice>
+                <orig>ᏭᏓᎪᎾᏛᏔᏅᎯ</orig>
+                <seg type="simple_phonetics">
+                wu⁠da⁠gona⁠d⁠ta⁠nv⁠hi⁠</seg>
+                <seg type="morphemic_segmentation">
+                w-uu-ataa-koonahtvht-ahn-vv̋ʔi</seg>
+                <seg type="morphemic_gloss">
+                TRNSL-3SG.B-REFL-contest-PFT-NOM/SH</seg>
+                <seg type="gloss">absolutely, incontestably, beyond
+                dispute</seg>
+              </choice>
+            </w>
+            <w xml:id="w45" lemmaRef="lex:id">
+              <choice>
+                <orig>ᎤᏓᏅᏍᏙᏒᎯ</orig>
+                <seg type="simple_phonetics">
+                ⁠u⁠da⁠nv⁠s⁠do⁠sv⁠hi⁠</seg>
+                <seg type="phonemic_form">uu-atanvvstosvv̋hi</seg>
+                <seg type="morphemic_segmentation">
+                3SG.B-forbidden</seg>
+                <seg type="morphemic_gloss">forbidden</seg>
+                <seg type="gloss">forbidden</seg>
+              </choice>
+            </w>
+            <lb n="16" />
+            <w xml:id="w46" lemmaRef="lex:id">
+              <choice>
+                <orig>ᏂᎦᎵᏍᏗᏍᎬᏊ</orig>
+                <seg type="simple_phonetics">
+                ni⁠ga⁠ls⁠di⁠s⁠gv⁠kwu⁠</seg>
+                <seg type="phonemic_form">nikalistiiskvkhwu</seg>
+                <seg type="morphemic_segmentation">
+                ni-k-alist-iisk-vv̋ʔi-khwu</seg>
+                <seg type="morphemic_gloss">
+                PART1-3SG.A-happen-IMPF-NDV/SH-DT</seg>
+                <seg type="gloss">happening, the occurrence
+                (of)</seg>
+              </choice>
+            </w>
+            <w xml:id="w47" lemmaRef="lex:id">
+              <choice>
+                <orig>ᎢᏯᏛᏁᎵᏏᏍᏗᎢ</orig>
+                <seg type="simple_phonetics">
+                ⁠i⁠ya⁠dv⁠ne⁠li⁠si⁠s⁠diʔ⁠i⁠</seg>
+                <seg type="phonemic_form">
+                iyatvvnʔeeliiʔstii̋ʔi</seg>
+                <seg type="morphemic_segmentation">
+                iʔ-Ø-atvvnʔeel-Ø-iiʔs-iihist-iiʔi</seg>
+                <seg type="morphemic_gloss">
+                IRR-3SG.A-act.silly-PFT-AND:IMPF-VEN:INF-NOM/SH</seg>
+                <seg type="gloss">to go around acting silly' (i.e.,
+                carelessly)</seg>
+              </choice>
+            </w>
+          </ab>
+          <lb n="17" />
+          <ab xml:id="b4" corresp="#b4_trans">
+            <w xml:id="w48" lemmaRef="lex:id">
+              <choice>
+                <orig>ᎥᎵᏍᏓᏴᏂᏙᎲᎢ</orig>
+                <seg type="simple_phonetics">
+                v⁠ls⁠da⁠yv⁠ni⁠do⁠hvʔ⁠i⁠</seg>
+                <seg type="phonemic_form">
+                vvlstáaʔyvvhniitʔoohvv̋ʔ⁠i⁠</seg>
+                <seg type="morphemic_segmentation">
+                vv-alistáaʔyvv-hn-iitʔooh-vv̋ʔ⁠i⁠</seg>
+                <seg type="morphemic_gloss">
+                3A.IP-eat.meal-PFT-AMB.IMPF-ASR</seg>
+                <seg type="gloss">one is going around eating
+                meals</seg>
+              </choice>
+            </w>
+            <w xml:id="w49" lemmaRef="lex:id">
+              <choice>
+                <orig>ᎢᏳᏃ</orig>
+                <seg type="simple_phonetics">⁠i⁠yu⁠no⁠</seg>
+                <seg type="phonemic_form">iyuno</seg>
+                <seg type="morphemic_segmentation">iyuno</seg>
+                <seg type="gloss">if</seg>
+              </choice>
+            </w>
+            <w xml:id="w50" lemmaRef="lex:id">
+              <choice>
+                <orig>ᎤᏙᏓᏆᏛ</orig>
+                <seg type="simple_phonetics">⁠u⁠do⁠dagwadv⁠</seg>
+                <seg type="phonemic_form">uutoótakwatv</seg>
+                <seg type="morphemic_segmentation">
+                uu-tootakwata</seg>
+                <seg type="morphemic_gloss">3SG.B-all.day</seg>
+                <seg type="gloss">all day</seg>
+              </choice>
+            </w>
+            <lb n="18" />
+            <w xml:id="w51" lemmaRef="lex:id">
+              <choice>
+                <orig>ᎢᎸᏢᎢ</orig>
+                <seg type="simple_phonetics">i⁠lv⁠tlvʔ⁠i⁠</seg>
+                <seg type="phonemic_form">ilvvhtlvv̋ʔi</seg>
+                <seg type="morphemic_segmentation">
+                ilvvhtlvvʔi</seg>
+                <seg type="gloss">somewhere</seg>
+              </choice>
+            </w>
+            <w xml:id="w52" lemmaRef="lex:id">
+              <choice>
+                <orig>ᏮᏓᎨᏙᎵ</orig>
+                <seg type="simple_phonetics">⁠wv⁠da⁠ge⁠do⁠li⁠</seg>
+                <seg type="gloss">going</seg>
+              </choice>
+            </w>
+            <w xml:id="w53" lemmaRef="lex:id">
+              <choice>
+                <orig>ᎮᎵᏍᎨᏍᏗ</orig>
+                <seg type="simple_phonetics">
+                ⁠he⁠li⁠s⁠ge⁠s⁠di⁠</seg>
+                <seg type="phonemic_form">heeliiʔskéésti</seg>
+                <seg type="morphemic_segmentation">
+                h-eel-iiʔsk-eesti</seg>
+                <seg type="morphemic_gloss">
+                2SG.A-think.so-IMPF-FUT.PROG</seg>
+                <seg type="gloss">you will be thinking (of),
+                planning</seg>
+              </choice>
+            </w>
+            <lb n="19" />
+            <w xml:id="w54" lemmaRef="lex:id">
+              <choice>
+                <orig>ᏨᏌ</orig>
+                <seg type="simple_phonetics">jv⁠sa⁠</seg>
+                <seg type="phonemic_form">cvv́sa</seg>
+                <seg type="morphemic_segmentation">cvvsa</seg>
+                <seg type="gloss">for yourself</seg>
+              </choice>
+            </w>
+            <w xml:id="w55" lemmaRef="lex:id">
+              <choice>
+                <orig>ᎭᏓᏍᏓᏴᎲᏍᎨᏍᏗ</orig>
+                <seg type="simple_phonetics">
+                ⁠ha⁠da⁠s⁠da⁠yv⁠hv⁠s⁠ge⁠s⁠di⁠</seg>
+                <seg type="phonemic_form">hatastayvhvskesti</seg>
+                <seg type="morphemic_segmentation">
+                h-aataastaayvv-hvvsk-éésti</seg>
+                <seg type="morphemic_gloss">
+                2SG.A-cook.meal-IMPF-FUT.PROG</seg>
+                <seg type="gloss">you will cook</seg>
+              </choice>
+            </w>
+            <w xml:id="w56" lemmaRef="lex:id">
+              <choice>
+                <orig>ᏣᏓᏁᏗ</orig>
+                <seg type="simple_phonetics">⁠ja⁠da⁠hne⁠hdi⁠</seg>
+                <seg type="phonemic_form">cataahnehti</seg>
+                <seg type="morphemic_segmentation">
+                ca-ataáhneehti</seg>
+                <seg type="morphemic_gloss">2SG.B-gift</seg>
+                <seg type="gloss">your (own) provisions</seg>
+              </choice>
+            </w>
+            <lb n="20" />
+            <w xml:id="w57" lemmaRef="lex:id">
+              <choice>
+                <orig>ᎭᏛᏅᎢᏍᏗᏍᎨᏍᏗ</orig>
+                <seg type="simple_phonetics">
+                ha⁠dv⁠nvʔ⁠i⁠s⁠di⁠s⁠ge⁠s⁠di⁠</seg>
+                <seg type="phonemic_form">
+                ha⁠tvv⁠nvvʔ⁠i⁠s⁠ti⁠s⁠ke⁠s⁠ti⁠</seg>
+                <seg type="morphemic_segmentation">
+                h-a⁠tvv⁠nvvʔ⁠i⁠s⁠t-iís⁠k-éésti</seg>
+                <seg type="morphemic_gloss">
+                2SG.A-prepare-IMPF-FUT.PROG</seg>
+                <seg type="gloss">you will prepare it</seg>
+              </choice>
+            </w>
+            <w xml:id="w58" lemmaRef="lex:id">
+              <choice>
+                <orig>ᎭᎦᏅᏍᎨᏍᏗ</orig>
+                <seg type="simple_phonetics">
+                ⁠ha⁠ga⁠nv⁠s⁠ge⁠s⁠di</seg>
+                <seg type="phonemic_form">hakanvskesti</seg>
+                <seg type="morphemic_segmentation">
+                ha-kanv-ʔvsk-éésti</seg>
+                <seg type="morphemic_gloss">
+                2SG.A-take.FL-IMPF-FUT.PROG</seg>
+                <seg type="gloss">you will take it with you</seg>
+              </choice>
+            </w>
+            <lb n="21" />
+            <w xml:id="w59" lemmaRef="lex:id">
+              <choice>
+                <orig>ᎢᎸᏢᎢ</orig>
+                <seg type="simple_phonetics">i⁠lvd⁠lvʔ⁠i⁠</seg>
+                <seg type="phonemic_form">ilvvdlvv̋ʔi</seg>
+                <seg type="morphemic_segmentation">ilvvdlvvʔi</seg>
+                <seg type="morphemic_gloss">somewhere</seg>
+                <seg type="gloss">somewhere</seg>
+              </choice>
+            </w>
+            <w xml:id="w60" lemmaRef="lex:id">
+              <choice>
+                <orig>ᎾᏊᎢ</orig>
+                <seg type="simple_phonetics">⁠na⁠gwu⁠ʔi⁠</seg>
+                <seg type="phonemic_form">nagwoʔi⁠</seg>
+                <seg type="morphemic_segmentation">nakwo-ʔi⁠</seg>
+                <seg type="morphemic_gloss">now-LOC/SH</seg>
+                <seg type="gloss">now</seg>
+              </choice>
+            </w>
+            <w xml:id="w61" lemmaRef="lex:id">
+              <choice>
+                <orig>ᏱᏤᎾ</orig>
+                <seg type="simple_phonetics">⁠yije⁠na</seg>
+                <seg type="phonemic_form">yiceena</seg>
+                <seg type="morphemic_segmentation">
+                yi-c-ee-ʔn-a</seg>
+                <seg type="morphemic_gloss">
+                IRR-2SG.B-go-PCT-IND</seg>
+                <seg type="gloss">if you go</seg>
+              </choice>
+            </w>
+            <lb n="22" />
+            <w xml:id="w62" lemmaRef="lex:id">
+              <choice>
+                <orig>ᎾᏍᎩᏃ</orig>
+                <seg type="simple_phonetics">na⁠s⁠gi⁠no⁠</seg>
+                <seg type="phonemic_form">nààskihno</seg>
+                <seg type="morphemic_segmentation">naaski-hno</seg>
+                <seg type="morphemic_gloss">this-CN</seg>
+                <seg type="gloss">and this</seg>
+              </choice>
+            </w>
+            <w xml:id="w63" lemmaRef="lex:id">
+              <choice>
+                <orig>ᏂᎭᏛᏁᎸᎭ</orig>
+                <seg type="simple_phonetics">
+                ⁠ni⁠ha⁠dvne⁠lv⁠ha⁠</seg>
+                <seg type="morphemic_segmentation">
+                ni-h-atvvʔn-eel-vvha</seg>
+                <seg type="morphemic_gloss">
+                PART1-2SG.A-do-PFT-NDV/SH</seg>
+                <seg type="gloss">having done (this)</seg>
+              </choice>
+            </w>
+            <w xml:id="w64" lemmaRef="lex:id">
+              <choice>
+                <orig>ᎪᎯᏗᎢ</orig>
+                <seg type="simple_phonetics">⁠go⁠hi⁠daʔ⁠i⁠</seg>
+                <seg type="phonemic_form">⁠koohii̋taʔ⁠i⁠</seg>
+                <seg type="morphemic_segmentation">
+                ⁠koohiita-ʔ⁠i⁠</seg>
+                <seg type="morphemic_gloss">long.time-EM</seg>
+                <seg type="gloss">(for) a very long time</seg>
+              </choice>
+            </w>
+            <lb n="23" />
+            <w xml:id="w65" lemmaRef="lex:id">
+              <choice>
+                <orig>ᎣᏍᏛ</orig>
+                <seg type="simple_phonetics">os⁠dv⁠</seg>
+                <seg type="phonemic_form">oősta</seg>
+                <seg type="morphemic_segmentation">oosta</seg>
+                <seg type="morphemic_gloss">good</seg>
+                <seg type="gloss">well</seg>
+              </choice>
+            </w>
+            <w xml:id="w66" lemmaRef="lex:id">
+              <choice>
+                <orig>ᏅᏬᏘ</orig>
+                <seg type="simple_phonetics">⁠nv⁠woti⁠</seg>
+                <seg type="phonemic_form">nvvwóothi</seg>
+                <seg type="morphemic_segmentation">nvvwoothi</seg>
+                <seg type="gloss">medicine</seg>
+              </choice>
+            </w>
+            <w xml:id="w67" lemmaRef="lex:id">
+              <choice>
+                <orig>ᎯᎦᏔᎮᏍᏗ</orig>
+                <seg type="simple_phonetics">
+                ⁠hi⁠k⁠ta⁠he⁠s⁠di⁠</seg>
+                <seg type="phonemic_form">hikthahéésti</seg>
+                <seg type="morphemic_segmentation">
+                hi-kahtha-h-eesti</seg>
+                <seg type="morphemic_gloss">
+                2SG.A-know.how-IMPF-FUT.PROG</seg>
+                <seg type="gloss">you will know</seg>
+              </choice>
+            </w>
+          </ab>
+          <lb n="24" />
+          <phr xml:id="p5">
+            <phr xml:id="p1">
+              <w xml:id="w68" lemmaRef="lex:id">
+                <choice>
+                  <orig>ᏧᏓᎴᏅᏓ</orig>
+                  <seg type="simple_phonetics">ju⁠da⁠lenv⁠da⁠</seg>
+                  <seg type="phonemic_form">cuutaleehnvvta</seg>
+                  <seg type="morphemic_segmentation">
+                  c-uu-ataleehnvvta</seg>
+                  <seg type="morphemic_gloss">
+                  DIST2-3SG.B-different</seg>
+                  <seg type="gloss">different</seg>
+                </choice>
+              </w>
+              <w xml:id="w69" lemmaRef="lex:id">
+                <choice>
+                  <orig>ᏴᎵᏍᏓᏴᏂᏙᎠ</orig>
+                  <seg type="simple_phonetics">
+                  ⁠yv⁠ls⁠da⁠yv⁠ni⁠doʔ⁠a⁠</seg>
+                  <seg type="phonemic_form">
+                  ⁠yvlstááyvv⁠hniitʔooha⁠</seg>
+                  <seg type="morphemic_segmentation">
+                  ⁠y-vv-alistaʔyvv-⁠hn-iit-ʔooh-a⁠</seg>
+                  <seg type="morphemic_gloss">
+                  IRR-3A.IP-eat.meal-PFT-AMB-IMPF-CVB</seg>
+                  <seg type="gloss">whenever one goes around eating
+                  (different) meals</seg>
+                </choice>
+              </w>
+            </phr>
+            <lb n="25" />
+            <w xml:id="w70" lemmaRef="lex:id">
+              <choice>
+                <orig>ᎠᏓᎵᏬᏤᎭ</orig>
+                <seg type="simple_phonetics">
+                ada⁠li⁠hwo⁠je⁠ha⁠</seg>
+                <seg type="phonemic_form">ataliihwoocééha</seg>
+                <seg type="morphemic_segmentation">
+                Ø-ata-liihwoo-c-eeh-a</seg>
+                <seg type="morphemic_gloss">
+                3SG.A-REFL-die.nonhuman-PFT-DAT-IND</seg>
+                <seg type="gloss">will die</seg>
+              </choice>
+            </w>
+          </phr>
+          <w xml:id="w71" lemmaRef="lex:id">
+            <choice>
+              <orig>ᎠᏗᏍᎬᎢ</orig>
+              <seg type="simple_phonetics">⁠a⁠di⁠s⁠gvʔ⁠i⁠</seg>
+              <seg type="phonemic_form">atiskvv́ʔi</seg>
+              <seg type="morphemic_segmentation">
+              Ø-at-isk-vv́ʔi</seg>
+              <seg type="morphemic_gloss">3SG.A-say-IMPF-ASR</seg>
+              <seg type="gloss">he used to say</seg>
+            </choice>
+          </w>
+          <lb n="26" />
+          <phr xml:id="p2">
+            <w xml:id="w72" lemmaRef="lex:id">
+              <choice>
+                <orig>ᎦᎾᏍᏓ</orig>
+                <seg type="simple_phonetics">ga⁠na⁠s⁠da⁠</seg>
+                <seg type="phonemic_form">kansta</seg>
+                <seg type="morphemic_segmentation">kansta</seg>
+                <seg type="morphemic_gloss">stick</seg>
+                <seg type="gloss">Switch</seg>
+              </choice>
+            </w>
+            <w xml:id="w73" lemmaRef="lex:id">
+              <choice>
+                <orig>ᏗᏥᏯ</orig>
+                <seg type="simple_phonetics">⁠di⁠ji⁠ya⁠</seg>
+                <seg type="phonemic_form">ticiya</seg>
+                <seg type="morphemic_segmentation">
+                ti-ciiya-híh-hih-i</seg>
+                <seg type="morphemic_gloss">
+                DIST2-1SG&gt;AN-kill-IMPF-NOM/SH</seg>
+                <seg type="gloss">killer (of many)</seg>
+              </choice>
+            </w>
+          </phr>
+          <w xml:id="w74" lemmaRef="lex:id">
+            <choice>
+              <orig>ᏥᎨᏒᎢ</orig>
+              <seg type="simple_phonetics">⁠ji⁠ge⁠svʔ⁠i</seg>
+              <seg type="phonemic_form">cikeesvvʔi</seg>
+              <seg type="morphemic_segmentation">
+              ci-Ø-kee-s-vvʔi</seg>
+              <seg type="morphemic_gloss">
+              REL-3SG.A-be-IMPF-ASR</seg>
+              <seg type="gloss">who was</seg>
+            </choice>
+          </w>
+          <lb n="27" />
+          <ab xml:id="b6" corresp="#b6_trans">
+            <w xml:id="w75" lemmaRef="lex:id">
+              <choice>
+                <orig>ᎠᎾᏗᏍᎪᎢ</orig>
+                <seg type="simple_phonetics">ana⁠di⁠s⁠go⁠ʔi⁠</seg>
+                <seg type="phonemic_form">ana⁠ti⁠s⁠kóʔi</seg>
+                <seg type="morphemic_segmentation">
+                an-a⁠t-i⁠s⁠k-oʔi</seg>
+                <seg type="morphemic_gloss">
+                3PL.A-say-IMPF-HAB</seg>
+                <seg type="gloss">(they) used to say (this)</seg>
+              </choice>
+            </w>
+            <w xml:id="w76" lemmaRef="lex:id">
+              <choice>
+                <orig>ᏧᎾᏛᏐᏅᎯ</orig>
+                <seg type="simple_phonetics">
+                ⁠ju⁠na⁠tvso⁠hnv⁠hi⁠</seg>
+                <seg type="phonemic_form">cuunatvsohnvvʔi</seg>
+                <seg type="morphemic_segmentation">
+                c-uun-athvsohnvvʔi</seg>
+                <seg type="morphemic_gloss">
+                DIST2-3PL.B-old.man</seg>
+                <seg type="gloss">elders</seg>
+              </choice>
+            </w>
+            <lb n="28" />
+            <w xml:id="w77" lemmaRef="lex:id">
+              <choice>
+                <orig>ᎤᏂᏃᎮᎸᎯ</orig>
+                <seg type="simple_phonetics">
+                u⁠ni⁠hno⁠he⁠hlv⁠hi⁠</seg>
+                <seg type="phonemic_form">uuniihnooheehlvv́ʔi</seg>
+                <seg type="morphemic_segmentation">
+                uunii-hnoo-heehl-vvʔi</seg>
+                <seg type="morphemic_gloss">
+                3PL.B-tell-PFT-ASR</seg>
+                <seg type="gloss">they told</seg>
+              </choice>
+            </w>
+            <w xml:id="w78" lemmaRef="lex:id">
+              <choice>
+                <orig>ᎨᏒ</orig>
+                <seg type="simple_phonetics">⁠ge⁠sv⁠</seg>
+                <seg type="phonemic_form">keesv́v́ʔi</seg>
+                <seg type="morphemic_segmentation">
+                Ø-kee-s-vvʔi</seg>
+                <seg type="morphemic_gloss">
+                3SG.A-be-IMPF-ASR/SH</seg>
+                <seg type="gloss">it was</seg>
+              </choice>
+            </w>
+            <w xml:id="w79" lemmaRef="lex:id">
+              <choice>
+                <orig>ᏄᏛᎢ</orig>
+                <seg type="simple_phonetics">⁠nu⁠dv⁠ʔi⁠</seg>
+              </choice>
+            </w>
+            <w xml:id="w80" lemmaRef="lex:id">
+              <choice>
+                <orig>ᎤᏁᏲᏅᎯ</orig>
+                <seg type="simple_phonetics">⁠u⁠neyoh⁠nv⁠hi⁠</seg>
+                <seg type="phonemic_form">uuneeyohnv́v́ʔi</seg>
+                <seg type="morphemic_segmentation">
+                uun-eehyoo-hn-vvʔi</seg>
+                <seg type="morphemic_gloss">
+                3PL.B-teach-PFT-ASR</seg>
+                <seg type="gloss">they were taught</seg>
+              </choice>
+            </w>
+            <lb n="29" />
+            <w xml:id="w81" lemmaRef="lex:id">
+              <choice>
+                <orig>ᎢᏥᏍᏆᏂᎪᏕᏍᏗ</orig>
+                <seg type="simple_phonetics">
+                i⁠ji⁠s⁠kwa⁠ni⁠go⁠hde⁠s⁠di⁠</seg>
+                <seg type="phonemic_form">
+                i⁠iciis⁠khwa⁠ni⁠koóhtéésti</seg>
+                <seg type="morphemic_segmentation">
+                i⁠icii-⁠skwanikoóht-eesti</seg>
+                <seg type="morphemic_gloss">
+                2PL-be.amazed-PFT-FUT.PROG</seg>
+                <seg type="gloss">you will be amazed at</seg>
+              </choice>
+            </w>
+            <w xml:id="w82" lemmaRef="lex:id">
+              <choice>
+                <orig>ᎠᏴ</orig>
+                <seg type="simple_phonetics">⁠a⁠yv</seg>
+                <seg type="phonemic_form">ayv</seg>
+                <seg type="morphemic_segmentation">ayv</seg>
+                <seg type="morphemic_gloss">I myself</seg>
+              </choice>
+            </w>
+            <w xml:id="w83" lemmaRef="lex:id">
+              <choice>
+                <orig>ᎠᎩᏁᏨᎢ</orig>
+                <seg type="simple_phonetics">a⁠gi⁠ne⁠jv⁠ʔi⁠</seg>
+                <seg type="morphemic_segmentation">
+                aki-⁠hnee-⁠c-v⁠vʔi⁠</seg>
+                <seg type="morphemic_gloss">
+                1SG.B-speak-PFT-ASR/SH</seg>
+                <seg type="gloss">(what) I have said</seg>
+              </choice>
+            </w>
+            <lb n="30" />
+            <phr xml:id="p3">
+              <w xml:id="w84" lemmaRef="lex:id">
+                <choice>
+                  <orig>ᎤᏛᏁᎢ</orig>
+                  <seg type="simple_phonetics">udv⁠ne⁠ʔi⁠</seg>
+                  <seg type="phonemic_form">uutvvhneeʔi</seg>
+                  <seg type="morphemic_segmentation">
+                  uu-at-vvhn-eeʔi</seg>
+                  <seg type="morphemic_gloss">
+                  3SG.B-say-PFT-REP</seg>
+                  <seg type="gloss">said</seg>
+                </choice>
+              </w>
+              <phr xml:id="p4">
+                <phr xml:id="p5">
+                  <w xml:id="w85" lemmaRef="lex:id">
+                    <choice>
+                      <orig>ᎦᎾᏍᏓ</orig>
+                      <seg type="simple_phonetics">
+                      ⁠ga⁠na⁠s⁠da⁠</seg>
+                      <seg type="phonemic_form">kansta</seg>
+                      <seg type="morphemic_segmentation">
+                      kansta</seg>
+                      <seg type="morphemic_gloss">stick</seg>
+                      <seg type="gloss">Switch</seg>
+                    </choice>
+                  </w>
+                  <w xml:id="w86" lemmaRef="lex:id">
+                    <choice>
+                      <orig>ᏗᏥᏯ</orig>
+                      <seg type="simple_phonetics">⁠di⁠ji⁠ya⁠</seg>
+                      <seg type="phonemic_form">ticiya</seg>
+                      <seg type="morphemic_segmentation">
+                      ti-ciiya-híh-hih-i</seg>
+                      <seg type="morphemic_gloss">
+                      DIST2-1SG&gt;AN-kill-IMPF-NOM/SH</seg>
+                      <seg type="gloss">killer (of many)</seg>
+                    </choice>
+                  </w>
+                </phr>
+                <w xml:id="w87" lemmaRef="lex:id">
+                  <choice>
+                    <orig>ᏥᎨᏒᎢ</orig>
+                    <seg type="simple_phonetics">
+                    ⁠ji⁠ge⁠sv⁠ʔi⁠</seg>
+                    <seg type="phonemic_form">cikeesvv́ʔi</seg>
+                    <seg type="morphemic_segmentation">
+                    ci-Ø-kee-s-vvʔi</seg>
+                    <seg type="morphemic_gloss">
+                    REL-3SG.A-be-IMPF-ASR/SH</seg>
+                    <seg type="gloss">who was</seg>
+                  </choice>
+                </w>
+              </phr>
+            </phr>
+          </ab>
+        </body>
+      </text>
+      <text type="translation" xml:lang="en">
+        <body>
+          <ab xml:id="b1_trans">
+            <seg>﻿Story of Switch Striker</seg>
+            <seg>Ganasda Ditsiti [1]</seg>
+          </ab>
+          <ab xml:id="b2_trans">
+            <seg>One who is a healer must take care of
+            himself</seg>
+            <seg>[2] Medicine men and healers must not go about
+            eating the cooking[3] of several different women</seg>
+            <seg>[4] Truly, he must be careful about eating food
+            cooked outside his own home</seg>
+            <seg>[5]</seg>
+          </ab>
+          <ab xml:id="b3_trans">
+            <seg>There are times our women are sick[6] during the
+            new moon[7] phase with their personal illness</seg>
+            <seg>[8] You may eat something they cooked</seg>
+            <seg>This will kill any medicine you know</seg>
+            <seg>It is absolutely forbidden to go carelessly about
+            eating[9] in many places</seg>
+            <seg></seg>
+          </ab>
+          <ab xml:id="b4_trans">
+            <seg>If you plan[10] to go somewhere and spend the
+            day,[11] you should be prepared to cook[12] for
+            yourself and take your own food along with you wherever
+            you go</seg>
+            <seg>If you follow these instructions, you will retain
+            knowledge of good medicine for a long time</seg>
+            <seg></seg>
+          </ab>
+          <ab xml:id="b5_trans">
+            <seg>“When you eat at different places, your knowledge
+            of medicine dies[13],” said Ganasda Ditsiti who was
+            Switch Striker and lived long ago</seg>
+            <seg></seg>
+          </ab>
+          <ab xml:id="b6_trans">
+            <seg>The elders[14] said this</seg>
+            <seg>[15]</seg>
+            <seg>They spoke[16] of what they were taught</seg>
+            <seg></seg>
+            <seg>“Keep in your memory[17] what I have said,”
+            cautioned[18] Ganasda Ditsiti who was Switch
+            Striker</seg>
+            <seg></seg>
+          </ab>
+          <ab xml:id="b7_trans">
+            <seg>Translators: Clara Proctor, Ernestine Berry</seg>
+            <seg>Notes: Jeffrey Bourns</seg>
+          </ab>
+        </body>
+      </text>
+    </group>
+  </text>
+  <standOff>
+    <d:noteBlock>
+      <note target="#w2">ᎦᏂᏍᏓ gan²sda 'stick' (DF1975:111)</note>
+      <note target="#w3">see previous word; above with irregular
+      1SG&gt;AN -ciiya-(?)</note>
+      <note target="#w5">final -hi for expected -ʔi; cf.
+      KK1966:51n13</note>
+      <note target="#w6">ᎩᎶ kị²lo⁴ 'someone' (DF1975:144) NC
+      kilooʔi 'someone, somebody' (DK1975:195)</note>
+      <note target="#w7">cf. ᏗᏓᏅᏫᏍᎩ di²da²hnv²wi⁴sgi 'medicine man'
+      (DF1975:80)</note>
+      <note target="#w8">yu = emphatic clitic (?); or INF here (?),
+      with following word 'he is to take care of himself'</note>
+      <note target="#w9">cf. CRG 97-98: may suggest that WJ thinks
+      previous word is an INF form; also CRG 342</note>
+      <note target="#w10">ᎩᎶ kị²lo⁴ 'someone' (DF1975:144) NC
+      kilooʔi 'someone, somebody' (DK1975:195)</note>
+      <note target="#w11">cf. ᏅᏬᏘ nv²wo³²ti 'medicine'
+      (DF1975:149)</note>
+      <note target="#w15">cf. ju²nạ²dạ²le²hnv⁴da 'different,
+      various' (pl.) (DF1975:135)</note>
+      <note target="#w16">final &lt;Ᏼ&gt; /yv/ here for expected
+      &lt;Ꮿ&gt; /ya/ ; cf. ạ²ni²ge²³hya 'women' (DF1975:16)</note>
+      <note target="#w17">final -hi for expected -ʔi; cf.
+      KK1966:51n13</note>
+      <note target="#w19">cf. u²do²hị²yu⁴ 'really, very'
+      (DF1975:163)</note>
+      <note target="#w21">-alisiin- 'be careful'</note>
+      <note target="#w25">ị²lv²³hị³yu⁴ʔi 'ever'</note>
+      <note target="#w35">ᎾᏍᎩᏃ ᎢᏳᏍᏗ nasgi iyusdi = 'that's why,
+      therefore; because'</note>
+      <note target="#w37">cf. Line 5</note>
+      <note target="#w43">cf. CRG p. 338</note>
+      <note target="#w44">Noq: ᏭᏓᎪᎾᏛ wudagonadv 'profound'
+      a¹nạ²da²go²nạ²tdi²³sgv⁴ɂi 'contest'</note>
+      <note target="#w46">CRG 284 ; CRG 97 (helping verb?)</note>
+      <note target="#w52">?</note>
+      <note target="#w54">read: 'you will cook your provisions for
+      yourself'</note>
+      <note target="#w55">cf. CRG 80-81</note>
+      <note target="#w58">root + ASP suffix unclear</note>
+      <note target="#w59">ị²lvh²dlv⁴ɂi 'somewhere'</note>
+      <note target="#w64">hypercharacterized with final
+      /-ʔi/</note>
+      <note target="#w65">&lt;Ꭳ&gt; /o/</note>
+      <note target="#w66">cf. Line 14</note>
+      <note target="#w68">&lt;Ꮄ&gt; /le/ here</note>
+      <note target="#w69">for final /-ʔ⁠a/⁠ sc. /-ha/.</note>
+      <note target="#w72">ᎦᏂᏍᏓ gan²sda 'stick' (DF1975:111)</note>
+      <note target="#w73">see previous word; above with irregular
+      1SG&gt;AN -ciiya-(?)</note>
+      <note target="#w76">final &lt;Ꭿ&gt; /hi/ for &lt;Ꭲ&gt;
+      /ʔi/</note>
+      <note target="#w77">WJ writes &lt;Ꮈ&gt; /lv/ for &lt;Ꮲ&gt;
+      /hlv/ here ; for final /-hi/ sc. /-ʔi/</note>
+      <note target="#w78">final /-ʔi/ dropped</note>
+      <note target="#w79">?</note>
+      <note target="#w85">ᎦᏂᏍᏓ gan²sda 'stick' (DF1975:111)</note>
+      <note target="#w86">see previous word; above with irregular
+      1SG&gt;AN -ciiya-(?)</note>
+    </d:noteBlock>
+  </standOff>
+</TEI>

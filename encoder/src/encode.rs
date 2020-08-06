@@ -12,14 +12,14 @@ const LINE_BREAK: char = '\\';
 const PAGE_BREAK: &str = "\\\\";
 const BLOCK_START: &str = "{";
 const BLOCK_END: &str = "}";
-const OUTPUT_DIR: &str = "output";
+const OUTPUT_DIR: &str = "../xml";
 
 /// Takes an unprocessed document with metadata, passing it through our TEI
 /// template to produce an xml document named like the given title.
 pub fn write_to_file(meta: DocumentMetadata, lines: Vec<SemanticLine>) -> Result<()> {
     let mut tera = Tera::new("*")?;
     let annotated = lines.iter().map(|line| AnnotatedLine::from_semantic(line));
-    let file_name = format!("{}/{}.xml", OUTPUT_DIR, meta.title);
+    let file_name = format!("{}/{}.xml", OUTPUT_DIR, meta.id);
     println!("writing to {}", file_name);
     tera.register_filter("convert_breaks", convert_breaks);
     let contents = tera.render(

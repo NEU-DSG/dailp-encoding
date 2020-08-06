@@ -1,0 +1,577 @@
+<?xml version="1.0" encoding="utf-8"?>
+<?xml-model href="../schema/out/dailp_odd.rng" type="application/xml" schematypens="http://relaxng.org/ns/structure/1.0"?>
+<TEI xmlns="http://www.tei-c.org/ns/1.0"
+xmlns:d="https://dsg.northeastern.edu/dailp/ns/1.0">
+  <teiHeader>
+    <fileDesc>
+      <titleStmt>
+        <title>Story of Wylie Wolf</title>
+      </titleStmt>
+      <publicationStmt>
+        <p></p>
+      </publicationStmt>
+      <sourceDesc>
+        <p>Willie Jumper Manuscripts</p>
+      </sourceDesc>
+    </fileDesc>
+    <encodingDesc>
+      <listPrefixDef>
+        <prefixDef matchPattern="" replacementPattern=""
+        ident="lex">
+          <p>This prefix resolves references to the lexical data
+          source.</p>
+        </prefixDef>
+        <prefixDef matchPattern="" replacementPattern=""
+        ident="drs">
+          <p>This prefix resolves references to the Digital
+          Repository Service.</p>
+        </prefixDef>
+      </listPrefixDef>
+    </encodingDesc>
+    <profileDesc>
+      <particDesc></particDesc>
+    </profileDesc>
+  </teiHeader>
+  <text>
+    <group>
+      <text type="source" xml:lang="chr">
+        <body>
+          <pb facs="drs:page1" />
+          <lb n="1" />
+          <w xml:id="w1" lemmaRef="lex:id">1919 Wylie Wolf</w>
+          <lb n="2" />
+          <w xml:id="w2" lemmaRef="lex:id">
+            <choice>
+              <orig>Story of the ᎬᏘᏌᏘ</orig>
+              <seg type="simple_phonetics">story of the
+              gvdisata</seg>
+              <seg type="gloss">Story of the Gvdisata</seg>
+            </choice>
+          </w>
+          <w xml:id="w3" lemmaRef="lex:id">
+            <choice>
+              <orig>ᏩᎭᏯ</orig>
+              <seg type="simple_phonetics">wayaha</seg>
+              <seg type="gloss">Wahaya</seg>
+            </choice>
+          </w>
+          <lb n="3" />
+          <w xml:id="w4" lemmaRef="lex:id">
+            <choice>
+              <orig>ᎬᏘᏌᏘ</orig>
+              <seg type="simple_phonetics">gvdisati</seg>
+              <seg type="gloss">Gvdisata</seg>
+            </choice>
+          </w>
+          <w xml:id="w5" lemmaRef="lex:id">
+            <choice>
+              <orig>ᏥᎨᏒᎢ</orig>
+              <seg type="simple_phonetics">jigeseʔi</seg>
+              <seg type="morphemic_segmentation">ci-kees-éeʔi</seg>
+              <seg type="morphemic_gloss">REL-was-REP</seg>
+              <seg type="gloss">was</seg>
+            </choice>
+          </w>
+          <w xml:id="w6" lemmaRef="lex:id">
+            <choice>
+              <orig>ᎤᏃᎮᏛ</orig>
+              <seg type="simple_phonetics">unohedv</seg>
+              <seg type="morphemic_segmentation">
+              uu-hnoo-heet-v</seg>
+              <seg type="morphemic_gloss">
+              3SG.B-tell-PASS.P-ASR</seg>
+              <seg type="gloss">told by him</seg>
+            </choice>
+          </w>
+          <lb n="4" />
+          <w xml:id="w7" lemmaRef="lex:id">
+            <choice>
+              <orig>ᏂᎪᎯᎸᎢ</orig>
+              <seg type="simple_phonetics">nigohilvʔi</seg>
+              <seg type="gloss">always</seg>
+            </choice>
+          </w>
+          <w xml:id="w8" lemmaRef="lex:id">
+            <choice>
+              <orig>ᎧᏃᎮᏍᎨᎢ</orig>
+              <seg type="simple_phonetics">kanohesgeʔi</seg>
+              <seg type="morphemic_segmentation">
+              ka-hnoo-heésk-éeʔi</seg>
+              <seg type="morphemic_gloss">
+              3SG.A.i-talk.about-IMPF-REP</seg>
+              <seg type="gloss">he talked about</seg>
+            </choice>
+          </w>
+          <lb n="5" />
+          <w xml:id="w9" lemmaRef="lex:id">
+            <choice>
+              <orig>ᏄᎵᏍᏔᏂᏙᎸᎢ</orig>
+              <seg type="simple_phonetics">nulistanidolvʔi</seg>
+              <seg type="morphemic_segmentation">
+              n-uu-(a)listaʔn-iitooʔl-vv́ʔi</seg>
+              <seg type="morphemic_gloss">
+              PART1-3SG.B-happen.to.O-PFT:AMB-ASR</seg>
+              <seg type="gloss">what happened</seg>
+            </choice>
+          </w>
+          <w xml:id="w10" lemmaRef="lex:id">
+            <choice>
+              <orig>ᎠᏓᎾᏬᎯ</orig>
+              <seg type="simple_phonetics">adahnawohi</seg>
+              <seg type="morphemic_segmentation">a-tahnawo-hi</seg>
+              <seg type="morphemic_gloss">3SG.A-war-LOC/SH</seg>
+              <seg type="gloss">in the war</seg>
+            </choice>
+          </w>
+          <lb n="6" />
+          <w xml:id="w11" lemmaRef="lex:id">
+            <choice>
+              <orig>ᎤᎵᎸᎢ</orig>
+              <seg type="simple_phonetics">ulilvʔi</seg>
+              <seg type="morphemic_segmentation">
+              uu-hlil-vv́ʔi</seg>
+              <seg type="morphemic_gloss">3SG.B-fight</seg>
+              <seg type="gloss">he fought</seg>
+            </choice>
+          </w>
+          <w xml:id="w12" lemmaRef="lex:id">
+            <choice>
+              <orig>ᎬᏘᏌᏘ</orig>
+              <seg type="simple_phonetics">gvdisati</seg>
+              <seg type="gloss">Gvdisati</seg>
+            </choice>
+          </w>
+          <w xml:id="w13" lemmaRef="lex:id">
+            <choice>
+              <orig>ᎤᏚᏚ</orig>
+              <seg type="simple_phonetics">ududu</seg>
+              <seg type="morphemic_segmentation">u-tùùtu</seg>
+              <seg type="morphemic_gloss">3SG.B-grandfather</seg>
+              <seg type="gloss">his grandfather</seg>
+            </choice>
+          </w>
+          <lb n="7" />
+          <w xml:id="w14" lemmaRef="lex:id">
+            <choice>
+              <orig>ᎠᎦᏴᎵ</orig>
+              <seg type="simple_phonetics">agayvli</seg>
+              <seg type="morphemic_segmentation">agayvv̋li</seg>
+              <seg type="morphemic_gloss">old</seg>
+              <seg type="gloss">old</seg>
+            </choice>
+          </w>
+          <w xml:id="w15" lemmaRef="lex:id">
+            <choice>
+              <orig>ᎤᏓᏐᏅᎯ</orig>
+              <seg type="simple_phonetics">udasonvhi</seg>
+              <seg type="gloss">wounded</seg>
+            </choice>
+          </w>
+          <w xml:id="w16" lemmaRef="lex:id">
+            <choice>
+              <orig>ᎨᏎᎢ</orig>
+              <seg type="simple_phonetics">geseʔi</seg>
+              <seg type="morphemic_segmentation">kees-éeʔi</seg>
+              <seg type="morphemic_gloss">was-REP</seg>
+              <seg type="gloss">was</seg>
+            </choice>
+          </w>
+          <lb n="8" />
+          <w xml:id="w17" lemmaRef="lex:id">
+            <choice>
+              <orig>ᎾᏍᎩᏃ</orig>
+              <seg type="simple_phonetics">nasgihno</seg>
+              <seg type="morphemic_segmentation">nasgi-hno</seg>
+              <seg type="morphemic_gloss">that-CN</seg>
+              <seg type="gloss">and that</seg>
+            </choice>
+          </w>
+          <w xml:id="w18" lemmaRef="lex:id">
+            <choice>
+              <orig>ᎤᏃᎮᎴᎢ</orig>
+              <seg type="simple_phonetics">unoheleʔi</seg>
+              <seg type="morphemic_segmentation">
+              uu-hnoo-heehl-éeʔi</seg>
+              <seg type="morphemic_gloss">3SG.B-tell-PFT-REP</seg>
+              <seg type="gloss">he told</seg>
+            </choice>
+          </w>
+          <w xml:id="w19" lemmaRef="lex:id">
+            <choice>
+              <orig>ᎤᎦᎾᏮᎢ</orig>
+              <seg type="simple_phonetics">uganawvʔi</seg>
+              <seg type="morphemic_segmentation">uugaánawa-ʔi</seg>
+              <seg type="morphemic_gloss">warm-LOC/SH</seg>
+              <seg type="gloss">warm place</seg>
+            </choice>
+          </w>
+          <lb n="9" />
+          <w xml:id="w20" lemmaRef="lex:id">
+            <choice>
+              <orig>ᎠᏍᏓᏱ</orig>
+              <seg type="simple_phonetics">asdayi</seg>
+              <seg type="gloss">hard, solid (object)</seg>
+            </choice>
+          </w>
+          <w xml:id="w21" lemmaRef="lex:id">
+            <choice>
+              <orig>ᎤᎵᎴᎢ</orig>
+              <seg type="simple_phonetics">ulileʔi</seg>
+              <seg type="gloss">ideal</seg>
+            </choice>
+          </w>
+          <w xml:id="w22" lemmaRef="lex:id">
+            <choice>
+              <orig>ᎠᏗᏍᎨᎢ</orig>
+              <seg type="simple_phonetics">adisgeʔi</seg>
+            </choice>
+          </w>
+          <lb n="10" />
+          <w xml:id="w23" lemmaRef="lex:id">
+            <choice>
+              <orig>ᎢᎸᏢᎢᏃ</orig>
+              <seg type="simple_phonetics">ilvdliʔihno</seg>
+              <seg type="morphemic_segmentation">ilvdliʔi-hno</seg>
+              <seg type="morphemic_gloss">somewhere-CN</seg>
+              <seg type="gloss">somewhere, and</seg>
+            </choice>
+          </w>
+          <w xml:id="w24" lemmaRef="lex:id">
+            <choice>
+              <orig>ᎠᏂᏅᎢ</orig>
+              <seg type="simple_phonetics">aninvʔi</seg>
+              <seg type="morphemic_segmentation">
+              anii-n-ʔ-vvʔi</seg>
+              <seg type="morphemic_gloss">3PL.A-sit-IMPF-ASR</seg>
+              <seg type="gloss">they were sitting</seg>
+            </choice>
+          </w>
+          <w xml:id="w25" lemmaRef="lex:id">
+            <choice>
+              <orig>ᎠᎪᎾ</orig>
+              <seg type="simple_phonetics">agona</seg>
+              <seg type="gloss">starvation</seg>
+            </choice>
+          </w>
+          <w xml:id="w26" lemmaRef="lex:id">
+            <choice>
+              <orig>ᏄᎾᎵ
+              <lb n="11" />ᏍᏓᏁᎮᎢ</orig>
+              <seg type="simple_phonetics">nunalisdaneheʔi</seg>
+              <seg type="morphemic_segmentation">
+              n-uun-alistaʔn-eeh-éeʔi</seg>
+              <seg type="morphemic_gloss">
+              PART1-3PL.B-cause-IMPF-REP</seg>
+              <seg type="gloss">it caused them</seg>
+            </choice>
+          </w>
+          <w xml:id="w27" lemmaRef="lex:id">
+            <choice>
+              <orig>ᎧᏫᏃ</orig>
+              <seg type="simple_phonetics">kawihno</seg>
+              <seg type="morphemic_segmentation">kaáhwi-hno</seg>
+              <seg type="morphemic_gloss">coffee-CN</seg>
+              <seg type="gloss">coffee, and</seg>
+            </choice>
+          </w>
+          <w xml:id="w28" lemmaRef="lex:id">
+            <choice>
+              <orig>ᏳᎾᏥᏒᏁᎳ</orig>
+              <seg type="simple_phonetics">yunajisvnela</seg>
+              <seg type="morphemic_segmentation">
+              y-uun-(a)cììs(l)v-hnel-a</seg>
+              <seg type="morphemic_gloss">
+              IRR-3PL.B-light.fire?</seg>
+            </choice>
+          </w>
+          <lb n="12" />
+          <w xml:id="w29" lemmaRef="lex:id">
+            <choice>
+              <orig>ᏔᎹᎵ</orig>
+              <seg type="simple_phonetics">tamahli</seg>
+              <seg type="morphemic_gloss">tomato</seg>
+              <seg type="gloss">tomato</seg>
+            </choice>
+          </w>
+          <w xml:id="w30" lemmaRef="lex:id">
+            <choice>
+              <orig>ᏗᎦᏌᏆᎴᎯᎯ</orig>
+              <seg type="simple_phonetics">digasagwalehihi</seg>
+              <seg type="morphemic_segmentation">
+              ti-ka-sakwaleé-haa̋ʔi</seg>
+              <seg type="morphemic_gloss">
+              DIST2-3SG.A-roll.O-ADJ</seg>
+              <seg type="gloss">the one that rolls</seg>
+            </choice>
+          </w>
+          <w xml:id="w31" lemmaRef="lex:id">
+            <choice>
+              <orig>ᏓᏅᏫᏍᎨᎢ</orig>
+              <seg type="simple_phonetics">danvwisgeʔi</seg>
+              <seg type="morphemic_segmentation">
+              t-an-vw-isk-éeʔi</seg>
+            </choice>
+          </w>
+          <lb n="13" />
+          <w xml:id="w32" lemmaRef="lex:id">
+            <choice>
+              <orig>ᎠᏗᏍᎨᎢ</orig>
+              <seg type="simple_phonetics">adisgeʔi</seg>
+            </choice>
+          </w>
+          <w xml:id="w33" lemmaRef="lex:id">
+            <choice>
+              <orig>ᎧᏃᎮᏍᎬᎢ</orig>
+              <seg type="simple_phonetics">kanohesvʔi</seg>
+              <seg type="morphemic_segmentation">
+              ka-hnoo-heés(k)-vvʔi</seg>
+              <seg type="morphemic_gloss">3SG.A-tell-IMPF-ASR</seg>
+              <seg type="gloss">he told</seg>
+            </choice>
+          </w>
+          <w xml:id="w34" lemmaRef="lex:id">
+            <choice>
+              <orig>ᏌᏊᎢ</orig>
+              <seg type="simple_phonetics">sagwuʔi</seg>
+              <seg type="morphemic_segmentation">sagwu-ʔi</seg>
+              <seg type="morphemic_gloss">one-NOM/SH</seg>
+              <seg type="gloss">once</seg>
+            </choice>
+          </w>
+          <lb n="14" />
+          <w xml:id="w35" lemmaRef="lex:id">
+            <choice>
+              <orig>ᎢᏳᎩᏘ</orig>
+              <seg type="simple_phonetics">iyugidi</seg>
+              <seg type="gloss">at any time</seg>
+            </choice>
+          </w>
+          <w xml:id="w36" lemmaRef="lex:id">
+            <choice>
+              <orig>ᏙᎦᏟᏴᎲᎩ</orig>
+              <seg type="simple_phonetics">dogadliyvhvgi</seg>
+              <seg type="morphemic_segmentation">
+              too-ka-tlhiiyvv-hvki</seg>
+              <seg type="morphemic_gloss">
+              DIST1-3SG.A-stand.up.to-IMPF?-?</seg>
+              <seg type="gloss">he stood up to</seg>
+            </choice>
+          </w>
+          <w xml:id="w37" lemmaRef="lex:id">
+            <choice>
+              <orig>ᎠᎹᏳᎵᏗ</orig>
+              <seg type="simple_phonetics">amayulidi</seg>
+              <seg type="morphemic_segmentation">amaayuűhldi</seg>
+              <seg type="morphemic_gloss">creek</seg>
+              <seg type="gloss">creek</seg>
+            </choice>
+          </w>
+          <lb n="15" />
+          <w xml:id="w38" lemmaRef="lex:id">
+            <choice>
+              <orig>ᏩᎦ</orig>
+              <seg type="simple_phonetics">waga</seg>
+              <seg type="gloss">cow</seg>
+            </choice>
+          </w>
+          <w xml:id="w39" lemmaRef="lex:id">
+            <choice>
+              <orig>ᎦᏁᎪᎯ</orig>
+              <seg type="simple_phonetics">ganegohi</seg>
+              <seg type="morphemic_segmentation">ganega-hi</seg>
+              <seg type="morphemic_gloss">skin-LOC/SH</seg>
+              <seg type="gloss">skin</seg>
+            </choice>
+          </w>
+          <w xml:id="w40" lemmaRef="lex:id">
+            <choice>
+              <orig>ᏚᏙᎥᎢ</orig>
+              <seg type="simple_phonetics">dudoʔvʔi</seg>
+              <seg type="gloss">called</seg>
+            </choice>
+          </w>
+          <w xml:id="w41" lemmaRef="lex:id">
+            <choice>
+              <orig>ᎤᏪᏴᎢ</orig>
+              <seg type="simple_phonetics">uweyvʔi</seg>
+              <seg type="morphemic_segmentation">uwééyvv̋ʔi</seg>
+              <seg type="morphemic_gloss">creek</seg>
+              <seg type="gloss">creek</seg>
+            </choice>
+          </w>
+          <lb n="16" />
+          <w xml:id="w42" lemmaRef="lex:id">
+            <choice>
+              <orig>ᎩᏄᏗᏊ</orig>
+              <seg type="simple_phonetics">ginudigwu</seg>
+              <seg type="morphemic_segmentation">ginudi-gwu</seg>
+              <seg type="morphemic_gloss">quarter-DT</seg>
+              <seg type="gloss">one quarter</seg>
+            </choice>
+          </w>
+          <w xml:id="w43" lemmaRef="lex:id">
+            <choice>
+              <orig>ᎢᏴᎢ</orig>
+              <seg type="simple_phonetics">iyvʔi</seg>
+              <seg type="gloss">of</seg>
+            </choice>
+          </w>
+          <w xml:id="w44" lemmaRef="lex:id">
+            <choice>
+              <orig>ᏂᏙᎦᏓᎸᎢ</orig>
+              <seg type="simple_phonetics">nidogadalvʔi</seg>
+              <seg type="morphemic_segmentation">
+              ni-to-g-adal-vʔi</seg>
+            </choice>
+          </w>
+          <w xml:id="w45" lemmaRef="lex:id">
+            <choice>
+              <orig>ᏙᎦᏓ
+              <lb n="17" />ᏍᏓᏲᎸᎢ</orig>
+              <seg type="simple_phonetics">dogadasdayolvʔi</seg>
+              <seg type="morphemic_segmentation">
+              too-k-ataa-stayoo-hl-vvʔi</seg>
+              <seg type="morphemic_gloss">
+              DIST1-3SG.A-REFL-shoot-PFT-ASR</seg>
+              <seg type="gloss">they shot at each other</seg>
+            </choice>
+          </w>
+          <w xml:id="w46" lemmaRef="lex:id">
+            <choice>
+              <orig>ᎠᏍᏗᏱᏳ</orig>
+              <seg type="simple_phonetics">asdiyiyu</seg>
+              <seg type="morphemic_segmentation">asdaya-yu</seg>
+              <seg type="morphemic_gloss">hard-EM</seg>
+              <seg type="gloss">hard</seg>
+            </choice>
+          </w>
+          <w xml:id="w47" lemmaRef="lex:id">
+            <choice>
+              <orig>ᏙᎦᏟᏴᎲᎢ</orig>
+              <seg type="simple_phonetics">dogahliʔi</seg>
+              <seg type="morphemic_segmentation">
+              too-ka-hli-ʔi</seg>
+              <seg type="gloss">he fought</seg>
+            </choice>
+          </w>
+          <lb n="18" />
+          <w xml:id="w48" lemmaRef="lex:id">
+            <choice>
+              <orig>ᎯᎠ</orig>
+              <seg type="simple_phonetics">hiʔa</seg>
+              <seg type="gloss">this</seg>
+            </choice>
+          </w>
+          <w xml:id="w49" lemmaRef="lex:id">
+            <choice>
+              <orig>ᎾᏍᎩ</orig>
+              <seg type="simple_phonetics">nasgi</seg>
+              <seg type="gloss">that</seg>
+            </choice>
+          </w>
+          <w xml:id="w50" lemmaRef="lex:id">
+            <choice>
+              <orig>ᎾᎿᎢ</orig>
+              <seg type="simple_phonetics">nahnaʔi</seg>
+              <seg type="gloss">place</seg>
+            </choice>
+          </w>
+          <w xml:id="w51" lemmaRef="lex:id">
+            <choice>
+              <orig>ᏩᎦ</orig>
+              <seg type="simple_phonetics">waga</seg>
+              <seg type="gloss">cow</seg>
+            </choice>
+          </w>
+          <w xml:id="w52" lemmaRef="lex:id">
+            <choice>
+              <orig>ᎦᏁᎪᎯ</orig>
+              <seg type="simple_phonetics">ganegohi</seg>
+              <seg type="gloss">skin</seg>
+            </choice>
+          </w>
+          <w xml:id="w53" lemmaRef="lex:id">
+            <choice>
+              <orig>ᏚᏙᎥᎢ</orig>
+              <seg type="simple_phonetics">dudoʔvʔi</seg>
+              <seg type="gloss">named</seg>
+            </choice>
+          </w>
+          <lb n="19" />
+          <w xml:id="w54" lemmaRef="lex:id">
+            <choice>
+              <orig>ᎾᏍᎩᏊᏃ</orig>
+              <seg type="simple_phonetics">nasgigwuhno</seg>
+              <seg type="gloss">those, and</seg>
+            </choice>
+          </w>
+          <w xml:id="w55" lemmaRef="lex:id">
+            <choice>
+              <orig>ᏂᎦᎠ</orig>
+              <seg type="simple_phonetics">nigaʔa</seg>
+              <seg type="gloss">all</seg>
+            </choice>
+          </w>
+          <lb n="20" />
+          <w xml:id="w56" lemmaRef="lex:id">
+            <choice>
+              <orig>ᏥᎪᏪᎳ</orig>
+              <seg type="simple_phonetics">jigowela</seg>
+              <seg type="morphemic_segmentation">jigowela</seg>
+            </choice>
+          </w>
+        </body>
+      </text>
+      <text type="translation" xml:lang="en">
+        <body>
+          <ab xml:id="b1_trans">
+            <seg>﻿1919</seg>
+            <seg>Story of Gvdisati Wahaya</seg>
+            <seg>(Wylie Wolf)</seg>
+          </ab>
+          <ab xml:id="b2_trans">
+            <seg>Gvdusati told this story</seg>
+            <seg></seg>
+          </ab>
+          <ab xml:id="b3_trans">
+            <seg>He always talked about what happened in the war
+            that his grandfather fought in</seg>
+            <seg>His grandfather was wounded</seg>
+            <seg></seg>
+          </ab>
+          <ab xml:id="b4_trans">
+            <seg>Gvdusati told that they were sitting around some
+            place and they were starving</seg>
+            <seg>When they ran out of coffee, they caught tomato
+            roller bugs, toasted them over the fire and ground them
+            up</seg>
+            <seg></seg>
+          </ab>
+          <ab xml:id="b5_trans">
+            <seg>Gvdusati told about once when they fought by the
+            creek at a place called Cowskin Prairie</seg>
+            <seg>The two detachments were only one-fourth of a mile
+            apart when they began shooting at each other</seg>
+            <seg>They fought back really hard at this place named
+            Cowskin Prairie</seg>
+            <seg></seg>
+          </ab>
+        </body>
+      </text>
+    </group>
+  </text>
+  <standOff>
+    <d:noteBlock>
+      <note target="#w11">Full word in RRD, can't find root in UDB.
+      Maybe [li:] 'burn'?</note>
+      <note target="#w15">noq: atsisonvnvhi 'wounded'</note>
+      <note target="#w21">noq: ulilohi 'ideal, attractive'</note>
+      <note target="#w31">Unknown form</note>
+      <note target="#w32">Unknown form</note>
+      <note target="#w35">iyu yigi 'at any time'</note>
+      <note target="#w44">Unknown form</note>
+      <note target="#w46">Noquisis: asdaya 'hard'</note>
+      <note target="#w56">Unknown form</note>
+    </d:noteBlock>
+  </standOff>
+</TEI>
