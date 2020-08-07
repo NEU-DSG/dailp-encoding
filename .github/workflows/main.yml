@@ -29,19 +29,20 @@ jobs:
     - uses: actions/setup-node@v1
       with:
         node-version: 8
+    - name: Install saxon (XSLT processor)
+      run: sudo apt-get install libsaxonb-java
+    - name: Install surge
+      run: sudo npm i -g surge
 
     - name: Encode documents as TEI
       run: cd encoder && cargo run
-    - name: Install saxon (XSLT processor)
-      run: sudo apt-get install libsaxonb-java
 
     - name: Render TEI as HTML
       run: |
+        mkdir -p public/xml
         for f in xml/*.xml
         do
           saxonb-xslt -s:$f -xsl:xml/stylesheets/xhtml.xsl -o:public/${f%.*}.html
         done
-    - name: Install surge
-      run: sudo npm i -g surge
     - name: Publish HTML to surge
       run: surge public dailp-encoding.surge.sh --token ${{ secrets.SURGE_TOKEN }}
