@@ -17,6 +17,10 @@ pub struct DocumentMetadata {
     pub people: Vec<String>,
     pub translation: Translation,
 }
+#[derive(Debug, Serialize)]
+pub struct DocumentIndex {
+    pub sheet_ids: Vec<String>,
+}
 #[derive(Debug, Serialize, Deserialize)]
 pub struct AnnotationRow {
     pub title: String,
@@ -54,6 +58,18 @@ impl SheetResult {
         .await?
         .json::<SheetResult>()
         .await?)
+    }
+    pub fn into_index(self) -> Result<DocumentIndex> {
+        // Example URL: https://docs.google.com/spreadsheets/d/1sDTRFoJylUqsZlxU57k1Uj8oHhbM3MAzU8sDgTfO7Mk/edit#gid=0
+        Ok(DocumentIndex {
+            sheet_ids: self
+                .values
+                .into_iter()
+                .skip(1)
+                .filter(|row| row.len() > 11 && !row[11].is_empty())
+                .map(|mut row| row.remove(11).split("/").nth(5).unwrap().to_owned())
+                .collect(),
+        })
     }
     pub async fn into_metadata(mut self) -> Result<DocumentMetadata> {
         // Meta order: genre, source, title, source page #, page count, translation
