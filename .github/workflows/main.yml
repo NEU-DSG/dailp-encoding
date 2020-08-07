@@ -9,6 +9,7 @@ on:
     branches: [ master ]
   pull_request:
     branches: [ master ]
+  workflow_dispatch:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -25,13 +26,13 @@ jobs:
       run: cd encoder && cargo run
 
     - name: Install saxon (XSLT processor)
-      run: sudo apt-get install libsaxonhe-java
+      run: sudo apt-get install openjdk-8-jdk libsaxonhe-java
 
     - name: Render TEI as HTML
       run: |
         for f in xml/*.xml
         do
-          saxon-he -s:$f -xsl:xml/stylesheets/xhtml.xsl -o:public/${f%.*}.html
+          java net.sf.saxon.Transform -s:$f -xsl:xml/stylesheets/xhtml.xsl -o:public/${f%.*}.html
         done
     - name: Install surge and fire deployment
       uses: actions/setup-node@v1
