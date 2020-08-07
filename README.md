@@ -1,9 +1,10 @@
 # dailp
 This is a repository for XML data and related materials for the Digital Archive of American Indian Languages Preservation and Perseverance project. 
 
-The following button will trigger a new deploy that pulls in all our annotated spreadsheets, converts them to TEI, converts the TEI to HTML, then deploys that to https://moondisaster.surge.sh.
+![CI](https://github.com/NEU-DSG/dailp-encoding/workflows/CI/badge.svg)
 
-![Deploy](https://github.com/NEU-DSG/dailp-encoding/workflows/CI/badge.svg?event=workflow_run)
+To trigger a new deploy, go [here](https://github.com/NEU-DSG/dailp-encoding/actions?query=workflow%3ACI) and click `Run workflow`.
+This process pulls in all our annotated spreadsheets, converts them to TEI, converts the TEI to HTML, then deploys that to https://moondisaster.surge.sh.
 
 ## Resources
 - [Draft TEI
