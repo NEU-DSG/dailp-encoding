@@ -1,11 +1,13 @@
+use crate::translation::{DocResult, Translation};
+use crate::GOOGLE_API_KEY;
 use anyhow::Result;
 use reqwest;
 use serde::{Deserialize, Serialize};
 
-const GOOGLE_API_KEY: &str = "AIzaSyBqqPrkht_OeYUSNkSf_sc6UzNaFhzOVNI";
-
 #[derive(Debug, Serialize)]
 pub struct DocumentMetadata {
+    /// Official short identifier for this document.
+    pub id: String,
     /// Title of the annotated document.
     pub title: String,
     pub publication: Option<String>,
@@ -13,6 +15,7 @@ pub struct DocumentMetadata {
     pub source: Option<String>,
     /// The people involved in collecting, translating, annotating.
     pub people: Vec<String>,
+    pub translation: Translation,
 }
 #[derive(Debug, Serialize, Deserialize)]
 pub struct AnnotationRow {
@@ -52,18 +55,26 @@ impl SheetResult {
         .json::<SheetResult>()
         .await?)
     }
-    pub fn into_metadata(mut self) -> DocumentMetadata {
+    pub async fn into_metadata(mut self) -> Result<DocumentMetadata> {
         // Meta order: genre, source, title, source page #, page count, translation
         // First column is the name of the field, useless when parsing so we ignore it.
+        let mut doc_id = self.values.remove(0);
         let _genre = self.values.remove(0);
         let mut source = self.values.remove(0);
         let mut title = self.values.remove(0);
-        DocumentMetadata {
+        let _page_num = self.values.remove(0);
+        let _page_count = self.values.remove(0);
+        let mut translations = self.values.remove(0);
+        Ok(DocumentMetadata {
+            id: doc_id.remove(1),
             title: title.remove(1),
             publication: None,
             people: Vec::new(),
             source: Some(source.remove(1)),
-        }
+            translation: DocResult::new(&translations.remove(1))
+                .await?
+                .to_translation(),
+        })
     }
     pub fn split_into_lines(mut self) -> Vec<SemanticLine> {
         // The header line is useless in encoding.

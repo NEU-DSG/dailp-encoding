@@ -1,3 +1,4 @@
+{# -*- mode: web; -*- #}
 
 {% macro any_segment(segment) %}
   {% if segment.type == "LineBreak" %}
@@ -15,25 +16,28 @@
 
 {% macro word(segment) %}
   <w xml:id="w{{segment.index + 1}}" lemmaRef="lex:id">
-    <choice>
-      <orig>{{segment.source | convert_breaks(lb=segment.line_break, pb=segment.page_break) | safe}}</orig>
-      <reg></reg>
-      {% if segment.simple_phonetics %}
-        <seg type="simple_phonetics">{{segment.simple_phonetics}}</seg>
-      {% endif %}
-      {% if segment.phonemic %}
-        <seg type="phonemic_form">{{segment.phonemic}}</seg>
-      {% endif %}
-      {% if segment.morphemic_segmentation %}
-        <seg type="morphemic_segmentation">{{segment.morphemic_segmentation}}</seg>
-      {% endif %}
-      {% if segment.morpheme_gloss %}
-        <seg type="morphemic_gloss">{{segment.morpheme_gloss}}</seg>
-      {% endif %}
-      {% if segment.english_gloss %}
-        <seg type="gloss">{{segment.english_gloss}}</seg>
-      {% endif %}
-    </choice>
+    {% if segment.simple_phonetics or segment.phonemic or segment.morphemic_segmentation or segment.morpheme_gloss or segment.english_gloss %}
+      <choice>
+        <orig>{{segment.source | convert_breaks(lb=segment.line_break, pb=segment.page_break) | safe}}</orig>
+        {% if segment.simple_phonetics %}
+          <seg type="simple_phonetics">{{segment.simple_phonetics}}</seg>
+        {% endif %}
+        {% if segment.phonemic %}
+          <seg type="phonemic_form">{{segment.phonemic}}</seg>
+        {% endif %}
+        {% if segment.morphemic_segmentation %}
+          <seg type="morphemic_segmentation">{{segment.morphemic_segmentation}}</seg>
+        {% endif %}
+        {% if segment.morpheme_gloss %}
+          <seg type="morphemic_gloss">{{segment.morpheme_gloss}}</seg>
+        {% endif %}
+        {% if segment.english_gloss %}
+          <seg type="gloss">{{segment.english_gloss}}</seg>
+        {% endif %}
+      </choice>
+    {% else %}
+      {{segment.source | convert_breaks(lb=segment.line_break, pb=segment.page_break) | safe}}
+    {% endif %}
   </w>
 {% endmacro word %}
 
@@ -56,7 +60,7 @@
 {% macro commentary(segment) %}
   {% if segment.type == "Word" and segment.commentary %}
     <note target="#w{{segment.index + 1}}">
-      <p>{{segment.commentary}}</p>
+      {{segment.commentary}}
     </note>
   {% elif segment.parts %}
     {% for segment in segment.parts %}
