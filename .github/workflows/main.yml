@@ -42,9 +42,13 @@ jobs:
       run: |
         mkdir -p public/xml
         cp xml/stylesheets/style.css public/xml/style.css
+        touch public/index.html
+        echo "<html><head/><body><ul>" >> public/index.html
         for f in xml/*.xml
         do
           saxonb-xslt -s:$f -xsl:xml/stylesheets/xhtml.xsl -o:public/${f%.*}.html
+          echo "<li><a href=\"/${f%.*}\">${f%.*}</a></li>" >> public/index.html
         done
+        echo "</ul></body></html>" >> public/index.html
     - name: Publish HTML to surge
       run: surge public dailp-encoding.surge.sh --token ${{ secrets.SURGE_TOKEN }}
