@@ -83,6 +83,7 @@ impl<'a> AnnotatedLine<'a> {
     fn to_segments(lines: Vec<Self>) -> Vec<AnnotatedSeg<'a>> {
         let mut segments = Vec::<AnnotatedSeg>::new();
         let mut stack = Vec::<AnnotatedPhrase>::new();
+        let mut child_segments = Vec::<AnnotatedSeg>::new();
         let mut line_num = 0;
         let mut page_num = 0;
         let mut word_idx = 0;
@@ -100,7 +101,7 @@ impl<'a> AnnotatedLine<'a> {
                 if let Some(p) = stack.last_mut() {
                     p.parts.push(lb);
                 } else {
-                    segments.push(lb);
+                    child_segments.push(lb);
                 }
                 line_num += 1;
             }
@@ -128,8 +129,9 @@ impl<'a> AnnotatedLine<'a> {
                     source = &source[1..];
                     stack.push(AnnotatedPhrase {
                         index: block_idx,
-                        parts: Vec::new(),
+                        parts: child_segments,
                     });
+                    child_segments = Vec::new();
                     block_idx += 1;
                 }
                 // Check for the start of a phrase.
