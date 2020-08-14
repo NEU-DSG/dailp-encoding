@@ -17,7 +17,16 @@
             <xsl:apply-templates/>
         </body>
     </xsl:template>
-    <xsl:template match="teiHeader"/>
+    <xsl:template match="teiHeader">
+        <header>
+            <h1>
+                <xsl:value-of select="fileDesc/titleStmt/title" />
+            </h1>
+            <h2>
+                <xsl:value-of select="fileDesc/sourceDesc/p" />
+            </h2>
+        </header>
+    </xsl:template>
     <!-- TODO: text -->
     <xsl:template match="group">
         <div id="doc_interface">
@@ -46,16 +55,6 @@
         <div class="doc_page">
             <xsl:apply-templates select="following-sibling::ab"/>
         </div>
-    </xsl:template>
-    <xsl:template match="fileDesc">
-        <header>
-            <h1>
-                <xsl:value-of select="titleStmt/title" />
-            </h1>
-            <h2>
-                <xsl:value-of select="sourceDesc" />
-            </h2>
-        </header>
     </xsl:template>
     <xsl:template match="ab">
         <p>
