@@ -14,7 +14,7 @@ async fn main() -> Result<()> {
             .await?
             .into_index()?;
 
-    for sheet_id in index.sheet_ids.into_iter() {
+    for sheet_id in index.sheet_ids {
         // Split the contents of each main sheet into semantic lines with
         // several layers.
         let sheet = retrieve::SheetResult::from_sheet(&sheet_id, None)
