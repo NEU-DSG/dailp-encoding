@@ -1,4 +1,22 @@
-.doc_page {
+@import url(//fonts.googleapis.com/earlyaccess/notosanscherokee.css);
+@import url('https://fonts.googleapis.com/css2?family=Gentium+Book+Basic&display=swap');
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    display: flex;
+    flex-flow: column nowrap;
+    align-items: center;
+    font-family: "Gentium Book Basic", "Noto Sans Cherokee";
+}
+
+.doc-interface {
+    max-width: 1024px;
+}
+
+.doc-page {
     display: flex;
     flex-flow: row wrap;
 }
