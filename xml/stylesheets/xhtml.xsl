@@ -11,23 +11,33 @@
         <!-- <xsl:text disable-output-escaping="yes">&#10;&lt;!DOCTYPE html&gt;&#10;</xsl:text>-->
         <head>
             <title>DAILP Document Viewer</title>
+            <link rel="stylesheet" href="style.css" />
         </head>
         <body>
             <xsl:apply-templates/>
         </body>
     </xsl:template>
-    <xsl:template match="teiHeader"/>
+    <xsl:template match="teiHeader">
+        <header>
+            <h1>
+                <xsl:value-of select="fileDesc/titleStmt/title" />
+            </h1>
+            <h2>
+                <xsl:value-of select="fileDesc/sourceDesc/p" />
+            </h2>
+        </header>
+    </xsl:template>
     <!-- TODO: text -->
     <xsl:template match="group">
-        <div id="doc_interface">
+        <main id="doc-interface">
             <xsl:apply-templates/>
-        </div>
+        </main>
     </xsl:template>
     <xsl:template match="group/text">
-        <div class="doc_layer" id="{@type}"><xsl:apply-templates/></div>
+        <section class="doc-layer" id="{@type}"><xsl:apply-templates/></section>
     </xsl:template>
     <xsl:template match="body">
-        <div class="doc_container">
+        <div class="doc-container">
             <!-- Is there a more elegant handling of this? -->
             <xsl:choose>
                 <xsl:when test="exists(child::pb)">
@@ -42,7 +52,7 @@
     </xsl:template>
     <!-- This allows the output tree to encapsulate pages for pagination -->
     <xsl:template match="pb">
-        <div class="doc_page">
+        <div class="doc-page">
             <xsl:apply-templates select="following-sibling::ab"/>
         </div>
     </xsl:template>
@@ -52,12 +62,12 @@
         </p>
     </xsl:template>
     <xsl:template match="lb">
-        <br id="{@n}"/>
+        <!-- <br id="line-break-{@n}"/> -->
     </xsl:template>
     <xsl:template match="ab/seg">
-        <span class="idea_unit" id="{@xml:id}">
+        <div class="idea-unit" id="{@xml:id}">
             <xsl:apply-templates/>
-        </span>
+        </div>
     </xsl:template>
     <xsl:template match="w">
         <div class="word" id="{@xml:id}">
@@ -91,7 +101,7 @@
         </div>
     </xsl:template>
     <xsl:template match="d:noteBlock">
-        <div class="noteBlock">
+        <div class="note-block">
             <xsl:apply-templates/>
         </div>
     </xsl:template>
