@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<?xml-model href="../schema/out/dailp_odd.rng" type="application/xml" schematypens="http://relaxng.org/ns/structure/1.0"?>
+<?xml-model href="schema/out/dailp_odd.rng" type="application/xml" schematypens="http://relaxng.org/ns/structure/1.0"?>
 <TEI xmlns="http://www.tei-c.org/ns/1.0"
 xmlns:d="https://dsg.northeastern.edu/dailp/ns/1.0">
   <teiHeader>
@@ -28,17 +28,15 @@ xmlns:d="https://dsg.northeastern.edu/dailp/ns/1.0">
         </prefixDef>
       </listPrefixDef>
     </encodingDesc>
-    <profileDesc>
-      <particDesc></particDesc>
-    </profileDesc>
+    <profileDesc></profileDesc>
   </teiHeader>
   <text>
     <group>
       <text type="source" xml:lang="chr">
         <body>
           <pb facs="drs:page1" />
-          <lb n="1" />
           <ab xml:id="b1" corresp="#b1_trans">
+            <lb n="1" />
             <w xml:id="w1" lemmaRef="lex:id">
               <choice>
                 <orig>ᏚᏙᎥᎢ</orig>
@@ -98,8 +96,8 @@ xmlns:d="https://dsg.northeastern.edu/dailp/ns/1.0">
               </choice>
             </w>
           </ab>
-          <lb n="2" />
           <ab xml:id="b2" corresp="#b2_trans">
+            <lb n="2" />
             <w xml:id="w6" lemmaRef="lex:id">
               <choice>
                 <orig>ᎩᎶᎢ</orig>
@@ -334,8 +332,8 @@ xmlns:d="https://dsg.northeastern.edu/dailp/ns/1.0">
               </choice>
             </w>
           </ab>
-          <lb n="9" />
           <ab xml:id="b3" corresp="#b3_trans">
+            <lb n="9" />
             <w xml:id="w25" lemmaRef="lex:id">
               <choice>
                 <orig>ᎢᎸᎯᏳᎾᏏ</orig>
@@ -614,8 +612,8 @@ xmlns:d="https://dsg.northeastern.edu/dailp/ns/1.0">
               </choice>
             </w>
           </ab>
-          <lb n="17" />
           <ab xml:id="b4" corresp="#b4_trans">
+            <lb n="17" />
             <w xml:id="w48" lemmaRef="lex:id">
               <choice>
                 <orig>ᎥᎵᏍᏓᏴᏂᏙᎲᎢ</orig>
@@ -846,37 +844,35 @@ xmlns:d="https://dsg.northeastern.edu/dailp/ns/1.0">
               </choice>
             </w>
           </ab>
-          <lb n="24" />
-          <phr xml:id="p5">
-            <phr xml:id="p1">
-              <w xml:id="w68" lemmaRef="lex:id">
-                <choice>
-                  <orig>ᏧᏓᎴᏅᏓ</orig>
-                  <seg type="simple_phonetics">ju⁠da⁠lenv⁠da⁠</seg>
-                  <seg type="phonemic_form">cuutaleehnvvta</seg>
-                  <seg type="morphemic_segmentation">
-                  c-uu-ataleehnvvta</seg>
-                  <seg type="morphemic_gloss">
-                  DIST2-3SG.B-different</seg>
-                  <seg type="gloss">different</seg>
-                </choice>
-              </w>
-              <w xml:id="w69" lemmaRef="lex:id">
-                <choice>
-                  <orig>ᏴᎵᏍᏓᏴᏂᏙᎠ</orig>
-                  <seg type="simple_phonetics">
-                  ⁠yv⁠ls⁠da⁠yv⁠ni⁠doʔ⁠a⁠</seg>
-                  <seg type="phonemic_form">
-                  ⁠yvlstááyvv⁠hniitʔooha⁠</seg>
-                  <seg type="morphemic_segmentation">
-                  ⁠y-vv-alistaʔyvv-⁠hn-iit-ʔooh-a⁠</seg>
-                  <seg type="morphemic_gloss">
-                  IRR-3A.IP-eat.meal-PFT-AMB-IMPF-CVB</seg>
-                  <seg type="gloss">whenever one goes around eating
-                  (different) meals</seg>
-                </choice>
-              </w>
-            </phr>
+          <ab xml:id="b5" corresp="#b5_trans">
+            <lb n="24" />
+            <w xml:id="w68" lemmaRef="lex:id">
+              <choice>
+                <orig>ᏧᏓᎴᏅᏓ</orig>
+                <seg type="simple_phonetics">ju⁠da⁠lenv⁠da⁠</seg>
+                <seg type="phonemic_form">cuutaleehnvvta</seg>
+                <seg type="morphemic_segmentation">
+                c-uu-ataleehnvvta</seg>
+                <seg type="morphemic_gloss">
+                DIST2-3SG.B-different</seg>
+                <seg type="gloss">different</seg>
+              </choice>
+            </w>
+            <w xml:id="w69" lemmaRef="lex:id">
+              <choice>
+                <orig>ᏴᎵᏍᏓᏴᏂᏙᎠ</orig>
+                <seg type="simple_phonetics">
+                ⁠yv⁠ls⁠da⁠yv⁠ni⁠doʔ⁠a⁠</seg>
+                <seg type="phonemic_form">
+                ⁠yvlstááyvv⁠hniitʔooha⁠</seg>
+                <seg type="morphemic_segmentation">
+                ⁠y-vv-alistaʔyvv-⁠hn-iit-ʔooh-a⁠</seg>
+                <seg type="morphemic_gloss">
+                IRR-3A.IP-eat.meal-PFT-AMB-IMPF-CVB</seg>
+                <seg type="gloss">whenever one goes around eating
+                (different) meals</seg>
+              </choice>
+            </w>
             <lb n="25" />
             <w xml:id="w70" lemmaRef="lex:id">
               <choice>
@@ -891,20 +887,19 @@ xmlns:d="https://dsg.northeastern.edu/dailp/ns/1.0">
                 <seg type="gloss">will die</seg>
               </choice>
             </w>
-          </phr>
-          <w xml:id="w71" lemmaRef="lex:id">
-            <choice>
-              <orig>ᎠᏗᏍᎬᎢ</orig>
-              <seg type="simple_phonetics">⁠a⁠di⁠s⁠gvʔ⁠i⁠</seg>
-              <seg type="phonemic_form">atiskvv́ʔi</seg>
-              <seg type="morphemic_segmentation">
-              Ø-at-isk-vv́ʔi</seg>
-              <seg type="morphemic_gloss">3SG.A-say-IMPF-ASR</seg>
-              <seg type="gloss">he used to say</seg>
-            </choice>
-          </w>
-          <lb n="26" />
-          <phr xml:id="p2">
+            <w xml:id="w71" lemmaRef="lex:id">
+              <choice>
+                <orig>ᎠᏗᏍᎬᎢ</orig>
+                <seg type="simple_phonetics">⁠a⁠di⁠s⁠gvʔ⁠i⁠</seg>
+                <seg type="phonemic_form">atiskvv́ʔi</seg>
+                <seg type="morphemic_segmentation">
+                Ø-at-isk-vv́ʔi</seg>
+                <seg type="morphemic_gloss">
+                3SG.A-say-IMPF-ASR</seg>
+                <seg type="gloss">he used to say</seg>
+              </choice>
+            </w>
+            <lb n="26" />
             <w xml:id="w72" lemmaRef="lex:id">
               <choice>
                 <orig>ᎦᎾᏍᏓ</orig>
@@ -927,21 +922,21 @@ xmlns:d="https://dsg.northeastern.edu/dailp/ns/1.0">
                 <seg type="gloss">killer (of many)</seg>
               </choice>
             </w>
-          </phr>
-          <w xml:id="w74" lemmaRef="lex:id">
-            <choice>
-              <orig>ᏥᎨᏒᎢ</orig>
-              <seg type="simple_phonetics">⁠ji⁠ge⁠svʔ⁠i</seg>
-              <seg type="phonemic_form">cikeesvvʔi</seg>
-              <seg type="morphemic_segmentation">
-              ci-Ø-kee-s-vvʔi</seg>
-              <seg type="morphemic_gloss">
-              REL-3SG.A-be-IMPF-ASR</seg>
-              <seg type="gloss">who was</seg>
-            </choice>
-          </w>
-          <lb n="27" />
+            <w xml:id="w74" lemmaRef="lex:id">
+              <choice>
+                <orig>ᏥᎨᏒᎢ</orig>
+                <seg type="simple_phonetics">⁠ji⁠ge⁠svʔ⁠i</seg>
+                <seg type="phonemic_form">cikeesvvʔi</seg>
+                <seg type="morphemic_segmentation">
+                ci-Ø-kee-s-vvʔi</seg>
+                <seg type="morphemic_gloss">
+                REL-3SG.A-be-IMPF-ASR</seg>
+                <seg type="gloss">who was</seg>
+              </choice>
+            </w>
+          </ab>
           <ab xml:id="b6" corresp="#b6_trans">
+            <lb n="27" />
             <w xml:id="w75" lemmaRef="lex:id">
               <choice>
                 <orig>ᎠᎾᏗᏍᎪᎢ</orig>
@@ -1047,7 +1042,7 @@ xmlns:d="https://dsg.northeastern.edu/dailp/ns/1.0">
               </choice>
             </w>
             <lb n="30" />
-            <phr xml:id="p3">
+            <phr xml:id="p1">
               <w xml:id="w84" lemmaRef="lex:id">
                 <choice>
                   <orig>ᎤᏛᏁᎢ</orig>
@@ -1060,8 +1055,8 @@ xmlns:d="https://dsg.northeastern.edu/dailp/ns/1.0">
                   <seg type="gloss">said</seg>
                 </choice>
               </w>
-              <phr xml:id="p4">
-                <phr xml:id="p5">
+              <phr xml:id="p2">
+                <phr xml:id="p3">
                   <w xml:id="w85" lemmaRef="lex:id">
                     <choice>
                       <orig>ᎦᎾᏍᏓ</orig>
