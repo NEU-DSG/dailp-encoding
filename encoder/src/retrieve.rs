@@ -93,6 +93,10 @@ impl SheetResult {
         })
     }
     pub fn split_into_lines(mut self) -> Vec<SemanticLine> {
+        if self.values.len() <= 0 {
+            return Vec::new();
+        }
+
         // The header line is useless in encoding.
         self.values.remove(0);
 
@@ -111,7 +115,9 @@ impl SheetResult {
                         rows: current_result
                             .into_iter()
                             .map(|mut row| {
-                                row.remove(0);
+                                if row.len() > 1 {
+                                    row.remove(0);
+                                }
                                 AnnotationRow {
                                     title: row.remove(0),
                                     items: row,
@@ -133,7 +139,9 @@ impl SheetResult {
                 rows: current_result
                     .into_iter()
                     .map(|mut row| {
-                        row.remove(0);
+                        if row.len() > 1 {
+                            row.remove(0);
+                        }
                         AnnotationRow {
                             title: row.remove(0),
                             items: row,
