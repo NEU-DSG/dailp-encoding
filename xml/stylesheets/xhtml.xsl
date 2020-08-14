@@ -29,15 +29,15 @@
     </xsl:template>
     <!-- TODO: text -->
     <xsl:template match="group">
-        <div id="doc_interface">
+        <main id="doc-interface">
             <xsl:apply-templates/>
-        </div>
+        </main>
     </xsl:template>
     <xsl:template match="group/text">
-        <div class="doc_layer" id="{@type}"><xsl:apply-templates/></div>
+        <div class="doc-layer" id="{@type}"><xsl:apply-templates/></div>
     </xsl:template>
     <xsl:template match="body">
-        <div class="doc_container">
+        <div class="doc-container">
             <!-- Is there a more elegant handling of this? -->
             <xsl:choose>
                 <xsl:when test="exists(child::pb)">
@@ -52,7 +52,7 @@
     </xsl:template>
     <!-- This allows the output tree to encapsulate pages for pagination -->
     <xsl:template match="pb">
-        <div class="doc_page">
+        <div class="doc-page">
             <xsl:apply-templates select="following-sibling::ab"/>
         </div>
     </xsl:template>
@@ -62,10 +62,10 @@
         </p>
     </xsl:template>
     <xsl:template match="lb">
-        <br id="{@n}"/>
+        <!-- <br id="line-break-{@n}"/> -->
     </xsl:template>
     <xsl:template match="ab/seg">
-        <span class="idea_unit" id="{@xml:id}">
+        <span class="idea-unit" id="{@xml:id}">
             <xsl:apply-templates/>
         </span>
     </xsl:template>
@@ -101,7 +101,7 @@
         </div>
     </xsl:template>
     <xsl:template match="d:noteBlock">
-        <div class="noteBlock">
+        <div class="note-block">
             <xsl:apply-templates/>
         </div>
     </xsl:template>
