@@ -11,6 +11,7 @@
         <!-- <xsl:text disable-output-escaping="yes">&#10;&lt;!DOCTYPE html&gt;&#10;</xsl:text>-->
         <head>
             <title>DAILP Document Viewer</title>
+            <link rel="stylesheet" href="style.css" />
         </head>
         <body>
             <xsl:apply-templates/>
@@ -45,6 +46,16 @@
         <div class="doc_page">
             <xsl:apply-templates select="following-sibling::ab"/>
         </div>
+    </xsl:template>
+    <xsl:template match="fileDesc">
+        <header>
+            <h1>
+                <xsl:value-of select="titleStmt/title" />
+            </h1>
+            <h2>
+                <xsl:value-of select="sourceDesc" />
+            </h2>
+        </header>
     </xsl:template>
     <xsl:template match="ab">
         <p>

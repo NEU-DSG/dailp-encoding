@@ -1,0 +1,12 @@
+.doc_page {
+    display: flex;
+    flex-flow: row wrap;
+}
+
+.word {
+    margin: 16px;
+}
+
+#translation {
+    margin: 32px 0px;
+}
