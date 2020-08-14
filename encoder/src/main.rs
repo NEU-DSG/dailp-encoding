@@ -23,13 +23,13 @@ async fn main() -> Result<()> {
 
         // Parse the metdata on the second page of each sheet.
         // This includes publication information and a link to the translation.
-        let meta = retrieve::SheetResult::from_sheet(&sheet_id, Some("Metadata"))
-            .await?
-            .into_metadata()
-            .await?;
-
-        // Pass all of this into the TEI output.
-        encode::write_to_file(meta, sheet)?;
+        if let Ok(res) = retrieve::SheetResult::from_sheet(&sheet_id, Some("Metadata")).await {
+            if let Ok(meta) = res.into_metadata().await {
+                // Pass all of this into the TEI output.
+                encode::write_to_file(meta, sheet)?;
+            }
+        }
     }
+
     Ok(())
 }
