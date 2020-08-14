@@ -1,0 +1,31 @@
+@import url(//fonts.googleapis.com/earlyaccess/notosanscherokee.css);
+@import url('https://fonts.googleapis.com/css2?family=Gentium+Basic&display=swap');
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: "Gentium Basic", "Noto Sans Cherokee";
+    display: flex;
+    flex-flow: column nowrap;
+    align-items: center;
+    font-size: 18px;
+}
+
+#doc-interface {
+    max-width: 1024px;
+}
+
+.doc-page, .idea-unit {
+    display: flex;
+    flex-flow: row wrap;
+    justify-content: space-between;
+}
+
+.word {
+    margin: 16px 24px;
+}
+
+#translation {
+    margin: 32px 0px;
+}
