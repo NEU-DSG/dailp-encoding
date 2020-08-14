@@ -38,6 +38,7 @@ jobs:
     - name: Render TEI as HTML
       run: |
         mkdir -p public/xml
+        cp xml/stylesheets/style.css public/xml/style.css
         for f in xml/*.xml
         do
           saxonb-xslt -s:$f -xsl:xml/stylesheets/xhtml.xsl -o:public/${f%.*}.html
