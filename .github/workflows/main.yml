@@ -23,8 +23,11 @@ jobs:
       id: cache-deps
       uses: actions/cache@v2
       with:
-        path: encoder/target
-        key: ${{ runner.os }}-cargo
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          encoder/target
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
     - uses: actions/setup-node@v1
       with: {node-version: 8}
     - name: Install saxon (XSLT processor)
