@@ -34,7 +34,7 @@
         </main>
     </xsl:template>
     <xsl:template match="group/text">
-        <div class="doc-layer" id="{@type}"><xsl:apply-templates/></div>
+        <section class="doc-layer" id="{@type}"><xsl:apply-templates/></section>
     </xsl:template>
     <xsl:template match="body">
         <div class="doc-container">
@@ -65,9 +65,9 @@
         <!-- <br id="line-break-{@n}"/> -->
     </xsl:template>
     <xsl:template match="ab/seg">
-        <span class="idea-unit" id="{@xml:id}">
+        <div class="idea-unit" id="{@xml:id}">
             <xsl:apply-templates/>
-        </span>
+        </div>
     </xsl:template>
     <xsl:template match="w">
         <div class="word" id="{@xml:id}">

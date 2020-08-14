@@ -15,7 +15,7 @@ body {
     max-width: 1024px;
 }
 
-.doc-page {
+.doc-page, .idea-unit {
     display: flex;
     flex-flow: row wrap;
     justify-content: space-between;
