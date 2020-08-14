@@ -9,6 +9,7 @@ body {
     display: flex;
     flex-flow: column nowrap;
     align-items: center;
+    font-size: 18px;
 }
 
 #doc-interface {
@@ -22,7 +23,7 @@ body {
 }
 
 .word {
-    margin: 16px;
+    margin: 16px 24px;
 }
 
 #translation {
