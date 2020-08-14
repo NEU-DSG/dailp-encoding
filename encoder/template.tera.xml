@@ -1,7 +1,7 @@
 {# -*- mode: web; -*- #}
 {% import "macros.xml" as macros %}
 <?xml version="1.0" encoding="UTF-8"?>
-<?xml-model href="../schema/out/dailp_odd.rng" type="application/xml" schematypens="http://relaxng.org/ns/structure/1.0"?>
+<?xml-model href="schema/out/dailp_odd.rng" type="application/xml" schematypens="http://relaxng.org/ns/structure/1.0"?>
 <TEI xmlns="http://www.tei-c.org/ns/1.0" xmlns:d="https://dsg.northeastern.edu/dailp/ns/1.0">
   <teiHeader>
     <fileDesc>
@@ -26,13 +26,15 @@
       </listPrefixDef>
     </encodingDesc>
     <profileDesc>
-      <particDesc>
-        {% for person in meta.people %}
-          <person xml:id="{{person | slugify}}">
-            <persName>{{person}}</persName>
-          </person>
-        {% endfor %}
-      </particDesc>
+      {% if meta.people %}
+        <particDesc>
+          {% for person in meta.people %}
+            <person xml:id="{{person | slugify}}">
+              <persName>{{person}}</persName>
+            </person>
+          {% endfor %}
+        </particDesc>
+      {% endif %}
     </profileDesc>
   </teiHeader>
 

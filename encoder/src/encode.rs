@@ -123,7 +123,7 @@ impl<'a> AnnotatedLine<'a> {
                     line_num += 1;
                 }
 
-                let mut source = &word.source[..];
+                let mut source = &word.source.trim()[..];
                 // Check for the start of a block.
                 while source.starts_with(BLOCK_START) {
                     source = &source[1..];
@@ -143,12 +143,12 @@ impl<'a> AnnotatedLine<'a> {
                     });
                     seg_idx += 1;
                 }
+                // Remove all ending brackets from the source.
                 let mut blocks_to_pop = 0;
                 while source.ends_with(BLOCK_END) {
                     source = &source[..source.len() - 1];
                     blocks_to_pop += 1;
                 }
-                // Remove all ending brackets from the source.
                 let mut count_to_pop = 0;
                 while source.ends_with(PHRASE_END) {
                     source = &source[..source.len() - 1];
