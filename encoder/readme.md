@@ -13,6 +13,36 @@ cargo run
 All of the current markings are placed on the first row of each annotation line, which corresponds with the original source text in Cherokee syllabary.
 This leaves other rows untouched for capturing source document formatting.
 
+### Blocks
+While phrases are too granular to correspond directly to a section of our loose translations, blocks are larger units of text that do this correspondence.
+We contain a block of text with curly brackets `{}` in both the source text and the translation.
+These occur in the syllabary row rather than between lines because a block may not fall exactly on line boundaries.
+
+These will be matched up in the encoding process by pairing blocks in order,
+such that the fourth block in the annotation spreadsheet corresponds to the fourth block in the translation.
+
+The following example represents a block that starts with the first word of line 2, and ends with the first word of line 3.
+
+|        |                  |         |     |
+|--------|------------------|---------|-----|
+| Line 2 | Syllabary        | {ᎩᎶᎢ    | ... |
+|        | Simple Phonetics | ⁠kiloʔi  |     |
+|        | ...              |         |     |
+| Line 3 | Syllabary        | ᎨᏎᏍᏗ}   | ... |
+|        | Simple Phonetics | ⁠gesesdi |     |
+|        | ...              |         |     |
+
+Here is a corresponding loose translation:
+
+> He was called Switch Striker.
+> {One who heals others must take care of themselves.}
+> You must not go around eating different women's cooking.
+
+Generally, blocks will be closer to paragraph length as opposed to this sentence length example.
+If there is no clear way to break up the document into blocks, then simply enclose the whole thing in one block; the first word starts with `{` and the last word ends with `}`.
+
+**NOTE: All line breaks (explicit and implicit) must be contained within a block to be included in the TEI output.**
+
 ### Phrases
 Square brackets `[]` delimit phrases and can be nested to any degree.
 For example, the following table produces a three word phrase with a two word phrase nested inside of it:
@@ -58,33 +88,6 @@ If a page break occurs between lines, then filling the first cell of the empty r
 | Line 3 | Syllabary        | ...         |
 |        | Simple Phonetics | ...         |
 |        | ...              |             |
-
-### Blocks
-While phrases are too granular to correspond directly to a section of our loose translations, blocks are larger units of text that do this correspondence.
-We contain a block of text with curly brackets `{}` in both the source text and the translation.
-These occur in the syllabary row rather than between lines because a block may not fall exactly on line boundaries.
-
-These will be matched up in the encoding process by pairing blocks in order,
-such that the fourth block in the annotation spreadsheet corresponds to the fourth block in the translation.
-
-The following example represents a block that starts with the first word of line 2, and ends with the first word of line 3.
-
-|        |                  |         |     |
-|--------|------------------|---------|-----|
-| Line 2 | Syllabary        | {ᎩᎶᎢ    | ... |
-|        | Simple Phonetics | ⁠kiloʔi  |     |
-|        | ...              |         |     |
-| Line 3 | Syllabary        | ᎨᏎᏍᏗ}   | ... |
-|        | Simple Phonetics | ⁠gesesdi |     |
-|        | ...              |         |     |
-
-Here is a corresponding loose translation:
-
-> He was called Switch Striker.
-> {One who heals others must take care of themselves.}
-> You must not go around eating different women's cooking.
-
-Generally, blocks will be closer to paragraph length as opposed to this sentence length example.
 
 ### Metadata
 The document metadata must be listed in a sub-sheet titled exactly `Metadata`.
