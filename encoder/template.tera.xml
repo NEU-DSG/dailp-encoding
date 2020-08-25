@@ -6,13 +6,13 @@
   <teiHeader>
     <fileDesc>
       <titleStmt>
-        <title>{{ meta.title }}</title>
+        <title>{{ title }}</title>
       </titleStmt>
         <publicationStmt>
-          <p>{{meta.publication}}</p>
+          <p>{{publication}}</p>
         </publicationStmt>
         <sourceDesc>
-          <p>{{meta.source}}</p>
+          <p>{{source}}</p>
         </sourceDesc>
     </fileDesc>
     <encodingDesc>
@@ -26,9 +26,9 @@
       </listPrefixDef>
     </encodingDesc>
     <profileDesc>
-      {% if meta.people %}
+      {% if people %}
         <particDesc>
-          {% for person in meta.people %}
+          {% for person in people %}
             <person xml:id="{{person | slugify}}">
               <persName>{{person}}</persName>
             </person>
@@ -50,7 +50,7 @@
 
       <text type="translation" xml:lang="en">
         <body>
-          {% for block in meta.translation.blocks %}
+          {% for block in translation.blocks %}
           <ab xml:id="b{{block.index}}_trans">
             {% for segment in block.segments %}
             <seg>{{segment}}</seg>

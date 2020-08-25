@@ -22,24 +22,22 @@ const OUTPUT_DIR: &str = "../xml";
 /// Takes an unprocessed document with metadata, passing it through our TEI
 /// template to produce an xml document named like the given title.
 pub fn write_to_file(meta: DocumentMetadata, lines: Vec<SemanticLine>) -> Result<()> {
-    // let mut tera = Tera::new("*")?;
-    // let annotated = lines
-    //     .into_iter()
-    //     .map(|line| AnnotatedLine::from_semantic(line));
-    // let file_name = format!("{}/{}.xml", OUTPUT_DIR, meta.id);
-    // println!("writing to {}", file_name);
-    // tera.register_filter("convert_breaks", convert_breaks);
-    // let contents = tera.render(
-    //     "template.tera.xml",
-    //     &tera::Context::from_serialize(AnnotatedDoc {
-    //         meta,
-    //         segments: AnnotatedLine::to_segments(annotated.collect()),
-    //     })?,
-    // )?;
-    // // Make sure the output folder exists.
-    // std::fs::create_dir_all(OUTPUT_DIR)?;
-    // let mut f = File::create(file_name)?;
-    // f.write(contents.as_bytes())?;
+    let mut tera = Tera::new("*")?;
+    let annotated = lines
+        .into_iter()
+        .map(|line| AnnotatedLine::from_semantic(line));
+    let file_name = format!("{}/{}.xml", OUTPUT_DIR, meta.id);
+    println!("writing to {}", file_name);
+    tera.register_filter("convert_breaks", convert_breaks);
+    let segments = AnnotatedLine::to_segments(annotated.collect(), &meta.id);
+    let contents = tera.render(
+        "template.tera.xml",
+        &tera::Context::from_serialize(AnnotatedDoc::new(meta, segments))?,
+    )?;
+    // Make sure the output folder exists.
+    std::fs::create_dir_all(OUTPUT_DIR)?;
+    let mut f = File::create(file_name)?;
+    f.write(contents.as_bytes())?;
     Ok(())
 }
 
@@ -61,6 +59,20 @@ pub struct AnnotatedDoc {
     pub translation: Translation,
     pub segments: Vec<AnnotatedSeg>,
     pub image_url: Option<String>,
+}
+impl AnnotatedDoc {
+    pub fn new(meta: DocumentMetadata, segments: Vec<AnnotatedSeg>) -> Self {
+        Self {
+            id: meta.id,
+            title: meta.title,
+            publication: meta.publication,
+            source: meta.source,
+            people: meta.people,
+            translation: meta.translation,
+            segments,
+            image_url: None,
+        }
+    }
 }
 
 // Ideal structure:
