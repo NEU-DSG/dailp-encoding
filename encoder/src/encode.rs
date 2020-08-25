@@ -1,6 +1,11 @@
-use crate::retrieve::{DocumentMetadata, SemanticLine};
+use crate::{
+    annotation::AnnotatedWord,
+    retrieve::{DocumentMetadata, SemanticLine},
+    translation::Translation,
+};
 use anyhow::Result;
-use serde::Serialize;
+use async_graphql::*;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::Write;
@@ -17,70 +22,151 @@ const OUTPUT_DIR: &str = "../xml";
 /// Takes an unprocessed document with metadata, passing it through our TEI
 /// template to produce an xml document named like the given title.
 pub fn write_to_file(meta: DocumentMetadata, lines: Vec<SemanticLine>) -> Result<()> {
-    let mut tera = Tera::new("*")?;
-    let annotated = lines.iter().map(|line| AnnotatedLine::from_semantic(line));
-    let file_name = format!("{}/{}.xml", OUTPUT_DIR, meta.id);
-    println!("writing to {}", file_name);
-    tera.register_filter("convert_breaks", convert_breaks);
-    let contents = tera.render(
-        "template.tera.xml",
-        &tera::Context::from_serialize(AnnotatedDoc {
-            meta,
-            segments: AnnotatedLine::to_segments(annotated.collect()),
-        })?,
-    )?;
-    // Make sure the output folder exists.
-    std::fs::create_dir_all(OUTPUT_DIR)?;
-    let mut f = File::create(file_name)?;
-    f.write(contents.as_bytes())?;
+    // let mut tera = Tera::new("*")?;
+    // let annotated = lines
+    //     .into_iter()
+    //     .map(|line| AnnotatedLine::from_semantic(line));
+    // let file_name = format!("{}/{}.xml", OUTPUT_DIR, meta.id);
+    // println!("writing to {}", file_name);
+    // tera.register_filter("convert_breaks", convert_breaks);
+    // let contents = tera.render(
+    //     "template.tera.xml",
+    //     &tera::Context::from_serialize(AnnotatedDoc {
+    //         meta,
+    //         segments: AnnotatedLine::to_segments(annotated.collect()),
+    //     })?,
+    // )?;
+    // // Make sure the output folder exists.
+    // std::fs::create_dir_all(OUTPUT_DIR)?;
+    // let mut f = File::create(file_name)?;
+    // f.write(contents.as_bytes())?;
     Ok(())
 }
 
-#[derive(Serialize)]
-struct AnnotatedDoc<'a> {
-    meta: DocumentMetadata,
-    segments: Vec<AnnotatedSeg<'a>>,
+#[SimpleObject]
+#[derive(Serialize, Deserialize)]
+pub struct AnnotatedDoc {
+    /// Official short identifier for this document.
+    #[serde(rename = "_id")]
+    pub id: String,
+    /// Full title of the document.
+    pub title: String,
+    /// The publication that included this document.
+    pub publication: Option<String>,
+    /// Where the source document came from, maybe the name of a collection.
+    pub source: Option<String>,
+    /// The people involved in collecting, translating, annotating.
+    pub people: Vec<String>,
+    /// Rough translation of the document, broken down by paragraph.
+    pub translation: Translation,
+    pub segments: Vec<AnnotatedSeg>,
+    pub image_url: Option<String>,
 }
 
-#[derive(Serialize)]
-struct AnnotatedLine<'a> {
-    number: &'a str,
-    words: Vec<AnnotatedWord<'a>>,
+// Ideal structure:
+// documents: [{ meta, pages: [{ lines: [{ index, words }] }] }]
+// Basic to start: [{meta, lines: [{ index, words }]}]
+
+#[SimpleObject]
+#[derive(Serialize, Deserialize)]
+pub struct AnnotatedLine {
+    number: String,
+    pub words: Vec<AnnotatedWord>,
     ends_page: bool,
 }
 
-impl<'a> AnnotatedLine<'a> {
-    fn from_semantic(line: &'a SemanticLine) -> Self {
+impl<'a> AnnotatedLine {
+    pub fn from_semantic(line: SemanticLine) -> Self {
         // Number of words = length of the longest row in this line.
         let num_words = line.rows.iter().map(|row| row.items.len()).max().unwrap();
         // For each word, extract the necessary data from every row.
+        let delims: &[char] = &['-', '='];
         let words = (0..num_words)
             // Only use words with a syllabary source entry.
             .filter(|i| line.rows.get(0).and_then(|r| r.items.get(*i)).is_some())
             .map(|i| {
                 let pb = line.rows[0].items[i].find(PAGE_BREAK);
                 AnnotatedWord {
-                    index: i,
-                    source: &line.rows[0].items[i].trim(),
-                    normalized_source: &line.rows[0].items[i].trim(),
-                    simple_phonetics: line.rows[2].items.get(i).map(|x| &**x),
-                    phonemic: line.rows[3].items.get(i).map(|x| &**x),
-                    morphemic_segmentation: line.rows[4].items.get(i).map(|x| &**x),
-                    morpheme_gloss: line.rows[5].items.get(i).map(|x| &**x),
-                    english_gloss: line.rows[6].items.get(i).map(|x| x.trim()),
-                    commentary: line.rows[7].items.get(i).map(|x| &**x),
-                    page_break: pb,
-                    line_break: pb.or_else(|| line.rows[0].items[i].find(LINE_BREAK)),
+                    document_id: None,
+                    ty: Some(WordType::Word),
+                    index: i as i32,
+                    source: line.rows[0].items[i].trim().to_owned(),
+                    normalized_source: line.rows[0].items[i].trim().to_owned(),
+                    simple_phonetics: line.rows[2].items.get(i).map(|x| x.to_owned()),
+                    phonemic: line.rows[3].items.get(i).map(|x| x.to_owned()),
+                    morphemic_segmentation: line.rows[4]
+                        .items
+                        .get(i)
+                        .map(|x| x.split(delims).map(|s| s.trim().to_owned()).collect()),
+                    morpheme_gloss: line.rows[5]
+                        .items
+                        .get(i)
+                        .map(|x| x.split(delims).map(|s| s.trim().to_owned()).collect()),
+                    english_gloss: line.rows[6].items.get(i).map(|x| x.trim().to_owned()),
+                    commentary: line.rows[7].items.get(i).map(|x| x.to_owned()),
+                    page_break: pb.map(|i| i as i32),
+                    line_break: pb
+                        .or_else(|| line.rows[0].items[i].find(LINE_BREAK))
+                        .map(|i| i as i32),
                 }
             })
             .collect();
         Self {
-            number: &line.number,
+            number: line.number,
             words,
             ends_page: line.ends_page,
         }
     }
-    fn to_segments(lines: Vec<Self>) -> Vec<AnnotatedSeg<'a>> {
+    pub fn many_from_semantic(lines: Vec<SemanticLine>) -> Vec<Self> {
+        let mut word_index = 0;
+        let delims: &[char] = &['-', '='];
+        lines
+            .into_iter()
+            .map(|line| {
+                // Number of words = length of the longest row in this line.
+                let num_words = line.rows.iter().map(|row| row.items.len()).max().unwrap();
+                // For each word, extract the necessary data from every row.
+                let words = (0..num_words)
+                    // Only use words with a syllabary source entry.
+                    .filter(|i| line.rows.get(0).and_then(|r| r.items.get(*i)).is_some())
+                    .map(|i| {
+                        let pb = line.rows[0].items[i].find(PAGE_BREAK);
+                        let w = AnnotatedWord {
+                            ty: Some(WordType::Word),
+                            index: i as i32,
+                            source: line.rows[0].items[i].trim().to_owned(),
+                            normalized_source: line.rows[0].items[i].trim().to_owned(),
+                            simple_phonetics: line.rows[2].items.get(i).map(|x| x.to_owned()),
+                            phonemic: line.rows[3].items.get(i).map(|x| x.to_owned()),
+                            morphemic_segmentation: line.rows[4]
+                                .items
+                                .get(i)
+                                .map(|x| x.split(delims).map(|s| s.trim().to_owned()).collect()),
+                            morpheme_gloss: line.rows[5]
+                                .items
+                                .get(i)
+                                .map(|x| x.split(delims).map(|s| s.trim().to_owned()).collect()),
+                            english_gloss: line.rows[6].items.get(i).map(|x| x.trim().to_owned()),
+                            commentary: line.rows[7].items.get(i).map(|x| x.to_owned()),
+                            page_break: pb.map(|i| i as i32),
+                            line_break: pb
+                                .or_else(|| line.rows[0].items[i].find(LINE_BREAK))
+                                .map(|i| i as i32),
+                            document_id: None,
+                        };
+                        word_index += 1;
+                        w
+                    })
+                    .collect();
+                Self {
+                    number: line.number,
+                    words,
+                    ends_page: line.ends_page,
+                }
+            })
+            .collect()
+    }
+    pub fn to_segments(lines: Vec<Self>, document_id: &str) -> Vec<AnnotatedSeg> {
         let mut segments = Vec::<AnnotatedSeg>::new();
         let mut stack = Vec::<AnnotatedPhrase>::new();
         let mut child_segments = Vec::<AnnotatedSeg>::new();
@@ -91,13 +177,15 @@ impl<'a> AnnotatedLine<'a> {
         let mut block_idx = 0;
 
         // The first page needs a break.
-        segments.push(AnnotatedSeg::PageBreak { index: page_num });
+        segments.push(AnnotatedSeg::PageBreak(PageBreak { index: page_num }));
 
         // Process each line into a series of segments.
         for (line_idx, line) in lines.into_iter().enumerate() {
             // Only add a line break if there wasn't an explicit one mid-word.
             if line_idx == line_num {
-                let lb = AnnotatedSeg::LineBreak { index: line_num };
+                let lb = AnnotatedSeg::LineBreak(LineBreak {
+                    index: line_num as i32,
+                });
                 if let Some(p) = stack.last_mut() {
                     p.parts.push(lb);
                 } else {
@@ -128,6 +216,7 @@ impl<'a> AnnotatedLine<'a> {
                 while source.starts_with(BLOCK_START) {
                     source = &source[1..];
                     stack.push(AnnotatedPhrase {
+                        ty: BlockType::Block,
                         index: block_idx,
                         parts: child_segments,
                     });
@@ -138,6 +227,7 @@ impl<'a> AnnotatedLine<'a> {
                 while source.starts_with(PHRASE_START) {
                     source = &source[1..];
                     stack.push(AnnotatedPhrase {
+                        ty: BlockType::Phrase,
                         index: seg_idx,
                         parts: Vec::new(),
                     });
@@ -156,9 +246,10 @@ impl<'a> AnnotatedLine<'a> {
                 }
                 // Add the current word to the top phrase or the root document.
                 let finished_word = AnnotatedSeg::Word(AnnotatedWord {
-                    source,
-                    line_break: word.line_break.map(|_| line_num),
-                    page_break: word.page_break.map(|_| page_num),
+                    source: source.to_owned(),
+                    line_break: word.line_break.map(|_| line_num as i32),
+                    page_break: word.page_break.map(|_| page_num as i32),
+                    document_id: Some(document_id.to_owned()),
                     ..word
                 });
                 if let Some(p) = stack.last_mut() {
@@ -169,7 +260,7 @@ impl<'a> AnnotatedLine<'a> {
                 // Check for the end of phrase(s).
                 for _ in 0..count_to_pop {
                     if let Some(p) = stack.pop() {
-                        let finished_p = AnnotatedSeg::Phrase(p);
+                        let finished_p = AnnotatedSeg::Block(p);
                         if let Some(top) = stack.last_mut() {
                             top.parts.push(finished_p);
                         } else {
@@ -191,7 +282,7 @@ impl<'a> AnnotatedLine<'a> {
             }
             if line.ends_page {
                 page_num += 1;
-                segments.push(AnnotatedSeg::PageBreak { index: page_num });
+                segments.push(AnnotatedSeg::PageBreak(PageBreak { index: page_num }));
             }
         }
 
@@ -203,36 +294,46 @@ impl<'a> AnnotatedLine<'a> {
     }
 }
 
-#[derive(Debug, Serialize)]
+#[Union]
+#[derive(Serialize, Deserialize)]
 #[serde(tag = "type")]
-enum AnnotatedSeg<'a> {
-    Block(AnnotatedPhrase<'a>),
-    Phrase(AnnotatedPhrase<'a>),
-    Word(AnnotatedWord<'a>),
-    LineBreak { index: usize },
-    PageBreak { index: usize },
+pub enum AnnotatedSeg {
+    Block(AnnotatedPhrase),
+    Word(AnnotatedWord),
+    LineBreak(LineBreak),
+    PageBreak(PageBreak),
 }
 
-#[derive(Debug, Serialize)]
-struct AnnotatedPhrase<'a> {
-    index: usize,
-    parts: Vec<AnnotatedSeg<'a>>,
+#[Enum]
+#[derive(Serialize, Deserialize)]
+pub enum BlockType {
+    Block,
+    Phrase,
 }
 
-#[derive(Debug, Serialize)]
-struct AnnotatedWord<'a> {
-    index: usize,
-    source: &'a str,
-    normalized_source: &'a str,
-    simple_phonetics: Option<&'a str>,
-    phonemic: Option<&'a str>,
-    morphemic_segmentation: Option<&'a str>,
-    morpheme_gloss: Option<&'a str>,
-    english_gloss: Option<&'a str>,
-    commentary: Option<&'a str>,
-    /// The character index of a mid-word line break, if there is one here.
-    line_break: Option<usize>,
-    page_break: Option<usize>,
+#[Enum]
+#[derive(Serialize, Deserialize)]
+pub enum WordType {
+    Word,
+}
+
+#[SimpleObject]
+#[derive(Serialize, Deserialize)]
+pub struct LineBreak {
+    index: i32,
+}
+#[SimpleObject]
+#[derive(Serialize, Deserialize)]
+pub struct PageBreak {
+    index: i32,
+}
+
+#[SimpleObject]
+#[derive(Serialize, Deserialize)]
+pub struct AnnotatedPhrase {
+    ty: BlockType,
+    index: i32,
+    parts: Vec<AnnotatedSeg>,
 }
 
 /// Encode all mid-word line breaks as `lb` tags and page breaks as `pb` tags.
