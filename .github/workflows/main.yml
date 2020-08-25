@@ -29,15 +29,13 @@ jobs:
           encoder/target
         key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
     - uses: actions/setup-node@v1
-      with: {node-version: 8}
+      with: {node-version: 10}
     - name: Install saxon (XSLT processor)
       run: sudo apt-get install libsaxonb-java
     - name: Install surge
       run: sudo npm i -g surge
-
     - name: Encode documents as TEI
-      run: cd encoder && cargo run
-
+      run: cd encoder && cargo run --bin encoder
     - name: Render TEI as HTML
       run: |
         mkdir -p public/xml

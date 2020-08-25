@@ -1,0 +1,29 @@
+service: dailp-encoding
+provider:
+  name: aws
+  runtime: rust
+  memorySize: 256
+plugins:
+  - serverless-rust
+package:
+  individually: true
+functions:
+  dailp-graphql:
+    handler: dailp-data.graphql
+    # rust:
+    #   dockerless: true
+    events:
+      - http:
+          path: "/graphql"
+          method: any
+          cors:
+            origin: '*'
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+              - x-apollo-tracing
+            allowCredentials: false

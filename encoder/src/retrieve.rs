@@ -1,32 +1,38 @@
 use crate::translation::{DocResult, Translation};
 use crate::GOOGLE_API_KEY;
 use anyhow::Result;
+use async_graphql::*;
 use reqwest;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Serialize)]
+#[SimpleObject]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct DocumentMetadata {
     /// Official short identifier for this document.
     pub id: String,
-    /// Title of the annotated document.
+    /// Full title of the document.
     pub title: String,
+    /// The publication that included this document.
     pub publication: Option<String>,
     /// Where the source document came from, maybe the name of a collection.
     pub source: Option<String>,
     /// The people involved in collecting, translating, annotating.
     pub people: Vec<String>,
+    /// Rough translation of the document, broken down by paragraph.
     pub translation: Translation,
+    /// URL for image of the original document.
+    pub image_url: Option<String>,
 }
 #[derive(Debug, Serialize)]
 pub struct DocumentIndex {
     pub sheet_ids: Vec<String>,
 }
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct AnnotationRow {
     pub title: String,
     pub items: Vec<String>,
 }
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct SemanticLine {
     pub number: String,
     pub rows: Vec<AnnotationRow>,
@@ -38,6 +44,11 @@ impl SemanticLine {
     fn is_empty(&self) -> bool {
         self.rows.iter().all(|r| r.items.is_empty())
     }
+}
+
+#[derive(Deserialize)]
+struct FileDetails {
+    web_content_link: String,
 }
 
 /// Result obtained directly from the raw Google sheet.
@@ -71,16 +82,42 @@ impl SheetResult {
                 .collect(),
         })
     }
-    pub async fn into_metadata(mut self) -> Result<DocumentMetadata> {
+    async fn get_drive_content(file_id: &str) -> Result<String> {
+        Ok(reqwest::get(&format!(
+            "https://www.googleapis.com/drive/v3/files/{}?fields=webContentLink",
+            file_id
+        ))
+        .await?
+        .json::<FileDetails>()
+        .await?
+        .web_content_link)
+    }
+    pub async fn into_metadata(self) -> Result<DocumentMetadata> {
         // Meta order: genre, source, title, source page #, page count, translation
         // First column is the name of the field, useless when parsing so we ignore it.
-        let mut doc_id = self.values.remove(0);
-        let _genre = self.values.remove(0);
-        let mut source = self.values.remove(0);
-        let mut title = self.values.remove(0);
-        let _page_num = self.values.remove(0);
-        let _page_count = self.values.remove(0);
-        let mut translations = self.values.remove(0);
+        let mut values = self.values.into_iter();
+        let mut doc_id = values
+            .next()
+            .ok_or_else(|| anyhow::format_err!("No Document ID"))?;
+        let _genre = values
+            .next()
+            .ok_or_else(|| anyhow::format_err!("No genre"))?;
+        let mut source = values
+            .next()
+            .ok_or_else(|| anyhow::format_err!("No source"))?;
+        let mut title = values
+            .next()
+            .ok_or_else(|| anyhow::format_err!("No title"))?;
+        let _page_num = values
+            .next()
+            .ok_or_else(|| anyhow::format_err!("No Page number"))?;
+        let _page_count = values
+            .next()
+            .ok_or_else(|| anyhow::format_err!("No Page Count"))?;
+        let mut translations = values
+            .next()
+            .ok_or_else(|| anyhow::format_err!("No Translations"))?;
+        let images = values.next();
         Ok(DocumentMetadata {
             id: doc_id.remove(1),
             title: title.remove(1),
@@ -90,6 +127,7 @@ impl SheetResult {
             translation: DocResult::new(&translations.remove(1))
                 .await?
                 .to_translation(),
+            image_url: None,
         })
     }
     pub fn split_into_lines(mut self) -> Vec<SemanticLine> {
@@ -107,7 +145,7 @@ impl SheetResult {
             // Empty rows mark a line break.
             // Rows starting with one cell containing just "\\" mark a page break.
             // All other rows are part of an annotated line.
-            let is_page_break = !row.is_empty() && row[0].starts_with("\\\\");
+            let is_page_break = !row.is_empty() && row[0].starts_with("No Document ID");
             if row.is_empty() || is_page_break {
                 if !current_result.is_empty() {
                     all_lines.push(SemanticLine {
