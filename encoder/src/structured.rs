@@ -17,16 +17,8 @@ pub async fn build_json(inputs: Vec<(DocumentMetadata, Vec<SemanticLine>)>) -> R
         let annotated = lines
             .into_iter()
             .map(|line| AnnotatedLine::from_semantic(line));
-        AnnotatedDoc {
-            segments: AnnotatedLine::to_segments(annotated.collect(), &meta.id),
-            id: meta.id,
-            title: meta.title,
-            publication: meta.publication,
-            source: meta.source,
-            people: meta.people,
-            translation: meta.translation,
-            image_url: meta.image_url,
-        }
+        let segments = AnnotatedLine::to_segments(annotated.collect(), &meta.id);
+        AnnotatedDoc::new(meta, segments)
     });
     // Write this big fat object with all our annotated documents as a JSON file.
     let login = env::var("MONGODB_LOGIN")?;
@@ -60,7 +52,9 @@ pub struct Database {
 }
 impl Database {
     pub async fn new() -> Result<Self> {
-        let mut opts = ClientOptions::parse("mongodb+srv://dailp:pok101@dailp-encoding.hgtma.mongodb.net/dailp-encoding?retryWrites=true&w=majority").await?;
+        let login = env::var("MONGODB_LOGIN")?;
+        let db_url = format!("mongodb+srv://{}@dailp-encoding.hgtma.mongodb.net/dailp-encoding?retryWrites=true&w=majority", login);
+        let mut opts = ClientOptions::parse(&db_url).await?;
         opts.app_name = Some("DAILP Encoding".to_owned());
         let client = Client::with_options(opts)?;
         Ok(Database {
@@ -76,55 +70,54 @@ impl Database {
             .and_then(|doc| doc.and_then(|doc| bson::from_document(doc).ok()))
     }
     pub async fn morphemes(&self, gloss: String) -> Vec<MorphemeReference> {
-        let docs: Vec<AnnotatedDoc> = self
+        let words: Vec<(String, AnnotatedWord)> = self
             .client
             .collection("annotated-documents")
             .aggregate(
-                vec![bson::doc! { "$project": {
-                    "title": 1,
-                    "people": 1,
-                    "translation": 1,
-                    "segments": {
-                        "$filter": {
-                            "input": "$segments",
-                            "as": "seg",
-                            "cond": {
-                                "$in": [&gloss, { "$ifNull": ["$$seg.morpheme_gloss", []]}]
+                vec![
+                    bson::doc! { "$match": { "words.morpheme_gloss": &gloss } },
+                    bson::doc! {
+                        "$project": {
+                            "words": {
+                                "$filter": {
+                                    "input": "$words",
+                                    "as": "word",
+                                    "cond": {
+                                        "$in": [&gloss, { "$ifNull": ["$$word.morpheme_gloss", []]}]
+                                    }
+                                }
                             }
                         }
-                    }
-                } }],
+                    },
+                    bson::doc! { "$unwind": "$words" },
+                    bson::doc! { "$replaceRoot": { "newRoot": "$words" } },
+                ],
                 None,
             )
             .await
             .unwrap()
-            .map(|doc| bson::from_document(doc.unwrap()).unwrap())
+            .map(|doc| {
+                let word: AnnotatedWord = bson::from_document(doc.unwrap()).unwrap();
+                let m = {
+                    // Find the index of the relevant morpheme gloss.
+                    let (idx, _) = word
+                        .morpheme_gloss
+                        .as_ref()
+                        .unwrap()
+                        .iter()
+                        .enumerate()
+                        .find(|(_, m)| **m == gloss)
+                        .unwrap();
+                    // Grab the morpheme with the same index.
+                    &word.morphemic_segmentation.as_ref().unwrap()[idx]
+                };
+                (m.to_owned(), word)
+            })
             .collect()
             .await;
 
-        docs.into_iter()
-            .flat_map(|doc| {
-                doc.segments.into_iter().filter_map(|segment| {
-                    if let AnnotatedSeg::Word(word) = segment {
-                        let m = {
-                            // Find the index of the relevant morpheme gloss.
-                            let (idx, _) = word
-                                .morpheme_gloss
-                                .as_ref()
-                                .unwrap()
-                                .iter()
-                                .enumerate()
-                                .find(|(_, m)| **m == gloss)
-                                .unwrap();
-                            // Grab the morpheme with the same index.
-                            &word.morphemic_segmentation.as_ref().unwrap()[idx]
-                        };
-                        Some((m.to_owned(), word))
-                    } else {
-                        None
-                    }
-                })
-            })
+        words
+            .into_iter()
             .into_group_map()
             .into_iter()
             .map(|(m, words)| MorphemeReference { morpheme: m, words })
