@@ -5,7 +5,7 @@ use async_graphql::*;
 use itertools::zip;
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct AnnotatedWord {
     pub ty: Option<WordType>,
     pub index: i32,
@@ -40,6 +40,7 @@ impl AnnotatedWord {
             None
         }
     }
+
     async fn similar_words(&self, context: &Context<'_>) -> FieldResult<Vec<AnnotatedWord>> {
         if let Some(root) = self.root(context).await? {
             let similar_roots = context.data::<Database>()?.morphemes(root.gloss).await;
@@ -53,6 +54,7 @@ impl AnnotatedWord {
             Ok(Vec::new())
         }
     }
+
     async fn document(&self, context: &Context<'_>) -> FieldResult<Option<AnnotatedDoc>> {
         Ok(context
             .data::<Database>()?

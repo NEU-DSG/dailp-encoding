@@ -56,20 +56,23 @@ pub struct AnnotatedDoc {
     /// The people involved in collecting, translating, annotating.
     pub people: Vec<String>,
     /// Rough translation of the document, broken down by paragraph.
-    pub translation: Translation,
-    pub segments: Vec<AnnotatedSeg>,
+    pub translation: Option<Translation>,
+    pub segments: Option<Vec<AnnotatedSeg>>,
+    pub words: Option<Vec<AnnotatedWord>>,
     pub image_url: Option<String>,
 }
 impl AnnotatedDoc {
     pub fn new(meta: DocumentMetadata, segments: Vec<AnnotatedSeg>) -> Self {
+        let words = segments.iter().flat_map(|s| s.words()).collect();
         Self {
             id: meta.id,
             title: meta.title,
             publication: meta.publication,
             source: meta.source,
             people: meta.people,
-            translation: meta.translation,
-            segments,
+            translation: Some(meta.translation),
+            segments: Some(segments),
+            words: Some(words),
             image_url: None,
         }
     }
@@ -314,6 +317,17 @@ pub enum AnnotatedSeg {
     Word(AnnotatedWord),
     LineBreak(LineBreak),
     PageBreak(PageBreak),
+}
+impl AnnotatedSeg {
+    pub fn words(&self) -> Vec<AnnotatedWord> {
+        use AnnotatedSeg::*;
+        match self {
+            Block(block) => block.parts.iter().flat_map(|s| s.words()).collect(),
+            Word(w) => vec![w.clone()],
+            LineBreak(_) => Vec::new(),
+            PageBreak(_) => Vec::new(),
+        }
+    }
 }
 
 #[Enum]
