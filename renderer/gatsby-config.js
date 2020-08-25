@@ -5,7 +5,7 @@ module.exports = {
   plugins: [
     "gatsby-plugin-typescript",
     "gatsby-plugin-react-helmet",
-    "gatsby-transformer-xml",
+    "gatsby-plugin-linaria",
     {
       resolve: `gatsby-source-filesystem`,
       options: {
@@ -14,12 +14,21 @@ module.exports = {
       },
     },
     {
-      resolve: `gatsby-source-filesystem`,
+      resolve: "gatsby-source-graphql",
       options: {
-        name: `data`,
-        path: `${__dirname}/src/data/`,
-        ignore: [`**/\.*`], // ignore files starting with a dot
+        typeName: "Dailp",
+        fieldName: "dailp",
+        url:
+          "https://b817bapwvb.execute-api.us-east-1.amazonaws.com/dev/graphql",
       },
     },
+    {
+      resolve: "gatsby-plugin-apollo",
+      options: {
+        uri:
+          "https://b817bapwvb.execute-api.us-east-1.amazonaws.com/dev/graphql",
+      },
+    },
+    // `gatsby-plugin-graphql-codegen`,
   ],
 }
