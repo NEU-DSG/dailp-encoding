@@ -61,6 +61,12 @@ impl AnnotatedWord {
             .document(self.document_id.as_ref().unwrap())
             .await)
     }
+    async fn index(&self) -> i32 {
+        self.index
+    }
+    async fn document_id(&self) -> &Option<String> {
+        &self.document_id
+    }
     async fn source(&self) -> &str {
         &self.source
     }
