@@ -3,6 +3,7 @@ name = "dailp-data"
 version = "0.1.0"
 authors = ["Taylor Snead <taylorsnead@gmail.com>"]
 edition = "2018"
+default-run = "encoder"
 
 [[bin]]
 name = "graphql"
@@ -20,10 +21,11 @@ tera = "1"
 serde_json = "1.0"
 reqwest = { version = "0.10", features = ["json"] }
 tokio = { version = "0.2", features = ["full"] }
-anyhow = "*"
-itertools = "*"
+anyhow = "1.0"
+itertools = "0.9"
 async-graphql = {git = "https://github.com/async-graphql/async-graphql"}
 futures = "0.3"
 mongodb = "*"
 lambda = {git = "https://github.com/awslabs/aws-lambda-rust-runtime"}
 lambda_http = {git = "https://github.com/awslabs/aws-lambda-rust-runtime"}
+dotenv = "0.15"

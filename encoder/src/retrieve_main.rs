@@ -5,6 +5,7 @@ mod structured;
 mod translation;
 
 use anyhow::Result;
+use dotenv::dotenv;
 use futures::future::join_all;
 use itertools::process_results;
 use retrieve::{DocumentMetadata, SemanticLine};
@@ -15,6 +16,7 @@ pub const GOOGLE_API_KEY: &str = "AIzaSyBqqPrkht_OeYUSNkSf_sc6UzNaFhzOVNI";
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    dotenv()?;
     migrate_data().await?;
     Ok(())
 }
