@@ -1,8 +1,6 @@
 import React, { Profiler, useState } from "react"
 import { graphql, Link } from "gatsby"
-// import { useQuery } from "graphql-hooks"
 import { useQuery, gql } from "@apollo/client"
-// import styled from "@emotion/styled"
 import { styled } from "linaria/react"
 import { Helmet } from "react-helmet"
 import {
@@ -81,8 +79,6 @@ const AnnotatedDocument = styled.main`
   display: flex;
   flex-flow: column nowrap;
   align-items: center;
-  font-family: "Gentium Plus", "Gentium Basic", "Noto Sans Cherokee", "Arial",
-    "serif";
   font-size: 18;
 `
 
