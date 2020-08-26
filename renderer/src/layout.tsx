@@ -5,41 +5,32 @@ import {
   ToolbarItem,
   ToolbarSeparator,
 } from "reakit/Toolbar"
-import styled from "@emotion/styled"
+import { styled } from "linaria/react"
+import { css } from "linaria"
 import { Link } from "gatsby"
 
 const Layout = ({ children }) => (
   <>
     <Header>
-      <SiteTitle to="/">Cherokee Reader</SiteTitle>
+      <Link to="/" className={siteTitle}>
+        Cherokee Reader
+      </Link>
     </Header>
     {children}
   </>
 )
 export default Layout
 
-const Header = styled.nav({
-  display: "flex",
-  flexFlow: "row nowrap",
-  justifyContent: "center",
-  backgroundColor: "lightgray",
-})
+const Header = styled.nav`
+  display: flex;
+  flex-flow: row nowrap;
+  justify-content: center;
+  background-color: lightgray;
+`
 
-const SiteTitle = styled(Link)({
-  color: "black",
-  textDecoration: "none",
-  fontSize: "2rem",
-  margin: "1.2rem 0",
-})
-
-// const NavBar = () => {
-//     const toolbar = useToolbarState()
-//     return (
-//         <Toolbar {...toolbar}>
-//             <ToolbarItem {...toolbar} as={Link} to="/">
-//
-//             </ToolbarItem>
-//
-//         </Toolbar>
-//     )
-// }
+const siteTitle = css`
+  color: black;
+  text-decoration: none;
+  font-size: 2rem;
+  margin: 1.2rem 0;
+`
