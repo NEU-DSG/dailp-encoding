@@ -117,7 +117,6 @@ impl SheetResult {
         let mut translations = values
             .next()
             .ok_or_else(|| anyhow::format_err!("No Translations"))?;
-        let images = values.next();
         Ok(DocumentMetadata {
             id: doc_id.remove(1),
             title: title.remove(1),

@@ -348,6 +348,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "async-graphql",
+ "dotenv",
  "futures",
  "itertools",
  "lambda",
@@ -396,6 +397,12 @@ checksum = "f3d0c8c8752312f9713efd397ff63acb9f85585afbf179282e720e7704954dd5"
 dependencies = [
  "generic-array",
 ]
+
+[[package]]
+name = "dotenv"
+version = "0.15.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "77c90badedccf4105eca100756a0b1289e191f6fcbdadd3cee1d2f614f97da8f"
 
 [[package]]
 name = "dtoa"
