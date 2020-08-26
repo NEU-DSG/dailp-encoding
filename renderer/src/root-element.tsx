@@ -1,27 +1,10 @@
 import React from "react"
-import fetch from "isomorphic-fetch"
 import { Provider } from "reakit"
-import { ApolloClient, ApolloProvider } from "@apollo/client"
-import Layout from "./layout"
-import { Global } from "@emotion/core"
+import { css } from "linaria"
 import { Helmet } from "react-helmet"
-
-const globalStyles = (
-  <Global
-    styles={{
-      "*": {
-        boxSizing: "border-box",
-      },
-      body: {
-        margin: 0,
-      },
-    }}
-  />
-)
 
 export const wrapRootElement = ({ element }) => (
   <>
-    {globalStyles}
     <Helmet>
       <link
         rel="stylesheet"
@@ -31,3 +14,16 @@ export const wrapRootElement = ({ element }) => (
     <Provider>{element}</Provider>
   </>
 )
+
+css`
+  :global() {
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      font-family: "Gentium Plus", "Gentium Basic", "Noto Sans Cherokee",
+        "Arial", "serif";
+    }
+  }
+`
