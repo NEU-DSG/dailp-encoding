@@ -4,7 +4,8 @@
   "description": "",
   "scripts": {
     "start": "gatsby develop",
-    "deploy": "gatsby build && surge public dailp-encoding.surge.sh"
+    "deploy": "gatsby build && surge public dailp-encoding.surge.sh",
+    "clean": "gatsby clean"
   },
   "keywords": [],
   "author": "DAILP",
