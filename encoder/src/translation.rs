@@ -1,16 +1,19 @@
 use crate::GOOGLE_API_KEY;
 use anyhow::Result;
+use async_graphql::*;
 use itertools::Itertools;
 use reqwest;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Serialize)]
+#[SimpleObject]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Translation {
     blocks: Vec<Block>,
 }
-#[derive(Debug, Serialize)]
+#[SimpleObject]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Block {
-    index: usize,
+    index: i32,
     segments: Vec<String>,
 }
 
@@ -59,7 +62,7 @@ impl DocResult {
             // Include the block index.
             .enumerate()
             .map(|(index, content)| Block {
-                index: index + 1,
+                index: index as i32 + 1,
                 segments: content
                     .into_iter()
                     .filter(|s| !s.is_empty())
