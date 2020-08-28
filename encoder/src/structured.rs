@@ -75,7 +75,6 @@ impl Database {
             .collection("annotated-documents")
             .aggregate(
                 vec![
-                    bson::doc! { "$match": { "words.morpheme_gloss": &gloss } },
                     bson::doc! {
                         "$project": {
                             "words": {
