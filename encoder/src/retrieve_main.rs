@@ -16,7 +16,7 @@ pub const GOOGLE_API_KEY: &str = "AIzaSyBqqPrkht_OeYUSNkSf_sc6UzNaFhzOVNI";
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    dotenv()?;
+    dotenv().ok();
     migrate_data().await?;
     Ok(())
 }
@@ -48,13 +48,13 @@ async fn migrate_data() -> Result<()> {
 }
 
 async fn fetch_sheet(sheet_id: String) -> Result<(DocumentMetadata, Vec<SemanticLine>)> {
+    println!("parsing sheet {}", sheet_id);
+
     // Split the contents of each main sheet into semantic lines with
     // several layers.
     let lines = retrieve::SheetResult::from_sheet(&sheet_id, None)
         .await?
         .split_into_lines();
-
-    println!("parsing sheet {}", sheet_id);
 
     // Parse the metadata on the second page of each sheet.
     // This includes publication information and a link to the translation.
