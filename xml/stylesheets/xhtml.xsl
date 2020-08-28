@@ -89,7 +89,11 @@
             <xsl:apply-templates/>
         </div>
     </xsl:template>
-    <xsl:template match="choice/seg">
+    
+    <xsl:template match="choice/seg[@type='phonemic_form']"/>
+    
+    
+    <xsl:template match="choice/seg[@type!='phonemic_form']">
         <div class="{@type}">
             <xsl:apply-templates/>
         </div>
