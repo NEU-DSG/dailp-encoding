@@ -25,10 +25,10 @@
         {% if segment.phonemic %}
           <seg type="phonemic_form">{{segment.phonemic}}</seg>
         {% endif %}
-        {% if segment.morphemic_segmentation %}
+        {% if segment.morphemic_segmentation | first %}
           <seg type="morphemic_segmentation">{{segment.morphemic_segmentation | join(sep="-")}}</seg>
         {% endif %}
-        {% if segment.morpheme_gloss %}
+        {% if segment.morpheme_gloss | first %}
           <seg type="morphemic_gloss">{{segment.morpheme_gloss | join(sep="-")}}</seg>
         {% endif %}
         {% if segment.english_gloss %}
