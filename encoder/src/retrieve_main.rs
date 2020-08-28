@@ -16,7 +16,7 @@ pub const GOOGLE_API_KEY: &str = "AIzaSyBqqPrkht_OeYUSNkSf_sc6UzNaFhzOVNI";
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    dotenv()?;
+    dotenv().ok();
     migrate_data().await?;
     Ok(())
 }
