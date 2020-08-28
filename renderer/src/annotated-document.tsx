@@ -126,9 +126,9 @@ const Segment = ({ segment, dialog, onOpenDetails }) => {
 
 const MorphemeSegment = ({ segment, gloss, dialog, onOpenDetails }) => {
   return (
-    <DialogDisclosure {...dialog} onClick={() => onOpenDetails(segment, gloss)}>
+    <MorphemeButton {...dialog} onClick={() => onOpenDetails(segment, gloss)}>
       {segment}
-    </DialogDisclosure>
+    </MorphemeButton>
   )
   // const popover = usePopoverState()
   // return (
@@ -143,15 +143,15 @@ const MorphemeSegment = ({ segment, gloss, dialog, onOpenDetails }) => {
   // )
 }
 
-const MorphemeButton = styled(PopoverDisclosure)`
+const MorphemeButton = styled(DialogDisclosure)`
   font-family: inherit;
+  font-size: inherit;
   padding: 0;
 `
 
 const GlossLine = styled.span`
   display: flex;
   flex-flow: row nowrap;
-  justify-content: space-between;
   & > * {
     display: flex;
     flex-flow: column nowrap;
@@ -220,32 +220,26 @@ const MorphemicSegmentation = ({
   dialog,
   onOpenDetails,
 }) => {
-  return (
-    <GlossLine>
-      {segments?.map((segment, i) => (
-        <div key={i}>
-          <MorphemeSegment
-            segment={segment}
-            gloss={glosses && glosses[i]}
-            dialog={dialog}
-            onOpenDetails={onOpenDetails}
-          />
-          {glosses && glosses[i]}
-        </div>
-      ))}
-    </GlossLine>
-  )
+  const segmentDivs = segments?.map((segment, i) => (
+    <div key={i}>
+      <MorphemeSegment
+        segment={segment}
+        gloss={glosses && glosses[i]}
+        dialog={dialog}
+        onOpenDetails={onOpenDetails}
+      />
+      {glosses && glosses[i]}
+    </div>
+  ))
+  const allDivs = segmentDivs && intersperse(segmentDivs, <div>-</div>)
+  return <GlossLine>{allDivs}</GlossLine>
 }
-// const PopupBox = styled(Popover)`
-//   display: flex;
-//   flex-flow: column nowrap;
-//   width: 150px;
-//   background-color: white;
-//   padding-left: 16px;
-// `
+const intersperse = (arr, sep) =>
+  arr.reduce((a, v) => [...a, v, sep], []).slice(0, -1)
 
 const AnnotatedWord = styled.div`
   margin: 16px 24px;
+  margin-bottom: 48px;
 `
 
 export const query = graphql`
