@@ -36,6 +36,8 @@ jobs:
       run: sudo npm i -g surge
     - name: Encode documents as TEI
       run: cd encoder && cargo run --bin encoder
+      env:
+        MONGODB_LOGIN: ${{ secrets.MONGODB_LOGIN }}
     - name: Render TEI as HTML
       run: |
         mkdir -p public/xml
