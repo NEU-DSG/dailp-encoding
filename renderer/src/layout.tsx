@@ -13,7 +13,7 @@ const Layout = ({ children }) => (
   <>
     <Header>
       <Link to="/" className={siteTitle}>
-        Cherokee Reader
+        Cherokee Reader (React Version)
       </Link>
     </Header>
     {children}
