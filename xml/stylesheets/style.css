@@ -10,6 +10,7 @@ body {
     flex-flow: column nowrap;
     align-items: center;
     font-size: 18px;
+    margin: 0;
 }
 
 #doc-interface {
@@ -28,4 +29,19 @@ body {
 
 #translation {
     margin: 32px 0px;
+}
+
+.page-header {
+    display: flex;
+    flex-flow: row nowrap;
+    justify-content: center;
+    background-color: lightgray;
+    width: 100%;
+}
+
+.page-header-link {
+    color: black;
+    text-decoration: none;
+    font-size: 2rem;
+    margin: 1.2rem 0;
 }
