@@ -7,12 +7,15 @@ mod translation;
 use anyhow::Result;
 use dotenv::dotenv;
 use futures::future::join_all;
+use futures::stream::FuturesUnordered;
+use futures::stream::StreamExt;
 use itertools::process_results;
 use retrieve::{DocumentMetadata, SemanticLine};
 use serde_json::json;
 use structured::{Database, Query};
 
 pub const GOOGLE_API_KEY: &str = "AIzaSyBqqPrkht_OeYUSNkSf_sc6UzNaFhzOVNI";
+const TASK_LIMIT: usize = 5;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -28,17 +31,23 @@ async fn migrate_data() -> Result<()> {
             .await?
             .into_index()?;
 
-    let items: Vec<_> = join_all(
-        index
-            .sheet_ids
-            .into_iter()
-            .map(|sheet_id| fetch_sheet(sheet_id))
-            .collect::<Vec<_>>(),
-    )
-    .await
-    .into_iter()
-    .filter_map(|x| x.ok())
-    .collect();
+    let mut items = Vec::new();
+    let mut tasks = FuturesUnordered::new();
+    // Retrieve data for spreadsheets in parallel.
+    // Because of Google API rate limits, we have to limit the number of
+    // simultaneous connections to the sheets endpoint.
+    for sheet_id in index.sheet_ids {
+        tasks.push(fetch_sheet(sheet_id));
+        if tasks.len() == TASK_LIMIT {
+            if let Some(Ok(item)) = tasks.next().await {
+                items.push(item);
+            }
+        }
+    }
+    // Wait for remaining tasks to finish.
+    while let Some(Ok(item)) = tasks.next().await {
+        items.push(item);
+    }
 
     for (meta, lines) in &items {
         encode::write_to_file(meta.clone(), lines.clone())?;

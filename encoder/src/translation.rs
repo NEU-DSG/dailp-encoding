@@ -2,6 +2,7 @@ use crate::GOOGLE_API_KEY;
 use anyhow::Result;
 use async_graphql::*;
 use itertools::Itertools;
+use regex::Regex;
 use reqwest;
 use serde::{Deserialize, Serialize};
 
@@ -38,6 +39,7 @@ impl DocResult {
     }
 
     pub fn to_translation(self) -> Translation {
+        let ends_with_footnote = Regex::new(r"\[\d+\]").unwrap();
         let text_runs = self
             .body
             // Split the translation text by lines.
@@ -58,7 +60,12 @@ impl DocResult {
             // Ignore text past the first horizontal line.
             .take_while(|text| !text[0].starts_with("________"))
             // Split sentences into separate segments.
-            .map(|text| text.into_iter().flat_map(|s| s.split(".")))
+            .map(|text| {
+                text.into_iter()
+                    .flat_map(|s| s.split("."))
+                    // Remove footnotes.
+                    .map(|text| ends_with_footnote.replace_all(text, "").into_owned())
+            })
             // Include the block index.
             .enumerate()
             .map(|(index, content)| Block {
