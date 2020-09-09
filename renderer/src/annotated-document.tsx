@@ -3,42 +3,38 @@ import { graphql, Link } from "gatsby"
 import { useQuery, gql } from "@apollo/client"
 import { styled } from "linaria/react"
 import { Helmet } from "react-helmet"
-import {
-  usePopoverState,
-  Popover,
-  PopoverDisclosure,
-  PopoverArrow,
-} from "reakit/Popover"
-import {
-  useDialogState,
-  Dialog,
-  DialogDisclosure,
-  DialogBackdrop,
-} from "reakit/Dialog"
+import { useDialogState, Dialog, DialogBackdrop } from "reakit/Dialog"
 import Layout from "./layout"
+import { MorphemeDetails } from "./morpheme"
+import { Segment } from "./segment"
 import "typeface-gentium-basic"
 
+/** A full annotated document, including all metadata and the translation(s) */
 const AnnotatedDocumentPage = ({ data }) => {
   const doc = data.dailp.document
   const dialog = useDialogState()
   const [selectedMorpheme, setMorpheme] = useState([null, null])
+
   return (
     <Layout>
       <Helmet>
         <title>{doc.title} - Cherokee Reader</title>
       </Helmet>
+
       <AnnotatedDocument>
-        <MorphemeDialog {...dialog} aria-label="Welcome">
+        <MorphemeDialog {...dialog} aria-label="Morpheme Details">
           <MorphemeDetails
             segment={selectedMorpheme[0]}
             gloss={selectedMorpheme[1]}
             dialog={dialog}
           />
         </MorphemeDialog>
+
         <header>
           <h2>{doc.title}</h2>
           <h3>{doc.source}</h3>
         </header>
+
         <AnnotationSection>
           {doc.segments.map((seg, i) => (
             <Segment
@@ -47,11 +43,11 @@ const AnnotatedDocumentPage = ({ data }) => {
               dialog={dialog}
               onOpenDetails={(segment, gloss) => {
                 setMorpheme([segment, gloss])
-                // dialog.toggle()
               }}
             />
           ))}
         </AnnotationSection>
+
         <DocSection>
           {doc.translation.blocks.map((block, i) => (
             <p key={`t${i}`}>{block.segments.join(". ")}</p>
@@ -62,185 +58,6 @@ const AnnotatedDocumentPage = ({ data }) => {
   )
 }
 export default AnnotatedDocumentPage
-
-const MorphemeDialog = styled(Dialog)`
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background-color: white;
-  border: 1px solid black;
-  padding: 16px;
-  max-height: 80vh;
-  overflow-y: scroll;
-`
-
-const AnnotatedDocument = styled.main`
-  display: flex;
-  flex-flow: column nowrap;
-  align-items: center;
-  font-size: 18;
-`
-
-const DocSection = styled.section`
-  max-width: 1024px;
-`
-
-const AnnotationSection = styled(DocSection)`
-  display: flex;
-  flex-flow: row wrap;
-  justify-content: space-between;
-`
-
-const Segment = ({ segment, dialog, onOpenDetails }) => {
-  const ty = segment.__typename
-  if (ty.endsWith("AnnotatedWord")) {
-    return (
-      <AnnotatedWord id={`w${segment.index}`}>
-        <div>{segment.source}</div>
-        <div>{segment.simplePhonetics || <br />}</div>
-        <MorphemicSegmentation
-          segments={segment.morphemicSegmentation}
-          glosses={segment.morphemeGloss}
-          dialog={dialog}
-          onOpenDetails={onOpenDetails}
-        />
-        <div>{segment.englishGloss}</div>
-      </AnnotatedWord>
-    )
-  } else if (ty.endsWith("AnnotatedPhrase")) {
-    return (
-      segment.parts?.map((seg, i) => (
-        <Segment
-          key={i}
-          segment={seg}
-          dialog={dialog}
-          onOpenDetails={onOpenDetails}
-        />
-      )) || null
-    )
-  } else {
-    return null
-  }
-}
-
-const MorphemeSegment = ({ segment, gloss, dialog, onOpenDetails }) => {
-  return (
-    <MorphemeButton {...dialog} onClick={() => onOpenDetails(segment, gloss)}>
-      {segment}
-    </MorphemeButton>
-  )
-  // const popover = usePopoverState()
-  // return (
-  //   <>
-  //     <MorphemeButton {...popover}>{segment}</MorphemeButton>
-  //     <PopupBox {...popover} tabIndex={0} aria-label="Similar Forms">
-  //       {popover.visible ? (
-  //         <MorphemeDetails segment={segment} gloss={gloss} />
-  //       ) : null}
-  //     </PopupBox>
-  //   </>
-  // )
-}
-
-const MorphemeButton = styled(DialogDisclosure)`
-  font-family: inherit;
-  font-size: inherit;
-  padding: 0;
-`
-
-const GlossLine = styled.span`
-  display: flex;
-  flex-flow: row nowrap;
-  & > * {
-    display: flex;
-    flex-flow: column nowrap;
-    align-items: center;
-    margin-right: 0;
-  }
-`
-
-const morphemeQuery = gql`
-  query Morpheme($gloss: String!) {
-    morphemes(gloss: $gloss) {
-      morpheme
-      words {
-        index
-        source
-        documentId
-      }
-    }
-  }
-`
-
-const MorphemeDetails = ({ segment, gloss, dialog }) => {
-  const { data, loading } = useQuery(morphemeQuery, {
-    skip: !gloss,
-    variables: { gloss },
-  })
-
-  let content = null
-  if (loading) {
-    content = <p>Loading...</p>
-  } else if (!data || !data.morphemes) {
-    content = <p>None Found</p>
-  } else {
-    content = data.morphemes.map((m, i) => (
-      <div>
-        <p key={i}>{m.morpheme}</p>
-        <ul>
-          {m.words.map(word => (
-            <li>
-              <Link
-                to={`/documents/${word.documentId.toLowerCase()}#w${
-                  word.index
-                }`}
-                onClick={() => dialog.hide()}
-              >
-                {word.source}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </div>
-    ))
-  }
-
-  return (
-    <>
-      <h4>{gloss} - Known surface forms</h4>
-      {content}
-    </>
-  )
-}
-
-const MorphemicSegmentation = ({
-  segments,
-  glosses,
-  dialog,
-  onOpenDetails,
-}) => {
-  const segmentDivs = segments?.map((segment, i) => (
-    <div key={i}>
-      <MorphemeSegment
-        segment={segment}
-        gloss={glosses && glosses[i]}
-        dialog={dialog}
-        onOpenDetails={onOpenDetails}
-      />
-      {glosses && glosses[i]}
-    </div>
-  ))
-  const allDivs = segmentDivs && intersperse(segmentDivs, <div>-</div>)
-  return <GlossLine>{allDivs}</GlossLine>
-}
-const intersperse = (arr, sep) =>
-  arr.reduce((a, v) => [...a, v, sep], []).slice(0, -1)
-
-const AnnotatedWord = styled.div`
-  margin: 16px 24px;
-  margin-bottom: 48px;
-`
 
 export const query = graphql`
   query AnnotatedDocument($id: String!) {
@@ -283,4 +100,33 @@ export const query = graphql`
     morphemeGloss
     englishGloss
   }
+`
+
+const MorphemeDialog = styled(Dialog)`
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: white;
+  border: 1px solid black;
+  padding: 16px;
+  max-height: 80vh;
+  overflow-y: scroll;
+`
+
+const AnnotatedDocument = styled.main`
+  display: flex;
+  flex-flow: column nowrap;
+  align-items: center;
+  font-size: 18;
+`
+
+const DocSection = styled.section`
+  max-width: 1024px;
+`
+
+const AnnotationSection = styled(DocSection)`
+  display: flex;
+  flex-flow: row wrap;
+  justify-content: space-between;
 `

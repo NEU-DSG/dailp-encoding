@@ -57,9 +57,9 @@ const FullWidth = styled.section`
   max-width: 1024px;
 `
 
-function groupBy(xs, key) {
-  return xs.reduce(function(rv, x) {
-    ;(rv[x[key]] = rv[x[key]] || []).push(x)
+const groupBy = (xs, key) =>
+  xs.reduce((rv, x) => {
+    const entry = (rv[x[key]] = rv[x[key]] || [])
+    entry.push(x)
     return rv
   }, {})
-}

@@ -13,7 +13,6 @@
   "dependencies": {
     "@apollo/client": "^3.1.3",
     "graphql-hooks": "^4.5.0",
-    "isomorphic-fetch": "^2.2.1",
     "isomorphic-unfetch": "^3.0.0",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
@@ -21,7 +20,6 @@
     "react-router": "^5.1.2",
     "react-router-dom": "^5.1.2",
     "reakit": "^1.2.1",
-    "typeface-charis-sil": "0.0.44",
     "typeface-gentium-basic": "0.0.72"
   },
   "devDependencies": {

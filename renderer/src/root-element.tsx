@@ -3,6 +3,7 @@ import { Provider } from "reakit"
 import { css } from "linaria"
 import { Helmet } from "react-helmet"
 
+/** Injects global providers into the page for styling and data access. */
 export const wrapRootElement = ({ element }) => (
   <>
     <Helmet>
@@ -15,6 +16,7 @@ export const wrapRootElement = ({ element }) => (
   </>
 )
 
+// These styles affect all pages.
 css`
   :global() {
     * {
