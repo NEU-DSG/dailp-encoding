@@ -9,6 +9,7 @@ import { styled } from "linaria/react"
 import { css } from "linaria"
 import { Link } from "gatsby"
 
+/** Wrapper for most site pages, providing them with a navigation header. */
 const Layout = ({ children }) => (
   <>
     <Header>
