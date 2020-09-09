@@ -354,6 +354,7 @@ dependencies = [
  "lambda",
  "lambda_http",
  "mongodb",
+ "regex",
  "reqwest",
  "serde",
  "serde_json",
