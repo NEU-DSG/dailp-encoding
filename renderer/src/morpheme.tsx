@@ -43,6 +43,7 @@ const SimilarMorphemeList = (props: { gloss: string; dialog: any }) => {
               >
                 {word.source}
               </Link>
+              : {word.englishGloss}
             </li>
           ))}
         </ul>
@@ -59,6 +60,7 @@ const morphemeQuery = gql`
         index
         source
         documentId
+        englishGloss
       }
     }
   }
