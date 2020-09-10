@@ -30,8 +30,8 @@ const SimilarMorphemeList = (props: { gloss: string; dialog: any }) => {
     return <p>None Found</p>
   } else {
     return data.morphemes.map((m, i) => (
-      <div>
-        <p key={i}>{m.morpheme}</p>
+      <div key={i}>
+        <p>{m.morpheme}</p>
         <ul>
           {m.words.map(word => (
             <li>
@@ -41,9 +41,9 @@ const SimilarMorphemeList = (props: { gloss: string; dialog: any }) => {
                 }`}
                 onClick={() => props.dialog.hide()}
               >
-                {word.source}
+              {word.source}
               </Link>
-              : {word.englishGloss}
+              : {word.englishGloss} (at {word.documentId}-{word.index})
             </li>
           ))}
         </ul>
