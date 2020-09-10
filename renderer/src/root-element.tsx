@@ -26,6 +26,7 @@ css`
       margin: 0;
       font-family: "Gentium Plus", "Gentium Basic", "Noto Sans Cherokee",
         "Arial", "serif";
+      font-size: 18px;
     }
   }
 `
