@@ -85,6 +85,8 @@ export const query = graphql`
   }
   fragment BlockFields on Dailp_AnnotatedPhrase {
     __typename
+    ty
+    index
     parts {
       ... on Dailp_AnnotatedWord {
         ...WordFields
@@ -125,7 +127,7 @@ const DocSection = styled.section`
   max-width: 1024px;
 `
 
-const AnnotationSection = styled(DocSection)`
+export const AnnotationSection = styled(DocSection)`
   display: flex;
   flex-flow: row wrap;
   justify-content: space-between;

@@ -46,12 +46,19 @@ const MorphemicSegmentation = ({
   dialog,
   onOpenDetails,
 }) => {
+  // If there is no segmentation, return two line breaks for the
+  // morphemic segmentation and morpheme gloss layers.
   if (!segments || (segments.length === 1 && !segments[0])) {
-    return <br />
+    return (
+      <>
+        <br />
+        <br />
+      </>
+    )
   }
 
   const segmentDivs = segments.map((segment, i) => (
-    <div key={i}>
+    <WordSegment key={i}>
       <MorphemeSegment
         segment={segment}
         gloss={glosses && glosses[i]}
@@ -59,10 +66,10 @@ const MorphemicSegmentation = ({
         onOpenDetails={onOpenDetails}
       />
       {glosses && glosses[i]}
-    </div>
+    </WordSegment>
   ))
   // Add dashes between all morphemes for more visible separation.
-  return <GlossLine>{intersperse(segmentDivs, <div>-</div>)}</GlossLine>
+  return <GlossLine>{segmentDivs}</GlossLine>
 }
 const intersperse = (arr, sep) =>
   arr.reduce((a, v) => [...a, v, sep], []).slice(0, -1)
@@ -74,9 +81,17 @@ const MorphemeSegment = ({ segment, gloss, dialog, onOpenDetails }) => (
   </MorphemeButton>
 )
 
+const WordSegment = styled.div`
+  display: flex;
+  flex-flow: column nowrap;
+  align-items: center;
+  margin-right: 8px;
+`
+
 const MorphemeButton = styled(DialogDisclosure)`
   font-family: inherit;
   font-size: inherit;
+  color: inherit;
   border: none;
   padding: 0px 8px;
   cursor: pointer;
@@ -89,15 +104,15 @@ const MorphemeButton = styled(DialogDisclosure)`
 const GlossLine = styled.span`
   display: flex;
   flex-flow: row nowrap;
-  & > * {
-    display: flex;
-    flex-flow: column nowrap;
-    align-items: center;
-    margin-right: 0;
-  }
 `
 
 const AnnotatedWord = styled(Group)`
-  margin: 16px 24px;
+  margin: 16px 20px;
   margin-bottom: 48px;
+`
+
+const TranslationPara = styled.p`
+  margin: 0 16px;
+  margin-top: 0;
+  margin-bottom: 8em;
 `
