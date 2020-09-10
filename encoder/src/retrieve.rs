@@ -5,10 +5,11 @@ use async_graphql::*;
 use reqwest;
 use serde::{Deserialize, Serialize};
 
+/// All the metadata associated with one particular document.
 #[SimpleObject]
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct DocumentMetadata {
-    /// Official short identifier for this document.
+    /// Official short identifier.
     pub id: String,
     /// Full title of the document.
     pub title: String,
@@ -20,7 +21,7 @@ pub struct DocumentMetadata {
     pub people: Vec<String>,
     /// Rough translation of the document, broken down by paragraph.
     pub translation: Translation,
-    /// URL for image of the original document.
+    /// URL for an image of the original physical document.
     pub image_url: Option<String>,
 }
 #[derive(Debug, Serialize)]
@@ -70,6 +71,7 @@ impl SheetResult {
         .json::<SheetResult>()
         .await?)
     }
+    /// Parse this sheet as the document index.
     pub fn into_index(self) -> Result<DocumentIndex> {
         // Example URL: https://docs.google.com/spreadsheets/d/1sDTRFoJylUqsZlxU57k1Uj8oHhbM3MAzU8sDgTfO7Mk/edit#gid=0
         Ok(DocumentIndex {
@@ -92,6 +94,8 @@ impl SheetResult {
         .await?
         .web_content_link)
     }
+
+    /// Parse this sheet as a document metadata listing.
     pub async fn into_metadata(self) -> Result<DocumentMetadata> {
         // Meta order: genre, source, title, source page #, page count, translation
         // First column is the name of the field, useless when parsing so we ignore it.
@@ -129,6 +133,8 @@ impl SheetResult {
             image_url: None,
         })
     }
+
+    /// Parse as an annotation sheet with several lines.
     pub fn split_into_lines(mut self) -> Vec<SemanticLine> {
         if self.values.len() <= 0 {
             return Vec::new();

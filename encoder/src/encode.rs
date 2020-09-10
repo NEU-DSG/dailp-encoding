@@ -103,7 +103,6 @@ impl<'a> AnnotatedLine {
                 let pb = line.rows[0].items[i].find(PAGE_BREAK);
                 AnnotatedWord {
                     document_id: None,
-                    ty: Some(WordType::Word),
                     index: i as i32,
                     source: line.rows[0].items[i].trim().to_owned(),
                     normalized_source: line.rows[0].items[i].trim().to_owned(),
@@ -147,7 +146,6 @@ impl<'a> AnnotatedLine {
                     .map(|i| {
                         let pb = line.rows[0].items[i].find(PAGE_BREAK);
                         let w = AnnotatedWord {
-                            ty: Some(WordType::Word),
                             index: i as i32,
                             source: line.rows[0].items[i].trim().to_owned(),
                             normalized_source: line.rows[0].items[i].trim().to_owned(),
@@ -335,12 +333,6 @@ impl AnnotatedSeg {
 pub enum BlockType {
     Block,
     Phrase,
-}
-
-#[Enum]
-#[derive(Serialize, Deserialize)]
-pub enum WordType {
-    Word,
 }
 
 #[SimpleObject]
