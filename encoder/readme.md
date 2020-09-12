@@ -94,8 +94,17 @@ The document metadata must be listed in a sub-sheet titled exactly `Metadata`.
 The order of fields should always stay the same based on our spreadsheet template.
 So far, that ordering is as follows: 
 
+- Document ID
 - Genre
 - Source Text
 - Title
 - Page # in Source Text
 - Page Count
+- Translation Document IDs
+
+## Translations
+A translation for a document should consist of paragraphs that correspond directly to blocks in the annotated spreadsheet.
+There are a few important rules to keep in mind:
+- Paragraphs should be separated by one empty line to correspond to different annotation blocks.
+- All text placed below a horizontal line will be ignored by the document processor.
+- If there are multiple translations, each one should be placed into its own Google Document.

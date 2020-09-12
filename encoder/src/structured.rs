@@ -11,6 +11,9 @@ use std::env;
 use std::fs::File;
 use tokio::{prelude::*, stream::StreamExt};
 
+/// Converts a set of annotated documents into our preferred access format, then
+/// pushes that data into the underlying database.
+/// Existing versions of these documents are overwritten with the new data.
 pub async fn build_json(inputs: Vec<(DocumentMetadata, Vec<SemanticLine>)>) -> Result<()> {
     // Combine the documents into one object.
     let docs = inputs.into_iter().map(|(meta, lines)| {
@@ -47,6 +50,7 @@ pub async fn build_json(inputs: Vec<(DocumentMetadata, Vec<SemanticLine>)>) -> R
     Ok(())
 }
 
+#[derive(Clone)]
 pub struct Database {
     pub client: mongodb::Database,
 }
@@ -61,6 +65,7 @@ impl Database {
             client: client.database("dailp-encoding"),
         })
     }
+
     pub async fn document(&self, id: &str) -> Option<AnnotatedDoc> {
         self.client
             .collection("annotated-documents")
@@ -69,6 +74,10 @@ impl Database {
             .ok()
             .and_then(|doc| doc.and_then(|doc| bson::from_document(doc).ok()))
     }
+
+    /// Retrieves all morphemes that share the given gloss text.
+    /// For example, there may be multiple ways to pronounce a Cherokee word
+    /// that glosses as "catch" in English.
     pub async fn morphemes(&self, gloss: String) -> Vec<MorphemeReference> {
         let words: Vec<(String, AnnotatedWord)> = self
             .client
@@ -128,10 +137,6 @@ pub struct Query;
 
 #[Object]
 impl Query {
-    async fn api_version(&self) -> &'static str {
-        "1.0"
-    }
-
     async fn documents(&self, context: &Context<'_>) -> FieldResult<Vec<AnnotatedDoc>> {
         Ok(context
             .data::<Database>()?
@@ -145,6 +150,7 @@ impl Query {
             .await)
     }
 
+    /// Retrieves a full document from its unique identifier.
     async fn document(
         &self,
         context: &Context<'_>,
@@ -183,10 +189,9 @@ impl Query {
     }
 }
 
+/// One particular morpheme and all the known words that contain that exact morpheme.
 #[SimpleObject]
 pub struct MorphemeReference {
     pub morpheme: String,
-    // TODO Add methods to reference the document.
-    // document_id: String,
     pub words: Vec<AnnotatedWord>,
 }
