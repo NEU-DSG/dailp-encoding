@@ -1,30 +1,45 @@
 use crate::encode::AnnotatedDoc;
-use crate::encode::WordType;
 use crate::structured::Database;
 use async_graphql::*;
 use itertools::zip;
 use serde::{Deserialize, Serialize};
 
+/// A single word in an annotated document.
+/// One word contains several layers of interpretation, including the original
+/// source text, multiple layers of linguistic annotation, and annotator notes.
 #[derive(Clone, Serialize, Deserialize)]
 pub struct AnnotatedWord {
-    pub ty: Option<WordType>,
+    /// Position of this word in its containing document.
     pub index: i32,
+    /// Original source text.
     pub source: String,
+    /// A normalized version of the word.
     pub normalized_source: String,
+    /// Romanized version of the word for simple phonetic pronunciation.
     pub simple_phonetics: Option<String>,
+    /// Underlying phonemic representation of this word.
     pub phonemic: Option<String>,
+    /// List of morphemes that make up the word.
     pub morphemic_segmentation: Option<Vec<String>>,
+    /// List of English glosses for each morpheme in the word.
     pub morpheme_gloss: Option<Vec<String>>,
+    /// English gloss for the whole word.
     pub english_gloss: Option<String>,
+    /// Further details about the annotation layers.
     pub commentary: Option<String>,
-    /// The character index of a mid-word line break, if there is one here.
+    /// The character index of a mid-word line break, if there is one.
     pub line_break: Option<i32>,
+    /// The character index of a mid-word page break, if there is one.
     pub page_break: Option<i32>,
+    /// The unique identifier of the containing document.
     pub document_id: Option<String>,
 }
 
 #[Object]
 impl AnnotatedWord {
+    /// The root morpheme of the word.
+    /// For example, a verb form glossed as "he catches" has the root morpheme
+    /// corresponding to "catch."
     async fn root(&self) -> Option<MorphemeSegment> {
         if let (Some(morphemes), Some(glosses)) = (
             self.morphemic_segmentation.as_ref(),
@@ -41,6 +56,7 @@ impl AnnotatedWord {
         }
     }
 
+    /// All other observed words with the same root morpheme as this word.
     async fn similar_words(&self, context: &Context<'_>) -> FieldResult<Vec<AnnotatedWord>> {
         if let Some(root) = self.root(context).await? {
             let similar_roots = context.data::<Database>()?.morphemes(root.gloss).await;
@@ -55,6 +71,7 @@ impl AnnotatedWord {
         }
     }
 
+    /// The document that contains this word.
     async fn document(&self, context: &Context<'_>) -> FieldResult<Option<AnnotatedDoc>> {
         Ok(context
             .data::<Database>()?
@@ -87,6 +104,7 @@ impl AnnotatedWord {
     }
 }
 
+/// A single unit of meaning and its corresponding English gloss.
 #[SimpleObject]
 #[derive(Serialize)]
 struct MorphemeSegment {

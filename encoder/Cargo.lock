@@ -153,6 +153,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "async_once"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "180ee3c96aa5de7798a93f56818a94dd070262233f8e8434462a02b2523cf3c1"
+dependencies = [
+ "futures",
+ "tokio",
+]
+
+[[package]]
 name = "autocfg"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -348,11 +358,13 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "async-graphql",
+ "async_once",
  "dotenv",
  "futures",
  "itertools",
  "lambda",
  "lambda_http",
+ "lazy_static",
  "mongodb",
  "regex",
  "reqwest",
