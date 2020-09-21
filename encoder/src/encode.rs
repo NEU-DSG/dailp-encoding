@@ -1,6 +1,7 @@
 use crate::{
     annotation::AnnotatedWord,
     retrieve::{DocumentMetadata, SemanticLine},
+    translation,
     translation::Translation,
 };
 use anyhow::Result;
@@ -41,29 +42,21 @@ pub fn write_to_file(meta: DocumentMetadata, lines: Vec<SemanticLine>) -> Result
     Ok(())
 }
 
-#[SimpleObject]
 #[derive(Serialize, Deserialize)]
 pub struct AnnotatedDoc {
-    /// Official short identifier for this document.
     #[serde(rename = "_id")]
     pub id: String,
-    /// Full title of the document.
     pub title: String,
-    /// The publication that included this document.
     pub publication: Option<String>,
-    /// Where the source document came from, maybe the name of a collection.
     pub source: Option<String>,
     /// The people involved in collecting, translating, annotating.
     pub people: Vec<String>,
-    /// Rough translation of the document, broken down by paragraph.
     pub translation: Option<Translation>,
     pub segments: Option<Vec<AnnotatedSeg>>,
-    pub words: Option<Vec<AnnotatedWord>>,
     pub image_url: Option<String>,
 }
 impl AnnotatedDoc {
     pub fn new(meta: DocumentMetadata, segments: Vec<AnnotatedSeg>) -> Self {
-        let words = segments.iter().flat_map(|s| s.words()).collect();
         Self {
             id: meta.id,
             title: meta.title,
@@ -72,10 +65,70 @@ impl AnnotatedDoc {
             people: meta.people,
             translation: Some(meta.translation),
             segments: Some(segments),
-            words: Some(words),
             image_url: None,
         }
     }
+}
+
+#[Object]
+impl AnnotatedDoc {
+    /// Official short identifier for this document.
+    async fn id(&self) -> &str {
+        &self.id
+    }
+    /// Full title of the document.
+    async fn title(&self) -> &str {
+        &self.title
+    }
+    /// The publication that included this document.
+    async fn publication(&self) -> &Option<String> {
+        &self.publication
+    }
+    /// Where the source document came from, maybe the name of a collection.
+    async fn source(&self) -> &Option<String> {
+        &self.source
+    }
+    /// Rough translation of the document, broken down by paragraph.
+    async fn translation(&self) -> &Option<Translation> {
+        &self.translation
+    }
+    async fn segments(&self) -> &Option<Vec<AnnotatedSeg>> {
+        &self.segments
+    }
+    async fn translated_segments(&self) -> Option<Vec<TranslatedSection>> {
+        if let (Some(segments), Some(translation)) =
+            (self.segments.as_ref(), self.translation.as_ref())
+        {
+            Some(
+                segments
+                    .iter()
+                    .zip(translation.blocks.iter())
+                    .map(|(seg, trans)| TranslatedSection {
+                        translation: trans.clone(),
+                        source: seg.clone(),
+                    })
+                    .collect(),
+            )
+        } else {
+            None
+        }
+    }
+
+    /// All the words contained in this document, dropping structural formatting
+    /// like line and page breaks.
+    async fn words(&self) -> Option<Vec<AnnotatedWord>> {
+        self.segments
+            .as_ref()
+            .map(|segments| segments.iter().flat_map(|s| s.words()).collect())
+    }
+}
+
+#[SimpleObject]
+struct TranslatedSection {
+    /// Translation of this portion of the source text.
+    translation: translation::Block,
+    /// Source text from the original document.
+    source: AnnotatedSeg,
 }
 
 // Ideal structure:
@@ -116,7 +169,10 @@ impl<'a> AnnotatedLine {
                         .items
                         .get(i)
                         .map(|x| x.split(delims).map(|s| s.trim().to_owned()).collect()),
-                    english_gloss: line.rows[6].items.get(i).map(|x| x.trim().to_owned()),
+                    english_gloss: vec![line.rows[6].items.get(i).map(|x| x.trim().to_owned())]
+                        .into_iter()
+                        .filter_map(|x| x)
+                        .collect(),
                     commentary: line.rows[7].items.get(i).map(|x| x.to_owned()),
                     page_break: pb.map(|i| i as i32),
                     line_break: pb
@@ -145,28 +201,33 @@ impl<'a> AnnotatedLine {
                     .filter(|i| line.rows.get(0).and_then(|r| r.items.get(*i)).is_some())
                     .map(|i| {
                         let pb = line.rows[0].items[i].find(PAGE_BREAK);
-                        let w = AnnotatedWord {
-                            index: i as i32,
-                            source: line.rows[0].items[i].trim().to_owned(),
-                            normalized_source: line.rows[0].items[i].trim().to_owned(),
-                            simple_phonetics: line.rows[2].items.get(i).map(|x| x.to_owned()),
-                            phonemic: line.rows[3].items.get(i).map(|x| x.to_owned()),
-                            morphemic_segmentation: line.rows[4]
-                                .items
-                                .get(i)
-                                .map(|x| x.split(delims).map(|s| s.trim().to_owned()).collect()),
-                            morpheme_gloss: line.rows[5]
-                                .items
-                                .get(i)
-                                .map(|x| x.split(delims).map(|s| s.trim().to_owned()).collect()),
-                            english_gloss: line.rows[6].items.get(i).map(|x| x.trim().to_owned()),
-                            commentary: line.rows[7].items.get(i).map(|x| x.to_owned()),
-                            page_break: pb.map(|i| i as i32),
-                            line_break: pb
-                                .or_else(|| line.rows[0].items[i].find(LINE_BREAK))
-                                .map(|i| i as i32),
-                            document_id: None,
-                        };
+                        let w =
+                            AnnotatedWord {
+                                index: i as i32,
+                                source: line.rows[0].items[i].trim().to_owned(),
+                                normalized_source: line.rows[0].items[i].trim().to_owned(),
+                                simple_phonetics: line.rows[2].items.get(i).map(|x| x.to_owned()),
+                                phonemic: line.rows[3].items.get(i).map(|x| x.to_owned()),
+                                morphemic_segmentation: line.rows[4].items.get(i).map(|x| {
+                                    x.split(delims).map(|s| s.trim().to_owned()).collect()
+                                }),
+                                morpheme_gloss: line.rows[5].items.get(i).map(|x| {
+                                    x.split(delims).map(|s| s.trim().to_owned()).collect()
+                                }),
+                                english_gloss: vec![line.rows[6]
+                                    .items
+                                    .get(i)
+                                    .map(|x| x.trim().to_owned())]
+                                .into_iter()
+                                .filter_map(|x| x)
+                                .collect(),
+                                commentary: line.rows[7].items.get(i).map(|x| x.to_owned()),
+                                page_break: pb.map(|i| i as i32),
+                                line_break: pb
+                                    .or_else(|| line.rows[0].items[i].find(LINE_BREAK))
+                                    .map(|i| i as i32),
+                                document_id: None,
+                            };
                         word_index += 1;
                         w
                     })
@@ -308,7 +369,7 @@ impl<'a> AnnotatedLine {
 }
 
 #[Union]
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 #[serde(tag = "type")]
 pub enum AnnotatedSeg {
     Block(AnnotatedPhrase),
@@ -336,18 +397,18 @@ pub enum BlockType {
 }
 
 #[SimpleObject]
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct LineBreak {
     index: i32,
 }
 #[SimpleObject]
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct PageBreak {
     index: i32,
 }
 
 #[SimpleObject]
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct AnnotatedPhrase {
     ty: BlockType,
     index: i32,

@@ -1,4 +1,5 @@
 mod annotation;
+mod dictionary;
 mod encode;
 mod retrieve;
 mod structured;
@@ -13,10 +14,7 @@ use lambda_http::{
     IntoResponse, Request, Response,
 };
 use lazy_static::lazy_static;
-use retrieve::{DocumentMetadata, SemanticLine};
-use serde_json::json;
-use std::future::Future;
-use structured::{Database, Query};
+use structured::Database;
 
 pub const GOOGLE_API_KEY: &str = "AIzaSyBqqPrkht_OeYUSNkSf_sc6UzNaFhzOVNI";
 
