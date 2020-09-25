@@ -1,16 +1,13 @@
 import React from "react"
 import { Link } from "gatsby"
 import { useQuery, gql } from "@apollo/client"
+import _ from "lodash"
 
 /** Specific details about some morpheme */
-export const MorphemeDetails = (props: {
-  segment: string
-  gloss: string
-  dialog: any
-}) => (
+export const MorphemeDetails = (props: { segment: any; dialog: any }) => (
   <>
-    <h4>{props.gloss} - Known surface forms</h4>
-    <SimilarMorphemeList gloss={props.gloss} dialog={props.dialog} />
+    <h4>Known Occurrences of "{props.segment?.gloss}"</h4>
+    <SimilarMorphemeList gloss={props.segment?.gloss} dialog={props.dialog} />
   </>
 )
 
@@ -24,44 +21,93 @@ const SimilarMorphemeList = (props: { gloss: string; dialog: any }) => {
     variables: { gloss: props.gloss },
   })
 
-  if (loading) {
+  const tag = useQuery(tagQuery, {
+    skip: !props.gloss,
+    variables: { gloss: props.gloss },
+  })
+
+  if (loading || tag.loading) {
     return <p>Loading...</p>
-  } else if (!data || !data.morphemes) {
+  } else if (!data || !data.documents) {
     return <p>None Found</p>
   } else {
-    return data.morphemes.map((m, i) => (
-      <div key={i}>
-        <p>{m.morpheme}</p>
+    const docTypes = _.groupBy(data.documents, "documentType")
+    const similarWords = Object.entries(docTypes).map(([ty, documents]) => (
+      <section key={ty}>
+        <h5>{documentTypeToHeading(ty)}</h5>
         <ul>
-          {m.words.map(word => (
-            <li>
-              <Link
-                to={`/documents/${word.documentId.toLowerCase()}#w${
-                  word.index
-                }`}
-                onClick={() => props.dialog.hide()}
-              >
-              {word.source}
-              </Link>
-              : {word.englishGloss} (at {word.documentId}-{word.index})
-            </li>
-          ))}
+          {documents.map((m, i) =>
+            m.words.map((word, j) => (
+              <li key={`${i}-${j}`}>
+                {word.source}: {word.englishGloss.join(", ")} (at{" "}
+                {word.documentId ? (
+                  <>
+                    {word.documentId && word.index ? (
+                      <Link
+                        to={`/documents/${word.documentId?.toLowerCase()}#w${
+                          word.index
+                        }`}
+                        onClick={() => props.dialog.hide()}
+                      >
+                        {word.documentId} #{word.index}
+                      </Link>
+                    ) : (
+                      <>
+                        {word.documentId} #{word.index}
+                      </>
+                    )}
+                  </>
+                ) : null}
+                )
+              </li>
+            ))
+          )}
         </ul>
-      </div>
+      </section>
     ))
+    let tagDetails = null
+    if (tag.data?.tag) {
+      tagDetails = <p>{tag.data.tag.name}</p>
+    }
+
+    return (
+      <>
+        {tagDetails}
+        {similarWords}
+      </>
+    )
+  }
+}
+
+function documentTypeToHeading(ty: string) {
+  if (ty === "REFERENCE") {
+    return "In Dictionaries"
+  } else {
+    return "In Documents"
   }
 }
 
 const morphemeQuery = gql`
   query Morpheme($gloss: String!) {
-    morphemes(gloss: $gloss) {
-      morpheme
+    documents: wordsWithMorpheme(gloss: $gloss) {
+      documentId
+      documentType
       words {
         index
         source
         documentId
         englishGloss
       }
+    }
+  }
+`
+
+const tagQuery = gql`
+  query Tag($gloss: String!) {
+    tag: morphemeTag(id: $gloss) {
+      morphemeType
+      name
+      crg
     }
   }
 `

@@ -23,7 +23,7 @@ reqwest = { version = "0.10", features = ["json"] }
 tokio = { version = "0.2", features = ["full"] }
 anyhow = "1.0"
 itertools = "0.9"
-async-graphql = {git = "https://github.com/async-graphql/async-graphql"}
+async-graphql = {git = "https://github.com/async-graphql/async-graphql", rev = "5f14325ef5bded27832a79c08d70034c1e5a9d6a"}
 futures = "0.3"
 mongodb = "*"
 lambda = {git = "https://github.com/awslabs/aws-lambda-rust-runtime"}

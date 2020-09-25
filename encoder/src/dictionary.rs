@@ -1,4 +1,4 @@
-use crate::annotation::AnnotatedWord;
+use crate::annotation::{AnnotatedWord, MorphemeSegment};
 use crate::retrieve::SheetResult;
 use crate::structured::Database;
 use anyhow::Result;
@@ -11,8 +11,9 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct DictionaryEntry {
-    pub root: String,
     #[serde(rename = "_id")]
+    pub id: String,
+    pub root: String,
     pub root_gloss: String,
     pub root_translations: Vec<String>,
     pub surface_forms: Vec<AnnotatedWord>,
@@ -20,6 +21,7 @@ pub struct DictionaryEntry {
 }
 
 pub async fn migrate_dictionaries(db: &Database) -> Result<()> {
+    println!("Migrating DF1975 and DF2003 to database...");
     let (df1975, df2003, root_nouns) = join!(
         SheetResult::from_sheet("11ssqdimOQc_hp3Zk8Y55m6DFfKR96OOpclUg5wcGSVE", None),
         SheetResult::from_sheet("18cKXgsfmVhRZ2ud8Cd7YDSHexs1ODHo6fkTPrmnwI1g", None),
@@ -28,16 +30,15 @@ pub async fn migrate_dictionaries(db: &Database) -> Result<()> {
 
     let df1975 = df1975?.into_df1975("DF1975", 1975, true)?;
     let df2003 = df2003?.into_df1975("DF2003", 2003, false)?;
-    let root_nouns = root_nouns?.into_nouns(1975)?;
+    let root_nouns = root_nouns?.into_nouns("DF1975", 1975)?;
 
     let dict = db.client.collection("dictionary");
-    println!("Migrating DF1975 and DF2003 to database...");
     let entries = df1975.into_iter().chain(df2003).chain(root_nouns);
     join_all(entries.filter_map(|entry| {
         if let bson::Bson::Document(bson_doc) = bson::to_bson(&entry).unwrap() {
             Some(
                 dict.update_one(
-                    bson::doc! {"_id": entry.root_gloss},
+                    bson::doc! {"_id": entry.id},
                     bson_doc,
                     mongodb::options::UpdateOptions::builder()
                         .upsert(true)
@@ -100,14 +101,12 @@ pub fn root_verb_surface_form(
         .map(|(_tag, src)| src.trim())
         .chain(vec![root, &mod_morpheme.1])
         .filter(|s| !s.is_empty())
-        .map(|s| convert_udb(s).to_dailp())
-        .collect();
+        .map(|s| convert_udb(s).to_dailp());
     let morpheme_glosses = morpheme_tags
         .iter()
         .map(|(tag, _src)| tag.trim().to_owned())
         .chain(vec![root_gloss.to_owned(), mod_morpheme.0])
-        .filter(|s| !s.is_empty())
-        .collect();
+        .filter(|s| !s.is_empty());
     // Then, the representations of the full word.
     let phonemic = phonemic?;
     let _numeric = if has_ppp { cols.next()? } else { String::new() };
@@ -126,8 +125,10 @@ pub fn root_verb_surface_form(
         normalized_source: syllabary,
         simple_phonetics: Some(phonetic),
         phonemic: Some(convert_udb(&phonemic).to_dailp()),
-        morphemic_segmentation: Some(morphemes),
-        morpheme_gloss: Some(morpheme_glosses),
+        segmentation: morphemes
+            .zip(morpheme_glosses)
+            .map(|(m, g)| MorphemeSegment::new(m, g))
+            .collect(),
         english_gloss: translations,
         commentary: None,
         line_break: None,
@@ -154,27 +155,26 @@ pub fn root_noun_surface_form(
     let syllabary = cols.next()?;
     let translations = cols.take(3).filter(|s| !s.is_empty());
 
+    let morphemes = vec![&ppp_src as &str, &pp_src as &str, root]
+        .into_iter()
+        .map(|s| s.trim())
+        .filter(|s| !s.is_empty())
+        .map(|s| convert_udb(s).to_dailp());
+    let glosses = vec![ppp_tag, pp_tag, root_gloss.to_owned()]
+        .into_iter()
+        .map(|s| s.trim().to_owned())
+        .filter(|s| !s.is_empty());
+
     Some(AnnotatedWord {
         index: 0,
         source: syllabary.clone(),
         normalized_source: syllabary,
         simple_phonetics: Some(phonetic),
         phonemic: Some(convert_udb(&phonemic).to_dailp()),
-        morphemic_segmentation: Some(
-            vec![&ppp_src as &str, &pp_src as &str, root]
-                .into_iter()
-                .map(|s| s.trim())
-                .filter(|s| !s.is_empty())
-                .map(|s| convert_udb(s).to_dailp())
-                .collect(),
-        ),
-        morpheme_gloss: Some(
-            vec![ppp_tag, pp_tag, root_gloss.to_owned()]
-                .into_iter()
-                .map(|s| s.trim().to_owned())
-                .filter(|s| !s.is_empty())
-                .collect(),
-        ),
+        segmentation: morphemes
+            .zip(glosses)
+            .map(|(m, g)| MorphemeSegment::new(m, g))
+            .collect(),
         english_gloss: translations.collect(),
         commentary: None,
         line_break: None,

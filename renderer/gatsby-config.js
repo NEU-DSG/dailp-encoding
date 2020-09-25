@@ -3,6 +3,18 @@ module.exports = {
     title: "DAILP Encoding",
   },
   plugins: [
+    {
+      resolve: `gatsby-plugin-manifest`,
+      options: {
+        name: `DAILP Cherokee Reader`,
+        short_name: `DAILP`,
+        start_url: `/`,
+        background_color: `#f7f0eb`,
+        theme_color: `#a2466c`,
+        display: `standalone`,
+      },
+    },
+    "gatsby-plugin-offline",
     "gatsby-plugin-typescript",
     "gatsby-plugin-react-helmet",
     "gatsby-plugin-linaria",

@@ -1,19 +1,19 @@
-import React, { Profiler, useState } from "react"
-import { graphql, Link } from "gatsby"
-import { useQuery, gql } from "@apollo/client"
+import React, { useState, useEffect } from "react"
+import { graphql } from "gatsby"
 import { styled } from "linaria/react"
 import { Helmet } from "react-helmet"
-import { useDialogState, Dialog, DialogBackdrop } from "reakit/Dialog"
-import Layout from "./layout"
-import { MorphemeDetails } from "./morpheme"
-import { Segment } from "./segment"
-import "typeface-gentium-basic"
+import { useDialogState, Dialog } from "reakit/Dialog"
+import { Radio, RadioGroup, useRadioState } from "reakit/Radio"
+import Layout from "../layout"
+import { MorphemeDetails } from "../morpheme"
+import { Segment } from "../segment"
 
 /** A full annotated document, including all metadata and the translation(s) */
 const AnnotatedDocumentPage = ({ data }) => {
   const doc = data.dailp.document
   const dialog = useDialogState()
-  const [selectedMorpheme, setMorpheme] = useState([null, null])
+  const [selectedMorpheme, setMorpheme] = useState(null)
+  const [experienceLevel, setLevel] = useState(ExperienceLevel.Beginner)
 
   return (
     <Layout>
@@ -23,11 +23,7 @@ const AnnotatedDocumentPage = ({ data }) => {
 
       <AnnotatedDocument>
         <MorphemeDialog {...dialog} aria-label="Morpheme Details">
-          <MorphemeDetails
-            segment={selectedMorpheme[0]}
-            gloss={selectedMorpheme[1]}
-            dialog={dialog}
-          />
+          <MorphemeDetails segment={selectedMorpheme} dialog={dialog} />
         </MorphemeDialog>
 
         <header>
@@ -35,29 +31,55 @@ const AnnotatedDocumentPage = ({ data }) => {
           <h3>{doc.source}</h3>
         </header>
 
+        <ExperiencePicker onPick={level => setLevel(level)} />
+
         <AnnotationSection>
-          {doc.segments.map((seg, i) => (
+          {doc.translatedSegments.map((seg, i) => (
             <Segment
               key={`s${i}`}
-              segment={seg}
+              segment={seg.source}
               dialog={dialog}
-              onOpenDetails={(segment, gloss) => {
-                setMorpheme([segment, gloss])
+              onOpenDetails={segment => {
+                setMorpheme(segment)
               }}
+              level={experienceLevel}
+              translations={seg.translation}
             />
           ))}
         </AnnotationSection>
-
-        <DocSection>
-          {doc.translation.blocks.map((block, i) => (
-            <p key={`t${i}`}>{block.segments.join(". ")}</p>
-          ))}
-        </DocSection>
       </AnnotatedDocument>
     </Layout>
   )
 }
 export default AnnotatedDocumentPage
+
+export enum ExperienceLevel {
+  Beginner = 0,
+  Intermediate = 1,
+  Advanced = 2,
+}
+
+const ExperiencePicker = (props: {
+  onPick: (exp: ExperienceLevel) => void
+}) => {
+  const radio = useRadioState({ state: ExperienceLevel.Beginner })
+  useEffect(() => {
+    props.onPick(radio.state as ExperienceLevel)
+  }, [radio.state])
+
+  return (
+    <RadioGroup {...radio}>
+      {Object.keys(ExperienceLevel)
+        .filter(l => isNaN(Number(l)))
+        .map(level => (
+          <label key={level}>
+            <Radio {...radio} value={ExperienceLevel[level]} />
+            {level}
+          </label>
+        ))}
+    </RadioGroup>
+  )
+}
 
 export const query = graphql`
   query AnnotatedDocument($id: String!) {
@@ -66,18 +88,18 @@ export const query = graphql`
         id
         title
         source
-        translation {
-          blocks {
+        translatedSegments {
+          source {
+            __typename
+            ... on Dailp_AnnotatedWord {
+              ...WordFields
+            }
+            ... on Dailp_AnnotatedPhrase {
+              ...BlockFields
+            }
+          }
+          translation {
             segments
-          }
-        }
-        segments {
-          __typename
-          ... on Dailp_AnnotatedWord {
-            ...WordFields
-          }
-          ... on Dailp_AnnotatedPhrase {
-            ...BlockFields
           }
         }
       }
@@ -98,8 +120,10 @@ export const query = graphql`
     source
     simplePhonetics
     phonemic
-    morphemicSegmentation
-    morphemeGloss
+    segmentation {
+      morpheme
+      gloss
+    }
     englishGloss
   }
 `

@@ -3,10 +3,11 @@ import { graphql, Link } from "gatsby"
 import { Helmet } from "react-helmet"
 import { styled } from "linaria/react"
 import Layout from "../layout"
+import _ from "lodash"
 
 export default ({ data }) => {
-  const documents = data.dailp.documents
-  const docsByCategory = groupBy(documents, "source")
+  const documents = data.dailp.allDocuments
+  const docsByCategory = _.groupBy(documents, "source")
   return (
     <Layout>
       <Helmet>
@@ -38,7 +39,7 @@ export default ({ data }) => {
 export const query = graphql`
   query {
     dailp {
-      documents {
+      allDocuments {
         id
         title
         source
@@ -47,19 +48,13 @@ export const query = graphql`
   }
 `
 
-const DocIndex = styled.main`
+export const DocIndex = styled.main`
   display: flex;
-  flex-flow: column nowrap;
-  align-items: center;
+  flex-flow: row nowrap;
+  justify-content: center;
 `
 
-const FullWidth = styled.section`
+export const FullWidth = styled.section`
   max-width: 1024px;
+  flex-grow: 1;
 `
-
-const groupBy = (xs, key) =>
-  xs.reduce((rv, x) => {
-    const entry = (rv[x[key]] = rv[x[key]] || [])
-    entry.push(x)
-    return rv
-  }, {})
