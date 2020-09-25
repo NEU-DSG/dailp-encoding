@@ -3,6 +3,7 @@ mod dictionary;
 mod encode;
 mod retrieve;
 mod structured;
+mod tag;
 mod translation;
 
 use async_graphql::http::{GQLRequest, GQLResponse};

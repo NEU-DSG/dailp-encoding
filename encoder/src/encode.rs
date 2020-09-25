@@ -1,11 +1,11 @@
 use crate::{
-    annotation::AnnotatedWord,
+    annotation::{AnnotatedWord, MorphemeSegment},
     retrieve::{DocumentMetadata, SemanticLine},
     translation,
     translation::Translation,
 };
 use anyhow::Result;
-use async_graphql::*;
+use async_graphql::{self, *};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs::File;
@@ -123,6 +123,12 @@ impl AnnotatedDoc {
     }
 }
 
+#[async_graphql::Enum]
+pub enum DocumentType {
+    Reference,
+    Corpus,
+}
+
 #[SimpleObject]
 struct TranslatedSection {
     /// Translation of this portion of the source text.
@@ -154,21 +160,28 @@ impl<'a> AnnotatedLine {
             .filter(|i| line.rows.get(0).and_then(|r| r.items.get(*i)).is_some())
             .map(|i| {
                 let pb = line.rows[0].items[i].find(PAGE_BREAK);
+                let morphemes: Vec<_> = line.rows[4]
+                    .items
+                    .get(i)
+                    .map(|x| x.split(delims).map(|s| s.trim().to_owned()).collect())
+                    .unwrap_or_default();
+                let glosses: Vec<_> = line.rows[5]
+                    .items
+                    .get(i)
+                    .map(|x| x.split(delims).map(|s| s.trim().to_owned()).collect())
+                    .unwrap_or_default();
                 AnnotatedWord {
-                    document_id: None,
                     index: i as i32,
                     source: line.rows[0].items[i].trim().to_owned(),
                     normalized_source: line.rows[0].items[i].trim().to_owned(),
                     simple_phonetics: line.rows[2].items.get(i).map(|x| x.to_owned()),
                     phonemic: line.rows[3].items.get(i).map(|x| x.to_owned()),
-                    morphemic_segmentation: line.rows[4]
-                        .items
-                        .get(i)
-                        .map(|x| x.split(delims).map(|s| s.trim().to_owned()).collect()),
-                    morpheme_gloss: line.rows[5]
-                        .items
-                        .get(i)
-                        .map(|x| x.split(delims).map(|s| s.trim().to_owned()).collect()),
+                    segmentation: morphemes
+                        .into_iter()
+                        .zip(glosses)
+                        .filter(|(m, g)| !m.is_empty() || !g.is_empty())
+                        .map(|(morpheme, gloss)| MorphemeSegment { morpheme, gloss })
+                        .collect(),
                     english_gloss: vec![line.rows[6].items.get(i).map(|x| x.trim().to_owned())]
                         .into_iter()
                         .filter_map(|x| x)
@@ -178,6 +191,7 @@ impl<'a> AnnotatedLine {
                     line_break: pb
                         .or_else(|| line.rows[0].items[i].find(LINE_BREAK))
                         .map(|i| i as i32),
+                    document_id: None,
                 }
             })
             .collect();
@@ -201,33 +215,42 @@ impl<'a> AnnotatedLine {
                     .filter(|i| line.rows.get(0).and_then(|r| r.items.get(*i)).is_some())
                     .map(|i| {
                         let pb = line.rows[0].items[i].find(PAGE_BREAK);
-                        let w =
-                            AnnotatedWord {
-                                index: i as i32,
-                                source: line.rows[0].items[i].trim().to_owned(),
-                                normalized_source: line.rows[0].items[i].trim().to_owned(),
-                                simple_phonetics: line.rows[2].items.get(i).map(|x| x.to_owned()),
-                                phonemic: line.rows[3].items.get(i).map(|x| x.to_owned()),
-                                morphemic_segmentation: line.rows[4].items.get(i).map(|x| {
-                                    x.split(delims).map(|s| s.trim().to_owned()).collect()
-                                }),
-                                morpheme_gloss: line.rows[5].items.get(i).map(|x| {
-                                    x.split(delims).map(|s| s.trim().to_owned()).collect()
-                                }),
-                                english_gloss: vec![line.rows[6]
-                                    .items
-                                    .get(i)
-                                    .map(|x| x.trim().to_owned())]
+                        let morphemes: Vec<_> = line.rows[4]
+                            .items
+                            .get(i)
+                            .map(|x| x.split(delims).map(|s| s.trim().to_owned()).collect())
+                            .unwrap_or_default();
+                        let glosses: Vec<_> = line.rows[5]
+                            .items
+                            .get(i)
+                            .map(|x| x.split(delims).map(|s| s.trim().to_owned()).collect())
+                            .unwrap_or_default();
+                        let w = AnnotatedWord {
+                            index: i as i32,
+                            source: line.rows[0].items[i].trim().to_owned(),
+                            normalized_source: line.rows[0].items[i].trim().to_owned(),
+                            simple_phonetics: line.rows[2].items.get(i).map(|x| x.to_owned()),
+                            phonemic: line.rows[3].items.get(i).map(|x| x.to_owned()),
+                            segmentation: morphemes
                                 .into_iter()
-                                .filter_map(|x| x)
+                                .zip(glosses)
+                                .filter(|(m, g)| !m.is_empty() || !g.is_empty())
+                                .map(|(morpheme, gloss)| MorphemeSegment { morpheme, gloss })
                                 .collect(),
-                                commentary: line.rows[7].items.get(i).map(|x| x.to_owned()),
-                                page_break: pb.map(|i| i as i32),
-                                line_break: pb
-                                    .or_else(|| line.rows[0].items[i].find(LINE_BREAK))
-                                    .map(|i| i as i32),
-                                document_id: None,
-                            };
+                            english_gloss: vec![line.rows[6]
+                                .items
+                                .get(i)
+                                .map(|x| x.trim().to_owned())]
+                            .into_iter()
+                            .filter_map(|x| x)
+                            .collect(),
+                            commentary: line.rows[7].items.get(i).map(|x| x.to_owned()),
+                            page_break: pb.map(|i| i as i32),
+                            line_break: pb
+                                .or_else(|| line.rows[0].items[i].find(LINE_BREAK))
+                                .map(|i| i as i32),
+                            document_id: None,
+                        };
                         word_index += 1;
                         w
                     })

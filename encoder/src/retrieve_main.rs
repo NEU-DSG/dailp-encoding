@@ -3,6 +3,7 @@ mod dictionary;
 mod encode;
 mod retrieve;
 mod structured;
+mod tag;
 mod translation;
 
 use anyhow::Result;
@@ -19,6 +20,7 @@ const TASK_LIMIT: usize = 5;
 async fn main() -> Result<()> {
     dotenv().ok();
     let db = structured::Database::new().await?;
+    tag::migrate_tags(&db).await?;
     dictionary::migrate_dictionaries(&db).await?;
     migrate_data(&db).await?;
     Ok(())
@@ -49,9 +51,15 @@ async fn migrate_data(db: &structured::Database) -> Result<()> {
         items.push(item);
     }
 
-    items.par_iter().for_each(|(meta, lines)| {
-        encode::write_to_file(meta.clone(), lines.clone()).unwrap();
-    });
+    // Write out all the XML in parallel.
+    let results: Vec<_> = items
+        .par_iter()
+        .map(|(meta, lines)| encode::write_to_file(meta.clone(), lines.clone()))
+        .collect();
+    // Then, propogate any errors in that process.
+    for r in results {
+        r?;
+    }
     structured::build_json(items, db).await?;
     Ok(())
 }

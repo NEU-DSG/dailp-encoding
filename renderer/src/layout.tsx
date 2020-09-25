@@ -1,23 +1,20 @@
 import React from "react"
-import {
-  useToolbarState,
-  Toolbar,
-  ToolbarItem,
-  ToolbarSeparator,
-} from "reakit/Toolbar"
 import { styled } from "linaria/react"
 import { css } from "linaria"
 import { Link } from "gatsby"
+import Footer from "./footer"
 
-/** Wrapper for most site pages, providing them with a navigation header. */
+/** Wrapper for most site pages, providing them with a navigation header and footer. */
 const Layout = ({ children }) => (
   <>
     <Header>
       <Link to="/" className={siteTitle}>
-        Cherokee Reader (React Version)
+        Digital Archive of American Indian Languages Preservation and
+        Perseverance
       </Link>
     </Header>
     {children}
+    <Footer />
   </>
 )
 export default Layout
@@ -26,12 +23,13 @@ const Header = styled.nav`
   display: flex;
   flex-flow: row nowrap;
   justify-content: center;
-  background-color: lightgray;
+  background-color: #f7eeed;
 `
 
 const siteTitle = css`
-  color: black;
+  margin: 1.2rem 0;
+  color: #bb675d;
   text-decoration: none;
   font-size: 2rem;
-  margin: 1.2rem 0;
+  font-family: "Open Sans";
 `
