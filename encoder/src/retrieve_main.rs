@@ -1,4 +1,5 @@
 mod annotation;
+mod dictionary;
 mod encode;
 mod retrieve;
 mod structured;
@@ -6,13 +7,10 @@ mod translation;
 
 use anyhow::Result;
 use dotenv::dotenv;
-use futures::future::join_all;
 use futures::stream::FuturesUnordered;
 use futures::stream::StreamExt;
-use itertools::process_results;
+use rayon::prelude::*;
 use retrieve::{DocumentMetadata, SemanticLine};
-use serde_json::json;
-use structured::{Database, Query};
 
 pub const GOOGLE_API_KEY: &str = "AIzaSyBqqPrkht_OeYUSNkSf_sc6UzNaFhzOVNI";
 const TASK_LIMIT: usize = 5;
@@ -20,11 +18,13 @@ const TASK_LIMIT: usize = 5;
 #[tokio::main]
 async fn main() -> Result<()> {
     dotenv().ok();
-    migrate_data().await?;
+    let db = structured::Database::new().await?;
+    dictionary::migrate_dictionaries(&db).await?;
+    migrate_data(&db).await?;
     Ok(())
 }
 
-async fn migrate_data() -> Result<()> {
+async fn migrate_data(db: &structured::Database) -> Result<()> {
     // Pull the list of annotated documents from our master index sheet.
     let index =
         retrieve::SheetResult::from_sheet("1sDTRFoJylUqsZlxU57k1Uj8oHhbM3MAzU8sDgTfO7Mk", None)
@@ -49,10 +49,10 @@ async fn migrate_data() -> Result<()> {
         items.push(item);
     }
 
-    for (meta, lines) in &items {
-        encode::write_to_file(meta.clone(), lines.clone())?;
-    }
-    structured::build_json(items).await?;
+    items.par_iter().for_each(|(meta, lines)| {
+        encode::write_to_file(meta.clone(), lines.clone()).unwrap();
+    });
+    structured::build_json(items, db).await?;
     Ok(())
 }
 

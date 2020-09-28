@@ -9,12 +9,13 @@ use serde::{Deserialize, Serialize};
 #[SimpleObject]
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Translation {
-    blocks: Vec<Block>,
+    pub blocks: Vec<Block>,
 }
 #[SimpleObject]
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Block {
     index: i32,
+    /// Each segment represents a sentence or line in the translation.
     segments: Vec<String>,
 }
 
