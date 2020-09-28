@@ -1,7 +1,11 @@
+use crate::dictionary::{
+    convert_udb, root_noun_surface_form, root_verb_surface_forms, DictionaryEntry,
+};
 use crate::translation::{DocResult, Translation};
 use crate::GOOGLE_API_KEY;
 use anyhow::Result;
 use async_graphql::*;
+use rayon::prelude::*;
 use reqwest;
 use serde::{Deserialize, Serialize};
 
@@ -64,7 +68,7 @@ impl SheetResult {
     pub async fn from_sheet(sheet_id: &str, sheet_name: Option<&str>) -> Result<Self> {
         let sheet_name = sheet_name.map_or_else(|| String::new(), |n| format!("{}!", n));
         Ok(reqwest::get(&format!(
-            "https://sheets.googleapis.com/v4/spreadsheets/{}/values/{}A1:Z?key={}",
+            "https://sheets.googleapis.com/v4/spreadsheets/{}/values/{}A1:ZZ?key={}",
             sheet_id, sheet_name, GOOGLE_API_KEY
         ))
         .await?
@@ -83,6 +87,99 @@ impl SheetResult {
                 .map(|mut row| row.remove(11).split("/").nth(5).unwrap().to_owned())
                 .collect(),
         })
+    }
+
+    pub fn into_df1975(
+        self,
+        doc_id: &str,
+        year: i32,
+        has_ppp: bool,
+    ) -> Result<Vec<DictionaryEntry>> {
+        // First two rows are simply headers.
+        // let mut values = self.values.into_iter();
+        // let first_header = values.next().unwrap();
+        // let second_header = values.next().unwrap();
+
+        // The rest are relevant to the verb itself.
+        Ok(self
+            .values
+            .into_par_iter()
+            .skip(2)
+            .filter_map(|columns| {
+                // The columns are as follows: key, page number, root, root gloss,
+                // translations 1, 2, 3, transitivity, UDB class, blank, surface forms.
+                if columns.len() > 7 && !columns[2].is_empty() {
+                    // Skip reference numbers for now.
+                    let mut root_values = columns.into_iter();
+                    let key = root_values.next()?;
+                    let _page_num = root_values.next()?;
+                    let root = root_values.next()?;
+                    let root_gloss = root_values.next()?;
+                    let mut form_values = root_values.clone().skip(5);
+                    Some(DictionaryEntry {
+                        surface_forms: root_verb_surface_forms(
+                            doc_id,
+                            &root,
+                            &root_gloss,
+                            &mut form_values,
+                            has_ppp,
+                        ),
+                        root_translations: root_values
+                            .take(3)
+                            .map(|s| s.trim().to_owned())
+                            .filter(|s| !s.is_empty())
+                            .collect(),
+                        root: convert_udb(&root).to_dailp(),
+                        root_gloss,
+                        year_recorded: year,
+                    })
+                } else {
+                    None
+                }
+            })
+            .collect())
+    }
+    pub fn into_nouns(self, year: i32) -> Result<Vec<DictionaryEntry>> {
+        // First two rows are simply headers.
+        // let mut values = self.values.into_iter();
+        // let first_header = values.next().unwrap();
+        // let second_header = values.next().unwrap();
+
+        // The rest are relevant to the noun itself.
+        Ok(self
+            .values
+            .into_par_iter()
+            .skip(2)
+            .filter_map(|columns| {
+                // The columns are as follows: key, root, root gloss, page ref,
+                // category, tags, surface forms.
+
+                if columns.len() > 4 && !columns[1].is_empty() {
+                    // Skip reference numbers for now.
+                    let mut root_values = columns.into_iter().skip(1);
+                    let root = root_values.next().unwrap();
+                    let root_gloss = root_values.next().unwrap();
+                    // Skip page ref and category.
+                    let mut form_values = root_values.skip(2);
+                    Some(DictionaryEntry {
+                        surface_forms: vec![root_noun_surface_form(
+                            &root,
+                            &root_gloss,
+                            &mut form_values,
+                        )]
+                        .into_iter()
+                        .filter_map(|x| x)
+                        .collect(),
+                        root: convert_udb(&root).to_dailp(),
+                        root_gloss,
+                        root_translations: Vec::new(),
+                        year_recorded: year,
+                    })
+                } else {
+                    None
+                }
+            })
+            .collect())
     }
     async fn get_drive_content(file_id: &str) -> Result<String> {
         Ok(reqwest::get(&format!(

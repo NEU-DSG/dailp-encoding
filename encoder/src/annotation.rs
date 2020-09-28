@@ -7,31 +7,23 @@ use serde::{Deserialize, Serialize};
 /// A single word in an annotated document.
 /// One word contains several layers of interpretation, including the original
 /// source text, multiple layers of linguistic annotation, and annotator notes.
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct AnnotatedWord {
-    /// Position of this word in its containing document.
     pub index: i32,
-    /// Original source text.
     pub source: String,
     /// A normalized version of the word.
     pub normalized_source: String,
-    /// Romanized version of the word for simple phonetic pronunciation.
     pub simple_phonetics: Option<String>,
-    /// Underlying phonemic representation of this word.
     pub phonemic: Option<String>,
-    /// List of morphemes that make up the word.
     pub morphemic_segmentation: Option<Vec<String>>,
-    /// List of English glosses for each morpheme in the word.
     pub morpheme_gloss: Option<Vec<String>>,
-    /// English gloss for the whole word.
-    pub english_gloss: Option<String>,
+    pub english_gloss: Vec<String>,
     /// Further details about the annotation layers.
     pub commentary: Option<String>,
     /// The character index of a mid-word line break, if there is one.
     pub line_break: Option<i32>,
     /// The character index of a mid-word page break, if there is one.
     pub page_break: Option<i32>,
-    /// The unique identifier of the containing document.
     pub document_id: Option<String>,
 }
 
@@ -73,33 +65,43 @@ impl AnnotatedWord {
 
     /// The document that contains this word.
     async fn document(&self, context: &Context<'_>) -> FieldResult<Option<AnnotatedDoc>> {
-        Ok(context
-            .data::<Database>()?
-            .document(self.document_id.as_ref().unwrap())
-            .await)
+        Ok(if let Some(id) = self.document_id.as_ref() {
+            context.data::<Database>()?.document(id).await
+        } else {
+            None
+        })
     }
+
+    /// Position of this word in its containing document.
     async fn index(&self) -> i32 {
         self.index
     }
+    /// The unique identifier of the containing document.
     async fn document_id(&self) -> &Option<String> {
         &self.document_id
     }
+    /// Original source text.
     async fn source(&self) -> &str {
         &self.source
     }
+    /// Romanized version of the word for simple phonetic pronunciation.
     async fn simple_phonetics(&self) -> &Option<String> {
         &self.simple_phonetics
     }
+    /// Underlying phonemic representation of this word.
     async fn phonemic(&self) -> &Option<String> {
         &self.phonemic
     }
+    /// List of morphemes that make up the word.
     async fn morphemic_segmentation(&self) -> &Option<Vec<String>> {
         &self.morphemic_segmentation
     }
+    /// List of English glosses for each morpheme in the word.
     async fn morpheme_gloss(&self) -> &Option<Vec<String>> {
         &self.morpheme_gloss
     }
-    async fn english_gloss(&self) -> &Option<String> {
+    /// English gloss for the whole word.
+    async fn english_gloss(&self) -> &Vec<String> {
         &self.english_gloss
     }
 }

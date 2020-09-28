@@ -1,20 +1,22 @@
 use crate::annotation::AnnotatedWord;
-use crate::encode::{AnnotatedDoc, AnnotatedLine, AnnotatedSeg};
-use crate::retrieve::{self, DocumentMetadata, SemanticLine};
+use crate::dictionary::DictionaryEntry;
+use crate::encode::{AnnotatedDoc, AnnotatedLine};
+use crate::retrieve::{DocumentMetadata, SemanticLine};
 use anyhow::Result;
 use async_graphql::*;
+use futures::join;
 use itertools::Itertools;
-use mongodb::{bson, options::ClientOptions, options::FindOneOptions, Client};
-use serde::{Deserialize, Serialize};
-use serde_json;
+use mongodb::{bson, options::ClientOptions, Client};
 use std::env;
-use std::fs::File;
-use tokio::{prelude::*, stream::StreamExt};
+use tokio::stream::StreamExt;
 
 /// Converts a set of annotated documents into our preferred access format, then
 /// pushes that data into the underlying database.
 /// Existing versions of these documents are overwritten with the new data.
-pub async fn build_json(inputs: Vec<(DocumentMetadata, Vec<SemanticLine>)>) -> Result<()> {
+pub async fn build_json(
+    inputs: Vec<(DocumentMetadata, Vec<SemanticLine>)>,
+    db: &Database,
+) -> Result<()> {
     // Combine the documents into one object.
     let docs = inputs.into_iter().map(|(meta, lines)| {
         let annotated = lines
@@ -24,15 +26,7 @@ pub async fn build_json(inputs: Vec<(DocumentMetadata, Vec<SemanticLine>)>) -> R
         AnnotatedDoc::new(meta, segments)
     });
     // Write this big fat object with all our annotated documents as a JSON file.
-    let login = env::var("MONGODB_LOGIN")?;
-    let db_url = format!("mongodb+srv://{}@dailp-encoding.hgtma.mongodb.net/dailp-encoding?retryWrites=true&w=majority", login);
-    let mut opts = ClientOptions::parse(&db_url).await?;
-    opts.app_name = Some("DAILP Encoding".to_owned());
-    let client = Client::with_options(opts)?;
-
-    let db = client
-        .database("dailp-encoding")
-        .collection("annotated-documents");
+    let db = db.client.collection("annotated-documents");
     println!("migrating data to database");
     for doc in docs {
         if let bson::Bson::Document(bson_doc) = bson::to_bson(&doc).unwrap() {
@@ -79,30 +73,46 @@ impl Database {
     /// For example, there may be multiple ways to pronounce a Cherokee word
     /// that glosses as "catch" in English.
     pub async fn morphemes(&self, gloss: String) -> Vec<MorphemeReference> {
-        let words: Vec<(String, AnnotatedWord)> = self
-            .client
-            .collection("annotated-documents")
-            .aggregate(
-                vec![
-                    bson::doc! {
-                        "$project": {
-                            "words": {
-                                "$filter": {
-                                    "input": "$words",
-                                    "as": "word",
-                                    "cond": {
-                                        "$in": [&gloss, { "$ifNull": ["$$word.morpheme_gloss", []]}]
-                                    }
+        let dictionary = self.client.collection("dictionary");
+        let documents = self.client.collection("annotated-documents");
+
+        let dictionary_words = dictionary.find(bson::doc! { "_id": &gloss }, None);
+        let document_words = documents.aggregate(
+            vec![
+                bson::doc! {
+                    "$project": {
+                        "words": {
+                            "$filter": {
+                                "input": "$words",
+                                "as": "word",
+                                "cond": {
+                                    "$in": [&gloss, { "$ifNull": ["$$word.morpheme_gloss", []]}]
                                 }
                             }
                         }
-                    },
-                    bson::doc! { "$unwind": "$words" },
-                    bson::doc! { "$replaceRoot": { "newRoot": "$words" } },
-                ],
-                None,
-            )
+                    }
+                },
+                bson::doc! { "$unwind": "$words" },
+                bson::doc! { "$replaceRoot": { "newRoot": "$words" } },
+            ],
+            None,
+        );
+
+        // Retrieve both document and dictionary references at once.
+        let (dictionary_words, document_words) = join!(dictionary_words, document_words);
+
+        let dictionary_words = dictionary_words
+            .unwrap()
+            .map(|doc| {
+                let entry: DictionaryEntry = bson::from_document(doc.unwrap()).unwrap();
+                (entry.root, entry.surface_forms)
+            })
+            .collect::<Vec<_>>()
             .await
+            .into_iter()
+            .flat_map(|(root, forms)| forms.into_iter().map(move |form| (root.clone(), form)));
+
+        let document_words = document_words
             .unwrap()
             .map(|doc| {
                 let word: AnnotatedWord = bson::from_document(doc.unwrap()).unwrap();
@@ -121,14 +131,79 @@ impl Database {
                 };
                 (m.to_owned(), word)
             })
-            .collect()
+            .collect::<Vec<_>>()
             .await;
 
-        words
+        document_words
             .into_iter()
+            .chain(dictionary_words)
             .into_group_map()
             .into_iter()
             .map(|(m, words)| MorphemeReference { morpheme: m, words })
+            .collect()
+    }
+
+    pub async fn words_by_doc(&self, gloss: &str) -> Vec<WordsInDocument> {
+        let dictionary = self.client.collection("dictionary");
+        let documents = self.client.collection("annotated-documents");
+
+        let dictionary_words = dictionary.find(bson::doc! { "_id": gloss }, None);
+        let document_words = documents.aggregate(
+            vec![
+                bson::doc! {
+                    "$project": {
+                        "words": {
+                            "$filter": {
+                                "input": "$words",
+                                "as": "word",
+                                "cond": {
+                                    "$in": [gloss, { "$ifNull": ["$$word.morpheme_gloss", []]}]
+                                }
+                            }
+                        }
+                    }
+                },
+                bson::doc! { "$unwind": "$words" },
+                bson::doc! { "$replaceRoot": { "newRoot": "$words" } },
+            ],
+            None,
+        );
+
+        // Retrieve both document and dictionary references at once.
+        let (dictionary_words, document_words) = join!(dictionary_words, document_words);
+
+        let dictionary_words = dictionary_words
+            .unwrap()
+            .map(|doc| {
+                let entry: DictionaryEntry = bson::from_document(doc.unwrap()).unwrap();
+                (
+                    entry.surface_forms[0].document_id.clone(),
+                    entry.surface_forms,
+                )
+            })
+            .collect::<Vec<_>>()
+            .await
+            .into_iter()
+            .flat_map(|(root, forms)| forms.into_iter().map(move |form| (root.clone(), form)));
+
+        let document_words = document_words
+            .unwrap()
+            .map(|doc| {
+                let word: AnnotatedWord = bson::from_document(doc.unwrap()).unwrap();
+                (word.document_id.clone(), word)
+            })
+            .collect::<Vec<_>>()
+            .await;
+
+        document_words
+            .into_iter()
+            .chain(dictionary_words)
+            .into_group_map()
+            .into_iter()
+            .map(|(m, words)| WordsInDocument {
+                document_id: m,
+                words,
+            })
             .collect()
     }
 }
@@ -137,7 +212,7 @@ pub struct Query;
 
 #[Object]
 impl Query {
-    async fn documents(&self, context: &Context<'_>) -> FieldResult<Vec<AnnotatedDoc>> {
+    async fn all_documents(&self, context: &Context<'_>) -> FieldResult<Vec<AnnotatedDoc>> {
         Ok(context
             .data::<Database>()?
             .client
@@ -151,7 +226,7 @@ impl Query {
     }
 
     /// Retrieves a full document from its unique identifier.
-    async fn document(
+    pub async fn document(
         &self,
         context: &Context<'_>,
         id: String,
@@ -180,12 +255,20 @@ impl Query {
     //         }  }])
     // }
 
-    async fn morphemes(
+    pub async fn morphemes(
         &self,
         context: &Context<'_>,
         gloss: String,
     ) -> FieldResult<Vec<MorphemeReference>> {
         Ok(context.data::<Database>()?.morphemes(gloss).await)
+    }
+
+    pub async fn words_with_morpheme(
+        &self,
+        context: &Context<'_>,
+        gloss: String,
+    ) -> FieldResult<Vec<WordsInDocument>> {
+        Ok(context.data::<Database>()?.words_by_doc(&gloss).await)
     }
 }
 
@@ -193,5 +276,11 @@ impl Query {
 #[SimpleObject]
 pub struct MorphemeReference {
     pub morpheme: String,
+    pub words: Vec<AnnotatedWord>,
+}
+
+#[SimpleObject]
+pub struct WordsInDocument {
+    pub document_id: Option<String>,
     pub words: Vec<AnnotatedWord>,
 }
