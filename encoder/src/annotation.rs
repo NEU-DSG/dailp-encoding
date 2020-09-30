@@ -110,18 +110,27 @@ impl MorphemeSegment {
 
 #[Object]
 impl MorphemeSegment {
+    /// Phonemic representation of the morpheme
     async fn morpheme(&self) -> &str {
         &self.morpheme
     }
+
+    /// English gloss in standard DAILP format
     async fn gloss(&self) -> &str {
         &self.gloss
     }
+
+    /// If this morpheme represents a functional tag that we have further
+    /// information on, this is the corresponding database entry.
     async fn matching_tag(&self, context: &Context<'_>) -> FieldResult<Option<MorphemeTag>> {
         Ok(context
             .data::<Database>()?
             .morpheme_tag(&self.gloss)
             .await?)
     }
+
+    /// All lexical entries that share the same gloss text as this morpheme.
+    /// This generally works for root morphemes.
     async fn lexical_entries(&self, context: &Context<'_>) -> FieldResult<Vec<LexicalEntry>> {
         Ok(context
             .data::<Database>()?
