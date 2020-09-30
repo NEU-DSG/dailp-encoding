@@ -25,7 +25,7 @@ async fn main() -> Result<()> {
 }
 
 async fn migrate_data(db: &structured::Database) -> Result<()> {
-    // Pull the list of annotated documents from our master index sheet.
+    // Pull the list of annotated documents from our index sheet.
     let index =
         retrieve::SheetResult::from_sheet("1sDTRFoJylUqsZlxU57k1Uj8oHhbM3MAzU8sDgTfO7Mk", None)
             .await?
