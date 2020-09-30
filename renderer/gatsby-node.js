@@ -1,22 +1,44 @@
 const path = require(`path`)
+const slugify = require("slugify")
 
-exports.createPages = async ({ actions, graphql }) => {
+exports.createPages = async args => {
+  await createDocumentPages(args)
+}
+
+const createDocumentPages = async ({ actions, graphql }) => {
   const { data } = await graphql(`
     query {
       dailp {
-        documents {
-title
-id
+        allDocuments {
+          title
+          id
+          collection
         }
       }
     }
   `)
-  for (const { title, id } of data.dailp.documents) {
+
+  const collections = []
+  for (const { title, id, collection } of data.dailp.allDocuments) {
+    if (collection && !collections.includes(collection)) {
+      collections.push(collection)
+    }
+
     actions.createPage({
-      path: `documents/${id.toLowerCase()}`,
-      component: path.resolve(`./src/annotated-document.tsx`),
+      path: `documents/${slugify(id, { lower: true })}`,
+      component: path.resolve(`./src/templates/annotated-document.tsx`),
       context: {
         id,
+      },
+    })
+  }
+
+  for (const collection of collections) {
+    actions.createPage({
+      path: `collections/${slugify(collection, { lower: true })}`,
+      component: path.resolve(`./src/templates/collection.tsx`),
+      context: {
+        name: collection,
       },
     })
   }
