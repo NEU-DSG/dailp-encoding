@@ -34,10 +34,25 @@ export type BooleanQueryOperatorInput = {
 };
 
 export type Dailp = {
-  apiVersion: Scalars['String'];
-  documents: Array<Dailp_AnnotatedDoc>;
+  allDocuments: Array<Dailp_AnnotatedDoc>;
+  /** Retrieves a full document from its unique identifier. */
   document?: Maybe<Dailp_AnnotatedDoc>;
-  morphemes: Array<Dailp_MorphemeReference>;
+  /**
+   * Lists all words containing a morpheme with the given gloss.
+   * Groups these words by the phonemic shape of the target morpheme.
+   */
+  morphemesByShape: Array<Dailp_MorphemeReference>;
+  /**
+   * Lists all words containing a morpheme with the given gloss.
+   * Groups these words by the document containing them.
+   */
+  morphemesByDocument: Array<Dailp_WordsInDocument>;
+  morphemeTag?: Maybe<Dailp_MorphemeTag>;
+};
+
+
+export type DailpAllDocumentsArgs = {
+  source?: Maybe<Scalars['String']>;
 };
 
 
@@ -46,13 +61,69 @@ export type DailpDocumentArgs = {
 };
 
 
-export type DailpMorphemesArgs = {
+export type DailpMorphemesByShapeArgs = {
   gloss: Scalars['String'];
 };
 
+
+export type DailpMorphemesByDocumentArgs = {
+  gloss: Scalars['String'];
+};
+
+
+export type DailpMorphemeTagArgs = {
+  id: Scalars['String'];
+};
+
 export type Dailp_AnnotatedDoc = {
-  meta: Dailp_DocumentMetadata;
-  segments: Array<Dailp_AnnotatedSeg>;
+  /** Official short identifier for this document. */
+  id: Scalars['String'];
+  /** Full title of the document. */
+  title: Scalars['String'];
+  /** The publication that included this document. */
+  publication?: Maybe<Scalars['String']>;
+  /** Where the source document came from, maybe the name of a collection. */
+  collection?: Maybe<Scalars['String']>;
+  /** Rough translation of the document, broken down by paragraph. */
+  translation?: Maybe<Dailp_Translation>;
+  segments?: Maybe<Array<Dailp_AnnotatedSeg>>;
+  /** Segments of the document paired with their respective translations. */
+  translatedSegments?: Maybe<Array<Dailp_TranslatedSection>>;
+  /**
+   * All the words contained in this document, dropping structural formatting
+   * like line and page breaks.
+   */
+  words?: Maybe<Array<Dailp_AnnotatedForm>>;
+};
+
+export type Dailp_AnnotatedForm = {
+  /**
+   * The root morpheme of the word.
+   * For example, a verb form glossed as "he catches" has the root morpheme
+   * corresponding to "catch."
+   */
+  root?: Maybe<Dailp_MorphemeSegment>;
+  /** All other observed words with the same root morpheme as this word. */
+  similarWords: Array<Dailp_AnnotatedForm>;
+  /** The document that contains this word. */
+  document?: Maybe<Dailp_AnnotatedDoc>;
+  /** Position of this word in its containing document. */
+  index: Scalars['Int'];
+  /** The unique identifier of the containing document. */
+  documentId?: Maybe<Scalars['String']>;
+  /** Original source text. */
+  source: Scalars['String'];
+  /** Romanized version of the word for simple phonetic pronunciation. */
+  simplePhonetics?: Maybe<Scalars['String']>;
+  /** Underlying phonemic representation of this word. */
+  phonemic?: Maybe<Scalars['String']>;
+  /**
+   * Morphemic segmentation of the form that includes a phonemic
+   * representation and gloss for each.
+   */
+  segments: Array<Dailp_MorphemeSegment>;
+  /** English gloss for the whole word. */
+  englishGloss: Array<Scalars['String']>;
 };
 
 export type Dailp_AnnotatedPhrase = {
@@ -61,26 +132,11 @@ export type Dailp_AnnotatedPhrase = {
   parts: Array<Dailp_AnnotatedSeg>;
 };
 
-export type Dailp_AnnotatedSeg = Dailp_AnnotatedPhrase | Dailp_AnnotatedWord | Dailp_LineBreak | Dailp_PageBreak;
-
-export type Dailp_AnnotatedWord = {
-  ty: Dailp_WordType;
-  index: Scalars['Int'];
-  source: Scalars['String'];
-  normalizedSource: Scalars['String'];
-  simplePhonetics?: Maybe<Scalars['String']>;
-  phonemic?: Maybe<Scalars['String']>;
-  morphemicSegmentation?: Maybe<Array<Scalars['String']>>;
-  morphemeGloss?: Maybe<Array<Scalars['String']>>;
-  englishGloss?: Maybe<Scalars['String']>;
-  commentary?: Maybe<Scalars['String']>;
-  /** The character index of a mid-word line break, if there is one here. */
-  lineBreak?: Maybe<Scalars['Int']>;
-  pageBreak?: Maybe<Scalars['Int']>;
-};
+export type Dailp_AnnotatedSeg = Dailp_AnnotatedPhrase | Dailp_AnnotatedForm | Dailp_LineBreak | Dailp_PageBreak;
 
 export type Dailp_Block = {
   index: Scalars['Int'];
+  /** Each segment represents a sentence or line in the translation. */
   segments: Array<Scalars['String']>;
 };
 
@@ -88,41 +144,71 @@ export type Dailp_BlockType =
   | 'BLOCK'
   | 'PHRASE';
 
-export type Dailp_DocumentMetadata = {
-  /** Official short identifier for this document. */
+export type Dailp_DocumentType = 
+  | 'REFERENCE'
+  | 'CORPUS';
+
+export type Dailp_LexicalEntry = {
   id: Scalars['String'];
-  /** Full title of the document. */
-  title: Scalars['String'];
-  /** The publication that included this document. */
-  publication?: Maybe<Scalars['String']>;
-  /** Where the source document came from, maybe the name of a collection. */
-  source?: Maybe<Scalars['String']>;
-  /** The people involved in collecting, translating, annotating. */
-  people: Array<Scalars['String']>;
-  /** Rough translation of the document, broken down by paragraph. */
-  translation: Dailp_Translation;
+  root: Dailp_MorphemeSegment;
+  rootTranslations: Array<Scalars['String']>;
+  surfaceForms: Array<Dailp_AnnotatedForm>;
+  yearRecorded: Scalars['Int'];
 };
 
 export type Dailp_LineBreak = {
   index: Scalars['Int'];
 };
 
+/** One particular morpheme and all the known words that contain that exact morpheme. */
 export type Dailp_MorphemeReference = {
+  /** Phonemic shape of the morpheme. */
   morpheme: Scalars['String'];
-  document: Dailp_AnnotatedDoc;
-  word: Dailp_AnnotatedWord;
+  /** List of words that contain this morpheme. */
+  words: Array<Dailp_AnnotatedForm>;
+};
+
+export type Dailp_MorphemeSegment = {
+  morpheme: Scalars['String'];
+  gloss: Scalars['String'];
+  matchingTag?: Maybe<Dailp_MorphemeTag>;
+  lexicalEntries: Array<Dailp_LexicalEntry>;
+};
+
+/** Represents a morphological gloss tag without commiting to a single representation. */
+export type Dailp_MorphemeTag = {
+  /** Standard annotation tag for this morpheme, defined by DAILP. */
+  id: Scalars['String'];
+  /** Alternate form that conveys a simple English representation. */
+  simple: Scalars['String'];
+  /** Alternate form of this morpheme from Cherokee Reference Grammar. */
+  crg: Scalars['String'];
+  /** English title */
+  name: Scalars['String'];
+  /** The kind of morpheme, whether prefix or suffix. */
+  morphemeType: Scalars['String'];
 };
 
 export type Dailp_PageBreak = {
   index: Scalars['Int'];
 };
 
+export type Dailp_TranslatedSection = {
+  /** Translation of this portion of the source text. */
+  translation: Dailp_Block;
+  /** Source text from the original document. */
+  source: Dailp_AnnotatedSeg;
+};
+
 export type Dailp_Translation = {
   blocks: Array<Dailp_Block>;
 };
 
-export type Dailp_WordType = 
-  | 'WORD';
+export type Dailp_WordsInDocument = {
+  documentId?: Maybe<Scalars['String']>;
+  documentType?: Maybe<Dailp_DocumentType>;
+  words: Array<Dailp_AnnotatedForm>;
+};
 
 
 export type DateQueryOperatorInput = {
@@ -470,8 +556,6 @@ export type File = Node & {
   birthtime?: Maybe<Scalars['Date']>;
   /** @deprecated Use `birthTime` instead */
   birthtimeMs?: Maybe<Scalars['Float']>;
-  blksize?: Maybe<Scalars['Int']>;
-  blocks?: Maybe<Scalars['Int']>;
   /** Copy file to static directory and return public url to it */
   publicURL?: Maybe<Scalars['String']>;
   id: Scalars['ID'];
@@ -595,8 +679,6 @@ export type FileFieldsEnum =
   | 'ctime'
   | 'birthtime'
   | 'birthtimeMs'
-  | 'blksize'
-  | 'blocks'
   | 'publicURL'
   | 'id'
   | 'parent___id'
@@ -717,8 +799,6 @@ export type FileFilterInput = {
   ctime?: Maybe<DateQueryOperatorInput>;
   birthtime?: Maybe<DateQueryOperatorInput>;
   birthtimeMs?: Maybe<FloatQueryOperatorInput>;
-  blksize?: Maybe<IntQueryOperatorInput>;
-  blocks?: Maybe<IntQueryOperatorInput>;
   publicURL?: Maybe<StringQueryOperatorInput>;
   id?: Maybe<StringQueryOperatorInput>;
   parent?: Maybe<NodeFilterInput>;
@@ -1014,8 +1094,6 @@ export type QueryFileArgs = {
   ctime?: Maybe<DateQueryOperatorInput>;
   birthtime?: Maybe<DateQueryOperatorInput>;
   birthtimeMs?: Maybe<FloatQueryOperatorInput>;
-  blksize?: Maybe<IntQueryOperatorInput>;
-  blocks?: Maybe<IntQueryOperatorInput>;
   publicURL?: Maybe<StringQueryOperatorInput>;
   id?: Maybe<StringQueryOperatorInput>;
   parent?: Maybe<NodeFilterInput>;
@@ -1087,15 +1165,15 @@ export type QuerySitePageArgs = {
   internalComponentName?: Maybe<StringQueryOperatorInput>;
   componentChunkName?: Maybe<StringQueryOperatorInput>;
   matchPath?: Maybe<StringQueryOperatorInput>;
-  id?: Maybe<StringQueryOperatorInput>;
-  parent?: Maybe<NodeFilterInput>;
-  children?: Maybe<NodeFilterListInput>;
-  internal?: Maybe<InternalFilterInput>;
   isCreatedByStatefulCreatePages?: Maybe<BooleanQueryOperatorInput>;
   context?: Maybe<SitePageContextFilterInput>;
   pluginCreator?: Maybe<SitePluginFilterInput>;
   pluginCreatorId?: Maybe<StringQueryOperatorInput>;
   componentPath?: Maybe<StringQueryOperatorInput>;
+  id?: Maybe<StringQueryOperatorInput>;
+  parent?: Maybe<NodeFilterInput>;
+  children?: Maybe<NodeFilterListInput>;
+  internal?: Maybe<InternalFilterInput>;
 };
 
 
@@ -1174,6 +1252,7 @@ export type QuerySitePluginArgs = {
   version?: Maybe<StringQueryOperatorInput>;
   pluginOptions?: Maybe<SitePluginPluginOptionsFilterInput>;
   nodeAPIs?: Maybe<StringQueryOperatorInput>;
+  browserAPIs?: Maybe<StringQueryOperatorInput>;
   ssrAPIs?: Maybe<StringQueryOperatorInput>;
   pluginFilepath?: Maybe<StringQueryOperatorInput>;
   packageJson?: Maybe<SitePluginPackageJsonFilterInput>;
@@ -1519,15 +1598,15 @@ export type SitePage = Node & {
   internalComponentName: Scalars['String'];
   componentChunkName: Scalars['String'];
   matchPath?: Maybe<Scalars['String']>;
-  id: Scalars['ID'];
-  parent?: Maybe<Node>;
-  children: Array<Node>;
-  internal: Internal;
   isCreatedByStatefulCreatePages?: Maybe<Scalars['Boolean']>;
   context?: Maybe<SitePageContext>;
   pluginCreator?: Maybe<SitePlugin>;
   pluginCreatorId?: Maybe<Scalars['String']>;
   componentPath?: Maybe<Scalars['String']>;
+  id: Scalars['ID'];
+  parent?: Maybe<Node>;
+  children: Array<Node>;
+  internal: Internal;
 };
 
 export type SitePageConnection = {
@@ -1553,10 +1632,12 @@ export type SitePageConnectionGroupArgs = {
 
 export type SitePageContext = {
   id?: Maybe<Scalars['String']>;
+  name?: Maybe<Scalars['String']>;
 };
 
 export type SitePageContextFilterInput = {
   id?: Maybe<StringQueryOperatorInput>;
+  name?: Maybe<StringQueryOperatorInput>;
 };
 
 export type SitePageEdge = {
@@ -1571,6 +1652,88 @@ export type SitePageFieldsEnum =
   | 'internalComponentName'
   | 'componentChunkName'
   | 'matchPath'
+  | 'isCreatedByStatefulCreatePages'
+  | 'context___id'
+  | 'context___name'
+  | 'pluginCreator___id'
+  | 'pluginCreator___parent___id'
+  | 'pluginCreator___parent___parent___id'
+  | 'pluginCreator___parent___parent___children'
+  | 'pluginCreator___parent___children'
+  | 'pluginCreator___parent___children___id'
+  | 'pluginCreator___parent___children___children'
+  | 'pluginCreator___parent___internal___content'
+  | 'pluginCreator___parent___internal___contentDigest'
+  | 'pluginCreator___parent___internal___description'
+  | 'pluginCreator___parent___internal___fieldOwners'
+  | 'pluginCreator___parent___internal___ignoreType'
+  | 'pluginCreator___parent___internal___mediaType'
+  | 'pluginCreator___parent___internal___owner'
+  | 'pluginCreator___parent___internal___type'
+  | 'pluginCreator___children'
+  | 'pluginCreator___children___id'
+  | 'pluginCreator___children___parent___id'
+  | 'pluginCreator___children___parent___children'
+  | 'pluginCreator___children___children'
+  | 'pluginCreator___children___children___id'
+  | 'pluginCreator___children___children___children'
+  | 'pluginCreator___children___internal___content'
+  | 'pluginCreator___children___internal___contentDigest'
+  | 'pluginCreator___children___internal___description'
+  | 'pluginCreator___children___internal___fieldOwners'
+  | 'pluginCreator___children___internal___ignoreType'
+  | 'pluginCreator___children___internal___mediaType'
+  | 'pluginCreator___children___internal___owner'
+  | 'pluginCreator___children___internal___type'
+  | 'pluginCreator___internal___content'
+  | 'pluginCreator___internal___contentDigest'
+  | 'pluginCreator___internal___description'
+  | 'pluginCreator___internal___fieldOwners'
+  | 'pluginCreator___internal___ignoreType'
+  | 'pluginCreator___internal___mediaType'
+  | 'pluginCreator___internal___owner'
+  | 'pluginCreator___internal___type'
+  | 'pluginCreator___resolve'
+  | 'pluginCreator___name'
+  | 'pluginCreator___version'
+  | 'pluginCreator___pluginOptions___name'
+  | 'pluginCreator___pluginOptions___short_name'
+  | 'pluginCreator___pluginOptions___start_url'
+  | 'pluginCreator___pluginOptions___background_color'
+  | 'pluginCreator___pluginOptions___theme_color'
+  | 'pluginCreator___pluginOptions___display'
+  | 'pluginCreator___pluginOptions___cache_busting_mode'
+  | 'pluginCreator___pluginOptions___include_favicon'
+  | 'pluginCreator___pluginOptions___legacy'
+  | 'pluginCreator___pluginOptions___theme_color_in_head'
+  | 'pluginCreator___pluginOptions___path'
+  | 'pluginCreator___pluginOptions___typeName'
+  | 'pluginCreator___pluginOptions___fieldName'
+  | 'pluginCreator___pluginOptions___url'
+  | 'pluginCreator___pluginOptions___uri'
+  | 'pluginCreator___pluginOptions___codegenConfig___enumsAsTypes'
+  | 'pluginCreator___pluginOptions___pathCheck'
+  | 'pluginCreator___nodeAPIs'
+  | 'pluginCreator___browserAPIs'
+  | 'pluginCreator___ssrAPIs'
+  | 'pluginCreator___pluginFilepath'
+  | 'pluginCreator___packageJson___name'
+  | 'pluginCreator___packageJson___description'
+  | 'pluginCreator___packageJson___version'
+  | 'pluginCreator___packageJson___main'
+  | 'pluginCreator___packageJson___license'
+  | 'pluginCreator___packageJson___dependencies'
+  | 'pluginCreator___packageJson___dependencies___name'
+  | 'pluginCreator___packageJson___dependencies___version'
+  | 'pluginCreator___packageJson___devDependencies'
+  | 'pluginCreator___packageJson___devDependencies___name'
+  | 'pluginCreator___packageJson___devDependencies___version'
+  | 'pluginCreator___packageJson___peerDependencies'
+  | 'pluginCreator___packageJson___peerDependencies___name'
+  | 'pluginCreator___packageJson___peerDependencies___version'
+  | 'pluginCreator___packageJson___keywords'
+  | 'pluginCreatorId'
+  | 'componentPath'
   | 'id'
   | 'parent___id'
   | 'parent___parent___id'
@@ -1656,76 +1819,7 @@ export type SitePageFieldsEnum =
   | 'internal___ignoreType'
   | 'internal___mediaType'
   | 'internal___owner'
-  | 'internal___type'
-  | 'isCreatedByStatefulCreatePages'
-  | 'context___id'
-  | 'pluginCreator___id'
-  | 'pluginCreator___parent___id'
-  | 'pluginCreator___parent___parent___id'
-  | 'pluginCreator___parent___parent___children'
-  | 'pluginCreator___parent___children'
-  | 'pluginCreator___parent___children___id'
-  | 'pluginCreator___parent___children___children'
-  | 'pluginCreator___parent___internal___content'
-  | 'pluginCreator___parent___internal___contentDigest'
-  | 'pluginCreator___parent___internal___description'
-  | 'pluginCreator___parent___internal___fieldOwners'
-  | 'pluginCreator___parent___internal___ignoreType'
-  | 'pluginCreator___parent___internal___mediaType'
-  | 'pluginCreator___parent___internal___owner'
-  | 'pluginCreator___parent___internal___type'
-  | 'pluginCreator___children'
-  | 'pluginCreator___children___id'
-  | 'pluginCreator___children___parent___id'
-  | 'pluginCreator___children___parent___children'
-  | 'pluginCreator___children___children'
-  | 'pluginCreator___children___children___id'
-  | 'pluginCreator___children___children___children'
-  | 'pluginCreator___children___internal___content'
-  | 'pluginCreator___children___internal___contentDigest'
-  | 'pluginCreator___children___internal___description'
-  | 'pluginCreator___children___internal___fieldOwners'
-  | 'pluginCreator___children___internal___ignoreType'
-  | 'pluginCreator___children___internal___mediaType'
-  | 'pluginCreator___children___internal___owner'
-  | 'pluginCreator___children___internal___type'
-  | 'pluginCreator___internal___content'
-  | 'pluginCreator___internal___contentDigest'
-  | 'pluginCreator___internal___description'
-  | 'pluginCreator___internal___fieldOwners'
-  | 'pluginCreator___internal___ignoreType'
-  | 'pluginCreator___internal___mediaType'
-  | 'pluginCreator___internal___owner'
-  | 'pluginCreator___internal___type'
-  | 'pluginCreator___resolve'
-  | 'pluginCreator___name'
-  | 'pluginCreator___version'
-  | 'pluginCreator___pluginOptions___name'
-  | 'pluginCreator___pluginOptions___path'
-  | 'pluginCreator___pluginOptions___typeName'
-  | 'pluginCreator___pluginOptions___fieldName'
-  | 'pluginCreator___pluginOptions___url'
-  | 'pluginCreator___pluginOptions___pathCheck'
-  | 'pluginCreator___nodeAPIs'
-  | 'pluginCreator___ssrAPIs'
-  | 'pluginCreator___pluginFilepath'
-  | 'pluginCreator___packageJson___name'
-  | 'pluginCreator___packageJson___description'
-  | 'pluginCreator___packageJson___version'
-  | 'pluginCreator___packageJson___main'
-  | 'pluginCreator___packageJson___license'
-  | 'pluginCreator___packageJson___dependencies'
-  | 'pluginCreator___packageJson___dependencies___name'
-  | 'pluginCreator___packageJson___dependencies___version'
-  | 'pluginCreator___packageJson___devDependencies'
-  | 'pluginCreator___packageJson___devDependencies___name'
-  | 'pluginCreator___packageJson___devDependencies___version'
-  | 'pluginCreator___packageJson___peerDependencies'
-  | 'pluginCreator___packageJson___peerDependencies___name'
-  | 'pluginCreator___packageJson___peerDependencies___version'
-  | 'pluginCreator___packageJson___keywords'
-  | 'pluginCreatorId'
-  | 'componentPath';
+  | 'internal___type';
 
 export type SitePageFilterInput = {
   path?: Maybe<StringQueryOperatorInput>;
@@ -1733,15 +1827,15 @@ export type SitePageFilterInput = {
   internalComponentName?: Maybe<StringQueryOperatorInput>;
   componentChunkName?: Maybe<StringQueryOperatorInput>;
   matchPath?: Maybe<StringQueryOperatorInput>;
-  id?: Maybe<StringQueryOperatorInput>;
-  parent?: Maybe<NodeFilterInput>;
-  children?: Maybe<NodeFilterListInput>;
-  internal?: Maybe<InternalFilterInput>;
   isCreatedByStatefulCreatePages?: Maybe<BooleanQueryOperatorInput>;
   context?: Maybe<SitePageContextFilterInput>;
   pluginCreator?: Maybe<SitePluginFilterInput>;
   pluginCreatorId?: Maybe<StringQueryOperatorInput>;
   componentPath?: Maybe<StringQueryOperatorInput>;
+  id?: Maybe<StringQueryOperatorInput>;
+  parent?: Maybe<NodeFilterInput>;
+  children?: Maybe<NodeFilterListInput>;
+  internal?: Maybe<InternalFilterInput>;
 };
 
 export type SitePageGroupConnection = {
@@ -1768,6 +1862,7 @@ export type SitePlugin = Node & {
   version?: Maybe<Scalars['String']>;
   pluginOptions?: Maybe<SitePluginPluginOptions>;
   nodeAPIs?: Maybe<Array<Maybe<Scalars['String']>>>;
+  browserAPIs?: Maybe<Array<Maybe<Scalars['String']>>>;
   ssrAPIs?: Maybe<Array<Maybe<Scalars['String']>>>;
   pluginFilepath?: Maybe<Scalars['String']>;
   packageJson?: Maybe<SitePluginPackageJson>;
@@ -1891,12 +1986,24 @@ export type SitePluginFieldsEnum =
   | 'name'
   | 'version'
   | 'pluginOptions___name'
+  | 'pluginOptions___short_name'
+  | 'pluginOptions___start_url'
+  | 'pluginOptions___background_color'
+  | 'pluginOptions___theme_color'
+  | 'pluginOptions___display'
+  | 'pluginOptions___cache_busting_mode'
+  | 'pluginOptions___include_favicon'
+  | 'pluginOptions___legacy'
+  | 'pluginOptions___theme_color_in_head'
   | 'pluginOptions___path'
   | 'pluginOptions___typeName'
   | 'pluginOptions___fieldName'
   | 'pluginOptions___url'
+  | 'pluginOptions___uri'
+  | 'pluginOptions___codegenConfig___enumsAsTypes'
   | 'pluginOptions___pathCheck'
   | 'nodeAPIs'
+  | 'browserAPIs'
   | 'ssrAPIs'
   | 'pluginFilepath'
   | 'packageJson___name'
@@ -1925,6 +2032,7 @@ export type SitePluginFilterInput = {
   version?: Maybe<StringQueryOperatorInput>;
   pluginOptions?: Maybe<SitePluginPluginOptionsFilterInput>;
   nodeAPIs?: Maybe<StringQueryOperatorInput>;
+  browserAPIs?: Maybe<StringQueryOperatorInput>;
   ssrAPIs?: Maybe<StringQueryOperatorInput>;
   pluginFilepath?: Maybe<StringQueryOperatorInput>;
   packageJson?: Maybe<SitePluginPackageJsonFilterInput>;
@@ -2007,19 +2115,49 @@ export type SitePluginPackageJsonPeerDependenciesFilterListInput = {
 
 export type SitePluginPluginOptions = {
   name?: Maybe<Scalars['String']>;
+  short_name?: Maybe<Scalars['String']>;
+  start_url?: Maybe<Scalars['String']>;
+  background_color?: Maybe<Scalars['String']>;
+  theme_color?: Maybe<Scalars['String']>;
+  display?: Maybe<Scalars['String']>;
+  cache_busting_mode?: Maybe<Scalars['String']>;
+  include_favicon?: Maybe<Scalars['Boolean']>;
+  legacy?: Maybe<Scalars['Boolean']>;
+  theme_color_in_head?: Maybe<Scalars['Boolean']>;
   path?: Maybe<Scalars['String']>;
   typeName?: Maybe<Scalars['String']>;
   fieldName?: Maybe<Scalars['String']>;
   url?: Maybe<Scalars['String']>;
+  uri?: Maybe<Scalars['String']>;
+  codegenConfig?: Maybe<SitePluginPluginOptionsCodegenConfig>;
   pathCheck?: Maybe<Scalars['Boolean']>;
+};
+
+export type SitePluginPluginOptionsCodegenConfig = {
+  enumsAsTypes?: Maybe<Scalars['Boolean']>;
+};
+
+export type SitePluginPluginOptionsCodegenConfigFilterInput = {
+  enumsAsTypes?: Maybe<BooleanQueryOperatorInput>;
 };
 
 export type SitePluginPluginOptionsFilterInput = {
   name?: Maybe<StringQueryOperatorInput>;
+  short_name?: Maybe<StringQueryOperatorInput>;
+  start_url?: Maybe<StringQueryOperatorInput>;
+  background_color?: Maybe<StringQueryOperatorInput>;
+  theme_color?: Maybe<StringQueryOperatorInput>;
+  display?: Maybe<StringQueryOperatorInput>;
+  cache_busting_mode?: Maybe<StringQueryOperatorInput>;
+  include_favicon?: Maybe<BooleanQueryOperatorInput>;
+  legacy?: Maybe<BooleanQueryOperatorInput>;
+  theme_color_in_head?: Maybe<BooleanQueryOperatorInput>;
   path?: Maybe<StringQueryOperatorInput>;
   typeName?: Maybe<StringQueryOperatorInput>;
   fieldName?: Maybe<StringQueryOperatorInput>;
   url?: Maybe<StringQueryOperatorInput>;
+  uri?: Maybe<StringQueryOperatorInput>;
+  codegenConfig?: Maybe<SitePluginPluginOptionsCodegenConfigFilterInput>;
   pathCheck?: Maybe<BooleanQueryOperatorInput>;
 };
 
@@ -2053,21 +2191,3 @@ export type StringQueryOperatorInput = {
   regex?: Maybe<Scalars['String']>;
   glob?: Maybe<Scalars['String']>;
 };
-
-export type AnnotatedDocumentQueryVariables = Exact<{
-  id: Scalars['String'];
-}>;
-
-
-export type AnnotatedDocumentQuery = { dailp: { document?: Maybe<{ meta: (
-        Pick<Dailp_DocumentMetadata, 'id' | 'title' | 'source'>
-        & { translation: { blocks: Array<Pick<Dailp_Block, 'segments'>> } }
-      ), segments: Array<{ __typename: 'Dailp_AnnotatedPhrase' } | (
-        { __typename: 'Dailp_AnnotatedWord' }
-        & Pick<Dailp_AnnotatedWord, 'source' | 'simplePhonetics' | 'phonemic' | 'morphemicSegmentation' | 'morphemeGloss' | 'englishGloss'>
-      ) | { __typename: 'Dailp_LineBreak' } | { __typename: 'Dailp_PageBreak' }> }> } };
-
-export type Unnamed_1_QueryVariables = Exact<{ [key: string]: never; }>;
-
-
-export type Unnamed_1_Query = { dailp: { documents: Array<{ meta: Pick<Dailp_DocumentMetadata, 'title'> }> } };
