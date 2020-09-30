@@ -15,6 +15,14 @@ module.exports = {
       },
     },
     "gatsby-plugin-offline",
+    {
+      resolve: `gatsby-plugin-graphql-codegen`,
+      options: {
+        codegenConfig: {
+          enumsAsTypes: false,
+        },
+      },
+    },
     "gatsby-plugin-typescript",
     "gatsby-plugin-typescript-checker",
     "gatsby-plugin-react-helmet",
@@ -40,14 +48,6 @@ module.exports = {
       options: {
         uri:
           "https://b817bapwvb.execute-api.us-east-1.amazonaws.com/dev/graphql",
-      },
-    },
-    {
-      resolve: `gatsby-plugin-graphql-codegen`,
-      options: {
-        codegenConfig: {
-          enumsAsTypes: false,
-        },
       },
     },
   ],

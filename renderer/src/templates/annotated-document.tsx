@@ -18,7 +18,7 @@ import {
 /** A full annotated document, including all metadata and the translation(s) */
 const AnnotatedDocumentPage = (p: { data: AnnotatedDocumentQuery }) => {
   const doc = p.data.dailp.document!
-  const collectionSlug = slugify(doc.collection!, { lower: true })
+  const collectionSlug = slugify(doc.collection ?? "", { lower: true })
   const dialog = useDialogState()
   const [
     selectedMorpheme,
