@@ -1,5 +1,5 @@
 use crate::{
-    annotation::{AnnotatedWord, MorphemeSegment},
+    annotation::{AnnotatedForm, MorphemeSegment},
     retrieve::{DocumentMetadata, SemanticLine},
     translation,
     translation::Translation,
@@ -48,7 +48,7 @@ pub struct AnnotatedDoc {
     pub id: String,
     pub title: String,
     pub publication: Option<String>,
-    pub source: Option<String>,
+    pub collection: Option<String>,
     /// The people involved in collecting, translating, annotating.
     pub people: Vec<String>,
     pub translation: Option<Translation>,
@@ -61,7 +61,7 @@ impl AnnotatedDoc {
             id: meta.id,
             title: meta.title,
             publication: meta.publication,
-            source: meta.source,
+            collection: meta.source,
             people: meta.people,
             translation: Some(meta.translation),
             segments: Some(segments),
@@ -85,8 +85,8 @@ impl AnnotatedDoc {
         &self.publication
     }
     /// Where the source document came from, maybe the name of a collection.
-    async fn source(&self) -> &Option<String> {
-        &self.source
+    async fn collection(&self) -> &Option<String> {
+        &self.collection
     }
     /// Rough translation of the document, broken down by paragraph.
     async fn translation(&self) -> &Option<Translation> {
@@ -95,6 +95,7 @@ impl AnnotatedDoc {
     async fn segments(&self) -> &Option<Vec<AnnotatedSeg>> {
         &self.segments
     }
+    /// Segments of the document paired with their respective translations.
     async fn translated_segments(&self) -> Option<Vec<TranslatedSection>> {
         if let (Some(segments), Some(translation)) =
             (self.segments.as_ref(), self.translation.as_ref())
@@ -116,7 +117,7 @@ impl AnnotatedDoc {
 
     /// All the words contained in this document, dropping structural formatting
     /// like line and page breaks.
-    async fn words(&self) -> Option<Vec<AnnotatedWord>> {
+    async fn words(&self) -> Option<Vec<AnnotatedForm>> {
         self.segments
             .as_ref()
             .map(|segments| segments.iter().flat_map(|s| s.words()).collect())
@@ -145,7 +146,7 @@ struct TranslatedSection {
 #[derive(Serialize, Deserialize)]
 pub struct AnnotatedLine {
     number: String,
-    pub words: Vec<AnnotatedWord>,
+    pub words: Vec<AnnotatedForm>,
     ends_page: bool,
 }
 
@@ -170,13 +171,13 @@ impl<'a> AnnotatedLine {
                     .get(i)
                     .map(|x| x.split(delims).map(|s| s.trim().to_owned()).collect())
                     .unwrap_or_default();
-                AnnotatedWord {
+                AnnotatedForm {
                     index: i as i32,
                     source: line.rows[0].items[i].trim().to_owned(),
                     normalized_source: line.rows[0].items[i].trim().to_owned(),
                     simple_phonetics: line.rows[2].items.get(i).map(|x| x.to_owned()),
                     phonemic: line.rows[3].items.get(i).map(|x| x.to_owned()),
-                    segmentation: morphemes
+                    segments: morphemes
                         .into_iter()
                         .zip(glosses)
                         .filter(|(m, g)| !m.is_empty() || !g.is_empty())
@@ -225,13 +226,13 @@ impl<'a> AnnotatedLine {
                             .get(i)
                             .map(|x| x.split(delims).map(|s| s.trim().to_owned()).collect())
                             .unwrap_or_default();
-                        let w = AnnotatedWord {
+                        let w = AnnotatedForm {
                             index: i as i32,
                             source: line.rows[0].items[i].trim().to_owned(),
                             normalized_source: line.rows[0].items[i].trim().to_owned(),
                             simple_phonetics: line.rows[2].items.get(i).map(|x| x.to_owned()),
                             phonemic: line.rows[3].items.get(i).map(|x| x.to_owned()),
-                            segmentation: morphemes
+                            segments: morphemes
                                 .into_iter()
                                 .zip(glosses)
                                 .filter(|(m, g)| !m.is_empty() || !g.is_empty())
@@ -293,7 +294,7 @@ impl<'a> AnnotatedLine {
 
             for word in line.words {
                 // Give the word an index within the whole document.
-                let word = AnnotatedWord {
+                let word = AnnotatedForm {
                     index: word_idx,
                     ..word
                 };
@@ -342,7 +343,7 @@ impl<'a> AnnotatedLine {
                     count_to_pop += 1;
                 }
                 // Add the current word to the top phrase or the root document.
-                let finished_word = AnnotatedSeg::Word(AnnotatedWord {
+                let finished_word = AnnotatedSeg::Word(AnnotatedForm {
                     source: source.to_owned(),
                     line_break: word.line_break.map(|_| line_num as i32),
                     page_break: word.page_break.map(|_| page_num as i32),
@@ -396,12 +397,12 @@ impl<'a> AnnotatedLine {
 #[serde(tag = "type")]
 pub enum AnnotatedSeg {
     Block(AnnotatedPhrase),
-    Word(AnnotatedWord),
+    Word(AnnotatedForm),
     LineBreak(LineBreak),
     PageBreak(PageBreak),
 }
 impl AnnotatedSeg {
-    pub fn words(&self) -> Vec<AnnotatedWord> {
+    pub fn words(&self) -> Vec<AnnotatedForm> {
         use AnnotatedSeg::*;
         match self {
             Block(block) => block.parts.iter().flat_map(|s| s.words()).collect(),

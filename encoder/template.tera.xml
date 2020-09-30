@@ -12,7 +12,7 @@
           <p>{{publication}}</p>
         </publicationStmt>
         <sourceDesc>
-          <p>{{source}}</p>
+          <p>{{collection}}</p>
         </sourceDesc>
     </fileDesc>
     <encodingDesc>

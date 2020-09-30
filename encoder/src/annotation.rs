@@ -1,14 +1,13 @@
-use crate::encode::AnnotatedDoc;
-use crate::structured::Database;
+use crate::{dictionary::LexicalEntry, structured::Database};
+use crate::{encode::AnnotatedDoc, tag::MorphemeTag};
 use async_graphql::*;
-use itertools::zip;
 use serde::{Deserialize, Serialize};
 
 /// A single word in an annotated document.
 /// One word contains several layers of interpretation, including the original
 /// source text, multiple layers of linguistic annotation, and annotator notes.
 #[derive(Clone, Serialize, Deserialize, Debug)]
-pub struct AnnotatedWord {
+pub struct AnnotatedForm {
     pub index: i32,
     pub source: String,
     /// A normalized version of the word.
@@ -16,7 +15,7 @@ pub struct AnnotatedWord {
     pub simple_phonetics: Option<String>,
     pub phonemic: Option<String>,
     #[serde(default)]
-    pub segmentation: Vec<MorphemeSegment>,
+    pub segments: Vec<MorphemeSegment>,
     #[serde(default)]
     pub english_gloss: Vec<String>,
     /// Further details about the annotation layers.
@@ -29,18 +28,18 @@ pub struct AnnotatedWord {
 }
 
 #[Object]
-impl AnnotatedWord {
+impl AnnotatedForm {
     /// The root morpheme of the word.
     /// For example, a verb form glossed as "he catches" has the root morpheme
     /// corresponding to "catch."
     async fn root(&self) -> Option<&MorphemeSegment> {
-        self.segmentation
+        self.segments
             .iter()
             .find(|seg| seg.gloss.starts_with(|c: char| c.is_lowercase()))
     }
 
     /// All other observed words with the same root morpheme as this word.
-    async fn similar_words(&self, context: &Context<'_>) -> FieldResult<Vec<AnnotatedWord>> {
+    async fn similar_words(&self, context: &Context<'_>) -> FieldResult<Vec<AnnotatedForm>> {
         if let Some(root) = self.root(context).await? {
             let similar_roots = context
                 .data::<Database>()?
@@ -86,10 +85,10 @@ impl AnnotatedWord {
     async fn phonemic(&self) -> &Option<String> {
         &self.phonemic
     }
-    /// Morphemic segmentation of the word that includes a phonemic
+    /// Morphemic segmentation of the form that includes a phonemic
     /// representation and gloss for each.
-    async fn segmentation(&self) -> &Vec<MorphemeSegment> {
-        &self.segmentation
+    async fn segments(&self) -> &Vec<MorphemeSegment> {
+        &self.segments
     }
     /// English gloss for the whole word.
     async fn english_gloss(&self) -> &Vec<String> {
@@ -98,7 +97,6 @@ impl AnnotatedWord {
 }
 
 /// A single unit of meaning and its corresponding English gloss.
-#[SimpleObject]
 #[derive(Serialize, Clone, Deserialize, Debug)]
 pub struct MorphemeSegment {
     pub morpheme: String,
@@ -107,5 +105,27 @@ pub struct MorphemeSegment {
 impl MorphemeSegment {
     pub fn new(morpheme: String, gloss: String) -> Self {
         Self { morpheme, gloss }
+    }
+}
+
+#[Object]
+impl MorphemeSegment {
+    async fn morpheme(&self) -> &str {
+        &self.morpheme
+    }
+    async fn gloss(&self) -> &str {
+        &self.gloss
+    }
+    async fn matching_tag(&self, context: &Context<'_>) -> FieldResult<Option<MorphemeTag>> {
+        Ok(context
+            .data::<Database>()?
+            .morpheme_tag(&self.gloss)
+            .await?)
+    }
+    async fn lexical_entries(&self, context: &Context<'_>) -> FieldResult<Vec<LexicalEntry>> {
+        Ok(context
+            .data::<Database>()?
+            .lexical_entries(&self.gloss)
+            .await?)
     }
 }

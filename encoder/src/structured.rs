@@ -1,7 +1,7 @@
 use crate::encode::{AnnotatedDoc, AnnotatedLine};
 use crate::retrieve::{DocumentMetadata, SemanticLine};
-use crate::{annotation::AnnotatedWord, encode::DocumentType};
-use crate::{dictionary::DictionaryEntry, tag::MorphemeTag};
+use crate::{annotation::AnnotatedForm, encode::DocumentType};
+use crate::{dictionary::LexicalEntry, tag::MorphemeTag};
 use anyhow::Result;
 use async_graphql::*;
 use futures::join;
@@ -78,7 +78,7 @@ impl Database {
         let dictionary = self.client.collection("dictionary");
         let documents = self.client.collection("annotated-documents");
 
-        let dictionary_words = dictionary.find(bson::doc! { "root_gloss": &gloss }, None);
+        let dictionary_words = dictionary.find(bson::doc! { "root.gloss": &gloss }, None);
         let document_words = documents.aggregate(
             vec![
                 bson::doc! { "$unwind": "$segments" },
@@ -86,7 +86,7 @@ impl Database {
                 bson::doc! { "$unwind": "$parts" },
                 bson::doc! { "$replaceRoot": { "newRoot": "$parts" } },
                 bson::doc! {
-                    "$match": {"segmentation.gloss": &gloss}
+                    "$match": {"segments.gloss": &gloss}
                 },
             ],
             None,
@@ -97,8 +97,8 @@ impl Database {
 
         let dictionary_words = dictionary_words?
             .map(|doc| {
-                let entry: DictionaryEntry = bson::from_document(doc.unwrap()).unwrap();
-                (entry.root, entry.surface_forms)
+                let entry: LexicalEntry = bson::from_document(doc.unwrap()).unwrap();
+                (entry.root.morpheme, entry.surface_forms)
             })
             .collect::<Vec<_>>()
             .await
@@ -107,10 +107,10 @@ impl Database {
 
         let document_words = document_words?
             .map(|doc| {
-                let word: AnnotatedWord = bson::from_document(doc.unwrap()).unwrap();
+                let word: AnnotatedForm = bson::from_document(doc.unwrap()).unwrap();
                 let m = {
                     // Find the index of the relevant morpheme gloss.
-                    let segment = word.segmentation.iter().find(|m| m.gloss == gloss).unwrap();
+                    let segment = word.segments.iter().find(|m| m.gloss == gloss).unwrap();
                     // Grab the morpheme with the same index.
                     segment.morpheme.clone()
                 };
@@ -128,20 +128,30 @@ impl Database {
             .collect())
     }
 
+    pub async fn lexical_entries(&self, root_gloss: &str) -> Result<Vec<LexicalEntry>> {
+        Ok(self
+            .client
+            .collection("dictionary")
+            .find(bson::doc! { "root.gloss": root_gloss }, None)
+            .await
+            .unwrap()
+            .map(|doc| bson::from_document::<LexicalEntry>(doc.unwrap()).unwrap())
+            .collect::<Vec<_>>()
+            .await)
+    }
+
     pub async fn words_by_doc(&self, gloss: &str) -> Vec<WordsInDocument> {
         let dictionary = self.client.collection("dictionary");
         let documents = self.client.collection("annotated-documents");
 
-        let dictionary_words = dictionary.find(bson::doc! { "root_gloss": gloss }, None);
+        let dictionary_words = dictionary.find(bson::doc! { "root.gloss": gloss }, None);
         let document_words = documents.aggregate(
             vec![
                 bson::doc! { "$unwind": "$segments" },
                 bson::doc! { "$replaceRoot": { "newRoot": "$segments" } },
                 bson::doc! { "$unwind": "$parts" },
                 bson::doc! { "$replaceRoot": { "newRoot": "$parts" } },
-                bson::doc! {
-                    "$match": {"segmentation.gloss": gloss}
-                },
+                bson::doc! { "$match": { "segments.gloss": gloss } },
             ],
             None,
         );
@@ -152,7 +162,7 @@ impl Database {
         let dictionary_words = dictionary_words
             .unwrap()
             .map(|doc| {
-                let entry: DictionaryEntry = bson::from_document(doc.unwrap()).unwrap();
+                let entry: LexicalEntry = bson::from_document(doc.unwrap()).unwrap();
                 (
                     entry.surface_forms[0].document_id.clone(),
                     entry.surface_forms,
@@ -173,7 +183,7 @@ impl Database {
         let document_words = document_words
             .unwrap()
             .map(|doc| {
-                let word: AnnotatedWord = bson::from_document(doc.unwrap()).unwrap();
+                let word: AnnotatedForm = bson::from_document(doc.unwrap()).unwrap();
                 (word.document_id.clone(), word)
             })
             .collect::<Vec<_>>()
@@ -189,6 +199,15 @@ impl Database {
 
         document_words.chain(dictionary_words).collect()
     }
+
+    pub async fn morpheme_tag(&self, id: &str) -> Result<Option<MorphemeTag>> {
+        Ok(self
+            .client
+            .collection("tags")
+            .find_one(bson::doc! { "_id": &id }, None)
+            .await?
+            .map(|doc| bson::from_document(doc).unwrap()))
+    }
 }
 
 pub struct Query;
@@ -198,15 +217,15 @@ impl Query {
     async fn all_documents(
         &self,
         context: &Context<'_>,
-        source: Option<String>,
+        collection: Option<String>,
     ) -> FieldResult<Vec<AnnotatedDoc>> {
         Ok(context
             .data::<Database>()?
             .client
             .collection("annotated-documents")
             .find(
-                source.map(|source| {
-                    bson::doc! { "source": source }
+                collection.map(|collection| {
+                    bson::doc! { "collection": collection }
                 }),
                 None,
             )
@@ -246,7 +265,9 @@ impl Query {
     //         }  }])
     // }
 
-    pub async fn morphemes(
+    /// Lists all words containing a morpheme with the given gloss.
+    /// Groups these words by the phonemic shape of the target morpheme.
+    pub async fn morphemes_by_shape(
         &self,
         context: &Context<'_>,
         gloss: String,
@@ -254,7 +275,9 @@ impl Query {
         Ok(context.data::<Database>()?.morphemes(gloss).await?)
     }
 
-    async fn words_with_morpheme(
+    /// Lists all words containing a morpheme with the given gloss.
+    /// Groups these words by the document containing them.
+    async fn morphemes_by_document(
         &self,
         context: &Context<'_>,
         gloss: String,
@@ -280,13 +303,15 @@ impl Query {
 /// One particular morpheme and all the known words that contain that exact morpheme.
 #[SimpleObject]
 pub struct MorphemeReference {
+    /// Phonemic shape of the morpheme.
     pub morpheme: String,
-    pub words: Vec<AnnotatedWord>,
+    /// List of words that contain this morpheme.
+    pub words: Vec<AnnotatedForm>,
 }
 
 #[SimpleObject]
 pub struct WordsInDocument {
     pub document_id: Option<String>,
     pub document_type: Option<DocumentType>,
-    pub words: Vec<AnnotatedWord>,
+    pub words: Vec<AnnotatedForm>,
 }
