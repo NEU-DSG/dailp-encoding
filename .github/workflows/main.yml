@@ -30,13 +30,7 @@ jobs:
         key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
     - uses: actions/setup-node@v1
       with: {node-version: 10}
-    - name: Encode documents as TEI
+    - name: Encode documents as TEI and database entries
       run: cd encoder && cargo run --bin encoder
       env:
         MONGODB_LOGIN: ${{ secrets.MONGODB_LOGIN }}
-    - name: Render and publish static website
-      run: |
-        cd renderer
-        npm install
-        npm run build
-        npx surge public dailp-encoding.surge.sh --token ${{ secrets.SURGE_TOKEN }}
