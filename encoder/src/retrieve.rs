@@ -1,8 +1,9 @@
-use crate::dictionary::{
-    convert_udb, root_noun_surface_form, root_verb_surface_forms, DictionaryEntry,
-};
 use crate::translation::{DocResult, Translation};
 use crate::GOOGLE_API_KEY;
+use crate::{
+    annotation::MorphemeSegment,
+    dictionary::{convert_udb, root_noun_surface_form, root_verb_surface_forms, LexicalEntry},
+};
 use anyhow::Result;
 use async_graphql::*;
 use rayon::prelude::*;
@@ -62,7 +63,7 @@ pub struct SheetResult {
     /// Each element here represents one row.
     /// Semantic lines in our documents are delimited by empty rows.
     /// The line number sits in the first cell of the first row of each semantic line.
-    values: Vec<Vec<String>>,
+    pub values: Vec<Vec<String>>,
 }
 impl SheetResult {
     pub async fn from_sheet(sheet_id: &str, sheet_name: Option<&str>) -> Result<Self> {
@@ -89,12 +90,7 @@ impl SheetResult {
         })
     }
 
-    pub fn into_df1975(
-        self,
-        doc_id: &str,
-        year: i32,
-        has_ppp: bool,
-    ) -> Result<Vec<DictionaryEntry>> {
+    pub fn into_df1975(self, doc_id: &str, year: i32, has_ppp: bool) -> Result<Vec<LexicalEntry>> {
         // First two rows are simply headers.
         // let mut values = self.values.into_iter();
         // let first_header = values.next().unwrap();
@@ -116,7 +112,8 @@ impl SheetResult {
                     let root = root_values.next()?;
                     let root_gloss = root_values.next()?;
                     let mut form_values = root_values.clone().skip(5);
-                    Some(DictionaryEntry {
+                    Some(LexicalEntry {
+                        id: format!("{}-{}", doc_id, key),
                         surface_forms: root_verb_surface_forms(
                             doc_id,
                             &root,
@@ -129,8 +126,7 @@ impl SheetResult {
                             .map(|s| s.trim().to_owned())
                             .filter(|s| !s.is_empty())
                             .collect(),
-                        root: convert_udb(&root).to_dailp(),
-                        root_gloss,
+                        root: MorphemeSegment::new(convert_udb(&root).to_dailp(), root_gloss),
                         year_recorded: year,
                     })
                 } else {
@@ -139,7 +135,7 @@ impl SheetResult {
             })
             .collect())
     }
-    pub fn into_nouns(self, year: i32) -> Result<Vec<DictionaryEntry>> {
+    pub fn into_nouns(self, doc_id: &str, year: i32) -> Result<Vec<LexicalEntry>> {
         // First two rows are simply headers.
         // let mut values = self.values.into_iter();
         // let first_header = values.next().unwrap();
@@ -156,12 +152,14 @@ impl SheetResult {
 
                 if columns.len() > 4 && !columns[1].is_empty() {
                     // Skip reference numbers for now.
-                    let mut root_values = columns.into_iter().skip(1);
+                    let mut root_values = columns.into_iter();
+                    let key = root_values.next().unwrap();
                     let root = root_values.next().unwrap();
                     let root_gloss = root_values.next().unwrap();
                     // Skip page ref and category.
                     let mut form_values = root_values.skip(2);
-                    Some(DictionaryEntry {
+                    Some(LexicalEntry {
+                        id: format!("{}-{}", doc_id, key),
                         surface_forms: vec![root_noun_surface_form(
                             &root,
                             &root_gloss,
@@ -170,8 +168,7 @@ impl SheetResult {
                         .into_iter()
                         .filter_map(|x| x)
                         .collect(),
-                        root: convert_udb(&root).to_dailp(),
-                        root_gloss,
+                        root: MorphemeSegment::new(convert_udb(&root).to_dailp(), root_gloss),
                         root_translations: Vec::new(),
                         year_recorded: year,
                     })

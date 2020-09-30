@@ -32,7 +32,7 @@
           <seg type="morphemic_gloss">{{segment.morpheme_gloss | join(sep="-")}}</seg>
         {% endif %}
         {% if segment.english_gloss %}
-          <seg type="gloss">{{segment.english_gloss}}</seg>
+          <seg type="gloss">{{segment.english_gloss | join(sep=", ")}}</seg>
         {% endif %}
       </choice>
     {% else %}
