@@ -4,10 +4,13 @@ import { Helmet } from "react-helmet"
 import { styled } from "linaria/react"
 import Layout from "../layout"
 import _ from "lodash"
+import slugify from "slugify"
+import { IndexPageQuery } from "../../graphql-types"
 
-export default ({ data }) => {
-  const documents = data.dailp.allDocuments
-  const docsByCategory = _.groupBy(documents, "source")
+/** Lists all documents in our database */
+const IndexPage = (props: { data: IndexPageQuery }) => {
+  const documents = props.data.dailp.allDocuments
+  const docsByCategory = _.groupBy(documents, "collection")
   return (
     <Layout>
       <Helmet>
@@ -15,34 +18,35 @@ export default ({ data }) => {
       </Helmet>
       <DocIndex>
         <FullWidth>
-          {Object.entries(docsByCategory).map(([source, documents]) => (
-            <>
-              <h2>{source}</h2>
+          {Object.entries(docsByCategory).map(([collection, documents]) => (
+            <section key={collection}>
+              <h2>{collection}</h2>
               <ul>
-                {documents.map((document: any) => (
-                  <li key={document.id}>
-                    <Link to={`/documents/${document.id.toLowerCase()}`}>
-                      {document.title}
-                    </Link>
-                  </li>
-                ))}
+                {documents.map(document => {
+                  const slug = slugify(document.id, { lower: true })
+                  return (
+                    <li key={document.id}>
+                      <Link to={`/documents/${slug}`}>{document.title}</Link>
+                    </li>
+                  )
+                })}
               </ul>
-            </>
+            </section>
           ))}
         </FullWidth>
       </DocIndex>
     </Layout>
   )
 }
+export default IndexPage
 
-// Pull our XML from any data source.
 export const query = graphql`
-  query {
+  query IndexPage {
     dailp {
       allDocuments {
         id
         title
-        source
+        collection
       }
     }
   }

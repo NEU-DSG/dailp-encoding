@@ -1,7 +1,8 @@
-use crate::annotation::{AnnotatedWord, MorphemeSegment};
+use crate::annotation::{AnnotatedForm, MorphemeSegment};
 use crate::retrieve::SheetResult;
 use crate::structured::Database;
 use anyhow::Result;
+use async_graphql::SimpleObject;
 use futures::future::join_all;
 use futures::join;
 use itertools::Itertools;
@@ -9,14 +10,14 @@ use mongodb::bson;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 
+#[SimpleObject]
 #[derive(Serialize, Deserialize, Debug)]
-pub struct DictionaryEntry {
+pub struct LexicalEntry {
     #[serde(rename = "_id")]
     pub id: String,
-    pub root: String,
-    pub root_gloss: String,
+    pub root: MorphemeSegment,
     pub root_translations: Vec<String>,
-    pub surface_forms: Vec<AnnotatedWord>,
+    pub surface_forms: Vec<AnnotatedForm>,
     pub year_recorded: i32,
 }
 
@@ -60,7 +61,7 @@ pub fn root_verb_surface_forms(
     root_gloss: &str,
     cols: &mut impl Iterator<Item = String>,
     has_ppp: bool,
-) -> Vec<AnnotatedWord> {
+) -> Vec<AnnotatedForm> {
     let mut forms = Vec::new();
     while let Some(form) = root_verb_surface_form(doc_id, root, root_gloss, cols, has_ppp) {
         forms.push(form);
@@ -89,7 +90,7 @@ pub fn root_verb_surface_form(
     root_gloss: &str,
     cols: &mut impl Iterator<Item = String>,
     has_ppp: bool,
-) -> Option<AnnotatedWord> {
+) -> Option<AnnotatedForm> {
     // Each form has an empty column before it.
     // let _empty = cols.next()?;
     // Then follows the morphemic segmentation.
@@ -119,13 +120,13 @@ pub fn root_verb_surface_form(
         vec![cols.next()?]
     };
 
-    Some(AnnotatedWord {
+    Some(AnnotatedForm {
         index: 0,
         source: syllabary.clone(),
         normalized_source: syllabary,
         simple_phonetics: Some(phonetic),
         phonemic: Some(convert_udb(&phonemic).to_dailp()),
-        segmentation: morphemes
+        segments: morphemes
             .zip(morpheme_glosses)
             .map(|(m, g)| MorphemeSegment::new(m, g))
             .collect(),
@@ -144,7 +145,7 @@ pub fn root_noun_surface_form(
     root: &str,
     root_gloss: &str,
     cols: &mut impl Iterator<Item = String>,
-) -> Option<AnnotatedWord> {
+) -> Option<AnnotatedForm> {
     let ppp_tag = cols.next()?;
     let ppp_src = cols.next()?;
     let pp_tag = cols.next()?;
@@ -165,13 +166,13 @@ pub fn root_noun_surface_form(
         .map(|s| s.trim().to_owned())
         .filter(|s| !s.is_empty());
 
-    Some(AnnotatedWord {
+    Some(AnnotatedForm {
         index: 0,
         source: syllabary.clone(),
         normalized_source: syllabary,
         simple_phonetics: Some(phonetic),
         phonemic: Some(convert_udb(&phonemic).to_dailp()),
-        segmentation: morphemes
+        segments: morphemes
             .zip(glosses)
             .map(|(m, g)| MorphemeSegment::new(m, g))
             .collect(),

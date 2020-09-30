@@ -12,42 +12,33 @@ const createDocumentPages = async ({ actions, graphql }) => {
         allDocuments {
           title
           id
+          collection
         }
       }
     }
   `)
-  for (const { title, id } of data.dailp.allDocuments) {
+
+  const collections = []
+  for (const { title, id, collection } of data.dailp.allDocuments) {
+    if (collection && !collections.includes(collection)) {
+      collections.push(collection)
+    }
+
     actions.createPage({
-      path: `documents/${id.toLowerCase()}`,
+      path: `documents/${slugify(id, { lower: true })}`,
       component: path.resolve(`./src/templates/annotated-document.tsx`),
       context: {
         id,
       },
     })
   }
-}
 
-const createCollectionPages = async ({ actions, graphql }) => {
-  const { data } = await graphql(`
-    query {
-      dailp {
-        allDocuments {
-          source
-        }
-      }
-    }
-  `)
-  const collections = []
-  for (const { source } of data.dailp.allDocuments) {
-    if (collections.includes(source)) {
-      continue
-    }
-    collections.push(source)
+  for (const collection of collections) {
     actions.createPage({
-      path: `collections/${slugify(source)}`,
+      path: `collections/${slugify(collection, { lower: true })}`,
       component: path.resolve(`./src/templates/collection.tsx`),
       context: {
-        name: source,
+        name: collection,
       },
     })
   }

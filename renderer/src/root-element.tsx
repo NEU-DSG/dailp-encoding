@@ -6,7 +6,7 @@ import "typeface-gentium-basic"
 import "typeface-open-sans"
 
 /** Injects global providers into the page for styling and data access. */
-export const wrapRootElement = ({ element }) => (
+export const wrapRootElement = (p: { element: any }) => (
   <>
     <Helmet>
       <link
@@ -14,7 +14,7 @@ export const wrapRootElement = ({ element }) => (
         href="https://fonts.googleapis.com/earlyaccess/notosanscherokee.css"
       />
     </Helmet>
-    <Provider>{element}</Provider>
+    <Provider>{p.element}</Provider>
   </>
 )
 
@@ -29,6 +29,10 @@ css`
       font-family: "Gentium Plus", "Gentium Basic", "Noto Sans Cherokee",
         "Arial", "serif";
       font-size: 18px;
+      background-color: rgb(63, 82, 113);
+    }
+    main {
+      background-color: white;
     }
     h1,
     h2 {

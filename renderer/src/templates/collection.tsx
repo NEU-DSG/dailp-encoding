@@ -3,9 +3,14 @@ import { graphql, Link } from "gatsby"
 import { Helmet } from "react-helmet"
 import Layout from "../layout"
 import { DocIndex, FullWidth } from "../pages/index"
+import { CollectionQuery } from "../../graphql-types"
+import slugify from "slugify"
 
-export default ({ data }) => {
-  const documents = data.dailp.allDocuments
+export default (p: {
+  data: CollectionQuery
+  pageContext: { name: string }
+}) => {
+  const documents = p.data.dailp.allDocuments
   return (
     <Layout>
       <Helmet>
@@ -13,15 +18,16 @@ export default ({ data }) => {
       </Helmet>
       <DocIndex>
         <FullWidth>
-          <h2>Collection Name</h2>
+          <h2>{p.pageContext.name}</h2>
           <ul>
-            {documents.map((document: any) => (
-              <li key={document.id}>
-                <Link to={`/documents/${document.id.toLowerCase()}`}>
-                  {document.title}
-                </Link>
-              </li>
-            ))}
+            {documents.map(document => {
+              const slug = slugify(document.id, { lower: true })
+              return (
+                <li key={document.id}>
+                  <Link to={`/documents/${slug}`}>{document.title}</Link>
+                </li>
+              )
+            })}
           </ul>
         </FullWidth>
       </DocIndex>
@@ -32,7 +38,7 @@ export default ({ data }) => {
 export const query = graphql`
   query Collection($name: String!) {
     dailp {
-      allDocuments(source: $name) {
+      allDocuments(collection: $name) {
         id
         title
       }

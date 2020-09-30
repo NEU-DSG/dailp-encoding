@@ -1,18 +1,29 @@
 import React, { useState, useEffect } from "react"
-import { graphql } from "gatsby"
+import { graphql, Link } from "gatsby"
 import { styled } from "linaria/react"
 import { Helmet } from "react-helmet"
+import slugify from "slugify"
 import { useDialogState, Dialog } from "reakit/Dialog"
 import { Radio, RadioGroup, useRadioState } from "reakit/Radio"
 import Layout from "../layout"
 import { MorphemeDetails } from "../morpheme"
 import { Segment } from "../segment"
+import {
+  AnnotatedDocumentQuery,
+  Dailp_AnnotatedSeg,
+  Dailp_MorphemeSegment,
+  Dailp_Block,
+} from "../../graphql-types"
 
 /** A full annotated document, including all metadata and the translation(s) */
-const AnnotatedDocumentPage = ({ data }) => {
-  const doc = data.dailp.document
+const AnnotatedDocumentPage = (p: { data: AnnotatedDocumentQuery }) => {
+  const doc = p.data.dailp.document!
+  const collectionSlug = slugify(doc.collection!, { lower: true })
   const dialog = useDialogState()
-  const [selectedMorpheme, setMorpheme] = useState(null)
+  const [
+    selectedMorpheme,
+    setMorpheme,
+  ] = useState<Dailp_MorphemeSegment | null>(null)
   const [experienceLevel, setLevel] = useState(ExperienceLevel.Beginner)
 
   return (
@@ -28,22 +39,22 @@ const AnnotatedDocumentPage = ({ data }) => {
 
         <header>
           <h2>{doc.title}</h2>
-          <h3>{doc.source}</h3>
+          <Link to={`/collections/${collectionSlug}`}>
+            <h3>{doc.collection}</h3>
+          </Link>
         </header>
 
         <ExperiencePicker onPick={level => setLevel(level)} />
 
         <AnnotationSection>
-          {doc.translatedSegments.map((seg, i) => (
+          {doc.translatedSegments?.map((seg, i) => (
             <Segment
               key={`s${i}`}
-              segment={seg.source}
+              segment={seg.source as Dailp_AnnotatedSeg}
               dialog={dialog}
-              onOpenDetails={segment => {
-                setMorpheme(segment)
-              }}
+              onOpenDetails={setMorpheme}
               level={experienceLevel}
-              translations={seg.translation}
+              translations={seg.translation as Dailp_Block}
             />
           ))}
         </AnnotationSection>
@@ -71,9 +82,12 @@ const ExperiencePicker = (props: {
     <RadioGroup {...radio}>
       {Object.keys(ExperienceLevel)
         .filter(l => isNaN(Number(l)))
-        .map(level => (
+        .map((level: string) => (
           <label key={level}>
-            <Radio {...radio} value={ExperienceLevel[level]} />
+            <Radio
+              {...radio}
+              value={ExperienceLevel[level as keyof typeof ExperienceLevel]}
+            />
             {level}
           </label>
         ))}
@@ -87,12 +101,11 @@ export const query = graphql`
       document(id: $id) {
         id
         title
-        source
+        collection
         translatedSegments {
           source {
-            __typename
-            ... on Dailp_AnnotatedWord {
-              ...WordFields
+            ... on Dailp_AnnotatedForm {
+              ...FormFields
             }
             ... on Dailp_AnnotatedPhrase {
               ...BlockFields
@@ -106,21 +119,20 @@ export const query = graphql`
     }
   }
   fragment BlockFields on Dailp_AnnotatedPhrase {
-    __typename
     ty
     index
     parts {
-      ... on Dailp_AnnotatedWord {
-        ...WordFields
+      ... on Dailp_AnnotatedForm {
+        ...FormFields
       }
     }
   }
-  fragment WordFields on Dailp_AnnotatedWord {
+  fragment FormFields on Dailp_AnnotatedForm {
     index
     source
     simplePhonetics
     phonemic
-    segmentation {
+    segments {
       morpheme
       gloss
     }

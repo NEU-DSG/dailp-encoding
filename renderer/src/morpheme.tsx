@@ -2,12 +2,20 @@ import React from "react"
 import { Link } from "gatsby"
 import { useQuery, gql } from "@apollo/client"
 import _ from "lodash"
+import {
+  Dailp_MorphemeSegment,
+  Dailp_WordsInDocument,
+  Maybe,
+} from "../graphql-types"
 
 /** Specific details about some morpheme */
-export const MorphemeDetails = (props: { segment: any; dialog: any }) => (
+export const MorphemeDetails = (props: {
+  segment: Maybe<Dailp_MorphemeSegment>
+  dialog: any
+}) => (
   <>
     <h4>Known Occurrences of "{props.segment?.gloss}"</h4>
-    <SimilarMorphemeList gloss={props.segment?.gloss} dialog={props.dialog} />
+    <SimilarMorphemeList gloss={props.segment?.gloss!} dialog={props.dialog} />
   </>
 )
 
@@ -31,18 +39,19 @@ const SimilarMorphemeList = (props: { gloss: string; dialog: any }) => {
   } else if (!data || !data.documents) {
     return <p>None Found</p>
   } else {
-    const docTypes = _.groupBy(data.documents, "documentType")
+    const docs = data.documents as Dailp_WordsInDocument[]
+    const docTypes = _.groupBy(docs, "documentType")
     const similarWords = Object.entries(docTypes).map(([ty, documents]) => (
       <section key={ty}>
         <h5>{documentTypeToHeading(ty)}</h5>
         <ul>
-          {documents.map((m, i) =>
-            m.words.map((word, j) => (
+          {documents.map((m: any, i: number) =>
+            m.words.map((word: any, j: number) => (
               <li key={`${i}-${j}`}>
-                {word.source}: {word.englishGloss.join(", ")} (at{" "}
+                {word.source}: {word.englishGloss.join(", ")} (
                 {word.documentId ? (
                   <>
-                    {word.documentId && word.index ? (
+                    {word.index ? (
                       <Link
                         to={`/documents/${word.documentId?.toLowerCase()}#w${
                           word.index
@@ -52,9 +61,7 @@ const SimilarMorphemeList = (props: { gloss: string; dialog: any }) => {
                         {word.documentId} #{word.index}
                       </Link>
                     ) : (
-                      <>
-                        {word.documentId} #{word.index}
-                      </>
+                      <>{word.documentId}</>
                     )}
                   </>
                 ) : null}
@@ -89,7 +96,7 @@ function documentTypeToHeading(ty: string) {
 
 const morphemeQuery = gql`
   query Morpheme($gloss: String!) {
-    documents: wordsWithMorpheme(gloss: $gloss) {
+    documents: morphemesByDocument(gloss: $gloss) {
       documentId
       documentType
       words {

@@ -5,7 +5,7 @@ import { Link } from "gatsby"
 import Footer from "./footer"
 
 /** Wrapper for most site pages, providing them with a navigation header and footer. */
-const Layout = ({ children }) => (
+const Layout = (p: { children: any }) => (
   <>
     <Header>
       <Link to="/" className={siteTitle}>
@@ -13,7 +13,7 @@ const Layout = ({ children }) => (
         Perseverance
       </Link>
     </Header>
-    {children}
+    {p.children}
     <Footer />
   </>
 )
