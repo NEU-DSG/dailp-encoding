@@ -3,8 +3,11 @@ This is a repository for XML data and related materials for the Digital Archive 
 
 ![CI](https://github.com/NEU-DSG/dailp-encoding/workflows/CI/badge.svg)
 
-To trigger a new deploy, go [here](https://github.com/NEU-DSG/dailp-encoding/actions?query=workflow%3ACI) and click `Run workflow`.
-This process pulls in all our annotated spreadsheets, converts them to TEI, converts the TEI to HTML, then deploys that to https://dailp-encoding.surge.sh.
+To trigger a new deploy of our data, go [here](https://github.com/NEU-DSG/dailp-encoding/actions?query=workflow%3ACI) and click `Run workflow`.
+This process pulls in all our annotated spreadsheets, converts them to TEI and puts them into our database.
+
+The `main` branch is deployed to https://dailp.netlify.app automatically when changes are made to the code.
+We currently don't have an automated method to trigger a new front-end deploy when the backing data changes.
 
 ## Resources
 - [Draft TEI
