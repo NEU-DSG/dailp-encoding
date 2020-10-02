@@ -170,7 +170,7 @@ impl<'a> AnnotatedLine {
                     .map(|x| x.split(delims).map(|s| s.trim().to_owned()).collect())
                     .unwrap_or_default();
                 AnnotatedForm {
-                    index: i as i32,
+                    index: i as i32 + 1,
                     source: line.rows[0].items[i].trim().to_owned(),
                     normalized_source: line.rows[0].items[i].trim().to_owned(),
                     simple_phonetics: line.rows[2].items.get(i).map(|x| x.to_owned()),
@@ -225,7 +225,7 @@ impl<'a> AnnotatedLine {
                             .map(|x| x.split(delims).map(|s| s.trim().to_owned()).collect())
                             .unwrap_or_default();
                         let w = AnnotatedForm {
-                            index: i as i32,
+                            index: i as i32 + 1,
                             source: line.rows[0].items[i].trim().to_owned(),
                             normalized_source: line.rows[0].items[i].trim().to_owned(),
                             simple_phonetics: line.rows[2].items.get(i).map(|x| x.to_owned()),
@@ -268,9 +268,9 @@ impl<'a> AnnotatedLine {
         let mut child_segments = Vec::<AnnotatedSeg>::new();
         let mut line_num = 0;
         let mut page_num = 0;
-        let mut word_idx = 0;
-        let mut seg_idx = 0;
-        let mut block_idx = 0;
+        let mut word_idx = 1;
+        let mut seg_idx = 1;
+        let mut block_idx = 1;
 
         // The first page needs a break.
         segments.push(AnnotatedSeg::PageBreak(PageBreak { index: page_num }));

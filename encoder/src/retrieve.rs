@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use crate::translation::{DocResult, Translation};
 use crate::GOOGLE_API_KEY;
 use crate::{
@@ -6,6 +8,7 @@ use crate::{
 };
 use anyhow::Result;
 use async_graphql::*;
+use futures_retry::{FutureRetry, RetryPolicy};
 use rayon::prelude::*;
 use reqwest;
 use serde::{Deserialize, Serialize};
@@ -67,6 +70,15 @@ pub struct SheetResult {
 }
 impl SheetResult {
     pub async fn from_sheet(sheet_id: &str, sheet_name: Option<&str>) -> Result<Self> {
+        let (t, _attempt) = FutureRetry::new(
+            move || Self::from_sheet_weak(sheet_id, sheet_name.clone()),
+            |_| RetryPolicy::<anyhow::Error>::WaitRetry(Duration::from_millis(500)),
+        )
+        .await
+        .map_err(|(e, _attempts)| e)?;
+        Ok(t)
+    }
+    async fn from_sheet_weak(sheet_id: &str, sheet_name: Option<&str>) -> Result<Self> {
         let sheet_name = sheet_name.map_or_else(|| String::new(), |n| format!("{}!", n));
         Ok(reqwest::get(&format!(
             "https://sheets.googleapis.com/v4/spreadsheets/{}/values/{}A1:ZZ?key={}",
