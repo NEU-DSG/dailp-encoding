@@ -393,6 +393,7 @@ dependencies = [
  "async_once",
  "dotenv",
  "futures",
+ "futures-retry",
  "itertools",
  "lambda",
  "lambda_http",
@@ -609,6 +610,17 @@ dependencies = [
  "proc-macro2 1.0.21",
  "quote 1.0.7",
  "syn 1.0.41",
+]
+
+[[package]]
+name = "futures-retry"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "759bfe7464299589f02197a973e0e01f17c4cdcef87b454579af8b0629ba7420"
+dependencies = [
+ "futures",
+ "pin-project",
+ "tokio",
 ]
 
 [[package]]

@@ -21,9 +21,7 @@ pub async fn build_json(
 
     // Combine the documents into one object.
     let docs = inputs.into_iter().map(|(meta, lines)| {
-        let annotated = lines
-            .into_iter()
-            .map(|line| AnnotatedLine::from_semantic(line));
+        let annotated = lines.iter().map(|line| AnnotatedLine::from_semantic(line));
         let segments = AnnotatedLine::to_segments(annotated.collect(), &meta.id);
         AnnotatedDoc::new(meta, segments)
     });
@@ -40,11 +38,40 @@ pub async fn build_json(
                     .build(),
             )
             .await?;
+        } else {
+            eprintln!("Failed to make document!");
         }
     }
 
     Ok(())
 }
+
+// pub async fn write_doc_db(
+//     db: &Database,
+//     meta: DocumentMetadata,
+//     lines: Vec<SemanticLine>,
+// ) -> Result<()> {
+//     let doc = {
+//         let annotated = lines
+//             .into_iter()
+//             .map(|line| AnnotatedLine::from_semantic(line));
+//         let segments = AnnotatedLine::to_segments(annotated.collect(), &meta.id);
+//         AnnotatedDoc::new(meta, segments)
+//     };
+
+//     if let bson::Bson::Document(bson_doc) = bson::to_bson(&doc)? {
+//         db.client
+//             .collection("annotated-documents")
+//             .update_one(
+//                 bson::doc! {"_id": doc.id},
+//                 bson_doc,
+//                 mongodb::options::UpdateOptions::builder()
+//                     .upsert(true)
+//                     .build(),
+//             )
+//             .await?;
+//     }
+// }
 
 #[derive(Clone)]
 pub struct Database {
@@ -82,7 +109,7 @@ impl Database {
         let document_words = documents.aggregate(
             vec![
                 bson::doc! { "$unwind": "$segments" },
-                bson::doc! { "$replaceRoot": { "newRoot": "$segments" } },
+                bson::doc! { "$replaceRoot": { "newRoot": "$segments.source" } },
                 bson::doc! { "$unwind": "$parts" },
                 bson::doc! { "$replaceRoot": { "newRoot": "$parts" } },
                 bson::doc! {
@@ -148,7 +175,7 @@ impl Database {
         let document_words = documents.aggregate(
             vec![
                 bson::doc! { "$unwind": "$segments" },
-                bson::doc! { "$replaceRoot": { "newRoot": "$segments" } },
+                bson::doc! { "$replaceRoot": { "newRoot": "$segments.source" } },
                 bson::doc! { "$unwind": "$parts" },
                 bson::doc! { "$replaceRoot": { "newRoot": "$parts" } },
                 bson::doc! { "$match": { "segments.gloss": gloss } },
@@ -204,9 +231,9 @@ impl Database {
         Ok(self
             .client
             .collection("tags")
-            .find_one(bson::doc! { "_id": &id }, None)
+            .find_one(bson::doc! { "_id": id }, None)
             .await?
-            .map(|doc| bson::from_document(doc).unwrap()))
+            .and_then(|doc| bson::from_document(doc).ok()))
     }
 }
 
@@ -214,6 +241,7 @@ pub struct Query;
 
 #[Object]
 impl Query {
+    /// Listing of all documents excluding their contents by default
     async fn all_documents(
         &self,
         context: &Context<'_>,
@@ -227,7 +255,9 @@ impl Query {
                 collection.map(|collection| {
                     bson::doc! { "collection": collection }
                 }),
-                None,
+                mongodb::options::FindOptions::builder()
+                    .projection(bson::doc! { "segments": 0, "translation": 0 })
+                    .build(),
             )
             .await?
             .filter_map(|doc| bson::from_document(doc.unwrap()).ok())

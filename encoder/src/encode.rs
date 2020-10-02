@@ -1,6 +1,7 @@
 use crate::{
     annotation::{AnnotatedForm, MorphemeSegment},
     retrieve::{DocumentMetadata, SemanticLine},
+    structured::Database,
     translation,
     translation::Translation,
 };
@@ -22,15 +23,16 @@ const OUTPUT_DIR: &str = "../xml";
 
 /// Takes an unprocessed document with metadata, passing it through our TEI
 /// template to produce an xml document named like the given title.
-pub fn write_to_file(meta: DocumentMetadata, lines: Vec<SemanticLine>) -> Result<()> {
+pub fn write_to_file(meta: DocumentMetadata, lines: &[SemanticLine]) -> Result<()> {
     let mut tera = Tera::new("*")?;
     let annotated = lines
-        .into_iter()
-        .map(|line| AnnotatedLine::from_semantic(line));
+        .iter()
+        .map(|line| AnnotatedLine::from_semantic(line))
+        .collect();
     let file_name = format!("{}/{}.xml", OUTPUT_DIR, meta.id);
     println!("writing to {}", file_name);
     tera.register_filter("convert_breaks", convert_breaks);
-    let segments = AnnotatedLine::to_segments(annotated.collect(), &meta.id);
+    let segments = AnnotatedLine::to_segments(annotated, &meta.id);
     let contents = tera.render(
         "template.tera.xml",
         &tera::Context::from_serialize(AnnotatedDoc::new(meta, segments))?,
@@ -51,8 +53,7 @@ pub struct AnnotatedDoc {
     pub collection: Option<String>,
     /// The people involved in collecting, translating, annotating.
     pub people: Vec<String>,
-    pub translation: Option<Translation>,
-    pub segments: Option<Vec<AnnotatedSeg>>,
+    pub segments: Option<Vec<TranslatedSection>>,
     pub image_url: Option<String>,
 }
 impl AnnotatedDoc {
@@ -63,8 +64,16 @@ impl AnnotatedDoc {
             publication: meta.publication,
             collection: meta.source,
             people: meta.people,
-            translation: Some(meta.translation),
-            segments: Some(segments),
+            segments: Some(
+                segments
+                    .into_iter()
+                    .zip(meta.translation.blocks)
+                    .map(|(seg, trans)| TranslatedSection {
+                        translation: trans,
+                        source: seg,
+                    })
+                    .collect(),
+            ),
             image_url: None,
         }
     }
@@ -76,42 +85,30 @@ impl AnnotatedDoc {
     async fn id(&self) -> &str {
         &self.id
     }
+
     /// Full title of the document.
     async fn title(&self) -> &str {
         &self.title
     }
+
     /// The publication that included this document.
     async fn publication(&self) -> &Option<String> {
         &self.publication
     }
+
     /// Where the source document came from, maybe the name of a collection.
     async fn collection(&self) -> &Option<String> {
         &self.collection
     }
-    /// Rough translation of the document, broken down by paragraph.
-    async fn translation(&self) -> &Option<Translation> {
-        &self.translation
-    }
-    async fn segments(&self) -> &Option<Vec<AnnotatedSeg>> {
-        &self.segments
-    }
-    /// Segments of the document paired with their respective translations.
-    async fn translated_segments(&self) -> Option<Vec<TranslatedSection>> {
-        if let (Some(segments), Some(translation)) =
-            (self.segments.as_ref(), self.translation.as_ref())
-        {
-            Some(
-                segments
-                    .iter()
-                    .zip(translation.blocks.iter())
-                    .map(|(seg, trans)| TranslatedSection {
-                        translation: trans.clone(),
-                        source: seg.clone(),
-                    })
-                    .collect(),
-            )
+
+    /// Segments of the document paired with their respective rough translations.
+    async fn translated_segments(&self, context: &Context<'_>) -> Option<Vec<TranslatedSection>> {
+        // We may not have complete data.
+        if self.segments.is_some() {
+            self.segments.clone()
         } else {
-            None
+            let db_doc = context.data::<Database>().unwrap().document(&self.id).await;
+            db_doc.and_then(|d| d.segments)
         }
     }
 
@@ -120,7 +117,7 @@ impl AnnotatedDoc {
     async fn words(&self) -> Option<Vec<AnnotatedForm>> {
         self.segments
             .as_ref()
-            .map(|segments| segments.iter().flat_map(|s| s.words()).collect())
+            .map(|segments| segments.iter().flat_map(|s| s.source.words()).collect())
     }
 }
 
@@ -131,7 +128,8 @@ pub enum DocumentType {
 }
 
 #[SimpleObject]
-struct TranslatedSection {
+#[derive(Serialize, Deserialize, Clone)]
+pub struct TranslatedSection {
     /// Translation of this portion of the source text.
     translation: translation::Block,
     /// Source text from the original document.
@@ -151,7 +149,7 @@ pub struct AnnotatedLine {
 }
 
 impl<'a> AnnotatedLine {
-    pub fn from_semantic(line: SemanticLine) -> Self {
+    pub fn from_semantic(line: &SemanticLine) -> Self {
         // Number of words = length of the longest row in this line.
         let num_words = line.rows.iter().map(|row| row.items.len()).max().unwrap();
         // For each word, extract the necessary data from every row.
@@ -197,7 +195,7 @@ impl<'a> AnnotatedLine {
             })
             .collect();
         Self {
-            number: line.number,
+            number: line.number.clone(),
             words,
             ends_page: line.ends_page,
         }

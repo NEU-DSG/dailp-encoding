@@ -6,23 +6,27 @@ mod structured;
 mod tag;
 mod translation;
 
+use std::time::{Duration, Instant};
+
 use anyhow::Result;
 use dotenv::dotenv;
 use futures::stream::FuturesUnordered;
 use futures::stream::StreamExt;
+use futures_retry::RetryPolicy;
 use rayon::prelude::*;
 use retrieve::{DocumentMetadata, SemanticLine};
+use tokio::time::delay_for;
 
 pub const GOOGLE_API_KEY: &str = "AIzaSyBqqPrkht_OeYUSNkSf_sc6UzNaFhzOVNI";
-const TASK_LIMIT: usize = 5;
+const TASK_LIMIT: usize = 2;
 
 #[tokio::main]
 async fn main() -> Result<()> {
     dotenv().ok();
     let db = structured::Database::new().await?;
+    migrate_data(&db).await?;
     tag::migrate_tags(&db).await?;
     dictionary::migrate_dictionaries(&db).await?;
-    migrate_data(&db).await?;
     Ok(())
 }
 
@@ -34,27 +38,29 @@ async fn migrate_data(db: &structured::Database) -> Result<()> {
             .into_index()?;
 
     let mut items = Vec::new();
-    let mut tasks = FuturesUnordered::new();
+    // let mut tasks = FuturesUnordered::new();
     // Retrieve data for spreadsheets in parallel.
     // Because of Google API rate limits, we have to limit the number of
     // simultaneous connections to the sheets endpoint.
     for sheet_id in index.sheet_ids {
-        tasks.push(fetch_sheet(sheet_id));
-        if tasks.len() == TASK_LIMIT {
-            if let Some(Ok(item)) = tasks.next().await {
-                items.push(item);
-            }
-        }
+        items.push(fetch_sheet(sheet_id).await?);
+        delay_for(Duration::from_millis(250)).await;
+        // tasks.push(fetch_sheet(sheet_id));
+        // if tasks.len() == TASK_LIMIT {
+        //     if let Some(item) = tasks.next().await {
+        //         items.push(item?);
+        //     }
+        // }
     }
     // Wait for remaining tasks to finish.
-    while let Some(Ok(item)) = tasks.next().await {
-        items.push(item);
-    }
+    // while let Some(item) = tasks.next().await {
+    //     items.push(item?);
+    // }
 
     // Write out all the XML in parallel.
     let results: Vec<_> = items
         .par_iter()
-        .map(|(meta, lines)| encode::write_to_file(meta.clone(), lines.clone()))
+        .map(|(meta, lines)| encode::write_to_file(meta.clone(), lines))
         .collect();
     // Then, propogate any errors in that process.
     for r in results {
@@ -79,6 +85,8 @@ async fn fetch_sheet(sheet_id: String) -> Result<(DocumentMetadata, Vec<Semantic
         .await?
         .into_metadata()
         .await?;
+
+    // encode::write_to_file(meta.clone(), &lines)?;
 
     Ok((meta, lines))
 }
