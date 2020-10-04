@@ -88,7 +88,7 @@ const SimilarMorphemeList = (props: { gloss: string; dialog: any }) => {
 
 function documentTypeToHeading(ty: string) {
   if (ty === "REFERENCE") {
-    return "In Dictionaries"
+    return "In Reference Materials"
   } else {
     return "In Documents"
   }
