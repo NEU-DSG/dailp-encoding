@@ -2,9 +2,9 @@
 
 {% macro any_segment(segment) %}
   {% if segment.type == "LineBreak" %}
-    <lb n="{{segment.index + 1}}"/>
+    <lb n="{{segment.index}}"/>
   {% elif segment.type == "PageBreak" %}
-    <pb facs="drs:page{{segment.index + 1}}"/>
+    <pb facs="drs:page{{segment.index}}"/>
   {% elif segment.type == "Phrase" %}
     {{ self::phrase(segment=segment) }}
   {% elif segment.type == "Block" %}
@@ -15,7 +15,7 @@
 {% endmacro any_segment %}
 
 {% macro word(segment) %}
-  <w xml:id="w{{segment.index + 1}}" lemmaRef="lex:id">
+  <w xml:id="w{{segment.index}}" lemmaRef="lex:id">
     {% if segment.simple_phonetics or segment.phonemic or segment.morphemic_segmentation or segment.morpheme_gloss or segment.english_gloss %}
       <choice>
         <orig>{{segment.source | convert_breaks(lb=segment.line_break, pb=segment.page_break) | safe}}</orig>
@@ -42,7 +42,7 @@
 {% endmacro word %}
 
 {% macro phrase(segment) %}
-  <phr xml:id="p{{segment.index + 1}}">
+  <phr xml:id="p{{segment.index}}">
     {% for child in segment.parts %}
       {{ self::any_segment(segment=child) }}
     {% endfor %}
@@ -50,7 +50,7 @@
 {% endmacro phrase %}
 
 {% macro block(segment) %}
-  <ab xml:id="b{{segment.index + 1}}" corresp="#b{{segment.index + 1}}_trans">
+  <ab xml:id="b{{segment.index}}" corresp="#b{{segment.index}}_trans">
     {% for child in segment.parts %}
       {{ self::any_segment(segment=child) }}
     {% endfor %}
@@ -59,7 +59,7 @@
 
 {% macro commentary(segment) %}
   {% if segment.type == "Word" and segment.commentary %}
-    <note target="#w{{segment.index + 1}}">
+    <note target="#w{{segment.index}}">
       {{segment.commentary}}
     </note>
   {% elif segment.parts %}

@@ -11,8 +11,8 @@ import {
   Dailp_AnnotatedSeg,
   Dailp_AnnotatedForm,
   Dailp_AnnotatedPhrase,
-  Dailp_Translation,
   Dailp_Block,
+  Dailp_PageBreak,
 } from "../graphql-types"
 
 /** Displays one segment of the document, which may be a word, block, or phrase. */

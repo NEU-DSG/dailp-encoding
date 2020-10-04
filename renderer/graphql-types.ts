@@ -34,6 +34,7 @@ export type BooleanQueryOperatorInput = {
 };
 
 export type Dailp = {
+  /** Listing of all documents excluding their contents by default */
   allDocuments: Array<Dailp_AnnotatedDoc>;
   /** Retrieves a full document from its unique identifier. */
   document?: Maybe<Dailp_AnnotatedDoc>;
@@ -84,10 +85,7 @@ export type Dailp_AnnotatedDoc = {
   publication?: Maybe<Scalars['String']>;
   /** Where the source document came from, maybe the name of a collection. */
   collection?: Maybe<Scalars['String']>;
-  /** Rough translation of the document, broken down by paragraph. */
-  translation?: Maybe<Dailp_Translation>;
-  segments?: Maybe<Array<Dailp_AnnotatedSeg>>;
-  /** Segments of the document paired with their respective translations. */
+  /** Segments of the document paired with their respective rough translations. */
   translatedSegments?: Maybe<Array<Dailp_TranslatedSection>>;
   /**
    * All the words contained in this document, dropping structural formatting
@@ -208,10 +206,6 @@ export type Dailp_TranslatedSection = {
   translation: Dailp_Block;
   /** Source text from the original document. */
   source: Dailp_AnnotatedSeg;
-};
-
-export type Dailp_Translation = {
-  blocks: Array<Dailp_Block>;
 };
 
 export type Dailp_WordsInDocument = {
@@ -2232,7 +2226,10 @@ export type BlockFieldsFragment = (
 
 export type FormFieldsFragment = (
   Pick<Dailp_AnnotatedForm, 'index' | 'source' | 'simplePhonetics' | 'phonemic' | 'englishGloss'>
-  & { segments: Array<Pick<Dailp_MorphemeSegment, 'morpheme' | 'gloss'>> }
+  & { segments: Array<(
+    Pick<Dailp_MorphemeSegment, 'morpheme' | 'gloss'>
+    & { matchingTag?: Maybe<Pick<Dailp_MorphemeTag, 'crg'>> }
+  )> }
 );
 
 export type CollectionQueryVariables = Exact<{
