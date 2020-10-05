@@ -6,7 +6,7 @@ name: CI
 # events but only for the main branch
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   workflow_dispatch:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
@@ -18,19 +18,45 @@ jobs:
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-    - uses: actions/checkout@v2
-    - name: Cache Dependencies
-      id: cache-deps
-      uses: actions/cache@v2
-      with:
-        path: |
-          ~/.cargo/registry
-          ~/.cargo/git
-          encoder/target
-        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-    - uses: actions/setup-node@v1
-      with: {node-version: 10}
-    - name: Encode documents as TEI and database entries
-      run: cd encoder && cargo run --bin encoder
-      env:
-        MONGODB_LOGIN: ${{ secrets.MONGODB_LOGIN }}
+      - uses: actions/checkout@v2
+      - name: Cache Dependencies
+        id: cache-deps
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            encoder/target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+      - uses: satackey/action-docker-layer-caching@v0.0.8
+        # Ignore the failure of a step and avoid terminating the job.
+        continue-on-error: true
+      - uses: actions/setup-node@v1
+        with: { node-version: 10 }
+      - name: Encode documents as TEI and database entries
+        env:
+          MONGODB_LOGIN: ${{ secrets.MONGODB_LOGIN }}
+        run: |
+          cd encoder
+          cargo run --bin encoder
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+      - name: Deploy GraphQL to AWS via Serverless
+        env:
+          MONGODB_LOGIN: ${{ secrets.MONGODB_LOGIN }}
+        run: |
+          cd encoder
+          npm install
+          npm run deploy
+      - name: Publish website to Netlify
+        uses: netlify/actions/build@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+          NETLIFY_BASE: renderer
+          NETLIFY_CMD: npm run build
+          NETLIFY_DIR: renderer/public
