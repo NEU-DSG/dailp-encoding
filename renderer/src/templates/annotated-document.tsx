@@ -4,10 +4,16 @@ import { styled } from "linaria/react"
 import { Helmet } from "react-helmet"
 import slugify from "slugify"
 import { useDialogState, Dialog } from "reakit/Dialog"
-import { Radio, RadioGroup, useRadioState } from "reakit/Radio"
+import {
+  Radio,
+  RadioGroup,
+  useRadioState,
+  RadioStateReturn,
+} from "reakit/Radio"
 import Layout from "../layout"
 import { MorphemeDetails } from "../morpheme"
 import { Segment } from "../segment"
+import Cookies from "js-cookie"
 
 /** A full annotated document, including all metadata and the translation(s) */
 const AnnotatedDocumentPage = (p: {
@@ -20,7 +26,15 @@ const AnnotatedDocumentPage = (p: {
     selectedMorpheme,
     setMorpheme,
   ] = useState<GatsbyTypes.Dailp_MorphemeSegment | null>(null)
-  const [experienceLevel, setLevel] = useState(ExperienceLevel.Beginner)
+  const experienceLevel = useRadioState({
+    state: Number.parseInt(Cookies.get("experienceLevel") ?? "0"),
+  })
+  // const tagSet = useRadioState({ state: TagSet.Dailp })
+
+  // Save the selected experience level throughout the session.
+  useEffect(() => {
+    Cookies.set("experienceLevel", experienceLevel.state!.toString())
+  }, [experienceLevel.state])
 
   return (
     <Layout>
@@ -40,7 +54,7 @@ const AnnotatedDocumentPage = (p: {
           </Link>
         </header>
 
-        <ExperiencePicker onPick={level => setLevel(level)} />
+        <ExperiencePicker radio={experienceLevel} />
 
         <AnnotationSection>
           {doc.translatedSegments?.map((seg, i) => (
@@ -49,7 +63,12 @@ const AnnotatedDocumentPage = (p: {
               segment={seg.source as GatsbyTypes.Dailp_AnnotatedSeg}
               dialog={dialog}
               onOpenDetails={setMorpheme}
-              level={experienceLevel}
+              level={experienceLevel.state! as ExperienceLevel}
+              tagSet={
+                experienceLevel.state! > ExperienceLevel.Intermediate
+                  ? TagSet.Dailp
+                  : TagSet.Crg
+              }
               translations={seg.translation as GatsbyTypes.Dailp_Block}
             />
           ))}
@@ -66,24 +85,37 @@ export enum ExperienceLevel {
   Advanced = 2,
 }
 
-const ExperiencePicker = (props: {
-  onPick: (exp: ExperienceLevel) => void
-}) => {
-  const radio = useRadioState({ state: ExperienceLevel.Beginner })
-  useEffect(() => {
-    props.onPick(radio.state as ExperienceLevel)
-  }, [radio.state])
+export enum TagSet {
+  Dailp,
+  Crg,
+}
 
+const ExperiencePicker = (p: { radio: RadioStateReturn }) => {
   return (
-    <RadioGroup {...radio}>
+    <RadioGroup {...p.radio}>
       {Object.keys(ExperienceLevel)
         .filter(l => isNaN(Number(l)))
         .map((level: string) => (
           <label key={level}>
             <Radio
-              {...radio}
+              {...p.radio}
               value={ExperienceLevel[level as keyof typeof ExperienceLevel]}
             />
+            {level}
+          </label>
+        ))}
+    </RadioGroup>
+  )
+}
+
+const TagSetPicker = (p: { radio: RadioStateReturn }) => {
+  return (
+    <RadioGroup {...p.radio}>
+      {Object.keys(TagSet)
+        .filter(l => isNaN(Number(l)))
+        .map((level: string) => (
+          <label key={level}>
+            <Radio {...p.radio} value={TagSet[level as keyof typeof TagSet]} />
             {level}
           </label>
         ))}
@@ -131,6 +163,9 @@ export const query = graphql`
     segments {
       morpheme
       gloss
+      matchingTag {
+        crg
+      }
     }
     englishGloss
     commentary
