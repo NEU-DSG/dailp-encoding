@@ -5,8 +5,8 @@ plugins:
 provider:
   name: aws
   runtime: rust
-  memorySize: 512
-  timeout: 10
+  memorySize: 256
+  timeout: 7
   environment:
     MONGODB_LOGIN: ${env:MONGODB_LOGIN}
 package:
@@ -21,7 +21,7 @@ functions:
           path: "/graphql"
           method: any
           cors:
-            origin: '*'
+            origin: "*"
             headers:
               - Content-Type
               - X-Amz-Date
