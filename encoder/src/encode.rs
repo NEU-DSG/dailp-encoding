@@ -52,6 +52,7 @@ pub struct AnnotatedDoc {
     pub publication: Option<String>,
     pub collection: Option<String>,
     /// The people involved in collecting, translating, annotating.
+    #[serde(default)]
     pub people: Vec<String>,
     pub segments: Option<Vec<TranslatedSection>>,
     pub image_url: Option<String>,
