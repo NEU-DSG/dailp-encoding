@@ -137,6 +137,7 @@ export const query = graphql`
       gloss
     }
     englishGloss
+    commentary
   }
 `
 

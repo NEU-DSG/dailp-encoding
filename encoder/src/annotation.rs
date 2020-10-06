@@ -18,7 +18,6 @@ pub struct AnnotatedForm {
     pub segments: Vec<MorphemeSegment>,
     #[serde(default)]
     pub english_gloss: Vec<String>,
-    /// Further details about the annotation layers.
     pub commentary: Option<String>,
     /// The character index of a mid-word line break, if there is one.
     pub line_break: Option<i32>,
@@ -93,6 +92,10 @@ impl AnnotatedForm {
     /// English gloss for the whole word.
     async fn english_gloss(&self) -> &Vec<String> {
         &self.english_gloss
+    }
+    /// Further details about the annotation layers, including uncertainty.
+    async fn commentary(&self) -> &Option<String> {
+        &self.commentary
     }
 }
 
