@@ -126,7 +126,9 @@ impl MorphemeSegment {
         Ok(context
             .data::<Database>()?
             .morpheme_tag(&self.gloss)
-            .await?)
+            .await
+            .ok()
+            .flatten())
     }
 
     /// All lexical entries that share the same gloss text as this morpheme.

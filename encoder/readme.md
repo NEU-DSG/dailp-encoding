@@ -1,6 +1,23 @@
 # Document Encoder
 This program encodes a spreadsheet hosted on Google Drive annotating a source document with linguistic information into an equivalent TEI XML document.
 
+<!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
+**Table of Contents**
+
+- [Document Encoder](#document-encoder)
+    - [Development](#development)
+    - [Spreadsheet Standards](#spreadsheet-standards)
+        - [Blocks](#blocks)
+        - [Phrases](#phrases)
+        - [Line Breaks](#line-breaks)
+        - [Page Breaks](#page-breaks)
+        - [Metadata](#metadata)
+    - [Translations](#translations)
+    - [Implementation Resources](#implementation-resources)
+    - [Linked Data Notes](#linked-data-notes)
+
+<!-- markdown-toc end -->
+
 ## Development
 To run this program, you need to have [rust](https://www.rust-lang.org/tools/install) and it's associated tooling installed.
 Then, simply navigate to this directory in a terminal and run the following:
