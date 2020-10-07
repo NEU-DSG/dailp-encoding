@@ -3,11 +3,10 @@ import { graphql, Link } from "gatsby"
 import { Helmet } from "react-helmet"
 import Layout from "../layout"
 import { DocIndex, FullWidth } from "../pages/index"
-import { CollectionQuery } from "../../graphql-types"
 import slugify from "slugify"
 
 export default (p: {
-  data: CollectionQuery
+  data: GatsbyTypes.CollectionQuery
   pageContext: { name: string }
 }) => {
   const documents = p.data.dailp.allDocuments

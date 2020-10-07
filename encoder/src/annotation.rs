@@ -111,7 +111,7 @@ impl MorphemeSegment {
     }
 }
 
-#[Object]
+#[Object(cache_control(max_age = 60))]
 impl MorphemeSegment {
     /// Phonemic representation of the morpheme
     async fn morpheme(&self) -> &str {

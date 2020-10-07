@@ -5,10 +5,9 @@ import { styled } from "linaria/react"
 import Layout from "../layout"
 import _ from "lodash"
 import slugify from "slugify"
-import { IndexPageQuery } from "../../graphql-types"
 
 /** Lists all documents in our database */
-const IndexPage = (props: { data: IndexPageQuery }) => {
+const IndexPage = (props: { data: GatsbyTypes.IndexPageQuery }) => {
   const documents = props.data.dailp.allDocuments
   const docsByCategory = _.groupBy(documents, "collection")
   return (

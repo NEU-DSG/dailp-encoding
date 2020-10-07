@@ -16,11 +16,9 @@ module.exports = {
     },
     "gatsby-plugin-offline",
     {
-      resolve: `gatsby-plugin-graphql-codegen`,
+      resolve: "gatsby-plugin-typegen",
       options: {
-        codegenConfig: {
-          enumsAsTypes: false,
-        },
+        outputPath: "src/__generated__/gatsby-types.d.ts",
       },
     },
     "gatsby-plugin-typescript",
@@ -41,6 +39,7 @@ module.exports = {
         fieldName: "dailp",
         url:
           "https://b817bapwvb.execute-api.us-east-1.amazonaws.com/dev/graphql",
+        batch: false,
       },
     },
     {

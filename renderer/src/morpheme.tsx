@@ -2,15 +2,10 @@ import React from "react"
 import { Link } from "gatsby"
 import { useQuery, gql } from "@apollo/client"
 import _ from "lodash"
-import {
-  Dailp_MorphemeSegment,
-  Dailp_WordsInDocument,
-  Maybe,
-} from "../graphql-types"
 
 /** Specific details about some morpheme */
 export const MorphemeDetails = (props: {
-  segment: Maybe<Dailp_MorphemeSegment>
+  segment: GatsbyTypes.Dailp_MorphemeSegment | null
   dialog: any
 }) => (
   <>
@@ -39,7 +34,7 @@ const SimilarMorphemeList = (props: { gloss: string; dialog: any }) => {
   } else if (!data || !data.documents) {
     return <p>None Found</p>
   } else {
-    const docs = data.documents as Dailp_WordsInDocument[]
+    const docs = data.documents as GatsbyTypes.Dailp_WordsInDocument[]
     const docTypes = _.groupBy(docs, "documentType")
     const similarWords = Object.entries(docTypes).map(([ty, documents]) => (
       <section key={ty}>

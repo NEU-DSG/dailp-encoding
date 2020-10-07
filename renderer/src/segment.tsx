@@ -2,78 +2,66 @@ import React from "react"
 import { styled } from "linaria/react"
 import { DialogDisclosure } from "reakit/Dialog"
 import { Group } from "reakit/Group"
+import { Tooltip, TooltipReference, useTooltipState } from "reakit/Tooltip"
+import _ from "lodash"
 import {
   ExperienceLevel,
   AnnotationSection,
 } from "./templates/annotated-document"
-import {
-  Dailp_MorphemeSegment,
-  Dailp_AnnotatedSeg,
-  Dailp_AnnotatedForm,
-  Dailp_AnnotatedPhrase,
-  Dailp_Block,
-  Dailp_PageBreak,
-} from "../graphql-types"
+
+interface Props {
+  segment: GatsbyTypes.Dailp_AnnotatedSeg
+  dialog: any
+  onOpenDetails: (morpheme: GatsbyTypes.Dailp_MorphemeSegment) => void
+  level: ExperienceLevel
+  translations: GatsbyTypes.Dailp_Block
+}
 
 /** Displays one segment of the document, which may be a word, block, or phrase. */
-export const Segment = (p: {
-  segment: Dailp_AnnotatedSeg
-  dialog: any
-  onOpenDetails: (morpheme: Dailp_MorphemeSegment) => void
-  level: ExperienceLevel
-  translations: Dailp_Block
-}) => {
+export const Segment = (p: Props) => {
   if (isForm(p.segment)) {
-    return (
-      <AnnotatedWord id={`w${p.segment.index}`}>
-        <div>{p.segment.source}</div>
-        <div>{p.segment.simplePhonetics || <br />}</div>
-        {p.level > ExperienceLevel.Beginner ? (
-          <MorphemicSegmentation
-            segments={p.segment.segments}
-            dialog={p.dialog}
-            onOpenDetails={p.onOpenDetails}
-          />
-        ) : null}
-        <div>{p.segment.englishGloss.join(", ")}</div>
-      </AnnotatedWord>
-    )
+    return <AnnotatedForm {...p} segment={p.segment} />
   } else if (isPhrase(p.segment)) {
-    const children = p.segment.parts?.map((seg, i) => (
-      <Segment
-        key={i}
-        segment={seg}
-        dialog={p.dialog}
-        onOpenDetails={p.onOpenDetails}
-        level={p.level}
-        translations={p.translations}
-      />
-    ))
+    const children =
+      p.segment.parts?.map((seg, i) => (
+        <Segment
+          key={i}
+          segment={seg}
+          dialog={p.dialog}
+          onOpenDetails={p.onOpenDetails}
+          level={p.level}
+          translations={p.translations}
+        />
+      )) ?? null
 
     if (p.segment.ty === "BLOCK") {
       return (
-        <div>
+        <DocumentBlock>
+          <TranslationPara>
+            {p.translations?.segments.join(". ") ?? null}.
+          </TranslationPara>
           <AnnotationSection>
-            {children || null}
+            {children}
             <div style={{ flexGrow: 1 }} aria-hidden={true} />
           </AnnotationSection>
-          <TranslationPara>
-            {p.translations?.segments.join(". ") || null}.
-          </TranslationPara>
-        </div>
+        </DocumentBlock>
       )
     } else {
-      return children ? <>{children}</> : null
+      return <>{children}</>
     }
   } else {
     return null
   }
 }
 
-function isForm(seg: Dailp_AnnotatedSeg): seg is Dailp_AnnotatedForm {
+function isForm(
+  seg: GatsbyTypes.Dailp_AnnotatedSeg
+): seg is GatsbyTypes.Dailp_AnnotatedForm {
   return "source" in seg
 }
-function isPhrase(seg: Dailp_AnnotatedSeg): seg is Dailp_AnnotatedPhrase {
+function isPhrase(
+  seg: GatsbyTypes.Dailp_AnnotatedSeg
+): seg is GatsbyTypes.Dailp_AnnotatedPhrase {
   return "parts" in seg
 }
 
@@ -82,9 +70,10 @@ function isPhrase(seg: Dailp_AnnotatedSeg): seg is Dailp_AnnotatedPhrase {
  * glosses for each morpheme.
  */
 const MorphemicSegmentation = (p: {
-  segments: Dailp_MorphemeSegment[]
+  segments: readonly GatsbyTypes.Dailp_MorphemeSegment[]
   dialog: any
   onOpenDetails: any
+  showPhonemicLayer: boolean
 }) => {
   // If there is no segmentation, return two line breaks for the
   // morphemic segmentation and morpheme gloss layers.
@@ -92,41 +81,58 @@ const MorphemicSegmentation = (p: {
     return (
       <>
         <br />
-        <br />
+        {p.showPhonemicLayer ? <br /> : null}
       </>
     )
   }
 
-  const segmentDivs = p.segments.map((segment, i) => (
-    <WordSegment key={i}>
-      <MorphemeSegment
-        segment={segment}
-        dialog={p.dialog}
-        onOpenDetails={p.onOpenDetails}
-      />
-      {segment?.gloss}
-    </WordSegment>
-  ))
+  const segmentDivs = intersperse(
+    p.segments.map((segment, i) => (
+      <WordSegment key={i}>
+        {p.showPhonemicLayer ? segment.morpheme : null}
+        <MorphemeSegment
+          segment={segment}
+          dialog={p.dialog}
+          onOpenDetails={p.onOpenDetails}
+        />
+      </WordSegment>
+    )),
+    _i => <MorphemeDivider showPhonemicLayer={p.showPhonemicLayer} />
+  )
   // Add dashes between all morphemes for more visible separation.
   return <GlossLine>{segmentDivs}</GlossLine>
 }
 
+export function intersperse<T>(arr: T[], separator: (n: number) => T): T[] {
+  return _.flatMap(arr, (a, i) => (i > 0 ? [separator(i - 1), a] : [a]))
+}
+
+const MorphemeDivider = (p: { showPhonemicLayer: boolean }) => (
+  <WordSegment>
+    <span>-</span>
+    {p.showPhonemicLayer ? <span>-</span> : null}
+  </WordSegment>
+)
+
 /** One morpheme that can be clicked to see further details. */
 const MorphemeSegment = (p: {
-  segment: Dailp_MorphemeSegment
+  segment: GatsbyTypes.Dailp_MorphemeSegment
   dialog: any
-  onOpenDetails: (segment: Dailp_MorphemeSegment) => void
-}) => (
-  <MorphemeButton {...p.dialog} onClick={() => p.onOpenDetails(p.segment)}>
-    {p.segment.morpheme}
-  </MorphemeButton>
-)
+  onOpenDetails: (segment: GatsbyTypes.Dailp_MorphemeSegment) => void
+}) => {
+  let gloss = p.segment.gloss
+  return (
+    <MorphemeButton {...p.dialog} onClick={() => p.onOpenDetails(p.segment)}>
+      {gloss}
+    </MorphemeButton>
+  )
+}
 
 const WordSegment = styled.div`
   display: flex;
   flex-flow: column nowrap;
-  align-items: center;
-  margin-right: 8px;
+  align-items: flex-start;
+  margin-right: 2px;
 `
 
 const MorphemeButton = styled(DialogDisclosure)`
@@ -147,13 +153,37 @@ const GlossLine = styled.span`
   flex-flow: row nowrap;
 `
 
-const AnnotatedWord = styled(Group)`
+const AnnotatedForm = (
+  p: Props & { segment: GatsbyTypes.Dailp_AnnotatedForm }
+) => {
+  const tooltip = useTooltipState()
+  return (
+    <WordGroup id={`w${p.segment.index}`}>
+      <TooltipReference {...tooltip}>{p.segment.source}</TooltipReference>
+      <Tooltip {...tooltip}>{p.segment.commentary}</Tooltip>
+      <div>{p.segment.simplePhonetics ?? <br />}</div>
+      {p.level > ExperienceLevel.Beginner ? (
+        <MorphemicSegmentation
+          segments={p.segment.segments}
+          dialog={p.dialog}
+          onOpenDetails={p.onOpenDetails}
+          showPhonemicLayer={p.level > ExperienceLevel.Intermediate}
+        />
+      ) : null}
+      <div>{p.segment.englishGloss.join(", ")}</div>
+    </WordGroup>
+  )
+}
+
+const WordGroup = styled(Group)`
   margin: 16px 20px;
   margin-bottom: 48px;
 `
 
 const TranslationPara = styled.p`
   margin: 0 16px;
-  margin-top: 0;
-  margin-bottom: 8em;
+`
+
+const DocumentBlock = styled.div`
+  margin: 4em 0;
 `
