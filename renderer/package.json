@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "description": "",
   "scripts": {
-    "start": "gatsby develop",
-    "build": "gatsby build",
+    "start": "GATSBY_EXPERIMENTAL_QUERY_CONCURRENCY=1 gatsby develop",
+    "build": "GATSBY_EXPERIMENTAL_QUERY_CONCURRENCY=1 gatsby build",
     "deploy": "npm run build && surge public dailp-encoding-react.surge.sh",
     "clean": "gatsby clean"
   },

@@ -2212,7 +2212,10 @@ type StringQueryOperatorInput = {
 
 type FormFieldsFragment = (
   Pick<Dailp_AnnotatedForm, 'index' | 'source' | 'simplePhonetics' | 'phonemic' | 'englishGloss' | 'commentary'>
-  & { readonly segments: ReadonlyArray<Pick<Dailp_MorphemeSegment, 'morpheme' | 'gloss'>> }
+  & { readonly segments: ReadonlyArray<(
+    Pick<Dailp_MorphemeSegment, 'morpheme' | 'gloss'>
+    & { readonly matchingTag: Maybe<Pick<Dailp_MorphemeTag, 'crg'>> }
+  )> }
 );
 
 type BlockFieldsFragment = (

@@ -67,7 +67,9 @@ function isPhrase(
 ): seg is GatsbyTypes.Dailp_AnnotatedPhrase {
   return "parts" in seg
 }
-function isPageBreak(seg: Dailp_AnnotatedSeg): seg is Dailp_PageBreak {
+function isPageBreak(
+  seg: GatsbyTypes.Dailp_AnnotatedSeg
+): seg is GatsbyTypes.Dailp_PageBreak {
   return (
     "__typename" in seg && (seg["__typename"] as string).endsWith("PageBreak")
   )
@@ -129,7 +131,7 @@ const MorphemeSegment = (p: {
   segment: GatsbyTypes.Dailp_MorphemeSegment
   tagSet: TagSet
   dialog: any
-  onOpenDetails: (segment: Dailp_MorphemeSegment) => void
+  onOpenDetails: (segment: GatsbyTypes.Dailp_MorphemeSegment) => void
 }) => {
   let gloss = p.segment.gloss
   if (p.tagSet === TagSet.Crg) {
@@ -182,6 +184,7 @@ const AnnotatedForm = (
           dialog={p.dialog}
           onOpenDetails={p.onOpenDetails}
           showPhonemicLayer={p.level > ExperienceLevel.Intermediate}
+          tagSet={p.tagSet}
         />
       ) : null}
       <div>{p.segment.englishGloss.join(", ")}</div>
@@ -196,11 +199,8 @@ const WordGroup = styled(Group)`
 
 const TranslationPara = styled.p`
   margin: 0 16px;
-<<<<<<< HEAD
 `
 
 const DocumentBlock = styled.div`
   margin: 4em 0;
-=======
->>>>>>> :sparkles: Convert between tag sets in UI
 `
