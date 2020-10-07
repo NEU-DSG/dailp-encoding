@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "description": "",
   "scripts": {
-    "start": "gatsby develop",
-    "build": "gatsby build",
+    "start": "GATSBY_EXPERIMENTAL_QUERY_CONCURRENCY=1 gatsby develop",
+    "build": "GATSBY_EXPERIMENTAL_QUERY_CONCURRENCY=1 gatsby build",
     "deploy": "npm run build && surge public dailp-encoding-react.surge.sh",
     "clean": "gatsby clean"
   },
@@ -14,6 +14,7 @@
   "dependencies": {
     "@apollo/client": "^3.1.3",
     "isomorphic-unfetch": "^3.0.0",
+    "js-cookie": "^2.2.1",
     "lodash": "^4.17.20",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
@@ -28,6 +29,7 @@
   "devDependencies": {
     "@babel/plugin-transform-react-jsx": "^7.3.3",
     "@babel/preset-typescript": "^7.3.3",
+    "@types/js-cookie": "^2.2.6",
     "@types/lodash": "^4.14.161",
     "@types/node": "^13.7.7",
     "@types/react": "^16.9.23",
