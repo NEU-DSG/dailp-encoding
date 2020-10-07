@@ -4,6 +4,18 @@ This package renders a static website using React and Gatsby that includes all a
 These documents are connected to a Cherokee lexical database using our GraphQL endpoint.
 The latest commit to the `master` branch is automatically deployed to [`dailp-encoding.surge.sh`](https://dailp-encoding.surge.sh).
 
+<!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
+
+**Table of Contents**
+
+- [DAILP Renderer](#dailp-renderer)
+  - [Navigating the Code](#navigating-the-code)
+  - [Type-checking](#type-checking)
+  - [Features of this approach](#features-of-this-approach)
+  - [Stakeholder Testing](#stakeholder-testing)
+
+<!-- markdown-toc end -->
+
 ## Navigating the Code
 
 Several folders have documentation to guide you in understanding the code.

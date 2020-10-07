@@ -7,6 +7,7 @@ import _ from "lodash"
 import {
   ExperienceLevel,
   AnnotationSection,
+  TagSet,
 } from "./templates/annotated-document"
 
 interface Props {
@@ -15,6 +16,7 @@ interface Props {
   onOpenDetails: (morpheme: GatsbyTypes.Dailp_MorphemeSegment) => void
   level: ExperienceLevel
   translations: GatsbyTypes.Dailp_Block
+  tagSet: TagSet
 }
 
 /** Displays one segment of the document, which may be a word, block, or phrase. */
@@ -31,6 +33,7 @@ export const Segment = (p: Props) => {
           onOpenDetails={p.onOpenDetails}
           level={p.level}
           translations={p.translations}
+          tagSet={p.tagSet}
         />
       )) ?? null
 
@@ -64,6 +67,13 @@ function isPhrase(
 ): seg is GatsbyTypes.Dailp_AnnotatedPhrase {
   return "parts" in seg
 }
+function isPageBreak(
+  seg: GatsbyTypes.Dailp_AnnotatedSeg
+): seg is GatsbyTypes.Dailp_PageBreak {
+  return (
+    "__typename" in seg && (seg["__typename"] as string).endsWith("PageBreak")
+  )
+}
 
 /**
  * Displays the break-down of a word into its units of meaning and the English
@@ -71,6 +81,7 @@ function isPhrase(
  */
 const MorphemicSegmentation = (p: {
   segments: readonly GatsbyTypes.Dailp_MorphemeSegment[]
+  tagSet: TagSet
   dialog: any
   onOpenDetails: any
   showPhonemicLayer: boolean
@@ -92,6 +103,7 @@ const MorphemicSegmentation = (p: {
         {p.showPhonemicLayer ? segment.morpheme : null}
         <MorphemeSegment
           segment={segment}
+          tagSet={p.tagSet}
           dialog={p.dialog}
           onOpenDetails={p.onOpenDetails}
         />
@@ -117,10 +129,14 @@ const MorphemeDivider = (p: { showPhonemicLayer: boolean }) => (
 /** One morpheme that can be clicked to see further details. */
 const MorphemeSegment = (p: {
   segment: GatsbyTypes.Dailp_MorphemeSegment
+  tagSet: TagSet
   dialog: any
   onOpenDetails: (segment: GatsbyTypes.Dailp_MorphemeSegment) => void
 }) => {
   let gloss = p.segment.gloss
+  if (p.tagSet === TagSet.Crg) {
+    gloss = p.segment.matchingTag?.crg ?? p.segment.gloss
+  }
   return (
     <MorphemeButton {...p.dialog} onClick={() => p.onOpenDetails(p.segment)}>
       {gloss}
@@ -168,6 +184,7 @@ const AnnotatedForm = (
           dialog={p.dialog}
           onOpenDetails={p.onOpenDetails}
           showPhonemicLayer={p.level > ExperienceLevel.Intermediate}
+          tagSet={p.tagSet}
         />
       ) : null}
       <div>{p.segment.englishGloss.join(", ")}</div>
