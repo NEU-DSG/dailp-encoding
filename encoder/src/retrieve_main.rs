@@ -1,24 +1,14 @@
-mod annotation;
-mod dictionary;
-mod encode;
-mod retrieve;
-mod structured;
-mod tag;
-mod translation;
-
 use std::time::{Duration, Instant};
 
 use anyhow::Result;
+use dailp::retrieve::{DocumentMetadata, SemanticLine};
+use dailp::{dictionary, encode, retrieve, structured, tag};
 use dotenv::dotenv;
 use futures::stream::FuturesUnordered;
 use futures::stream::StreamExt;
 use futures_retry::{FutureRetry, RetryPolicy};
 use rayon::prelude::*;
-use retrieve::{DocumentMetadata, SemanticLine};
 use tokio::time::delay_for;
-
-pub const GOOGLE_API_KEY: &str = "AIzaSyBqqPrkht_OeYUSNkSf_sc6UzNaFhzOVNI";
-const TASK_LIMIT: usize = 2;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -37,7 +27,7 @@ async fn migrate_data(db: &structured::Database) -> Result<()> {
             .await?
             .into_index()?;
 
-    let mut items: Vec<(DocumentMetadata, Vec<SemanticLine>)> = Vec::new();
+    let mut items = Vec::new();
     // Retrieve data for spreadsheets in sequence.
     // Because of Google API rate limits, we have to limit the number of
     // simultaneous connections to the sheets endpoint.
@@ -50,7 +40,7 @@ async fn migrate_data(db: &structured::Database) -> Result<()> {
         .par_iter()
         .map(|(meta, lines)| encode::write_to_file(meta.clone(), lines))
         .collect();
-    // Then, propogate any errors in that process.
+    // Then, propagate any errors in that process.
     for r in results {
         r?;
     }
@@ -73,8 +63,6 @@ async fn fetch_sheet(sheet_id: &str) -> Result<(DocumentMetadata, Vec<SemanticLi
         .await?
         .into_metadata()
         .await?;
-
-    // encode::write_to_file(meta.clone(), &lines)?;
 
     Ok((meta, lines))
 }

@@ -1,4 +1,4 @@
-use crate::GOOGLE_API_KEY;
+use crate::retrieve::GOOGLE_API_KEY;
 use anyhow::Result;
 use async_graphql::*;
 use itertools::Itertools;

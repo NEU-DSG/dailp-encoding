@@ -1,7 +1,6 @@
 use std::time::Duration;
 
 use crate::translation::{DocResult, Translation};
-use crate::GOOGLE_API_KEY;
 use crate::{
     annotation::MorphemeSegment,
     dictionary::{convert_udb, root_noun_surface_form, root_verb_surface_forms, LexicalEntry},
@@ -12,6 +11,8 @@ use futures_retry::{FutureRetry, RetryPolicy};
 use rayon::prelude::*;
 use reqwest;
 use serde::{Deserialize, Serialize};
+
+pub const GOOGLE_API_KEY: &str = "AIzaSyBqqPrkht_OeYUSNkSf_sc6UzNaFhzOVNI";
 
 /// All the metadata associated with one particular document.
 #[SimpleObject]

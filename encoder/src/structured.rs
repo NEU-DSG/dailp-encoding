@@ -239,7 +239,7 @@ impl Database {
 
 pub struct Query;
 
-#[Object]
+#[Object(cache_control(max_age = 60))]
 impl Query {
     /// Listing of all documents excluding their contents by default
     async fn all_documents(

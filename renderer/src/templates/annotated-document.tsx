@@ -8,22 +8,18 @@ import { Radio, RadioGroup, useRadioState } from "reakit/Radio"
 import Layout from "../layout"
 import { MorphemeDetails } from "../morpheme"
 import { Segment } from "../segment"
-import {
-  AnnotatedDocumentQuery,
-  Dailp_AnnotatedSeg,
-  Dailp_MorphemeSegment,
-  Dailp_Block,
-} from "../../graphql-types"
 
 /** A full annotated document, including all metadata and the translation(s) */
-const AnnotatedDocumentPage = (p: { data: AnnotatedDocumentQuery }) => {
+const AnnotatedDocumentPage = (p: {
+  data: GatsbyTypes.AnnotatedDocumentQuery
+}) => {
   const doc = p.data.dailp.document!
   const collectionSlug = slugify(doc.collection ?? "", { lower: true })
   const dialog = useDialogState()
   const [
     selectedMorpheme,
     setMorpheme,
-  ] = useState<Dailp_MorphemeSegment | null>(null)
+  ] = useState<GatsbyTypes.Dailp_MorphemeSegment | null>(null)
   const [experienceLevel, setLevel] = useState(ExperienceLevel.Beginner)
 
   return (
@@ -50,11 +46,11 @@ const AnnotatedDocumentPage = (p: { data: AnnotatedDocumentQuery }) => {
           {doc.translatedSegments?.map((seg, i) => (
             <Segment
               key={`s${i}`}
-              segment={seg.source as Dailp_AnnotatedSeg}
+              segment={seg.source as GatsbyTypes.Dailp_AnnotatedSeg}
               dialog={dialog}
               onOpenDetails={setMorpheme}
               level={experienceLevel}
-              translations={seg.translation as Dailp_Block}
+              translations={seg.translation as GatsbyTypes.Dailp_Block}
             />
           ))}
         </AnnotationSection>
