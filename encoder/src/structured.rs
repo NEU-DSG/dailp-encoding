@@ -162,7 +162,7 @@ impl Database {
             .find(bson::doc! { "root.gloss": root_gloss }, None)
             .await
             .unwrap()
-            .map(|doc| bson::from_document::<LexicalEntry>(doc.unwrap()).unwrap())
+            .filter_map(|doc| bson::from_document::<LexicalEntry>(doc.unwrap()).ok())
             .collect::<Vec<_>>()
             .await)
     }
@@ -232,8 +232,14 @@ impl Database {
             .client
             .collection("tags")
             .find_one(bson::doc! { "_id": id }, None)
-            .await?
-            .and_then(|doc| bson::from_document(doc).ok()))
+            .await
+            .and_then(|doc| {
+                if let Some(doc) = doc {
+                    Ok(bson::from_document(doc)?)
+                } else {
+                    Ok(None)
+                }
+            })?)
     }
 }
 
@@ -325,8 +331,14 @@ impl Query {
             .client
             .collection("tags")
             .find_one(bson::doc! { "_id": id }, None)
-            .await?
-            .map(|doc| bson::from_document(doc).unwrap()))
+            .await
+            .and_then(|doc| {
+                if let Some(doc) = doc {
+                    Ok(bson::from_document(doc)?)
+                } else {
+                    Ok(None)
+                }
+            })?)
     }
 }
 
