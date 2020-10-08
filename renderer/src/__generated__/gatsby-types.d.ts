@@ -1816,7 +1816,6 @@ enum SitePageFieldsEnum {
   pluginCreator___pluginOptions___typeName = 'pluginCreator.pluginOptions.typeName',
   pluginCreator___pluginOptions___fieldName = 'pluginCreator.pluginOptions.fieldName',
   pluginCreator___pluginOptions___url = 'pluginCreator.pluginOptions.url',
-  pluginCreator___pluginOptions___batch = 'pluginCreator.pluginOptions.batch',
   pluginCreator___pluginOptions___uri = 'pluginCreator.pluginOptions.uri',
   pluginCreator___pluginOptions___pathCheck = 'pluginCreator.pluginOptions.pathCheck',
   pluginCreator___nodeAPIs = 'pluginCreator.nodeAPIs',
@@ -2021,7 +2020,6 @@ enum SitePluginFieldsEnum {
   pluginOptions___typeName = 'pluginOptions.typeName',
   pluginOptions___fieldName = 'pluginOptions.fieldName',
   pluginOptions___url = 'pluginOptions.url',
-  pluginOptions___batch = 'pluginOptions.batch',
   pluginOptions___uri = 'pluginOptions.uri',
   pluginOptions___pathCheck = 'pluginOptions.pathCheck',
   nodeAPIs = 'nodeAPIs',
@@ -2152,7 +2150,6 @@ type SitePluginPluginOptions = {
   readonly typeName: Maybe<Scalars['String']>;
   readonly fieldName: Maybe<Scalars['String']>;
   readonly url: Maybe<Scalars['String']>;
-  readonly batch: Maybe<Scalars['Boolean']>;
   readonly uri: Maybe<Scalars['String']>;
   readonly pathCheck: Maybe<Scalars['Boolean']>;
 };
@@ -2173,7 +2170,6 @@ type SitePluginPluginOptionsFilterInput = {
   readonly typeName: Maybe<StringQueryOperatorInput>;
   readonly fieldName: Maybe<StringQueryOperatorInput>;
   readonly url: Maybe<StringQueryOperatorInput>;
-  readonly batch: Maybe<BooleanQueryOperatorInput>;
   readonly uri: Maybe<StringQueryOperatorInput>;
   readonly pathCheck: Maybe<BooleanQueryOperatorInput>;
 };
