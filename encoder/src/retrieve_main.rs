@@ -1,26 +1,30 @@
+mod retrieve;
+
 use std::time::{Duration, Instant};
 
 use anyhow::Result;
-use dailp::retrieve::{DocumentMetadata, SemanticLine};
-use dailp::{dictionary, encode, retrieve, structured, tag};
+use dailp::{Database, DocumentMetadata};
 use dotenv::dotenv;
 use futures::stream::FuturesUnordered;
 use futures::stream::StreamExt;
 use futures_retry::{FutureRetry, RetryPolicy};
 use rayon::prelude::*;
+use retrieve::SemanticLine;
 use tokio::time::delay_for;
 
 #[tokio::main]
 async fn main() -> Result<()> {
     dotenv().ok();
-    let db = structured::Database::new().await?;
+    let db = Database::new().await?;
     migrate_data(&db).await?;
-    tag::migrate_tags(&db).await?;
-    dictionary::migrate_dictionaries(&db).await?;
+    retrieve::migrate_tags(&db).await?;
+    retrieve::migrate_dictionaries(&db).await?;
     Ok(())
 }
 
-async fn migrate_data(db: &structured::Database) -> Result<()> {
+/// Parses our annotated document spreadsheets, migrating that data to our
+/// database and writing them into TEI XML files.
+async fn migrate_data(db: &Database) -> Result<()> {
     // Pull the list of annotated documents from our index sheet.
     let index =
         retrieve::SheetResult::from_sheet("1sDTRFoJylUqsZlxU57k1Uj8oHhbM3MAzU8sDgTfO7Mk", None)
@@ -38,16 +42,18 @@ async fn migrate_data(db: &structured::Database) -> Result<()> {
     // Write out all the XML in parallel.
     let results: Vec<_> = items
         .par_iter()
-        .map(|(meta, lines)| encode::write_to_file(meta.clone(), lines))
+        .map(|(meta, lines)| retrieve::write_to_file(meta.clone(), lines))
         .collect();
     // Then, propagate any errors in that process.
     for r in results {
         r?;
     }
-    structured::build_json(items, db).await?;
+    retrieve::migrate_documents_to_db(items, db).await?;
     Ok(())
 }
 
+/// Fetch the contents of the sheet with the given ID, validating the first page as
+/// annotation lines and the "Metadata" page as [DocumentMetadata].
 async fn fetch_sheet(sheet_id: &str) -> Result<(DocumentMetadata, Vec<SemanticLine>)> {
     println!("parsing sheet {}", sheet_id);
 

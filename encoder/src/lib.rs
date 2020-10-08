@@ -1,7 +1,13 @@
-pub mod annotation;
-pub mod dictionary;
-pub mod encode;
-pub mod retrieve;
-pub mod structured;
-pub mod tag;
-pub mod translation;
+mod database;
+mod document;
+mod form;
+mod lexical;
+mod tag;
+mod translation;
+
+pub use database::*;
+pub use document::*;
+pub use form::*;
+pub use lexical::*;
+pub use tag::*;
+pub use translation::*;

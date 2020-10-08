@@ -1,6 +1,5 @@
-use crate::annotation::{AnnotatedForm, MorphemeSegment};
-use crate::retrieve::SheetResult;
-use crate::structured::Database;
+use crate::database::Database;
+use crate::form::{AnnotatedForm, MorphemeSegment};
 use anyhow::Result;
 use async_graphql::SimpleObject;
 use futures::future::join_all;
@@ -19,40 +18,6 @@ pub struct LexicalEntry {
     pub root_translations: Vec<String>,
     pub surface_forms: Vec<AnnotatedForm>,
     pub year_recorded: i32,
-}
-
-pub async fn migrate_dictionaries(db: &Database) -> Result<()> {
-    println!("Migrating DF1975 and DF2003 to database...");
-    let (df1975, df2003, root_nouns) = join!(
-        SheetResult::from_sheet("11ssqdimOQc_hp3Zk8Y55m6DFfKR96OOpclUg5wcGSVE", None),
-        SheetResult::from_sheet("18cKXgsfmVhRZ2ud8Cd7YDSHexs1ODHo6fkTPrmnwI1g", None),
-        SheetResult::from_sheet("1XuQIKzhGf_mGCH4-bHNBAaQqTAJDNtPbNHjQDhszVRo", None)
-    );
-
-    let df1975 = df1975?.into_df1975("DF1975", 1975, true)?;
-    let df2003 = df2003?.into_df1975("DF2003", 2003, false)?;
-    let root_nouns = root_nouns?.into_nouns("DF1975", 1975)?;
-
-    let dict = db.client.collection("dictionary");
-    let entries = df1975.into_iter().chain(df2003).chain(root_nouns);
-    join_all(entries.filter_map(|entry| {
-        if let bson::Bson::Document(bson_doc) = bson::to_bson(&entry).unwrap() {
-            Some(
-                dict.update_one(
-                    bson::doc! {"_id": entry.id},
-                    bson_doc,
-                    mongodb::options::UpdateOptions::builder()
-                        .upsert(true)
-                        .build(),
-                ),
-            )
-        } else {
-            None
-        }
-    }))
-    .await;
-
-    Ok(())
 }
 
 pub fn root_verb_surface_forms(
@@ -92,7 +57,6 @@ pub fn root_verb_surface_form(
     has_ppp: bool,
 ) -> Option<AnnotatedForm> {
     // Each form has an empty column before it.
-    // let _empty = cols.next()?;
     // Then follows the morphemic segmentation.
     // All tags except the last one come before the root.
     let (mut morpheme_tags, phonemic) = all_tags(&mut cols.filter(|x| !x.is_empty()));

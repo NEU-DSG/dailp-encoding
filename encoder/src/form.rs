@@ -1,5 +1,4 @@
-use crate::{dictionary::LexicalEntry, structured::Database};
-use crate::{encode::AnnotatedDoc, tag::MorphemeTag};
+use crate::{AnnotatedDoc, Database, LexicalEntry, MorphemeTag, Translation};
 use async_graphql::*;
 use serde::{Deserialize, Serialize};
 
