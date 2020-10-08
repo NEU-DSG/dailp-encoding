@@ -2,7 +2,6 @@ import React from "react"
 import { styled } from "linaria/react"
 import { DialogDisclosure } from "reakit/Dialog"
 import { Group } from "reakit/Group"
-import { Tooltip, TooltipReference, useTooltipState } from "reakit/Tooltip"
 import _ from "lodash"
 import {
   ExperienceLevel,
@@ -109,9 +108,9 @@ const MorphemicSegmentation = (p: {
         />
       </WordSegment>
     )),
+    // Add dashes between all morphemes for more visible separation.
     _i => <MorphemeDivider showPhonemicLayer={p.showPhonemicLayer} />
   )
-  // Add dashes between all morphemes for more visible separation.
   return <GlossLine>{segmentDivs}</GlossLine>
 }
 
@@ -172,11 +171,9 @@ const GlossLine = styled.span`
 const AnnotatedForm = (
   p: Props & { segment: GatsbyTypes.Dailp_AnnotatedForm }
 ) => {
-  const tooltip = useTooltipState()
   return (
     <WordGroup id={`w${p.segment.index}`}>
-      <TooltipReference {...tooltip}>{p.segment.source}</TooltipReference>
-      <Tooltip {...tooltip}>{p.segment.commentary}</Tooltip>
+      <div>{p.segment.source}</div>
       <div>{p.segment.simplePhonetics ?? <br />}</div>
       {p.level > ExperienceLevel.Beginner ? (
         <MorphemicSegmentation

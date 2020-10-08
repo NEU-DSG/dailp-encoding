@@ -39,7 +39,6 @@ module.exports = {
         fieldName: "dailp",
         url:
           "https://b817bapwvb.execute-api.us-east-1.amazonaws.com/dev/graphql",
-        batch: false,
       },
     },
     {
