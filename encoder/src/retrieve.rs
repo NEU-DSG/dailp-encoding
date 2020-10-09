@@ -444,8 +444,8 @@ pub async fn migrate_documents_to_db(
 
     // Combine the documents into one object.
     let docs = inputs.into_iter().map(|(meta, lines)| {
-        let annotated = lines.iter().map(|line| AnnotatedLine::from_semantic(line));
-        let segments = AnnotatedLine::to_segments(annotated.collect(), &meta.id);
+        let annotated = AnnotatedLine::many_from_semantic(&lines);
+        let segments = AnnotatedLine::to_segments(annotated, &meta.id);
         AnnotatedDoc::new(meta, segments)
     });
 
@@ -473,10 +473,7 @@ pub async fn migrate_documents_to_db(
 /// template to produce an xml document named like the given title.
 pub fn write_to_file(meta: DocumentMetadata, lines: &[SemanticLine]) -> Result<()> {
     let mut tera = tera::Tera::new("*")?;
-    let annotated = lines
-        .iter()
-        .map(|line| AnnotatedLine::from_semantic(line))
-        .collect();
+    let annotated = AnnotatedLine::many_from_semantic(lines);
     let file_name = format!("{}/{}.xml", OUTPUT_DIR, meta.id);
     println!("writing to {}", file_name);
     tera.register_filter("convert_breaks", convert_breaks);
@@ -500,58 +497,7 @@ pub struct AnnotatedLine {
 }
 
 impl<'a> AnnotatedLine {
-    pub fn from_semantic(line: &SemanticLine) -> Self {
-        // Number of words = length of the longest row in this line.
-        let num_words = line.rows.iter().map(|row| row.items.len()).max().unwrap();
-        // For each word, extract the necessary data from every row.
-        let delims: &[char] = &['-', '='];
-        let words = (0..num_words)
-            // Only use words with a syllabary source entry.
-            .filter(|i| line.rows.get(0).and_then(|r| r.items.get(*i)).is_some())
-            .map(|i| {
-                let pb = line.rows[0].items[i].find(PAGE_BREAK);
-                let morphemes: Vec<_> = line.rows[4]
-                    .items
-                    .get(i)
-                    .map(|x| x.split(delims).map(|s| s.trim().to_owned()).collect())
-                    .unwrap_or_default();
-                let glosses: Vec<_> = line.rows[5]
-                    .items
-                    .get(i)
-                    .map(|x| x.split(delims).map(|s| s.trim().to_owned()).collect())
-                    .unwrap_or_default();
-                AnnotatedForm {
-                    index: i as i32 + 1,
-                    source: line.rows[0].items[i].trim().to_owned(),
-                    normalized_source: line.rows[0].items[i].trim().to_owned(),
-                    simple_phonetics: line.rows[2].items.get(i).map(|x| x.to_owned()),
-                    phonemic: line.rows[3].items.get(i).map(|x| x.to_owned()),
-                    segments: morphemes
-                        .into_iter()
-                        .zip(glosses)
-                        .filter(|(m, g)| !m.is_empty() || !g.is_empty())
-                        .map(|(morpheme, gloss)| MorphemeSegment { morpheme, gloss })
-                        .collect(),
-                    english_gloss: vec![line.rows[6].items.get(i).map(|x| x.trim().to_owned())]
-                        .into_iter()
-                        .filter_map(|x| x)
-                        .collect(),
-                    commentary: line.rows[7].items.get(i).map(|x| x.to_owned()),
-                    page_break: pb.map(|i| i as i32),
-                    line_break: pb
-                        .or_else(|| line.rows[0].items[i].find(LINE_BREAK))
-                        .map(|i| i as i32),
-                    document_id: None,
-                }
-            })
-            .collect();
-        Self {
-            number: line.number.clone(),
-            words,
-            ends_page: line.ends_page,
-        }
-    }
-    pub fn many_from_semantic(lines: Vec<SemanticLine>) -> Vec<Self> {
+    pub fn many_from_semantic(lines: &[SemanticLine]) -> Vec<Self> {
         let mut word_index = 0;
         let delims: &[char] = &['-', '='];
         lines
@@ -577,7 +523,7 @@ impl<'a> AnnotatedLine {
                             .unwrap_or_default();
                         let w = AnnotatedForm {
                             index: i as i32 + 1,
-                            source: line.rows[0].items[i].trim().to_owned(),
+                            source: line.rows[0].items[i].trim().replace(LINE_BREAK, ""),
                             normalized_source: line.rows[0].items[i].trim().to_owned(),
                             simple_phonetics: line.rows[2].items.get(i).map(|x| x.to_owned()),
                             phonemic: line.rows[3].items.get(i).map(|x| x.to_owned()),
@@ -606,7 +552,7 @@ impl<'a> AnnotatedLine {
                     })
                     .collect();
                 Self {
-                    number: line.number,
+                    number: line.number.clone(),
                     words,
                     ends_page: line.ends_page,
                 }
@@ -779,7 +725,7 @@ pub fn convert_breaks(
 
 const PHRASE_START: &str = "[";
 const PHRASE_END: &str = "]";
-const LINE_BREAK: char = '\\';
+const LINE_BREAK: &str = "\\";
 const PAGE_BREAK: &str = "\\\\";
 const BLOCK_START: &str = "{";
 const BLOCK_END: &str = "}";
