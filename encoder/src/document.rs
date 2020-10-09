@@ -1,11 +1,5 @@
-use crate::{AnnotatedForm, Database, MorphemeSegment, Translation, TranslationBlock};
-use anyhow::Result;
-use async_graphql::{self, *};
+use crate::{AnnotatedForm, Database, Translation, TranslationBlock};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-use std::fs::File;
-use std::io::Write;
-use tera::{self, Tera};
 
 #[derive(Serialize, Deserialize)]
 pub struct AnnotatedDoc {
@@ -43,7 +37,7 @@ impl AnnotatedDoc {
     }
 }
 
-#[Object]
+#[async_graphql::Object]
 impl AnnotatedDoc {
     /// Official short identifier for this document.
     async fn id(&self) -> &str {
@@ -66,7 +60,10 @@ impl AnnotatedDoc {
     }
 
     /// Segments of the document paired with their respective rough translations.
-    async fn translated_segments(&self, context: &Context<'_>) -> Option<Vec<TranslatedSection>> {
+    async fn translated_segments(
+        &self,
+        context: &async_graphql::Context<'_>,
+    ) -> Option<Vec<TranslatedSection>> {
         // We may not have complete data.
         if self.segments.is_some() {
             self.segments.clone()
@@ -91,7 +88,7 @@ pub enum DocumentType {
     Corpus,
 }
 
-#[SimpleObject]
+#[async_graphql::SimpleObject]
 #[derive(Serialize, Deserialize, Clone)]
 pub struct TranslatedSection {
     /// Translation of this portion of the source text.
@@ -104,7 +101,7 @@ pub struct TranslatedSection {
 // documents: [{ meta, pages: [{ lines: [{ index, words }] }] }]
 // Basic to start: [{meta, lines: [{ index, words }]}]
 
-#[Union]
+#[async_graphql::Union]
 #[derive(Serialize, Deserialize, Clone)]
 #[serde(tag = "type")]
 pub enum AnnotatedSeg {
@@ -125,25 +122,26 @@ impl AnnotatedSeg {
     }
 }
 
-#[Enum]
+#[async_graphql::Enum]
 #[derive(Serialize, Deserialize)]
 pub enum BlockType {
     Block,
     Phrase,
 }
 
-#[SimpleObject]
+#[async_graphql::SimpleObject]
 #[derive(Serialize, Deserialize, Clone)]
 pub struct LineBreak {
     pub index: i32,
 }
-#[SimpleObject]
+
+#[async_graphql::SimpleObject]
 #[derive(Serialize, Deserialize, Clone)]
 pub struct PageBreak {
     pub index: i32,
 }
 
-#[SimpleObject]
+#[async_graphql::SimpleObject]
 #[derive(Serialize, Deserialize, Clone)]
 pub struct AnnotatedPhrase {
     pub ty: BlockType,

@@ -1,5 +1,5 @@
-use crate::{AnnotatedDoc, Database, LexicalEntry, MorphemeTag, Translation};
-use async_graphql::*;
+use crate::{AnnotatedDoc, Database, LexicalEntry, MorphemeTag};
+use async_graphql::FieldResult;
 use serde::{Deserialize, Serialize};
 
 /// A single word in an annotated document.
@@ -25,7 +25,7 @@ pub struct AnnotatedForm {
     pub document_id: Option<String>,
 }
 
-#[Object]
+#[async_graphql::Object]
 impl AnnotatedForm {
     /// The root morpheme of the word.
     /// For example, a verb form glossed as "he catches" has the root morpheme
@@ -37,7 +37,10 @@ impl AnnotatedForm {
     }
 
     /// All other observed words with the same root morpheme as this word.
-    async fn similar_words(&self, context: &Context<'_>) -> FieldResult<Vec<AnnotatedForm>> {
+    async fn similar_words(
+        &self,
+        context: &async_graphql::Context<'_>,
+    ) -> FieldResult<Vec<AnnotatedForm>> {
         if let Some(root) = self.root(context).await? {
             let similar_roots = context
                 .data::<Database>()?
@@ -55,7 +58,10 @@ impl AnnotatedForm {
     }
 
     /// The document that contains this word.
-    async fn document(&self, context: &Context<'_>) -> FieldResult<Option<AnnotatedDoc>> {
+    async fn document(
+        &self,
+        context: &async_graphql::Context<'_>,
+    ) -> FieldResult<Option<AnnotatedDoc>> {
         Ok(if let Some(id) = self.document_id.as_ref() {
             context.data::<Database>()?.document(id).await
         } else {
@@ -110,7 +116,7 @@ impl MorphemeSegment {
     }
 }
 
-#[Object(cache_control(max_age = 60))]
+#[async_graphql::Object(cache_control(max_age = 60))]
 impl MorphemeSegment {
     /// Phonemic representation of the morpheme
     async fn morpheme(&self) -> &str {
@@ -124,7 +130,10 @@ impl MorphemeSegment {
 
     /// If this morpheme represents a functional tag that we have further
     /// information on, this is the corresponding database entry.
-    async fn matching_tag(&self, context: &Context<'_>) -> FieldResult<Option<MorphemeTag>> {
+    async fn matching_tag(
+        &self,
+        context: &async_graphql::Context<'_>,
+    ) -> FieldResult<Option<MorphemeTag>> {
         Ok(context
             .data::<Database>()?
             .morpheme_tag(&self.gloss)
@@ -135,7 +144,10 @@ impl MorphemeSegment {
 
     /// All lexical entries that share the same gloss text as this morpheme.
     /// This generally works for root morphemes.
-    async fn lexical_entries(&self, context: &Context<'_>) -> FieldResult<Vec<LexicalEntry>> {
+    async fn lexical_entries(
+        &self,
+        context: &async_graphql::Context<'_>,
+    ) -> FieldResult<Vec<LexicalEntry>> {
         Ok(context
             .data::<Database>()?
             .lexical_entries(&self.gloss)

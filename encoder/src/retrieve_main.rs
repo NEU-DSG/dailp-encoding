@@ -1,21 +1,11 @@
 mod retrieve;
 
-use std::time::{Duration, Instant};
-
 use anyhow::Result;
-use dailp::{Database, DocumentMetadata};
-use dotenv::dotenv;
-use futures::stream::FuturesUnordered;
-use futures::stream::StreamExt;
-use futures_retry::{FutureRetry, RetryPolicy};
-use rayon::prelude::*;
-use retrieve::SemanticLine;
-use tokio::time::delay_for;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    dotenv().ok();
-    let db = Database::new().await?;
+    dotenv::dotenv().ok();
+    let db = dailp::Database::new().await?;
     migrate_data(&db).await?;
     retrieve::migrate_tags(&db).await?;
     retrieve::migrate_dictionaries(&db).await?;
@@ -24,7 +14,9 @@ async fn main() -> Result<()> {
 
 /// Parses our annotated document spreadsheets, migrating that data to our
 /// database and writing them into TEI XML files.
-async fn migrate_data(db: &Database) -> Result<()> {
+async fn migrate_data(db: &dailp::Database) -> Result<()> {
+    use rayon::prelude::*;
+
     // Pull the list of annotated documents from our index sheet.
     let index =
         retrieve::SheetResult::from_sheet("1sDTRFoJylUqsZlxU57k1Uj8oHhbM3MAzU8sDgTfO7Mk", None)
@@ -54,7 +46,9 @@ async fn migrate_data(db: &Database) -> Result<()> {
 
 /// Fetch the contents of the sheet with the given ID, validating the first page as
 /// annotation lines and the "Metadata" page as [DocumentMetadata].
-async fn fetch_sheet(sheet_id: &str) -> Result<(DocumentMetadata, Vec<SemanticLine>)> {
+async fn fetch_sheet(
+    sheet_id: &str,
+) -> Result<(dailp::DocumentMetadata, Vec<retrieve::SemanticLine>)> {
     println!("parsing sheet {}", sheet_id);
 
     // Split the contents of each main sheet into semantic lines with

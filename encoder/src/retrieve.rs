@@ -1,25 +1,15 @@
 use anyhow::Result;
-use async_graphql::*;
-use futures::future::join_all;
-use futures::join;
-use futures_retry::{FutureRetry, RetryPolicy};
-use itertools::Itertools;
-use mongodb::bson::{self, to_bson, Bson};
-use rayon::prelude::*;
-use regex::Regex;
-use reqwest;
-use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-use std::fs::File;
-use std::io::Write;
-use std::time::Duration;
-use tera::Tera;
-
 use dailp::{
     convert_udb, root_noun_surface_form, root_verb_surface_forms, AnnotatedDoc, AnnotatedForm,
     AnnotatedPhrase, AnnotatedSeg, BlockType, Database, DocumentMetadata, LexicalEntry, LineBreak,
     MorphemeSegment, MorphemeTag, PageBreak, Translation, TranslationBlock,
 };
+use futures::future::join_all;
+use futures_retry::{FutureRetry, RetryPolicy};
+use itertools::Itertools;
+use mongodb::bson::{self, Bson};
+use serde::{Deserialize, Serialize};
+use std::{collections::HashMap, fs::File, io::Write, time::Duration};
 
 pub const GOOGLE_API_KEY: &str = "AIzaSyBqqPrkht_OeYUSNkSf_sc6UzNaFhzOVNI";
 
@@ -94,6 +84,7 @@ impl SheetResult {
     }
 
     pub fn into_df1975(self, doc_id: &str, year: i32, has_ppp: bool) -> Result<Vec<LexicalEntry>> {
+        use rayon::prelude::*;
         // First two rows are simply headers.
         // let mut values = self.values.into_iter();
         // let first_header = values.next().unwrap();
@@ -139,6 +130,7 @@ impl SheetResult {
             .collect())
     }
     pub fn into_nouns(self, doc_id: &str, year: i32) -> Result<Vec<LexicalEntry>> {
+        use rayon::prelude::*;
         // First two rows are simply headers.
         // let mut values = self.values.into_iter();
         // let first_header = values.next().unwrap();
@@ -319,7 +311,7 @@ impl DocResult {
     }
 
     pub fn to_translation(self) -> Translation {
-        let ends_with_footnote = Regex::new(r"\[\d+\]").unwrap();
+        let ends_with_footnote = regex::Regex::new(r"\[\d+\]").unwrap();
         let text_runs = self
             .body
             // Split the translation text by lines.
@@ -369,7 +361,7 @@ impl DocResult {
 pub async fn migrate_tags(db: &Database) -> Result<()> {
     println!("Migrating tags to database...");
 
-    let (pp_tags, combined_pp, prepronominals, modals, nominal, refl, clitics) = join!(
+    let (pp_tags, combined_pp, prepronominals, modals, nominal, refl, clitics) = futures::join!(
         SheetResult::from_sheet("1D0JZEwE-dj-fKppbosaGhT7Xyyy4lVxmgG02tpEi8nw", None),
         SheetResult::from_sheet("1OMzkbDGY1BqPR_ZwJRe4-F5_I12Ao5OJqqMp8Ej_ZhE", None),
         SheetResult::from_sheet("12v5fqtOztwwLeEaKQJGMfziwlxP4n60riMsN9dYw9Xc", None),
@@ -397,7 +389,7 @@ pub async fn migrate_tags(db: &Database) -> Result<()> {
         .chain(clitics)
         .chain(nominal)
     {
-        if let Bson::Document(bson_doc) = to_bson(&entry).unwrap() {
+        if let Bson::Document(bson_doc) = bson::to_bson(&entry).unwrap() {
             dict.update_one(
                 bson::doc! {"_id": entry.id},
                 bson_doc,
@@ -418,6 +410,7 @@ async fn parse_tags(
     num_allomorphs: usize,
     gap_to_crg: usize,
 ) -> Result<Vec<MorphemeTag>> {
+    use rayon::prelude::*;
     Ok(sheet
         .values
         .into_par_iter()
@@ -459,7 +452,7 @@ pub async fn migrate_documents_to_db(
     // Write the contents of each document to our database.
     let db = db.client.collection("annotated-documents");
     for doc in docs {
-        if let bson::Bson::Document(bson_doc) = bson::to_bson(&doc)? {
+        if let Bson::Document(bson_doc) = bson::to_bson(&doc)? {
             db.update_one(
                 bson::doc! {"_id": doc.id},
                 bson_doc,
@@ -479,7 +472,7 @@ pub async fn migrate_documents_to_db(
 /// Takes an unprocessed document with metadata, passing it through our TEI
 /// template to produce an xml document named like the given title.
 pub fn write_to_file(meta: DocumentMetadata, lines: &[SemanticLine]) -> Result<()> {
-    let mut tera = Tera::new("*")?;
+    let mut tera = tera::Tera::new("*")?;
     let annotated = lines
         .iter()
         .map(|line| AnnotatedLine::from_semantic(line))
@@ -794,7 +787,7 @@ const OUTPUT_DIR: &str = "../xml";
 
 pub async fn migrate_dictionaries(db: &Database) -> Result<()> {
     println!("Migrating DF1975 and DF2003 to database...");
-    let (df1975, df2003, root_nouns) = join!(
+    let (df1975, df2003, root_nouns) = futures::join!(
         SheetResult::from_sheet("11ssqdimOQc_hp3Zk8Y55m6DFfKR96OOpclUg5wcGSVE", None),
         SheetResult::from_sheet("18cKXgsfmVhRZ2ud8Cd7YDSHexs1ODHo6fkTPrmnwI1g", None),
         SheetResult::from_sheet("1XuQIKzhGf_mGCH4-bHNBAaQqTAJDNtPbNHjQDhszVRo", None)
@@ -807,7 +800,7 @@ pub async fn migrate_dictionaries(db: &Database) -> Result<()> {
     let dict = db.client.collection("dictionary");
     let entries = df1975.into_iter().chain(df2003).chain(root_nouns);
     join_all(entries.filter_map(|entry| {
-        if let bson::Bson::Document(bson_doc) = bson::to_bson(&entry).unwrap() {
+        if let Bson::Document(bson_doc) = bson::to_bson(&entry).unwrap() {
             Some(
                 dict.update_one(
                     bson::doc! {"_id": entry.id},

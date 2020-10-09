@@ -1,4 +1,3 @@
-use async_graphql;
 use serde::{Deserialize, Serialize};
 
 /// Represents a morphological gloss tag without commiting to a single representation.

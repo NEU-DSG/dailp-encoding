@@ -1,11 +1,6 @@
 use crate::{AnnotatedDoc, AnnotatedForm, DocumentType, LexicalEntry, MorphemeTag};
 use anyhow::Result;
-use async_graphql::*;
-use futures::join;
-use itertools::Itertools;
-use mongodb::{bson, options::ClientOptions, Client};
-use std::env;
-use tokio::stream::StreamExt;
+use mongodb::bson;
 
 #[derive(Clone)]
 pub struct Database {
@@ -14,7 +9,9 @@ pub struct Database {
 
 impl Database {
     pub async fn new() -> Result<Self> {
-        let login = env::var("MONGODB_LOGIN")?;
+        use mongodb::{options::ClientOptions, Client};
+
+        let login = std::env::var("MONGODB_LOGIN")?;
         let db_url = format!("mongodb+srv://{}@dailp-encoding.hgtma.mongodb.net/dailp-encoding?retryWrites=true&w=majority", login);
         let mut opts = ClientOptions::parse(&db_url).await?;
         opts.app_name = Some("DAILP Encoding".to_owned());
@@ -37,6 +34,9 @@ impl Database {
     /// For example, there may be multiple ways to pronounce a Cherokee word
     /// that glosses as "catch" in English.
     pub async fn morphemes(&self, gloss: String) -> Result<Vec<MorphemeReference>> {
+        use itertools::Itertools;
+        use tokio::stream::StreamExt;
+
         let dictionary = self.client.collection("dictionary");
         let documents = self.client.collection("annotated-documents");
 
@@ -55,7 +55,7 @@ impl Database {
         );
 
         // Retrieve both document and dictionary references at once.
-        let (dictionary_words, document_words) = join!(dictionary_words, document_words);
+        let (dictionary_words, document_words) = futures::join!(dictionary_words, document_words);
 
         let dictionary_words = dictionary_words?
             .map(|doc| {
@@ -91,6 +91,8 @@ impl Database {
     }
 
     pub async fn lexical_entries(&self, root_gloss: &str) -> Result<Vec<LexicalEntry>> {
+        use tokio::stream::StreamExt;
+
         Ok(self
             .client
             .collection("dictionary")
@@ -103,6 +105,9 @@ impl Database {
     }
 
     pub async fn words_by_doc(&self, gloss: &str) -> Vec<WordsInDocument> {
+        use itertools::Itertools;
+        use tokio::stream::StreamExt;
+
         let dictionary = self.client.collection("dictionary");
         let documents = self.client.collection("annotated-documents");
 
@@ -119,7 +124,7 @@ impl Database {
         );
 
         // Retrieve both document and dictionary references at once.
-        let (dictionary_words, document_words) = join!(dictionary_words, document_words);
+        let (dictionary_words, document_words) = futures::join!(dictionary_words, document_words);
 
         let dictionary_words = dictionary_words
             .unwrap()
@@ -179,7 +184,7 @@ impl Database {
 }
 
 /// One particular morpheme and all the known words that contain that exact morpheme.
-#[SimpleObject]
+#[async_graphql::SimpleObject]
 pub struct MorphemeReference {
     /// Phonemic shape of the morpheme.
     pub morpheme: String,
@@ -187,7 +192,7 @@ pub struct MorphemeReference {
     pub words: Vec<AnnotatedForm>,
 }
 
-#[SimpleObject]
+#[async_graphql::SimpleObject]
 pub struct WordsInDocument {
     pub document_id: Option<String>,
     pub document_type: Option<DocumentType>,

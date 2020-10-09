@@ -1,15 +1,7 @@
-use crate::database::Database;
-use crate::form::{AnnotatedForm, MorphemeSegment};
-use anyhow::Result;
-use async_graphql::SimpleObject;
-use futures::future::join_all;
-use futures::join;
-use itertools::Itertools;
-use mongodb::bson;
-use regex::Regex;
+use crate::{AnnotatedForm, MorphemeSegment};
 use serde::{Deserialize, Serialize};
 
-#[SimpleObject]
+#[async_graphql::SimpleObject]
 #[derive(Serialize, Deserialize, Debug)]
 pub struct LexicalEntry {
     #[serde(rename = "_id")]
@@ -155,7 +147,7 @@ pub fn convert_udb(input: &str) -> PhonemicString {
     // UDB represents glottal stops with the single quote.
     // TODO Move this to the output conversion step.
     let input = input.replace("'", "ʔ");
-    let pat = Regex::new("([^aeiouv]*)([aeiouv]:?)([!*`^\"])?").unwrap();
+    let pat = regex::Regex::new("([^aeiouv]*)([aeiouv]:?)([!*`^\"])?").unwrap();
     let mut syllables = Vec::new();
     for caps in pat.captures_iter(&input) {
         let consonant = &caps[1];
@@ -215,6 +207,7 @@ pub enum PhonemicString {
 }
 impl PhonemicString {
     pub fn to_dailp(self) -> String {
+        use itertools::Itertools;
         match self {
             PhonemicString::Form(all) => all.into_iter().map(|x| x.to_dailp()).join(""),
             PhonemicString::Consonant(s) => s,

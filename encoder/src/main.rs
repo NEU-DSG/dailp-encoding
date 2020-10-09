@@ -1,21 +1,17 @@
-use async_graphql::http::{GQLRequest, GQLResponse};
 use async_graphql::{
-    self, Context, EmptyMutation, EmptySubscription, FieldResult, IntoQueryBuilder, Schema,
+    http::{GQLRequest, GQLResponse},
+    Context, EmptyMutation, EmptySubscription, FieldResult, IntoQueryBuilder, Schema,
 };
-use async_once::AsyncOnce;
-use dailp::{
-    AnnotatedDoc, AnnotatedForm, Database, MorphemeReference, MorphemeTag, WordsInDocument,
-};
+use dailp::{AnnotatedDoc, Database, MorphemeReference, MorphemeTag, WordsInDocument};
 use lambda_http::{http::header::CONTENT_TYPE, lambda, IntoResponse, Request, Response};
-use lazy_static::lazy_static;
-use mongodb::{bson, bson::Bson};
-use tokio::stream::StreamExt;
 
 type Error = Box<dyn std::error::Error + Sync + Send + 'static>;
 
-lazy_static! {
+lazy_static::lazy_static! {
     // Share database connection between executions.
-    static ref CTX: AsyncOnce<Database> = AsyncOnce::new(async { Database::new().await.unwrap() });
+    static ref CTX: async_once::AsyncOnce<dailp::Database> = async_once::AsyncOnce::new(async {
+        dailp::Database::new().await.unwrap()
+    });
     static ref SCHEMA: Schema<Query, EmptyMutation, EmptySubscription> = Schema::new(Query, EmptyMutation, EmptySubscription);
 }
 
@@ -39,6 +35,8 @@ async fn main(req: Request, _: lambda::Context) -> Result<impl IntoResponse, Err
     }
 }
 
+use mongodb::bson;
+
 struct Query;
 
 #[async_graphql::Object(cache_control(max_age = 60))]
@@ -49,6 +47,8 @@ impl Query {
         context: &Context<'_>,
         collection: Option<String>,
     ) -> FieldResult<Vec<AnnotatedDoc>> {
+        use tokio::stream::StreamExt;
+
         Ok(context
             .data::<Database>()?
             .client

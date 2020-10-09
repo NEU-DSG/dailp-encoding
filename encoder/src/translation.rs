@@ -1,17 +1,12 @@
-use anyhow::Result;
-use async_graphql::*;
-use itertools::Itertools;
-use regex::Regex;
-use reqwest;
 use serde::{Deserialize, Serialize};
 
-#[SimpleObject]
+#[async_graphql::SimpleObject]
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Translation {
     pub blocks: Vec<TranslationBlock>,
 }
 
-#[SimpleObject]
+#[async_graphql::SimpleObject]
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct TranslationBlock {
     pub index: i32,
