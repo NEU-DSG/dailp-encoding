@@ -2,6 +2,7 @@ mod retrieve;
 
 use anyhow::Result;
 
+/// Migrates DAILP data from several Google spreadsheets to a MongoDB instance.
 #[tokio::main]
 async fn main() -> Result<()> {
     dotenv::dotenv().ok();

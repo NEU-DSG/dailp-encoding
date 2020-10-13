@@ -1,3 +1,6 @@
+//! This module handles the retrieval of data from Google Drive Spreadsheets and
+//! transforming that data into a usable format based on the data types
+//! specified in modules under `dailp`.
 use anyhow::Result;
 use dailp::{
     convert_udb, root_noun_surface_form, root_verb_surface_forms, AnnotatedDoc, AnnotatedForm,
@@ -12,34 +15,6 @@ use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, fs::File, io::Write, time::Duration};
 
 pub const GOOGLE_API_KEY: &str = "AIzaSyBqqPrkht_OeYUSNkSf_sc6UzNaFhzOVNI";
-
-#[derive(Debug, Serialize)]
-pub struct DocumentIndex {
-    pub sheet_ids: Vec<String>,
-}
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct AnnotationRow {
-    pub title: String,
-    pub items: Vec<String>,
-}
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct SemanticLine {
-    pub number: String,
-    pub rows: Vec<AnnotationRow>,
-    pub ends_page: bool,
-}
-impl SemanticLine {
-    /// Is this line devoid of any source or annotation information?
-    /// Usually indicates that this is an extra line at the end of a document.
-    fn is_empty(&self) -> bool {
-        self.rows.iter().all(|r| r.items.is_empty())
-    }
-}
-
-#[derive(Deserialize)]
-struct FileDetails {
-    web_content_link: String,
-}
 
 /// Result obtained directly from the raw Google sheet.
 #[derive(Debug, Serialize, Deserialize)]
@@ -353,6 +328,34 @@ impl DocResult {
             blocks: blocks.collect(),
         }
     }
+}
+
+#[derive(Debug, Serialize)]
+pub struct DocumentIndex {
+    pub sheet_ids: Vec<String>,
+}
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct AnnotationRow {
+    pub title: String,
+    pub items: Vec<String>,
+}
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct SemanticLine {
+    pub number: String,
+    pub rows: Vec<AnnotationRow>,
+    pub ends_page: bool,
+}
+impl SemanticLine {
+    /// Is this line devoid of any source or annotation information?
+    /// Usually indicates that this is an extra line at the end of a document.
+    fn is_empty(&self) -> bool {
+        self.rows.iter().all(|r| r.items.is_empty())
+    }
+}
+
+#[derive(Deserialize)]
+struct FileDetails {
+    web_content_link: String,
 }
 
 /// Cherokee has many functional morphemes that are documented.

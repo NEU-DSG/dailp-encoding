@@ -30,13 +30,12 @@ async fn main(req: Request, _: lambda::Context) -> Result<impl IntoResponse, Err
             .header("Access-Control-Allow-Origin", "*")
             .body(result)?;
         Ok(resp)
-    } else {
-        todo!()
     }
 }
 
 use mongodb::bson;
 
+/// Home for all read-only queries
 struct Query;
 
 #[async_graphql::Object(cache_control(max_age = 60))]
@@ -96,6 +95,9 @@ impl Query {
         Ok(context.data::<Database>()?.words_by_doc(&gloss).await)
     }
 
+    /// Retrieve information for the morpheme that corresponds to the given tag
+    /// string. For example, "3PL.B" is the standard string referring to a 3rd
+    /// person plural prefix.
     pub async fn morpheme_tag(
         &self,
         context: &Context<'_>,

@@ -1,17 +1,28 @@
 use crate::{AnnotatedForm, MorphemeSegment};
 use serde::{Deserialize, Serialize};
 
+/// A lexical entry is a form whose meaning cannot be created solely through
+/// semantic composition. In linguistic theory terms, our lexemes are
+/// semantically atomic forms rather than semantically complex forms.
+/// In English, lexical entries may be afforded for "kick," "the," and "bucket."
+/// By our definition, "kick the bucket" might have its own lexical entry
+/// because it has meaning beyond forcing your foot into a container.
 #[async_graphql::SimpleObject]
 #[derive(Serialize, Deserialize, Debug)]
 pub struct LexicalEntry {
     #[serde(rename = "_id")]
     pub id: String,
+    /// The phonemic shape of the root and it's semi-unique gloss tag
     pub root: MorphemeSegment,
+    /// Plain English translations of root's meaning
     pub root_translations: Vec<String>,
+    /// An owned collection of surface forms containing this root
     pub surface_forms: Vec<AnnotatedForm>,
+    /// The year this form was recorded
     pub year_recorded: i32,
 }
 
+/// Gather many verb surface forms from the given row.
 pub fn root_verb_surface_forms(
     doc_id: &str,
     root: &str,
@@ -26,21 +37,7 @@ pub fn root_verb_surface_forms(
     forms
 }
 
-fn all_tags(cols: &mut impl Iterator<Item = String>) -> (Vec<(String, String)>, Option<String>) {
-    let mut tags = Vec::new();
-    let mut cols = cols.by_ref().peekable();
-    // Tags are all uppercase, followed by the corresponding morpheme.
-    while let Some(true) = cols
-        .peek()
-        .map(|x| x.contains(|c: char| c.is_ascii_uppercase()))
-    {
-        if let (Some(a), Some(b)) = (cols.next(), cols.next()) {
-            tags.push((a, b));
-        }
-    }
-    (tags, cols.next())
-}
-
+/// Build a single verb surface form from the given row.
 pub fn root_verb_surface_form(
     doc_id: &str,
     root: &str,
@@ -92,6 +89,23 @@ pub fn root_verb_surface_form(
         page_break: None,
         document_id: Some(doc_id.to_owned()),
     })
+}
+
+/// Group all the morpheme shapes with their paired glosses, return them along
+/// with the phonemic shape of the whole root.
+fn all_tags(cols: &mut impl Iterator<Item = String>) -> (Vec<(String, String)>, Option<String>) {
+    let mut tags = Vec::new();
+    let mut cols = cols.by_ref().peekable();
+    // Tags are all uppercase, followed by the corresponding morpheme.
+    while let Some(true) = cols
+        .peek()
+        .map(|x| x.contains(|c: char| c.is_ascii_uppercase()))
+    {
+        if let (Some(a), Some(b)) = (cols.next(), cols.next()) {
+            tags.push((a, b));
+        }
+    }
+    (tags, cols.next())
 }
 
 /// TODO Convert all phonemic representations into the TAOC/DAILP format.

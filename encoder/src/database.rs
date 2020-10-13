@@ -2,6 +2,8 @@ use crate::{AnnotatedDoc, AnnotatedForm, DocumentType, LexicalEntry, MorphemeTag
 use anyhow::Result;
 use mongodb::bson;
 
+/// Connects to our backing database instance, providing high level functions
+/// for accessing the data therein.
 #[derive(Clone)]
 pub struct Database {
     pub client: mongodb::Database,
@@ -21,6 +23,7 @@ impl Database {
         })
     }
 
+    /// The document uniquely identified by the given string
     pub async fn document(&self, id: &str) -> Option<AnnotatedDoc> {
         self.client
             .collection("annotated-documents")
@@ -90,6 +93,7 @@ impl Database {
             .collect())
     }
 
+    /// All lexical entries that use the given gloss.
     pub async fn lexical_entries(&self, root_gloss: &str) -> Result<Vec<LexicalEntry>> {
         use tokio::stream::StreamExt;
 
@@ -104,6 +108,8 @@ impl Database {
             .await)
     }
 
+    /// All words containing a morpheme with the given gloss, grouped by the
+    /// document they are contained in.
     pub async fn words_by_doc(&self, gloss: &str) -> Vec<WordsInDocument> {
         use itertools::Itertools;
         use tokio::stream::StreamExt;
@@ -167,6 +173,7 @@ impl Database {
         document_words.chain(dictionary_words).collect()
     }
 
+    /// The tag details for the morpheme identified by the given string
     pub async fn morpheme_tag(&self, id: &str) -> Result<Option<MorphemeTag>> {
         Ok(self
             .client
@@ -192,9 +199,13 @@ pub struct MorphemeReference {
     pub words: Vec<AnnotatedForm>,
 }
 
+/// A list of words grouped by the document that contains them.
 #[async_graphql::SimpleObject]
 pub struct WordsInDocument {
+    /// Unique identifier of the containing document
     pub document_id: Option<String>,
+    /// What kind of document contains these words (e.g. manuscript vs dictionary)
     pub document_type: Option<DocumentType>,
+    /// List of annotated and potentially segmented forms
     pub words: Vec<AnnotatedForm>,
 }
