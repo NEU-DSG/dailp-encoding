@@ -1,14 +1,14 @@
-# DAILP Renderer
+# DAILP Website
 
 This package renders a static website using React and Gatsby that includes all annotated documents produced by the DAILP project.
 These documents are connected to a Cherokee lexical database using our GraphQL endpoint.
-The latest commit to the `master` branch is automatically deployed to [`dailp-encoding.surge.sh`](https://dailp-encoding.surge.sh).
+The latest commit to the `main` branch is automatically deployed to [`dailp.netlify.app`](https://dailp.netlify.app).
 
 <!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
 
 **Table of Contents**
 
-- [DAILP Renderer](#dailp-renderer)
+- [DAILP Website](#dailp-website)
   - [Navigating the Code](#navigating-the-code)
   - [Type-checking](#type-checking)
   - [Features of this approach](#features-of-this-approach)
