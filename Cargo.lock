@@ -420,7 +420,6 @@ dependencies = [
  "lambda_http",
  "lazy_static",
  "mongodb",
- "serde",
  "serde_json",
  "tokio",
 ]

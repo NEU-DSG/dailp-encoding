@@ -16,7 +16,7 @@ impl Database {
         let login = std::env::var("MONGODB_LOGIN")?;
         let db_url = format!("mongodb+srv://{}@dailp-encoding.hgtma.mongodb.net/dailp-encoding?retryWrites=true&w=majority", login);
         let mut opts = ClientOptions::parse(&db_url).await?;
-        opts.app_name = Some("DAILP Encoding".to_owned());
+        opts.app_name = Some("DAILP".to_owned());
         let client = Client::with_options(opts)?;
         Ok(Database {
             client: client.database("dailp-encoding"),

@@ -43,6 +43,8 @@ Thus, we define our types once in [the back-end](../encoder) and those definitio
 
 ## Stakeholder Testing
 
+The following is a sketch of how we have thought about approaching stakeholder testing and collaboration.
+
 1. Create multiple interface prototypes for different use cases. (see [Dow et al, 2010](https://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=&ved=2ahUKEwi94P3PppHsAhWlUt8KHXkUA7oQFjABegQIBBAB&url=http%3A%2F%2Fspdow.ucsd.edu%2Ffiles%2FPrototypingParallel-TOCHI10.pdf&usg=AOvVaw3Y9g1TBANvYS0fiy9-50dH) for the value of parallel prototyping)
 2. Present all prototypes together to stakeholders in each interest group: learners, experienced speakers, annotators, linguists, etc.
 3. Let them play around themselves in the interface. Show and tell can only go so far, and letting stakeholders interact directly with our work will give us much more valuable discussion and feedback.
