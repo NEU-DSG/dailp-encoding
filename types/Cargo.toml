@@ -1,0 +1,22 @@
+[package]
+name = "dailp"
+version = "0.2.0"
+authors = ["Taylor Snead <taylorsnead@gmail.com>"]
+edition = "2018"
+
+[lib]
+name = "dailp"
+path = "src/lib.rs"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+serde = {version = "1.0", features = ["derive"]}
+tera = "1"
+tokio = { version = "0.2", features = ["full", "time"] }
+anyhow = "1.0"
+itertools = "0.9"
+async-graphql = {git = "https://github.com/async-graphql/async-graphql", rev = "5f14325ef5bded27832a79c08d70034c1e5a9d6a"}
+futures = "0.3"
+mongodb = "1.1"
+regex = "1.3"

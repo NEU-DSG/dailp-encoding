@@ -30,6 +30,8 @@ async fn main(req: Request, _: lambda::Context) -> Result<impl IntoResponse, Err
             .header("Access-Control-Allow-Origin", "*")
             .body(result)?;
         Ok(resp)
+    } else {
+        todo!("Failed to parse lambda request.")
     }
 }
 

@@ -1,9 +1,5 @@
 {
   "name": "dailp-data",
-  "description": "description",
-  "version": "1.0.0",
-  "author": "Taylor Snead <taylorsnead@gmail.com>",
-  "license": "MIT",
   "scripts": {
     "deploy": "serverless deploy"
   },

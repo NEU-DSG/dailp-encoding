@@ -1,7 +1,7 @@
 {
-  "name": "dailp-renderer",
+  "name": "dailp-website",
   "version": "0.1.0",
-  "description": "",
+  "description": "Front-end for exploring Cherokee documents from DAILP",
   "scripts": {
     "start": "GATSBY_EXPERIMENTAL_QUERY_CONCURRENCY=1 gatsby develop",
     "build": "GATSBY_EXPERIMENTAL_QUERY_CONCURRENCY=1 gatsby build",
