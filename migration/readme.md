@@ -27,8 +27,6 @@ Then, simply navigate to this directory in a terminal and run the following:
 cargo run
 ```
 
-There are two main components to the `encoder`, one being
-
 ## Spreadsheet Standards
 
 All of the current markings are placed on the first row of each annotation line, which corresponds with the original source text in Cherokee syllabary.

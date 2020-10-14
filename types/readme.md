@@ -2,7 +2,7 @@
 
 This crate defines the data structure and type system used by the whole DAILP infrastructure, including [data migration](../migration), [GraphQL layer](../graphql), and the [front-end](../website).
 
-## Implementation Resources
+## Potential Resources
 
 - [`sophia`](https://github.com/pchampin/sophia_rs): Rust library for managing Linked Data in RDF and JSON-LD.
   Directly useful for querying LD or constructing our LD endpoints.

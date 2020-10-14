@@ -29,8 +29,8 @@ Other components in the [`src`](src) folder are general components to be used in
 Our whole stack is type-checked.
 When data from spreadsheets and other sources are pulled into our database, its format is verified and data types are enforced.
 The GraphQL layer mediating access to this data uses the exact same data types, automatically providing access to them in the GraphQL schema.
-The front-end build process ingests the GraphQL schema on demand to produce [data types](graphql-types.ts) compatible with Typescript/Javascript.
-Thus, we define our types once in [the back-end](../encoder) and those definitions propagate all the way here.
+The front-end build process ingests the GraphQL schema on demand to produce [TypeScript types](src/__generated__/gatsby-types.d.ts).
+Thus, we define our types once in the [back-end](../types) and those definitions propagate all the way here.
 
 ## Features of this approach
 
