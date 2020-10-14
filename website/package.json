@@ -5,7 +5,6 @@
   "scripts": {
     "start": "GATSBY_EXPERIMENTAL_QUERY_CONCURRENCY=1 gatsby develop",
     "build": "GATSBY_EXPERIMENTAL_QUERY_CONCURRENCY=1 gatsby build",
-    "deploy": "npm run build && surge public dailp-encoding-react.surge.sh",
     "clean": "gatsby clean"
   },
   "keywords": [],
@@ -56,7 +55,6 @@
     "gatsby-source-graphql": "^2.7.1",
     "linaria": "^1.4.0-beta.10",
     "prettier": "^1.19.1",
-    "surge": "^0.21.6",
     "typescript": "^3.8.3"
   },
   "prettier": {

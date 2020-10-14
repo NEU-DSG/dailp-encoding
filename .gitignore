@@ -15,3 +15,8 @@ target/
 .env
 
 public/
+
+.serverless/
+.cache/
+.log/
+.linaria-cache/

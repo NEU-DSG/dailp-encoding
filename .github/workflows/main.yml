@@ -49,9 +49,8 @@ jobs:
           aws-region: us-east-1
       - name: Deploy GraphQL to AWS via Serverless
         run: |
-          cd graphql
-          yarn
-          yarn deploy
+          yarn install
+          yarn deploy-graphql
       - name: Publish website to Netlify
         uses: netlify/actions/build@master
         env:

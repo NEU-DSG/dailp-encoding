@@ -1,7 +1,7 @@
 {
-  "name": "dailp-data",
+  "private": true,
   "scripts": {
-    "deploy": "serverless deploy"
+    "deploy-graphql": "serverless deploy"
   },
   "devDependencies": {
     "serverless": "^2.6.0",

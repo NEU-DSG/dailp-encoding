@@ -12,7 +12,6 @@ The latest commit to the `main` branch is automatically deployed to [`dailp.netl
   - [Navigating the Code](#navigating-the-code)
   - [Type-checking](#type-checking)
   - [Features of this approach](#features-of-this-approach)
-  - [Stakeholder Testing](#stakeholder-testing)
 
 <!-- markdown-toc end -->
 
@@ -40,23 +39,3 @@ Thus, we define our types once in the [back-end](../types) and those definitions
 - Uses [`typescript`](https://www.typescriptlang.org/) to provide compile-time type safety and validation to Javascript.
 - Uses [`linaria`](https://github.com/callstack/linaria) for styling so that we can write scoped styles that live directly on React components without managing CSS classes.
   Incurs zero runtime overhead as styles are extracted into CSS files at build time.
-
-## Stakeholder Testing
-
-The following is a sketch of how we have thought about approaching stakeholder testing and collaboration.
-
-1. Create multiple interface prototypes for different use cases. (see [Dow et al, 2010](https://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=&ved=2ahUKEwi94P3PppHsAhWlUt8KHXkUA7oQFjABegQIBBAB&url=http%3A%2F%2Fspdow.ucsd.edu%2Ffiles%2FPrototypingParallel-TOCHI10.pdf&usg=AOvVaw3Y9g1TBANvYS0fiy9-50dH) for the value of parallel prototyping)
-2. Present all prototypes together to stakeholders in each interest group: learners, experienced speakers, annotators, linguists, etc.
-3. Let them play around themselves in the interface. Show and tell can only go so far, and letting stakeholders interact directly with our work will give us much more valuable discussion and feedback.
-4. Ask them each questions about their experience, here are some examples:
-   - "Would you use this?"
-   - "Did one of these interfaces feel more intuitive or useful to you?"
-   - "How could each interface be better?"
-   - "Does this serve your needs as an X?"
-   - "Does this respect your community and position in that community?"
-5. Not only on their experience, but solicit feedback on how they themselves and tech-literate members of their community would feel most comfortable contributing to and participating in further development.
-   Then we can change our process to facilitate that kind of involvement.
-6. Iterate on all of the prototypes separately based on the feedback received.
-7. Involve some of the same people and some new people in testing out these refined prototypes, to recognize where we've improved (or not) and where we stand in fresh eyes.
-8. Consolidate these prototypes where possible while providing these same stakeholders with a link to our active working primary interface, and to our GitHub repository.
-9. Solicit feedback on a single refined prototype that will become the production release candidate.
