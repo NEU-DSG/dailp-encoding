@@ -10,5 +10,13 @@ yarn-error.log*
 *.tsbuildinfo
 .npm
 .eslintcache
+target/
+.auctex-auto/
+.env
 
 public/
+
+.serverless/
+.cache/
+.log/
+.linaria-cache/

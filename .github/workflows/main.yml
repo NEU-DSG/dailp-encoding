@@ -9,6 +9,10 @@ on:
     branches: [main]
   workflow_dispatch:
 
+env:
+  MONGODB_LOGIN: ${{ secrets.MONGODB_LOGIN }}
+  GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   # This workflow contains a single job called "build"
@@ -26,19 +30,17 @@ jobs:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
-            encoder/target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('Cargo.lock') }}
       - uses: satackey/action-docker-layer-caching@v0.0.8
         # Ignore the failure of a step and avoid terminating the job.
         continue-on-error: true
       - uses: actions/setup-node@v1
         with: { node-version: 10 }
       - name: Encode documents as TEI and database entries
-        env:
-          MONGODB_LOGIN: ${{ secrets.MONGODB_LOGIN }}
         run: |
-          cd encoder
-          cargo run --bin encoder
+          cd migration
+          cargo run
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -46,17 +48,11 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
       - name: Deploy GraphQL to AWS via Serverless
-        env:
-          MONGODB_LOGIN: ${{ secrets.MONGODB_LOGIN }}
         run: |
-          cd encoder
-          npm install
-          npm run deploy
+          yarn install
+          yarn deploy-graphql
       - name: Publish website to Netlify
         uses: netlify/actions/build@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
-          NETLIFY_BASE: renderer
-          NETLIFY_CMD: npm run build
-          NETLIFY_DIR: renderer/public
