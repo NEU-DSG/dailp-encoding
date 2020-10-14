@@ -1,0 +1,2 @@
+[workspace]
+members = ["types", "graphql", "migration"]

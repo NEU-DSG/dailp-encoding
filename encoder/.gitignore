@@ -1,5 +1,0 @@
-target/
-./secrets.json
-output/
-.serverless/
-node_modules/
