@@ -1,20 +1,84 @@
 //! This module handles the retrieval of data from Google Drive Spreadsheets and
 //! transforming that data into a usable format based on the data types
 //! specified in modules under `dailp`.
+
+use crate::translations::DocResult;
 use anyhow::Result;
 use dailp::{
     convert_udb, root_noun_surface_form, root_verb_surface_forms, AnnotatedDoc, AnnotatedForm,
     AnnotatedPhrase, AnnotatedSeg, BlockType, Database, DocumentMetadata, LexicalEntry, LineBreak,
-    MorphemeSegment, MorphemeTag, PageBreak, Translation, TranslationBlock,
+    MorphemeSegment, PageBreak,
 };
-use futures::future::join_all;
 use futures_retry::{FutureRetry, RetryPolicy};
-use itertools::Itertools;
 use mongodb::bson::{self, Bson};
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, fs::File, io::Write, time::Duration};
 
-pub const GOOGLE_API_KEY: &str = "AIzaSyBqqPrkht_OeYUSNkSf_sc6UzNaFhzOVNI";
+// Define the delimeters used in spreadsheets for marking phrases, blocks,
+// lines, and pages.
+const PHRASE_START: &str = "[";
+const PHRASE_END: &str = "]";
+const LINE_BREAK: &str = "\\";
+const PAGE_BREAK: &str = "\\\\";
+const BLOCK_START: &str = "{";
+const BLOCK_END: &str = "}";
+const OUTPUT_DIR: &str = "../xml";
+
+/// Converts a set of annotated documents into our preferred access format, then
+/// pushes that data into the underlying database.
+/// Existing versions of these documents are overwritten with the new data.
+pub async fn migrate_documents_to_db(
+    inputs: Vec<(DocumentMetadata, Vec<SemanticLine>)>,
+    db: &Database,
+) -> Result<()> {
+    println!("Migrating documents to database...");
+
+    // Combine the documents into one object.
+    let docs = inputs.into_iter().map(|(meta, lines)| {
+        let annotated = AnnotatedLine::many_from_semantic(&lines);
+        let segments = AnnotatedLine::to_segments(annotated, &meta.id);
+        AnnotatedDoc::new(meta, segments)
+    });
+
+    // Write the contents of each document to our database.
+    let db = db.client.collection("annotated-documents");
+    for doc in docs {
+        if let Bson::Document(bson_doc) = bson::to_bson(&doc)? {
+            db.update_one(
+                bson::doc! {"_id": doc.id},
+                bson_doc,
+                mongodb::options::UpdateOptions::builder()
+                    .upsert(true)
+                    .build(),
+            )
+            .await?;
+        } else {
+            eprintln!("Failed to make document!");
+        }
+    }
+
+    Ok(())
+}
+
+/// Takes an unprocessed document with metadata, passing it through our TEI
+/// template to produce an xml document named like the given title.
+pub fn write_to_file(meta: DocumentMetadata, lines: &[SemanticLine]) -> Result<()> {
+    let mut tera = tera::Tera::new("*")?;
+    let annotated = AnnotatedLine::many_from_semantic(lines);
+    let file_name = format!("{}/{}.xml", OUTPUT_DIR, meta.id);
+    println!("writing to {}", file_name);
+    tera.register_filter("convert_breaks", convert_breaks);
+    let segments = AnnotatedLine::to_segments(annotated, &meta.id);
+    let contents = tera.render(
+        "template.tera.xml",
+        &tera::Context::from_serialize(AnnotatedDoc::new(meta, segments))?,
+    )?;
+    // Make sure the output folder exists.
+    std::fs::create_dir_all(OUTPUT_DIR)?;
+    let mut f = File::create(file_name)?;
+    f.write(contents.as_bytes())?;
+    Ok(())
+}
 
 /// Result obtained directly from the raw Google sheet.
 #[derive(Debug, Serialize, Deserialize)]
@@ -24,6 +88,7 @@ pub struct SheetResult {
     /// The line number sits in the first cell of the first row of each semantic line.
     pub values: Vec<Vec<String>>,
 }
+
 impl SheetResult {
     pub async fn from_sheet(sheet_id: &str, sheet_name: Option<&str>) -> Result<Self> {
         let (t, _attempt) = FutureRetry::new(
@@ -35,10 +100,11 @@ impl SheetResult {
         Ok(t)
     }
     async fn from_sheet_weak(sheet_id: &str, sheet_name: Option<&str>) -> Result<Self> {
+        let api_key = std::env::var("GOOGLE_API_KEY")?;
         let sheet_name = sheet_name.map_or_else(|| String::new(), |n| format!("{}!", n));
         Ok(reqwest::get(&format!(
             "https://sheets.googleapis.com/v4/spreadsheets/{}/values/{}A1:ZZ?key={}",
-            sheet_id, sheet_name, GOOGLE_API_KEY
+            sheet_id, sheet_name, api_key
         ))
         .await?
         .json::<SheetResult>()
@@ -265,86 +331,24 @@ impl SheetResult {
     }
 }
 
-/// Result obtained directly from the raw Google sheet.
-#[derive(Deserialize)]
-pub struct DocResult {
-    /// Each element here represents one row.
-    /// Semantic lines in our documents are delimited by empty rows.
-    /// The line number sits in the first cell of the first row of each semantic line.
-    body: String,
-}
-impl DocResult {
-    pub async fn new(doc_id: &str) -> Result<Self> {
-        let r = reqwest::get(&format!(
-            "https://www.googleapis.com/drive/v3/files/{}/export?mimeType=text/plain&key={}",
-            doc_id, GOOGLE_API_KEY
-        ))
-        .await?;
-        Ok(Self {
-            body: r.text().await?,
-        })
-    }
-
-    pub fn to_translation(self) -> Translation {
-        let ends_with_footnote = regex::Regex::new(r"\[\d+\]").unwrap();
-        let text_runs = self
-            .body
-            // Split the translation text by lines.
-            .lines()
-            .map(|s| s.trim())
-            // Group consecutive non-empty lines together.
-            .group_by(|s| s.is_empty());
-        let blocks = text_runs
-            .into_iter()
-            // Only keep non-empty runs of text.
-            .filter_map(|(empty, lines)| {
-                if !empty {
-                    Some(lines.collect::<Vec<&str>>())
-                } else {
-                    None
-                }
-            })
-            // Ignore text past the first horizontal line.
-            .take_while(|text| !text[0].starts_with("________"))
-            // Split sentences into separate segments.
-            .map(|text| {
-                text.into_iter()
-                    .flat_map(|s| s.split("."))
-                    // Remove footnotes.
-                    .map(|text| ends_with_footnote.replace_all(text, "").into_owned())
-            })
-            // Include the block index.
-            .enumerate()
-            .map(|(index, content)| TranslationBlock {
-                index: index as i32 + 1,
-                segments: content
-                    .into_iter()
-                    .filter(|s| !s.is_empty())
-                    .map(|s| s.to_owned())
-                    .collect(),
-            });
-
-        Translation {
-            blocks: blocks.collect(),
-        }
-    }
-}
-
 #[derive(Debug, Serialize)]
 pub struct DocumentIndex {
     pub sheet_ids: Vec<String>,
 }
+
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct AnnotationRow {
     pub title: String,
     pub items: Vec<String>,
 }
+
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct SemanticLine {
     pub number: String,
     pub rows: Vec<AnnotationRow>,
     pub ends_page: bool,
 }
+
 impl SemanticLine {
     /// Is this line devoid of any source or annotation information?
     /// Usually indicates that this is an extra line at the end of a document.
@@ -356,140 +360,6 @@ impl SemanticLine {
 #[derive(Deserialize)]
 struct FileDetails {
     web_content_link: String,
-}
-
-/// Cherokee has many functional morphemes that are documented.
-/// Pulls all the details we have about each morpheme from our spreadsheets,
-/// parses it into typed data, then updates the database entry for each.
-pub async fn migrate_tags(db: &Database) -> Result<()> {
-    println!("Migrating tags to database...");
-
-    let (pp_tags, combined_pp, prepronominals, modals, nominal, refl, clitics) = futures::join!(
-        SheetResult::from_sheet("1D0JZEwE-dj-fKppbosaGhT7Xyyy4lVxmgG02tpEi8nw", None),
-        SheetResult::from_sheet("1OMzkbDGY1BqPR_ZwJRe4-F5_I12Ao5OJqqMp8Ej_ZhE", None),
-        SheetResult::from_sheet("12v5fqtOztwwLeEaKQJGMfziwlxP4n60riMsN9dYw9Xc", None),
-        SheetResult::from_sheet("1QWYWFeK6xy7zciIliizeW2hBfuRPNk6dK5rGJf2pdNc", None),
-        SheetResult::from_sheet("1MCooadB1bTIKmi_uXBv93DMsv6CyF-L979XOLbFGGgM", None),
-        SheetResult::from_sheet("1Q_q_1MZbmZ-g0bmj1sQouFFDnLBINGT3fzthPgqgkqo", None),
-        SheetResult::from_sheet("1inyNSJSbISFLwa5fBs4Sj0UUkNhXBokuNRxk7wVQF5A", None),
-    );
-
-    let pp_tags = parse_tags(pp_tags?, 3, 7).await?;
-    let combined_pp = parse_tags(combined_pp?, 2, 6).await?;
-    let prepronominals = parse_tags(prepronominals?, 3, 8).await?;
-    let modals = parse_tags(modals?, 4, 5).await?;
-    let nominal = parse_tags(nominal?, 7, 5).await?;
-    let refl = parse_tags(refl?, 4, 4).await?;
-    let clitics = parse_tags(clitics?, 4, 4).await?;
-
-    let dict = db.client.collection("tags");
-    for entry in pp_tags
-        .into_iter()
-        .chain(combined_pp)
-        .chain(modals)
-        .chain(prepronominals)
-        .chain(refl)
-        .chain(clitics)
-        .chain(nominal)
-    {
-        if let Bson::Document(bson_doc) = bson::to_bson(&entry).unwrap() {
-            dict.update_one(
-                bson::doc! {"_id": entry.id},
-                bson_doc,
-                mongodb::options::UpdateOptions::builder()
-                    .upsert(true)
-                    .build(),
-            )
-            .await?;
-        }
-    }
-
-    Ok(())
-}
-
-/// Transforms a spreadsheet of morpheme information into a list of type-safe tag objects.
-async fn parse_tags(
-    sheet: SheetResult,
-    num_allomorphs: usize,
-    gap_to_crg: usize,
-) -> Result<Vec<MorphemeTag>> {
-    use rayon::prelude::*;
-    Ok(sheet
-        .values
-        .into_par_iter()
-        // The first row is headers.
-        .skip(1)
-        // There are a few empty spacing rows to ignore.
-        .filter(|row| !row.is_empty())
-        .filter_map(|row| {
-            // Skip over allomorphs, and instead allow them to emerge from our texts.
-            let mut cols = row.into_iter().skip(num_allomorphs);
-            Some(MorphemeTag {
-                id: cols.next()?,
-                name: cols.next()?.trim().to_owned(),
-                simple: String::new(),
-                morpheme_type: cols.clone().skip(1).next()?.trim().to_owned(),
-                // Each sheet has a different number of columns.
-                crg: cols.skip(gap_to_crg).next()?,
-            })
-        })
-        .collect())
-}
-
-/// Converts a set of annotated documents into our preferred access format, then
-/// pushes that data into the underlying database.
-/// Existing versions of these documents are overwritten with the new data.
-pub async fn migrate_documents_to_db(
-    inputs: Vec<(DocumentMetadata, Vec<SemanticLine>)>,
-    db: &Database,
-) -> Result<()> {
-    println!("Migrating documents to database...");
-
-    // Combine the documents into one object.
-    let docs = inputs.into_iter().map(|(meta, lines)| {
-        let annotated = AnnotatedLine::many_from_semantic(&lines);
-        let segments = AnnotatedLine::to_segments(annotated, &meta.id);
-        AnnotatedDoc::new(meta, segments)
-    });
-
-    // Write the contents of each document to our database.
-    let db = db.client.collection("annotated-documents");
-    for doc in docs {
-        if let Bson::Document(bson_doc) = bson::to_bson(&doc)? {
-            db.update_one(
-                bson::doc! {"_id": doc.id},
-                bson_doc,
-                mongodb::options::UpdateOptions::builder()
-                    .upsert(true)
-                    .build(),
-            )
-            .await?;
-        } else {
-            eprintln!("Failed to make document!");
-        }
-    }
-
-    Ok(())
-}
-
-/// Takes an unprocessed document with metadata, passing it through our TEI
-/// template to produce an xml document named like the given title.
-pub fn write_to_file(meta: DocumentMetadata, lines: &[SemanticLine]) -> Result<()> {
-    let mut tera = tera::Tera::new("*")?;
-    let annotated = AnnotatedLine::many_from_semantic(lines);
-    let file_name = format!("{}/{}.xml", OUTPUT_DIR, meta.id);
-    println!("writing to {}", file_name);
-    tera.register_filter("convert_breaks", convert_breaks);
-    let segments = AnnotatedLine::to_segments(annotated, &meta.id);
-    let contents = tera.render(
-        "template.tera.xml",
-        &tera::Context::from_serialize(AnnotatedDoc::new(meta, segments))?,
-    )?;
-    // Make sure the output folder exists.
-    std::fs::create_dir_all(OUTPUT_DIR)?;
-    let mut f = File::create(file_name)?;
-    f.write(contents.as_bytes())?;
-    Ok(())
 }
 
 #[derive(Serialize, Deserialize)]
@@ -724,46 +594,4 @@ pub fn convert_breaks(
     } else {
         Ok(value.clone())
     }
-}
-
-const PHRASE_START: &str = "[";
-const PHRASE_END: &str = "]";
-const LINE_BREAK: &str = "\\";
-const PAGE_BREAK: &str = "\\\\";
-const BLOCK_START: &str = "{";
-const BLOCK_END: &str = "}";
-const OUTPUT_DIR: &str = "../xml";
-
-pub async fn migrate_dictionaries(db: &Database) -> Result<()> {
-    println!("Migrating DF1975 and DF2003 to database...");
-    let (df1975, df2003, root_nouns) = futures::join!(
-        SheetResult::from_sheet("11ssqdimOQc_hp3Zk8Y55m6DFfKR96OOpclUg5wcGSVE", None),
-        SheetResult::from_sheet("18cKXgsfmVhRZ2ud8Cd7YDSHexs1ODHo6fkTPrmnwI1g", None),
-        SheetResult::from_sheet("1XuQIKzhGf_mGCH4-bHNBAaQqTAJDNtPbNHjQDhszVRo", None)
-    );
-
-    let df1975 = df1975?.into_df1975("DF1975", 1975, true)?;
-    let df2003 = df2003?.into_df1975("DF2003", 2003, false)?;
-    let root_nouns = root_nouns?.into_nouns("DF1975", 1975)?;
-
-    let dict = db.client.collection("dictionary");
-    let entries = df1975.into_iter().chain(df2003).chain(root_nouns);
-    join_all(entries.filter_map(|entry| {
-        if let Bson::Document(bson_doc) = bson::to_bson(&entry).unwrap() {
-            Some(
-                dict.update_one(
-                    bson::doc! {"_id": entry.id},
-                    bson_doc,
-                    mongodb::options::UpdateOptions::builder()
-                        .upsert(true)
-                        .build(),
-                ),
-            )
-        } else {
-            None
-        }
-    }))
-    .await;
-
-    Ok(())
 }
