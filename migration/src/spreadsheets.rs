@@ -31,8 +31,6 @@ pub async fn migrate_documents_to_db(
     inputs: Vec<(DocumentMetadata, Vec<SemanticLine>)>,
     db: &Database,
 ) -> Result<()> {
-    println!("Migrating documents to database...");
-
     // Combine the documents into one object.
     let docs = inputs.into_iter().map(|(meta, lines)| {
         let annotated = AnnotatedLine::many_from_semantic(&lines);
@@ -63,7 +61,7 @@ pub async fn migrate_documents_to_db(
 /// Takes an unprocessed document with metadata, passing it through our TEI
 /// template to produce an xml document named like the given title.
 pub fn write_to_file(meta: DocumentMetadata, lines: &[SemanticLine]) -> Result<()> {
-    let mut tera = tera::Tera::new("*")?;
+    let mut tera = tera::Tera::new("*.tera.xml")?;
     let annotated = AnnotatedLine::many_from_semantic(lines);
     let file_name = format!("{}/{}.xml", OUTPUT_DIR, meta.id);
     println!("writing to {}", file_name);
@@ -233,12 +231,14 @@ impl SheetResult {
         let mut doc_id = values
             .next()
             .ok_or_else(|| anyhow::format_err!("No Document ID"))?;
-        let _genre = values
+        let mut genre = values
             .next()
             .ok_or_else(|| anyhow::format_err!("No genre"))?;
+        genre.remove(0);
         let mut source = values
             .next()
             .ok_or_else(|| anyhow::format_err!("No source"))?;
+        source.remove(0);
         let mut title = values
             .next()
             .ok_or_else(|| anyhow::format_err!("No title"))?;
@@ -251,16 +251,26 @@ impl SheetResult {
         let mut translations = values
             .next()
             .ok_or_else(|| anyhow::format_err!("No Translations"))?;
+        let page_images = values
+            .next()
+            // Remove the row title.
+            .map(|mut x| {
+                x.remove(0);
+                x
+            })
+            // Assume no images if the row is missing.
+            .unwrap_or_default();
         Ok(DocumentMetadata {
             id: doc_id.remove(1),
             title: title.remove(1),
             publication: None,
             people: Vec::new(),
-            source: Some(source.remove(1)),
+            source: source.pop(),
+            genre: genre.pop(),
             translation: DocResult::new(&translations.remove(1))
                 .await?
                 .to_translation(),
-            image_url: None,
+            page_images,
         })
     }
 
