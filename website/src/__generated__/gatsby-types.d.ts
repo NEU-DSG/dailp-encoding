@@ -46,6 +46,11 @@ type Dailp = {
    * Groups these words by the document containing them.
    */
   readonly morphemesByDocument: ReadonlyArray<Dailp_WordsInDocument>;
+  /**
+   * Retrieve information for the morpheme that corresponds to the given tag
+   * string. For example, "3PL.B" is the standard string referring to a 3rd
+   * person plural prefix.
+   */
   readonly morphemeTag: Maybe<Dailp_MorphemeTag>;
 };
 
@@ -132,15 +137,22 @@ type Dailp_AnnotatedPhrase = {
 
 type Dailp_AnnotatedSeg = Dailp_AnnotatedPhrase | Dailp_AnnotatedForm | Dailp_LineBreak | Dailp_PageBreak;
 
-type Dailp_Block = {
-  readonly index: Scalars['Int'];
-  /** Each segment represents a sentence or line in the translation. */
-  readonly segments: ReadonlyArray<Scalars['String']>;
-};
-
 enum Dailp_BlockType {
   BLOCK = 'BLOCK',
   PHRASE = 'PHRASE'
+}
+
+enum Dailp_CherokeeOrthography {
+  /**
+   * The d/t system for transcribing the Cherokee syllabary.
+   * This orthography is favored by native speakers.
+   */
+  DT = 'DT',
+  /**
+   * The t/th system for transcribing the Cherokee syllabary.
+   * This orthography is favored by linguists as it is segmentally more accurate.
+   */
+  TTH = 'TTH'
 }
 
 enum Dailp_DocumentType {
@@ -148,11 +160,23 @@ enum Dailp_DocumentType {
   CORPUS = 'CORPUS'
 }
 
+/**
+ * A lexical entry is a form whose meaning cannot be created solely through
+ * semantic composition. In linguistic theory terms, our lexemes are
+ * semantically atomic forms rather than semantically complex forms.
+ * In English, lexical entries may be afforded for "kick," "the," and "bucket."
+ * By our definition, "kick the bucket" might have its own lexical entry
+ * because it has meaning beyond forcing your foot into a container.
+ */
 type Dailp_LexicalEntry = {
   readonly id: Scalars['String'];
+  /** The phonemic shape of the root and it's semi-unique gloss tag */
   readonly root: Dailp_MorphemeSegment;
+  /** Plain English translations of root's meaning */
   readonly rootTranslations: ReadonlyArray<Scalars['String']>;
+  /** An owned collection of surface forms containing this root */
   readonly surfaceForms: ReadonlyArray<Dailp_AnnotatedForm>;
+  /** The year this form was recorded */
   readonly yearRecorded: Scalars['Int'];
 };
 
@@ -185,7 +209,12 @@ type Dailp_MorphemeSegment = {
   readonly lexicalEntries: ReadonlyArray<Dailp_LexicalEntry>;
 };
 
-/** Represents a morphological gloss tag without commiting to a single representation. */
+
+type Dailp_MorphemeSegment_morphemeArgs = {
+  system: Maybe<Dailp_CherokeeOrthography>;
+};
+
+/** Represents a morphological gloss tag without committing to a single representation. */
 type Dailp_MorphemeTag = {
   /** Standard annotation tag for this morpheme, defined by DAILP. */
   readonly id: Scalars['String'];
@@ -205,14 +234,28 @@ type Dailp_PageBreak = {
 
 type Dailp_TranslatedSection = {
   /** Translation of this portion of the source text. */
-  readonly translation: Dailp_Block;
+  readonly translation: Dailp_TranslationBlock;
   /** Source text from the original document. */
   readonly source: Dailp_AnnotatedSeg;
 };
 
+/**
+ * One block or paragraph of a translation document that should correspond to a
+ * block of original text. One block may contain several segments (or sentences).
+ */
+type Dailp_TranslationBlock = {
+  readonly index: Scalars['Int'];
+  /** Each segment represents a sentence or line in the translation. */
+  readonly segments: ReadonlyArray<Scalars['String']>;
+};
+
+/** A list of words grouped by the document that contains them. */
 type Dailp_WordsInDocument = {
+  /** Unique identifier of the containing document */
   readonly documentId: Maybe<Scalars['String']>;
+  /** What kind of document contains these words (e.g. manuscript vs dictionary) */
   readonly documentType: Maybe<Dailp_DocumentType>;
+  /** List of annotated and potentially segmented forms */
   readonly words: ReadonlyArray<Dailp_AnnotatedForm>;
 };
 
@@ -2230,7 +2273,7 @@ type AnnotatedDocumentQuery = { readonly dailp: { readonly document: Maybe<(
         ) | (
           { readonly __typename: 'Dailp_AnnotatedForm' }
           & FormFieldsFragment
-        ) | { readonly __typename: 'Dailp_LineBreak' } | { readonly __typename: 'Dailp_PageBreak' }, readonly translation: Pick<Dailp_Block, 'segments'> }>> }
+        ) | { readonly __typename: 'Dailp_LineBreak' } | { readonly __typename: 'Dailp_PageBreak' }, readonly translation: Pick<Dailp_TranslationBlock, 'segments'> }>> }
     )> } };
 
 type CollectionQueryVariables = Exact<{

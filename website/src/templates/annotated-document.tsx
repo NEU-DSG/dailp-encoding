@@ -29,7 +29,6 @@ const AnnotatedDocumentPage = (p: {
   const experienceLevel = useRadioState({
     state: Number.parseInt(Cookies.get("experienceLevel") ?? "0"),
   })
-  // const tagSet = useRadioState({ state: TagSet.Dailp })
 
   // Save the selected experience level throughout the session.
   useEffect(() => {
@@ -69,7 +68,9 @@ const AnnotatedDocumentPage = (p: {
                   ? TagSet.Dailp
                   : TagSet.Crg
               }
-              translations={seg.translation as GatsbyTypes.Dailp_Block}
+              translations={
+                seg.translation as GatsbyTypes.Dailp_TranslationBlock
+              }
             />
           ))}
         </AnnotationSection>
