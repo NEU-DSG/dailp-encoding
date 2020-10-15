@@ -3,7 +3,7 @@ import { graphql, Link } from "gatsby"
 import { styled } from "linaria/react"
 import { Helmet } from "react-helmet"
 import slugify from "slugify"
-import { useDialogState, Dialog } from "reakit/Dialog"
+import { useDialogState, Dialog, DialogBackdrop } from "reakit/Dialog"
 import {
   Radio,
   RadioGroup,
@@ -47,11 +47,13 @@ const AnnotatedDocumentPage = (p: {
       </Helmet>
 
       <AnnotatedDocument>
-        <MorphemeDialog {...dialog} aria-label="Morpheme Details">
-          {selectedMorpheme ? (
-            <MorphemeDetails segment={selectedMorpheme} dialog={dialog} />
-          ) : null}
-        </MorphemeDialog>
+        <MorphemeDialogBackdrop {...dialog}>
+          <MorphemeDialog {...dialog} aria-label="Morpheme Details">
+            {selectedMorpheme ? (
+              <MorphemeDetails segment={selectedMorpheme} dialog={dialog} />
+            ) : null}
+          </MorphemeDialog>
+        </MorphemeDialogBackdrop>
 
         <header>
           <h2>{doc.title}</h2>
@@ -176,6 +178,12 @@ const MorphemeDialog = styled(Dialog)`
   padding: 1rem;
   max-height: 80vh;
   overflow-y: scroll;
+`
+
+const MorphemeDialogBackdrop = styled(DialogBackdrop)`
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.2);
 `
 
 const AnnotatedDocument = styled.main`

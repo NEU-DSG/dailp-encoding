@@ -88,6 +88,8 @@ type Dailp_AnnotatedDoc = {
   readonly publication: Maybe<Scalars['String']>;
   /** Where the source document came from, maybe the name of a collection. */
   readonly collection: Maybe<Scalars['String']>;
+  /** The genre of the document, used to group similar ones. */
+  readonly genre: Maybe<Scalars['String']>;
   /** Images of each source document page, in order. */
   readonly pageImages: ReadonlyArray<Scalars['String']>;
   /** Segments of the document paired with their respective rough translations. */
@@ -2298,6 +2300,6 @@ type PagesQueryQuery = { readonly allSitePage: { readonly nodes: ReadonlyArray<P
 type IndexPageQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-type IndexPageQuery = { readonly dailp: { readonly allDocuments: ReadonlyArray<Pick<Dailp_AnnotatedDoc, 'id' | 'title' | 'collection'>> } };
+type IndexPageQuery = { readonly dailp: { readonly allDocuments: ReadonlyArray<Pick<Dailp_AnnotatedDoc, 'id' | 'title' | 'collection' | 'genre'>> } };
 
 }
