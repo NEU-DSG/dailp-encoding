@@ -41,7 +41,9 @@ jobs:
       - uses: actions/setup-node@v1
         with: { node-version: 10 }
       - name: Encode documents as TEI and database entries
-        run: cargo run -p dailp-migration
+        run: |
+          cd migration
+          cargo run
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
