@@ -104,6 +104,41 @@ impl AnnotatedForm {
     }
 }
 
+#[async_graphql::Enum]
+pub enum CherokeeOrthography {
+    /// The d/t system for transcribing the Cherokee syllabary.
+    /// This orthography is favored by native speakers.
+    /// TODO Option for /ts/ instead of /j/
+    /// TODO Option for /qu/ instead of /gw/ or /kw/
+    Dt,
+    /// The t/th system for transcribing the Cherokee syllabary.
+    /// This orthography is favored by linguists as it is segmentally more accurate.
+    Tth,
+}
+
+fn convert_tth_to_dt(input: &str, keep_glottal_stops: bool) -> String {
+    use {lazy_static::*, regex::Captures, regex::Regex};
+    lazy_static! {
+        static ref TTH_PATTERN: Regex = Regex::new(r"(kh|th|k|t|c|ʔ)").unwrap();
+    }
+    let result = TTH_PATTERN.replace_all(input, |cap: &Captures| match &cap[0] {
+        "kh" => "k",
+        "th" => "t",
+        "k" => "g",
+        "t" => "d",
+        "c" => "j",
+        "ʔ" => {
+            if keep_glottal_stops {
+                "ʔ"
+            } else {
+                "'"
+            }
+        }
+        _ => unreachable!(),
+    });
+    result.into_owned()
+}
+
 /// A single unit of meaning and its corresponding English gloss.
 #[derive(Serialize, Clone, Deserialize, Debug)]
 pub struct MorphemeSegment {
@@ -119,8 +154,11 @@ impl MorphemeSegment {
 #[async_graphql::Object(cache_control(max_age = 60))]
 impl MorphemeSegment {
     /// Phonemic representation of the morpheme
-    async fn morpheme(&self) -> &str {
-        &self.morpheme
+    async fn morpheme(&self, system: Option<CherokeeOrthography>) -> String {
+        match system {
+            Some(CherokeeOrthography::Dt) => convert_tth_to_dt(&self.morpheme, false),
+            _ => self.morpheme.clone(),
+        }
     }
 
     /// English gloss in standard DAILP format

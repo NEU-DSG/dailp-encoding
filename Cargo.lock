@@ -400,6 +400,7 @@ dependencies = [
  "async-graphql",
  "futures",
  "itertools",
+ "lazy_static",
  "mongodb",
  "regex",
  "serde",
