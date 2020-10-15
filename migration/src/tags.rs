@@ -7,8 +7,6 @@ use mongodb::bson::{self, Bson};
 /// Pulls all the details we have about each morpheme from our spreadsheets,
 /// parses it into typed data, then updates the database entry for each.
 pub async fn migrate_tags(db: &Database) -> Result<()> {
-    println!("Migrating tags to database...");
-
     let (pp_tags, combined_pp, prepronominals, modals, nominal, refl, clitics) = futures::join!(
         SheetResult::from_sheet("1D0JZEwE-dj-fKppbosaGhT7Xyyy4lVxmgG02tpEi8nw", None),
         SheetResult::from_sheet("1OMzkbDGY1BqPR_ZwJRe4-F5_I12Ao5OJqqMp8Ej_ZhE", None),

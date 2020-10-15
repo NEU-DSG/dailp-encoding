@@ -16,6 +16,7 @@ interface Props {
   level: ExperienceLevel
   translations: GatsbyTypes.Dailp_TranslationBlock
   tagSet: TagSet
+  pageImages: readonly string[]
 }
 
 /** Displays one segment of the document, which may be a word, block, or phrase. */
@@ -33,6 +34,7 @@ export const Segment = (p: Props) => {
           level={p.level}
           translations={p.translations}
           tagSet={p.tagSet}
+          pageImages={p.pageImages}
         />
       )) ?? null
 
@@ -51,10 +53,18 @@ export const Segment = (p: Props) => {
     } else {
       return <>{children}</>
     }
+  } else if (isPageBreak(p.segment)) {
+    return <PageImage src={p.pageImages[p.segment.index]} />
   } else {
     return null
   }
 }
+
+const PageImage = styled.img`
+  margin-top: 2rem;
+  width: 100%;
+  height: auto;
+`
 
 function isForm(
   seg: GatsbyTypes.Dailp_AnnotatedSeg
@@ -70,7 +80,9 @@ function isPageBreak(
   seg: GatsbyTypes.Dailp_AnnotatedSeg
 ): seg is GatsbyTypes.Dailp_PageBreak {
   return (
-    "__typename" in seg && (seg["__typename"] as string).endsWith("PageBreak")
+    "__typename" in seg &&
+    (seg["__typename"] as string).endsWith("PageBreak") &&
+    "index" in seg
   )
 }
 
@@ -109,7 +121,12 @@ const MorphemicSegmentation = (p: {
       </WordSegment>
     )),
     // Add dashes between all morphemes for more visible separation.
-    _i => <MorphemeDivider showPhonemicLayer={p.showPhonemicLayer} />
+    i => (
+      <MorphemeDivider
+        key={100 * (i + 1)}
+        showPhonemicLayer={p.showPhonemicLayer}
+      />
+    )
   )
   return <GlossLine>{segmentDivs}</GlossLine>
 }
@@ -155,7 +172,7 @@ const MorphemeButton = styled(DialogDisclosure)`
   font-size: inherit;
   color: inherit;
   border: none;
-  padding: 0px 8px;
+  padding: 0px 0.2rem;
   cursor: pointer;
   border-bottom: 1px solid transparent;
   &:hover {
@@ -190,14 +207,14 @@ const AnnotatedForm = (
 }
 
 const WordGroup = styled(Group)`
-  margin: 16px 20px;
-  margin-bottom: 48px;
+  margin: 1rem 1.5rem;
+  margin-bottom: 2rem;
 `
 
 const TranslationPara = styled.p`
-  margin: 0 16px;
+  margin: 0 1rem;
 `
 
 const DocumentBlock = styled.div`
-  margin: 4em 0;
+  margin: 3rem 0;
 `

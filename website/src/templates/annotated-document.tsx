@@ -35,6 +35,11 @@ const AnnotatedDocumentPage = (p: {
     Cookies.set("experienceLevel", experienceLevel.state!.toString())
   }, [experienceLevel.state])
 
+  const tagSet =
+    experienceLevel.state! > ExperienceLevel.Intermediate
+      ? TagSet.Dailp
+      : TagSet.Crg
+
   return (
     <Layout>
       <Helmet>
@@ -63,14 +68,11 @@ const AnnotatedDocumentPage = (p: {
               dialog={dialog}
               onOpenDetails={setMorpheme}
               level={experienceLevel.state! as ExperienceLevel}
-              tagSet={
-                experienceLevel.state! > ExperienceLevel.Intermediate
-                  ? TagSet.Dailp
-                  : TagSet.Crg
-              }
+              tagSet={tagSet}
               translations={
                 seg.translation as GatsbyTypes.Dailp_TranslationBlock
               }
+              pageImages={doc.pageImages}
             />
           ))}
         </AnnotationSection>
@@ -109,21 +111,6 @@ const ExperiencePicker = (p: { radio: RadioStateReturn }) => {
   )
 }
 
-const TagSetPicker = (p: { radio: RadioStateReturn }) => {
-  return (
-    <RadioGroup {...p.radio}>
-      {Object.keys(TagSet)
-        .filter(l => isNaN(Number(l)))
-        .map((level: string) => (
-          <label key={level}>
-            <Radio {...p.radio} value={TagSet[level as keyof typeof TagSet]} />
-            {level}
-          </label>
-        ))}
-    </RadioGroup>
-  )
-}
-
 export const query = graphql`
   query AnnotatedDocument($id: String!) {
     dailp {
@@ -131,6 +118,7 @@ export const query = graphql`
         id
         title
         collection
+        pageImages
         translatedSegments {
           source {
             ... on Dailp_AnnotatedForm {
@@ -138,6 +126,9 @@ export const query = graphql`
             }
             ... on Dailp_AnnotatedPhrase {
               ...BlockFields
+            }
+            ... on Dailp_PageBreak {
+              index
             }
           }
           translation {
@@ -180,7 +171,7 @@ const MorphemeDialog = styled(Dialog)`
   transform: translate(-50%, -50%);
   background-color: white;
   border: 1px solid black;
-  padding: 16px;
+  padding: 1rem;
   max-height: 80vh;
   overflow-y: scroll;
 `
