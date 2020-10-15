@@ -48,7 +48,9 @@ const AnnotatedDocumentPage = (p: {
 
       <AnnotatedDocument>
         <MorphemeDialog {...dialog} aria-label="Morpheme Details">
-          <MorphemeDetails segment={selectedMorpheme} dialog={dialog} />
+          {selectedMorpheme ? (
+            <MorphemeDetails segment={selectedMorpheme} dialog={dialog} />
+          ) : null}
         </MorphemeDialog>
 
         <header>

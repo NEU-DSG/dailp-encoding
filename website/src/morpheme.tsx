@@ -5,7 +5,7 @@ import _ from "lodash"
 
 /** Specific details about some morpheme */
 export const MorphemeDetails = (props: {
-  segment: GatsbyTypes.Dailp_MorphemeSegment | null
+  segment: GatsbyTypes.Dailp_MorphemeSegment
   dialog: any
 }) => (
   <>
