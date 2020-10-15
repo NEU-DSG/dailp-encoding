@@ -108,6 +108,8 @@ impl AnnotatedForm {
 pub enum CherokeeOrthography {
     /// The d/t system for transcribing the Cherokee syllabary.
     /// This orthography is favored by native speakers.
+    /// TODO Option for /ts/ instead of /j/
+    /// TODO Option for /qu/ instead of /gw/ or /kw/
     Dt,
     /// The t/th system for transcribing the Cherokee syllabary.
     /// This orthography is favored by linguists as it is segmentally more accurate.
@@ -154,7 +156,7 @@ impl MorphemeSegment {
     /// Phonemic representation of the morpheme
     async fn morpheme(&self, system: Option<CherokeeOrthography>) -> String {
         match system {
-            Some(CherokeeOrthography::Dt) => convert_tth_to_dt(&self.morpheme, true),
+            Some(CherokeeOrthography::Dt) => convert_tth_to_dt(&self.morpheme, false),
             _ => self.morpheme.clone(),
         }
     }
