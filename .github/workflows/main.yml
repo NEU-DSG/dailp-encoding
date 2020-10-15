@@ -7,6 +7,9 @@ name: CI
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - "**/README.md"
+      - "**/readme.md"
   workflow_dispatch:
 
 env:
@@ -38,9 +41,7 @@ jobs:
       - uses: actions/setup-node@v1
         with: { node-version: 10 }
       - name: Encode documents as TEI and database entries
-        run: |
-          cd migration
-          cargo run
+        run: cargo run -p dailp-migration
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:

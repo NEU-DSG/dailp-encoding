@@ -162,7 +162,7 @@ export const query = graphql`
     simplePhonetics
     phonemic
     segments {
-      morpheme
+      morpheme(system: DT)
       gloss
       matchingTag {
         crg
