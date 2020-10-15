@@ -11,7 +11,11 @@ async fn main() -> Result<()> {
     dotenv::dotenv().ok();
     let db = dailp::Database::new().await?;
     migrate_data(&db).await?;
+
+    println!("Migrating tags to database...");
     tags::migrate_tags(&db).await?;
+
+    println!("Migrating DF1975 and DF2003 to database...");
     lexical::migrate_dictionaries(&db).await?;
     Ok(())
 }
@@ -35,6 +39,8 @@ async fn migrate_data(db: &dailp::Database) -> Result<()> {
         items.push(fetch_sheet(sheet_id).await?);
     }
 
+    println!("Writing all manuscripts to TEI...");
+
     // Write out all the XML in parallel.
     let results: Vec<_> = items
         .par_iter()
@@ -44,6 +50,9 @@ async fn migrate_data(db: &dailp::Database) -> Result<()> {
     for r in results {
         r?;
     }
+
+    println!("Migrating documents to database...");
+
     spreadsheets::migrate_documents_to_db(items, db).await?;
     Ok(())
 }

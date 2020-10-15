@@ -1,5 +1,5 @@
 {# -*- mode: web; -*- #}
-{% import "macros.xml" as macros %}
+{% import "macros.tera.xml" as macros %}
 <?xml version="1.0" encoding="UTF-8"?>
 <?xml-model href="schema/out/dailp_odd.rng" type="application/xml" schematypens="http://relaxng.org/ns/structure/1.0"?>
 <TEI xmlns="http://www.tei-c.org/ns/1.0" xmlns:d="https://dsg.northeastern.edu/dailp/ns/1.0">

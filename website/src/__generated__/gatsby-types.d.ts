@@ -88,6 +88,10 @@ type Dailp_AnnotatedDoc = {
   readonly publication: Maybe<Scalars['String']>;
   /** Where the source document came from, maybe the name of a collection. */
   readonly collection: Maybe<Scalars['String']>;
+  /** The genre of the document, used to group similar ones. */
+  readonly genre: Maybe<Scalars['String']>;
+  /** Images of each source document page, in order. */
+  readonly pageImages: ReadonlyArray<Scalars['String']>;
   /** Segments of the document paired with their respective rough translations. */
   readonly translatedSegments: Maybe<ReadonlyArray<Dailp_TranslatedSection>>;
   /**
@@ -146,6 +150,8 @@ enum Dailp_CherokeeOrthography {
   /**
    * The d/t system for transcribing the Cherokee syllabary.
    * This orthography is favored by native speakers.
+   * TODO Option for /ts/ instead of /j/
+   * TODO Option for /qu/ instead of /gw/ or /kw/
    */
   DT = 'DT',
   /**
@@ -2266,14 +2272,17 @@ type AnnotatedDocumentQueryVariables = Exact<{
 
 
 type AnnotatedDocumentQuery = { readonly dailp: { readonly document: Maybe<(
-      Pick<Dailp_AnnotatedDoc, 'id' | 'title' | 'collection'>
+      Pick<Dailp_AnnotatedDoc, 'id' | 'title' | 'collection' | 'pageImages'>
       & { readonly translatedSegments: Maybe<ReadonlyArray<{ readonly source: (
           { readonly __typename: 'Dailp_AnnotatedPhrase' }
           & BlockFieldsFragment
         ) | (
           { readonly __typename: 'Dailp_AnnotatedForm' }
           & FormFieldsFragment
-        ) | { readonly __typename: 'Dailp_LineBreak' } | { readonly __typename: 'Dailp_PageBreak' }, readonly translation: Pick<Dailp_TranslationBlock, 'segments'> }>> }
+        ) | { readonly __typename: 'Dailp_LineBreak' } | (
+          { readonly __typename: 'Dailp_PageBreak' }
+          & Pick<Dailp_PageBreak, 'index'>
+        ), readonly translation: Pick<Dailp_TranslationBlock, 'segments'> }>> }
     )> } };
 
 type CollectionQueryVariables = Exact<{
@@ -2291,6 +2300,6 @@ type PagesQueryQuery = { readonly allSitePage: { readonly nodes: ReadonlyArray<P
 type IndexPageQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-type IndexPageQuery = { readonly dailp: { readonly allDocuments: ReadonlyArray<Pick<Dailp_AnnotatedDoc, 'id' | 'title' | 'collection'>> } };
+type IndexPageQuery = { readonly dailp: { readonly allDocuments: ReadonlyArray<Pick<Dailp_AnnotatedDoc, 'id' | 'title' | 'collection' | 'genre'>> } };
 
 }

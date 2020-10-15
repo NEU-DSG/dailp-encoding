@@ -8,11 +8,13 @@ pub struct AnnotatedDoc {
     pub title: String,
     pub publication: Option<String>,
     pub collection: Option<String>,
+    pub genre: Option<String>,
     /// The people involved in collecting, translating, annotating.
     #[serde(default)]
     pub people: Vec<String>,
+    #[serde(default)]
+    pub page_images: Vec<String>,
     pub segments: Option<Vec<TranslatedSection>>,
-    pub image_url: Option<String>,
 }
 impl AnnotatedDoc {
     pub fn new(meta: DocumentMetadata, segments: Vec<AnnotatedSeg>) -> Self {
@@ -21,7 +23,9 @@ impl AnnotatedDoc {
             title: meta.title,
             publication: meta.publication,
             collection: meta.source,
+            genre: meta.genre,
             people: meta.people,
+            page_images: meta.page_images,
             segments: Some(
                 segments
                     .into_iter()
@@ -32,7 +36,6 @@ impl AnnotatedDoc {
                     })
                     .collect(),
             ),
-            image_url: None,
         }
     }
 }
@@ -57,6 +60,16 @@ impl AnnotatedDoc {
     /// Where the source document came from, maybe the name of a collection.
     async fn collection(&self) -> &Option<String> {
         &self.collection
+    }
+
+    /// The genre of the document, used to group similar ones.
+    async fn genre(&self) -> &Option<String> {
+        &self.genre
+    }
+
+    /// Images of each source document page, in order.
+    async fn page_images(&self) -> &Vec<String> {
+        &self.page_images
     }
 
     /// Segments of the document paired with their respective rough translations.
@@ -160,10 +173,11 @@ pub struct DocumentMetadata {
     pub publication: Option<String>,
     /// Where the source document came from, maybe the name of a collection.
     pub source: Option<String>,
+    pub genre: Option<String>,
     /// The people involved in collecting, translating, annotating.
     pub people: Vec<String>,
     /// Rough translation of the document, broken down by paragraph.
     pub translation: Translation,
     /// URL for an image of the original physical document.
-    pub image_url: Option<String>,
+    pub page_images: Vec<String>,
 }
