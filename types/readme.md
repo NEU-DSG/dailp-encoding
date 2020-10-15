@@ -2,6 +2,18 @@
 
 This crate defines the data structure and type system used by the whole DAILP infrastructure, including [data migration](../migration), [GraphQL layer](../graphql), and the [front-end](../website).
 
+## Basic Guide
+
+There are a few key types to understand about our handling of annotated manuscripts and Cherokee lexical sources.
+
+An [`AnnotatedDoc`](src/document.rs) represents one manuscript broken down word by word (generally referred to as "forms").
+It has several fields of metadata, like its `title`, `id`, or `collection`.
+The meat of the `AnnotatedDoc` is its `segments`, which is a list of segments which may each be a `AnnotatedForm`, block (contains segments), or line break.
+
+An [`AnnotatedForm`](src/form.rs) is a single word located in some document that has multiple layers of representation.
+In DAILP's Cherokee data, those layers are typically the source text, simple phonetics, phonemic representation, morphemic segmentation, and an English gloss.
+Each `AnnotatedForm` always knows what document it came from, retaining a sense of source and concrete reference.
+
 ## Potential Resources
 
 - [`sophia`](https://github.com/pchampin/sophia_rs): Rust library for managing Linked Data in RDF and JSON-LD.

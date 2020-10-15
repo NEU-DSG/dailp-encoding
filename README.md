@@ -1,13 +1,21 @@
 # DAILP
 
-This is a repository for the data structure and website code of the Digital Archive of American Indian Languages Preservation and Perseverance project.
+This is a repository for the data structure and website code of the Digital Archive of American Indian Languages Preservation and Perseverance ([DAILP](https://dailp.northeastern.edu)) project at [Northeastern University](https://northeastern.edu).
 Explore Cherokee manuscripts and language data at our website [dailp.netlify.app](https://dailp.netlify.app).
 
 ![CI](https://github.com/NEU-DSG/dailp-encoding/workflows/CI/badge.svg)
 
-To trigger a new deploy of our data, go [here](https://github.com/NEU-DSG/dailp-encoding/actions?query=workflow%3ACI) and click `Run workflow`.
+For maintainers: to trigger a new deploy of our data, go [here](https://github.com/NEU-DSG/dailp-encoding/actions?query=workflow%3ACI) and click `Run workflow`.
 This process pulls in all our annotated spreadsheets, puts them into our database and converts them to TEI.
-The job also runs automatically every time a commit is pushed to the `main` branch, and deploys the [`website`](website) on [Netlify](https://www.netlify.com/).
+The job also runs automatically every time a commit is pushed to the `main` branch, and deploys the website on [Netlify](https://www.netlify.com/).
+
+## Plans
+
+This project is a **prototype** intended to gather stakeholder feedback on the utility and usability of our interface for exploring Cherokee texts.
+We are building out this web interface to drive our decisions on data structures that may outlast the current website.
+This prototype is likely to change quickly in significant ways, especially as we pursue technical integration with greater [Digital Scholarship Group](https://dsg.northeastern.edu/) infrastructure near the end of 2020 and early 2021.
+
+In the meantime, feel free to make an issue if you have feedback, suggestions, questions, or problems!
 
 ## Project Structure
 
@@ -23,7 +31,7 @@ Each directory has its own `README` with further information.
 
 ## Stakeholder Testing
 
-The following is a sketch of how we have thought about approaching stakeholder testing and collaboration.
+The following is a sketch of how we might approaching stakeholder testing and collaboration.
 
 1. Create multiple interface prototypes for different use cases. (see [Dow et al, 2010](https://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=&ved=2ahUKEwi94P3PppHsAhWlUt8KHXkUA7oQFjABegQIBBAB&url=http%3A%2F%2Fspdow.ucsd.edu%2Ffiles%2FPrototypingParallel-TOCHI10.pdf&usg=AOvVaw3Y9g1TBANvYS0fiy9-50dH) for the value of parallel prototyping)
 2. Present all prototypes together to stakeholders in each interest group: learners, experienced speakers, annotators, linguists, etc.

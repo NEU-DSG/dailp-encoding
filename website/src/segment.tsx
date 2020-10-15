@@ -14,7 +14,7 @@ interface Props {
   dialog: any
   onOpenDetails: (morpheme: GatsbyTypes.Dailp_MorphemeSegment) => void
   level: ExperienceLevel
-  translations: GatsbyTypes.Dailp_Block
+  translations: GatsbyTypes.Dailp_TranslationBlock
   tagSet: TagSet
 }
 
