@@ -14,7 +14,7 @@ import Layout from "../layout"
 import { MorphemeDetails } from "../morpheme"
 import { Segment, BasicMorphemeSegment } from "../segment"
 import Cookies from "js-cookie"
-import { fullWidth } from "../theme"
+import { fullWidth, largeDialog } from "../theme"
 
 /** A full annotated document, including all metadata and the translation(s) */
 const AnnotatedDocumentPage = (p: {
@@ -181,6 +181,7 @@ export const query = graphql`
 `
 
 const MorphemeDialog = styled(Dialog)`
+  ${largeDialog}
   position: fixed;
   top: 50%;
   left: 50%;
@@ -189,7 +190,7 @@ const MorphemeDialog = styled(Dialog)`
   border: 1px solid black;
   padding: 1rem;
   max-height: 80vh;
-  width: max-content;
+  min-height: 20rem;
   max-width: 100vw;
   overflow-y: scroll;
 `

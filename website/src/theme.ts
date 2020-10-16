@@ -35,4 +35,14 @@ export const fullWidth = {
   },
 }
 
+export const largeDialog = {
+  width: "95%",
+  [theme.mediaQueries.medium]: {
+    width: "35rem",
+  },
+  [theme.mediaQueries.large]: {
+    width: "45rem",
+  },
+}
+
 export default theme
