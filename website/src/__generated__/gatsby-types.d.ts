@@ -225,7 +225,7 @@ type Dailp_MorphemeTag = {
   /** Standard annotation tag for this morpheme, defined by DAILP. */
   readonly id: Scalars['String'];
   /** Alternate form that conveys a simple English representation. */
-  readonly simple: Scalars['String'];
+  readonly simple: Maybe<Scalars['String']>;
   /** Alternate form of this morpheme from Cherokee Reference Grammar. */
   readonly crg: Scalars['String'];
   /** English title */
@@ -2249,41 +2249,6 @@ type StringQueryOperatorInput = {
   readonly regex: Maybe<Scalars['String']>;
   readonly glob: Maybe<Scalars['String']>;
 };
-
-type FormFieldsFragment = (
-  Pick<Dailp_AnnotatedForm, 'index' | 'source' | 'simplePhonetics' | 'phonemic' | 'englishGloss' | 'commentary'>
-  & { readonly segments: ReadonlyArray<(
-    Pick<Dailp_MorphemeSegment, 'morpheme' | 'gloss'>
-    & { readonly matchingTag: Maybe<Pick<Dailp_MorphemeTag, 'crg'>> }
-  )> }
-);
-
-type BlockFieldsFragment = (
-  Pick<Dailp_AnnotatedPhrase, 'ty' | 'index'>
-  & { readonly parts: ReadonlyArray<{ readonly __typename: 'Dailp_AnnotatedPhrase' } | (
-    { readonly __typename: 'Dailp_AnnotatedForm' }
-    & FormFieldsFragment
-  ) | { readonly __typename: 'Dailp_LineBreak' } | { readonly __typename: 'Dailp_PageBreak' }> }
-);
-
-type AnnotatedDocumentQueryVariables = Exact<{
-  id: Scalars['String'];
-}>;
-
-
-type AnnotatedDocumentQuery = { readonly dailp: { readonly document: Maybe<(
-      Pick<Dailp_AnnotatedDoc, 'id' | 'title' | 'collection' | 'pageImages'>
-      & { readonly translatedSegments: Maybe<ReadonlyArray<{ readonly source: (
-          { readonly __typename: 'Dailp_AnnotatedPhrase' }
-          & BlockFieldsFragment
-        ) | (
-          { readonly __typename: 'Dailp_AnnotatedForm' }
-          & FormFieldsFragment
-        ) | { readonly __typename: 'Dailp_LineBreak' } | (
-          { readonly __typename: 'Dailp_PageBreak' }
-          & Pick<Dailp_PageBreak, 'index'>
-        ), readonly translation: Pick<Dailp_TranslationBlock, 'segments'> }>> }
-    )> } };
 
 type CollectionQueryVariables = Exact<{
   name: Scalars['String'];

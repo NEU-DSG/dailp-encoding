@@ -2,10 +2,11 @@ import React from "react"
 import { Link } from "gatsby"
 import { useQuery, gql } from "@apollo/client"
 import _ from "lodash"
+import { BasicMorphemeSegment } from "./segment"
 
 /** Specific details about some morpheme */
 export const MorphemeDetails = (props: {
-  segment: GatsbyTypes.Dailp_MorphemeSegment
+  segment: BasicMorphemeSegment
   dialog: any
 }) => (
   <>
