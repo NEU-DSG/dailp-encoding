@@ -112,6 +112,7 @@ fn all_tags(cols: &mut impl Iterator<Item = String>) -> (Vec<(String, String)>, 
 /// TODO Store forms in any format with a tag defining the format so that
 /// GraphQL can do the conversion instead of the migration process.
 pub fn root_noun_surface_form(
+    doc_id: &str,
     root: &str,
     root_gloss: &str,
     cols: &mut impl Iterator<Item = String>,
@@ -150,7 +151,7 @@ pub fn root_noun_surface_form(
         commentary: None,
         line_break: None,
         page_break: None,
-        document_id: None,
+        document_id: Some(doc_id.to_owned()),
     })
 }
 
