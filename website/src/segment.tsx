@@ -8,11 +8,14 @@ import {
   AnnotationSection,
   TagSet,
 } from "./templates/annotated-document"
+import theme from "./theme"
+
+export type BasicMorphemeSegment = GatsbyTypes.FormFieldsFragment["segments"][0]
 
 interface Props {
   segment: GatsbyTypes.Dailp_AnnotatedSeg
   dialog: any
-  onOpenDetails: (morpheme: GatsbyTypes.Dailp_MorphemeSegment) => void
+  onOpenDetails: (morpheme: BasicMorphemeSegment) => void
   level: ExperienceLevel
   translations: GatsbyTypes.Dailp_TranslationBlock
   tagSet: TagSet
@@ -41,34 +44,28 @@ export const Segment = (p: Props) => {
     if (p.segment.ty === "BLOCK") {
       return (
         <DocumentBlock>
-          <TranslationPara>
-            {p.translations?.segments.join(". ") ?? null}.
-          </TranslationPara>
           <AnnotationSection>
             {children}
             <div style={{ flexGrow: 1 }} aria-hidden={true} />
           </AnnotationSection>
+          <TranslationPara>
+            {p.translations?.segments.join(". ") ?? null}.
+          </TranslationPara>
         </DocumentBlock>
       )
     } else {
       return <>{children}</>
     }
-  } else if (isPageBreak(p.segment)) {
-    return <PageImage src={p.pageImages[p.segment.index]} />
+    // } else if (isPageBreak(p.segment)) {
+    // return <PageImage src={p.pageImages[p.segment.index]} />
   } else {
     return null
   }
 }
 
-const PageImage = styled.img`
-  margin-top: 2rem;
-  width: 100%;
-  height: auto;
-`
-
 function isForm(
   seg: GatsbyTypes.Dailp_AnnotatedSeg
-): seg is GatsbyTypes.Dailp_AnnotatedForm {
+): seg is GatsbyTypes.FormFieldsFragment {
   return "source" in seg
 }
 function isPhrase(
@@ -91,11 +88,11 @@ function isPageBreak(
  * glosses for each morpheme.
  */
 const MorphemicSegmentation = (p: {
-  segments: readonly GatsbyTypes.Dailp_MorphemeSegment[]
+  segments: GatsbyTypes.FormFieldsFragment["segments"]
   tagSet: TagSet
   dialog: any
   onOpenDetails: any
-  showPhonemicLayer: boolean
+  showAdvanced: boolean
 }) => {
   // If there is no segmentation, return two line breaks for the
   // morphemic segmentation and morpheme gloss layers.
@@ -103,7 +100,7 @@ const MorphemicSegmentation = (p: {
     return (
       <>
         <br />
-        {p.showPhonemicLayer ? <br /> : null}
+        <br />
       </>
     )
   }
@@ -111,7 +108,7 @@ const MorphemicSegmentation = (p: {
   const segmentDivs = intersperse(
     p.segments.map((segment, i) => (
       <WordSegment key={i}>
-        {p.showPhonemicLayer ? segment.morpheme : null}
+        {p.showAdvanced ? segment.morpheme : segment.simpleMorpheme}
         <MorphemeSegment
           segment={segment}
           tagSet={p.tagSet}
@@ -121,12 +118,7 @@ const MorphemicSegmentation = (p: {
       </WordSegment>
     )),
     // Add dashes between all morphemes for more visible separation.
-    i => (
-      <MorphemeDivider
-        key={100 * (i + 1)}
-        showPhonemicLayer={p.showPhonemicLayer}
-      />
-    )
+    (i) => <MorphemeDivider key={100 * (i + 1)} showAdvanced={p.showAdvanced} />
   )
   return <GlossLine>{segmentDivs}</GlossLine>
 }
@@ -135,23 +127,26 @@ export function intersperse<T>(arr: T[], separator: (n: number) => T): T[] {
   return _.flatMap(arr, (a, i) => (i > 0 ? [separator(i - 1), a] : [a]))
 }
 
-const MorphemeDivider = (p: { showPhonemicLayer: boolean }) => (
+const MorphemeDivider = (p: { showAdvanced: boolean }) => (
   <WordSegment>
     <span>-</span>
-    {p.showPhonemicLayer ? <span>-</span> : null}
+    <span>-</span>
   </WordSegment>
 )
 
 /** One morpheme that can be clicked to see further details. */
 const MorphemeSegment = (p: {
-  segment: GatsbyTypes.Dailp_MorphemeSegment
+  segment: BasicMorphemeSegment
   tagSet: TagSet
   dialog: any
-  onOpenDetails: (segment: GatsbyTypes.Dailp_MorphemeSegment) => void
+  onOpenDetails: Props["onOpenDetails"]
 }) => {
   let gloss = p.segment.gloss
-  if (p.tagSet === TagSet.Crg) {
-    gloss = p.segment.matchingTag?.crg ?? p.segment.gloss
+  if (p.tagSet === TagSet.Learner) {
+    gloss =
+      p.segment.matchingTag?.learner ??
+      p.segment.matchingTag?.crg ??
+      p.segment.gloss
   }
   return (
     <MorphemeButton {...p.dialog} onClick={() => p.onOpenDetails(p.segment)}>
@@ -172,7 +167,7 @@ const MorphemeButton = styled(DialogDisclosure)`
   font-size: inherit;
   color: inherit;
   border: none;
-  padding: 0px 0.2rem;
+  padding: 0;
   cursor: pointer;
   border-bottom: 1px solid transparent;
   &:hover {
@@ -186,18 +181,19 @@ const GlossLine = styled.span`
 `
 
 const AnnotatedForm = (
-  p: Props & { segment: GatsbyTypes.Dailp_AnnotatedForm }
+  p: Props & { segment: GatsbyTypes.FormFieldsFragment }
 ) => {
+  const showSegments = p.level > ExperienceLevel.Basic
   return (
     <WordGroup id={`w${p.segment.index}`}>
-      <div>{p.segment.source}</div>
+      <SyllabaryLayer>{p.segment.source}</SyllabaryLayer>
       <div>{p.segment.simplePhonetics ?? <br />}</div>
-      {p.level > ExperienceLevel.Beginner ? (
+      {showSegments ? (
         <MorphemicSegmentation
           segments={p.segment.segments}
           dialog={p.dialog}
           onOpenDetails={p.onOpenDetails}
-          showPhonemicLayer={p.level > ExperienceLevel.Intermediate}
+          showAdvanced={p.level > ExperienceLevel.Learner}
           tagSet={p.tagSet}
         />
       ) : null}
@@ -207,14 +203,19 @@ const AnnotatedForm = (
 }
 
 const WordGroup = styled(Group)`
-  margin: 1rem 1.5rem;
+  margin: 1rem ${theme.edgeSpacing};
   margin-bottom: 2rem;
 `
 
+const SyllabaryLayer = styled.div`
+  font-size: 1.1rem;
+`
+
 const TranslationPara = styled.p`
-  margin: 0 1rem;
+  margin: 0 ${theme.edgeSpacing};
 `
 
 const DocumentBlock = styled.div`
-  margin: 3rem 0;
+  margin-top: 2rem;
+  margin-bottom: 3rem;
 `

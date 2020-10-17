@@ -17,13 +17,13 @@ pub async fn migrate_tags(db: &Database) -> Result<()> {
         SheetResult::from_sheet("1inyNSJSbISFLwa5fBs4Sj0UUkNhXBokuNRxk7wVQF5A", None),
     );
 
-    let pp_tags = parse_tags(pp_tags?, 3, 7).await?;
-    let combined_pp = parse_tags(combined_pp?, 2, 6).await?;
-    let prepronominals = parse_tags(prepronominals?, 3, 8).await?;
-    let modals = parse_tags(modals?, 4, 5).await?;
-    let nominal = parse_tags(nominal?, 7, 5).await?;
-    let refl = parse_tags(refl?, 4, 4).await?;
-    let clitics = parse_tags(clitics?, 4, 4).await?;
+    let pp_tags = parse_tags(pp_tags?, 3, 7, true).await?;
+    let combined_pp = parse_tags(combined_pp?, 2, 6, false).await?;
+    let prepronominals = parse_tags(prepronominals?, 3, 8, false).await?;
+    let modals = parse_tags(modals?, 4, 5, false).await?;
+    let nominal = parse_tags(nominal?, 7, 5, false).await?;
+    let refl = parse_tags(refl?, 4, 4, false).await?;
+    let clitics = parse_tags(clitics?, 4, 4, false).await?;
 
     let dict = db.client.collection("tags");
     for entry in pp_tags
@@ -55,6 +55,7 @@ async fn parse_tags(
     sheet: SheetResult,
     num_allomorphs: usize,
     gap_to_crg: usize,
+    has_simple: bool,
 ) -> Result<Vec<MorphemeTag>> {
     use rayon::prelude::*;
     Ok(sheet
@@ -70,10 +71,14 @@ async fn parse_tags(
             Some(MorphemeTag {
                 id: cols.next()?,
                 name: cols.next()?.trim().to_owned(),
-                simple: String::new(),
                 morpheme_type: cols.clone().skip(1).next()?.trim().to_owned(),
                 // Each sheet has a different number of columns.
-                crg: cols.skip(gap_to_crg).next()?,
+                crg: cols.clone().skip(gap_to_crg).next()?,
+                learner: if has_simple {
+                    cols.skip(gap_to_crg + 2).next()
+                } else {
+                    None
+                },
             })
         })
         .collect())
