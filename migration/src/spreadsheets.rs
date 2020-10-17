@@ -195,6 +195,7 @@ impl SheetResult {
                     Some(LexicalEntry {
                         id: format!("{}-{}", doc_id, key),
                         surface_forms: vec![root_noun_surface_form(
+                            doc_id,
                             &root,
                             &root_gloss,
                             &mut form_values,

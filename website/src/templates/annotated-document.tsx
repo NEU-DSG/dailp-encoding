@@ -12,8 +12,9 @@ import {
 } from "reakit/Radio"
 import Layout from "../layout"
 import { MorphemeDetails } from "../morpheme"
-import { Segment } from "../segment"
+import { Segment, BasicMorphemeSegment } from "../segment"
 import Cookies from "js-cookie"
+import { fullWidth, largeDialog } from "../theme"
 
 /** A full annotated document, including all metadata and the translation(s) */
 const AnnotatedDocumentPage = (p: {
@@ -22,10 +23,9 @@ const AnnotatedDocumentPage = (p: {
   const doc = p.data.dailp.document!
   const collectionSlug = slugify(doc.collection ?? "", { lower: true })
   const dialog = useDialogState()
-  const [
-    selectedMorpheme,
-    setMorpheme,
-  ] = useState<GatsbyTypes.Dailp_MorphemeSegment | null>(null)
+  const [selectedMorpheme, setMorpheme] = useState<BasicMorphemeSegment | null>(
+    null
+  )
   const experienceLevel = useRadioState({
     state: Number.parseInt(Cookies.get("experienceLevel") ?? "0"),
   })
@@ -36,9 +36,9 @@ const AnnotatedDocumentPage = (p: {
   }, [experienceLevel.state])
 
   const tagSet =
-    experienceLevel.state! > ExperienceLevel.Intermediate
+    experienceLevel.state! > ExperienceLevel.Learner
       ? TagSet.Dailp
-      : TagSet.Crg
+      : TagSet.Learner
 
   return (
     <Layout>
@@ -79,6 +79,9 @@ const AnnotatedDocumentPage = (p: {
               pageImages={doc.pageImages}
             />
           ))}
+          {doc.pageImages.map((url, i) => (
+            <PageImage key={i} src={url} />
+          ))}
         </AnnotationSection>
       </AnnotatedDocument>
     </Layout>
@@ -86,14 +89,21 @@ const AnnotatedDocumentPage = (p: {
 }
 export default AnnotatedDocumentPage
 
+const PageImage = styled.img`
+  margin-bottom: 2rem;
+  width: 100%;
+  height: auto;
+`
+
 export enum ExperienceLevel {
-  Beginner = 0,
-  Intermediate = 1,
+  Basic = 0,
+  Learner = 1,
   Advanced = 2,
 }
 
 export enum TagSet {
   Dailp,
+  Learner,
   Crg,
 }
 
@@ -101,7 +111,7 @@ const ExperiencePicker = (p: { radio: RadioStateReturn }) => {
   return (
     <RadioGroup {...p.radio}>
       {Object.keys(ExperienceLevel)
-        .filter(l => isNaN(Number(l)))
+        .filter((l) => isNaN(Number(l)))
         .map((level: string) => (
           <label key={level}>
             <Radio
@@ -157,10 +167,12 @@ export const query = graphql`
     simplePhonetics
     phonemic
     segments {
-      morpheme(system: DT)
+      morpheme
+      simpleMorpheme: morpheme(system: DT)
       gloss
       matchingTag {
         crg
+        learner
       }
     }
     englishGloss
@@ -169,6 +181,7 @@ export const query = graphql`
 `
 
 const MorphemeDialog = styled(Dialog)`
+  ${largeDialog}
   position: fixed;
   top: 50%;
   left: 50%;
@@ -177,6 +190,8 @@ const MorphemeDialog = styled(Dialog)`
   border: 1px solid black;
   padding: 1rem;
   max-height: 80vh;
+  min-height: 20rem;
+  max-width: 100vw;
   overflow-y: scroll;
 `
 
@@ -190,11 +205,11 @@ const AnnotatedDocument = styled.main`
   display: flex;
   flex-flow: column nowrap;
   align-items: center;
-  font-size: 18;
+  font-size: 1rem;
 `
 
 const DocSection = styled.section`
-  max-width: 1024px;
+  ${fullWidth}
 `
 
 export const AnnotationSection = styled(DocSection)`

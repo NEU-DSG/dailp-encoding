@@ -1,10 +1,11 @@
 import React from "react"
 import { styled } from "linaria/react"
+import { fullWidth } from "./theme"
 
 /** University affiliation, related navigation links, and contact info.  */
 const Footer = () => (
   <FooterContainer role="contentinfo">
-    <FullWidth>Northeastern University</FullWidth>
+    <FooterContent>Northeastern University</FooterContent>
   </FooterContainer>
 )
 export default Footer
@@ -18,6 +19,6 @@ const FooterContainer = styled.footer`
   color: white;
 `
 
-const FullWidth = styled.div`
-  max-width: 1024px;
+const FooterContent = styled.div`
+  ${fullWidth}
 `

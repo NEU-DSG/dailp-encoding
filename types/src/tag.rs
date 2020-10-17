@@ -8,7 +8,7 @@ pub struct MorphemeTag {
     #[serde(rename = "_id")]
     pub id: String,
     /// Alternate form that conveys a simple English representation.
-    pub simple: String,
+    pub learner: Option<String>,
     /// Alternate form of this morpheme from Cherokee Reference Grammar.
     pub crg: String,
     /// English title

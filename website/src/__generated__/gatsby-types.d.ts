@@ -225,7 +225,7 @@ type Dailp_MorphemeTag = {
   /** Standard annotation tag for this morpheme, defined by DAILP. */
   readonly id: Scalars['String'];
   /** Alternate form that conveys a simple English representation. */
-  readonly simple: Scalars['String'];
+  readonly learner: Maybe<Scalars['String']>;
   /** Alternate form of this morpheme from Cherokee Reference Grammar. */
   readonly crg: Scalars['String'];
   /** English title */
@@ -2254,7 +2254,8 @@ type FormFieldsFragment = (
   Pick<Dailp_AnnotatedForm, 'index' | 'source' | 'simplePhonetics' | 'phonemic' | 'englishGloss' | 'commentary'>
   & { readonly segments: ReadonlyArray<(
     Pick<Dailp_MorphemeSegment, 'morpheme' | 'gloss'>
-    & { readonly matchingTag: Maybe<Pick<Dailp_MorphemeTag, 'crg'>> }
+    & { simpleMorpheme: Dailp_MorphemeSegment['morpheme'] }
+    & { readonly matchingTag: Maybe<Pick<Dailp_MorphemeTag, 'crg' | 'learner'>> }
   )> }
 );
 
