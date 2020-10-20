@@ -19,5 +19,6 @@ mongodb = "1.1"
 dotenv = "0.15"
 regex = "1.3"
 rayon = "1.4"
+chrono = "0.4"
 
 dailp = {path = "../types"}

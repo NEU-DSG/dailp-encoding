@@ -1,6 +1,6 @@
 import React from "react"
 import { styled } from "linaria/react"
-import { DialogDisclosure } from "reakit/Dialog"
+import { DialogDisclosure, DialogStateReturn } from "reakit/Dialog"
 import { Group } from "reakit/Group"
 import _ from "lodash"
 import {
@@ -14,7 +14,7 @@ export type BasicMorphemeSegment = GatsbyTypes.FormFieldsFragment["segments"][0]
 
 interface Props {
   segment: GatsbyTypes.Dailp_AnnotatedSeg
-  dialog: any
+  dialog: DialogStateReturn
   onOpenDetails: (morpheme: BasicMorphemeSegment) => void
   level: ExperienceLevel
   translations: GatsbyTypes.Dailp_TranslationBlock
@@ -83,6 +83,31 @@ function isPageBreak(
   )
 }
 
+const AnnotatedForm = (
+  p: Props & { segment: GatsbyTypes.FormFieldsFragment }
+) => {
+  if (!p.segment.source) {
+    return null
+  }
+  const showSegments = p.level > ExperienceLevel.Basic
+  return (
+    <WordGroup id={`w${p.segment.index}`}>
+      <SyllabaryLayer>{p.segment.source}</SyllabaryLayer>
+      <div>{p.segment.simplePhonetics ?? <br />}</div>
+      {showSegments ? (
+        <MorphemicSegmentation
+          segments={p.segment.segments}
+          dialog={p.dialog}
+          onOpenDetails={p.onOpenDetails}
+          showAdvanced={p.level > ExperienceLevel.Learner}
+          tagSet={p.tagSet}
+        />
+      ) : null}
+      <div>{p.segment.englishGloss.join(", ")}</div>
+    </WordGroup>
+  )
+}
+
 /**
  * Displays the break-down of a word into its units of meaning and the English
  * glosses for each morpheme.
@@ -90,8 +115,8 @@ function isPageBreak(
 const MorphemicSegmentation = (p: {
   segments: GatsbyTypes.FormFieldsFragment["segments"]
   tagSet: TagSet
-  dialog: any
-  onOpenDetails: any
+  dialog: Props["dialog"]
+  onOpenDetails: Props["onOpenDetails"]
   showAdvanced: boolean
 }) => {
   // If there is no segmentation, return two line breaks for the
@@ -132,7 +157,7 @@ const MorphemicSegmentation = (p: {
   )
 }
 
-export function intersperse<T>(arr: T[], separator: (n: number) => T): T[] {
+function intersperse<T>(arr: T[], separator: (n: number) => T): T[] {
   return _.flatMap(arr, (a, i) => (i > 0 ? [separator(i - 1), a] : [a]))
 }
 
@@ -140,7 +165,7 @@ export function intersperse<T>(arr: T[], separator: (n: number) => T): T[] {
 const MorphemeSegment = (p: {
   segment: BasicMorphemeSegment
   tagSet: TagSet
-  dialog: any
+  dialog: Props["dialog"]
   onOpenDetails: Props["onOpenDetails"]
 }) => {
   let gloss = p.segment.gloss
@@ -180,28 +205,6 @@ const GlossLine = styled.span`
   display: flex;
   flex-flow: row nowrap;
 `
-
-const AnnotatedForm = (
-  p: Props & { segment: GatsbyTypes.FormFieldsFragment }
-) => {
-  const showSegments = p.level > ExperienceLevel.Basic
-  return (
-    <WordGroup id={`w${p.segment.index}`}>
-      <SyllabaryLayer>{p.segment.source}</SyllabaryLayer>
-      <div>{p.segment.simplePhonetics ?? <br />}</div>
-      {showSegments ? (
-        <MorphemicSegmentation
-          segments={p.segment.segments}
-          dialog={p.dialog}
-          onOpenDetails={p.onOpenDetails}
-          showAdvanced={p.level > ExperienceLevel.Learner}
-          tagSet={p.tagSet}
-        />
-      ) : null}
-      <div>{p.segment.englishGloss.join(", ")}</div>
-    </WordGroup>
-  )
-}
 
 const WordGroup = styled(Group)`
   margin: 1rem ${theme.edgeSpacing};

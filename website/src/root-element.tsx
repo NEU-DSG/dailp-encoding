@@ -33,6 +33,10 @@ css`
     }
     main {
       background-color: ${theme.colors.body};
+      display: flex;
+      flex-flow: column nowrap;
+      align-items: center;
+      font-size: 1rem;
     }
     h1,
     h2 {
@@ -45,7 +49,6 @@ css`
     h5,
     h6 {
       font-family: ${theme.fonts.header};
-      padding: 0 ${theme.edgeSpacing};
     }
   }
 `
