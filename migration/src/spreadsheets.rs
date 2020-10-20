@@ -7,7 +7,7 @@ use anyhow::Result;
 use dailp::{
     convert_udb, root_noun_surface_form, root_verb_surface_forms, AnnotatedDoc, AnnotatedForm,
     AnnotatedPhrase, AnnotatedSeg, BlockType, Database, DocumentMetadata, LexicalEntry, LineBreak,
-    MorphemeSegment, PageBreak,
+    MorphemeSegment, PageBreak, PersonAssociation,
 };
 use futures_retry::{FutureRetry, RetryPolicy};
 use mongodb::bson::{self, Bson};
@@ -213,19 +213,11 @@ impl SheetResult {
             })
             .collect())
     }
-    async fn get_drive_content(file_id: &str) -> Result<String> {
-        Ok(reqwest::get(&format!(
-            "https://www.googleapis.com/drive/v3/files/{}?fields=webContentLink",
-            file_id
-        ))
-        .await?
-        .json::<FileDetails>()
-        .await?
-        .web_content_link)
-    }
 
     /// Parse this sheet as a document metadata listing.
     pub async fn into_metadata(self) -> Result<DocumentMetadata> {
+        use chrono::TimeZone as _;
+
         // Meta order: genre, source, title, source page #, page count, translation
         // First column is the name of the field, useless when parsing so we ignore it.
         let mut values = self.values.into_iter();
@@ -261,17 +253,35 @@ impl SheetResult {
             })
             // Assume no images if the row is missing.
             .unwrap_or_default();
+        let date = values.next();
+        println!("{:?}", date);
+        let person_names = values.next();
+        let person_roles = values.next();
+        let people = if let (Some(names), Some(roles)) = (person_names, person_roles) {
+            names
+                .into_iter()
+                .skip(1)
+                .zip(roles.into_iter().skip(1))
+                .map(|(name, role)| PersonAssociation { name, role })
+                .collect()
+        } else {
+            Vec::new()
+        };
         Ok(DocumentMetadata {
             id: doc_id.remove(1),
             title: title.remove(1),
             publication: None,
-            people: Vec::new(),
+            people,
             source: source.pop(),
             genre: genre.pop(),
             translation: DocResult::new(&translations.remove(1))
                 .await?
                 .to_translation(),
             page_images,
+            date: date
+                .as_ref()
+                .and_then(|d| d.get(1))
+                .and_then(|s| chrono::Utc.datetime_from_str(s, "%Y-%m-%d %H:%M:%S").ok()),
         })
     }
 
@@ -366,11 +376,6 @@ impl SemanticLine {
     fn is_empty(&self) -> bool {
         self.rows.iter().all(|r| r.items.is_empty())
     }
-}
-
-#[derive(Deserialize)]
-struct FileDetails {
-    web_content_link: String,
 }
 
 #[derive(Serialize, Deserialize)]
