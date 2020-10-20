@@ -1,5 +1,8 @@
 import React from "react"
 import { Link } from "gatsby"
+import { Button } from "reakit/Button"
+import { DialogStateReturn } from "reakit/Dialog"
+import { styled } from "linaria/react"
 import { useQuery, gql } from "@apollo/client"
 import _ from "lodash"
 import { BasicMorphemeSegment } from "./segment"
@@ -7,19 +10,29 @@ import { BasicMorphemeSegment } from "./segment"
 /** Specific details about some morpheme */
 export const MorphemeDetails = (props: {
   segment: BasicMorphemeSegment
-  dialog: any
+  dialog: DialogStateReturn
 }) => (
   <>
+    <CloseButton onClick={() => props.dialog.hide()}>Close</CloseButton>
     <h4>Known Occurrences of "{props.segment?.gloss}"</h4>
     <SimilarMorphemeList gloss={props.segment?.gloss!} dialog={props.dialog} />
   </>
 )
 
+const CloseButton = styled(Button)`
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+`
+
 /**
  * List of morphemes that share the given gloss, and all words that contain
  * those morphemes.
  */
-const SimilarMorphemeList = (props: { gloss: string; dialog: any }) => {
+const SimilarMorphemeList = (props: {
+  gloss: string
+  dialog: DialogStateReturn
+}) => {
   const { data, loading } = useQuery(morphemeQuery, {
     skip: !props.gloss,
     variables: { gloss: props.gloss },
@@ -68,6 +81,7 @@ const SimilarMorphemeList = (props: { gloss: string; dialog: any }) => {
         </ul>
       </section>
     ))
+
     let tagDetails = null
     if (tag.data?.tag) {
       tagDetails = <p>{tag.data.tag.name}</p>

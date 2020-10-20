@@ -80,19 +80,26 @@ type Dailp_morphemeTagArgs = {
 };
 
 type Dailp_AnnotatedDoc = {
-  /** Official short identifier for this document. */
+  /** Official short identifier for this document */
   readonly id: Scalars['String'];
-  /** Full title of the document. */
+  /** Full title of the document */
   readonly title: Scalars['String'];
-  /** The publication that included this document. */
+  /** Date and time this document was written or created */
+  readonly date: Maybe<Dailp_DateTime>;
+  /** The publication that included this document */
   readonly publication: Maybe<Scalars['String']>;
-  /** Where the source document came from, maybe the name of a collection. */
+  /** Where the source document came from, maybe the name of a collection */
   readonly collection: Maybe<Scalars['String']>;
-  /** The genre of the document, used to group similar ones. */
+  /** The genre of the document, used to group similar ones */
   readonly genre: Maybe<Scalars['String']>;
-  /** Images of each source document page, in order. */
+  /** Images of each source document page, in order */
   readonly pageImages: ReadonlyArray<Scalars['String']>;
-  /** Segments of the document paired with their respective rough translations. */
+  /**
+   * The people involved in producing this document, including the original
+   * author, translators, and annotators
+   */
+  readonly people: ReadonlyArray<Dailp_PersonAssociation>;
+  /** Segments of the document paired with their respective rough translations */
   readonly translatedSegments: Maybe<ReadonlyArray<Dailp_TranslatedSection>>;
   /**
    * All the words contained in this document, dropping structural formatting
@@ -160,6 +167,12 @@ enum Dailp_CherokeeOrthography {
    */
   TTH = 'TTH'
 }
+
+type Dailp_DateTime = {
+  readonly year: Scalars['Int'];
+  /** Formatted version of this date for humans to read */
+  readonly formatted: Scalars['String'];
+};
 
 enum Dailp_DocumentType {
   REFERENCE = 'REFERENCE',
@@ -236,6 +249,11 @@ type Dailp_MorphemeTag = {
 
 type Dailp_PageBreak = {
   readonly index: Scalars['Int'];
+};
+
+type Dailp_PersonAssociation = {
+  readonly name: Scalars['String'];
+  readonly role: Scalars['String'];
 };
 
 type Dailp_TranslatedSection = {
@@ -2274,7 +2292,7 @@ type AnnotatedDocumentQueryVariables = Exact<{
 
 type AnnotatedDocumentQuery = { readonly dailp: { readonly document: Maybe<(
       Pick<Dailp_AnnotatedDoc, 'id' | 'title' | 'collection' | 'pageImages'>
-      & { readonly translatedSegments: Maybe<ReadonlyArray<{ readonly source: (
+      & { readonly date: Maybe<Pick<Dailp_DateTime, 'year'>>, readonly translatedSegments: Maybe<ReadonlyArray<{ readonly source: (
           { readonly __typename: 'Dailp_AnnotatedPhrase' }
           & BlockFieldsFragment
         ) | (
@@ -2284,6 +2302,16 @@ type AnnotatedDocumentQuery = { readonly dailp: { readonly document: Maybe<(
           { readonly __typename: 'Dailp_PageBreak' }
           & Pick<Dailp_PageBreak, 'index'>
         ), readonly translation: Pick<Dailp_TranslationBlock, 'segments'> }>> }
+    )> } };
+
+type DocumentDetailsQueryVariables = Exact<{
+  id: Scalars['String'];
+}>;
+
+
+type DocumentDetailsQuery = { readonly dailp: { readonly document: Maybe<(
+      Pick<Dailp_AnnotatedDoc, 'id' | 'title' | 'collection'>
+      & { readonly date: Maybe<Pick<Dailp_DateTime, 'year'>>, readonly people: ReadonlyArray<Pick<Dailp_PersonAssociation, 'name' | 'role'>> }
     )> } };
 
 type CollectionQueryVariables = Exact<{

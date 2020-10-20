@@ -15,5 +15,6 @@ lambda_http = {git = "https://github.com/awslabs/aws-lambda-rust-runtime"}
 dotenv = "0.15"
 lazy_static = "1.4"
 async_once = {version = "0.1", features = ["tokio"]}
+chrono = "0.4"
 
 dailp = {path = "../types"}

@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react"
 import { graphql, Link } from "gatsby"
 import { styled } from "linaria/react"
 import { Helmet } from "react-helmet"
-import slugify from "slugify"
 import { useDialogState, Dialog, DialogBackdrop } from "reakit/Dialog"
 import {
   Radio,
@@ -14,14 +13,14 @@ import Layout from "../layout"
 import { MorphemeDetails } from "../morpheme"
 import { Segment, BasicMorphemeSegment } from "../segment"
 import Cookies from "js-cookie"
-import { fullWidth, largeDialog } from "../theme"
+import theme, { fullWidth, largeDialog } from "../theme"
+import { collectionRoute } from "../routes"
 
 /** A full annotated document, including all metadata and the translation(s) */
 const AnnotatedDocumentPage = (p: {
   data: GatsbyTypes.AnnotatedDocumentQuery
 }) => {
   const doc = p.data.dailp.document!
-  const collectionSlug = slugify(doc.collection ?? "", { lower: true })
   const dialog = useDialogState()
   const [selectedMorpheme, setMorpheme] = useState<BasicMorphemeSegment | null>(
     null
@@ -55,12 +54,14 @@ const AnnotatedDocumentPage = (p: {
           </MorphemeDialog>
         </MorphemeDialogBackdrop>
 
-        <header>
-          <h2>{doc.title}</h2>
-          <Link to={`/collections/${collectionSlug}`}>
+        <DocHeader>
+          <h2>
+            {doc.title} {doc.date && `(${doc.date.year})`}
+          </h2>
+          <Link to={collectionRoute(doc.collection!)}>
             <h3>{doc.collection}</h3>
           </Link>
-        </header>
+        </DocHeader>
 
         <ExperiencePicker radio={experienceLevel} />
 
@@ -88,6 +89,10 @@ const AnnotatedDocumentPage = (p: {
   )
 }
 export default AnnotatedDocumentPage
+
+export const DocHeader = styled.header`
+  padding: 0 ${theme.edgeSpacing};
+`
 
 const PageImage = styled.img`
   margin-bottom: 2rem;
@@ -132,6 +137,9 @@ export const query = graphql`
         id
         title
         collection
+        date {
+          year
+        }
         pageImages
         translatedSegments {
           source {

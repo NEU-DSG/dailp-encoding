@@ -29,8 +29,8 @@
       {% if people %}
         <particDesc>
           {% for person in people %}
-            <person xml:id="{{person | slugify}}">
-              <persName>{{person}}</persName>
+            <person xml:id="{{person.name | slugify}}">
+              <persName>{{person.name}}</persName>
             </person>
           {% endfor %}
         </particDesc>
