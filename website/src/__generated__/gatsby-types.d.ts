@@ -170,8 +170,8 @@ enum Dailp_CherokeeOrthography {
 
 type Dailp_DateTime = {
   readonly year: Scalars['Int'];
-  /** Formatted version of this date for humans to read */
-  readonly formatted: Scalars['String'];
+  /** Formatted version of the date for humans to read */
+  readonly formattedDate: Scalars['String'];
 };
 
 enum Dailp_DocumentType {
@@ -189,6 +189,8 @@ enum Dailp_DocumentType {
  */
 type Dailp_LexicalEntry = {
   readonly id: Scalars['String'];
+  /** The original source text in whatever orthography was used there */
+  readonly original: Scalars['String'];
   /** The phonemic shape of the root and it's semi-unique gloss tag */
   readonly root: Dailp_MorphemeSegment;
   /** Plain English translations of root's meaning */
@@ -196,7 +198,9 @@ type Dailp_LexicalEntry = {
   /** An owned collection of surface forms containing this root */
   readonly surfaceForms: ReadonlyArray<Dailp_AnnotatedForm>;
   /** The year this form was recorded */
-  readonly yearRecorded: Scalars['Int'];
+  readonly dateRecorded: Dailp_DateTime;
+  /** This form's position in its containing document */
+  readonly position: Maybe<Dailp_PositionInDocument>;
 };
 
 type Dailp_LineBreak = {
@@ -216,6 +220,7 @@ type Dailp_MorphemeSegment = {
   readonly morpheme: Scalars['String'];
   /** English gloss in standard DAILP format */
   readonly gloss: Scalars['String'];
+  readonly nextSeparator: Maybe<Scalars['String']>;
   /**
    * If this morpheme represents a functional tag that we have further
    * information on, this is the corresponding database entry.
@@ -254,6 +259,30 @@ type Dailp_PageBreak = {
 type Dailp_PersonAssociation = {
   readonly name: Scalars['String'];
   readonly role: Scalars['String'];
+};
+
+type Dailp_PositionInDocument = {
+  /**
+   * Standard page reference for this position, which can be used in citation.
+   * Generally formatted like ID:PAGE, i.e "DF2018:55"
+   */
+  readonly pageReference: Scalars['String'];
+  /**
+   * Index reference for this position, more specific than `page_reference`.
+   * Generally used in corpus documents where there are few pages containing
+   * many forms each. Example: "WJ23:#21"
+   */
+  readonly indexReference: Scalars['String'];
+  /** Unique identifier of the source document */
+  readonly documentId: Scalars['String'];
+  /** 1-indexed page number */
+  readonly pageNumber: Scalars['Int'];
+  /**
+   * 1-indexed position indicating where the form sits in the ordering of all
+   * forms in the document. Used for relative ordering of forms from the
+   * same document.
+   */
+  readonly index: Scalars['Int'];
 };
 
 type Dailp_TranslatedSection = {
@@ -2271,7 +2300,7 @@ type StringQueryOperatorInput = {
 type FormFieldsFragment = (
   Pick<Dailp_AnnotatedForm, 'index' | 'source' | 'simplePhonetics' | 'phonemic' | 'englishGloss' | 'commentary'>
   & { readonly segments: ReadonlyArray<(
-    Pick<Dailp_MorphemeSegment, 'morpheme' | 'gloss'>
+    Pick<Dailp_MorphemeSegment, 'morpheme' | 'gloss' | 'nextSeparator'>
     & { simpleMorpheme: Dailp_MorphemeSegment['morpheme'] }
     & { readonly matchingTag: Maybe<Pick<Dailp_MorphemeTag, 'crg' | 'learner'>> }
   )> }
