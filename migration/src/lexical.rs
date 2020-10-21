@@ -12,8 +12,8 @@ pub async fn migrate_dictionaries(db: &Database) -> Result<()> {
     );
 
     let df1975 = df1975?.into_df1975("DF1975", 1975, true)?;
-    let df2003 = df2003?.into_df1975("DF2003", 2003, false)?;
     let root_nouns = root_nouns?.into_nouns("DF1975", 1975)?;
+    let df2003 = df2003?.into_df1975("DF2003", 2003, false)?;
 
     let dict = db.client.collection("dictionary");
     let entries = df1975.into_iter().chain(df2003).chain(root_nouns);
