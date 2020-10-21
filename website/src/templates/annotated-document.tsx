@@ -182,6 +182,7 @@ export const query = graphql`
         crg
         learner
       }
+      nextSeparator
     }
     englishGloss
     commentary
