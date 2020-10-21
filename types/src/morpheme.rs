@@ -7,11 +7,29 @@ use serde::{Deserialize, Serialize};
 pub struct MorphemeSegment {
     pub morpheme: String,
     pub gloss: String,
+    pub followed_by: Option<SegmentType>,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub enum SegmentType {
+    /// -
+    Morpheme,
+    /// =
+    Clitic,
 }
 
 impl MorphemeSegment {
-    pub fn new(morpheme: String, gloss: String) -> Self {
-        Self { morpheme, gloss }
+    pub fn new(morpheme: String, gloss: String, followed_by: Option<SegmentType>) -> Self {
+        Self {
+            morpheme,
+            gloss,
+            followed_by,
+        }
+    }
+
+    pub fn parse_many(morpheme_layer: &str, gloss_layer: &str) -> Option<Vec<Self>> {
+        let (_, result) = parse_gloss_layers(morpheme_layer, gloss_layer).ok()?;
+        Some(result)
     }
 }
 
@@ -28,6 +46,14 @@ impl MorphemeSegment {
     /// English gloss in standard DAILP format
     async fn gloss(&self) -> &str {
         &self.gloss
+    }
+
+    async fn next_separator(&self) -> Option<&str> {
+        use SegmentType::*;
+        self.followed_by.as_ref().map(|ty| match ty {
+            Morpheme => "-",
+            Clitic => "=",
+        })
     }
 
     /// If this morpheme represents a functional tag that we have further

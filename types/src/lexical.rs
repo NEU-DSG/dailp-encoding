@@ -1,4 +1,4 @@
-use crate::{AnnotatedForm, MorphemeSegment};
+use crate::{AnnotatedForm, DateTime, MorphemeSegment};
 use serde::{Deserialize, Serialize};
 
 /// A lexical entry is a form whose meaning cannot be created solely through
@@ -12,6 +12,8 @@ use serde::{Deserialize, Serialize};
 pub struct LexicalEntry {
     #[serde(rename = "_id")]
     pub id: String,
+    /// The original source text in whatever orthography was used there
+    pub original: String,
     /// The phonemic shape of the root and it's semi-unique gloss tag
     pub root: MorphemeSegment,
     /// Plain English translations of root's meaning
@@ -19,7 +21,71 @@ pub struct LexicalEntry {
     /// An owned collection of surface forms containing this root
     pub surface_forms: Vec<AnnotatedForm>,
     /// The year this form was recorded
-    pub year_recorded: i32,
+    pub date_recorded: DateTime,
+    /// This form's position in its containing document
+    pub position: Option<PositionInDocument>,
+}
+
+impl LexicalEntry {
+    pub fn make_id(doc_id: &str, gloss: &str) -> String {
+        use regex::{Captures, Regex};
+        lazy_static::lazy_static! {
+            static ref GLOSS_PAT: Regex = Regex::new(r"[\s:\-,\[\]]+").unwrap();
+        }
+        // Unify gloss formats into a lowercase dot-separated string: "multi.word.gloss"
+        let gloss_tag = GLOSS_PAT.replace_all(&gloss, |_: &Captures| ".");
+        format!("{}:{}", doc_id, gloss_tag.trim_end_matches("."))
+    }
+}
+
+/// The reference position within a document of one specific form
+#[derive(Serialize, Deserialize, Debug)]
+pub struct PositionInDocument {
+    document_id: String,
+    page_number: i64,
+    index: i64,
+}
+impl PositionInDocument {
+    pub fn new(document_id: String, page_number: i64, index: i64) -> Self {
+        Self {
+            document_id,
+            page_number,
+            index,
+        }
+    }
+}
+
+#[async_graphql::Object]
+impl PositionInDocument {
+    /// Standard page reference for this position, which can be used in citation.
+    /// Generally formatted like ID:PAGE, i.e "DF2018:55"
+    async fn page_reference(&self) -> String {
+        format!("{}:{}", self.document_id, self.page_number)
+    }
+
+    /// Index reference for this position, more specific than `page_reference`.
+    /// Generally used in corpus documents where there are few pages containing
+    /// many forms each. Example: "WJ23:#21"
+    async fn index_reference(&self) -> String {
+        format!("{}:#{}", self.document_id, self.index)
+    }
+
+    /// Unique identifier of the source document
+    async fn document_id(&self) -> &str {
+        &self.document_id
+    }
+
+    /// 1-indexed page number
+    async fn page_number(&self) -> i64 {
+        self.page_number
+    }
+
+    /// 1-indexed position indicating where the form sits in the ordering of all
+    /// forms in the document. Used for relative ordering of forms from the
+    /// same document.
+    async fn index(&self) -> i64 {
+        self.index
+    }
 }
 
 /// Gather many verb surface forms from the given row.
@@ -45,22 +111,26 @@ pub fn root_verb_surface_form(
     cols: &mut impl Iterator<Item = String>,
     has_ppp: bool,
 ) -> Option<AnnotatedForm> {
+    use itertools::Itertools as _;
+
     // Each form has an empty column before it.
     // Then follows the morphemic segmentation.
     // All tags except the last one come before the root.
     let (mut morpheme_tags, phonemic) = all_tags(&mut cols.filter(|x| !x.is_empty()));
     let mod_morpheme = morpheme_tags.pop()?;
-    let morphemes = morpheme_tags
+    let mut morphemes = morpheme_tags
         .iter()
         .map(|(_tag, src)| src.trim())
         .chain(vec![root, &mod_morpheme.1])
         .filter(|s| !s.is_empty())
         .map(|s| convert_udb(s).to_dailp());
-    let morpheme_glosses = morpheme_tags
+    let morpheme_layer = morphemes.join("-");
+    let mut morpheme_glosses = morpheme_tags
         .iter()
         .map(|(tag, _src)| tag.trim().to_owned())
         .chain(vec![root_gloss.to_owned(), mod_morpheme.0])
         .filter(|s| !s.is_empty());
+    let gloss_layer = morpheme_glosses.join("-");
     // Then, the representations of the full word.
     let phonemic = phonemic?;
     let _numeric = if has_ppp { cols.next()? } else { String::new() };
@@ -79,10 +149,7 @@ pub fn root_verb_surface_form(
         normalized_source: syllabary,
         simple_phonetics: Some(phonetic),
         phonemic: Some(convert_udb(&phonemic).to_dailp()),
-        segments: morphemes
-            .zip(morpheme_glosses)
-            .map(|(m, g)| MorphemeSegment::new(m, g))
-            .collect(),
+        segments: MorphemeSegment::parse_many(&morpheme_layer, &gloss_layer)?,
         english_gloss: translations,
         commentary: None,
         line_break: None,
@@ -117,6 +184,8 @@ pub fn root_noun_surface_form(
     root_gloss: &str,
     cols: &mut impl Iterator<Item = String>,
 ) -> Option<AnnotatedForm> {
+    use itertools::Itertools as _;
+
     let ppp_tag = cols.next()?;
     let ppp_src = cols.next()?;
     let pp_tag = cols.next()?;
@@ -127,15 +196,17 @@ pub fn root_noun_surface_form(
     let syllabary = cols.next()?;
     let translations = cols.take(3).filter(|s| !s.is_empty());
 
-    let morphemes = vec![&ppp_src as &str, &pp_src as &str, root]
+    let mut morphemes = vec![&ppp_src as &str, &pp_src as &str, root]
         .into_iter()
         .map(|s| s.trim())
         .filter(|s| !s.is_empty())
         .map(|s| convert_udb(s).to_dailp());
-    let glosses = vec![ppp_tag, pp_tag, root_gloss.to_owned()]
+    let morpheme_layer = morphemes.join("-");
+    let mut glosses = vec![ppp_tag, pp_tag, root_gloss.to_owned()]
         .into_iter()
         .map(|s| s.trim().to_owned())
         .filter(|s| !s.is_empty());
+    let gloss_layer = glosses.join("-");
 
     Some(AnnotatedForm {
         index: 0,
@@ -143,10 +214,7 @@ pub fn root_noun_surface_form(
         normalized_source: syllabary,
         simple_phonetics: Some(phonetic),
         phonemic: Some(convert_udb(&phonemic).to_dailp()),
-        segments: morphemes
-            .zip(glosses)
-            .map(|(m, g)| MorphemeSegment::new(m, g))
-            .collect(),
+        segments: MorphemeSegment::parse_many(&morpheme_layer, &gloss_layer)?,
         english_gloss: translations.collect(),
         commentary: None,
         line_break: None,
