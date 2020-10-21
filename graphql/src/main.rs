@@ -77,6 +77,14 @@ impl Query {
         Ok(context.data::<Database>()?.document(&id).await)
     }
 
+    async fn lexical_entry(
+        &self,
+        context: &Context<'_>,
+        id: String,
+    ) -> FieldResult<Option<dailp::LexicalEntry>> {
+        Ok(context.data::<Database>()?.lexical_entry(id).await?)
+    }
+
     /// Lists all words containing a morpheme with the given gloss.
     /// Groups these words by the phonemic shape of the target morpheme.
     pub async fn morphemes_by_shape(

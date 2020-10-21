@@ -122,7 +122,13 @@ impl SheetResult {
         })
     }
 
-    pub fn into_df1975(self, doc_id: &str, year: i32, has_ppp: bool) -> Result<Vec<LexicalEntry>> {
+    pub fn into_df1975(
+        self,
+        doc_id: &str,
+        year: i32,
+        translation_count: usize,
+        has_numeric: bool,
+    ) -> Result<Vec<LexicalEntry>> {
         use chrono::TimeZone as _;
         use rayon::prelude::*;
         Ok(self
@@ -137,7 +143,7 @@ impl SheetResult {
                 if columns.len() > 7 && !columns[2].is_empty() {
                     // Skip reference numbers for now.
                     let mut root_values = columns.into_iter();
-                    let key = root_values.next()?;
+                    let _key = root_values.next()?;
                     let _page_num = root_values.next()?;
                     let root = root_values.next()?;
                     let root_gloss = root_values.next()?;
@@ -149,7 +155,10 @@ impl SheetResult {
                             &root,
                             &root_gloss,
                             &mut form_values,
-                            has_ppp,
+                            translation_count,
+                            has_numeric,
+                            false,
+                            true,
                         ),
                         root_translations: root_values
                             .take(3)
@@ -157,6 +166,51 @@ impl SheetResult {
                             .filter(|s| !s.is_empty())
                             .collect(),
                         root: MorphemeSegment::new(convert_udb(&root).to_dailp(), root_gloss, None),
+                        date_recorded: DateTime::new(chrono::Utc.ymd(year, 1, 1).and_hms(0, 0, 0)),
+                        original: root,
+                        position: None,
+                    })
+                } else {
+                    None
+                }
+            })
+            .collect())
+    }
+    pub fn into_adjs(self, doc_id: &str, year: i32) -> Result<Vec<LexicalEntry>> {
+        use chrono::TimeZone as _;
+        use rayon::prelude::*;
+        Ok(self
+            .values
+            .into_par_iter()
+            // First two rows are simply headers.
+            .skip(2)
+            // The rest are relevant to the noun itself.
+            .filter_map(|columns| {
+                // The columns are as follows: key, root, root gloss, page ref,
+                // category, tags, surface forms.
+
+                if columns.len() > 4 && !columns[1].is_empty() {
+                    // Skip reference numbers for now.
+                    let mut root_values = columns.into_iter();
+                    let _key = root_values.next()?;
+                    let root = root_values.next()?;
+                    let root_gloss = root_values.next()?;
+                    // Skip page ref.
+                    let mut form_values = root_values.skip(1);
+                    Some(LexicalEntry {
+                        id: LexicalEntry::make_id(doc_id, &root_gloss),
+                        surface_forms: root_verb_surface_forms(
+                            doc_id,
+                            &root,
+                            &root_gloss,
+                            &mut form_values,
+                            3,
+                            true,
+                            true,
+                            false,
+                        ),
+                        root: MorphemeSegment::new(convert_udb(&root).to_dailp(), root_gloss, None),
+                        root_translations: Vec::new(),
                         date_recorded: DateTime::new(chrono::Utc.ymd(year, 1, 1).and_hms(0, 0, 0)),
                         original: root,
                         position: None,

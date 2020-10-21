@@ -33,6 +33,15 @@ impl Database {
             .and_then(|doc| doc.and_then(|doc| bson::from_document(doc).ok()))
     }
 
+    pub async fn lexical_entry(&self, id: String) -> Result<Option<LexicalEntry>> {
+        Ok(self
+            .client
+            .collection("dictionary")
+            .find_one(bson::doc! { "_id": id }, None)
+            .await?
+            .and_then(|doc| bson::from_document(doc).ok()))
+    }
+
     /// Retrieves all morphemes that share the given gloss text.
     /// For example, there may be multiple ways to pronounce a Cherokee word
     /// that glosses as "catch" in English.
