@@ -105,34 +105,36 @@ const MorphemicSegmentation = (p: {
     )
   }
 
-  const segmentDivs = intersperse(
-    p.segments.map((segment, i) => (
-      <WordSegment key={i}>
-        {p.showAdvanced ? segment.morpheme : segment.simpleMorpheme}
-        <MorphemeSegment
-          segment={segment}
-          tagSet={p.tagSet}
-          dialog={p.dialog}
-          onOpenDetails={p.onOpenDetails}
-        />
-      </WordSegment>
-    )),
-    // Add dashes between all morphemes for more visible separation.
-    (i) => <MorphemeDivider key={100 * (i + 1)} showAdvanced={p.showAdvanced} />
+  return (
+    <WordSegment>
+      {p.segments
+        .map((segment, i) =>
+          p.showAdvanced ? segment.morpheme : segment.simpleMorpheme
+        )
+        .join("-")}
+      <GlossLine>
+        {intersperse(
+          p.segments.map((segment, i) => (
+            <MorphemeSegment
+              key={i}
+              segment={segment}
+              tagSet={p.tagSet}
+              dialog={p.dialog}
+              onOpenDetails={p.onOpenDetails}
+            />
+          )),
+          (i) => (
+            <span key={100 * (i + 1)}>-</span>
+          )
+        )}
+      </GlossLine>
+    </WordSegment>
   )
-  return <GlossLine>{segmentDivs}</GlossLine>
 }
 
 export function intersperse<T>(arr: T[], separator: (n: number) => T): T[] {
   return _.flatMap(arr, (a, i) => (i > 0 ? [separator(i - 1), a] : [a]))
 }
-
-const MorphemeDivider = (p: { showAdvanced: boolean }) => (
-  <WordSegment>
-    <span>-</span>
-    <span>-</span>
-  </WordSegment>
-)
 
 /** One morpheme that can be clicked to see further details. */
 const MorphemeSegment = (p: {
@@ -159,7 +161,6 @@ const WordSegment = styled.div`
   display: flex;
   flex-flow: column nowrap;
   align-items: flex-start;
-  margin-right: 2px;
 `
 
 const MorphemeButton = styled(DialogDisclosure)`
