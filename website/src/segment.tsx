@@ -132,11 +132,10 @@ const MorphemicSegmentation = (p: {
 
   return (
     <WordSegment>
-      {p.segments
-        .map((segment, i) =>
-          p.showAdvanced ? segment.morpheme : segment.simpleMorpheme
-        )
-        .join("-")}
+      {p.segments.map((segment, i) => {
+        let seg = p.showAdvanced ? segment.morpheme : segment.simpleMorpheme
+        return seg + (segment.nextSeparator || "")
+      })}
       <GlossLine>
         {intersperse(
           p.segments.map((segment, i) => (
@@ -149,7 +148,7 @@ const MorphemicSegmentation = (p: {
             />
           )),
           (i) => (
-            <span key={100 * (i + 1)}>-</span>
+            <span key={100 * (i + 1)}>{p.segments[i].nextSeparator}</span>
           )
         )}
       </GlossLine>
