@@ -132,8 +132,11 @@ pub fn root_verb_surface_form(
     // Then follows the morphemic segmentation.
     // All tags except the last one come before the root.
     let (mut morpheme_tags, phonemic) = all_tags(&mut cols.filter(|x| !x.is_empty()));
-    let mod_morpheme = morpheme_tags.pop()?;
+    if morpheme_tags.is_empty() {
+        return None;
+    }
     let asp_morpheme = morpheme_tags.remove(0);
+    let mod_morpheme = morpheme_tags.pop()?;
     let mut morphemes = morpheme_tags
         .iter()
         .map(|(_tag, src)| src.trim())
