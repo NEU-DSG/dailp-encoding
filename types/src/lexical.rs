@@ -94,10 +94,22 @@ pub fn root_verb_surface_forms(
     root: &str,
     root_gloss: &str,
     cols: &mut impl Iterator<Item = String>,
-    has_ppp: bool,
+    translation_count: usize,
+    has_numeric: bool,
+    has_comment: bool,
+    has_spacer: bool,
 ) -> Vec<AnnotatedForm> {
     let mut forms = Vec::new();
-    while let Some(form) = root_verb_surface_form(doc_id, root, root_gloss, cols, has_ppp) {
+    while let Some(form) = root_verb_surface_form(
+        doc_id,
+        root,
+        root_gloss,
+        cols,
+        translation_count,
+        has_numeric,
+        has_comment,
+        has_spacer,
+    ) {
         forms.push(form);
     }
     forms
@@ -109,7 +121,10 @@ pub fn root_verb_surface_form(
     root: &str,
     root_gloss: &str,
     cols: &mut impl Iterator<Item = String>,
-    has_ppp: bool,
+    translation_count: usize,
+    has_numeric: bool,
+    has_comment: bool,
+    has_spacer: bool,
 ) -> Option<AnnotatedForm> {
     use itertools::Itertools as _;
 
@@ -118,30 +133,46 @@ pub fn root_verb_surface_form(
     // All tags except the last one come before the root.
     let (mut morpheme_tags, phonemic) = all_tags(&mut cols.filter(|x| !x.is_empty()));
     let mod_morpheme = morpheme_tags.pop()?;
+    let asp_morpheme = morpheme_tags.remove(0);
     let mut morphemes = morpheme_tags
         .iter()
         .map(|(_tag, src)| src.trim())
-        .chain(vec![root, &mod_morpheme.1])
+        .chain(vec![root, &asp_morpheme.1, &mod_morpheme.1])
         .filter(|s| !s.is_empty())
         .map(|s| convert_udb(s).to_dailp());
     let morpheme_layer = morphemes.join("-");
     let mut morpheme_glosses = morpheme_tags
         .iter()
         .map(|(tag, _src)| tag.trim().to_owned())
-        .chain(vec![root_gloss.to_owned(), mod_morpheme.0])
+        .chain(vec![root_gloss.to_owned(), asp_morpheme.0, mod_morpheme.0])
         .filter(|s| !s.is_empty());
     let gloss_layer = morpheme_glosses.join("-");
     // Then, the representations of the full word.
     let phonemic = phonemic?;
-    let _numeric = if has_ppp { cols.next()? } else { String::new() };
+    let _numeric = if has_numeric {
+        cols.next()?
+    } else {
+        String::new()
+    };
     let phonetic = cols.next()?;
     let syllabary = cols.next()?;
     // Finally, up to three translations of the word.
-    let translations = if has_ppp {
-        cols.take(3).filter(|s| !s.is_empty()).collect()
+    let mut translations = Vec::new();
+    for _ in 0..translation_count {
+        let t = cols.next()?;
+        if !t.is_empty() {
+            translations.push(t);
+        }
+    }
+
+    let commentary = if has_comment {
+        Some(cols.next()?)
     } else {
-        vec![cols.next()?]
+        None
     };
+    if has_spacer {
+        cols.next();
+    }
 
     Some(AnnotatedForm {
         index: 0,
@@ -151,7 +182,7 @@ pub fn root_verb_surface_form(
         phonemic: Some(convert_udb(&phonemic).to_dailp()),
         segments: MorphemeSegment::parse_many(&morpheme_layer, &gloss_layer)?,
         english_gloss: translations,
-        commentary: None,
+        commentary,
         line_break: None,
         page_break: None,
         document_id: Some(doc_id.to_owned()),
@@ -166,10 +197,12 @@ fn all_tags(cols: &mut impl Iterator<Item = String>) -> (Vec<(String, String)>, 
     // Tags are all uppercase, followed by the corresponding morpheme.
     while let Some(true) = cols
         .peek()
-        .map(|x| x.contains(|c: char| c.is_ascii_uppercase()))
+        .map(|x| !x.starts_with(|c: char| c.is_lowercase()) || x.is_empty())
     {
         if let (Some(a), Some(b)) = (cols.next(), cols.next()) {
-            tags.push((a, b));
+            if !a.is_empty() || !b.is_empty() {
+                tags.push((a, b));
+            }
         }
     }
     (tags, cols.next())

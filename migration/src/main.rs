@@ -10,13 +10,14 @@ use anyhow::Result;
 async fn main() -> Result<()> {
     dotenv::dotenv().ok();
     let db = dailp::Database::new().await?;
+
+    println!("Migrating DF1975 and DF2003 to database...");
+    lexical::migrate_dictionaries(&db).await?;
+
     migrate_data(&db).await?;
 
     println!("Migrating tags to database...");
     tags::migrate_tags(&db).await?;
-
-    println!("Migrating DF1975 and DF2003 to database...");
-    lexical::migrate_dictionaries(&db).await?;
     Ok(())
 }
 
