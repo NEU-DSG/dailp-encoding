@@ -204,19 +204,21 @@ const MorphemeButton = styled(DialogDisclosure)`
 
 const GlossLine = styled.span`
   display: flex;
-  flex-flow: row nowrap;
+  flex-flow: row wrap;
 `
 
 const WordGroup = styled(Group)`
-  margin: 1rem ${theme.edgeSpacing};
+  margin: 1rem 0.5rem;
   margin-bottom: 0.5rem;
   padding: 0.5rem;
-  border: 2px solid ${theme.colors.header};
+  padding-right: 0;
+  border: 2px solid ${theme.colors.borders};
   border-radius: 2px;
   ${theme.mediaQueries.medium} {
     margin-bottom: 2rem;
     padding: 0;
     border: none;
+    margin: 1rem ${theme.edgeSpacing};
   }
 `
 

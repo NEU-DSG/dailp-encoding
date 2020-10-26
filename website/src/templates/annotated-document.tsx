@@ -139,7 +139,7 @@ export default AnnotatedDocumentPage
 
 const wideAndTop = css`
   width: 100%;
-  z-index: 999;
+  z-index: 1;
 `
 
 const WideSticky = styled(({ className, ...p }) => (
@@ -277,12 +277,14 @@ const MorphemeDialog = styled(Dialog)`
   left: 50%;
   transform: translate(-50%, -50%);
   background-color: white;
-  border: 1px solid black;
+  border: 1px solid ${theme.colors.borders};
+  border-radius: 2px;
   padding: 1rem;
   max-height: 80vh;
   min-height: 20rem;
   max-width: 100vw;
   overflow-y: scroll;
+  z-index: 999;
 `
 
 const MorphemeDialogBackdrop = styled(DialogBackdrop)`

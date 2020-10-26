@@ -21,7 +21,7 @@ export default Layout
 
 const Header = styled.nav`
   display: flex;
-  flex-flow: row nowrap;
+  flex-flow: row wrap;
   justify-content: center;
   background-color: ${theme.colors.header};
   padding: 0 ${theme.edgeSpacing};

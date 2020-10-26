@@ -16,6 +16,7 @@ const theme = {
     body: "white",
     text: "black",
     headings: "#bb675d",
+    borders: "darkgray",
   },
   mediaQueries: {
     small: "@media print, (min-width: 40em)",
