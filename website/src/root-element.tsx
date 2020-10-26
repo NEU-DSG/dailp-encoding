@@ -53,6 +53,10 @@ css`
     h5,
     h6 {
       font-family: ${theme.fonts.header};
+      main > & {
+        padding-left: ${theme.edgeSpacing};
+        padding-right: ${theme.edgeSpacing};
+      }
     }
   }
 `

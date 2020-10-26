@@ -137,11 +137,15 @@ const AnnotatedDocumentPage = (p: {
 }
 export default AnnotatedDocumentPage
 
+const wideAndTop = css`
+  width: 100%;
+  z-index: 999;
+`
+
 const WideSticky = styled(({ className, ...p }) => (
-  <Sticky innerClass={className} {...p} />
+  <Sticky className={wideAndTop} innerClass={className} {...p} />
 ))`
   left: 0;
-  z-index: 999;
   display: flex;
   flex-flow: column nowrap;
   align-items: center;

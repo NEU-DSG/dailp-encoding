@@ -5,7 +5,7 @@ import { styled } from "linaria/react"
 import _ from "lodash"
 import slugify from "slugify"
 import Layout from "../layout"
-import { fullWidth } from "../theme"
+import theme, { fullWidth } from "../theme"
 
 /** Lists all documents in our database */
 const IndexPage = (props: { data: GatsbyTypes.IndexPageQuery }) => {
