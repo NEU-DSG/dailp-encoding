@@ -18,6 +18,7 @@ import { Segment, BasicMorphemeSegment } from "../segment"
 import Cookies from "js-cookie"
 import theme, { fullWidth, largeDialog } from "../theme"
 import { collectionRoute } from "../routes"
+import { css } from "linaria"
 
 interface TabScrollPositions {
   [x: string]: number
@@ -140,6 +141,11 @@ const WideSticky = styled(({ className, ...p }) => (
   <Sticky innerClass={className} {...p} />
 ))`
   left: 0;
+  z-index: 999;
+  display: flex;
+  flex-flow: column nowrap;
+  align-items: center;
+  width: 100% !important;
 `
 
 const DocTab = styled(Tab)`
@@ -155,11 +161,8 @@ const DocTab = styled(Tab)`
 const DocTabs = styled(TabList)`
   display: flex;
   flex-flow: row nowrap;
-  width: 100vw;
   height: 48px;
-  ${theme.mediaQueries.small} {
-    width: 100%;
-  }
+  ${fullWidth}
 `
 
 export const DocHeader = styled.header`
