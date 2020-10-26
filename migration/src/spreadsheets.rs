@@ -4,10 +4,11 @@
 
 use crate::translations::DocResult;
 use anyhow::Result;
+use dailp::PositionInDocument;
 use dailp::{
     convert_udb, root_noun_surface_form, root_verb_surface_forms, AnnotatedDoc, AnnotatedForm,
     AnnotatedPhrase, AnnotatedSeg, BlockType, Database, DateTime, DocumentMetadata, LexicalEntry,
-    LineBreak, MorphemeSegment, PageBreak, PersonAssociation,
+    LineBreak, MorphemeSegment, PageBreak, PersonAssociation, UniqueAnnotatedForm,
 };
 use futures_retry::{FutureRetry, RetryPolicy};
 use mongodb::bson::{self, Bson};
@@ -24,6 +25,11 @@ const BLOCK_START: &str = "{";
 const BLOCK_END: &str = "}";
 const OUTPUT_DIR: &str = "../xml";
 
+pub struct LexicalEntryWithForms {
+    pub entry: LexicalEntry,
+    pub forms: Vec<UniqueAnnotatedForm>,
+}
+
 /// Converts a set of annotated documents into our preferred access format, then
 /// pushes that data into the underlying database.
 /// Existing versions of these documents are overwritten with the new data.
@@ -39,11 +45,11 @@ pub async fn migrate_documents_to_db(
     });
 
     // Write the contents of each document to our database.
-    let db = db.client.collection("annotated-documents");
+    let db = db.documents_collection();
     for doc in docs {
         if let Bson::Document(bson_doc) = bson::to_bson(&doc)? {
             db.update_one(
-                bson::doc! {"_id": doc.id},
+                bson::doc! {"_id": doc.meta.id},
                 bson_doc,
                 mongodb::options::UpdateOptions::builder()
                     .upsert(true)
@@ -128,7 +134,11 @@ impl SheetResult {
         year: i32,
         translation_count: usize,
         has_numeric: bool,
-    ) -> Result<Vec<LexicalEntry>> {
+        has_comment: bool,
+        before_root: usize,
+        after_root: usize,
+        translations: usize,
+    ) -> Result<Vec<LexicalEntryWithForms>> {
         use chrono::TimeZone as _;
         use rayon::prelude::*;
         Ok(self
@@ -136,39 +146,54 @@ impl SheetResult {
             .into_par_iter()
             // The first two rows are simply headers.
             .skip(2)
+            .enumerate()
             // The rest are relevant to the verb itself.
-            .filter_map(|columns| {
+            .filter_map(|(index, columns)| {
                 // The columns are as follows: key, page number, root, root gloss,
                 // translations 1, 2, 3, transitivity, UDB class, blank, surface forms.
                 if columns.len() > 7 && !columns[2].is_empty() {
                     // Skip reference numbers for now.
                     let mut root_values = columns.into_iter();
-                    let _key = root_values.next()?;
-                    let _page_num = root_values.next()?;
+                    for _ in 0..before_root {
+                        root_values.next()?;
+                    }
                     let root = root_values.next()?;
                     let root_gloss = root_values.next()?;
-                    let mut form_values = root_values.clone().skip(5);
-                    Some(LexicalEntry {
-                        id: LexicalEntry::make_id(doc_id, &root_gloss),
-                        surface_forms: root_verb_surface_forms(
+                    let root_id = LexicalEntry::make_id(doc_id, &root_gloss);
+                    let mut form_values = root_values.clone().skip(after_root);
+                    Some(LexicalEntryWithForms {
+                        forms: root_verb_surface_forms(
                             doc_id,
                             &root,
-                            &root_gloss,
+                            &root_id,
                             &mut form_values,
                             translation_count,
                             has_numeric,
-                            false,
+                            has_comment,
                             true,
                         ),
-                        root_translations: root_values
-                            .take(3)
-                            .map(|s| s.trim().to_owned())
-                            .filter(|s| !s.is_empty())
-                            .collect(),
-                        root: MorphemeSegment::new(convert_udb(&root).to_dailp(), root_gloss, None),
-                        date_recorded: DateTime::new(chrono::Utc.ymd(year, 1, 1).and_hms(0, 0, 0)),
-                        original: root,
-                        position: None,
+                        entry: LexicalEntry {
+                            id: root_id,
+                            root_translations: root_values
+                                .take(translations)
+                                .map(|s| s.trim().to_owned())
+                                .filter(|s| !s.is_empty())
+                                .collect(),
+                            root: MorphemeSegment::new(
+                                convert_udb(&root).to_dailp(),
+                                root_gloss,
+                                None,
+                            ),
+                            date_recorded: DateTime::new(
+                                chrono::Utc.ymd(year, 1, 1).and_hms(0, 0, 0),
+                            ),
+                            original: root,
+                            position: Some(PositionInDocument {
+                                document_id: doc_id.to_owned(),
+                                page_number: 1,
+                                index: index as i64 + 1,
+                            }),
+                        },
                     })
                 } else {
                     None
@@ -176,7 +201,7 @@ impl SheetResult {
             })
             .collect())
     }
-    pub fn into_adjs(self, doc_id: &str, year: i32) -> Result<Vec<LexicalEntry>> {
+    pub fn into_adjs(self, doc_id: &str, year: i32) -> Result<Vec<LexicalEntryWithForms>> {
         use chrono::TimeZone as _;
         use rayon::prelude::*;
         Ok(self
@@ -195,25 +220,34 @@ impl SheetResult {
                     let _key = root_values.next()?;
                     let root = root_values.next()?;
                     let root_gloss = root_values.next()?;
+                    let root_id = LexicalEntry::make_id(doc_id, &root_gloss);
                     // Skip page ref.
                     let mut form_values = root_values.skip(1);
-                    Some(LexicalEntry {
-                        id: LexicalEntry::make_id(doc_id, &root_gloss),
-                        surface_forms: root_verb_surface_forms(
+                    Some(LexicalEntryWithForms {
+                        forms: root_verb_surface_forms(
                             doc_id,
                             &root,
-                            &root_gloss,
+                            &root_id,
                             &mut form_values,
                             3,
                             true,
                             true,
                             false,
                         ),
-                        root: MorphemeSegment::new(convert_udb(&root).to_dailp(), root_gloss, None),
-                        root_translations: Vec::new(),
-                        date_recorded: DateTime::new(chrono::Utc.ymd(year, 1, 1).and_hms(0, 0, 0)),
-                        original: root,
-                        position: None,
+                        entry: LexicalEntry {
+                            id: root_id,
+                            root: MorphemeSegment::new(
+                                convert_udb(&root).to_dailp(),
+                                root_gloss,
+                                None,
+                            ),
+                            root_translations: Vec::new(),
+                            date_recorded: DateTime::new(
+                                chrono::Utc.ymd(year, 1, 1).and_hms(0, 0, 0),
+                            ),
+                            original: root,
+                            position: None,
+                        },
                     })
                 } else {
                     None
@@ -221,7 +255,13 @@ impl SheetResult {
             })
             .collect())
     }
-    pub fn into_nouns(self, doc_id: &str, year: i32) -> Result<Vec<LexicalEntry>> {
+    pub fn into_nouns(
+        self,
+        doc_id: &str,
+        year: i32,
+        before_root: usize,
+        after_root: usize,
+    ) -> Result<Vec<LexicalEntryWithForms>> {
         use chrono::TimeZone as _;
         use rayon::prelude::*;
         Ok(self
@@ -237,27 +277,38 @@ impl SheetResult {
                 if columns.len() > 4 && !columns[1].is_empty() {
                     // Skip reference numbers for now.
                     let mut root_values = columns.into_iter();
-                    let key = root_values.next()?;
+                    for _ in 0..before_root {
+                        root_values.next()?;
+                    }
                     let root = root_values.next()?;
                     let root_gloss = root_values.next()?;
+                    let root_id = LexicalEntry::make_id(doc_id, &root_gloss);
                     // Skip page ref and category.
-                    let mut form_values = root_values.skip(2);
-                    Some(LexicalEntry {
-                        id: LexicalEntry::make_id(doc_id, &root_gloss),
-                        surface_forms: vec![root_noun_surface_form(
+                    let mut form_values = root_values.skip(after_root);
+                    Some(LexicalEntryWithForms {
+                        forms: vec![root_noun_surface_form(
                             doc_id,
                             &root,
-                            &root_gloss,
+                            &root_id,
                             &mut form_values,
                         )]
                         .into_iter()
                         .filter_map(|x| x)
                         .collect(),
-                        root: MorphemeSegment::new(convert_udb(&root).to_dailp(), root_gloss, None),
-                        root_translations: Vec::new(),
-                        date_recorded: DateTime::new(chrono::Utc.ymd(year, 1, 1).and_hms(0, 0, 0)),
-                        original: root,
-                        position: None,
+                        entry: LexicalEntry {
+                            id: root_id,
+                            root: MorphemeSegment::new(
+                                convert_udb(&root).to_dailp(),
+                                root_gloss,
+                                None,
+                            ),
+                            root_translations: Vec::new(),
+                            date_recorded: DateTime::new(
+                                chrono::Utc.ymd(year, 1, 1).and_hms(0, 0, 0),
+                            ),
+                            original: root,
+                            position: None,
+                        },
                     })
                 } else {
                     None
@@ -322,8 +373,8 @@ impl SheetResult {
             id: doc_id.remove(1),
             title: title.remove(1),
             publication: None,
+            collection: source.pop(),
             people,
-            source: source.pop(),
             genre: genre.pop(),
             translation: DocResult::new(&translations.remove(1))
                 .await?
@@ -332,7 +383,8 @@ impl SheetResult {
             date: date
                 .as_ref()
                 .and_then(|d| d.get(1))
-                .and_then(|s| chrono::Utc.datetime_from_str(s, "%Y-%m-%d %H:%M:%S").ok()),
+                .and_then(|s| chrono::Utc.datetime_from_str(s, "%Y-%m-%d %H:%M:%S").ok())
+                .map(|d| DateTime::new(d)),
         })
     }
 
@@ -455,13 +507,15 @@ impl<'a> AnnotatedLine {
                         let w = AnnotatedForm {
                             index: i as i32 + 1,
                             source: line.rows[0].items[i].trim().replace(LINE_BREAK, ""),
-                            normalized_source: line.rows[0].items[i].trim().to_owned(),
-                            simple_phonetics: line.rows[2].items.get(i).map(|x| x.to_owned()),
+                            simple_phonetics: line.rows[2]
+                                .items
+                                .get(i)
+                                .map(|x| x.replace("ʔ", "'")),
                             phonemic: line.rows[3].items.get(i).map(|x| x.to_owned()),
                             segments: if let (Some(m), Some(g)) = (morphemes, glosses) {
-                                MorphemeSegment::parse_many(m, g).unwrap_or_default()
+                                MorphemeSegment::parse_many(m, g)
                             } else {
-                                Vec::new()
+                                None
                             },
                             english_gloss: vec![line.rows[6]
                                 .items

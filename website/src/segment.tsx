@@ -10,7 +10,9 @@ import {
 } from "./templates/annotated-document"
 import theme from "./theme"
 
-export type BasicMorphemeSegment = GatsbyTypes.FormFieldsFragment["segments"][0]
+export type BasicMorphemeSegment = NonNullable<
+  GatsbyTypes.FormFieldsFragment["segments"]
+>[0]
 
 interface Props {
   segment: GatsbyTypes.Dailp_AnnotatedSeg
@@ -132,13 +134,13 @@ const MorphemicSegmentation = (p: {
 
   return (
     <WordSegment>
-      {p.segments.map((segment, i) => {
+      {p.segments!.map((segment, i) => {
         let seg = p.showAdvanced ? segment.morpheme : segment.simpleMorpheme
         return seg + (segment.nextSeparator || "")
       })}
       <GlossLine>
         {intersperse(
-          p.segments.map((segment, i) => (
+          p.segments!.map((segment, i) => (
             <MorphemeSegment
               key={i}
               segment={segment}
@@ -148,7 +150,7 @@ const MorphemicSegmentation = (p: {
             />
           )),
           (i) => (
-            <span key={100 * (i + 1)}>{p.segments[i].nextSeparator}</span>
+            <span key={100 * (i + 1)}>{p.segments![i].nextSeparator}</span>
           )
         )}
       </GlossLine>

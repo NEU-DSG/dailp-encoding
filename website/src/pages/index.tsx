@@ -25,7 +25,8 @@ const IndexPage = (props: { data: GatsbyTypes.IndexPageQuery }) => {
                 const slug = slugify(document.id, { lower: true })
                 return (
                   <li key={document.id}>
-                    <Link to={`/documents/${slug}`}>{document.title}</Link>
+                    <Link to={`/documents/${slug}`}>{document.title}</Link>{" "}
+                    {document.date && `(${document.date.year})`}
                   </li>
                 )
               })}
@@ -45,6 +46,10 @@ export const query = graphql`
         id
         title
         collection
+        genre
+        date {
+          year
+        }
       }
     }
   }

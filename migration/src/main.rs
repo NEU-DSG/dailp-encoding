@@ -1,3 +1,4 @@
+mod connections;
 mod lexical;
 mod spreadsheets;
 mod tags;
@@ -11,13 +12,20 @@ async fn main() -> Result<()> {
     dotenv::dotenv().ok();
     let db = dailp::Database::new().await?;
 
-    println!("Migrating DF1975 and DF2003 to database...");
+    println!("Migrating DF1975 and DF2003...");
     lexical::migrate_dictionaries(&db).await?;
+
+    println!("Migrating early vocabularies...");
+    lexical::migrate_old_lexical(&db).await?;
 
     migrate_data(&db).await?;
 
     println!("Migrating tags to database...");
     tags::migrate_tags(&db).await?;
+
+    println!("Migrating connections...");
+    connections::migrate_connections(&db).await?;
+
     Ok(())
 }
 

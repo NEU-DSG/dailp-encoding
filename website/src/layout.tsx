@@ -3,7 +3,7 @@ import { styled } from "linaria/react"
 import { css } from "linaria"
 import { Link } from "gatsby"
 import Footer from "./footer"
-import theme from "./theme"
+import theme, { fullWidth } from "./theme"
 
 /** Wrapper for most site pages, providing them with a navigation header and footer. */
 const Layout = (p: { children: any }) => (
@@ -24,6 +24,9 @@ const Header = styled.nav`
   flex-flow: row nowrap;
   justify-content: center;
   background-color: ${theme.colors.header};
+  & > * {
+    ${fullWidth}
+  }
 `
 
 const siteTitle = css`
