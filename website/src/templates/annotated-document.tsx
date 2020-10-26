@@ -158,6 +158,8 @@ const DocTab = styled(Tab)`
   border-bottom: 2px solid transparent;
   flex-grow: 1;
   cursor: pointer;
+  font-family: ${theme.fonts.header};
+  font-size: 1.1rem;
   &[aria-selected="true"] {
     border-color: ${theme.colors.headings};
   }
