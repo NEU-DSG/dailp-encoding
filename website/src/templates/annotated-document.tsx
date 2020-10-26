@@ -157,6 +157,7 @@ const DocTab = styled(Tab)`
   border: none;
   border-bottom: 2px solid transparent;
   flex-grow: 1;
+  cursor: pointer;
   &[aria-selected="true"] {
     border-color: ${theme.colors.headings};
   }
@@ -177,6 +178,7 @@ const PageImage = styled.img`
   margin-bottom: 2rem;
   width: 100%;
   height: auto;
+  cursor: grab;
 `
 
 export enum ExperienceLevel {
@@ -302,6 +304,9 @@ const DocSection = styled.section`
 
 export const AnnotationSection = styled(DocSection)`
   display: flex;
-  flex-flow: row wrap;
-  justify-content: space-between;
+  flex-flow: column nowrap;
+  ${theme.mediaQueries.medium} {
+    flex-flow: row wrap;
+    justify-content: space-between;
+  }
 `

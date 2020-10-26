@@ -209,11 +209,19 @@ const GlossLine = styled.span`
 
 const WordGroup = styled(Group)`
   margin: 1rem ${theme.edgeSpacing};
-  margin-bottom: 2rem;
+  margin-bottom: 0.5rem;
+  padding: 0.5rem;
+  border: 2px solid ${theme.colors.header};
+  border-radius: 2px;
+  ${theme.mediaQueries.medium} {
+    margin-bottom: 2rem;
+    padding: 0;
+    border: none;
+  }
 `
 
 const SyllabaryLayer = styled.div`
-  font-size: 1.1rem;
+  font-size: 1.2rem;
 `
 
 const TranslationPara = styled.p`

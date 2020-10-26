@@ -18,7 +18,7 @@ const theme = {
     headings: "#bb675d",
   },
   mediaQueries: {
-    small: "@media (min-width: 40em)",
+    small: "@media print, (min-width: 40em)",
     medium: "@media print, (min-width: 52em)",
     large: "@media (min-width: 64em)",
   },
