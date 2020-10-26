@@ -93,8 +93,8 @@ const AnnotatedDocumentPage = (p: {
 
         <WideSticky>
           <DocTabs {...tabs}>
-            <Tab {...tabs}>Annotation</Tab>
-            <Tab {...tabs}>Source Image</Tab>
+            <DocTab {...tabs}>Translation</DocTab>
+            <DocTab {...tabs}>Source Image</DocTab>
           </DocTabs>
         </WideSticky>
 
@@ -142,6 +142,16 @@ const WideSticky = styled(({ className, ...p }) => (
   left: 0;
 `
 
+const DocTab = styled(Tab)`
+  border-radius: 0;
+  border: none;
+  border-bottom: 2px solid transparent;
+  flex-grow: 1;
+  &[aria-selected="true"] {
+    border-color: ${theme.colors.headings};
+  }
+`
+
 const DocTabs = styled(TabList)`
   display: flex;
   flex-flow: row nowrap;
@@ -149,9 +159,6 @@ const DocTabs = styled(TabList)`
   height: 48px;
   ${theme.mediaQueries.small} {
     width: 100%;
-  }
-  & > * {
-    flex-grow: 1;
   }
 `
 
