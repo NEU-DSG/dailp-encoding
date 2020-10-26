@@ -18,6 +18,7 @@
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
     "react-helmet": "^6.0.0",
+    "react-stickynode": "^3.0.4",
     "reakit": "^1.2.1",
     "slugify": "^1.4.5",
     "typeface-gentium-basic": "1.1.13",
@@ -32,6 +33,7 @@
     "@types/react": "^16.9.23",
     "@types/react-dom": "^16.9.5",
     "@types/react-helmet": "^6.0.0",
+    "@types/react-stickynode": "^3.0.0",
     "babel-plugin-object-styles-to-template": "^0.2.2",
     "babel-preset-gatsby": "^0.5.5",
     "eslint": "^7.11.0",
@@ -55,6 +57,7 @@
   },
   "prettier": {
     "trailingComma": "es5",
-    "semi": false
+    "semi": false,
+    "tabWidth": 2
   }
 }

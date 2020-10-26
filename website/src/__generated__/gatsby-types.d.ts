@@ -2296,19 +2296,6 @@ type StringQueryOperatorInput = {
   readonly glob: Maybe<Scalars['String']>;
 };
 
-type PagesQueryQueryVariables = Exact<{ [key: string]: never; }>;
-
-
-type PagesQueryQuery = { readonly allSitePage: { readonly nodes: ReadonlyArray<Pick<SitePage, 'path'>> } };
-
-type IndexPageQueryVariables = Exact<{ [key: string]: never; }>;
-
-
-type IndexPageQuery = { readonly dailp: { readonly allDocuments: ReadonlyArray<(
-      Pick<Dailp_AnnotatedDoc, 'id' | 'title' | 'collection' | 'genre'>
-      & { readonly date: Maybe<Pick<Dailp_DateTime, 'year'>> }
-    )> } };
-
 type FormFieldsFragment = (
   Pick<Dailp_AnnotatedForm, 'index' | 'source' | 'simplePhonetics' | 'phonemic' | 'englishGloss' | 'commentary'>
   & { readonly segments: Maybe<ReadonlyArray<(
@@ -2361,5 +2348,18 @@ type CollectionQueryVariables = Exact<{
 
 
 type CollectionQuery = { readonly dailp: { readonly allDocuments: ReadonlyArray<Pick<Dailp_AnnotatedDoc, 'id' | 'title'>> } };
+
+type PagesQueryQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+type PagesQueryQuery = { readonly allSitePage: { readonly nodes: ReadonlyArray<Pick<SitePage, 'path'>> } };
+
+type IndexPageQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+type IndexPageQuery = { readonly dailp: { readonly allDocuments: ReadonlyArray<(
+      Pick<Dailp_AnnotatedDoc, 'id' | 'title' | 'collection' | 'genre'>
+      & { readonly date: Maybe<Pick<Dailp_DateTime, 'year'>> }
+    )> } };
 
 }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react"
+import React, { useState, useEffect, useRef } from "react"
 import { graphql, Link } from "gatsby"
 import { styled } from "linaria/react"
 import { Helmet } from "react-helmet"
@@ -9,6 +9,8 @@ import {
   useRadioState,
   RadioStateReturn,
 } from "reakit/Radio"
+import { useTabState, Tab, TabPanel, TabList } from "reakit/Tab"
+import Sticky from "react-stickynode"
 import Layout from "../layout"
 import { MorphemeDetails } from "../morpheme"
 import { Segment, BasicMorphemeSegment } from "../segment"
@@ -16,12 +18,17 @@ import Cookies from "js-cookie"
 import theme, { fullWidth, largeDialog } from "../theme"
 import { collectionRoute } from "../routes"
 
+interface TabScrollPositions {
+  [x: string]: number
+}
+
 /** A full annotated document, including all metadata and the translation(s) */
 const AnnotatedDocumentPage = (p: {
   data: GatsbyTypes.AnnotatedDocumentQuery
 }) => {
   const doc = p.data.dailp.document!
   const dialog = useDialogState()
+  const tabs = useTabState()
   const [selectedMorpheme, setMorpheme] = useState<BasicMorphemeSegment | null>(
     null
   )
@@ -33,6 +40,26 @@ const AnnotatedDocumentPage = (p: {
   useEffect(() => {
     Cookies.set("experienceLevel", experienceLevel.state!.toString())
   }, [experienceLevel.state])
+
+  const tabScrollPos = useRef<TabScrollPositions>({})
+  useEffect(() => {
+    // Restore the scroll position for the new tab.
+    const newScroll = tabScrollPos.current[tabs.selectedId!]
+    if (newScroll) {
+      window.scrollTo({ top: newScroll })
+    }
+
+    const listener = (e: any) => {
+      // Save scroll position for last tab.
+      const lastTabId = tabs.selectedId!
+      if (lastTabId) {
+        tabScrollPos.current[lastTabId] = window.scrollY
+      }
+    }
+    window.addEventListener("scroll", listener)
+
+    return () => window.removeEventListener("scroll", listener)
+  }, [tabs.selectedId])
 
   const tagSet =
     experienceLevel.state! > ExperienceLevel.Learner
@@ -63,32 +90,65 @@ const AnnotatedDocumentPage = (p: {
           </Link>
         </DocHeader>
 
-        <ExperiencePicker radio={experienceLevel} />
+        <WideSticky>
+          <DocTabs {...tabs}>
+            <Tab {...tabs}>Annotation</Tab>
+            <Tab {...tabs}>Source Image</Tab>
+          </DocTabs>
+        </WideSticky>
 
-        <AnnotationSection>
-          {doc.translatedSegments?.map((seg, i) => (
-            <Segment
-              key={`s${i}`}
-              segment={seg.source as GatsbyTypes.Dailp_AnnotatedSeg}
-              dialog={dialog}
-              onOpenDetails={setMorpheme}
-              level={experienceLevel.state! as ExperienceLevel}
-              tagSet={tagSet}
-              translations={
-                seg.translation as GatsbyTypes.Dailp_TranslationBlock
-              }
-              pageImages={doc.pageImages}
-            />
-          ))}
-          {doc.pageImages.map((url, i) => (
-            <PageImage key={i} src={url} />
-          ))}
-        </AnnotationSection>
+        <TabPanel {...tabs}>
+          <ExperiencePicker radio={experienceLevel} />
+
+          <AnnotationSection>
+            {doc.translatedSegments?.map((seg, i) => (
+              <Segment
+                key={`s${i}`}
+                segment={seg.source as GatsbyTypes.Dailp_AnnotatedSeg}
+                dialog={dialog}
+                onOpenDetails={setMorpheme}
+                level={experienceLevel.state! as ExperienceLevel}
+                tagSet={tagSet}
+                translations={
+                  seg.translation as GatsbyTypes.Dailp_TranslationBlock
+                }
+                pageImages={doc.pageImages}
+              />
+            ))}
+          </AnnotationSection>
+        </TabPanel>
+
+        <TabPanel {...tabs}>
+          <AnnotationSection>
+            {doc.pageImages.map((url, i) => (
+              <PageImage key={i} src={url} />
+            ))}
+          </AnnotationSection>
+        </TabPanel>
       </AnnotatedDocument>
     </Layout>
   )
 }
 export default AnnotatedDocumentPage
+
+const WideSticky = styled(({ className, ...p }) => (
+  <Sticky innerClass={className} {...p} />
+))`
+  left: 0;
+`
+
+const DocTabs = styled(TabList)`
+  display: flex;
+  flex-flow: row nowrap;
+  width: 100vw;
+  height: 48px;
+  ${theme.mediaQueries.small} {
+    width: 100%;
+  }
+  & > * {
+    flex-grow: 1;
+  }
+`
 
 export const DocHeader = styled.header`
   padding: 0 ${theme.edgeSpacing};

@@ -24,6 +24,7 @@ const Header = styled.nav`
   flex-flow: row nowrap;
   justify-content: center;
   background-color: ${theme.colors.header};
+  padding: 0 ${theme.edgeSpacing};
   & > * {
     ${fullWidth}
   }
