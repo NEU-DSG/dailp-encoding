@@ -11,6 +11,7 @@ import {
 } from "reakit/Radio"
 import { useTabState, Tab, TabPanel, TabList } from "reakit/Tab"
 import Sticky from "react-stickynode"
+import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch"
 import Layout from "../layout"
 import { MorphemeDetails } from "../morpheme"
 import { Segment, BasicMorphemeSegment } from "../segment"
@@ -121,7 +122,11 @@ const AnnotatedDocumentPage = (p: {
         <TabPanel {...tabs}>
           <AnnotationSection>
             {doc.pageImages.map((url, i) => (
-              <PageImage key={i} src={url} />
+              <TransformWrapper>
+                <TransformComponent>
+                  <PageImage key={i} src={url} />
+                </TransformComponent>
+              </TransformWrapper>
             ))}
           </AnnotationSection>
         </TabPanel>
