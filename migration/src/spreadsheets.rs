@@ -507,6 +507,7 @@ impl<'a> AnnotatedLine {
                         let w = AnnotatedForm {
                             index: i as i32 + 1,
                             source: line.rows[0].items[i].trim().replace(LINE_BREAK, ""),
+                            normalized_source: None,
                             simple_phonetics: line.rows[2]
                                 .items
                                 .get(i)
