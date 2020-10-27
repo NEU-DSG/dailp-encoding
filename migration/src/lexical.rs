@@ -142,6 +142,7 @@ fn parse_early_vocab(
                 form: AnnotatedForm {
                     index: index as i32 + 1,
                     source: original,
+                    normalized_source: None,
                     simple_phonetics: None,
                     segments: None,
                     phonemic: None,
