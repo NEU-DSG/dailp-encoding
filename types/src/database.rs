@@ -1,4 +1,6 @@
-use crate::{AnnotatedDoc, AnnotatedForm, DocumentType, LexicalEntry, MorphemeTag};
+use crate::{
+    AnnotatedDoc, AnnotatedForm, DocumentCollection, DocumentType, LexicalEntry, MorphemeTag,
+};
 use anyhow::Result;
 use mongodb::bson;
 
@@ -54,6 +56,38 @@ impl Database {
             .await
             .ok()
             .and_then(|doc| doc.and_then(|doc| bson::from_document(doc).ok()))
+    }
+
+    pub async fn all_documents(&self, collection: Option<String>) -> Result<Vec<AnnotatedDoc>> {
+        use tokio::stream::StreamExt;
+
+        Ok(self
+            .documents_collection()
+            .find(
+                collection.map(|collection| {
+                    bson::doc! { "collection": collection }
+                }),
+                mongodb::options::FindOptions::builder()
+                    .projection(bson::doc! { "segments": 0, "translation": 0 })
+                    .build(),
+            )
+            .await?
+            .filter_map(|doc| bson::from_document(doc.unwrap()).ok())
+            .collect()
+            .await)
+    }
+
+    pub async fn all_collections(&self) -> Result<Vec<DocumentCollection>> {
+        Ok(self
+            .documents_collection()
+            .distinct("collection", None, None)
+            .await?
+            .iter()
+            .filter_map(|doc| doc.as_str())
+            .map(|name| DocumentCollection {
+                name: name.to_owned(),
+            })
+            .collect())
     }
 
     pub async fn lexical_entry(&self, id: String) -> Result<Option<LexicalEntry>> {

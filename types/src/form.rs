@@ -10,7 +10,7 @@ pub struct AnnotatedForm {
     pub index: i32,
     pub source: String,
     /// A normalized version of the word.
-    pub normalized_source: String,
+    pub normalized_source: Option<String>,
     pub simple_phonetics: Option<String>,
     pub phonemic: Option<String>,
     pub segments: Option<Vec<MorphemeSegment>>,
