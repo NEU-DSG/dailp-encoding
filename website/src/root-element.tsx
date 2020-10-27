@@ -8,6 +8,10 @@ import theme from "./theme"
 export const wrapRootElement = (p: { element: any }) => (
   <>
     <Helmet>
+      <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+      />
       <link
         rel="stylesheet"
         href="https://fonts.googleapis.com/earlyaccess/notosanscherokee.css"
@@ -49,6 +53,10 @@ css`
     h5,
     h6 {
       font-family: ${theme.fonts.header};
+      main > & {
+        padding-left: ${theme.edgeSpacing};
+        padding-right: ${theme.edgeSpacing};
+      }
     }
   }
 `

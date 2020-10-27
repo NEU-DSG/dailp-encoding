@@ -25,7 +25,7 @@ pub async fn migrate_tags(db: &Database) -> Result<()> {
     let refl = parse_tags(refl?, 4, 4, false).await?;
     let clitics = parse_tags(clitics?, 4, 4, false).await?;
 
-    let dict = db.client.collection("tags");
+    let dict = db.tags_collection();
     for entry in pp_tags
         .into_iter()
         .chain(combined_pp)

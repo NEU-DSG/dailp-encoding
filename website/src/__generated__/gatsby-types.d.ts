@@ -36,6 +36,7 @@ type Dailp = {
   readonly allDocuments: ReadonlyArray<Dailp_AnnotatedDoc>;
   /** Retrieves a full document from its unique identifier. */
   readonly document: Maybe<Dailp_AnnotatedDoc>;
+  readonly lexicalEntry: Maybe<Dailp_LexicalEntry>;
   /**
    * Lists all words containing a morpheme with the given gloss.
    * Groups these words by the phonemic shape of the target morpheme.
@@ -61,6 +62,11 @@ type Dailp_allDocumentsArgs = {
 
 
 type Dailp_documentArgs = {
+  id: Scalars['String'];
+};
+
+
+type Dailp_lexicalEntryArgs = {
   id: Scalars['String'];
 };
 
@@ -133,7 +139,7 @@ type Dailp_AnnotatedForm = {
    * Morphemic segmentation of the form that includes a phonemic
    * representation and gloss for each.
    */
-  readonly segments: ReadonlyArray<Dailp_MorphemeSegment>;
+  readonly segments: Maybe<ReadonlyArray<Dailp_MorphemeSegment>>;
   /** English gloss for the whole word. */
   readonly englishGloss: ReadonlyArray<Scalars['String']>;
   /** Further details about the annotation layers, including uncertainty. */
@@ -179,14 +185,6 @@ enum Dailp_DocumentType {
   CORPUS = 'CORPUS'
 }
 
-/**
- * A lexical entry is a form whose meaning cannot be created solely through
- * semantic composition. In linguistic theory terms, our lexemes are
- * semantically atomic forms rather than semantically complex forms.
- * In English, lexical entries may be afforded for "kick," "the," and "bucket."
- * By our definition, "kick the bucket" might have its own lexical entry
- * because it has meaning beyond forcing your foot into a container.
- */
 type Dailp_LexicalEntry = {
   readonly id: Scalars['String'];
   /** The original source text in whatever orthography was used there */
@@ -195,12 +193,13 @@ type Dailp_LexicalEntry = {
   readonly root: Dailp_MorphemeSegment;
   /** Plain English translations of root's meaning */
   readonly rootTranslations: ReadonlyArray<Scalars['String']>;
-  /** An owned collection of surface forms containing this root */
-  readonly surfaceForms: ReadonlyArray<Dailp_AnnotatedForm>;
   /** The year this form was recorded */
   readonly dateRecorded: Dailp_DateTime;
   /** This form's position in its containing document */
   readonly position: Maybe<Dailp_PositionInDocument>;
+  /** A collection of surface forms containing this root */
+  readonly surfaceForms: ReadonlyArray<Dailp_AnnotatedForm>;
+  readonly connectedForms: ReadonlyArray<Dailp_AnnotatedForm>;
 };
 
 type Dailp_LineBreak = {
@@ -2299,11 +2298,11 @@ type StringQueryOperatorInput = {
 
 type FormFieldsFragment = (
   Pick<Dailp_AnnotatedForm, 'index' | 'source' | 'simplePhonetics' | 'phonemic' | 'englishGloss' | 'commentary'>
-  & { readonly segments: ReadonlyArray<(
+  & { readonly segments: Maybe<ReadonlyArray<(
     Pick<Dailp_MorphemeSegment, 'morpheme' | 'gloss' | 'nextSeparator'>
     & { simpleMorpheme: Dailp_MorphemeSegment['morpheme'] }
     & { readonly matchingTag: Maybe<Pick<Dailp_MorphemeTag, 'crg' | 'learner'>> }
-  )> }
+  )>> }
 );
 
 type BlockFieldsFragment = (
@@ -2358,6 +2357,9 @@ type PagesQueryQuery = { readonly allSitePage: { readonly nodes: ReadonlyArray<P
 type IndexPageQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-type IndexPageQuery = { readonly dailp: { readonly allDocuments: ReadonlyArray<Pick<Dailp_AnnotatedDoc, 'id' | 'title' | 'collection' | 'genre'>> } };
+type IndexPageQuery = { readonly dailp: { readonly allDocuments: ReadonlyArray<(
+      Pick<Dailp_AnnotatedDoc, 'id' | 'title' | 'collection' | 'genre'>
+      & { readonly date: Maybe<Pick<Dailp_DateTime, 'year'>> }
+    )> } };
 
 }

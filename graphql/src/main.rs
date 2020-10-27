@@ -52,8 +52,7 @@ impl Query {
 
         Ok(context
             .data::<Database>()?
-            .client
-            .collection("annotated-documents")
+            .documents_collection()
             .find(
                 collection.map(|collection| {
                     bson::doc! { "collection": collection }
@@ -115,8 +114,7 @@ impl Query {
     ) -> FieldResult<Option<MorphemeTag>> {
         Ok(context
             .data::<Database>()?
-            .client
-            .collection("tags")
+            .tags_collection()
             .find_one(bson::doc! { "_id": id }, None)
             .await
             .and_then(|doc| {

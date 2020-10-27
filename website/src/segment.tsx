@@ -10,7 +10,9 @@ import {
 } from "./templates/annotated-document"
 import theme from "./theme"
 
-export type BasicMorphemeSegment = GatsbyTypes.FormFieldsFragment["segments"][0]
+export type BasicMorphemeSegment = NonNullable<
+  GatsbyTypes.FormFieldsFragment["segments"]
+>[0]
 
 interface Props {
   segment: GatsbyTypes.Dailp_AnnotatedSeg
@@ -132,13 +134,13 @@ const MorphemicSegmentation = (p: {
 
   return (
     <WordSegment>
-      {p.segments.map((segment, i) => {
+      {p.segments!.map((segment, i) => {
         let seg = p.showAdvanced ? segment.morpheme : segment.simpleMorpheme
         return seg + (segment.nextSeparator || "")
       })}
       <GlossLine>
         {intersperse(
-          p.segments.map((segment, i) => (
+          p.segments!.map((segment, i) => (
             <MorphemeSegment
               key={i}
               segment={segment}
@@ -148,7 +150,7 @@ const MorphemicSegmentation = (p: {
             />
           )),
           (i) => (
-            <span key={100 * (i + 1)}>{p.segments[i].nextSeparator}</span>
+            <span key={100 * (i + 1)}>{p.segments![i].nextSeparator}</span>
           )
         )}
       </GlossLine>
@@ -202,16 +204,26 @@ const MorphemeButton = styled(DialogDisclosure)`
 
 const GlossLine = styled.span`
   display: flex;
-  flex-flow: row nowrap;
+  flex-flow: row wrap;
 `
 
 const WordGroup = styled(Group)`
-  margin: 1rem ${theme.edgeSpacing};
-  margin-bottom: 2rem;
+  margin: 1rem 0.5rem;
+  margin-bottom: 0.5rem;
+  padding: 0.5rem;
+  padding-right: 0;
+  border: 2px solid ${theme.colors.borders};
+  border-radius: 2px;
+  ${theme.mediaQueries.medium} {
+    margin-bottom: 2rem;
+    padding: 0;
+    border: none;
+    margin: 1rem ${theme.edgeSpacing};
+  }
 `
 
 const SyllabaryLayer = styled.div`
-  font-size: 1.1rem;
+  font-size: 1.2rem;
 `
 
 const TranslationPara = styled.p`

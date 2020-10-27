@@ -16,9 +16,10 @@ const theme = {
     body: "white",
     text: "black",
     headings: "#bb675d",
+    borders: "darkgray",
   },
   mediaQueries: {
-    small: "@media (min-width: 40em)",
+    small: "@media print, (min-width: 40em)",
     medium: "@media print, (min-width: 52em)",
     large: "@media (min-width: 64em)",
   },

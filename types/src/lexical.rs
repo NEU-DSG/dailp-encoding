@@ -1,4 +1,4 @@
-use crate::{AnnotatedForm, DateTime, MorphemeSegment};
+use crate::{AnnotatedForm, Database, DateTime, MorphemeSegment, UniqueAnnotatedForm};
 use serde::{Deserialize, Serialize};
 
 /// A lexical entry is a form whose meaning cannot be created solely through
@@ -7,22 +7,14 @@ use serde::{Deserialize, Serialize};
 /// In English, lexical entries may be afforded for "kick," "the," and "bucket."
 /// By our definition, "kick the bucket" might have its own lexical entry
 /// because it has meaning beyond forcing your foot into a container.
-#[async_graphql::SimpleObject]
 #[derive(Serialize, Deserialize, Debug)]
 pub struct LexicalEntry {
     #[serde(rename = "_id")]
     pub id: String,
-    /// The original source text in whatever orthography was used there
     pub original: String,
-    /// The phonemic shape of the root and it's semi-unique gloss tag
     pub root: MorphemeSegment,
-    /// Plain English translations of root's meaning
     pub root_translations: Vec<String>,
-    /// An owned collection of surface forms containing this root
-    pub surface_forms: Vec<AnnotatedForm>,
-    /// The year this form was recorded
     pub date_recorded: DateTime,
-    /// This form's position in its containing document
     pub position: Option<PositionInDocument>,
 }
 
@@ -38,12 +30,57 @@ impl LexicalEntry {
     }
 }
 
+#[async_graphql::Object]
+impl LexicalEntry {
+    async fn id(&self) -> &str {
+        &self.id
+    }
+    /// The original source text in whatever orthography was used there
+    async fn original(&self) -> &str {
+        &self.original
+    }
+    /// The phonemic shape of the root and it's semi-unique gloss tag
+    async fn root(&self) -> &MorphemeSegment {
+        &self.root
+    }
+    /// Plain English translations of root's meaning
+    async fn root_translations(&self) -> &[String] {
+        &self.root_translations
+    }
+    /// The year this form was recorded
+    async fn date_recorded(&self) -> &DateTime {
+        &self.date_recorded
+    }
+    /// This form's position in its containing document
+    async fn position(&self) -> &Option<PositionInDocument> {
+        &self.position
+    }
+
+    /// A collection of surface forms containing this root
+    async fn surface_forms(
+        &self,
+        context: &async_graphql::Context<'_>,
+    ) -> async_graphql::FieldResult<Vec<AnnotatedForm>> {
+        Ok(context.data::<Database>()?.surface_forms(&self.id).await?)
+    }
+
+    async fn connected_forms(
+        &self,
+        context: &async_graphql::Context<'_>,
+    ) -> async_graphql::FieldResult<Vec<AnnotatedForm>> {
+        Ok(context
+            .data::<Database>()?
+            .connected_entries(&self.id)
+            .await?)
+    }
+}
+
 /// The reference position within a document of one specific form
 #[derive(Serialize, Deserialize, Debug)]
 pub struct PositionInDocument {
-    document_id: String,
-    page_number: i64,
-    index: i64,
+    pub document_id: String,
+    pub page_number: i64,
+    pub index: i64,
 }
 impl PositionInDocument {
     pub fn new(document_id: String, page_number: i64, index: i64) -> Self {
@@ -88,6 +125,15 @@ impl PositionInDocument {
     }
 }
 
+/// A connection between two lexical entries from the same or different sources
+#[derive(Serialize, Deserialize)]
+pub struct LexicalConnection {
+    #[serde(rename = "_id")]
+    pub id: String,
+    pub from: String,
+    pub to: String,
+}
+
 /// Gather many verb surface forms from the given row.
 pub fn root_verb_surface_forms(
     doc_id: &str,
@@ -98,7 +144,7 @@ pub fn root_verb_surface_forms(
     has_numeric: bool,
     has_comment: bool,
     has_spacer: bool,
-) -> Vec<AnnotatedForm> {
+) -> Vec<UniqueAnnotatedForm> {
     let mut forms = Vec::new();
     while let Some(form) = root_verb_surface_form(
         doc_id,
@@ -125,7 +171,7 @@ pub fn root_verb_surface_form(
     has_numeric: bool,
     has_comment: bool,
     has_spacer: bool,
-) -> Option<AnnotatedForm> {
+) -> Option<UniqueAnnotatedForm> {
     use itertools::Itertools as _;
 
     // Each form has an empty column before it.
@@ -177,18 +223,20 @@ pub fn root_verb_surface_form(
         cols.next();
     }
 
-    Some(AnnotatedForm {
-        index: 0,
-        source: syllabary.clone(),
-        normalized_source: syllabary,
-        simple_phonetics: Some(phonetic),
-        phonemic: Some(convert_udb(&phonemic).to_dailp()),
-        segments: MorphemeSegment::parse_many(&morpheme_layer, &gloss_layer)?,
-        english_gloss: translations,
-        commentary,
-        line_break: None,
-        page_break: None,
-        document_id: Some(doc_id.to_owned()),
+    Some(UniqueAnnotatedForm {
+        form: AnnotatedForm {
+            index: 0,
+            source: syllabary.clone(),
+            simple_phonetics: Some(phonetic),
+            phonemic: Some(convert_udb(&phonemic).to_dailp()),
+            segments: Some(MorphemeSegment::parse_many(&morpheme_layer, &gloss_layer)?),
+            english_gloss: translations,
+            commentary,
+            line_break: None,
+            page_break: None,
+            document_id: Some(doc_id.to_owned()),
+        },
+        id: gloss_layer,
     })
 }
 
@@ -197,10 +245,10 @@ pub fn root_verb_surface_form(
 fn all_tags(cols: &mut impl Iterator<Item = String>) -> (Vec<(String, String)>, Option<String>) {
     let mut tags = Vec::new();
     let mut cols = cols.by_ref().peekable();
-    // Tags are all uppercase, followed by the corresponding morpheme.
+    // Tags are all uppercase ascii and numbers, followed by the corresponding morpheme.
     while let Some(true) = cols
         .peek()
-        .map(|x| !x.starts_with(|c: char| c.is_lowercase()) || x.is_empty())
+        .map(|x| x.starts_with(|c: char| c.is_ascii_uppercase() || c.is_numeric()) || x.is_empty())
     {
         if let (Some(a), Some(b)) = (cols.next(), cols.next()) {
             if !a.is_empty() || !b.is_empty() {
@@ -219,7 +267,7 @@ pub fn root_noun_surface_form(
     root: &str,
     root_gloss: &str,
     cols: &mut impl Iterator<Item = String>,
-) -> Option<AnnotatedForm> {
+) -> Option<UniqueAnnotatedForm> {
     use itertools::Itertools as _;
 
     let ppp_tag = cols.next()?;
@@ -244,18 +292,20 @@ pub fn root_noun_surface_form(
         .filter(|s| !s.is_empty());
     let gloss_layer = glosses.join("-");
 
-    Some(AnnotatedForm {
-        index: 0,
-        source: syllabary.clone(),
-        normalized_source: syllabary,
-        simple_phonetics: Some(phonetic),
-        phonemic: Some(convert_udb(&phonemic).to_dailp()),
-        segments: MorphemeSegment::parse_many(&morpheme_layer, &gloss_layer)?,
-        english_gloss: translations.collect(),
-        commentary: None,
-        line_break: None,
-        page_break: None,
-        document_id: Some(doc_id.to_owned()),
+    Some(UniqueAnnotatedForm {
+        form: AnnotatedForm {
+            index: 0,
+            source: syllabary,
+            simple_phonetics: Some(phonetic),
+            phonemic: Some(convert_udb(&phonemic).to_dailp()),
+            segments: Some(MorphemeSegment::parse_many(&morpheme_layer, &gloss_layer)?),
+            english_gloss: translations.collect(),
+            commentary: None,
+            line_break: None,
+            page_break: None,
+            document_id: Some(doc_id.to_owned()),
+        },
+        id: gloss_layer,
     })
 }
 

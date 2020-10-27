@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react"
+import React, { useState, useEffect, useRef } from "react"
 import { graphql, Link } from "gatsby"
 import { styled } from "linaria/react"
 import { Helmet } from "react-helmet"
@@ -9,12 +9,17 @@ import {
   useRadioState,
   RadioStateReturn,
 } from "reakit/Radio"
+import { Tab, TabPanel, TabList } from "reakit/Tab"
+import Sticky from "react-stickynode"
+import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch"
 import Layout from "../layout"
 import { MorphemeDetails } from "../morpheme"
 import { Segment, BasicMorphemeSegment } from "../segment"
 import Cookies from "js-cookie"
 import theme, { fullWidth, largeDialog } from "../theme"
 import { collectionRoute } from "../routes"
+import { useScrollableTabState } from "../scrollable-tabs"
+import { css } from "linaria"
 
 /** A full annotated document, including all metadata and the translation(s) */
 const AnnotatedDocumentPage = (p: {
@@ -22,6 +27,7 @@ const AnnotatedDocumentPage = (p: {
 }) => {
   const doc = p.data.dailp.document!
   const dialog = useDialogState()
+  const tabs = useScrollableTabState()
   const [selectedMorpheme, setMorpheme] = useState<BasicMorphemeSegment | null>(
     null
   )
@@ -63,32 +69,85 @@ const AnnotatedDocumentPage = (p: {
           </Link>
         </DocHeader>
 
-        <ExperiencePicker radio={experienceLevel} />
+        <WideSticky>
+          <DocTabs {...tabs}>
+            <DocTab {...tabs}>Translation</DocTab>
+            <DocTab {...tabs}>Source Image</DocTab>
+          </DocTabs>
+        </WideSticky>
 
-        <AnnotationSection>
-          {doc.translatedSegments?.map((seg, i) => (
-            <Segment
-              key={`s${i}`}
-              segment={seg.source as GatsbyTypes.Dailp_AnnotatedSeg}
-              dialog={dialog}
-              onOpenDetails={setMorpheme}
-              level={experienceLevel.state! as ExperienceLevel}
-              tagSet={tagSet}
-              translations={
-                seg.translation as GatsbyTypes.Dailp_TranslationBlock
-              }
-              pageImages={doc.pageImages}
-            />
-          ))}
-          {doc.pageImages.map((url, i) => (
-            <PageImage key={i} src={url} />
-          ))}
-        </AnnotationSection>
+        <TabPanel {...tabs}>
+          <ExperiencePicker radio={experienceLevel} />
+
+          <AnnotationSection>
+            {doc.translatedSegments?.map((seg, i) => (
+              <Segment
+                key={`s${i}`}
+                segment={seg.source as GatsbyTypes.Dailp_AnnotatedSeg}
+                dialog={dialog}
+                onOpenDetails={setMorpheme}
+                level={experienceLevel.state! as ExperienceLevel}
+                tagSet={tagSet}
+                translations={
+                  seg.translation as GatsbyTypes.Dailp_TranslationBlock
+                }
+                pageImages={doc.pageImages}
+              />
+            ))}
+          </AnnotationSection>
+        </TabPanel>
+
+        <TabPanel {...tabs}>
+          <AnnotationSection>
+            {doc.pageImages.map((url, i) => (
+              <TransformWrapper>
+                <TransformComponent>
+                  <PageImage key={i} src={url} />
+                </TransformComponent>
+              </TransformWrapper>
+            ))}
+          </AnnotationSection>
+        </TabPanel>
       </AnnotatedDocument>
     </Layout>
   )
 }
 export default AnnotatedDocumentPage
+
+const wideAndTop = css`
+  width: 100%;
+  z-index: 1;
+`
+
+const WideSticky = styled(({ className, ...p }) => (
+  <Sticky className={wideAndTop} innerClass={className} {...p} />
+))`
+  left: 0;
+  display: flex;
+  flex-flow: column nowrap;
+  align-items: center;
+  width: 100% !important;
+`
+
+const DocTab = styled(Tab)`
+  border-radius: 0;
+  border: none;
+  border-bottom: 2px solid transparent;
+  flex-grow: 1;
+  cursor: pointer;
+  font-family: ${theme.fonts.header};
+  font-size: 1.1rem;
+  &[aria-selected="true"] {
+    border-color: ${theme.colors.headings};
+  }
+`
+
+const DocTabs = styled(TabList)`
+  display: flex;
+  flex-flow: row nowrap;
+  height: 48px;
+  ${fullWidth}
+`
 
 export const DocHeader = styled.header`
   padding: 0 ${theme.edgeSpacing};
@@ -98,6 +157,7 @@ const PageImage = styled.img`
   margin-bottom: 2rem;
   width: 100%;
   height: auto;
+  cursor: grab;
 `
 
 export enum ExperienceLevel {
@@ -196,18 +256,22 @@ const MorphemeDialog = styled(Dialog)`
   left: 50%;
   transform: translate(-50%, -50%);
   background-color: white;
-  border: 1px solid black;
+  border: 1px solid ${theme.colors.borders};
+  border-radius: 2px;
   padding: 1rem;
   max-height: 80vh;
   min-height: 20rem;
   max-width: 100vw;
   overflow-y: scroll;
+  -webkit-overflow-scrolling: touch;
+  z-index: 999;
 `
 
 const MorphemeDialogBackdrop = styled(DialogBackdrop)`
   position: fixed;
   inset: 0;
   background-color: rgba(0, 0, 0, 0.2);
+  z-index: 998;
 `
 
 const AnnotatedDocument = styled.main`
@@ -223,6 +287,9 @@ const DocSection = styled.section`
 
 export const AnnotationSection = styled(DocSection)`
   display: flex;
-  flex-flow: row wrap;
-  justify-content: space-between;
+  flex-flow: column nowrap;
+  ${theme.mediaQueries.medium} {
+    flex-flow: row wrap;
+    justify-content: space-between;
+  }
 `

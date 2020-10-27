@@ -13,8 +13,7 @@ pub struct AnnotatedForm {
     pub normalized_source: String,
     pub simple_phonetics: Option<String>,
     pub phonemic: Option<String>,
-    #[serde(default)]
-    pub segments: Vec<MorphemeSegment>,
+    pub segments: Option<Vec<MorphemeSegment>>,
     #[serde(default)]
     pub english_gloss: Vec<String>,
     pub commentary: Option<String>,
@@ -25,15 +24,31 @@ pub struct AnnotatedForm {
     pub document_id: Option<String>,
 }
 
+#[derive(Serialize, Deserialize)]
+pub struct UniqueAnnotatedForm {
+    #[serde(rename = "_id")]
+    pub id: String,
+    #[serde(flatten)]
+    pub form: AnnotatedForm,
+}
+
+impl AnnotatedForm {
+    pub fn find_root(&self) -> Option<&MorphemeSegment> {
+        self.segments.as_ref().and_then(|segments| {
+            segments
+                .iter()
+                .find(|seg| seg.gloss.starts_with(|c: char| c.is_lowercase()))
+        })
+    }
+}
+
 #[async_graphql::Object]
 impl AnnotatedForm {
     /// The root morpheme of the word.
     /// For example, a verb form glossed as "he catches" has the root morpheme
     /// corresponding to "catch."
     async fn root(&self) -> Option<&MorphemeSegment> {
-        self.segments
-            .iter()
-            .find(|seg| seg.gloss.starts_with(|c: char| c.is_lowercase()))
+        self.find_root()
     }
 
     /// All other observed words with the same root morpheme as this word.
@@ -41,14 +56,15 @@ impl AnnotatedForm {
         &self,
         context: &async_graphql::Context<'_>,
     ) -> FieldResult<Vec<AnnotatedForm>> {
-        if let Some(root) = self.root(context).await? {
-            let similar_roots = context
-                .data::<Database>()?
-                .morphemes(root.gloss.clone())
-                .await?;
-            Ok(similar_roots
+        if let Some(root) = self.find_root() {
+            let db = context.data::<Database>()?;
+            let connected = db.connected_entries(&root.gloss);
+            let similar_roots = db.morphemes(root.gloss.clone());
+            let (connected, similar_roots) = futures::join!(connected, similar_roots);
+            Ok(similar_roots?
                 .into_iter()
                 .flat_map(|r| r.words)
+                .chain(connected?)
                 // Only return other similar words.
                 .filter(|word| word.index != self.index || word.document_id != self.document_id)
                 .collect())
@@ -91,7 +107,7 @@ impl AnnotatedForm {
     }
     /// Morphemic segmentation of the form that includes a phonemic
     /// representation and gloss for each.
-    async fn segments(&self) -> &Vec<MorphemeSegment> {
+    async fn segments(&self) -> &Option<Vec<MorphemeSegment>> {
         &self.segments
     }
     /// English gloss for the whole word.

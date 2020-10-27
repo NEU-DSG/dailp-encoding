@@ -5,12 +5,12 @@ import { styled } from "linaria/react"
 import _ from "lodash"
 import slugify from "slugify"
 import Layout from "../layout"
-import { fullWidth } from "../theme"
+import theme, { fullWidth } from "../theme"
 
 /** Lists all documents in our database */
 const IndexPage = (props: { data: GatsbyTypes.IndexPageQuery }) => {
   const documents = props.data.dailp.allDocuments
-  const docsByCategory = _.groupBy(documents, "collection")
+  const docsByCategory = _.groupBy(documents, "genre")
   return (
     <Layout>
       <Helmet>
@@ -25,7 +25,8 @@ const IndexPage = (props: { data: GatsbyTypes.IndexPageQuery }) => {
                 const slug = slugify(document.id, { lower: true })
                 return (
                   <li key={document.id}>
-                    <Link to={`/documents/${slug}`}>{document.title}</Link>
+                    <Link to={`/documents/${slug}`}>{document.title}</Link>{" "}
+                    {document.date && `(${document.date.year})`}
                   </li>
                 )
               })}
@@ -45,6 +46,10 @@ export const query = graphql`
         id
         title
         collection
+        genre
+        date {
+          year
+        }
       }
     }
   }

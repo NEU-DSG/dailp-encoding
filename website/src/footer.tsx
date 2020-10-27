@@ -1,6 +1,6 @@
 import React from "react"
 import { styled } from "linaria/react"
-import { fullWidth } from "./theme"
+import theme, { fullWidth } from "./theme"
 
 /** University affiliation, related navigation links, and contact info.  */
 const Footer = () => (
@@ -21,4 +21,5 @@ const FooterContainer = styled.footer`
 
 const FooterContent = styled.div`
   ${fullWidth}
+  padding: 0 ${theme.edgeSpacing};
 `
