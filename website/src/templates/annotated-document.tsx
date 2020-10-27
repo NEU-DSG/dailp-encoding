@@ -9,7 +9,7 @@ import {
   useRadioState,
   RadioStateReturn,
 } from "reakit/Radio"
-import { useTabState, Tab, TabPanel, TabList } from "reakit/Tab"
+import { Tab, TabPanel, TabList } from "reakit/Tab"
 import Sticky from "react-stickynode"
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch"
 import Layout from "../layout"
@@ -18,11 +18,8 @@ import { Segment, BasicMorphemeSegment } from "../segment"
 import Cookies from "js-cookie"
 import theme, { fullWidth, largeDialog } from "../theme"
 import { collectionRoute } from "../routes"
+import { useScrollableTabState } from "../scrollable-tabs"
 import { css } from "linaria"
-
-interface TabScrollPositions {
-  [x: string]: number
-}
 
 /** A full annotated document, including all metadata and the translation(s) */
 const AnnotatedDocumentPage = (p: {
@@ -30,7 +27,7 @@ const AnnotatedDocumentPage = (p: {
 }) => {
   const doc = p.data.dailp.document!
   const dialog = useDialogState()
-  const tabs = useTabState()
+  const tabs = useScrollableTabState()
   const [selectedMorpheme, setMorpheme] = useState<BasicMorphemeSegment | null>(
     null
   )
@@ -42,26 +39,6 @@ const AnnotatedDocumentPage = (p: {
   useEffect(() => {
     Cookies.set("experienceLevel", experienceLevel.state!.toString())
   }, [experienceLevel.state])
-
-  const tabScrollPos = useRef<TabScrollPositions>({})
-  useEffect(() => {
-    // Restore the scroll position for the new tab.
-    const newScroll = tabScrollPos.current[tabs.selectedId!]
-    if (newScroll) {
-      window.scrollTo({ top: newScroll })
-    }
-
-    const listener = (e: any) => {
-      // Save scroll position for last tab.
-      const lastTabId = tabs.selectedId!
-      if (lastTabId) {
-        tabScrollPos.current[lastTabId] = window.scrollY
-      }
-    }
-    window.addEventListener("scroll", listener)
-
-    return () => window.removeEventListener("scroll", listener)
-  }, [tabs.selectedId])
 
   const tagSet =
     experienceLevel.state! > ExperienceLevel.Learner
