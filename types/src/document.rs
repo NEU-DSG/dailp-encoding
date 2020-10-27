@@ -48,8 +48,13 @@ impl AnnotatedDoc {
     }
 
     /// Where the source document came from, maybe the name of a collection
-    async fn collection(&self) -> &Option<String> {
-        &self.meta.collection
+    async fn collection(&self) -> Option<DocumentCollection> {
+        self.meta
+            .collection
+            .as_ref()
+            .map(|name| DocumentCollection {
+                name: name.to_owned(),
+            })
     }
 
     /// The genre of the document, used to group similar ones
@@ -66,6 +71,11 @@ impl AnnotatedDoc {
     /// author, translators, and annotators
     async fn people(&self) -> &Vec<PersonAssociation> {
         &self.meta.people
+    }
+
+    /// URL-ready slug for this document, generated from the title
+    async fn slug(&self) -> String {
+        slug::slugify(&self.meta.id)
     }
 
     /// Segments of the document paired with their respective rough translations
@@ -193,6 +203,17 @@ pub struct DocumentCollection {
 }
 #[async_graphql::Object]
 impl DocumentCollection {
+    /// Full name of this collection
+    async fn name(&self) -> &str {
+        &self.name
+    }
+
+    /// URL-ready slug for this collection, generated from the name
+    async fn slug(&self) -> String {
+        slug::slugify(&self.name)
+    }
+
+    /// All documents that are part of this collection
     async fn documents(
         &self,
         context: &async_graphql::Context<'_>,
