@@ -1,10 +1,6 @@
-import slugify from "slugify"
+export const documentRoute = (slug: string) => `/documents/${slug}`
 
-const toSlug = (s: string) => slugify(s, { lower: true })
+export const documentDetailsRoute = (slug: string) =>
+  `/documents/${slug}/details`
 
-export const documentRoute = (id: string) => `/documents/${toSlug(id)}`
-
-export const documentDetailsRoute = (id: string) =>
-  `/documents/${toSlug(id)}/details`
-
-export const collectionRoute = (name: string) => `/collections/${toSlug(name)}`
+export const collectionRoute = (slug: string) => `/collections/${slug}`

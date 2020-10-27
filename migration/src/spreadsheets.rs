@@ -373,7 +373,7 @@ impl SheetResult {
             id: doc_id.remove(1),
             title: title.remove(1),
             publication: None,
-            collection: source.pop(),
+            collection: source.pop().filter(|s| !s.is_empty()),
             people,
             genre: genre.pop(),
             translation: DocResult::new(&translations.remove(1))
@@ -544,6 +544,7 @@ impl<'a> AnnotatedLine {
             })
             .collect()
     }
+
     pub fn to_segments(lines: Vec<Self>, document_id: &str) -> Vec<AnnotatedSeg> {
         let mut segments = Vec::<AnnotatedSeg>::new();
         let mut stack = Vec::<AnnotatedPhrase>::new();

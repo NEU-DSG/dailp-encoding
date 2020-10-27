@@ -64,9 +64,11 @@ const AnnotatedDocumentPage = (p: {
           <h2>
             {doc.title} {doc.date && `(${doc.date.year})`}
           </h2>
-          <Link to={collectionRoute(doc.collection!)}>
-            <h3>{doc.collection}</h3>
-          </Link>
+          {doc.collection && (
+            <Link to={collectionRoute(doc.collection.slug)}>
+              <h3>{doc.collection.name}</h3>
+            </Link>
+          )}
         </DocHeader>
 
         <WideSticky>
@@ -196,7 +198,10 @@ export const query = graphql`
       document(id: $id) {
         id
         title
-        collection
+        collection {
+          name
+          slug
+        }
         date {
           year
         }

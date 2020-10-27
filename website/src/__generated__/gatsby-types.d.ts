@@ -34,6 +34,8 @@ type BooleanQueryOperatorInput = {
 type Dailp = {
   /** Listing of all documents excluding their contents by default */
   readonly allDocuments: ReadonlyArray<Dailp_AnnotatedDoc>;
+  /** List of all the document collections available. */
+  readonly allCollections: ReadonlyArray<Dailp_DocumentCollection>;
   /** Retrieves a full document from its unique identifier. */
   readonly document: Maybe<Dailp_AnnotatedDoc>;
   readonly lexicalEntry: Maybe<Dailp_LexicalEntry>;
@@ -95,7 +97,7 @@ type Dailp_AnnotatedDoc = {
   /** The publication that included this document */
   readonly publication: Maybe<Scalars['String']>;
   /** Where the source document came from, maybe the name of a collection */
-  readonly collection: Maybe<Scalars['String']>;
+  readonly collection: Maybe<Dailp_DocumentCollection>;
   /** The genre of the document, used to group similar ones */
   readonly genre: Maybe<Scalars['String']>;
   /** Images of each source document page, in order */
@@ -105,6 +107,8 @@ type Dailp_AnnotatedDoc = {
    * author, translators, and annotators
    */
   readonly people: ReadonlyArray<Dailp_PersonAssociation>;
+  /** URL-ready slug for this document, generated from the title */
+  readonly slug: Scalars['String'];
   /** Segments of the document paired with their respective rough translations */
   readonly translatedSegments: Maybe<ReadonlyArray<Dailp_TranslatedSection>>;
   /**
@@ -178,6 +182,15 @@ type Dailp_DateTime = {
   readonly year: Scalars['Int'];
   /** Formatted version of the date for humans to read */
   readonly formattedDate: Scalars['String'];
+};
+
+type Dailp_DocumentCollection = {
+  /** Full name of this collection */
+  readonly name: Scalars['String'];
+  /** URL-ready slug for this collection, generated from the name */
+  readonly slug: Scalars['String'];
+  /** All documents that are part of this collection */
+  readonly documents: ReadonlyArray<Dailp_AnnotatedDoc>;
 };
 
 enum Dailp_DocumentType {
@@ -1740,11 +1753,13 @@ type SitePageConnection_groupArgs = {
 type SitePageContext = {
   readonly id: Maybe<Scalars['String']>;
   readonly name: Maybe<Scalars['String']>;
+  readonly slug: Maybe<Scalars['String']>;
 };
 
 type SitePageContextFilterInput = {
   readonly id: Maybe<StringQueryOperatorInput>;
   readonly name: Maybe<StringQueryOperatorInput>;
+  readonly slug: Maybe<StringQueryOperatorInput>;
 };
 
 type SitePageEdge = {
@@ -1848,6 +1863,7 @@ enum SitePageFieldsEnum {
   isCreatedByStatefulCreatePages = 'isCreatedByStatefulCreatePages',
   context___id = 'context.id',
   context___name = 'context.name',
+  context___slug = 'context.slug',
   pluginCreator___id = 'pluginCreator.id',
   pluginCreator___parent___id = 'pluginCreator.parent.id',
   pluginCreator___parent___parent___id = 'pluginCreator.parent.parent.id',
@@ -2319,8 +2335,8 @@ type AnnotatedDocumentQueryVariables = Exact<{
 
 
 type AnnotatedDocumentQuery = { readonly dailp: { readonly document: Maybe<(
-      Pick<Dailp_AnnotatedDoc, 'id' | 'title' | 'collection' | 'pageImages'>
-      & { readonly date: Maybe<Pick<Dailp_DateTime, 'year'>>, readonly translatedSegments: Maybe<ReadonlyArray<{ readonly source: (
+      Pick<Dailp_AnnotatedDoc, 'id' | 'title' | 'pageImages'>
+      & { readonly collection: Maybe<Pick<Dailp_DocumentCollection, 'name' | 'slug'>>, readonly date: Maybe<Pick<Dailp_DateTime, 'year'>>, readonly translatedSegments: Maybe<ReadonlyArray<{ readonly source: (
           { readonly __typename: 'Dailp_AnnotatedPhrase' }
           & BlockFieldsFragment
         ) | (
@@ -2338,8 +2354,8 @@ type DocumentDetailsQueryVariables = Exact<{
 
 
 type DocumentDetailsQuery = { readonly dailp: { readonly document: Maybe<(
-      Pick<Dailp_AnnotatedDoc, 'id' | 'title' | 'collection'>
-      & { readonly date: Maybe<Pick<Dailp_DateTime, 'year'>>, readonly people: ReadonlyArray<Pick<Dailp_PersonAssociation, 'name' | 'role'>> }
+      Pick<Dailp_AnnotatedDoc, 'id' | 'slug' | 'title'>
+      & { readonly collection: Maybe<Pick<Dailp_DocumentCollection, 'name' | 'slug'>>, readonly date: Maybe<Pick<Dailp_DateTime, 'year'>>, readonly people: ReadonlyArray<Pick<Dailp_PersonAssociation, 'name' | 'role'>> }
     )> } };
 
 type CollectionQueryVariables = Exact<{
@@ -2347,7 +2363,10 @@ type CollectionQueryVariables = Exact<{
 }>;
 
 
-type CollectionQuery = { readonly dailp: { readonly allDocuments: ReadonlyArray<Pick<Dailp_AnnotatedDoc, 'id' | 'title'>> } };
+type CollectionQuery = { readonly dailp: { readonly allDocuments: ReadonlyArray<(
+      Pick<Dailp_AnnotatedDoc, 'id' | 'slug' | 'title'>
+      & { readonly date: Maybe<Pick<Dailp_DateTime, 'year'>> }
+    )> } };
 
 type PagesQueryQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -2357,9 +2376,6 @@ type PagesQueryQuery = { readonly allSitePage: { readonly nodes: ReadonlyArray<P
 type IndexPageQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-type IndexPageQuery = { readonly dailp: { readonly allDocuments: ReadonlyArray<(
-      Pick<Dailp_AnnotatedDoc, 'id' | 'title' | 'collection' | 'genre'>
-      & { readonly date: Maybe<Pick<Dailp_DateTime, 'year'>> }
-    )> } };
+type IndexPageQuery = { readonly dailp: { readonly allCollections: ReadonlyArray<Pick<Dailp_DocumentCollection, 'name' | 'slug'>> } };
 
 }

@@ -21,7 +21,6 @@
     "react-stickynode": "^3.0.4",
     "react-zoom-pan-pinch": "^1.6.1",
     "reakit": "^1.2.1",
-    "slugify": "^1.4.5",
     "typeface-gentium-basic": "1.1.13",
     "typeface-open-sans": "1.1.13"
   },

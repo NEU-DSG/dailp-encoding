@@ -12,19 +12,22 @@ const createDocumentPages = async ({ actions, graphql }) => {
         allDocuments {
           title
           id
-          collection
+          slug
+        }
+        allCollections {
+          name
+          slug
         }
       }
     }
   `)
 
   const collections = []
-  for (const { title, id, collection } of data.dailp.allDocuments) {
+  for (const { title, id, collection, slug } of data.dailp.allDocuments) {
     if (collection && !collections.includes(collection)) {
       collections.push(collection)
     }
 
-    const slug = slugify(id, { lower: true })
     // The main page displays the document contents.
     actions.createPage({
       path: `documents/${slug}`,
@@ -39,13 +42,11 @@ const createDocumentPages = async ({ actions, graphql }) => {
     })
   }
 
-  for (const collection of collections) {
+  for (const collection of data.dailp.allCollections) {
     actions.createPage({
-      path: `collections/${slugify(collection, { lower: true })}`,
+      path: `collections/${collection.slug}`,
       component: path.resolve(`./src/templates/collection.tsx`),
-      context: {
-        name: collection,
-      },
+      context: collection,
     })
   }
 }

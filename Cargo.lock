@@ -407,6 +407,7 @@ dependencies = [
  "nom",
  "regex",
  "serde",
+ "slug",
  "tera",
  "tokio",
  "unicode-normalization",

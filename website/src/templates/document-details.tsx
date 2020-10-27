@@ -17,11 +17,11 @@ const DocumentDetails = (p: { data: GatsbyTypes.DocumentDetailsQuery }) => {
         </Helmet>
         <DocHeader>
           <h2>
-            <Link to={documentRoute(doc.id)}>{doc.title}</Link>{" "}
+            <Link to={documentRoute(doc.slug)}>{doc.title}</Link>{" "}
             {doc.date && `(${doc.date.year})`}
           </h2>
-          <Link to={collectionRoute(doc.collection!)}>
-            <h3>{doc.collection}</h3>
+          <Link to={collectionRoute(doc.collection!.slug)}>
+            <h3>{doc.collection?.name}</h3>
           </Link>
         </DocHeader>
         <WideSection>
@@ -45,8 +45,12 @@ export const query = graphql`
     dailp {
       document(id: $id) {
         id
+        slug
         title
-        collection
+        collection {
+          name
+          slug
+        }
         date {
           year
         }
