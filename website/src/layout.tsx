@@ -4,21 +4,30 @@ import { css } from "linaria"
 import { Link } from "gatsby"
 import Footer from "./footer"
 import theme, { fullWidth } from "./theme"
+import { Helmet } from "react-helmet"
+import Sticky from "react-stickynode"
+import { isMobile } from "react-device-detect"
 
 /** Wrapper for most site pages, providing them with a navigation header and footer. */
-const Layout = (p: { children: any }) => (
+const Layout = (p: { title?: string; children: any }) => (
   <>
-    <Header>
-      <HeaderContents>
-        <Link to="/" className={siteTitle}>
-          DAILP
-        </Link>
-        <SubHeader>
-          Digital Archive of American Indian Languages Preservation and
-          Perseverance
-        </SubHeader>
-      </HeaderContents>
-    </Header>
+    <Helmet>
+      <title>{p.title ? `${p.title} - ` : null}</title>
+      DAILP
+    </Helmet>
+    <Sticky enabled={isMobile}>
+      <Header id={isMobile ? "header" : undefined}>
+        <HeaderContents>
+          <Link to="/" className={siteTitle}>
+            DAILP
+          </Link>
+          <SubHeader>
+            Digital Archive of American Indian Languages Preservation and
+            Perseverance
+          </SubHeader>
+        </HeaderContents>
+      </Header>
+    </Sticky>
     {p.children}
     <Footer />
   </>
@@ -53,8 +62,11 @@ const SubHeader = styled.span`
 `
 
 const siteTitle = css`
-  margin: 1.2rem 0;
+  margin: 0.25rem 0;
   color: ${theme.colors.headings};
   text-decoration: none;
   font-size: 2rem;
+  ${theme.mediaQueries.medium} {
+    margin: 1.2rem 0;
+  }
 `

@@ -46,11 +46,7 @@ const AnnotatedDocumentPage = (p: {
       : TagSet.Learner
 
   return (
-    <Layout>
-      <Helmet>
-        <title>{doc.title} - Cherokee Reader</title>
-      </Helmet>
-
+    <Layout title={doc.title}>
       <AnnotatedDocument>
         <MorphemeDialogBackdrop {...dialog}>
           <MorphemeDialog {...dialog} aria-label="Morpheme Details">
@@ -71,7 +67,7 @@ const AnnotatedDocumentPage = (p: {
           )}
         </DocHeader>
 
-        <WideSticky>
+        <WideSticky top="#header">
           <DocTabs {...tabs}>
             <DocTab {...tabs}>Translation</DocTab>
             <DocTab {...tabs}>Source Image</DocTab>
@@ -84,7 +80,7 @@ const AnnotatedDocumentPage = (p: {
           <AnnotationSection>
             {doc.translatedSegments?.map((seg, i) => (
               <Segment
-                key={`s${i}`}
+                key={i}
                 segment={seg.source as GatsbyTypes.Dailp_AnnotatedSeg}
                 dialog={dialog}
                 onOpenDetails={setMorpheme}
@@ -101,10 +97,10 @@ const AnnotatedDocumentPage = (p: {
 
         <TabPanel {...tabs}>
           <AnnotationSection>
-            {doc.pageImages.map((url, i) => (
-              <TransformWrapper>
+            {doc.pageImages?.map((url, i) => (
+              <TransformWrapper key={i}>
                 <TransformComponent>
-                  <PageImage key={i} src={url} />
+                  <PageImage src={url} />
                 </TransformComponent>
               </TransformWrapper>
             ))}
@@ -147,7 +143,7 @@ const DocTab = styled(Tab)`
 const DocTabs = styled(TabList)`
   display: flex;
   flex-flow: row nowrap;
-  height: 48px;
+  height: 2.6rem;
   ${fullWidth}
 `
 
