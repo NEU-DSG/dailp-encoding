@@ -10,7 +10,7 @@ import theme, { fullWidth } from "../theme"
 /** Lists all documents in our database */
 const IndexPage = (props: { data: GatsbyTypes.IndexPageQuery }) => {
   const documents = props.data.dailp.allDocuments
-  const docsByCategory = _.groupBy(documents, "collection")
+  const docsByCategory = _.groupBy(documents, "genre")
   return (
     <Layout>
       <Helmet>

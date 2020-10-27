@@ -8630,10 +8630,10 @@ levn@^0.4.1:
     prelude-ls "^1.2.1"
     type-check "~0.4.0"
 
-linaria@^2.0.0-rc.3:
-  version "2.0.0-rc.3"
-  resolved "https://registry.yarnpkg.com/linaria/-/linaria-2.0.0-rc.3.tgz#332ac365b50b69da9a877d0fae970e77db185cf9"
-  integrity sha512-aIcVEOg4dLJbTDDl6FMqp3fJx9BKP+T3qg9QePlSvhWD35CeANOfNSRBDq5HnfTkOVx2iQ8gMZTe7wdm1WlzKA==
+linaria@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/linaria/-/linaria-2.0.0.tgz#4f425ef10da3fdbbf3e4968639b8ab361c61f71c"
+  integrity sha512-9o5RLcYRaq2jrhTtPQv/UzNKZNU6h9HZ+0kSo92ym23yIdSAaZRHh4b2ukbej5kW9J/qB7MSepA36VZ/6fYCGg==
   dependencies:
     "@babel/generator" ">=7"
     "@babel/plugin-proposal-export-namespace-from" ">=7"

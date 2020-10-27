@@ -286,6 +286,7 @@ const MorphemeDialog = styled(Dialog)`
   min-height: 20rem;
   max-width: 100vw;
   overflow-y: scroll;
+  -webkit-overflow-scrolling: touch;
   z-index: 999;
 `
 
@@ -293,6 +294,7 @@ const MorphemeDialogBackdrop = styled(DialogBackdrop)`
   position: fixed;
   inset: 0;
   background-color: rgba(0, 0, 0, 0.2);
+  z-index: 998;
 `
 
 const AnnotatedDocument = styled.main`
