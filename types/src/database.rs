@@ -6,7 +6,31 @@ use mongodb::bson;
 /// for accessing the data therein.
 #[derive(Clone)]
 pub struct Database {
-    pub client: mongodb::Database,
+    client: mongodb::Database,
+}
+
+impl Database {
+    const DOCUMENTS: &'static str = "annotated-documents";
+    const WORDS: &'static str = "sea-of-words";
+    const LEXICAL: &'static str = "dictionary";
+    const TAGS: &'static str = "tags";
+    const CONNECTIONS: &'static str = "tags";
+
+    pub fn documents_collection(&self) -> mongodb::Collection {
+        self.client.collection(Self::DOCUMENTS)
+    }
+    pub fn words_collection(&self) -> mongodb::Collection {
+        self.client.collection(Self::WORDS)
+    }
+    pub fn lexical_collection(&self) -> mongodb::Collection {
+        self.client.collection(Self::LEXICAL)
+    }
+    pub fn tags_collection(&self) -> mongodb::Collection {
+        self.client.collection(Self::TAGS)
+    }
+    pub fn connections_collection(&self) -> mongodb::Collection {
+        self.client.collection(Self::CONNECTIONS)
+    }
 }
 
 impl Database {
@@ -25,8 +49,7 @@ impl Database {
 
     /// The document uniquely identified by the given string
     pub async fn document(&self, id: &str) -> Option<AnnotatedDoc> {
-        self.client
-            .collection("annotated-documents")
+        self.documents_collection()
             .find_one(bson::doc! { "_id": id }, None)
             .await
             .ok()
@@ -35,11 +58,51 @@ impl Database {
 
     pub async fn lexical_entry(&self, id: String) -> Result<Option<LexicalEntry>> {
         Ok(self
-            .client
-            .collection("dictionary")
+            .lexical_collection()
             .find_one(bson::doc! { "_id": id }, None)
             .await?
             .and_then(|doc| bson::from_document(doc).ok()))
+    }
+
+    pub async fn surface_forms(&self, root_gloss: &str) -> Result<Vec<AnnotatedForm>> {
+        use tokio::stream::StreamExt as _;
+        Ok(self
+            .words_collection()
+            .find(bson::doc! { "segments.gloss": root_gloss }, None)
+            .await?
+            .filter_map(|doc| doc.ok().and_then(|doc| bson::from_document(doc).ok()))
+            .collect()
+            .await)
+    }
+
+    pub async fn connected_entries(&self, id: &str) -> Result<Vec<AnnotatedForm>> {
+        use tokio::stream::StreamExt as _;
+
+        let col = self.connections_collection();
+
+        // Find the connections starting from this entry.
+        let froms = col.aggregate(vec! [
+            bson::doc! { "$match": { "from": id } },
+            bson::doc! { "$lookup": { "from": Database::WORDS, "localField": "to", "foreignField": "_id", "as": "connections" } },
+            bson::doc! { "$unwind": "$connections" },
+            bson::doc! { "$replaceRoot": { "newRoot": "$connections" } },
+        ], None);
+
+        // Find the connections ending with this entry.
+        let tos = col.aggregate(vec! [
+            bson::doc! { "$match": { "to": id } },
+            bson::doc! { "$lookup": { "from": Database::WORDS, "localField": "from", "foreignField": "_id", "as": "connections" } },
+            bson::doc! { "$unwind": "$connections" },
+            bson::doc! { "$replaceRoot": { "newRoot": "$connections" } },
+        ], None);
+
+        let (froms, tos) = futures::join!(froms, tos);
+
+        Ok(froms?
+            .chain(tos?)
+            .filter_map(|doc| doc.ok().and_then(|doc| bson::from_document(doc).ok()))
+            .collect()
+            .await)
     }
 
     /// Retrieves all morphemes that share the given gloss text.
@@ -49,10 +112,8 @@ impl Database {
         use itertools::Itertools;
         use tokio::stream::StreamExt;
 
-        let dictionary = self.client.collection("dictionary");
-        let documents = self.client.collection("annotated-documents");
-
-        let dictionary_words = dictionary.find(bson::doc! { "root.gloss": &gloss }, None);
+        let dictionary_words = self.surface_forms(&gloss);
+        let documents = self.documents_collection();
         let document_words = documents.aggregate(
             vec![
                 bson::doc! { "$unwind": "$segments" },
@@ -70,21 +131,21 @@ impl Database {
         let (dictionary_words, document_words) = futures::join!(dictionary_words, document_words);
 
         let dictionary_words = dictionary_words?
-            .map(|doc| {
-                let entry: LexicalEntry = bson::from_document(doc.unwrap()).unwrap();
-                (entry.root.morpheme, entry.surface_forms)
-            })
-            .collect::<Vec<_>>()
-            .await
             .into_iter()
-            .flat_map(|(root, forms)| forms.into_iter().map(move |form| (root.clone(), form)));
+            .map(|form| (form.find_root().unwrap().morpheme.clone(), form));
 
         let document_words = document_words?
             .map(|doc| {
                 let word: AnnotatedForm = bson::from_document(doc.unwrap()).unwrap();
                 let m = {
                     // Find the index of the relevant morpheme gloss.
-                    let segment = word.segments.iter().find(|m| m.gloss == gloss).unwrap();
+                    let segment = word
+                        .segments
+                        .as_ref()
+                        .unwrap()
+                        .iter()
+                        .find(|m| m.gloss == gloss)
+                        .unwrap();
                     // Grab the morpheme with the same index.
                     segment.morpheme.clone()
                 };
@@ -107,8 +168,7 @@ impl Database {
         use tokio::stream::StreamExt;
 
         Ok(self
-            .client
-            .collection("dictionary")
+            .lexical_collection()
             .find(bson::doc! { "root.gloss": root_gloss }, None)
             .await
             .unwrap()
@@ -123,10 +183,9 @@ impl Database {
         use itertools::Itertools;
         use tokio::stream::StreamExt;
 
-        let dictionary = self.client.collection("dictionary");
-        let documents = self.client.collection("annotated-documents");
+        let documents = self.documents_collection();
+        let dictionary_words = self.surface_forms(gloss);
 
-        let dictionary_words = dictionary.find(bson::doc! { "root.gloss": gloss }, None);
         let document_words = documents.aggregate(
             vec![
                 bson::doc! { "$unwind": "$segments" },
@@ -143,17 +202,8 @@ impl Database {
 
         let dictionary_words = dictionary_words
             .unwrap()
-            .map(|doc| {
-                let entry: LexicalEntry = bson::from_document(doc.unwrap()).unwrap();
-                (
-                    entry.surface_forms[0].document_id.clone(),
-                    entry.surface_forms,
-                )
-            })
-            .collect::<Vec<_>>()
-            .await
             .into_iter()
-            .flat_map(|(root, forms)| forms.into_iter().map(move |form| (root.clone(), form)))
+            .map(|form| (form.document_id.clone(), form))
             .into_group_map()
             .into_iter()
             .map(|(doc_id, words)| WordsInDocument {
@@ -185,8 +235,7 @@ impl Database {
     /// The tag details for the morpheme identified by the given string
     pub async fn morpheme_tag(&self, id: &str) -> Result<Option<MorphemeTag>> {
         Ok(self
-            .client
-            .collection("tags")
+            .tags_collection()
             .find_one(bson::doc! { "_id": id }, None)
             .await
             .and_then(|doc| {
