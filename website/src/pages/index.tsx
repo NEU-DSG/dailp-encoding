@@ -12,10 +12,7 @@ const IndexPage = (props: { data: GatsbyTypes.IndexPageQuery }) => {
   const collections = props.data.dailp.allCollections
 
   return (
-    <Layout>
-      <Helmet>
-        <title>DAILP Document Viewer</title>
-      </Helmet>
+    <Layout title="Collections">
       <DocIndex>
         <FullWidth>
           {collections.map((collection) => (
@@ -50,4 +47,5 @@ export const DocIndex = styled.main`
 export const FullWidth = styled.section`
   ${fullWidth}
   flex-grow: 1;
+  padding: 0 ${theme.edgeSpacing};
 `

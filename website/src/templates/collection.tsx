@@ -6,6 +6,7 @@ import Layout from "../layout"
 import { DocIndex, FullWidth } from "../pages/index"
 import { documentRoute } from "../routes"
 
+// This collator allows us to sort strings for a particular locale.
 const collator = new Intl.Collator(undefined, {
   numeric: true,
   sensitivity: "base",
@@ -21,10 +22,7 @@ export default (p: {
   documents.sort((a, b) => collator.compare(a.id, b.id))
 
   return (
-    <Layout>
-      <Helmet>
-        <title>DAILP Document Viewer</title>
-      </Helmet>
+    <Layout title={p.pageContext.name}>
       <DocIndex>
         <FullWidth>
           <h2>{p.pageContext.name}</h2>

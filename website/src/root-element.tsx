@@ -41,6 +41,7 @@ css`
       flex-flow: column nowrap;
       align-items: center;
       font-size: 1rem;
+      padding-bottom: 1.5rem;
     }
     h1,
     h2 {
