@@ -186,3 +186,20 @@ pub struct DocumentMetadata {
     pub page_images: Vec<String>,
     pub date: Option<DateTime>,
 }
+
+#[derive(Clone, Serialize, Deserialize)]
+pub struct DocumentCollection {
+    pub name: String,
+}
+#[async_graphql::Object]
+impl DocumentCollection {
+    async fn documents(
+        &self,
+        context: &async_graphql::Context<'_>,
+    ) -> async_graphql::FieldResult<Vec<AnnotatedDoc>> {
+        Ok(context
+            .data::<Database>()?
+            .all_documents(Some(self.name.clone()))
+            .await?)
+    }
+}

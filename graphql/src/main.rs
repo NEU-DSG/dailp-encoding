@@ -48,23 +48,18 @@ impl Query {
         context: &Context<'_>,
         collection: Option<String>,
     ) -> FieldResult<Vec<AnnotatedDoc>> {
-        use tokio::stream::StreamExt;
-
         Ok(context
             .data::<Database>()?
-            .documents_collection()
-            .find(
-                collection.map(|collection| {
-                    bson::doc! { "collection": collection }
-                }),
-                mongodb::options::FindOptions::builder()
-                    .projection(bson::doc! { "segments": 0, "translation": 0 })
-                    .build(),
-            )
-            .await?
-            .filter_map(|doc| bson::from_document(doc.unwrap()).ok())
-            .collect()
-            .await)
+            .all_documents(collection)
+            .await?)
+    }
+
+    /// List of all the document collections available.
+    async fn all_collections(
+        &self,
+        context: &Context<'_>,
+    ) -> FieldResult<Vec<dailp::DocumentCollection>> {
+        Ok(context.data::<Database>()?.all_collections().await?)
     }
 
     /// Retrieves a full document from its unique identifier.

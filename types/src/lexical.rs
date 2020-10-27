@@ -227,6 +227,7 @@ pub fn root_verb_surface_form(
         form: AnnotatedForm {
             index: 0,
             source: syllabary.clone(),
+            normalized_source: None,
             simple_phonetics: Some(phonetic),
             phonemic: Some(convert_udb(&phonemic).to_dailp()),
             segments: Some(MorphemeSegment::parse_many(&morpheme_layer, &gloss_layer)?),
@@ -296,6 +297,7 @@ pub fn root_noun_surface_form(
         form: AnnotatedForm {
             index: 0,
             source: syllabary,
+            normalized_source: None,
             simple_phonetics: Some(phonetic),
             phonemic: Some(convert_udb(&phonemic).to_dailp()),
             segments: Some(MorphemeSegment::parse_many(&morpheme_layer, &gloss_layer)?),
