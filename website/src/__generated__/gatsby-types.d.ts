@@ -31,6 +31,153 @@ type BooleanQueryOperatorInput = {
   readonly nin: Maybe<ReadonlyArray<Maybe<Scalars['Boolean']>>>;
 };
 
+type CurrentBuildDate = Node & {
+  readonly id: Scalars['ID'];
+  readonly parent: Maybe<Node>;
+  readonly children: ReadonlyArray<Node>;
+  readonly internal: Internal;
+  readonly currentDate: Maybe<Scalars['String']>;
+};
+
+type CurrentBuildDateConnection = {
+  readonly totalCount: Scalars['Int'];
+  readonly edges: ReadonlyArray<CurrentBuildDateEdge>;
+  readonly nodes: ReadonlyArray<CurrentBuildDate>;
+  readonly pageInfo: PageInfo;
+  readonly distinct: ReadonlyArray<Scalars['String']>;
+  readonly group: ReadonlyArray<CurrentBuildDateGroupConnection>;
+};
+
+
+type CurrentBuildDateConnection_distinctArgs = {
+  field: CurrentBuildDateFieldsEnum;
+};
+
+
+type CurrentBuildDateConnection_groupArgs = {
+  skip: Maybe<Scalars['Int']>;
+  limit: Maybe<Scalars['Int']>;
+  field: CurrentBuildDateFieldsEnum;
+};
+
+type CurrentBuildDateEdge = {
+  readonly next: Maybe<CurrentBuildDate>;
+  readonly node: CurrentBuildDate;
+  readonly previous: Maybe<CurrentBuildDate>;
+};
+
+enum CurrentBuildDateFieldsEnum {
+  id = 'id',
+  parent___id = 'parent.id',
+  parent___parent___id = 'parent.parent.id',
+  parent___parent___parent___id = 'parent.parent.parent.id',
+  parent___parent___parent___children = 'parent.parent.parent.children',
+  parent___parent___children = 'parent.parent.children',
+  parent___parent___children___id = 'parent.parent.children.id',
+  parent___parent___children___children = 'parent.parent.children.children',
+  parent___parent___internal___content = 'parent.parent.internal.content',
+  parent___parent___internal___contentDigest = 'parent.parent.internal.contentDigest',
+  parent___parent___internal___description = 'parent.parent.internal.description',
+  parent___parent___internal___fieldOwners = 'parent.parent.internal.fieldOwners',
+  parent___parent___internal___ignoreType = 'parent.parent.internal.ignoreType',
+  parent___parent___internal___mediaType = 'parent.parent.internal.mediaType',
+  parent___parent___internal___owner = 'parent.parent.internal.owner',
+  parent___parent___internal___type = 'parent.parent.internal.type',
+  parent___children = 'parent.children',
+  parent___children___id = 'parent.children.id',
+  parent___children___parent___id = 'parent.children.parent.id',
+  parent___children___parent___children = 'parent.children.parent.children',
+  parent___children___children = 'parent.children.children',
+  parent___children___children___id = 'parent.children.children.id',
+  parent___children___children___children = 'parent.children.children.children',
+  parent___children___internal___content = 'parent.children.internal.content',
+  parent___children___internal___contentDigest = 'parent.children.internal.contentDigest',
+  parent___children___internal___description = 'parent.children.internal.description',
+  parent___children___internal___fieldOwners = 'parent.children.internal.fieldOwners',
+  parent___children___internal___ignoreType = 'parent.children.internal.ignoreType',
+  parent___children___internal___mediaType = 'parent.children.internal.mediaType',
+  parent___children___internal___owner = 'parent.children.internal.owner',
+  parent___children___internal___type = 'parent.children.internal.type',
+  parent___internal___content = 'parent.internal.content',
+  parent___internal___contentDigest = 'parent.internal.contentDigest',
+  parent___internal___description = 'parent.internal.description',
+  parent___internal___fieldOwners = 'parent.internal.fieldOwners',
+  parent___internal___ignoreType = 'parent.internal.ignoreType',
+  parent___internal___mediaType = 'parent.internal.mediaType',
+  parent___internal___owner = 'parent.internal.owner',
+  parent___internal___type = 'parent.internal.type',
+  children = 'children',
+  children___id = 'children.id',
+  children___parent___id = 'children.parent.id',
+  children___parent___parent___id = 'children.parent.parent.id',
+  children___parent___parent___children = 'children.parent.parent.children',
+  children___parent___children = 'children.parent.children',
+  children___parent___children___id = 'children.parent.children.id',
+  children___parent___children___children = 'children.parent.children.children',
+  children___parent___internal___content = 'children.parent.internal.content',
+  children___parent___internal___contentDigest = 'children.parent.internal.contentDigest',
+  children___parent___internal___description = 'children.parent.internal.description',
+  children___parent___internal___fieldOwners = 'children.parent.internal.fieldOwners',
+  children___parent___internal___ignoreType = 'children.parent.internal.ignoreType',
+  children___parent___internal___mediaType = 'children.parent.internal.mediaType',
+  children___parent___internal___owner = 'children.parent.internal.owner',
+  children___parent___internal___type = 'children.parent.internal.type',
+  children___children = 'children.children',
+  children___children___id = 'children.children.id',
+  children___children___parent___id = 'children.children.parent.id',
+  children___children___parent___children = 'children.children.parent.children',
+  children___children___children = 'children.children.children',
+  children___children___children___id = 'children.children.children.id',
+  children___children___children___children = 'children.children.children.children',
+  children___children___internal___content = 'children.children.internal.content',
+  children___children___internal___contentDigest = 'children.children.internal.contentDigest',
+  children___children___internal___description = 'children.children.internal.description',
+  children___children___internal___fieldOwners = 'children.children.internal.fieldOwners',
+  children___children___internal___ignoreType = 'children.children.internal.ignoreType',
+  children___children___internal___mediaType = 'children.children.internal.mediaType',
+  children___children___internal___owner = 'children.children.internal.owner',
+  children___children___internal___type = 'children.children.internal.type',
+  children___internal___content = 'children.internal.content',
+  children___internal___contentDigest = 'children.internal.contentDigest',
+  children___internal___description = 'children.internal.description',
+  children___internal___fieldOwners = 'children.internal.fieldOwners',
+  children___internal___ignoreType = 'children.internal.ignoreType',
+  children___internal___mediaType = 'children.internal.mediaType',
+  children___internal___owner = 'children.internal.owner',
+  children___internal___type = 'children.internal.type',
+  internal___content = 'internal.content',
+  internal___contentDigest = 'internal.contentDigest',
+  internal___description = 'internal.description',
+  internal___fieldOwners = 'internal.fieldOwners',
+  internal___ignoreType = 'internal.ignoreType',
+  internal___mediaType = 'internal.mediaType',
+  internal___owner = 'internal.owner',
+  internal___type = 'internal.type',
+  currentDate = 'currentDate'
+}
+
+type CurrentBuildDateFilterInput = {
+  readonly id: Maybe<StringQueryOperatorInput>;
+  readonly parent: Maybe<NodeFilterInput>;
+  readonly children: Maybe<NodeFilterListInput>;
+  readonly internal: Maybe<InternalFilterInput>;
+  readonly currentDate: Maybe<StringQueryOperatorInput>;
+};
+
+type CurrentBuildDateGroupConnection = {
+  readonly totalCount: Scalars['Int'];
+  readonly edges: ReadonlyArray<CurrentBuildDateEdge>;
+  readonly nodes: ReadonlyArray<CurrentBuildDate>;
+  readonly pageInfo: PageInfo;
+  readonly field: Scalars['String'];
+  readonly fieldValue: Maybe<Scalars['String']>;
+};
+
+type CurrentBuildDateSortInput = {
+  readonly fields: Maybe<ReadonlyArray<Maybe<CurrentBuildDateFieldsEnum>>>;
+  readonly order: Maybe<ReadonlyArray<Maybe<SortOrderEnum>>>;
+};
+
 type Dailp = {
   /** Listing of all documents excluding their contents by default */
   readonly allDocuments: ReadonlyArray<Dailp_AnnotatedDoc>;
@@ -1177,6 +1324,8 @@ type Query = {
   readonly allSitePage: SitePageConnection;
   readonly graphQlSource: Maybe<GraphQLSource>;
   readonly allGraphQlSource: GraphQLSourceConnection;
+  readonly currentBuildDate: Maybe<CurrentBuildDate>;
+  readonly allCurrentBuildDate: CurrentBuildDateConnection;
   readonly siteBuildMetadata: Maybe<SiteBuildMetadata>;
   readonly allSiteBuildMetadata: SiteBuildMetadataConnection;
   readonly sitePlugin: Maybe<SitePlugin>;
@@ -1345,6 +1494,23 @@ type Query_graphQlSourceArgs = {
 type Query_allGraphQlSourceArgs = {
   filter: Maybe<GraphQLSourceFilterInput>;
   sort: Maybe<GraphQLSourceSortInput>;
+  skip: Maybe<Scalars['Int']>;
+  limit: Maybe<Scalars['Int']>;
+};
+
+
+type Query_currentBuildDateArgs = {
+  id: Maybe<StringQueryOperatorInput>;
+  parent: Maybe<NodeFilterInput>;
+  children: Maybe<NodeFilterListInput>;
+  internal: Maybe<InternalFilterInput>;
+  currentDate: Maybe<StringQueryOperatorInput>;
+};
+
+
+type Query_allCurrentBuildDateArgs = {
+  filter: Maybe<CurrentBuildDateFilterInput>;
+  sort: Maybe<CurrentBuildDateSortInput>;
   skip: Maybe<Scalars['Int']>;
   limit: Maybe<Scalars['Int']>;
 };
@@ -1905,6 +2071,7 @@ enum SitePageFieldsEnum {
   pluginCreator___resolve = 'pluginCreator.resolve',
   pluginCreator___name = 'pluginCreator.name',
   pluginCreator___version = 'pluginCreator.version',
+  pluginCreator___pluginOptions___formatting___format = 'pluginCreator.pluginOptions.formatting.format',
   pluginCreator___pluginOptions___name = 'pluginCreator.pluginOptions.name',
   pluginCreator___pluginOptions___short_name = 'pluginCreator.pluginOptions.short_name',
   pluginCreator___pluginOptions___start_url = 'pluginCreator.pluginOptions.start_url',
@@ -2109,6 +2276,7 @@ enum SitePluginFieldsEnum {
   resolve = 'resolve',
   name = 'name',
   version = 'version',
+  pluginOptions___formatting___format = 'pluginOptions.formatting.format',
   pluginOptions___name = 'pluginOptions.name',
   pluginOptions___short_name = 'pluginOptions.short_name',
   pluginOptions___start_url = 'pluginOptions.start_url',
@@ -2239,6 +2407,7 @@ type SitePluginPackageJsonPeerDependenciesFilterListInput = {
 };
 
 type SitePluginPluginOptions = {
+  readonly formatting: Maybe<SitePluginPluginOptionsFormatting>;
   readonly name: Maybe<Scalars['String']>;
   readonly short_name: Maybe<Scalars['String']>;
   readonly start_url: Maybe<Scalars['String']>;
@@ -2259,6 +2428,7 @@ type SitePluginPluginOptions = {
 };
 
 type SitePluginPluginOptionsFilterInput = {
+  readonly formatting: Maybe<SitePluginPluginOptionsFormattingFilterInput>;
   readonly name: Maybe<StringQueryOperatorInput>;
   readonly short_name: Maybe<StringQueryOperatorInput>;
   readonly start_url: Maybe<StringQueryOperatorInput>;
@@ -2276,6 +2446,14 @@ type SitePluginPluginOptionsFilterInput = {
   readonly url: Maybe<StringQueryOperatorInput>;
   readonly uri: Maybe<StringQueryOperatorInput>;
   readonly pathCheck: Maybe<BooleanQueryOperatorInput>;
+};
+
+type SitePluginPluginOptionsFormatting = {
+  readonly format: Maybe<Scalars['String']>;
+};
+
+type SitePluginPluginOptionsFormattingFilterInput = {
+  readonly format: Maybe<StringQueryOperatorInput>;
 };
 
 type SitePluginSortInput = {
@@ -2335,7 +2513,7 @@ type AnnotatedDocumentQueryVariables = Exact<{
 
 
 type AnnotatedDocumentQuery = { readonly dailp: { readonly document: Maybe<(
-      Pick<Dailp_AnnotatedDoc, 'id' | 'title' | 'pageImages'>
+      Pick<Dailp_AnnotatedDoc, 'id' | 'title' | 'slug' | 'pageImages'>
       & { readonly collection: Maybe<Pick<Dailp_DocumentCollection, 'name' | 'slug'>>, readonly date: Maybe<Pick<Dailp_DateTime, 'year'>>, readonly translatedSegments: Maybe<ReadonlyArray<{ readonly source: (
           { readonly __typename: 'Dailp_AnnotatedPhrase' }
           & BlockFieldsFragment
@@ -2377,5 +2555,10 @@ type IndexPageQueryVariables = Exact<{ [key: string]: never; }>;
 
 
 type IndexPageQuery = { readonly dailp: { readonly allCollections: ReadonlyArray<Pick<Dailp_DocumentCollection, 'name' | 'slug'>> } };
+
+type homesneadpiedailpEncodingwebsitesrcfooterTsx1552981879QueryVariables = Exact<{ [key: string]: never; }>;
+
+
+type homesneadpiedailpEncodingwebsitesrcfooterTsx1552981879Query = { readonly currentBuildDate: Maybe<Pick<CurrentBuildDate, 'currentDate'>> };
 
 }
