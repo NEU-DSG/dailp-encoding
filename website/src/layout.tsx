@@ -15,7 +15,7 @@ const Layout = (p: { title?: string; children: any }) => (
       <title>{p.title ? `${p.title} - ` : null}</title>
       DAILP
     </Helmet>
-    <Sticky enabled={isMobile}>
+    <Sticky enabled={isMobile} innerZ={1}>
       <Header aria-label="Site Header" id={isMobile ? "header" : undefined}>
         <HeaderContents>
           <Link to="/" className={siteTitle}>

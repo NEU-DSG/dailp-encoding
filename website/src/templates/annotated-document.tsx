@@ -289,6 +289,7 @@ const DocSection = styled.section`
 export const AnnotationSection = styled(DocSection)`
   display: flex;
   flex-flow: column nowrap;
+  margin: 0;
   ${theme.mediaQueries.medium} {
     flex-flow: row wrap;
     justify-content: space-between;
