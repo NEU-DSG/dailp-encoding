@@ -215,10 +215,10 @@ const WordGroup = styled(Group)`
   border: 2px solid ${theme.colors.borders};
   border-radius: 2px;
   ${theme.mediaQueries.medium} {
-    margin-bottom: 2rem;
     padding: 0;
     border: none;
-    margin: 1rem ${theme.edgeSpacing};
+    margin: 1rem 2rem;
+    margin-bottom: 2rem;
   }
 `
 
