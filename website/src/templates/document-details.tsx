@@ -1,11 +1,10 @@
 import React from "react"
-import { graphql, Link } from "gatsby"
+import { graphql } from "gatsby"
 import Layout from "../layout"
 import { Helmet } from "react-helmet"
-import { DocHeader } from "./annotated-document"
+import { DocumentTitleHeader } from "./annotated-document"
 import { styled } from "linaria/react"
 import { fullWidth } from "../theme"
-import { documentRoute, collectionRoute } from "../routes"
 
 const DocumentDetails = (p: { data: GatsbyTypes.DocumentDetailsQuery }) => {
   const doc = p.data.dailp.document!
@@ -15,15 +14,7 @@ const DocumentDetails = (p: { data: GatsbyTypes.DocumentDetailsQuery }) => {
         <Helmet>
           <title>{doc.title} - Details</title>
         </Helmet>
-        <DocHeader>
-          <h2>
-            <Link to={documentRoute(doc.slug)}>{doc.title}</Link>{" "}
-            {doc.date && `(${doc.date.year})`}
-          </h2>
-          <Link to={collectionRoute(doc.collection!.slug)}>
-            <h3>{doc.collection?.name}</h3>
-          </Link>
-        </DocHeader>
+        <DocumentTitleHeader doc={doc} showDetails={false} />
         <WideSection>
           <h3>People Involved</h3>
           <ul>
