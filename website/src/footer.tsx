@@ -4,7 +4,7 @@ import theme, { fullWidth } from "./theme"
 
 /** University affiliation, related navigation links, and contact info.  */
 const Footer = () => (
-  <FooterContainer role="contentinfo">
+  <FooterContainer>
     <FooterContent>Northeastern University</FooterContent>
   </FooterContainer>
 )
