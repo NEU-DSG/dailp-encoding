@@ -17,9 +17,37 @@ import { MorphemeDetails } from "../morpheme"
 import { Segment, BasicMorphemeSegment } from "../segment"
 import Cookies from "js-cookie"
 import theme, { fullWidth, largeDialog } from "../theme"
-import { collectionRoute } from "../routes"
+import { collectionRoute, documentDetailsRoute, documentRoute } from "../routes"
 import { useScrollableTabState } from "../scrollable-tabs"
 import { css } from "linaria"
+import { DeepPartial } from "tsdef"
+
+export const DocumentTitleHeader = (p: {
+  doc: DeepPartial<GatsbyTypes.Dailp_AnnotatedDoc>
+  showDetails?: boolean
+}) => (
+  <DocHeader>
+    {p.doc.collection && (
+      <Link to={collectionRoute(p.doc.collection.slug!)}>
+        <h3>{p.doc.collection.name}</h3>
+      </Link>
+    )}
+
+    <h2>
+      {p.showDetails ? (
+        p.doc.title
+      ) : (
+        <Link to={documentRoute(p.doc.slug!)}>{p.doc.title}</Link>
+      )}{" "}
+      {p.doc.date && `(${p.doc.date.year})`}{" "}
+      {p.showDetails ? (
+        <>
+          [<Link to={documentDetailsRoute(p.doc.slug!)}>Details</Link>]
+        </>
+      ) : null}
+    </h2>
+  </DocHeader>
+)
 
 /** A full annotated document, including all metadata and the translation(s) */
 const AnnotatedDocumentPage = (p: {
@@ -56,16 +84,10 @@ const AnnotatedDocumentPage = (p: {
           </MorphemeDialog>
         </MorphemeDialogBackdrop>
 
-        <DocHeader>
-          <h2>
-            {doc.title} {doc.date && `(${doc.date.year})`}
-          </h2>
-          {doc.collection && (
-            <Link to={collectionRoute(doc.collection.slug)}>
-              <h3>{doc.collection.name}</h3>
-            </Link>
-          )}
-        </DocHeader>
+        <DocumentTitleHeader
+          doc={doc as GatsbyTypes.Dailp_AnnotatedDoc}
+          showDetails={true}
+        />
 
         <WideSticky top="#header">
           <DocTabs {...tabs}>
@@ -96,7 +118,7 @@ const AnnotatedDocumentPage = (p: {
         </TabPanel>
 
         <TabPanel {...tabs}>
-          <AnnotationSection as="figure">
+          <AnnotationFigure>
             {doc.pageImages?.map((url, i) => (
               <TransformWrapper key={i}>
                 <TransformComponent>
@@ -104,7 +126,7 @@ const AnnotatedDocumentPage = (p: {
                 </TransformComponent>
               </TransformWrapper>
             ))}
-          </AnnotationSection>
+          </AnnotationFigure>
         </TabPanel>
       </AnnotatedDocument>
     </Layout>
@@ -147,7 +169,8 @@ const DocTabs = styled(TabList)`
   ${fullWidth}
 `
 
-export const DocHeader = styled.header`
+const DocHeader = styled.header`
+  ${fullWidth}
   padding: 0 ${theme.edgeSpacing};
 `
 
@@ -194,6 +217,7 @@ export const query = graphql`
       document(id: $id) {
         id
         title
+        slug
         collection {
           name
           slug
@@ -289,9 +313,19 @@ const DocSection = styled.section`
 export const AnnotationSection = styled(DocSection)`
   display: flex;
   flex-flow: column nowrap;
-  margin: 0;
   ${theme.mediaQueries.medium} {
     flex-flow: row wrap;
     justify-content: space-between;
+  }
+`
+
+const AnnotationFigure = styled.figure`
+  ${fullWidth}
+  margin: 0;
+  .react-transform-component {
+    max-height: 20rem;
+    ${theme.mediaQueries.medium} {
+      max-height: initial;
+    }
   }
 `
