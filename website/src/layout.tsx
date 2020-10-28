@@ -16,7 +16,7 @@ const Layout = (p: { title?: string; children: any }) => (
       DAILP
     </Helmet>
     <Sticky enabled={isMobile}>
-      <Header id={isMobile ? "header" : undefined}>
+      <Header aria-label="Site Header" id={isMobile ? "header" : undefined}>
         <HeaderContents>
           <Link to="/" className={siteTitle}>
             DAILP
@@ -35,7 +35,7 @@ const Layout = (p: { title?: string; children: any }) => (
 
 export default Layout
 
-const Header = styled.nav`
+const Header = styled.header`
   display: flex;
   flex-flow: row nowrap;
   justify-content: center;
