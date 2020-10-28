@@ -56,5 +56,7 @@ module.exports = {
           "https://b817bapwvb.execute-api.us-east-1.amazonaws.com/dev/graphql",
       },
     },
+    "gatsby-plugin-netlify",
+    "gatsby-plugin-netlify-cache",
   ],
 }

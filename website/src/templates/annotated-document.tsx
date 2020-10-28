@@ -157,6 +157,8 @@ const DocTab = styled(Tab)`
   cursor: pointer;
   font-family: ${theme.fonts.header};
   font-size: 1.1rem;
+  background-color: ${theme.colors.header};
+  color: ${theme.colors.headings};
   &[aria-selected="true"] {
     border-color: ${theme.colors.headings};
   }
@@ -178,7 +180,6 @@ const PageImage = styled.img`
   margin-bottom: 2rem;
   width: 100%;
   height: auto;
-  cursor: grab;
 `
 
 export enum ExperienceLevel {
@@ -322,10 +323,15 @@ export const AnnotationSection = styled(DocSection)`
 const AnnotationFigure = styled.figure`
   ${fullWidth}
   margin: 0;
+  cursor: move;
+  cursor: grab;
   .react-transform-component {
     max-height: 20rem;
     ${theme.mediaQueries.medium} {
-      max-height: initial;
+      max-height: 30rem;
     }
+  }
+  .react-transform-element {
+    width: 100%;
   }
 `
