@@ -1,5 +1,6 @@
 import "typeface-gentium-basic"
 import "typeface-open-sans"
+import "./fonts.css"
 
 const theme = {
   fonts: {
