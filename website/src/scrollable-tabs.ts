@@ -20,7 +20,7 @@ export const useScrollableTabState = (initialState?: TabInitialState) => {
         tabScrollPos.current[lastTabId] = window.scrollY
       }
     }
-    window.addEventListener("scroll", listener)
+    window.addEventListener("scroll", listener, { passive: true })
 
     return () => window.removeEventListener("scroll", listener)
   }, [tabs.selectedId])

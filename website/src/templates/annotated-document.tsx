@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef } from "react"
+import React, { useState, useEffect } from "react"
 import { graphql, Link } from "gatsby"
 import { styled } from "linaria/react"
-import { Helmet } from "react-helmet"
+import loadable from "@loadable/component"
 import { useDialogState, Dialog, DialogBackdrop } from "reakit/Dialog"
 import {
   Radio,
@@ -13,14 +13,16 @@ import { Tab, TabPanel, TabList } from "reakit/Tab"
 import Sticky from "react-stickynode"
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch"
 import Layout from "../layout"
-import { MorphemeDetails } from "../morpheme"
-import { Segment, BasicMorphemeSegment } from "../segment"
+import { AnnotationSection, Segment } from "../segment"
 import Cookies from "js-cookie"
 import theme, { fullWidth, largeDialog } from "../theme"
 import { collectionRoute, documentDetailsRoute, documentRoute } from "../routes"
 import { useScrollableTabState } from "../scrollable-tabs"
 import { css } from "linaria"
 import { DeepPartial } from "tsdef"
+import { ExperienceLevel, TagSet, BasicMorphemeSegment } from "../types"
+
+const { MorphemeDetails } = loadable(() => import("../morpheme"))
 
 export const DocumentTitleHeader = (p: {
   doc: DeepPartial<GatsbyTypes.Dailp_AnnotatedDoc>
@@ -56,12 +58,12 @@ const AnnotatedDocumentPage = (p: {
   const doc = p.data.dailp.document!
   const dialog = useDialogState()
   const tabs = useScrollableTabState()
-  const [selectedMorpheme, setMorpheme] = useState<BasicMorphemeSegment | null>(
-    null
-  )
   const experienceLevel = useRadioState({
     state: Number.parseInt(Cookies.get("experienceLevel") ?? "0"),
   })
+  const [selectedMorpheme, setMorpheme] = useState<BasicMorphemeSegment | null>(
+    null
+  )
 
   // Save the selected experience level throughout the session.
   useEffect(() => {
@@ -122,7 +124,11 @@ const AnnotatedDocumentPage = (p: {
             {doc.pageImages?.map((url, i) => (
               <TransformWrapper key={i}>
                 <TransformComponent>
-                  <PageImage src={url} alt={`Manuscript Page ${i + 1}`} />
+                  <PageImage
+                    src={url}
+                    alt={`Manuscript Page ${i + 1}`}
+                    loading="lazy"
+                  />
                 </TransformComponent>
               </TransformWrapper>
             ))}
@@ -181,18 +187,6 @@ const PageImage = styled.img`
   width: 100%;
   height: auto;
 `
-
-export enum ExperienceLevel {
-  Basic = 0,
-  Learner = 1,
-  Advanced = 2,
-}
-
-export enum TagSet {
-  Dailp,
-  Learner,
-  Crg,
-}
 
 const ExperiencePicker = (p: { radio: RadioStateReturn }) => {
   return (
@@ -305,19 +299,6 @@ const AnnotatedDocument = styled.main`
   flex-flow: column nowrap;
   align-items: center;
   font-size: 1rem;
-`
-
-const DocSection = styled.section`
-  ${fullWidth}
-`
-
-export const AnnotationSection = styled(DocSection)`
-  display: flex;
-  flex-flow: column nowrap;
-  ${theme.mediaQueries.medium} {
-    flex-flow: row wrap;
-    justify-content: space-between;
-  }
 `
 
 const AnnotationFigure = styled.figure`

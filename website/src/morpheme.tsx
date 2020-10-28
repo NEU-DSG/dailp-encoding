@@ -5,7 +5,10 @@ import { DialogStateReturn } from "reakit/Dialog"
 import { styled } from "linaria/react"
 import { useQuery, gql } from "@apollo/client"
 import _ from "lodash"
-import { BasicMorphemeSegment } from "./segment"
+
+type BasicMorphemeSegment = NonNullable<
+  GatsbyTypes.FormFieldsFragment["segments"]
+>[0]
 
 /** Specific details about some morpheme */
 export const MorphemeDetails = (props: {

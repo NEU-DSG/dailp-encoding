@@ -3,16 +3,18 @@ import { styled } from "linaria/react"
 import { DialogDisclosure, DialogStateReturn } from "reakit/Dialog"
 import { Group } from "reakit/Group"
 import _ from "lodash"
-import {
-  ExperienceLevel,
-  AnnotationSection,
-  TagSet,
-} from "./templates/annotated-document"
-import theme from "./theme"
+import { ExperienceLevel, TagSet, BasicMorphemeSegment } from "./types"
+import theme, { fullWidth } from "./theme"
 
-export type BasicMorphemeSegment = NonNullable<
-  GatsbyTypes.FormFieldsFragment["segments"]
->[0]
+export const AnnotationSection = styled.section`
+  ${fullWidth}
+  display: flex;
+  flex-flow: column nowrap;
+  ${theme.mediaQueries.medium} {
+    flex-flow: row wrap;
+    justify-content: space-between;
+  }
+`
 
 interface Props {
   segment: GatsbyTypes.Dailp_AnnotatedSeg
@@ -134,10 +136,16 @@ const MorphemicSegmentation = (p: {
 
   return (
     <WordSegment>
-      {p.segments!.map((segment, i) => {
-        let seg = p.showAdvanced ? segment.morpheme : segment.simpleMorpheme
-        return seg + (segment.nextSeparator || "")
-      })}
+      {p
+        .segments!.map((segment) => {
+          let seg = p.showAdvanced ? segment.morpheme : segment.simpleMorpheme
+          if (segment.nextSeparator) {
+            return seg + segment.nextSeparator
+          } else {
+            return seg
+          }
+        })
+        .join()}
       <GlossLine>
         {intersperse(
           p.segments!.map((segment, i) => (

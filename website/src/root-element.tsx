@@ -12,10 +12,6 @@ export const wrapRootElement = (p: { element: any }) => (
         name="viewport"
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0"
       />
-      <link
-        rel="stylesheet"
-        href="https://fonts.googleapis.com/earlyaccess/notosanscherokee.css"
-      />
     </Helmet>
     <Provider>{p.element}</Provider>
   </>
