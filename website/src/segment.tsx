@@ -45,8 +45,8 @@ export const Segment = (p: Props) => {
 
     if (p.segment.ty === "BLOCK") {
       return (
-        <DocumentBlock>
-          <AnnotationSection>
+        <DocumentBlock as="section">
+          <AnnotationSection as="div">
             {children}
             <div style={{ flexGrow: 1 }} aria-hidden={true} />
           </AnnotationSection>

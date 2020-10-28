@@ -49,7 +49,7 @@ const AnnotatedDocumentPage = (p: {
     <Layout title={doc.title}>
       <AnnotatedDocument>
         <MorphemeDialogBackdrop {...dialog}>
-          <MorphemeDialog {...dialog} aria-label="Morpheme Details">
+          <MorphemeDialog {...dialog} aria-label="Segment Details">
             {selectedMorpheme ? (
               <MorphemeDetails segment={selectedMorpheme} dialog={dialog} />
             ) : null}
@@ -77,7 +77,7 @@ const AnnotatedDocumentPage = (p: {
         <TabPanel {...tabs}>
           <ExperiencePicker radio={experienceLevel} />
 
-          <AnnotationSection>
+          <AnnotationSection as="article">
             {doc.translatedSegments?.map((seg, i) => (
               <Segment
                 key={i}
@@ -96,11 +96,11 @@ const AnnotatedDocumentPage = (p: {
         </TabPanel>
 
         <TabPanel {...tabs}>
-          <AnnotationSection>
+          <AnnotationSection as="figure">
             {doc.pageImages?.map((url, i) => (
               <TransformWrapper key={i}>
                 <TransformComponent>
-                  <PageImage src={url} />
+                  <PageImage src={url} alt={`Manuscript Page ${i + 1}`} />
                 </TransformComponent>
               </TransformWrapper>
             ))}
