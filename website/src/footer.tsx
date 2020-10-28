@@ -1,13 +1,27 @@
 import React from "react"
 import { styled } from "linaria/react"
+import { useStaticQuery, graphql } from "gatsby"
 import theme, { fullWidth } from "./theme"
 
 /** University affiliation, related navigation links, and contact info.  */
-const Footer = () => (
-  <FooterContainer>
-    <FooterContent>Northeastern University</FooterContent>
-  </FooterContainer>
-)
+const Footer = () => {
+  const data = useStaticQuery(graphql`
+    query {
+      currentBuildDate {
+        currentDate
+      }
+    }
+  `)
+
+  return (
+    <FooterContainer>
+      <FooterContent>Northeastern University</FooterContent>
+      <FooterContent>
+        Last Updated on {data.currentBuildDate.currentDate}
+      </FooterContent>
+    </FooterContainer>
+  )
+}
 export default Footer
 
 const FooterContainer = styled.footer`
