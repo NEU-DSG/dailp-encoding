@@ -4,6 +4,14 @@ module.exports = {
   },
   plugins: [
     {
+      resolve: "gatsby-plugin-build-date",
+      options: {
+        formatting: {
+          format: "MM/DD/YYYY [at] hh:mm A",
+        },
+      },
+    },
+    {
       resolve: `gatsby-plugin-manifest`,
       options: {
         name: `DAILP Cherokee Reader`,
