@@ -62,9 +62,9 @@ const Breadcrumbs = styled.ul`
   padding-inline-start: 0;
   li {
     display: inline;
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     &:after {
-      padding: 0 0.5rem;
+      padding: 0 0.3rem;
       content: "/";
     }
   }
@@ -196,7 +196,10 @@ const DocTabs = styled(TabList)`
 
 const DocTabPanel = styled(TabPanel)`
   ${fullWidth}
-  padding: 0 ${theme.edgeSpacing};
+  padding: 0 0.5rem;
+  ${theme.mediaQueries.medium} {
+    padding: 0 ${theme.edgeSpacing};
+  }
 `
 
 const DocHeader = styled.header`
