@@ -37,6 +37,9 @@ css`
       font-size: 1rem;
       padding-bottom: 1.5rem;
     }
+    ul {
+      padding-inline-start: 1.5rem;
+    }
     h1,
     h2 {
       color: ${theme.colors.headings};
