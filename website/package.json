@@ -24,6 +24,7 @@
     "react-device-detect": "^1.14.0",
     "react-dom": "^16.13.1",
     "react-helmet": "^6.0.0",
+    "react-icons": "^3.11.0",
     "react-stickynode": "^3.0.4",
     "react-zoom-pan-pinch": "^1.6.1",
     "reakit": "^1.2.1",

@@ -61,6 +61,12 @@ module.exports = {
     },
     "gatsby-plugin-netlify",
     "gatsby-plugin-netlify-cache",
+    {
+      resolve: "gatsby-plugin-anchor-links",
+      options: {
+        offset: -100,
+      },
+    },
     "gatsby-plugin-loadable-components-ssr",
   ],
 }

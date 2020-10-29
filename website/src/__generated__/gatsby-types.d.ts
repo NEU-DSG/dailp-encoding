@@ -2079,6 +2079,7 @@ enum SitePageFieldsEnum {
   pluginCreator___pluginOptions___fieldName = 'pluginCreator.pluginOptions.fieldName',
   pluginCreator___pluginOptions___url = 'pluginCreator.pluginOptions.url',
   pluginCreator___pluginOptions___uri = 'pluginCreator.pluginOptions.uri',
+  pluginCreator___pluginOptions___offset = 'pluginCreator.pluginOptions.offset',
   pluginCreator___pluginOptions___pathCheck = 'pluginCreator.pluginOptions.pathCheck',
   pluginCreator___nodeAPIs = 'pluginCreator.nodeAPIs',
   pluginCreator___browserAPIs = 'pluginCreator.browserAPIs',
@@ -2286,6 +2287,7 @@ enum SitePluginFieldsEnum {
   pluginOptions___fieldName = 'pluginOptions.fieldName',
   pluginOptions___url = 'pluginOptions.url',
   pluginOptions___uri = 'pluginOptions.uri',
+  pluginOptions___offset = 'pluginOptions.offset',
   pluginOptions___pathCheck = 'pluginOptions.pathCheck',
   nodeAPIs = 'nodeAPIs',
   browserAPIs = 'browserAPIs',
@@ -2419,6 +2421,7 @@ type SitePluginPluginOptions = {
   readonly fieldName: Maybe<Scalars['String']>;
   readonly url: Maybe<Scalars['String']>;
   readonly uri: Maybe<Scalars['String']>;
+  readonly offset: Maybe<Scalars['Int']>;
   readonly pathCheck: Maybe<Scalars['Boolean']>;
 };
 
@@ -2442,6 +2445,7 @@ type SitePluginPluginOptionsFilterInput = {
   readonly fieldName: Maybe<StringQueryOperatorInput>;
   readonly url: Maybe<StringQueryOperatorInput>;
   readonly uri: Maybe<StringQueryOperatorInput>;
+  readonly offset: Maybe<IntQueryOperatorInput>;
   readonly pathCheck: Maybe<BooleanQueryOperatorInput>;
 };
 
@@ -2487,10 +2491,25 @@ type StringQueryOperatorInput = {
   readonly glob: Maybe<Scalars['String']>;
 };
 
+type Unnamed_1_QueryVariables = Exact<{ [key: string]: never; }>;
+
+
+type Unnamed_1_Query = { readonly currentBuildDate: Maybe<Pick<CurrentBuildDate, 'currentDate'>> };
+
 type IndexPageQueryVariables = Exact<{ [key: string]: never; }>;
 
 
 type IndexPageQuery = { readonly dailp: { readonly allCollections: ReadonlyArray<Pick<Dailp_DocumentCollection, 'name' | 'slug'>> } };
+
+type CollectionQueryVariables = Exact<{
+  name: Scalars['String'];
+}>;
+
+
+type CollectionQuery = { readonly dailp: { readonly allDocuments: ReadonlyArray<(
+      Pick<Dailp_AnnotatedDoc, 'id' | 'slug' | 'title'>
+      & { readonly date: Maybe<Pick<Dailp_DateTime, 'year'>> }
+    )> } };
 
 type AnnotatedDocumentQueryVariables = Exact<{
   id: Scalars['String'];
@@ -2516,16 +2535,6 @@ type FormFieldsFragment = (
   )>> }
 );
 
-type CollectionQueryVariables = Exact<{
-  name: Scalars['String'];
-}>;
-
-
-type CollectionQuery = { readonly dailp: { readonly allDocuments: ReadonlyArray<(
-      Pick<Dailp_AnnotatedDoc, 'id' | 'slug' | 'title'>
-      & { readonly date: Maybe<Pick<Dailp_DateTime, 'year'>> }
-    )> } };
-
 type DocumentDetailsQueryVariables = Exact<{
   id: Scalars['String'];
 }>;
@@ -2535,10 +2544,5 @@ type DocumentDetailsQuery = { readonly dailp: { readonly document: Maybe<(
       Pick<Dailp_AnnotatedDoc, 'id' | 'slug' | 'title'>
       & { readonly collection: Maybe<Pick<Dailp_DocumentCollection, 'name' | 'slug'>>, readonly date: Maybe<Pick<Dailp_DateTime, 'year'>>, readonly people: ReadonlyArray<Pick<Dailp_PersonAssociation, 'name' | 'role'>> }
     )> } };
-
-type Unnamed_1_QueryVariables = Exact<{ [key: string]: never; }>;
-
-
-type Unnamed_1_Query = { readonly currentBuildDate: Maybe<Pick<CurrentBuildDate, 'currentDate'>> };
 
 }

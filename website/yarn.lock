@@ -2154,6 +2154,11 @@
     "@types/glob" "*"
     "@types/node" "*"
 
+"@types/scroll-to-element@^2.0.0":
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/@types/scroll-to-element/-/scroll-to-element-2.0.0.tgz#caa1e37747db5cf8023b1283b8449a5560c0be4f"
+  integrity sha512-MyhKHHONq0jP4e44PVbic8xrjjawsn7Rp+cijvL7K/I6Hi0KWvD98SB1muqjtIkxoopOPdUqL+DGE67JqNkPsQ==
+
 "@types/tmp@^0.0.33":
   version "0.0.33"
   resolved "https://registry.yarnpkg.com/@types/tmp/-/tmp-0.0.33.tgz#1073c4bc824754ae3d10cfab88ab0237ba964e4d"
@@ -4170,6 +4175,11 @@ constants-browserify@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/constants-browserify/-/constants-browserify-1.0.0.tgz#c20b96d8c617748aaf1c16021760cd27fcb8cb75"
   integrity sha1-wguW2MYXdIqvHBYCF2DNJ/y4y3U=
+
+constate@^3.1.0:
+  version "3.1.0"
+  resolved "https://registry.yarnpkg.com/constate/-/constate-3.1.0.tgz#6a84da7f8051334a77a6a92860e4058b2eae96c1"
+  integrity sha512-a8hPXRJzcllP5D/9twMRI2VkAiZwgcY/fXyTHQqvv8EBZxzjEh6cAFlsHqnBQ7GtPWlNK11zD4pbIqO1jP0ReA==
 
 contains-path@^0.1.0:
   version "0.1.0"
@@ -11311,7 +11321,7 @@ react-hot-loader@^4.12.21:
     shallowequal "^1.1.0"
     source-map "^0.7.3"
 
-react-icons@^3.0.1:
+react-icons@^3.0.1, react-icons@^3.11.0:
   version "3.11.0"
   resolved "https://registry.yarnpkg.com/react-icons/-/react-icons-3.11.0.tgz#2ca2903dfab8268ca18ebd8cc2e879921ec3b254"
   integrity sha512-JRgiI/vdF6uyBgyZhVyYJUZAop95Sy4XDe/jmT3R/bKliFWpO/uZBwvSjWEdxwzec7SYbEPNPck0Kff2tUGM2Q==
