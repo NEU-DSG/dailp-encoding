@@ -7,7 +7,7 @@ import { ExperienceLevel, TagSet, BasicMorphemeSegment } from "./types"
 import theme, { fullWidth } from "./theme"
 
 export const AnnotationSection = styled.section`
-  ${fullWidth}
+  width: 100%;
   display: flex;
   flex-flow: column nowrap;
   ${theme.mediaQueries.medium} {
@@ -53,7 +53,7 @@ export const Segment = (p: Props) => {
             {children}
             <div style={{ flexGrow: 1 }} aria-hidden={true} />
           </AnnotationSection>
-          <TranslationPara>{p.translations?.text ?? null}.</TranslationPara>
+          <p>{p.translations?.text ?? null}.</p>
         </DocumentBlock>
       )
     } else {
@@ -228,17 +228,15 @@ const WordGroup = styled(Group)`
   ${theme.mediaQueries.medium} {
     padding: 0;
     border: none;
-    margin: 1rem 2rem;
+    margin-top: 1rem;
     margin-bottom: 2rem;
+    margin-right: 3rem;
+    margin-left: 0;
   }
 `
 
 const SyllabaryLayer = styled.div`
   font-size: 1.2rem;
-`
-
-const TranslationPara = styled.p`
-  margin: 0 ${theme.edgeSpacing};
 `
 
 const DocumentBlock = styled.div`
