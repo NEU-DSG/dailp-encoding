@@ -28,11 +28,18 @@ export const DocumentTitleHeader = (p: {
   showDetails?: boolean
 }) => (
   <DocHeader>
-    {p.doc.collection && (
-      <Link to={collectionRoute(p.doc.collection.slug!)}>
-        <h3>{p.doc.collection.name}</h3>
-      </Link>
-    )}
+    <Breadcrumbs aria-label="Breadcrumbs">
+      <li>
+        <Link to="/">Collections</Link>
+      </li>
+      {p.doc.collection && (
+        <li>
+          <Link to={collectionRoute(p.doc.collection.slug!)}>
+            {p.doc.collection.name}
+          </Link>
+        </li>
+      )}
+    </Breadcrumbs>
 
     <h2>
       {p.showDetails ? (
@@ -49,6 +56,19 @@ export const DocumentTitleHeader = (p: {
     </h2>
   </DocHeader>
 )
+
+const Breadcrumbs = styled.ul`
+  list-style: none;
+  padding-inline-start: 0;
+  li {
+    display: inline;
+    font-size: 1.2rem;
+    &:after {
+      padding: 0 0.5rem;
+      content: "/";
+    }
+  }
+`
 
 enum Tabs {
   ANNOTATION = "annotation-tab",
