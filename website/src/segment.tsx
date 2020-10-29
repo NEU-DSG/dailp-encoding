@@ -12,7 +12,6 @@ export const AnnotationSection = styled.section`
   flex-flow: column nowrap;
   ${theme.mediaQueries.medium} {
     flex-flow: row wrap;
-    justify-content: space-between;
   }
 `
 
@@ -32,18 +31,20 @@ export const Segment = (p: Props) => {
     return <AnnotatedForm {...p} segment={p.segment} />
   } else if (isPhrase(p.segment)) {
     const children =
-      p.segment.parts?.map((seg, i) => (
-        <Segment
-          key={i}
-          segment={seg}
-          dialog={p.dialog}
-          onOpenDetails={p.onOpenDetails}
-          level={p.level}
-          translations={p.translations}
-          tagSet={p.tagSet}
-          pageImages={p.pageImages}
-        />
-      )) ?? null
+      p.segment.parts?.map(function (seg, i) {
+        return (
+          <Segment
+            key={i}
+            segment={seg}
+            dialog={p.dialog}
+            onOpenDetails={p.onOpenDetails}
+            level={p.level}
+            translations={p.translations}
+            tagSet={p.tagSet}
+            pageImages={p.pageImages}
+          />
+        )
+      }) ?? null
 
     if (p.segment.ty === "BLOCK") {
       return (
@@ -52,9 +53,7 @@ export const Segment = (p: Props) => {
             {children}
             <div style={{ flexGrow: 1 }} aria-hidden={true} />
           </AnnotationSection>
-          <TranslationPara>
-            {p.translations?.segments.join(". ") ?? null}.
-          </TranslationPara>
+          <TranslationPara>{p.translations?.text ?? null}.</TranslationPara>
         </DocumentBlock>
       )
     } else {
@@ -96,7 +95,7 @@ const AnnotatedForm = (
   const showSegments = p.level > ExperienceLevel.Basic
   return (
     <WordGroup id={`w${p.segment.index}`}>
-      <SyllabaryLayer>{p.segment.source}</SyllabaryLayer>
+      <SyllabaryLayer lang="chr">{p.segment.source}</SyllabaryLayer>
       <div>{p.segment.simplePhonetics ?? <br />}</div>
       {showSegments ? (
         <MorphemicSegmentation
@@ -137,7 +136,7 @@ const MorphemicSegmentation = (p: {
   return (
     <WordSegment>
       {p
-        .segments!.map((segment) => {
+        .segments!.map(function (segment) {
           let seg = p.showAdvanced ? segment.morpheme : segment.simpleMorpheme
           if (segment.nextSeparator) {
             return seg + segment.nextSeparator
@@ -145,21 +144,25 @@ const MorphemicSegmentation = (p: {
             return seg
           }
         })
-        .join()}
+        .join("")}
       <GlossLine>
         {intersperse(
-          p.segments!.map((segment, i) => (
-            <MorphemeSegment
-              key={i}
-              segment={segment}
-              tagSet={p.tagSet}
-              dialog={p.dialog}
-              onOpenDetails={p.onOpenDetails}
-            />
-          )),
-          (i) => (
-            <span key={100 * (i + 1)}>{p.segments![i].nextSeparator}</span>
-          )
+          p.segments!.map(function (segment, i) {
+            return (
+              <MorphemeSegment
+                key={i}
+                segment={segment}
+                tagSet={p.tagSet}
+                dialog={p.dialog}
+                onOpenDetails={p.onOpenDetails}
+              />
+            )
+          }),
+          function (i) {
+            return (
+              <span key={100 * (i + 1)}>{p.segments![i].nextSeparator}</span>
+            )
+          }
         )}
       </GlossLine>
     </WordSegment>
