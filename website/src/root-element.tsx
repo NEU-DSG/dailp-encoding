@@ -54,7 +54,8 @@ css`
       }
     }
 
-    button {
+    button,
+    input[type="radio"] {
       cursor: pointer;
     }
   }

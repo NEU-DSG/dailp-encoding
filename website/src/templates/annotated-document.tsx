@@ -104,7 +104,7 @@ const AnnotatedDocumentPage = (p: {
           </DocTabs>
         </WideSticky>
 
-        <TabPanel
+        <DocTabPanel
           visible={isSSR || tabs.currentId === Tabs.ANNOTATION}
           {...tabs}
         >
@@ -126,11 +126,11 @@ const AnnotatedDocumentPage = (p: {
               />
             ))}
           </AnnotationSection>
-        </TabPanel>
+        </DocTabPanel>
 
-        <TabPanel {...tabs}>
+        <DocTabPanel {...tabs}>
           <PageImages pageImages={doc.pageImages} />
-        </TabPanel>
+        </DocTabPanel>
       </main>
     </Layout>
   )
@@ -172,6 +172,11 @@ const DocTabs = styled(TabList)`
   flex-flow: row nowrap;
   height: 2.6rem;
   ${fullWidth}
+`
+
+const DocTabPanel = styled(TabPanel)`
+  ${fullWidth}
+  padding: 0 ${theme.edgeSpacing};
 `
 
 const DocHeader = styled.header`

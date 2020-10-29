@@ -35,7 +35,7 @@ const PageImage = styled.img`
 `
 
 const AnnotationFigure = styled.figure`
-  ${fullWidth}
+  width: 100%;
   margin: 0;
   cursor: move;
   cursor: grab;
