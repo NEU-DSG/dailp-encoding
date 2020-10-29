@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react"
+import loadable from "@loadable/component"
 import { graphql, Link } from "gatsby"
 import { styled } from "linaria/react"
-import loadable from "@loadable/component"
 import { useDialogState, Dialog, DialogBackdrop } from "reakit/Dialog"
 import {
   Radio,
@@ -11,7 +11,6 @@ import {
 } from "reakit/Radio"
 import { Tab, TabPanel, TabList } from "reakit/Tab"
 import Sticky from "react-stickynode"
-import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch"
 import Layout from "../layout"
 import { AnnotationSection, Segment } from "../segment"
 import Cookies from "js-cookie"
@@ -21,8 +20,8 @@ import { useScrollableTabState } from "../scrollable-tabs"
 import { css } from "linaria"
 import { DeepPartial } from "tsdef"
 import { ExperienceLevel, TagSet, BasicMorphemeSegment } from "../types"
-
-const { MorphemeDetails } = loadable(() => import("../morpheme"))
+import { MorphemeDetails } from "../morpheme"
+import PageImages from "../page-image"
 
 export const DocumentTitleHeader = (p: {
   doc: DeepPartial<GatsbyTypes.Dailp_AnnotatedDoc>
@@ -51,13 +50,19 @@ export const DocumentTitleHeader = (p: {
   </DocHeader>
 )
 
+enum Tabs {
+  ANNOTATION = "annotation-tab",
+  IMAGES = "source-image-tab",
+}
+
 /** A full annotated document, including all metadata and the translation(s) */
 const AnnotatedDocumentPage = (p: {
   data: GatsbyTypes.AnnotatedDocumentQuery
 }) => {
+  const isSSR = typeof window === "undefined"
   const doc = p.data.dailp.document!
+  const tabs = useScrollableTabState({ selectedId: Tabs.ANNOTATION })
   const dialog = useDialogState()
-  const tabs = useScrollableTabState()
   const experienceLevel = useRadioState({
     state: Number.parseInt(Cookies.get("experienceLevel") ?? "0"),
   })
@@ -77,7 +82,7 @@ const AnnotatedDocumentPage = (p: {
 
   return (
     <Layout title={doc.title}>
-      <AnnotatedDocument>
+      <main className={annotatedDocument}>
         <MorphemeDialogBackdrop {...dialog}>
           <MorphemeDialog {...dialog} aria-label="Segment Details">
             {selectedMorpheme ? (
@@ -86,19 +91,23 @@ const AnnotatedDocumentPage = (p: {
           </MorphemeDialog>
         </MorphemeDialogBackdrop>
 
-        <DocumentTitleHeader
-          doc={doc as GatsbyTypes.Dailp_AnnotatedDoc}
-          showDetails={true}
-        />
+        <DocumentTitleHeader doc={doc as any} showDetails={true} />
 
         <WideSticky top="#header">
-          <DocTabs {...tabs}>
-            <DocTab {...tabs}>Translation</DocTab>
-            <DocTab {...tabs}>Source Image</DocTab>
+          <DocTabs {...tabs} aria-label="Manuscript Tabs">
+            <DocTab {...tabs} id={Tabs.ANNOTATION}>
+              Translation
+            </DocTab>
+            <DocTab {...tabs} id={Tabs.IMAGES}>
+              Source Image
+            </DocTab>
           </DocTabs>
         </WideSticky>
 
-        <TabPanel {...tabs}>
+        <TabPanel
+          visible={isSSR || tabs.currentId === Tabs.ANNOTATION}
+          {...tabs}
+        >
           <ExperiencePicker radio={experienceLevel} />
 
           <AnnotationSection as="article">
@@ -120,21 +129,9 @@ const AnnotatedDocumentPage = (p: {
         </TabPanel>
 
         <TabPanel {...tabs}>
-          <AnnotationFigure>
-            {doc.pageImages?.map((url, i) => (
-              <TransformWrapper key={i}>
-                <TransformComponent>
-                  <PageImage
-                    src={url}
-                    alt={`Manuscript Page ${i + 1}`}
-                    loading="lazy"
-                  />
-                </TransformComponent>
-              </TransformWrapper>
-            ))}
-          </AnnotationFigure>
+          <PageImages pageImages={doc.pageImages} />
         </TabPanel>
-      </AnnotatedDocument>
+      </main>
     </Layout>
   )
 }
@@ -182,26 +179,24 @@ const DocHeader = styled.header`
   padding: 0 ${theme.edgeSpacing};
 `
 
-const PageImage = styled.img`
-  margin-bottom: 2rem;
-  width: 100%;
-  height: auto;
-`
+const thingIsNaN = (l: any) => isNaN(Number(l))
 
 const ExperiencePicker = (p: { radio: RadioStateReturn }) => {
   return (
     <RadioGroup {...p.radio}>
       {Object.keys(ExperienceLevel)
-        .filter((l) => isNaN(Number(l)))
-        .map((level: string) => (
-          <label key={level}>
-            <Radio
-              {...p.radio}
-              value={ExperienceLevel[level as keyof typeof ExperienceLevel]}
-            />
-            {level}
-          </label>
-        ))}
+        .filter(thingIsNaN)
+        .map(function (level: string) {
+          return (
+            <label key={level}>
+              <Radio
+                {...p.radio}
+                value={ExperienceLevel[level as keyof typeof ExperienceLevel]}
+              />
+              {level}
+            </label>
+          )
+        })}
     </RadioGroup>
   )
 }
@@ -234,7 +229,7 @@ export const query = graphql`
             }
           }
           translation {
-            segments
+            text
           }
         }
       }
@@ -294,25 +289,9 @@ const MorphemeDialogBackdrop = styled(DialogBackdrop)`
   z-index: 998;
 `
 
-const AnnotatedDocument = styled.main`
+const annotatedDocument = css`
   display: flex;
   flex-flow: column nowrap;
   align-items: center;
   font-size: 1rem;
-`
-
-const AnnotationFigure = styled.figure`
-  ${fullWidth}
-  margin: 0;
-  cursor: move;
-  cursor: grab;
-  .react-transform-component {
-    max-height: 20rem;
-    ${theme.mediaQueries.medium} {
-      max-height: 30rem;
-    }
-  }
-  .react-transform-element {
-    width: 100%;
-  }
 `

@@ -451,13 +451,10 @@ type Dailp_TranslatedSection = {
   readonly source: Dailp_AnnotatedSeg;
 };
 
-/**
- * One block or paragraph of a translation document that should correspond to a
- * block of original text. One block may contain several segments (or sentences).
- */
 type Dailp_TranslationBlock = {
-  readonly index: Scalars['Int'];
-  /** Each segment represents a sentence or line in the translation. */
+  /** Full text of this block */
+  readonly text: Scalars['String'];
+  /** The text of this block split into segments (sentences or lines) */
   readonly segments: ReadonlyArray<Scalars['String']>;
 };
 
@@ -1436,8 +1433,6 @@ type Query_allDirectoryArgs = {
 type Query_siteArgs = {
   buildTime: Maybe<DateQueryOperatorInput>;
   siteMetadata: Maybe<SiteSiteMetadataFilterInput>;
-  port: Maybe<IntQueryOperatorInput>;
-  host: Maybe<StringQueryOperatorInput>;
   polyfill: Maybe<BooleanQueryOperatorInput>;
   pathPrefix: Maybe<StringQueryOperatorInput>;
   id: Maybe<StringQueryOperatorInput>;
@@ -1560,8 +1555,6 @@ type Query_allSitePluginArgs = {
 type Site = Node & {
   readonly buildTime: Maybe<Scalars['Date']>;
   readonly siteMetadata: Maybe<SiteSiteMetadata>;
-  readonly port: Maybe<Scalars['Int']>;
-  readonly host: Maybe<Scalars['String']>;
   readonly polyfill: Maybe<Scalars['Boolean']>;
   readonly pathPrefix: Maybe<Scalars['String']>;
   readonly id: Scalars['ID'];
@@ -1764,8 +1757,6 @@ enum SiteFieldsEnum {
   buildTime = 'buildTime',
   siteMetadata___title = 'siteMetadata.title',
   siteMetadata___description = 'siteMetadata.description',
-  port = 'port',
-  host = 'host',
   polyfill = 'polyfill',
   pathPrefix = 'pathPrefix',
   id = 'id',
@@ -1859,8 +1850,6 @@ enum SiteFieldsEnum {
 type SiteFilterInput = {
   readonly buildTime: Maybe<DateQueryOperatorInput>;
   readonly siteMetadata: Maybe<SiteSiteMetadataFilterInput>;
-  readonly port: Maybe<IntQueryOperatorInput>;
-  readonly host: Maybe<StringQueryOperatorInput>;
   readonly polyfill: Maybe<BooleanQueryOperatorInput>;
   readonly pathPrefix: Maybe<StringQueryOperatorInput>;
   readonly id: Maybe<StringQueryOperatorInput>;
@@ -2078,10 +2067,12 @@ enum SitePageFieldsEnum {
   pluginCreator___pluginOptions___background_color = 'pluginCreator.pluginOptions.background_color',
   pluginCreator___pluginOptions___theme_color = 'pluginCreator.pluginOptions.theme_color',
   pluginCreator___pluginOptions___display = 'pluginCreator.pluginOptions.display',
+  pluginCreator___pluginOptions___icon = 'pluginCreator.pluginOptions.icon',
   pluginCreator___pluginOptions___cache_busting_mode = 'pluginCreator.pluginOptions.cache_busting_mode',
   pluginCreator___pluginOptions___include_favicon = 'pluginCreator.pluginOptions.include_favicon',
   pluginCreator___pluginOptions___legacy = 'pluginCreator.pluginOptions.legacy',
   pluginCreator___pluginOptions___theme_color_in_head = 'pluginCreator.pluginOptions.theme_color_in_head',
+  pluginCreator___pluginOptions___cacheDigest = 'pluginCreator.pluginOptions.cacheDigest',
   pluginCreator___pluginOptions___outputPath = 'pluginCreator.pluginOptions.outputPath',
   pluginCreator___pluginOptions___path = 'pluginCreator.pluginOptions.path',
   pluginCreator___pluginOptions___typeName = 'pluginCreator.pluginOptions.typeName',
@@ -2283,10 +2274,12 @@ enum SitePluginFieldsEnum {
   pluginOptions___background_color = 'pluginOptions.background_color',
   pluginOptions___theme_color = 'pluginOptions.theme_color',
   pluginOptions___display = 'pluginOptions.display',
+  pluginOptions___icon = 'pluginOptions.icon',
   pluginOptions___cache_busting_mode = 'pluginOptions.cache_busting_mode',
   pluginOptions___include_favicon = 'pluginOptions.include_favicon',
   pluginOptions___legacy = 'pluginOptions.legacy',
   pluginOptions___theme_color_in_head = 'pluginOptions.theme_color_in_head',
+  pluginOptions___cacheDigest = 'pluginOptions.cacheDigest',
   pluginOptions___outputPath = 'pluginOptions.outputPath',
   pluginOptions___path = 'pluginOptions.path',
   pluginOptions___typeName = 'pluginOptions.typeName',
@@ -2414,10 +2407,12 @@ type SitePluginPluginOptions = {
   readonly background_color: Maybe<Scalars['String']>;
   readonly theme_color: Maybe<Scalars['String']>;
   readonly display: Maybe<Scalars['String']>;
+  readonly icon: Maybe<Scalars['String']>;
   readonly cache_busting_mode: Maybe<Scalars['String']>;
   readonly include_favicon: Maybe<Scalars['Boolean']>;
   readonly legacy: Maybe<Scalars['Boolean']>;
   readonly theme_color_in_head: Maybe<Scalars['Boolean']>;
+  readonly cacheDigest: Maybe<Scalars['String']>;
   readonly outputPath: Maybe<Scalars['String']>;
   readonly path: Maybe<Scalars['String']>;
   readonly typeName: Maybe<Scalars['String']>;
@@ -2435,10 +2430,12 @@ type SitePluginPluginOptionsFilterInput = {
   readonly background_color: Maybe<StringQueryOperatorInput>;
   readonly theme_color: Maybe<StringQueryOperatorInput>;
   readonly display: Maybe<StringQueryOperatorInput>;
+  readonly icon: Maybe<StringQueryOperatorInput>;
   readonly cache_busting_mode: Maybe<StringQueryOperatorInput>;
   readonly include_favicon: Maybe<BooleanQueryOperatorInput>;
   readonly legacy: Maybe<BooleanQueryOperatorInput>;
   readonly theme_color_in_head: Maybe<BooleanQueryOperatorInput>;
+  readonly cacheDigest: Maybe<StringQueryOperatorInput>;
   readonly outputPath: Maybe<StringQueryOperatorInput>;
   readonly path: Maybe<StringQueryOperatorInput>;
   readonly typeName: Maybe<StringQueryOperatorInput>;
@@ -2490,6 +2487,26 @@ type StringQueryOperatorInput = {
   readonly glob: Maybe<Scalars['String']>;
 };
 
+type IndexPageQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+type IndexPageQuery = { readonly dailp: { readonly allCollections: ReadonlyArray<Pick<Dailp_DocumentCollection, 'name' | 'slug'>> } };
+
+type AnnotatedDocumentQueryVariables = Exact<{
+  id: Scalars['String'];
+}>;
+
+
+type AnnotatedDocumentQuery = { readonly dailp: { readonly document: Maybe<(
+      Pick<Dailp_AnnotatedDoc, 'id' | 'title' | 'slug' | 'pageImages'>
+      & { readonly collection: Maybe<Pick<Dailp_DocumentCollection, 'name' | 'slug'>>, readonly date: Maybe<Pick<Dailp_DateTime, 'year'>>, readonly translatedSegments: Maybe<ReadonlyArray<{ readonly source: BlockFieldsFragment | FormFieldsFragment | Pick<Dailp_PageBreak, 'index'>, readonly translation: Pick<Dailp_TranslationBlock, 'text'> }>> }
+    )> } };
+
+type BlockFieldsFragment = (
+  Pick<Dailp_AnnotatedPhrase, 'ty' | 'index'>
+  & { readonly parts: ReadonlyArray<FormFieldsFragment> }
+);
+
 type FormFieldsFragment = (
   Pick<Dailp_AnnotatedForm, 'index' | 'source' | 'simplePhonetics' | 'phonemic' | 'englishGloss' | 'commentary'>
   & { readonly segments: Maybe<ReadonlyArray<(
@@ -2499,31 +2516,14 @@ type FormFieldsFragment = (
   )>> }
 );
 
-type BlockFieldsFragment = (
-  Pick<Dailp_AnnotatedPhrase, 'ty' | 'index'>
-  & { readonly parts: ReadonlyArray<{ readonly __typename: 'Dailp_AnnotatedPhrase' } | (
-    { readonly __typename: 'Dailp_AnnotatedForm' }
-    & FormFieldsFragment
-  ) | { readonly __typename: 'Dailp_LineBreak' } | { readonly __typename: 'Dailp_PageBreak' }> }
-);
-
-type AnnotatedDocumentQueryVariables = Exact<{
-  id: Scalars['String'];
+type CollectionQueryVariables = Exact<{
+  name: Scalars['String'];
 }>;
 
 
-type AnnotatedDocumentQuery = { readonly dailp: { readonly document: Maybe<(
-      Pick<Dailp_AnnotatedDoc, 'id' | 'title' | 'slug' | 'pageImages'>
-      & { readonly collection: Maybe<Pick<Dailp_DocumentCollection, 'name' | 'slug'>>, readonly date: Maybe<Pick<Dailp_DateTime, 'year'>>, readonly translatedSegments: Maybe<ReadonlyArray<{ readonly source: (
-          { readonly __typename: 'Dailp_AnnotatedPhrase' }
-          & BlockFieldsFragment
-        ) | (
-          { readonly __typename: 'Dailp_AnnotatedForm' }
-          & FormFieldsFragment
-        ) | { readonly __typename: 'Dailp_LineBreak' } | (
-          { readonly __typename: 'Dailp_PageBreak' }
-          & Pick<Dailp_PageBreak, 'index'>
-        ), readonly translation: Pick<Dailp_TranslationBlock, 'segments'> }>> }
+type CollectionQuery = { readonly dailp: { readonly allDocuments: ReadonlyArray<(
+      Pick<Dailp_AnnotatedDoc, 'id' | 'slug' | 'title'>
+      & { readonly date: Maybe<Pick<Dailp_DateTime, 'year'>> }
     )> } };
 
 type DocumentDetailsQueryVariables = Exact<{
@@ -2536,29 +2536,9 @@ type DocumentDetailsQuery = { readonly dailp: { readonly document: Maybe<(
       & { readonly collection: Maybe<Pick<Dailp_DocumentCollection, 'name' | 'slug'>>, readonly date: Maybe<Pick<Dailp_DateTime, 'year'>>, readonly people: ReadonlyArray<Pick<Dailp_PersonAssociation, 'name' | 'role'>> }
     )> } };
 
-type CollectionQueryVariables = Exact<{
-  name: Scalars['String'];
-}>;
+type Unnamed_1_QueryVariables = Exact<{ [key: string]: never; }>;
 
 
-type CollectionQuery = { readonly dailp: { readonly allDocuments: ReadonlyArray<(
-      Pick<Dailp_AnnotatedDoc, 'id' | 'slug' | 'title'>
-      & { readonly date: Maybe<Pick<Dailp_DateTime, 'year'>> }
-    )> } };
-
-type PagesQueryQueryVariables = Exact<{ [key: string]: never; }>;
-
-
-type PagesQueryQuery = { readonly allSitePage: { readonly nodes: ReadonlyArray<Pick<SitePage, 'path'>> } };
-
-type IndexPageQueryVariables = Exact<{ [key: string]: never; }>;
-
-
-type IndexPageQuery = { readonly dailp: { readonly allCollections: ReadonlyArray<Pick<Dailp_DocumentCollection, 'name' | 'slug'>> } };
-
-type homesneadpiedailpEncodingwebsitesrcfooterTsx1552981879QueryVariables = Exact<{ [key: string]: never; }>;
-
-
-type homesneadpiedailpEncodingwebsitesrcfooterTsx1552981879Query = { readonly currentBuildDate: Maybe<Pick<CurrentBuildDate, 'currentDate'>> };
+type Unnamed_1_Query = { readonly currentBuildDate: Maybe<Pick<CurrentBuildDate, 'currentDate'>> };
 
 }

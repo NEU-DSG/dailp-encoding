@@ -8,10 +8,8 @@ import theme from "./theme"
 export const wrapRootElement = (p: { element: any }) => (
   <>
     <Helmet>
-      <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0, maximum-scale=1.0"
-      />
+      <html lang="en" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     </Helmet>
     <Provider>{p.element}</Provider>
   </>
@@ -54,6 +52,10 @@ css`
         padding-left: ${theme.edgeSpacing};
         padding-right: ${theme.edgeSpacing};
       }
+    }
+
+    button {
+      cursor: pointer;
     }
   }
 `

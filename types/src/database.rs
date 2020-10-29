@@ -68,7 +68,7 @@ impl Database {
                     bson::doc! { "collection": collection }
                 }),
                 mongodb::options::FindOptions::builder()
-                    .projection(bson::doc! { "segments": 0, "translation": 0 })
+                    .projection(bson::doc! { "segments": 0 })
                     .build(),
             )
             .await?
