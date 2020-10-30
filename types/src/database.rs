@@ -50,12 +50,12 @@ impl Database {
     }
 
     /// The document uniquely identified by the given string
-    pub async fn document(&self, id: &str) -> Option<AnnotatedDoc> {
-        self.documents_collection()
+    pub async fn document(&self, id: &str) -> Result<Option<AnnotatedDoc>> {
+        Ok(self
+            .documents_collection()
             .find_one(bson::doc! { "_id": id }, None)
-            .await
-            .ok()
-            .and_then(|doc| doc.and_then(|doc| bson::from_document(doc).ok()))
+            .await?
+            .and_then(|doc| bson::from_document(doc).ok()))
     }
 
     pub async fn all_documents(&self, collection: Option<String>) -> Result<Vec<AnnotatedDoc>> {
@@ -72,7 +72,7 @@ impl Database {
                     .build(),
             )
             .await?
-            .filter_map(|doc| bson::from_document(doc.unwrap()).ok())
+            .filter_map(|doc| doc.ok().and_then(|doc| bson::from_document(doc).ok()))
             .collect()
             .await)
     }
@@ -169,21 +169,15 @@ impl Database {
             .map(|form| (form.find_root().unwrap().morpheme.clone(), form));
 
         let document_words = document_words?
-            .map(|doc| {
-                let word: AnnotatedForm = bson::from_document(doc.unwrap()).unwrap();
+            .filter_map(|doc| {
+                let word: AnnotatedForm = bson::from_document(doc.ok()?).ok()?;
                 let m = {
                     // Find the index of the relevant morpheme gloss.
-                    let segment = word
-                        .segments
-                        .as_ref()
-                        .unwrap()
-                        .iter()
-                        .find(|m| m.gloss == gloss)
-                        .unwrap();
+                    let segment = word.segments.as_ref()?.iter().find(|m| m.gloss == gloss)?;
                     // Grab the morpheme with the same index.
                     segment.morpheme.clone()
                 };
-                (m.to_owned(), word)
+                Some((m.to_owned(), word))
             })
             .collect::<Vec<_>>()
             .await;
@@ -204,16 +198,15 @@ impl Database {
         Ok(self
             .lexical_collection()
             .find(bson::doc! { "root.gloss": root_gloss }, None)
-            .await
-            .unwrap()
-            .filter_map(|doc| bson::from_document::<LexicalEntry>(doc.unwrap()).ok())
-            .collect::<Vec<_>>()
+            .await?
+            .filter_map(|doc| doc.ok().and_then(|doc| bson::from_document(doc).ok()))
+            .collect()
             .await)
     }
 
     /// All words containing a morpheme with the given gloss, grouped by the
     /// document they are contained in.
-    pub async fn words_by_doc(&self, gloss: &str) -> Vec<WordsInDocument> {
+    pub async fn words_by_doc(&self, gloss: &str) -> Result<Vec<WordsInDocument>> {
         use itertools::Itertools;
         use tokio::stream::StreamExt;
 
@@ -234,8 +227,7 @@ impl Database {
         // Retrieve both document and dictionary references at once.
         let (dictionary_words, document_words) = futures::join!(dictionary_words, document_words);
 
-        let dictionary_words = dictionary_words
-            .unwrap()
+        let dictionary_words = dictionary_words?
             .into_iter()
             .map(|form| (form.document_id.clone(), form))
             .into_group_map()
@@ -246,11 +238,10 @@ impl Database {
                 words,
             });
 
-        let document_words = document_words
-            .unwrap()
-            .map(|doc| {
-                let word: AnnotatedForm = bson::from_document(doc.unwrap()).unwrap();
-                (word.document_id.clone(), word)
+        let document_words = document_words?
+            .filter_map(|doc| {
+                let word: AnnotatedForm = bson::from_document(doc.ok()?).ok()?;
+                Some((word.document_id.clone(), word))
             })
             .collect::<Vec<_>>()
             .await
@@ -263,7 +254,7 @@ impl Database {
                 words,
             });
 
-        document_words.chain(dictionary_words).collect()
+        Ok(document_words.chain(dictionary_words).collect())
     }
 
     /// The tag details for the morpheme identified by the given string

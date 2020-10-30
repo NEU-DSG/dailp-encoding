@@ -2,6 +2,7 @@ use async_graphql::{
     http::{GQLRequest, GQLResponse},
     Context, EmptyMutation, EmptySubscription, FieldResult, IntoQueryBuilder, Schema,
 };
+use async_once::AsyncOnce;
 use dailp::{AnnotatedDoc, Database, MorphemeReference, MorphemeTag, WordsInDocument};
 use lambda_http::{http::header::CONTENT_TYPE, lambda, IntoResponse, Request, Response};
 
@@ -9,7 +10,7 @@ type Error = Box<dyn std::error::Error + Sync + Send + 'static>;
 
 lazy_static::lazy_static! {
     // Share database connection between executions.
-    static ref CTX: async_once::AsyncOnce<dailp::Database> = async_once::AsyncOnce::new(async {
+    static ref CTX: AsyncOnce<dailp::Database> = AsyncOnce::new(async {
         dailp::Database::new().await.unwrap()
     });
     static ref SCHEMA: Schema<Query, EmptyMutation, EmptySubscription> = Schema::new(Query, EmptyMutation, EmptySubscription);
@@ -68,7 +69,7 @@ impl Query {
         context: &Context<'_>,
         id: String,
     ) -> FieldResult<Option<AnnotatedDoc>> {
-        Ok(context.data::<Database>()?.document(&id).await)
+        Ok(context.data::<Database>()?.document(&id).await?)
     }
 
     async fn lexical_entry(
@@ -96,7 +97,7 @@ impl Query {
         context: &Context<'_>,
         gloss: String,
     ) -> FieldResult<Vec<WordsInDocument>> {
-        Ok(context.data::<Database>()?.words_by_doc(&gloss).await)
+        Ok(context.data::<Database>()?.words_by_doc(&gloss).await?)
     }
 
     /// Retrieve information for the morpheme that corresponds to the given tag
