@@ -77,10 +77,7 @@ const AnnotatedDocumentPage = (p: {
           </DocTabs>
         </WideSticky>
 
-        <DocTabPanel
-          visible={isSSR || tabs.currentId === Tabs.ANNOTATION}
-          {...tabs}
-        >
+        <DocTabPanel {...tabs}>
           <ExperiencePicker radio={experienceLevel} />
 
           <AnnotationSection as="article">
