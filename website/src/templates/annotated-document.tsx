@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react"
-import loadable from "@loadable/component"
 import { graphql, Link } from "gatsby"
 import { styled } from "linaria/react"
 import { useDialogState, Dialog, DialogBackdrop } from "reakit/Dialog"
@@ -22,53 +21,7 @@ import { DeepPartial } from "tsdef"
 import { ExperienceLevel, TagSet, BasicMorphemeSegment } from "../types"
 import { MorphemeDetails } from "../morpheme"
 import PageImages from "../page-image"
-
-export const DocumentTitleHeader = (p: {
-  doc: DeepPartial<GatsbyTypes.Dailp_AnnotatedDoc>
-  showDetails?: boolean
-}) => (
-  <DocHeader>
-    <Breadcrumbs aria-label="Breadcrumbs">
-      <li>
-        <Link to="/">Collections</Link>
-      </li>
-      {p.doc.collection && (
-        <li>
-          <Link to={collectionRoute(p.doc.collection.slug!)}>
-            {p.doc.collection.name}
-          </Link>
-        </li>
-      )}
-    </Breadcrumbs>
-
-    <h2>
-      {p.showDetails ? (
-        p.doc.title
-      ) : (
-        <Link to={documentRoute(p.doc.slug!)}>{p.doc.title}</Link>
-      )}{" "}
-      {p.doc.date && `(${p.doc.date.year})`}{" "}
-      {p.showDetails ? (
-        <>
-          [<Link to={documentDetailsRoute(p.doc.slug!)}>Details</Link>]
-        </>
-      ) : null}
-    </h2>
-  </DocHeader>
-)
-
-const Breadcrumbs = styled.ul`
-  list-style: none;
-  padding-inline-start: 0;
-  li {
-    display: inline;
-    font-size: 1.1rem;
-    &:after {
-      padding: 0 0.3rem;
-      content: "/";
-    }
-  }
-`
+import { Breadcrumbs } from "../breadcrumbs"
 
 enum Tabs {
   ANNOTATION = "annotation-tab",
@@ -156,6 +109,40 @@ const AnnotatedDocumentPage = (p: {
   )
 }
 export default AnnotatedDocumentPage
+
+export const DocumentTitleHeader = (p: {
+  doc: DeepPartial<GatsbyTypes.Dailp_AnnotatedDoc>
+  showDetails?: boolean
+}) => (
+  <DocHeader>
+    <Breadcrumbs aria-label="Breadcrumbs">
+      <li>
+        <Link to="/">Collections</Link>
+      </li>
+      {p.doc.collection && (
+        <li>
+          <Link to={collectionRoute(p.doc.collection.slug!)}>
+            {p.doc.collection.name}
+          </Link>
+        </li>
+      )}
+    </Breadcrumbs>
+
+    <h2>
+      {p.showDetails ? (
+        p.doc.title
+      ) : (
+        <Link to={documentRoute(p.doc.slug!)}>{p.doc.title}</Link>
+      )}{" "}
+      {p.doc.date && `(${p.doc.date.year})`}{" "}
+      {p.showDetails ? (
+        <>
+          [<Link to={documentDetailsRoute(p.doc.slug!)}>Details</Link>]
+        </>
+      ) : null}
+    </h2>
+  </DocHeader>
+)
 
 const wideAndTop = css`
   width: 100%;

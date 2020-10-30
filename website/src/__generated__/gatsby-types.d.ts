@@ -2491,6 +2491,16 @@ type StringQueryOperatorInput = {
   readonly glob: Maybe<Scalars['String']>;
 };
 
+type DocumentDetailsQueryVariables = Exact<{
+  id: Scalars['String'];
+}>;
+
+
+type DocumentDetailsQuery = { readonly dailp: { readonly document: Maybe<(
+      Pick<Dailp_AnnotatedDoc, 'id' | 'slug' | 'title'>
+      & { readonly collection: Maybe<Pick<Dailp_DocumentCollection, 'name' | 'slug'>>, readonly date: Maybe<Pick<Dailp_DateTime, 'year'>>, readonly people: ReadonlyArray<Pick<Dailp_PersonAssociation, 'name' | 'role'>> }
+    )> } };
+
 type Unnamed_1_QueryVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -2534,15 +2544,5 @@ type FormFieldsFragment = (
     & { readonly matchingTag: Maybe<Pick<Dailp_MorphemeTag, 'crg' | 'learner'>> }
   )>> }
 );
-
-type DocumentDetailsQueryVariables = Exact<{
-  id: Scalars['String'];
-}>;
-
-
-type DocumentDetailsQuery = { readonly dailp: { readonly document: Maybe<(
-      Pick<Dailp_AnnotatedDoc, 'id' | 'slug' | 'title'>
-      & { readonly collection: Maybe<Pick<Dailp_DocumentCollection, 'name' | 'slug'>>, readonly date: Maybe<Pick<Dailp_DateTime, 'year'>>, readonly people: ReadonlyArray<Pick<Dailp_PersonAssociation, 'name' | 'role'>> }
-    )> } };
 
 }

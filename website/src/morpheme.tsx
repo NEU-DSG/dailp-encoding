@@ -1,5 +1,4 @@
 import React from "react"
-import { Link } from "gatsby"
 import { Clickable } from "reakit/Clickable"
 import { DialogStateReturn } from "reakit/Dialog"
 import { styled } from "linaria/react"
