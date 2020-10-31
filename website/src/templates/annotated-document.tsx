@@ -77,7 +77,12 @@ const AnnotatedDocumentPage = (p: {
           </DocTabs>
         </WideSticky>
 
-        <DocTabPanel {...tabs}>
+        <TabPanel
+          {...tabs}
+          className={docTabPanel}
+          id="id-1-3"
+          tabId={Tabs.ANNOTATION}
+        >
           <ExperiencePicker radio={experienceLevel} />
 
           <AnnotationSection as="article">
@@ -96,11 +101,16 @@ const AnnotatedDocumentPage = (p: {
               />
             ))}
           </AnnotationSection>
-        </DocTabPanel>
+        </TabPanel>
 
-        <DocTabPanel {...tabs}>
+        <TabPanel
+          {...tabs}
+          className={docTabPanel}
+          id="id-1-4"
+          tabId={Tabs.IMAGES}
+        >
           <PageImages pageImages={doc.pageImages} />
-        </DocTabPanel>
+        </TabPanel>
       </main>
     </Layout>
   )
@@ -178,7 +188,7 @@ const DocTabs = styled(TabList)`
   ${fullWidth}
 `
 
-const DocTabPanel = styled(TabPanel)`
+const docTabPanel = css`
   ${fullWidth}
   padding: 0 0.5rem;
   ${theme.mediaQueries.medium} {
