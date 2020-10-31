@@ -1,10 +1,9 @@
 import React from "react"
 import { graphql, Link } from "gatsby"
-import { Helmet } from "react-helmet"
-import _ from "lodash"
 import Layout from "../layout"
 import { DocIndex, FullWidth } from "../pages/index"
 import { documentRoute } from "../routes"
+import { Breadcrumbs } from "../breadcrumbs"
 
 // This collator allows us to sort strings for a particular locale.
 const collator = new Intl.Collator(undefined, {
@@ -25,7 +24,15 @@ export default (p: {
     <Layout title={p.pageContext.name}>
       <DocIndex>
         <FullWidth>
-          <h2>{p.pageContext.name}</h2>
+          <header>
+            <Breadcrumbs aria-label="Breadcrumbs">
+              <li>
+                <Link to="/">Collections</Link>
+              </li>
+            </Breadcrumbs>
+            <h2>{p.pageContext.name}</h2>
+          </header>
+
           <ul>
             {documents.map((document) => (
               <li key={document.slug}>

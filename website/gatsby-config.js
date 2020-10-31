@@ -3,6 +3,7 @@ module.exports = {
     title: "DAILP Encoding",
   },
   plugins: [
+    // "gatsby-plugin-preact",
     {
       resolve: "gatsby-plugin-build-date",
       options: {
@@ -12,14 +13,16 @@ module.exports = {
       },
     },
     {
-      resolve: `gatsby-plugin-manifest`,
+      resolve: "gatsby-plugin-manifest",
       options: {
-        name: `DAILP Cherokee Reader`,
-        short_name: `DAILP`,
-        start_url: `/`,
-        background_color: `#f7f0eb`,
-        theme_color: `#a2466c`,
-        display: `standalone`,
+        name:
+          "Digital Archive of American Indian Languages Preservation and Perseverance",
+        short_name: "DAILP",
+        start_url: "/",
+        background_color: "#f7f0eb",
+        theme_color: "#a2466c",
+        display: "standalone",
+        icon: "src/assets/uktena.jpg",
       },
     },
     "gatsby-plugin-offline",
@@ -56,5 +59,14 @@ module.exports = {
           "https://b817bapwvb.execute-api.us-east-1.amazonaws.com/dev/graphql",
       },
     },
+    "gatsby-plugin-netlify",
+    "gatsby-plugin-netlify-cache",
+    {
+      resolve: "gatsby-plugin-anchor-links",
+      options: {
+        offset: -115,
+      },
+    },
+    "gatsby-plugin-loadable-components-ssr",
   ],
 }

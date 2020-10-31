@@ -3,16 +3,17 @@ import { styled } from "linaria/react"
 import { DialogDisclosure, DialogStateReturn } from "reakit/Dialog"
 import { Group } from "reakit/Group"
 import _ from "lodash"
-import {
-  ExperienceLevel,
-  AnnotationSection,
-  TagSet,
-} from "./templates/annotated-document"
-import theme from "./theme"
+import { ExperienceLevel, TagSet, BasicMorphemeSegment } from "./types"
+import theme, { fullWidth } from "./theme"
 
-export type BasicMorphemeSegment = NonNullable<
-  GatsbyTypes.FormFieldsFragment["segments"]
->[0]
+export const AnnotationSection = styled.section`
+  width: 100%;
+  display: flex;
+  flex-flow: column nowrap;
+  ${theme.mediaQueries.medium} {
+    flex-flow: row wrap;
+  }
+`
 
 interface Props {
   segment: GatsbyTypes.Dailp_AnnotatedSeg
@@ -30,18 +31,20 @@ export const Segment = (p: Props) => {
     return <AnnotatedForm {...p} segment={p.segment} />
   } else if (isPhrase(p.segment)) {
     const children =
-      p.segment.parts?.map((seg, i) => (
-        <Segment
-          key={i}
-          segment={seg}
-          dialog={p.dialog}
-          onOpenDetails={p.onOpenDetails}
-          level={p.level}
-          translations={p.translations}
-          tagSet={p.tagSet}
-          pageImages={p.pageImages}
-        />
-      )) ?? null
+      p.segment.parts?.map(function (seg, i) {
+        return (
+          <Segment
+            key={i}
+            segment={seg}
+            dialog={p.dialog}
+            onOpenDetails={p.onOpenDetails}
+            level={p.level}
+            translations={p.translations}
+            tagSet={p.tagSet}
+            pageImages={p.pageImages}
+          />
+        )
+      }) ?? null
 
     if (p.segment.ty === "BLOCK") {
       return (
@@ -50,9 +53,7 @@ export const Segment = (p: Props) => {
             {children}
             <div style={{ flexGrow: 1 }} aria-hidden={true} />
           </AnnotationSection>
-          <TranslationPara>
-            {p.translations?.segments.join(". ") ?? null}.
-          </TranslationPara>
+          <p>{p.translations?.text ?? null}.</p>
         </DocumentBlock>
       )
     } else {
@@ -94,7 +95,7 @@ const AnnotatedForm = (
   const showSegments = p.level > ExperienceLevel.Basic
   return (
     <WordGroup id={`w${p.segment.index}`}>
-      <SyllabaryLayer>{p.segment.source}</SyllabaryLayer>
+      <SyllabaryLayer lang="chr">{p.segment.source}</SyllabaryLayer>
       <div>{p.segment.simplePhonetics ?? <br />}</div>
       {showSegments ? (
         <MorphemicSegmentation
@@ -134,24 +135,34 @@ const MorphemicSegmentation = (p: {
 
   return (
     <WordSegment>
-      {p.segments!.map((segment, i) => {
-        let seg = p.showAdvanced ? segment.morpheme : segment.simpleMorpheme
-        return seg + (segment.nextSeparator || "")
-      })}
+      {p
+        .segments!.map(function (segment) {
+          let seg = p.showAdvanced ? segment.morpheme : segment.simpleMorpheme
+          if (segment.nextSeparator) {
+            return seg + segment.nextSeparator
+          } else {
+            return seg
+          }
+        })
+        .join("")}
       <GlossLine>
         {intersperse(
-          p.segments!.map((segment, i) => (
-            <MorphemeSegment
-              key={i}
-              segment={segment}
-              tagSet={p.tagSet}
-              dialog={p.dialog}
-              onOpenDetails={p.onOpenDetails}
-            />
-          )),
-          (i) => (
-            <span key={100 * (i + 1)}>{p.segments![i].nextSeparator}</span>
-          )
+          p.segments!.map(function (segment, i) {
+            return (
+              <MorphemeSegment
+                key={i}
+                segment={segment}
+                tagSet={p.tagSet}
+                dialog={p.dialog}
+                onOpenDetails={p.onOpenDetails}
+              />
+            )
+          }),
+          function (i) {
+            return (
+              <span key={100 * (i + 1)}>{p.segments![i].nextSeparator}</span>
+            )
+          }
         )}
       </GlossLine>
     </WordSegment>
@@ -215,19 +226,17 @@ const WordGroup = styled(Group)`
   border: 2px solid ${theme.colors.borders};
   border-radius: 2px;
   ${theme.mediaQueries.medium} {
-    margin-bottom: 2rem;
     padding: 0;
     border: none;
-    margin: 1rem ${theme.edgeSpacing};
+    margin-top: 1rem;
+    margin-bottom: 2rem;
+    margin-right: 3rem;
+    margin-left: 0;
   }
 `
 
 const SyllabaryLayer = styled.div`
   font-size: 1.2rem;
-`
-
-const TranslationPara = styled.p`
-  margin: 0 ${theme.edgeSpacing};
 `
 
 const DocumentBlock = styled.div`

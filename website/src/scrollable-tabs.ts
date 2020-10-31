@@ -13,14 +13,14 @@ export const useScrollableTabState = (initialState?: TabInitialState) => {
       window.scrollTo({ top: newScroll })
     }
 
-    const listener = () => {
+    function listener() {
       // Save scroll position for last tab.
       const lastTabId = tabs.selectedId!
       if (lastTabId) {
         tabScrollPos.current[lastTabId] = window.scrollY
       }
     }
-    window.addEventListener("scroll", listener)
+    window.addEventListener("scroll", listener, { passive: true })
 
     return () => window.removeEventListener("scroll", listener)
   }, [tabs.selectedId])
