@@ -15,7 +15,14 @@ const Footer = () => {
 
   return (
     <FooterContainer>
-      <FooterContent>Northeastern University</FooterContent>
+      <FooterContent>
+        <a href="https://northeastern.edu">
+          <img
+            src="https://dailp.northeastern.edu/wp-content/themes/quest-child/images/nu-light.svg"
+            alt="Northeastern University"
+          />
+        </a>
+      </FooterContent>
       <FooterContent>
         Last Updated on {data.currentBuildDate.currentDate}
       </FooterContent>

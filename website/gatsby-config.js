@@ -3,7 +3,7 @@ module.exports = {
     title: "DAILP Encoding",
   },
   plugins: [
-    // "gatsby-plugin-preact",
+    "gatsby-plugin-sharp",
     {
       resolve: "gatsby-plugin-build-date",
       options: {
@@ -44,6 +44,16 @@ module.exports = {
       },
     },
     {
+      resolve: "gatsby-source-wordpress-experimental",
+      options: {
+        url: "https://dailp.northeastern.edu/graphql",
+        verbose: true,
+        schema: {
+          perPage: 50,
+        },
+      },
+    },
+    {
       resolve: "gatsby-source-graphql",
       options: {
         typeName: "Dailp",
@@ -59,6 +69,7 @@ module.exports = {
           "https://b817bapwvb.execute-api.us-east-1.amazonaws.com/dev/graphql",
       },
     },
+    "gatsby-transformer-sharp",
     "gatsby-plugin-netlify",
     "gatsby-plugin-netlify-cache",
     {

@@ -1,12 +1,12 @@
-import "typeface-gentium-basic"
-import "typeface-open-sans"
+import "fontsource-gentium-basic"
+import "fontsource-quattrocento-sans"
 import "./fonts.css"
 
 const theme = {
   fonts: {
     body: `"Gentium Plus", "Gentium Basic", "Noto Sans Cherokee",
         "Arial", "serif"`,
-    header: `"Open Sans"`,
+    header: `"Quattrocento Sans"`,
   },
   fontSizes: {
     root: "18px",

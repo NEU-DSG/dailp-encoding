@@ -41,15 +41,13 @@ css`
       padding-inline-start: 1.5rem;
     }
     h1,
-    h2 {
-      color: ${theme.colors.headings};
-    }
-    h1,
     h2,
     h3,
     h4,
     h5,
-    h6 {
+    h6,
+    header {
+      color: ${theme.colors.headings};
       font-family: ${theme.fonts.header};
       main > & {
         padding-left: ${theme.edgeSpacing};

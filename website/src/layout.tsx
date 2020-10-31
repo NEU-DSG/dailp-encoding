@@ -4,6 +4,7 @@ import { css } from "linaria"
 import { Link } from "gatsby"
 import Footer from "./footer"
 import theme, { fullWidth } from "./theme"
+import NavMenu from "./menu"
 import { Helmet } from "react-helmet"
 import Sticky from "react-stickynode"
 import { isMobile } from "react-device-detect"
@@ -25,6 +26,7 @@ const Layout = (p: { title?: string; children: any }) => (
             Digital Archive of American Indian Languages Preservation and
             Perseverance
           </SubHeader>
+          <NavMenu />
         </HeaderContents>
       </Header>
     </Sticky>
