@@ -67,6 +67,7 @@
     "gatsby-plugin-web-font-loader": "^1.0.4",
     "gatsby-source-filesystem": "^2.3.34",
     "gatsby-source-graphql": "^2.7.6",
+    "gatsby-source-wordpress-experimental": "^2.0.2",
     "gatsby-transformer-sharp": "^2.5.20",
     "linaria": "^2.0.0",
     "prettier": "^2.1.2",
