@@ -8,14 +8,8 @@ import theme from "./theme"
 export const wrapRootElement = (p: { element: any }) => (
   <>
     <Helmet>
-      <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
-      />
-      <link
-        rel="stylesheet"
-        href="https://fonts.googleapis.com/earlyaccess/notosanscherokee.css"
-      />
+      <html lang="en" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     </Helmet>
     <Provider>{p.element}</Provider>
   </>
@@ -43,6 +37,9 @@ css`
       font-size: 1rem;
       padding-bottom: 1.5rem;
     }
+    ul {
+      padding-inline-start: 1.5rem;
+    }
     h1,
     h2 {
       color: ${theme.colors.headings};
@@ -58,6 +55,11 @@ css`
         padding-left: ${theme.edgeSpacing};
         padding-right: ${theme.edgeSpacing};
       }
+    }
+
+    button,
+    input[type="radio"] {
+      cursor: pointer;
     }
   }
 `

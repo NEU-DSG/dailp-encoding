@@ -1,7 +1,6 @@
-import React, { useState, useEffect, useRef } from "react"
+import React, { useState, useEffect } from "react"
 import { graphql, Link } from "gatsby"
 import { styled } from "linaria/react"
-import { Helmet } from "react-helmet"
 import { useDialogState, Dialog, DialogBackdrop } from "reakit/Dialog"
 import {
   Radio,
@@ -11,57 +10,38 @@ import {
 } from "reakit/Radio"
 import { Tab, TabPanel, TabList } from "reakit/Tab"
 import Sticky from "react-stickynode"
-import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch"
 import Layout from "../layout"
-import { MorphemeDetails } from "../morpheme"
-import { Segment, BasicMorphemeSegment } from "../segment"
+import { AnnotationSection, Segment } from "../segment"
 import Cookies from "js-cookie"
 import theme, { fullWidth, largeDialog } from "../theme"
 import { collectionRoute, documentDetailsRoute, documentRoute } from "../routes"
 import { useScrollableTabState } from "../scrollable-tabs"
 import { css } from "linaria"
 import { DeepPartial } from "tsdef"
+import { ExperienceLevel, TagSet, BasicMorphemeSegment } from "../types"
+import { MorphemeDetails } from "../morpheme"
+import PageImages from "../page-image"
+import { Breadcrumbs } from "../breadcrumbs"
 
-export const DocumentTitleHeader = (p: {
-  doc: DeepPartial<GatsbyTypes.Dailp_AnnotatedDoc>
-  showDetails?: boolean
-}) => (
-  <DocHeader>
-    {p.doc.collection && (
-      <Link to={collectionRoute(p.doc.collection.slug!)}>
-        <h3>{p.doc.collection.name}</h3>
-      </Link>
-    )}
-
-    <h2>
-      {p.showDetails ? (
-        p.doc.title
-      ) : (
-        <Link to={documentRoute(p.doc.slug!)}>{p.doc.title}</Link>
-      )}{" "}
-      {p.doc.date && `(${p.doc.date.year})`}{" "}
-      {p.showDetails ? (
-        <>
-          [<Link to={documentDetailsRoute(p.doc.slug!)}>Details</Link>]
-        </>
-      ) : null}
-    </h2>
-  </DocHeader>
-)
+enum Tabs {
+  ANNOTATION = "annotation-tab",
+  IMAGES = "source-image-tab",
+}
 
 /** A full annotated document, including all metadata and the translation(s) */
 const AnnotatedDocumentPage = (p: {
   data: GatsbyTypes.AnnotatedDocumentQuery
 }) => {
+  const isSSR = typeof window === "undefined"
   const doc = p.data.dailp.document!
+  const tabs = useScrollableTabState({ selectedId: Tabs.ANNOTATION })
   const dialog = useDialogState()
-  const tabs = useScrollableTabState()
-  const [selectedMorpheme, setMorpheme] = useState<BasicMorphemeSegment | null>(
-    null
-  )
   const experienceLevel = useRadioState({
     state: Number.parseInt(Cookies.get("experienceLevel") ?? "0"),
   })
+  const [selectedMorpheme, setMorpheme] = useState<BasicMorphemeSegment | null>(
+    null
+  )
 
   // Save the selected experience level throughout the session.
   useEffect(() => {
@@ -75,7 +55,7 @@ const AnnotatedDocumentPage = (p: {
 
   return (
     <Layout title={doc.title}>
-      <AnnotatedDocument>
+      <main className={annotatedDocument}>
         <MorphemeDialogBackdrop {...dialog}>
           <MorphemeDialog {...dialog} aria-label="Segment Details">
             {selectedMorpheme ? (
@@ -84,19 +64,20 @@ const AnnotatedDocumentPage = (p: {
           </MorphemeDialog>
         </MorphemeDialogBackdrop>
 
-        <DocumentTitleHeader
-          doc={doc as GatsbyTypes.Dailp_AnnotatedDoc}
-          showDetails={true}
-        />
+        <DocumentTitleHeader doc={doc as any} showDetails={true} />
 
         <WideSticky top="#header">
-          <DocTabs {...tabs}>
-            <DocTab {...tabs}>Translation</DocTab>
-            <DocTab {...tabs}>Source Image</DocTab>
+          <DocTabs {...tabs} aria-label="Manuscript Tabs">
+            <DocTab {...tabs} id={Tabs.ANNOTATION}>
+              Translation
+            </DocTab>
+            <DocTab {...tabs} id={Tabs.IMAGES}>
+              Source Image
+            </DocTab>
           </DocTabs>
         </WideSticky>
 
-        <TabPanel {...tabs}>
+        <DocTabPanel {...tabs}>
           <ExperiencePicker radio={experienceLevel} />
 
           <AnnotationSection as="article">
@@ -115,24 +96,50 @@ const AnnotatedDocumentPage = (p: {
               />
             ))}
           </AnnotationSection>
-        </TabPanel>
+        </DocTabPanel>
 
-        <TabPanel {...tabs}>
-          <AnnotationFigure>
-            {doc.pageImages?.map((url, i) => (
-              <TransformWrapper key={i}>
-                <TransformComponent>
-                  <PageImage src={url} alt={`Manuscript Page ${i + 1}`} />
-                </TransformComponent>
-              </TransformWrapper>
-            ))}
-          </AnnotationFigure>
-        </TabPanel>
-      </AnnotatedDocument>
+        <DocTabPanel {...tabs}>
+          <PageImages pageImages={doc.pageImages} />
+        </DocTabPanel>
+      </main>
     </Layout>
   )
 }
 export default AnnotatedDocumentPage
+
+export const DocumentTitleHeader = (p: {
+  doc: DeepPartial<GatsbyTypes.Dailp_AnnotatedDoc>
+  showDetails?: boolean
+}) => (
+  <DocHeader>
+    <Breadcrumbs aria-label="Breadcrumbs">
+      <li>
+        <Link to="/">Collections</Link>
+      </li>
+      {p.doc.collection && (
+        <li>
+          <Link to={collectionRoute(p.doc.collection.slug!)}>
+            {p.doc.collection.name}
+          </Link>
+        </li>
+      )}
+    </Breadcrumbs>
+
+    <h2>
+      {p.showDetails ? (
+        p.doc.title
+      ) : (
+        <Link to={documentRoute(p.doc.slug!)}>{p.doc.title}</Link>
+      )}{" "}
+      {p.doc.date && `(${p.doc.date.year})`}{" "}
+      {p.showDetails ? (
+        <>
+          [<Link to={documentDetailsRoute(p.doc.slug!)}>Details</Link>]
+        </>
+      ) : null}
+    </h2>
+  </DocHeader>
+)
 
 const wideAndTop = css`
   width: 100%;
@@ -157,6 +164,8 @@ const DocTab = styled(Tab)`
   cursor: pointer;
   font-family: ${theme.fonts.header};
   font-size: 1.1rem;
+  background-color: ${theme.colors.header};
+  color: ${theme.colors.headings};
   &[aria-selected="true"] {
     border-color: ${theme.colors.headings};
   }
@@ -169,44 +178,37 @@ const DocTabs = styled(TabList)`
   ${fullWidth}
 `
 
+const DocTabPanel = styled(TabPanel)`
+  ${fullWidth}
+  padding: 0 0.5rem;
+  ${theme.mediaQueries.medium} {
+    padding: 0 ${theme.edgeSpacing};
+  }
+`
+
 const DocHeader = styled.header`
   ${fullWidth}
   padding: 0 ${theme.edgeSpacing};
 `
 
-const PageImage = styled.img`
-  margin-bottom: 2rem;
-  width: 100%;
-  height: auto;
-  cursor: grab;
-`
-
-export enum ExperienceLevel {
-  Basic = 0,
-  Learner = 1,
-  Advanced = 2,
-}
-
-export enum TagSet {
-  Dailp,
-  Learner,
-  Crg,
-}
+const thingIsNaN = (l: any) => isNaN(Number(l))
 
 const ExperiencePicker = (p: { radio: RadioStateReturn }) => {
   return (
     <RadioGroup {...p.radio}>
       {Object.keys(ExperienceLevel)
-        .filter((l) => isNaN(Number(l)))
-        .map((level: string) => (
-          <label key={level}>
-            <Radio
-              {...p.radio}
-              value={ExperienceLevel[level as keyof typeof ExperienceLevel]}
-            />
-            {level}
-          </label>
-        ))}
+        .filter(thingIsNaN)
+        .map(function (level: string) {
+          return (
+            <label key={level}>
+              <Radio
+                {...p.radio}
+                value={ExperienceLevel[level as keyof typeof ExperienceLevel]}
+              />
+              {level}
+            </label>
+          )
+        })}
     </RadioGroup>
   )
 }
@@ -239,7 +241,7 @@ export const query = graphql`
             }
           }
           translation {
-            segments
+            text
           }
         }
       }
@@ -299,33 +301,9 @@ const MorphemeDialogBackdrop = styled(DialogBackdrop)`
   z-index: 998;
 `
 
-const AnnotatedDocument = styled.main`
+const annotatedDocument = css`
   display: flex;
   flex-flow: column nowrap;
   align-items: center;
   font-size: 1rem;
-`
-
-const DocSection = styled.section`
-  ${fullWidth}
-`
-
-export const AnnotationSection = styled(DocSection)`
-  display: flex;
-  flex-flow: column nowrap;
-  ${theme.mediaQueries.medium} {
-    flex-flow: row wrap;
-    justify-content: space-between;
-  }
-`
-
-const AnnotationFigure = styled.figure`
-  ${fullWidth}
-  margin: 0;
-  .react-transform-component {
-    max-height: 20rem;
-    ${theme.mediaQueries.medium} {
-      max-height: initial;
-    }
-  }
 `

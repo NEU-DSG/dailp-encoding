@@ -22,7 +22,7 @@ impl LexicalEntry {
     pub fn make_id(doc_id: &str, gloss: &str) -> String {
         use regex::{Captures, Regex};
         lazy_static::lazy_static! {
-            static ref GLOSS_PAT: Regex = Regex::new(r"[\s:\-,\[\]]+").unwrap();
+            static ref GLOSS_PAT: Regex = Regex::new(r"[\s\-,\[\]]+").unwrap();
         }
         // Unify gloss formats into a lowercase dot-separated string: "multi.word.gloss"
         let gloss_tag = GLOSS_PAT.replace_all(&gloss, |_: &Captures| ".");

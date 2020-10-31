@@ -35,7 +35,7 @@ pub async fn migrate_tags(db: &Database) -> Result<()> {
         .chain(clitics)
         .chain(nominal)
     {
-        if let Bson::Document(bson_doc) = bson::to_bson(&entry).unwrap() {
+        if let Bson::Document(bson_doc) = bson::to_bson(&entry)? {
             dict.update_one(
                 bson::doc! {"_id": entry.id},
                 bson_doc,

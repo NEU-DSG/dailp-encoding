@@ -44,7 +44,7 @@ pub async fn migrate_dictionaries(db: &Database) -> Result<()> {
     // Push all lexical entries to the database.
     join_all(entries.iter().filter_map(|entry| {
         let entry = &entry.entry;
-        if let Bson::Document(bson_doc) = bson::to_bson(entry).unwrap() {
+        if let Bson::Document(bson_doc) = bson::to_bson(entry).ok()? {
             Some(
                 dict.update_one(
                     bson::doc! {"_id": &entry.id},
@@ -63,7 +63,7 @@ pub async fn migrate_dictionaries(db: &Database) -> Result<()> {
     // Push all the surface forms to the sea of words.
     join_all(entries.into_iter().flat_map(|entry| {
         entry.forms.into_iter().filter_map(|form| {
-            if let Bson::Document(bson_doc) = bson::to_bson(&form).unwrap() {
+            if let Bson::Document(bson_doc) = bson::to_bson(&form).ok()? {
                 Some(
                     words.update_one(
                         bson::doc! {"_id": &form.id},
@@ -98,7 +98,7 @@ pub async fn migrate_old_lexical(db: &Database) -> Result<()> {
     // Push all lexical entries to the database.
     let dict = db.words_collection();
     join_all(entries.filter_map(|entry| {
-        if let Bson::Document(bson_doc) = bson::to_bson(&entry).unwrap() {
+        if let Bson::Document(bson_doc) = bson::to_bson(&entry).ok()? {
             Some(
                 dict.update_one(
                     bson::doc! {"_id": &entry.id},

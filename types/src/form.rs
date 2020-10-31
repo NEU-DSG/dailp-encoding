@@ -79,7 +79,7 @@ impl AnnotatedForm {
         context: &async_graphql::Context<'_>,
     ) -> FieldResult<Option<AnnotatedDoc>> {
         Ok(if let Some(id) = self.document_id.as_ref() {
-            context.data::<Database>()?.document(id).await
+            context.data::<Database>()?.document(id).await?
         } else {
             None
         })

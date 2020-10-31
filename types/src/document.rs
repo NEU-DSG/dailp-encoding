@@ -1,4 +1,5 @@
 use crate::{AnnotatedForm, Database, DateTime, PersonAssociation, Translation, TranslationBlock};
+use async_graphql::FieldResult;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
@@ -82,17 +83,13 @@ impl AnnotatedDoc {
     async fn translated_segments(
         &self,
         context: &async_graphql::Context<'_>,
-    ) -> Option<Vec<TranslatedSection>> {
+    ) -> FieldResult<Option<Vec<TranslatedSection>>> {
         // We may not have complete data.
         if self.segments.is_some() {
-            self.segments.clone()
+            Ok(self.segments.clone())
         } else {
-            let db_doc = context
-                .data::<Database>()
-                .unwrap()
-                .document(&self.meta.id)
-                .await;
-            db_doc.and_then(|d| d.segments)
+            let db_doc = context.data::<Database>()?.document(&self.meta.id).await?;
+            Ok(db_doc.and_then(|d| d.segments))
         }
     }
 

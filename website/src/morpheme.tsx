@@ -1,11 +1,15 @@
 import React from "react"
-import { Link } from "gatsby"
-import { Button } from "reakit/Button"
+import { Clickable } from "reakit/Clickable"
 import { DialogStateReturn } from "reakit/Dialog"
 import { styled } from "linaria/react"
 import { useQuery, gql } from "@apollo/client"
 import _ from "lodash"
-import { BasicMorphemeSegment } from "./segment"
+import { MdClose } from "react-icons/md"
+import { AnchorLink } from "./link"
+
+type BasicMorphemeSegment = NonNullable<
+  GatsbyTypes.FormFieldsFragment["segments"]
+>[0]
 
 /** Specific details about some morpheme */
 export const MorphemeDetails = (props: {
@@ -13,16 +17,26 @@ export const MorphemeDetails = (props: {
   dialog: DialogStateReturn
 }) => (
   <>
-    <CloseButton onClick={() => props.dialog.hide()}>Close</CloseButton>
+    <CloseButton
+      role="button"
+      aria-label="Close Dialog"
+      onClick={() => props.dialog.hide()}
+    >
+      <MdClose size={32} />
+    </CloseButton>
     <h4>Known Occurrences of "{props.segment?.gloss}"</h4>
     <SimilarMorphemeList gloss={props.segment?.gloss!} dialog={props.dialog} />
   </>
 )
 
-const CloseButton = styled(Button)`
+const CloseButton = styled(Clickable)`
   position: absolute;
   top: 0.5rem;
   right: 0.5rem;
+  cursor: pointer;
+  border: none;
+  background: none;
+  padding: 0;
 `
 
 /**
@@ -61,14 +75,14 @@ const SimilarMorphemeList = (props: {
                 {word.documentId ? (
                   <>
                     {word.index ? (
-                      <Link
+                      <AnchorLink
                         to={`/documents/${word.documentId?.toLowerCase()}#w${
                           word.index
                         }`}
                         onClick={() => props.dialog.hide()}
                       >
                         {word.documentId} #{word.index}
-                      </Link>
+                      </AnchorLink>
                     ) : (
                       <>{word.documentId}</>
                     )}
