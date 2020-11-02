@@ -21,9 +21,9 @@ const Layout = (p: { title?: string; children: any }) => (
     </Helmet>
 
     <Sticky enabled={isMobile} innerZ={1}>
-      <Header aria-label="Site Header" id={isMobile ? "header" : undefined}>
+      <Header aria-label="Site Header" id="header">
         <HeaderContents>
-          {isMobile ? <MobileNav /> : null}
+          <MobileNav />
           <Link to="/" className={siteTitle}>
             DAILP
           </Link>
@@ -31,7 +31,7 @@ const Layout = (p: { title?: string; children: any }) => (
             Digital Archive of American Indian Languages Preservation and
             Perseverance
           </SubHeader>
-          {isMobile ? null : <NavMenu />}
+          <NavMenu />
         </HeaderContents>
       </Header>
     </Sticky>

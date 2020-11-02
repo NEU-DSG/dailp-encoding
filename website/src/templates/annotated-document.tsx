@@ -22,6 +22,7 @@ import { ExperienceLevel, TagSet, BasicMorphemeSegment } from "../types"
 import { MorphemeDetails } from "../morpheme"
 import PageImages from "../page-image"
 import { Breadcrumbs } from "../breadcrumbs"
+import { isMobile } from "react-device-detect"
 
 enum Tabs {
   ANNOTATION = "annotation-tab",
@@ -66,7 +67,7 @@ const AnnotatedDocumentPage = (p: {
 
         <DocumentTitleHeader doc={doc as any} showDetails={true} />
 
-        <WideSticky top="#header">
+        <WideSticky top={isMobile ? "#header" : undefined}>
           <DocTabs {...tabs} aria-label="Manuscript Tabs">
             <DocTab {...tabs} id={Tabs.ANNOTATION}>
               Translation

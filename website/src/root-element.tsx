@@ -69,5 +69,13 @@ css`
         color: ${theme.colors.link};
       }
     }
+
+    figure {
+      margin-inline-start: 0;
+      max-width: 100%;
+      ${theme.mediaQueries.medium} {
+        margin-inline-start: 2rem;
+      }
+    }
   }
 `

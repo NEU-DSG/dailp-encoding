@@ -22,7 +22,7 @@ export const NavMenu = () => {
   const location = useLocation()
 
   return (
-    <nav>
+    <nav className={desktopNav}>
       <NavList>
         <NavItem>
           <Link to="/collections">Collections</Link>
@@ -46,6 +46,7 @@ export const NavMenu = () => {
 }
 
 export const MobileNav = () => {
+  const location = useLocation()
   const data = useStaticQuery(query)
   const dialog = useDialogState({ animated: true })
   const items: any[] = data.wpMenu.menuItems.nodes
@@ -53,7 +54,9 @@ export const MobileNav = () => {
     !items.find(
       (item) => !!item.childItems.nodes.find((x: typeof y) => x.path === y.path)
     )
-  const location = useLocation()
+  const navItems = items.filter(isTopLevel)
+  // Add a link to the collections page.
+  navItems.splice(0, 0, { path: "/collections", label: "Collections" })
 
   return (
     <>
@@ -68,12 +71,8 @@ export const MobileNav = () => {
           aria-label="Navigation Drawer"
         >
           <ul>
-            <li>
-              <Link to="/collections">Collections</Link>
-            </li>
-
-            {items.filter(isTopLevel).map((item) => (
-              <li>
+            {navItems.map((item) => (
+              <DrawerItem key={item.path}>
                 <Link
                   to={item.path}
                   aria-current={
@@ -82,7 +81,7 @@ export const MobileNav = () => {
                 >
                   {item.label}
                 </Link>
-              </li>
+              </DrawerItem>
             ))}
           </ul>
         </Dialog>
@@ -119,11 +118,6 @@ const NavList = styled.ul`
 
 const NavItem = styled.li`
   display: inline;
-  font-size: 1rem;
-
-  &:hover > a {
-    color: ${theme.colors.link};
-  }
 
   & > a {
     padding: 0.5rem 1rem;
@@ -133,10 +127,36 @@ const NavItem = styled.li`
       color: ${theme.colors.link};
       border-bottom: 2px solid ${theme.colors.link};
     }
+    &:hover {
+      color: ${theme.colors.link};
+    }
+  }
+`
+
+const DrawerItem = styled.li`
+  margin-bottom: 0.5rem;
+  & > a {
+    padding: 0.5rem;
+    text-decoration: none;
+    color: ${theme.colors.text};
+    &[aria-current="page"],
+    &:hover {
+      color: ${theme.colors.link};
+    }
+  }
+`
+
+const desktopNav = css`
+  display: none;
+  ${theme.mediaQueries.medium} {
+    display: initial;
   }
 `
 
 const navButton = css`
+  ${theme.mediaQueries.medium} {
+    display: none;
+  }
   border: none;
   padding: 0;
   background: none;
@@ -165,6 +185,9 @@ const navDrawer = css`
 `
 
 const drawerBg = css`
+  ${theme.mediaQueries.medium} {
+    display: none;
+  }
   z-index: 999;
   inset: 0;
   position: fixed;
