@@ -219,7 +219,8 @@ const GlossLine = styled.span`
 `
 
 const WordGroup = styled(Group)`
-  margin: 1rem 0.5rem;
+  position: relative;
+  margin: 1rem 0;
   margin-bottom: 0.5rem;
   padding: 0.5rem;
   padding-right: 0;
@@ -228,14 +229,12 @@ const WordGroup = styled(Group)`
   ${theme.mediaQueries.medium} {
     padding: 0;
     border: none;
-    margin-top: 1rem;
-    margin-bottom: 2rem;
-    margin-right: 3rem;
-    margin-left: 0;
+    margin: 1rem 3rem 2rem 0;
   }
 `
 
 const SyllabaryLayer = styled.div`
+  font-family: ${theme.fonts.cherokee};
   font-size: 1.2rem;
 `
 

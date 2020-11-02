@@ -28,9 +28,10 @@ const Footer = () => {
       <FooterContent>
         <a
           href="https://github.com/neu-dsg/dailp-encoding"
+          aria-label="Github Repository"
           className={plainLink}
         >
-          <FaGithub size={24} />
+          <FaGithub size={24} aria-label="Github Icon" />
         </a>
         Last Updated on {data.currentBuildDate.currentDate}
       </FooterContent>
