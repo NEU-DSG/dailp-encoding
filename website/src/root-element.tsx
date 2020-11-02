@@ -59,5 +59,15 @@ css`
     input[type="radio"] {
       cursor: pointer;
     }
+
+    a {
+      color: ${theme.colors.text};
+      text-decoration-thickness: 0.1em;
+
+      &:hover,
+      &:active {
+        color: ${theme.colors.link};
+      }
+    }
   }
 `

@@ -4,7 +4,7 @@ import { DialogDisclosure, DialogStateReturn } from "reakit/Dialog"
 import { Group } from "reakit/Group"
 import _ from "lodash"
 import { ExperienceLevel, TagSet, BasicMorphemeSegment } from "./types"
-import theme, { fullWidth } from "./theme"
+import theme from "./theme"
 
 export const AnnotationSection = styled.section`
   width: 100%;
@@ -49,10 +49,7 @@ export const Segment = (p: Props) => {
     if (p.segment.ty === "BLOCK") {
       return (
         <DocumentBlock as="section">
-          <AnnotationSection as="div">
-            {children}
-            <div style={{ flexGrow: 1 }} aria-hidden={true} />
-          </AnnotationSection>
+          <AnnotationSection as="div">{children}</AnnotationSection>
           <p>{p.translations?.text ?? null}.</p>
         </DocumentBlock>
       )
@@ -134,17 +131,20 @@ const MorphemicSegmentation = (p: {
   }
 
   return (
-    <WordSegment>
-      {p
-        .segments!.map(function (segment) {
-          let seg = p.showAdvanced ? segment.morpheme : segment.simpleMorpheme
-          if (segment.nextSeparator) {
-            return seg + segment.nextSeparator
-          } else {
-            return seg
-          }
-        })
-        .join("")}
+    <>
+      <GlossLine>
+        {p
+          .segments!.map(function (segment) {
+            let seg = p.showAdvanced ? segment.morpheme : segment.simpleMorpheme
+            if (segment.nextSeparator) {
+              return seg + segment.nextSeparator
+            } else {
+              return seg
+            }
+          })
+          .join("")}
+      </GlossLine>
+
       <GlossLine>
         {intersperse(
           p.segments!.map(function (segment, i) {
@@ -165,7 +165,7 @@ const MorphemicSegmentation = (p: {
           }
         )}
       </GlossLine>
-    </WordSegment>
+    </>
   )
 }
 
@@ -194,12 +194,6 @@ const MorphemeSegment = (p: {
   )
 }
 
-const WordSegment = styled.div`
-  display: flex;
-  flex-flow: column nowrap;
-  align-items: flex-start;
-`
-
 const MorphemeButton = styled(DialogDisclosure)`
   font-family: inherit;
   font-size: inherit;
@@ -213,7 +207,7 @@ const MorphemeButton = styled(DialogDisclosure)`
   }
 `
 
-const GlossLine = styled.span`
+const GlossLine = styled.div`
   display: flex;
   flex-flow: row wrap;
 `
