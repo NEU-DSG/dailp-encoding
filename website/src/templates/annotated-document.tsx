@@ -105,7 +105,7 @@ const AnnotatedDocumentPage = (p: {
 
         <TabPanel
           {...tabs}
-          className={docTabPanel}
+          className={imageTabPanel}
           id="id-1-4"
           tabId={Tabs.IMAGES}
         >
@@ -194,6 +194,10 @@ const docTabPanel = css`
   ${theme.mediaQueries.medium} {
     padding: 0 ${theme.edgeSpacing};
   }
+`
+
+const imageTabPanel = css`
+  ${fullWidth}
 `
 
 const DocHeader = styled.header`

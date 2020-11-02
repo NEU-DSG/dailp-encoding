@@ -2,9 +2,17 @@ import React from "react"
 import { Link, graphql, useStaticQuery } from "gatsby"
 import { useLocation } from "@reach/router"
 import { styled } from "linaria/react"
+import { css } from "linaria"
 import theme from "./theme"
+import {
+  useDialogState,
+  Dialog,
+  DialogDisclosure,
+  DialogBackdrop,
+} from "reakit/Dialog"
+import { MdMenu } from "react-icons/md"
 
-const NavMenu = () => {
+export const NavMenu = () => {
   const data = useStaticQuery(query)
   const items: any[] = data.wpMenu.menuItems.nodes
   const isTopLevel = (y: { path: string }) =>
@@ -37,7 +45,51 @@ const NavMenu = () => {
   )
 }
 
-export default NavMenu
+export const MobileNav = () => {
+  const data = useStaticQuery(query)
+  const dialog = useDialogState({ animated: true })
+  const items: any[] = data.wpMenu.menuItems.nodes
+  const isTopLevel = (y: { path: string }) =>
+    !items.find(
+      (item) => !!item.childItems.nodes.find((x: typeof y) => x.path === y.path)
+    )
+  const location = useLocation()
+
+  return (
+    <>
+      <DialogDisclosure {...dialog} className={navButton}>
+        <MdMenu size={32} />
+      </DialogDisclosure>
+      <DialogBackdrop {...dialog} className={drawerBg}>
+        <Dialog
+          {...dialog}
+          as="nav"
+          className={navDrawer}
+          aria-label="Navigation Drawer"
+        >
+          <ul>
+            <li>
+              <Link to="/collections">Collections</Link>
+            </li>
+
+            {items.filter(isTopLevel).map((item) => (
+              <li>
+                <Link
+                  to={item.path}
+                  aria-current={
+                    location.pathname === item.path ? "page" : undefined
+                  }
+                >
+                  {item.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </Dialog>
+      </DialogBackdrop>
+    </>
+  )
+}
 
 const query = graphql`
   query {
@@ -81,5 +133,45 @@ const NavItem = styled.li`
       color: ${theme.colors.link};
       border-bottom: 2px solid ${theme.colors.link};
     }
+  }
+`
+
+const navButton = css`
+  border: none;
+  padding: 0;
+  background: none;
+  margin-right: 1rem;
+  height: 32px;
+`
+
+const navDrawer = css`
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  background-color: ${theme.colors.body};
+  width: 16rem;
+  transition: transform 150ms ease-in-out;
+  transform: translateX(-16rem);
+  &[data-enter] {
+    transform: translateX(0);
+  }
+
+  padding: 0 ${theme.edgeSpacing};
+  ul {
+    list-style: none;
+    padding-inline-start: 0;
+  }
+`
+
+const drawerBg = css`
+  z-index: 999;
+  inset: 0;
+  position: fixed;
+  background-color: rgba(0, 0, 0, 0.2);
+  transition: opacity 100ms ease-in-out;
+  opacity: 0;
+  &[data-enter] {
+    opacity: 1;
   }
 `

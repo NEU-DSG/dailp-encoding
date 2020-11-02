@@ -4,7 +4,7 @@ import { css } from "linaria"
 import { Link } from "gatsby"
 import Footer from "./footer"
 import theme, { fullWidth } from "./theme"
-import NavMenu from "./menu"
+import { NavMenu, MobileNav } from "./menu"
 import { Helmet } from "react-helmet"
 import Sticky from "react-stickynode"
 import { isMobile } from "react-device-detect"
@@ -23,6 +23,7 @@ const Layout = (p: { title?: string; children: any }) => (
     <Sticky enabled={isMobile} innerZ={1}>
       <Header aria-label="Site Header" id={isMobile ? "header" : undefined}>
         <HeaderContents>
+          {isMobile ? <MobileNav /> : null}
           <Link to="/" className={siteTitle}>
             DAILP
           </Link>
@@ -30,7 +31,7 @@ const Layout = (p: { title?: string; children: any }) => (
             Digital Archive of American Indian Languages Preservation and
             Perseverance
           </SubHeader>
-          <NavMenu />
+          {isMobile ? null : <NavMenu />}
         </HeaderContents>
       </Header>
     </Sticky>
@@ -54,7 +55,10 @@ const HeaderContents = styled.div`
   ${fullWidth}
   display: flex;
   flex-flow: row wrap;
-  align-items: baseline;
+  align-items: center;
+  ${theme.mediaQueries.medium} {
+    align-items: baseline;
+  }
 `
 
 const SubHeader = styled.span`
