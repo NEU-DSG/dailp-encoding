@@ -1,11 +1,7 @@
-import "fontsource-gentium-basic"
-import "fontsource-quattrocento-sans"
-import "./fonts.css"
-
 const theme = {
   fonts: {
-    body: `"Gentium Plus", "Gentium Basic", "Noto Sans Cherokee",
-        "Arial", "serif"`,
+    // Noto Serif supports glottal stops and more accents than other fonts.
+    body: `"Noto Serif", "Noto Sans Cherokee", "Arial", "serif"`,
     header: `"Quattrocento Sans"`,
   },
   fontSizes: {

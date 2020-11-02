@@ -9,6 +9,10 @@ import { Helmet } from "react-helmet"
 import Sticky from "react-stickynode"
 import { isMobile } from "react-device-detect"
 
+import "fontsource-noto-serif"
+import "fontsource-quattrocento-sans"
+import "./fonts.css"
+
 /** Wrapper for most site pages, providing them with a navigation header and footer. */
 const Layout = (p: { title?: string; children: any }) => (
   <>

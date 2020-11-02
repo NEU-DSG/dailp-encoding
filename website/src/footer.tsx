@@ -1,7 +1,9 @@
 import React from "react"
 import { styled } from "linaria/react"
+import { css } from "linaria"
 import { useStaticQuery, graphql } from "gatsby"
 import theme, { fullWidth } from "./theme"
+import { FaGithub } from "react-icons/fa"
 
 /** University affiliation, related navigation links, and contact info.  */
 const Footer = () => {
@@ -24,6 +26,12 @@ const Footer = () => {
         </a>
       </FooterContent>
       <FooterContent>
+        <a
+          href="https://github.com/neu-dsg/dailp-encoding"
+          className={plainLink}
+        >
+          <FaGithub size={24} />
+        </a>
         Last Updated on {data.currentBuildDate.currentDate}
       </FooterContent>
     </FooterContainer>
@@ -43,4 +51,11 @@ const FooterContainer = styled.footer`
 const FooterContent = styled.div`
   ${fullWidth}
   padding: 0 ${theme.edgeSpacing};
+  & > * {
+    margin-right: 0.5rem;
+  }
+`
+
+const plainLink = css`
+  color: white;
 `
