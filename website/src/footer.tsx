@@ -42,7 +42,7 @@ export default Footer
 
 const FooterContainer = styled.footer`
   background-color: rgb(63, 82, 113);
-  padding: 15px 0;
+  padding: 1rem 0;
   display: flex;
   flex-flow: column nowrap;
   align-items: center;
@@ -52,6 +52,7 @@ const FooterContainer = styled.footer`
 const FooterContent = styled.div`
   ${fullWidth}
   padding: 0 ${theme.edgeSpacing};
+  font-size: 0.8rem;
   & > * {
     margin-right: 0.5rem;
   }

@@ -169,15 +169,15 @@ const WideSticky = styled(({ className, ...p }) => (
 const DocTab = styled(Tab)`
   border-radius: 0;
   border: none;
-  border-bottom: 2px solid transparent;
   flex-grow: 1;
   cursor: pointer;
   font-family: ${theme.fonts.header};
   font-size: 1.1rem;
   background-color: ${theme.colors.header};
   color: ${theme.colors.headings};
+  outline-color: ${theme.colors.headings};
   &[aria-selected="true"] {
-    border-color: ${theme.colors.headings};
+    border-bottom: 2px solid ${theme.colors.headings};
   }
 `
 
