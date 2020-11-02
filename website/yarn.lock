@@ -6634,6 +6634,11 @@ fontsource-gentium-basic@^3.0.9:
   resolved "https://registry.yarnpkg.com/fontsource-gentium-basic/-/fontsource-gentium-basic-3.0.9.tgz#b48b0dd1a924909c6c82b7bfd4ba8dc1ccb6fa7d"
   integrity sha512-+9YdDB2pn7HKPEpAvuBaxmCwiFEzKX2dgz+k/DwKTTuTZSnGDwjDfG6u6bq10SjQZR/zG1ZZZYyDBL6Mh33Pyg==
 
+fontsource-noto-serif@^3.0.9:
+  version "3.0.9"
+  resolved "https://registry.yarnpkg.com/fontsource-noto-serif/-/fontsource-noto-serif-3.0.9.tgz#601468100fa2b97595ba0be06285ea477aee2788"
+  integrity sha512-WBzxnMGOzOAsBQ2vkL5xHWJnK5WtOCe3FdFVDhmhsQJQgCssIJ6vfjLEJkuS3fzXmnzk5ZCkve1dtEgJjusYnA==
+
 fontsource-quattrocento-sans@^3.0.9:
   version "3.0.9"
   resolved "https://registry.yarnpkg.com/fontsource-quattrocento-sans/-/fontsource-quattrocento-sans-3.0.9.tgz#a31a3cad438d8e2f39e937f41e4564471b2f2d58"

@@ -2,6 +2,7 @@ import React from "react"
 import { css, cx } from "linaria"
 import { useStaticQuery, graphql } from "gatsby"
 import theme, { fullWidth } from "./theme"
+import { FaGithub } from "react-icons/fa"
 
 /** University affiliation, related navigation links, and contact info.  */
 const Footer = () => {
