@@ -13,6 +13,7 @@ const theme = {
     footer: "rgb(63, 82, 113)",
     body: "white",
     text: "black",
+    link: "#405372",
     headings: "#9f4c43",
     borders: "darkgray",
   },
