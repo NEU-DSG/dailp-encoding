@@ -43,7 +43,18 @@ impl MorphemeSegment {
         }
     }
 
-    /// English gloss in standard DAILP format
+    /// English gloss for display
+    async fn display_gloss(&self, context: &async_graphql::Context<'_>) -> FieldResult<String> {
+        Ok(context
+            .data::<Database>()?
+            .lexical_entry(&self.gloss)
+            .await?
+            .and_then(|entry| entry.form.english_gloss.get(0).map(|x| x.clone()))
+            .unwrap_or_else(|| self.gloss.clone())
+            .to_owned())
+    }
+
+    /// English gloss in standard DAILP format that refers to a lexical item
     async fn gloss(&self) -> &str {
         &self.gloss
     }
@@ -72,14 +83,15 @@ impl MorphemeSegment {
 
     /// All lexical entries that share the same gloss text as this morpheme.
     /// This generally works for root morphemes.
-    async fn lexical_entries(
+    async fn lexical_entry(
         &self,
         context: &async_graphql::Context<'_>,
-    ) -> FieldResult<Vec<LexicalEntry>> {
+    ) -> FieldResult<Option<AnnotatedForm>> {
         Ok(context
             .data::<Database>()?
-            .lexical_entries(&self.gloss)
-            .await?)
+            .lexical_entry(&self.gloss)
+            .await?
+            .map(|x| x.form))
     }
 }
 
