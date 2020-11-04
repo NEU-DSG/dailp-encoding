@@ -1,4 +1,4 @@
-# dailp-types
+# dailp
 
 This crate defines the data structure and type system used by the whole DAILP infrastructure, including [data migration](../migration), [GraphQL layer](../graphql), and the [front-end](../website).
 
