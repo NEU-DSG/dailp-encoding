@@ -39,8 +39,7 @@ impl Database {
     pub async fn new() -> Result<Self> {
         use mongodb::{options::ClientOptions, Client};
 
-        let login = std::env::var("MONGODB_LOGIN")?;
-        let db_url = format!("mongodb+srv://{}@dailp-encoding.hgtma.mongodb.net/dailp-encoding?retryWrites=true&w=majority", login);
+        let db_url = std::env::var("MONGODB_URI")?;
         let mut opts = ClientOptions::parse(&db_url).await?;
         opts.app_name = Some("DAILP".to_owned());
         let client = Client::with_options(opts)?;

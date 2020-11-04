@@ -5,10 +5,10 @@ plugins:
 provider:
   name: aws
   runtime: rust
-  memorySize: 512
-  timeout: 10
+  memorySize: 256
+  timeout: 20
   environment:
-    MONGODB_LOGIN: ${env:MONGODB_LOGIN}
+    MONGODB_URI: ${env:MONGODB_URI}
 package:
   individually: true
 functions:
