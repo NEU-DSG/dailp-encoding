@@ -34,6 +34,6 @@ The project team includes an advisory board that brings together members of the 
 
 ## Previous Board Members
 
-**Joel Dunham** is a software developer at Artefactual Systems, Inc. who works on linguistic data management software and digital preservation software. He also works at Concordia University where he builds and maintains the Online Linguistic Database (OLD\*\*, an open-source software application that facilitates the collaborative management, analysis, and sharing of linguistic data. He holds a Ph.D. in Linguistics from the University of British Columbia with a focus on under-studied and endangered languages.
+**Joel Dunham** is a software developer at Artefactual Systems, Inc. who works on linguistic data management software and digital preservation software. He also works at Concordia University where he builds and maintains the Online Linguistic Database (OLD), an open-source software application that facilitates the collaborative management, analysis, and sharing of linguistic data. He holds a Ph.D. in Linguistics from the University of British Columbia with a focus on under-studied and endangered languages.
 
 **Brad Montgomery-Anderson** is an Assistant Professor of English at Colorado Mesa University in Colorado. He holds a Ph.D. in Linguistics from the University of Kansas. His research focuses on Cherokee language, Mayan languages, and language revitalization, and his recent book, the Cherokee Reference Grammar, won the Leonard Bloomfield Book Award for 2017.

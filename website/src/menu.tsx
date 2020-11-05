@@ -125,8 +125,7 @@ const NavList = styled.ul`
   align-items: baseline;
   list-style: none;
   padding-inline-start: 0;
-  margin-top: 0;
-  margin-bottom: 0.6rem;
+  margin: 0;
 `
 
 const NavItem = styled.li`
