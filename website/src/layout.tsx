@@ -24,10 +24,8 @@ const Layout = (p: { title?: string; children: any }) => (
       <Header aria-label="Site Header" id="header">
         <HeaderContents>
           <MobileNav />
-          <h1>
-            <Link to="/" className={siteTitle}>
-              DAILP
-            </Link>
+          <h1 className={siteTitle}>
+            <Link to="/">DAILP</Link>
           </h1>
           <SubHeader>
             Digital Archive of American Indian Languages Preservation and
@@ -75,10 +73,12 @@ const SubHeader = styled.span`
 
 const siteTitle = css`
   margin: 0.25rem 0;
-  color: ${theme.colors.headings};
-  text-decoration: none;
   font-size: 2rem;
   ${theme.mediaQueries.medium} {
     margin: 1.2rem 0;
+  }
+  & > a {
+    color: ${theme.colors.headings};
+    text-decoration: none;
   }
 `

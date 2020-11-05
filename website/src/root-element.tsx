@@ -79,7 +79,7 @@ css`
 
     a {
       color: ${theme.colors.text};
-      text-decoration-thickness: 0.1em;
+      text-decoration-thickness: 0.09em;
 
       &:hover,
       &:active {

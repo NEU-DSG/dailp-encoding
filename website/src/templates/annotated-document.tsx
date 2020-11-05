@@ -125,7 +125,7 @@ export const DocumentTitleHeader = (p: {
   <DocHeader>
     <Breadcrumbs aria-label="Breadcrumbs">
       <li>
-        <Link to="/">Index</Link>
+        <Link to="/">Collections</Link>
       </li>
       {p.doc.collection && (
         <li>

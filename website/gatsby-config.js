@@ -45,6 +45,7 @@ module.exports = {
     },
     "gatsby-transformer-remark",
     "gatsby-plugin-slug",
+    "gatsby-plugin-catch-links",
     {
       resolve: "gatsby-source-graphql",
       options: {

@@ -3,7 +3,6 @@ import { styled } from "linaria/react"
 import { css } from "linaria"
 import { useStaticQuery, graphql } from "gatsby"
 import theme, { fullWidth } from "./theme"
-import { FaGithub } from "react-icons/fa"
 
 /** University affiliation, related navigation links, and contact info.  */
 const Footer = () => {
@@ -24,15 +23,11 @@ const Footer = () => {
             alt="Northeastern University"
           />
         </a>
+        <a href="https://github.com/neu-dsg/dailp-encoding">
+          Browse the source code
+        </a>
       </FooterContent>
       <FooterContent>
-        <a
-          href="https://github.com/neu-dsg/dailp-encoding"
-          aria-label="Github Repository"
-          className={plainLink}
-        >
-          <FaGithub size={24} aria-label="Github Icon" />
-        </a>
         Last Updated on {data.currentBuildDate.currentDate}
       </FooterContent>
     </FooterContainer>
@@ -42,7 +37,7 @@ export default Footer
 
 const FooterContainer = styled.footer`
   background-color: rgb(63, 82, 113);
-  padding: 1rem 0;
+  padding: 1rem ${theme.edgeSpacing};
   display: flex;
   flex-flow: column nowrap;
   align-items: center;
@@ -57,13 +52,11 @@ const FooterContainer = styled.footer`
 
 const FooterContent = styled.div`
   ${fullWidth}
-  padding: 0 ${theme.edgeSpacing};
-  font-size: 0.8rem;
+  font-size: 0.9rem;
+  display: flex;
+  flex-flow: row wrap;
+  justify-content: space-between;
   & > * {
     margin-right: 0.5rem;
   }
-`
-
-const plainLink = css`
-  color: white;
 `
