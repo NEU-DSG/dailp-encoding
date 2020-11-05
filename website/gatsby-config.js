@@ -43,16 +43,8 @@ module.exports = {
         path: `${__dirname}/src/pages/`,
       },
     },
-    {
-      resolve: "gatsby-source-wordpress-experimental",
-      options: {
-        url: "https://dailp.northeastern.edu/graphql",
-        verbose: true,
-        schema: {
-          perPage: 50,
-        },
-      },
-    },
+    "gatsby-transformer-remark",
+    "gatsby-plugin-slug",
     {
       resolve: "gatsby-source-graphql",
       options: {

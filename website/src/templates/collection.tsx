@@ -1,7 +1,7 @@
 import React from "react"
 import { graphql, Link } from "gatsby"
 import Layout from "../layout"
-import { DocIndex, FullWidth } from "../pages/collections"
+import { DocIndex, FullWidth } from "../pages/index"
 import { documentRoute } from "../routes"
 import { Breadcrumbs } from "../breadcrumbs"
 
@@ -27,7 +27,7 @@ export default (p: {
           <header>
             <Breadcrumbs aria-label="Breadcrumbs">
               <li>
-                <Link to="/collections">Collections</Link>
+                <Link to="/">Index</Link>
               </li>
             </Breadcrumbs>
             <h2>{p.pageContext.name}</h2>

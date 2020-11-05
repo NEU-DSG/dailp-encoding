@@ -5,8 +5,8 @@ import { Helmet } from "react-helmet"
 import theme, { fullWidth } from "../theme"
 import Layout from "../layout"
 
-export default (p: { data: GatsbyTypes.ContentPageQuery }) => {
-  const page = p.data.wpPage
+export default (p: { data: any }) => {
+  const page = p.data.page
   return (
     <Layout>
       <Helmet>
@@ -19,12 +19,10 @@ export default (p: { data: GatsbyTypes.ContentPageQuery }) => {
         />
       </Helmet>
       <main className={padded}>
-        <article className={wideArticle}>
-          <header>
-            <h1>{page.title}</h1>
-          </header>
-          <div dangerouslySetInnerHTML={{ __html: page.content }} />
-        </article>
+        <article
+          className={wideArticle}
+          dangerouslySetInnerHTML={{ __html: page.content }}
+        />
       </main>
     </Layout>
   )
@@ -32,9 +30,8 @@ export default (p: { data: GatsbyTypes.ContentPageQuery }) => {
 
 export const query = graphql`
   query ContentPage($id: String!) {
-    wpPage(id: { eq: $id }) {
-      title
-      content
+    page: markdownRemark(id: { eq: $id }) {
+      content: html
     }
   }
 `

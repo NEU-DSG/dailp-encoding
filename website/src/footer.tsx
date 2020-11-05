@@ -46,7 +46,13 @@ const FooterContainer = styled.footer`
   display: flex;
   flex-flow: column nowrap;
   align-items: center;
-  color: white;
+  color: ${theme.colors.body};
+  a {
+    color: ${theme.colors.body};
+    &:hover {
+      color: ${theme.colors.header};
+    }
+  }
 `
 
 const FooterContent = styled.div`

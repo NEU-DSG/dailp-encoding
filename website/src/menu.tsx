@@ -1,5 +1,5 @@
 import React from "react"
-import { Link, graphql, useStaticQuery } from "gatsby"
+import { Link, graphql } from "gatsby"
 import { useLocation } from "@reach/router"
 import { styled } from "linaria/react"
 import { css } from "linaria"
@@ -10,53 +10,78 @@ import {
   DialogDisclosure,
   DialogBackdrop,
 } from "reakit/Dialog"
-import { MdMenu } from "react-icons/md"
+import { useMenuState, Menu, MenuItem, MenuButton } from "reakit/Menu"
+import { MdMenu, MdArrowDropDown } from "react-icons/md"
+
+const menuItems = [
+  {
+    label: "About",
+    childItems: [
+      { path: "/about", label: "About DAILP" },
+      { path: "/about/our-team", label: "Our Team" },
+      { path: "/about/our-goals", label: "Our Goals" },
+      { path: "/about/why-now", label: "Why Now" },
+      { path: "/about/project-history", label: "Project History" },
+    ],
+  },
+  { path: "/credit", label: "Additional Resources" },
+  { path: "/contact", label: "Interested in Working With Us?" },
+]
 
 export const NavMenu = () => {
-  const data = useStaticQuery(query)
-  const items: any[] = data.wpMenu.menuItems.nodes
-  const isTopLevel = (y: { path: string }) =>
-    !items.find(
-      (item) => !!item.childItems.nodes.find((x: typeof y) => x.path === y.path)
-    )
   const location = useLocation()
 
   return (
-    <nav className={desktopNav}>
+    <div className={desktopNav}>
       <NavList>
-        <NavItem>
-          <Link to="/collections">Collections</Link>
-        </NavItem>
-
-        {items.filter(isTopLevel).map((item) => (
-          <NavItem>
-            <Link
-              to={item.path}
-              aria-current={
-                location.pathname === item.path ? "page" : undefined
-              }
-            >
-              {item.label}
-            </Link>
-          </NavItem>
-        ))}
+        {menuItems.map((item) => {
+          if (item.childItems) {
+            const menu = useMenuState()
+            return (
+              <>
+                <MenuButton {...menu} className={navLink}>
+                  {item.label}
+                  <MdArrowDropDown />
+                </MenuButton>
+                <Menu {...menu} aria-label={item.label} className={navMenu}>
+                  {item.childItems.map((item) => (
+                    <MenuItem
+                      as={Link}
+                      to={item.path}
+                      key={item.path}
+                      className={navLink}
+                      {...menu}
+                    >
+                      {item.label}
+                    </MenuItem>
+                  ))}
+                </Menu>
+              </>
+            )
+          } else {
+            return (
+              <NavItem key={item.path}>
+                <Link
+                  to={item.path}
+                  aria-current={
+                    location.pathname === item.path ? "page" : undefined
+                  }
+                  className={navLink}
+                >
+                  {item.label}
+                </Link>
+              </NavItem>
+            )
+          }
+        })}
       </NavList>
-    </nav>
+    </div>
   )
 }
 
 export const MobileNav = () => {
   const location = useLocation()
-  const data = useStaticQuery(query)
   const dialog = useDialogState({ animated: true })
-  const items: any[] = data.wpMenu.menuItems.nodes
-  const isTopLevel = (y: { path: string }) =>
-    !items.find(
-      (item) => !!item.childItems.nodes.find((x: typeof y) => x.path === y.path)
-    )
-  const navItems = items.filter(isTopLevel)
-  // Add a link to the collections page.
-  navItems.splice(0, 0, { path: "/collections", label: "Collections" })
 
   return (
     <>
@@ -71,18 +96,22 @@ export const MobileNav = () => {
           aria-label="Navigation Drawer"
         >
           <ul>
-            {navItems.map((item) => (
-              <DrawerItem key={item.path}>
-                <Link
-                  to={item.path}
-                  aria-current={
-                    location.pathname === item.path ? "page" : undefined
-                  }
-                >
-                  {item.label}
-                </Link>
-              </DrawerItem>
-            ))}
+            {menuItems.map((item) => {
+              const items: any[] = item.childItems ?? [item]
+              return items.map((item) => (
+                <DrawerItem key={item.path}>
+                  <Link
+                    to={item.path}
+                    aria-current={
+                      location.pathname === item.path ? "page" : undefined
+                    }
+                    className={navLink}
+                  >
+                    {item.label}
+                  </Link>
+                </DrawerItem>
+              ))
+            })}
           </ul>
         </Dialog>
       </DialogBackdrop>
@@ -90,26 +119,10 @@ export const MobileNav = () => {
   )
 }
 
-const query = graphql`
-  query {
-    wpMenu {
-      menuItems {
-        nodes {
-          path
-          label
-          childItems {
-            nodes {
-              path
-              label
-            }
-          }
-        }
-      }
-    }
-  }
-`
-
 const NavList = styled.ul`
+  display: flex;
+  flex-flow: row;
+  align-items: baseline;
   list-style: none;
   padding-inline-start: 0;
   margin-top: 0;
@@ -118,18 +131,30 @@ const NavList = styled.ul`
 
 const NavItem = styled.li`
   display: inline;
+`
 
-  & > a {
-    padding: 0.5rem 1rem;
-    text-decoration: none;
-    color: ${theme.colors.text};
-    &[aria-current="page"] {
-      color: ${theme.colors.link};
-      border-bottom: 2px solid ${theme.colors.link};
-    }
-    &:hover {
-      color: ${theme.colors.link};
-    }
+const navMenu = css`
+  display: flex;
+  flex-flow: column;
+  background-color: ${theme.colors.body};
+  border: 2px solid ${theme.colors.link};
+`
+
+const navLink = css`
+  padding: 0.5rem 1rem;
+  text-decoration: none;
+  color: ${theme.colors.text};
+  background: none;
+  border: none;
+  display: flex;
+  flex-flow: row;
+
+  &[aria-current="page"] {
+    color: ${theme.colors.link};
+    border-bottom: 2px solid ${theme.colors.link};
+  }
+  &:hover {
+    color: ${theme.colors.link};
   }
 `
 

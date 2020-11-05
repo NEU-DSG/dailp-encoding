@@ -57,21 +57,21 @@ const createDocumentPages = async ({ actions, graphql }) => {
 const createWpPages = async ({ actions, graphql }) => {
   const { data } = await graphql(`
     query {
-      allWpPage(filter: { status: { eq: "publish" } }) {
+      allPages: allMarkdownRemark {
         nodes {
+          fields {
+            slug
+          }
           id
-          slug
-          link
-          status
         }
       }
     }
   `)
 
-  for (const doc of data.allWpPage.nodes) {
+  for (const doc of data.allPages.nodes) {
     actions.createPage({
       // Make all page urls relative.
-      path: doc.link.replace(/^https:\/\/dailp\.northeastern\.edu/, ""),
+      path: doc.fields.slug,
       component: path.resolve("./src/templates/page.tsx"),
       context: doc,
     })

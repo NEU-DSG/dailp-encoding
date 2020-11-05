@@ -24,9 +24,11 @@ const Layout = (p: { title?: string; children: any }) => (
       <Header aria-label="Site Header" id="header">
         <HeaderContents>
           <MobileNav />
-          <Link to="/" className={siteTitle}>
-            DAILP
-          </Link>
+          <h1>
+            <Link to="/" className={siteTitle}>
+              DAILP
+            </Link>
+          </h1>
           <SubHeader>
             Digital Archive of American Indian Languages Preservation and
             Perseverance
@@ -51,7 +53,7 @@ const Header = styled.header`
   font-family: ${theme.fonts.header};
 `
 
-const HeaderContents = styled.div`
+const HeaderContents = styled.nav`
   ${fullWidth}
   display: flex;
   flex-flow: row wrap;
