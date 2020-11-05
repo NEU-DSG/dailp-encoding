@@ -33,48 +33,45 @@ export const NavMenu = () => {
 
   return (
     <div className={desktopNav}>
-      <NavList>
-        {menuItems.map((item) => {
-          if (item.childItems) {
-            const menu = useMenuState()
-            return (
-              <>
-                <MenuButton {...menu} className={navLink}>
-                  {item.label}
-                  <MdArrowDropDown />
-                </MenuButton>
-                <Menu {...menu} aria-label={item.label} className={navMenu}>
-                  {item.childItems.map((item) => (
-                    <MenuItem
-                      as={Link}
-                      to={item.path}
-                      key={item.path}
-                      className={navLink}
-                      {...menu}
-                    >
-                      {item.label}
-                    </MenuItem>
-                  ))}
-                </Menu>
-              </>
-            )
-          } else {
-            return (
-              <NavItem key={item.path}>
-                <Link
-                  to={item.path}
-                  aria-current={
-                    location.pathname === item.path ? "page" : undefined
-                  }
-                  className={navLink}
-                >
-                  {item.label}
-                </Link>
-              </NavItem>
-            )
-          }
-        })}
-      </NavList>
+      {menuItems.map((item) => {
+        if (item.childItems) {
+          const menu = useMenuState()
+          return (
+            <>
+              <MenuButton {...menu} className={navLink}>
+                {item.label}
+                <MdArrowDropDown />
+              </MenuButton>
+              <Menu {...menu} aria-label={item.label} className={navMenu}>
+                {item.childItems.map((item) => (
+                  <MenuItem
+                    as={Link}
+                    to={item.path}
+                    key={item.path}
+                    className={navLink}
+                    {...menu}
+                  >
+                    {item.label}
+                  </MenuItem>
+                ))}
+              </Menu>
+            </>
+          )
+        } else {
+          return (
+            <Link
+              key={item.path}
+              to={item.path}
+              aria-current={
+                location.pathname === item.path ? "page" : undefined
+              }
+              className={navLink}
+            >
+              {item.label}
+            </Link>
+          )
+        }
+      })}
     </div>
   )
 }
@@ -152,7 +149,8 @@ const navLink = css`
     color: ${theme.colors.link};
     border-bottom: 2px solid ${theme.colors.link};
   }
-  &:hover {
+  &:hover,
+  &:focus {
     color: ${theme.colors.link};
   }
 `
@@ -163,8 +161,10 @@ const DrawerItem = styled.li`
     padding: 0.5rem;
     text-decoration: none;
     color: ${theme.colors.text};
+
     &[aria-current="page"],
-    &:hover {
+    &:hover,
+    &:focus {
       color: ${theme.colors.link};
     }
   }
@@ -173,7 +173,7 @@ const DrawerItem = styled.li`
 const desktopNav = css`
   display: none;
   ${theme.mediaQueries.medium} {
-    display: initial;
+    display: flex;
   }
 `
 

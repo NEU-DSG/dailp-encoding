@@ -8,7 +8,7 @@ import Layout from "../layout"
 export default (p: { data: any }) => {
   const page = p.data.page
   return (
-    <Layout>
+    <Layout title={page.headings[0]?.value}>
       <Helmet>
         <link
           rel="stylesheet"
@@ -32,6 +32,9 @@ export const query = graphql`
   query ContentPage($id: String!) {
     page: markdownRemark(id: { eq: $id }) {
       content: html
+      headings(depth: h1) {
+        value
+      }
     }
   }
 `
