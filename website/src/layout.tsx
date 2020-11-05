@@ -91,6 +91,8 @@ css`
     }
     html {
       font-size: ${theme.fontSizes.root};
+      width: 100vw;
+      overflow-x: hidden;
     }
     body {
       margin: 0;

@@ -36,7 +36,7 @@ const Footer = () => {
 export default Footer
 
 const FooterContainer = styled.footer`
-  background-color: rgb(63, 82, 113);
+  background-color: ${theme.colors.footer};
   padding: 1rem ${theme.edgeSpacing};
   display: flex;
   flex-flow: column nowrap;
@@ -44,8 +44,12 @@ const FooterContainer = styled.footer`
   color: ${theme.colors.body};
   a {
     color: ${theme.colors.body};
-    &:hover {
+
+    &:hover,
+    &:focus,
+    &:active {
       color: ${theme.colors.header};
+      outline-color: ${theme.colors.header};
     }
   }
 `

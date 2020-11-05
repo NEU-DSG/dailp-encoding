@@ -10,7 +10,7 @@ const theme = {
   },
   colors: {
     header: "#f7eeed",
-    footer: "rgb(63, 82, 113)",
+    footer: "#405372",
     body: "white",
     text: "black",
     link: "#405372",
