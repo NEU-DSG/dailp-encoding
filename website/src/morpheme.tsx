@@ -30,7 +30,7 @@ export const MorphemeDetails = (props: {
 )
 
 const CloseButton = styled(Clickable)`
-  position: absolute;
+  position: fixed;
   top: 0.5rem;
   right: 0.5rem;
   cursor: pointer;
