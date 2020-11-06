@@ -183,15 +183,20 @@ const MorphemeSegment = (p: {
   let gloss = p.segment.gloss
   if (p.tagSet === TagSet.Learner) {
     gloss =
-      p.segment.matchingTag?.learner ??
-      p.segment.matchingTag?.crg ??
-      p.segment.displayGloss
+      p.segment.matchingTag?.learner ||
+      p.segment.matchingTag?.crg ||
+      p.segment.displayGloss ||
+      gloss
   }
-  return (
-    <MorphemeButton {...p.dialog} onClick={() => p.onOpenDetails(p.segment)}>
-      {gloss}
-    </MorphemeButton>
-  )
+  if (gloss) {
+    return (
+      <MorphemeButton {...p.dialog} onClick={() => p.onOpenDetails(p.segment)}>
+        {gloss}
+      </MorphemeButton>
+    )
+  } else {
+    return null
+  }
 }
 
 const MorphemeButton = styled(DialogDisclosure)`

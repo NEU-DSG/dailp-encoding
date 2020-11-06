@@ -1,7 +1,6 @@
 import React from "react"
 import { Link, graphql } from "gatsby"
 import { useLocation } from "@reach/router"
-import { styled } from "linaria/react"
 import { css } from "linaria"
 import theme from "./theme"
 import {
@@ -41,7 +40,7 @@ export const NavMenu = () => {
             <>
               <MenuButton {...menu} className={navLink}>
                 {item.label}
-                <MdArrowDropDown />
+                <MdArrowDropDown aria-label="Menu" />
               </MenuButton>
               <Menu {...menu} aria-label={item.label} className={navMenu}>
                 {item.childItems.map((item) => (
@@ -83,7 +82,11 @@ export const MobileNav = () => {
 
   return (
     <>
-      <DialogDisclosure {...dialog} className={navButton}>
+      <DialogDisclosure
+        {...dialog}
+        className={navButton}
+        aria-label="Open Mobile Navigation Drawer"
+      >
         <MdMenu size={32} />
       </DialogDisclosure>
       <DialogBackdrop {...dialog} className={drawerBg}>
