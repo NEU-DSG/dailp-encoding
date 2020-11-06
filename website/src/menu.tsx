@@ -14,6 +14,7 @@ import { useMenuState, Menu, MenuItem, MenuButton } from "reakit/Menu"
 import { MdMenu, MdArrowDropDown } from "react-icons/md"
 
 const menuItems = [
+  { path: "/", label: "Collections" },
   {
     label: "About",
     childItems: [
@@ -96,7 +97,7 @@ export const MobileNav = () => {
             {menuItems.map((item) => {
               const items: any[] = item.childItems ?? [item]
               return items.map((item) => (
-                <DrawerItem key={item.path}>
+                <li className={drawerItem} key={item.path}>
                   <Link
                     to={item.path}
                     aria-current={
@@ -106,7 +107,7 @@ export const MobileNav = () => {
                   >
                     {item.label}
                   </Link>
-                </DrawerItem>
+                </li>
               ))
             })}
           </ul>
@@ -116,24 +117,14 @@ export const MobileNav = () => {
   )
 }
 
-const NavList = styled.ul`
-  display: flex;
-  flex-flow: row;
-  align-items: baseline;
-  list-style: none;
-  padding-inline-start: 0;
-  margin: 0;
-`
-
-const NavItem = styled.li`
-  display: inline;
-`
-
 const navMenu = css`
   display: flex;
   flex-flow: column;
   background-color: ${theme.colors.body};
   border: 2px solid ${theme.colors.link};
+  &:focus {
+    outline: none;
+  }
 `
 
 const navLink = css`
@@ -155,7 +146,7 @@ const navLink = css`
   }
 `
 
-const DrawerItem = styled.li`
+const drawerItem = css`
   margin-bottom: 0.5rem;
   & > a {
     padding: 0.5rem;

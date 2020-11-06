@@ -1,5 +1,4 @@
 import React from "react"
-import { styled } from "linaria/react"
 import { css } from "linaria"
 import { Link } from "gatsby"
 import Footer from "./footer"
@@ -16,24 +15,21 @@ import "./fonts.css"
 /** Wrapper for most site pages, providing them with a navigation header and footer. */
 const Layout = (p: { title?: string; children: any }) => (
   <>
-    <Helmet>
-      <title>{p.title ? `${p.title} - ` : null} DAILP</title>
-    </Helmet>
-
-    <Sticky enabled={isMobile} innerZ={1}>
-      <Header aria-label="Site Header" id="header">
-        <HeaderContents>
+    <Helmet title={p.title ? `${p.title} - DAILP` : "DAILP"} />
+    <Sticky enabled={isMobile} innerZ={2}>
+      <header aria-label="Site Header" id="header" className={header}>
+        <nav className={headerContents}>
           <MobileNav />
           <h1 className={siteTitle}>
             <Link to="/">DAILP</Link>
           </h1>
-          <SubHeader>
+          <span className={subHeader}>
             Digital Archive of American Indian Languages Preservation and
             Perseverance
-          </SubHeader>
+          </span>
           <NavMenu />
-        </HeaderContents>
-      </Header>
+        </nav>
+      </header>
     </Sticky>
     {p.children}
     <Footer />
@@ -42,7 +38,7 @@ const Layout = (p: { title?: string; children: any }) => (
 
 export default Layout
 
-const Header = styled.header`
+const header = css`
   display: flex;
   flex-flow: row nowrap;
   justify-content: center;
@@ -51,7 +47,7 @@ const Header = styled.header`
   font-family: ${theme.fonts.header};
 `
 
-const HeaderContents = styled.nav`
+const headerContents = css`
   ${fullWidth}
   display: flex;
   flex-flow: row wrap;
@@ -61,7 +57,7 @@ const HeaderContents = styled.nav`
   }
 `
 
-const SubHeader = styled.span`
+const subHeader = css`
   font-size: 0.9rem;
   color: ${theme.colors.headings};
   padding-left: 1rem;
@@ -91,8 +87,6 @@ css`
     }
     html {
       font-size: ${theme.fontSizes.root};
-      width: 100vw;
-      overflow-x: hidden;
     }
     body {
       margin: 0;

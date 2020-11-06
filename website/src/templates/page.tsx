@@ -9,15 +9,6 @@ export default (p: { data: any }) => {
   const page = p.data.page
   return (
     <Layout title={page.headings[0]?.value}>
-      <Helmet>
-        <link
-          rel="stylesheet"
-          id="wpforms-full-css"
-          href="https://dailp.northeastern.edu/wp-content/plugins/wpforms-lite/assets/css/wpforms-full.min.css?ver=1.6.3.1"
-          type="text/css"
-          media="all"
-        />
-      </Helmet>
       <main className={padded}>
         <article
           className={wideArticle}
