@@ -185,9 +185,9 @@ type Dailp = {
   readonly allCollections: ReadonlyArray<Dailp_DocumentCollection>;
   /** Retrieves a full document from its unique identifier. */
   readonly document: Maybe<Dailp_AnnotatedDoc>;
-  readonly lexicalEntry: Maybe<Dailp_LexicalEntry>;
+  readonly lexicalEntry: Maybe<Dailp_AnnotatedForm>;
   /**
-   * Lists all words containing a morpheme with the given gloss.
+   * Lists all forms containing a morpheme with the given gloss.
    * Groups these words by the phonemic shape of the target morpheme.
    */
   readonly morphemesByShape: ReadonlyArray<Dailp_MorphemeReference>;
@@ -196,12 +196,16 @@ type Dailp = {
    * Groups these words by the document containing them.
    */
   readonly morphemesByDocument: ReadonlyArray<Dailp_WordsInDocument>;
+  /** Forms containing the given morpheme gloss or related ones clustered over time. */
+  readonly morphemeTimeClusters: ReadonlyArray<Dailp_FormsInTime>;
   /**
    * Retrieve information for the morpheme that corresponds to the given tag
    * string. For example, "3PL.B" is the standard string referring to a 3rd
    * person plural prefix.
    */
   readonly morphemeTag: Maybe<Dailp_MorphemeTag>;
+  /** Search for words that include the given query at any position. */
+  readonly wordSearch: ReadonlyArray<Dailp_AnnotatedForm>;
 };
 
 
@@ -230,8 +234,19 @@ type Dailp_morphemesByDocumentArgs = {
 };
 
 
+type Dailp_morphemeTimeClustersArgs = {
+  gloss: Scalars['String'];
+  clusterYears: Scalars['Int'];
+};
+
+
 type Dailp_morphemeTagArgs = {
   id: Scalars['String'];
+};
+
+
+type Dailp_wordSearchArgs = {
+  query: Scalars['String'];
 };
 
 type Dailp_AnnotatedDoc = {
@@ -262,7 +277,7 @@ type Dailp_AnnotatedDoc = {
    * All the words contained in this document, dropping structural formatting
    * like line and page breaks.
    */
-  readonly words: Maybe<ReadonlyArray<Dailp_AnnotatedForm>>;
+  readonly forms: Maybe<ReadonlyArray<Dailp_AnnotatedForm>>;
 };
 
 type Dailp_AnnotatedForm = {
@@ -273,7 +288,7 @@ type Dailp_AnnotatedForm = {
    */
   readonly root: Maybe<Dailp_MorphemeSegment>;
   /** All other observed words with the same root morpheme as this word. */
-  readonly similarWords: ReadonlyArray<Dailp_AnnotatedForm>;
+  readonly similarForms: ReadonlyArray<Dailp_AnnotatedForm>;
   /** The document that contains this word. */
   readonly document: Maybe<Dailp_AnnotatedDoc>;
   /** Position of this word in its containing document. */
@@ -282,6 +297,8 @@ type Dailp_AnnotatedForm = {
   readonly documentId: Maybe<Scalars['String']>;
   /** Original source text. */
   readonly source: Scalars['String'];
+  /** Normalized source text */
+  readonly normalizedSource: Maybe<Scalars['String']>;
   /** Romanized version of the word for simple phonetic pronunciation. */
   readonly simplePhonetics: Maybe<Scalars['String']>;
   /** Underlying phonemic representation of this word. */
@@ -295,6 +312,8 @@ type Dailp_AnnotatedForm = {
   readonly englishGloss: ReadonlyArray<Scalars['String']>;
   /** Further details about the annotation layers, including uncertainty. */
   readonly commentary: Maybe<Scalars['String']>;
+  /** The date and time this form was recorded */
+  readonly dateRecorded: Maybe<Dailp_DateTime>;
 };
 
 type Dailp_AnnotatedPhrase = {
@@ -345,21 +364,10 @@ enum Dailp_DocumentType {
   CORPUS = 'CORPUS'
 }
 
-type Dailp_LexicalEntry = {
-  readonly id: Scalars['String'];
-  /** The original source text in whatever orthography was used there */
-  readonly original: Scalars['String'];
-  /** The phonemic shape of the root and it's semi-unique gloss tag */
-  readonly root: Dailp_MorphemeSegment;
-  /** Plain English translations of root's meaning */
-  readonly rootTranslations: ReadonlyArray<Scalars['String']>;
-  /** The year this form was recorded */
-  readonly dateRecorded: Dailp_DateTime;
-  /** This form's position in its containing document */
-  readonly position: Maybe<Dailp_PositionInDocument>;
-  /** A collection of surface forms containing this root */
-  readonly surfaceForms: ReadonlyArray<Dailp_AnnotatedForm>;
-  readonly connectedForms: ReadonlyArray<Dailp_AnnotatedForm>;
+type Dailp_FormsInTime = {
+  readonly start: Dailp_DateTime;
+  readonly end: Dailp_DateTime;
+  readonly forms: ReadonlyArray<Dailp_AnnotatedForm>;
 };
 
 type Dailp_LineBreak = {
@@ -371,13 +379,15 @@ type Dailp_MorphemeReference = {
   /** Phonemic shape of the morpheme. */
   readonly morpheme: Scalars['String'];
   /** List of words that contain this morpheme. */
-  readonly words: ReadonlyArray<Dailp_AnnotatedForm>;
+  readonly forms: ReadonlyArray<Dailp_AnnotatedForm>;
 };
 
 type Dailp_MorphemeSegment = {
   /** Phonemic representation of the morpheme */
   readonly morpheme: Scalars['String'];
-  /** English gloss in standard DAILP format */
+  /** English gloss for display */
+  readonly displayGloss: Scalars['String'];
+  /** English gloss in standard DAILP format that refers to a lexical item */
   readonly gloss: Scalars['String'];
   readonly nextSeparator: Maybe<Scalars['String']>;
   /**
@@ -389,7 +399,7 @@ type Dailp_MorphemeSegment = {
    * All lexical entries that share the same gloss text as this morpheme.
    * This generally works for root morphemes.
    */
-  readonly lexicalEntries: ReadonlyArray<Dailp_LexicalEntry>;
+  readonly lexicalEntry: Maybe<Dailp_AnnotatedForm>;
 };
 
 
@@ -420,30 +430,6 @@ type Dailp_PersonAssociation = {
   readonly role: Scalars['String'];
 };
 
-type Dailp_PositionInDocument = {
-  /**
-   * Standard page reference for this position, which can be used in citation.
-   * Generally formatted like ID:PAGE, i.e "DF2018:55"
-   */
-  readonly pageReference: Scalars['String'];
-  /**
-   * Index reference for this position, more specific than `page_reference`.
-   * Generally used in corpus documents where there are few pages containing
-   * many forms each. Example: "WJ23:#21"
-   */
-  readonly indexReference: Scalars['String'];
-  /** Unique identifier of the source document */
-  readonly documentId: Scalars['String'];
-  /** 1-indexed page number */
-  readonly pageNumber: Scalars['Int'];
-  /**
-   * 1-indexed position indicating where the form sits in the ordering of all
-   * forms in the document. Used for relative ordering of forms from the
-   * same document.
-   */
-  readonly index: Scalars['Int'];
-};
-
 type Dailp_TranslatedSection = {
   /** Translation of this portion of the source text. */
   readonly translation: Dailp_TranslationBlock;
@@ -465,7 +451,7 @@ type Dailp_WordsInDocument = {
   /** What kind of document contains these words (e.g. manuscript vs dictionary) */
   readonly documentType: Maybe<Dailp_DocumentType>;
   /** List of annotated and potentially segmented forms */
-  readonly words: ReadonlyArray<Dailp_AnnotatedForm>;
+  readonly forms: ReadonlyArray<Dailp_AnnotatedForm>;
 };
 
 
@@ -1433,6 +1419,8 @@ type Query_allDirectoryArgs = {
 type Query_siteArgs = {
   buildTime: Maybe<DateQueryOperatorInput>;
   siteMetadata: Maybe<SiteSiteMetadataFilterInput>;
+  port: Maybe<IntQueryOperatorInput>;
+  host: Maybe<StringQueryOperatorInput>;
   polyfill: Maybe<BooleanQueryOperatorInput>;
   pathPrefix: Maybe<StringQueryOperatorInput>;
   id: Maybe<StringQueryOperatorInput>;
@@ -1456,15 +1444,15 @@ type Query_sitePageArgs = {
   internalComponentName: Maybe<StringQueryOperatorInput>;
   componentChunkName: Maybe<StringQueryOperatorInput>;
   matchPath: Maybe<StringQueryOperatorInput>;
-  id: Maybe<StringQueryOperatorInput>;
-  parent: Maybe<NodeFilterInput>;
-  children: Maybe<NodeFilterListInput>;
-  internal: Maybe<InternalFilterInput>;
   isCreatedByStatefulCreatePages: Maybe<BooleanQueryOperatorInput>;
   context: Maybe<SitePageContextFilterInput>;
   pluginCreator: Maybe<SitePluginFilterInput>;
   pluginCreatorId: Maybe<StringQueryOperatorInput>;
   componentPath: Maybe<StringQueryOperatorInput>;
+  id: Maybe<StringQueryOperatorInput>;
+  parent: Maybe<NodeFilterInput>;
+  children: Maybe<NodeFilterListInput>;
+  internal: Maybe<InternalFilterInput>;
 };
 
 
@@ -1555,6 +1543,8 @@ type Query_allSitePluginArgs = {
 type Site = Node & {
   readonly buildTime: Maybe<Scalars['Date']>;
   readonly siteMetadata: Maybe<SiteSiteMetadata>;
+  readonly port: Maybe<Scalars['Int']>;
+  readonly host: Maybe<Scalars['String']>;
   readonly polyfill: Maybe<Scalars['Boolean']>;
   readonly pathPrefix: Maybe<Scalars['String']>;
   readonly id: Scalars['ID'];
@@ -1757,6 +1747,8 @@ enum SiteFieldsEnum {
   buildTime = 'buildTime',
   siteMetadata___title = 'siteMetadata.title',
   siteMetadata___description = 'siteMetadata.description',
+  port = 'port',
+  host = 'host',
   polyfill = 'polyfill',
   pathPrefix = 'pathPrefix',
   id = 'id',
@@ -1850,6 +1842,8 @@ enum SiteFieldsEnum {
 type SiteFilterInput = {
   readonly buildTime: Maybe<DateQueryOperatorInput>;
   readonly siteMetadata: Maybe<SiteSiteMetadataFilterInput>;
+  readonly port: Maybe<IntQueryOperatorInput>;
+  readonly host: Maybe<StringQueryOperatorInput>;
   readonly polyfill: Maybe<BooleanQueryOperatorInput>;
   readonly pathPrefix: Maybe<StringQueryOperatorInput>;
   readonly id: Maybe<StringQueryOperatorInput>;
@@ -1873,15 +1867,15 @@ type SitePage = Node & {
   readonly internalComponentName: Scalars['String'];
   readonly componentChunkName: Scalars['String'];
   readonly matchPath: Maybe<Scalars['String']>;
-  readonly id: Scalars['ID'];
-  readonly parent: Maybe<Node>;
-  readonly children: ReadonlyArray<Node>;
-  readonly internal: Internal;
   readonly isCreatedByStatefulCreatePages: Maybe<Scalars['Boolean']>;
   readonly context: Maybe<SitePageContext>;
   readonly pluginCreator: Maybe<SitePlugin>;
   readonly pluginCreatorId: Maybe<Scalars['String']>;
   readonly componentPath: Maybe<Scalars['String']>;
+  readonly id: Scalars['ID'];
+  readonly parent: Maybe<Node>;
+  readonly children: ReadonlyArray<Node>;
+  readonly internal: Internal;
 };
 
 type SitePageConnection = {
@@ -1929,92 +1923,6 @@ enum SitePageFieldsEnum {
   internalComponentName = 'internalComponentName',
   componentChunkName = 'componentChunkName',
   matchPath = 'matchPath',
-  id = 'id',
-  parent___id = 'parent.id',
-  parent___parent___id = 'parent.parent.id',
-  parent___parent___parent___id = 'parent.parent.parent.id',
-  parent___parent___parent___children = 'parent.parent.parent.children',
-  parent___parent___children = 'parent.parent.children',
-  parent___parent___children___id = 'parent.parent.children.id',
-  parent___parent___children___children = 'parent.parent.children.children',
-  parent___parent___internal___content = 'parent.parent.internal.content',
-  parent___parent___internal___contentDigest = 'parent.parent.internal.contentDigest',
-  parent___parent___internal___description = 'parent.parent.internal.description',
-  parent___parent___internal___fieldOwners = 'parent.parent.internal.fieldOwners',
-  parent___parent___internal___ignoreType = 'parent.parent.internal.ignoreType',
-  parent___parent___internal___mediaType = 'parent.parent.internal.mediaType',
-  parent___parent___internal___owner = 'parent.parent.internal.owner',
-  parent___parent___internal___type = 'parent.parent.internal.type',
-  parent___children = 'parent.children',
-  parent___children___id = 'parent.children.id',
-  parent___children___parent___id = 'parent.children.parent.id',
-  parent___children___parent___children = 'parent.children.parent.children',
-  parent___children___children = 'parent.children.children',
-  parent___children___children___id = 'parent.children.children.id',
-  parent___children___children___children = 'parent.children.children.children',
-  parent___children___internal___content = 'parent.children.internal.content',
-  parent___children___internal___contentDigest = 'parent.children.internal.contentDigest',
-  parent___children___internal___description = 'parent.children.internal.description',
-  parent___children___internal___fieldOwners = 'parent.children.internal.fieldOwners',
-  parent___children___internal___ignoreType = 'parent.children.internal.ignoreType',
-  parent___children___internal___mediaType = 'parent.children.internal.mediaType',
-  parent___children___internal___owner = 'parent.children.internal.owner',
-  parent___children___internal___type = 'parent.children.internal.type',
-  parent___internal___content = 'parent.internal.content',
-  parent___internal___contentDigest = 'parent.internal.contentDigest',
-  parent___internal___description = 'parent.internal.description',
-  parent___internal___fieldOwners = 'parent.internal.fieldOwners',
-  parent___internal___ignoreType = 'parent.internal.ignoreType',
-  parent___internal___mediaType = 'parent.internal.mediaType',
-  parent___internal___owner = 'parent.internal.owner',
-  parent___internal___type = 'parent.internal.type',
-  children = 'children',
-  children___id = 'children.id',
-  children___parent___id = 'children.parent.id',
-  children___parent___parent___id = 'children.parent.parent.id',
-  children___parent___parent___children = 'children.parent.parent.children',
-  children___parent___children = 'children.parent.children',
-  children___parent___children___id = 'children.parent.children.id',
-  children___parent___children___children = 'children.parent.children.children',
-  children___parent___internal___content = 'children.parent.internal.content',
-  children___parent___internal___contentDigest = 'children.parent.internal.contentDigest',
-  children___parent___internal___description = 'children.parent.internal.description',
-  children___parent___internal___fieldOwners = 'children.parent.internal.fieldOwners',
-  children___parent___internal___ignoreType = 'children.parent.internal.ignoreType',
-  children___parent___internal___mediaType = 'children.parent.internal.mediaType',
-  children___parent___internal___owner = 'children.parent.internal.owner',
-  children___parent___internal___type = 'children.parent.internal.type',
-  children___children = 'children.children',
-  children___children___id = 'children.children.id',
-  children___children___parent___id = 'children.children.parent.id',
-  children___children___parent___children = 'children.children.parent.children',
-  children___children___children = 'children.children.children',
-  children___children___children___id = 'children.children.children.id',
-  children___children___children___children = 'children.children.children.children',
-  children___children___internal___content = 'children.children.internal.content',
-  children___children___internal___contentDigest = 'children.children.internal.contentDigest',
-  children___children___internal___description = 'children.children.internal.description',
-  children___children___internal___fieldOwners = 'children.children.internal.fieldOwners',
-  children___children___internal___ignoreType = 'children.children.internal.ignoreType',
-  children___children___internal___mediaType = 'children.children.internal.mediaType',
-  children___children___internal___owner = 'children.children.internal.owner',
-  children___children___internal___type = 'children.children.internal.type',
-  children___internal___content = 'children.internal.content',
-  children___internal___contentDigest = 'children.internal.contentDigest',
-  children___internal___description = 'children.internal.description',
-  children___internal___fieldOwners = 'children.internal.fieldOwners',
-  children___internal___ignoreType = 'children.internal.ignoreType',
-  children___internal___mediaType = 'children.internal.mediaType',
-  children___internal___owner = 'children.internal.owner',
-  children___internal___type = 'children.internal.type',
-  internal___content = 'internal.content',
-  internal___contentDigest = 'internal.contentDigest',
-  internal___description = 'internal.description',
-  internal___fieldOwners = 'internal.fieldOwners',
-  internal___ignoreType = 'internal.ignoreType',
-  internal___mediaType = 'internal.mediaType',
-  internal___owner = 'internal.owner',
-  internal___type = 'internal.type',
   isCreatedByStatefulCreatePages = 'isCreatedByStatefulCreatePages',
   context___id = 'context.id',
   context___name = 'context.name',
@@ -2101,7 +2009,93 @@ enum SitePageFieldsEnum {
   pluginCreator___packageJson___peerDependencies___version = 'pluginCreator.packageJson.peerDependencies.version',
   pluginCreator___packageJson___keywords = 'pluginCreator.packageJson.keywords',
   pluginCreatorId = 'pluginCreatorId',
-  componentPath = 'componentPath'
+  componentPath = 'componentPath',
+  id = 'id',
+  parent___id = 'parent.id',
+  parent___parent___id = 'parent.parent.id',
+  parent___parent___parent___id = 'parent.parent.parent.id',
+  parent___parent___parent___children = 'parent.parent.parent.children',
+  parent___parent___children = 'parent.parent.children',
+  parent___parent___children___id = 'parent.parent.children.id',
+  parent___parent___children___children = 'parent.parent.children.children',
+  parent___parent___internal___content = 'parent.parent.internal.content',
+  parent___parent___internal___contentDigest = 'parent.parent.internal.contentDigest',
+  parent___parent___internal___description = 'parent.parent.internal.description',
+  parent___parent___internal___fieldOwners = 'parent.parent.internal.fieldOwners',
+  parent___parent___internal___ignoreType = 'parent.parent.internal.ignoreType',
+  parent___parent___internal___mediaType = 'parent.parent.internal.mediaType',
+  parent___parent___internal___owner = 'parent.parent.internal.owner',
+  parent___parent___internal___type = 'parent.parent.internal.type',
+  parent___children = 'parent.children',
+  parent___children___id = 'parent.children.id',
+  parent___children___parent___id = 'parent.children.parent.id',
+  parent___children___parent___children = 'parent.children.parent.children',
+  parent___children___children = 'parent.children.children',
+  parent___children___children___id = 'parent.children.children.id',
+  parent___children___children___children = 'parent.children.children.children',
+  parent___children___internal___content = 'parent.children.internal.content',
+  parent___children___internal___contentDigest = 'parent.children.internal.contentDigest',
+  parent___children___internal___description = 'parent.children.internal.description',
+  parent___children___internal___fieldOwners = 'parent.children.internal.fieldOwners',
+  parent___children___internal___ignoreType = 'parent.children.internal.ignoreType',
+  parent___children___internal___mediaType = 'parent.children.internal.mediaType',
+  parent___children___internal___owner = 'parent.children.internal.owner',
+  parent___children___internal___type = 'parent.children.internal.type',
+  parent___internal___content = 'parent.internal.content',
+  parent___internal___contentDigest = 'parent.internal.contentDigest',
+  parent___internal___description = 'parent.internal.description',
+  parent___internal___fieldOwners = 'parent.internal.fieldOwners',
+  parent___internal___ignoreType = 'parent.internal.ignoreType',
+  parent___internal___mediaType = 'parent.internal.mediaType',
+  parent___internal___owner = 'parent.internal.owner',
+  parent___internal___type = 'parent.internal.type',
+  children = 'children',
+  children___id = 'children.id',
+  children___parent___id = 'children.parent.id',
+  children___parent___parent___id = 'children.parent.parent.id',
+  children___parent___parent___children = 'children.parent.parent.children',
+  children___parent___children = 'children.parent.children',
+  children___parent___children___id = 'children.parent.children.id',
+  children___parent___children___children = 'children.parent.children.children',
+  children___parent___internal___content = 'children.parent.internal.content',
+  children___parent___internal___contentDigest = 'children.parent.internal.contentDigest',
+  children___parent___internal___description = 'children.parent.internal.description',
+  children___parent___internal___fieldOwners = 'children.parent.internal.fieldOwners',
+  children___parent___internal___ignoreType = 'children.parent.internal.ignoreType',
+  children___parent___internal___mediaType = 'children.parent.internal.mediaType',
+  children___parent___internal___owner = 'children.parent.internal.owner',
+  children___parent___internal___type = 'children.parent.internal.type',
+  children___children = 'children.children',
+  children___children___id = 'children.children.id',
+  children___children___parent___id = 'children.children.parent.id',
+  children___children___parent___children = 'children.children.parent.children',
+  children___children___children = 'children.children.children',
+  children___children___children___id = 'children.children.children.id',
+  children___children___children___children = 'children.children.children.children',
+  children___children___internal___content = 'children.children.internal.content',
+  children___children___internal___contentDigest = 'children.children.internal.contentDigest',
+  children___children___internal___description = 'children.children.internal.description',
+  children___children___internal___fieldOwners = 'children.children.internal.fieldOwners',
+  children___children___internal___ignoreType = 'children.children.internal.ignoreType',
+  children___children___internal___mediaType = 'children.children.internal.mediaType',
+  children___children___internal___owner = 'children.children.internal.owner',
+  children___children___internal___type = 'children.children.internal.type',
+  children___internal___content = 'children.internal.content',
+  children___internal___contentDigest = 'children.internal.contentDigest',
+  children___internal___description = 'children.internal.description',
+  children___internal___fieldOwners = 'children.internal.fieldOwners',
+  children___internal___ignoreType = 'children.internal.ignoreType',
+  children___internal___mediaType = 'children.internal.mediaType',
+  children___internal___owner = 'children.internal.owner',
+  children___internal___type = 'children.internal.type',
+  internal___content = 'internal.content',
+  internal___contentDigest = 'internal.contentDigest',
+  internal___description = 'internal.description',
+  internal___fieldOwners = 'internal.fieldOwners',
+  internal___ignoreType = 'internal.ignoreType',
+  internal___mediaType = 'internal.mediaType',
+  internal___owner = 'internal.owner',
+  internal___type = 'internal.type'
 }
 
 type SitePageFilterInput = {
@@ -2110,15 +2104,15 @@ type SitePageFilterInput = {
   readonly internalComponentName: Maybe<StringQueryOperatorInput>;
   readonly componentChunkName: Maybe<StringQueryOperatorInput>;
   readonly matchPath: Maybe<StringQueryOperatorInput>;
-  readonly id: Maybe<StringQueryOperatorInput>;
-  readonly parent: Maybe<NodeFilterInput>;
-  readonly children: Maybe<NodeFilterListInput>;
-  readonly internal: Maybe<InternalFilterInput>;
   readonly isCreatedByStatefulCreatePages: Maybe<BooleanQueryOperatorInput>;
   readonly context: Maybe<SitePageContextFilterInput>;
   readonly pluginCreator: Maybe<SitePluginFilterInput>;
   readonly pluginCreatorId: Maybe<StringQueryOperatorInput>;
   readonly componentPath: Maybe<StringQueryOperatorInput>;
+  readonly id: Maybe<StringQueryOperatorInput>;
+  readonly parent: Maybe<NodeFilterInput>;
+  readonly children: Maybe<NodeFilterListInput>;
+  readonly internal: Maybe<InternalFilterInput>;
 };
 
 type SitePageGroupConnection = {
@@ -2491,6 +2485,42 @@ type StringQueryOperatorInput = {
   readonly glob: Maybe<Scalars['String']>;
 };
 
+type FormFieldsFragment = (
+  Pick<Dailp_AnnotatedForm, 'index' | 'source' | 'simplePhonetics' | 'phonemic' | 'englishGloss' | 'commentary'>
+  & { readonly segments: Maybe<ReadonlyArray<(
+    Pick<Dailp_MorphemeSegment, 'morpheme' | 'gloss' | 'displayGloss' | 'nextSeparator'>
+    & { simpleMorpheme: Dailp_MorphemeSegment['morpheme'] }
+    & { readonly matchingTag: Maybe<Pick<Dailp_MorphemeTag, 'crg' | 'learner'>> }
+  )>> }
+);
+
+type BlockFieldsFragment = (
+  Pick<Dailp_AnnotatedPhrase, 'ty' | 'index'>
+  & { readonly parts: ReadonlyArray<{ readonly __typename: 'Dailp_AnnotatedPhrase' } | (
+    { readonly __typename: 'Dailp_AnnotatedForm' }
+    & FormFieldsFragment
+  ) | { readonly __typename: 'Dailp_LineBreak' } | { readonly __typename: 'Dailp_PageBreak' }> }
+);
+
+type AnnotatedDocumentQueryVariables = Exact<{
+  id: Scalars['String'];
+}>;
+
+
+type AnnotatedDocumentQuery = { readonly dailp: { readonly document: Maybe<(
+      Pick<Dailp_AnnotatedDoc, 'id' | 'title' | 'slug' | 'pageImages'>
+      & { readonly collection: Maybe<Pick<Dailp_DocumentCollection, 'name' | 'slug'>>, readonly date: Maybe<Pick<Dailp_DateTime, 'year'>>, readonly translatedSegments: Maybe<ReadonlyArray<{ readonly source: (
+          { readonly __typename: 'Dailp_AnnotatedPhrase' }
+          & BlockFieldsFragment
+        ) | (
+          { readonly __typename: 'Dailp_AnnotatedForm' }
+          & FormFieldsFragment
+        ) | { readonly __typename: 'Dailp_LineBreak' } | (
+          { readonly __typename: 'Dailp_PageBreak' }
+          & Pick<Dailp_PageBreak, 'index'>
+        ), readonly translation: Pick<Dailp_TranslationBlock, 'text'> }>> }
+    )> } };
+
 type DocumentDetailsQueryVariables = Exact<{
   id: Scalars['String'];
 }>;
@@ -2500,16 +2530,6 @@ type DocumentDetailsQuery = { readonly dailp: { readonly document: Maybe<(
       Pick<Dailp_AnnotatedDoc, 'id' | 'slug' | 'title'>
       & { readonly collection: Maybe<Pick<Dailp_DocumentCollection, 'name' | 'slug'>>, readonly date: Maybe<Pick<Dailp_DateTime, 'year'>>, readonly people: ReadonlyArray<Pick<Dailp_PersonAssociation, 'name' | 'role'>> }
     )> } };
-
-type Unnamed_1_QueryVariables = Exact<{ [key: string]: never; }>;
-
-
-type Unnamed_1_Query = { readonly currentBuildDate: Maybe<Pick<CurrentBuildDate, 'currentDate'>> };
-
-type IndexPageQueryVariables = Exact<{ [key: string]: never; }>;
-
-
-type IndexPageQuery = { readonly dailp: { readonly allCollections: ReadonlyArray<Pick<Dailp_DocumentCollection, 'name' | 'slug'>> } };
 
 type CollectionQueryVariables = Exact<{
   name: Scalars['String'];
@@ -2521,28 +2541,14 @@ type CollectionQuery = { readonly dailp: { readonly allDocuments: ReadonlyArray<
       & { readonly date: Maybe<Pick<Dailp_DateTime, 'year'>> }
     )> } };
 
-type AnnotatedDocumentQueryVariables = Exact<{
-  id: Scalars['String'];
-}>;
+type PagesQueryQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-type AnnotatedDocumentQuery = { readonly dailp: { readonly document: Maybe<(
-      Pick<Dailp_AnnotatedDoc, 'id' | 'title' | 'slug' | 'pageImages'>
-      & { readonly collection: Maybe<Pick<Dailp_DocumentCollection, 'name' | 'slug'>>, readonly date: Maybe<Pick<Dailp_DateTime, 'year'>>, readonly translatedSegments: Maybe<ReadonlyArray<{ readonly source: BlockFieldsFragment | FormFieldsFragment | Pick<Dailp_PageBreak, 'index'>, readonly translation: Pick<Dailp_TranslationBlock, 'text'> }>> }
-    )> } };
+type PagesQueryQuery = { readonly allSitePage: { readonly nodes: ReadonlyArray<Pick<SitePage, 'path'>> } };
 
-type BlockFieldsFragment = (
-  Pick<Dailp_AnnotatedPhrase, 'ty' | 'index'>
-  & { readonly parts: ReadonlyArray<FormFieldsFragment> }
-);
+type IndexPageQueryVariables = Exact<{ [key: string]: never; }>;
 
-type FormFieldsFragment = (
-  Pick<Dailp_AnnotatedForm, 'index' | 'source' | 'simplePhonetics' | 'phonemic' | 'englishGloss' | 'commentary'>
-  & { readonly segments: Maybe<ReadonlyArray<(
-    Pick<Dailp_MorphemeSegment, 'morpheme' | 'gloss' | 'nextSeparator'>
-    & { simpleMorpheme: Dailp_MorphemeSegment['morpheme'] }
-    & { readonly matchingTag: Maybe<Pick<Dailp_MorphemeTag, 'crg' | 'learner'>> }
-  )>> }
-);
+
+type IndexPageQuery = { readonly dailp: { readonly allCollections: ReadonlyArray<Pick<Dailp_DocumentCollection, 'name' | 'slug'>> } };
 
 }

@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct DateTime(chrono::DateTime<chrono::Utc>);
+#[derive(Serialize, Deserialize, Clone, Debug, PartialOrd, Ord, PartialEq, Eq)]
+pub struct DateTime(pub chrono::DateTime<chrono::Utc>);
 
 impl DateTime {
     pub fn new(internal: chrono::DateTime<chrono::Utc>) -> Self {

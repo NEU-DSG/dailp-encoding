@@ -1,4 +1,4 @@
-use crate::{AnnotatedDoc, Database, MorphemeSegment};
+use crate::{AnnotatedDoc, Database, DateTime, MorphemeSegment, PositionInDocument};
 use async_graphql::FieldResult;
 use serde::{Deserialize, Serialize};
 
@@ -7,7 +7,6 @@ use serde::{Deserialize, Serialize};
 /// source text, multiple layers of linguistic annotation, and annotator notes.
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct AnnotatedForm {
-    pub index: i32,
     pub source: String,
     /// A normalized version of the word.
     pub normalized_source: Option<String>,
@@ -21,9 +20,11 @@ pub struct AnnotatedForm {
     pub line_break: Option<i32>,
     /// The character index of a mid-word page break, if there is one.
     pub page_break: Option<i32>,
-    pub document_id: Option<String>,
+    pub position: Option<PositionInDocument>,
+    pub date_recorded: Option<DateTime>,
 }
 
+#[async_graphql::SimpleObject]
 #[derive(Serialize, Deserialize)]
 pub struct UniqueAnnotatedForm {
     #[serde(rename = "_id")]
@@ -37,7 +38,7 @@ impl AnnotatedForm {
         self.segments.as_ref().and_then(|segments| {
             segments
                 .iter()
-                .find(|seg| seg.gloss.starts_with(|c: char| c.is_lowercase()))
+                .find(|seg| seg.gloss.contains(|c: char| c.is_lowercase()))
         })
     }
 }
@@ -45,28 +46,36 @@ impl AnnotatedForm {
 #[async_graphql::Object]
 impl AnnotatedForm {
     /// The root morpheme of the word.
-    /// For example, a verb form glossed as "he catches" has the root morpheme
+    /// For example, a verb form glossed as "he catches" might have a root morpheme
     /// corresponding to "catch."
     async fn root(&self) -> Option<&MorphemeSegment> {
         self.find_root()
     }
 
     /// All other observed words with the same root morpheme as this word.
-    async fn similar_words(
+    async fn similar_forms(
         &self,
         context: &async_graphql::Context<'_>,
     ) -> FieldResult<Vec<AnnotatedForm>> {
         if let Some(root) = self.find_root() {
             let db = context.data::<Database>()?;
-            let connected = db.connected_entries(&root.gloss);
-            let similar_roots = db.morphemes(root.gloss.clone());
+            // Find the forms with the exact same root.
+            let similar_roots = db.morphemes(&root.gloss);
+            // Find forms with directly linked roots.
+            let connected = db.connected_forms(&root.gloss);
             let (connected, similar_roots) = futures::join!(connected, similar_roots);
             Ok(similar_roots?
                 .into_iter()
-                .flat_map(|r| r.words)
+                .flat_map(|r| r.forms)
                 .chain(connected?)
                 // Only return other similar words.
-                .filter(|word| word.index != self.index || word.document_id != self.document_id)
+                .filter(|word| {
+                    if let (Some(a), Some(b)) = (&word.position, &self.position) {
+                        a != b || word.source != self.source
+                    } else {
+                        true
+                    }
+                })
                 .collect())
         } else {
             Ok(Vec::new())
@@ -78,8 +87,11 @@ impl AnnotatedForm {
         &self,
         context: &async_graphql::Context<'_>,
     ) -> FieldResult<Option<AnnotatedDoc>> {
-        Ok(if let Some(id) = self.document_id.as_ref() {
-            context.data::<Database>()?.document(id).await?
+        Ok(if let Some(pos) = self.position.as_ref() {
+            context
+                .data::<Database>()?
+                .document(&pos.document_id)
+                .await?
         } else {
             None
         })
@@ -87,15 +99,24 @@ impl AnnotatedForm {
 
     /// Position of this word in its containing document.
     async fn index(&self) -> i32 {
-        self.index
+        self.position.as_ref().map(|p| p.index).unwrap_or(0)
     }
     /// The unique identifier of the containing document.
-    async fn document_id(&self) -> &Option<String> {
-        &self.document_id
+    async fn document_id(&self) -> Option<&str> {
+        self.position.as_ref().map(|p| &*p.document_id)
     }
+
+    async fn position(&self) -> &Option<PositionInDocument> {
+        &self.position
+    }
+
     /// Original source text.
     async fn source(&self) -> &str {
         &self.source
+    }
+    /// Normalized source text
+    async fn normalized_source(&self) -> &Option<String> {
+        &self.normalized_source
     }
     /// Romanized version of the word for simple phonetic pronunciation.
     async fn simple_phonetics(&self) -> &Option<String> {
@@ -117,5 +138,9 @@ impl AnnotatedForm {
     /// Further details about the annotation layers, including uncertainty.
     async fn commentary(&self) -> &Option<String> {
         &self.commentary
+    }
+    /// The date and time this form was recorded
+    async fn date_recorded(&self) -> &Option<DateTime> {
+        &self.date_recorded
     }
 }

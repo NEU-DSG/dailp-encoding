@@ -95,10 +95,10 @@ impl AnnotatedDoc {
 
     /// All the words contained in this document, dropping structural formatting
     /// like line and page breaks.
-    async fn words(&self) -> Option<Vec<&AnnotatedForm>> {
+    async fn forms(&self) -> Option<Vec<&AnnotatedForm>> {
         self.segments
             .as_ref()
-            .map(|segments| segments.iter().flat_map(|s| s.source.words()).collect())
+            .map(|segments| segments.iter().flat_map(|s| s.source.forms()).collect())
     }
 }
 
@@ -131,10 +131,10 @@ pub enum AnnotatedSeg {
     PageBreak(PageBreak),
 }
 impl AnnotatedSeg {
-    pub fn words(&self) -> Vec<&AnnotatedForm> {
+    pub fn forms(&self) -> Vec<&AnnotatedForm> {
         use AnnotatedSeg::*;
         match self {
-            Block(block) => block.parts.iter().flat_map(|s| s.words()).collect(),
+            Block(block) => block.parts.iter().flat_map(|s| s.forms()).collect(),
             Word(w) => vec![w],
             LineBreak(_) => Vec::new(),
             PageBreak(_) => Vec::new(),

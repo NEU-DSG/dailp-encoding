@@ -26,7 +26,7 @@ const BLOCK_END: &str = "}";
 const OUTPUT_DIR: &str = "../xml";
 
 pub struct LexicalEntryWithForms {
-    pub entry: LexicalEntry,
+    pub entry: UniqueAnnotatedForm,
     pub forms: Vec<UniqueAnnotatedForm>,
 }
 
@@ -40,7 +40,7 @@ pub async fn migrate_documents_to_db(
     // Combine the documents into one object.
     let docs = inputs.into_iter().map(|(meta, lines)| {
         let annotated = AnnotatedLine::many_from_semantic(&lines);
-        let segments = AnnotatedLine::to_segments(annotated, &meta.id);
+        let segments = AnnotatedLine::to_segments(annotated, &meta.id, &meta.date);
         AnnotatedDoc::new(meta, segments)
     });
 
@@ -72,7 +72,7 @@ pub fn write_to_file(meta: DocumentMetadata, lines: &[SemanticLine]) -> Result<(
     let file_name = format!("{}/{}.xml", OUTPUT_DIR, meta.id);
     println!("writing to {}", file_name);
     tera.register_filter("convert_breaks", convert_breaks);
-    let segments = AnnotatedLine::to_segments(annotated, &meta.id);
+    let segments = AnnotatedLine::to_segments(annotated, &meta.id, &meta.date);
     let contents = tera.render(
         "template.tera.xml",
         &tera::Context::from_serialize(AnnotatedDoc::new(meta, segments))?,
@@ -161,9 +161,11 @@ impl SheetResult {
                     let root_gloss = root_values.next()?;
                     let root_id = LexicalEntry::make_id(doc_id, &root_gloss);
                     let mut form_values = root_values.clone().skip(after_root);
+                    let date = DateTime::new(chrono::Utc.ymd(year, 1, 1).and_hms(0, 0, 0));
                     Some(LexicalEntryWithForms {
                         forms: root_verb_surface_forms(
                             doc_id,
+                            &date,
                             &root,
                             &root_id,
                             &mut form_values,
@@ -172,27 +174,34 @@ impl SheetResult {
                             has_comment,
                             true,
                         ),
-                        entry: LexicalEntry {
-                            id: root_id,
-                            root_translations: root_values
-                                .take(translations)
-                                .map(|s| s.trim().to_owned())
-                                .filter(|s| !s.is_empty())
-                                .collect(),
-                            root: MorphemeSegment::new(
-                                convert_udb(&root).to_dailp(),
-                                root_gloss,
-                                None,
-                            ),
-                            date_recorded: DateTime::new(
-                                chrono::Utc.ymd(year, 1, 1).and_hms(0, 0, 0),
-                            ),
-                            original: root,
-                            position: Some(PositionInDocument {
-                                document_id: doc_id.to_owned(),
-                                page_number: 1,
-                                index: index as i64 + 1,
-                            }),
+                        entry: UniqueAnnotatedForm {
+                            id: root_id.clone(),
+                            form: AnnotatedForm {
+                                simple_phonetics: None,
+                                normalized_source: None,
+                                phonemic: None,
+                                commentary: None,
+                                line_break: None,
+                                page_break: None,
+
+                                english_gloss: root_values
+                                    .take(translations)
+                                    .map(|s| s.trim().to_owned())
+                                    .filter(|s| !s.is_empty())
+                                    .collect(),
+                                segments: Some(vec![MorphemeSegment::new(
+                                    convert_udb(&root).to_dailp(),
+                                    root_id,
+                                    None,
+                                )]),
+                                date_recorded: Some(date),
+                                source: root,
+                                position: Some(PositionInDocument {
+                                    document_id: doc_id.to_owned(),
+                                    page_number: 1,
+                                    index: index as i32 + 1,
+                                }),
+                            },
                         },
                     })
                 } else {
@@ -209,49 +218,59 @@ impl SheetResult {
             .into_par_iter()
             // First two rows are simply headers.
             .skip(2)
+            .enumerate()
+            .filter(|(_idx, cols)| cols.len() > 4 && !cols[1].is_empty())
             // The rest are relevant to the noun itself.
-            .filter_map(|columns| {
+            .filter_map(|(idx, columns)| {
                 // The columns are as follows: key, root, root gloss, page ref,
                 // category, tags, surface forms.
 
-                if columns.len() > 4 && !columns[1].is_empty() {
-                    // Skip reference numbers for now.
-                    let mut root_values = columns.into_iter();
-                    let _key = root_values.next()?;
-                    let root = root_values.next()?;
-                    let root_gloss = root_values.next()?;
-                    let root_id = LexicalEntry::make_id(doc_id, &root_gloss);
-                    // Skip page ref.
-                    let mut form_values = root_values.skip(1);
-                    Some(LexicalEntryWithForms {
-                        forms: root_verb_surface_forms(
-                            doc_id,
-                            &root,
-                            &root_id,
-                            &mut form_values,
-                            3,
-                            true,
-                            true,
-                            false,
-                        ),
-                        entry: LexicalEntry {
-                            id: root_id,
-                            root: MorphemeSegment::new(
+                // Skip reference numbers for now.
+                let mut root_values = columns.into_iter();
+                let _key = root_values.next()?;
+                let root = root_values.next()?;
+                let root_gloss = root_values.next()?;
+                let root_id = LexicalEntry::make_id(doc_id, &root_gloss);
+                // Skip page ref.
+                let mut form_values = root_values.skip(1);
+                let date = DateTime::new(chrono::Utc.ymd(year, 1, 1).and_hms(0, 0, 0));
+                Some(LexicalEntryWithForms {
+                    forms: root_verb_surface_forms(
+                        doc_id,
+                        &date,
+                        &root,
+                        &root_id,
+                        &mut form_values,
+                        3,
+                        true,
+                        true,
+                        false,
+                    ),
+                    entry: UniqueAnnotatedForm {
+                        id: root_id.clone(),
+                        form: AnnotatedForm {
+                            normalized_source: None,
+                            simple_phonetics: None,
+                            phonemic: None,
+                            commentary: None,
+                            line_break: None,
+                            page_break: None,
+                            segments: Some(vec![MorphemeSegment::new(
                                 convert_udb(&root).to_dailp(),
-                                root_gloss,
+                                root_id,
                                 None,
-                            ),
-                            root_translations: Vec::new(),
-                            date_recorded: DateTime::new(
-                                chrono::Utc.ymd(year, 1, 1).and_hms(0, 0, 0),
-                            ),
-                            original: root,
-                            position: None,
+                            )]),
+                            english_gloss: vec![root_gloss],
+                            date_recorded: Some(date),
+                            source: root,
+                            position: Some(PositionInDocument {
+                                document_id: doc_id.to_owned(),
+                                index: idx as i32 + 1,
+                                page_number: 1,
+                            }),
                         },
-                    })
-                } else {
-                    None
-                }
+                    },
+                })
             })
             .collect())
     }
@@ -270,7 +289,8 @@ impl SheetResult {
             // First two rows are simply headers.
             .skip(2)
             // The rest are relevant to the noun itself.
-            .filter_map(|columns| {
+            .enumerate()
+            .filter_map(|(idx, columns)| {
                 // The columns are as follows: key, root, root gloss, page ref,
                 // category, tags, surface forms.
 
@@ -285,9 +305,11 @@ impl SheetResult {
                     let root_id = LexicalEntry::make_id(doc_id, &root_gloss);
                     // Skip page ref and category.
                     let mut form_values = root_values.skip(after_root);
+                    let date = DateTime::new(chrono::Utc.ymd(year, 1, 1).and_hms(0, 0, 0));
                     Some(LexicalEntryWithForms {
                         forms: vec![root_noun_surface_form(
                             doc_id,
+                            &date,
                             &root,
                             &root_id,
                             &mut form_values,
@@ -295,19 +317,29 @@ impl SheetResult {
                         .into_iter()
                         .filter_map(|x| x)
                         .collect(),
-                        entry: LexicalEntry {
-                            id: root_id,
-                            root: MorphemeSegment::new(
-                                convert_udb(&root).to_dailp(),
-                                root_gloss,
-                                None,
-                            ),
-                            root_translations: Vec::new(),
-                            date_recorded: DateTime::new(
-                                chrono::Utc.ymd(year, 1, 1).and_hms(0, 0, 0),
-                            ),
-                            original: root,
-                            position: None,
+                        entry: UniqueAnnotatedForm {
+                            id: root_id.clone(),
+                            form: AnnotatedForm {
+                                position: Some(PositionInDocument {
+                                    document_id: doc_id.to_owned(),
+                                    index: idx as i32 + 1,
+                                    page_number: 1,
+                                }),
+                                normalized_source: None,
+                                simple_phonetics: None,
+                                phonemic: None,
+                                segments: Some(vec![MorphemeSegment::new(
+                                    convert_udb(&root).to_dailp(),
+                                    root_id,
+                                    None,
+                                )]),
+                                english_gloss: vec![root_gloss],
+                                source: root,
+                                commentary: None,
+                                date_recorded: Some(date),
+                                line_break: None,
+                                page_break: None,
+                            },
                         },
                     })
                 } else {
@@ -505,7 +537,7 @@ impl<'a> AnnotatedLine {
                         let morphemes = line.rows[4].items.get(i);
                         let glosses = line.rows[5].items.get(i);
                         let w = AnnotatedForm {
-                            index: i as i32 + 1,
+                            position: None,
                             source: line.rows[0].items[i].trim().replace(LINE_BREAK, ""),
                             normalized_source: None,
                             simple_phonetics: line.rows[2]
@@ -530,7 +562,7 @@ impl<'a> AnnotatedLine {
                             line_break: pb
                                 .or_else(|| line.rows[0].items[i].find(LINE_BREAK))
                                 .map(|i| i as i32),
-                            document_id: None,
+                            date_recorded: None,
                         };
                         word_index += 1;
                         w
@@ -545,7 +577,11 @@ impl<'a> AnnotatedLine {
             .collect()
     }
 
-    pub fn to_segments(lines: Vec<Self>, document_id: &str) -> Vec<AnnotatedSeg> {
+    pub fn to_segments(
+        lines: Vec<Self>,
+        document_id: &str,
+        date: &Option<DateTime>,
+    ) -> Vec<AnnotatedSeg> {
         let mut segments = Vec::<AnnotatedSeg>::new();
         let mut stack = Vec::<AnnotatedPhrase>::new();
         let mut child_segments = Vec::<AnnotatedSeg>::new();
@@ -576,7 +612,12 @@ impl<'a> AnnotatedLine {
             for word in line.words {
                 // Give the word an index within the whole document.
                 let word = AnnotatedForm {
-                    index: word_idx,
+                    position: Some(PositionInDocument {
+                        index: word_idx,
+                        document_id: document_id.to_owned(),
+                        page_number: page_num,
+                    }),
+                    date_recorded: date.clone(),
                     ..word
                 };
 
@@ -628,7 +669,6 @@ impl<'a> AnnotatedLine {
                     source: source.to_owned(),
                     line_break: word.line_break.map(|_| line_num as i32),
                     page_break: word.page_break.map(|_| page_num as i32),
-                    document_id: Some(document_id.to_owned()),
                     ..word
                 });
                 if let Some(p) = stack.last_mut() {
