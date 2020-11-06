@@ -70,20 +70,20 @@ impl LexicalEntry {
     ) -> async_graphql::FieldResult<Vec<AnnotatedForm>> {
         Ok(context
             .data::<Database>()?
-            .connected_entries(&self.id)
+            .connected_forms(&self.id)
             .await?)
     }
 }
 
 /// The reference position within a document of one specific form
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Clone, Serialize, Deserialize, Debug, PartialEq, Eq)]
 pub struct PositionInDocument {
     pub document_id: String,
-    pub page_number: i64,
-    pub index: i64,
+    pub page_number: i32,
+    pub index: i32,
 }
 impl PositionInDocument {
-    pub fn new(document_id: String, page_number: i64, index: i64) -> Self {
+    pub fn new(document_id: String, page_number: i32, index: i32) -> Self {
         Self {
             document_id,
             page_number,
@@ -113,14 +113,14 @@ impl PositionInDocument {
     }
 
     /// 1-indexed page number
-    async fn page_number(&self) -> i64 {
+    async fn page_number(&self) -> i32 {
         self.page_number
     }
 
     /// 1-indexed position indicating where the form sits in the ordering of all
     /// forms in the document. Used for relative ordering of forms from the
     /// same document.
-    async fn index(&self) -> i64 {
+    async fn index(&self) -> i32 {
         self.index
     }
 }
@@ -137,6 +137,7 @@ pub struct LexicalConnection {
 /// Gather many verb surface forms from the given row.
 pub fn root_verb_surface_forms(
     doc_id: &str,
+    date: &DateTime,
     root: &str,
     root_gloss: &str,
     cols: &mut impl Iterator<Item = String>,
@@ -148,6 +149,7 @@ pub fn root_verb_surface_forms(
     let mut forms = Vec::new();
     while let Some(form) = root_verb_surface_form(
         doc_id,
+        date,
         root,
         root_gloss,
         cols,
@@ -164,6 +166,7 @@ pub fn root_verb_surface_forms(
 /// Build a single verb surface form from the given row.
 pub fn root_verb_surface_form(
     doc_id: &str,
+    date: &DateTime,
     root: &str,
     root_gloss: &str,
     cols: &mut impl Iterator<Item = String>,
@@ -192,8 +195,8 @@ pub fn root_verb_surface_form(
     let morpheme_layer = morphemes.join("-");
     let mut morpheme_glosses = morpheme_tags
         .iter()
-        .map(|(tag, _src)| tag.trim().to_owned())
-        .chain(vec![root_gloss.to_owned(), asp_morpheme.0, mod_morpheme.0])
+        .map(|(tag, _src)| tag.trim())
+        .chain(vec![root_gloss, &*asp_morpheme.0, &*mod_morpheme.0])
         .filter(|s| !s.is_empty());
     let gloss_layer = morpheme_glosses.join("-");
     // Then, the representations of the full word.
@@ -225,7 +228,11 @@ pub fn root_verb_surface_form(
 
     Some(UniqueAnnotatedForm {
         form: AnnotatedForm {
-            index: 0,
+            position: Some(PositionInDocument {
+                document_id: doc_id.to_owned(),
+                index: 1,
+                page_number: 1,
+            }),
             source: syllabary.clone(),
             normalized_source: None,
             simple_phonetics: Some(phonetic),
@@ -235,7 +242,7 @@ pub fn root_verb_surface_form(
             commentary,
             line_break: None,
             page_break: None,
-            document_id: Some(doc_id.to_owned()),
+            date_recorded: Some(date.clone()),
         },
         id: gloss_layer,
     })
@@ -265,6 +272,7 @@ fn all_tags(cols: &mut impl Iterator<Item = String>) -> (Vec<(String, String)>, 
 /// GraphQL can do the conversion instead of the migration process.
 pub fn root_noun_surface_form(
     doc_id: &str,
+    date: &DateTime,
     root: &str,
     root_gloss: &str,
     cols: &mut impl Iterator<Item = String>,
@@ -281,21 +289,25 @@ pub fn root_noun_surface_form(
     let syllabary = cols.next()?;
     let translations = cols.take(3).filter(|s| !s.is_empty());
 
-    let mut morphemes = vec![&ppp_src as &str, &pp_src as &str, root]
+    let mut morphemes = vec![&*ppp_src, &*pp_src, root]
         .into_iter()
         .map(|s| s.trim())
         .filter(|s| !s.is_empty())
         .map(|s| convert_udb(s).to_dailp());
     let morpheme_layer = morphemes.join("-");
-    let mut glosses = vec![ppp_tag, pp_tag, root_gloss.to_owned()]
+    let mut glosses = vec![&*ppp_tag, &*pp_tag, root_gloss]
         .into_iter()
-        .map(|s| s.trim().to_owned())
+        .map(|s| s.trim())
         .filter(|s| !s.is_empty());
     let gloss_layer = glosses.join("-");
 
     Some(UniqueAnnotatedForm {
         form: AnnotatedForm {
-            index: 0,
+            position: Some(PositionInDocument {
+                document_id: doc_id.to_owned(),
+                index: 1,
+                page_number: 1,
+            }),
             source: syllabary,
             normalized_source: None,
             simple_phonetics: Some(phonetic),
@@ -305,7 +317,7 @@ pub fn root_noun_surface_form(
             commentary: None,
             line_break: None,
             page_break: None,
-            document_id: Some(doc_id.to_owned()),
+            date_recorded: Some(date.clone()),
         },
         id: gloss_layer,
     })

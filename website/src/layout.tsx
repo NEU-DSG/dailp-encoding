@@ -12,9 +12,9 @@ import { isMobile } from "react-device-detect"
 const Layout = (p: { title?: string; children: any }) => (
   <>
     <Helmet>
-      <title>{p.title ? `${p.title} - ` : null}</title>
-      DAILP
+      <title>{p.title ? `${p.title} - ` : null} DAILP</title>
     </Helmet>
+
     <Sticky enabled={isMobile} innerZ={1}>
       <Header aria-label="Site Header" id={isMobile ? "header" : undefined}>
         <HeaderContents>

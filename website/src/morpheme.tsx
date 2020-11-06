@@ -30,7 +30,7 @@ export const MorphemeDetails = (props: {
 )
 
 const CloseButton = styled(Clickable)`
-  position: absolute;
+  position: fixed;
   top: 0.5rem;
   right: 0.5rem;
   cursor: pointer;
@@ -47,7 +47,7 @@ const SimilarMorphemeList = (props: {
   gloss: string
   dialog: DialogStateReturn
 }) => {
-  const { data, loading } = useQuery(morphemeQuery, {
+  const { data, loading, error } = useQuery(morphemeQuery, {
     skip: !props.gloss,
     variables: { gloss: props.gloss },
   })
@@ -59,6 +59,8 @@ const SimilarMorphemeList = (props: {
 
   if (loading || tag.loading) {
     return <p>Loading...</p>
+  } else if (error || tag.error) {
+    return <p>Error! {error ?? tag.error}</p>
   } else if (!data || !data.documents) {
     return <p>None Found</p>
   } else {
@@ -69,9 +71,10 @@ const SimilarMorphemeList = (props: {
         <h5>{documentTypeToHeading(ty)}</h5>
         <ul>
           {documents.map((m: any, i: number) =>
-            m.words.map((word: any, j: number) => (
-              <li key={`${i}-${j}`}>
-                {word.source}: {word.englishGloss.join(", ")} (
+            m.forms.map((word: any, j: number) => (
+              <li key={i * 10000 + j}>
+                {word.normalizedSource ?? word.source}:{" "}
+                {word.englishGloss.join(", ")} (
                 {word.documentId ? (
                   <>
                     {word.index ? (
@@ -113,8 +116,10 @@ const SimilarMorphemeList = (props: {
 function documentTypeToHeading(ty: string) {
   if (ty === "REFERENCE") {
     return "In Reference Materials"
-  } else {
+  } else if (ty === "CORPUS") {
     return "In Documents"
+  } else {
+    return "Miscellaneous"
   }
 }
 
@@ -123,9 +128,10 @@ const morphemeQuery = gql`
     documents: morphemesByDocument(gloss: $gloss) {
       documentId
       documentType
-      words {
+      forms {
         index
         source
+        normalizedSource
         documentId
         englishGloss
       }

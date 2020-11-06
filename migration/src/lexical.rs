@@ -1,9 +1,7 @@
 use crate::spreadsheets::SheetResult;
 use anyhow::Result;
-use dailp::{
-    AnnotatedForm, Database, DateTime, LexicalEntry, MorphemeSegment, PositionInDocument,
-    UniqueAnnotatedForm,
-};
+use dailp::MorphemeSegment;
+use dailp::{AnnotatedForm, Database, DateTime, PositionInDocument, UniqueAnnotatedForm};
 use futures::future::join_all;
 use mongodb::bson::{self, Bson};
 
@@ -28,7 +26,6 @@ pub async fn migrate_dictionaries(db: &Database) -> Result<()> {
     let root_adjs = root_adjs?.into_adjs("DF1975", 1975)?;
     let df2003 = df2003?.into_df1975("DF2003", 2003, 1, false, false, 2, 5, 3)?;
 
-    let dict = db.lexical_collection();
     let words = db.words_collection();
     let entries: Vec<_> = df1975
         .into_iter()
@@ -46,7 +43,7 @@ pub async fn migrate_dictionaries(db: &Database) -> Result<()> {
         let entry = &entry.entry;
         if let Bson::Document(bson_doc) = bson::to_bson(entry).ok()? {
             Some(
-                dict.update_one(
+                words.update_one(
                     bson::doc! {"_id": &entry.id},
                     bson_doc,
                     mongodb::options::UpdateOptions::builder()
@@ -84,16 +81,34 @@ pub async fn migrate_dictionaries(db: &Database) -> Result<()> {
 }
 
 pub async fn migrate_old_lexical(db: &Database) -> Result<()> {
-    let (ag1836, jm1887, dc1800) = futures::join!(
+    let (ag1836, jm1887, dc1800, ts1822, jdb1771, ja1775, bh1784, bb1819) = futures::join!(
         SheetResult::from_sheet("1Lj8YnEmi4hZk6m3fxNk3mdd366yjgLLa5sWeWSvg-ZY", None),
         SheetResult::from_sheet("1RqtDUzYCRMx7AOSp7aICCis40m4kZQpUsd2thav_m50", None),
         SheetResult::from_sheet("1R7dCEDyZEk8bhXlBHro8-JoeKjUZlRyBfAVdsuiY2Yc", None),
+        SheetResult::from_sheet("14sN6e07u8rttS0nfX58-ojIgP7zwcOm6vjEXRk8qB-0", None),
+        SheetResult::from_sheet("1rOXTBydHnt5zmMffLf8QEId4W0J8YcQXMen8HBg5rKo", None),
+        SheetResult::from_sheet("1Gfa_Ef1KFKp9ig1AlF65hxaXe43ffV_U_xKQGkD0mnc", None),
+        SheetResult::from_sheet("1lny1LHFDcwEjxLWqwotXKG_cYXfPrslodq1Rbn7ygAc", None),
+        SheetResult::from_sheet("1aLPu_d_1OtgPL2_2olnjeDSBOgsreE6X3vBAFtpB5N0", None),
     );
 
-    let ag1836 = parse_early_vocab(ag1836?, "AG1836", 1836, 0);
-    let jm1887 = parse_early_vocab(jm1887?, "JM1887", 1887, 1);
-    let dc1800 = parse_early_vocab(dc1800?, "DC1800", 1800, 1);
-    let entries = ag1836.chain(jm1887).chain(dc1800);
+    let ag1836 = parse_early_vocab(ag1836?, "AG1836", 1836, 0, false, true);
+    // TODO Include all three dialectal variants somehow!
+    let jm1887 = parse_early_vocab(jm1887?, "JM1887", 1887, 1, false, false);
+    let dc1800 = parse_early_vocab(dc1800?, "DC1800", 1800, 1, false, true);
+    let ts1822 = parse_early_vocab(ts1822?, "TS1822", 1823, 1, false, false);
+    let jdb1771 = parse_early_vocab(jdb1771?, "JDB1771", 1771, 1, false, true);
+    let ja1775 = parse_early_vocab(ja1775?, "JA1775", 1775, 1, false, false);
+    let bh1784 = parse_early_vocab(bh1784?, "BH1784", 1784, 0, false, true);
+    let bb1819 = parse_early_vocab(bb1819?, "BB1819", 1819, 0, true, true);
+    let entries = ag1836
+        .chain(jm1887)
+        .chain(dc1800)
+        .chain(ts1822)
+        .chain(jdb1771)
+        .chain(ja1775)
+        .chain(bh1784)
+        .chain(bb1819);
 
     // Push all lexical entries to the database.
     let dict = db.words_collection();
@@ -122,6 +137,8 @@ fn parse_early_vocab(
     doc_id: &'static str,
     year: i32,
     to_skip: usize,
+    has_norm: bool,
+    has_phonetic: bool,
 ) -> impl Iterator<Item = UniqueAnnotatedForm> {
     use chrono::TimeZone as _;
     sheet
@@ -137,34 +154,47 @@ fn parse_early_vocab(
             }
             let gloss = row.remove(0);
             let original = row.remove(0);
+            let norm = if has_norm && !row.is_empty() {
+                Some(row.remove(0))
+            } else {
+                None
+            };
+            let simple_phonetics = if has_phonetic && !row.is_empty() {
+                let s = row.remove(0);
+                if s.is_empty() {
+                    None
+                } else {
+                    Some(s)
+                }
+            } else {
+                None
+            };
 
             UniqueAnnotatedForm {
                 form: AnnotatedForm {
-                    index: index as i32 + 1,
+                    normalized_source: norm,
+                    simple_phonetics,
+                    segments: Some(vec![MorphemeSegment::new(
+                        original.clone(),
+                        id.clone(),
+                        None,
+                    )]),
                     source: original,
-                    normalized_source: None,
-                    simple_phonetics: None,
-                    segments: None,
                     phonemic: None,
                     commentary: None,
                     english_gloss: vec![gloss],
                     line_break: None,
                     page_break: None,
-                    document_id: Some(doc_id.to_owned()),
+                    position: Some(PositionInDocument {
+                        document_id: doc_id.to_owned(),
+                        page_number: page_num.parse().unwrap_or(1),
+                        index: index as i32 + 1,
+                    }),
+                    date_recorded: Some(DateTime::new(
+                        chrono::Utc.ymd(year, 1, 1).and_hms(0, 0, 0),
+                    )),
                 },
                 id,
             }
-            // LexicalEntry {
-            //     root: MorphemeSegment::new(original.clone(), id.clone(), None),
-            //     id,
-            //     position: Some(PositionInDocument {
-            //         document_id: doc_id.to_owned(),
-            //         page_number: page_num.parse().unwrap_or(1),
-            //         index: index as i64 + 1,
-            //     }),
-            //     root_translations: vec![gloss],
-            //     original,
-            //     date_recorded: DateTime::new(chrono::Utc.ymd(year, 1, 1).and_hms(0, 0, 0)),
-            // }
         })
 }

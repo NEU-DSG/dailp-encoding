@@ -423,6 +423,7 @@ dependencies = [
  "chrono",
  "dailp",
  "dotenv",
+ "itertools",
  "lambda",
  "lambda_http",
  "lazy_static",

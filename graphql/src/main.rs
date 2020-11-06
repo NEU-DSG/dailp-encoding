@@ -76,18 +76,22 @@ impl Query {
         &self,
         context: &Context<'_>,
         id: String,
-    ) -> FieldResult<Option<dailp::LexicalEntry>> {
-        Ok(context.data::<Database>()?.lexical_entry(id).await?)
+    ) -> FieldResult<Option<dailp::AnnotatedForm>> {
+        Ok(context
+            .data::<Database>()?
+            .lexical_entry(&id)
+            .await?
+            .map(|x| x.form))
     }
 
-    /// Lists all words containing a morpheme with the given gloss.
+    /// Lists all forms containing a morpheme with the given gloss.
     /// Groups these words by the phonemic shape of the target morpheme.
     pub async fn morphemes_by_shape(
         &self,
         context: &Context<'_>,
         gloss: String,
     ) -> FieldResult<Vec<MorphemeReference>> {
-        Ok(context.data::<Database>()?.morphemes(gloss).await?)
+        Ok(context.data::<Database>()?.morphemes(&gloss).await?)
     }
 
     /// Lists all words containing a morpheme with the given gloss.
@@ -100,10 +104,58 @@ impl Query {
         Ok(context.data::<Database>()?.words_by_doc(&gloss).await?)
     }
 
+    /// Forms containing the given morpheme gloss or related ones clustered over time.
+    async fn morpheme_time_clusters(
+        &self,
+        context: &Context<'_>,
+        gloss: String,
+        #[graphql(default = 10)] cluster_years: i32,
+    ) -> FieldResult<Vec<FormsInTime>> {
+        use chrono::Datelike;
+        use itertools::Itertools as _;
+
+        let forms = context
+            .data::<Database>()?
+            .connected_surface_forms(&gloss)
+            .await?;
+        // Cluster forms by the decade they were recorded in.
+        let clusters = forms
+            .into_iter()
+            .map(|form| {
+                (
+                    form.date_recorded
+                        .as_ref()
+                        .map(|d| d.0.year() / cluster_years),
+                    form,
+                )
+            })
+            .into_group_map();
+
+        Ok(clusters
+            .into_iter()
+            .map(|(_, forms)| {
+                let dates = forms.iter().map(|f| f.date_recorded.as_ref().unwrap());
+                let start = dates.clone().min();
+                let end = dates.max();
+                FormsInTime {
+                    start: start.unwrap().clone(),
+                    end: end.unwrap().clone(),
+                    // Sort forms from oldest to newest.
+                    forms: forms
+                        .into_iter()
+                        .sorted_by(|a, b| Ord::cmp(&a.date_recorded, &b.date_recorded))
+                        .collect(),
+                }
+            })
+            // Sort the clusters from oldest to newest.
+            .sorted_by(|a, b| Ord::cmp(&a.start, &b.start))
+            .collect())
+    }
+
     /// Retrieve information for the morpheme that corresponds to the given tag
     /// string. For example, "3PL.B" is the standard string referring to a 3rd
     /// person plural prefix.
-    pub async fn morpheme_tag(
+    async fn morpheme_tag(
         &self,
         context: &Context<'_>,
         id: String,
@@ -121,4 +173,20 @@ impl Query {
                 }
             })?)
     }
+
+    /// Search for words that include the given query at any position.
+    async fn word_search(
+        &self,
+        context: &Context<'_>,
+        query: String,
+    ) -> FieldResult<Vec<dailp::AnnotatedForm>> {
+        Ok(context.data::<Database>()?.word_search(query).await?)
+    }
+}
+
+#[async_graphql::SimpleObject]
+struct FormsInTime {
+    start: dailp::DateTime,
+    end: dailp::DateTime,
+    forms: Vec<dailp::AnnotatedForm>,
 }

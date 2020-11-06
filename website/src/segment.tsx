@@ -185,7 +185,7 @@ const MorphemeSegment = (p: {
     gloss =
       p.segment.matchingTag?.learner ??
       p.segment.matchingTag?.crg ??
-      p.segment.gloss
+      p.segment.displayGloss
   }
   return (
     <MorphemeButton {...p.dialog} onClick={() => p.onOpenDetails(p.segment)}>
