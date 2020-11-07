@@ -141,12 +141,12 @@ impl Query {
                     // Sort forms from oldest to newest.
                     forms: forms
                         .into_iter()
-                        .sorted_by(|a, b| Ord::cmp(&a.date_recorded, &b.date_recorded))
+                        .sorted_by(|a, b| Ord::cmp(&b.date_recorded, &a.date_recorded))
                         .collect(),
                 }
             })
             // Sort the clusters from oldest to newest.
-            .sorted_by(|a, b| Ord::cmp(&a.start, &b.start))
+            .sorted_by(|a, b| Ord::cmp(&b.start, &a.start))
             .collect())
     }
 
