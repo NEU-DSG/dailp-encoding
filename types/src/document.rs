@@ -102,14 +102,13 @@ impl AnnotatedDoc {
     }
 }
 
-#[async_graphql::Enum]
+#[derive(async_graphql::Enum, Clone, Copy, PartialEq, Eq)]
 pub enum DocumentType {
     Reference,
     Corpus,
 }
 
-#[async_graphql::SimpleObject]
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(async_graphql::SimpleObject, Serialize, Deserialize, Clone)]
 pub struct TranslatedSection {
     /// Translation of this portion of the source text.
     translation: TranslationBlock,
@@ -121,8 +120,7 @@ pub struct TranslatedSection {
 // documents: [{ meta, pages: [{ lines: [{ index, words }] }] }]
 // Basic to start: [{meta, lines: [{ index, words }]}]
 
-#[async_graphql::Union]
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(async_graphql::Union, Serialize, Deserialize, Clone)]
 #[serde(tag = "type")]
 pub enum AnnotatedSeg {
     Block(AnnotatedPhrase),
@@ -142,27 +140,23 @@ impl AnnotatedSeg {
     }
 }
 
-#[async_graphql::Enum]
-#[derive(Serialize, Deserialize)]
+#[derive(async_graphql::Enum, Clone, Copy, Eq, PartialEq, Serialize, Deserialize)]
 pub enum BlockType {
     Block,
     Phrase,
 }
 
-#[async_graphql::SimpleObject]
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(async_graphql::SimpleObject, Serialize, Deserialize, Clone)]
 pub struct LineBreak {
     pub index: i32,
 }
 
-#[async_graphql::SimpleObject]
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(async_graphql::SimpleObject, Serialize, Deserialize, Clone)]
 pub struct PageBreak {
     pub index: i32,
 }
 
-#[async_graphql::SimpleObject]
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(async_graphql::SimpleObject, Serialize, Deserialize, Clone)]
 pub struct AnnotatedPhrase {
     pub ty: BlockType,
     pub index: i32,

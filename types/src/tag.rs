@@ -1,8 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 /// Represents a morphological gloss tag without committing to a single representation.
-#[async_graphql::SimpleObject]
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(async_graphql::SimpleObject, Serialize, Deserialize, Debug)]
 pub struct MorphemeTag {
     /// Standard annotation tag for this morpheme, defined by DAILP.
     #[serde(rename = "_id")]

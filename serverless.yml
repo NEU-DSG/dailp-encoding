@@ -9,13 +9,14 @@ provider:
   timeout: 20
   environment:
     MONGODB_URI: ${env:MONGODB_URI}
+custom:
+  rust:
+    dockerless: true
 package:
   individually: true
 functions:
   dailp-graphql:
     handler: dailp-graphql
-    # rust:
-    #   dockerless: true
     events:
       - http:
           path: "/graphql"

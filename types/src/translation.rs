@@ -1,8 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 /// One full translation broken into several blocks.
-#[async_graphql::SimpleObject]
-#[derive(Clone, Debug, Serialize, Deserialize, Default)]
+#[derive(async_graphql::SimpleObject, Clone, Debug, Serialize, Deserialize, Default)]
 pub struct Translation {
     pub blocks: Vec<TranslationBlock>,
 }

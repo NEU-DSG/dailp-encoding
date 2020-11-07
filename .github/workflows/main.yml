@@ -35,11 +35,20 @@ jobs:
             ~/.cargo/git
             target
           key: ${{ runner.os }}-cargo-${{ hashFiles('Cargo.lock') }}
-      - uses: satackey/action-docker-layer-caching@v0.0.8
+      - name: Cache docker images
+        uses: satackey/action-docker-layer-caching@v0.0.8
         # Ignore the failure of a step and avoid terminating the job.
         continue-on-error: true
-      - uses: actions/setup-node@v1
+      - name: Setup node.js
+        uses: actions/setup-node@v1
         with: { node-version: 10 }
+      - name: Setup rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          target: x86_64-unknown-linux-musl
+          toolchain: 1.47.0
+          override: true
       - name: Encode documents as TEI and database entries
         run: |
           cd migration
@@ -50,6 +59,12 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
+      - name: Build GraphQL layer
+        uses: actions-rs/cargo@v1
+        with:
+          use-cross: true
+          command: build
+          args: --target x86_64-unknown-linux-musl
       - name: Deploy GraphQL to AWS via Serverless
         run: |
           yarn install

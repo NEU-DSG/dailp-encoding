@@ -1,7 +1,4 @@
-use async_graphql::{
-    http::{GQLRequest, GQLResponse},
-    Context, EmptyMutation, EmptySubscription, FieldResult, IntoQueryBuilder, Schema,
-};
+use async_graphql::{Context, EmptyMutation, EmptySubscription, FieldResult, Schema};
 use async_once::AsyncOnce;
 use dailp::{AnnotatedDoc, Database, MorphemeReference, MorphemeTag, WordsInDocument};
 use lambda_http::{http::header::CONTENT_TYPE, lambda, IntoResponse, Request, Response};
@@ -10,10 +7,9 @@ type Error = Box<dyn std::error::Error + Sync + Send + 'static>;
 
 lazy_static::lazy_static! {
     // Share database connection between executions.
-    static ref CTX: AsyncOnce<dailp::Database> = AsyncOnce::new(async {
+    static ref DATABASE: AsyncOnce<dailp::Database> = AsyncOnce::new(async {
         dailp::Database::new().await.unwrap()
     });
-    static ref SCHEMA: Schema<Query, EmptyMutation, EmptySubscription> = Schema::new(Query, EmptyMutation, EmptySubscription);
 }
 
 /// Takes an HTTP request containing a GraphQL query,
@@ -22,9 +18,11 @@ lazy_static::lazy_static! {
 #[tokio::main]
 async fn main(req: Request, _: lambda::Context) -> Result<impl IntoResponse, Error> {
     if let lambda_http::Body::Text(req) = req.into_body() {
-        let req: GQLRequest = serde_json::from_str(&req)?;
-        let builder = req.into_query_builder().await?.data(CTX.get().await);
-        let res = GQLResponse(builder.execute(&SCHEMA).await);
+        let schema = Schema::build(Query, EmptyMutation, EmptySubscription)
+            .data(DATABASE.get().await)
+            .finish();
+        let req: async_graphql::Request = serde_json::from_str(&req)?;
+        let res = schema.execute(req).await;
         let result = serde_json::to_string(&res)?;
         let resp = Response::builder()
             .header(CONTENT_TYPE, "application/json")
@@ -184,7 +182,7 @@ impl Query {
     }
 }
 
-#[async_graphql::SimpleObject]
+#[derive(async_graphql::SimpleObject)]
 struct FormsInTime {
     start: dailp::DateTime,
     end: dailp::DateTime,

@@ -95,7 +95,7 @@ impl MorphemeSegment {
     }
 }
 
-#[async_graphql::Enum]
+#[derive(async_graphql::Enum, Clone, Copy, Eq, PartialEq)]
 enum CherokeeOrthography {
     /// The d/t system for transcribing the Cherokee syllabary.
     /// This orthography is favored by native speakers.

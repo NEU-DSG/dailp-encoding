@@ -24,8 +24,7 @@ pub struct AnnotatedForm {
     pub date_recorded: Option<DateTime>,
 }
 
-#[async_graphql::SimpleObject]
-#[derive(Serialize, Deserialize)]
+#[derive(async_graphql::SimpleObject, Serialize, Deserialize)]
 pub struct UniqueAnnotatedForm {
     #[serde(rename = "_id")]
     pub id: String,

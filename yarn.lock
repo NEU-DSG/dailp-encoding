@@ -4444,10 +4444,9 @@ serverless-dotenv-plugin@^3.0.0:
     dotenv "^8.2.0"
     dotenv-expand "^5.1.0"
 
-serverless-rust@^0.3.8:
+serverless-rust@loafofpiecrust/serverless-rust#master:
   version "0.3.8"
-  resolved "https://registry.yarnpkg.com/serverless-rust/-/serverless-rust-0.3.8.tgz#d47870e75660dc81fa08dfc4e1cd410f0f604820"
-  integrity sha512-T1YYa3+DJghJBpvMKnZGSUMzbF735PDx+LCfyElAdwlWUSzlD2g1bAPQjUY6pwJ5Sy4DnWxfdb+3Jxv2ZJyoTA==
+  resolved "https://codeload.github.com/loafofpiecrust/serverless-rust/tar.gz/745432d4df6221f114e04b181954712f0fc82866"
   dependencies:
     fs-copy-file-sync "^1.1.1"
     fs-extra "^9.0.0"
