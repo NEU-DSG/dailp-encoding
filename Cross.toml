@@ -1,0 +1,2 @@
+[target.x86_64-unknown-linux-musl]
+image = "ekidd/rust-musl-builder:1.47.0"

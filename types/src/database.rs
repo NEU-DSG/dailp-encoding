@@ -355,7 +355,7 @@ impl Database {
 }
 
 /// One particular morpheme and all the known words that contain that exact morpheme.
-#[async_graphql::SimpleObject]
+#[derive(async_graphql::SimpleObject)]
 pub struct MorphemeReference {
     /// Phonemic shape of the morpheme.
     pub morpheme: String,
@@ -364,7 +364,7 @@ pub struct MorphemeReference {
 }
 
 /// A list of words grouped by the document that contains them.
-#[async_graphql::SimpleObject]
+#[derive(async_graphql::SimpleObject)]
 pub struct WordsInDocument {
     /// Unique identifier of the containing document
     pub document_id: Option<String>,
