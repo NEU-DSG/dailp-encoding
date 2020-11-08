@@ -79,11 +79,11 @@ impl LexicalEntry {
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq, Eq)]
 pub struct PositionInDocument {
     pub document_id: String,
-    pub page_number: i32,
+    pub page_number: String,
     pub index: i32,
 }
 impl PositionInDocument {
-    pub fn new(document_id: String, page_number: i32, index: i32) -> Self {
+    pub fn new(document_id: String, page_number: String, index: i32) -> Self {
         Self {
             document_id,
             page_number,
@@ -113,8 +113,8 @@ impl PositionInDocument {
     }
 
     /// 1-indexed page number
-    async fn page_number(&self) -> i32 {
-        self.page_number
+    async fn page_number(&self) -> &str {
+        &self.page_number
     }
 
     /// 1-indexed position indicating where the form sits in the ordering of all
@@ -228,16 +228,16 @@ pub fn root_verb_surface_form(
 
     Some(UniqueAnnotatedForm {
         form: AnnotatedForm {
-            position: Some(PositionInDocument {
-                document_id: doc_id.to_owned(),
-                index: 1,
-                page_number: 1,
-            }),
+            position: Some(PositionInDocument::new(doc_id.to_owned(), 1.to_string(), 1)),
             source: syllabary.clone(),
             normalized_source: None,
             simple_phonetics: Some(phonetic),
             phonemic: Some(convert_udb(&phonemic).to_dailp()),
-            segments: Some(MorphemeSegment::parse_many(&morpheme_layer, &gloss_layer)?),
+            segments: Some(MorphemeSegment::parse_many(
+                &morpheme_layer,
+                &gloss_layer,
+                None,
+            )?),
             english_gloss: translations,
             commentary,
             line_break: None,
@@ -303,16 +303,16 @@ pub fn root_noun_surface_form(
 
     Some(UniqueAnnotatedForm {
         form: AnnotatedForm {
-            position: Some(PositionInDocument {
-                document_id: doc_id.to_owned(),
-                index: 1,
-                page_number: 1,
-            }),
+            position: Some(PositionInDocument::new(doc_id.to_owned(), 1.to_string(), 1)),
             source: syllabary,
             normalized_source: None,
             simple_phonetics: Some(phonetic),
             phonemic: Some(convert_udb(&phonemic).to_dailp()),
-            segments: Some(MorphemeSegment::parse_many(&morpheme_layer, &gloss_layer)?),
+            segments: Some(MorphemeSegment::parse_many(
+                &morpheme_layer,
+                &gloss_layer,
+                None,
+            )?),
             english_gloss: translations.collect(),
             commentary: None,
             line_break: None,

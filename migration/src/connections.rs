@@ -1,6 +1,6 @@
 use crate::spreadsheets::SheetResult;
 use dailp::{Database, LexicalConnection};
-use mongodb::{bson, bson::Bson};
+use mongodb::bson;
 
 pub async fn migrate_connections(db: &Database) -> anyhow::Result<()> {
     let res = SheetResult::from_sheet("1ab9ddOiuoCbCaYWwhDOLk-Xj8OOS0dkHwmMqktZabpM", None).await?;
@@ -17,17 +17,16 @@ pub async fn migrate_connections(db: &Database) -> anyhow::Result<()> {
     });
 
     let dict = db.connections_collection();
+    let upsert = mongodb::options::UpdateOptions::builder()
+        .upsert(true)
+        .build();
     for conn in connections {
-        if let Bson::Document(bson_doc) = bson::to_bson(&conn)? {
-            dict.update_one(
-                bson::doc! {"_id": conn.id},
-                bson_doc,
-                mongodb::options::UpdateOptions::builder()
-                    .upsert(true)
-                    .build(),
-            )
-            .await?;
-        }
+        dict.update_one(
+            bson::doc! {"_id": &conn.id},
+            bson::to_document(&conn)?,
+            upsert.clone(),
+        )
+        .await?;
     }
 
     Ok(())

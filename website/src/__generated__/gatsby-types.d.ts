@@ -236,7 +236,7 @@ type Dailp_morphemesByDocumentArgs = {
 
 type Dailp_morphemeTimeClustersArgs = {
   gloss: Scalars['String'];
-  clusterYears: Scalars['Int'];
+  clusterYears?: Scalars['Int'];
 };
 
 
