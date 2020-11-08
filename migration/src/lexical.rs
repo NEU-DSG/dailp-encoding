@@ -3,7 +3,7 @@ use anyhow::Result;
 use dailp::MorphemeSegment;
 use dailp::{AnnotatedForm, Database, DateTime, PositionInDocument, UniqueAnnotatedForm};
 use futures::future::join_all;
-use mongodb::bson::{self, Bson};
+use mongodb::bson;
 
 pub async fn migrate_dictionaries(db: &Database) -> Result<()> {
     let (df1975, df2003, root_nouns, irreg_nouns, ptcp_nouns, body_parts, root_adjs, inf_nouns) = futures::join!(
@@ -38,41 +38,28 @@ pub async fn migrate_dictionaries(db: &Database) -> Result<()> {
         .chain(df2003)
         .collect();
 
+    println!("Pushing entries to database...");
+
+    let upsert = mongodb::options::UpdateOptions::builder()
+        .upsert(true)
+        .build();
     // Push all lexical entries to the database.
     join_all(entries.iter().filter_map(|entry| {
         let entry = &entry.entry;
-        if let Bson::Document(bson_doc) = bson::to_bson(entry).ok()? {
-            Some(
-                words.update_one(
-                    bson::doc! {"_id": &entry.id},
-                    bson_doc,
-                    mongodb::options::UpdateOptions::builder()
-                        .upsert(true)
-                        .build(),
-                ),
-            )
-        } else {
-            None
-        }
+        bson::to_document(entry).ok().map(|bson_doc| {
+            words.update_one(bson::doc! {"_id": &entry.id}, bson_doc, upsert.clone())
+        })
     }))
     .await;
+
+    println!("Pushing surface forms to database...");
 
     // Push all the surface forms to the sea of words.
     join_all(entries.into_iter().flat_map(|entry| {
         entry.forms.into_iter().filter_map(|form| {
-            if let Bson::Document(bson_doc) = bson::to_bson(&form).ok()? {
-                Some(
-                    words.update_one(
-                        bson::doc! {"_id": &form.id},
-                        bson_doc,
-                        mongodb::options::UpdateOptions::builder()
-                            .upsert(true)
-                            .build(),
-                    ),
-                )
-            } else {
-                None
-            }
+            bson::to_document(&form).ok().map(|bson_doc| {
+                words.update_one(bson::doc! {"_id": &form.id}, bson_doc, upsert.clone())
+            })
         })
     }))
     .await;
@@ -113,19 +100,15 @@ pub async fn migrate_old_lexical(db: &Database) -> Result<()> {
     // Push all lexical entries to the database.
     let dict = db.words_collection();
     join_all(entries.filter_map(|entry| {
-        if let Bson::Document(bson_doc) = bson::to_bson(&entry).ok()? {
-            Some(
-                dict.update_one(
-                    bson::doc! {"_id": &entry.id},
-                    bson_doc,
-                    mongodb::options::UpdateOptions::builder()
-                        .upsert(true)
-                        .build(),
-                ),
+        bson::to_document(&entry).ok().map(|bson_doc| {
+            dict.update_one(
+                bson::doc! {"_id": &entry.id},
+                bson_doc,
+                mongodb::options::UpdateOptions::builder()
+                    .upsert(true)
+                    .build(),
             )
-        } else {
-            None
-        }
+        })
     }))
     .await;
 
@@ -148,7 +131,7 @@ fn parse_early_vocab(
         .enumerate()
         .map(move |(index, mut row)| {
             let id = row.remove(0);
-            let page_num = row.remove(0);
+            let page_number = row.remove(0);
             for _ in 0..to_skip {
                 row.remove(0);
             }
@@ -187,7 +170,7 @@ fn parse_early_vocab(
                     page_break: None,
                     position: Some(PositionInDocument {
                         document_id: doc_id.to_owned(),
-                        page_number: page_num.parse().unwrap_or(1),
+                        page_number,
                         index: index as i32 + 1,
                     }),
                     date_recorded: Some(DateTime::new(

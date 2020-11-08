@@ -211,7 +211,7 @@ impl DocumentCollection {
     ) -> async_graphql::FieldResult<Vec<AnnotatedDoc>> {
         Ok(context
             .data::<Database>()?
-            .all_documents(Some(self.name.clone()))
+            .all_documents(Some(&*self.name))
             .await?)
     }
 }

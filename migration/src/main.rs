@@ -32,35 +32,23 @@ async fn main() -> Result<()> {
 /// Parses our annotated document spreadsheets, migrating that data to our
 /// database and writing them into TEI XML files.
 async fn migrate_data(db: &dailp::Database) -> Result<()> {
-    use rayon::prelude::*;
-
     // Pull the list of annotated documents from our index sheet.
     let index =
         spreadsheets::SheetResult::from_sheet("1sDTRFoJylUqsZlxU57k1Uj8oHhbM3MAzU8sDgTfO7Mk", None)
             .await?
             .into_index()?;
 
-    let mut items = Vec::new();
+    println!("Migrating documents to database...");
+
     // Retrieve data for spreadsheets in sequence.
     // Because of Google API rate limits, we have to limit the number of
     // simultaneous connections to the sheets endpoint.
+    let mut items = Vec::new();
     for sheet_id in &index.sheet_ids {
-        items.push(fetch_sheet(sheet_id).await?);
+        let (doc, refs) = fetch_sheet(sheet_id).await?;
+        spreadsheets::write_to_file(&doc)?;
+        items.push((doc, refs));
     }
-
-    println!("Writing all manuscripts to TEI...");
-
-    // Write out all the XML in parallel.
-    let results: Vec<_> = items
-        .par_iter()
-        .map(|(meta, lines)| spreadsheets::write_to_file(meta.clone(), lines))
-        .collect();
-    // Then, propagate any errors in that process.
-    for r in results {
-        r?;
-    }
-
-    println!("Migrating documents to database...");
 
     spreadsheets::migrate_documents_to_db(items, db).await?;
     Ok(())
@@ -70,8 +58,9 @@ async fn migrate_data(db: &dailp::Database) -> Result<()> {
 /// annotation lines and the "Metadata" page as [dailp::DocumentMetadata].
 async fn fetch_sheet(
     sheet_id: &str,
-) -> Result<(dailp::DocumentMetadata, Vec<spreadsheets::SemanticLine>)> {
-    println!("parsing sheet {}", sheet_id);
+) -> Result<(dailp::AnnotatedDoc, Vec<dailp::LexicalConnection>)> {
+    use crate::spreadsheets::AnnotatedLine;
+    println!("parsing sheet {}...", sheet_id);
 
     // Split the contents of each main sheet into semantic lines with
     // several layers.
@@ -86,5 +75,17 @@ async fn fetch_sheet(
         .into_metadata()
         .await?;
 
-    Ok((meta, lines))
+    // Parse references for this particular document.
+    let refs = spreadsheets::SheetResult::from_sheet(sheet_id, Some("References")).await;
+    let refs = if let Ok(refs) = refs {
+        refs.into_references(&meta.id).await?
+    } else {
+        Vec::new()
+    };
+
+    let annotated = AnnotatedLine::many_from_semantic(&lines, &meta);
+    let segments = AnnotatedLine::to_segments(annotated, &meta.id, &meta.date);
+    let doc = dailp::AnnotatedDoc::new(meta, segments);
+
+    Ok((doc, refs))
 }

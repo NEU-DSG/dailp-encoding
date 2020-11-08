@@ -27,8 +27,12 @@ impl MorphemeSegment {
         }
     }
 
-    pub fn parse_many(morpheme_layer: &str, gloss_layer: &str) -> Option<Vec<Self>> {
-        let (_, result) = parse_gloss_layers(morpheme_layer, gloss_layer).ok()?;
+    pub fn parse_many(
+        morpheme_layer: &str,
+        gloss_layer: &str,
+        document_id: Option<&str>,
+    ) -> Option<Vec<Self>> {
+        let (_, result) = parse_gloss_layers(morpheme_layer, gloss_layer, document_id).ok()?;
         Some(result)
     }
 }
@@ -50,7 +54,13 @@ impl MorphemeSegment {
             .lexical_entry(&self.gloss)
             .await?
             .and_then(|entry| entry.form.english_gloss.get(0).map(|x| x.clone()))
-            .unwrap_or_else(|| self.gloss.clone())
+            .unwrap_or_else(|| {
+                if self.gloss.contains(|c: char| c.is_lowercase()) {
+                    self.gloss.splitn(2, ":").last().unwrap().to_owned()
+                } else {
+                    self.gloss.clone()
+                }
+            })
             .to_owned())
     }
 

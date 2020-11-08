@@ -49,7 +49,7 @@ impl Query {
     ) -> FieldResult<Vec<AnnotatedDoc>> {
         Ok(context
             .data::<Database>()?
-            .all_documents(collection)
+            .all_documents(collection.as_ref().map(|x| &**x))
             .await?)
     }
 
