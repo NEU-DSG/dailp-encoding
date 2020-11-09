@@ -1,6 +1,7 @@
 use crate::*;
 use async_graphql::FieldResult;
 use serde::{Deserialize, Serialize};
+use std::borrow::Cow;
 
 /// A single unit of meaning and its corresponding English gloss.
 #[derive(Serialize, Clone, Deserialize, Debug)]
@@ -40,28 +41,38 @@ impl MorphemeSegment {
 #[async_graphql::Object(cache_control(max_age = 60))]
 impl MorphemeSegment {
     /// Phonemic representation of the morpheme
-    async fn morpheme(&self, system: Option<CherokeeOrthography>) -> String {
+    async fn morpheme(&self, system: Option<CherokeeOrthography>) -> Cow<'_, str> {
         match system {
-            Some(CherokeeOrthography::Dt) => convert_tth_to_dt(&self.morpheme, false),
-            _ => self.morpheme.clone(),
+            Some(CherokeeOrthography::Dt) => Cow::Owned(convert_tth_to_dt(&self.morpheme, false)),
+            _ => Cow::Borrowed(&*self.morpheme),
         }
     }
 
     /// English gloss for display
-    async fn display_gloss(&self, context: &async_graphql::Context<'_>) -> FieldResult<String> {
+    async fn display_gloss(
+        &self,
+        context: &async_graphql::Context<'_>,
+    ) -> FieldResult<Cow<'_, str>> {
         Ok(context
             .data::<Database>()?
             .lexical_entry(&self.gloss)
             .await?
-            .and_then(|entry| entry.form.english_gloss.get(0).map(|x| x.clone()))
-            .unwrap_or_else(|| {
-                if self.gloss.contains(|c: char| c.is_lowercase()) {
-                    self.gloss.splitn(2, ":").last().unwrap().to_owned()
+            .and_then(|mut entry| {
+                if entry.form.english_gloss.is_empty() {
+                    None
                 } else {
-                    self.gloss.clone()
+                    Some(Cow::Owned(entry.form.english_gloss.remove(0)))
                 }
             })
-            .to_owned())
+            .unwrap_or_else(|| {
+                // Strip the document ID from scoped glosses.
+                // TODO Make a function for checking if a morpheme is a tag or root.
+                if self.gloss.contains(|c: char| c.is_lowercase()) {
+                    Cow::Borrowed(self.gloss.splitn(2, ":").last().unwrap())
+                } else {
+                    Cow::Borrowed(&*self.gloss)
+                }
+            }))
     }
 
     /// English gloss in standard DAILP format that refers to a lexical item

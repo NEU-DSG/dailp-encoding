@@ -1,6 +1,7 @@
 use crate::{AnnotatedForm, Database, DateTime, PersonAssociation, Translation, TranslationBlock};
 use async_graphql::FieldResult;
 use serde::{Deserialize, Serialize};
+use std::borrow::Cow;
 
 #[derive(Serialize, Deserialize)]
 pub struct AnnotatedDoc {
@@ -83,13 +84,13 @@ impl AnnotatedDoc {
     async fn translated_segments(
         &self,
         context: &async_graphql::Context<'_>,
-    ) -> FieldResult<Option<Vec<TranslatedSection>>> {
+    ) -> FieldResult<Option<Cow<'_, Vec<TranslatedSection>>>> {
         // We may not have complete data.
         if self.segments.is_some() {
-            Ok(self.segments.clone())
+            Ok(self.segments.as_ref().map(|s| Cow::Borrowed(s)))
         } else {
             let db_doc = context.data::<Database>()?.document(&self.meta.id).await?;
-            Ok(db_doc.and_then(|d| d.segments))
+            Ok(db_doc.and_then(|d| d.segments).map(|s| Cow::Owned(s)))
         }
     }
 
