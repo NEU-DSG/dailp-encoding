@@ -1,0 +1,5 @@
+# Why DAILP? Why Now?
+
+As is the case with most indigenous languages, the vitality of the Cherokee language has never been more precarious. It has become increasingly difficult for new learners to find a space where they can practice their language in their everyday life-- a place where people from all walks of life can come together to practice speaking, listening, reading, and writing-- and to build a deeper shared understanding of language and culture together.
+
+The Digital Archive for American Indian Languages Preservation and Perseverance (DAILP) seeks to support and extend these efforts, focusing on both language perseverance and language preservation. This project makes the dissemination and contextualization of historical documents part of a vital work of language perseverance, performed centrally by and for those with the most at stake. Through detailed, commented translations and linguistic resources, this project will make these documents richly intelligible and accessible for language learning, scholarship, and public history.

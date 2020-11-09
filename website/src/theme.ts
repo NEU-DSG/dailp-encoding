@@ -1,22 +1,20 @@
-import "typeface-gentium-basic"
-import "typeface-open-sans"
-import "./fonts.css"
-
 const theme = {
   fonts: {
-    body: `"Gentium Plus", "Gentium Basic", "Noto Sans Cherokee",
-        "Arial", "serif"`,
-    header: `"Open Sans"`,
+    // Noto Serif supports glottal stops and more accents than other fonts.
+    body: `"Noto Serif", "Noto Sans Cherokee", Arial, serif`,
+    header: `"Quattrocento Sans", "Segoe UI", Arial, sans-serif`,
+    cherokee: `"Noto Sans Cherokee", "Noto Sans", Arial, sans-serif`,
   },
   fontSizes: {
     root: "18px",
   },
   colors: {
     header: "#f7eeed",
-    footer: "rgb(63, 82, 113)",
+    footer: "#405372",
     body: "white",
     text: "black",
-    headings: "#bb675d",
+    link: "#405372",
+    headings: "#9f4c43",
     borders: "darkgray",
   },
   mediaQueries: {

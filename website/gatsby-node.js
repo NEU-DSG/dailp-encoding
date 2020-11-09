@@ -1,8 +1,10 @@
-const path = require(`path`)
-const slugify = require("slugify")
+const path = require("path")
 
 exports.createPages = async (args) => {
-  await createDocumentPages(args)
+  const doc = createDocumentPages(args)
+  const wp = createWpPages(args)
+  await doc
+  await wp
 }
 
 const createDocumentPages = async ({ actions, graphql }) => {
@@ -47,6 +49,31 @@ const createDocumentPages = async ({ actions, graphql }) => {
       path: `collections/${collection.slug}`,
       component: path.resolve(`./src/templates/collection.tsx`),
       context: collection,
+    })
+  }
+}
+
+/** Make a static page for each one from Wordpress. */
+const createWpPages = async ({ actions, graphql }) => {
+  const { data } = await graphql(`
+    query {
+      allPages: allMarkdownRemark {
+        nodes {
+          fields {
+            slug
+          }
+          id
+        }
+      }
+    }
+  `)
+
+  for (const doc of data.allPages.nodes) {
+    actions.createPage({
+      // Make all page urls relative.
+      path: doc.fields.slug,
+      component: path.resolve("./src/templates/page.tsx"),
+      context: doc,
     })
   }
 }

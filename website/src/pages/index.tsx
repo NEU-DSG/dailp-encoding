@@ -10,11 +10,16 @@ const IndexPage = (props: { data: GatsbyTypes.IndexPageQuery }) => (
   <Layout title="Collections">
     <DocIndex>
       <FullWidth>
-        {props.data.dailp.allCollections.map((collection) => (
-          <Link key={collection.slug} to={collectionRoute(collection.slug)}>
-            <h2>{collection.name}</h2>
-          </Link>
-        ))}
+        <h1>Cherokee Manuscript Collections</h1>
+        <ul>
+          {props.data.dailp.allCollections.map((collection) => (
+            <li key={collection.slug}>
+              <Link to={collectionRoute(collection.slug)}>
+                {collection.name}
+              </Link>
+            </li>
+          ))}
+        </ul>
       </FullWidth>
     </DocIndex>
   </Layout>

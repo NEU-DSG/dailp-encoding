@@ -20,7 +20,7 @@ export const MorphemeDetails = (props: {
     <CloseButton
       role="button"
       aria-label="Close Dialog"
-      onClick={() => props.dialog.hide()}
+      onClick={props.dialog.hide}
     >
       <MdClose size={32} />
     </CloseButton>
@@ -82,7 +82,7 @@ const SimilarMorphemeList = (props: {
                         to={`/documents/${word.documentId?.toLowerCase()}#w${
                           word.index
                         }`}
-                        onClick={() => props.dialog.hide()}
+                        onClick={props.dialog.hide}
                       >
                         {word.documentId} #{word.index}
                       </AnchorLink>

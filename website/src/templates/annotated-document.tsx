@@ -22,6 +22,7 @@ import { ExperienceLevel, TagSet, BasicMorphemeSegment } from "../types"
 import { MorphemeDetails } from "../morpheme"
 import PageImages from "../page-image"
 import { Breadcrumbs } from "../breadcrumbs"
+import { isMobile } from "react-device-detect"
 
 enum Tabs {
   ANNOTATION = "annotation-tab",
@@ -66,7 +67,7 @@ const AnnotatedDocumentPage = (p: {
 
         <DocumentTitleHeader doc={doc as any} showDetails={true} />
 
-        <WideSticky top="#header">
+        <WideSticky top={isMobile ? "#header" : undefined}>
           <DocTabs {...tabs} aria-label="Manuscript Tabs">
             <DocTab {...tabs} id={Tabs.ANNOTATION}>
               Translation
@@ -105,7 +106,7 @@ const AnnotatedDocumentPage = (p: {
 
         <TabPanel
           {...tabs}
-          className={docTabPanel}
+          className={imageTabPanel}
           id="id-1-4"
           tabId={Tabs.IMAGES}
         >
@@ -169,15 +170,15 @@ const WideSticky = styled(({ className, ...p }) => (
 const DocTab = styled(Tab)`
   border-radius: 0;
   border: none;
-  border-bottom: 2px solid transparent;
   flex-grow: 1;
   cursor: pointer;
   font-family: ${theme.fonts.header};
   font-size: 1.1rem;
   background-color: ${theme.colors.header};
   color: ${theme.colors.headings};
+  outline-color: ${theme.colors.headings};
   &[aria-selected="true"] {
-    border-color: ${theme.colors.headings};
+    border-bottom: 2px solid ${theme.colors.headings};
   }
 `
 
@@ -194,6 +195,10 @@ const docTabPanel = css`
   ${theme.mediaQueries.medium} {
     padding: 0 ${theme.edgeSpacing};
   }
+`
+
+const imageTabPanel = css`
+  ${fullWidth}
 `
 
 const DocHeader = styled.header`
