@@ -136,6 +136,7 @@ pub struct LexicalConnection {
 
 pub fn seg_verb_surface_forms(
     doc_id: &str,
+    page_num: &str,
     date: &DateTime,
     cols: &mut impl Iterator<Item = String>,
     translation_count: usize,
@@ -146,6 +147,7 @@ pub fn seg_verb_surface_forms(
     let mut forms = Vec::new();
     while let Some(form) = seg_verb_surface_form(
         doc_id,
+        page_num,
         date,
         cols,
         translation_count,
@@ -160,6 +162,7 @@ pub fn seg_verb_surface_forms(
 
 pub fn seg_verb_surface_form(
     doc_id: &str,
+    page_num: &str,
     date: &DateTime,
     cols: &mut impl Iterator<Item = String>,
     translation_count: usize,
@@ -167,20 +170,19 @@ pub fn seg_verb_surface_form(
     has_comment: bool,
     has_spacer: bool,
 ) -> Option<UniqueAnnotatedForm> {
-    // Each form has an empty column before it.
-    // Then follows the morphemic segmentation.
-    // All tags except the last one come before the root.
-    let morpheme_layer = cols.next().filter(|s| !s.is_empty())?;
+    // Skip empty cells until we find a form.
+    let mut morpheme_layer = cols.next()?;
+    while morpheme_layer.is_empty() {
+        morpheme_layer = cols.next()?;
+    }
     let gloss_layer = cols.next().filter(|s| !s.is_empty())?;
+
     // Then, the representations of the full word.
     let phonemic = cols.next().filter(|s| !s.is_empty())?;
-    let _numeric = if has_numeric {
-        cols.next().filter(|s| !s.is_empty())?
-    } else {
-        String::new()
-    };
+    let _numeric = if has_numeric { cols.next() } else { None };
     let phonetic = cols.next().filter(|s| !s.is_empty())?;
     let syllabary = cols.next().filter(|s| !s.is_empty())?;
+
     // Finally, up to three translations of the word.
     let mut translations = Vec::new();
     for _ in 0..translation_count {
@@ -204,7 +206,11 @@ pub fn seg_verb_surface_form(
     Some(UniqueAnnotatedForm {
         id: MorphemeSegment::gloss_layer(&segments),
         form: AnnotatedForm {
-            position: Some(PositionInDocument::new(doc_id.to_owned(), 1.to_string(), 1)),
+            position: Some(PositionInDocument::new(
+                doc_id.to_owned(),
+                page_num.to_owned(),
+                1,
+            )),
             source: syllabary.clone(),
             normalized_source: None,
             simple_phonetics: Some(phonetic),
