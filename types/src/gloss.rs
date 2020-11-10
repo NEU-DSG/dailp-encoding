@@ -27,14 +27,15 @@ pub fn parse_gloss_layers<'a>(
             .zip(two)
             .map(|(a, b)| {
                 let gloss = String::from_utf8_lossy(b.tag);
+                let gloss = gloss.trim();
                 let gloss = if let Some(prefix) = root_prefix {
                     if gloss.contains(|c: char| c.is_lowercase()) {
                         format!("{}:{}", prefix, gloss)
                     } else {
-                        gloss.into_owned()
+                        gloss.to_owned()
                     }
                 } else {
-                    gloss.into_owned()
+                    gloss.to_owned()
                 };
                 MorphemeSegment::new(
                     String::from_utf8_lossy(a.tag).into_owned(),

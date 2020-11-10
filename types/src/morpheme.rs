@@ -36,6 +36,22 @@ impl MorphemeSegment {
         let (_, result) = parse_gloss_layers(morpheme_layer, gloss_layer, document_id).ok()?;
         Some(result)
     }
+
+    pub fn get_next_separator(&self) -> Option<&'static str> {
+        use SegmentType::*;
+        self.followed_by.as_ref().map(|ty| match ty {
+            Morpheme => "-",
+            Clitic => "=",
+        })
+    }
+
+    pub fn gloss_layer<'a>(segments: impl IntoIterator<Item = &'a MorphemeSegment>) -> String {
+        use itertools::Itertools;
+        segments
+            .into_iter()
+            .flat_map(|s| vec![&*s.gloss, s.get_next_separator().unwrap_or("")])
+            .join("")
+    }
 }
 
 #[async_graphql::Object(cache_control(max_age = 60))]
@@ -81,11 +97,7 @@ impl MorphemeSegment {
     }
 
     async fn next_separator(&self) -> Option<&str> {
-        use SegmentType::*;
-        self.followed_by.as_ref().map(|ty| match ty {
-            Morpheme => "-",
-            Clitic => "=",
-        })
+        self.get_next_separator()
     }
 
     /// If this morpheme represents a functional tag that we have further
