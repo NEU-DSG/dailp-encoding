@@ -102,7 +102,7 @@ impl SheetResult {
                     RetryPolicy::<anyhow::Error>::ForwardError(e)
                 } else {
                     tries += 1;
-                    RetryPolicy::<anyhow::Error>::WaitRetry(Duration::from_millis(350))
+                    RetryPolicy::<anyhow::Error>::WaitRetry(Duration::from_millis(400))
                 }
             },
         )
