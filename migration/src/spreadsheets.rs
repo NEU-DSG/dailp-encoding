@@ -7,11 +7,12 @@ use anyhow::Result;
 use dailp::PositionInDocument;
 use dailp::{
     convert_udb, root_noun_surface_form, root_verb_surface_forms, AnnotatedDoc, AnnotatedForm,
-    AnnotatedPhrase, AnnotatedSeg, BlockType, Database, DateTime, DocumentMetadata, LexicalEntry,
-    LineBreak, MorphemeSegment, PageBreak, PersonAssociation, UniqueAnnotatedForm,
+    AnnotatedPhrase, AnnotatedSeg, BlockType, Database, DateTime, DocumentMetadata,
+    LexicalConnection, LexicalEntry, LineBreak, MorphemeSegment, PageBreak, PersonAssociation,
+    UniqueAnnotatedForm,
 };
 use futures_retry::{FutureRetry, RetryPolicy};
-use mongodb::bson::{self, Bson};
+use mongodb::bson;
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, fs::File, io::Write, time::Duration};
 
@@ -34,31 +35,33 @@ pub struct LexicalEntryWithForms {
 /// pushes that data into the underlying database.
 /// Existing versions of these documents are overwritten with the new data.
 pub async fn migrate_documents_to_db(
-    inputs: Vec<(DocumentMetadata, Vec<SemanticLine>)>,
+    docs: Vec<(AnnotatedDoc, Vec<LexicalConnection>)>,
     db: &Database,
 ) -> Result<()> {
-    // Combine the documents into one object.
-    let docs = inputs.into_iter().map(|(meta, lines)| {
-        let annotated = AnnotatedLine::many_from_semantic(&lines);
-        let segments = AnnotatedLine::to_segments(annotated, &meta.id, &meta.date);
-        AnnotatedDoc::new(meta, segments)
-    });
-
     // Write the contents of each document to our database.
+    let ref_db = db.connections_collection();
     let db = db.documents_collection();
-    for doc in docs {
-        if let Bson::Document(bson_doc) = bson::to_bson(&doc)? {
-            db.update_one(
-                bson::doc! {"_id": doc.meta.id},
-                bson_doc,
-                mongodb::options::UpdateOptions::builder()
-                    .upsert(true)
-                    .build(),
-            )
-            .await?;
-        } else {
-            eprintln!("Failed to make document!");
+    let upsert = mongodb::options::UpdateOptions::builder()
+        .upsert(true)
+        .build();
+
+    for (doc, refs) in docs {
+        for r in refs {
+            ref_db
+                .update_one(
+                    bson::doc! { "_id": &r.id },
+                    bson::to_document(&r)?,
+                    upsert.clone(),
+                )
+                .await?;
         }
+
+        db.update_one(
+            bson::doc! {"_id": &doc.meta.id},
+            bson::to_document(&doc)?,
+            upsert.clone(),
+        )
+        .await?;
     }
 
     Ok(())
@@ -66,17 +69,12 @@ pub async fn migrate_documents_to_db(
 
 /// Takes an unprocessed document with metadata, passing it through our TEI
 /// template to produce an xml document named like the given title.
-pub fn write_to_file(meta: DocumentMetadata, lines: &[SemanticLine]) -> Result<()> {
+pub fn write_to_file(doc: &AnnotatedDoc) -> Result<()> {
     let mut tera = tera::Tera::new("*.tera.xml")?;
-    let annotated = AnnotatedLine::many_from_semantic(lines);
-    let file_name = format!("{}/{}.xml", OUTPUT_DIR, meta.id);
+    let file_name = format!("{}/{}.xml", OUTPUT_DIR, doc.meta.id);
     println!("writing to {}", file_name);
     tera.register_filter("convert_breaks", convert_breaks);
-    let segments = AnnotatedLine::to_segments(annotated, &meta.id, &meta.date);
-    let contents = tera.render(
-        "template.tera.xml",
-        &tera::Context::from_serialize(AnnotatedDoc::new(meta, segments))?,
-    )?;
+    let contents = tera.render("template.tera.xml", &tera::Context::from_serialize(doc)?)?;
     // Make sure the output folder exists.
     std::fs::create_dir_all(OUTPUT_DIR)?;
     let mut f = File::create(file_name)?;
@@ -95,9 +93,18 @@ pub struct SheetResult {
 
 impl SheetResult {
     pub async fn from_sheet(sheet_id: &str, sheet_name: Option<&str>) -> Result<Self> {
+        let mut tries = 0;
         let (t, _attempt) = FutureRetry::new(
             move || Self::from_sheet_weak(sheet_id, sheet_name.clone()),
-            |_| RetryPolicy::<anyhow::Error>::WaitRetry(Duration::from_millis(500)),
+            |e| {
+                // Try three times before giving up.
+                if tries > 2 {
+                    RetryPolicy::<anyhow::Error>::ForwardError(e)
+                } else {
+                    tries += 1;
+                    RetryPolicy::<anyhow::Error>::WaitRetry(Duration::from_millis(400))
+                }
+            },
         )
         .await
         .map_err(|(e, _attempts)| e)?;
@@ -116,7 +123,6 @@ impl SheetResult {
     }
     /// Parse this sheet as the document index.
     pub fn into_index(self) -> Result<DocumentIndex> {
-        // Example URL: https://docs.google.com/spreadsheets/d/1sDTRFoJylUqsZlxU57k1Uj8oHhbM3MAzU8sDgTfO7Mk/edit#gid=0
         Ok(DocumentIndex {
             sheet_ids: self
                 .values
@@ -198,7 +204,7 @@ impl SheetResult {
                                 source: root,
                                 position: Some(PositionInDocument {
                                     document_id: doc_id.to_owned(),
-                                    page_number: 1,
+                                    page_number: 1.to_string(),
                                     index: index as i32 + 1,
                                 }),
                             },
@@ -232,7 +238,8 @@ impl SheetResult {
                 let root_gloss = root_values.next()?;
                 let root_id = LexicalEntry::make_id(doc_id, &root_gloss);
                 // Skip page ref.
-                let mut form_values = root_values.skip(1);
+                let page_number = root_values.next()?;
+                let mut form_values = root_values;
                 let date = DateTime::new(chrono::Utc.ymd(year, 1, 1).and_hms(0, 0, 0));
                 Some(LexicalEntryWithForms {
                     forms: root_verb_surface_forms(
@@ -266,7 +273,7 @@ impl SheetResult {
                             position: Some(PositionInDocument {
                                 document_id: doc_id.to_owned(),
                                 index: idx as i32 + 1,
-                                page_number: 1,
+                                page_number,
                             }),
                         },
                     },
@@ -323,7 +330,7 @@ impl SheetResult {
                                 position: Some(PositionInDocument {
                                     document_id: doc_id.to_owned(),
                                     index: idx as i32 + 1,
-                                    page_number: 1,
+                                    page_number: 1.to_string(),
                                 }),
                                 normalized_source: None,
                                 simple_phonetics: None,
@@ -344,6 +351,23 @@ impl SheetResult {
                     })
                 } else {
                     None
+                }
+            })
+            .collect())
+    }
+
+    pub async fn into_references(self, doc_id: &str) -> Result<Vec<dailp::LexicalConnection>> {
+        // First column is the name of the field, useless when parsing so we ignore it.
+        let values = self.values.into_iter().skip(1);
+
+        Ok(values
+            .map(|mut row| {
+                let from = format!("{}:{}", doc_id, row.remove(0));
+                let to = row.remove(0);
+                dailp::LexicalConnection {
+                    id: format!("{}->{}", from, to),
+                    from,
+                    to,
                 }
             })
             .collect())
@@ -515,13 +539,12 @@ impl SemanticLine {
 
 #[derive(Serialize, Deserialize)]
 pub struct AnnotatedLine {
-    number: String,
     pub words: Vec<AnnotatedForm>,
     ends_page: bool,
 }
 
 impl<'a> AnnotatedLine {
-    pub fn many_from_semantic(lines: &[SemanticLine]) -> Vec<Self> {
+    pub fn many_from_semantic(lines: &[SemanticLine], meta: &DocumentMetadata) -> Vec<Self> {
         let mut word_index = 0;
         lines
             .into_iter()
@@ -546,7 +569,7 @@ impl<'a> AnnotatedLine {
                                 .map(|x| x.replace("ʔ", "'")),
                             phonemic: line.rows[3].items.get(i).map(|x| x.to_owned()),
                             segments: if let (Some(m), Some(g)) = (morphemes, glosses) {
-                                MorphemeSegment::parse_many(m, g)
+                                MorphemeSegment::parse_many(m, g, Some(&meta.id))
                             } else {
                                 None
                             },
@@ -569,7 +592,6 @@ impl<'a> AnnotatedLine {
                     })
                     .collect();
                 Self {
-                    number: line.number.clone(),
                     words,
                     ends_page: line.ends_page,
                 }
@@ -615,7 +637,7 @@ impl<'a> AnnotatedLine {
                     position: Some(PositionInDocument {
                         index: word_idx,
                         document_id: document_id.to_owned(),
-                        page_number: page_num,
+                        page_number: page_num.to_string(),
                     }),
                     date_recorded: date.clone(),
                     ..word

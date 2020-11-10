@@ -56,7 +56,7 @@ impl Database {
             .and_then(|doc| bson::from_document(doc).ok()))
     }
 
-    pub async fn all_documents(&self, collection: Option<String>) -> Result<Vec<AnnotatedDoc>> {
+    pub async fn all_documents(&self, collection: Option<&str>) -> Result<Vec<AnnotatedDoc>> {
         use tokio::stream::StreamExt as _;
         Ok(self
             .documents_collection()
