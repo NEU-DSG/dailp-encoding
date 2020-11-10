@@ -1,9 +1,13 @@
+use crate::spreadsheets::LexicalEntryWithForms;
 use crate::spreadsheets::SheetResult;
 use anyhow::Result;
+use dailp::convert_udb;
+use dailp::seg_verb_surface_forms;
+use dailp::LexicalEntry;
 use dailp::MorphemeSegment;
 use dailp::{AnnotatedForm, Database, DateTime, PositionInDocument, UniqueAnnotatedForm};
 use futures::future::join_all;
-use mongodb::bson::{self, Bson};
+use mongodb::bson;
 
 pub async fn migrate_dictionaries(db: &Database) -> Result<()> {
     let (df1975, df2003, root_nouns, irreg_nouns, ptcp_nouns, body_parts, root_adjs, inf_nouns) = futures::join!(
@@ -17,7 +21,7 @@ pub async fn migrate_dictionaries(db: &Database) -> Result<()> {
         SheetResult::from_sheet("1feuNOuzm0-TpotKyjebKwuXV4MYv-jnU5zLamczqu5U", None),
     );
 
-    let df1975 = df1975?.into_df1975("DF1975", 1975, 3, true, false, 2, 5, 3)?;
+    let df1975 = parse_new_df1975(df1975?, "DF1975", 1975, 3, true, false, 3, 3);
     let root_nouns = root_nouns?.into_nouns("DF1975", 1975, 1, 2)?;
     let irreg_nouns = irreg_nouns?.into_nouns("DF1975", 1975, 1, 2)?;
     let ptcp_nouns = ptcp_nouns?.into_nouns("DF1975", 1975, 1, 1)?;
@@ -38,46 +42,110 @@ pub async fn migrate_dictionaries(db: &Database) -> Result<()> {
         .chain(df2003)
         .collect();
 
+    println!("Pushing entries to database...");
+
+    let upsert = mongodb::options::UpdateOptions::builder()
+        .upsert(true)
+        .build();
     // Push all lexical entries to the database.
     join_all(entries.iter().filter_map(|entry| {
         let entry = &entry.entry;
-        if let Bson::Document(bson_doc) = bson::to_bson(entry).ok()? {
-            Some(
-                words.update_one(
-                    bson::doc! {"_id": &entry.id},
-                    bson_doc,
-                    mongodb::options::UpdateOptions::builder()
-                        .upsert(true)
-                        .build(),
-                ),
-            )
-        } else {
-            None
-        }
+        bson::to_document(entry).ok().map(|bson_doc| {
+            words.update_one(bson::doc! {"_id": &entry.id}, bson_doc, upsert.clone())
+        })
     }))
     .await;
+
+    println!("Pushing surface forms to database...");
 
     // Push all the surface forms to the sea of words.
     join_all(entries.into_iter().flat_map(|entry| {
         entry.forms.into_iter().filter_map(|form| {
-            if let Bson::Document(bson_doc) = bson::to_bson(&form).ok()? {
-                Some(
-                    words.update_one(
-                        bson::doc! {"_id": &form.id},
-                        bson_doc,
-                        mongodb::options::UpdateOptions::builder()
-                            .upsert(true)
-                            .build(),
-                    ),
-                )
-            } else {
-                None
-            }
+            bson::to_document(&form).ok().map(|bson_doc| {
+                words.update_one(bson::doc! {"_id": &form.id}, bson_doc, upsert.clone())
+            })
         })
     }))
     .await;
 
     Ok(())
+}
+
+fn parse_new_df1975(
+    sheet: SheetResult,
+    doc_id: &str,
+    year: i32,
+    translation_count: usize,
+    has_numeric: bool,
+    has_comment: bool,
+    after_root: usize,
+    translations: usize,
+) -> impl Iterator<Item = LexicalEntryWithForms> {
+    use chrono::TimeZone as _;
+    let doc_id = doc_id.to_owned();
+    sheet
+        .values
+        .into_iter()
+        // The first two rows are simply headers.
+        .skip(2)
+        .enumerate()
+        // The rest are relevant to the verb itself.
+        .filter_map(move |(index, columns)| {
+            // The columns are as follows: key, page number, root, root gloss,
+            // translations 1, 2, 3, transitivity, UDB class, blank, surface forms.
+            if columns.len() > 7 && !columns[2].is_empty() {
+                // Skip reference numbers for now.
+                let mut root_values = columns.into_iter();
+                let _key = root_values.next()?;
+                let page_number = root_values.next()?;
+                let root = root_values.next()?;
+                let root_gloss = root_values.next()?;
+                let root_id = LexicalEntry::make_id(&doc_id, &root_gloss);
+                let mut form_values = root_values.clone().skip(after_root + translations);
+                let date = DateTime::new(chrono::Utc.ymd(year, 1, 1).and_hms(0, 0, 0));
+                Some(LexicalEntryWithForms {
+                    forms: seg_verb_surface_forms(
+                        &doc_id,
+                        &date,
+                        &mut form_values,
+                        translation_count,
+                        has_numeric,
+                        has_comment,
+                        true,
+                    ),
+                    entry: UniqueAnnotatedForm {
+                        id: root_id.clone(),
+                        form: AnnotatedForm {
+                            simple_phonetics: None,
+                            normalized_source: None,
+                            phonemic: None,
+                            commentary: None,
+                            line_break: None,
+                            page_break: None,
+                            english_gloss: root_values
+                                .take(translations)
+                                .map(|s| s.trim().to_owned())
+                                .filter(|s| !s.is_empty())
+                                .collect(),
+                            segments: Some(vec![MorphemeSegment::new(
+                                convert_udb(&root).to_dailp(),
+                                root_id,
+                                None,
+                            )]),
+                            date_recorded: Some(date),
+                            source: root,
+                            position: Some(PositionInDocument {
+                                document_id: doc_id.clone(),
+                                page_number,
+                                index: index as i32 + 1,
+                            }),
+                        },
+                    },
+                })
+            } else {
+                None
+            }
+        })
 }
 
 pub async fn migrate_old_lexical(db: &Database) -> Result<()> {
@@ -113,19 +181,15 @@ pub async fn migrate_old_lexical(db: &Database) -> Result<()> {
     // Push all lexical entries to the database.
     let dict = db.words_collection();
     join_all(entries.filter_map(|entry| {
-        if let Bson::Document(bson_doc) = bson::to_bson(&entry).ok()? {
-            Some(
-                dict.update_one(
-                    bson::doc! {"_id": &entry.id},
-                    bson_doc,
-                    mongodb::options::UpdateOptions::builder()
-                        .upsert(true)
-                        .build(),
-                ),
+        bson::to_document(&entry).ok().map(|bson_doc| {
+            dict.update_one(
+                bson::doc! {"_id": &entry.id},
+                bson_doc,
+                mongodb::options::UpdateOptions::builder()
+                    .upsert(true)
+                    .build(),
             )
-        } else {
-            None
-        }
+        })
     }))
     .await;
 
@@ -148,7 +212,7 @@ fn parse_early_vocab(
         .enumerate()
         .map(move |(index, mut row)| {
             let id = row.remove(0);
-            let page_num = row.remove(0);
+            let page_number = row.remove(0);
             for _ in 0..to_skip {
                 row.remove(0);
             }
@@ -187,7 +251,7 @@ fn parse_early_vocab(
                     page_break: None,
                     position: Some(PositionInDocument {
                         document_id: doc_id.to_owned(),
-                        page_number: page_num.parse().unwrap_or(1),
+                        page_number,
                         index: index as i32 + 1,
                     }),
                     date_recorded: Some(DateTime::new(

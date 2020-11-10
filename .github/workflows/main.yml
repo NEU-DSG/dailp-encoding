@@ -55,14 +55,9 @@ jobs:
         run: |
           cd migration
           cargo run
-      - name: Build GraphQL layer
-        uses: actions-rs/cargo@v1
-        with:
-          use-cross: true
-          command: build
-          args: --target x86_64-unknown-linux-musl
       - name: Deploy GraphQL to AWS via Serverless
         run: |
+          cargo install cross
           yarn install
           yarn deploy-graphql
       - name: Publish website to Netlify

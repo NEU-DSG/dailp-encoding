@@ -17,6 +17,7 @@ const SEPARATORS: &str = "-=~\\";
 pub fn parse_gloss_layers<'a>(
     layer_one: &'a str,
     layer_two: &'a str,
+    root_prefix: Option<&'a str>,
 ) -> IResult<&'a [u8], Vec<MorphemeSegment>> {
     let (_, one) = gloss_line(layer_one.as_bytes())?;
     let (_, two) = gloss_line(layer_two.as_bytes())?;
@@ -25,9 +26,20 @@ pub fn parse_gloss_layers<'a>(
         one.into_iter()
             .zip(two)
             .map(|(a, b)| {
+                let gloss = String::from_utf8_lossy(b.tag);
+                let gloss = gloss.trim();
+                let gloss = if let Some(prefix) = root_prefix {
+                    if gloss.contains(|c: char| c.is_lowercase()) {
+                        format!("{}:{}", prefix, gloss)
+                    } else {
+                        gloss.to_owned()
+                    }
+                } else {
+                    gloss.to_owned()
+                };
                 MorphemeSegment::new(
                     String::from_utf8_lossy(a.tag).into_owned(),
-                    String::from_utf8_lossy(b.tag).into_owned(),
+                    gloss,
                     // The gloss line is most likely to have the correct separator.
                     b.followed_by,
                 )

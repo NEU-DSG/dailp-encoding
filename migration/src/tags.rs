@@ -1,7 +1,7 @@
 use crate::spreadsheets::SheetResult;
 use anyhow::Result;
 use dailp::{Database, MorphemeTag};
-use mongodb::bson::{self, Bson};
+use mongodb::bson;
 
 /// Cherokee has many functional morphemes that are documented.
 /// Pulls all the details we have about each morpheme from our spreadsheets,
@@ -26,6 +26,9 @@ pub async fn migrate_tags(db: &Database) -> Result<()> {
     let clitics = parse_tags(clitics?, 4, 4, false).await?;
 
     let dict = db.tags_collection();
+    let upsert = mongodb::options::UpdateOptions::builder()
+        .upsert(true)
+        .build();
     for entry in pp_tags
         .into_iter()
         .chain(combined_pp)
@@ -35,16 +38,12 @@ pub async fn migrate_tags(db: &Database) -> Result<()> {
         .chain(clitics)
         .chain(nominal)
     {
-        if let Bson::Document(bson_doc) = bson::to_bson(&entry)? {
-            dict.update_one(
-                bson::doc! {"_id": entry.id},
-                bson_doc,
-                mongodb::options::UpdateOptions::builder()
-                    .upsert(true)
-                    .build(),
-            )
-            .await?;
-        }
+        dict.update_one(
+            bson::doc! {"_id": &entry.id},
+            bson::to_document(&entry)?,
+            upsert.clone(),
+        )
+        .await?;
     }
 
     Ok(())
