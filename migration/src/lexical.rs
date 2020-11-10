@@ -28,7 +28,7 @@ pub async fn migrate_dictionaries(db: &Database) -> Result<()> {
     let inf_nouns = inf_nouns?.into_df1975("DF1975", 1975, 3, true, true, 1, 1, 0)?;
     let body_parts = body_parts?.into_nouns("DF1975", 1975, 2, 1)?;
     let root_adjs = root_adjs?.into_adjs("DF1975", 1975)?;
-    let df2003 = df2003?.into_df1975("DF2003", 2003, 1, false, false, 2, 5, 3)?;
+    let df2003 = parse_new_df1975(df2003?, "DF2003", 2003, 1, false, false, 3, 3);
 
     let words = db.words_collection();
     let entries: Vec<_> = df1975
@@ -93,19 +93,20 @@ fn parse_new_df1975(
         .filter_map(move |(index, columns)| {
             // The columns are as follows: key, page number, root, root gloss,
             // translations 1, 2, 3, transitivity, UDB class, blank, surface forms.
-            if columns.len() > 7 && !columns[2].is_empty() {
+            if columns.len() > 4 && !columns[2].is_empty() {
                 // Skip reference numbers for now.
                 let mut root_values = columns.into_iter();
                 let _key = root_values.next()?;
                 let page_number = root_values.next()?;
-                let root = root_values.next()?;
-                let root_gloss = root_values.next()?;
+                let root = root_values.next().filter(|s| !s.is_empty())?;
+                let root_gloss = root_values.next().filter(|s| !s.is_empty())?;
                 let root_id = LexicalEntry::make_id(&doc_id, &root_gloss);
                 let mut form_values = root_values.clone().skip(after_root + translations);
                 let date = DateTime::new(chrono::Utc.ymd(year, 1, 1).and_hms(0, 0, 0));
                 Some(LexicalEntryWithForms {
                     forms: seg_verb_surface_forms(
                         &doc_id,
+                        &page_number,
                         &date,
                         &mut form_values,
                         translation_count,
@@ -210,31 +211,23 @@ fn parse_early_vocab(
         .into_iter()
         .filter(move |row| row.len() >= 4 + to_skip)
         .enumerate()
-        .map(move |(index, mut row)| {
-            let id = row.remove(0);
-            let page_number = row.remove(0);
+        .filter_map(move |(index, row)| {
+            let mut row = row.into_iter();
+            let id = row.next()?;
+            let page_number = row.next()?;
             for _ in 0..to_skip {
-                row.remove(0);
+                row.next()?;
             }
-            let gloss = row.remove(0);
-            let original = row.remove(0);
-            let norm = if has_norm && !row.is_empty() {
-                Some(row.remove(0))
-            } else {
-                None
-            };
-            let simple_phonetics = if has_phonetic && !row.is_empty() {
-                let s = row.remove(0);
-                if s.is_empty() {
-                    None
-                } else {
-                    Some(s)
-                }
+            let gloss = row.next()?;
+            let original = row.next()?;
+            let norm = if has_norm { row.next() } else { None };
+            let simple_phonetics = if has_phonetic {
+                row.next().filter(|s| !s.is_empty())
             } else {
                 None
             };
 
-            UniqueAnnotatedForm {
+            Some(UniqueAnnotatedForm {
                 form: AnnotatedForm {
                     normalized_source: norm,
                     simple_phonetics,
@@ -259,6 +252,6 @@ fn parse_early_vocab(
                     )),
                 },
                 id,
-            }
+            })
         })
 }

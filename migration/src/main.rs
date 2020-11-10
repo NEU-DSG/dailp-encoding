@@ -78,7 +78,7 @@ async fn fetch_sheet(
     // Parse references for this particular document.
     let refs = spreadsheets::SheetResult::from_sheet(sheet_id, Some("References")).await;
     let refs = if let Ok(refs) = refs {
-        refs.into_references(&meta.id).await?
+        refs.into_references(&meta.id).await
     } else {
         Vec::new()
     };

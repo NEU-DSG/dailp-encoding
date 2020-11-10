@@ -356,11 +356,11 @@ impl SheetResult {
             .collect())
     }
 
-    pub async fn into_references(self, doc_id: &str) -> Result<Vec<dailp::LexicalConnection>> {
-        // First column is the name of the field, useless when parsing so we ignore it.
-        let values = self.values.into_iter().skip(1);
-
-        Ok(values
+    pub async fn into_references(self, doc_id: &str) -> Vec<dailp::LexicalConnection> {
+        self.values
+            .into_iter()
+            // First column is the name of the field, useless when parsing so we ignore it.
+            .skip(1)
             .map(|mut row| {
                 let from = format!("{}:{}", doc_id, row.remove(0));
                 let to = row.remove(0);
@@ -370,7 +370,7 @@ impl SheetResult {
                     to,
                 }
             })
-            .collect())
+            .collect()
     }
 
     /// Parse this sheet as a document metadata listing.
@@ -445,18 +445,16 @@ impl SheetResult {
     }
 
     /// Parse as an annotation sheet with several lines.
-    pub fn split_into_lines(mut self) -> Vec<SemanticLine> {
+    pub fn split_into_lines(self) -> Vec<SemanticLine> {
         if self.values.len() <= 0 {
             return Vec::new();
         }
 
-        // The header line is useless in encoding.
-        self.values.remove(0);
-
         // Firstly, split up groups of rows delimited by an empty row.
         let mut current_result: Vec<Vec<String>> = Vec::new();
         let mut all_lines = Vec::<SemanticLine>::new();
-        for row in self.values {
+        // The header line is useless in encoding.
+        for row in self.values.into_iter().skip(1) {
             // Empty rows mark a line break.
             // Rows starting with one cell containing just "\\" mark a page break.
             // All other rows are part of an annotated line.
