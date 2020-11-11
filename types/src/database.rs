@@ -18,7 +18,7 @@ impl Database {
     const DOCUMENTS: &'static str = "annotated-documents";
     const WORDS: &'static str = "sea-of-words";
     const TAGS: &'static str = "tags";
-    const CONNECTIONS: &'static str = "tags";
+    const CONNECTIONS: &'static str = "lexical-connections";
 
     pub fn documents_collection(&self) -> mongodb::Collection {
         self.client.collection(Self::DOCUMENTS)

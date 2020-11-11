@@ -35,7 +35,7 @@ pub struct LexicalEntryWithForms {
 /// pushes that data into the underlying database.
 /// Existing versions of these documents are overwritten with the new data.
 pub async fn migrate_documents_to_db(
-    docs: Vec<(AnnotatedDoc, Vec<LexicalConnection>)>,
+    docs: &[(AnnotatedDoc, Vec<LexicalConnection>)],
     db: &Database,
 ) -> Result<()> {
     // Write the contents of each document to our database.
@@ -102,7 +102,7 @@ impl SheetResult {
                     RetryPolicy::<anyhow::Error>::ForwardError(e)
                 } else {
                     tries += 1;
-                    RetryPolicy::<anyhow::Error>::WaitRetry(Duration::from_millis(400))
+                    RetryPolicy::<anyhow::Error>::WaitRetry(Duration::from_millis(500))
                 }
             },
         )
@@ -361,14 +361,15 @@ impl SheetResult {
             .into_iter()
             // First column is the name of the field, useless when parsing so we ignore it.
             .skip(1)
-            .map(|mut row| {
-                let from = format!("{}:{}", doc_id, row.remove(0));
-                let to = row.remove(0);
-                dailp::LexicalConnection {
+            .filter_map(|row| {
+                let mut row = row.into_iter();
+                let from = format!("{}:{}", doc_id, row.next()?);
+                let to = row.next()?;
+                Some(dailp::LexicalConnection {
                     id: format!("{}->{}", from, to),
                     from,
                     to,
-                }
+                })
             })
             .collect()
     }
@@ -425,6 +426,7 @@ impl SheetResult {
         } else {
             Vec::new()
         };
+
         Ok(DocumentMetadata {
             id: doc_id.remove(1),
             title: title.remove(1),
