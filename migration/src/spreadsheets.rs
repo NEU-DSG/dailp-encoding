@@ -93,16 +93,19 @@ pub struct SheetResult {
 
 impl SheetResult {
     pub async fn from_sheet(sheet_id: &str, sheet_name: Option<&str>) -> Result<Self> {
+        use rand::prelude::*;
+        let mut rng = thread_rng();
         let mut tries = 0;
         let (t, _attempt) = FutureRetry::new(
             move || Self::from_sheet_weak(sheet_id, sheet_name.clone()),
             |e| {
                 // Try three times before giving up.
-                if tries > 2 {
+                if tries > 3 {
                     RetryPolicy::<anyhow::Error>::ForwardError(e)
                 } else {
                     tries += 1;
-                    RetryPolicy::<anyhow::Error>::WaitRetry(Duration::from_millis(500))
+                    let t = rng.gen_range(350, 650);
+                    RetryPolicy::<anyhow::Error>::WaitRetry(Duration::from_millis(t))
                 }
             },
         )
@@ -639,7 +642,6 @@ impl<'a> AnnotatedLine {
                         document_id: document_id.to_owned(),
                         page_number: page_num.to_string(),
                     }),
-                    date_recorded: date.clone(),
                     ..word
                 };
 
@@ -691,6 +693,7 @@ impl<'a> AnnotatedLine {
                     source: source.to_owned(),
                     line_break: word.line_break.map(|_| line_num as i32),
                     page_break: word.page_break.map(|_| page_num as i32),
+                    date_recorded: date.clone(),
                     ..word
                 });
                 if let Some(p) = stack.last_mut() {

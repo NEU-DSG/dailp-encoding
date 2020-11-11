@@ -132,12 +132,12 @@ impl Query {
         Ok(clusters
             .into_iter()
             .map(|(_, forms)| {
-                let dates = forms.iter().map(|f| f.date_recorded.as_ref().unwrap());
+                let dates = forms.iter().filter_map(|f| f.date_recorded.as_ref());
                 let start = dates.clone().min();
                 let end = dates.max();
                 FormsInTime {
-                    start: start.unwrap().clone(),
-                    end: end.unwrap().clone(),
+                    start: start.cloned(),
+                    end: end.cloned(),
                     // Sort forms from oldest to newest.
                     forms: forms
                         .into_iter()
@@ -184,7 +184,7 @@ impl Query {
 
 #[derive(async_graphql::SimpleObject)]
 struct FormsInTime {
-    start: dailp::DateTime,
-    end: dailp::DateTime,
+    start: Option<dailp::DateTime>,
+    end: Option<dailp::DateTime>,
     forms: Vec<dailp::AnnotatedForm>,
 }
