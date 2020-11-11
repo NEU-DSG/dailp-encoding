@@ -558,6 +558,7 @@ dependencies = [
  "futures-retry",
  "itertools",
  "mongodb",
+ "rand",
  "rayon",
  "regex",
  "reqwest",

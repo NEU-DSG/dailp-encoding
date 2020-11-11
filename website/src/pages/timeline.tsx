@@ -47,10 +47,10 @@ const Timeline = (p: { gloss: string }) => {
           }}
         >
           <div style={{ borderBottom: "2px solid black" }}>
-            {Math.floor(cluster.start.year / 50) * 50} -{" "}
-            {Math.ceil(cluster.end.year / 50) * 50}
+            {cluster.start ? Math.floor(cluster.start!.year / 50) * 50 : "None"} -{" "}
+            {cluster.end ? Math.ceil(cluster.end!.year / 50) * 50 : "None"}
           </div>
-          {cluster.forms.map((form: any, i: number) => (
+          {cluster.forms.map((form: GatsbyTypes.Dailp_AnnotatedForm, i: number) => (
             <div key={i} style={{ marginBottom: "1.5rem" }}>
               <div>{form.documentId}</div>
               <div>{form.normalizedSource ?? form.source}</div>
