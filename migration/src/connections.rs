@@ -17,6 +17,10 @@ pub async fn migrate_connections(db: &Database) -> anyhow::Result<()> {
     });
 
     let dict = db.connections_collection();
+
+    // Clear all connections before starting.
+    dict.delete_many(bson::doc! {}, None).await?;
+
     let upsert = mongodb::options::UpdateOptions::builder()
         .upsert(true)
         .build();

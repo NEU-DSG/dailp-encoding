@@ -18,13 +18,13 @@ async fn main() -> Result<()> {
     println!("Migrating early vocabularies...");
     lexical::migrate_old_lexical(&db).await?;
 
-    migrate_data(&db).await?;
-
     println!("Migrating tags to database...");
     tags::migrate_tags(&db).await?;
 
     println!("Migrating connections...");
     connections::migrate_connections(&db).await?;
+
+    migrate_data(&db).await?;
 
     Ok(())
 }
