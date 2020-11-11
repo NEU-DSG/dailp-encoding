@@ -43,14 +43,11 @@ async fn migrate_data(db: &dailp::Database) -> Result<()> {
     // Retrieve data for spreadsheets in sequence.
     // Because of Google API rate limits, we have to limit the number of
     // simultaneous connections to the sheets endpoint.
-    let mut items = Vec::new();
     for sheet_id in &index.sheet_ids {
         let (doc, refs) = fetch_sheet(sheet_id).await?;
         spreadsheets::write_to_file(&doc)?;
-        items.push((doc, refs));
+        spreadsheets::migrate_documents_to_db(&[(doc, refs)], db).await?;
     }
-
-    spreadsheets::migrate_documents_to_db(items, db).await?;
     Ok(())
 }
 
