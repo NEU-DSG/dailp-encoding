@@ -52,7 +52,7 @@ module.exports = {
         url: "https://dailp.northeastern.edu/graphql",
         verbose: true,
         schema: {
-          perPage: 50,
+          perPage: 30,
         },
       },
     },

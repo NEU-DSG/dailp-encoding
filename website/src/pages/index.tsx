@@ -66,6 +66,7 @@ const IndexPage = (props: { data: GatsbyTypes.IndexPageQuery }) => (
           the contributions of Cherokee linguists in our collective.
         </p>
         <h1>Cherokee Manuscript Collections</h1>
+        <div dangerouslySetInnerHTML={{ __html: props.data.aboutPage.content }}/>
         <ul>
           {props.data.dailp.allCollections.map((collection) => (
             <li key={collection.slug}>
@@ -89,8 +90,14 @@ export const query = graphql`
         slug
       }
     }
+    aboutPage: wpPage(slug: { eq: "home" }) {
+      title
+      content
+    }
   }
 `
+
+
 
 export const DocIndex = styled.main`
   display: flex;

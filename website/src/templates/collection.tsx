@@ -1,7 +1,7 @@
 import React from "react"
 import { graphql, Link } from "gatsby"
 import Layout from "../layout"
-import { DocIndex, FullWidth } from "../pages/collections"
+import { DocIndex, FullWidth } from "../pages/index"
 import { documentRoute } from "../routes"
 import { Breadcrumbs } from "../breadcrumbs"
 
