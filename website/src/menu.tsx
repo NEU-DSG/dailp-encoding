@@ -17,7 +17,6 @@ const menuItems = [
   {
     label: "About",
     childItems: [
-      { path: "/about", label: "About DAILP" },
       { path: "/about/our-team", label: "Our Team" },
       { path: "/about/our-goals", label: "Our Goals" },
       { path: "/about/why-now", label: "Why Now" },
