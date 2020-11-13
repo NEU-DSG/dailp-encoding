@@ -12,6 +12,11 @@ async fn main() -> Result<()> {
     dotenv::dotenv().ok();
     let db = dailp::Database::new().await?;
 
+    println!("Migrating connections...");
+    connections::migrate_connections(&db).await?;
+
+    migrate_data(&db).await?;
+
     println!("Migrating DF1975 and DF2003...");
     lexical::migrate_dictionaries(&db).await?;
 
@@ -20,11 +25,6 @@ async fn main() -> Result<()> {
 
     println!("Migrating tags to database...");
     tags::migrate_tags(&db).await?;
-
-    println!("Migrating connections...");
-    connections::migrate_connections(&db).await?;
-
-    migrate_data(&db).await?;
 
     Ok(())
 }
