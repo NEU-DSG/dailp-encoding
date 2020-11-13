@@ -10,25 +10,44 @@ use futures::future::join_all;
 use mongodb::bson;
 
 pub async fn migrate_dictionaries(db: &Database) -> Result<()> {
-    let (df1975, df2003, root_nouns, irreg_nouns, ptcp_nouns, body_parts, root_adjs, inf_nouns) = futures::join!(
-        SheetResult::from_sheet("11ssqdimOQc_hp3Zk8Y55m6DFfKR96OOpclUg5wcGSVE", None),
-        SheetResult::from_sheet("18cKXgsfmVhRZ2ud8Cd7YDSHexs1ODHo6fkTPrmnwI1g", None),
-        SheetResult::from_sheet("1XuQIKzhGf_mGCH4-bHNBAaQqTAJDNtPbNHjQDhszVRo", None),
-        SheetResult::from_sheet("1urfgtarnSypCgb5lSOhQGhhDcg1ozQ1r4jtCJ8Bu-vw", None),
-        SheetResult::from_sheet("1JRmOx5_LlnoLQhzhyb3NmA4FAfMM2XRoT9ntyWtPEnk", None),
-        SheetResult::from_sheet("1xdnJuTsLBwxbCz9ffJmQNeX-xNYSmntoiRTu9Uwgu5I", None),
-        SheetResult::from_sheet("1R5EhHRq-hlMcYKLzwY2bLAvC-LEeVklHJEHgL6dt5L4", None),
-        SheetResult::from_sheet("1feuNOuzm0-TpotKyjebKwuXV4MYv-jnU5zLamczqu5U", None),
+    let df1975 = parse_new_df1975(
+        SheetResult::from_sheet("11ssqdimOQc_hp3Zk8Y55m6DFfKR96OOpclUg5wcGSVE", None).await?,
+        "DF1975",
+        1975,
+        3,
+        true,
+        false,
+        3,
+        3,
     );
-
-    let df1975 = parse_new_df1975(df1975?, "DF1975", 1975, 3, true, false, 3, 3);
-    let root_nouns = root_nouns?.into_nouns("DF1975", 1975, 1, 2)?;
-    let irreg_nouns = irreg_nouns?.into_nouns("DF1975", 1975, 1, 2)?;
-    let ptcp_nouns = ptcp_nouns?.into_nouns("DF1975", 1975, 1, 1)?;
-    let inf_nouns = inf_nouns?.into_df1975("DF1975", 1975, 3, true, true, 1, 1, 0)?;
-    let body_parts = body_parts?.into_nouns("DF1975", 1975, 2, 1)?;
-    let root_adjs = root_adjs?.into_adjs("DF1975", 1975)?;
-    let df2003 = parse_new_df1975(df2003?, "DF2003", 2003, 1, false, false, 3, 3);
+    let root_nouns = SheetResult::from_sheet("1XuQIKzhGf_mGCH4-bHNBAaQqTAJDNtPbNHjQDhszVRo", None)
+        .await?
+        .into_nouns("DF1975", 1975, 1, 2)?;
+    let irreg_nouns = SheetResult::from_sheet("1urfgtarnSypCgb5lSOhQGhhDcg1ozQ1r4jtCJ8Bu-vw", None)
+        .await?
+        .into_nouns("DF1975", 1975, 1, 2)?;
+    let ptcp_nouns = SheetResult::from_sheet("1JRmOx5_LlnoLQhzhyb3NmA4FAfMM2XRoT9ntyWtPEnk", None)
+        .await?
+        .into_nouns("DF1975", 1975, 1, 1)?;
+    let inf_nouns = SheetResult::from_sheet("1feuNOuzm0-TpotKyjebKwuXV4MYv-jnU5zLamczqu5U", None)
+        .await?
+        .into_df1975("DF1975", 1975, 3, true, true, 1, 1, 0)?;
+    let body_parts = SheetResult::from_sheet("1xdnJuTsLBwxbCz9ffJmQNeX-xNYSmntoiRTu9Uwgu5I", None)
+        .await?
+        .into_nouns("DF1975", 1975, 2, 1)?;
+    let root_adjs = SheetResult::from_sheet("1R5EhHRq-hlMcYKLzwY2bLAvC-LEeVklHJEHgL6dt5L4", None)
+        .await?
+        .into_adjs("DF1975", 1975)?;
+    let df2003 = parse_new_df1975(
+        SheetResult::from_sheet("18cKXgsfmVhRZ2ud8Cd7YDSHexs1ODHo6fkTPrmnwI1g", None).await?,
+        "DF2003",
+        2003,
+        1,
+        false,
+        false,
+        3,
+        3,
+    );
 
     let words = db.words_collection();
     let entries: Vec<_> = df1975
@@ -150,26 +169,71 @@ fn parse_new_df1975(
 }
 
 pub async fn migrate_old_lexical(db: &Database) -> Result<()> {
-    let (ag1836, jm1887, dc1800, ts1822, jdb1771, ja1775, bh1784, bb1819) = futures::join!(
-        SheetResult::from_sheet("1Lj8YnEmi4hZk6m3fxNk3mdd366yjgLLa5sWeWSvg-ZY", None),
-        SheetResult::from_sheet("1RqtDUzYCRMx7AOSp7aICCis40m4kZQpUsd2thav_m50", None),
-        SheetResult::from_sheet("1R7dCEDyZEk8bhXlBHro8-JoeKjUZlRyBfAVdsuiY2Yc", None),
-        SheetResult::from_sheet("14sN6e07u8rttS0nfX58-ojIgP7zwcOm6vjEXRk8qB-0", None),
-        SheetResult::from_sheet("1rOXTBydHnt5zmMffLf8QEId4W0J8YcQXMen8HBg5rKo", None),
-        SheetResult::from_sheet("1Gfa_Ef1KFKp9ig1AlF65hxaXe43ffV_U_xKQGkD0mnc", None),
-        SheetResult::from_sheet("1lny1LHFDcwEjxLWqwotXKG_cYXfPrslodq1Rbn7ygAc", None),
-        SheetResult::from_sheet("1aLPu_d_1OtgPL2_2olnjeDSBOgsreE6X3vBAFtpB5N0", None),
+    let ag1836 = parse_early_vocab(
+        SheetResult::from_sheet("1Lj8YnEmi4hZk6m3fxNk3mdd366yjgLLa5sWeWSvg-ZY", None).await?,
+        "AG1836",
+        1836,
+        0,
+        false,
+        true,
     );
-
-    let ag1836 = parse_early_vocab(ag1836?, "AG1836", 1836, 0, false, true);
     // TODO Include all three dialectal variants somehow!
-    let jm1887 = parse_early_vocab(jm1887?, "JM1887", 1887, 1, false, false);
-    let dc1800 = parse_early_vocab(dc1800?, "DC1800", 1800, 1, false, true);
-    let ts1822 = parse_early_vocab(ts1822?, "TS1822", 1823, 1, false, false);
-    let jdb1771 = parse_early_vocab(jdb1771?, "JDB1771", 1771, 1, false, true);
-    let ja1775 = parse_early_vocab(ja1775?, "JA1775", 1775, 1, false, false);
-    let bh1784 = parse_early_vocab(bh1784?, "BH1784", 1784, 0, false, true);
-    let bb1819 = parse_early_vocab(bb1819?, "BB1819", 1819, 0, true, true);
+    let jm1887 = parse_early_vocab(
+        SheetResult::from_sheet("1RqtDUzYCRMx7AOSp7aICCis40m4kZQpUsd2thav_m50", None).await?,
+        "JM1887",
+        1887,
+        1,
+        false,
+        false,
+    );
+    let dc1800 = parse_early_vocab(
+        SheetResult::from_sheet("1R7dCEDyZEk8bhXlBHro8-JoeKjUZlRyBfAVdsuiY2Yc", None).await?,
+        "DC1800",
+        1800,
+        1,
+        false,
+        true,
+    );
+    let ts1822 = parse_early_vocab(
+        SheetResult::from_sheet("14sN6e07u8rttS0nfX58-ojIgP7zwcOm6vjEXRk8qB-0", None).await?,
+        "TS1822",
+        1823,
+        1,
+        false,
+        false,
+    );
+    let jdb1771 = parse_early_vocab(
+        SheetResult::from_sheet("1rOXTBydHnt5zmMffLf8QEId4W0J8YcQXMen8HBg5rKo", None).await?,
+        "JDB1771",
+        1771,
+        1,
+        false,
+        true,
+    );
+    let ja1775 = parse_early_vocab(
+        SheetResult::from_sheet("1Gfa_Ef1KFKp9ig1AlF65hxaXe43ffV_U_xKQGkD0mnc", None).await?,
+        "JA1775",
+        1775,
+        1,
+        false,
+        false,
+    );
+    let bh1784 = parse_early_vocab(
+        SheetResult::from_sheet("1lny1LHFDcwEjxLWqwotXKG_cYXfPrslodq1Rbn7ygAc", None).await?,
+        "BH1784",
+        1784,
+        0,
+        false,
+        true,
+    );
+    let bb1819 = parse_early_vocab(
+        SheetResult::from_sheet("1aLPu_d_1OtgPL2_2olnjeDSBOgsreE6X3vBAFtpB5N0", None).await?,
+        "BB1819",
+        1819,
+        0,
+        true,
+        true,
+    );
     let entries = ag1836
         .chain(jm1887)
         .chain(dc1800)

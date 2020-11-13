@@ -1,7 +1,7 @@
 use async_graphql::{Context, EmptyMutation, EmptySubscription, FieldResult, Schema};
 use async_once::AsyncOnce;
 use dailp::{AnnotatedDoc, Database, MorphemeReference, MorphemeTag, WordsInDocument};
-use lambda_http::{http::header::CONTENT_TYPE, lambda, IntoResponse, Request, Response};
+use lambda_http::{http::header, lambda, IntoResponse, Request, Response};
 
 type Error = Box<dyn std::error::Error + Sync + Send + 'static>;
 
@@ -25,8 +25,8 @@ async fn main(req: Request, _: lambda::Context) -> Result<impl IntoResponse, Err
         let res = schema.execute(req).await;
         let result = serde_json::to_string(&res)?;
         let resp = Response::builder()
-            .header(CONTENT_TYPE, "application/json")
-            .header("Access-Control-Allow-Origin", "*")
+            .header(header::CONTENT_TYPE, "application/json")
+            .header(header::ACCESS_CONTROL_ALLOW_ORIGIN, "*")
             .body(result)?;
         Ok(resp)
     } else {

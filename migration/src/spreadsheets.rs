@@ -99,12 +99,12 @@ impl SheetResult {
         let (t, _attempt) = FutureRetry::new(
             move || Self::from_sheet_weak(sheet_id, sheet_name.clone()),
             |e| {
-                // Try three times before giving up.
-                if tries > 3 {
+                // Try up to ten times before giving up.
+                if tries > 9 {
                     RetryPolicy::<anyhow::Error>::ForwardError(e)
                 } else {
                     tries += 1;
-                    let t = rng.gen_range(350, 650);
+                    let t = rng.gen_range(800, 1500);
                     RetryPolicy::<anyhow::Error>::WaitRetry(Duration::from_millis(t))
                 }
             },
