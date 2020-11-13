@@ -178,13 +178,12 @@ const MorphemeSegment = (p: {
   dialog: Props["dialog"]
   onOpenDetails: Props["onOpenDetails"]
 }) => {
-  let gloss = p.segment.displayGloss
+  let gloss = p.segment.gloss
   if (p.tagSet === TagSet.Learner) {
     gloss =
-      p.segment.matchingTag?.learner ||
-      p.segment.matchingTag?.crg ||
-      gloss
+      p.segment.matchingTag?.learner || p.segment.matchingTag?.crg || gloss
   }
+
   if (gloss) {
     return (
       <MorphemeButton {...p.dialog} onClick={() => p.onOpenDetails(p.segment)}>

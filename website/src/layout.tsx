@@ -86,12 +86,31 @@ css`
       box-sizing: border-box;
     }
     html {
-      font-size: ${theme.fontSizes.root};
+      font-size: ${theme.fontSizes.root} !important;
     }
     body {
       margin: 0;
       font-family: ${theme.fonts.body};
-      background-color: ${theme.colors.footer};
+      background-color: ${theme.colors.footer} !important;
+    }
+
+    a {
+      color: ${theme.colors.text};
+      text-decoration-thickness: 0.09em;
+      border-radius: 0;
+
+      &:hover,
+      &:active,
+      &:focus {
+        color: ${theme.colors.link};
+      }
+    }
+
+    *:focus {
+      outline-color: ${theme.colors.link};
+      outline-style: solid;
+      outline-width: thin;
+      outline-offset: 0;
     }
     main {
       background-color: ${theme.colors.body};
@@ -139,25 +158,6 @@ css`
       cursor: pointer;
       font-family: inherit;
       font-size: inherit;
-    }
-
-    a {
-      color: ${theme.colors.text};
-      text-decoration-thickness: 0.09em;
-      border-radius: 0;
-
-      &:hover,
-      &:active,
-      &:focus {
-        color: ${theme.colors.link};
-      }
-    }
-
-    *:focus {
-      outline-color: ${theme.colors.link};
-      outline-style: solid;
-      outline-width: thin;
-      outline-offset: 0;
     }
 
     figure {
