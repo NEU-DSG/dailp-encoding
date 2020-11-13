@@ -6,7 +6,7 @@ provider:
   name: aws
   runtime: rust
   memorySize: 256
-  timeout: 20
+  timeout: 30
   environment:
     MONGODB_URI: ${env:MONGODB_URI}
 custom:
