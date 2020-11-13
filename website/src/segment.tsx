@@ -48,7 +48,7 @@ export const Segment = (p: Props) => {
 
     if (p.segment.ty === "BLOCK") {
       return (
-        <DocumentBlock as="section">
+        <DocumentBlock>
           <AnnotationSection as="div">{children}</AnnotationSection>
           <p>{p.translations?.text ?? null}.</p>
         </DocumentBlock>
@@ -56,8 +56,6 @@ export const Segment = (p: Props) => {
     } else {
       return <>{children}</>
     }
-    // } else if (isPageBreak(p.segment)) {
-    // return <PageImage src={p.pageImages[p.segment.index]} />
   } else {
     return null
   }
@@ -180,7 +178,7 @@ const MorphemeSegment = (p: {
   dialog: Props["dialog"]
   onOpenDetails: Props["onOpenDetails"]
 }) => {
-  let gloss = p.segment.gloss
+  let gloss = p.segment.displayGloss
   if (p.tagSet === TagSet.Learner) {
     gloss =
       p.segment.matchingTag?.learner ||
@@ -236,7 +234,11 @@ const SyllabaryLayer = styled.div`
   font-size: 1.2rem;
 `
 
-const DocumentBlock = styled.div`
+const DocumentBlock = styled.section`
   margin-top: 2rem;
-  margin-bottom: 3rem;
+  padding-bottom: 1.5rem;
+  margin-bottom: 1.5rem;
+  ${theme.mediaQueries.medium} {
+    border-bottom: 2px solid ${theme.colors.text};
+  }
 `

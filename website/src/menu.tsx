@@ -17,14 +17,17 @@ const menuItems = [
   {
     label: "About",
     childItems: [
-      { path: "/about/our-team", label: "Our Team" },
-      { path: "/about/our-goals", label: "Our Goals" },
-      { path: "/about/why-now", label: "Why Now" },
-      { path: "/about/project-history", label: "Project History" },
+      { path: "/home/our-team", label: "Our Team" },
+      { path: "/home/our-goals", label: "Our Goals" },
+      { path: "/home/why-this-archive-why-now", label: "Why Now" },
+      { path: "/home/project-history", label: "Project History" },
     ],
   },
   { path: "/credit", label: "Additional Resources" },
-  { path: "/contact", label: "Interested in Working With Us?" },
+  {
+    path: "/interested-in-working-with-us",
+    label: "Interested in Working With Us?",
+  },
 ]
 
 export const NavMenu = () => {

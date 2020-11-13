@@ -185,9 +185,9 @@ type Dailp = {
   readonly allCollections: ReadonlyArray<Dailp_DocumentCollection>;
   /** Retrieves a full document from its unique identifier. */
   readonly document: Maybe<Dailp_AnnotatedDoc>;
-  readonly lexicalEntry: Maybe<Dailp_LexicalEntry>;
+  readonly lexicalEntry: Maybe<Dailp_AnnotatedForm>;
   /**
-   * Lists all words containing a morpheme with the given gloss.
+   * Lists all forms containing a morpheme with the given gloss.
    * Groups these words by the phonemic shape of the target morpheme.
    */
   readonly morphemesByShape: ReadonlyArray<Dailp_MorphemeReference>;
@@ -196,12 +196,16 @@ type Dailp = {
    * Groups these words by the document containing them.
    */
   readonly morphemesByDocument: ReadonlyArray<Dailp_WordsInDocument>;
+  /** Forms containing the given morpheme gloss or related ones clustered over time. */
+  readonly morphemeTimeClusters: ReadonlyArray<Dailp_FormsInTime>;
   /**
    * Retrieve information for the morpheme that corresponds to the given tag
    * string. For example, "3PL.B" is the standard string referring to a 3rd
    * person plural prefix.
    */
   readonly morphemeTag: Maybe<Dailp_MorphemeTag>;
+  /** Search for words that include the given query at any position. */
+  readonly wordSearch: ReadonlyArray<Dailp_AnnotatedForm>;
 };
 
 
@@ -230,8 +234,19 @@ type Dailp_morphemesByDocumentArgs = {
 };
 
 
+type Dailp_morphemeTimeClustersArgs = {
+  gloss: Scalars['String'];
+  clusterYears?: Scalars['Int'];
+};
+
+
 type Dailp_morphemeTagArgs = {
   id: Scalars['String'];
+};
+
+
+type Dailp_wordSearchArgs = {
+  query: Scalars['String'];
 };
 
 type Dailp_AnnotatedDoc = {
@@ -262,26 +277,29 @@ type Dailp_AnnotatedDoc = {
    * All the words contained in this document, dropping structural formatting
    * like line and page breaks.
    */
-  readonly words: Maybe<ReadonlyArray<Dailp_AnnotatedForm>>;
+  readonly forms: Maybe<ReadonlyArray<Dailp_AnnotatedForm>>;
 };
 
 type Dailp_AnnotatedForm = {
   /**
    * The root morpheme of the word.
-   * For example, a verb form glossed as "he catches" has the root morpheme
+   * For example, a verb form glossed as "he catches" might have a root morpheme
    * corresponding to "catch."
    */
   readonly root: Maybe<Dailp_MorphemeSegment>;
   /** All other observed words with the same root morpheme as this word. */
-  readonly similarWords: ReadonlyArray<Dailp_AnnotatedForm>;
+  readonly similarForms: ReadonlyArray<Dailp_AnnotatedForm>;
   /** The document that contains this word. */
   readonly document: Maybe<Dailp_AnnotatedDoc>;
   /** Position of this word in its containing document. */
   readonly index: Scalars['Int'];
   /** The unique identifier of the containing document. */
   readonly documentId: Maybe<Scalars['String']>;
+  readonly position: Maybe<Dailp_PositionInDocument>;
   /** Original source text. */
   readonly source: Scalars['String'];
+  /** Normalized source text */
+  readonly normalizedSource: Maybe<Scalars['String']>;
   /** Romanized version of the word for simple phonetic pronunciation. */
   readonly simplePhonetics: Maybe<Scalars['String']>;
   /** Underlying phonemic representation of this word. */
@@ -295,6 +313,8 @@ type Dailp_AnnotatedForm = {
   readonly englishGloss: ReadonlyArray<Scalars['String']>;
   /** Further details about the annotation layers, including uncertainty. */
   readonly commentary: Maybe<Scalars['String']>;
+  /** The date and time this form was recorded */
+  readonly dateRecorded: Maybe<Dailp_DateTime>;
 };
 
 type Dailp_AnnotatedPhrase = {
@@ -345,21 +365,10 @@ enum Dailp_DocumentType {
   CORPUS = 'CORPUS'
 }
 
-type Dailp_LexicalEntry = {
-  readonly id: Scalars['String'];
-  /** The original source text in whatever orthography was used there */
-  readonly original: Scalars['String'];
-  /** The phonemic shape of the root and it's semi-unique gloss tag */
-  readonly root: Dailp_MorphemeSegment;
-  /** Plain English translations of root's meaning */
-  readonly rootTranslations: ReadonlyArray<Scalars['String']>;
-  /** The year this form was recorded */
-  readonly dateRecorded: Dailp_DateTime;
-  /** This form's position in its containing document */
-  readonly position: Maybe<Dailp_PositionInDocument>;
-  /** A collection of surface forms containing this root */
-  readonly surfaceForms: ReadonlyArray<Dailp_AnnotatedForm>;
-  readonly connectedForms: ReadonlyArray<Dailp_AnnotatedForm>;
+type Dailp_FormsInTime = {
+  readonly start: Maybe<Dailp_DateTime>;
+  readonly end: Maybe<Dailp_DateTime>;
+  readonly forms: ReadonlyArray<Dailp_AnnotatedForm>;
 };
 
 type Dailp_LineBreak = {
@@ -371,13 +380,15 @@ type Dailp_MorphemeReference = {
   /** Phonemic shape of the morpheme. */
   readonly morpheme: Scalars['String'];
   /** List of words that contain this morpheme. */
-  readonly words: ReadonlyArray<Dailp_AnnotatedForm>;
+  readonly forms: ReadonlyArray<Dailp_AnnotatedForm>;
 };
 
 type Dailp_MorphemeSegment = {
   /** Phonemic representation of the morpheme */
   readonly morpheme: Scalars['String'];
-  /** English gloss in standard DAILP format */
+  /** English gloss for display */
+  readonly displayGloss: Scalars['String'];
+  /** English gloss in standard DAILP format that refers to a lexical item */
   readonly gloss: Scalars['String'];
   readonly nextSeparator: Maybe<Scalars['String']>;
   /**
@@ -389,7 +400,7 @@ type Dailp_MorphemeSegment = {
    * All lexical entries that share the same gloss text as this morpheme.
    * This generally works for root morphemes.
    */
-  readonly lexicalEntries: ReadonlyArray<Dailp_LexicalEntry>;
+  readonly lexicalEntry: Maybe<Dailp_AnnotatedForm>;
 };
 
 
@@ -435,7 +446,7 @@ type Dailp_PositionInDocument = {
   /** Unique identifier of the source document */
   readonly documentId: Scalars['String'];
   /** 1-indexed page number */
-  readonly pageNumber: Scalars['Int'];
+  readonly pageNumber: Scalars['String'];
   /**
    * 1-indexed position indicating where the form sits in the ordering of all
    * forms in the document. Used for relative ordering of forms from the
@@ -465,7 +476,7 @@ type Dailp_WordsInDocument = {
   /** What kind of document contains these words (e.g. manuscript vs dictionary) */
   readonly documentType: Maybe<Dailp_DocumentType>;
   /** List of annotated and potentially segmented forms */
-  readonly words: ReadonlyArray<Dailp_AnnotatedForm>;
+  readonly forms: ReadonlyArray<Dailp_AnnotatedForm>;
 };
 
 
@@ -831,6 +842,7 @@ type File = Node & {
   readonly parent: Maybe<Node>;
   readonly children: ReadonlyArray<Node>;
   readonly internal: Internal;
+  readonly childMarkdownRemark: Maybe<MarkdownRemark>;
 };
 
 
@@ -1128,7 +1140,62 @@ enum FileFieldsEnum {
   internal___ignoreType = 'internal.ignoreType',
   internal___mediaType = 'internal.mediaType',
   internal___owner = 'internal.owner',
-  internal___type = 'internal.type'
+  internal___type = 'internal.type',
+  childMarkdownRemark___id = 'childMarkdownRemark.id',
+  childMarkdownRemark___frontmatter___title = 'childMarkdownRemark.frontmatter.title',
+  childMarkdownRemark___excerpt = 'childMarkdownRemark.excerpt',
+  childMarkdownRemark___rawMarkdownBody = 'childMarkdownRemark.rawMarkdownBody',
+  childMarkdownRemark___fileAbsolutePath = 'childMarkdownRemark.fileAbsolutePath',
+  childMarkdownRemark___fields___slug = 'childMarkdownRemark.fields.slug',
+  childMarkdownRemark___html = 'childMarkdownRemark.html',
+  childMarkdownRemark___htmlAst = 'childMarkdownRemark.htmlAst',
+  childMarkdownRemark___excerptAst = 'childMarkdownRemark.excerptAst',
+  childMarkdownRemark___headings = 'childMarkdownRemark.headings',
+  childMarkdownRemark___headings___id = 'childMarkdownRemark.headings.id',
+  childMarkdownRemark___headings___value = 'childMarkdownRemark.headings.value',
+  childMarkdownRemark___headings___depth = 'childMarkdownRemark.headings.depth',
+  childMarkdownRemark___timeToRead = 'childMarkdownRemark.timeToRead',
+  childMarkdownRemark___tableOfContents = 'childMarkdownRemark.tableOfContents',
+  childMarkdownRemark___wordCount___paragraphs = 'childMarkdownRemark.wordCount.paragraphs',
+  childMarkdownRemark___wordCount___sentences = 'childMarkdownRemark.wordCount.sentences',
+  childMarkdownRemark___wordCount___words = 'childMarkdownRemark.wordCount.words',
+  childMarkdownRemark___parent___id = 'childMarkdownRemark.parent.id',
+  childMarkdownRemark___parent___parent___id = 'childMarkdownRemark.parent.parent.id',
+  childMarkdownRemark___parent___parent___children = 'childMarkdownRemark.parent.parent.children',
+  childMarkdownRemark___parent___children = 'childMarkdownRemark.parent.children',
+  childMarkdownRemark___parent___children___id = 'childMarkdownRemark.parent.children.id',
+  childMarkdownRemark___parent___children___children = 'childMarkdownRemark.parent.children.children',
+  childMarkdownRemark___parent___internal___content = 'childMarkdownRemark.parent.internal.content',
+  childMarkdownRemark___parent___internal___contentDigest = 'childMarkdownRemark.parent.internal.contentDigest',
+  childMarkdownRemark___parent___internal___description = 'childMarkdownRemark.parent.internal.description',
+  childMarkdownRemark___parent___internal___fieldOwners = 'childMarkdownRemark.parent.internal.fieldOwners',
+  childMarkdownRemark___parent___internal___ignoreType = 'childMarkdownRemark.parent.internal.ignoreType',
+  childMarkdownRemark___parent___internal___mediaType = 'childMarkdownRemark.parent.internal.mediaType',
+  childMarkdownRemark___parent___internal___owner = 'childMarkdownRemark.parent.internal.owner',
+  childMarkdownRemark___parent___internal___type = 'childMarkdownRemark.parent.internal.type',
+  childMarkdownRemark___children = 'childMarkdownRemark.children',
+  childMarkdownRemark___children___id = 'childMarkdownRemark.children.id',
+  childMarkdownRemark___children___parent___id = 'childMarkdownRemark.children.parent.id',
+  childMarkdownRemark___children___parent___children = 'childMarkdownRemark.children.parent.children',
+  childMarkdownRemark___children___children = 'childMarkdownRemark.children.children',
+  childMarkdownRemark___children___children___id = 'childMarkdownRemark.children.children.id',
+  childMarkdownRemark___children___children___children = 'childMarkdownRemark.children.children.children',
+  childMarkdownRemark___children___internal___content = 'childMarkdownRemark.children.internal.content',
+  childMarkdownRemark___children___internal___contentDigest = 'childMarkdownRemark.children.internal.contentDigest',
+  childMarkdownRemark___children___internal___description = 'childMarkdownRemark.children.internal.description',
+  childMarkdownRemark___children___internal___fieldOwners = 'childMarkdownRemark.children.internal.fieldOwners',
+  childMarkdownRemark___children___internal___ignoreType = 'childMarkdownRemark.children.internal.ignoreType',
+  childMarkdownRemark___children___internal___mediaType = 'childMarkdownRemark.children.internal.mediaType',
+  childMarkdownRemark___children___internal___owner = 'childMarkdownRemark.children.internal.owner',
+  childMarkdownRemark___children___internal___type = 'childMarkdownRemark.children.internal.type',
+  childMarkdownRemark___internal___content = 'childMarkdownRemark.internal.content',
+  childMarkdownRemark___internal___contentDigest = 'childMarkdownRemark.internal.contentDigest',
+  childMarkdownRemark___internal___description = 'childMarkdownRemark.internal.description',
+  childMarkdownRemark___internal___fieldOwners = 'childMarkdownRemark.internal.fieldOwners',
+  childMarkdownRemark___internal___ignoreType = 'childMarkdownRemark.internal.ignoreType',
+  childMarkdownRemark___internal___mediaType = 'childMarkdownRemark.internal.mediaType',
+  childMarkdownRemark___internal___owner = 'childMarkdownRemark.internal.owner',
+  childMarkdownRemark___internal___type = 'childMarkdownRemark.internal.type'
 }
 
 type FileFilterInput = {
@@ -1172,6 +1239,7 @@ type FileFilterInput = {
   readonly parent: Maybe<NodeFilterInput>;
   readonly children: Maybe<NodeFilterListInput>;
   readonly internal: Maybe<InternalFilterInput>;
+  readonly childMarkdownRemark: Maybe<MarkdownRemarkFilterInput>;
 };
 
 type FileGroupConnection = {
@@ -1891,6 +1959,285 @@ type IntQueryOperatorInput = {
 };
 
 
+type JSONQueryOperatorInput = {
+  readonly eq: Maybe<Scalars['JSON']>;
+  readonly ne: Maybe<Scalars['JSON']>;
+  readonly in: Maybe<ReadonlyArray<Maybe<Scalars['JSON']>>>;
+  readonly nin: Maybe<ReadonlyArray<Maybe<Scalars['JSON']>>>;
+  readonly regex: Maybe<Scalars['JSON']>;
+  readonly glob: Maybe<Scalars['JSON']>;
+};
+
+enum MarkdownExcerptFormats {
+  PLAIN = 'PLAIN',
+  HTML = 'HTML',
+  MARKDOWN = 'MARKDOWN'
+}
+
+type MarkdownHeading = {
+  readonly id: Maybe<Scalars['String']>;
+  readonly value: Maybe<Scalars['String']>;
+  readonly depth: Maybe<Scalars['Int']>;
+};
+
+type MarkdownHeadingFilterInput = {
+  readonly id: Maybe<StringQueryOperatorInput>;
+  readonly value: Maybe<StringQueryOperatorInput>;
+  readonly depth: Maybe<IntQueryOperatorInput>;
+};
+
+type MarkdownHeadingFilterListInput = {
+  readonly elemMatch: Maybe<MarkdownHeadingFilterInput>;
+};
+
+enum MarkdownHeadingLevels {
+  h1 = 'h1',
+  h2 = 'h2',
+  h3 = 'h3',
+  h4 = 'h4',
+  h5 = 'h5',
+  h6 = 'h6'
+}
+
+type MarkdownRemark = Node & {
+  readonly id: Scalars['ID'];
+  readonly frontmatter: Maybe<MarkdownRemarkFrontmatter>;
+  readonly excerpt: Maybe<Scalars['String']>;
+  readonly rawMarkdownBody: Maybe<Scalars['String']>;
+  readonly fileAbsolutePath: Maybe<Scalars['String']>;
+  readonly fields: Maybe<MarkdownRemarkFields>;
+  readonly html: Maybe<Scalars['String']>;
+  readonly htmlAst: Maybe<Scalars['JSON']>;
+  readonly excerptAst: Maybe<Scalars['JSON']>;
+  readonly headings: Maybe<ReadonlyArray<Maybe<MarkdownHeading>>>;
+  readonly timeToRead: Maybe<Scalars['Int']>;
+  readonly tableOfContents: Maybe<Scalars['String']>;
+  readonly wordCount: Maybe<MarkdownWordCount>;
+  readonly parent: Maybe<Node>;
+  readonly children: ReadonlyArray<Node>;
+  readonly internal: Internal;
+};
+
+
+type MarkdownRemark_excerptArgs = {
+  pruneLength?: Maybe<Scalars['Int']>;
+  truncate?: Maybe<Scalars['Boolean']>;
+  format?: Maybe<MarkdownExcerptFormats>;
+};
+
+
+type MarkdownRemark_excerptAstArgs = {
+  pruneLength?: Maybe<Scalars['Int']>;
+  truncate?: Maybe<Scalars['Boolean']>;
+};
+
+
+type MarkdownRemark_headingsArgs = {
+  depth: Maybe<MarkdownHeadingLevels>;
+};
+
+
+type MarkdownRemark_tableOfContentsArgs = {
+  absolute?: Maybe<Scalars['Boolean']>;
+  pathToSlugField?: Maybe<Scalars['String']>;
+  maxDepth: Maybe<Scalars['Int']>;
+  heading: Maybe<Scalars['String']>;
+};
+
+type MarkdownRemarkConnection = {
+  readonly totalCount: Scalars['Int'];
+  readonly edges: ReadonlyArray<MarkdownRemarkEdge>;
+  readonly nodes: ReadonlyArray<MarkdownRemark>;
+  readonly pageInfo: PageInfo;
+  readonly distinct: ReadonlyArray<Scalars['String']>;
+  readonly group: ReadonlyArray<MarkdownRemarkGroupConnection>;
+};
+
+
+type MarkdownRemarkConnection_distinctArgs = {
+  field: MarkdownRemarkFieldsEnum;
+};
+
+
+type MarkdownRemarkConnection_groupArgs = {
+  skip: Maybe<Scalars['Int']>;
+  limit: Maybe<Scalars['Int']>;
+  field: MarkdownRemarkFieldsEnum;
+};
+
+type MarkdownRemarkEdge = {
+  readonly next: Maybe<MarkdownRemark>;
+  readonly node: MarkdownRemark;
+  readonly previous: Maybe<MarkdownRemark>;
+};
+
+type MarkdownRemarkFields = {
+  readonly slug: Maybe<Scalars['String']>;
+};
+
+enum MarkdownRemarkFieldsEnum {
+  id = 'id',
+  frontmatter___title = 'frontmatter.title',
+  excerpt = 'excerpt',
+  rawMarkdownBody = 'rawMarkdownBody',
+  fileAbsolutePath = 'fileAbsolutePath',
+  fields___slug = 'fields.slug',
+  html = 'html',
+  htmlAst = 'htmlAst',
+  excerptAst = 'excerptAst',
+  headings = 'headings',
+  headings___id = 'headings.id',
+  headings___value = 'headings.value',
+  headings___depth = 'headings.depth',
+  timeToRead = 'timeToRead',
+  tableOfContents = 'tableOfContents',
+  wordCount___paragraphs = 'wordCount.paragraphs',
+  wordCount___sentences = 'wordCount.sentences',
+  wordCount___words = 'wordCount.words',
+  parent___id = 'parent.id',
+  parent___parent___id = 'parent.parent.id',
+  parent___parent___parent___id = 'parent.parent.parent.id',
+  parent___parent___parent___children = 'parent.parent.parent.children',
+  parent___parent___children = 'parent.parent.children',
+  parent___parent___children___id = 'parent.parent.children.id',
+  parent___parent___children___children = 'parent.parent.children.children',
+  parent___parent___internal___content = 'parent.parent.internal.content',
+  parent___parent___internal___contentDigest = 'parent.parent.internal.contentDigest',
+  parent___parent___internal___description = 'parent.parent.internal.description',
+  parent___parent___internal___fieldOwners = 'parent.parent.internal.fieldOwners',
+  parent___parent___internal___ignoreType = 'parent.parent.internal.ignoreType',
+  parent___parent___internal___mediaType = 'parent.parent.internal.mediaType',
+  parent___parent___internal___owner = 'parent.parent.internal.owner',
+  parent___parent___internal___type = 'parent.parent.internal.type',
+  parent___children = 'parent.children',
+  parent___children___id = 'parent.children.id',
+  parent___children___parent___id = 'parent.children.parent.id',
+  parent___children___parent___children = 'parent.children.parent.children',
+  parent___children___children = 'parent.children.children',
+  parent___children___children___id = 'parent.children.children.id',
+  parent___children___children___children = 'parent.children.children.children',
+  parent___children___internal___content = 'parent.children.internal.content',
+  parent___children___internal___contentDigest = 'parent.children.internal.contentDigest',
+  parent___children___internal___description = 'parent.children.internal.description',
+  parent___children___internal___fieldOwners = 'parent.children.internal.fieldOwners',
+  parent___children___internal___ignoreType = 'parent.children.internal.ignoreType',
+  parent___children___internal___mediaType = 'parent.children.internal.mediaType',
+  parent___children___internal___owner = 'parent.children.internal.owner',
+  parent___children___internal___type = 'parent.children.internal.type',
+  parent___internal___content = 'parent.internal.content',
+  parent___internal___contentDigest = 'parent.internal.contentDigest',
+  parent___internal___description = 'parent.internal.description',
+  parent___internal___fieldOwners = 'parent.internal.fieldOwners',
+  parent___internal___ignoreType = 'parent.internal.ignoreType',
+  parent___internal___mediaType = 'parent.internal.mediaType',
+  parent___internal___owner = 'parent.internal.owner',
+  parent___internal___type = 'parent.internal.type',
+  children = 'children',
+  children___id = 'children.id',
+  children___parent___id = 'children.parent.id',
+  children___parent___parent___id = 'children.parent.parent.id',
+  children___parent___parent___children = 'children.parent.parent.children',
+  children___parent___children = 'children.parent.children',
+  children___parent___children___id = 'children.parent.children.id',
+  children___parent___children___children = 'children.parent.children.children',
+  children___parent___internal___content = 'children.parent.internal.content',
+  children___parent___internal___contentDigest = 'children.parent.internal.contentDigest',
+  children___parent___internal___description = 'children.parent.internal.description',
+  children___parent___internal___fieldOwners = 'children.parent.internal.fieldOwners',
+  children___parent___internal___ignoreType = 'children.parent.internal.ignoreType',
+  children___parent___internal___mediaType = 'children.parent.internal.mediaType',
+  children___parent___internal___owner = 'children.parent.internal.owner',
+  children___parent___internal___type = 'children.parent.internal.type',
+  children___children = 'children.children',
+  children___children___id = 'children.children.id',
+  children___children___parent___id = 'children.children.parent.id',
+  children___children___parent___children = 'children.children.parent.children',
+  children___children___children = 'children.children.children',
+  children___children___children___id = 'children.children.children.id',
+  children___children___children___children = 'children.children.children.children',
+  children___children___internal___content = 'children.children.internal.content',
+  children___children___internal___contentDigest = 'children.children.internal.contentDigest',
+  children___children___internal___description = 'children.children.internal.description',
+  children___children___internal___fieldOwners = 'children.children.internal.fieldOwners',
+  children___children___internal___ignoreType = 'children.children.internal.ignoreType',
+  children___children___internal___mediaType = 'children.children.internal.mediaType',
+  children___children___internal___owner = 'children.children.internal.owner',
+  children___children___internal___type = 'children.children.internal.type',
+  children___internal___content = 'children.internal.content',
+  children___internal___contentDigest = 'children.internal.contentDigest',
+  children___internal___description = 'children.internal.description',
+  children___internal___fieldOwners = 'children.internal.fieldOwners',
+  children___internal___ignoreType = 'children.internal.ignoreType',
+  children___internal___mediaType = 'children.internal.mediaType',
+  children___internal___owner = 'children.internal.owner',
+  children___internal___type = 'children.internal.type',
+  internal___content = 'internal.content',
+  internal___contentDigest = 'internal.contentDigest',
+  internal___description = 'internal.description',
+  internal___fieldOwners = 'internal.fieldOwners',
+  internal___ignoreType = 'internal.ignoreType',
+  internal___mediaType = 'internal.mediaType',
+  internal___owner = 'internal.owner',
+  internal___type = 'internal.type'
+}
+
+type MarkdownRemarkFieldsFilterInput = {
+  readonly slug: Maybe<StringQueryOperatorInput>;
+};
+
+type MarkdownRemarkFilterInput = {
+  readonly id: Maybe<StringQueryOperatorInput>;
+  readonly frontmatter: Maybe<MarkdownRemarkFrontmatterFilterInput>;
+  readonly excerpt: Maybe<StringQueryOperatorInput>;
+  readonly rawMarkdownBody: Maybe<StringQueryOperatorInput>;
+  readonly fileAbsolutePath: Maybe<StringQueryOperatorInput>;
+  readonly fields: Maybe<MarkdownRemarkFieldsFilterInput>;
+  readonly html: Maybe<StringQueryOperatorInput>;
+  readonly htmlAst: Maybe<JSONQueryOperatorInput>;
+  readonly excerptAst: Maybe<JSONQueryOperatorInput>;
+  readonly headings: Maybe<MarkdownHeadingFilterListInput>;
+  readonly timeToRead: Maybe<IntQueryOperatorInput>;
+  readonly tableOfContents: Maybe<StringQueryOperatorInput>;
+  readonly wordCount: Maybe<MarkdownWordCountFilterInput>;
+  readonly parent: Maybe<NodeFilterInput>;
+  readonly children: Maybe<NodeFilterListInput>;
+  readonly internal: Maybe<InternalFilterInput>;
+};
+
+type MarkdownRemarkFrontmatter = {
+  readonly title: Maybe<Scalars['String']>;
+};
+
+type MarkdownRemarkFrontmatterFilterInput = {
+  readonly title: Maybe<StringQueryOperatorInput>;
+};
+
+type MarkdownRemarkGroupConnection = {
+  readonly totalCount: Scalars['Int'];
+  readonly edges: ReadonlyArray<MarkdownRemarkEdge>;
+  readonly nodes: ReadonlyArray<MarkdownRemark>;
+  readonly pageInfo: PageInfo;
+  readonly field: Scalars['String'];
+  readonly fieldValue: Maybe<Scalars['String']>;
+};
+
+type MarkdownRemarkSortInput = {
+  readonly fields: Maybe<ReadonlyArray<Maybe<MarkdownRemarkFieldsEnum>>>;
+  readonly order: Maybe<ReadonlyArray<Maybe<SortOrderEnum>>>;
+};
+
+type MarkdownWordCount = {
+  readonly paragraphs: Maybe<Scalars['Int']>;
+  readonly sentences: Maybe<Scalars['Int']>;
+  readonly words: Maybe<Scalars['Int']>;
+};
+
+type MarkdownWordCountFilterInput = {
+  readonly paragraphs: Maybe<IntQueryOperatorInput>;
+  readonly sentences: Maybe<IntQueryOperatorInput>;
+  readonly words: Maybe<IntQueryOperatorInput>;
+};
+
 /** Node Interface */
 type Node = {
   readonly id: Scalars['ID'];
@@ -1954,6 +2301,8 @@ type Query = {
   readonly allSite: SiteConnection;
   readonly sitePage: Maybe<SitePage>;
   readonly allSitePage: SitePageConnection;
+  readonly markdownRemark: Maybe<MarkdownRemark>;
+  readonly allMarkdownRemark: MarkdownRemarkConnection;
   readonly wpUser: Maybe<WpUser>;
   readonly allWpUser: WpUserConnection;
   readonly wpComment: Maybe<WpComment>;
@@ -2087,6 +2436,7 @@ type Query_fileArgs = {
   parent: Maybe<NodeFilterInput>;
   children: Maybe<NodeFilterListInput>;
   internal: Maybe<InternalFilterInput>;
+  childMarkdownRemark: Maybe<MarkdownRemarkFilterInput>;
 };
 
 
@@ -2175,21 +2525,49 @@ type Query_sitePageArgs = {
   internalComponentName: Maybe<StringQueryOperatorInput>;
   componentChunkName: Maybe<StringQueryOperatorInput>;
   matchPath: Maybe<StringQueryOperatorInput>;
-  id: Maybe<StringQueryOperatorInput>;
-  parent: Maybe<NodeFilterInput>;
-  children: Maybe<NodeFilterListInput>;
-  internal: Maybe<InternalFilterInput>;
   isCreatedByStatefulCreatePages: Maybe<BooleanQueryOperatorInput>;
   context: Maybe<SitePageContextFilterInput>;
   pluginCreator: Maybe<SitePluginFilterInput>;
   pluginCreatorId: Maybe<StringQueryOperatorInput>;
   componentPath: Maybe<StringQueryOperatorInput>;
+  id: Maybe<StringQueryOperatorInput>;
+  parent: Maybe<NodeFilterInput>;
+  children: Maybe<NodeFilterListInput>;
+  internal: Maybe<InternalFilterInput>;
 };
 
 
 type Query_allSitePageArgs = {
   filter: Maybe<SitePageFilterInput>;
   sort: Maybe<SitePageSortInput>;
+  skip: Maybe<Scalars['Int']>;
+  limit: Maybe<Scalars['Int']>;
+};
+
+
+type Query_markdownRemarkArgs = {
+  id: Maybe<StringQueryOperatorInput>;
+  frontmatter: Maybe<MarkdownRemarkFrontmatterFilterInput>;
+  excerpt: Maybe<StringQueryOperatorInput>;
+  rawMarkdownBody: Maybe<StringQueryOperatorInput>;
+  fileAbsolutePath: Maybe<StringQueryOperatorInput>;
+  fields: Maybe<MarkdownRemarkFieldsFilterInput>;
+  html: Maybe<StringQueryOperatorInput>;
+  htmlAst: Maybe<JSONQueryOperatorInput>;
+  excerptAst: Maybe<JSONQueryOperatorInput>;
+  headings: Maybe<MarkdownHeadingFilterListInput>;
+  timeToRead: Maybe<IntQueryOperatorInput>;
+  tableOfContents: Maybe<StringQueryOperatorInput>;
+  wordCount: Maybe<MarkdownWordCountFilterInput>;
+  parent: Maybe<NodeFilterInput>;
+  children: Maybe<NodeFilterListInput>;
+  internal: Maybe<InternalFilterInput>;
+};
+
+
+type Query_allMarkdownRemarkArgs = {
+  filter: Maybe<MarkdownRemarkFilterInput>;
+  sort: Maybe<MarkdownRemarkSortInput>;
   skip: Maybe<Scalars['Int']>;
   limit: Maybe<Scalars['Int']>;
 };
@@ -3124,15 +3502,15 @@ type SitePage = Node & {
   readonly internalComponentName: Scalars['String'];
   readonly componentChunkName: Scalars['String'];
   readonly matchPath: Maybe<Scalars['String']>;
-  readonly id: Scalars['ID'];
-  readonly parent: Maybe<Node>;
-  readonly children: ReadonlyArray<Node>;
-  readonly internal: Internal;
   readonly isCreatedByStatefulCreatePages: Maybe<Scalars['Boolean']>;
   readonly context: Maybe<SitePageContext>;
   readonly pluginCreator: Maybe<SitePlugin>;
   readonly pluginCreatorId: Maybe<Scalars['String']>;
   readonly componentPath: Maybe<Scalars['String']>;
+  readonly id: Scalars['ID'];
+  readonly parent: Maybe<Node>;
+  readonly children: ReadonlyArray<Node>;
+  readonly internal: Internal;
 };
 
 type SitePageConnection = {
@@ -3184,92 +3562,6 @@ enum SitePageFieldsEnum {
   internalComponentName = 'internalComponentName',
   componentChunkName = 'componentChunkName',
   matchPath = 'matchPath',
-  id = 'id',
-  parent___id = 'parent.id',
-  parent___parent___id = 'parent.parent.id',
-  parent___parent___parent___id = 'parent.parent.parent.id',
-  parent___parent___parent___children = 'parent.parent.parent.children',
-  parent___parent___children = 'parent.parent.children',
-  parent___parent___children___id = 'parent.parent.children.id',
-  parent___parent___children___children = 'parent.parent.children.children',
-  parent___parent___internal___content = 'parent.parent.internal.content',
-  parent___parent___internal___contentDigest = 'parent.parent.internal.contentDigest',
-  parent___parent___internal___description = 'parent.parent.internal.description',
-  parent___parent___internal___fieldOwners = 'parent.parent.internal.fieldOwners',
-  parent___parent___internal___ignoreType = 'parent.parent.internal.ignoreType',
-  parent___parent___internal___mediaType = 'parent.parent.internal.mediaType',
-  parent___parent___internal___owner = 'parent.parent.internal.owner',
-  parent___parent___internal___type = 'parent.parent.internal.type',
-  parent___children = 'parent.children',
-  parent___children___id = 'parent.children.id',
-  parent___children___parent___id = 'parent.children.parent.id',
-  parent___children___parent___children = 'parent.children.parent.children',
-  parent___children___children = 'parent.children.children',
-  parent___children___children___id = 'parent.children.children.id',
-  parent___children___children___children = 'parent.children.children.children',
-  parent___children___internal___content = 'parent.children.internal.content',
-  parent___children___internal___contentDigest = 'parent.children.internal.contentDigest',
-  parent___children___internal___description = 'parent.children.internal.description',
-  parent___children___internal___fieldOwners = 'parent.children.internal.fieldOwners',
-  parent___children___internal___ignoreType = 'parent.children.internal.ignoreType',
-  parent___children___internal___mediaType = 'parent.children.internal.mediaType',
-  parent___children___internal___owner = 'parent.children.internal.owner',
-  parent___children___internal___type = 'parent.children.internal.type',
-  parent___internal___content = 'parent.internal.content',
-  parent___internal___contentDigest = 'parent.internal.contentDigest',
-  parent___internal___description = 'parent.internal.description',
-  parent___internal___fieldOwners = 'parent.internal.fieldOwners',
-  parent___internal___ignoreType = 'parent.internal.ignoreType',
-  parent___internal___mediaType = 'parent.internal.mediaType',
-  parent___internal___owner = 'parent.internal.owner',
-  parent___internal___type = 'parent.internal.type',
-  children = 'children',
-  children___id = 'children.id',
-  children___parent___id = 'children.parent.id',
-  children___parent___parent___id = 'children.parent.parent.id',
-  children___parent___parent___children = 'children.parent.parent.children',
-  children___parent___children = 'children.parent.children',
-  children___parent___children___id = 'children.parent.children.id',
-  children___parent___children___children = 'children.parent.children.children',
-  children___parent___internal___content = 'children.parent.internal.content',
-  children___parent___internal___contentDigest = 'children.parent.internal.contentDigest',
-  children___parent___internal___description = 'children.parent.internal.description',
-  children___parent___internal___fieldOwners = 'children.parent.internal.fieldOwners',
-  children___parent___internal___ignoreType = 'children.parent.internal.ignoreType',
-  children___parent___internal___mediaType = 'children.parent.internal.mediaType',
-  children___parent___internal___owner = 'children.parent.internal.owner',
-  children___parent___internal___type = 'children.parent.internal.type',
-  children___children = 'children.children',
-  children___children___id = 'children.children.id',
-  children___children___parent___id = 'children.children.parent.id',
-  children___children___parent___children = 'children.children.parent.children',
-  children___children___children = 'children.children.children',
-  children___children___children___id = 'children.children.children.id',
-  children___children___children___children = 'children.children.children.children',
-  children___children___internal___content = 'children.children.internal.content',
-  children___children___internal___contentDigest = 'children.children.internal.contentDigest',
-  children___children___internal___description = 'children.children.internal.description',
-  children___children___internal___fieldOwners = 'children.children.internal.fieldOwners',
-  children___children___internal___ignoreType = 'children.children.internal.ignoreType',
-  children___children___internal___mediaType = 'children.children.internal.mediaType',
-  children___children___internal___owner = 'children.children.internal.owner',
-  children___children___internal___type = 'children.children.internal.type',
-  children___internal___content = 'children.internal.content',
-  children___internal___contentDigest = 'children.internal.contentDigest',
-  children___internal___description = 'children.internal.description',
-  children___internal___fieldOwners = 'children.internal.fieldOwners',
-  children___internal___ignoreType = 'children.internal.ignoreType',
-  children___internal___mediaType = 'children.internal.mediaType',
-  children___internal___owner = 'children.internal.owner',
-  children___internal___type = 'children.internal.type',
-  internal___content = 'internal.content',
-  internal___contentDigest = 'internal.contentDigest',
-  internal___description = 'internal.description',
-  internal___fieldOwners = 'internal.fieldOwners',
-  internal___ignoreType = 'internal.ignoreType',
-  internal___mediaType = 'internal.mediaType',
-  internal___owner = 'internal.owner',
-  internal___type = 'internal.type',
   isCreatedByStatefulCreatePages = 'isCreatedByStatefulCreatePages',
   context___id = 'context.id',
   context___slug = 'context.slug',
@@ -3360,7 +3652,93 @@ enum SitePageFieldsEnum {
   pluginCreator___packageJson___peerDependencies___version = 'pluginCreator.packageJson.peerDependencies.version',
   pluginCreator___packageJson___keywords = 'pluginCreator.packageJson.keywords',
   pluginCreatorId = 'pluginCreatorId',
-  componentPath = 'componentPath'
+  componentPath = 'componentPath',
+  id = 'id',
+  parent___id = 'parent.id',
+  parent___parent___id = 'parent.parent.id',
+  parent___parent___parent___id = 'parent.parent.parent.id',
+  parent___parent___parent___children = 'parent.parent.parent.children',
+  parent___parent___children = 'parent.parent.children',
+  parent___parent___children___id = 'parent.parent.children.id',
+  parent___parent___children___children = 'parent.parent.children.children',
+  parent___parent___internal___content = 'parent.parent.internal.content',
+  parent___parent___internal___contentDigest = 'parent.parent.internal.contentDigest',
+  parent___parent___internal___description = 'parent.parent.internal.description',
+  parent___parent___internal___fieldOwners = 'parent.parent.internal.fieldOwners',
+  parent___parent___internal___ignoreType = 'parent.parent.internal.ignoreType',
+  parent___parent___internal___mediaType = 'parent.parent.internal.mediaType',
+  parent___parent___internal___owner = 'parent.parent.internal.owner',
+  parent___parent___internal___type = 'parent.parent.internal.type',
+  parent___children = 'parent.children',
+  parent___children___id = 'parent.children.id',
+  parent___children___parent___id = 'parent.children.parent.id',
+  parent___children___parent___children = 'parent.children.parent.children',
+  parent___children___children = 'parent.children.children',
+  parent___children___children___id = 'parent.children.children.id',
+  parent___children___children___children = 'parent.children.children.children',
+  parent___children___internal___content = 'parent.children.internal.content',
+  parent___children___internal___contentDigest = 'parent.children.internal.contentDigest',
+  parent___children___internal___description = 'parent.children.internal.description',
+  parent___children___internal___fieldOwners = 'parent.children.internal.fieldOwners',
+  parent___children___internal___ignoreType = 'parent.children.internal.ignoreType',
+  parent___children___internal___mediaType = 'parent.children.internal.mediaType',
+  parent___children___internal___owner = 'parent.children.internal.owner',
+  parent___children___internal___type = 'parent.children.internal.type',
+  parent___internal___content = 'parent.internal.content',
+  parent___internal___contentDigest = 'parent.internal.contentDigest',
+  parent___internal___description = 'parent.internal.description',
+  parent___internal___fieldOwners = 'parent.internal.fieldOwners',
+  parent___internal___ignoreType = 'parent.internal.ignoreType',
+  parent___internal___mediaType = 'parent.internal.mediaType',
+  parent___internal___owner = 'parent.internal.owner',
+  parent___internal___type = 'parent.internal.type',
+  children = 'children',
+  children___id = 'children.id',
+  children___parent___id = 'children.parent.id',
+  children___parent___parent___id = 'children.parent.parent.id',
+  children___parent___parent___children = 'children.parent.parent.children',
+  children___parent___children = 'children.parent.children',
+  children___parent___children___id = 'children.parent.children.id',
+  children___parent___children___children = 'children.parent.children.children',
+  children___parent___internal___content = 'children.parent.internal.content',
+  children___parent___internal___contentDigest = 'children.parent.internal.contentDigest',
+  children___parent___internal___description = 'children.parent.internal.description',
+  children___parent___internal___fieldOwners = 'children.parent.internal.fieldOwners',
+  children___parent___internal___ignoreType = 'children.parent.internal.ignoreType',
+  children___parent___internal___mediaType = 'children.parent.internal.mediaType',
+  children___parent___internal___owner = 'children.parent.internal.owner',
+  children___parent___internal___type = 'children.parent.internal.type',
+  children___children = 'children.children',
+  children___children___id = 'children.children.id',
+  children___children___parent___id = 'children.children.parent.id',
+  children___children___parent___children = 'children.children.parent.children',
+  children___children___children = 'children.children.children',
+  children___children___children___id = 'children.children.children.id',
+  children___children___children___children = 'children.children.children.children',
+  children___children___internal___content = 'children.children.internal.content',
+  children___children___internal___contentDigest = 'children.children.internal.contentDigest',
+  children___children___internal___description = 'children.children.internal.description',
+  children___children___internal___fieldOwners = 'children.children.internal.fieldOwners',
+  children___children___internal___ignoreType = 'children.children.internal.ignoreType',
+  children___children___internal___mediaType = 'children.children.internal.mediaType',
+  children___children___internal___owner = 'children.children.internal.owner',
+  children___children___internal___type = 'children.children.internal.type',
+  children___internal___content = 'children.internal.content',
+  children___internal___contentDigest = 'children.internal.contentDigest',
+  children___internal___description = 'children.internal.description',
+  children___internal___fieldOwners = 'children.internal.fieldOwners',
+  children___internal___ignoreType = 'children.internal.ignoreType',
+  children___internal___mediaType = 'children.internal.mediaType',
+  children___internal___owner = 'children.internal.owner',
+  children___internal___type = 'children.internal.type',
+  internal___content = 'internal.content',
+  internal___contentDigest = 'internal.contentDigest',
+  internal___description = 'internal.description',
+  internal___fieldOwners = 'internal.fieldOwners',
+  internal___ignoreType = 'internal.ignoreType',
+  internal___mediaType = 'internal.mediaType',
+  internal___owner = 'internal.owner',
+  internal___type = 'internal.type'
 }
 
 type SitePageFilterInput = {
@@ -3369,15 +3747,15 @@ type SitePageFilterInput = {
   readonly internalComponentName: Maybe<StringQueryOperatorInput>;
   readonly componentChunkName: Maybe<StringQueryOperatorInput>;
   readonly matchPath: Maybe<StringQueryOperatorInput>;
-  readonly id: Maybe<StringQueryOperatorInput>;
-  readonly parent: Maybe<NodeFilterInput>;
-  readonly children: Maybe<NodeFilterListInput>;
-  readonly internal: Maybe<InternalFilterInput>;
   readonly isCreatedByStatefulCreatePages: Maybe<BooleanQueryOperatorInput>;
   readonly context: Maybe<SitePageContextFilterInput>;
   readonly pluginCreator: Maybe<SitePluginFilterInput>;
   readonly pluginCreatorId: Maybe<StringQueryOperatorInput>;
   readonly componentPath: Maybe<StringQueryOperatorInput>;
+  readonly id: Maybe<StringQueryOperatorInput>;
+  readonly parent: Maybe<NodeFilterInput>;
+  readonly children: Maybe<NodeFilterListInput>;
+  readonly internal: Maybe<InternalFilterInput>;
 };
 
 type SitePageGroupConnection = {
@@ -5885,6 +6263,37 @@ enum WpMediaItemFieldsEnum {
   remoteFile___internal___mediaType = 'remoteFile.internal.mediaType',
   remoteFile___internal___owner = 'remoteFile.internal.owner',
   remoteFile___internal___type = 'remoteFile.internal.type',
+  remoteFile___childMarkdownRemark___id = 'remoteFile.childMarkdownRemark.id',
+  remoteFile___childMarkdownRemark___frontmatter___title = 'remoteFile.childMarkdownRemark.frontmatter.title',
+  remoteFile___childMarkdownRemark___excerpt = 'remoteFile.childMarkdownRemark.excerpt',
+  remoteFile___childMarkdownRemark___rawMarkdownBody = 'remoteFile.childMarkdownRemark.rawMarkdownBody',
+  remoteFile___childMarkdownRemark___fileAbsolutePath = 'remoteFile.childMarkdownRemark.fileAbsolutePath',
+  remoteFile___childMarkdownRemark___fields___slug = 'remoteFile.childMarkdownRemark.fields.slug',
+  remoteFile___childMarkdownRemark___html = 'remoteFile.childMarkdownRemark.html',
+  remoteFile___childMarkdownRemark___htmlAst = 'remoteFile.childMarkdownRemark.htmlAst',
+  remoteFile___childMarkdownRemark___excerptAst = 'remoteFile.childMarkdownRemark.excerptAst',
+  remoteFile___childMarkdownRemark___headings = 'remoteFile.childMarkdownRemark.headings',
+  remoteFile___childMarkdownRemark___headings___id = 'remoteFile.childMarkdownRemark.headings.id',
+  remoteFile___childMarkdownRemark___headings___value = 'remoteFile.childMarkdownRemark.headings.value',
+  remoteFile___childMarkdownRemark___headings___depth = 'remoteFile.childMarkdownRemark.headings.depth',
+  remoteFile___childMarkdownRemark___timeToRead = 'remoteFile.childMarkdownRemark.timeToRead',
+  remoteFile___childMarkdownRemark___tableOfContents = 'remoteFile.childMarkdownRemark.tableOfContents',
+  remoteFile___childMarkdownRemark___wordCount___paragraphs = 'remoteFile.childMarkdownRemark.wordCount.paragraphs',
+  remoteFile___childMarkdownRemark___wordCount___sentences = 'remoteFile.childMarkdownRemark.wordCount.sentences',
+  remoteFile___childMarkdownRemark___wordCount___words = 'remoteFile.childMarkdownRemark.wordCount.words',
+  remoteFile___childMarkdownRemark___parent___id = 'remoteFile.childMarkdownRemark.parent.id',
+  remoteFile___childMarkdownRemark___parent___children = 'remoteFile.childMarkdownRemark.parent.children',
+  remoteFile___childMarkdownRemark___children = 'remoteFile.childMarkdownRemark.children',
+  remoteFile___childMarkdownRemark___children___id = 'remoteFile.childMarkdownRemark.children.id',
+  remoteFile___childMarkdownRemark___children___children = 'remoteFile.childMarkdownRemark.children.children',
+  remoteFile___childMarkdownRemark___internal___content = 'remoteFile.childMarkdownRemark.internal.content',
+  remoteFile___childMarkdownRemark___internal___contentDigest = 'remoteFile.childMarkdownRemark.internal.contentDigest',
+  remoteFile___childMarkdownRemark___internal___description = 'remoteFile.childMarkdownRemark.internal.description',
+  remoteFile___childMarkdownRemark___internal___fieldOwners = 'remoteFile.childMarkdownRemark.internal.fieldOwners',
+  remoteFile___childMarkdownRemark___internal___ignoreType = 'remoteFile.childMarkdownRemark.internal.ignoreType',
+  remoteFile___childMarkdownRemark___internal___mediaType = 'remoteFile.childMarkdownRemark.internal.mediaType',
+  remoteFile___childMarkdownRemark___internal___owner = 'remoteFile.childMarkdownRemark.internal.owner',
+  remoteFile___childMarkdownRemark___internal___type = 'remoteFile.childMarkdownRemark.internal.type',
   localFile___sourceInstanceName = 'localFile.sourceInstanceName',
   localFile___absolutePath = 'localFile.absolutePath',
   localFile___relativePath = 'localFile.relativePath',
@@ -6025,6 +6434,37 @@ enum WpMediaItemFieldsEnum {
   localFile___internal___mediaType = 'localFile.internal.mediaType',
   localFile___internal___owner = 'localFile.internal.owner',
   localFile___internal___type = 'localFile.internal.type',
+  localFile___childMarkdownRemark___id = 'localFile.childMarkdownRemark.id',
+  localFile___childMarkdownRemark___frontmatter___title = 'localFile.childMarkdownRemark.frontmatter.title',
+  localFile___childMarkdownRemark___excerpt = 'localFile.childMarkdownRemark.excerpt',
+  localFile___childMarkdownRemark___rawMarkdownBody = 'localFile.childMarkdownRemark.rawMarkdownBody',
+  localFile___childMarkdownRemark___fileAbsolutePath = 'localFile.childMarkdownRemark.fileAbsolutePath',
+  localFile___childMarkdownRemark___fields___slug = 'localFile.childMarkdownRemark.fields.slug',
+  localFile___childMarkdownRemark___html = 'localFile.childMarkdownRemark.html',
+  localFile___childMarkdownRemark___htmlAst = 'localFile.childMarkdownRemark.htmlAst',
+  localFile___childMarkdownRemark___excerptAst = 'localFile.childMarkdownRemark.excerptAst',
+  localFile___childMarkdownRemark___headings = 'localFile.childMarkdownRemark.headings',
+  localFile___childMarkdownRemark___headings___id = 'localFile.childMarkdownRemark.headings.id',
+  localFile___childMarkdownRemark___headings___value = 'localFile.childMarkdownRemark.headings.value',
+  localFile___childMarkdownRemark___headings___depth = 'localFile.childMarkdownRemark.headings.depth',
+  localFile___childMarkdownRemark___timeToRead = 'localFile.childMarkdownRemark.timeToRead',
+  localFile___childMarkdownRemark___tableOfContents = 'localFile.childMarkdownRemark.tableOfContents',
+  localFile___childMarkdownRemark___wordCount___paragraphs = 'localFile.childMarkdownRemark.wordCount.paragraphs',
+  localFile___childMarkdownRemark___wordCount___sentences = 'localFile.childMarkdownRemark.wordCount.sentences',
+  localFile___childMarkdownRemark___wordCount___words = 'localFile.childMarkdownRemark.wordCount.words',
+  localFile___childMarkdownRemark___parent___id = 'localFile.childMarkdownRemark.parent.id',
+  localFile___childMarkdownRemark___parent___children = 'localFile.childMarkdownRemark.parent.children',
+  localFile___childMarkdownRemark___children = 'localFile.childMarkdownRemark.children',
+  localFile___childMarkdownRemark___children___id = 'localFile.childMarkdownRemark.children.id',
+  localFile___childMarkdownRemark___children___children = 'localFile.childMarkdownRemark.children.children',
+  localFile___childMarkdownRemark___internal___content = 'localFile.childMarkdownRemark.internal.content',
+  localFile___childMarkdownRemark___internal___contentDigest = 'localFile.childMarkdownRemark.internal.contentDigest',
+  localFile___childMarkdownRemark___internal___description = 'localFile.childMarkdownRemark.internal.description',
+  localFile___childMarkdownRemark___internal___fieldOwners = 'localFile.childMarkdownRemark.internal.fieldOwners',
+  localFile___childMarkdownRemark___internal___ignoreType = 'localFile.childMarkdownRemark.internal.ignoreType',
+  localFile___childMarkdownRemark___internal___mediaType = 'localFile.childMarkdownRemark.internal.mediaType',
+  localFile___childMarkdownRemark___internal___owner = 'localFile.childMarkdownRemark.internal.owner',
+  localFile___childMarkdownRemark___internal___type = 'localFile.childMarkdownRemark.internal.type',
   parent___id = 'parent.id',
   parent___parent___id = 'parent.parent.id',
   parent___parent___parent___id = 'parent.parent.parent.id',
@@ -9880,12 +10320,12 @@ type ContentPageQueryVariables = Exact<{
 }>;
 
 
-type ContentPageQuery = { readonly wpPage: Maybe<Pick<WpPage, 'title' | 'content'>> };
+type ContentPageQuery = { readonly page: Maybe<Pick<WpPage, 'title' | 'content'>> };
 
 type FormFieldsFragment = (
   Pick<Dailp_AnnotatedForm, 'index' | 'source' | 'simplePhonetics' | 'phonemic' | 'englishGloss' | 'commentary'>
   & { readonly segments: Maybe<ReadonlyArray<(
-    Pick<Dailp_MorphemeSegment, 'morpheme' | 'gloss' | 'nextSeparator'>
+    Pick<Dailp_MorphemeSegment, 'morpheme' | 'gloss' | 'displayGloss' | 'nextSeparator'>
     & { simpleMorpheme: Dailp_MorphemeSegment['morpheme'] }
     & { readonly matchingTag: Maybe<Pick<Dailp_MorphemeTag, 'crg' | 'learner'>> }
   )>> }
@@ -9946,6 +10386,11 @@ type PagesQueryQuery = { readonly allSitePage: { readonly nodes: ReadonlyArray<P
 type IndexPageQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-type IndexPageQuery = { readonly dailp: { readonly allCollections: ReadonlyArray<Pick<Dailp_DocumentCollection, 'name' | 'slug'>> } };
+type IndexPageQuery = { readonly dailp: { readonly allCollections: ReadonlyArray<Pick<Dailp_DocumentCollection, 'name' | 'slug'>> }, readonly aboutPage: Maybe<Pick<WpPage, 'title' | 'content'>> };
+
+type homesneadpiedailpEncodingwebsitesrcfooterTsx1552981879QueryVariables = Exact<{ [key: string]: never; }>;
+
+
+type homesneadpiedailpEncodingwebsitesrcfooterTsx1552981879Query = { readonly currentBuildDate: Maybe<Pick<CurrentBuildDate, 'currentDate'>> };
 
 }

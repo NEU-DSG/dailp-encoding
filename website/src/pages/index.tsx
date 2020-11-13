@@ -26,47 +26,8 @@ const IndexPage = (props: { data: GatsbyTypes.IndexPageQuery }) => (
   <Layout title="Collections">
     <DocIndex>
       <FullWidth>
-        <CarouselProvider
-          className={carousel}
-          totalSlides={2}
-          naturalSlideWidth={100}
-          naturalSlideHeight={40}
-          isIntrinsicHeight={true}
-          isPlaying={true}
-        >
-          <Slider>
-            {images.map((url, idx) => (
-              <Slide index={idx} innerClassName={centerAlign}>
-                <img src={url} />
-              </Slide>
-            ))}
-          </Slider>
-          <ButtonBack className={cx(carouselButton, onLeft)}>
-            <BiLeftArrow aria-label="Previous" size={24} />
-          </ButtonBack>
-          <ButtonNext className={cx(carouselButton, onRight)}>
-            <BiRightArrow aria-label="Next" size={24} />
-          </ButtonNext>
-        </CarouselProvider>
-        <h5 className={centerAlign}>
-          Digital Archive of American Indian Languages Preservation and
-          Perseverance
-        </h5>
-        <p>
-          DAILP is a community-based digital archive created to support the
-          ongoing creation of indigenous peoples’ knowledge, interpretations,
-          and representations of the past. DAILP will be a collaborative place
-          for indigenous language learners, speakers, and scholars to translate
-          documents and other media across American Indian languages.
-        </p>
-        <p>
-          The DAILP team is developing a prototype of this translation space
-          using a selection of handwritten documents in the Cherokee syllabary
-          that have been translated using an online lexical data set drawn from
-          the contributions of Cherokee linguists in our collective.
-        </p>
+        <div dangerouslySetInnerHTML={{ __html: props.data.aboutPage?.content }}/>
         <h1>Cherokee Manuscript Collections</h1>
-        <div dangerouslySetInnerHTML={{ __html: props.data.aboutPage.content }}/>
         <ul>
           {props.data.dailp.allCollections.map((collection) => (
             <li key={collection.slug}>
@@ -96,8 +57,6 @@ export const query = graphql`
     }
   }
 `
-
-
 
 export const DocIndex = styled.main`
   display: flex;
