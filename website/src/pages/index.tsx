@@ -48,6 +48,10 @@ const IndexPage = (props: { data: GatsbyTypes.IndexPageQuery }) => (
             <BiRightArrow aria-label="Next" size={24} />
           </ButtonNext>
         </CarouselProvider>
+        <h5 className={centerAlign}>
+          Digital Archive of American Indian Languages Preservation and
+          Perseverance
+        </h5>
         <p>
           DAILP is a community-based digital archive created to support the
           ongoing creation of indigenous peoples’ knowledge, interpretations,
@@ -95,7 +99,6 @@ export const DocIndex = styled.main`
   padding-top: 1rem;
 `
 
-
 export const FullWidth = styled.article`
   ${fullWidth}
   flex-grow: 1;
@@ -113,10 +116,8 @@ const carouselButton = css`
   outline: none;
   border: none;
   background: none;
-  width: 3rem;
+  width: 4rem;
 `
-
-
 
 const onLeft = css`
   left: 0;
