@@ -83,7 +83,7 @@ function isPageBreak(
   )
 }
 
-const AnnotatedForm = (
+export const AnnotatedForm = (
   p: Props & { segment: GatsbyTypes.FormFieldsFragment }
 ) => {
   if (!p.segment.source) {

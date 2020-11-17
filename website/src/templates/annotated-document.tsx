@@ -11,7 +11,7 @@ import {
 import { Tab, TabPanel, TabList } from "reakit/Tab"
 import Sticky from "react-stickynode"
 import Layout from "../layout"
-import { AnnotationSection, Segment } from "../segment"
+import { AnnotationSection, Segment, AnnotatedForm } from "../segment"
 import Cookies from "js-cookie"
 import theme, { fullWidth, largeDialog } from "../theme"
 import { collectionRoute, documentDetailsRoute, documentRoute } from "../routes"
@@ -104,6 +104,19 @@ const AnnotatedDocumentPage = (p: {
                 }
                 pageImages={doc.pageImages}
               />
+            ))}
+            {doc.forms?.map((form, i) => (
+              <AnnotatedForm
+                key={i}
+                segment={form}
+                dialog={dialog}
+                onOpenDetails={setMorpheme}
+                level={experienceLevel.state! as ExperienceLevel}
+                tagSet={tagSet}
+                translations={null}
+                pageImages={doc.pageImages}
+              />
+
             ))}
           </AnnotationSection>
         </TabPanel>
@@ -247,7 +260,7 @@ export const query = graphql`
           year
         }
         pageImages
-        translatedSegments {
+        translatedSegments @skip(if: $isReference) {
           source {
             ... on Dailp_AnnotatedForm {
               ...FormFields
@@ -263,9 +276,9 @@ export const query = graphql`
             text
           }
         }
-        forms {
+        forms @include(if: $isReference) {
           ...FormFields
-        } @include(if: $isReference)
+        }
       }
     }
   }
