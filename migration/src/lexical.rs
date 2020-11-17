@@ -5,7 +5,7 @@ use dailp::convert_udb;
 use dailp::seg_verb_surface_forms;
 use dailp::LexicalEntry;
 use dailp::MorphemeSegment;
-use dailp::{AnnotatedForm, Database, DateTime, PositionInDocument, UniqueAnnotatedForm};
+use dailp::{AnnotatedForm, Database, DateTime, PositionInDocument};
 use futures::future::join_all;
 use mongodb::bson;
 
@@ -107,25 +107,27 @@ fn parse_new_df1975(
         .into_iter()
         // The first two rows are simply headers.
         .skip(2)
-        .enumerate()
         // The rest are relevant to the verb itself.
-        .filter_map(move |(index, columns)| {
+        .filter_map(move |columns| {
             // The columns are as follows: key, page number, root, root gloss,
             // translations 1, 2, 3, transitivity, UDB class, blank, surface forms.
             if columns.len() > 4 && !columns[2].is_empty() {
                 // Skip reference numbers for now.
                 let mut root_values = columns.into_iter();
-                let _key = root_values.next()?;
+                let key = root_values.next()?;
                 let page_number = root_values.next()?;
                 let root = root_values.next().filter(|s| !s.is_empty())?;
                 let root_gloss = root_values.next().filter(|s| !s.is_empty())?;
-                let root_id = LexicalEntry::make_id(&doc_id, &root_gloss);
                 let mut form_values = root_values.clone().skip(after_root + translations);
                 let date = DateTime::new(chrono::Utc.ymd(year, 1, 1).and_hms(0, 0, 0));
+                let pos = PositionInDocument {
+                    document_id: doc_id.clone(),
+                    page_number: page_number.clone(),
+                    index: key.parse().unwrap_or(1),
+                };
                 Some(LexicalEntryWithForms {
                     forms: seg_verb_surface_forms(
-                        &doc_id,
-                        &page_number,
+                        &pos,
                         &date,
                         &mut form_values,
                         translation_count,
@@ -133,33 +135,27 @@ fn parse_new_df1975(
                         has_comment,
                         true,
                     ),
-                    entry: UniqueAnnotatedForm {
-                        id: root_id.clone(),
-                        form: AnnotatedForm {
-                            simple_phonetics: None,
-                            normalized_source: None,
-                            phonemic: None,
-                            commentary: None,
-                            line_break: None,
-                            page_break: None,
-                            english_gloss: root_values
-                                .take(translations)
-                                .map(|s| s.trim().to_owned())
-                                .filter(|s| !s.is_empty())
-                                .collect(),
-                            segments: Some(vec![MorphemeSegment::new(
-                                convert_udb(&root).to_dailp(),
-                                root_id,
-                                None,
-                            )]),
-                            date_recorded: Some(date),
-                            source: root,
-                            position: Some(PositionInDocument {
-                                document_id: doc_id.clone(),
-                                page_number,
-                                index: index as i32 + 1,
-                            }),
-                        },
+                    entry: AnnotatedForm {
+                        id: LexicalEntry::make_id(&doc_id, &root_gloss),
+                        simple_phonetics: None,
+                        normalized_source: None,
+                        phonemic: None,
+                        commentary: None,
+                        line_break: None,
+                        page_break: None,
+                        english_gloss: root_values
+                            .take(translations)
+                            .map(|s| s.trim().to_owned())
+                            .filter(|s| !s.is_empty())
+                            .collect(),
+                        segments: Some(vec![MorphemeSegment::new(
+                            convert_udb(&root).to_dailp(),
+                            root_gloss.to_owned(),
+                            None,
+                        )]),
+                        date_recorded: Some(date),
+                        source: root,
+                        position: pos,
                     },
                 })
             } else {
@@ -268,7 +264,7 @@ fn parse_early_vocab(
     to_skip: usize,
     has_norm: bool,
     has_phonetic: bool,
-) -> impl Iterator<Item = UniqueAnnotatedForm> {
+) -> impl Iterator<Item = AnnotatedForm> {
     use chrono::TimeZone as _;
     sheet
         .values
@@ -291,30 +287,26 @@ fn parse_early_vocab(
                 None
             };
 
-            Some(UniqueAnnotatedForm {
-                form: AnnotatedForm {
-                    normalized_source: norm,
-                    simple_phonetics,
-                    segments: Some(vec![MorphemeSegment::new(
-                        original.clone(),
-                        id.clone(),
-                        None,
-                    )]),
-                    source: original,
-                    phonemic: None,
-                    commentary: None,
-                    english_gloss: vec![gloss],
-                    line_break: None,
-                    page_break: None,
-                    position: Some(PositionInDocument {
-                        document_id: doc_id.to_owned(),
-                        page_number,
-                        index: index as i32 + 1,
-                    }),
-                    date_recorded: Some(DateTime::new(
-                        chrono::Utc.ymd(year, 1, 1).and_hms(0, 0, 0),
-                    )),
+            Some(AnnotatedForm {
+                normalized_source: norm,
+                simple_phonetics,
+                segments: Some(vec![MorphemeSegment::new(
+                    original.clone(),
+                    id.clone(),
+                    None,
+                )]),
+                source: original,
+                phonemic: None,
+                commentary: None,
+                english_gloss: vec![gloss],
+                line_break: None,
+                page_break: None,
+                position: PositionInDocument {
+                    document_id: doc_id.to_owned(),
+                    page_number,
+                    index: index as i32 + 1,
                 },
+                date_recorded: Some(DateTime::new(chrono::Utc.ymd(year, 1, 1).and_hms(0, 0, 0))),
                 id,
             })
         })

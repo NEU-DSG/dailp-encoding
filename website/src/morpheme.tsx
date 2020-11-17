@@ -13,6 +13,7 @@ type BasicMorphemeSegment = NonNullable<
 
 /** Specific details about some morpheme */
 export const MorphemeDetails = (props: {
+  documentId: string
   segment: BasicMorphemeSegment
   dialog: DialogStateReturn
 }) => (
@@ -25,7 +26,7 @@ export const MorphemeDetails = (props: {
       <MdClose size={32} />
     </CloseButton>
     <h4>Known Occurrences of "{props.segment?.gloss}"</h4>
-    <SimilarMorphemeList gloss={props.segment?.gloss!} dialog={props.dialog} />
+    <SimilarMorphemeList documentId={props.documentId} gloss={props.segment?.gloss!} dialog={props.dialog} />
   </>
 )
 
@@ -45,11 +46,12 @@ const CloseButton = styled(Clickable)`
  */
 const SimilarMorphemeList = (props: {
   gloss: string
+  documentId: string
   dialog: DialogStateReturn
 }) => {
   const { data, loading, error } = useQuery(morphemeQuery, {
     skip: !props.gloss,
-    variables: { gloss: props.gloss },
+    variables: { gloss: props.gloss, documentId: props.documentId },
   })
 
   const tag = useQuery(tagQuery, {
@@ -124,8 +126,8 @@ function documentTypeToHeading(ty: string) {
 }
 
 const morphemeQuery = gql`
-  query Morpheme($gloss: String!) {
-    documents: morphemesByDocument(gloss: $gloss) {
+  query Morpheme($gloss: String!, $documentId: String!) {
+    documents: morphemesByDocument(gloss: $gloss, documentId: $documentId) {
       documentId
       documentType
       forms {
