@@ -77,7 +77,8 @@ impl Database {
     pub async fn all_collections(&self) -> Result<Vec<DocumentCollection>> {
         Ok(self
             .documents_collection()
-            .distinct("collection", None, None)
+            // Only show non-reference collections in the list.
+            .distinct("collection", bson::doc! { "is_reference": false }, None)
             .await?
             .iter()
             .filter_map(|doc| doc.as_str())
@@ -85,6 +86,19 @@ impl Database {
                 name: name.to_owned(),
             })
             .collect())
+    }
+
+    pub async fn words_in_document(&self, doc_id: &str) -> Result<Vec<AnnotatedForm>> {
+        use tokio::stream::StreamExt as _;
+        let mut forms: Vec<AnnotatedForm> = self
+            .words_collection()
+            .find(bson::doc! { "position.document_id": doc_id }, None)
+            .await?
+            .filter_map(|doc| doc.ok().and_then(|doc| bson::from_document(doc).ok()))
+            .collect()
+            .await;
+        forms.sort_by_key(|f| f.position.index);
+        Ok(forms)
     }
 
     pub async fn word_search(&self, query: String) -> Result<Vec<AnnotatedForm>> {

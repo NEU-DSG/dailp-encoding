@@ -233,7 +233,7 @@ const ExperiencePicker = (p: { radio: RadioStateReturn }) => {
 }
 
 export const query = graphql`
-  query AnnotatedDocument($id: String!) {
+  query AnnotatedDocument($id: String!, $isReference: Boolean!) {
     dailp {
       document(id: $id) {
         id
@@ -263,6 +263,9 @@ export const query = graphql`
             text
           }
         }
+        forms {
+          ...FormFields
+        } @include(if: $isReference)
       }
     }
   }

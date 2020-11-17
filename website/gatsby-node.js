@@ -12,9 +12,9 @@ const createDocumentPages = async ({ actions, graphql }) => {
     query {
       dailp {
         allDocuments {
-          title
           id
           slug
+          isReference
         }
         allCollections {
           name
@@ -25,7 +25,7 @@ const createDocumentPages = async ({ actions, graphql }) => {
   `)
 
   const collections = []
-  for (const { title, id, collection, slug } of data.dailp.allDocuments) {
+  for (const { id, collection, slug, isReference } of data.dailp.allDocuments) {
     if (collection && !collections.includes(collection)) {
       collections.push(collection)
     }
@@ -34,13 +34,13 @@ const createDocumentPages = async ({ actions, graphql }) => {
     actions.createPage({
       path: `documents/${slug}`,
       component: path.resolve(`./src/templates/annotated-document.tsx`),
-      context: { id },
+      context: { id, isReference },
     })
     // The details page displays information and description about this document.
     actions.createPage({
       path: `documents/${slug}/details`,
       component: path.resolve("./src/templates/document-details.tsx"),
-      context: { id },
+      context: { id, isReference },
     })
   }
 
