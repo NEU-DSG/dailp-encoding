@@ -185,7 +185,6 @@ const MorphemeSegment = (p: {
     gloss =
       p.segment.matchingTag?.learner ||
       p.segment.matchingTag?.crg ||
-      p.segment.displayGloss ||
       gloss
   }
   if (gloss) {
