@@ -13,7 +13,6 @@ const Footer = () => {
     }
   `)
 
-
   return (
     <footer>
       <div className={cx(light, container)}>
@@ -21,7 +20,7 @@ const Footer = () => {
           This project was created using{" "}
           <a href="https://gatsbyjs.com">Gatsby</a>{" "}
           with help from the{" "}
-          <a href="http://dsg.neu.edu/">Digital Scholarship Group</a>{" "}
+          <a href="http://dsg.northeastern.edu/">Digital Scholarship Group</a>{" "}
           at the{" "}
           <a href="http://library.northeastern.edu/">
             Northeastern University Library

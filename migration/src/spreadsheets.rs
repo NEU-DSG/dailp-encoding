@@ -104,7 +104,7 @@ impl SheetResult {
                     RetryPolicy::<anyhow::Error>::ForwardError(e)
                 } else {
                     tries += 1;
-                    let t = rng.gen_range(800, 1500);
+                    let t = rng.gen_range(1000, 1500);
                     RetryPolicy::<anyhow::Error>::WaitRetry(Duration::from_millis(t))
                 }
             },

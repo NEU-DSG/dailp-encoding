@@ -96,7 +96,6 @@ export const DocIndex = styled.main`
   display: flex;
   flex-flow: column nowrap;
   align-items: center;
-  padding-top: 1rem;
 `
 
 export const FullWidth = styled.article`
@@ -107,6 +106,7 @@ export const FullWidth = styled.article`
 
 const carousel = css`
   position: relative;
+  margin-top: 1rem;
 `
 
 const carouselButton = css`

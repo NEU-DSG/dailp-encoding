@@ -290,11 +290,7 @@ fn parse_early_vocab(
             Some(AnnotatedForm {
                 normalized_source: norm,
                 simple_phonetics,
-                segments: Some(vec![MorphemeSegment::new(
-                    original.clone(),
-                    id.clone(),
-                    None,
-                )]),
+                segments: None,
                 source: original,
                 phonemic: None,
                 commentary: None,
