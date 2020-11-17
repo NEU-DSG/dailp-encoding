@@ -1,5 +1,5 @@
 import React from "react"
-import { css } from "linaria"
+import { css, cx } from "linaria"
 import { useStaticQuery, graphql } from "gatsby"
 import theme, { fullWidth } from "./theme"
 
@@ -13,21 +13,36 @@ const Footer = () => {
     }
   `)
 
+
   return (
-    <footer className={container}>
-      <div className={content}>
-        <a href="https://northeastern.edu">
-          <img
-            src="https://dailp.northeastern.edu/wp-content/themes/quest-child/images/nu-light.svg"
-            alt="Northeastern University"
-          />
-        </a>
-        <a href="https://github.com/neu-dsg/dailp-encoding">
-          Browse the source code
-        </a>
+    <footer>
+      <div className={cx(light, container)}>
+        <div className={content} style={{ display: "block" }}>
+          This project was created using{" "}
+          <a href="https://gatsbyjs.com">Gatsby</a>{" "}
+          with help from the{" "}
+          <a href="http://dsg.neu.edu/">Digital Scholarship Group</a>{" "}
+          at the{" "}
+          <a href="http://library.northeastern.edu/">
+            Northeastern University Library
+          </a>
+        </div>
       </div>
-      <div className={content}>
-        Last Updated on {data.currentBuildDate.currentDate}
+      <div className={container}>
+        <div className={content}>
+          <a href="https://northeastern.edu">
+            <img
+              src="https://dailp.northeastern.edu/wp-content/themes/quest-child/images/nu-light.svg"
+              alt="Northeastern University"
+            />
+          </a>
+          <a href="https://github.com/neu-dsg/dailp-encoding">
+            Browse the source code
+          </a>
+        </div>
+        <div className={content}>
+          Last Updated on {data.currentBuildDate.currentDate}
+        </div>
       </div>
     </footer>
   )
@@ -35,12 +50,12 @@ const Footer = () => {
 export default Footer
 
 const container = css`
-  background-color: ${theme.colors.footer};
   padding: 1rem ${theme.edgeSpacing};
   display: flex;
   flex-flow: column nowrap;
   align-items: center;
   color: ${theme.colors.body};
+  font-size: 0.9rem;
   a {
     color: ${theme.colors.body};
 
@@ -55,11 +70,11 @@ const container = css`
 
 const content = css`
   ${fullWidth}
-  font-size: 0.9rem;
   display: flex;
   flex-flow: row wrap;
   justify-content: space-between;
-  & > * {
-    margin-right: 0.5rem;
-  }
+`
+
+const light = css`
+  background-color: ${theme.colors.altFooter};
 `
