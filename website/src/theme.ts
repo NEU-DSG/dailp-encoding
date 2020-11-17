@@ -11,6 +11,7 @@ const theme = {
   colors: {
     header: "#f7eeed",
     footer: "#405372",
+    altFooter: "#4f5970",
     body: "white",
     text: "black",
     link: "#405372",
