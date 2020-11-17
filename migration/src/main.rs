@@ -17,11 +17,11 @@ async fn main() -> Result<()> {
 
     migrate_data(&db).await?;
 
-    println!("Migrating DF1975 and DF2003...");
-    lexical::migrate_dictionaries(&db).await?;
-
     println!("Migrating early vocabularies...");
     lexical::migrate_old_lexical(&db).await?;
+
+    println!("Migrating DF1975 and DF2003...");
+    lexical::migrate_dictionaries(&db).await?;
 
     println!("Migrating tags to database...");
     tags::migrate_tags(&db).await?;
@@ -69,7 +69,7 @@ async fn fetch_sheet(
     // This includes publication information and a link to the translation.
     let meta = spreadsheets::SheetResult::from_sheet(sheet_id, Some("Metadata"))
         .await?
-        .into_metadata()
+        .into_metadata(false)
         .await?;
 
     // Parse references for this particular document.

@@ -369,7 +369,7 @@ impl SheetResult {
     }
 
     /// Parse this sheet as a document metadata listing.
-    pub async fn into_metadata(self) -> Result<DocumentMetadata> {
+    pub async fn into_metadata(self, is_reference: bool) -> Result<DocumentMetadata> {
         use chrono::TimeZone as _;
 
         // Meta order: genre, source, title, source page #, page count, translation
@@ -428,15 +428,18 @@ impl SheetResult {
             collection: source.pop().filter(|s| !s.is_empty()),
             people,
             genre: genre.pop(),
-            translation: DocResult::new(&translations.remove(1))
-                .await?
-                .to_translation(),
+            translation: Some(
+                DocResult::new(&translations.remove(1))
+                    .await?
+                    .to_translation(),
+            ),
             page_images,
             date: date
                 .as_ref()
                 .and_then(|d| d.get(1))
                 .and_then(|s| chrono::Utc.datetime_from_str(s, "%Y-%m-%d %H:%M:%S").ok())
                 .map(|d| DateTime::new(d)),
+            is_reference,
         })
     }
 

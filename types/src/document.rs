@@ -15,7 +15,7 @@ impl AnnotatedDoc {
             segments: Some(
                 segments
                     .into_iter()
-                    .zip(&meta.translation.blocks)
+                    .zip(&meta.translation.as_ref().unwrap().blocks)
                     .map(|(seg, trans)| TranslatedSection {
                         translation: trans.clone(),
                         source: seg,
@@ -75,6 +75,12 @@ impl AnnotatedDoc {
         &self.meta.people
     }
 
+    /// Is this document a reference source (unstructured list of words)?
+    /// Otherwise, it is considered a structured document with a translation.
+    async fn is_reference(&self) -> bool {
+        self.meta.is_reference
+    }
+
     /// URL-ready slug for this document, generated from the title
     async fn slug(&self) -> String {
         slug::slugify(&self.meta.id)
@@ -96,10 +102,25 @@ impl AnnotatedDoc {
 
     /// All the words contained in this document, dropping structural formatting
     /// like line and page breaks.
-    async fn forms(&self) -> Option<Vec<&AnnotatedForm>> {
-        self.segments
-            .as_ref()
-            .map(|segments| segments.iter().flat_map(|s| s.source.forms()).collect())
+    async fn forms(
+        &self,
+        context: &async_graphql::Context<'_>,
+    ) -> FieldResult<Vec<Cow<'_, AnnotatedForm>>> {
+        if let Some(segs) = &self.segments {
+            Ok(segs
+                .iter()
+                .flat_map(|s| s.source.forms())
+                .map(|f| Cow::Borrowed(f))
+                .collect())
+        } else {
+            Ok(context
+                .data::<Database>()?
+                .words_in_document(&self.meta.id)
+                .await?
+                .into_iter()
+                .map(|f| Cow::Owned(f))
+                .collect())
+        }
     }
 }
 
@@ -182,11 +203,13 @@ pub struct DocumentMetadata {
     pub people: Vec<PersonAssociation>,
     /// Rough translation of the document, broken down by paragraph.
     #[serde(skip)]
-    pub translation: Translation,
+    pub translation: Option<Translation>,
     /// URL for an image of the original physical document.
     #[serde(default)]
     pub page_images: Vec<String>,
     pub date: Option<DateTime>,
+    /// Whether this document is a reference, therefore just a list of forms.
+    pub is_reference: bool,
 }
 
 #[derive(Clone, Serialize, Deserialize)]
