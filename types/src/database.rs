@@ -114,7 +114,12 @@ impl Database {
         Ok(self
             .words_collection()
             .find(
-                bson::doc! { "position.document_id": &morpheme.document_id, "segments.gloss": &morpheme.gloss },
+                bson::doc! { "$or": [
+                    // More likely a surface form
+                    { "position.document_id": &morpheme.document_id, "segments.gloss": &morpheme.gloss },
+                    // More likely a root
+                    { "_id": morpheme.to_string() }
+                ] },
                 None,
             )
             .await?
