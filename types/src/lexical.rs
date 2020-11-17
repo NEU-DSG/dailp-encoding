@@ -1,4 +1,4 @@
-use crate::{AnnotatedForm, Database, DateTime, MorphemeSegment, UniqueAnnotatedForm};
+use crate::{AnnotatedForm, DateTime, MorphemeSegment};
 use serde::{Deserialize, Serialize};
 
 /// A lexical entry is a form whose meaning cannot be created solely through
@@ -30,51 +30,6 @@ impl LexicalEntry {
     }
 }
 
-#[async_graphql::Object]
-impl LexicalEntry {
-    async fn id(&self) -> &str {
-        &self.id
-    }
-    /// The original source text in whatever orthography was used there
-    async fn original(&self) -> &str {
-        &self.original
-    }
-    /// The phonemic shape of the root and it's semi-unique gloss tag
-    async fn root(&self) -> &MorphemeSegment {
-        &self.root
-    }
-    /// Plain English translations of root's meaning
-    async fn root_translations(&self) -> &[String] {
-        &self.root_translations
-    }
-    /// The year this form was recorded
-    async fn date_recorded(&self) -> &DateTime {
-        &self.date_recorded
-    }
-    /// This form's position in its containing document
-    async fn position(&self) -> &Option<PositionInDocument> {
-        &self.position
-    }
-
-    /// A collection of surface forms containing this root
-    async fn surface_forms(
-        &self,
-        context: &async_graphql::Context<'_>,
-    ) -> async_graphql::FieldResult<Vec<AnnotatedForm>> {
-        Ok(context.data::<Database>()?.surface_forms(&self.id).await?)
-    }
-
-    async fn connected_forms(
-        &self,
-        context: &async_graphql::Context<'_>,
-    ) -> async_graphql::FieldResult<Vec<AnnotatedForm>> {
-        Ok(context
-            .data::<Database>()?
-            .connected_forms(&self.id)
-            .await?)
-    }
-}
-
 /// The reference position within a document of one specific form
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq, Eq)]
 pub struct PositionInDocument {
@@ -92,6 +47,12 @@ impl PositionInDocument {
     }
 }
 
+impl PositionInDocument {
+    pub fn make_id(&self, gloss: &str) -> String {
+        format!("{}.{}:{}", self.document_id, self.index, gloss)
+    }
+}
+
 #[async_graphql::Object]
 impl PositionInDocument {
     /// Standard page reference for this position, which can be used in citation.
@@ -104,7 +65,7 @@ impl PositionInDocument {
     /// Generally used in corpus documents where there are few pages containing
     /// many forms each. Example: "WJ23:#21"
     async fn index_reference(&self) -> String {
-        format!("{}:#{}", self.document_id, self.index)
+        format!("{}.{}", self.document_id, self.index)
     }
 
     /// Unique identifier of the source document
@@ -130,24 +91,70 @@ impl PositionInDocument {
 pub struct LexicalConnection {
     #[serde(rename = "_id")]
     pub id: String,
-    pub from: String,
-    pub to: String,
+    pub from: MorphemeId,
+    pub to: MorphemeId,
+}
+impl LexicalConnection {
+    pub fn new(from: MorphemeId, to: MorphemeId) -> Self {
+        Self {
+            id: format!("{}->{}", from, to),
+            from,
+            to,
+        }
+    }
+    pub fn parse(from: &str, to: &str) -> Option<Self> {
+        let from = MorphemeId::parse(from)?;
+        let to = MorphemeId::parse(to)?;
+        Some(Self::new(from, to))
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, PartialEq, Eq, Hash)]
+pub struct MorphemeId {
+    pub document_id: String,
+    pub gloss: String,
+    pub index: Option<i32>,
+}
+impl MorphemeId {
+    pub fn new(document_id: String, index: Option<i32>, gloss: String) -> Self {
+        Self {
+            document_id,
+            index,
+            gloss,
+        }
+    }
+    pub fn parse(input: &str) -> Option<Self> {
+        // Split by colon.
+        let mut parts = input.splitn(2, ':');
+        Some(Self {
+            document_id: parts.next()?.to_owned(),
+            gloss: parts.next()?.to_owned(),
+            index: None,
+        })
+    }
+}
+impl std::fmt::Display for MorphemeId {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if let Some(index) = self.index.as_ref() {
+            write!(f, "{}.{}:{}", index, self.document_id, self.gloss)
+        } else {
+            write!(f, "{}:{}", self.document_id, self.gloss)
+        }
+    }
 }
 
 pub fn seg_verb_surface_forms(
-    doc_id: &str,
-    page_num: &str,
+    position: &PositionInDocument,
     date: &DateTime,
     cols: &mut impl Iterator<Item = String>,
     translation_count: usize,
     has_numeric: bool,
     has_comment: bool,
     has_spacer: bool,
-) -> Vec<UniqueAnnotatedForm> {
+) -> Vec<AnnotatedForm> {
     let mut forms = Vec::new();
     while let Some(form) = seg_verb_surface_form(
-        doc_id,
-        page_num,
+        position.clone(),
         date,
         cols,
         translation_count,
@@ -161,15 +168,14 @@ pub fn seg_verb_surface_forms(
 }
 
 pub fn seg_verb_surface_form(
-    doc_id: &str,
-    page_num: &str,
+    position: PositionInDocument,
     date: &DateTime,
     cols: &mut impl Iterator<Item = String>,
     translation_count: usize,
     has_numeric: bool,
     has_comment: bool,
     has_spacer: bool,
-) -> Option<UniqueAnnotatedForm> {
+) -> Option<AnnotatedForm> {
     // Skip empty cells until we find a form.
     let mut morpheme_layer = cols.next()?;
     while morpheme_layer.is_empty() {
@@ -201,27 +207,21 @@ pub fn seg_verb_surface_form(
         cols.next();
     }
 
-    let segments = MorphemeSegment::parse_many(&morpheme_layer, &gloss_layer, Some(doc_id))?;
+    let segments = MorphemeSegment::parse_many(&morpheme_layer, &gloss_layer)?;
 
-    Some(UniqueAnnotatedForm {
-        id: MorphemeSegment::gloss_layer(&segments),
-        form: AnnotatedForm {
-            position: Some(PositionInDocument::new(
-                doc_id.to_owned(),
-                page_num.to_owned(),
-                1,
-            )),
-            source: syllabary.clone(),
-            normalized_source: None,
-            simple_phonetics: Some(phonetic),
-            phonemic: Some(convert_udb(&phonemic).to_dailp()),
-            segments: Some(segments),
-            english_gloss: translations,
-            commentary,
-            line_break: None,
-            page_break: None,
-            date_recorded: Some(date.clone()),
-        },
+    Some(AnnotatedForm {
+        id: position.make_id(&gloss_layer),
+        position,
+        source: syllabary.clone(),
+        normalized_source: None,
+        simple_phonetics: Some(phonetic),
+        phonemic: Some(convert_udb(&phonemic).to_dailp()),
+        segments: Some(segments),
+        english_gloss: translations,
+        commentary,
+        line_break: None,
+        page_break: None,
+        date_recorded: Some(date.clone()),
     })
 }
 
@@ -236,7 +236,7 @@ pub fn root_verb_surface_forms(
     has_numeric: bool,
     has_comment: bool,
     has_spacer: bool,
-) -> Vec<UniqueAnnotatedForm> {
+) -> Vec<AnnotatedForm> {
     let mut forms = Vec::new();
     while let Some(form) = root_verb_surface_form(
         doc_id,
@@ -265,7 +265,7 @@ pub fn root_verb_surface_form(
     has_numeric: bool,
     has_comment: bool,
     has_spacer: bool,
-) -> Option<UniqueAnnotatedForm> {
+) -> Option<AnnotatedForm> {
     use itertools::Itertools as _;
 
     // Each form has an empty column before it.
@@ -317,24 +317,18 @@ pub fn root_verb_surface_form(
         cols.next();
     }
 
-    Some(UniqueAnnotatedForm {
-        form: AnnotatedForm {
-            position: Some(PositionInDocument::new(doc_id.to_owned(), 1.to_string(), 1)),
-            source: syllabary.clone(),
-            normalized_source: None,
-            simple_phonetics: Some(phonetic),
-            phonemic: Some(convert_udb(&phonemic).to_dailp()),
-            segments: Some(MorphemeSegment::parse_many(
-                &morpheme_layer,
-                &gloss_layer,
-                None,
-            )?),
-            english_gloss: translations,
-            commentary,
-            line_break: None,
-            page_break: None,
-            date_recorded: Some(date.clone()),
-        },
+    Some(AnnotatedForm {
+        position: PositionInDocument::new(doc_id.to_owned(), 1.to_string(), 1),
+        source: syllabary.clone(),
+        normalized_source: None,
+        simple_phonetics: Some(phonetic),
+        phonemic: Some(convert_udb(&phonemic).to_dailp()),
+        segments: Some(MorphemeSegment::parse_many(&morpheme_layer, &gloss_layer)?),
+        english_gloss: translations,
+        commentary,
+        line_break: None,
+        page_break: None,
+        date_recorded: Some(date.clone()),
         id: gloss_layer,
     })
 }
@@ -367,7 +361,7 @@ pub fn root_noun_surface_form(
     root: &str,
     root_gloss: &str,
     cols: &mut impl Iterator<Item = String>,
-) -> Option<UniqueAnnotatedForm> {
+) -> Option<AnnotatedForm> {
     use itertools::Itertools as _;
 
     let ppp_tag = cols.next()?;
@@ -392,24 +386,18 @@ pub fn root_noun_surface_form(
         .filter(|s| !s.is_empty());
     let gloss_layer = glosses.join("-");
 
-    Some(UniqueAnnotatedForm {
-        form: AnnotatedForm {
-            position: Some(PositionInDocument::new(doc_id.to_owned(), 1.to_string(), 1)),
-            source: syllabary,
-            normalized_source: None,
-            simple_phonetics: Some(phonetic),
-            phonemic: Some(convert_udb(&phonemic).to_dailp()),
-            segments: Some(MorphemeSegment::parse_many(
-                &morpheme_layer,
-                &gloss_layer,
-                None,
-            )?),
-            english_gloss: translations.collect(),
-            commentary: None,
-            line_break: None,
-            page_break: None,
-            date_recorded: Some(date.clone()),
-        },
+    Some(AnnotatedForm {
+        position: PositionInDocument::new(doc_id.to_owned(), 1.to_string(), 1),
+        source: syllabary,
+        normalized_source: None,
+        simple_phonetics: Some(phonetic),
+        phonemic: Some(convert_udb(&phonemic).to_dailp()),
+        segments: Some(MorphemeSegment::parse_many(&morpheme_layer, &gloss_layer)?),
+        english_gloss: translations.collect(),
+        commentary: None,
+        line_break: None,
+        page_break: None,
+        date_recorded: Some(date.clone()),
         id: gloss_layer,
     })
 }

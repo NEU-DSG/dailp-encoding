@@ -366,8 +366,8 @@ enum Dailp_DocumentType {
 }
 
 type Dailp_FormsInTime = {
-  readonly start: Dailp_DateTime;
-  readonly end: Dailp_DateTime;
+  readonly start: Maybe<Dailp_DateTime>;
+  readonly end: Maybe<Dailp_DateTime>;
   readonly forms: ReadonlyArray<Dailp_AnnotatedForm>;
 };
 
@@ -3547,7 +3547,7 @@ type ContentPageQuery = { readonly page: Maybe<(
 type FormFieldsFragment = (
   Pick<Dailp_AnnotatedForm, 'index' | 'source' | 'simplePhonetics' | 'phonemic' | 'englishGloss' | 'commentary'>
   & { readonly segments: Maybe<ReadonlyArray<(
-    Pick<Dailp_MorphemeSegment, 'morpheme' | 'gloss' | 'displayGloss' | 'nextSeparator'>
+    Pick<Dailp_MorphemeSegment, 'morpheme' | 'gloss' | 'nextSeparator'>
     & { simpleMorpheme: Dailp_MorphemeSegment['morpheme'] }
     & { readonly matchingTag: Maybe<Pick<Dailp_MorphemeTag, 'crg' | 'learner'>> }
   )>> }
@@ -3609,5 +3609,10 @@ type IndexPageQueryVariables = Exact<{ [key: string]: never; }>;
 
 
 type IndexPageQuery = { readonly dailp: { readonly allCollections: ReadonlyArray<Pick<Dailp_DocumentCollection, 'name' | 'slug'>> } };
+
+type homesneadpiedailpEncodingwebsitesrcfooterTsx1552981879QueryVariables = Exact<{ [key: string]: never; }>;
+
+
+type homesneadpiedailpEncodingwebsitesrcfooterTsx1552981879Query = { readonly currentBuildDate: Maybe<Pick<CurrentBuildDate, 'currentDate'>> };
 
 }

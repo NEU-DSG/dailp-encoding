@@ -8,8 +8,8 @@ use dailp::PositionInDocument;
 use dailp::{
     convert_udb, root_noun_surface_form, root_verb_surface_forms, AnnotatedDoc, AnnotatedForm,
     AnnotatedPhrase, AnnotatedSeg, BlockType, Database, DateTime, DocumentMetadata,
-    LexicalConnection, LexicalEntry, LineBreak, MorphemeSegment, PageBreak, PersonAssociation,
-    UniqueAnnotatedForm,
+    LexicalConnection, LexicalEntry, LineBreak, MorphemeId, MorphemeSegment, PageBreak,
+    PersonAssociation,
 };
 use futures_retry::{FutureRetry, RetryPolicy};
 use mongodb::bson;
@@ -27,8 +27,8 @@ const BLOCK_END: &str = "}";
 const OUTPUT_DIR: &str = "../xml";
 
 pub struct LexicalEntryWithForms {
-    pub entry: UniqueAnnotatedForm,
-    pub forms: Vec<UniqueAnnotatedForm>,
+    pub entry: AnnotatedForm,
+    pub forms: Vec<AnnotatedForm>,
 }
 
 /// Converts a set of annotated documents into our preferred access format, then
@@ -168,7 +168,6 @@ impl SheetResult {
                     }
                     let root = root_values.next()?;
                     let root_gloss = root_values.next()?;
-                    let root_id = LexicalEntry::make_id(doc_id, &root_gloss);
                     let mut form_values = root_values.clone().skip(after_root);
                     let date = DateTime::new(chrono::Utc.ymd(year, 1, 1).and_hms(0, 0, 0));
                     Some(LexicalEntryWithForms {
@@ -176,40 +175,37 @@ impl SheetResult {
                             doc_id,
                             &date,
                             &root,
-                            &root_id,
+                            &root_gloss,
                             &mut form_values,
                             translation_count,
                             has_numeric,
                             has_comment,
                             true,
                         ),
-                        entry: UniqueAnnotatedForm {
-                            id: root_id.clone(),
-                            form: AnnotatedForm {
-                                simple_phonetics: None,
-                                normalized_source: None,
-                                phonemic: None,
-                                commentary: None,
-                                line_break: None,
-                                page_break: None,
-
-                                english_gloss: root_values
-                                    .take(translations)
-                                    .map(|s| s.trim().to_owned())
-                                    .filter(|s| !s.is_empty())
-                                    .collect(),
-                                segments: Some(vec![MorphemeSegment::new(
-                                    convert_udb(&root).to_dailp(),
-                                    root_id,
-                                    None,
-                                )]),
-                                date_recorded: Some(date),
-                                source: root,
-                                position: Some(PositionInDocument {
-                                    document_id: doc_id.to_owned(),
-                                    page_number: 1.to_string(),
-                                    index: index as i32 + 1,
-                                }),
+                        entry: AnnotatedForm {
+                            id: LexicalEntry::make_id(doc_id, &root_gloss),
+                            simple_phonetics: None,
+                            normalized_source: None,
+                            phonemic: None,
+                            commentary: None,
+                            line_break: None,
+                            page_break: None,
+                            english_gloss: root_values
+                                .take(translations)
+                                .map(|s| s.trim().to_owned())
+                                .filter(|s| !s.is_empty())
+                                .collect(),
+                            segments: Some(vec![MorphemeSegment::new(
+                                convert_udb(&root).to_dailp(),
+                                root_gloss,
+                                None,
+                            )]),
+                            date_recorded: Some(date),
+                            source: root,
+                            position: PositionInDocument {
+                                document_id: doc_id.to_owned(),
+                                page_number: 1.to_string(),
+                                index: index as i32 + 1,
                             },
                         },
                     })
@@ -239,7 +235,6 @@ impl SheetResult {
                 let _key = root_values.next()?;
                 let root = root_values.next()?;
                 let root_gloss = root_values.next()?;
-                let root_id = LexicalEntry::make_id(doc_id, &root_gloss);
                 // Skip page ref.
                 let page_number = root_values.next()?;
                 let mut form_values = root_values;
@@ -249,35 +244,33 @@ impl SheetResult {
                         doc_id,
                         &date,
                         &root,
-                        &root_id,
+                        &root_gloss,
                         &mut form_values,
                         3,
                         true,
                         true,
                         false,
                     ),
-                    entry: UniqueAnnotatedForm {
-                        id: root_id.clone(),
-                        form: AnnotatedForm {
-                            normalized_source: None,
-                            simple_phonetics: None,
-                            phonemic: None,
-                            commentary: None,
-                            line_break: None,
-                            page_break: None,
-                            segments: Some(vec![MorphemeSegment::new(
-                                convert_udb(&root).to_dailp(),
-                                root_id,
-                                None,
-                            )]),
-                            english_gloss: vec![root_gloss],
-                            date_recorded: Some(date),
-                            source: root,
-                            position: Some(PositionInDocument {
-                                document_id: doc_id.to_owned(),
-                                index: idx as i32 + 1,
-                                page_number,
-                            }),
+                    entry: AnnotatedForm {
+                        id: LexicalEntry::make_id(doc_id, &root_gloss),
+                        normalized_source: None,
+                        simple_phonetics: None,
+                        phonemic: None,
+                        commentary: None,
+                        line_break: None,
+                        page_break: None,
+                        segments: Some(vec![MorphemeSegment::new(
+                            convert_udb(&root).to_dailp(),
+                            root_gloss.clone(),
+                            None,
+                        )]),
+                        english_gloss: vec![root_gloss],
+                        date_recorded: Some(date),
+                        source: root,
+                        position: PositionInDocument {
+                            document_id: doc_id.to_owned(),
+                            index: idx as i32 + 1,
+                            page_number,
                         },
                     },
                 })
@@ -312,7 +305,6 @@ impl SheetResult {
                     }
                     let root = root_values.next()?;
                     let root_gloss = root_values.next()?;
-                    let root_id = LexicalEntry::make_id(doc_id, &root_gloss);
                     // Skip page ref and category.
                     let mut form_values = root_values.skip(after_root);
                     let date = DateTime::new(chrono::Utc.ymd(year, 1, 1).and_hms(0, 0, 0));
@@ -321,35 +313,33 @@ impl SheetResult {
                             doc_id,
                             &date,
                             &root,
-                            &root_id,
+                            &root_gloss,
                             &mut form_values,
                         )]
                         .into_iter()
                         .filter_map(|x| x)
                         .collect(),
-                        entry: UniqueAnnotatedForm {
-                            id: root_id.clone(),
-                            form: AnnotatedForm {
-                                position: Some(PositionInDocument {
-                                    document_id: doc_id.to_owned(),
-                                    index: idx as i32 + 1,
-                                    page_number: 1.to_string(),
-                                }),
-                                normalized_source: None,
-                                simple_phonetics: None,
-                                phonemic: None,
-                                segments: Some(vec![MorphemeSegment::new(
-                                    convert_udb(&root).to_dailp(),
-                                    root_id,
-                                    None,
-                                )]),
-                                english_gloss: vec![root_gloss],
-                                source: root,
-                                commentary: None,
-                                date_recorded: Some(date),
-                                line_break: None,
-                                page_break: None,
+                        entry: AnnotatedForm {
+                            id: LexicalEntry::make_id(doc_id, &root_gloss),
+                            position: PositionInDocument {
+                                document_id: doc_id.to_owned(),
+                                index: idx as i32 + 1,
+                                page_number: 1.to_string(),
                             },
+                            normalized_source: None,
+                            simple_phonetics: None,
+                            phonemic: None,
+                            segments: Some(vec![MorphemeSegment::new(
+                                convert_udb(&root).to_dailp(),
+                                root_gloss.clone(),
+                                None,
+                            )]),
+                            english_gloss: vec![root_gloss],
+                            source: root,
+                            commentary: None,
+                            date_recorded: Some(date),
+                            line_break: None,
+                            page_break: None,
                         },
                     })
                 } else {
@@ -366,13 +356,14 @@ impl SheetResult {
             .skip(1)
             .filter_map(|row| {
                 let mut row = row.into_iter();
-                let from = format!("{}:{}", doc_id, row.next()?);
-                let to = row.next()?;
-                Some(dailp::LexicalConnection {
-                    id: format!("{}->{}", from, to),
-                    from,
-                    to,
-                })
+                Some(dailp::LexicalConnection::new(
+                    MorphemeId {
+                        document_id: doc_id.to_owned(),
+                        gloss: row.next()?,
+                        index: None,
+                    },
+                    MorphemeId::parse(&row.next()?)?,
+                ))
             })
             .collect()
     }
@@ -548,7 +539,7 @@ pub struct AnnotatedLine {
 
 impl<'a> AnnotatedLine {
     pub fn many_from_semantic(lines: &[SemanticLine], meta: &DocumentMetadata) -> Vec<Self> {
-        let mut word_index = 0;
+        let mut word_index = 1;
         lines
             .into_iter()
             .map(|line| {
@@ -562,8 +553,21 @@ impl<'a> AnnotatedLine {
                         let pb = line.rows[0].items[i].find(PAGE_BREAK);
                         let morphemes = line.rows[4].items.get(i);
                         let glosses = line.rows[5].items.get(i);
+                        let translation = line.rows[6].items.get(i).map(|x| x.trim().to_owned());
                         let w = AnnotatedForm {
-                            position: None,
+                            // TODO Extract into public function!
+                            id: if let Some(gloss) = glosses {
+                                format!("{}.{}:{}", meta.id, word_index, gloss)
+                            } else if let Some(t) = translation.as_ref() {
+                                format!("{}.{}:{}", meta.id, word_index, t)
+                            } else {
+                                format!("{}.{}", meta.id, word_index)
+                            },
+                            position: PositionInDocument {
+                                document_id: meta.id.clone(),
+                                index: word_index,
+                                page_number: 1.to_string(),
+                            },
                             source: line.rows[0].items[i].trim().replace(LINE_BREAK, ""),
                             normalized_source: None,
                             simple_phonetics: line.rows[2]
@@ -572,17 +576,14 @@ impl<'a> AnnotatedLine {
                                 .map(|x| x.replace("ʔ", "'")),
                             phonemic: line.rows[3].items.get(i).map(|x| x.to_owned()),
                             segments: if let (Some(m), Some(g)) = (morphemes, glosses) {
-                                MorphemeSegment::parse_many(m, g, Some(&meta.id))
+                                MorphemeSegment::parse_many(m, g)
                             } else {
                                 None
                             },
-                            english_gloss: vec![line.rows[6]
-                                .items
-                                .get(i)
-                                .map(|x| x.trim().to_owned())]
-                            .into_iter()
-                            .filter_map(|x| x)
-                            .collect(),
+                            english_gloss: vec![translation]
+                                .into_iter()
+                                .filter_map(|x| x)
+                                .collect(),
                             commentary: line.rows[7].items.get(i).map(|x| x.to_owned()),
                             page_break: pb.map(|i| i as i32),
                             line_break: pb
@@ -637,11 +638,11 @@ impl<'a> AnnotatedLine {
             for word in line.words {
                 // Give the word an index within the whole document.
                 let word = AnnotatedForm {
-                    position: Some(PositionInDocument {
+                    position: PositionInDocument {
                         index: word_idx,
                         document_id: document_id.to_owned(),
                         page_number: page_num.to_string(),
-                    }),
+                    },
                     ..word
                 };
 

@@ -1,6 +1,6 @@
-use crate::UniqueAnnotatedForm;
 use crate::{
-    AnnotatedDoc, AnnotatedForm, DocumentCollection, DocumentType, LexicalConnection, MorphemeTag,
+    AnnotatedDoc, AnnotatedForm, DocumentCollection, DocumentType, LexicalConnection, MorphemeId,
+    MorphemeTag,
 };
 use anyhow::Result;
 use futures::future::join_all;
@@ -101,7 +101,7 @@ impl Database {
             .await)
     }
 
-    pub async fn lexical_entry(&self, id: &str) -> Result<Option<UniqueAnnotatedForm>> {
+    pub async fn lexical_entry(&self, id: &str) -> Result<Option<AnnotatedForm>> {
         Ok(self
             .words_collection()
             .find_one(bson::doc! { "_id": id }, None)
@@ -109,37 +109,57 @@ impl Database {
             .and_then(|doc| bson::from_document(doc).ok()))
     }
 
-    pub async fn surface_forms(&self, root_gloss: &str) -> Result<Vec<AnnotatedForm>> {
+    pub async fn surface_forms(&self, morpheme: &MorphemeId) -> Result<Vec<AnnotatedForm>> {
         use tokio::stream::StreamExt as _;
         Ok(self
             .words_collection()
-            .find(bson::doc! { "segments.gloss": root_gloss }, None)
+            .find(
+                bson::doc! { "position.document_id": &morpheme.document_id, "segments.gloss": &morpheme.gloss },
+                None,
+            )
             .await?
             .filter_map(|doc| doc.ok().and_then(|doc| bson::from_document(doc).ok()))
             .collect()
             .await)
     }
 
-    pub async fn connected_forms(&self, id: &str) -> Result<Vec<AnnotatedForm>> {
+    pub async fn connected_forms(&self, morpheme: &MorphemeId) -> Result<Vec<AnnotatedForm>> {
         use tokio::stream::StreamExt as _;
 
         let col = self.connections_collection();
+        let morpheme = bson::to_bson(morpheme)?;
 
         // Find the connections starting from this entry.
-        let froms = col.aggregate(vec! [
-            bson::doc! { "$match": { "from": id } },
-            bson::doc! { "$lookup": { "from": Database::WORDS, "localField": "to", "foreignField": "segments.gloss", "as": "connections" } },
-            bson::doc! { "$unwind": "$connections" },
-            bson::doc! { "$replaceRoot": { "newRoot": "$connections" } },
-        ], None);
+        let froms = col.aggregate(
+            vec![
+                bson::doc! { "$match": { "from": &morpheme } },
+                bson::doc! { "$lookup": {
+                    "from": Database::WORDS,
+                    "localField": "to",
+                    "foreignField": "segments.gloss",
+                    "as": "connections"
+                } },
+                bson::doc! { "$unwind": "$connections" },
+                bson::doc! { "$replaceRoot": { "newRoot": "$connections" } },
+            ],
+            None,
+        );
 
         // Find the connections ending with this entry.
-        let tos = col.aggregate(vec! [
-            bson::doc! { "$match": { "to": id } },
-            bson::doc! { "$lookup": { "from": Database::WORDS, "localField": "from", "foreignField": "segments.gloss", "as": "connections" } },
-            bson::doc! { "$unwind": "$connections" },
-            bson::doc! { "$replaceRoot": { "newRoot": "$connections" } },
-        ], None);
+        let tos = col.aggregate(
+            vec![
+                bson::doc! { "$match": { "to": morpheme } },
+                bson::doc! { "$lookup": {
+                    "from": Database::WORDS,
+                    "localField": "from",
+                    "foreignField": "segments.gloss",
+                    "as": "connections"
+                } },
+                bson::doc! { "$unwind": "$connections" },
+                bson::doc! { "$replaceRoot": { "newRoot": "$connections" } },
+            ],
+            None,
+        );
 
         let (froms, tos) = futures::join!(froms, tos);
 
@@ -150,17 +170,16 @@ impl Database {
             .await)
     }
 
-    async fn exact_connections(&self, id: &str) -> Result<Vec<String>> {
+    async fn exact_connections(&self, morpheme: &MorphemeId) -> Result<Vec<MorphemeId>> {
         use tokio::stream::StreamExt as _;
 
         let col = self.connections_collection();
+        let morpheme = bson::to_bson(morpheme)?;
 
         // Find the connections starting from this entry.
-        let froms = col.find(bson::doc! { "from": id }, None);
-
+        let froms = col.find(bson::doc! { "from": &morpheme }, None);
         // Find the connections ending with this entry.
-        let tos = col.find(bson::doc! { "to": id }, None);
-
+        let tos = col.find(bson::doc! { "to": morpheme }, None);
         let (froms, tos) = futures::join!(froms, tos);
 
         let froms = froms?
@@ -180,12 +199,12 @@ impl Database {
         Ok(froms.chain(tos).collect().await)
     }
 
-    async fn recursive_connections(&self, id: &str) -> Result<HashSet<String>> {
+    async fn recursive_connections(&self, id: &MorphemeId) -> Result<HashSet<MorphemeId>> {
         let mut conns = HashSet::new();
-        conns.insert(id.to_owned());
-        let mut to_request = vec![id.to_owned()];
+        conns.insert(id.clone());
+        let mut to_request = vec![id.clone()];
         loop {
-            let res = join_all(to_request.iter().map(|x| self.exact_connections(x))).await;
+            let res = join_all(to_request.iter().map(|x| self.exact_connections(&x))).await;
 
             let mut is_done = true;
             for y in res {
@@ -205,17 +224,18 @@ impl Database {
         Ok(conns)
     }
 
-    async fn doc_matches(&self, gloss: &str) -> Result<Vec<AnnotatedForm>> {
+    async fn doc_matches(&self, morpheme: &MorphemeId) -> Result<Vec<AnnotatedForm>> {
         use tokio::stream::StreamExt as _;
         Ok(self
             .documents_collection()
             .aggregate(
                 vec![
+                    bson::doc! { "$match": { "_id": &morpheme.document_id } },
                     bson::doc! { "$unwind": "$segments" },
                     bson::doc! { "$replaceRoot": { "newRoot": "$segments.source" } },
                     bson::doc! { "$unwind": "$parts" },
                     bson::doc! { "$replaceRoot": { "newRoot": "$parts" } },
-                    bson::doc! { "$match": { "segments.gloss": gloss } },
+                    bson::doc! { "$match": { "segments.gloss": &morpheme.gloss } },
                 ],
                 None,
             )
@@ -227,9 +247,9 @@ impl Database {
 
     /// Forms that contain the given morpheme gloss, from both lexical resources
     /// and corpus data
-    pub async fn connected_surface_forms(&self, id: &str) -> Result<Vec<AnnotatedForm>> {
+    pub async fn connected_surface_forms(&self, id: &MorphemeId) -> Result<Vec<AnnotatedForm>> {
         let ids = self.recursive_connections(id).await?;
-        let lexical = join_all(ids.iter().map(|id| self.surface_forms(&id)));
+        let lexical = join_all(ids.iter().map(|id| self.surface_forms(id)));
         let corpus = join_all(ids.iter().map(|id| self.doc_matches(&id)));
         let (lexical, corpus) = futures::join!(lexical, corpus);
 
@@ -245,20 +265,21 @@ impl Database {
     /// Retrieves all morphemes that share the given gloss text.
     /// For example, there may be multiple ways to pronounce a Cherokee word
     /// that glosses as "catch" in English.
-    pub async fn morphemes(&self, gloss: &str) -> Result<Vec<MorphemeReference>> {
+    pub async fn morphemes(&self, morpheme: &MorphemeId) -> Result<Vec<MorphemeReference>> {
         use itertools::Itertools;
         use tokio::stream::StreamExt;
 
-        let dictionary_words = self.surface_forms(gloss);
+        let dictionary_words = self.surface_forms(morpheme);
         let documents = self.documents_collection();
         let document_words = documents.aggregate(
             vec![
+                bson::doc! { "$match": { "_id": &morpheme.document_id } },
                 bson::doc! { "$unwind": "$segments" },
                 bson::doc! { "$replaceRoot": { "newRoot": "$segments.source" } },
                 bson::doc! { "$unwind": "$parts" },
                 bson::doc! { "$replaceRoot": { "newRoot": "$parts" } },
                 bson::doc! {
-                    "$match": {"segments.gloss": gloss}
+                    "$match": { "segments.gloss": &morpheme.gloss }
                 },
             ],
             None,
@@ -276,7 +297,11 @@ impl Database {
                 let word: AnnotatedForm = bson::from_document(doc.ok()?).ok()?;
                 let m = {
                     // Find the index of the relevant morpheme gloss.
-                    let segment = word.segments.as_ref()?.iter().find(|m| m.gloss == gloss)?;
+                    let segment = word
+                        .segments
+                        .as_ref()?
+                        .iter()
+                        .find(|m| m.gloss == morpheme.gloss)?;
                     // Grab the morpheme with the same index.
                     segment.morpheme.clone()
                 };
@@ -299,11 +324,11 @@ impl Database {
 
     /// All words containing a morpheme with the given gloss, grouped by the
     /// document they are contained in.
-    pub async fn words_by_doc(&self, gloss: &str) -> Result<Vec<WordsInDocument>> {
+    pub async fn words_by_doc(&self, gloss: &MorphemeId) -> Result<Vec<WordsInDocument>> {
         use itertools::Itertools;
 
         let ids = self.recursive_connections(gloss).await?;
-        let lexical = join_all(ids.iter().map(|id| self.surface_forms(&id)));
+        let lexical = join_all(ids.iter().map(|id| self.surface_forms(id)));
         let corpus = join_all(ids.iter().map(|id| self.doc_matches(&id)));
         let (dictionary_words, document_words) = futures::join!(lexical, corpus);
 
@@ -311,12 +336,12 @@ impl Database {
             .into_iter()
             .filter_map(|x| x.ok())
             .flat_map(|x| x)
-            .map(|form| (form.position.as_ref().map(|p| p.document_id.clone()), form))
+            .map(|form| (form.position.document_id.clone(), form))
             .into_group_map()
             .into_iter()
             .map(|(doc_id, words)| WordsInDocument {
                 document_type: Some(DocumentType::Reference),
-                document_id: doc_id,
+                document_id: Some(doc_id),
                 forms: words,
             });
 
@@ -324,14 +349,14 @@ impl Database {
             .into_iter()
             .filter_map(|x| x.ok())
             .flat_map(|x| x)
-            .map(|form| (form.position.as_ref().map(|p| p.document_id.clone()), form))
+            .map(|form| (form.position.document_id.clone(), form))
             .collect::<Vec<_>>()
             .into_iter()
             .into_group_map()
             .into_iter()
             .map(|(doc_id, words)| WordsInDocument {
                 document_type: Some(DocumentType::Corpus),
-                document_id: doc_id,
+                document_id: Some(doc_id),
                 forms: words,
             });
 

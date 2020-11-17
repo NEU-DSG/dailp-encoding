@@ -1,6 +1,6 @@
 use async_graphql::{Context, EmptyMutation, EmptySubscription, FieldResult, Schema};
 use async_once::AsyncOnce;
-use dailp::{AnnotatedDoc, Database, MorphemeReference, MorphemeTag, WordsInDocument};
+use dailp::{AnnotatedDoc, Database, MorphemeId, MorphemeReference, MorphemeTag, WordsInDocument};
 use lambda_http::{http::header, lambda, IntoResponse, Request, Response};
 
 type Error = Box<dyn std::error::Error + Sync + Send + 'static>;
@@ -75,11 +75,7 @@ impl Query {
         context: &Context<'_>,
         id: String,
     ) -> FieldResult<Option<dailp::AnnotatedForm>> {
-        Ok(context
-            .data::<Database>()?
-            .lexical_entry(&id)
-            .await?
-            .map(|x| x.form))
+        Ok(context.data::<Database>()?.lexical_entry(&id).await?)
     }
 
     /// Lists all forms containing a morpheme with the given gloss.
@@ -89,7 +85,10 @@ impl Query {
         context: &Context<'_>,
         gloss: String,
     ) -> FieldResult<Vec<MorphemeReference>> {
-        Ok(context.data::<Database>()?.morphemes(&gloss).await?)
+        Ok(context
+            .data::<Database>()?
+            .morphemes(&MorphemeId::parse(&gloss).unwrap())
+            .await?)
     }
 
     /// Lists all words containing a morpheme with the given gloss.
@@ -97,9 +96,11 @@ impl Query {
     async fn morphemes_by_document(
         &self,
         context: &Context<'_>,
+        document_id: String,
         gloss: String,
     ) -> FieldResult<Vec<WordsInDocument>> {
-        Ok(context.data::<Database>()?.words_by_doc(&gloss).await?)
+        let id = MorphemeId::new(document_id, None, gloss);
+        Ok(context.data::<Database>()?.words_by_doc(&id).await?)
     }
 
     /// Forms containing the given morpheme gloss or related ones clustered over time.
@@ -114,7 +115,7 @@ impl Query {
 
         let forms = context
             .data::<Database>()?
-            .connected_surface_forms(&gloss)
+            .connected_surface_forms(&dailp::MorphemeId::parse(&gloss).unwrap())
             .await?;
         // Cluster forms by the decade they were recorded in.
         let clusters = forms

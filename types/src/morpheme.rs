@@ -28,12 +28,8 @@ impl MorphemeSegment {
         }
     }
 
-    pub fn parse_many(
-        morpheme_layer: &str,
-        gloss_layer: &str,
-        document_id: Option<&str>,
-    ) -> Option<Vec<Self>> {
-        let (_, result) = parse_gloss_layers(morpheme_layer, gloss_layer, document_id).ok()?;
+    pub fn parse_many(morpheme_layer: &str, gloss_layer: &str) -> Option<Vec<Self>> {
+        let (_, result) = parse_gloss_layers(morpheme_layer, gloss_layer).ok()?;
         Some(result)
     }
 
@@ -62,33 +58,6 @@ impl MorphemeSegment {
             Some(CherokeeOrthography::Dt) => Cow::Owned(convert_tth_to_dt(&self.morpheme, false)),
             _ => Cow::Borrowed(&*self.morpheme),
         }
-    }
-
-    /// English gloss for display
-    async fn display_gloss(
-        &self,
-        context: &async_graphql::Context<'_>,
-    ) -> FieldResult<Cow<'_, str>> {
-        Ok(context
-            .data::<Database>()?
-            .lexical_entry(&self.gloss)
-            .await?
-            .and_then(|mut entry| {
-                if entry.form.english_gloss.is_empty() {
-                    None
-                } else {
-                    Some(Cow::Owned(entry.form.english_gloss.remove(0)))
-                }
-            })
-            .unwrap_or_else(|| {
-                // Strip the document ID from scoped glosses.
-                // TODO Make a function for checking if a morpheme is a tag or root.
-                if self.gloss.contains(|c: char| c.is_lowercase()) {
-                    Cow::Borrowed(self.gloss.splitn(2, ":").last().unwrap())
-                } else {
-                    Cow::Borrowed(&*self.gloss)
-                }
-            }))
     }
 
     /// English gloss in standard DAILP format that refers to a lexical item
@@ -123,8 +92,7 @@ impl MorphemeSegment {
         Ok(context
             .data::<Database>()?
             .lexical_entry(&self.gloss)
-            .await?
-            .map(|x| x.form))
+            .await?)
     }
 }
 

@@ -8,12 +8,8 @@ pub async fn migrate_connections(db: &Database) -> anyhow::Result<()> {
     let connections = res.values.into_iter().skip(1).flat_map(|row| {
         let mut row = row.into_iter();
         let from = row.next().unwrap();
-        row.map(|to| LexicalConnection {
-            id: format!("{}->{}", from, to),
-            from: from.clone(),
-            to,
-        })
-        .collect::<Vec<_>>()
+        row.filter_map(|to| LexicalConnection::parse(&from, &to))
+            .collect::<Vec<_>>()
     });
 
     let dict = db.connections_collection();

@@ -1,4 +1,4 @@
-use crate::{AnnotatedDoc, Database, DateTime, MorphemeSegment, PositionInDocument};
+use crate::{AnnotatedDoc, Database, DateTime, MorphemeId, MorphemeSegment, PositionInDocument};
 use async_graphql::FieldResult;
 use serde::{Deserialize, Serialize};
 
@@ -7,6 +7,8 @@ use serde::{Deserialize, Serialize};
 /// source text, multiple layers of linguistic annotation, and annotator notes.
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct AnnotatedForm {
+    #[serde(rename = "_id")]
+    pub id: String,
     pub source: String,
     /// A normalized version of the word.
     pub normalized_source: Option<String>,
@@ -20,25 +22,15 @@ pub struct AnnotatedForm {
     pub line_break: Option<i32>,
     /// The character index of a mid-word page break, if there is one.
     pub page_break: Option<i32>,
-    pub position: Option<PositionInDocument>,
+    pub position: PositionInDocument,
     pub date_recorded: Option<DateTime>,
-}
-
-#[derive(async_graphql::SimpleObject, Serialize, Deserialize)]
-pub struct UniqueAnnotatedForm {
-    #[serde(rename = "_id")]
-    pub id: String,
-    #[serde(flatten)]
-    pub form: AnnotatedForm,
 }
 
 impl AnnotatedForm {
     pub fn find_root(&self) -> Option<&MorphemeSegment> {
-        self.segments.as_ref().and_then(|segments| {
-            segments
-                .iter()
-                .find(|seg| seg.gloss.contains(|c: char| c.is_lowercase()))
-        })
+        self.segments
+            .as_ref()
+            .and_then(|segments| segments.iter().find(|seg| is_root_morpheme(&seg.gloss)))
     }
 }
 
@@ -59,22 +51,21 @@ impl AnnotatedForm {
         if let Some(root) = self.find_root() {
             let db = context.data::<Database>()?;
             // Find the forms with the exact same root.
-            let similar_roots = db.morphemes(&root.gloss);
+            let id = MorphemeId {
+                document_id: self.position.document_id.clone(),
+                gloss: root.gloss.clone(),
+                index: None,
+            };
+            let similar_roots = db.morphemes(&id);
             // Find forms with directly linked roots.
-            let connected = db.connected_forms(&root.gloss);
+            let connected = db.connected_forms(&id);
             let (connected, similar_roots) = futures::join!(connected, similar_roots);
             Ok(similar_roots?
                 .into_iter()
                 .flat_map(|r| r.forms)
                 .chain(connected?)
                 // Only return other similar words.
-                .filter(|word| {
-                    if let (Some(a), Some(b)) = (&word.position, &self.position) {
-                        a != b || word.source != self.source
-                    } else {
-                        true
-                    }
-                })
+                .filter(|word| word.position != self.position || word.source != self.source)
                 .collect())
         } else {
             Ok(Vec::new())
@@ -86,26 +77,22 @@ impl AnnotatedForm {
         &self,
         context: &async_graphql::Context<'_>,
     ) -> FieldResult<Option<AnnotatedDoc>> {
-        Ok(if let Some(pos) = self.position.as_ref() {
-            context
-                .data::<Database>()?
-                .document(&pos.document_id)
-                .await?
-        } else {
-            None
-        })
+        Ok(context
+            .data::<Database>()?
+            .document(&self.position.document_id)
+            .await?)
     }
 
     /// Position of this word in its containing document.
     async fn index(&self) -> i32 {
-        self.position.as_ref().map(|p| p.index).unwrap_or(0)
+        self.position.index
     }
     /// The unique identifier of the containing document.
-    async fn document_id(&self) -> Option<&str> {
-        self.position.as_ref().map(|p| &*p.document_id)
+    async fn document_id(&self) -> &str {
+        &self.position.document_id
     }
 
-    async fn position(&self) -> &Option<PositionInDocument> {
+    async fn position(&self) -> &PositionInDocument {
         &self.position
     }
 
@@ -142,4 +129,8 @@ impl AnnotatedForm {
     async fn date_recorded(&self) -> &Option<DateTime> {
         &self.date_recorded
     }
+}
+
+pub fn is_root_morpheme(s: &str) -> bool {
+    s.contains(|c: char| c.is_lowercase())
 }
