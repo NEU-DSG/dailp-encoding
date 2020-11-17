@@ -287,6 +287,8 @@ async fn parse_early_vocab(
     let entries = sheet
         .values
         .into_iter()
+        // The first row is just a header.
+        .skip(1)
         .filter(move |row| row.len() >= (4 + to_skip))
         .enumerate()
         .filter_map(|(index, row)| {
