@@ -280,7 +280,6 @@ export const query = graphql`
       morpheme
       simpleMorpheme: morpheme(system: DT)
       gloss
-      displayGloss
       matchingTag {
         crg
         learner
