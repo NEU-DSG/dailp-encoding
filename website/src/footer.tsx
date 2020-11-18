@@ -55,6 +55,7 @@ const container = css`
   align-items: center;
   color: ${theme.colors.body};
   font-size: 0.9rem;
+  background-color: ${theme.colors.footer};
   a {
     color: ${theme.colors.body};
 
