@@ -191,10 +191,10 @@ pub async fn migrate_old_lexical(db: &Database) -> Result<()> {
     .await?;
     parse_early_vocab(
         db,
-        "1R7dCEDyZEk8bhXlBHro8-JoeKjUZlRyBfAVdsuiY2Yc",
+        "1R7dCEDyZEk8bhXlBHro8-JoeKjUZlRyBfAVdsuiY2Yc", // DC1800
         1,
-        false,
         true,
+        false,
         false,
         false,
     )
