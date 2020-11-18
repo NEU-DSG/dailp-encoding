@@ -1,7 +1,9 @@
 import React, { useState, useRef } from "react"
 import { useQuery, gql } from "@apollo/client"
+import { css } from "linaria"
 import { Input } from "reakit/Input"
 import { Button } from "reakit/Button"
+import { fullWidth } from "../theme"
 import Layout from "../layout"
 
 export default () => {
@@ -36,24 +38,20 @@ const Timeline = (p: { gloss: string }) => {
     return <>Error!</>
   }
   return (
-    <div style={{ display: "flex", flexFlow: "row", overflowX: "scroll" }}>
+    <div className={wide}>
       {timeline.data.morphemeTimeClusters.map((cluster: any) => (
         <div
           key={cluster.start.year}
-          style={{
-            display: "flex",
-            flexFlow: "column nowrap",
-            marginRight: "4rem",
-          }}
+          style={{ marginBottom: "3rem" }}
         >
-          <div style={{ borderBottom: "2px solid black" }}>
+          <h2 style={{ borderBottom: "2px solid black" }}>
             {cluster.start ? Math.floor(cluster.start!.year / 50) * 50 : "None"} -{" "}
             {cluster.end ? Math.ceil(cluster.end!.year / 50) * 50 : "None"}
-          </div>
-          {cluster.forms.map((form: GatsbyTypes.Dailp_AnnotatedForm, i: number) => (
-            <div key={i} style={{ marginBottom: "1.5rem" }}>
+          </h2>
+          {cluster.forms.map((form: any, i: number) => (
+            <div key={i} className={wordRow}>
               <div>{form.documentId}</div>
-              <div>{form.normalizedSource ?? form.source}</div>
+              <div>{form.normalizedSource || form.source}</div>
               <div>{form.simplePhonetics}</div>
               <div>{form.englishGloss.join(", ")}</div>
             </div>
@@ -63,6 +61,20 @@ const Timeline = (p: { gloss: string }) => {
     </div>
   )
 }
+
+const wide = css`
+  ${fullWidth}
+`
+
+const wordRow = css`
+  display: flex;
+  flex-flow: row;
+  margin-bottom: 1rem;
+  & > * {
+    width: 10rem;
+  }
+`
+
 
 const query = gql`
   query Timeline($gloss: String!) {
