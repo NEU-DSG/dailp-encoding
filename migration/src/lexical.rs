@@ -201,12 +201,12 @@ pub async fn migrate_old_lexical(db: &Database) -> Result<()> {
     .await?;
     parse_early_vocab(
         db,
-        "14sN6e07u8rttS0nfX58-ojIgP7zwcOm6vjEXRk8qB-0",
+        "14sN6e07u8rttS0nfX58-ojIgP7zwcOm6vjEXRk8qB-0", // TS1822
         1,
         false,
         false,
         false,
-        false,
+        true,
     )
     .await?;
     parse_early_vocab(
