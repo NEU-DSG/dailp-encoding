@@ -90,7 +90,7 @@ const AnnotatedDocumentPage = (p: {
         >
           <ExperiencePicker radio={experienceLevel} />
 
-          <AnnotationSection as="article">
+          <article className={annotationContents}>
             {doc.translatedSegments?.map((seg, i) => (
               <Segment
                 key={i}
@@ -118,7 +118,7 @@ const AnnotatedDocumentPage = (p: {
               />
 
             ))}
-          </AnnotationSection>
+          </article>
         </TabPanel>
 
         <TabPanel
@@ -134,6 +134,12 @@ const AnnotatedDocumentPage = (p: {
   )
 }
 export default AnnotatedDocumentPage
+
+const annotationContents = css`
+  width: 100%;
+  display: flex;
+  flex-flow: column nowrap;
+`
 
 export const DocumentTitleHeader = (p: {
   doc: DeepPartial<GatsbyTypes.Dailp_AnnotatedDoc>
