@@ -27,7 +27,7 @@ export default (p: {
           <header>
             <Breadcrumbs aria-label="Breadcrumbs">
               <li>
-                <Link to="/collections">Collections</Link>
+                <Link to="/">Collections</Link>
               </li>
             </Breadcrumbs>
             <h2>{p.pageContext.name}</h2>
