@@ -6,7 +6,7 @@ use dailp::seg_verb_surface_forms;
 use dailp::AnnotatedDoc;
 use dailp::DocumentMetadata;
 use dailp::LexicalConnection;
-use dailp::LexicalEntry;
+use dailp::MorphemeId;
 use dailp::MorphemeSegment;
 use dailp::{AnnotatedForm, Database, DateTime, PositionInDocument};
 use futures::future::join_all;
@@ -25,19 +25,19 @@ pub async fn migrate_dictionaries(db: &Database) -> Result<()> {
     );
     let root_nouns = SheetResult::from_sheet("1XuQIKzhGf_mGCH4-bHNBAaQqTAJDNtPbNHjQDhszVRo", None)
         .await?
-        .into_nouns("DF1975", 1975, 1, 2)?;
+        .into_nouns("DF1975", 1975, true, 1)?;
     let irreg_nouns = SheetResult::from_sheet("1urfgtarnSypCgb5lSOhQGhhDcg1ozQ1r4jtCJ8Bu-vw", None)
         .await?
-        .into_nouns("DF1975", 1975, 1, 2)?;
+        .into_nouns("DF1975", 1975, true, 1)?;
     let ptcp_nouns = SheetResult::from_sheet("1JRmOx5_LlnoLQhzhyb3NmA4FAfMM2XRoT9ntyWtPEnk", None)
         .await?
-        .into_nouns("DF1975", 1975, 1, 1)?;
+        .into_nouns("DF1975", 1975, true, 0)?;
     let inf_nouns = SheetResult::from_sheet("1feuNOuzm0-TpotKyjebKwuXV4MYv-jnU5zLamczqu5U", None)
         .await?
         .into_df1975("DF1975", 1975, 3, true, true, 1, 1, 0)?;
     let body_parts = SheetResult::from_sheet("1xdnJuTsLBwxbCz9ffJmQNeX-xNYSmntoiRTu9Uwgu5I", None)
         .await?
-        .into_nouns("DF1975", 1975, 2, 1)?;
+        .into_nouns("DF1975", 1975, false, 1)?;
     let root_adjs = SheetResult::from_sheet("1R5EhHRq-hlMcYKLzwY2bLAvC-LEeVklHJEHgL6dt5L4", None)
         .await?
         .into_adjs("DF1975", 1975)?;
@@ -51,6 +51,9 @@ pub async fn migrate_dictionaries(db: &Database) -> Result<()> {
         3,
         3,
     );
+
+    // DF1975 Grammatical Appendix
+    parse_appendix(db, "1VjpKXMqb7CgFKE5lk9E6gqL-k6JKZ3FVUvhnqiMZYQg", 2).await?;
 
     let words = db.words_collection();
     let entries: Vec<_> = df1975
@@ -89,6 +92,119 @@ pub async fn migrate_dictionaries(db: &Database) -> Result<()> {
         })
     }))
     .await;
+
+    Ok(())
+}
+
+async fn parse_appendix(db: &Database, sheet_id: &str, to_skip: usize) -> Result<()> {
+    use chrono::TimeZone;
+
+    let sheet = SheetResult::from_sheet(sheet_id, None).await?;
+    let meta = SheetResult::from_sheet(sheet_id, Some("Metadata")).await?;
+    let mut meta_values = meta.values.into_iter();
+    let document_id = meta_values.next().unwrap().pop().unwrap();
+    let title = meta_values.next().unwrap().pop().unwrap();
+    let year = meta_values.next().unwrap().pop().unwrap().parse();
+    let date_recorded = year
+        .ok()
+        .map(|year| DateTime::new(chrono::Utc.ymd(year, 1, 1).and_hms(0, 0, 0)));
+    let meta = DocumentMetadata {
+        id: document_id,
+        title,
+        date: date_recorded,
+        publication: None,
+        collection: Some("Vocabularies".to_owned()),
+        genre: None,
+        people: Vec::new(),
+        page_images: Vec::new(),
+        translation: None,
+        is_reference: true,
+    };
+
+    let forms = sheet
+        .values
+        .into_iter()
+        .skip(1)
+        .filter(|r| r.len() > 4 && !r[1].is_empty())
+        .filter_map(|row| {
+            let mut values = row.into_iter();
+            let position = PositionInDocument {
+                document_id: meta.id.clone(),
+                index: values.next()?.parse().unwrap_or(1),
+                page_number: values.next()?,
+            };
+            for _ in 0..to_skip {
+                values.next()?;
+            }
+            let syllabary = values.next()?;
+            let numeric = values.next()?;
+            let translation = values.next()?;
+            let phonemic = values.next();
+            let morpheme_gloss = values.next()?;
+            let morpheme_segments = values.next()?;
+            let segments = MorphemeSegment::parse_many(&morpheme_segments, &morpheme_gloss);
+            Some(AnnotatedForm {
+                id: position.make_id(&morpheme_gloss),
+                position,
+                source: syllabary,
+                normalized_source: None,
+                simple_phonetics: None,
+                english_gloss: vec![translation],
+                phonemic,
+                segments,
+                line_break: None,
+                page_break: None,
+                commentary: None,
+                date_recorded: meta.date.clone(),
+            })
+        });
+
+    let upsert = mongodb::options::UpdateOptions::builder()
+        .upsert(true)
+        .build();
+
+    let forms_db = db.words_collection();
+    for form in forms {
+        forms_db
+            .update_one(
+                bson::doc! {"_id": &form.id},
+                bson::to_document(&form)?,
+                upsert.clone(),
+            )
+            .await?;
+    }
+
+    let links = SheetResult::from_sheet(sheet_id, Some("References")).await?;
+    let links = links.values.into_iter().skip(1).filter_map(|row| {
+        let mut row = row.into_iter();
+        Some(LexicalConnection::new(
+            MorphemeId::new(meta.id.clone(), None, row.next()?),
+            MorphemeId::parse(&row.next()?)?,
+        ))
+    });
+    let links_db = db.connections_collection();
+    for link in links {
+        links_db
+            .update_one(
+                bson::doc! { "_id": &link.id },
+                bson::to_document(&link)?,
+                upsert.clone(),
+            )
+            .await?;
+    }
+
+    let docs_db = db.documents_collection();
+    let doc = AnnotatedDoc {
+        meta,
+        segments: None,
+    };
+    docs_db
+        .update_one(
+            bson::doc! { "_id": &doc.meta.id },
+            bson::to_document(&doc)?,
+            upsert.clone(),
+        )
+        .await?;
 
     Ok(())
 }
@@ -139,7 +255,7 @@ fn parse_new_df1975(
                         true,
                     ),
                     entry: AnnotatedForm {
-                        id: LexicalEntry::make_id(&doc_id, &root_gloss),
+                        id: pos.make_id(&root_gloss),
                         simple_phonetics: None,
                         normalized_source: None,
                         phonemic: None,
