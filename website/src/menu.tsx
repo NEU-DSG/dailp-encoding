@@ -1,7 +1,7 @@
 import React from "react"
+import { css } from "linaria"
 import { Link, graphql, useStaticQuery } from "gatsby"
 import { useLocation } from "@reach/router"
-import { css } from "linaria"
 import theme from "./theme"
 import {
   useDialogState,
@@ -12,11 +12,32 @@ import {
 import { useMenuState, Menu, MenuItem, MenuButton } from "reakit/Menu"
 import { MdMenu, MdArrowDropDown } from "react-icons/md"
 
+const useMenu = () =>
+  useStaticQuery(graphql`
+    query {
+      wpMenu {
+        menuItems {
+          nodes {
+            label
+            path
+            childItems {
+              nodes {
+                label
+                path
+              }
+            }
+          }
+        }
+      }
+    }
+  `)
+
 export const NavMenu = () => {
   const location = useLocation()
-  const data = useStaticQuery(query)
+  const data = useMenu()
   const menuItems = data.wpMenu.menuItems.nodes
-  const isTopLevel = (a) => !menuItems.some(b => b.childItems.nodes.some(b => b.path === a.path))
+  const isTopLevel = (a) =>
+    !menuItems.some((b) => b.childItems.nodes.some((b) => b.path === a.path))
 
   return (
     <div className={desktopNav}>
@@ -32,11 +53,14 @@ export const NavMenu = () => {
               <Menu {...menu} aria-label={item.label} className={navMenu}>
                 {item.childItems.nodes.map((item) => (
                   <MenuItem
+                    {...menu}
                     as={Link}
                     to={item.path}
                     key={item.path}
                     className={navLink}
-                    {...menu}
+                    aria-current={
+                      location.pathname === item.path ? "page" : undefined
+                    }
                   >
                     {item.label}
                   </MenuItem>
@@ -66,9 +90,10 @@ export const NavMenu = () => {
 export const MobileNav = () => {
   const location = useLocation()
   const dialog = useDialogState({ animated: true })
-  const data = useStaticQuery(query)
+  const data = useMenu()
   const menuItems = data.wpMenu.menuItems.nodes
-  const isTopLevel = (a) => !menuItems.some(b => b.childItems.nodes.some(b => b.path === a.path))
+  const isTopLevel = (a) =>
+    !menuItems.some((b) => b.childItems.nodes.some((b) => b.path === a.path))
 
   return (
     <>
@@ -112,25 +137,6 @@ export const MobileNav = () => {
     </>
   )
 }
-
-const query = graphql`
-  query {
-    wpMenu {
-      menuItems {
-        nodes {
-          label
-          path
-          childItems {
-            nodes {
-              label
-              path
-            }
-          }
-        }
-      }
-    }
-  }
-`
 
 const navMenu = css`
   display: flex;
