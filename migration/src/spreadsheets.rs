@@ -8,8 +8,7 @@ use dailp::PositionInDocument;
 use dailp::{
     convert_udb, root_noun_surface_form, root_verb_surface_forms, AnnotatedDoc, AnnotatedForm,
     AnnotatedPhrase, AnnotatedSeg, BlockType, Database, DateTime, DocumentMetadata,
-    LexicalConnection, LexicalEntry, LineBreak, MorphemeId, MorphemeSegment, PageBreak,
-    PersonAssociation,
+    LexicalConnection, LineBreak, MorphemeId, MorphemeSegment, PageBreak, PersonAssociation,
 };
 use futures_retry::{FutureRetry, RetryPolicy};
 use mongodb::bson;
@@ -104,7 +103,7 @@ impl SheetResult {
                     RetryPolicy::<anyhow::Error>::ForwardError(e)
                 } else {
                     tries += 1;
-                    let t = rng.gen_range(1000, 1500);
+                    let t = rng.gen_range(1100, 1600);
                     RetryPolicy::<anyhow::Error>::WaitRetry(Duration::from_millis(t))
                 }
             },
@@ -170,9 +169,14 @@ impl SheetResult {
                     let root_gloss = root_values.next()?;
                     let mut form_values = root_values.clone().skip(after_root);
                     let date = DateTime::new(chrono::Utc.ymd(year, 1, 1).and_hms(0, 0, 0));
+                    let position = PositionInDocument {
+                        document_id: doc_id.to_owned(),
+                        page_number: 1.to_string(),
+                        index: index as i32 + 1,
+                    };
                     Some(LexicalEntryWithForms {
                         forms: root_verb_surface_forms(
-                            doc_id,
+                            &position,
                             &date,
                             &root,
                             &root_gloss,
@@ -183,7 +187,7 @@ impl SheetResult {
                             true,
                         ),
                         entry: AnnotatedForm {
-                            id: LexicalEntry::make_id(doc_id, &root_gloss),
+                            id: position.make_id(&root_gloss),
                             simple_phonetics: None,
                             normalized_source: None,
                             phonemic: None,
@@ -202,11 +206,7 @@ impl SheetResult {
                             )]),
                             date_recorded: Some(date),
                             source: root,
-                            position: PositionInDocument {
-                                document_id: doc_id.to_owned(),
-                                page_number: 1.to_string(),
-                                index: index as i32 + 1,
-                            },
+                            position,
                         },
                     })
                 } else {
@@ -239,9 +239,14 @@ impl SheetResult {
                 let page_number = root_values.next()?;
                 let mut form_values = root_values;
                 let date = DateTime::new(chrono::Utc.ymd(year, 1, 1).and_hms(0, 0, 0));
+                let position = PositionInDocument {
+                    document_id: doc_id.to_owned(),
+                    index: idx as i32 + 1,
+                    page_number,
+                };
                 Some(LexicalEntryWithForms {
                     forms: root_verb_surface_forms(
-                        doc_id,
+                        &position,
                         &date,
                         &root,
                         &root_gloss,
@@ -252,7 +257,7 @@ impl SheetResult {
                         false,
                     ),
                     entry: AnnotatedForm {
-                        id: LexicalEntry::make_id(doc_id, &root_gloss),
+                        id: position.make_id(&root_gloss),
                         normalized_source: None,
                         simple_phonetics: None,
                         phonemic: None,
@@ -267,11 +272,7 @@ impl SheetResult {
                         english_gloss: vec![root_gloss],
                         date_recorded: Some(date),
                         source: root,
-                        position: PositionInDocument {
-                            document_id: doc_id.to_owned(),
-                            index: idx as i32 + 1,
-                            page_number,
-                        },
+                        position,
                     },
                 })
             })
@@ -281,7 +282,7 @@ impl SheetResult {
         self,
         doc_id: &str,
         year: i32,
-        before_root: usize,
+        page_after: bool,
         after_root: usize,
     ) -> Result<Vec<LexicalEntryWithForms>> {
         use chrono::TimeZone as _;
@@ -292,25 +293,34 @@ impl SheetResult {
             // First two rows are simply headers.
             .skip(2)
             // The rest are relevant to the noun itself.
-            .enumerate()
-            .filter_map(|(idx, columns)| {
+            .filter_map(|columns| {
                 // The columns are as follows: key, root, root gloss, page ref,
                 // category, tags, surface forms.
 
                 if columns.len() > 4 && !columns[1].is_empty() {
                     // Skip reference numbers for now.
                     let mut root_values = columns.into_iter();
-                    for _ in 0..before_root {
-                        root_values.next()?;
+                    let index = root_values.next()?.parse().unwrap_or(1);
+                    let mut page_number = None;
+                    if !page_after {
+                        page_number = root_values.next();
                     }
                     let root = root_values.next()?;
                     let root_gloss = root_values.next()?;
+                    if page_after {
+                        page_number = root_values.next();
+                    }
                     // Skip page ref and category.
                     let mut form_values = root_values.skip(after_root);
                     let date = DateTime::new(chrono::Utc.ymd(year, 1, 1).and_hms(0, 0, 0));
+                    let position = PositionInDocument {
+                        document_id: doc_id.to_owned(),
+                        index,
+                        page_number: page_number?,
+                    };
                     Some(LexicalEntryWithForms {
                         forms: vec![root_noun_surface_form(
-                            doc_id,
+                            &position,
                             &date,
                             &root,
                             &root_gloss,
@@ -320,12 +330,8 @@ impl SheetResult {
                         .filter_map(|x| x)
                         .collect(),
                         entry: AnnotatedForm {
-                            id: LexicalEntry::make_id(doc_id, &root_gloss),
-                            position: PositionInDocument {
-                                document_id: doc_id.to_owned(),
-                                index: idx as i32 + 1,
-                                page_number: 1.to_string(),
-                            },
+                            id: position.make_id(&root_gloss),
+                            position,
                             normalized_source: None,
                             simple_phonetics: None,
                             phonemic: None,

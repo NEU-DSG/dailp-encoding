@@ -103,10 +103,16 @@ impl Database {
 
     pub async fn word_search(&self, query: String) -> Result<Vec<AnnotatedForm>> {
         use tokio::stream::StreamExt as _;
+        let pat = format!(".*{}.*", query);
         Ok(self
             .words_collection()
             .find(
-                bson::doc! { "source": { "$regex": format!(".*{}.*", query) } },
+                bson::doc! {
+                    "$or": [
+                        { "source": { "$regex": &pat } },
+                        { "english_gloss": { "$regex": pat } },
+                    ]
+                },
                 None,
             )
             .await?

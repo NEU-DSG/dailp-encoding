@@ -1,35 +1,6 @@
 use crate::{AnnotatedForm, DateTime, MorphemeSegment};
 use serde::{Deserialize, Serialize};
 
-/// A lexical entry is a form whose meaning cannot be created solely through
-/// semantic composition. In linguistic theory terms, our lexemes are
-/// semantically atomic forms rather than semantically complex forms.
-/// In English, lexical entries may be afforded for "kick," "the," and "bucket."
-/// By our definition, "kick the bucket" might have its own lexical entry
-/// because it has meaning beyond forcing your foot into a container.
-#[derive(Serialize, Deserialize, Debug)]
-pub struct LexicalEntry {
-    #[serde(rename = "_id")]
-    pub id: String,
-    pub original: String,
-    pub root: MorphemeSegment,
-    pub root_translations: Vec<String>,
-    pub date_recorded: DateTime,
-    pub position: Option<PositionInDocument>,
-}
-
-impl LexicalEntry {
-    pub fn make_id(doc_id: &str, gloss: &str) -> String {
-        use regex::{Captures, Regex};
-        lazy_static::lazy_static! {
-            static ref GLOSS_PAT: Regex = Regex::new(r"[\s\-,\[\]]+").unwrap();
-        }
-        // Unify gloss formats into a lowercase dot-separated string: "multi.word.gloss"
-        let gloss_tag = GLOSS_PAT.replace_all(&gloss, |_: &Captures| ".");
-        format!("{}:{}", doc_id, gloss_tag.trim_end_matches("."))
-    }
-}
-
 /// The reference position within a document of one specific form
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq, Eq)]
 pub struct PositionInDocument {
@@ -227,7 +198,7 @@ pub fn seg_verb_surface_form(
 
 /// Gather many verb surface forms from the given row.
 pub fn root_verb_surface_forms(
-    doc_id: &str,
+    position: &PositionInDocument,
     date: &DateTime,
     root: &str,
     root_gloss: &str,
@@ -239,7 +210,7 @@ pub fn root_verb_surface_forms(
 ) -> Vec<AnnotatedForm> {
     let mut forms = Vec::new();
     while let Some(form) = root_verb_surface_form(
-        doc_id,
+        position,
         date,
         root,
         root_gloss,
@@ -256,7 +227,7 @@ pub fn root_verb_surface_forms(
 
 /// Build a single verb surface form from the given row.
 pub fn root_verb_surface_form(
-    doc_id: &str,
+    position: &PositionInDocument,
     date: &DateTime,
     root: &str,
     root_gloss: &str,
@@ -318,7 +289,8 @@ pub fn root_verb_surface_form(
     }
 
     Some(AnnotatedForm {
-        position: PositionInDocument::new(doc_id.to_owned(), 1.to_string(), 1),
+        id: position.make_id(&gloss_layer),
+        position: position.clone(),
         source: syllabary.clone(),
         normalized_source: None,
         simple_phonetics: Some(phonetic),
@@ -329,7 +301,6 @@ pub fn root_verb_surface_form(
         line_break: None,
         page_break: None,
         date_recorded: Some(date.clone()),
-        id: gloss_layer,
     })
 }
 
@@ -356,7 +327,7 @@ fn all_tags(cols: &mut impl Iterator<Item = String>) -> (Vec<(String, String)>, 
 /// TODO Store forms in any format with a tag defining the format so that
 /// GraphQL can do the conversion instead of the migration process.
 pub fn root_noun_surface_form(
-    doc_id: &str,
+    position: &PositionInDocument,
     date: &DateTime,
     root: &str,
     root_gloss: &str,
@@ -387,7 +358,8 @@ pub fn root_noun_surface_form(
     let gloss_layer = glosses.join("-");
 
     Some(AnnotatedForm {
-        position: PositionInDocument::new(doc_id.to_owned(), 1.to_string(), 1),
+        id: position.make_id(&gloss_layer),
+        position: position.clone(),
         source: syllabary,
         normalized_source: None,
         simple_phonetics: Some(phonetic),
@@ -398,7 +370,6 @@ pub fn root_noun_surface_form(
         line_break: None,
         page_break: None,
         date_recorded: Some(date.clone()),
-        id: gloss_layer,
     })
 }
 
