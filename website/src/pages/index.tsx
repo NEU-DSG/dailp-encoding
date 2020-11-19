@@ -41,7 +41,7 @@ const IndexPage = (props: { data: GatsbyTypes.IndexPageQuery }) => (
     </Helmet>
     <DocIndex>
       <FullWidth>
-        <div
+        <div className={pageContents}
           dangerouslySetInnerHTML={{ __html: props.data.aboutPage?.content }}
         />
         <h1>Cherokee Manuscript Collections</h1>
@@ -75,12 +75,14 @@ export const query = graphql`
   }
 `
 
+const pageContents = css`
+  padding-top: 1.5rem;
+`
 
 export const DocIndex = styled.main`
   display: flex;
   flex-flow: column nowrap;
   align-items: center;
-  padding-top: 1.5rem;
 
   .carousel {
     position: relative;
