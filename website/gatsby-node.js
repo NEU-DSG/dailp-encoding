@@ -57,23 +57,26 @@ const createDocumentPages = async ({ actions, graphql }) => {
 const createWpPages = async ({ actions, graphql }) => {
   const { data } = await graphql(`
     query {
-      allPages: allMarkdownRemark {
+      allWpPage(filter: { status: { eq: "publish" } }) {
         nodes {
-          fields {
-            slug
-          }
           id
+          slug
+          link
+          status
         }
       }
     }
   `)
 
-  for (const doc of data.allPages.nodes) {
-    actions.createPage({
-      // Make all page urls relative.
-      path: doc.fields.slug,
-      component: path.resolve("./src/templates/page.tsx"),
-      context: doc,
-    })
+  for (const doc of data.allWpPage.nodes) {
+    // We'll manually handle the index page, which is the only one that starts
+    // with "https://" since it's an absolute url to the root of the site.
+    if (!doc.link.startsWith("https://")) {
+      actions.createPage({
+        path: doc.link,
+        component: path.resolve("./src/templates/page.tsx"),
+        context: doc,
+      })
+    }
   }
 }

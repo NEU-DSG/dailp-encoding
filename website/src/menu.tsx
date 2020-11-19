@@ -1,7 +1,7 @@
 import React from "react"
-import { Link, graphql } from "gatsby"
-import { useLocation } from "@reach/router"
 import { css } from "linaria"
+import { Link, graphql, useStaticQuery } from "gatsby"
+import { useLocation } from "@reach/router"
 import theme from "./theme"
 import {
   useDialogState,
@@ -12,28 +12,37 @@ import {
 import { useMenuState, Menu, MenuItem, MenuButton } from "reakit/Menu"
 import { MdMenu, MdArrowDropDown } from "react-icons/md"
 
-const menuItems = [
-  { path: "/", label: "Collections" },
-  {
-    label: "About",
-    childItems: [
-      { path: "/about/our-team", label: "Our Team" },
-      { path: "/about/our-goals", label: "Our Goals" },
-      { path: "/about/why-now", label: "Why Now" },
-      { path: "/about/project-history", label: "Project History" },
-    ],
-  },
-  { path: "/credit", label: "Additional Resources" },
-  { path: "/contact", label: "Interested in Working With Us?" },
-]
+const useMenu = () =>
+  useStaticQuery(graphql`
+    query {
+      wpMenu {
+        menuItems {
+          nodes {
+            label
+            path
+            childItems {
+              nodes {
+                label
+                path
+              }
+            }
+          }
+        }
+      }
+    }
+  `)
 
 export const NavMenu = () => {
   const location = useLocation()
+  const data = useMenu()
+  const menuItems = data.wpMenu.menuItems.nodes
+  const isTopLevel = (a) =>
+    !menuItems.some((b) => b.childItems.nodes.some((b) => b.path === a.path))
 
   return (
     <div className={desktopNav}>
-      {menuItems.map((item) => {
-        if (item.childItems) {
+      {menuItems.filter(isTopLevel).map((item) => {
+        if (item.childItems.nodes.length) {
           const menu = useMenuState()
           return (
             <>
@@ -42,13 +51,16 @@ export const NavMenu = () => {
                 <MdArrowDropDown aria-label="Menu" />
               </MenuButton>
               <Menu {...menu} aria-label={item.label} className={navMenu}>
-                {item.childItems.map((item) => (
+                {item.childItems.nodes.map((item) => (
                   <MenuItem
+                    {...menu}
                     as={Link}
                     to={item.path}
                     key={item.path}
                     className={navLink}
-                    {...menu}
+                    aria-current={
+                      location.pathname === item.path ? "page" : undefined
+                    }
                   >
                     {item.label}
                   </MenuItem>
@@ -78,6 +90,10 @@ export const NavMenu = () => {
 export const MobileNav = () => {
   const location = useLocation()
   const dialog = useDialogState({ animated: true })
+  const data = useMenu()
+  const menuItems = data.wpMenu.menuItems.nodes
+  const isTopLevel = (a) =>
+    !menuItems.some((b) => b.childItems.nodes.some((b) => b.path === a.path))
 
   return (
     <>
@@ -96,8 +112,11 @@ export const MobileNav = () => {
           aria-label="Navigation Drawer"
         >
           <ul>
-            {menuItems.map((item) => {
-              const items: any[] = item.childItems ?? [item]
+            {menuItems.filter(isTopLevel).map((item) => {
+              let items = item.childItems.nodes
+              if (!items.length) {
+                items = [item]
+              }
               return items.map((item) => (
                 <li className={drawerItem} key={item.path}>
                   <Link

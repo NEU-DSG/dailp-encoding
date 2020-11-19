@@ -47,6 +47,16 @@ module.exports = {
     "gatsby-plugin-slug",
     "gatsby-plugin-catch-links",
     {
+      resolve: "gatsby-source-wordpress-experimental",
+      options: {
+        url: "https://dailp.northeastern.edu/graphql",
+        verbose: true,
+        schema: {
+          perPage: 30,
+        },
+      },
+    },
+    {
       resolve: "gatsby-source-graphql",
       options: {
         typeName: "Dailp",
