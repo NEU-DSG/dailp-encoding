@@ -6,7 +6,7 @@ use crate::translations::DocResult;
 use anyhow::Result;
 use dailp::PositionInDocument;
 use dailp::{
-    convert_udb, root_noun_surface_form, root_verb_surface_forms, AnnotatedDoc, AnnotatedForm,
+    convert_udb, root_noun_surface_forms, root_verb_surface_forms, AnnotatedDoc, AnnotatedForm,
     AnnotatedPhrase, AnnotatedSeg, BlockType, Database, DateTime, DocumentMetadata,
     LexicalConnection, LineBreak, MorphemeId, MorphemeSegment, PageBreak, PersonAssociation,
 };
@@ -103,7 +103,7 @@ impl SheetResult {
                     RetryPolicy::<anyhow::Error>::ForwardError(e)
                 } else {
                     tries += 1;
-                    let t = rng.gen_range(1100, 1600);
+                    let t = rng.gen_range(1100, 2000);
                     RetryPolicy::<anyhow::Error>::WaitRetry(Duration::from_millis(t))
                 }
             },
@@ -136,85 +136,6 @@ impl SheetResult {
         })
     }
 
-    pub fn into_df1975(
-        self,
-        doc_id: &str,
-        year: i32,
-        translation_count: usize,
-        has_numeric: bool,
-        has_comment: bool,
-        before_root: usize,
-        after_root: usize,
-        translations: usize,
-    ) -> Result<Vec<LexicalEntryWithForms>> {
-        use chrono::TimeZone as _;
-        use rayon::prelude::*;
-        Ok(self
-            .values
-            .into_par_iter()
-            // The first two rows are simply headers.
-            .skip(2)
-            .enumerate()
-            // The rest are relevant to the verb itself.
-            .filter_map(|(index, columns)| {
-                // The columns are as follows: key, page number, root, root gloss,
-                // translations 1, 2, 3, transitivity, UDB class, blank, surface forms.
-                if columns.len() > 7 && !columns[2].is_empty() {
-                    // Skip reference numbers for now.
-                    let mut root_values = columns.into_iter();
-                    for _ in 0..before_root {
-                        root_values.next()?;
-                    }
-                    let root = root_values.next()?;
-                    let root_gloss = root_values.next()?;
-                    let mut form_values = root_values.clone().skip(after_root);
-                    let date = DateTime::new(chrono::Utc.ymd(year, 1, 1).and_hms(0, 0, 0));
-                    let position = PositionInDocument {
-                        document_id: doc_id.to_owned(),
-                        page_number: 1.to_string(),
-                        index: index as i32 + 1,
-                    };
-                    Some(LexicalEntryWithForms {
-                        forms: root_verb_surface_forms(
-                            &position,
-                            &date,
-                            &root,
-                            &root_gloss,
-                            &mut form_values,
-                            translation_count,
-                            has_numeric,
-                            has_comment,
-                            true,
-                        ),
-                        entry: AnnotatedForm {
-                            id: position.make_id(&root_gloss),
-                            simple_phonetics: None,
-                            normalized_source: None,
-                            phonemic: None,
-                            commentary: None,
-                            line_break: None,
-                            page_break: None,
-                            english_gloss: root_values
-                                .take(translations)
-                                .map(|s| s.trim().to_owned())
-                                .filter(|s| !s.is_empty())
-                                .collect(),
-                            segments: Some(vec![MorphemeSegment::new(
-                                convert_udb(&root).to_dailp(),
-                                root_gloss,
-                                None,
-                            )]),
-                            date_recorded: Some(date),
-                            source: root,
-                            position,
-                        },
-                    })
-                } else {
-                    None
-                }
-            })
-            .collect())
-    }
     pub fn into_adjs(self, doc_id: &str, year: i32) -> Result<Vec<LexicalEntryWithForms>> {
         use chrono::TimeZone as _;
         use rayon::prelude::*;
@@ -282,8 +203,8 @@ impl SheetResult {
         self,
         doc_id: &str,
         year: i32,
-        page_after: bool,
         after_root: usize,
+        has_comment: bool,
     ) -> Result<Vec<LexicalEntryWithForms>> {
         use chrono::TimeZone as _;
         use rayon::prelude::*;
@@ -301,15 +222,9 @@ impl SheetResult {
                     // Skip reference numbers for now.
                     let mut root_values = columns.into_iter();
                     let index = root_values.next()?.parse().unwrap_or(1);
-                    let mut page_number = None;
-                    if !page_after {
-                        page_number = root_values.next();
-                    }
+                    let page_number = root_values.next();
                     let root = root_values.next()?;
                     let root_gloss = root_values.next()?;
-                    if page_after {
-                        page_number = root_values.next();
-                    }
                     // Skip page ref and category.
                     let mut form_values = root_values.skip(after_root);
                     let date = DateTime::new(chrono::Utc.ymd(year, 1, 1).and_hms(0, 0, 0));
@@ -319,16 +234,12 @@ impl SheetResult {
                         page_number: page_number?,
                     };
                     Some(LexicalEntryWithForms {
-                        forms: vec![root_noun_surface_form(
+                        forms: root_noun_surface_forms(
                             &position,
                             &date,
-                            &root,
-                            &root_gloss,
                             &mut form_values,
-                        )]
-                        .into_iter()
-                        .filter_map(|x| x)
-                        .collect(),
+                            has_comment,
+                        ),
                         entry: AnnotatedForm {
                             id: position.make_id(&root_gloss),
                             position,

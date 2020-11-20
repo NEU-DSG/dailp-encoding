@@ -22,6 +22,15 @@ impl PositionInDocument {
     pub fn make_id(&self, gloss: &str) -> String {
         format!("{}.{}:{}", self.document_id, self.index, gloss)
     }
+
+    pub fn make_form_id(&self, segments: &[MorphemeSegment]) -> String {
+        format!(
+            "{}.{}:{}",
+            self.document_id,
+            self.index,
+            MorphemeSegment::gloss_layer(segments)
+        )
+    }
 }
 
 #[async_graphql::Object]
@@ -121,7 +130,6 @@ pub fn seg_verb_surface_forms(
     translation_count: usize,
     has_numeric: bool,
     has_comment: bool,
-    has_spacer: bool,
 ) -> Vec<AnnotatedForm> {
     let mut forms = Vec::new();
     while let Some(form) = seg_verb_surface_form(
@@ -131,7 +139,6 @@ pub fn seg_verb_surface_forms(
         translation_count,
         has_numeric,
         has_comment,
-        has_spacer,
     ) {
         forms.push(form);
     }
@@ -145,7 +152,6 @@ pub fn seg_verb_surface_form(
     translation_count: usize,
     has_numeric: bool,
     has_comment: bool,
-    has_spacer: bool,
 ) -> Option<AnnotatedForm> {
     // Skip empty cells until we find a form.
     let mut morpheme_layer = cols.next()?;
@@ -174,14 +180,11 @@ pub fn seg_verb_surface_form(
     } else {
         None
     };
-    if has_spacer {
-        cols.next();
-    }
 
     let segments = MorphemeSegment::parse_many(&morpheme_layer, &gloss_layer)?;
 
     Some(AnnotatedForm {
-        id: position.make_id(&gloss_layer),
+        id: position.make_form_id(&segments),
         position,
         source: syllabary.clone(),
         normalized_source: None,
@@ -288,14 +291,16 @@ pub fn root_verb_surface_form(
         cols.next();
     }
 
+    let segments = MorphemeSegment::parse_many(&morpheme_layer, &gloss_layer)?;
+
     Some(AnnotatedForm {
-        id: position.make_id(&gloss_layer),
+        id: position.make_form_id(&segments),
         position: position.clone(),
         source: syllabary.clone(),
         normalized_source: None,
         simple_phonetics: Some(phonetic),
         phonemic: Some(convert_udb(&phonemic).to_dailp()),
-        segments: Some(MorphemeSegment::parse_many(&morpheme_layer, &gloss_layer)?),
+        segments: Some(segments),
         english_gloss: translations,
         commentary,
         line_break: None,
@@ -323,50 +328,59 @@ fn all_tags(cols: &mut impl Iterator<Item = String>) -> (Vec<(String, String)>, 
     (tags, cols.next())
 }
 
+pub fn root_noun_surface_forms(
+    position: &PositionInDocument,
+    date: &DateTime,
+    cols: &mut impl Iterator<Item = String>,
+    has_comment: bool,
+) -> Vec<AnnotatedForm> {
+    let mut result = Vec::new();
+    while let Some(form) = root_noun_surface_form(position, date, cols, has_comment) {
+        result.push(form);
+    }
+    result
+}
+
 /// TODO Convert all phonemic representations into the TAOC/DAILP format.
 /// TODO Store forms in any format with a tag defining the format so that
 /// GraphQL can do the conversion instead of the migration process.
 pub fn root_noun_surface_form(
     position: &PositionInDocument,
     date: &DateTime,
-    root: &str,
-    root_gloss: &str,
     cols: &mut impl Iterator<Item = String>,
+    has_comment: bool,
 ) -> Option<AnnotatedForm> {
-    use itertools::Itertools as _;
-
-    let ppp_tag = cols.next()?;
-    let ppp_src = cols.next()?;
-    let pp_tag = cols.next()?;
-    let pp_src = cols.next()?;
+    let mut morpheme_layer = cols.next()?;
+    while morpheme_layer.is_empty() {
+        morpheme_layer = cols.next()?;
+    }
+    let gloss_layer = cols.next()?;
     let phonemic = cols.next()?;
     let _numeric = cols.next()?;
     let phonetic = cols.next()?;
     let syllabary = cols.next()?;
-    let translations = cols.take(3).filter(|s| !s.is_empty());
-
-    let mut morphemes = vec![&*ppp_src, &*pp_src, root]
-        .into_iter()
-        .map(|s| s.trim())
-        .filter(|s| !s.is_empty())
-        .map(|s| convert_udb(s).to_dailp());
-    let morpheme_layer = morphemes.join("-");
-    let mut glosses = vec![&*ppp_tag, &*pp_tag, root_gloss]
-        .into_iter()
-        .map(|s| s.trim())
-        .filter(|s| !s.is_empty());
-    let gloss_layer = glosses.join("-");
+    let mut translations = Vec::new();
+    for _ in 0..3 {
+        if let Some(s) = cols.next() {
+            if !s.is_empty() {
+                translations.push(s);
+            }
+        }
+    }
+    let commentary = if has_comment { cols.next() } else { None };
+    let segments = MorphemeSegment::parse_many(&morpheme_layer, &gloss_layer)?;
+    let id = position.make_form_id(&segments);
 
     Some(AnnotatedForm {
-        id: position.make_id(&gloss_layer),
+        id,
         position: position.clone(),
         source: syllabary,
         normalized_source: None,
         simple_phonetics: Some(phonetic),
         phonemic: Some(convert_udb(&phonemic).to_dailp()),
-        segments: Some(MorphemeSegment::parse_many(&morpheme_layer, &gloss_layer)?),
-        english_gloss: translations.collect(),
-        commentary: None,
+        segments: Some(segments),
+        english_gloss: translations,
+        commentary,
         line_break: None,
         page_break: None,
         date_recorded: Some(date.clone()),
