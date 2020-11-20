@@ -9,7 +9,6 @@ use dailp::LexicalConnection;
 use dailp::MorphemeId;
 use dailp::MorphemeSegment;
 use dailp::{AnnotatedForm, Database, DateTime, PositionInDocument};
-use futures::future::join_all;
 use mongodb::bson;
 
 pub async fn migrate_dictionaries(db: &Database) -> Result<()> {
@@ -25,19 +24,19 @@ pub async fn migrate_dictionaries(db: &Database) -> Result<()> {
     );
     let root_nouns = SheetResult::from_sheet("1XuQIKzhGf_mGCH4-bHNBAaQqTAJDNtPbNHjQDhszVRo", None)
         .await?
-        .into_nouns("DF1975", 1975, true, 1)?;
+        .into_nouns("DF1975", 1975, 1, false)?;
     let irreg_nouns = SheetResult::from_sheet("1urfgtarnSypCgb5lSOhQGhhDcg1ozQ1r4jtCJ8Bu-vw", None)
         .await?
-        .into_nouns("DF1975", 1975, true, 1)?;
+        .into_nouns("DF1975", 1975, 1, false)?;
     let ptcp_nouns = SheetResult::from_sheet("1JRmOx5_LlnoLQhzhyb3NmA4FAfMM2XRoT9ntyWtPEnk", None)
         .await?
-        .into_nouns("DF1975", 1975, true, 0)?;
+        .into_nouns("DF1975", 1975, 0, false)?;
     let inf_nouns = SheetResult::from_sheet("1feuNOuzm0-TpotKyjebKwuXV4MYv-jnU5zLamczqu5U", None)
         .await?
-        .into_df1975("DF1975", 1975, 3, true, true, 1, 1, 0)?;
+        .into_nouns("DF1975", 1975, 0, true)?;
     let body_parts = SheetResult::from_sheet("1xdnJuTsLBwxbCz9ffJmQNeX-xNYSmntoiRTu9Uwgu5I", None)
         .await?
-        .into_nouns("DF1975", 1975, false, 1)?;
+        .into_nouns("DF1975", 1975, 1, false)?;
     let root_adjs = SheetResult::from_sheet("1R5EhHRq-hlMcYKLzwY2bLAvC-LEeVklHJEHgL6dt5L4", None)
         .await?
         .into_adjs("DF1975", 1975)?;
@@ -56,15 +55,12 @@ pub async fn migrate_dictionaries(db: &Database) -> Result<()> {
     parse_appendix(db, "1VjpKXMqb7CgFKE5lk9E6gqL-k6JKZ3FVUvhnqiMZYQg", 2).await?;
 
     let words = db.words_collection();
+
     let entries: Vec<_> = df1975
-        .into_iter()
-        .chain(irreg_nouns)
-        .chain(ptcp_nouns)
-        .chain(inf_nouns)
-        .chain(body_parts)
-        .chain(root_adjs)
-        .chain(root_nouns)
         .chain(df2003)
+        .chain(root_nouns)
+        .chain(root_adjs)
+        .chain(body_parts)
         .collect();
 
     println!("Pushing entries to database...");
@@ -72,26 +68,35 @@ pub async fn migrate_dictionaries(db: &Database) -> Result<()> {
     let upsert = mongodb::options::UpdateOptions::builder()
         .upsert(true)
         .build();
-    // Push all lexical entries to the database.
-    join_all(entries.iter().filter_map(|entry| {
-        let entry = &entry.entry;
-        bson::to_document(entry).ok().map(|bson_doc| {
-            words.update_one(bson::doc! {"_id": &entry.id}, bson_doc, upsert.clone())
-        })
-    }))
-    .await;
 
-    println!("Pushing surface forms to database...");
+    for entry in &entries {
+        // Push all lexical entries to the database.
+        words
+            .update_one(
+                bson::doc! {"_id": &entry.entry.id},
+                bson::to_document(&entry.entry)?,
+                upsert.clone(),
+            )
+            .await?;
+    }
+
+    let forms = entries
+        .into_iter()
+        .chain(irreg_nouns)
+        .chain(ptcp_nouns)
+        .chain(inf_nouns)
+        .flat_map(|x| x.forms);
 
     // Push all the surface forms to the sea of words.
-    join_all(entries.into_iter().flat_map(|entry| {
-        entry.forms.into_iter().filter_map(|form| {
-            bson::to_document(&form).ok().map(|bson_doc| {
-                words.update_one(bson::doc! {"_id": &form.id}, bson_doc, upsert.clone())
-            })
-        })
-    }))
-    .await;
+    for form in forms {
+        words
+            .update_one(
+                bson::doc! {"_id": &form.id},
+                bson::to_document(&form)?,
+                upsert.clone(),
+            )
+            .await?;
+    }
 
     Ok(())
 }
@@ -137,21 +142,21 @@ async fn parse_appendix(db: &Database, sheet_id: &str, to_skip: usize) -> Result
                 values.next()?;
             }
             let syllabary = values.next()?;
-            let numeric = values.next()?;
+            let _numeric = values.next()?;
             let translation = values.next()?;
             let phonemic = values.next();
             let morpheme_gloss = values.next()?;
             let morpheme_segments = values.next()?;
-            let segments = MorphemeSegment::parse_many(&morpheme_segments, &morpheme_gloss);
+            let segments = MorphemeSegment::parse_many(&morpheme_segments, &morpheme_gloss)?;
             Some(AnnotatedForm {
-                id: position.make_id(&morpheme_gloss),
+                id: position.make_form_id(&segments),
                 position,
                 source: syllabary,
                 normalized_source: None,
                 simple_phonetics: None,
                 english_gloss: vec![translation],
                 phonemic,
-                segments,
+                segments: Some(segments),
                 line_break: None,
                 page_break: None,
                 commentary: None,
@@ -252,7 +257,6 @@ fn parse_new_df1975(
                         translation_count,
                         has_numeric,
                         has_comment,
-                        true,
                     ),
                     entry: AnnotatedForm {
                         id: pos.make_id(&root_gloss),

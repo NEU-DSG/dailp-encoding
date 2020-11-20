@@ -24,15 +24,12 @@ pub fn parse_gloss_layers<'a>(
         &[],
         one.into_iter()
             .zip(two)
-            .map(|(a, b)| {
-                let gloss = String::from_utf8_lossy(b.tag);
-                let gloss = gloss.trim();
-                let gloss = gloss.to_owned();
+            .map(|(morpheme, gloss)| {
                 MorphemeSegment::new(
-                    String::from_utf8_lossy(a.tag).into_owned(),
-                    gloss,
+                    String::from_utf8_lossy(morpheme.tag).trim().to_owned(),
+                    String::from_utf8_lossy(gloss.tag).trim().to_owned(),
                     // The gloss line is most likely to have the correct separator.
-                    b.followed_by,
+                    gloss.followed_by,
                 )
             })
             .collect(),
@@ -40,7 +37,7 @@ pub fn parse_gloss_layers<'a>(
 }
 
 /// Parses a string following the Leipzig glossing guidelines, where morphemes
-/// or morpheme glosses are separated by several different delimeters, each with
+/// or morpheme glosses are separated by several different delimiters, each with
 /// different semantics.
 fn gloss_line(input: &[u8]) -> IResult<&[u8], Vec<GlossSegment>> {
     many1(tailed_morpheme)(input)
