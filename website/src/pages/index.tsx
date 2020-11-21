@@ -7,6 +7,7 @@ import Layout from "../layout"
 import theme, { fullWidth } from "../theme"
 import { collectionRoute } from "../routes"
 import "@fortawesome/fontawesome-free/css/fontawesome.css"
+import "@fortawesome/fontawesome-free/css/solid.css"
 
 const images = [
   "https://dailp.northeastern.edu/wp-content/uploads/2020/01/Screen-Shot-2020-01-07-at-7.53.23-PM-300x253.png",

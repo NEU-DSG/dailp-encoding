@@ -156,6 +156,7 @@ const navLink = css`
   border: none;
   display: flex;
   flex-flow: row;
+  align-items: center;
 
   &[aria-current="page"] {
     color: ${theme.colors.link};
