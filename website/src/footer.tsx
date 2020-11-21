@@ -19,8 +19,7 @@ const Footer = () => {
       <div className={cx(light, container)}>
         <div className={content} style={{ display: "block" }}>
           This project was created using{" "}
-          <a href="https://gatsbyjs.com">Gatsby</a>{" "}
-          with help from the{" "}
+          <a href="https://gatsbyjs.com">Gatsby</a> with help from the{" "}
           <a href="http://dsg.northeastern.edu/">Digital Scholarship Group</a>{" "}
           at the{" "}
           <a href="http://library.northeastern.edu/">
@@ -55,7 +54,6 @@ const container = css`
   flex-flow: column nowrap;
   align-items: center;
   color: ${theme.colors.body};
-  font-size: 0.9rem;
   background-color: ${theme.colors.footer};
   a {
     color: ${theme.colors.body};
@@ -66,6 +64,9 @@ const container = css`
       color: ${theme.colors.header};
       outline-color: ${theme.colors.header};
     }
+  }
+  img {
+    margin-bottom: 0;
   }
 `
 

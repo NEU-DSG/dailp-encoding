@@ -2,11 +2,13 @@ const theme = {
   fonts: {
     // Noto Serif supports glottal stops and more accents than other fonts.
     body: `"Noto Serif", "Noto Sans Cherokee", Arial, serif`,
+    bodyArr: ["Noto Serif", "Noto Sans Cherokee", "Arial", "serif"],
     header: `"Quattrocento Sans", "Segoe UI", Arial, sans-serif`,
+    headerArr: ["Quattrocento Sans", "Segoe UI", "Arial", "sans-serif"],
     cherokee: `"Noto Sans Cherokee", "Noto Sans", Arial, sans-serif`,
   },
   fontSizes: {
-    root: "18px",
+    root: "17px",
   },
   colors: {
     header: "#f7eeed",
@@ -24,6 +26,7 @@ const theme = {
     large: "@media (min-width: 64em)",
   },
   edgeSpacing: "1rem",
+  rhythm: 1.53,
 }
 
 export const fullWidth = {

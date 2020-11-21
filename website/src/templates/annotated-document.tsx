@@ -74,7 +74,7 @@ const AnnotatedDocumentPage = (p: {
         <WideSticky top={isMobile ? "#header" : undefined}>
           <DocTabs {...tabs} aria-label="Manuscript Tabs">
             <DocTab {...tabs} id={Tabs.ANNOTATION}>
-              Translation
+              Text
             </DocTab>
             <DocTab {...tabs} id={Tabs.IMAGES}>
               Source Image
@@ -116,7 +116,6 @@ const AnnotatedDocumentPage = (p: {
                 translations={null}
                 pageImages={doc.pageImages}
               />
-
             ))}
           </article>
         </TabPanel>
@@ -159,7 +158,7 @@ export const DocumentTitleHeader = (p: {
       )}
     </Breadcrumbs>
 
-    <h2>
+    <h1>
       {p.showDetails ? (
         p.doc.title
       ) : (
@@ -171,7 +170,7 @@ export const DocumentTitleHeader = (p: {
           [<Link to={documentDetailsRoute(p.doc.slug!)}>Details</Link>]
         </>
       ) : null}
-    </h2>
+    </h1>
   </DocHeader>
 )
 
@@ -196,7 +195,7 @@ const DocTab = styled(Tab)`
   flex-grow: 1;
   cursor: pointer;
   font-family: ${theme.fonts.header};
-  font-size: 1.1rem;
+  font-size: 1.25rem;
   background-color: ${theme.colors.header};
   color: ${theme.colors.headings};
   outline-color: ${theme.colors.headings};
@@ -208,7 +207,7 @@ const DocTab = styled(Tab)`
 const DocTabs = styled(TabList)`
   display: flex;
   flex-flow: row nowrap;
-  height: 2.6rem;
+  height: ${theme.rhythm * 2}rem;
   ${fullWidth}
 `
 
@@ -233,16 +232,17 @@ const thingIsNaN = (l: any) => isNaN(Number(l))
 
 const ExperiencePicker = (p: { radio: RadioStateReturn }) => {
   return (
-    <RadioGroup {...p.radio}>
+    <RadioGroup {...p.radio} className={levelGroup}>
       {Object.keys(ExperienceLevel)
         .filter(thingIsNaN)
         .map(function (level: string) {
           return (
-            <label key={level}>
+            <label key={level} className={levelLabel}>
               <Radio
                 {...p.radio}
                 value={ExperienceLevel[level as keyof typeof ExperienceLevel]}
               />
+              {"  "}
               {level}
             </label>
           )
@@ -250,6 +250,17 @@ const ExperiencePicker = (p: { radio: RadioStateReturn }) => {
     </RadioGroup>
   )
 }
+
+const levelGroup = css`
+  margin-top: ${theme.rhythm / 2}rem;
+  display: flex;
+  flex-flow: row wrap;
+  justify-content: center;
+`
+
+const levelLabel = css`
+  margin-right: 2rem;
+`
 
 export const query = graphql`
   query AnnotatedDocument($id: String!, $isReference: Boolean!) {
@@ -326,7 +337,7 @@ const MorphemeDialog = styled(Dialog)`
   background-color: white;
   border: 1px solid ${theme.colors.borders};
   border-radius: 2px;
-  padding: 1rem;
+  padding: ${theme.rhythm}rem 1rem;
   max-height: 80vh;
   min-height: 20rem;
   max-width: 100vw;

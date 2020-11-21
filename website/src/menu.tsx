@@ -149,7 +149,7 @@ const navMenu = css`
 `
 
 const navLink = css`
-  padding: 0.5rem 1rem;
+  padding: ${theme.rhythm / 4}rem 1rem;
   text-decoration: none;
   color: ${theme.colors.text};
   background: none;
@@ -168,9 +168,9 @@ const navLink = css`
 `
 
 const drawerItem = css`
-  margin-bottom: 0.5rem;
+  margin-bottom: ${theme.rhythm / 2}rem;
   & > a {
-    padding: 0.5rem;
+    padding: ${theme.rhythm / 2}rem;
     text-decoration: none;
     color: ${theme.colors.text};
 
