@@ -11,11 +11,12 @@ export const AnnotationSection = styled.section`
   width: 100%;
   display: flex;
   flex-flow: column nowrap;
-  margin-bottom: ${theme.rhythm}rem;
+  margin-bottom: ${theme.rhythm / 2}rem;
   ${theme.mediaQueries.medium} {
     flex-flow: row wrap;
   }
 `
+
 
 interface Props {
   segment: GatsbyTypes.Dailp_AnnotatedSeg
@@ -231,7 +232,7 @@ const GlossLine = styled.div`
 
 const WordGroup = styled(Group)`
   position: relative;
-  margin: 1rem 0;
+  margin: ${theme.rhythm / 2}rem 0;
   margin-bottom: ${theme.rhythm / 2}rem;
   padding: ${theme.rhythm / 2}rem 0.5rem;
   padding-right: 0;
@@ -240,9 +241,11 @@ const WordGroup = styled(Group)`
   ${theme.mediaQueries.medium} {
     padding: 0;
     border: none;
-    margin: 1rem 3rem 2rem 0;
+    margin: ${theme.rhythm / 2}rem 3rem ${theme.rhythm}rem 0;
   }
 `
+
+
 
 const SyllabaryLayer = styled.div`
   font-family: ${theme.fonts.cherokee};

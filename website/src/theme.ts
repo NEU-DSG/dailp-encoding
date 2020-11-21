@@ -8,7 +8,7 @@ const theme = {
     cherokee: `"Noto Sans Cherokee", "Noto Sans", Arial, sans-serif`,
   },
   fontSizes: {
-    root: "17px",
+    root: "18px",
   },
   colors: {
     header: "#f7eeed",
