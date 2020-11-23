@@ -11,7 +11,7 @@ import {
 import { Tab, TabPanel, TabList } from "reakit/Tab"
 import Sticky from "react-stickynode"
 import Layout from "../layout"
-import { AnnotationSection, Segment, AnnotatedForm } from "../segment"
+import { Segment, AnnotatedForm } from "../segment"
 import Cookies from "js-cookie"
 import theme, { fullWidth, largeDialog } from "../theme"
 import { collectionRoute, documentDetailsRoute, documentRoute } from "../routes"

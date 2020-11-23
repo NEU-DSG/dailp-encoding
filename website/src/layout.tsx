@@ -92,12 +92,15 @@ const typography = new Typography({
 css`
   :global() {
     ${typography.toString()}
+
     * {
       box-sizing: border-box;
     }
+
     html {
       font-size: ${theme.fontSizes.root} !important;
     }
+
     body {
       margin: 0;
       font-family: ${theme.fonts.body};
@@ -122,13 +125,14 @@ css`
       outline-width: thin;
       outline-offset: 0;
     }
+
     main {
       background-color: ${theme.colors.body};
       display: flex;
-      flex-flow: column nowrap;
+      flex-flow: column wrap;
       align-items: center;
       font-size: 1rem;
-      padding: ${theme.rhythm}rem 1rem;
+      padding: ${theme.rhythm}rem 0;
     }
 
     h1,

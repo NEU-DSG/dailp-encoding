@@ -76,10 +76,11 @@ export const query = graphql`
   }
 `
 
-
 export const DocIndex = styled.main`
+  padding-left: ${theme.edgeSpacing};
+  padding-right: ${theme.edgeSpacing};
   display: flex;
-  flex-flow: column nowrap;
+  flex-flow: column wrap;
   align-items: center;
 
   .carousel {
@@ -143,7 +144,6 @@ export const DocIndex = styled.main`
 export const FullWidth = styled.article`
   ${fullWidth}
   flex-grow: 1;
-  padding: 0 ${theme.edgeSpacing};
 `
 
 const carousel = css`
