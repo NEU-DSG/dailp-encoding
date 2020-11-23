@@ -49,6 +49,7 @@ const Footer = () => {
 export default Footer
 
 const container = css`
+  font-size: 0.9rem;
   padding: 1rem ${theme.edgeSpacing};
   display: flex;
   flex-flow: column nowrap;

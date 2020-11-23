@@ -105,7 +105,7 @@ css`
     }
 
     a {
-      color: ${theme.colors.link};
+      color: ${theme.colors.footer};
       text-decoration-thickness: 0.09em;
       border-radius: 0;
 
