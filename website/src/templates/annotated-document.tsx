@@ -215,7 +215,7 @@ const docTabPanel = css`
   ${fullWidth}
   padding: 0 0.5rem;
   ${theme.mediaQueries.medium} {
-    padding: 0 ${theme.edgeSpacing};
+    padding: 0;
   }
 `
 
@@ -226,6 +226,9 @@ const imageTabPanel = css`
 const DocHeader = styled.header`
   ${fullWidth}
   padding: 0 ${theme.edgeSpacing};
+  ${theme.mediaQueries.medium} {
+    padding: 0;
+  }
 `
 
 const thingIsNaN = (l: any) => isNaN(Number(l))
@@ -358,4 +361,8 @@ const annotatedDocument = css`
   flex-flow: column nowrap;
   align-items: center;
   font-size: 1rem;
+  ${theme.mediaQueries.medium} {
+    padding-left: ${theme.edgeSpacing};
+    padding-right: ${theme.edgeSpacing};
+  }
 `

@@ -136,7 +136,7 @@ const MorphemicSegmentation = (p: {
 
   return (
     <>
-      <div className={glossName}>
+      <div className={glossLine}>
         {p
           .segments!.map(function (segment) {
             let seg = p.showAdvanced ? segment.morpheme : segment.simpleMorpheme
