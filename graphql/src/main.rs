@@ -41,6 +41,11 @@ struct Query;
 
 #[async_graphql::Object(cache_control(max_age = 60))]
 impl Query {
+    /// List of all the functional morpheme tags available
+    async fn all_tags(&self, context: &Context<'_>) -> FieldResult<Vec<MorphemeTag>> {
+        Ok(context.data::<Database>()?.all_tags().await?)
+    }
+
     /// Listing of all documents excluding their contents by default
     async fn all_documents(
         &self,
