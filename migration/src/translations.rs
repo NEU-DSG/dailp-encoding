@@ -1,4 +1,5 @@
-use anyhow::Result;
+use std::time::Duration;
+
 use dailp::{Translation, TranslationBlock};
 use itertools::Itertools;
 use serde::Deserialize;
@@ -9,15 +10,31 @@ pub struct DocResult {
     body: String,
 }
 impl DocResult {
-    pub async fn new(doc_id: &str) -> Result<Self> {
+    pub async fn new(doc_id: &str) -> Result<Self, anyhow::Error> {
+        use futures_retry::{FutureRetry, RetryPolicy};
         let api_key = std::env::var("GOOGLE_API_KEY")?;
-        let r = reqwest::get(&format!(
+        let url = format!(
             "https://www.googleapis.com/drive/v3/files/{}/export?mimeType=text/plain&key={}",
             doc_id, api_key
-        ))
-        .await?;
+        );
+        let mut tries: usize = 0;
+        let (t, _attempt) = FutureRetry::new(
+            || reqwest::get(&url),
+            |e| {
+                // Try up to ten times before giving up.
+                if tries > 9 {
+                    RetryPolicy::<reqwest::Error>::ForwardError(e)
+                } else {
+                    tries += 1;
+                    RetryPolicy::<reqwest::Error>::WaitRetry(Duration::from_millis(2000))
+                }
+            },
+        )
+        .await
+        .map_err(|(e, _attempts)| e)?;
+
         Ok(Self {
-            body: r.text().await?,
+            body: t.text().await?,
         })
     }
 

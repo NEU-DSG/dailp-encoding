@@ -10,7 +10,6 @@ use dailp::{
     AnnotatedPhrase, AnnotatedSeg, BlockType, Database, DateTime, DocumentMetadata,
     LexicalConnection, LineBreak, MorphemeId, MorphemeSegment, PageBreak, PersonAssociation,
 };
-use futures_retry::{FutureRetry, RetryPolicy};
 use mongodb::bson;
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, fs::File, io::Write, time::Duration};
@@ -92,19 +91,18 @@ pub struct SheetResult {
 
 impl SheetResult {
     pub async fn from_sheet(sheet_id: &str, sheet_name: Option<&str>) -> Result<Self> {
-        use rand::prelude::*;
-        let mut rng = thread_rng();
+        use futures_retry::{FutureRetry, RetryPolicy};
         let mut tries = 0;
         let (t, _attempt) = FutureRetry::new(
             move || Self::from_sheet_weak(sheet_id, sheet_name.clone()),
             |e| {
                 // Try up to ten times before giving up.
-                if tries > 9 {
+                if tries > 15 {
                     RetryPolicy::<anyhow::Error>::ForwardError(e)
                 } else {
                     tries += 1;
-                    let t = rng.gen_range(1100, 2000);
-                    RetryPolicy::<anyhow::Error>::WaitRetry(Duration::from_millis(t))
+                    println!("Retrying for the {}nth time...", tries);
+                    RetryPolicy::<anyhow::Error>::WaitRetry(Duration::from_millis(5000))
                 }
             },
         )

@@ -88,6 +88,17 @@ impl Database {
             .collect())
     }
 
+    pub async fn all_tags(&self) -> Result<Vec<MorphemeTag>> {
+        use tokio::stream::StreamExt as _;
+        Ok(self
+            .tags_collection()
+            .find(None, None)
+            .await?
+            .filter_map(|doc| doc.ok().and_then(|doc| bson::from_document(doc).ok()))
+            .collect()
+            .await)
+    }
+
     pub async fn words_in_document(&self, doc_id: &str) -> Result<Vec<AnnotatedForm>> {
         use tokio::stream::StreamExt as _;
         let mut forms: Vec<AnnotatedForm> = self
