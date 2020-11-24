@@ -94,15 +94,15 @@ impl SheetResult {
         use futures_retry::{FutureRetry, RetryPolicy};
         let mut tries = 0;
         let (t, _attempt) = FutureRetry::new(
-            move || Self::from_sheet_weak(sheet_id, sheet_name.clone()),
+            || Self::from_sheet_weak(sheet_id, sheet_name.clone()),
             |e| {
-                // Try up to ten times before giving up.
-                if tries > 15 {
+                // Try up to five times before giving up.
+                if tries > 4 {
                     RetryPolicy::<anyhow::Error>::ForwardError(e)
                 } else {
                     tries += 1;
-                    println!("Retrying for the {}nth time...", tries);
-                    RetryPolicy::<anyhow::Error>::WaitRetry(Duration::from_millis(5000))
+                    println!("Retrying for the {}th time...", tries);
+                    RetryPolicy::<anyhow::Error>::WaitRetry(Duration::from_millis(1000))
                 }
             },
         )

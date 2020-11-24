@@ -44,9 +44,10 @@ async fn migrate_data(db: &dailp::Database) -> Result<()> {
     // Because of Google API rate limits, we have to limit the number of
     // simultaneous connections to the sheets endpoint.
     for sheet_id in &index.sheet_ids {
-        let (doc, refs) = fetch_sheet(sheet_id).await?;
-        spreadsheets::write_to_file(&doc)?;
-        spreadsheets::migrate_documents_to_db(&[(doc, refs)], db).await?;
+        if let Some((doc, refs)) = fetch_sheet(sheet_id).await? {
+            spreadsheets::write_to_file(&doc)?;
+            spreadsheets::migrate_documents_to_db(&[(doc, refs)], db).await?;
+        }
     }
     Ok(())
 }
@@ -55,7 +56,7 @@ async fn migrate_data(db: &dailp::Database) -> Result<()> {
 /// annotation lines and the "Metadata" page as [dailp::DocumentMetadata].
 async fn fetch_sheet(
     sheet_id: &str,
-) -> Result<(dailp::AnnotatedDoc, Vec<dailp::LexicalConnection>)> {
+) -> Result<Option<(dailp::AnnotatedDoc, Vec<dailp::LexicalConnection>)>> {
     use crate::spreadsheets::AnnotatedLine;
     println!("parsing sheet {}...", sheet_id);
 
@@ -67,22 +68,24 @@ async fn fetch_sheet(
 
     // Parse the metadata on the second page of each sheet.
     // This includes publication information and a link to the translation.
-    let meta = spreadsheets::SheetResult::from_sheet(sheet_id, Some("Metadata"))
-        .await?
-        .into_metadata(false)
-        .await?;
+    let meta = spreadsheets::SheetResult::from_sheet(sheet_id, Some("Metadata")).await;
+    if let Ok(meta_sheet) = meta {
+        let meta = meta_sheet.into_metadata(false).await?;
 
-    // Parse references for this particular document.
-    let refs = spreadsheets::SheetResult::from_sheet(sheet_id, Some("References")).await;
-    let refs = if let Ok(refs) = refs {
-        refs.into_references(&meta.id).await
+        // Parse references for this particular document.
+        let refs = spreadsheets::SheetResult::from_sheet(sheet_id, Some("References")).await;
+        let refs = if let Ok(refs) = refs {
+            refs.into_references(&meta.id).await
+        } else {
+            Vec::new()
+        };
+
+        let annotated = AnnotatedLine::many_from_semantic(&lines, &meta);
+        let segments = AnnotatedLine::to_segments(annotated, &meta.id, &meta.date);
+        let doc = dailp::AnnotatedDoc::new(meta, segments);
+
+        Ok(Some((doc, refs)))
     } else {
-        Vec::new()
-    };
-
-    let annotated = AnnotatedLine::many_from_semantic(&lines, &meta);
-    let segments = AnnotatedLine::to_segments(annotated, &meta.id, &meta.date);
-    let doc = dailp::AnnotatedDoc::new(meta, segments);
-
-    Ok((doc, refs))
+        Ok(None)
+    }
 }
