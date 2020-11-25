@@ -10398,7 +10398,7 @@ type PagesQueryQuery = { readonly allSitePage: { readonly nodes: ReadonlyArray<P
 type GlossaryQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-type GlossaryQuery = { readonly dailp: { readonly allTags: ReadonlyArray<Pick<Dailp_MorphemeTag, 'id' | 'name' | 'crg' | 'morphemeType'>> } };
+type GlossaryQuery = { readonly dailp: { readonly allTags: ReadonlyArray<Pick<Dailp_MorphemeTag, 'id' | 'name' | 'morphemeType'>> } };
 
 type IndexPageQueryVariables = Exact<{ [key: string]: never; }>;
 
