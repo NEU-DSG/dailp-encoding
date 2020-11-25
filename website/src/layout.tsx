@@ -7,6 +7,7 @@ import { NavMenu, MobileNav } from "./menu"
 import { Helmet } from "react-helmet"
 import Sticky from "react-stickynode"
 import { isMobile } from "react-device-detect"
+import Typography from "typography"
 
 import "fontsource-noto-serif"
 import "fontsource-quattrocento-sans"
@@ -58,7 +59,6 @@ const headerContents = css`
 `
 
 const subHeader = css`
-  font-size: 0.9rem;
   color: ${theme.colors.headings};
   padding-left: 1rem;
   display: none;
@@ -68,10 +68,9 @@ const subHeader = css`
 `
 
 const siteTitle = css`
-  margin: 0.25rem 0;
-  font-size: 2rem;
+  margin: ${theme.rhythm / 4}rem 0;
   ${theme.mediaQueries.medium} {
-    margin: 1.2rem 0;
+    margin: ${theme.rhythm}rem 0;
   }
   & > a {
     color: ${theme.colors.headings};
@@ -79,15 +78,29 @@ const siteTitle = css`
   }
 `
 
+const typography = new Typography({
+  baseFontSize: theme.fontSizes.root,
+  baseLineHeight: theme.rhythm,
+  headerFontFamily: theme.fonts.headerArr,
+  bodyFontFamily: theme.fonts.bodyArr,
+  bodyGray: 5,
+  headerGray: 10,
+  // blockMarginBottom: 0.5,
+})
+
 // These styles affect all pages.
 css`
   :global() {
+    ${typography.toString()}
+
     * {
       box-sizing: border-box;
     }
+
     html {
       font-size: ${theme.fontSizes.root} !important;
     }
+
     body {
       margin: 0;
       font-family: ${theme.fonts.body};
@@ -95,14 +108,14 @@ css`
     }
 
     a {
-      color: ${theme.colors.text};
+      color: ${theme.colors.footer};
       text-decoration-thickness: 0.09em;
       border-radius: 0;
 
       &:hover,
       &:active,
       &:focus {
-        color: ${theme.colors.link};
+        color: ${theme.colors.altFooter};
       }
     }
 
@@ -112,17 +125,16 @@ css`
       outline-width: thin;
       outline-offset: 0;
     }
+
     main {
       background-color: ${theme.colors.body};
       display: flex;
-      flex-flow: column nowrap;
+      flex-flow: column wrap;
       align-items: center;
       font-size: 1rem;
-      padding-bottom: 1.5rem;
+      padding: ${theme.rhythm}rem 0;
     }
-    ul {
-      padding-inline-start: 1.5rem;
-    }
+
     h1,
     h2,
     h3,
@@ -136,21 +148,6 @@ css`
         padding-left: ${theme.edgeSpacing};
         padding-right: ${theme.edgeSpacing};
       }
-    }
-
-    h1 {
-      font-size: 1.7rem;
-    }
-    h2 {
-      font-size: 1.4rem;
-    }
-    h3 {
-      font-size: 1.2rem;
-    }
-    h4,
-    h5,
-    h6 {
-      font-size: 1rem;
     }
 
     button,

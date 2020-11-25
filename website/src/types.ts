@@ -1,7 +1,8 @@
 export enum ExperienceLevel {
-  Basic = 0,
-  Learner = 1,
-  Advanced = 2,
+  Story = 0,
+  Basic = 1,
+  Learner = 2,
+  Advanced = 3,
 }
 
 export enum TagSet {

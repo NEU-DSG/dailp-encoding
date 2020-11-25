@@ -29,7 +29,7 @@ const PageImages = (p: { pageImages?: readonly string[] }) => (
 export default PageImages
 
 const PageImage = styled.img`
-  margin-bottom: 2rem;
+  margin-bottom: ${theme.rhythm * 2}rem;
   width: 100%;
   height: auto;
 `
