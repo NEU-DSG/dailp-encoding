@@ -30,7 +30,7 @@ export default (p: {
                 <Link to="/">Collections</Link>
               </li>
             </Breadcrumbs>
-            <h2>{p.pageContext.name}</h2>
+            <h1>{p.pageContext.name}</h1>
           </header>
 
           <ul>

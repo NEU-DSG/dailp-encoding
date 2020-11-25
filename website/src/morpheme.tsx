@@ -6,6 +6,7 @@ import { useQuery, gql } from "@apollo/client"
 import _ from "lodash"
 import { MdClose } from "react-icons/md"
 import { AnchorLink } from "./link"
+import theme from "./theme"
 
 type BasicMorphemeSegment = NonNullable<
   GatsbyTypes.FormFieldsFragment["segments"]
@@ -25,15 +26,19 @@ export const MorphemeDetails = (props: {
     >
       <MdClose size={32} />
     </CloseButton>
-    <h4>Known Occurrences of "{props.segment?.gloss}"</h4>
-    <SimilarMorphemeList documentId={props.documentId} gloss={props.segment?.gloss!} dialog={props.dialog} />
+    <h3>Known Occurrences of "{props.segment?.gloss}"</h3>
+    <SimilarMorphemeList
+      documentId={props.documentId}
+      gloss={props.segment?.gloss!}
+      dialog={props.dialog}
+    />
   </>
 )
 
 const CloseButton = styled(Clickable)`
   position: fixed;
-  top: 0.5rem;
-  right: 0.5rem;
+  top: ${theme.rhythm / 2}rem;
+  right: ${theme.rhythm / 2}rem;
   cursor: pointer;
   border: none;
   background: none;
@@ -70,7 +75,7 @@ const SimilarMorphemeList = (props: {
     const docTypes = _.groupBy(docs, "documentType")
     const similarWords = Object.entries(docTypes).map(([ty, documents]) => (
       <section key={ty}>
-        <h5>{documentTypeToHeading(ty)}</h5>
+        <h4>{documentTypeToHeading(ty)}</h4>
         <ul>
           {documents.map((m: any, i: number) =>
             m.forms.map((word: any, j: number) => (

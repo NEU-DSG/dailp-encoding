@@ -1,19 +1,11 @@
 import React from "react"
+import { css, cx } from "linaria"
 import { styled } from "linaria/react"
 import { DialogDisclosure, DialogStateReturn } from "reakit/Dialog"
 import { Group } from "reakit/Group"
 import _ from "lodash"
 import { ExperienceLevel, TagSet, BasicMorphemeSegment } from "./types"
 import theme from "./theme"
-
-export const AnnotationSection = styled.section`
-  width: 100%;
-  display: flex;
-  flex-flow: column nowrap;
-  ${theme.mediaQueries.medium} {
-    flex-flow: row wrap;
-  }
-`
 
 interface Props {
   segment: GatsbyTypes.Dailp_AnnotatedSeg
@@ -48,10 +40,15 @@ export const Segment = (p: Props) => {
 
     if (p.segment.ty === "BLOCK") {
       return (
-        <DocumentBlock>
-          <AnnotationSection as="div">{children}</AnnotationSection>
+        <section
+          className={cx(
+            documentBlock,
+            p.level > ExperienceLevel.Story && bordered
+          )}
+        >
+          <div className={cx(annotationSection, p.level <= ExperienceLevel.Story && storySection)}>{children}</div>
           <p>{p.translations?.text ?? null}.</p>
-        </DocumentBlock>
+        </section>
       )
     } else {
       return <>{children}</>
@@ -87,23 +84,32 @@ export const AnnotatedForm = (
   if (!p.segment.source) {
     return null
   }
-  const showSegments = p.level > ExperienceLevel.Basic
-  return (
-    <WordGroup id={`w${p.segment.index}`}>
-      <SyllabaryLayer lang="chr">{p.segment.source}</SyllabaryLayer>
-      <div>{p.segment.simplePhonetics ?? <br />}</div>
-      {showSegments ? (
-        <MorphemicSegmentation
-          segments={p.segment.segments}
-          dialog={p.dialog}
-          onOpenDetails={p.onOpenDetails}
-          showAdvanced={p.level > ExperienceLevel.Learner}
-          tagSet={p.tagSet}
-        />
-      ) : null}
-      <div>{p.segment.englishGloss.join(", ")}</div>
-    </WordGroup>
-  )
+  const showAnything = p.level > ExperienceLevel.Story
+  if (showAnything) {
+    const showSegments = p.level > ExperienceLevel.Basic
+    return (
+      <div className={wordGroup} id={`w${p.segment.index}`}>
+        <SyllabaryLayer lang="chr">{p.segment.source}</SyllabaryLayer>
+        <div>{p.segment.simplePhonetics ?? <br />}</div>
+        {showSegments ? (
+          <MorphemicSegmentation
+            segments={p.segment.segments}
+            dialog={p.dialog}
+            onOpenDetails={p.onOpenDetails}
+            showAdvanced={p.level > ExperienceLevel.Learner}
+            tagSet={p.tagSet}
+          />
+        ) : null}
+        <div>{p.segment.englishGloss.join(", ")}</div>
+      </div>
+    )
+  } else {
+    return (
+      <span className={plainSyllabary} id={`w${p.segment.index}`} lang="chr">
+        {p.segment.source}
+      </span>
+    )
+  }
 }
 
 /**
@@ -130,7 +136,7 @@ const MorphemicSegmentation = (p: {
 
   return (
     <>
-      <GlossLine>
+      <div className={glossLine}>
         {p
           .segments!.map(function (segment) {
             let seg = p.showAdvanced ? segment.morpheme : segment.simpleMorpheme
@@ -141,9 +147,9 @@ const MorphemicSegmentation = (p: {
             }
           })
           .join("")}
-      </GlossLine>
+      </div>
 
-      <GlossLine>
+      <div className={glossLine}>
         {intersperse(
           p.segments!.map(function (segment, i) {
             return (
@@ -162,7 +168,7 @@ const MorphemicSegmentation = (p: {
             )
           }
         )}
-      </GlossLine>
+      </div>
     </>
   )
 }
@@ -186,16 +192,16 @@ const MorphemeSegment = (p: {
 
   if (gloss) {
     return (
-      <MorphemeButton {...p.dialog} onClick={() => p.onOpenDetails(p.segment)}>
+      <DialogDisclosure {...p.dialog} className={morphemeButton} onClick={() => p.onOpenDetails(p.segment)}>
         {gloss}
-      </MorphemeButton>
+      </DialogDisclosure>
     )
   } else {
     return null
   }
 }
 
-const MorphemeButton = styled(DialogDisclosure)`
+const morphemeButton = css`
   font-family: inherit;
   font-size: inherit;
   color: inherit;
@@ -208,36 +214,59 @@ const MorphemeButton = styled(DialogDisclosure)`
   }
 `
 
-const GlossLine = styled.div`
+const glossLine = css`
   display: flex;
   flex-flow: row wrap;
 `
 
-const WordGroup = styled(Group)`
+const wordGroup = css`
   position: relative;
-  margin: 1rem 0;
-  margin-bottom: 0.5rem;
-  padding: 0.5rem;
+  margin: ${theme.rhythm / 2}rem 0;
+  margin-bottom: ${theme.rhythm / 2}rem;
+  padding: ${theme.rhythm / 2}rem 0.5rem;
   padding-right: 0;
   border: 2px solid ${theme.colors.borders};
   border-radius: 2px;
   ${theme.mediaQueries.medium} {
     padding: 0;
     border: none;
-    margin: 1rem 3rem 2rem 0;
+    margin: ${theme.rhythm / 2}rem 3rem ${theme.rhythm}rem 0;
   }
 `
 
 const SyllabaryLayer = styled.div`
   font-family: ${theme.fonts.cherokee};
-  font-size: 1.2rem;
+  font-size: 1.25rem;
 `
 
-const DocumentBlock = styled.section`
-  margin-top: 2rem;
-  padding-bottom: 1.5rem;
-  margin-bottom: 1.5rem;
+const plainSyllabary = css`
+  font-family: ${theme.fonts.cherokee};
+  font-size: 1.25rem;
+  margin-right: 0.5rem;
+`
+
+const documentBlock = css`
+  margin-top: ${theme.rhythm}rem;
+  padding-bottom: ${theme.rhythm / 2}rem;
+  margin-bottom: ${theme.rhythm / 2}rem;
+`
+
+const bordered = css`
   ${theme.mediaQueries.medium} {
     border-bottom: 2px solid ${theme.colors.text};
   }
+`
+
+const annotationSection = css`
+  width: 100%;
+  display: flex;
+  flex-flow: column nowrap;
+  margin-bottom: ${theme.rhythm / 2}rem;
+  ${theme.mediaQueries.medium} {
+    flex-flow: row wrap;
+  }
+`
+
+const storySection = css`
+  flex-flow: row wrap;
 `
