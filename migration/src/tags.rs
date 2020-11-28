@@ -1,29 +1,23 @@
 use crate::spreadsheets::SheetResult;
 use anyhow::Result;
-use dailp::{Database, MorphemeTag};
+use dailp::{Database, MorphemeTag, TagForm};
 use mongodb::bson;
 
 /// Cherokee has many functional morphemes that are documented.
 /// Pulls all the details we have about each morpheme from our spreadsheets,
 /// parses it into typed data, then updates the database entry for each.
 pub async fn migrate_tags(db: &Database) -> Result<()> {
-    let (pp_tags, combined_pp, prepronominals, modals, nominal, refl, clitics) = futures::join!(
+    let (glossary, pp_tags, combined_pp, refl) = futures::join!(
+        SheetResult::from_sheet("17LSuDu7QHJfJyLDVJjO0f4wmTHQLVyHuSktr6OrbD_M", None),
         SheetResult::from_sheet("1D0JZEwE-dj-fKppbosaGhT7Xyyy4lVxmgG02tpEi8nw", None),
-        SheetResult::from_sheet("1OMzkbDGY1BqPR_ZwJRe4-F5_I12Ao5OJqqMp8Ej_ZhE", None),
-        SheetResult::from_sheet("12v5fqtOztwwLeEaKQJGMfziwlxP4n60riMsN9dYw9Xc", None),
-        SheetResult::from_sheet("1QWYWFeK6xy7zciIliizeW2hBfuRPNk6dK5rGJf2pdNc", None),
         SheetResult::from_sheet("1MCooadB1bTIKmi_uXBv93DMsv6CyF-L979XOLbFGGgM", None),
         SheetResult::from_sheet("1Q_q_1MZbmZ-g0bmj1sQouFFDnLBINGT3fzthPgqgkqo", None),
-        SheetResult::from_sheet("1inyNSJSbISFLwa5fBs4Sj0UUkNhXBokuNRxk7wVQF5A", None),
     );
 
-    let pp_tags = parse_tags(pp_tags?, 3, 7, true).await?;
-    let combined_pp = parse_tags(combined_pp?, 2, 6, false).await?;
-    let prepronominals = parse_tags(prepronominals?, 3, 8, false).await?;
-    let modals = parse_tags(modals?, 4, 5, false).await?;
-    let nominal = parse_tags(nominal?, 7, 5, false).await?;
-    let refl = parse_tags(refl?, 4, 4, false).await?;
-    let clitics = parse_tags(clitics?, 4, 4, false).await?;
+    let glossary = parse_tag_glossary(glossary?)?;
+    let pp_tags = parse_tags(pp_tags?, 3, 7, true)?;
+    let combined_pp = parse_tags(combined_pp?, 2, 6, false)?;
+    let refl = parse_tags(refl?, 4, 4, false)?;
 
     let dict = db.tags_collection();
     let upsert = mongodb::options::UpdateOptions::builder()
@@ -32,11 +26,8 @@ pub async fn migrate_tags(db: &Database) -> Result<()> {
     for entry in pp_tags
         .into_iter()
         .chain(combined_pp)
-        .chain(modals)
-        .chain(prepronominals)
         .chain(refl)
-        .chain(clitics)
-        .chain(nominal)
+        .chain(glossary)
     {
         dict.update_one(
             bson::doc! {"_id": &entry.id},
@@ -48,18 +39,15 @@ pub async fn migrate_tags(db: &Database) -> Result<()> {
 
     Ok(())
 }
-
-/// Transforms a spreadsheet of morpheme information into a list of type-safe tag objects.
-async fn parse_tags(
+fn parse_tags(
     sheet: SheetResult,
     num_allomorphs: usize,
     gap_to_crg: usize,
     has_simple: bool,
 ) -> Result<Vec<MorphemeTag>> {
-    use rayon::prelude::*;
     Ok(sheet
         .values
-        .into_par_iter()
+        .into_iter()
         // The first row is headers.
         .skip(1)
         // There are a few empty spacing rows to ignore.
@@ -68,13 +56,23 @@ async fn parse_tags(
             // Skip over allomorphs, and instead allow them to emerge from our texts.
             let mut cols = row.into_iter().skip(num_allomorphs);
             let dailp = cols.next()?;
+            let name = cols.next()?.trim().to_owned();
             Some(MorphemeTag {
                 id: dailp.clone(),
-                taoc: dailp,
-                name: cols.next()?.trim().to_owned(),
+                // FIXME Use title and shape from the sheet.
+                taoc: Some(TagForm {
+                    tag: dailp,
+                    title: name.clone(),
+                    shape: String::new(),
+                }),
                 morpheme_type: cols.clone().skip(1).next()?.trim().to_owned(),
-                // Each sheet has a different number of columns.
-                crg: cols.clone().skip(gap_to_crg).next()?,
+                // FIXME Use title and shape from the sheet.
+                crg: Some(TagForm {
+                    // Each sheet has a different number of columns.
+                    tag: cols.clone().skip(gap_to_crg).next()?,
+                    title: name,
+                    shape: String::new(),
+                }),
                 learner: if has_simple {
                     cols.skip(gap_to_crg + 2).next()
                 } else {
@@ -83,4 +81,43 @@ async fn parse_tags(
             })
         })
         .collect())
+}
+
+/// Transforms a spreadsheet of morpheme information into a list of type-safe tag objects.
+fn parse_tag_glossary(sheet: SheetResult) -> Result<Vec<MorphemeTag>> {
+    Ok(sheet
+        .values
+        .into_iter()
+        // The first row is headers.
+        .skip(1)
+        // There are a few empty spacing rows to ignore.
+        .filter(|row| !row.is_empty())
+        .filter_map(|row| {
+            // Skip over allomorphs, and instead allow them to emerge from our texts.
+            let mut cols = row.into_iter();
+            let morpheme_type = cols.next()?;
+            let dailp = parse_tag_section(&mut cols, false)?;
+            let crg = parse_tag_section(&mut cols, true);
+            let taoc = parse_tag_section(&mut cols, true);
+            Some(MorphemeTag {
+                id: dailp.tag,
+                taoc,
+                crg,
+                morpheme_type,
+                learner: None,
+            })
+        })
+        .collect())
+}
+
+fn parse_tag_section(values: &mut impl Iterator<Item = String>, has_page: bool) -> Option<TagForm> {
+    let tag = values.next()?;
+    let title = values.next()?;
+    let page_num = if has_page { values.next() } else { None };
+    let shape = values.next()?;
+    if !tag.is_empty() {
+        Some(TagForm { tag, title, shape })
+    } else {
+        None
+    }
 }
