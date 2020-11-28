@@ -7,6 +7,9 @@ pub struct MorphemeTag {
     #[serde(rename = "_id")]
     pub id: String,
     pub learner: Option<String>,
+    /// Representation of this morpheme from TAOC.
+    pub taoc: String,
+    /// Alternate form of this morpheme from Cherokee Reference Grammar.
     pub crg: String,
     pub name: String,
     pub morpheme_type: String,
