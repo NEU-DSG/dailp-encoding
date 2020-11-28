@@ -67,8 +67,10 @@ async fn parse_tags(
         .filter_map(|row| {
             // Skip over allomorphs, and instead allow them to emerge from our texts.
             let mut cols = row.into_iter().skip(num_allomorphs);
+            let dailp = cols.next()?;
             Some(MorphemeTag {
-                id: cols.next()?,
+                id: dailp.clone(),
+                taoc: dailp,
                 name: cols.next()?.trim().to_owned(),
                 morpheme_type: cols.clone().skip(1).next()?.trim().to_owned(),
                 // Each sheet has a different number of columns.

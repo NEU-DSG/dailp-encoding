@@ -21,7 +21,9 @@ export default (p: { data: GatsbyTypes.GlossaryQuery }) => {
             <dl>
               {tags.map((tag) => (
                 <React.Fragment key={tag.id}>
-                  <dt id={tag.id}>{tag.id}</dt>
+                  <dt id={tag.id}>
+                    {tag.id === tag.crg ? tag.id : `${tag.id} / ${tag.crg}`}
+                  </dt>
                   <dd>{tag.name}</dd>
                 </React.Fragment>
               ))}
@@ -39,6 +41,7 @@ export const query = graphql`
       allTags {
         id
         name
+        crg
         morphemeType
       }
     }
