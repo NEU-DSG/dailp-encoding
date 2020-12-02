@@ -56,7 +56,7 @@ const SimilarMorphemeList = (props: {
 }) => {
   const { data, loading, error } = useQuery(morphemeQuery, {
     skip: !props.gloss,
-    variables: { gloss: props.gloss, documentId: props.documentId },
+    variables: { morphemeId: `${props.documentId}:${props.gloss}` },
   })
 
   const tag = useQuery(tagQuery, {
@@ -131,8 +131,8 @@ function documentTypeToHeading(ty: string) {
 }
 
 const morphemeQuery = gql`
-  query Morpheme($gloss: String!, $documentId: String!) {
-    documents: morphemesByDocument(gloss: $gloss, documentId: $documentId) {
+  query Morpheme($morphemeId: String!) {
+    documents: morphemesByDocument(morphemeId: $morphemeId) {
       documentId
       documentType
       forms {

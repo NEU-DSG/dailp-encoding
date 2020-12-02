@@ -32,6 +32,12 @@ impl AnnotatedForm {
             .as_ref()
             .and_then(|segments| segments.iter().find(|seg| is_root_morpheme(&seg.gloss)))
     }
+
+    pub fn find_morpheme(&self, gloss: &str) -> Option<&MorphemeSegment> {
+        self.segments
+            .as_ref()
+            .and_then(|segments| segments.iter().find(|seg| seg.gloss == gloss))
+    }
 }
 
 #[async_graphql::Object]
@@ -56,7 +62,7 @@ impl AnnotatedForm {
                 gloss: root.gloss.clone(),
                 index: None,
             };
-            let similar_roots = db.morphemes(&id);
+            let similar_roots = db.morphemes(&id, None);
             // Find forms with directly linked roots.
             let connected = db.connected_forms(&id);
             let (connected, similar_roots) = futures::join!(connected, similar_roots);

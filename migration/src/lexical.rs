@@ -183,7 +183,7 @@ async fn parse_appendix(db: &Database, sheet_id: &str, to_skip: usize) -> Result
     let links = links.values.into_iter().skip(1).filter_map(|row| {
         let mut row = row.into_iter();
         Some(LexicalConnection::new(
-            MorphemeId::new(meta.id.clone(), None, row.next()?),
+            MorphemeId::new(Some(meta.id.clone()), None, row.next()?),
             MorphemeId::parse(&row.next()?)?,
         ))
     });
