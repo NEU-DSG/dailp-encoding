@@ -48,16 +48,20 @@ impl MorphemeSegment {
             .flat_map(|s| vec![&*s.gloss, s.get_next_separator().unwrap_or("")])
             .join("")
     }
+
+    pub fn get_morpheme(&self, system: Option<CherokeeOrthography>) -> Cow<'_, str> {
+        match system {
+            Some(CherokeeOrthography::Dt) => Cow::Owned(convert_tth_to_dt(&self.morpheme, false)),
+            _ => Cow::Borrowed(&*self.morpheme),
+        }
+    }
 }
 
 #[async_graphql::Object(cache_control(max_age = 60))]
 impl MorphemeSegment {
     /// Phonemic representation of the morpheme
     async fn morpheme(&self, system: Option<CherokeeOrthography>) -> Cow<'_, str> {
-        match system {
-            Some(CherokeeOrthography::Dt) => Cow::Owned(convert_tth_to_dt(&self.morpheme, false)),
-            _ => Cow::Borrowed(&*self.morpheme),
-        }
+        self.get_morpheme(system)
     }
 
     /// English gloss in standard DAILP format that refers to a lexical item
@@ -97,7 +101,7 @@ impl MorphemeSegment {
 }
 
 #[derive(async_graphql::Enum, Clone, Copy, Eq, PartialEq)]
-enum CherokeeOrthography {
+pub enum CherokeeOrthography {
     /// The d/t system for transcribing the Cherokee syllabary.
     /// This orthography is favored by native speakers.
     /// TODO Option for /ts/ instead of /j/

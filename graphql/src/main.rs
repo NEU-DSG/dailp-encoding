@@ -1,6 +1,9 @@
 use async_graphql::{Context, EmptyMutation, EmptySubscription, FieldResult, Schema};
 use async_once::AsyncOnce;
-use dailp::{AnnotatedDoc, Database, MorphemeId, MorphemeReference, MorphemeTag, WordsInDocument};
+use dailp::{
+    AnnotatedDoc, CherokeeOrthography, Database, MorphemeId, MorphemeReference, MorphemeTag,
+    WordsInDocument,
+};
 use lambda_http::{http::header, lambda, IntoResponse, Request, Response};
 
 type Error = Box<dyn std::error::Error + Sync + Send + 'static>;
@@ -89,10 +92,14 @@ impl Query {
         &self,
         context: &Context<'_>,
         gloss: String,
+        #[graphql(desc = "Compare morpheme shapes in this orthography.
+                          Choosing a simpler system like d/t will give you more general groupings.
+                         ")]
+        compare_by: Option<CherokeeOrthography>,
     ) -> FieldResult<Vec<MorphemeReference>> {
         Ok(context
             .data::<Database>()?
-            .morphemes(&MorphemeId::parse(&gloss).unwrap())
+            .morphemes(&MorphemeId::parse(&gloss).unwrap(), compare_by)
             .await?)
     }
 
@@ -101,10 +108,9 @@ impl Query {
     async fn morphemes_by_document(
         &self,
         context: &Context<'_>,
-        document_id: String,
-        gloss: String,
+        morpheme_id: String,
     ) -> FieldResult<Vec<WordsInDocument>> {
-        let id = MorphemeId::new(document_id, None, gloss);
+        let id = MorphemeId::parse(&morpheme_id).unwrap();
         Ok(context.data::<Database>()?.words_by_doc(&id).await?)
     }
 

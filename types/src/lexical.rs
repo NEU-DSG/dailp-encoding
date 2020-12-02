@@ -96,9 +96,9 @@ pub struct MorphemeId {
     pub index: Option<i32>,
 }
 impl MorphemeId {
-    pub fn new(document_id: String, index: Option<i32>, gloss: String) -> Self {
+    pub fn new(document_id: Option<String>, index: Option<i32>, gloss: String) -> Self {
         Self {
-            document_id: Some(document_id),
+            document_id,
             index,
             gloss,
         }

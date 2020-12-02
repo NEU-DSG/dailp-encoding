@@ -1,6 +1,6 @@
 use crate::{
-    AnnotatedDoc, AnnotatedForm, DocumentCollection, DocumentType, LexicalConnection, MorphemeId,
-    MorphemeTag,
+    AnnotatedDoc, AnnotatedForm, CherokeeOrthography, DocumentCollection, DocumentType,
+    LexicalConnection, MorphemeId, MorphemeTag,
 };
 use anyhow::Result;
 use futures::future::join_all;
@@ -306,7 +306,11 @@ impl Database {
     /// Retrieves all morphemes that share the given gloss text.
     /// For example, there may be multiple ways to pronounce a Cherokee word
     /// that glosses as "catch" in English.
-    pub async fn morphemes(&self, morpheme: &MorphemeId) -> Result<Vec<MorphemeReference>> {
+    pub async fn morphemes(
+        &self,
+        morpheme: &MorphemeId,
+        compare_by: Option<CherokeeOrthography>,
+    ) -> Result<Vec<MorphemeReference>> {
         use itertools::Itertools;
         use tokio::stream::StreamExt;
 
@@ -327,22 +331,23 @@ impl Database {
         // Retrieve both document and dictionary references at once.
         let (dictionary_words, document_words) = futures::join!(dictionary_words, document_words);
 
-        let dictionary_words = dictionary_words?
-            .into_iter()
-            .map(|form| (form.find_root().unwrap().morpheme.clone(), form));
+        let dictionary_words = dictionary_words?.into_iter().filter_map(|form| {
+            Some((
+                form.find_morpheme(&morpheme.gloss)?
+                    .get_morpheme(compare_by)
+                    .into_owned(),
+                form,
+            ))
+        });
 
         let document_words = document_words?
             .filter_map(|doc| {
                 let word: AnnotatedForm = bson::from_document(doc.ok()?).ok()?;
                 let m = {
                     // Find the index of the relevant morpheme gloss.
-                    let segment = word
-                        .segments
-                        .as_ref()?
-                        .iter()
-                        .find(|m| m.gloss == morpheme.gloss)?;
+                    let segment = word.find_morpheme(&morpheme.gloss)?;
                     // Grab the morpheme with the same index.
-                    segment.morpheme.clone()
+                    segment.get_morpheme(compare_by).into_owned()
                 };
                 Some((m.to_owned(), word))
             })
