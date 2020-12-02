@@ -52,7 +52,7 @@ impl AnnotatedForm {
             let db = context.data::<Database>()?;
             // Find the forms with the exact same root.
             let id = MorphemeId {
-                document_id: self.position.document_id.clone(),
+                document_id: Some(self.position.document_id.clone()),
                 gloss: root.gloss.clone(),
                 index: None,
             };

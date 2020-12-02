@@ -91,34 +91,50 @@ impl LexicalConnection {
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Eq, Hash)]
 pub struct MorphemeId {
-    pub document_id: String,
+    pub document_id: Option<String>,
     pub gloss: String,
     pub index: Option<i32>,
 }
 impl MorphemeId {
     pub fn new(document_id: String, index: Option<i32>, gloss: String) -> Self {
         Self {
-            document_id,
+            document_id: Some(document_id),
             index,
             gloss,
         }
     }
     pub fn parse(input: &str) -> Option<Self> {
         // Split by colon.
-        let mut parts = input.splitn(2, ':');
+        let mut parts: Vec<_> = input.splitn(2, ':').collect();
+        let gloss = parts.pop()?;
+        let (document_id, index) = if let Some(x) = parts.pop() {
+            // Check for an index after the document ID, like "DF1975.23"
+            let mut parts = x.splitn(2, '.');
+            (parts.next(), parts.next())
+        } else {
+            (None, None)
+        };
         Some(Self {
-            document_id: parts.next()?.to_owned(),
-            gloss: parts.next()?.to_owned(),
-            index: None,
+            document_id: document_id.map(str::to_owned),
+            gloss: gloss.to_owned(),
+            index: index.and_then(|i| i.parse().ok()),
         })
     }
 }
 impl std::fmt::Display for MorphemeId {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        if let Some(index) = self.index.as_ref() {
-            write!(f, "{}.{}:{}", index, self.document_id, self.gloss)
+        if let Some(index) = &self.index {
+            write!(
+                f,
+                "{}.{}:{}",
+                self.document_id.as_ref().unwrap(),
+                index,
+                self.gloss
+            )
+        } else if let Some(doc_id) = &self.document_id {
+            write!(f, "{}:{}", doc_id, self.gloss)
         } else {
-            write!(f, "{}:{}", self.document_id, self.gloss)
+            write!(f, "{}", self.gloss)
         }
     }
 }

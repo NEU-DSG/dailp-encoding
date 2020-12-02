@@ -142,12 +142,17 @@ impl Database {
 
     pub async fn surface_forms(&self, morpheme: &MorphemeId) -> Result<Vec<AnnotatedForm>> {
         use tokio::stream::StreamExt as _;
+        let morpheme_match = if let Some(doc_id) = &morpheme.document_id {
+            bson::doc! { "position.document_id": doc_id, "segments.gloss": &morpheme.gloss }
+        } else {
+            bson::doc! { "segments.gloss": &morpheme.gloss }
+        };
         Ok(self
             .words_collection()
             .find(
                 bson::doc! { "$or": [
                     // More likely a surface form
-                    { "position.document_id": &morpheme.document_id, "segments.gloss": &morpheme.gloss },
+                    morpheme_match,
                     // More likely a root
                     { "_id": morpheme.to_string() }
                 ] },
@@ -262,19 +267,19 @@ impl Database {
 
     async fn doc_matches(&self, morpheme: &MorphemeId) -> Result<Vec<AnnotatedForm>> {
         use tokio::stream::StreamExt as _;
+        let mut steps = vec![
+            bson::doc! { "$unwind": "$segments" },
+            bson::doc! { "$replaceRoot": { "newRoot": "$segments.source" } },
+            bson::doc! { "$unwind": "$parts" },
+            bson::doc! { "$replaceRoot": { "newRoot": "$parts" } },
+            bson::doc! { "$match": { "segments.gloss": &morpheme.gloss } },
+        ];
+        if let Some(doc_id) = &morpheme.document_id {
+            steps.insert(0, bson::doc! { "$match": { "_id": doc_id } });
+        }
         Ok(self
             .documents_collection()
-            .aggregate(
-                vec![
-                    bson::doc! { "$match": { "_id": &morpheme.document_id } },
-                    bson::doc! { "$unwind": "$segments" },
-                    bson::doc! { "$replaceRoot": { "newRoot": "$segments.source" } },
-                    bson::doc! { "$unwind": "$parts" },
-                    bson::doc! { "$replaceRoot": { "newRoot": "$parts" } },
-                    bson::doc! { "$match": { "segments.gloss": &morpheme.gloss } },
-                ],
-                None,
-            )
+            .aggregate(steps, None)
             .await?
             .filter_map(|d| d.ok().and_then(|d| bson::from_document(d).ok()))
             .collect()
@@ -307,19 +312,17 @@ impl Database {
 
         let dictionary_words = self.surface_forms(morpheme);
         let documents = self.documents_collection();
-        let document_words = documents.aggregate(
-            vec![
-                bson::doc! { "$match": { "_id": &morpheme.document_id } },
-                bson::doc! { "$unwind": "$segments" },
-                bson::doc! { "$replaceRoot": { "newRoot": "$segments.source" } },
-                bson::doc! { "$unwind": "$parts" },
-                bson::doc! { "$replaceRoot": { "newRoot": "$parts" } },
-                bson::doc! {
-                    "$match": { "segments.gloss": &morpheme.gloss }
-                },
-            ],
-            None,
-        );
+        let mut steps = vec![
+            bson::doc! { "$unwind": "$segments" },
+            bson::doc! { "$replaceRoot": { "newRoot": "$segments.source" } },
+            bson::doc! { "$unwind": "$parts" },
+            bson::doc! { "$replaceRoot": { "newRoot": "$parts" } },
+            bson::doc! { "$match": { "segments.gloss": &morpheme.gloss } },
+        ];
+        if let Some(doc_id) = &morpheme.document_id {
+            steps.insert(0, bson::doc! { "$match": { "_id": doc_id } });
+        }
+        let document_words = documents.aggregate(steps, None);
 
         // Retrieve both document and dictionary references at once.
         let (dictionary_words, document_words) = futures::join!(dictionary_words, document_words);
