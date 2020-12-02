@@ -3,7 +3,7 @@ import { graphql } from "gatsby"
 import Layout from "../layout"
 import { Helmet } from "react-helmet"
 import { DocumentTitleHeader } from "./annotated-document"
-import { styled } from "linaria/react"
+import { css } from "linaria"
 import { fullWidth } from "../theme"
 
 const DocumentDetails = (p: { data: GatsbyTypes.DocumentDetailsQuery }) => {
@@ -15,7 +15,7 @@ const DocumentDetails = (p: { data: GatsbyTypes.DocumentDetailsQuery }) => {
           <title>{doc.title} - Details</title>
         </Helmet>
         <DocumentTitleHeader doc={doc} showDetails={false} />
-        <WideSection>
+        <section className={wideSection}>
           <h3>People Involved</h3>
           <ul>
             {doc.people.map((person) => (
@@ -24,7 +24,7 @@ const DocumentDetails = (p: { data: GatsbyTypes.DocumentDetailsQuery }) => {
               </li>
             ))}
           </ul>
-        </WideSection>
+        </section>
       </main>
     </Layout>
   )
@@ -54,6 +54,6 @@ export const query = graphql`
   }
 `
 
-const WideSection = styled.section`
+const wideSection = css`
   ${fullWidth}
 `
