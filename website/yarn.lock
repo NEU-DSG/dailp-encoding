@@ -2248,10 +2248,10 @@
   dependencies:
     "@types/react" "*"
 
-"@types/react-stickynode@^3.0.0":
-  version "3.0.0"
-  resolved "https://registry.yarnpkg.com/@types/react-stickynode/-/react-stickynode-3.0.0.tgz#881c8b5c5ea84a9fc903b519f576bbbdb3d12311"
-  integrity sha512-k3HT52agVZgLtP9Z44VECHYDOVgZ3TImxrH81NiAvl0dIgYx/J4I+2/g65fHwoUxTjhobVxVF393g3gZxMJnMA==
+"@types/react-stickynode@^3.0.1":
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/@types/react-stickynode/-/react-stickynode-3.0.1.tgz#522b8d3a254c0cf5abf8f3d3359b461817a4bf89"
+  integrity sha512-7B4UYE+/yEOp2p0mUbu/O0w1UuGiPzSB3RbkjA3UQcaF+k3VaiKdaTdah32PerfEV2WhvmvVeXnNpsm4PsDd5g==
   dependencies:
     "@types/react" "*"
 

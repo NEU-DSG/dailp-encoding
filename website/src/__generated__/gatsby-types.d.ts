@@ -228,12 +228,12 @@ type Dailp_lexicalEntryArgs = {
 
 type Dailp_morphemesByShapeArgs = {
   gloss: Scalars['String'];
+  compareBy: Maybe<Dailp_CherokeeOrthography>;
 };
 
 
 type Dailp_morphemesByDocumentArgs = {
-  documentId: Scalars['String'];
-  gloss: Scalars['String'];
+  morphemeId: Scalars['String'];
 };
 
 
@@ -414,7 +414,6 @@ type Dailp_MorphemeSegment_morphemeArgs = {
   system: Maybe<Dailp_CherokeeOrthography>;
 };
 
-/** Represents a morphological gloss tag without committing to a single representation. */
 type Dailp_MorphemeTag = {
   /** Standard annotation tag for this morpheme, defined by DAILP. */
   readonly id: Scalars['String'];
@@ -426,6 +425,7 @@ type Dailp_MorphemeTag = {
   readonly name: Scalars['String'];
   /** The kind of morpheme, whether prefix or suffix. */
   readonly morphemeType: Scalars['String'];
+  readonly attestedAllomorphs: ReadonlyArray<Scalars['String']>;
 };
 
 type Dailp_PageBreak = {
@@ -10404,5 +10404,18 @@ type IndexPageQueryVariables = Exact<{ [key: string]: never; }>;
 
 
 type IndexPageQuery = { readonly dailp: { readonly allCollections: ReadonlyArray<Pick<Dailp_DocumentCollection, 'name' | 'slug'>> }, readonly aboutPage: Maybe<Pick<WpPage, 'title' | 'content'>> };
+
+type homesneadpiedailpEncodingwebsitesrcfooterTsx1552981879QueryVariables = Exact<{ [key: string]: never; }>;
+
+
+type homesneadpiedailpEncodingwebsitesrcfooterTsx1552981879Query = { readonly currentBuildDate: Maybe<Pick<CurrentBuildDate, 'currentDate'>> };
+
+type homesneadpiedailpEncodingwebsitesrcmenuTsx2377851188QueryVariables = Exact<{ [key: string]: never; }>;
+
+
+type homesneadpiedailpEncodingwebsitesrcmenuTsx2377851188Query = { readonly wpMenu: Maybe<{ readonly menuItems: Maybe<{ readonly nodes: Maybe<ReadonlyArray<Maybe<(
+        Pick<WpMenuItem, 'label' | 'path'>
+        & { readonly childItems: Maybe<{ readonly nodes: Maybe<ReadonlyArray<Maybe<Pick<WpMenuItem, 'label' | 'path'>>>> }> }
+      )>>> }> }> };
 
 }

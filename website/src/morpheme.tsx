@@ -1,7 +1,7 @@
 import React from "react"
 import { Clickable } from "reakit/Clickable"
 import { DialogStateReturn } from "reakit/Dialog"
-import { styled } from "linaria/react"
+import { css } from "linaria"
 import { useQuery, gql } from "@apollo/client"
 import _ from "lodash"
 import { MdClose } from "react-icons/md"
@@ -19,13 +19,14 @@ export const MorphemeDetails = (props: {
   dialog: DialogStateReturn
 }) => (
   <>
-    <CloseButton
+    <Clickable
+      className={closeButton}
       role="button"
       aria-label="Close Dialog"
       onClick={props.dialog.hide}
     >
       <MdClose size={32} />
-    </CloseButton>
+    </Clickable>
     <h3>Known Occurrences of "{props.segment?.gloss}"</h3>
     <SimilarMorphemeList
       documentId={props.documentId}
@@ -35,7 +36,7 @@ export const MorphemeDetails = (props: {
   </>
 )
 
-const CloseButton = styled(Clickable)`
+const closeButton = css`
   position: fixed;
   top: ${theme.rhythm / 2}rem;
   right: ${theme.rhythm / 2}rem;
