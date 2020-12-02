@@ -273,7 +273,7 @@ impl SheetResult {
                 let mut row = row.into_iter();
                 Some(dailp::LexicalConnection::new(
                     MorphemeId {
-                        document_id: doc_id.to_owned(),
+                        document_id: Some(doc_id.to_owned()),
                         gloss: row.next()?,
                         index: None,
                     },
