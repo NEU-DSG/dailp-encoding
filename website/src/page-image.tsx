@@ -1,11 +1,11 @@
 import React from "react"
-import { styled } from "linaria/react"
+import { css } from "linaria"
 import theme, { fullWidth } from "./theme"
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch"
 import { Helmet } from "react-helmet"
 
 const PageImages = (p: { pageImages?: readonly string[] }) => (
-  <AnnotationFigure aria-label="Manuscript Source Images">
+  <figure className={annotationFigure} aria-label="Manuscript Source Images">
     <Helmet>
       <link
         href="https://brbl-media.library.yale.edu"
@@ -16,7 +16,8 @@ const PageImages = (p: { pageImages?: readonly string[] }) => (
     {p.pageImages?.map((url, i) => (
       <TransformWrapper key={i}>
         <TransformComponent>
-          <PageImage
+          <img
+            className={pageImage}
             src={url}
             alt={`Manuscript Page ${i + 1}`}
             loading="lazy"
@@ -24,17 +25,17 @@ const PageImages = (p: { pageImages?: readonly string[] }) => (
         </TransformComponent>
       </TransformWrapper>
     ))}
-  </AnnotationFigure>
+  </figure>
 )
 export default PageImages
 
-const PageImage = styled.img`
+const pageImage = css`
   margin-bottom: ${theme.rhythm * 2}rem;
   width: 100%;
   height: auto;
 `
 
-const AnnotationFigure = styled.figure`
+const annotationFigure = css`
   width: 100%;
   margin: 0;
   cursor: move;
