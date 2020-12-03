@@ -11,6 +11,7 @@ pub struct MorphemeTag {
     pub taoc: Option<TagForm>,
     pub crg: Option<TagForm>,
     pub morpheme_type: String,
+    pub definition: Option<String>,
 }
 
 #[async_graphql::Object]
