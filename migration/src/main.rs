@@ -5,6 +5,7 @@ mod tags;
 mod translations;
 
 use anyhow::Result;
+use std::time::Duration;
 
 /// Migrates DAILP data from several Google spreadsheets to a MongoDB instance.
 #[tokio::main]
@@ -48,6 +49,7 @@ async fn migrate_data(db: &dailp::Database) -> Result<()> {
             spreadsheets::write_to_file(&doc)?;
             spreadsheets::migrate_documents_to_db(&[(doc, refs)], db).await?;
         }
+        tokio::time::delay_for(Duration::from_millis(1700)).await;
     }
     Ok(())
 }

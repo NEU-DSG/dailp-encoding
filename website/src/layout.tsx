@@ -144,10 +144,6 @@ css`
     header {
       color: ${theme.colors.headings};
       font-family: ${theme.fonts.header};
-      main > & {
-        padding-left: ${theme.edgeSpacing};
-        padding-right: ${theme.edgeSpacing};
-      }
     }
 
     button,
@@ -163,6 +159,10 @@ css`
       ${theme.mediaQueries.medium} {
         margin-inline-start: 2rem;
       }
+    }
+
+    dd {
+      margin-left: ${theme.rhythm}rem;
     }
   }
 `

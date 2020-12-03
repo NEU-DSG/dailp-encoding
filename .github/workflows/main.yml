@@ -60,7 +60,7 @@ jobs:
       - name: Encode documents as TEI and database entries
         run: |
           cd migration
-          cargo run
+          cargo run --release
       - name: Deploy GraphQL to AWS via serverless
         run: |
           cargo install cross

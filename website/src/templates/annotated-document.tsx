@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react"
 import { graphql, Link } from "gatsby"
-import { styled } from "linaria/react"
 import { useDialogState, Dialog, DialogBackdrop } from "reakit/Dialog"
 import {
   Radio,
@@ -57,8 +56,12 @@ const AnnotatedDocumentPage = (p: {
   return (
     <Layout title={doc.title}>
       <main className={annotatedDocument}>
-        <MorphemeDialogBackdrop {...dialog}>
-          <MorphemeDialog {...dialog} aria-label="Segment Details">
+        <DialogBackdrop className={morphemeDialogBackdrop} {...dialog}>
+          <Dialog
+            {...dialog}
+            className={morphemeDialog}
+            aria-label="Segment Details"
+          >
             {selectedMorpheme ? (
               <MorphemeDetails
                 documentId={doc.id}
@@ -66,21 +69,24 @@ const AnnotatedDocumentPage = (p: {
                 dialog={dialog}
               />
             ) : null}
-          </MorphemeDialog>
-        </MorphemeDialogBackdrop>
+          </Dialog>
+        </DialogBackdrop>
 
         <DocumentTitleHeader doc={doc as any} showDetails={true} />
-
-        <WideSticky top={isMobile ? "#header" : undefined}>
-          <DocTabs {...tabs} aria-label="Manuscript Tabs">
-            <DocTab {...tabs} id={Tabs.ANNOTATION}>
+        <Sticky
+          top={isMobile ? "#header" : undefined}
+          className={wideAndTop}
+          innerClass={wideSticky}
+        >
+          <TabList {...tabs} className={docTabs} aria-label="Manuscript Tabs">
+            <Tab {...tabs} id={Tabs.ANNOTATION} className={docTab}>
               Text
-            </DocTab>
-            <DocTab {...tabs} id={Tabs.IMAGES}>
+            </Tab>
+            <Tab {...tabs} id={Tabs.IMAGES} className={docTab}>
               Source Image
-            </DocTab>
-          </DocTabs>
-        </WideSticky>
+            </Tab>
+          </TabList>
+        </Sticky>
 
         <TabPanel
           {...tabs}
@@ -144,7 +150,7 @@ export const DocumentTitleHeader = (p: {
   doc: DeepPartial<GatsbyTypes.Dailp_AnnotatedDoc>
   showDetails?: boolean
 }) => (
-  <DocHeader>
+  <header className={docHeader}>
     <Breadcrumbs aria-label="Breadcrumbs">
       <li>
         <Link to="/">Collections</Link>
@@ -171,7 +177,7 @@ export const DocumentTitleHeader = (p: {
         </>
       ) : null}
     </h1>
-  </DocHeader>
+  </header>
 )
 
 const wideAndTop = css`
@@ -179,9 +185,7 @@ const wideAndTop = css`
   z-index: 1;
 `
 
-const WideSticky = styled(({ className, ...p }) => (
-  <Sticky className={wideAndTop} innerClass={className} {...p} />
-))`
+const wideSticky = css`
   left: 0;
   display: flex;
   flex-flow: column nowrap;
@@ -189,7 +193,7 @@ const WideSticky = styled(({ className, ...p }) => (
   width: 100% !important;
 `
 
-const DocTab = styled(Tab)`
+const docTab = css`
   border-radius: 0;
   border: none;
   flex-grow: 1;
@@ -204,7 +208,7 @@ const DocTab = styled(Tab)`
   }
 `
 
-const DocTabs = styled(TabList)`
+const docTabs = css`
   display: flex;
   flex-flow: row nowrap;
   height: ${theme.rhythm * 2}rem;
@@ -223,7 +227,7 @@ const imageTabPanel = css`
   ${fullWidth}
 `
 
-const DocHeader = styled.header`
+const docHeader = css`
   ${fullWidth}
   padding: 0 ${theme.edgeSpacing};
   ${theme.mediaQueries.medium} {
@@ -331,7 +335,7 @@ export const query = graphql`
   }
 `
 
-const MorphemeDialog = styled(Dialog)`
+const morphemeDialog = css`
   ${largeDialog}
   position: fixed;
   top: 50%;
@@ -349,7 +353,7 @@ const MorphemeDialog = styled(Dialog)`
   z-index: 999;
 `
 
-const MorphemeDialogBackdrop = styled(DialogBackdrop)`
+const morphemeDialogBackdrop = css`
   position: fixed;
   inset: 0;
   background-color: rgba(0, 0, 0, 0.2);

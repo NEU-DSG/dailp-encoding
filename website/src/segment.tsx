@@ -1,8 +1,6 @@
 import React from "react"
 import { css, cx } from "linaria"
-import { styled } from "linaria/react"
 import { DialogDisclosure, DialogStateReturn } from "reakit/Dialog"
-import { Group } from "reakit/Group"
 import _ from "lodash"
 import { ExperienceLevel, TagSet, BasicMorphemeSegment } from "./types"
 import theme from "./theme"
@@ -46,7 +44,14 @@ export const Segment = (p: Props) => {
             p.level > ExperienceLevel.Story && bordered
           )}
         >
-          <div className={cx(annotationSection, p.level <= ExperienceLevel.Story && storySection)}>{children}</div>
+          <div
+            className={cx(
+              annotationSection,
+              p.level <= ExperienceLevel.Story && storySection
+            )}
+          >
+            {children}
+          </div>
           <p>{p.translations?.text ?? null}.</p>
         </section>
       )
@@ -89,7 +94,9 @@ export const AnnotatedForm = (
     const showSegments = p.level > ExperienceLevel.Basic
     return (
       <div className={wordGroup} id={`w${p.segment.index}`}>
-        <SyllabaryLayer lang="chr">{p.segment.source}</SyllabaryLayer>
+        <div className={syllabaryLayer} lang="chr">
+          {p.segment.source}
+        </div>
         <div>{p.segment.simplePhonetics ?? <br />}</div>
         {showSegments ? (
           <MorphemicSegmentation
@@ -192,7 +199,11 @@ const MorphemeSegment = (p: {
 
   if (gloss) {
     return (
-      <DialogDisclosure {...p.dialog} className={morphemeButton} onClick={() => p.onOpenDetails(p.segment)}>
+      <DialogDisclosure
+        {...p.dialog}
+        className={morphemeButton}
+        onClick={() => p.onOpenDetails(p.segment)}
+      >
         {gloss}
       </DialogDisclosure>
     )
@@ -234,7 +245,7 @@ const wordGroup = css`
   }
 `
 
-const SyllabaryLayer = styled.div`
+const syllabaryLayer = css`
   font-family: ${theme.fonts.cherokee};
   font-size: 1.25rem;
 `

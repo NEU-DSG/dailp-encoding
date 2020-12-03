@@ -145,30 +145,3 @@ export const FullWidth = styled.article`
   ${fullWidth}
   flex-grow: 1;
 `
-
-const carousel = css`
-  position: relative;
-  margin-top: ${theme.rhythm}rem;
-`
-
-const carouselButton = css`
-  position: absolute;
-  top: 0;
-  height: 100%;
-  outline: none;
-  border: none;
-  background: none;
-  width: 4rem;
-`
-
-const onLeft = css`
-  left: 0;
-`
-
-const onRight = css`
-  right: 0;
-`
-
-const centerAlign = css`
-  text-align: center;
-`
