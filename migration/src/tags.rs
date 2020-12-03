@@ -78,6 +78,7 @@ fn parse_tags(
                 } else {
                     None
                 },
+                definition: None,
             })
         })
         .collect())
@@ -99,12 +100,14 @@ fn parse_tag_glossary(sheet: SheetResult) -> Result<Vec<MorphemeTag>> {
             let dailp = parse_tag_section(&mut cols, false)?;
             let crg = parse_tag_section(&mut cols, true);
             let taoc = parse_tag_section(&mut cols, true);
+            let definition = cols.next();
             Some(MorphemeTag {
                 id: dailp.tag,
                 taoc,
                 crg,
                 morpheme_type,
                 learner: None,
+                definition,
             })
         })
         .collect())
