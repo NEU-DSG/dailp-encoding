@@ -57,6 +57,11 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
+      - name: Write AWS TLS Certificate file
+        run: 'echo "$AWS_TLS_CERTIFICATE" > migration/aws-certificate.pem'
+        shell: bash
+        env:
+          AWS_TLS_CERTIFICATE: ${{secrets.AWS_TLS_CERTIFICATE}}
       - name: Encode documents as TEI and database entries
         run: |
           cd migration

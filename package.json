@@ -1,7 +1,8 @@
 {
   "private": true,
   "scripts": {
-    "deploy-graphql": "serverless deploy"
+    "deploy-graphql": "serverless deploy --stage prod",
+    "deploy-graphql:dev": "serverless deploy --stage dev"
   },
   "devDependencies": {
     "serverless": "^2.6.0",

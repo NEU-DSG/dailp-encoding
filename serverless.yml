@@ -1,12 +1,15 @@
-service: dailp-encoding
+service: dailp
+useDotenv: true
 plugins:
   - serverless-rust
-  - serverless-dotenv-plugin
 provider:
   name: aws
+  region: us-east-1
   runtime: rust
-  memorySize: 256
-  timeout: 35
+  memorySize: 512
+  timeout: 30
+  apiGateway:
+    shouldStartNameWithService: true
   environment:
     MONGODB_URI: ${env:MONGODB_URI}
 custom:
@@ -32,3 +35,20 @@ functions:
               - X-Amz-User-Agent
               - x-apollo-tracing
             allowCredentials: false
+# resources:
+#   Resources:
+#     DBCluster:
+#       Type: "AWS::DocDB::DBCluster"
+#       DeletionPolicy: Delete
+#       Properties:
+#         DBClusterIdentifier: "dailp-prod"
+#         MasterUsername: ${env:MONGODB_USERNAME}
+#         MasterUserPassword: ${env:MONGODB_PASSWORD}
+
+#     DBInstance:
+#       Type: "AWS::DocDB::DBInstance"
+#       Properties:
+#         DBClusterIdentifier: "dailp-prod"
+#         DBInstanceIdentifier: "dailp-prod-1"
+#         DBInstanceClass: "db.t3.medium"
+#       DependsOn: DBCluster
