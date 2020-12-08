@@ -1,3 +1,6 @@
+require("dotenv").config({
+  path: `.env`,
+})
 module.exports = {
   siteMetadata: {
     title: "DAILP Encoding",
@@ -61,15 +64,13 @@ module.exports = {
       options: {
         typeName: "Dailp",
         fieldName: "dailp",
-        url:
-          "https://b817bapwvb.execute-api.us-east-1.amazonaws.com/dev/graphql",
+        uri: process.env.DAILP_GRAPHQL_URL,
       },
     },
     {
       resolve: "gatsby-plugin-apollo",
       options: {
-        uri:
-          "https://b817bapwvb.execute-api.us-east-1.amazonaws.com/dev/graphql",
+        uri: process.env.DAILP_GRAPHQL_URL,
       },
     },
     "gatsby-transformer-sharp",

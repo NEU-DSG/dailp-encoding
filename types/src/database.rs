@@ -43,7 +43,7 @@ impl Database {
         opts.app_name = Some("DAILP".to_owned());
         let client = Client::with_options(opts)?;
         Ok(Database {
-            client: client.database("dailp-encoding"),
+            client: client.database("cherokee"),
         })
     }
 
