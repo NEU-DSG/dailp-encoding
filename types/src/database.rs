@@ -43,7 +43,7 @@ impl Database {
         opts.app_name = Some("DAILP".to_owned());
         let client = Client::with_options(opts)?;
         Ok(Database {
-            client: client.database("cherokee"),
+            client: client.database("dailp-encoding"),
         })
     }
 
@@ -54,6 +54,58 @@ impl Database {
             .find_one(bson::doc! { "_id": id }, None)
             .await?
             .and_then(|doc| bson::from_document(doc).ok()))
+    }
+
+    pub async fn update_tag(&self, tag: MorphemeTag) -> Result<()> {
+        self.tags_collection()
+            .update_one(
+                bson::doc! { "_id": &tag.id },
+                bson::to_document(&tag)?,
+                mongodb::options::UpdateOptions::builder()
+                    .upsert(true)
+                    .build(),
+            )
+            .await?;
+        Ok(())
+    }
+
+    pub async fn update_document(&self, tag: AnnotatedDoc) -> Result<()> {
+        self.documents_collection()
+            .update_one(
+                bson::doc! { "_id": &tag.meta.id },
+                bson::to_document(&tag)?,
+                mongodb::options::UpdateOptions::builder()
+                    .upsert(true)
+                    .build(),
+            )
+            .await?;
+        Ok(())
+    }
+
+    pub async fn update_connection(&self, tag: LexicalConnection) -> Result<()> {
+        self.connections_collection()
+            .update_one(
+                bson::doc! { "_id": &tag.id },
+                bson::to_document(&tag)?,
+                mongodb::options::UpdateOptions::builder()
+                    .upsert(true)
+                    .build(),
+            )
+            .await?;
+        Ok(())
+    }
+
+    pub async fn update_form(&self, tag: AnnotatedForm) -> Result<()> {
+        self.words_collection()
+            .update_one(
+                bson::doc! { "_id": &tag.id },
+                bson::to_document(&tag)?,
+                mongodb::options::UpdateOptions::builder()
+                    .upsert(true)
+                    .build(),
+            )
+            .await?;
+        Ok(())
     }
 
     pub async fn all_documents(&self, collection: Option<&str>) -> Result<Vec<AnnotatedDoc>> {

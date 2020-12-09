@@ -13,6 +13,7 @@ lazy_static::lazy_static! {
     static ref DATABASE: AsyncOnce<dailp::Database> = AsyncOnce::new(async {
         dailp::Database::new().await.unwrap()
     });
+    static ref MONGODB_PASSWORD: String = std::env::var("MONGODB_PASSWORD").unwrap();
 }
 
 /// Takes an HTTP request containing a GraphQL query,
@@ -21,7 +22,7 @@ lazy_static::lazy_static! {
 #[tokio::main]
 async fn main(req: Request, _: lambda::Context) -> Result<impl IntoResponse, Error> {
     if let lambda_http::Body::Text(req) = req.into_body() {
-        let schema = Schema::build(Query, EmptyMutation, EmptySubscription)
+        let schema = Schema::build(Query, Mutation, EmptySubscription)
             .data(DATABASE.get().await)
             .finish();
         let req: async_graphql::Request = serde_json::from_str(&req)?;
@@ -191,6 +192,83 @@ impl Query {
         query: String,
     ) -> FieldResult<Vec<dailp::AnnotatedForm>> {
         Ok(context.data::<Database>()?.word_search(query).await?)
+    }
+}
+
+struct Mutation;
+
+#[async_graphql::Object]
+impl Mutation {
+    async fn update_tag(
+        &self,
+        context: &Context<'_>,
+        password: String,
+        // Data encoded as JSON for now.
+        // FIXME Use real input objects.
+        contents: String,
+    ) -> FieldResult<bool> {
+        if password != *MONGODB_PASSWORD {
+            Ok(false)
+        } else {
+            let b = base64::decode(&contents)?;
+            let tag = serde_json::from_slice(&b)?;
+            context.data::<Database>()?.update_tag(tag).await?;
+            Ok(true)
+        }
+    }
+
+    async fn update_document(
+        &self,
+        context: &Context<'_>,
+        password: String,
+        // Data encoded as JSON for now.
+        // FIXME Use real input objects.
+        contents: String,
+    ) -> FieldResult<bool> {
+        if password != *MONGODB_PASSWORD {
+            Ok(false)
+        } else {
+            let b = base64::decode(&contents)?;
+            let tag = serde_json::from_slice(&b)?;
+            context.data::<Database>()?.update_document(tag).await?;
+            Ok(true)
+        }
+    }
+
+    async fn update_form(
+        &self,
+        context: &Context<'_>,
+        password: String,
+        // Data encoded as JSON for now.
+        // FIXME Use real input objects.
+        contents: String,
+    ) -> FieldResult<bool> {
+        if password != *MONGODB_PASSWORD {
+            Ok(false)
+        } else {
+            let b = base64::decode(&contents)?;
+            let tag = serde_json::from_slice(&b)?;
+            context.data::<Database>()?.update_form(tag).await?;
+            Ok(true)
+        }
+    }
+
+    async fn update_connection(
+        &self,
+        context: &Context<'_>,
+        password: String,
+        // Data encoded as JSON for now.
+        // FIXME Use real input objects.
+        contents: String,
+    ) -> FieldResult<bool> {
+        if password != *MONGODB_PASSWORD {
+            Ok(false)
+        } else {
+            let b = base64::decode(&contents)?;
+            let tag = serde_json::from_slice(&b)?;
+            context.data::<Database>()?.update_connection(tag).await?;
+            Ok(true)
+        }
     }
 }
 

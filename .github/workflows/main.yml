@@ -58,7 +58,7 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
       - name: Write AWS TLS Certificate file
-        run: 'echo "$AWS_TLS_CERTIFICATE" > migration/aws-certificate.pem'
+        run: 'echo "$AWS_TLS_CERTIFICATE" > aws-certificate.pem'
         shell: bash
         env:
           AWS_TLS_CERTIFICATE: ${{secrets.AWS_TLS_CERTIFICATE}}

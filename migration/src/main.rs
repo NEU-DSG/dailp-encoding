@@ -11,28 +11,27 @@ use std::time::Duration;
 #[tokio::main]
 async fn main() -> Result<()> {
     dotenv::dotenv().ok();
-    let db = dailp::Database::new().await?;
 
     println!("Migrating connections...");
-    connections::migrate_connections(&db).await?;
+    connections::migrate_connections().await?;
 
-    migrate_data(&db).await?;
+    migrate_data().await?;
 
     println!("Migrating early vocabularies...");
-    lexical::migrate_old_lexical(&db).await?;
+    lexical::migrate_old_lexical().await?;
 
     println!("Migrating DF1975 and DF2003...");
-    lexical::migrate_dictionaries(&db).await?;
+    lexical::migrate_dictionaries().await?;
 
     println!("Migrating tags to database...");
-    tags::migrate_tags(&db).await?;
+    tags::migrate_tags().await?;
 
     Ok(())
 }
 
 /// Parses our annotated document spreadsheets, migrating that data to our
 /// database and writing them into TEI XML files.
-async fn migrate_data(db: &dailp::Database) -> Result<()> {
+async fn migrate_data() -> Result<()> {
     // Pull the list of annotated documents from our index sheet.
     let index =
         spreadsheets::SheetResult::from_sheet("1sDTRFoJylUqsZlxU57k1Uj8oHhbM3MAzU8sDgTfO7Mk", None)
@@ -47,7 +46,7 @@ async fn migrate_data(db: &dailp::Database) -> Result<()> {
     for sheet_id in &index.sheet_ids {
         if let Some((doc, refs)) = fetch_sheet(sheet_id).await? {
             spreadsheets::write_to_file(&doc)?;
-            spreadsheets::migrate_documents_to_db(&[(doc, refs)], db).await?;
+            spreadsheets::migrate_documents_to_db(&[(doc, refs)]).await?;
         }
         tokio::time::delay_for(Duration::from_millis(1700)).await;
     }
@@ -90,4 +89,43 @@ async fn fetch_sheet(
     } else {
         Ok(None)
     }
+}
+
+async fn graphql_mutate(method: &str, contents: String) -> Result<()> {
+    lazy_static::lazy_static! {
+        static ref CLIENT: reqwest::Client = reqwest::Client::new();
+        static ref ENDPOINT: String = std::env::var("DAILP_GRAPHQL_URL").unwrap();
+        static ref PASSWORD: String = std::env::var("MONGODB_PASSWORD").unwrap();
+    }
+    let b = base64::encode(&contents);
+    let query = serde_json::json!({
+            "operationName": null,
+            "query": format!(r#"mutation {{
+            {}(password: "{}", contents: "{}")
+        }}"#, method, *PASSWORD, b)
+    });
+    // println!("{}", query);
+    let res = CLIENT.post(&*ENDPOINT).json(&query).send().await?;
+    // println!("{:?}", res);
+    Ok(())
+}
+
+async fn update_tag(tag: &dailp::MorphemeTag) -> Result<()> {
+    let json = serde_json::to_string(tag)?;
+    graphql_mutate("updateTag", json).await
+}
+
+async fn update_document(tag: &dailp::AnnotatedDoc) -> Result<()> {
+    let json = serde_json::to_string(tag)?;
+    graphql_mutate("updateDocument", json).await
+}
+
+async fn update_form(tag: &dailp::AnnotatedForm) -> Result<()> {
+    let json = serde_json::to_string(tag)?;
+    graphql_mutate("updateForm", json).await
+}
+
+async fn update_connection(tag: &dailp::LexicalConnection) -> Result<()> {
+    let json = serde_json::to_string(tag)?;
+    graphql_mutate("updateConnection", json).await
 }

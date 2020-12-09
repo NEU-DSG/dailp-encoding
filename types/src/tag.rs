@@ -6,12 +6,10 @@ use serde::{Deserialize, Serialize};
 pub struct MorphemeTag {
     #[serde(rename = "_id")]
     pub id: String,
-    // TODO Align learner form with the rest.
-    pub learner: Option<String>,
+    pub learner: Option<TagForm>,
     pub taoc: Option<TagForm>,
     pub crg: Option<TagForm>,
     pub morpheme_type: String,
-    pub definition: Option<String>,
 }
 
 #[async_graphql::Object]
@@ -21,7 +19,7 @@ impl MorphemeTag {
         &self.id
     }
     /// Alternate form that conveys a simple English representation.
-    async fn learner(&self) -> &Option<String> {
+    async fn learner(&self) -> &Option<TagForm> {
         &self.learner
     }
     /// Alternate form of this morpheme from Cherokee Reference Grammar.
@@ -59,5 +57,6 @@ pub struct TagForm {
     /// Plain English title of the morpheme tag
     pub title: String,
     /// How this morpheme looks in original language data
-    pub shape: String,
+    pub shape: Option<String>,
+    pub definition: String,
 }

@@ -7,14 +7,13 @@ use anyhow::Result;
 use dailp::PositionInDocument;
 use dailp::{
     convert_udb, root_noun_surface_forms, root_verb_surface_forms, AnnotatedDoc, AnnotatedForm,
-    AnnotatedPhrase, AnnotatedSeg, BlockType, Database, DateTime, DocumentMetadata,
-    LexicalConnection, LineBreak, MorphemeId, MorphemeSegment, PageBreak, PersonAssociation,
+    AnnotatedPhrase, AnnotatedSeg, BlockType, DateTime, DocumentMetadata, LexicalConnection,
+    LineBreak, MorphemeId, MorphemeSegment, PageBreak, PersonAssociation,
 };
-use mongodb::bson;
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, fs::File, io::Write, time::Duration};
 
-// Define the delimeters used in spreadsheets for marking phrases, blocks,
+// Define the delimiters used in spreadsheets for marking phrases, blocks,
 // lines, and pages.
 const PHRASE_START: &str = "[";
 const PHRASE_END: &str = "]";
@@ -34,32 +33,14 @@ pub struct LexicalEntryWithForms {
 /// Existing versions of these documents are overwritten with the new data.
 pub async fn migrate_documents_to_db(
     docs: &[(AnnotatedDoc, Vec<LexicalConnection>)],
-    db: &Database,
 ) -> Result<()> {
     // Write the contents of each document to our database.
-    let ref_db = db.connections_collection();
-    let db = db.documents_collection();
-    let upsert = mongodb::options::UpdateOptions::builder()
-        .upsert(true)
-        .build();
 
     for (doc, refs) in docs {
         for r in refs {
-            ref_db
-                .update_one(
-                    bson::doc! { "_id": &r.id },
-                    bson::to_document(&r)?,
-                    upsert.clone(),
-                )
-                .await?;
+            crate::update_connection(&r).await?;
         }
-
-        db.update_one(
-            bson::doc! {"_id": &doc.meta.id},
-            bson::to_document(&doc)?,
-            upsert.clone(),
-        )
-        .await?;
+        crate::update_document(&doc).await?;
     }
 
     Ok(())
