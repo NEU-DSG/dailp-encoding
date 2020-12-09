@@ -1,12 +1,11 @@
 use crate::spreadsheets::SheetResult;
 use anyhow::Result;
-use dailp::{Database, MorphemeTag, TagForm};
-use mongodb::bson;
+use dailp::{MorphemeTag, TagForm};
 
 /// Cherokee has many functional morphemes that are documented.
 /// Pulls all the details we have about each morpheme from our spreadsheets,
 /// parses it into typed data, then updates the database entry for each.
-pub async fn migrate_tags(db: &Database) -> Result<()> {
+pub async fn migrate_tags() -> Result<()> {
     let (glossary, pp_tags, combined_pp, refl) = futures::join!(
         SheetResult::from_sheet("17LSuDu7QHJfJyLDVJjO0f4wmTHQLVyHuSktr6OrbD_M", None),
         SheetResult::from_sheet("1D0JZEwE-dj-fKppbosaGhT7Xyyy4lVxmgG02tpEi8nw", None),
@@ -19,22 +18,13 @@ pub async fn migrate_tags(db: &Database) -> Result<()> {
     let combined_pp = parse_tags(combined_pp?, 2, 6, false)?;
     let refl = parse_tags(refl?, 4, 4, false)?;
 
-    let dict = db.tags_collection();
-    let upsert = mongodb::options::UpdateOptions::builder()
-        .upsert(true)
-        .build();
     for entry in pp_tags
         .into_iter()
         .chain(combined_pp)
         .chain(refl)
         .chain(glossary)
     {
-        dict.update_one(
-            bson::doc! {"_id": &entry.id},
-            bson::to_document(&entry)?,
-            upsert.clone(),
-        )
-        .await?;
+        crate::update_tag(&entry).await?;
     }
 
     Ok(())
@@ -63,22 +53,28 @@ fn parse_tags(
                 taoc: Some(TagForm {
                     tag: dailp,
                     title: name.clone(),
-                    shape: String::new(),
+                    definition: String::new(),
+                    shape: None,
                 }),
                 morpheme_type: cols.clone().skip(1).next()?.trim().to_owned(),
                 // FIXME Use title and shape from the sheet.
                 crg: Some(TagForm {
                     // Each sheet has a different number of columns.
                     tag: cols.clone().skip(gap_to_crg).next()?,
-                    title: name,
-                    shape: String::new(),
+                    title: name.clone(),
+                    definition: String::new(),
+                    shape: None,
                 }),
                 learner: if has_simple {
-                    cols.skip(gap_to_crg + 2).next()
+                    Some(TagForm {
+                        tag: cols.skip(gap_to_crg + 2).next()?,
+                        title: name,
+                        definition: String::new(),
+                        shape: None,
+                    })
                 } else {
                     None
                 },
-                definition: None,
             })
         })
         .collect())
@@ -96,18 +92,19 @@ fn parse_tag_glossary(sheet: SheetResult) -> Result<Vec<MorphemeTag>> {
         .filter_map(|row| {
             // Skip over allomorphs, and instead allow them to emerge from our texts.
             let mut cols = row.into_iter();
+            let id = cols.next()?;
+            let name = cols.next()?;
             let morpheme_type = cols.next()?;
-            let dailp = parse_tag_section(&mut cols, false)?;
+            let dailp_form = cols.next()?;
             let crg = parse_tag_section(&mut cols, true);
             let taoc = parse_tag_section(&mut cols, true);
-            let definition = cols.next();
+            let learner = parse_tag_section(&mut cols, false);
             Some(MorphemeTag {
-                id: dailp.tag,
+                id,
                 taoc,
                 crg,
                 morpheme_type,
-                learner: None,
-                definition,
+                learner,
             })
         })
         .collect())
@@ -116,10 +113,16 @@ fn parse_tag_glossary(sheet: SheetResult) -> Result<Vec<MorphemeTag>> {
 fn parse_tag_section(values: &mut impl Iterator<Item = String>, has_page: bool) -> Option<TagForm> {
     let tag = values.next()?;
     let title = values.next()?;
+    let definition = values.next()?;
     let page_num = if has_page { values.next() } else { None };
-    let shape = values.next()?;
+    let shape = values.next();
     if !tag.is_empty() {
-        Some(TagForm { tag, title, shape })
+        Some(TagForm {
+            tag,
+            title,
+            definition,
+            shape,
+        })
     } else {
         None
     }

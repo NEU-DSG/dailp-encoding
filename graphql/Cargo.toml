@@ -17,5 +17,6 @@ lazy_static = "*"
 chrono = "*"
 itertools = "*"
 async_once = {version = "0.1", features = ["tokio"]}
+base64 = "*"
 
 dailp = {path = "../types"}

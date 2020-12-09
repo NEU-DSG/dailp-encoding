@@ -12,6 +12,15 @@ provider:
     shouldStartNameWithService: true
   environment:
     MONGODB_URI: ${env:MONGODB_URI}
+    MONGODB_PASSWORD: ${env:MONGODB_PASSWORD}
+  vpc:
+    securityGroupIds:
+      - sg-09a273617c1be0577
+    subnetIds:
+      - subnet-0a39453d94ed889d6
+      - subnet-08452f5a8b4ff8085
+      - subnet-05944b39f6c30b57e
+      - subnet-0c5c9bca12e771cab
 custom:
   rust:
     dockerless: true
@@ -35,6 +44,9 @@ functions:
               - X-Amz-User-Agent
               - x-apollo-tracing
             allowCredentials: false
+    package:
+      include:
+        - aws-certificate.pem
 # resources:
 #   Resources:
 #     DBCluster:

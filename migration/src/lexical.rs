@@ -8,10 +8,9 @@ use dailp::DocumentMetadata;
 use dailp::LexicalConnection;
 use dailp::MorphemeId;
 use dailp::MorphemeSegment;
-use dailp::{AnnotatedForm, Database, DateTime, PositionInDocument};
-use mongodb::bson;
+use dailp::{AnnotatedForm, DateTime, PositionInDocument};
 
-pub async fn migrate_dictionaries(db: &Database) -> Result<()> {
+pub async fn migrate_dictionaries() -> Result<()> {
     let df1975 = parse_new_df1975(
         SheetResult::from_sheet("11ssqdimOQc_hp3Zk8Y55m6DFfKR96OOpclUg5wcGSVE", None).await?,
         "DF1975",
@@ -52,9 +51,7 @@ pub async fn migrate_dictionaries(db: &Database) -> Result<()> {
     );
 
     // DF1975 Grammatical Appendix
-    parse_appendix(db, "1VjpKXMqb7CgFKE5lk9E6gqL-k6JKZ3FVUvhnqiMZYQg", 2).await?;
-
-    let words = db.words_collection();
+    parse_appendix("1VjpKXMqb7CgFKE5lk9E6gqL-k6JKZ3FVUvhnqiMZYQg", 2).await?;
 
     let entries: Vec<_> = df1975
         .chain(df2003)
@@ -65,19 +62,9 @@ pub async fn migrate_dictionaries(db: &Database) -> Result<()> {
 
     println!("Pushing entries to database...");
 
-    let upsert = mongodb::options::UpdateOptions::builder()
-        .upsert(true)
-        .build();
-
     for entry in &entries {
         // Push all lexical entries to the database.
-        words
-            .update_one(
-                bson::doc! {"_id": &entry.entry.id},
-                bson::to_document(&entry.entry)?,
-                upsert.clone(),
-            )
-            .await?;
+        crate::update_form(&entry.entry).await?;
     }
 
     let forms = entries
@@ -89,19 +76,13 @@ pub async fn migrate_dictionaries(db: &Database) -> Result<()> {
 
     // Push all the surface forms to the sea of words.
     for form in forms {
-        words
-            .update_one(
-                bson::doc! {"_id": &form.id},
-                bson::to_document(&form)?,
-                upsert.clone(),
-            )
-            .await?;
+        crate::update_form(&form).await?;
     }
 
     Ok(())
 }
 
-async fn parse_appendix(db: &Database, sheet_id: &str, to_skip: usize) -> Result<()> {
+async fn parse_appendix(sheet_id: &str, to_skip: usize) -> Result<()> {
     use chrono::TimeZone;
 
     let sheet = SheetResult::from_sheet(sheet_id, None).await?;
@@ -164,19 +145,8 @@ async fn parse_appendix(db: &Database, sheet_id: &str, to_skip: usize) -> Result
             })
         });
 
-    let upsert = mongodb::options::UpdateOptions::builder()
-        .upsert(true)
-        .build();
-
-    let forms_db = db.words_collection();
     for form in forms {
-        forms_db
-            .update_one(
-                bson::doc! {"_id": &form.id},
-                bson::to_document(&form)?,
-                upsert.clone(),
-            )
-            .await?;
+        crate::update_form(&form).await?;
     }
 
     let links = SheetResult::from_sheet(sheet_id, Some("References")).await?;
@@ -187,29 +157,15 @@ async fn parse_appendix(db: &Database, sheet_id: &str, to_skip: usize) -> Result
             MorphemeId::parse(&row.next()?)?,
         ))
     });
-    let links_db = db.connections_collection();
     for link in links {
-        links_db
-            .update_one(
-                bson::doc! { "_id": &link.id },
-                bson::to_document(&link)?,
-                upsert.clone(),
-            )
-            .await?;
+        crate::update_connection(&link).await?;
     }
 
-    let docs_db = db.documents_collection();
     let doc = AnnotatedDoc {
         meta,
         segments: None,
     };
-    docs_db
-        .update_one(
-            bson::doc! { "_id": &doc.meta.id },
-            bson::to_document(&doc)?,
-            upsert.clone(),
-        )
-        .await?;
+    crate::update_document(&doc).await?;
 
     Ok(())
 }
@@ -287,9 +243,8 @@ fn parse_new_df1975(
         })
 }
 
-pub async fn migrate_old_lexical(db: &Database) -> Result<()> {
+pub async fn migrate_old_lexical() -> Result<()> {
     parse_early_vocab(
-        db,
         "1Lj8YnEmi4hZk6m3fxNk3mdd366yjgLLa5sWeWSvg-ZY",
         0,
         false,
@@ -300,7 +255,6 @@ pub async fn migrate_old_lexical(db: &Database) -> Result<()> {
     .await?;
     // TODO Include all three dialectal variants somehow!
     parse_early_vocab(
-        db,
         "1RqtDUzYCRMx7AOSp7aICCis40m4kZQpUsd2thav_m50",
         1,
         false,
@@ -310,7 +264,6 @@ pub async fn migrate_old_lexical(db: &Database) -> Result<()> {
     )
     .await?;
     parse_early_vocab(
-        db,
         "1R7dCEDyZEk8bhXlBHro8-JoeKjUZlRyBfAVdsuiY2Yc", // DC1800
         1,
         true,
@@ -320,7 +273,6 @@ pub async fn migrate_old_lexical(db: &Database) -> Result<()> {
     )
     .await?;
     parse_early_vocab(
-        db,
         "14sN6e07u8rttS0nfX58-ojIgP7zwcOm6vjEXRk8qB-0", // TS1822
         1,
         false,
@@ -330,7 +282,6 @@ pub async fn migrate_old_lexical(db: &Database) -> Result<()> {
     )
     .await?;
     parse_early_vocab(
-        db,
         "1rOXTBydHnt5zmMffLf8QEId4W0J8YcQXMen8HBg5rKo",
         1,
         false,
@@ -340,7 +291,6 @@ pub async fn migrate_old_lexical(db: &Database) -> Result<()> {
     )
     .await?;
     parse_early_vocab(
-        db,
         "1Gfa_Ef1KFKp9ig1AlF65hxaXe43ffV_U_xKQGkD0mnc",
         1,
         false,
@@ -350,7 +300,6 @@ pub async fn migrate_old_lexical(db: &Database) -> Result<()> {
     )
     .await?;
     parse_early_vocab(
-        db,
         "1lny1LHFDcwEjxLWqwotXKG_cYXfPrslodq1Rbn7ygAc",
         0,
         false,
@@ -360,7 +309,6 @@ pub async fn migrate_old_lexical(db: &Database) -> Result<()> {
     )
     .await?;
     parse_early_vocab(
-        db,
         "1aLPu_d_1OtgPL2_2olnjeDSBOgsreE6X3vBAFtpB5N0",
         0,
         true,
@@ -374,7 +322,6 @@ pub async fn migrate_old_lexical(db: &Database) -> Result<()> {
 }
 
 async fn parse_early_vocab(
-    db: &Database,
     sheet_id: &str,
     to_skip: usize,
     has_norm: bool,
@@ -462,45 +409,21 @@ async fn parse_early_vocab(
             })
         });
 
-    let upsert = mongodb::options::UpdateOptions::builder()
-        .upsert(true)
-        .build();
-
     // Push all forms and links to the database.
-    let forms_db = db.words_collection();
-    let links = db.connections_collection();
     for entry in entries {
-        forms_db
-            .update_one(
-                bson::doc! {"_id": &entry.form.id},
-                bson::to_document(&entry.form)?,
-                upsert.clone(),
-            )
-            .await?;
+        crate::update_form(&entry.form).await?;
 
         if let Some(link) = &entry.link {
-            links
-                .update_one(
-                    bson::doc! { "_id": &link.id },
-                    bson::to_document(link)?,
-                    upsert.clone(),
-                )
-                .await?;
+            crate::update_connection(&link).await?;
         }
     }
 
     // Update document metadata record
-    let docs = db.documents_collection();
     let doc = AnnotatedDoc {
         meta,
         segments: None,
     };
-    docs.update_one(
-        bson::doc! { "_id": &doc.meta.id },
-        bson::to_document(&doc)?,
-        upsert.clone(),
-    )
-    .await?;
+    crate::update_document(&doc).await?;
 
     Ok(())
 }
