@@ -7,7 +7,10 @@ use dailp::{MorphemeTag, TagForm};
 /// parses it into typed data, then updates the database entry for each.
 pub async fn migrate_tags() -> Result<()> {
     let (glossary, pp_tags, combined_pp, refl) = futures::join!(
-        SheetResult::from_sheet("17LSuDu7QHJfJyLDVJjO0f4wmTHQLVyHuSktr6OrbD_M", None),
+        SheetResult::from_sheet(
+            "17LSuDu7QHJfJyLDVJjO0f4wmTHQLVyHuSktr6OrbD_M",
+            Some("DAILP Storage Tags")
+        ),
         SheetResult::from_sheet("1D0JZEwE-dj-fKppbosaGhT7Xyyy4lVxmgG02tpEi8nw", None),
         SheetResult::from_sheet("1MCooadB1bTIKmi_uXBv93DMsv6CyF-L979XOLbFGGgM", None),
         SheetResult::from_sheet("1Q_q_1MZbmZ-g0bmj1sQouFFDnLBINGT3fzthPgqgkqo", None),
