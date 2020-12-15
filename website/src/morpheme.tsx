@@ -151,8 +151,14 @@ const tagQuery = gql`
   query Tag($gloss: String!) {
     tag: morphemeTag(id: $gloss) {
       morphemeType
-      name
-      crg
+      taoc {
+        tag
+        title
+      }
+      crg {
+        tag
+        title
+      }
     }
   }
 `

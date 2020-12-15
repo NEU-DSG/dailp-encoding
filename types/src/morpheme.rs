@@ -80,7 +80,7 @@ impl MorphemeSegment {
         context: &async_graphql::Context<'_>,
     ) -> FieldResult<Option<MorphemeTag>> {
         Ok(context
-            .data::<Database>()?
+            .data::<&Database>()?
             .morpheme_tag(&self.gloss)
             .await
             .ok()
@@ -94,7 +94,7 @@ impl MorphemeSegment {
         context: &async_graphql::Context<'_>,
     ) -> FieldResult<Option<AnnotatedForm>> {
         Ok(context
-            .data::<Database>()?
+            .data::<&Database>()?
             .lexical_entry(&self.gloss)
             .await?)
     }

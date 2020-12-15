@@ -1,12 +1,14 @@
 {
   "private": true,
   "scripts": {
-    "deploy-graphql": "serverless deploy --stage prod",
-    "deploy-graphql:dev": "serverless deploy --stage dev"
+    "deploy-graphql": "sls translate && sls deploy --stage prod",
+    "deploy-graphql:dev": "sls translate && sls deploy --stage dev"
   },
   "devDependencies": {
     "serverless": "^2.6.0",
     "serverless-dotenv-plugin": "^3.0.0",
-    "serverless-rust": "loafofpiecrust/serverless-rust#master"
+    "serverless-manifest-plugin": "^1.0.7",
+    "serverless-rust": "loafofpiecrust/serverless-rust#master",
+    "serverless-translate-templateurls": "^1.1.1"
   }
 }

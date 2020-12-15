@@ -91,41 +91,80 @@ async fn fetch_sheet(
     }
 }
 
-async fn graphql_mutate(method: &str, contents: String) -> Result<()> {
+async fn graphql_mutate(
+    method: &str,
+    content_list: impl IntoIterator<Item = String>,
+) -> Result<()> {
+    use itertools::Itertools as _;
     lazy_static::lazy_static! {
         static ref CLIENT: reqwest::Client = reqwest::Client::new();
         static ref ENDPOINT: String = std::env::var("DAILP_GRAPHQL_URL").unwrap();
         static ref PASSWORD: String = std::env::var("MONGODB_PASSWORD").unwrap();
     }
-    let b = base64::encode(&contents);
-    let query = serde_json::json!({
+    // Chunk our contents to make fewer requests to the server that handles
+    // pushing this data to the database.
+    for mut chunk in content_list
+        .into_iter()
+        // Each item corresponds to one GraphQL method call.
+        // For now, all the mutation calls are structured the same way to make
+        // this easier.
+        .enumerate()
+        .map(|(i, x)| {
+            format!(
+                "r{}: {}(password: \"{}\", contents: \"{}\")\n",
+                i,
+                method,
+                *PASSWORD,
+                base64::encode(&x)
+            )
+        })
+        .chunks(10)
+        .into_iter()
+    {
+        let s = chunk.join("");
+        let query = serde_json::json!({
             "operationName": null,
-            "query": format!(r#"mutation {{
-            {}(password: "{}", contents: "{}")
-        }}"#, method, *PASSWORD, b)
-    });
-    // println!("{}", query);
-    let res = CLIENT.post(&*ENDPOINT).json(&query).send().await?;
-    // println!("{:?}", res);
+            "query": format!("mutation {{\n{}\n}}", s)
+        });
+        // println!("{:?}", query);
+        let res = CLIENT.post(&*ENDPOINT).json(&query).send().await?;
+        // println!("{:?}", res);
+    }
     Ok(())
 }
 
-async fn update_tag(tag: &dailp::MorphemeTag) -> Result<()> {
-    let json = serde_json::to_string(tag)?;
-    graphql_mutate("updateTag", json).await
+async fn update_tag(tag: impl IntoIterator<Item = &dailp::MorphemeTag>) -> Result<()> {
+    graphql_mutate(
+        "updateTag",
+        tag.into_iter()
+            .map(|tag| serde_json::to_string(tag).unwrap()),
+    )
+    .await
 }
 
-async fn update_document(tag: &dailp::AnnotatedDoc) -> Result<()> {
-    let json = serde_json::to_string(tag)?;
-    graphql_mutate("updateDocument", json).await
+async fn update_document(tag: impl IntoIterator<Item = &dailp::AnnotatedDoc>) -> Result<()> {
+    graphql_mutate(
+        "updateDocument",
+        tag.into_iter()
+            .map(|tag| serde_json::to_string(tag).unwrap()),
+    )
+    .await
 }
 
-async fn update_form(tag: &dailp::AnnotatedForm) -> Result<()> {
-    let json = serde_json::to_string(tag)?;
-    graphql_mutate("updateForm", json).await
+async fn update_form(tag: impl IntoIterator<Item = &dailp::AnnotatedForm>) -> Result<()> {
+    graphql_mutate(
+        "updateForm",
+        tag.into_iter()
+            .map(|tag| serde_json::to_string(tag).unwrap()),
+    )
+    .await
 }
 
-async fn update_connection(tag: &dailp::LexicalConnection) -> Result<()> {
-    let json = serde_json::to_string(tag)?;
-    graphql_mutate("updateConnection", json).await
+async fn update_connection(tag: impl IntoIterator<Item = &dailp::LexicalConnection>) -> Result<()> {
+    graphql_mutate(
+        "updateConnection",
+        tag.into_iter()
+            .map(|tag| serde_json::to_string(tag).unwrap()),
+    )
+    .await
 }

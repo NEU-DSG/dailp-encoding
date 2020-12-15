@@ -95,7 +95,7 @@ impl AnnotatedDoc {
         if self.segments.is_some() {
             Ok(self.segments.as_ref().map(|s| Cow::Borrowed(s)))
         } else {
-            let db_doc = context.data::<Database>()?.document(&self.meta.id).await?;
+            let db_doc = context.data::<&Database>()?.document(&self.meta.id).await?;
             Ok(db_doc.and_then(|d| d.segments).map(|s| Cow::Owned(s)))
         }
     }
@@ -114,7 +114,7 @@ impl AnnotatedDoc {
                 .collect())
         } else {
             Ok(context
-                .data::<Database>()?
+                .data::<&Database>()?
                 .words_in_document(&self.meta.id)
                 .await?
                 .into_iter()
@@ -234,7 +234,7 @@ impl DocumentCollection {
         context: &async_graphql::Context<'_>,
     ) -> async_graphql::FieldResult<Vec<AnnotatedDoc>> {
         Ok(context
-            .data::<Database>()?
+            .data::<&Database>()?
             .all_documents(Some(&*self.name))
             .await?)
     }

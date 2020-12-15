@@ -20,3 +20,7 @@ public/
 .cache/
 .log/
 .linaria-cache/
+
+# Ignore serverless manifest files
+serverless.manifest.json
+.serverless/manifest.json

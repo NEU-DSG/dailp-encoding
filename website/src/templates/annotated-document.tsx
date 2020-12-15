@@ -50,7 +50,7 @@ const AnnotatedDocumentPage = (p: {
 
   const tagSet =
     experienceLevel.state! > ExperienceLevel.Learner
-      ? TagSet.Dailp
+      ? TagSet.Taoc
       : TagSet.Learner
 
   return (
@@ -325,8 +325,22 @@ export const query = graphql`
       simpleMorpheme: morpheme(system: DT)
       gloss
       matchingTag {
-        crg
-        learner
+        id
+        taoc {
+          tag
+          title
+          definition
+        }
+        learner {
+          tag
+          title
+          definition
+        }
+        crg {
+          tag
+          title
+          definition
+        }
       }
       nextSeparator
     }

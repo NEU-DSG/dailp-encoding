@@ -1,7 +1,5 @@
 service: dailp
 useDotenv: true
-plugins:
-  - serverless-rust
 provider:
   name: aws
   region: us-east-1
@@ -11,19 +9,40 @@ provider:
   apiGateway:
     shouldStartNameWithService: true
   environment:
-    MONGODB_URI: ${env:MONGODB_URI}
     MONGODB_PASSWORD: ${env:MONGODB_PASSWORD}
+    MONGODB_USERNAME: ${env:MONGODB_USERNAME}
   vpc:
     securityGroupIds:
-      - sg-09a273617c1be0577
+      - !Ref "DailpDBServerAccessSecurityGroup"
     subnetIds:
-      - subnet-0a39453d94ed889d6
-      - subnet-08452f5a8b4ff8085
-      - subnet-05944b39f6c30b57e
-      - subnet-0c5c9bca12e771cab
+      - ${self:custom.database.subnetId}
+      - ${self:custom.database.subnetId2}
+      - ${self:custom.database.subnetId3}
 custom:
+  database:
+    mongoVersion: 4.2
+    volumeType: gp2
+    volumeSize: 32
+    instanceType: t3.small
+    vpcId: ${env:AWS_VPC_ID}
+    subnetId: ${env:AWS_SUBNET_PRIMARY}
+    subnetId2: ${env:AWS_SUBNET_SECONDARY0}
+    subnetId3: ${env:AWS_SUBNET_SECONDARY1}
+    replicaCount: 3
+    replicaShardIndex: "0"
+    keyName: dailp-database
+    qsBucket: aws-quickstart
+    qsKeyPrefix: quickstart-mongodb/
+  serverless-translate-templateurls:
+    s3Bucket: "dailp-prod-serverlessdeploymentbucket-1k5ja8qst262t --region us-east-1"
+    inFolder: cf-templates
+    outFolder: .serverless
   rust:
     dockerless: true
+plugins:
+  - serverless-rust
+  - serverless-translate-templateurls
+  - serverless-manifest-plugin
 package:
   individually: true
 functions:
@@ -35,32 +54,11 @@ functions:
           method: any
           cors:
             origin: "*"
-            headers:
-              - Content-Type
-              - X-Amz-Date
-              - Authorization
-              - X-Api-Key
-              - X-Amz-Security-Token
-              - X-Amz-User-Agent
-              - x-apollo-tracing
+            headers: "*"
             allowCredentials: false
-    package:
-      include:
-        - aws-certificate.pem
-# resources:
-#   Resources:
-#     DBCluster:
-#       Type: "AWS::DocDB::DBCluster"
-#       DeletionPolicy: Delete
-#       Properties:
-#         DBClusterIdentifier: "dailp-prod"
-#         MasterUsername: ${env:MONGODB_USERNAME}
-#         MasterUserPassword: ${env:MONGODB_PASSWORD}
-
-#     DBInstance:
-#       Type: "AWS::DocDB::DBInstance"
-#       Properties:
-#         DBClusterIdentifier: "dailp-prod"
-#         DBInstanceIdentifier: "dailp-prod-1"
-#         DBInstanceClass: "db.t3.medium"
-#       DependsOn: DBCluster
+    environment:
+      MONGODB_URI: !Sub
+        - "mongodb://${NodeIp}:27017/admin?retryWrites=true&w=majority"
+        - NodeIp: !GetAtt "DailpPrimaryReplicaNode0.Outputs.NodePrivateIp"
+resources:
+  - ${file(./.serverless/database.template.out.yaml)}
