@@ -49,9 +49,15 @@ impl MorphemeSegment {
             .join("")
     }
 
-    pub fn get_morpheme(&self, system: Option<CherokeeOrthography>) -> Cow<'_, str> {
+    pub fn get_morpheme(
+        &self,
+        system: Option<CherokeeOrthography>,
+        simplify: bool,
+    ) -> Cow<'_, str> {
         match system {
-            Some(CherokeeOrthography::Dt) => Cow::Owned(convert_tth_to_dt(&self.morpheme, false)),
+            Some(CherokeeOrthography::Dt) => {
+                Cow::Owned(convert_tth_to_dt(&self.morpheme, !simplify))
+            }
             _ => Cow::Borrowed(&*self.morpheme),
         }
     }
@@ -60,8 +66,12 @@ impl MorphemeSegment {
 #[async_graphql::Object(cache_control(max_age = 60))]
 impl MorphemeSegment {
     /// Phonemic representation of the morpheme
-    async fn morpheme(&self, system: Option<CherokeeOrthography>) -> Cow<'_, str> {
-        self.get_morpheme(system)
+    async fn morpheme(
+        &self,
+        system: Option<CherokeeOrthography>,
+        simplify: Option<bool>,
+    ) -> Cow<'_, str> {
+        self.get_morpheme(system, simplify.unwrap_or(true))
     }
 
     /// English gloss in standard DAILP format that refers to a lexical item
