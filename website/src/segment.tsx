@@ -1,6 +1,7 @@
 import React from "react"
 import { css, cx } from "linaria"
 import { DialogDisclosure, DialogStateReturn } from "reakit/Dialog"
+import { Tooltip, TooltipReference, useTooltipState } from "reakit/Tooltip"
 import _ from "lodash"
 import { ExperienceLevel, TagSet, BasicMorphemeSegment } from "./types"
 import theme from "./theme"
@@ -191,13 +192,36 @@ const MorphemeSegment = (p: {
   dialog: Props["dialog"]
   onOpenDetails: Props["onOpenDetails"]
 }) => {
-  let gloss = p.segment.gloss
-  if (p.tagSet === TagSet.Learner) {
-    gloss =
-      p.segment.matchingTag?.learner || p.segment.matchingTag?.crg || gloss
+  let matchingTag = null
+  if (p.segment.matchingTag) {
+    const tag = p.segment.matchingTag!
+    if (p.tagSet === TagSet.Learner) {
+      matchingTag = tag.learner ?? tag.crg
+    } else if (p.tagSet === TagSet.Taoc) {
+      matchingTag = tag.taoc
+    } else if (p.tagSet === TagSet.Crg) {
+      matchingTag = tag.crg
+    }
   }
+  const gloss = matchingTag?.tag || p.segment.gloss
 
-  if (gloss) {
+  if (p.segment.matchingTag) {
+    const tooltip = useTooltipState()
+    return (
+      <>
+        <DialogDisclosure
+          {...p.dialog}
+          className={morphemeButton}
+          onClick={() => p.onOpenDetails(p.segment)}
+        >
+          <Tooltip className={withBg} {...tooltip}>
+            {matchingTag.definition}
+          </Tooltip>
+          <TooltipReference {...tooltip}>{gloss}</TooltipReference>
+        </DialogDisclosure>
+      </>
+    )
+  } else if (gloss) {
     return (
       <DialogDisclosure
         {...p.dialog}
@@ -211,6 +235,15 @@ const MorphemeSegment = (p: {
     return null
   }
 }
+
+const withBg = css`
+  background-color: ${theme.colors.body};
+  padding: ${theme.rhythm / 4}em;
+  border: 1px solid ${theme.colors.text};
+  ${theme.mediaQueries.medium} {
+    max-width: 70vw;
+  }
+`
 
 const morphemeButton = css`
   font-family: inherit;

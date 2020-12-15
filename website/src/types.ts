@@ -6,7 +6,7 @@ export enum ExperienceLevel {
 }
 
 export enum TagSet {
-  Dailp,
+  Taoc,
   Learner,
   Crg,
 }

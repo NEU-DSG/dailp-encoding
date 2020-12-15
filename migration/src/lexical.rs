@@ -62,22 +62,18 @@ pub async fn migrate_dictionaries() -> Result<()> {
 
     println!("Pushing entries to database...");
 
-    for entry in &entries {
-        // Push all lexical entries to the database.
-        crate::update_form(&entry.entry).await?;
-    }
+    // Push all lexical entries to the database.
+    crate::update_form(entries.iter().map(|x| &x.entry)).await?;
 
     let forms = entries
-        .into_iter()
-        .chain(irreg_nouns)
-        .chain(ptcp_nouns)
-        .chain(inf_nouns)
-        .flat_map(|x| x.forms);
+        .iter()
+        .chain(&irreg_nouns)
+        .chain(&ptcp_nouns)
+        .chain(&inf_nouns)
+        .flat_map(|x| &x.forms);
 
     // Push all the surface forms to the sea of words.
-    for form in forms {
-        crate::update_form(&form).await?;
-    }
+    crate::update_form(forms).await?;
 
     Ok(())
 }
@@ -107,7 +103,7 @@ async fn parse_appendix(sheet_id: &str, to_skip: usize) -> Result<()> {
         is_reference: true,
     };
 
-    let forms = sheet
+    let forms: Vec<_> = sheet
         .values
         .into_iter()
         .skip(1)
@@ -143,29 +139,32 @@ async fn parse_appendix(sheet_id: &str, to_skip: usize) -> Result<()> {
                 commentary: None,
                 date_recorded: meta.date.clone(),
             })
-        });
+        })
+        .collect();
 
-    for form in forms {
-        crate::update_form(&form).await?;
-    }
+    crate::update_form(&forms).await?;
 
     let links = SheetResult::from_sheet(sheet_id, Some("References")).await?;
-    let links = links.values.into_iter().skip(1).filter_map(|row| {
-        let mut row = row.into_iter();
-        Some(LexicalConnection::new(
-            MorphemeId::new(Some(meta.id.clone()), None, row.next()?),
-            MorphemeId::parse(&row.next()?)?,
-        ))
-    });
-    for link in links {
-        crate::update_connection(&link).await?;
-    }
+    let links: Vec<_> = links
+        .values
+        .into_iter()
+        .skip(1)
+        .filter_map(|row| {
+            let mut row = row.into_iter();
+            Some(LexicalConnection::new(
+                MorphemeId::new(Some(meta.id.clone()), None, row.next()?),
+                MorphemeId::parse(&row.next()?)?,
+            ))
+        })
+        .collect();
+    crate::update_connection(&links).await?;
 
     let doc = AnnotatedDoc {
         meta,
         segments: None,
     };
-    crate::update_document(&doc).await?;
+    let docs = vec![doc];
+    crate::update_document(&docs).await?;
 
     Ok(())
 }
@@ -351,7 +350,7 @@ async fn parse_early_vocab(
         is_reference: true,
     };
 
-    let entries = sheet
+    let entries: Vec<_> = sheet
         .values
         .into_iter()
         // The first row is just a header.
@@ -407,23 +406,20 @@ async fn parse_early_vocab(
                 },
                 link,
             })
-        });
+        })
+        .collect();
 
     // Push all forms and links to the database.
-    for entry in entries {
-        crate::update_form(&entry.form).await?;
-
-        if let Some(link) = &entry.link {
-            crate::update_connection(&link).await?;
-        }
-    }
+    crate::update_form(entries.iter().map(|x| &x.form)).await?;
+    crate::update_connection(entries.iter().filter_map(|x| x.link.as_ref())).await?;
 
     // Update document metadata record
     let doc = AnnotatedDoc {
         meta,
         segments: None,
     };
-    crate::update_document(&doc).await?;
+    let docs = vec![doc];
+    crate::update_document(&docs).await?;
 
     Ok(())
 }

@@ -6,81 +6,19 @@ use dailp::{MorphemeTag, TagForm};
 /// Pulls all the details we have about each morpheme from our spreadsheets,
 /// parses it into typed data, then updates the database entry for each.
 pub async fn migrate_tags() -> Result<()> {
-    let (glossary, pp_tags, combined_pp, refl) = futures::join!(
-        SheetResult::from_sheet(
-            "17LSuDu7QHJfJyLDVJjO0f4wmTHQLVyHuSktr6OrbD_M",
-            Some("DAILP Storage Tags")
-        ),
-        SheetResult::from_sheet("1D0JZEwE-dj-fKppbosaGhT7Xyyy4lVxmgG02tpEi8nw", None),
-        SheetResult::from_sheet("1MCooadB1bTIKmi_uXBv93DMsv6CyF-L979XOLbFGGgM", None),
-        SheetResult::from_sheet("1Q_q_1MZbmZ-g0bmj1sQouFFDnLBINGT3fzthPgqgkqo", None),
-    );
+    let glossary = SheetResult::from_sheet(
+        "17LSuDu7QHJfJyLDVJjO0f4wmTHQLVyHuSktr6OrbD_M",
+        Some("DAILP Storage Tags"),
+    )
+    .await;
 
+    println!("Parsing sheet results...");
     let glossary = parse_tag_glossary(glossary?)?;
-    let pp_tags = parse_tags(pp_tags?, 3, 7, true)?;
-    let combined_pp = parse_tags(combined_pp?, 2, 6, false)?;
-    let refl = parse_tags(refl?, 4, 4, false)?;
 
-    for entry in pp_tags
-        .into_iter()
-        .chain(combined_pp)
-        .chain(refl)
-        .chain(glossary)
-    {
-        crate::update_tag(&entry).await?;
-    }
+    println!("Pushing tags to db...");
+    crate::update_tag(&glossary).await?;
 
     Ok(())
-}
-fn parse_tags(
-    sheet: SheetResult,
-    num_allomorphs: usize,
-    gap_to_crg: usize,
-    has_simple: bool,
-) -> Result<Vec<MorphemeTag>> {
-    Ok(sheet
-        .values
-        .into_iter()
-        // The first row is headers.
-        .skip(1)
-        // There are a few empty spacing rows to ignore.
-        .filter(|row| !row.is_empty())
-        .filter_map(|row| {
-            // Skip over allomorphs, and instead allow them to emerge from our texts.
-            let mut cols = row.into_iter().skip(num_allomorphs);
-            let dailp = cols.next()?;
-            let name = cols.next()?.trim().to_owned();
-            Some(MorphemeTag {
-                id: dailp.clone(),
-                // FIXME Use title and shape from the sheet.
-                taoc: Some(TagForm {
-                    tag: dailp,
-                    title: name.clone(),
-                    definition: String::new(),
-                    shape: None,
-                }),
-                morpheme_type: cols.clone().skip(1).next()?.trim().to_owned(),
-                // FIXME Use title and shape from the sheet.
-                crg: Some(TagForm {
-                    // Each sheet has a different number of columns.
-                    tag: cols.clone().skip(gap_to_crg).next()?,
-                    title: name.clone(),
-                    definition: String::new(),
-                    shape: None,
-                }),
-                learner: if has_simple {
-                    Some(TagForm {
-                        tag: cols.skip(gap_to_crg + 2).next()?,
-                        title: name,
-                        definition: String::new(),
-                        shape: None,
-                    })
-                } else {
-                    None
-                },
-            })
-        })
-        .collect())
 }
 
 /// Transforms a spreadsheet of morpheme information into a list of type-safe tag objects.

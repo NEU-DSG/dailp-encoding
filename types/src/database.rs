@@ -3,6 +3,7 @@ use crate::{
     LexicalConnection, MorphemeId, MorphemeTag,
 };
 use anyhow::Result;
+use futures::executor;
 use futures::future::join_all;
 use mongodb::bson;
 use std::collections::HashSet;
@@ -35,12 +36,11 @@ impl Database {
 }
 
 impl Database {
-    pub async fn new() -> Result<Self> {
+    pub fn new() -> Result<Self> {
         use mongodb::{options::ClientOptions, Client};
 
         let db_url = std::env::var("MONGODB_URI")?;
-        let mut opts = ClientOptions::parse(&db_url).await?;
-        opts.app_name = Some("DAILP".to_owned());
+        let opts = executor::block_on(ClientOptions::parse(&db_url))?;
         let client = Client::with_options(opts)?;
         Ok(Database {
             client: client.database("dailp-encoding"),

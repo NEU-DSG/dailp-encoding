@@ -1,0 +1,232 @@
+Conditions:
+  CreateThreeReplicaSet: !Equals
+    - ${self:custom.database.replicaCount}
+    - 3
+Resources:
+  DailpDBServerAccessSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: ${self:custom.database.vpcId}
+      GroupDescription: Instances with access to MongoDB servers
+  DailpDBServerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: ${self:custom.database.vpcId}
+      GroupDescription: MongoDB access management
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 129.10.0.0/16
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 10.0.0.0/8
+        - IpProtocol: tcp
+          FromPort: 27017
+          ToPort: 27030
+          SourceSecurityGroupId: !Ref "DailpDBServerAccessSecurityGroup"
+        - IpProtocol: tcp
+          FromPort: 28017
+          ToPort: 28017
+          SourceSecurityGroupId: !Ref "DailpDBServerAccessSecurityGroup"
+  DailpDBServersSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: ${self:custom.database.vpcId}
+      GroupDescription: MongoDB inter-server communication
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          SourceSecurityGroupId: !Ref "DailpDBServerSecurityGroup"
+        - IpProtocol: tcp
+          FromPort: 27017
+          ToPort: 27030
+          SourceSecurityGroupId: !Ref "DailpDBServerSecurityGroup"
+        - IpProtocol: tcp
+          FromPort: 28017
+          ToPort: 28017
+          SourceSecurityGroupId: !Ref "DailpDBServerSecurityGroup"
+  DailpDBNodeIAMRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: /
+      Policies:
+        - PolicyName: mongodb-access-policy
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ec2:Describe*
+                  - ec2:AttachNetworkInterface
+                  - ec2:AttachVolume
+                  - ec2:CreateTags
+                  - ec2:CreateVolume
+                  - ec2:RunInstances
+                  - ec2:StartInstances
+                  - ec2:DeleteVolume
+                  - ec2:CreateSecurityGroup
+                  - ec2:CreateSnapshot
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                Resource:
+                  "Fn::Sub": arn:${AWS::Partition}:s3:::${self:custom.database.qsBucket}-${self:provider.region}/${self:custom.database.qsKeyPrefix}*
+              - Effect: Allow
+                Action:
+                  - dynamodb:BatchGetItem
+                  - dynamodb:CreateTable
+                  - dynamodb:DeleteTable
+                  - dynamodb:DescribeTable
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                  - dynamodb:Query
+                  - dynamodb:Scan
+                  - dynamodb:UpdateItem
+                  - dynamodb:UpdateTable
+                Resource: "*"
+  DailpDBNodeIAMProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: /
+      Roles:
+        - !Ref "DailpDBNodeIAMRole"
+  PrimaryReplicaNode0WaitForNodeInstallWaitHandle:
+    Type: AWS::CloudFormation::WaitConditionHandle
+    Properties: {}
+  DailpPrimaryReplicaNode0:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ./mongodb.template.yaml
+      Parameters:
+        NodeReplicaSetIndex: "0"
+        ReplicaNodeNameTag: Primary
+        Iops: 100
+        VPC: ${self:custom.database.vpcId}
+        MongoDBAdminUsername: ${env:MONGODB_USERNAME}
+        MongoDBAdminPassword: ${env:MONGODB_PASSWORD}
+        NodeSubnet: ${self:custom.database.subnetId}
+        VolumeType: ${self:custom.database.volumeType}
+        VolumeSize: ${self:custom.database.volumeSize}
+        ClusterReplicaSetCount: ${self:custom.database.replicaCount}
+        ReplicaShardIndex: ${self:custom.database.replicaShardIndex}
+        QSS3BucketName: ${self:custom.database.qsBucket}
+        QSS3KeyPrefix: ${self:custom.database.qsKeyPrefix}
+        QSS3BucketRegion: ${self:provider.region}
+        KeyName: ${self:custom.database.keyName}
+        MongoDBVersion: ${self:custom.database.mongoVersion}
+        NodeInstanceType: ${self:custom.database.instanceType}
+        MongoDBServerSecurityGroupID: !Ref "DailpDBServerSecurityGroup"
+        MongoDBServersSecurityGroupID: !Ref "DailpDBServersSecurityGroup"
+        MongoDBNodeIAMProfileID: !Ref "DailpDBNodeIAMProfile"
+        StackName: !Ref "AWS::StackName"
+        ReplicaNodeWaitForNodeInstallWaitHandle: !Ref "PrimaryReplicaNode0WaitForNodeInstallWaitHandle"
+  # PrimaryReplicaNode0WaitForNodeInstall:
+  #   Type: AWS::CloudFormation::WaitCondition
+  #   DependsOn: DailpPrimaryReplicaNode0
+  #   Properties:
+  #     Handle: !Ref "PrimaryReplicaNode0WaitForNodeInstallWaitHandle"
+  #     Timeout: "3600"
+  SecondaryReplicaNode0WaitForNodeInstallWaitHandle:
+    Condition: CreateThreeReplicaSet
+    Type: AWS::CloudFormation::WaitConditionHandle
+    Properties: {}
+  DailpSecondaryReplicaNode0:
+    Condition: CreateThreeReplicaSet
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ./mongodb.template.yaml
+      Parameters:
+        QSS3BucketName: ${self:custom.database.qsBucket}
+        QSS3KeyPrefix: ${self:custom.database.qsKeyPrefix}
+        QSS3BucketRegion: ${self:provider.region}
+        ClusterReplicaSetCount: ${self:custom.database.replicaCount}
+        Iops: 100
+        KeyName: ${self:custom.database.keyName}
+        MongoDBVersion: ${self:custom.database.mongoVersion}
+        MongoDBAdminUsername: ${env:MONGODB_USERNAME}
+        MongoDBAdminPassword: ${env:MONGODB_PASSWORD}
+        NodeInstanceType: ${self:custom.database.instanceType}
+        NodeSubnet: ${self:custom.database.subnetId}
+        MongoDBServerSecurityGroupID: !Ref "DailpDBServerSecurityGroup"
+        MongoDBServersSecurityGroupID: !Ref "DailpDBServersSecurityGroup"
+        MongoDBNodeIAMProfileID: !Ref "DailpDBNodeIAMProfile"
+        VPC: ${self:custom.database.vpcId}
+        VolumeSize: ${self:custom.database.volumeSize}
+        VolumeType: ${self:custom.database.volumeType}
+        StackName: !Ref "AWS::StackName"
+        ReplicaNodeNameTag: SecondaryReplicaNode0Dailp
+        NodeReplicaSetIndex: "1"
+        ReplicaShardIndex: ${self:custom.database.replicaShardIndex}
+        ReplicaNodeWaitForNodeInstallWaitHandle: !Ref "SecondaryReplicaNode0WaitForNodeInstallWaitHandle"
+  # SecondaryReplicaNode0WaitForNodeInstall:
+  #   Condition: CreateThreeReplicaSet
+  #   Type: AWS::CloudFormation::WaitCondition
+  #   DependsOn: DailpSecondaryReplicaNode0
+  #   Properties:
+  #     Handle: !Ref "SecondaryReplicaNode0WaitForNodeInstallWaitHandle"
+  #     Timeout: "3600"
+  SecondaryReplicaNode1WaitForNodeInstallWaitHandle:
+    Condition: CreateThreeReplicaSet
+    Type: AWS::CloudFormation::WaitConditionHandle
+    Properties: {}
+  DailpSecondaryReplicaNode1:
+    Condition: CreateThreeReplicaSet
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ./mongodb.template.yaml
+      Parameters:
+        QSS3BucketName: ${self:custom.database.qsBucket}
+        QSS3KeyPrefix: ${self:custom.database.qsKeyPrefix}
+        QSS3BucketRegion: ${self:provider.region}
+        ClusterReplicaSetCount: ${self:custom.database.replicaCount}
+        Iops: 100
+        KeyName: ${self:custom.database.keyName}
+        MongoDBVersion: ${self:custom.database.mongoVersion}
+        MongoDBAdminUsername: ${env:MONGODB_USERNAME}
+        MongoDBAdminPassword: ${env:MONGODB_PASSWORD}
+        NodeInstanceType: ${self:custom.database.instanceType}
+        NodeSubnet: ${self:custom.database.subnetId}
+        MongoDBServerSecurityGroupID: !Ref "DailpDBServerSecurityGroup"
+        MongoDBServersSecurityGroupID: !Ref "DailpDBServersSecurityGroup"
+        MongoDBNodeIAMProfileID: !Ref "DailpDBNodeIAMProfile"
+        VPC: ${self:custom.database.vpcId}
+        VolumeSize: ${self:custom.database.volumeSize}
+        VolumeType: ${self:custom.database.volumeType}
+        StackName: !Ref "AWS::StackName"
+        ReplicaNodeNameTag: SecondaryReplicaNode1Dailp
+        NodeReplicaSetIndex: "2"
+        ReplicaShardIndex: ${self:custom.database.replicaShardIndex}
+        ReplicaNodeWaitForNodeInstallWaitHandle: !Ref "SecondaryReplicaNode1WaitForNodeInstallWaitHandle"
+  # SecondaryReplicaNode1WaitForNodeInstall:
+  #   Condition: CreateThreeReplicaSet
+  #   Type: AWS::CloudFormation::WaitCondition
+  #   DependsOn: DailpSecondaryReplicaNode1
+  #   Properties:
+  #     Handle: !Ref "SecondaryReplicaNode1WaitForNodeInstallWaitHandle"
+  #     Timeout: "3600"
+Outputs:
+  PrimaryReplicaNodeIp:
+    Value: !GetAtt "DailpPrimaryReplicaNode0.Outputs.NodePrivateIp"
+    Description: Private IP Address of Primary Replica Node
+  SecondaryReplicaNode0Ip:
+    Value: !GetAtt "DailpSecondaryReplicaNode0.Outputs.NodePrivateIp"
+    Description: Private IP Address of Secondary Replica 0 Node
+    Condition: CreateThreeReplicaSet
+  SecondaryReplicaNode1Ip:
+    Value: !GetAtt "DailpSecondaryReplicaNode1.Outputs.NodePrivateIp"
+    Description: Private IP Address of Secondary Replica 1 Node
+    Condition: CreateThreeReplicaSet
+  MongoDBServerAccessSecurityGroup:
+    Value: !Ref "DailpDBServerAccessSecurityGroup"
+    Description: MongoDB Access Security Group

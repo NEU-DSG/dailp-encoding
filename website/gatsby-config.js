@@ -1,5 +1,5 @@
 require("dotenv").config({
-  path: `.env`,
+  path: `../.env`,
 })
 module.exports = {
   siteMetadata: {
@@ -64,7 +64,7 @@ module.exports = {
       options: {
         typeName: "Dailp",
         fieldName: "dailp",
-        uri: process.env.DAILP_GRAPHQL_URL,
+        url: process.env.DAILP_GRAPHQL_URL,
       },
     },
     {

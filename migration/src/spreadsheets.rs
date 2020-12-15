@@ -36,12 +36,8 @@ pub async fn migrate_documents_to_db(
 ) -> Result<()> {
     // Write the contents of each document to our database.
 
-    for (doc, refs) in docs {
-        for r in refs {
-            crate::update_connection(&r).await?;
-        }
-        crate::update_document(&doc).await?;
-    }
+    crate::update_document(docs.iter().map(|(d, _)| d)).await?;
+    crate::update_connection(docs.iter().flat_map(|(_, r)| r)).await?;
 
     Ok(())
 }
