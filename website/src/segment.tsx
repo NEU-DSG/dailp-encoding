@@ -3,7 +3,12 @@ import { css, cx } from "linaria"
 import { DialogDisclosure, DialogStateReturn } from "reakit/Dialog"
 import { Tooltip, TooltipReference, useTooltipState } from "reakit/Tooltip"
 import _ from "lodash"
-import { ExperienceLevel, TagSet, BasicMorphemeSegment } from "./types"
+import {
+  ExperienceLevel,
+  TagSet,
+  BasicMorphemeSegment,
+  morphemeDisplayTag,
+} from "./types"
 import theme from "./theme"
 
 interface Props {
@@ -104,7 +109,7 @@ export const AnnotatedForm = (
             segments={p.segment.segments}
             dialog={p.dialog}
             onOpenDetails={p.onOpenDetails}
-            showAdvanced={p.level > ExperienceLevel.Learner}
+            level={p.level}
             tagSet={p.tagSet}
           />
         ) : null}
@@ -129,7 +134,7 @@ const MorphemicSegmentation = (p: {
   tagSet: TagSet
   dialog: Props["dialog"]
   onOpenDetails: Props["onOpenDetails"]
-  showAdvanced: boolean
+  level: ExperienceLevel
 }) => {
   // If there is no segmentation, return two line breaks for the
   // morphemic segmentation and morpheme gloss layers.
@@ -147,7 +152,14 @@ const MorphemicSegmentation = (p: {
       <div className={glossLine}>
         {p
           .segments!.map(function (segment) {
-            let seg = p.showAdvanced ? segment.morpheme : segment.simpleMorpheme
+            // Adapt the segment shape to the chosen experience level.
+            let seg = segment.shapeTth
+            if (p.level === ExperienceLevel.AdvancedDt) {
+              seg = segment.shapeDt
+            } else if (p.level === ExperienceLevel.Learner) {
+              seg = segment.shapeDtSimple
+            }
+
             if (segment.nextSeparator) {
               return seg + segment.nextSeparator
             } else {
@@ -192,20 +204,10 @@ const MorphemeSegment = (p: {
   dialog: Props["dialog"]
   onOpenDetails: Props["onOpenDetails"]
 }) => {
-  let matchingTag = null
-  if (p.segment.matchingTag) {
-    const tag = p.segment.matchingTag!
-    if (p.tagSet === TagSet.Learner) {
-      matchingTag = tag.learner ?? tag.crg
-    } else if (p.tagSet === TagSet.Taoc) {
-      matchingTag = tag.taoc
-    } else if (p.tagSet === TagSet.Crg) {
-      matchingTag = tag.crg
-    }
-  }
+  const matchingTag = morphemeDisplayTag(p.segment.matchingTag, p.tagSet)
   const gloss = matchingTag?.tag || p.segment.gloss
 
-  if (p.segment.matchingTag) {
+  if (matchingTag && matchingTag.title) {
     const tooltip = useTooltipState()
     return (
       <>
@@ -215,7 +217,7 @@ const MorphemeSegment = (p: {
           onClick={() => p.onOpenDetails(p.segment)}
         >
           <Tooltip className={withBg} {...tooltip}>
-            {matchingTag.definition}
+            {matchingTag.title}
           </Tooltip>
           <TooltipReference {...tooltip}>{gloss}</TooltipReference>
         </DialogDisclosure>
