@@ -48,9 +48,11 @@ const AnnotatedDocumentPage = (p: {
   }, [experienceLevel.state])
 
   let tagSet = TagSet.Dailp
-  if (experienceLevel.state! >= ExperienceLevel.AdvancedDt) {
+  if (experienceLevel.state! === ExperienceLevel.AdvancedTth) {
     tagSet = TagSet.Taoc
-  } else if (experienceLevel.state! >= ExperienceLevel.Learner) {
+  } else if (experienceLevel.state! === ExperienceLevel.AdvancedDt) {
+    tagSet = TagSet.Crg
+  } else if (experienceLevel.state! === ExperienceLevel.Learner) {
     tagSet = TagSet.Learner
   }
 
