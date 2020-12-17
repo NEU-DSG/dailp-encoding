@@ -62,3 +62,4 @@ functions:
         - NodeIp: !GetAtt "DailpPrimaryReplicaNode0.Outputs.NodePrivateIp"
 resources:
   - ${file(./.serverless/database.template.out.yaml)}
+  - ${file(./.serverless/website.template.out.yaml)}

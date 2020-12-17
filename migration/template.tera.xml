@@ -8,9 +8,6 @@
       <titleStmt>
         <title>{{ title }}</title>
       </titleStmt>
-        <publicationStmt>
-          <p>{{publication}}</p>
-        </publicationStmt>
         <sourceDesc>
           <p>{{collection}}</p>
         </sourceDesc>

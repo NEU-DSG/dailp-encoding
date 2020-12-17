@@ -21,6 +21,8 @@ env:
   AWS_SUBNET_SECONDARY0: ${{ secrets.AWS_SUBNET_SECONDARY0 }}
   AWS_SUBNET_SECONDARY1: ${{ secrets.AWS_SUBNET_SECONDARY1 }}
   DAILP_GRAPHQL_URL: ${{ secrets.DAILP_GRAPHQL_URL }}
+  GIT_REPOSITORY_URL: https://github.com/neu-dsg/dailp-encoding
+  OAUTH_TOKEN: ${{ secrets.OAUTH_TOKEN }}
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
