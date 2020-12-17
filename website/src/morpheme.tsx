@@ -7,6 +7,7 @@ import _ from "lodash"
 import { MdClose } from "react-icons/md"
 import { AnchorLink } from "./link"
 import theme from "./theme"
+import { morphemeDisplayTag, TagSet } from "./types"
 
 type BasicMorphemeSegment = NonNullable<
   GatsbyTypes.FormFieldsFragment["segments"]
@@ -16,25 +17,51 @@ type BasicMorphemeSegment = NonNullable<
 export const MorphemeDetails = (props: {
   documentId: string
   segment: BasicMorphemeSegment
+  tagSet: TagSet
   dialog: DialogStateReturn
-}) => (
-  <>
-    <Clickable
-      className={closeButton}
-      role="button"
-      aria-label="Close Dialog"
-      onClick={props.dialog.hide}
-    >
-      <MdClose size={32} />
-    </Clickable>
-    <h3>Known Occurrences of "{props.segment?.gloss}"</h3>
-    <SimilarMorphemeList
-      documentId={props.documentId}
-      gloss={props.segment?.gloss!}
-      dialog={props.dialog}
-    />
-  </>
-)
+}) => {
+  return (
+    <>
+      <Clickable
+        className={closeButton}
+        role="button"
+        aria-label="Close Dialog"
+        onClick={props.dialog.hide}
+      >
+        <MdClose size={32} />
+      </Clickable>
+      <TagDetails segment={props.segment} tagSet={props.tagSet} />
+      <SimilarMorphemeList
+        documentId={props.documentId}
+        gloss={props.segment?.gloss!}
+        dialog={props.dialog}
+      />
+    </>
+  )
+}
+
+const TagDetails = (props: {
+  segment: BasicMorphemeSegment
+  tagSet: TagSet
+}) => {
+  const tag = useQuery(tagQuery, {
+    skip: !props.segment.gloss,
+    variables: { gloss: props.segment.gloss },
+  })
+  if (tag.data) {
+    const matchingTag = morphemeDisplayTag(tag.data.tag, props.tagSet)
+    const gloss = matchingTag?.tag || props.segment.gloss
+    return (
+      <>
+        {matchingTag?.title ? <h2>{matchingTag.title}</h2> : null}
+        {matchingTag?.definition ? <p>{matchingTag.definition}</p> : null}
+        <h3>Known Occurrences of "{gloss}"</h3>
+      </>
+    )
+  } else {
+    return <h3>Known Occurrences of "{props.segment.gloss}"</h3>
+  }
+}
 
 const closeButton = css`
   position: fixed;
@@ -60,15 +87,10 @@ const SimilarMorphemeList = (props: {
     variables: { morphemeId: `${props.documentId}:${props.gloss}` },
   })
 
-  const tag = useQuery(tagQuery, {
-    skip: !props.gloss,
-    variables: { gloss: props.gloss },
-  })
-
-  if (loading || tag.loading) {
+  if (loading) {
     return <p>Loading...</p>
-  } else if (error || tag.error) {
-    return <p>Error! {error ?? tag.error}</p>
+  } else if (error) {
+    return <p>Error! {error}</p>
   } else if (!data || !data.documents) {
     return <p>None Found</p>
   } else {
@@ -107,17 +129,7 @@ const SimilarMorphemeList = (props: {
       </section>
     ))
 
-    let tagDetails = null
-    if (tag.data?.tag) {
-      tagDetails = <p>{tag.data.tag.name}</p>
-    }
-
-    return (
-      <>
-        {tagDetails}
-        {similarWords}
-      </>
-    )
+    return <>{similarWords}</>
   }
 }
 
@@ -154,10 +166,17 @@ const tagQuery = gql`
       taoc {
         tag
         title
+        definition
       }
       crg {
         tag
         title
+        definition
+      }
+      learner {
+        tag
+        title
+        definition
       }
     }
   }
