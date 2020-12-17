@@ -517,6 +517,7 @@ dependencies = [
  "futures",
  "itertools",
  "lazy_static",
+ "maplit",
  "mongodb",
  "nom",
  "regex",

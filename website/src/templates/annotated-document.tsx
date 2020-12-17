@@ -322,7 +322,7 @@ export const query = graphql`
     phonemic
     segments {
       morpheme
-      simpleMorpheme: morpheme(system: DT)
+      simpleMorpheme: morpheme(system: LEARNER)
       gloss
       matchingTag {
         id

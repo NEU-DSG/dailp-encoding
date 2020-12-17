@@ -461,6 +461,10 @@ pub fn convert_udb(input: &str) -> PhonemicString {
     }
 }
 
+/// Storage format for Cherokee phonetics.
+/// Consonants: t/th in storage, converted to d/t on output.
+/// Vowels: struct-defined
+#[derive(Debug)]
 pub enum PhonemicString {
     Form(Vec<PhonemicString>),
     /// For example, "hn"
@@ -469,10 +473,127 @@ pub enum PhonemicString {
     Vowel(String, VowelType),
 }
 impl PhonemicString {
+    pub fn parse_dailp(input: &str) -> Self {
+        use {
+            itertools::Itertools, lazy_static::lazy_static, maplit::hashmap,
+            std::collections::HashMap, unicode_normalization::UnicodeNormalization,
+        };
+        lazy_static! {
+            static ref SHORT_VOWELS: HashMap<&'static str, (&'static str, VowelType)> = hashmap! {
+                "a" => ("a", VowelType::ShortLow),
+                "á" => ("a", VowelType::ShortHigh),
+                "à" => ("a", VowelType::ShortLowfall),
+                "a̋" => ("a", VowelType::ShortSuperhigh),
+                "e" => ("e", VowelType::ShortLow),
+                "é" => ("e", VowelType::ShortHigh),
+                "è" => ("e", VowelType::ShortLowfall),
+                "e̋" => ("e", VowelType::ShortSuperhigh),
+                "i" => ("i", VowelType::ShortLow),
+                "í" => ("i", VowelType::ShortHigh),
+                "ì" => ("i", VowelType::ShortLowfall),
+                "i̋" => ("i", VowelType::ShortSuperhigh),
+                "o" => ("o", VowelType::ShortLow),
+                "ó" => ("o", VowelType::ShortHigh),
+                "ò" => ("o", VowelType::ShortLowfall),
+                "ő" => ("o", VowelType::ShortSuperhigh),
+                "u" => ("u", VowelType::ShortLow),
+                "ú" => ("u", VowelType::ShortHigh),
+                "ù" => ("u", VowelType::ShortLowfall),
+                "ű" => ("u", VowelType::ShortSuperhigh),
+                "v" => ("v", VowelType::ShortLow),
+                "v́" => ("v", VowelType::ShortHigh),
+                "v̀" => ("v", VowelType::ShortLowfall),
+                "v̋" => ("v", VowelType::ShortSuperhigh),
+            };
+            static ref LONG_VOWELS: HashMap<&'static str, (&'static str, VowelType)> = hashmap! {
+                "aa" => ("a", VowelType::LongLow),
+                "áá" => ("a", VowelType::LongHigh),
+                "aá" => ("a", VowelType::Rising),
+                "áa" => ("a", VowelType::Falling),
+                "àà" => ("a", VowelType::Lowfall),
+                "aa̋" => ("a", VowelType::Superhigh),
+                "ee" => ("e", VowelType::LongLow),
+                "éé" => ("e", VowelType::LongHigh),
+                "eé" => ("e", VowelType::Rising),
+                "ée" => ("e", VowelType::Falling),
+                "èè" => ("e", VowelType::Lowfall),
+                "ee̋" => ("e", VowelType::Superhigh),
+                "ii" => ("i", VowelType::LongLow),
+                "íí" => ("i", VowelType::LongHigh),
+                "ií" => ("i", VowelType::Rising),
+                "íi" => ("i", VowelType::Falling),
+                "ìì" => ("i", VowelType::Lowfall),
+                "ii̋" => ("i", VowelType::Superhigh),
+                "oo" => ("o", VowelType::LongLow),
+                "óó" => ("o", VowelType::LongHigh),
+                "oó" => ("o", VowelType::Rising),
+                "óo" => ("o", VowelType::Falling),
+                "òò" => ("o", VowelType::Lowfall),
+                "oő" => ("o", VowelType::Superhigh),
+                "uu" => ("u", VowelType::LongLow),
+                "úú" => ("u", VowelType::LongHigh),
+                "uú" => ("u", VowelType::Rising),
+                "úu" => ("u", VowelType::Falling),
+                "ùù" => ("u", VowelType::Lowfall),
+                "uű" => ("u", VowelType::Superhigh),
+                "vv" => ("v", VowelType::LongLow),
+                "v́v́" => ("v", VowelType::LongHigh),
+                "vv́" => ("v", VowelType::Rising),
+                "v́v" => ("v", VowelType::Falling),
+                "v̀v̀" => ("v", VowelType::Lowfall),
+                "vv̋" => ("v", VowelType::Superhigh),
+            };
+            static ref PAT: regex::Regex = {
+                let long = LONG_VOWELS.iter().map(|(k, _v)| k.nfc()).join("|");
+                let short = SHORT_VOWELS.iter().map(|(k, _v)| k.nfc()).join("|");
+
+                // NOTE This contains the list of acceptable consonants.
+                regex::Regex::new(&format!(
+                    "({}|{})?([tdkghcjmnswrypl'ʔØ]*)({}|{})",
+                    long, short, long, short,
+                ))
+                .unwrap()
+            };
+        }
+
+        let mut syllables = Vec::new();
+        let input = input.nfc().to_string();
+        for caps in PAT.captures_iter(&input) {
+            if let Some(vowel_one) = caps.get(1) {
+                let vowel_one = vowel_one.as_str();
+                let e = LONG_VOWELS
+                    .get(vowel_one)
+                    .or_else(|| SHORT_VOWELS.get(vowel_one))
+                    .unwrap();
+                syllables.push(PhonemicString::Vowel(e.0.to_owned(), e.1));
+            }
+
+            let consonant = &caps[2];
+            syllables.push(PhonemicString::Consonant(consonant.to_owned()));
+            let vowel = &caps[3];
+            let e = LONG_VOWELS
+                .get(vowel)
+                .or_else(|| SHORT_VOWELS.get(vowel))
+                .unwrap();
+            syllables.push(PhonemicString::Vowel(e.0.to_owned(), e.1));
+        }
+
+        if syllables.is_empty() {
+            PhonemicString::Consonant(input.to_owned())
+        } else {
+            PhonemicString::Form(syllables)
+        }
+    }
+
     pub fn to_dailp(self) -> String {
-        use itertools::Itertools;
+        use {itertools::Itertools, unicode_normalization::UnicodeNormalization};
         match self {
-            PhonemicString::Form(all) => all.into_iter().map(|x| x.to_dailp()).join(""),
+            PhonemicString::Form(all) => all
+                .into_iter()
+                .map(|x| x.to_dailp())
+                .join("")
+                .nfc()
+                .to_string(),
             PhonemicString::Consonant(s) => s,
             PhonemicString::Vowel(v, ty) => match ty {
                 VowelType::ShortLow => v,
@@ -488,8 +609,76 @@ impl PhonemicString {
             },
         }
     }
+
+    pub fn to_crg(self) -> String {
+        use {itertools::Itertools, unicode_normalization::UnicodeNormalization};
+        match self {
+            PhonemicString::Form(all) => all
+                .into_iter()
+                // Join all decomposed unicode.
+                .map(|x| x.to_crg())
+                .join("")
+                .nfc()
+                .to_string(),
+            PhonemicString::Consonant(s) => tth_to_dt(&s, true),
+            PhonemicString::Vowel(v, ty) => match ty {
+                // Short vowels in CRG match TAOC.
+                VowelType::ShortLow => v,
+                VowelType::ShortHigh => format!("{}\u{0301}", v),
+                VowelType::ShortLowfall => format!("{}\u{0300}", v),
+                VowelType::ShortSuperhigh => format!("{}\u{030B}", v),
+                // The long vowels are slightly different.
+                VowelType::LongLow => format!("{}{}", v, v),
+                VowelType::LongHigh => format!("{}\u{0301}{}", v, v),
+                VowelType::Rising => format!("{}{}\u{0301}", v, v),
+                VowelType::Falling => format!("{}\u{0301}{}\u{0300}", v, v),
+                VowelType::Lowfall => format!("{}{}\u{0300}", v, v),
+                VowelType::Superhigh => format!("{}\u{0301}{}\u{0301}", v, v),
+            },
+        }
+    }
+
+    /// Simplify all vowels by stripping out tone and length.
+    /// Convert t/th consonants to the d/t representation with apostrophe for
+    /// the glottal stop.
+    pub fn to_learner(self) -> String {
+        use itertools::Itertools;
+        match self {
+            PhonemicString::Form(all) => all.into_iter().map(|x| x.to_learner()).join(""),
+            PhonemicString::Consonant(s) => tth_to_dt(&s, false),
+            PhonemicString::Vowel(v, ty) => v,
+        }
+    }
 }
 
+fn tth_to_dt(input: &str, keep_glottal_stops: bool) -> String {
+    use {
+        lazy_static::lazy_static,
+        regex::{Captures, Regex},
+    };
+    // Convert the t/th consonants to d/t
+    lazy_static! {
+        static ref TTH_PATTERN: Regex = Regex::new(r"(kh|th|k|t|c|ʔ)").unwrap();
+    }
+    let result = TTH_PATTERN.replace_all(input, |cap: &Captures| match &cap[0] {
+        "ʔ" => {
+            if keep_glottal_stops {
+                "ʔ"
+            } else {
+                "'"
+            }
+        }
+        "kh" => "k",
+        "th" => "t",
+        "k" => "g",
+        "t" => "d",
+        "c" => "j",
+        _ => unreachable!(),
+    });
+    result.into_owned()
+}
+
+#[derive(Debug, Clone, Copy)]
 pub enum VowelType {
     ShortLow,
     ShortHigh,

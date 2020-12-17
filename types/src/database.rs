@@ -386,7 +386,7 @@ impl Database {
         let dictionary_words = dictionary_words?.into_iter().filter_map(|form| {
             Some((
                 form.find_morpheme(&morpheme.gloss)?
-                    .get_morpheme(compare_by, true)
+                    .get_morpheme(compare_by)
                     .into_owned(),
                 form,
             ))
@@ -399,7 +399,7 @@ impl Database {
                     // Find the index of the relevant morpheme gloss.
                     let segment = word.find_morpheme(&morpheme.gloss)?;
                     // Grab the morpheme with the same index.
-                    segment.get_morpheme(compare_by, true).into_owned()
+                    segment.get_morpheme(compare_by).into_owned()
                 };
                 Some((m.to_owned(), word))
             })
