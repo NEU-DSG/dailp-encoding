@@ -544,15 +544,12 @@ impl PhonemicString {
                 "vv̋" => ("v", VowelType::Superhigh),
             };
             static ref PAT: regex::Regex = {
-                let long = LONG_VOWELS.iter().map(|(k, _v)| k.nfc()).join("|");
-                let short = SHORT_VOWELS.iter().map(|(k, _v)| k.nfc()).join("|");
-
                 // NOTE This contains the list of acceptable consonants.
+                let consonants = "tdkghcjmnswrypl'ʔØ";
                 regex::Regex::new(&format!(
-                    "({}|{})?([tdkghcjmnswrypl'ʔØ]*)({}|{})",
-                    long, short, long, short,
-                ))
-                .unwrap()
+                    "([^{}]+)?([{}]*)([^{}]+)",
+                    consonants, consonants, consonants
+                )).unwrap()
             };
         }
 
