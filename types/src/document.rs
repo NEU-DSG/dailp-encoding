@@ -1,4 +1,7 @@
-use crate::{AnnotatedForm, Database, DateTime, PersonAssociation, Translation, TranslationBlock};
+use crate::{
+    AnnotatedForm, Contributor, Database, DateTime, SourceAttribution, Translation,
+    TranslationBlock,
+};
 use async_graphql::FieldResult;
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
@@ -44,9 +47,9 @@ impl AnnotatedDoc {
         &self.meta.date
     }
 
-    /// The publication that included this document
-    async fn publication(&self) -> &Option<String> {
-        &self.meta.publication
+    /// The original source(s) of this document, the most important first.
+    async fn sources(&self) -> &Vec<SourceAttribution> {
+        &self.meta.sources
     }
 
     /// Where the source document came from, maybe the name of a collection
@@ -71,8 +74,8 @@ impl AnnotatedDoc {
 
     /// The people involved in producing this document, including the original
     /// author, translators, and annotators
-    async fn people(&self) -> &Vec<PersonAssociation> {
-        &self.meta.people
+    async fn people(&self) -> &Vec<Contributor> {
+        &self.meta.contributors
     }
 
     /// Is this document a reference source (unstructured list of words)?
@@ -193,14 +196,15 @@ pub struct DocumentMetadata {
     pub id: String,
     /// Full title of the document.
     pub title: String,
-    /// The publication that included this document.
-    pub publication: Option<String>,
+    #[serde(default)]
+    /// The original source(s) of this document, the most important first.
+    pub sources: Vec<SourceAttribution>,
     /// Where the source document came from, maybe the name of a collection.
     pub collection: Option<String>,
     pub genre: Option<String>,
     /// The people involved in collecting, translating, annotating.
     #[serde(default)]
-    pub people: Vec<PersonAssociation>,
+    pub contributors: Vec<Contributor>,
     /// Rough translation of the document, broken down by paragraph.
     #[serde(skip)]
     pub translation: Option<Translation>,

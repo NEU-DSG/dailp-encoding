@@ -127,8 +127,10 @@ So far, that ordering is as follows:
 - Translation Document ID: Identifier of a Google Doc containing the translation, pulled from the share url of that document.
 - Source Image URLs: a link directly to an image for each page, where each page is a column here.
 - Date: date-time in ISO format like `YYYY-MM-DD hh:mm:ss` that indicates when this document was created.
-- People Names: Names of each person involved in this document, whether as creator/author, translator, annotator, collector, etc. Each name goes in a column.
-- People Roles: Short description of the person above's role in the document, i.e. Annotator. The role should match with the person name in the same column one row above.
+- Contributor Names: Names of each contributor this document, whether as creator/author, translator, annotator, collector, etc. Each name goes in a column.
+- Contributor Role: Short description of the person above's role in the document, i.e. Annotator. The role should match with the person name in the same column one row above.
+- Source Attribution: Where this manuscript was sourced from, i.e. Beineke Rare Book & Manuscript Library
+- Source Attribution Link: A link to the organization or specific record this document was source from. Each entry should correspond with the source just above it.
 
 ## Translations
 
