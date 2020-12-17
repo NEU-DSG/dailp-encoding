@@ -32,7 +32,6 @@ enum Tabs {
 const AnnotatedDocumentPage = (p: {
   data: GatsbyTypes.AnnotatedDocumentQuery
 }) => {
-  const isSSR = typeof window === "undefined"
   const doc = p.data.dailp.document!
   const tabs = useScrollableTabState({ selectedId: Tabs.ANNOTATION })
   const dialog = useDialogState()
@@ -48,10 +47,14 @@ const AnnotatedDocumentPage = (p: {
     Cookies.set("experienceLevel", experienceLevel.state!.toString())
   }, [experienceLevel.state])
 
-  const tagSet =
-    experienceLevel.state! > ExperienceLevel.Learner
-      ? TagSet.Taoc
-      : TagSet.Learner
+  let tagSet = TagSet.Dailp
+  if (experienceLevel.state! === ExperienceLevel.AdvancedTth) {
+    tagSet = TagSet.Taoc
+  } else if (experienceLevel.state! === ExperienceLevel.AdvancedDt) {
+    tagSet = TagSet.Crg
+  } else if (experienceLevel.state! === ExperienceLevel.Learner) {
+    tagSet = TagSet.Learner
+  }
 
   return (
     <Layout title={doc.title}>
@@ -67,6 +70,7 @@ const AnnotatedDocumentPage = (p: {
                 documentId={doc.id}
                 segment={selectedMorpheme}
                 dialog={dialog}
+                tagSet={tagSet}
               />
             ) : null}
           </Dialog>
@@ -235,22 +239,27 @@ const docHeader = css`
   }
 `
 
-const thingIsNaN = (l: any) => isNaN(Number(l))
+const notNumber = (l: any) => isNaN(Number(l))
+const levelNameMapping = {
+  [ExperienceLevel.Story]: "Story",
+  [ExperienceLevel.Basic]: "Basic",
+  [ExperienceLevel.Learner]: "Learner",
+  [ExperienceLevel.AdvancedDt]: "Advanced (d/t)",
+  [ExperienceLevel.AdvancedTth]: "Advanced (t/th)",
+}
 
 const ExperiencePicker = (p: { radio: RadioStateReturn }) => {
   return (
     <RadioGroup {...p.radio} className={levelGroup}>
       {Object.keys(ExperienceLevel)
-        .filter(thingIsNaN)
+        .filter(notNumber)
         .map(function (level: string) {
+          const value = ExperienceLevel[level as keyof typeof ExperienceLevel]
           return (
             <label key={level} className={levelLabel}>
-              <Radio
-                {...p.radio}
-                value={ExperienceLevel[level as keyof typeof ExperienceLevel]}
-              />
+              <Radio {...p.radio} value={value} />
               {"  "}
-              {level}
+              {levelNameMapping[value]}
             </label>
           )
         })}
@@ -321,25 +330,23 @@ export const query = graphql`
     simplePhonetics
     phonemic
     segments {
-      morpheme
-      simpleMorpheme: morpheme(system: LEARNER)
+      shapeTth: morpheme(system: TAOC)
+      shapeDt: morpheme(system: CRG)
+      shapeDtSimple: morpheme(system: LEARNER)
       gloss
       matchingTag {
         id
         taoc {
           tag
           title
-          definition
         }
         learner {
           tag
           title
-          definition
         }
         crg {
           tag
           title
-          definition
         }
       }
       nextSeparator

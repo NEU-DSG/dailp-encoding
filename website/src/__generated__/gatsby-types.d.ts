@@ -412,6 +412,7 @@ type Dailp_MorphemeSegment = {
 
 type Dailp_MorphemeSegment_morphemeArgs = {
   system: Maybe<Dailp_CherokeeOrthography>;
+  simplify: Maybe<Scalars['Boolean']>;
 };
 
 type Dailp_MorphemeTag = {
@@ -10346,11 +10347,11 @@ type ContentPageQuery = { readonly page: Maybe<Pick<WpPage, 'title' | 'content'>
 type FormFieldsFragment = (
   Pick<Dailp_AnnotatedForm, 'index' | 'source' | 'simplePhonetics' | 'phonemic' | 'englishGloss' | 'commentary'>
   & { readonly segments: Maybe<ReadonlyArray<(
-    Pick<Dailp_MorphemeSegment, 'morpheme' | 'gloss' | 'nextSeparator'>
-    & { simpleMorpheme: Dailp_MorphemeSegment['morpheme'] }
+    Pick<Dailp_MorphemeSegment, 'gloss' | 'nextSeparator'>
+    & { shapeTth: Dailp_MorphemeSegment['morpheme'], shapeDt: Dailp_MorphemeSegment['morpheme'], shapeDtSimple: Dailp_MorphemeSegment['morpheme'] }
     & { readonly matchingTag: Maybe<(
       Pick<Dailp_MorphemeTag, 'id'>
-      & { readonly taoc: Maybe<Pick<Dailp_TagForm, 'tag' | 'title' | 'definition'>>, readonly learner: Maybe<Pick<Dailp_TagForm, 'tag' | 'title' | 'definition'>>, readonly crg: Maybe<Pick<Dailp_TagForm, 'tag' | 'title' | 'definition'>> }
+      & { readonly taoc: Maybe<Pick<Dailp_TagForm, 'tag' | 'title'>>, readonly learner: Maybe<Pick<Dailp_TagForm, 'tag' | 'title'>>, readonly crg: Maybe<Pick<Dailp_TagForm, 'tag' | 'title'>> }
     )> }
   )>> }
 );
@@ -10420,5 +10421,18 @@ type IndexPageQueryVariables = Exact<{ [key: string]: never; }>;
 
 
 type IndexPageQuery = { readonly dailp: { readonly allCollections: ReadonlyArray<Pick<Dailp_DocumentCollection, 'name' | 'slug'>> }, readonly aboutPage: Maybe<Pick<WpPage, 'title' | 'content'>> };
+
+type homesneadpiedailpEncodingwebsitesrcfooterTsx1552981879QueryVariables = Exact<{ [key: string]: never; }>;
+
+
+type homesneadpiedailpEncodingwebsitesrcfooterTsx1552981879Query = { readonly currentBuildDate: Maybe<Pick<CurrentBuildDate, 'currentDate'>> };
+
+type homesneadpiedailpEncodingwebsitesrcmenuTsx2377851188QueryVariables = Exact<{ [key: string]: never; }>;
+
+
+type homesneadpiedailpEncodingwebsitesrcmenuTsx2377851188Query = { readonly wpMenu: Maybe<{ readonly menuItems: Maybe<{ readonly nodes: Maybe<ReadonlyArray<Maybe<(
+        Pick<WpMenuItem, 'label' | 'path'>
+        & { readonly childItems: Maybe<{ readonly nodes: Maybe<ReadonlyArray<Maybe<Pick<WpMenuItem, 'label' | 'path'>>>> }> }
+      )>>> }> }> };
 
 }
