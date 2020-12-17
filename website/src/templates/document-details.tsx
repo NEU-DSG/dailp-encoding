@@ -16,9 +16,9 @@ const DocumentDetails = (p: { data: GatsbyTypes.DocumentDetailsQuery }) => {
         </Helmet>
         <DocumentTitleHeader doc={doc} showDetails={false} />
         <section className={wideSection}>
-          <h3>People Involved</h3>
+          <h3>Contributors</h3>
           <ul>
-            {doc.people.map((person) => (
+            {doc.contributors.map((person) => (
               <li key={person.name}>
                 {person.name}: {person.role}
               </li>
@@ -45,7 +45,7 @@ export const query = graphql`
         date {
           year
         }
-        people {
+        contributors {
           name
           role
         }

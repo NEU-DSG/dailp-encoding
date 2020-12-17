@@ -4,12 +4,12 @@
 
 use crate::translations::DocResult;
 use anyhow::Result;
-use dailp::PositionInDocument;
 use dailp::{
     convert_udb, root_noun_surface_forms, root_verb_surface_forms, AnnotatedDoc, AnnotatedForm,
-    AnnotatedPhrase, AnnotatedSeg, BlockType, DateTime, DocumentMetadata, LexicalConnection,
-    LineBreak, MorphemeId, MorphemeSegment, PageBreak, PersonAssociation,
+    AnnotatedPhrase, AnnotatedSeg, BlockType, Contributor, DateTime, DocumentMetadata,
+    LexicalConnection, LineBreak, MorphemeId, MorphemeSegment, PageBreak,
 };
+use dailp::{PositionInDocument, SourceAttribution};
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, fs::File, io::Write, time::Duration};
 
@@ -307,7 +307,17 @@ impl SheetResult {
                 .into_iter()
                 .skip(1)
                 .zip(roles.into_iter().skip(1))
-                .map(|(name, role)| PersonAssociation { name, role })
+                .map(|(name, role)| Contributor { name, role })
+                .collect()
+        } else {
+            Vec::new()
+        };
+        let sources = if let (Some(names), Some(links)) = (values.next(), values.next()) {
+            names
+                .into_iter()
+                .skip(1)
+                .zip(links.into_iter().skip(1))
+                .map(|(name, link)| SourceAttribution { name, link })
                 .collect()
         } else {
             Vec::new()
@@ -316,9 +326,9 @@ impl SheetResult {
         Ok(DocumentMetadata {
             id: doc_id.remove(1),
             title: title.remove(1),
-            publication: None,
+            sources,
             collection: source.pop().filter(|s| !s.is_empty()),
-            people,
+            contributors: people,
             genre: genre.pop(),
             translation: Some(
                 DocResult::new(&translations.remove(1))
