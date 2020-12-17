@@ -74,8 +74,8 @@ module.exports = {
       },
     },
     "gatsby-transformer-sharp",
-    "gatsby-plugin-netlify",
-    "gatsby-plugin-netlify-cache",
+    // "gatsby-plugin-netlify",
+    // "gatsby-plugin-netlify-cache",
     {
       resolve: "gatsby-plugin-anchor-links",
       options: {

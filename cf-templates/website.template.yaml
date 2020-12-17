@@ -1,0 +1,63 @@
+Resources:
+  AmplifyRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - amplify.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: Amplify
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action: "amplify:*"
+                Resource: "*"
+  AmplifyApp:
+    Type: AWS::Amplify::App
+    Properties:
+      Name: dailp
+      Description: Digital Archive of American Indian Languages Preservation and Perseverence
+      Repository: ${env:GIT_REPOSITORY_URL}
+      OauthToken: ${env:OAUTH_TOKEN}
+      IAMServiceRole: !GetAtt AmplifyRole.Arn
+      BuildSpec: |-
+        version: 1
+        env:
+          variables:
+            DAILP_GRAPHQL_URL: ${env:DAILP_GRAPHQL_URL}
+        frontend:
+          artifacts:
+            baseDirectory: website/public
+            files:
+              - "*"
+          phases:
+            build:
+              commands:
+                - cd website
+                - yarn install
+                - yarn build
+          cache:
+            paths:
+              - website/node_modules
+              - website/.cache
+  AmplifyMainBranch:
+    Type: AWS::Amplify::Branch
+    Properties:
+      BranchName: main
+      AppId: !GetAtt AmplifyApp.AppId
+      Description: Main Branch
+      EnableAutoBuild: false
+  # AmplifyDomain:
+  #   Type: AWS::Amplify::Domain
+  #   Properties:
+  #     AppId: !GetAtt AmplifyApp.AppId
+  #     DomainName: dailp.northeastern.edu
+
+Outputs:
+  DefaultDomain:
+    Value: !GetAtt AmplifyApp.DefaultDomain
