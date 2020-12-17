@@ -49,15 +49,9 @@ impl MorphemeSegment {
             .join("")
     }
 
-    pub fn get_morpheme(
-        &self,
-        system: Option<CherokeeOrthography>,
-        simplify: bool,
-    ) -> Cow<'_, str> {
+    pub fn get_morpheme(&self, system: Option<CherokeeOrthography>) -> Cow<'_, str> {
         match system {
-            Some(CherokeeOrthography::Dt) => {
-                Cow::Owned(convert_tth_to_dt(&self.morpheme, !simplify))
-            }
+            Some(orthography) => Cow::Owned(orthography.convert(&self.morpheme)),
             _ => Cow::Borrowed(&*self.morpheme),
         }
     }
@@ -66,12 +60,8 @@ impl MorphemeSegment {
 #[async_graphql::Object(cache_control(max_age = 60))]
 impl MorphemeSegment {
     /// Phonemic representation of the morpheme
-    async fn morpheme(
-        &self,
-        system: Option<CherokeeOrthography>,
-        simplify: Option<bool>,
-    ) -> Cow<'_, str> {
-        self.get_morpheme(system, simplify.unwrap_or(true))
+    async fn morpheme(&self, system: Option<CherokeeOrthography>) -> Cow<'_, str> {
+        self.get_morpheme(system)
     }
 
     /// English gloss in standard DAILP format that refers to a lexical item
@@ -116,51 +106,40 @@ pub enum CherokeeOrthography {
     /// This orthography is favored by native speakers.
     /// TODO Option for /ts/ instead of /j/
     /// TODO Option for /qu/ instead of /gw/ or /kw/
-    Dt,
+    Taoc,
     /// The t/th system for transcribing the Cherokee syllabary.
     /// This orthography is favored by linguists as it is segmentally more accurate.
-    Tth,
+    Crg,
+    Learner,
+}
+impl CherokeeOrthography {
+    pub fn convert(&self, input: &str) -> String {
+        use CherokeeOrthography::*;
+        let ast = PhonemicString::parse_dailp(input);
+        println!("{:?}", ast);
+        match self {
+            Taoc => ast.to_dailp(),
+            Crg => ast.to_crg(),
+            Learner => ast.to_learner(),
+        }
+    }
 }
 
-/// TODO Unit tests!!
-fn convert_tth_to_dt(input: &str, keep_glottal_stops: bool) -> String {
-    use {
-        lazy_static::*,
-        regex::{Captures, Regex},
-        unicode_normalization::UnicodeNormalization,
-    };
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-    // Strip all unicode diacritics from the string.
-    const ACCEPTABLE_NON_ASCII: &str = "ʔØ";
-    let input = input
-        .nfkd()
-        .filter(|c| c.is_ascii() || ACCEPTABLE_NON_ASCII.contains(*c))
-        .collect::<String>();
-
-    // Convert t/th to d/t and make all vowels short.
-    lazy_static! {
-        static ref TTH_PATTERN: Regex = Regex::new(r"(kh|th|k|t|c|ʔ|ii|ee|aa|oo|uu|vv)").unwrap();
+    #[test]
+    fn test_orthography_conversion() {
+        // This value came straight from the DD1 spreadsheet.
+        let orig = "ùùnatoótákwààskvv̋ʔi";
+        // Test the learner orthography.
+        assert_eq!(
+            CherokeeOrthography::Learner.convert(orig),
+            "unadodagwasgv'i"
+        );
+        // Test the CRG orthography.
+        let crg = CherokeeOrthography::Crg.convert(orig);
+        assert_eq!(crg, "uùnadoódágwaàsgv́v́ʔi");
     }
-    let result = TTH_PATTERN.replace_all(&input, |cap: &Captures| match &cap[0] {
-        "ʔ" => {
-            if keep_glottal_stops {
-                "ʔ"
-            } else {
-                "'"
-            }
-        }
-        "kh" => "k",
-        "th" => "t",
-        "k" => "g",
-        "t" => "d",
-        "c" => "j",
-        "ii" => "i",
-        "ee" => "e",
-        "aa" => "a",
-        "oo" => "o",
-        "uu" => "u",
-        "vv" => "v",
-        _ => unreachable!(),
-    });
-    result.into_owned()
 }
