@@ -154,5 +154,10 @@ mod tests {
             CherokeeOrthography::Learner.convert("t-uu-alihthat-:iinvvʔs-ééʔi"),
             "d-u-alihtad-inv's-e'i"
         );
+
+        assert_eq!(
+            CherokeeOrthography::Learner.convert("Ø-ataweelakʔ-?-i"),
+            "Ø-adawelag'-?-i"
+        );
     }
 }
