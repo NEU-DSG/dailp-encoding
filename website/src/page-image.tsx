@@ -1,10 +1,13 @@
 import React from "react"
 import { css } from "linaria"
-import theme, { fullWidth } from "./theme"
+import theme from "./theme"
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch"
 import { Helmet } from "react-helmet"
 
-const PageImages = (p: { pageImages?: readonly string[] }) => (
+const PageImages = (p: {
+  document: GatsbyTypes.Dailp_AnnotatedDoc
+  pageImages?: readonly string[]
+}) => (
   <figure className={annotationFigure} aria-label="Manuscript Source Images">
     <Helmet>
       <link

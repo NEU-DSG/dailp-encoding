@@ -49,6 +49,10 @@ export const query = graphql`
           name
           role
         }
+        sources {
+          name
+          link
+        }
       }
     }
   }

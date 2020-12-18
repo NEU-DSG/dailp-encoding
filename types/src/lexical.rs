@@ -544,11 +544,11 @@ impl PhonemicString {
                 "vv̋" => ("v", VowelType::Superhigh),
             };
             static ref PAT: regex::Regex = {
-                // NOTE This contains the list of acceptable consonants.
-                let consonants = "tdkghcjmnswrypl'ʔØ";
+                // NOTE This contains the list of acceptable consonants and symbols.
+                let consonants = "tdkghcjmnswrypl'ʔØ\\(\\)\\.\\-=:?";
                 regex::Regex::new(&format!(
-                    "([^{}]+)?([{}]*)([^{}]+)",
-                    consonants, consonants, consonants
+                    "([{}]+)?([^{}]+)?",
+                    consonants, consonants
                 )).unwrap()
             };
         }
@@ -556,7 +556,11 @@ impl PhonemicString {
         let mut syllables = Vec::new();
         let input = input.nfc().to_string();
         for caps in PAT.captures_iter(&input) {
-            if let Some(vowel_one) = caps.get(1) {
+            if let Some(consonant) = caps.get(1) {
+                syllables.push(PhonemicString::Consonant(consonant.as_str().to_owned()));
+            }
+
+            if let Some(vowel_one) = caps.get(2) {
                 let vowel_one = vowel_one.as_str();
                 let e = LONG_VOWELS
                     .get(vowel_one)
@@ -564,15 +568,6 @@ impl PhonemicString {
                     .unwrap();
                 syllables.push(PhonemicString::Vowel(e.0.to_owned(), e.1));
             }
-
-            let consonant = &caps[2];
-            syllables.push(PhonemicString::Consonant(consonant.to_owned()));
-            let vowel = &caps[3];
-            let e = LONG_VOWELS
-                .get(vowel)
-                .or_else(|| SHORT_VOWELS.get(vowel))
-                .unwrap();
-            syllables.push(PhonemicString::Vowel(e.0.to_owned(), e.1));
         }
 
         if syllables.is_empty() {
@@ -642,8 +637,8 @@ impl PhonemicString {
         use itertools::Itertools;
         match self {
             PhonemicString::Form(all) => all.into_iter().map(|x| x.to_learner()).join(""),
-            PhonemicString::Consonant(s) => tth_to_dt(&s, false),
-            PhonemicString::Vowel(v, ty) => v,
+            PhonemicString::Consonant(s) => tth_to_dt(&s.replace(":", ""), false),
+            PhonemicString::Vowel(v, _ty) => v,
         }
     }
 }
