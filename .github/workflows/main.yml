@@ -58,9 +58,9 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-cargo
-      - name: Change permissions on .cargo directory
-        run: |
-          sudo chown -R $(whoami):$(id -ng) ~/.cargo/
+      # - name: Change permissions on .cargo directory
+      #   run: |
+      #     sudo chown -R $(whoami):$(id -ng) ~/.cargo/
       - name: Run unit tests
         run: cargo test --release
       - name: Configure AWS credentials

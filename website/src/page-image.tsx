@@ -28,14 +28,24 @@ const PageImages = (p: {
         </TransformComponent>
       </TransformWrapper>
     ))}
+    {p.document.sources.length ? (
+      <figcaption className={caption}>
+        Courtesy of{" "}
+        <a href={p.document.sources[0].link}>{p.document.sources[0].name}</a>
+      </figcaption>
+    ) : null}
   </figure>
 )
 export default PageImages
 
 const pageImage = css`
-  margin-bottom: ${theme.rhythm * 2}rem;
   width: 100%;
   height: auto;
+  margin-bottom: 1px;
+`
+
+const caption = css`
+  margin-top: ${theme.rhythm / 2}rem;
 `
 
 const annotationFigure = css`
@@ -43,6 +53,7 @@ const annotationFigure = css`
   margin: 0;
   cursor: move;
   cursor: grab;
+  margin-bottom: ${theme.rhythm * 2}rem;
   .react-transform-component {
     max-height: 20rem;
     ${theme.mediaQueries.medium} {

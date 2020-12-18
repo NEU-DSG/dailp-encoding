@@ -1,3 +1,5 @@
+import { css } from "linaria"
+
 const theme = {
   fonts: {
     // Noto Serif supports glottal stops and more accents than other fonts.
@@ -48,5 +50,15 @@ export const largeDialog = {
     width: "45rem",
   },
 }
+
+export const withBg = css`
+  z-index: 999;
+  background-color: ${theme.colors.body};
+  padding: ${theme.rhythm / 4}em;
+  border: 1px solid ${theme.colors.text};
+  ${theme.mediaQueries.medium} {
+    max-width: 70vw;
+  }
+`
 
 export default theme

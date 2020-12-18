@@ -271,7 +271,7 @@ type Dailp_AnnotatedDoc = {
    * The people involved in producing this document, including the original
    * author, translators, and annotators
    */
-  readonly people: ReadonlyArray<Dailp_Contributor>;
+  readonly contributors: ReadonlyArray<Dailp_Contributor>;
   /**
    * Is this document a reference source (unstructured list of words)?
    * Otherwise, it is considered a structured document with a translation.
@@ -10389,6 +10389,16 @@ type AnnotatedDocumentQuery = { readonly dailp: { readonly document: Maybe<(
         ), readonly translation: Pick<Dailp_TranslationBlock, 'text'> }>>, readonly forms: ReadonlyArray<FormFieldsFragment> }
     )> } };
 
+type DocumentDetailsQueryVariables = Exact<{
+  id: Scalars['String'];
+}>;
+
+
+type DocumentDetailsQuery = { readonly dailp: { readonly document: Maybe<(
+      Pick<Dailp_AnnotatedDoc, 'id' | 'slug' | 'title'>
+      & { readonly collection: Maybe<Pick<Dailp_DocumentCollection, 'name' | 'slug'>>, readonly date: Maybe<Pick<Dailp_DateTime, 'year'>>, readonly contributors: ReadonlyArray<Pick<Dailp_Contributor, 'name' | 'role'>>, readonly sources: ReadonlyArray<Pick<Dailp_SourceAttribution, 'name' | 'link'>> }
+    )> } };
+
 type CollectionQueryVariables = Exact<{
   name: Scalars['String'];
 }>;
@@ -10416,18 +10426,5 @@ type IndexPageQueryVariables = Exact<{ [key: string]: never; }>;
 
 
 type IndexPageQuery = { readonly dailp: { readonly allCollections: ReadonlyArray<Pick<Dailp_DocumentCollection, 'name' | 'slug'>> }, readonly aboutPage: Maybe<Pick<WpPage, 'title' | 'content'>> };
-
-type homesneadpiedailpEncodingwebsitesrcfooterTsx1552981879QueryVariables = Exact<{ [key: string]: never; }>;
-
-
-type homesneadpiedailpEncodingwebsitesrcfooterTsx1552981879Query = { readonly currentBuildDate: Maybe<Pick<CurrentBuildDate, 'currentDate'>> };
-
-type homesneadpiedailpEncodingwebsitesrcmenuTsx2377851188QueryVariables = Exact<{ [key: string]: never; }>;
-
-
-type homesneadpiedailpEncodingwebsitesrcmenuTsx2377851188Query = { readonly wpMenu: Maybe<{ readonly menuItems: Maybe<{ readonly nodes: Maybe<ReadonlyArray<Maybe<(
-        Pick<WpMenuItem, 'label' | 'path'>
-        & { readonly childItems: Maybe<{ readonly nodes: Maybe<ReadonlyArray<Maybe<Pick<WpMenuItem, 'label' | 'path'>>>> }> }
-      )>>> }> }> };
 
 }

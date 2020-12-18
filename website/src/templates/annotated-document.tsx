@@ -8,11 +8,12 @@ import {
   RadioStateReturn,
 } from "reakit/Radio"
 import { Tab, TabPanel, TabList } from "reakit/Tab"
+import { Tooltip, TooltipReference, useTooltipState } from "reakit/Tooltip"
 import Sticky from "react-stickynode"
 import Layout from "../layout"
 import { Segment, AnnotatedForm } from "../segment"
 import Cookies from "js-cookie"
-import theme, { fullWidth, largeDialog } from "../theme"
+import theme, { fullWidth, largeDialog, withBg } from "../theme"
 import { collectionRoute, documentDetailsRoute, documentRoute } from "../routes"
 import { useScrollableTabState } from "../scrollable-tabs"
 import { css } from "linaria"
@@ -222,6 +223,7 @@ const docTabs = css`
 const docTabPanel = css`
   ${fullWidth}
   padding: 0 0.5rem;
+  outline: none;
   ${theme.mediaQueries.medium} {
     padding: 0;
   }
@@ -241,11 +243,29 @@ const docHeader = css`
 
 const notNumber = (l: any) => isNaN(Number(l))
 const levelNameMapping = {
-  [ExperienceLevel.Story]: "Story",
-  [ExperienceLevel.Basic]: "Basic",
-  [ExperienceLevel.Learner]: "Learner",
-  [ExperienceLevel.AdvancedDt]: "Advanced (d/t)",
-  [ExperienceLevel.AdvancedTth]: "Advanced (t/th)",
+  [ExperienceLevel.Story]: {
+    label: "Read",
+    details: "Only the original syllabary text and free English translation",
+  },
+  [ExperienceLevel.Basic]: {
+    label: "Learn (basic)",
+    details: "Original text with word by word translation",
+  },
+  [ExperienceLevel.Learner]: {
+    label: "Learn (detailed)",
+    details:
+      "Original text with a translation and breakdown of each word into its component parts",
+  },
+  [ExperienceLevel.AdvancedDt]: {
+    label: "Analyze (CRG)",
+    details:
+      "All layers of linguistic anaylsis, using the Cherokee Reference Grammar (CRG) representation",
+  },
+  [ExperienceLevel.AdvancedTth]: {
+    label: "Analyze (TAOC)",
+    details:
+      "All layers of linguistic analysis, using the Tone and Accent in Oklahoma Cherokee (TAOC) representation",
+  },
 }
 
 const ExperiencePicker = (p: { radio: RadioStateReturn }) => {
@@ -254,16 +274,26 @@ const ExperiencePicker = (p: { radio: RadioStateReturn }) => {
       {Object.keys(ExperienceLevel)
         .filter(notNumber)
         .map(function (level: string) {
-          const value = ExperienceLevel[level as keyof typeof ExperienceLevel]
-          return (
-            <label key={level} className={levelLabel}>
-              <Radio {...p.radio} value={value} />
-              {"  "}
-              {levelNameMapping[value]}
-            </label>
-          )
+          return <ExperienceOption key={level} level={level} radio={p.radio} />
         })}
     </RadioGroup>
+  )
+}
+
+const ExperienceOption = (p: { radio: RadioStateReturn; level: string }) => {
+  const tooltip = useTooltipState()
+  const value = ExperienceLevel[p.level as keyof typeof ExperienceLevel]
+  return (
+    <>
+      <TooltipReference {...tooltip} as="label" className={levelLabel}>
+        <Radio {...p.radio} value={value} />
+        {"  "}
+        {levelNameMapping[value].label}
+      </TooltipReference>
+      <Tooltip {...tooltip} className={withBg}>
+        {levelNameMapping[value].details}
+      </Tooltip>
+    </>
   )
 }
 

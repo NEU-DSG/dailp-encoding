@@ -9,7 +9,7 @@ import {
   BasicMorphemeSegment,
   morphemeDisplayTag,
 } from "./types"
-import theme from "./theme"
+import theme, { withBg } from "./theme"
 
 interface Props {
   segment: GatsbyTypes.Dailp_AnnotatedSeg
@@ -237,15 +237,6 @@ const MorphemeSegment = (p: {
     return null
   }
 }
-
-const withBg = css`
-  background-color: ${theme.colors.body};
-  padding: ${theme.rhythm / 4}em;
-  border: 1px solid ${theme.colors.text};
-  ${theme.mediaQueries.medium} {
-    max-width: 70vw;
-  }
-`
 
 const morphemeButton = css`
   font-family: inherit;
