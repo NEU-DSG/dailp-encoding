@@ -136,7 +136,7 @@ const AnnotatedDocumentPage = (p: {
           id="id-1-4"
           tabId={Tabs.IMAGES}
         >
-          <PageImages pageImages={doc.pageImages} />
+          <PageImages pageImages={doc.pageImages} document={doc as any} />
         </TabPanel>
       </main>
     </Layout>
@@ -291,6 +291,10 @@ export const query = graphql`
         }
         date {
           year
+        }
+        sources {
+          name
+          link
         }
         pageImages
         translatedSegments @skip(if: $isReference) {

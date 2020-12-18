@@ -74,7 +74,7 @@ impl AnnotatedDoc {
 
     /// The people involved in producing this document, including the original
     /// author, translators, and annotators
-    async fn people(&self) -> &Vec<Contributor> {
+    async fn contributors(&self) -> &Vec<Contributor> {
         &self.meta.contributors
     }
 

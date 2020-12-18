@@ -142,4 +142,17 @@ mod tests {
         let crg = CherokeeOrthography::Crg.convert(orig);
         assert_eq!(crg, "uùnadoódágwaàsgv́v́ʔi");
     }
+
+    #[test]
+    fn test_orthography_edge_cases() {
+        assert_eq!(
+            CherokeeOrthography::Learner.convert("Ø-ali-sul(v)-hvsk-vv̋ʔi=hnoo"),
+            "Ø-ali-sul(v)-hvsg-v'i=hno"
+        );
+
+        assert_eq!(
+            CherokeeOrthography::Learner.convert("t-uu-alihthat-:iinvvʔs-ééʔi"),
+            "d-u-alihtad-inv's-e'i"
+        );
+    }
 }

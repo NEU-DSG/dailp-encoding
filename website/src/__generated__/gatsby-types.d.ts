@@ -259,8 +259,8 @@ type Dailp_AnnotatedDoc = {
   readonly title: Scalars['String'];
   /** Date and time this document was written or created */
   readonly date: Maybe<Dailp_DateTime>;
-  /** The publication that included this document */
-  readonly publication: Maybe<Scalars['String']>;
+  /** The original source(s) of this document, the most important first. */
+  readonly sources: ReadonlyArray<Dailp_SourceAttribution>;
   /** Where the source document came from, maybe the name of a collection */
   readonly collection: Maybe<Dailp_DocumentCollection>;
   /** The genre of the document, used to group similar ones */
@@ -271,7 +271,7 @@ type Dailp_AnnotatedDoc = {
    * The people involved in producing this document, including the original
    * author, translators, and annotators
    */
-  readonly people: ReadonlyArray<Dailp_PersonAssociation>;
+  readonly people: ReadonlyArray<Dailp_Contributor>;
   /**
    * Is this document a reference source (unstructured list of words)?
    * Otherwise, it is considered a structured document with a translation.
@@ -345,13 +345,19 @@ enum Dailp_CherokeeOrthography {
    * TODO Option for /ts/ instead of /j/
    * TODO Option for /qu/ instead of /gw/ or /kw/
    */
-  DT = 'DT',
+  TAOC = 'TAOC',
   /**
    * The t/th system for transcribing the Cherokee syllabary.
    * This orthography is favored by linguists as it is segmentally more accurate.
    */
-  TTH = 'TTH'
+  CRG = 'CRG',
+  LEARNER = 'LEARNER'
 }
+
+type Dailp_Contributor = {
+  readonly name: Scalars['String'];
+  readonly role: Scalars['String'];
+};
 
 type Dailp_DateTime = {
   readonly year: Scalars['Int'];
@@ -412,7 +418,6 @@ type Dailp_MorphemeSegment = {
 
 type Dailp_MorphemeSegment_morphemeArgs = {
   system: Maybe<Dailp_CherokeeOrthography>;
-  simplify: Maybe<Scalars['Boolean']>;
 };
 
 type Dailp_MorphemeTag = {
@@ -431,11 +436,6 @@ type Dailp_MorphemeTag = {
 
 type Dailp_PageBreak = {
   readonly index: Scalars['Int'];
-};
-
-type Dailp_PersonAssociation = {
-  readonly name: Scalars['String'];
-  readonly role: Scalars['String'];
 };
 
 type Dailp_PositionInDocument = {
@@ -460,6 +460,11 @@ type Dailp_PositionInDocument = {
    * same document.
    */
   readonly index: Scalars['Int'];
+};
+
+type Dailp_SourceAttribution = {
+  readonly name: Scalars['String'];
+  readonly link: Scalars['String'];
 };
 
 type Dailp_TagForm = {
@@ -10372,7 +10377,7 @@ type AnnotatedDocumentQueryVariables = Exact<{
 
 type AnnotatedDocumentQuery = { readonly dailp: { readonly document: Maybe<(
       Pick<Dailp_AnnotatedDoc, 'id' | 'title' | 'slug' | 'pageImages'>
-      & { readonly collection: Maybe<Pick<Dailp_DocumentCollection, 'name' | 'slug'>>, readonly date: Maybe<Pick<Dailp_DateTime, 'year'>>, readonly translatedSegments: Maybe<ReadonlyArray<{ readonly source: (
+      & { readonly collection: Maybe<Pick<Dailp_DocumentCollection, 'name' | 'slug'>>, readonly date: Maybe<Pick<Dailp_DateTime, 'year'>>, readonly sources: ReadonlyArray<Pick<Dailp_SourceAttribution, 'name' | 'link'>>, readonly translatedSegments: Maybe<ReadonlyArray<{ readonly source: (
           { readonly __typename: 'Dailp_AnnotatedPhrase' }
           & BlockFieldsFragment
         ) | (
@@ -10382,16 +10387,6 @@ type AnnotatedDocumentQuery = { readonly dailp: { readonly document: Maybe<(
           { readonly __typename: 'Dailp_PageBreak' }
           & Pick<Dailp_PageBreak, 'index'>
         ), readonly translation: Pick<Dailp_TranslationBlock, 'text'> }>>, readonly forms: ReadonlyArray<FormFieldsFragment> }
-    )> } };
-
-type DocumentDetailsQueryVariables = Exact<{
-  id: Scalars['String'];
-}>;
-
-
-type DocumentDetailsQuery = { readonly dailp: { readonly document: Maybe<(
-      Pick<Dailp_AnnotatedDoc, 'id' | 'slug' | 'title'>
-      & { readonly collection: Maybe<Pick<Dailp_DocumentCollection, 'name' | 'slug'>>, readonly date: Maybe<Pick<Dailp_DateTime, 'year'>>, readonly people: ReadonlyArray<Pick<Dailp_PersonAssociation, 'name' | 'role'>> }
     )> } };
 
 type CollectionQueryVariables = Exact<{
