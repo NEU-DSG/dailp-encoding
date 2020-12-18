@@ -607,7 +607,7 @@ impl PhonemicString {
     }
 
     pub fn to_crg(self) -> String {
-        use {itertools::Itertools, unicode_normalization::UnicodeNormalization};
+        use {itertools::Itertools, unicode_normalization::UnicodeNormalization, VowelType::*};
         match self {
             PhonemicString::Form(all) => all
                 .into_iter()
@@ -619,17 +619,16 @@ impl PhonemicString {
             PhonemicString::Consonant(s) => tth_to_dt(&s, true),
             PhonemicString::Vowel(v, ty) => match ty {
                 // Short vowels in CRG match TAOC.
-                VowelType::ShortLow => v,
-                VowelType::ShortHigh => format!("{}\u{0301}", v),
-                VowelType::ShortLowfall => format!("{}\u{0300}", v),
-                VowelType::ShortSuperhigh => format!("{}\u{030B}", v),
+                ShortLow => v,
+                ShortHigh | ShortSuperhigh => format!("{}\u{0301}", v),
+                ShortLowfall => format!("{}\u{0300}", v),
                 // The long vowels are slightly different.
-                VowelType::LongLow => format!("{}{}", v, v),
-                VowelType::LongHigh => format!("{}\u{0301}{}", v, v),
-                VowelType::Rising => format!("{}{}\u{0301}", v, v),
-                VowelType::Falling => format!("{}\u{0301}{}\u{0300}", v, v),
-                VowelType::Lowfall => format!("{}{}\u{0300}", v, v),
-                VowelType::Superhigh => format!("{}\u{0301}{}\u{0301}", v, v),
+                LongLow => format!("{}{}", v, v),
+                LongHigh => format!("{}\u{0301}{}", v, v),
+                Rising => format!("{}{}\u{0301}", v, v),
+                Falling => format!("{}\u{0301}{}\u{0300}", v, v),
+                Lowfall => format!("{}{}\u{0300}", v, v),
+                Superhigh => format!("{}\u{0301}{}\u{0301}", v, v),
             },
         }
     }
