@@ -25,6 +25,12 @@ const DocumentDetails = (p: { data: GatsbyTypes.DocumentDetailsQuery }) => {
             ))}
           </ul>
         </section>
+        {doc.sources.length ? (
+          <section className={wideSection}>
+            Original document provided courtesy of{" "}
+            <a href={doc.sources[0].link}>{doc.sources[0].name}</a>.
+          </section>
+        ) : null}
       </main>
     </Layout>
   )

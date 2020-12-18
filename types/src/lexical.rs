@@ -475,8 +475,8 @@ pub enum PhonemicString {
 impl PhonemicString {
     pub fn parse_dailp(input: &str) -> Self {
         use {
-            itertools::Itertools, lazy_static::lazy_static, maplit::hashmap,
-            std::collections::HashMap, unicode_normalization::UnicodeNormalization,
+            lazy_static::lazy_static, maplit::hashmap, std::collections::HashMap,
+            unicode_normalization::UnicodeNormalization,
         };
         lazy_static! {
             static ref SHORT_VOWELS: HashMap<&'static str, (&'static str, VowelType)> = hashmap! {
@@ -653,9 +653,17 @@ fn tth_to_dt(input: &str, keep_glottal_stops: bool) -> String {
     };
     // Convert the t/th consonants to d/t
     lazy_static! {
-        static ref TTH_PATTERN: Regex = Regex::new(r"(kh|th|k|t|c|ʔ)").unwrap();
+        static ref TTH_PATTERN: Regex = Regex::new(r"(tlh|kwh|kh|th|ch|k|t|c|ʔ)").unwrap();
     }
     let result = TTH_PATTERN.replace_all(input, |cap: &Captures| match &cap[0] {
+        "tlh" => "tl",
+        "kwh" => "kw",
+        "kh" => "k",
+        "th" => "t",
+        "ch" => "ch", // Not sure I've ever seen this segment in data before.
+        "k" => "g",
+        "t" => "d",
+        "c" => "j",
         "ʔ" => {
             if keep_glottal_stops {
                 "ʔ"
@@ -663,11 +671,6 @@ fn tth_to_dt(input: &str, keep_glottal_stops: bool) -> String {
                 "'"
             }
         }
-        "kh" => "k",
-        "th" => "t",
-        "k" => "g",
-        "t" => "d",
-        "c" => "j",
         _ => unreachable!(),
     });
     result.into_owned()

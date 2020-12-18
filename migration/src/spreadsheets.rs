@@ -74,12 +74,12 @@ impl SheetResult {
             || Self::from_sheet_weak(sheet_id, sheet_name.clone()),
             |e| {
                 // Try up to five times before giving up.
-                if tries > 4 {
+                if tries > 5 {
                     RetryPolicy::<anyhow::Error>::ForwardError(e)
                 } else {
                     tries += 1;
                     println!("Retrying for the {}th time...", tries);
-                    RetryPolicy::<anyhow::Error>::WaitRetry(Duration::from_millis(2000))
+                    RetryPolicy::<anyhow::Error>::WaitRetry(Duration::from_millis(2500))
                 }
             },
         )
