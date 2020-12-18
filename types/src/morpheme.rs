@@ -116,7 +116,6 @@ impl CherokeeOrthography {
     pub fn convert(&self, input: &str) -> String {
         use CherokeeOrthography::*;
         let ast = PhonemicString::parse_dailp(input);
-        println!("{:?}", ast);
         match self {
             Taoc => ast.to_dailp(),
             Crg => ast.to_crg(),
@@ -130,7 +129,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_orthography_conversion() {
+    fn orthography_conversion() {
         // This value came straight from the DD1 spreadsheet.
         let orig = "ùùnatoótákwààskvv̋ʔi";
         // Test the learner orthography.
@@ -139,12 +138,14 @@ mod tests {
             "unadodagwasgv'i"
         );
         // Test the CRG orthography.
-        let crg = CherokeeOrthography::Crg.convert(orig);
-        assert_eq!(crg, "uùnadoódágwaàsgv́v́ʔi");
+        assert_eq!(
+            CherokeeOrthography::Crg.convert(orig),
+            "uùnadoódágwaàsgv́v́ʔi"
+        );
     }
 
     #[test]
-    fn test_orthography_edge_cases() {
+    fn orthography_edge_cases() {
         assert_eq!(
             CherokeeOrthography::Learner.convert("Ø-ali-sul(v)-hvsk-vv̋ʔi=hnoo"),
             "Ø-ali-sul(v)-hvsg-v'i=hno"
@@ -158,6 +159,14 @@ mod tests {
         assert_eq!(
             CherokeeOrthography::Learner.convert("Ø-ataweelakʔ-?-i"),
             "Ø-adawelag'-?-i"
+        );
+
+        assert_eq!(CherokeeOrthography::Learner.convert(""), "");
+        assert_eq!(CherokeeOrthography::Learner.convert("n"), "n");
+        assert_eq!(CherokeeOrthography::Learner.convert("uu"), "u");
+        assert_eq!(
+            CherokeeOrthography::Learner.convert("(a)listaʔyvv"),
+            "(a)lisda'yv"
         );
     }
 }

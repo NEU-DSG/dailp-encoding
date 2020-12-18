@@ -545,7 +545,7 @@ impl PhonemicString {
             };
             static ref PAT: regex::Regex = {
                 // NOTE This contains the list of acceptable consonants and symbols.
-                let consonants = "tdkghcjmnswrypl'ʔØ\\(\\)\\.\\-=:?";
+                let consonants = "1-9tdkghcjmnswrylq'ʔØ\\(\\)\\.\\-=:?";
                 regex::Regex::new(&format!(
                     "([{}]+)?([^{}]+)?",
                     consonants, consonants
@@ -554,7 +554,8 @@ impl PhonemicString {
         }
 
         let mut syllables = Vec::new();
-        let input = input.nfc().to_string();
+        let mut input = input.nfc().to_string();
+        input.make_ascii_lowercase();
         for caps in PAT.captures_iter(&input) {
             if let Some(consonant) = caps.get(1) {
                 syllables.push(PhonemicString::Consonant(consonant.as_str().to_owned()));
@@ -562,11 +563,14 @@ impl PhonemicString {
 
             if let Some(vowel_one) = caps.get(2) {
                 let vowel_one = vowel_one.as_str();
-                let e = LONG_VOWELS
+                if let Some(e) = LONG_VOWELS
                     .get(vowel_one)
                     .or_else(|| SHORT_VOWELS.get(vowel_one))
-                    .unwrap();
-                syllables.push(PhonemicString::Vowel(e.0.to_owned(), e.1));
+                {
+                    syllables.push(PhonemicString::Vowel(e.0.to_owned(), e.1));
+                } else {
+                    syllables.push(PhonemicString::Consonant(vowel_one.to_owned()));
+                }
             }
         }
 
