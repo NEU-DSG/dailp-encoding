@@ -79,7 +79,7 @@ impl SheetResult {
                 } else {
                     tries += 1;
                     println!("Retrying for the {}th time...", tries);
-                    RetryPolicy::<anyhow::Error>::WaitRetry(Duration::from_millis(1500))
+                    RetryPolicy::<anyhow::Error>::WaitRetry(Duration::from_millis(2000))
                 }
             },
         )

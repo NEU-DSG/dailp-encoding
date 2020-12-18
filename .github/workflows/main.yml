@@ -45,9 +45,6 @@ jobs:
           target: x86_64-unknown-linux-musl
           toolchain: 1.48.0
           override: true
-      - name: Change permissions on .cargo directory
-        run: |
-          sudo chown -R $(whoami):$(id -ng) ~/.cargo/
       - name: Checkout code
         uses: actions/checkout@v2
       - name: Cache dependencies
@@ -61,6 +58,9 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-cargo
+      - name: Change permissions on .cargo directory
+        run: |
+          sudo chown -R $(whoami):$(id -ng) ~/.cargo/
       - name: Run unit tests
         run: cargo test --release
       - name: Configure AWS credentials
