@@ -33,8 +33,9 @@ export const MorphemeDetails = (props: {
       <TagDetails segment={props.segment} tagSet={props.tagSet} />
       <SimilarMorphemeList
         documentId={props.documentId}
-        gloss={props.segment?.gloss!}
+        gloss={props.segment.gloss!}
         dialog={props.dialog}
+        isGlobal={!!props.segment.matchingTag}
       />
     </>
   )
@@ -80,11 +81,16 @@ const closeButton = css`
 const SimilarMorphemeList = (props: {
   gloss: string
   documentId: string
+  isGlobal: boolean
   dialog: DialogStateReturn
 }) => {
   const { data, loading, error } = useQuery(morphemeQuery, {
     skip: !props.gloss,
-    variables: { morphemeId: `${props.documentId}:${props.gloss}` },
+    variables: {
+      morphemeId: props.isGlobal
+        ? props.gloss
+        : `${props.documentId}:${props.gloss}`,
+    },
   })
 
   if (loading) {

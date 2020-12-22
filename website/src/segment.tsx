@@ -206,6 +206,10 @@ const MorphemeSegment = (p: {
 }) => {
   const matchingTag = morphemeDisplayTag(p.segment.matchingTag, p.tagSet)
   const gloss = matchingTag?.tag || p.segment.gloss
+  // Display functional tags in small-caps, per interlinear typesetting practice.
+  const buttonStyle = matchingTag
+    ? cx(morphemeButton, smallCaps)
+    : morphemeButton
 
   if (matchingTag && matchingTag.title) {
     const tooltip = useTooltipState()
@@ -213,7 +217,7 @@ const MorphemeSegment = (p: {
       <>
         <DialogDisclosure
           {...p.dialog}
-          className={morphemeButton}
+          className={buttonStyle}
           onClick={() => p.onOpenDetails(p.segment)}
         >
           <Tooltip className={withBg} {...tooltip}>
@@ -227,7 +231,7 @@ const MorphemeSegment = (p: {
     return (
       <DialogDisclosure
         {...p.dialog}
-        className={morphemeButton}
+        className={buttonStyle}
         onClick={() => p.onOpenDetails(p.segment)}
       >
         {gloss}
@@ -237,6 +241,10 @@ const MorphemeSegment = (p: {
     return null
   }
 }
+
+const smallCaps = css`
+  font-variant: small-caps;
+`
 
 const morphemeButton = css`
   font-family: inherit;
