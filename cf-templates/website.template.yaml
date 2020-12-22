@@ -34,7 +34,7 @@ Resources:
           artifacts:
             baseDirectory: website/public
             files:
-              - "*"
+              - "**/*"
           phases:
             build:
               commands:
@@ -52,7 +52,10 @@ Resources:
       BranchName: main
       AppId: !GetAtt AmplifyApp.AppId
       Description: Main Branch
+      # Use a build hook at the end of our GH Action instead.
       EnableAutoBuild: false
+      # But do build PR previews.
+      EnablePullRequestPreview: true
   # AmplifyDomain:
   #   Type: AWS::Amplify::Domain
   #   Properties:
