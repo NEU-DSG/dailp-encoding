@@ -79,6 +79,6 @@ jobs:
         run: |
           cd migration
           cargo run --release
-      - name: Publish website to Netlify
+      - name: Publish website
         run: |
-          curl -X POST -d {} https://api.netlify.com/build_hooks/${{ secrets.NETLIFY_HOOK_ID }}?trigger_title=Github+Actions
+          curl -X POST -d {} ${{ secrets.BUILD_WEBHOOK }}
