@@ -41,6 +41,7 @@ Resources:
                 - cd website
                 - yarn install
                 - yarn build
+                - cd ..
           cache:
             paths:
               - website/node_modules
