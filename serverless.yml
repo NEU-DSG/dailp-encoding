@@ -21,13 +21,17 @@ provider:
 custom:
   database:
     mongoVersion: 4.2
-    volumeType: gp2
+    volumeType: io1
     volumeSize: 32
+    iops: 1000
     instanceType: t3.small
     vpcId: ${env:AWS_VPC_ID}
     subnetId: ${env:AWS_SUBNET_PRIMARY}
     subnetId2: ${env:AWS_SUBNET_SECONDARY0}
     subnetId3: ${env:AWS_SUBNET_SECONDARY1}
+    zone1: us-east-1a
+    zone2: us-east-1b
+    zone3: us-east-1c
     replicaCount: 3
     replicaShardIndex: "0"
     keyName: dailp-database

@@ -111,7 +111,8 @@ Resources:
       Parameters:
         NodeReplicaSetIndex: "0"
         ReplicaNodeNameTag: Primary
-        Iops: 100
+        Iops: ${self:custom.database.iops}
+        AvailabilityZone: ${self:custom.database.zone1}
         VPC: ${self:custom.database.vpcId}
         MongoDBAdminUsername: ${env:MONGODB_USERNAME}
         MongoDBAdminPassword: ${env:MONGODB_PASSWORD}
@@ -151,7 +152,8 @@ Resources:
         QSS3KeyPrefix: ${self:custom.database.qsKeyPrefix}
         QSS3BucketRegion: ${self:provider.region}
         ClusterReplicaSetCount: ${self:custom.database.replicaCount}
-        Iops: 100
+        Iops: ${self:custom.database.iops}
+        AvailabilityZone: ${self:custom.database.zone2}
         KeyName: ${self:custom.database.keyName}
         MongoDBVersion: ${self:custom.database.mongoVersion}
         MongoDBAdminUsername: ${env:MONGODB_USERNAME}
@@ -190,7 +192,8 @@ Resources:
         QSS3KeyPrefix: ${self:custom.database.qsKeyPrefix}
         QSS3BucketRegion: ${self:provider.region}
         ClusterReplicaSetCount: ${self:custom.database.replicaCount}
-        Iops: 100
+        Iops: ${self:custom.database.iops}
+        AvailabilityZone: ${self:custom.database.zone3}
         KeyName: ${self:custom.database.keyName}
         MongoDBVersion: ${self:custom.database.mongoVersion}
         MongoDBAdminUsername: ${env:MONGODB_USERNAME}
