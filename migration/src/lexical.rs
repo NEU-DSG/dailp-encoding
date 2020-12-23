@@ -243,16 +243,19 @@ fn parse_new_df1975(
 }
 
 pub async fn migrate_old_lexical() -> Result<()> {
+    // AG1836
     parse_early_vocab(
-        "1Lj8YnEmi4hZk6m3fxNk3mdd366yjgLLa5sWeWSvg-ZY",
+        "1EPsHXNIqGgsPtTP-V86ItFfJ5vwxKIV2qx9sycrARsg",
         0,
-        false,
         true,
         false,
-        false,
+        true,
+        true,
+        3,
     )
     .await?;
     // TODO Include all three dialectal variants somehow!
+    // JM1887
     parse_early_vocab(
         "1RqtDUzYCRMx7AOSp7aICCis40m4kZQpUsd2thav_m50",
         1,
@@ -260,35 +263,41 @@ pub async fn migrate_old_lexical() -> Result<()> {
         false,
         false,
         false,
+        0,
     )
     .await?;
     parse_early_vocab(
-        "1R7dCEDyZEk8bhXlBHro8-JoeKjUZlRyBfAVdsuiY2Yc", // DC1800
-        1,
+        "1zq0qQ6jv8ym6VZNIAoiavGQeGhIWM0M1ZfOM9ngA49w", // DC1800
+        0,
         true,
         false,
-        false,
-        false,
+        true,
+        true,
+        3,
     )
     .await?;
     parse_early_vocab(
-        "14sN6e07u8rttS0nfX58-ojIgP7zwcOm6vjEXRk8qB-0", // TS1822
-        1,
-        false,
-        false,
+        "1sZEhIBoEGp1nTsvpDcFqLm6HAjz0YBTlWW-uzkAzQkM", // TS1822
+        0,
+        true,
         false,
         true,
+        true,
+        3,
     )
     .await?;
+    // jdb1771
     parse_early_vocab(
-        "1rOXTBydHnt5zmMffLf8QEId4W0J8YcQXMen8HBg5rKo",
-        1,
-        false,
+        "1pYYS_jv01rccXhue2vX0xnLqMnCg-PoFDE4WSOA6hVQ",
+        0,
         true,
         false,
-        false,
+        true,
+        true,
+        3,
     )
     .await?;
+    // JA1775
     parse_early_vocab(
         "1Gfa_Ef1KFKp9ig1AlF65hxaXe43ffV_U_xKQGkD0mnc",
         1,
@@ -296,24 +305,51 @@ pub async fn migrate_old_lexical() -> Result<()> {
         false,
         false,
         false,
+        0,
     )
     .await?;
+    // BH1784
     parse_early_vocab(
-        "1lny1LHFDcwEjxLWqwotXKG_cYXfPrslodq1Rbn7ygAc",
+        "1fhV3DTHzh9ffqUFfHPSALjotgkXEvKKMNfE5G8ZYVC8",
         0,
-        false,
         true,
         false,
-        false,
+        true,
+        true,
+        3,
     )
     .await?;
+    // BB1819
     parse_early_vocab(
         "1aLPu_d_1OtgPL2_2olnjeDSBOgsreE6X3vBAFtpB5N0",
         0,
         true,
         false,
         true,
+        false,
+        1,
+    )
+    .await?;
+    // WP1796
+    parse_early_vocab(
+        "1H2Z26jHh6bb1p7xVfv3P2vvD73eifiLR7Ss5k1HpUfM",
+        0,
         true,
+        false,
+        true,
+        true,
+        3,
+    )
+    .await?;
+    // JH1823
+    parse_early_vocab(
+        "1Uj7bk1wvTbXopL52mm-b9s3RLw7iSA_RFAt_ccFg_bQ",
+        0,
+        true,
+        false,
+        true,
+        true,
+        3,
     )
     .await?;
 
@@ -326,7 +362,8 @@ async fn parse_early_vocab(
     has_norm: bool,
     has_phonetic: bool,
     has_notes: bool,
-    has_link: bool,
+    has_segmentation: bool,
+    num_links: usize,
 ) -> Result<()> {
     use chrono::TimeZone as _;
     println!("parsing sheet {}...", sheet_id);
@@ -359,14 +396,18 @@ async fn parse_early_vocab(
         .enumerate()
         .filter_map(|(index, row)| {
             let mut row = row.into_iter();
-            let id = row.next()?;
             let page_number = row.next()?;
+            let id = row.next()?;
             for _ in 0..to_skip {
                 row.next()?;
             }
             let gloss = row.next()?;
             let source = row.next()?;
-            let normalized_source = if has_norm { row.next() } else { None };
+            let normalized_source = if has_norm {
+                row.next().filter(|s| !s.is_empty())
+            } else {
+                None
+            };
             let simple_phonetics = if has_phonetic {
                 row.next().filter(|s| !s.is_empty())
             } else {
@@ -377,19 +418,32 @@ async fn parse_early_vocab(
             } else {
                 None
             };
-            let link = if has_link {
-                row.next()
-                    .filter(|s| !s.is_empty())
-                    .and_then(|to| LexicalConnection::parse(&id, &to))
+            let segments = if has_segmentation {
+                if let (Some(segs), Some(glosses)) = (
+                    row.next().filter(|s| !s.is_empty()),
+                    row.next().filter(|s| !s.is_empty()),
+                ) {
+                    MorphemeSegment::parse_many(&segs, &glosses)
+                } else {
+                    None
+                }
             } else {
                 None
             };
+            let mut links = Vec::new();
+            for _ in 0..num_links {
+                if let Some(s) = row.next() {
+                    if !s.is_empty() {
+                        links.push(LexicalConnection::parse(&id, &s)?);
+                    }
+                }
+            }
 
             Some(ConnectedForm {
                 form: AnnotatedForm {
                     normalized_source,
                     simple_phonetics,
-                    segments: None,
+                    segments,
                     source,
                     phonemic: None,
                     commentary,
@@ -404,14 +458,14 @@ async fn parse_early_vocab(
                     date_recorded: meta.date.clone(),
                     id,
                 },
-                link,
+                links,
             })
         })
         .collect();
 
     // Push all forms and links to the database.
     crate::update_form(entries.iter().map(|x| &x.form)).await?;
-    crate::update_connection(entries.iter().filter_map(|x| x.link.as_ref())).await?;
+    crate::update_connection(entries.iter().flat_map(|x| &x.links)).await?;
 
     // Update document metadata record
     let doc = AnnotatedDoc {
@@ -426,5 +480,5 @@ async fn parse_early_vocab(
 
 struct ConnectedForm {
     form: AnnotatedForm,
-    link: Option<LexicalConnection>,
+    links: Vec<LexicalConnection>,
 }
