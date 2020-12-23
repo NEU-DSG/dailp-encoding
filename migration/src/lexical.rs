@@ -50,6 +50,13 @@ pub async fn migrate_dictionaries() -> Result<()> {
         3,
     );
 
+    parse_numerals(
+        "1MB_FCG3QhmX-pw9t9PyMtFlV8SCvgXzWz8B9BdvEtec",
+        "DF1975",
+        1975,
+    )
+    .await?;
+
     // DF1975 Grammatical Appendix
     parse_appendix("1VjpKXMqb7CgFKE5lk9E6gqL-k6JKZ3FVUvhnqiMZYQg", 2).await?;
 
@@ -74,6 +81,58 @@ pub async fn migrate_dictionaries() -> Result<()> {
 
     // Push all the surface forms to the sea of words.
     crate::update_form(forms).await?;
+
+    Ok(())
+}
+
+async fn parse_numerals(sheet_id: &str, doc_id: &str, year: i32) -> Result<()> {
+    use chrono::TimeZone as _;
+
+    let numerals = SheetResult::from_sheet(sheet_id, None).await?;
+    let date = DateTime::new(chrono::Utc.ymd(year, 1, 1).and_hms(0, 0, 0));
+
+    let forms = numerals
+        .values
+        .into_iter()
+        .skip(1)
+        .enumerate()
+        .filter_map(|(index, cols)| {
+            let mut values = cols.into_iter();
+            let _key = values.next()?;
+            let root = values.next()?;
+            let root_dailp = convert_udb(&root).to_dailp();
+            let gloss = values.next()?;
+            let page_num = values.next()?;
+            let surface_form = values.next()?;
+            let surface_form_dailp = convert_udb(&surface_form).to_dailp();
+            let translation = values.next()?;
+            let _numeric = values.next()?;
+            let simple_phonetics = values.next()?;
+            let syllabary = values.next()?;
+            let position = PositionInDocument {
+                document_id: doc_id.to_owned(),
+                index: index as i32,
+                page_number: page_num,
+            };
+            let segments = vec![MorphemeSegment::new(root_dailp, gloss.clone(), None)];
+            Some(AnnotatedForm {
+                id: position.make_id(&gloss),
+                position,
+                normalized_source: None,
+                simple_phonetics: Some(simple_phonetics),
+                phonemic: Some(root),
+                segments: Some(segments),
+                english_gloss: vec![translation],
+                source: syllabary,
+                commentary: None,
+                date_recorded: Some(date.clone()),
+                line_break: None,
+                page_break: None,
+            })
+        })
+        .collect::<Vec<_>>();
+
+    crate::update_form(&forms).await?;
 
     Ok(())
 }
@@ -243,17 +302,32 @@ fn parse_new_df1975(
 }
 
 pub async fn migrate_old_lexical() -> Result<()> {
-    // AG1836
-    parse_early_vocab(
+    // Most of our early vocabularies have a consistent format, so we can parse
+    // them the exact same way.
+    migrate_new_vocabs(&[
+        // AG1836
         "1EPsHXNIqGgsPtTP-V86ItFfJ5vwxKIV2qx9sycrARsg",
-        0,
-        true,
-        false,
-        true,
-        true,
-        3,
-    )
+        // DC1800
+        "1zq0qQ6jv8ym6VZNIAoiavGQeGhIWM0M1ZfOM9ngA49w",
+        // TS1822
+        "1sZEhIBoEGp1nTsvpDcFqLm6HAjz0YBTlWW-uzkAzQkM",
+        // jdb1771
+        "1pYYS_jv01rccXhue2vX0xnLqMnCg-PoFDE4WSOA6hVQ",
+        // BH1784
+        "1fhV3DTHzh9ffqUFfHPSALjotgkXEvKKMNfE5G8ZYVC8",
+        // WP1796
+        "1H2Z26jHh6bb1p7xVfv3P2vvD73eifiLR7Ss5k1HpUfM",
+        // JH1823
+        "1Uj7bk1wvTbXopL52mm-b9s3RLw7iSA_RFAt_ccFg_bQ",
+        // DB1884
+        "1hLPiRBdKUX7jaLVE6MFLgfrTMBJGNHFb8P-2MM81YIo",
+        // BB1797
+        "1SRTn65vbHrjmc54hVFSmBba6Cnh8KPn5LQ8qmk_kJMc",
+    ])
     .await?;
+
+    // A few others have slight differences.
+
     // TODO Include all three dialectal variants somehow!
     // JM1887
     parse_early_vocab(
@@ -264,37 +338,6 @@ pub async fn migrate_old_lexical() -> Result<()> {
         false,
         false,
         0,
-    )
-    .await?;
-    parse_early_vocab(
-        "1zq0qQ6jv8ym6VZNIAoiavGQeGhIWM0M1ZfOM9ngA49w", // DC1800
-        0,
-        true,
-        false,
-        true,
-        true,
-        3,
-    )
-    .await?;
-    parse_early_vocab(
-        "1sZEhIBoEGp1nTsvpDcFqLm6HAjz0YBTlWW-uzkAzQkM", // TS1822
-        0,
-        true,
-        false,
-        true,
-        true,
-        3,
-    )
-    .await?;
-    // jdb1771
-    parse_early_vocab(
-        "1pYYS_jv01rccXhue2vX0xnLqMnCg-PoFDE4WSOA6hVQ",
-        0,
-        true,
-        false,
-        true,
-        true,
-        3,
     )
     .await?;
     // JA1775
@@ -308,17 +351,6 @@ pub async fn migrate_old_lexical() -> Result<()> {
         0,
     )
     .await?;
-    // BH1784
-    parse_early_vocab(
-        "1fhV3DTHzh9ffqUFfHPSALjotgkXEvKKMNfE5G8ZYVC8",
-        0,
-        true,
-        false,
-        true,
-        true,
-        3,
-    )
-    .await?;
     // BB1819
     parse_early_vocab(
         "1aLPu_d_1OtgPL2_2olnjeDSBOgsreE6X3vBAFtpB5N0",
@@ -330,29 +362,14 @@ pub async fn migrate_old_lexical() -> Result<()> {
         1,
     )
     .await?;
-    // WP1796
-    parse_early_vocab(
-        "1H2Z26jHh6bb1p7xVfv3P2vvD73eifiLR7Ss5k1HpUfM",
-        0,
-        true,
-        false,
-        true,
-        true,
-        3,
-    )
-    .await?;
-    // JH1823
-    parse_early_vocab(
-        "1Uj7bk1wvTbXopL52mm-b9s3RLw7iSA_RFAt_ccFg_bQ",
-        0,
-        true,
-        false,
-        true,
-        true,
-        3,
-    )
-    .await?;
 
+    Ok(())
+}
+
+async fn migrate_new_vocabs(sheet_ids: &[&str]) -> Result<()> {
+    for s in sheet_ids {
+        parse_early_vocab(s, 0, true, false, true, true, 3).await?;
+    }
     Ok(())
 }
 
