@@ -18,7 +18,18 @@ lazy_static::lazy_static! {
 #[lambda::lambda(http)]
 #[tokio::main]
 async fn main(req: Request, _: lambda::Context) -> Result<impl IntoResponse, Error> {
-    if let lambda_http::Body::Text(req) = req.into_body() {
+    if req.method() == lambda_http::http::Method::GET {
+        // Serve GraphQL Playground over GET to allow introspection in the browser!
+        let playground = async_graphql::http::playground_source(
+            async_graphql::http::GraphQLPlaygroundConfig::new("/graphql"),
+        );
+        Ok(Response::builder()
+            .header(header::CONTENT_TYPE, "text/html; charset=utf-8")
+            .header(header::ACCESS_CONTROL_ALLOW_ORIGIN, "*")
+            .body(playground)?)
+    } else if let lambda_http::Body::Text(req) = req.into_body() {
+        // Other requests (usually POST) should be processed as an actual
+        // GraphQL query.
         let schema = Schema::build(Query, Mutation, EmptySubscription)
             .data::<&dailp::Database>(&*DATABASE)
             .finish();
@@ -31,8 +42,8 @@ async fn main(req: Request, _: lambda::Context) -> Result<impl IntoResponse, Err
             .body(result)?;
         Ok(resp)
     } else {
+        // TODO Make a custom error type for DAILP to cover this and ingestion errors.
         Err(Box::new(std::fmt::Error))
-        // todo!("Failed to parse lambda request.")
     }
 }
 
