@@ -244,27 +244,27 @@ const docHeader = css`
 const notNumber = (l: any) => isNaN(Number(l))
 const levelNameMapping = {
   [ExperienceLevel.Story]: {
-    label: "Read",
+    label: "Story",
     details: "Only the original syllabary text and free English translation",
   },
   [ExperienceLevel.Basic]: {
-    label: "Learn (basic)",
+    label: "Study (basic)",
     details: "Original text with word by word translation",
   },
   [ExperienceLevel.Learner]: {
-    label: "Learn (detailed)",
+    label: "Study (detailed)",
     details:
       "Original text with a translation and breakdown of each word into its component parts",
   },
   [ExperienceLevel.AdvancedDt]: {
-    label: "Analyze (CRG)",
+    label: "Analysis (CRG)",
     details:
-      "All layers of linguistic anaylsis, using the Cherokee Reference Grammar (CRG) representation",
+      "Linguistic anaylsis using the Cherokee Reference Grammar (CRG) representation",
   },
   [ExperienceLevel.AdvancedTth]: {
-    label: "Analyze (TAOC)",
+    label: "Analysis (TAOC)",
     details:
-      "All layers of linguistic analysis, using the Tone and Accent in Oklahoma Cherokee (TAOC) representation",
+      "Linguistic analysis using the Tone and Accent in Oklahoma Cherokee (TAOC) representation",
   },
 }
 
