@@ -98,11 +98,13 @@ async fn parse_numerals(sheet_id: &str, doc_id: &str, year: i32) -> Result<()> {
         .enumerate()
         .filter_map(|(index, cols)| {
             let mut values = cols.into_iter();
-            let _key = values.next()?;
-            let root = values.next()?;
+            let key = values.next()?.parse().unwrap_or(index as i32);
+            // UDB t/th
+            let root = values.next().filter(|s| !s.is_empty())?;
             let root_dailp = convert_udb(&root).to_dailp();
             let gloss = values.next()?;
             let page_num = values.next()?;
+            // UDB d/t
             let surface_form = values.next()?;
             let surface_form_dailp = convert_udb(&surface_form).to_dailp();
             let translation = values.next()?;
@@ -111,7 +113,7 @@ async fn parse_numerals(sheet_id: &str, doc_id: &str, year: i32) -> Result<()> {
             let syllabary = values.next()?;
             let position = PositionInDocument {
                 document_id: doc_id.to_owned(),
-                index: index as i32,
+                index: key,
                 page_number: page_num,
             };
             let segments = vec![MorphemeSegment::new(root_dailp, gloss.clone(), None)];
