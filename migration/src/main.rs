@@ -61,12 +61,6 @@ async fn fetch_sheet(
     use crate::spreadsheets::AnnotatedLine;
     println!("parsing sheet {}...", sheet_id);
 
-    // Split the contents of each main sheet into semantic lines with
-    // several layers.
-    let lines = spreadsheets::SheetResult::from_sheet(sheet_id, None)
-        .await?
-        .split_into_lines();
-
     // Parse the metadata on the second page of each sheet.
     // This includes publication information and a link to the translation.
     let meta = spreadsheets::SheetResult::from_sheet(sheet_id, Some("Metadata")).await;
@@ -81,7 +75,28 @@ async fn fetch_sheet(
             Vec::new()
         };
 
-        let annotated = AnnotatedLine::many_from_semantic(&lines, &meta);
+        let page_count = meta.page_images.len();
+        let mut all_lines = Vec::new();
+        // Each document page lives in its own tab.
+        for index in 0..page_count {
+            let tab_name = if index > 0 {
+                Some(format!("Page {}", index + 1))
+            } else {
+                None
+            };
+
+            // Split the contents of each main sheet into semantic lines with
+            // several layers.
+            let mut lines =
+                spreadsheets::SheetResult::from_sheet(sheet_id, tab_name.as_ref().map(|x| &**x))
+                    .await?
+                    .split_into_lines();
+            // TODO Consider page breaks embedded in the last word of a page.
+            lines.last_mut().unwrap().ends_page = true;
+
+            all_lines.append(&mut lines);
+        }
+        let annotated = AnnotatedLine::many_from_semantic(&all_lines, &meta);
         let segments = AnnotatedLine::to_segments(annotated, &meta.id, &meta.date);
         let doc = dailp::AnnotatedDoc::new(meta, segments);
 

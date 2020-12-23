@@ -90,27 +90,16 @@ For example:
 
 ### Page Breaks
 
-Page breaks may occur at the end of a line or in the middle of a word.
-Taking inspiration from the last section about line breaks, we use two backslashes `\\` to represent a page break.
-This can be marked mid-word like so:
+If a document consists of multiple pages, the annotation of each page exists on a separate tab of the same spreadsheet.
+To all be detected correctly, these tabs _must_ be named exactly like this: `Page 1`, `Page 2`, `Page 3`, etc.
+Page breaks may also occur in the middle of a word.
+Taking inspiration from the last section about line breaks, we can use a backslash `\` to represent such a page break, like so:
 
-|        |                  |                  |
-| ------ | ---------------- | ---------------- |
-| Line 2 | Syllabary        | ᎤᏓᎦᏎ\\\\ᏍᏗᏳ      |
-|        | Simple Phonetics | ⁠u⁠da⁠k⁠se⁠sdiyu |
-|        | ...              |                  |
-
-If a page break occurs between lines, then filling the first cell of the empty row between the lines with two backslashes `\\` will mark that page break.
-
-|        |                  |                  |
-| ------ | ---------------- | ---------------- |
-| Line 2 | Syllabary        | ᎤᏓᎦᏎᏍᏗᏳ          |
-|        | Simple Phonetics | ⁠u⁠da⁠k⁠se⁠sdiyu |
-|        | ...              |                  |
-| \\\\   |                  |                  |
-| Line 3 | Syllabary        | ...              |
-|        | Simple Phonetics | ...              |
-|        | ...              |                  |
+|        |                  |             |
+| ------ | ---------------- | ----------- |
+| Line 2 | Syllabary        | ᎤᏓᎦᏎ\\ᏍᏗᏳ   |
+|        | Simple Phonetics | udaksesdiyu |
+|        | ...              |             |
 
 ### Metadata
 
