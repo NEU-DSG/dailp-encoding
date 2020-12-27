@@ -38,22 +38,12 @@ jobs:
       - name: Setup node.js
         uses: actions/setup-node@v1
         with: { node-version: 10 }
-      - name: Setup rust toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          target: x86_64-unknown-linux-musl
-          toolchain: 1.48.0
-          override: true
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
-      - name: Change permissions on .cargo directory
-        run: |
-          sudo chown -R $(whoami):$(id -ng) ~/.cargo/
       - name: Checkout code
         uses: actions/checkout@v2
       - name: Cache dependencies
@@ -66,6 +56,13 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-cargo
+      - name: Setup rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          target: x86_64-unknown-linux-musl
+          toolchain: 1.48.0
+          override: true
       - name: Cache docker images
         uses: satackey/action-docker-layer-caching@v0.0.11
         # Ignore the failure of a step and avoid terminating the job.

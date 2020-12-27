@@ -23,9 +23,10 @@ const theme = {
     borders: "darkgray",
   },
   mediaQueries: {
-    small: "@media print, (min-width: 40em)",
-    medium: "@media print, (min-width: 52em)",
-    large: "@media (min-width: 64em)",
+    small: "@media screen and (min-width: 40em)",
+    medium: "@media screen and (min-width: 52em)",
+    large: "@media screen and (min-width: 64em)",
+    print: "@media print",
   },
   edgeSpacing: "1rem",
   rhythm: 1.53,
@@ -58,6 +59,15 @@ export const withBg = css`
   border: 1px solid ${theme.colors.text};
   ${theme.mediaQueries.medium} {
     max-width: 70vw;
+  }
+  ${theme.mediaQueries.print} {
+    display: none;
+  }
+`
+
+export const hideOnPrint = css`
+  ${theme.mediaQueries.print} {
+    display: none;
   }
 `
 

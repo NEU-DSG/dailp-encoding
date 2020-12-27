@@ -1,8 +1,8 @@
 import React from "react"
-import { css } from "linaria"
+import { css, cx } from "linaria"
 import { Link } from "gatsby"
 import Footer from "./footer"
-import theme, { fullWidth } from "./theme"
+import theme, { fullWidth, hideOnPrint } from "./theme"
 import { NavMenu, MobileNav } from "./menu"
 import { Helmet } from "react-helmet"
 import Sticky from "react-stickynode"
@@ -17,7 +17,7 @@ import "./fonts.css"
 const Layout = (p: { title?: string; children: any }) => (
   <>
     <Helmet title={p.title ? `${p.title} - DAILP` : "DAILP"} />
-    <Sticky enabled={isMobile} innerZ={2}>
+    <Sticky enabled={isMobile} innerZ={2} className={hideOnPrint}>
       <header aria-label="Site Header" id="header" className={header}>
         <nav className={headerContents}>
           <MobileNav />
@@ -95,16 +95,41 @@ css`
 
     * {
       box-sizing: border-box;
+      float: none;
     }
 
     html {
       font-size: ${theme.fontSizes.root} !important;
+      ${theme.mediaQueries.print} {
+        font-size: 12pt !important;
+      }
     }
 
     body {
       margin: 0;
       font-family: ${theme.fonts.body};
       background-color: ${theme.colors.footer} !important;
+      ${theme.mediaQueries.print} {
+        background-color: none !important;
+      }
+    }
+
+    ${theme.mediaQueries.print} {
+      abbr[title] {
+        border-bottom: none;
+        text-decoration: none;
+      }
+    }
+
+    p,
+    h1,
+    h2 {
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+
+    @page {
+      margin: 0.75in;
     }
 
     a {
@@ -117,6 +142,11 @@ css`
       &:focus {
         color: ${theme.colors.altFooter};
       }
+
+      ${theme.mediaQueries.print} {
+        color: ${theme.colors.text};
+        text-decoration: none;
+      }
     }
 
     *:focus {
@@ -124,6 +154,10 @@ css`
       outline-style: solid;
       outline-width: thin;
       outline-offset: 0;
+
+      ${theme.mediaQueries.print} {
+        outline: none;
+      }
     }
 
     main {
@@ -131,8 +165,11 @@ css`
       display: flex;
       flex-flow: column wrap;
       align-items: center;
-      font-size: 1rem;
       padding: ${theme.rhythm}rem 0;
+      ${theme.mediaQueries.print} {
+        display: block;
+        padding-bottom: 0;
+      }
     }
 
     h1,
@@ -144,6 +181,9 @@ css`
     header {
       color: ${theme.colors.headings};
       font-family: ${theme.fonts.header};
+      ${theme.mediaQueries.print} {
+        color: ${theme.colors.text};
+      }
     }
 
     button,

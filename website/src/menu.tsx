@@ -45,7 +45,7 @@ export const NavMenu = () => {
         if (item.childItems.nodes.length) {
           const menu = useMenuState()
           return (
-            <>
+            <React.Fragment key={item.label}>
               <MenuButton {...menu} className={navLink}>
                 {item.label}
                 <MdArrowDropDown aria-label="Menu" />
@@ -66,7 +66,7 @@ export const NavMenu = () => {
                   </MenuItem>
                 ))}
               </Menu>
-            </>
+            </React.Fragment>
           )
         } else {
           return (

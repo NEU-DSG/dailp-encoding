@@ -1,7 +1,7 @@
 import React from "react"
 import { css, cx } from "linaria"
 import { useStaticQuery, graphql } from "gatsby"
-import theme, { fullWidth } from "./theme"
+import theme, { fullWidth, hideOnPrint } from "./theme"
 import { FaGithub } from "react-icons/fa"
 
 /** University affiliation, related navigation links, and contact info.  */
@@ -15,7 +15,7 @@ const Footer = () => {
   `)
 
   return (
-    <footer>
+    <footer className={hideOnPrint}>
       <div className={cx(light, container)}>
         <div className={content} style={{ display: "block" }}>
           This project was created using{" "}
