@@ -36,7 +36,7 @@ impl MorphemeSegment {
     pub fn get_next_separator(&self) -> Option<&'static str> {
         use SegmentType::*;
         self.followed_by.as_ref().map(|ty| match ty {
-            Morpheme => "-",
+            Morpheme => "–",
             Clitic => "=",
         })
     }
