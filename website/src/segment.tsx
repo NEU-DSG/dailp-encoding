@@ -103,7 +103,11 @@ export const AnnotatedForm = (
         <div className={syllabaryLayer} lang="chr">
           {p.segment.source}
         </div>
-        <div>{p.segment.simplePhonetics ?? <br />}</div>
+        {p.segment.simplePhonetics ? (
+          <div>{p.segment.simplePhonetics}</div>
+        ) : (
+          <br />
+        )}
         {showSegments ? (
           <MorphemicSegmentation
             segments={p.segment.segments}
@@ -149,7 +153,7 @@ const MorphemicSegmentation = (p: {
 
   return (
     <>
-      <div className={glossLine}>
+      <div>
         {p
           .segments!.map(function (segment) {
             // Adapt the segment shape to the chosen experience level.
@@ -169,7 +173,7 @@ const MorphemicSegmentation = (p: {
           .join("")}
       </div>
 
-      <div className={glossLine}>
+      <div>
         {intersperse(
           p.segments!.map(function (segment, i) {
             return (
@@ -212,7 +216,6 @@ const MorphemeSegment = (p: {
     : morphemeButton
 
   if (matchingTag && matchingTag.title) {
-    const tooltip = useTooltipState()
     return (
       <>
         <DialogDisclosure
@@ -220,10 +223,7 @@ const MorphemeSegment = (p: {
           className={buttonStyle}
           onClick={() => p.onOpenDetails(p.segment)}
         >
-          <Tooltip className={withBg} {...tooltip}>
-            {matchingTag.title}
-          </Tooltip>
-          <TooltipReference {...tooltip}>{gloss}</TooltipReference>
+          <abbr title={matchingTag.title}>{gloss}</abbr>
         </DialogDisclosure>
       </>
     )
@@ -254,14 +254,10 @@ const morphemeButton = css`
   padding: 0;
   cursor: pointer;
   border-bottom: 1px solid transparent;
+  display: inline-block;
   &:hover {
     border-bottom: 1px solid darkblue;
   }
-`
-
-const glossLine = css`
-  display: flex;
-  flex-flow: row wrap;
 `
 
 const wordGroup = css`
@@ -272,10 +268,18 @@ const wordGroup = css`
   padding-right: 0;
   border: 2px solid ${theme.colors.borders};
   border-radius: 2px;
+  line-height: normal;
+  page-break-inside: avoid;
+  break-inside: avoid;
   ${theme.mediaQueries.medium} {
     padding: 0;
     border: none;
     margin: ${theme.rhythm / 2}rem 3rem ${theme.rhythm}rem 0;
+  }
+  ${theme.mediaQueries.print} {
+    padding: 0;
+    border: none;
+    margin: 0rem 3.5rem ${theme.rhythm * 1.5}rem 0;
   }
 `
 
@@ -291,24 +295,39 @@ const plainSyllabary = css`
 `
 
 const documentBlock = css`
+  position: relative;
+  display: block;
+  break-after: avoid;
   margin-top: ${theme.rhythm}rem;
   padding-bottom: ${theme.rhythm / 2}rem;
   margin-bottom: ${theme.rhythm / 2}rem;
+  ${theme.mediaQueries.print} {
+    padding-bottom: ${theme.rhythm / 4}rem;
+    margin-bottom: ${theme.rhythm * 2}rem;
+  }
 `
 
 const bordered = css`
-  ${theme.mediaQueries.medium} {
+  ${theme.mediaQueries.medium}, print {
     border-bottom: 2px solid ${theme.colors.text};
+    &:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
   }
 `
 
 const annotationSection = css`
   width: 100%;
-  display: flex;
-  flex-flow: column nowrap;
+  position: relative;
+  display: block;
   margin-bottom: ${theme.rhythm / 2}rem;
-  ${theme.mediaQueries.medium} {
-    flex-flow: row wrap;
+  ${theme.mediaQueries.medium}, print {
+    margin-bottom: ${theme.rhythm / 2}rem;
+    & > * {
+      display: inline-block;
+    }
   }
 `
 

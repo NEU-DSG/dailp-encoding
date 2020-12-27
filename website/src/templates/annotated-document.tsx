@@ -147,8 +147,6 @@ export default AnnotatedDocumentPage
 
 const annotationContents = css`
   width: 100%;
-  display: flex;
-  flex-flow: column nowrap;
 `
 
 export const DocumentTitleHeader = (p: {
@@ -177,17 +175,27 @@ export const DocumentTitleHeader = (p: {
       )}{" "}
       {p.doc.date && `(${p.doc.date.year})`}{" "}
       {p.showDetails ? (
-        <>
+        <span className={notInPrint}>
           [<Link to={documentDetailsRoute(p.doc.slug!)}>Details</Link>]
-        </>
+        </span>
       ) : null}
     </h1>
   </header>
 )
 
+const notInPrint = css`
+  ${theme.mediaQueries.print} {
+    display: none;
+  }
+`
+
 const wideAndTop = css`
   width: 100%;
   z-index: 1;
+  ${theme.mediaQueries.print} {
+    display: none;
+    height: 0;
+  }
 `
 
 const wideSticky = css`
@@ -302,6 +310,9 @@ const levelGroup = css`
   display: flex;
   flex-flow: row wrap;
   justify-content: center;
+  ${theme.mediaQueries.print} {
+    display: none;
+  }
 `
 
 const levelLabel = css`
@@ -416,10 +427,7 @@ const morphemeDialogBackdrop = css`
 `
 
 const annotatedDocument = css`
-  display: flex;
-  flex-flow: column nowrap;
   align-items: center;
-  font-size: 1rem;
   ${theme.mediaQueries.medium} {
     padding-left: ${theme.edgeSpacing};
     padding-right: ${theme.edgeSpacing};
