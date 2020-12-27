@@ -342,22 +342,60 @@ Resources:
       UserData:
         Fn::Base64:
           Fn::Sub:
-            - "#!/bin/bash\nsudo yum install -y https://s3.us-east-1.amazonaws.com/amazon-ssm-us-east-1/latest/linux_amd64/amazon-ssm-agent.rpm\n/opt/aws/bin/cfn-init -v --stack ${AWS::StackName} --resource\
-              \ ReplicaNodeInstance  --region ${AWS::Region}\naws ec2 detach-volume --volume-id ${VolumeId}\naws ec2 attach-volume --volume-id ${VolumeId} --instance-id ${InstanceId} --device /dev/xvdf\nmkdir -p /home/ec2-user/mongodb\
-              \ \ncd /home/ec2-user/mongodb \naws s3 cp s3://${Param1}/${QSS3KeyPrefix}scripts/orchestrator.sh\
-              \ orchestrator.sh --region ${Param2}\nchmod +x orchestrator.sh \naws s3\
-              \ cp s3://${Param1}/${QSS3KeyPrefix}scripts/disable-transparent-hugepages\
-              \ /etc/init.d/disable-transparent-hugepages --region ${Param2}\nchmod\
-              \ +x /etc/init.d/disable-transparent-hugepages \nchkconfig --add disable-transparent-hugepages\
-              \ \naws s3 cp s3://${Param1}/${QSS3KeyPrefix}scripts/init_replica.sh init.sh\
-              \ --region ${Param2}\naws s3 cp s3://${Param1}/${QSS3KeyPrefix}scripts/signalFinalStatus.sh\
-              \ signalFinalStatus.sh --region ${Param2}\nchmod +x signalFinalStatus.sh\
-              \ \nchmod +x init.sh \n#  Run the install \n#  Store stack name to tag\
-              \ DDB name\necho ${Param3} >> config.sh\necho ${Param4} >> config.sh\n\
-              echo ${Param5} >> config.sh\necho ${Param6} >> config.sh\n\
-              echo ${Param7} >> config.sh\nmkdir -p /mongo_auth \n./init.sh > install.log\
-              \ 2>&1 \n#  Cleanup \n#rm -rf *\nchown -R ec2-user:ec2-user /home/ec2-user/\
-              \ \n/home/ec2-user/mongodb/signalFinalStatus.sh 0\n"
+            - |
+              #!/bin/bash
+              EC2_INSTANCE_ID=$(curl -s http://instance-data/latest/meta-data/instance-id)
+
+              # Install SSM agent for remote access from AWS console.
+              sudo yum install -y https://s3.us-east-1.amazonaws.com/amazon-ssm-us-east-1/latest/linux_amd64/amazon-ssm-agent.rpm
+
+              /opt/aws/bin/cfn-init -v --stack ${AWS::StackName} --resource ReplicaNodeInstance  --region ${AWS::Region}
+
+              # Make sure the data volume is detached from anything.
+              aws ec2 detach-volume --volume-id ${VolumeId}
+              aws ec2 attach-volume --volume-id ${VolumeId} --instance-id ${!EC2_INSTANCE_ID} --device /dev/sdf
+
+              # Wait for the data volume to be attached here.
+              DATA_STATE="unknown"
+              until [ "${!DATA_STATE}" == "attached" ]; do
+                DATA_STATE=$(aws ec2 describe-volumes \
+                  --region ${AWS::Region} \
+                  --filters \
+                      Name=attachment.instance-id,Values=${!EC2_INSTANCE_ID} \
+                      Name=attachment.device,Values=/dev/sdf \
+                  --query Volumes[].Attachments[].State \
+                  --output text)
+
+                sleep 4
+              done
+
+              mkdir -p /home/ec2-user/mongodb
+              cd /home/ec2-user/mongodb
+              aws s3 cp s3://${Param1}/${QSS3KeyPrefix}scripts/orchestrator.sh
+              orchestrator.sh --region ${Param2}
+              chmod +x orchestrator.sh
+              aws s3 cp s3://${Param1}/${QSS3KeyPrefix}scripts/disable-transparent-hugepages
+              /etc/init.d/disable-transparent-hugepages --region ${Param2}
+              chmod +x /etc/init.d/disable-transparent-hugepages
+              chkconfig --add disable-transparent-hugepages
+              aws s3 cp s3://${Param1}/${QSS3KeyPrefix}scripts/init_replica.sh init.sh --region ${Param2}
+              aws s3 cp s3://${Param1}/${QSS3KeyPrefix}scripts/signalFinalStatus.sh
+              signalFinalStatus.sh --region ${Param2}
+              chmod +x signalFinalStatus.sh
+              chmod +x init.sh
+              #  Run the install
+              #  Store stack name to tag DDB name
+              echo ${Param3} >> config.sh
+              echo ${Param4} >> config.sh
+              echo ${Param5} >> config.sh
+              echo ${Param6} >> config.sh
+              echo ${Param7} >> config.sh
+              mkdir -p /mongo_auth
+              ./init.sh > install.log 2>&1
+              #  Cleanup
+              chown -R ec2-user:ec2-user /home/ec2-user/
+              /home/ec2-user/mongodb/signalFinalStatus.sh 0
+
             - Param1:
                 Fn::If:
                   - UsingDefaultBucket
@@ -378,7 +416,6 @@ Resources:
                 Fn::Sub: '"export WAITHANDLER=''${ReplicaNodeWaitForNodeInstallWaitHandle}''"'
               Param7:
                 Fn::Sub: export MONGODB_ADMIN_USER=${MongoDBAdminUsername}
-              InstanceId: !Ref ReplicaNodeInstance
               VolumeId: !Ref NodeInstanceVolume
       InstanceType:
         Ref: NodeInstanceType
