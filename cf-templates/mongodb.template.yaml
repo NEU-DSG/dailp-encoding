@@ -356,6 +356,7 @@ Resources:
               until [ "${!DATA_STATE}" == "attached" ]; do
                 DATA_STATE=$(aws ec2 describe-volumes \
                   --region ${AWS::Region} \
+                  --volume-ids ${VolumeId} \
                   --filters \
                       Name=attachment.instance-id,Values=${!EC2_INSTANCE_ID} \
                       Name=attachment.device,Values=/dev/sdf \
@@ -367,16 +368,13 @@ Resources:
 
               mkdir -p /home/ec2-user/mongodb
               cd /home/ec2-user/mongodb
-              aws s3 cp s3://${Param1}/${QSS3KeyPrefix}scripts/orchestrator.sh
-              orchestrator.sh --region ${Param2}
+              aws s3 cp s3://${Param1}/${QSS3KeyPrefix}scripts/orchestrator.sh orchestrator.sh --region ${Param2}
               chmod +x orchestrator.sh
-              aws s3 cp s3://${Param1}/${QSS3KeyPrefix}scripts/disable-transparent-hugepages
-              /etc/init.d/disable-transparent-hugepages --region ${Param2}
+              aws s3 cp s3://${Param1}/${QSS3KeyPrefix}scripts/disable-transparent-hugepages /etc/init.d/disable-transparent-hugepages --region ${Param2}
               chmod +x /etc/init.d/disable-transparent-hugepages
               chkconfig --add disable-transparent-hugepages
               aws s3 cp s3://${Param1}/${QSS3KeyPrefix}scripts/init_replica.sh init.sh --region ${Param2}
-              aws s3 cp s3://${Param1}/${QSS3KeyPrefix}scripts/signalFinalStatus.sh
-              signalFinalStatus.sh --region ${Param2}
+              aws s3 cp s3://${Param1}/${QSS3KeyPrefix}scripts/signalFinalStatus.sh signalFinalStatus.sh --region ${Param2}
               chmod +x signalFinalStatus.sh
               chmod +x init.sh
               #  Run the install

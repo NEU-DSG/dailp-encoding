@@ -116,7 +116,7 @@ Resources:
         VPC: ${self:custom.database.vpcId}
         MongoDBAdminUsername: ${env:MONGODB_USERNAME}
         MongoDBAdminPassword: ${env:MONGODB_PASSWORD}
-        NodeSubnet: ${self:custom.database.subnetId}
+        NodeSubnet: ${self:custom.database.subnetId1}
         VolumeType: ${self:custom.database.volumeType}
         VolumeSize: ${self:custom.database.volumeSize}
         ClusterReplicaSetCount: ${self:custom.database.replicaCount}
@@ -159,7 +159,7 @@ Resources:
         MongoDBAdminUsername: ${env:MONGODB_USERNAME}
         MongoDBAdminPassword: ${env:MONGODB_PASSWORD}
         NodeInstanceType: ${self:custom.database.instanceType}
-        NodeSubnet: ${self:custom.database.subnetId}
+        NodeSubnet: ${self:custom.database.subnetId2}
         MongoDBServerSecurityGroupID: !Ref "DailpDBServerSecurityGroup"
         MongoDBServersSecurityGroupID: !Ref "DailpDBServersSecurityGroup"
         MongoDBNodeIAMProfileID: !Ref "DailpDBNodeIAMProfile"
@@ -199,7 +199,7 @@ Resources:
         MongoDBAdminUsername: ${env:MONGODB_USERNAME}
         MongoDBAdminPassword: ${env:MONGODB_PASSWORD}
         NodeInstanceType: ${self:custom.database.instanceType}
-        NodeSubnet: ${self:custom.database.subnetId}
+        NodeSubnet: ${self:custom.database.subnetId3}
         MongoDBServerSecurityGroupID: !Ref "DailpDBServerSecurityGroup"
         MongoDBServersSecurityGroupID: !Ref "DailpDBServersSecurityGroup"
         MongoDBNodeIAMProfileID: !Ref "DailpDBNodeIAMProfile"

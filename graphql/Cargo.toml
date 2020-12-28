@@ -9,7 +9,7 @@ serde_json = "1.0"
 tokio = { version = "0.2", features = ["full", "time"] }
 anyhow = "*"
 futures = "*"
-async-graphql = "2.1"
+async-graphql = "*"
 mongodb = {git = "https://github.com/mongodb/mongo-rust-driver", rev = "6067e98fedcdabc8b8fce4cdd5a1d6e155929a38"}
 lambda = {git = "https://github.com/awslabs/aws-lambda-rust-runtime"}
 lambda_http = {git = "https://github.com/awslabs/aws-lambda-rust-runtime"}
