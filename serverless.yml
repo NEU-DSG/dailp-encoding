@@ -29,9 +29,9 @@ custom:
     subnetId: ${env:AWS_SUBNET_PRIMARY}
     subnetId2: ${env:AWS_SUBNET_SECONDARY0}
     subnetId3: ${env:AWS_SUBNET_SECONDARY1}
-    zone1: us-east-1a
-    zone2: us-east-1b
-    zone3: us-east-1c
+    zone1: us-east-1d
+    zone2: us-east-1d
+    zone3: us-east-1a
     replicaCount: 3
     replicaShardIndex: "0"
     keyName: dailp-database

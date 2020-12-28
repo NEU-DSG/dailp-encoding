@@ -121,10 +121,6 @@ Parameters:
   AvailabilityZone:
     Type: String
     Description: Availability zone where the volume should be hosted (cannot be updated later) [us-east-1a, us-east-1b]
-    AllowedValues:
-      - us-east-1a
-      - us-east-1b
-      - us-east-1c
   Iops:
     Type: String
     Description: Iops of EBS volume when io1 type is chosen. Otherwise ignored
