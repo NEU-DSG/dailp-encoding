@@ -38,6 +38,13 @@ jobs:
       - name: Setup node.js
         uses: actions/setup-node@v1
         with: { node-version: 10 }
+      - name: Setup rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: 1.48.0
+          default: true
+          override: true
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -56,13 +63,6 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-cargo
-      - name: Setup rust toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          target: x86_64-unknown-linux-musl
-          toolchain: 1.48.0
-          override: true
       - name: Cache docker images
         uses: satackey/action-docker-layer-caching@v0.0.11
         # Ignore the failure of a step and avoid terminating the job.
