@@ -61,6 +61,9 @@ Resources:
   #   Properties:
   #     AppId: !GetAtt AmplifyApp.AppId
   #     DomainName: dailp.northeastern.edu
+  #     SubDomainSettings:
+  #       - BranchName: dev
+  #         Prefix: dev
 
 Outputs:
   DefaultDomain:

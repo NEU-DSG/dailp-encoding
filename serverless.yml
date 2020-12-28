@@ -15,7 +15,7 @@ provider:
     securityGroupIds:
       - !Ref "DailpDBServerAccessSecurityGroup"
     subnetIds:
-      - ${self:custom.database.subnetId}
+      - ${self:custom.database.subnetId1}
       - ${self:custom.database.subnetId2}
       - ${self:custom.database.subnetId3}
 custom:
@@ -26,7 +26,7 @@ custom:
     iops: 1000
     instanceType: t3.small
     vpcId: ${env:AWS_VPC_ID}
-    subnetId: ${env:AWS_SUBNET_PRIMARY}
+    subnetId1: ${env:AWS_SUBNET_PRIMARY}
     subnetId2: ${env:AWS_SUBNET_SECONDARY0}
     subnetId3: ${env:AWS_SUBNET_SECONDARY1}
     zone1: us-east-1d
