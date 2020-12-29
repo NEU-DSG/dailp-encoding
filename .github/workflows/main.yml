@@ -53,15 +53,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
       - name: Cache dependencies
-        id: cache-deps
-        uses: actions/cache@v2
-        with:
-          path: |
-            ~/.cargo
-            target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo
+        uses: Swatinem/rust-cache@v1
       - name: Cache docker images
         uses: satackey/action-docker-layer-caching@v0.0.11
         # Ignore the failure of a step and avoid terminating the job.
