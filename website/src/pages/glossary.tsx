@@ -22,9 +22,7 @@ export default (p: { data: GatsbyTypes.GlossaryQuery }) => {
               {tags.map((tag) => (
                 <React.Fragment key={tag.id}>
                   <dt id={tag.id}>
-                    {tag.id === tag.crg?.tag
-                      ? tag.id
-                      : `${tag.id} / ${tag.crg?.tag}`}
+                    {tag.taoc.tag} – {tag.taoc.title}
                   </dt>
                   <dd>{tag.crg.definition}</dd>
                 </React.Fragment>

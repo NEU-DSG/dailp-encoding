@@ -339,6 +339,25 @@ Resources:
         Fn::Base64:
           Fn::Sub:
             - |
+              Content-Type: multipart/mixed; boundary="//"
+              MIME-Version: 1.0
+
+              --//
+              Content-Type: text/cloud-config; charset="us-ascii"
+              MIME-Version: 1.0
+              Content-Transfer-Encoding: 7bit
+              Content-Disposition: attachment; filename="cloud-config.txt"
+
+              #cloud-config
+              cloud_final_modules:
+                - [scripts-user, always]
+
+              --//
+              Content-Type: text/x-shellscript; charset="us-ascii"
+              MIME-Version: 1.0
+              Content-Transfer-Encoding: 7bit
+              Content-Disposition: attachment; filename="userdata.txt"
+
               #!/bin/bash
               export EC2_INSTANCE_ID=$(curl -s http://instance-data/latest/meta-data/instance-id)
 
@@ -364,7 +383,7 @@ Resources:
                 fi
 
                 # Attach the volume here.
-                aws ec2 attach-volume --region ${AWS::Region} --volume-id ${VolumeId} --instance-id ${!EC2_INSTANCE_ID} --device /dev/sdf
+                aws ec2 attach-volume --region ${AWS::Region} --volume-id ${VolumeId} --instance-id ${!EC2_INSTANCE_ID} --device /dev/xvdf
 
                 # Wait for the data volume to be attached here.
                 until [ "${!DATA_STATE}" == "attached" ]; do
@@ -377,32 +396,35 @@ Resources:
 
               mkdir -p /home/ec2-user/mongodb
               cd /home/ec2-user/mongodb
-              # Only proceed with the full installation if it hasn't happened before.
               if [ ! -f ./install.log ]; then
-                # Make sure no package installs prompt me.
                 echo "assumeyes=1" | sudo tee -a /etc/yum.conf
-                aws s3 cp s3://${Param1}/${QSS3KeyPrefix}scripts/orchestrator.sh orchestrator.sh --region ${Param2}
-                chmod +x orchestrator.sh
-                aws s3 cp s3://${Param1}/${QSS3KeyPrefix}scripts/disable-transparent-hugepages /etc/init.d/disable-transparent-hugepages --region ${Param2}
-                chmod +x /etc/init.d/disable-transparent-hugepages
-                chkconfig --add disable-transparent-hugepages
-                aws s3 cp s3://${Param1}/${QSS3KeyPrefix}scripts/init_replica.sh init.sh --region ${Param2}
-                aws s3 cp s3://${Param1}/${QSS3KeyPrefix}scripts/signalFinalStatus.sh signalFinalStatus.sh --region ${Param2}
-                chmod +x signalFinalStatus.sh
-                chmod +x init.sh
-                #  Run the install
-                #  Store stack name to tag DDB name
-                echo ${Param3} > config.sh
-                echo ${Param4} >> config.sh
-                echo ${Param5} >> config.sh
-                echo ${Param6} >> config.sh
-                echo ${Param7} >> config.sh
-                mkdir -p /mongo_auth
-                ./init.sh > install.log
-                #  Cleanup
-                chown -R ec2-user:ec2-user /home/ec2-user/
-                /home/ec2-user/mongodb/signalFinalStatus.sh 0
               fi
+              aws s3 cp s3://${Param1}/${QSS3KeyPrefix}scripts/orchestrator.sh orchestrator.sh --region ${Param2}
+              chmod +x orchestrator.sh
+              aws s3 cp s3://${Param1}/${QSS3KeyPrefix}scripts/disable-transparent-hugepages /etc/init.d/disable-transparent-hugepages --region ${Param2}
+              chmod +x /etc/init.d/disable-transparent-hugepages
+              chkconfig --add disable-transparent-hugepages
+              aws s3 cp s3://${Param1}/${QSS3KeyPrefix}scripts/init_replica.sh init.sh --region ${Param2}
+              aws s3 cp s3://${Param1}/${QSS3KeyPrefix}scripts/signalFinalStatus.sh signalFinalStatus.sh --region ${Param2}
+              chmod +x signalFinalStatus.sh
+              chmod +x init.sh
+              #  Run the install
+              #  Store stack name to tag DDB name
+              echo ${Param3} > config.sh
+              echo ${Param4} >> config.sh
+              echo ${Param5} >> config.sh
+              echo ${Param6} >> config.sh
+              echo ${Param7} >> config.sh
+              mkdir -p /mongo_auth
+              ./init.sh > install.log
+              # Remove duplicate fstab entries.
+              awk '!a[$0]++' /etc/fstab
+              # Make sure the data volume is fail-proof.
+              sed -ie '/^\/dev\/xvdf/ s/noatime,noexec/noatime,nofail,noexec/' /etc/fstab
+              # Signal to the CF stack that we're done here.
+              chown -R ec2-user:ec2-user /home/ec2-user/
+              /home/ec2-user/mongodb/signalFinalStatus.sh 0
+              --//
 
             - Param1:
                 Fn::If:

@@ -48,7 +48,7 @@ async fn migrate_data() -> Result<()> {
             spreadsheets::write_to_file(&doc)?;
             spreadsheets::migrate_documents_to_db(&[(doc, refs)]).await?;
         }
-        tokio::time::delay_for(Duration::from_millis(1700)).await;
+        tokio::time::delay_for(Duration::from_millis(1000)).await;
     }
     Ok(())
 }

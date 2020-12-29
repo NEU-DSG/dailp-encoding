@@ -391,8 +391,10 @@ async fn parse_early_vocab(
     let mut meta = meta.values.into_iter();
     let doc_id = meta.next().unwrap().pop().unwrap();
     let title = meta.next().unwrap().pop().unwrap();
-    let year: i32 = meta.next().unwrap().pop().unwrap().parse()?;
-    let date_recorded = Some(DateTime::new(chrono::Utc.ymd(year, 1, 1).and_hms(0, 0, 0)));
+    let year = meta.next().unwrap().pop().unwrap().parse::<i32>();
+    let date_recorded = year
+        .ok()
+        .map(|year| DateTime::new(chrono::Utc.ymd(year, 1, 1).and_hms(0, 0, 0)));
     let meta = DocumentMetadata {
         id: doc_id,
         title,

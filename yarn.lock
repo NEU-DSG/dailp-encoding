@@ -4940,6 +4940,13 @@ semver@^7.3.2, semver@^7.3.4:
   dependencies:
     lru-cache "^6.0.0"
 
+serverless-cloudformation-changesets@kandrzejczak/serverless-cloudformation-changesets#skip_create_change_set:
+  version "0.1.0"
+  resolved "https://codeload.github.com/kandrzejczak/serverless-cloudformation-changesets/tar.gz/7f4dea799ec74b188df8ae382b42bbeb8328c292"
+  dependencies:
+    lodash "^4.17.11"
+    serverless "^1.44.1"
+
 serverless-dotenv-plugin@^3.0.0:
   version "3.1.0"
   resolved "https://registry.yarnpkg.com/serverless-dotenv-plugin/-/serverless-dotenv-plugin-3.1.0.tgz#f1482a5e69b01cc4de8c6439bdd8c134fc923534"
@@ -4975,7 +4982,7 @@ serverless-translate-templateurls@^1.1.1:
   resolved "https://registry.yarnpkg.com/serverless-translate-templateurls/-/serverless-translate-templateurls-1.1.1.tgz#bcd87d976ab41e22aee13e5937d46eb80ce5f040"
   integrity sha512-dABmdF+UOvbTFpkG3gtT/wgh7LGDge/lSSJdDUQyaVUmoP1EMDJnaoGE3oWOEUQl7+Eil4/uA2ocqF4yYww+Bg==
 
-serverless@^1.71.3:
+serverless@^1.44.1, serverless@^1.71.3:
   version "1.83.2"
   resolved "https://registry.yarnpkg.com/serverless/-/serverless-1.83.2.tgz#e2889906f3d77372cec9b535cef0a9760357e092"
   integrity sha512-VjB0CK79iLbrmaPKgn/g1IrK+R2T1/TGh3LkTBHn8H+uLe8Fx15SP4jQsuLSSsr6XY7jB+GISb8pOlkTfdUjEQ==
