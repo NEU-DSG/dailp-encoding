@@ -54,7 +54,7 @@ fn parse_tag_glossary(sheet: SheetResult) -> Result<Vec<MorphemeTag>> {
 fn parse_tag_section(values: &mut impl Iterator<Item = String>, has_page: bool) -> Option<TagForm> {
     let tag = values.next()?;
     let title = values.next()?;
-    let definition = values.next()?;
+    let definition = values.next().unwrap_or_default();
     let page_num = if has_page { values.next() } else { None };
     let shape = values.next();
     if !tag.is_empty() {

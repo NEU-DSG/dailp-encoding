@@ -265,12 +265,12 @@ const levelNameMapping = {
       "Original text with a translation and breakdown of each word into its component parts",
   },
   [ExperienceLevel.AdvancedDt]: {
-    label: "Analysis (CRG)",
+    label: "Analysis (d/t)",
     details:
       "Linguistic anaylsis using the Cherokee Reference Grammar (CRG) representation",
   },
   [ExperienceLevel.AdvancedTth]: {
-    label: "Analysis (TAOC)",
+    label: "Analysis (t/th)",
     details:
       "Linguistic analysis using the Tone and Accent in Oklahoma Cherokee (TAOC) representation",
   },
