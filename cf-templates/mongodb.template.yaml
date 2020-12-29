@@ -340,55 +340,69 @@ Resources:
           Fn::Sub:
             - |
               #!/bin/bash
-              EC2_INSTANCE_ID=$(curl -s http://instance-data/latest/meta-data/instance-id)
+              export EC2_INSTANCE_ID=$(curl -s http://instance-data/latest/meta-data/instance-id)
 
               # Install SSM agent for remote access from AWS console.
               sudo yum install -y https://s3.us-east-1.amazonaws.com/amazon-ssm-us-east-1/latest/linux_amd64/amazon-ssm-agent.rpm
 
               /opt/aws/bin/cfn-init -v --stack ${AWS::StackName} --resource ReplicaNodeInstance  --region ${AWS::Region}
 
-              # Make sure the data volume is detached from anything.
-              aws ec2 detach-volume --volume-id ${VolumeId}
-              aws ec2 attach-volume --volume-id ${VolumeId} --instance-id ${!EC2_INSTANCE_ID} --device /dev/sdf
+              DATA_STATE=$(aws ec2 describe-volumes --region ${AWS::Region} --volume-ids ${VolumeId} \
+                  --filters Name=attachment.instance-id,Values=${!EC2_INSTANCE_ID} \
+                  --query Volumes[].Attachments[].State --output text)
+              # The volume isn't attached to this instance, so make that happen.
+              if [ "${!DATA_STATE}" != "attached" ]; then
+                # If the volume isn't available, detach it from whatever instance it's on.
+                VOLUME_STATE=$(aws ec2 describe-volumes --region ${AWS::Region} --volume-ids ${VolumeId} --query Volumes[].State --output text)
+                if [ "${!VOLUME_STATE}" != "available" ]; then
+                  # Make sure the data volume is detached from anything.
+                  aws ec2 detach-volume --region ${AWS::Region} --volume-id ${VolumeId}
+                  until [ "${!VOLUME_STATE}" == "available" ]; do
+                    VOLUME_STATE=$(aws ec2 describe-volumes --region ${AWS::Region} --volume-ids ${VolumeId} --query Volumes[].State --output text)
+                    sleep 3
+                  done
+                fi
 
-              # Wait for the data volume to be attached here.
-              DATA_STATE="unknown"
-              until [ "${!DATA_STATE}" == "attached" ]; do
-                DATA_STATE=$(aws ec2 describe-volumes \
-                  --region ${AWS::Region} \
-                  --volume-ids ${VolumeId} \
-                  --filters \
-                      Name=attachment.instance-id,Values=${!EC2_INSTANCE_ID} \
-                      Name=attachment.device,Values=/dev/sdf \
-                  --query Volumes[].Attachments[].State \
-                  --output text)
+                # Attach the volume here.
+                aws ec2 attach-volume --region ${AWS::Region} --volume-id ${VolumeId} --instance-id ${!EC2_INSTANCE_ID} --device /dev/sdf
 
-                sleep 4
-              done
+                # Wait for the data volume to be attached here.
+                until [ "${!DATA_STATE}" == "attached" ]; do
+                  DATA_STATE=$(aws ec2 describe-volumes --region ${AWS::Region} --volume-ids ${VolumeId} \
+                    --filters Name=attachment.instance-id,Values=${!EC2_INSTANCE_ID} \
+                    --query Volumes[].Attachments[].State --output text)
+                  sleep 3
+                done
+              fi
 
               mkdir -p /home/ec2-user/mongodb
               cd /home/ec2-user/mongodb
-              aws s3 cp s3://${Param1}/${QSS3KeyPrefix}scripts/orchestrator.sh orchestrator.sh --region ${Param2}
-              chmod +x orchestrator.sh
-              aws s3 cp s3://${Param1}/${QSS3KeyPrefix}scripts/disable-transparent-hugepages /etc/init.d/disable-transparent-hugepages --region ${Param2}
-              chmod +x /etc/init.d/disable-transparent-hugepages
-              chkconfig --add disable-transparent-hugepages
-              aws s3 cp s3://${Param1}/${QSS3KeyPrefix}scripts/init_replica.sh init.sh --region ${Param2}
-              aws s3 cp s3://${Param1}/${QSS3KeyPrefix}scripts/signalFinalStatus.sh signalFinalStatus.sh --region ${Param2}
-              chmod +x signalFinalStatus.sh
-              chmod +x init.sh
-              #  Run the install
-              #  Store stack name to tag DDB name
-              echo ${Param3} >> config.sh
-              echo ${Param4} >> config.sh
-              echo ${Param5} >> config.sh
-              echo ${Param6} >> config.sh
-              echo ${Param7} >> config.sh
-              mkdir -p /mongo_auth
-              ./init.sh > install.log 2>&1
-              #  Cleanup
-              chown -R ec2-user:ec2-user /home/ec2-user/
-              /home/ec2-user/mongodb/signalFinalStatus.sh 0
+              # Only proceed with the full installation if it hasn't happened before.
+              if [ ! -f ./install.log ]; then
+                # Make sure no package installs prompt me.
+                echo "assumeyes=1" | sudo tee -a /etc/yum.conf
+                aws s3 cp s3://${Param1}/${QSS3KeyPrefix}scripts/orchestrator.sh orchestrator.sh --region ${Param2}
+                chmod +x orchestrator.sh
+                aws s3 cp s3://${Param1}/${QSS3KeyPrefix}scripts/disable-transparent-hugepages /etc/init.d/disable-transparent-hugepages --region ${Param2}
+                chmod +x /etc/init.d/disable-transparent-hugepages
+                chkconfig --add disable-transparent-hugepages
+                aws s3 cp s3://${Param1}/${QSS3KeyPrefix}scripts/init_replica.sh init.sh --region ${Param2}
+                aws s3 cp s3://${Param1}/${QSS3KeyPrefix}scripts/signalFinalStatus.sh signalFinalStatus.sh --region ${Param2}
+                chmod +x signalFinalStatus.sh
+                chmod +x init.sh
+                #  Run the install
+                #  Store stack name to tag DDB name
+                echo ${Param3} > config.sh
+                echo ${Param4} >> config.sh
+                echo ${Param5} >> config.sh
+                echo ${Param6} >> config.sh
+                echo ${Param7} >> config.sh
+                mkdir -p /mongo_auth
+                ./init.sh > install.log
+                #  Cleanup
+                chown -R ec2-user:ec2-user /home/ec2-user/
+                /home/ec2-user/mongodb/signalFinalStatus.sh 0
+              fi
 
             - Param1:
                 Fn::If:

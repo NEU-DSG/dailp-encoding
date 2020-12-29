@@ -50,7 +50,7 @@ plugins:
 package:
   individually: true
 functions:
-  dailp-graphql:
+  graphql:
     handler: dailp-graphql
     events:
       - http:
