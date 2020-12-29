@@ -20,7 +20,6 @@ env:
   AWS_SUBNET_PRIMARY: ${{ secrets.AWS_SUBNET_PRIMARY }}
   AWS_SUBNET_SECONDARY0: ${{ secrets.AWS_SUBNET_SECONDARY0 }}
   AWS_SUBNET_SECONDARY1: ${{ secrets.AWS_SUBNET_SECONDARY1 }}
-  DAILP_GRAPHQL_URL: ${{ secrets.DAILP_GRAPHQL_URL }}
   GIT_REPOSITORY_URL: https://github.com/neu-dsg/dailp-encoding
   OAUTH_TOKEN: ${{ secrets.OAUTH_TOKEN }}
 
@@ -73,10 +72,11 @@ jobs:
         run: |
           cargo install cross
           yarn install
-          mkdir .serverless
+          mkdir -p .serverless
           yarn deploy-graphql
       - name: Encode documents as TEI and database entries
         run: |
+          export DAILP_GRAPHQL_URL=$(jq -r '.prod.urls.byFunction.graphql.url' .serverless/manifest.json)
           cd migration
           cargo run --release
       - name: Publish website

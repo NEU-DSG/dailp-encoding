@@ -25,27 +25,30 @@ Resources:
       Repository: ${env:GIT_REPOSITORY_URL}
       OauthToken: ${env:OAUTH_TOKEN}
       IAMServiceRole: !GetAtt AmplifyRole.Arn
-      BuildSpec: |-
-        version: 1
-        env:
-          variables:
-            DAILP_GRAPHQL_URL: ${env:DAILP_GRAPHQL_URL}
-        frontend:
-          artifacts:
-            baseDirectory: website/public
-            files:
-              - "**/*"
-          phases:
-            build:
-              commands:
-                - cd website
-                - yarn install
-                - yarn build
-                - cd ..
-          cache:
-            paths:
-              - website/node_modules
-              - website/.cache
+      BuildSpec:
+        Fn::Sub:
+          - |-
+            version: 1
+            env:
+              variables:
+                DAILP_GRAPHQL_URL: https://${RestApiId}.execute-api.${self:provider.region}.amazonaws.com/${opt:stage}/graphql
+            frontend:
+              artifacts:
+                baseDirectory: website/public
+                files:
+                  - "**/*"
+              phases:
+                build:
+                  commands:
+                    - cd website
+                    - yarn install
+                    - yarn build
+                    - cd ..
+              cache:
+                paths:
+                  - website/node_modules
+                  - website/.cache
+          - RestApiId: !Ref ApiGatewayRestApi
   AmplifyMainBranch:
     Type: AWS::Amplify::Branch
     Properties:

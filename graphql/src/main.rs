@@ -21,7 +21,7 @@ async fn main(req: Request, _: lambda::Context) -> Result<impl IntoResponse, Err
     if req.method() == lambda_http::http::Method::GET {
         // Serve GraphQL Playground over GET to allow introspection in the browser!
         let playground = async_graphql::http::playground_source(
-            async_graphql::http::GraphQLPlaygroundConfig::new("/graphql"),
+            async_graphql::http::GraphQLPlaygroundConfig::new(req.uri().path()),
         );
         Ok(Response::builder()
             .header(header::CONTENT_TYPE, "text/html; charset=utf-8")

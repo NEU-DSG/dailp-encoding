@@ -41,12 +41,15 @@ custom:
     s3Bucket: "dailp-prod-serverlessdeploymentbucket-1k5ja8qst262t --region us-east-1"
     inFolder: cf-templates
     outFolder: .serverless
+  cf-changesets:
+    requireChangeSet: true
   rust:
     dockerless: true
 plugins:
   - serverless-rust
   - serverless-translate-templateurls
   - serverless-manifest-plugin
+  - serverless-cloudformation-changesets
 package:
   individually: true
 functions:
