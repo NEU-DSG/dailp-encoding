@@ -69,6 +69,7 @@ Resources:
                   - ec2:Describe*
                   - ec2:AttachNetworkInterface
                   - ec2:AttachVolume
+                  - ec2:DetachVolume
                   - ec2:CreateTags
                   - ec2:CreateVolume
                   - ec2:RunInstances
