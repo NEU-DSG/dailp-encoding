@@ -7,7 +7,7 @@ import _ from "lodash"
 import { MdClose } from "react-icons/md"
 import { AnchorLink } from "./link"
 import theme from "./theme"
-import { BasicMorphemeTag, morphemeDisplayTag, TagSet } from "./types"
+import { morphemeDisplayTag, TagSet } from "./types"
 
 type BasicMorphemeSegment = NonNullable<
   GatsbyTypes.FormFieldsFragment["segments"]
@@ -45,26 +45,36 @@ const TagDetails = (props: {
   segment: BasicMorphemeSegment
   tagSet: TagSet
 }) => {
+  // Use the right tag name from the jump.
+  const matchingTag = morphemeDisplayTag(
+    props.segment.matchingTag,
+    props.tagSet
+  )
+  const gloss = matchingTag?.tag || props.segment.gloss
+  const occurrences = <h3>Known Occurrences of "{gloss}"</h3>
+
+  // Get the morpheme title and definition from the server.
+  // TODO Only request the specific definition we need, not all three.
   const tag = useQuery(tagQuery, {
     skip: !props.segment.gloss,
     variables: { gloss: props.segment.gloss },
   })
+
   if (tag.data) {
     const matchingTag = morphemeDisplayTag<{
       title: string
       tag: string
       definition: string
     }>(tag.data.tag, props.tagSet)
-    const gloss = matchingTag?.tag || props.segment.gloss
     return (
       <>
         {matchingTag?.title ? <h2>{matchingTag.title}</h2> : null}
         {matchingTag?.definition ? <p>{matchingTag.definition}</p> : null}
-        <h3>Known Occurrences of "{gloss}"</h3>
+        {occurrences}
       </>
     )
   } else {
-    return <h3>Known Occurrences of "{props.segment.gloss}"</h3>
+    return occurrences
   }
 }
 

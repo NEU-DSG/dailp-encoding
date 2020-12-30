@@ -226,7 +226,10 @@ const drawerBg = css`
     display: none;
   }
   z-index: 999;
-  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   position: fixed;
   background-color: rgba(0, 0, 0, 0.2);
   transition: opacity 100ms ease-in-out;
