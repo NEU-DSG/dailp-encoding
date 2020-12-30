@@ -2,9 +2,10 @@ import { css } from "linaria"
 
 const theme = {
   fonts: {
+    // 4 fonts total: header, serif body, sans body, Cherokee.
     // Noto Serif supports glottal stops and more accents than other fonts.
-    body: `"Noto Serif", "Noto Sans Cherokee", Arial, serif`,
-    bodyArr: ["Noto Serif", "Noto Sans Cherokee", "Arial", "serif"],
+    body: `"Noto Serif", "Noto Sans Cherokee", serif, Arial`,
+    bodyArr: ["Noto Serif", "Noto Sans Cherokee", "serif", "Arial"],
     header: `"Quattrocento Sans", "Segoe UI", Arial, sans-serif`,
     headerArr: ["Quattrocento Sans", "Segoe UI", "Arial", "sans-serif"],
     cherokee: `"Noto Sans Cherokee", "Noto Sans", Arial, sans-serif`,
