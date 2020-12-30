@@ -25,6 +25,10 @@ Resources:
       Repository: ${env:GIT_REPOSITORY_URL}
       OauthToken: ${env:OAUTH_TOKEN}
       IAMServiceRole: !GetAtt AmplifyRole.Arn
+      CustomRules:
+        - Source: "/<*>"
+          Status: 404-200
+          Target: "/404.html"
       BuildSpec:
         Fn::Sub:
           - |-
