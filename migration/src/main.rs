@@ -52,7 +52,7 @@ async fn migrate_data() -> Result<()> {
             spreadsheets::write_to_file(&doc)?;
             spreadsheets::migrate_documents_to_db(&[(doc, refs)]).await?;
         }
-        tokio::time::delay_for(Duration::from_millis(1000)).await;
+        tokio::time::delay_for(Duration::from_millis(1500)).await;
     }
     Ok(())
 }
@@ -72,6 +72,7 @@ async fn fetch_sheet(
         let meta = meta_sheet.into_metadata(false).await?;
 
         // Parse references for this particular document.
+        println!("parsing references...");
         let refs =
             spreadsheets::SheetResult::from_sheet(sheet_id, Some(REFERENCES_SHEET_NAME)).await;
         let refs = if let Ok(refs) = refs {
@@ -85,6 +86,7 @@ async fn fetch_sheet(
         // Each document page lives in its own tab.
         for index in 0..page_count {
             let tab_name = if index > 0 {
+                println!("Pulling Page {}...", index + 1);
                 Some(format!("Page {}", index + 1))
             } else {
                 None
@@ -100,6 +102,7 @@ async fn fetch_sheet(
             lines.last_mut().unwrap().ends_page = true;
 
             all_lines.append(&mut lines);
+            tokio::time::delay_for(Duration::from_millis(1000)).await;
         }
         let annotated = AnnotatedLine::many_from_semantic(&all_lines, &meta);
         let segments = AnnotatedLine::to_segments(annotated, &meta.id, &meta.date);
