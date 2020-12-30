@@ -23,6 +23,17 @@ impl PositionInDocument {
         format!("{}.{}:{}", self.document_id, self.index, gloss)
     }
 
+    /// Converts the input into a suitable ID format by stripping whitespace and
+    /// punctuation before putting the document ID before it.
+    pub fn make_raw_id(&self, raw_gloss: &str) -> String {
+        use itertools::Itertools as _;
+        // Remove punctuation all together.
+        let gloss = raw_gloss.replace(&[',', '+', '(', ')', '[', ']'] as &[char], "");
+        // Replace whitespace with dots.
+        let mut gloss = gloss.split_whitespace().join(".");
+        self.make_id(&gloss)
+    }
+
     pub fn make_form_id(&self, segments: &[MorphemeSegment]) -> String {
         format!(
             "{}.{}:{}",
@@ -89,7 +100,7 @@ impl LexicalConnection {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, Hash)]
 pub struct MorphemeId {
     pub document_id: Option<String>,
     pub gloss: String,
@@ -104,6 +115,12 @@ impl MorphemeId {
         }
     }
     pub fn parse(input: &str) -> Option<Self> {
+        // Trim any potential whitespace from the edges.
+        let input = input.trim();
+        // Toss out anything with a newline in it, because it's probably garbage.
+        if input.contains("\n") {
+            return None;
+        }
         // Split by colon.
         let mut parts: Vec<_> = input.splitn(2, ':').collect();
         let gloss = parts.pop()?;
@@ -688,4 +705,47 @@ pub enum VowelType {
     Falling,
     Lowfall,
     Superhigh,
+}
+
+mod tests {
+    use super::*;
+
+    #[test]
+    fn morpheme_id_page_number() {
+        let id = MorphemeId::parse("DF2018:55");
+        assert_ne!(id, None);
+        let id = id.unwrap();
+        assert_eq!(id.document_id.as_ref().map(|x| &**x), Some("DF2018"));
+        assert_eq!(id.gloss, "55");
+    }
+
+    #[test]
+    fn morpheme_id_page_range() {
+        let id = MorphemeId::parse("IN1861:1-24");
+        assert_ne!(id, None);
+        let id = id.unwrap();
+        assert_eq!(id.document_id.as_ref().map(|x| &**x), Some("IN1861"));
+        assert_eq!(id.gloss, "1-24");
+    }
+
+    #[test]
+    fn morpheme_id_nonsense() {
+        let id = MorphemeId::parse(
+            "DF2018:33;
+DF2018:54",
+        );
+        assert_eq!(id, None);
+    }
+
+    #[test]
+    fn morpheme_id_raw() {
+        let raw = "as for me (1SG.PRO + CS)";
+        let pos = PositionInDocument {
+            document_id: "AK1997".to_owned(),
+            page_number: "116".to_owned(),
+            index: 1,
+        };
+        let id = pos.make_raw_id(raw);
+        assert_eq!(id, "AK1997.1:as.for.me.1SG.PRO.CS");
+    }
 }
