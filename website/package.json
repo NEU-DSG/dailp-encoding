@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "description": "Front-end for exploring Cherokee documents from DAILP",
   "scripts": {
-    "start": "GATSBY_EXPERIMENTAL_QUERY_CONCURRENCY=3 GATSBY_CONCURRENT_DOWNLOAD=5 gatsby develop",
-    "build": "GATSBY_EXPERIMENTAL_QUERY_CONCURRENCY=3 GATSBY_CONCURRENT_DOWNLOAD=5 gatsby build",
+    "start": "GATSBY_EXPERIMENTAL_QUERY_CONCURRENCY=5 GATSBY_CONCURRENT_DOWNLOAD=5 gatsby develop",
+    "build": "GATSBY_EXPERIMENTAL_QUERY_CONCURRENCY=5 GATSBY_CONCURRENT_DOWNLOAD=5 GATSBY_EXPERIMENTAL_PAGE_BUILD_ON_DATA_CHANGES=true gatsby build",
     "serve": "gatsby serve",
     "clean": "gatsby clean"
   },

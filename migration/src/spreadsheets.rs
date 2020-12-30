@@ -104,7 +104,7 @@ impl SheetResult {
             // This is, in fact, a file path.
             let start = start + 3;
             let (_, rest) = input.split_at(start);
-            let end = rest.find("/").unwrap_or(rest.len() - 1);
+            let end = rest.find("/").unwrap_or(rest.len());
             rest.split_at(end).0
         } else {
             // This is probably already a bare ID. Anyway, we couldn't parse it.
@@ -704,5 +704,8 @@ mod tests {
         assert_eq!(SheetResult::drive_url_to_id(url), id);
         // Raw IDs should remain intact.
         assert_eq!(SheetResult::drive_url_to_id(id), id);
+        // URLs without the "/edit" at the end should work too.
+        let url = "https://docs.google.com/document/d/13ELP_F95OUUW8exR2KvQzzgtcfO1w_b3wVgPQR8dggo";
+        assert_eq!(SheetResult::drive_url_to_id(url), id);
     }
 }

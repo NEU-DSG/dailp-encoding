@@ -48,6 +48,7 @@ Resources:
                 paths:
                   - website/node_modules
                   - website/.cache
+                  - website/public
           - RestApiId: !Ref ApiGatewayRestApi
   AmplifyMainBranch:
     Type: AWS::Amplify::Branch
