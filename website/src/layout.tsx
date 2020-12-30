@@ -45,7 +45,7 @@ const header = css`
   justify-content: center;
   background-color: ${theme.colors.header};
   padding: 0 ${theme.edgeSpacing};
-  font-family: ${theme.fonts.header};
+  font-family: ${theme.fonts.headerArr.join(",")};
 `
 
 const headerContents = css`
@@ -107,7 +107,6 @@ css`
 
     body {
       margin: 0;
-      font-family: ${theme.fonts.body};
       background-color: ${theme.colors.footer} !important;
       ${theme.mediaQueries.print} {
         background-color: none !important;
@@ -180,7 +179,7 @@ css`
     h6,
     header {
       color: ${theme.colors.headings};
-      font-family: ${theme.fonts.header};
+      font-family: ${theme.fonts.headerArr.join(",")};
       ${theme.mediaQueries.print} {
         color: ${theme.colors.text};
       }

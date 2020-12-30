@@ -1,28 +1,26 @@
 import React, { useState, useEffect } from "react"
 import { graphql, Link } from "gatsby"
 import { useDialogState, Dialog, DialogBackdrop } from "reakit/Dialog"
-import {
-  Radio,
-  RadioGroup,
-  useRadioState,
-  RadioStateReturn,
-} from "reakit/Radio"
 import { Tab, TabPanel, TabList } from "reakit/Tab"
-import { Tooltip, TooltipReference, useTooltipState } from "reakit/Tooltip"
 import Sticky from "react-stickynode"
 import Layout from "../layout"
 import { Segment, AnnotatedForm } from "../segment"
-import Cookies from "js-cookie"
 import theme, { fullWidth, largeDialog, withBg } from "../theme"
 import { collectionRoute, documentDetailsRoute, documentRoute } from "../routes"
 import { useScrollableTabState } from "../scrollable-tabs"
 import { css } from "linaria"
 import { DeepPartial } from "tsdef"
-import { ExperienceLevel, TagSet, BasicMorphemeSegment } from "../types"
+import {
+  ExperienceLevel,
+  TagSet,
+  BasicMorphemeSegment,
+  tagSetForMode,
+} from "../types"
 import { MorphemeDetails } from "../morpheme"
 import PageImages from "../page-image"
 import { Breadcrumbs } from "../breadcrumbs"
 import { isMobile } from "react-device-detect"
+import { ExperiencePicker } from "../mode"
 
 enum Tabs {
   ANNOTATION = "annotation-tab",
@@ -36,26 +34,13 @@ const AnnotatedDocumentPage = (p: {
   const doc = p.data.dailp.document!
   const tabs = useScrollableTabState({ selectedId: Tabs.ANNOTATION })
   const dialog = useDialogState()
-  const experienceLevel = useRadioState({
-    state: Number.parseInt(Cookies.get("experienceLevel") ?? "0"),
-  })
   const [selectedMorpheme, setMorpheme] = useState<BasicMorphemeSegment | null>(
     null
   )
 
-  // Save the selected experience level throughout the session.
-  useEffect(() => {
-    Cookies.set("experienceLevel", experienceLevel.state!.toString())
-  }, [experienceLevel.state])
+  const [experienceLevel, setExperienceLevel] = useState<ExperienceLevel>(null)
 
-  let tagSet = TagSet.Dailp
-  if (experienceLevel.state! === ExperienceLevel.AdvancedTth) {
-    tagSet = TagSet.Taoc
-  } else if (experienceLevel.state! === ExperienceLevel.AdvancedDt) {
-    tagSet = TagSet.Crg
-  } else if (experienceLevel.state! === ExperienceLevel.Learner) {
-    tagSet = TagSet.Learner
-  }
+  const tagSet = tagSetForMode(experienceLevel)
 
   return (
     <Layout title={doc.title}>
@@ -99,7 +84,7 @@ const AnnotatedDocumentPage = (p: {
           id="id-1-3"
           tabId={Tabs.ANNOTATION}
         >
-          <ExperiencePicker radio={experienceLevel} />
+          <ExperiencePicker onSelect={setExperienceLevel} />
 
           <article className={annotationContents}>
             {doc.translatedSegments?.map((seg, i) => (
@@ -108,7 +93,7 @@ const AnnotatedDocumentPage = (p: {
                 segment={seg.source as GatsbyTypes.Dailp_AnnotatedSeg}
                 dialog={dialog}
                 onOpenDetails={setMorpheme}
-                level={experienceLevel.state! as ExperienceLevel}
+                level={experienceLevel}
                 tagSet={tagSet}
                 translations={
                   seg.translation as GatsbyTypes.Dailp_TranslationBlock
@@ -122,7 +107,7 @@ const AnnotatedDocumentPage = (p: {
                 segment={form}
                 dialog={dialog}
                 onOpenDetails={setMorpheme}
-                level={experienceLevel.state! as ExperienceLevel}
+                level={experienceLevel}
                 tagSet={tagSet}
                 translations={null}
                 pageImages={doc.pageImages}
@@ -211,7 +196,7 @@ const docTab = css`
   border: none;
   flex-grow: 1;
   cursor: pointer;
-  font-family: ${theme.fonts.header};
+  font-family: ${theme.fonts.headerArr.join(",")};
   font-size: 1.25rem;
   background-color: ${theme.colors.header};
   color: ${theme.colors.headings};
@@ -247,76 +232,6 @@ const docHeader = css`
   ${theme.mediaQueries.medium} {
     padding: 0;
   }
-`
-
-const notNumber = (l: any) => isNaN(Number(l))
-const levelNameMapping = {
-  [ExperienceLevel.Story]: {
-    label: "Story",
-    details: "Only the original syllabary text and free English translation",
-  },
-  [ExperienceLevel.Basic]: {
-    label: "Study (basic)",
-    details: "Original text with word by word translation",
-  },
-  [ExperienceLevel.Learner]: {
-    label: "Study (detailed)",
-    details:
-      "Original text with a translation and breakdown of each word into its component parts",
-  },
-  [ExperienceLevel.AdvancedDt]: {
-    label: "Analysis (d/t)",
-    details:
-      "Linguistic anaylsis using the Cherokee Reference Grammar (CRG) representation",
-  },
-  [ExperienceLevel.AdvancedTth]: {
-    label: "Analysis (t/th)",
-    details:
-      "Linguistic analysis using the Tone and Accent in Oklahoma Cherokee (TAOC) representation",
-  },
-}
-
-const ExperiencePicker = (p: { radio: RadioStateReturn }) => {
-  return (
-    <RadioGroup {...p.radio} className={levelGroup}>
-      {Object.keys(ExperienceLevel)
-        .filter(notNumber)
-        .map(function (level: string) {
-          return <ExperienceOption key={level} level={level} radio={p.radio} />
-        })}
-    </RadioGroup>
-  )
-}
-
-const ExperienceOption = (p: { radio: RadioStateReturn; level: string }) => {
-  const tooltip = useTooltipState()
-  const value = ExperienceLevel[p.level as keyof typeof ExperienceLevel]
-  return (
-    <>
-      <TooltipReference {...tooltip} as="label" className={levelLabel}>
-        <Radio {...p.radio} value={value} />
-        {"  "}
-        {levelNameMapping[value].label}
-      </TooltipReference>
-      <Tooltip {...tooltip} className={withBg}>
-        {levelNameMapping[value].details}
-      </Tooltip>
-    </>
-  )
-}
-
-const levelGroup = css`
-  margin-top: ${theme.rhythm / 2}rem;
-  display: flex;
-  flex-flow: row wrap;
-  justify-content: center;
-  ${theme.mediaQueries.print} {
-    display: none;
-  }
-`
-
-const levelLabel = css`
-  margin-right: 2rem;
 `
 
 export const query = graphql`

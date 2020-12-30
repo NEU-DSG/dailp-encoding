@@ -7,7 +7,7 @@ import _ from "lodash"
 import { MdClose } from "react-icons/md"
 import { AnchorLink } from "./link"
 import theme from "./theme"
-import { morphemeDisplayTag, TagSet } from "./types"
+import { BasicMorphemeTag, morphemeDisplayTag, TagSet } from "./types"
 
 type BasicMorphemeSegment = NonNullable<
   GatsbyTypes.FormFieldsFragment["segments"]
@@ -50,7 +50,11 @@ const TagDetails = (props: {
     variables: { gloss: props.segment.gloss },
   })
   if (tag.data) {
-    const matchingTag = morphemeDisplayTag(tag.data.tag, props.tagSet)
+    const matchingTag = morphemeDisplayTag<{
+      title: string
+      tag: string
+      definition: string
+    }>(tag.data.tag, props.tagSet)
     const gloss = matchingTag?.tag || props.segment.gloss
     return (
       <>

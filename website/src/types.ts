@@ -19,8 +19,11 @@ export type BasicMorphemeSegment = NonNullable<
 
 export type BasicMorphemeTag = BasicMorphemeSegment["matchingTag"]
 
-export const morphemeDisplayTag = (tag: BasicMorphemeTag, tagSet: TagSet) => {
-  let matchingTag = null
+export function morphemeDisplayTag<T>(
+  tag: { readonly taoc: T; readonly crg: T; readonly learner: T },
+  tagSet: TagSet
+): T {
+  let matchingTag = tag?.taoc
   if (tag) {
     if (tagSet === TagSet.Learner) {
       matchingTag = tag.learner || tag.crg
@@ -31,4 +34,16 @@ export const morphemeDisplayTag = (tag: BasicMorphemeTag, tagSet: TagSet) => {
     }
   }
   return matchingTag
+}
+
+export const tagSetForMode = (experienceLevel: ExperienceLevel) => {
+  let tagSet = TagSet.Dailp
+  if (experienceLevel === ExperienceLevel.AdvancedTth) {
+    tagSet = TagSet.Taoc
+  } else if (experienceLevel === ExperienceLevel.AdvancedDt) {
+    tagSet = TagSet.Crg
+  } else if (experienceLevel <= ExperienceLevel.Learner) {
+    tagSet = TagSet.Learner
+  }
+  return tagSet
 }

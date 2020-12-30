@@ -243,7 +243,7 @@ const MorphemeSegment = (p: {
 }
 
 const smallCaps = css`
-  font-variant: small-caps;
+  font-feature-settings: "c2sc";
 `
 
 const morphemeButton = css`
