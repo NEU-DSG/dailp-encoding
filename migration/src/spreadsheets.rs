@@ -98,15 +98,28 @@ impl SheetResult {
         .json::<SheetResult>()
         .await?)
     }
+    /// Parse a Google Drive file ID from a full link to it.
+    fn drive_url_to_id(input: &str) -> &str {
+        if let Some(start) = input.find("/d/") {
+            // This is, in fact, a file path.
+            let start = start + 3;
+            let (_, rest) = input.split_at(start);
+            let end = rest.find("/").unwrap_or(rest.len() - 1);
+            rest.split_at(end).0
+        } else {
+            // This is probably already a bare ID. Anyway, we couldn't parse it.
+            input
+        }
+    }
     /// Parse this sheet as the document index.
     pub fn into_index(self) -> Result<DocumentIndex> {
         Ok(DocumentIndex {
             sheet_ids: self
                 .values
-                .into_iter()
+                .iter()
                 .skip(1)
                 .filter(|row| row.len() > 11 && !row[11].is_empty())
-                .map(|mut row| row.remove(11).split("/").nth(5).unwrap().to_owned())
+                .map(|row| Self::drive_url_to_id(&row[11]).to_owned())
                 .collect(),
         })
     }
@@ -331,7 +344,7 @@ impl SheetResult {
             contributors: people,
             genre: genre.pop(),
             translation: Some(
-                DocResult::new(&translations.remove(1))
+                DocResult::new(Self::drive_url_to_id(&translations[1]))
                     .await?
                     .to_translation(),
             ),
@@ -677,5 +690,19 @@ pub fn convert_breaks(
         Ok(tera::Value::String(replaced))
     } else {
         Ok(value.clone())
+    }
+}
+
+mod tests {
+    use super::*;
+
+    #[test]
+    fn url_parsing() {
+        let url =
+            "https://docs.google.com/document/d/13ELP_F95OUUW8exR2KvQzzgtcfO1w_b3wVgPQR8dggo/edit";
+        let id = "13ELP_F95OUUW8exR2KvQzzgtcfO1w_b3wVgPQR8dggo";
+        assert_eq!(SheetResult::drive_url_to_id(url), id);
+        // Raw IDs should remain intact.
+        assert_eq!(SheetResult::drive_url_to_id(id), id);
     }
 }
