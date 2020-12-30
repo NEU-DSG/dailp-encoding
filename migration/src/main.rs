@@ -1,4 +1,5 @@
 mod connections;
+mod early_vocab;
 mod lexical;
 mod spreadsheets;
 mod tags;
@@ -6,6 +7,9 @@ mod translations;
 
 use anyhow::Result;
 use std::time::Duration;
+
+pub const METADATA_SHEET_NAME: &str = "Metadata";
+pub const REFERENCES_SHEET_NAME: &str = "References";
 
 /// Migrates DAILP data from several Google spreadsheets to a MongoDB instance.
 #[tokio::main]
@@ -18,7 +22,7 @@ async fn main() -> Result<()> {
     migrate_data().await?;
 
     println!("Migrating early vocabularies...");
-    lexical::migrate_old_lexical().await?;
+    early_vocab::migrate_all().await?;
 
     println!("Migrating DF1975 and DF2003...");
     lexical::migrate_dictionaries().await?;
@@ -63,12 +67,13 @@ async fn fetch_sheet(
 
     // Parse the metadata on the second page of each sheet.
     // This includes publication information and a link to the translation.
-    let meta = spreadsheets::SheetResult::from_sheet(sheet_id, Some("Metadata")).await;
+    let meta = spreadsheets::SheetResult::from_sheet(sheet_id, Some(METADATA_SHEET_NAME)).await;
     if let Ok(meta_sheet) = meta {
         let meta = meta_sheet.into_metadata(false).await?;
 
         // Parse references for this particular document.
-        let refs = spreadsheets::SheetResult::from_sheet(sheet_id, Some("References")).await;
+        let refs =
+            spreadsheets::SheetResult::from_sheet(sheet_id, Some(REFERENCES_SHEET_NAME)).await;
         let refs = if let Ok(refs) = refs {
             refs.into_references(&meta.id).await
         } else {

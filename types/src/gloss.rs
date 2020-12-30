@@ -1,3 +1,5 @@
+//! Parse morpheme glosses and segmentations using the Leipzig Glossing Rules.
+
 use crate::{MorphemeSegment, SegmentType};
 use nom::{
     bytes::complete::*,

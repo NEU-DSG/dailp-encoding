@@ -57,6 +57,8 @@ pub async fn migrate_dictionaries() -> Result<()> {
     )
     .await?;
 
+    ingest_particle_index("1YppMsIvNixHdq7oM_iCnYE1ZI4y0TMSf-mVibji7pJ4").await?;
+
     // DF1975 Grammatical Appendix
     parse_appendix("1VjpKXMqb7CgFKE5lk9E6gqL-k6JKZ3FVUvhnqiMZYQg", 2).await?;
 
@@ -303,203 +305,43 @@ fn parse_new_df1975(
         })
 }
 
-pub async fn migrate_old_lexical() -> Result<()> {
-    // Most of our early vocabularies have a consistent format, so we can parse
-    // them the exact same way.
-    migrate_new_vocabs(&[
-        // AG1836
-        "1EPsHXNIqGgsPtTP-V86ItFfJ5vwxKIV2qx9sycrARsg",
-        // DC1800
-        "1zq0qQ6jv8ym6VZNIAoiavGQeGhIWM0M1ZfOM9ngA49w",
-        // TS1822
-        "1sZEhIBoEGp1nTsvpDcFqLm6HAjz0YBTlWW-uzkAzQkM",
-        // jdb1771
-        "1pYYS_jv01rccXhue2vX0xnLqMnCg-PoFDE4WSOA6hVQ",
-        // BH1784
-        "1fhV3DTHzh9ffqUFfHPSALjotgkXEvKKMNfE5G8ZYVC8",
-        // WP1796
-        "1H2Z26jHh6bb1p7xVfv3P2vvD73eifiLR7Ss5k1HpUfM",
-        // JH1823
-        "1Uj7bk1wvTbXopL52mm-b9s3RLw7iSA_RFAt_ccFg_bQ",
-        // DB1884
-        "1hLPiRBdKUX7jaLVE6MFLgfrTMBJGNHFb8P-2MM81YIo",
-        // BB1797
-        "1SRTn65vbHrjmc54hVFSmBba6Cnh8KPn5LQ8qmk_kJMc",
-    ])
-    .await?;
-
-    // A few others have slight differences.
-
-    // TODO Include all three dialectal variants somehow!
-    // JM1887
-    parse_early_vocab(
-        "1RqtDUzYCRMx7AOSp7aICCis40m4kZQpUsd2thav_m50",
-        1,
-        false,
-        false,
-        false,
-        false,
-        0,
-    )
-    .await?;
-    // JA1775
-    parse_early_vocab(
-        "1Gfa_Ef1KFKp9ig1AlF65hxaXe43ffV_U_xKQGkD0mnc",
-        1,
-        false,
-        false,
-        false,
-        false,
-        0,
-    )
-    .await?;
-    // BB1819
-    parse_early_vocab(
-        "1aLPu_d_1OtgPL2_2olnjeDSBOgsreE6X3vBAFtpB5N0",
-        0,
-        true,
-        false,
-        true,
-        false,
-        1,
-    )
-    .await?;
-
-    Ok(())
-}
-
-async fn migrate_new_vocabs(sheet_ids: &[&str]) -> Result<()> {
-    for s in sheet_ids {
-        parse_early_vocab(s, 0, true, false, true, true, 3).await?;
-    }
-    Ok(())
-}
-
-async fn parse_early_vocab(
-    sheet_id: &str,
-    to_skip: usize,
-    has_norm: bool,
-    has_phonetic: bool,
-    has_notes: bool,
-    has_segmentation: bool,
-    num_links: usize,
-) -> Result<()> {
-    use chrono::TimeZone as _;
-    println!("parsing sheet {}...", sheet_id);
-    let sheet = SheetResult::from_sheet(sheet_id, None).await?;
-    let meta = SheetResult::from_sheet(sheet_id, Some("Metadata")).await?;
-    let mut meta = meta.values.into_iter();
-    let doc_id = meta.next().unwrap().pop().unwrap();
-    let title = meta.next().unwrap().pop().unwrap();
-    let year = meta.next().unwrap().pop().unwrap().parse::<i32>();
-    let date_recorded = year
-        .ok()
-        .map(|year| DateTime::new(chrono::Utc.ymd(year, 1, 1).and_hms(0, 0, 0)));
-    let meta = DocumentMetadata {
-        id: doc_id,
-        title,
-        date: date_recorded,
-        sources: Vec::new(),
-        collection: Some("Early Vocabularies".to_owned()),
-        genre: None,
-        contributors: Vec::new(),
-        page_images: Vec::new(),
-        translation: None,
-        is_reference: true,
-    };
-
-    let entries: Vec<_> = sheet
+async fn ingest_particle_index(document_id: &str) -> Result<()> {
+    let sheet = SheetResult::from_sheet(document_id, None).await?;
+    let forms = sheet
         .values
         .into_iter()
-        // The first row is just a header.
-        .skip(1)
-        .filter(move |row| row.len() >= (4 + to_skip))
         .enumerate()
         .filter_map(|(index, row)| {
             let mut row = row.into_iter();
-            let page_number = row.next()?;
-            let id = row.next()?;
-            for _ in 0..to_skip {
-                row.next()?;
-            }
-            let gloss = row.next()?;
-            let source = row.next()?;
-            let normalized_source = if has_norm {
-                row.next().filter(|s| !s.is_empty())
-            } else {
-                None
-            };
-            let simple_phonetics = if has_phonetic {
-                row.next().filter(|s| !s.is_empty())
-            } else {
-                None
-            };
-            let commentary = if has_notes {
-                row.next().filter(|s| !s.is_empty())
-            } else {
-                None
-            };
-            let segments = if has_segmentation {
-                if let (Some(segs), Some(glosses)) = (
-                    row.next().filter(|s| !s.is_empty()),
-                    row.next().filter(|s| !s.is_empty()),
-                ) {
-                    MorphemeSegment::parse_many(&segs, &glosses)
-                } else {
-                    None
-                }
-            } else {
-                None
-            };
-            let mut links = Vec::new();
-            for _ in 0..num_links {
-                if let Some(s) = row.next() {
-                    if !s.is_empty() {
-                        links.push(LexicalConnection::parse(&id, &s)?);
-                    }
-                }
-            }
-
-            Some(ConnectedForm {
-                form: AnnotatedForm {
-                    normalized_source,
-                    simple_phonetics,
-                    segments,
-                    source,
-                    phonemic: None,
-                    commentary,
-                    english_gloss: vec![gloss],
-                    line_break: None,
-                    page_break: None,
-                    position: PositionInDocument {
-                        document_id: meta.id.clone(),
-                        page_number,
-                        index: index as i32 + 1,
-                    },
-                    date_recorded: meta.date.clone(),
-                    id,
-                },
-                links,
+            let syllabary = row.next()?;
+            let simple_phonetics = row.next()?;
+            let translation = row.next()?;
+            let source_str = row.next()?;
+            let source = MorphemeId::parse(&source_str)?;
+            let pos = PositionInDocument::new(
+                source.document_id.clone()?,
+                source.gloss.clone(),
+                index as i32,
+            );
+            Some(AnnotatedForm {
+                id: pos.make_raw_id(&translation),
+                simple_phonetics: Some(simple_phonetics),
+                normalized_source: None,
+                phonemic: None,
+                commentary: None,
+                line_break: None,
+                page_break: None,
+                english_gloss: vec![translation],
+                segments: None,
+                date_recorded: None,
+                source: syllabary,
+                position: pos,
             })
         })
-        .collect();
+        .collect::<Vec<_>>();
 
-    // Push all forms and links to the database.
-    crate::update_form(entries.iter().map(|x| &x.form)).await?;
-    crate::update_connection(entries.iter().flat_map(|x| &x.links)).await?;
-
-    // Update document metadata record
-    let doc = AnnotatedDoc {
-        meta,
-        segments: None,
-    };
-    let docs = vec![doc];
-    crate::update_document(&docs).await?;
+    // Push the forms to the database.
+    crate::update_form(&forms).await?;
 
     Ok(())
-}
-
-struct ConnectedForm {
-    form: AnnotatedForm,
-    links: Vec<LexicalConnection>,
 }
