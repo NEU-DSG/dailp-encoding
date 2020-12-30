@@ -299,8 +299,7 @@ const documentBlock = css`
   display: block;
   break-after: avoid;
   margin-top: ${theme.rhythm}rem;
-  padding-bottom: ${theme.rhythm / 2}rem;
-  margin-bottom: ${theme.rhythm / 2}rem;
+  margin-bottom: ${theme.rhythm * 2}rem;
   ${theme.mediaQueries.print} {
     padding-bottom: ${theme.rhythm / 4}rem;
     margin-bottom: ${theme.rhythm * 2}rem;

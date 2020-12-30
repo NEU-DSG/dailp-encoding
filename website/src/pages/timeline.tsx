@@ -39,25 +39,27 @@ const Timeline = (p: { gloss: string }) => {
   }
   return (
     <div className={wide}>
-      {timeline.data.morphemeTimeClusters.map((cluster: any) => (
-        <div
-          key={cluster.start.year}
-          style={{ marginBottom: "3rem" }}
-        >
-          <h2 style={{ borderBottom: "2px solid black" }}>
-            {cluster.start ? Math.floor(cluster.start!.year / 50) * 50 : "None"} -{" "}
-            {cluster.end ? Math.ceil(cluster.end!.year / 50) * 50 : "None"}
-          </h2>
-          {cluster.forms.map((form: any, i: number) => (
-            <div key={i} className={wordRow}>
-              <div>{form.documentId}</div>
-              <div>{form.normalizedSource || form.source}</div>
-              <div>{form.simplePhonetics}</div>
-              <div>{form.englishGloss.join(", ")}</div>
-            </div>
-          ))}
-        </div>
-      ))}
+      {timeline.data.morphemeTimeClusters.map((cluster: any) => {
+        let timeRange = "Unknown"
+        if (cluster.start) {
+          const start = Math.floor(cluster.start.year / 50) * 50
+          const end = Math.floor(cluster.end.year / 50) * 50
+          timeRange = `${start} – ${end}`
+        }
+        return (
+          <div key={timeRange} style={{ marginBottom: "3rem" }}>
+            <h2 style={{ borderBottom: "2px solid black" }}>{timeRange}</h2>
+            {cluster.forms.map((form: any, i: number) => (
+              <div key={i} className={wordRow}>
+                <div>{form.documentId}</div>
+                <div>{form.normalizedSource || form.source}</div>
+                <div>{form.simplePhonetics}</div>
+                <div>{form.englishGloss.join(", ")}</div>
+              </div>
+            ))}
+          </div>
+        )
+      })}
     </div>
   )
 }
@@ -74,7 +76,6 @@ const wordRow = css`
     width: 10rem;
   }
 `
-
 
 const query = gql`
   query Timeline($gloss: String!) {
