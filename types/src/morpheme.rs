@@ -57,7 +57,7 @@ impl MorphemeSegment {
     }
 }
 
-#[async_graphql::Object(cache_control(max_age = 60))]
+#[async_graphql::Object]
 impl MorphemeSegment {
     /// Phonemic representation of the morpheme
     async fn morpheme(&self, system: Option<CherokeeOrthography>) -> Cow<'_, str> {

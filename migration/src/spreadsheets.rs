@@ -74,12 +74,12 @@ impl SheetResult {
             || Self::from_sheet_weak(sheet_id, sheet_name.clone()),
             |e| {
                 // Try up to five times before giving up.
-                if tries > 5 {
+                if tries > 3 {
                     RetryPolicy::<anyhow::Error>::ForwardError(e)
                 } else {
                     tries += 1;
                     println!("Retrying for the {}th time...", tries);
-                    RetryPolicy::<anyhow::Error>::WaitRetry(Duration::from_millis(2500))
+                    RetryPolicy::<anyhow::Error>::WaitRetry(Duration::from_millis(5000))
                 }
             },
         )
@@ -372,8 +372,8 @@ impl SheetResult {
             // Empty rows mark a line break.
             // Rows starting with one cell containing just "\\" mark a page break.
             // All other rows are part of an annotated line.
-            let is_page_break = !row.is_empty() && row[0].starts_with("No Document ID");
-            if row.is_empty() || is_page_break {
+            let is_blank = row.is_empty() || row.iter().all(|x| x.trim().is_empty());
+            if is_blank {
                 if !current_result.is_empty() {
                     all_lines.push(SemanticLine {
                         number: current_result[0][0].clone(),
@@ -389,7 +389,7 @@ impl SheetResult {
                                 }
                             })
                             .collect(),
-                        ends_page: is_page_break,
+                        ends_page: false,
                     });
                 }
                 current_result = Vec::new();
@@ -397,6 +397,7 @@ impl SheetResult {
                 current_result.push(row);
             }
         }
+
         // Add the last line to the output.
         if !current_result.is_empty() {
             all_lines.push(SemanticLine {
@@ -449,7 +450,7 @@ impl SemanticLine {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct AnnotatedLine {
     pub words: Vec<AnnotatedForm>,
     ends_page: bool,
@@ -559,7 +560,7 @@ impl<'a> AnnotatedLine {
                     position: PositionInDocument {
                         index: word_idx,
                         document_id: document_id.to_owned(),
-                        page_number: page_num.to_string(),
+                        page_number: (page_num + 1).to_string(),
                     },
                     ..word
                 };
@@ -568,9 +569,7 @@ impl<'a> AnnotatedLine {
                 word_idx += 1;
 
                 // Account for mid-word line breaks.
-                if word.page_break.is_some() {
-                    page_num += 1;
-                } else if word.line_break.is_some() {
+                if word.line_break.is_some() {
                     line_num += 1;
                 }
 
@@ -607,7 +606,7 @@ impl<'a> AnnotatedLine {
                     source = &source[..source.len() - 1];
                     count_to_pop += 1;
                 }
-                // Add the current word to the top phrase or the root document.
+                // Construct the final word.
                 let finished_word = AnnotatedSeg::Word(AnnotatedForm {
                     source: source.to_owned(),
                     line_break: word.line_break.map(|_| line_num as i32),
@@ -615,12 +614,13 @@ impl<'a> AnnotatedLine {
                     date_recorded: date.clone(),
                     ..word
                 });
+                // Add the current word to the current phrase or the root document.
                 if let Some(p) = stack.last_mut() {
                     p.parts.push(finished_word);
                 } else {
                     segments.push(finished_word);
                 }
-                // Check for the end of phrase(s).
+                // Check for the end of phrases.
                 for _ in 0..count_to_pop {
                     if let Some(p) = stack.pop() {
                         let finished_p = AnnotatedSeg::Block(p);

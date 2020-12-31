@@ -51,8 +51,9 @@ async fn migrate_data() -> Result<()> {
         if let Some((doc, refs)) = fetch_sheet(sheet_id).await? {
             spreadsheets::write_to_file(&doc)?;
             spreadsheets::migrate_documents_to_db(&[(doc, refs)]).await?;
+        } else {
+            println!("Failed to process {}", sheet_id);
         }
-        tokio::time::delay_for(Duration::from_millis(1500)).await;
     }
     Ok(())
 }
@@ -85,7 +86,7 @@ async fn fetch_sheet(
         let mut all_lines = Vec::new();
         // Each document page lives in its own tab.
         for index in 0..page_count {
-            let tab_name = if index > 0 {
+            let tab_name = if page_count > 1 {
                 println!("Pulling Page {}...", index + 1);
                 Some(format!("Page {}", index + 1))
             } else {

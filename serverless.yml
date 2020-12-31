@@ -41,8 +41,6 @@ custom:
     s3Bucket: "dailp-prod-serverlessdeploymentbucket-1k5ja8qst262t --region us-east-1"
     inFolder: cf-templates
     outFolder: .serverless
-  cf-changesets:
-    requireChangeSet: true
   rust:
     dockerless: true
 plugins:
