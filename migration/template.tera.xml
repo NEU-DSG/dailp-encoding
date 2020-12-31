@@ -48,11 +48,13 @@
       <text type="translation" xml:lang="en">
         <body>
           {% for segment in segments %}
-          <ab xml:id="b{{segment.translation.index}}_trans">
-            {% for text in segment.translation.segments %}
-            <seg>{{text}}</seg>
-            {% endfor %}
-          </ab>
+            {% if segment.translation %}
+              <ab xml:id="b{{segment.translation.index}}_trans">
+                {% for text in segment.translation.segments %}
+                  <seg>{{text}}</seg>
+                {% endfor %}
+              </ab>
+            {% endif %}
           {% endfor %}
         </body>
       </text>

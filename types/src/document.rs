@@ -14,17 +14,28 @@ pub struct AnnotatedDoc {
 }
 impl AnnotatedDoc {
     pub fn new(meta: DocumentMetadata, segments: Vec<AnnotatedSeg>) -> Self {
+        let mut merged_segments = Vec::new();
+        // Skip the first block of the translation, since this usually contains
+        // the header and information for translators and editors.
+        let mut block_index = 1;
+        let blocks = &meta.translation.as_ref().unwrap().blocks;
+        for seg in segments {
+            // Only blocks have an associated translation.
+            let trans = if let AnnotatedSeg::Block(_) = &seg {
+                let t = blocks.get(block_index);
+                block_index += 1;
+                t.map(|t| t.clone())
+            } else {
+                None
+            };
+            merged_segments.push(TranslatedSection {
+                translation: trans,
+                source: seg,
+            });
+        }
+
         Self {
-            segments: Some(
-                segments
-                    .into_iter()
-                    .zip(&meta.translation.as_ref().unwrap().blocks)
-                    .map(|(seg, trans)| TranslatedSection {
-                        translation: trans.clone(),
-                        source: seg,
-                    })
-                    .collect(),
-            ),
+            segments: Some(merged_segments),
             meta,
         }
     }
@@ -136,7 +147,7 @@ pub enum DocumentType {
 #[derive(async_graphql::SimpleObject, Serialize, Deserialize, Clone)]
 pub struct TranslatedSection {
     /// Translation of this portion of the source text.
-    translation: TranslationBlock,
+    translation: Option<TranslationBlock>,
     /// Source text from the original document.
     source: AnnotatedSeg,
 }
@@ -145,7 +156,7 @@ pub struct TranslatedSection {
 // documents: [{ meta, pages: [{ lines: [{ index, words }] }] }]
 // Basic to start: [{meta, lines: [{ index, words }]}]
 
-#[derive(async_graphql::Union, Serialize, Deserialize, Clone)]
+#[derive(Debug, async_graphql::Union, Serialize, Deserialize, Clone)]
 #[serde(tag = "type")]
 pub enum AnnotatedSeg {
     Block(AnnotatedPhrase),
@@ -165,23 +176,23 @@ impl AnnotatedSeg {
     }
 }
 
-#[derive(async_graphql::Enum, Clone, Copy, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, async_graphql::Enum, Clone, Copy, Eq, PartialEq, Serialize, Deserialize)]
 pub enum BlockType {
     Block,
     Phrase,
 }
 
-#[derive(async_graphql::SimpleObject, Serialize, Deserialize, Clone)]
+#[derive(Debug, async_graphql::SimpleObject, Serialize, Deserialize, Clone)]
 pub struct LineBreak {
     pub index: i32,
 }
 
-#[derive(async_graphql::SimpleObject, Serialize, Deserialize, Clone)]
+#[derive(Debug, async_graphql::SimpleObject, Serialize, Deserialize, Clone)]
 pub struct PageBreak {
     pub index: i32,
 }
 
-#[derive(async_graphql::SimpleObject, Serialize, Deserialize, Clone)]
+#[derive(async_graphql::SimpleObject, Debug, Serialize, Deserialize, Clone)]
 pub struct AnnotatedPhrase {
     pub ty: BlockType,
     pub index: i32,

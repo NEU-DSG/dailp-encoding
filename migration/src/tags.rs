@@ -34,9 +34,9 @@ fn parse_tag_glossary(sheet: SheetResult) -> Result<Vec<MorphemeTag>> {
             // Skip over allomorphs, and instead allow them to emerge from our texts.
             let mut cols = row.into_iter();
             let id = cols.next()?;
-            let name = cols.next()?;
+            let _name = cols.next()?;
             let morpheme_type = cols.next()?;
-            let dailp_form = cols.next()?;
+            let _dailp_form = cols.next()?;
             let crg = parse_tag_section(&mut cols, true);
             let taoc = parse_tag_section(&mut cols, true);
             let learner = parse_tag_section(&mut cols, false);
@@ -55,7 +55,7 @@ fn parse_tag_section(values: &mut impl Iterator<Item = String>, has_page: bool) 
     let tag = values.next()?;
     let title = values.next()?;
     let definition = values.next().unwrap_or_default();
-    let page_num = if has_page { values.next() } else { None };
+    let _page_num = if has_page { values.next() } else { None };
     let shape = values.next();
     if !tag.is_empty() {
         Some(TagForm {

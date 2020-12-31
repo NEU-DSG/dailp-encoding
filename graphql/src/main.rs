@@ -32,6 +32,8 @@ async fn main(req: Request, _: lambda::Context) -> Result<impl IntoResponse, Err
         // GraphQL query.
         let schema = Schema::build(Query, Mutation, EmptySubscription)
             .data::<&dailp::Database>(&*DATABASE)
+            .limit_depth(10)
+            .limit_complexity(50)
             .finish();
         let req: async_graphql::Request = serde_json::from_str(&req)?;
         let res = schema.execute(req).await;
@@ -52,7 +54,7 @@ use mongodb::bson;
 /// Home for all read-only queries
 struct Query;
 
-#[async_graphql::Object(cache_control(max_age = 60))]
+#[async_graphql::Object]
 impl Query {
     /// List of all the functional morpheme tags available
     async fn all_tags(&self, context: &Context<'_>) -> FieldResult<Vec<MorphemeTag>> {
