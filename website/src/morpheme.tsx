@@ -1,7 +1,7 @@
 import React from "react"
 import { Clickable } from "reakit/Clickable"
 import { DialogStateReturn } from "reakit/Dialog"
-import { css } from "linaria"
+import { css, cx } from "linaria"
 import { useQuery, gql } from "@apollo/client"
 import _ from "lodash"
 import { MdClose } from "react-icons/md"
@@ -20,31 +20,6 @@ export const MorphemeDetails = (props: {
   tagSet: TagSet
   dialog: DialogStateReturn
 }) => {
-  return (
-    <>
-      <Clickable
-        className={closeButton}
-        role="button"
-        aria-label="Close Dialog"
-        onClick={props.dialog.hide}
-      >
-        <MdClose size={32} />
-      </Clickable>
-      <TagDetails segment={props.segment} tagSet={props.tagSet} />
-      <SimilarMorphemeList
-        documentId={props.documentId}
-        gloss={props.segment.gloss!}
-        dialog={props.dialog}
-        isGlobal={!!props.segment.matchingTag}
-      />
-    </>
-  )
-}
-
-const TagDetails = (props: {
-  segment: BasicMorphemeSegment
-  tagSet: TagSet
-}) => {
   // Use the right tag name from the jump.
   const matchingTag = morphemeDisplayTag(
     props.segment.matchingTag,
@@ -60,26 +35,67 @@ const TagDetails = (props: {
     variables: { gloss: props.segment.gloss },
   })
 
-  if (tag.data) {
+  let titleArea = null
+  let content = occurrences
+  if (tag.data && tag.data.tag) {
     const matchingTag = morphemeDisplayTag<{
       title: string
       tag: string
       definition: string
     }>(tag.data.tag, props.tagSet)
-    return (
+    titleArea = matchingTag?.title ? (
+      <h2 className={margined}>{matchingTag.title}</h2>
+    ) : null
+    content = (
       <>
-        {matchingTag?.title ? <h2>{matchingTag.title}</h2> : null}
         {matchingTag?.definition ? <p>{matchingTag.definition}</p> : null}
         {occurrences}
       </>
     )
-  } else {
-    return occurrences
   }
+
+  return (
+    <>
+      {titleArea}
+      <Clickable
+        className={closeButton}
+        role="button"
+        aria-label="Close Dialog"
+        onClick={props.dialog.hide}
+      >
+        <MdClose size={32} />
+      </Clickable>
+      <div className={cx(scrollable, padded)}>
+        {content}
+        <SimilarMorphemeList
+          documentId={props.documentId}
+          gloss={props.segment.gloss!}
+          dialog={props.dialog}
+          isGlobal={!!props.segment.matchingTag}
+        />
+      </div>
+    </>
+  )
 }
 
+const margined = css`
+  margin: ${theme.rhythm / 2}rem 1rem;
+`
+
+const padded = css`
+  padding: ${theme.rhythm / 2}rem 1rem;
+`
+
+const scrollable = css`
+  overflow-y: scroll;
+  -webkit-overflow-scrolling: touch;
+  width: 100%;
+  max-height: 75vh;
+  min-height: 20rem;
+`
+
 const closeButton = css`
-  position: fixed;
+  position: absolute;
   top: ${theme.rhythm / 2}rem;
   right: ${theme.rhythm / 2}rem;
   cursor: pointer;
@@ -132,7 +148,7 @@ const SimilarMorphemeList = (props: {
                         to={`/documents/${word.documentId?.toLowerCase()}#w${
                           word.index
                         }`}
-                        onClick={props.dialog.hide}
+                        onClick={() => props.dialog.hide()}
                       >
                         {word.documentId} #{word.index}
                       </AnchorLink>
