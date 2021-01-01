@@ -325,12 +325,7 @@ const morphemeDialog = css`
   background-color: white;
   border: 1px solid ${theme.colors.borders};
   border-radius: 2px;
-  padding: ${theme.rhythm}rem 1rem;
-  max-height: 80vh;
-  min-height: 20rem;
   max-width: 100vw;
-  overflow-y: scroll;
-  -webkit-overflow-scrolling: touch;
   z-index: 999;
 `
 
