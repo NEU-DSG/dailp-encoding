@@ -135,7 +135,7 @@ const TagSetOption = (p: { radio: RadioStateReturn; level: string }) => {
 }
 
 const levelGroup = css`
-  margin-top: ${theme.rhythm / 2}rem;
+  margin: ${theme.rhythm / 2}rem 0;
   display: flex;
   flex-flow: row wrap;
   justify-content: center;
