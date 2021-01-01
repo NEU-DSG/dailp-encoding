@@ -33,6 +33,10 @@ export default (p: {
             <h1>{p.pageContext.name}</h1>
           </header>
 
+          {p.data.wpPage ? (
+            <div dangerouslySetInnerHTML={{ __html: p.data.wpPage.content }} />
+          ) : null}
+
           <ul>
             {documents.map((document) => (
               <li key={document.slug}>
@@ -48,7 +52,7 @@ export default (p: {
 }
 
 export const query = graphql`
-  query Collection($name: String!) {
+  query Collection($name: String!, $slug: String!) {
     dailp {
       allDocuments(collection: $name) {
         id
@@ -58,6 +62,9 @@ export const query = graphql`
           year
         }
       }
+    }
+    wpPage(slug: { eq: $slug }) {
+      content
     }
   }
 `
