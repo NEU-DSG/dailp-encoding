@@ -8,6 +8,8 @@ import { MdClose } from "react-icons/md"
 import { AnchorLink } from "./link"
 import theme from "./theme"
 import { morphemeDisplayTag, TagSet } from "./types"
+import { Link } from "gatsby"
+import { glossaryRoute, morphemeTagId } from "./routes"
 
 type BasicMorphemeSegment = NonNullable<
   GatsbyTypes.FormFieldsFragment["segments"]
@@ -49,6 +51,9 @@ export const MorphemeDetails = (props: {
     content = (
       <>
         {matchingTag?.definition ? <p>{matchingTag.definition}</p> : null}
+        <p>
+          <Link to={glossaryRoute(tag.data.tag.id)}>View in glossary</Link>
+        </p>
         {occurrences}
       </>
     )
@@ -198,6 +203,7 @@ const morphemeQuery = gql`
 const tagQuery = gql`
   query Tag($gloss: String!) {
     tag: morphemeTag(id: $gloss) {
+      id
       morphemeType
       taoc {
         tag

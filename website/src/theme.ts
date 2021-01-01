@@ -1,4 +1,5 @@
 import { css } from "linaria"
+import Color from "color"
 
 const theme = {
   fonts: {
@@ -15,6 +16,7 @@ const theme = {
   },
   colors: {
     header: "#f7eeed",
+    button: "#f7eeed",
     footer: "#405372",
     altFooter: "#4f5970",
     body: "white",
@@ -71,5 +73,29 @@ export const hideOnPrint = css`
     display: none;
   }
 `
+
+const button = css`
+  font-family: ${theme.fonts.headerArr.join(",")};
+  font-size: 1rem;
+  color: ${theme.colors.link};
+  background-color: ${theme.colors.button};
+  padding: ${theme.rhythm / 3}rem 1rem;
+  margin: 0 1rem;
+  cursor: pointer;
+  border: 2px solid ${theme.colors.headings};
+  &:hover {
+    color: ${theme.colors.headings};
+    background-color: ${Color(theme.colors.button).lighten(0.2).hsl().string()};
+  }
+  &:focus,
+  &:active {
+    outline: none;
+    border-style: dashed;
+  }
+`
+
+export const std = {
+  button,
+}
 
 export default theme
