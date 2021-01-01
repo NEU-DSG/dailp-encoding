@@ -103,7 +103,7 @@ async fn fetch_sheet(
             lines.last_mut().unwrap().ends_page = true;
 
             all_lines.append(&mut lines);
-            tokio::time::delay_for(Duration::from_millis(1000)).await;
+            tokio::time::delay_for(Duration::from_millis(1700)).await;
         }
         let annotated = AnnotatedLine::many_from_semantic(&all_lines, &meta);
         let segments = AnnotatedLine::to_segments(annotated, &meta.id, &meta.date);

@@ -53,6 +53,11 @@ Resources:
                   - website/node_modules
                   - website/.cache
                   - website/public
+            customHeaders:
+              - pattern: "**/*.{json,html}"
+                headers:
+                  - key: "Cache-Control"
+                    value: "public, max-age=0, must-revalidate"
           - RestApiId: !Ref ApiGatewayRestApi
   AmplifyMainBranch:
     Type: AWS::Amplify::Branch
