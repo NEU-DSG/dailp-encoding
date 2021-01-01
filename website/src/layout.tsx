@@ -101,7 +101,7 @@ css`
     html {
       font-size: ${theme.fontSizes.root} !important;
       ${theme.mediaQueries.print} {
-        font-size: 12pt !important;
+        font-size: 11pt !important;
       }
     }
 

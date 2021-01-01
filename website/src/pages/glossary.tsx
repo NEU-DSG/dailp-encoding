@@ -11,6 +11,7 @@ import {
   TagSet,
   tagSetForMode,
 } from "../types"
+import { glossarySectionId, morphemeTagId } from "../routes"
 
 export default (p: { data: GatsbyTypes.GlossaryQuery }) => {
   const tags = p.data.dailp.allTags
@@ -27,13 +28,13 @@ export default (p: { data: GatsbyTypes.GlossaryQuery }) => {
         {Object.entries(groupedTags).map(([ty, tags]) => {
           return (
             <section key={ty} className={cx(wide, sec)}>
-              <h2>{ty}</h2>
+              <h2 id={glossarySectionId(ty)}>{ty}</h2>
               <dl>
                 {tags.map((tag) => {
                   const scopedTag = morphemeDisplayTag(tag, tagSet)
                   return (
                     <React.Fragment key={tag.id}>
-                      <dt id={tag.id}>
+                      <dt id={morphemeTagId(tag.id)}>
                         {scopedTag.tag} – {scopedTag.title}
                       </dt>
                       <dd>{scopedTag.definition}</dd>

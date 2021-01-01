@@ -5,10 +5,16 @@ import { Tab, TabPanel, TabList } from "reakit/Tab"
 import Sticky from "react-stickynode"
 import Layout from "../layout"
 import { Segment, AnnotatedForm } from "../segment"
-import theme, { fullWidth, largeDialog, withBg } from "../theme"
+import theme, {
+  fullWidth,
+  largeDialog,
+  withBg,
+  std,
+  hideOnPrint,
+} from "../theme"
 import { collectionRoute, documentDetailsRoute, documentRoute } from "../routes"
 import { useScrollableTabState } from "../scrollable-tabs"
-import { css } from "linaria"
+import { css, cx } from "linaria"
 import { DeepPartial } from "tsdef"
 import {
   ExperienceLevel,
@@ -21,6 +27,7 @@ import PageImages from "../page-image"
 import { Breadcrumbs } from "../breadcrumbs"
 import { isMobile } from "react-device-detect"
 import { ExperiencePicker } from "../mode"
+import { Button } from "reakit/Button"
 
 enum Tabs {
   ANNOTATION = "annotation-tab",
@@ -153,22 +160,29 @@ export const DocumentTitleHeader = (p: {
     </Breadcrumbs>
 
     <h1>
-      {p.showDetails ? (
-        p.doc.title
-      ) : (
-        <Link to={documentRoute(p.doc.slug!)}>{p.doc.title}</Link>
-      )}{" "}
-      {p.doc.date && `(${p.doc.date.year})`}{" "}
-      {p.showDetails ? (
-        <span className={notInPrint}>
-          [<Link to={documentDetailsRoute(p.doc.slug!)}>Details</Link>]
-        </span>
-      ) : null}
+      {p.doc.title} {p.doc.date && `(${p.doc.date.year})`}{" "}
     </h1>
+    <div className={bottomPadded}>
+      {p.showDetails ? (
+        <Link to={documentDetailsRoute(p.doc.slug!)}>View Details</Link>
+      ) : (
+        <Link to={documentRoute(p.doc.slug!)}>View Contents</Link>
+      )}
+      {!isMobile ? (
+        <Button className={std.button} onClick={() => window.print()}>
+          Print
+        </Button>
+      ) : null}
+    </div>
   </header>
 )
 
-const notInPrint = css`
+const bottomPadded = css`
+  margin-bottom: ${theme.rhythm / 2}rem;
+  display: flex;
+  flex-flow: row wrap;
+  align-items: center;
+  justify-content: space-between;
   ${theme.mediaQueries.print} {
     display: none;
   }
