@@ -10344,6 +10344,57 @@ type IndexPageQueryVariables = Exact<{ [key: string]: never; }>;
 
 type IndexPageQuery = { readonly dailp: { readonly allCollections: ReadonlyArray<Pick<Dailp_DocumentCollection, 'name' | 'slug'>> }, readonly aboutPage: Maybe<Pick<WpPage, 'title' | 'content'>> };
 
+type GlossaryQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+type GlossaryQuery = { readonly dailp: { readonly allTags: ReadonlyArray<(
+      Pick<Dailp_MorphemeTag, 'id' | 'morphemeType'>
+      & { readonly crg: Maybe<Pick<Dailp_TagForm, 'tag' | 'title' | 'definition'>>, readonly taoc: Maybe<Pick<Dailp_TagForm, 'tag' | 'title' | 'definition'>>, readonly learner: Maybe<Pick<Dailp_TagForm, 'tag' | 'title' | 'definition'>> }
+    )> } };
+
+type Unnamed_2_QueryVariables = Exact<{ [key: string]: never; }>;
+
+
+type Unnamed_2_Query = { readonly wpMenu: Maybe<{ readonly menuItems: Maybe<{ readonly nodes: Maybe<ReadonlyArray<Maybe<(
+        Pick<WpMenuItem, 'label' | 'path'>
+        & { readonly childItems: Maybe<{ readonly nodes: Maybe<ReadonlyArray<Maybe<Pick<WpMenuItem, 'label' | 'path'>>>> }> }
+      )>>> }> }> };
+
+type AnnotatedDocumentQueryVariables = Exact<{
+  id: Scalars['String'];
+  isReference: Scalars['Boolean'];
+}>;
+
+
+type AnnotatedDocumentQuery = { readonly dailp: { readonly document: Maybe<(
+      Pick<Dailp_AnnotatedDoc, 'id' | 'title' | 'slug' | 'pageImages'>
+      & { readonly collection: Maybe<Pick<Dailp_DocumentCollection, 'name' | 'slug'>>, readonly date: Maybe<Pick<Dailp_DateTime, 'year'>>, readonly sources: ReadonlyArray<Pick<Dailp_SourceAttribution, 'name' | 'link'>>, readonly translatedSegments: Maybe<ReadonlyArray<{ readonly source: BlockFieldsFragment | FormFieldsFragment | Pick<Dailp_PageBreak, 'index'>, readonly translation: Maybe<Pick<Dailp_TranslationBlock, 'text'>> }>>, readonly forms: ReadonlyArray<FormFieldsFragment> }
+    )> } };
+
+type BlockFieldsFragment = (
+  Pick<Dailp_AnnotatedPhrase, 'ty' | 'index'>
+  & { readonly parts: ReadonlyArray<FormFieldsFragment> }
+);
+
+type FormFieldsFragment = (
+  Pick<Dailp_AnnotatedForm, 'index' | 'source' | 'simplePhonetics' | 'phonemic' | 'englishGloss' | 'commentary'>
+  & { readonly segments: Maybe<ReadonlyArray<(
+    Pick<Dailp_MorphemeSegment, 'gloss' | 'nextSeparator'>
+    & { shapeTth: Dailp_MorphemeSegment['morpheme'], shapeDt: Dailp_MorphemeSegment['morpheme'], shapeDtSimple: Dailp_MorphemeSegment['morpheme'] }
+    & { readonly matchingTag: Maybe<(
+      Pick<Dailp_MorphemeTag, 'id'>
+      & { readonly taoc: Maybe<Pick<Dailp_TagForm, 'tag' | 'title'>>, readonly learner: Maybe<Pick<Dailp_TagForm, 'tag' | 'title'>>, readonly crg: Maybe<Pick<Dailp_TagForm, 'tag' | 'title'>> }
+    )> }
+  )>> }
+);
+
+type ContentPageQueryVariables = Exact<{
+  id: Scalars['String'];
+}>;
+
+
+type ContentPageQuery = { readonly page: Maybe<Pick<WpPage, 'title' | 'content'>> };
+
 type CollectionQueryVariables = Exact<{
   name: Scalars['String'];
   slug: Scalars['String'];
@@ -10354,32 +10405,6 @@ type CollectionQuery = { readonly dailp: { readonly allDocuments: ReadonlyArray<
       Pick<Dailp_AnnotatedDoc, 'id' | 'slug' | 'title'>
       & { readonly date: Maybe<Pick<Dailp_DateTime, 'year'>> }
     )> }, readonly wpPage: Maybe<Pick<WpPage, 'content'>> };
-
-type Unnamed_2_QueryVariables = Exact<{ [key: string]: never; }>;
-
-
-type Unnamed_2_Query = { readonly wpMenu: Maybe<{ readonly menuItems: Maybe<{ readonly nodes: Maybe<ReadonlyArray<Maybe<(
-        Pick<WpMenuItem, 'label' | 'path'>
-        & { readonly childItems: Maybe<{ readonly nodes: Maybe<ReadonlyArray<Maybe<Pick<WpMenuItem, 'label' | 'path'>>>> }> }
-      )>>> }> }> };
-
-type GlossaryQueryVariables = Exact<{ [key: string]: never; }>;
-
-
-type GlossaryQuery = { readonly dailp: { readonly allTags: ReadonlyArray<(
-      Pick<Dailp_MorphemeTag, 'id' | 'morphemeType'>
-      & { readonly crg: Maybe<Pick<Dailp_TagForm, 'tag' | 'title' | 'definition'>>, readonly taoc: Maybe<Pick<Dailp_TagForm, 'tag' | 'title' | 'definition'>>, readonly learner: Maybe<Pick<Dailp_TagForm, 'tag' | 'title' | 'definition'>> }
-    )> } };
-
-type DocumentDetailsQueryVariables = Exact<{
-  id: Scalars['String'];
-}>;
-
-
-type DocumentDetailsQuery = { readonly dailp: { readonly document: Maybe<(
-      Pick<Dailp_AnnotatedDoc, 'id' | 'slug' | 'title'>
-      & { readonly collection: Maybe<Pick<Dailp_DocumentCollection, 'name' | 'slug'>>, readonly date: Maybe<Pick<Dailp_DateTime, 'year'>>, readonly contributors: ReadonlyArray<Pick<Dailp_Contributor, 'name' | 'role'>>, readonly sources: ReadonlyArray<Pick<Dailp_SourceAttribution, 'name' | 'link'>> }
-    )> } };
 
 type GatsbyImageSharpFixedFragment = Pick<ImageSharpFixed, 'base64' | 'width' | 'height' | 'src' | 'srcSet'>;
 
@@ -10431,39 +10456,14 @@ type GatsbyImageSharpSizes_noBase64Fragment = Pick<ImageSharpSizes, 'aspectRatio
 
 type GatsbyImageSharpSizes_withWebp_noBase64Fragment = Pick<ImageSharpSizes, 'aspectRatio' | 'src' | 'srcSet' | 'srcWebp' | 'srcSetWebp' | 'sizes'>;
 
-type ContentPageQueryVariables = Exact<{
+type DocumentDetailsQueryVariables = Exact<{
   id: Scalars['String'];
 }>;
 
 
-type ContentPageQuery = { readonly page: Maybe<Pick<WpPage, 'title' | 'content'>> };
-
-type AnnotatedDocumentQueryVariables = Exact<{
-  id: Scalars['String'];
-  isReference: Scalars['Boolean'];
-}>;
-
-
-type AnnotatedDocumentQuery = { readonly dailp: { readonly document: Maybe<(
-      Pick<Dailp_AnnotatedDoc, 'id' | 'title' | 'slug' | 'pageImages'>
-      & { readonly collection: Maybe<Pick<Dailp_DocumentCollection, 'name' | 'slug'>>, readonly date: Maybe<Pick<Dailp_DateTime, 'year'>>, readonly sources: ReadonlyArray<Pick<Dailp_SourceAttribution, 'name' | 'link'>>, readonly translatedSegments: Maybe<ReadonlyArray<{ readonly source: BlockFieldsFragment | FormFieldsFragment | Pick<Dailp_PageBreak, 'index'>, readonly translation: Maybe<Pick<Dailp_TranslationBlock, 'text'>> }>>, readonly forms: ReadonlyArray<FormFieldsFragment> }
+type DocumentDetailsQuery = { readonly dailp: { readonly document: Maybe<(
+      Pick<Dailp_AnnotatedDoc, 'id' | 'slug' | 'title'>
+      & { readonly collection: Maybe<Pick<Dailp_DocumentCollection, 'name' | 'slug'>>, readonly date: Maybe<Pick<Dailp_DateTime, 'year'>>, readonly contributors: ReadonlyArray<Pick<Dailp_Contributor, 'name' | 'role'>>, readonly sources: ReadonlyArray<Pick<Dailp_SourceAttribution, 'name' | 'link'>> }
     )> } };
-
-type BlockFieldsFragment = (
-  Pick<Dailp_AnnotatedPhrase, 'ty' | 'index'>
-  & { readonly parts: ReadonlyArray<FormFieldsFragment> }
-);
-
-type FormFieldsFragment = (
-  Pick<Dailp_AnnotatedForm, 'index' | 'source' | 'simplePhonetics' | 'phonemic' | 'englishGloss' | 'commentary'>
-  & { readonly segments: Maybe<ReadonlyArray<(
-    Pick<Dailp_MorphemeSegment, 'gloss' | 'nextSeparator'>
-    & { shapeTth: Dailp_MorphemeSegment['morpheme'], shapeDt: Dailp_MorphemeSegment['morpheme'], shapeDtSimple: Dailp_MorphemeSegment['morpheme'] }
-    & { readonly matchingTag: Maybe<(
-      Pick<Dailp_MorphemeTag, 'id'>
-      & { readonly taoc: Maybe<Pick<Dailp_TagForm, 'tag' | 'title'>>, readonly learner: Maybe<Pick<Dailp_TagForm, 'tag' | 'title'>>, readonly crg: Maybe<Pick<Dailp_TagForm, 'tag' | 'title'>> }
-    )> }
-  )>> }
-);
 
 }
