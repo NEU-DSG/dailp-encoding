@@ -100,6 +100,7 @@ css`
 
     html {
       font-size: ${theme.fontSizes.root} !important;
+      overflow: hidden;
       ${theme.mediaQueries.print} {
         font-size: 11pt !important;
       }
@@ -107,6 +108,9 @@ css`
 
     body {
       margin: 0;
+      padding: 0;
+      overflow-y: auto;
+      max-height: 100vh;
       background-color: ${theme.colors.footer} !important;
       ${theme.mediaQueries.print} {
         background-color: none !important;

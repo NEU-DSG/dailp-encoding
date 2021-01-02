@@ -215,7 +215,7 @@ const MorphemeSegment = (p: {
     ? cx(morphemeButton, smallCaps)
     : morphemeButton
 
-  let content = <>gloss</>
+  let content = <>{gloss}</>
   if (matchingTag && matchingTag.title) {
     content = <abbr title={matchingTag.title}>{gloss}</abbr>
   } else if (gloss === "?") {
