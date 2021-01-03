@@ -1,13 +1,9 @@
 # DAILP
 
-This is a repository for the data structure and website code of the Digital Archive of American Indian Languages Preservation and Perseverance ([DAILP](https://dailp.northeastern.edu)) project at [Northeastern University](https://northeastern.edu).
-Explore Cherokee manuscripts and language data at our website [dailp.netlify.app](https://dailp.netlify.app).
-
 ![CI](https://github.com/NEU-DSG/dailp-encoding/workflows/CI/badge.svg)
 
-For maintainers: to trigger a new deploy of our data, go [here](https://github.com/NEU-DSG/dailp-encoding/actions?query=workflow%3ACI) and click `Run workflow`.
-This process pulls in all our annotated spreadsheets, puts them into our database and converts them to TEI.
-The job also runs automatically every time a commit is pushed to the `main` branch, and deploys the website on [Netlify](https://www.netlify.com/).
+This is a repository for the data structure and website code of the Digital Archive of American Indian Languages Preservation and Perseverance ([DAILP](https://dailp.northeastern.edu)) project at [Northeastern University](https://northeastern.edu).
+Explore Cherokee manuscripts and language data at our website [dailp.netlify.app](https://dailp.netlify.app).
 
 ## Plans
 
@@ -29,22 +25,21 @@ Each directory has its own `README` with further information.
 - [`website/`](website) renders a static site with [Gatsby](https://gatsbyjs.org/) using our GraphQL endpoint at build time and at runtime (to handle user queries).
 - [`xml/`](xml) contains templates and a schema for defining TEI XML documents using DAILP data.
 
-## Stakeholder Testing
+### Further Documentation
 
-The following is a sketch of how we might approaching stakeholder testing and collaboration.
+Look no further than the [`doc/`](doc) directory for further notes about project development, testing, and contribution.
 
-1. Create multiple interface prototypes for different use cases. (see [Dow et al, 2010](https://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=&ved=2ahUKEwi94P3PppHsAhWlUt8KHXkUA7oQFjABegQIBBAB&url=http%3A%2F%2Fspdow.ucsd.edu%2Ffiles%2FPrototypingParallel-TOCHI10.pdf&usg=AOvVaw3Y9g1TBANvYS0fiy9-50dH) for the value of parallel prototyping)
-2. Present all prototypes together to stakeholders in each interest group: learners, experienced speakers, annotators, linguists, etc.
-3. Let them play around themselves in the interface. Show and tell can only go so far, and letting stakeholders interact directly with our work will give us much more valuable discussion and feedback.
-4. Ask them each questions about their experience, here are some examples:
-   - "Would you use this?"
-   - "Did one of these interfaces feel more intuitive or useful to you?"
-   - "How could each interface be better?"
-   - "Does this serve your needs as an X?"
-   - "Does this respect your community and position in that community?"
-5. Not only on their experience, but solicit feedback on how they themselves and tech-literate members of their community would feel most comfortable contributing to and participating in further development.
-   Then we can change our process to facilitate that kind of involvement.
-6. Iterate on all of the prototypes separately based on the feedback received.
-7. Involve some of the same people and some new people in testing out these refined prototypes, to recognize where we've improved (or not) and where we stand in fresh eyes.
-8. Consolidate these prototypes where possible while providing these same stakeholders with a link to our active working primary interface, and to our GitHub repository.
-9. Solicit feedback on a single refined prototype that will become the production release candidate.
+- [`doc/user-testing`](doc/user-testing.md) details how our user testing and feedback process.
+
+## Development
+
+### You Updated an Annotated Manuscript
+
+Maintainers can trigger a new deploy of our data [here](https://github.com/NEU-DSG/dailp-encoding/actions?query=workflow%3ACI) and click `Run workflow`.
+This process pulls in all our annotated spreadsheets, puts them into our database and converts them to TEI.
+Then, the new data is published on the website.
+This process also happens automatically every time a code change is made on the `main` branch.
+
+### Data Exploration
+
+If you just want to explore our data without navigating the DAILP website, we host a [GraphQL Playground](https://e3j0jht905.execute-api.us-east-1.amazonaws.com/prod/graphql) that allows you to query the DAILP database.
