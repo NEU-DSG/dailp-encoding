@@ -215,31 +215,22 @@ const MorphemeSegment = (p: {
     ? cx(morphemeButton, smallCaps)
     : morphemeButton
 
+  let content = <>{gloss}</>
   if (matchingTag && matchingTag.title) {
-    return (
-      <>
-        <DialogDisclosure
-          {...p.dialog}
-          className={buttonStyle}
-          onClick={() => p.onOpenDetails(p.segment)}
-        >
-          <abbr title={matchingTag.title}>{gloss}</abbr>
-        </DialogDisclosure>
-      </>
-    )
-  } else if (gloss) {
-    return (
-      <DialogDisclosure
-        {...p.dialog}
-        className={buttonStyle}
-        onClick={() => p.onOpenDetails(p.segment)}
-      >
-        {gloss}
-      </DialogDisclosure>
-    )
-  } else {
-    return null
+    content = <abbr title={matchingTag.title}>{gloss}</abbr>
+  } else if (gloss === "?") {
+    content = <abbr title="Unanalyzed or unknown segment">{gloss}</abbr>
   }
+
+  return (
+    <DialogDisclosure
+      {...p.dialog}
+      className={buttonStyle}
+      onClick={() => p.onOpenDetails(p.segment)}
+    >
+      {content}
+    </DialogDisclosure>
+  )
 }
 
 const smallCaps = css`
