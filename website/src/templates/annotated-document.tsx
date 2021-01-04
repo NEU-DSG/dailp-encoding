@@ -135,7 +135,9 @@ const AnnotatedDocumentPage = (p: {
           id="id-1-4"
           tabId={Tabs.IMAGES}
         >
-          <PageImages pageImages={doc.pageImages} document={doc as any} />
+          {doc.pageImages ? (
+            <PageImages pageImages={doc.pageImages} document={doc as any} />
+          ) : null}
         </TabPanel>
       </main>
     </Layout>
@@ -249,6 +251,7 @@ const docTabPanel = css`
 
 const imageTabPanel = css`
   ${fullWidth}
+  outline: none;
 `
 
 const docHeader = css`
