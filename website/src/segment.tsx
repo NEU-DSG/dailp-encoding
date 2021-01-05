@@ -58,7 +58,7 @@ export const Segment = (p: Props) => {
           >
             {children}
           </div>
-          <p>{p.translations?.text ?? null}.</p>
+          <p>{p.translations?.text ?? null}</p>
         </section>
       )
     } else {
