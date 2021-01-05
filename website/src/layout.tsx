@@ -2,15 +2,15 @@ import React from "react"
 import { css, cx } from "linaria"
 import { Link } from "gatsby"
 import Footer from "./footer"
-import theme, { fullWidth, hideOnPrint } from "./theme"
+import theme, { fullWidth, hideOnPrint, typography } from "./theme"
 import { NavMenu, MobileNav } from "./menu"
 import { Helmet } from "react-helmet"
 import Sticky from "react-stickynode"
 import { isMobile } from "react-device-detect"
-import Typography from "typography"
 
-import "fontsource-noto-serif"
-import "fontsource-quattrocento-sans"
+import "@fontsource/spectral"
+import "@fontsource/spectral-sc"
+import "@fontsource/quattrocento-sans"
 import "./fonts.css"
 
 /** Wrapper for most site pages, providing them with a navigation header and footer. */
@@ -68,25 +68,16 @@ const subHeader = css`
 `
 
 const siteTitle = css`
-  margin: ${theme.rhythm / 4}rem 0;
+  running-head: title;
+  margin: ${typography.rhythm(1 / 4)} 0;
   ${theme.mediaQueries.medium} {
-    margin: ${theme.rhythm}rem 0;
+    margin: ${typography.rhythm(1)} 0;
   }
   & > a {
     color: ${theme.colors.headings};
     text-decoration: none;
   }
 `
-
-const typography = new Typography({
-  baseFontSize: theme.fontSizes.root,
-  baseLineHeight: theme.rhythm,
-  headerFontFamily: theme.fonts.headerArr,
-  bodyFontFamily: theme.fonts.bodyArr,
-  bodyGray: 5,
-  headerGray: 10,
-  // blockMarginBottom: 0.5,
-})
 
 // These styles affect all pages.
 css`
@@ -103,7 +94,7 @@ css`
       overflow: initial;
       font-size: ${theme.fontSizes.root} !important;
       ${theme.mediaQueries.print} {
-        font-size: 11pt !important;
+        font-size: 11.5pt !important;
       }
     }
 
@@ -113,6 +104,7 @@ css`
       background-color: ${theme.colors.footer} !important;
       ${theme.mediaQueries.print} {
         background-color: none !important;
+        color: black;
       }
     }
 
@@ -132,11 +124,17 @@ css`
 
     @page {
       margin: 0.75in;
+      :left :header {
+        content: first(title);
+      }
+      :right :header {
+        content: first(chapter), , decimal(pageno);
+      }
     }
 
     a {
       color: ${theme.colors.footer};
-      text-decoration-thickness: 0.09em;
+      text-decoration-thickness: 0.08em;
       border-radius: 0;
 
       &:hover,
@@ -167,7 +165,7 @@ css`
       display: flex;
       flex-flow: column wrap;
       align-items: center;
-      padding: ${theme.rhythm}rem 0;
+      padding: ${typography.rhythm(1)} 0;
       ${theme.mediaQueries.print} {
         display: block;
         padding-bottom: 0;
@@ -184,7 +182,7 @@ css`
       color: ${theme.colors.headings};
       font-family: ${theme.fonts.headerArr.join(",")};
       ${theme.mediaQueries.print} {
-        color: ${theme.colors.text};
+        color: black;
       }
     }
 
@@ -204,7 +202,7 @@ css`
     }
 
     dd {
-      margin-left: ${theme.rhythm}rem;
+      margin-left: ${typography.rhythm(1)};
     }
   }
 `

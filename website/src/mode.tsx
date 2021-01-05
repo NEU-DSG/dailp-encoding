@@ -7,9 +7,9 @@ import {
 } from "reakit/Radio"
 import { Tooltip, TooltipReference, useTooltipState } from "reakit/Tooltip"
 import Cookies from "js-cookie"
-import theme, { withBg } from "./theme"
+import theme, { hideOnPrint, withBg } from "./theme"
 import { ExperienceLevel, TagSet, tagSetForMode } from "./types"
-import { css } from "linaria"
+import { css, cx } from "linaria"
 
 const notNumber = (l: any) => isNaN(Number(l))
 const levelNameMapping = {
@@ -72,11 +72,16 @@ export const ExperiencePicker = (p: {
 
   return (
     <>
-      <p className={topMargin}>
+      <p className={cx(topMargin, hideOnPrint)}>
         Each mode below displays different information about the words on the
         page. Hover over each mode for a specific description.
       </p>
-      <RadioGroup {...radio} className={levelGroup} aria-label="Display Mode">
+      <RadioGroup
+        {...radio}
+        id="mode-picker"
+        className={levelGroup}
+        aria-label="Display Mode"
+      >
         {Object.keys(ExperienceLevel)
           .filter(notNumber)
           .map(function (level: string) {
@@ -95,7 +100,7 @@ export const TagSetPicker = (p: { onSelect: (tagSet: TagSet) => void }) => {
   useEffect(() => p.onSelect(radio.state as TagSet), [radio.state])
 
   return (
-    <RadioGroup {...radio} className={levelGroup}>
+    <RadioGroup {...radio} id="tag-set-picker" className={levelGroup}>
       {Object.keys(TagSet)
         .filter(notNumber)
         .map(function (tagSet: string) {
@@ -108,9 +113,14 @@ export const TagSetPicker = (p: { onSelect: (tagSet: TagSet) => void }) => {
 const ExperienceOption = (p: { radio: RadioStateReturn; level: string }) => {
   const tooltip = useTooltipState()
   const value = ExperienceLevel[p.level as keyof typeof ExperienceLevel]
+  const isSelected = p.radio.state === value
   return (
     <>
-      <TooltipReference {...tooltip} as="label" className={levelLabel}>
+      <TooltipReference
+        {...tooltip}
+        as="label"
+        className={cx(levelLabel, isSelected && highlightedLabel)}
+      >
         <Radio {...p.radio} value={value} />
         {"  "}
         {levelNameMapping[value].label}
@@ -121,6 +131,10 @@ const ExperienceOption = (p: { radio: RadioStateReturn; level: string }) => {
     </>
   )
 }
+
+const highlightedLabel = css`
+  outline: 2px dashed ${theme.colors.headings};
+`
 
 const TagSetOption = (p: { radio: RadioStateReturn; level: string }) => {
   const tooltip = useTooltipState()
@@ -150,7 +164,8 @@ const levelGroup = css`
 `
 
 const levelLabel = css`
-  margin-right: 2rem;
+  margin-right: 1rem;
+  padding: 0 1ch;
   cursor: pointer;
 `
 

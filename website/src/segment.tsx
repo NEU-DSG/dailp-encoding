@@ -211,9 +211,7 @@ const MorphemeSegment = (p: {
   const matchingTag = morphemeDisplayTag(p.segment.matchingTag, p.tagSet)
   const gloss = matchingTag?.tag || p.segment.gloss
   // Display functional tags in small-caps, per interlinear typesetting practice.
-  const buttonStyle = matchingTag
-    ? cx(morphemeButton, smallCaps)
-    : morphemeButton
+  const buttonStyle = matchingTag ? smallCaps : morphemeButton
 
   let content = <>{gloss}</>
   if (matchingTag && matchingTag.title) {
@@ -234,7 +232,16 @@ const MorphemeSegment = (p: {
 }
 
 const smallCaps = css`
-  font-feature-settings: "c2sc";
+  font-family: ${theme.fonts.smallCaps};
+  text-transform: lowercase;
+  color: inherit;
+  border: none;
+  padding: 0;
+  border-bottom: 1px solid transparent;
+  display: inline-block;
+  &:hover {
+    border-bottom: 1px solid darkblue;
+  }
 `
 
 const morphemeButton = css`
@@ -243,7 +250,6 @@ const morphemeButton = css`
   color: inherit;
   border: none;
   padding: 0;
-  cursor: pointer;
   border-bottom: 1px solid transparent;
   display: inline-block;
   &:hover {
@@ -259,7 +265,6 @@ const wordGroup = css`
   padding-right: 0;
   border: 2px solid ${theme.colors.borders};
   border-radius: 2px;
-  line-height: normal;
   page-break-inside: avoid;
   break-inside: avoid;
   ${theme.mediaQueries.medium} {
@@ -276,13 +281,13 @@ const wordGroup = css`
 
 const syllabaryLayer = css`
   font-family: ${theme.fonts.cherokee};
-  font-size: 1.25rem;
+  font-size: 1.15rem;
 `
 
 const plainSyllabary = css`
   font-family: ${theme.fonts.cherokee};
-  font-size: 1.25rem;
-  margin-right: 0.5rem;
+  font-size: 1.15rem;
+  margin-right: 1ch;
 `
 
 const documentBlock = css`
@@ -305,6 +310,9 @@ const bordered = css`
       margin-bottom: 0;
       padding-bottom: 0;
     }
+  }
+  ${theme.mediaQueries.print} {
+    border-bottom: 1px solid black;
   }
 `
 

@@ -1,18 +1,20 @@
 import { css } from "linaria"
 import Color from "color"
+import Typography from "typography"
 
 const theme = {
   fonts: {
-    // 4 fonts total: header, serif body, sans body, Cherokee.
+    // 4 fonts total: header + sans body, serif body, serif smallcaps, Cherokee.
     // Noto Serif supports glottal stops and more accents than other fonts.
-    body: `"Noto Serif", "Noto Sans Cherokee", serif, Arial`,
-    bodyArr: ["Noto Serif", "Noto Sans Cherokee", "serif", "Arial"],
-    header: `"Quattrocento Sans", "Segoe UI", Arial, sans-serif`,
+    bodyArr: ["Spectral", "Digohweli", "serif", "Arial"],
     headerArr: ["Quattrocento Sans", "Segoe UI", "Arial", "sans-serif"],
-    cherokee: `"Noto Sans Cherokee", "Noto Sans", Arial, sans-serif`,
+    cherokee: `"Digohweli", "Spectral", "serif", "Arial"`,
+    smallCaps: "Spectral SC",
+    body: null,
+    header: null,
   },
   fontSizes: {
-    root: "18px",
+    root: "19px",
   },
   colors: {
     header: "#f7eeed",
@@ -32,16 +34,19 @@ const theme = {
     print: "@media print",
   },
   edgeSpacing: "1rem",
-  rhythm: 1.53,
+  rhythm: 1.47,
 }
+
+theme.fonts.body = theme.fonts.bodyArr.join(",")
+theme.fonts.header = theme.fonts.headerArr.join(",")
 
 export const fullWidth = {
   width: "100%",
   [theme.mediaQueries.medium]: {
-    width: "45rem",
+    width: "40rem",
   },
   [theme.mediaQueries.large]: {
-    width: "56rem",
+    width: "50rem",
   },
 }
 
@@ -75,8 +80,7 @@ export const hideOnPrint = css`
 `
 
 const button = css`
-  font-family: ${theme.fonts.headerArr.join(",")};
-  font-size: 1rem;
+  font-family: ${theme.fonts.header};
   color: ${theme.colors.link};
   background-color: ${theme.colors.button};
   padding: ${theme.rhythm / 3}rem 1rem;
@@ -94,8 +98,24 @@ const button = css`
   }
 `
 
+const smallCaps = css`
+  font-family: ${theme.fonts.smallCaps};
+  text-transform: lowercase;
+`
+
 export const std = {
   button,
+  smallCaps,
 }
+
+export const typography = new Typography({
+  baseFontSize: theme.fontSizes.root,
+  baseLineHeight: theme.rhythm,
+  headerFontFamily: theme.fonts.headerArr,
+  bodyFontFamily: theme.fonts.bodyArr,
+  bodyGray: 5,
+  headerGray: 10,
+  // blockMarginBottom: 0.5,
+})
 
 export default theme

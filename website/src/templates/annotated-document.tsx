@@ -163,7 +163,7 @@ export const DocumentTitleHeader = (p: {
       )}
     </Breadcrumbs>
 
-    <h1>
+    <h1 className={docTitle}>
       {p.doc.title} {p.doc.date && `(${p.doc.date.year})`}{" "}
     </h1>
     <div className={bottomPadded}>
@@ -180,6 +180,10 @@ export const DocumentTitleHeader = (p: {
     </div>
   </header>
 )
+
+const docTitle = css`
+  running-head: chapter;
+`
 
 const bottomPadded = css`
   margin-bottom: ${theme.rhythm / 2}rem;
@@ -214,8 +218,8 @@ const docTab = css`
   border: none;
   flex-grow: 1;
   cursor: pointer;
-  font-family: ${theme.fonts.headerArr.join(",")};
-  font-size: 1.25rem;
+  font-family: ${theme.fonts.header};
+  font-size: 1.1rem;
   background-color: ${theme.colors.header};
   color: ${theme.colors.headings};
   outline-color: ${theme.colors.headings};
@@ -227,7 +231,7 @@ const docTab = css`
 const docTabs = css`
   display: flex;
   flex-flow: row nowrap;
-  height: ${theme.rhythm * 2}rem;
+  height: ${theme.rhythm * 1.75}rem;
   margin: 0 !important;
   ${fullWidth}
 `
