@@ -33,7 +33,7 @@ const theme = {
     print: "@media print",
   },
   edgeSpacing: "1rem",
-  rhythm: 1.5,
+  rhythm: 1.47,
 }
 
 theme.fonts.body = theme.fonts.bodyArr.join(",")
@@ -45,7 +45,7 @@ export const fullWidth = {
     width: "40rem",
   },
   [theme.mediaQueries.large]: {
-    width: "50rem",
+    width: "49rem",
   },
 }
 
