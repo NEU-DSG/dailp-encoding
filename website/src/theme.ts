@@ -106,6 +106,7 @@ const smallCaps = css`
 export const std = {
   button,
   smallCaps,
+  tooltip: withBg,
 }
 
 export const typography = new Typography({
