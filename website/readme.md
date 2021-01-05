@@ -9,11 +9,29 @@ The latest commit to the `main` branch is automatically deployed to [`dailp.netl
 **Table of Contents**
 
 - [DAILP Website](#dailp-website)
+  - [Run locally](#run-locally)
   - [Navigating the Code](#navigating-the-code)
   - [Type-checking](#type-checking)
   - [Features of this approach](#features-of-this-approach)
 
 <!-- markdown-toc end -->
+
+## Run locally
+
+To build and preview the website locally, you need to make a `.env` file in the root project directory with the following contents:
+
+```
+DAILP_GRAPHQL_URL=https://e3j0jht905.execute-api.us-east-1.amazonaws.com/prod/graphql
+```
+
+Feel free to change the actual URL if you are running a local version of the GraphQL server or otherwise.
+
+After that, you can run the following in a terminal to initially install the dependencies of the project and start a development process:
+
+```
+yarn install
+yarn start
+```
 
 ## Navigating the Code
 

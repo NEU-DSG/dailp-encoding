@@ -7,7 +7,7 @@ pub struct Translation {
 }
 
 /// One block or paragraph of a translation document that should correspond to a
-/// block of original text. One block may contain several segments (or sentences).
+/// block of original text. One block may contain several segments (or lines).
 #[derive(Clone, Debug, Serialize, Deserialize, Default)]
 pub struct TranslationBlock {
     pub index: i32,
