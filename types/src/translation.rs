@@ -20,7 +20,7 @@ impl TranslationBlock {
     /// Full text of this block
     async fn text(&self) -> String {
         use itertools::Itertools as _;
-        self.segments.iter().join(". ")
+        self.segments.iter().join(" ")
     }
 
     /// The text of this block split into segments (sentences or lines)

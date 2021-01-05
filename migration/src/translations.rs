@@ -62,7 +62,7 @@ impl DocResult {
             // Split sentences into separate segments.
             .map(|text| {
                 text.into_iter()
-                    .flat_map(|s| s.split("."))
+                    // .flat_map(|s| s.split("."))
                     // Remove footnotes.
                     .map(|text| ends_with_footnote.replace_all(text, "").into_owned())
             })
