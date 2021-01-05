@@ -1,7 +1,7 @@
 [package]
 name = "dailp"
 version = "0.4.0"
-authors = ["Taylor Snead <taylorsnead@gmail.com>"]
+authors = ["Taylor Snead <taylor@snead.xyz>"]
 edition = "2018"
 
 [lib]
