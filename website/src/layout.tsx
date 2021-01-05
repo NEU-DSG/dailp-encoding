@@ -9,8 +9,9 @@ import Sticky from "react-stickynode"
 import { isMobile } from "react-device-detect"
 import Typography from "typography"
 
-import "fontsource-noto-serif"
-import "fontsource-quattrocento-sans"
+import "@fontsource/alegreya"
+import "@fontsource/alegreya-sc"
+import "@fontsource/quattrocento-sans"
 import "./fonts.css"
 
 /** Wrapper for most site pages, providing them with a navigation header and footer. */
@@ -103,7 +104,7 @@ css`
       overflow: initial;
       font-size: ${theme.fontSizes.root} !important;
       ${theme.mediaQueries.print} {
-        font-size: 11pt !important;
+        font-size: 12pt !important;
       }
     }
 
@@ -136,7 +137,7 @@ css`
 
     a {
       color: ${theme.colors.footer};
-      text-decoration-thickness: 0.09em;
+      text-decoration-thickness: 0.08em;
       border-radius: 0;
 
       &:hover,

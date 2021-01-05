@@ -49,6 +49,7 @@ const Footer = () => {
 export default Footer
 
 const container = css`
+  font-family: ${theme.fonts.headerArr.join(",")};
   font-size: 0.9rem;
   padding: 1rem ${theme.edgeSpacing};
   display: flex;
