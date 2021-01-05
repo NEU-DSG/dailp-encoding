@@ -75,12 +75,16 @@ const AnnotatedDocumentPage = (p: {
           className={wideAndTop}
           innerClass={wideSticky}
         >
-          <TabList {...tabs} className={docTabs} aria-label="Manuscript Tabs">
+          <TabList
+            {...tabs}
+            className={docTabs}
+            aria-label="Document View Types"
+          >
             <Tab {...tabs} id={Tabs.ANNOTATION} className={docTab}>
-              Text
+              Translation
             </Tab>
             <Tab {...tabs} id={Tabs.IMAGES} className={docTab}>
-              Source Image
+              Original Text
             </Tab>
           </TabList>
         </Sticky>
@@ -224,6 +228,7 @@ const docTabs = css`
   display: flex;
   flex-flow: row nowrap;
   height: ${theme.rhythm * 2}rem;
+  margin: 0 !important;
   ${fullWidth}
 `
 
