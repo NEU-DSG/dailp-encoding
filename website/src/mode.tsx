@@ -15,16 +15,15 @@ const notNumber = (l: any) => isNaN(Number(l))
 const levelNameMapping = {
   [ExperienceLevel.Story]: {
     label: "Story",
-    details: "Original syllabary text and free English translation",
+    details: "Original text in the Cherokee syllabary with English translation",
   },
   [ExperienceLevel.Basic]: {
-    label: "Study (basic)",
+    label: "Pronunciation",
     details: "Word by word pronunciation and translation",
   },
   [ExperienceLevel.Learner]: {
-    label: "Study (detailed)",
-    details:
-      "Original text with a breakdown of each word into its component parts",
+    label: "Segmentation",
+    details: "Each Cherokee word broken up into its component parts",
   },
   [ExperienceLevel.AdvancedDt]: {
     label: "Analysis (d/t)",
@@ -72,13 +71,19 @@ export const ExperiencePicker = (p: {
   }, [radio.state])
 
   return (
-    <RadioGroup {...radio} className={levelGroup}>
-      {Object.keys(ExperienceLevel)
-        .filter(notNumber)
-        .map(function (level: string) {
-          return <ExperienceOption key={level} level={level} radio={radio} />
-        })}
-    </RadioGroup>
+    <>
+      <p className={topMargin}>
+        Each mode below displays different information about the words on the
+        page. Hover over each mode for a specific description.
+      </p>
+      <RadioGroup {...radio} className={levelGroup} aria-label="Display Mode">
+        {Object.keys(ExperienceLevel)
+          .filter(notNumber)
+          .map(function (level: string) {
+            return <ExperienceOption key={level} level={level} radio={radio} />
+          })}
+      </RadioGroup>
+    </>
   )
 }
 
@@ -146,4 +151,9 @@ const levelGroup = css`
 
 const levelLabel = css`
   margin-right: 2rem;
+  cursor: pointer;
+`
+
+const topMargin = css`
+  margin-top: ${theme.rhythm / 2}rem;
 `
