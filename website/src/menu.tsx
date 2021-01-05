@@ -51,28 +51,38 @@ export const NavMenu = () => {
                 <MdArrowDropDown aria-label="Menu" />
               </MenuButton>
               <Menu {...menu} aria-label={item.label} className={navMenu}>
-                {item.childItems.nodes.map((item) => (
-                  <MenuItem
-                    {...menu}
-                    as={Link}
-                    to={item.path}
-                    key={item.path}
-                    className={navLink}
-                    aria-current={
-                      location.pathname === item.path ? "page" : undefined
-                    }
-                  >
-                    {item.label}
-                  </MenuItem>
-                ))}
+                {item.childItems.nodes.map((item) => {
+                  let url = { pathname: item.path }
+                  if (item.path.startsWith("http")) {
+                    url = new URL(item.path)
+                  }
+                  return (
+                    <MenuItem
+                      {...menu}
+                      as={Link}
+                      to={url.pathname}
+                      key={item.path}
+                      className={navLink}
+                      aria-current={
+                        location.pathname === item.path ? "page" : undefined
+                      }
+                    >
+                      {item.label}
+                    </MenuItem>
+                  )
+                })}
               </Menu>
             </React.Fragment>
           )
         } else {
+          let url = { pathname: item.path }
+          if (item.path.startsWith("http")) {
+            url = new URL(item.path)
+          }
           return (
             <Link
               key={item.path}
-              to={item.path}
+              to={url.pathname}
               aria-current={
                 location.pathname === item.path ? "page" : undefined
               }
@@ -117,19 +127,25 @@ export const MobileNav = () => {
               if (!items.length) {
                 items = [item]
               }
-              return items.map((item) => (
-                <li className={drawerItem} key={item.path}>
-                  <Link
-                    to={item.path}
-                    aria-current={
-                      location.pathname === item.path ? "page" : undefined
-                    }
-                    className={navLink}
-                  >
-                    {item.label}
-                  </Link>
-                </li>
-              ))
+              return items.map((item) => {
+                let url = { pathname: item.path }
+                if (item.path.startsWith("http")) {
+                  url = new URL(item.path)
+                }
+                return (
+                  <li className={drawerItem} key={item.path}>
+                    <Link
+                      to={url.pathname}
+                      aria-current={
+                        location.pathname === url.pathname ? "page" : undefined
+                      }
+                      className={navLink}
+                    >
+                      {item.label}
+                    </Link>
+                  </li>
+                )
+              })
             })}
           </ul>
         </Dialog>
