@@ -165,7 +165,7 @@ const navMenu = css`
 `
 
 const navLink = css`
-  padding: ${theme.rhythm / 4}rem 1rem;
+  padding: ${theme.rhythm / 4}rem 1ch;
   text-decoration: none;
   color: ${theme.colors.text};
   background: none;
@@ -173,6 +173,11 @@ const navLink = css`
   display: flex;
   flex-flow: row;
   align-items: center;
+
+  ${theme.mediaQueries.large} {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
 
   &[aria-current="page"] {
     color: ${theme.colors.link};
@@ -224,6 +229,7 @@ const navDrawer = css`
   bottom: 0;
   background-color: ${theme.colors.body};
   width: 16rem;
+  font-family: ${theme.fonts.header};
   transition: transform 150ms ease-in-out;
   transform: translateX(-16rem);
   &[data-enter] {

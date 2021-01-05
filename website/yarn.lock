@@ -1111,6 +1111,21 @@
     minimatch "^3.0.4"
     strip-json-comments "^3.1.1"
 
+"@fontsource/alegreya-sc@^4.1.0":
+  version "4.1.0"
+  resolved "https://registry.yarnpkg.com/@fontsource/alegreya-sc/-/alegreya-sc-4.1.0.tgz#a7d750f6d9e9e040982854dc187fa25ce7d9f591"
+  integrity sha512-8rhcrBDgXwzBfxJldT/J/52q04lQ/X4fzSLPshyxDevWG1gt8RNr9JKi+3PZyLY+e79hUhA17Js0G+F0lzNrBg==
+
+"@fontsource/alegreya@^4.1.0":
+  version "4.1.0"
+  resolved "https://registry.yarnpkg.com/@fontsource/alegreya/-/alegreya-4.1.0.tgz#2e90c83de418f9e9744aca7c6da6d1ecbfe0c9a5"
+  integrity sha512-NwHaijCjxNLh/Im/jCEkCIOc6R862+8WgPq3l9qIJvPIJHJmGukp3mjrijrUqLcQexwGoDzw/A7A5Fuw0jz2zg==
+
+"@fontsource/quattrocento-sans@^4.1.0":
+  version "4.1.0"
+  resolved "https://registry.yarnpkg.com/@fontsource/quattrocento-sans/-/quattrocento-sans-4.1.0.tgz#2dd3ab2652c8609ac6b279c10150d90042b97ade"
+  integrity sha512-vE0gNcPC/gYG8z1BgBgMzc5ZjW5/uonwZEzCRHOV2YEFcVjNfMXfAgRv/HcC6FlUXXrmKXrFPpSjnCu85CDTvQ==
+
 "@fortawesome/fontawesome-free@^5.15.1":
   version "5.15.1"
   resolved "https://registry.yarnpkg.com/@fortawesome/fontawesome-free/-/fontawesome-free-5.15.1.tgz#ccfef6ddbe59f8fe8f694783e1d3eb88902dc5eb"
@@ -6749,16 +6764,6 @@ follow-redirects@^1.0.0, follow-redirects@^1.10.0:
   version "1.13.0"
   resolved "https://registry.yarnpkg.com/follow-redirects/-/follow-redirects-1.13.0.tgz#b42e8d93a2a7eea5ed88633676d6597bc8e384db"
   integrity sha512-aq6gF1BEKje4a9i9+5jimNFIpq4Q1WiwBToeRK5NvZBd/TRsmW8BsJfOEGkr76TbOyPVD3OVDN910EcUNtRYEA==
-
-fontsource-noto-serif@^3.0.9:
-  version "3.0.9"
-  resolved "https://registry.yarnpkg.com/fontsource-noto-serif/-/fontsource-noto-serif-3.0.9.tgz#601468100fa2b97595ba0be06285ea477aee2788"
-  integrity sha512-WBzxnMGOzOAsBQ2vkL5xHWJnK5WtOCe3FdFVDhmhsQJQgCssIJ6vfjLEJkuS3fzXmnzk5ZCkve1dtEgJjusYnA==
-
-fontsource-quattrocento-sans@^3.0.9:
-  version "3.0.9"
-  resolved "https://registry.yarnpkg.com/fontsource-quattrocento-sans/-/fontsource-quattrocento-sans-3.0.9.tgz#a31a3cad438d8e2f39e937f41e4564471b2f2d58"
-  integrity sha512-UZfh73x7feCQlftA4QJacS5uxZlqzsmLge+lL0QdN9S9eyKQULQy6SxnERV1cl7H49n+ybufMKlGlE6deo1rLw==
 
 for-in@^1.0.2:
   version "1.0.2"
