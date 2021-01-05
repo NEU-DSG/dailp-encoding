@@ -58,7 +58,7 @@ export const Segment = (p: Props) => {
           >
             {children}
           </div>
-          <p>{p.translations?.text ?? null}.</p>
+          <p>{p.translations?.text ?? null}</p>
         </section>
       )
     } else {
@@ -265,7 +265,6 @@ const wordGroup = css`
   padding-right: 0;
   border: 2px solid ${theme.colors.borders};
   border-radius: 2px;
-  line-height: normal;
   page-break-inside: avoid;
   break-inside: avoid;
   ${theme.mediaQueries.medium} {
@@ -287,8 +286,8 @@ const syllabaryLayer = css`
 
 const plainSyllabary = css`
   font-family: ${theme.fonts.cherokee};
-  font-size: 1.25rem;
-  margin-right: 0.5rem;
+  font-size: 1.15rem;
+  margin-right: 1ch;
 `
 
 const documentBlock = css`
@@ -311,6 +310,9 @@ const bordered = css`
       margin-bottom: 0;
       padding-bottom: 0;
     }
+  }
+  ${theme.mediaQueries.print} {
+    border-bottom: 1px solid black;
   }
 `
 
