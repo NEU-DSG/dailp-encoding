@@ -1,19 +1,20 @@
 import { css } from "linaria"
 import Color from "color"
+import Typography from "typography"
 
 const theme = {
   fonts: {
     // 4 fonts total: header + sans body, serif body, serif smallcaps, Cherokee.
     // Noto Serif supports glottal stops and more accents than other fonts.
-    bodyArr: ["Alegreya", "Noto Sans Cherokee", "serif", "Arial"],
+    bodyArr: ["Spectral", "Digohweli", "serif", "Arial"],
     headerArr: ["Quattrocento Sans", "Segoe UI", "Arial", "sans-serif"],
-    cherokee: `"Noto Sans Cherokee", "Noto Sans", Arial, sans-serif`,
-    smallCaps: "Alegreya SC",
+    cherokee: `"Digohweli", "Spectral", "serif", "Arial"`,
+    smallCaps: "Spectral SC",
     body: null,
     header: null,
   },
   fontSizes: {
-    root: "20px",
+    root: "19px",
   },
   colors: {
     header: "#f7eeed",
@@ -45,7 +46,7 @@ export const fullWidth = {
     width: "40rem",
   },
   [theme.mediaQueries.large]: {
-    width: "49rem",
+    width: "50rem",
   },
 }
 
@@ -97,8 +98,24 @@ const button = css`
   }
 `
 
+const smallCaps = css`
+  font-family: ${theme.fonts.smallCaps};
+  text-transform: lowercase;
+`
+
 export const std = {
   button,
+  smallCaps,
 }
+
+export const typography = new Typography({
+  baseFontSize: theme.fontSizes.root,
+  baseLineHeight: theme.rhythm,
+  headerFontFamily: theme.fonts.headerArr,
+  bodyFontFamily: theme.fonts.bodyArr,
+  bodyGray: 5,
+  headerGray: 10,
+  // blockMarginBottom: 0.5,
+})
 
 export default theme

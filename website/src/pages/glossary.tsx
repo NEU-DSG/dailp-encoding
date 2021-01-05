@@ -2,7 +2,7 @@ import React, { useState } from "react"
 import { graphql } from "gatsby"
 import { css, cx } from "linaria"
 import _ from "lodash"
-import theme, { fullWidth } from "../theme"
+import theme, { fullWidth, std } from "../theme"
 import Layout from "../layout"
 import { ExperiencePicker, TagSetPicker } from "../mode"
 import {
@@ -35,7 +35,8 @@ export default (p: { data: GatsbyTypes.GlossaryQuery }) => {
                   return (
                     <React.Fragment key={tag.id}>
                       <dt id={morphemeTagId(tag.id)}>
-                        {scopedTag.tag} – {scopedTag.title}
+                        <span className={std.smallCaps}>{scopedTag.tag}</span> –{" "}
+                        {scopedTag.title}
                       </dt>
                       <dd>{scopedTag.definition}</dd>
                     </React.Fragment>

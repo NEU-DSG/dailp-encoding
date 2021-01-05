@@ -163,7 +163,7 @@ export const DocumentTitleHeader = (p: {
       )}
     </Breadcrumbs>
 
-    <h1>
+    <h1 className={docTitle}>
       {p.doc.title} {p.doc.date && `(${p.doc.date.year})`}{" "}
     </h1>
     <div className={bottomPadded}>
@@ -180,6 +180,10 @@ export const DocumentTitleHeader = (p: {
     </div>
   </header>
 )
+
+const docTitle = css`
+  running-head: chapter;
+`
 
 const bottomPadded = css`
   margin-bottom: ${theme.rhythm / 2}rem;

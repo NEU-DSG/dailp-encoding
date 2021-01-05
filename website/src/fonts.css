@@ -1,1 +1,4 @@
-@import url("https://fonts.googleapis.com/earlyaccess/notosanscherokee.css");
+@font-face {
+  font-family: "Digohweli";
+  src: url("./assets/Digohweli_1_7.ttf") format("truetype");
+}

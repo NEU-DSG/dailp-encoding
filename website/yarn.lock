@@ -1126,6 +1126,16 @@
   resolved "https://registry.yarnpkg.com/@fontsource/quattrocento-sans/-/quattrocento-sans-4.1.0.tgz#2dd3ab2652c8609ac6b279c10150d90042b97ade"
   integrity sha512-vE0gNcPC/gYG8z1BgBgMzc5ZjW5/uonwZEzCRHOV2YEFcVjNfMXfAgRv/HcC6FlUXXrmKXrFPpSjnCu85CDTvQ==
 
+"@fontsource/spectral-sc@^4.1.0":
+  version "4.1.0"
+  resolved "https://registry.yarnpkg.com/@fontsource/spectral-sc/-/spectral-sc-4.1.0.tgz#ce04bdccd76ebd8f089fcc9a81d30bd3598b1abd"
+  integrity sha512-LMb5NRy6WW7y/VizTczxwIInQbEoX5PSq1h5NXGRk2vfQ7tYLkh3si1XMlfohT2T5OB5ovYq5UCxSuXxBetV7Q==
+
+"@fontsource/spectral@^4.1.0":
+  version "4.1.0"
+  resolved "https://registry.yarnpkg.com/@fontsource/spectral/-/spectral-4.1.0.tgz#ad753478fb283a228b7cd07c699dfe9aa5237fa9"
+  integrity sha512-le/Sz5hN1Gipk0fPwk7eNgHwK3KRkNMIHn9rejYvyND4LUUTlS47lXa5SeqkjfIzBJdGgtBUUmtKUEOSbvntyA==
+
 "@fortawesome/fontawesome-free@^5.15.1":
   version "5.15.1"
   resolved "https://registry.yarnpkg.com/@fortawesome/fontawesome-free/-/fontawesome-free-5.15.1.tgz#ccfef6ddbe59f8fe8f694783e1d3eb88902dc5eb"
@@ -2316,6 +2326,11 @@
   version "0.0.33"
   resolved "https://registry.yarnpkg.com/@types/tmp/-/tmp-0.0.33.tgz#1073c4bc824754ae3d10cfab88ab0237ba964e4d"
   integrity sha1-EHPEvIJHVK49EM+riKsCN7qWTk0=
+
+"@types/typography@^0.16.3":
+  version "0.16.3"
+  resolved "https://registry.yarnpkg.com/@types/typography/-/typography-0.16.3.tgz#a237ed8b6ffa5d647491d4e681f2f37a87bfbd65"
+  integrity sha512-LC+htrmoMhmFfFYjshxeHzZsKnpwVo9oMmdelRhqISG+ataFPscxnq8XEuCGWcNXQXZYfmIKjgmo1eJ/vs1BQw==
 
 "@types/unist@*", "@types/unist@^2.0.0", "@types/unist@^2.0.2", "@types/unist@^2.0.3":
   version "2.0.3"
