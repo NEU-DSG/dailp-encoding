@@ -21,7 +21,7 @@ Each directory has its own `README` with further information.
 
 - [`types/`](types) defines all the types that our data adheres to in the database, GraphQL, and front-end.
 - [`migration/`](migration) pulls data from several Google Drive spreadsheets, conforms it to consistent types, then writes it all to a MongoDB instance.
-- [`graphql/`](graphql) exposes a public [GraphQL](https://graphql.org/) endpoint (deployed on [AWS Lambda](https://aws.amazon.com/lambda/)) that allows one to query DAILP data from the database.
+- [`graphql/`](graphql) exposes a public [GraphQL](https://graphql.org/) endpoint (deployed on [AWS Lambda](https://aws.amazon.com/lambda/)) that allows one to query DAILP data from the database. [Play with the data here](https://e3j0jht905.execute-api.us-east-1.amazonaws.com/prod/graphql).
 - [`website/`](website) renders a static site with [Gatsby](https://gatsbyjs.org/) using our GraphQL endpoint at build time and at runtime (to handle user queries).
 - [`xml/`](xml) contains templates and a schema for defining TEI XML documents using DAILP data.
 
@@ -30,7 +30,7 @@ Each directory has its own `README` with further information.
 ### You Updated an Annotated Manuscript
 
 Maintainers can trigger a new deploy of our data [here](https://github.com/NEU-DSG/dailp-encoding/actions?query=workflow%3ACI) and click `Run workflow`.
-This process pulls in all our annotated spreadsheets, puts them into our database and converts them to TEI.
+This process pulls in all of our annotated spreadsheets, puts them into our database and converts them to TEI.
 Then, the new data is published on the website.
 This process also happens automatically every time a code change is made on the `main` branch.
 
@@ -42,4 +42,4 @@ If you just want to explore our data without navigating the DAILP website, we ho
 
 Look no further than the [`doc/`](doc) directory for further notes about project development, testing, and contribution.
 
-- [`doc/user-testing`](doc/user-testing.md) details how our user testing and feedback process.
+- [`doc/user-testing`](doc/user-testing.md) details how we conduct user testing and gather feedback.
