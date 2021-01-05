@@ -707,6 +707,7 @@ pub enum VowelType {
     Superhigh,
 }
 
+#[cfg(test)]
 mod tests {
     use super::*;
 

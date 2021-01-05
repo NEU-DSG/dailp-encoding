@@ -13,9 +13,12 @@ You come across a website called "DAILP," whose goal is to support the ongoing c
 
 ### Casual Visitor
 
+Is it okay with you if I record this session for record keeping?
+
 You are interested in American Indian language preservation and history, but not necessarily learning Cherokee.
 You come across an organization called "DAILP" on the Northeastern University website and curiously take a look at their website.
 The goal of DAILP is to support the ongoing creation of indigenous peoples’ knowledge, interpretations, and representations of the past by preserving and analyzing historical texts.
+I am one of DAILP's developers and today I'd like to have you test the website and ask for your feedback.
 
 ## Features
 
@@ -29,10 +32,25 @@ Which features I hope to test here:
 
 ## Tasks
 
-1. Read a Cherokee manuscript that you are curious about.
-2. Figure out how to pronounce a Cherokee word that you see.
-3. Figure out the root of another long word that you see.
-4. Find the word you're looking at in the original manuscript image.
+I'm going to read you a set of short tasks one at a time that I would like you to complete.
+I will interfer minimally, so just keep trying unless you get really stuck.
+This is not a test of you or your abilities, but rather a test of our interface.
+
+Here is the link to the site: https://deploy-preview-76--dailp.netlify.app/
+
+1. Find one Cherokee document that you are curious about.
+2. Read through the translation.
+3. Take a stab at pronouncing a Cherokee word that you see.
+4. Figure out the root of another long word that you see.
+5. Find the word you're looking at in the original image.
+
+## Post-test Survey
+
+1. What was your initial impression of the site?
+   Did that change as you browsed?
+2. Was any part of your experience confusing or frustrating?
+3. Did you understand the document that you read?
+4. Did any of my introduction or task descriptions feel misleading after using the interface?
 
 ## Overall Approach
 

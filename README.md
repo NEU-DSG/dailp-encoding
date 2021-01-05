@@ -25,12 +25,6 @@ Each directory has its own `README` with further information.
 - [`website/`](website) renders a static site with [Gatsby](https://gatsbyjs.org/) using our GraphQL endpoint at build time and at runtime (to handle user queries).
 - [`xml/`](xml) contains templates and a schema for defining TEI XML documents using DAILP data.
 
-### Further Documentation
-
-Look no further than the [`doc/`](doc) directory for further notes about project development, testing, and contribution.
-
-- [`doc/user-testing`](doc/user-testing.md) details how our user testing and feedback process.
-
 ## Development
 
 ### You Updated an Annotated Manuscript
@@ -43,3 +37,9 @@ This process also happens automatically every time a code change is made on the 
 ### Data Exploration
 
 If you just want to explore our data without navigating the DAILP website, we host a [GraphQL Playground](https://e3j0jht905.execute-api.us-east-1.amazonaws.com/prod/graphql) that allows you to query the DAILP database.
+
+### Further Documentation
+
+Look no further than the [`doc/`](doc) directory for further notes about project development, testing, and contribution.
+
+- [`doc/user-testing`](doc/user-testing.md) details how our user testing and feedback process.

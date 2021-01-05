@@ -10,6 +10,7 @@ on:
     paths-ignore:
       - "**/README.md"
       - "**/readme.md"
+      - "doc/**/*.md"
   workflow_dispatch:
 
 env:
