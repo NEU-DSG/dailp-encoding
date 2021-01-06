@@ -2,6 +2,7 @@ import React from "react"
 import { css, cx } from "linaria"
 import { DialogDisclosure, DialogStateReturn } from "reakit/Dialog"
 import { Tooltip, TooltipReference, useTooltipState } from "reakit/Tooltip"
+import { MdInfoOutline } from "react-icons/md"
 import _ from "lodash"
 import {
   ExperienceLevel,
@@ -9,7 +10,7 @@ import {
   BasicMorphemeSegment,
   morphemeDisplayTag,
 } from "./types"
-import theme, { withBg } from "./theme"
+import theme, { hideOnPrint, std, withBg } from "./theme"
 
 interface Props {
   segment: GatsbyTypes.Dailp_AnnotatedSeg
@@ -98,10 +99,14 @@ export const AnnotatedForm = (
   const showAnything = p.level > ExperienceLevel.Story
   if (showAnything) {
     const showSegments = p.level > ExperienceLevel.Basic
+    const translation = p.segment.englishGloss.join(", ")
     return (
       <div className={wordGroup} id={`w${p.segment.index}`}>
         <div className={syllabaryLayer} lang="chr">
           {p.segment.source}
+          {p.segment.commentary && showSegments && (
+            <WordCommentaryInfo commentary={p.segment.commentary} />
+          )}
         </div>
         {p.segment.simplePhonetics ? (
           <div>{p.segment.simplePhonetics}</div>
@@ -117,7 +122,7 @@ export const AnnotatedForm = (
             tagSet={p.tagSet}
           />
         ) : null}
-        <div>{p.segment.englishGloss.join(", ")}</div>
+        {translation.length ? <div>{translation}</div> : <br />}
       </div>
     )
   } else {
@@ -128,6 +133,33 @@ export const AnnotatedForm = (
     )
   }
 }
+
+const WordCommentaryInfo = (p: { commentary: string }) => {
+  const tooltip = useTooltipState()
+  return (
+    <>
+      <TooltipReference
+        {...tooltip}
+        as="span"
+        aria-label="Commentary on this word"
+        className={cx(infoIcon, hideOnPrint)}
+      >
+        <MdInfoOutline size={20} />
+      </TooltipReference>
+      <Tooltip {...tooltip} className={std.tooltip}>
+        {p.commentary}
+      </Tooltip>
+    </>
+  )
+}
+
+const infoIcon = css`
+  margin-left: 0.4rem;
+  cursor: help;
+  svg {
+    fill: ${theme.colors.link};
+  }
+`
 
 /**
  * Displays the break-down of a word into its units of meaning and the English
@@ -215,9 +247,17 @@ const MorphemeSegment = (p: {
 
   let content = <>{gloss}</>
   if (matchingTag && matchingTag.title) {
-    content = <abbr title={matchingTag.title}>{gloss}</abbr>
+    content = (
+      <abbr className={atLeastThin} title={matchingTag.title}>
+        {gloss}
+      </abbr>
+    )
   } else if (gloss === "?") {
-    content = <abbr title="Unanalyzed or unknown segment">{gloss}</abbr>
+    content = (
+      <abbr className={atLeastThin} title="Unanalyzed or unfamiliar segment">
+        {gloss}
+      </abbr>
+    )
   }
 
   return (
@@ -242,6 +282,11 @@ const smallCaps = css`
   &:hover {
     border-bottom: 1px solid darkblue;
   }
+`
+
+const atLeastThin = css`
+  display: inline-block;
+  min-width: 1rem;
 `
 
 const morphemeButton = css`
