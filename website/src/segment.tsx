@@ -155,7 +155,7 @@ const WordCommentaryInfo = (p: { commentary: string }) => {
 
 const infoIcon = css`
   margin-left: 0.4rem;
-  cursor: pointer;
+  cursor: help;
   svg {
     fill: ${theme.colors.link};
   }
