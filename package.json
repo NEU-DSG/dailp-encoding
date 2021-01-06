@@ -5,11 +5,11 @@
     "deploy-graphql:dev": "sls translate --stage dev && sls deploy --stage dev"
   },
   "devDependencies": {
-    "serverless": "^2.6.0",
+    "serverless": "^2.17.0",
+    "serverless-cloudformation-changesets": "kandrzejczak/serverless-cloudformation-changesets#skip_create_change_set",
     "serverless-dotenv-plugin": "^3.0.0",
     "serverless-manifest-plugin": "^1.0.7",
     "serverless-rust": "loafofpiecrust/serverless-rust#master",
-    "serverless-cloudformation-changesets": "kandrzejczak/serverless-cloudformation-changesets#skip_create_change_set",
     "serverless-translate-templateurls": "^1.1.1"
   }
 }
