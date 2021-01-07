@@ -52,7 +52,7 @@ module.exports = {
     {
       resolve: "gatsby-source-wordpress-experimental",
       options: {
-        url: "https://dailp.northeastern.edu/graphql",
+        url: "https://wp.dailp.northeastern.edu/graphql",
         verbose: true,
         schema: {
           perPage: 30,
