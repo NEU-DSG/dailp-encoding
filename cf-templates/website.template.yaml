@@ -29,6 +29,14 @@ Resources:
         - Source: "/<*>"
           Status: 404-200
           Target: "/404.html"
+        # Allow us to access the corresponding graphql environment (dev or prod)
+        # at the path /graphql. Then the front-end doesn't have to know the exact url.
+        - Source: "/graphql"
+          Status: 200
+          Target:
+            Fn::Sub:
+              - https://${RestApiId}.execute-api.${self:provider.region}.amazonaws.com/${opt:stage}/graphql
+              - RestApiId: !Ref ApiGatewayRestApi
       BuildSpec:
         Fn::Sub:
           - |-
@@ -69,14 +77,6 @@ Resources:
       EnableAutoBuild: false
       # But do build PR previews.
       EnablePullRequestPreview: true
-  # AmplifyDomain:
-  #   Type: AWS::Amplify::Domain
-  #   Properties:
-  #     AppId: !GetAtt AmplifyApp.AppId
-  #     DomainName: dailp.northeastern.edu
-  #     SubDomainSettings:
-  #       - BranchName: dev
-  #         Prefix: dev
 
 Outputs:
   DefaultDomain:
