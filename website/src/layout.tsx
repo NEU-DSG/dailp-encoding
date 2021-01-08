@@ -149,7 +149,10 @@ css`
       }
     }
 
-    *:focus {
+    button:focus,
+    a:focus,
+    img:focus,
+    *[tabindex]:focus {
       outline-color: ${theme.colors.link};
       outline-style: solid;
       outline-width: thin;
@@ -184,6 +187,11 @@ css`
       ${theme.mediaQueries.print} {
         color: black;
       }
+    }
+
+    hr {
+      width: 40%;
+      margin: auto;
     }
 
     button,

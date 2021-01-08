@@ -1,42 +1,135 @@
-import React from "react"
-import { css } from "linaria"
-import theme from "./theme"
+import React, { useState } from "react"
+import { css, cx } from "linaria"
+import theme, { hideOnPrint, std, typography } from "./theme"
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch"
 import { Helmet } from "react-helmet"
+import { Button } from "reakit/Button"
+import { MdZoomIn, MdZoomOut } from "react-icons/md"
+import { FaMinus, FaPlus } from "react-icons/fa"
 
 const PageImages = (p: {
   document: GatsbyTypes.Dailp_AnnotatedDoc
-  pageImages?: readonly string[]
-}) => (
-  <figure className={annotationFigure} aria-label="Manuscript Source Images">
-    <Helmet>
-      <link
-        href="https://brbl-media.library.yale.edu"
-        rel="preconnect"
-        crossOrigin="true"
-      />
-    </Helmet>
-    {p.pageImages?.map((url, i) => (
-      <TransformWrapper key={i}>
+  pageImages: readonly string[]
+}) => {
+  return (
+    <figure className={annotationFigure} aria-label="Manuscript Source Images">
+      <Helmet>
+        <link
+          href="https://brbl-media.library.yale.edu"
+          rel="preconnect"
+          crossOrigin="true"
+        />
+      </Helmet>
+      <TransformWrapper
+        defaultScale={1}
+        positionX={0}
+        positionY={0}
+        wheel={{ disabled: true }}
+        options={{ maxScale: 6, centerContent: true }}
+      >
+        {({ setTransform, zoomIn, zoomOut }) => (
+          <CurrentPageImage
+            resetTransform={() => setTransform(0, 0, 1, 200, "easeOut")}
+            zoomIn={zoomIn}
+            zoomOut={zoomOut}
+            pageImages={p.pageImages}
+          />
+        )}
+      </TransformWrapper>
+      {p.document.sources.length ? (
+        <figcaption className={caption}>
+          Source:{" "}
+          <a href={p.document.sources[0].link}>{p.document.sources[0].name}</a>
+        </figcaption>
+      ) : null}
+    </figure>
+  )
+}
+export default PageImages
+
+const CurrentPageImage = (p: {
+  resetTransform: () => void
+  zoomIn: () => void
+  zoomOut: () => void
+  pageImages: readonly string[]
+}) => {
+  const [selectedPage, setSelectedPage] = useState(0)
+  let url = p.pageImages[selectedPage]
+  return (
+    <>
+      {p.pageImages.length > 1 && (
+        <nav aria-label="Pagination" className={cx(pageNav, hideOnPrint)}>
+          <Button
+            className={std.button}
+            onClick={() => {
+              p.resetTransform()
+              setSelectedPage(selectedPage - 1)
+            }}
+            disabled={selectedPage <= 0}
+            aria-label="Previous Page"
+          >
+            Previous
+          </Button>
+
+          <span aria-current="true">Page {selectedPage + 1}</span>
+
+          <Button
+            className={std.button}
+            onClick={() => {
+              p.resetTransform()
+              setSelectedPage(selectedPage + 1)
+            }}
+            disabled={selectedPage >= p.pageImages.length - 1}
+            aria-label="Next Page"
+          >
+            Next
+          </Button>
+        </nav>
+      )}
+      <div style={{ position: "relative" }}>
         <TransformComponent>
           <img
             className={pageImage}
             src={url}
-            alt={`Manuscript Page ${i + 1}`}
-            loading="lazy"
+            alt={`Manuscript Page ${selectedPage + 1}`}
           />
         </TransformComponent>
-      </TransformWrapper>
-    ))}
-    {p.document.sources.length ? (
-      <figcaption className={caption}>
-        Courtesy of{" "}
-        <a href={p.document.sources[0].link}>{p.document.sources[0].name}</a>
-      </figcaption>
-    ) : null}
-  </figure>
-)
-export default PageImages
+        <div className={floatingControls}>
+          <Button
+            onClick={p.zoomIn}
+            className={std.iconButton}
+            aria-label="Zoom In"
+          >
+            <FaPlus size={20} />
+          </Button>
+          <Button
+            onClick={p.zoomOut}
+            className={std.iconButton}
+            aria-label="Zoom Out"
+          >
+            <FaMinus size={20} />
+          </Button>
+        </div>
+      </div>
+    </>
+  )
+}
+
+const floatingControls = css`
+  position: absolute;
+  right: 0.5rem;
+  bottom: 0.5rem;
+  background: ${theme.colors.body};
+  & > * {
+    display: block;
+  }
+`
+
+const pageNav = css`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+`
 
 const pageImage = css`
   width: 100%;
@@ -45,19 +138,25 @@ const pageImage = css`
 `
 
 const caption = css`
-  margin-top: ${theme.rhythm / 2}rem;
+  margin-top: ${typography.rhythm(0.5)};
+  margin-left: ${theme.edgeSpacing};
+  margin-right: ${theme.edgeSpacing};
 `
 
 const annotationFigure = css`
   width: 100%;
   margin: 0;
-  cursor: move;
-  cursor: grab;
-  margin-bottom: ${theme.rhythm * 2}rem;
+  margin-bottom: ${typography.rhythm(2)};
   .react-transform-component {
+    position: relative;
+    cursor: move;
+    cursor: grab;
     max-height: 20rem;
     ${theme.mediaQueries.medium} {
       max-height: 30rem;
+    }
+    ${theme.mediaQueries.print} {
+      max-height: initial;
     }
   }
   .react-transform-element {
