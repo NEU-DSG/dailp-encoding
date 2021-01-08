@@ -10,7 +10,7 @@ import {
   BasicMorphemeSegment,
   morphemeDisplayTag,
 } from "./types"
-import theme, { hideOnPrint, std, withBg } from "./theme"
+import theme, { hideOnPrint, std, typography, withBg } from "./theme"
 
 interface Props {
   segment: GatsbyTypes.Dailp_AnnotatedSeg
@@ -66,12 +66,15 @@ export const Segment = (p: Props) => {
       return <>{children}</>
     }
   } else if (isPageBreak(p.segment)) {
+    const num = p.segment.index + 1
     return (
-      <hr
-        id={`document-page-${p.segment.index}`}
+      <div
+        id={`document-page-${num}`}
         className={pageBreak}
-        aria-label={`Start of document page ${p.segment.index + 1}`}
-      />
+        aria-label={`Start of page ${num}`}
+      >
+        Page {num}
+      </div>
     )
   } else {
     return null
@@ -280,8 +283,12 @@ const MorphemeSegment = (p: {
 }
 
 const pageBreak = css`
+  display: block;
   width: 40%;
   margin: auto;
+  text-align: center;
+  border-top: 1px solid gray;
+  padding-top: ${typography.rhythm(0.5)};
 
   &:first-child,
   &:last-child {
