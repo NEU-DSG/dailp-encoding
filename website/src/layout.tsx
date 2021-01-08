@@ -189,6 +189,11 @@ css`
       }
     }
 
+    hr {
+      width: 40%;
+      margin: auto;
+    }
+
     button,
     input[type="radio"] {
       cursor: pointer;
