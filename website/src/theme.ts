@@ -98,6 +98,22 @@ const button = css`
     outline: none;
     border-style: dashed;
   }
+
+  &[disabled] {
+    color: darkgray;
+    background-color: lightgray;
+    border-color: darkgray;
+    opacity: 80;
+  }
+`
+
+const iconButton = css`
+  border: none;
+  margin: 0;
+  padding: 8px;
+  & > svg {
+    display: block;
+  }
 `
 
 const smallCaps = css`
@@ -107,6 +123,7 @@ const smallCaps = css`
 
 export const std = {
   button,
+  iconButton,
   smallCaps,
   tooltip: withBg,
 }
