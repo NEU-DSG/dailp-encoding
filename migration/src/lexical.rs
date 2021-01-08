@@ -103,12 +103,12 @@ async fn parse_numerals(sheet_id: &str, doc_id: &str, year: i32) -> Result<()> {
             let key = values.next()?.parse().unwrap_or(index as i32);
             // UDB t/th
             let root = values.next().filter(|s| !s.is_empty())?;
-            let root_dailp = convert_udb(&root).to_dailp();
+            let root_dailp = convert_udb(&root).into_dailp();
             let gloss = values.next()?;
             let page_num = values.next()?;
             // UDB d/t
             let surface_form = values.next()?;
-            let _surface_form_dailp = convert_udb(&surface_form).to_dailp();
+            let _surface_form_dailp = convert_udb(&surface_form).into_dailp();
             let translation = values.next()?;
             let _numeric = values.next()?;
             let simple_phonetics = values.next()?;
@@ -264,7 +264,7 @@ fn parse_new_df1975(
                 let date = DateTime::new(chrono::Utc.ymd(year, 1, 1).and_hms(0, 0, 0));
                 let pos = PositionInDocument {
                     document_id: doc_id.clone(),
-                    page_number: page_number.clone(),
+                    page_number,
                     index: key.parse().unwrap_or(1),
                 };
                 Some(LexicalEntryWithForms {
@@ -290,7 +290,7 @@ fn parse_new_df1975(
                             .filter(|s| !s.is_empty())
                             .collect(),
                         segments: Some(vec![MorphemeSegment::new(
-                            convert_udb(&root).to_dailp(),
+                            convert_udb(&root).into_dailp(),
                             root_gloss.to_owned(),
                             None,
                         )]),
@@ -318,11 +318,8 @@ async fn ingest_particle_index(document_id: &str) -> Result<()> {
             let translation = row.next()?;
             let source_str = row.next()?;
             let source = MorphemeId::parse(&source_str)?;
-            let pos = PositionInDocument::new(
-                source.document_id.clone()?,
-                source.gloss.clone(),
-                index as i32,
-            );
+            let pos =
+                PositionInDocument::new(source.document_id.clone()?, source.gloss, index as i32);
             Some(AnnotatedForm {
                 id: pos.make_raw_id(&translation),
                 simple_phonetics: Some(simple_phonetics),

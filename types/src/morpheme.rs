@@ -117,9 +117,9 @@ impl CherokeeOrthography {
         use CherokeeOrthography::*;
         let ast = PhonemicString::parse_dailp(input);
         match self {
-            Taoc => ast.to_dailp(),
-            Crg => ast.to_crg(),
-            Learner => ast.to_learner(),
+            Taoc => ast.into_dailp(),
+            Crg => ast.into_crg(),
+            Learner => ast.into_learner(),
         }
     }
 }

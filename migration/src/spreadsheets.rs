@@ -53,7 +53,7 @@ pub fn write_to_file(doc: &AnnotatedDoc) -> Result<()> {
     // Make sure the output folder exists.
     std::fs::create_dir_all(OUTPUT_DIR)?;
     let mut f = File::create(file_name)?;
-    f.write(contents.as_bytes())?;
+    f.write_all(contents.as_bytes())?;
     Ok(())
 }
 
@@ -71,7 +71,7 @@ impl SheetResult {
         use futures_retry::{FutureRetry, RetryPolicy};
         let mut tries = 0;
         let (t, _attempt) = FutureRetry::new(
-            || Self::from_sheet_weak(sheet_id, sheet_name.clone()),
+            || Self::from_sheet_weak(sheet_id, sheet_name),
             |e| {
                 // Try up to five times before giving up.
                 if tries > 3 {
@@ -89,7 +89,7 @@ impl SheetResult {
     }
     async fn from_sheet_weak(sheet_id: &str, sheet_name: Option<&str>) -> Result<Self> {
         let api_key = std::env::var("GOOGLE_API_KEY")?;
-        let sheet_name = sheet_name.map_or_else(|| String::new(), |n| format!("{}!", n));
+        let sheet_name = sheet_name.map_or_else(String::new, |n| format!("{}!", n));
         Ok(reqwest::get(&format!(
             "https://sheets.googleapis.com/v4/spreadsheets/{}/values/{}A1:ZZ?key={}",
             sheet_id, sheet_name, api_key
@@ -104,7 +104,7 @@ impl SheetResult {
             // This is, in fact, a file path.
             let start = start + 3;
             let (_, rest) = input.split_at(start);
-            let end = rest.find("/").unwrap_or(rest.len());
+            let end = rest.find('/').unwrap_or_else(|| rest.len());
             rest.split_at(end).0
         } else {
             // This is probably already a bare ID. Anyway, we couldn't parse it.
@@ -174,7 +174,7 @@ impl SheetResult {
                         line_break: None,
                         page_break: None,
                         segments: Some(vec![MorphemeSegment::new(
-                            convert_udb(&root).to_dailp(),
+                            convert_udb(&root).into_dailp(),
                             root_gloss.clone(),
                             None,
                         )]),
@@ -235,7 +235,7 @@ impl SheetResult {
                             simple_phonetics: None,
                             phonemic: None,
                             segments: Some(vec![MorphemeSegment::new(
-                                convert_udb(&root).to_dailp(),
+                                convert_udb(&root).into_dailp(),
                                 root_gloss.clone(),
                                 None,
                             )]),
@@ -346,21 +346,21 @@ impl SheetResult {
             translation: Some(
                 DocResult::new(Self::drive_url_to_id(&translations[1]))
                     .await?
-                    .to_translation(),
+                    .into_translation(),
             ),
             page_images,
             date: date
                 .as_ref()
                 .and_then(|d| d.get(1))
                 .and_then(|s| chrono::Utc.datetime_from_str(s, "%Y-%m-%d %H:%M:%S").ok())
-                .map(|d| DateTime::new(d)),
+                .map(DateTime::new),
             is_reference,
         })
     }
 
     /// Parse as an annotation sheet with several lines.
     pub fn split_into_lines(self) -> Vec<SemanticLine> {
-        if self.values.len() <= 0 {
+        if self.values.is_empty() {
             return Vec::new();
         }
 
@@ -460,7 +460,7 @@ impl<'a> AnnotatedLine {
     pub fn many_from_semantic(lines: &[SemanticLine], meta: &DocumentMetadata) -> Vec<Self> {
         let mut word_index = 1;
         lines
-            .into_iter()
+            .iter()
             .map(|line| {
                 // Number of words = length of the longest row in this line.
                 let num_words = line.rows.iter().map(|row| row.items.len()).max().unwrap();
@@ -522,7 +522,7 @@ impl<'a> AnnotatedLine {
             .collect()
     }
 
-    pub fn to_segments(
+    pub fn lines_into_segments(
         lines: Vec<Self>,
         document_id: &str,
         date: &Option<DateTime>,

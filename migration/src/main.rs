@@ -95,10 +95,9 @@ async fn fetch_sheet(
 
             // Split the contents of each main sheet into semantic lines with
             // several layers.
-            let mut lines =
-                spreadsheets::SheetResult::from_sheet(sheet_id, tab_name.as_ref().map(|x| &**x))
-                    .await?
-                    .split_into_lines();
+            let mut lines = spreadsheets::SheetResult::from_sheet(sheet_id, tab_name.as_deref())
+                .await?
+                .split_into_lines();
             // TODO Consider page breaks embedded in the last word of a page.
             lines.last_mut().unwrap().ends_page = true;
 
@@ -106,7 +105,7 @@ async fn fetch_sheet(
             tokio::time::delay_for(Duration::from_millis(1700)).await;
         }
         let annotated = AnnotatedLine::many_from_semantic(&all_lines, &meta);
-        let segments = AnnotatedLine::to_segments(annotated, &meta.id, &meta.date);
+        let segments = AnnotatedLine::lines_into_segments(annotated, &meta.id, &meta.date);
         let doc = dailp::AnnotatedDoc::new(meta, segments);
 
         Ok(Some((doc, refs)))
