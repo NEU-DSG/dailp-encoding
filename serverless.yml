@@ -47,7 +47,6 @@ plugins:
   - serverless-rust
   - serverless-translate-templateurls
   - serverless-manifest-plugin
-  - serverless-cloudformation-changesets
 package:
   individually: true
 functions:
