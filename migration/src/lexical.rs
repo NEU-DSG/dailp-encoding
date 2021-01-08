@@ -108,7 +108,7 @@ async fn parse_numerals(sheet_id: &str, doc_id: &str, year: i32) -> Result<()> {
             let page_num = values.next()?;
             // UDB d/t
             let surface_form = values.next()?;
-            let surface_form_dailp = convert_udb(&surface_form).to_dailp();
+            let _surface_form_dailp = convert_udb(&surface_form).to_dailp();
             let translation = values.next()?;
             let _numeric = values.next()?;
             let simple_phonetics = values.next()?;

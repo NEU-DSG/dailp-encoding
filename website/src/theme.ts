@@ -37,6 +37,8 @@ const theme = {
   rhythm: 1.47,
 }
 
+export const wordpressUrl = "https://wp.dailp.northeastern.edu"
+
 theme.fonts.body = theme.fonts.bodyArr.join(",")
 theme.fonts.header = theme.fonts.headerArr.join(",")
 

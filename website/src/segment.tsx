@@ -65,6 +65,14 @@ export const Segment = (p: Props) => {
     } else {
       return <>{children}</>
     }
+  } else if (isPageBreak(p.segment)) {
+    return (
+      <hr
+        id={`document-page-${p.segment.index}`}
+        className={pageBreak}
+        aria-label={`Start of document page ${p.segment.index + 1}`}
+      />
+    )
   } else {
     return null
   }
@@ -270,6 +278,20 @@ const MorphemeSegment = (p: {
     </DialogDisclosure>
   )
 }
+
+const pageBreak = css`
+  width: 40%;
+  margin: auto;
+
+  &:first-child,
+  &:last-child {
+    display: none;
+  }
+
+  ${theme.mediaQueries.print} {
+    display: none;
+  }
+`
 
 const smallCaps = css`
   font-family: ${theme.fonts.smallCaps};

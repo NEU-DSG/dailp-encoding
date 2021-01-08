@@ -300,7 +300,7 @@ impl SheetResult {
         let _page_count = values
             .next()
             .ok_or_else(|| anyhow::format_err!("No Page Count"))?;
-        let mut translations = values
+        let translations = values
             .next()
             .ok_or_else(|| anyhow::format_err!("No Translations"))?;
         let page_images = values
@@ -693,6 +693,7 @@ pub fn convert_breaks(
     }
 }
 
+#[cfg(test)]
 mod tests {
     use super::*;
 

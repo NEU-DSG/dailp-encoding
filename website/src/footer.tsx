@@ -1,7 +1,7 @@
 import React from "react"
 import { css, cx } from "linaria"
 import { useStaticQuery, graphql } from "gatsby"
-import theme, { fullWidth, hideOnPrint } from "./theme"
+import theme, { fullWidth, hideOnPrint, wordpressUrl } from "./theme"
 import { FaGithub } from "react-icons/fa"
 
 /** University affiliation, related navigation links, and contact info.  */
@@ -31,7 +31,7 @@ const Footer = () => {
         <div className={content}>
           <a href="https://northeastern.edu">
             <img
-              src="https://dailp.northeastern.edu/wp-content/themes/quest-child/images/nu-light.svg"
+              src={`${wordpressUrl}/wp-content/themes/quest-child/images/nu-light.svg`}
               alt="Northeastern University"
             />
           </a>
