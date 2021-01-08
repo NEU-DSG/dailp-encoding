@@ -208,7 +208,6 @@ struct Mutation;
 
 #[async_graphql::Object]
 impl Mutation {
-    #[graphql(visible = false)]
     async fn update_tag(
         &self,
         context: &Context<'_>,

@@ -3,7 +3,6 @@
 ![CI](https://github.com/NEU-DSG/dailp-encoding/workflows/CI/badge.svg)
 
 This is a repository for the data structure and website code of the Digital Archive of American Indian Languages Preservation and Perseverance ([DAILP](https://dailp.northeastern.edu)) project at [Northeastern University](https://northeastern.edu).
-Explore Cherokee manuscripts and language data at our website [dailp.netlify.app](https://dailp.netlify.app).
 
 ## Plans
 

@@ -2,7 +2,7 @@
 
 This package renders a static website using React and Gatsby that includes all annotated documents produced by the DAILP project.
 These documents are connected to a Cherokee lexical database using our GraphQL endpoint.
-The latest commit to the `main` branch is automatically deployed to [`dailp.netlify.app`](https://dailp.netlify.app).
+The latest commit to the `main` branch is automatically deployed to [`dailp.northeastern.edu`](https://dailp.northeastern.edu).
 
 <!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
 
@@ -53,7 +53,6 @@ Thus, we define our types once in the [back-end](../types) and those definitions
 
 - Built with [`gatsby`](https://www.gatsbyjs.com/) as a static site to minimize load times and remove the need for a web server. [Comparison to Wordpress](https://www.gatsbyjs.com/features/cms/gatsby-vs-wordpress/) and [explanation for content creators](https://www.gatsbyjs.com/docs/winning-over-content-creators/)
 - Pre-caching and offline access using a web manifest and [`gatsby-plugin-offline`](https://www.gatsbyjs.com/plugins/gatsby-plugin-offline)
-- Deployed on [Netlify](https://www.netlify.com/), which provides a top-class CDN and branch deploys: a unique deployment URL for each branch in git, making parallel prototyping and code review a breeze.
 - Uses [`typescript`](https://www.typescriptlang.org/) to provide compile-time type safety and validation to Javascript.
 - Uses [`linaria`](https://github.com/callstack/linaria) for styling so that we can write scoped styles that live directly on React components without managing CSS classes.
   Incurs zero runtime overhead as styles are extracted into CSS files at build time.
