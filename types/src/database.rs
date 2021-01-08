@@ -401,7 +401,7 @@ impl Database {
                     // Grab the morpheme with the same index.
                     segment.get_morpheme(compare_by).into_owned()
                 };
-                Some((m.to_owned(), word))
+                Some((m, word))
             })
             .collect::<Vec<_>>()
             .await;

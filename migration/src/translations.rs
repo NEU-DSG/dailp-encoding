@@ -38,7 +38,7 @@ impl DocResult {
         })
     }
 
-    pub fn to_translation(self) -> Translation {
+    pub fn into_translation(self) -> Translation {
         let ends_with_footnote = regex::Regex::new(r"\[\d+\]").unwrap();
         let text_runs = self
             .body
@@ -70,11 +70,7 @@ impl DocResult {
             .enumerate()
             .map(|(index, content)| TranslationBlock {
                 index: index as i32 + 1,
-                segments: content
-                    .into_iter()
-                    .filter(|s| !s.is_empty())
-                    .map(|s| s.to_owned())
-                    .collect(),
+                segments: content.into_iter().filter(|s| !s.is_empty()).collect(),
             });
 
         Translation {

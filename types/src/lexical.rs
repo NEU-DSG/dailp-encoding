@@ -118,7 +118,7 @@ impl MorphemeId {
         // Trim any potential whitespace from the edges.
         let input = input.trim();
         // Toss out anything with a newline in it, because it's probably garbage.
-        if input.contains("\n") {
+        if input.contains('\n') {
             return None;
         }
         // Split by colon.
@@ -219,10 +219,10 @@ pub fn seg_verb_surface_form(
     Some(AnnotatedForm {
         id: position.make_form_id(&segments),
         position,
-        source: syllabary.clone(),
+        source: syllabary,
         normalized_source: None,
         simple_phonetics: Some(phonetic),
-        phonemic: Some(convert_udb(&phonemic).to_dailp()),
+        phonemic: Some(convert_udb(&phonemic).into_dailp()),
         segments: Some(segments),
         english_gloss: translations,
         commentary,
@@ -289,7 +289,7 @@ pub fn root_verb_surface_form(
         .map(|(_tag, src)| src.trim())
         .chain(vec![root, &asp_morpheme.1, &mod_morpheme.1])
         .filter(|s| !s.is_empty())
-        .map(|s| convert_udb(s).to_dailp());
+        .map(|s| convert_udb(s).into_dailp());
     let morpheme_layer = morphemes.join("-");
     let mut morpheme_glosses = morpheme_tags
         .iter()
@@ -329,10 +329,10 @@ pub fn root_verb_surface_form(
     Some(AnnotatedForm {
         id: position.make_form_id(&segments),
         position: position.clone(),
-        source: syllabary.clone(),
+        source: syllabary,
         normalized_source: None,
         simple_phonetics: Some(phonetic),
-        phonemic: Some(convert_udb(&phonemic).to_dailp()),
+        phonemic: Some(convert_udb(&phonemic).into_dailp()),
         segments: Some(segments),
         english_gloss: translations,
         commentary,
@@ -410,7 +410,7 @@ pub fn root_noun_surface_form(
         source: syllabary,
         normalized_source: None,
         simple_phonetics: Some(phonetic),
-        phonemic: Some(convert_udb(&phonemic).to_dailp()),
+        phonemic: Some(convert_udb(&phonemic).into_dailp()),
         segments: Some(segments),
         english_gloss: translations,
         commentary,
@@ -433,7 +433,7 @@ pub fn convert_udb(input: &str) -> PhonemicString {
         let consonant = &caps[1];
         syllables.push(PhonemicString::Consonant(consonant.to_owned()));
         let vowel = &caps[2];
-        let is_long = vowel.ends_with(":");
+        let is_long = vowel.ends_with(':');
         let accent = caps.get(3).map(|x| x.as_str()).unwrap_or("");
         let vowel_type = match accent {
             "" => {
@@ -592,18 +592,18 @@ impl PhonemicString {
         }
 
         if syllables.is_empty() {
-            PhonemicString::Consonant(input.to_owned())
+            PhonemicString::Consonant(input)
         } else {
             PhonemicString::Form(syllables)
         }
     }
 
-    pub fn to_dailp(self) -> String {
+    pub fn into_dailp(self) -> String {
         use {itertools::Itertools, unicode_normalization::UnicodeNormalization};
         match self {
             PhonemicString::Form(all) => all
                 .into_iter()
-                .map(|x| x.to_dailp())
+                .map(|x| x.into_dailp())
                 .join("")
                 .nfc()
                 .to_string(),
@@ -623,13 +623,13 @@ impl PhonemicString {
         }
     }
 
-    pub fn to_crg(self) -> String {
+    pub fn into_crg(self) -> String {
         use {itertools::Itertools, unicode_normalization::UnicodeNormalization, VowelType::*};
         match self {
             PhonemicString::Form(all) => all
                 .into_iter()
                 // Join all decomposed unicode.
-                .map(|x| x.to_crg())
+                .map(|x| x.into_crg())
                 .join("")
                 .nfc()
                 .to_string(),
@@ -653,10 +653,10 @@ impl PhonemicString {
     /// Simplify all vowels by stripping out tone and length.
     /// Convert t/th consonants to the d/t representation with apostrophe for
     /// the glottal stop.
-    pub fn to_learner(self) -> String {
+    pub fn into_learner(self) -> String {
         use itertools::Itertools;
         match self {
-            PhonemicString::Form(all) => all.into_iter().map(|x| x.to_learner()).join(""),
+            PhonemicString::Form(all) => all.into_iter().map(|x| x.into_learner()).join(""),
             PhonemicString::Consonant(s) => tth_to_dt(&s.replace(":", ""), false),
             PhonemicString::Vowel(v, _ty) => v,
         }

@@ -24,7 +24,7 @@ impl AnnotatedDoc {
             let trans = if let AnnotatedSeg::Block(_) = &seg {
                 let t = blocks.get(block_index);
                 block_index += 1;
-                t.map(|t| t.clone())
+                t.cloned()
             } else {
                 None
             };
@@ -110,7 +110,7 @@ impl AnnotatedDoc {
             Ok(self.segments.as_ref().map(|s| Cow::Borrowed(s)))
         } else {
             let db_doc = context.data::<&Database>()?.document(&self.meta.id).await?;
-            Ok(db_doc.and_then(|d| d.segments).map(|s| Cow::Owned(s)))
+            Ok(db_doc.and_then(|d| d.segments).map(Cow::Owned))
         }
     }
 
@@ -124,7 +124,7 @@ impl AnnotatedDoc {
             Ok(segs
                 .iter()
                 .flat_map(|s| s.source.forms())
-                .map(|f| Cow::Borrowed(f))
+                .map(Cow::Borrowed)
                 .collect())
         } else {
             Ok(context
@@ -132,7 +132,7 @@ impl AnnotatedDoc {
                 .words_in_document(&self.meta.id)
                 .await?
                 .into_iter()
-                .map(|f| Cow::Owned(f))
+                .map(Cow::Owned)
                 .collect())
         }
     }
