@@ -150,9 +150,7 @@ async fn graphql_mutate(
             "operationName": null,
             "query": format!("mutation {{\n{}\n}}", s)
         });
-        // println!("{:?}", query);
-        let res = CLIENT.post(&*ENDPOINT).json(&query).send().await?;
-        // println!("{:?}", res);
+        CLIENT.post(&*ENDPOINT).json(&query).send().await?;
     }
     Ok(())
 }

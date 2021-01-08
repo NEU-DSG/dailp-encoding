@@ -21,7 +21,8 @@ Each directory has its own `README` with further information.
 
 - [`types/`](types) defines all the types that our data adheres to in the database, GraphQL, and front-end.
 - [`migration/`](migration) pulls data from several Google Drive spreadsheets, conforms it to consistent types, then writes it all to a MongoDB instance.
-- [`graphql/`](graphql) exposes a public [GraphQL](https://graphql.org/) endpoint (deployed on [AWS Lambda](https://aws.amazon.com/lambda/)) that allows one to query DAILP data from the database. [Play with the data here](https://e3j0jht905.execute-api.us-east-1.amazonaws.com/prod/graphql).
+- [`graphql/`](graphql) exposes a public [GraphQL](https://graphql.org/) endpoint (deployed on [AWS Lambda](https://aws.amazon.com/lambda/)) that allows one to query DAILP data from the database.
+  [Play with the data here](https://dailp.northeastern.edu/graphql).
 - [`website/`](website) renders a static site with [Gatsby](https://gatsbyjs.org/) using our GraphQL endpoint at build time and at runtime (to handle user queries).
 - [`xml/`](xml) contains templates and a schema for defining TEI XML documents using DAILP data.
 
@@ -36,7 +37,7 @@ This process also happens automatically every time a code change is made on the 
 
 ### Data Exploration
 
-If you just want to explore our data without navigating the DAILP website, we host a [GraphQL Playground](https://e3j0jht905.execute-api.us-east-1.amazonaws.com/prod/graphql) that allows you to query the DAILP database.
+If you just want to explore our data without navigating the DAILP website, we host a [GraphQL Playground](https://dailp.northeastern.edu/graphql) that allows you to query the DAILP database.
 
 ### Further Documentation
 

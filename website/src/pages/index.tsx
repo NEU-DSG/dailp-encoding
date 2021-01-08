@@ -4,15 +4,10 @@ import { styled } from "linaria/react"
 import { css, cx } from "linaria"
 import { Helmet } from "react-helmet"
 import Layout from "../layout"
-import theme, { fullWidth } from "../theme"
+import theme, { fullWidth, wordpressUrl } from "../theme"
 import { collectionRoute } from "../routes"
 import "@fortawesome/fontawesome-free/css/fontawesome.css"
 import "@fortawesome/fontawesome-free/css/solid.css"
-
-const images = [
-  "https://dailp.northeastern.edu/wp-content/uploads/2020/01/Screen-Shot-2020-01-07-at-7.53.23-PM-300x253.png",
-  "https://dailp.northeastern.edu/wp-content/uploads/2020/01/Screen-Shot-2020-01-07-at-9.30.13-PM-184x300.png",
-]
 
 /** Lists all documents in our database */
 const IndexPage = (props: { data: GatsbyTypes.IndexPageQuery }) => (
@@ -21,23 +16,23 @@ const IndexPage = (props: { data: GatsbyTypes.IndexPageQuery }) => (
       <link
         type="text/css"
         rel="stylesheet"
-        href="https://dailp.northeastern.edu/wp-content/themes/quest-child/style.css?ver=4.9.16"
+        href={`${wordpressUrl}/wp-content/themes/quest-child/style.css?ver=4.9.16`}
       />
       <script
         type="text/javascript"
-        src="https://dailp.northeastern.edu/wp-includes/js/jquery/jquery.js?ver=1.12.4"
+        src={`${wordpressUrl}/wp-includes/js/jquery/jquery.js?ver=1.12.4`}
       />
       <script
         type="text/javascript"
-        src="https://dailp.northeastern.edu/wp-content/themes/quest/assets/js/quest-and-plugins.js?ver=4.9.16"
+        src={`${wordpressUrl}/wp-content/themes/quest/assets/js/quest-and-plugins.js?ver=4.9.16`}
       ></script>
       <script
         type="text/javascript"
-        src="https://dailp.northeastern.edu/wp-content/plugins/drs-tk/assets/js/gallery.js?ver=4.9.16"
+        src={`${wordpressUrl}/wp-content/plugins/drs-tk/assets/js/gallery.js?ver=4.9.16`}
       ></script>
       <script
         type="text/javascript"
-        src="https://dailp.northeastern.edu/wp-includes/js/imagesloaded.min.js?ver=3.2.0"
+        src={`${wordpressUrl}/wp-includes/js/imagesloaded.min.js?ver=3.2.0`}
       ></script>
     </Helmet>
     <DocIndex>

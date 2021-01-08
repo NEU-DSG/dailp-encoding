@@ -2,7 +2,7 @@ import React from "react"
 import { graphql } from "gatsby"
 import { css } from "linaria"
 import { Helmet } from "react-helmet"
-import theme, { fullWidth } from "../theme"
+import theme, { fullWidth, wordpressUrl } from "../theme"
 import Layout from "../layout"
 
 export default (p: { data: GatsbyTypes.ContentPageQuery }) => {
@@ -13,7 +13,7 @@ export default (p: { data: GatsbyTypes.ContentPageQuery }) => {
         <link
           rel="stylesheet"
           id="wpforms-full-css"
-          href="https://dailp.northeastern.edu/wp-content/plugins/wpforms-lite/assets/css/wpforms-full.min.css?ver=1.6.3.1"
+          href={`${wordpressUrl}/wp-content/plugins/wpforms-lite/assets/css/wpforms-full.min.css?ver=1.6.3.1`}
           type="text/css"
           media="all"
         />

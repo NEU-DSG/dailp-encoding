@@ -208,6 +208,7 @@ struct Mutation;
 
 #[async_graphql::Object]
 impl Mutation {
+    #[graphql(visible = false)]
     async fn update_tag(
         &self,
         context: &Context<'_>,
@@ -226,6 +227,7 @@ impl Mutation {
         }
     }
 
+    #[graphql(visible = false)]
     async fn update_document(
         &self,
         context: &Context<'_>,
@@ -244,6 +246,7 @@ impl Mutation {
         }
     }
 
+    #[graphql(visible = false)]
     async fn update_form(
         &self,
         context: &Context<'_>,
@@ -262,6 +265,7 @@ impl Mutation {
         }
     }
 
+    #[graphql(visible = false)]
     async fn update_connection(
         &self,
         context: &Context<'_>,

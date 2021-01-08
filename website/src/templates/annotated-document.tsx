@@ -26,7 +26,7 @@ import { MorphemeDetails } from "../morpheme"
 import PageImages from "../page-image"
 import { Breadcrumbs } from "../breadcrumbs"
 import { isMobile } from "react-device-detect"
-import { ExperiencePicker } from "../mode"
+import { ExperiencePicker, modeDetails } from "../mode"
 import { Button } from "reakit/Button"
 
 enum Tabs {
@@ -45,12 +45,14 @@ const AnnotatedDocumentPage = (p: {
     null
   )
 
-  const [experienceLevel, setExperienceLevel] = useState<ExperienceLevel>(null)
+  const [experienceLevel, setExperienceLevel] = useState<ExperienceLevel>(
+    ExperienceLevel.Story
+  )
 
   const tagSet = tagSetForMode(experienceLevel)
 
   return (
-    <Layout title={doc.title}>
+    <Layout title={`${doc.title} (${modeDetails(experienceLevel)?.label})`}>
       <main className={annotatedDocument}>
         <DialogBackdrop className={morphemeDialogBackdrop} {...dialog}>
           <Dialog

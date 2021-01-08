@@ -37,6 +37,8 @@ const levelNameMapping = {
   },
 }
 
+export const modeDetails = (mode: ExperienceLevel) => levelNameMapping[mode]
+
 const tagSetMapping = {
   [TagSet.Crg]: { label: "CRG", details: "Cherokee Reference Grammar" },
 

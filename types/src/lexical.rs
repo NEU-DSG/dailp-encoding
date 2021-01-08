@@ -30,7 +30,7 @@ impl PositionInDocument {
         // Remove punctuation all together.
         let gloss = raw_gloss.replace(&[',', '+', '(', ')', '[', ']'] as &[char], "");
         // Replace whitespace with dots.
-        let mut gloss = gloss.split_whitespace().join(".");
+        let gloss = gloss.split_whitespace().join(".");
         self.make_id(&gloss)
     }
 
