@@ -56,13 +56,15 @@ fn parse_tag_section(values: &mut impl Iterator<Item = String>, has_page: bool) 
     let title = values.next()?;
     let definition = values.next().unwrap_or_default();
     let _page_num = if has_page { values.next() } else { None };
-    let shape = values.next();
+    let shape = values.next().filter(|x| !x.is_empty());
+    let details_url = values.next().filter(|x| !x.is_empty());
     if !tag.is_empty() {
         Some(TagForm {
             tag,
             title,
             definition,
             shape,
+            details_url,
         })
     } else {
         None
