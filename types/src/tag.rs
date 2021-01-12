@@ -58,5 +58,9 @@ pub struct TagForm {
     pub title: String,
     /// How this morpheme looks in original language data
     pub shape: Option<String>,
+    /// URL to an external page with more details about this morpheme.
+    pub details_url: Option<String>,
+    /// A prose description of what this morpheme means and how it works in
+    /// context.
     pub definition: String,
 }
