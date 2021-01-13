@@ -133,14 +133,18 @@ css`
     }
 
     a {
-      color: ${theme.colors.footer};
+      color: ${theme.colors.link};
       text-decoration-thickness: 0.08em;
+      text-decoration-style: dotted;
       border-radius: 0;
 
-      &:hover,
+      &:hover {
+        text-decoration-style: solid;
+      }
+
       &:active,
       &:focus {
-        color: ${theme.colors.altFooter};
+        text-decoration: none;
       }
 
       ${theme.mediaQueries.print} {

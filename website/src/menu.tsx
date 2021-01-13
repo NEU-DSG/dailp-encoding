@@ -64,7 +64,7 @@ export const NavMenu = () => {
                       key={item.path}
                       className={navLink}
                       aria-current={
-                        location.pathname === item.path ? "page" : undefined
+                        location.pathname === url.pathname ? "page" : undefined
                       }
                     >
                       {item.label}
@@ -84,7 +84,7 @@ export const NavMenu = () => {
               key={item.path}
               to={url.pathname}
               aria-current={
-                location.pathname === item.path ? "page" : undefined
+                location.pathname === url.pathname ? "page" : undefined
               }
               className={navLink}
             >
