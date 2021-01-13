@@ -2,24 +2,6 @@
 
 Notes on user testing and feedback gathering.
 
-## Scenario
-
-What do we tell a tester at the beginning of the session?
-
-### Language Learner
-
-You are a student looking for resources to learn to read and speak Cherokee.
-You come across a website called "DAILP," whose goal is to support the ongoing creation of indigenous peoples’ knowledge, interpretations, and representations of the past by preserving and analyzing historical texts.
-
-### Casual Visitor
-
-Is it okay with you if I record this session for record keeping?
-
-You are interested in American Indian language preservation and history, but not necessarily learning Cherokee.
-You come across an organization called "DAILP" on the Northeastern University website and curiously take a look at their website.
-The goal of DAILP is to support the ongoing creation of indigenous peoples’ knowledge, interpretations, and representations of the past by preserving and analyzing historical texts.
-I am one of DAILP's developers and today I'd like to have you test the website and ask for your feedback.
-
 ## Features
 
 Which features I hope to test here:
@@ -30,13 +12,34 @@ Which features I hope to test here:
 - Finding other instances of a word in the document
 - Look up a morpheme in the glossary
 
+## Scenario
+
+What do we tell a tester at the beginning of the session?
+
+### Language Learner
+
+You are a student looking for resources to learn to read and speak Cherokee.
+You come across a website called "DAILP,\*\* whose goal is to support the ongoing creation of indigenous peoples’ knowledge, interpretations, and representations of the past by preserving and analyzing historical texts.
+
+### Casual Visitor
+
+Is it okay with you if I record this session for record keeping?
+
+<!-- You are interested in American Indian language preservation and history, but not necessarily learning Cherokee. -->
+
+I work with the Digital Archive of American Indian Languages Preservation and Perseverence (DAILP) at Northeastern University.
+The goal of DAILP is to support the ongoing creation of indigenous peoples’ knowledge, interpretations, and representations of the past by preserving and analyzing historical texts.
+We have collected and translated a collection of Cherokee documents from the early 20th century, and hope for this collection to be a tool that brings together learners and linguists.
+I'd like to have you complete a few tasks on our website and ask for your feedback.
+I'm not expecting you to have specific knowledge about Cherokee, just curiosity.
+
 ## Tasks
 
 I'm going to read you a set of short tasks one at a time that I would like you to complete.
 I will interfer minimally, so just keep trying unless you get really stuck.
 This is not a test of you or your abilities, but rather a test of our interface.
 
-Here is the link to the site: https://deploy-preview-76--dailp.netlify.app/
+Here is the link to the site: https://dailp.northeastern.edu/
 
 1. Find one Cherokee document that you are curious about.
 2. Read through the translation.

@@ -42,6 +42,16 @@ export const wordpressUrl = "https://wp.dailp.northeastern.edu"
 theme.fonts.body = theme.fonts.bodyArr.join(",")
 theme.fonts.header = theme.fonts.headerArr.join(",")
 
+export const typography = new Typography({
+  baseFontSize: theme.fontSizes.root,
+  baseLineHeight: theme.rhythm,
+  headerFontFamily: theme.fonts.headerArr,
+  bodyFontFamily: theme.fonts.bodyArr,
+  bodyColor: "hsl(0, 0%, 0%, 0.95)",
+  headerColor: "hsl(0, 0%, 0%, 0.9)",
+  // blockMarginBottom: 0.5,
+})
+
 export const fullWidth = {
   width: "100%",
   [theme.mediaQueries.medium]: {
@@ -121,21 +131,16 @@ const smallCaps = css`
   text-transform: lowercase;
 `
 
+const closeBlock = css`
+  margin-bottom: ${typography.rhythm(0.5)};
+`
+
 export const std = {
   button,
   iconButton,
   smallCaps,
   tooltip: withBg,
+  closeBlock,
 }
-
-export const typography = new Typography({
-  baseFontSize: theme.fontSizes.root,
-  baseLineHeight: theme.rhythm,
-  headerFontFamily: theme.fonts.headerArr,
-  bodyFontFamily: theme.fonts.bodyArr,
-  bodyGray: 5,
-  headerGray: 10,
-  // blockMarginBottom: 0.5,
-})
 
 export default theme

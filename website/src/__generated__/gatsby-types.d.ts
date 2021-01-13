@@ -474,6 +474,12 @@ type Dailp_TagForm = {
   readonly title: Scalars['String'];
   /** How this morpheme looks in original language data */
   readonly shape: Maybe<Scalars['String']>;
+  /** URL to an external page with more details about this morpheme. */
+  readonly detailsUrl: Maybe<Scalars['String']>;
+  /**
+   * A prose description of what this morpheme means and how it works in
+   * context.
+   */
   readonly definition: Scalars['String'];
 };
 
@@ -10360,6 +10366,27 @@ type Unnamed_2_QueryVariables = Exact<{ [key: string]: never; }>;
 
 type Unnamed_2_Query = { readonly currentBuildDate: Maybe<Pick<CurrentBuildDate, 'currentDate'>> };
 
+type DocumentDetailsQueryVariables = Exact<{
+  id: Scalars['String'];
+}>;
+
+
+type DocumentDetailsQuery = { readonly dailp: { readonly document: Maybe<(
+      Pick<Dailp_AnnotatedDoc, 'id' | 'slug' | 'title'>
+      & { readonly collection: Maybe<Pick<Dailp_DocumentCollection, 'name' | 'slug'>>, readonly date: Maybe<Pick<Dailp_DateTime, 'year'>>, readonly contributors: ReadonlyArray<Pick<Dailp_Contributor, 'name' | 'role'>>, readonly sources: ReadonlyArray<Pick<Dailp_SourceAttribution, 'name' | 'link'>> }
+    )> } };
+
+type CollectionQueryVariables = Exact<{
+  name: Scalars['String'];
+  slug: Scalars['String'];
+}>;
+
+
+type CollectionQuery = { readonly dailp: { readonly allDocuments: ReadonlyArray<(
+      Pick<Dailp_AnnotatedDoc, 'id' | 'slug' | 'title'>
+      & { readonly date: Maybe<Pick<Dailp_DateTime, 'year'>> }
+    )> }, readonly wpPage: Maybe<Pick<WpPage, 'content'>> };
+
 type AnnotatedDocumentQueryVariables = Exact<{
   id: Scalars['String'];
   isReference: Scalars['Boolean'];
@@ -10388,33 +10415,12 @@ type FormFieldsFragment = (
   )>> }
 );
 
-type CollectionQueryVariables = Exact<{
-  name: Scalars['String'];
-  slug: Scalars['String'];
-}>;
-
-
-type CollectionQuery = { readonly dailp: { readonly allDocuments: ReadonlyArray<(
-      Pick<Dailp_AnnotatedDoc, 'id' | 'slug' | 'title'>
-      & { readonly date: Maybe<Pick<Dailp_DateTime, 'year'>> }
-    )> }, readonly wpPage: Maybe<Pick<WpPage, 'content'>> };
-
 type ContentPageQueryVariables = Exact<{
   id: Scalars['String'];
 }>;
 
 
 type ContentPageQuery = { readonly page: Maybe<Pick<WpPage, 'title' | 'content'>> };
-
-type DocumentDetailsQueryVariables = Exact<{
-  id: Scalars['String'];
-}>;
-
-
-type DocumentDetailsQuery = { readonly dailp: { readonly document: Maybe<(
-      Pick<Dailp_AnnotatedDoc, 'id' | 'slug' | 'title'>
-      & { readonly collection: Maybe<Pick<Dailp_DocumentCollection, 'name' | 'slug'>>, readonly date: Maybe<Pick<Dailp_DateTime, 'year'>>, readonly contributors: ReadonlyArray<Pick<Dailp_Contributor, 'name' | 'role'>>, readonly sources: ReadonlyArray<Pick<Dailp_SourceAttribution, 'name' | 'link'>> }
-    )> } };
 
 type GatsbyImageSharpFixedFragment = Pick<ImageSharpFixed, 'base64' | 'width' | 'height' | 'src' | 'srcSet'>;
 
