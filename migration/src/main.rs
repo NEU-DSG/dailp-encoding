@@ -64,7 +64,6 @@ async fn fetch_sheet(
     sheet_id: &str,
 ) -> Result<Option<(dailp::AnnotatedDoc, Vec<dailp::LexicalConnection>)>> {
     use crate::spreadsheets::AnnotatedLine;
-    println!("parsing sheet {}...", sheet_id);
 
     // Parse the metadata on the second page of each sheet.
     // This includes publication information and a link to the translation.

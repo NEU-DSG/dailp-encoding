@@ -89,7 +89,6 @@ async fn parse_early_vocab(
         dailp::{DateTime, DocumentMetadata, MorphemeSegment},
     };
 
-    println!("parsing sheet {}...", sheet_id);
     let sheet = SheetResult::from_sheet(sheet_id, None).await?;
     let meta = SheetResult::from_sheet(sheet_id, Some(crate::METADATA_SHEET_NAME)).await?;
     let mut meta = meta.values.into_iter();

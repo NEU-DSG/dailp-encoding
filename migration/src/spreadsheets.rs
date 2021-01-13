@@ -69,6 +69,7 @@ pub struct SheetResult {
 impl SheetResult {
     pub async fn from_sheet(sheet_id: &str, sheet_name: Option<&str>) -> Result<Self> {
         use futures_retry::{FutureRetry, RetryPolicy};
+        println!("parsing sheet {}...", sheet_id);
         let mut tries = 0;
         let (t, _attempt) = FutureRetry::new(
             || Self::from_sheet_weak(sheet_id, sheet_name),
