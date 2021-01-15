@@ -28,7 +28,7 @@ const levelNameMapping = {
   [ExperienceLevel.AdvancedDt]: {
     label: "Analysis (d/t)",
     details:
-      "Linguistic anaylsis using the Cherokee Reference Grammar (CRG) representation",
+      "Linguistic analysis using the Cherokee Reference Grammar (CRG) representation",
   },
   [ExperienceLevel.AdvancedTth]: {
     label: "Analysis (t/th)",
