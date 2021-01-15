@@ -670,7 +670,7 @@ fn tth_to_dt(input: &str, keep_glottal_stops: bool, replace_colons: Option<&str>
     };
     // Convert the t/th consonants to d/t
     lazy_static! {
-        static ref TTH_PATTERN: Regex = Regex::new(r"(tlh|kwh|kh|th|ch|k|t|c|ʔ|:)").unwrap();
+        static ref TTH_PATTERN: Regex = Regex::new(r"(ts|ks|tlh|kwh|kh|th|ch|k|t|c|ʔ|:)").unwrap();
     }
     let result = TTH_PATTERN.replace_all(input, |cap: &Captures| match &cap[0] {
         "tlh" => "tl",
@@ -695,6 +695,10 @@ fn tth_to_dt(input: &str, keep_glottal_stops: bool, replace_colons: Option<&str>
                 ":"
             }
         }
+        // Any other matches we should leave as-is, retaining for example "ts"
+        // and "ks" in the d/t representation.
+        "ts" => "ts",
+        "ks" => "ks",
         _ => unreachable!(),
     });
     result.into_owned()
