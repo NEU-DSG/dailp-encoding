@@ -173,6 +173,7 @@ impl Database {
                 bson::doc! {
                     "$or": [
                         { "source": { "$regex": &pat } },
+                        { "simple_phonetics": { "$regex": &pat } },
                         { "english_gloss": { "$regex": pat } },
                     ]
                 },
