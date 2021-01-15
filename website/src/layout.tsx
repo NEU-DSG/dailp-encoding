@@ -136,6 +136,7 @@ css`
       color: ${theme.colors.link};
       text-decoration-thickness: 0.08em;
       text-decoration-style: dotted;
+      text-decoration-skip-ink: none;
       border-radius: 0;
 
       &:hover {
