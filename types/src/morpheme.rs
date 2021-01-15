@@ -169,4 +169,12 @@ mod tests {
             "(a)lisda'yv"
         );
     }
+
+    #[test]
+    fn orthography_colons() {
+        assert_eq!(
+            CherokeeOrthography::Crg.convert("uwa–:ciískáhlvv̋ʔi"),
+            "uwa–xxjiísgáhlv́v́ʔi"
+        )
+    }
 }

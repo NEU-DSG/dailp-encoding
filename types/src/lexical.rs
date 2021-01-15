@@ -633,7 +633,7 @@ impl PhonemicString {
                 .join("")
                 .nfc()
                 .to_string(),
-            PhonemicString::Consonant(s) => tth_to_dt(&s, true),
+            PhonemicString::Consonant(s) => tth_to_dt(&s, true, Some("xx")),
             PhonemicString::Vowel(v, ty) => match ty {
                 // Short vowels in CRG match TAOC.
                 ShortLow => v,
@@ -657,20 +657,20 @@ impl PhonemicString {
         use itertools::Itertools;
         match self {
             PhonemicString::Form(all) => all.into_iter().map(|x| x.into_learner()).join(""),
-            PhonemicString::Consonant(s) => tth_to_dt(&s.replace(":", ""), false),
+            PhonemicString::Consonant(s) => tth_to_dt(&s, false, Some("")),
             PhonemicString::Vowel(v, _ty) => v,
         }
     }
 }
 
-fn tth_to_dt(input: &str, keep_glottal_stops: bool) -> String {
+fn tth_to_dt(input: &str, keep_glottal_stops: bool, replace_colons: Option<&str>) -> String {
     use {
         lazy_static::lazy_static,
         regex::{Captures, Regex},
     };
     // Convert the t/th consonants to d/t
     lazy_static! {
-        static ref TTH_PATTERN: Regex = Regex::new(r"(tlh|kwh|kh|th|ch|k|t|c|ʔ)").unwrap();
+        static ref TTH_PATTERN: Regex = Regex::new(r"(tlh|kwh|kh|th|ch|k|t|c|ʔ|:)").unwrap();
     }
     let result = TTH_PATTERN.replace_all(input, |cap: &Captures| match &cap[0] {
         "tlh" => "tl",
@@ -686,6 +686,13 @@ fn tth_to_dt(input: &str, keep_glottal_stops: bool) -> String {
                 "ʔ"
             } else {
                 "'"
+            }
+        }
+        ":" => {
+            if let Some(r) = replace_colons {
+                r
+            } else {
+                ":"
             }
         }
         _ => unreachable!(),
