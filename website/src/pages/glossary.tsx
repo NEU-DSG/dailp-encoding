@@ -4,7 +4,7 @@ import { css, cx } from "linaria"
 import _ from "lodash"
 import pluralize from "pluralize"
 import { AnchorLink } from "gatsby-plugin-anchor-links"
-import theme, { fullWidth, std } from "../theme"
+import theme, { fullWidth, std, typography } from "../theme"
 import Layout from "../layout"
 import { TagSetPicker } from "../mode"
 import { morphemeDisplayTag, TagSet } from "../types"
@@ -99,7 +99,7 @@ const wide = css`
 `
 
 const sec = css`
-  margin-bottom: ${theme.rhythm}rem;
+  margin-bottom: ${typography.rhythm(1)};
 `
 
 const padded = css`

@@ -1,10 +1,10 @@
 import { styled } from "linaria/react"
-import theme from "./theme"
+import theme, { typography } from "./theme"
 
 export const Breadcrumbs = styled.ul`
   list-style: none;
   padding-inline-start: 0;
-  margin-bottom: ${theme.rhythm / 2}rem;
+  margin-bottom: ${typography.rhythm(1 / 2)};
   margin-left: 0;
   li {
     display: inline;

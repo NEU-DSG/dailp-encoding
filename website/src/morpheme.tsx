@@ -6,7 +6,7 @@ import { useQuery, gql } from "@apollo/client"
 import _ from "lodash"
 import { MdClose } from "react-icons/md"
 import { AnchorLink } from "./link"
-import theme from "./theme"
+import theme, { typography } from "./theme"
 import { morphemeDisplayTag, TagSet } from "./types"
 import { Link } from "gatsby"
 import { glossaryRoute, morphemeTagId } from "./routes"
@@ -84,11 +84,11 @@ export const MorphemeDetails = (props: {
 }
 
 const margined = css`
-  margin: ${theme.rhythm / 2}rem 1rem;
+  margin: ${typography.rhythm(1 / 2)} 1rem;
 `
 
 const padded = css`
-  padding: ${theme.rhythm / 2}rem 1rem;
+  padding: ${typography.rhythm(1 / 2)} 1rem;
 `
 
 const scrollable = css`
@@ -101,8 +101,8 @@ const scrollable = css`
 
 const closeButton = css`
   position: absolute;
-  top: ${theme.rhythm / 2}rem;
-  right: ${theme.rhythm / 2}rem;
+  top: ${typography.rhythm(1 / 2)};
+  right: ${typography.rhythm(1 / 2)};
   cursor: pointer;
   border: none;
   background: none;
