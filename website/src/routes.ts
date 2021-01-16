@@ -13,3 +13,5 @@ export const glossaryRoute = (tag: string) => `/glossary#${morphemeTagId(tag)}`
 
 export const glossarySectionId = (key: string) =>
   `sec-${slugify(key, slugifyOpts)}`
+
+export const sourceCitationId = (key: string) => `source-${key}`
