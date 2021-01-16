@@ -145,20 +145,30 @@ export const AnnotatedForm = (
   }
 }
 
-const WordCommentaryInfo = (p: { commentary: string }) => {
+const WordCommentaryInfo = (p: { commentary: string }) => (
+  <WithTooltip
+    hint={p.commentary}
+    aria-label="Commentary on this word"
+    className={cx(infoIcon, hideOnPrint)}
+  >
+    <MdInfoOutline size={20} />
+  </WithTooltip>
+)
+
+const WithTooltip = (p: {
+  hint: string
+  children: any
+  "aria-label"?: string
+  className?: string
+}) => {
   const tooltip = useTooltipState()
   return (
     <>
-      <TooltipReference
-        {...tooltip}
-        as="span"
-        aria-label="Commentary on this word"
-        className={cx(infoIcon, hideOnPrint)}
-      >
-        <MdInfoOutline size={20} />
+      <TooltipReference {...tooltip} as="span" className={p.className}>
+        {p.children}
       </TooltipReference>
       <Tooltip {...tooltip} className={std.tooltip}>
-        {p.commentary}
+        {p.hint}
       </Tooltip>
     </>
   )
@@ -259,15 +269,18 @@ const MorphemeSegment = (p: {
   let content = <>{gloss}</>
   if (matchingTag && matchingTag.title) {
     content = (
-      <abbr className={atLeastThin} title={matchingTag.title}>
+      <WithTooltip className={atLeastThin} hint={matchingTag.title}>
         {gloss}
-      </abbr>
+      </WithTooltip>
     )
   } else if (gloss === "?") {
     content = (
-      <abbr className={atLeastThin} title="Unanalyzed or unfamiliar segment">
+      <WithTooltip
+        className={atLeastThin}
+        hint="Unanalyzed or unfamiliar segment"
+      >
         {gloss}
-      </abbr>
+      </WithTooltip>
     )
   }
 
