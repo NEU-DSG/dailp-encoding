@@ -164,6 +164,14 @@ impl Database {
         Ok(forms)
     }
 
+    /// The number of words that belong to the given document ID.
+    pub async fn count_words_in_document(&self, doc_id: &str) -> Result<i64> {
+        Ok(self
+            .words_collection()
+            .count_documents(bson::doc! { "position.document_id": doc_id }, None)
+            .await?)
+    }
+
     pub async fn word_search(&self, query: String) -> Result<Vec<AnnotatedForm>> {
         use tokio::stream::StreamExt as _;
         let pat = format!(".*{}.*", query);
@@ -224,41 +232,24 @@ impl Database {
         let morpheme = bson::to_bson(morpheme)?;
 
         // Find the connections starting from this entry.
-        let froms = col.aggregate(
-            vec![
-                bson::doc! { "$match": { "from": &morpheme } },
-                bson::doc! { "$lookup": {
-                    "from": Database::WORDS,
-                    "localField": "to",
-                    "foreignField": "segments.gloss",
-                    "as": "connections"
-                } },
-                bson::doc! { "$unwind": "$connections" },
-                bson::doc! { "$replaceRoot": { "newRoot": "$connections" } },
-            ],
-            None,
-        );
+        let links = col
+            .aggregate(
+                vec![
+                    bson::doc! { "$match": { "links": &morpheme } },
+                    bson::doc! { "$lookup": {
+                        "from": Database::WORDS,
+                        "localField": "links",
+                        "foreignField": "segments.gloss",
+                        "as": "connections"
+                    } },
+                    bson::doc! { "$unwind": "$connections" },
+                    bson::doc! { "$replaceRoot": { "newRoot": "$connections" } },
+                ],
+                None,
+            )
+            .await?;
 
-        // Find the connections ending with this entry.
-        let tos = col.aggregate(
-            vec![
-                bson::doc! { "$match": { "to": morpheme } },
-                bson::doc! { "$lookup": {
-                    "from": Database::WORDS,
-                    "localField": "from",
-                    "foreignField": "segments.gloss",
-                    "as": "connections"
-                } },
-                bson::doc! { "$unwind": "$connections" },
-                bson::doc! { "$replaceRoot": { "newRoot": "$connections" } },
-            ],
-            None,
-        );
-
-        let (froms, tos) = futures::join!(froms, tos);
-
-        Ok(froms?
-            .chain(tos?)
+        Ok(links
             .filter_map(|doc| doc.ok().and_then(|doc| bson::from_document(doc).ok()))
             .collect()
             .await)
@@ -270,27 +261,20 @@ impl Database {
         let col = self.connections_collection();
         let morpheme = bson::to_bson(morpheme)?;
 
-        // Find the connections starting from this entry.
-        let froms = col.find(bson::doc! { "from": &morpheme }, None);
-        // Find the connections ending with this entry.
-        let tos = col.find(bson::doc! { "to": morpheme }, None);
-        let (froms, tos) = futures::join!(froms, tos);
+        // Find the connections containing this entry.
+        let froms = col.find(bson::doc! { "links": &morpheme }, None).await?;
 
-        let froms = froms?
-            .filter_map(|doc| {
-                doc.ok()
-                    .and_then(|doc| bson::from_document::<LexicalConnection>(doc).ok())
-            })
-            .map(|conn| conn.to);
+        let froms = froms.filter_map(|doc| {
+            doc.ok()
+                .and_then(|doc| bson::from_document::<LexicalConnection>(doc).ok())
+        });
 
-        let tos = tos?
-            .filter_map(|doc| {
-                doc.ok()
-                    .and_then(|doc| bson::from_document::<LexicalConnection>(doc).ok())
-            })
-            .map(|conn| conn.from);
-
-        Ok(froms.chain(tos).collect().await)
+        Ok(froms
+            .collect::<Vec<_>>()
+            .await
+            .into_iter()
+            .flat_map(|conn| conn.links)
+            .collect())
     }
 
     async fn recursive_connections(&self, id: &MorphemeId) -> Result<HashSet<MorphemeId>> {
@@ -318,6 +302,39 @@ impl Database {
         Ok(conns)
     }
 
+    async fn graph_connections(&self, id: &MorphemeId) -> Result<HashSet<MorphemeId>> {
+        use tokio::stream::StreamExt as _;
+
+        let col = self.connections_collection();
+        let morpheme = bson::to_bson(id)?;
+
+        let connections = col
+            .aggregate(
+                vec![
+                    bson::doc! { "$match": { "links": morpheme } },
+                    bson::doc! { "$graphLookup": {
+                        "from": Database::CONNECTIONS,
+                        "startWith": "$links",
+                        "connectFromField": "links",
+                        "connectToField": "links",
+                        "maxDepth": 20,
+                        "as": "connections"
+                    } },
+                ],
+                None,
+            )
+            .await?
+            .collect::<Vec<_>>()
+            .await;
+
+        Ok(connections
+            .into_iter()
+            .filter_map(|d| d.unwrap().get_array("connections").ok().map(|x| x.clone()))
+            .flat_map(|x| x)
+            .filter_map(|d| bson::from_bson(d).ok())
+            .collect())
+    }
+
     async fn doc_matches(&self, morpheme: &MorphemeId) -> Result<Vec<AnnotatedForm>> {
         use tokio::stream::StreamExt as _;
         let mut steps = vec![
@@ -342,7 +359,7 @@ impl Database {
     /// Forms that contain the given morpheme gloss, from both lexical resources
     /// and corpus data
     pub async fn connected_surface_forms(&self, id: &MorphemeId) -> Result<Vec<AnnotatedForm>> {
-        let ids = self.recursive_connections(id).await?;
+        let ids = self.graph_connections(id).await?;
         let lexical = join_all(ids.iter().map(|id| self.surface_forms(id)));
         let corpus = join_all(ids.iter().map(|id| self.doc_matches(&id)));
         let (lexical, corpus) = futures::join!(lexical, corpus);

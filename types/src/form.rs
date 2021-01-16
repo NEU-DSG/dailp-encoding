@@ -1,4 +1,4 @@
-use crate::{AnnotatedDoc, Database, DateTime, MorphemeId, MorphemeSegment, PositionInDocument};
+use crate::{AnnotatedDoc, Database, Date, MorphemeId, MorphemeSegment, PositionInDocument};
 use async_graphql::FieldResult;
 use serde::{Deserialize, Serialize};
 
@@ -23,7 +23,7 @@ pub struct AnnotatedForm {
     /// The character index of a mid-word page break, if there is one.
     pub page_break: Option<i32>,
     pub position: PositionInDocument,
-    pub date_recorded: Option<DateTime>,
+    pub date_recorded: Option<Date>,
 }
 
 impl AnnotatedForm {
@@ -132,7 +132,7 @@ impl AnnotatedForm {
         &self.commentary
     }
     /// The date and time this form was recorded
-    async fn date_recorded(&self) -> &Option<DateTime> {
+    async fn date_recorded(&self) -> &Option<Date> {
         &self.date_recorded
     }
 }

@@ -1,14 +1,14 @@
 use crate::spreadsheets::LexicalEntryWithForms;
 use crate::spreadsheets::SheetResult;
 use anyhow::Result;
-use dailp::convert_udb;
 use dailp::seg_verb_surface_forms;
 use dailp::AnnotatedDoc;
 use dailp::DocumentMetadata;
 use dailp::LexicalConnection;
 use dailp::MorphemeId;
 use dailp::MorphemeSegment;
-use dailp::{AnnotatedForm, DateTime, PositionInDocument};
+use dailp::{convert_udb, Contributor};
+use dailp::{AnnotatedForm, Date, PositionInDocument};
 
 pub async fn migrate_dictionaries() -> Result<()> {
     let df1975 = parse_new_df1975(
@@ -88,10 +88,8 @@ pub async fn migrate_dictionaries() -> Result<()> {
 }
 
 async fn parse_numerals(sheet_id: &str, doc_id: &str, year: i32) -> Result<()> {
-    use chrono::TimeZone as _;
-
     let numerals = SheetResult::from_sheet(sheet_id, None).await?;
-    let date = DateTime::new(chrono::Utc.ymd(year, 1, 1).and_hms(0, 0, 0));
+    let date = Date::new(chrono::NaiveDate::from_ymd(year, 1, 1));
 
     let forms = numerals
         .values
@@ -142,8 +140,6 @@ async fn parse_numerals(sheet_id: &str, doc_id: &str, year: i32) -> Result<()> {
 }
 
 async fn parse_appendix(sheet_id: &str, to_skip: usize) -> Result<()> {
-    use chrono::TimeZone;
-
     let sheet = SheetResult::from_sheet(sheet_id, None).await?;
     let meta = SheetResult::from_sheet(sheet_id, Some("Metadata")).await?;
     let mut meta_values = meta.values.into_iter();
@@ -152,7 +148,8 @@ async fn parse_appendix(sheet_id: &str, to_skip: usize) -> Result<()> {
     let year = meta_values.next().unwrap().pop().unwrap().parse();
     let date_recorded = year
         .ok()
-        .map(|year| DateTime::new(chrono::Utc.ymd(year, 1, 1).and_hms(0, 0, 0)));
+        .map(|year| Date::new(chrono::NaiveDate::from_ymd(year, 1, 1)));
+    let authors = meta_values.next().unwrap_or_default();
     let meta = DocumentMetadata {
         id: document_id,
         title,
@@ -160,7 +157,11 @@ async fn parse_appendix(sheet_id: &str, to_skip: usize) -> Result<()> {
         sources: Vec::new(),
         collection: Some("Vocabularies".to_owned()),
         genre: None,
-        contributors: Vec::new(),
+        contributors: authors
+            .into_iter()
+            .skip(1)
+            .map(Contributor::new_author)
+            .collect(),
         page_images: Vec::new(),
         translation: None,
         is_reference: true,
@@ -242,7 +243,6 @@ fn parse_new_df1975(
     after_root: usize,
     translations: usize,
 ) -> impl Iterator<Item = LexicalEntryWithForms> {
-    use chrono::TimeZone as _;
     let doc_id = doc_id.to_owned();
     sheet
         .values
@@ -261,7 +261,7 @@ fn parse_new_df1975(
                 let root = root_values.next().filter(|s| !s.is_empty())?;
                 let root_gloss = root_values.next().filter(|s| !s.is_empty())?;
                 let mut form_values = root_values.clone().skip(after_root + translations);
-                let date = DateTime::new(chrono::Utc.ymd(year, 1, 1).and_hms(0, 0, 0));
+                let date = Date::new(chrono::NaiveDate::from_ymd(year, 1, 1));
                 let pos = PositionInDocument {
                     document_id: doc_id.clone(),
                     page_number,

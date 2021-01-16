@@ -286,7 +286,7 @@ impl Mutation {
 
 #[derive(async_graphql::SimpleObject)]
 struct FormsInTime {
-    start: Option<dailp::DateTime>,
-    end: Option<dailp::DateTime>,
+    start: Option<dailp::Date>,
+    end: Option<dailp::Date>,
     forms: Vec<dailp::AnnotatedForm>,
 }

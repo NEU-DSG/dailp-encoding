@@ -1,6 +1,5 @@
 use crate::{
-    AnnotatedForm, Contributor, Database, DateTime, SourceAttribution, Translation,
-    TranslationBlock,
+    AnnotatedForm, Contributor, Database, Date, SourceAttribution, Translation, TranslationBlock,
 };
 use async_graphql::FieldResult;
 use serde::{Deserialize, Serialize};
@@ -54,7 +53,7 @@ impl AnnotatedDoc {
     }
 
     /// Date and time this document was written or created
-    async fn date(&self) -> &Option<DateTime> {
+    async fn date(&self) -> &Option<Date> {
         &self.meta.date
     }
 
@@ -136,6 +135,13 @@ impl AnnotatedDoc {
                 .collect())
         }
     }
+
+    async fn form_count(&self, context: &async_graphql::Context<'_>) -> FieldResult<i64> {
+        Ok(context
+            .data::<&Database>()?
+            .count_words_in_document(&self.meta.id)
+            .await?)
+    }
 }
 
 #[derive(async_graphql::Enum, Clone, Copy, PartialEq, Eq)]
@@ -207,6 +213,8 @@ pub struct DocumentMetadata {
     pub id: String,
     /// Full title of the document.
     pub title: String,
+    /// Further details about this particular document.
+    // pub details: String,
     #[serde(default)]
     /// The original source(s) of this document, the most important first.
     pub sources: Vec<SourceAttribution>,
@@ -222,7 +230,7 @@ pub struct DocumentMetadata {
     /// URL for an image of the original physical document.
     #[serde(default)]
     pub page_images: Vec<String>,
-    pub date: Option<DateTime>,
+    pub date: Option<Date>,
     /// Whether this document is a reference, therefore just a list of forms.
     pub is_reference: bool,
 }

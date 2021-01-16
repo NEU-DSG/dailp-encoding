@@ -1,4 +1,5 @@
 use anyhow::Result;
+use dailp::Contributor;
 
 const COLLECTION_NAME: &str = "Early Vocabularies";
 
@@ -84,10 +85,7 @@ async fn parse_early_vocab(
     num_links: usize,
 ) -> Result<()> {
     use crate::spreadsheets::SheetResult;
-    use {
-        chrono::TimeZone as _,
-        dailp::{DateTime, DocumentMetadata, MorphemeSegment},
-    };
+    use dailp::{Date, DocumentMetadata, MorphemeSegment};
 
     let sheet = SheetResult::from_sheet(sheet_id, None).await?;
     let meta = SheetResult::from_sheet(sheet_id, Some(crate::METADATA_SHEET_NAME)).await?;
@@ -97,7 +95,8 @@ async fn parse_early_vocab(
     let year = meta.next().unwrap().pop().unwrap().parse::<i32>();
     let date_recorded = year
         .ok()
-        .map(|year| DateTime::new(chrono::Utc.ymd(year, 1, 1).and_hms(0, 0, 0)));
+        .map(|year| Date::new(chrono::NaiveDate::from_ymd(year, 1, 1)));
+    let authors = meta.next().unwrap_or_default();
     let meta = DocumentMetadata {
         id: doc_id,
         title,
@@ -105,7 +104,11 @@ async fn parse_early_vocab(
         sources: Vec::new(),
         collection: Some(COLLECTION_NAME.to_owned()),
         genre: None,
-        contributors: Vec::new(),
+        contributors: authors
+            .into_iter()
+            .skip(1)
+            .map(Contributor::new_author)
+            .collect(),
         page_images: Vec::new(),
         translation: None,
         is_reference: true,

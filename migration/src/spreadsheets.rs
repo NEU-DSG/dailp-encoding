@@ -6,7 +6,7 @@ use crate::translations::DocResult;
 use anyhow::Result;
 use dailp::{
     convert_udb, root_noun_surface_forms, root_verb_surface_forms, AnnotatedDoc, AnnotatedForm,
-    AnnotatedPhrase, AnnotatedSeg, BlockType, Contributor, DateTime, DocumentMetadata,
+    AnnotatedPhrase, AnnotatedSeg, BlockType, Contributor, Date, DocumentMetadata,
     LexicalConnection, LineBreak, MorphemeId, MorphemeSegment, PageBreak,
 };
 use dailp::{PositionInDocument, SourceAttribution};
@@ -126,7 +126,6 @@ impl SheetResult {
     }
 
     pub fn into_adjs(self, doc_id: &str, year: i32) -> Result<Vec<LexicalEntryWithForms>> {
-        use chrono::TimeZone as _;
         use rayon::prelude::*;
         Ok(self
             .values
@@ -148,7 +147,7 @@ impl SheetResult {
                 // Skip page ref.
                 let page_number = root_values.next()?;
                 let mut form_values = root_values;
-                let date = DateTime::new(chrono::Utc.ymd(year, 1, 1).and_hms(0, 0, 0));
+                let date = Date::new(chrono::NaiveDate::from_ymd(year, 1, 1));
                 let position = PositionInDocument {
                     document_id: doc_id.to_owned(),
                     index: idx as i32 + 1,
@@ -195,7 +194,6 @@ impl SheetResult {
         after_root: usize,
         has_comment: bool,
     ) -> Result<Vec<LexicalEntryWithForms>> {
-        use chrono::TimeZone as _;
         use rayon::prelude::*;
         Ok(self
             .values
@@ -216,7 +214,7 @@ impl SheetResult {
                     let root_gloss = root_values.next()?;
                     // Skip page ref and category.
                     let mut form_values = root_values.skip(after_root);
-                    let date = DateTime::new(chrono::Utc.ymd(year, 1, 1).and_hms(0, 0, 0));
+                    let date = Date::new(chrono::NaiveDate::from_ymd(year, 1, 1));
                     let position = PositionInDocument {
                         document_id: doc_id.to_owned(),
                         index,
@@ -276,9 +274,7 @@ impl SheetResult {
 
     /// Parse this sheet as a document metadata listing.
     pub async fn into_metadata(self, is_reference: bool) -> Result<DocumentMetadata> {
-        use chrono::TimeZone as _;
-
-        // Meta order: genre, source, title, source page #, page count, translation
+        // Field order: genre, source, title, source page #, page count, translation
         // First column is the name of the field, useless when parsing so we ignore it.
         let mut values = self.values.into_iter();
         let mut doc_id = values
@@ -353,8 +349,8 @@ impl SheetResult {
             date: date
                 .as_ref()
                 .and_then(|d| d.get(1))
-                .and_then(|s| chrono::Utc.datetime_from_str(s, "%Y-%m-%d %H:%M:%S").ok())
-                .map(DateTime::new),
+                .and_then(|s| chrono::NaiveDate::parse_from_str(s, "%Y-%m-%d").ok())
+                .map(Date::new),
             is_reference,
         })
     }
@@ -526,7 +522,7 @@ impl<'a> AnnotatedLine {
     pub fn lines_into_segments(
         lines: Vec<Self>,
         document_id: &str,
-        date: &Option<DateTime>,
+        date: &Option<Date>,
     ) -> Vec<AnnotatedSeg> {
         let mut segments = Vec::<AnnotatedSeg>::new();
         let mut stack = Vec::<AnnotatedPhrase>::new();
