@@ -1,4 +1,4 @@
-use crate::{AnnotatedForm, DateTime, MorphemeSegment};
+use crate::{AnnotatedForm, Date, MorphemeSegment};
 use serde::{Deserialize, Serialize};
 
 /// The reference position within a document of one specific form
@@ -82,15 +82,13 @@ impl PositionInDocument {
 pub struct LexicalConnection {
     #[serde(rename = "_id")]
     pub id: String,
-    pub from: MorphemeId,
-    pub to: MorphemeId,
+    pub links: Vec<MorphemeId>,
 }
 impl LexicalConnection {
     pub fn new(from: MorphemeId, to: MorphemeId) -> Self {
         Self {
-            id: format!("{}->{}", from, to),
-            from,
-            to,
+            id: format!("{}-{}", from, to),
+            links: vec![from, to],
         }
     }
     pub fn parse(from: &str, to: &str) -> Option<Self> {
@@ -158,7 +156,7 @@ impl std::fmt::Display for MorphemeId {
 
 pub fn seg_verb_surface_forms(
     position: &PositionInDocument,
-    date: &DateTime,
+    date: &Date,
     cols: &mut impl Iterator<Item = String>,
     translation_count: usize,
     has_numeric: bool,
@@ -180,7 +178,7 @@ pub fn seg_verb_surface_forms(
 
 pub fn seg_verb_surface_form(
     position: PositionInDocument,
-    date: &DateTime,
+    date: &Date,
     cols: &mut impl Iterator<Item = String>,
     translation_count: usize,
     has_numeric: bool,
@@ -235,7 +233,7 @@ pub fn seg_verb_surface_form(
 /// Gather many verb surface forms from the given row.
 pub fn root_verb_surface_forms(
     position: &PositionInDocument,
-    date: &DateTime,
+    date: &Date,
     root: &str,
     root_gloss: &str,
     cols: &mut impl Iterator<Item = String>,
@@ -264,7 +262,7 @@ pub fn root_verb_surface_forms(
 /// Build a single verb surface form from the given row.
 pub fn root_verb_surface_form(
     position: &PositionInDocument,
-    date: &DateTime,
+    date: &Date,
     root: &str,
     root_gloss: &str,
     cols: &mut impl Iterator<Item = String>,
@@ -363,7 +361,7 @@ fn all_tags(cols: &mut impl Iterator<Item = String>) -> (Vec<(String, String)>, 
 
 pub fn root_noun_surface_forms(
     position: &PositionInDocument,
-    date: &DateTime,
+    date: &Date,
     cols: &mut impl Iterator<Item = String>,
     has_comment: bool,
 ) -> Vec<AnnotatedForm> {
@@ -379,7 +377,7 @@ pub fn root_noun_surface_forms(
 /// GraphQL can do the conversion instead of the migration process.
 pub fn root_noun_surface_form(
     position: &PositionInDocument,
-    date: &DateTime,
+    date: &Date,
     cols: &mut impl Iterator<Item = String>,
     has_comment: bool,
 ) -> Option<AnnotatedForm> {

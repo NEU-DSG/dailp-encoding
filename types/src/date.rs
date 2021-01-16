@@ -1,16 +1,16 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialOrd, Ord, PartialEq, Eq)]
-pub struct DateTime(pub chrono::DateTime<chrono::Utc>);
+pub struct Date(pub chrono::NaiveDate);
 
-impl DateTime {
-    pub fn new(internal: chrono::DateTime<chrono::Utc>) -> Self {
+impl Date {
+    pub fn new(internal: chrono::NaiveDate) -> Self {
         Self(internal)
     }
 }
 
 #[async_graphql::Object]
-impl DateTime {
+impl Date {
     async fn year(&self) -> i32 {
         use chrono::Datelike as _;
         self.0.year()
