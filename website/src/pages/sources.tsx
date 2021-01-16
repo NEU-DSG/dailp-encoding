@@ -8,9 +8,9 @@ import { sourceCitationId } from "../routes"
 
 export default (p: { data: GatsbyTypes.AllSourcesQuery }) => {
   return (
-    <Layout title="Sources index">
+    <Layout title="Sources Index">
       <main>
-        <h1>Sources of Cherokee Language Data</h1>
+        <h1 className={wide}>Sources of Cherokee Language Data</h1>
         <ul className={wide}>
           {_.sortBy(
             p.data.dailp.allDocuments.filter((d) => d.isReference),
@@ -51,6 +51,7 @@ const apaCitation = css`
 const wide = css`
   ${fullWidth}
   list-style: none;
+  margin-left: 0;
 `
 
 export const query = graphql`
