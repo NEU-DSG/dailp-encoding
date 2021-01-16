@@ -7,6 +7,10 @@ exports.createPages = async (args) => {
   await wp
 }
 
+// There are a few documents that currently take too long to query, so exclude
+// them from the build process for now. Real solution: implement pagination.
+const excludedDocuments = ["DF1975"]
+
 const createDocumentPages = async ({ actions, graphql }) => {
   const { data } = await graphql(`
     query {
@@ -31,17 +35,19 @@ const createDocumentPages = async ({ actions, graphql }) => {
     }
 
     // The main page displays the document contents.
-    actions.createPage({
-      path: `documents/${slug}`,
-      component: path.resolve(`./src/templates/annotated-document.tsx`),
-      context: { id, isReference },
-    })
-    // The details page displays information and description about this document.
-    actions.createPage({
-      path: `documents/${slug}/details`,
-      component: path.resolve("./src/templates/document-details.tsx"),
-      context: { id, isReference },
-    })
+    if (!excludedDocuments.includes(id)) {
+      actions.createPage({
+        path: `documents/${slug}`,
+        component: path.resolve(`./src/templates/annotated-document.tsx`),
+        context: { id, isReference },
+      })
+      // The details page displays information and description about this document.
+      actions.createPage({
+        path: `documents/${slug}/details`,
+        component: path.resolve("./src/templates/document-details.tsx"),
+        context: { id, isReference },
+      })
+    }
   }
 
   for (const collection of data.dailp.allCollections) {
