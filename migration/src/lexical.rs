@@ -84,6 +84,43 @@ pub async fn migrate_dictionaries() -> Result<()> {
     // Push all the surface forms to the sea of words.
     crate::update_form(forms).await?;
 
+    let docs = vec![
+        AnnotatedDoc {
+            meta: DocumentMetadata {
+                id: "DF1975".to_owned(),
+                title: "Cherokee–English Dictionary".to_owned(),
+                sources: Vec::new(),
+                collection: Some("Lexical Resources".to_owned()),
+                contributors: vec![
+                    Contributor::new_author("Feeling, Durbin".to_owned()),
+                    Contributor::new_author("Pulte, William".to_owned()),
+                ],
+                date: Some(dailp::Date::new(chrono::NaiveDate::from_ymd(1975, 1, 1))),
+                genre: None,
+                translation: None,
+                page_images: Vec::new(),
+                is_reference: true,
+            },
+            segments: None,
+        },
+        AnnotatedDoc {
+            meta: DocumentMetadata {
+                id: "DF2003".to_owned(),
+                title: "A handbook of the Cherokee verb: a preliminary study.".to_owned(),
+                sources: Vec::new(),
+                collection: Some("Lexical Resources".to_owned()),
+                contributors: vec![Contributor::new_author("Feeling, Durbin".to_owned())],
+                date: Some(dailp::Date::new(chrono::NaiveDate::from_ymd(2003, 1, 1))),
+                genre: None,
+                translation: None,
+                page_images: Vec::new(),
+                is_reference: true,
+            },
+            segments: None,
+        },
+    ];
+    crate::update_document(&docs).await?;
+
     Ok(())
 }
 
