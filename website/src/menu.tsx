@@ -2,7 +2,7 @@ import React from "react"
 import { css } from "linaria"
 import { Link, graphql, useStaticQuery } from "gatsby"
 import { useLocation } from "@reach/router"
-import theme from "./theme"
+import theme, { typography } from "./theme"
 import {
   useDialogState,
   Dialog,
@@ -165,7 +165,7 @@ const navMenu = css`
 `
 
 const navLink = css`
-  padding: ${theme.rhythm / 4}rem 1ch;
+  padding: ${typography.rhythm(1 / 4)} 1ch;
   text-decoration: none;
   color: ${theme.colors.text};
   background: none;
@@ -190,9 +190,9 @@ const navLink = css`
 `
 
 const drawerItem = css`
-  margin-bottom: ${theme.rhythm / 2}rem;
+  margin-bottom: ${typography.rhythm(1 / 2)};
   & > a {
-    padding: ${theme.rhythm / 2}rem;
+    padding: ${typography.rhythm(1 / 2)};
     text-decoration: none;
     color: ${theme.colors.text};
 

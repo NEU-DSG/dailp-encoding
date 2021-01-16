@@ -7,7 +7,7 @@ import {
 } from "reakit/Radio"
 import { Tooltip, TooltipReference, useTooltipState } from "reakit/Tooltip"
 import Cookies from "js-cookie"
-import theme, { hideOnPrint, withBg } from "./theme"
+import theme, { hideOnPrint, typography, withBg } from "./theme"
 import { ExperienceLevel, TagSet, tagSetForMode } from "./types"
 import { css, cx } from "linaria"
 
@@ -156,7 +156,7 @@ const TagSetOption = (p: { radio: RadioStateReturn; level: string }) => {
 }
 
 const levelGroup = css`
-  margin: ${theme.rhythm / 2}rem 0;
+  margin: ${typography.rhythm(1 / 2)} 0;
   display: flex;
   flex-flow: row wrap;
   justify-content: center;
@@ -172,5 +172,5 @@ const levelLabel = css`
 `
 
 const topMargin = css`
-  margin-top: ${theme.rhythm / 2}rem;
+  margin-top: ${typography.rhythm(1 / 2)};
 `

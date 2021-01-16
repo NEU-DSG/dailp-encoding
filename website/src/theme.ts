@@ -34,7 +34,6 @@ const theme = {
     print: "@media print",
   },
   edgeSpacing: "1rem",
-  rhythm: 1.47,
 }
 
 export const wordpressUrl = "https://wp.dailp.northeastern.edu"
@@ -44,7 +43,7 @@ theme.fonts.header = theme.fonts.headerArr.join(",")
 
 export const typography = new Typography({
   baseFontSize: theme.fontSizes.root,
-  baseLineHeight: theme.rhythm,
+  baseLineHeight: 1.47,
   headerFontFamily: theme.fonts.headerArr,
   bodyFontFamily: theme.fonts.bodyArr,
   bodyColor: "hsl(0, 0%, 0%, 0.95)",
@@ -75,7 +74,7 @@ export const largeDialog = {
 export const withBg = css`
   z-index: 999;
   background-color: ${theme.colors.body};
-  padding: ${theme.rhythm / 4}em;
+  padding: ${typography.rhythm(1 / 6)} 1ch;
   border: 1px solid ${theme.colors.text};
   ${theme.mediaQueries.medium} {
     max-width: 70vw;
@@ -95,7 +94,7 @@ const button = css`
   font-family: ${theme.fonts.header};
   color: ${theme.colors.link};
   background-color: ${theme.colors.button};
-  padding: ${theme.rhythm / 3}rem 1rem;
+  padding: ${typography.rhythm(1 / 3)} 1ch;
   margin: 0 1rem;
   cursor: pointer;
   border: 2px solid ${theme.colors.headings};

@@ -333,9 +333,9 @@ const morphemeButton = css`
 
 const wordGroup = css`
   position: relative;
-  margin: ${theme.rhythm / 2}rem 0;
-  margin-bottom: ${theme.rhythm / 2}rem;
-  padding: ${theme.rhythm / 2}rem 0.5rem;
+  margin: ${typography.rhythm(1 / 2)} 0;
+  margin-bottom: ${typography.rhythm(1 / 2)};
+  padding: ${typography.rhythm(1 / 2)} 0.5rem;
   padding-right: 0;
   border: 2px solid ${theme.colors.borders};
   border-radius: 2px;
@@ -344,12 +344,12 @@ const wordGroup = css`
   ${theme.mediaQueries.medium} {
     padding: 0;
     border: none;
-    margin: ${theme.rhythm / 2}rem 3rem ${theme.rhythm}rem 0;
+    margin: ${typography.rhythm(1 / 2)} 3rem ${typography.rhythm(1 / 2)} 0;
   }
   ${theme.mediaQueries.print} {
     padding: 0;
     border: none;
-    margin: 0rem 3.5rem ${theme.rhythm * 1.5}rem 0;
+    margin: 0rem 3.5rem ${typography.rhythm(1.5)} 0;
   }
 `
 
@@ -368,11 +368,11 @@ const documentBlock = css`
   position: relative;
   display: block;
   break-after: avoid;
-  margin-top: ${theme.rhythm}rem;
-  margin-bottom: ${theme.rhythm * 2}rem;
+  margin-top: ${typography.rhythm(1)};
+  margin-bottom: ${typography.rhythm(2)};
   ${theme.mediaQueries.print} {
-    padding-bottom: ${theme.rhythm / 4}rem;
-    margin-bottom: ${theme.rhythm * 2}rem;
+    padding-bottom: ${typography.rhythm(1 / 4)};
+    margin-bottom: ${typography.rhythm(2)};
   }
 `
 
@@ -394,9 +394,8 @@ const annotationSection = css`
   width: 100%;
   position: relative;
   display: block;
-  margin-bottom: ${theme.rhythm / 2}rem;
+  margin-bottom: ${typography.rhythm(1 / 2)};
   ${theme.mediaQueries.medium}, print {
-    margin-bottom: ${theme.rhythm / 2}rem;
     & > * {
       display: inline-block;
     }

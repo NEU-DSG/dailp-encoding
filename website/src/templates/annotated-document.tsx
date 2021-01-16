@@ -11,6 +11,7 @@ import theme, {
   withBg,
   std,
   hideOnPrint,
+  typography,
 } from "../theme"
 import { collectionRoute, documentDetailsRoute, documentRoute } from "../routes"
 import { useScrollableTabState } from "../scrollable-tabs"
@@ -190,7 +191,7 @@ const docTitle = css`
 `
 
 const bottomPadded = css`
-  margin-bottom: ${theme.rhythm / 2}rem;
+  margin-bottom: ${typography.rhythm(1 / 2)};
   display: flex;
   flex-flow: row wrap;
   align-items: center;
@@ -235,7 +236,7 @@ const docTab = css`
 const docTabs = css`
   display: flex;
   flex-flow: row nowrap;
-  height: ${theme.rhythm * 1.75}rem;
+  height: ${typography.rhythm(1.75)};
   margin: 0 !important;
   ${fullWidth}
 `
