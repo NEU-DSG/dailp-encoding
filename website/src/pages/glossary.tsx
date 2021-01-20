@@ -16,10 +16,10 @@ export default (p: { data: GatsbyTypes.GlossaryQuery }) => {
   const groupedTags = _.groupBy(tags, (t) => t.morphemeType)
   const [tagSet, setTagSet] = useState<TagSet>(null)
   return (
-    <Layout title="Morpheme Glossary">
+    <Layout title="Glossary of Terms">
       <main className={padded}>
         <header className={wide}>
-          <h1>Morpheme Glossary</h1>
+          <h1>Glossary of Terms</h1>
         </header>
 
         <TagSetPicker onSelect={setTagSet} />
