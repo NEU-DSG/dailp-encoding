@@ -20,11 +20,15 @@ export default () => {
   )
 
   useEffect(() => {
-    if (typeof location !== "undefined") {
-      location.search = queryString.stringifyUrl({
-        url: location.pathname,
-        query: { query: morphemeId },
-      })
+    if (typeof window !== "undefined") {
+      window.history.replaceState(
+        null,
+        "",
+        queryString.stringifyUrl({
+          url: window.location.pathname,
+          query: { query: morphemeId },
+        })
+      )
     }
   }, [morphemeId])
 
