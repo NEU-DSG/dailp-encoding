@@ -19,19 +19,23 @@ impl PositionInDocument {
 }
 
 impl PositionInDocument {
-    pub fn make_id(&self, gloss: &str) -> String {
-        format!("{}.{}:{}", self.document_id, self.index, gloss)
+    pub fn make_id(&self, gloss: &str, use_index: bool) -> String {
+        if use_index {
+            format!("{}.{}:{}", self.document_id, self.index, gloss)
+        } else {
+            format!("{}:{}", self.document_id, gloss)
+        }
     }
 
     /// Converts the input into a suitable ID format by stripping whitespace and
     /// punctuation before putting the document ID before it.
-    pub fn make_raw_id(&self, raw_gloss: &str) -> String {
+    pub fn make_raw_id(&self, raw_gloss: &str, use_index: bool) -> String {
         use itertools::Itertools as _;
         // Remove punctuation all together.
         let gloss = raw_gloss.replace(&[',', '+', '(', ')', '[', ']'] as &[char], "");
         // Replace whitespace with dots.
         let gloss = gloss.split_whitespace().join(".");
-        self.make_id(&gloss)
+        self.make_id(&gloss, use_index)
     }
 
     pub fn make_form_id(&self, segments: &[MorphemeSegment]) -> String {
@@ -755,7 +759,7 @@ DF2018:54",
             page_number: "116".to_owned(),
             index: 1,
         };
-        let id = pos.make_raw_id(raw);
-        assert_eq!(id, "AK1997.1:as.for.me.1SG.PRO.CS");
+        assert_eq!(pos.make_raw_id(raw, true), "AK1997.1:as.for.me.1SG.PRO.CS");
+        assert_eq!(pos.make_raw_id(raw, false), "AK1997:as.for.me.1SG.PRO.CS");
     }
 }
