@@ -392,7 +392,7 @@ const documentBlock = css`
 const bordered = css`
   ${theme.mediaQueries.medium}, print {
     border-bottom: 2px solid ${theme.colors.text};
-    &:last-child {
+    &:last-of-type {
       border-bottom: none;
       margin-bottom: 0;
       padding-bottom: 0;

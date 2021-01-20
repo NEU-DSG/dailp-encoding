@@ -208,6 +208,14 @@ struct Mutation;
 
 #[async_graphql::Object]
 impl Mutation {
+    /// Mutation must have at least one visible field for introspection to work
+    /// correctly, so we just provide an API version which might be useful in
+    /// the future.
+    async fn api_version(&self) -> &str {
+        "1.0"
+    }
+
+    #[graphql(visible = false)]
     async fn update_tag(
         &self,
         context: &Context<'_>,

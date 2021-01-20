@@ -170,6 +170,7 @@ const navLink = css`
   color: ${theme.colors.text};
   background: none;
   border: none;
+  border-bottom: 2px solid transparent;
   display: flex;
   flex-flow: row;
   align-items: center;
@@ -181,7 +182,7 @@ const navLink = css`
 
   &[aria-current="page"] {
     color: ${theme.colors.link};
-    border-bottom: 2px solid ${theme.colors.link};
+    border-color: ${theme.colors.link};
   }
   &:hover,
   &:focus {
