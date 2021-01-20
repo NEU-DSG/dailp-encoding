@@ -36,8 +36,8 @@ const DocumentCitation = (p: { document: LocalDocument }) => {
   )
   return (
     <li id={sourceCitationId(doc.id)} className={apaCitation}>
-      <span className={std.smallCaps}>{doc.id}</span>: {authors}{" "}
-      {year && `(${year})`}. <i>{doc.title}</i>.
+      <span className={std.smallCaps}>{doc.id}</span>, {doc.formCount} forms:{" "}
+      {authors} {year && `(${year})`}. <i>{doc.title}</i>.
     </li>
   )
 }
@@ -67,6 +67,7 @@ export const query = graphql`
         contributors {
           name
         }
+        formCount
       }
     }
   }

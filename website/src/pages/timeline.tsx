@@ -1,9 +1,10 @@
 import React, { useState, useRef } from "react"
 import { useQuery, gql } from "@apollo/client"
-import { css } from "linaria"
+import { css, cx } from "linaria"
 import { Input } from "reakit/Input"
 import { Button } from "reakit/Button"
-import { fullWidth } from "../theme"
+import { fullWidth, typography } from "../theme"
+import _ from "lodash"
 import Layout from "../layout"
 
 export default () => {
@@ -39,27 +40,78 @@ const Timeline = (p: { gloss: string }) => {
   }
   return (
     <div className={wide}>
+      <div className={cx(wordRow, bolden)}>
+        <div>Document ID</div>
+        <div>Original</div>
+        <div>Normalized</div>
+        <div>Simple Phonetics</div>
+        <div>Translation</div>
+      </div>
+
       {timeline.data.morphemeTimeClusters.map((cluster: any) => {
         let timeRange = "Unknown"
         if (cluster.start) {
           const start = Math.floor(cluster.start.year / 50) * 50
-          const end = Math.floor(cluster.end.year / 50) * 50
+          const end = Math.ceil(cluster.end.year / 50) * 50
           timeRange = `${start} – ${end}`
         }
+        const deduplicatedForms = _.groupBy(
+          cluster.forms,
+          (form) => form.normalizedSource || form.source
+        )
         return (
-          <div key={timeRange} style={{ marginBottom: "3rem" }}>
-            <h2 style={{ borderBottom: "2px solid black" }}>{timeRange}</h2>
-            {cluster.forms.map((form: any, i: number) => (
-              <div key={i} className={wordRow}>
-                <div>{form.documentId}</div>
-                <div>{form.normalizedSource || form.source}</div>
-                <div>{form.simplePhonetics}</div>
-                <div>{form.englishGloss.join(", ")}</div>
-              </div>
-            ))}
+          <div key={timeRange} className={margined}>
+            <h2 className={underlined}>{timeRange}</h2>
+            {Object.entries(deduplicatedForms).map(([key, forms], idx) => {
+              if (forms.length === 1) {
+                const form = forms[0]
+                return (
+                  <div key={idx} className={wordRow}>
+                    <div>{form.documentId}</div>
+                    <div>{form.source}</div>
+                    <div>{form.normalizedSource}</div>
+                    <div>{form.simplePhonetics}</div>
+                    <div>{form.englishGloss.join(", ")}</div>
+                  </div>
+                )
+              } else {
+                const simplePhonetics = forms.find(
+                  (w) => w.simplePhonetics?.length
+                )
+                const englishGloss = forms.find((w) => w.englishGloss?.length)
+                const docIds = _.uniq(forms.map((w) => w.documentId))
+                return (
+                  <div key={idx} className={wordRow}>
+                    <div>{docIds.join(", ")}</div>
+                    <div>{key}</div>
+                    <div />
+                    <div>{simplePhonetics?.simplePhonetics}</div>
+                    <div>{englishGloss?.englishGloss.join(", ")}</div>
+                  </div>
+                )
+              }
+            })}
           </div>
         )
       })}
+    </div>
+  )
+}
+
+const FormRow = (p: {
+  documentId: string
+  source: string
+  normalizedSource: string
+  phonetic: string
+  translation: string
+}) => {
+  return (
+    <div className={wordRow}>
+      <div>{p.documentId}</div>
+      <div>{p.source}</div>
+      <div>{p.normalizedSource}</div>
+      <div>{p.phonetic}</div>
+      <div>{p.translation}</div>
     </div>
   )
 }
@@ -68,10 +120,23 @@ const wide = css`
   ${fullWidth}
 `
 
-const wordRow = css`
+export const bolden = css`
+  font-weight: bold;
+`
+
+const underlined = css`
+  border-bottom: 1px solid gray;
+  margin-bottom: ${typography.rhythm(0.5)};
+`
+
+const margined = css`
+  margin-bottom: ${typography.rhythm(1.5)};
+`
+
+export const wordRow = css`
   display: flex;
   flex-flow: row;
-  margin-bottom: 1rem;
+  margin-bottom: ${typography.rhythm(0.5)};
   & > * {
     width: 10rem;
   }
@@ -90,6 +155,7 @@ const query = gql`
         source
         normalizedSource
         simplePhonetics
+        phonemic
         documentId
         englishGloss
       }

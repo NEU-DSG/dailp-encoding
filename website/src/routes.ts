@@ -15,3 +15,4 @@ export const glossarySectionId = (key: string) =>
   `sec-${slugify(key, slugifyOpts)}`
 
 export const sourceCitationId = (key: string) => `source-${key}`
+export const sourceCitationRoute = (key: string) => `/sources#source-${key}`

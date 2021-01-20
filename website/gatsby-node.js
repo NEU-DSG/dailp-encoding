@@ -12,7 +12,7 @@ exports.createPages = async (args) => {
 const excludedDocuments = ["DF1975"]
 
 const createDocumentPages = async ({ actions, graphql }) => {
-  const { data } = await graphql(`
+  const { data, errors } = await graphql(`
     query {
       dailp {
         allDocuments {
@@ -27,6 +27,11 @@ const createDocumentPages = async ({ actions, graphql }) => {
       }
     }
   `)
+
+  if (errors) {
+    console.error(errors)
+    return
+  }
 
   const collections = []
   for (const { id, collection, slug, isReference } of data.dailp.allDocuments) {
@@ -61,7 +66,7 @@ const createDocumentPages = async ({ actions, graphql }) => {
 
 /** Make a static page for each one from Wordpress. */
 const createWpPages = async ({ actions, graphql }) => {
-  const { data } = await graphql(`
+  const { data, errors } = await graphql(`
     query {
       allWpPage(filter: { status: { eq: "publish" } }) {
         nodes {
@@ -73,6 +78,11 @@ const createWpPages = async ({ actions, graphql }) => {
       }
     }
   `)
+
+  if (errors) {
+    console.error(errors)
+    return
+  }
 
   for (const doc of data.allWpPage.nodes) {
     // We'll manually handle the index page, which is the only one that starts
