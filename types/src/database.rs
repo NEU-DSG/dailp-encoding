@@ -180,10 +180,10 @@ impl Database {
             .find(
                 bson::doc! {
                     "$or": [
-                        { "source": { "$regex": &pat } },
-                        { "normalized_source": { "$regex": &pat } },
-                        { "simple_phonetics": { "$regex": &pat } },
-                        { "english_gloss": { "$regex": pat } },
+                        { "source": { "$regex": &pat, "$options": "i" } },
+                        { "normalized_source": { "$regex": &pat, "$options": "i" } },
+                        { "simple_phonetics": { "$regex": &pat, "$options": "i" } },
+                        { "english_gloss": { "$regex": pat, "$options": "i" } },
                     ]
                 },
                 None,
