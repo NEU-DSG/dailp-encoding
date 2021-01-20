@@ -166,7 +166,7 @@ impl SheetResult {
                         false,
                     ),
                     entry: AnnotatedForm {
-                        id: position.make_id(&root_gloss),
+                        id: position.make_id(&root_gloss, true),
                         normalized_source: None,
                         simple_phonetics: None,
                         phonemic: None,
@@ -228,7 +228,7 @@ impl SheetResult {
                             has_comment,
                         ),
                         entry: AnnotatedForm {
-                            id: position.make_id(&root_gloss),
+                            id: position.make_id(&root_gloss, true),
                             position,
                             normalized_source: None,
                             simple_phonetics: None,

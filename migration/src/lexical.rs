@@ -155,7 +155,7 @@ async fn parse_numerals(sheet_id: &str, doc_id: &str, year: i32) -> Result<()> {
             };
             let segments = vec![MorphemeSegment::new(root_dailp, gloss.clone(), None)];
             Some(AnnotatedForm {
-                id: position.make_id(&gloss),
+                id: position.make_id(&gloss, true),
                 position,
                 normalized_source: None,
                 simple_phonetics: Some(simple_phonetics),
@@ -314,7 +314,7 @@ fn parse_new_df1975(
                         has_comment,
                     ),
                     entry: AnnotatedForm {
-                        id: pos.make_id(&root_gloss),
+                        id: pos.make_id(&root_gloss, true),
                         simple_phonetics: None,
                         normalized_source: None,
                         phonemic: None,
@@ -358,7 +358,7 @@ async fn ingest_particle_index(document_id: &str) -> Result<()> {
             let pos =
                 PositionInDocument::new(source.document_id.clone()?, source.gloss, index as i32);
             Some(AnnotatedForm {
-                id: pos.make_raw_id(&translation),
+                id: pos.make_raw_id(&translation, false),
                 simple_phonetics: Some(simple_phonetics),
                 normalized_source: None,
                 phonemic: None,
