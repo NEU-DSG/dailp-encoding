@@ -63,7 +63,7 @@ const Timeline = (p: { gloss: string }) => {
 
   if (!p.gloss) {
     return null
-  } else if (timeline.loading && !timeline.data) {
+  } else if (timeline.loading) {
     return <>Loading...</>
   } else if (timeline.error) {
     return <>Error!</>
@@ -74,8 +74,8 @@ const Timeline = (p: { gloss: string }) => {
       <div className={wide}>
         <div className={cx(wordRow, bolden)}>
           <div>Document ID</div>
-          <div>Original</div>
-          <div>Normalized</div>
+          <div>Transcription</div>
+          <div>Normalization</div>
           <div>Simple Phonetics</div>
           <div>Translation</div>
         </div>

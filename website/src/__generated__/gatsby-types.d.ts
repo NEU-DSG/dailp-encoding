@@ -10341,6 +10341,14 @@ type WpWritingSettingsFilterInput = {
   readonly useSmilies: Maybe<BooleanQueryOperatorInput>;
 };
 
+type GlossaryQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+type GlossaryQuery = { readonly dailp: { readonly allTags: ReadonlyArray<(
+      Pick<Dailp_MorphemeTag, 'id' | 'morphemeType'>
+      & { readonly crg: Maybe<Pick<Dailp_TagForm, 'tag' | 'title' | 'definition'>>, readonly taoc: Maybe<Pick<Dailp_TagForm, 'tag' | 'title' | 'definition'>>, readonly learner: Maybe<Pick<Dailp_TagForm, 'tag' | 'title' | 'definition'>> }
+    )> } };
+
 type Unnamed_1_QueryVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -10353,14 +10361,6 @@ type Unnamed_2_Query = { readonly wpMenu: Maybe<{ readonly menuItems: Maybe<{ re
         Pick<WpMenuItem, 'label' | 'path'>
         & { readonly childItems: Maybe<{ readonly nodes: Maybe<ReadonlyArray<Maybe<Pick<WpMenuItem, 'label' | 'path'>>>> }> }
       )>>> }> }> };
-
-type GlossaryQueryVariables = Exact<{ [key: string]: never; }>;
-
-
-type GlossaryQuery = { readonly dailp: { readonly allTags: ReadonlyArray<(
-      Pick<Dailp_MorphemeTag, 'id' | 'morphemeType'>
-      & { readonly crg: Maybe<Pick<Dailp_TagForm, 'tag' | 'title' | 'definition'>>, readonly taoc: Maybe<Pick<Dailp_TagForm, 'tag' | 'title' | 'definition'>>, readonly learner: Maybe<Pick<Dailp_TagForm, 'tag' | 'title' | 'definition'>> }
-    )> } };
 
 type IndexPageQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -10403,17 +10403,6 @@ type FormFieldsFragment = (
   )>> }
 );
 
-type CollectionQueryVariables = Exact<{
-  name: Scalars['String'];
-  slug: Scalars['String'];
-}>;
-
-
-type CollectionQuery = { readonly dailp: { readonly allDocuments: ReadonlyArray<(
-      Pick<Dailp_AnnotatedDoc, 'id' | 'slug' | 'title'>
-      & { readonly date: Maybe<Pick<Dailp_Date, 'year'>> }
-    )> }, readonly wpPage: Maybe<Pick<WpPage, 'content'>> };
-
 type DocumentDetailsQueryVariables = Exact<{
   id: Scalars['String'];
 }>;
@@ -10430,6 +10419,17 @@ type ContentPageQueryVariables = Exact<{
 
 
 type ContentPageQuery = { readonly page: Maybe<Pick<WpPage, 'title' | 'content'>> };
+
+type CollectionQueryVariables = Exact<{
+  name: Scalars['String'];
+  slug: Scalars['String'];
+}>;
+
+
+type CollectionQuery = { readonly dailp: { readonly allDocuments: ReadonlyArray<(
+      Pick<Dailp_AnnotatedDoc, 'id' | 'slug' | 'title'>
+      & { readonly date: Maybe<Pick<Dailp_Date, 'year'>> }
+    )> }, readonly wpPage: Maybe<Pick<WpPage, 'content'>> };
 
 type GatsbyImageSharpFixedFragment = Pick<ImageSharpFixed, 'base64' | 'width' | 'height' | 'src' | 'srcSet'>;
 
