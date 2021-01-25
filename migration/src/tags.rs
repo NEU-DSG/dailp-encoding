@@ -18,6 +18,9 @@ pub async fn migrate_tags() -> Result<()> {
     println!("Pushing tags to db...");
     crate::update_tag(&glossary).await?;
 
+    // Make sure all reference grammars are cited.
+    migrate_glossary_metadata("17LSuDu7QHJfJyLDVJjO0f4wmTHQLVyHuSktr6OrbD_M").await?;
+
     Ok(())
 }
 
@@ -49,6 +52,46 @@ fn parse_tag_glossary(sheet: SheetResult) -> Result<Vec<MorphemeTag>> {
             })
         })
         .collect())
+}
+
+/// Migrate the metadata for each source document used in creating the glossary.
+/// There may be multiple entries here, because there are several grammars we use.
+async fn migrate_glossary_metadata(sheet_id: &str) -> Result<()> {
+    use itertools::Itertools;
+    let sheet = SheetResult::from_sheet(sheet_id, Some("Metadata")).await?;
+    let docs = sheet
+        .values
+        .into_iter()
+        .chunks(7)
+        .into_iter()
+        .filter_map(|mut values| {
+            Some(dailp::AnnotatedDoc {
+                meta: dailp::DocumentMetadata {
+                    id: values.next()?.pop()?,
+                    title: values.next()?.pop()?,
+                    date: Some(dailp::Date(chrono::NaiveDate::from_ymd(
+                        values.next()?.pop()?.parse().unwrap(),
+                        1,
+                        1,
+                    ))),
+                    contributors: values
+                        .next()?
+                        .into_iter()
+                        .map(dailp::Contributor::new_author)
+                        .collect(),
+                    collection: Some("Reference Materials".to_owned()),
+                    genre: None,
+                    is_reference: true,
+                    page_images: Vec::new(),
+                    sources: Vec::new(),
+                    translation: None,
+                },
+                segments: None,
+            })
+        })
+        .collect::<Vec<_>>();
+    crate::update_document(&docs).await?;
+    Ok(())
 }
 
 fn parse_tag_section(values: &mut impl Iterator<Item = String>, has_page: bool) -> Option<TagForm> {
