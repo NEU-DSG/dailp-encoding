@@ -599,6 +599,117 @@ impl PhonemicString {
             PhonemicString::Form(syllables)
         }
     }
+    pub fn parse_crg(input: &str) -> Self {
+        use {
+            lazy_static::lazy_static, maplit::hashmap, std::collections::HashMap,
+            unicode_normalization::UnicodeNormalization,
+        };
+        lazy_static! {
+            static ref SHORT_VOWELS: HashMap<&'static str, (&'static str, VowelType)> = hashmap! {
+                "a" => ("a", VowelType::ShortLow),
+                "á" => ("a", VowelType::ShortHigh),
+                "à" => ("a", VowelType::ShortLowfall),
+                "a̋" => ("a", VowelType::ShortSuperhigh),
+                "e" => ("e", VowelType::ShortLow),
+                "é" => ("e", VowelType::ShortHigh),
+                "è" => ("e", VowelType::ShortLowfall),
+                "e̋" => ("e", VowelType::ShortSuperhigh),
+                "i" => ("i", VowelType::ShortLow),
+                "í" => ("i", VowelType::ShortHigh),
+                "ì" => ("i", VowelType::ShortLowfall),
+                "i̋" => ("i", VowelType::ShortSuperhigh),
+                "o" => ("o", VowelType::ShortLow),
+                "ó" => ("o", VowelType::ShortHigh),
+                "ò" => ("o", VowelType::ShortLowfall),
+                "ő" => ("o", VowelType::ShortSuperhigh),
+                "u" => ("u", VowelType::ShortLow),
+                "ú" => ("u", VowelType::ShortHigh),
+                "ù" => ("u", VowelType::ShortLowfall),
+                "ű" => ("u", VowelType::ShortSuperhigh),
+                "v" => ("v", VowelType::ShortLow),
+                "v́" => ("v", VowelType::ShortHigh),
+                "v̀" => ("v", VowelType::ShortLowfall),
+                "v̋" => ("v", VowelType::ShortSuperhigh),
+            };
+            static ref LONG_VOWELS: HashMap<&'static str, (&'static str, VowelType)> = hashmap! {
+                "aa" => ("a", VowelType::LongLow),
+                "áá" => ("a", VowelType::LongHigh),
+                "aá" => ("a", VowelType::Rising),
+                "áa" => ("a", VowelType::Falling),
+                "àà" => ("a", VowelType::Lowfall),
+                "aa̋" => ("a", VowelType::Superhigh),
+                "ee" => ("e", VowelType::LongLow),
+                "éé" => ("e", VowelType::LongHigh),
+                "eé" => ("e", VowelType::Rising),
+                "ée" => ("e", VowelType::Falling),
+                "èè" => ("e", VowelType::Lowfall),
+                "ee̋" => ("e", VowelType::Superhigh),
+                "ii" => ("i", VowelType::LongLow),
+                "íí" => ("i", VowelType::LongHigh),
+                "ií" => ("i", VowelType::Rising),
+                "íi" => ("i", VowelType::Falling),
+                "ìì" => ("i", VowelType::Lowfall),
+                "ii̋" => ("i", VowelType::Superhigh),
+                "oo" => ("o", VowelType::LongLow),
+                "óó" => ("o", VowelType::LongHigh),
+                "oó" => ("o", VowelType::Rising),
+                "óo" => ("o", VowelType::Falling),
+                "òò" => ("o", VowelType::Lowfall),
+                "oő" => ("o", VowelType::Superhigh),
+                "uu" => ("u", VowelType::LongLow),
+                "úú" => ("u", VowelType::LongHigh),
+                "uú" => ("u", VowelType::Rising),
+                "úu" => ("u", VowelType::Falling),
+                "ùù" => ("u", VowelType::Lowfall),
+                "uű" => ("u", VowelType::Superhigh),
+                "vv" => ("v", VowelType::LongLow),
+                "v́v́" => ("v", VowelType::LongHigh),
+                "vv́" => ("v", VowelType::Rising),
+                "v́v" => ("v", VowelType::Falling),
+                "v̀v̀" => ("v", VowelType::Lowfall),
+                "vv̋" => ("v", VowelType::Superhigh),
+            };
+            static ref PAT: regex::Regex = {
+                // NOTE This contains the list of acceptable consonants and symbols.
+                let consonants = "1-9tdkghcjmnswrylq'ʔØ\\(\\)\\.\\-=:?";
+                regex::Regex::new(&format!(
+                    "([{}]+)?([^{}]+)?",
+                    consonants, consonants
+                )).unwrap()
+            };
+        }
+
+        let mut syllables = Vec::new();
+        let mut input = input.nfc().to_string();
+        input.make_ascii_lowercase();
+        for caps in PAT.captures_iter(&input) {
+            if let Some(consonant) = caps.get(1) {
+                syllables.push(PhonemicString::Consonant(dt_to_tth(
+                    consonant.as_str(),
+                    true,
+                    None,
+                )));
+            }
+
+            if let Some(vowel_one) = caps.get(2) {
+                let vowel_one = vowel_one.as_str();
+                if let Some(e) = LONG_VOWELS
+                    .get(vowel_one)
+                    .or_else(|| SHORT_VOWELS.get(vowel_one))
+                {
+                    syllables.push(PhonemicString::Vowel(e.0.to_owned(), e.1));
+                } else {
+                    syllables.push(PhonemicString::Consonant(dt_to_tth(vowel_one, true, None)));
+                }
+            }
+        }
+
+        if syllables.is_empty() {
+            PhonemicString::Consonant(input)
+        } else {
+            PhonemicString::Form(syllables)
+        }
+    }
 
     pub fn into_dailp(self) -> String {
         use {itertools::Itertools, unicode_normalization::UnicodeNormalization};
@@ -663,6 +774,48 @@ impl PhonemicString {
             PhonemicString::Vowel(v, _ty) => v,
         }
     }
+}
+
+fn dt_to_tth(input: &str, keep_glottal_stops: bool, replace_colons: Option<&str>) -> String {
+    use {
+        lazy_static::lazy_static,
+        regex::{Captures, Regex},
+    };
+    // Convert the t/th consonants to d/t
+    lazy_static! {
+        static ref DT_PATTERN: Regex = Regex::new(r"(ts|ks|tl|kw|gw|k|t|c|g|d|j|'|ʔ|:)").unwrap();
+    }
+    let result = DT_PATTERN.replace_all(input, |cap: &Captures| match &cap[0] {
+        "tl" => "tlh",
+        "kw" => "kwh",
+        "gw" => "kw",
+        "k" => "kh",
+        "t" => "th",
+        "c" => "ch",
+        "j" => "c",
+        "g" => "k",
+        "d" => "t",
+        "'" | "ʔ" => {
+            if keep_glottal_stops {
+                "ʔ"
+            } else {
+                "'"
+            }
+        }
+        ":" => {
+            if let Some(r) = replace_colons {
+                r
+            } else {
+                ":"
+            }
+        }
+        // Any other matches we should leave as-is, retaining for example "ts"
+        // and "ks" in the t/th representation.
+        "ts" => "ts",
+        "ks" => "ks",
+        _ => unreachable!(),
+    });
+    result.into_owned()
 }
 
 fn tth_to_dt(input: &str, keep_glottal_stops: bool, replace_colons: Option<&str>) -> String {

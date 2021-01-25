@@ -139,7 +139,14 @@ async fn parse_early_vocab(
                 row.next().filter(|s| !s.is_empty())
             } else {
                 None
-            };
+            }
+            .or_else(|| {
+                // Convert the normalized source to simple phonetics.
+                normalized_source
+                    .as_ref()
+                    .map(|s| dailp::PhonemicString::parse_crg(&s).into_learner())
+            });
+
             let commentary = if has_notes {
                 row.next().filter(|s| !s.is_empty())
             } else {
@@ -199,8 +206,7 @@ async fn parse_early_vocab(
         meta,
         segments: None,
     };
-    let docs = vec![doc];
-    crate::update_document(&docs).await?;
+    crate::update_document(&[doc]).await?;
 
     Ok(())
 }
