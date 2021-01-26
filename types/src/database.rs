@@ -499,11 +499,6 @@ impl Database {
 #[derive(Clone, Eq, PartialEq, Hash)]
 pub struct TagId(pub String);
 
-trait DatabaseId {
-    fn raw_id(&self) -> String;
-    fn collection(database: &Database) -> mongodb::Collection;
-}
-
 #[async_trait::async_trait]
 impl Loader<TagId> for Database {
     type Value = MorphemeTag;
