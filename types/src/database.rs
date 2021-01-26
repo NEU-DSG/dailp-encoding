@@ -3,10 +3,11 @@ use crate::{
     LexicalConnection, MorphemeId, MorphemeTag,
 };
 use anyhow::Result;
+use async_graphql::dataloader::*;
 use futures::executor;
 use futures::future::join_all;
 use mongodb::bson;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 /// Connects to our backing database instance, providing high level functions
 /// for accessing the data therein.
@@ -45,15 +46,6 @@ impl Database {
         Ok(Database {
             client: client.database("dailp-encoding"),
         })
-    }
-
-    /// The document uniquely identified by the given string
-    pub async fn document(&self, id: &str) -> Result<Option<AnnotatedDoc>> {
-        Ok(self
-            .documents_collection()
-            .find_one(bson::doc! { "_id": id }, None)
-            .await?
-            .and_then(|doc| bson::from_document(doc).ok()))
     }
 
     pub async fn update_tag(&self, tag: MorphemeTag) -> Result<()> {
@@ -477,21 +469,72 @@ impl Database {
 
         Ok(document_words.chain(dictionary_words).collect())
     }
+}
 
-    /// The tag details for the morpheme identified by the given string
-    pub async fn morpheme_tag(&self, id: &str) -> Result<Option<MorphemeTag>> {
-        Ok(self
-            .tags_collection()
-            .find_one(bson::doc! { "_id": id }, None)
-            .await
-            .and_then(|doc| {
-                if let Some(doc) = doc {
-                    Ok(bson::from_document(doc)?)
-                } else {
-                    Ok(None)
-                }
-            })?)
+#[derive(Clone, Eq, PartialEq, Hash)]
+pub struct TagId(pub String);
+
+trait DatabaseId {
+    fn raw_id(&self) -> String;
+    fn collection(database: &Database) -> mongodb::Collection;
+}
+
+#[async_trait::async_trait]
+impl Loader<TagId> for Database {
+    type Value = MorphemeTag;
+    type Error = mongodb::error::Error;
+    async fn load(&self, keys: &[TagId]) -> Result<HashMap<TagId, Self::Value>, Self::Error> {
+        let mut results = HashMap::new();
+        // Turn keys into strings for Mongo request.
+        let keys: Vec<_> = keys.iter().map(|x| &*x.0).collect();
+        let items: Vec<Self::Value> = find_all_keys(self.tags_collection(), keys).await?;
+
+        for tag in items {
+            results.insert(TagId(tag.id.clone()), tag);
+        }
+
+        Ok(results)
     }
+}
+
+#[derive(Clone, Eq, PartialEq, Hash)]
+pub struct DocumentId(pub String);
+
+#[async_trait::async_trait]
+impl Loader<DocumentId> for Database {
+    type Value = AnnotatedDoc;
+    type Error = mongodb::error::Error;
+    async fn load(
+        &self,
+        keys: &[DocumentId],
+    ) -> Result<HashMap<DocumentId, Self::Value>, Self::Error> {
+        let mut results = HashMap::new();
+        // Turn keys into strings for Mongo request.
+        let keys: Vec<_> = keys.iter().map(|x| &x.0 as &str).collect();
+        let items: Vec<Self::Value> = find_all_keys(self.documents_collection(), keys).await?;
+
+        for tag in items {
+            results.insert(DocumentId(tag.meta.id.clone()), tag);
+        }
+
+        Ok(results)
+    }
+}
+
+async fn find_all_keys<T>(
+    col: mongodb::Collection,
+    keys: Vec<&str>,
+) -> Result<Vec<T>, mongodb::error::Error>
+where
+    T: for<'de> serde::Deserialize<'de>,
+{
+    use tokio::stream::StreamExt;
+    Ok(col
+        .find(bson::doc! { "_id": { "$in": keys } }, None)
+        .await?
+        .filter_map(|doc| bson::from_document(doc.unwrap()).ok())
+        .collect()
+        .await)
 }
 
 /// One particular morpheme and all the known words that contain that exact morpheme.

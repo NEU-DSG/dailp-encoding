@@ -2,7 +2,7 @@ use crate::{Database, MorphemeId};
 use serde::{Deserialize, Serialize};
 
 /// Represents a morphological gloss tag without committing to a single representation.
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct MorphemeTag {
     #[serde(rename = "_id")]
     pub id: String,
@@ -50,7 +50,7 @@ impl MorphemeTag {
     }
 }
 
-#[derive(async_graphql::SimpleObject, Serialize, Deserialize, Debug)]
+#[derive(async_graphql::SimpleObject, Serialize, Deserialize, Debug, Clone)]
 pub struct TagForm {
     /// How this morpheme is represented in a gloss
     pub tag: String,

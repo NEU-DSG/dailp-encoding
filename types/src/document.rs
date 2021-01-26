@@ -1,11 +1,11 @@
 use crate::{
     AnnotatedForm, Contributor, Database, Date, SourceAttribution, Translation, TranslationBlock,
 };
-use async_graphql::FieldResult;
+use async_graphql::{dataloader::DataLoader, FieldResult};
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct AnnotatedDoc {
     #[serde(flatten)]
     pub meta: DocumentMetadata,
@@ -108,7 +108,10 @@ impl AnnotatedDoc {
         if self.segments.is_some() {
             Ok(self.segments.as_ref().map(|s| Cow::Borrowed(s)))
         } else {
-            let db_doc = context.data::<&Database>()?.document(&self.meta.id).await?;
+            let db_doc = context
+                .data::<DataLoader<Database>>()?
+                .load_one(crate::DocumentId(self.meta.id.clone()))
+                .await?;
             Ok(db_doc.and_then(|d| d.segments).map(Cow::Owned))
         }
     }
