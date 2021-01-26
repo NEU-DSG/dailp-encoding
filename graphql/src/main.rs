@@ -1,4 +1,4 @@
-use async_graphql::{Context, EmptySubscription, FieldResult, Schema};
+use async_graphql::{dataloader::DataLoader, Context, EmptySubscription, FieldResult, Schema};
 use dailp::{
     AnnotatedDoc, CherokeeOrthography, Database, MorphemeId, MorphemeReference, MorphemeTag,
     WordsInDocument,
@@ -9,7 +9,12 @@ type Error = Box<dyn std::error::Error + Sync + Send + 'static>;
 
 lazy_static::lazy_static! {
     // Share database connection between executions.
-    static ref DATABASE: dailp::Database = dailp::Database::new().unwrap();
+    static ref SCHEMA: Schema<Query, Mutation, EmptySubscription> = {
+        Schema::build(Query, Mutation, EmptySubscription)
+            .data(dailp::Database::new().unwrap())
+            .data(DataLoader::new(dailp::Database::new().unwrap()))
+            .finish()
+    };
     static ref MONGODB_PASSWORD: String = std::env::var("MONGODB_PASSWORD").unwrap();
 }
 
@@ -30,9 +35,7 @@ async fn main(req: Request, _: lambda::Context) -> Result<impl IntoResponse, Err
     } else if let lambda_http::Body::Text(req) = req.into_body() {
         // Other requests (usually POST) should be processed as an actual
         // GraphQL query.
-        let schema = Schema::build(Query, Mutation, EmptySubscription)
-            .data::<&dailp::Database>(&*DATABASE)
-            .finish();
+        let schema = &*SCHEMA;
         let req: async_graphql::Request = serde_json::from_str(&req)?;
         let res = schema.execute(req).await;
         let result = serde_json::to_string(&res)?;
@@ -46,8 +49,6 @@ async fn main(req: Request, _: lambda::Context) -> Result<impl IntoResponse, Err
         Err(Box::new(std::fmt::Error))
     }
 }
-
-use mongodb::bson;
 
 /// Home for all read-only queries
 struct Query;
@@ -85,7 +86,10 @@ impl Query {
         context: &Context<'_>,
         id: String,
     ) -> FieldResult<Option<AnnotatedDoc>> {
-        Ok(context.data::<&Database>()?.document(&id).await?)
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .load_one(dailp::DocumentId(id))
+            .await?)
     }
 
     async fn lexical_entry(
@@ -181,17 +185,9 @@ impl Query {
         id: String,
     ) -> FieldResult<Option<MorphemeTag>> {
         Ok(context
-            .data::<&Database>()?
-            .tags_collection()
-            .find_one(bson::doc! { "_id": id }, None)
-            .await
-            .and_then(|doc| {
-                if let Some(doc) = doc {
-                    Ok(bson::from_document(doc)?)
-                } else {
-                    Ok(None)
-                }
-            })?)
+            .data::<DataLoader<Database>>()?
+            .load_one(dailp::TagId(id))
+            .await?)
     }
 
     /// Search for words that include the given query at any position.

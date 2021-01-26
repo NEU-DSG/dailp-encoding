@@ -79,9 +79,11 @@ impl MorphemeSegment {
         &self,
         context: &async_graphql::Context<'_>,
     ) -> FieldResult<Option<MorphemeTag>> {
+        use crate::database::TagId;
+        use async_graphql::dataloader::*;
         Ok(context
-            .data::<&Database>()?
-            .morpheme_tag(&self.gloss)
+            .data::<DataLoader<Database>>()?
+            .load_one(TagId(self.gloss.clone()))
             .await
             .ok()
             .flatten())

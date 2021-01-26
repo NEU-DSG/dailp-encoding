@@ -1,5 +1,5 @@
 use crate::{AnnotatedDoc, Database, Date, MorphemeId, MorphemeSegment, PositionInDocument};
-use async_graphql::FieldResult;
+use async_graphql::{dataloader::DataLoader, FieldResult};
 use serde::{Deserialize, Serialize};
 
 /// A single word in an annotated document.
@@ -84,8 +84,8 @@ impl AnnotatedForm {
         context: &async_graphql::Context<'_>,
     ) -> FieldResult<Option<AnnotatedDoc>> {
         Ok(context
-            .data::<&Database>()?
-            .document(&self.position.document_id)
+            .data::<DataLoader<Database>>()?
+            .load_one(crate::DocumentId(self.position.document_id.clone()))
             .await?)
     }
 
