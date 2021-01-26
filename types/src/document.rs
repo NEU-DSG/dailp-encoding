@@ -130,7 +130,7 @@ impl AnnotatedDoc {
                 .collect())
         } else {
             Ok(context
-                .data::<&Database>()?
+                .data::<Database>()?
                 .words_in_document(&self.meta.id)
                 .await?
                 .into_iter()
@@ -141,7 +141,7 @@ impl AnnotatedDoc {
 
     async fn form_count(&self, context: &async_graphql::Context<'_>) -> FieldResult<i64> {
         Ok(context
-            .data::<&Database>()?
+            .data::<Database>()?
             .count_words_in_document(&self.meta.id)
             .await?)
     }
@@ -260,7 +260,7 @@ impl DocumentCollection {
         context: &async_graphql::Context<'_>,
     ) -> async_graphql::FieldResult<Vec<AnnotatedDoc>> {
         Ok(context
-            .data::<&Database>()?
+            .data::<Database>()?
             .all_documents(Some(&*self.name))
             .await?)
     }

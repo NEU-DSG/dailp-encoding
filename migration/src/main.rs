@@ -1,4 +1,5 @@
 mod connections;
+mod contributors;
 mod early_vocab;
 mod lexical;
 mod spreadsheets;
@@ -15,6 +16,8 @@ pub const REFERENCES_SHEET_NAME: &str = "References";
 #[tokio::main]
 async fn main() -> Result<()> {
     dotenv::dotenv().ok();
+
+    contributors::migrate_all().await?;
 
     println!("Migrating connections...");
     connections::migrate_connections().await?;
@@ -183,6 +186,15 @@ async fn update_form(tag: impl IntoIterator<Item = &dailp::AnnotatedForm>) -> Re
 async fn update_connection(tag: impl IntoIterator<Item = &dailp::LexicalConnection>) -> Result<()> {
     graphql_mutate(
         "updateConnection",
+        tag.into_iter()
+            .map(|tag| serde_json::to_string(tag).unwrap()),
+    )
+    .await
+}
+
+async fn update_person(tag: impl IntoIterator<Item = &dailp::ContributorDetails>) -> Result<()> {
+    graphql_mutate(
+        "updatePerson",
         tag.into_iter()
             .map(|tag| serde_json::to_string(tag).unwrap()),
     )

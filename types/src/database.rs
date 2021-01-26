@@ -1,7 +1,4 @@
-use crate::{
-    AnnotatedDoc, AnnotatedForm, CherokeeOrthography, DocumentCollection, DocumentType,
-    LexicalConnection, MorphemeId, MorphemeTag,
-};
+use crate::*;
 use anyhow::Result;
 use async_graphql::dataloader::*;
 use futures::executor;
@@ -21,6 +18,7 @@ impl Database {
     const WORDS: &'static str = "sea-of-words";
     const TAGS: &'static str = "tags";
     const CONNECTIONS: &'static str = "lexical-connections";
+    const PEOPLE: &'static str = "people";
 
     pub fn documents_collection(&self) -> mongodb::Collection {
         self.client.collection(Self::DOCUMENTS)
@@ -33,6 +31,9 @@ impl Database {
     }
     pub fn connections_collection(&self) -> mongodb::Collection {
         self.client.collection(Self::CONNECTIONS)
+    }
+    pub fn people_collection(&self) -> mongodb::Collection {
+        self.client.collection(Self::PEOPLE)
     }
 }
 
@@ -100,6 +101,19 @@ impl Database {
         Ok(())
     }
 
+    pub async fn update_person(&self, person: ContributorDetails) -> Result<()> {
+        self.people_collection()
+            .update_one(
+                bson::doc! { "_id": &person.full_name },
+                bson::to_document(&person)?,
+                mongodb::options::UpdateOptions::builder()
+                    .upsert(true)
+                    .build(),
+            )
+            .await?;
+        Ok(())
+    }
+
     pub async fn all_documents(&self, collection: Option<&str>) -> Result<Vec<AnnotatedDoc>> {
         use tokio::stream::StreamExt as _;
         Ok(self
@@ -136,6 +150,17 @@ impl Database {
         use tokio::stream::StreamExt as _;
         Ok(self
             .tags_collection()
+            .find(None, None)
+            .await?
+            .filter_map(|doc| doc.ok().and_then(|doc| bson::from_document(doc).ok()))
+            .collect()
+            .await)
+    }
+
+    pub async fn all_people(&self) -> Result<Vec<ContributorDetails>> {
+        use tokio::stream::StreamExt as _;
+        Ok(self
+            .people_collection()
             .find(None, None)
             .await?
             .filter_map(|doc| doc.ok().and_then(|doc| bson::from_document(doc).ok()))
@@ -515,6 +540,27 @@ impl Loader<DocumentId> for Database {
 
         for tag in items {
             results.insert(DocumentId(tag.meta.id.clone()), tag);
+        }
+
+        Ok(results)
+    }
+}
+
+#[derive(Clone, Eq, PartialEq, Hash)]
+pub struct PersonId(pub String);
+
+#[async_trait::async_trait]
+impl Loader<PersonId> for Database {
+    type Value = ContributorDetails;
+    type Error = mongodb::error::Error;
+    async fn load(&self, keys: &[PersonId]) -> Result<HashMap<PersonId, Self::Value>, Self::Error> {
+        let mut results = HashMap::new();
+        // Turn keys into strings for Mongo request.
+        let keys: Vec<_> = keys.iter().map(|x| &x.0 as &str).collect();
+        let items: Vec<Self::Value> = find_all_keys(self.people_collection(), keys).await?;
+
+        for tag in items {
+            results.insert(PersonId(tag.full_name.clone()), tag);
         }
 
         Ok(results)

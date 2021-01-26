@@ -7,6 +7,9 @@ impl Date {
     pub fn new(internal: chrono::NaiveDate) -> Self {
         Self(internal)
     }
+    pub fn parse(s: &str) -> Result<Self, chrono::ParseError> {
+        chrono::NaiveDate::parse_from_str(s, "%Y-%m-%d").map(|d| Self(d))
+    }
 }
 
 #[async_graphql::Object]

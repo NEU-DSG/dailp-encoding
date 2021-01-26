@@ -41,7 +41,7 @@ impl MorphemeTag {
     ) -> async_graphql::FieldResult<Vec<String>> {
         let id = MorphemeId::new(None, None, self.id.clone());
         Ok(context
-            .data::<&Database>()?
+            .data::<Database>()?
             .morphemes(&id, None)
             .await?
             .into_iter()
