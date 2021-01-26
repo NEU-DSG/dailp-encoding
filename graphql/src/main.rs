@@ -57,7 +57,7 @@ struct Query;
 impl Query {
     /// List of all the functional morpheme tags available
     async fn all_tags(&self, context: &Context<'_>) -> FieldResult<Vec<MorphemeTag>> {
-        Ok(context.data::<&Database>()?.all_tags().await?)
+        Ok(context.data::<Database>()?.all_tags().await?)
     }
 
     /// Listing of all documents excluding their contents by default
@@ -67,7 +67,7 @@ impl Query {
         collection: Option<String>,
     ) -> FieldResult<Vec<AnnotatedDoc>> {
         Ok(context
-            .data::<&Database>()?
+            .data::<Database>()?
             .all_documents(collection.as_deref())
             .await?)
     }
@@ -77,7 +77,7 @@ impl Query {
         &self,
         context: &Context<'_>,
     ) -> FieldResult<Vec<dailp::DocumentCollection>> {
-        Ok(context.data::<&Database>()?.all_collections().await?)
+        Ok(context.data::<Database>()?.all_collections().await?)
     }
 
     /// Retrieves a full document from its unique identifier.
@@ -97,7 +97,7 @@ impl Query {
         context: &Context<'_>,
         id: String,
     ) -> FieldResult<Option<dailp::AnnotatedForm>> {
-        Ok(context.data::<&Database>()?.lexical_entry(&id).await?)
+        Ok(context.data::<Database>()?.lexical_entry(&id).await?)
     }
 
     /// Lists all forms containing a morpheme with the given gloss.
@@ -112,7 +112,7 @@ impl Query {
         compare_by: Option<CherokeeOrthography>,
     ) -> FieldResult<Vec<MorphemeReference>> {
         Ok(context
-            .data::<&Database>()?
+            .data::<Database>()?
             .morphemes(&MorphemeId::parse(&gloss).unwrap(), compare_by)
             .await?)
     }
@@ -125,7 +125,7 @@ impl Query {
         morpheme_id: String,
     ) -> FieldResult<Vec<WordsInDocument>> {
         let id = MorphemeId::parse(&morpheme_id).unwrap();
-        Ok(context.data::<&Database>()?.words_by_doc(&id).await?)
+        Ok(context.data::<Database>()?.words_by_doc(&id).await?)
     }
 
     /// Forms containing the given morpheme gloss or related ones clustered over time.
@@ -139,7 +139,7 @@ impl Query {
         use itertools::Itertools as _;
 
         let forms = context
-            .data::<&Database>()?
+            .data::<Database>()?
             .connected_surface_forms(&dailp::MorphemeId::parse(&gloss).unwrap())
             .await?;
         // Cluster forms by the decade they were recorded in.
@@ -196,7 +196,7 @@ impl Query {
         context: &Context<'_>,
         query: String,
     ) -> FieldResult<Vec<dailp::AnnotatedForm>> {
-        Ok(context.data::<&Database>()?.word_search(query).await?)
+        Ok(context.data::<Database>()?.word_search(query).await?)
     }
 }
 
@@ -225,7 +225,7 @@ impl Mutation {
         } else {
             let b = base64::decode(&contents)?;
             let tag = serde_json::from_slice(&b)?;
-            context.data::<&Database>()?.update_tag(tag).await?;
+            context.data::<Database>()?.update_tag(tag).await?;
             Ok(true)
         }
     }
@@ -244,7 +244,7 @@ impl Mutation {
         } else {
             let b = base64::decode(&contents)?;
             let tag = serde_json::from_slice(&b)?;
-            context.data::<&Database>()?.update_document(tag).await?;
+            context.data::<Database>()?.update_document(tag).await?;
             Ok(true)
         }
     }
@@ -263,7 +263,7 @@ impl Mutation {
         } else {
             let b = base64::decode(&contents)?;
             let tag = serde_json::from_slice(&b)?;
-            context.data::<&Database>()?.update_form(tag).await?;
+            context.data::<Database>()?.update_form(tag).await?;
             Ok(true)
         }
     }
@@ -282,7 +282,26 @@ impl Mutation {
         } else {
             let b = base64::decode(&contents)?;
             let tag = serde_json::from_slice(&b)?;
-            context.data::<&Database>()?.update_connection(tag).await?;
+            context.data::<Database>()?.update_connection(tag).await?;
+            Ok(true)
+        }
+    }
+
+    #[graphql(visible = false)]
+    async fn update_person(
+        &self,
+        context: &Context<'_>,
+        password: String,
+        // Data encoded as JSON for now.
+        // FIXME Use real input objects.
+        contents: String,
+    ) -> FieldResult<bool> {
+        if password != *MONGODB_PASSWORD {
+            Ok(false)
+        } else {
+            let b = base64::decode(&contents)?;
+            let tag = serde_json::from_slice(&b)?;
+            context.data::<Database>()?.update_person(tag).await?;
             Ok(true)
         }
     }
