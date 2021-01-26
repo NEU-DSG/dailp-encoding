@@ -109,13 +109,13 @@ export const AnnotatedForm = (
   }
   const showAnything = p.level > ExperienceLevel.Story
   if (showAnything) {
-    const showSegments = p.level > ExperienceLevel.Basic
+    const showSegments = p.level >= ExperienceLevel.Learner
     const translation = p.segment.englishGloss.join(", ")
     return (
       <div className={wordGroup} id={`w${p.segment.index}`}>
         <div className={syllabaryLayer} lang="chr">
           {p.segment.source}
-          {p.segment.commentary && showSegments && (
+          {p.segment.commentary && p.level >= ExperienceLevel.AdvancedDt && (
             <WordCommentaryInfo commentary={p.segment.commentary} />
           )}
         </div>
@@ -133,7 +133,7 @@ export const AnnotatedForm = (
             tagSet={p.tagSet}
           />
         ) : null}
-        {translation.length ? <div>{translation}</div> : <br />}
+        {translation.length ? <div>&lsquo;{translation}&rsquo;</div> : <br />}
       </div>
     )
   } else {
@@ -206,7 +206,7 @@ const MorphemicSegmentation = (p: {
 
   return (
     <>
-      <div>
+      <div className={italicSegmentation}>
         {p
           .segments!.map(function (segment) {
             // Adapt the segment shape to the chosen experience level.
@@ -249,6 +249,10 @@ const MorphemicSegmentation = (p: {
     </>
   )
 }
+
+const italicSegmentation = css`
+  font-style: italic;
+`
 
 function intersperse<T>(arr: T[], separator: (n: number) => T): T[] {
   return _.flatMap(arr, (a, i) => (i > 0 ? [separator(i - 1), a] : [a]))
@@ -319,11 +323,8 @@ const smallCaps = css`
   color: inherit;
   border: none;
   padding: 0;
-  border-bottom: 1px solid transparent;
   display: inline-block;
-  &:hover {
-    border-bottom: 1px solid darkblue;
-  }
+  background: none;
 `
 
 const atLeastThin = css`
@@ -337,11 +338,8 @@ const morphemeButton = css`
   color: inherit;
   border: none;
   padding: 0;
-  border-bottom: 1px solid transparent;
   display: inline-block;
-  &:hover {
-    border-bottom: 1px solid darkblue;
-  }
+  background: none;
 `
 
 const wordGroup = css`
