@@ -77,6 +77,7 @@ async fn migrate_glossary_metadata(sheet_id: &str) -> Result<()> {
                     contributors: values
                         .next()?
                         .into_iter()
+                        .skip(1)
                         .map(dailp::Contributor::new_author)
                         .collect(),
                     collection: Some("Reference Materials".to_owned()),
