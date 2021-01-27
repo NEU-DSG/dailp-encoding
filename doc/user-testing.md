@@ -36,13 +36,13 @@ I'm not expecting you to have specific knowledge about Cherokee, just curiosity.
 
 This is not a test of you or your abilities, but rather a test of our interface.
 If anything is unclear, that is our fault, not yours.
-I would like to read you a set of short tasks one at a time to
+I would like to read you a set of short tasks one at a time that we can use as a starting point.
 I want to see where our tool falls short, so if you are confused, tell me what you're thinking.
 I will only provide help if you get stuck
 
 Here is the link to the site: https://dailp.northeastern.edu/
 
-1. Find one Cherokee document that you are curious about.
+1. Find one (Cherokee) document that you are curious about.
 2. Read through as much or little of the document/translation as you'd like.
 3. Take a stab at speaking a Cherokee word that you see.
 4. Figure out the root/meaning of a long word that you see.
