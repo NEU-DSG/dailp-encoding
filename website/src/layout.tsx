@@ -8,9 +8,13 @@ import { Helmet } from "react-helmet"
 import Sticky from "react-stickynode"
 import { isMobile } from "react-device-detect"
 
-import "@fontsource/spectral"
-import "@fontsource/spectral-sc"
-import "@fontsource/quattrocento-sans"
+/* import "@fontsource/spectral/latin-ext.css" */
+/* import "@fontsource/spectral-sc" */
+import "@fontsource/charis-sil/400.css"
+import "@fontsource/charis-sil/400-italic.css"
+import "@fontsource/charis-sil/700.css"
+import "@fontsource/charis-sil/700-italic.css"
+import "@fontsource/quattrocento-sans/latin.css"
 import "./fonts.css"
 
 /** Wrapper for most site pages, providing them with a navigation header and footer. */

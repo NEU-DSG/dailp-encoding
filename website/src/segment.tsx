@@ -319,6 +319,7 @@ const pageBreak = css`
 
 const smallCaps = css`
   font-family: ${theme.fonts.smallCaps};
+  font-feature-settings: "smcp";
   text-transform: lowercase;
   color: inherit;
   border: none;
@@ -389,7 +390,7 @@ const documentBlock = css`
 
 const bordered = css`
   ${theme.mediaQueries.medium}, print {
-    border-bottom: 2px solid ${theme.colors.text};
+    border-bottom: 1px solid ${theme.colors.text};
     &:last-of-type {
       border-bottom: none;
       margin-bottom: 0;
