@@ -14,18 +14,17 @@ Which features I hope to test here:
 
 ## Scenario
 
-What do we tell a tester at the beginning of the session?
+What we tell a tester at the beginning of the session.
 
 ### Language Learner
 
-You are a student looking for resources to learn to read and speak Cherokee.
-You come across a website called "DAILP,\*\* whose goal is to support the ongoing creation of indigenous peoples’ knowledge, interpretations, and representations of the past by preserving and analyzing historical texts.
+I work with the Digital Archive of American Indian Languages Preservation and Perseverence (DAILP) at Northeastern University.
+As you may know, we have collected and translated a collection of Cherokee documents, and hope for this collection to be a tool that brings together learners and linguists.
+Would you be open to looking at our website, and going through a few tasks to help us figure out how we can best serve your needs?
 
 ### Casual Visitor
 
 Is it okay with you if I record this session for record keeping?
-
-<!-- You are interested in American Indian language preservation and history, but not necessarily learning Cherokee. -->
 
 I work with the Digital Archive of American Indian Languages Preservation and Perseverence (DAILP) at Northeastern University.
 The goal of DAILP is to support the ongoing creation of indigenous peoples’ knowledge, interpretations, and representations of the past by preserving and analyzing historical texts.
@@ -35,25 +34,37 @@ I'm not expecting you to have specific knowledge about Cherokee, just curiosity.
 
 ## Tasks
 
-I'm going to read you a set of short tasks one at a time that I would like you to complete.
-I will interfer minimally, so just keep trying unless you get really stuck.
 This is not a test of you or your abilities, but rather a test of our interface.
+If anything is unclear, that is our fault, not yours.
+I would like to read you a set of short tasks one at a time to
+I want to see where our tool falls short, so if you are confused, tell me what you're thinking.
+I will only provide help if you get stuck
 
 Here is the link to the site: https://dailp.northeastern.edu/
 
 1. Find one Cherokee document that you are curious about.
-2. Read through the translation.
-3. Take a stab at pronouncing a Cherokee word that you see.
-4. Figure out the root of another long word that you see.
+2. Read through as much or little of the document/translation as you'd like.
+3. Take a stab at speaking a Cherokee word that you see.
+4. Figure out the root/meaning of a long word that you see.
 5. Find the word you're looking at in the original image.
 
 ## Post-test Survey
+
+### Non-speakers
 
 1. What was your initial impression of the site?
    Did that change as you browsed?
 2. Was any part of your experience confusing or frustrating?
 3. Did you understand the document that you read?
 4. Did any of my introduction or task descriptions feel misleading after using the interface?
+
+### Cherokee speakers
+
+1. What was your initial impression of the site?
+   Did that change as you browsed?
+2. Was any part of your experience confusing or frustrating?
+3. How easy was the document to read?
+4. Was any provided terminology unclear or unfamiliar?
 
 ## Overall Approach
 
