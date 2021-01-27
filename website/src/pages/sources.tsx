@@ -19,7 +19,7 @@ export default (p: { data: GatsbyTypes.AllSourcesQuery }) => {
           <a href="https://apastyle.apa.org/">APA style</a>, like so:
           <br />
           Document ID = Last name, First name, ... (Year published).{" "}
-          <i>Title of the document</i>. Number of Cherokee words.
+          <i>Title of the document</i>. Number of words referenced.
         </p>
 
         <ul className={wide}>
@@ -45,10 +45,11 @@ const DocumentCitation = (p: { document: LocalDocument }) => {
     doc.contributors.map((author) => author.name),
     ", "
   )
+  const wordCount = doc.formCount ? ` ${doc.formCount} words.` : null
   return (
     <li id={sourceCitationId(doc.id)} className={apaCitation}>
       <span className={cx(std.smallCaps, bolded)}>{doc.id}</span> = {authors}{" "}
-      {year && `(${year})`}. <i>{doc.title}</i>. {doc.formCount} words.
+      {year && `(${year})`}. <i>{doc.title}</i>.{wordCount}
     </li>
   )
 }
