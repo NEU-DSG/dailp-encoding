@@ -356,7 +356,7 @@ const wordGroup = css`
   ${theme.mediaQueries.medium} {
     padding: 0;
     border: none;
-    margin: ${typography.rhythm(1 / 2)} 3rem ${typography.rhythm(1 / 2)} 0;
+    margin: ${typography.rhythm(1 / 2)} 3rem ${typography.rhythm(1)} 0;
   }
   ${theme.mediaQueries.print} {
     padding: 0;
@@ -380,8 +380,9 @@ const documentBlock = css`
   position: relative;
   display: block;
   break-after: avoid;
-  margin-top: ${typography.rhythm(1)};
-  margin-bottom: ${typography.rhythm(2)};
+  margin-top: ${typography.rhythm(1.5)};
+  margin-bottom: ${typography.rhythm(1)};
+  padding-bottom: ${typography.rhythm(1)};
   ${theme.mediaQueries.print} {
     padding-bottom: ${typography.rhythm(1 / 4)};
     margin-bottom: ${typography.rhythm(2)};
