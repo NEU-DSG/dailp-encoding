@@ -54,7 +54,7 @@ export const typography = new Typography({
 export const fullWidth = {
   width: "100%",
   [theme.mediaQueries.medium]: {
-    width: "40rem",
+    width: "41rem",
   },
   [theme.mediaQueries.large]: {
     width: "50rem",
