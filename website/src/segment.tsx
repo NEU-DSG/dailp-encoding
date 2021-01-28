@@ -353,6 +353,7 @@ const wordGroup = css`
   border-radius: 2px;
   page-break-inside: avoid;
   break-inside: avoid;
+  line-height: ${typography.rhythm(1)};
   ${theme.mediaQueries.medium} {
     padding: 0;
     border: none;
