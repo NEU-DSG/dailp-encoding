@@ -11,7 +11,6 @@ on:
       - "**/README.md"
       - "**/readme.md"
       - "doc/**/*.md"
-  workflow_dispatch:
 
 env:
   MONGODB_USERNAME: ${{ secrets.MONGODB_USERNAME }}
@@ -53,6 +52,22 @@ jobs:
           aws-region: us-east-1
       - name: Checkout code
         uses: actions/checkout@v2
+      - uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          filters: |
+            backend:
+              - 'types/**'
+              - 'graphql/**'
+              - 'serverless.yml'
+              - 'cf-templates/**'
+            data:
+              - 'types/**'
+              - 'migration/**'
+              - 'graphql/**'
+            rust:
+              - '**/*.rs'
+              - 'Cargo.lock'
       - name: Cache dependencies
         uses: Swatinem/rust-cache@v1
       - name: Cache docker images
@@ -60,14 +75,17 @@ jobs:
         # Ignore the failure of a step and avoid terminating the job.
         continue-on-error: true
       - name: Run unit tests
+        if: steps.filter.outputs.rust == 'true'
         run: cargo test --release
       - name: Deploy back-end to AWS via serverless
+        if: steps.filter.outputs.backend == 'true'
         run: |
           cargo install cross
           yarn install
           mkdir -p .serverless
           yarn deploy-graphql
       - name: Encode documents as TEI and database entries
+        if: steps.filter.outputs.data == 'true'
         run: |
           export DAILP_GRAPHQL_URL=$(jq -r '.prod.urls.byFunction.graphql.url' .serverless/manifest.json)
           cd migration

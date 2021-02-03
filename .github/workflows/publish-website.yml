@@ -1,0 +1,10 @@
+name: Publish website only
+on:
+  workflow_dispatch:
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Publish website
+        run: |
+          curl -X POST -d {} ${{ secrets.BUILD_WEBHOOK }}
