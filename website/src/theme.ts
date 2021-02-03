@@ -127,6 +127,7 @@ const iconButton = css`
 
 const smallCaps = css`
   font-family: ${theme.fonts.smallCaps};
+  font-feature-settings: "smcp";
   text-transform: lowercase;
 `
 

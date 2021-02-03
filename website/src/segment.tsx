@@ -268,7 +268,10 @@ const MorphemeSegment = (p: {
   const matchingTag = morphemeDisplayTag(p.segment.matchingTag, p.tagSet)
   const gloss = matchingTag?.tag || p.segment.gloss
   // Display functional tags in small-caps, per interlinear typesetting practice.
-  const buttonStyle = matchingTag ? smallCaps : morphemeButton
+  const buttonStyle = cx(
+    morphemeButton,
+    matchingTag ? std.smallCaps : inheritFont
+  )
 
   let content = <>{gloss}</>
   if (matchingTag && matchingTag.title) {
@@ -317,25 +320,17 @@ const pageBreak = css`
   }
 `
 
-const smallCaps = css`
-  font-family: ${theme.fonts.smallCaps};
-  font-feature-settings: "smcp";
-  text-transform: lowercase;
-  color: inherit;
-  border: none;
-  padding: 0;
-  display: inline-block;
-  background: none;
-`
-
 const atLeastThin = css`
   display: inline-block;
   min-width: 1rem;
 `
 
-const morphemeButton = css`
+const inheritFont = css`
   font-family: inherit;
   font-size: inherit;
+`
+
+const morphemeButton = css`
   color: inherit;
   border: none;
   padding: 0;
