@@ -1111,6 +1111,11 @@
     minimatch "^3.0.4"
     strip-json-comments "^3.1.1"
 
+"@fontsource/charis-sil@^4.1.0":
+  version "4.1.0"
+  resolved "https://registry.yarnpkg.com/@fontsource/charis-sil/-/charis-sil-4.1.0.tgz#362c2287970b900026eff57c5e3c6919060bd251"
+  integrity sha512-CAIFtnaN7oXwCYx4TWwPJleMdPKD1n4CQLuTVvtj/uTDiBpJ4DDO6z+HS/Y9bZsp0Z3WDl2wFxTv/B6jPB9mRw==
+
 "@fontsource/quattrocento-sans@^4.1.0":
   version "4.1.0"
   resolved "https://registry.yarnpkg.com/@fontsource/quattrocento-sans/-/quattrocento-sans-4.1.0.tgz#2dd3ab2652c8609ac6b279c10150d90042b97ade"

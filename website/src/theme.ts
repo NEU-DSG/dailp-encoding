@@ -6,10 +6,10 @@ const theme = {
   fonts: {
     // 4 fonts total: header + sans body, serif body, serif smallcaps, Cherokee.
     // Noto Serif supports glottal stops and more accents than other fonts.
-    bodyArr: ["Spectral", "Digohweli", "serif", "Arial"],
+    bodyArr: ["Charis SIL", "Digohweli", "serif", "Arial"],
     headerArr: ["Quattrocento Sans", "Segoe UI", "Arial", "sans-serif"],
     cherokee: `"Digohweli", "Spectral", "serif", "Arial"`,
-    smallCaps: "Spectral SC",
+    smallCaps: "Charis SIL",
     body: null,
     header: null,
   },
@@ -54,7 +54,7 @@ export const typography = new Typography({
 export const fullWidth = {
   width: "100%",
   [theme.mediaQueries.medium]: {
-    width: "40rem",
+    width: "41rem",
   },
   [theme.mediaQueries.large]: {
     width: "50rem",
