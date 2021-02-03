@@ -244,7 +244,9 @@ const docTabs = css`
 const docTabPanel = css`
   ${fullWidth}
   padding: 0 0.5rem;
-  outline: none;
+  &:focus {
+    outline: none;
+  }
   ${theme.mediaQueries.medium} {
     padding: 0;
   }

@@ -358,6 +358,21 @@ enum Dailp_CherokeeOrthography {
 type Dailp_Contributor = {
   readonly name: Scalars['String'];
   readonly role: Scalars['String'];
+  readonly details: Maybe<Dailp_ContributorDetails>;
+};
+
+type Dailp_ContributorDetails = {
+  /**
+   * Full name of this person, this exact string must be used to identify
+   * them elsewhere, like in the attribution for a particular document.
+   */
+  readonly fullName: Scalars['String'];
+  /**
+   * Alternate name of this person, may be in a different language or writing
+   * system. Used only for descriptive purposes.
+   */
+  readonly alternateName: Maybe<Scalars['String']>;
+  readonly birthDate: Maybe<Dailp_Date>;
 };
 
 type Dailp_Date = {
@@ -10341,23 +10356,10 @@ type WpWritingSettingsFilterInput = {
   readonly useSmilies: Maybe<BooleanQueryOperatorInput>;
 };
 
-type GlossaryQueryVariables = Exact<{ [key: string]: never; }>;
-
-
-type GlossaryQuery = { readonly dailp: { readonly allTags: ReadonlyArray<(
-      Pick<Dailp_MorphemeTag, 'id' | 'morphemeType'>
-      & { readonly crg: Maybe<Pick<Dailp_TagForm, 'tag' | 'title' | 'definition'>>, readonly taoc: Maybe<Pick<Dailp_TagForm, 'tag' | 'title' | 'definition'>>, readonly learner: Maybe<Pick<Dailp_TagForm, 'tag' | 'title' | 'definition'>> }
-    )> } };
-
 type Unnamed_1_QueryVariables = Exact<{ [key: string]: never; }>;
 
 
-type Unnamed_1_Query = { readonly currentBuildDate: Maybe<Pick<CurrentBuildDate, 'currentDate'>> };
-
-type Unnamed_2_QueryVariables = Exact<{ [key: string]: never; }>;
-
-
-type Unnamed_2_Query = { readonly wpMenu: Maybe<{ readonly menuItems: Maybe<{ readonly nodes: Maybe<ReadonlyArray<Maybe<(
+type Unnamed_1_Query = { readonly wpMenu: Maybe<{ readonly menuItems: Maybe<{ readonly nodes: Maybe<ReadonlyArray<Maybe<(
         Pick<WpMenuItem, 'label' | 'path'>
         & { readonly childItems: Maybe<{ readonly nodes: Maybe<ReadonlyArray<Maybe<Pick<WpMenuItem, 'label' | 'path'>>>> }> }
       )>>> }> }> };
@@ -10366,6 +10368,19 @@ type IndexPageQueryVariables = Exact<{ [key: string]: never; }>;
 
 
 type IndexPageQuery = { readonly dailp: { readonly allCollections: ReadonlyArray<Pick<Dailp_DocumentCollection, 'name' | 'slug'>> }, readonly aboutPage: Maybe<Pick<WpPage, 'title' | 'content'>> };
+
+type GlossaryQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+type GlossaryQuery = { readonly dailp: { readonly allTags: ReadonlyArray<(
+      Pick<Dailp_MorphemeTag, 'id' | 'morphemeType'>
+      & { readonly crg: Maybe<Pick<Dailp_TagForm, 'tag' | 'title' | 'definition'>>, readonly taoc: Maybe<Pick<Dailp_TagForm, 'tag' | 'title' | 'definition'>>, readonly learner: Maybe<Pick<Dailp_TagForm, 'tag' | 'title' | 'definition'>> }
+    )> } };
+
+type Unnamed_2_QueryVariables = Exact<{ [key: string]: never; }>;
+
+
+type Unnamed_2_Query = { readonly currentBuildDate: Maybe<Pick<CurrentBuildDate, 'currentDate'>> };
 
 type AllSourcesQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -10403,6 +10418,17 @@ type FormFieldsFragment = (
   )>> }
 );
 
+type CollectionQueryVariables = Exact<{
+  name: Scalars['String'];
+  slug: Scalars['String'];
+}>;
+
+
+type CollectionQuery = { readonly dailp: { readonly allDocuments: ReadonlyArray<(
+      Pick<Dailp_AnnotatedDoc, 'id' | 'slug' | 'title'>
+      & { readonly date: Maybe<Pick<Dailp_Date, 'year'>> }
+    )> }, readonly wpPage: Maybe<Pick<WpPage, 'content'>> };
+
 type DocumentDetailsQueryVariables = Exact<{
   id: Scalars['String'];
 }>;
@@ -10419,17 +10445,6 @@ type ContentPageQueryVariables = Exact<{
 
 
 type ContentPageQuery = { readonly page: Maybe<Pick<WpPage, 'title' | 'content'>> };
-
-type CollectionQueryVariables = Exact<{
-  name: Scalars['String'];
-  slug: Scalars['String'];
-}>;
-
-
-type CollectionQuery = { readonly dailp: { readonly allDocuments: ReadonlyArray<(
-      Pick<Dailp_AnnotatedDoc, 'id' | 'slug' | 'title'>
-      & { readonly date: Maybe<Pick<Dailp_Date, 'year'>> }
-    )> }, readonly wpPage: Maybe<Pick<WpPage, 'content'>> };
 
 type GatsbyImageSharpFixedFragment = Pick<ImageSharpFixed, 'base64' | 'width' | 'height' | 'src' | 'srcSet'>;
 

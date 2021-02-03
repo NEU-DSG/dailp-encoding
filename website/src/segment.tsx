@@ -109,13 +109,13 @@ export const AnnotatedForm = (
   }
   const showAnything = p.level > ExperienceLevel.Story
   if (showAnything) {
-    const showSegments = p.level > ExperienceLevel.Basic
+    const showSegments = p.level >= ExperienceLevel.Learner
     const translation = p.segment.englishGloss.join(", ")
     return (
       <div className={wordGroup} id={`w${p.segment.index}`}>
         <div className={syllabaryLayer} lang="chr">
           {p.segment.source}
-          {p.segment.commentary && showSegments && (
+          {p.segment.commentary && p.level >= ExperienceLevel.AdvancedDt && (
             <WordCommentaryInfo commentary={p.segment.commentary} />
           )}
         </div>
@@ -133,7 +133,7 @@ export const AnnotatedForm = (
             tagSet={p.tagSet}
           />
         ) : null}
-        {translation.length ? <div>{translation}</div> : <br />}
+        {translation.length ? <div>&lsquo;{translation}&rsquo;</div> : <br />}
       </div>
     )
   } else {
@@ -206,7 +206,7 @@ const MorphemicSegmentation = (p: {
 
   return (
     <>
-      <div>
+      <div className={italicSegmentation}>
         {p
           .segments!.map(function (segment) {
             // Adapt the segment shape to the chosen experience level.
@@ -249,6 +249,10 @@ const MorphemicSegmentation = (p: {
     </>
   )
 }
+
+const italicSegmentation = css`
+  font-style: italic;
+`
 
 function intersperse<T>(arr: T[], separator: (n: number) => T): T[] {
   return _.flatMap(arr, (a, i) => (i > 0 ? [separator(i - 1), a] : [a]))
@@ -315,15 +319,13 @@ const pageBreak = css`
 
 const smallCaps = css`
   font-family: ${theme.fonts.smallCaps};
+  font-feature-settings: "smcp";
   text-transform: lowercase;
   color: inherit;
   border: none;
   padding: 0;
-  border-bottom: 1px solid transparent;
   display: inline-block;
-  &:hover {
-    border-bottom: 1px solid darkblue;
-  }
+  background: none;
 `
 
 const atLeastThin = css`
@@ -337,11 +339,8 @@ const morphemeButton = css`
   color: inherit;
   border: none;
   padding: 0;
-  border-bottom: 1px solid transparent;
   display: inline-block;
-  &:hover {
-    border-bottom: 1px solid darkblue;
-  }
+  background: none;
 `
 
 const wordGroup = css`
@@ -354,10 +353,11 @@ const wordGroup = css`
   border-radius: 2px;
   page-break-inside: avoid;
   break-inside: avoid;
+  line-height: ${typography.rhythm(1)};
   ${theme.mediaQueries.medium} {
     padding: 0;
     border: none;
-    margin: ${typography.rhythm(1 / 2)} 3rem ${typography.rhythm(1 / 2)} 0;
+    margin: ${typography.rhythm(1 / 2)} 3rem ${typography.rhythm(1)} 0;
   }
   ${theme.mediaQueries.print} {
     padding: 0;
@@ -381,8 +381,9 @@ const documentBlock = css`
   position: relative;
   display: block;
   break-after: avoid;
-  margin-top: ${typography.rhythm(1)};
-  margin-bottom: ${typography.rhythm(2)};
+  margin-top: ${typography.rhythm(1.5)};
+  margin-bottom: ${typography.rhythm(1)};
+  padding-bottom: ${typography.rhythm(1)};
   ${theme.mediaQueries.print} {
     padding-bottom: ${typography.rhythm(1 / 4)};
     margin-bottom: ${typography.rhythm(2)};
@@ -391,7 +392,7 @@ const documentBlock = css`
 
 const bordered = css`
   ${theme.mediaQueries.medium}, print {
-    border-bottom: 2px solid ${theme.colors.text};
+    border-bottom: 1px solid ${theme.colors.text};
     &:last-of-type {
       border-bottom: none;
       margin-bottom: 0;
