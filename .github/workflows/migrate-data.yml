@@ -1,0 +1,51 @@
+name: Migrate Data
+on:
+  workflow_dispatch:
+env:
+  MONGODB_USERNAME: ${{ secrets.MONGODB_USERNAME }}
+  MONGODB_PASSWORD: ${{ secrets.MONGODB_PASSWORD }}
+  GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+  AWS_VPC_ID: ${{ secrets.AWS_VPC_ID }}
+  AWS_SUBNET_PRIMARY: ${{ secrets.AWS_SUBNET_PRIMARY }}
+  AWS_SUBNET_SECONDARY0: ${{ secrets.AWS_SUBNET_SECONDARY0 }}
+  AWS_SUBNET_SECONDARY1: ${{ secrets.AWS_SUBNET_SECONDARY1 }}
+  GIT_REPOSITORY_URL: https://github.com/neu-dsg/dailp-encoding
+  OAUTH_TOKEN: ${{ secrets.OAUTH_TOKEN }}
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup node.js
+        uses: actions/setup-node@v1
+        with: { node-version: 10 }
+      - name: Setup rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: 1.48.0
+          default: true
+          override: true
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v1
+      - name: Generate serverless manifest
+        run: |
+          yarn install
+          mkdir -p .serverless
+          yarn sls translate --stage prod
+          yarn sls manifest --stage prod
+      - name: Migrate data to MongoDB
+        run: |
+          export DAILP_GRAPHQL_URL=$(jq -r '.prod.urls.byFunction.graphql.url' .serverless/manifest.json)
+          cd migration
+          cargo run --release
+      - name: Publish website
+        run: |
+          curl -X POST -d {} ${{ secrets.BUILD_WEBHOOK }}
