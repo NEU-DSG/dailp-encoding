@@ -2347,16 +2347,16 @@ type Query = {
   readonly allSitePage: SitePageConnection;
   readonly markdownRemark: Maybe<MarkdownRemark>;
   readonly allMarkdownRemark: MarkdownRemarkConnection;
+  readonly wpContentType: Maybe<WpContentType>;
+  readonly allWpContentType: WpContentTypeConnection;
+  readonly wpTaxonomy: Maybe<WpTaxonomy>;
+  readonly allWpTaxonomy: WpTaxonomyConnection;
   readonly wpUser: Maybe<WpUser>;
   readonly allWpUser: WpUserConnection;
   readonly wpComment: Maybe<WpComment>;
   readonly allWpComment: WpCommentConnection;
   readonly wpMediaItem: Maybe<WpMediaItem>;
   readonly allWpMediaItem: WpMediaItemConnection;
-  readonly wpContentType: Maybe<WpContentType>;
-  readonly allWpContentType: WpContentTypeConnection;
-  readonly wpTaxonomy: Maybe<WpTaxonomy>;
-  readonly allWpTaxonomy: WpTaxonomyConnection;
   readonly wpPage: Maybe<WpPage>;
   readonly allWpPage: WpPageConnection;
   readonly wpPost: Maybe<WpPost>;
@@ -2390,6 +2390,7 @@ type Query = {
 
 
 type Query_wpContentNodeArgs = {
+  contentType: Maybe<WpContentNodeToContentTypeConnectionEdgeFilterInput>;
   databaseId: Maybe<IntQueryOperatorInput>;
   date: Maybe<DateQueryOperatorInput>;
   dateGmt: Maybe<DateQueryOperatorInput>;
@@ -2403,6 +2404,7 @@ type Query_wpContentNodeArgs = {
   modifiedGmt: Maybe<DateQueryOperatorInput>;
   slug: Maybe<StringQueryOperatorInput>;
   status: Maybe<StringQueryOperatorInput>;
+  template: Maybe<WpContentTemplateFilterInput>;
   uri: Maybe<StringQueryOperatorInput>;
   nodeType: Maybe<StringQueryOperatorInput>;
 };
@@ -2615,132 +2617,6 @@ type Query_allMarkdownRemarkArgs = {
 };
 
 
-type Query_wpUserArgs = {
-  avatar: Maybe<WpAvatarFilterInput>;
-  capKey: Maybe<StringQueryOperatorInput>;
-  capabilities: Maybe<StringQueryOperatorInput>;
-  comments: Maybe<WpUserToCommentConnectionFilterInput>;
-  databaseId: Maybe<IntQueryOperatorInput>;
-  description: Maybe<StringQueryOperatorInput>;
-  email: Maybe<StringQueryOperatorInput>;
-  extraCapabilities: Maybe<StringQueryOperatorInput>;
-  firstName: Maybe<StringQueryOperatorInput>;
-  id: Maybe<StringQueryOperatorInput>;
-  lastName: Maybe<StringQueryOperatorInput>;
-  locale: Maybe<StringQueryOperatorInput>;
-  name: Maybe<StringQueryOperatorInput>;
-  nicename: Maybe<StringQueryOperatorInput>;
-  nickname: Maybe<StringQueryOperatorInput>;
-  pages: Maybe<WpUserToPageConnectionFilterInput>;
-  posts: Maybe<WpUserToPostConnectionFilterInput>;
-  registeredDate: Maybe<StringQueryOperatorInput>;
-  roles: Maybe<WpUserToUserRoleConnectionFilterInput>;
-  slug: Maybe<StringQueryOperatorInput>;
-  uri: Maybe<StringQueryOperatorInput>;
-  url: Maybe<StringQueryOperatorInput>;
-  username: Maybe<StringQueryOperatorInput>;
-  nodeType: Maybe<StringQueryOperatorInput>;
-  parent: Maybe<NodeFilterInput>;
-  children: Maybe<NodeFilterListInput>;
-  internal: Maybe<InternalFilterInput>;
-};
-
-
-type Query_allWpUserArgs = {
-  filter: Maybe<WpUserFilterInput>;
-  sort: Maybe<WpUserSortInput>;
-  skip: Maybe<Scalars['Int']>;
-  limit: Maybe<Scalars['Int']>;
-};
-
-
-type Query_wpCommentArgs = {
-  agent: Maybe<StringQueryOperatorInput>;
-  approved: Maybe<BooleanQueryOperatorInput>;
-  author: Maybe<WpCommentToCommenterConnectionEdgeFilterInput>;
-  authorIp: Maybe<StringQueryOperatorInput>;
-  commentedOn: Maybe<WpCommentToContentNodeConnectionEdgeFilterInput>;
-  content: Maybe<StringQueryOperatorInput>;
-  databaseId: Maybe<IntQueryOperatorInput>;
-  date: Maybe<DateQueryOperatorInput>;
-  dateGmt: Maybe<DateQueryOperatorInput>;
-  id: Maybe<StringQueryOperatorInput>;
-  karma: Maybe<IntQueryOperatorInput>;
-  wpParent: Maybe<WpCommentToParentCommentConnectionEdgeFilterInput>;
-  replies: Maybe<WpCommentToCommentConnectionFilterInput>;
-  type: Maybe<StringQueryOperatorInput>;
-  nodeType: Maybe<StringQueryOperatorInput>;
-  parent: Maybe<NodeFilterInput>;
-  children: Maybe<NodeFilterListInput>;
-  internal: Maybe<InternalFilterInput>;
-};
-
-
-type Query_allWpCommentArgs = {
-  filter: Maybe<WpCommentFilterInput>;
-  sort: Maybe<WpCommentSortInput>;
-  skip: Maybe<Scalars['Int']>;
-  limit: Maybe<Scalars['Int']>;
-};
-
-
-type Query_wpMediaItemArgs = {
-  altText: Maybe<StringQueryOperatorInput>;
-  ancestors: Maybe<WpHierarchicalContentNodeToContentNodeAncestorsConnectionFilterInput>;
-  author: Maybe<WpNodeWithAuthorToUserConnectionEdgeFilterInput>;
-  authorDatabaseId: Maybe<IntQueryOperatorInput>;
-  authorId: Maybe<IDQueryOperatorInput>;
-  caption: Maybe<StringQueryOperatorInput>;
-  wpChildren: Maybe<WpHierarchicalContentNodeToContentNodeChildrenConnectionFilterInput>;
-  commentCount: Maybe<IntQueryOperatorInput>;
-  commentStatus: Maybe<StringQueryOperatorInput>;
-  comments: Maybe<WpMediaItemToCommentConnectionFilterInput>;
-  contentType: Maybe<WpMediaItemToContentTypeConnectionEdgeFilterInput>;
-  databaseId: Maybe<IntQueryOperatorInput>;
-  date: Maybe<DateQueryOperatorInput>;
-  dateGmt: Maybe<DateQueryOperatorInput>;
-  description: Maybe<StringQueryOperatorInput>;
-  desiredSlug: Maybe<StringQueryOperatorInput>;
-  enclosure: Maybe<StringQueryOperatorInput>;
-  fileSize: Maybe<IntQueryOperatorInput>;
-  guid: Maybe<StringQueryOperatorInput>;
-  id: Maybe<StringQueryOperatorInput>;
-  lastEditedBy: Maybe<WpContentNodeToEditLastConnectionEdgeFilterInput>;
-  link: Maybe<StringQueryOperatorInput>;
-  mediaDetails: Maybe<WpMediaDetailsFilterInput>;
-  mediaItemUrl: Maybe<StringQueryOperatorInput>;
-  mediaType: Maybe<StringQueryOperatorInput>;
-  mimeType: Maybe<StringQueryOperatorInput>;
-  modified: Maybe<DateQueryOperatorInput>;
-  modifiedGmt: Maybe<DateQueryOperatorInput>;
-  wpParent: Maybe<WpHierarchicalContentNodeToParentContentNodeConnectionEdgeFilterInput>;
-  parentDatabaseId: Maybe<IntQueryOperatorInput>;
-  parentId: Maybe<IDQueryOperatorInput>;
-  sizes: Maybe<StringQueryOperatorInput>;
-  slug: Maybe<StringQueryOperatorInput>;
-  sourceUrl: Maybe<StringQueryOperatorInput>;
-  srcSet: Maybe<StringQueryOperatorInput>;
-  status: Maybe<StringQueryOperatorInput>;
-  template: Maybe<WpContentTemplateFilterInput>;
-  title: Maybe<StringQueryOperatorInput>;
-  uri: Maybe<StringQueryOperatorInput>;
-  nodeType: Maybe<StringQueryOperatorInput>;
-  remoteFile: Maybe<FileFilterInput>;
-  localFile: Maybe<FileFilterInput>;
-  parent: Maybe<NodeFilterInput>;
-  children: Maybe<NodeFilterListInput>;
-  internal: Maybe<InternalFilterInput>;
-};
-
-
-type Query_allWpMediaItemArgs = {
-  filter: Maybe<WpMediaItemFilterInput>;
-  sort: Maybe<WpMediaItemSortInput>;
-  skip: Maybe<Scalars['Int']>;
-  limit: Maybe<Scalars['Int']>;
-};
-
-
 type Query_wpContentTypeArgs = {
   archivePath: Maybe<StringQueryOperatorInput>;
   canExport: Maybe<BooleanQueryOperatorInput>;
@@ -2823,6 +2699,134 @@ type Query_allWpTaxonomyArgs = {
 };
 
 
+type Query_wpUserArgs = {
+  avatar: Maybe<WpAvatarFilterInput>;
+  capKey: Maybe<StringQueryOperatorInput>;
+  capabilities: Maybe<StringQueryOperatorInput>;
+  comments: Maybe<WpUserToCommentConnectionFilterInput>;
+  databaseId: Maybe<IntQueryOperatorInput>;
+  description: Maybe<StringQueryOperatorInput>;
+  email: Maybe<StringQueryOperatorInput>;
+  extraCapabilities: Maybe<StringQueryOperatorInput>;
+  firstName: Maybe<StringQueryOperatorInput>;
+  id: Maybe<StringQueryOperatorInput>;
+  lastName: Maybe<StringQueryOperatorInput>;
+  locale: Maybe<StringQueryOperatorInput>;
+  name: Maybe<StringQueryOperatorInput>;
+  nicename: Maybe<StringQueryOperatorInput>;
+  nickname: Maybe<StringQueryOperatorInput>;
+  pages: Maybe<WpUserToPageConnectionFilterInput>;
+  posts: Maybe<WpUserToPostConnectionFilterInput>;
+  registeredDate: Maybe<StringQueryOperatorInput>;
+  roles: Maybe<WpUserToUserRoleConnectionFilterInput>;
+  slug: Maybe<StringQueryOperatorInput>;
+  uri: Maybe<StringQueryOperatorInput>;
+  url: Maybe<StringQueryOperatorInput>;
+  username: Maybe<StringQueryOperatorInput>;
+  nodeType: Maybe<StringQueryOperatorInput>;
+  parent: Maybe<NodeFilterInput>;
+  children: Maybe<NodeFilterListInput>;
+  internal: Maybe<InternalFilterInput>;
+};
+
+
+type Query_allWpUserArgs = {
+  filter: Maybe<WpUserFilterInput>;
+  sort: Maybe<WpUserSortInput>;
+  skip: Maybe<Scalars['Int']>;
+  limit: Maybe<Scalars['Int']>;
+};
+
+
+type Query_wpCommentArgs = {
+  agent: Maybe<StringQueryOperatorInput>;
+  approved: Maybe<BooleanQueryOperatorInput>;
+  author: Maybe<WpCommentToCommenterConnectionEdgeFilterInput>;
+  authorIp: Maybe<StringQueryOperatorInput>;
+  commentedOn: Maybe<WpCommentToContentNodeConnectionEdgeFilterInput>;
+  content: Maybe<StringQueryOperatorInput>;
+  databaseId: Maybe<IntQueryOperatorInput>;
+  date: Maybe<DateQueryOperatorInput>;
+  dateGmt: Maybe<DateQueryOperatorInput>;
+  id: Maybe<StringQueryOperatorInput>;
+  karma: Maybe<IntQueryOperatorInput>;
+  wpParent: Maybe<WpCommentToParentCommentConnectionEdgeFilterInput>;
+  parentDatabaseId: Maybe<IntQueryOperatorInput>;
+  parentId: Maybe<IDQueryOperatorInput>;
+  replies: Maybe<WpCommentToCommentConnectionFilterInput>;
+  type: Maybe<StringQueryOperatorInput>;
+  nodeType: Maybe<StringQueryOperatorInput>;
+  parent: Maybe<NodeFilterInput>;
+  children: Maybe<NodeFilterListInput>;
+  internal: Maybe<InternalFilterInput>;
+};
+
+
+type Query_allWpCommentArgs = {
+  filter: Maybe<WpCommentFilterInput>;
+  sort: Maybe<WpCommentSortInput>;
+  skip: Maybe<Scalars['Int']>;
+  limit: Maybe<Scalars['Int']>;
+};
+
+
+type Query_wpMediaItemArgs = {
+  altText: Maybe<StringQueryOperatorInput>;
+  ancestors: Maybe<WpHierarchicalContentNodeToContentNodeAncestorsConnectionFilterInput>;
+  author: Maybe<WpNodeWithAuthorToUserConnectionEdgeFilterInput>;
+  authorDatabaseId: Maybe<IntQueryOperatorInput>;
+  authorId: Maybe<IDQueryOperatorInput>;
+  caption: Maybe<StringQueryOperatorInput>;
+  wpChildren: Maybe<WpHierarchicalContentNodeToContentNodeChildrenConnectionFilterInput>;
+  commentCount: Maybe<IntQueryOperatorInput>;
+  commentStatus: Maybe<StringQueryOperatorInput>;
+  comments: Maybe<WpMediaItemToCommentConnectionFilterInput>;
+  contentType: Maybe<WpContentNodeToContentTypeConnectionEdgeFilterInput>;
+  databaseId: Maybe<IntQueryOperatorInput>;
+  date: Maybe<DateQueryOperatorInput>;
+  dateGmt: Maybe<DateQueryOperatorInput>;
+  description: Maybe<StringQueryOperatorInput>;
+  desiredSlug: Maybe<StringQueryOperatorInput>;
+  enclosure: Maybe<StringQueryOperatorInput>;
+  fileSize: Maybe<IntQueryOperatorInput>;
+  guid: Maybe<StringQueryOperatorInput>;
+  id: Maybe<StringQueryOperatorInput>;
+  lastEditedBy: Maybe<WpContentNodeToEditLastConnectionEdgeFilterInput>;
+  link: Maybe<StringQueryOperatorInput>;
+  mediaDetails: Maybe<WpMediaDetailsFilterInput>;
+  mediaItemUrl: Maybe<StringQueryOperatorInput>;
+  mediaType: Maybe<StringQueryOperatorInput>;
+  mimeType: Maybe<StringQueryOperatorInput>;
+  modified: Maybe<DateQueryOperatorInput>;
+  modifiedGmt: Maybe<DateQueryOperatorInput>;
+  wpParent: Maybe<WpHierarchicalContentNodeToParentContentNodeConnectionEdgeFilterInput>;
+  parentDatabaseId: Maybe<IntQueryOperatorInput>;
+  parentId: Maybe<IDQueryOperatorInput>;
+  sizes: Maybe<StringQueryOperatorInput>;
+  slug: Maybe<StringQueryOperatorInput>;
+  sourceUrl: Maybe<StringQueryOperatorInput>;
+  srcSet: Maybe<StringQueryOperatorInput>;
+  status: Maybe<StringQueryOperatorInput>;
+  template: Maybe<WpContentTemplateFilterInput>;
+  title: Maybe<StringQueryOperatorInput>;
+  uri: Maybe<StringQueryOperatorInput>;
+  nodeType: Maybe<StringQueryOperatorInput>;
+  remoteFile: Maybe<FileFilterInput>;
+  localFile: Maybe<FileFilterInput>;
+  parent: Maybe<NodeFilterInput>;
+  children: Maybe<NodeFilterListInput>;
+  internal: Maybe<InternalFilterInput>;
+};
+
+
+type Query_allWpMediaItemArgs = {
+  filter: Maybe<WpMediaItemFilterInput>;
+  sort: Maybe<WpMediaItemSortInput>;
+  skip: Maybe<Scalars['Int']>;
+  limit: Maybe<Scalars['Int']>;
+};
+
+
 type Query_wpPageArgs = {
   ancestors: Maybe<WpHierarchicalContentNodeToContentNodeAncestorsConnectionFilterInput>;
   author: Maybe<WpNodeWithAuthorToUserConnectionEdgeFilterInput>;
@@ -2833,7 +2837,7 @@ type Query_wpPageArgs = {
   commentStatus: Maybe<StringQueryOperatorInput>;
   comments: Maybe<WpPageToCommentConnectionFilterInput>;
   content: Maybe<StringQueryOperatorInput>;
-  contentType: Maybe<WpPageToContentTypeConnectionEdgeFilterInput>;
+  contentType: Maybe<WpContentNodeToContentTypeConnectionEdgeFilterInput>;
   databaseId: Maybe<IntQueryOperatorInput>;
   date: Maybe<DateQueryOperatorInput>;
   dateGmt: Maybe<DateQueryOperatorInput>;
@@ -2884,7 +2888,7 @@ type Query_wpPostArgs = {
   commentStatus: Maybe<StringQueryOperatorInput>;
   comments: Maybe<WpPostToCommentConnectionFilterInput>;
   content: Maybe<StringQueryOperatorInput>;
-  contentType: Maybe<WpPostToContentTypeConnectionEdgeFilterInput>;
+  contentType: Maybe<WpContentNodeToContentTypeConnectionEdgeFilterInput>;
   databaseId: Maybe<IntQueryOperatorInput>;
   date: Maybe<DateQueryOperatorInput>;
   dateGmt: Maybe<DateQueryOperatorInput>;
@@ -4181,11 +4185,14 @@ type StringQueryOperatorInput = {
   readonly glob: Maybe<Scalars['String']>;
 };
 
+/** Non-node WPGraphQL root fields. */
 type Wp = Node & {
+  /** Entry point to get all settings for the site */
   readonly allSettings: Maybe<WpSettings>;
   readonly discussionSettings: Maybe<WpDiscussionSettings>;
   readonly generalSettings: Maybe<WpGeneralSettings>;
   readonly readingSettings: Maybe<WpReadingSettings>;
+  /** Information needed by gatsby-source-wordpress. */
   readonly wpGatsby: Maybe<WpWPGatsby>;
   readonly writingSettings: Maybe<WpWritingSettings>;
   readonly nodeType: Maybe<Scalars['String']>;
@@ -4195,16 +4202,37 @@ type Wp = Node & {
   readonly internal: Internal;
 };
 
+/** Avatars are profile images for users. WordPress by default uses the Gravatar service to host and fetch avatars from. */
 type WpAvatar = {
+  /**
+   * URL for the default image or a default type. Accepts &#039;404&#039; (return a
+   * 404 instead of a default image), &#039;retro&#039; (8bit),
+   * &#039;monsterid&#039; (monster), &#039;wavatar&#039; (cartoon face),
+   * &#039;indenticon&#039; (the &#039;quilt&#039;), &#039;mystery&#039;,
+   * &#039;mm&#039;, or &#039;mysteryman&#039; (The Oyster Man), &#039;blank&#039;
+   * (transparent GIF), or &#039;gravatar_default&#039; (the Gravatar logo).
+   */
   readonly default: Maybe<Scalars['String']>;
+  /** HTML attributes to insert in the IMG element. Is not sanitized. */
   readonly extraAttr: Maybe<Scalars['String']>;
+  /** Whether to always show the default image, never the Gravatar. */
   readonly forceDefault: Maybe<Scalars['Boolean']>;
+  /** Whether the avatar was successfully found. */
   readonly foundAvatar: Maybe<Scalars['Boolean']>;
+  /** Height of the avatar image. */
   readonly height: Maybe<Scalars['Int']>;
+  /**
+   * What rating to display avatars up to. Accepts &#039;G&#039;, &#039;PG&#039;,
+   * &#039;R&#039;, &#039;X&#039;, and are judged in that order.
+   */
   readonly rating: Maybe<Scalars['String']>;
+  /** Type of url scheme to use. Typically HTTP vs. HTTPS. */
   readonly scheme: Maybe<Scalars['String']>;
+  /** The size of the avatar in pixels. A value of 96 will match a 96px x 96px gravatar image. */
   readonly size: Maybe<Scalars['Int']>;
+  /** URL for the gravatar image source. */
   readonly url: Maybe<Scalars['String']>;
+  /** Width of the avatar image. */
   readonly width: Maybe<Scalars['Int']>;
 };
 
@@ -4221,24 +4249,42 @@ type WpAvatarFilterInput = {
   readonly width: Maybe<IntQueryOperatorInput>;
 };
 
+/** The category type */
 type WpCategory = Node & WpNode & WpTermNode & WpDatabaseIdentifier & WpUniformResourceIdentifiable & WpHierarchicalTermNode & WpMenuItemLinkable & {
+  /** The ancestors of the node. Default ordered as lowest (closest to the child) to highest (closest to the root). */
   readonly ancestors: Maybe<WpCategoryToAncestorsCategoryConnection>;
+  /** Connection between the category type and the category type */
   readonly wpChildren: Maybe<WpCategoryToCategoryConnection>;
+  /** Connection between the category type and the ContentNode type */
   readonly contentNodes: Maybe<WpCategoryToContentNodeConnection>;
+  /** The number of objects connected to the object */
   readonly count: Maybe<Scalars['Int']>;
+  /** Identifies the primary key from the database. */
   readonly databaseId: Scalars['Int'];
+  /** The description of the object */
   readonly description: Maybe<Scalars['String']>;
   readonly id: Scalars['ID'];
+  /** The link to the term */
   readonly link: Maybe<Scalars['String']>;
+  /** The human friendly name of the object. */
   readonly name: Maybe<Scalars['String']>;
+  /** Connection between the category type and the category type */
   readonly wpParent: Maybe<WpCategoryToParentCategoryConnectionEdge>;
+  /** Database id of the parent node */
   readonly parentDatabaseId: Maybe<Scalars['Int']>;
+  /** The globally unique identifier of the parent node. */
   readonly parentId: Maybe<Scalars['ID']>;
+  /** Connection between the category type and the post type */
   readonly posts: Maybe<WpCategoryToPostConnection>;
+  /** An alphanumeric identifier for the object unique to its type. */
   readonly slug: Maybe<Scalars['String']>;
+  /** Connection between the category type and the Taxonomy type */
   readonly taxonomy: Maybe<WpCategoryToTaxonomyConnectionEdge>;
+  /** The ID of the term group that this term object belongs to */
   readonly termGroupId: Maybe<Scalars['Int']>;
+  /** The taxonomy ID that the object is associated with */
   readonly termTaxonomyId: Maybe<Scalars['Int']>;
+  /** The unique resource identifier path */
   readonly uri: Scalars['String'];
   readonly nodeType: Maybe<Scalars['String']>;
   readonly parent: Maybe<Node>;
@@ -4349,6 +4395,7 @@ enum WpCategoryFieldsEnum {
   contentNodes___nodes___modifiedGmt = 'contentNodes.nodes.modifiedGmt',
   contentNodes___nodes___slug = 'contentNodes.nodes.slug',
   contentNodes___nodes___status = 'contentNodes.nodes.status',
+  contentNodes___nodes___template___templateName = 'contentNodes.nodes.template.templateName',
   contentNodes___nodes___uri = 'contentNodes.nodes.uri',
   contentNodes___nodes___nodeType = 'contentNodes.nodes.nodeType',
   count = 'count',
@@ -4418,7 +4465,6 @@ enum WpCategoryFieldsEnum {
   posts___nodes___slug = 'posts.nodes.slug',
   posts___nodes___status = 'posts.nodes.status',
   posts___nodes___tags___nodes = 'posts.nodes.tags.nodes',
-  posts___nodes___template___templateFile = 'posts.nodes.template.templateFile',
   posts___nodes___template___templateName = 'posts.nodes.template.templateName',
   posts___nodes___terms___nodes = 'posts.nodes.terms.nodes',
   posts___nodes___title = 'posts.nodes.title',
@@ -4607,7 +4653,9 @@ type WpCategorySortInput = {
   readonly order: Maybe<ReadonlyArray<Maybe<SortOrderEnum>>>;
 };
 
+/** Connection between the category type and the category type */
 type WpCategoryToAncestorsCategoryConnection = {
+  /** The nodes of the connection, without the edges */
   readonly nodes: Maybe<ReadonlyArray<Maybe<WpCategory>>>;
 };
 
@@ -4615,7 +4663,9 @@ type WpCategoryToAncestorsCategoryConnectionFilterInput = {
   readonly nodes: Maybe<WpCategoryFilterListInput>;
 };
 
+/** Connection between the category type and the category type */
 type WpCategoryToCategoryConnection = {
+  /** The nodes of the connection, without the edges */
   readonly nodes: Maybe<ReadonlyArray<Maybe<WpCategory>>>;
 };
 
@@ -4623,7 +4673,9 @@ type WpCategoryToCategoryConnectionFilterInput = {
   readonly nodes: Maybe<WpCategoryFilterListInput>;
 };
 
+/** Connection between the category type and the ContentNode type */
 type WpCategoryToContentNodeConnection = {
+  /** The nodes of the connection, without the edges */
   readonly nodes: Maybe<ReadonlyArray<Maybe<WpContentNode>>>;
 };
 
@@ -4631,7 +4683,9 @@ type WpCategoryToContentNodeConnectionFilterInput = {
   readonly nodes: Maybe<WpContentNodeFilterListInput>;
 };
 
+/** Connection between the category type and the category type */
 type WpCategoryToParentCategoryConnectionEdge = {
+  /** The nodes of the connection, without the edges */
   readonly node: Maybe<WpCategory>;
 };
 
@@ -4639,7 +4693,9 @@ type WpCategoryToParentCategoryConnectionEdgeFilterInput = {
   readonly node: Maybe<WpCategoryFilterInput>;
 };
 
+/** Connection between the category type and the post type */
 type WpCategoryToPostConnection = {
+  /** The nodes of the connection, without the edges */
   readonly nodes: Maybe<ReadonlyArray<Maybe<WpPost>>>;
 };
 
@@ -4647,7 +4703,9 @@ type WpCategoryToPostConnectionFilterInput = {
   readonly nodes: Maybe<WpPostFilterListInput>;
 };
 
+/** Connection between the category type and the Taxonomy type */
 type WpCategoryToTaxonomyConnectionEdge = {
+  /** The nodes of the connection, without the edges */
   readonly node: Maybe<WpTaxonomy>;
 };
 
@@ -4655,20 +4713,67 @@ type WpCategoryToTaxonomyConnectionEdgeFilterInput = {
   readonly node: Maybe<WpTaxonomyFilterInput>;
 };
 
+/** A Comment object */
 type WpComment = Node & WpNode & WpDatabaseIdentifier & {
+  /**
+   * User agent used to post the comment. This field is equivalent to
+   * WP_Comment-&gt;comment_agent and the value matching the
+   * &quot;comment_agent&quot; column in SQL.
+   */
   readonly agent: Maybe<Scalars['String']>;
+  /**
+   * The approval status of the comment. This field is equivalent to
+   * WP_Comment-&gt;comment_approved and the value matching the
+   * &quot;comment_approved&quot; column in SQL.
+   */
   readonly approved: Maybe<Scalars['Boolean']>;
+  /** The author of the comment */
   readonly author: Maybe<WpCommentToCommenterConnectionEdge>;
+  /**
+   * IP address for the author. This field is equivalent to
+   * WP_Comment-&gt;comment_author_IP and the value matching the
+   * &quot;comment_author_IP&quot; column in SQL.
+   */
   readonly authorIp: Maybe<Scalars['String']>;
+  /** Connection between the Comment type and the ContentNode type */
   readonly commentedOn: Maybe<WpCommentToContentNodeConnectionEdge>;
+  /**
+   * Content of the comment. This field is equivalent to
+   * WP_Comment-&gt;comment_content and the value matching the
+   * &quot;comment_content&quot; column in SQL.
+   */
   readonly content: Maybe<Scalars['String']>;
+  /** The unique identifier stored in the database */
   readonly databaseId: Scalars['Int'];
+  /**
+   * Date the comment was posted in local time. This field is equivalent to
+   * WP_Comment-&gt;date and the value matching the &quot;date&quot; column in SQL.
+   */
   readonly date: Maybe<Scalars['Date']>;
+  /**
+   * Date the comment was posted in GMT. This field is equivalent to
+   * WP_Comment-&gt;date_gmt and the value matching the &quot;date_gmt&quot; column in SQL.
+   */
   readonly dateGmt: Maybe<Scalars['Date']>;
   readonly id: Scalars['ID'];
+  /**
+   * Karma value for the comment. This field is equivalent to
+   * WP_Comment-&gt;comment_karma and the value matching the
+   * &quot;comment_karma&quot; column in SQL.
+   */
   readonly karma: Maybe<Scalars['Int']>;
+  /** Connection between the Comment type and the Comment type */
   readonly wpParent: Maybe<WpCommentToParentCommentConnectionEdge>;
+  /** The database id of the parent comment node or null if it is the root comment */
+  readonly parentDatabaseId: Maybe<Scalars['Int']>;
+  /** The globally unique identifier of the parent comment node. */
+  readonly parentId: Maybe<Scalars['ID']>;
+  /** Connection between the Comment type and the Comment type */
   readonly replies: Maybe<WpCommentToCommentConnection>;
+  /**
+   * Type of comment. This field is equivalent to WP_Comment-&gt;comment_type and
+   * the value matching the &quot;comment_type&quot; column in SQL.
+   */
   readonly type: Maybe<Scalars['String']>;
   readonly nodeType: Maybe<Scalars['String']>;
   readonly parent: Maybe<Node>;
@@ -4677,6 +4782,7 @@ type WpComment = Node & WpNode & WpDatabaseIdentifier & {
 };
 
 
+/** A Comment object */
 type WpComment_dateArgs = {
   formatString: Maybe<Scalars['String']>;
   fromNow: Maybe<Scalars['Boolean']>;
@@ -4685,6 +4791,7 @@ type WpComment_dateArgs = {
 };
 
 
+/** A Comment object */
 type WpComment_dateGmtArgs = {
   formatString: Maybe<Scalars['String']>;
   fromNow: Maybe<Scalars['Boolean']>;
@@ -4720,10 +4827,15 @@ type WpCommentEdge = {
 };
 
 type WpCommenter = {
+  /** Identifies the primary key from the database. */
   readonly databaseId: Scalars['Int'];
+  /** The email address of the author of a comment. */
   readonly email: Maybe<Scalars['String']>;
+  /** The globally unique identifier for the comment author. */
   readonly id: Scalars['ID'];
+  /** The name of the author of a comment. */
   readonly name: Maybe<Scalars['String']>;
+  /** The url of the author of a comment. */
   readonly url: Maybe<Scalars['String']>;
 };
 
@@ -4756,6 +4868,7 @@ enum WpCommentFieldsEnum {
   commentedOn___node___modifiedGmt = 'commentedOn.node.modifiedGmt',
   commentedOn___node___slug = 'commentedOn.node.slug',
   commentedOn___node___status = 'commentedOn.node.status',
+  commentedOn___node___template___templateName = 'commentedOn.node.template.templateName',
   commentedOn___node___uri = 'commentedOn.node.uri',
   commentedOn___node___nodeType = 'commentedOn.node.nodeType',
   content = 'content',
@@ -4773,6 +4886,8 @@ enum WpCommentFieldsEnum {
   wpParent___node___dateGmt = 'wpParent.node.dateGmt',
   wpParent___node___id = 'wpParent.node.id',
   wpParent___node___karma = 'wpParent.node.karma',
+  wpParent___node___parentDatabaseId = 'wpParent.node.parentDatabaseId',
+  wpParent___node___parentId = 'wpParent.node.parentId',
   wpParent___node___replies___nodes = 'wpParent.node.replies.nodes',
   wpParent___node___type = 'wpParent.node.type',
   wpParent___node___nodeType = 'wpParent.node.nodeType',
@@ -4789,6 +4904,8 @@ enum WpCommentFieldsEnum {
   wpParent___node___internal___mediaType = 'wpParent.node.internal.mediaType',
   wpParent___node___internal___owner = 'wpParent.node.internal.owner',
   wpParent___node___internal___type = 'wpParent.node.internal.type',
+  parentDatabaseId = 'parentDatabaseId',
+  parentId = 'parentId',
   replies___nodes = 'replies.nodes',
   replies___nodes___agent = 'replies.nodes.agent',
   replies___nodes___approved = 'replies.nodes.approved',
@@ -4799,6 +4916,8 @@ enum WpCommentFieldsEnum {
   replies___nodes___dateGmt = 'replies.nodes.dateGmt',
   replies___nodes___id = 'replies.nodes.id',
   replies___nodes___karma = 'replies.nodes.karma',
+  replies___nodes___parentDatabaseId = 'replies.nodes.parentDatabaseId',
+  replies___nodes___parentId = 'replies.nodes.parentId',
   replies___nodes___replies___nodes = 'replies.nodes.replies.nodes',
   replies___nodes___type = 'replies.nodes.type',
   replies___nodes___nodeType = 'replies.nodes.nodeType',
@@ -4917,6 +5036,8 @@ type WpCommentFilterInput = {
   readonly id: Maybe<StringQueryOperatorInput>;
   readonly karma: Maybe<IntQueryOperatorInput>;
   readonly wpParent: Maybe<WpCommentToParentCommentConnectionEdgeFilterInput>;
+  readonly parentDatabaseId: Maybe<IntQueryOperatorInput>;
+  readonly parentId: Maybe<IDQueryOperatorInput>;
   readonly replies: Maybe<WpCommentToCommentConnectionFilterInput>;
   readonly type: Maybe<StringQueryOperatorInput>;
   readonly nodeType: Maybe<StringQueryOperatorInput>;
@@ -4943,7 +5064,9 @@ type WpCommentSortInput = {
   readonly order: Maybe<ReadonlyArray<Maybe<SortOrderEnum>>>;
 };
 
+/** Connection between the Comment type and the Comment type */
 type WpCommentToCommentConnection = {
+  /** The nodes of the connection, without the edges */
   readonly nodes: Maybe<ReadonlyArray<Maybe<WpComment>>>;
 };
 
@@ -4951,7 +5074,9 @@ type WpCommentToCommentConnectionFilterInput = {
   readonly nodes: Maybe<WpCommentFilterListInput>;
 };
 
+/** Connection between the Comment type and the Commenter type */
 type WpCommentToCommenterConnectionEdge = {
+  /** The nodes of the connection, without the edges */
   readonly node: Maybe<WpCommenter>;
 };
 
@@ -4959,7 +5084,9 @@ type WpCommentToCommenterConnectionEdgeFilterInput = {
   readonly node: Maybe<WpCommenterFilterInput>;
 };
 
+/** Connection between the Comment type and the ContentNode type */
 type WpCommentToContentNodeConnectionEdge = {
+  /** The nodes of the connection, without the edges */
   readonly node: Maybe<WpContentNode>;
 };
 
@@ -4967,7 +5094,9 @@ type WpCommentToContentNodeConnectionEdgeFilterInput = {
   readonly node: Maybe<WpContentNodeFilterInput>;
 };
 
+/** Connection between the Comment type and the Comment type */
 type WpCommentToParentCommentConnectionEdge = {
+  /** The nodes of the connection, without the edges */
   readonly node: Maybe<WpComment>;
 };
 
@@ -4997,19 +5126,49 @@ type WpConnection_groupArgs = {
 };
 
 type WpContentNode = {
+  /** Connection between the ContentNode type and the ContentType type */
+  readonly contentType: Maybe<WpContentNodeToContentTypeConnectionEdge>;
+  /** The ID of the node in the database. */
   readonly databaseId: Scalars['Int'];
+  /** Post publishing date. */
   readonly date: Maybe<Scalars['Date']>;
+  /** The publishing date set in GMT. */
   readonly dateGmt: Maybe<Scalars['Date']>;
+  /** The desired slug of the post */
   readonly desiredSlug: Maybe<Scalars['String']>;
+  /** The RSS enclosure for the object */
   readonly enclosure: Maybe<Scalars['String']>;
+  /**
+   * The global unique identifier for this post. This currently matches the value
+   * stored in WP_Post->guid and the guid column in the "post_objects" database table.
+   */
   readonly guid: Maybe<Scalars['String']>;
+  /** The globally unique identifier of the node. */
   readonly id: Scalars['ID'];
+  /** The user that most recently edited the node */
   readonly lastEditedBy: Maybe<WpContentNodeToEditLastConnectionEdge>;
+  /** The permalink of the post */
   readonly link: Maybe<Scalars['String']>;
+  /**
+   * The local modified time for a post. If a post was recently updated the
+   * modified field will change to match the corresponding time.
+   */
   readonly modified: Maybe<Scalars['Date']>;
+  /**
+   * The GMT modified time for a post. If a post was recently updated the modified
+   * field will change to match the corresponding time in GMT.
+   */
   readonly modifiedGmt: Maybe<Scalars['Date']>;
+  /**
+   * The uri slug for the post. This is equivalent to the WP_Post->post_name field
+   * and the post_name column in the database for the "post_objects" table.
+   */
   readonly slug: Maybe<Scalars['String']>;
+  /** The current status of the object */
   readonly status: Maybe<Scalars['String']>;
+  /** The template assigned to a node of content */
+  readonly template: Maybe<WpContentTemplate>;
+  /** URI path for the resource */
   readonly uri: Scalars['String'];
   readonly nodeType: Maybe<Scalars['String']>;
 };
@@ -5074,6 +5233,74 @@ type WpContentNodeEdge = {
 };
 
 enum WpContentNodeFieldsEnum {
+  contentType___node___archivePath = 'contentType.node.archivePath',
+  contentType___node___canExport = 'contentType.node.canExport',
+  contentType___node___connectedTaxonomies___nodes = 'contentType.node.connectedTaxonomies.nodes',
+  contentType___node___contentNodes___nodes = 'contentType.node.contentNodes.nodes',
+  contentType___node___deleteWithUser = 'contentType.node.deleteWithUser',
+  contentType___node___description = 'contentType.node.description',
+  contentType___node___excludeFromSearch = 'contentType.node.excludeFromSearch',
+  contentType___node___graphqlPluralName = 'contentType.node.graphqlPluralName',
+  contentType___node___graphqlSingleName = 'contentType.node.graphqlSingleName',
+  contentType___node___hasArchive = 'contentType.node.hasArchive',
+  contentType___node___hierarchical = 'contentType.node.hierarchical',
+  contentType___node___id = 'contentType.node.id',
+  contentType___node___isFrontPage = 'contentType.node.isFrontPage',
+  contentType___node___isPostsPage = 'contentType.node.isPostsPage',
+  contentType___node___label = 'contentType.node.label',
+  contentType___node___labels___addNew = 'contentType.node.labels.addNew',
+  contentType___node___labels___addNewItem = 'contentType.node.labels.addNewItem',
+  contentType___node___labels___allItems = 'contentType.node.labels.allItems',
+  contentType___node___labels___archives = 'contentType.node.labels.archives',
+  contentType___node___labels___attributes = 'contentType.node.labels.attributes',
+  contentType___node___labels___editItem = 'contentType.node.labels.editItem',
+  contentType___node___labels___featuredImage = 'contentType.node.labels.featuredImage',
+  contentType___node___labels___filterItemsList = 'contentType.node.labels.filterItemsList',
+  contentType___node___labels___insertIntoItem = 'contentType.node.labels.insertIntoItem',
+  contentType___node___labels___itemsList = 'contentType.node.labels.itemsList',
+  contentType___node___labels___itemsListNavigation = 'contentType.node.labels.itemsListNavigation',
+  contentType___node___labels___menuName = 'contentType.node.labels.menuName',
+  contentType___node___labels___name = 'contentType.node.labels.name',
+  contentType___node___labels___newItem = 'contentType.node.labels.newItem',
+  contentType___node___labels___notFound = 'contentType.node.labels.notFound',
+  contentType___node___labels___notFoundInTrash = 'contentType.node.labels.notFoundInTrash',
+  contentType___node___labels___parentItemColon = 'contentType.node.labels.parentItemColon',
+  contentType___node___labels___removeFeaturedImage = 'contentType.node.labels.removeFeaturedImage',
+  contentType___node___labels___searchItems = 'contentType.node.labels.searchItems',
+  contentType___node___labels___setFeaturedImage = 'contentType.node.labels.setFeaturedImage',
+  contentType___node___labels___singularName = 'contentType.node.labels.singularName',
+  contentType___node___labels___uploadedToThisItem = 'contentType.node.labels.uploadedToThisItem',
+  contentType___node___labels___useFeaturedImage = 'contentType.node.labels.useFeaturedImage',
+  contentType___node___labels___viewItem = 'contentType.node.labels.viewItem',
+  contentType___node___labels___viewItems = 'contentType.node.labels.viewItems',
+  contentType___node___menuIcon = 'contentType.node.menuIcon',
+  contentType___node___menuPosition = 'contentType.node.menuPosition',
+  contentType___node___name = 'contentType.node.name',
+  contentType___node___public = 'contentType.node.public',
+  contentType___node___publiclyQueryable = 'contentType.node.publiclyQueryable',
+  contentType___node___restBase = 'contentType.node.restBase',
+  contentType___node___restControllerClass = 'contentType.node.restControllerClass',
+  contentType___node___showInAdminBar = 'contentType.node.showInAdminBar',
+  contentType___node___showInGraphql = 'contentType.node.showInGraphql',
+  contentType___node___showInMenu = 'contentType.node.showInMenu',
+  contentType___node___showInNavMenus = 'contentType.node.showInNavMenus',
+  contentType___node___showInRest = 'contentType.node.showInRest',
+  contentType___node___showUi = 'contentType.node.showUi',
+  contentType___node___uri = 'contentType.node.uri',
+  contentType___node___nodeType = 'contentType.node.nodeType',
+  contentType___node___parent___id = 'contentType.node.parent.id',
+  contentType___node___parent___children = 'contentType.node.parent.children',
+  contentType___node___children = 'contentType.node.children',
+  contentType___node___children___id = 'contentType.node.children.id',
+  contentType___node___children___children = 'contentType.node.children.children',
+  contentType___node___internal___content = 'contentType.node.internal.content',
+  contentType___node___internal___contentDigest = 'contentType.node.internal.contentDigest',
+  contentType___node___internal___description = 'contentType.node.internal.description',
+  contentType___node___internal___fieldOwners = 'contentType.node.internal.fieldOwners',
+  contentType___node___internal___ignoreType = 'contentType.node.internal.ignoreType',
+  contentType___node___internal___mediaType = 'contentType.node.internal.mediaType',
+  contentType___node___internal___owner = 'contentType.node.internal.owner',
+  contentType___node___internal___type = 'contentType.node.internal.type',
   databaseId = 'databaseId',
   date = 'date',
   dateGmt = 'dateGmt',
@@ -5132,11 +5359,13 @@ enum WpContentNodeFieldsEnum {
   modifiedGmt = 'modifiedGmt',
   slug = 'slug',
   status = 'status',
+  template___templateName = 'template.templateName',
   uri = 'uri',
   nodeType = 'nodeType'
 }
 
 type WpContentNodeFilterInput = {
+  readonly contentType: Maybe<WpContentNodeToContentTypeConnectionEdgeFilterInput>;
   readonly databaseId: Maybe<IntQueryOperatorInput>;
   readonly date: Maybe<DateQueryOperatorInput>;
   readonly dateGmt: Maybe<DateQueryOperatorInput>;
@@ -5150,6 +5379,7 @@ type WpContentNodeFilterInput = {
   readonly modifiedGmt: Maybe<DateQueryOperatorInput>;
   readonly slug: Maybe<StringQueryOperatorInput>;
   readonly status: Maybe<StringQueryOperatorInput>;
+  readonly template: Maybe<WpContentTemplateFilterInput>;
   readonly uri: Maybe<StringQueryOperatorInput>;
   readonly nodeType: Maybe<StringQueryOperatorInput>;
 };
@@ -5172,7 +5402,19 @@ type WpContentNodeSortInput = {
   readonly order: Maybe<ReadonlyArray<Maybe<SortOrderEnum>>>;
 };
 
+/** Connection between the ContentNode type and the ContentType type */
+type WpContentNodeToContentTypeConnectionEdge = {
+  /** The nodes of the connection, without the edges */
+  readonly node: Maybe<WpContentType>;
+};
+
+type WpContentNodeToContentTypeConnectionEdgeFilterInput = {
+  readonly node: Maybe<WpContentTypeFilterInput>;
+};
+
+/** Connection between the ContentNode type and the User type */
 type WpContentNodeToEditLastConnectionEdge = {
+  /** The nodes of the connection, without the edges */
   readonly node: Maybe<WpUser>;
 };
 
@@ -5180,51 +5422,95 @@ type WpContentNodeToEditLastConnectionEdgeFilterInput = {
   readonly node: Maybe<WpUserFilterInput>;
 };
 
+/** Connection between the ContentNode type and the User type */
 type WpContentNodeToEditLockConnectionEdge = {
+  /** The timestamp for when the node was last edited */
   readonly lockTimestamp: Maybe<Scalars['String']>;
+  /** The nodes of the connection, without the edges */
   readonly node: Maybe<WpUser>;
 };
 
 type WpContentTemplate = {
-  readonly templateFile: Maybe<Scalars['String']>;
+  /** The name of the template */
   readonly templateName: Maybe<Scalars['String']>;
 };
 
 type WpContentTemplateFilterInput = {
-  readonly templateFile: Maybe<StringQueryOperatorInput>;
   readonly templateName: Maybe<StringQueryOperatorInput>;
 };
 
+/** An Post Type object */
 type WpContentType = Node & WpNode & WpUniformResourceIdentifiable & {
+  /** The url path of the first page of the archive page for this content type. */
   readonly archivePath: Maybe<Scalars['String']>;
+  /** Whether this content type should can be exported. */
   readonly canExport: Maybe<Scalars['Boolean']>;
+  /** Connection between the ContentType type and the Taxonomy type */
   readonly connectedTaxonomies: Maybe<WpContentTypeToTaxonomyConnection>;
+  /** Connection between the ContentType type and the ContentNode type */
   readonly contentNodes: Maybe<WpContentTypeToContentNodeConnection>;
+  /** Whether content of this type should be deleted when the author of it is deleted from the system. */
   readonly deleteWithUser: Maybe<Scalars['Boolean']>;
+  /** Description of the content type. */
   readonly description: Maybe<Scalars['String']>;
+  /** Whether to exclude nodes of this content type from front end search results. */
   readonly excludeFromSearch: Maybe<Scalars['Boolean']>;
+  /** The plural name of the content type within the GraphQL Schema. */
   readonly graphqlPluralName: Maybe<Scalars['String']>;
+  /** The singular name of the content type within the GraphQL Schema. */
   readonly graphqlSingleName: Maybe<Scalars['String']>;
+  /** Whether this content type should have archives. Content archives are generated by type and by date. */
   readonly hasArchive: Maybe<Scalars['Boolean']>;
+  /** Whether the content type is hierarchical, for example pages. */
   readonly hierarchical: Maybe<Scalars['Boolean']>;
   readonly id: Scalars['ID'];
+  /** Whether this page is set to the static front page. */
   readonly isFrontPage: Scalars['Boolean'];
+  /** Whether this page is set to the blog posts page. */
   readonly isPostsPage: Scalars['Boolean'];
+  /** Display name of the content type. */
   readonly label: Maybe<Scalars['String']>;
+  /** Details about the content type labels. */
   readonly labels: Maybe<WpPostTypeLabelDetails>;
+  /** The name of the icon file to display as a menu icon. */
   readonly menuIcon: Maybe<Scalars['String']>;
+  /** The position of this post type in the menu. Only applies if show_in_menu is true. */
   readonly menuPosition: Maybe<Scalars['Int']>;
+  /** The internal name of the post type. This should not be used for display purposes. */
   readonly name: Maybe<Scalars['String']>;
+  /**
+   * Whether a content type is intended for use publicly either via the admin
+   * interface or by front-end users. While the default settings of
+   * exclude_from_search, publicly_queryable, show_ui, and show_in_nav_menus are
+   * inherited from public, each does not rely on this relationship and controls a
+   * very specific intention.
+   */
   readonly public: Maybe<Scalars['Boolean']>;
+  /** Whether queries can be performed on the front end for the content type as part of parse_request(). */
   readonly publiclyQueryable: Maybe<Scalars['Boolean']>;
+  /** Name of content type to display in REST API &quot;wp/v2&quot; namespace. */
   readonly restBase: Maybe<Scalars['String']>;
+  /** The REST Controller class assigned to handling this content type. */
   readonly restControllerClass: Maybe<Scalars['String']>;
+  /** Makes this content type available via the admin bar. */
   readonly showInAdminBar: Maybe<Scalars['Boolean']>;
+  /** Whether to add the content type to the GraphQL Schema. */
   readonly showInGraphql: Maybe<Scalars['Boolean']>;
+  /**
+   * Where to show the content type in the admin menu. To work, $show_ui must be
+   * true. If true, the post type is shown in its own top level menu. If false, no
+   * menu is shown. If a string of an existing top level menu (eg.
+   * &quot;tools.php&quot; or &quot;edit.php?post_type=page&quot;), the post type
+   * will be placed as a sub-menu of that.
+   */
   readonly showInMenu: Maybe<Scalars['Boolean']>;
+  /** Makes this content type available for selection in navigation menus. */
   readonly showInNavMenus: Maybe<Scalars['Boolean']>;
+  /** Whether the content type is associated with a route under the the REST API &quot;wp/v2&quot; namespace. */
   readonly showInRest: Maybe<Scalars['Boolean']>;
+  /** Whether to generate and allow a UI for managing this content type in the admin. */
   readonly showUi: Maybe<Scalars['Boolean']>;
+  /** The unique resource identifier path */
   readonly uri: Maybe<Scalars['String']>;
   readonly nodeType: Maybe<Scalars['String']>;
   readonly parent: Maybe<Node>;
@@ -5310,6 +5596,7 @@ enum WpContentTypeFieldsEnum {
   contentNodes___nodes___modifiedGmt = 'contentNodes.nodes.modifiedGmt',
   contentNodes___nodes___slug = 'contentNodes.nodes.slug',
   contentNodes___nodes___status = 'contentNodes.nodes.status',
+  contentNodes___nodes___template___templateName = 'contentNodes.nodes.template.templateName',
   contentNodes___nodes___uri = 'contentNodes.nodes.uri',
   contentNodes___nodes___nodeType = 'contentNodes.nodes.nodeType',
   deleteWithUser = 'deleteWithUser',
@@ -5505,7 +5792,9 @@ type WpContentTypeSortInput = {
   readonly order: Maybe<ReadonlyArray<Maybe<SortOrderEnum>>>;
 };
 
+/** Connection between the ContentType type and the ContentNode type */
 type WpContentTypeToContentNodeConnection = {
+  /** The nodes of the connection, without the edges */
   readonly nodes: Maybe<ReadonlyArray<Maybe<WpContentNode>>>;
 };
 
@@ -5513,7 +5802,9 @@ type WpContentTypeToContentNodeConnectionFilterInput = {
   readonly nodes: Maybe<WpContentNodeFilterListInput>;
 };
 
+/** Connection between the ContentType type and the Taxonomy type */
 type WpContentTypeToTaxonomyConnection = {
+  /** The nodes of the connection, without the edges */
   readonly nodes: Maybe<ReadonlyArray<Maybe<WpTaxonomy>>>;
 };
 
@@ -5522,16 +5813,21 @@ type WpContentTypeToTaxonomyConnectionFilterInput = {
 };
 
 type WpDatabaseIdentifier = {
+  /** The unique identifier stored in the database */
   readonly databaseId: Scalars['Int'];
 };
 
+/** The template assigned to the node */
 type WpDefaultTemplate = WpContentTemplate & {
-  readonly templateFile: Maybe<Scalars['String']>;
+  /** The name of the template */
   readonly templateName: Maybe<Scalars['String']>;
 };
 
+/** The discussion setting type */
 type WpDiscussionSettings = {
+  /** Allow people to post comments on new articles. */
   readonly defaultCommentStatus: Maybe<Scalars['String']>;
+  /** Allow link notifications from other blogs (pingbacks and trackbacks) on new articles. */
   readonly defaultPingStatus: Maybe<Scalars['String']>;
 };
 
@@ -5681,15 +5977,25 @@ type WpFilterInput = {
   readonly internal: Maybe<InternalFilterInput>;
 };
 
+/** The general setting type */
 type WpGeneralSettings = {
+  /** A date format for all date strings. */
   readonly dateFormat: Maybe<Scalars['String']>;
+  /** Site tagline. */
   readonly description: Maybe<Scalars['String']>;
+  /** This address is used for admin purposes, like new user notification. */
   readonly email: Maybe<Scalars['String']>;
+  /** WordPress locale code. */
   readonly language: Maybe<Scalars['String']>;
+  /** A day number of the week that the week should start on. */
   readonly startOfWeek: Maybe<Scalars['Int']>;
+  /** A time format for all time strings. */
   readonly timeFormat: Maybe<Scalars['String']>;
+  /** A city in the same timezone as you. */
   readonly timezone: Maybe<Scalars['String']>;
+  /** Site title. */
   readonly title: Maybe<Scalars['String']>;
+  /** Site URL. */
   readonly url: Maybe<Scalars['String']>;
 };
 
@@ -5715,14 +6021,21 @@ type WpGroupConnection = {
 };
 
 type WpHierarchicalContentNode = {
+  /** Returns ancestors of the node. Default ordered as lowest (closest to the child) to highest (closest to the root). */
   readonly ancestors: Maybe<WpHierarchicalContentNodeToContentNodeAncestorsConnection>;
+  /** Connection between the HierarchicalContentNode type and the ContentNode type */
   readonly wpChildren: Maybe<WpHierarchicalContentNodeToContentNodeChildrenConnection>;
+  /** The parent of the node. The parent object can be of various types */
   readonly wpParent: Maybe<WpHierarchicalContentNodeToParentContentNodeConnectionEdge>;
+  /** Database id of the parent node */
   readonly parentDatabaseId: Maybe<Scalars['Int']>;
+  /** The globally unique identifier of the parent node. */
   readonly parentId: Maybe<Scalars['ID']>;
 };
 
+/** Connection between the HierarchicalContentNode type and the ContentNode type */
 type WpHierarchicalContentNodeToContentNodeAncestorsConnection = {
+  /** The nodes of the connection, without the edges */
   readonly nodes: Maybe<ReadonlyArray<Maybe<WpContentNode>>>;
 };
 
@@ -5730,7 +6043,9 @@ type WpHierarchicalContentNodeToContentNodeAncestorsConnectionFilterInput = {
   readonly nodes: Maybe<WpContentNodeFilterListInput>;
 };
 
+/** Connection between the HierarchicalContentNode type and the ContentNode type */
 type WpHierarchicalContentNodeToContentNodeChildrenConnection = {
+  /** The nodes of the connection, without the edges */
   readonly nodes: Maybe<ReadonlyArray<Maybe<WpContentNode>>>;
 };
 
@@ -5738,7 +6053,9 @@ type WpHierarchicalContentNodeToContentNodeChildrenConnectionFilterInput = {
   readonly nodes: Maybe<WpContentNodeFilterListInput>;
 };
 
+/** Connection between the HierarchicalContentNode type and the ContentNode type */
 type WpHierarchicalContentNodeToParentContentNodeConnectionEdge = {
+  /** The nodes of the connection, without the edges */
   readonly node: Maybe<WpContentNode>;
 };
 
@@ -5747,15 +6064,22 @@ type WpHierarchicalContentNodeToParentContentNodeConnectionEdgeFilterInput = {
 };
 
 type WpHierarchicalTermNode = {
+  /** Database id of the parent node */
   readonly parentDatabaseId: Maybe<Scalars['Int']>;
+  /** The globally unique identifier of the parent node. */
   readonly parentId: Maybe<Scalars['ID']>;
 };
 
+/** File details for a Media Item */
 type WpMediaDetails = {
+  /** The height of the mediaItem */
   readonly file: Maybe<Scalars['String']>;
+  /** The height of the mediaItem */
   readonly height: Maybe<Scalars['Int']>;
   readonly meta: Maybe<WpMediaItemMeta>;
+  /** The available sizes of the mediaItem */
   readonly sizes: Maybe<ReadonlyArray<Maybe<WpMediaSize>>>;
+  /** The width of the mediaItem */
   readonly width: Maybe<Scalars['Int']>;
 };
 
@@ -5767,45 +6091,104 @@ type WpMediaDetailsFilterInput = {
   readonly width: Maybe<IntQueryOperatorInput>;
 };
 
-type WpMediaItem = Node & WpNode & WpContentNode & WpDatabaseIdentifier & WpUniformResourceIdentifiable & WpNodeWithTitle & WpNodeWithAuthor & WpNodeWithComments & WpHierarchicalContentNode & {
+/** The mediaItem type */
+type WpMediaItem = Node & WpNode & WpContentNode & WpDatabaseIdentifier & WpNodeWithTemplate & WpUniformResourceIdentifiable & WpNodeWithTitle & WpNodeWithAuthor & WpNodeWithComments & WpHierarchicalContentNode & {
+  /** Alternative text to display when resource is not displayed */
   readonly altText: Maybe<Scalars['String']>;
+  /** Returns ancestors of the node. Default ordered as lowest (closest to the child) to highest (closest to the root). */
   readonly ancestors: Maybe<WpHierarchicalContentNodeToContentNodeAncestorsConnection>;
+  /** Connection between the NodeWithAuthor type and the User type */
   readonly author: Maybe<WpNodeWithAuthorToUserConnectionEdge>;
+  /** The database identifier of the author of the node */
   readonly authorDatabaseId: Maybe<Scalars['Int']>;
+  /** The globally unique identifier of the author of the node */
   readonly authorId: Maybe<Scalars['ID']>;
+  /** The caption for the resource */
   readonly caption: Maybe<Scalars['String']>;
+  /** Connection between the HierarchicalContentNode type and the ContentNode type */
   readonly wpChildren: Maybe<WpHierarchicalContentNodeToContentNodeChildrenConnection>;
+  /**
+   * The number of comments. Even though WPGraphQL denotes this field as an
+   * integer, in WordPress this field should be saved as a numeric string for compatibility.
+   */
   readonly commentCount: Maybe<Scalars['Int']>;
+  /** Whether the comments are open or closed for this particular post. */
   readonly commentStatus: Maybe<Scalars['String']>;
+  /** Connection between the mediaItem type and the Comment type */
   readonly comments: Maybe<WpMediaItemToCommentConnection>;
-  readonly contentType: Maybe<WpMediaItemToContentTypeConnectionEdge>;
+  /** Connection between the ContentNode type and the ContentType type */
+  readonly contentType: Maybe<WpContentNodeToContentTypeConnectionEdge>;
+  /** The ID of the node in the database. */
   readonly databaseId: Scalars['Int'];
+  /** Post publishing date. */
   readonly date: Maybe<Scalars['Date']>;
+  /** The publishing date set in GMT. */
   readonly dateGmt: Maybe<Scalars['Date']>;
+  /** Description of the image (stored as post_content) */
   readonly description: Maybe<Scalars['String']>;
+  /** The desired slug of the post */
   readonly desiredSlug: Maybe<Scalars['String']>;
+  /** The RSS enclosure for the object */
   readonly enclosure: Maybe<Scalars['String']>;
+  /** The filesize in bytes of the resource */
   readonly fileSize: Maybe<Scalars['Int']>;
+  /**
+   * The global unique identifier for this post. This currently matches the value
+   * stored in WP_Post-&gt;guid and the guid column in the &quot;post_objects&quot;
+   * database table.
+   */
   readonly guid: Maybe<Scalars['String']>;
   readonly id: Scalars['ID'];
+  /** The user that most recently edited the node */
   readonly lastEditedBy: Maybe<WpContentNodeToEditLastConnectionEdge>;
+  /** The permalink of the post */
   readonly link: Maybe<Scalars['String']>;
+  /** Details about the mediaItem */
   readonly mediaDetails: Maybe<WpMediaDetails>;
+  /** Url of the mediaItem */
   readonly mediaItemUrl: Maybe<Scalars['String']>;
+  /** Type of resource */
   readonly mediaType: Maybe<Scalars['String']>;
+  /** The mime type of the mediaItem */
   readonly mimeType: Maybe<Scalars['String']>;
+  /**
+   * The local modified time for a post. If a post was recently updated the
+   * modified field will change to match the corresponding time.
+   */
   readonly modified: Maybe<Scalars['Date']>;
+  /**
+   * The GMT modified time for a post. If a post was recently updated the modified
+   * field will change to match the corresponding time in GMT.
+   */
   readonly modifiedGmt: Maybe<Scalars['Date']>;
+  /** The parent of the node. The parent object can be of various types */
   readonly wpParent: Maybe<WpHierarchicalContentNodeToParentContentNodeConnectionEdge>;
+  /** Database id of the parent node */
   readonly parentDatabaseId: Maybe<Scalars['Int']>;
+  /** The globally unique identifier of the parent node. */
   readonly parentId: Maybe<Scalars['ID']>;
+  /** The sizes attribute value for an image. */
   readonly sizes: Maybe<Scalars['String']>;
+  /**
+   * The uri slug for the post. This is equivalent to the WP_Post-&gt;post_name
+   * field and the post_name column in the database for the
+   * &quot;post_objects&quot; table.
+   */
   readonly slug: Maybe<Scalars['String']>;
+  /** Url of the mediaItem */
   readonly sourceUrl: Maybe<Scalars['String']>;
+  /**
+   * The srcset attribute specifies the URL of the image to use in different
+   * situations. It is a comma separated string of urls and their widths.
+   */
   readonly srcSet: Maybe<Scalars['String']>;
+  /** The current status of the object */
   readonly status: Maybe<Scalars['String']>;
+  /** The template assigned to a node of content */
   readonly template: Maybe<WpContentTemplate>;
+  /** The title of the post. This is currently just the raw title. An amendment to support rendered title needs to be made. */
   readonly title: Maybe<Scalars['String']>;
+  /** URI path for the resource */
   readonly uri: Scalars['String'];
   readonly nodeType: Maybe<Scalars['String']>;
   /** @deprecated MediaItem.remoteFile was renamed to localFile */
@@ -5817,6 +6200,7 @@ type WpMediaItem = Node & WpNode & WpContentNode & WpDatabaseIdentifier & WpUnif
 };
 
 
+/** The mediaItem type */
 type WpMediaItem_dateArgs = {
   formatString: Maybe<Scalars['String']>;
   fromNow: Maybe<Scalars['Boolean']>;
@@ -5825,6 +6209,7 @@ type WpMediaItem_dateArgs = {
 };
 
 
+/** The mediaItem type */
 type WpMediaItem_dateGmtArgs = {
   formatString: Maybe<Scalars['String']>;
   fromNow: Maybe<Scalars['Boolean']>;
@@ -5833,6 +6218,7 @@ type WpMediaItem_dateGmtArgs = {
 };
 
 
+/** The mediaItem type */
 type WpMediaItem_modifiedArgs = {
   formatString: Maybe<Scalars['String']>;
   fromNow: Maybe<Scalars['Boolean']>;
@@ -5841,6 +6227,7 @@ type WpMediaItem_modifiedArgs = {
 };
 
 
+/** The mediaItem type */
 type WpMediaItem_modifiedGmtArgs = {
   formatString: Maybe<Scalars['String']>;
   fromNow: Maybe<Scalars['Boolean']>;
@@ -5890,6 +6277,7 @@ enum WpMediaItemFieldsEnum {
   ancestors___nodes___modifiedGmt = 'ancestors.nodes.modifiedGmt',
   ancestors___nodes___slug = 'ancestors.nodes.slug',
   ancestors___nodes___status = 'ancestors.nodes.status',
+  ancestors___nodes___template___templateName = 'ancestors.nodes.template.templateName',
   ancestors___nodes___uri = 'ancestors.nodes.uri',
   ancestors___nodes___nodeType = 'ancestors.nodes.nodeType',
   author___node___avatar___default = 'author.node.avatar.default',
@@ -5954,6 +6342,7 @@ enum WpMediaItemFieldsEnum {
   wpChildren___nodes___modifiedGmt = 'wpChildren.nodes.modifiedGmt',
   wpChildren___nodes___slug = 'wpChildren.nodes.slug',
   wpChildren___nodes___status = 'wpChildren.nodes.status',
+  wpChildren___nodes___template___templateName = 'wpChildren.nodes.template.templateName',
   wpChildren___nodes___uri = 'wpChildren.nodes.uri',
   wpChildren___nodes___nodeType = 'wpChildren.nodes.nodeType',
   commentCount = 'commentCount',
@@ -5968,6 +6357,8 @@ enum WpMediaItemFieldsEnum {
   comments___nodes___dateGmt = 'comments.nodes.dateGmt',
   comments___nodes___id = 'comments.nodes.id',
   comments___nodes___karma = 'comments.nodes.karma',
+  comments___nodes___parentDatabaseId = 'comments.nodes.parentDatabaseId',
+  comments___nodes___parentId = 'comments.nodes.parentId',
   comments___nodes___replies___nodes = 'comments.nodes.replies.nodes',
   comments___nodes___type = 'comments.nodes.type',
   comments___nodes___nodeType = 'comments.nodes.nodeType',
@@ -6148,6 +6539,7 @@ enum WpMediaItemFieldsEnum {
   wpParent___node___modifiedGmt = 'wpParent.node.modifiedGmt',
   wpParent___node___slug = 'wpParent.node.slug',
   wpParent___node___status = 'wpParent.node.status',
+  wpParent___node___template___templateName = 'wpParent.node.template.templateName',
   wpParent___node___uri = 'wpParent.node.uri',
   wpParent___node___nodeType = 'wpParent.node.nodeType',
   parentDatabaseId = 'parentDatabaseId',
@@ -6157,7 +6549,6 @@ enum WpMediaItemFieldsEnum {
   sourceUrl = 'sourceUrl',
   srcSet = 'srcSet',
   status = 'status',
-  template___templateFile = 'template.templateFile',
   template___templateName = 'template.templateName',
   title = 'title',
   uri = 'uri',
@@ -6602,7 +6993,7 @@ type WpMediaItemFilterInput = {
   readonly commentCount: Maybe<IntQueryOperatorInput>;
   readonly commentStatus: Maybe<StringQueryOperatorInput>;
   readonly comments: Maybe<WpMediaItemToCommentConnectionFilterInput>;
-  readonly contentType: Maybe<WpMediaItemToContentTypeConnectionEdgeFilterInput>;
+  readonly contentType: Maybe<WpContentNodeToContentTypeConnectionEdgeFilterInput>;
   readonly databaseId: Maybe<IntQueryOperatorInput>;
   readonly date: Maybe<DateQueryOperatorInput>;
   readonly dateGmt: Maybe<DateQueryOperatorInput>;
@@ -6648,6 +7039,7 @@ type WpMediaItemGroupConnection = {
   readonly fieldValue: Maybe<Scalars['String']>;
 };
 
+/** Meta connected to a MediaItem */
 type WpMediaItemMeta = {
   readonly aperture: Maybe<Scalars['Float']>;
   readonly camera: Maybe<Scalars['String']>;
@@ -6683,7 +7075,9 @@ type WpMediaItemSortInput = {
   readonly order: Maybe<ReadonlyArray<Maybe<SortOrderEnum>>>;
 };
 
+/** Connection between the mediaItem type and the Comment type */
 type WpMediaItemToCommentConnection = {
+  /** The nodes of the connection, without the edges */
   readonly nodes: Maybe<ReadonlyArray<Maybe<WpComment>>>;
 };
 
@@ -6691,21 +7085,21 @@ type WpMediaItemToCommentConnectionFilterInput = {
   readonly nodes: Maybe<WpCommentFilterListInput>;
 };
 
-type WpMediaItemToContentTypeConnectionEdge = {
-  readonly node: Maybe<WpContentType>;
-};
-
-type WpMediaItemToContentTypeConnectionEdgeFilterInput = {
-  readonly node: Maybe<WpContentTypeFilterInput>;
-};
-
+/** Details of an available size for a media item */
 type WpMediaSize = {
+  /** The file of the for the referenced size */
   readonly file: Maybe<Scalars['String']>;
+  /** The filesize of the resource */
   readonly fileSize: Maybe<Scalars['Int']>;
+  /** The height of the for the referenced size */
   readonly height: Maybe<Scalars['String']>;
+  /** The mime type of the resource */
   readonly mimeType: Maybe<Scalars['String']>;
+  /** The referenced size name */
   readonly name: Maybe<Scalars['String']>;
+  /** The url of the for the referenced size */
   readonly sourceUrl: Maybe<Scalars['String']>;
+  /** The width of the for the referenced size */
   readonly width: Maybe<Scalars['String']>;
 };
 
@@ -6723,13 +7117,22 @@ type WpMediaSizeFilterListInput = {
   readonly elemMatch: Maybe<WpMediaSizeFilterInput>;
 };
 
+/**
+ * Menus are the containers for navigation items. Menus can be assigned to menu
+ * locations, which are typically registered by the active theme.
+ */
 type WpMenu = Node & WpNode & WpDatabaseIdentifier & {
+  /** The number of items in the menu */
   readonly count: Maybe<Scalars['Int']>;
+  /** The unique identifier stored in the database */
   readonly databaseId: Scalars['Int'];
   readonly id: Scalars['ID'];
   readonly locations: Maybe<ReadonlyArray<Maybe<WpMenuLocationEnum>>>;
+  /** Connection between the Menu type and the MenuItem type */
   readonly menuItems: Maybe<WpMenuToMenuItemConnection>;
+  /** Display name of the menu. Equivalent to WP_Term-&gt;name. */
   readonly name: Maybe<Scalars['String']>;
+  /** The url friendly name of the menu. Equivalent to WP_Term-&gt;slug */
   readonly slug: Maybe<Scalars['String']>;
   readonly nodeType: Maybe<Scalars['String']>;
   readonly parent: Maybe<Node>;
@@ -6912,23 +7315,39 @@ type WpMenuGroupConnection = {
   readonly fieldValue: Maybe<Scalars['String']>;
 };
 
+/** Navigation menu items are the individual items assigned to a menu. These are rendered as the links in a navigation menu. */
 type WpMenuItem = Node & WpNode & WpDatabaseIdentifier & {
+  /** Connection between the MenuItem type and the MenuItem type */
   readonly childItems: Maybe<WpMenuItemToMenuItemConnection>;
+  /** Connection from MenuItem to it&#039;s connected node */
   readonly connectedNode: Maybe<WpMenuItemToMenuItemLinkableConnectionEdge>;
+  /** Class attribute for the menu item link */
   readonly cssClasses: Maybe<ReadonlyArray<Maybe<Scalars['String']>>>;
+  /** The unique identifier stored in the database */
   readonly databaseId: Scalars['Int'];
+  /** Description of the menu item. */
   readonly description: Maybe<Scalars['String']>;
   readonly id: Scalars['ID'];
+  /** Label or title of the menu item. */
   readonly label: Maybe<Scalars['String']>;
+  /** Link relationship (XFN) of the menu item. */
   readonly linkRelationship: Maybe<Scalars['String']>;
   readonly locations: Maybe<ReadonlyArray<Maybe<WpMenuLocationEnum>>>;
+  /** The Menu a MenuItem is part of */
   readonly menu: Maybe<WpMenuItemToMenuConnectionEdge>;
+  /** Menu item order */
   readonly order: Maybe<Scalars['Int']>;
+  /** The database id of the parent menu item or null if it is the root */
   readonly parentDatabaseId: Maybe<Scalars['Int']>;
+  /** The globally unique identifier of the parent nav menu item object. */
   readonly parentId: Maybe<Scalars['ID']>;
+  /** Path for the resource. Relative path for internal resources. Absolute path for external resources. */
   readonly path: Scalars['String'];
+  /** Target attribute for the menu item link. */
   readonly target: Maybe<Scalars['String']>;
+  /** Title attribute for the menu item link */
   readonly title: Maybe<Scalars['String']>;
+  /** URL or destination of the menu item. */
   readonly url: Maybe<Scalars['String']>;
   readonly nodeType: Maybe<Scalars['String']>;
   readonly parent: Maybe<Node>;
@@ -7158,8 +7577,11 @@ type WpMenuItemGroupConnection = {
 };
 
 type WpMenuItemLinkable = {
+  /** The unique resource identifier path */
   readonly databaseId: Scalars['Int'];
+  /** The unique resource identifier path */
   readonly id: Scalars['ID'];
+  /** The unique resource identifier path */
   readonly uri: Scalars['String'];
 };
 
@@ -7174,7 +7596,9 @@ type WpMenuItemSortInput = {
   readonly order: Maybe<ReadonlyArray<Maybe<SortOrderEnum>>>;
 };
 
+/** Connection between the MenuItem type and the Menu type */
 type WpMenuItemToMenuConnectionEdge = {
+  /** The nodes of the connection, without the edges */
   readonly node: Maybe<WpMenu>;
 };
 
@@ -7182,7 +7606,9 @@ type WpMenuItemToMenuConnectionEdgeFilterInput = {
   readonly node: Maybe<WpMenuFilterInput>;
 };
 
+/** Connection between the MenuItem type and the MenuItem type */
 type WpMenuItemToMenuItemConnection = {
+  /** The nodes of the connection, without the edges */
   readonly nodes: Maybe<ReadonlyArray<Maybe<WpMenuItem>>>;
 };
 
@@ -7190,7 +7616,9 @@ type WpMenuItemToMenuItemConnectionFilterInput = {
   readonly nodes: Maybe<WpMenuItemFilterListInput>;
 };
 
+/** Connection between the MenuItem type and the MenuItemLinkable type */
 type WpMenuItemToMenuItemLinkableConnectionEdge = {
+  /** The nodes of the connection, without the edges */
   readonly node: Maybe<WpMenuItemLinkable>;
 };
 
@@ -7217,7 +7645,9 @@ type WpMenuSortInput = {
   readonly order: Maybe<ReadonlyArray<Maybe<SortOrderEnum>>>;
 };
 
+/** Connection between the Menu type and the MenuItem type */
 type WpMenuToMenuItemConnection = {
+  /** The nodes of the connection, without the edges */
   readonly nodes: Maybe<ReadonlyArray<Maybe<WpMenuItem>>>;
 };
 
@@ -7226,16 +7656,22 @@ type WpMenuToMenuItemConnectionFilterInput = {
 };
 
 type WpNode = {
+  /** The globally unique ID for the object */
   readonly id: Scalars['ID'];
 };
 
 type WpNodeWithAuthor = {
+  /** Connection between the NodeWithAuthor type and the User type */
   readonly author: Maybe<WpNodeWithAuthorToUserConnectionEdge>;
+  /** The database identifier of the author of the node */
   readonly authorDatabaseId: Maybe<Scalars['Int']>;
+  /** The globally unique identifier of the author of the node */
   readonly authorId: Maybe<Scalars['ID']>;
 };
 
+/** Connection between the NodeWithAuthor type and the User type */
 type WpNodeWithAuthorToUserConnectionEdge = {
+  /** The nodes of the connection, without the edges */
   readonly node: Maybe<WpUser>;
 };
 
@@ -7244,25 +7680,37 @@ type WpNodeWithAuthorToUserConnectionEdgeFilterInput = {
 };
 
 type WpNodeWithComments = {
+  /**
+   * The number of comments. Even though WPGraphQL denotes this field as an
+   * integer, in WordPress this field should be saved as a numeric string for compatibility.
+   */
   readonly commentCount: Maybe<Scalars['Int']>;
+  /** Whether the comments are open or closed for this particular post. */
   readonly commentStatus: Maybe<Scalars['String']>;
 };
 
 type WpNodeWithContentEditor = {
+  /** The content of the post. */
   readonly content: Maybe<Scalars['String']>;
 };
 
 type WpNodeWithExcerpt = {
+  /** The excerpt of the post. */
   readonly excerpt: Maybe<Scalars['String']>;
 };
 
 type WpNodeWithFeaturedImage = {
+  /** Connection between the NodeWithFeaturedImage type and the MediaItem type */
   readonly featuredImage: Maybe<WpNodeWithFeaturedImageToMediaItemConnectionEdge>;
+  /** The database identifier for the featured image node assigned to the content node */
   readonly featuredImageDatabaseId: Maybe<Scalars['Int']>;
+  /** Globally unique ID of the featured image assigned to the node */
   readonly featuredImageId: Maybe<Scalars['ID']>;
 };
 
+/** Connection between the NodeWithFeaturedImage type and the MediaItem type */
 type WpNodeWithFeaturedImageToMediaItemConnectionEdge = {
+  /** The nodes of the connection, without the edges */
   readonly node: Maybe<WpMediaItem>;
 };
 
@@ -7271,63 +7719,135 @@ type WpNodeWithFeaturedImageToMediaItemConnectionEdgeFilterInput = {
 };
 
 type WpNodeWithPageAttributes = {
+  /**
+   * A field used for ordering posts. This is typically used with nav menu items or
+   * for special ordering of hierarchical content types.
+   */
   readonly menuOrder: Maybe<Scalars['Int']>;
 };
 
 type WpNodeWithRevisions = {
+  /** True if the node is a revision of another node */
   readonly isRevision: Maybe<Scalars['Boolean']>;
 };
 
+/** Connection between the NodeWithRevisions type and the ContentNode type */
 type WpNodeWithRevisionsToContentNodeConnectionEdge = {
+  /** The nodes of the connection, without the edges */
   readonly node: Maybe<WpContentNode>;
 };
 
+type WpNodeWithTemplate = {
+  /** The template assigned to the node */
+  readonly template: Maybe<WpContentTemplate>;
+};
+
 type WpNodeWithTitle = {
+  /** The title of the post. This is currently just the raw title. An amendment to support rendered title needs to be made. */
   readonly title: Maybe<Scalars['String']>;
 };
 
 type WpNodeWithTrackbacks = {
+  /** Whether the pings are open or closed for this particular post. */
   readonly pingStatus: Maybe<Scalars['String']>;
+  /** URLs that have been pinged. */
   readonly pinged: Maybe<ReadonlyArray<Maybe<Scalars['String']>>>;
+  /** URLs queued to be pinged. */
   readonly toPing: Maybe<ReadonlyArray<Maybe<Scalars['String']>>>;
 };
 
-type WpPage = Node & WpNode & WpContentNode & WpDatabaseIdentifier & WpUniformResourceIdentifiable & WpNodeWithTitle & WpNodeWithContentEditor & WpNodeWithAuthor & WpNodeWithFeaturedImage & WpNodeWithComments & WpNodeWithRevisions & WpNodeWithPageAttributes & WpHierarchicalContentNode & WpMenuItemLinkable & {
+/** The page type */
+type WpPage = Node & WpNode & WpContentNode & WpDatabaseIdentifier & WpNodeWithTemplate & WpUniformResourceIdentifiable & WpNodeWithTitle & WpNodeWithContentEditor & WpNodeWithAuthor & WpNodeWithFeaturedImage & WpNodeWithComments & WpNodeWithRevisions & WpNodeWithPageAttributes & WpHierarchicalContentNode & WpMenuItemLinkable & {
+  /** Returns ancestors of the node. Default ordered as lowest (closest to the child) to highest (closest to the root). */
   readonly ancestors: Maybe<WpHierarchicalContentNodeToContentNodeAncestorsConnection>;
+  /** Connection between the NodeWithAuthor type and the User type */
   readonly author: Maybe<WpNodeWithAuthorToUserConnectionEdge>;
+  /** The database identifier of the author of the node */
   readonly authorDatabaseId: Maybe<Scalars['Int']>;
+  /** The globally unique identifier of the author of the node */
   readonly authorId: Maybe<Scalars['ID']>;
+  /** Connection between the HierarchicalContentNode type and the ContentNode type */
   readonly wpChildren: Maybe<WpHierarchicalContentNodeToContentNodeChildrenConnection>;
+  /**
+   * The number of comments. Even though WPGraphQL denotes this field as an
+   * integer, in WordPress this field should be saved as a numeric string for compatibility.
+   */
   readonly commentCount: Maybe<Scalars['Int']>;
+  /** Whether the comments are open or closed for this particular post. */
   readonly commentStatus: Maybe<Scalars['String']>;
+  /** Connection between the page type and the Comment type */
   readonly comments: Maybe<WpPageToCommentConnection>;
+  /** The content of the post. */
   readonly content: Maybe<Scalars['String']>;
-  readonly contentType: Maybe<WpPageToContentTypeConnectionEdge>;
+  /** Connection between the ContentNode type and the ContentType type */
+  readonly contentType: Maybe<WpContentNodeToContentTypeConnectionEdge>;
+  /** The ID of the node in the database. */
   readonly databaseId: Scalars['Int'];
+  /** Post publishing date. */
   readonly date: Maybe<Scalars['Date']>;
+  /** The publishing date set in GMT. */
   readonly dateGmt: Maybe<Scalars['Date']>;
+  /** The desired slug of the post */
   readonly desiredSlug: Maybe<Scalars['String']>;
+  /** The RSS enclosure for the object */
   readonly enclosure: Maybe<Scalars['String']>;
+  /** Connection between the NodeWithFeaturedImage type and the MediaItem type */
   readonly featuredImage: Maybe<WpNodeWithFeaturedImageToMediaItemConnectionEdge>;
+  /** The database identifier for the featured image node assigned to the content node */
   readonly featuredImageDatabaseId: Maybe<Scalars['Int']>;
+  /** Globally unique ID of the featured image assigned to the node */
   readonly featuredImageId: Maybe<Scalars['ID']>;
+  /**
+   * The global unique identifier for this post. This currently matches the value
+   * stored in WP_Post-&gt;guid and the guid column in the &quot;post_objects&quot;
+   * database table.
+   */
   readonly guid: Maybe<Scalars['String']>;
   readonly id: Scalars['ID'];
+  /** Whether this page is set to the static front page. */
   readonly isFrontPage: Scalars['Boolean'];
+  /** Whether this page is set to the blog posts page. */
   readonly isPostsPage: Scalars['Boolean'];
+  /** True if the node is a revision of another node */
   readonly isRevision: Maybe<Scalars['Boolean']>;
+  /** The user that most recently edited the node */
   readonly lastEditedBy: Maybe<WpContentNodeToEditLastConnectionEdge>;
+  /** The permalink of the post */
   readonly link: Maybe<Scalars['String']>;
+  /**
+   * A field used for ordering posts. This is typically used with nav menu items or
+   * for special ordering of hierarchical content types.
+   */
   readonly menuOrder: Maybe<Scalars['Int']>;
+  /**
+   * The local modified time for a post. If a post was recently updated the
+   * modified field will change to match the corresponding time.
+   */
   readonly modified: Maybe<Scalars['Date']>;
+  /**
+   * The GMT modified time for a post. If a post was recently updated the modified
+   * field will change to match the corresponding time in GMT.
+   */
   readonly modifiedGmt: Maybe<Scalars['Date']>;
+  /** The parent of the node. The parent object can be of various types */
   readonly wpParent: Maybe<WpHierarchicalContentNodeToParentContentNodeConnectionEdge>;
+  /** Database id of the parent node */
   readonly parentDatabaseId: Maybe<Scalars['Int']>;
+  /** The globally unique identifier of the parent node. */
   readonly parentId: Maybe<Scalars['ID']>;
+  /**
+   * The uri slug for the post. This is equivalent to the WP_Post-&gt;post_name
+   * field and the post_name column in the database for the
+   * &quot;post_objects&quot; table.
+   */
   readonly slug: Maybe<Scalars['String']>;
+  /** The current status of the object */
   readonly status: Maybe<Scalars['String']>;
+  /** The template assigned to a node of content */
   readonly template: Maybe<WpContentTemplate>;
+  /** The title of the post. This is currently just the raw title. An amendment to support rendered title needs to be made. */
   readonly title: Maybe<Scalars['String']>;
+  /** URI path for the resource */
   readonly uri: Scalars['String'];
   readonly nodeType: Maybe<Scalars['String']>;
   readonly parent: Maybe<Node>;
@@ -7336,6 +7856,7 @@ type WpPage = Node & WpNode & WpContentNode & WpDatabaseIdentifier & WpUniformRe
 };
 
 
+/** The page type */
 type WpPage_dateArgs = {
   formatString: Maybe<Scalars['String']>;
   fromNow: Maybe<Scalars['Boolean']>;
@@ -7344,6 +7865,7 @@ type WpPage_dateArgs = {
 };
 
 
+/** The page type */
 type WpPage_dateGmtArgs = {
   formatString: Maybe<Scalars['String']>;
   fromNow: Maybe<Scalars['Boolean']>;
@@ -7352,6 +7874,7 @@ type WpPage_dateGmtArgs = {
 };
 
 
+/** The page type */
 type WpPage_modifiedArgs = {
   formatString: Maybe<Scalars['String']>;
   fromNow: Maybe<Scalars['Boolean']>;
@@ -7360,16 +7883,12 @@ type WpPage_modifiedArgs = {
 };
 
 
+/** The page type */
 type WpPage_modifiedGmtArgs = {
   formatString: Maybe<Scalars['String']>;
   fromNow: Maybe<Scalars['Boolean']>;
   difference: Maybe<Scalars['String']>;
   locale: Maybe<Scalars['String']>;
-};
-
-type WpPageBuilderTemplate = WpContentTemplate & {
-  readonly templateFile: Maybe<Scalars['String']>;
-  readonly templateName: Maybe<Scalars['String']>;
 };
 
 type WpPageConnection = {
@@ -7413,6 +7932,7 @@ enum WpPageFieldsEnum {
   ancestors___nodes___modifiedGmt = 'ancestors.nodes.modifiedGmt',
   ancestors___nodes___slug = 'ancestors.nodes.slug',
   ancestors___nodes___status = 'ancestors.nodes.status',
+  ancestors___nodes___template___templateName = 'ancestors.nodes.template.templateName',
   ancestors___nodes___uri = 'ancestors.nodes.uri',
   ancestors___nodes___nodeType = 'ancestors.nodes.nodeType',
   author___node___avatar___default = 'author.node.avatar.default',
@@ -7476,6 +7996,7 @@ enum WpPageFieldsEnum {
   wpChildren___nodes___modifiedGmt = 'wpChildren.nodes.modifiedGmt',
   wpChildren___nodes___slug = 'wpChildren.nodes.slug',
   wpChildren___nodes___status = 'wpChildren.nodes.status',
+  wpChildren___nodes___template___templateName = 'wpChildren.nodes.template.templateName',
   wpChildren___nodes___uri = 'wpChildren.nodes.uri',
   wpChildren___nodes___nodeType = 'wpChildren.nodes.nodeType',
   commentCount = 'commentCount',
@@ -7490,6 +8011,8 @@ enum WpPageFieldsEnum {
   comments___nodes___dateGmt = 'comments.nodes.dateGmt',
   comments___nodes___id = 'comments.nodes.id',
   comments___nodes___karma = 'comments.nodes.karma',
+  comments___nodes___parentDatabaseId = 'comments.nodes.parentDatabaseId',
+  comments___nodes___parentId = 'comments.nodes.parentId',
   comments___nodes___replies___nodes = 'comments.nodes.replies.nodes',
   comments___nodes___type = 'comments.nodes.type',
   comments___nodes___nodeType = 'comments.nodes.nodeType',
@@ -7615,7 +8138,6 @@ enum WpPageFieldsEnum {
   featuredImage___node___sourceUrl = 'featuredImage.node.sourceUrl',
   featuredImage___node___srcSet = 'featuredImage.node.srcSet',
   featuredImage___node___status = 'featuredImage.node.status',
-  featuredImage___node___template___templateFile = 'featuredImage.node.template.templateFile',
   featuredImage___node___template___templateName = 'featuredImage.node.template.templateName',
   featuredImage___node___title = 'featuredImage.node.title',
   featuredImage___node___uri = 'featuredImage.node.uri',
@@ -7776,13 +8298,13 @@ enum WpPageFieldsEnum {
   wpParent___node___modifiedGmt = 'wpParent.node.modifiedGmt',
   wpParent___node___slug = 'wpParent.node.slug',
   wpParent___node___status = 'wpParent.node.status',
+  wpParent___node___template___templateName = 'wpParent.node.template.templateName',
   wpParent___node___uri = 'wpParent.node.uri',
   wpParent___node___nodeType = 'wpParent.node.nodeType',
   parentDatabaseId = 'parentDatabaseId',
   parentId = 'parentId',
   slug = 'slug',
   status = 'status',
-  template___templateFile = 'template.templateFile',
   template___templateName = 'template.templateName',
   title = 'title',
   uri = 'uri',
@@ -7884,7 +8406,7 @@ type WpPageFilterInput = {
   readonly commentStatus: Maybe<StringQueryOperatorInput>;
   readonly comments: Maybe<WpPageToCommentConnectionFilterInput>;
   readonly content: Maybe<StringQueryOperatorInput>;
-  readonly contentType: Maybe<WpPageToContentTypeConnectionEdgeFilterInput>;
+  readonly contentType: Maybe<WpContentNodeToContentTypeConnectionEdgeFilterInput>;
   readonly databaseId: Maybe<IntQueryOperatorInput>;
   readonly date: Maybe<DateQueryOperatorInput>;
   readonly dateGmt: Maybe<DateQueryOperatorInput>;
@@ -7935,7 +8457,9 @@ type WpPageSortInput = {
   readonly order: Maybe<ReadonlyArray<Maybe<SortOrderEnum>>>;
 };
 
+/** Connection between the page type and the Comment type */
 type WpPageToCommentConnection = {
+  /** The nodes of the connection, without the edges */
   readonly nodes: Maybe<ReadonlyArray<Maybe<WpComment>>>;
 };
 
@@ -7943,51 +8467,97 @@ type WpPageToCommentConnectionFilterInput = {
   readonly nodes: Maybe<WpCommentFilterListInput>;
 };
 
-type WpPageToContentTypeConnectionEdge = {
-  readonly node: Maybe<WpContentType>;
-};
-
-type WpPageToContentTypeConnectionEdgeFilterInput = {
-  readonly node: Maybe<WpContentTypeFilterInput>;
-};
-
-type WpPost = Node & WpNode & WpContentNode & WpDatabaseIdentifier & WpUniformResourceIdentifiable & WpNodeWithTitle & WpNodeWithContentEditor & WpNodeWithAuthor & WpNodeWithFeaturedImage & WpNodeWithExcerpt & WpNodeWithComments & WpNodeWithTrackbacks & WpNodeWithRevisions & WpMenuItemLinkable & {
+/** The post type */
+type WpPost = Node & WpNode & WpContentNode & WpDatabaseIdentifier & WpNodeWithTemplate & WpUniformResourceIdentifiable & WpNodeWithTitle & WpNodeWithContentEditor & WpNodeWithAuthor & WpNodeWithFeaturedImage & WpNodeWithExcerpt & WpNodeWithComments & WpNodeWithTrackbacks & WpNodeWithRevisions & WpMenuItemLinkable & {
+  /** Connection between the NodeWithAuthor type and the User type */
   readonly author: Maybe<WpNodeWithAuthorToUserConnectionEdge>;
+  /** The database identifier of the author of the node */
   readonly authorDatabaseId: Maybe<Scalars['Int']>;
+  /** The globally unique identifier of the author of the node */
   readonly authorId: Maybe<Scalars['ID']>;
+  /** Connection between the post type and the category type */
   readonly categories: Maybe<WpPostToCategoryConnection>;
+  /**
+   * The number of comments. Even though WPGraphQL denotes this field as an
+   * integer, in WordPress this field should be saved as a numeric string for compatibility.
+   */
   readonly commentCount: Maybe<Scalars['Int']>;
+  /** Whether the comments are open or closed for this particular post. */
   readonly commentStatus: Maybe<Scalars['String']>;
+  /** Connection between the post type and the Comment type */
   readonly comments: Maybe<WpPostToCommentConnection>;
+  /** The content of the post. */
   readonly content: Maybe<Scalars['String']>;
-  readonly contentType: Maybe<WpPostToContentTypeConnectionEdge>;
+  /** Connection between the ContentNode type and the ContentType type */
+  readonly contentType: Maybe<WpContentNodeToContentTypeConnectionEdge>;
+  /** The ID of the node in the database. */
   readonly databaseId: Scalars['Int'];
+  /** Post publishing date. */
   readonly date: Maybe<Scalars['Date']>;
+  /** The publishing date set in GMT. */
   readonly dateGmt: Maybe<Scalars['Date']>;
+  /** The desired slug of the post */
   readonly desiredSlug: Maybe<Scalars['String']>;
+  /** The RSS enclosure for the object */
   readonly enclosure: Maybe<Scalars['String']>;
+  /** The excerpt of the post. */
   readonly excerpt: Maybe<Scalars['String']>;
+  /** Connection between the NodeWithFeaturedImage type and the MediaItem type */
   readonly featuredImage: Maybe<WpNodeWithFeaturedImageToMediaItemConnectionEdge>;
+  /** The database identifier for the featured image node assigned to the content node */
   readonly featuredImageDatabaseId: Maybe<Scalars['Int']>;
+  /** Globally unique ID of the featured image assigned to the node */
   readonly featuredImageId: Maybe<Scalars['ID']>;
+  /**
+   * The global unique identifier for this post. This currently matches the value
+   * stored in WP_Post-&gt;guid and the guid column in the &quot;post_objects&quot;
+   * database table.
+   */
   readonly guid: Maybe<Scalars['String']>;
   readonly id: Scalars['ID'];
+  /** True if the node is a revision of another node */
   readonly isRevision: Maybe<Scalars['Boolean']>;
+  /** Whether this page is sticky */
   readonly isSticky: Scalars['Boolean'];
+  /** The user that most recently edited the node */
   readonly lastEditedBy: Maybe<WpContentNodeToEditLastConnectionEdge>;
+  /** The permalink of the post */
   readonly link: Maybe<Scalars['String']>;
+  /**
+   * The local modified time for a post. If a post was recently updated the
+   * modified field will change to match the corresponding time.
+   */
   readonly modified: Maybe<Scalars['Date']>;
+  /**
+   * The GMT modified time for a post. If a post was recently updated the modified
+   * field will change to match the corresponding time in GMT.
+   */
   readonly modifiedGmt: Maybe<Scalars['Date']>;
+  /** Whether the pings are open or closed for this particular post. */
   readonly pingStatus: Maybe<Scalars['String']>;
+  /** URLs that have been pinged. */
   readonly pinged: Maybe<ReadonlyArray<Maybe<Scalars['String']>>>;
+  /** Connection between the post type and the postFormat type */
   readonly postFormats: Maybe<WpPostToPostFormatConnection>;
+  /**
+   * The uri slug for the post. This is equivalent to the WP_Post-&gt;post_name
+   * field and the post_name column in the database for the
+   * &quot;post_objects&quot; table.
+   */
   readonly slug: Maybe<Scalars['String']>;
+  /** The current status of the object */
   readonly status: Maybe<Scalars['String']>;
+  /** Connection between the post type and the tag type */
   readonly tags: Maybe<WpPostToTagConnection>;
+  /** The template assigned to a node of content */
   readonly template: Maybe<WpContentTemplate>;
+  /** Connection between the post type and the TermNode type */
   readonly terms: Maybe<WpPostToTermNodeConnection>;
+  /** The title of the post. This is currently just the raw title. An amendment to support rendered title needs to be made. */
   readonly title: Maybe<Scalars['String']>;
+  /** URLs queued to be pinged. */
   readonly toPing: Maybe<ReadonlyArray<Maybe<Scalars['String']>>>;
+  /** URI path for the resource */
   readonly uri: Scalars['String'];
   readonly nodeType: Maybe<Scalars['String']>;
   readonly parent: Maybe<Node>;
@@ -7996,6 +8566,7 @@ type WpPost = Node & WpNode & WpContentNode & WpDatabaseIdentifier & WpUniformRe
 };
 
 
+/** The post type */
 type WpPost_dateArgs = {
   formatString: Maybe<Scalars['String']>;
   fromNow: Maybe<Scalars['Boolean']>;
@@ -8004,6 +8575,7 @@ type WpPost_dateArgs = {
 };
 
 
+/** The post type */
 type WpPost_dateGmtArgs = {
   formatString: Maybe<Scalars['String']>;
   fromNow: Maybe<Scalars['Boolean']>;
@@ -8012,6 +8584,7 @@ type WpPost_dateGmtArgs = {
 };
 
 
+/** The post type */
 type WpPost_modifiedArgs = {
   formatString: Maybe<Scalars['String']>;
   fromNow: Maybe<Scalars['Boolean']>;
@@ -8020,6 +8593,7 @@ type WpPost_modifiedArgs = {
 };
 
 
+/** The post type */
 type WpPost_modifiedGmtArgs = {
   formatString: Maybe<Scalars['String']>;
   fromNow: Maybe<Scalars['Boolean']>;
@@ -8146,6 +8720,8 @@ enum WpPostFieldsEnum {
   comments___nodes___dateGmt = 'comments.nodes.dateGmt',
   comments___nodes___id = 'comments.nodes.id',
   comments___nodes___karma = 'comments.nodes.karma',
+  comments___nodes___parentDatabaseId = 'comments.nodes.parentDatabaseId',
+  comments___nodes___parentId = 'comments.nodes.parentId',
   comments___nodes___replies___nodes = 'comments.nodes.replies.nodes',
   comments___nodes___type = 'comments.nodes.type',
   comments___nodes___nodeType = 'comments.nodes.nodeType',
@@ -8272,7 +8848,6 @@ enum WpPostFieldsEnum {
   featuredImage___node___sourceUrl = 'featuredImage.node.sourceUrl',
   featuredImage___node___srcSet = 'featuredImage.node.srcSet',
   featuredImage___node___status = 'featuredImage.node.status',
-  featuredImage___node___template___templateFile = 'featuredImage.node.template.templateFile',
   featuredImage___node___template___templateName = 'featuredImage.node.template.templateName',
   featuredImage___node___title = 'featuredImage.node.title',
   featuredImage___node___uri = 'featuredImage.node.uri',
@@ -8477,7 +9052,6 @@ enum WpPostFieldsEnum {
   tags___nodes___internal___mediaType = 'tags.nodes.internal.mediaType',
   tags___nodes___internal___owner = 'tags.nodes.internal.owner',
   tags___nodes___internal___type = 'tags.nodes.internal.type',
-  template___templateFile = 'template.templateFile',
   template___templateName = 'template.templateName',
   terms___nodes = 'terms.nodes',
   terms___nodes___count = 'terms.nodes.count',
@@ -8591,7 +9165,7 @@ type WpPostFilterInput = {
   readonly commentStatus: Maybe<StringQueryOperatorInput>;
   readonly comments: Maybe<WpPostToCommentConnectionFilterInput>;
   readonly content: Maybe<StringQueryOperatorInput>;
-  readonly contentType: Maybe<WpPostToContentTypeConnectionEdgeFilterInput>;
+  readonly contentType: Maybe<WpContentNodeToContentTypeConnectionEdgeFilterInput>;
   readonly databaseId: Maybe<IntQueryOperatorInput>;
   readonly date: Maybe<DateQueryOperatorInput>;
   readonly dateGmt: Maybe<DateQueryOperatorInput>;
@@ -8630,19 +9204,32 @@ type WpPostFilterListInput = {
   readonly elemMatch: Maybe<WpPostFilterInput>;
 };
 
+/** The postFormat type */
 type WpPostFormat = Node & WpNode & WpTermNode & WpDatabaseIdentifier & WpUniformResourceIdentifiable & {
+  /** Connection between the postFormat type and the ContentNode type */
   readonly contentNodes: Maybe<WpPostFormatToContentNodeConnection>;
+  /** The number of objects connected to the object */
   readonly count: Maybe<Scalars['Int']>;
+  /** Identifies the primary key from the database. */
   readonly databaseId: Scalars['Int'];
+  /** The description of the object */
   readonly description: Maybe<Scalars['String']>;
   readonly id: Scalars['ID'];
+  /** The link to the term */
   readonly link: Maybe<Scalars['String']>;
+  /** The human friendly name of the object. */
   readonly name: Maybe<Scalars['String']>;
+  /** Connection between the postFormat type and the post type */
   readonly posts: Maybe<WpPostFormatToPostConnection>;
+  /** An alphanumeric identifier for the object unique to its type. */
   readonly slug: Maybe<Scalars['String']>;
+  /** Connection between the postFormat type and the Taxonomy type */
   readonly taxonomy: Maybe<WpPostFormatToTaxonomyConnectionEdge>;
+  /** The ID of the term group that this term object belongs to */
   readonly termGroupId: Maybe<Scalars['Int']>;
+  /** The taxonomy ID that the object is associated with */
   readonly termTaxonomyId: Maybe<Scalars['Int']>;
+  /** The unique resource identifier path */
   readonly uri: Scalars['String'];
   readonly nodeType: Maybe<Scalars['String']>;
   readonly parent: Maybe<Node>;
@@ -8691,6 +9278,7 @@ enum WpPostFormatFieldsEnum {
   contentNodes___nodes___modifiedGmt = 'contentNodes.nodes.modifiedGmt',
   contentNodes___nodes___slug = 'contentNodes.nodes.slug',
   contentNodes___nodes___status = 'contentNodes.nodes.status',
+  contentNodes___nodes___template___templateName = 'contentNodes.nodes.template.templateName',
   contentNodes___nodes___uri = 'contentNodes.nodes.uri',
   contentNodes___nodes___nodeType = 'contentNodes.nodes.nodeType',
   count = 'count',
@@ -8728,7 +9316,6 @@ enum WpPostFormatFieldsEnum {
   posts___nodes___slug = 'posts.nodes.slug',
   posts___nodes___status = 'posts.nodes.status',
   posts___nodes___tags___nodes = 'posts.nodes.tags.nodes',
-  posts___nodes___template___templateFile = 'posts.nodes.template.templateFile',
   posts___nodes___template___templateName = 'posts.nodes.template.templateName',
   posts___nodes___terms___nodes = 'posts.nodes.terms.nodes',
   posts___nodes___title = 'posts.nodes.title',
@@ -8912,7 +9499,9 @@ type WpPostFormatSortInput = {
   readonly order: Maybe<ReadonlyArray<Maybe<SortOrderEnum>>>;
 };
 
+/** Connection between the postFormat type and the ContentNode type */
 type WpPostFormatToContentNodeConnection = {
+  /** The nodes of the connection, without the edges */
   readonly nodes: Maybe<ReadonlyArray<Maybe<WpContentNode>>>;
 };
 
@@ -8920,7 +9509,9 @@ type WpPostFormatToContentNodeConnectionFilterInput = {
   readonly nodes: Maybe<WpContentNodeFilterListInput>;
 };
 
+/** Connection between the postFormat type and the post type */
 type WpPostFormatToPostConnection = {
+  /** The nodes of the connection, without the edges */
   readonly nodes: Maybe<ReadonlyArray<Maybe<WpPost>>>;
 };
 
@@ -8928,7 +9519,9 @@ type WpPostFormatToPostConnectionFilterInput = {
   readonly nodes: Maybe<WpPostFilterListInput>;
 };
 
+/** Connection between the postFormat type and the Taxonomy type */
 type WpPostFormatToTaxonomyConnectionEdge = {
+  /** The nodes of the connection, without the edges */
   readonly node: Maybe<WpTaxonomy>;
 };
 
@@ -8950,7 +9543,9 @@ type WpPostSortInput = {
   readonly order: Maybe<ReadonlyArray<Maybe<SortOrderEnum>>>;
 };
 
+/** Connection between the post type and the category type */
 type WpPostToCategoryConnection = {
+  /** The nodes of the connection, without the edges */
   readonly nodes: Maybe<ReadonlyArray<Maybe<WpCategory>>>;
 };
 
@@ -8958,7 +9553,9 @@ type WpPostToCategoryConnectionFilterInput = {
   readonly nodes: Maybe<WpCategoryFilterListInput>;
 };
 
+/** Connection between the post type and the Comment type */
 type WpPostToCommentConnection = {
+  /** The nodes of the connection, without the edges */
   readonly nodes: Maybe<ReadonlyArray<Maybe<WpComment>>>;
 };
 
@@ -8966,15 +9563,9 @@ type WpPostToCommentConnectionFilterInput = {
   readonly nodes: Maybe<WpCommentFilterListInput>;
 };
 
-type WpPostToContentTypeConnectionEdge = {
-  readonly node: Maybe<WpContentType>;
-};
-
-type WpPostToContentTypeConnectionEdgeFilterInput = {
-  readonly node: Maybe<WpContentTypeFilterInput>;
-};
-
+/** Connection between the post type and the postFormat type */
 type WpPostToPostFormatConnection = {
+  /** The nodes of the connection, without the edges */
   readonly nodes: Maybe<ReadonlyArray<Maybe<WpPostFormat>>>;
 };
 
@@ -8982,7 +9573,9 @@ type WpPostToPostFormatConnectionFilterInput = {
   readonly nodes: Maybe<WpPostFormatFilterListInput>;
 };
 
+/** Connection between the post type and the tag type */
 type WpPostToTagConnection = {
+  /** The nodes of the connection, without the edges */
   readonly nodes: Maybe<ReadonlyArray<Maybe<WpTag>>>;
 };
 
@@ -8990,7 +9583,9 @@ type WpPostToTagConnectionFilterInput = {
   readonly nodes: Maybe<WpTagFilterListInput>;
 };
 
+/** Connection between the post type and the TermNode type */
 type WpPostToTermNodeConnection = {
+  /** The nodes of the connection, without the edges */
   readonly nodes: Maybe<ReadonlyArray<Maybe<WpTermNode>>>;
 };
 
@@ -8998,31 +9593,57 @@ type WpPostToTermNodeConnectionFilterInput = {
   readonly nodes: Maybe<WpTermNodeFilterListInput>;
 };
 
+/** Details for labels of the PostType */
 type WpPostTypeLabelDetails = {
+  /** Default is ‘Add New’ for both hierarchical and non-hierarchical types. */
   readonly addNew: Maybe<Scalars['String']>;
+  /** Label for adding a new singular item. */
   readonly addNewItem: Maybe<Scalars['String']>;
+  /** Label to signify all items in a submenu link. */
   readonly allItems: Maybe<Scalars['String']>;
+  /** Label for archives in nav menus */
   readonly archives: Maybe<Scalars['String']>;
+  /** Label for the attributes meta box. */
   readonly attributes: Maybe<Scalars['String']>;
+  /** Label for editing a singular item. */
   readonly editItem: Maybe<Scalars['String']>;
+  /** Label for the Featured Image meta box title. */
   readonly featuredImage: Maybe<Scalars['String']>;
+  /** Label for the table views hidden heading. */
   readonly filterItemsList: Maybe<Scalars['String']>;
+  /** Label for the media frame button. */
   readonly insertIntoItem: Maybe<Scalars['String']>;
+  /** Label for the table hidden heading. */
   readonly itemsList: Maybe<Scalars['String']>;
+  /** Label for the table pagination hidden heading. */
   readonly itemsListNavigation: Maybe<Scalars['String']>;
+  /** Label for the menu name. */
   readonly menuName: Maybe<Scalars['String']>;
+  /** General name for the post type, usually plural. */
   readonly name: Maybe<Scalars['String']>;
+  /** Label for the new item page title. */
   readonly newItem: Maybe<Scalars['String']>;
+  /** Label used when no items are found. */
   readonly notFound: Maybe<Scalars['String']>;
+  /** Label used when no items are in the trash. */
   readonly notFoundInTrash: Maybe<Scalars['String']>;
+  /** Label used to prefix parents of hierarchical items. */
   readonly parentItemColon: Maybe<Scalars['String']>;
+  /** Label for removing the featured image. */
   readonly removeFeaturedImage: Maybe<Scalars['String']>;
+  /** Label for searching plural items. */
   readonly searchItems: Maybe<Scalars['String']>;
+  /** Label for setting the featured image. */
   readonly setFeaturedImage: Maybe<Scalars['String']>;
+  /** Name for one object of this post type. */
   readonly singularName: Maybe<Scalars['String']>;
+  /** Label for the media frame filter. */
   readonly uploadedToThisItem: Maybe<Scalars['String']>;
+  /** Label in the media frame for using a featured image. */
   readonly useFeaturedImage: Maybe<Scalars['String']>;
+  /** Label for viewing a singular item. */
   readonly viewItem: Maybe<Scalars['String']>;
+  /** Label for viewing post type archives. */
   readonly viewItems: Maybe<Scalars['String']>;
 };
 
@@ -9054,7 +9675,9 @@ type WpPostTypeLabelDetailsFilterInput = {
   readonly viewItems: Maybe<StringQueryOperatorInput>;
 };
 
+/** The reading setting type */
 type WpReadingSettings = {
+  /** Blog pages show at most. */
   readonly postsPerPage: Maybe<Scalars['Int']>;
 };
 
@@ -9062,21 +9685,37 @@ type WpReadingSettingsFilterInput = {
   readonly postsPerPage: Maybe<IntQueryOperatorInput>;
 };
 
+/** All of the registered settings */
 type WpSettings = {
+  /** Allow people to post comments on new articles. */
   readonly discussionSettingsDefaultCommentStatus: Maybe<Scalars['String']>;
+  /** Allow link notifications from other blogs (pingbacks and trackbacks) on new articles. */
   readonly discussionSettingsDefaultPingStatus: Maybe<Scalars['String']>;
+  /** A date format for all date strings. */
   readonly generalSettingsDateFormat: Maybe<Scalars['String']>;
+  /** Site tagline. */
   readonly generalSettingsDescription: Maybe<Scalars['String']>;
+  /** This address is used for admin purposes, like new user notification. */
   readonly generalSettingsEmail: Maybe<Scalars['String']>;
+  /** WordPress locale code. */
   readonly generalSettingsLanguage: Maybe<Scalars['String']>;
+  /** A day number of the week that the week should start on. */
   readonly generalSettingsStartOfWeek: Maybe<Scalars['Int']>;
+  /** A time format for all time strings. */
   readonly generalSettingsTimeFormat: Maybe<Scalars['String']>;
+  /** A city in the same timezone as you. */
   readonly generalSettingsTimezone: Maybe<Scalars['String']>;
+  /** Site title. */
   readonly generalSettingsTitle: Maybe<Scalars['String']>;
+  /** Site URL. */
   readonly generalSettingsUrl: Maybe<Scalars['String']>;
+  /** Blog pages show at most. */
   readonly readingSettingsPostsPerPage: Maybe<Scalars['Int']>;
+  /** Default post category. */
   readonly writingSettingsDefaultCategory: Maybe<Scalars['Int']>;
+  /** Default post format. */
   readonly writingSettingsDefaultPostFormat: Maybe<Scalars['String']>;
+  /** Convert emoticons like :-) and :-P to graphics on display. */
   readonly writingSettingsUseSmilies: Maybe<Scalars['Boolean']>;
 };
 
@@ -9103,19 +9742,32 @@ type WpSortInput = {
   readonly order: Maybe<ReadonlyArray<Maybe<SortOrderEnum>>>;
 };
 
+/** The tag type */
 type WpTag = Node & WpNode & WpTermNode & WpDatabaseIdentifier & WpUniformResourceIdentifiable & WpMenuItemLinkable & {
+  /** Connection between the tag type and the ContentNode type */
   readonly contentNodes: Maybe<WpTagToContentNodeConnection>;
+  /** The number of objects connected to the object */
   readonly count: Maybe<Scalars['Int']>;
+  /** Identifies the primary key from the database. */
   readonly databaseId: Scalars['Int'];
+  /** The description of the object */
   readonly description: Maybe<Scalars['String']>;
   readonly id: Scalars['ID'];
+  /** The link to the term */
   readonly link: Maybe<Scalars['String']>;
+  /** The human friendly name of the object. */
   readonly name: Maybe<Scalars['String']>;
+  /** Connection between the tag type and the post type */
   readonly posts: Maybe<WpTagToPostConnection>;
+  /** An alphanumeric identifier for the object unique to its type. */
   readonly slug: Maybe<Scalars['String']>;
+  /** Connection between the tag type and the Taxonomy type */
   readonly taxonomy: Maybe<WpTagToTaxonomyConnectionEdge>;
+  /** The ID of the term group that this term object belongs to */
   readonly termGroupId: Maybe<Scalars['Int']>;
+  /** The taxonomy ID that the object is associated with */
   readonly termTaxonomyId: Maybe<Scalars['Int']>;
+  /** The unique resource identifier path */
   readonly uri: Scalars['String'];
   readonly nodeType: Maybe<Scalars['String']>;
   readonly parent: Maybe<Node>;
@@ -9164,6 +9816,7 @@ enum WpTagFieldsEnum {
   contentNodes___nodes___modifiedGmt = 'contentNodes.nodes.modifiedGmt',
   contentNodes___nodes___slug = 'contentNodes.nodes.slug',
   contentNodes___nodes___status = 'contentNodes.nodes.status',
+  contentNodes___nodes___template___templateName = 'contentNodes.nodes.template.templateName',
   contentNodes___nodes___uri = 'contentNodes.nodes.uri',
   contentNodes___nodes___nodeType = 'contentNodes.nodes.nodeType',
   count = 'count',
@@ -9201,7 +9854,6 @@ enum WpTagFieldsEnum {
   posts___nodes___slug = 'posts.nodes.slug',
   posts___nodes___status = 'posts.nodes.status',
   posts___nodes___tags___nodes = 'posts.nodes.tags.nodes',
-  posts___nodes___template___templateFile = 'posts.nodes.template.templateFile',
   posts___nodes___template___templateName = 'posts.nodes.template.templateName',
   posts___nodes___terms___nodes = 'posts.nodes.terms.nodes',
   posts___nodes___title = 'posts.nodes.title',
@@ -9385,7 +10037,9 @@ type WpTagSortInput = {
   readonly order: Maybe<ReadonlyArray<Maybe<SortOrderEnum>>>;
 };
 
+/** Connection between the tag type and the ContentNode type */
 type WpTagToContentNodeConnection = {
+  /** The nodes of the connection, without the edges */
   readonly nodes: Maybe<ReadonlyArray<Maybe<WpContentNode>>>;
 };
 
@@ -9393,7 +10047,9 @@ type WpTagToContentNodeConnectionFilterInput = {
   readonly nodes: Maybe<WpContentNodeFilterListInput>;
 };
 
+/** Connection between the tag type and the post type */
 type WpTagToPostConnection = {
+  /** The nodes of the connection, without the edges */
   readonly nodes: Maybe<ReadonlyArray<Maybe<WpPost>>>;
 };
 
@@ -9401,7 +10057,9 @@ type WpTagToPostConnectionFilterInput = {
   readonly nodes: Maybe<WpPostFilterListInput>;
 };
 
+/** Connection between the tag type and the Taxonomy type */
 type WpTagToTaxonomyConnectionEdge = {
+  /** The nodes of the connection, without the edges */
   readonly node: Maybe<WpTaxonomy>;
 };
 
@@ -9409,26 +10067,46 @@ type WpTagToTaxonomyConnectionEdgeFilterInput = {
   readonly node: Maybe<WpTaxonomyFilterInput>;
 };
 
+/** A taxonomy object */
 type WpTaxonomy = Node & WpNode & {
+  /** The url path of the first page of the archive page for this content type. */
   readonly archivePath: Maybe<Scalars['String']>;
+  /** List of Content Types associated with the Taxonomy */
   readonly connectedContentTypes: Maybe<WpTaxonomyToContentTypeConnection>;
+  /** Description of the taxonomy. This field is equivalent to WP_Taxonomy-&gt;description */
   readonly description: Maybe<Scalars['String']>;
+  /** The plural name of the post type within the GraphQL Schema. */
   readonly graphqlPluralName: Maybe<Scalars['String']>;
+  /** The singular name of the post type within the GraphQL Schema. */
   readonly graphqlSingleName: Maybe<Scalars['String']>;
+  /** Whether the taxonomy is hierarchical */
   readonly hierarchical: Maybe<Scalars['Boolean']>;
   readonly id: Scalars['ID'];
+  /** Name of the taxonomy shown in the menu. Usually plural. */
   readonly label: Maybe<Scalars['String']>;
+  /** The display name of the taxonomy. This field is equivalent to WP_Taxonomy-&gt;label */
   readonly name: Maybe<Scalars['String']>;
+  /** Whether the taxonomy is publicly queryable */
   readonly public: Maybe<Scalars['Boolean']>;
+  /** Name of content type to diplay in REST API &quot;wp/v2&quot; namespace. */
   readonly restBase: Maybe<Scalars['String']>;
+  /** The REST Controller class assigned to handling this content type. */
   readonly restControllerClass: Maybe<Scalars['String']>;
+  /** Whether to show the taxonomy as part of a tag cloud widget. This field is equivalent to WP_Taxonomy-&gt;show_tagcloud */
   readonly showCloud: Maybe<Scalars['Boolean']>;
+  /** Whether to display a column for the taxonomy on its post type listing screens. */
   readonly showInAdminColumn: Maybe<Scalars['Boolean']>;
+  /** Whether to add the post type to the GraphQL Schema. */
   readonly showInGraphql: Maybe<Scalars['Boolean']>;
+  /** Whether to show the taxonomy in the admin menu */
   readonly showInMenu: Maybe<Scalars['Boolean']>;
+  /** Whether the taxonomy is available for selection in navigation menus. */
   readonly showInNavMenus: Maybe<Scalars['Boolean']>;
+  /** Whether to show the taxonomy in the quick/bulk edit panel. */
   readonly showInQuickEdit: Maybe<Scalars['Boolean']>;
+  /** Whether to add the post type route in the REST API &quot;wp/v2&quot; namespace. */
   readonly showInRest: Maybe<Scalars['Boolean']>;
+  /** Whether to generate and allow a UI for managing terms in this taxonomy in the admin */
   readonly showUi: Maybe<Scalars['Boolean']>;
   readonly nodeType: Maybe<Scalars['String']>;
   readonly parent: Maybe<Node>;
@@ -9685,7 +10363,9 @@ type WpTaxonomySortInput = {
   readonly order: Maybe<ReadonlyArray<Maybe<SortOrderEnum>>>;
 };
 
+/** Connection between the Taxonomy type and the ContentType type */
 type WpTaxonomyToContentTypeConnection = {
+  /** The nodes of the connection, without the edges */
   readonly nodes: Maybe<ReadonlyArray<Maybe<WpContentType>>>;
 };
 
@@ -9693,16 +10373,32 @@ type WpTaxonomyToContentTypeConnectionFilterInput = {
   readonly nodes: Maybe<WpContentTypeFilterListInput>;
 };
 
+/** The template assigned to the node */
+type WpTemplate_PageBuilder = WpContentTemplate & {
+  /** The name of the template */
+  readonly templateName: Maybe<Scalars['String']>;
+};
+
 type WpTermNode = {
+  /** The number of objects connected to the object */
   readonly count: Maybe<Scalars['Int']>;
+  /** Identifies the primary key from the database. */
   readonly databaseId: Scalars['Int'];
+  /** The description of the object */
   readonly description: Maybe<Scalars['String']>;
+  /** Unique identifier for the term */
   readonly id: Scalars['ID'];
+  /** The link to the term */
   readonly link: Maybe<Scalars['String']>;
+  /** The human friendly name of the object. */
   readonly name: Maybe<Scalars['String']>;
+  /** An alphanumeric identifier for the object unique to its type. */
   readonly slug: Maybe<Scalars['String']>;
+  /** The ID of the term group that this term object belongs to */
   readonly termGroupId: Maybe<Scalars['Int']>;
+  /** The taxonomy ID that the object is associated with */
   readonly termTaxonomyId: Maybe<Scalars['Int']>;
+  /** The unique resource identifier path */
   readonly uri: Scalars['String'];
   readonly nodeType: Maybe<Scalars['String']>;
 };
@@ -9781,33 +10477,61 @@ type WpTermNodeSortInput = {
 };
 
 type WpUniformResourceIdentifiable = {
+  /** The unique resource identifier path */
   readonly id: Scalars['ID'];
+  /** The unique resource identifier path */
   readonly uri: Maybe<Scalars['String']>;
 };
 
+/** A User object */
 type WpUser = Node & WpNode & WpUniformResourceIdentifiable & WpCommenter & WpDatabaseIdentifier & {
+  /** Avatar object for user. The avatar object can be retrieved in different sizes by specifying the size argument. */
   readonly avatar: Maybe<WpAvatar>;
+  /** User metadata option name. Usually it will be &quot;wp_capabilities&quot;. */
   readonly capKey: Maybe<Scalars['String']>;
+  /** A list of capabilities (permissions) granted to the user */
   readonly capabilities: Maybe<ReadonlyArray<Maybe<Scalars['String']>>>;
+  /** Connection between the User type and the Comment type */
   readonly comments: Maybe<WpUserToCommentConnection>;
+  /** Identifies the primary key from the database. */
   readonly databaseId: Scalars['Int'];
+  /** Description of the user. */
   readonly description: Maybe<Scalars['String']>;
+  /** Email address of the user. This is equivalent to the WP_User-&gt;user_email property. */
   readonly email: Maybe<Scalars['String']>;
+  /**
+   * A complete list of capabilities including capabilities inherited from a role.
+   * This is equivalent to the array keys of WP_User-&gt;allcaps.
+   */
   readonly extraCapabilities: Maybe<ReadonlyArray<Maybe<Scalars['String']>>>;
+  /** First name of the user. This is equivalent to the WP_User-&gt;user_first_name property. */
   readonly firstName: Maybe<Scalars['String']>;
   readonly id: Scalars['ID'];
+  /** Last name of the user. This is equivalent to the WP_User-&gt;user_last_name property. */
   readonly lastName: Maybe<Scalars['String']>;
+  /** The preferred language locale set for the user. Value derived from get_user_locale(). */
   readonly locale: Maybe<Scalars['String']>;
+  /** Display name of the user. This is equivalent to the WP_User-&gt;dispaly_name property. */
   readonly name: Maybe<Scalars['String']>;
+  /** The nicename for the user. This field is equivalent to WP_User-&gt;user_nicename */
   readonly nicename: Maybe<Scalars['String']>;
+  /** Nickname of the user. */
   readonly nickname: Maybe<Scalars['String']>;
+  /** Connection between the User type and the page type */
   readonly pages: Maybe<WpUserToPageConnection>;
+  /** Connection between the User type and the post type */
   readonly posts: Maybe<WpUserToPostConnection>;
+  /** The date the user registered or was created. The field follows a full ISO8601 date string format. */
   readonly registeredDate: Maybe<Scalars['String']>;
+  /** Connection between the User type and the UserRole type */
   readonly roles: Maybe<WpUserToUserRoleConnection>;
+  /** The slug for the user. This field is equivalent to WP_User-&gt;user_nicename */
   readonly slug: Maybe<Scalars['String']>;
+  /** The unique resource identifier path */
   readonly uri: Maybe<Scalars['String']>;
+  /** A website url that is associated with the user. */
   readonly url: Maybe<Scalars['String']>;
+  /** Username for the user. This field is equivalent to WP_User-&gt;user_login. */
   readonly username: Maybe<Scalars['String']>;
   readonly nodeType: Maybe<Scalars['String']>;
   readonly parent: Maybe<Node>;
@@ -9865,6 +10589,8 @@ enum WpUserFieldsEnum {
   comments___nodes___dateGmt = 'comments.nodes.dateGmt',
   comments___nodes___id = 'comments.nodes.id',
   comments___nodes___karma = 'comments.nodes.karma',
+  comments___nodes___parentDatabaseId = 'comments.nodes.parentDatabaseId',
+  comments___nodes___parentId = 'comments.nodes.parentId',
   comments___nodes___replies___nodes = 'comments.nodes.replies.nodes',
   comments___nodes___type = 'comments.nodes.type',
   comments___nodes___nodeType = 'comments.nodes.nodeType',
@@ -9921,7 +10647,6 @@ enum WpUserFieldsEnum {
   pages___nodes___parentId = 'pages.nodes.parentId',
   pages___nodes___slug = 'pages.nodes.slug',
   pages___nodes___status = 'pages.nodes.status',
-  pages___nodes___template___templateFile = 'pages.nodes.template.templateFile',
   pages___nodes___template___templateName = 'pages.nodes.template.templateName',
   pages___nodes___title = 'pages.nodes.title',
   pages___nodes___uri = 'pages.nodes.uri',
@@ -9968,7 +10693,6 @@ enum WpUserFieldsEnum {
   posts___nodes___slug = 'posts.nodes.slug',
   posts___nodes___status = 'posts.nodes.status',
   posts___nodes___tags___nodes = 'posts.nodes.tags.nodes',
-  posts___nodes___template___templateFile = 'posts.nodes.template.templateFile',
   posts___nodes___template___templateName = 'posts.nodes.template.templateName',
   posts___nodes___terms___nodes = 'posts.nodes.terms.nodes',
   posts___nodes___title = 'posts.nodes.title',
@@ -10139,10 +10863,14 @@ type WpUserGroupConnection = {
   readonly fieldValue: Maybe<Scalars['String']>;
 };
 
+/** A user role object */
 type WpUserRole = Node & WpNode & {
+  /** The capabilities that belong to this role */
   readonly capabilities: Maybe<ReadonlyArray<Maybe<Scalars['String']>>>;
+  /** The display name of the role */
   readonly displayName: Maybe<Scalars['String']>;
   readonly id: Scalars['ID'];
+  /** The registered name of the role */
   readonly name: Maybe<Scalars['String']>;
   readonly nodeType: Maybe<Scalars['String']>;
   readonly parent: Maybe<Node>;
@@ -10304,7 +11032,9 @@ type WpUserSortInput = {
   readonly order: Maybe<ReadonlyArray<Maybe<SortOrderEnum>>>;
 };
 
+/** Connection between the User type and the Comment type */
 type WpUserToCommentConnection = {
+  /** The nodes of the connection, without the edges */
   readonly nodes: Maybe<ReadonlyArray<Maybe<WpComment>>>;
 };
 
@@ -10312,7 +11042,9 @@ type WpUserToCommentConnectionFilterInput = {
   readonly nodes: Maybe<WpCommentFilterListInput>;
 };
 
+/** Connection between the User type and the page type */
 type WpUserToPageConnection = {
+  /** The nodes of the connection, without the edges */
   readonly nodes: Maybe<ReadonlyArray<Maybe<WpPage>>>;
 };
 
@@ -10320,7 +11052,9 @@ type WpUserToPageConnectionFilterInput = {
   readonly nodes: Maybe<WpPageFilterListInput>;
 };
 
+/** Connection between the User type and the post type */
 type WpUserToPostConnection = {
+  /** The nodes of the connection, without the edges */
   readonly nodes: Maybe<ReadonlyArray<Maybe<WpPost>>>;
 };
 
@@ -10328,7 +11062,9 @@ type WpUserToPostConnectionFilterInput = {
   readonly nodes: Maybe<WpPostFilterListInput>;
 };
 
+/** Connection between the User type and the UserRole type */
 type WpUserToUserRoleConnection = {
+  /** The nodes of the connection, without the edges */
   readonly nodes: Maybe<ReadonlyArray<Maybe<WpUserRole>>>;
 };
 
@@ -10336,7 +11072,9 @@ type WpUserToUserRoleConnectionFilterInput = {
   readonly nodes: Maybe<WpUserRoleFilterListInput>;
 };
 
+/** Information needed by gatsby-source-wordpress. */
 type WpWPGatsby = {
+  /** Returns wether or not pretty permalinks are enabled. */
   readonly arePrettyPermalinksEnabled: Maybe<Scalars['Boolean']>;
 };
 
@@ -10344,9 +11082,13 @@ type WpWPGatsbyFilterInput = {
   readonly arePrettyPermalinksEnabled: Maybe<BooleanQueryOperatorInput>;
 };
 
+/** The writing setting type */
 type WpWritingSettings = {
+  /** Default post category. */
   readonly defaultCategory: Maybe<Scalars['Int']>;
+  /** Default post format. */
   readonly defaultPostFormat: Maybe<Scalars['String']>;
+  /** Convert emoticons like :-) and :-P to graphics on display. */
   readonly useSmilies: Maybe<Scalars['Boolean']>;
 };
 
@@ -10359,15 +11101,15 @@ type WpWritingSettingsFilterInput = {
 type Unnamed_1_QueryVariables = Exact<{ [key: string]: never; }>;
 
 
-type Unnamed_1_Query = { readonly wpMenu: Maybe<{ readonly menuItems: Maybe<{ readonly nodes: Maybe<ReadonlyArray<Maybe<(
-        Pick<WpMenuItem, 'label' | 'path'>
-        & { readonly childItems: Maybe<{ readonly nodes: Maybe<ReadonlyArray<Maybe<Pick<WpMenuItem, 'label' | 'path'>>>> }> }
-      )>>> }> }> };
+type Unnamed_1_Query = { readonly currentBuildDate: Maybe<Pick<CurrentBuildDate, 'currentDate'>> };
 
 type Unnamed_2_QueryVariables = Exact<{ [key: string]: never; }>;
 
 
-type Unnamed_2_Query = { readonly currentBuildDate: Maybe<Pick<CurrentBuildDate, 'currentDate'>> };
+type Unnamed_2_Query = { readonly wpMenu: Maybe<{ readonly menuItems: Maybe<{ readonly nodes: Maybe<ReadonlyArray<Maybe<(
+        Pick<WpMenuItem, 'label' | 'path'>
+        & { readonly childItems: Maybe<{ readonly nodes: Maybe<ReadonlyArray<Maybe<Pick<WpMenuItem, 'label' | 'path'>>>> }> }
+      )>>> }> }> };
 
 type GlossaryQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -10381,14 +11123,6 @@ type IndexPageQueryVariables = Exact<{ [key: string]: never; }>;
 
 
 type IndexPageQuery = { readonly dailp: { readonly allCollections: ReadonlyArray<Pick<Dailp_DocumentCollection, 'name' | 'slug'>> }, readonly aboutPage: Maybe<Pick<WpPage, 'title' | 'content'>> };
-
-type AllSourcesQueryVariables = Exact<{ [key: string]: never; }>;
-
-
-type AllSourcesQuery = { readonly dailp: { readonly allDocuments: ReadonlyArray<(
-      Pick<Dailp_AnnotatedDoc, 'isReference' | 'id' | 'title' | 'formCount'>
-      & { readonly date: Maybe<Pick<Dailp_Date, 'year'>>, readonly contributors: ReadonlyArray<Pick<Dailp_Contributor, 'name'>> }
-    )> } };
 
 type AnnotatedDocumentQueryVariables = Exact<{
   id: Scalars['String'];
@@ -10418,23 +11152,13 @@ type FormFieldsFragment = (
   )>> }
 );
 
-type CollectionQueryVariables = Exact<{
-  name: Scalars['String'];
-  slug: Scalars['String'];
-}>;
+type AllSourcesQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-type CollectionQuery = { readonly dailp: { readonly allDocuments: ReadonlyArray<(
-      Pick<Dailp_AnnotatedDoc, 'id' | 'slug' | 'title'>
-      & { readonly date: Maybe<Pick<Dailp_Date, 'year'>> }
-    )> }, readonly wpPage: Maybe<Pick<WpPage, 'content'>> };
-
-type ContentPageQueryVariables = Exact<{
-  id: Scalars['String'];
-}>;
-
-
-type ContentPageQuery = { readonly page: Maybe<Pick<WpPage, 'title' | 'content'>> };
+type AllSourcesQuery = { readonly dailp: { readonly allDocuments: ReadonlyArray<(
+      Pick<Dailp_AnnotatedDoc, 'isReference' | 'id' | 'title' | 'formCount'>
+      & { readonly date: Maybe<Pick<Dailp_Date, 'year'>>, readonly contributors: ReadonlyArray<Pick<Dailp_Contributor, 'name'>> }
+    )> } };
 
 type DocumentDetailsQueryVariables = Exact<{
   id: Scalars['String'];
@@ -10445,6 +11169,17 @@ type DocumentDetailsQuery = { readonly dailp: { readonly document: Maybe<(
       Pick<Dailp_AnnotatedDoc, 'id' | 'slug' | 'title'>
       & { readonly collection: Maybe<Pick<Dailp_DocumentCollection, 'name' | 'slug'>>, readonly date: Maybe<Pick<Dailp_Date, 'year'>>, readonly contributors: ReadonlyArray<Pick<Dailp_Contributor, 'name' | 'role'>>, readonly sources: ReadonlyArray<Pick<Dailp_SourceAttribution, 'name' | 'link'>> }
     )> } };
+
+type CollectionQueryVariables = Exact<{
+  name: Scalars['String'];
+  slug: Scalars['String'];
+}>;
+
+
+type CollectionQuery = { readonly dailp: { readonly allDocuments: ReadonlyArray<(
+      Pick<Dailp_AnnotatedDoc, 'id' | 'slug' | 'title'>
+      & { readonly date: Maybe<Pick<Dailp_Date, 'year'>> }
+    )> }, readonly wpPage: Maybe<Pick<WpPage, 'content'>> };
 
 type GatsbyImageSharpFixedFragment = Pick<ImageSharpFixed, 'base64' | 'width' | 'height' | 'src' | 'srcSet'>;
 
@@ -10495,5 +11230,12 @@ type GatsbyImageSharpSizes_withWebp_tracedSVGFragment = Pick<ImageSharpSizes, 't
 type GatsbyImageSharpSizes_noBase64Fragment = Pick<ImageSharpSizes, 'aspectRatio' | 'src' | 'srcSet' | 'sizes'>;
 
 type GatsbyImageSharpSizes_withWebp_noBase64Fragment = Pick<ImageSharpSizes, 'aspectRatio' | 'src' | 'srcSet' | 'srcWebp' | 'srcSetWebp' | 'sizes'>;
+
+type ContentPageQueryVariables = Exact<{
+  id: Scalars['String'];
+}>;
+
+
+type ContentPageQuery = { readonly page: Maybe<Pick<WpPage, 'title' | 'content'>> };
 
 }

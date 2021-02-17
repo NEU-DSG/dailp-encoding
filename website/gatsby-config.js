@@ -50,7 +50,7 @@ module.exports = {
     "gatsby-plugin-slug",
     "gatsby-plugin-catch-links",
     {
-      resolve: "gatsby-source-wordpress-experimental",
+      resolve: "gatsby-source-wordpress",
       options: {
         url: "https://wp.dailp.northeastern.edu/graphql",
         verbose: true,
