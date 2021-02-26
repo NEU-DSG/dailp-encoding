@@ -11103,14 +11103,6 @@ type Unnamed_1_QueryVariables = Exact<{ [key: string]: never; }>;
 
 type Unnamed_1_Query = { readonly currentBuildDate: Maybe<Pick<CurrentBuildDate, 'currentDate'>> };
 
-type Unnamed_2_QueryVariables = Exact<{ [key: string]: never; }>;
-
-
-type Unnamed_2_Query = { readonly wpMenu: Maybe<{ readonly menuItems: Maybe<{ readonly nodes: Maybe<ReadonlyArray<Maybe<(
-        Pick<WpMenuItem, 'label' | 'path'>
-        & { readonly childItems: Maybe<{ readonly nodes: Maybe<ReadonlyArray<Maybe<Pick<WpMenuItem, 'label' | 'path'>>>> }> }
-      )>>> }> }> };
-
 type GlossaryQueryVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -11123,6 +11115,17 @@ type IndexPageQueryVariables = Exact<{ [key: string]: never; }>;
 
 
 type IndexPageQuery = { readonly dailp: { readonly allCollections: ReadonlyArray<Pick<Dailp_DocumentCollection, 'name' | 'slug'>> }, readonly aboutPage: Maybe<Pick<WpPage, 'title' | 'content'>> };
+
+type CollectionQueryVariables = Exact<{
+  name: Scalars['String'];
+  slug: Scalars['String'];
+}>;
+
+
+type CollectionQuery = { readonly dailp: { readonly allDocuments: ReadonlyArray<(
+      Pick<Dailp_AnnotatedDoc, 'id' | 'slug' | 'title'>
+      & { readonly date: Maybe<Pick<Dailp_Date, 'year'>> }
+    )> }, readonly wpPage: Maybe<Pick<WpPage, 'content'>> };
 
 type AnnotatedDocumentQueryVariables = Exact<{
   id: Scalars['String'];
@@ -11152,6 +11155,14 @@ type FormFieldsFragment = (
   )>> }
 );
 
+type Unnamed_2_QueryVariables = Exact<{ [key: string]: never; }>;
+
+
+type Unnamed_2_Query = { readonly wpMenu: Maybe<{ readonly menuItems: Maybe<{ readonly nodes: Maybe<ReadonlyArray<Maybe<(
+        Pick<WpMenuItem, 'label' | 'path'>
+        & { readonly childItems: Maybe<{ readonly nodes: Maybe<ReadonlyArray<Maybe<Pick<WpMenuItem, 'label' | 'path'>>>> }> }
+      )>>> }> }> };
+
 type AllSourcesQueryVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -11170,16 +11181,12 @@ type DocumentDetailsQuery = { readonly dailp: { readonly document: Maybe<(
       & { readonly collection: Maybe<Pick<Dailp_DocumentCollection, 'name' | 'slug'>>, readonly date: Maybe<Pick<Dailp_Date, 'year'>>, readonly contributors: ReadonlyArray<Pick<Dailp_Contributor, 'name' | 'role'>>, readonly sources: ReadonlyArray<Pick<Dailp_SourceAttribution, 'name' | 'link'>> }
     )> } };
 
-type CollectionQueryVariables = Exact<{
-  name: Scalars['String'];
-  slug: Scalars['String'];
+type ContentPageQueryVariables = Exact<{
+  id: Scalars['String'];
 }>;
 
 
-type CollectionQuery = { readonly dailp: { readonly allDocuments: ReadonlyArray<(
-      Pick<Dailp_AnnotatedDoc, 'id' | 'slug' | 'title'>
-      & { readonly date: Maybe<Pick<Dailp_Date, 'year'>> }
-    )> }, readonly wpPage: Maybe<Pick<WpPage, 'content'>> };
+type ContentPageQuery = { readonly page: Maybe<Pick<WpPage, 'title' | 'content'>> };
 
 type GatsbyImageSharpFixedFragment = Pick<ImageSharpFixed, 'base64' | 'width' | 'height' | 'src' | 'srcSet'>;
 
@@ -11230,12 +11237,5 @@ type GatsbyImageSharpSizes_withWebp_tracedSVGFragment = Pick<ImageSharpSizes, 't
 type GatsbyImageSharpSizes_noBase64Fragment = Pick<ImageSharpSizes, 'aspectRatio' | 'src' | 'srcSet' | 'sizes'>;
 
 type GatsbyImageSharpSizes_withWebp_noBase64Fragment = Pick<ImageSharpSizes, 'aspectRatio' | 'src' | 'srcSet' | 'srcWebp' | 'srcSetWebp' | 'sizes'>;
-
-type ContentPageQueryVariables = Exact<{
-  id: Scalars['String'];
-}>;
-
-
-type ContentPageQuery = { readonly page: Maybe<Pick<WpPage, 'title' | 'content'>> };
 
 }
