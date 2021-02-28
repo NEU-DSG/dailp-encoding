@@ -39,7 +39,7 @@
     "react-icons": "^3.11.0",
     "react-stickynode": "^3.0.4",
     "react-zoom-pan-pinch": "^1.6.1",
-    "reakit": "^1.2.1",
+    "reakit": "^1.3.5",
     "slugify": "^1.4.6"
   },
   "devDependencies": {
