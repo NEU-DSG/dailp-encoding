@@ -40,7 +40,60 @@ const AnnotatedDocumentPage = (p: {
   data: GatsbyTypes.AnnotatedDocumentQuery
 }) => {
   const doc = p.data.dailp.document!
+  return (
+    <Layout title={doc.title}>
+      <main className={annotatedDocument}>
+        <DocumentTitleHeader doc={doc as any} showDetails={true} />
+        <TabSet doc={doc} />
+      </main>
+    </Layout>
+  )
+}
+export default AnnotatedDocumentPage
+
+const TabSet = ({ doc }) => {
   const tabs = useScrollableTabState({ selectedId: Tabs.ANNOTATION })
+  return (
+    <>
+      <Sticky
+        top={isMobile ? "#header" : undefined}
+        className={wideAndTop}
+        innerClass={wideSticky}
+      >
+        <TabList {...tabs} className={docTabs} aria-label="Document View Types">
+          <Tab {...tabs} id={Tabs.ANNOTATION} className={docTab}>
+            Translation
+          </Tab>
+          <Tab {...tabs} id={Tabs.IMAGES} className={docTab}>
+            Original Text
+          </Tab>
+        </TabList>
+      </Sticky>
+
+      <TabPanel
+        {...tabs}
+        className={docTabPanel}
+        id={`${Tabs.ANNOTATION}-panel`}
+        tabId={Tabs.ANNOTATION}
+      >
+        <TranslationTab doc={doc} />
+      </TabPanel>
+
+      <TabPanel
+        {...tabs}
+        className={imageTabPanel}
+        id={`${Tabs.IMAGES}-panel`}
+        tabId={Tabs.IMAGES}
+      >
+        {doc.pageImages ? (
+          <PageImages pageImages={doc.pageImages} document={doc as any} />
+        ) : null}
+      </TabPanel>
+    </>
+  )
+}
+
+const TranslationTab = ({ doc }) => {
   const dialog = useDialogState()
   const [selectedMorpheme, setMorpheme] = useState<BasicMorphemeSegment | null>(
     null
@@ -51,100 +104,55 @@ const AnnotatedDocumentPage = (p: {
   )
 
   const tagSet = tagSetForMode(experienceLevel)
-
   return (
-    <Layout title={`${doc.title} (${modeDetails(experienceLevel)?.label})`}>
-      <main className={annotatedDocument}>
-        <DialogBackdrop className={morphemeDialogBackdrop} {...dialog}>
-          <Dialog
-            {...dialog}
-            className={morphemeDialog}
-            aria-label="Segment Details"
-          >
-            {selectedMorpheme ? (
-              <MorphemeDetails
-                documentId={doc.id}
-                segment={selectedMorpheme}
-                dialog={dialog}
-                tagSet={tagSet}
-              />
-            ) : null}
-          </Dialog>
-        </DialogBackdrop>
-
-        <DocumentTitleHeader doc={doc as any} showDetails={true} />
-        <Sticky
-          top={isMobile ? "#header" : undefined}
-          className={wideAndTop}
-          innerClass={wideSticky}
+    <>
+      <DialogBackdrop className={morphemeDialogBackdrop} {...dialog}>
+        <Dialog
+          {...dialog}
+          className={morphemeDialog}
+          aria-label="Segment Details"
         >
-          <TabList
-            {...tabs}
-            className={docTabs}
-            aria-label="Document View Types"
-          >
-            <Tab {...tabs} id={Tabs.ANNOTATION} className={docTab}>
-              Translation
-            </Tab>
-            <Tab {...tabs} id={Tabs.IMAGES} className={docTab}>
-              Original Text
-            </Tab>
-          </TabList>
-        </Sticky>
-
-        <TabPanel
-          {...tabs}
-          className={docTabPanel}
-          id="id-1-3"
-          tabId={Tabs.ANNOTATION}
-        >
-          <ExperiencePicker onSelect={setExperienceLevel} />
-
-          <article className={annotationContents}>
-            {doc.translatedSegments?.map((seg, i) => (
-              <Segment
-                key={i}
-                segment={seg.source as GatsbyTypes.Dailp_AnnotatedSeg}
-                dialog={dialog}
-                onOpenDetails={setMorpheme}
-                level={experienceLevel}
-                tagSet={tagSet}
-                translations={
-                  seg.translation as GatsbyTypes.Dailp_TranslationBlock
-                }
-                pageImages={doc.pageImages}
-              />
-            ))}
-            {doc.forms?.map((form, i) => (
-              <AnnotatedForm
-                key={i}
-                segment={form}
-                dialog={dialog}
-                onOpenDetails={setMorpheme}
-                level={experienceLevel}
-                tagSet={tagSet}
-                translations={null}
-                pageImages={doc.pageImages}
-              />
-            ))}
-          </article>
-        </TabPanel>
-
-        <TabPanel
-          {...tabs}
-          className={imageTabPanel}
-          id="id-1-4"
-          tabId={Tabs.IMAGES}
-        >
-          {doc.pageImages ? (
-            <PageImages pageImages={doc.pageImages} document={doc as any} />
+          {selectedMorpheme ? (
+            <MorphemeDetails
+              documentId={doc.id}
+              segment={selectedMorpheme}
+              dialog={dialog}
+              tagSet={tagSet}
+            />
           ) : null}
-        </TabPanel>
-      </main>
-    </Layout>
+        </Dialog>
+      </DialogBackdrop>
+      <ExperiencePicker onSelect={setExperienceLevel} />
+
+      <article className={annotationContents}>
+        {doc.translatedSegments?.map((seg, i) => (
+          <Segment
+            key={i}
+            segment={seg.source as GatsbyTypes.Dailp_AnnotatedSeg}
+            dialog={dialog}
+            onOpenDetails={setMorpheme}
+            level={experienceLevel}
+            tagSet={tagSet}
+            translations={seg.translation as GatsbyTypes.Dailp_TranslationBlock}
+            pageImages={doc.pageImages}
+          />
+        ))}
+        {doc.forms?.map((form, i) => (
+          <AnnotatedForm
+            key={i}
+            segment={form}
+            dialog={dialog}
+            onOpenDetails={setMorpheme}
+            level={experienceLevel}
+            tagSet={tagSet}
+            translations={null}
+            pageImages={doc.pageImages}
+          />
+        ))}
+      </article>
+    </>
   )
 }
-export default AnnotatedDocumentPage
 
 const annotationContents = css`
   width: 100%;
