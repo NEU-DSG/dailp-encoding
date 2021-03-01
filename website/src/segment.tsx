@@ -5,7 +5,7 @@ import { Tooltip, TooltipReference, useTooltipState } from "reakit/Tooltip"
 import { MdInfoOutline } from "react-icons/md"
 import _ from "lodash"
 import {
-  ExperienceLevel,
+  ViewMode,
   TagSet,
   BasicMorphemeSegment,
   morphemeDisplayTag,
@@ -16,7 +16,7 @@ interface Props {
   segment: GatsbyTypes.Dailp_AnnotatedSeg
   dialog: DialogStateReturn
   onOpenDetails: (morpheme: BasicMorphemeSegment) => void
-  level: ExperienceLevel
+  viewMode: ViewMode
   translations: GatsbyTypes.Dailp_TranslationBlock
   tagSet: TagSet
   pageImages: readonly string[]
@@ -35,7 +35,7 @@ export const Segment = (p: Props) => {
             segment={seg}
             dialog={p.dialog}
             onOpenDetails={p.onOpenDetails}
-            level={p.level}
+            viewMode={p.viewMode}
             translations={p.translations}
             tagSet={p.tagSet}
             pageImages={p.pageImages}
@@ -46,15 +46,12 @@ export const Segment = (p: Props) => {
     if (p.segment.ty === "BLOCK") {
       return (
         <section
-          className={cx(
-            documentBlock,
-            p.level > ExperienceLevel.Story && bordered
-          )}
+          className={cx(documentBlock, p.viewMode > ViewMode.Story && bordered)}
         >
           <div
             className={cx(
               annotationSection,
-              p.level <= ExperienceLevel.Story && storySection
+              p.viewMode <= ViewMode.Story && storySection
             )}
           >
             {children}
@@ -107,15 +104,15 @@ export const AnnotatedForm = (
   if (!p.segment.source) {
     return null
   }
-  const showAnything = p.level > ExperienceLevel.Story
+  const showAnything = p.viewMode > ViewMode.Story
   if (showAnything) {
-    const showSegments = p.level >= ExperienceLevel.Learner
+    const showSegments = p.viewMode >= ViewMode.Segmentation
     const translation = p.segment.englishGloss.join(", ")
     return (
       <div className={wordGroup} id={`w${p.segment.index}`}>
         <div className={syllabaryLayer} lang="chr">
           {p.segment.source}
-          {p.segment.commentary && p.level >= ExperienceLevel.AdvancedDt && (
+          {p.segment.commentary && p.viewMode >= ViewMode.Pronunciation && (
             <WordCommentaryInfo commentary={p.segment.commentary} />
           )}
         </div>
@@ -129,7 +126,7 @@ export const AnnotatedForm = (
             segments={p.segment.segments}
             dialog={p.dialog}
             onOpenDetails={p.onOpenDetails}
-            level={p.level}
+            level={p.viewMode}
             tagSet={p.tagSet}
           />
         ) : null}
@@ -191,7 +188,7 @@ const MorphemicSegmentation = (p: {
   tagSet: TagSet
   dialog: Props["dialog"]
   onOpenDetails: Props["onOpenDetails"]
-  level: ExperienceLevel
+  level: ViewMode
 }) => {
   // If there is no segmentation, return two line breaks for the
   // morphemic segmentation and morpheme gloss layers.
@@ -211,9 +208,9 @@ const MorphemicSegmentation = (p: {
           .segments!.map(function (segment) {
             // Adapt the segment shape to the chosen experience level.
             let seg = segment.shapeTth
-            if (p.level === ExperienceLevel.AdvancedDt) {
+            if (p.level === ViewMode.AnalysisDt) {
               seg = segment.shapeDt
-            } else if (p.level === ExperienceLevel.Learner) {
+            } else if (p.level === ViewMode.Segmentation) {
               seg = segment.shapeDtSimple
             }
 

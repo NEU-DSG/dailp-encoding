@@ -11111,21 +11111,21 @@ type GlossaryQuery = { readonly dailp: { readonly allTags: ReadonlyArray<(
       & { readonly crg: Maybe<Pick<Dailp_TagForm, 'tag' | 'title' | 'definition'>>, readonly taoc: Maybe<Pick<Dailp_TagForm, 'tag' | 'title' | 'definition'>>, readonly learner: Maybe<Pick<Dailp_TagForm, 'tag' | 'title' | 'definition'>> }
     )> } };
 
-type IndexPageQueryVariables = Exact<{ [key: string]: never; }>;
+type AllSourcesQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-type IndexPageQuery = { readonly dailp: { readonly allCollections: ReadonlyArray<Pick<Dailp_DocumentCollection, 'name' | 'slug'>> }, readonly aboutPage: Maybe<Pick<WpPage, 'title' | 'content'>> };
+type AllSourcesQuery = { readonly dailp: { readonly allDocuments: ReadonlyArray<(
+      Pick<Dailp_AnnotatedDoc, 'isReference' | 'id' | 'title' | 'formCount'>
+      & { readonly date: Maybe<Pick<Dailp_Date, 'year'>>, readonly contributors: ReadonlyArray<Pick<Dailp_Contributor, 'name'>> }
+    )> } };
 
-type CollectionQueryVariables = Exact<{
-  name: Scalars['String'];
-  slug: Scalars['String'];
-}>;
+type Unnamed_2_QueryVariables = Exact<{ [key: string]: never; }>;
 
 
-type CollectionQuery = { readonly dailp: { readonly allDocuments: ReadonlyArray<(
-      Pick<Dailp_AnnotatedDoc, 'id' | 'slug' | 'title'>
-      & { readonly date: Maybe<Pick<Dailp_Date, 'year'>> }
-    )> }, readonly wpPage: Maybe<Pick<WpPage, 'content'>> };
+type Unnamed_2_Query = { readonly wpMenu: Maybe<{ readonly menuItems: Maybe<{ readonly nodes: Maybe<ReadonlyArray<Maybe<(
+        Pick<WpMenuItem, 'label' | 'path'>
+        & { readonly childItems: Maybe<{ readonly nodes: Maybe<ReadonlyArray<Maybe<Pick<WpMenuItem, 'label' | 'path'>>>> }> }
+      )>>> }> }> };
 
 type AnnotatedDocumentQueryVariables = Exact<{
   id: Scalars['String'];
@@ -11155,22 +11155,6 @@ type FormFieldsFragment = (
   )>> }
 );
 
-type Unnamed_2_QueryVariables = Exact<{ [key: string]: never; }>;
-
-
-type Unnamed_2_Query = { readonly wpMenu: Maybe<{ readonly menuItems: Maybe<{ readonly nodes: Maybe<ReadonlyArray<Maybe<(
-        Pick<WpMenuItem, 'label' | 'path'>
-        & { readonly childItems: Maybe<{ readonly nodes: Maybe<ReadonlyArray<Maybe<Pick<WpMenuItem, 'label' | 'path'>>>> }> }
-      )>>> }> }> };
-
-type AllSourcesQueryVariables = Exact<{ [key: string]: never; }>;
-
-
-type AllSourcesQuery = { readonly dailp: { readonly allDocuments: ReadonlyArray<(
-      Pick<Dailp_AnnotatedDoc, 'isReference' | 'id' | 'title' | 'formCount'>
-      & { readonly date: Maybe<Pick<Dailp_Date, 'year'>>, readonly contributors: ReadonlyArray<Pick<Dailp_Contributor, 'name'>> }
-    )> } };
-
 type DocumentDetailsQueryVariables = Exact<{
   id: Scalars['String'];
 }>;
@@ -11180,6 +11164,22 @@ type DocumentDetailsQuery = { readonly dailp: { readonly document: Maybe<(
       Pick<Dailp_AnnotatedDoc, 'id' | 'slug' | 'title'>
       & { readonly collection: Maybe<Pick<Dailp_DocumentCollection, 'name' | 'slug'>>, readonly date: Maybe<Pick<Dailp_Date, 'year'>>, readonly contributors: ReadonlyArray<Pick<Dailp_Contributor, 'name' | 'role'>>, readonly sources: ReadonlyArray<Pick<Dailp_SourceAttribution, 'name' | 'link'>> }
     )> } };
+
+type IndexPageQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+type IndexPageQuery = { readonly dailp: { readonly allCollections: ReadonlyArray<Pick<Dailp_DocumentCollection, 'name' | 'slug'>> }, readonly aboutPage: Maybe<Pick<WpPage, 'title' | 'content'>> };
+
+type CollectionQueryVariables = Exact<{
+  name: Scalars['String'];
+  slug: Scalars['String'];
+}>;
+
+
+type CollectionQuery = { readonly dailp: { readonly allDocuments: ReadonlyArray<(
+      Pick<Dailp_AnnotatedDoc, 'id' | 'slug' | 'title'>
+      & { readonly date: Maybe<Pick<Dailp_Date, 'year'>> }
+    )> }, readonly wpPage: Maybe<Pick<WpPage, 'content'>> };
 
 type ContentPageQueryVariables = Exact<{
   id: Scalars['String'];

@@ -17,12 +17,7 @@ import { collectionRoute, documentDetailsRoute, documentRoute } from "../routes"
 import { useScrollableTabState } from "../scrollable-tabs"
 import { css, cx } from "linaria"
 import { DeepPartial } from "tsdef"
-import {
-  ExperienceLevel,
-  TagSet,
-  BasicMorphemeSegment,
-  tagSetForMode,
-} from "../types"
+import { ViewMode, TagSet, BasicMorphemeSegment, tagSetForMode } from "../types"
 import { MorphemeDetails } from "../morpheme"
 import PageImages from "../page-image"
 import { Breadcrumbs } from "../breadcrumbs"
@@ -99,8 +94,8 @@ const TranslationTab = ({ doc }) => {
     null
   )
 
-  const [experienceLevel, setExperienceLevel] = useState<ExperienceLevel>(
-    ExperienceLevel.Story
+  const [experienceLevel, setExperienceLevel] = useState<ViewMode>(
+    ViewMode.Story
   )
 
   const tagSet = tagSetForMode(experienceLevel)
@@ -131,7 +126,7 @@ const TranslationTab = ({ doc }) => {
             segment={seg.source as GatsbyTypes.Dailp_AnnotatedSeg}
             dialog={dialog}
             onOpenDetails={setMorpheme}
-            level={experienceLevel}
+            viewMode={experienceLevel}
             tagSet={tagSet}
             translations={seg.translation as GatsbyTypes.Dailp_TranslationBlock}
             pageImages={doc.pageImages}
@@ -143,7 +138,7 @@ const TranslationTab = ({ doc }) => {
             segment={form}
             dialog={dialog}
             onOpenDetails={setMorpheme}
-            level={experienceLevel}
+            viewMode={experienceLevel}
             tagSet={tagSet}
             translations={null}
             pageImages={doc.pageImages}

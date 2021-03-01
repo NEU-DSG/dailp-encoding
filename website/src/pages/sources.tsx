@@ -48,8 +48,8 @@ const DocumentCitation = (p: { document: LocalDocument }) => {
   const wordCount = doc.formCount ? ` ${doc.formCount} words.` : null
   return (
     <li id={sourceCitationId(doc.id)} className={apaCitation}>
-      <span className={cx(std.smallCaps, bolded)}>{doc.id}</span> = {authors}{" "}
-      {year && `(${year})`}. <i>{doc.title}</i>.{wordCount}
+      <span className={bolded}>{doc.id}</span> = {authors} {year && `(${year})`}
+      . <i>{doc.title}</i>.{wordCount}
     </li>
   )
 }
