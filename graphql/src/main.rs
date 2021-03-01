@@ -80,6 +80,14 @@ impl Query {
         Ok(context.data::<Database>()?.all_collections().await?)
     }
 
+    /// List all contributors to documents and lexical resources.
+    async fn all_contributors(
+        &self,
+        context: &Context<'_>,
+    ) -> FieldResult<Vec<dailp::ContributorDetails>> {
+        Ok(context.data::<Database>()?.all_people().await?)
+    }
+
     /// Retrieves a full document from its unique identifier.
     pub async fn document(
         &self,
