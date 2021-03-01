@@ -9,7 +9,7 @@ exports.createPages = async (args) => {
 
 // There are a few documents that currently take too long to query, so exclude
 // them from the build process for now. Real solution: implement pagination.
-const excludedDocuments = ["DF1975"]
+const excludedDocuments = ["DF1975", "AC1995", "PF1975"]
 
 const createDocumentPages = async ({ actions, graphql }) => {
   const { data, errors } = await graphql(`
