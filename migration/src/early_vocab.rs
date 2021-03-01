@@ -25,6 +25,8 @@ pub async fn migrate_all() -> Result<()> {
         "1hLPiRBdKUX7jaLVE6MFLgfrTMBJGNHFb8P-2MM81YIo",
         // BB1797
         "1SRTn65vbHrjmc54hVFSmBba6Cnh8KPn5LQ8qmk_kJMc",
+        // BB1819
+        "1OTtJuh1n5Z05JYxFVbilwvwjvhCUETUHhzhMw1zWGsw",
     ])
     .await?;
 
@@ -51,17 +53,6 @@ pub async fn migrate_all() -> Result<()> {
         false,
         false,
         0,
-    )
-    .await?;
-    // BB1819
-    parse_early_vocab(
-        "1aLPu_d_1OtgPL2_2olnjeDSBOgsreE6X3vBAFtpB5N0",
-        0,
-        true,
-        false,
-        true,
-        false,
-        1,
     )
     .await?;
 
