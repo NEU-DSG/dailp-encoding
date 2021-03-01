@@ -89,6 +89,11 @@ impl AnnotatedForm {
             .await?)
     }
 
+    /// Unique identifier for this form.
+    async fn id(&self) -> &str {
+        &self.id
+    }
+
     /// Position of this word in its containing document.
     async fn index(&self) -> i32 {
         self.position.index
