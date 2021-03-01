@@ -825,11 +825,14 @@ fn tth_to_dt(input: &str, keep_glottal_stops: bool, replace_colons: Option<&str>
     };
     // Convert the t/th consonants to d/t
     lazy_static! {
-        static ref TTH_PATTERN: Regex = Regex::new(r"(ts|ks|tlh|kwh|kh|th|ch|k|t|c|ʔ|:)").unwrap();
+        static ref TTH_PATTERN: Regex =
+            Regex::new(r"(qu|ts|ks|tlh|kwh|kw|kh|th|ch|k|t|c|ʔ|:)").unwrap();
     }
     let result = TTH_PATTERN.replace_all(input, |cap: &Captures| match &cap[0] {
         "tlh" => "tl",
+        "qu" => "gw",
         "kwh" => "kw",
+        "kw" => "gw",
         "kh" => "k",
         "th" => "t",
         "ch" => "ch", // Not sure I've ever seen this segment in data before.
@@ -852,7 +855,7 @@ fn tth_to_dt(input: &str, keep_glottal_stops: bool, replace_colons: Option<&str>
         }
         // Any other matches we should leave as-is, retaining for example "ts"
         // and "ks" in the d/t representation.
-        "ts" => "ts",
+        "ts" => "j",
         "ks" => "ks",
         _ => unreachable!(),
     });

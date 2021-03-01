@@ -85,6 +85,9 @@ jobs:
       - name: Encode documents as TEI and database entries
         if: steps.filter.outputs.data == 'true'
         run: |
+          mkdir -p .serverless
+          yarn sls translate --stage prod
+          yarn sls manifest --stage prod
           export DAILP_GRAPHQL_URL=$(jq -r '.prod.urls.byFunction.graphql.url' .serverless/manifest.json)
           cd migration
           cargo run --release
