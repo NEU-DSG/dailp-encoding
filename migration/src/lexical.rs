@@ -59,7 +59,9 @@ pub async fn migrate_dictionaries() -> Result<()> {
 
     ingest_particle_index("1YppMsIvNixHdq7oM_iCnYE1ZI4y0TMSf-mVibji7pJ4").await?;
 
-    // DF1975 Grammatical Appendix
+    ingest_ac1995("1x02KTuF0yyEFcrJwkfFiBKj79ysQTZfLKB6hKeq-ZT8").await?;
+
+    // DF1975 Grammatical Appendix (PF1975)
     parse_appendix("1VjpKXMqb7CgFKE5lk9E6gqL-k6JKZ3FVUvhnqiMZYQg", 2).await?;
 
     let entries: Vec<_> = df1975
@@ -176,8 +178,7 @@ async fn parse_numerals(sheet_id: &str, doc_id: &str, year: i32) -> Result<()> {
     Ok(())
 }
 
-async fn parse_appendix(sheet_id: &str, to_skip: usize) -> Result<()> {
-    let sheet = SheetResult::from_sheet(sheet_id, None).await?;
+async fn parse_meta(sheet_id: &str, collection: &str) -> Result<DocumentMetadata> {
     let meta = SheetResult::from_sheet(sheet_id, Some("Metadata")).await?;
     let mut meta_values = meta.values.into_iter();
     let document_id = meta_values.next().unwrap().pop().unwrap();
@@ -187,12 +188,12 @@ async fn parse_appendix(sheet_id: &str, to_skip: usize) -> Result<()> {
         .ok()
         .map(|year| Date::new(chrono::NaiveDate::from_ymd(year, 1, 1)));
     let authors = meta_values.next().unwrap_or_default();
-    let meta = DocumentMetadata {
+    Ok(DocumentMetadata {
         id: document_id,
         title,
         date: date_recorded,
         sources: Vec::new(),
-        collection: Some("Vocabularies".to_owned()),
+        collection: Some(collection.to_owned()),
         genre: None,
         contributors: authors
             .into_iter()
@@ -202,7 +203,12 @@ async fn parse_appendix(sheet_id: &str, to_skip: usize) -> Result<()> {
         page_images: Vec::new(),
         translation: None,
         is_reference: true,
-    };
+    })
+}
+
+async fn parse_appendix(sheet_id: &str, to_skip: usize) -> Result<()> {
+    let sheet = SheetResult::from_sheet(sheet_id, None).await?;
+    let meta = parse_meta(sheet_id, "Vocabularies").await?;
 
     let forms: Vec<_> = sheet
         .values
@@ -373,6 +379,51 @@ async fn ingest_particle_index(document_id: &str) -> Result<()> {
             })
         })
         .collect::<Vec<_>>();
+
+    // Push the forms to the database.
+    crate::update_form(&forms).await?;
+
+    Ok(())
+}
+
+async fn ingest_ac1995(sheet_id: &str) -> Result<()> {
+    let sheet = SheetResult::from_sheet(sheet_id, None).await?;
+    let meta = parse_meta(sheet_id, "Vocabularies").await?;
+    let forms = sheet
+        .values
+        .into_iter()
+        .filter_map(|row| {
+            let mut row = row.into_iter();
+            let index: i32 = row.next()?.parse().ok()?;
+            let form_id = row.next()?;
+            let syllabary = row.next()?;
+            let romanized = row.next()?;
+            let normalized = row.next()?;
+            let translation = row.next()?;
+            let pos = PositionInDocument::new(meta.id.clone(), "1".to_owned(), index);
+            Some(AnnotatedForm {
+                id: form_id,
+                simple_phonetics: Some(normalized),
+                normalized_source: None,
+                phonemic: None,
+                commentary: None,
+                line_break: None,
+                page_break: None,
+                english_gloss: vec![translation],
+                segments: None,
+                date_recorded: meta.date.clone(),
+                source: syllabary,
+                position: pos,
+            })
+        })
+        .collect::<Vec<_>>();
+
+    // Update the document metadata.
+    crate::update_document(&[AnnotatedDoc {
+        meta,
+        segments: None,
+    }])
+    .await?;
 
     // Push the forms to the database.
     crate::update_form(&forms).await?;

@@ -4,4 +4,4 @@ passthrough = [
 ]
 
 [target.x86_64-unknown-linux-musl]
-image = "clux/muslrust:1.48.0"
+image = "clux/muslrust:1.49.0"
