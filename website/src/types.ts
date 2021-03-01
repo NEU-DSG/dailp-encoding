@@ -1,9 +1,9 @@
-export enum ExperienceLevel {
+export enum ViewMode {
   Story = 0,
-  Basic = 1,
-  Learner = 2,
-  AdvancedDt = 3,
-  AdvancedTth = 4,
+  Pronunciation = 1,
+  Segmentation = 2,
+  AnalysisDt = 3,
+  AnalysisTth = 4,
 }
 
 export enum TagSet {
@@ -36,13 +36,13 @@ export function morphemeDisplayTag<T>(
   return matchingTag
 }
 
-export const tagSetForMode = (experienceLevel: ExperienceLevel) => {
+export const tagSetForMode = (experienceLevel: ViewMode) => {
   let tagSet = TagSet.Dailp
-  if (experienceLevel === ExperienceLevel.AdvancedTth) {
+  if (experienceLevel === ViewMode.AnalysisTth) {
     tagSet = TagSet.Taoc
-  } else if (experienceLevel === ExperienceLevel.AdvancedDt) {
+  } else if (experienceLevel === ViewMode.AnalysisDt) {
     tagSet = TagSet.Crg
-  } else if (experienceLevel <= ExperienceLevel.Learner) {
+  } else if (experienceLevel <= ViewMode.Segmentation) {
     tagSet = TagSet.Learner
   }
   return tagSet

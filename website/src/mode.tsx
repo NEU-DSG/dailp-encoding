@@ -8,36 +8,36 @@ import {
 import { Tooltip, TooltipReference, useTooltipState } from "reakit/Tooltip"
 import Cookies from "js-cookie"
 import theme, { hideOnPrint, typography, withBg } from "./theme"
-import { ExperienceLevel, TagSet, tagSetForMode } from "./types"
+import { ViewMode, TagSet, tagSetForMode } from "./types"
 import { css, cx } from "linaria"
 
 const notNumber = (l: any) => isNaN(Number(l))
 const levelNameMapping = {
-  [ExperienceLevel.Story]: {
+  [ViewMode.Story]: {
     label: "Story",
     details: "Original text in the Cherokee syllabary with English translation",
   },
-  [ExperienceLevel.Basic]: {
+  [ViewMode.Pronunciation]: {
     label: "Pronunciation",
     details: "Word by word pronunciation and translation",
   },
-  [ExperienceLevel.Learner]: {
+  [ViewMode.Segmentation]: {
     label: "Segmentation",
     details: "Each Cherokee word broken up into its component parts",
   },
-  [ExperienceLevel.AdvancedDt]: {
+  [ViewMode.AnalysisDt]: {
     label: "Analysis (d/t)",
     details:
       "Linguistic analysis using the Cherokee Reference Grammar (CRG) representation",
   },
-  [ExperienceLevel.AdvancedTth]: {
+  [ViewMode.AnalysisTth]: {
     label: "Analysis (t/th)",
     details:
       "Linguistic analysis using the Tone and Accent in Oklahoma Cherokee (TAOC) representation",
   },
 }
 
-export const modeDetails = (mode: ExperienceLevel) => levelNameMapping[mode]
+export const modeDetails = (mode: ViewMode) => levelNameMapping[mode]
 
 const tagSetMapping = {
   [TagSet.Crg]: { label: "CRG", details: "Cherokee Reference Grammar" },
@@ -59,9 +59,7 @@ const tagSetMapping = {
 const selectedMode = () =>
   Number.parseInt(Cookies.get("experienceLevel") ?? "0")
 
-export const ExperiencePicker = (p: {
-  onSelect: (mode: ExperienceLevel) => void
-}) => {
+export const ExperiencePicker = (p: { onSelect: (mode: ViewMode) => void }) => {
   const radio = useRadioState({
     state: selectedMode(),
   })
@@ -69,7 +67,7 @@ export const ExperiencePicker = (p: {
   // Save the selected experience level throughout the session.
   useEffect(() => {
     Cookies.set("experienceLevel", radio.state!.toString())
-    p.onSelect(radio.state as ExperienceLevel)
+    p.onSelect(radio.state as ViewMode)
   }, [radio.state])
 
   return (
@@ -84,7 +82,7 @@ export const ExperiencePicker = (p: {
         className={levelGroup}
         aria-label="Display Mode"
       >
-        {Object.keys(ExperienceLevel)
+        {Object.keys(ViewMode)
           .filter(notNumber)
           .map(function (level: string) {
             return <ExperienceOption key={level} level={level} radio={radio} />
@@ -96,7 +94,7 @@ export const ExperiencePicker = (p: {
 
 export const TagSetPicker = (p: { onSelect: (tagSet: TagSet) => void }) => {
   const radio = useRadioState({
-    state: tagSetForMode(selectedMode() as ExperienceLevel),
+    state: tagSetForMode(selectedMode() as ViewMode),
   })
 
   useEffect(() => p.onSelect(radio.state as TagSet), [radio.state])
@@ -114,7 +112,7 @@ export const TagSetPicker = (p: { onSelect: (tagSet: TagSet) => void }) => {
 
 const ExperienceOption = (p: { radio: RadioStateReturn; level: string }) => {
   const tooltip = useTooltipState()
-  const value = ExperienceLevel[p.level as keyof typeof ExperienceLevel]
+  const value = ViewMode[p.level as keyof typeof ViewMode]
   const isSelected = p.radio.state === value
   return (
     <>
