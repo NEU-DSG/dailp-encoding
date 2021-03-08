@@ -19,6 +19,8 @@ provider:
       - ${self:custom.database.subnetId2}
       - ${self:custom.database.subnetId3}
 custom:
+  cf-changesets:
+    requireChangeSet: true
   database:
     mongoVersion: 4.2
     volumeType: io1
@@ -47,6 +49,7 @@ plugins:
   - serverless-rust
   - serverless-translate-templateurls
   - serverless-manifest-plugin
+  - serverless-cloudformation-changesets
 package:
   individually: true
 functions:
