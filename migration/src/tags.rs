@@ -83,7 +83,7 @@ async fn migrate_glossary_metadata(sheet_id: &str) -> Result<()> {
                     collection: Some("Reference Materials".to_owned()),
                     genre: None,
                     is_reference: true,
-                    page_images: Vec::new(),
+                    page_images: None,
                     sources: Vec::new(),
                     translation: None,
                 },

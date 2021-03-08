@@ -313,6 +313,25 @@ impl Mutation {
             Ok(true)
         }
     }
+
+    #[graphql(visible = false)]
+    async fn update_image_source(
+        &self,
+        context: &Context<'_>,
+        password: String,
+        // Data encoded as JSON for now.
+        // FIXME Use real input objects.
+        contents: String,
+    ) -> FieldResult<bool> {
+        if password != *MONGODB_PASSWORD {
+            Ok(false)
+        } else {
+            let b = base64::decode(&contents)?;
+            let tag = serde_json::from_slice(&b)?;
+            context.data::<Database>()?.update_image_source(tag).await?;
+            Ok(true)
+        }
+    }
 }
 
 #[derive(async_graphql::SimpleObject)]

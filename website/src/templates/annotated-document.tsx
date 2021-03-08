@@ -286,7 +286,9 @@ export const query = graphql`
           name
           link
         }
-        pageImages
+        pageImages {
+          urls
+        }
         translatedSegments @skip(if: $isReference) {
           source {
             ... on Dailp_AnnotatedForm {

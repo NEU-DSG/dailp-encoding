@@ -19,6 +19,7 @@ impl Database {
     const TAGS: &'static str = "tags";
     const CONNECTIONS: &'static str = "lexical-connections";
     const PEOPLE: &'static str = "people";
+    const IMAGE_SOURCES: &'static str = "image-sources";
 
     pub fn documents_collection(&self) -> mongodb::Collection {
         self.client.collection(Self::DOCUMENTS)
@@ -34,6 +35,9 @@ impl Database {
     }
     pub fn people_collection(&self) -> mongodb::Collection {
         self.client.collection(Self::PEOPLE)
+    }
+    pub fn source_collection(&self) -> mongodb::Collection {
+        self.client.collection(Self::IMAGE_SOURCES)
     }
 }
 
@@ -114,6 +118,19 @@ impl Database {
         Ok(())
     }
 
+    pub async fn update_image_source(&self, source: ImageSource) -> Result<()> {
+        self.source_collection()
+            .update_one(
+                bson::doc! { "_id": &source.id.0 },
+                bson::to_document(&source)?,
+                mongodb::options::UpdateOptions::builder()
+                    .upsert(true)
+                    .build(),
+            )
+            .await?;
+        Ok(())
+    }
+
     pub async fn all_documents(&self, collection: Option<&str>) -> Result<Vec<AnnotatedDoc>> {
         use tokio::stream::StreamExt as _;
         Ok(self
@@ -166,6 +183,14 @@ impl Database {
             .filter_map(|doc| doc.ok().and_then(|doc| bson::from_document(doc).ok()))
             .collect()
             .await)
+    }
+
+    pub async fn image_source(&self, id: &ImageSourceId) -> Result<Option<ImageSource>> {
+        Ok(self
+            .source_collection()
+            .find_one(bson::doc! { "_id": &id.0 }, None)
+            .await?
+            .and_then(|doc| bson::from_document(doc).ok()))
     }
 
     pub async fn words_in_document(&self, doc_id: &str) -> Result<Vec<AnnotatedForm>> {
