@@ -300,28 +300,34 @@ impl SheetResult {
         let translations = values
             .next()
             .ok_or_else(|| anyhow::format_err!("No Translations"))?;
-        let page_images = values
+        let image_source = values
+            .next()
+            .ok_or_else(|| anyhow::format_err!("Missing image source"))?
+            .into_iter()
+            .next()
+            .unwrap();
+        let image_ids = values
             .next()
             // Remove the row title.
             .map(|mut x| {
                 x.remove(0);
                 x
-            })
-            // Assume no images if the row is missing.
-            .unwrap_or_default();
-        let date = values.next();
-        let person_names = values.next();
-        let person_roles = values.next();
-        let people = if let (Some(names), Some(roles)) = (person_names, person_roles) {
-            names
-                .into_iter()
-                .skip(1)
-                .zip(roles.into_iter().skip(1))
-                .map(|(name, role)| Contributor { name, role })
-                .collect()
-        } else {
-            Vec::new()
-        };
+            });
+        let date = values
+            .next()
+            .ok_or_else(|| anyhow::format_err!("No Date"))?;
+        let names = values
+            .next()
+            .ok_or_else(|| anyhow::format_err!("No contributor names"))?;
+        let roles = values
+            .next()
+            .ok_or_else(|| anyhow::format_err!("No contributor roles"))?;
+        let people = names
+            .into_iter()
+            .skip(1)
+            .zip(roles.into_iter().skip(1))
+            .map(|(name, role)| Contributor { name, role })
+            .collect();
         let sources = if let (Some(names), Some(links)) = (values.next(), values.next()) {
             names
                 .into_iter()
@@ -345,10 +351,12 @@ impl SheetResult {
                     .await?
                     .into_translation(),
             ),
-            page_images,
+            page_images: image_ids.map(|ids| dailp::IiifImages {
+                source: dailp::ImageSourceId(image_source),
+                ids,
+            }),
             date: date
-                .as_ref()
-                .and_then(|d| d.get(1))
+                .get(1)
                 .and_then(|s| chrono::NaiveDate::parse_from_str(s, "%Y-%m-%d").ok())
                 .map(Date::new),
             is_reference,

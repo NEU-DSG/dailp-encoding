@@ -17,6 +17,8 @@ pub const REFERENCES_SHEET_NAME: &str = "References";
 async fn main() -> Result<()> {
     dotenv::dotenv().ok();
 
+    migrate_image_sources().await?;
+
     contributors::migrate_all().await?;
 
     println!("Migrating connections...");
@@ -33,6 +35,15 @@ async fn main() -> Result<()> {
     println!("Migrating tags to database...");
     tags::migrate_tags().await?;
 
+    Ok(())
+}
+
+async fn migrate_image_sources() -> Result<()> {
+    update_image_source(&[dailp::ImageSource {
+        id: dailp::ImageSourceId("beineke".to_owned()),
+        url: "https://collections.library.yale.edu/iiif/2".to_owned(),
+    }])
+    .await?;
     Ok(())
 }
 
@@ -84,7 +95,11 @@ async fn fetch_sheet(
             Vec::new()
         };
 
-        let page_count = meta.page_images.len();
+        let page_count = meta
+            .page_images
+            .as_ref()
+            .map(|images| images.count())
+            .unwrap_or(0);
         let mut all_lines = Vec::new();
         // Each document page lives in its own tab.
         for index in 0..page_count {
@@ -195,6 +210,15 @@ async fn update_connection(tag: impl IntoIterator<Item = &dailp::LexicalConnecti
 async fn update_person(tag: impl IntoIterator<Item = &dailp::ContributorDetails>) -> Result<()> {
     graphql_mutate(
         "updatePerson",
+        tag.into_iter()
+            .map(|tag| serde_json::to_string(tag).unwrap()),
+    )
+    .await
+}
+
+async fn update_image_source(tag: impl IntoIterator<Item = &dailp::ImageSource>) -> Result<()> {
+    graphql_mutate(
+        "updateImageSource",
         tag.into_iter()
             .map(|tag| serde_json::to_string(tag).unwrap()),
     )

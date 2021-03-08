@@ -100,7 +100,7 @@ async fn parse_early_vocab(
             .skip(1)
             .map(Contributor::new_author)
             .collect(),
-        page_images: Vec::new(),
+        page_images: None,
         translation: None,
         is_reference: true,
     };

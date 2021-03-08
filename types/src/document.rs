@@ -78,7 +78,7 @@ impl AnnotatedDoc {
     }
 
     /// Images of each source document page, in order
-    async fn page_images(&self) -> &Vec<String> {
+    async fn page_images(&self) -> &Option<IiifImages> {
         &self.meta.page_images
     }
 
@@ -232,10 +232,65 @@ pub struct DocumentMetadata {
     pub translation: Option<Translation>,
     /// URL for an image of the original physical document.
     #[serde(default)]
-    pub page_images: Vec<String>,
+    pub page_images: Option<IiifImages>,
     pub date: Option<Date>,
     /// Whether this document is a reference, therefore just a list of forms.
     pub is_reference: bool,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct ImageSourceId(pub String);
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct ImageSource {
+    #[serde(rename = "_id")]
+    pub id: ImageSourceId,
+    pub url: String,
+}
+#[async_graphql::Object]
+impl ImageSource {
+    async fn id(&self) -> &str {
+        &self.id.0
+    }
+    async fn url(&self) -> &str {
+        &self.url
+    }
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct IiifImages {
+    pub source: ImageSourceId,
+    pub ids: Vec<String>,
+}
+impl IiifImages {
+    pub fn count(&self) -> usize {
+        self.ids.len()
+    }
+}
+#[async_graphql::Object]
+impl IiifImages {
+    async fn source(
+        &self,
+        context: &async_graphql::Context<'_>,
+    ) -> async_graphql::FieldResult<ImageSource> {
+        Ok(context
+            .data::<Database>()?
+            .image_source(&self.source)
+            .await?
+            .unwrap())
+    }
+
+    async fn urls(
+        &self,
+        context: &async_graphql::Context<'_>,
+    ) -> async_graphql::FieldResult<Vec<String>> {
+        let source = self.source(context).await?;
+        Ok(self
+            .ids
+            .iter()
+            .map(|id| format!("{}/{}", source.url, id))
+            .collect())
+    }
 }
 
 #[derive(Clone, Serialize, Deserialize)]

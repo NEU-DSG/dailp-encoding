@@ -4,12 +4,11 @@ import theme, { hideOnPrint, std, typography } from "./theme"
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch"
 import { Helmet } from "react-helmet"
 import { Button } from "reakit/Button"
-import { MdZoomIn, MdZoomOut } from "react-icons/md"
 import { FaMinus, FaPlus } from "react-icons/fa"
 
 const PageImages = (p: {
   document: GatsbyTypes.Dailp_AnnotatedDoc
-  pageImages: readonly string[]
+  pageImages: GatsbyTypes.Dailp_IiifImages
 }) => {
   return (
     <figure className={annotationFigure} aria-label="Manuscript Source Images">
@@ -51,13 +50,14 @@ const CurrentPageImage = (p: {
   resetTransform: () => void
   zoomIn: () => void
   zoomOut: () => void
-  pageImages: readonly string[]
+  pageImages: GatsbyTypes.Dailp_IiifImages
 }) => {
   const [selectedPage, setSelectedPage] = useState(0)
-  let url = p.pageImages[selectedPage]
+  const imageCount = p.pageImages.urls.length
+  const url = `${p.pageImages.urls[selectedPage]}/full/max/0/default.jpg`
   return (
     <>
-      {p.pageImages.length > 1 && (
+      {imageCount > 1 && (
         <nav aria-label="Pagination" className={cx(pageNav, hideOnPrint)}>
           <Button
             className={std.button}
@@ -79,7 +79,7 @@ const CurrentPageImage = (p: {
               p.resetTransform()
               setSelectedPage(selectedPage + 1)
             }}
-            disabled={selectedPage >= p.pageImages.length - 1}
+            disabled={selectedPage >= imageCount - 1}
             aria-label="Next Page"
           >
             Next

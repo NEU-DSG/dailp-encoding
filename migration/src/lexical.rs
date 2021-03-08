@@ -100,7 +100,7 @@ pub async fn migrate_dictionaries() -> Result<()> {
                 date: Some(dailp::Date::new(chrono::NaiveDate::from_ymd(1975, 1, 1))),
                 genre: None,
                 translation: None,
-                page_images: Vec::new(),
+                page_images: None,
                 is_reference: true,
             },
             segments: None,
@@ -115,7 +115,7 @@ pub async fn migrate_dictionaries() -> Result<()> {
                 date: Some(dailp::Date::new(chrono::NaiveDate::from_ymd(2003, 1, 1))),
                 genre: None,
                 translation: None,
-                page_images: Vec::new(),
+                page_images: None,
                 is_reference: true,
             },
             segments: None,
@@ -200,7 +200,7 @@ async fn parse_meta(sheet_id: &str, collection: &str) -> Result<DocumentMetadata
             .skip(1)
             .map(Contributor::new_author)
             .collect(),
-        page_images: Vec::new(),
+        page_images: None,
         translation: None,
         is_reference: true,
     })
@@ -397,7 +397,7 @@ async fn ingest_ac1995(sheet_id: &str) -> Result<()> {
             let index: i32 = row.next()?.parse().ok()?;
             let form_id = row.next()?;
             let syllabary = row.next()?;
-            let romanized = row.next()?;
+            let _romanized = row.next()?;
             let normalized = row.next()?;
             let translation = row.next()?;
             let pos = PositionInDocument::new(meta.id.clone(), "1".to_owned(), index);
