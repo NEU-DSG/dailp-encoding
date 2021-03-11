@@ -198,6 +198,18 @@ impl Query {
             .await?)
     }
 
+    /// Details of one image source based on its short identifier string.
+    async fn image_source(
+        &self,
+        context: &Context<'_>,
+        id: String,
+    ) -> FieldResult<Option<dailp::ImageSource>> {
+        Ok(context
+            .data::<Database>()?
+            .image_source(&dailp::ImageSourceId(id))
+            .await?)
+    }
+
     /// Search for words that include the given query at any position.
     async fn word_search(
         &self,
