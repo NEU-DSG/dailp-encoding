@@ -277,7 +277,7 @@ impl IiifImages {
             .data::<Database>()?
             .image_source(&self.source)
             .await?
-            .unwrap())
+            .ok_or_else(|| anyhow::format_err!("Image source not found"))?)
     }
 
     async fn urls(
