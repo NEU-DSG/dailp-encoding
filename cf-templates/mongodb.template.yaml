@@ -93,8 +93,8 @@ Parameters:
       - t3.xlarge
       - t3.2xlarge
   LatestAmazonLinux2Id:
-    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
-    Default: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2
+    Type: AWS::EC2::Image::Id
+    Default: ami-0be2609ba883822ec
   ReplicaNodeNameTag:
     Description: Instance Name
     Type: String
@@ -283,6 +283,7 @@ Resources:
           Value: !Sub dailp-${ReplicaNodeNameTag}-data
   ReplicaNodeInstance:
     Type: AWS::EC2::Instance
+    DeletionPolicy: Retain
     DependsOn: NodeInstanceVolume
     Metadata:
       HostRole: MongoDB Node

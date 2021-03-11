@@ -19,8 +19,6 @@ provider:
       - ${self:custom.database.subnetId2}
       - ${self:custom.database.subnetId3}
 custom:
-  cf-changesets:
-    requireChangeSet: true
   database:
     mongoVersion: 4.2
     volumeType: io1
@@ -39,6 +37,7 @@ custom:
     keyName: dailp-database
     qsBucket: aws-quickstart
     qsKeyPrefix: quickstart-mongodb/
+    instanceAMI: ami-0be2609ba883822ec
   serverless-translate-templateurls:
     s3Bucket: "dailp-prod-serverlessdeploymentbucket-1k5ja8qst262t --region us-east-1"
     inFolder: cf-templates
@@ -49,7 +48,6 @@ plugins:
   - serverless-rust
   - serverless-translate-templateurls
   - serverless-manifest-plugin
-  - serverless-cloudformation-changesets
 package:
   individually: true
 functions:

@@ -128,6 +128,7 @@ Resources:
         KeyName: ${self:custom.database.keyName}
         MongoDBVersion: ${self:custom.database.mongoVersion}
         NodeInstanceType: ${self:custom.database.instanceType}
+        LatestAmazonLinux2Id: ${self:custom.database.instanceAMI}
         MongoDBServerSecurityGroupID: !Ref "DailpDBServerSecurityGroup"
         MongoDBServersSecurityGroupID: !Ref "DailpDBServersSecurityGroup"
         MongoDBNodeIAMProfileID: !Ref "DailpDBNodeIAMProfile"
@@ -160,6 +161,7 @@ Resources:
         MongoDBAdminUsername: ${env:MONGODB_USERNAME}
         MongoDBAdminPassword: ${env:MONGODB_PASSWORD}
         NodeInstanceType: ${self:custom.database.instanceType}
+        LatestAmazonLinux2Id: ${self:custom.database.instanceAMI}
         NodeSubnet: ${self:custom.database.subnetId2}
         MongoDBServerSecurityGroupID: !Ref "DailpDBServerSecurityGroup"
         MongoDBServersSecurityGroupID: !Ref "DailpDBServersSecurityGroup"
@@ -207,6 +209,7 @@ Resources:
         VPC: ${self:custom.database.vpcId}
         VolumeSize: ${self:custom.database.volumeSize}
         VolumeType: ${self:custom.database.volumeType}
+        LatestAmazonLinux2Id: ${self:custom.database.instanceAMI}
         StackName: !Ref "AWS::StackName"
         ReplicaNodeNameTag: SecondaryReplicaNode1Dailp
         NodeReplicaSetIndex: "2"
