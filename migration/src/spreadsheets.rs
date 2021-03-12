@@ -304,8 +304,10 @@ impl SheetResult {
             .next()
             .ok_or_else(|| anyhow::format_err!("Missing image source"))?
             .into_iter()
+            .skip(1)
             .next()
-            .unwrap();
+            .unwrap()
+            .to_ascii_lowercase();
         let image_ids = values
             .next()
             // Remove the row title.
