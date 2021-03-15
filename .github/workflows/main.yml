@@ -75,17 +75,18 @@ jobs:
       - name: Run unit tests
         if: steps.filter.outputs.rust == 'true'
         run: cargo test --release
+      - name: Install NPM dependencies
+        run: |
+          yarn install
+          mkdir -p .serverless
       - name: Deploy back-end to AWS via serverless
         if: steps.filter.outputs.backend == 'true'
         run: |
           cargo install cross
-          yarn install
-          mkdir -p .serverless
           yarn deploy-graphql
       - name: Encode documents as TEI and database entries
         if: steps.filter.outputs.data == 'true'
         run: |
-          mkdir -p .serverless
           yarn sls translate --stage prod
           yarn sls manifest --stage prod
           export DAILP_GRAPHQL_URL=$(jq -r '.prod.urls.byFunction.graphql.url' .serverless/manifest.json)
