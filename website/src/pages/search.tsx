@@ -1,4 +1,5 @@
 import React, { useEffect } from "react"
+import { Link } from "gatsby"
 import { useLocation } from "@reach/router"
 import { useQuery, gql } from "@apollo/client"
 import { css, cx } from "linaria"
@@ -36,9 +37,11 @@ export default () => {
     <Layout title="Search">
       <main>
         <p className={wide}>
-          Type your search query in simple phonetics, English translation,
-          Cherokee syllabary, or romanized source. All matching words will be
-          shown below.
+          Type a search query in Cherokee syllabary, simple phonetics, English
+          translation, or romanized source. All words from{" "}
+          <Link to="/sources">dictionaries and grammars</Link> that contain your
+          query will be shown below. These results do not include our collection
+          of manuscripts yet.
         </p>
         <Input
           className={searchBox}

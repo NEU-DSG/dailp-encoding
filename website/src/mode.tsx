@@ -26,37 +26,41 @@ const levelNameMapping = {
     details: "Each Cherokee word broken up into its component parts",
   },
   [ViewMode.AnalysisDt]: {
-    label: "Analysis (d/t)",
+    label: "Analysis (CRG)",
     details:
-      "Linguistic analysis using the Cherokee Reference Grammar (CRG) representation",
+      "Linguistic analysis using terms from Cherokee Reference Grammar (CRG)",
   },
   [ViewMode.AnalysisTth]: {
-    label: "Analysis (t/th)",
+    label: "Analysis (TAOC)",
     details:
-      "Linguistic analysis using the Tone and Accent in Oklahoma Cherokee (TAOC) representation",
+      "Linguistic analysis using terms from Tone and Accent in Oklahoma Cherokee (TAOC) and t",
   },
 }
 
 export const modeDetails = (mode: ViewMode) => levelNameMapping[mode]
 
 const tagSetMapping = {
-  [TagSet.Crg]: { label: "CRG", details: "Cherokee Reference Grammar" },
-
+  [TagSet.Crg]: {
+    label: "CRG",
+    details:
+      "Cherokee Reference Grammar. A common resource for more advanced students.",
+  },
   [TagSet.Learner]: {
     label: "Study",
     details: "Simplified tag set for learning Cherokee",
   },
   [TagSet.Taoc]: {
     label: "TAOC",
-    details: "Tone and Accent in Ohlahoma Cherokee",
+    details:
+      "Tone and Accent in Ohlahoma Cherokee. The foundation of DAILP's analysis practices.",
   },
   [TagSet.Dailp]: {
     label: "DAILP",
-    details: "Internal DAILP tag set used in linguistic analysis",
+    details: "The hybrid terminology that DAILP uses in linguistic analysis",
   },
 }
 
-const selectedMode = () =>
+export const selectedMode = () =>
   Number.parseInt(Cookies.get("experienceLevel") ?? "0")
 
 export const ExperiencePicker = (p: { onSelect: (mode: ViewMode) => void }) => {
