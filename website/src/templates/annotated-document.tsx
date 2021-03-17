@@ -22,7 +22,7 @@ import { MorphemeDetails } from "../morpheme"
 import PageImages from "../page-image"
 import { Breadcrumbs } from "../breadcrumbs"
 import { isMobile } from "react-device-detect"
-import { ExperiencePicker, modeDetails } from "../mode"
+import { ExperiencePicker, modeDetails, selectedMode } from "../mode"
 import { Button } from "reakit/Button"
 
 enum Tabs {
@@ -95,7 +95,7 @@ const TranslationTab = ({ doc }) => {
   )
 
   const [experienceLevel, setExperienceLevel] = useState<ViewMode>(
-    ViewMode.Story
+    selectedMode()
   )
 
   const tagSet = tagSetForMode(experienceLevel)

@@ -15,10 +15,10 @@ export default (p: { data: GatsbyTypes.AllSourcesQuery }) => {
           This is a cited list of the lexical language resources that we use to
           identify and correlate words in a document. The list includes
           dictionaries and grammars written as early as the 18th century and as
-          recent as the 2000s. Each citation is written following the{" "}
+          recent as the 2000s. Each citation is written generally following the{" "}
           <a href="https://apastyle.apa.org/">APA style</a>, like so:
           <br />
-          Document ID = Last name, First name, ... (Year published).{" "}
+          Document ID = Last name, First name; ... (Year published).{" "}
           <i>Title of the document</i>. Number of words referenced.
         </p>
 
@@ -43,7 +43,7 @@ const DocumentCitation = (p: { document: LocalDocument }) => {
   const year = doc.date?.year
   const authors = _.join(
     doc.contributors.map((author) => author.name),
-    ", "
+    "; "
   )
   const wordCount = doc.formCount ? ` ${doc.formCount} words.` : null
   return (

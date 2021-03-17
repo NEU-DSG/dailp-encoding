@@ -21,6 +21,11 @@ export default (p: { data: GatsbyTypes.GlossaryQuery }) => {
         <header className={wide}>
           <h1>Glossary of Terms</h1>
         </header>
+        <p className={wide}>
+          There are multiple conventions for describing the parts of a Cherokee
+          word. Hover over each terminology mode below to see more details about
+          what they offer.
+        </p>
 
         <TagSetPicker onSelect={setTagSet} />
 
