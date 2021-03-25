@@ -38,6 +38,16 @@ impl AnnotatedForm {
             .as_ref()
             .and_then(|segments| segments.iter().find(|seg| seg.gloss == gloss))
     }
+
+    pub fn is_unresolved(&self) -> bool {
+        if let Some(segments) = &self.segments {
+            segments
+                .iter()
+                .any(|segment| segment.morpheme.contains('?') || segment.gloss.contains('?'))
+        } else {
+            self.source.contains('?')
+        }
+    }
 }
 
 #[async_graphql::Object]
