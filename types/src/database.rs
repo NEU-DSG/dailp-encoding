@@ -225,6 +225,16 @@ impl Database {
             .await)
     }
 
+    pub async fn potential_syllabary_matches(&self, syllabary: &str) -> Result<Vec<AnnotatedForm>> {
+        let alternate_spellings = CherokeeOrthography::similar_syllabary_strings(syllabary);
+        let spelling_queries: Vec<_> = alternate_spellings
+            .into_iter()
+            .map(|s| bson::doc! { "source": s })
+            .collect();
+        self.word_search(bson::doc! { "$or": spelling_queries })
+            .await
+    }
+
     pub async fn lexical_entry(&self, id: &str) -> Result<Option<AnnotatedForm>> {
         Ok(self
             .words_collection()

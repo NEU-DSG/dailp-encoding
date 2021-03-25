@@ -225,6 +225,19 @@ impl Query {
         // Return the matching words, if any.
         Ok(context.data::<Database>()?.word_search(q).await?)
     }
+
+    /// Search for words with the exact same syllabary string, or with very
+    /// similar looking characters.
+    async fn syllabary_search(
+        &self,
+        context: &Context<'_>,
+        query: String,
+    ) -> FieldResult<Vec<dailp::AnnotatedForm>> {
+        Ok(context
+            .data::<Database>()?
+            .potential_syllabary_matches(&query)
+            .await?)
+    }
 }
 
 #[derive(async_graphql::InputObject)]
