@@ -4,6 +4,7 @@ use dailp::{
     WordsInDocument,
 };
 use lambda_http::{http::header, lambda, IntoResponse, Request, Response};
+use mongodb::bson;
 
 type Error = Box<dyn std::error::Error + Sync + Send + 'static>;
 
@@ -210,13 +211,50 @@ impl Query {
             .await?)
     }
 
-    /// Search for words that include the given query at any position.
+    /// Search for words that match any one of the given queries.
+    /// Each query may match against multiple fields of a word.
     async fn word_search(
         &self,
         context: &Context<'_>,
-        query: String,
+        queries: Vec<FormQuery>,
     ) -> FieldResult<Vec<dailp::AnnotatedForm>> {
-        Ok(context.data::<Database>()?.word_search(query).await?)
+        // Convert the queries to valid BSON to send to MongoDB.
+        let bson_queries: Vec<_> = queries.into_iter().map(|q| q.into_bson()).collect();
+        // Match against any of the given queries.
+        let q = bson::doc! { "$or": bson_queries };
+        // Return the matching words, if any.
+        Ok(context.data::<Database>()?.word_search(q).await?)
+    }
+}
+
+#[derive(async_graphql::InputObject)]
+struct FormQuery {
+    id: Option<String>,
+    source: Option<String>,
+    normalized_source: Option<String>,
+    simple_phonetics: Option<String>,
+    unresolved: Option<bool>,
+}
+impl FormQuery {
+    fn into_bson(self) -> bson::Document {
+        let regex_query = |q| bson::doc! { "$regex": q, "$options": "i" };
+        let mut doc = bson::Document::new();
+        if let Some(id) = self.id {
+            doc.insert("id", regex_query(id));
+        }
+        if let Some(source) = self.source {
+            doc.insert("source", regex_query(source));
+        }
+        if let Some(normalized_source) = self.normalized_source {
+            doc.insert("normalized_source", regex_query(normalized_source));
+        }
+        if let Some(simple_phonetics) = self.simple_phonetics {
+            doc.insert("simple_phonetics", regex_query(simple_phonetics));
+        }
+        if let Some(true) = self.unresolved {
+            doc.insert("segments", bson::doc! { "gloss": "?" });
+        }
+        doc
     }
 }
 

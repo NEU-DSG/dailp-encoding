@@ -59,8 +59,6 @@ Resources:
               cache:
                 paths:
                   - website/node_modules
-                  - website/.cache
-                  - website/public
             customHeaders:
               - pattern: "**/*.{json,html}"
                 headers:
