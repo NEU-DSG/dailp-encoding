@@ -145,6 +145,19 @@ impl AnnotatedDoc {
             .count_words_in_document(&self.meta.id)
             .await?)
     }
+
+    /// All words in the document that have unanalyzed or unfamiliar parts.
+    /// These words need to be corrected or reviewed further.
+    async fn unresolved_forms(
+        &self,
+        context: &async_graphql::Context<'_>,
+    ) -> FieldResult<Vec<Cow<'_, AnnotatedForm>>> {
+        let forms = self.forms(context).await?;
+        Ok(forms
+            .into_iter()
+            .filter(|form| form.is_unresolved())
+            .collect())
+    }
 }
 
 #[derive(async_graphql::Enum, Clone, Copy, PartialEq, Eq)]

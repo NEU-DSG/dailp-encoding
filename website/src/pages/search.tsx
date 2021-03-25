@@ -110,8 +110,15 @@ const searchBox = css`
 `
 
 const query = gql`
-  query StringSearch($gloss: String!) {
-    wordSearch(query: $gloss) {
+  query StringSearch($query: String!) {
+    wordSearch(
+      queries: [
+        { source: $query }
+        { normalized_source: $query }
+        { simple_phonetics: $query }
+        { english_gloss: $query }
+      ]
+    ) {
       source
       normalizedSource
       simplePhonetics
