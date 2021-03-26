@@ -246,6 +246,7 @@ struct FormQuery {
     source: Option<String>,
     normalized_source: Option<String>,
     simple_phonetics: Option<String>,
+    english_gloss: Option<String>,
     unresolved: Option<bool>,
 }
 impl FormQuery {
@@ -263,6 +264,9 @@ impl FormQuery {
         }
         if let Some(simple_phonetics) = self.simple_phonetics {
             doc.insert("simple_phonetics", regex_query(simple_phonetics));
+        }
+        if let Some(english_gloss) = self.english_gloss {
+            doc.insert("english_gloss", regex_query(english_gloss));
         }
         if let Some(true) = self.unresolved {
             doc.insert("segments", bson::doc! { "gloss": "?" });

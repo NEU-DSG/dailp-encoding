@@ -60,7 +60,7 @@ export default () => {
 
 const Timeline = (p: { gloss: string }) => {
   const timeline = useQuery(query, {
-    variables: { gloss: p.gloss },
+    variables: { query: p.gloss },
     skip: !p.gloss,
   })
 
@@ -69,6 +69,7 @@ const Timeline = (p: { gloss: string }) => {
   } else if (timeline.loading) {
     return <>Loading...</>
   } else if (timeline.error) {
+    console.error(timeline.error)
     return <>Error!</>
   } else if (!timeline.data || !timeline.data.wordSearch.length) {
     return <>No results found.</>
@@ -114,9 +115,9 @@ const query = gql`
     wordSearch(
       queries: [
         { source: $query }
-        { normalized_source: $query }
-        { simple_phonetics: $query }
-        { english_gloss: $query }
+        { normalizedSource: $query }
+        { simplePhonetics: $query }
+        { englishGloss: $query }
       ]
     ) {
       source
