@@ -348,7 +348,15 @@ impl Database {
         use tokio::stream::StreamExt as _;
 
         let col = self.connections_collection();
-        let morpheme = bson::to_bson(id)?;
+        let morpheme = if let Some(doc_id) = &id.document_id {
+            if let Some(index) = id.index {
+                bson::doc! { "document_id": doc_id, "gloss": &id.gloss, "index": index }
+            } else {
+                bson::doc! { "document_id": doc_id, "gloss": &id.gloss }
+            }
+        } else {
+            bson::doc! { "gloss": &id.gloss }
+        };
 
         let connections = col
             .aggregate(
