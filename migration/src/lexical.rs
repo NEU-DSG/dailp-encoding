@@ -150,11 +150,7 @@ async fn parse_numerals(sheet_id: &str, doc_id: &str, year: i32) -> Result<()> {
             let _numeric = values.next()?;
             let simple_phonetics = values.next()?;
             let syllabary = values.next()?;
-            let position = PositionInDocument {
-                document_id: doc_id.to_owned(),
-                index: key,
-                page_number: page_num,
-            };
+            let position = PositionInDocument::new(doc_id.to_owned(), page_num, key);
             let segments = vec![MorphemeSegment::new(root_dailp, gloss.clone(), None)];
             Some(AnnotatedForm {
                 id: position.make_id(&gloss, true),
@@ -217,11 +213,11 @@ async fn parse_appendix(sheet_id: &str, to_skip: usize) -> Result<()> {
         .filter(|r| r.len() > 4 && !r[1].is_empty())
         .filter_map(|row| {
             let mut values = row.into_iter();
-            let position = PositionInDocument {
-                document_id: meta.id.clone(),
-                index: values.next()?.parse().unwrap_or(1),
-                page_number: values.next()?,
-            };
+            let position = PositionInDocument::new(
+                meta.id.clone(),
+                values.next()?,
+                values.next()?.parse().unwrap_or(1),
+            );
             for _ in 0..to_skip {
                 values.next()?;
             }
@@ -305,11 +301,8 @@ fn parse_new_df1975(
                 let root_gloss = root_values.next().filter(|s| !s.is_empty())?;
                 let mut form_values = root_values.clone().skip(after_root + translations);
                 let date = Date::new(chrono::NaiveDate::from_ymd(year, 1, 1));
-                let pos = PositionInDocument {
-                    document_id: doc_id.clone(),
-                    page_number,
-                    index: key.parse().unwrap_or(1),
-                };
+                let pos =
+                    PositionInDocument::new(doc_id.clone(), page_number, key.parse().unwrap_or(1));
                 Some(LexicalEntryWithForms {
                     forms: seg_verb_surface_forms(
                         &pos,
