@@ -1,12 +1,13 @@
-use crate::{AnnotatedForm, Date, MorphemeSegment};
+use crate::{AnnotatedForm, Date, Geometry, MorphemeSegment};
 use serde::{Deserialize, Serialize};
 
 /// The reference position within a document of one specific form
-#[derive(Clone, Serialize, Deserialize, Debug, PartialEq, Eq)]
+#[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
 pub struct PositionInDocument {
     pub document_id: String,
     pub page_number: String,
     pub index: i32,
+    pub geometry: Option<Geometry>,
 }
 impl PositionInDocument {
     pub fn new(document_id: String, page_number: String, index: i32) -> Self {
@@ -14,16 +15,20 @@ impl PositionInDocument {
             document_id,
             page_number,
             index,
+            geometry: None,
         }
     }
 }
 
 impl PositionInDocument {
     pub fn make_id(&self, gloss: &str, use_index: bool) -> String {
+        // Clear non-ASCII characters from the ID to prevent weird duplicates
+        // caused by unicode blanks or accents.
+        let clean_gloss = gloss.replace(|c: char| !c.is_ascii(), "");
         if use_index {
-            format!("{}.{}:{}", self.document_id, self.index, gloss)
+            format!("{}.{}:{}", self.document_id, self.index, clean_gloss)
         } else {
-            format!("{}:{}", self.document_id, gloss)
+            format!("{}:{}", self.document_id, clean_gloss)
         }
     }
 
@@ -78,6 +83,46 @@ impl PositionInDocument {
     /// same document.
     async fn index(&self) -> i32 {
         self.index
+    }
+
+    async fn iiif_url(
+        &self,
+        context: &async_graphql::Context<'_>,
+    ) -> async_graphql::FieldResult<Option<String>> {
+        use {
+            crate::{Database, DocumentId},
+            async_graphql::dataloader::DataLoader,
+        };
+        if let Some(geometry) = &self.geometry {
+            // Retrieve the document instance.
+            let doc = context
+                .data::<DataLoader<Database>>()?
+                .load_one(DocumentId(self.document_id.clone()))
+                .await?
+                .ok_or_else(|| {
+                    anyhow::format_err!("Document {} missing from database.", self.document_id)
+                })?;
+            // Only proceed if the document has some associated images.
+            if let Some(imgs) = &doc.meta.page_images {
+                // Try to parse the page number as an integer.
+                // Page ranges are allowed, which is why the field is a string.
+                let page_num: usize = self.page_number.parse()?;
+
+                // Only proceed if this particular page has an associated image.
+                if let Some(img_id) = imgs.ids.get(page_num - 1) {
+                    // Get the base url for the image source.
+                    let source = imgs.source(context).await?;
+                    // Combine the pieces of the IIIF url as: "source/oid/region"
+                    return Ok(Some(format!(
+                        "{}/{}/{}",
+                        source.url,
+                        img_id,
+                        geometry.to_iiif_string()
+                    )));
+                }
+            }
+        }
+        Ok(None)
     }
 }
 
@@ -910,11 +955,7 @@ DF2018:54",
     #[test]
     fn morpheme_id_raw() {
         let raw = "as for me (1SG.PRO + CS)";
-        let pos = PositionInDocument {
-            document_id: "AK1997".to_owned(),
-            page_number: "116".to_owned(),
-            index: 1,
-        };
+        let pos = PositionInDocument::new("AK1997".to_owned(), "116".to_owned(), 1);
         assert_eq!(pos.make_raw_id(raw, true), "AK1997.1:as.for.me.1SG.PRO.CS");
         assert_eq!(pos.make_raw_id(raw, false), "AK1997:as.for.me.1SG.PRO.CS");
     }
