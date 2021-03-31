@@ -55,7 +55,12 @@ const TabSet = ({ doc }) => {
         className={wideAndTop}
         innerClass={wideSticky}
       >
-        <TabList {...tabs} className={docTabs} aria-label="Document View Types">
+        <TabList
+          {...tabs}
+          id="document-tabs-header"
+          className={docTabs}
+          aria-label="Document View Types"
+        >
           <Tab {...tabs} id={Tabs.ANNOTATION} className={docTab}>
             Translation
           </Tab>
@@ -117,7 +122,15 @@ const TranslationTab = ({ doc }) => {
           ) : null}
         </Dialog>
       </DialogBackdrop>
-      <ExperiencePicker onSelect={setExperienceLevel} />
+
+      <p className={cx(topMargin, hideOnPrint)}>
+        Each mode below displays different information about the words on the
+        page. Hover over each mode for a specific description.
+      </p>
+
+      <Sticky innerClass={solidBg} top="#document-tabs-header">
+        <ExperiencePicker onSelect={setExperienceLevel} />
+      </Sticky>
 
       <article className={annotationContents}>
         {doc.translatedSegments?.map((seg, i) => (
@@ -151,6 +164,10 @@ const TranslationTab = ({ doc }) => {
 
 const annotationContents = css`
   width: 100%;
+`
+
+const topMargin = css`
+  margin-top: ${typography.rhythm(1 / 2)};
 `
 
 export const DocumentTitleHeader = (p: {
@@ -211,6 +228,11 @@ const wideAndTop = css`
     display: none;
     height: 0;
   }
+`
+
+const solidBg = css`
+  background-color: ${theme.colors.body};
+  z-index: 1;
 `
 
 const wideSticky = css`
