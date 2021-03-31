@@ -36,6 +36,7 @@ const Timeline = (p: { gloss: string }) => {
     return <>Loading...</>
   }
   if (timeline.error) {
+    console.error(timeline.error)
     return <>Error!</>
   }
   return (
@@ -94,24 +95,6 @@ const Timeline = (p: { gloss: string }) => {
           </div>
         )
       })}
-    </div>
-  )
-}
-
-const FormRow = (p: {
-  documentId: string
-  source: string
-  normalizedSource: string
-  phonetic: string
-  translation: string
-}) => {
-  return (
-    <div className={wordRow}>
-      <div>{p.documentId}</div>
-      <div>{p.source}</div>
-      <div>{p.normalizedSource}</div>
-      <div>{p.phonetic}</div>
-      <div>{p.translation}</div>
     </div>
   )
 }
