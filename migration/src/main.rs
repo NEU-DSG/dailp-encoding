@@ -39,12 +39,16 @@ async fn main() -> Result<()> {
 }
 
 async fn migrate_image_sources() -> Result<()> {
-    update_image_source(&[dailp::ImageSource {
-        id: dailp::ImageSourceId("beinecke".to_owned()),
+    use dailp::{ImageSource, ImageSourceId};
+    update_image_source(&[ImageSource {
+        id: ImageSourceId("beinecke".to_owned()),
         url: "https://collections.library.yale.edu/iiif/2".to_owned(),
+    },
+    ImageSource {
+        id: ImageSourceId("dailp".to_owned()),
+        url: "https://wd0ahsivs3.execute-api.us-east-1.amazonaws.com/latest/iiif/2".to_owned(),
     }])
-    .await?;
-    Ok(())
+    .await
 }
 
 /// Parses our annotated document spreadsheets, migrating that data to our
