@@ -44,7 +44,6 @@ const Timeline = (p: { gloss: string }) => {
       <div className={cx(wordRow, bolden)}>
         <div>Document ID</div>
         <div>Original</div>
-        <div>Normalized</div>
         <div>Simple Phonetics</div>
         <div>Translation</div>
       </div>
@@ -70,7 +69,6 @@ const Timeline = (p: { gloss: string }) => {
                   <div key={idx} className={wordRow}>
                     <div>{form.documentId}</div>
                     <div>{form.source}</div>
-                    <div>{form.normalizedSource}</div>
                     <div>{form.simplePhonetics}</div>
                     <div>{form.englishGloss.join(", ")}</div>
                   </div>
