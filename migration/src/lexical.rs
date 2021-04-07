@@ -213,10 +213,12 @@ async fn parse_appendix(sheet_id: &str, to_skip: usize) -> Result<()> {
         .filter(|r| r.len() > 4 && !r[1].is_empty())
         .filter_map(|row| {
             let mut values = row.into_iter();
+            let index = values.next()?.parse().unwrap_or(1);
+            let page_num = values.next()?;
             let position = PositionInDocument::new(
                 meta.id.clone(),
-                values.next()?,
-                values.next()?.parse().unwrap_or(1),
+                page_num,
+                index,
             );
             for _ in 0..to_skip {
                 values.next()?;
