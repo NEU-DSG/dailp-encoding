@@ -155,7 +155,7 @@ const SimilarMorphemeList = (props: {
                         }`}
                         onClick={() => props.dialog.hide()}
                       >
-                        {word.documentId} #{word.index}
+                        {word.documentId}
                       </AnchorLink>
                     ) : (
                       <>{word.documentId}</>
