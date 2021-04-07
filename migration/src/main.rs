@@ -40,7 +40,7 @@ async fn main() -> Result<()> {
 
 async fn migrate_image_sources() -> Result<()> {
     update_image_source(&[dailp::ImageSource {
-        id: dailp::ImageSourceId("beineke".to_owned()),
+        id: dailp::ImageSourceId("beinecke".to_owned()),
         url: "https://collections.library.yale.edu/iiif/2".to_owned(),
     }])
     .await?;
