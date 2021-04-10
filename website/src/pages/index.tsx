@@ -20,8 +20,14 @@ const IndexPage = (props: { data: GatsbyTypes.IndexPageQuery }) => (
       />
       <script
         type="text/javascript"
-        src={`${wordpressUrl}/wp-includes/js/jquery/jquery.js?ver=1.12.4`}
-      />
+        src="https://code.jquery.com/jquery-1.12.4.min.js"
+        integrity="sha256-ZosEbRLbNQzLpnKIkEdrPv7lOy9C27hHQ+Xp8a4MxAQ="
+        crossOrigin="anonymous"
+      ></script>
+      <script
+        type="text/javascript"
+        src={`${wordpressUrl}/wp-includes/js/jquery/jquery-migrate.min.js?ver=1.4.1`}
+      ></script>
       <script
         type="text/javascript"
         src={`${wordpressUrl}/wp-content/themes/quest/assets/js/quest-and-plugins.js?ver=4.9.16`}
@@ -79,6 +85,7 @@ export const DocIndex = styled.main`
   align-items: center;
 
   .carousel {
+    display: none;
     position: relative;
     .carousel-inner {
       position: relative;
