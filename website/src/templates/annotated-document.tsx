@@ -172,7 +172,7 @@ export const DocumentTitleHeader = (p: {
     </Breadcrumbs>
 
     <h1 className={docTitle}>
-      {p.doc.title} {p.doc.date && `(${p.doc.date.year})`}{" "}
+      {p.doc.title} ({p.doc.id}{p.doc.date && `, ${p.doc.date.year}`}){" "}
     </h1>
     <div className={bottomPadded}>
       {p.showDetails ? (

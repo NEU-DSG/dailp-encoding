@@ -22,8 +22,8 @@ const levelNameMapping = {
     details: "Word by word pronunciation and translation",
   },
   [ViewMode.Segmentation]: {
-    label: "Segmentation",
-    details: "Each Cherokee word broken up into its component parts",
+    label: "Word Parts",
+    details: "Each word broken down into its component parts",
   },
   [ViewMode.AnalysisDt]: {
     label: "Analysis (CRG)",
@@ -33,7 +33,7 @@ const levelNameMapping = {
   [ViewMode.AnalysisTth]: {
     label: "Analysis (TAOC)",
     details:
-      "Linguistic analysis using terms from Tone and Accent in Oklahoma Cherokee (TAOC) and t",
+      "Linguistic analysis using terms from Tone and Accent in Oklahoma Cherokee (TAOC)",
   },
 }
 
