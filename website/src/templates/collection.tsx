@@ -41,7 +41,8 @@ export default (p: {
             {documents.map((document) => (
               <li key={document.slug}>
                 <Link to={documentRoute(document.slug)}>{document.title}</Link>{" "}
-                {document.date && `(${document.date.year})`}
+                ({document.id}
+                {document.date && `, ${document.date.year}`})
               </li>
             ))}
           </ul>
