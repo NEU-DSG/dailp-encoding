@@ -4,7 +4,9 @@
   "description": "Front-end for exploring Cherokee documents from DAILP",
   "scripts": {
     "start": "GATSBY_EXPERIMENTAL_QUERY_CONCURRENCY=5 GATSBY_CONCURRENT_DOWNLOAD=5 gatsby develop",
-    "build": "GATSBY_EXPERIMENTAL_QUERY_CONCURRENCY=5 GATSBY_CONCURRENT_DOWNLOAD=5 GATSBY_EXPERIMENTAL_PAGE_BUILD_ON_DATA_CHANGES=true gatsby build",
+    "build:gatsby": "GATSBY_EXPERIMENTAL_QUERY_CONCURRENCY=5 GATSBY_CONCURRENT_DOWNLOAD=5 GATSBY_EXPERIMENTAL_PAGE_BUILD_ON_DATA_CHANGES=true gatsby build",
+    "build:rustdoc": "cd .. && cargo doc --no-deps --workspace && rm -rf website/public/rustdoc && cp -r target/doc website/public/rustdoc",
+    "build": "npm-run-all build:gatsby build:rustdoc",
     "serve": "gatsby serve",
     "clean": "gatsby clean"
   },
@@ -79,6 +81,7 @@
     "gatsby-source-wordpress": "^4.0.1",
     "gatsby-transformer-sharp": "^2.5.20",
     "linaria": "^2.0.0",
+    "npm-run-all": "^4.1.5",
     "prettier": "^2.1.2",
     "tsdef": "0.0.14",
     "typescript": "^4.0.3",
