@@ -215,11 +215,7 @@ async fn parse_appendix(sheet_id: &str, to_skip: usize) -> Result<()> {
             let mut values = row.into_iter();
             let index = values.next()?.parse().unwrap_or(1);
             let page_num = values.next()?;
-            let position = PositionInDocument::new(
-                meta.id.clone(),
-                page_num,
-                index,
-            );
+            let position = PositionInDocument::new(meta.id.clone(), page_num, index);
             for _ in 0..to_skip {
                 values.next()?;
             }

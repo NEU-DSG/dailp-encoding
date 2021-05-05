@@ -475,13 +475,7 @@ impl<'a> AnnotatedLine {
                         let translation = line.rows[6].items.get(i).map(|x| x.trim().to_owned());
                         let w = AnnotatedForm {
                             // TODO Extract into public function!
-                            id: if let Some(gloss) = glosses {
-                                format!("{}.{}:{}", meta.id, word_index, gloss)
-                            } else if let Some(t) = translation.as_ref() {
-                                format!("{}.{}:{}", meta.id, word_index, t)
-                            } else {
-                                format!("{}.{}", meta.id, word_index)
-                            },
+                            id: format!("{}.{}", meta.id, word_index),
                             position: PositionInDocument::new(
                                 meta.id.clone(),
                                 1.to_string(),

@@ -61,6 +61,13 @@ functions:
             origin: "*"
             headers: "*"
             allowCredentials: false
+      - http:
+          path: /manifests/{id}
+          method: get
+          cors:
+            origin: "*"
+            headers: "*"
+            allowCredentials: false
     environment:
       MONGODB_URI: !Sub
         - "mongodb://${NodeIp}:27017/admin?retryWrites=true&w=majority"

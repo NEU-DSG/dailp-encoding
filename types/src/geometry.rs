@@ -41,7 +41,6 @@ impl Geometry {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use anyhow::Result;
 
     #[test]
     fn iiif_string() {
