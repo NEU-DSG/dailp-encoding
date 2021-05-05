@@ -1,3 +1,5 @@
+//! This program encodes spreadsheets hosted on Google Drive annotating source documents with linguistic information into equivalent database entries.
+
 mod connections;
 mod contributors;
 mod early_vocab;

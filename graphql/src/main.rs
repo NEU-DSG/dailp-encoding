@@ -1,3 +1,5 @@
+//! This piece of the project exposes a GraphQL endpoint that allows one to access DAILP data in a federated manner with specific queries.
+
 use async_graphql::{dataloader::DataLoader, Context, EmptySubscription, FieldResult, Schema};
 use dailp::{
     AnnotatedDoc, CherokeeOrthography, Database, MorphemeId, MorphemeReference, MorphemeTag,
