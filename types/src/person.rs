@@ -34,6 +34,12 @@ impl Contributor {
     }
 }
 
+/// Basic personal details of an individual contributor.
+///
+/// They may have transcribed a handwritten manuscript, translated it into
+/// English, or analyzed it for linguistic information.
+/// This information can be used to track who contributed to the development of
+/// each individual document, and track contributions to the archive as a whole.
 #[derive(async_graphql::SimpleObject, Clone, Debug, Serialize, Deserialize)]
 pub struct ContributorDetails {
     /// Full name of this person, this exact string must be used to identify
@@ -43,11 +49,17 @@ pub struct ContributorDetails {
     /// Alternate name of this person, may be in a different language or writing
     /// system. Used only for descriptive purposes.
     pub alternate_name: Option<String>,
+    /// The optional date that this contributor was born on.
     pub birth_date: Option<crate::Date>,
 }
 
+/// Attribution for a particular source, whether an institution or an individual.
+/// Most commonly, this will represent the details of a library or archive that
+/// houses documents used elsewhere.
 #[derive(async_graphql::SimpleObject, Clone, Debug, Serialize, Deserialize)]
 pub struct SourceAttribution {
+    /// Name of the source, i.e. "The Newberry Library"
     pub name: String,
+    /// URL of this source's homepage, i.e. "https://www.newberry.org/"
     pub link: String,
 }

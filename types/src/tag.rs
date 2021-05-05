@@ -2,13 +2,25 @@ use crate::{Database, MorphemeId};
 use serde::{Deserialize, Serialize};
 
 /// Represents a morphological gloss tag without committing to a single representation.
+///
+/// - TODO: Use a more generic representation than fields for learner, TAOC, and CRG.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct MorphemeTag {
+    /// Unique identifier for this morpheme which should be used in raw
+    /// interlinear glosses of a word containing this morpheme.
     #[serde(rename = "_id")]
     pub id: String,
+    /// The "learner" representation of this morpheme, a compromise between no
+    /// interlinear glossing and standard linguistic terms.
     pub learner: Option<TagForm>,
+    /// Representation of this morpheme that closely aligns with _Tone and
+    /// Accent in Oklahoma Cherokee_.
     pub taoc: Option<TagForm>,
+    /// Representation of this morpheme that closesly aligns with _Cherokee
+    /// Reference Grammar_.
     pub crg: Option<TagForm>,
+    /// What kind of functional morpheme is this?
+    /// A few examples: "Prepronominal Prefix", "Clitic"
     pub morpheme_type: String,
 }
 
@@ -50,6 +62,7 @@ impl MorphemeTag {
     }
 }
 
+/// A concrete representation of a particular functional morpheme.
 #[derive(async_graphql::SimpleObject, Serialize, Deserialize, Debug, Clone)]
 pub struct TagForm {
     /// How this morpheme is represented in a gloss
