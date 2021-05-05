@@ -4,6 +4,7 @@ mod document;
 mod form;
 mod geometry;
 mod gloss;
+pub mod iiif;
 mod lexical;
 mod morpheme;
 mod orthography;

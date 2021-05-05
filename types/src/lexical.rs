@@ -1,10 +1,10 @@
-use crate::{AnnotatedForm, Date, Geometry, MorphemeSegment};
+use crate::{AnnotatedForm, Date, DocumentId, Geometry, MorphemeSegment};
 use serde::{Deserialize, Serialize};
 
 /// The reference position within a document of one specific form
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
 pub struct PositionInDocument {
-    pub document_id: String,
+    pub document_id: DocumentId,
     pub page_number: String,
     pub index: i32,
     pub geometry: Option<Geometry>,
@@ -12,7 +12,7 @@ pub struct PositionInDocument {
 impl PositionInDocument {
     pub fn new(document_id: String, page_number: String, index: i32) -> Self {
         Self {
-            document_id,
+            document_id: DocumentId(document_id),
             page_number,
             index,
             geometry: None,
@@ -26,9 +26,9 @@ impl PositionInDocument {
         // caused by unicode blanks or accents.
         let clean_gloss = gloss.replace(|c: char| !c.is_ascii(), "");
         if use_index {
-            format!("{}.{}:{}", self.document_id, self.index, clean_gloss)
+            format!("{}.{}:{}", self.document_id.0, self.index, clean_gloss)
         } else {
-            format!("{}:{}", self.document_id, clean_gloss)
+            format!("{}:{}", self.document_id.0, clean_gloss)
         }
     }
 
@@ -46,7 +46,7 @@ impl PositionInDocument {
     pub fn make_form_id(&self, segments: &[MorphemeSegment]) -> String {
         format!(
             "{}.{}:{}",
-            self.document_id,
+            self.document_id.0,
             self.index,
             MorphemeSegment::gloss_layer(segments)
         )
@@ -58,19 +58,19 @@ impl PositionInDocument {
     /// Standard page reference for this position, which can be used in citation.
     /// Generally formatted like ID:PAGE, i.e "DF2018:55"
     async fn page_reference(&self) -> String {
-        format!("{}:{}", self.document_id, self.page_number)
+        format!("{}:{}", self.document_id.0, self.page_number)
     }
 
     /// Index reference for this position, more specific than `page_reference`.
     /// Generally used in corpus documents where there are few pages containing
     /// many forms each. Example: "WJ23:#21"
     async fn index_reference(&self) -> String {
-        format!("{}.{}", self.document_id, self.index)
+        format!("{}.{}", self.document_id.0, self.index)
     }
 
     /// Unique identifier of the source document
     async fn document_id(&self) -> &str {
-        &self.document_id
+        &self.document_id.0
     }
 
     /// 1-indexed page number
@@ -89,18 +89,15 @@ impl PositionInDocument {
         &self,
         context: &async_graphql::Context<'_>,
     ) -> async_graphql::FieldResult<Option<String>> {
-        use {
-            crate::{Database, DocumentId},
-            async_graphql::dataloader::DataLoader,
-        };
+        use async_graphql::dataloader::DataLoader;
         if let Some(geometry) = &self.geometry {
             // Retrieve the document instance.
             let doc = context
-                .data::<DataLoader<Database>>()?
-                .load_one(DocumentId(self.document_id.clone()))
+                .data::<DataLoader<crate::Database>>()?
+                .load_one(self.document_id.clone())
                 .await?
                 .ok_or_else(|| {
-                    anyhow::format_err!("Document {} missing from database.", self.document_id)
+                    anyhow::format_err!("Document {:?} missing from database.", self.document_id)
                 })?;
             // Only proceed if the document has some associated images.
             if let Some(imgs) = &doc.meta.page_images {
