@@ -379,7 +379,7 @@ impl Database {
 
         Ok(connections
             .into_iter()
-            .filter_map(|d| d.unwrap().get_array("connections").ok().map(|x| x.clone()))
+            .filter_map(|d| d.unwrap().get_array("connections").ok().cloned())
             .flat_map(|x| x)
             .filter_map(|d| bson::from_bson(d).ok())
             .collect())

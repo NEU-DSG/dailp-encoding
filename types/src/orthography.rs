@@ -36,7 +36,7 @@ impl CherokeeOrthography {
         // This yields from "GFT" => [['G', 'C', 'O'], ['F', 'E'], ['T', 'I']]
         let potential_chars: Vec<Vec<char>> = original
             .chars()
-            .map(|c| Self::similar_syllabary_chars(c))
+            .map(Self::similar_syllabary_chars)
             .collect();
 
         // Now produce the list of combinations.
@@ -68,7 +68,7 @@ impl CherokeeOrthography {
     fn similar_syllabary_chars(c: char) -> Vec<char> {
         let group = CherokeeSyllabaryVisualGroups::from_char(c);
         if let Some(chars) = CHEROKEE_FALSE_FRIENDS.get(&group) {
-            chars.into_iter().map(|c| *c).collect()
+            chars.iter().copied().collect()
         } else {
             vec![c]
         }
