@@ -109,35 +109,40 @@ export const AnnotatedForm = (
     const showSegments = p.viewMode >= ViewMode.Segmentation
     const translation = p.segment.englishGloss.join(", ")
     return (
-      <div className={wordGroup} id={`w${p.segment.index}`}>
-        <div className={syllabaryLayer} lang="chr">
-          {p.segment.source}
-          {p.segment.commentary && p.viewMode >= ViewMode.Pronunciation && (
-            <WordCommentaryInfo commentary={p.segment.commentary} />
+      <a className={anchor} id={`w${p.segment.index}`}>
+        <div className={wordGroup} id={`w${p.segment.index}`}>
+          <div className={syllabaryLayer} lang="chr">
+            {p.segment.source}
+            {p.segment.commentary && p.viewMode >= ViewMode.Pronunciation && (
+              <WordCommentaryInfo commentary={p.segment.commentary} />
+            )}
+          </div>
+          {p.segment.simplePhonetics ? (
+            <div>{p.segment.simplePhonetics}</div>
+          ) : (
+            <br />
           )}
+          {showSegments ? (
+            <MorphemicSegmentation
+              segments={p.segment.segments}
+              dialog={p.dialog}
+              onOpenDetails={p.onOpenDetails}
+              level={p.viewMode}
+              tagSet={p.tagSet}
+            />
+          ) : null}
+          {translation.length ? <div>&lsquo;{translation}&rsquo;</div> : <br />}
         </div>
-        {p.segment.simplePhonetics ? (
-          <div>{p.segment.simplePhonetics}</div>
-        ) : (
-          <br />
-        )}
-        {showSegments ? (
-          <MorphemicSegmentation
-            segments={p.segment.segments}
-            dialog={p.dialog}
-            onOpenDetails={p.onOpenDetails}
-            level={p.viewMode}
-            tagSet={p.tagSet}
-          />
-        ) : null}
-        {translation.length ? <div>&lsquo;{translation}&rsquo;</div> : <br />}
-      </div>
+      </a>
     )
   } else {
     return (
-      <span className={plainSyllabary} id={`w${p.segment.index}`} lang="chr">
+      <a className={anchor} id={`w${p.segment.index}`}>
+        <span className={plainSyllabary} id={`w${p.segment.index}`} lang="chr">
         {p.segment.source}
-      </span>
+        </span>
+      </a>
+
     )
   }
 }
@@ -410,4 +415,7 @@ const annotationSection = css`
 
 const storySection = css`
   flex-flow: row wrap;
+`
+const anchor =css`
+  color:black;
 `
