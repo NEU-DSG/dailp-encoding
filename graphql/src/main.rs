@@ -75,6 +75,11 @@ impl Query {
             .await?)
     }
 
+    /// List of all content pages
+    async fn all_pages(&self, context: &Context<'_>) -> FieldResult<Vec<dailp::page::Page>> {
+        Ok(context.data::<Database>()?.pages().all().await?)
+    }
+
     /// List of all the document collections available.
     async fn all_collections(
         &self,
@@ -100,6 +105,18 @@ impl Query {
         Ok(context
             .data::<DataLoader<Database>>()?
             .load_one(dailp::DocumentId(id))
+            .await?)
+    }
+
+    /// Retrieves a full document from its unique identifier.
+    pub async fn page(
+        &self,
+        context: &Context<'_>,
+        id: String,
+    ) -> FieldResult<Option<dailp::page::Page>> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .load_one(dailp::PageId(id))
             .await?)
     }
 
@@ -398,6 +415,22 @@ impl Mutation {
             let b = base64::decode(&contents)?;
             let tag = serde_json::from_slice(&b)?;
             context.data::<Database>()?.update_image_source(tag).await?;
+            Ok(true)
+        }
+    }
+
+    #[graphql(visible = false)]
+    async fn update_page(
+        &self,
+        context: &Context<'_>,
+        password: String,
+        // Data encoded as JSON for now.
+        data: async_graphql::Json<dailp::page::Page>,
+    ) -> FieldResult<bool> {
+        if password != *MONGODB_PASSWORD {
+            Ok(false)
+        } else {
+            context.data::<Database>()?.pages().update(data.0).await?;
             Ok(true)
         }
     }
