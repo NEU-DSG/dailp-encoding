@@ -29,6 +29,7 @@ mod gloss;
 mod lexical;
 mod morpheme;
 mod orthography;
+pub mod page;
 mod person;
 mod tag;
 mod translation;

@@ -13,32 +13,49 @@ pub struct Database {
     client: mongodb::Database,
 }
 
+fn upsert() -> mongodb::options::UpdateOptions {
+    mongodb::options::UpdateOptions::builder()
+        .upsert(true)
+        .build()
+}
+
+pub struct PagesDb {
+    conn: mongodb::Collection,
+}
+impl PagesDb {
+    pub async fn update(&self, page: crate::page::Page) -> Result<()> {
+        self.conn
+            .update_one(
+                bson::doc! { "_id": &page.id },
+                bson::to_document(&page)?,
+                upsert(),
+            )
+            .await?;
+        Ok(())
+    }
+
+    pub async fn all(&self) -> Result<Vec<crate::page::Page>> {
+        use tokio::stream::StreamExt as _;
+        Ok(self
+            .conn
+            .find(None, None)
+            .await?
+            .filter_map(|doc| doc.ok().and_then(|doc| bson::from_document(doc).ok()))
+            .collect()
+            .await)
+    }
+}
+
 impl Database {
     const DOCUMENTS: &'static str = "annotated-documents";
+    /// TODO Rename to "forms"
     const WORDS: &'static str = "sea-of-words";
     const TAGS: &'static str = "tags";
     const CONNECTIONS: &'static str = "lexical-connections";
+    /// TODO Rename to "contributors"
     const PEOPLE: &'static str = "people";
     const IMAGE_SOURCES: &'static str = "image-sources";
-
-    pub fn documents_collection(&self) -> mongodb::Collection {
-        self.client.collection(Self::DOCUMENTS)
-    }
-    pub fn words_collection(&self) -> mongodb::Collection {
-        self.client.collection(Self::WORDS)
-    }
-    pub fn tags_collection(&self) -> mongodb::Collection {
-        self.client.collection(Self::TAGS)
-    }
-    pub fn connections_collection(&self) -> mongodb::Collection {
-        self.client.collection(Self::CONNECTIONS)
-    }
-    pub fn people_collection(&self) -> mongodb::Collection {
-        self.client.collection(Self::PEOPLE)
-    }
-    pub fn source_collection(&self) -> mongodb::Collection {
-        self.client.collection(Self::IMAGE_SOURCES)
-    }
+    const PAGES: &'static str = "pages";
 }
 
 impl Database {
@@ -48,84 +65,83 @@ impl Database {
         let db_url = std::env::var("MONGODB_URI")?;
         let opts = executor::block_on(ClientOptions::parse(&db_url))?;
         let client = Client::with_options(opts)?;
-        Ok(Database {
-            client: client.database("dailp-encoding"),
-        })
+        let db = client.database("dailp-encoding");
+        Ok(Database { client: db })
+    }
+
+    pub fn pages(&self) -> PagesDb {
+        PagesDb {
+            conn: self.client.collection(Self::PAGES),
+        }
     }
 
     pub async fn update_tag(&self, tag: MorphemeTag) -> Result<()> {
-        self.tags_collection()
+        self.client
+            .collection(Self::TAGS)
             .update_one(
                 bson::doc! { "_id": &tag.id },
                 bson::to_document(&tag)?,
-                mongodb::options::UpdateOptions::builder()
-                    .upsert(true)
-                    .build(),
+                upsert(),
             )
             .await?;
         Ok(())
     }
 
     pub async fn update_document(&self, tag: AnnotatedDoc) -> Result<()> {
-        self.documents_collection()
+        self.client
+            .collection(Self::DOCUMENTS)
             .update_one(
                 bson::doc! { "_id": &tag.meta.id },
                 bson::to_document(&tag)?,
-                mongodb::options::UpdateOptions::builder()
-                    .upsert(true)
-                    .build(),
+                upsert(),
             )
             .await?;
         Ok(())
     }
 
     pub async fn update_connection(&self, tag: LexicalConnection) -> Result<()> {
-        self.connections_collection()
+        self.client
+            .collection(Self::CONNECTIONS)
             .update_one(
                 bson::doc! { "_id": &tag.id },
                 bson::to_document(&tag)?,
-                mongodb::options::UpdateOptions::builder()
-                    .upsert(true)
-                    .build(),
+                upsert(),
             )
             .await?;
         Ok(())
     }
 
     pub async fn update_form(&self, tag: AnnotatedForm) -> Result<()> {
-        self.words_collection()
+        self.client
+            .collection(Self::WORDS)
             .update_one(
                 bson::doc! { "_id": &tag.id },
                 bson::to_document(&tag)?,
-                mongodb::options::UpdateOptions::builder()
-                    .upsert(true)
-                    .build(),
+                upsert(),
             )
             .await?;
         Ok(())
     }
 
     pub async fn update_person(&self, person: ContributorDetails) -> Result<()> {
-        self.people_collection()
+        self.client
+            .collection(Self::PEOPLE)
             .update_one(
                 bson::doc! { "_id": &person.full_name },
                 bson::to_document(&person)?,
-                mongodb::options::UpdateOptions::builder()
-                    .upsert(true)
-                    .build(),
+                upsert(),
             )
             .await?;
         Ok(())
     }
 
     pub async fn update_image_source(&self, source: ImageSource) -> Result<()> {
-        self.source_collection()
+        self.client
+            .collection(Self::IMAGE_SOURCES)
             .update_one(
                 bson::doc! { "_id": &source.id.0 },
                 bson::to_document(&source)?,
-                mongodb::options::UpdateOptions::builder()
-                    .upsert(true)
-                    .build(),
+                upsert(),
             )
             .await?;
         Ok(())
@@ -134,7 +150,8 @@ impl Database {
     pub async fn all_documents(&self, collection: Option<&str>) -> Result<Vec<AnnotatedDoc>> {
         use tokio::stream::StreamExt as _;
         Ok(self
-            .documents_collection()
+            .client
+            .collection(Self::DOCUMENTS)
             .find(
                 collection.map(|collection| {
                     bson::doc! { "collection": collection }
@@ -151,7 +168,8 @@ impl Database {
 
     pub async fn all_collections(&self) -> Result<Vec<DocumentCollection>> {
         Ok(self
-            .documents_collection()
+            .client
+            .collection(Self::DOCUMENTS)
             // Only show non-reference collections in the list.
             .distinct("collection", bson::doc! { "is_reference": false }, None)
             .await?
@@ -166,7 +184,8 @@ impl Database {
     pub async fn all_tags(&self) -> Result<Vec<MorphemeTag>> {
         use tokio::stream::StreamExt as _;
         Ok(self
-            .tags_collection()
+            .client
+            .collection(Self::TAGS)
             .find(None, None)
             .await?
             .filter_map(|doc| doc.ok().and_then(|doc| bson::from_document(doc).ok()))
@@ -177,7 +196,8 @@ impl Database {
     pub async fn all_people(&self) -> Result<Vec<ContributorDetails>> {
         use tokio::stream::StreamExt as _;
         Ok(self
-            .people_collection()
+            .client
+            .collection(Self::PEOPLE)
             .find(None, None)
             .await?
             .filter_map(|doc| doc.ok().and_then(|doc| bson::from_document(doc).ok()))
@@ -187,7 +207,8 @@ impl Database {
 
     pub async fn image_source(&self, id: &ImageSourceId) -> Result<Option<ImageSource>> {
         Ok(self
-            .source_collection()
+            .client
+            .collection(Self::IMAGE_SOURCES)
             .find_one(bson::doc! { "_id": &id.0 }, None)
             .await?
             .and_then(|doc| bson::from_document(doc).ok()))
@@ -196,7 +217,8 @@ impl Database {
     pub async fn words_in_document(&self, doc_id: &str) -> Result<Vec<AnnotatedForm>> {
         use tokio::stream::StreamExt as _;
         let mut forms: Vec<AnnotatedForm> = self
-            .words_collection()
+            .client
+            .collection(Self::WORDS)
             .find(bson::doc! { "position.document_id": doc_id }, None)
             .await?
             .filter_map(|doc| doc.ok().and_then(|doc| bson::from_document(doc).ok()))
@@ -209,7 +231,8 @@ impl Database {
     /// The number of words that belong to the given document ID.
     pub async fn count_words_in_document(&self, doc_id: &str) -> Result<i64> {
         Ok(self
-            .words_collection()
+            .client
+            .collection(Self::WORDS)
             .count_documents(bson::doc! { "position.document_id": doc_id }, None)
             .await?)
     }
@@ -217,7 +240,8 @@ impl Database {
     pub async fn word_search(&self, query: bson::Document) -> Result<Vec<AnnotatedForm>> {
         use tokio::stream::StreamExt as _;
         Ok(self
-            .words_collection()
+            .client
+            .collection(Self::WORDS)
             .find(query, None)
             .await?
             .filter_map(|doc| doc.ok().and_then(|doc| bson::from_document(doc).ok()))
@@ -237,7 +261,8 @@ impl Database {
 
     pub async fn lexical_entry(&self, id: &str) -> Result<Option<AnnotatedForm>> {
         Ok(self
-            .words_collection()
+            .client
+            .collection(Self::WORDS)
             .find_one(bson::doc! { "_id": id }, None)
             .await?
             .and_then(|doc| bson::from_document(doc).ok()))
@@ -251,7 +276,8 @@ impl Database {
             bson::doc! { "segments.gloss": &morpheme.gloss }
         };
         Ok(self
-            .words_collection()
+            .client
+            .collection(Self::WORDS)
             .find(
                 bson::doc! { "$or": [
                     // More likely a surface form
@@ -270,7 +296,7 @@ impl Database {
     pub async fn connected_forms(&self, morpheme: &MorphemeId) -> Result<Vec<AnnotatedForm>> {
         use tokio::stream::StreamExt as _;
 
-        let col = self.connections_collection();
+        let col = self.client.collection(Self::CONNECTIONS);
         let morpheme = bson::to_bson(morpheme)?;
 
         // Find the connections starting from this entry.
@@ -279,7 +305,7 @@ impl Database {
                 vec![
                     bson::doc! { "$match": { "links": &morpheme } },
                     bson::doc! { "$lookup": {
-                        "from": Database::WORDS,
+                        "from": Self::WORDS,
                         "localField": "links",
                         "foreignField": "segments.gloss",
                         "as": "connections"
@@ -300,7 +326,7 @@ impl Database {
     async fn exact_connections(&self, morpheme: &MorphemeId) -> Result<Vec<MorphemeId>> {
         use tokio::stream::StreamExt as _;
 
-        let col = self.connections_collection();
+        let col = self.client.collection(Self::CONNECTIONS);
         let morpheme = bson::to_bson(morpheme)?;
 
         // Find the connections containing this entry.
@@ -347,7 +373,7 @@ impl Database {
     async fn graph_connections(&self, id: &MorphemeId) -> Result<HashSet<MorphemeId>> {
         use tokio::stream::StreamExt as _;
 
-        let col = self.connections_collection();
+        let col = self.client.collection(Self::CONNECTIONS);
         let morpheme = if let Some(doc_id) = &id.document_id {
             if let Some(index) = id.index {
                 bson::doc! { "document_id": doc_id, "gloss": &id.gloss, "index": index }
@@ -363,7 +389,7 @@ impl Database {
                 vec![
                     bson::doc! { "$match": { "links": morpheme } },
                     bson::doc! { "$graphLookup": {
-                        "from": Database::CONNECTIONS,
+                        "from": Self::CONNECTIONS,
                         "startWith": "$links",
                         "connectFromField": "links",
                         "connectToField": "links",
@@ -398,7 +424,8 @@ impl Database {
             steps.insert(0, bson::doc! { "$match": { "_id": doc_id } });
         }
         Ok(self
-            .documents_collection()
+            .client
+            .collection(Self::DOCUMENTS)
             .aggregate(steps, None)
             .await?
             .filter_map(|d| d.ok().and_then(|d| bson::from_document(d).ok()))
@@ -435,7 +462,7 @@ impl Database {
         use tokio::stream::StreamExt;
 
         let dictionary_words = self.surface_forms(morpheme);
-        let documents = self.documents_collection();
+        let documents = self.client.collection(Self::DOCUMENTS);
         let mut steps = vec![
             bson::doc! { "$unwind": "$segments" },
             bson::doc! { "$replaceRoot": { "newRoot": "$segments.source" } },
@@ -539,7 +566,8 @@ impl Loader<TagId> for Database {
         let mut results = HashMap::new();
         // Turn keys into strings for Mongo request.
         let keys: Vec<_> = keys.iter().map(|x| &*x.0).collect();
-        let items: Vec<Self::Value> = find_all_keys(self.tags_collection(), keys).await?;
+        let items: Vec<Self::Value> =
+            find_all_keys(self.client.collection(Self::TAGS), keys).await?;
 
         for tag in items {
             results.insert(TagId(tag.id.clone()), tag);
@@ -560,16 +588,14 @@ impl Loader<DocumentId> for Database {
         &self,
         keys: &[DocumentId],
     ) -> Result<HashMap<DocumentId, Self::Value>, Self::Error> {
-        let mut results = HashMap::new();
-        // Turn keys into strings for Mongo request.
+        // Turn keys into strings for database request.
         let keys: Vec<_> = keys.iter().map(|x| &x.0 as &str).collect();
-        let items: Vec<Self::Value> = find_all_keys(self.documents_collection(), keys).await?;
-
-        for tag in items {
-            results.insert(DocumentId(tag.meta.id.clone()), tag);
-        }
-
-        Ok(results)
+        let items: Vec<Self::Value> =
+            find_all_keys(self.client.collection(Self::DOCUMENTS), keys).await?;
+        Ok(items
+            .into_iter()
+            .map(|tag| (DocumentId(tag.meta.id.clone()), tag))
+            .collect())
     }
 }
 
@@ -581,16 +607,33 @@ impl Loader<PersonId> for Database {
     type Value = ContributorDetails;
     type Error = mongodb::error::Error;
     async fn load(&self, keys: &[PersonId]) -> Result<HashMap<PersonId, Self::Value>, Self::Error> {
-        let mut results = HashMap::new();
         // Turn keys into strings for Mongo request.
         let keys: Vec<_> = keys.iter().map(|x| &x.0 as &str).collect();
-        let items: Vec<Self::Value> = find_all_keys(self.people_collection(), keys).await?;
+        let items: Vec<Self::Value> =
+            find_all_keys(self.client.collection(Self::PEOPLE), keys).await?;
+        Ok(items
+            .into_iter()
+            .map(|tag| (PersonId(tag.full_name.clone()), tag))
+            .collect())
+    }
+}
 
-        for tag in items {
-            results.insert(PersonId(tag.full_name.clone()), tag);
-        }
+#[derive(Clone, Eq, PartialEq, Hash)]
+pub struct PageId(pub String);
 
-        Ok(results)
+#[async_trait::async_trait]
+impl Loader<PageId> for Database {
+    type Value = crate::page::Page;
+    type Error = mongodb::error::Error;
+    async fn load(&self, keys: &[PageId]) -> Result<HashMap<PageId, Self::Value>, Self::Error> {
+        // Turn keys into strings for database request.
+        let keys: Vec<_> = keys.iter().map(|x| &x.0 as &str).collect();
+        let items: Vec<Self::Value> =
+            find_all_keys(self.client.collection(Self::PAGES), keys).await?;
+        Ok(items
+            .into_iter()
+            .map(|tag| (PageId(tag.id.clone()), tag))
+            .collect())
     }
 }
 
