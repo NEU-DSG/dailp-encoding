@@ -282,7 +282,7 @@ impl IiifImages {
 }
 #[async_graphql::Object]
 impl IiifImages {
-    async fn source(
+    pub async fn source(
         &self,
         context: &async_graphql::Context<'_>,
     ) -> async_graphql::FieldResult<ImageSource> {

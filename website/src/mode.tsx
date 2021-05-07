@@ -76,10 +76,6 @@ export const ExperiencePicker = (p: { onSelect: (mode: ViewMode) => void }) => {
 
   return (
     <>
-      <p className={cx(topMargin, hideOnPrint)}>
-        Each mode below displays different information about the words on the
-        page. Hover over each mode for a specific description.
-      </p>
       <RadioGroup
         {...radio}
         id="mode-picker"
@@ -158,7 +154,7 @@ const TagSetOption = (p: { radio: RadioStateReturn; level: string }) => {
 }
 
 const levelGroup = css`
-  margin: ${typography.rhythm(1 / 2)} 0;
+  margin: ${typography.rhythm(1 / 4)} 0;
   display: flex;
   flex-flow: row wrap;
   justify-content: center;
@@ -171,8 +167,4 @@ const levelLabel = css`
   margin-right: 1rem;
   padding: 0 1ch;
   cursor: pointer;
-`
-
-const topMargin = css`
-  margin-top: ${typography.rhythm(1 / 2)};
 `
