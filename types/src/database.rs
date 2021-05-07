@@ -4,6 +4,7 @@ use async_graphql::dataloader::*;
 use futures::executor;
 use futures::future::join_all;
 use mongodb::bson;
+use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 
 /// Connects to our backing database instance, providing high level functions
@@ -532,7 +533,7 @@ impl Database {
             .into_iter()
             .map(|(doc_id, words)| WordsInDocument {
                 document_type: Some(DocumentType::Reference),
-                document_id: Some(doc_id),
+                document_id: Some(doc_id.0),
                 forms: words,
             });
 
@@ -547,11 +548,23 @@ impl Database {
             .into_iter()
             .map(|(doc_id, words)| WordsInDocument {
                 document_type: Some(DocumentType::Corpus),
-                document_id: Some(doc_id),
+                document_id: Some(doc_id.0),
                 forms: words,
             });
 
         Ok(document_words.chain(dictionary_words).collect())
+    }
+
+    pub async fn document_manifest(&self, document_id: &str) -> Result<iiif::Manifest> {
+        // Retrieve the document from the DB.
+        let doc: AnnotatedDoc = self
+            .client.collection(Self::DOCUMENTS)
+            .find_one(bson::doc! { "_id": document_id }, None)
+            .await?
+            .and_then(|doc| bson::from_document(doc).ok())
+            .unwrap();
+        // Build a IIIF manifest for this document.
+        Ok(iiif::Manifest::from_document(self, doc).await)
     }
 }
 
@@ -577,7 +590,7 @@ impl Loader<TagId> for Database {
     }
 }
 
-#[derive(Clone, Eq, PartialEq, Hash)]
+#[derive(Clone, Eq, PartialEq, Hash, Serialize, Deserialize, Debug)]
 pub struct DocumentId(pub String);
 
 #[async_trait::async_trait]

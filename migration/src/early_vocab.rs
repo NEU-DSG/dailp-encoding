@@ -175,11 +175,11 @@ async fn parse_early_vocab(
                     english_gloss: vec![gloss],
                     line_break: None,
                     page_break: None,
-                    position: dailp::PositionInDocument {
-                        document_id: meta.id.clone(),
+                    position: dailp::PositionInDocument::new(
+                        meta.id.clone(),
                         page_number,
-                        index: index as i32 + 1,
-                    },
+                        index as i32 + 1,
+                    ),
                     date_recorded: meta.date.clone(),
                     id,
                 },

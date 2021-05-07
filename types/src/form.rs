@@ -68,7 +68,7 @@ impl AnnotatedForm {
             let db = context.data::<Database>()?;
             // Find the forms with the exact same root.
             let id = MorphemeId {
-                document_id: Some(self.position.document_id.clone()),
+                document_id: Some(self.position.document_id.0.clone()),
                 gloss: root.gloss.clone(),
                 index: None,
             };
@@ -95,7 +95,7 @@ impl AnnotatedForm {
     ) -> FieldResult<Option<AnnotatedDoc>> {
         Ok(context
             .data::<DataLoader<Database>>()?
-            .load_one(crate::DocumentId(self.position.document_id.clone()))
+            .load_one(self.position.document_id.clone())
             .await?)
     }
 
@@ -110,7 +110,7 @@ impl AnnotatedForm {
     }
     /// The unique identifier of the containing document.
     async fn document_id(&self) -> &str {
-        &self.position.document_id
+        &self.position.document_id.0
     }
 
     async fn position(&self) -> &PositionInDocument {

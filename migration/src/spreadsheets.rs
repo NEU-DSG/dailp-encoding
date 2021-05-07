@@ -148,11 +148,8 @@ impl SheetResult {
                 let page_number = root_values.next()?;
                 let mut form_values = root_values;
                 let date = Date::new(chrono::NaiveDate::from_ymd(year, 1, 1));
-                let position = PositionInDocument {
-                    document_id: doc_id.to_owned(),
-                    index: idx as i32 + 1,
-                    page_number,
-                };
+                let position =
+                    PositionInDocument::new(doc_id.to_owned(), page_number, idx as i32 + 1);
                 Some(LexicalEntryWithForms {
                     forms: root_verb_surface_forms(
                         &position,
@@ -215,11 +212,7 @@ impl SheetResult {
                     // Skip page ref and category.
                     let mut form_values = root_values.skip(after_root);
                     let date = Date::new(chrono::NaiveDate::from_ymd(year, 1, 1));
-                    let position = PositionInDocument {
-                        document_id: doc_id.to_owned(),
-                        index,
-                        page_number: page_number?,
-                    };
+                    let position = PositionInDocument::new(doc_id.to_owned(), page_number?, index);
                     Some(LexicalEntryWithForms {
                         forms: root_noun_surface_forms(
                             &position,
@@ -482,18 +475,12 @@ impl<'a> AnnotatedLine {
                         let translation = line.rows[6].items.get(i).map(|x| x.trim().to_owned());
                         let w = AnnotatedForm {
                             // TODO Extract into public function!
-                            id: if let Some(gloss) = glosses {
-                                format!("{}.{}:{}", meta.id, word_index, gloss)
-                            } else if let Some(t) = translation.as_ref() {
-                                format!("{}.{}:{}", meta.id, word_index, t)
-                            } else {
-                                format!("{}.{}", meta.id, word_index)
-                            },
-                            position: PositionInDocument {
-                                document_id: meta.id.clone(),
-                                index: word_index,
-                                page_number: 1.to_string(),
-                            },
+                            id: format!("{}.{}", meta.id, word_index),
+                            position: PositionInDocument::new(
+                                meta.id.clone(),
+                                1.to_string(),
+                                word_index,
+                            ),
                             source: line.rows[0].items[i].trim().replace(LINE_BREAK, ""),
                             normalized_source: None,
                             simple_phonetics: line.rows[2]
@@ -564,11 +551,11 @@ impl<'a> AnnotatedLine {
             for word in line.words {
                 // Give the word an index within the whole document.
                 let word = AnnotatedForm {
-                    position: PositionInDocument {
-                        index: word_idx,
-                        document_id: document_id.to_owned(),
-                        page_number: (page_num + 1).to_string(),
-                    },
+                    position: PositionInDocument::new(
+                        document_id.to_owned(),
+                        (page_num + 1).to_string(),
+                        word_idx,
+                    ),
                     ..word
                 };
 

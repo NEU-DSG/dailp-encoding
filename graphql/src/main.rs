@@ -5,13 +5,16 @@ use dailp::{
     AnnotatedDoc, CherokeeOrthography, Database, MorphemeId, MorphemeReference, MorphemeTag,
     WordsInDocument,
 };
-use lambda_http::{http::header, lambda, IntoResponse, Request, Response};
+use lambda_http::{http::header, lambda, IntoResponse, Request, RequestExt, Response};
 use mongodb::bson;
 
 type Error = Box<dyn std::error::Error + Sync + Send + 'static>;
 
 lazy_static::lazy_static! {
     // Share database connection between executions.
+    // This prevents each lambda invocation from creating a new connection to
+    // the database.
+    static ref DATABASE: dailp::Database = dailp::Database::new().unwrap();
     static ref SCHEMA: Schema<Query, Mutation, EmptySubscription> = {
         Schema::build(Query, Mutation, EmptySubscription)
             .data(dailp::Database::new().unwrap())
@@ -26,26 +29,46 @@ lazy_static::lazy_static! {
 #[lambda::lambda(http)]
 #[tokio::main]
 async fn main(req: Request, _: lambda::Context) -> Result<impl IntoResponse, Error> {
-    if req.method() == lambda_http::http::Method::GET {
-        // Serve GraphQL Playground over GET to allow introspection in the browser!
-        let playground = async_graphql::http::playground_source(
-            async_graphql::http::GraphQLPlaygroundConfig::new(req.uri().path()),
-        );
-        Ok(Response::builder()
-            .header(header::CONTENT_TYPE, "text/html; charset=utf-8")
-            .header(header::ACCESS_CONTROL_ALLOW_ORIGIN, "*")
-            .body(playground)?)
-    } else if let lambda_http::Body::Text(req) = req.into_body() {
-        // Other requests (usually POST) should be processed as an actual
-        // GraphQL query.
-        let schema = &*SCHEMA;
-        let req: async_graphql::Request = serde_json::from_str(&req)?;
-        let res = schema.execute(req).await;
-        let result = serde_json::to_string(&res)?;
+    // TODO Hook up warp or tide instead of using a manual conditional.
+    let path = req.uri().path();
+    // GraphQL queries route to the /graphql endpoint.
+    if path.starts_with("/graphql") {
+        if req.method() == lambda_http::http::Method::GET {
+            // Serve GraphQL Playground over GET to allow introspection in the browser!
+            let playground = async_graphql::http::playground_source(
+                async_graphql::http::GraphQLPlaygroundConfig::new(req.uri().path()),
+            );
+            Ok(Response::builder()
+                .header(header::CONTENT_TYPE, "text/html; charset=utf-8")
+                .header(header::ACCESS_CONTROL_ALLOW_ORIGIN, "*")
+                .body(playground)?)
+        } else if let lambda_http::Body::Text(req) = req.into_body() {
+            // Other requests (usually POST) should be processed as an actual
+            // GraphQL query.
+            let schema = &*SCHEMA;
+            let req: async_graphql::Request = serde_json::from_str(&req)?;
+            let res = schema.execute(req).await;
+            let result = serde_json::to_string(&res)?;
+            let resp = Response::builder()
+                .header(header::CONTENT_TYPE, "application/json")
+                .header(header::ACCESS_CONTROL_ALLOW_ORIGIN, "*")
+                .body(result)?;
+            Ok(resp)
+        } else {
+            // TODO Make a custom error type for DAILP to cover this and ingestion errors.
+            Err(Box::new(std::fmt::Error))
+        }
+    }
+    // Document manifests are found at /manifests/{id}
+    else if path.starts_with("/manifests") {
+        let params = req.path_parameters();
+        let document_id = params.get("id").unwrap();
+        let manifest = DATABASE.document_manifest(document_id).await?;
+        let json = serde_json::to_string(&manifest)?;
         let resp = Response::builder()
             .header(header::CONTENT_TYPE, "application/json")
             .header(header::ACCESS_CONTROL_ALLOW_ORIGIN, "*")
-            .body(result)?;
+            .body(json)?;
         Ok(resp)
     } else {
         // TODO Make a custom error type for DAILP to cover this and ingestion errors.
