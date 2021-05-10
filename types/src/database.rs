@@ -3,9 +3,10 @@ use anyhow::Result;
 use async_graphql::dataloader::*;
 use futures::executor;
 use futures::future::join_all;
-use mongodb::bson;
+use mongodb::bson::{self, Bson};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
+use tokio_stream::StreamExt;
 
 /// Connects to our backing database instance, providing high level functions
 /// for accessing the data therein.
@@ -20,30 +21,57 @@ fn upsert() -> mongodb::options::UpdateOptions {
         .build()
 }
 
+async fn upsert_one<T, K>(conn: &mongodb::Collection, id: K, item: &T) -> Result<()>
+where
+    Bson: From<K>,
+    T: Serialize,
+{
+    conn.update_one(bson::doc! { "_id": id }, bson::to_document(item)?, upsert())
+        .await?;
+    Ok(())
+}
+
 pub struct PagesDb {
     conn: mongodb::Collection,
 }
 impl PagesDb {
     pub async fn update(&self, page: crate::page::Page) -> Result<()> {
-        self.conn
-            .update_one(
-                bson::doc! { "_id": &page.id },
-                bson::to_document(&page)?,
-                upsert(),
-            )
-            .await?;
-        Ok(())
+        upsert_one(&self.conn, &page.id, &page).await
     }
 
     pub async fn all(&self) -> Result<Vec<crate::page::Page>> {
-        use tokio::stream::StreamExt as _;
-        Ok(self
-            .conn
+        self.conn
             .find(None, None)
             .await?
-            .filter_map(|doc| doc.ok().and_then(|doc| bson::from_document(doc).ok()))
+            .map::<Result<crate::page::Page>, _>(|doc| Ok(bson::from_document(doc?)?))
             .collect()
-            .await)
+            .await
+    }
+}
+
+pub struct AnnotationsDb {
+    conn: mongodb::Collection,
+}
+impl AnnotationsDb {
+    pub async fn on_document(&self, document_id: &str) -> Result<Vec<annotation::Annotation>> {
+        self.conn
+            .find(
+                bson::doc! {
+                    "attachedTo": {
+                        "__typename": "Document",
+                        "document": document_id
+                    }
+                },
+                None,
+            )
+            .await?
+            .map::<Result<_>, _>(|d| Ok(bson::from_document(d?)?))
+            .collect()
+            .await
+    }
+
+    pub async fn update(&self, annote: annotation::Annotation) -> Result<()> {
+        upsert_one(&self.conn, &annote.id.0, &annote).await
     }
 }
 
@@ -57,6 +85,7 @@ impl Database {
     const PEOPLE: &'static str = "people";
     const IMAGE_SOURCES: &'static str = "image-sources";
     const PAGES: &'static str = "pages";
+    const ANNOTATIONS: &'static str = "annotations";
 }
 
 impl Database {
@@ -76,82 +105,48 @@ impl Database {
         }
     }
 
+    pub fn annotations(&self) -> AnnotationsDb {
+        AnnotationsDb {
+            conn: self.client.collection(Self::ANNOTATIONS),
+        }
+    }
+
     pub async fn update_tag(&self, tag: MorphemeTag) -> Result<()> {
-        self.client
-            .collection(Self::TAGS)
-            .update_one(
-                bson::doc! { "_id": &tag.id },
-                bson::to_document(&tag)?,
-                upsert(),
-            )
-            .await?;
-        Ok(())
+        upsert_one(&self.client.collection(Self::TAGS), &tag.id, &tag).await
     }
 
     pub async fn update_document(&self, tag: AnnotatedDoc) -> Result<()> {
-        self.client
-            .collection(Self::DOCUMENTS)
-            .update_one(
-                bson::doc! { "_id": &tag.meta.id },
-                bson::to_document(&tag)?,
-                upsert(),
-            )
-            .await?;
-        Ok(())
+        upsert_one(&self.client.collection(Self::DOCUMENTS), &tag.meta.id, &tag).await
     }
 
     pub async fn update_connection(&self, tag: LexicalConnection) -> Result<()> {
-        self.client
-            .collection(Self::CONNECTIONS)
-            .update_one(
-                bson::doc! { "_id": &tag.id },
-                bson::to_document(&tag)?,
-                upsert(),
-            )
-            .await?;
-        Ok(())
+        upsert_one(&self.client.collection(Self::CONNECTIONS), &tag.id, &tag).await
     }
 
     pub async fn update_form(&self, tag: AnnotatedForm) -> Result<()> {
-        self.client
-            .collection(Self::WORDS)
-            .update_one(
-                bson::doc! { "_id": &tag.id },
-                bson::to_document(&tag)?,
-                upsert(),
-            )
-            .await?;
-        Ok(())
+        upsert_one(&self.client.collection(Self::WORDS), &tag.id, &tag).await
     }
 
     pub async fn update_person(&self, person: ContributorDetails) -> Result<()> {
-        self.client
-            .collection(Self::PEOPLE)
-            .update_one(
-                bson::doc! { "_id": &person.full_name },
-                bson::to_document(&person)?,
-                upsert(),
-            )
-            .await?;
-        Ok(())
+        upsert_one(
+            &self.client.collection(Self::PEOPLE),
+            &person.full_name,
+            &person,
+        )
+        .await
     }
 
     pub async fn update_image_source(&self, source: ImageSource) -> Result<()> {
-        self.client
-            .collection(Self::IMAGE_SOURCES)
-            .update_one(
-                bson::doc! { "_id": &source.id.0 },
-                bson::to_document(&source)?,
-                upsert(),
-            )
-            .await?;
-        Ok(())
+        upsert_one(
+            &self.client.collection(Self::IMAGE_SOURCES),
+            &source.id.0,
+            &source,
+        )
+        .await
     }
 
     pub async fn all_documents(&self, collection: Option<&str>) -> Result<Vec<AnnotatedDoc>> {
-        use tokio::stream::StreamExt as _;
-        Ok(self
-            .client
+        self.client
             .collection(Self::DOCUMENTS)
             .find(
                 collection.map(|collection| {
@@ -162,15 +157,14 @@ impl Database {
                     .build(),
             )
             .await?
-            .filter_map(|doc| doc.ok().and_then(|doc| bson::from_document(doc).ok()))
+            .map::<Result<_>, _>(|doc| Ok(bson::from_document(doc?)?))
             .collect()
-            .await)
+            .await
     }
 
     pub async fn all_collections(&self) -> Result<Vec<DocumentCollection>> {
-        Ok(self
-            .client
-            .collection(Self::DOCUMENTS)
+        let coll: mongodb::Collection = self.client.collection(Self::DOCUMENTS);
+        Ok(coll
             // Only show non-reference collections in the list.
             .distinct("collection", bson::doc! { "is_reference": false }, None)
             .await?
@@ -183,7 +177,6 @@ impl Database {
     }
 
     pub async fn all_tags(&self) -> Result<Vec<MorphemeTag>> {
-        use tokio::stream::StreamExt as _;
         Ok(self
             .client
             .collection(Self::TAGS)
@@ -195,7 +188,6 @@ impl Database {
     }
 
     pub async fn all_people(&self) -> Result<Vec<ContributorDetails>> {
-        use tokio::stream::StreamExt as _;
         Ok(self
             .client
             .collection(Self::PEOPLE)
@@ -216,36 +208,33 @@ impl Database {
     }
 
     pub async fn words_in_document(&self, doc_id: &str) -> Result<Vec<AnnotatedForm>> {
-        use tokio::stream::StreamExt as _;
         let mut forms: Vec<AnnotatedForm> = self
             .client
             .collection(Self::WORDS)
             .find(bson::doc! { "position.document_id": doc_id }, None)
             .await?
-            .filter_map(|doc| doc.ok().and_then(|doc| bson::from_document(doc).ok()))
-            .collect()
-            .await;
+            .map::<Result<_>, _>(|d| Ok(bson::from_document(d?)?))
+            .collect::<Result<Vec<_>>>()
+            .await?;
         forms.sort_by_key(|f| f.position.index);
         Ok(forms)
     }
 
     /// The number of words that belong to the given document ID.
     pub async fn count_words_in_document(&self, doc_id: &str) -> Result<i64> {
-        Ok(self
-            .client
-            .collection(Self::WORDS)
+        let coll: mongodb::Collection = self.client.collection(Self::WORDS);
+        Ok(coll
             .count_documents(bson::doc! { "position.document_id": doc_id }, None)
             .await?)
     }
 
     pub async fn word_search(&self, query: bson::Document) -> Result<Vec<AnnotatedForm>> {
-        use tokio::stream::StreamExt as _;
-        Ok(self
+        (self
             .client
             .collection(Self::WORDS)
             .find(query, None)
             .await?
-            .filter_map(|doc| doc.ok().and_then(|doc| bson::from_document(doc).ok()))
+            .map::<Result<_>, _>(|d| Ok(bson::from_document(d?)?))
             .collect()
             .await)
     }
@@ -270,7 +259,6 @@ impl Database {
     }
 
     pub async fn surface_forms(&self, morpheme: &MorphemeId) -> Result<Vec<AnnotatedForm>> {
-        use tokio::stream::StreamExt as _;
         let morpheme_match = if let Some(doc_id) = &morpheme.document_id {
             bson::doc! { "position.document_id": doc_id, "segments.gloss": &morpheme.gloss }
         } else {
@@ -295,9 +283,7 @@ impl Database {
     }
 
     pub async fn connected_forms(&self, morpheme: &MorphemeId) -> Result<Vec<AnnotatedForm>> {
-        use tokio::stream::StreamExt as _;
-
-        let col = self.client.collection(Self::CONNECTIONS);
+        let col: mongodb::Collection = self.client.collection(Self::CONNECTIONS);
         let morpheme = bson::to_bson(morpheme)?;
 
         // Find the connections starting from this entry.
@@ -318,16 +304,14 @@ impl Database {
             )
             .await?;
 
-        Ok(links
-            .filter_map(|doc| doc.ok().and_then(|doc| bson::from_document(doc).ok()))
+        links
+            .map::<Result<_>, _>(|doc| Ok(bson::from_document(doc?)?))
             .collect()
-            .await)
+            .await
     }
 
     async fn exact_connections(&self, morpheme: &MorphemeId) -> Result<Vec<MorphemeId>> {
-        use tokio::stream::StreamExt as _;
-
-        let col = self.client.collection(Self::CONNECTIONS);
+        let col: mongodb::Collection = self.client.collection(Self::CONNECTIONS);
         let morpheme = bson::to_bson(morpheme)?;
 
         // Find the connections containing this entry.
@@ -372,9 +356,7 @@ impl Database {
     }
 
     async fn graph_connections(&self, id: &MorphemeId) -> Result<HashSet<MorphemeId>> {
-        use tokio::stream::StreamExt as _;
-
-        let col = self.client.collection(Self::CONNECTIONS);
+        let col: mongodb::Collection = self.client.collection(Self::CONNECTIONS);
         let morpheme = if let Some(doc_id) = &id.document_id {
             if let Some(index) = id.index {
                 bson::doc! { "document_id": doc_id, "gloss": &id.gloss, "index": index }
@@ -413,7 +395,6 @@ impl Database {
     }
 
     async fn doc_matches(&self, morpheme: &MorphemeId) -> Result<Vec<AnnotatedForm>> {
-        use tokio::stream::StreamExt as _;
         let mut steps = vec![
             bson::doc! { "$unwind": "$segments" },
             bson::doc! { "$replaceRoot": { "newRoot": "$segments.source" } },
@@ -424,14 +405,12 @@ impl Database {
         if let Some(doc_id) = &morpheme.document_id {
             steps.insert(0, bson::doc! { "$match": { "_id": doc_id } });
         }
-        Ok(self
-            .client
-            .collection(Self::DOCUMENTS)
-            .aggregate(steps, None)
+        let coll: mongodb::Collection = self.client.collection(Self::DOCUMENTS);
+        coll.aggregate(steps, None)
             .await?
-            .filter_map(|d| d.ok().and_then(|d| bson::from_document(d).ok()))
+            .map::<Result<_>, _>(|d| Ok(bson::from_document(d?)?))
             .collect()
-            .await)
+            .await
     }
 
     /// Forms that contain the given morpheme gloss, from both lexical resources
@@ -460,10 +439,9 @@ impl Database {
         compare_by: Option<CherokeeOrthography>,
     ) -> Result<Vec<MorphemeReference>> {
         use itertools::Itertools;
-        use tokio::stream::StreamExt;
 
         let dictionary_words = self.surface_forms(morpheme);
-        let documents = self.client.collection(Self::DOCUMENTS);
+        let documents: mongodb::Collection = self.client.collection(Self::DOCUMENTS);
         let mut steps = vec![
             bson::doc! { "$unwind": "$segments" },
             bson::doc! { "$replaceRoot": { "newRoot": "$segments.source" } },
@@ -558,7 +536,8 @@ impl Database {
     pub async fn document_manifest(&self, document_id: &str) -> Result<iiif::Manifest> {
         // Retrieve the document from the DB.
         let doc: AnnotatedDoc = self
-            .client.collection(Self::DOCUMENTS)
+            .client
+            .collection(Self::DOCUMENTS)
             .find_one(bson::doc! { "_id": document_id }, None)
             .await?
             .and_then(|doc| bson::from_document(doc).ok())
@@ -657,7 +636,6 @@ async fn find_all_keys<T>(
 where
     T: for<'de> serde::Deserialize<'de>,
 {
-    use tokio::stream::StreamExt;
     Ok(col
         .find(bson::doc! { "_id": { "$in": keys } }, None)
         .await?

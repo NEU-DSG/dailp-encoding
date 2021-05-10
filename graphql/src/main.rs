@@ -5,7 +5,7 @@ use dailp::{
     AnnotatedDoc, CherokeeOrthography, Database, MorphemeId, MorphemeReference, MorphemeTag,
     WordsInDocument,
 };
-use lambda_http::{http::header, lambda, IntoResponse, Request, RequestExt, Response};
+use lambda_http::{http::header, lambda_runtime, IntoResponse, Request, RequestExt, Response};
 use mongodb::bson;
 
 type Error = Box<dyn std::error::Error + Sync + Send + 'static>;
@@ -24,11 +24,15 @@ lazy_static::lazy_static! {
     static ref MONGODB_PASSWORD: String = std::env::var("MONGODB_PASSWORD").unwrap();
 }
 
+#[tokio::main]
+async fn main() -> Result<(), Error> {
+    lambda_runtime::run(lambda_http::handler(handler)).await?;
+    Ok(())
+}
+
 /// Takes an HTTP request containing a GraphQL query,
 /// processes it with our GraphQL schema, then returns a JSON response.
-#[lambda::lambda(http)]
-#[tokio::main]
-async fn main(req: Request, _: lambda::Context) -> Result<impl IntoResponse, Error> {
+async fn handler(req: Request, _: lambda_runtime::Context) -> Result<impl IntoResponse, Error> {
     // TODO Hook up warp or tide instead of using a manual conditional.
     let path = req.uri().path();
     // GraphQL queries route to the /graphql endpoint.

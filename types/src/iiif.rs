@@ -1,7 +1,7 @@
-use crate::{Database, AnnotatedDoc};
+use crate::{AnnotatedDoc, Database};
+use futures::stream::{self, StreamExt};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use futures::stream::{self, StreamExt};
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase", tag = "type")]
@@ -28,14 +28,16 @@ impl Manifest {
             manifest_uri.clone(),
             doc.meta.title,
             "The Newburry Library".to_owned(),
-            stream::iter(page_images
-                .ids
-                .into_iter()
-                .enumerate())
+            stream::iter(page_images.ids.into_iter().enumerate())
                 .then(|(index, id)| async move {
                     let image_url = format!("{}/{}", image_source.url, id);
                     let info_url = format!("{}/info.json", image_url);
-                    let info = reqwest::get(info_url).await.unwrap().json::<ImageInfo>().await.unwrap();
+                    let info = reqwest::get(info_url)
+                        .await
+                        .unwrap()
+                        .json::<ImageInfo>()
+                        .await
+                        .unwrap();
                     let page_num = index + 1;
                     let page_uri = format!("{}/page/{}", manifest_uri, page_num);
                     let canvas_uri = format!("{}/canvas", page_uri);
@@ -44,34 +46,29 @@ impl Manifest {
                         label: I18nString::english(&format!("Page {}", page_num)),
                         height: info.height,
                         width: info.width,
-                        items: vec![
-                            AnnotationPage {
-                                items: vec![
-                                    Annotation {
-                                        id: format!("{}/image", page_uri),
-                                        motivation: "painting".to_owned(),
-                                        body: Image {
-                                            id: format!("{}/full/max/0/default.jpg", image_url),
-                                            width: info.width,
-                                            height: info.height,
-                                            format: "image/jpeg".to_owned(),
-                                            service: vec![
-                                                ImageService2 {
-                                                    id: image_url,
-                                                    profile: "level1".to_owned(),
-                                                }
-                                            ]
-                                        },
-                                        target: canvas_uri.clone(),
-                                    }
-                                ],
-                                id: page_uri,
-                            }
-                        ],
+                        items: vec![AnnotationPage {
+                            items: vec![Annotation {
+                                id: format!("{}/image", page_uri),
+                                motivation: "painting".to_owned(),
+                                body: Image {
+                                    id: format!("{}/full/max/0/default.jpg", image_url),
+                                    width: info.width,
+                                    height: info.height,
+                                    format: "image/jpeg".to_owned(),
+                                    service: vec![ImageService2 {
+                                        id: image_url,
+                                        profile: "level1".to_owned(),
+                                    }],
+                                },
+                                target: canvas_uri.clone(),
+                            }],
+                            id: page_uri,
+                        }],
                         id: canvas_uri,
                     }
                 })
-                .collect().await,
+                .collect()
+                .await,
         )
     }
 
