@@ -21,6 +21,7 @@
 //! [`AnnotatedDoc`]: #struct.AnnotatedDoc
 //! [`AnnotatedForm`]: #struct.AnnotatedForm
 
+pub mod annotation;
 mod database;
 mod date;
 mod document;
