@@ -17,8 +17,8 @@ pub struct Manifest {
     #[serde(rename = "@context")]
     context: String,
     id: String,
-    label: I18nString,
-    summary: String,
+    label: LanguageString,
+    summary: LanguageString,
     metadata: Vec<MetadataEntry>,
     required_statement: MetadataEntry,
     behavior: Vec<String>,
@@ -28,13 +28,13 @@ pub struct Manifest {
 }
 impl Manifest {
     /// Make a IIIF manifest from the given document
-    pub async fn from_document(db: &Database, doc: AnnotatedDoc) -> Self {
+    pub async fn from_document(db: &Database, doc: AnnotatedDoc, url: String) -> Self {
         let base_uri = "https://dailp.northeastern.edu";
         let manifest_uri = &format!("{}/manifests/{}", base_uri, doc.meta.id);
         let page_images = doc.meta.page_images.unwrap();
         let image_source = &db.image_source(&page_images.source).await.unwrap().unwrap();
         Self::new(
-            manifest_uri.clone(),
+            url,
             doc.meta.title,
             "The Newburry Library".to_owned(),
             stream::iter(page_images.ids.into_iter().enumerate())
@@ -52,7 +52,7 @@ impl Manifest {
                     let canvas_uri = format!("{}/canvas", page_uri);
                     // For each page, retrieve the size of the image to set the canvas size.
                     Canvas {
-                        label: I18nString::english(&format!("Page {}", page_num)),
+                        label: LanguageString::english(&format!("Page {}", page_num)),
                         height: info.height,
                         width: info.width,
                         items: vec![AnnotationPage {
@@ -86,12 +86,12 @@ impl Manifest {
         Self {
             context: "http://iiif.io/api/presentation/3/context.json".to_owned(),
             id: uri,
-            label: I18nString::english(&title),
-            summary: title,
+            label: LanguageString::english(&title),
+            summary: LanguageString::english(&title),
             metadata: vec![],
             required_statement: MetadataEntry {
-                label: I18nString::english("Attribution"),
-                value: I18nString::english(&attribution),
+                label: LanguageString::english("Attribution"),
+                value: LanguageString::english(&attribution),
             },
             behavior: vec!["paged".to_owned()],
             provider: vec![],
@@ -114,7 +114,7 @@ struct ImageInfo {
 #[serde(rename_all = "camelCase", tag = "type")]
 pub struct Agent {
     id: String,
-    label: I18nString,
+    label: LanguageString,
     homepage: Vec<Text>,
 }
 impl Agent {
@@ -122,10 +122,10 @@ impl Agent {
     pub fn neu_library() -> Self {
         Self {
             id: "https://library.northeastern.edu/".to_owned(),
-            label: I18nString::english("Northeastern University Library"),
+            label: LanguageString::english("Northeastern University Library"),
             homepage: vec![Text {
                 id: "https://library.northeastern.edu".to_owned(),
-                label: I18nString::english("Northeastern University Library"),
+                label: LanguageString::english("Northeastern University Library"),
                 format: "text/html".to_owned(),
             }],
         }
@@ -136,15 +136,15 @@ impl Agent {
 #[serde(rename_all = "camelCase", tag = "type")]
 pub struct Text {
     id: String,
-    label: I18nString,
+    label: LanguageString,
     format: String,
 }
 
 /// A string which may have many different translations into several languages.
 #[derive(Serialize)]
 #[serde(transparent)]
-pub struct I18nString(HashMap<String, Vec<String>>);
-impl I18nString {
+pub struct LanguageString(HashMap<String, Vec<String>>);
+impl LanguageString {
     /// Make an English-only string
     pub fn english(s: &str) -> Self {
         let mut h = HashMap::new();
@@ -156,15 +156,15 @@ impl I18nString {
 /// Generic metadata entry on a manifest, page, or annotation.
 #[derive(Serialize)]
 pub struct MetadataEntry {
-    label: I18nString,
-    value: I18nString,
+    label: LanguageString,
+    value: LanguageString,
 }
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase", tag = "type")]
 pub struct Canvas {
     id: String,
-    label: I18nString,
+    label: LanguageString,
     height: u32,
     width: u32,
     items: Vec<AnnotationPage>,
@@ -187,9 +187,8 @@ pub struct Annotation {
 }
 
 #[derive(Serialize)]
-#[serde(rename_all = "camelCase", tag = "@type")]
+#[serde(rename_all = "camelCase", tag = "type")]
 pub struct Image {
-    #[serde(rename = "@id")]
     id: String,
     format: String,
     height: u32,
@@ -200,7 +199,6 @@ pub struct Image {
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase", tag = "type")]
 pub struct ImageService2 {
-    #[serde(rename = "@id")]
     id: String,
     profile: String,
 }

@@ -533,7 +533,7 @@ impl Database {
         Ok(document_words.chain(dictionary_words).collect())
     }
 
-    pub async fn document_manifest(&self, document_id: &str) -> Result<iiif::Manifest> {
+    pub async fn document_manifest(&self, document_id: &str, url: String) -> Result<iiif::Manifest> {
         // Retrieve the document from the DB.
         let doc: AnnotatedDoc = self
             .client
@@ -543,7 +543,7 @@ impl Database {
             .and_then(|doc| bson::from_document(doc).ok())
             .unwrap();
         // Build a IIIF manifest for this document.
-        Ok(iiif::Manifest::from_document(self, doc).await)
+        Ok(iiif::Manifest::from_document(self, doc, url).await)
     }
 }
 
