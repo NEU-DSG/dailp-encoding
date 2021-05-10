@@ -29,6 +29,13 @@ Resources:
         - Source: "/<*>"
           Status: 404-200
           Target: "/404.html"
+        # Access any http methods associated with our lambda function at /api/
+        - Source: "/api/<*>"
+          Status: 200
+          Target:
+            Fn::Sub:
+              - https://${RestApiId}.execute-api.${self:provider.region}.amazonaws.com/${opt:stage}/<*>
+              - RestApiId: !Ref ApiGatewayRestApi
         # Allow us to access the corresponding graphql environment (dev or prod)
         # at the path /graphql. Then the front-end doesn't have to know the exact url.
         - Source: "/graphql"
