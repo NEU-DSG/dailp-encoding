@@ -1,8 +1,16 @@
+//! This module includes types which are intended to represent the [IIIF
+//! Presentation API specification](https://iiif.io/api/presentation/3.0/).
+//! We use these types to build IIIF manifests for any annotated document,
+//! allowing any IIIF image viewer to consume and properly display our content.
+
 use crate::{AnnotatedDoc, Database};
 use futures::stream::{self, StreamExt};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
+/// [IIIF manifest](https://iiif.io/api/presentation/3.0/#52-manifest) which
+/// represents a particular annotated document, containing all original images
+/// and current annotations on each image.
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase", tag = "type")]
 pub struct Manifest {
@@ -19,6 +27,7 @@ pub struct Manifest {
     items: Vec<Canvas>,
 }
 impl Manifest {
+    /// Make a IIIF manifest from the given document
     pub async fn from_document(db: &Database, doc: AnnotatedDoc) -> Self {
         let base_uri = "https://dailp.northeastern.edu";
         let manifest_uri = &format!("{}/manifests/{}", base_uri, doc.meta.id);
@@ -72,6 +81,7 @@ impl Manifest {
         )
     }
 
+    /// Make a IIIF manifest
     pub fn new(uri: String, title: String, attribution: String, items: Vec<Canvas>) -> Self {
         Self {
             context: "http://iiif.io/api/presentation/3/context.json".to_owned(),
@@ -91,6 +101,7 @@ impl Manifest {
     }
 }
 
+/// Basic image information including dimensions.
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", tag = "type")]
 struct ImageInfo {
@@ -98,6 +109,7 @@ struct ImageInfo {
     height: u32,
 }
 
+/// A creative agent, which may be publisher or editor of manifest content.
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase", tag = "type")]
 pub struct Agent {
@@ -106,6 +118,7 @@ pub struct Agent {
     homepage: Vec<Text>,
 }
 impl Agent {
+    /// [`Agent`] object representing Northeastern University Library
     pub fn neu_library() -> Self {
         Self {
             id: "https://library.northeastern.edu/".to_owned(),
@@ -127,10 +140,12 @@ pub struct Text {
     format: String,
 }
 
+/// A string which may have many different translations into several languages.
 #[derive(Serialize)]
 #[serde(transparent)]
 pub struct I18nString(HashMap<String, Vec<String>>);
 impl I18nString {
+    /// Make an English-only string
     pub fn english(s: &str) -> Self {
         let mut h = HashMap::new();
         h.insert("en".to_owned(), vec![s.to_owned()]);
@@ -138,6 +153,7 @@ impl I18nString {
     }
 }
 
+/// Generic metadata entry on a manifest, page, or annotation.
 #[derive(Serialize)]
 pub struct MetadataEntry {
     label: I18nString,
