@@ -28,15 +28,14 @@ pub struct Manifest {
 }
 impl Manifest {
     /// Make a IIIF manifest from the given document
-    pub async fn from_document(db: &Database, doc: AnnotatedDoc, url: String) -> Self {
-        let base_uri = "https://dailp.northeastern.edu";
-        let manifest_uri = &format!("{}/manifests/{}", base_uri, doc.meta.id);
+    pub async fn from_document(db: &Database, doc: AnnotatedDoc, manifest_uri: String) -> Self {
         let page_images = doc.meta.page_images.unwrap();
         let image_source = &db.image_source(&page_images.source).await.unwrap().unwrap();
+        let manifest_uri = &manifest_uri;
         Self::new(
-            url,
+            manifest_uri.clone(),
             doc.meta.title,
-            "The Newburry Library".to_owned(),
+            "The Newberry Library".to_owned(),
             stream::iter(page_images.ids.into_iter().enumerate())
                 .then(|(index, id)| async move {
                     let image_url = format!("{}/{}", image_source.url, id);
@@ -94,8 +93,12 @@ impl Manifest {
                 value: LanguageString::english(&attribution),
             },
             behavior: vec!["paged".to_owned()],
-            provider: vec![],
-            homepage: vec![],
+            provider: vec![Agent::neu_library()],
+            homepage: vec![Text {
+                id: "https://dailp.northeastern.edu/".to_owned(),
+                label: LanguageString::english("Digital Archive of American Indian Languages Preservation and Perseverance"),
+                format: "text/html".to_owned(),
+            }],
             items,
         }
     }
