@@ -65,9 +65,10 @@ async fn handler(req: Request, _: lambda_runtime::Context) -> Result<impl IntoRe
     }
     // Document manifests are found at /manifests/{id}
     else if path.starts_with("/manifests") {
+        let full_url = req.uri().to_string();
         let params = req.path_parameters();
         let document_id = params.get("id").unwrap();
-        let manifest = DATABASE.document_manifest(document_id).await?;
+        let manifest = DATABASE.document_manifest(document_id, full_url).await?;
         let json = serde_json::to_string(&manifest)?;
         let resp = Response::builder()
             .header(header::CONTENT_TYPE, "application/json")
