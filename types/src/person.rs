@@ -1,11 +1,17 @@
 use serde::{Deserialize, Serialize};
 
+/// An individual or organization that contributed to the creation or analysis
+/// of a particular document or source. Each contributor has a name and a role
+/// that specifies the type of their contributions.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Contributor {
+    /// Full name of the contributor
     pub name: String,
+    /// The role that defines most of their contributions to the associated item
     pub role: String,
 }
 impl Contributor {
+    /// Create new contributor with the role "Author"
     pub fn new_author(name: String) -> Self {
         Self {
             name,
@@ -34,7 +40,8 @@ impl Contributor {
     }
 }
 
-/// Basic personal details of an individual contributor.
+/// Basic personal details of an individual contributor, which can be retrieved
+/// from a particular instance of [`Contributor`].
 ///
 /// They may have transcribed a handwritten manuscript, translated it into
 /// English, or analyzed it for linguistic information.

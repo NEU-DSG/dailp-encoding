@@ -4,12 +4,18 @@ use serde::{Deserialize, Serialize};
 /// The reference position within a document of one specific form
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
 pub struct PositionInDocument {
+    /// What document is this item within?
     pub document_id: DocumentId,
+    /// What page is it on? May be a single page or range of pages.
     pub page_number: String,
+    /// How many items come before this one in the whole document?
     pub index: i32,
+    /// What section of the document image corresponds to this item?
     pub geometry: Option<Geometry>,
 }
+
 impl PositionInDocument {
+    /// Make a new document position from the document ID, page number, and item index.
     pub fn new(document_id: String, page_number: String, index: i32) -> Self {
         Self {
             document_id: DocumentId(document_id),
@@ -18,9 +24,9 @@ impl PositionInDocument {
             geometry: None,
         }
     }
-}
 
-impl PositionInDocument {
+    /// Make a unique ID to identify a string at this position, clearing all
+    /// non-ASCII characters from the given string.
     pub fn make_id(&self, gloss: &str, use_index: bool) -> String {
         // Clear non-ASCII characters from the ID to prevent weird duplicates
         // caused by unicode blanks or accents.
@@ -126,17 +132,22 @@ impl PositionInDocument {
 /// A connection between two lexical entries from the same or different sources
 #[derive(Serialize, Deserialize)]
 pub struct LexicalConnection {
+    /// Unique ID of this connection, generally formatted as "FROM-TO"
     #[serde(rename = "_id")]
     pub id: String,
+    /// List of all forms or morphemes to associate
     pub links: Vec<MorphemeId>,
 }
 impl LexicalConnection {
+    /// Make a new association between these two identifiers.
     pub fn new(from: MorphemeId, to: MorphemeId) -> Self {
         Self {
             id: format!("{}-{}", from, to),
             links: vec![from, to],
         }
     }
+
+    /// Make a new association between the two identifiers parsed from two strings.
     pub fn parse(from: &str, to: &str) -> Option<Self> {
         let from = MorphemeId::parse(from)?;
         let to = MorphemeId::parse(to)?;
@@ -144,6 +155,8 @@ impl LexicalConnection {
     }
 }
 
+/// Uniquely identifies a particular form based on its parent [`DocumentId`],
+/// gloss, and index within that document.
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, Hash)]
 pub struct MorphemeId {
     pub document_id: Option<String>,
@@ -151,6 +164,7 @@ pub struct MorphemeId {
     pub index: Option<i32>,
 }
 impl MorphemeId {
+    /// Make a new [`MorphemeId`]
     pub fn new(document_id: Option<String>, index: Option<i32>, gloss: String) -> Self {
         Self {
             document_id,
@@ -158,6 +172,8 @@ impl MorphemeId {
             gloss,
         }
     }
+
+    /// Attempt to parse an ID from the given string.
     pub fn parse(input: &str) -> Option<Self> {
         // Trim any potential whitespace from the edges.
         let input = input.trim();
@@ -182,6 +198,7 @@ impl MorphemeId {
         })
     }
 }
+
 impl std::fmt::Display for MorphemeId {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         if let Some(index) = &self.index {

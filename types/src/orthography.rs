@@ -1,6 +1,11 @@
 use crate::*;
 use lazy_static::lazy_static;
 
+/// One representation of Cherokee phonology.
+/// There are several different writing systems for Cherokee phonology and we
+/// want to convert between them.
+/// This type enumerates all of the systems that we support and provides
+/// conversion from our internal orthography into any of these.
 #[derive(async_graphql::Enum, Clone, Copy, Eq, PartialEq)]
 pub enum CherokeeOrthography {
     /// The t/th system for transcribing the Cherokee syllabary.

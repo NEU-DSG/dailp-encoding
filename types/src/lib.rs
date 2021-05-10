@@ -17,9 +17,6 @@
 //! morphemic segmentation, and an English gloss. Each [`AnnotatedForm`] always
 //! knows what document it came from, retaining a sense of source and concrete
 //! reference.
-//!
-//! [`AnnotatedDoc`]: #struct.AnnotatedDoc
-//! [`AnnotatedForm`]: #struct.AnnotatedForm
 
 pub mod annotation;
 mod database;

@@ -229,14 +229,14 @@ impl Database {
     }
 
     pub async fn word_search(&self, query: bson::Document) -> Result<Vec<AnnotatedForm>> {
-        (self
+        self
             .client
             .collection(Self::WORDS)
             .find(query, None)
             .await?
             .map::<Result<_>, _>(|d| Ok(bson::from_document(d?)?))
             .collect()
-            .await)
+            .await
     }
 
     pub async fn potential_syllabary_matches(&self, syllabary: &str) -> Result<Vec<AnnotatedForm>> {
