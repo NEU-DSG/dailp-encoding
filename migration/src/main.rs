@@ -177,7 +177,13 @@ async fn graphql_mutate(
             "operationName": null,
             "query": format!("mutation {{\n{}\n}}", s)
         });
-        let response = CLIENT.post(&*ENDPOINT).json(&query).send().await?.json::<serde_json::Value>().await?;
+        let response = CLIENT
+            .post(&*ENDPOINT)
+            .json(&query)
+            .send()
+            .await?
+            .json::<serde_json::Value>()
+            .await?;
         if let Some(errors) = response.get("errors") {
             bail!("Mutation '{}' failed: {}", method, errors);
         }
