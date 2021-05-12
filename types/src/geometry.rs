@@ -1,3 +1,8 @@
+use {
+    crate::AnnotatedForm,
+    serde::{Deserialize, Serialize},
+};
+
 /// A rectangle slice of something, usually a large document image.
 ///
 /// Units are a percentage of the containing document.
@@ -13,9 +18,7 @@
 /// syllabary characters, notes about the handwriting, etc. Using MongoDB
 /// comparison queries, we can request a list of all spatial annotations
 /// on the same document that lie within or around the geometry of this specific word.
-#[derive(
-    Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, async_graphql::SimpleObject,
-)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, async_graphql::SimpleObject)]
 #[serde(rename_all = "camelCase")]
 pub struct Geometry {
     x_min: Scalar,

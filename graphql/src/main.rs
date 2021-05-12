@@ -309,13 +309,13 @@ impl FormQuery {
             doc.insert("source", regex_query(source));
         }
         if let Some(normalized_source) = self.normalized_source {
-            doc.insert("normalized_source", regex_query(normalized_source));
+            doc.insert("normalizedSource", regex_query(normalized_source));
         }
         if let Some(simple_phonetics) = self.simple_phonetics {
-            doc.insert("simple_phonetics", regex_query(simple_phonetics));
+            doc.insert("simplePhonetics", regex_query(simple_phonetics));
         }
         if let Some(english_gloss) = self.english_gloss {
-            doc.insert("english_gloss", regex_query(english_gloss));
+            doc.insert("englishGloss", regex_query(english_gloss));
         }
         if let Some(true) = self.unresolved {
             doc.insert("segments", bson::doc! { "gloss": "?" });
