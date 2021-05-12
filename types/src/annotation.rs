@@ -8,8 +8,8 @@ use serde::{Deserialize, Serialize};
 pub struct Annotation {
     #[serde(rename = "_id")]
     pub id: AnnotationId,
-    content: String,
-    attached_to: AnnotationAttachment,
+    pub content: String,
+    pub attached_to: AnnotationAttachment,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Hash)]
@@ -17,7 +17,7 @@ pub struct AnnotationId(pub String);
 
 #[derive(Serialize, Deserialize)]
 #[serde(tag = "__typename")]
-enum AnnotationAttachment {
+pub enum AnnotationAttachment {
     /// Reply to another existing annotation, referred to by ID.
     Reply(AnnotationId),
     /// Attached to a particular word.
@@ -27,11 +27,11 @@ enum AnnotationAttachment {
 }
 
 #[derive(Serialize, Deserialize)]
-struct DocumentRegion {
-    document: DocumentId,
-    /// Index of the page this annotation applies to.
-    page: Option<u32>,
+pub struct DocumentRegion {
+    pub document: DocumentId,
+    /// Number of the page this annotation applies to.
+    pub page: Option<u32>,
     /// An image annotation without a region applies to the whole image.
     /// A page number is required to specify a region.
-    region: Option<Geometry>,
+    pub region: Option<Geometry>,
 }

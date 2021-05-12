@@ -5,52 +5,40 @@ use serde::{Deserialize, Serialize};
 /// A single word in an annotated document.
 /// One word contains several layers of interpretation, including the original
 /// source text, multiple layers of linguistic annotation, and annotator notes.
-#[derive(Clone, Serialize, Deserialize, Debug)]
+#[derive(Clone, Serialize, Deserialize, Debug, async_graphql::SimpleObject)]
+#[serde(rename_all = "camelCase")]
+#[graphql(complex)]
 pub struct AnnotatedForm {
     #[serde(rename = "_id")]
+    /// Unique identifier of this form
     pub id: String,
+    /// Original source text
     pub source: String,
-    /// A normalized version of the word.
+    /// A normalized version of the word
     pub normalized_source: Option<String>,
+    /// Romanized version of the word for simple phonetic pronunciation
     pub simple_phonetics: Option<String>,
+    /// Underlying phonemic representation of this word
     pub phonemic: Option<String>,
+    /// Morphemic segmentation of the form that includes a phonemic
+    /// representation and gloss for each
     pub segments: Option<Vec<MorphemeSegment>>,
     #[serde(default)]
+    /// English gloss for the whole word
     pub english_gloss: Vec<String>,
+    /// Further details about the annotation layers, including uncertainty
     pub commentary: Option<String>,
-    /// The character index of a mid-word line break, if there is one.
+    /// The character index of a mid-word line break, if there is one
     pub line_break: Option<i32>,
-    /// The character index of a mid-word page break, if there is one.
+    /// The character index of a mid-word page break, if there is one
     pub page_break: Option<i32>,
+    /// Position of the form within the context of its parent document
     pub position: PositionInDocument,
+    /// The date and time this form was recorded
     pub date_recorded: Option<Date>,
 }
 
-impl AnnotatedForm {
-    pub fn find_root(&self) -> Option<&MorphemeSegment> {
-        self.segments
-            .as_ref()
-            .and_then(|segments| segments.iter().find(|seg| is_root_morpheme(&seg.gloss)))
-    }
-
-    pub fn find_morpheme(&self, gloss: &str) -> Option<&MorphemeSegment> {
-        self.segments
-            .as_ref()
-            .and_then(|segments| segments.iter().find(|seg| seg.gloss == gloss))
-    }
-
-    pub fn is_unresolved(&self) -> bool {
-        if let Some(segments) = &self.segments {
-            segments
-                .iter()
-                .any(|segment| segment.morpheme.contains('?') || segment.gloss.contains('?'))
-        } else {
-            self.source.contains('?')
-        }
-    }
-}
-
-#[async_graphql::Object]
+#[async_graphql::ComplexObject]
 impl AnnotatedForm {
     /// The root morpheme of the word.
     /// For example, a verb form glossed as "he catches" might have a root morpheme
@@ -68,7 +56,7 @@ impl AnnotatedForm {
             let db = context.data::<Database>()?;
             // Find the forms with the exact same root.
             let id = MorphemeId {
-                document_id: Some(self.position.document_id.0.clone()),
+                document_id: Some(self.position.document_id.clone()),
                 gloss: root.gloss.clone(),
                 index: None,
             };
@@ -99,56 +87,38 @@ impl AnnotatedForm {
             .await?)
     }
 
-    /// Unique identifier for this form.
-    async fn id(&self) -> &str {
-        &self.id
-    }
-
-    /// Position of this word in its containing document.
+    /// Number of words preceding this one in the containing document
     async fn index(&self) -> i32 {
         self.position.index
     }
-    /// The unique identifier of the containing document.
+
+    /// Unique identifier of the containing document
     async fn document_id(&self) -> &str {
         &self.position.document_id.0
     }
+}
 
-    async fn position(&self) -> &PositionInDocument {
-        &self.position
+impl AnnotatedForm {
+    pub fn find_root(&self) -> Option<&MorphemeSegment> {
+        self.segments
+            .as_ref()
+            .and_then(|segments| segments.iter().find(|seg| is_root_morpheme(&seg.gloss)))
     }
 
-    /// Original source text.
-    async fn source(&self) -> &str {
-        &self.source
+    pub fn find_morpheme(&self, gloss: &str) -> Option<&MorphemeSegment> {
+        self.segments
+            .as_ref()
+            .and_then(|segments| segments.iter().find(|seg| seg.gloss == gloss))
     }
-    /// Normalized source text
-    async fn normalized_source(&self) -> &Option<String> {
-        &self.normalized_source
-    }
-    /// Romanized version of the word for simple phonetic pronunciation.
-    async fn simple_phonetics(&self) -> &Option<String> {
-        &self.simple_phonetics
-    }
-    /// Underlying phonemic representation of this word.
-    async fn phonemic(&self) -> &Option<String> {
-        &self.phonemic
-    }
-    /// Morphemic segmentation of the form that includes a phonemic
-    /// representation and gloss for each.
-    async fn segments(&self) -> &Option<Vec<MorphemeSegment>> {
-        &self.segments
-    }
-    /// English gloss for the whole word.
-    async fn english_gloss(&self) -> &Vec<String> {
-        &self.english_gloss
-    }
-    /// Further details about the annotation layers, including uncertainty.
-    async fn commentary(&self) -> &Option<String> {
-        &self.commentary
-    }
-    /// The date and time this form was recorded
-    async fn date_recorded(&self) -> &Option<Date> {
-        &self.date_recorded
+
+    pub fn is_unresolved(&self) -> bool {
+        if let Some(segments) = &self.segments {
+            segments
+                .iter()
+                .any(|segment| segment.morpheme.contains('?') || segment.gloss.contains('?'))
+        } else {
+            self.source.contains('?')
+        }
     }
 }
 

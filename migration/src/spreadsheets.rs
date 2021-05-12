@@ -46,7 +46,7 @@ pub async fn migrate_documents_to_db(
 /// template to produce an xml document named like the given title.
 pub fn write_to_file(doc: &AnnotatedDoc) -> Result<()> {
     let mut tera = tera::Tera::new("*.tera.xml")?;
-    let file_name = format!("{}/{}.xml", OUTPUT_DIR, doc.meta.id);
+    let file_name = format!("{}/{}.xml", OUTPUT_DIR, doc.meta.id.0);
     println!("writing to {}", file_name);
     tera.register_filter("convert_breaks", convert_breaks);
     let contents = tera.render("template.tera.xml", &tera::Context::from_serialize(doc)?)?;
@@ -148,8 +148,11 @@ impl SheetResult {
                 let page_number = root_values.next()?;
                 let mut form_values = root_values;
                 let date = Date::new(chrono::NaiveDate::from_ymd(year, 1, 1));
-                let position =
-                    PositionInDocument::new(doc_id.to_owned(), page_number, idx as i32 + 1);
+                let position = PositionInDocument::new(
+                    dailp::DocumentId(doc_id.to_string()),
+                    page_number,
+                    idx as i32 + 1,
+                );
                 Some(LexicalEntryWithForms {
                     forms: root_verb_surface_forms(
                         &position,
@@ -212,7 +215,11 @@ impl SheetResult {
                     // Skip page ref and category.
                     let mut form_values = root_values.skip(after_root);
                     let date = Date::new(chrono::NaiveDate::from_ymd(year, 1, 1));
-                    let position = PositionInDocument::new(doc_id.to_owned(), page_number?, index);
+                    let position = PositionInDocument::new(
+                        dailp::DocumentId(doc_id.to_owned()),
+                        page_number?,
+                        index,
+                    );
                     Some(LexicalEntryWithForms {
                         forms: root_noun_surface_forms(
                             &position,
@@ -246,7 +253,10 @@ impl SheetResult {
             .collect())
     }
 
-    pub async fn into_references(self, doc_id: &str) -> Vec<dailp::LexicalConnection> {
+    pub async fn into_references(
+        self,
+        doc_id: &dailp::DocumentId,
+    ) -> Vec<dailp::LexicalConnection> {
         self.values
             .into_iter()
             // First column is the name of the field, useless when parsing so we ignore it.
@@ -255,7 +265,7 @@ impl SheetResult {
                 let mut row = row.into_iter();
                 Some(dailp::LexicalConnection::new(
                     MorphemeId {
-                        document_id: Some(doc_id.to_owned()),
+                        document_id: Some(doc_id.clone()),
                         gloss: row.next()?,
                         index: None,
                     },
@@ -335,7 +345,7 @@ impl SheetResult {
         };
 
         Ok(DocumentMetadata {
-            id: doc_id.remove(1),
+            id: dailp::DocumentId(doc_id.remove(1)),
             title: title.remove(1),
             sources,
             collection: source.pop().filter(|s| !s.is_empty()),
@@ -475,7 +485,7 @@ impl<'a> AnnotatedLine {
                         let translation = line.rows[6].items.get(i).map(|x| x.trim().to_owned());
                         let w = AnnotatedForm {
                             // TODO Extract into public function!
-                            id: format!("{}.{}", meta.id, word_index),
+                            id: format!("{}.{}", meta.id.0, word_index),
                             position: PositionInDocument::new(
                                 meta.id.clone(),
                                 1.to_string(),
@@ -518,7 +528,7 @@ impl<'a> AnnotatedLine {
 
     pub fn lines_into_segments(
         lines: Vec<Self>,
-        document_id: &str,
+        document_id: &dailp::DocumentId,
         date: &Option<Date>,
     ) -> Vec<AnnotatedSeg> {
         let mut segments = Vec::<AnnotatedSeg>::new();
@@ -552,7 +562,7 @@ impl<'a> AnnotatedLine {
                 // Give the word an index within the whole document.
                 let word = AnnotatedForm {
                     position: PositionInDocument::new(
-                        document_id.to_owned(),
+                        document_id.clone(),
                         (page_num + 1).to_string(),
                         word_idx,
                     ),

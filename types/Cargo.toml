@@ -14,7 +14,7 @@ tokio = { version = "1.5", features = ["full", "time"] }
 tokio-stream = "0.1"
 anyhow = "1.0"
 itertools = "0.9"
-async-graphql = "2.5.10"
+async-graphql = { version = "2.8", features = ["dataloader"] }
 futures = "0.3"
 mongodb = "2.0.0-alpha.1"
 lazy_static = "1.4"

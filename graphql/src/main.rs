@@ -68,7 +68,9 @@ async fn handler(req: Request, _: lambda_runtime::Context) -> Result<impl IntoRe
         let full_url = req.uri().to_string();
         let params = req.path_parameters();
         let document_id = params.get("id").unwrap();
-        let manifest = DATABASE.document_manifest(document_id, full_url).await?;
+        let manifest = DATABASE
+            .document_manifest(&dailp::DocumentId(document_id.to_string()), full_url)
+            .await?;
         let json = serde_json::to_string(&manifest)?;
         let resp = Response::builder()
             .header(header::CONTENT_TYPE, "application/json")
@@ -337,7 +339,7 @@ impl Mutation {
     async fn update_tag(
         &self,
         context: &Context<'_>,
-        password: String,
+        #[graphql(secret)] password: String,
         // Data encoded as JSON for now.
         // FIXME Use real input objects.
         contents: String,
@@ -356,7 +358,7 @@ impl Mutation {
     async fn update_document(
         &self,
         context: &Context<'_>,
-        password: String,
+        #[graphql(secret)] password: String,
         // Data encoded as JSON for now.
         // FIXME Use real input objects.
         contents: String,
@@ -375,7 +377,7 @@ impl Mutation {
     async fn update_form(
         &self,
         context: &Context<'_>,
-        password: String,
+        #[graphql(secret)] password: String,
         // Data encoded as JSON for now.
         // FIXME Use real input objects.
         contents: String,
@@ -394,7 +396,7 @@ impl Mutation {
     async fn update_connection(
         &self,
         context: &Context<'_>,
-        password: String,
+        #[graphql(secret)] password: String,
         // Data encoded as JSON for now.
         // FIXME Use real input objects.
         contents: String,
@@ -413,7 +415,7 @@ impl Mutation {
     async fn update_person(
         &self,
         context: &Context<'_>,
-        password: String,
+        #[graphql(secret)] password: String,
         // Data encoded as JSON for now.
         // FIXME Use real input objects.
         contents: String,
@@ -432,7 +434,7 @@ impl Mutation {
     async fn update_image_source(
         &self,
         context: &Context<'_>,
-        password: String,
+        #[graphql(secret)] password: String,
         // Data encoded as JSON for now.
         // FIXME Use real input objects.
         contents: String,
@@ -451,7 +453,7 @@ impl Mutation {
     async fn update_page(
         &self,
         context: &Context<'_>,
-        password: String,
+        #[graphql(secret)] password: String,
         // Data encoded as JSON for now.
         data: async_graphql::Json<dailp::page::Page>,
     ) -> FieldResult<bool> {
@@ -459,6 +461,26 @@ impl Mutation {
             Ok(false)
         } else {
             context.data::<Database>()?.pages().update(data.0).await?;
+            Ok(true)
+        }
+    }
+
+    #[graphql(visible = false)]
+    async fn update_annotation(
+        &self,
+        context: &Context<'_>,
+        #[graphql(secret)] password: String,
+        // Data encoded as JSON for now.
+        data: async_graphql::Json<dailp::annotation::Annotation>,
+    ) -> FieldResult<bool> {
+        if password != *MONGODB_PASSWORD {
+            Ok(false)
+        } else {
+            context
+                .data::<Database>()?
+                .annotations()
+                .update(data.0)
+                .await?;
             Ok(true)
         }
     }

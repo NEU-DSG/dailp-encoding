@@ -4,10 +4,13 @@ use serde::{Deserialize, Serialize};
 /// Represents a morphological gloss tag without committing to a single representation.
 ///
 /// - TODO: Use a more generic representation than fields for learner, TAOC, and CRG.
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, async_graphql::SimpleObject)]
+#[serde(rename_all = "camelCase")]
+#[graphql(complex)]
 pub struct MorphemeTag {
     /// Unique identifier for this morpheme which should be used in raw
     /// interlinear glosses of a word containing this morpheme.
+    /// Standard annotation tag for this morpheme, defined by DAILP.
     #[serde(rename = "_id")]
     pub id: String,
     /// The "learner" representation of this morpheme, a compromise between no
@@ -16,7 +19,7 @@ pub struct MorphemeTag {
     /// Representation of this morpheme that closely aligns with _Tone and
     /// Accent in Oklahoma Cherokee_.
     pub taoc: Option<TagForm>,
-    /// Representation of this morpheme that closesly aligns with _Cherokee
+    /// Representation of this morpheme that closely aligns with _Cherokee
     /// Reference Grammar_.
     pub crg: Option<TagForm>,
     /// What kind of functional morpheme is this?
@@ -24,29 +27,8 @@ pub struct MorphemeTag {
     pub morpheme_type: String,
 }
 
-#[async_graphql::Object]
+#[async_graphql::ComplexObject]
 impl MorphemeTag {
-    /// Standard annotation tag for this morpheme, defined by DAILP.
-    async fn id(&self) -> &str {
-        &self.id
-    }
-    /// Alternate form that conveys a simple English representation.
-    async fn learner(&self) -> &Option<TagForm> {
-        &self.learner
-    }
-    /// Alternate form of this morpheme from Cherokee Reference Grammar.
-    async fn crg(&self) -> &Option<TagForm> {
-        &self.crg
-    }
-    /// Representation of this morpheme from TAOC.
-    async fn taoc(&self) -> &Option<TagForm> {
-        &self.taoc
-    }
-    /// The kind of morpheme, whether prefix or suffix.
-    async fn morpheme_type(&self) -> &str {
-        &self.morpheme_type
-    }
-
     async fn attested_allomorphs(
         &self,
         context: &async_graphql::Context<'_>,
@@ -64,6 +46,7 @@ impl MorphemeTag {
 
 /// A concrete representation of a particular functional morpheme.
 #[derive(async_graphql::SimpleObject, Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct TagForm {
     /// How this morpheme is represented in a gloss
     pub tag: String,

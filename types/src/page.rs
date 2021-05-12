@@ -35,6 +35,7 @@ pub struct MarkdownBlock {
 
 /// A gallery of images, which may be rendered as a slideshow or lightbox.
 #[derive(Clone, Serialize, Deserialize, SimpleObject)]
+#[serde(rename_all = "camelCase")]
 pub struct GalleryBlock {
     media_urls: Vec<String>,
 }

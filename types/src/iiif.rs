@@ -3,7 +3,11 @@
 //! We use these types to build IIIF manifests for any annotated document,
 //! allowing any IIIF image viewer to consume and properly display our content.
 
-use crate::{AnnotatedDoc, Database};
+use crate::{
+    annotation::{AnnotationAttachment, DocumentRegion},
+    AnnotatedDoc, Database,
+};
+use futures::join;
 use futures::stream::{self, StreamExt};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -30,7 +34,17 @@ impl Manifest {
     /// Make a IIIF manifest from the given document
     pub async fn from_document(db: &Database, doc: AnnotatedDoc, manifest_uri: String) -> Self {
         let page_images = doc.meta.page_images.unwrap();
-        let image_source = &db.image_source(&page_images.source).await.unwrap().unwrap();
+        let (image_source, annotations, words) = {
+            let annot_db = db.annotations();
+            join!(
+                db.image_source(&page_images.source),
+                annot_db.on_document(&doc.meta.id),
+                db.words_in_document(&doc.meta.id)
+            )
+        };
+        let annotations = &annotations.unwrap();
+        let words = &words.unwrap();
+        let image_source = &image_source.unwrap().unwrap();
         let manifest_uri = &manifest_uri;
         Self::new(
             manifest_uri.clone(),
@@ -46,9 +60,66 @@ impl Manifest {
                         .json::<ImageInfo>()
                         .await
                         .unwrap();
-                    let page_num = index + 1;
+                    let page_num = (index + 1) as u32;
                     let page_uri = format!("{}/page/{}", manifest_uri, page_num);
                     let canvas_uri = format!("{}/canvas", page_uri);
+                    let annotations_uri = format!("{}/annotations", page_uri);
+                    let annotation_page = AnnotationPage {
+                        items: words
+                            .into_iter()
+                            .filter_map(|word| {
+                                if let Some(geometry) = &word.position.geometry {
+                                    Some(Annotation {
+                                        id: format!("{}/{}", annotations_uri, word.id),
+                                        motivation: "supplementing".to_owned(),
+                                        body: AnnotationBody::TextualBody(TextualBody {
+                                            language: "en".to_string(),
+                                            format: "text/html".to_string(),
+                                            value: word.source.clone(),
+                                        }),
+                                        target: AnnotationTarget::Selector(TargetSelector {
+                                            id: canvas_uri.clone(),
+                                            selector: FragmentSelector {
+                                                value: geometry.to_selector_string(),
+                                            },
+                                        }),
+                                    })
+                                } else {
+                                    None
+                                }
+                            })
+                            .chain(annotations.into_iter().filter_map(|annote| {
+                                match &annote.attached_to {
+                                    AnnotationAttachment::Document(DocumentRegion {
+                                        region,
+                                        page: Some(annote_page),
+                                        ..
+                                    }) if *annote_page == page_num => Some(Annotation {
+                                        id: format!("{}/{}", annotations_uri, annote.id.0),
+                                        motivation: "commenting".to_owned(),
+                                        body: AnnotationBody::TextualBody(TextualBody {
+                                            language: "en".to_string(),
+                                            format: "text/html".to_string(),
+                                            value: annote.content.clone(),
+                                        }),
+                                        target: if let Some(region) = &region {
+                                            AnnotationTarget::Selector(TargetSelector {
+                                                id: canvas_uri.clone(),
+                                                selector: FragmentSelector {
+                                                    value: region.to_selector_string(),
+                                                },
+                                            })
+                                        } else {
+                                            AnnotationTarget::Id(canvas_uri.clone())
+                                        },
+                                    }),
+
+                                    _ => None,
+                                }
+                            }))
+                            .collect(),
+                        id: annotations_uri,
+                    };
                     // For each page, retrieve the size of the image to set the canvas size.
                     Canvas {
                         label: LanguageString::english(&format!("Page {}", page_num)),
@@ -58,7 +129,7 @@ impl Manifest {
                             items: vec![Annotation {
                                 id: format!("{}/image", page_uri),
                                 motivation: "painting".to_owned(),
-                                body: Image {
+                                body: AnnotationBody::Image(Image {
                                     id: format!("{}/full/max/0/default.jpg", image_url),
                                     width: info.width,
                                     height: info.height,
@@ -67,11 +138,12 @@ impl Manifest {
                                         id: image_url,
                                         profile: "level1".to_owned(),
                                     }],
-                                },
-                                target: canvas_uri.clone(),
+                                }),
+                                target: AnnotationTarget::Id(canvas_uri.clone()),
                             }],
                             id: page_uri,
                         }],
+                        annotations: vec![annotation_page],
                         id: canvas_uri,
                     }
                 })
@@ -96,7 +168,9 @@ impl Manifest {
             provider: vec![Agent::neu_library()],
             homepage: vec![Text {
                 id: "https://dailp.northeastern.edu/".to_owned(),
-                label: LanguageString::english("Digital Archive of American Indian Languages Preservation and Perseverance"),
+                label: LanguageString::english(
+                    "Digital Archive of American Indian Languages Preservation and Perseverance",
+                ),
                 format: "text/html".to_owned(),
             }],
             items,
@@ -171,6 +245,7 @@ pub struct Canvas {
     height: u32,
     width: u32,
     items: Vec<AnnotationPage>,
+    annotations: Vec<AnnotationPage>,
 }
 
 #[derive(Serialize)]
@@ -185,8 +260,34 @@ pub struct AnnotationPage {
 pub struct Annotation {
     id: String,
     motivation: String,
-    body: Image,
-    target: String,
+    body: AnnotationBody,
+    target: AnnotationTarget,
+}
+
+#[derive(Serialize)]
+#[serde(untagged)]
+pub enum AnnotationTarget {
+    Id(String),
+    Selector(TargetSelector),
+}
+
+#[derive(Serialize)]
+pub struct TargetSelector {
+    id: String,
+    selector: FragmentSelector,
+}
+
+#[derive(Serialize)]
+#[serde(tag = "type")]
+pub struct FragmentSelector {
+    value: String,
+}
+
+#[derive(Serialize)]
+#[serde(untagged)]
+pub enum AnnotationBody {
+    Image(Image),
+    TextualBody(TextualBody),
 }
 
 #[derive(Serialize)]
@@ -204,4 +305,12 @@ pub struct Image {
 pub struct ImageService2 {
     id: String,
     profile: String,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase", tag = "type")]
+pub struct TextualBody {
+    language: String,
+    format: String,
+    value: String,
 }

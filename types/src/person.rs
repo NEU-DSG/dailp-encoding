@@ -3,7 +3,8 @@ use serde::{Deserialize, Serialize};
 /// An individual or organization that contributed to the creation or analysis
 /// of a particular document or source. Each contributor has a name and a role
 /// that specifies the type of their contributions.
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, async_graphql::SimpleObject)]
+#[graphql(complex)]
 pub struct Contributor {
     /// Full name of the contributor
     pub name: String,
@@ -20,14 +21,8 @@ impl Contributor {
     }
 }
 
-#[async_graphql::Object]
+#[async_graphql::ComplexObject]
 impl Contributor {
-    async fn name(&self) -> &str {
-        &self.name
-    }
-    async fn role(&self) -> &str {
-        &self.role
-    }
     async fn details(
         &self,
         ctx: &async_graphql::Context<'_>,
@@ -48,6 +43,7 @@ impl Contributor {
 /// This information can be used to track who contributed to the development of
 /// each individual document, and track contributions to the archive as a whole.
 #[derive(async_graphql::SimpleObject, Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ContributorDetails {
     /// Full name of this person, this exact string must be used to identify
     /// them elsewhere, like in the attribution for a particular document.
