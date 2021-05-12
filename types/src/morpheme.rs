@@ -5,6 +5,7 @@ use std::borrow::Cow;
 
 /// A single unit of meaning and its corresponding English gloss.
 #[derive(Serialize, Clone, Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct MorphemeSegment {
     /// Source language representation of this segment.
     pub morpheme: String,

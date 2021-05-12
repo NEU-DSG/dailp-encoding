@@ -16,27 +16,27 @@
 
 {% macro word(segment) %}
   <w xml:id="w{{segment.position.index}}" lemmaRef="lex:id">
-    {% if segment.simple_phonetics or segment.phonemic or segment.morphemic_segmentation or segment.morpheme_gloss or segment.english_gloss %}
+    {% if segment.simplePhonetics or segment.phonemic or segment.morphemicSegmentation or segment.morphemeGloss or segment.englishGloss %}
       <choice>
-        <orig>{{segment.source | convert_breaks(lb=segment.line_break, pb=segment.page_break) | safe}}</orig>
-        {% if segment.simple_phonetics %}
-          <seg type="simple_phonetics">{{segment.simple_phonetics}}</seg>
+        <orig>{{segment.source | convert_breaks(lb=segment.lineBreak, pb=segment.pageBreak) | safe}}</orig>
+        {% if segment.simplePhonetics %}
+          <seg type="simple_phonetics">{{segment.simplePhonetics}}</seg>
         {% endif %}
         {% if segment.phonemic %}
           <seg type="phonemic_form">{{segment.phonemic}}</seg>
         {% endif %}
-        {% if segment.morphemic_segmentation | first %}
-          <seg type="morphemic_segmentation">{{segment.morphemic_segmentation | join(sep="-")}}</seg>
+        {% if segment.morphemicSegmentation | first %}
+          <seg type="morphemic_segmentation">{{segment.morphemicSegmentation | join(sep="-")}}</seg>
         {% endif %}
-        {% if segment.morpheme_gloss | first %}
-          <seg type="morphemic_gloss">{{segment.morpheme_gloss | join(sep="-")}}</seg>
+        {% if segment.morphemeGloss | first %}
+          <seg type="morphemic_gloss">{{segment.morphemeGloss | join(sep="-")}}</seg>
         {% endif %}
-        {% if segment.english_gloss %}
-          <seg type="gloss">{{segment.english_gloss | join(sep=", ")}}</seg>
+        {% if segment.englishGloss %}
+          <seg type="gloss">{{segment.englishGloss | join(sep=", ")}}</seg>
         {% endif %}
       </choice>
     {% else %}
-      {{segment.source | convert_breaks(lb=segment.line_break, pb=segment.page_break) | safe}}
+      {{segment.source | convert_breaks(lb=segment.lineBreak, pb=segment.pageBreak) | safe}}
     {% endif %}
   </w>
 {% endmacro word %}

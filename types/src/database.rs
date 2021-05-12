@@ -1,78 +1,20 @@
-use crate::*;
-use anyhow::Result;
-use async_graphql::dataloader::*;
-use futures::executor;
-use futures::future::join_all;
-use mongodb::bson::{self, Bson};
-use serde::{Deserialize, Serialize};
-use std::collections::{HashMap, HashSet};
-use tokio_stream::StreamExt;
+use {
+    crate::*,
+    anyhow::Result,
+    async_graphql::dataloader::*,
+    futures::executor,
+    futures::future::join_all,
+    mongodb::bson,
+    serde::Serialize,
+    std::collections::{HashMap, HashSet},
+    tokio_stream::StreamExt,
+};
 
 /// Connects to our backing database instance, providing high level functions
 /// for accessing the data therein.
 #[derive(Clone)]
 pub struct Database {
     client: mongodb::Database,
-}
-
-fn upsert() -> mongodb::options::UpdateOptions {
-    mongodb::options::UpdateOptions::builder()
-        .upsert(true)
-        .build()
-}
-
-async fn upsert_one<T, K>(conn: &mongodb::Collection, id: K, item: &T) -> Result<()>
-where
-    Bson: From<K>,
-    T: Serialize,
-{
-    conn.update_one(bson::doc! { "_id": id }, bson::to_document(item)?, upsert())
-        .await?;
-    Ok(())
-}
-
-pub struct PagesDb {
-    conn: mongodb::Collection,
-}
-impl PagesDb {
-    pub async fn update(&self, page: crate::page::Page) -> Result<()> {
-        upsert_one(&self.conn, &page.id, &page).await
-    }
-
-    pub async fn all(&self) -> Result<Vec<crate::page::Page>> {
-        self.conn
-            .find(None, None)
-            .await?
-            .map::<Result<crate::page::Page>, _>(|doc| Ok(bson::from_document(doc?)?))
-            .collect()
-            .await
-    }
-}
-
-pub struct AnnotationsDb {
-    conn: mongodb::Collection,
-}
-impl AnnotationsDb {
-    pub async fn on_document(&self, document_id: &str) -> Result<Vec<annotation::Annotation>> {
-        self.conn
-            .find(
-                bson::doc! {
-                    "attachedTo": {
-                        "__typename": "Document",
-                        "document": document_id
-                    }
-                },
-                None,
-            )
-            .await?
-            .map::<Result<_>, _>(|d| Ok(bson::from_document(d?)?))
-            .collect()
-            .await
-    }
-
-    pub async fn update(&self, annote: annotation::Annotation) -> Result<()> {
-        upsert_one(&self.conn, &annote.id.0, &annote).await
-    }
 }
 
 impl Database {
@@ -166,7 +108,7 @@ impl Database {
         let coll: mongodb::Collection = self.client.collection(Self::DOCUMENTS);
         Ok(coll
             // Only show non-reference collections in the list.
-            .distinct("collection", bson::doc! { "is_reference": false }, None)
+            .distinct("collection", bson::doc! { "isReference": false }, None)
             .await?
             .iter()
             .filter_map(|doc| doc.as_str())
@@ -177,25 +119,23 @@ impl Database {
     }
 
     pub async fn all_tags(&self) -> Result<Vec<MorphemeTag>> {
-        Ok(self
-            .client
+        self.client
             .collection(Self::TAGS)
             .find(None, None)
             .await?
-            .filter_map(|doc| doc.ok().and_then(|doc| bson::from_document(doc).ok()))
+            .map(|doc| Ok(bson::from_document(doc?)?))
             .collect()
-            .await)
+            .await
     }
 
     pub async fn all_people(&self) -> Result<Vec<ContributorDetails>> {
-        Ok(self
-            .client
+        self.client
             .collection(Self::PEOPLE)
             .find(None, None)
             .await?
-            .filter_map(|doc| doc.ok().and_then(|doc| bson::from_document(doc).ok()))
+            .map::<Result<_>, _>(|doc| Ok(bson::from_document(doc?)?))
             .collect()
-            .await)
+            .await
     }
 
     pub async fn image_source(&self, id: &ImageSourceId) -> Result<Option<ImageSource>> {
@@ -207,11 +147,14 @@ impl Database {
             .and_then(|doc| bson::from_document(doc).ok()))
     }
 
-    pub async fn words_in_document(&self, doc_id: &str) -> Result<Vec<AnnotatedForm>> {
+    pub async fn words_in_document(&self, doc_id: &DocumentId) -> Result<Vec<AnnotatedForm>> {
         let mut forms: Vec<AnnotatedForm> = self
             .client
             .collection(Self::WORDS)
-            .find(bson::doc! { "position.document_id": doc_id }, None)
+            .find(
+                bson::doc! { "position.documentId": bson::to_bson(doc_id)? },
+                None,
+            )
             .await?
             .map::<Result<_>, _>(|d| Ok(bson::from_document(d?)?))
             .collect::<Result<Vec<_>>>()
@@ -221,16 +164,18 @@ impl Database {
     }
 
     /// The number of words that belong to the given document ID.
-    pub async fn count_words_in_document(&self, doc_id: &str) -> Result<i64> {
+    pub async fn count_words_in_document(&self, doc_id: &DocumentId) -> Result<i64> {
         let coll: mongodb::Collection = self.client.collection(Self::WORDS);
         Ok(coll
-            .count_documents(bson::doc! { "position.document_id": doc_id }, None)
+            .count_documents(
+                bson::doc! { "position.documentId": bson::to_bson(doc_id)? },
+                None,
+            )
             .await?)
     }
 
     pub async fn word_search(&self, query: bson::Document) -> Result<Vec<AnnotatedForm>> {
-        self
-            .client
+        self.client
             .collection(Self::WORDS)
             .find(query, None)
             .await?
@@ -260,7 +205,8 @@ impl Database {
 
     pub async fn surface_forms(&self, morpheme: &MorphemeId) -> Result<Vec<AnnotatedForm>> {
         let morpheme_match = if let Some(doc_id) = &morpheme.document_id {
-            bson::doc! { "position.document_id": doc_id, "segments.gloss": &morpheme.gloss }
+            let doc_id = bson::to_bson(doc_id)?;
+            bson::doc! { "position.documentId": doc_id, "segments.gloss": &morpheme.gloss }
         } else {
             bson::doc! { "segments.gloss": &morpheme.gloss }
         };
@@ -358,10 +304,11 @@ impl Database {
     async fn graph_connections(&self, id: &MorphemeId) -> Result<HashSet<MorphemeId>> {
         let col: mongodb::Collection = self.client.collection(Self::CONNECTIONS);
         let morpheme = if let Some(doc_id) = &id.document_id {
+            let doc_id = bson::to_bson(doc_id)?;
             if let Some(index) = id.index {
-                bson::doc! { "document_id": doc_id, "gloss": &id.gloss, "index": index }
+                bson::doc! { "documentId": doc_id, "gloss": &id.gloss, "index": index }
             } else {
-                bson::doc! { "document_id": doc_id, "gloss": &id.gloss }
+                bson::doc! { "documentId": doc_id, "gloss": &id.gloss }
             }
         } else {
             bson::doc! { "gloss": &id.gloss }
@@ -403,7 +350,10 @@ impl Database {
             bson::doc! { "$match": { "segments.gloss": &morpheme.gloss } },
         ];
         if let Some(doc_id) = &morpheme.document_id {
-            steps.insert(0, bson::doc! { "$match": { "_id": doc_id } });
+            steps.insert(
+                0,
+                bson::doc! { "$match": { "_id": bson::to_bson(doc_id)? } },
+            );
         }
         let coll: mongodb::Collection = self.client.collection(Self::DOCUMENTS);
         coll.aggregate(steps, None)
@@ -450,7 +400,10 @@ impl Database {
             bson::doc! { "$match": { "segments.gloss": &morpheme.gloss } },
         ];
         if let Some(doc_id) = &morpheme.document_id {
-            steps.insert(0, bson::doc! { "$match": { "_id": doc_id } });
+            steps.insert(
+                0,
+                bson::doc! { "$match": { "_id": bson::to_bson(doc_id)? } },
+            );
         }
         let document_words = documents.aggregate(steps, None);
 
@@ -533,17 +486,73 @@ impl Database {
         Ok(document_words.chain(dictionary_words).collect())
     }
 
-    pub async fn document_manifest(&self, document_id: &str, url: String) -> Result<iiif::Manifest> {
+    pub async fn document_manifest(
+        &self,
+        document_id: &DocumentId,
+        url: String,
+    ) -> Result<iiif::Manifest> {
         // Retrieve the document from the DB.
         let doc: AnnotatedDoc = self
             .client
             .collection(Self::DOCUMENTS)
-            .find_one(bson::doc! { "_id": document_id }, None)
+            .find_one(bson::doc! { "_id": bson::to_bson(document_id)? }, None)
             .await?
             .and_then(|doc| bson::from_document(doc).ok())
             .unwrap();
         // Build a IIIF manifest for this document.
         Ok(iiif::Manifest::from_document(self, doc, url).await)
+    }
+
+    /// USE WITH CAUTION! Clears the entire database of words, documents, etc.
+    pub async fn clear_all(&self) -> Result<()> {
+        Ok(self.client.drop(None).await?)
+    }
+}
+
+pub struct PagesDb {
+    conn: mongodb::Collection,
+}
+impl PagesDb {
+    pub async fn update(&self, page: crate::page::Page) -> Result<()> {
+        upsert_one(&self.conn, &page.id, &page).await
+    }
+
+    pub async fn all(&self) -> Result<Vec<crate::page::Page>> {
+        self.conn
+            .find(None, None)
+            .await?
+            .map::<Result<crate::page::Page>, _>(|doc| Ok(bson::from_document(doc?)?))
+            .collect()
+            .await
+    }
+}
+
+pub struct AnnotationsDb {
+    conn: mongodb::Collection,
+}
+impl AnnotationsDb {
+    pub async fn on_document(
+        &self,
+        document_id: &DocumentId,
+    ) -> Result<Vec<annotation::Annotation>> {
+        self.conn
+            .find(
+                bson::doc! {
+                    "attachedTo": {
+                        "__typename": "Document",
+                        "document": bson::to_bson(document_id)?
+                    }
+                },
+                None,
+            )
+            .await?
+            .map::<Result<_>, _>(|d| Ok(bson::from_document(d?)?))
+            .collect()
+            .await
+    }
+
+    pub async fn update(&self, annote: annotation::Annotation) -> Result<()> {
+        upsert_one(&self.conn, &annote.id.0, &annote).await
     }
 }
 
@@ -569,9 +578,6 @@ impl Loader<TagId> for Database {
     }
 }
 
-#[derive(Clone, Eq, PartialEq, Hash, Serialize, Deserialize, Debug)]
-pub struct DocumentId(pub String);
-
 #[async_trait::async_trait]
 impl Loader<DocumentId> for Database {
     type Value = AnnotatedDoc;
@@ -586,7 +592,7 @@ impl Loader<DocumentId> for Database {
             find_all_keys(self.client.collection(Self::DOCUMENTS), keys).await?;
         Ok(items
             .into_iter()
-            .map(|tag| (DocumentId(tag.meta.id.clone()), tag))
+            .map(|tag| (tag.meta.id.clone(), tag))
             .collect())
     }
 }
@@ -642,6 +648,26 @@ where
         .filter_map(|doc| bson::from_document(doc.unwrap()).ok())
         .collect()
         .await)
+}
+
+async fn upsert_one<T, K>(conn: &mongodb::Collection, id: &K, item: &T) -> Result<()>
+where
+    K: Serialize,
+    T: Serialize,
+{
+    conn.update_one(
+        bson::doc! { "_id": bson::to_bson(id)? },
+        bson::to_document(item)?,
+        upsert(),
+    )
+    .await?;
+    Ok(())
+}
+
+fn upsert() -> mongodb::options::UpdateOptions {
+    mongodb::options::UpdateOptions::builder()
+        .upsert(true)
+        .build()
 }
 
 /// One particular morpheme and all the known words that contain that exact morpheme.

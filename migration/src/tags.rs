@@ -67,7 +67,7 @@ async fn migrate_glossary_metadata(sheet_id: &str) -> Result<()> {
         .filter_map(|mut values| {
             Some(dailp::AnnotatedDoc {
                 meta: dailp::DocumentMetadata {
-                    id: values.next()?.pop()?,
+                    id: dailp::DocumentId(values.next()?.pop()?),
                     title: values.next()?.pop()?,
                     date: Some(dailp::Date(chrono::NaiveDate::from_ymd(
                         values.next()?.pop()?.parse().unwrap(),

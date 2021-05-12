@@ -43,7 +43,7 @@ impl AnnotatedDoc {
 #[async_graphql::Object]
 impl AnnotatedDoc {
     /// Official short identifier for this document
-    async fn id(&self) -> &str {
+    async fn id(&self) -> &DocumentId {
         &self.meta.id
     }
 
@@ -96,7 +96,7 @@ impl AnnotatedDoc {
 
     /// URL-ready slug for this document, generated from the title
     async fn slug(&self) -> String {
-        slug::slugify(&self.meta.id)
+        self.meta.id.slug()
     }
 
     /// Segments of the document paired with their respective rough translations
@@ -110,7 +110,7 @@ impl AnnotatedDoc {
         } else {
             let db_doc = context
                 .data::<DataLoader<Database>>()?
-                .load_one(crate::DocumentId(self.meta.id.clone()))
+                .load_one(self.meta.id.clone())
                 .await?;
             Ok(db_doc.and_then(|d| d.segments).map(Cow::Owned))
         }
@@ -223,10 +223,11 @@ pub struct AnnotatedPhrase {
 
 /// All the metadata associated with one particular document.
 #[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct DocumentMetadata {
     /// Official short identifier.
     #[serde(rename = "_id")]
-    pub id: String,
+    pub id: DocumentId,
     /// Full title of the document.
     pub title: String,
     /// Further details about this particular document.
@@ -237,8 +238,8 @@ pub struct DocumentMetadata {
     /// Where the source document came from, maybe the name of a collection.
     pub collection: Option<String>,
     pub genre: Option<String>,
-    /// The people involved in collecting, translating, annotating.
     #[serde(default)]
+    /// The people involved in collecting, translating, annotating.
     pub contributors: Vec<Contributor>,
     /// Rough translation of the document, broken down by paragraph.
     #[serde(skip)]
@@ -249,6 +250,16 @@ pub struct DocumentMetadata {
     pub date: Option<Date>,
     /// Whether this document is a reference, therefore just a list of forms.
     pub is_reference: bool,
+}
+
+#[derive(Clone, Eq, PartialEq, Hash, Serialize, Deserialize, Debug, async_graphql::NewType)]
+pub struct DocumentId(pub String);
+
+impl DocumentId {
+    /// Page slug based on this identifier
+    pub fn slug(&self) -> String {
+        slug::slugify(&self.0)
+    }
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]

@@ -89,13 +89,13 @@ pub async fn migrate_dictionaries() -> Result<()> {
     let docs = vec![
         AnnotatedDoc {
             meta: DocumentMetadata {
-                id: "DF1975".to_owned(),
-                title: "Cherokee–English Dictionary".to_owned(),
+                id: dailp::DocumentId("DF1975".to_string()),
+                title: "Cherokee–English Dictionary".to_string(),
                 sources: Vec::new(),
-                collection: Some("Lexical Resources".to_owned()),
+                collection: Some("Lexical Resources".to_string()),
                 contributors: vec![
-                    Contributor::new_author("Feeling, Durbin".to_owned()),
-                    Contributor::new_author("Pulte, William".to_owned()),
+                    Contributor::new_author("Feeling, Durbin".to_string()),
+                    Contributor::new_author("Pulte, William".to_string()),
                 ],
                 date: Some(dailp::Date::new(chrono::NaiveDate::from_ymd(1975, 1, 1))),
                 genre: None,
@@ -107,11 +107,11 @@ pub async fn migrate_dictionaries() -> Result<()> {
         },
         AnnotatedDoc {
             meta: DocumentMetadata {
-                id: "DF2003".to_owned(),
-                title: "A handbook of the Cherokee verb: a preliminary study.".to_owned(),
+                id: dailp::DocumentId("DF2003".to_string()),
+                title: "A handbook of the Cherokee verb: a preliminary study".to_string(),
                 sources: Vec::new(),
-                collection: Some("Lexical Resources".to_owned()),
-                contributors: vec![Contributor::new_author("Feeling, Durbin".to_owned())],
+                collection: Some("Lexical Resources".to_string()),
+                contributors: vec![Contributor::new_author("Feeling, Durbin".to_string())],
                 date: Some(dailp::Date::new(chrono::NaiveDate::from_ymd(2003, 1, 1))),
                 genre: None,
                 translation: None,
@@ -150,7 +150,8 @@ async fn parse_numerals(sheet_id: &str, doc_id: &str, year: i32) -> Result<()> {
             let _numeric = values.next()?;
             let simple_phonetics = values.next()?;
             let syllabary = values.next()?;
-            let position = PositionInDocument::new(doc_id.to_owned(), page_num, key);
+            let position =
+                PositionInDocument::new(dailp::DocumentId(doc_id.to_string()), page_num, key);
             let segments = vec![MorphemeSegment::new(root_dailp, gloss.clone(), None)];
             Some(AnnotatedForm {
                 id: position.make_id(&gloss, true),
@@ -185,7 +186,7 @@ async fn parse_meta(sheet_id: &str, collection: &str) -> Result<DocumentMetadata
         .map(|year| Date::new(chrono::NaiveDate::from_ymd(year, 1, 1)));
     let authors = meta_values.next().unwrap_or_default();
     Ok(DocumentMetadata {
-        id: document_id,
+        id: dailp::DocumentId(document_id),
         title,
         date: date_recorded,
         sources: Vec::new(),
@@ -280,7 +281,7 @@ fn parse_new_df1975(
     after_root: usize,
     translations: usize,
 ) -> impl Iterator<Item = LexicalEntryWithForms> {
-    let doc_id = doc_id.to_owned();
+    let doc_id = dailp::DocumentId(doc_id.to_owned());
     sheet
         .values
         .into_iter()

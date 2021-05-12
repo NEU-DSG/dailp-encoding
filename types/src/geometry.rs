@@ -13,7 +13,10 @@
 /// syllabary characters, notes about the handwriting, etc. Using MongoDB
 /// comparison queries, we can request a list of all spatial annotations
 /// on the same document that lie within or around the geometry of this specific word.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(
+    Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, async_graphql::SimpleObject,
+)]
+#[serde(rename_all = "camelCase")]
 pub struct Geometry {
     x_min: Scalar,
     y_min: Scalar,
@@ -31,10 +34,29 @@ impl Geometry {
             y_max,
         }
     }
+    pub fn width(&self) -> Scalar {
+        (self.x_max - self.x_min).abs()
+    }
+    pub fn height(&self) -> Scalar {
+        (self.y_max - self.y_min).abs()
+    }
     pub fn to_iiif_string(&self) -> String {
-        let w = self.x_max - self.x_min;
-        let h = self.y_max - self.y_min;
-        format!("pct:{},{},{},{}", self.x_min, self.y_min, w, h)
+        format!(
+            "pct:{},{},{},{}",
+            self.x_min,
+            self.y_min,
+            self.width(),
+            self.height()
+        )
+    }
+    pub fn to_selector_string(&self) -> String {
+        format!(
+            "xywh={},{},{},{}",
+            self.x_min,
+            self.y_min,
+            self.width(),
+            self.height()
+        )
     }
 }
 

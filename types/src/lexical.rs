@@ -2,13 +2,19 @@ use crate::{AnnotatedForm, Date, DocumentId, Geometry, MorphemeSegment};
 use serde::{Deserialize, Serialize};
 
 /// The reference position within a document of one specific form
-#[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Clone, Serialize, Deserialize, Debug, PartialEq, async_graphql::SimpleObject)]
+#[serde(rename_all = "camelCase")]
+#[graphql(complex)]
 pub struct PositionInDocument {
     /// What document is this item within?
     pub document_id: DocumentId,
-    /// What page is it on? May be a single page or range of pages.
+    /// What page is it on (starting from 1)? May be a single page or range of pages.
     pub page_number: String,
     /// How many items come before this one in the whole document?
+    ///
+    /// 1-indexed position indicating where the form sits in the ordering of all
+    /// forms in the document. Used for relative ordering of forms from the
+    /// same document.
     pub index: i32,
     /// What section of the document image corresponds to this item?
     pub geometry: Option<Geometry>,
@@ -16,9 +22,9 @@ pub struct PositionInDocument {
 
 impl PositionInDocument {
     /// Make a new document position from the document ID, page number, and item index.
-    pub fn new(document_id: String, page_number: String, index: i32) -> Self {
+    pub fn new(document_id: DocumentId, page_number: String, index: i32) -> Self {
         Self {
-            document_id: DocumentId(document_id),
+            document_id,
             page_number,
             index,
             geometry: None,
@@ -59,7 +65,7 @@ impl PositionInDocument {
     }
 }
 
-#[async_graphql::Object]
+#[async_graphql::ComplexObject]
 impl PositionInDocument {
     /// Standard page reference for this position, which can be used in citation.
     /// Generally formatted like ID:PAGE, i.e "DF2018:55"
@@ -72,23 +78,6 @@ impl PositionInDocument {
     /// many forms each. Example: "WJ23:#21"
     async fn index_reference(&self) -> String {
         format!("{}.{}", self.document_id.0, self.index)
-    }
-
-    /// Unique identifier of the source document
-    async fn document_id(&self) -> &str {
-        &self.document_id.0
-    }
-
-    /// 1-indexed page number
-    async fn page_number(&self) -> &str {
-        &self.page_number
-    }
-
-    /// 1-indexed position indicating where the form sits in the ordering of all
-    /// forms in the document. Used for relative ordering of forms from the
-    /// same document.
-    async fn index(&self) -> i32 {
-        self.index
     }
 
     async fn iiif_url(
@@ -158,14 +147,15 @@ impl LexicalConnection {
 /// Uniquely identifies a particular form based on its parent [`DocumentId`],
 /// gloss, and index within that document.
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, Hash)]
+#[serde(rename_all = "camelCase")]
 pub struct MorphemeId {
-    pub document_id: Option<String>,
+    pub document_id: Option<DocumentId>,
     pub gloss: String,
     pub index: Option<i32>,
 }
 impl MorphemeId {
     /// Make a new [`MorphemeId`]
-    pub fn new(document_id: Option<String>, index: Option<i32>, gloss: String) -> Self {
+    pub fn new(document_id: Option<DocumentId>, index: Option<i32>, gloss: String) -> Self {
         Self {
             document_id,
             index,
@@ -192,7 +182,7 @@ impl MorphemeId {
             (None, None)
         };
         Some(Self {
-            document_id: document_id.map(str::to_owned),
+            document_id: document_id.map(str::to_owned).map(DocumentId),
             gloss: gloss.to_owned(),
             index: index.and_then(|i| i.parse().ok()),
         })
@@ -205,12 +195,12 @@ impl std::fmt::Display for MorphemeId {
             write!(
                 f,
                 "{}.{}:{}",
-                self.document_id.as_ref().unwrap(),
+                self.document_id.as_ref().unwrap().0,
                 index,
                 self.gloss
             )
         } else if let Some(doc_id) = &self.document_id {
-            write!(f, "{}:{}", doc_id, self.gloss)
+            write!(f, "{}:{}", doc_id.0, self.gloss)
         } else {
             write!(f, "{}", self.gloss)
         }
@@ -944,7 +934,7 @@ mod tests {
         let id = MorphemeId::parse("DF2018:55");
         assert_ne!(id, None);
         let id = id.unwrap();
-        assert_eq!(id.document_id.as_ref().map(|x| &**x), Some("DF2018"));
+        assert_eq!(id.document_id.as_ref().map(|x| &*x.0), Some("DF2018"));
         assert_eq!(id.gloss, "55");
     }
 
@@ -953,7 +943,7 @@ mod tests {
         let id = MorphemeId::parse("IN1861:1-24");
         assert_ne!(id, None);
         let id = id.unwrap();
-        assert_eq!(id.document_id.as_ref().map(|x| &**x), Some("IN1861"));
+        assert_eq!(id.document_id.as_ref().map(|x| &*x.0), Some("IN1861"));
         assert_eq!(id.gloss, "1-24");
     }
 
@@ -969,7 +959,11 @@ DF2018:54",
     #[test]
     fn morpheme_id_raw() {
         let raw = "as for me (1SG.PRO + CS)";
-        let pos = PositionInDocument::new("AK1997".to_owned(), "116".to_owned(), 1);
+        let pos = PositionInDocument::new(
+            crate::DocumentId("AK1997".to_string()),
+            "116".to_string(),
+            1,
+        );
         assert_eq!(pos.make_raw_id(raw, true), "AK1997.1:as.for.me.1SG.PRO.CS");
         assert_eq!(pos.make_raw_id(raw, false), "AK1997:as.for.me.1SG.PRO.CS");
     }
