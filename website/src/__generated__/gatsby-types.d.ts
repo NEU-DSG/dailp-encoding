@@ -12,6 +12,7 @@ type Scalars = {
   Float: number;
   Date: string;
   JSON: never;
+  Dailp_JSON: any;
 };
 
 
@@ -183,12 +184,16 @@ type Dailp = {
   readonly allTags: ReadonlyArray<Dailp_MorphemeTag>;
   /** Listing of all documents excluding their contents by default */
   readonly allDocuments: ReadonlyArray<Dailp_AnnotatedDoc>;
+  /** List of all content pages */
+  readonly allPages: ReadonlyArray<Dailp_Page>;
   /** List of all the document collections available. */
   readonly allCollections: ReadonlyArray<Dailp_DocumentCollection>;
   /** List all contributors to documents and lexical resources. */
   readonly allContributors: ReadonlyArray<Dailp_ContributorDetails>;
   /** Retrieves a full document from its unique identifier. */
   readonly document: Maybe<Dailp_AnnotatedDoc>;
+  /** Retrieves a full document from its unique identifier. */
+  readonly page: Maybe<Dailp_Page>;
   readonly lexicalEntry: Maybe<Dailp_AnnotatedForm>;
   /**
    * Lists all forms containing a morpheme with the given gloss.
@@ -210,8 +215,16 @@ type Dailp = {
   readonly morphemeTag: Maybe<Dailp_MorphemeTag>;
   /** Details of one image source based on its short identifier string. */
   readonly imageSource: Maybe<Dailp_ImageSource>;
-  /** Search for words that include the given query at any position. */
+  /**
+   * Search for words that match any one of the given queries.
+   * Each query may match against multiple fields of a word.
+   */
   readonly wordSearch: ReadonlyArray<Dailp_AnnotatedForm>;
+  /**
+   * Search for words with the exact same syllabary string, or with very
+   * similar looking characters.
+   */
+  readonly syllabarySearch: ReadonlyArray<Dailp_AnnotatedForm>;
 };
 
 
@@ -221,6 +234,11 @@ type Dailp_allDocumentsArgs = {
 
 
 type Dailp_documentArgs = {
+  id: Scalars['String'];
+};
+
+
+type Dailp_pageArgs = {
   id: Scalars['String'];
 };
 
@@ -258,6 +276,11 @@ type Dailp_imageSourceArgs = {
 
 
 type Dailp_wordSearchArgs = {
+  queries: ReadonlyArray<Dailp_FormQuery>;
+};
+
+
+type Dailp_syllabarySearchArgs = {
   query: Scalars['String'];
 };
 
@@ -296,9 +319,46 @@ type Dailp_AnnotatedDoc = {
    */
   readonly forms: ReadonlyArray<Dailp_AnnotatedForm>;
   readonly formCount: Scalars['Int'];
+  /**
+   * All words in the document that have unanalyzed or unfamiliar parts.
+   * These words need to be corrected or reviewed further.
+   */
+  readonly unresolvedForms: ReadonlyArray<Dailp_AnnotatedForm>;
 };
 
+/**
+ * A single word in an annotated document.
+ * One word contains several layers of interpretation, including the original
+ * source text, multiple layers of linguistic annotation, and annotator notes.
+ */
 type Dailp_AnnotatedForm = {
+  /** Unique identifier of this form */
+  readonly id: Scalars['String'];
+  /** Original source text */
+  readonly source: Scalars['String'];
+  /** A normalized version of the word */
+  readonly normalizedSource: Maybe<Scalars['String']>;
+  /** Romanized version of the word for simple phonetic pronunciation */
+  readonly simplePhonetics: Maybe<Scalars['String']>;
+  /** Underlying phonemic representation of this word */
+  readonly phonemic: Maybe<Scalars['String']>;
+  /**
+   * Morphemic segmentation of the form that includes a phonemic
+   * representation and gloss for each
+   */
+  readonly segments: Maybe<ReadonlyArray<Dailp_MorphemeSegment>>;
+  /** English gloss for the whole word */
+  readonly englishGloss: ReadonlyArray<Scalars['String']>;
+  /** Further details about the annotation layers, including uncertainty */
+  readonly commentary: Maybe<Scalars['String']>;
+  /** The character index of a mid-word line break, if there is one */
+  readonly lineBreak: Maybe<Scalars['Int']>;
+  /** The character index of a mid-word page break, if there is one */
+  readonly pageBreak: Maybe<Scalars['Int']>;
+  /** Position of the form within the context of its parent document */
+  readonly position: Dailp_PositionInDocument;
+  /** The date and time this form was recorded */
+  readonly dateRecorded: Maybe<Dailp_Date>;
   /**
    * The root morpheme of the word.
    * For example, a verb form glossed as "he catches" might have a root morpheme
@@ -309,32 +369,10 @@ type Dailp_AnnotatedForm = {
   readonly similarForms: ReadonlyArray<Dailp_AnnotatedForm>;
   /** The document that contains this word. */
   readonly document: Maybe<Dailp_AnnotatedDoc>;
-  /** Unique identifier for this form. */
-  readonly id: Scalars['String'];
-  /** Position of this word in its containing document. */
+  /** Number of words preceding this one in the containing document */
   readonly index: Scalars['Int'];
-  /** The unique identifier of the containing document. */
+  /** Unique identifier of the containing document */
   readonly documentId: Scalars['String'];
-  readonly position: Dailp_PositionInDocument;
-  /** Original source text. */
-  readonly source: Scalars['String'];
-  /** Normalized source text */
-  readonly normalizedSource: Maybe<Scalars['String']>;
-  /** Romanized version of the word for simple phonetic pronunciation. */
-  readonly simplePhonetics: Maybe<Scalars['String']>;
-  /** Underlying phonemic representation of this word. */
-  readonly phonemic: Maybe<Scalars['String']>;
-  /**
-   * Morphemic segmentation of the form that includes a phonemic
-   * representation and gloss for each.
-   */
-  readonly segments: Maybe<ReadonlyArray<Dailp_MorphemeSegment>>;
-  /** English gloss for the whole word. */
-  readonly englishGloss: ReadonlyArray<Scalars['String']>;
-  /** Further details about the annotation layers, including uncertainty. */
-  readonly commentary: Maybe<Scalars['String']>;
-  /** The date and time this form was recorded */
-  readonly dateRecorded: Maybe<Dailp_Date>;
 };
 
 type Dailp_AnnotatedPhrase = {
@@ -350,28 +388,64 @@ enum Dailp_BlockType {
   PHRASE = 'PHRASE'
 }
 
+/**
+ * One representation of Cherokee phonology.
+ * There are several different writing systems for Cherokee phonology and we
+ * want to convert between them.
+ * This type enumerates all of the systems that we support and provides
+ * conversion from our internal orthography into any of these.
+ */
 enum Dailp_CherokeeOrthography {
-  /**
-   * The d/t system for transcribing the Cherokee syllabary.
-   * This orthography is favored by native speakers.
-   * TODO Option for /ts/ instead of /j/
-   * TODO Option for /qu/ instead of /gw/ or /kw/
-   */
-  TAOC = 'TAOC',
   /**
    * The t/th system for transcribing the Cherokee syllabary.
    * This orthography is favored by linguists as it is segmentally more accurate.
    */
+  TAOC = 'TAOC',
+  /**
+   * The d/t system for transcribing the Cherokee syllabary.
+   * This orthography is favored by speakers.
+   * TODO Option for /ts/ instead of /j/
+   * TODO Option for /qu/ instead of /gw/ or /kw/
+   */
   CRG = 'CRG',
+  /**
+   * Simplified system that uses d/t without tones, a compromise intended for
+   * language learners.
+   */
   LEARNER = 'LEARNER'
 }
 
+/**
+ * A block of content, which may be one of several types.
+ * Each page contains several blocks.
+ * 
+ * This type is intended to enable a custom page builder on the front-end for
+ * content editors.
+ */
+type Dailp_ContentBlock = Dailp_MarkdownBlock | Dailp_GalleryBlock;
+
+/**
+ * An individual or organization that contributed to the creation or analysis
+ * of a particular document or source. Each contributor has a name and a role
+ * that specifies the type of their contributions.
+ */
 type Dailp_Contributor = {
+  /** Full name of the contributor */
   readonly name: Scalars['String'];
+  /** The role that defines most of their contributions to the associated item */
   readonly role: Scalars['String'];
   readonly details: Maybe<Dailp_ContributorDetails>;
 };
 
+/**
+ * Basic personal details of an individual contributor, which can be retrieved
+ * from a particular instance of [`Contributor`].
+ * 
+ * They may have transcribed a handwritten manuscript, translated it into
+ * English, or analyzed it for linguistic information.
+ * This information can be used to track who contributed to the development of
+ * each individual document, and track contributions to the archive as a whole.
+ */
 type Dailp_ContributorDetails = {
   /**
    * Full name of this person, this exact string must be used to identify
@@ -383,6 +457,7 @@ type Dailp_ContributorDetails = {
    * system. Used only for descriptive purposes.
    */
   readonly alternateName: Maybe<Scalars['String']>;
+  /** The optional date that this contributor was born on. */
   readonly birthDate: Maybe<Dailp_Date>;
 };
 
@@ -406,10 +481,48 @@ enum Dailp_DocumentType {
   CORPUS = 'CORPUS'
 }
 
+type Dailp_FormQuery = {
+  readonly id: Maybe<Scalars['String']>;
+  readonly source: Maybe<Scalars['String']>;
+  readonly normalizedSource: Maybe<Scalars['String']>;
+  readonly simplePhonetics: Maybe<Scalars['String']>;
+  readonly englishGloss: Maybe<Scalars['String']>;
+  readonly unresolved: Maybe<Scalars['Boolean']>;
+};
+
 type Dailp_FormsInTime = {
   readonly start: Maybe<Dailp_Date>;
   readonly end: Maybe<Dailp_Date>;
   readonly forms: ReadonlyArray<Dailp_AnnotatedForm>;
+};
+
+/** A gallery of images, which may be rendered as a slideshow or lightbox. */
+type Dailp_GalleryBlock = {
+  readonly mediaUrls: ReadonlyArray<Scalars['String']>;
+};
+
+/**
+ * A rectangle slice of something, usually a large document image.
+ * 
+ * Units are a percentage of the containing document.
+ * This is more useful than pixels because we can more easily compare
+ * geometries between images of different resolutions. For example, we could identify
+ * all items in any bottom-right corner with Geometry(90%, 90%, 100%, 100%).
+ * Physical units would be better, but IIIF only allows pixels and percentages.
+ * 
+ * Potential use case:
+ * Each document is represented by an ordered list of [AnnotatedForm]s. Each
+ * form has some geometry on the source image. There are a bunch of other
+ * annotations on the source image that are unordered. These may be specific
+ * syllabary characters, notes about the handwriting, etc. Using MongoDB
+ * comparison queries, we can request a list of all spatial annotations
+ * on the same document that lie within or around the geometry of this specific word.
+ */
+type Dailp_Geometry = {
+  readonly xMin: Scalars['Float'];
+  readonly yMin: Scalars['Float'];
+  readonly xMax: Scalars['Float'];
+  readonly yMax: Scalars['Float'];
 };
 
 type Dailp_IiifImages = {
@@ -422,8 +535,14 @@ type Dailp_ImageSource = {
   readonly url: Scalars['String'];
 };
 
+
 type Dailp_LineBreak = {
   readonly index: Scalars['Int'];
+};
+
+/** A block of prose content, formatted with [Markdown](https://commonmark.org/). */
+type Dailp_MarkdownBlock = {
+  readonly content: Scalars['String'];
 };
 
 /** One particular morpheme and all the known words that contain that exact morpheme. */
@@ -439,6 +558,12 @@ type Dailp_MorphemeSegment = {
   readonly morpheme: Scalars['String'];
   /** English gloss in standard DAILP format that refers to a lexical item */
   readonly gloss: Scalars['String'];
+  /**
+   * What kind of thing is the next segment?
+   * 
+   * This field determines what character should separate this segment from
+   * the next one when reconstituting the full segmentation string.
+   */
   readonly nextSeparator: Maybe<Scalars['String']>;
   /**
    * If this morpheme represents a functional tag that we have further
@@ -457,25 +582,75 @@ type Dailp_MorphemeSegment_morphemeArgs = {
   system: Maybe<Dailp_CherokeeOrthography>;
 };
 
+/**
+ * Represents a morphological gloss tag without committing to a single representation.
+ * 
+ * - TODO: Use a more generic representation than fields for learner, TAOC, and CRG.
+ */
 type Dailp_MorphemeTag = {
-  /** Standard annotation tag for this morpheme, defined by DAILP. */
+  /**
+   * Unique identifier for this morpheme which should be used in raw
+   * interlinear glosses of a word containing this morpheme.
+   * Standard annotation tag for this morpheme, defined by DAILP.
+   */
   readonly id: Scalars['String'];
-  /** Alternate form that conveys a simple English representation. */
+  /**
+   * The "learner" representation of this morpheme, a compromise between no
+   * interlinear glossing and standard linguistic terms.
+   */
   readonly learner: Maybe<Dailp_TagForm>;
-  /** Alternate form of this morpheme from Cherokee Reference Grammar. */
-  readonly crg: Maybe<Dailp_TagForm>;
-  /** Representation of this morpheme from TAOC. */
+  /**
+   * Representation of this morpheme that closely aligns with _Tone and
+   * Accent in Oklahoma Cherokee_.
+   */
   readonly taoc: Maybe<Dailp_TagForm>;
-  /** The kind of morpheme, whether prefix or suffix. */
+  /**
+   * Representation of this morpheme that closely aligns with _Cherokee
+   * Reference Grammar_.
+   */
+  readonly crg: Maybe<Dailp_TagForm>;
+  /**
+   * What kind of functional morpheme is this?
+   * A few examples: "Prepronominal Prefix", "Clitic"
+   */
   readonly morphemeType: Scalars['String'];
   readonly attestedAllomorphs: ReadonlyArray<Scalars['String']>;
+};
+
+/**
+ * A website page which lives at a specific URL and has a list of blocks that
+ * define its content.
+ */
+type Dailp_Page = {
+  /**
+   * The path that this page lives at, which also uniquely identifies it.
+   * For example, "/our-team"
+   */
+  readonly id: Scalars['String'];
+  readonly title: Scalars['String'];
+  readonly body: ReadonlyArray<Dailp_ContentBlock>;
 };
 
 type Dailp_PageBreak = {
   readonly index: Scalars['Int'];
 };
 
+/** The reference position within a document of one specific form */
 type Dailp_PositionInDocument = {
+  /** What document is this item within? */
+  readonly documentId: Scalars['String'];
+  /** What page is it on (starting from 1)? May be a single page or range of pages. */
+  readonly pageNumber: Scalars['String'];
+  /**
+   * How many items come before this one in the whole document?
+   * 
+   * 1-indexed position indicating where the form sits in the ordering of all
+   * forms in the document. Used for relative ordering of forms from the
+   * same document.
+   */
+  readonly index: Scalars['Int'];
+  /** What section of the document image corresponds to this item? */
+  readonly geometry: Maybe<Dailp_Geometry>;
   /**
    * Standard page reference for this position, which can be used in citation.
    * Generally formatted like ID:PAGE, i.e "DF2018:55"
@@ -487,23 +662,22 @@ type Dailp_PositionInDocument = {
    * many forms each. Example: "WJ23:#21"
    */
   readonly indexReference: Scalars['String'];
-  /** Unique identifier of the source document */
-  readonly documentId: Scalars['String'];
-  /** 1-indexed page number */
-  readonly pageNumber: Scalars['String'];
-  /**
-   * 1-indexed position indicating where the form sits in the ordering of all
-   * forms in the document. Used for relative ordering of forms from the
-   * same document.
-   */
-  readonly index: Scalars['Int'];
+  readonly iiifUrl: Maybe<Scalars['String']>;
 };
 
+/**
+ * Attribution for a particular source, whether an institution or an individual.
+ * Most commonly, this will represent the details of a library or archive that
+ * houses documents used elsewhere.
+ */
 type Dailp_SourceAttribution = {
+  /** Name of the source, i.e. "The Newberry Library" */
   readonly name: Scalars['String'];
+  /** URL of this source's homepage, i.e. "https://www.newberry.org/" */
   readonly link: Scalars['String'];
 };
 
+/** A concrete representation of a particular functional morpheme. */
 type Dailp_TagForm = {
   /** How this morpheme is represented in a gloss */
   readonly tag: Scalars['String'];
@@ -11119,6 +11293,11 @@ type WpWritingSettingsFilterInput = {
   readonly useSmilies: Maybe<BooleanQueryOperatorInput>;
 };
 
+type Unnamed_1_QueryVariables = Exact<{ [key: string]: never; }>;
+
+
+type Unnamed_1_Query = { readonly currentBuildDate: Maybe<Pick<CurrentBuildDate, 'currentDate'>> };
+
 type GlossaryQueryVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -11127,16 +11306,26 @@ type GlossaryQuery = { readonly dailp: { readonly allTags: ReadonlyArray<(
       & { readonly crg: Maybe<Pick<Dailp_TagForm, 'tag' | 'title' | 'definition'>>, readonly taoc: Maybe<Pick<Dailp_TagForm, 'tag' | 'title' | 'definition'>>, readonly learner: Maybe<Pick<Dailp_TagForm, 'tag' | 'title' | 'definition'>> }
     )> } };
 
-type CollectionQueryVariables = Exact<{
-  name: Scalars['String'];
-  slug: Scalars['String'];
-}>;
+type Unnamed_2_QueryVariables = Exact<{ [key: string]: never; }>;
 
 
-type CollectionQuery = { readonly dailp: { readonly allDocuments: ReadonlyArray<(
-      Pick<Dailp_AnnotatedDoc, 'id' | 'slug' | 'title'>
-      & { readonly date: Maybe<Pick<Dailp_Date, 'year'>> }
-    )> }, readonly wpPage: Maybe<Pick<WpPage, 'content'>> };
+type Unnamed_2_Query = { readonly wpMenu: Maybe<{ readonly menuItems: Maybe<{ readonly nodes: Maybe<ReadonlyArray<Maybe<(
+        Pick<WpMenuItem, 'label' | 'path'>
+        & { readonly childItems: Maybe<{ readonly nodes: Maybe<ReadonlyArray<Maybe<Pick<WpMenuItem, 'label' | 'path'>>>> }> }
+      )>>> }> }> };
+
+type AllSourcesQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+type AllSourcesQuery = { readonly dailp: { readonly allDocuments: ReadonlyArray<(
+      Pick<Dailp_AnnotatedDoc, 'isReference' | 'id' | 'title' | 'formCount'>
+      & { readonly date: Maybe<Pick<Dailp_Date, 'year'>>, readonly contributors: ReadonlyArray<Pick<Dailp_Contributor, 'name'>> }
+    )> } };
+
+type IndexPageQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+type IndexPageQuery = { readonly dailp: { readonly allCollections: ReadonlyArray<Pick<Dailp_DocumentCollection, 'name' | 'slug'>> }, readonly aboutPage: Maybe<Pick<WpPage, 'title' | 'content'>> };
 
 type AnnotatedDocumentQueryVariables = Exact<{
   id: Scalars['String'];
@@ -11166,14 +11355,6 @@ type FormFieldsFragment = (
   )>> }
 );
 
-type AllSourcesQueryVariables = Exact<{ [key: string]: never; }>;
-
-
-type AllSourcesQuery = { readonly dailp: { readonly allDocuments: ReadonlyArray<(
-      Pick<Dailp_AnnotatedDoc, 'isReference' | 'id' | 'title' | 'formCount'>
-      & { readonly date: Maybe<Pick<Dailp_Date, 'year'>>, readonly contributors: ReadonlyArray<Pick<Dailp_Contributor, 'name'>> }
-    )> } };
-
 type DocumentDetailsQueryVariables = Exact<{
   id: Scalars['String'];
 }>;
@@ -11184,13 +11365,23 @@ type DocumentDetailsQuery = { readonly dailp: { readonly document: Maybe<(
       & { readonly collection: Maybe<Pick<Dailp_DocumentCollection, 'name' | 'slug'>>, readonly date: Maybe<Pick<Dailp_Date, 'year'>>, readonly contributors: ReadonlyArray<Pick<Dailp_Contributor, 'name' | 'role'>>, readonly sources: ReadonlyArray<Pick<Dailp_SourceAttribution, 'name' | 'link'>> }
     )> } };
 
-type Unnamed_1_QueryVariables = Exact<{ [key: string]: never; }>;
+type CollectionQueryVariables = Exact<{
+  name: Scalars['String'];
+  slug: Scalars['String'];
+}>;
 
 
-type Unnamed_1_Query = { readonly wpMenu: Maybe<{ readonly menuItems: Maybe<{ readonly nodes: Maybe<ReadonlyArray<Maybe<(
-        Pick<WpMenuItem, 'label' | 'path'>
-        & { readonly childItems: Maybe<{ readonly nodes: Maybe<ReadonlyArray<Maybe<Pick<WpMenuItem, 'label' | 'path'>>>> }> }
-      )>>> }> }> };
+type CollectionQuery = { readonly dailp: { readonly allDocuments: ReadonlyArray<(
+      Pick<Dailp_AnnotatedDoc, 'id' | 'slug' | 'title'>
+      & { readonly date: Maybe<Pick<Dailp_Date, 'year'>> }
+    )> }, readonly wpPage: Maybe<Pick<WpPage, 'content'>> };
+
+type ContentPageQueryVariables = Exact<{
+  id: Scalars['String'];
+}>;
+
+
+type ContentPageQuery = { readonly page: Maybe<Pick<WpPage, 'title' | 'content'>> };
 
 type GatsbyImageSharpFixedFragment = Pick<ImageSharpFixed, 'base64' | 'width' | 'height' | 'src' | 'srcSet'>;
 
@@ -11241,22 +11432,5 @@ type GatsbyImageSharpSizes_withWebp_tracedSVGFragment = Pick<ImageSharpSizes, 't
 type GatsbyImageSharpSizes_noBase64Fragment = Pick<ImageSharpSizes, 'aspectRatio' | 'src' | 'srcSet' | 'sizes'>;
 
 type GatsbyImageSharpSizes_withWebp_noBase64Fragment = Pick<ImageSharpSizes, 'aspectRatio' | 'src' | 'srcSet' | 'srcWebp' | 'srcSetWebp' | 'sizes'>;
-
-type ContentPageQueryVariables = Exact<{
-  id: Scalars['String'];
-}>;
-
-
-type ContentPageQuery = { readonly page: Maybe<Pick<WpPage, 'title' | 'content'>> };
-
-type IndexPageQueryVariables = Exact<{ [key: string]: never; }>;
-
-
-type IndexPageQuery = { readonly dailp: { readonly allCollections: ReadonlyArray<Pick<Dailp_DocumentCollection, 'name' | 'slug'>> }, readonly aboutPage: Maybe<Pick<WpPage, 'title' | 'content'>> };
-
-type Unnamed_2_QueryVariables = Exact<{ [key: string]: never; }>;
-
-
-type Unnamed_2_Query = { readonly currentBuildDate: Maybe<Pick<CurrentBuildDate, 'currentDate'>> };
 
 }
