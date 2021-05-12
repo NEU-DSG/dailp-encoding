@@ -1,14 +1,10 @@
-use crate::spreadsheets::LexicalEntryWithForms;
-use crate::spreadsheets::SheetResult;
+use crate::spreadsheets::{LexicalEntryWithForms, SheetResult};
 use anyhow::Result;
-use dailp::seg_verb_surface_forms;
-use dailp::AnnotatedDoc;
-use dailp::DocumentMetadata;
-use dailp::LexicalConnection;
-use dailp::MorphemeId;
-use dailp::MorphemeSegment;
-use dailp::{convert_udb, Contributor};
-use dailp::{AnnotatedForm, Date, PositionInDocument};
+use dailp::{
+    convert_udb, seg_verb_surface_forms, AnnotatedDoc, AnnotatedForm, Contributor, Date,
+    DocumentMetadata, LexicalConnection, MorphemeId, MorphemeSegment, PositionInDocument,
+};
+use log::info;
 
 pub async fn migrate_dictionaries() -> Result<()> {
     let df1975 = parse_new_df1975(
@@ -71,7 +67,7 @@ pub async fn migrate_dictionaries() -> Result<()> {
         .chain(body_parts)
         .collect();
 
-    println!("Pushing entries to database...");
+    info!("Pushing entries to database...");
 
     // Push all lexical entries to the database.
     crate::update_form(entries.iter().map(|x| &x.entry)).await?;

@@ -1,6 +1,7 @@
 use crate::spreadsheets::SheetResult;
 use anyhow::Result;
 use dailp::{MorphemeTag, TagForm};
+use log::info;
 
 /// Cherokee has many functional morphemes that are documented.
 /// Pulls all the details we have about each morpheme from our spreadsheets,
@@ -12,10 +13,10 @@ pub async fn migrate_tags() -> Result<()> {
     )
     .await;
 
-    println!("Parsing sheet results...");
+    info!("Parsing sheet results...");
     let glossary = parse_tag_glossary(glossary?)?;
 
-    println!("Pushing tags to db...");
+    info!("Pushing tags to db...");
     crate::update_tag(&glossary).await?;
 
     // Make sure all reference grammars are cited.

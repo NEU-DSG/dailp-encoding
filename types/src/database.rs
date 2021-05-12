@@ -657,7 +657,7 @@ where
 {
     conn.update_one(
         bson::doc! { "_id": bson::to_bson(id)? },
-        bson::to_document(item)?,
+        bson::doc! { "$set": bson::to_document(item)? },
         upsert(),
     )
     .await?;

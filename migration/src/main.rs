@@ -8,7 +8,7 @@ mod spreadsheets;
 mod tags;
 mod translations;
 
-use anyhow::Result;
+use anyhow::{bail, Result};
 use log::{error, info};
 use std::time::Duration;
 
@@ -18,9 +18,9 @@ pub const REFERENCES_SHEET_NAME: &str = "References";
 /// Migrates DAILP data from several Google spreadsheets to a MongoDB instance.
 #[tokio::main]
 async fn main() -> Result<()> {
-    pretty_env_logger::init();
-
     dotenv::dotenv().ok();
+
+    pretty_env_logger::init();
 
     migrate_image_sources().await?;
 
@@ -177,7 +177,10 @@ async fn graphql_mutate(
             "operationName": null,
             "query": format!("mutation {{\n{}\n}}", s)
         });
-        CLIENT.post(&*ENDPOINT).json(&query).send().await?;
+        let response = CLIENT.post(&*ENDPOINT).json(&query).send().await?.json::<serde_json::Value>().await?;
+        if let Some(errors) = response.get("errors") {
+            bail!("Mutation '{}' failed: {}", method, errors);
+        }
     }
     Ok(())
 }

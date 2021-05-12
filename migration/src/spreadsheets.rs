@@ -10,6 +10,7 @@ use dailp::{
     LexicalConnection, LineBreak, MorphemeId, MorphemeSegment, PageBreak,
 };
 use dailp::{PositionInDocument, SourceAttribution};
+use log::{error, info, warn};
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, fs::File, io::Write, time::Duration};
 
@@ -45,16 +46,21 @@ pub async fn migrate_documents_to_db(
 /// Takes an unprocessed document with metadata, passing it through our TEI
 /// template to produce an xml document named like the given title.
 pub fn write_to_file(doc: &AnnotatedDoc) -> Result<()> {
-    let mut tera = tera::Tera::new("*.tera.xml")?;
-    let file_name = format!("{}/{}.xml", OUTPUT_DIR, doc.meta.id.0);
-    println!("writing to {}", file_name);
-    tera.register_filter("convert_breaks", convert_breaks);
-    let contents = tera.render("template.tera.xml", &tera::Context::from_serialize(doc)?)?;
+    let contents = render_template(doc)?;
     // Make sure the output folder exists.
     std::fs::create_dir_all(OUTPUT_DIR)?;
+    let file_name = format!("{}/{}.xml", OUTPUT_DIR, doc.meta.id.0);
+    info!("writing to {}", file_name);
     let mut f = File::create(file_name)?;
     f.write_all(contents.as_bytes())?;
     Ok(())
+}
+
+fn render_template(doc: &AnnotatedDoc) -> Result<String> {
+    let mut tera = tera::Tera::new("*.tera.xml")?;
+    tera.register_filter("convert_breaks", convert_breaks);
+    let contents = tera.render("template.tera.xml", &tera::Context::from_serialize(doc)?)?;
+    Ok(contents)
 }
 
 /// Result obtained directly from the raw Google sheet.
@@ -69,7 +75,7 @@ pub struct SheetResult {
 impl SheetResult {
     pub async fn from_sheet(sheet_id: &str, sheet_name: Option<&str>) -> Result<Self> {
         use futures_retry::{FutureRetry, RetryPolicy};
-        println!("parsing sheet {}...", sheet_id);
+        info!("parsing sheet {}...", sheet_id);
         let mut tries = 0;
         let (t, _attempt) = FutureRetry::new(
             || Self::from_sheet_weak(sheet_id, sheet_name),
@@ -79,7 +85,7 @@ impl SheetResult {
                     RetryPolicy::<anyhow::Error>::ForwardError(e)
                 } else {
                     tries += 1;
-                    println!("Retrying for the {}th time...", tries);
+                    warn!("Retrying for the {}th time...", tries);
                     RetryPolicy::<anyhow::Error>::WaitRetry(Duration::from_millis(10000))
                 }
             },
@@ -654,7 +660,7 @@ impl<'a> AnnotatedLine {
         }
 
         while let Some(p) = stack.pop() {
-            eprintln!("dangling block!");
+            error!("dangling block!");
             segments.push(AnnotatedSeg::Block(p));
         }
         segments
