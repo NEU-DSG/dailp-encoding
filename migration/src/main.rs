@@ -9,6 +9,7 @@ mod tags;
 mod translations;
 
 use anyhow::Result;
+use log::{error, info};
 use std::time::Duration;
 
 pub const METADATA_SHEET_NAME: &str = "Metadata";
@@ -17,24 +18,26 @@ pub const REFERENCES_SHEET_NAME: &str = "References";
 /// Migrates DAILP data from several Google spreadsheets to a MongoDB instance.
 #[tokio::main]
 async fn main() -> Result<()> {
+    pretty_env_logger::init();
+
     dotenv::dotenv().ok();
 
     migrate_image_sources().await?;
 
     contributors::migrate_all().await?;
 
-    println!("Migrating connections...");
+    info!("Migrating connections...");
     connections::migrate_connections().await?;
 
     migrate_data().await?;
 
-    println!("Migrating early vocabularies...");
+    info!("Migrating early vocabularies...");
     early_vocab::migrate_all().await?;
 
-    println!("Migrating DF1975 and DF2003...");
+    info!("Migrating DF1975 and DF2003...");
     lexical::migrate_dictionaries().await?;
 
-    println!("Migrating tags to database...");
+    info!("Migrating tags to database...");
     tags::migrate_tags().await?;
 
     Ok(())
@@ -64,7 +67,7 @@ async fn migrate_data() -> Result<()> {
             .await?
             .into_index()?;
 
-    println!("Migrating documents to database...");
+    info!("Migrating documents to database...");
 
     // Retrieve data for spreadsheets in sequence.
     // Because of Google API rate limits, we have to limit the number of
@@ -74,7 +77,7 @@ async fn migrate_data() -> Result<()> {
             spreadsheets::write_to_file(&doc)?;
             spreadsheets::migrate_documents_to_db(&[(doc, refs)]).await?;
         } else {
-            println!("Failed to process {}", sheet_id);
+            error!("Failed to process {}", sheet_id);
         }
     }
     Ok(())
@@ -94,7 +97,7 @@ async fn fetch_sheet(
         let meta = meta_sheet.into_metadata(false).await?;
 
         // Parse references for this particular document.
-        println!("parsing references...");
+        info!("parsing references...");
         let refs =
             spreadsheets::SheetResult::from_sheet(sheet_id, Some(REFERENCES_SHEET_NAME)).await;
         let refs = if let Ok(refs) = refs {
@@ -112,7 +115,7 @@ async fn fetch_sheet(
         // Each document page lives in its own tab.
         for index in 0..page_count {
             let tab_name = if page_count > 1 {
-                println!("Pulling Page {}...", index + 1);
+                info!("Pulling Page {}...", index + 1);
                 Some(format!("Page {}", index + 1))
             } else {
                 None

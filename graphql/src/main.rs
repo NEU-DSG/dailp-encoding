@@ -484,6 +484,20 @@ impl Mutation {
             Ok(true)
         }
     }
+
+    #[graphql(visible = false)]
+    async fn clear_database(
+        &self,
+        context: &Context<'_>,
+        #[graphql(secret)] password: String,
+    ) -> FieldResult<bool> {
+        if password != *MONGODB_PASSWORD {
+            Ok(false)
+        } else {
+            context.data::<Database>()?.clear_all().await?;
+            Ok(true)
+        }
+    }
 }
 
 #[derive(async_graphql::SimpleObject)]
