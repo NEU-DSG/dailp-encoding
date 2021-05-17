@@ -3,9 +3,24 @@ use serde::{Deserialize, Serialize};
 
 /// This entity may have zero or more interpretations.
 /// There may be a specific reason for or agent of the ambiguity between the choices.
+///
+/// Let's consider a potentially ambiguous word in a document.
+/// - We may think that there is a word, but we have no idea how to interpret it.
+///   This situation is represented by a blank list of choices.
+/// - We may be unsure about word breaks and thus interpret either one word, or two words.
+///   This is represented by two choices, the first being a singleton list
+///   and the second being a multi-element list.
+/// - We may be certain of one interpretation of the word.
+///   This situation is represented by a single choice that is a singleton list.
+///
+/// In any of these scenarios, explanation may be provided that indicates why
+/// there is ambiguity, why a certain interpretation is present, or why others
+/// have been discarded.
+///
+/// - TODO: Conditional ambiguity.
 #[derive(async_graphql::SimpleObject, Clone, Debug, Deserialize, Serialize, PartialEq)]
-#[graphql(concrete(name = "AmbiguousString", params(String)))]
 #[graphql(concrete(name = "AmbiguousChar", params(char)))]
+#[graphql(concrete(name = "AmbiguousString", params(String)))]
 #[graphql(concrete(name = "AmbiguousForm", params(AnnotatedForm)))]
 pub struct Ambiguous<T: async_graphql::OutputType> {
     /// Indicates why the material is hard to transcribe.
@@ -21,6 +36,14 @@ pub struct Ambiguous<T: async_graphql::OutputType> {
 }
 
 impl<T: async_graphql::OutputType> Ambiguous<T> {
+    pub fn new(reason: Option<String>, agent: Option<String>, choices: Vec<Vec<T>>) -> Self {
+        Self {
+            reason,
+            agent,
+            choices,
+        }
+    }
+
     pub fn from_certain(choice: T) -> Self {
         Self {
             reason: None,
@@ -37,7 +60,7 @@ impl<T: async_graphql::OutputType> Ambiguous<T> {
     /// Does this ambiguity represent an entity that we only have one
     /// interpretation of so far?
     pub fn is_certain(&self) -> bool {
-        self.reason.is_none() && self.agent.is_none() && self.choices.len() == 1
+        self.choices.len() == 1
     }
 
     /// Either the one interpretation that we are so far certain of, or `None`.
@@ -140,5 +163,48 @@ impl CharacterRange {
     /// last characters.
     pub async fn page_number(&self, context: &async_graphql::Context<'_>) -> String {
         String::new()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn certain() {
+        let amb = Ambiguous::from_certain(10);
+        assert!(amb.is_certain());
+    }
+
+    #[test]
+    fn certain_with_reason() {
+        let amb = Ambiguous::new(Some("At first, I thought this might have been IO, but then I looked again and it was obviously 10".to_string()), None, vec![vec![10]]);
+        assert!(amb.is_certain());
+    }
+
+    #[test]
+    fn uncertain() {
+        let amb = Ambiguous::new(None, None, vec![vec!["10"], vec!["IO"]]);
+        assert_eq!(amb.is_certain(), false);
+    }
+
+    #[test]
+    fn uncertain_with_reason() {
+        let amb = Ambiguous::new(
+            Some("10 and IO are very similar sequences in general".to_string()),
+            Some("Messy handwriting".to_string()),
+            vec![vec!["10"], vec!["IO"]],
+        );
+        assert_eq!(amb.is_certain(), false);
+    }
+
+    #[test]
+    fn uncertain_with_alternate_split() {
+        let amb = Ambiguous::new(
+            Some("The dense letters may include an embedded h, indicating the place name Carthage. If not, then they must be referring to the cart age (golden age of carts).".to_string()),
+            Some("Dense script".to_string()),
+            vec![vec!["Carthage"], vec!["Cart", "age"]],
+        );
+        assert_eq!(amb.is_certain(), false);
     }
 }
