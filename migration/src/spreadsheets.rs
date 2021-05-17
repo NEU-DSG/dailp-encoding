@@ -5,9 +5,10 @@
 use crate::translations::DocResult;
 use anyhow::Result;
 use dailp::{
-    convert_udb, root_noun_surface_forms, root_verb_surface_forms, AnnotatedDoc, AnnotatedForm,
-    AnnotatedPhrase, AnnotatedSeg, BlockType, Contributor, Date, DocumentMetadata,
-    LexicalConnection, LineBreak, MorphemeId, MorphemeSegment, PageBreak,
+    convert_udb, root_noun_surface_forms, root_verb_surface_forms, Ambiguous, AnnotatedDoc,
+    AnnotatedForm, AnnotatedPhrase, AnnotatedSeg, BlockType, CharId, CharacterRange, Contributor,
+    Date, DocumentCharacter, DocumentMetadata, IndependentPosition, LexicalConnection, LineBreak,
+    MorphemeId, MorphemeSegment, PageBreak,
 };
 use dailp::{PositionInDocument, SourceAttribution};
 use log::{error, info, warn};
@@ -154,11 +155,11 @@ impl SheetResult {
                 let page_number = root_values.next()?;
                 let mut form_values = root_values;
                 let date = Date::new(chrono::NaiveDate::from_ymd(year, 1, 1));
-                let position = PositionInDocument::new(
+                let position = PositionInDocument::IndependentPosition(IndependentPosition::new(
                     dailp::DocumentId(doc_id.to_string()),
                     page_number,
                     idx as i32 + 1,
-                );
+                ));
                 Some(LexicalEntryWithForms {
                     forms: root_verb_surface_forms(
                         &position,
@@ -221,11 +222,12 @@ impl SheetResult {
                     // Skip page ref and category.
                     let mut form_values = root_values.skip(after_root);
                     let date = Date::new(chrono::NaiveDate::from_ymd(year, 1, 1));
-                    let position = PositionInDocument::new(
-                        dailp::DocumentId(doc_id.to_owned()),
-                        page_number?,
-                        index,
-                    );
+                    let position =
+                        PositionInDocument::IndependentPosition(IndependentPosition::new(
+                            dailp::DocumentId(doc_id.to_owned()),
+                            page_number?,
+                            index,
+                        ));
                     Some(LexicalEntryWithForms {
                         forms: root_noun_surface_forms(
                             &position,
@@ -464,6 +466,24 @@ impl SemanticLine {
     fn is_empty(&self) -> bool {
         self.rows.iter().all(|r| r.items.is_empty())
     }
+    fn source(&self, i: usize) -> String {
+        self.rows[0].items[i].trim().replace(LINE_BREAK, "")
+    }
+    fn clean_source(&self, i: usize) -> String {
+        self.source(i)
+            .replace(BLOCK_START, "")
+            .replace(BLOCK_END, "")
+            .replace(PAGE_BREAK, "")
+    }
+    fn has_source(&self, i: usize) -> bool {
+        self.rows.get(0).and_then(|r| r.items.get(i)).is_some()
+    }
+    fn count_words(&self) -> usize {
+        self.rows.iter().map(|row| row.items.len()).max().unwrap()
+    }
+    fn page_break(&self, i: usize) -> Option<usize> {
+        self.rows[0].items[i].find(PAGE_BREAK)
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -473,31 +493,74 @@ pub struct AnnotatedLine {
 }
 
 impl<'a> AnnotatedLine {
+    pub fn chars_from_semantic(lines: &[SemanticLine]) -> Vec<DocumentCharacter> {
+        let mut char_num = 0;
+        let mut page_num = 0;
+        lines
+            .iter()
+            .enumerate()
+            .flat_map(|(line_index, line)| {
+                let num_words = line.count_words();
+                let w = (0..num_words)
+                    .filter(move |i| line.has_source(*i))
+                    .flat_map(move |word_index| {
+                        let source = line.clean_source(word_index);
+                        let cs = source
+                            .chars()
+                            .map(move |c| {
+                                let res = DocumentCharacter::new(
+                                    CharId::for_index(char_num),
+                                    page_num,
+                                    line_index as i32 + 1,
+                                    Ambiguous::from_certain(c.to_string()),
+                                    None,
+                                );
+                                char_num += 1;
+                                res
+                            })
+                            .collect::<Vec<_>>();
+                        if line.page_break(word_index).is_some() {
+                            page_num += 1;
+                        }
+                        cs
+                    });
+                if line.ends_page {
+                    page_num += 1;
+                }
+                w
+            })
+            .collect()
+    }
+
     pub fn many_from_semantic(lines: &[SemanticLine], meta: &DocumentMetadata) -> Vec<Self> {
-        let mut word_index = 1;
+        let mut word_index = 0;
+        let mut char_index = 0;
         lines
             .iter()
             .map(|line| {
                 // Number of words = length of the longest row in this line.
-                let num_words = line.rows.iter().map(|row| row.items.len()).max().unwrap();
+                let num_words = line.count_words();
                 // For each word, extract the necessary data from every row.
                 let words = (0..num_words)
                     // Only use words with a syllabary source entry.
-                    .filter(|i| line.rows.get(0).and_then(|r| r.items.get(*i)).is_some())
+                    .filter(|i| line.has_source(*i))
                     .map(|i| {
                         let pb = line.rows[0].items[i].find(PAGE_BREAK);
                         let morphemes = line.rows[4].items.get(i);
                         let glosses = line.rows[5].items.get(i);
                         let translation = line.rows[6].items.get(i).map(|x| x.trim().to_owned());
+                        let source = line.rows[0].items[i].trim().replace(LINE_BREAK, "");
+                        let next_char_index = char_index + source.len();
                         let w = AnnotatedForm {
                             // TODO Extract into public function!
                             id: format!("{}.{}", meta.id.0, word_index),
-                            position: PositionInDocument::new(
+                            position: PositionInDocument::CharacterRange(CharacterRange::new(
                                 meta.id.clone(),
-                                1.to_string(),
                                 word_index,
-                            ),
-                            source: line.rows[0].items[i].trim().replace(LINE_BREAK, ""),
+                                CharId::for_index(char_index as i32),
+                                CharId::for_index(next_char_index as i32 - 1),
+                            )),
+                            source,
                             normalized_source: None,
                             simple_phonetics: line.rows[2]
                                 .items
@@ -521,6 +584,7 @@ impl<'a> AnnotatedLine {
                             date_recorded: None,
                         };
                         word_index += 1;
+                        char_index = next_char_index;
                         w
                     })
                     .collect();
@@ -542,9 +606,9 @@ impl<'a> AnnotatedLine {
         let mut child_segments = Vec::<AnnotatedSeg>::new();
         let mut line_num = 0;
         let mut page_num = 0;
-        let mut word_idx = 1;
-        let mut seg_idx = 1;
-        let mut block_idx = 1;
+        let mut word_idx = 0;
+        let mut seg_idx = 0;
+        let mut block_idx = 0;
 
         // The first page needs a break.
         segments.push(AnnotatedSeg::PageBreak(PageBreak { index: page_num }));
@@ -566,14 +630,15 @@ impl<'a> AnnotatedLine {
 
             for word in line.words {
                 // Give the word an index within the whole document.
-                let word = AnnotatedForm {
-                    position: PositionInDocument::new(
-                        document_id.clone(),
-                        (page_num + 1).to_string(),
-                        word_idx,
-                    ),
-                    ..word
-                };
+                // FIXME
+                // let word = AnnotatedForm {
+                //     position: PositionInDocument::new(
+                //         document_id.clone(),
+                //         (page_num + 1).to_string(),
+                //         word_idx,
+                //     ),
+                //     ..word
+                // };
 
                 // Keep a global word index for the whole document.
                 word_idx += 1;
@@ -617,13 +682,13 @@ impl<'a> AnnotatedLine {
                     count_to_pop += 1;
                 }
                 // Construct the final word.
-                let finished_word = AnnotatedSeg::Word(AnnotatedForm {
+                let finished_word = AnnotatedSeg::Word(Ambiguous::from_certain(AnnotatedForm {
                     source: source.to_owned(),
                     line_break: word.line_break.map(|_| line_num as i32),
                     page_break: word.page_break.map(|_| page_num as i32),
                     date_recorded: date.clone(),
                     ..word
-                });
+                }));
                 // Add the current word to the current phrase or the root document.
                 if let Some(p) = stack.last_mut() {
                     p.parts.push(finished_word);
@@ -718,5 +783,17 @@ mod tests {
         // URLs without the "/edit" at the end should work too.
         let url = "https://docs.google.com/document/d/13ELP_F95OUUW8exR2KvQzzgtcfO1w_b3wVgPQR8dggo";
         assert_eq!(SheetResult::drive_url_to_id(url), id);
+    }
+
+    #[tokio::test]
+    async fn parse_characters() -> anyhow::Result<()> {
+        dotenv::dotenv().ok();
+        let sheet_id = "1i1FIX3qpwQK6waf0OHnCkWJdmQcG10FYCS84LI_QZNE";
+        let lines = SheetResult::from_sheet(sheet_id, None)
+            .await?
+            .split_into_lines();
+        let characters = AnnotatedLine::chars_from_semantic(&lines);
+        assert_eq!(characters.len(), 82);
+        Ok(())
     }
 }

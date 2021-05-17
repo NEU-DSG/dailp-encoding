@@ -2,7 +2,8 @@ use crate::spreadsheets::{LexicalEntryWithForms, SheetResult};
 use anyhow::Result;
 use dailp::{
     convert_udb, seg_verb_surface_forms, AnnotatedDoc, AnnotatedForm, Contributor, Date,
-    DocumentMetadata, LexicalConnection, MorphemeId, MorphemeSegment, PositionInDocument,
+    DocumentMetadata, IndependentPosition, LexicalConnection, MorphemeId, MorphemeSegment,
+    PositionInDocument,
 };
 use log::info;
 
@@ -100,6 +101,7 @@ pub async fn migrate_dictionaries() -> Result<()> {
                 is_reference: true,
             },
             segments: None,
+            characters: None,
         },
         AnnotatedDoc {
             meta: DocumentMetadata {
@@ -115,6 +117,7 @@ pub async fn migrate_dictionaries() -> Result<()> {
                 is_reference: true,
             },
             segments: None,
+            characters: None,
         },
     ];
     crate::update_document(&docs).await?;
@@ -146,8 +149,11 @@ async fn parse_numerals(sheet_id: &str, doc_id: &str, year: i32) -> Result<()> {
             let _numeric = values.next()?;
             let simple_phonetics = values.next()?;
             let syllabary = values.next()?;
-            let position =
-                PositionInDocument::new(dailp::DocumentId(doc_id.to_string()), page_num, key);
+            let position = PositionInDocument::IndependentPosition(IndependentPosition::new(
+                dailp::DocumentId(doc_id.to_string()),
+                page_num,
+                key,
+            ));
             let segments = vec![MorphemeSegment::new(root_dailp, gloss.clone(), None)];
             Some(AnnotatedForm {
                 id: position.make_id(&gloss, true),
@@ -212,7 +218,11 @@ async fn parse_appendix(sheet_id: &str, to_skip: usize) -> Result<()> {
             let mut values = row.into_iter();
             let index = values.next()?.parse().unwrap_or(1);
             let page_num = values.next()?;
-            let position = PositionInDocument::new(meta.id.clone(), page_num, index);
+            let position = PositionInDocument::IndependentPosition(IndependentPosition::new(
+                meta.id.clone(),
+                page_num,
+                index,
+            ));
             for _ in 0..to_skip {
                 values.next()?;
             }
@@ -260,6 +270,7 @@ async fn parse_appendix(sheet_id: &str, to_skip: usize) -> Result<()> {
     let doc = AnnotatedDoc {
         meta,
         segments: None,
+        characters: None,
     };
     let docs = vec![doc];
     crate::update_document(&docs).await?;
@@ -296,8 +307,11 @@ fn parse_new_df1975(
                 let root_gloss = root_values.next().filter(|s| !s.is_empty())?;
                 let mut form_values = root_values.clone().skip(after_root + translations);
                 let date = Date::new(chrono::NaiveDate::from_ymd(year, 1, 1));
-                let pos =
-                    PositionInDocument::new(doc_id.clone(), page_number, key.parse().unwrap_or(1));
+                let pos = PositionInDocument::IndependentPosition(IndependentPosition::new(
+                    doc_id.clone(),
+                    page_number,
+                    key.parse().unwrap_or(1),
+                ));
                 Some(LexicalEntryWithForms {
                     forms: seg_verb_surface_forms(
                         &pos,
@@ -349,8 +363,11 @@ async fn ingest_particle_index(document_id: &str) -> Result<()> {
             let translation = row.next()?;
             let source_str = row.next()?;
             let source = MorphemeId::parse(&source_str)?;
-            let pos =
-                PositionInDocument::new(source.document_id.clone()?, source.gloss, index as i32);
+            let pos = PositionInDocument::IndependentPosition(IndependentPosition::new(
+                source.document_id.clone()?,
+                source.gloss,
+                index as i32,
+            ));
             Some(AnnotatedForm {
                 id: pos.make_raw_id(&translation, false),
                 simple_phonetics: Some(simple_phonetics),
@@ -388,7 +405,7 @@ async fn ingest_ac1995(sheet_id: &str) -> Result<()> {
             let _romanized = row.next()?;
             let normalized = row.next()?;
             let translation = row.next()?;
-            let pos = PositionInDocument::new(meta.id.clone(), "1".to_owned(), index);
+            let pos = IndependentPosition::new(meta.id.clone(), "1".to_owned(), index);
             Some(AnnotatedForm {
                 id: form_id,
                 simple_phonetics: Some(normalized),
@@ -401,7 +418,7 @@ async fn ingest_ac1995(sheet_id: &str) -> Result<()> {
                 segments: None,
                 date_recorded: meta.date.clone(),
                 source: syllabary,
-                position: pos,
+                position: PositionInDocument::IndependentPosition(pos),
             })
         })
         .collect::<Vec<_>>();
@@ -410,6 +427,7 @@ async fn ingest_ac1995(sheet_id: &str) -> Result<()> {
     crate::update_document(&[AnnotatedDoc {
         meta,
         segments: None,
+        characters: None,
     }])
     .await?;
 

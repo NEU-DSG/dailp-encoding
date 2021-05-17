@@ -132,9 +132,10 @@ async fn fetch_sheet(
             all_lines.append(&mut lines);
             tokio::time::sleep(Duration::from_millis(1700)).await;
         }
+        let characters = AnnotatedLine::chars_from_semantic(&all_lines);
         let annotated = AnnotatedLine::many_from_semantic(&all_lines, &meta);
         let segments = AnnotatedLine::lines_into_segments(annotated, &meta.id, &meta.date);
-        let doc = dailp::AnnotatedDoc::new(meta, segments);
+        let doc = dailp::AnnotatedDoc::new(meta, segments, characters);
 
         Ok(Some((doc, refs)))
     } else {

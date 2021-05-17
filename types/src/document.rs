@@ -1,5 +1,6 @@
 use crate::{
-    AnnotatedForm, Contributor, Database, Date, SourceAttribution, Translation, TranslationBlock,
+    ambiguous, Ambiguous, AnnotatedForm, Contributor, Database, Date, SourceAttribution,
+    Translation, TranslationBlock,
 };
 use async_graphql::{dataloader::DataLoader, FieldResult};
 use serde::{Deserialize, Serialize};
@@ -9,10 +10,16 @@ use std::borrow::Cow;
 pub struct AnnotatedDoc {
     #[serde(flatten)]
     pub meta: DocumentMetadata,
+    /// List of character transcriptions that make up all readings of this document.
+    pub characters: Option<Vec<ambiguous::DocumentCharacter>>,
     pub segments: Option<Vec<TranslatedSection>>,
 }
 impl AnnotatedDoc {
-    pub fn new(meta: DocumentMetadata, segments: Vec<AnnotatedSeg>) -> Self {
+    pub fn new(
+        meta: DocumentMetadata,
+        segments: Vec<AnnotatedSeg>,
+        characters: Vec<ambiguous::DocumentCharacter>,
+    ) -> Self {
         let mut merged_segments = Vec::new();
         // Skip the first block of the translation, since this usually contains
         // the header and information for translators and editors.
@@ -35,6 +42,7 @@ impl AnnotatedDoc {
 
         Self {
             segments: Some(merged_segments),
+            characters: Some(characters),
             meta,
         }
     }
@@ -121,7 +129,7 @@ impl AnnotatedDoc {
     async fn forms(
         &self,
         context: &async_graphql::Context<'_>,
-    ) -> FieldResult<Vec<Cow<'_, AnnotatedForm>>> {
+    ) -> FieldResult<Vec<Cow<'_, Ambiguous<AnnotatedForm>>>> {
         if let Some(segs) = &self.segments {
             Ok(segs
                 .iter()
@@ -134,6 +142,7 @@ impl AnnotatedDoc {
                 .words_in_document(&self.meta.id)
                 .await?
                 .into_iter()
+                .map(Ambiguous::from_certain)
                 .map(Cow::Owned)
                 .collect())
         }
@@ -151,11 +160,15 @@ impl AnnotatedDoc {
     async fn unresolved_forms(
         &self,
         context: &async_graphql::Context<'_>,
-    ) -> FieldResult<Vec<Cow<'_, AnnotatedForm>>> {
+    ) -> FieldResult<Vec<Cow<'_, Ambiguous<AnnotatedForm>>>> {
         let forms = self.forms(context).await?;
         Ok(forms
             .into_iter()
-            .filter(|form| form.is_unresolved())
+            .filter(|amb| {
+                amb.get_choices()
+                    .into_iter()
+                    .any(|forms| forms.iter().any(|form| form.is_unresolved()))
+            })
             .collect())
     }
 }
@@ -179,15 +192,18 @@ pub struct TranslatedSection {
 // Basic to start: [{meta, lines: [{ index, words }]}]
 
 #[derive(Debug, async_graphql::Union, Serialize, Deserialize, Clone)]
-#[serde(tag = "type")]
+#[serde(tag = "__typename")]
 pub enum AnnotatedSeg {
     Block(AnnotatedPhrase),
-    Word(AnnotatedForm),
+    /// When a word is certain, it is represented as a singleton vector.
+    /// When a word is uncertain, there may be different word breaks to
+    /// consider, thus multiple words may actually be present.
+    Word(Ambiguous<AnnotatedForm>),
     LineBreak(LineBreak),
     PageBreak(PageBreak),
 }
 impl AnnotatedSeg {
-    pub fn forms(&self) -> Vec<&AnnotatedForm> {
+    pub fn forms(&self) -> Vec<&Ambiguous<AnnotatedForm>> {
         use AnnotatedSeg::*;
         match self {
             Block(block) => block.parts.iter().flat_map(|s| s.forms()).collect(),

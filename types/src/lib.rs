@@ -18,6 +18,7 @@
 //! knows what document it came from, retaining a sense of source and concrete
 //! reference.
 
+mod ambiguous;
 pub mod annotation;
 mod database;
 mod date;
@@ -34,6 +35,7 @@ mod person;
 mod tag;
 mod translation;
 
+pub use ambiguous::*;
 pub use database::*;
 pub use date::*;
 pub use document::*;

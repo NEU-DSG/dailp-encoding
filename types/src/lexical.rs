@@ -1,33 +1,36 @@
-use crate::{AnnotatedForm, Date, DocumentId, Geometry, MorphemeSegment};
+use crate::{ambiguous, AnnotatedForm, Date, DocumentId, Geometry, MorphemeSegment};
 use serde::{Deserialize, Serialize};
 
 /// The reference position within a document of one specific form
-#[derive(Clone, Serialize, Deserialize, Debug, PartialEq, async_graphql::SimpleObject)]
-#[serde(rename_all = "camelCase")]
-#[graphql(complex)]
-pub struct PositionInDocument {
-    /// What document is this item within?
-    pub document_id: DocumentId,
-    /// What page is it on (starting from 1)? May be a single page or range of pages.
-    pub page_number: String,
-    /// How many items come before this one in the whole document?
-    ///
-    /// 1-indexed position indicating where the form sits in the ordering of all
-    /// forms in the document. Used for relative ordering of forms from the
-    /// same document.
-    pub index: i32,
-    /// What section of the document image corresponds to this item?
-    pub geometry: Option<Geometry>,
+#[derive(async_graphql::Union, Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[serde(tag = "__typename")]
+pub enum PositionInDocument {
+    CharacterRange(ambiguous::CharacterRange),
+    IndependentPosition(IndependentPosition),
 }
 
 impl PositionInDocument {
-    /// Make a new document position from the document ID, page number, and item index.
-    pub fn new(document_id: DocumentId, page_number: String, index: i32) -> Self {
-        Self {
-            document_id,
-            page_number,
-            index,
-            geometry: None,
+    pub fn document_id(&self) -> &DocumentId {
+        use PositionInDocument::*;
+        match self {
+            CharacterRange(range) => &range.document_id,
+            IndependentPosition(pos) => &pos.document_id,
+        }
+    }
+
+    pub fn index(&self) -> Option<i32> {
+        use PositionInDocument::*;
+        match self {
+            IndependentPosition(pos) => Some(pos.index),
+            CharacterRange(range) => Some(range.index),
+        }
+    }
+
+    pub async fn region(&self, db: &crate::Database) -> Option<Geometry> {
+        use PositionInDocument::*;
+        match self {
+            IndependentPosition(pos) => pos.region.clone(),
+            CharacterRange(range) => range.get_region(db).await,
         }
     }
 
@@ -37,10 +40,12 @@ impl PositionInDocument {
         // Clear non-ASCII characters from the ID to prevent weird duplicates
         // caused by unicode blanks or accents.
         let clean_gloss = gloss.replace(|c: char| !c.is_ascii(), "");
-        if use_index {
-            format!("{}.{}:{}", self.document_id.0, self.index, clean_gloss)
-        } else {
-            format!("{}:{}", self.document_id.0, clean_gloss)
+        let doc_id = self.document_id();
+        match self.index() {
+            Some(index) if use_index => {
+                format!("{}.{}:{}", doc_id.0, index, clean_gloss)
+            }
+            _ => format!("{}:{}", doc_id.0, clean_gloss),
         }
     }
 
@@ -56,17 +61,55 @@ impl PositionInDocument {
     }
 
     pub fn make_form_id(&self, segments: &[MorphemeSegment]) -> String {
-        format!(
-            "{}.{}:{}",
-            self.document_id.0,
-            self.index,
-            MorphemeSegment::gloss_layer(segments)
-        )
+        if let Some(index) = self.index() {
+            format!(
+                "{}.{}:{}",
+                self.document_id().0,
+                index,
+                MorphemeSegment::gloss_layer(segments)
+            )
+        } else {
+            format!(
+                "{}:{}",
+                self.document_id().0,
+                MorphemeSegment::gloss_layer(segments)
+            )
+        }
+    }
+}
+
+#[derive(Clone, Serialize, Deserialize, Debug, PartialEq, async_graphql::SimpleObject)]
+#[serde(rename_all = "camelCase")]
+#[graphql(complex)]
+pub struct IndependentPosition {
+    /// What document is this item within?
+    pub document_id: DocumentId,
+    /// What page is it on (starting from 1)? May be a single page or range of pages.
+    pub page_number: String,
+    /// How many items come before this one in the whole document?
+    ///
+    /// 1-indexed position indicating where the form sits in the ordering of all
+    /// forms in the document. Used for relative ordering of forms from the
+    /// same document.
+    pub index: i32,
+    /// What region of the document image corresponds to this item?
+    pub region: Option<Geometry>,
+}
+
+impl IndependentPosition {
+    /// Make a new document position from the document ID, page number, and item index.
+    pub fn new(document_id: DocumentId, page_number: String, index: i32) -> Self {
+        Self {
+            document_id,
+            page_number,
+            index,
+            region: None,
+        }
     }
 }
 
 #[async_graphql::ComplexObject]
-impl PositionInDocument {
+impl IndependentPosition {
     /// Standard page reference for this position, which can be used in citation.
     /// Generally formatted like ID:PAGE, i.e "DF2018:55"
     async fn page_reference(&self) -> String {
@@ -85,7 +128,7 @@ impl PositionInDocument {
         context: &async_graphql::Context<'_>,
     ) -> async_graphql::FieldResult<Option<String>> {
         use async_graphql::dataloader::DataLoader;
-        if let Some(geometry) = &self.geometry {
+        if let Some(geometry) = &self.region {
             // Retrieve the document instance.
             let doc = context
                 .data::<DataLoader<crate::Database>>()?
@@ -959,11 +1002,11 @@ DF2018:54",
     #[test]
     fn morpheme_id_raw() {
         let raw = "as for me (1SG.PRO + CS)";
-        let pos = PositionInDocument::new(
+        let pos = PositionInDocument::IndependentPosition(IndependentPosition::new(
             crate::DocumentId("AK1997".to_string()),
             "116".to_string(),
             1,
-        );
+        ));
         assert_eq!(pos.make_raw_id(raw, true), "AK1997.1:as.for.me.1SG.PRO.CS");
         assert_eq!(pos.make_raw_id(raw, false), "AK1997:as.for.me.1SG.PRO.CS");
     }

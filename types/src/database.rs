@@ -159,7 +159,7 @@ impl Database {
             .map::<Result<_>, _>(|d| Ok(bson::from_document(d?)?))
             .collect::<Result<Vec<_>>>()
             .await?;
-        forms.sort_by_key(|f| f.position.index);
+        forms.sort_by_key(|f| f.position.index().unwrap());
         Ok(forms)
     }
 
@@ -459,7 +459,7 @@ impl Database {
             .into_iter()
             .filter_map(|x| x.ok())
             .flat_map(|x| x)
-            .map(|form| (form.position.document_id.clone(), form))
+            .map(|form| (form.position.document_id().clone(), form))
             .into_group_map()
             .into_iter()
             .map(|(doc_id, words)| WordsInDocument {
@@ -472,7 +472,7 @@ impl Database {
             .into_iter()
             .filter_map(|x| x.ok())
             .flat_map(|x| x)
-            .map(|form| (form.position.document_id.clone(), form))
+            .map(|form| (form.position.document_id().clone(), form))
             .collect::<Vec<_>>()
             .into_iter()
             .into_group_map()

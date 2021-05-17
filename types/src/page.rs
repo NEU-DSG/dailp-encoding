@@ -19,7 +19,7 @@ pub struct Page {
 /// This type is intended to enable a custom page builder on the front-end for
 /// content editors.
 #[derive(Clone, Serialize, Deserialize, Union)]
-#[serde(tag = "type")]
+#[serde(tag = "__typename")]
 pub enum ContentBlock {
     /// Block of markdown prose content
     Markdown(MarkdownBlock),
