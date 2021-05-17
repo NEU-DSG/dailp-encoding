@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 
 /// A single unit of meaning and its corresponding English gloss.
-#[derive(Serialize, Clone, Deserialize, Debug)]
+#[derive(Serialize, Clone, Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct MorphemeSegment {
     /// Source language representation of this segment.
@@ -20,7 +20,7 @@ pub struct MorphemeSegment {
 
 /// The kind of segment that a particular sequence of characters in a morphemic
 /// segmentations represent.
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
 pub enum SegmentType {
     /// Separated by a hyphen '-'
     Morpheme,

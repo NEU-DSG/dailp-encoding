@@ -119,6 +119,10 @@ impl DocumentCharacter {
             region,
         }
     }
+
+    pub fn get_transcription(&self) -> &Ambiguous<String> {
+        &self.transcription
+    }
 }
 
 #[derive(async_graphql::SimpleObject)]

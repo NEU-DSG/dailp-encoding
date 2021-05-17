@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 /// A single word in an annotated document.
 /// One word contains several layers of interpretation, including the original
 /// source text, multiple layers of linguistic annotation, and annotator notes.
-#[derive(Clone, Serialize, Deserialize, Debug, async_graphql::SimpleObject)]
+#[derive(Clone, Serialize, Deserialize, Debug, async_graphql::SimpleObject, PartialEq)]
 #[serde(rename_all = "camelCase")]
 #[graphql(complex)]
 pub struct AnnotatedForm {

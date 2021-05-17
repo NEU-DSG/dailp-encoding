@@ -496,40 +496,33 @@ impl<'a> AnnotatedLine {
     pub fn chars_from_semantic(lines: &[SemanticLine]) -> Vec<DocumentCharacter> {
         let mut char_num = 0;
         let mut page_num = 0;
-        lines
-            .iter()
-            .enumerate()
-            .flat_map(|(line_index, line)| {
-                let num_words = line.count_words();
-                let w = (0..num_words)
-                    .filter(move |i| line.has_source(*i))
-                    .flat_map(move |word_index| {
-                        let source = line.clean_source(word_index);
-                        let cs = source
-                            .chars()
-                            .map(move |c| {
-                                let res = DocumentCharacter::new(
-                                    CharId::for_index(char_num),
-                                    page_num,
-                                    line_index as i32 + 1,
-                                    Ambiguous::from_certain(c.to_string()),
-                                    None,
-                                );
-                                char_num += 1;
-                                res
-                            })
-                            .collect::<Vec<_>>();
-                        if line.page_break(word_index).is_some() {
-                            page_num += 1;
-                        }
-                        cs
-                    });
-                if line.ends_page {
-                    page_num += 1;
+        let mut chars = Vec::new();
+        for (line_index, line) in lines.iter().enumerate() {
+            let num_words = line.count_words();
+            chars.reserve(num_words * 2);
+            for word_index in (0..num_words) {
+                if line.has_source(word_index) {
+                    let source = line.clean_source(word_index);
+                    for c in source.chars() {
+                        chars.push(DocumentCharacter::new(
+                            CharId::for_index(char_num),
+                            page_num,
+                            line_index as i32,
+                            Ambiguous::from_certain(c.to_string()),
+                            None,
+                        ));
+                        char_num += 1;
+                    }
+                    if line.page_break(word_index).is_some() {
+                        page_num += 1;
+                    }
                 }
-                w
-            })
-            .collect()
+            }
+            if line.ends_page {
+                page_num += 1;
+            }
+        }
+        chars
     }
 
     pub fn many_from_semantic(lines: &[SemanticLine], meta: &DocumentMetadata) -> Vec<Self> {
@@ -550,7 +543,7 @@ impl<'a> AnnotatedLine {
                         let glosses = line.rows[5].items.get(i);
                         let translation = line.rows[6].items.get(i).map(|x| x.trim().to_owned());
                         let source = line.rows[0].items[i].trim().replace(LINE_BREAK, "");
-                        let next_char_index = char_index + source.len();
+                        let next_char_index = char_index + line.clean_source(i).chars().count();
                         let w = AnnotatedForm {
                             // TODO Extract into public function!
                             id: format!("{}.{}", meta.id.0, word_index),
@@ -794,6 +787,39 @@ mod tests {
             .split_into_lines();
         let characters = AnnotatedLine::chars_from_semantic(&lines);
         assert_eq!(characters.len(), 82);
+
+        let meta = SheetResult::from_sheet(sheet_id, Some(crate::METADATA_SHEET_NAME))
+            .await?
+            .into_metadata(false)
+            .await?;
+
+        let annotated = AnnotatedLine::many_from_semantic(&lines, &meta);
+        assert_eq!(annotated[0].words, Vec::new());
+
+        let first_word = &annotated[2].words[0];
+        assert_eq!(first_word.source, "ᏤᏈᏏ");
+
+        assert_eq!(
+            characters[11],
+            dailp::DocumentCharacter::new(
+                dailp::CharId::for_index(11),
+                0,
+                2,
+                dailp::Ambiguous::from_certain("Ꮴ".to_string()),
+                None
+            )
+        );
+
+        let first_pos = &first_word.position;
+        assert_eq!(
+            first_pos,
+            &PositionInDocument::CharacterRange(CharacterRange::new(
+                dailp::DocumentId("EFN4".to_string()),
+                3,
+                dailp::CharId::for_index(11),
+                dailp::CharId::for_index(13)
+            ))
+        );
         Ok(())
     }
 }

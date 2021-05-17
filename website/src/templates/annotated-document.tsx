@@ -189,7 +189,8 @@ export const DocumentTitleHeader = (p: {
     </Breadcrumbs>
 
     <h1 className={docTitle}>
-      {p.doc.title} ({p.doc.id}{p.doc.date && `, ${p.doc.date.year}`}){" "}
+      {p.doc.title} ({p.doc.id}
+      {p.doc.date && `, ${p.doc.date.year}`}){" "}
     </h1>
     <div className={bottomPadded}>
       {p.showDetails ? (
@@ -313,7 +314,7 @@ export const query = graphql`
         }
         translatedSegments @skip(if: $isReference) {
           source {
-            ... on Dailp_AnnotatedForm {
+            ... on Dailp_AmbiguousForm {
               ...FormFields
             }
             ... on Dailp_AnnotatedPhrase {
@@ -337,40 +338,44 @@ export const query = graphql`
     ty
     index
     parts {
-      ... on Dailp_AnnotatedForm {
+      ... on Dailp_AmbiguousForm {
         ...FormFields
       }
     }
   }
-  fragment FormFields on Dailp_AnnotatedForm {
-    index
-    source
-    simplePhonetics
-    phonemic
-    segments {
-      shapeTth: morpheme(system: TAOC)
-      shapeDt: morpheme(system: CRG)
-      shapeDtSimple: morpheme(system: LEARNER)
-      gloss
-      matchingTag {
-        id
-        taoc {
-          tag
-          title
+  fragment FormFields on Dailp_AmbiguousForm {
+    reason
+    agent
+    choices {
+      index
+      source
+      simplePhonetics
+      phonemic
+      segments {
+        shapeTth: morpheme(system: TAOC)
+        shapeDt: morpheme(system: CRG)
+        shapeDtSimple: morpheme(system: LEARNER)
+        gloss
+        matchingTag {
+          id
+          taoc {
+            tag
+            title
+          }
+          learner {
+            tag
+            title
+          }
+          crg {
+            tag
+            title
+          }
         }
-        learner {
-          tag
-          title
-        }
-        crg {
-          tag
-          title
-        }
+        nextSeparator
       }
-      nextSeparator
+      englishGloss
+      commentary
     }
-    englishGloss
-    commentary
   }
 `
 
