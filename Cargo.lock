@@ -400,7 +400,7 @@ dependencies = [
  "async-trait",
  "chrono",
  "futures",
- "itertools 0.9.0",
+ "itertools",
  "lazy_static",
  "maplit",
  "mongodb",
@@ -426,7 +426,7 @@ dependencies = [
  "dailp",
  "dotenv",
  "futures",
- "itertools 0.10.0",
+ "itertools",
  "lambda_http",
  "lazy_static",
  "mongodb",
@@ -445,11 +445,10 @@ dependencies = [
  "dotenv",
  "futures",
  "futures-retry",
- "itertools 0.10.0",
+ "itertools",
  "lazy_static",
  "log",
  "pretty_env_logger",
- "rand 0.8.3",
  "rayon",
  "regex",
  "reqwest",
@@ -1085,15 +1084,6 @@ name = "ipnet"
 version = "2.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "47be2f14c678be2fdcab04ab1171db51b2762ce6f0a8ee87c8dd4a04ed216135"
-
-[[package]]
-name = "itertools"
-version = "0.9.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "284f18f85651fe11e8a991b2adb42cb078325c996ed026d994719efcfca1d54b"
-dependencies = [
- "either",
-]
 
 [[package]]
 name = "itertools"

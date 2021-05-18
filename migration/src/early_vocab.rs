@@ -166,10 +166,12 @@ async fn parse_early_vocab(
                     english_gloss: vec![gloss],
                     line_break: None,
                     page_break: None,
-                    position: dailp::PositionInDocument::new(
-                        meta.id.clone(),
-                        page_number,
-                        index as i32 + 1,
+                    position: dailp::PositionInDocument::IndependentPosition(
+                        dailp::IndependentPosition::new(
+                            meta.id.clone(),
+                            page_number,
+                            index as i32 + 1,
+                        ),
                     ),
                     date_recorded: meta.date.clone(),
                     id,
@@ -187,6 +189,7 @@ async fn parse_early_vocab(
     let doc = dailp::AnnotatedDoc {
         meta,
         segments: None,
+        characters: None,
     };
     crate::update_document(&[doc]).await?;
 

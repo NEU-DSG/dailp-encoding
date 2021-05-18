@@ -64,30 +64,29 @@ impl Manifest {
                     let page_uri = format!("{}/page/{}", manifest_uri, page_num);
                     let canvas_uri = format!("{}/canvas", page_uri);
                     let annotations_uri = format!("{}/annotations", page_uri);
-                    let annotation_page = AnnotationPage {
-                        items: words
-                            .into_iter()
-                            .filter_map(|word| {
-                                if let Some(geometry) = &word.position.geometry {
-                                    Some(Annotation {
-                                        id: format!("{}/{}", annotations_uri, word.id),
-                                        motivation: "supplementing".to_owned(),
-                                        body: AnnotationBody::TextualBody(TextualBody {
-                                            language: "en".to_string(),
-                                            format: "text/html".to_string(),
-                                            value: word.source.clone(),
-                                        }),
-                                        target: AnnotationTarget::Selector(TargetSelector {
-                                            id: canvas_uri.clone(),
-                                            selector: FragmentSelector {
-                                                value: geometry.to_selector_string(),
-                                            },
-                                        }),
-                                    })
-                                } else {
-                                    None
-                                }
+                    let mut items = Vec::new();
+                    for word in words {
+                        if let Some(geometry) = &word.position.region(db).await {
+                            items.push(Annotation {
+                                id: format!("{}/{}", annotations_uri, word.id),
+                                motivation: "supplementing".to_owned(),
+                                body: AnnotationBody::TextualBody(TextualBody {
+                                    language: "en".to_string(),
+                                    format: "text/html".to_string(),
+                                    value: word.source.clone(),
+                                }),
+                                target: AnnotationTarget::Selector(TargetSelector {
+                                    id: canvas_uri.clone(),
+                                    selector: FragmentSelector {
+                                        value: geometry.to_selector_string(),
+                                    },
+                                }),
                             })
+                        }
+                    }
+                    let annotation_page = AnnotationPage {
+                        items: items
+                            .into_iter()
                             .chain(annotations.into_iter().filter_map(|annote| {
                                 match &annote.attached_to {
                                     AnnotationAttachment::Document(DocumentRegion {

@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 /// A single word in an annotated document.
 /// One word contains several layers of interpretation, including the original
 /// source text, multiple layers of linguistic annotation, and annotator notes.
-#[derive(Clone, Serialize, Deserialize, Debug, async_graphql::SimpleObject)]
+#[derive(Clone, Serialize, Deserialize, Debug, async_graphql::SimpleObject, PartialEq)]
 #[serde(rename_all = "camelCase")]
 #[graphql(complex)]
 pub struct AnnotatedForm {
@@ -56,7 +56,7 @@ impl AnnotatedForm {
             let db = context.data::<Database>()?;
             // Find the forms with the exact same root.
             let id = MorphemeId {
-                document_id: Some(self.position.document_id.clone()),
+                document_id: Some(self.position.document_id().clone()),
                 gloss: root.gloss.clone(),
                 index: None,
             };
@@ -83,18 +83,18 @@ impl AnnotatedForm {
     ) -> FieldResult<Option<AnnotatedDoc>> {
         Ok(context
             .data::<DataLoader<Database>>()?
-            .load_one(self.position.document_id.clone())
+            .load_one(self.position.document_id().clone())
             .await?)
     }
 
     /// Number of words preceding this one in the containing document
-    async fn index(&self) -> i32 {
-        self.position.index
+    async fn index(&self) -> Option<i32> {
+        self.position.index()
     }
 
     /// Unique identifier of the containing document
     async fn document_id(&self) -> &str {
-        &self.position.document_id.0
+        &self.position.document_id().0
     }
 }
 
