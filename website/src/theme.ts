@@ -24,7 +24,7 @@ const theme = {
     body: "white",
     text: "black",
     link: "#405372",
-    headings: "#9f4c43",
+    headings: "#fff478",
     borders: "darkgray",
   },
   mediaQueries: {
