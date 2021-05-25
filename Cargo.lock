@@ -17,6 +17,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "739f4a8db6605981345c5654f3a85b056ce52f37a39d34da03f25bf2151ea16e"
 
 [[package]]
+name = "ahash"
+version = "0.7.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "43bb833f0bf979d8475d38fbf09ed3b8a55e1885fe93ad3f93239fc6a4f17b98"
+dependencies = [
+ "getrandom 0.2.2",
+ "once_cell",
+ "version_check",
+]
+
+[[package]]
 name = "aho-corasick"
 version = "0.7.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -208,15 +219,16 @@ dependencies = [
 
 [[package]]
 name = "bson"
-version = "1.2.2"
+version = "2.0.0-beta"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "38b6553abdb9d2d8f262f0b5bccf807321d5b7d1a12796bcede8e1f150e85f2e"
+checksum = "441bd9b15699ed6fd29a3546ed614a943a9dbab851b799e2344f3f11b3230bdc"
 dependencies = [
+ "ahash 0.7.4",
  "base64",
  "chrono",
  "hex",
+ "indexmap",
  "lazy_static",
- "linked-hash-map",
  "rand 0.7.3",
  "serde",
  "serde_json",
@@ -666,9 +678,9 @@ checksum = "0402f765d8a89a26043b889b26ce3c4679d268fa6bb22cd7c6aad98340e179d1"
 
 [[package]]
 name = "futures-executor"
-version = "0.3.12"
+version = "0.3.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e9e59fdc009a4b3096bf94f740a0f2424c082521f20a9b08c5c07c48d90fd9b9"
+checksum = "badaa6a909fac9e7236d0620a2f57f7664640c56575b71a7552fbd68deafab79"
 dependencies = [
  "futures-core",
  "futures-task",
@@ -834,7 +846,7 @@ version = "0.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d7afe4a420e3fe79967a00898cc1f4db7c8a49a9333a29f8a4bd76a253d5cd04"
 dependencies = [
- "ahash",
+ "ahash 0.4.7",
 ]
 
 [[package]]
@@ -1251,9 +1263,9 @@ dependencies = [
 
 [[package]]
 name = "mongodb"
-version = "2.0.0-alpha.1"
+version = "2.0.0-beta"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1264c64d5469f05c0201b939f971138bd385e7eb87eacdfd79f0c18b9eae7940"
+checksum = "e7bf6da4c15a6eea66750989ff2f3319d6ca9fdc8f903d4dc1c0ef72541af905"
 dependencies = [
  "async-trait",
  "base64",
@@ -1261,7 +1273,10 @@ dependencies = [
  "bson",
  "chrono",
  "derivative",
- "futures",
+ "futures-core",
+ "futures-executor",
+ "futures-io",
+ "futures-util",
  "hex",
  "hmac",
  "lazy_static",
@@ -2368,9 +2383,9 @@ dependencies = [
 
 [[package]]
 name = "typed-builder"
-version = "0.4.1"
+version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dfc955f27acc7a547f328f52f4a5a568986a31efec2fc6de865279f3995787b9"
+checksum = "345426c7406aa355b60c5007c79a2d1f5b605540072795222f17f6443e6a9c6f"
 dependencies = [
  "proc-macro2",
  "quote",

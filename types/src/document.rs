@@ -143,7 +143,7 @@ impl AnnotatedDoc {
         Ok(context
             .data::<Database>()?
             .count_words_in_document(&self.meta.id)
-            .await?)
+            .await? as i64)
     }
 
     /// All words in the document that have unanalyzed or unfamiliar parts.
