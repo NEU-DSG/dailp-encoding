@@ -58,12 +58,25 @@ functions:
     handler: dailp-graphql
     events:
       - http:
-          path: "/graphql"
+          path: /graphql
           method: any
           cors:
             origin: "*"
             headers: "*"
             allowCredentials: false
+      - http:
+          path: /graphql-edit
+          method: any
+          cors: true
+          integration: lambda
+          authorizer:
+            name: UserPoolAuthorizer
+            type: COGNITO_USER_POOLS
+            arn: !GetAtt
+              - UserPool
+              - Arn
+            claims:
+              - email
       - http:
           path: /manifests/{id}
           method: get
