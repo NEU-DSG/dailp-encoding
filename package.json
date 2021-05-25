@@ -9,7 +9,6 @@
     "serverless-dotenv-plugin": "^3.0.0",
     "serverless-manifest-plugin": "^1.0.7",
     "serverless-rust": "loafofpiecrust/serverless-rust#master",
-    "serverless-translate-templateurls": "^1.1.1",
-    "serverless-cloudformation-changesets": "trek10inc/serverless-cloudformation-changesets#master"
+    "serverless-translate-templateurls": "^1.1.1"
   }
 }

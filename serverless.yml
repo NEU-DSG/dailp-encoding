@@ -44,6 +44,9 @@ custom:
     outFolder: .serverless
   rust:
     dockerless: true
+  deploymentUrl:
+    dev: https://dev.dailp.northeastern.edu
+    prod: https://dailp.northeastern.edu
 plugins:
   - serverless-rust
   - serverless-translate-templateurls
@@ -73,5 +76,6 @@ functions:
         - "mongodb://${NodeIp}:27017/admin?retryWrites=true&w=majority"
         - NodeIp: !GetAtt "DailpPrimaryReplicaNode0.Outputs.NodePrivateIp"
 resources:
+  - ${file(./.serverless/auth.template.out.yaml)}
   - ${file(./.serverless/database.template.out.yaml)}
   - ${file(./.serverless/website.template.out.yaml)}
