@@ -10,7 +10,7 @@ tokio = { version = "1.5", features = ["full", "time"] }
 anyhow = "*"
 futures = "*"
 async-graphql = "*"
-mongodb = "2.0.0-alpha.1"
+mongodb = "2.0.0-beta"
 lambda_http = "0.3"
 dotenv = "0.15"
 lazy_static = "*"

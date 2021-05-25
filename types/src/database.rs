@@ -164,7 +164,7 @@ impl Database {
     }
 
     /// The number of words that belong to the given document ID.
-    pub async fn count_words_in_document(&self, doc_id: &DocumentId) -> Result<i64> {
+    pub async fn count_words_in_document(&self, doc_id: &DocumentId) -> Result<u64> {
         let coll: mongodb::Collection = self.client.collection(Self::WORDS);
         Ok(coll
             .count_documents(
