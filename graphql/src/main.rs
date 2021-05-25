@@ -36,7 +36,7 @@ async fn handler(req: Request, _: lambda_runtime::Context) -> Result<impl IntoRe
     // TODO Hook up warp or tide instead of using a manual conditional.
     let path = req.uri().path();
     // GraphQL queries route to the /graphql endpoint.
-    if path.starts_with("/graphql") {
+    if path.contains("/graphql") {
         if req.method() == lambda_http::http::Method::GET {
             // Serve GraphQL Playground over GET to allow introspection in the browser!
             let playground = async_graphql::http::playground_source(
@@ -56,6 +56,7 @@ async fn handler(req: Request, _: lambda_runtime::Context) -> Result<impl IntoRe
             let resp = Response::builder()
                 .header(header::CONTENT_TYPE, "application/json")
                 .header(header::ACCESS_CONTROL_ALLOW_ORIGIN, "*")
+                .header(header::ACCESS_CONTROL_ALLOW_CREDENTIALS, "true")
                 .body(result)?;
             Ok(resp)
         } else {
