@@ -51,6 +51,9 @@ Resources:
             env:
               variables:
                 DAILP_GRAPHQL_URL: https://${RestApiId}.execute-api.${self:provider.region}.amazonaws.com/${opt:stage}/graphql
+                GATSBY_AWS_REGION: ${opt:region, self:provider.region}
+                GATSBY_USER_POOL: ${UserPool}
+                GATSBY_USER_POOL_CLIENT: ${UserPoolClient}
             frontend:
               artifacts:
                 baseDirectory: website/public
@@ -78,6 +81,8 @@ Resources:
                   - key: "Cache-Control"
                     value: "public, max-age=0, must-revalidate"
           - RestApiId: !Ref ApiGatewayRestApi
+            UserPool: !Ref UserPool
+            UserPoolClient: !Ref UserPoolClient
   AmplifyMainBranch:
     Type: AWS::Amplify::Branch
     Properties:
