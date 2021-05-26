@@ -9,6 +9,7 @@ use {
         WordsInDocument,
     },
     lambda_http::{http::header, lambda_runtime, IntoResponse, Request, RequestExt, Response},
+    log::{error, info},
     mongodb::bson,
     serde::{Deserialize, Serialize},
     serde_with::{rust::StringWithSeparator, CommaSeparator},
@@ -32,6 +33,7 @@ lazy_static::lazy_static! {
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
+    pretty_env_logger::init();
     lambda_runtime::run(lambda_http::handler(handler)).await?;
     Ok(())
 }
@@ -39,8 +41,14 @@ async fn main() -> Result<(), Error> {
 /// Takes an HTTP request containing a GraphQL query,
 /// processes it with our GraphQL schema, then returns a JSON response.
 async fn handler(req: Request, _: lambda_runtime::Context) -> Result<impl IntoResponse, Error> {
+    info!("API Gateway Request: {:?}", req);
+
     let user: Option<UserInfo> = match req.request_context() {
         lambda_http::request::RequestContext::ApiGatewayV2(ctx) => ctx
+            .authorizer
+            .get("claims")
+            .and_then(|claims| serde_json::from_value(claims.clone()).ok()),
+        lambda_http::request::RequestContext::ApiGateway(ctx) => ctx
             .authorizer
             .get("claims")
             .and_then(|claims| serde_json::from_value(claims.clone()).ok()),
@@ -529,6 +537,7 @@ struct FormsInTime {
 struct UserInfo {
     email: String,
     #[serde(
+        default,
         rename = "cognito:groups",
         with = "StringWithSeparator::<CommaSeparator>"
     )]
