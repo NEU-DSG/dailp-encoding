@@ -33,6 +33,19 @@ jobs:
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Cache Cargo Dependencies
+        uses: actions/cache@v1
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-${{ hashFiles('Cargo.lock') }}
+            ${{ runner.os }}-cargo
       - name: Setup node.js
         uses: actions/setup-node@v1
         with: { node-version: 10 }
@@ -40,17 +53,13 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: 1.49.0
           default: true
-          override: true
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
-      - name: Checkout code
-        uses: actions/checkout@v2
       - uses: dorny/paths-filter@v2
         id: filter
         with:
@@ -67,8 +76,6 @@ jobs:
             rust:
               - '**/*.rs'
               - 'Cargo.lock'
-      - name: Cache dependencies
-        uses: Swatinem/rust-cache@v1
       - name: Cache docker images
         uses: satackey/action-docker-layer-caching@v0.0.11
         # Ignore the failure of a step and avoid terminating the job.
