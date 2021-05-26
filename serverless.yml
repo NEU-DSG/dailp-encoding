@@ -68,7 +68,6 @@ functions:
           path: /graphql-edit
           method: any
           cors: true
-          integration: lambda
           authorizer:
             name: UserPoolAuthorizer
             type: COGNITO_USER_POOLS
