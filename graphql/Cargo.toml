@@ -18,5 +18,9 @@ chrono = "*"
 itertools = "*"
 async_once = {version = "0.1", features = ["tokio"]}
 base64 = "*"
+serde = "*"
+serde_with = "1.9"
+serde_plain = "0.3"
+async-trait = "*"
 
 dailp = {path = "../types"}

@@ -1,12 +1,18 @@
 //! This piece of the project exposes a GraphQL endpoint that allows one to access DAILP data in a federated manner with specific queries.
 
-use async_graphql::{dataloader::DataLoader, Context, EmptySubscription, FieldResult, Schema};
-use dailp::{
-    AnnotatedDoc, CherokeeOrthography, Database, MorphemeId, MorphemeReference, MorphemeTag,
-    WordsInDocument,
+use {
+    async_graphql::{
+        dataloader::DataLoader, guard::Guard, Context, EmptySubscription, FieldResult, Schema,
+    },
+    dailp::{
+        AnnotatedDoc, CherokeeOrthography, Database, MorphemeId, MorphemeReference, MorphemeTag,
+        WordsInDocument,
+    },
+    lambda_http::{http::header, lambda_runtime, IntoResponse, Request, RequestExt, Response},
+    mongodb::bson,
+    serde::{Deserialize, Serialize},
+    serde_with::{rust::StringWithSeparator, CommaSeparator},
 };
-use lambda_http::{http::header, lambda_runtime, IntoResponse, Request, RequestExt, Response};
-use mongodb::bson;
 
 type Error = Box<dyn std::error::Error + Sync + Send + 'static>;
 
@@ -33,6 +39,14 @@ async fn main() -> Result<(), Error> {
 /// Takes an HTTP request containing a GraphQL query,
 /// processes it with our GraphQL schema, then returns a JSON response.
 async fn handler(req: Request, _: lambda_runtime::Context) -> Result<impl IntoResponse, Error> {
+    let user: Option<UserInfo> = match req.request_context() {
+        lambda_http::request::RequestContext::ApiGatewayV2(ctx) => ctx
+            .authorizer
+            .get("claims")
+            .and_then(|claims| serde_json::from_value(claims.clone()).ok()),
+        _ => None,
+    };
+
     // TODO Hook up warp or tide instead of using a manual conditional.
     let path = req.uri().path();
     // GraphQL queries route to the /graphql endpoint.
@@ -51,6 +65,13 @@ async fn handler(req: Request, _: lambda_runtime::Context) -> Result<impl IntoRe
             // GraphQL query.
             let schema = &*SCHEMA;
             let req: async_graphql::Request = serde_json::from_str(&req)?;
+            // If the request was made by an authenticated user, add their
+            // information to the request data.
+            let req = if let Some(user) = user {
+                req.data(user)
+            } else {
+                req
+            };
             let res = schema.execute(req).await;
             let result = serde_json::to_string(&res)?;
             let resp = Response::builder()
@@ -288,6 +309,12 @@ impl Query {
             .potential_syllabary_matches(&query)
             .await?)
     }
+
+    /// Basic information about the currently authenticated user, if any.
+    #[graphql(guard(AuthGuard()))]
+    async fn user_info<'a>(&self, context: &'a Context<'_>) -> &'a UserInfo {
+        context.data_unchecked()
+    }
 }
 
 #[derive(async_graphql::InputObject)]
@@ -450,40 +477,30 @@ impl Mutation {
         }
     }
 
-    #[graphql(visible = false)]
+    #[graphql(guard(GroupGuard(group = "UserGroup::Editor")))]
     async fn update_page(
         &self,
         context: &Context<'_>,
-        #[graphql(secret)] password: String,
         // Data encoded as JSON for now.
         data: async_graphql::Json<dailp::page::Page>,
     ) -> FieldResult<bool> {
-        if password != *MONGODB_PASSWORD {
-            Ok(false)
-        } else {
-            context.data::<Database>()?.pages().update(data.0).await?;
-            Ok(true)
-        }
+        context.data::<Database>()?.pages().update(data.0).await?;
+        Ok(true)
     }
 
-    #[graphql(visible = false)]
+    #[graphql(guard(GroupGuard(group = "UserGroup::Editor")))]
     async fn update_annotation(
         &self,
         context: &Context<'_>,
-        #[graphql(secret)] password: String,
         // Data encoded as JSON for now.
         data: async_graphql::Json<dailp::annotation::Annotation>,
     ) -> FieldResult<bool> {
-        if password != *MONGODB_PASSWORD {
-            Ok(false)
-        } else {
-            context
-                .data::<Database>()?
-                .annotations()
-                .update(data.0)
-                .await?;
-            Ok(true)
-        }
+        context
+            .data::<Database>()?
+            .annotations()
+            .update(data.0)
+            .await?;
+        Ok(true)
     }
 
     #[graphql(visible = false)]
@@ -506,4 +523,57 @@ struct FormsInTime {
     start: Option<dailp::Date>,
     end: Option<dailp::Date>,
     forms: Vec<dailp::AnnotatedForm>,
+}
+
+#[derive(Deserialize, Debug, async_graphql::SimpleObject)]
+struct UserInfo {
+    email: String,
+    #[serde(
+        rename = "cognito:groups",
+        with = "StringWithSeparator::<CommaSeparator>"
+    )]
+    groups: Vec<UserGroup>,
+}
+
+#[derive(Eq, PartialEq, Copy, Clone, Serialize, Deserialize, Debug, async_graphql::Enum)]
+enum UserGroup {
+    Editor,
+}
+// Impl FromStr and Display automatically for UserGroup, using serde.
+// This allows us to (de)serialize lists of groups via a comma-separated string
+// like this: "Editor,Contributor,Translator"
+serde_plain::forward_from_str_to_serde!(UserGroup);
+serde_plain::forward_display_to_serde!(UserGroup);
+
+/// Requires that the user is authenticated and a member of the given user group.
+struct GroupGuard {
+    group: UserGroup,
+}
+
+#[async_trait::async_trait]
+impl Guard for GroupGuard {
+    async fn check(&self, ctx: &async_graphql::Context<'_>) -> async_graphql::Result<()> {
+        let user = ctx.data_opt::<UserInfo>();
+        let has_group = user.map(|user| user.groups.iter().any(|group| group == &self.group));
+        if has_group == Some(true) {
+            Ok(())
+        } else {
+            Err(format!("Forbidden, user not in group '{}'", self.group).into())
+        }
+    }
+}
+
+/// Requires that the user is authenticated.
+struct AuthGuard;
+
+#[async_trait::async_trait]
+impl Guard for AuthGuard {
+    async fn check(&self, ctx: &async_graphql::Context<'_>) -> async_graphql::Result<()> {
+        let user = ctx.data_opt::<UserInfo>();
+        if user.is_some() {
+            Ok(())
+        } else {
+            Err("Forbidden, user not authenticated".into())
+        }
+    }
 }
