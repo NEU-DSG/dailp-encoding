@@ -22,5 +22,7 @@ serde = "*"
 serde_with = "1.9"
 serde_plain = "0.3"
 async-trait = "*"
+log = "*"
+pretty_env_logger = "*"
 
 dailp = {path = "../types"}
