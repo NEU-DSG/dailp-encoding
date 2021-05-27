@@ -104,7 +104,7 @@ export const PageCreatorPlugin = {
   async onSubmit(values, cms) {
     // Add the new page to the database.
     await cms.api.graphql.mutate({
-      mutation: updatePageQuery,
+      mutation: mutatePage,
       // Add an empty body to the new page.
       variables: {
         data: { ...values, body: [] },
@@ -113,8 +113,23 @@ export const PageCreatorPlugin = {
   },
 }
 
-const updatePageQuery = gql`
-  mutation EditPage($data: String!) {
+export const mutatePage = gql`
+  mutation NewPage($data: JSON!) {
     updatePage(data: $data)
+  }
+`
+
+export const queryPage = gql`
+  query Page($id: String!) {
+    page(id: $id) {
+      id
+      title
+      body {
+        __typename
+        ... on Markdown {
+          content
+        }
+      }
+    }
   }
 `
