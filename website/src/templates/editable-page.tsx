@@ -33,12 +33,6 @@ const liveMutation = gql`
 `
 
 export default function EditablePage(props: any) {
-  /* const cms = useCMS()
-   * cms.registerApi("graphql", useApolloClient())
-
-   * usePlugin(PageCreatorPlugin) */
-  // Crate the editing form.
-
   return (
     <Layout>
       <main className={padded}>

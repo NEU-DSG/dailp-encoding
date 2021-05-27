@@ -1,19 +1,5 @@
-import {
-  useLazyQuery,
-  useMutation,
-  gql,
-  useApolloClient,
-  ApolloClient,
-} from "@apollo/client"
-import {
-  useForm,
-  Form,
-  FormOptions,
-  WatchableFormValue,
-  useCMS,
-  Field,
-  BlockTemplate,
-} from "tinacms"
+import { gql } from "@apollo/client"
+import { useForm, useCMS, Field, BlockTemplate } from "tinacms"
 
 type CustomBlockTemplate = BlockTemplate & { key?: string }
 type CustomField = Field & { templates?: Record<string, CustomBlockTemplate> }
@@ -32,10 +18,10 @@ export const useGraphQLForm = (
     transformOut?: (input: any) => any
   }
 ) => {
-  const client = useApolloClient()
+  const cms = useCMS()
   return useForm({
     loadInitialValues: async () => {
-      const { data } = await client.query({
+      const { data } = await cms.api.graphql.query({
         query,
         variables: config.variables,
       })
@@ -45,16 +31,17 @@ export const useGraphQLForm = (
       const finalData = config.transformOut
         ? config.transformOut(formData)
         : formData
-      console.log(finalData)
-      const res = await client.mutate({
+      const { data, errors } = await cms.api.graphql.mutate({
         mutation,
         variables: { ...config.variables, data: finalData },
       })
-      console.log(res)
-      if (res.errors) {
-        console.error(res.errors)
+      if (errors) {
+        console.error(errors)
+        alert(errors[0].message)
+        throw errors
+      } else {
+        return data
       }
-      return res
     },
     id: config.id,
     label: config.label,
@@ -97,7 +84,7 @@ export const MarkdownBlock: BlockTemplate & { key?: string } = {
 }
 export const PageCreatorPlugin = {
   __type: "content-creator",
-  name: "PageCreator",
+  name: "New Page",
   fields: [
     {
       label: "Title",

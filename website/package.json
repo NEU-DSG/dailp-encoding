@@ -43,12 +43,13 @@
     "react-icons": "^3.11.0",
     "react-markdown": "^6.0.2",
     "react-stickynode": "^3.0.4",
-    "react-tinacms-editor": "^0.40.0",
+    "react-tinacms-editor": "^0.41.0",
+    "react-tinacms-inline": "^0.41.0",
     "react-zoom-pan-pinch": "^1.6.1",
     "reakit": "^1.3.5",
     "remark-gfm": "^1.0.0",
     "styled-components": "^5.2.3",
-    "tinacms": "^0.40.0"
+    "tinacms": "^0.41.0"
   },
   "devDependencies": {
     "@babel/plugin-transform-react-jsx": "^7.12.1",
@@ -78,7 +79,7 @@
     "gatsby-plugin-preact": "^5.4.0",
     "gatsby-plugin-react-helmet": "^3.3.3",
     "gatsby-plugin-sharp": "^2.6.43",
-    "gatsby-plugin-tinacms": "^0.40.0",
+    "gatsby-plugin-tinacms": "^0.41.0",
     "gatsby-plugin-typegen": "^2.2.1",
     "gatsby-plugin-typescript": "^2.4.22",
     "gatsby-plugin-typescript-checker": "^1.1.1",

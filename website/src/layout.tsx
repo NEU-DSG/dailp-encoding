@@ -1,5 +1,5 @@
 import React from "react"
-import { css, cx } from "linaria"
+import { css } from "linaria"
 import { Link } from "gatsby"
 import Footer from "./footer"
 import theme, { fullWidth, hideOnPrint, typography } from "./theme"
@@ -7,7 +7,6 @@ import { NavMenu, MobileNav } from "./menu"
 import { Helmet } from "react-helmet"
 import Sticky from "react-stickynode"
 import { isMobile } from "react-device-detect"
-import Amplify from "aws-amplify"
 import { ApolloProvider } from "@apollo/client"
 import { useCMS, usePlugin } from "tinacms"
 import { PageCreatorPlugin } from "./cms/graphql-form"
@@ -48,15 +47,16 @@ const Layout = (p: { title?: string; children: any }) => (
 const LayoutInner = (p: { children: any }) => {
   const creds = useCredentials()
   const token = creds ? creds.signInUserSession.idToken.jwtToken : null
+  const client = apolloClient(token)
+  useCMS().registerApi("graphql", client)
   return (
-    <ApolloProvider client={apolloClient(token)}>
+    <ApolloProvider client={client}>
       <LayoutCMS creds={creds}>{p.children}</LayoutCMS>
     </ApolloProvider>
   )
 }
 
 const LayoutCMS = (p: { children: any; creds: any }) => {
-  const cms = useCMS()
   usePlugin(PageCreatorPlugin)
   return <>{p.children}</>
 }

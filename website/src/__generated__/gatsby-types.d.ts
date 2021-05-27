@@ -12,7 +12,6 @@ type Scalars = {
   Float: number;
   Date: string;
   JSON: never;
-  /** A scalar that can represent any JSON value. */
   Dailp_JSON: any;
 };
 
@@ -11316,13 +11315,6 @@ type ContentPageQueryVariables = Exact<{
 
 type ContentPageQuery = { readonly page: Maybe<Pick<WpPage, 'title' | 'content'>> };
 
-type EditablePageQueryQueryVariables = Exact<{
-  id: Scalars['String'];
-}>;
-
-
-type EditablePageQueryQuery = { readonly dailp: { readonly page: Maybe<Pick<Dailp_Page, 'id' | 'title'>> } };
-
 type FormFieldsFragment = (
   Pick<Dailp_AnnotatedForm, 'index' | 'source' | 'simplePhonetics' | 'phonemic' | 'englishGloss' | 'commentary'>
   & { readonly segments: Maybe<ReadonlyArray<(
@@ -11384,6 +11376,13 @@ type CollectionQuery = { readonly dailp: { readonly allDocuments: ReadonlyArray<
       & { readonly date: Maybe<Pick<Dailp_Date, 'year'>> }
     )> }, readonly wpPage: Maybe<Pick<WpPage, 'content'>> };
 
+type EditablePageQueryQueryVariables = Exact<{
+  id: Scalars['String'];
+}>;
+
+
+type EditablePageQueryQuery = { readonly dailp: { readonly page: Maybe<Pick<Dailp_Page, 'id' | 'title'>> } };
+
 type PagesQueryQueryVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -11409,5 +11408,18 @@ type AllSourcesQuery = { readonly dailp: { readonly allDocuments: ReadonlyArray<
       Pick<Dailp_AnnotatedDoc, 'isReference' | 'id' | 'title' | 'formCount'>
       & { readonly date: Maybe<Pick<Dailp_Date, 'year'>>, readonly contributors: ReadonlyArray<Pick<Dailp_Contributor, 'name'>> }
     )> } };
+
+type homesneadpiedailpEncodingwebsitesrcfooterTsx1552981879QueryVariables = Exact<{ [key: string]: never; }>;
+
+
+type homesneadpiedailpEncodingwebsitesrcfooterTsx1552981879Query = { readonly currentBuildDate: Maybe<Pick<CurrentBuildDate, 'currentDate'>> };
+
+type homesneadpiedailpEncodingwebsitesrcmenuTsx2377851188QueryVariables = Exact<{ [key: string]: never; }>;
+
+
+type homesneadpiedailpEncodingwebsitesrcmenuTsx2377851188Query = { readonly wpMenu: Maybe<{ readonly menuItems: Maybe<{ readonly nodes: Maybe<ReadonlyArray<Maybe<(
+        Pick<WpMenuItem, 'label' | 'path'>
+        & { readonly childItems: Maybe<{ readonly nodes: Maybe<ReadonlyArray<Maybe<Pick<WpMenuItem, 'label' | 'path'>>>> }> }
+      )>>> }> }> };
 
 }
