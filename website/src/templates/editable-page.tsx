@@ -7,47 +7,29 @@ import { MarkdownFieldPlugin } from "react-tinacms-editor"
 import { gql } from "@apollo/client"
 import { Helmet } from "react-helmet"
 import gfm from "remark-gfm"
-import { useGraphQLForm, blocksField } from "../cms/graphql-form"
+import {
+  useGraphQLForm,
+  blocksField,
+  queryPage,
+  mutatePage,
+} from "../cms/graphql-form"
 import theme, { fullWidth } from "../theme"
 import Layout from "../layout"
 
-const liveQuery = gql`
-  query EditPage($id: String!) {
-    page(id: $id) {
-      id
-      title
-      body {
-        __typename
-        ... on Markdown {
-          content
-        }
-      }
-    }
-  }
-`
-
-const liveMutation = gql`
-  mutation EditPage($data: JSON!) {
-    updatePage(data: $data)
-  }
-`
-
-export default function EditablePage(props: any) {
-  return (
-    <Layout>
-      <main className={padded}>
-        <article className={wideArticle}>
-          <EditablePageInner {...props} />
-        </article>
-      </main>
-    </Layout>
-  )
-}
+export default (props: any) => (
+  <Layout>
+    <main className={padded}>
+      <article className={wideArticle}>
+        <EditablePageInner {...props} />
+      </article>
+    </main>
+  </Layout>
+)
 
 const EditablePageInner = (props: any) => {
   usePlugin(MarkdownFieldPlugin)
 
-  const [data, form] = useGraphQLForm(liveQuery, liveMutation, {
+  const [data, form] = useGraphQLForm(queryPage, mutatePage, {
     label: props.data.title,
     id: props.pageContext.id,
     variables: { id: props.pageContext.id },
@@ -125,11 +107,17 @@ const wideArticle = css`
    ]
  */
 export const query = graphql`
-  query EditablePageQuery($id: String!) {
+  query EditablePage($id: String!) {
     dailp {
       page(id: $id) {
         id
         title
+        body {
+          __typename
+          ... on Dailp_Markdown {
+            content
+          }
+        }
       }
     }
   }
