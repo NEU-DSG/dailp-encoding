@@ -22,7 +22,9 @@ export const useCredentials = () => {
   const [creds, setCreds] = useState(null)
 
   useEffect(() => {
-    Auth.currentUserPoolUser().then((creds) => setCreds(creds))
+    Auth.currentUserPoolUser()
+      .then((creds) => setCreds(creds))
+      .catch((err) => setCreds(null))
 
     const listener = async (data) => {
       switch (data.payload.event) {
