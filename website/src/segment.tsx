@@ -3,7 +3,7 @@ import { css, cx } from "linaria"
 import { DialogDisclosure, DialogStateReturn } from "reakit/Dialog"
 import { Tooltip, TooltipReference, useTooltipState } from "reakit/Tooltip"
 import { MdInfoOutline } from "react-icons/md"
-import _ from "lodash"
+import { flatMap } from "lodash"
 import {
   ViewMode,
   TagSet,
@@ -252,7 +252,7 @@ const italicSegmentation = css`
 `
 
 function intersperse<T>(arr: T[], separator: (n: number) => T): T[] {
-  return _.flatMap(arr, (a, i) => (i > 0 ? [separator(i - 1), a] : [a]))
+  return flatMap(arr, (a, i) => (i > 0 ? [separator(i - 1), a] : [a]))
 }
 
 /** One morpheme that can be clicked to see further details. */

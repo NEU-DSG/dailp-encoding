@@ -7,9 +7,12 @@ import { NavMenu, MobileNav } from "./menu"
 import { Helmet } from "react-helmet"
 import Sticky from "react-stickynode"
 import { isMobile } from "react-device-detect"
+import Amplify from "aws-amplify"
+import { ApolloProvider } from "@apollo/client"
+import { useCMS, usePlugin } from "tinacms"
+import { PageCreatorPlugin } from "./cms/graphql-form"
+import { useCredentials, SignIn, apolloClient } from "./auth"
 
-/* import "@fontsource/spectral/latin-ext.css" */
-/* import "@fontsource/spectral-sc" */
 import "@fontsource/charis-sil/400.css"
 import "@fontsource/charis-sil/400-italic.css"
 import "@fontsource/charis-sil/700.css"
@@ -20,7 +23,7 @@ import "./fonts.css"
 /** Wrapper for most site pages, providing them with a navigation header and footer. */
 const Layout = (p: { title?: string; children: any }) => (
   <>
-    <Helmet title={p.title ? `${p.title} - DAILP` : "DAILP"} />
+    <Helmet titleTemplate="%s - DAILP" defaultTitle="DAILP" title={p.title} />
     <Sticky enabled={isMobile} innerZ={2} className={hideOnPrint}>
       <header aria-label="Site Header" id="header" className={header}>
         <nav className={headerContents}>
@@ -36,10 +39,27 @@ const Layout = (p: { title?: string; children: any }) => (
         </nav>
       </header>
     </Sticky>
-    {p.children}
+    <SignIn />
+    <LayoutInner>{p.children}</LayoutInner>
     <Footer />
   </>
 )
+
+const LayoutInner = (p: { children: any }) => {
+  const creds = useCredentials()
+  const token = creds ? creds.signInUserSession.idToken.jwtToken : null
+  return (
+    <ApolloProvider client={apolloClient(token)}>
+      <LayoutCMS creds={creds}>{p.children}</LayoutCMS>
+    </ApolloProvider>
+  )
+}
+
+const LayoutCMS = (p: { children: any; creds: any }) => {
+  const cms = useCMS()
+  usePlugin(PageCreatorPlugin)
+  return <>{p.children}</>
+}
 
 export default Layout
 

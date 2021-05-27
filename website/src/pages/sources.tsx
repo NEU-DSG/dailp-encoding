@@ -1,7 +1,7 @@
 import React from "react"
 import { graphql } from "gatsby"
 import { css, cx } from "linaria"
-import _ from "lodash"
+import { sortBy, join } from "lodash"
 import Layout from "../layout"
 import { fullWidth, std, typography } from "../theme"
 import { sourceCitationId } from "../routes"
@@ -23,7 +23,7 @@ export default (p: { data: GatsbyTypes.AllSourcesQuery }) => {
         </p>
 
         <ul className={wide}>
-          {_.sortBy(
+          {sortBy(
             p.data.dailp.allDocuments.filter((d) => d.isReference),
             (doc) => doc.id
           ).map((doc) => (
@@ -41,7 +41,7 @@ type LocalDocument = GatsbyTypes.AllSourcesQuery["dailp"]["allDocuments"][0]
 const DocumentCitation = (p: { document: LocalDocument }) => {
   const doc = p.document
   const year = doc.date?.year
-  const authors = _.join(
+  const authors = join(
     doc.contributors.map((author) => author.name),
     "; "
   )

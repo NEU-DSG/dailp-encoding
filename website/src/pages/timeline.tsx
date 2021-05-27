@@ -4,7 +4,7 @@ import { css, cx } from "linaria"
 import { Input } from "reakit/Input"
 import { Button } from "reakit/Button"
 import { fullWidth, typography } from "../theme"
-import _ from "lodash"
+import { groupBy, uniq } from "lodash"
 import Layout from "../layout"
 
 export default () => {
@@ -55,7 +55,7 @@ const Timeline = (p: { gloss: string }) => {
           const end = Math.ceil(cluster.end.year / 50) * 50
           timeRange = `${start} – ${end}`
         }
-        const deduplicatedForms = _.groupBy(
+        const deduplicatedForms = groupBy(
           cluster.forms,
           (form) => form.normalizedSource || form.source
         )
@@ -78,7 +78,7 @@ const Timeline = (p: { gloss: string }) => {
                   (w) => w.simplePhonetics?.length
                 )
                 const englishGloss = forms.find((w) => w.englishGloss?.length)
-                const docIds = _.uniq(forms.map((w) => w.documentId))
+                const docIds = uniq(forms.map((w) => w.documentId))
                 return (
                   <div key={idx} className={wordRow}>
                     <div>{docIds.join(", ")}</div>
