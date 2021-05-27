@@ -67,12 +67,6 @@ module.exports = {
         url: process.env.DAILP_GRAPHQL_URL,
       },
     },
-    {
-      resolve: "gatsby-plugin-apollo",
-      options: {
-        uri: process.env.DAILP_GRAPHQL_URL,
-      },
-    },
     "gatsby-transformer-sharp",
     {
       resolve: "gatsby-plugin-anchor-links",

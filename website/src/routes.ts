@@ -1,4 +1,4 @@
-import slugify from "slugify"
+import { kebabCase } from "lodash"
 
 export const documentRoute = (slug: string) => `/documents/${slug}`
 
@@ -7,12 +7,10 @@ export const documentDetailsRoute = (slug: string) =>
 
 export const collectionRoute = (slug: string) => `/collections/${slug}`
 
-const slugifyOpts = { strict: true, lower: true }
-export const morphemeTagId = (tag: string) => `tag-${slugify(tag, slugifyOpts)}`
+export const morphemeTagId = (tag: string) => `tag-${kebabCase(tag)}`
 export const glossaryRoute = (tag: string) => `/glossary#${morphemeTagId(tag)}`
 
-export const glossarySectionId = (key: string) =>
-  `sec-${slugify(key, slugifyOpts)}`
+export const glossarySectionId = (key: string) => `sec-${kebabCase(key)}`
 
 export const sourceCitationId = (key: string) => `source-${key}`
 export const sourceCitationRoute = (key: string) => `/sources#source-${key}`

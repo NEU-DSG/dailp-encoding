@@ -3,7 +3,7 @@ import { Clickable } from "reakit/Clickable"
 import { DialogStateReturn } from "reakit/Dialog"
 import { css, cx } from "linaria"
 import { useQuery, gql } from "@apollo/client"
-import _ from "lodash"
+import { groupBy } from "lodash"
 import { MdClose } from "react-icons/md"
 import { AnchorLink } from "./link"
 import theme, { typography } from "./theme"
@@ -136,7 +136,7 @@ const SimilarMorphemeList = (props: {
     return <p>None Found</p>
   } else {
     const docs = data.documents as GatsbyTypes.Dailp_WordsInDocument[]
-    const docTypes = _.groupBy(docs, "documentType")
+    const docTypes = groupBy(docs, "documentType")
     const similarWords = Object.entries(docTypes).map(([ty, documents]) => (
       <section key={ty}>
         <h4>{documentTypeToHeading(ty)}</h4>

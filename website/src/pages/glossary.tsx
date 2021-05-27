@@ -1,7 +1,7 @@
 import React, { useState } from "react"
 import { graphql } from "gatsby"
 import { css, cx } from "linaria"
-import _ from "lodash"
+import { groupBy } from "lodash"
 import pluralize from "pluralize"
 import { AnchorLink } from "gatsby-plugin-anchor-links"
 import theme, { fullWidth, std, typography } from "../theme"
@@ -13,7 +13,7 @@ import { glossarySectionId, morphemeTagId } from "../routes"
 export default (p: { data: GatsbyTypes.GlossaryQuery }) => {
   const tags = p.data.dailp.allTags
   // Group the tags by type.
-  const groupedTags = _.groupBy(tags, (t) => t.morphemeType)
+  const groupedTags = groupBy(tags, (t) => t.morphemeType)
   const [tagSet, setTagSet] = useState<TagSet>(null)
   return (
     <Layout title="Glossary of Terms">
