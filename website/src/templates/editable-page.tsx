@@ -15,25 +15,42 @@ import {
 } from "../cms/graphql-form"
 import theme, { fullWidth } from "../theme"
 import Layout from "../layout"
+import { useHasMounted } from "../cms/routes"
 
-export default (props: any) => (
+interface Props {
+  pageContext?: {
+    id: string
+  }
+  data: any
+}
+
+export default (props: Props) => (
   <Layout>
     <main className={padded}>
       <article className={wideArticle}>
-        <EditablePageInner {...props} />
+        <EditablePageSSR {...props} />
       </article>
     </main>
   </Layout>
 )
 
-const EditablePageInner = (props: any) => {
+const EditablePageSSR = (props: Props) => {
+  const hasMounted = useHasMounted()
+  if (!hasMounted) {
+    return <PageContents data={props.data} />
+  } else {
+    return <EditablePageInner {...props} />
+  }
+}
+
+const EditablePageInner = (props: Props) => {
+  const staticData = props.data.dailp.page
   usePlugin(MarkdownFieldPlugin)
 
   const [data, form] = useGraphQLForm(queryPage, mutatePage, {
-    label: props.data.title,
-    id: props.pageContext.id,
-    variables: { id: props.pageContext.id },
-    /* transformIn: (data) => data.page, */
+    label: staticData?.title,
+    id: props.pageContext?.id,
+    variables: { id: props.pageContext?.id },
     transformIn: ({ page: { body, ...page } }) => ({
       ...page,
       body:
@@ -64,17 +81,18 @@ const EditablePageInner = (props: any) => {
     ],
   })
 
-  // Register the editing form with the CMS.
   usePlugin(form)
 
-  return (
-    <>
-      <Helmet title={data.title} />
-      <h1>{data.title}</h1>
-      <BlocksRenderer children={data.body} />
-    </>
-  )
+  return <PageContents data={data && data.body ? data : staticData} />
 }
+
+const PageContents = (props: { data: any }) => (
+  <>
+    <Helmet title={props.data.title} />
+    <h1>{props.data.title}</h1>
+    <BlocksRenderer children={props.data.body} />
+  </>
+)
 
 const BlocksRenderer = (props: { children: any[] }) => (
   <>
@@ -101,10 +119,8 @@ const wideArticle = css`
 `
 
 /* Page body will be JSON, like so:
-   [
-     {"type": "Markdown", "body": "..."},
-     {"type": "Image", "url": "https://...", "max-height": 200},
-   ]
+   [{"type": "Markdown", "body": "..."},
+    {"type": "Image", "url": "https://...", "max-height": 200}]
  */
 export const query = graphql`
   query EditablePage($id: String!) {

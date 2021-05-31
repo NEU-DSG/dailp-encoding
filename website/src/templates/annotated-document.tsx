@@ -6,12 +6,12 @@ import Sticky from "react-stickynode"
 import Layout from "../layout"
 import { Segment, AnnotatedForm } from "../segment"
 import theme, {
-  fullWidth,
   largeDialog,
   withBg,
   std,
   hideOnPrint,
   typography,
+  fullWidth,
 } from "../theme"
 import { collectionRoute, documentDetailsRoute, documentRoute } from "../routes"
 import { useScrollableTabState } from "../scrollable-tabs"
@@ -95,9 +95,8 @@ const TabSet = ({ doc }) => {
 
 const TranslationTab = ({ doc }) => {
   const dialog = useDialogState()
-  const [selectedMorpheme, setMorpheme] = useState<BasicMorphemeSegment | null>(
-    null
-  )
+  const [selectedMorpheme, setMorpheme] =
+    useState<BasicMorphemeSegment | null>(null)
 
   const [experienceLevel, setExperienceLevel] = useState<ViewMode>(
     selectedMode()
@@ -189,7 +188,8 @@ export const DocumentTitleHeader = (p: {
     </Breadcrumbs>
 
     <h1 className={docTitle}>
-      {p.doc.title} ({p.doc.id}{p.doc.date && `, ${p.doc.date.year}`}){" "}
+      {p.doc.title} ({p.doc.id}
+      {p.doc.date && `, ${p.doc.date.year}`}){" "}
     </h1>
     <div className={bottomPadded}>
       {p.showDetails ? (
@@ -263,11 +263,11 @@ const docTabs = css`
   flex-flow: row nowrap;
   height: ${typography.rhythm(1.75)};
   margin: 0 !important;
-  ${fullWidth}
+  ${fullWidth};
 `
 
 const docTabPanel = css`
-  ${fullWidth}
+  ${fullWidth};
   padding: 0 0.5rem;
   &:focus {
     outline: none;
@@ -278,12 +278,12 @@ const docTabPanel = css`
 `
 
 const imageTabPanel = css`
-  ${fullWidth}
+  ${fullWidth};
   outline: none;
 `
 
 const docHeader = css`
-  ${fullWidth}
+  ${fullWidth};
   padding: 0 ${theme.edgeSpacing};
   ${theme.mediaQueries.medium} {
     padding: 0;

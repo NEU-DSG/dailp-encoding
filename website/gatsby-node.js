@@ -126,3 +126,17 @@ async function createHybridPages({ actions, graphql }) {
     })
   }
 }
+
+exports.onCreateWebpackConfig = ({ actions }) => {
+  actions.setWebpackConfig({
+    resolve: {
+      alias: {
+        // TinaCMS depends on the `path` module, so we polyfill it since Webpack v5.
+        path: require.resolve("path-browserify"),
+      },
+      fallback: {
+        fs: false,
+      },
+    },
+  })
+}

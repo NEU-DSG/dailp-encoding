@@ -1,7 +1,7 @@
 import React from "react"
 import { css } from "linaria"
 import { Link, graphql, useStaticQuery } from "gatsby"
-import { useLocation } from "@reach/router"
+import { useLocation } from "@gatsbyjs/reach-router"
 import theme, { typography } from "./theme"
 import {
   useDialogState,

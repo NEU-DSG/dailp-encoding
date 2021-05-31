@@ -1,6 +1,7 @@
 import { css } from "linaria"
 import Color from "color"
 import Typography from "typography"
+import CSS from "csstype"
 
 const theme = {
   fonts: {
@@ -41,6 +42,11 @@ export const wordpressUrl = "https://wp.dailp.northeastern.edu"
 theme.fonts.body = theme.fonts.bodyArr.join(",")
 theme.fonts.header = theme.fonts.headerArr.join(",")
 
+export interface CSSProps extends CSS.Properties {
+  // Add fallback objects to support arbitrary nested selectors
+  // [k: string]: CSSProps
+}
+
 export const typography = new Typography({
   baseFontSize: theme.fontSizes.root,
   baseLineHeight: 1.47,
@@ -48,27 +54,19 @@ export const typography = new Typography({
   bodyFontFamily: theme.fonts.bodyArr,
   bodyColor: "hsl(0, 0%, 0%, 0.95)",
   headerColor: "hsl(0, 0%, 0%, 0.9)",
-  // blockMarginBottom: 0.5,
 })
 
 export const fullWidth = {
-  width: "100%",
-  [theme.mediaQueries.medium]: {
-    width: "41rem",
-  },
-  [theme.mediaQueries.large]: {
-    width: "50rem",
-  },
+  width: "var(--full-width)",
 }
 
 export const largeDialog = {
-  width: "95%",
-  [theme.mediaQueries.medium]: {
-    width: "35rem",
-  },
-  [theme.mediaQueries.large]: {
-    width: "45rem",
-  },
+  width: "var(--most-width)",
+}
+
+export const centered = {
+  paddingLeft: theme.edgeSpacing,
+  paddingRight: theme.edgeSpacing,
 }
 
 export const withBg = css`
