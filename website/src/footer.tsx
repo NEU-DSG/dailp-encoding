@@ -73,7 +73,7 @@ const container = css`
 `
 
 const content = css`
-  ${fullWidth}
+  ${fullWidth};
   display: flex;
   flex-flow: row wrap;
   justify-content: space-between;

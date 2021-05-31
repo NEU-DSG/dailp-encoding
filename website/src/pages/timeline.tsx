@@ -98,7 +98,7 @@ const Timeline = (p: { gloss: string }) => {
 }
 
 const wide = css`
-  ${fullWidth}
+  ${fullWidth};
 `
 
 export const bolden = css`

@@ -5,6 +5,7 @@ module.exports = {
   siteMetadata: {
     title: "DAILP Encoding",
   },
+  flags: { PRESERVE_WEBPACK_CACHE: true },
   plugins: [
     "gatsby-plugin-sharp",
     {
@@ -18,8 +19,7 @@ module.exports = {
     {
       resolve: "gatsby-plugin-manifest",
       options: {
-        name:
-          "Digital Archive of American Indian Languages Preservation and Perseverance",
+        name: "Digital Archive of American Indian Languages Preservation and Perseverance",
         short_name: "DAILP",
         start_url: "/",
         background_color: "#f7f0eb",
@@ -46,8 +46,6 @@ module.exports = {
         path: `${__dirname}/src/pages/`,
       },
     },
-    "gatsby-transformer-remark",
-    "gatsby-plugin-slug",
     "gatsby-plugin-catch-links",
     {
       resolve: "gatsby-source-wordpress",
@@ -74,6 +72,6 @@ module.exports = {
         offset: -115,
       },
     },
-    "gatsby-plugin-loadable-components-ssr",
+    // "gatsby-plugin-loadable-components-ssr",
   ],
 }

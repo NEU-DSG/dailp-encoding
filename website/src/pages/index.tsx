@@ -74,6 +74,6 @@ export const DocIndex = styled.main`
 `
 
 export const FullWidth = styled.article`
-  ${fullWidth}
+  ${fullWidth};
   flex-grow: 1;
 `

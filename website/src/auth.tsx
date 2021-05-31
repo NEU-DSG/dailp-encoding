@@ -8,6 +8,7 @@ import {
 import { ApolloClient, HttpLink, InMemoryCache } from "@apollo/client"
 import { setContext } from "@apollo/client/link/context"
 import fetch from "isomorphic-unfetch"
+import { isSSR } from "./cms/routes"
 
 export const SignIn = withAuthenticator((props) => {
   const creds = useCredentials()
@@ -46,6 +47,7 @@ export const useCredentials = () => {
 
 export const apolloClient = (token) =>
   new ApolloClient({
+    ssrMode: isSSR(),
     cache: new InMemoryCache(),
     link: authLink(token).concat(httpLink(token)),
   })

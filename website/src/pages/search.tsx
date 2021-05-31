@@ -1,6 +1,6 @@
 import React, { useEffect } from "react"
 import { Link } from "gatsby"
-import { useLocation } from "@reach/router"
+import { useLocation } from "@gatsbyjs/reach-router"
 import { useQuery, gql } from "@apollo/client"
 import { css, cx } from "linaria"
 import { Input } from "reakit/Input"
@@ -12,8 +12,8 @@ import { AnchorLink } from "gatsby-plugin-anchor-links"
 import { sourceCitationRoute } from "../routes"
 import queryString from "query-string"
 
-export default () => {
-  const location = useLocation()
+export default (p: { location: any }) => {
+  const location = p.location
   const defaultParams = queryString.parse(location.search)
   const [morphemeId, setMorpheme] = useDebounce(
     defaultParams.query as string,
@@ -102,11 +102,11 @@ const Timeline = (p: { gloss: string }) => {
 }
 
 const wide = css`
-  ${fullWidth}
+  ${fullWidth};
 `
 
 const searchBox = css`
-  ${fullWidth}
+  ${fullWidth};
   margin-bottom: ${typography.rhythm(0.5)};
 `
 

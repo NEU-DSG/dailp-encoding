@@ -20,29 +20,31 @@ import "@fontsource/quattrocento-sans/latin.css"
 import "./fonts.css"
 
 /** Wrapper for most site pages, providing them with a navigation header and footer. */
-const Layout = (p: { title?: string; children: any }) => (
-  <>
-    <Helmet titleTemplate="%s - DAILP" defaultTitle="DAILP" title={p.title} />
-    <Sticky enabled={isMobile} innerZ={2} className={hideOnPrint}>
-      <header aria-label="Site Header" id="header" className={header}>
-        <nav className={headerContents}>
-          <MobileNav />
-          <h1 className={siteTitle}>
-            <Link to="/">DAILP</Link>
-          </h1>
-          <span className={subHeader}>
-            Digital Archive of American Indian Languages Preservation and
-            Perseverance
-          </span>
-          <NavMenu />
-        </nav>
-      </header>
-    </Sticky>
-    <SignIn />
-    <LayoutInner>{p.children}</LayoutInner>
-    <Footer />
-  </>
-)
+const Layout = (p: { title?: string; children: any }) => {
+  return (
+    <>
+      <Helmet titleTemplate="%s - DAILP" defaultTitle="DAILP" title={p.title} />
+      <Sticky enabled={isMobile} innerZ={2} className={hideOnPrint}>
+        <header aria-label="Site Header" id="header" className={header}>
+          <nav className={headerContents}>
+            <MobileNav />
+            <h1 className={siteTitle}>
+              <Link to="/">DAILP</Link>
+            </h1>
+            <span className={subHeader}>
+              Digital Archive of American Indian Languages Preservation and
+              Perseverance
+            </span>
+            <NavMenu />
+          </nav>
+        </header>
+      </Sticky>
+      <SignIn />
+      <LayoutInner>{p.children}</LayoutInner>
+      <Footer />
+    </>
+  )
+}
 
 const LayoutInner = (p: { children: any }) => {
   const creds = useCredentials()
@@ -73,7 +75,7 @@ const header = css`
 `
 
 const headerContents = css`
-  ${fullWidth}
+  ${fullWidth};
   display: flex;
   flex-flow: row wrap;
   align-items: center;
@@ -110,6 +112,19 @@ css`
 
     * {
       box-sizing: border-box;
+    }
+
+    :root {
+      --full-width: 100%;
+      --most-width: 95%;
+      ${theme.mediaQueries.medium} {
+        --full-width: 41rem;
+        --most-width: 35rem;
+      }
+      ${theme.mediaQueries.large} {
+        --full-width: 50rem;
+        --most-width: 45rem;
+      }
     }
 
     html {

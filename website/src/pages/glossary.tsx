@@ -100,7 +100,7 @@ export const query = graphql`
 `
 
 const wide = css`
-  ${fullWidth}
+  ${fullWidth};
 `
 
 const sec = css`
