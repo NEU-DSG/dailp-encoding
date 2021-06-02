@@ -2,6 +2,9 @@ use crate::{AnnotatedDoc, Database, Date, MorphemeId, MorphemeSegment, PositionI
 use async_graphql::{dataloader::DataLoader, FieldResult};
 use serde::{Deserialize, Serialize};
 
+#[derive(Clone, Eq, PartialEq, Hash, Serialize, Deserialize, Debug, async_graphql::NewType)]
+pub struct FormId(pub String);
+
 /// A single word in an annotated document.
 /// One word contains several layers of interpretation, including the original
 /// source text, multiple layers of linguistic annotation, and annotator notes.
