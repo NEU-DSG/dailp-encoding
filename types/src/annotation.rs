@@ -1,4 +1,4 @@
-use crate::{DocumentId, Geometry};
+use crate::{DocumentId, FormId, Geometry};
 use serde::{Deserialize, Serialize};
 
 /// An annotation is a piece of information that provides details about a word,
@@ -19,11 +19,21 @@ pub struct AnnotationId(pub String);
 #[serde(tag = "__typename")]
 pub enum AnnotationAttachment {
     /// Reply to another existing annotation, referred to by ID.
-    Reply(AnnotationId),
+    Reply(Reply),
     /// Attached to a particular word.
-    Word(String),
+    WordAttachment(WordAttachment),
     /// Attached to a document or section of the document image.
-    Document(DocumentRegion),
+    DocumentRegion(DocumentRegion),
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct Reply {
+    to: AnnotationId,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct WordAttachment {
+    to: FormId,
 }
 
 #[derive(Serialize, Deserialize)]

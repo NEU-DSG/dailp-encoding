@@ -90,7 +90,7 @@ impl Manifest {
                             })
                             .chain(annotations.into_iter().filter_map(|annote| {
                                 match &annote.attached_to {
-                                    AnnotationAttachment::Document(DocumentRegion {
+                                    AnnotationAttachment::DocumentRegion(DocumentRegion {
                                         region,
                                         page: Some(annote_page),
                                         ..
