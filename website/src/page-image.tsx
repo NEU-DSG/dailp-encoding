@@ -1,9 +1,8 @@
 import React, { useState } from "react"
 import { css, cx } from "linaria"
-import theme, { hideOnPrint, std, typography } from "./theme"
+import theme, { hideOnPrint, std, typography, Button } from "./theme"
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch"
 import { Helmet } from "react-helmet"
-import { Button } from "reakit/Button"
 import { FaMinus, FaPlus } from "react-icons/fa"
 
 const PageImages = (p: {
@@ -60,7 +59,6 @@ const CurrentPageImage = (p: {
       {imageCount > 1 && (
         <nav aria-label="Pagination" className={cx(pageNav, hideOnPrint)}>
           <Button
-            className={std.button}
             onClick={() => {
               p.resetTransform()
               setSelectedPage(selectedPage - 1)
@@ -74,7 +72,6 @@ const CurrentPageImage = (p: {
           <span aria-current="true">Page {selectedPage + 1}</span>
 
           <Button
-            className={std.button}
             onClick={() => {
               p.resetTransform()
               setSelectedPage(selectedPage + 1)

@@ -9,6 +9,7 @@ import {
 } from "@apollo/client"
 import { TinaCMS, TinaProvider } from "tinacms"
 import Amplify from "aws-amplify"
+import { isSSR } from "./cms/routes"
 
 /** Injects global providers into the page for styling and data access. */
 export const wrapRootElement = (p: { element: any }) => (
@@ -25,7 +26,7 @@ export const wrapRootElement = (p: { element: any }) => (
 
 const InnerRoot = (p: { children: any }) => {
   const cms = React.useMemo(
-    () => new TinaCMS({ enabled: true, sidebar: true, plugins: [] }),
+    () => new TinaCMS({ enabled: !isSSR(), sidebar: true, plugins: [] }),
     []
   )
   return <TinaProvider cms={cms}>{p.children}</TinaProvider>
@@ -33,8 +34,8 @@ const InnerRoot = (p: { children: any }) => {
 
 Amplify.configure({
   Auth: {
-    region: process.env.GATSBY_AWS_REGION,
-    userPoolId: process.env.GATSBY_USER_POOL,
-    userPoolWebClientId: process.env.GATSBY_USER_POOL_CLIENT,
+    region: process.env.AWS_REGION,
+    userPoolId: process.env.DAILP_USER_POOL,
+    userPoolWebClientId: process.env.DAILP_USER_POOL_CLIENT,
   },
 })

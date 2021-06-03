@@ -12,6 +12,7 @@ import theme, {
   hideOnPrint,
   typography,
   fullWidth,
+  Button,
 } from "../theme"
 import { collectionRoute, documentDetailsRoute, documentRoute } from "../routes"
 import { useScrollableTabState } from "../scrollable-tabs"
@@ -23,7 +24,6 @@ import PageImages from "../page-image"
 import { Breadcrumbs } from "../breadcrumbs"
 import { isMobile } from "react-device-detect"
 import { ExperiencePicker, modeDetails, selectedMode } from "../mode"
-import { Button } from "reakit/Button"
 
 enum Tabs {
   ANNOTATION = "annotation-tab",
@@ -197,11 +197,7 @@ export const DocumentTitleHeader = (p: {
       ) : (
         <Link to={documentRoute(p.doc.slug!)}>View Contents</Link>
       )}
-      {!isMobile ? (
-        <Button className={std.button} onClick={() => window.print()}>
-          Print
-        </Button>
-      ) : null}
+      {!isMobile ? <Button onClick={() => window.print()}>Print</Button> : null}
     </div>
   </header>
 )

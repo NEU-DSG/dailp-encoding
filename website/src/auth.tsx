@@ -1,23 +1,31 @@
 import React, { useEffect, useState } from "react"
 import { Auth, Hub } from "aws-amplify"
-import {
-  withAuthenticator,
-  AmplifySignIn,
-  AmplifySignOut,
-} from "@aws-amplify/ui-react"
+import { HubCallback } from "@aws-amplify/core"
 import { ApolloClient, HttpLink, InMemoryCache } from "@apollo/client"
 import { setContext } from "@apollo/client/link/context"
 import fetch from "isomorphic-unfetch"
-import { isSSR } from "./cms/routes"
+import { isSSR, ClientOnly } from "./cms/routes"
+import { Button } from "./theme"
+import { Link } from "gatsby"
 
-export const SignIn = withAuthenticator((props) => {
+export const SignIn = () => (
+  <ClientOnly>
+    <ClientSignIn />
+  </ClientOnly>
+)
+
+const ClientSignIn = () => {
   const creds = useCredentials()
   if (creds) {
-    return <AmplifySignOut />
+    return <Button onClick={() => Auth.signOut()}>Sign Out</Button>
   } else {
-    return <AmplifySignIn />
+    return (
+      <Button as={Link} to="/signin">
+        Sign In
+      </Button>
+    )
   }
-})
+}
 
 export const useCredentials = () => {
   const [creds, setCreds] = useState(null)
@@ -25,9 +33,9 @@ export const useCredentials = () => {
   useEffect(() => {
     Auth.currentUserPoolUser()
       .then((creds) => setCreds(creds))
-      .catch((err) => setCreds(null))
+      .catch((_err) => setCreds(null))
 
-    const listener = async (data) => {
+    const listener: HubCallback = async (data) => {
       switch (data.payload.event) {
         case "signIn":
         case "signUp":
@@ -45,14 +53,14 @@ export const useCredentials = () => {
   return creds
 }
 
-export const apolloClient = (token) =>
+export const apolloClient = (token: string) =>
   new ApolloClient({
     ssrMode: isSSR(),
     cache: new InMemoryCache(),
     link: authLink(token).concat(httpLink(token)),
   })
 
-const httpLink = (token) =>
+const httpLink = (token: string) =>
   new HttpLink({
     uri: `https://dailp.northeastern.edu/${
       token ? "api/graphql-edit" : "graphql"
@@ -60,7 +68,7 @@ const httpLink = (token) =>
     fetch,
   })
 
-const authLink = (token) =>
+const authLink = (token: string) =>
   setContext((_, { headers }) => {
     // get the authentication token from local storage if it exists
     // return the headers to the context so httpLink can read them
