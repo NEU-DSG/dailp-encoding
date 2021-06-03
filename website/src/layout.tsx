@@ -35,11 +35,11 @@ const Layout = (p: { title?: string; children: any }) => {
               Digital Archive of American Indian Languages Preservation and
               Perseverance
             </span>
+            <SignIn />
             <NavMenu />
           </nav>
         </header>
       </Sticky>
-      <SignIn />
       <LayoutInner>{p.children}</LayoutInner>
       <Footer />
     </>

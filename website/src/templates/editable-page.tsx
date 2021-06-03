@@ -4,7 +4,6 @@ import { usePlugin } from "tinacms"
 import { graphql } from "gatsby"
 import Markdown from "react-markdown"
 import { MarkdownFieldPlugin } from "react-tinacms-editor"
-import { gql } from "@apollo/client"
 import { Helmet } from "react-helmet"
 import gfm from "remark-gfm"
 import {
@@ -36,10 +35,10 @@ export default (props: Props) => (
 
 const EditablePageSSR = (props: Props) => {
   const hasMounted = useHasMounted()
-  if (!hasMounted) {
-    return <PageContents data={props.data} />
-  } else {
+  if (hasMounted) {
     return <EditablePageInner {...props} />
+  } else {
+    return <PageContents page={props.data.dailp.page} />
   }
 }
 
@@ -48,7 +47,7 @@ const EditablePageInner = (props: Props) => {
   usePlugin(MarkdownFieldPlugin)
 
   const [data, form] = useGraphQLForm(queryPage, mutatePage, {
-    label: staticData?.title,
+    label: "Edit Page",
     id: props.pageContext?.id,
     variables: { id: props.pageContext?.id },
     transformIn: ({ page: { body, ...page } }) => ({
@@ -83,14 +82,14 @@ const EditablePageInner = (props: Props) => {
 
   usePlugin(form)
 
-  return <PageContents data={data && data.body ? data : staticData} />
+  return <PageContents page={data && data.body ? data : staticData} />
 }
 
-const PageContents = (props: { data: any }) => (
+const PageContents = (props: { page: any }) => (
   <>
-    <Helmet title={props.data.title} />
-    <h1>{props.data.title}</h1>
-    <BlocksRenderer children={props.data.body} />
+    <Helmet title={props.page.title} />
+    <h1>{props.page.title}</h1>
+    <BlocksRenderer children={props.page.body} />
   </>
 )
 
@@ -104,9 +103,20 @@ const BlocksRenderer = (props: { children: any[] }) => (
 )
 
 const BlockRenderer = (props: { children: any }) => {
-  const ty = props.children._template
+  const ty = getType(props.children)
   if (ty === "Markdown") {
     return <Markdown children={props.children.content} remarkPlugins={[gfm]} />
+  } else {
+    return null
+  }
+}
+
+const getType = (obj: any) => {
+  const ty = obj.__typename || obj._template
+  if (ty.startsWith("Dailp_")) {
+    return ty.substring(6)
+  } else {
+    return ty
   }
 }
 

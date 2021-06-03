@@ -73,5 +73,11 @@ module.exports = {
       },
     },
     // "gatsby-plugin-loadable-components-ssr",
+    {
+      resolve: "gatsby-plugin-env-variables",
+      options: {
+        allowList: ["AWS_REGION", "DAILP_USER_POOL", "DAILP_USER_POOL_CLIENT"],
+      },
+    },
   ],
 }

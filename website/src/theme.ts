@@ -1,7 +1,9 @@
 import { css } from "linaria"
+import { styled } from "linaria/react"
 import Color from "color"
 import Typography from "typography"
 import CSS from "csstype"
+import { Button as BaseButton } from "reakit/Button"
 
 const theme = {
   fonts: {
@@ -88,7 +90,7 @@ export const hideOnPrint = css`
   }
 `
 
-const button = css`
+export const Button = styled(BaseButton)`
   font-family: ${theme.fonts.header};
   color: ${theme.colors.link};
   background-color: ${theme.colors.button};
@@ -134,7 +136,6 @@ const closeBlock = css`
 `
 
 export const std = {
-  button,
   iconButton,
   smallCaps,
   tooltip: withBg,

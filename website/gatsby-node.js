@@ -133,6 +133,8 @@ exports.onCreateWebpackConfig = ({ actions }) => {
       alias: {
         // TinaCMS depends on the `path` module, so we polyfill it since Webpack v5.
         path: require.resolve("path-browserify"),
+        crypto: require.resolve("crypto-browserify"),
+        stream: require.resolve("stream-browserify"),
       },
       fallback: {
         fs: false,
