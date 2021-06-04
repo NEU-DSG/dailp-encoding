@@ -1,6 +1,6 @@
 import React from "react"
 import { graphql } from "gatsby"
-import { css } from "linaria"
+import { css } from "@emotion/react"
 import { Helmet } from "react-helmet"
 import theme, { fullWidth, wordpressUrl } from "../theme"
 import Layout from "../layout"
@@ -18,8 +18,8 @@ const WordpressPage = (p: { data: GatsbyTypes.ContentPageQuery }) => {
           media="all"
         />
       </Helmet>
-      <main className={padded}>
-        <article className={wideArticle}>
+      <main css={padded}>
+        <article css={wideArticle}>
           <header>
             <h1>{page.title}</h1>
           </header>

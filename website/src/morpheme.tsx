@@ -1,7 +1,7 @@
 import React from "react"
 import { Clickable } from "reakit/Clickable"
 import { DialogStateReturn } from "reakit/Dialog"
-import { css, cx } from "linaria"
+import { css } from "@emotion/react"
 import { useQuery, gql } from "@apollo/client"
 import { groupBy } from "lodash"
 import { MdClose } from "react-icons/md"
@@ -46,7 +46,7 @@ export const MorphemeDetails = (props: {
       definition: string
     }>(tag.data.tag, props.tagSet)
     titleArea = matchingTag?.title ? (
-      <h2 className={margined}>{matchingTag.title}</h2>
+      <h2 css={margined}>{matchingTag.title}</h2>
     ) : null
     content = (
       <>
@@ -63,14 +63,14 @@ export const MorphemeDetails = (props: {
     <>
       {titleArea}
       <Clickable
-        className={closeButton}
+        css={closeButton}
         role="button"
         aria-label="Close Dialog"
         onClick={props.dialog.hide}
       >
         <MdClose size={32} />
       </Clickable>
-      <div className={cx(scrollable, padded)}>
+      <div css={[scrollable, padded]}>
         {content}
         <SimilarMorphemeList
           documentId={props.documentId}

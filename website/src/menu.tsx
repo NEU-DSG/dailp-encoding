@@ -1,8 +1,8 @@
 import React from "react"
-import { css } from "linaria"
+import { css } from "@emotion/react"
 import { Link, graphql, useStaticQuery } from "gatsby"
 import { useLocation } from "@gatsbyjs/reach-router"
-import theme, { typography } from "./theme"
+import theme, { fullWidth, typography } from "./theme"
 import {
   useDialogState,
   Dialog,
@@ -40,17 +40,17 @@ export const NavMenu = () => {
     !menuItems.some((b) => b.childItems.nodes.some((b) => b.path === a.path))
 
   return (
-    <div className={desktopNav}>
+    <nav css={desktopNav}>
       {menuItems.filter(isTopLevel).map((item) => {
         if (item.childItems.nodes.length) {
           const menu = useMenuState()
           return (
             <React.Fragment key={item.label}>
-              <MenuButton {...menu} className={navLink}>
+              <MenuButton {...menu} css={navLink}>
                 {item.label}
                 <MdArrowDropDown aria-label="Menu" />
               </MenuButton>
-              <Menu {...menu} aria-label={item.label} className={navMenu}>
+              <Menu {...menu} aria-label={item.label} css={navMenu}>
                 {item.childItems.nodes.map((item) => {
                   let url = { pathname: item.path }
                   if (item.path.startsWith("http")) {
@@ -62,7 +62,7 @@ export const NavMenu = () => {
                       as={Link}
                       to={url.pathname}
                       key={item.path}
-                      className={navLink}
+                      css={navLink}
                       aria-current={
                         location.pathname === url.pathname ? "page" : undefined
                       }
@@ -86,14 +86,14 @@ export const NavMenu = () => {
               aria-current={
                 location.pathname === url.pathname ? "page" : undefined
               }
-              className={navLink}
+              css={navLink}
             >
               {item.label}
             </Link>
           )
         }
       })}
-    </div>
+    </nav>
   )
 }
 
@@ -109,16 +109,16 @@ export const MobileNav = () => {
     <>
       <DialogDisclosure
         {...dialog}
-        className={navButton}
+        css={navButton}
         aria-label="Open Mobile Navigation Drawer"
       >
         <MdMenu size={32} />
       </DialogDisclosure>
-      <DialogBackdrop {...dialog} className={drawerBg}>
+      <DialogBackdrop {...dialog} css={drawerBg}>
         <Dialog
           {...dialog}
           as="nav"
-          className={navDrawer}
+          css={navDrawer}
           aria-label="Navigation Drawer"
         >
           <ul>
@@ -133,13 +133,13 @@ export const MobileNav = () => {
                   url = new URL(item.path)
                 }
                 return (
-                  <li className={drawerItem} key={item.path}>
+                  <li css={drawerItem} key={item.path}>
                     <Link
                       to={url.pathname}
                       aria-current={
                         location.pathname === url.pathname ? "page" : undefined
                       }
-                      className={navLink}
+                      css={navLink}
                     >
                       {item.label}
                     </Link>
@@ -206,6 +206,7 @@ const drawerItem = css`
 `
 
 const desktopNav = css`
+  ${fullWidth};
   display: none;
   ${theme.mediaQueries.medium} {
     display: flex;

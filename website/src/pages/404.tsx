@@ -2,7 +2,7 @@ import React from "react"
 import { Link } from "gatsby"
 import Layout from "../layout"
 import { queryPage } from "../cms/graphql-form"
-import EditablePage from "../templates/editable-page"
+import { EditablePageContents } from "../templates/editable-page"
 import { useQuery } from "@apollo/client"
 import { isSSR, useHasMounted } from "../cms/routes"
 
@@ -11,12 +11,8 @@ import { isSSR, useHasMounted } from "../cms/routes"
  yet, or those only available to authenticated users.
  */
 const NotFoundPage = () => {
-  const hasMounted = useHasMounted()
-  if (hasMounted) {
-    return <ClientPage />
-  } else {
-    return <NotFound />
-  }
+  const content = useHasMounted() ? <ClientPage /> : <NotFound />
+  return <Layout>{content}</Layout>
 }
 export default NotFoundPage
 
@@ -28,8 +24,8 @@ const ClientPage = () => {
     return null
   } else if (data) {
     return (
-      <EditablePage
-        data={data}
+      <EditablePageContents
+        data={{ dailp: data }}
         pageContext={{ id: window.location.pathname }}
       />
     )
@@ -39,13 +35,11 @@ const ClientPage = () => {
 }
 
 const NotFound = () => (
-  <Layout>
-    <main>
-      <h1>Page Not Found</h1>
-      <p>
-        We aren't sure what page you were looking for.{" "}
-        <Link to="/">View our collection of Cherokee manuscripts</Link>
-      </p>
-    </main>
-  </Layout>
+  <main>
+    <h1>Page Not Found</h1>
+    <p>
+      We aren't sure what page you were looking for.{" "}
+      <Link to="/">View our collection of Cherokee manuscripts</Link>
+    </p>
+  </main>
 )

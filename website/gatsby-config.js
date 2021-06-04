@@ -5,7 +5,7 @@ module.exports = {
   siteMetadata: {
     title: "DAILP Encoding",
   },
-  flags: { PRESERVE_WEBPACK_CACHE: true },
+  flags: { PRESERVE_WEBPACK_CACHE: true, FAST_REFRESH: true, FAST_DEV: true },
   plugins: [
     "gatsby-plugin-sharp",
     {
@@ -38,7 +38,7 @@ module.exports = {
     "gatsby-plugin-typescript",
     "gatsby-plugin-typescript-checker",
     "gatsby-plugin-react-helmet",
-    "gatsby-plugin-linaria",
+    "gatsby-plugin-emotion",
     {
       resolve: `gatsby-source-filesystem`,
       options: {
@@ -76,7 +76,12 @@ module.exports = {
     {
       resolve: "gatsby-plugin-env-variables",
       options: {
-        allowList: ["AWS_REGION", "DAILP_USER_POOL", "DAILP_USER_POOL_CLIENT"],
+        allowList: [
+          "AWS_REGION",
+          "DAILP_AWS_REGION",
+          "DAILP_USER_POOL",
+          "DAILP_USER_POOL_CLIENT",
+        ],
       },
     },
   ],

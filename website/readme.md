@@ -54,5 +54,6 @@ Thus, we define our types once in the [back-end](../types) and those definitions
 - Built with [`gatsby`](https://www.gatsbyjs.com/) as a static site to minimize load times and remove the need for a web server. [Comparison to Wordpress](https://www.gatsbyjs.com/features/cms/gatsby-vs-wordpress/) and [explanation for content creators](https://www.gatsbyjs.com/docs/winning-over-content-creators/)
 - Pre-caching and offline access using a web manifest and [`gatsby-plugin-offline`](https://www.gatsbyjs.com/plugins/gatsby-plugin-offline)
 - Uses [`typescript`](https://www.typescriptlang.org/) to provide compile-time type safety and validation to Javascript.
-- Uses [`linaria`](https://github.com/callstack/linaria) for styling so that we can write scoped styles that live directly on React components without managing CSS classes.
-  Incurs zero runtime overhead as styles are extracted into CSS files at build time.
+- Uses [`emotion`](https://emotion.sh) for styling so that we can write scoped styles that live directly on React components without managing CSS classes.
+  Incurs relatively small runtime overhead as styles are extracted at build time, but they do have to be hydrated at runtime.
+  Themeing and dynamic styling becomes very easy with Emotion, while staying compatible with all browsers.

@@ -2,7 +2,7 @@ import React, { useEffect } from "react"
 import { Link } from "gatsby"
 import { useLocation } from "@gatsbyjs/reach-router"
 import { useQuery, gql } from "@apollo/client"
-import { css, cx } from "linaria"
+import { css } from "@emotion/react"
 import { Input } from "reakit/Input"
 import { useDebounce } from "@react-hook/debounce"
 import { wordRow, bolden } from "./timeline"
@@ -36,7 +36,7 @@ const SearchPage = (p: { location: any }) => {
   return (
     <Layout title="Search">
       <main>
-        <p className={wide}>
+        <p css={wide}>
           Type a search query in Cherokee syllabary, simple phonetics, English
           translation, or romanized source. All words from{" "}
           <Link to="/sources">dictionaries and grammars</Link> that contain your
@@ -44,7 +44,7 @@ const SearchPage = (p: { location: any }) => {
           of manuscripts yet.
         </p>
         <Input
-          className={searchBox}
+          css={searchBox}
           defaultValue={morphemeId}
           placeholder="Search query"
           onChange={(e) => {
@@ -76,8 +76,8 @@ const Timeline = (p: { gloss: string }) => {
     return <>No results found.</>
   } else {
     return (
-      <div className={wide}>
-        <div className={cx(wordRow, bolden)}>
+      <div css={wide}>
+        <div css={[wordRow, bolden]}>
           <div>Document ID</div>
           <div>Transcription</div>
           <div>Normalization</div>
@@ -86,7 +86,7 @@ const Timeline = (p: { gloss: string }) => {
         </div>
         {timeline.data.wordSearch.map(
           (form: GatsbyTypes.Dailp_AnnotatedForm, i: number) => (
-            <div key={i} className={wordRow}>
+            <div key={i} css={wordRow}>
               <AnchorLink to={sourceCitationRoute(form.documentId)}>
                 {form.documentId}
               </AnchorLink>

@@ -1,6 +1,6 @@
 import React, { useState } from "react"
 import { graphql } from "gatsby"
-import { css, cx } from "linaria"
+import { css } from "@emotion/react"
 import { groupBy } from "lodash"
 import pluralize from "pluralize"
 import { AnchorLink } from "gatsby-plugin-anchor-links"
@@ -17,11 +17,11 @@ const GlossaryPage = (p: { data: GatsbyTypes.GlossaryQuery }) => {
   const [tagSet, setTagSet] = useState<TagSet>(null)
   return (
     <Layout title="Glossary of Terms">
-      <main className={padded}>
-        <header className={wide}>
+      <main css={padded}>
+        <header css={wide}>
           <h1>Glossary of Terms</h1>
         </header>
-        <p className={wide}>
+        <p css={wide}>
           There are multiple conventions for describing the parts of a Cherokee
           word. Hover over each terminology mode below to see more details about
           what they offer.
@@ -29,8 +29,8 @@ const GlossaryPage = (p: { data: GatsbyTypes.GlossaryQuery }) => {
 
         <TagSetPicker onSelect={setTagSet} />
 
-        <ul className={wide}>
-          <h4 className={std.closeBlock}>Table of Contents</h4>
+        <ul css={wide}>
+          <h4 css={std.closeBlock}>Table of Contents</h4>
           {Object.entries(groupedTags).map(
             ([ty]) =>
               ty && (
@@ -45,7 +45,7 @@ const GlossaryPage = (p: { data: GatsbyTypes.GlossaryQuery }) => {
 
         {Object.entries(groupedTags).map(([ty, tags]) => {
           return (
-            <section key={ty} className={cx(wide, sec)}>
+            <section key={ty} css={[wide, sec]}>
               <h2 id={glossarySectionId(ty)}>{pluralize(ty)}</h2>
               <dl>
                 {tags.map((tag) => {
@@ -54,8 +54,8 @@ const GlossaryPage = (p: { data: GatsbyTypes.GlossaryQuery }) => {
                     return (
                       <React.Fragment key={tag.id}>
                         <dt id={morphemeTagId(tag.id)}>
-                          <span className={std.smallCaps}>{scopedTag.tag}</span>{" "}
-                          – {scopedTag.title}
+                          <span css={std.smallCaps}>{scopedTag.tag}</span> –{" "}
+                          {scopedTag.title}
                         </dt>
                         <dd>{scopedTag.definition}</dd>
                       </React.Fragment>

@@ -1,7 +1,6 @@
 import React from "react"
 import { graphql, Link } from "gatsby"
-import { styled } from "linaria/react"
-import { css, cx } from "linaria"
+import styled from "@emotion/styled"
 import { Helmet } from "react-helmet"
 import "@fortawesome/fontawesome-free/css/fontawesome.css"
 import "@fortawesome/fontawesome-free/css/solid.css"

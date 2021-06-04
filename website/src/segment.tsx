@@ -1,5 +1,5 @@
 import React from "react"
-import { css, cx } from "linaria"
+import { css } from "@emotion/react"
 import { DialogDisclosure, DialogStateReturn } from "reakit/Dialog"
 import { Tooltip, TooltipReference, useTooltipState } from "reakit/Tooltip"
 import { MdInfoOutline } from "react-icons/md"
@@ -45,14 +45,12 @@ export const Segment = (p: Props) => {
 
     if (p.segment.ty === "BLOCK") {
       return (
-        <section
-          className={cx(documentBlock, p.viewMode > ViewMode.Story && bordered)}
-        >
+        <section css={[documentBlock, p.viewMode > ViewMode.Story && bordered]}>
           <div
-            className={cx(
+            css={[
               annotationSection,
-              p.viewMode <= ViewMode.Story && storySection
-            )}
+              p.viewMode <= ViewMode.Story && storySection,
+            ]}
           >
             {children}
           </div>
@@ -67,7 +65,7 @@ export const Segment = (p: Props) => {
     return (
       <div
         id={`document-page-${num}`}
-        className={pageBreak}
+        css={pageBreak}
         aria-label={`Start of page ${num}`}
       >
         Page {num}
@@ -109,8 +107,8 @@ export const AnnotatedForm = (
     const showSegments = p.viewMode >= ViewMode.Segmentation
     const translation = p.segment.englishGloss.join(", ")
     return (
-      <div className={wordGroup} id={`w${p.segment.index}`}>
-        <div className={syllabaryLayer} lang="chr">
+      <div css={wordGroup} id={`w${p.segment.index}`}>
+        <div css={syllabaryLayer} lang="chr">
           {p.segment.source}
           {p.segment.commentary && p.viewMode >= ViewMode.Pronunciation && (
             <WordCommentaryInfo commentary={p.segment.commentary} />
@@ -135,7 +133,7 @@ export const AnnotatedForm = (
     )
   } else {
     return (
-      <span className={plainSyllabary} id={`w${p.segment.index}`} lang="chr">
+      <span css={plainSyllabary} id={`w${p.segment.index}`} lang="chr">
         {p.segment.source}
       </span>
     )
@@ -146,7 +144,7 @@ const WordCommentaryInfo = (p: { commentary: string }) => (
   <WithTooltip
     hint={p.commentary}
     aria-label="Commentary on this word"
-    className={cx(infoIcon, hideOnPrint)}
+    css={[infoIcon, hideOnPrint]}
   >
     <MdInfoOutline size={20} />
   </WithTooltip>
@@ -164,7 +162,7 @@ const WithTooltip = (p: {
       <TooltipReference {...tooltip} as="span" className={p.className}>
         {p.children}
       </TooltipReference>
-      <Tooltip {...tooltip} className={std.tooltip}>
+      <Tooltip {...tooltip} css={std.tooltip}>
         {p.hint}
       </Tooltip>
     </>
@@ -203,7 +201,7 @@ const MorphemicSegmentation = (p: {
 
   return (
     <>
-      <div className={italicSegmentation}>
+      <div css={italicSegmentation}>
         {p
           .segments!.map(function (segment) {
             // Adapt the segment shape to the chosen experience level.
@@ -265,24 +263,21 @@ const MorphemeSegment = (p: {
   const matchingTag = morphemeDisplayTag(p.segment.matchingTag, p.tagSet)
   const gloss = matchingTag?.tag || p.segment.gloss
   // Display functional tags in small-caps, per interlinear typesetting practice.
-  const buttonStyle = cx(
+  const buttonStyle = [
     morphemeButton,
-    matchingTag ? std.smallCaps : inheritFont
-  )
+    matchingTag ? std.smallCaps : inheritFont,
+  ]
 
   let content = <>{gloss}</>
   if (matchingTag && matchingTag.title) {
     content = (
-      <WithTooltip className={atLeastThin} hint={matchingTag.title}>
+      <WithTooltip css={atLeastThin} hint={matchingTag.title}>
         {gloss}
       </WithTooltip>
     )
   } else if (gloss === "?") {
     content = (
-      <WithTooltip
-        className={atLeastThin}
-        hint="Unanalyzed or unfamiliar segment"
-      >
+      <WithTooltip css={atLeastThin} hint="Unanalyzed or unfamiliar segment">
         {gloss}
       </WithTooltip>
     )
@@ -291,7 +286,7 @@ const MorphemeSegment = (p: {
   return (
     <DialogDisclosure
       {...p.dialog}
-      className={buttonStyle}
+      css={buttonStyle}
       onClick={() => p.onOpenDetails(p.segment)}
     >
       {content}

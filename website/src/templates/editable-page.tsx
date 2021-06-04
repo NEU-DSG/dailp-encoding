@@ -1,5 +1,5 @@
 import React from "react"
-import { css } from "linaria"
+import { css } from "@emotion/react"
 import { usePlugin } from "tinacms"
 import { graphql } from "gatsby"
 import Markdown from "react-markdown"
@@ -14,7 +14,6 @@ import {
 } from "../cms/graphql-form"
 import theme, { fullWidth } from "../theme"
 import Layout from "../layout"
-import { useHasMounted } from "../cms/routes"
 import { useCredentials } from "../auth"
 
 interface Props {
@@ -26,17 +25,22 @@ interface Props {
 
 const EditablePage = (props: Props) => (
   <Layout>
-    <main className={padded}>
-      <article className={wideArticle}>
-        <EditablePageSSR {...props} />
-      </article>
-    </main>
+    <EditablePageContents {...props} />
   </Layout>
 )
 export default EditablePage
 
+export const EditablePageContents = (props: Props) => (
+  <main css={padded}>
+    <article css={wideArticle}>
+      <EditablePageSSR {...props} />
+    </article>
+  </main>
+)
+
 const EditablePageSSR = (props: Props) => {
   const creds = useCredentials()
+  console.log(creds)
   if (creds) {
     return <EditablePageInner {...props} />
   } else {

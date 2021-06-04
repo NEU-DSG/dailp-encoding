@@ -1,5 +1,5 @@
 import React from "react"
-import { css, cx } from "linaria"
+import { css } from "@emotion/react"
 import { BiRightArrow, BiLeftArrow } from "react-icons/bi"
 import {
   CarouselProvider,
@@ -13,7 +13,7 @@ import "pure-react-carousel/dist/react-carousel.es.css"
 export const Carousel = (p: { caption: any; images: string[] }) => (
   <>
     <CarouselProvider
-      className={carousel}
+      css={carousel}
       totalSlides={2}
       naturalSlideWidth={100}
       naturalSlideHeight={40}
@@ -22,19 +22,19 @@ export const Carousel = (p: { caption: any; images: string[] }) => (
     >
       <Slider>
         {p.images.map((url, idx) => (
-          <Slide key={idx} index={idx} innerClassName={centerAlign}>
+          <Slide key={idx} index={idx} innerClassName={centerAlign.name}>
             <img src={url} />
           </Slide>
         ))}
       </Slider>
-      <ButtonBack className={cx(carouselButton, onLeft)}>
+      <ButtonBack css={[carouselButton, onLeft]}>
         <BiLeftArrow aria-label="Previous" size={24} />
       </ButtonBack>
-      <ButtonNext className={cx(carouselButton, onRight)}>
+      <ButtonNext css={[carouselButton, onRight]}>
         <BiRightArrow aria-label="Next" size={24} />
       </ButtonNext>
     </CarouselProvider>
-    {p.caption ? <h5 className={centerAlign}>{p.caption}</h5> : null}
+    {p.caption ? <h5 css={centerAlign}>{p.caption}</h5> : null}
   </>
 )
 

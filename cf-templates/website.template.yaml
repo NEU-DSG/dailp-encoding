@@ -51,7 +51,7 @@ Resources:
             env:
               variables:
                 DAILP_GRAPHQL_URL: https://${RestApiId}.execute-api.${self:provider.region}.amazonaws.com/${opt:stage}/graphql
-                AWS_REGION: ${self:provider.region}
+                DAILP_AWS_REGION: ${self:provider.region}
                 DAILP_USER_POOL: ${UserPool}
                 DAILP_USER_POOL_CLIENT: ${UserPoolClient}
             frontend:
