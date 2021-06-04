@@ -10,7 +10,7 @@ import { isSSR, useHasMounted } from "../cms/routes"
  Handle client-only routes for pages that haven't been statically renderered
  yet, or those only available to authenticated users.
  */
-export default () => {
+const NotFoundPage = () => {
   const hasMounted = useHasMounted()
   if (hasMounted) {
     return <ClientPage />
@@ -18,6 +18,7 @@ export default () => {
     return <NotFound />
   }
 }
+export default NotFoundPage
 
 const ClientPage = () => {
   const { data, error, loading } = useQuery(queryPage, {

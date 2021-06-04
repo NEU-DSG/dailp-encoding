@@ -10,7 +10,7 @@ import { TagSetPicker } from "../mode"
 import { morphemeDisplayTag, TagSet } from "../types"
 import { glossarySectionId, morphemeTagId } from "../routes"
 
-export default (p: { data: GatsbyTypes.GlossaryQuery }) => {
+const GlossaryPage = (p: { data: GatsbyTypes.GlossaryQuery }) => {
   const tags = p.data.dailp.allTags
   // Group the tags by type.
   const groupedTags = groupBy(tags, (t) => t.morphemeType)
@@ -72,6 +72,7 @@ export default (p: { data: GatsbyTypes.GlossaryQuery }) => {
     </Layout>
   )
 }
+export default GlossaryPage
 
 export const query = graphql`
   query Glossary {

@@ -7,7 +7,7 @@ import { fullWidth, typography } from "../theme"
 import { groupBy, uniq } from "lodash"
 import Layout from "../layout"
 
-export default () => {
+const TimelinePage = () => {
   const staticMorphemeId = useRef("")
   const [morphemeId, setMorpheme] = useState(null)
 
@@ -26,6 +26,7 @@ export default () => {
     </Layout>
   )
 }
+export default TimelinePage
 
 const Timeline = (p: { gloss: string }) => {
   const timeline = useQuery(query, {

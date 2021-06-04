@@ -11,7 +11,7 @@ const collator = new Intl.Collator(undefined, {
   sensitivity: "base",
 })
 
-export default (p: {
+const CollectionPage = (p: {
   data: GatsbyTypes.CollectionQuery
   pageContext: { name: string }
 }) => {
@@ -51,6 +51,7 @@ export default (p: {
     </Layout>
   )
 }
+export default CollectionPage
 
 export const query = graphql`
   query Collection($name: String!, $slug: String!) {

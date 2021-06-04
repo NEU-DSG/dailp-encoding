@@ -15,6 +15,7 @@ import {
 import theme, { fullWidth } from "../theme"
 import Layout from "../layout"
 import { useHasMounted } from "../cms/routes"
+import { useCredentials } from "../auth"
 
 interface Props {
   pageContext?: {
@@ -23,7 +24,7 @@ interface Props {
   data: any
 }
 
-export default (props: Props) => (
+const EditablePage = (props: Props) => (
   <Layout>
     <main className={padded}>
       <article className={wideArticle}>
@@ -32,10 +33,11 @@ export default (props: Props) => (
     </main>
   </Layout>
 )
+export default EditablePage
 
 const EditablePageSSR = (props: Props) => {
-  const hasMounted = useHasMounted()
-  if (hasMounted) {
+  const creds = useCredentials()
+  if (creds) {
     return <EditablePageInner {...props} />
   } else {
     return <PageContents page={props.data.dailp.page} />

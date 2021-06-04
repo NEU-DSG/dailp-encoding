@@ -1,14 +1,7 @@
 import React from "react"
 import { Provider } from "reakit"
 import { Helmet } from "react-helmet"
-import {
-  ApolloProvider,
-  ApolloClient,
-  HttpLink,
-  InMemoryCache,
-} from "@apollo/client"
 import { TinaCMS, TinaProvider } from "tinacms"
-import Amplify from "aws-amplify"
 import { isSSR } from "./cms/routes"
 
 /** Injects global providers into the page for styling and data access. */
@@ -31,11 +24,3 @@ const InnerRoot = (p: { children: any }) => {
   )
   return <TinaProvider cms={cms}>{p.children}</TinaProvider>
 }
-
-Amplify.configure({
-  Auth: {
-    region: process.env.AWS_REGION,
-    userPoolId: process.env.DAILP_USER_POOL,
-    userPoolWebClientId: process.env.DAILP_USER_POOL_CLIENT,
-  },
-})

@@ -5,7 +5,7 @@ import { Helmet } from "react-helmet"
 import theme, { fullWidth, wordpressUrl } from "../theme"
 import Layout from "../layout"
 
-export default (p: { data: GatsbyTypes.ContentPageQuery }) => {
+const WordpressPage = (p: { data: GatsbyTypes.ContentPageQuery }) => {
   const page = p.data.page
   return (
     <Layout>
@@ -29,6 +29,7 @@ export default (p: { data: GatsbyTypes.ContentPageQuery }) => {
     </Layout>
   )
 }
+export default WordpressPage
 
 export const query = graphql`
   query ContentPage($id: String!) {

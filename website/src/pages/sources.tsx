@@ -6,7 +6,7 @@ import Layout from "../layout"
 import { fullWidth, std, typography } from "../theme"
 import { sourceCitationId } from "../routes"
 
-export default (p: { data: GatsbyTypes.AllSourcesQuery }) => {
+const SourcesPage = (p: { data: GatsbyTypes.AllSourcesQuery }) => {
   return (
     <Layout title="Sources Index">
       <main className={wideChildren}>
@@ -35,6 +35,7 @@ export default (p: { data: GatsbyTypes.AllSourcesQuery }) => {
     </Layout>
   )
 }
+export default SourcesPage
 
 type LocalDocument = GatsbyTypes.AllSourcesQuery["dailp"]["allDocuments"][0]
 
