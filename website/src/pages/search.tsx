@@ -12,7 +12,7 @@ import { AnchorLink } from "gatsby-plugin-anchor-links"
 import { sourceCitationRoute } from "../routes"
 import queryString from "query-string"
 
-export default (p: { location: any }) => {
+const SearchPage = (p: { location: any }) => {
   const location = p.location
   const defaultParams = queryString.parse(location.search)
   const [morphemeId, setMorpheme] = useDebounce(
@@ -57,6 +57,7 @@ export default (p: { location: any }) => {
     </Layout>
   )
 }
+export default SearchPage
 
 const Timeline = (p: { gloss: string }) => {
   const timeline = useQuery(query, {

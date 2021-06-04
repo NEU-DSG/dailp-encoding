@@ -8,9 +8,9 @@ import { Helmet } from "react-helmet"
 import Sticky from "react-stickynode"
 import { isMobile } from "react-device-detect"
 import { ApolloProvider } from "@apollo/client"
-import { useCMS, usePlugin } from "tinacms"
-import { PageCreatorPlugin } from "./cms/graphql-form"
-import { useCredentials, SignIn, apolloClient } from "./auth"
+import { apolloClient } from "./apollo"
+import loadable from "@loadable/component"
+import { useHasMounted } from "./cms/routes"
 
 import "@fontsource/charis-sil/400.css"
 import "@fontsource/charis-sil/400-italic.css"
@@ -18,6 +18,9 @@ import "@fontsource/charis-sil/700.css"
 import "@fontsource/charis-sil/700-italic.css"
 import "@fontsource/quattrocento-sans/latin.css"
 import "./fonts.css"
+
+const ClientSignIn = loadable(() => import("./client/signin"))
+const ClientLayout = loadable(() => import("./client/layout"))
 
 /** Wrapper for most site pages, providing them with a navigation header and footer. */
 const Layout = (p: { title?: string; children: any }) => {
@@ -46,21 +49,27 @@ const Layout = (p: { title?: string; children: any }) => {
   )
 }
 
-const LayoutInner = (p: { children: any }) => {
-  const creds = useCredentials()
-  const token = creds ? creds.signInUserSession.idToken.jwtToken : null
-  const client = apolloClient(token)
-  useCMS().registerApi("graphql", client)
-  return (
-    <ApolloProvider client={client}>
-      <LayoutCMS creds={creds}>{p.children}</LayoutCMS>
-    </ApolloProvider>
-  )
+export const SignIn = () => {
+  const hasMounted = useHasMounted()
+  if (hasMounted) {
+    return <ClientSignIn />
+  } else {
+    return null
+  }
 }
 
-const LayoutCMS = (p: { children: any; creds: any }) => {
-  usePlugin(PageCreatorPlugin)
-  return <>{p.children}</>
+const LayoutInner = (p: { children: any }) => {
+  const hasMounted = useHasMounted()
+  if (hasMounted) {
+    return <ClientLayout {...p} />
+  } else {
+    return <ServerLayout {...p} />
+  }
+}
+
+const ServerLayout = (p: { children: any }) => {
+  const client = apolloClient(null)
+  return <ApolloProvider client={client}>{p.children}</ApolloProvider>
 }
 
 export default Layout

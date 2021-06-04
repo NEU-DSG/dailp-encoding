@@ -3,13 +3,14 @@ import { withAuthenticator, AmplifySignIn } from "@aws-amplify/ui-react"
 import { useCredentials } from "../auth"
 import Layout from "../layout"
 
-export default () => (
+const SignInPage = () => (
   <Layout>
     <main>
       <SignIn />
     </main>
   </Layout>
 )
+export default SignInPage
 
 const SignIn = withAuthenticator(() => {
   const creds = useCredentials()
