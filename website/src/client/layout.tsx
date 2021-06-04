@@ -1,7 +1,7 @@
 import React from "react"
 import { ApolloProvider } from "@apollo/client"
 import { useCMS, usePlugin } from "tinacms"
-import { useCredentials } from "../auth"
+import { useCredentials, UserProvider } from "../auth"
 import { apolloClient } from "../apollo"
 import { PageCreatorPlugin } from "../cms/graphql-form"
 
@@ -16,7 +16,12 @@ const LayoutClient = (p: { children: any }) => {
     </ApolloProvider>
   )
 }
-export default LayoutClient
+
+export default (p: { children: any }) => (
+  <UserProvider>
+    <LayoutClient {...p} />
+  </UserProvider>
+)
 
 const LayoutCMS = (p: { children: any; creds: any }) => {
   usePlugin(PageCreatorPlugin)

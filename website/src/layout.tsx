@@ -1,5 +1,5 @@
 import React from "react"
-import { css } from "linaria"
+import { css, Global } from "@emotion/react"
 import { Link } from "gatsby"
 import Footer from "./footer"
 import theme, { fullWidth, hideOnPrint, typography } from "./theme"
@@ -26,21 +26,30 @@ const ClientLayout = loadable(() => import("./client/layout"))
 const Layout = (p: { title?: string; children: any }) => {
   return (
     <>
+      <Global styles={globalStyles} />
       <Helmet titleTemplate="%s - DAILP" defaultTitle="DAILP" title={p.title} />
-      <Sticky enabled={isMobile} innerZ={2} className={hideOnPrint}>
-        <header aria-label="Site Header" id="header" className={header}>
-          <nav className={headerContents}>
+      <Sticky enabled={isMobile} innerZ={2} css={hideOnPrint}>
+        <header aria-label="Site Header" id="header" css={header}>
+          <div css={headerContents}>
             <MobileNav />
-            <h1 className={siteTitle}>
-              <Link to="/">DAILP</Link>
-            </h1>
-            <span className={subHeader}>
-              Digital Archive of American Indian Languages Preservation and
-              Perseverance
-            </span>
+            <div
+              css={{
+                display: "flex",
+                alignItems: "baseline",
+                flexFlow: "row nowrap",
+              }}
+            >
+              <h1 css={siteTitle}>
+                <Link to="/">DAILP</Link>
+              </h1>
+              <span css={subHeader}>
+                Digital Archive of American Indian Languages Preservation and
+                Perseverance
+              </span>
+            </div>
             <SignIn />
-            <NavMenu />
-          </nav>
+          </div>
+          <NavMenu />
         </header>
       </Sticky>
       <LayoutInner>{p.children}</LayoutInner>
@@ -76,8 +85,8 @@ export default Layout
 
 const header = css`
   display: flex;
-  flex-flow: row nowrap;
-  justify-content: center;
+  flex-flow: column nowrap;
+  align-items: center;
   background-color: ${theme.colors.header};
   padding: 0 ${theme.edgeSpacing};
   font-family: ${theme.fonts.headerArr.join(",")};
@@ -87,10 +96,8 @@ const headerContents = css`
   ${fullWidth};
   display: flex;
   flex-flow: row wrap;
+  justify-content: space-between;
   align-items: center;
-  ${theme.mediaQueries.medium} {
-    align-items: baseline;
-  }
 `
 
 const subHeader = css`
@@ -115,155 +122,153 @@ const siteTitle = css`
 `
 
 // These styles affect all pages.
-css`
-  :global() {
-    ${typography.toString()}
+const globalStyles = css`
+  ${typography.toString()}
 
-    * {
-      box-sizing: border-box;
+  * {
+    box-sizing: border-box;
+  }
+
+  :root {
+    --full-width: 100%;
+    --most-width: 95%;
+    ${theme.mediaQueries.medium} {
+      --full-width: 41rem;
+      --most-width: 35rem;
+    }
+    ${theme.mediaQueries.large} {
+      --full-width: 50rem;
+      --most-width: 45rem;
+    }
+  }
+
+  html {
+    margin: 0;
+    padding: 0;
+    overflow: initial;
+    font-size: ${theme.fontSizes.root} !important;
+    ${theme.mediaQueries.print} {
+      font-size: 11.5pt !important;
+    }
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+    background-color: ${theme.colors.footer} !important;
+    ${theme.mediaQueries.print} {
+      background-color: none !important;
+      color: black;
+    }
+  }
+
+  ${theme.mediaQueries.print} {
+    abbr[title] {
+      border-bottom: none;
+      text-decoration: none;
+    }
+  }
+
+  p,
+  h1,
+  h2 {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  @page {
+    margin: 0.75in;
+    :left :header {
+      content: first(title);
+    }
+    :right :header {
+      content: first(chapter), , decimal(pageno);
+    }
+  }
+
+  a {
+    color: ${theme.colors.link};
+    text-decoration-thickness: 0.08em;
+    text-decoration-style: dotted;
+    text-decoration-skip-ink: none;
+    border-radius: 0;
+
+    &:hover {
+      text-decoration-style: solid;
     }
 
-    :root {
-      --full-width: 100%;
-      --most-width: 95%;
-      ${theme.mediaQueries.medium} {
-        --full-width: 41rem;
-        --most-width: 35rem;
-      }
-      ${theme.mediaQueries.large} {
-        --full-width: 50rem;
-        --most-width: 45rem;
-      }
-    }
-
-    html {
-      margin: 0;
-      padding: 0;
-      overflow: initial;
-      font-size: ${theme.fontSizes.root} !important;
-      ${theme.mediaQueries.print} {
-        font-size: 11.5pt !important;
-      }
-    }
-
-    body {
-      margin: 0;
-      padding: 0;
-      background-color: ${theme.colors.footer} !important;
-      ${theme.mediaQueries.print} {
-        background-color: none !important;
-        color: black;
-      }
+    &:active,
+    &:focus {
+      text-decoration: none;
     }
 
     ${theme.mediaQueries.print} {
-      abbr[title] {
-        border-bottom: none;
-        text-decoration: none;
-      }
+      color: ${theme.colors.text};
+      text-decoration: none;
     }
+  }
 
-    p,
-    h1,
-    h2 {
-      page-break-inside: avoid;
-      break-inside: avoid;
+  button:focus,
+  a:focus,
+  img:focus,
+  *[tabindex]:focus {
+    outline-color: ${theme.colors.link};
+    outline-style: solid;
+    outline-width: thin;
+    outline-offset: 0;
+
+    ${theme.mediaQueries.print} {
+      outline: none;
     }
+  }
 
-    @page {
-      margin: 0.75in;
-      :left :header {
-        content: first(title);
-      }
-      :right :header {
-        content: first(chapter), , decimal(pageno);
-      }
+  main {
+    background-color: ${theme.colors.body};
+    display: flex;
+    flex-flow: column wrap;
+    align-items: center;
+    padding: ${typography.rhythm(1)} 0;
+    ${theme.mediaQueries.print} {
+      display: block;
+      padding-bottom: 0;
     }
+  }
 
-    a {
-      color: ${theme.colors.link};
-      text-decoration-thickness: 0.08em;
-      text-decoration-style: dotted;
-      text-decoration-skip-ink: none;
-      border-radius: 0;
-
-      &:hover {
-        text-decoration-style: solid;
-      }
-
-      &:active,
-      &:focus {
-        text-decoration: none;
-      }
-
-      ${theme.mediaQueries.print} {
-        color: ${theme.colors.text};
-        text-decoration: none;
-      }
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  header {
+    color: ${theme.colors.headings};
+    font-family: ${theme.fonts.headerArr.join(",")};
+    ${theme.mediaQueries.print} {
+      color: black;
     }
+  }
 
-    button:focus,
-    a:focus,
-    img:focus,
-    *[tabindex]:focus {
-      outline-color: ${theme.colors.link};
-      outline-style: solid;
-      outline-width: thin;
-      outline-offset: 0;
+  hr {
+    width: 40%;
+    margin: auto;
+  }
 
-      ${theme.mediaQueries.print} {
-        outline: none;
-      }
+  button,
+  input[type="radio"] {
+    cursor: pointer;
+    font-family: inherit;
+    font-size: inherit;
+  }
+
+  figure {
+    margin-inline-start: 0;
+    max-width: 100%;
+    ${theme.mediaQueries.medium} {
+      margin-inline-start: 2rem;
     }
+  }
 
-    main {
-      background-color: ${theme.colors.body};
-      display: flex;
-      flex-flow: column wrap;
-      align-items: center;
-      padding: ${typography.rhythm(1)} 0;
-      ${theme.mediaQueries.print} {
-        display: block;
-        padding-bottom: 0;
-      }
-    }
-
-    h1,
-    h2,
-    h3,
-    h4,
-    h5,
-    h6,
-    header {
-      color: ${theme.colors.headings};
-      font-family: ${theme.fonts.headerArr.join(",")};
-      ${theme.mediaQueries.print} {
-        color: black;
-      }
-    }
-
-    hr {
-      width: 40%;
-      margin: auto;
-    }
-
-    button,
-    input[type="radio"] {
-      cursor: pointer;
-      font-family: inherit;
-      font-size: inherit;
-    }
-
-    figure {
-      margin-inline-start: 0;
-      max-width: 100%;
-      ${theme.mediaQueries.medium} {
-        margin-inline-start: 2rem;
-      }
-    }
-
-    dd {
-      margin-left: ${typography.rhythm(1)};
-    }
+  dd {
+    margin-left: ${typography.rhythm(1)};
   }
 `

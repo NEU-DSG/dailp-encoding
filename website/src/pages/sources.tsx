@@ -1,6 +1,6 @@
 import React from "react"
 import { graphql } from "gatsby"
-import { css, cx } from "linaria"
+import { css } from "@emotion/react"
 import { sortBy, join } from "lodash"
 import Layout from "../layout"
 import { fullWidth, std, typography } from "../theme"
@@ -9,7 +9,7 @@ import { sourceCitationId } from "../routes"
 const SourcesPage = (p: { data: GatsbyTypes.AllSourcesQuery }) => {
   return (
     <Layout title="Sources Index">
-      <main className={wideChildren}>
+      <main css={wideChildren}>
         <h1>Sources of Cherokee Language Data</h1>
         <p>
           This is a cited list of the lexical language resources that we use to
@@ -22,7 +22,7 @@ const SourcesPage = (p: { data: GatsbyTypes.AllSourcesQuery }) => {
           <i>Title of the document</i>. Number of words referenced.
         </p>
 
-        <ul className={wide}>
+        <ul css={wide}>
           {sortBy(
             p.data.dailp.allDocuments.filter((d) => d.isReference),
             (doc) => doc.id
@@ -48,9 +48,9 @@ const DocumentCitation = (p: { document: LocalDocument }) => {
   )
   const wordCount = doc.formCount ? ` ${doc.formCount} words.` : null
   return (
-    <li id={sourceCitationId(doc.id)} className={apaCitation}>
-      <span className={bolded}>{doc.id}</span> = {authors} {year && `(${year})`}
-      . <i>{doc.title}</i>.{wordCount}
+    <li id={sourceCitationId(doc.id)} css={apaCitation}>
+      <span css={bolded}>{doc.id}</span> = {authors} {year && `(${year})`}.{" "}
+      <i>{doc.title}</i>.{wordCount}
     </li>
   )
 }

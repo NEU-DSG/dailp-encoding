@@ -9,7 +9,7 @@ import { Tooltip, TooltipReference, useTooltipState } from "reakit/Tooltip"
 import Cookies from "js-cookie"
 import theme, { hideOnPrint, typography, withBg } from "./theme"
 import { ViewMode, TagSet, tagSetForMode } from "./types"
-import { css, cx } from "linaria"
+import { css } from "@emotion/react"
 
 const notNumber = (l: any) => isNaN(Number(l))
 const levelNameMapping = {
@@ -79,7 +79,7 @@ export const ExperiencePicker = (p: { onSelect: (mode: ViewMode) => void }) => {
       <RadioGroup
         {...radio}
         id="mode-picker"
-        className={levelGroup}
+        css={levelGroup}
         aria-label="Display Mode"
       >
         {Object.keys(ViewMode)
@@ -100,7 +100,7 @@ export const TagSetPicker = (p: { onSelect: (tagSet: TagSet) => void }) => {
   useEffect(() => p.onSelect(radio.state as TagSet), [radio.state])
 
   return (
-    <RadioGroup {...radio} id="tag-set-picker" className={levelGroup}>
+    <RadioGroup {...radio} id="tag-set-picker" css={levelGroup}>
       {Object.keys(TagSet)
         .filter(notNumber)
         .map(function (tagSet: string) {
@@ -119,13 +119,13 @@ const ExperienceOption = (p: { radio: RadioStateReturn; level: string }) => {
       <TooltipReference
         {...tooltip}
         as="label"
-        className={cx(levelLabel, isSelected && highlightedLabel)}
+        css={[levelLabel, isSelected && highlightedLabel]}
       >
         <Radio {...p.radio} value={value} />
         {"  "}
         {levelNameMapping[value].label}
       </TooltipReference>
-      <Tooltip {...tooltip} className={withBg}>
+      <Tooltip {...tooltip} css={withBg}>
         {levelNameMapping[value].details}
       </Tooltip>
     </>
@@ -141,12 +141,12 @@ const TagSetOption = (p: { radio: RadioStateReturn; level: string }) => {
   const value = TagSet[p.level as keyof typeof TagSet]
   return (
     <>
-      <TooltipReference {...tooltip} as="label" className={levelLabel}>
+      <TooltipReference {...tooltip} as="label" css={levelLabel}>
         <Radio {...p.radio} value={value} />
         {"  "}
         {tagSetMapping[value].label}
       </TooltipReference>
-      <Tooltip {...tooltip} className={withBg}>
+      <Tooltip {...tooltip} css={withBg}>
         {tagSetMapping[value].details}
       </Tooltip>
     </>

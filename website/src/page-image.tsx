@@ -1,5 +1,5 @@
 import React, { useState } from "react"
-import { css, cx } from "linaria"
+import { css } from "@emotion/react"
 import theme, { hideOnPrint, std, typography, Button } from "./theme"
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch"
 import { Helmet } from "react-helmet"
@@ -10,7 +10,7 @@ const PageImages = (p: {
   pageImages: GatsbyTypes.Dailp_IiifImages
 }) => {
   return (
-    <figure className={annotationFigure} aria-label="Manuscript Source Images">
+    <figure css={annotationFigure} aria-label="Manuscript Source Images">
       <Helmet>
         <link
           href="https://brbl-media.library.yale.edu"
@@ -35,7 +35,7 @@ const PageImages = (p: {
         )}
       </TransformWrapper>
       {p.document.sources.length ? (
-        <figcaption className={caption}>
+        <figcaption css={caption}>
           Source:{" "}
           <a href={p.document.sources[0].link}>{p.document.sources[0].name}</a>
         </figcaption>
@@ -57,7 +57,7 @@ const CurrentPageImage = (p: {
   return (
     <>
       {imageCount > 1 && (
-        <nav aria-label="Pagination" className={cx(pageNav, hideOnPrint)}>
+        <nav aria-label="Pagination" css={[pageNav, hideOnPrint]}>
           <Button
             onClick={() => {
               p.resetTransform()
@@ -86,22 +86,18 @@ const CurrentPageImage = (p: {
       <div style={{ position: "relative" }}>
         <TransformComponent>
           <img
-            className={pageImage}
+            css={pageImage}
             src={url}
             alt={`Manuscript Page ${selectedPage + 1}`}
           />
         </TransformComponent>
-        <div className={floatingControls}>
-          <Button
-            onClick={p.zoomIn}
-            className={std.iconButton}
-            aria-label="Zoom In"
-          >
+        <div css={floatingControls}>
+          <Button onClick={p.zoomIn} css={std.iconButton} aria-label="Zoom In">
             <FaPlus size={20} />
           </Button>
           <Button
             onClick={p.zoomOut}
-            className={std.iconButton}
+            css={std.iconButton}
             aria-label="Zoom Out"
           >
             <FaMinus size={20} />

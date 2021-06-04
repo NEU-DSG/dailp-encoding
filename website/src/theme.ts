@@ -1,5 +1,5 @@
-import { css } from "linaria"
-import { styled } from "linaria/react"
+import { css } from "@emotion/react"
+import styled from "@emotion/styled"
 import Color from "color"
 import Typography from "typography"
 import CSS from "csstype"
@@ -58,18 +58,18 @@ export const typography = new Typography({
   headerColor: "hsl(0, 0%, 0%, 0.9)",
 })
 
-export const fullWidth = {
+export const fullWidth = css({
   width: "var(--full-width)",
-}
+})
 
-export const largeDialog = {
+export const largeDialog = css({
   width: "var(--most-width)",
-}
+})
 
-export const centered = {
+export const centered = css({
   paddingLeft: theme.edgeSpacing,
   paddingRight: theme.edgeSpacing,
-}
+})
 
 export const withBg = css`
   z-index: 999;
