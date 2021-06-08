@@ -16,7 +16,7 @@ const SignIn = withAuthenticator(() => {
   const creds = useCredentials()
   if (creds) {
     // Redirect to profile page?
-    return null
+    return <p>Already signed in</p>
   } else {
     return <AmplifySignIn />
   }
