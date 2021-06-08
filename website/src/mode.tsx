@@ -70,7 +70,10 @@ export const ExperiencePicker = (p: { onSelect: (mode: ViewMode) => void }) => {
 
   // Save the selected experience level throughout the session.
   useEffect(() => {
-    Cookies.set("experienceLevel", radio.state!.toString())
+    Cookies.set("experienceLevel", radio.state!.toString(), {
+      sameSite: "strict",
+      secure: true,
+    })
     p.onSelect(radio.state as ViewMode)
   }, [radio.state])
 
