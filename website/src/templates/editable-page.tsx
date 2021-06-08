@@ -12,7 +12,7 @@ import {
   queryPage,
   mutatePage,
 } from "../cms/graphql-form"
-import theme, { fullWidth, centered } from "../theme"
+import theme, { fullWidth, paddedWidth } from "../theme"
 import Layout from "../layout"
 import { useCredentials } from "../auth"
 
@@ -31,7 +31,7 @@ const EditablePage = (props: Props) => (
 export default EditablePage
 
 export const EditablePageContents = (props: Props) => (
-  <main css={centered}>
+  <main css={paddedWidth}>
     <article css={fullWidth}>
       <EditablePageInner {...props} />
     </article>

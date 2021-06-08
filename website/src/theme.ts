@@ -11,7 +11,7 @@ const theme = {
     // Noto Serif supports glottal stops and more accents than other fonts.
     bodyArr: ["Charis SIL", "Digohweli", "serif", "Arial"],
     headerArr: ["Quattrocento Sans", "Segoe UI", "Arial", "sans-serif"],
-    cherokee: `"Digohweli", "Spectral", "serif", "Arial"`,
+    cherokee: `"Digohweli", "Charis SIL", "serif", "Arial"`,
     smallCaps: "Charis SIL",
     body: null,
     header: null,
@@ -60,9 +60,9 @@ export const typography = new Typography({
 
 const paddingX = (x) => css({ paddingLeft: x, paddingRight: x })
 
-export const centered = paddingX(theme.edgeSpacing)
+export const paddedWidth = paddingX(theme.edgeSpacing)
 
-export const fullWidth = css(centered, {
+export const fullWidth = css({
   width: "100%",
   [theme.mediaQueries.medium]: {
     width: "41rem",

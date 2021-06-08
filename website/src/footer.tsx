@@ -34,6 +34,7 @@ const Footer = () => {
               src={`${wordpressUrl}/wp-content/themes/quest-child/images/nu-light.svg`}
               alt="Northeastern University"
               width={180}
+              loading="lazy"
             />
           </a>
           <a href="https://github.com/neu-dsg/dailp-encoding">

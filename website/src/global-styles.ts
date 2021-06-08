@@ -18,14 +18,11 @@ const globalStyles = css`
   }
 
   :root {
-    --full-width: 100%;
     --most-width: 95%;
     ${theme.mediaQueries.medium} {
-      --full-width: 41rem;
       --most-width: 35rem;
     }
     ${theme.mediaQueries.large} {
-      --full-width: 50rem;
       --most-width: 45rem;
     }
   }
