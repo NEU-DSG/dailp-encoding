@@ -1,5 +1,5 @@
 import React from "react"
-import { css } from "@emotion/react"
+import { css, ClassNames } from "@emotion/react"
 import { BiRightArrow, BiLeftArrow } from "react-icons/bi"
 import {
   CarouselProvider,
@@ -22,9 +22,9 @@ export const Carousel = (p: { caption: any; images: string[] }) => (
     >
       <Slider>
         {p.images.map((url, idx) => (
-          <Slide key={idx} index={idx} innerClassName={centerAlign.name}>
-            <img src={url} />
-          </Slide>
+          <CenteredSlide key={idx} index={idx}>
+            <img src={url} height={300} />
+          </CenteredSlide>
         ))}
       </Slider>
       <ButtonBack css={[carouselButton, onLeft]}>
@@ -34,8 +34,16 @@ export const Carousel = (p: { caption: any; images: string[] }) => (
         <BiRightArrow aria-label="Next" size={24} />
       </ButtonNext>
     </CarouselProvider>
-    {p.caption ? <h5 css={centerAlign}>{p.caption}</h5> : null}
+    {p.caption ? <h5 css={{ textAlign: "center" }}>{p.caption}</h5> : null}
   </>
+)
+
+const CenteredSlide = (props: any) => (
+  <ClassNames>
+    {({ css }) => (
+      <Slide innerClassName={css({ textAlign: "center" })} {...props} />
+    )}
+  </ClassNames>
 )
 
 const carousel = css`
@@ -58,8 +66,4 @@ const onLeft = css`
 
 const onRight = css`
   right: 0;
-`
-
-const centerAlign = css`
-  text-align: center;
 `

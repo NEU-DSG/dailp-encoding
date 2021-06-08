@@ -127,7 +127,7 @@ async function createHybridPages({ actions, graphql }) {
   }
 }
 
-exports.onCreateWebpackConfig = ({ actions }) => {
+exports.onCreateWebpackConfig = ({ actions, getConfig, rules, loaders }) => {
   actions.setWebpackConfig({
     resolve: {
       alias: {
@@ -141,4 +141,16 @@ exports.onCreateWebpackConfig = ({ actions }) => {
       },
     },
   })
+
+  // Load self-hosted fonts more efficiently.
+  const config = getConfig()
+  const fonts = rules.fonts()
+  fonts.use = [loaders.file()]
+  config.module.rules = [
+    ...config.module.rules.filter(
+      (rule) => !String(rule.test).includes("woff(2)?")
+    ),
+    fonts,
+  ]
+  actions.replaceWebpackConfig(config)
 }

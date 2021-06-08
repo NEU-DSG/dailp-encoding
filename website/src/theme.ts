@@ -58,17 +58,22 @@ export const typography = new Typography({
   headerColor: "hsl(0, 0%, 0%, 0.9)",
 })
 
-export const fullWidth = css({
-  width: "var(--full-width)",
+const paddingX = (x) => css({ paddingLeft: x, paddingRight: x })
+
+export const centered = paddingX(theme.edgeSpacing)
+
+export const fullWidth = css(centered, {
+  width: "100%",
+  [theme.mediaQueries.medium]: {
+    width: "41rem",
+  },
+  [theme.mediaQueries.large]: {
+    width: "50rem",
+  },
 })
 
 export const largeDialog = css({
   width: "var(--most-width)",
-})
-
-export const centered = css({
-  paddingLeft: theme.edgeSpacing,
-  paddingRight: theme.edgeSpacing,
 })
 
 export const withBg = css`

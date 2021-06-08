@@ -7,6 +7,7 @@ type CustomField = Field & { templates?: Record<string, CustomBlockTemplate> }
 // For the query, we need variables that stay the same for all queries, like
 // entity ID. For mutations, we also need to pass in the change as the variable $data.
 export const useGraphQLForm = (
+  initialData: any,
   query: any,
   mutation: any,
   config: {
@@ -21,11 +22,15 @@ export const useGraphQLForm = (
   const cms = useCMS()
   return useForm({
     loadInitialValues: async () => {
-      const { data } = await cms.api.graphql.query({
-        query,
-        variables: config.variables,
-      })
-      return config.transformIn ? config.transformIn(data) : data
+      if (cms.api.graphql) {
+        const { data } = await cms.api.graphql.query({
+          query,
+          variables: config.variables,
+        })
+        return config.transformIn ? config.transformIn(data) : data
+      } else {
+        return initialData
+      }
     },
     onSubmit: async (formData) => {
       const finalData = config.transformOut

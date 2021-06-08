@@ -4,7 +4,7 @@ import Layout from "../layout"
 import { queryPage } from "../cms/graphql-form"
 import { EditablePageContents } from "../templates/editable-page"
 import { useQuery } from "@apollo/client"
-import { isSSR, useHasMounted } from "../cms/routes"
+import { useHasMounted } from "../cms/routes"
 
 /**
  Handle client-only routes for pages that haven't been statically renderered

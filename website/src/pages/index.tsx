@@ -2,23 +2,16 @@ import React from "react"
 import { graphql, Link } from "gatsby"
 import styled from "@emotion/styled"
 import { Helmet } from "react-helmet"
-import "@fortawesome/fontawesome-free/css/fontawesome.css"
-import "@fortawesome/fontawesome-free/css/solid.css"
 import Layout from "../layout"
 import theme, { fullWidth, wordpressUrl } from "../theme"
 import { collectionRoute } from "../routes"
 import { Carousel } from "../carousel"
 
+import "../wordpress.css"
+
 /** Lists all documents in our database */
 const IndexPage = (props: { data: GatsbyTypes.IndexPageQuery }) => (
   <Layout title="Collections">
-    <Helmet>
-      <link
-        type="text/css"
-        rel="stylesheet"
-        href={`${wordpressUrl}/wp-content/themes/quest-child/style.css?ver=4.9.16`}
-      />
-    </Helmet>
     <DocIndex>
       <FullWidth>
         <Carousel

@@ -33,6 +33,7 @@ const Footer = () => {
             <img
               src={`${wordpressUrl}/wp-content/themes/quest-child/images/nu-light.svg`}
               alt="Northeastern University"
+              width={180}
             />
           </a>
           <a href="https://github.com/neu-dsg/dailp-encoding">
