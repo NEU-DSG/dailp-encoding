@@ -16,7 +16,7 @@ import theme, {
 } from "../theme"
 import { collectionRoute, documentDetailsRoute, documentRoute } from "../routes"
 import { useScrollableTabState } from "../scrollable-tabs"
-import { css } from "@emotion/react"
+import { css, ClassNames } from "@emotion/react"
 import { DeepPartial } from "tsdef"
 import { ViewMode, TagSet, BasicMorphemeSegment, tagSetForMode } from "../types"
 import { MorphemeDetails } from "../morpheme"
@@ -50,11 +50,7 @@ const TabSet = ({ doc }) => {
   const tabs = useScrollableTabState({ selectedId: Tabs.ANNOTATION })
   return (
     <>
-      <Sticky
-        top={isMobile ? "#header" : undefined}
-        css={wideAndTop}
-        innerClass={wideSticky.name}
-      >
+      <WideSticky top={isMobile ? "#header" : undefined} css={wideAndTop}>
         <TabList
           {...tabs}
           id="document-tabs-header"
@@ -68,7 +64,7 @@ const TabSet = ({ doc }) => {
             Original Text
           </Tab>
         </TabList>
-      </Sticky>
+      </WideSticky>
 
       <TabPanel
         {...tabs}
@@ -92,6 +88,44 @@ const TabSet = ({ doc }) => {
     </>
   )
 }
+
+const SolidSticky = (props: { top: string; children: any; css?: any }) => (
+  <ClassNames>
+    {({ css }) => (
+      <Sticky
+        innerClass={css`
+          background-color: ${theme.colors.body};
+          z-index: 1;
+        `}
+        top={props.top}
+        css={props.css}
+      >
+        {props.children}
+      </Sticky>
+    )}
+  </ClassNames>
+)
+
+const WideSticky = (props: { top: string; children: any; css?: any }) => (
+  <ClassNames>
+    {({ css }) => (
+      <Sticky
+        innerClass={css`
+          left: 0;
+          display: flex;
+          flex-flow: column nowrap;
+          align-items: center;
+          width: 100% !important;
+          z-index: 1;
+        `}
+        top={props.top}
+        css={props.css}
+      >
+        {props.children}
+      </Sticky>
+    )}
+  </ClassNames>
+)
 
 const TranslationTab = ({ doc }) => {
   const dialog = useDialogState()
@@ -123,9 +157,9 @@ const TranslationTab = ({ doc }) => {
         page. Hover over each mode for a specific description.
       </p>
 
-      <Sticky innerClass={solidBg.name} top="#document-tabs-header">
+      <SolidSticky top="#document-tabs-header">
         <ExperiencePicker onSelect={setExperienceLevel} />
-      </Sticky>
+      </SolidSticky>
 
       <article css={annotationContents}>
         {doc.translatedSegments?.map((seg, i) => (
@@ -222,18 +256,7 @@ const wideAndTop = css`
   }
 `
 
-const solidBg = css`
-  background-color: ${theme.colors.body};
-  z-index: 1;
-`
-
-const wideSticky = css`
-  left: 0;
-  display: flex;
-  flex-flow: column nowrap;
-  align-items: center;
-  width: 100% !important;
-`
+const wideSticky = css``
 
 const docTab = css`
   border-radius: 0;

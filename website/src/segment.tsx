@@ -60,7 +60,7 @@ export const Segment = (p: Props) => {
     } else {
       return <>{children}</>
     }
-  } else if (isPageBreak(p.segment)) {
+  } else if (isPageBreak(p.segment) && p.segment.index > 0) {
     const num = p.segment.index + 1
     return (
       <div
@@ -301,11 +301,6 @@ const pageBreak = css`
   text-align: center;
   border-top: 1px solid gray;
   padding-top: ${typography.rhythm(0.5)};
-
-  &:first-child,
-  &:last-child {
-    display: none;
-  }
 
   ${theme.mediaQueries.print} {
     display: none;

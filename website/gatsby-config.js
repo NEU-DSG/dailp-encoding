@@ -5,7 +5,13 @@ module.exports = {
   siteMetadata: {
     title: "DAILP Encoding",
   },
-  flags: { PRESERVE_WEBPACK_CACHE: true, FAST_REFRESH: true, FAST_DEV: true },
+  flags: {
+    PRESERVE_WEBPACK_CACHE: true,
+    FAST_REFRESH: true,
+    DEV_SSR: true,
+    LAZY_IMAGES: true,
+    QUERY_ON_DEMAND: false,
+  },
   plugins: [
     "gatsby-plugin-sharp",
     {
@@ -28,7 +34,10 @@ module.exports = {
         icon: "src/assets/uktena.jpg",
       },
     },
-    "gatsby-plugin-offline",
+    // Removed gatsby-plugin-offline because it keeps users stuck on old
+    // versions of the site! Big problem for us since we're updating all the time.
+    // See details here: https://github.com/gatsbyjs/gatsby/issues/9087#issuecomment-774680408
+    "gatsby-plugin-remove-serviceworker",
     {
       resolve: "gatsby-plugin-typegen",
       options: {
@@ -72,7 +81,7 @@ module.exports = {
         offset: -115,
       },
     },
-    // "gatsby-plugin-loadable-components-ssr",
+    "gatsby-plugin-loadable-components-ssr",
     {
       resolve: "gatsby-plugin-env-variables",
       options: {

@@ -12,7 +12,7 @@ import {
   queryPage,
   mutatePage,
 } from "../cms/graphql-form"
-import theme, { fullWidth } from "../theme"
+import theme, { fullWidth, centered } from "../theme"
 import Layout from "../layout"
 import { useCredentials } from "../auth"
 
@@ -31,16 +31,15 @@ const EditablePage = (props: Props) => (
 export default EditablePage
 
 export const EditablePageContents = (props: Props) => (
-  <main css={padded}>
-    <article css={wideArticle}>
-      <EditablePageSSR {...props} />
+  <main css={centered}>
+    <article css={fullWidth}>
+      <EditablePageInner {...props} />
     </article>
   </main>
 )
 
 const EditablePageSSR = (props: Props) => {
   const creds = useCredentials()
-  console.log(creds)
   if (creds) {
     return <EditablePageInner {...props} />
   } else {
@@ -52,7 +51,7 @@ const EditablePageInner = (props: Props) => {
   const staticData = props.data.dailp.page
   usePlugin(MarkdownFieldPlugin)
 
-  const [data, form] = useGraphQLForm(queryPage, mutatePage, {
+  const [data, form] = useGraphQLForm(staticData, queryPage, mutatePage, {
     label: "Edit Page",
     id: props.pageContext?.id,
     variables: { id: props.pageContext?.id },
@@ -125,14 +124,6 @@ const getType = (obj: any) => {
     return ty
   }
 }
-
-const padded = css`
-  padding-left: ${theme.edgeSpacing};
-  padding-right: ${theme.edgeSpacing};
-`
-const wideArticle = css`
-  ${fullWidth}
-`
 
 /* Page body will be JSON, like so:
    [{"type": "Markdown", "body": "..."},
