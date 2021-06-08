@@ -3,7 +3,7 @@ import { graphql } from "gatsby"
 import { css } from "@emotion/react"
 import { sortBy, join } from "lodash"
 import Layout from "../layout"
-import { fullWidth, std, typography } from "../theme"
+import { fullWidth, std, typography, paddedWidth } from "../theme"
 import { sourceCitationId } from "../routes"
 
 const SourcesPage = (p: { data: GatsbyTypes.AllSourcesQuery }) => {
@@ -63,6 +63,7 @@ const apaCitation = css`
 const wideChildren = css`
   & > * {
     ${fullWidth};
+    ${paddedWidth};
   }
 `
 

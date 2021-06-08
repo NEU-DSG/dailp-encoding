@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react"
+import React, { useState } from "react"
 import { graphql, Link } from "gatsby"
 import { useDialogState, Dialog, DialogBackdrop } from "reakit/Dialog"
 import { Tab, TabPanel, TabList } from "reakit/Tab"
@@ -18,12 +18,14 @@ import { collectionRoute, documentDetailsRoute, documentRoute } from "../routes"
 import { useScrollableTabState } from "../scrollable-tabs"
 import { css, ClassNames } from "@emotion/react"
 import { DeepPartial } from "tsdef"
-import { ViewMode, TagSet, BasicMorphemeSegment, tagSetForMode } from "../types"
+import { ViewMode, BasicMorphemeSegment, tagSetForMode } from "../types"
 import { MorphemeDetails } from "../morpheme"
-import PageImages from "../page-image"
 import { Breadcrumbs } from "../breadcrumbs"
 import { isMobile } from "react-device-detect"
-import { ExperiencePicker, modeDetails, selectedMode } from "../mode"
+import { ExperiencePicker, selectedMode } from "../mode"
+import loadable from "@loadable/component"
+
+const PageImages = loadable(() => import("../page-image"))
 
 enum Tabs {
   ANNOTATION = "annotation-tab",

@@ -89,6 +89,7 @@ const CurrentPageImage = (p: {
             css={pageImage}
             src={url}
             alt={`Manuscript Page ${selectedPage + 1}`}
+            loading="lazy"
           />
         </TransformComponent>
         <div css={floatingControls}>
