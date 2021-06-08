@@ -25,7 +25,7 @@ const theme = {
     footer: "#405372",
     altFooter: "#4f5970",
     body: "white",
-    text: "black",
+    text: "hsl(0, 0%, 0%, 0.95)",
     link: "#405372",
     headings: "#9f4c43",
     borders: "darkgray",
@@ -54,8 +54,8 @@ export const typography = new Typography({
   baseLineHeight: 1.47,
   headerFontFamily: theme.fonts.headerArr,
   bodyFontFamily: theme.fonts.bodyArr,
-  bodyColor: "hsl(0, 0%, 0%, 0.95)",
-  headerColor: "hsl(0, 0%, 0%, 0.9)",
+  bodyColor: theme.colors.text,
+  headerColor: theme.colors.headings,
 })
 
 const paddingX = (x) => css({ paddingLeft: x, paddingRight: x })
@@ -76,24 +76,27 @@ export const largeDialog = css({
   width: "var(--most-width)",
 })
 
-export const withBg = css`
-  z-index: 999;
-  background-color: ${theme.colors.body};
-  padding: ${typography.rhythm(1 / 6)} 1ch;
-  border: 1px solid ${theme.colors.text};
-  ${theme.mediaQueries.medium} {
-    max-width: 70vw;
-  }
-  ${theme.mediaQueries.print} {
-    display: none;
-  }
-`
+export const hideOnPrint = css({
+  [theme.mediaQueries.print]: {
+    display: "none",
+  },
+})
 
-export const hideOnPrint = css`
-  ${theme.mediaQueries.print} {
-    display: none;
-  }
-`
+export const withBg = css(hideOnPrint, {
+  zIndex: 999,
+  backgroundColor: theme.colors.body,
+  padding: `${typography.rhythm(1 / 6)} 1ch`,
+  border: `1px solid ${theme.colors.text}`,
+  [theme.mediaQueries.medium]: {
+    maxWidth: "70vw",
+  },
+})
+
+const tooltip = css(withBg, {
+  fontFamily: theme.fonts.body,
+  color: theme.colors.text,
+  fontSize: "0.9rem",
+})
 
 export const Button = styled(BaseButton)`
   font-family: ${theme.fonts.header};
@@ -143,7 +146,7 @@ const closeBlock = css`
 export const std = {
   iconButton,
   smallCaps,
-  tooltip: withBg,
+  tooltip,
   closeBlock,
 }
 
