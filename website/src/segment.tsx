@@ -1,7 +1,7 @@
 import React from "react"
 import { css } from "@emotion/react"
 import { DialogDisclosure, DialogStateReturn } from "reakit/Dialog"
-import { Tooltip, TooltipReference, useTooltipState } from "reakit/Tooltip"
+import { Tooltip } from "@reach/tooltip"
 import { MdInfoOutline } from "react-icons/md"
 import { flatMap } from "lodash"
 import {
@@ -11,6 +11,7 @@ import {
   morphemeDisplayTag,
 } from "./types"
 import theme, { hideOnPrint, std, typography, withBg } from "./theme"
+import "@reach/tooltip/styles.css"
 
 interface Props {
   segment: GatsbyTypes.Dailp_AnnotatedSeg
@@ -141,12 +142,10 @@ export const AnnotatedForm = (
 }
 
 const WordCommentaryInfo = (p: { commentary: string }) => (
-  <WithTooltip
-    hint={p.commentary}
-    aria-label="Commentary on this word"
-    css={[infoIcon, hideOnPrint]}
-  >
-    <MdInfoOutline size={20} />
+  <WithTooltip hint={p.commentary} aria-label="Commentary on this word">
+    <span css={[infoIcon, hideOnPrint]}>
+      <MdInfoOutline size={20} />
+    </span>
   </WithTooltip>
 )
 
@@ -155,19 +154,16 @@ const WithTooltip = (p: {
   children: any
   "aria-label"?: string
   className?: string
-}) => {
-  const tooltip = useTooltipState()
-  return (
-    <>
-      <TooltipReference {...tooltip} as="span" className={p.className}>
-        {p.children}
-      </TooltipReference>
-      <Tooltip {...tooltip} css={std.tooltip}>
-        {p.hint}
-      </Tooltip>
-    </>
-  )
-}
+}) => (
+  <Tooltip
+    css={std.tooltip}
+    label={p.hint || ""}
+    className={p.className}
+    aria-label={p["aria-label"]}
+  >
+    {p.children}
+  </Tooltip>
+)
 
 const infoIcon = css`
   margin-left: 0.4rem;
@@ -236,7 +232,9 @@ const MorphemicSegmentation = (p: {
           }),
           function (i) {
             return (
-              <span key={100 * (i + 1)}>{p.segments![i].nextSeparator}</span>
+              <React.Fragment key={100 * (i + 1)}>
+                {p.segments![i].nextSeparator}
+              </React.Fragment>
             )
           }
         )}
@@ -264,34 +262,46 @@ const MorphemeSegment = (p: {
   const gloss = matchingTag?.tag || p.segment.gloss
   // Display functional tags in small-caps, per interlinear typesetting practice.
   const buttonStyle = [
+    atLeastThin,
     morphemeButton,
     matchingTag ? std.smallCaps : inheritFont,
   ]
 
-  let content = <>{gloss}</>
   if (matchingTag && matchingTag.title) {
-    content = (
-      <WithTooltip css={atLeastThin} hint={matchingTag.title}>
-        {gloss}
+    return (
+      <WithTooltip hint={matchingTag.title}>
+        <DialogDisclosure
+          {...p.dialog}
+          css={buttonStyle}
+          onClick={() => p.onOpenDetails(p.segment)}
+        >
+          {gloss}
+        </DialogDisclosure>
       </WithTooltip>
     )
   } else if (gloss === "?") {
-    content = (
-      <WithTooltip css={atLeastThin} hint="Unanalyzed or unfamiliar segment">
-        {gloss}
+    return (
+      <WithTooltip hint="Unanalyzed or unfamiliar segment">
+        <DialogDisclosure
+          {...p.dialog}
+          css={buttonStyle}
+          onClick={() => p.onOpenDetails(p.segment)}
+        >
+          {gloss}
+        </DialogDisclosure>
       </WithTooltip>
     )
+  } else {
+    return (
+      <DialogDisclosure
+        {...p.dialog}
+        css={buttonStyle}
+        onClick={() => p.onOpenDetails(p.segment)}
+      >
+        {gloss}
+      </DialogDisclosure>
+    )
   }
-
-  return (
-    <DialogDisclosure
-      {...p.dialog}
-      css={buttonStyle}
-      onClick={() => p.onOpenDetails(p.segment)}
-    >
-      {content}
-    </DialogDisclosure>
-  )
 }
 
 const pageBreak = css`

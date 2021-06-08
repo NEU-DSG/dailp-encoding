@@ -10,7 +10,10 @@ import {
 } from "pure-react-carousel"
 import "pure-react-carousel/dist/react-carousel.es.css"
 
-export const Carousel = (p: { caption: any; images: string[] }) => (
+export const Carousel = (p: {
+  caption: any
+  images: { src: string; alt: string }[]
+}) => (
   <>
     <CarouselProvider
       css={carousel}
@@ -21,9 +24,9 @@ export const Carousel = (p: { caption: any; images: string[] }) => (
       isPlaying={true}
     >
       <Slider>
-        {p.images.map((url, idx) => (
+        {p.images.map((img, idx) => (
           <CenteredSlide key={idx} index={idx}>
-            <img src={url} height={300} />
+            <img src={img.src} alt={img.alt} height={300} />
           </CenteredSlide>
         ))}
       </Slider>

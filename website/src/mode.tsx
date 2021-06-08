@@ -5,9 +5,9 @@ import {
   useRadioState,
   RadioStateReturn,
 } from "reakit/Radio"
-import { Tooltip, TooltipReference, useTooltipState } from "reakit/Tooltip"
+import { Tooltip } from "@reach/tooltip"
 import Cookies from "js-cookie"
-import theme, { hideOnPrint, typography, withBg } from "./theme"
+import theme, { hideOnPrint, typography, withBg, std } from "./theme"
 import { ViewMode, TagSet, tagSetForMode } from "./types"
 import { css } from "@emotion/react"
 
@@ -111,24 +111,16 @@ export const TagSetPicker = (p: { onSelect: (tagSet: TagSet) => void }) => {
 }
 
 const ExperienceOption = (p: { radio: RadioStateReturn; level: string }) => {
-  const tooltip = useTooltipState()
   const value = ViewMode[p.level as keyof typeof ViewMode]
   const isSelected = p.radio.state === value
   return (
-    <>
-      <TooltipReference
-        {...tooltip}
-        as="label"
-        css={[levelLabel, isSelected && highlightedLabel]}
-      >
+    <Tooltip css={std.tooltip} label={levelNameMapping[value].details}>
+      <label css={[levelLabel, isSelected && highlightedLabel]}>
         <Radio {...p.radio} value={value} />
         {"  "}
         {levelNameMapping[value].label}
-      </TooltipReference>
-      <Tooltip {...tooltip} css={withBg}>
-        {levelNameMapping[value].details}
-      </Tooltip>
-    </>
+      </label>
+    </Tooltip>
   )
 }
 
@@ -137,19 +129,15 @@ const highlightedLabel = css`
 `
 
 const TagSetOption = (p: { radio: RadioStateReturn; level: string }) => {
-  const tooltip = useTooltipState()
   const value = TagSet[p.level as keyof typeof TagSet]
   return (
-    <>
-      <TooltipReference {...tooltip} as="label" css={levelLabel}>
+    <Tooltip css={std.tooltip} label={tagSetMapping[value].details}>
+      <label css={levelLabel}>
         <Radio {...p.radio} value={value} />
         {"  "}
         {tagSetMapping[value].label}
-      </TooltipReference>
-      <Tooltip {...tooltip} css={withBg}>
-        {tagSetMapping[value].details}
-      </Tooltip>
-    </>
+      </label>
+    </Tooltip>
   )
 }
 
