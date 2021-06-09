@@ -91,7 +91,11 @@ const TabSet = ({ doc }) => {
   )
 }
 
-const SolidSticky = (props: { top: string; children: any; css?: any }) => (
+const SolidSticky = (props: {
+  top: string
+  children: any
+  className?: any
+}) => (
   <ClassNames>
     {({ css }) => (
       <Sticky
@@ -100,7 +104,7 @@ const SolidSticky = (props: { top: string; children: any; css?: any }) => (
           z-index: 1;
         `}
         top={props.top}
-        css={props.css}
+        className={props.className}
       >
         {props.children}
       </Sticky>
@@ -108,7 +112,7 @@ const SolidSticky = (props: { top: string; children: any; css?: any }) => (
   </ClassNames>
 )
 
-const WideSticky = (props: { top: string; children: any; css?: any }) => (
+const WideSticky = (props: { top: string; children: any; className?: any }) => (
   <ClassNames>
     {({ css }) => (
       <Sticky
@@ -121,7 +125,7 @@ const WideSticky = (props: { top: string; children: any; css?: any }) => (
           z-index: 1;
         `}
         top={props.top}
-        css={props.css}
+        className={props.className}
       >
         {props.children}
       </Sticky>
@@ -257,8 +261,6 @@ const wideAndTop = css`
     height: 0;
   }
 `
-
-const wideSticky = css``
 
 const docTab = css`
   border-radius: 0;
