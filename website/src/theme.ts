@@ -96,6 +96,7 @@ const tooltip = css(withBg, {
   fontFamily: theme.fonts.body,
   color: theme.colors.text,
   fontSize: "0.9rem",
+  right: "auto",
 })
 
 export const Button = styled(BaseButton)`
