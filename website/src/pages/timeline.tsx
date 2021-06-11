@@ -1,13 +1,13 @@
 import React, { useState, useRef } from "react"
 import { useQuery, gql } from "@apollo/client"
-import { css, cx } from "linaria"
+import { css } from "@emotion/react"
 import { Input } from "reakit/Input"
 import { Button } from "reakit/Button"
 import { fullWidth, typography } from "../theme"
-import _ from "lodash"
+import { groupBy, uniq } from "lodash"
 import Layout from "../layout"
 
-export default () => {
+const TimelinePage = () => {
   const staticMorphemeId = useRef("")
   const [morphemeId, setMorpheme] = useState(null)
 
@@ -26,6 +26,7 @@ export default () => {
     </Layout>
   )
 }
+export default TimelinePage
 
 const Timeline = (p: { gloss: string }) => {
   const timeline = useQuery(query, {
@@ -40,8 +41,8 @@ const Timeline = (p: { gloss: string }) => {
     return <>Error!</>
   }
   return (
-    <div className={wide}>
-      <div className={cx(wordRow, bolden)}>
+    <div css={wide}>
+      <div css={[wordRow, bolden]}>
         <div>Document ID</div>
         <div>Original</div>
         <div>Simple Phonetics</div>
@@ -55,18 +56,18 @@ const Timeline = (p: { gloss: string }) => {
           const end = Math.ceil(cluster.end.year / 50) * 50
           timeRange = `${start} – ${end}`
         }
-        const deduplicatedForms = _.groupBy(
+        const deduplicatedForms = groupBy(
           cluster.forms,
           (form) => form.normalizedSource || form.source
         )
         return (
-          <div key={timeRange} className={margined}>
-            <h2 className={underlined}>{timeRange}</h2>
+          <div key={timeRange} css={margined}>
+            <h2 css={underlined}>{timeRange}</h2>
             {Object.entries(deduplicatedForms).map(([key, forms], idx) => {
               if (forms.length === 1) {
                 const form = forms[0]
                 return (
-                  <div key={idx} className={wordRow}>
+                  <div key={idx} css={wordRow}>
                     <div>{form.documentId}</div>
                     <div>{form.source}</div>
                     <div>{form.simplePhonetics}</div>
@@ -78,9 +79,9 @@ const Timeline = (p: { gloss: string }) => {
                   (w) => w.simplePhonetics?.length
                 )
                 const englishGloss = forms.find((w) => w.englishGloss?.length)
-                const docIds = _.uniq(forms.map((w) => w.documentId))
+                const docIds = uniq(forms.map((w) => w.documentId))
                 return (
-                  <div key={idx} className={wordRow}>
+                  <div key={idx} css={wordRow}>
                     <div>{docIds.join(", ")}</div>
                     <div>{key}</div>
                     <div />
@@ -98,7 +99,7 @@ const Timeline = (p: { gloss: string }) => {
 }
 
 const wide = css`
-  ${fullWidth}
+  ${fullWidth};
 `
 
 export const bolden = css`

@@ -1,9 +1,9 @@
 import React from "react"
-import { css, cx } from "linaria"
+import { css } from "@emotion/react"
 import { DialogDisclosure, DialogStateReturn } from "reakit/Dialog"
-import { Tooltip, TooltipReference, useTooltipState } from "reakit/Tooltip"
+import { Tooltip } from "@reach/tooltip"
 import { MdInfoOutline } from "react-icons/md"
-import _ from "lodash"
+import { flatMap } from "lodash"
 import {
   ViewMode,
   TagSet,
@@ -11,6 +11,7 @@ import {
   morphemeDisplayTag,
 } from "./types"
 import theme, { hideOnPrint, std, typography, withBg } from "./theme"
+import "@reach/tooltip/styles.css"
 
 interface Props {
   segment: GatsbyTypes.Dailp_AnnotatedSeg
@@ -45,14 +46,12 @@ export const Segment = (p: Props) => {
 
     if (p.segment.ty === "BLOCK") {
       return (
-        <section
-          className={cx(documentBlock, p.viewMode > ViewMode.Story && bordered)}
-        >
+        <section css={[documentBlock, p.viewMode > ViewMode.Story && bordered]}>
           <div
-            className={cx(
+            css={[
               annotationSection,
-              p.viewMode <= ViewMode.Story && storySection
-            )}
+              p.viewMode <= ViewMode.Story && storySection,
+            ]}
           >
             {children}
           </div>
@@ -62,12 +61,12 @@ export const Segment = (p: Props) => {
     } else {
       return <>{children}</>
     }
-  } else if (isPageBreak(p.segment)) {
+  } else if (isPageBreak(p.segment) && p.segment.index > 0) {
     const num = p.segment.index + 1
     return (
       <div
         id={`document-page-${num}`}
-        className={pageBreak}
+        css={pageBreak}
         aria-label={`Start of page ${num}`}
       >
         Page {num}
@@ -109,8 +108,8 @@ export const AnnotatedForm = (
     const showSegments = p.viewMode >= ViewMode.Segmentation
     const translation = p.segment.englishGloss.join(", ")
     return (
-      <div className={wordGroup} id={`w${p.segment.index}`}>
-        <div className={syllabaryLayer} lang="chr">
+      <div css={wordGroup} id={`w${p.segment.index}`}>
+        <div css={syllabaryLayer} lang="chr">
           {p.segment.source}
           {p.segment.commentary && p.viewMode >= ViewMode.Pronunciation && (
             <WordCommentaryInfo commentary={p.segment.commentary} />
@@ -135,7 +134,7 @@ export const AnnotatedForm = (
     )
   } else {
     return (
-      <span className={plainSyllabary} id={`w${p.segment.index}`} lang="chr">
+      <span css={plainSyllabary} id={`w${p.segment.index}`} lang="chr">
         {p.segment.source}
       </span>
     )
@@ -143,12 +142,10 @@ export const AnnotatedForm = (
 }
 
 const WordCommentaryInfo = (p: { commentary: string }) => (
-  <WithTooltip
-    hint={p.commentary}
-    aria-label="Commentary on this word"
-    className={cx(infoIcon, hideOnPrint)}
-  >
-    <MdInfoOutline size={20} />
+  <WithTooltip hint={p.commentary} aria-label="Commentary on this word">
+    <span css={[infoIcon, hideOnPrint]}>
+      <MdInfoOutline size={20} />
+    </span>
   </WithTooltip>
 )
 
@@ -157,19 +154,16 @@ const WithTooltip = (p: {
   children: any
   "aria-label"?: string
   className?: string
-}) => {
-  const tooltip = useTooltipState()
-  return (
-    <>
-      <TooltipReference {...tooltip} as="span" className={p.className}>
-        {p.children}
-      </TooltipReference>
-      <Tooltip {...tooltip} className={std.tooltip}>
-        {p.hint}
-      </Tooltip>
-    </>
-  )
-}
+}) => (
+  <Tooltip
+    css={std.tooltip}
+    label={p.hint || ""}
+    className={p.className}
+    aria-label={p["aria-label"]}
+  >
+    {p.children}
+  </Tooltip>
+)
 
 const infoIcon = css`
   margin-left: 0.4rem;
@@ -203,7 +197,7 @@ const MorphemicSegmentation = (p: {
 
   return (
     <>
-      <div className={italicSegmentation}>
+      <div css={italicSegmentation}>
         {p
           .segments!.map(function (segment) {
             // Adapt the segment shape to the chosen experience level.
@@ -238,7 +232,9 @@ const MorphemicSegmentation = (p: {
           }),
           function (i) {
             return (
-              <span key={100 * (i + 1)}>{p.segments![i].nextSeparator}</span>
+              <React.Fragment key={100 * (i + 1)}>
+                {p.segments![i].nextSeparator}
+              </React.Fragment>
             )
           }
         )}
@@ -252,7 +248,7 @@ const italicSegmentation = css`
 `
 
 function intersperse<T>(arr: T[], separator: (n: number) => T): T[] {
-  return _.flatMap(arr, (a, i) => (i > 0 ? [separator(i - 1), a] : [a]))
+  return flatMap(arr, (a, i) => (i > 0 ? [separator(i - 1), a] : [a]))
 }
 
 /** One morpheme that can be clicked to see further details. */
@@ -265,38 +261,47 @@ const MorphemeSegment = (p: {
   const matchingTag = morphemeDisplayTag(p.segment.matchingTag, p.tagSet)
   const gloss = matchingTag?.tag || p.segment.gloss
   // Display functional tags in small-caps, per interlinear typesetting practice.
-  const buttonStyle = cx(
+  const buttonStyle = [
+    atLeastThin,
     morphemeButton,
-    matchingTag ? std.smallCaps : inheritFont
-  )
+    matchingTag ? std.smallCaps : inheritFont,
+  ]
 
-  let content = <>{gloss}</>
   if (matchingTag && matchingTag.title) {
-    content = (
-      <WithTooltip className={atLeastThin} hint={matchingTag.title}>
-        {gloss}
+    return (
+      <WithTooltip hint={matchingTag.title}>
+        <DialogDisclosure
+          {...p.dialog}
+          css={buttonStyle}
+          onClick={() => p.onOpenDetails(p.segment)}
+        >
+          {gloss}
+        </DialogDisclosure>
       </WithTooltip>
     )
   } else if (gloss === "?") {
-    content = (
-      <WithTooltip
-        className={atLeastThin}
-        hint="Unanalyzed or unfamiliar segment"
-      >
-        {gloss}
+    return (
+      <WithTooltip hint="Unanalyzed or unfamiliar segment">
+        <DialogDisclosure
+          {...p.dialog}
+          css={buttonStyle}
+          onClick={() => p.onOpenDetails(p.segment)}
+        >
+          {gloss}
+        </DialogDisclosure>
       </WithTooltip>
     )
+  } else {
+    return (
+      <DialogDisclosure
+        {...p.dialog}
+        css={buttonStyle}
+        onClick={() => p.onOpenDetails(p.segment)}
+      >
+        {gloss}
+      </DialogDisclosure>
+    )
   }
-
-  return (
-    <DialogDisclosure
-      {...p.dialog}
-      className={buttonStyle}
-      onClick={() => p.onOpenDetails(p.segment)}
-    >
-      {content}
-    </DialogDisclosure>
-  )
 }
 
 const pageBreak = css`
@@ -306,11 +311,6 @@ const pageBreak = css`
   text-align: center;
   border-top: 1px solid gray;
   padding-top: ${typography.rhythm(0.5)};
-
-  &:first-child,
-  &:last-child {
-    display: none;
-  }
 
   ${theme.mediaQueries.print} {
     display: none;

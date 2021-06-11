@@ -5,6 +5,13 @@ module.exports = {
   siteMetadata: {
     title: "DAILP Encoding",
   },
+  flags: {
+    PRESERVE_WEBPACK_CACHE: true,
+    FAST_REFRESH: true,
+    DEV_SSR: true,
+    LAZY_IMAGES: true,
+    QUERY_ON_DEMAND: false,
+  },
   plugins: [
     "gatsby-plugin-sharp",
     {
@@ -18,8 +25,7 @@ module.exports = {
     {
       resolve: "gatsby-plugin-manifest",
       options: {
-        name:
-          "Digital Archive of American Indian Languages Preservation and Perseverance",
+        name: "Digital Archive of American Indian Languages Preservation and Perseverance",
         short_name: "DAILP",
         start_url: "/",
         background_color: "#f7f0eb",
@@ -28,7 +34,10 @@ module.exports = {
         icon: "src/assets/uktena.jpg",
       },
     },
-    "gatsby-plugin-offline",
+    // Removed gatsby-plugin-offline because it keeps users stuck on old
+    // versions of the site! Big problem for us since we're updating all the time.
+    // See details here: https://github.com/gatsbyjs/gatsby/issues/9087#issuecomment-774680408
+    "gatsby-plugin-remove-serviceworker",
     {
       resolve: "gatsby-plugin-typegen",
       options: {
@@ -38,7 +47,7 @@ module.exports = {
     "gatsby-plugin-typescript",
     "gatsby-plugin-typescript-checker",
     "gatsby-plugin-react-helmet",
-    "gatsby-plugin-linaria",
+    "gatsby-plugin-emotion",
     {
       resolve: `gatsby-source-filesystem`,
       options: {
@@ -46,8 +55,6 @@ module.exports = {
         path: `${__dirname}/src/pages/`,
       },
     },
-    "gatsby-transformer-remark",
-    "gatsby-plugin-slug",
     "gatsby-plugin-catch-links",
     {
       resolve: "gatsby-source-wordpress",
@@ -67,12 +74,6 @@ module.exports = {
         url: process.env.DAILP_GRAPHQL_URL,
       },
     },
-    {
-      resolve: "gatsby-plugin-apollo",
-      options: {
-        uri: process.env.DAILP_GRAPHQL_URL,
-      },
-    },
     "gatsby-transformer-sharp",
     {
       resolve: "gatsby-plugin-anchor-links",
@@ -81,5 +82,16 @@ module.exports = {
       },
     },
     "gatsby-plugin-loadable-components-ssr",
+    {
+      resolve: "gatsby-plugin-env-variables",
+      options: {
+        allowList: [
+          "AWS_REGION",
+          "DAILP_AWS_REGION",
+          "DAILP_USER_POOL",
+          "DAILP_USER_POOL_CLIENT",
+        ],
+      },
+    },
   ],
 }

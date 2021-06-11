@@ -1,5 +1,5 @@
 import React from "react"
-import { css, cx } from "linaria"
+import { css, ClassNames } from "@emotion/react"
 import { BiRightArrow, BiLeftArrow } from "react-icons/bi"
 import {
   CarouselProvider,
@@ -10,10 +10,13 @@ import {
 } from "pure-react-carousel"
 import "pure-react-carousel/dist/react-carousel.es.css"
 
-export const Carousel = (p: { caption: any; images: string[] }) => (
+export const Carousel = (p: {
+  caption: any
+  images: { src: string; alt: string }[]
+}) => (
   <>
     <CarouselProvider
-      className={carousel}
+      css={carousel}
       totalSlides={2}
       naturalSlideWidth={100}
       naturalSlideHeight={40}
@@ -21,21 +24,29 @@ export const Carousel = (p: { caption: any; images: string[] }) => (
       isPlaying={true}
     >
       <Slider>
-        {p.images.map((url, idx) => (
-          <Slide key={idx} index={idx} innerClassName={centerAlign}>
-            <img src={url} />
-          </Slide>
+        {p.images.map((img, idx) => (
+          <CenteredSlide key={idx} index={idx}>
+            <img src={img.src} alt={img.alt} height={300} />
+          </CenteredSlide>
         ))}
       </Slider>
-      <ButtonBack className={cx(carouselButton, onLeft)}>
+      <ButtonBack css={[carouselButton, onLeft]}>
         <BiLeftArrow aria-label="Previous" size={24} />
       </ButtonBack>
-      <ButtonNext className={cx(carouselButton, onRight)}>
+      <ButtonNext css={[carouselButton, onRight]}>
         <BiRightArrow aria-label="Next" size={24} />
       </ButtonNext>
     </CarouselProvider>
-    {p.caption ? <h5 className={centerAlign}>{p.caption}</h5> : null}
+    {p.caption ? <h5 css={{ textAlign: "center" }}>{p.caption}</h5> : null}
   </>
+)
+
+const CenteredSlide = (props: any) => (
+  <ClassNames>
+    {({ css }) => (
+      <Slide innerClassName={css({ textAlign: "center" })} {...props} />
+    )}
+  </ClassNames>
 )
 
 const carousel = css`
@@ -58,8 +69,4 @@ const onLeft = css`
 
 const onRight = css`
   right: 0;
-`
-
-const centerAlign = css`
-  text-align: center;
 `

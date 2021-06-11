@@ -1,25 +1,17 @@
 import React from "react"
 import { graphql, Link } from "gatsby"
-import { styled } from "linaria/react"
-import { css, cx } from "linaria"
+import styled from "@emotion/styled"
 import { Helmet } from "react-helmet"
-import "@fortawesome/fontawesome-free/css/fontawesome.css"
-import "@fortawesome/fontawesome-free/css/solid.css"
 import Layout from "../layout"
 import theme, { fullWidth, wordpressUrl } from "../theme"
 import { collectionRoute } from "../routes"
 import { Carousel } from "../carousel"
 
+import "../wordpress.css"
+
 /** Lists all documents in our database */
 const IndexPage = (props: { data: GatsbyTypes.IndexPageQuery }) => (
   <Layout title="Collections">
-    <Helmet>
-      <link
-        type="text/css"
-        rel="stylesheet"
-        href={`${wordpressUrl}/wp-content/themes/quest-child/style.css?ver=4.9.16`}
-      />
-    </Helmet>
     <DocIndex>
       <FullWidth>
         <Carousel
@@ -61,8 +53,14 @@ export const query = graphql`
 `
 
 const carouselImages = [
-  "https://wp.dailp.northeastern.edu/wp-content/uploads/2020/01/Screen-Shot-2020-01-07-at-7.53.23-PM-300x253.png",
-  "https://wp.dailp.northeastern.edu/wp-content/uploads/2020/01/Screen-Shot-2020-01-07-at-9.30.13-PM-184x300.png",
+  {
+    src: "https://wp.dailp.northeastern.edu/wp-content/uploads/2020/01/Screen-Shot-2020-01-07-at-7.53.23-PM-300x253.png",
+    alt: "Example of handwritten Cherokee syllabary in notebook",
+  },
+  {
+    src: "https://wp.dailp.northeastern.edu/wp-content/uploads/2020/01/Screen-Shot-2020-01-07-at-9.30.13-PM-184x300.png",
+    alt: "'Our Banner' notebook with triangle flag and decorative swirls on cover",
+  },
 ]
 
 export const DocIndex = styled.main`
@@ -74,6 +72,6 @@ export const DocIndex = styled.main`
 `
 
 export const FullWidth = styled.article`
-  ${fullWidth}
+  ${fullWidth};
   flex-grow: 1;
 `

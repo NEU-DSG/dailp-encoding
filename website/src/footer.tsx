@@ -1,5 +1,5 @@
 import React from "react"
-import { css, cx } from "linaria"
+import { css } from "@emotion/react"
 import { useStaticQuery, graphql } from "gatsby"
 import theme, { fullWidth, hideOnPrint, wordpressUrl } from "./theme"
 import { FaGithub } from "react-icons/fa"
@@ -15,9 +15,9 @@ const Footer = () => {
   `)
 
   return (
-    <footer className={hideOnPrint}>
-      <div className={cx(light, container)}>
-        <div className={content} style={{ display: "block" }}>
+    <footer css={hideOnPrint}>
+      <div css={[light, container]}>
+        <div css={content} style={{ display: "block" }}>
           This project was created using{" "}
           <a href="https://gatsbyjs.com">Gatsby</a> with help from the{" "}
           <a href="http://dsg.northeastern.edu/">Digital Scholarship Group</a>{" "}
@@ -27,19 +27,21 @@ const Footer = () => {
           </a>
         </div>
       </div>
-      <div className={container}>
-        <div className={content}>
+      <div css={container}>
+        <div css={content}>
           <a href="https://northeastern.edu">
             <img
               src={`${wordpressUrl}/wp-content/themes/quest-child/images/nu-light.svg`}
               alt="Northeastern University"
+              width={180}
+              loading="lazy"
             />
           </a>
           <a href="https://github.com/neu-dsg/dailp-encoding">
             Browse the source code
           </a>
         </div>
-        <div className={content}>
+        <div css={content}>
           Last Updated on {data.currentBuildDate.currentDate}
         </div>
       </div>
@@ -73,7 +75,7 @@ const container = css`
 `
 
 const content = css`
-  ${fullWidth}
+  ${fullWidth};
   display: flex;
   flex-flow: row wrap;
   justify-content: space-between;

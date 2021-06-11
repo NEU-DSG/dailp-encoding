@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react"
+import React, { useState } from "react"
 import { graphql, Link } from "gatsby"
 import { useDialogState, Dialog, DialogBackdrop } from "reakit/Dialog"
 import { Tab, TabPanel, TabList } from "reakit/Tab"
@@ -6,24 +6,26 @@ import Sticky from "react-stickynode"
 import Layout from "../layout"
 import { Segment, AnnotatedForm } from "../segment"
 import theme, {
-  fullWidth,
   largeDialog,
   withBg,
   std,
   hideOnPrint,
   typography,
+  fullWidth,
+  Button,
 } from "../theme"
 import { collectionRoute, documentDetailsRoute, documentRoute } from "../routes"
 import { useScrollableTabState } from "../scrollable-tabs"
-import { css, cx } from "linaria"
+import { css, ClassNames } from "@emotion/react"
 import { DeepPartial } from "tsdef"
-import { ViewMode, TagSet, BasicMorphemeSegment, tagSetForMode } from "../types"
+import { ViewMode, BasicMorphemeSegment, tagSetForMode } from "../types"
 import { MorphemeDetails } from "../morpheme"
-import PageImages from "../page-image"
 import { Breadcrumbs } from "../breadcrumbs"
 import { isMobile } from "react-device-detect"
-import { ExperiencePicker, modeDetails, selectedMode } from "../mode"
-import { Button } from "reakit/Button"
+import { ExperiencePicker, selectedMode } from "../mode"
+import loadable from "@loadable/component"
+
+const PageImages = loadable(() => import("../page-image"))
 
 enum Tabs {
   ANNOTATION = "annotation-tab",
@@ -37,7 +39,7 @@ const AnnotatedDocumentPage = (p: {
   const doc = p.data.dailp.document!
   return (
     <Layout title={doc.title}>
-      <main className={annotatedDocument}>
+      <main css={annotatedDocument}>
         <DocumentTitleHeader doc={doc as any} showDetails={true} />
         <TabSet doc={doc} />
       </main>
@@ -50,29 +52,25 @@ const TabSet = ({ doc }) => {
   const tabs = useScrollableTabState({ selectedId: Tabs.ANNOTATION })
   return (
     <>
-      <Sticky
-        top={isMobile ? "#header" : undefined}
-        className={wideAndTop}
-        innerClass={wideSticky}
-      >
+      <WideSticky top={isMobile ? "#header" : undefined} css={wideAndTop}>
         <TabList
           {...tabs}
           id="document-tabs-header"
-          className={docTabs}
+          css={docTabs}
           aria-label="Document View Types"
         >
-          <Tab {...tabs} id={Tabs.ANNOTATION} className={docTab}>
+          <Tab {...tabs} id={Tabs.ANNOTATION} css={docTab}>
             Translation
           </Tab>
-          <Tab {...tabs} id={Tabs.IMAGES} className={docTab}>
+          <Tab {...tabs} id={Tabs.IMAGES} css={docTab}>
             Original Text
           </Tab>
         </TabList>
-      </Sticky>
+      </WideSticky>
 
       <TabPanel
         {...tabs}
-        className={docTabPanel}
+        css={docTabPanel}
         id={`${Tabs.ANNOTATION}-panel`}
         tabId={Tabs.ANNOTATION}
       >
@@ -81,7 +79,7 @@ const TabSet = ({ doc }) => {
 
       <TabPanel
         {...tabs}
-        className={imageTabPanel}
+        css={imageTabPanel}
         id={`${Tabs.IMAGES}-panel`}
         tabId={Tabs.IMAGES}
       >
@@ -93,11 +91,52 @@ const TabSet = ({ doc }) => {
   )
 }
 
+const SolidSticky = (props: {
+  top: string
+  children: any
+  className?: any
+}) => (
+  <ClassNames>
+    {({ css }) => (
+      <Sticky
+        innerClass={css`
+          background-color: ${theme.colors.body};
+          z-index: 1;
+        `}
+        top={props.top}
+        className={props.className}
+      >
+        {props.children}
+      </Sticky>
+    )}
+  </ClassNames>
+)
+
+const WideSticky = (props: { top: string; children: any; className?: any }) => (
+  <ClassNames>
+    {({ css }) => (
+      <Sticky
+        innerClass={css`
+          left: 0;
+          display: flex;
+          flex-flow: column nowrap;
+          align-items: center;
+          width: 100% !important;
+          z-index: 1;
+        `}
+        top={props.top}
+        className={props.className}
+      >
+        {props.children}
+      </Sticky>
+    )}
+  </ClassNames>
+)
+
 const TranslationTab = ({ doc }) => {
   const dialog = useDialogState()
-  const [selectedMorpheme, setMorpheme] = useState<BasicMorphemeSegment | null>(
-    null
-  )
+  const [selectedMorpheme, setMorpheme] =
+    useState<BasicMorphemeSegment | null>(null)
 
   const [experienceLevel, setExperienceLevel] = useState<ViewMode>(
     selectedMode()
@@ -106,12 +145,8 @@ const TranslationTab = ({ doc }) => {
   const tagSet = tagSetForMode(experienceLevel)
   return (
     <>
-      <DialogBackdrop className={morphemeDialogBackdrop} {...dialog}>
-        <Dialog
-          {...dialog}
-          className={morphemeDialog}
-          aria-label="Segment Details"
-        >
+      <DialogBackdrop css={morphemeDialogBackdrop} {...dialog}>
+        <Dialog {...dialog} css={morphemeDialog} aria-label="Segment Details">
           {selectedMorpheme ? (
             <MorphemeDetails
               documentId={doc.id}
@@ -123,16 +158,16 @@ const TranslationTab = ({ doc }) => {
         </Dialog>
       </DialogBackdrop>
 
-      <p className={cx(topMargin, hideOnPrint)}>
+      <p css={[topMargin, hideOnPrint]}>
         Each mode below displays different information about the words on the
         page. Hover over each mode for a specific description.
       </p>
 
-      <Sticky innerClass={solidBg} top="#document-tabs-header">
+      <SolidSticky top="#document-tabs-header">
         <ExperiencePicker onSelect={setExperienceLevel} />
-      </Sticky>
+      </SolidSticky>
 
-      <article className={annotationContents}>
+      <article css={annotationContents}>
         {doc.translatedSegments?.map((seg, i) => (
           <Segment
             key={i}
@@ -174,7 +209,7 @@ export const DocumentTitleHeader = (p: {
   doc: DeepPartial<GatsbyTypes.Dailp_AnnotatedDoc>
   showDetails?: boolean
 }) => (
-  <header className={docHeader}>
+  <header css={docHeader}>
     <Breadcrumbs aria-label="Breadcrumbs">
       <li>
         <Link to="/">Collections</Link>
@@ -188,20 +223,17 @@ export const DocumentTitleHeader = (p: {
       )}
     </Breadcrumbs>
 
-    <h1 className={docTitle}>
-      {p.doc.title} ({p.doc.id}{p.doc.date && `, ${p.doc.date.year}`}){" "}
+    <h1 css={docTitle}>
+      {p.doc.title} ({p.doc.id}
+      {p.doc.date && `, ${p.doc.date.year}`}){" "}
     </h1>
-    <div className={bottomPadded}>
+    <div css={bottomPadded}>
       {p.showDetails ? (
         <Link to={documentDetailsRoute(p.doc.slug!)}>View Details</Link>
       ) : (
         <Link to={documentRoute(p.doc.slug!)}>View Contents</Link>
       )}
-      {!isMobile ? (
-        <Button className={std.button} onClick={() => window.print()}>
-          Print
-        </Button>
-      ) : null}
+      {!isMobile ? <Button onClick={() => window.print()}>Print</Button> : null}
     </div>
   </header>
 )
@@ -230,19 +262,6 @@ const wideAndTop = css`
   }
 `
 
-const solidBg = css`
-  background-color: ${theme.colors.body};
-  z-index: 1;
-`
-
-const wideSticky = css`
-  left: 0;
-  display: flex;
-  flex-flow: column nowrap;
-  align-items: center;
-  width: 100% !important;
-`
-
 const docTab = css`
   border-radius: 0;
   border: none;
@@ -263,11 +282,11 @@ const docTabs = css`
   flex-flow: row nowrap;
   height: ${typography.rhythm(1.75)};
   margin: 0 !important;
-  ${fullWidth}
+  ${fullWidth};
 `
 
 const docTabPanel = css`
-  ${fullWidth}
+  ${fullWidth};
   padding: 0 0.5rem;
   &:focus {
     outline: none;
@@ -278,12 +297,12 @@ const docTabPanel = css`
 `
 
 const imageTabPanel = css`
-  ${fullWidth}
+  ${fullWidth};
   outline: none;
 `
 
 const docHeader = css`
-  ${fullWidth}
+  ${fullWidth};
   padding: 0 ${theme.edgeSpacing};
   ${theme.mediaQueries.medium} {
     padding: 0;
