@@ -87,6 +87,7 @@ export const MarkdownBlock: BlockTemplate & { key?: string } = {
     { name: "content", label: "Edit in Markdown", component: "markdown" },
   ],
 }
+
 export const PageCreatorPlugin = {
   __type: "content-creator",
   name: "New Page",

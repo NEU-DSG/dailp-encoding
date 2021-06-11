@@ -92,7 +92,9 @@ const EditablePageInner = (props: Props) => {
 
 const PageContents = (props: { page: any }) => (
   <>
-    <Helmet title={props.page.title} />
+    <Helmet title={props.page.title}>
+      <meta name="robots" content="noindex" />
+    </Helmet>
     <h1>{props.page.title}</h1>
     <BlocksRenderer children={props.page.body} />
   </>
