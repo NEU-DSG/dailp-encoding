@@ -3,15 +3,17 @@ const path = require("path")
 exports.createPages = async (args) => {
   const doc = createDocumentPages(args)
   const wp = createWpPages(args)
+  const rest = createHybridPages(args)
   await doc
   await wp
+  await rest
 }
 
 // There are a few documents that currently take too long to query, so exclude
 // them from the build process for now. Real solution: implement pagination.
 const excludedDocuments = ["DF1975", "AC1995", "PF1975"]
 
-const createDocumentPages = async ({ actions, graphql }) => {
+async function createDocumentPages({ actions, graphql }) {
   const { data, errors } = await graphql(`
     query {
       dailp {
@@ -65,7 +67,7 @@ const createDocumentPages = async ({ actions, graphql }) => {
 }
 
 /** Make a static page for each one from Wordpress. */
-const createWpPages = async ({ actions, graphql }) => {
+async function createWpPages({ actions, graphql }) {
   const { data, errors } = await graphql(`
     query {
       allWpPage(filter: { status: { eq: "publish" } }) {
@@ -95,4 +97,60 @@ const createWpPages = async ({ actions, graphql }) => {
       })
     }
   }
+}
+
+async function createHybridPages({ actions, graphql }) {
+  const { data, errors } = await graphql(`
+    query {
+      dailp {
+        allPages {
+          id
+        }
+      }
+    }
+  `)
+
+  if (errors) {
+    console.error(errors)
+    return
+  }
+
+  // TODO add slug field to page type so that a page can retain the same unique
+  // ID while changing its path.
+  const component = path.resolve("./src/templates/editable-page.tsx")
+  for (const page of data.dailp.allPages) {
+    actions.createPage({
+      path: page.id,
+      component,
+      context: { id: page.id },
+    })
+  }
+}
+
+exports.onCreateWebpackConfig = ({ actions, getConfig, rules, loaders }) => {
+  actions.setWebpackConfig({
+    resolve: {
+      alias: {
+        // TinaCMS depends on the `path` module, so we polyfill it since Webpack v5.
+        path: require.resolve("path-browserify"),
+        crypto: require.resolve("crypto-browserify"),
+        stream: require.resolve("stream-browserify"),
+      },
+      fallback: {
+        fs: false,
+      },
+    },
+  })
+
+  // Load self-hosted fonts more efficiently.
+  const config = getConfig()
+  const fonts = rules.fonts()
+  fonts.use = [loaders.file()]
+  config.module.rules = [
+    ...config.module.rules.filter(
+      (rule) => !String(rule.test).includes("woff(2)?")
+    ),
+    fonts,
+  ]
+  actions.replaceWebpackConfig(config)
 }

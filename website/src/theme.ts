@@ -1,6 +1,9 @@
-import { css } from "linaria"
+import { css } from "@emotion/react"
+import styled from "@emotion/styled"
 import Color from "color"
 import Typography from "typography"
+import CSS from "csstype"
+import { Button as BaseButton } from "reakit/Button"
 
 const theme = {
   fonts: {
@@ -8,7 +11,7 @@ const theme = {
     // Noto Serif supports glottal stops and more accents than other fonts.
     bodyArr: ["Charis SIL", "Digohweli", "serif", "Arial"],
     headerArr: ["Quattrocento Sans", "Segoe UI", "Arial", "sans-serif"],
-    cherokee: `"Digohweli", "Spectral", "serif", "Arial"`,
+    cherokee: `"Digohweli", "Charis SIL", "serif", "Arial"`,
     smallCaps: "Charis SIL",
     body: null,
     header: null,
@@ -22,7 +25,7 @@ const theme = {
     footer: "#405372",
     altFooter: "#4f5970",
     body: "white",
-    text: "black",
+    text: "hsl(0, 0%, 0%, 0.95)",
     link: "#405372",
     headings: "#9f4c43",
     borders: "darkgray",
@@ -41,17 +44,25 @@ export const wordpressUrl = "https://wp.dailp.northeastern.edu"
 theme.fonts.body = theme.fonts.bodyArr.join(",")
 theme.fonts.header = theme.fonts.headerArr.join(",")
 
+export interface CSSProps extends CSS.Properties {
+  // Add fallback objects to support arbitrary nested selectors
+  // [k: string]: CSSProps
+}
+
 export const typography = new Typography({
   baseFontSize: theme.fontSizes.root,
   baseLineHeight: 1.47,
   headerFontFamily: theme.fonts.headerArr,
   bodyFontFamily: theme.fonts.bodyArr,
-  bodyColor: "hsl(0, 0%, 0%, 0.95)",
-  headerColor: "hsl(0, 0%, 0%, 0.9)",
-  // blockMarginBottom: 0.5,
+  bodyColor: theme.colors.text,
+  headerColor: theme.colors.headings,
 })
 
-export const fullWidth = {
+const paddingX = (x) => css({ paddingLeft: x, paddingRight: x })
+
+export const paddedWidth = paddingX(theme.edgeSpacing)
+
+export const fullWidth = css({
   width: "100%",
   [theme.mediaQueries.medium]: {
     width: "41rem",
@@ -59,38 +70,36 @@ export const fullWidth = {
   [theme.mediaQueries.large]: {
     width: "50rem",
   },
-}
+})
 
-export const largeDialog = {
-  width: "95%",
+export const largeDialog = css({
+  width: "var(--most-width)",
+})
+
+export const hideOnPrint = css({
+  [theme.mediaQueries.print]: {
+    display: "none",
+  },
+})
+
+export const withBg = css(hideOnPrint, {
+  zIndex: 999,
+  backgroundColor: theme.colors.body,
+  padding: `${typography.rhythm(1 / 6)} 1ch`,
+  border: `1px solid ${theme.colors.text}`,
   [theme.mediaQueries.medium]: {
-    width: "35rem",
+    maxWidth: "70vw",
   },
-  [theme.mediaQueries.large]: {
-    width: "45rem",
-  },
-}
+})
 
-export const withBg = css`
-  z-index: 999;
-  background-color: ${theme.colors.body};
-  padding: ${typography.rhythm(1 / 6)} 1ch;
-  border: 1px solid ${theme.colors.text};
-  ${theme.mediaQueries.medium} {
-    max-width: 70vw;
-  }
-  ${theme.mediaQueries.print} {
-    display: none;
-  }
-`
+const tooltip = css(withBg, {
+  fontFamily: theme.fonts.body,
+  color: theme.colors.text,
+  fontSize: "0.9rem",
+  right: "auto",
+})
 
-export const hideOnPrint = css`
-  ${theme.mediaQueries.print} {
-    display: none;
-  }
-`
-
-const button = css`
+export const Button = styled(BaseButton)`
   font-family: ${theme.fonts.header};
   color: ${theme.colors.link};
   background-color: ${theme.colors.button};
@@ -136,10 +145,9 @@ const closeBlock = css`
 `
 
 export const std = {
-  button,
   iconButton,
   smallCaps,
-  tooltip: withBg,
+  tooltip,
   closeBlock,
 }
 

@@ -1,15 +1,15 @@
 import React from "react"
 import { graphql } from "gatsby"
-import { css, cx } from "linaria"
-import _ from "lodash"
+import { css } from "@emotion/react"
+import { sortBy, join } from "lodash"
 import Layout from "../layout"
-import { fullWidth, std, typography } from "../theme"
+import { fullWidth, std, typography, paddedWidth } from "../theme"
 import { sourceCitationId } from "../routes"
 
-export default (p: { data: GatsbyTypes.AllSourcesQuery }) => {
+const SourcesPage = (p: { data: GatsbyTypes.AllSourcesQuery }) => {
   return (
     <Layout title="Sources Index">
-      <main className={wideChildren}>
+      <main css={wideChildren}>
         <h1>Sources of Cherokee Language Data</h1>
         <p>
           This is a cited list of the lexical language resources that we use to
@@ -22,8 +22,8 @@ export default (p: { data: GatsbyTypes.AllSourcesQuery }) => {
           <i>Title of the document</i>. Number of words referenced.
         </p>
 
-        <ul className={wide}>
-          {_.sortBy(
+        <ul css={wide}>
+          {sortBy(
             p.data.dailp.allDocuments.filter((d) => d.isReference),
             (doc) => doc.id
           ).map((doc) => (
@@ -35,21 +35,22 @@ export default (p: { data: GatsbyTypes.AllSourcesQuery }) => {
     </Layout>
   )
 }
+export default SourcesPage
 
 type LocalDocument = GatsbyTypes.AllSourcesQuery["dailp"]["allDocuments"][0]
 
 const DocumentCitation = (p: { document: LocalDocument }) => {
   const doc = p.document
   const year = doc.date?.year
-  const authors = _.join(
+  const authors = join(
     doc.contributors.map((author) => author.name),
     "; "
   )
   const wordCount = doc.formCount ? ` ${doc.formCount} words.` : null
   return (
-    <li id={sourceCitationId(doc.id)} className={apaCitation}>
-      <span className={bolded}>{doc.id}</span> = {authors} {year && `(${year})`}
-      . <i>{doc.title}</i>.{wordCount}
+    <li id={sourceCitationId(doc.id)} css={apaCitation}>
+      <span css={bolded}>{doc.id}</span> = {authors} {year && `(${year})`}.{" "}
+      <i>{doc.title}</i>.{wordCount}
     </li>
   )
 }
@@ -62,6 +63,7 @@ const apaCitation = css`
 const wideChildren = css`
   & > * {
     ${fullWidth};
+    ${paddedWidth};
   }
 `
 

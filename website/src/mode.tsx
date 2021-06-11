@@ -5,11 +5,11 @@ import {
   useRadioState,
   RadioStateReturn,
 } from "reakit/Radio"
-import { Tooltip, TooltipReference, useTooltipState } from "reakit/Tooltip"
+import { Tooltip } from "@reach/tooltip"
 import Cookies from "js-cookie"
-import theme, { hideOnPrint, typography, withBg } from "./theme"
+import theme, { hideOnPrint, typography, withBg, std } from "./theme"
 import { ViewMode, TagSet, tagSetForMode } from "./types"
-import { css, cx } from "linaria"
+import { css } from "@emotion/react"
 
 const notNumber = (l: any) => isNaN(Number(l))
 const levelNameMapping = {
@@ -70,7 +70,10 @@ export const ExperiencePicker = (p: { onSelect: (mode: ViewMode) => void }) => {
 
   // Save the selected experience level throughout the session.
   useEffect(() => {
-    Cookies.set("experienceLevel", radio.state!.toString())
+    Cookies.set("experienceLevel", radio.state!.toString(), {
+      sameSite: "strict",
+      secure: true,
+    })
     p.onSelect(radio.state as ViewMode)
   }, [radio.state])
 
@@ -79,7 +82,7 @@ export const ExperiencePicker = (p: { onSelect: (mode: ViewMode) => void }) => {
       <RadioGroup
         {...radio}
         id="mode-picker"
-        className={levelGroup}
+        css={levelGroup}
         aria-label="Display Mode"
       >
         {Object.keys(ViewMode)
@@ -100,7 +103,7 @@ export const TagSetPicker = (p: { onSelect: (tagSet: TagSet) => void }) => {
   useEffect(() => p.onSelect(radio.state as TagSet), [radio.state])
 
   return (
-    <RadioGroup {...radio} id="tag-set-picker" className={levelGroup}>
+    <RadioGroup {...radio} id="tag-set-picker" css={levelGroup}>
       {Object.keys(TagSet)
         .filter(notNumber)
         .map(function (tagSet: string) {
@@ -111,24 +114,16 @@ export const TagSetPicker = (p: { onSelect: (tagSet: TagSet) => void }) => {
 }
 
 const ExperienceOption = (p: { radio: RadioStateReturn; level: string }) => {
-  const tooltip = useTooltipState()
   const value = ViewMode[p.level as keyof typeof ViewMode]
   const isSelected = p.radio.state === value
   return (
-    <>
-      <TooltipReference
-        {...tooltip}
-        as="label"
-        className={cx(levelLabel, isSelected && highlightedLabel)}
-      >
+    <Tooltip css={std.tooltip} label={levelNameMapping[value].details}>
+      <label css={[levelLabel, isSelected && highlightedLabel]}>
         <Radio {...p.radio} value={value} />
         {"  "}
         {levelNameMapping[value].label}
-      </TooltipReference>
-      <Tooltip {...tooltip} className={withBg}>
-        {levelNameMapping[value].details}
-      </Tooltip>
-    </>
+      </label>
+    </Tooltip>
   )
 }
 
@@ -137,19 +132,15 @@ const highlightedLabel = css`
 `
 
 const TagSetOption = (p: { radio: RadioStateReturn; level: string }) => {
-  const tooltip = useTooltipState()
   const value = TagSet[p.level as keyof typeof TagSet]
   return (
-    <>
-      <TooltipReference {...tooltip} as="label" className={levelLabel}>
+    <Tooltip css={std.tooltip} label={tagSetMapping[value].details}>
+      <label css={levelLabel}>
         <Radio {...p.radio} value={value} />
         {"  "}
         {tagSetMapping[value].label}
-      </TooltipReference>
-      <Tooltip {...tooltip} className={withBg}>
-        {tagSetMapping[value].details}
-      </Tooltip>
-    </>
+      </label>
+    </Tooltip>
   )
 }
 
