@@ -72,10 +72,6 @@ jobs:
             rust:
               - '**/*.rs'
               - 'Cargo.lock'
-      - name: Cache docker images
-        uses: satackey/action-docker-layer-caching@v0.0.11
-        # Ignore the failure of a step and avoid terminating the job.
-        continue-on-error: true
       # - name: Run unit tests
       #   if: steps.filter.outputs.rust == 'true'
       #   run: cargo test --release
@@ -86,6 +82,13 @@ jobs:
           install_options: "--tarball-url-prefix https://nixos-nix-install-tests.cachix.org/serve"
           extra_nix_config: |
             experimental-features = nix-command flakes
+      - name: Use binary cache for nix store
+        uses: cachix/cachix-action@v10
+        with:
+          name: dailp
+          # If you chose API tokens for write access OR if you have a private cache
+          authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
+          pushFilter: "(-dailp$|-dailp-dev$|-terraform-config$|-source$)"
       - name: Add public IP to AWS security group
         uses: sohelamin/aws-security-group-add-ip-action@master
         with:
@@ -96,18 +99,19 @@ jobs:
           port: "22"
           to-port: "22"
           protocol: "tcp"
-      - name: Deploy back-end to AWS via terraform
-        if: steps.filter.outputs.backend == 'true'
+      - name: Build project
         run: |
           nix build --impure
-          nix develop --impure --command plan
+          cp -f ./result/config.tf.json ./config.tf.json
+      - name: Deploy back-end to AWS via terraform
+        if: steps.filter.outputs.backend == 'true'
+        run: nix develop --impure --command apply-now
       - name: Encode documents as TEI and database entries
         if: steps.filter.outputs.data == 'true'
         run: |
-          cp -f ./result/config.tf.json ./config.tf.json
-          export DAILP_GRAPHQL_URL=$(terraform output functions_url)/graphql
+          export DAILP_GRAPHQL_URL=$(nix develop --impure --command output functions_url)/graphql
           cd migration
           cargo run --release
       - name: Publish website
         run: |
-          curl -X POST -d {} -H "Content-Type:application/json" "$(terraform output amplify_webhook)"
+          curl -X POST -d {} -H "Content-Type:application/json" "$(nix develop --impure --command output amplify_webhook)"
