@@ -111,43 +111,47 @@ in {
         name = "dailp-nixos-test";
         vpc_id = config.setup.vpc;
         description = "MongoDB on NixOS test";
-        ingress = let neu_vpn = "129.10.0.0/16";
-        in [
-          {
-            description = "SSH access";
-            protocol = "tcp";
-            from_port = 22;
-            to_port = 22;
-            cidr_blocks = [ neu_vpn "68.160.191.121/32" ];
-            ipv6_cidr_blocks = [ ];
-            prefix_list_ids = [ ];
-            security_groups = [ ];
-            self = false;
-          }
-          {
-            description = "MongoDB access";
-            protocol = "tcp";
-            from_port = 27017;
-            to_port = 27017;
-            cidr_blocks = [ ];
-            ipv6_cidr_blocks = [ ];
-            prefix_list_ids = [ ];
-            security_groups = [ "\${aws_security_group.mongodb_access.id}" ];
-            self = true;
-          }
-        ];
-        # Allow any egress.
-        egress = [{
-          description = "All egress";
-          from_port = 0;
-          to_port = 0;
-          protocol = "-1";
-          cidr_blocks = [ "0.0.0.0/0" ];
-          ipv6_cidr_blocks = [ "::/0" ];
-          self = true;
-          security_groups = [ ];
-          prefix_list_ids = [ ];
-        }];
+      };
+
+      aws_security_group_rule.mongodb_internet = {
+        type = "egress";
+        security_group_id = "\${aws_security_group.nixos_test.id}";
+        description = "All egress";
+        protocol = "-1";
+        from_port = 0;
+        to_port = 0;
+        cidr_blocks = [ "0.0.0.0/0" ];
+        ipv6_cidr_blocks = [ "::/0" ];
+      };
+
+      aws_security_group_rule.mongodb_ssh = {
+        type = "ingress";
+        security_group_id = "\${aws_security_group.nixos_test.id}";
+        description = "SSH access";
+        protocol = "tcp";
+        from_port = 22;
+        to_port = 22;
+        cidr_blocks = [ "129.10.0.0/16" "68.160.191.121/32" ];
+      };
+
+      aws_security_group_rule.mongodb_external = {
+        type = "ingress";
+        security_group_id = "\${aws_security_group.nixos_test.id}";
+        source_security_group_id = "\${aws_security_group.mongodb_access.id}";
+        description = "MongoDB external access";
+        protocol = "tcp";
+        from_port = 27017;
+        to_port = 27017;
+      };
+
+      aws_security_group_rule.mongodb_internal = {
+        type = "ingress";
+        security_group_id = "\${aws_security_group.nixos_test.id}";
+        description = "MongoDB internal access";
+        protocol = "tcp";
+        from_port = 27017;
+        to_port = 27017;
+        self = true;
       };
 
       aws_security_group.mongodb_access = {
