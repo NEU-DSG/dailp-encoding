@@ -1,5 +1,3 @@
-# This is a basic workflow to help you get started with Actions
-
 name: Development Deployment
 
 # Controls when the action will run. Triggers the workflow on push or pull request
@@ -78,9 +76,9 @@ jobs:
         uses: satackey/action-docker-layer-caching@v0.0.11
         # Ignore the failure of a step and avoid terminating the job.
         continue-on-error: true
-      - name: Run unit tests
-        if: steps.filter.outputs.rust == 'true'
-        run: cargo test --release
+      # - name: Run unit tests
+      #   if: steps.filter.outputs.rust == 'true'
+      #   run: cargo test --release
       - name: Install Nix
         uses: cachix/install-nix-action@v13
         with:
@@ -102,11 +100,11 @@ jobs:
         if: steps.filter.outputs.backend == 'true'
         run: |
           nix build --impure
-          cp -f ./result/config.tf.json ./config.tf.json
           nix develop --impure --command plan
       - name: Encode documents as TEI and database entries
         if: steps.filter.outputs.data == 'true'
         run: |
+          cp -f ./result/config.tf.json ./config.tf.json
           export DAILP_GRAPHQL_URL=$(terraform output functions_url)/graphql
           cd migration
           cargo run --release
