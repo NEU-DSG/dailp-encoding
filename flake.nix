@@ -124,6 +124,9 @@
                 terraform init ${defaultPackage}
                 terraform apply -auto-approve ${defaultPackage}
               '')
+              (writers.writeBashBin "output" ''
+                terraform output $1
+              '')
             ];
           };
       });
