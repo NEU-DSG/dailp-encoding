@@ -43,7 +43,7 @@ with builtins; {
           {
             source = "/api/<*>";
             status = "200";
-            target = apiUrl;
+            target = "${apiUrl}/<*>";
           }
           # TODO Consider removing this one and having all access be under the /api endpoint.
           {
