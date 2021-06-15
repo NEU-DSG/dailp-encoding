@@ -6,7 +6,7 @@ name: CI
 # events but only for the main branch
 on:
   push:
-    branches: [main]
+    branches: [dev]
     paths-ignore:
       - "**/README.md"
       - "**/readme.md"
@@ -18,16 +18,17 @@ env:
   AWS_SUBNET_PRIMARY: ${{ secrets.AWS_SUBNET_PRIMARY }}
   AWS_SUBNET_SECONDARY0: ${{ secrets.AWS_SUBNET_SECONDARY0 }}
   AWS_SUBNET_SECONDARY1: ${{ secrets.AWS_SUBNET_SECONDARY1 }}
+  AWS_SSH_KEY: ${{ secrets.AWS_SSH_KEY }}
   GIT_REPOSITORY_URL: https://github.com/${{ github.repository }}
   OAUTH_TOKEN: ${{ secrets.OAUTH_TOKEN }}
   RUST_LOG: info
-  TF_STAGE: prod
+  TF_STAGE: dev
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   # This workflow contains a single job called "build"
   build:
-    environment: Production
+    environment: Development
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
 
@@ -51,12 +52,22 @@ jobs:
         with:
           profile: minimal
           default: true
-      - name: Configure AWS credentials for prod
+      - name: Configure AWS credentials for dev
         uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
+      - name: Add public IP to AWS security group
+        uses: sohelamin/aws-security-group-add-ip-action@master
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+          aws-security-group-id: ${{ secrets.AWS_DEPLOYMENT_SECURITY_GROUP }}
+          port: "22"
+          to-port: "22"
+          protocol: "tcp"
       - uses: dorny/paths-filter@v2
         id: filter
         with:
@@ -93,13 +104,13 @@ jobs:
           cargo install cross
           nix build
           cp -f ./result/config.tf.json ./config.tf.json
-          nix develop --impure --command apply-now
+          nix develop --impure --command plan
       - name: Encode documents as TEI and database entries
         if: steps.filter.outputs.data == 'true'
         run: |
-          export DAILP_GRAPHQL_URL=$(terraform output graphql_read_url)/graphql
+          export DAILP_GRAPHQL_URL=$(terraform output functions_url)/graphql
           cd migration
           cargo run --release
       - name: Publish website
         run: |
-          curl -X POST -d {} $(terraform output amplify_webhook)
+          curl -X POST -d {} -H "Content-Type:application/json" "$(terraform output amplify_webhook)"
