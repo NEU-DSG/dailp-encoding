@@ -1,6 +1,6 @@
 # This is a basic workflow to help you get started with Actions
 
-name: CI
+name: Development Deployment
 
 # Controls when the action will run. Triggers the workflow on push or pull request
 # events but only for the main branch
@@ -58,16 +58,6 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
-      - name: Add public IP to AWS security group
-        uses: sohelamin/aws-security-group-add-ip-action@master
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
-          aws-security-group-id: ${{ secrets.AWS_DEPLOYMENT_SECURITY_GROUP }}
-          port: "22"
-          to-port: "22"
-          protocol: "tcp"
       - uses: dorny/paths-filter@v2
         id: filter
         with:
@@ -98,11 +88,20 @@ jobs:
           install_options: "--tarball-url-prefix https://nixos-nix-install-tests.cachix.org/serve"
           extra_nix_config: |
             experimental-features = nix-command flakes
+      - name: Add public IP to AWS security group
+        uses: sohelamin/aws-security-group-add-ip-action@master
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+          aws-security-group-id: ${{ secrets.AWS_DEPLOYMENT_SECURITY_GROUP }}
+          port: "22"
+          to-port: "22"
+          protocol: "tcp"
       - name: Deploy back-end to AWS via terraform
         if: steps.filter.outputs.backend == 'true'
         run: |
-          cargo install cross
-          nix build
+          nix build --impure
           cp -f ./result/config.tf.json ./config.tf.json
           nix develop --impure --command plan
       - name: Encode documents as TEI and database entries
