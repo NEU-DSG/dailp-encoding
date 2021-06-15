@@ -31,7 +31,7 @@ with builtins; {
         name = "dailp";
         description =
           "Digital Archive of American Indian Languages Preservation and Perseverance";
-        repository = getEnv "GIT_REPOSITORY_URL";
+        repository = lib.toLower (getEnv "GIT_REPOSITORY_URL");
         oauth_token = getEnv "OAUTH_TOKEN";
         iam_service_role_arn = "\${aws_iam_role.amplify_role.arn}";
         custom_rule = [

@@ -45,6 +45,7 @@
           };
           # Make sure `cargo check` passes before building.
           doCheck = true;
+          # doTest = true;
 
           # Prefer static linking
           nativeBuildInputs = with pkgs; [ pkgsStatic.stdenv.cc ];
