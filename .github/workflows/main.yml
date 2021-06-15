@@ -20,8 +20,11 @@ jobs:
       GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
       AWS_VPC_ID: ${{ secrets.AWS_VPC_ID }}
       AWS_SUBNET_PRIMARY: ${{ secrets.AWS_SUBNET_PRIMARY }}
+      AWS_ZONE_PRIMARY: ${{ secrets.AWS_ZONE_PRIMARY }}
       AWS_SUBNET_SECONDARY0: ${{ secrets.AWS_SUBNET_SECONDARY0 }}
+      AWS_ZONE_SECONDARY0: ${{ secrets.AWS_ZONE_SECONDARY0 }}
       AWS_SUBNET_SECONDARY1: ${{ secrets.AWS_SUBNET_SECONDARY1 }}
+      AWS_ZONE_SECONDARY1: ${{ secrets.AWS_ZONE_SECONDARY1 }}
       AWS_SSH_KEY: ${{ secrets.AWS_SSH_KEY }}
       GIT_REPOSITORY_URL: https://github.com/neu-dsg/dailp-encoding
       OAUTH_TOKEN: ${{ secrets.OAUTH_TOKEN }}
