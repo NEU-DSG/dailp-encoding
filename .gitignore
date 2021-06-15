@@ -13,6 +13,7 @@ yarn-error.log*
 target/
 .auctex-auto/
 .env
+*.tfstate
 
 public/
 
@@ -20,6 +21,8 @@ public/
 .cache/
 .log/
 .linaria-cache/
+.terraform/
+*.tf.json
 
 # Ignore serverless manifest files
 serverless.manifest.json
