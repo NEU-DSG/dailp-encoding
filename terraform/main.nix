@@ -88,19 +88,19 @@ in {
   servers.mongodb.nodes = [
     {
       primary = true;
-      availability_zone = "us-east-1d";
+      availability_zone = getEnv "AWS_ZONE_PRIMARY";
       name = "mongodb_primary";
       subnet_id = config.setup.subnets.primary;
     }
     {
       primary = false;
-      availability_zone = "us-east-1a";
+      availability_zone = getEnv "AWS_ZONE_SECONDARY0";
       name = "mongodb_secondary0";
       subnet_id = config.setup.subnets.secondary;
     }
     {
       primary = false;
-      availability_zone = "us-east-1b";
+      availability_zone = getEnv "AWS_ZONE_SECONDARY1";
       name = "mongodb_secondary1";
       subnet_id = config.setup.subnets.tertiary;
     }

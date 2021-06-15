@@ -1,33 +1,32 @@
-# This is a basic workflow to help you get started with Actions
-
-name: CI
+name: Infrastructure Deployment
 
 # Controls when the action will run. Triggers the workflow on push or pull request
 # events but only for the main branch
 on:
   push:
-    branches: [main]
+    branches: [main, dev]
     paths-ignore:
       - "**/README.md"
       - "**/readme.md"
       - "doc/**/*.md"
-env:
-  MONGODB_PASSWORD: ${{ secrets.MONGODB_PASSWORD }}
-  GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
-  AWS_VPC_ID: ${{ secrets.AWS_VPC_ID }}
-  AWS_SUBNET_PRIMARY: ${{ secrets.AWS_SUBNET_PRIMARY }}
-  AWS_SUBNET_SECONDARY0: ${{ secrets.AWS_SUBNET_SECONDARY0 }}
-  AWS_SUBNET_SECONDARY1: ${{ secrets.AWS_SUBNET_SECONDARY1 }}
-  GIT_REPOSITORY_URL: https://github.com/${{ github.repository }}
-  OAUTH_TOKEN: ${{ secrets.OAUTH_TOKEN }}
-  RUST_LOG: info
-  TF_STAGE: prod
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   # This workflow contains a single job called "build"
   build:
-    environment: Production
+    environment: ${{ github.ref == 'refs/heads/main' && 'Production' || 'Development' }}
+    env:
+      MONGODB_PASSWORD: ${{ secrets.MONGODB_PASSWORD }}
+      GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+      AWS_VPC_ID: ${{ secrets.AWS_VPC_ID }}
+      AWS_SUBNET_PRIMARY: ${{ secrets.AWS_SUBNET_PRIMARY }}
+      AWS_SUBNET_SECONDARY0: ${{ secrets.AWS_SUBNET_SECONDARY0 }}
+      AWS_SUBNET_SECONDARY1: ${{ secrets.AWS_SUBNET_SECONDARY1 }}
+      AWS_SSH_KEY: ${{ secrets.AWS_SSH_KEY }}
+      GIT_REPOSITORY_URL: https://github.com/neu-dsg/dailp-encoding
+      OAUTH_TOKEN: ${{ secrets.OAUTH_TOKEN }}
+      RUST_LOG: info
+      TF_STAGE: ${{ github.ref == 'refs/heads/main' && 'prod' || 'dev' }}
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
 
@@ -51,7 +50,7 @@ jobs:
         with:
           profile: minimal
           default: true
-      - name: Configure AWS credentials for prod
+      - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -73,13 +72,9 @@ jobs:
             rust:
               - '**/*.rs'
               - 'Cargo.lock'
-      - name: Cache docker images
-        uses: satackey/action-docker-layer-caching@v0.0.11
-        # Ignore the failure of a step and avoid terminating the job.
-        continue-on-error: true
-      - name: Run unit tests
-        if: steps.filter.outputs.rust == 'true'
-        run: cargo test --release
+      # - name: Run unit tests
+      #   if: steps.filter.outputs.rust == 'true'
+      #   run: cargo test --release
       - name: Install Nix
         uses: cachix/install-nix-action@v13
         with:
@@ -87,19 +82,36 @@ jobs:
           install_options: "--tarball-url-prefix https://nixos-nix-install-tests.cachix.org/serve"
           extra_nix_config: |
             experimental-features = nix-command flakes
+      - name: Use binary cache for nix store
+        uses: cachix/cachix-action@v10
+        with:
+          name: dailp
+          # If you chose API tokens for write access OR if you have a private cache
+          authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
+          pushFilter: "(-dailp$|-dailp-dev$|-dailp-dev-env$|-terraform-config$|-source$|\\.tar\\.gz$|-output$|-plan$|-apply-now$|-apply$)"
+      - name: Add public IP to AWS security group
+        uses: sohelamin/aws-security-group-add-ip-action@master
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+          aws-security-group-id: ${{ secrets.AWS_DEPLOYMENT_SECURITY_GROUP }}
+          port: "22"
+          to-port: "22"
+          protocol: "tcp"
+      - name: Build project
+        run: |
+          nix build --impure
+          cp -f ./result/config.tf.json ./config.tf.json
       - name: Deploy back-end to AWS via terraform
         if: steps.filter.outputs.backend == 'true'
-        run: |
-          cargo install cross
-          nix build
-          cp -f ./result/config.tf.json ./config.tf.json
-          nix develop --impure --command apply-now
+        run: nix develop --impure --command apply-now
       - name: Encode documents as TEI and database entries
         if: steps.filter.outputs.data == 'true'
         run: |
-          export DAILP_GRAPHQL_URL=$(terraform output graphql_read_url)/graphql
+          export DAILP_GRAPHQL_URL=$(nix develop --impure --command output functions_url)/graphql
           cd migration
           cargo run --release
       - name: Publish website
         run: |
-          curl -X POST -d {} $(terraform output amplify_webhook)
+          curl -X POST -d {} "$(nix develop --impure --command output amplify_webhook)" -H "Content-Type:application/json"
