@@ -88,7 +88,7 @@ jobs:
           name: dailp
           # If you chose API tokens for write access OR if you have a private cache
           authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
-          pushFilter: "(-dailp$|-dailp-dev$|-terraform-config$|-source$|\\.tar\\.gz$|-output$|-plan$|-apply-now$|-apply$)"
+          pushFilter: "(-dailp$|-dailp-dev$|-dailp-dev-env$|-terraform-config$|-source$|\\.tar\\.gz$|-output$|-plan$|-apply-now$|-apply$)"
       - name: Add public IP to AWS security group
         uses: sohelamin/aws-security-group-add-ip-action@master
         with:
