@@ -224,36 +224,37 @@ in {
         release = "20.09";
       };
     }
-    (mkMerge (map (node@{ name, ... }: {
-      "deploy_${name}" = {
-        source =
-          "git::${terraform_nixos_repo}//deploy_nixos?ref=${terraform_nixos_ref}";
-        nixos_config = toString ./mongodb-configuration.nix;
-        hermetic = true;
-        target_user = "root";
-        target_host = "\${aws_instance.${name}.public_ip}";
-        ssh_agent = false;
-        ssh_private_key = getEnv "AWS_SSH_KEY";
-        extra_eval_args = let
-          primaryIp = "\${aws_instance.${name}.public_dns}";
-          secondaryAddrs =
-            map (node: "\${aws_instance.${node.name}.public_dns}")
-            (filter (node: node.primary == false) config.servers.mongodb.nodes);
-          secondariesQuoted = map (s: ''"${s}"'') secondaryAddrs;
-          secondariesStr = concatStringsSep " " secondariesQuoted;
-          secondaries = if node.primary then "[${secondariesStr}]" else "null";
-        in [
-          # HACK: Force the deployment to wait for all volumes to be attached
-          # first. This helps prevent wonky MongoDB logging errors.
-          "--argstr"
-          "junk"
-          "\${aws_volume_attachment.${name}_data.id} \${aws_volume_attachment.${name}_journal.id}"
-          "--arg"
-          "configArgs"
-          ''
-            { primaryAddress = "${primaryIp}"; secondaryAddresses = ${secondaries}; }''
-        ];
-      };
-    }) config.servers.mongodb.nodes))
+    (mkMerge (map (node@{ name, ... }:
+      let
+        primaryIp = "\${aws_instance.${name}.public_dns}";
+        secondaryAddrs = map (node: "\${aws_instance.${node.name}.public_dns}")
+          (filter (node: node.primary == false) config.servers.mongodb.nodes);
+        secondariesQuoted = map (s: ''"${s}"'') secondaryAddrs;
+        secondariesStr = concatStringsSep " " secondariesQuoted;
+        secondaries = if node.primary then "[${secondariesStr}]" else "null";
+      in {
+        "deploy_${name}" = {
+          source =
+            "git::${terraform_nixos_repo}//deploy_nixos?ref=${terraform_nixos_ref}";
+          nixos_config = toString ./mongodb-configuration.nix;
+          hermetic = true;
+          target_user = "root";
+          target_host = "\${aws_instance.${name}.public_dns}";
+          ssh_agent = false;
+          ssh_private_key = getEnv "AWS_SSH_KEY";
+          triggers = { inherit secondaries; };
+          extra_eval_args = [
+            # HACK: Force the deployment to wait for all volumes to be attached
+            # first. This helps prevent wonky MongoDB logging errors.
+            "--argstr"
+            "junk"
+            "\${aws_volume_attachment.${name}_data.id} \${aws_volume_attachment.${name}_journal.id}"
+            "--arg"
+            "configArgs"
+            ''
+              { primaryAddress = "${primaryIp}"; secondaryAddresses = ${secondaries}; }''
+          ];
+        };
+      }) config.servers.mongodb.nodes))
   ];
 }
