@@ -11,7 +11,7 @@
 #
 # The secondary benefit is that you guard the `nixpkgs` you use, with
 # an integrity hash.
-{ primaryAddress, secondaryAddresses ? null, ... }:
+{ primaryAddress, secondary0Address ? null, secondary1Address ? null, ... }:
 let
   nixpkgs = let
     rev = "cd63096d6d887d689543a0b97743d28995bc9bc3";
@@ -50,17 +50,21 @@ in import "${nixpkgs}/nixos" {
       enableAuth = false;
     };
 
-    systemd.services.mongodb-replication = if secondaryAddresses == null then {
+    systemd.services.mongodb-replication = if secondary0Address == null then {
       enable = false;
     } else {
       enable = true;
       wantedBy = [ "mongodb.service" ];
-      restartIfChanged = true;
+      reloadIfChanged = true;
       script = let
         port = "27017";
         addressMembers = pkgs.lib.imap1 (i: addr:
-          "{_id: ${builtins.toString i}, host: '${addr}:${port}', priority: 5}")
-          secondaryAddresses;
+          "{_id: ${
+            builtins.toString i
+          }, host: '${addr}:${port}', priority: 5}") [
+            secondary0Address
+            secondary1Address
+          ];
         allMembers =
           [ "{_id: 0, host: '${primaryAddress}:${port}', priority: 10}" ]
           ++ addressMembers;
@@ -73,12 +77,6 @@ in import "${nixpkgs}/nixos" {
             rs.initiate({_id: '${replSetName}', members: [${addressesStr}]});
           }
         '';
-        # f = pkgs.writeTextFile {
-        #   name = "replica-set-script";
-        #   text = script;
-        #   executable = false;
-        #   destination = "/script.txt";
-        # };
       in ''
         ${config.services.mongodb.package}/bin/mongo admin --eval "${script}"
       '';
