@@ -41,6 +41,7 @@ in {
         else
           null;
         tags = { Name = "dailp-${toKebabCase volume.name}"; };
+        lifecycle.prevent_destroy = true;
       };
 
       aws_volume_attachment."${volume.name}" = {
@@ -68,6 +69,7 @@ in {
                 volume_type = "gp3";
               };
               tags = { Name = "dailp-${toKebabCase name}"; };
+              lifecycle.prevent_destroy = true;
             };
 
             aws_iam_instance_profile."${name}" = {
