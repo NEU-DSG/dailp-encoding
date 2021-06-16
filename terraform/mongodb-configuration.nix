@@ -20,7 +20,7 @@ let
     url = "https://github.com/NixOS/nixpkgs/archive/${rev}.tar.gz";
     inherit sha256;
   };
-
+in import "${nixpkgs}/nixos" {
   system = "x86_64-linux";
 
   configuration = { config, pkgs, ... }: {
@@ -66,21 +66,21 @@ let
           ++ addressMembers;
         addressesStr = pkgs.lib.concatStringsSep "," allMembers;
         replSetName = config.services.mongodb.replSetName;
-        f = pkgs.writeTextFile {
-          name =
-            "replica-set-script-${builtins.hashString "sha1" addressesStr}";
-          text = ''
-            if (rs.status().ok) {
-              rs.reconfig({_id: "${replSetName}", members: [${addressesStr}]}, {force: true});
-            } else {
-              rs.initiate({_id: "${replSetName}", members: [${addressesStr}]});
-            }
-          '';
-          executable = false;
-          destination = "/script.txt";
-        };
+        script = ''
+          if (rs.status().ok) {
+            rs.reconfig({_id: '${replSetName}', members: [${addressesStr}]}, {force: true});
+          } else {
+            rs.initiate({_id: '${replSetName}', members: [${addressesStr}]});
+          }
+        '';
+        # f = pkgs.writeTextFile {
+        #   name = "replica-set-script";
+        #   text = script;
+        #   executable = false;
+        #   destination = "/script.txt";
+        # };
       in ''
-        ${config.services.mongodb.package}/bin/mongo admin "${f}/script.txt"
+        ${config.services.mongodb.package}/bin/mongo admin --eval "${script}"
       '';
       # Retry several times if necessary.
       serviceConfig = {
@@ -136,5 +136,4 @@ let
       SystemMaxUse=1024M
     '';
   };
-
-in import "${nixpkgs}/nixos" { inherit system configuration; }
+}
