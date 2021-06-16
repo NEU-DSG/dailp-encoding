@@ -1,11 +1,10 @@
 { config, lib, pkgs, ... }:
 
 let
-  inherit (builtins) map filter getEnv replaceStrings toJSON;
-  inherit (lib) mkMerge concatStringsSep;
-  terraform_nixos_repo =
-    "https://github.com/loafofpiecrust/terraform-nixos.git";
-  terraform_nixos_ref = "d91078b61181df76d78b0594b5cd1fa76ebae7f7";
+  inherit (builtins) map filter getEnv replaceStrings toJSON toString;
+  inherit (lib) mkMerge concatStringsSep imap0;
+  terraform_nixos_repo = "https://github.com/tomferon/terraform-nixos.git";
+  terraform_nixos_ref = "caa6191b952f8c92a097a67fc21200e2927e3d10";
   toKebabCase = s: replaceStrings [ "_" ] [ "-" ] s;
 in {
   options.servers.mongodb = with lib;
@@ -174,6 +173,7 @@ in {
           security_groups = [ ];
           prefix_list_ids = [ ];
         }];
+        lifecycle.prevent_destroy = true;
       };
 
       aws_iam_role.mongodb_node = {
@@ -241,21 +241,19 @@ in {
           nixos_config = toString ./mongodb-configuration.nix;
           hermetic = true;
           target_user = "root";
-          target_host = "\${aws_instance.${name}.public_dns}";
+          target_host = "\${aws_instance.${name}.public_ip}";
           ssh_agent = false;
           ssh_private_key = getEnv "AWS_SSH_KEY";
-          triggers = { inherit secondaries; };
-          extra_eval_args = [
-            # HACK: Force the deployment to wait for all volumes to be attached
-            # first. This helps prevent wonky MongoDB logging errors.
-            "--argstr"
-            "junk"
-            "\${aws_volume_attachment.${name}_data.id} \${aws_volume_attachment.${name}_journal.id}"
-            "--arg"
-            "configArgs"
-            ''
-              { primaryAddress = "${primaryIp}"; secondaryAddresses = ${secondaries}; }''
-          ];
+          arguments = mkMerge ([{ primaryAddress = primaryIp; }]
+            ++ (imap0 (i: addr: { "secondary${toString i}Address" = addr; })
+              secondaryAddrs));
+          # extra_eval_args = [
+          #   # HACK: Force the deployment to wait for all volumes to be attached
+          #   # first. This helps prevent wonky MongoDB logging errors.
+          #   "--argstr"
+          #   "junk"
+          #   "\${aws_volume_attachment.${name}_data.id} \${aws_volume_attachment.${name}_journal.id}"
+          # ];
         };
       }) config.servers.mongodb.nodes))
   ];

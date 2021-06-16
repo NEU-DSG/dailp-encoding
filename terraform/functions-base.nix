@@ -22,6 +22,7 @@
           ]
         }
       '';
+      lifecycle.prevent_destroy = true;
     };
 
     # The "REST API" is the container for all of the other API Gateway objects you will create.
