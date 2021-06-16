@@ -14,7 +14,7 @@ on:
 jobs:
   # This workflow contains a single job called "build"
   build:
-    environment: ${{ github.ref == 'refs/heads/main' && 'Production' || 'Development' }}
+    environment: Development
     env:
       MONGODB_PASSWORD: ${{ secrets.MONGODB_PASSWORD }}
       GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
