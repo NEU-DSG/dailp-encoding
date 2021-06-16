@@ -21,9 +21,9 @@ with lib; {
         {
           sse_algorithm = "AES256";
         };
-      lifecycle.prevent_destroy = true;
       versioning.enabled = true;
       tags."Terraform" = "true";
+      lifecycle.prevent_destroy = true;
     };
 
     resource.aws_dynamodb_table.tf_lock_state = {
@@ -40,6 +40,7 @@ with lib; {
         Name = config.setup.state.table;
         BuiltBy = "Terraform";
       };
+      lifecycle.prevent_destroy = true;
     };
 
     # Use the bucket and table provisioned above to fuel Terraform state
