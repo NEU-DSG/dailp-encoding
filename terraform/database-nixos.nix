@@ -111,6 +111,8 @@ in {
         name = "dailp-nixos-test";
         vpc_id = config.setup.vpc;
         description = "MongoDB on NixOS test";
+        # GitHub Actions relies on the ID staying the same.
+        lifecycle.prevent_destroy = true;
       };
 
       aws_security_group_rule.mongodb_internet = {
@@ -230,6 +232,7 @@ in {
         hermetic = true;
         target_user = "root";
         target_host = "\${aws_instance.${name}.public_ip}";
+        ssh_agent = false;
         ssh_private_key = getEnv "AWS_SSH_KEY";
         extra_eval_args = let
           primaryIp = "\${aws_instance.${name}.public_dns}";

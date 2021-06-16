@@ -28,6 +28,7 @@ with builtins; {
     aws_amplify_app.dailp =
       let apiUrl = "\${aws_api_gateway_deployment.functions_api.invoke_url}";
       in {
+        lifecycle.prevent_destroy = true;
         name = "dailp";
         description =
           "Digital Archive of American Indian Languages Preservation and Perseverance";
