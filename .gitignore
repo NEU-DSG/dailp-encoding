@@ -23,6 +23,7 @@ public/
 .linaria-cache/
 .terraform/
 *.tf.json
+result/
 
 # Ignore serverless manifest files
 serverless.manifest.json

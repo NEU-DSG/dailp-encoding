@@ -1,7 +1,0 @@
-[build.env]
-passthrough = [
-  "DAILP_GRAPHQL_URL",
-]
-
-[target.x86_64-unknown-linux-musl]
-image = "clux/muslrust:1.49.0"
