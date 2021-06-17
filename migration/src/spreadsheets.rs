@@ -57,7 +57,9 @@ pub fn write_to_file(doc: &AnnotatedDoc) -> Result<()> {
 }
 
 fn render_template(doc: &AnnotatedDoc) -> Result<String> {
-    let mut tera = tera::Tera::new("*.tera.xml")?;
+    let mut tera = tera::Tera::default();
+    tera.add_raw_template("macros.tera.xml", include_str!("../macros.tera.xml"))?;
+    tera.add_raw_template("template.tera.xml", include_str!("../template.tera.xml"))?;
     tera.register_filter("convert_breaks", convert_breaks);
     let contents = tera.render("template.tera.xml", &tera::Context::from_serialize(doc)?)?;
     Ok(contents)
