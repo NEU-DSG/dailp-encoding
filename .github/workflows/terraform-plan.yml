@@ -10,7 +10,7 @@ on:
 jobs:
   plan:
     runs-on: ubuntu-latest
-    environment: ${{ github.base_ref == 'refs/heads/main' && 'Production' || 'Development' }}
+    environment: ${{ github.base_ref == 'main' && 'Production' || 'Development' }}
     env:
       MONGODB_PASSWORD: ${{ secrets.MONGODB_PASSWORD }}
       GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
@@ -25,7 +25,7 @@ jobs:
       GIT_REPOSITORY_URL: https://github.com/neu-dsg/dailp-encoding
       OAUTH_TOKEN: ${{ secrets.OAUTH_TOKEN }}
       RUST_LOG: info
-      TF_STAGE: ${{ github.base_ref == 'refs/heads/main' && 'prod' || 'dev' }}
+      TF_STAGE: ${{ github.base_ref == 'main' && 'prod' || 'dev' }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
