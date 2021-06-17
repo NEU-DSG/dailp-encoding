@@ -10,6 +10,10 @@ on:
       - "**/readme.md"
       - "doc/**/*.md"
 
+concurrency:
+  group: infra-${{ github.ref }}
+  cancel-in-progress: true
+
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   # This workflow contains a single job called "build"
@@ -91,7 +95,6 @@ jobs:
           nix build --impure -L
           cp -f ./result/config.tf.json ./config.tf.json
       - name: Deploy back-end to AWS via terraform
-        if: steps.filter.outputs.backend == 'true'
         run: nix develop --impure --command apply-now
       - name: Encode documents as TEI and database entries
         if: steps.filter.outputs.data == 'true'
