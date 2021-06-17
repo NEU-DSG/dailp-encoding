@@ -11,6 +11,21 @@ jobs:
   plan:
     runs-on: ubuntu-latest
     environment: ${{ github.base_ref == 'refs/heads/main' && 'Production' || 'Development' }}
+    env:
+      MONGODB_PASSWORD: ${{ secrets.MONGODB_PASSWORD }}
+      GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+      AWS_VPC_ID: ${{ secrets.AWS_VPC_ID }}
+      AWS_SUBNET_PRIMARY: ${{ secrets.AWS_SUBNET_PRIMARY }}
+      AWS_ZONE_PRIMARY: ${{ secrets.AWS_ZONE_PRIMARY }}
+      AWS_SUBNET_SECONDARY0: ${{ secrets.AWS_SUBNET_SECONDARY0 }}
+      AWS_ZONE_SECONDARY0: ${{ secrets.AWS_ZONE_SECONDARY0 }}
+      AWS_SUBNET_SECONDARY1: ${{ secrets.AWS_SUBNET_SECONDARY1 }}
+      AWS_ZONE_SECONDARY1: ${{ secrets.AWS_ZONE_SECONDARY1 }}
+      AWS_SSH_KEY: ${{ secrets.AWS_SSH_KEY }}
+      GIT_REPOSITORY_URL: https://github.com/neu-dsg/dailp-encoding
+      OAUTH_TOKEN: ${{ secrets.OAUTH_TOKEN }}
+      RUST_LOG: info
+      TF_STAGE: ${{ github.base_ref == 'refs/heads/main' && 'prod' || 'dev' }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -36,18 +51,3 @@ jobs:
           aws-region: us-east-1
       - name: Terraform Plan
         run: nix develop --impure --command plan
-        env:
-          MONGODB_PASSWORD: ${{ secrets.MONGODB_PASSWORD }}
-          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
-          AWS_VPC_ID: ${{ secrets.AWS_VPC_ID }}
-          AWS_SUBNET_PRIMARY: ${{ secrets.AWS_SUBNET_PRIMARY }}
-          AWS_ZONE_PRIMARY: ${{ secrets.AWS_ZONE_PRIMARY }}
-          AWS_SUBNET_SECONDARY0: ${{ secrets.AWS_SUBNET_SECONDARY0 }}
-          AWS_ZONE_SECONDARY0: ${{ secrets.AWS_ZONE_SECONDARY0 }}
-          AWS_SUBNET_SECONDARY1: ${{ secrets.AWS_SUBNET_SECONDARY1 }}
-          AWS_ZONE_SECONDARY1: ${{ secrets.AWS_ZONE_SECONDARY1 }}
-          AWS_SSH_KEY: ${{ secrets.AWS_SSH_KEY }}
-          GIT_REPOSITORY_URL: https://github.com/neu-dsg/dailp-encoding
-          OAUTH_TOKEN: ${{ secrets.OAUTH_TOKEN }}
-          RUST_LOG: info
-          TF_STAGE: ${{ github.base_ref == 'refs/heads/main' && 'prod' || 'dev' }}
