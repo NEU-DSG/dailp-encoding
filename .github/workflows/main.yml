@@ -46,11 +46,13 @@ jobs:
       - uses: dorny/paths-filter@v2
         id: filter
         with:
+          base: ${{ github.ref }}
           filters: |
             backend:
               - 'types/**'
               - 'graphql/**'
               - 'flake.nix'
+              - 'flake.lock'
               - 'terraform/**'
             data:
               - 'types/**'
