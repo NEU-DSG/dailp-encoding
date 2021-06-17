@@ -14,7 +14,7 @@ on:
 jobs:
   # This workflow contains a single job called "build"
   build:
-    environment: Development
+    environment: ${{ github.ref == 'refs/heads/main' && 'Production' || 'Development' }}
     env:
       MONGODB_PASSWORD: ${{ secrets.MONGODB_PASSWORD }}
       GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
@@ -37,22 +37,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-      - name: Cache Cargo Dependencies
-        uses: actions/cache@v1
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-${{ hashFiles('Cargo.lock') }}
-            ${{ runner.os }}-cargo
-      - name: Setup rust toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          default: true
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -75,9 +59,6 @@ jobs:
             rust:
               - '**/*.rs'
               - 'Cargo.lock'
-      # - name: Run unit tests
-      #   if: steps.filter.outputs.rust == 'true'
-      #   run: cargo test --release
       - name: Install Nix
         uses: cachix/install-nix-action@v13
         with:
@@ -91,7 +72,7 @@ jobs:
           name: dailp
           # If you chose API tokens for write access OR if you have a private cache
           authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
-          pushFilter: "(-dailp$|-dailp-dev$|-dailp-dev-env$|-terraform-config$|-source$|\\.tar\\.gz$|-output$|-plan$|-apply-now$|-apply$)"
+          pushFilter: "(-dailp$|-dailp-|-terraform-config$|-source$|\\.tar\\.gz$|-output$|-plan$|-apply-now$|-apply$)"
       - name: Add public IP to AWS security group
         uses: sohelamin/aws-security-group-add-ip-action@master
         with:
@@ -102,9 +83,10 @@ jobs:
           port: "22"
           to-port: "22"
           protocol: "tcp"
-      - name: Build project
+      - name: Build and test project
+        # nix -L argument shows the full build log and --impure allows it to access environment variables.
         run: |
-          nix build --impure
+          nix build --impure -L
           cp -f ./result/config.tf.json ./config.tf.json
       - name: Deploy back-end to AWS via terraform
         if: steps.filter.outputs.backend == 'true'
@@ -113,8 +95,7 @@ jobs:
         if: steps.filter.outputs.data == 'true'
         run: |
           export DAILP_GRAPHQL_URL=$(nix develop --impure --command output functions_url)/graphql
-          cd migration
-          cargo run --release
+          nix run .#migrate-data -L
       - name: Publish website
         run: |
           curl -X POST -d {} "$(nix develop --impure --command output amplify_webhook)" -H "Content-Type:application/json"

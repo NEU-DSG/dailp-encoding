@@ -1,7 +1,7 @@
 {
   inputs = {
     pkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-    flake-utils.url = "github:numtide/flake-utils";
+    utils.url = "github:numtide/flake-utils";
     # Provides cargo dependencies.
     fenix = {
       url = "github:nix-community/fenix";
@@ -16,7 +16,7 @@
   };
 
   outputs = inputs:
-    inputs.flake-utils.lib.eachDefaultSystem (system:
+    inputs.utils.lib.eachDefaultSystem (system:
       let
         pkgs = inputs.pkgs.legacyPackages.${system};
         toolchain = with inputs.fenix.packages.${system};
@@ -30,34 +30,40 @@
           rustc = toolchain;
         };
         filter = inputs.nix-filter.lib;
-        rustPackage = naersk.buildPackage {
-          root = ./.;
-          src = filter.filter {
+        # The rust compiler is internally a cross compiler, so a single
+        # toolchain can be used to compile multiple targets. In a hermetic
+        # build system like nix flakes, there's effectively one package for
+        # every permutation of the supported hosts and targets.
+        rustPackage = target:
+          naersk.buildPackage {
             root = ./.;
-            include = [
-              (filter.inDirectory "types")
-              (filter.inDirectory "graphql")
-              (filter.inDirectory "migration")
-              ./Cargo.toml
-              ./Cargo.lock
-              ./rust-toolchain
-            ];
+            src = filter.filter {
+              root = ./.;
+              include = [
+                (filter.inDirectory "types")
+                (filter.inDirectory "graphql")
+                (filter.inDirectory "migration")
+                ./Cargo.toml
+                ./Cargo.lock
+                ./rust-toolchain
+              ];
+            };
+            # Make sure `cargo check` passes before building.
+            doCheck = true;
+            doTest = true;
+
+            # Prefer static linking
+            nativeBuildInputs = with pkgs; [ pkgsStatic.stdenv.cc ];
+
+            # Configures the target which will be built.
+            # ref: https://doc.rust-lang.org/cargo/reference/config.html#buildtarget
+            CARGO_BUILD_TARGET = target;
+
+            # Enables static compilation.
+            # ref: https://github.com/rust-lang/rust/issues/79624#issuecomment-737415388
+            CARGO_BUILD_RUSTFLAGS = "-C target-feature=+crt-static";
           };
-          # Make sure `cargo check` passes before building.
-          doCheck = true;
-          # doTest = true;
-
-          # Prefer static linking
-          nativeBuildInputs = with pkgs; [ pkgsStatic.stdenv.cc ];
-
-          # Configures the target which will be built.
-          # ref: https://doc.rust-lang.org/cargo/reference/config.html#buildtarget
-          CARGO_BUILD_TARGET = "x86_64-unknown-linux-musl";
-
-          # Enables static compilation.
-          # ref: https://github.com/rust-lang/rust/issues/79624#issuecomment-737415388
-          CARGO_BUILD_RUSTFLAGS = "-C target-feature=+crt-static";
-        };
+        muslPackage = rustPackage "x86_64-unknown-linux-musl";
         dailpFunctions = with pkgs;
           stdenv.mkDerivation {
             name = "dailp-functions";
@@ -66,7 +72,7 @@
             unpackPhase = "true";
             installPhase = ''
               mkdir -p $out
-              cp -f ${rustPackage}/bin/dailp-graphql $out/bootstrap
+              cp -f ${muslPackage}/bin/dailp-graphql $out/bootstrap
               zip -j $out/dailp-graphql.zip $out/bootstrap
             '';
           };
@@ -100,11 +106,10 @@
             '';
           };
 
-        # The rust compiler is internally a cross compiler, so a single
-        # toolchain can be used to compile multiple targets. In a hermetic
-        # build system like nix flakes, there's effectively one package for
-        # every permutation of the supported hosts and targets.
-        packages.x86_64-unknown-linux-musl = rustPackage;
+        apps.migrate-data = inputs.utils.lib.mkApp {
+          drv = muslPackage;
+          exePath = "/bin/dailp-migration";
+        };
 
         devShell = with pkgs;
           stdenv.mkDerivation {
