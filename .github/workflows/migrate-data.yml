@@ -1,51 +1,42 @@
 name: Migrate Data
 on:
   workflow_dispatch:
-env:
-  MONGODB_USERNAME: ${{ secrets.MONGODB_USERNAME }}
-  MONGODB_PASSWORD: ${{ secrets.MONGODB_PASSWORD }}
-  GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
-  AWS_VPC_ID: ${{ secrets.AWS_VPC_ID }}
-  AWS_SUBNET_PRIMARY: ${{ secrets.AWS_SUBNET_PRIMARY }}
-  AWS_SUBNET_SECONDARY0: ${{ secrets.AWS_SUBNET_SECONDARY0 }}
-  AWS_SUBNET_SECONDARY1: ${{ secrets.AWS_SUBNET_SECONDARY1 }}
-  GIT_REPOSITORY_URL: https://github.com/neu-dsg/dailp-encoding
-  OAUTH_TOKEN: ${{ secrets.OAUTH_TOKEN }}
 jobs:
   build:
     runs-on: ubuntu-latest
+    environment: ${{ github.ref == 'refs/heads/main' && 'Production' || 'Development' }}
+    env:
+      MONGODB_PASSWORD: ${{ secrets.MONGODB_PASSWORD }}
+      GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+      AWS_VPC_ID: ${{ secrets.AWS_VPC_ID }}
+      AWS_SUBNET_PRIMARY: ${{ secrets.AWS_SUBNET_PRIMARY }}
+      AWS_ZONE_PRIMARY: ${{ secrets.AWS_ZONE_PRIMARY }}
+      AWS_SUBNET_SECONDARY0: ${{ secrets.AWS_SUBNET_SECONDARY0 }}
+      AWS_ZONE_SECONDARY0: ${{ secrets.AWS_ZONE_SECONDARY0 }}
+      AWS_SUBNET_SECONDARY1: ${{ secrets.AWS_SUBNET_SECONDARY1 }}
+      AWS_ZONE_SECONDARY1: ${{ secrets.AWS_ZONE_SECONDARY1 }}
+      AWS_SSH_KEY: ${{ secrets.AWS_SSH_KEY }}
+      GIT_REPOSITORY_URL: https://github.com/neu-dsg/dailp-encoding
+      OAUTH_TOKEN: ${{ secrets.OAUTH_TOKEN }}
+      RUST_LOG: info
+      TF_STAGE: ${{ github.ref == 'refs/heads/main' && 'prod' || 'dev' }}
     steps:
-      - name: Setup node.js
-        uses: actions/setup-node@v1
-        with: { node-version: 10 }
-      - name: Setup rust toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: 1.49.0
-          default: true
-          override: true
+      - name: Checkout code
+        uses: actions/checkout@v2
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
-      - name: Checkout code
-        uses: actions/checkout@v2
-      - name: Cache dependencies
-        uses: Swatinem/rust-cache@v1
-      - name: Generate serverless manifest
+      - name: Build project
         run: |
-          yarn install
-          mkdir -p .serverless
-          yarn sls translate --stage prod
-          yarn sls manifest --stage prod
+          nix build --impure -L
+          cp -f ./result/config.tf.json ./config.tf.json
       - name: Migrate data to MongoDB
         run: |
-          export DAILP_GRAPHQL_URL=$(jq -r '.prod.urls.byFunction.graphql.url' .serverless/manifest.json)
-          cd migration
-          cargo run --release
+          export DAILP_GRAPHQL_URL=$(nix develop --impure --command output functions_url)/graphql
+          nix run .#migrate-data -L
       - name: Publish website
         run: |
-          curl -X POST -d {} ${{ secrets.BUILD_WEBHOOK }}
+          curl -X POST -d {} "$(nix develop --impure --command output amplify_webhook)" -H "Content-Type:application/json"
