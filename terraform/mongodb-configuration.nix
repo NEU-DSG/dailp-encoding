@@ -11,7 +11,8 @@
 #
 # The secondary benefit is that you guard the `nixpkgs` you use, with
 # an integrity hash.
-{ primaryAddress, secondary0Address ? null, secondary1Address ? null, ... }:
+{ hostName, primaryAddress, secondary0Address ? null, secondary1Address ? null
+, ... }:
 let
   nixpkgs = let
     rev = "cd63096d6d887d689543a0b97743d28995bc9bc3";
@@ -28,6 +29,7 @@ in import "${nixpkgs}/nixos" {
 
     ec2.hvm = true;
 
+    networking.hostName = hostName;
     # Only allow SSH and certain MongoDB ports.
     networking.firewall.allowedTCPPorts = [ 22 27017 27030 ];
 

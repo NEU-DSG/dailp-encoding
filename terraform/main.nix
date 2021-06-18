@@ -21,6 +21,7 @@ in {
     ./database-nixos.nix
     ./auth.nix
     ./website.nix
+    ./nu-tags.nix
   ];
 
   # Gives all modules access to which stage we're deploying to, while also
@@ -35,14 +36,13 @@ in {
     version = "~> 3.44";
   };
 
-  # Setup the S3 bucket and DynamoDB table that store and manage Terraform state
-  # for the current environment.
-  setup.state = {
-    bucket = "dailp-${config.setup.stage}-terraform-state-bucket";
-    table = "dailp-${config.setup.stage}-terraform-state-locks";
-  };
-
   setup = {
+    # Setup the S3 bucket and DynamoDB table that store and manage Terraform state
+    # for the current environment.
+    state = {
+      bucket = "dailp-${config.setup.stage}-terraform-state-bucket";
+      table = "dailp-${config.setup.stage}-terraform-state-locks";
+    };
     vpc = getEnv "AWS_VPC_ID";
     subnets = {
       primary = getEnv "AWS_SUBNET_PRIMARY";

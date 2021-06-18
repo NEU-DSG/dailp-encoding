@@ -5,9 +5,13 @@ with lib; {
       bucket = mkOption { type = str; };
       table = mkOption { type = str; };
     };
-    stage = mkOption { type = str; };
+    stage = mkOption { type = enum [ "dev" "prod" ]; };
     vpc = mkOption { type = str; };
     subnets = mkOption { type = attrsOf str; };
+    global_tags = mkOption {
+      type = attrsOf str;
+      default = { };
+    };
   };
 
   config = {
@@ -22,7 +26,7 @@ with lib; {
           sse_algorithm = "AES256";
         };
       versioning.enabled = true;
-      tags."Terraform" = "true";
+      tags = { "Terraform" = "true"; } // config.setup.global_tags;
       lifecycle.prevent_destroy = true;
     };
 
@@ -39,7 +43,7 @@ with lib; {
       tags = {
         Name = config.setup.state.table;
         BuiltBy = "Terraform";
-      };
+      } // config.setup.global_tags;
       lifecycle.prevent_destroy = true;
     };
 

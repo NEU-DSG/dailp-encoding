@@ -51,6 +51,7 @@ let
             security_group_ids = config.functions.security_group_ids;
           };
           environment.variables = env;
+          tags = config.setup.global_tags // config.functions.tags;
         };
         aws_lambda_permission."${id}" = {
           statement_id = "AllowAPIGatewayInvoke";
@@ -73,6 +74,10 @@ in {
     security_group_ids = mkOption { type = listOf str; };
     package_path = mkOption { type = str; };
     functions = mkOption { type = listOf attrs; };
+    tags = mkOption {
+      type = attrsOf str;
+      default = { };
+    };
   };
 
   config.resource = mkMerge (map mkLambda config.functions.functions);

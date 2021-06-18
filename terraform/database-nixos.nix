@@ -26,6 +26,14 @@ in {
         type = listOf attrs;
         default = [ ];
       };
+      instance_tags = mkOption {
+        type = attrsOf str;
+        default = { };
+      };
+      storage_tags = mkOption {
+        type = attrsOf str;
+        default = { };
+      };
     };
 
   config.resource = let
@@ -39,7 +47,9 @@ in {
           volume.iops
         else
           null;
-        tags = { Name = "dailp-${toKebabCase volume.name}"; };
+        tags = {
+          Name = "dailp-${toKebabCase volume.name}";
+        } // config.setup.global_tags // config.servers.mongodb.storage_tags;
         lifecycle.prevent_destroy = true;
       };
 
@@ -67,7 +77,10 @@ in {
                 volume_size = root_volume_size;
                 volume_type = "gp3";
               };
-              tags = { Name = "dailp-${toKebabCase name}"; };
+              tags = {
+                Name = "dailp-${toKebabCase name}";
+              } // config.setup.global_tags
+                // config.servers.mongodb.instance_tags;
               lifecycle.prevent_destroy = true;
             };
 
@@ -244,9 +257,11 @@ in {
           target_host = "\${aws_instance.${name}.public_ip}";
           ssh_agent = false;
           ssh_private_key = getEnv "AWS_SSH_KEY";
-          arguments = mkMerge ([{ primaryAddress = primaryIp; }]
-            ++ (imap0 (i: addr: { "secondary${toString i}Address" = addr; })
-              secondaryAddrs));
+          arguments = mkMerge ([{
+            hostName = config.resource.aws_instance."${name}".tags.Name;
+            primaryAddress = primaryIp;
+          }] ++ (imap0 (i: addr: { "secondary${toString i}Address" = addr; })
+            secondaryAddrs));
           # extra_eval_args = [
           #   # HACK: Force the deployment to wait for all volumes to be attached
           #   # first. This helps prevent wonky MongoDB logging errors.
