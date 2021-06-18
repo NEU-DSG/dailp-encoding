@@ -30,6 +30,7 @@ with builtins; {
       in {
         lifecycle.prevent_destroy = true;
         name = "dailp";
+        tags = config.setup.global_tags;
         description =
           "Digital Archive of American Indian Languages Preservation and Perseverance";
         repository = lib.toLower (getEnv "GIT_REPOSITORY_URL");

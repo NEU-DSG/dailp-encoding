@@ -7,6 +7,7 @@
       username_attributes = [ "email" ];
       auto_verified_attributes = [ "email" ];
       admin_create_user_config.allow_admin_create_user_only = true;
+      tags = config.setup.global_tags;
     };
 
     aws_cognito_user_pool_client.main = {

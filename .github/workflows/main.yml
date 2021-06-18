@@ -12,7 +12,8 @@ on:
 
 concurrency:
   group: infra-${{ github.ref }}
-  cancel-in-progress: true
+  # Cancelling terraform deployments will screw up terraform's own locking mechanism
+  cancel-in-progress: false
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
