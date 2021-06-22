@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
 jobs:
   publish:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     environment: ${{ github.ref == 'refs/heads/main' && 'Production' || 'Development' }}
     env:
       MONGODB_PASSWORD: ${{ secrets.MONGODB_PASSWORD }}
