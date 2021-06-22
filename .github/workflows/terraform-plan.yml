@@ -9,7 +9,7 @@ on:
       - "flake.lock"
 jobs:
   plan:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     environment: ${{ github.base_ref == 'main' && 'Production' || 'Development' }}
     env:
       MONGODB_PASSWORD: ${{ secrets.MONGODB_PASSWORD }}

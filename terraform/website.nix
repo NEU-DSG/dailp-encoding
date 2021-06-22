@@ -92,7 +92,7 @@ with builtins; {
       };
 
     aws_amplify_branch = let
-      branchName = if config.setup.stage == "dev" then "dev" else "main";
+      branchName = if config.setup.stage == "dev" then "main" else "release";
       stageName =
         if config.setup.stage == "dev" then "DEVELOPMENT" else "PRODUCTION";
     in {
