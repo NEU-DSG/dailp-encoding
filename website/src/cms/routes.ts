@@ -8,6 +8,8 @@ export function useHasMounted() {
   return hasMounted
 }
 
+export const isProductionDeployment = () => process.env.TF_STAGE === "prod"
+
 export const ClientOnly = (props: { children: any }) => {
   const hasMounted = useHasMounted()
   if (hasMounted) {

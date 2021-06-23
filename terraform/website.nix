@@ -62,6 +62,7 @@ with builtins; {
             DAILP_AWS_REGION = config.provider.aws.region;
             DAILP_USER_POOL = "\${aws_cognito_user_pool.main.id}";
             DAILP_USER_POOL_CLIENT = "\${aws_cognito_user_pool_client.main.id}";
+            TF_STAGE = config.setup.stage;
           };
           frontend = {
             artifacts = {
