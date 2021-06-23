@@ -12,9 +12,7 @@ export const apolloClient = (token: string) =>
 
 const httpLink = (token: string) =>
   new HttpLink({
-    uri: `https://dailp.northeastern.edu/${
-      token ? "api/graphql-edit" : "graphql"
-    }`,
+    uri: process.env.DAILP_API_URL + (token ? "/graphql-edit" : "/graphql"),
     fetch,
   })
 

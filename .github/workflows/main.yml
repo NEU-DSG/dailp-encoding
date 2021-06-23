@@ -108,7 +108,7 @@ jobs:
       - name: Encode documents as TEI and database entries
         if: steps.filter.outputs.data == 'true'
         run: |
-          export DAILP_GRAPHQL_URL=$(nix develop --impure --command output functions_url)/graphql
+          export DAILP_API_URL=$(nix develop --impure --command output functions_url)
           nix run .#migrate-data -L
       - name: Publish website
         run: |

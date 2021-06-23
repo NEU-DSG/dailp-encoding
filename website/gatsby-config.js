@@ -71,7 +71,7 @@ module.exports = {
       options: {
         typeName: "Dailp",
         fieldName: "dailp",
-        url: process.env.DAILP_GRAPHQL_URL,
+        url: `${process.env.DAILP_API_URL}/graphql`,
       },
     },
     "gatsby-transformer-sharp",
