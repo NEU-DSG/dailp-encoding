@@ -2,7 +2,7 @@ name: Terraform Plan
 on:
   workflow_dispatch:
   pull_request:
-    branches: [main, dev]
+    branches: [main]
     paths:
       - "terraform/**/*.nix"
       - "flake.nix"
@@ -10,7 +10,7 @@ on:
 jobs:
   plan:
     runs-on: ubuntu-20.04
-    environment: ${{ github.base_ref == 'main' && 'Production' || 'Development' }}
+    environment: ${{ github.base_ref == 'main' && 'Development' || 'Production' }}
     env:
       MONGODB_PASSWORD: ${{ secrets.MONGODB_PASSWORD }}
       GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
@@ -25,7 +25,7 @@ jobs:
       GIT_REPOSITORY_URL: https://github.com/neu-dsg/dailp-encoding
       OAUTH_TOKEN: ${{ secrets.OAUTH_TOKEN }}
       RUST_LOG: info
-      TF_STAGE: ${{ github.base_ref == 'main' && 'prod' || 'dev' }}
+      TF_STAGE: ${{ github.base_ref == 'main' && 'dev' || 'prod' }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
