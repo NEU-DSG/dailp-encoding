@@ -90,6 +90,8 @@ module.exports = {
           "DAILP_AWS_REGION",
           "DAILP_USER_POOL",
           "DAILP_USER_POOL_CLIENT",
+          "DAILP_API_URL",
+          "TF_STAGE",
         ],
       },
     },
