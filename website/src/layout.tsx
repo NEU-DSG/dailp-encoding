@@ -8,7 +8,7 @@ import Footer from "./footer"
 import theme, { fullWidth, hideOnPrint, typography } from "./theme"
 import { isMobile } from "react-device-detect"
 import loadable from "@loadable/component"
-import { useHasMounted } from "./cms/routes"
+import { isProductionDeployment, useHasMounted } from "./cms/routes"
 import globalStyles from "./global-styles"
 import ClientLayout from "./client/layout"
 
@@ -53,7 +53,7 @@ const Layout = (p: { title?: string; children: any }) => {
 
 export const SignIn = () => {
   const hasMounted = useHasMounted()
-  if (hasMounted) {
+  if (hasMounted && !isProductionDeployment()) {
     return <ClientSignIn />
   } else {
     return null

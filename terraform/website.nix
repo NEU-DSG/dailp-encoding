@@ -58,10 +58,11 @@ with builtins; {
         build_spec = toJSON {
           version = "1";
           env.variables = {
-            DAILP_GRAPHQL_URL = "${apiUrl}/graphql";
+            DAILP_API_URL = apiUrl;
             DAILP_AWS_REGION = config.provider.aws.region;
             DAILP_USER_POOL = "\${aws_cognito_user_pool.main.id}";
             DAILP_USER_POOL_CLIENT = "\${aws_cognito_user_pool_client.main.id}";
+            TF_STAGE = config.setup.stage;
           };
           frontend = {
             artifacts = {
