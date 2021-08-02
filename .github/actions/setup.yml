@@ -1,0 +1,32 @@
+name: Setup Nix and AWS
+inputs:
+  aws-access-key-id:
+    required: true
+  aws-secret-access-key:
+    required: true
+  cachix-auth-token:
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ inputs.aws-access-key-id }}
+        aws-secret-access-key: ${{ inputs.aws-secret-access-key }}
+        aws-region: us-east-1
+    - name: Install Nix
+      uses: cachix/install-nix-action@v13
+      with:
+        nix_path: nixpkgs=channel:nixos-21.05
+        install_url: https://nixos-nix-install-tests.cachix.org/serve/i6laym9jw3wg9mw6ncyrk6gjx4l34vvx/install
+        install_options: "--tarball-url-prefix https://nixos-nix-install-tests.cachix.org/serve"
+        extra_nix_config: |
+          experimental-features = nix-command flakes
+    - name: Use binary cache for nix store
+      uses: cachix/cachix-action@v10
+      with:
+        name: dailp
+        # If you chose API tokens for write access OR if you have a private cache
+        authToken: "${{ inputs.cachix-auth-token }}"
+        pushFilter: "(-dailp$|-dailp-|-terraform-config$|-source$|\\.tar\\.gz$|-output$|-plan$|-apply-now$|-apply$)"

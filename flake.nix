@@ -112,10 +112,17 @@
         };
 
         devShell = with pkgs;
-          stdenv.mkDerivation {
+          stdenv.mkDerivation rec {
             name = "dailp-dev";
             unpackPhase = "true";
+            LD_LIBRARY_PATH = "${lib.makeLibraryPath buildInputs}";
             buildInputs = [
+              autoconf
+              automake
+              libtool
+              pkg-config
+              file
+              nasm
               terraform
               (writers.writeBashBin "plan" ''
                 terraform init ${defaultPackage}
