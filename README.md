@@ -4,19 +4,20 @@
 
 This is a repository for the data structure and website code of the Digital Archive of American Indian Languages Preservation and Perseverance ([DAILP](https://dailp.northeastern.edu)) project at [Northeastern University](https://northeastern.edu).
 
+Check out the [project wiki](https://github.com/NEU-DSG/dailp-encoding/wiki) for further information about the project, how it's built, and how to contribute.
+
 ## Plans
 
 This project is a **prototype** intended to gather stakeholder feedback on the utility and usability of our interface for exploring Cherokee texts.
 We are building out this web interface to drive our decisions on data structures that may outlast the current website.
-This prototype is likely to change quickly in significant ways, especially as we pursue technical integration with greater [Digital Scholarship Group](https://dsg.northeastern.edu/) infrastructure near the end of 2020 and early 2021.
+This prototype is likely to change quickly in significant ways, especially as we pursue technical integration with [Digital Scholarship Group](https://dsg.northeastern.edu/) infrastructure.
 
-In the meantime, feel free to make an issue if you have feedback, suggestions, questions, or problems!
+Feel free to [submit an issue](https://github.com/NEU-DSG/dailp-encoding/issues/new) if you have feedback, suggestions, questions, or problems!
 
 ## Project Structure
 
 The back-end is implemented in [Rust](https://rust-lang.org) and the front-end is written in [TypeScript](https://www.typescriptlang.org/).
 Each layer of the architecture is split into its own directory, starting with the back-end.
-Each directory has its own `README` with further information.
 
 - [`types/`](types) defines all the types that our data adheres to in the database, GraphQL, and front-end.
 - [`migration/`](migration) pulls data from several Google Drive spreadsheets, conforms it to consistent types, then writes it all to a MongoDB instance.
@@ -25,21 +26,31 @@ Each directory has its own `README` with further information.
 - [`website/`](website) renders a static site with [Gatsby](https://gatsbyjs.org/) using our GraphQL endpoint at build time and at runtime (to handle user queries).
 - [`xml/`](xml) contains templates and a schema for defining TEI XML documents using DAILP data.
 
-## Development
+Read more on [the wiki](https://github.com/NEU-DSG/dailp-encoding/wiki/Technical-Design).
 
-### You Updated an Annotated Manuscript
+## Contributing
 
-Maintainers can trigger a new deploy of our data [here](https://github.com/NEU-DSG/dailp-encoding/actions?query=workflow%3ACI) and click `Run workflow`.
-This process pulls in all of our annotated spreadsheets, puts them into our database and converts them to TEI.
-Then, the new data is published on the website.
-This process also happens automatically every time a code change is made on the `main` branch.
+We use the [Nix package manager](https://nixos.org/) for managing dependencies, development environments, and predictable infrastructure.
+Before contributing, ask a maintainer for a `.env` file which will hold secrets required to run the code.
+This file must never be committed on Git.
 
-### Data Exploration
+To get started with a development environment, you only need to install Nix by following [these instructions](https://nixos.org/download.html#nix-quick-install).
+After that, the `nix` command will be available in a terminal. Then, you can start a shell which has all the tools needed to work on this project:
 
-If you just want to explore our data without navigating the DAILP website, we host a [GraphQL Playground](https://dailp.northeastern.edu/graphql) that allows you to query the DAILP database.
+```sh
+$ nix develop
+```
 
-### Further Documentation
+Once you are in the devshell, you can manage the back-end with [Cargo](https://doc.rust-lang.org/cargo/) and the front-end with [Yarn](https://yarnpkg.com/). For example, this command runs all back-end unit tests:
 
-Look no further than the [`doc/`](doc) directory for further notes about project development, testing, and contribution.
+```sh
+$ cargo test
+```
 
-- [`doc/user-testing`](doc/user-testing.md) details how we conduct user testing and gather feedback.
+The next commands start a local version of the front-end.
+
+```sh
+$ cd website
+$ yarn install
+$ yarn start
+```
