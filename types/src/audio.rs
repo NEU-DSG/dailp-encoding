@@ -1,14 +1,13 @@
-/// Audio for a whole manuscript document and
+/// Audio for a whole manuscript document
 pub struct DocumentAudio {
     /// Unique identifier for this audio resource
     pub id: String,
-    /// The ID for the [AnnotatedDocument] this audio resource represents
-    pub source: String,
     /// Access link for the audio file.
-    /// TODO: Re-consider typing to best fit storage solution
     pub resource: String,
     /// Subdivisions of this audio track
     pub slices: Optional<Vector<AudioSlice>>
+    // /// The ID for the [AnnotatedDocument] this audio resource represents
+    // pub source: String,
 }
 
 /// A segment of audio representing a word, phrase,
