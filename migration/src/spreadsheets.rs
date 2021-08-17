@@ -313,12 +313,11 @@ impl SheetResult {
             .ok_or_else(|| anyhow::format_err!("No Translations"))?;
         let image_source = values
             .next()
-            .ok_or_else(|| anyhow::format_err!("Missing image source"))?
+            .ok_or_else(|| anyhow::format_err!("Missing image source row"))?
             .into_iter()
             .skip(1)
             .next()
-            .unwrap()
-            .to_ascii_lowercase();
+            .map(|src| src.to_ascii_lowercase());
         let image_ids = values
             .next()
             // Remove the row title.
@@ -364,10 +363,12 @@ impl SheetResult {
                     .await?
                     .into_translation(),
             ),
-            page_images: image_ids.map(|ids| dailp::IiifImages {
-                source: dailp::ImageSourceId(image_source),
-                ids,
-            }),
+            page_images: if let (Some(ids), Some(source)) = (image_ids, image_source) {
+                Some(dailp::IiifImages {
+                    source: dailp::ImageSourceId(source),
+                    ids,
+                })
+            } else { None },
             date: date
                 .get(1)
                 .and_then(|s| chrono::NaiveDate::parse_from_str(s, "%Y-%m-%d").ok())
