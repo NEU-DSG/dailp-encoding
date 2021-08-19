@@ -94,6 +94,12 @@ impl AnnotatedDoc {
         self.meta.is_reference
     }
 
+    /// Arbitrary number used for manually ordering documents in a collection.
+    /// For collections without manual ordering, use zero here.
+    async fn order_index(&self) -> i64 {
+        self.meta.order_index
+    }
+
     /// URL-ready slug for this document, generated from the title
     async fn slug(&self) -> String {
         self.meta.id.slug()
