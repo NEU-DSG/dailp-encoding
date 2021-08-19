@@ -250,6 +250,10 @@ pub struct DocumentMetadata {
     pub date: Option<Date>,
     /// Whether this document is a reference, therefore just a list of forms.
     pub is_reference: bool,
+    #[serde(default)]
+    /// Arbitrary number used for manually ordering documents in a collection.
+    /// For collections without manual ordering, use zero here.
+    pub order_index: i64,
 }
 
 #[derive(Clone, Eq, PartialEq, Hash, Serialize, Deserialize, Debug, async_graphql::NewType)]

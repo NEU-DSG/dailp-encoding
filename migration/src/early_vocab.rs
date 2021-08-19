@@ -94,6 +94,7 @@ async fn parse_early_vocab(
         page_images: None,
         translation: None,
         is_reference: true,
+        order_index: 0,
     };
 
     let entries: Vec<_> = sheet
