@@ -284,7 +284,7 @@ impl SheetResult {
     }
 
     /// Parse this sheet as a document metadata listing.
-    pub async fn into_metadata(self, is_reference: bool) -> Result<DocumentMetadata> {
+    pub async fn into_metadata(self, is_reference: bool, order_index: i64) -> Result<DocumentMetadata> {
         // Field order: genre, source, title, source page #, page count, translation
         // First column is the name of the field, useless when parsing so we ignore it.
         let mut values = self.values.into_iter();
@@ -374,6 +374,7 @@ impl SheetResult {
                 .and_then(|s| chrono::NaiveDate::parse_from_str(s, "%Y-%m-%d").ok())
                 .map(Date::new),
             is_reference,
+            order_index,
         })
     }
 

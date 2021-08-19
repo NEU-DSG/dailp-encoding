@@ -19,6 +19,7 @@ const CollectionPage = (p: {
   // Sort documents into natural order by their ID.
   // This means that "10" comes after "9" instead of after "1".
   documents.sort((a, b) => collator.compare(a.id, b.id))
+           .sort((a, b) => collator.compare(a.orderIndex, b.orderIndex))
 
   return (
     <Layout title={p.pageContext.name}>
@@ -63,6 +64,7 @@ export const query = graphql`
         date {
           year
         }
+        orderIndex
       }
     }
     wpPage(slug: { eq: $slug }) {
