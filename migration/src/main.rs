@@ -70,10 +70,12 @@ async fn migrate_data() -> Result<()> {
     info!("Migrating documents to database...");
 
     // Retrieve data for spreadsheets in sequence.
-    // Because of Google API rate limits, we have to limit the number of
-    // simultaneous connections to the sheets endpoint.
-    for sheet_id in &index.sheet_ids {
-        if let Some((doc, refs)) = fetch_sheet(sheet_id).await? {
+    // Because of Google API rate limits, we have to process them sequentially
+    // rather than in parallel.
+    // This process encodes the ordering in the Index sheet to allow us to
+    // manually order different document collections.
+    for (order_index, sheet_id) in index.sheet_ids.iter().enumerate() {
+        if let Some((doc, refs)) = fetch_sheet(sheet_id, order_index as i64).await? {
             spreadsheets::write_to_file(&doc)?;
             spreadsheets::migrate_documents_to_db(&[(doc, refs)]).await?;
         } else {
@@ -87,6 +89,7 @@ async fn migrate_data() -> Result<()> {
 /// annotation lines and the "Metadata" page as [dailp::DocumentMetadata].
 async fn fetch_sheet(
     sheet_id: &str,
+    order_index: i64,
 ) -> Result<Option<(dailp::AnnotatedDoc, Vec<dailp::LexicalConnection>)>> {
     use crate::spreadsheets::AnnotatedLine;
 
@@ -94,7 +97,7 @@ async fn fetch_sheet(
     // This includes publication information and a link to the translation.
     let meta = spreadsheets::SheetResult::from_sheet(sheet_id, Some(METADATA_SHEET_NAME)).await;
     if let Ok(meta_sheet) = meta {
-        let meta = meta_sheet.into_metadata(false).await?;
+        let meta = meta_sheet.into_metadata(false, order_index).await?;
 
         // Parse references for this particular document.
         info!("parsing references...");

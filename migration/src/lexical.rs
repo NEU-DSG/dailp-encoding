@@ -98,6 +98,7 @@ pub async fn migrate_dictionaries() -> Result<()> {
                 translation: None,
                 page_images: None,
                 is_reference: true,
+                order_index: 0,
             },
             segments: None,
         },
@@ -113,6 +114,7 @@ pub async fn migrate_dictionaries() -> Result<()> {
                 translation: None,
                 page_images: None,
                 is_reference: true,
+                order_index: 0,
             },
             segments: None,
         },
@@ -196,6 +198,7 @@ async fn parse_meta(sheet_id: &str, collection: &str) -> Result<DocumentMetadata
         page_images: None,
         translation: None,
         is_reference: true,
+        order_index: 0,
     })
 }
 
