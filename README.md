@@ -35,22 +35,41 @@ Before contributing, ask a maintainer for a `.env` file which will hold secrets 
 This file must never be committed on Git.
 
 To get started with a development environment, you only need to install Nix by following [these instructions](https://nixos.org/download.html#nix-quick-install).
-After that, the `nix` command will be available in a terminal. Then, you can start a shell which has all the tools needed to work on this project:
+After that, the `nix` command will be available in a terminal.
+We use an unstable feature of `nix` called "flakes," so you also need to [enable this feature](https://nixos.wiki/wiki/Flakes).
+
+Then, you can start a shell which has all the tools needed to work on this project:
 
 ```sh
 $ nix develop
 ```
 
-Once you are in the devshell, you can manage the back-end with [Cargo](https://doc.rust-lang.org/cargo/) and the front-end with [Yarn](https://yarnpkg.com/). For example, this command runs all back-end unit tests:
+Once you are in the development shell, you can manage the back-end with [Cargo](https://doc.rust-lang.org/cargo/) and the front-end with [Yarn](https://yarnpkg.com/). For example, this command runs all back-end unit tests:
 
 ```sh
 $ cargo test
 ```
 
-The next commands start a local version of the front-end.
+Inside the `nix develop` shell, the next commands start a local version of the front-end.
 
 ```sh
 $ cd website
 $ yarn install
 $ yarn start
+```
+
+The next command runs a local version of the GraphQL server.
+
+``` sh
+$ cargo run --bin dailp-graphql-local
+```
+
+### Cleaning Up
+
+`nix` caches build results to make future builds quicker.
+However, this can take up a lot of disk space if you're making lots of code changes.
+To clean up the nix cache, simply run:
+
+``` sh
+$ nix-collect-garbage
 ```
