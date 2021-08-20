@@ -18,8 +18,11 @@ const CollectionPage = (p: {
   const documents = [...p.data.dailp.allDocuments]
   // Sort documents into natural order by their ID.
   // This means that "10" comes after "9" instead of after "1".
-  documents.sort((a, b) => collator.compare(a.id, b.id))
-           .sort((a, b) => collator.compare(a.orderIndex, b.orderIndex))
+  documents
+    .sort((a, b) => collator.compare(a.id, b.id))
+    .sort((a, b) =>
+      collator.compare(a.orderIndex.toString(), b.orderIndex.toString())
+    )
 
   return (
     <Layout title={p.pageContext.name}>
@@ -41,9 +44,8 @@ const CollectionPage = (p: {
           <ul>
             {documents.map((document) => (
               <li key={document.slug}>
-                <Link to={documentRoute(document.slug)}>{document.title}</Link>{" "}
-                ({document.id}
-                {document.date && `, ${document.date.year}`})
+                <Link to={documentRoute(document.slug)}>{document.title}</Link>
+                {document.date && ` (${document.date.year})`}
               </li>
             ))}
           </ul>
