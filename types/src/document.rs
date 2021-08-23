@@ -1,5 +1,5 @@
 use crate::{
-    AnnotatedForm, Contributor, Database, Date, DocumentAudio, SourceAttribution, Translation, TranslationBlock,
+    AnnotatedForm, Contributor, Database, Date, AudioSlice, SourceAttribution, Translation, TranslationBlock,
 };
 use async_graphql::{dataloader::DataLoader, FieldResult};
 use serde::{Deserialize, Serialize};
@@ -251,7 +251,7 @@ pub struct DocumentMetadata {
     /// Whether this document is a reference, therefore just a list of forms.
     pub is_reference: bool,
     /// Audio recording of this document, if one exists
-    pub audio_recording: Option<DocumentAudio>
+    pub audio_recording: Option<AudioSlice>
 }
 
 #[derive(Clone, Eq, PartialEq, Hash, Serialize, Deserialize, Debug, async_graphql::NewType)]
