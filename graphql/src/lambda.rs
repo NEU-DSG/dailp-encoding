@@ -2,18 +2,11 @@ mod query;
 
 use {
     async_graphql::{
-        dataloader::DataLoader, guard::Guard, Context, EmptySubscription, FieldResult, Schema,
-    },
-    dailp::{
-        AnnotatedDoc, CherokeeOrthography, Database, MorphemeId, MorphemeReference, MorphemeTag,
-        WordsInDocument,
+        dataloader::DataLoader, EmptySubscription, Schema,
     },
     lambda_http::{http::header, lambda_runtime, IntoResponse, Request, RequestExt, Response},
-    log::{error, info},
-    mongodb::bson,
+    log::info,
     query::*,
-    serde::{Deserialize, Serialize},
-    serde_with::{rust::StringWithSeparator, CommaSeparator},
 };
 
 type Error = Box<dyn std::error::Error + Sync + Send + 'static>;
@@ -96,8 +89,9 @@ async fn handler(req: Request, _: lambda_runtime::Context) -> Result<impl IntoRe
     // Document manifests are found at /manifests/{id}
     else if path.starts_with("/manifests") {
         let full_url = req.uri().to_string();
-        let params = req.path_parameters();
-        let document_id = params.get("id").unwrap();
+        let full_path = req.uri().path();
+        let mut parts = full_path.split("/");
+        let document_id = parts.nth(2).expect("No manifest ID given");
         let manifest = DATABASE
             .document_manifest(&dailp::DocumentId(document_id.to_string()), full_url)
             .await?;

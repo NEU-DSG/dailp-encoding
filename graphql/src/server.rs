@@ -2,19 +2,9 @@ mod query;
 use {
     async_graphql::{
         dataloader::DataLoader,
-        guard::Guard,
         http::{playground_source, GraphQLPlaygroundConfig},
-        Context, EmptySubscription, FieldResult, Schema,
+        EmptySubscription, Schema,
     },
-    dailp::{
-        AnnotatedDoc, CherokeeOrthography, Database, MorphemeId, MorphemeReference, MorphemeTag,
-        WordsInDocument,
-    },
-    log::{error, info},
-    mongodb::bson,
-    query::*,
-    serde::{Deserialize, Serialize},
-    serde_with::{rust::StringWithSeparator, CommaSeparator},
     tide::{http::mime, Body, Response, StatusCode},
 };
 
@@ -35,7 +25,7 @@ async fn main() -> tide::Result<()> {
         .post(async_graphql_tide::endpoint(schema));
 
     // enable graphql playground
-    app.at("/").get(|_| async move {
+    app.at("/graphql").get(|_| async move {
         Ok(Response::builder(StatusCode::Ok)
             .body(Body::from_string(playground_source(
                 // note that the playground needs to know

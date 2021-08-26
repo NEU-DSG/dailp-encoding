@@ -2,20 +2,16 @@
 
 use {
     async_graphql::{
-        dataloader::DataLoader, guard::Guard, Context, EmptySubscription, FieldResult, Schema,
+        dataloader::DataLoader, guard::Guard, Context, FieldResult,
     },
     dailp::{
         AnnotatedDoc, CherokeeOrthography, Database, MorphemeId, MorphemeReference, MorphemeTag,
         WordsInDocument,
     },
-    lambda_http::{http::header, lambda_runtime, IntoResponse, Request, RequestExt, Response},
-    log::{error, info},
     mongodb::bson,
     serde::{Deserialize, Serialize},
     serde_with::{rust::StringWithSeparator, CommaSeparator},
 };
-
-type Error = Box<dyn std::error::Error + Sync + Send + 'static>;
 
 lazy_static::lazy_static! {
     static ref MONGODB_PASSWORD: String = std::env::var("MONGODB_PASSWORD").unwrap();
