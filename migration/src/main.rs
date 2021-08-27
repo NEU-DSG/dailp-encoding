@@ -99,6 +99,8 @@ async fn fetch_sheet(
     if let Ok(meta_sheet) = meta {
         let meta = meta_sheet.into_metadata(false, order_index).await?;
 
+        info!("---Processing document: {}---", meta.id.0);
+
         // Parse references for this particular document.
         info!("parsing references...");
         let refs =
@@ -152,8 +154,13 @@ async fn graphql_mutate(
     use itertools::Itertools as _;
     lazy_static::lazy_static! {
         static ref CLIENT: reqwest::Client = reqwest::Client::new();
-        static ref ENDPOINT: String = format!("{}/graphql", std::env::var("DAILP_API_URL").unwrap());
-        static ref PASSWORD: String = std::env::var("MONGODB_PASSWORD").unwrap();
+        static ref ENDPOINT: String = format!(
+            "{}/graphql",
+            std::env::var("DAILP_API_URL")
+                .expect("Missing DAILP_API_URL environment variable")
+        );
+        static ref PASSWORD: String = std::env::var("MONGODB_PASSWORD")
+            .expect("Missing MONGODB_PASSWORD environment variable");
     }
     // Chunk our contents to make fewer requests to the server that handles
     // pushing this data to the database.
