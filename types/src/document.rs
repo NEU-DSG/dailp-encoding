@@ -17,7 +17,9 @@ impl AnnotatedDoc {
         // Skip the first block of the translation, since this usually contains
         // the header and information for translators and editors.
         let mut block_index = 1;
-        let blocks = &meta.translation.as_ref().unwrap().blocks;
+        let blocks = &meta.translation.as_ref()
+            .expect(&format!("Missing translation for {}", meta.id.0))
+            .blocks;
         for seg in segments {
             // Only blocks have an associated translation.
             let trans = if let AnnotatedSeg::Block(_) = &seg {

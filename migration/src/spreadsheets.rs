@@ -481,7 +481,8 @@ impl<'a> AnnotatedLine {
         let mut word_index = 1;
         lines
             .iter()
-            .map(|line| {
+            .enumerate()
+            .map(|(line_idx, line)| {
                 // Number of words = length of the longest row in this line.
                 let num_words = line.rows.iter().map(|row| row.items.len()).max().unwrap();
                 // For each word, extract the necessary data from every row.
@@ -490,9 +491,17 @@ impl<'a> AnnotatedLine {
                     .filter(|i| line.rows.get(0).and_then(|r| r.items.get(*i)).is_some())
                     .map(|i| {
                         let pb = line.rows[0].items[i].find(PAGE_BREAK);
-                        let morphemes = line.rows[4].items.get(i);
-                        let glosses = line.rows[5].items.get(i);
-                        let translation = line.rows[6].items.get(i).map(|x| x.trim().to_owned());
+                        let morphemes = line.rows.get(4)
+                            .expect(&format!("No morphemic segmentation for line {}, word {}", line_idx + 1, i + 1))
+                            .items.get(i);
+                        let glosses = line.rows.get(5)
+                            .expect(&format!("No morphemic gloss for line {}, word {}", line_idx + 1, i + 1))
+                            .items.get(i);
+                        let translation = line.rows.get(6)
+                            .expect(&format!("No translation for line {}, word {}", line_idx + 1, i + 1))
+                            .items
+                            .get(i)
+                            .map(|x| x.trim().to_owned());
                         let w = AnnotatedForm {
                             // TODO Extract into public function!
                             id: format!("{}.{}", meta.id.0, word_index),
