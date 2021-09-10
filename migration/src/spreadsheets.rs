@@ -4,15 +4,12 @@
 
 use crate::translations::DocResult;
 use anyhow::Result;
-use dailp::{
-    convert_udb, root_noun_surface_forms, root_verb_surface_forms, AnnotatedDoc, AnnotatedForm,
-    AnnotatedPhrase, AnnotatedSeg, BlockType, Contributor, Date, DocumentMetadata,
-    LexicalConnection, LineBreak, MorphemeId, MorphemeSegment, PageBreak,
-};
+use dailp::{convert_udb, root_noun_surface_forms, root_verb_surface_forms, AnnotatedDoc, AnnotatedForm, AnnotatedPhrase, AnnotatedSeg, BlockType, Contributor, Date, DocumentMetadata, LexicalConnection, LineBreak, MorphemeId, MorphemeSegment, PageBreak, AudioSlice};
 use dailp::{PositionInDocument, SourceAttribution};
 use log::{error, info, warn};
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, fs::File, io::Write, time::Duration};
+use crate::audio::{AudioRes};
 
 // Define the delimiters used in spreadsheets for marking phrases, blocks,
 // lines, and pages.
@@ -190,6 +187,7 @@ impl SheetResult {
                         date_recorded: Some(date),
                         source: root,
                         position,
+                        audio_track: None
                     },
                 })
             })
@@ -252,6 +250,7 @@ impl SheetResult {
                             date_recorded: Some(date),
                             line_break: None,
                             page_break: None,
+                            audio_track: None
                         },
                     })
                 } else {
@@ -351,6 +350,9 @@ impl SheetResult {
         } else {
             Vec::new()
         };
+        let audio_files = values
+            .next()
+            .ok_or_else(|| anyhow::format_err!("No audio resources"))?;
 
         Ok(DocumentMetadata {
             id: dailp::DocumentId(doc_id.remove(1)),
@@ -373,6 +375,17 @@ impl SheetResult {
                 .and_then(|s| chrono::NaiveDate::parse_from_str(s, "%Y-%m-%d").ok())
                 .map(Date::new),
             is_reference,
+            audio_recording:
+                if audio_files.get(1).is_none()
+                    || audio_files.get(2).is_none() { None }
+                else {
+                    Some(
+                        AudioRes::new(audio_files.get(1).unwrap(),
+                                       audio_files.get(2).unwrap())
+                        .await?
+                        .into_document_audio()
+                    )
+                },
         })
     }
 
@@ -521,6 +534,14 @@ impl<'a> AnnotatedLine {
                                 .or_else(|| line.rows[0].items[i].find(LINE_BREAK))
                                 .map(|i| i as i32),
                             date_recorded: None,
+                            audio_track:
+                             if meta.audio_recording.is_some()
+                                 && meta.audio_recording.clone().unwrap().annotations.is_some() {
+                                    meta.audio_recording.clone().unwrap().annotations
+                                     .unwrap()
+                                     .into_iter()
+                                     .next()
+                             } else { None },
                         };
                         word_index += 1;
                         w
