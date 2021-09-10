@@ -1,4 +1,4 @@
-use crate::{AnnotatedDoc, Database, Date, MorphemeId, MorphemeSegment, PositionInDocument};
+use crate::{AnnotatedDoc, AudioSlice, Database, Date, MorphemeId, MorphemeSegment, PositionInDocument};
 use async_graphql::{dataloader::DataLoader, FieldResult};
 use serde::{Deserialize, Serialize};
 
@@ -39,6 +39,8 @@ pub struct AnnotatedForm {
     pub position: PositionInDocument,
     /// The date and time this form was recorded
     pub date_recorded: Option<Date>,
+    /// A slice of audio associated with this word in the context of a document
+    pub audio_track: Option<AudioSlice>
 }
 
 #[async_graphql::ComplexObject]

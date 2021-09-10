@@ -87,6 +87,7 @@ async fn migrate_glossary_metadata(sheet_id: &str) -> Result<()> {
                     page_images: None,
                     sources: Vec::new(),
                     translation: None,
+                    audio_recording: None
                     order_index: 0,
                 },
                 segments: None,

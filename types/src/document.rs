@@ -1,5 +1,5 @@
 use crate::{
-    AnnotatedForm, Contributor, Database, Date, SourceAttribution, Translation, TranslationBlock,
+    AnnotatedForm, Contributor, Database, Date, AudioSlice, SourceAttribution, Translation, TranslationBlock,
 };
 use async_graphql::{dataloader::DataLoader, FieldResult};
 use serde::{Deserialize, Serialize};
@@ -258,6 +258,9 @@ pub struct DocumentMetadata {
     pub date: Option<Date>,
     /// Whether this document is a reference, therefore just a list of forms.
     pub is_reference: bool,
+    /// Audio recording of this document, if one exists
+    #[serde(default)]
+    pub audio_recording: Option<AudioSlice>
     #[serde(default)]
     /// Arbitrary number used for manually ordering documents in a collection.
     /// For collections without manual ordering, use zero here.
