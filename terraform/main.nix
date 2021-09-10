@@ -65,7 +65,7 @@ in {
       endpoints = [
         {
           id = "graphql_read";
-          path = "graphql";
+          path = "{proxy+}";
           method = "ANY";
           authorization = "NONE";
         }
@@ -76,8 +76,8 @@ in {
           authorization = "COGNITO_USER_POOLS";
         }
         # {
-        #   name = "manifests";
-        #   path = "/manifests/{id}";
+        #   id = "manifests";
+        #   path = "manifests/{id}";
         #   method = "GET";
         #   authorization = "NONE";
         # }
