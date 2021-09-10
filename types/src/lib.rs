@@ -33,6 +33,7 @@ pub mod page;
 mod person;
 mod tag;
 mod translation;
+mod audio;
 
 pub use database::*;
 pub use date::*;
@@ -46,3 +47,4 @@ pub use orthography::*;
 pub use person::*;
 pub use tag::*;
 pub use translation::*;
+pub use audio::*;
