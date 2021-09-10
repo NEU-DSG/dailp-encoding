@@ -98,6 +98,7 @@ pub async fn migrate_dictionaries() -> Result<()> {
                 translation: None,
                 page_images: None,
                 is_reference: true,
+                audio_recording: None,
             },
             segments: None,
         },
@@ -113,6 +114,7 @@ pub async fn migrate_dictionaries() -> Result<()> {
                 translation: None,
                 page_images: None,
                 is_reference: true,
+                audio_recording: None,
             },
             segments: None,
         },
@@ -162,6 +164,7 @@ async fn parse_numerals(sheet_id: &str, doc_id: &str, year: i32) -> Result<()> {
                 date_recorded: Some(date.clone()),
                 line_break: None,
                 page_break: None,
+                audio_track: None
             })
         })
         .collect::<Vec<_>>();
@@ -196,6 +199,7 @@ async fn parse_meta(sheet_id: &str, collection: &str) -> Result<DocumentMetadata
         page_images: None,
         translation: None,
         is_reference: true,
+        audio_recording: None
     })
 }
 
@@ -236,6 +240,7 @@ async fn parse_appendix(sheet_id: &str, to_skip: usize) -> Result<()> {
                 page_break: None,
                 commentary: None,
                 date_recorded: meta.date.clone(),
+                audio_track: None
             })
         })
         .collect();
@@ -328,6 +333,7 @@ fn parse_new_df1975(
                         date_recorded: Some(date),
                         source: root,
                         position: pos,
+                        audio_track: None
                     },
                 })
             } else {
@@ -364,6 +370,7 @@ async fn ingest_particle_index(document_id: &str) -> Result<()> {
                 date_recorded: None,
                 source: syllabary,
                 position: pos,
+                audio_track: None
             })
         })
         .collect::<Vec<_>>();
@@ -402,6 +409,7 @@ async fn ingest_ac1995(sheet_id: &str) -> Result<()> {
                 date_recorded: meta.date.clone(),
                 source: syllabary,
                 position: pos,
+                audio_track: None,
             })
         })
         .collect::<Vec<_>>();

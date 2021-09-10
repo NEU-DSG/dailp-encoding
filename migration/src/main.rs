@@ -7,6 +7,7 @@ mod lexical;
 mod spreadsheets;
 mod tags;
 mod translations;
+mod audio;
 
 use anyhow::{bail, Result};
 use log::{error, info};
@@ -21,9 +22,9 @@ async fn main() -> Result<()> {
     dotenv::dotenv().ok();
 
     pretty_env_logger::init();
-
+    info!("Migrating Image Sources");
     migrate_image_sources().await?;
-
+    info!("Migrating contributors");
     contributors::migrate_all().await?;
 
     info!("Migrating connections...");

@@ -94,6 +94,7 @@ async fn parse_early_vocab(
         page_images: None,
         translation: None,
         is_reference: true,
+        audio_recording: None,
     };
 
     let entries: Vec<_> = sheet
@@ -173,6 +174,7 @@ async fn parse_early_vocab(
                     ),
                     date_recorded: meta.date.clone(),
                     id,
+                    audio_track: None
                 },
                 links,
             })
