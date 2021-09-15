@@ -283,7 +283,7 @@ impl SheetResult {
     }
 
     /// Parse this sheet as a document metadata listing.
-    pub async fn into_metadata(self, is_reference: bool) -> Result<DocumentMetadata> {
+    pub async fn into_metadata(self, is_reference: bool, order_index: i64) -> Result<DocumentMetadata> {
         // Field order: genre, source, title, source page #, page count, translation
         // First column is the name of the field, useless when parsing so we ignore it.
         let mut values = self.values.into_iter();
@@ -312,12 +312,11 @@ impl SheetResult {
             .ok_or_else(|| anyhow::format_err!("No Translations"))?;
         let image_source = values
             .next()
-            .ok_or_else(|| anyhow::format_err!("Missing image source"))?
+            .ok_or_else(|| anyhow::format_err!("Missing image source row"))?
             .into_iter()
             .skip(1)
             .next()
-            .unwrap()
-            .to_ascii_lowercase();
+            .map(|src| src.to_ascii_lowercase());
         let image_ids = values
             .next()
             // Remove the row title.
@@ -366,10 +365,12 @@ impl SheetResult {
                     .await?
                     .into_translation(),
             ),
-            page_images: image_ids.map(|ids| dailp::IiifImages {
-                source: dailp::ImageSourceId(image_source),
-                ids,
-            }),
+            page_images: if let (Some(ids), Some(source)) = (image_ids, image_source) {
+                Some(dailp::IiifImages {
+                    source: dailp::ImageSourceId(source),
+                    ids,
+                })
+            } else { None },
             date: date
                 .get(1)
                 .and_then(|s| chrono::NaiveDate::parse_from_str(s, "%Y-%m-%d").ok())
@@ -386,6 +387,7 @@ impl SheetResult {
                         .into_document_audio()
                     )
                 },
+            order_index,
         })
     }
 
@@ -492,7 +494,8 @@ impl<'a> AnnotatedLine {
         let mut word_index = 1;
         lines
             .iter()
-            .map(|line| {
+            .enumerate()
+            .map(|(line_idx, line)| {
                 // Number of words = length of the longest row in this line.
                 let num_words = line.rows.iter().map(|row| row.items.len()).max().unwrap();
                 // For each word, extract the necessary data from every row.
@@ -501,9 +504,17 @@ impl<'a> AnnotatedLine {
                     .filter(|i| line.rows.get(0).and_then(|r| r.items.get(*i)).is_some())
                     .map(|i| {
                         let pb = line.rows[0].items[i].find(PAGE_BREAK);
-                        let morphemes = line.rows[4].items.get(i);
-                        let glosses = line.rows[5].items.get(i);
-                        let translation = line.rows[6].items.get(i).map(|x| x.trim().to_owned());
+                        let morphemes = line.rows.get(4)
+                            .expect(&format!("No morphemic segmentation for line {}, word {}", line_idx + 1, i + 1))
+                            .items.get(i);
+                        let glosses = line.rows.get(5)
+                            .expect(&format!("No morphemic gloss for line {}, word {}", line_idx + 1, i + 1))
+                            .items.get(i);
+                        let translation = line.rows.get(6)
+                            .expect(&format!("No translation for line {}, word {}", line_idx + 1, i + 1))
+                            .items
+                            .get(i)
+                            .map(|x| x.trim().to_owned());
                         let w = AnnotatedForm {
                             // TODO Extract into public function!
                             id: format!("{}.{}", meta.id.0, word_index),

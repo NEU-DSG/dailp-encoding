@@ -17,7 +17,9 @@ impl AnnotatedDoc {
         // Skip the first block of the translation, since this usually contains
         // the header and information for translators and editors.
         let mut block_index = 1;
-        let blocks = &meta.translation.as_ref().unwrap().blocks;
+        let blocks = &meta.translation.as_ref()
+            .expect(&format!("Missing translation for {}", meta.id.0))
+            .blocks;
         for seg in segments {
             // Only blocks have an associated translation.
             let trans = if let AnnotatedSeg::Block(_) = &seg {
@@ -92,6 +94,12 @@ impl AnnotatedDoc {
     /// Otherwise, it is considered a structured document with a translation.
     async fn is_reference(&self) -> bool {
         self.meta.is_reference
+    }
+
+    /// Arbitrary number used for manually ordering documents in a collection.
+    /// For collections without manual ordering, use zero here.
+    async fn order_index(&self) -> i64 {
+        self.meta.order_index
     }
 
     /// URL-ready slug for this document, generated from the title
@@ -251,7 +259,12 @@ pub struct DocumentMetadata {
     /// Whether this document is a reference, therefore just a list of forms.
     pub is_reference: bool,
     /// Audio recording of this document, if one exists
+    #[serde(default)]
     pub audio_recording: Option<AudioSlice>
+    #[serde(default)]
+    /// Arbitrary number used for manually ordering documents in a collection.
+    /// For collections without manual ordering, use zero here.
+    pub order_index: i64,
 }
 
 #[derive(Clone, Eq, PartialEq, Hash, Serialize, Deserialize, Debug, async_graphql::NewType)]

@@ -4,7 +4,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-20.04
-    environment: ${{ github.ref == 'refs/heads/main' && 'Production' || 'Development' }}
+    environment: Development
     env:
       MONGODB_PASSWORD: ${{ secrets.MONGODB_PASSWORD }}
       GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
@@ -19,7 +19,7 @@ jobs:
       GIT_REPOSITORY_URL: https://github.com/neu-dsg/dailp-encoding
       OAUTH_TOKEN: ${{ secrets.OAUTH_TOKEN }}
       RUST_LOG: info
-      TF_STAGE: ${{ github.ref == 'refs/heads/main' && 'prod' || 'dev' }}
+      TF_STAGE: dev
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -51,7 +51,7 @@ jobs:
       - name: Migrate data to MongoDB
         run: |
           nix develop --impure --command plan
-          export DAILP_GRAPHQL_URL=$(nix develop --impure --command output functions_url)/graphql
+          export DAILP_API_URL=$(nix develop --impure --command output functions_url)
           nix run .#migrate-data -L
       - name: Publish website
         run: |
