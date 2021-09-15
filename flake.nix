@@ -48,7 +48,7 @@
                 ./rust-toolchain
               ];
             };
-            # Make sure `cargo check` passes before building.
+            # Make sure `cargo check` and `cargo test` pass.
             doCheck = true;
             doTest = true;
 
@@ -61,8 +61,9 @@
 
             # Enables static compilation.
             # ref: https://github.com/rust-lang/rust/issues/79624#issuecomment-737415388
-            CARGO_BUILD_RUSTFLAGS = "-C target-feature=+crt-static";
+            CARGO_BUILD_RUSTFLAGS = if target == null then "" else "-C target-feature=+crt-static";
           };
+        nativePackage = rustPackage null;
         muslPackage = rustPackage "x86_64-unknown-linux-musl";
         dailpFunctions = with pkgs;
           stdenv.mkDerivation {
@@ -107,8 +108,13 @@
           };
 
         apps.migrate-data = inputs.utils.lib.mkApp {
-          drv = muslPackage;
+          drv = nativePackage;
           exePath = "/bin/dailp-migration";
+        };
+
+        apps.graphql = inputs.utils.lib.mkApp {
+          drv = nativePackage;
+          exePath = "/bin/dailp-graphql-local";
         };
 
         devShell = with pkgs;

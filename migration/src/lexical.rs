@@ -99,6 +99,7 @@ pub async fn migrate_dictionaries() -> Result<()> {
                 page_images: None,
                 is_reference: true,
                 audio_recording: None,
+                order_index: 0,
             },
             segments: None,
         },
@@ -115,6 +116,7 @@ pub async fn migrate_dictionaries() -> Result<()> {
                 page_images: None,
                 is_reference: true,
                 audio_recording: None,
+                order_index: 0,
             },
             segments: None,
         },
@@ -200,6 +202,7 @@ async fn parse_meta(sheet_id: &str, collection: &str) -> Result<DocumentMetadata
         translation: None,
         is_reference: true,
         audio_recording: None
+        order_index: 0,
     })
 }
 
