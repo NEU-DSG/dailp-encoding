@@ -9,11 +9,16 @@ pub struct DocumentAudioId(pub String);
 #[derive(Serialize, Deserialize, Clone, Debug, async_graphql::SimpleObject)]
 pub struct AudioSlice {
     /// The audio resource this audio slice is taken from, generally pulled from the DRS API
-    pub parent_track: DocumentAudioId,
+    pub resource_url: String,
+    /// An audio slice this slice is a subunit of, if there is one
+    pub parent_track: Option<DocumentAudioId>,
+    /// The annotations for subunits of this slice, if there are any
+    #[graphql(skip = true)]
+    pub annotations: Option<Vec<AudioSlice>>,
     /// This slice's relative position to other slices within an audio resource
-    pub index: u32,
+    pub index: usize,
     /// The time (in seconds) in the parent track where this slice begins.
-    pub start_time: u32,
+    pub start_time: Option<u32>,
     /// The time (in seconds) in the parent track where this slice ends.
-    pub end_time: u32,
+    pub end_time: Option<u32>,
 }
