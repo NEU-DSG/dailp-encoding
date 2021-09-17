@@ -16,9 +16,9 @@ pub struct AudioSlice {
     #[graphql(skip = true)]
     pub annotations: Option<Vec<AudioSlice>>,
     /// This slice's relative position to other slices within an audio resource
-    pub index: usize,
+    pub index: i32,
     /// The time (in seconds) in the parent track where this slice begins.
-    pub start_time: Option<u32>,
+    pub start_time: Option<i32>,
     /// The time (in seconds) in the parent track where this slice ends.
-    pub end_time: Option<u32>,
+    pub end_time: Option<i32>,
 }
