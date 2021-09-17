@@ -201,7 +201,7 @@ async fn parse_meta(sheet_id: &str, collection: &str) -> Result<DocumentMetadata
         page_images: None,
         translation: None,
         is_reference: true,
-        audio_recording: None
+        audio_recording: None,
         order_index: 0,
     })
 }
