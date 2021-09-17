@@ -42,8 +42,8 @@ impl DrsRes {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 struct AudioAnnotationRow {
     layer: String,
-    start_time: u32,
-    end_time: u32,
+    start_time: i32,
+    end_time: i32,
     word: String,
 }
 
@@ -111,9 +111,9 @@ impl AudioRes {
             .from_reader(self.annotations.as_bytes());
 
         // Structure column info for all audio of the right layer
-        for (i, annotation_line) in reader
+        for (annotation_line, i) in reader
             .deserialize::<AudioAnnotationRow>()
-            .enumerate()
+            .zip((0..))
         // TODO: Implement reading of Col 1 labels to assign audio to different "chunks" of documents
         // .filter(Some(annotation_line.unwrap()) == from_layer)
         {
