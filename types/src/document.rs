@@ -260,7 +260,7 @@ pub struct DocumentMetadata {
     pub is_reference: bool,
     /// Audio recording of this document, if one exists
     #[serde(default)]
-    pub audio_recording: Option<AudioSlice>
+    pub audio_recording: Option<AudioSlice>,
     #[serde(default)]
     /// Arbitrary number used for manually ordering documents in a collection.
     /// For collections without manual ordering, use zero here.
