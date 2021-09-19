@@ -20,11 +20,11 @@ struct ComplexDrsObject(HashMap<String, Value>);
 #[derive(Serialize, Deserialize, Clone, Debug)]
 struct DrsRes {
     pid: DrsId,
-    //breadcrumbs: ComplexDrsObject,
+    // breadcrumbs: ComplexDrsObject,
     parent: DrsId,
     thumbnails: Vec<String>,
     canonical_object: ComplexDrsObject,
-    //content_objects: ComplexDrsObject,
+    // content_objects: ComplexDrsObject,
 }
 
 impl DrsRes {
@@ -41,9 +41,9 @@ impl DrsRes {
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 struct AudioAnnotationRow {
-    layer: String,
-    start_time: i32,
-    end_time: i32,
+    layer: Option<String>,
+    start_time: f64,
+    end_time: f64,
     word: String,
 }
 
@@ -113,12 +113,12 @@ impl AudioRes {
         // Structure column info for all audio of the right layer
         for (annotation_line, i) in reader
             .deserialize::<AudioAnnotationRow>()
-            .zip((0..))
+            .zip(0..)
         // TODO: Implement reading of Col 1 labels to assign audio to different "chunks" of documents
         // .filter(Some(annotation_line.unwrap()) == from_layer)
         {
-            info!("Attempting to add values from line {}", i);
             if annotation_line.is_err() {
+                error!("Failed to add line {}", i);
                 result.push(
                     AudioSlice {
                         resource_url: self.audio_url.clone(),
@@ -137,10 +137,13 @@ impl AudioRes {
                         parent_track: Some(DocumentAudioId("".to_string())),
                         annotations: None,
                         index: i,
-                        start_time: Some(annotation.start_time * 1000),
-                        end_time: Some(annotation.end_time * 1000),
+                        // Perform calculation before converting to retain precision
+                        start_time: Some((annotation.start_time * 1000.0) as i32),
+                        end_time: Some((annotation.end_time * 1000.0) as i32),
                     }
                 );
+                info!("Successfully added from line {}.\nURL: {}\nStart:{}ms\nEnd:{}ms",
+                i, self.audio_url.clone(), annotation.start_time*1000.0, annotation.end_time*1000.0);
             };
         };
         result
