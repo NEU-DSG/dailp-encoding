@@ -96,6 +96,11 @@ impl AnnotatedDoc {
         self.meta.is_reference
     }
 
+    /// The audio recording resource for this entire document
+    async fn audio_recording(&self) -> &Option<AudioSlice> {
+        // TODO: Allow for multiple audio sources
+        &self.meta.audio_recording
+    }
     /// Arbitrary number used for manually ordering documents in a collection.
     /// For collections without manual ordering, use zero here.
     async fn order_index(&self) -> i64 {
