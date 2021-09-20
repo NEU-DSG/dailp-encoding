@@ -349,6 +349,11 @@ export const query = graphql`
         forms @include(if: $isReference) {
           ...FormFields
         }
+        audioRecording {
+          resourceUrl
+          startTime
+          endTime
+        }
       }
     }
   }
@@ -390,6 +395,12 @@ export const query = graphql`
     }
     englishGloss
     commentary
+    audioTrack {
+      index
+      resourceUrl
+      startTime
+      endTime
+    }
   }
 `
 
