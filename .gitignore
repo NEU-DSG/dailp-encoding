@@ -28,3 +28,5 @@ result/
 # Ignore serverless manifest files
 serverless.manifest.json
 .serverless/manifest.json
+
+xml/
