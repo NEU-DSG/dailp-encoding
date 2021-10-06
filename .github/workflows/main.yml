@@ -107,7 +107,7 @@ jobs:
       - name: Deploy back-end to AWS via terraform
         run: nix develop --impure --command apply-now
       - name: Encode documents as TEI and database entries
-        if: steps.filter.outputs.data == 'true'
+        if: steps.filter.outputs.data == 'true' || github.event_name == 'release'
         run: |
           export DAILP_API_URL=$(nix develop --impure --command output functions_url)
           nix run .#migrate-data -L
