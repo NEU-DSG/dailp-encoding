@@ -23,7 +23,9 @@ import { MorphemeDetails } from "../morpheme"
 import { Breadcrumbs } from "../breadcrumbs"
 import { isMobile } from "react-device-detect"
 import { ExperiencePicker, selectedMode } from "../mode"
+import { DocumentAudio } from "../audio-player";
 import loadable from "@loadable/component"
+
 
 const PageImages = loadable(() => import("../page-image"))
 
@@ -235,6 +237,10 @@ export const DocumentTitleHeader = (p: {
       )}
       {!isMobile ? <Button onClick={() => window.print()}>Print</Button> : null}
     </div>
+    {p.doc.audioRecording && // TODO Implement sticky audio bar
+      <div id="document-audio-player" css={wideAndTop && topMargin && bottomPadded}>
+        <DocumentAudio audioUrl={p.doc.audioRecording.resourceUrl}/>
+      </div>}
   </header>
 )
 
