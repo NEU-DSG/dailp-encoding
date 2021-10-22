@@ -545,16 +545,25 @@ impl<'a> AnnotatedLine {
                                 .or_else(|| line.rows[0].items[i].find(LINE_BREAK))
                                 .map(|i| i as i32),
                             date_recorded: None,
-                            audio_track:
-                             if meta.audio_recording.is_some()
+                            audio_track: // TODO is this correct
+                             if meta.audio_recording.is_some() // if audio file and annotation exists
                                  && meta.audio_recording.clone().unwrap().annotations.is_some() {
-                                    meta.audio_recording.clone().unwrap().annotations
-                                     .unwrap()
-                                     .into_iter()
-                                     .next()
+                                    Some(meta.audio_recording.clone().unwrap().annotations
+                                     .unwrap()[(word_index-1) as usize].clone())
+                                         // TODO THIS LINE IS THE ISSUE; pop returns pos 33, next returns pos 1
                              } else { None },
                         };
                         word_index += 1;
+                        let dummy = AudioSlice { resource_url: "".to_string(),
+                            parent_track: None,
+                            annotations: None,
+                            index: -1,
+                            start_time: Some(-1),
+                            end_time: Some(-1) };
+                        info!("Track {}, t from {} to {}",
+                            w.audio_track.clone().unwrap_or(dummy.clone()).index,
+                            w.audio_track.clone().unwrap_or(dummy.clone()).start_time.clone().unwrap(),
+                            w.audio_track.clone().unwrap_or(dummy.clone()).end_time.clone().unwrap());
                         w
                     })
                     .collect();
