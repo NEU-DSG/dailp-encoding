@@ -553,16 +553,6 @@ impl<'a> AnnotatedLine {
                              } else { None },
                         };
                         word_index += 1;
-                        let dummy = AudioSlice { resource_url: "".to_string(),
-                            parent_track: None,
-                            annotations: None,
-                            index: -1,
-                            start_time: Some(-1),
-                            end_time: Some(-1) };
-                        info!("Track {}, t from {} to {}",
-                            w.audio_track.clone().unwrap_or(dummy.clone()).index,
-                            w.audio_track.clone().unwrap_or(dummy.clone()).start_time.clone().unwrap(),
-                            w.audio_track.clone().unwrap_or(dummy.clone()).end_time.clone().unwrap());
                         w
                     })
                     .collect();
