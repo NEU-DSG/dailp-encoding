@@ -18,11 +18,11 @@ import { collectionRoute, documentDetailsRoute, documentRoute } from "../routes"
 import { useScrollableTabState } from "../scrollable-tabs"
 import { css, ClassNames } from "@emotion/react"
 import { DeepPartial } from "tsdef"
-import { ViewMode, BasicMorphemeSegment, tagSetForMode } from "../types"
+import {ViewMode, BasicMorphemeSegment, tagSetForMode, PhoneticRepresentation} from "../types"
 import { MorphemeDetails } from "../morpheme"
 import { Breadcrumbs } from "../breadcrumbs"
 import { isMobile } from "react-device-detect"
-import { ExperiencePicker, selectedMode } from "../mode"
+import {ExperiencePicker, selectedMode, selectedPhonetics, PhoneticsPicker} from "../mode"
 import loadable from "@loadable/component"
 
 const PageImages = loadable(() => import("../page-image"))
@@ -138,6 +138,9 @@ const TranslationTab = ({ doc }) => {
   const [selectedMorpheme, setMorpheme] =
     useState<BasicMorphemeSegment | null>(null)
 
+  const [phoneticRepresentation, setPhoneticRepresentation] =
+    useState<PhoneticRepresentation>(selectedPhonetics())
+
   const [experienceLevel, setExperienceLevel] = useState<ViewMode>(
     selectedMode()
   )
@@ -164,7 +167,10 @@ const TranslationTab = ({ doc }) => {
       </p>
 
       <SolidSticky top="#document-tabs-header">
-        <ExperiencePicker onSelect={setExperienceLevel} />
+        <>
+          <ExperiencePicker onSelect={setExperienceLevel} />
+          <PhoneticsPicker onSelect={setPhoneticRepresentation} />
+        </>
       </SolidSticky>
 
       <article css={annotationContents}>
@@ -178,7 +184,7 @@ const TranslationTab = ({ doc }) => {
             tagSet={tagSet}
             translations={seg.translation as GatsbyTypes.Dailp_TranslationBlock}
             pageImages={doc.pageImages}
-          />
+           phoneticRepresentation={phoneticRepresentation}/>
         ))}
         {doc.forms?.map((form, i) => (
           <AnnotatedForm
@@ -188,6 +194,7 @@ const TranslationTab = ({ doc }) => {
             onOpenDetails={setMorpheme}
             viewMode={experienceLevel}
             tagSet={tagSet}
+            phoneticRepresentation={phoneticRepresentation}
             translations={null}
             pageImages={doc.pageImages}
           />
