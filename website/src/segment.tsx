@@ -1,11 +1,17 @@
 import React from "react"
-import {css} from "@emotion/react"
-import {DialogDisclosure, DialogStateReturn} from "reakit/Dialog"
-import {Tooltip} from "@reach/tooltip"
-import {MdInfoOutline} from "react-icons/md"
-import {flatMap} from "lodash"
-import {BasicMorphemeSegment, morphemeDisplayTag, TagSet, ViewMode,} from "./types"
-import theme, {hideOnPrint, std, typography} from "./theme"
+import { css } from "@emotion/react"
+import { DialogDisclosure, DialogStateReturn } from "reakit/Dialog"
+import { Tooltip } from "@reach/tooltip"
+import { MdInfoOutline } from "react-icons/md"
+import { flatMap } from "lodash"
+import {
+  ViewMode,
+  TagSet,
+  BasicMorphemeSegment,
+  PhoneticRepresentation,
+  morphemeDisplayTag,
+} from "./types"
+import theme, { hideOnPrint, std, typography, withBg } from "./theme"
 import "@reach/tooltip/styles.css"
 import {FormAudio} from "./audio-player"
 import {Howl} from 'howler';
@@ -19,6 +25,7 @@ interface Props {
   translations: GatsbyTypes.Dailp_TranslationBlock
   tagSet: TagSet
   pageImages: readonly string[]
+  phoneticRepresentation: PhoneticRepresentation
 }
 
 /** Displays one segment of the document, which may be a word, block, or phrase. */
@@ -38,6 +45,7 @@ export const Segment = (p: Props & {howl?: Howl}) => {
             translations={p.translations}
             tagSet={p.tagSet}
             pageImages={p.pageImages}
+            phoneticRepresentation={p.phoneticRepresentation}
           />
         )
       }) ?? null
@@ -106,6 +114,8 @@ export const AnnotatedForm = (
   if (showAnything) {
     const showSegments = p.viewMode >= ViewMode.Segmentation
     const translation = p.segment.englishGloss.join(", ")
+    const worcesterValues = p.phoneticRepresentation == PhoneticRepresentation.Worcester
+
     return (
       <div css={wordGroup} id={`w${p.segment.index}`}>
         <div css={syllabaryLayer} lang="chr">
@@ -116,7 +126,7 @@ export const AnnotatedForm = (
         </div>
         {p.segment.simplePhonetics ? (
           <div>
-            {p.segment.simplePhonetics}
+            {worcesterValues ? toWorcester(p.segment.simplePhonetics) : p.segment.simplePhonetics}
             {p.segment.audioTrack &&
             <FormAudio
               endTime={p.segment.audioTrack.endTime}
@@ -161,6 +171,12 @@ export const AnnotatedForm = (
       </span>
     )
   }
+}
+
+/// Converts DAILP's learner-oriented simple phonetics representation to
+/// a more traditional rendering in Worcester's syllabary values
+const toWorcester = (source: string): string => {
+    return source.replace(/([kg]w)/gi, "qu").replace(/j/gi, "ts")
 }
 
 const WordCommentaryInfo = (p: { commentary: string }) => (

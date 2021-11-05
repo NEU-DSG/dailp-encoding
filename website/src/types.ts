@@ -13,6 +13,11 @@ export enum TagSet {
   Crg,
 }
 
+export enum PhoneticRepresentation {
+  Dailp,
+  Worcester,
+  //Ipa,
+}
 export type BasicMorphemeSegment = NonNullable<
   GatsbyTypes.FormFieldsFragment["segments"]
 >[0]
