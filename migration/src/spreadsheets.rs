@@ -546,12 +546,10 @@ impl<'a> AnnotatedLine {
                                 .map(|i| i as i32),
                             date_recorded: None,
                             audio_track:
-                             if meta.audio_recording.is_some()
+                             if meta.audio_recording.is_some() // if audio file and annotation exists
                                  && meta.audio_recording.clone().unwrap().annotations.is_some() {
-                                    meta.audio_recording.clone().unwrap().annotations
-                                     .unwrap()
-                                     .into_iter()
-                                     .next()
+                                    Some(meta.audio_recording.clone().unwrap().annotations
+                                     .unwrap()[(word_index-1) as usize].clone())
                              } else { None },
                         };
                         word_index += 1;

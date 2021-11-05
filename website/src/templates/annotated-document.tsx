@@ -22,8 +22,10 @@ import {ViewMode, BasicMorphemeSegment, tagSetForMode, PhoneticRepresentation} f
 import { MorphemeDetails } from "../morpheme"
 import { Breadcrumbs } from "../breadcrumbs"
 import { isMobile } from "react-device-detect"
-import {ExperiencePicker, selectedMode, selectedPhonetics, PhoneticsPicker} from "../mode"
+import { ExperiencePicker, selectedMode, selectedPhonetics, PhoneticsPicker } from "../mode"
+import { DocumentAudio } from "../audio-player";
 import loadable from "@loadable/component"
+
 
 const PageImages = loadable(() => import("../page-image"))
 
@@ -242,6 +244,10 @@ export const DocumentTitleHeader = (p: {
       )}
       {!isMobile ? <Button onClick={() => window.print()}>Print</Button> : null}
     </div>
+    {p.doc.audioRecording && // TODO Implement sticky audio bar
+      <div id="document-audio-player" css={wideAndTop && topMargin && bottomPadded}>
+        <DocumentAudio audioUrl={p.doc.audioRecording.resourceUrl}/>
+      </div>}
   </header>
 )
 
@@ -356,6 +362,11 @@ export const query = graphql`
         forms @include(if: $isReference) {
           ...FormFields
         }
+        audioRecording {
+          resourceUrl
+          startTime
+          endTime
+        }
       }
     }
   }
@@ -397,6 +408,12 @@ export const query = graphql`
     }
     englishGloss
     commentary
+    audioTrack {
+      index
+      resourceUrl
+      startTime
+      endTime
+    }
   }
 `
 
