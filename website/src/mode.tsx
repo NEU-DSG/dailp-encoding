@@ -8,7 +8,7 @@ import {
 import { Tooltip } from "@reach/tooltip"
 import Cookies from "js-cookie"
 import theme, { hideOnPrint, typography, withBg, std } from "./theme"
-import { ViewMode, TagSet, tagSetForMode } from "./types"
+import {ViewMode, TagSet, tagSetForMode, PhoneticRepresentation} from "./types"
 import { css } from "@emotion/react"
 
 const notNumber = (l: any) => isNaN(Number(l))
@@ -60,8 +60,26 @@ const tagSetMapping = {
   },
 }
 
+const phoneticRepresentationMapping = {
+  [PhoneticRepresentation.Dailp]: {
+    label: "Simple Phonetics",
+    details: "The DAILP simple phonetics, made for learners. Uses kw, gw, and j",
+  },
+    [PhoneticRepresentation.Worcester]: {
+      label: "Worcester Phonetics",
+      details: "A more traditional phonetics view, aligned with the Worcester syllabary. Uses qu and ts.",
+    },
+  // [PhoneticRepresentation.Ipa]: {
+  //   label: "IPA",
+  //   details: "The international phonetic alphabet, a way of representing sounds across languages",
+  // },
+}
+
 export const selectedMode = () =>
   Number.parseInt(Cookies.get("experienceLevel") ?? "0")
+
+export const selectedPhonetics = () =>
+  Number.parseInt(Cookies.get("phonetics") ?? "0")
 
 export const ExperiencePicker = (p: { onSelect: (mode: ViewMode) => void }) => {
   const radio = useRadioState({
@@ -95,6 +113,36 @@ export const ExperiencePicker = (p: { onSelect: (mode: ViewMode) => void }) => {
   )
 }
 
+export const PhoneticsPicker = (p: { onSelect: (phonetics: PhoneticRepresentation) => void }) => {
+  const radio = useRadioState({
+    state: selectedPhonetics(),
+  })
+
+  // Save the selected experience level throughout the session.
+  useEffect(() => {
+    Cookies.set("phonetics", radio.state!.toString(), {
+      sameSite: "strict",
+      secure: true,
+    })
+    p.onSelect(radio.state as PhoneticRepresentation)
+  }, [radio.state])
+
+  return (
+      <RadioGroup
+        {...radio}
+        id="phonetics-picker"
+        css={levelGroup}
+        aria-label="Phonetic Representation"
+      >
+        {Object.keys(PhoneticRepresentation)
+          .filter(notNumber)
+          .map(function (representation: string) {
+            return <PhoneticOption key={representation} representation={representation} radio={radio}/>
+          })}
+      </RadioGroup>
+  )
+}
+
 export const TagSetPicker = (p: { onSelect: (tagSet: TagSet) => void }) => {
   const radio = useRadioState({
     state: tagSetForMode(selectedMode() as ViewMode),
@@ -122,6 +170,20 @@ const ExperienceOption = (p: { radio: RadioStateReturn; level: string }) => {
         <Radio {...p.radio} value={value} />
         {"  "}
         {levelNameMapping[value].label}
+      </label>
+    </Tooltip>
+  )
+}
+
+const PhoneticOption = (p: { radio: RadioStateReturn; representation: string }) => {
+  const value = PhoneticRepresentation[p.representation as keyof typeof PhoneticRepresentation]
+  const isSelected = p.radio.state === value
+  return (
+    <Tooltip css={std.tooltip} label={phoneticRepresentationMapping[value].details}>
+      <label css={[levelLabel, isSelected && highlightedLabel]}>
+        <Radio {...p.radio} value={value} />
+          {"  "}
+          {phoneticRepresentationMapping[value].label}
       </label>
     </Tooltip>
   )
