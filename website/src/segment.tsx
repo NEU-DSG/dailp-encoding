@@ -8,6 +8,7 @@ import {
   ViewMode,
   TagSet,
   BasicMorphemeSegment,
+  PhoneticRepresentation,
   morphemeDisplayTag,
 } from "./types"
 import theme, { hideOnPrint, std, typography, withBg } from "./theme"
@@ -21,6 +22,7 @@ interface Props {
   translations: GatsbyTypes.Dailp_TranslationBlock
   tagSet: TagSet
   pageImages: readonly string[]
+  phoneticRepresentation: PhoneticRepresentation
 }
 
 /** Displays one segment of the document, which may be a word, block, or phrase. */
@@ -40,6 +42,7 @@ export const Segment = (p: Props) => {
             translations={p.translations}
             tagSet={p.tagSet}
             pageImages={p.pageImages}
+            phoneticRepresentation={p.phoneticRepresentation}
           />
         )
       }) ?? null
@@ -107,6 +110,8 @@ export const AnnotatedForm = (
   if (showAnything) {
     const showSegments = p.viewMode >= ViewMode.Segmentation
     const translation = p.segment.englishGloss.join(", ")
+    const worcesterValues = p.phoneticRepresentation == PhoneticRepresentation.Worcester
+
     return (
       <div css={wordGroup} id={`w${p.segment.index}`}>
         <div css={syllabaryLayer} lang="chr">
@@ -116,7 +121,7 @@ export const AnnotatedForm = (
           )}
         </div>
         {p.segment.simplePhonetics ? (
-          <div>{p.segment.simplePhonetics}</div>
+          <div>{worcesterValues ? toWorcester(p.segment.simplePhonetics) : p.segment.simplePhonetics}</div>
         ) : (
           <br />
         )}
@@ -139,6 +144,12 @@ export const AnnotatedForm = (
       </span>
     )
   }
+}
+
+/// Converts DAILP's learner-oriented simple phonetics representation to
+/// a more traditional rendering in Worcester's syllabary values
+const toWorcester = (source: string): string => {
+    return source.replace(/([kg]w)/gi, "qu").replace(/j/gi, "ts")
 }
 
 const WordCommentaryInfo = (p: { commentary: string }) => (
