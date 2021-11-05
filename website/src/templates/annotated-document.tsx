@@ -171,7 +171,7 @@ const TranslationTab = ({ doc }) => {
       <SolidSticky top="#document-tabs-header">
         <>
           <ExperiencePicker onSelect={setExperienceLevel} />
-          <PhoneticsPicker onSelect={setPhoneticRepresentation} />
+          {/*<PhoneticsPicker onSelect={setPhoneticRepresentation} />*/}
         </>
       </SolidSticky>
 
