@@ -870,6 +870,26 @@ fn dt_to_tth(input: &str, keep_glottal_stops: bool, replace_colons: Option<&str>
     result.into_owned()
 }
 
+pub fn simple_phonetics_to_worcester(input: &str) -> String {
+    use {
+        lazy_static::lazy_static,
+        regex::{Captures, Regex},
+    };
+    // Convert the t/th consonants to d/t
+    lazy_static! {
+        static ref TTH_PATTERN: Regex =
+            Regex::new(r"(gw|kw|j|ʔ|:)").unwrap();
+    }
+    let result = TTH_PATTERN.replace_all(input, |cap: &Captures| match &cap[0] {
+        "gw" | "kw" => "qu",
+        "j" => "ts",
+        "ʔ" => "'",
+        ":" => "",
+        _ => unreachable!(),
+    });
+    result.into_owned()
+}
+
 fn tth_to_dt(input: &str, keep_glottal_stops: bool, replace_colons: Option<&str>) -> String {
     use {
         lazy_static::lazy_static,
@@ -878,10 +898,11 @@ fn tth_to_dt(input: &str, keep_glottal_stops: bool, replace_colons: Option<&str>
     // Convert the t/th consonants to d/t
     lazy_static! {
         static ref TTH_PATTERN: Regex =
-            Regex::new(r"(qu|ts|ks|tlh|kwh|kw|kh|th|ch|k|t|c|ʔ|:)").unwrap();
+            Regex::new(r"(qu|ts|ks|tlh|kwh|tl|kw|kh|th|ch|k|t|c|ʔ|:)").unwrap();
     }
     let result = TTH_PATTERN.replace_all(input, |cap: &Captures| match &cap[0] {
         "tlh" => "tl",
+        "tl" => "dl",
         "qu" => "gw",
         "kwh" => "kw",
         "kw" => "gw",

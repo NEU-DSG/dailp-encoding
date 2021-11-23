@@ -52,6 +52,12 @@ impl AnnotatedForm {
         self.find_root()
     }
 
+    async fn romanized_source(&self) -> Option<String> {
+        self.simple_phonetics.as_ref().map(|phonetic| {
+            crate::lexical::simple_phonetics_to_worcester(phonetic)
+        })
+    }
+
     /// All other observed words with the same root morpheme as this word.
     async fn similar_forms(
         &self,
