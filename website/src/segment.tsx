@@ -114,7 +114,6 @@ export const AnnotatedForm = (
   if (showAnything) {
     const showSegments = p.viewMode >= ViewMode.Segmentation
     const translation = p.segment.englishGloss.join(", ")
-    const worcesterValues = p.phoneticRepresentation == PhoneticRepresentation.Worcester
 
     return (
       <div css={wordGroup} id={`w${p.segment.index}`}>
@@ -125,32 +124,40 @@ export const AnnotatedForm = (
           )}
         </div>
         {p.segment.simplePhonetics ? (
-          <div>
-            {worcesterValues ? toWorcester(p.segment.simplePhonetics) : p.segment.simplePhonetics}
-            {p.segment.audioTrack &&
-            <FormAudio
-              endTime={p.segment.audioTrack.endTime}
-              index={p.segment.audioTrack.index}
-              parentTrack=""
-              resourceUrl={p.segment.audioTrack.resourceUrl}
-              startTime={p.segment.audioTrack.startTime}
-            />}
-            {p.segment.phonemic && p.viewMode >= ViewMode.Pronunciation && (
-              <div />
-            )}
-          </div>
-        ) : (
-          (p.segment.audioTrack &&
-                <div css={css`padding-left:40%;`}>
-                  <FormAudio
-                    endTime={p.segment.audioTrack.endTime}
-                   index={p.segment.audioTrack.index}
-                   parentTrack=""
+          <>
+            <div>{p.segment.romanizedSource}</div>
+            <div>
+              {p.segment.simplePhonetics}
+              {p.segment.audioTrack && (
+                <FormAudio
+                  endTime={p.segment.audioTrack.endTime}
+                  index={p.segment.audioTrack.index}
+                  parentTrack=""
                   resourceUrl={p.segment.audioTrack.resourceUrl}
                   startTime={p.segment.audioTrack.startTime}
                 />
-              </div>)
-          || <br />
+              )}
+              {p.segment.phonemic && p.viewMode >= ViewMode.Pronunciation && (
+                <div />
+              )}
+            </div>
+          </>
+        ) : (
+          (p.segment.audioTrack && (
+            <div
+              css={css`
+                padding-left: 40%;
+              `}
+            >
+              <FormAudio
+                endTime={p.segment.audioTrack.endTime}
+                index={p.segment.audioTrack.index}
+                parentTrack=""
+                resourceUrl={p.segment.audioTrack.resourceUrl}
+                startTime={p.segment.audioTrack.startTime}
+              />
+            </div>
+          )) || <br />
         )}
         {showSegments ? (
           <MorphemicSegmentation
@@ -171,12 +178,6 @@ export const AnnotatedForm = (
       </span>
     )
   }
-}
-
-/// Converts DAILP's learner-oriented simple phonetics representation to
-/// a more traditional rendering in Worcester's syllabary values
-const toWorcester = (source: string): string => {
-    return source.replace(/([kg]w)/gi, "qu").replace(/j/gi, "ts")
 }
 
 const WordCommentaryInfo = (p: { commentary: string }) => (
