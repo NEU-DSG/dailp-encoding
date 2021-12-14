@@ -166,6 +166,7 @@
               nasm
               terraform
               rust-toolchain
+              nodejs-14_x
               yarn
               mongodb-4_2
               (writers.writeBashBin "dev-database" ''
