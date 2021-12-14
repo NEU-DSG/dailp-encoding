@@ -166,7 +166,7 @@ async fn parse_numerals(sheet_id: &str, doc_id: &str, year: i32) -> Result<()> {
                 date_recorded: Some(date.clone()),
                 line_break: None,
                 page_break: None,
-                audio_track: None
+                audio_track: None,
             })
         })
         .collect::<Vec<_>>();
@@ -241,7 +241,7 @@ async fn parse_appendix(sheet_id: &str, to_skip: usize) -> Result<()> {
                 page_break: None,
                 commentary: None,
                 date_recorded: meta.date.clone(),
-                audio_track: None
+                audio_track: None,
             })
         })
         .collect();
@@ -334,7 +334,7 @@ fn parse_new_df1975(
                         date_recorded: Some(date),
                         source: root,
                         position: pos,
-                        audio_track: None
+                        audio_track: None,
                     },
                 })
             } else {
@@ -371,7 +371,7 @@ async fn ingest_particle_index(document_id: &str) -> Result<()> {
                 date_recorded: None,
                 source: syllabary,
                 position: pos,
-                audio_track: None
+                audio_track: None,
             })
         })
         .collect::<Vec<_>>();

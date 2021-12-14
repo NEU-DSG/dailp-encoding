@@ -2,14 +2,18 @@
 //! transforming that data into a usable format based on the data types
 //! specified in modules under `dailp`.
 
+use crate::audio::AudioRes;
 use crate::translations::DocResult;
 use anyhow::Result;
-use dailp::{convert_udb, root_noun_surface_forms, root_verb_surface_forms, AnnotatedDoc, AnnotatedForm, AnnotatedPhrase, AnnotatedSeg, BlockType, Contributor, Date, DocumentMetadata, LexicalConnection, LineBreak, MorphemeId, MorphemeSegment, PageBreak, AudioSlice};
+use dailp::{
+    convert_udb, root_noun_surface_forms, root_verb_surface_forms, AnnotatedDoc, AnnotatedForm,
+    AnnotatedPhrase, AnnotatedSeg, AudioSlice, BlockType, Contributor, Date, DocumentMetadata,
+    LexicalConnection, LineBreak, MorphemeId, MorphemeSegment, PageBreak,
+};
 use dailp::{PositionInDocument, SourceAttribution};
 use log::{error, info, warn};
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, fs::File, io::Write, time::Duration};
-use crate::audio::{AudioRes};
 
 // Define the delimiters used in spreadsheets for marking phrases, blocks,
 // lines, and pages.
@@ -187,7 +191,7 @@ impl SheetResult {
                         date_recorded: Some(date),
                         source: root,
                         position,
-                        audio_track: None
+                        audio_track: None,
                     },
                 })
             })
@@ -250,7 +254,7 @@ impl SheetResult {
                             date_recorded: Some(date),
                             line_break: None,
                             page_break: None,
-                            audio_track: None
+                            audio_track: None,
                         },
                     })
                 } else {
@@ -283,7 +287,11 @@ impl SheetResult {
     }
 
     /// Parse this sheet as a document metadata listing.
-    pub async fn into_metadata(self, is_reference: bool, order_index: i64) -> Result<DocumentMetadata> {
+    pub async fn into_metadata(
+        self,
+        is_reference: bool,
+        order_index: i64,
+    ) -> Result<DocumentMetadata> {
         // Field order: genre, source, title, source page #, page count, translation
         // First column is the name of the field, useless when parsing so we ignore it.
         let mut values = self.values.into_iter();
@@ -370,23 +378,23 @@ impl SheetResult {
                     source: dailp::ImageSourceId(source),
                     ids,
                 })
-            } else { None },
+            } else {
+                None
+            },
             date: date
                 .get(1)
-                .and_then(|s| chrono::NaiveDate::parse_from_str(s, "%Y-%m-%d").ok())
+                .and_then(|s| dailp::chrono::NaiveDate::parse_from_str(s, "%Y-%m-%d").ok())
                 .map(Date::new),
             is_reference,
-            audio_recording:
-                if audio_files.get(1).is_none()
-                    || audio_files.get(2).is_none() { None }
-                else {
-                    Some(
-                        AudioRes::new(audio_files.get(1).unwrap(),
-                                       audio_files.get(2).unwrap())
+            audio_recording: if audio_files.get(1).is_none() || audio_files.get(2).is_none() {
+                None
+            } else {
+                Some(
+                    AudioRes::new(audio_files.get(1).unwrap(), audio_files.get(2).unwrap())
                         .await?
-                        .into_document_audio()
-                    )
-                },
+                        .into_document_audio(),
+                )
+            },
             order_index,
         })
     }
@@ -504,14 +512,34 @@ impl<'a> AnnotatedLine {
                     .filter(|i| line.rows.get(0).and_then(|r| r.items.get(*i)).is_some())
                     .map(|i| {
                         let pb = line.rows[0].items[i].find(PAGE_BREAK);
-                        let morphemes = line.rows.get(4)
-                            .expect(&format!("No morphemic segmentation for line {}, word {}", line_idx + 1, i + 1))
-                            .items.get(i);
-                        let glosses = line.rows.get(5)
-                            .expect(&format!("No morphemic gloss for line {}, word {}", line_idx + 1, i + 1))
-                            .items.get(i);
-                        let translation = line.rows.get(6)
-                            .expect(&format!("No translation for line {}, word {}", line_idx + 1, i + 1))
+                        let morphemes = line
+                            .rows
+                            .get(4)
+                            .expect(&format!(
+                                "No morphemic segmentation for line {}, word {}",
+                                line_idx + 1,
+                                i + 1
+                            ))
+                            .items
+                            .get(i);
+                        let glosses = line
+                            .rows
+                            .get(5)
+                            .expect(&format!(
+                                "No morphemic gloss for line {}, word {}",
+                                line_idx + 1,
+                                i + 1
+                            ))
+                            .items
+                            .get(i);
+                        let translation = line
+                            .rows
+                            .get(6)
+                            .expect(&format!(
+                                "No translation for line {}, word {}",
+                                line_idx + 1,
+                                i + 1
+                            ))
                             .items
                             .get(i)
                             .map(|x| x.trim().to_owned());
@@ -545,12 +573,17 @@ impl<'a> AnnotatedLine {
                                 .or_else(|| line.rows[0].items[i].find(LINE_BREAK))
                                 .map(|i| i as i32),
                             date_recorded: None,
-                            audio_track:
-                             if meta.audio_recording.is_some() // if audio file and annotation exists
-                                 && meta.audio_recording.clone().unwrap().annotations.is_some() {
-                                    Some(meta.audio_recording.clone().unwrap().annotations
-                                     .unwrap()[(word_index-1) as usize].clone())
-                             } else { None },
+                            audio_track: if meta.audio_recording.is_some() // if audio file and annotation exists
+                                 && meta.audio_recording.clone().unwrap().annotations.is_some()
+                            {
+                                Some(
+                                    meta.audio_recording.clone().unwrap().annotations.unwrap()
+                                        [(word_index - 1) as usize]
+                                        .clone(),
+                                )
+                            } else {
+                                None
+                            },
                         };
                         word_index += 1;
                         w

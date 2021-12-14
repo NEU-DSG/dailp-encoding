@@ -13,9 +13,8 @@ import {
 } from "./types"
 import theme, { hideOnPrint, std, typography, withBg } from "./theme"
 import "@reach/tooltip/styles.css"
-import {FormAudio} from "./audio-player"
-import {Howl} from 'howler';
-
+import { FormAudio } from "./audio-player"
+import { Howl } from "howler"
 
 interface Props {
   segment: GatsbyTypes.Dailp_AnnotatedSeg
@@ -29,9 +28,9 @@ interface Props {
 }
 
 /** Displays one segment of the document, which may be a word, block, or phrase. */
-export const Segment = (p: Props & {howl?: Howl}) => {
+export const Segment = (p: Props & { howl?: Howl }) => {
   if (isForm(p.segment)) {
-    return <AnnotatedForm {...p} segment={p.segment}/>
+    return <AnnotatedForm {...p} segment={p.segment} />
   } else if (isPhrase(p.segment)) {
     const children =
       p.segment.parts?.map(function (seg, i) {
@@ -105,7 +104,7 @@ function isPageBreak(
 }
 
 export const AnnotatedForm = (
-  p: Props & { segment: GatsbyTypes.FormFieldsFragment}
+  p: Props & { segment: GatsbyTypes.FormFieldsFragment }
 ) => {
   if (!p.segment.source) {
     return null

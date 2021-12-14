@@ -18,14 +18,23 @@ import { collectionRoute, documentDetailsRoute, documentRoute } from "../routes"
 import { useScrollableTabState } from "../scrollable-tabs"
 import { css, ClassNames } from "@emotion/react"
 import { DeepPartial } from "tsdef"
-import {ViewMode, BasicMorphemeSegment, tagSetForMode, PhoneticRepresentation} from "../types"
+import {
+  ViewMode,
+  BasicMorphemeSegment,
+  tagSetForMode,
+  PhoneticRepresentation,
+} from "../types"
 import { MorphemeDetails } from "../morpheme"
 import { Breadcrumbs } from "../breadcrumbs"
 import { isMobile } from "react-device-detect"
-import { ExperiencePicker, selectedMode, selectedPhonetics, PhoneticsPicker } from "../mode"
-import { DocumentAudio } from "../audio-player";
+import {
+  ExperiencePicker,
+  selectedMode,
+  selectedPhonetics,
+  PhoneticsPicker,
+} from "../mode"
+import { DocumentAudio } from "../audio-player"
 import loadable from "@loadable/component"
-
 
 const PageImages = loadable(() => import("../page-image"))
 
@@ -137,8 +146,9 @@ const WideSticky = (props: { top: string; children: any; className?: any }) => (
 
 const TranslationTab = ({ doc }) => {
   const dialog = useDialogState()
-  const [selectedMorpheme, setMorpheme] =
-    useState<BasicMorphemeSegment | null>(null)
+  const [selectedMorpheme, setMorpheme] = useState<BasicMorphemeSegment | null>(
+    null
+  )
 
   const [phoneticRepresentation, setPhoneticRepresentation] =
     useState<PhoneticRepresentation>(selectedPhonetics())
@@ -186,7 +196,8 @@ const TranslationTab = ({ doc }) => {
             tagSet={tagSet}
             translations={seg.translation as GatsbyTypes.Dailp_TranslationBlock}
             pageImages={doc.pageImages}
-           phoneticRepresentation={phoneticRepresentation}/>
+            phoneticRepresentation={phoneticRepresentation}
+          />
         ))}
         {doc.forms?.map((form, i) => (
           <AnnotatedForm
@@ -244,10 +255,14 @@ export const DocumentTitleHeader = (p: {
       )}
       {!isMobile ? <Button onClick={() => window.print()}>Print</Button> : null}
     </div>
-    {p.doc.audioRecording && // TODO Implement sticky audio bar
-      <div id="document-audio-player" css={wideAndTop && topMargin && bottomPadded}>
-        <DocumentAudio audioUrl={p.doc.audioRecording.resourceUrl}/>
-      </div>}
+    {p.doc.audioRecording && ( // TODO Implement sticky audio bar
+      <div
+        id="document-audio-player"
+        css={wideAndTop && topMargin && bottomPadded}
+      >
+        <DocumentAudio audioUrl={p.doc.audioRecording.resourceUrl} />
+      </div>
+    )}
   </header>
 )
 
