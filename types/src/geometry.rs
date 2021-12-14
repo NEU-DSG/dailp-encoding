@@ -1,7 +1,4 @@
-use {
-    crate::AnnotatedForm,
-    serde::{Deserialize, Serialize},
-};
+use serde::{Deserialize, Serialize};
 
 /// A rectangle slice of something, usually a large document image.
 ///

@@ -18,16 +18,19 @@
   outputs = inputs:
     inputs.utils.lib.eachDefaultSystem (system:
       let
-        pkgs = inputs.pkgs.legacyPackages.${system};
-        toolchain = with inputs.fenix.packages.${system};
-          combine [
-            minimal.rustc
-            minimal.cargo
-            targets.x86_64-unknown-linux-musl.latest.rust-std
-          ];
+        pkgs = import inputs.pkgs {
+          inherit system;
+          config.allowUnfree = true;
+        };
+        fenix = inputs.fenix.packages.${system};
+        toolchainFile = {
+          file = ./rust-toolchain.toml;
+          sha256 = "6PfBjfCI9DaNRyGigEmuUP2pcamWsWGc4g7SNEHqD2c=";
+        };
+        rust-toolchain = fenix.fromToolchainFile toolchainFile;
         naersk = inputs.naersk.lib.${system}.override {
-          cargo = toolchain;
-          rustc = toolchain;
+          cargo = rust-toolchain;
+          rustc = rust-toolchain;
         };
         filter = inputs.nix-filter.lib;
         # The rust compiler is internally a cross compiler, so a single
@@ -61,7 +64,8 @@
 
             # Enables static compilation.
             # ref: https://github.com/rust-lang/rust/issues/79624#issuecomment-737415388
-            CARGO_BUILD_RUSTFLAGS = if target == null then "" else "-C target-feature=+crt-static";
+            CARGO_BUILD_RUSTFLAGS =
+              if target == null then "" else "-C target-feature=+crt-static";
           };
         nativePackage = rustPackage null;
         muslPackage = rustPackage "x86_64-unknown-linux-musl";
@@ -92,6 +96,12 @@
           executable = false;
           destination = "/config.tf.json";
         };
+        mkBashApp = name: script:
+          inputs.utils.lib.mkApp {
+            drv = pkgs.writers.writeBashBin name script;
+            exePath = "/bin/${name}";
+          };
+        tf = "${pkgs.terraform}/bin/terraform";
       in rec {
         defaultPackage = with pkgs;
           stdenv.mkDerivation {
@@ -117,6 +127,21 @@
           exePath = "/bin/dailp-graphql-local";
         };
 
+        apps.tf-plan = mkBashApp "plan" ''
+          ${tf} init ${defaultPackage}
+          ${tf} plan ${defaultPackage}
+        '';
+
+        apps.tf-apply = mkBashApp "apply" ''
+          ${tf} init ${defaultPackage}
+          ${tf} apply ${defaultPackage}
+        '';
+
+        apps.tf-apply-now = mkBashApp "apply-now" ''
+          ${tf} init ${defaultPackage}
+          ${tf} apply -auto-approve ${defaultPackage}
+        '';
+
         devShell = with pkgs;
           stdenv.mkDerivation rec {
             name = "dailp-dev";
@@ -130,21 +155,29 @@
               file
               nasm
               terraform
-              (writers.writeBashBin "plan" ''
-                terraform init ${defaultPackage}
-                terraform plan ${defaultPackage}
+              rust-toolchain
+              yarn
+              mongodb-4_2
+              (writers.writeBashBin "dev-database" ''
+                mkdir -p .mongo
+                mongod --dbpath .mongo
               '')
-              (writers.writeBashBin "apply" ''
-                terraform init ${defaultPackage}
-                terraform apply ${defaultPackage}
+              (writers.writeBashBin "dev-graphql" ''
+                cargo run --bin dailp-graphql-local
               '')
-              (writers.writeBashBin "apply-now" ''
-                terraform init ${defaultPackage}
-                terraform apply -auto-approve ${defaultPackage}
+              (writers.writeBashBin "dev-migrate" ''
+                cargo run --bin dailp-migration
+              '')
+              (writers.writeBashBin "dev-website" ''
+                cd website
+                yarn start
               '')
               (writers.writeBashBin "output" ''
                 terraform output $1
               '')
+            ] ++ lib.optionals stdenv.isDarwin [
+              darwin.apple_sdk.frameworks.Security
+              libiconv
             ];
           };
       });

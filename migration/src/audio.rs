@@ -1,13 +1,13 @@
-use dailp::{DocumentAudioId, AudioSlice};
-use serde::{Deserialize, Serialize};
+use dailp::{AudioSlice, DocumentAudioId};
 use reqwest::Client;
+use serde::{Deserialize, Serialize};
 
 extern crate pretty_env_logger;
 
-use log::{error, info};
-use std::collections::{HashSet, HashMap};
-use serde_json::Value;
 use itertools::Itertools;
+use log::{error, info};
+use serde_json::Value;
+use std::collections::{HashMap, HashSet};
 
 /// The string ID for a DRS item, usu. prefixed with "neu:"
 #[derive(Serialize, Deserialize, Clone, Debug)]

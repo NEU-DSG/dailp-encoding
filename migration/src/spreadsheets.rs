@@ -152,7 +152,7 @@ impl SheetResult {
                 // Skip page ref.
                 let page_number = root_values.next()?;
                 let mut form_values = root_values;
-                let date = Date::new(chrono::NaiveDate::from_ymd(year, 1, 1));
+                let date = Date::from_ymd(year, 1, 1);
                 let position = PositionInDocument::new(
                     dailp::DocumentId(doc_id.to_string()),
                     page_number,
@@ -220,7 +220,7 @@ impl SheetResult {
                     let root_gloss = root_values.next()?;
                     // Skip page ref and category.
                     let mut form_values = root_values.skip(after_root);
-                    let date = Date::new(chrono::NaiveDate::from_ymd(year, 1, 1));
+                    let date = Date::from_ymd(year, 1, 1);
                     let position = PositionInDocument::new(
                         dailp::DocumentId(doc_id.to_owned()),
                         page_number?,

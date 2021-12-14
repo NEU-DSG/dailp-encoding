@@ -1,10 +1,11 @@
 mod query;
 use {
-    async_graphql::{
+    dailp::async_graphql::{
         dataloader::DataLoader,
         http::{playground_source, GraphQLPlaygroundConfig},
         EmptySubscription, Schema,
     },
+    log::info,
     tide::{http::mime, Body, Response, StatusCode},
 };
 
@@ -16,7 +17,7 @@ async fn main() -> tide::Result<()> {
 
     // create schema
     let schema = Schema::build(query::Query, query::Mutation, EmptySubscription)
-        .data(dailp::Database::new().unwrap())
+        .data(dailp::Database::new().expect("Failed to initialize database"))
         .data(DataLoader::new(dailp::Database::new().unwrap()))
         .finish();
 
@@ -36,5 +37,6 @@ async fn main() -> tide::Result<()> {
             .build())
     });
 
+    info!("Listening on port 8080");
     Ok(app.listen("127.0.0.1:8080").await?)
 }

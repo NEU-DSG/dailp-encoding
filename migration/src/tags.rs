@@ -70,11 +70,11 @@ async fn migrate_glossary_metadata(sheet_id: &str) -> Result<()> {
                 meta: dailp::DocumentMetadata {
                     id: dailp::DocumentId(values.next()?.pop()?),
                     title: values.next()?.pop()?,
-                    date: Some(dailp::Date(chrono::NaiveDate::from_ymd(
+                    date: Some(dailp::Date::from_ymd(
                         values.next()?.pop()?.parse().unwrap(),
                         1,
                         1,
-                    ))),
+                    )),
                     contributors: values
                         .next()?
                         .into_iter()
