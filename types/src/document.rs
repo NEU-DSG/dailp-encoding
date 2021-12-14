@@ -1,5 +1,6 @@
 use crate::{
-    AnnotatedForm, Contributor, Database, Date, AudioSlice, SourceAttribution, Translation, TranslationBlock,
+    AnnotatedForm, AudioSlice, Contributor, Database, Date, SourceAttribution, Translation,
+    TranslationBlock,
 };
 use async_graphql::{dataloader::DataLoader, FieldResult};
 use serde::{Deserialize, Serialize};
@@ -17,7 +18,9 @@ impl AnnotatedDoc {
         // Skip the first block of the translation, since this usually contains
         // the header and information for translators and editors.
         let mut block_index = 1;
-        let blocks = &meta.translation.as_ref()
+        let blocks = &meta
+            .translation
+            .as_ref()
             .expect(&format!("Missing translation for {}", meta.id.0))
             .blocks;
         for seg in segments {

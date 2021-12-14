@@ -280,7 +280,7 @@ pub fn seg_verb_surface_form(
         line_break: None,
         page_break: None,
         date_recorded: Some(date.clone()),
-        audio_track: None
+        audio_track: None,
     })
 }
 
@@ -391,7 +391,7 @@ pub fn root_verb_surface_form(
         line_break: None,
         page_break: None,
         date_recorded: Some(date.clone()),
-        audio_track: None
+        audio_track: None,
     })
 }
 
@@ -470,7 +470,7 @@ pub fn root_noun_surface_form(
         line_break: None,
         page_break: None,
         date_recorded: Some(date.clone()),
-        audio_track: None
+        audio_track: None,
     })
 }
 
@@ -877,8 +877,7 @@ pub fn simple_phonetics_to_worcester(input: &str) -> String {
     };
     // Convert the t/th consonants to d/t
     lazy_static! {
-        static ref TTH_PATTERN: Regex =
-            Regex::new(r"(gw|kw|j|ʔ|:)").unwrap();
+        static ref TTH_PATTERN: Regex = Regex::new(r"(gw|kw|j|ʔ|:)").unwrap();
     }
     let result = TTH_PATTERN.replace_all(input, |cap: &Captures| match &cap[0] {
         "gw" | "kw" => "qu",
