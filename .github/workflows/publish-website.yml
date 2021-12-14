@@ -51,5 +51,5 @@ jobs:
           cp -f ./result/config.tf.json ./config.tf.json
       - name: Publish website
         run: |
-          nix develop --impure --command plan
+          nix run --impure .#tf-plan
           curl -X POST -d {} "$(nix develop --impure --command output amplify_webhook)" -H "Content-Type:application/json"
