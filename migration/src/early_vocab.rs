@@ -75,9 +75,7 @@ async fn parse_early_vocab(
     let doc_id = meta.next().unwrap().pop().unwrap();
     let title = meta.next().unwrap().pop().unwrap();
     let year = meta.next().unwrap().pop().unwrap().parse::<i32>();
-    let date_recorded = year
-        .ok()
-        .map(|year| Date::new(chrono::NaiveDate::from_ymd(year, 1, 1)));
+    let date_recorded = year.ok().map(|year| Date::from_ymd(year, 1, 1));
     let authors = meta.next().unwrap_or_default();
     let meta = DocumentMetadata {
         id: dailp::DocumentId(doc_id),

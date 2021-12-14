@@ -7,6 +7,9 @@ impl Date {
     pub fn new(internal: chrono::NaiveDate) -> Self {
         Self(internal)
     }
+    pub fn from_ymd(year: i32, month: u32, day: u32) -> Self {
+        Self::new(chrono::NaiveDate::from_ymd(year, month, day))
+    }
     pub fn parse(s: &str) -> Result<Self, chrono::ParseError> {
         chrono::NaiveDate::parse_from_str(s, "%Y-%m-%d").map(Self)
     }

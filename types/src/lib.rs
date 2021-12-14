@@ -35,6 +35,9 @@ mod tag;
 mod translation;
 mod audio;
 
+// Re-export dependencies for downstream to use.
+pub use async_graphql;
+pub use chrono;
 pub use database::*;
 pub use date::*;
 pub use document::*;

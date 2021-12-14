@@ -105,7 +105,7 @@ impl Database {
     }
 
     pub async fn all_collections(&self) -> Result<Vec<DocumentCollection>> {
-        let coll: mongodb::Collection = self.client.collection(Self::DOCUMENTS);
+        let coll = self.client.collection::<AnnotatedDoc>(Self::DOCUMENTS);
         Ok(coll
             // Only show non-reference collections in the list.
             .distinct("collection", bson::doc! { "isReference": false }, None)
@@ -165,7 +165,7 @@ impl Database {
 
     /// The number of words that belong to the given document ID.
     pub async fn count_words_in_document(&self, doc_id: &DocumentId) -> Result<u64> {
-        let coll: mongodb::Collection = self.client.collection(Self::WORDS);
+        let coll = self.client.collection::<AnnotatedForm>(Self::WORDS);
         Ok(coll
             .count_documents(
                 bson::doc! { "position.documentId": bson::to_bson(doc_id)? },
@@ -229,7 +229,9 @@ impl Database {
     }
 
     pub async fn connected_forms(&self, morpheme: &MorphemeId) -> Result<Vec<AnnotatedForm>> {
-        let col: mongodb::Collection = self.client.collection(Self::CONNECTIONS);
+        let col = self
+            .client
+            .collection::<LexicalConnection>(Self::CONNECTIONS);
         let morpheme = bson::to_bson(morpheme)?;
 
         // Find the connections starting from this entry.
@@ -257,16 +259,15 @@ impl Database {
     }
 
     async fn exact_connections(&self, morpheme: &MorphemeId) -> Result<Vec<MorphemeId>> {
-        let col: mongodb::Collection = self.client.collection(Self::CONNECTIONS);
+        let col = self
+            .client
+            .collection::<LexicalConnection>(Self::CONNECTIONS);
         let morpheme = bson::to_bson(morpheme)?;
 
         // Find the connections containing this entry.
         let froms = col.find(bson::doc! { "links": &morpheme }, None).await?;
 
-        let froms = froms.filter_map(|doc| {
-            doc.ok()
-                .and_then(|doc| bson::from_document::<LexicalConnection>(doc).ok())
-        });
+        let froms = froms.filter_map(|doc| doc.ok());
 
         Ok(froms
             .collect::<Vec<_>>()
@@ -302,7 +303,9 @@ impl Database {
     }
 
     async fn graph_connections(&self, id: &MorphemeId) -> Result<HashSet<MorphemeId>> {
-        let col: mongodb::Collection = self.client.collection(Self::CONNECTIONS);
+        let col = self
+            .client
+            .collection::<LexicalConnection>(Self::CONNECTIONS);
         let morpheme = if let Some(doc_id) = &id.document_id {
             let doc_id = bson::to_bson(doc_id)?;
             if let Some(index) = id.index {
@@ -355,7 +358,7 @@ impl Database {
                 bson::doc! { "$match": { "_id": bson::to_bson(doc_id)? } },
             );
         }
-        let coll: mongodb::Collection = self.client.collection(Self::DOCUMENTS);
+        let coll = self.client.collection::<AnnotatedDoc>(Self::DOCUMENTS);
         coll.aggregate(steps, None)
             .await?
             .map::<Result<_>, _>(|d| Ok(bson::from_document(d?)?))
@@ -391,7 +394,7 @@ impl Database {
         use itertools::Itertools;
 
         let dictionary_words = self.surface_forms(morpheme);
-        let documents: mongodb::Collection = self.client.collection(Self::DOCUMENTS);
+        let documents = self.client.collection::<AnnotatedDoc>(Self::DOCUMENTS);
         let mut steps = vec![
             bson::doc! { "$unwind": "$segments" },
             bson::doc! { "$replaceRoot": { "newRoot": "$segments.source" } },
@@ -510,7 +513,7 @@ impl Database {
 }
 
 pub struct PagesDb {
-    conn: mongodb::Collection,
+    conn: mongodb::Collection<crate::page::Page>,
 }
 impl PagesDb {
     pub async fn update(&self, page: crate::page::Page) -> Result<()> {
@@ -521,14 +524,14 @@ impl PagesDb {
         self.conn
             .find(None, None)
             .await?
-            .map::<Result<crate::page::Page>, _>(|doc| Ok(bson::from_document(doc?)?))
+            .map(|doc| Ok(doc?))
             .collect()
             .await
     }
 }
 
 pub struct AnnotationsDb {
-    conn: mongodb::Collection,
+    conn: mongodb::Collection<annotation::Annotation>,
 }
 impl AnnotationsDb {
     pub async fn on_document(
@@ -546,7 +549,7 @@ impl AnnotationsDb {
                 None,
             )
             .await?
-            .map::<Result<_>, _>(|d| Ok(bson::from_document(d?)?))
+            .map(|d| Ok(d?))
             .collect()
             .await
     }
@@ -636,21 +639,22 @@ impl Loader<PageId> for Database {
 }
 
 async fn find_all_keys<T>(
-    col: mongodb::Collection,
+    col: mongodb::Collection<T>,
     keys: Vec<&str>,
 ) -> Result<Vec<T>, mongodb::error::Error>
 where
     T: for<'de> serde::Deserialize<'de>,
+    T: Send + Sync + Unpin,
 {
     Ok(col
         .find(bson::doc! { "_id": { "$in": keys } }, None)
         .await?
-        .filter_map(|doc| bson::from_document(doc.unwrap()).ok())
+        .filter_map(|doc| doc.ok())
         .collect()
         .await)
 }
 
-async fn upsert_one<T, K>(conn: &mongodb::Collection, id: &K, item: &T) -> Result<()>
+async fn upsert_one<T, K>(conn: &mongodb::Collection<T>, id: &K, item: &T) -> Result<()>
 where
     K: Serialize,
     T: Serialize,
