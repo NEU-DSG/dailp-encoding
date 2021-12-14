@@ -138,18 +138,18 @@
         };
 
         apps.tf-plan = mkBashApp "plan" ''
-          ${tf} init ${defaultPackage}
-          ${tf} plan ${defaultPackage}
+          ${tf} -chdir=${defaultPackage} init
+          ${tf} -chdir=${defaultPackage} plan
         '';
 
         apps.tf-apply = mkBashApp "apply" ''
-          ${tf} init ${defaultPackage}
-          ${tf} apply ${defaultPackage}
+          ${tf} -chdir=${defaultPackage} init
+          ${tf} -chdir=${defaultPackage} apply
         '';
 
         apps.tf-apply-now = mkBashApp "apply-now" ''
-          ${tf} init ${defaultPackage}
-          ${tf} apply -auto-approve ${defaultPackage}
+          ${tf} -chdir=${defaultPackage} init
+          ${tf} -chdir=${defaultPackage} apply -auto-approve
         '';
 
         devShell = with pkgs;
