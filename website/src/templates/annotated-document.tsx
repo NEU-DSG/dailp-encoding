@@ -382,6 +382,7 @@ export const query = graphql`
   fragment FormFields on Dailp_AnnotatedForm {
     index
     source
+    romanizedSource
     simplePhonetics
     phonemic
     segments {
