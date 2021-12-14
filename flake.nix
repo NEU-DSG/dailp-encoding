@@ -103,6 +103,16 @@
           };
         tf = "${pkgs.terraform}/bin/terraform";
       in rec {
+        # Add extra binary caches for quicker builds of the rust toolchain and MongoDB.
+        nixConfig = {
+          binaryCaches =
+            [ "https://nix-community.cachix.org" "https://dailp.cachix.org" ];
+          binaryCachePublicKeys = [
+            "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
+            "dailp.cachix.org-1:QKIYFfTB/jrD6J8wZoBEpML64ONrIxs3X5ifSKoJ3kA="
+          ];
+        };
+
         defaultPackage = with pkgs;
           stdenv.mkDerivation {
             name = "dailp";
