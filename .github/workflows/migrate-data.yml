@@ -50,7 +50,7 @@ jobs:
           cp -f ./result/config.tf.json ./config.tf.json
       - name: Migrate data to MongoDB
         run: |
-          nix develop --impure --command plan
+          nix run --impure .#tf-plan
           export DAILP_API_URL=$(nix develop --impure --command output functions_url)
           nix run .#migrate-data -L
       - name: Publish website
