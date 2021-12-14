@@ -101,18 +101,6 @@
             drv = pkgs.writers.writeBashBin name script;
             exePath = "/bin/${name}";
           };
-        tf = "${pkgs.terraform}/bin/terraform";
-      in rec {
-        # Add extra binary caches for quicker builds of the rust toolchain and MongoDB.
-        nixConfig = {
-          binaryCaches =
-            [ "https://nix-community.cachix.org" "https://dailp.cachix.org" ];
-          binaryCachePublicKeys = [
-            "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
-            "dailp.cachix.org-1:QKIYFfTB/jrD6J8wZoBEpML64ONrIxs3X5ifSKoJ3kA="
-          ];
-        };
-
         defaultPackage = with pkgs;
           stdenv.mkDerivation {
             name = "dailp";
@@ -126,6 +114,23 @@
               cp -f ${terraformConfig}/config.tf.json $out/
             '';
           };
+        tf = "${pkgs.terraform}/bin/terraform";
+        tfInit = ''
+          export TF_DATA_DIR=$(pwd)/.terraform
+          ${tf} -chdir=${defaultPackage} init
+        '';
+      in rec {
+        # Add extra binary caches for quicker builds of the rust toolchain and MongoDB.
+        nixConfig = {
+          binaryCaches =
+            [ "https://nix-community.cachix.org" "https://dailp.cachix.org" ];
+          binaryCachePublicKeys = [
+            "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
+            "dailp.cachix.org-1:QKIYFfTB/jrD6J8wZoBEpML64ONrIxs3X5ifSKoJ3kA="
+          ];
+        };
+
+        inherit defaultPackage;
 
         apps.migrate-data = inputs.utils.lib.mkApp {
           drv = nativePackage;
@@ -138,17 +143,17 @@
         };
 
         apps.tf-plan = mkBashApp "plan" ''
-          ${tf} -chdir=${defaultPackage} init
+          ${tfInit}
           ${tf} -chdir=${defaultPackage} plan
         '';
 
         apps.tf-apply = mkBashApp "apply" ''
-          ${tf} -chdir=${defaultPackage} init
+          ${tfInit}
           ${tf} -chdir=${defaultPackage} apply
         '';
 
         apps.tf-apply-now = mkBashApp "apply-now" ''
-          ${tf} -chdir=${defaultPackage} init
+          ${tfInit}
           ${tf} -chdir=${defaultPackage} apply -auto-approve
         '';
 
