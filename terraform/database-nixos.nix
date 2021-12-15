@@ -3,8 +3,8 @@
 let
   inherit (builtins) map filter getEnv replaceStrings toJSON toString;
   inherit (lib) mkMerge concatStringsSep imap0;
-  terraform_nixos_repo = "https://github.com/tomferon/terraform-nixos.git";
-  terraform_nixos_ref = "caa6191b952f8c92a097a67fc21200e2927e3d10";
+  terraform_nixos_repo = "https://github.com/tweag/terraform-nixos.git";
+  terraform_nixos_ref = "646cacb12439ca477c05315a7bfd49e9832bc4e3";
   toKebabCase = s: replaceStrings [ "_" ] [ "-" ] s;
 in {
   options.servers.mongodb = with lib;
