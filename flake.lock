@@ -56,6 +56,22 @@
         "type": "github"
       }
     },
+    "nixpkgs-server": {
+      "locked": {
+        "lastModified": 1603791972,
+        "narHash": "sha256-nj2SvACFH+NERpye1kudcuygCcvnsZYv26M2+wgM5vE=",
+        "owner": "nixos",
+        "repo": "nixpkgs",
+        "rev": "cd63096d6d887d689543a0b97743d28995bc9bc3",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nixos",
+        "repo": "nixpkgs",
+        "rev": "cd63096d6d887d689543a0b97743d28995bc9bc3",
+        "type": "github"
+      }
+    },
     "pkgs": {
       "locked": {
         "lastModified": 1639347265,
@@ -77,6 +93,7 @@
         "fenix": "fenix",
         "naersk": "naersk",
         "nix-filter": "nix-filter",
+        "nixpkgs-server": "nixpkgs-server",
         "pkgs": "pkgs",
         "utils": "utils"
       }

@@ -1,6 +1,9 @@
 {
   inputs = {
     pkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    # Lock a version of nixpkgs that matches our MongoDB instances.
+    nixpkgs-server.url =
+      "github:nixos/nixpkgs/cd63096d6d887d689543a0b97743d28995bc9bc3";
     utils.url = "github:numtide/flake-utils";
     # Provides cargo dependencies.
     fenix = {
@@ -19,6 +22,10 @@
     inputs.utils.lib.eachDefaultSystem (system:
       let
         pkgs = import inputs.pkgs {
+          inherit system;
+          config.allowUnfree = true;
+        };
+        nixpkgs-server = import inputs.nixpkgs-server {
           inherit system;
           config.allowUnfree = true;
         };
@@ -116,8 +123,9 @@
           };
         tf = "${pkgs.terraform}/bin/terraform";
         tfInit = ''
+          cp -f ${terraformConfig}/config.tf.json ./
           export TF_DATA_DIR=$(pwd)/.terraform
-          ${tf} -chdir=${defaultPackage} init
+          ${tf} init
         '';
       in rec {
         # Add extra binary caches for quicker builds of the rust toolchain and MongoDB.
@@ -144,17 +152,21 @@
 
         apps.tf-plan = mkBashApp "plan" ''
           ${tfInit}
-          ${tf} -chdir=${defaultPackage} plan
+          ${tf} plan
         '';
 
         apps.tf-apply = mkBashApp "apply" ''
           ${tfInit}
-          ${tf} -chdir=${defaultPackage} apply
+          ${tf} apply
         '';
 
         apps.tf-apply-now = mkBashApp "apply-now" ''
           ${tfInit}
-          ${tf} -chdir=${defaultPackage} apply -auto-approve
+          ${tf} apply -auto-approve
+        '';
+
+        apps.tf-shell = mkBashApp "tf-shell" ''
+          ${tfInit}
         '';
 
         devShell = with pkgs;
@@ -173,7 +185,7 @@
               rust-toolchain
               nodejs-14_x
               yarn
-              mongodb-4_2
+              nixpkgs-server.mongodb-4_2
               (writers.writeBashBin "dev-database" ''
                 mkdir -p .mongo
                 mongod --dbpath .mongo
