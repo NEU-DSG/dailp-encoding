@@ -103,6 +103,8 @@ with builtins; {
         stage = stageName;
         enable_auto_build = false;
         enable_pull_request_preview = true;
+        framework = "Web";
+        description = "Primary Deployment Branch";
       };
     };
 

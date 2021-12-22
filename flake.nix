@@ -1,9 +1,8 @@
 {
   inputs = {
-    pkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    pkgs.url = "github:nixos/nixpkgs/nixos-21.11";
     # Lock a version of nixpkgs that matches our MongoDB instances.
-    nixpkgs-server.url =
-      "github:nixos/nixpkgs/cd63096d6d887d689543a0b97743d28995bc9bc3";
+    nixpkgs-server.url = "github:nixos/nixpkgs/nixos-21.05";
     utils.url = "github:numtide/flake-utils";
     # Provides cargo dependencies.
     fenix = {
@@ -40,42 +39,45 @@
           rustc = rust-toolchain;
         };
         filter = inputs.nix-filter.lib;
+        packageSrc = filter.filter {
+          root = ./.;
+          include = [
+            (filter.inDirectory "types")
+            (filter.inDirectory "graphql")
+            (filter.inDirectory "migration")
+            ./Cargo.toml
+            ./Cargo.lock
+            ./rust-toolchain
+          ];
+        };
         # The rust compiler is internally a cross compiler, so a single
         # toolchain can be used to compile multiple targets. In a hermetic
         # build system like nix flakes, there's effectively one package for
         # every permutation of the supported hosts and targets.
-        rustPackage = target:
-          naersk.buildPackage {
-            root = ./.;
-            src = filter.filter {
-              root = ./.;
-              include = [
-                (filter.inDirectory "types")
-                (filter.inDirectory "graphql")
-                (filter.inDirectory "migration")
-                ./Cargo.toml
-                ./Cargo.lock
-                ./rust-toolchain
-              ];
-            };
-            # Make sure `cargo check` and `cargo test` pass.
-            doCheck = true;
-            doTest = true;
-
-            # Prefer static linking
-            nativeBuildInputs = with pkgs; [ pkgsStatic.stdenv.cc ];
-
-            # Configures the target which will be built.
-            # ref: https://doc.rust-lang.org/cargo/reference/config.html#buildtarget
-            CARGO_BUILD_TARGET = target;
-
-            # Enables static compilation.
-            # ref: https://github.com/rust-lang/rust/issues/79624#issuecomment-737415388
-            CARGO_BUILD_RUSTFLAGS =
-              if target == null then "" else "-C target-feature=+crt-static";
+        targetPackage = let
+          target = "x86_64-unknown-linux-gnu";
+          pkgsCross = import inputs.pkgs {
+            inherit system;
+            crossSystem.config = target;
           };
-        nativePackage = rustPackage null;
-        muslPackage = rustPackage "x86_64-unknown-linux-musl";
+        in naersk.buildPackage {
+          root = ./.;
+          src = packageSrc;
+          doCheck = false;
+
+          # Configures the target which will be built.
+          # ref: https://doc.rust-lang.org/cargo/reference/config.html#buildtarget
+          CARGO_BUILD_TARGET = target;
+          CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_LINKER = if target == null then
+            null
+          else
+            "${pkgsCross.stdenv.cc}/bin/${target}-gcc";
+          TARGET_CC = "${pkgsCross.stdenv.cc}/bin/${target}-gcc";
+        };
+        hostPackage = naersk.buildPackage {
+          root = ./.;
+          src = packageSrc;
+        };
         dailpFunctions = with pkgs;
           stdenv.mkDerivation {
             name = "dailp-functions";
@@ -84,7 +86,7 @@
             unpackPhase = "true";
             installPhase = ''
               mkdir -p $out
-              cp -f ${muslPackage}/bin/dailp-graphql $out/bootstrap
+              cp -f ${targetPackage}/bin/dailp-graphql $out/bootstrap
               zip -j $out/dailp-graphql.zip $out/bootstrap
             '';
           };
@@ -108,19 +110,6 @@
             drv = pkgs.writers.writeBashBin name script;
             exePath = "/bin/${name}";
           };
-        defaultPackage = with pkgs;
-          stdenv.mkDerivation {
-            name = "dailp";
-            src = filter.filter {
-              root = ./.;
-              include =
-                [ (filter.inDirectory "terraform") ./aws-certificate.pem ];
-            };
-            installPhase = ''
-              mkdir -p $out
-              cp -f ${terraformConfig}/config.tf.json $out/
-            '';
-          };
         tf = "${pkgs.terraform}/bin/terraform";
         tfInit = ''
           cp -f ${terraformConfig}/config.tf.json ./
@@ -138,16 +127,9 @@
           ];
         };
 
-        inherit defaultPackage;
-
         apps.migrate-data = inputs.utils.lib.mkApp {
-          drv = nativePackage;
+          drv = hostPackage;
           exePath = "/bin/dailp-migration";
-        };
-
-        apps.graphql = inputs.utils.lib.mkApp {
-          drv = nativePackage;
-          exePath = "/bin/dailp-graphql-local";
         };
 
         apps.tf-plan = mkBashApp "plan" ''
@@ -165,7 +147,7 @@
           ${tf} apply -auto-approve
         '';
 
-        apps.tf-shell = mkBashApp "tf-shell" ''
+        apps.tf-init = mkBashApp "tf-init" ''
           ${tfInit}
         '';
 
@@ -191,10 +173,10 @@
                 mongod --dbpath .mongo
               '')
               (writers.writeBashBin "dev-graphql" ''
-                cargo run --bin dailp-graphql-local
+                RUST_LOG=info cargo run --bin dailp-graphql-local
               '')
               (writers.writeBashBin "dev-migrate" ''
-                cargo run --bin dailp-migration
+                RUST_LOG=info cargo run --bin dailp-migration
               '')
               (writers.writeBashBin "dev-website" ''
                 cd website
@@ -206,6 +188,7 @@
             ] ++ lib.optionals stdenv.isDarwin [
               darwin.apple_sdk.frameworks.Security
               libiconv
+              stdenv.cc
             ];
           };
       });
