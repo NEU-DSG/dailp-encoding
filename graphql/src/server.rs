@@ -6,7 +6,6 @@ use {
         http::{playground_source, GraphQLPlaygroundConfig},
         EmptySubscription, Schema,
     },
-    log::info,
     tide::{
         http::headers::HeaderValue,
         http::mime,
@@ -50,6 +49,5 @@ async fn main() -> tide::Result<()> {
             .build())
     });
 
-    info!("Listening on port 8080");
     Ok(app.listen("127.0.0.1:8080").await?)
 }
