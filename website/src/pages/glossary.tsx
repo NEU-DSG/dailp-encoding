@@ -1,17 +1,18 @@
 import React, { useState } from "react"
-import { graphql } from "gatsby"
+import Link from "next/link"
 import { css } from "@emotion/react"
 import { groupBy } from "lodash"
 import pluralize from "pluralize"
-import { AnchorLink } from "gatsby-plugin-anchor-links"
 import theme, { fullWidth, std, typography } from "../theme"
 import Layout from "../layout"
 import { TagSetPicker } from "../mode"
 import { morphemeDisplayTag, TagSet } from "../types"
 import { glossarySectionId, morphemeTagId } from "../routes"
+import * as Dailp from "src/graphql/dailp"
 
-const GlossaryPage = (p: { data: GatsbyTypes.GlossaryQuery }) => {
-  const tags = p.data.dailp.allTags
+const GlossaryPage = () => {
+  const [{ data }] = Dailp.useGlossaryQuery()
+  const tags = data?.allTags
   // Group the tags by type.
   const groupedTags = groupBy(tags, (t) => t.morphemeType)
   const [tagSet, setTagSet] = useState<TagSet>(null)
@@ -35,9 +36,9 @@ const GlossaryPage = (p: { data: GatsbyTypes.GlossaryQuery }) => {
             ([ty]) =>
               ty && (
                 <li>
-                  <AnchorLink to={`#${glossarySectionId(ty)}`}>
+                  <Link href={`#${glossarySectionId(ty)}`}>
                     {pluralize(ty)}
-                  </AnchorLink>
+                  </Link>
                 </li>
               )
           )}
@@ -73,32 +74,6 @@ const GlossaryPage = (p: { data: GatsbyTypes.GlossaryQuery }) => {
   )
 }
 export default GlossaryPage
-
-export const query = graphql`
-  query Glossary {
-    dailp {
-      allTags {
-        id
-        crg {
-          tag
-          title
-          definition
-        }
-        taoc {
-          tag
-          title
-          definition
-        }
-        learner {
-          tag
-          title
-          definition
-        }
-        morphemeType
-      }
-    }
-  }
-`
 
 const wide = css`
   ${fullWidth};

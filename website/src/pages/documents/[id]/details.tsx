@@ -1,13 +1,15 @@
 import React from "react"
-import { graphql } from "gatsby"
-import Layout from "../layout"
+import Layout from "src/layout"
 import { Helmet } from "react-helmet"
-import { DocumentTitleHeader } from "./annotated-document"
+import { DocumentTitleHeader } from "src/pages/documents/[id]"
 import { css } from "@emotion/react"
-import { fullWidth } from "../theme"
+import { fullWidth } from "src/theme"
+import * as Dailp from "src/graphql/dailp"
+import { getStaticQueriesNew } from "src/graphql"
 
-const DocumentDetails = (p: { data: GatsbyTypes.DocumentDetailsQuery }) => {
-  const doc = p.data.dailp.document!
+const DocumentDetails = ({ id }) => {
+  const [{ data }] = Dailp.useDocumentDetailsQuery({ variables: { id } })
+  const doc = data.document
   return (
     <Layout>
       <main>
@@ -37,32 +39,13 @@ const DocumentDetails = (p: { data: GatsbyTypes.DocumentDetailsQuery }) => {
 }
 export default DocumentDetails
 
-export const query = graphql`
-  query DocumentDetails($id: String!) {
-    dailp {
-      document(id: $id) {
-        id
-        slug
-        title
-        collection {
-          name
-          slug
-        }
-        date {
-          year
-        }
-        contributors {
-          name
-          role
-        }
-        sources {
-          name
-          link
-        }
-      }
-    }
-  }
-`
+export const getStaticProps = getStaticQueriesNew(async (params, dailp, wp) => {
+  const id = params.id.toUpperCase()
+  await dailp.query(Dailp.DocumentDetailsDocument, { id }).toPromise()
+  return { id }
+})
+
+export { getStaticPaths } from "../[id]"
 
 const wideSection = css`
   ${fullWidth}

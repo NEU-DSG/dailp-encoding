@@ -1,11 +1,11 @@
 import React, { useState, useRef } from "react"
-import { useQuery, gql } from "@apollo/client"
 import { css } from "@emotion/react"
 import { Input } from "reakit/Input"
 import { Button } from "reakit/Button"
 import { fullWidth, typography } from "../theme"
 import { groupBy, uniq } from "lodash"
 import Layout from "../layout"
+import * as Dailp from "src/graphql/dailp"
 
 const TimelinePage = () => {
   const staticMorphemeId = useRef("")
@@ -29,11 +29,11 @@ const TimelinePage = () => {
 export default TimelinePage
 
 const Timeline = (p: { gloss: string }) => {
-  const timeline = useQuery(query, {
+  const [timeline] = Dailp.useTimelineQuery({
     variables: { gloss: p.gloss },
-    skip: !p.gloss,
+    pause: !p.gloss,
   })
-  if (timeline.loading || !timeline.data) {
+  if (timeline.fetching || !timeline.data) {
     return <>Loading...</>
   }
   if (timeline.error) {
@@ -121,26 +121,5 @@ export const wordRow = css`
   margin-bottom: ${typography.rhythm(0.5)};
   & > * {
     width: 10rem;
-  }
-`
-
-const query = gql`
-  query Timeline($gloss: String!) {
-    morphemeTimeClusters(gloss: $gloss, clusterYears: 50) {
-      start {
-        year
-      }
-      end {
-        year
-      }
-      forms {
-        source
-        normalizedSource
-        simplePhonetics
-        phonemic
-        documentId
-        englishGloss
-      }
-    }
   }
 `

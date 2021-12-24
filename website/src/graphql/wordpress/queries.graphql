@@ -1,0 +1,34 @@
+query Page($slug: String!) {
+  pages(where: { name: $slug }) {
+    nodes {
+      title
+      content
+    }
+  }
+}
+
+query PageIndex {
+  pages(where: { status: PUBLISH }) {
+    nodes {
+      id
+      slug
+      link
+      status
+    }
+  }
+}
+
+query MainMenu {
+  menuItems(where: { parentId: 1 }) {
+    nodes {
+      label
+      path
+      childItems {
+        nodes {
+          label
+          path
+        }
+      }
+    }
+  }
+}

@@ -1,19 +1,10 @@
 import React from "react"
 import { css } from "@emotion/react"
-import { useStaticQuery, graphql } from "gatsby"
 import theme, { fullWidth, hideOnPrint, wordpressUrl } from "./theme"
 import { FaGithub } from "react-icons/fa"
 
 /** University affiliation, related navigation links, and contact info.  */
 const Footer = () => {
-  const data = useStaticQuery(graphql`
-    query {
-      currentBuildDate {
-        currentDate
-      }
-    }
-  `)
-
   return (
     <footer css={hideOnPrint}>
       <div css={[light, container]}>
@@ -41,9 +32,7 @@ const Footer = () => {
             Browse the source code
           </a>
         </div>
-        <div css={content}>
-          Last Updated on {data.currentBuildDate.currentDate}
-        </div>
+        <div css={content}>Last Updated on</div>
       </div>
     </footer>
   )

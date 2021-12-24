@@ -1,0 +1,272 @@
+query CollectionsListing {
+  allCollections {
+    name
+    slug
+  }
+}
+
+query DocumentsPages {
+  allDocuments {
+    id
+    slug
+    isReference
+  }
+}
+
+query AnnotatedDocument($id: String!, $isReference: Boolean!) {
+  document(id: $id) {
+    id
+    title
+    slug
+    collection {
+      name
+      slug
+    }
+    date {
+      year
+    }
+    sources {
+      name
+      link
+    }
+    pageImages {
+      urls
+    }
+    translatedSegments @skip(if: $isReference) {
+      source {
+        __typename
+        ... on AnnotatedForm {
+          ...FormFields
+        }
+        ... on AnnotatedPhrase {
+          ...BlockFields
+        }
+        ... on PageBreak {
+          index
+        }
+      }
+      translation {
+        text
+      }
+    }
+    forms @include(if: $isReference) {
+      ...FormFields
+    }
+    audioRecording {
+      resourceUrl
+      startTime
+      endTime
+    }
+  }
+}
+
+fragment BlockFields on AnnotatedPhrase {
+  ty
+  index
+  parts {
+    ... on AnnotatedForm {
+      ...FormFields
+    }
+  }
+}
+fragment FormFields on AnnotatedForm {
+  index
+  source
+  romanizedSource
+  simplePhonetics
+  phonemic
+  segments {
+    shapeTth: morpheme(system: TAOC)
+    shapeDt: morpheme(system: CRG)
+    shapeDtSimple: morpheme(system: LEARNER)
+    gloss
+    matchingTag {
+      id
+      taoc {
+        tag
+        title
+      }
+      learner {
+        tag
+        title
+      }
+      crg {
+        tag
+        title
+      }
+    }
+    nextSeparator
+  }
+  englishGloss
+  commentary
+  audioTrack {
+    index
+    resourceUrl
+    startTime
+    endTime
+  }
+}
+
+query Collection($slug: String!) {
+  collection(slug: $slug) {
+    name
+    documents {
+      id
+      slug
+      title
+      date {
+        year
+      }
+      orderIndex
+    }
+  }
+}
+
+query WordSearch($query: String!) {
+  wordSearch(
+    queries: [
+      { source: $query }
+      { normalizedSource: $query }
+      { simplePhonetics: $query }
+      { englishGloss: $query }
+    ]
+  ) {
+    source
+    normalizedSource
+    simplePhonetics
+    documentId
+    englishGloss
+  }
+}
+
+query AllSources {
+  allDocuments {
+    isReference
+    id
+    title
+    date {
+      year
+    }
+    contributors {
+      name
+    }
+    formCount
+  }
+}
+
+query Glossary {
+  allTags {
+    id
+    crg {
+      tag
+      title
+      definition
+    }
+    taoc {
+      tag
+      title
+      definition
+    }
+    learner {
+      tag
+      title
+      definition
+    }
+    morphemeType
+  }
+}
+
+query Timeline($gloss: String!) {
+  morphemeTimeClusters(gloss: $gloss, clusterYears: 50) {
+    start {
+      year
+    }
+    end {
+      year
+    }
+    forms {
+      source
+      normalizedSource
+      simplePhonetics
+      phonemic
+      documentId
+      englishGloss
+    }
+  }
+}
+
+query DocumentDetails($id: String!) {
+  document(id: $id) {
+    id
+    slug
+    title
+    collection {
+      name
+      slug
+    }
+    date {
+      year
+    }
+    contributors {
+      name
+      role
+    }
+    sources {
+      name
+      link
+    }
+  }
+}
+
+query EditablePage($id: String!) {
+  page(id: $id) {
+    id
+    title
+    body {
+      __typename
+      ... on Markdown {
+        content
+      }
+    }
+  }
+}
+
+query Tag($gloss: String!) {
+  tag: morphemeTag(id: $gloss) {
+    id
+    morphemeType
+    taoc {
+      tag
+      title
+      definition
+    }
+    crg {
+      tag
+      title
+      definition
+    }
+    learner {
+      tag
+      title
+      definition
+    }
+  }
+}
+
+query Morpheme($morphemeId: String!) {
+  documents: morphemesByDocument(morphemeId: $morphemeId) {
+    documentId
+    documentType
+    forms {
+      index
+      source
+      normalizedSource
+      documentId
+      englishGloss
+    }
+  }
+}
+
+mutation NewPage($data: JSON!) {
+  updatePage(data: $data)
+}

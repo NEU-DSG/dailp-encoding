@@ -1,12 +1,13 @@
 import React from "react"
-import { graphql } from "gatsby"
 import { css } from "@emotion/react"
 import { sortBy, join } from "lodash"
 import Layout from "../layout"
 import { fullWidth, std, typography, paddedWidth } from "../theme"
 import { sourceCitationId } from "../routes"
+import * as Dailp from "src/graphql/dailp"
 
-const SourcesPage = (p: { data: GatsbyTypes.AllSourcesQuery }) => {
+const SourcesPage = () => {
+  const [{ data: dailp }] = Dailp.useAllSourcesQuery()
   return (
     <Layout title="Sources Index">
       <main css={wideChildren}>
@@ -24,7 +25,7 @@ const SourcesPage = (p: { data: GatsbyTypes.AllSourcesQuery }) => {
 
         <ul css={wide}>
           {sortBy(
-            p.data.dailp.allDocuments.filter((d) => d.isReference),
+            dailp?.allDocuments.filter((d) => d.isReference),
             (doc) => doc.id
           ).map((doc) => (
             // Cite each source in APA format.
@@ -37,7 +38,7 @@ const SourcesPage = (p: { data: GatsbyTypes.AllSourcesQuery }) => {
 }
 export default SourcesPage
 
-type LocalDocument = GatsbyTypes.AllSourcesQuery["dailp"]["allDocuments"][0]
+type LocalDocument = Dailp.AllSourcesQuery["allDocuments"][0]
 
 const DocumentCitation = (p: { document: LocalDocument }) => {
   const doc = p.document
@@ -74,23 +75,4 @@ const bolded = css`
 const wide = css`
   list-style: none;
   margin-left: 0;
-`
-
-export const query = graphql`
-  query AllSources {
-    dailp {
-      allDocuments {
-        isReference
-        id
-        title
-        date {
-          year
-        }
-        contributors {
-          name
-        }
-        formCount
-      }
-    }
-  }
 `

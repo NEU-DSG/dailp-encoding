@@ -1,5 +1,5 @@
-import { gql } from "@apollo/client"
 import { useForm, useCMS, Field, BlockTemplate } from "tinacms"
+import { NewPageDocument } from "src/graphql/dailp"
 
 type CustomBlockTemplate = BlockTemplate & { key?: string }
 type CustomField = Field & { templates?: Record<string, CustomBlockTemplate> }
@@ -23,10 +23,7 @@ export const useGraphQLForm = (
   return useForm({
     loadInitialValues: async () => {
       if (cms.api.graphql) {
-        const { data } = await cms.api.graphql.query({
-          query,
-          variables: config.variables,
-        })
+        const { data } = await cms.api.graphql.query(query, config.variables)
         return config.transformIn ? config.transformIn(data) : data
       } else {
         return initialData
@@ -36,9 +33,9 @@ export const useGraphQLForm = (
       const finalData = config.transformOut
         ? config.transformOut(formData)
         : formData
-      const { data, errors } = await cms.api.graphql.mutate({
-        mutation,
-        variables: { ...config.variables, data: finalData },
+      const { data, errors } = await cms.api.graphql.mutate(mutation, {
+        ...config.variables,
+        data: finalData,
       })
       if (errors) {
         console.error(errors)
@@ -109,33 +106,7 @@ export const PageCreatorPlugin = {
   ],
   async onSubmit(values, cms) {
     // Add the new page to the database.
-    await cms.api.graphql.mutate({
-      mutation: mutatePage,
-      // Add an empty body to the new page.
-      variables: {
-        data: { ...values, body: [] },
-      },
-    })
+    // Add an empty body to the new page.
+    await cms.api.graphql.mutate(NewPageDocument, { ...values, body: [] })
   },
 }
-
-export const mutatePage = gql`
-  mutation NewPage($data: JSON!) {
-    updatePage(data: $data)
-  }
-`
-
-export const queryPage = gql`
-  query Page($id: String!) {
-    page(id: $id) {
-      id
-      title
-      body {
-        __typename
-        ... on Markdown {
-          content
-        }
-      }
-    }
-  }
-`

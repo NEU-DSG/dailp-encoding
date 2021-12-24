@@ -2,18 +2,15 @@ import React from "react"
 import { Clickable } from "reakit/Clickable"
 import { DialogStateReturn } from "reakit/Dialog"
 import { css } from "@emotion/react"
-import { useQuery, gql } from "@apollo/client"
 import { groupBy } from "lodash"
 import { MdClose } from "react-icons/md"
-import { AnchorLink } from "./link"
 import theme, { typography } from "./theme"
 import { morphemeDisplayTag, TagSet } from "./types"
-import { Link } from "gatsby"
+import Link from "next/link"
 import { glossaryRoute, morphemeTagId } from "./routes"
+import * as Dailp from "src/graphql/dailp"
 
-type BasicMorphemeSegment = NonNullable<
-  GatsbyTypes.FormFieldsFragment["segments"]
->[0]
+type BasicMorphemeSegment = NonNullable<Dailp.FormFieldsFragment["segments"]>[0]
 
 /** Specific details about some morpheme */
 export const MorphemeDetails = (props: {
@@ -32,8 +29,8 @@ export const MorphemeDetails = (props: {
 
   // Get the morpheme title and definition from the server.
   // TODO Only request the specific definition we need, not all three.
-  const tag = useQuery(tagQuery, {
-    skip: !props.segment.gloss,
+  const [tag] = Dailp.useTagQuery({
+    pause: !props.segment.gloss,
     variables: { gloss: props.segment.gloss },
   })
 
@@ -52,7 +49,7 @@ export const MorphemeDetails = (props: {
       <>
         {matchingTag?.definition ? <p>{matchingTag.definition}</p> : null}
         <p>
-          <Link to={glossaryRoute(tag.data.tag.id)}>View in glossary</Link>
+          <Link href={glossaryRoute(tag.data.tag.id)}>View in glossary</Link>
         </p>
         {occurrences}
       </>
@@ -119,8 +116,8 @@ const SimilarMorphemeList = (props: {
   isGlobal: boolean
   dialog: DialogStateReturn
 }) => {
-  const { data, loading, error } = useQuery(morphemeQuery, {
-    skip: !props.gloss,
+  const [{ data, fetching, error }] = Dailp.useMorphemeQuery({
+    pause: !props.gloss,
     variables: {
       morphemeId: props.isGlobal
         ? props.gloss
@@ -128,14 +125,14 @@ const SimilarMorphemeList = (props: {
     },
   })
 
-  if (loading) {
+  if (fetching) {
     return <p>Loading...</p>
   } else if (error) {
     return <p>Error! {error}</p>
   } else if (!data || !data.documents) {
     return <p>None Found</p>
   } else {
-    const docs = data.documents as GatsbyTypes.Dailp_WordsInDocument[]
+    const docs = data.documents as Dailp.WordsInDocument[]
     const docTypes = groupBy(docs, "documentType")
     const similarWords = Object.entries(docTypes).map(([ty, documents]) => (
       <section key={ty}>
@@ -149,14 +146,13 @@ const SimilarMorphemeList = (props: {
                 {word.documentId ? (
                   <>
                     {word.index ? (
-                      <AnchorLink
-                        to={`/documents/${word.documentId?.toLowerCase()}#w${
+                      <Link
+                        href={`/documents/${word.documentId?.toLowerCase()}#w${
                           word.index
                         }`}
-                        onClick={() => props.dialog.hide()}
                       >
                         {word.documentId}
-                      </AnchorLink>
+                      </Link>
                     ) : (
                       <>{word.documentId}</>
                     )}
@@ -183,43 +179,3 @@ function documentTypeToHeading(ty: string) {
     return "Miscellaneous"
   }
 }
-
-const morphemeQuery = gql`
-  query Morpheme($morphemeId: String!) {
-    documents: morphemesByDocument(morphemeId: $morphemeId) {
-      documentId
-      documentType
-      forms {
-        index
-        source
-        normalizedSource
-        documentId
-        englishGloss
-      }
-    }
-  }
-`
-
-const tagQuery = gql`
-  query Tag($gloss: String!) {
-    tag: morphemeTag(id: $gloss) {
-      id
-      morphemeType
-      taoc {
-        tag
-        title
-        definition
-      }
-      crg {
-        tag
-        title
-        definition
-      }
-      learner {
-        tag
-        title
-        definition
-      }
-    }
-  }
-`

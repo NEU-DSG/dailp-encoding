@@ -1,0 +1,22 @@
+generates:
+  ./src/graphql/dailp/index.ts:
+    schema: http://localhost:8080/graphql
+    documents: src/graphql/dailp/**/*.graphql
+    plugins:
+      - typescript
+      - typescript-operations
+      - typescript-urql
+  ./src/graphql/wordpress/index.ts:
+    schema: https://wp.dailp.northeastern.edu/graphql
+    documents: src/graphql/wordpress/**/*.graphql
+    plugins:
+      - typescript
+      - typescript-operations
+      - typescript-urql
+    config:
+      urqlImportFrom: ../urql-wordpress
+config:
+  avoidOptionals:
+    field: true
+  useTypeImports: true
+  dedupeFragments: true
