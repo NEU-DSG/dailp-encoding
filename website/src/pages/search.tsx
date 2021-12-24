@@ -1,20 +1,19 @@
 import React, { useEffect } from "react"
-import { Link } from "gatsby"
-import { useLocation } from "@gatsbyjs/reach-router"
-import { useQuery, gql } from "@apollo/client"
+import Link from "next/link"
+import { useRouter } from "next/router"
 import { css } from "@emotion/react"
 import { Input } from "reakit/Input"
 import { useDebounce } from "@react-hook/debounce"
 import { wordRow, bolden } from "./timeline"
 import { fullWidth, typography } from "../theme"
 import Layout from "../layout"
-import { AnchorLink } from "gatsby-plugin-anchor-links"
 import { sourceCitationRoute } from "../routes"
 import queryString from "query-string"
+import * as Dailp from "src/graphql/dailp"
 
-const SearchPage = (p: { location: any }) => {
-  const location = p.location
-  const defaultParams = queryString.parse(location.search)
+const SearchPage = () => {
+  const router = useRouter()
+  const defaultParams = router.query
   const [morphemeId, setMorpheme] = useDebounce(
     defaultParams.query as string,
     200
@@ -39,9 +38,9 @@ const SearchPage = (p: { location: any }) => {
         <p css={wide}>
           Type a search query in Cherokee syllabary, simple phonetics, English
           translation, or romanized source. All words from{" "}
-          <Link to="/sources">dictionaries and grammars</Link> that contain your
-          query will be shown below. These results do not include our collection
-          of manuscripts yet.
+          <Link href="/sources">dictionaries and grammars</Link> that contain
+          your query will be shown below. These results do not include our
+          collection of manuscripts yet.
         </p>
         <Input
           css={searchBox}
@@ -60,14 +59,14 @@ const SearchPage = (p: { location: any }) => {
 export default SearchPage
 
 const Timeline = (p: { gloss: string }) => {
-  const timeline = useQuery(query, {
+  const [timeline] = Dailp.useWordSearchQuery({
     variables: { query: p.gloss },
-    skip: !p.gloss,
+    pause: !p.gloss,
   })
 
   if (!p.gloss) {
     return null
-  } else if (timeline.loading) {
+  } else if (timeline.fetching) {
     return <>Loading...</>
   } else if (timeline.error) {
     console.error(timeline.error)
@@ -85,11 +84,11 @@ const Timeline = (p: { gloss: string }) => {
           <div>Translation</div>
         </div>
         {timeline.data.wordSearch.map(
-          (form: GatsbyTypes.Dailp_AnnotatedForm, i: number) => (
+          (form: Dailp.AnnotatedForm, i: number) => (
             <div key={i} css={wordRow}>
-              <AnchorLink to={sourceCitationRoute(form.documentId)}>
+              <Link href={sourceCitationRoute(form.documentId)}>
                 {form.documentId}
-              </AnchorLink>
+              </Link>
               <div>{form.source}</div>
               <div>{form.normalizedSource}</div>
               <div>{form.simplePhonetics}</div>
@@ -109,23 +108,4 @@ const wide = css`
 const searchBox = css`
   ${fullWidth};
   margin-bottom: ${typography.rhythm(0.5)};
-`
-
-const query = gql`
-  query StringSearch($query: String!) {
-    wordSearch(
-      queries: [
-        { source: $query }
-        { normalizedSource: $query }
-        { simplePhonetics: $query }
-        { englishGloss: $query }
-      ]
-    ) {
-      source
-      normalizedSource
-      simplePhonetics
-      documentId
-      englishGloss
-    }
-  }
 `

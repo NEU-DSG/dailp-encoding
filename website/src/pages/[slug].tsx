@@ -1,12 +1,15 @@
 import React from "react"
-import { graphql } from "gatsby"
+import { GetStaticPaths } from "next"
 import { css } from "@emotion/react"
 import { Helmet } from "react-helmet"
 import theme, { fullWidth, wordpressUrl } from "../theme"
 import Layout from "../layout"
+import * as Wordpress from "src/graphql/wordpress"
+import { client, getStaticQueriesNew } from "src/graphql"
 
-const WordpressPage = (p: { data: GatsbyTypes.ContentPageQuery }) => {
-  const page = p.data.page
+const WordpressPage = ({ slug }) => {
+  const [{ data }] = Wordpress.usePageQuery({ variables: { slug } })
+  const page = data.pages.nodes[0]
   return (
     <Layout>
       <Helmet>
@@ -31,14 +34,25 @@ const WordpressPage = (p: { data: GatsbyTypes.ContentPageQuery }) => {
 }
 export default WordpressPage
 
-export const query = graphql`
-  query ContentPage($id: String!) {
-    page: wpPage(id: { eq: $id }) {
-      title
-      content
-    }
+export const getStaticProps = getStaticQueriesNew(async (params, dailp, wp) => {
+  await wp.query(Wordpress.PageDocument, { slug: params.slug }).toPromise()
+  return params
+})
+
+export const getStaticPaths: GetStaticPaths = async () => {
+  const { data } = await client.wordpress
+    .query<Wordpress.PageIndexQuery, Wordpress.PageIndexQueryVariables>(
+      Wordpress.PageIndexDocument
+    )
+    .toPromise()
+
+  return {
+    paths: data.pages.nodes.map((page) => ({
+      params: { slug: page.slug },
+    })),
+    fallback: false,
   }
-`
+}
 
 const padded = css`
   padding-left: ${theme.edgeSpacing};

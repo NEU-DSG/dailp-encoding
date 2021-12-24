@@ -4,10 +4,12 @@ import theme, { hideOnPrint, std, typography, Button } from "./theme"
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch"
 import { Helmet } from "react-helmet"
 import { FaMinus, FaPlus } from "react-icons/fa"
+import * as Dailp from "src/graphql/dailp"
+import { Document } from "src/pages/documents/[id]"
 
 const PageImages = (p: {
-  document: GatsbyTypes.Dailp_AnnotatedDoc
-  pageImages: GatsbyTypes.Dailp_IiifImages
+  document: Document
+  pageImages: Pick<Dailp.IiifImages, "urls">
 }) => {
   return (
     <figure css={annotationFigure} aria-label="Manuscript Source Images">
@@ -49,7 +51,7 @@ const CurrentPageImage = (p: {
   resetTransform: () => void
   zoomIn: () => void
   zoomOut: () => void
-  pageImages: GatsbyTypes.Dailp_IiifImages
+  pageImages: Pick<Dailp.IiifImages, "urls">
 }) => {
   const [selectedPage, setSelectedPage] = useState(0)
   const imageCount = p.pageImages.urls.length

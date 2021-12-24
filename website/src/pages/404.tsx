@@ -1,10 +1,11 @@
 import React from "react"
-import { Link } from "gatsby"
+import { useRouter } from "next/router"
+import Link from "next/link"
 import Layout from "../layout"
 import { queryPage } from "../cms/graphql-form"
 import { EditablePageContents } from "../templates/editable-page"
-import { useQuery } from "@apollo/client"
 import { useHasMounted } from "../cms/routes"
+import * as Wordpress from "src/graphql/wordpress"
 
 /**
  Handle client-only routes for pages that haven't been statically renderered
@@ -17,10 +18,11 @@ const NotFoundPage = () => {
 export default NotFoundPage
 
 const ClientPage = () => {
-  const { data, error, loading } = useQuery(queryPage, {
-    variables: { id: window.location.pathname },
+  const router = useRouter()
+  const [{ data, error, fetching }] = Wordpress.usePageQuery({
+    variables: { id: router.pathname },
   })
-  if (loading) {
+  if (fetching) {
     return null
   } else if (data) {
     return (

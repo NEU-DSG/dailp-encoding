@@ -1,7 +1,7 @@
 import React, { useEffect } from "react"
 import Amplify, { Auth } from "aws-amplify"
 import { Button } from "../theme"
-import { Link } from "gatsby"
+import Link from "next/link"
 import { useCredentials, UserProvider } from "../auth"
 import { useCMS } from "tinacms"
 
@@ -18,7 +18,7 @@ const ClientSignIn = () => {
   if (creds) {
     return <Button onClick={() => Auth.signOut()}>Sign Out</Button>
   } else {
-    return <Link to="/signin">Sign In</Link>
+    return <Link href="/signin">Sign In</Link>
   }
 }
 

@@ -1,5 +1,4 @@
 import React from "react"
-import { ApolloProvider } from "@apollo/client"
 import { useCMS, usePlugin } from "tinacms"
 import { useCredentials, UserProvider } from "../auth"
 import { apolloClient } from "../apollo"
@@ -10,11 +9,7 @@ const LayoutClient = (p: { children: any }) => {
   const token = creds ? creds.signInUserSession.idToken.jwtToken : null
   const client = apolloClient(token)
   useCMS().registerApi("graphql", client)
-  return (
-    <ApolloProvider client={client}>
-      <LayoutCMS creds={creds}>{p.children}</LayoutCMS>
-    </ApolloProvider>
-  )
+  return <LayoutCMS creds={creds}>{p.children}</LayoutCMS>
 }
 
 export default (p: { children: any }) => (

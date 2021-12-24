@@ -1,10 +1,10 @@
 import React, { useState } from "react"
-import { graphql, Link } from "gatsby"
+import Link from "next/link"
 import { useDialogState, Dialog, DialogBackdrop } from "reakit/Dialog"
 import { Tab, TabPanel, TabList } from "reakit/Tab"
 import Sticky from "react-stickynode"
-import Layout from "../layout"
-import { Segment, AnnotatedForm } from "../segment"
+import Layout from "src/layout"
+import { Segment, AnnotatedForm } from "src/segment"
 import theme, {
   largeDialog,
   withBg,
@@ -13,9 +13,13 @@ import theme, {
   typography,
   fullWidth,
   Button,
-} from "../theme"
-import { collectionRoute, documentDetailsRoute, documentRoute } from "../routes"
-import { useScrollableTabState } from "../scrollable-tabs"
+} from "src/theme"
+import {
+  collectionRoute,
+  documentDetailsRoute,
+  documentRoute,
+} from "src/routes"
+import { useScrollableTabState } from "src/scrollable-tabs"
 import { css, ClassNames } from "@emotion/react"
 import { DeepPartial } from "tsdef"
 import {
@@ -23,35 +27,46 @@ import {
   BasicMorphemeSegment,
   tagSetForMode,
   PhoneticRepresentation,
-} from "../types"
-import { MorphemeDetails } from "../morpheme"
-import { Breadcrumbs } from "../breadcrumbs"
+} from "src/types"
+import { MorphemeDetails } from "src/morpheme"
+import { Breadcrumbs } from "src/breadcrumbs"
 import { isMobile } from "react-device-detect"
 import {
   ExperiencePicker,
   selectedMode,
   selectedPhonetics,
   PhoneticsPicker,
-} from "../mode"
-import { DocumentAudio } from "../audio-player"
-import loadable from "@loadable/component"
+} from "src/mode"
+import { DocumentAudio } from "src/audio-player"
+import loadable from "next/dynamic"
+import * as Dailp from "src/graphql/dailp"
+import * as Wordpress from "src/graphql/wordpress"
+import { client, getStaticQueriesNew } from "src/graphql"
+import { GetStaticPaths, GetStaticProps, GetStaticPropsContext } from "next"
+import { ParsedUrlQuery } from "querystring"
 
-const PageImages = loadable(() => import("../page-image"))
+const PageImages = loadable(() => import("src/page-image"))
 
 enum Tabs {
   ANNOTATION = "annotation-tab",
   IMAGES = "source-image-tab",
 }
 
+export type Document = Dailp.AnnotatedDocumentQuery["document"]
+
 /** A full annotated document, including all metadata and the translation(s) */
-const AnnotatedDocumentPage = (p: {
-  data: GatsbyTypes.AnnotatedDocumentQuery
-}) => {
-  const doc = p.data.dailp.document!
+const AnnotatedDocumentPage = ({ id }) => {
+  const [
+    {
+      data: { document: doc },
+    },
+  ] = Dailp.useAnnotatedDocumentQuery({
+    variables: { id, isReference: false },
+  })
   return (
     <Layout title={doc.title}>
       <main css={annotatedDocument}>
-        <DocumentTitleHeader doc={doc as any} showDetails={true} />
+        <DocumentTitleHeader doc={doc} showDetails={true} />
         <TabSet doc={doc} />
       </main>
     </Layout>
@@ -59,7 +74,38 @@ const AnnotatedDocumentPage = (p: {
 }
 export default AnnotatedDocumentPage
 
-const TabSet = ({ doc }) => {
+interface Params extends ParsedUrlQuery {
+  id: string
+}
+
+export const getStaticProps = getStaticQueriesNew(async (params, dailp, wp) => {
+  const id = params.id.toUpperCase()
+  await wp.query(Wordpress.MainMenuDocument).toPromise()
+  const { data } = await dailp
+    .query<Dailp.AnnotatedDocumentQuery, Dailp.AnnotatedDocumentQueryVariables>(
+      Dailp.AnnotatedDocumentDocument,
+      { id, isReference: false }
+    )
+    .toPromise()
+  return { id, doc: data?.document }
+})
+
+export const getStaticPaths: GetStaticPaths = async () => {
+  const { data } = await client.dailp
+    .query<Dailp.DocumentsPagesQuery, Dailp.DocumentsPagesQueryVariables>(
+      Dailp.DocumentsPagesDocument
+    )
+    .toPromise()
+
+  return {
+    paths: data.allDocuments.map((document) => ({
+      params: { id: document.id.toLowerCase() },
+    })),
+    fallback: false,
+  }
+}
+
+const TabSet = ({ doc }: { doc: Document }) => {
   const tabs = useScrollableTabState({ selectedId: Tabs.ANNOTATION })
   return (
     <>
@@ -95,7 +141,7 @@ const TabSet = ({ doc }) => {
         tabId={Tabs.IMAGES}
       >
         {doc.pageImages ? (
-          <PageImages pageImages={doc.pageImages} document={doc as any} />
+          <PageImages pageImages={doc.pageImages} document={doc} />
         ) : null}
       </TabPanel>
     </>
@@ -189,12 +235,12 @@ const TranslationTab = ({ doc }) => {
         {doc.translatedSegments?.map((seg, i) => (
           <Segment
             key={i}
-            segment={seg.source as GatsbyTypes.Dailp_AnnotatedSeg}
+            segment={seg.source}
             dialog={dialog}
             onOpenDetails={setMorpheme}
             viewMode={experienceLevel}
             tagSet={tagSet}
-            translations={seg.translation as GatsbyTypes.Dailp_TranslationBlock}
+            translations={seg.translation as Dailp.TranslationBlock}
             pageImages={doc.pageImages}
             phoneticRepresentation={phoneticRepresentation}
           />
@@ -226,17 +272,21 @@ const topMargin = css`
 `
 
 export const DocumentTitleHeader = (p: {
-  doc: DeepPartial<GatsbyTypes.Dailp_AnnotatedDoc>
+  doc: Pick<Dailp.AnnotatedDoc, "slug" | "title"> & {
+    date: Pick<Dailp.AnnotatedDoc["date"], "year">
+    collection: Pick<Dailp.AnnotatedDoc["collection"], "name" | "slug">
+    audioRecording?: Pick<Dailp.AnnotatedDoc["audioRecording"], "resourceUrl">
+  }
   showDetails?: boolean
 }) => (
   <header css={docHeader}>
     <Breadcrumbs aria-label="Breadcrumbs">
       <li>
-        <Link to="/">Collections</Link>
+        <Link href="/">Collections</Link>
       </li>
       {p.doc.collection && (
         <li>
-          <Link to={collectionRoute(p.doc.collection.slug!)}>
+          <Link href={collectionRoute(p.doc.collection.slug!)}>
             {p.doc.collection.name}
           </Link>
         </li>
@@ -249,9 +299,9 @@ export const DocumentTitleHeader = (p: {
     </h1>
     <div css={bottomPadded}>
       {p.showDetails ? (
-        <Link to={documentDetailsRoute(p.doc.slug!)}>View Details</Link>
+        <Link href={documentDetailsRoute(p.doc.slug!)}>View Details</Link>
       ) : (
-        <Link to={documentRoute(p.doc.slug!)}>View Contents</Link>
+        <Link href={documentRoute(p.doc.slug!)}>View Contents</Link>
       )}
       {!isMobile ? <Button onClick={() => window.print()}>Print</Button> : null}
     </div>
@@ -334,102 +384,6 @@ const docHeader = css`
   padding: 0 ${theme.edgeSpacing};
   ${theme.mediaQueries.medium} {
     padding: 0;
-  }
-`
-
-export const query = graphql`
-  query AnnotatedDocument($id: String!, $isReference: Boolean!) {
-    dailp {
-      document(id: $id) {
-        id
-        title
-        slug
-        collection {
-          name
-          slug
-        }
-        date {
-          year
-        }
-        sources {
-          name
-          link
-        }
-        pageImages {
-          urls
-        }
-        translatedSegments @skip(if: $isReference) {
-          source {
-            ... on Dailp_AnnotatedForm {
-              ...FormFields
-            }
-            ... on Dailp_AnnotatedPhrase {
-              ...BlockFields
-            }
-            ... on Dailp_PageBreak {
-              index
-            }
-          }
-          translation {
-            text
-          }
-        }
-        forms @include(if: $isReference) {
-          ...FormFields
-        }
-        audioRecording {
-          resourceUrl
-          startTime
-          endTime
-        }
-      }
-    }
-  }
-  fragment BlockFields on Dailp_AnnotatedPhrase {
-    ty
-    index
-    parts {
-      ... on Dailp_AnnotatedForm {
-        ...FormFields
-      }
-    }
-  }
-  fragment FormFields on Dailp_AnnotatedForm {
-    index
-    source
-    romanizedSource
-    simplePhonetics
-    phonemic
-    segments {
-      shapeTth: morpheme(system: TAOC)
-      shapeDt: morpheme(system: CRG)
-      shapeDtSimple: morpheme(system: LEARNER)
-      gloss
-      matchingTag {
-        id
-        taoc {
-          tag
-          title
-        }
-        learner {
-          tag
-          title
-        }
-        crg {
-          tag
-          title
-        }
-      }
-      nextSeparator
-    }
-    englishGloss
-    commentary
-    audioTrack {
-      index
-      resourceUrl
-      startTime
-      endTime
-    }
   }
 `
 

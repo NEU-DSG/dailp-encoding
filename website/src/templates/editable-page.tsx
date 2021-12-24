@@ -1,20 +1,15 @@
 import React from "react"
 import { css } from "@emotion/react"
 import { usePlugin } from "tinacms"
-import { graphql } from "gatsby"
 import Markdown from "react-markdown"
 import { MarkdownFieldPlugin } from "react-tinacms-editor"
 import { Helmet } from "react-helmet"
 import gfm from "remark-gfm"
-import {
-  useGraphQLForm,
-  blocksField,
-  queryPage,
-  mutatePage,
-} from "../cms/graphql-form"
+import { useGraphQLForm, blocksField } from "../cms/graphql-form"
 import theme, { fullWidth, paddedWidth } from "../theme"
 import Layout from "../layout"
 import { useCredentials } from "../auth"
+import * as Dailp from "src/graphql/dailp"
 
 interface Props {
   pageContext?: {
@@ -51,39 +46,44 @@ const EditablePageInner = (props: Props) => {
   const staticData = props.data.dailp.page
   usePlugin(MarkdownFieldPlugin)
 
-  const [data, form] = useGraphQLForm(staticData, queryPage, mutatePage, {
-    label: "Edit Page",
-    id: props.pageContext?.id,
-    variables: { id: props.pageContext?.id },
-    transformIn: ({ page: { body, ...page } }) => ({
-      ...page,
-      body:
-        body &&
-        body.map(({ __typename, ...block }) => ({
-          _template: __typename,
-          ...block,
-        })),
-    }),
-    transformOut: ({ body, id, ...page }) => ({
-      ...page,
-      _id: id,
-      body:
-        body &&
-        body.map(({ _template, ...block }) => ({
-          __typename: _template,
-          ...block,
-        })),
-    }),
-
-    fields: [
-      { name: "id", label: "Path", component: "text" },
-      { name: "title", label: "Title", component: "text" },
-      blocksField({
-        name: "body",
-        label: "Page Sections",
+  const [data, form] = useGraphQLForm(
+    staticData,
+    Dailp.EditablePageDocument,
+    Dailp.NewPageDocument,
+    {
+      label: "Edit Page",
+      id: props.pageContext?.id,
+      variables: { id: props.pageContext?.id },
+      transformIn: ({ page: { body, ...page } }) => ({
+        ...page,
+        body:
+          body &&
+          body.map(({ __typename, ...block }) => ({
+            _template: __typename,
+            ...block,
+          })),
       }),
-    ],
-  })
+      transformOut: ({ body, id, ...page }) => ({
+        ...page,
+        _id: id,
+        body:
+          body &&
+          body.map(({ _template, ...block }) => ({
+            __typename: _template,
+            ...block,
+          })),
+      }),
+
+      fields: [
+        { name: "id", label: "Path", component: "text" },
+        { name: "title", label: "Title", component: "text" },
+        blocksField({
+          name: "body",
+          label: "Page Sections",
+        }),
+      ],
+    }
+  )
 
   usePlugin(form)
 
@@ -131,19 +131,3 @@ const getType = (obj: any) => {
    [{"type": "Markdown", "body": "..."},
     {"type": "Image", "url": "https://...", "max-height": 200}]
  */
-export const query = graphql`
-  query EditablePage($id: String!) {
-    dailp {
-      page(id: $id) {
-        id
-        title
-        body {
-          __typename
-          ... on Dailp_Markdown {
-            content
-          }
-        }
-      }
-    }
-  }
-`

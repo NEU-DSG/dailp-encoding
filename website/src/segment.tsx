@@ -15,13 +15,17 @@ import theme, { hideOnPrint, std, typography, withBg } from "./theme"
 import "@reach/tooltip/styles.css"
 import { FormAudio } from "./audio-player"
 import { Howl } from "howler"
+import * as Dailp from "src/graphql/dailp"
+import { Document } from "src/pages/documents/[id]"
+
+type Segment = Document["translatedSegments"][0]["source"]
 
 interface Props {
-  segment: GatsbyTypes.Dailp_AnnotatedSeg
+  segment: Segment
   dialog: DialogStateReturn
   onOpenDetails: (morpheme: BasicMorphemeSegment) => void
   viewMode: ViewMode
-  translations: GatsbyTypes.Dailp_TranslationBlock
+  translations: Dailp.TranslationBlock
   tagSet: TagSet
   pageImages: readonly string[]
   phoneticRepresentation: PhoneticRepresentation
@@ -29,11 +33,12 @@ interface Props {
 
 /** Displays one segment of the document, which may be a word, block, or phrase. */
 export const Segment = (p: Props & { howl?: Howl }) => {
-  if (isForm(p.segment)) {
-    return <AnnotatedForm {...p} segment={p.segment} />
-  } else if (isPhrase(p.segment)) {
+  const segment = p.segment
+  if (segment.__typename === "AnnotatedForm") {
+    return <AnnotatedForm {...p} segment={segment} />
+  } else if (segment.__typename === "AnnotatedPhrase") {
     const children =
-      p.segment.parts?.map(function (seg, i) {
+      segment.parts?.map(function (seg: Segment, i) {
         return (
           <Segment
             key={i}
@@ -49,7 +54,7 @@ export const Segment = (p: Props & { howl?: Howl }) => {
         )
       }) ?? null
 
-    if (p.segment.ty === "BLOCK") {
+    if (segment.ty === "BLOCK") {
       return (
         <section css={[documentBlock, p.viewMode > ViewMode.Story && bordered]}>
           <div
@@ -67,7 +72,7 @@ export const Segment = (p: Props & { howl?: Howl }) => {
     } else {
       return <>{children}</>
     }
-  } else if (isPageBreak(p.segment) && p.segment.index > 0) {
+  } else if (p.segment.__typename === "PageBreak" && p.segment.index > 0) {
     const num = p.segment.index + 1
     return (
       <div
@@ -83,28 +88,8 @@ export const Segment = (p: Props & { howl?: Howl }) => {
   }
 }
 
-function isForm(
-  seg: GatsbyTypes.Dailp_AnnotatedSeg
-): seg is GatsbyTypes.FormFieldsFragment {
-  return "source" in seg
-}
-function isPhrase(
-  seg: GatsbyTypes.Dailp_AnnotatedSeg
-): seg is GatsbyTypes.Dailp_AnnotatedPhrase {
-  return "parts" in seg
-}
-function isPageBreak(
-  seg: GatsbyTypes.Dailp_AnnotatedSeg
-): seg is GatsbyTypes.Dailp_PageBreak {
-  return (
-    "__typename" in seg &&
-    (seg["__typename"] as string).endsWith("PageBreak") &&
-    "index" in seg
-  )
-}
-
 export const AnnotatedForm = (
-  p: Props & { segment: GatsbyTypes.FormFieldsFragment }
+  p: Props & { segment: Dailp.FormFieldsFragment }
 ) => {
   if (!p.segment.source) {
     return null
@@ -216,7 +201,7 @@ const infoIcon = css`
  * glosses for each morpheme.
  */
 const MorphemicSegmentation = (p: {
-  segments: GatsbyTypes.FormFieldsFragment["segments"]
+  segments: Dailp.FormFieldsFragment["segments"]
   tagSet: TagSet
   dialog: Props["dialog"]
   onOpenDetails: Props["onOpenDetails"]

@@ -1,7 +1,7 @@
 import React from "react"
 import { css } from "@emotion/react"
-import { Link, graphql, useStaticQuery } from "gatsby"
-import { useLocation } from "@gatsbyjs/reach-router"
+import Link from "next/link"
+import { useRouter } from "next/router"
 import theme, { fullWidth, typography } from "./theme"
 import {
   useDialogState,
@@ -11,39 +11,22 @@ import {
 } from "reakit/Dialog"
 import { useMenuState, Menu, MenuItem, MenuButton } from "reakit/Menu"
 import { MdMenu, MdArrowDropDown } from "react-icons/md"
-
-const useMenu = () =>
-  useStaticQuery(graphql`
-    query {
-      wpMenu {
-        menuItems {
-          nodes {
-            label
-            path
-            childItems {
-              nodes {
-                label
-                path
-              }
-            }
-          }
-        }
-      }
-    }
-  `)
+import * as Wordpress from "src/graphql/wordpress"
 
 export const NavMenu = () => {
-  const location = useLocation()
-  const data = useMenu()
-  const menuItems = data.wpMenu.menuItems.nodes
+  const router = useRouter()
+  const [{ data }] = Wordpress.useMainMenuQuery()
+  const menuItems = data?.menuItems.nodes
   const isTopLevel = (a) =>
-    !menuItems.some((b) => b.childItems.nodes.some((b) => b.path === a.path))
+    !menuItems?.some((b) => b?.childItems.nodes.some((b) => b.path === a?.path))
+  const menu = useMenuState()
 
   return (
     <nav css={desktopNav}>
-      {menuItems.filter(isTopLevel).map((item) => {
-        if (item.childItems.nodes.length) {
-          const menu = useMenuState()
+      {menuItems?.filter(isTopLevel).map((item) => {
+        if (!item) {
+          return null
+        } else if (item.childItems.nodes.length) {
           return (
             <React.Fragment key={item.label}>
               <MenuButton {...menu} css={navLink}>
@@ -60,11 +43,11 @@ export const NavMenu = () => {
                     <MenuItem
                       {...menu}
                       as={Link}
-                      to={url.pathname}
+                      href={url.pathname}
                       key={item.path}
                       css={navLink}
                       aria-current={
-                        location.pathname === url.pathname ? "page" : undefined
+                        router.pathname === url.pathname ? "page" : undefined
                       }
                     >
                       {item.label}
@@ -82,9 +65,9 @@ export const NavMenu = () => {
           return (
             <Link
               key={item.path}
-              to={url.pathname}
+              href={url.pathname}
               aria-current={
-                location.pathname === url.pathname ? "page" : undefined
+                router.pathname === url.pathname ? "page" : undefined
               }
               css={navLink}
             >
@@ -98,12 +81,12 @@ export const NavMenu = () => {
 }
 
 export const MobileNav = () => {
-  const location = useLocation()
+  const router = useRouter()
   const dialog = useDialogState({ animated: true })
-  const data = useMenu()
-  const menuItems = data.wpMenu.menuItems.nodes
+  const [{ data }] = Wordpress.useMainMenuQuery()
+  const menuItems = data?.menuItems.nodes
   const isTopLevel = (a) =>
-    !menuItems.some((b) => b.childItems.nodes.some((b) => b.path === a.path))
+    !menuItems?.some((b) => b?.childItems.nodes.some((b) => b.path === a?.path))
 
   return (
     <>
@@ -122,12 +105,12 @@ export const MobileNav = () => {
           aria-label="Navigation Drawer"
         >
           <ul>
-            {menuItems.filter(isTopLevel).map((item) => {
-              let items = item.childItems.nodes
-              if (!items.length) {
+            {menuItems?.filter(isTopLevel).map((item) => {
+              let items = item?.childItems.nodes
+              if (items && !items.length) {
                 items = [item]
               }
-              return items.map((item) => {
+              return items?.map((item) => {
                 let url = { pathname: item.path }
                 if (item.path.startsWith("http")) {
                   url = new URL(item.path)
@@ -135,9 +118,9 @@ export const MobileNav = () => {
                 return (
                   <li css={drawerItem} key={item.path}>
                     <Link
-                      to={url.pathname}
+                      href={url.pathname}
                       aria-current={
-                        location.pathname === url.pathname ? "page" : undefined
+                        router.pathname === url.pathname ? "page" : undefined
                       }
                       css={navLink}
                     >

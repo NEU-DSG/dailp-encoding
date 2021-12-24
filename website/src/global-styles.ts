@@ -1,12 +1,4 @@
 import { css } from "@emotion/react"
-import "./fonts.css"
-import "@fontsource/charis-sil/400.css"
-import "@fontsource/charis-sil/400-italic.css"
-import "@fontsource/charis-sil/700.css"
-import "@fontsource/charis-sil/700-italic.css"
-import "@fontsource/quattrocento-sans/latin.css"
-import "@fortawesome/fontawesome-free/css/fontawesome.css"
-import "@fortawesome/fontawesome-free/css/solid.css"
 import theme, { typography } from "./theme"
 
 // These styles affect all pages.

@@ -2,7 +2,7 @@ import React from "react"
 import { css, Global } from "@emotion/react"
 import { Helmet } from "react-helmet"
 import Sticky from "react-stickynode"
-import { Link } from "gatsby"
+import Link from "next/link"
 import { NavMenu, MobileNav } from "./menu"
 import Footer from "./footer"
 import theme, { fullWidth, hideOnPrint, typography } from "./theme"
@@ -33,7 +33,7 @@ const Layout = (p: { title?: string; children: any }) => {
               }}
             >
               <h1 css={siteTitle}>
-                <Link to="/">DAILP</Link>
+                <Link href="/">DAILP</Link>
               </h1>
               <span css={subHeader}>
                 Digital Archive of American Indian Languages Preservation and

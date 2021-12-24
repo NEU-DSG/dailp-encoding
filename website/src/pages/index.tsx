@@ -1,56 +1,57 @@
 import React from "react"
-import { graphql, Link } from "gatsby"
+import Link from "next/link"
 import styled from "@emotion/styled"
-import { Helmet } from "react-helmet"
+import Helmet from "next/head"
 import Layout from "../layout"
 import theme, { fullWidth, wordpressUrl } from "../theme"
 import { collectionRoute } from "../routes"
 import { Carousel } from "../carousel"
-
-import "../wordpress.css"
+import * as Dailp from "src/graphql/dailp"
+import * as Wordpress from "src/graphql/wordpress"
+import { getStaticQueriesNew } from "src/graphql"
 
 /** Lists all documents in our database */
-const IndexPage = (props: { data: GatsbyTypes.IndexPageQuery }) => (
-  <Layout title="Collections">
-    <DocIndex>
-      <FullWidth>
-        <Carousel
-          images={carouselImages}
-          caption="Digital Archive of American Indian Languages Preservation and Perseverance"
-        />
-        <div
-          dangerouslySetInnerHTML={{ __html: props.data.aboutPage?.content }}
-        />
-        <h1>Cherokee Manuscript Collections</h1>
-        <ul>
-          {props.data.dailp.allCollections.map((collection) => (
-            <li key={collection.slug}>
-              <Link to={collectionRoute(collection.slug)}>
-                {collection.name}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </FullWidth>
-    </DocIndex>
-  </Layout>
-)
+const IndexPage = () => {
+  const [{ data: dailp }] = Dailp.useCollectionsListingQuery()
+  const [{ data: wp }] = Wordpress.usePageQuery({ variables: { slug: "home" } })
+
+  return (
+    <Layout title="Collections">
+      <DocIndex>
+        <FullWidth>
+          <Carousel
+            images={carouselImages}
+            caption="Digital Archive of American Indian Languages Preservation and Perseverance"
+          />
+          <div
+            dangerouslySetInnerHTML={{ __html: wp?.pages.nodes[0].content }}
+          />
+          <h1>Cherokee Manuscript Collections</h1>
+          <ul>
+            {dailp?.allCollections.map((collection) => (
+              <li key={collection.slug}>
+                <Link href={collectionRoute(collection.slug)}>
+                  {collection.name}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </FullWidth>
+      </DocIndex>
+    </Layout>
+  )
+}
 export default IndexPage
 
-export const query = graphql`
-  query IndexPage {
-    dailp {
-      allCollections {
-        name
-        slug
-      }
-    }
-    aboutPage: wpPage(slug: { eq: "home" }) {
-      title
-      content
-    }
-  }
-`
+export const getStaticProps = getStaticQueriesNew(async (params, dailp, wp) => {
+  await dailp.query(Dailp.CollectionsListingDocument).toPromise()
+  await wp.query(Wordpress.MainMenuDocument).toPromise()
+  await wp
+    .query<any, Wordpress.PageQueryVariables>(Wordpress.PageDocument, {
+      slug: "home",
+    })
+    .toPromise()
+})
 
 const carouselImages = [
   {

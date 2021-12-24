@@ -1,3 +1,5 @@
+import * as Dailp from "src/graphql/dailp"
+
 export enum ViewMode {
   Story = 0,
   Pronunciation = 1,
@@ -19,7 +21,7 @@ export enum PhoneticRepresentation {
   //Ipa,
 }
 export type BasicMorphemeSegment = NonNullable<
-  GatsbyTypes.FormFieldsFragment["segments"]
+  Dailp.FormFieldsFragment["segments"]
 >[0]
 
 export type BasicMorphemeTag = BasicMorphemeSegment["matchingTag"]

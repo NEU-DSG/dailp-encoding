@@ -344,6 +344,11 @@ impl IiifImages {
 pub struct DocumentCollection {
     pub name: String,
 }
+impl DocumentCollection {
+    pub fn make_slug(&self) -> String {
+        slug::slugify(&self.name)
+    }
+}
 #[async_graphql::Object]
 impl DocumentCollection {
     /// Full name of this collection
@@ -353,7 +358,7 @@ impl DocumentCollection {
 
     /// URL-ready slug for this collection, generated from the name
     async fn slug(&self) -> String {
-        slug::slugify(&self.name)
+        self.make_slug()
     }
 
     /// All documents that are part of this collection
