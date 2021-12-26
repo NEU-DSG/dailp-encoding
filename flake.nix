@@ -127,6 +127,8 @@
           ];
         };
 
+        defaultPackage = terraformConfig;
+
         apps.migrate-data = inputs.utils.lib.mkApp {
           drv = hostPackage;
           exePath = "/bin/dailp-migration";
