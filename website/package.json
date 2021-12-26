@@ -4,7 +4,7 @@
   "description": "Front-end for exploring Cherokee documents from DAILP",
   "scripts": {
     "start": "GATSBY_EXPERIMENTAL_QUERY_CONCURRENCY=5 GATSBY_CONCURRENT_DOWNLOAD=5 gatsby develop",
-    "build:gatsby": "GATSBY_EXPERIMENTAL_QUERY_CONCURRENCY=5 GATSBY_CONCURRENT_DOWNLOAD=5 GATSBY_EXPERIMENTAL_PAGE_BUILD_ON_DATA_CHANGES=true gatsby build",
+    "build:gatsby": "GATSBY_EXPERIMENTAL_QUERY_CONCURRENCY=5 GATSBY_CONCURRENT_DOWNLOAD=5 gatsby build",
     "build:rustdoc": "cd .. && cargo doc --no-deps --workspace",
     "build": "npm-run-all --parallel build:gatsby build:rustdoc && rm -rf public/rustdoc && cp -r ../target/doc public/rustdoc",
     "serve": "gatsby serve",
@@ -17,6 +17,8 @@
   "dependencies": {
     "@apollo/client": "^3.3.19",
     "@aws-amplify/ui-react": "^1.2.0",
+    "@babel/core": "^7.14.3",
+    "@babel/runtime": "^7.14.0",
     "@emotion/react": "^11.4.0",
     "@emotion/styled": "^11.3.0",
     "@fontsource/charis-sil": "^4.4.2",
@@ -32,6 +34,7 @@
     "gatsby-plugin-anchor-links": "^1.1.1",
     "gatsby-plugin-build-date": "^1.0.0",
     "gatsby-plugin-env-variables": "^2.1.0",
+    "graphql": "^15.4.0",
     "howler": "^2.2.3",
     "isomorphic-unfetch": "^3.0.0",
     "js-cookie": "^3.0.0-rc.1",
@@ -55,7 +58,8 @@
     "remark-gfm": "^1.0.0",
     "stream-browserify": "^3.0.0",
     "styled-components": "^5.3.0",
-    "tinacms": "^0.41.0"
+    "tinacms": "^0.41.0",
+    "webpack": "^5.24.2"
   },
   "devDependencies": {
     "@babel/plugin-transform-react-jsx": "^7.14.3",

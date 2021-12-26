@@ -93,7 +93,7 @@ pub async fn migrate_dictionaries() -> Result<()> {
                     Contributor::new_author("Feeling, Durbin".to_string()),
                     Contributor::new_author("Pulte, William".to_string()),
                 ],
-                date: Some(dailp::Date::new(chrono::NaiveDate::from_ymd(1975, 1, 1))),
+                date: Some(dailp::Date::from_ymd(1975, 1, 1)),
                 genre: None,
                 translation: None,
                 page_images: None,
@@ -110,7 +110,7 @@ pub async fn migrate_dictionaries() -> Result<()> {
                 sources: Vec::new(),
                 collection: Some("Lexical Resources".to_string()),
                 contributors: vec![Contributor::new_author("Feeling, Durbin".to_string())],
-                date: Some(dailp::Date::new(chrono::NaiveDate::from_ymd(2003, 1, 1))),
+                date: Some(dailp::Date::from_ymd(2003, 1, 1)),
                 genre: None,
                 translation: None,
                 page_images: None,
@@ -128,7 +128,7 @@ pub async fn migrate_dictionaries() -> Result<()> {
 
 async fn parse_numerals(sheet_id: &str, doc_id: &str, year: i32) -> Result<()> {
     let numerals = SheetResult::from_sheet(sheet_id, None).await?;
-    let date = Date::new(chrono::NaiveDate::from_ymd(year, 1, 1));
+    let date = Date::from_ymd(year, 1, 1);
 
     let forms = numerals
         .values
@@ -166,7 +166,7 @@ async fn parse_numerals(sheet_id: &str, doc_id: &str, year: i32) -> Result<()> {
                 date_recorded: Some(date.clone()),
                 line_break: None,
                 page_break: None,
-                audio_track: None
+                audio_track: None,
             })
         })
         .collect::<Vec<_>>();
@@ -182,9 +182,7 @@ async fn parse_meta(sheet_id: &str, collection: &str) -> Result<DocumentMetadata
     let document_id = meta_values.next().unwrap().pop().unwrap();
     let title = meta_values.next().unwrap().pop().unwrap();
     let year = meta_values.next().unwrap().pop().unwrap().parse();
-    let date_recorded = year
-        .ok()
-        .map(|year| Date::new(chrono::NaiveDate::from_ymd(year, 1, 1)));
+    let date_recorded = year.ok().map(|year| Date::from_ymd(year, 1, 1));
     let authors = meta_values.next().unwrap_or_default();
     Ok(DocumentMetadata {
         id: dailp::DocumentId(document_id),
@@ -243,7 +241,7 @@ async fn parse_appendix(sheet_id: &str, to_skip: usize) -> Result<()> {
                 page_break: None,
                 commentary: None,
                 date_recorded: meta.date.clone(),
-                audio_track: None
+                audio_track: None,
             })
         })
         .collect();
@@ -303,7 +301,7 @@ fn parse_new_df1975(
                 let root = root_values.next().filter(|s| !s.is_empty())?;
                 let root_gloss = root_values.next().filter(|s| !s.is_empty())?;
                 let mut form_values = root_values.clone().skip(after_root + translations);
-                let date = Date::new(chrono::NaiveDate::from_ymd(year, 1, 1));
+                let date = Date::from_ymd(year, 1, 1);
                 let pos =
                     PositionInDocument::new(doc_id.clone(), page_number, key.parse().unwrap_or(1));
                 Some(LexicalEntryWithForms {
@@ -336,7 +334,7 @@ fn parse_new_df1975(
                         date_recorded: Some(date),
                         source: root,
                         position: pos,
-                        audio_track: None
+                        audio_track: None,
                     },
                 })
             } else {
@@ -373,7 +371,7 @@ async fn ingest_particle_index(document_id: &str) -> Result<()> {
                 date_recorded: None,
                 source: syllabary,
                 position: pos,
-                audio_track: None
+                audio_track: None,
             })
         })
         .collect::<Vec<_>>();

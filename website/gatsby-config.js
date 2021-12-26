@@ -7,10 +7,7 @@ module.exports = {
   },
   flags: {
     PRESERVE_WEBPACK_CACHE: true,
-    FAST_REFRESH: true,
     DEV_SSR: true,
-    LAZY_IMAGES: true,
-    QUERY_ON_DEMAND: false,
   },
   plugins: [
     "gatsby-plugin-sharp",

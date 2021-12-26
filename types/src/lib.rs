@@ -19,6 +19,7 @@
 //! reference.
 
 pub mod annotation;
+mod audio;
 mod database;
 mod date;
 mod document;
@@ -33,8 +34,12 @@ pub mod page;
 mod person;
 mod tag;
 mod translation;
-mod audio;
 
+// Re-export dependencies for downstream to use.
+pub use async_graphql;
+pub use chrono;
+
+pub use audio::*;
 pub use database::*;
 pub use date::*;
 pub use document::*;
@@ -47,4 +52,3 @@ pub use orthography::*;
 pub use person::*;
 pub use tag::*;
 pub use translation::*;
-pub use audio::*;

@@ -1,5 +1,6 @@
 //! This program encodes spreadsheets hosted on Google Drive annotating source documents with linguistic information into equivalent database entries.
 
+mod audio;
 mod connections;
 mod contributors;
 mod early_vocab;
@@ -7,7 +8,6 @@ mod lexical;
 mod spreadsheets;
 mod tags;
 mod translations;
-mod audio;
 
 use anyhow::{bail, Result};
 use log::{error, info};

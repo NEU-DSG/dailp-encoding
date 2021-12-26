@@ -1,4 +1,6 @@
-use crate::{AnnotatedDoc, AudioSlice, Database, Date, MorphemeId, MorphemeSegment, PositionInDocument};
+use crate::{
+    AnnotatedDoc, AudioSlice, Database, Date, MorphemeId, MorphemeSegment, PositionInDocument,
+};
 use async_graphql::{dataloader::DataLoader, FieldResult};
 use serde::{Deserialize, Serialize};
 
@@ -40,7 +42,7 @@ pub struct AnnotatedForm {
     /// The date and time this form was recorded
     pub date_recorded: Option<Date>,
     /// A slice of audio associated with this word in the context of a document
-    pub audio_track: Option<AudioSlice>
+    pub audio_track: Option<AudioSlice>,
 }
 
 #[async_graphql::ComplexObject]
@@ -50,6 +52,12 @@ impl AnnotatedForm {
     /// corresponding to "catch."
     async fn root(&self) -> Option<&MorphemeSegment> {
         self.find_root()
+    }
+
+    async fn romanized_source(&self) -> Option<String> {
+        self.simple_phonetics
+            .as_ref()
+            .map(|phonetic| crate::lexical::simple_phonetics_to_worcester(phonetic))
     }
 
     /// All other observed words with the same root morpheme as this word.

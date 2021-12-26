@@ -1,11 +1,17 @@
 mod query;
+
 use {
-    async_graphql::{
+    dailp::async_graphql::{
         dataloader::DataLoader,
         http::{playground_source, GraphQLPlaygroundConfig},
         EmptySubscription, Schema,
     },
-    tide::{http::mime, Body, Response, StatusCode},
+    tide::{
+        http::headers::HeaderValue,
+        http::mime,
+        security::{CorsMiddleware, Origin},
+        Body, Response, StatusCode,
+    },
 };
 
 #[tokio::main]
@@ -16,9 +22,16 @@ async fn main() -> tide::Result<()> {
 
     // create schema
     let schema = Schema::build(query::Query, query::Mutation, EmptySubscription)
-        .data(dailp::Database::new().unwrap())
+        .data(dailp::Database::new().expect("Failed to initialize database"))
         .data(DataLoader::new(dailp::Database::new().unwrap()))
         .finish();
+
+    let cors = CorsMiddleware::new()
+        .allow_methods("GET, POST, OPTIONS".parse::<HeaderValue>().unwrap())
+        .allow_origin(Origin::from("*"))
+        .allow_credentials(true);
+
+    app.with(cors);
 
     // add tide endpoint
     app.at("/graphql")

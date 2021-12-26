@@ -1,9 +1,7 @@
 //! This piece of the project exposes a GraphQL endpoint that allows one to access DAILP data in a federated manner with specific queries.
 
 use {
-    async_graphql::{
-        dataloader::DataLoader, guard::Guard, Context, FieldResult,
-    },
+    dailp::async_graphql::{self, dataloader::DataLoader, guard::Guard, Context, FieldResult},
     dailp::{
         AnnotatedDoc, CherokeeOrthography, Database, MorphemeId, MorphemeReference, MorphemeTag,
         WordsInDocument,
@@ -127,7 +125,7 @@ impl Query {
         gloss: String,
         #[graphql(default = 10)] cluster_years: i32,
     ) -> FieldResult<Vec<FormsInTime>> {
-        use chrono::Datelike;
+        use dailp::chrono::Datelike;
         use itertools::Itertools as _;
 
         let forms = context
