@@ -1,6 +1,6 @@
 [package]
 name = "dailp"
-version = "0.4.0"
+version = "0.5.0"
 authors = ["Taylor Snead <taylor@snead.xyz>"]
 edition = "2018"
 
@@ -10,13 +10,12 @@ path = "src/lib.rs"
 
 [dependencies]
 serde = {version = "1.0", features = ["derive"]}
-tokio = { version = "1.5", features = ["full", "time"] }
 tokio-stream = "0.1"
 anyhow = "1.0"
 itertools = "0.9"
 async-graphql = { version = "2.8", features = ["dataloader"] }
 futures = "0.3"
-mongodb = "2.0.0-beta"
+mongodb = "2.0"
 lazy_static = "1.4"
 regex = "1.3"
 unicode-normalization = "0.1"

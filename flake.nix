@@ -1,6 +1,8 @@
 {
   inputs = {
-    pkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    pkgs.url = "github:nixos/nixpkgs/nixos-21.11";
+    # Lock a version of nixpkgs that matches our MongoDB instances.
+    nixpkgs-server.url = "github:nixos/nixpkgs/nixos-21.05";
     utils.url = "github:numtide/flake-utils";
     # Provides cargo dependencies.
     fenix = {
@@ -18,53 +20,64 @@
   outputs = inputs:
     inputs.utils.lib.eachDefaultSystem (system:
       let
-        pkgs = inputs.pkgs.legacyPackages.${system};
-        toolchain = with inputs.fenix.packages.${system};
-          combine [
-            minimal.rustc
-            minimal.cargo
-            targets.x86_64-unknown-linux-musl.latest.rust-std
-          ];
+        pkgs = import inputs.pkgs {
+          inherit system;
+          config.allowUnfree = true;
+        };
+        nixpkgs-server = import inputs.nixpkgs-server {
+          inherit system;
+          config.allowUnfree = true;
+        };
+        fenix = inputs.fenix.packages.${system};
+        toolchainFile = {
+          file = ./rust-toolchain.toml;
+          sha256 = "6PfBjfCI9DaNRyGigEmuUP2pcamWsWGc4g7SNEHqD2c=";
+        };
+        rust-toolchain = fenix.fromToolchainFile toolchainFile;
         naersk = inputs.naersk.lib.${system}.override {
-          cargo = toolchain;
-          rustc = toolchain;
+          cargo = rust-toolchain;
+          rustc = rust-toolchain;
         };
         filter = inputs.nix-filter.lib;
+        packageSrc = filter.filter {
+          root = ./.;
+          include = [
+            (filter.inDirectory "types")
+            (filter.inDirectory "graphql")
+            (filter.inDirectory "migration")
+            ./Cargo.toml
+            ./Cargo.lock
+            ./rust-toolchain
+          ];
+        };
         # The rust compiler is internally a cross compiler, so a single
         # toolchain can be used to compile multiple targets. In a hermetic
         # build system like nix flakes, there's effectively one package for
         # every permutation of the supported hosts and targets.
-        rustPackage = target:
-          naersk.buildPackage {
-            root = ./.;
-            src = filter.filter {
-              root = ./.;
-              include = [
-                (filter.inDirectory "types")
-                (filter.inDirectory "graphql")
-                (filter.inDirectory "migration")
-                ./Cargo.toml
-                ./Cargo.lock
-                ./rust-toolchain
-              ];
-            };
-            # Make sure `cargo check` and `cargo test` pass.
-            doCheck = true;
-            doTest = true;
-
-            # Prefer static linking
-            nativeBuildInputs = with pkgs; [ pkgsStatic.stdenv.cc ];
-
-            # Configures the target which will be built.
-            # ref: https://doc.rust-lang.org/cargo/reference/config.html#buildtarget
-            CARGO_BUILD_TARGET = target;
-
-            # Enables static compilation.
-            # ref: https://github.com/rust-lang/rust/issues/79624#issuecomment-737415388
-            CARGO_BUILD_RUSTFLAGS = if target == null then "" else "-C target-feature=+crt-static";
+        targetPackage = let
+          target = "x86_64-unknown-linux-gnu";
+          pkgsCross = import inputs.pkgs {
+            inherit system;
+            crossSystem.config = target;
           };
-        nativePackage = rustPackage null;
-        muslPackage = rustPackage "x86_64-unknown-linux-musl";
+        in naersk.buildPackage {
+          root = ./.;
+          src = packageSrc;
+          doCheck = false;
+
+          # Configures the target which will be built.
+          # ref: https://doc.rust-lang.org/cargo/reference/config.html#buildtarget
+          CARGO_BUILD_TARGET = target;
+          CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_LINKER = if target == null then
+            null
+          else
+            "${pkgsCross.stdenv.cc}/bin/${target}-gcc";
+          TARGET_CC = "${pkgsCross.stdenv.cc}/bin/${target}-gcc";
+        };
+        hostPackage = naersk.buildPackage {
+          root = ./.;
+          src = packageSrc;
+        };
         dailpFunctions = with pkgs;
           stdenv.mkDerivation {
             name = "dailp-functions";
@@ -73,7 +86,7 @@
             unpackPhase = "true";
             installPhase = ''
               mkdir -p $out
-              cp -f ${muslPackage}/bin/dailp-graphql $out/bootstrap
+              cp -f ${targetPackage}/bin/dailp-graphql $out/bootstrap
               zip -j $out/dailp-graphql.zip $out/bootstrap
             '';
           };
@@ -92,30 +105,51 @@
           executable = false;
           destination = "/config.tf.json";
         };
-      in rec {
-        defaultPackage = with pkgs;
-          stdenv.mkDerivation {
-            name = "dailp";
-            src = filter.filter {
-              root = ./.;
-              include =
-                [ (filter.inDirectory "terraform") ./aws-certificate.pem ];
-            };
-            installPhase = ''
-              mkdir -p $out
-              cp -f ${terraformConfig}/config.tf.json $out/
-            '';
+        mkBashApp = name: script:
+          inputs.utils.lib.mkApp {
+            drv = pkgs.writers.writeBashBin name script;
+            exePath = "/bin/${name}";
           };
+        tf = "${pkgs.terraform}/bin/terraform";
+        tfInit = ''
+          cp -f ${terraformConfig}/config.tf.json ./
+          export TF_DATA_DIR=$(pwd)/.terraform
+          ${tf} init
+        '';
+      in rec {
+        # Add extra binary caches for quicker builds of the rust toolchain and MongoDB.
+        nixConfig = {
+          binaryCaches =
+            [ "https://nix-community.cachix.org" "https://dailp.cachix.org" ];
+          binaryCachePublicKeys = [
+            "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
+            "dailp.cachix.org-1:QKIYFfTB/jrD6J8wZoBEpML64ONrIxs3X5ifSKoJ3kA="
+          ];
+        };
 
         apps.migrate-data = inputs.utils.lib.mkApp {
-          drv = nativePackage;
+          drv = hostPackage;
           exePath = "/bin/dailp-migration";
         };
 
-        apps.graphql = inputs.utils.lib.mkApp {
-          drv = nativePackage;
-          exePath = "/bin/dailp-graphql-local";
-        };
+        apps.tf-plan = mkBashApp "plan" ''
+          ${tfInit}
+          ${tf} plan
+        '';
+
+        apps.tf-apply = mkBashApp "apply" ''
+          ${tfInit}
+          ${tf} apply
+        '';
+
+        apps.tf-apply-now = mkBashApp "apply-now" ''
+          ${tfInit}
+          ${tf} apply -auto-approve
+        '';
+
+        apps.tf-init = mkBashApp "tf-init" ''
+          ${tfInit}
+        '';
 
         devShell = with pkgs;
           stdenv.mkDerivation rec {
@@ -130,21 +164,31 @@
               file
               nasm
               terraform
-              (writers.writeBashBin "plan" ''
-                terraform init ${defaultPackage}
-                terraform plan ${defaultPackage}
+              rust-toolchain
+              nodejs-14_x
+              yarn
+              nixpkgs-server.mongodb-4_2
+              (writers.writeBashBin "dev-database" ''
+                mkdir -p .mongo
+                mongod --dbpath .mongo
               '')
-              (writers.writeBashBin "apply" ''
-                terraform init ${defaultPackage}
-                terraform apply ${defaultPackage}
+              (writers.writeBashBin "dev-graphql" ''
+                RUST_LOG=info cargo run --bin dailp-graphql-local
               '')
-              (writers.writeBashBin "apply-now" ''
-                terraform init ${defaultPackage}
-                terraform apply -auto-approve ${defaultPackage}
+              (writers.writeBashBin "dev-migrate" ''
+                RUST_LOG=info cargo run --bin dailp-migration
+              '')
+              (writers.writeBashBin "dev-website" ''
+                cd website
+                yarn start
               '')
               (writers.writeBashBin "output" ''
                 terraform output $1
               '')
+            ] ++ lib.optionals stdenv.isDarwin [
+              darwin.apple_sdk.frameworks.Security
+              libiconv
+              stdenv.cc
             ];
           };
       });

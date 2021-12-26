@@ -13,6 +13,8 @@ yarn-error.log*
 target/
 .auctex-auto/
 .env
+.direnv/
+.mongo/
 *.tfstate
 
 public/
@@ -29,3 +31,5 @@ result/
 serverless.manifest.json
 .serverless/manifest.json
 
+config.tf.json
+*.pem

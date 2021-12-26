@@ -28,12 +28,16 @@ in {
   # verifying that its one of the stages we actually use.
   setup.stage = stage;
 
+  terraform.required_providers.aws = {
+    source = "hashicorp/aws";
+    version = "~> 3.44";
+  };
+
   # Setup AWS credentials depending on whether we are in the development or
   # production account.
   provider.aws = {
     profile = "neu-${config.setup.stage}";
     region = "us-east-1";
-    version = "~> 3.44";
   };
 
   setup = {
