@@ -15,11 +15,15 @@ import * as Wordpress from "src/graphql/wordpress"
 
 export const NavMenu = () => {
   const router = useRouter()
+  const menu = useMenuState()
   const [{ data }] = Wordpress.useMainMenuQuery()
+  if (!data) {
+    return null
+  }
+
   const menuItems = data?.menuItems.nodes
   const isTopLevel = (a) =>
     !menuItems?.some((b) => b?.childItems.nodes.some((b) => b.path === a?.path))
-  const menu = useMenuState()
 
   return (
     <nav css={desktopNav}>
@@ -40,18 +44,18 @@ export const NavMenu = () => {
                     url = new URL(item.path)
                   }
                   return (
-                    <MenuItem
-                      {...menu}
-                      as={Link}
-                      href={url.pathname}
-                      key={item.path}
-                      css={navLink}
-                      aria-current={
-                        router.pathname === url.pathname ? "page" : undefined
-                      }
-                    >
-                      {item.label}
-                    </MenuItem>
+                    <Link href={url.pathname} passHref key={item.path}>
+                      <MenuItem
+                        {...menu}
+                        as="a"
+                        aria-current={
+                          router.pathname === url.pathname ? "page" : undefined
+                        }
+                        css={navLink}
+                      >
+                        {item.label}
+                      </MenuItem>
+                    </Link>
                   )
                 })}
               </Menu>
@@ -63,15 +67,15 @@ export const NavMenu = () => {
             url = new URL(item.path)
           }
           return (
-            <Link
-              key={item.path}
-              href={url.pathname}
-              aria-current={
-                router.pathname === url.pathname ? "page" : undefined
-              }
-              css={navLink}
-            >
-              {item.label}
+            <Link key={item.path} href={url.pathname} passHref>
+              <a
+                css={navLink}
+                aria-current={
+                  router.pathname === url.pathname ? "page" : undefined
+                }
+              >
+                {item.label}
+              </a>
             </Link>
           )
         }
@@ -117,14 +121,14 @@ export const MobileNav = () => {
                 }
                 return (
                   <li css={drawerItem} key={item.path}>
-                    <Link
-                      href={url.pathname}
-                      aria-current={
-                        router.pathname === url.pathname ? "page" : undefined
-                      }
-                      css={navLink}
-                    >
-                      {item.label}
+                    <Link href={url.pathname} passHref>
+                      <a
+                        aria-current={
+                          router.pathname === url.pathname ? "page" : undefined
+                        }
+                      >
+                        {item.label}
+                      </a>
                     </Link>
                   </li>
                 )

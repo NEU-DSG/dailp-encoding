@@ -5,8 +5,8 @@ import {
   useQuery,
   UseQueryArgs,
   dedupExchange,
-  cacheExchange,
   fetchExchange,
+  cacheExchange,
   Client,
 } from "urql"
 import { initUrqlClient, withUrqlClient as withUrqlClientBase } from "next-urql"
@@ -25,19 +25,24 @@ export function useWpQuery<Data = any, Variables = object>(
   })
 }
 
+const sharedCache = cacheExchange
+
 export const client = {
   dailp: createClient({
     url: GRAPHQL_URL,
+    exchanges: [dedupExchange, sharedCache, fetchExchange],
   }),
   wordpress: createClient({
     url: WP_GRAPHQL_URL,
+    exchanges: [dedupExchange, sharedCache, fetchExchange],
   }),
 }
 
 export const withGraphQL = (component) =>
   withUrqlClientBase(
-    (ssr, ctx) => ({
+    (ssrExchange, ctx) => ({
       url: GRAPHQL_URL,
+      exchanges: [dedupExchange, sharedCache, ssrExchange, fetchExchange],
     }),
     { ssr: false }
   )(component)
@@ -51,7 +56,7 @@ export async function getStaticQueries(
     const dailp = initUrqlClient(
       {
         url: GRAPHQL_URL,
-        exchanges: [dedupExchange, cacheExchange, ssrCache, fetchExchange],
+        exchanges: [dedupExchange, sharedCache, ssrCache, fetchExchange],
       },
       false
     )
@@ -65,7 +70,7 @@ export async function getStaticQueries(
     const wp = initUrqlClient(
       {
         url: WP_GRAPHQL_URL,
-        exchanges: [dedupExchange, cacheExchange, ssrCache, fetchExchange],
+        exchanges: [dedupExchange, sharedCache, ssrCache, fetchExchange],
       },
       false
     )
@@ -86,11 +91,15 @@ export function getStaticQueriesNew(
   makeQueries: (params: any, dailp: Client, wordpress: Client) => Promise<any>
 ) {
   return async ({ params }) => {
+    if (process.env.NODE_ENV === "development") {
+      return { props: params || {} }
+    }
+
     const ssrCache = ssrExchange({ isClient: false })
     const dailp = initUrqlClient(
       {
         url: GRAPHQL_URL,
-        exchanges: [dedupExchange, cacheExchange, ssrCache, fetchExchange],
+        exchanges: [dedupExchange, sharedCache, ssrCache, fetchExchange],
       },
       false
     )
@@ -98,7 +107,7 @@ export function getStaticQueriesNew(
     const wp = initUrqlClient(
       {
         url: WP_GRAPHQL_URL,
-        exchanges: [dedupExchange, cacheExchange, ssrCache, fetchExchange],
+        exchanges: [dedupExchange, sharedCache, ssrCache, fetchExchange],
       },
       false
     )

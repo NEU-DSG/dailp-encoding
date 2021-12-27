@@ -2,10 +2,9 @@ import React from "react"
 import { useRouter } from "next/router"
 import Link from "next/link"
 import Layout from "../layout"
-import { queryPage } from "../cms/graphql-form"
 import { EditablePageContents } from "../templates/editable-page"
 import { useHasMounted } from "../cms/routes"
-import * as Wordpress from "src/graphql/wordpress"
+import * as Dailp from "src/graphql/dailp"
 
 /**
  Handle client-only routes for pages that haven't been statically renderered
@@ -19,12 +18,12 @@ export default NotFoundPage
 
 const ClientPage = () => {
   const router = useRouter()
-  const [{ data, error, fetching }] = Wordpress.usePageQuery({
+  const [{ data, error, fetching }] = Dailp.useEditablePageQuery({
     variables: { id: router.pathname },
   })
   if (fetching) {
     return null
-  } else if (data) {
+  } else if (data && data.page) {
     return (
       <EditablePageContents
         data={{ dailp: data }}
@@ -41,7 +40,7 @@ const NotFound = () => (
     <h1>Page Not Found</h1>
     <p>
       We aren't sure what page you were looking for.{" "}
-      <Link to="/">View our collection of Cherokee manuscripts</Link>
+      <Link href="/">View our collection of Cherokee manuscripts</Link>
     </p>
   </main>
 )
