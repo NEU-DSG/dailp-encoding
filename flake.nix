@@ -1,6 +1,7 @@
 {
   inputs = {
     pkgs.url = "github:nixos/nixpkgs/nixos-21.11";
+    pkgs-unstable.url = "github:nixos/nixpkgs/master";
     # Lock a version of nixpkgs that matches our MongoDB instances.
     nixpkgs-server.url = "github:nixos/nixpkgs/nixos-21.05";
     utils.url = "github:numtide/flake-utils";
@@ -24,6 +25,7 @@
           inherit system;
           config.allowUnfree = true;
         };
+        pkgs-unstable = import inputs.pkgs-unstable { inherit system; };
         nixpkgs-server = import inputs.nixpkgs-server {
           inherit system;
           config.allowUnfree = true;
@@ -55,24 +57,24 @@
         # build system like nix flakes, there's effectively one package for
         # every permutation of the supported hosts and targets.
         targetPackage = let
-          target = "x86_64-unknown-linux-gnu";
+          target = "x86_64-unknown-linux-musl";
           pkgsCross = import inputs.pkgs {
             inherit system;
             crossSystem.config = target;
           };
+          cc = pkgsCross.pkgsStatic.stdenv.cc;
         in naersk.buildPackage {
           root = ./.;
           src = packageSrc;
-          doCheck = false;
+          doCheck = true;
+
+          nativeBuildInputs = [ cc ];
 
           # Configures the target which will be built.
           # ref: https://doc.rust-lang.org/cargo/reference/config.html#buildtarget
           CARGO_BUILD_TARGET = target;
-          CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_LINKER = if target == null then
-            null
-          else
-            "${pkgsCross.stdenv.cc}/bin/${target}-gcc";
-          TARGET_CC = "${pkgsCross.stdenv.cc}/bin/${target}-gcc";
+          TARGET_CC = "${cc}/bin/${target}-gcc";
+          CARGO_BUILD_RUSTFLAGS = "-C target-feature=+crt-static";
         };
         hostPackage = naersk.buildPackage {
           root = ./.;
@@ -149,14 +151,16 @@
           ${tf} apply -auto-approve
         '';
 
-        apps.tf-init = mkBashApp "tf-init" ''
+        apps.tf-output = mkBashApp "tf-output" ''
           ${tfInit}
+          ${tf} output $1
         '';
 
         devShell = with pkgs;
           stdenv.mkDerivation rec {
             name = "dailp-dev";
             unpackPhase = "true";
+            RUST_LOG = "info";
             LD_LIBRARY_PATH = "${lib.makeLibraryPath buildInputs}";
             buildInputs = [
               autoconf
@@ -170,27 +174,25 @@
               nodejs-14_x
               yarn
               nixpkgs-server.mongodb-4_2
+              docker
+              pkgs-unstable.act
               (writers.writeBashBin "dev-database" ''
                 mkdir -p .mongo
                 mongod --dbpath .mongo
               '')
               (writers.writeBashBin "dev-graphql" ''
-                RUST_LOG=info cargo run --bin dailp-graphql-local
+                cargo run --bin dailp-graphql-local
               '')
               (writers.writeBashBin "dev-migrate" ''
-                RUST_LOG=info cargo run --bin dailp-migration
+                cargo run --bin dailp-migration
               '')
               (writers.writeBashBin "dev-website" ''
                 cd website
                 yarn start
               '')
-              (writers.writeBashBin "output" ''
-                terraform output $1
-              '')
             ] ++ lib.optionals stdenv.isDarwin [
               darwin.apple_sdk.frameworks.Security
               libiconv
-              stdenv.cc
             ];
           };
       });
