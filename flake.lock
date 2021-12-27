@@ -88,6 +88,22 @@
         "type": "github"
       }
     },
+    "pkgs-unstable": {
+      "locked": {
+        "lastModified": 1640579071,
+        "narHash": "sha256-CPnxlk7590FCrtz+SbUQFnIXiA5xBMR9WgR7xGC1dmY=",
+        "owner": "nixos",
+        "repo": "nixpkgs",
+        "rev": "41a11ec584d61033b8adae4e66e424e3350c15b7",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nixos",
+        "ref": "master",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
     "root": {
       "inputs": {
         "fenix": "fenix",
@@ -95,6 +111,7 @@
         "nix-filter": "nix-filter",
         "nixpkgs-server": "nixpkgs-server",
         "pkgs": "pkgs",
+        "pkgs-unstable": "pkgs-unstable",
         "utils": "utils"
       }
     },

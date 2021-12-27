@@ -41,6 +41,7 @@ let
           function_name = name;
           filename = "${config.functions.package_path}/${name}.zip";
           runtime = "provided.al2";
+          architectures = [ "x86_64" ];
           handler = name;
           role = "\${aws_iam_role.lambda_exec.arn}";
           memory_size = 512;
