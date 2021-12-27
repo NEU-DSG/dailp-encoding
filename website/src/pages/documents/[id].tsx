@@ -21,7 +21,6 @@ import {
 } from "src/routes"
 import { useScrollableTabState } from "src/scrollable-tabs"
 import { css, ClassNames } from "@emotion/react"
-import { DeepPartial } from "tsdef"
 import {
   ViewMode,
   BasicMorphemeSegment,
@@ -55,16 +54,16 @@ enum Tabs {
 export type Document = Dailp.AnnotatedDocumentQuery["document"]
 
 /** A full annotated document, including all metadata and the translation(s) */
-const AnnotatedDocumentPage = ({ id }) => {
-  const [
-    {
-      data: { document: doc },
-    },
-  ] = Dailp.useAnnotatedDocumentQuery({
-    variables: { id, isReference: false },
+const AnnotatedDocumentPage = (props) => {
+  const [{ data }] = Dailp.useAnnotatedDocumentQuery({
+    variables: { id: props.id, isReference: false },
   })
+  const doc = data?.document
+  if (!doc) {
+    return null
+  }
   return (
-    <Layout title={doc.title}>
+    <Layout title={doc?.title}>
       <main css={annotatedDocument}>
         <DocumentTitleHeader doc={doc} showDetails={true} />
         <TabSet doc={doc} />
@@ -78,19 +77,20 @@ interface Params extends ParsedUrlQuery {
   id: string
 }
 
-export const getStaticProps = getStaticQueriesNew(async (params, dailp, wp) => {
-  const id = params.id.toUpperCase()
-  await wp.query(Wordpress.MainMenuDocument).toPromise()
-  const { data } = await dailp
-    .query<Dailp.AnnotatedDocumentQuery, Dailp.AnnotatedDocumentQueryVariables>(
-      Dailp.AnnotatedDocumentDocument,
-      { id, isReference: false }
-    )
-    .toPromise()
-  return { id, doc: data?.document }
-})
+export const getStaticProps = getStaticQueriesNew(
+  async (params: Params, dailp, wp) => {
+    await wp.query(Wordpress.MainMenuDocument).toPromise()
+    const { data } = await dailp
+      .query<
+        Dailp.AnnotatedDocumentQuery,
+        Dailp.AnnotatedDocumentQueryVariables
+      >(Dailp.AnnotatedDocumentDocument, { id: params.id, isReference: false })
+      .toPromise()
+    return { id: params.id, doc: data?.document }
+  }
+)
 
-export const getStaticPaths: GetStaticPaths = async () => {
+export const getStaticPaths: GetStaticPaths = async (context) => {
   const { data } = await client.dailp
     .query<Dailp.DocumentsPagesQuery, Dailp.DocumentsPagesQueryVariables>(
       Dailp.DocumentsPagesDocument

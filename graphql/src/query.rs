@@ -74,7 +74,7 @@ impl Query {
     ) -> FieldResult<Option<AnnotatedDoc>> {
         Ok(context
             .data::<DataLoader<Database>>()?
-            .load_one(dailp::DocumentId(id))
+            .load_one(dailp::DocumentId(id.to_ascii_uppercase()))
             .await?)
     }
 

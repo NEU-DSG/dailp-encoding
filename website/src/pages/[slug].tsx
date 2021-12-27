@@ -9,7 +9,10 @@ import { client, getStaticQueriesNew } from "src/graphql"
 
 const WordpressPage = ({ slug }) => {
   const [{ data }] = Wordpress.usePageQuery({ variables: { slug } })
-  const page = data.pages.nodes[0]
+  if (!data) {
+    return null
+  }
+  const page = data?.pages?.nodes[0]
   return (
     <Layout>
       <Helmet>

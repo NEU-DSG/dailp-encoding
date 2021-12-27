@@ -9,6 +9,9 @@ import { getStaticQueriesNew } from "src/graphql"
 
 const DocumentDetails = ({ id }) => {
   const [{ data }] = Dailp.useDocumentDetailsQuery({ variables: { id } })
+  if (!data) {
+    return null
+  }
   const doc = data.document
   return (
     <Layout>
@@ -40,9 +43,10 @@ const DocumentDetails = ({ id }) => {
 export default DocumentDetails
 
 export const getStaticProps = getStaticQueriesNew(async (params, dailp, wp) => {
-  const id = params.id.toUpperCase()
-  await dailp.query(Dailp.DocumentDetailsDocument, { id }).toPromise()
-  return { id }
+  await dailp
+    .query(Dailp.DocumentDetailsDocument, { id: params.id })
+    .toPromise()
+  return params
 })
 
 export { getStaticPaths } from "../[id]"
