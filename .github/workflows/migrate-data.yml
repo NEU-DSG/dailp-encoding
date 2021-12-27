@@ -50,7 +50,7 @@ jobs:
         run: |
           nix run --impure -L .#tf-plan
           export DAILP_API_URL=$(nix run --impure .#tf-output functions_url)
-          nix run .#migrate-data -L
+          nix run --impure -L .#migrate-data
       - name: Publish website
         run: |
           curl -X POST -d {} "$(nix run --impure .#tf-output amplify_webhook)" -H "Content-Type:application/json"
