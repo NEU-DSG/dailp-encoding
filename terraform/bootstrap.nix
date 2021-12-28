@@ -28,6 +28,10 @@ with lib; {
       versioning.enabled = true;
       tags = { "Terraform" = "true"; } // config.setup.global_tags;
       lifecycle.prevent_destroy = true;
+      logging = {
+        target_bucket = "s3-server-access-logs-783177801354";
+        target_prefix = "/${config.setup.state.bucket}";
+      };
     };
 
     resource.aws_dynamodb_table.tf_lock_state = {
