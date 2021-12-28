@@ -152,7 +152,7 @@
         '';
 
         apps.tf-output = mkBashApp "tf-output" ''
-          ${tf} output $1
+          ${tf} output $1 | xargs
         '';
 
         devShell = with pkgs;
