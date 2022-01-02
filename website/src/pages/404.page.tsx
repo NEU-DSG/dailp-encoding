@@ -1,10 +1,10 @@
 import React from "react"
-import { useRouter } from "next/router"
-import Link from "next/link"
+import { useLocation } from "renderer/PageShell"
+import * as Dailp from "src/graphql/dailp"
+import Link from "src/link"
+import { useHasMounted } from "../cms/routes"
 import Layout from "../layout"
 import { EditablePageContents } from "../templates/editable-page"
-import { useHasMounted } from "../cms/routes"
-import * as Dailp from "src/graphql/dailp"
 
 /**
  Handle client-only routes for pages that haven't been statically renderered
@@ -17,9 +17,9 @@ const NotFoundPage = () => {
 export default NotFoundPage
 
 const ClientPage = () => {
-  const router = useRouter()
-  const [{ data, error, fetching }] = Dailp.useEditablePageQuery({
-    variables: { id: router.pathname },
+  const location = useLocation()
+  const [{ data, fetching }] = Dailp.useEditablePageQuery({
+    variables: { id: location.pathname },
   })
   if (fetching) {
     return null

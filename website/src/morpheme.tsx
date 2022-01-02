@@ -1,14 +1,13 @@
+import { groupBy } from "lodash"
 import React from "react"
+import { MdClose } from "react-icons/md"
 import { Clickable } from "reakit/Clickable"
 import { DialogStateReturn } from "reakit/Dialog"
-import { css } from "@emotion/react"
-import { groupBy } from "lodash"
-import { MdClose } from "react-icons/md"
-import theme, { typography } from "./theme"
-import { morphemeDisplayTag, TagSet } from "./types"
-import Link from "next/link"
-import { glossaryRoute, morphemeTagId } from "./routes"
 import * as Dailp from "src/graphql/dailp"
+import Link from "src/link"
+import * as css from "./morpheme.css"
+import { glossaryRoute } from "./routes"
+import { TagSet, morphemeDisplayTag } from "./types"
 
 type BasicMorphemeSegment = NonNullable<Dailp.FormFieldsFragment["segments"]>[0]
 
@@ -43,7 +42,7 @@ export const MorphemeDetails = (props: {
       definition: string
     }>(tag.data.tag, props.tagSet)
     titleArea = matchingTag?.title ? (
-      <h2 css={margined}>{matchingTag.title}</h2>
+      <h2 className={css.margined}>{matchingTag.title}</h2>
     ) : null
     content = (
       <>
@@ -60,14 +59,14 @@ export const MorphemeDetails = (props: {
     <>
       {titleArea}
       <Clickable
-        css={closeButton}
+        className={css.closeButton}
         role="button"
         aria-label="Close Dialog"
         onClick={props.dialog.hide}
       >
         <MdClose size={32} />
       </Clickable>
-      <div css={[scrollable, padded]}>
+      <div className={css.scrollable}>
         {content}
         <SimilarMorphemeList
           documentId={props.documentId}
@@ -79,32 +78,6 @@ export const MorphemeDetails = (props: {
     </>
   )
 }
-
-const margined = css`
-  margin: ${typography.rhythm(1 / 2)} 1rem;
-`
-
-const padded = css`
-  padding: ${typography.rhythm(1 / 2)} 1rem;
-`
-
-const scrollable = css`
-  overflow-y: scroll;
-  -webkit-overflow-scrolling: touch;
-  width: 100%;
-  max-height: 75vh;
-  min-height: 20rem;
-`
-
-const closeButton = css`
-  position: absolute;
-  top: ${typography.rhythm(1 / 2)};
-  right: ${typography.rhythm(1 / 2)};
-  cursor: pointer;
-  border: none;
-  background: none;
-  padding: 0;
-`
 
 /**
  * List of morphemes that share the given gloss, and all words that contain

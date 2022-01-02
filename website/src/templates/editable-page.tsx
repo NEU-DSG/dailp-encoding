@@ -1,15 +1,15 @@
 import React from "react"
-import { css } from "@emotion/react"
-import { usePlugin } from "tinacms"
-import Markdown from "react-markdown"
-import { MarkdownFieldPlugin } from "react-tinacms-editor"
 import { Helmet } from "react-helmet"
+import Markdown from "react-markdown"
+
+/* import { MarkdownFieldPlugin } from "react-tinacms-editor" */
 import gfm from "remark-gfm"
-import { useGraphQLForm, blocksField } from "../cms/graphql-form"
-import theme, { fullWidth, paddedWidth } from "../theme"
-import Layout from "../layout"
-import { useCredentials } from "../auth"
+import { usePlugin } from "tinacms"
 import * as Dailp from "src/graphql/dailp"
+import { fullWidth, paddedWidth } from "src/sprinkles.css"
+import { useCredentials } from "../auth"
+import { blocksField, useGraphQLForm } from "../cms/graphql-form"
+import Layout from "../layout"
 
 interface Props {
   pageContext?: {
@@ -26,8 +26,8 @@ const EditablePage = (props: Props) => (
 export default EditablePage
 
 export const EditablePageContents = (props: Props) => (
-  <main css={paddedWidth}>
-    <article css={fullWidth}>
+  <main className={paddedWidth}>
+    <article className={fullWidth}>
       <EditablePageInner {...props} />
     </article>
   </main>
@@ -44,7 +44,7 @@ const EditablePageSSR = (props: Props) => {
 
 const EditablePageInner = (props: Props) => {
   const staticData = props.data.dailp.page
-  usePlugin(MarkdownFieldPlugin)
+  /* usePlugin(MarkdownFieldPlugin) */
 
   const [data, form] = useGraphQLForm(
     staticData,

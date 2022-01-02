@@ -1,15 +1,15 @@
+import fetch from "isomorphic-unfetch"
 import { useMemo } from "react"
 import {
-  createClient,
-  ssrExchange,
-  useQuery,
+  Client,
   UseQueryArgs,
+  cacheExchange,
+  createClient,
   dedupExchange,
   fetchExchange,
-  cacheExchange,
-  Client,
+  ssrExchange,
+  useQuery,
 } from "urql"
-import { initUrqlClient, withUrqlClient as withUrqlClientBase } from "next-urql"
 
 const GRAPHQL_URL = "http://localhost:8080/graphql"
 const WP_GRAPHQL_URL = "https://wp.dailp.northeastern.edu/graphql"
@@ -38,87 +38,95 @@ export const client = {
   }),
 }
 
-export const withGraphQL = (component) =>
-  withUrqlClientBase(
-    (ssrExchange, ctx) => ({
-      url: GRAPHQL_URL,
-      exchanges: [dedupExchange, sharedCache, ssrExchange, fetchExchange],
-    }),
-    { ssr: false }
-  )(component)
+export const customClient = (suspense = true, exchanges = []) =>
+  createClient({
+    url: GRAPHQL_URL,
+    exchanges: [dedupExchange, sharedCache, ...exchanges, fetchExchange],
+    suspense,
+    fetch,
+  })
 
-export async function getStaticQueries(
-  dailpQuery?: (client: Client) => any[],
-  wpQuery?: (client: Client) => any[]
-) {
-  const ssrCache = ssrExchange({ isClient: false })
-  if (dailpQuery) {
-    const dailp = initUrqlClient(
-      {
-        url: GRAPHQL_URL,
-        exchanges: [dedupExchange, sharedCache, ssrCache, fetchExchange],
-      },
-      false
-    )
-    const qs = dailpQuery(dailp)
-    for (const q of qs) {
-      await q.toPromise()
-    }
-  }
+// export const withGraphQL = (component) =>
+//   withUrqlClientBase(
+//     (ssrExchange, ctx) => ({
+//       url: GRAPHQL_URL,
+//       exchanges: [dedupExchange, sharedCache, ssrExchange, fetchExchange],
+//     }),
+//     { ssr: false }
+//   )(component)
 
-  if (wpQuery) {
-    const wp = initUrqlClient(
-      {
-        url: WP_GRAPHQL_URL,
-        exchanges: [dedupExchange, sharedCache, ssrCache, fetchExchange],
-      },
-      false
-    )
-    const qs = wpQuery(wp)
-    for (const q of qs) {
-      await q.toPromise()
-    }
-  }
+// export async function getStaticQueries(
+//   dailpQuery?: (client: Client) => any[],
+//   wpQuery?: (client: Client) => any[]
+// ) {
+//   const ssrCache = ssrExchange({ isClient: false })
+//   if (dailpQuery) {
+//     const dailp = initUrqlClient(
+//       {
+//         url: GRAPHQL_URL,
+//         exchanges: [dedupExchange, sharedCache, ssrCache, fetchExchange],
+//       },
+//       false
+//     )
+//     const qs = dailpQuery(dailp)
+//     for (const q of qs) {
+//       await q.toPromise()
+//     }
+//   }
 
-  return {
-    props: {
-      urqlState: ssrCache.extractData(),
-    },
-  }
-}
+//   if (wpQuery) {
+//     const wp = initUrqlClient(
+//       {
+//         url: WP_GRAPHQL_URL,
+//         exchanges: [dedupExchange, sharedCache, ssrCache, fetchExchange],
+//       },
+//       false
+//     )
+//     const qs = wpQuery(wp)
+//     for (const q of qs) {
+//       await q.toPromise()
+//     }
+//   }
 
-export function getStaticQueriesNew(
-  makeQueries: (params: any, dailp: Client, wordpress: Client) => Promise<any>
-) {
-  return async ({ params }) => {
-    if (process.env.NODE_ENV === "development") {
-      return { props: params || {} }
-    }
+//   return {
+//     props: {
+//       urqlState: ssrCache.extractData(),
+//     },
+//   }
+// }
 
-    const ssrCache = ssrExchange({ isClient: false })
-    const dailp = initUrqlClient(
-      {
-        url: GRAPHQL_URL,
-        exchanges: [dedupExchange, sharedCache, ssrCache, fetchExchange],
-      },
-      false
-    )
+// export function getStaticQueriesNew(
+//   makeQueries: (params: any, dailp: Client, wordpress: Client) => Promise<any>
+// ) {
+//   return async ({ params }) => {
+//     if (process.env.NODE_ENV === "development") {
+//       return { props: params || {} }
+//     }
 
-    const wp = initUrqlClient(
-      {
-        url: WP_GRAPHQL_URL,
-        exchanges: [dedupExchange, sharedCache, ssrCache, fetchExchange],
-      },
-      false
-    )
+//     const ssrCache = ssrExchange({ isClient: false })
+//     const dailp = initUrqlClient(
+//       {
+//         url: GRAPHQL_URL,
+//         exchanges: [dedupExchange, sharedCache, ssrCache, fetchExchange],
+//       },
+//       false
+//     )
 
-    const pageProps = (await makeQueries(params, dailp, wp)) || {}
+//     const wp = initUrqlClient(
+//       {
+//         url: WP_GRAPHQL_URL,
+//         exchanges: [dedupExchange, sharedCache, ssrCache, fetchExchange],
+//       },
+//       false
+//     )
 
-    return {
-      props: {
-        urqlState: ssrCache.extractData(),
-        ...pageProps,
-      },
-    }
-  }
-}
+//     const pageProps = (await makeQueries(params, dailp, wp)) || {}
+
+//     return {
+//       props: {
+//         urqlState: ssrCache.extractData(),
+//         ...pageProps,
+//       },
+//     }
+//   }
+// }

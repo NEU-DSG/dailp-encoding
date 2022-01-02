@@ -1,16 +1,15 @@
-import React, { useState, useRef } from "react"
-import { css } from "@emotion/react"
-import { Input } from "reakit/Input"
-import { Button } from "reakit/Button"
-import { fullWidth, typography } from "../theme"
 import { groupBy, uniq } from "lodash"
-import Layout from "../layout"
+import React, { useRef, useState } from "react"
+import { Button } from "reakit/Button"
+import { Input } from "reakit/Input"
 import * as Dailp from "src/graphql/dailp"
+import { fullWidth } from "src/sprinkles.css"
+import Layout from "../layout"
+import { boldWordRow, margined, underlined, wordRow } from "./timeline.css"
 
 const TimelinePage = () => {
   const staticMorphemeId = useRef("")
   const [morphemeId, setMorpheme] = useState(null)
-
   return (
     <Layout title="Timeline">
       <main>
@@ -41,8 +40,8 @@ const Timeline = (p: { gloss: string }) => {
     return <>Error!</>
   }
   return (
-    <div css={wide}>
-      <div css={[wordRow, bolden]}>
+    <div className={fullWidth}>
+      <div className={boldWordRow}>
         <div>Document ID</div>
         <div>Original</div>
         <div>Simple Phonetics</div>
@@ -61,13 +60,13 @@ const Timeline = (p: { gloss: string }) => {
           (form) => form.normalizedSource || form.source
         )
         return (
-          <div key={timeRange} css={margined}>
-            <h2 css={underlined}>{timeRange}</h2>
+          <div key={timeRange} className={margined}>
+            <h2 className={underlined}>{timeRange}</h2>
             {Object.entries(deduplicatedForms).map(([key, forms], idx) => {
               if (forms.length === 1) {
                 const form = forms[0]
                 return (
-                  <div key={idx} css={wordRow}>
+                  <div key={idx} className={wordRow}>
                     <div>{form.documentId}</div>
                     <div>{form.source}</div>
                     <div>{form.simplePhonetics}</div>
@@ -81,7 +80,7 @@ const Timeline = (p: { gloss: string }) => {
                 const englishGloss = forms.find((w) => w.englishGloss?.length)
                 const docIds = uniq(forms.map((w) => w.documentId))
                 return (
-                  <div key={idx} css={wordRow}>
+                  <div key={idx} className={wordRow}>
                     <div>{docIds.join(", ")}</div>
                     <div>{key}</div>
                     <div />
@@ -97,29 +96,3 @@ const Timeline = (p: { gloss: string }) => {
     </div>
   )
 }
-
-const wide = css`
-  ${fullWidth};
-`
-
-export const bolden = css`
-  font-weight: bold;
-`
-
-const underlined = css`
-  border-bottom: 1px solid gray;
-  margin-bottom: ${typography.rhythm(0.5)};
-`
-
-const margined = css`
-  margin-bottom: ${typography.rhythm(1.5)};
-`
-
-export const wordRow = css`
-  display: flex;
-  flex-flow: row;
-  margin-bottom: ${typography.rhythm(0.5)};
-  & > * {
-    width: 10rem;
-  }
-`

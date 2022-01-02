@@ -16,7 +16,6 @@ generates:
     config:
       urqlImportFrom: ../urql-wordpress
 config:
-  avoidOptionals:
-    field: true
+  avoidOptionals: true
   useTypeImports: true
   dedupeFragments: true

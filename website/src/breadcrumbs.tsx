@@ -1,20 +1,14 @@
-import styled from "@emotion/styled"
-import theme, { typography } from "./theme"
+import React from "react"
+import * as css from "./breadcrumbs.css"
 
-export const Breadcrumbs = styled.ul`
-  font-family: ${theme.fonts.body};
-  font-weight: normal;
-  list-style: none;
-  padding-inline-start: 0;
-  margin-bottom: ${typography.rhythm(1 / 2)};
-  margin-left: 0;
-  li {
-    display: inline;
-    font-size: 1rem;
-    &:after {
-      padding: 0 0.5rem;
-      content: "/";
-      color: ${theme.colors.text};
-    }
-  }
-`
+export const Breadcrumbs = (p: React.HTMLAttributes<HTMLUListElement>) => {
+  let { children: baseChildren, ...rest } = p
+  const children = React.Children.map(baseChildren, (e) => (
+    <li className={css.breadcrumbElement}>{e}</li>
+  ))
+  return (
+    <ul className={css.breadcrumbs} {...rest}>
+      {children}
+    </ul>
+  )
+}

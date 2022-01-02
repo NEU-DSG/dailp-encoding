@@ -1,16 +1,11 @@
+import { authExchange } from "@urql/exchange-auth"
 import {
-  createClient,
-  Provider,
-  ssrExchange,
-  useQuery,
-  UseQueryArgs,
-  dedupExchange,
   cacheExchange,
+  createClient,
+  dedupExchange,
   fetchExchange,
-  Client,
   makeOperation,
 } from "urql"
-import { authExchange } from "@urql/exchange-auth"
 
 export const apolloClient = (token: string) =>
   createClient({
