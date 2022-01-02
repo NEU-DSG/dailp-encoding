@@ -1,12 +1,12 @@
 use crate::spreadsheets::SheetResult;
 use anyhow::Result;
-use dailp::{MorphemeTag, TagForm};
+use dailp::{Database, MorphemeTag, TagForm};
 use log::info;
 
 /// Cherokee has many functional morphemes that are documented.
 /// Pulls all the details we have about each morpheme from our spreadsheets,
 /// parses it into typed data, then updates the database entry for each.
-pub async fn migrate_tags() -> Result<()> {
+pub async fn migrate_tags(db: &Database) -> Result<()> {
     let glossary = SheetResult::from_sheet(
         "17LSuDu7QHJfJyLDVJjO0f4wmTHQLVyHuSktr6OrbD_M",
         Some("DAILP Storage Tags"),
@@ -17,10 +17,12 @@ pub async fn migrate_tags() -> Result<()> {
     let glossary = parse_tag_glossary(glossary?)?;
 
     info!("Pushing tags to db...");
-    crate::update_tag(&glossary).await?;
+    for tag in glossary {
+        db.update_tag(tag).await?;
+    }
 
     // Make sure all reference grammars are cited.
-    migrate_glossary_metadata("17LSuDu7QHJfJyLDVJjO0f4wmTHQLVyHuSktr6OrbD_M").await?;
+    migrate_glossary_metadata(db, "17LSuDu7QHJfJyLDVJjO0f4wmTHQLVyHuSktr6OrbD_M").await?;
 
     Ok(())
 }
@@ -57,44 +59,41 @@ fn parse_tag_glossary(sheet: SheetResult) -> Result<Vec<MorphemeTag>> {
 
 /// Migrate the metadata for each source document used in creating the glossary.
 /// There may be multiple entries here, because there are several grammars we use.
-async fn migrate_glossary_metadata(sheet_id: &str) -> Result<()> {
+async fn migrate_glossary_metadata(db: &Database, sheet_id: &str) -> Result<()> {
     use itertools::Itertools;
     let sheet = SheetResult::from_sheet(sheet_id, Some("Metadata")).await?;
-    let docs = sheet
-        .values
-        .into_iter()
-        .chunks(7)
-        .into_iter()
-        .filter_map(|mut values| {
-            Some(dailp::AnnotatedDoc {
-                meta: dailp::DocumentMetadata {
-                    id: dailp::DocumentId(values.next()?.pop()?),
-                    title: values.next()?.pop()?,
-                    date: Some(dailp::Date::from_ymd(
-                        values.next()?.pop()?.parse().unwrap(),
-                        1,
-                        1,
-                    )),
-                    contributors: values
-                        .next()?
-                        .into_iter()
-                        .skip(1)
-                        .map(dailp::Contributor::new_author)
-                        .collect(),
-                    collection: Some("Reference Materials".to_owned()),
-                    genre: None,
-                    is_reference: true,
-                    page_images: None,
-                    sources: Vec::new(),
-                    translation: None,
-                    audio_recording: None,
-                    order_index: 0,
-                },
-                segments: None,
-            })
+    let chunks = sheet.values.into_iter().chunks(7);
+    let docs = chunks.into_iter().filter_map(|mut values| {
+        Some(dailp::AnnotatedDoc {
+            meta: dailp::DocumentMetadata {
+                id: dailp::DocumentId(values.next()?.pop()?),
+                title: values.next()?.pop()?,
+                date: Some(dailp::Date::from_ymd(
+                    values.next()?.pop()?.parse().unwrap(),
+                    1,
+                    1,
+                )),
+                contributors: values
+                    .next()?
+                    .into_iter()
+                    .skip(1)
+                    .map(dailp::Contributor::new_author)
+                    .collect(),
+                collection: Some("Reference Materials".to_owned()),
+                genre: None,
+                is_reference: true,
+                page_images: None,
+                sources: Vec::new(),
+                translation: None,
+                audio_recording: None,
+                order_index: 0,
+            },
+            segments: None,
         })
-        .collect::<Vec<_>>();
-    crate::update_document(&docs).await?;
+    });
+    for doc in docs {
+        db.update_document(doc).await?;
+    }
     Ok(())
 }
 

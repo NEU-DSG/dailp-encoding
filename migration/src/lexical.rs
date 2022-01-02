@@ -1,12 +1,12 @@
 use crate::spreadsheets::{LexicalEntryWithForms, SheetResult};
 use anyhow::Result;
 use dailp::{
-    convert_udb, seg_verb_surface_forms, AnnotatedDoc, AnnotatedForm, Contributor, Date,
+    convert_udb, seg_verb_surface_forms, AnnotatedDoc, AnnotatedForm, Contributor, Database, Date,
     DocumentMetadata, LexicalConnection, MorphemeId, MorphemeSegment, PositionInDocument,
 };
 use log::info;
 
-pub async fn migrate_dictionaries() -> Result<()> {
+pub async fn migrate_dictionaries(db: &Database) -> Result<()> {
     let df1975 = parse_new_df1975(
         SheetResult::from_sheet("11ssqdimOQc_hp3Zk8Y55m6DFfKR96OOpclUg5wcGSVE", None).await?,
         "DF1975",
@@ -47,40 +47,38 @@ pub async fn migrate_dictionaries() -> Result<()> {
     );
 
     parse_numerals(
+        db,
         "1MB_FCG3QhmX-pw9t9PyMtFlV8SCvgXzWz8B9BdvEtec",
         "DF1975",
         1975,
     )
     .await?;
 
-    ingest_particle_index("1YppMsIvNixHdq7oM_iCnYE1ZI4y0TMSf-mVibji7pJ4").await?;
+    ingest_particle_index(db, "1YppMsIvNixHdq7oM_iCnYE1ZI4y0TMSf-mVibji7pJ4").await?;
 
-    ingest_ac1995("1x02KTuF0yyEFcrJwkfFiBKj79ysQTZfLKB6hKeq-ZT8").await?;
+    ingest_ac1995(db, "1x02KTuF0yyEFcrJwkfFiBKj79ysQTZfLKB6hKeq-ZT8").await?;
 
     // DF1975 Grammatical Appendix (PF1975)
-    parse_appendix("1VjpKXMqb7CgFKE5lk9E6gqL-k6JKZ3FVUvhnqiMZYQg", 2).await?;
+    parse_appendix(db, "1VjpKXMqb7CgFKE5lk9E6gqL-k6JKZ3FVUvhnqiMZYQg", 2).await?;
 
-    let entries: Vec<_> = df1975
+    let entries = df1975
         .chain(df2003)
         .chain(root_nouns)
         .chain(root_adjs)
         .chain(body_parts)
-        .collect();
+        .chain(irreg_nouns)
+        .chain(ptcp_nouns)
+        .chain(inf_nouns);
 
     info!("Pushing entries to database...");
-
     // Push all lexical entries to the database.
-    crate::update_form(entries.iter().map(|x| &x.entry)).await?;
-
-    let forms = entries
-        .iter()
-        .chain(&irreg_nouns)
-        .chain(&ptcp_nouns)
-        .chain(&inf_nouns)
-        .flat_map(|x| &x.forms);
-
-    // Push all the surface forms to the sea of words.
-    crate::update_form(forms).await?;
+    for entry in entries {
+        db.update_form(entry.entry).await?;
+        // Push all the surface forms to the sea of words.
+        for form in entry.forms {
+            db.update_form(form).await?;
+        }
+    }
 
     let docs = vec![
         AnnotatedDoc {
@@ -121,12 +119,14 @@ pub async fn migrate_dictionaries() -> Result<()> {
             segments: None,
         },
     ];
-    crate::update_document(&docs).await?;
+    for doc in docs {
+        db.update_document(doc).await?;
+    }
 
     Ok(())
 }
 
-async fn parse_numerals(sheet_id: &str, doc_id: &str, year: i32) -> Result<()> {
+async fn parse_numerals(db: &Database, sheet_id: &str, doc_id: &str, year: i32) -> Result<()> {
     let numerals = SheetResult::from_sheet(sheet_id, None).await?;
     let date = Date::from_ymd(year, 1, 1);
 
@@ -168,10 +168,11 @@ async fn parse_numerals(sheet_id: &str, doc_id: &str, year: i32) -> Result<()> {
                 page_break: None,
                 audio_track: None,
             })
-        })
-        .collect::<Vec<_>>();
+        });
 
-    crate::update_form(&forms).await?;
+    for form in forms {
+        db.update_form(form).await?;
+    }
 
     Ok(())
 }
@@ -204,11 +205,11 @@ async fn parse_meta(sheet_id: &str, collection: &str) -> Result<DocumentMetadata
     })
 }
 
-async fn parse_appendix(sheet_id: &str, to_skip: usize) -> Result<()> {
+async fn parse_appendix(db: &Database, sheet_id: &str, to_skip: usize) -> Result<()> {
     let sheet = SheetResult::from_sheet(sheet_id, None).await?;
     let meta = parse_meta(sheet_id, "Vocabularies").await?;
 
-    let forms: Vec<_> = sheet
+    let forms = sheet
         .values
         .into_iter()
         .skip(1)
@@ -243,32 +244,29 @@ async fn parse_appendix(sheet_id: &str, to_skip: usize) -> Result<()> {
                 date_recorded: meta.date.clone(),
                 audio_track: None,
             })
-        })
-        .collect();
+        });
 
-    crate::update_form(&forms).await?;
+    for form in forms {
+        db.update_form(form).await?;
+    }
 
     let links = SheetResult::from_sheet(sheet_id, Some("References")).await?;
-    let links: Vec<_> = links
-        .values
-        .into_iter()
-        .skip(1)
-        .filter_map(|row| {
-            let mut row = row.into_iter();
-            Some(LexicalConnection::new(
-                MorphemeId::new(Some(meta.id.clone()), None, row.next()?),
-                MorphemeId::parse(&row.next()?)?,
-            ))
-        })
-        .collect();
-    crate::update_connection(&links).await?;
+    let links = links.values.into_iter().skip(1).filter_map(|row| {
+        let mut row = row.into_iter();
+        Some(LexicalConnection::new(
+            MorphemeId::new(Some(meta.id.clone()), None, row.next()?),
+            MorphemeId::parse(&row.next()?)?,
+        ))
+    });
+    for link in links {
+        db.update_connection(link).await?;
+    }
 
     let doc = AnnotatedDoc {
         meta,
         segments: None,
     };
-    let docs = vec![doc];
-    crate::update_document(&docs).await?;
+    db.update_document(doc).await?;
 
     Ok(())
 }
@@ -343,7 +341,7 @@ fn parse_new_df1975(
         })
 }
 
-async fn ingest_particle_index(document_id: &str) -> Result<()> {
+async fn ingest_particle_index(db: &Database, document_id: &str) -> Result<()> {
     let sheet = SheetResult::from_sheet(document_id, None).await?;
     let forms = sheet
         .values
@@ -373,57 +371,56 @@ async fn ingest_particle_index(document_id: &str) -> Result<()> {
                 position: pos,
                 audio_track: None,
             })
-        })
-        .collect::<Vec<_>>();
+        });
 
     // Push the forms to the database.
-    crate::update_form(&forms).await?;
+    for form in forms {
+        db.update_form(form).await?;
+    }
 
     Ok(())
 }
 
-async fn ingest_ac1995(sheet_id: &str) -> Result<()> {
+async fn ingest_ac1995(db: &Database, sheet_id: &str) -> Result<()> {
     let sheet = SheetResult::from_sheet(sheet_id, None).await?;
     let meta = parse_meta(sheet_id, "Vocabularies").await?;
-    let forms = sheet
-        .values
-        .into_iter()
-        .filter_map(|row| {
-            let mut row = row.into_iter();
-            let index: i32 = row.next()?.parse().ok()?;
-            let form_id = row.next()?;
-            let syllabary = row.next()?;
-            let _romanized = row.next()?;
-            let normalized = row.next()?;
-            let translation = row.next()?;
-            let pos = PositionInDocument::new(meta.id.clone(), "1".to_owned(), index);
-            Some(AnnotatedForm {
-                id: form_id,
-                simple_phonetics: Some(normalized),
-                normalized_source: None,
-                phonemic: None,
-                commentary: None,
-                line_break: None,
-                page_break: None,
-                english_gloss: vec![translation],
-                segments: None,
-                date_recorded: meta.date.clone(),
-                source: syllabary,
-                position: pos,
-                audio_track: None,
-            })
+    let forms = sheet.values.into_iter().filter_map(|row| {
+        let mut row = row.into_iter();
+        let index: i32 = row.next()?.parse().ok()?;
+        let form_id = row.next()?;
+        let syllabary = row.next()?;
+        let _romanized = row.next()?;
+        let normalized = row.next()?;
+        let translation = row.next()?;
+        let pos = PositionInDocument::new(meta.id.clone(), "1".to_owned(), index);
+        Some(AnnotatedForm {
+            id: form_id,
+            simple_phonetics: Some(normalized),
+            normalized_source: None,
+            phonemic: None,
+            commentary: None,
+            line_break: None,
+            page_break: None,
+            english_gloss: vec![translation],
+            segments: None,
+            date_recorded: meta.date.clone(),
+            source: syllabary,
+            position: pos,
+            audio_track: None,
         })
-        .collect::<Vec<_>>();
-
-    // Update the document metadata.
-    crate::update_document(&[AnnotatedDoc {
-        meta,
-        segments: None,
-    }])
-    .await?;
+    });
 
     // Push the forms to the database.
-    crate::update_form(&forms).await?;
+    for form in forms {
+        db.update_form(form).await?;
+    }
+
+    // Update the document metadata.
+    db.update_document(AnnotatedDoc {
+        meta,
+        segments: None,
+    })
+    .await?;
 
     Ok(())
 }
