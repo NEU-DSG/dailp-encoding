@@ -7,8 +7,8 @@ use crate::translations::DocResult;
 use anyhow::Result;
 use dailp::{
     convert_udb, root_noun_surface_forms, root_verb_surface_forms, AnnotatedDoc, AnnotatedForm,
-    AnnotatedPhrase, AnnotatedSeg, AudioSlice, BlockType, Contributor, Date, DocumentMetadata,
-    LexicalConnection, LineBreak, MorphemeId, MorphemeSegment, PageBreak,
+    AnnotatedPhrase, AnnotatedSeg, AudioSlice, BlockType, Contributor, Database, Date,
+    DocumentMetadata, LexicalConnection, LineBreak, MorphemeId, MorphemeSegment, PageBreak,
 };
 use dailp::{PositionInDocument, SourceAttribution};
 use log::{error, info, warn};
@@ -34,12 +34,16 @@ pub struct LexicalEntryWithForms {
 /// pushes that data into the underlying database.
 /// Existing versions of these documents are overwritten with the new data.
 pub async fn migrate_documents_to_db(
-    docs: &[(AnnotatedDoc, Vec<LexicalConnection>)],
+    db: &Database,
+    docs: (AnnotatedDoc, Vec<LexicalConnection>),
 ) -> Result<()> {
     // Write the contents of each document to our database.
 
-    crate::update_document(docs.iter().map(|(d, _)| d)).await?;
-    crate::update_connection(docs.iter().flat_map(|(_, r)| r)).await?;
+    let (d, conns) = docs;
+    db.update_document(d).await?;
+    for r in conns {
+        db.update_connection(r).await?;
+    }
 
     Ok(())
 }
@@ -78,16 +82,17 @@ pub struct SheetResult {
 impl SheetResult {
     pub async fn from_sheet(sheet_id: &str, sheet_name: Option<&str>) -> Result<Self> {
         use futures_retry::{FutureRetry, RetryPolicy};
-        info!("parsing sheet {}...", sheet_id);
+        info!("parsing sheet {}, {:?}...", sheet_id, sheet_name);
         let mut tries = 0;
         let (t, _attempt) = FutureRetry::new(
             || Self::from_sheet_weak(sheet_id, sheet_name),
             |e| {
-                // Try up to five times before giving up.
-                if tries > 3 {
+                // Try a few times before giving up.
+                if tries >= 3 {
                     RetryPolicy::<anyhow::Error>::ForwardError(e)
                 } else {
                     tries += 1;
+                    error!("{}", e);
                     warn!("Retrying for the {}th time...", tries);
                     RetryPolicy::<anyhow::Error>::WaitRetry(Duration::from_millis(10000))
                 }
@@ -100,13 +105,12 @@ impl SheetResult {
     async fn from_sheet_weak(sheet_id: &str, sheet_name: Option<&str>) -> Result<Self> {
         let api_key = std::env::var("GOOGLE_API_KEY")?;
         let sheet_name = sheet_name.map_or_else(String::new, |n| format!("{}!", n));
-        Ok(reqwest::get(&format!(
+        let response = reqwest::get(&format!(
             "https://sheets.googleapis.com/v4/spreadsheets/{}/values/{}A1:ZZ?key={}",
             sheet_id, sheet_name, api_key
         ))
-        .await?
-        .json::<SheetResult>()
-        .await?)
+        .await?;
+        Ok(response.json::<SheetResult>().await?)
     }
     /// Parse a Google Drive file ID from a full link to it.
     fn drive_url_to_id(input: &str) -> &str {
