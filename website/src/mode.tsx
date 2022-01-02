@@ -1,15 +1,21 @@
+import { Tooltip } from "@reach/tooltip"
+import cx from "classnames"
+import Cookies from "js-cookie"
 import React, { useEffect } from "react"
 import {
   Radio,
   RadioGroup,
-  useRadioState,
   RadioStateReturn,
+  useRadioState,
 } from "reakit/Radio"
-import { Tooltip } from "@reach/tooltip"
-import Cookies from "js-cookie"
-import theme, { hideOnPrint, typography, withBg, std } from "./theme"
-import {ViewMode, TagSet, tagSetForMode, PhoneticRepresentation} from "./types"
-import { css } from "@emotion/react"
+import { std } from "src/sprinkles.css"
+import * as css from "./mode.css"
+import {
+  PhoneticRepresentation,
+  TagSet,
+  ViewMode,
+  tagSetForMode,
+} from "./types"
 
 const notNumber = (l: any) => isNaN(Number(l))
 const levelNameMapping = {
@@ -63,12 +69,14 @@ const tagSetMapping = {
 const phoneticRepresentationMapping = {
   [PhoneticRepresentation.Dailp]: {
     label: "Simple Phonetics",
-    details: "The DAILP simple phonetics, made for learners. Uses kw, gw, and j",
+    details:
+      "The DAILP simple phonetics, made for learners. Uses kw, gw, and j",
   },
-    [PhoneticRepresentation.Worcester]: {
-      label: "Worcester Phonetics",
-      details: "A more traditional phonetics view, aligned with the Worcester syllabary. Uses qu and ts.",
-    },
+  [PhoneticRepresentation.Worcester]: {
+    label: "Worcester Phonetics",
+    details:
+      "A more traditional phonetics view, aligned with the Worcester syllabary. Uses qu and ts.",
+  },
   // [PhoneticRepresentation.Ipa]: {
   //   label: "IPA",
   //   details: "The international phonetic alphabet, a way of representing sounds across languages",
@@ -100,7 +108,7 @@ export const ExperiencePicker = (p: { onSelect: (mode: ViewMode) => void }) => {
       <RadioGroup
         {...radio}
         id="mode-picker"
-        css={levelGroup}
+        className={css.levelGroup}
         aria-label="Display Mode"
       >
         {Object.keys(ViewMode)
@@ -113,7 +121,9 @@ export const ExperiencePicker = (p: { onSelect: (mode: ViewMode) => void }) => {
   )
 }
 
-export const PhoneticsPicker = (p: { onSelect: (phonetics: PhoneticRepresentation) => void }) => {
+export const PhoneticsPicker = (p: {
+  onSelect: (phonetics: PhoneticRepresentation) => void
+}) => {
   const radio = useRadioState({
     state: selectedPhonetics(),
   })
@@ -128,18 +138,24 @@ export const PhoneticsPicker = (p: { onSelect: (phonetics: PhoneticRepresentatio
   }, [radio.state])
 
   return (
-      <RadioGroup
-        {...radio}
-        id="phonetics-picker"
-        css={levelGroup}
-        aria-label="Phonetic Representation"
-      >
-        {Object.keys(PhoneticRepresentation)
-          .filter(notNumber)
-          .map(function (representation: string) {
-            return <PhoneticOption key={representation} representation={representation} radio={radio}/>
-          })}
-      </RadioGroup>
+    <RadioGroup
+      {...radio}
+      id="phonetics-picker"
+      className={css.levelGroup}
+      aria-label="Phonetic Representation"
+    >
+      {Object.keys(PhoneticRepresentation)
+        .filter(notNumber)
+        .map(function (representation: string) {
+          return (
+            <PhoneticOption
+              key={representation}
+              representation={representation}
+              radio={radio}
+            />
+          )
+        })}
+    </RadioGroup>
   )
 }
 
@@ -151,7 +167,7 @@ export const TagSetPicker = (p: { onSelect: (tagSet: TagSet) => void }) => {
   useEffect(() => p.onSelect(radio.state as TagSet), [radio.state])
 
   return (
-    <RadioGroup {...radio} id="tag-set-picker" css={levelGroup}>
+    <RadioGroup {...radio} id="tag-set-picker" className={css.levelGroup}>
       {Object.keys(TagSet)
         .filter(notNumber)
         .map(function (tagSet: string) {
@@ -165,8 +181,8 @@ const ExperienceOption = (p: { radio: RadioStateReturn; level: string }) => {
   const value = ViewMode[p.level as keyof typeof ViewMode]
   const isSelected = p.radio.state === value
   return (
-    <Tooltip css={std.tooltip} label={levelNameMapping[value].details}>
-      <label css={[levelLabel, isSelected && highlightedLabel]}>
+    <Tooltip className={std.tooltip} label={levelNameMapping[value].details}>
+      <label className={cx(css.levelLabel, isSelected && css.highlightedLabel)}>
         <Radio {...p.radio} value={value} />
         {"  "}
         {levelNameMapping[value].label}
@@ -175,29 +191,34 @@ const ExperienceOption = (p: { radio: RadioStateReturn; level: string }) => {
   )
 }
 
-const PhoneticOption = (p: { radio: RadioStateReturn; representation: string }) => {
-  const value = PhoneticRepresentation[p.representation as keyof typeof PhoneticRepresentation]
+const PhoneticOption = (p: {
+  radio: RadioStateReturn
+  representation: string
+}) => {
+  const value =
+    PhoneticRepresentation[
+      p.representation as keyof typeof PhoneticRepresentation
+    ]
   const isSelected = p.radio.state === value
   return (
-    <Tooltip css={std.tooltip} label={phoneticRepresentationMapping[value].details}>
-      <label css={[levelLabel, isSelected && highlightedLabel]}>
+    <Tooltip
+      className={std.tooltip}
+      label={phoneticRepresentationMapping[value].details}
+    >
+      <label className={cx(css.levelLabel, isSelected && css.highlightedLabel)}>
         <Radio {...p.radio} value={value} />
-          {"  "}
-          {phoneticRepresentationMapping[value].label}
+        {"  "}
+        {phoneticRepresentationMapping[value].label}
       </label>
     </Tooltip>
   )
 }
 
-const highlightedLabel = css`
-  outline: 2px dashed ${theme.colors.headings};
-`
-
 const TagSetOption = (p: { radio: RadioStateReturn; level: string }) => {
   const value = TagSet[p.level as keyof typeof TagSet]
   return (
-    <Tooltip css={std.tooltip} label={tagSetMapping[value].details}>
-      <label css={levelLabel}>
+    <Tooltip className={std.tooltip} label={tagSetMapping[value].details}>
+      <label className={css.levelLabel}>
         <Radio {...p.radio} value={value} />
         {"  "}
         {tagSetMapping[value].label}
@@ -205,19 +226,3 @@ const TagSetOption = (p: { radio: RadioStateReturn; level: string }) => {
     </Tooltip>
   )
 }
-
-const levelGroup = css`
-  margin: ${typography.rhythm(1 / 4)} 0;
-  display: flex;
-  flex-flow: row wrap;
-  justify-content: center;
-  ${theme.mediaQueries.print} {
-    display: none;
-  }
-`
-
-const levelLabel = css`
-  margin-right: 1rem;
-  padding: 0 1ch;
-  cursor: pointer;
-`

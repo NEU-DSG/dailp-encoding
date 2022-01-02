@@ -1,9 +1,9 @@
-import React, { useEffect } from "react"
 import Amplify, { Auth } from "aws-amplify"
-import { Button } from "../theme"
-import Link from "next/link"
-import { useCredentials, UserProvider } from "../auth"
+import React, { useEffect } from "react"
 import { useCMS } from "tinacms"
+import { Button } from "src/components"
+import Link from "src/link"
+import { UserProvider, useCredentials } from "../auth"
 
 const ClientSignIn = () => {
   const creds = useCredentials()

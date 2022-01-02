@@ -1,6 +1,6 @@
-import React, { useContext, useEffect, useState, createContext } from "react"
-import Amplify, { Auth, Hub } from "aws-amplify"
 import { HubCallback } from "@aws-amplify/core"
+import Amplify, { Auth, Hub } from "aws-amplify"
+import React, { createContext, useContext, useEffect, useState } from "react"
 
 const UserContext = createContext(null)
 
@@ -9,6 +9,7 @@ export const UserProvider = (props: { children: any }) => {
   React.useEffect(() => {
     Amplify.configure({
       Auth: {
+        // TODO How to get these variables from the server?
         region: process.env.DAILP_AWS_REGION,
         userPoolId: process.env.DAILP_USER_POOL,
         userPoolWebClientId: process.env.DAILP_USER_POOL_CLIENT,

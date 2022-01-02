@@ -1,6 +1,7 @@
 query Page($slug: String!) {
-  pages(where: { name: $slug }) {
-    nodes {
+  page: nodeByUri(uri: $slug) {
+    __typename
+    ... on Page {
       title
       content
     }
@@ -8,12 +9,13 @@ query Page($slug: String!) {
 }
 
 query PageIndex {
-  pages(where: { status: PUBLISH }) {
+  pages(where: { status: PUBLISH }, last: 100) {
     nodes {
       id
       slug
       link
       status
+      uri
     }
   }
 }

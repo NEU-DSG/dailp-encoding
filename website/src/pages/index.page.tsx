@@ -1,31 +1,27 @@
 import React from "react"
-import Link from "next/link"
-import styled from "@emotion/styled"
-import Helmet from "next/head"
-import Layout from "../layout"
-import theme, { fullWidth, wordpressUrl } from "../theme"
-import { collectionRoute } from "../routes"
+import { Link } from "src/link"
+import { fullWidth, paddedCenterColumn } from "src/sprinkles.css"
 import { Carousel } from "../carousel"
-import * as Dailp from "src/graphql/dailp"
-import * as Wordpress from "src/graphql/wordpress"
-import { getStaticQueriesNew } from "src/graphql"
+import * as Dailp from "../graphql/dailp"
+import * as Wordpress from "../graphql/wordpress"
+import Layout from "../layout"
+import { collectionRoute } from "../routes"
 
 /** Lists all documents in our database */
 const IndexPage = () => {
   const [{ data: dailp }] = Dailp.useCollectionsListingQuery()
-  const [{ data: wp }] = Wordpress.usePageQuery({ variables: { slug: "home" } })
+  const [{ data: wp }] = Wordpress.usePageQuery({ variables: { slug: "/" } })
+  const wpPage = wp?.page?.__typename === "Page" && wp.page
 
   return (
     <Layout title="Collections">
-      <DocIndex>
-        <FullWidth>
+      <main className={paddedCenterColumn}>
+        <article className={fullWidth}>
           <Carousel
             images={carouselImages}
             caption="Digital Archive of American Indian Languages Preservation and Perseverance"
           />
-          <div
-            dangerouslySetInnerHTML={{ __html: wp?.pages.nodes[0].content }}
-          />
+          <div dangerouslySetInnerHTML={{ __html: wpPage.content }} />
           <h1>Cherokee Manuscript Collections</h1>
           <ul>
             {dailp?.allCollections.map((collection) => (
@@ -36,22 +32,12 @@ const IndexPage = () => {
               </li>
             ))}
           </ul>
-        </FullWidth>
-      </DocIndex>
+        </article>
+      </main>
     </Layout>
   )
 }
 export default IndexPage
-
-export const getStaticProps = getStaticQueriesNew(async (params, dailp, wp) => {
-  await dailp.query(Dailp.CollectionsListingDocument).toPromise()
-  await wp.query(Wordpress.MainMenuDocument).toPromise()
-  await wp
-    .query<any, Wordpress.PageQueryVariables>(Wordpress.PageDocument, {
-      slug: "home",
-    })
-    .toPromise()
-})
 
 const carouselImages = [
   {
@@ -63,16 +49,3 @@ const carouselImages = [
     alt: "'Our Banner' notebook with triangle flag and decorative swirls on cover",
   },
 ]
-
-export const DocIndex = styled.main`
-  padding-left: ${theme.edgeSpacing};
-  padding-right: ${theme.edgeSpacing};
-  display: flex;
-  flex-flow: column wrap;
-  align-items: center;
-`
-
-export const FullWidth = styled.article`
-  ${fullWidth};
-  flex-grow: 1;
-`

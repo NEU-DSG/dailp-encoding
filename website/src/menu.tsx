@@ -1,82 +1,62 @@
 import React from "react"
-import { css } from "@emotion/react"
-import Link from "next/link"
-import { useRouter } from "next/router"
-import theme, { fullWidth, typography } from "./theme"
+import { MdArrowDropDown, MdMenu } from "react-icons/md"
 import {
-  useDialogState,
   Dialog,
-  DialogDisclosure,
   DialogBackdrop,
+  DialogDisclosure,
+  useDialogState,
 } from "reakit/Dialog"
-import { useMenuState, Menu, MenuItem, MenuButton } from "reakit/Menu"
-import { MdMenu, MdArrowDropDown } from "react-icons/md"
+import { Menu, MenuButton, MenuItem, useMenuState } from "reakit/Menu"
+import { usePageContext } from "renderer/PageShell"
 import * as Wordpress from "src/graphql/wordpress"
+import { Link } from "src/link"
+import {
+  desktopNav,
+  drawerBg,
+  drawerItem,
+  navButton,
+  navDrawer,
+  navLink,
+  navMenu,
+} from "./menu.css"
+import { closeBlock } from "./sprinkles.css"
 
 export const NavMenu = () => {
-  const router = useRouter()
-  const menu = useMenuState()
+  const router = usePageContext()
   const [{ data }] = Wordpress.useMainMenuQuery()
   if (!data) {
     return null
   }
 
-  const menuItems = data?.menuItems.nodes
+  const menuItems = data?.menuItems?.nodes
   const isTopLevel = (a) =>
-    !menuItems?.some((b) => b?.childItems.nodes.some((b) => b.path === a?.path))
+    !menuItems?.some((b) =>
+      b?.childItems?.nodes?.some((b) => b?.path === a?.path)
+    )
 
   return (
-    <nav css={desktopNav}>
+    <nav className={desktopNav}>
       {menuItems?.filter(isTopLevel).map((item) => {
         if (!item) {
           return null
         } else if (item.childItems.nodes.length) {
-          return (
-            <React.Fragment key={item.label}>
-              <MenuButton {...menu} css={navLink}>
-                {item.label}
-                <MdArrowDropDown aria-label="Menu" />
-              </MenuButton>
-              <Menu {...menu} aria-label={item.label} css={navMenu}>
-                {item.childItems.nodes.map((item) => {
-                  let url = { pathname: item.path }
-                  if (item.path.startsWith("http")) {
-                    url = new URL(item.path)
-                  }
-                  return (
-                    <Link href={url.pathname} passHref key={item.path}>
-                      <MenuItem
-                        {...menu}
-                        as="a"
-                        aria-current={
-                          router.pathname === url.pathname ? "page" : undefined
-                        }
-                        css={navLink}
-                      >
-                        {item.label}
-                      </MenuItem>
-                    </Link>
-                  )
-                })}
-              </Menu>
-            </React.Fragment>
-          )
+          return <SubMenu key={item.label} item={item} router={router} />
         } else {
           let url = { pathname: item.path }
           if (item.path.startsWith("http")) {
             url = new URL(item.path)
           }
           return (
-            <Link key={item.path} href={url.pathname} passHref>
-              <a
-                css={navLink}
-                aria-current={
-                  router.pathname === url.pathname ? "page" : undefined
-                }
-              >
-                {item.label}
-              </a>
-            </Link>
+            <a
+              key={item.path}
+              href={url.pathname}
+              className={navLink}
+              aria-current={
+                router.urlPathname === url.pathname ? "page" : undefined
+              }
+            >
+              {item.label}
+            </a>
           )
         }
       })}
@@ -84,8 +64,42 @@ export const NavMenu = () => {
   )
 }
 
+const SubMenu = ({ item, router }) => {
+  const menu = useMenuState()
+  return (
+    <>
+      <MenuButton {...menu} className={navLink}>
+        {item.label}
+        <MdArrowDropDown aria-label="Menu" />
+      </MenuButton>
+      <Menu {...menu} aria-label={item.label} className={navMenu}>
+        {item.childItems.nodes.map((item) => {
+          let url = { pathname: item.path }
+          if (item.path.startsWith("http")) {
+            url = new URL(item.path)
+          }
+          return (
+            <MenuItem
+              {...menu}
+              as="a"
+              key={item.path}
+              href={url.pathname}
+              aria-current={
+                router.urlPathname === url.pathname ? "page" : undefined
+              }
+              className={navLink}
+            >
+              {item.label}
+            </MenuItem>
+          )
+        })}
+      </Menu>
+    </>
+  )
+}
+
 export const MobileNav = () => {
-  const router = useRouter()
+  const router = usePageContext()
   const dialog = useDialogState({ animated: true })
   const [{ data }] = Wordpress.useMainMenuQuery()
   const menuItems = data?.menuItems.nodes
@@ -96,21 +110,21 @@ export const MobileNav = () => {
     <>
       <DialogDisclosure
         {...dialog}
-        css={navButton}
+        className={navButton}
         aria-label="Open Mobile Navigation Drawer"
       >
         <MdMenu size={32} />
       </DialogDisclosure>
-      <DialogBackdrop {...dialog} css={drawerBg}>
+      <DialogBackdrop {...dialog} className={drawerBg}>
         <Dialog
           {...dialog}
           as="nav"
-          css={navDrawer}
+          className={navDrawer}
           aria-label="Navigation Drawer"
         >
           <ul>
             {menuItems?.filter(isTopLevel).map((item) => {
-              let items = item?.childItems.nodes
+              let items = item?.childItems?.nodes
               if (items && !items.length) {
                 items = [item]
               }
@@ -120,16 +134,16 @@ export const MobileNav = () => {
                   url = new URL(item.path)
                 }
                 return (
-                  <li css={drawerItem} key={item.path}>
-                    <Link href={url.pathname} passHref>
-                      <a
-                        aria-current={
-                          router.pathname === url.pathname ? "page" : undefined
-                        }
-                      >
-                        {item.label}
-                      </a>
-                    </Link>
+                  <li className={closeBlock} key={item.path}>
+                    <a
+                      className={drawerItem}
+                      href={url.pathname}
+                      aria-current={
+                        router.urlPathname === url.pathname ? "page" : undefined
+                      }
+                    >
+                      {item.label}
+                    </a>
                   </li>
                 )
               })
@@ -140,112 +154,3 @@ export const MobileNav = () => {
     </>
   )
 }
-
-const navMenu = css`
-  display: flex;
-  flex-flow: column;
-  background-color: ${theme.colors.body};
-  border: 2px solid ${theme.colors.link};
-  &:focus {
-    outline: none;
-  }
-`
-
-const navLink = css`
-  padding: ${typography.rhythm(1 / 4)} 1ch;
-  text-decoration: none;
-  color: ${theme.colors.text};
-  background: none;
-  border: none;
-  border-bottom: 2px solid transparent;
-  display: flex;
-  flex-flow: row;
-  align-items: center;
-
-  ${theme.mediaQueries.large} {
-    padding-left: 1rem;
-    padding-right: 1rem;
-  }
-
-  &[aria-current="page"] {
-    color: ${theme.colors.link};
-    border-color: ${theme.colors.link};
-  }
-  &:hover,
-  &:focus {
-    color: ${theme.colors.link};
-  }
-`
-
-const drawerItem = css`
-  margin-bottom: ${typography.rhythm(1 / 2)};
-  & > a {
-    padding: ${typography.rhythm(1 / 2)};
-    text-decoration: none;
-    color: ${theme.colors.text};
-
-    &[aria-current="page"],
-    &:hover,
-    &:focus {
-      color: ${theme.colors.link};
-    }
-  }
-`
-
-const desktopNav = css`
-  ${fullWidth};
-  display: none;
-  ${theme.mediaQueries.medium} {
-    display: flex;
-  }
-`
-
-const navButton = css`
-  ${theme.mediaQueries.medium} {
-    display: none;
-  }
-  border: none;
-  padding: 0;
-  background: none;
-  margin-right: 1rem;
-  height: 32px;
-`
-
-const navDrawer = css`
-  position: fixed;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  background-color: ${theme.colors.body};
-  width: 16rem;
-  font-family: ${theme.fonts.header};
-  transition: transform 150ms ease-in-out;
-  transform: translateX(-16rem);
-  &[data-enter] {
-    transform: translateX(0);
-  }
-
-  padding: 0 ${theme.edgeSpacing};
-  ul {
-    list-style: none;
-    padding-inline-start: 0;
-  }
-`
-
-const drawerBg = css`
-  ${theme.mediaQueries.medium} {
-    display: none;
-  }
-  z-index: 999;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  position: fixed;
-  background-color: rgba(0, 0, 0, 0.2);
-  transition: opacity 100ms ease-in-out;
-  opacity: 0;
-  &[data-enter] {
-    opacity: 1;
-  }
-`

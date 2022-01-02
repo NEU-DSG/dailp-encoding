@@ -5,3 +5,4 @@ public/
 .linaria-cache/
 out/
 .next/
+dist/

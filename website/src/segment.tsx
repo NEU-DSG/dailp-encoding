@@ -1,22 +1,23 @@
-import React from "react"
-import { css } from "@emotion/react"
-import { DialogDisclosure, DialogStateReturn } from "reakit/Dialog"
 import { Tooltip } from "@reach/tooltip"
-import { MdInfoOutline } from "react-icons/md"
+import "@reach/tooltip/styles.css"
+import cx from "classnames"
+import { Howl } from "howler"
 import { flatMap } from "lodash"
+import React from "react"
+import { MdInfoOutline } from "react-icons/md"
+import { DialogDisclosure, DialogStateReturn } from "reakit/Dialog"
+import * as Dailp from "src/graphql/dailp"
+import { Document } from "src/pages/documents/document.page"
+import { FormAudio } from "./audio-player"
+import * as css from "./segment.css"
+import { std } from "./sprinkles.css"
 import {
-  ViewMode,
-  TagSet,
   BasicMorphemeSegment,
   PhoneticRepresentation,
+  TagSet,
+  ViewMode,
   morphemeDisplayTag,
 } from "./types"
-import theme, { hideOnPrint, std, typography, withBg } from "./theme"
-import "@reach/tooltip/styles.css"
-import { FormAudio } from "./audio-player"
-import { Howl } from "howler"
-import * as Dailp from "src/graphql/dailp"
-import { Document } from "src/pages/documents/[id]"
 
 type Segment = Document["translatedSegments"][0]["source"]
 
@@ -55,17 +56,11 @@ export const Segment = (p: Props & { howl?: Howl }) => {
       }) ?? null
 
     if (segment.ty === "BLOCK") {
+      const variant = p.viewMode > ViewMode.Story ? "wordByWord" : "story"
       return (
-        <section css={[documentBlock, p.viewMode > ViewMode.Story && bordered]}>
-          <div
-            css={[
-              annotationSection,
-              p.viewMode <= ViewMode.Story && storySection,
-            ]}
-          >
-            {children}
-          </div>
-          <p>{p.translations?.text ?? null}</p>
+        <section className={css.documentBlock[variant]}>
+          <div className={css.annotationSection[variant]}>{children}</div>
+          <p className={css.inlineBlock}>{p.translations?.text ?? null}</p>
           {/*<SegmentAudio/>*/}
         </section>
       )
@@ -77,7 +72,7 @@ export const Segment = (p: Props & { howl?: Howl }) => {
     return (
       <div
         id={`document-page-${num}`}
-        css={pageBreak}
+        className={css.pageBreak}
         aria-label={`Start of page ${num}`}
       >
         Page {num}
@@ -100,8 +95,8 @@ export const AnnotatedForm = (
     const translation = p.segment.englishGloss.join(", ")
 
     return (
-      <div css={wordGroup} id={`w${p.segment.index}`}>
-        <div css={syllabaryLayer} lang="chr">
+      <div className={css.wordGroup} id={`w${p.segment.index}`}>
+        <div className={css.syllabaryLayer} lang="chr">
           {p.segment.source}
           {p.segment.commentary && p.viewMode >= ViewMode.Pronunciation && (
             <WordCommentaryInfo commentary={p.segment.commentary} />
@@ -128,11 +123,7 @@ export const AnnotatedForm = (
           </>
         ) : (
           (p.segment.audioTrack && (
-            <div
-              css={css`
-                padding-left: 40%;
-              `}
-            >
+            <div className={css.audioContainer}>
               <FormAudio
                 endTime={p.segment.audioTrack.endTime}
                 index={p.segment.audioTrack.index}
@@ -157,7 +148,11 @@ export const AnnotatedForm = (
     )
   } else {
     return (
-      <span css={plainSyllabary} id={`w${p.segment.index}`} lang="chr">
+      <span
+        className={css.plainSyllabary}
+        id={`w${p.segment.index}`}
+        lang="chr"
+      >
         {p.segment.source}
       </span>
     )
@@ -166,8 +161,8 @@ export const AnnotatedForm = (
 
 const WordCommentaryInfo = (p: { commentary: string }) => (
   <WithTooltip hint={p.commentary} aria-label="Commentary on this word">
-    <span css={[infoIcon, hideOnPrint]}>
-      <MdInfoOutline size={20} />
+    <span className={css.infoIcon}>
+      <MdInfoOutline size={20} className={css.linkSvg} />
     </span>
   </WithTooltip>
 )
@@ -179,22 +174,13 @@ const WithTooltip = (p: {
   className?: string
 }) => (
   <Tooltip
-    css={std.tooltip}
+    className={cx(std.tooltip, p.className)}
     label={p.hint || ""}
-    className={p.className}
     aria-label={p["aria-label"]}
   >
     {p.children}
   </Tooltip>
 )
-
-const infoIcon = css`
-  margin-left: 0.4rem;
-  cursor: help;
-  svg {
-    fill: ${theme.colors.link};
-  }
-`
 
 /**
  * Displays the break-down of a word into its units of meaning and the English
@@ -220,7 +206,7 @@ const MorphemicSegmentation = (p: {
 
   return (
     <>
-      <div css={italicSegmentation}>
+      <i>
         {p
           .segments!.map(function (segment) {
             // Adapt the segment shape to the chosen experience level.
@@ -238,7 +224,7 @@ const MorphemicSegmentation = (p: {
             }
           })
           .join("")}
-      </div>
+      </i>
 
       <div>
         {intersperse(
@@ -266,10 +252,6 @@ const MorphemicSegmentation = (p: {
   )
 }
 
-const italicSegmentation = css`
-  font-style: italic;
-`
-
 function intersperse<T>(arr: T[], separator: (n: number) => T): T[] {
   return flatMap(arr, (a, i) => (i > 0 ? [separator(i - 1), a] : [a]))
 }
@@ -284,18 +266,13 @@ const MorphemeSegment = (p: {
   const matchingTag = morphemeDisplayTag(p.segment.matchingTag, p.tagSet)
   const gloss = matchingTag?.tag || p.segment.gloss
   // Display functional tags in small-caps, per interlinear typesetting practice.
-  const buttonStyle = [
-    atLeastThin,
-    morphemeButton,
-    matchingTag ? std.smallCaps : inheritFont,
-  ]
 
   if (matchingTag && matchingTag.title) {
     return (
       <WithTooltip hint={matchingTag.title}>
         <DialogDisclosure
           {...p.dialog}
-          css={buttonStyle}
+          className={css.morphemeButton.functional}
           onClick={() => p.onOpenDetails(p.segment)}
         >
           {gloss}
@@ -307,7 +284,7 @@ const MorphemeSegment = (p: {
       <WithTooltip hint="Unanalyzed or unfamiliar segment">
         <DialogDisclosure
           {...p.dialog}
-          css={buttonStyle}
+          className={css.morphemeButton.lexical}
           onClick={() => p.onOpenDetails(p.segment)}
         >
           {gloss}
@@ -318,7 +295,7 @@ const MorphemeSegment = (p: {
     return (
       <DialogDisclosure
         {...p.dialog}
-        css={buttonStyle}
+        className={css.morphemeButton.lexical}
         onClick={() => p.onOpenDetails(p.segment)}
       >
         {gloss}
@@ -326,111 +303,3 @@ const MorphemeSegment = (p: {
     )
   }
 }
-
-const pageBreak = css`
-  display: block;
-  width: 40%;
-  margin: auto;
-  text-align: center;
-  border-top: 1px solid gray;
-  padding-top: ${typography.rhythm(0.5)};
-
-  ${theme.mediaQueries.print} {
-    display: none;
-  }
-`
-
-const atLeastThin = css`
-  display: inline-block;
-  min-width: 1rem;
-`
-
-const inheritFont = css`
-  font-family: inherit;
-  font-size: inherit;
-`
-
-const morphemeButton = css`
-  color: inherit;
-  border: none;
-  padding: 0;
-  display: inline-block;
-  background: none;
-`
-
-const wordGroup = css`
-  position: relative;
-  margin: ${typography.rhythm(1 / 2)} 0;
-  margin-bottom: ${typography.rhythm(1 / 2)};
-  padding: ${typography.rhythm(1 / 2)} 0.5rem;
-  padding-right: 0;
-  border: 2px solid ${theme.colors.borders};
-  border-radius: 2px;
-  page-break-inside: avoid;
-  break-inside: avoid;
-  line-height: ${typography.rhythm(1)};
-  ${theme.mediaQueries.medium} {
-    padding: 0;
-    border: none;
-    margin: ${typography.rhythm(1 / 2)} 3rem ${typography.rhythm(1)} 0;
-  }
-  ${theme.mediaQueries.print} {
-    padding: 0;
-    border: none;
-    margin: 0rem 3.5rem ${typography.rhythm(1.5)} 0;
-  }
-`
-
-const syllabaryLayer = css`
-  font-family: ${theme.fonts.cherokee};
-  font-size: 1.15rem;
-`
-
-const plainSyllabary = css`
-  font-family: ${theme.fonts.cherokee};
-  font-size: 1.15rem;
-  margin-right: 1ch;
-`
-
-const documentBlock = css`
-  position: relative;
-  display: block;
-  break-after: avoid;
-  margin-top: ${typography.rhythm(1.5)};
-  margin-bottom: ${typography.rhythm(1)};
-  padding-bottom: ${typography.rhythm(1)};
-  ${theme.mediaQueries.print} {
-    padding-bottom: ${typography.rhythm(1 / 4)};
-    margin-bottom: ${typography.rhythm(2)};
-  }
-`
-
-const bordered = css`
-  ${theme.mediaQueries.medium}, print {
-    border-bottom: 1px solid ${theme.colors.text};
-    &:last-of-type {
-      border-bottom: none;
-      margin-bottom: 0;
-      padding-bottom: 0;
-    }
-  }
-  ${theme.mediaQueries.print} {
-    border-bottom: 1px solid black;
-  }
-`
-
-const annotationSection = css`
-  width: 100%;
-  position: relative;
-  display: block;
-  margin-bottom: ${typography.rhythm(1 / 2)};
-  ${theme.mediaQueries.medium}, print {
-    & > * {
-      display: inline-block;
-    }
-  }
-`
-
-const storySection = css`
-  flex-flow: row wrap;
-`

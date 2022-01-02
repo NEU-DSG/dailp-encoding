@@ -94,31 +94,31 @@ export type ActionMonitorAction = ContentNode & DatabaseIdentifier & Node & Node
 
 /** The ActionMonitorAction type */
 export type ActionMonitorActionContentArgs = {
-  format?: InputMaybe<PostObjectFieldFormatEnum>;
+  format: InputMaybe<PostObjectFieldFormatEnum>;
 };
 
 
 /** The ActionMonitorAction type */
 export type ActionMonitorActionEnqueuedScriptsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
+  after: InputMaybe<Scalars['String']>;
+  before: InputMaybe<Scalars['String']>;
+  first: InputMaybe<Scalars['Int']>;
+  last: InputMaybe<Scalars['Int']>;
 };
 
 
 /** The ActionMonitorAction type */
 export type ActionMonitorActionEnqueuedStylesheetsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
+  after: InputMaybe<Scalars['String']>;
+  before: InputMaybe<Scalars['String']>;
+  first: InputMaybe<Scalars['Int']>;
+  last: InputMaybe<Scalars['Int']>;
 };
 
 
 /** The ActionMonitorAction type */
 export type ActionMonitorActionTitleArgs = {
-  format?: InputMaybe<PostObjectFieldFormatEnum>;
+  format: InputMaybe<PostObjectFieldFormatEnum>;
 };
 
 /** The Type of Identifier used to fetch a single resource. Default is ID. */
@@ -230,58 +230,58 @@ export type Category = DatabaseIdentifier & HierarchicalTermNode & MenuItemLinka
 
 /** The category type */
 export type CategoryAncestorsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
+  after: InputMaybe<Scalars['String']>;
+  before: InputMaybe<Scalars['String']>;
+  first: InputMaybe<Scalars['Int']>;
+  last: InputMaybe<Scalars['Int']>;
 };
 
 
 /** The category type */
 export type CategoryChildrenArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  where?: InputMaybe<CategoryToCategoryConnectionWhereArgs>;
+  after: InputMaybe<Scalars['String']>;
+  before: InputMaybe<Scalars['String']>;
+  first: InputMaybe<Scalars['Int']>;
+  last: InputMaybe<Scalars['Int']>;
+  where: InputMaybe<CategoryToCategoryConnectionWhereArgs>;
 };
 
 
 /** The category type */
 export type CategoryContentNodesArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  where?: InputMaybe<CategoryToContentNodeConnectionWhereArgs>;
+  after: InputMaybe<Scalars['String']>;
+  before: InputMaybe<Scalars['String']>;
+  first: InputMaybe<Scalars['Int']>;
+  last: InputMaybe<Scalars['Int']>;
+  where: InputMaybe<CategoryToContentNodeConnectionWhereArgs>;
 };
 
 
 /** The category type */
 export type CategoryEnqueuedScriptsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
+  after: InputMaybe<Scalars['String']>;
+  before: InputMaybe<Scalars['String']>;
+  first: InputMaybe<Scalars['Int']>;
+  last: InputMaybe<Scalars['Int']>;
 };
 
 
 /** The category type */
 export type CategoryEnqueuedStylesheetsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
+  after: InputMaybe<Scalars['String']>;
+  before: InputMaybe<Scalars['String']>;
+  first: InputMaybe<Scalars['Int']>;
+  last: InputMaybe<Scalars['Int']>;
 };
 
 
 /** The category type */
 export type CategoryPostsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  where?: InputMaybe<CategoryToPostConnectionWhereArgs>;
+  after: InputMaybe<Scalars['String']>;
+  before: InputMaybe<Scalars['String']>;
+  first: InputMaybe<Scalars['Int']>;
+  last: InputMaybe<Scalars['Int']>;
+  where: InputMaybe<CategoryToPostConnectionWhereArgs>;
 };
 
 /** The Type of Identifier used to fetch a single resource. Default is ID. */
@@ -341,43 +341,43 @@ export type CategoryToCategoryConnectionEdge = {
 /** Arguments for filtering the CategoryToCategoryConnection connection */
 export type CategoryToCategoryConnectionWhereArgs = {
   /** Unique cache key to be produced when this query is stored in an object cache. Default is 'core'. */
-  cacheDomain?: InputMaybe<Scalars['String']>;
+  cacheDomain: InputMaybe<Scalars['String']>;
   /** Term ID to retrieve child terms of. If multiple taxonomies are passed, $child_of is ignored. Default 0. */
-  childOf?: InputMaybe<Scalars['Int']>;
+  childOf: InputMaybe<Scalars['Int']>;
   /** True to limit results to terms that have no children. This parameter has no effect on non-hierarchical taxonomies. Default false. */
-  childless?: InputMaybe<Scalars['Boolean']>;
+  childless: InputMaybe<Scalars['Boolean']>;
   /** Retrieve terms where the description is LIKE the input value. Default empty. */
-  descriptionLike?: InputMaybe<Scalars['String']>;
+  descriptionLike: InputMaybe<Scalars['String']>;
   /** Array of term ids to exclude. If $include is non-empty, $exclude is ignored. Default empty array. */
-  exclude?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  exclude: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Array of term ids to exclude along with all of their descendant terms. If $include is non-empty, $exclude_tree is ignored. Default empty array. */
-  excludeTree?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  excludeTree: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Whether to hide terms not assigned to any posts. Accepts true or false. Default false */
-  hideEmpty?: InputMaybe<Scalars['Boolean']>;
+  hideEmpty: InputMaybe<Scalars['Boolean']>;
   /** Whether to include terms that have non-empty descendants (even if $hide_empty is set to true). Default true. */
-  hierarchical?: InputMaybe<Scalars['Boolean']>;
+  hierarchical: InputMaybe<Scalars['Boolean']>;
   /** Array of term ids to include. Default empty array. */
-  include?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  include: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Array of names to return term(s) for. Default empty. */
-  name?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  name: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   /** Retrieve terms where the name is LIKE the input value. Default empty. */
-  nameLike?: InputMaybe<Scalars['String']>;
+  nameLike: InputMaybe<Scalars['String']>;
   /** Array of object IDs. Results will be limited to terms associated with these objects. */
-  objectIds?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  objectIds: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Field(s) to order terms by. Defaults to 'name'. */
-  orderby?: InputMaybe<TermObjectsConnectionOrderbyEnum>;
+  orderby: InputMaybe<TermObjectsConnectionOrderbyEnum>;
   /** Whether to pad the quantity of a term's children in the quantity of each term's "count" object variable. Default false. */
-  padCounts?: InputMaybe<Scalars['Boolean']>;
+  padCounts: InputMaybe<Scalars['Boolean']>;
   /** Parent term ID to retrieve direct-child terms of. Default empty. */
-  parent?: InputMaybe<Scalars['Int']>;
+  parent: InputMaybe<Scalars['Int']>;
   /** Search criteria to match terms. Will be SQL-formatted with wildcards before and after. Default empty. */
-  search?: InputMaybe<Scalars['String']>;
+  search: InputMaybe<Scalars['String']>;
   /** Array of slugs to return term(s) for. Default empty. */
-  slug?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  slug: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   /** Array of term taxonomy IDs, to match when querying terms. */
-  termTaxonomId?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  termTaxonomId: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Whether to prime meta caches for matched terms. Default true. */
-  updateTermMetaCache?: InputMaybe<Scalars['Boolean']>;
+  updateTermMetaCache: InputMaybe<Scalars['Boolean']>;
 };
 
 /** Connection between the category type and the ContentNode type */
@@ -403,37 +403,37 @@ export type CategoryToContentNodeConnectionEdge = {
 /** Arguments for filtering the CategoryToContentNodeConnection connection */
 export type CategoryToContentNodeConnectionWhereArgs = {
   /** Filter the connection based on dates */
-  dateQuery?: InputMaybe<DateQueryInput>;
+  dateQuery: InputMaybe<DateQueryInput>;
   /** True for objects with passwords; False for objects without passwords; null for all objects with or without passwords */
-  hasPassword?: InputMaybe<Scalars['Boolean']>;
+  hasPassword: InputMaybe<Scalars['Boolean']>;
   /** Specific ID of the object */
-  id?: InputMaybe<Scalars['Int']>;
+  id: InputMaybe<Scalars['Int']>;
   /** Array of IDs for the objects to retrieve */
-  in?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  in: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Get objects with a specific mimeType property */
-  mimeType?: InputMaybe<MimeTypeEnum>;
+  mimeType: InputMaybe<MimeTypeEnum>;
   /** Slug / post_name of the object */
-  name?: InputMaybe<Scalars['String']>;
+  name: InputMaybe<Scalars['String']>;
   /** Specify objects to retrieve. Use slugs */
-  nameIn?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  nameIn: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
-  notIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  notIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** What paramater to use to order the objects by. */
-  orderby?: InputMaybe<Array<InputMaybe<PostObjectsConnectionOrderbyInput>>>;
+  orderby: InputMaybe<Array<InputMaybe<PostObjectsConnectionOrderbyInput>>>;
   /** Use ID to return only children. Use 0 to return only top-level items */
-  parent?: InputMaybe<Scalars['ID']>;
+  parent: InputMaybe<Scalars['ID']>;
   /** Specify objects whose parent is in an array */
-  parentIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  parentIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Specify posts whose parent is not in an array */
-  parentNotIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  parentNotIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Show posts with a specific password. */
-  password?: InputMaybe<Scalars['String']>;
+  password: InputMaybe<Scalars['String']>;
   /** Show Posts based on a keyword search */
-  search?: InputMaybe<Scalars['String']>;
-  stati?: InputMaybe<Array<InputMaybe<PostStatusEnum>>>;
-  status?: InputMaybe<PostStatusEnum>;
+  search: InputMaybe<Scalars['String']>;
+  stati: InputMaybe<Array<InputMaybe<PostStatusEnum>>>;
+  status: InputMaybe<PostStatusEnum>;
   /** Title of the object */
-  title?: InputMaybe<Scalars['String']>;
+  title: InputMaybe<Scalars['String']>;
 };
 
 /** Connection between the category type and the category type */
@@ -466,65 +466,65 @@ export type CategoryToPostConnectionEdge = {
 /** Arguments for filtering the CategoryToPostConnection connection */
 export type CategoryToPostConnectionWhereArgs = {
   /** The user that's connected as the author of the object. Use the userId for the author object. */
-  author?: InputMaybe<Scalars['Int']>;
+  author: InputMaybe<Scalars['Int']>;
   /** Find objects connected to author(s) in the array of author's userIds */
-  authorIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  authorIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Find objects connected to the author by the author's nicename */
-  authorName?: InputMaybe<Scalars['String']>;
+  authorName: InputMaybe<Scalars['String']>;
   /** Find objects NOT connected to author(s) in the array of author's userIds */
-  authorNotIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  authorNotIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Category ID */
-  categoryId?: InputMaybe<Scalars['Int']>;
+  categoryId: InputMaybe<Scalars['Int']>;
   /** Array of category IDs, used to display objects from one category OR another */
-  categoryIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  categoryIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Use Category Slug */
-  categoryName?: InputMaybe<Scalars['String']>;
+  categoryName: InputMaybe<Scalars['String']>;
   /** Array of category IDs, used to display objects from one category OR another */
-  categoryNotIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  categoryNotIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Filter the connection based on dates */
-  dateQuery?: InputMaybe<DateQueryInput>;
+  dateQuery: InputMaybe<DateQueryInput>;
   /** True for objects with passwords; False for objects without passwords; null for all objects with or without passwords */
-  hasPassword?: InputMaybe<Scalars['Boolean']>;
+  hasPassword: InputMaybe<Scalars['Boolean']>;
   /** Specific ID of the object */
-  id?: InputMaybe<Scalars['Int']>;
+  id: InputMaybe<Scalars['Int']>;
   /** Array of IDs for the objects to retrieve */
-  in?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  in: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Get objects with a specific mimeType property */
-  mimeType?: InputMaybe<MimeTypeEnum>;
+  mimeType: InputMaybe<MimeTypeEnum>;
   /** Slug / post_name of the object */
-  name?: InputMaybe<Scalars['String']>;
+  name: InputMaybe<Scalars['String']>;
   /** Specify objects to retrieve. Use slugs */
-  nameIn?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  nameIn: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
-  notIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  notIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** What paramater to use to order the objects by. */
-  orderby?: InputMaybe<Array<InputMaybe<PostObjectsConnectionOrderbyInput>>>;
+  orderby: InputMaybe<Array<InputMaybe<PostObjectsConnectionOrderbyInput>>>;
   /** Use ID to return only children. Use 0 to return only top-level items */
-  parent?: InputMaybe<Scalars['ID']>;
+  parent: InputMaybe<Scalars['ID']>;
   /** Specify objects whose parent is in an array */
-  parentIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  parentIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Specify posts whose parent is not in an array */
-  parentNotIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  parentNotIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Show posts with a specific password. */
-  password?: InputMaybe<Scalars['String']>;
+  password: InputMaybe<Scalars['String']>;
   /** Show Posts based on a keyword search */
-  search?: InputMaybe<Scalars['String']>;
-  stati?: InputMaybe<Array<InputMaybe<PostStatusEnum>>>;
-  status?: InputMaybe<PostStatusEnum>;
+  search: InputMaybe<Scalars['String']>;
+  stati: InputMaybe<Array<InputMaybe<PostStatusEnum>>>;
+  status: InputMaybe<PostStatusEnum>;
   /** Tag Slug */
-  tag?: InputMaybe<Scalars['String']>;
+  tag: InputMaybe<Scalars['String']>;
   /** Use Tag ID */
-  tagId?: InputMaybe<Scalars['String']>;
+  tagId: InputMaybe<Scalars['String']>;
   /** Array of tag IDs, used to display objects from one tag OR another */
-  tagIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  tagIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Array of tag IDs, used to display objects from one tag OR another */
-  tagNotIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  tagNotIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Array of tag slugs, used to display objects from one tag OR another */
-  tagSlugAnd?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  tagSlugAnd: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   /** Array of tag slugs, used to exclude objects in specified tags */
-  tagSlugIn?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  tagSlugIn: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   /** Title of the object */
-  title?: InputMaybe<Scalars['String']>;
+  title: InputMaybe<Scalars['String']>;
 };
 
 /** Connection between the category type and the Taxonomy type */
@@ -581,23 +581,23 @@ export type Comment = DatabaseIdentifier & Node & {
 
 /** A Comment object */
 export type CommentContentArgs = {
-  format?: InputMaybe<PostObjectFieldFormatEnum>;
+  format: InputMaybe<PostObjectFieldFormatEnum>;
 };
 
 
 /** A Comment object */
 export type CommentParentArgs = {
-  where?: InputMaybe<CommentToParentCommentConnectionWhereArgs>;
+  where: InputMaybe<CommentToParentCommentConnectionWhereArgs>;
 };
 
 
 /** A Comment object */
 export type CommentRepliesArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  where?: InputMaybe<CommentToCommentConnectionWhereArgs>;
+  after: InputMaybe<Scalars['String']>;
+  before: InputMaybe<Scalars['String']>;
+  first: InputMaybe<Scalars['Int']>;
+  last: InputMaybe<Scalars['Int']>;
+  where: InputMaybe<CommentToCommentConnectionWhereArgs>;
 };
 
 /** A Comment Author object */
@@ -640,63 +640,63 @@ export type CommentToCommentConnectionEdge = {
 /** Arguments for filtering the CommentToCommentConnection connection */
 export type CommentToCommentConnectionWhereArgs = {
   /** Comment author email address. */
-  authorEmail?: InputMaybe<Scalars['String']>;
+  authorEmail: InputMaybe<Scalars['String']>;
   /** Array of author IDs to include comments for. */
-  authorIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  authorIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Array of author IDs to exclude comments for. */
-  authorNotIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  authorNotIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Comment author URL. */
-  authorUrl?: InputMaybe<Scalars['String']>;
+  authorUrl: InputMaybe<Scalars['String']>;
   /** Array of comment IDs to include. */
-  commentIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  commentIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Array of IDs of users whose unapproved comments will be returned by the query regardless of status. */
-  commentNotIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  commentNotIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Include comments of a given type. */
-  commentType?: InputMaybe<Scalars['String']>;
+  commentType: InputMaybe<Scalars['String']>;
   /** Include comments from a given array of comment types. */
-  commentTypeIn?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  commentTypeIn: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   /** Exclude comments from a given array of comment types. */
-  commentTypeNotIn?: InputMaybe<Scalars['String']>;
+  commentTypeNotIn: InputMaybe<Scalars['String']>;
   /** Content object author ID to limit results by. */
-  contentAuthor?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  contentAuthor: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Array of author IDs to retrieve comments for. */
-  contentAuthorIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  contentAuthorIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Array of author IDs *not* to retrieve comments for. */
-  contentAuthorNotIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  contentAuthorNotIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Limit results to those affiliated with a given content object ID. */
-  contentId?: InputMaybe<Scalars['ID']>;
+  contentId: InputMaybe<Scalars['ID']>;
   /** Array of content object IDs to include affiliated comments for. */
-  contentIdIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  contentIdIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Array of content object IDs to exclude affiliated comments for. */
-  contentIdNotIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  contentIdNotIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Content object name to retrieve affiliated comments for. */
-  contentName?: InputMaybe<Scalars['String']>;
+  contentName: InputMaybe<Scalars['String']>;
   /** Content Object parent ID to retrieve affiliated comments for. */
-  contentParent?: InputMaybe<Scalars['Int']>;
+  contentParent: InputMaybe<Scalars['Int']>;
   /** Array of content object statuses to retrieve affiliated comments for. Pass 'any' to match any value. */
-  contentStatus?: InputMaybe<Array<InputMaybe<PostStatusEnum>>>;
+  contentStatus: InputMaybe<Array<InputMaybe<PostStatusEnum>>>;
   /** Content object type or array of types to retrieve affiliated comments for. Pass 'any' to match any value. */
-  contentType?: InputMaybe<Array<InputMaybe<ContentTypeEnum>>>;
+  contentType: InputMaybe<Array<InputMaybe<ContentTypeEnum>>>;
   /** Array of IDs or email addresses of users whose unapproved comments will be returned by the query regardless of $status. Default empty */
-  includeUnapproved?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  includeUnapproved: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Karma score to retrieve matching comments for. */
-  karma?: InputMaybe<Scalars['Int']>;
+  karma: InputMaybe<Scalars['Int']>;
   /** The cardinality of the order of the connection */
-  order?: InputMaybe<OrderEnum>;
+  order: InputMaybe<OrderEnum>;
   /** Field to order the comments by. */
-  orderby?: InputMaybe<CommentsConnectionOrderbyEnum>;
+  orderby: InputMaybe<CommentsConnectionOrderbyEnum>;
   /** Parent ID of comment to retrieve children of. */
-  parent?: InputMaybe<Scalars['Int']>;
+  parent: InputMaybe<Scalars['Int']>;
   /** Array of parent IDs of comments to retrieve children for. */
-  parentIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  parentIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Array of parent IDs of comments *not* to retrieve children for. */
-  parentNotIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  parentNotIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Search term(s) to retrieve matching comments for. */
-  search?: InputMaybe<Scalars['String']>;
+  search: InputMaybe<Scalars['String']>;
   /** Comment status to limit results by. */
-  status?: InputMaybe<Scalars['String']>;
+  status: InputMaybe<Scalars['String']>;
   /** Include comments for a specific user ID. */
-  userId?: InputMaybe<Scalars['ID']>;
+  userId: InputMaybe<Scalars['ID']>;
 };
 
 /** Connection between the Comment type and the Commenter type */
@@ -723,63 +723,63 @@ export type CommentToParentCommentConnectionEdge = {
 /** Arguments for filtering the CommentToParentCommentConnection connection */
 export type CommentToParentCommentConnectionWhereArgs = {
   /** Comment author email address. */
-  authorEmail?: InputMaybe<Scalars['String']>;
+  authorEmail: InputMaybe<Scalars['String']>;
   /** Array of author IDs to include comments for. */
-  authorIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  authorIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Array of author IDs to exclude comments for. */
-  authorNotIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  authorNotIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Comment author URL. */
-  authorUrl?: InputMaybe<Scalars['String']>;
+  authorUrl: InputMaybe<Scalars['String']>;
   /** Array of comment IDs to include. */
-  commentIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  commentIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Array of IDs of users whose unapproved comments will be returned by the query regardless of status. */
-  commentNotIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  commentNotIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Include comments of a given type. */
-  commentType?: InputMaybe<Scalars['String']>;
+  commentType: InputMaybe<Scalars['String']>;
   /** Include comments from a given array of comment types. */
-  commentTypeIn?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  commentTypeIn: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   /** Exclude comments from a given array of comment types. */
-  commentTypeNotIn?: InputMaybe<Scalars['String']>;
+  commentTypeNotIn: InputMaybe<Scalars['String']>;
   /** Content object author ID to limit results by. */
-  contentAuthor?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  contentAuthor: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Array of author IDs to retrieve comments for. */
-  contentAuthorIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  contentAuthorIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Array of author IDs *not* to retrieve comments for. */
-  contentAuthorNotIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  contentAuthorNotIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Limit results to those affiliated with a given content object ID. */
-  contentId?: InputMaybe<Scalars['ID']>;
+  contentId: InputMaybe<Scalars['ID']>;
   /** Array of content object IDs to include affiliated comments for. */
-  contentIdIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  contentIdIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Array of content object IDs to exclude affiliated comments for. */
-  contentIdNotIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  contentIdNotIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Content object name to retrieve affiliated comments for. */
-  contentName?: InputMaybe<Scalars['String']>;
+  contentName: InputMaybe<Scalars['String']>;
   /** Content Object parent ID to retrieve affiliated comments for. */
-  contentParent?: InputMaybe<Scalars['Int']>;
+  contentParent: InputMaybe<Scalars['Int']>;
   /** Array of content object statuses to retrieve affiliated comments for. Pass 'any' to match any value. */
-  contentStatus?: InputMaybe<Array<InputMaybe<PostStatusEnum>>>;
+  contentStatus: InputMaybe<Array<InputMaybe<PostStatusEnum>>>;
   /** Content object type or array of types to retrieve affiliated comments for. Pass 'any' to match any value. */
-  contentType?: InputMaybe<Array<InputMaybe<ContentTypeEnum>>>;
+  contentType: InputMaybe<Array<InputMaybe<ContentTypeEnum>>>;
   /** Array of IDs or email addresses of users whose unapproved comments will be returned by the query regardless of $status. Default empty */
-  includeUnapproved?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  includeUnapproved: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Karma score to retrieve matching comments for. */
-  karma?: InputMaybe<Scalars['Int']>;
+  karma: InputMaybe<Scalars['Int']>;
   /** The cardinality of the order of the connection */
-  order?: InputMaybe<OrderEnum>;
+  order: InputMaybe<OrderEnum>;
   /** Field to order the comments by. */
-  orderby?: InputMaybe<CommentsConnectionOrderbyEnum>;
+  orderby: InputMaybe<CommentsConnectionOrderbyEnum>;
   /** Parent ID of comment to retrieve children of. */
-  parent?: InputMaybe<Scalars['Int']>;
+  parent: InputMaybe<Scalars['Int']>;
   /** Array of parent IDs of comments to retrieve children for. */
-  parentIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  parentIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Array of parent IDs of comments *not* to retrieve children for. */
-  parentNotIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  parentNotIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Search term(s) to retrieve matching comments for. */
-  search?: InputMaybe<Scalars['String']>;
+  search: InputMaybe<Scalars['String']>;
   /** Comment status to limit results by. */
-  status?: InputMaybe<Scalars['String']>;
+  status: InputMaybe<Scalars['String']>;
   /** Include comments for a specific user ID. */
-  userId?: InputMaybe<Scalars['ID']>;
+  userId: InputMaybe<Scalars['ID']>;
 };
 
 /** The author of a comment */
@@ -871,19 +871,19 @@ export type ContentNode = {
 
 /** Nodes used to manage content */
 export type ContentNodeEnqueuedScriptsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
+  after: InputMaybe<Scalars['String']>;
+  before: InputMaybe<Scalars['String']>;
+  first: InputMaybe<Scalars['Int']>;
+  last: InputMaybe<Scalars['Int']>;
 };
 
 
 /** Nodes used to manage content */
 export type ContentNodeEnqueuedStylesheetsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
+  after: InputMaybe<Scalars['String']>;
+  before: InputMaybe<Scalars['String']>;
+  first: InputMaybe<Scalars['Int']>;
+  last: InputMaybe<Scalars['Int']>;
 };
 
 /** The Type of Identifier used to fetch a single resource. Default is ID. */
@@ -1037,20 +1037,20 @@ export type ContentType = Node & UniformResourceIdentifiable & {
 
 /** An Post Type object */
 export type ContentTypeConnectedTaxonomiesArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
+  after: InputMaybe<Scalars['String']>;
+  before: InputMaybe<Scalars['String']>;
+  first: InputMaybe<Scalars['Int']>;
+  last: InputMaybe<Scalars['Int']>;
 };
 
 
 /** An Post Type object */
 export type ContentTypeContentNodesArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  where?: InputMaybe<ContentTypeToContentNodeConnectionWhereArgs>;
+  after: InputMaybe<Scalars['String']>;
+  before: InputMaybe<Scalars['String']>;
+  first: InputMaybe<Scalars['Int']>;
+  last: InputMaybe<Scalars['Int']>;
+  where: InputMaybe<ContentTypeToContentNodeConnectionWhereArgs>;
 };
 
 /** Allowed Content Types */
@@ -1094,37 +1094,37 @@ export type ContentTypeToContentNodeConnectionEdge = {
 /** Arguments for filtering the ContentTypeToContentNodeConnection connection */
 export type ContentTypeToContentNodeConnectionWhereArgs = {
   /** Filter the connection based on dates */
-  dateQuery?: InputMaybe<DateQueryInput>;
+  dateQuery: InputMaybe<DateQueryInput>;
   /** True for objects with passwords; False for objects without passwords; null for all objects with or without passwords */
-  hasPassword?: InputMaybe<Scalars['Boolean']>;
+  hasPassword: InputMaybe<Scalars['Boolean']>;
   /** Specific ID of the object */
-  id?: InputMaybe<Scalars['Int']>;
+  id: InputMaybe<Scalars['Int']>;
   /** Array of IDs for the objects to retrieve */
-  in?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  in: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Get objects with a specific mimeType property */
-  mimeType?: InputMaybe<MimeTypeEnum>;
+  mimeType: InputMaybe<MimeTypeEnum>;
   /** Slug / post_name of the object */
-  name?: InputMaybe<Scalars['String']>;
+  name: InputMaybe<Scalars['String']>;
   /** Specify objects to retrieve. Use slugs */
-  nameIn?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  nameIn: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
-  notIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  notIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** What paramater to use to order the objects by. */
-  orderby?: InputMaybe<Array<InputMaybe<PostObjectsConnectionOrderbyInput>>>;
+  orderby: InputMaybe<Array<InputMaybe<PostObjectsConnectionOrderbyInput>>>;
   /** Use ID to return only children. Use 0 to return only top-level items */
-  parent?: InputMaybe<Scalars['ID']>;
+  parent: InputMaybe<Scalars['ID']>;
   /** Specify objects whose parent is in an array */
-  parentIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  parentIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Specify posts whose parent is not in an array */
-  parentNotIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  parentNotIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Show posts with a specific password. */
-  password?: InputMaybe<Scalars['String']>;
+  password: InputMaybe<Scalars['String']>;
   /** Show Posts based on a keyword search */
-  search?: InputMaybe<Scalars['String']>;
-  stati?: InputMaybe<Array<InputMaybe<PostStatusEnum>>>;
-  status?: InputMaybe<PostStatusEnum>;
+  search: InputMaybe<Scalars['String']>;
+  stati: InputMaybe<Array<InputMaybe<PostStatusEnum>>>;
+  status: InputMaybe<PostStatusEnum>;
   /** Title of the object */
-  title?: InputMaybe<Scalars['String']>;
+  title: InputMaybe<Scalars['String']>;
 };
 
 /** Connection between the ContentType type and the Taxonomy type */
@@ -1149,21 +1149,21 @@ export type ContentTypeToTaxonomyConnectionEdge = {
 
 /** Input for the createActionMonitorAction mutation */
 export type CreateActionMonitorActionInput = {
-  clientMutationId?: InputMaybe<Scalars['String']>;
+  clientMutationId: InputMaybe<Scalars['String']>;
   /** The content of the object */
-  content?: InputMaybe<Scalars['String']>;
+  content: InputMaybe<Scalars['String']>;
   /** The date of the object. Preferable to enter as year/month/day (e.g. 01/31/2017) as it will rearrange date as fit if it is not specified. Incomplete dates may have unintended results for example, "2017" as the input will use current date with timestamp 20:17  */
-  date?: InputMaybe<Scalars['String']>;
+  date: InputMaybe<Scalars['String']>;
   /** A field used for ordering posts. This is typically used with nav menu items or for special ordering of hierarchical content types. */
-  menuOrder?: InputMaybe<Scalars['Int']>;
+  menuOrder: InputMaybe<Scalars['Int']>;
   /** The password used to protect the content of the object */
-  password?: InputMaybe<Scalars['String']>;
+  password: InputMaybe<Scalars['String']>;
   /** The slug of the object */
-  slug?: InputMaybe<Scalars['String']>;
+  slug: InputMaybe<Scalars['String']>;
   /** The status of the object */
-  status?: InputMaybe<PostStatusEnum>;
+  status: InputMaybe<PostStatusEnum>;
   /** The title of the object */
-  title?: InputMaybe<Scalars['String']>;
+  title: InputMaybe<Scalars['String']>;
 };
 
 /** The payload for the createActionMonitorAction mutation */
@@ -1176,16 +1176,16 @@ export type CreateActionMonitorActionPayload = {
 /** Input for the createCategory mutation */
 export type CreateCategoryInput = {
   /** The slug that the category will be an alias of */
-  aliasOf?: InputMaybe<Scalars['String']>;
-  clientMutationId?: InputMaybe<Scalars['String']>;
+  aliasOf: InputMaybe<Scalars['String']>;
+  clientMutationId: InputMaybe<Scalars['String']>;
   /** The description of the category object */
-  description?: InputMaybe<Scalars['String']>;
+  description: InputMaybe<Scalars['String']>;
   /** The name of the category object to mutate */
   name: Scalars['String'];
   /** The ID of the category that should be set as the parent */
-  parentId?: InputMaybe<Scalars['ID']>;
+  parentId: InputMaybe<Scalars['ID']>;
   /** If this argument exists then the slug will be checked to see if it is not an existing valid term. If that check succeeds (it is not a valid term), then it is added and the term id is given. If it fails, then a check is made to whether the taxonomy is hierarchical and the parent argument is not empty. If the second check succeeds, the term will be inserted and the term id will be given. If the slug argument is empty, then it will be calculated from the term name. */
-  slug?: InputMaybe<Scalars['String']>;
+  slug: InputMaybe<Scalars['String']>;
 };
 
 /** The payload for the createCategory mutation */
@@ -1199,24 +1199,24 @@ export type CreateCategoryPayload = {
 /** Input for the createComment mutation */
 export type CreateCommentInput = {
   /** The approval status of the comment. */
-  approved?: InputMaybe<Scalars['String']>;
+  approved: InputMaybe<Scalars['String']>;
   /** The name of the comment's author. */
-  author?: InputMaybe<Scalars['String']>;
+  author: InputMaybe<Scalars['String']>;
   /** The email of the comment's author. */
-  authorEmail?: InputMaybe<Scalars['String']>;
+  authorEmail: InputMaybe<Scalars['String']>;
   /** The url of the comment's author. */
-  authorUrl?: InputMaybe<Scalars['String']>;
-  clientMutationId?: InputMaybe<Scalars['String']>;
+  authorUrl: InputMaybe<Scalars['String']>;
+  clientMutationId: InputMaybe<Scalars['String']>;
   /** The ID of the post object the comment belongs to. */
-  commentOn?: InputMaybe<Scalars['Int']>;
+  commentOn: InputMaybe<Scalars['Int']>;
   /** Content of the comment. */
-  content?: InputMaybe<Scalars['String']>;
+  content: InputMaybe<Scalars['String']>;
   /** The date of the object. Preferable to enter as year/month/day ( e.g. 01/31/2017 ) as it will rearrange date as fit if it is not specified. Incomplete dates may have unintended results for example, "2017" as the input will use current date with timestamp 20:17  */
-  date?: InputMaybe<Scalars['String']>;
+  date: InputMaybe<Scalars['String']>;
   /** Parent comment of current comment. */
-  parent?: InputMaybe<Scalars['ID']>;
+  parent: InputMaybe<Scalars['ID']>;
   /** Type of comment. */
-  type?: InputMaybe<Scalars['String']>;
+  type: InputMaybe<Scalars['String']>;
 };
 
 /** The payload for the createComment mutation */
@@ -1232,34 +1232,34 @@ export type CreateCommentPayload = {
 /** Input for the createMediaItem mutation */
 export type CreateMediaItemInput = {
   /** Alternative text to display when mediaItem is not displayed */
-  altText?: InputMaybe<Scalars['String']>;
+  altText: InputMaybe<Scalars['String']>;
   /** The userId to assign as the author of the mediaItem */
-  authorId?: InputMaybe<Scalars['ID']>;
+  authorId: InputMaybe<Scalars['ID']>;
   /** The caption for the mediaItem */
-  caption?: InputMaybe<Scalars['String']>;
-  clientMutationId?: InputMaybe<Scalars['String']>;
+  caption: InputMaybe<Scalars['String']>;
+  clientMutationId: InputMaybe<Scalars['String']>;
   /** The comment status for the mediaItem */
-  commentStatus?: InputMaybe<Scalars['String']>;
+  commentStatus: InputMaybe<Scalars['String']>;
   /** The date of the mediaItem */
-  date?: InputMaybe<Scalars['String']>;
+  date: InputMaybe<Scalars['String']>;
   /** The date (in GMT zone) of the mediaItem */
-  dateGmt?: InputMaybe<Scalars['String']>;
+  dateGmt: InputMaybe<Scalars['String']>;
   /** Description of the mediaItem */
-  description?: InputMaybe<Scalars['String']>;
+  description: InputMaybe<Scalars['String']>;
   /** The file name of the mediaItem */
-  filePath?: InputMaybe<Scalars['String']>;
+  filePath: InputMaybe<Scalars['String']>;
   /** The file type of the mediaItem */
-  fileType?: InputMaybe<MimeTypeEnum>;
+  fileType: InputMaybe<MimeTypeEnum>;
   /** The WordPress post ID or the graphQL postId of the parent object */
-  parentId?: InputMaybe<Scalars['ID']>;
+  parentId: InputMaybe<Scalars['ID']>;
   /** The ping status for the mediaItem */
-  pingStatus?: InputMaybe<Scalars['String']>;
+  pingStatus: InputMaybe<Scalars['String']>;
   /** The slug of the mediaItem */
-  slug?: InputMaybe<Scalars['String']>;
+  slug: InputMaybe<Scalars['String']>;
   /** The status of the mediaItem */
-  status?: InputMaybe<MediaItemStatusEnum>;
+  status: InputMaybe<MediaItemStatusEnum>;
   /** The title of the mediaItem */
-  title?: InputMaybe<Scalars['String']>;
+  title: InputMaybe<Scalars['String']>;
 };
 
 /** The payload for the createMediaItem mutation */
@@ -1272,26 +1272,26 @@ export type CreateMediaItemPayload = {
 /** Input for the createPage mutation */
 export type CreatePageInput = {
   /** The userId to assign as the author of the object */
-  authorId?: InputMaybe<Scalars['ID']>;
-  clientMutationId?: InputMaybe<Scalars['String']>;
+  authorId: InputMaybe<Scalars['ID']>;
+  clientMutationId: InputMaybe<Scalars['String']>;
   /** The comment status for the object */
-  commentStatus?: InputMaybe<Scalars['String']>;
+  commentStatus: InputMaybe<Scalars['String']>;
   /** The content of the object */
-  content?: InputMaybe<Scalars['String']>;
+  content: InputMaybe<Scalars['String']>;
   /** The date of the object. Preferable to enter as year/month/day (e.g. 01/31/2017) as it will rearrange date as fit if it is not specified. Incomplete dates may have unintended results for example, "2017" as the input will use current date with timestamp 20:17  */
-  date?: InputMaybe<Scalars['String']>;
+  date: InputMaybe<Scalars['String']>;
   /** A field used for ordering posts. This is typically used with nav menu items or for special ordering of hierarchical content types. */
-  menuOrder?: InputMaybe<Scalars['Int']>;
+  menuOrder: InputMaybe<Scalars['Int']>;
   /** The ID of the parent object */
-  parentId?: InputMaybe<Scalars['ID']>;
+  parentId: InputMaybe<Scalars['ID']>;
   /** The password used to protect the content of the object */
-  password?: InputMaybe<Scalars['String']>;
+  password: InputMaybe<Scalars['String']>;
   /** The slug of the object */
-  slug?: InputMaybe<Scalars['String']>;
+  slug: InputMaybe<Scalars['String']>;
   /** The status of the object */
-  status?: InputMaybe<PostStatusEnum>;
+  status: InputMaybe<PostStatusEnum>;
   /** The title of the object */
-  title?: InputMaybe<Scalars['String']>;
+  title: InputMaybe<Scalars['String']>;
 };
 
 /** The payload for the createPage mutation */
@@ -1304,14 +1304,14 @@ export type CreatePagePayload = {
 /** Input for the createPostFormat mutation */
 export type CreatePostFormatInput = {
   /** The slug that the post_format will be an alias of */
-  aliasOf?: InputMaybe<Scalars['String']>;
-  clientMutationId?: InputMaybe<Scalars['String']>;
+  aliasOf: InputMaybe<Scalars['String']>;
+  clientMutationId: InputMaybe<Scalars['String']>;
   /** The description of the post_format object */
-  description?: InputMaybe<Scalars['String']>;
+  description: InputMaybe<Scalars['String']>;
   /** The name of the post_format object to mutate */
   name: Scalars['String'];
   /** If this argument exists then the slug will be checked to see if it is not an existing valid term. If that check succeeds (it is not a valid term), then it is added and the term id is given. If it fails, then a check is made to whether the taxonomy is hierarchical and the parent argument is not empty. If the second check succeeds, the term will be inserted and the term id will be given. If the slug argument is empty, then it will be calculated from the term name. */
-  slug?: InputMaybe<Scalars['String']>;
+  slug: InputMaybe<Scalars['String']>;
 };
 
 /** The payload for the createPostFormat mutation */
@@ -1325,38 +1325,38 @@ export type CreatePostFormatPayload = {
 /** Input for the createPost mutation */
 export type CreatePostInput = {
   /** The userId to assign as the author of the object */
-  authorId?: InputMaybe<Scalars['ID']>;
+  authorId: InputMaybe<Scalars['ID']>;
   /** Set connections between the post and categories */
-  categories?: InputMaybe<PostCategoriesInput>;
-  clientMutationId?: InputMaybe<Scalars['String']>;
+  categories: InputMaybe<PostCategoriesInput>;
+  clientMutationId: InputMaybe<Scalars['String']>;
   /** The comment status for the object */
-  commentStatus?: InputMaybe<Scalars['String']>;
+  commentStatus: InputMaybe<Scalars['String']>;
   /** The content of the object */
-  content?: InputMaybe<Scalars['String']>;
+  content: InputMaybe<Scalars['String']>;
   /** The date of the object. Preferable to enter as year/month/day (e.g. 01/31/2017) as it will rearrange date as fit if it is not specified. Incomplete dates may have unintended results for example, "2017" as the input will use current date with timestamp 20:17  */
-  date?: InputMaybe<Scalars['String']>;
+  date: InputMaybe<Scalars['String']>;
   /** The excerpt of the object */
-  excerpt?: InputMaybe<Scalars['String']>;
+  excerpt: InputMaybe<Scalars['String']>;
   /** A field used for ordering posts. This is typically used with nav menu items or for special ordering of hierarchical content types. */
-  menuOrder?: InputMaybe<Scalars['Int']>;
+  menuOrder: InputMaybe<Scalars['Int']>;
   /** The password used to protect the content of the object */
-  password?: InputMaybe<Scalars['String']>;
+  password: InputMaybe<Scalars['String']>;
   /** The ping status for the object */
-  pingStatus?: InputMaybe<Scalars['String']>;
+  pingStatus: InputMaybe<Scalars['String']>;
   /** URLs that have been pinged. */
-  pinged?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  pinged: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   /** Set connections between the post and postFormats */
-  postFormats?: InputMaybe<PostPostFormatsInput>;
+  postFormats: InputMaybe<PostPostFormatsInput>;
   /** The slug of the object */
-  slug?: InputMaybe<Scalars['String']>;
+  slug: InputMaybe<Scalars['String']>;
   /** The status of the object */
-  status?: InputMaybe<PostStatusEnum>;
+  status: InputMaybe<PostStatusEnum>;
   /** Set connections between the post and tags */
-  tags?: InputMaybe<PostTagsInput>;
+  tags: InputMaybe<PostTagsInput>;
   /** The title of the object */
-  title?: InputMaybe<Scalars['String']>;
+  title: InputMaybe<Scalars['String']>;
   /** URLs queued to be pinged. */
-  toPing?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  toPing: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
 };
 
 /** The payload for the createPost mutation */
@@ -1369,14 +1369,14 @@ export type CreatePostPayload = {
 /** Input for the createTag mutation */
 export type CreateTagInput = {
   /** The slug that the post_tag will be an alias of */
-  aliasOf?: InputMaybe<Scalars['String']>;
-  clientMutationId?: InputMaybe<Scalars['String']>;
+  aliasOf: InputMaybe<Scalars['String']>;
+  clientMutationId: InputMaybe<Scalars['String']>;
   /** The description of the post_tag object */
-  description?: InputMaybe<Scalars['String']>;
+  description: InputMaybe<Scalars['String']>;
   /** The name of the post_tag object to mutate */
   name: Scalars['String'];
   /** If this argument exists then the slug will be checked to see if it is not an existing valid term. If that check succeeds (it is not a valid term), then it is added and the term id is given. If it fails, then a check is made to whether the taxonomy is hierarchical and the parent argument is not empty. If the second check succeeds, the term will be inserted and the term id will be given. If the slug argument is empty, then it will be calculated from the term name. */
-  slug?: InputMaybe<Scalars['String']>;
+  slug: InputMaybe<Scalars['String']>;
 };
 
 /** The payload for the createTag mutation */
@@ -1390,40 +1390,40 @@ export type CreateTagPayload = {
 /** Input for the createUser mutation */
 export type CreateUserInput = {
   /** User's AOL IM account. */
-  aim?: InputMaybe<Scalars['String']>;
-  clientMutationId?: InputMaybe<Scalars['String']>;
+  aim: InputMaybe<Scalars['String']>;
+  clientMutationId: InputMaybe<Scalars['String']>;
   /** A string containing content about the user. */
-  description?: InputMaybe<Scalars['String']>;
+  description: InputMaybe<Scalars['String']>;
   /** A string that will be shown on the site. Defaults to user's username. It is likely that you will want to change this, for both appearance and security through obscurity (that is if you dont use and delete the default admin user). */
-  displayName?: InputMaybe<Scalars['String']>;
+  displayName: InputMaybe<Scalars['String']>;
   /** A string containing the user's email address. */
-  email?: InputMaybe<Scalars['String']>;
+  email: InputMaybe<Scalars['String']>;
   /** 	The user's first name. */
-  firstName?: InputMaybe<Scalars['String']>;
+  firstName: InputMaybe<Scalars['String']>;
   /** User's Jabber account. */
-  jabber?: InputMaybe<Scalars['String']>;
+  jabber: InputMaybe<Scalars['String']>;
   /** The user's last name. */
-  lastName?: InputMaybe<Scalars['String']>;
+  lastName: InputMaybe<Scalars['String']>;
   /** User's locale. */
-  locale?: InputMaybe<Scalars['String']>;
+  locale: InputMaybe<Scalars['String']>;
   /** A string that contains a URL-friendly name for the user. The default is the user's username. */
-  nicename?: InputMaybe<Scalars['String']>;
+  nicename: InputMaybe<Scalars['String']>;
   /** The user's nickname, defaults to the user's username. */
-  nickname?: InputMaybe<Scalars['String']>;
+  nickname: InputMaybe<Scalars['String']>;
   /** A string that contains the plain text password for the user. */
-  password?: InputMaybe<Scalars['String']>;
+  password: InputMaybe<Scalars['String']>;
   /** The date the user registered. Format is Y-m-d H:i:s. */
-  registered?: InputMaybe<Scalars['String']>;
+  registered: InputMaybe<Scalars['String']>;
   /** A string for whether to enable the rich editor or not. False if not empty. */
-  richEditing?: InputMaybe<Scalars['String']>;
+  richEditing: InputMaybe<Scalars['String']>;
   /** An array of roles to be assigned to the user. */
-  roles?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  roles: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   /** A string that contains the user's username for logging in. */
   username: Scalars['String'];
   /** A string containing the user's URL for the user's web site. */
-  websiteUrl?: InputMaybe<Scalars['String']>;
+  websiteUrl: InputMaybe<Scalars['String']>;
   /** User's Yahoo IM account. */
-  yim?: InputMaybe<Scalars['String']>;
+  yim: InputMaybe<Scalars['String']>;
 };
 
 /** The payload for the createUser mutation */
@@ -1442,41 +1442,41 @@ export type DatabaseIdentifier = {
 /** Date values */
 export type DateInput = {
   /** Day of the month (from 1 to 31) */
-  day?: InputMaybe<Scalars['Int']>;
+  day: InputMaybe<Scalars['Int']>;
   /** Month number (from 1 to 12) */
-  month?: InputMaybe<Scalars['Int']>;
+  month: InputMaybe<Scalars['Int']>;
   /** 4 digit year (e.g. 2017) */
-  year?: InputMaybe<Scalars['Int']>;
+  year: InputMaybe<Scalars['Int']>;
 };
 
 /** Filter the connection based on input */
 export type DateQueryInput = {
   /** Nodes should be returned after this date */
-  after?: InputMaybe<DateInput>;
+  after: InputMaybe<DateInput>;
   /** Nodes should be returned before this date */
-  before?: InputMaybe<DateInput>;
+  before: InputMaybe<DateInput>;
   /** Column to query against */
-  column?: InputMaybe<PostObjectsConnectionDateColumnEnum>;
+  column: InputMaybe<PostObjectsConnectionDateColumnEnum>;
   /** For after/before, whether exact value should be matched or not */
-  compare?: InputMaybe<Scalars['String']>;
+  compare: InputMaybe<Scalars['String']>;
   /** Day of the month (from 1 to 31) */
-  day?: InputMaybe<Scalars['Int']>;
+  day: InputMaybe<Scalars['Int']>;
   /** Hour (from 0 to 23) */
-  hour?: InputMaybe<Scalars['Int']>;
+  hour: InputMaybe<Scalars['Int']>;
   /** For after/before, whether exact value should be matched or not */
-  inclusive?: InputMaybe<Scalars['Boolean']>;
+  inclusive: InputMaybe<Scalars['Boolean']>;
   /** Minute (from 0 to 59) */
-  minute?: InputMaybe<Scalars['Int']>;
+  minute: InputMaybe<Scalars['Int']>;
   /** Month number (from 1 to 12) */
-  month?: InputMaybe<Scalars['Int']>;
+  month: InputMaybe<Scalars['Int']>;
   /** OR or AND, how the sub-arrays should be compared */
-  relation?: InputMaybe<RelationEnum>;
+  relation: InputMaybe<RelationEnum>;
   /** Second (0 to 59) */
-  second?: InputMaybe<Scalars['Int']>;
+  second: InputMaybe<Scalars['Int']>;
   /** Week of the year (from 0 to 53) */
-  week?: InputMaybe<Scalars['Int']>;
+  week: InputMaybe<Scalars['Int']>;
   /** 4 digit year (e.g. 2017) */
-  year?: InputMaybe<Scalars['Int']>;
+  year: InputMaybe<Scalars['Int']>;
 };
 
 /** The template assigned to the node */
@@ -1488,9 +1488,9 @@ export type DefaultTemplate = ContentTemplate & {
 
 /** Input for the deleteActionMonitorAction mutation */
 export type DeleteActionMonitorActionInput = {
-  clientMutationId?: InputMaybe<Scalars['String']>;
+  clientMutationId: InputMaybe<Scalars['String']>;
   /** Whether the object should be force deleted instead of being moved to the trash */
-  forceDelete?: InputMaybe<Scalars['Boolean']>;
+  forceDelete: InputMaybe<Scalars['Boolean']>;
   /** The ID of the ActionMonitorAction to delete */
   id: Scalars['ID'];
 };
@@ -1507,7 +1507,7 @@ export type DeleteActionMonitorActionPayload = {
 
 /** Input for the deleteCategory mutation */
 export type DeleteCategoryInput = {
-  clientMutationId?: InputMaybe<Scalars['String']>;
+  clientMutationId: InputMaybe<Scalars['String']>;
   /** The ID of the category to delete */
   id: Scalars['ID'];
 };
@@ -1524,9 +1524,9 @@ export type DeleteCategoryPayload = {
 
 /** Input for the deleteComment mutation */
 export type DeleteCommentInput = {
-  clientMutationId?: InputMaybe<Scalars['String']>;
+  clientMutationId: InputMaybe<Scalars['String']>;
   /** Whether the comment should be force deleted instead of being moved to the trash */
-  forceDelete?: InputMaybe<Scalars['Boolean']>;
+  forceDelete: InputMaybe<Scalars['Boolean']>;
   /** The deleted comment ID */
   id: Scalars['ID'];
 };
@@ -1543,9 +1543,9 @@ export type DeleteCommentPayload = {
 
 /** Input for the deleteMediaItem mutation */
 export type DeleteMediaItemInput = {
-  clientMutationId?: InputMaybe<Scalars['String']>;
+  clientMutationId: InputMaybe<Scalars['String']>;
   /** Whether the mediaItem should be force deleted instead of being moved to the trash */
-  forceDelete?: InputMaybe<Scalars['Boolean']>;
+  forceDelete: InputMaybe<Scalars['Boolean']>;
   /** The ID of the mediaItem to delete */
   id: Scalars['ID'];
 };
@@ -1562,9 +1562,9 @@ export type DeleteMediaItemPayload = {
 
 /** Input for the deletePage mutation */
 export type DeletePageInput = {
-  clientMutationId?: InputMaybe<Scalars['String']>;
+  clientMutationId: InputMaybe<Scalars['String']>;
   /** Whether the object should be force deleted instead of being moved to the trash */
-  forceDelete?: InputMaybe<Scalars['Boolean']>;
+  forceDelete: InputMaybe<Scalars['Boolean']>;
   /** The ID of the page to delete */
   id: Scalars['ID'];
 };
@@ -1581,7 +1581,7 @@ export type DeletePagePayload = {
 
 /** Input for the deletePostFormat mutation */
 export type DeletePostFormatInput = {
-  clientMutationId?: InputMaybe<Scalars['String']>;
+  clientMutationId: InputMaybe<Scalars['String']>;
   /** The ID of the postFormat to delete */
   id: Scalars['ID'];
 };
@@ -1598,9 +1598,9 @@ export type DeletePostFormatPayload = {
 
 /** Input for the deletePost mutation */
 export type DeletePostInput = {
-  clientMutationId?: InputMaybe<Scalars['String']>;
+  clientMutationId: InputMaybe<Scalars['String']>;
   /** Whether the object should be force deleted instead of being moved to the trash */
-  forceDelete?: InputMaybe<Scalars['Boolean']>;
+  forceDelete: InputMaybe<Scalars['Boolean']>;
   /** The ID of the post to delete */
   id: Scalars['ID'];
 };
@@ -1617,7 +1617,7 @@ export type DeletePostPayload = {
 
 /** Input for the deleteTag mutation */
 export type DeleteTagInput = {
-  clientMutationId?: InputMaybe<Scalars['String']>;
+  clientMutationId: InputMaybe<Scalars['String']>;
   /** The ID of the tag to delete */
   id: Scalars['ID'];
 };
@@ -1634,11 +1634,11 @@ export type DeleteTagPayload = {
 
 /** Input for the deleteUser mutation */
 export type DeleteUserInput = {
-  clientMutationId?: InputMaybe<Scalars['String']>;
+  clientMutationId: InputMaybe<Scalars['String']>;
   /** The ID of the user you want to delete */
   id: Scalars['ID'];
   /** Reassign posts and links to new User ID. */
-  reassignId?: InputMaybe<Scalars['ID']>;
+  reassignId: InputMaybe<Scalars['ID']>;
 };
 
 /** The payload for the deleteUser mutation */
@@ -1777,21 +1777,21 @@ export type HierarchicalContentNode = {
 
 /** Content node with hierarchical (parent/child) relationships */
 export type HierarchicalContentNodeAncestorsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  where?: InputMaybe<HierarchicalContentNodeToContentNodeAncestorsConnectionWhereArgs>;
+  after: InputMaybe<Scalars['String']>;
+  before: InputMaybe<Scalars['String']>;
+  first: InputMaybe<Scalars['Int']>;
+  last: InputMaybe<Scalars['Int']>;
+  where: InputMaybe<HierarchicalContentNodeToContentNodeAncestorsConnectionWhereArgs>;
 };
 
 
 /** Content node with hierarchical (parent/child) relationships */
 export type HierarchicalContentNodeChildrenArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  where?: InputMaybe<HierarchicalContentNodeToContentNodeChildrenConnectionWhereArgs>;
+  after: InputMaybe<Scalars['String']>;
+  before: InputMaybe<Scalars['String']>;
+  first: InputMaybe<Scalars['Int']>;
+  last: InputMaybe<Scalars['Int']>;
+  where: InputMaybe<HierarchicalContentNodeToContentNodeChildrenConnectionWhereArgs>;
 };
 
 /** Connection between the HierarchicalContentNode type and the ContentNode type */
@@ -1817,37 +1817,37 @@ export type HierarchicalContentNodeToContentNodeAncestorsConnectionEdge = {
 /** Arguments for filtering the HierarchicalContentNodeToContentNodeAncestorsConnection connection */
 export type HierarchicalContentNodeToContentNodeAncestorsConnectionWhereArgs = {
   /** Filter the connection based on dates */
-  dateQuery?: InputMaybe<DateQueryInput>;
+  dateQuery: InputMaybe<DateQueryInput>;
   /** True for objects with passwords; False for objects without passwords; null for all objects with or without passwords */
-  hasPassword?: InputMaybe<Scalars['Boolean']>;
+  hasPassword: InputMaybe<Scalars['Boolean']>;
   /** Specific ID of the object */
-  id?: InputMaybe<Scalars['Int']>;
+  id: InputMaybe<Scalars['Int']>;
   /** Array of IDs for the objects to retrieve */
-  in?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  in: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Get objects with a specific mimeType property */
-  mimeType?: InputMaybe<MimeTypeEnum>;
+  mimeType: InputMaybe<MimeTypeEnum>;
   /** Slug / post_name of the object */
-  name?: InputMaybe<Scalars['String']>;
+  name: InputMaybe<Scalars['String']>;
   /** Specify objects to retrieve. Use slugs */
-  nameIn?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  nameIn: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
-  notIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  notIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** What paramater to use to order the objects by. */
-  orderby?: InputMaybe<Array<InputMaybe<PostObjectsConnectionOrderbyInput>>>;
+  orderby: InputMaybe<Array<InputMaybe<PostObjectsConnectionOrderbyInput>>>;
   /** Use ID to return only children. Use 0 to return only top-level items */
-  parent?: InputMaybe<Scalars['ID']>;
+  parent: InputMaybe<Scalars['ID']>;
   /** Specify objects whose parent is in an array */
-  parentIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  parentIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Specify posts whose parent is not in an array */
-  parentNotIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  parentNotIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Show posts with a specific password. */
-  password?: InputMaybe<Scalars['String']>;
+  password: InputMaybe<Scalars['String']>;
   /** Show Posts based on a keyword search */
-  search?: InputMaybe<Scalars['String']>;
-  stati?: InputMaybe<Array<InputMaybe<PostStatusEnum>>>;
-  status?: InputMaybe<PostStatusEnum>;
+  search: InputMaybe<Scalars['String']>;
+  stati: InputMaybe<Array<InputMaybe<PostStatusEnum>>>;
+  status: InputMaybe<PostStatusEnum>;
   /** Title of the object */
-  title?: InputMaybe<Scalars['String']>;
+  title: InputMaybe<Scalars['String']>;
 };
 
 /** Connection between the HierarchicalContentNode type and the ContentNode type */
@@ -1873,37 +1873,37 @@ export type HierarchicalContentNodeToContentNodeChildrenConnectionEdge = {
 /** Arguments for filtering the HierarchicalContentNodeToContentNodeChildrenConnection connection */
 export type HierarchicalContentNodeToContentNodeChildrenConnectionWhereArgs = {
   /** Filter the connection based on dates */
-  dateQuery?: InputMaybe<DateQueryInput>;
+  dateQuery: InputMaybe<DateQueryInput>;
   /** True for objects with passwords; False for objects without passwords; null for all objects with or without passwords */
-  hasPassword?: InputMaybe<Scalars['Boolean']>;
+  hasPassword: InputMaybe<Scalars['Boolean']>;
   /** Specific ID of the object */
-  id?: InputMaybe<Scalars['Int']>;
+  id: InputMaybe<Scalars['Int']>;
   /** Array of IDs for the objects to retrieve */
-  in?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  in: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Get objects with a specific mimeType property */
-  mimeType?: InputMaybe<MimeTypeEnum>;
+  mimeType: InputMaybe<MimeTypeEnum>;
   /** Slug / post_name of the object */
-  name?: InputMaybe<Scalars['String']>;
+  name: InputMaybe<Scalars['String']>;
   /** Specify objects to retrieve. Use slugs */
-  nameIn?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  nameIn: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
-  notIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  notIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** What paramater to use to order the objects by. */
-  orderby?: InputMaybe<Array<InputMaybe<PostObjectsConnectionOrderbyInput>>>;
+  orderby: InputMaybe<Array<InputMaybe<PostObjectsConnectionOrderbyInput>>>;
   /** Use ID to return only children. Use 0 to return only top-level items */
-  parent?: InputMaybe<Scalars['ID']>;
+  parent: InputMaybe<Scalars['ID']>;
   /** Specify objects whose parent is in an array */
-  parentIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  parentIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Specify posts whose parent is not in an array */
-  parentNotIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  parentNotIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Show posts with a specific password. */
-  password?: InputMaybe<Scalars['String']>;
+  password: InputMaybe<Scalars['String']>;
   /** Show Posts based on a keyword search */
-  search?: InputMaybe<Scalars['String']>;
-  stati?: InputMaybe<Array<InputMaybe<PostStatusEnum>>>;
-  status?: InputMaybe<PostStatusEnum>;
+  search: InputMaybe<Scalars['String']>;
+  stati: InputMaybe<Array<InputMaybe<PostStatusEnum>>>;
+  status: InputMaybe<PostStatusEnum>;
   /** Title of the object */
-  title?: InputMaybe<Scalars['String']>;
+  title: InputMaybe<Scalars['String']>;
 };
 
 /** Connection between the HierarchicalContentNode type and the ContentNode type */
@@ -2040,91 +2040,91 @@ export type MediaItem = ContentNode & DatabaseIdentifier & HierarchicalContentNo
 
 /** The mediaItem type */
 export type MediaItemAncestorsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  where?: InputMaybe<HierarchicalContentNodeToContentNodeAncestorsConnectionWhereArgs>;
+  after: InputMaybe<Scalars['String']>;
+  before: InputMaybe<Scalars['String']>;
+  first: InputMaybe<Scalars['Int']>;
+  last: InputMaybe<Scalars['Int']>;
+  where: InputMaybe<HierarchicalContentNodeToContentNodeAncestorsConnectionWhereArgs>;
 };
 
 
 /** The mediaItem type */
 export type MediaItemCaptionArgs = {
-  format?: InputMaybe<PostObjectFieldFormatEnum>;
+  format: InputMaybe<PostObjectFieldFormatEnum>;
 };
 
 
 /** The mediaItem type */
 export type MediaItemChildrenArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  where?: InputMaybe<HierarchicalContentNodeToContentNodeChildrenConnectionWhereArgs>;
+  after: InputMaybe<Scalars['String']>;
+  before: InputMaybe<Scalars['String']>;
+  first: InputMaybe<Scalars['Int']>;
+  last: InputMaybe<Scalars['Int']>;
+  where: InputMaybe<HierarchicalContentNodeToContentNodeChildrenConnectionWhereArgs>;
 };
 
 
 /** The mediaItem type */
 export type MediaItemCommentsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  where?: InputMaybe<MediaItemToCommentConnectionWhereArgs>;
+  after: InputMaybe<Scalars['String']>;
+  before: InputMaybe<Scalars['String']>;
+  first: InputMaybe<Scalars['Int']>;
+  last: InputMaybe<Scalars['Int']>;
+  where: InputMaybe<MediaItemToCommentConnectionWhereArgs>;
 };
 
 
 /** The mediaItem type */
 export type MediaItemDescriptionArgs = {
-  format?: InputMaybe<PostObjectFieldFormatEnum>;
+  format: InputMaybe<PostObjectFieldFormatEnum>;
 };
 
 
 /** The mediaItem type */
 export type MediaItemEnqueuedScriptsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
+  after: InputMaybe<Scalars['String']>;
+  before: InputMaybe<Scalars['String']>;
+  first: InputMaybe<Scalars['Int']>;
+  last: InputMaybe<Scalars['Int']>;
 };
 
 
 /** The mediaItem type */
 export type MediaItemEnqueuedStylesheetsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
+  after: InputMaybe<Scalars['String']>;
+  before: InputMaybe<Scalars['String']>;
+  first: InputMaybe<Scalars['Int']>;
+  last: InputMaybe<Scalars['Int']>;
 };
 
 
 /** The mediaItem type */
 export type MediaItemFileSizeArgs = {
-  size?: InputMaybe<MediaItemSizeEnum>;
+  size: InputMaybe<MediaItemSizeEnum>;
 };
 
 
 /** The mediaItem type */
 export type MediaItemSizesArgs = {
-  size?: InputMaybe<MediaItemSizeEnum>;
+  size: InputMaybe<MediaItemSizeEnum>;
 };
 
 
 /** The mediaItem type */
 export type MediaItemSourceUrlArgs = {
-  size?: InputMaybe<MediaItemSizeEnum>;
+  size: InputMaybe<MediaItemSizeEnum>;
 };
 
 
 /** The mediaItem type */
 export type MediaItemSrcSetArgs = {
-  size?: InputMaybe<MediaItemSizeEnum>;
+  size: InputMaybe<MediaItemSizeEnum>;
 };
 
 
 /** The mediaItem type */
 export type MediaItemTitleArgs = {
-  format?: InputMaybe<PostObjectFieldFormatEnum>;
+  format: InputMaybe<PostObjectFieldFormatEnum>;
 };
 
 /** The Type of Identifier used to fetch a single resource. Default is ID. */
@@ -2211,63 +2211,63 @@ export type MediaItemToCommentConnectionEdge = {
 /** Arguments for filtering the MediaItemToCommentConnection connection */
 export type MediaItemToCommentConnectionWhereArgs = {
   /** Comment author email address. */
-  authorEmail?: InputMaybe<Scalars['String']>;
+  authorEmail: InputMaybe<Scalars['String']>;
   /** Array of author IDs to include comments for. */
-  authorIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  authorIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Array of author IDs to exclude comments for. */
-  authorNotIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  authorNotIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Comment author URL. */
-  authorUrl?: InputMaybe<Scalars['String']>;
+  authorUrl: InputMaybe<Scalars['String']>;
   /** Array of comment IDs to include. */
-  commentIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  commentIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Array of IDs of users whose unapproved comments will be returned by the query regardless of status. */
-  commentNotIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  commentNotIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Include comments of a given type. */
-  commentType?: InputMaybe<Scalars['String']>;
+  commentType: InputMaybe<Scalars['String']>;
   /** Include comments from a given array of comment types. */
-  commentTypeIn?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  commentTypeIn: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   /** Exclude comments from a given array of comment types. */
-  commentTypeNotIn?: InputMaybe<Scalars['String']>;
+  commentTypeNotIn: InputMaybe<Scalars['String']>;
   /** Content object author ID to limit results by. */
-  contentAuthor?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  contentAuthor: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Array of author IDs to retrieve comments for. */
-  contentAuthorIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  contentAuthorIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Array of author IDs *not* to retrieve comments for. */
-  contentAuthorNotIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  contentAuthorNotIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Limit results to those affiliated with a given content object ID. */
-  contentId?: InputMaybe<Scalars['ID']>;
+  contentId: InputMaybe<Scalars['ID']>;
   /** Array of content object IDs to include affiliated comments for. */
-  contentIdIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  contentIdIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Array of content object IDs to exclude affiliated comments for. */
-  contentIdNotIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  contentIdNotIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Content object name to retrieve affiliated comments for. */
-  contentName?: InputMaybe<Scalars['String']>;
+  contentName: InputMaybe<Scalars['String']>;
   /** Content Object parent ID to retrieve affiliated comments for. */
-  contentParent?: InputMaybe<Scalars['Int']>;
+  contentParent: InputMaybe<Scalars['Int']>;
   /** Array of content object statuses to retrieve affiliated comments for. Pass 'any' to match any value. */
-  contentStatus?: InputMaybe<Array<InputMaybe<PostStatusEnum>>>;
+  contentStatus: InputMaybe<Array<InputMaybe<PostStatusEnum>>>;
   /** Content object type or array of types to retrieve affiliated comments for. Pass 'any' to match any value. */
-  contentType?: InputMaybe<Array<InputMaybe<ContentTypeEnum>>>;
+  contentType: InputMaybe<Array<InputMaybe<ContentTypeEnum>>>;
   /** Array of IDs or email addresses of users whose unapproved comments will be returned by the query regardless of $status. Default empty */
-  includeUnapproved?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  includeUnapproved: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Karma score to retrieve matching comments for. */
-  karma?: InputMaybe<Scalars['Int']>;
+  karma: InputMaybe<Scalars['Int']>;
   /** The cardinality of the order of the connection */
-  order?: InputMaybe<OrderEnum>;
+  order: InputMaybe<OrderEnum>;
   /** Field to order the comments by. */
-  orderby?: InputMaybe<CommentsConnectionOrderbyEnum>;
+  orderby: InputMaybe<CommentsConnectionOrderbyEnum>;
   /** Parent ID of comment to retrieve children of. */
-  parent?: InputMaybe<Scalars['Int']>;
+  parent: InputMaybe<Scalars['Int']>;
   /** Array of parent IDs of comments to retrieve children for. */
-  parentIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  parentIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Array of parent IDs of comments *not* to retrieve children for. */
-  parentNotIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  parentNotIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Search term(s) to retrieve matching comments for. */
-  search?: InputMaybe<Scalars['String']>;
+  search: InputMaybe<Scalars['String']>;
   /** Comment status to limit results by. */
-  status?: InputMaybe<Scalars['String']>;
+  status: InputMaybe<Scalars['String']>;
   /** Include comments for a specific user ID. */
-  userId?: InputMaybe<Scalars['ID']>;
+  userId: InputMaybe<Scalars['ID']>;
 };
 
 /** Details of an available size for a media item */
@@ -2317,11 +2317,11 @@ export type Menu = DatabaseIdentifier & Node & {
 
 /** Menus are the containers for navigation items. Menus can be assigned to menu locations, which are typically registered by the active theme. */
 export type MenuMenuItemsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  where?: InputMaybe<MenuToMenuItemConnectionWhereArgs>;
+  after: InputMaybe<Scalars['String']>;
+  before: InputMaybe<Scalars['String']>;
+  first: InputMaybe<Scalars['Int']>;
+  last: InputMaybe<Scalars['Int']>;
+  where: InputMaybe<MenuToMenuItemConnectionWhereArgs>;
 };
 
 /** Navigation menu items are the individual items assigned to a menu. These are rendered as the links in a navigation menu. */
@@ -2377,11 +2377,11 @@ export type MenuItem = DatabaseIdentifier & Node & {
 
 /** Navigation menu items are the individual items assigned to a menu. These are rendered as the links in a navigation menu. */
 export type MenuItemChildItemsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  where?: InputMaybe<MenuItemToMenuItemConnectionWhereArgs>;
+  after: InputMaybe<Scalars['String']>;
+  before: InputMaybe<Scalars['String']>;
+  first: InputMaybe<Scalars['Int']>;
+  last: InputMaybe<Scalars['Int']>;
+  where: InputMaybe<MenuItemToMenuItemConnectionWhereArgs>;
 };
 
 /** Nodes that can be linked to as Menu Items */
@@ -2435,13 +2435,13 @@ export type MenuItemToMenuItemConnectionEdge = {
 /** Arguments for filtering the MenuItemToMenuItemConnection connection */
 export type MenuItemToMenuItemConnectionWhereArgs = {
   /** The ID of the object */
-  id?: InputMaybe<Scalars['Int']>;
+  id: InputMaybe<Scalars['Int']>;
   /** The menu location for the menu being queried */
-  location?: InputMaybe<MenuLocationEnum>;
+  location: InputMaybe<MenuLocationEnum>;
   /** The database ID of the parent menu object */
-  parentDatabaseId?: InputMaybe<Scalars['Int']>;
+  parentDatabaseId: InputMaybe<Scalars['Int']>;
   /** The ID of the parent menu object */
-  parentId?: InputMaybe<Scalars['ID']>;
+  parentId: InputMaybe<Scalars['ID']>;
 };
 
 /** Connection between the MenuItem type and the MenuItemLinkable type */
@@ -2454,9 +2454,9 @@ export type MenuItemToMenuItemLinkableConnectionEdge = {
 /** Options for filtering the connection */
 export type MenuItemsWhereArgs = {
   /** The ID of the object */
-  id?: InputMaybe<Scalars['Int']>;
+  id: InputMaybe<Scalars['Int']>;
   /** The menu location for the menu being queried */
-  location?: InputMaybe<MenuLocationEnum>;
+  location: InputMaybe<MenuLocationEnum>;
 };
 
 /** Registered menu locations */
@@ -2499,13 +2499,13 @@ export type MenuToMenuItemConnectionEdge = {
 /** Arguments for filtering the MenuToMenuItemConnection connection */
 export type MenuToMenuItemConnectionWhereArgs = {
   /** The ID of the object */
-  id?: InputMaybe<Scalars['Int']>;
+  id: InputMaybe<Scalars['Int']>;
   /** The menu location for the menu being queried */
-  location?: InputMaybe<MenuLocationEnum>;
+  location: InputMaybe<MenuLocationEnum>;
   /** The database ID of the parent menu object */
-  parentDatabaseId?: InputMaybe<Scalars['Int']>;
+  parentDatabaseId: InputMaybe<Scalars['Int']>;
   /** The ID of the parent menu object */
-  parentId?: InputMaybe<Scalars['ID']>;
+  parentId: InputMaybe<Scalars['ID']>;
 };
 
 /** The MimeType of the object */
@@ -2639,7 +2639,7 @@ export type NodeWithContentEditor = {
 
 /** A node that supports the content editor */
 export type NodeWithContentEditorContentArgs = {
-  format?: InputMaybe<PostObjectFieldFormatEnum>;
+  format: InputMaybe<PostObjectFieldFormatEnum>;
 };
 
 /** A node that can have an excerpt */
@@ -2651,7 +2651,7 @@ export type NodeWithExcerpt = {
 
 /** A node that can have an excerpt */
 export type NodeWithExcerptExcerptArgs = {
-  format?: InputMaybe<PostObjectFieldFormatEnum>;
+  format: InputMaybe<PostObjectFieldFormatEnum>;
 };
 
 /** A node that can have a featured image set */
@@ -2707,7 +2707,7 @@ export type NodeWithTitle = {
 
 /** A node that NodeWith a title */
 export type NodeWithTitleTitleArgs = {
-  format?: InputMaybe<PostObjectFieldFormatEnum>;
+  format: InputMaybe<PostObjectFieldFormatEnum>;
 };
 
 /** A node that can have trackbacks and pingbacks */
@@ -2831,71 +2831,71 @@ export type Page = ContentNode & DatabaseIdentifier & HierarchicalContentNode & 
 
 /** The page type */
 export type PageAncestorsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  where?: InputMaybe<HierarchicalContentNodeToContentNodeAncestorsConnectionWhereArgs>;
+  after: InputMaybe<Scalars['String']>;
+  before: InputMaybe<Scalars['String']>;
+  first: InputMaybe<Scalars['Int']>;
+  last: InputMaybe<Scalars['Int']>;
+  where: InputMaybe<HierarchicalContentNodeToContentNodeAncestorsConnectionWhereArgs>;
 };
 
 
 /** The page type */
 export type PageChildrenArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  where?: InputMaybe<HierarchicalContentNodeToContentNodeChildrenConnectionWhereArgs>;
+  after: InputMaybe<Scalars['String']>;
+  before: InputMaybe<Scalars['String']>;
+  first: InputMaybe<Scalars['Int']>;
+  last: InputMaybe<Scalars['Int']>;
+  where: InputMaybe<HierarchicalContentNodeToContentNodeChildrenConnectionWhereArgs>;
 };
 
 
 /** The page type */
 export type PageCommentsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  where?: InputMaybe<PageToCommentConnectionWhereArgs>;
+  after: InputMaybe<Scalars['String']>;
+  before: InputMaybe<Scalars['String']>;
+  first: InputMaybe<Scalars['Int']>;
+  last: InputMaybe<Scalars['Int']>;
+  where: InputMaybe<PageToCommentConnectionWhereArgs>;
 };
 
 
 /** The page type */
 export type PageContentArgs = {
-  format?: InputMaybe<PostObjectFieldFormatEnum>;
+  format: InputMaybe<PostObjectFieldFormatEnum>;
 };
 
 
 /** The page type */
 export type PageEnqueuedScriptsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
+  after: InputMaybe<Scalars['String']>;
+  before: InputMaybe<Scalars['String']>;
+  first: InputMaybe<Scalars['Int']>;
+  last: InputMaybe<Scalars['Int']>;
 };
 
 
 /** The page type */
 export type PageEnqueuedStylesheetsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
+  after: InputMaybe<Scalars['String']>;
+  before: InputMaybe<Scalars['String']>;
+  first: InputMaybe<Scalars['Int']>;
+  last: InputMaybe<Scalars['Int']>;
 };
 
 
 /** The page type */
 export type PageRevisionsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  where?: InputMaybe<PageToRevisionConnectionWhereArgs>;
+  after: InputMaybe<Scalars['String']>;
+  before: InputMaybe<Scalars['String']>;
+  first: InputMaybe<Scalars['Int']>;
+  last: InputMaybe<Scalars['Int']>;
+  where: InputMaybe<PageToRevisionConnectionWhereArgs>;
 };
 
 
 /** The page type */
 export type PageTitleArgs = {
-  format?: InputMaybe<PostObjectFieldFormatEnum>;
+  format: InputMaybe<PostObjectFieldFormatEnum>;
 };
 
 /** The Type of Identifier used to fetch a single resource. Default is ID. */
@@ -2931,63 +2931,63 @@ export type PageToCommentConnectionEdge = {
 /** Arguments for filtering the PageToCommentConnection connection */
 export type PageToCommentConnectionWhereArgs = {
   /** Comment author email address. */
-  authorEmail?: InputMaybe<Scalars['String']>;
+  authorEmail: InputMaybe<Scalars['String']>;
   /** Array of author IDs to include comments for. */
-  authorIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  authorIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Array of author IDs to exclude comments for. */
-  authorNotIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  authorNotIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Comment author URL. */
-  authorUrl?: InputMaybe<Scalars['String']>;
+  authorUrl: InputMaybe<Scalars['String']>;
   /** Array of comment IDs to include. */
-  commentIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  commentIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Array of IDs of users whose unapproved comments will be returned by the query regardless of status. */
-  commentNotIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  commentNotIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Include comments of a given type. */
-  commentType?: InputMaybe<Scalars['String']>;
+  commentType: InputMaybe<Scalars['String']>;
   /** Include comments from a given array of comment types. */
-  commentTypeIn?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  commentTypeIn: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   /** Exclude comments from a given array of comment types. */
-  commentTypeNotIn?: InputMaybe<Scalars['String']>;
+  commentTypeNotIn: InputMaybe<Scalars['String']>;
   /** Content object author ID to limit results by. */
-  contentAuthor?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  contentAuthor: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Array of author IDs to retrieve comments for. */
-  contentAuthorIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  contentAuthorIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Array of author IDs *not* to retrieve comments for. */
-  contentAuthorNotIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  contentAuthorNotIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Limit results to those affiliated with a given content object ID. */
-  contentId?: InputMaybe<Scalars['ID']>;
+  contentId: InputMaybe<Scalars['ID']>;
   /** Array of content object IDs to include affiliated comments for. */
-  contentIdIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  contentIdIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Array of content object IDs to exclude affiliated comments for. */
-  contentIdNotIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  contentIdNotIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Content object name to retrieve affiliated comments for. */
-  contentName?: InputMaybe<Scalars['String']>;
+  contentName: InputMaybe<Scalars['String']>;
   /** Content Object parent ID to retrieve affiliated comments for. */
-  contentParent?: InputMaybe<Scalars['Int']>;
+  contentParent: InputMaybe<Scalars['Int']>;
   /** Array of content object statuses to retrieve affiliated comments for. Pass 'any' to match any value. */
-  contentStatus?: InputMaybe<Array<InputMaybe<PostStatusEnum>>>;
+  contentStatus: InputMaybe<Array<InputMaybe<PostStatusEnum>>>;
   /** Content object type or array of types to retrieve affiliated comments for. Pass 'any' to match any value. */
-  contentType?: InputMaybe<Array<InputMaybe<ContentTypeEnum>>>;
+  contentType: InputMaybe<Array<InputMaybe<ContentTypeEnum>>>;
   /** Array of IDs or email addresses of users whose unapproved comments will be returned by the query regardless of $status. Default empty */
-  includeUnapproved?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  includeUnapproved: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Karma score to retrieve matching comments for. */
-  karma?: InputMaybe<Scalars['Int']>;
+  karma: InputMaybe<Scalars['Int']>;
   /** The cardinality of the order of the connection */
-  order?: InputMaybe<OrderEnum>;
+  order: InputMaybe<OrderEnum>;
   /** Field to order the comments by. */
-  orderby?: InputMaybe<CommentsConnectionOrderbyEnum>;
+  orderby: InputMaybe<CommentsConnectionOrderbyEnum>;
   /** Parent ID of comment to retrieve children of. */
-  parent?: InputMaybe<Scalars['Int']>;
+  parent: InputMaybe<Scalars['Int']>;
   /** Array of parent IDs of comments to retrieve children for. */
-  parentIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  parentIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Array of parent IDs of comments *not* to retrieve children for. */
-  parentNotIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  parentNotIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Search term(s) to retrieve matching comments for. */
-  search?: InputMaybe<Scalars['String']>;
+  search: InputMaybe<Scalars['String']>;
   /** Comment status to limit results by. */
-  status?: InputMaybe<Scalars['String']>;
+  status: InputMaybe<Scalars['String']>;
   /** Include comments for a specific user ID. */
-  userId?: InputMaybe<Scalars['ID']>;
+  userId: InputMaybe<Scalars['ID']>;
 };
 
 /** Connection between the page type and the page type */
@@ -3020,45 +3020,45 @@ export type PageToRevisionConnectionEdge = {
 /** Arguments for filtering the pageToRevisionConnection connection */
 export type PageToRevisionConnectionWhereArgs = {
   /** The user that's connected as the author of the object. Use the userId for the author object. */
-  author?: InputMaybe<Scalars['Int']>;
+  author: InputMaybe<Scalars['Int']>;
   /** Find objects connected to author(s) in the array of author's userIds */
-  authorIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  authorIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Find objects connected to the author by the author's nicename */
-  authorName?: InputMaybe<Scalars['String']>;
+  authorName: InputMaybe<Scalars['String']>;
   /** Find objects NOT connected to author(s) in the array of author's userIds */
-  authorNotIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  authorNotIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Filter the connection based on dates */
-  dateQuery?: InputMaybe<DateQueryInput>;
+  dateQuery: InputMaybe<DateQueryInput>;
   /** True for objects with passwords; False for objects without passwords; null for all objects with or without passwords */
-  hasPassword?: InputMaybe<Scalars['Boolean']>;
+  hasPassword: InputMaybe<Scalars['Boolean']>;
   /** Specific ID of the object */
-  id?: InputMaybe<Scalars['Int']>;
+  id: InputMaybe<Scalars['Int']>;
   /** Array of IDs for the objects to retrieve */
-  in?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  in: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Get objects with a specific mimeType property */
-  mimeType?: InputMaybe<MimeTypeEnum>;
+  mimeType: InputMaybe<MimeTypeEnum>;
   /** Slug / post_name of the object */
-  name?: InputMaybe<Scalars['String']>;
+  name: InputMaybe<Scalars['String']>;
   /** Specify objects to retrieve. Use slugs */
-  nameIn?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  nameIn: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
-  notIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  notIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** What paramater to use to order the objects by. */
-  orderby?: InputMaybe<Array<InputMaybe<PostObjectsConnectionOrderbyInput>>>;
+  orderby: InputMaybe<Array<InputMaybe<PostObjectsConnectionOrderbyInput>>>;
   /** Use ID to return only children. Use 0 to return only top-level items */
-  parent?: InputMaybe<Scalars['ID']>;
+  parent: InputMaybe<Scalars['ID']>;
   /** Specify objects whose parent is in an array */
-  parentIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  parentIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Specify posts whose parent is not in an array */
-  parentNotIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  parentNotIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Show posts with a specific password. */
-  password?: InputMaybe<Scalars['String']>;
+  password: InputMaybe<Scalars['String']>;
   /** Show Posts based on a keyword search */
-  search?: InputMaybe<Scalars['String']>;
-  stati?: InputMaybe<Array<InputMaybe<PostStatusEnum>>>;
-  status?: InputMaybe<PostStatusEnum>;
+  search: InputMaybe<Scalars['String']>;
+  stati: InputMaybe<Array<InputMaybe<PostStatusEnum>>>;
+  status: InputMaybe<PostStatusEnum>;
   /** Title of the object */
-  title?: InputMaybe<Scalars['String']>;
+  title: InputMaybe<Scalars['String']>;
 };
 
 /** An plugin object */
@@ -3191,116 +3191,116 @@ export type Post = ContentNode & DatabaseIdentifier & MenuItemLinkable & Node & 
 
 /** The post type */
 export type PostCategoriesArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  where?: InputMaybe<PostToCategoryConnectionWhereArgs>;
+  after: InputMaybe<Scalars['String']>;
+  before: InputMaybe<Scalars['String']>;
+  first: InputMaybe<Scalars['Int']>;
+  last: InputMaybe<Scalars['Int']>;
+  where: InputMaybe<PostToCategoryConnectionWhereArgs>;
 };
 
 
 /** The post type */
 export type PostCommentsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  where?: InputMaybe<PostToCommentConnectionWhereArgs>;
+  after: InputMaybe<Scalars['String']>;
+  before: InputMaybe<Scalars['String']>;
+  first: InputMaybe<Scalars['Int']>;
+  last: InputMaybe<Scalars['Int']>;
+  where: InputMaybe<PostToCommentConnectionWhereArgs>;
 };
 
 
 /** The post type */
 export type PostContentArgs = {
-  format?: InputMaybe<PostObjectFieldFormatEnum>;
+  format: InputMaybe<PostObjectFieldFormatEnum>;
 };
 
 
 /** The post type */
 export type PostEnqueuedScriptsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
+  after: InputMaybe<Scalars['String']>;
+  before: InputMaybe<Scalars['String']>;
+  first: InputMaybe<Scalars['Int']>;
+  last: InputMaybe<Scalars['Int']>;
 };
 
 
 /** The post type */
 export type PostEnqueuedStylesheetsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
+  after: InputMaybe<Scalars['String']>;
+  before: InputMaybe<Scalars['String']>;
+  first: InputMaybe<Scalars['Int']>;
+  last: InputMaybe<Scalars['Int']>;
 };
 
 
 /** The post type */
 export type PostExcerptArgs = {
-  format?: InputMaybe<PostObjectFieldFormatEnum>;
+  format: InputMaybe<PostObjectFieldFormatEnum>;
 };
 
 
 /** The post type */
 export type PostPostFormatsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  where?: InputMaybe<PostToPostFormatConnectionWhereArgs>;
+  after: InputMaybe<Scalars['String']>;
+  before: InputMaybe<Scalars['String']>;
+  first: InputMaybe<Scalars['Int']>;
+  last: InputMaybe<Scalars['Int']>;
+  where: InputMaybe<PostToPostFormatConnectionWhereArgs>;
 };
 
 
 /** The post type */
 export type PostRevisionsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  where?: InputMaybe<PostToRevisionConnectionWhereArgs>;
+  after: InputMaybe<Scalars['String']>;
+  before: InputMaybe<Scalars['String']>;
+  first: InputMaybe<Scalars['Int']>;
+  last: InputMaybe<Scalars['Int']>;
+  where: InputMaybe<PostToRevisionConnectionWhereArgs>;
 };
 
 
 /** The post type */
 export type PostTagsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  where?: InputMaybe<PostToTagConnectionWhereArgs>;
+  after: InputMaybe<Scalars['String']>;
+  before: InputMaybe<Scalars['String']>;
+  first: InputMaybe<Scalars['Int']>;
+  last: InputMaybe<Scalars['Int']>;
+  where: InputMaybe<PostToTagConnectionWhereArgs>;
 };
 
 
 /** The post type */
 export type PostTermsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  where?: InputMaybe<PostToTermNodeConnectionWhereArgs>;
+  after: InputMaybe<Scalars['String']>;
+  before: InputMaybe<Scalars['String']>;
+  first: InputMaybe<Scalars['Int']>;
+  last: InputMaybe<Scalars['Int']>;
+  where: InputMaybe<PostToTermNodeConnectionWhereArgs>;
 };
 
 
 /** The post type */
 export type PostTitleArgs = {
-  format?: InputMaybe<PostObjectFieldFormatEnum>;
+  format: InputMaybe<PostObjectFieldFormatEnum>;
 };
 
 /** Set relationships between the post to categories */
 export type PostCategoriesInput = {
   /** If true, this will append the category to existing related categories. If false, this will replace existing relationships. Default true. */
-  append?: InputMaybe<Scalars['Boolean']>;
-  nodes?: InputMaybe<Array<InputMaybe<PostCategoriesNodeInput>>>;
+  append: InputMaybe<Scalars['Boolean']>;
+  nodes: InputMaybe<Array<InputMaybe<PostCategoriesNodeInput>>>;
 };
 
 /** List of categories to connect the post to. If an ID is set, it will be used to create the connection. If not, it will look for a slug. If neither are valid existing terms, and the site is configured to allow terms to be created during post mutations, a term will be created using the Name if it exists in the input, then fallback to the slug if it exists. */
 export type PostCategoriesNodeInput = {
   /** The description of the category. This field is used to set a description of the category if a new one is created during the mutation. */
-  description?: InputMaybe<Scalars['String']>;
+  description: InputMaybe<Scalars['String']>;
   /** The ID of the category. If present, this will be used to connect to the post. If no existing category exists with this ID, no connection will be made. */
-  id?: InputMaybe<Scalars['ID']>;
+  id: InputMaybe<Scalars['ID']>;
   /** The name of the category. This field is used to create a new term, if term creation is enabled in nested mutations, and if one does not already exist with the provided slug or ID or if a slug or ID is not provided. If no name is included and a term is created, the creation will fallback to the slug field. */
-  name?: InputMaybe<Scalars['String']>;
+  name: InputMaybe<Scalars['String']>;
   /** The slug of the category. If no ID is present, this field will be used to make a connection. If no existing term exists with this slug, this field will be used as a fallback to the Name field when creating a new term to connect to, if term creation is enabled as a nested mutation. */
-  slug?: InputMaybe<Scalars['String']>;
+  slug: InputMaybe<Scalars['String']>;
 };
 
 /** The postFormat type */
@@ -3348,39 +3348,39 @@ export type PostFormat = DatabaseIdentifier & Node & TermNode & UniformResourceI
 
 /** The postFormat type */
 export type PostFormatContentNodesArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  where?: InputMaybe<PostFormatToContentNodeConnectionWhereArgs>;
+  after: InputMaybe<Scalars['String']>;
+  before: InputMaybe<Scalars['String']>;
+  first: InputMaybe<Scalars['Int']>;
+  last: InputMaybe<Scalars['Int']>;
+  where: InputMaybe<PostFormatToContentNodeConnectionWhereArgs>;
 };
 
 
 /** The postFormat type */
 export type PostFormatEnqueuedScriptsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
+  after: InputMaybe<Scalars['String']>;
+  before: InputMaybe<Scalars['String']>;
+  first: InputMaybe<Scalars['Int']>;
+  last: InputMaybe<Scalars['Int']>;
 };
 
 
 /** The postFormat type */
 export type PostFormatEnqueuedStylesheetsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
+  after: InputMaybe<Scalars['String']>;
+  before: InputMaybe<Scalars['String']>;
+  first: InputMaybe<Scalars['Int']>;
+  last: InputMaybe<Scalars['Int']>;
 };
 
 
 /** The postFormat type */
 export type PostFormatPostsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  where?: InputMaybe<PostFormatToPostConnectionWhereArgs>;
+  after: InputMaybe<Scalars['String']>;
+  before: InputMaybe<Scalars['String']>;
+  first: InputMaybe<Scalars['Int']>;
+  last: InputMaybe<Scalars['Int']>;
+  where: InputMaybe<PostFormatToPostConnectionWhereArgs>;
 };
 
 /** The Type of Identifier used to fetch a single resource. Default is ID. */
@@ -3420,37 +3420,37 @@ export type PostFormatToContentNodeConnectionEdge = {
 /** Arguments for filtering the PostFormatToContentNodeConnection connection */
 export type PostFormatToContentNodeConnectionWhereArgs = {
   /** Filter the connection based on dates */
-  dateQuery?: InputMaybe<DateQueryInput>;
+  dateQuery: InputMaybe<DateQueryInput>;
   /** True for objects with passwords; False for objects without passwords; null for all objects with or without passwords */
-  hasPassword?: InputMaybe<Scalars['Boolean']>;
+  hasPassword: InputMaybe<Scalars['Boolean']>;
   /** Specific ID of the object */
-  id?: InputMaybe<Scalars['Int']>;
+  id: InputMaybe<Scalars['Int']>;
   /** Array of IDs for the objects to retrieve */
-  in?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  in: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Get objects with a specific mimeType property */
-  mimeType?: InputMaybe<MimeTypeEnum>;
+  mimeType: InputMaybe<MimeTypeEnum>;
   /** Slug / post_name of the object */
-  name?: InputMaybe<Scalars['String']>;
+  name: InputMaybe<Scalars['String']>;
   /** Specify objects to retrieve. Use slugs */
-  nameIn?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  nameIn: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
-  notIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  notIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** What paramater to use to order the objects by. */
-  orderby?: InputMaybe<Array<InputMaybe<PostObjectsConnectionOrderbyInput>>>;
+  orderby: InputMaybe<Array<InputMaybe<PostObjectsConnectionOrderbyInput>>>;
   /** Use ID to return only children. Use 0 to return only top-level items */
-  parent?: InputMaybe<Scalars['ID']>;
+  parent: InputMaybe<Scalars['ID']>;
   /** Specify objects whose parent is in an array */
-  parentIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  parentIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Specify posts whose parent is not in an array */
-  parentNotIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  parentNotIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Show posts with a specific password. */
-  password?: InputMaybe<Scalars['String']>;
+  password: InputMaybe<Scalars['String']>;
   /** Show Posts based on a keyword search */
-  search?: InputMaybe<Scalars['String']>;
-  stati?: InputMaybe<Array<InputMaybe<PostStatusEnum>>>;
-  status?: InputMaybe<PostStatusEnum>;
+  search: InputMaybe<Scalars['String']>;
+  stati: InputMaybe<Array<InputMaybe<PostStatusEnum>>>;
+  status: InputMaybe<PostStatusEnum>;
   /** Title of the object */
-  title?: InputMaybe<Scalars['String']>;
+  title: InputMaybe<Scalars['String']>;
 };
 
 /** Connection between the postFormat type and the post type */
@@ -3476,65 +3476,65 @@ export type PostFormatToPostConnectionEdge = {
 /** Arguments for filtering the PostFormatToPostConnection connection */
 export type PostFormatToPostConnectionWhereArgs = {
   /** The user that's connected as the author of the object. Use the userId for the author object. */
-  author?: InputMaybe<Scalars['Int']>;
+  author: InputMaybe<Scalars['Int']>;
   /** Find objects connected to author(s) in the array of author's userIds */
-  authorIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  authorIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Find objects connected to the author by the author's nicename */
-  authorName?: InputMaybe<Scalars['String']>;
+  authorName: InputMaybe<Scalars['String']>;
   /** Find objects NOT connected to author(s) in the array of author's userIds */
-  authorNotIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  authorNotIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Category ID */
-  categoryId?: InputMaybe<Scalars['Int']>;
+  categoryId: InputMaybe<Scalars['Int']>;
   /** Array of category IDs, used to display objects from one category OR another */
-  categoryIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  categoryIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Use Category Slug */
-  categoryName?: InputMaybe<Scalars['String']>;
+  categoryName: InputMaybe<Scalars['String']>;
   /** Array of category IDs, used to display objects from one category OR another */
-  categoryNotIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  categoryNotIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Filter the connection based on dates */
-  dateQuery?: InputMaybe<DateQueryInput>;
+  dateQuery: InputMaybe<DateQueryInput>;
   /** True for objects with passwords; False for objects without passwords; null for all objects with or without passwords */
-  hasPassword?: InputMaybe<Scalars['Boolean']>;
+  hasPassword: InputMaybe<Scalars['Boolean']>;
   /** Specific ID of the object */
-  id?: InputMaybe<Scalars['Int']>;
+  id: InputMaybe<Scalars['Int']>;
   /** Array of IDs for the objects to retrieve */
-  in?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  in: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Get objects with a specific mimeType property */
-  mimeType?: InputMaybe<MimeTypeEnum>;
+  mimeType: InputMaybe<MimeTypeEnum>;
   /** Slug / post_name of the object */
-  name?: InputMaybe<Scalars['String']>;
+  name: InputMaybe<Scalars['String']>;
   /** Specify objects to retrieve. Use slugs */
-  nameIn?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  nameIn: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
-  notIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  notIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** What paramater to use to order the objects by. */
-  orderby?: InputMaybe<Array<InputMaybe<PostObjectsConnectionOrderbyInput>>>;
+  orderby: InputMaybe<Array<InputMaybe<PostObjectsConnectionOrderbyInput>>>;
   /** Use ID to return only children. Use 0 to return only top-level items */
-  parent?: InputMaybe<Scalars['ID']>;
+  parent: InputMaybe<Scalars['ID']>;
   /** Specify objects whose parent is in an array */
-  parentIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  parentIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Specify posts whose parent is not in an array */
-  parentNotIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  parentNotIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Show posts with a specific password. */
-  password?: InputMaybe<Scalars['String']>;
+  password: InputMaybe<Scalars['String']>;
   /** Show Posts based on a keyword search */
-  search?: InputMaybe<Scalars['String']>;
-  stati?: InputMaybe<Array<InputMaybe<PostStatusEnum>>>;
-  status?: InputMaybe<PostStatusEnum>;
+  search: InputMaybe<Scalars['String']>;
+  stati: InputMaybe<Array<InputMaybe<PostStatusEnum>>>;
+  status: InputMaybe<PostStatusEnum>;
   /** Tag Slug */
-  tag?: InputMaybe<Scalars['String']>;
+  tag: InputMaybe<Scalars['String']>;
   /** Use Tag ID */
-  tagId?: InputMaybe<Scalars['String']>;
+  tagId: InputMaybe<Scalars['String']>;
   /** Array of tag IDs, used to display objects from one tag OR another */
-  tagIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  tagIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Array of tag IDs, used to display objects from one tag OR another */
-  tagNotIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  tagNotIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Array of tag slugs, used to display objects from one tag OR another */
-  tagSlugAnd?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  tagSlugAnd: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   /** Array of tag slugs, used to exclude objects in specified tags */
-  tagSlugIn?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  tagSlugIn: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   /** Title of the object */
-  title?: InputMaybe<Scalars['String']>;
+  title: InputMaybe<Scalars['String']>;
 };
 
 /** Connection between the postFormat type and the Taxonomy type */
@@ -3607,20 +3607,20 @@ export type PostObjectsConnectionOrderbyInput = {
 /** Set relationships between the post to postFormats */
 export type PostPostFormatsInput = {
   /** If true, this will append the postFormat to existing related postFormats. If false, this will replace existing relationships. Default true. */
-  append?: InputMaybe<Scalars['Boolean']>;
-  nodes?: InputMaybe<Array<InputMaybe<PostPostFormatsNodeInput>>>;
+  append: InputMaybe<Scalars['Boolean']>;
+  nodes: InputMaybe<Array<InputMaybe<PostPostFormatsNodeInput>>>;
 };
 
 /** List of postFormats to connect the post to. If an ID is set, it will be used to create the connection. If not, it will look for a slug. If neither are valid existing terms, and the site is configured to allow terms to be created during post mutations, a term will be created using the Name if it exists in the input, then fallback to the slug if it exists. */
 export type PostPostFormatsNodeInput = {
   /** The description of the postFormat. This field is used to set a description of the postFormat if a new one is created during the mutation. */
-  description?: InputMaybe<Scalars['String']>;
+  description: InputMaybe<Scalars['String']>;
   /** The ID of the postFormat. If present, this will be used to connect to the post. If no existing postFormat exists with this ID, no connection will be made. */
-  id?: InputMaybe<Scalars['ID']>;
+  id: InputMaybe<Scalars['ID']>;
   /** The name of the postFormat. This field is used to create a new term, if term creation is enabled in nested mutations, and if one does not already exist with the provided slug or ID or if a slug or ID is not provided. If no name is included and a term is created, the creation will fallback to the slug field. */
-  name?: InputMaybe<Scalars['String']>;
+  name: InputMaybe<Scalars['String']>;
   /** The slug of the postFormat. If no ID is present, this field will be used to make a connection. If no existing term exists with this slug, this field will be used as a fallback to the Name field when creating a new term to connect to, if term creation is enabled as a nested mutation. */
-  slug?: InputMaybe<Scalars['String']>;
+  slug: InputMaybe<Scalars['String']>;
 };
 
 /** The status of the object. */
@@ -3654,20 +3654,20 @@ export enum PostStatusEnum {
 /** Set relationships between the post to tags */
 export type PostTagsInput = {
   /** If true, this will append the tag to existing related tags. If false, this will replace existing relationships. Default true. */
-  append?: InputMaybe<Scalars['Boolean']>;
-  nodes?: InputMaybe<Array<InputMaybe<PostTagsNodeInput>>>;
+  append: InputMaybe<Scalars['Boolean']>;
+  nodes: InputMaybe<Array<InputMaybe<PostTagsNodeInput>>>;
 };
 
 /** List of tags to connect the post to. If an ID is set, it will be used to create the connection. If not, it will look for a slug. If neither are valid existing terms, and the site is configured to allow terms to be created during post mutations, a term will be created using the Name if it exists in the input, then fallback to the slug if it exists. */
 export type PostTagsNodeInput = {
   /** The description of the tag. This field is used to set a description of the tag if a new one is created during the mutation. */
-  description?: InputMaybe<Scalars['String']>;
+  description: InputMaybe<Scalars['String']>;
   /** The ID of the tag. If present, this will be used to connect to the post. If no existing tag exists with this ID, no connection will be made. */
-  id?: InputMaybe<Scalars['ID']>;
+  id: InputMaybe<Scalars['ID']>;
   /** The name of the tag. This field is used to create a new term, if term creation is enabled in nested mutations, and if one does not already exist with the provided slug or ID or if a slug or ID is not provided. If no name is included and a term is created, the creation will fallback to the slug field. */
-  name?: InputMaybe<Scalars['String']>;
+  name: InputMaybe<Scalars['String']>;
   /** The slug of the tag. If no ID is present, this field will be used to make a connection. If no existing term exists with this slug, this field will be used as a fallback to the Name field when creating a new term to connect to, if term creation is enabled as a nested mutation. */
-  slug?: InputMaybe<Scalars['String']>;
+  slug: InputMaybe<Scalars['String']>;
 };
 
 /** Connection between the post type and the category type */
@@ -3693,43 +3693,43 @@ export type PostToCategoryConnectionEdge = {
 /** Arguments for filtering the PostToCategoryConnection connection */
 export type PostToCategoryConnectionWhereArgs = {
   /** Unique cache key to be produced when this query is stored in an object cache. Default is 'core'. */
-  cacheDomain?: InputMaybe<Scalars['String']>;
+  cacheDomain: InputMaybe<Scalars['String']>;
   /** Term ID to retrieve child terms of. If multiple taxonomies are passed, $child_of is ignored. Default 0. */
-  childOf?: InputMaybe<Scalars['Int']>;
+  childOf: InputMaybe<Scalars['Int']>;
   /** True to limit results to terms that have no children. This parameter has no effect on non-hierarchical taxonomies. Default false. */
-  childless?: InputMaybe<Scalars['Boolean']>;
+  childless: InputMaybe<Scalars['Boolean']>;
   /** Retrieve terms where the description is LIKE the input value. Default empty. */
-  descriptionLike?: InputMaybe<Scalars['String']>;
+  descriptionLike: InputMaybe<Scalars['String']>;
   /** Array of term ids to exclude. If $include is non-empty, $exclude is ignored. Default empty array. */
-  exclude?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  exclude: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Array of term ids to exclude along with all of their descendant terms. If $include is non-empty, $exclude_tree is ignored. Default empty array. */
-  excludeTree?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  excludeTree: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Whether to hide terms not assigned to any posts. Accepts true or false. Default false */
-  hideEmpty?: InputMaybe<Scalars['Boolean']>;
+  hideEmpty: InputMaybe<Scalars['Boolean']>;
   /** Whether to include terms that have non-empty descendants (even if $hide_empty is set to true). Default true. */
-  hierarchical?: InputMaybe<Scalars['Boolean']>;
+  hierarchical: InputMaybe<Scalars['Boolean']>;
   /** Array of term ids to include. Default empty array. */
-  include?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  include: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Array of names to return term(s) for. Default empty. */
-  name?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  name: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   /** Retrieve terms where the name is LIKE the input value. Default empty. */
-  nameLike?: InputMaybe<Scalars['String']>;
+  nameLike: InputMaybe<Scalars['String']>;
   /** Array of object IDs. Results will be limited to terms associated with these objects. */
-  objectIds?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  objectIds: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Field(s) to order terms by. Defaults to 'name'. */
-  orderby?: InputMaybe<TermObjectsConnectionOrderbyEnum>;
+  orderby: InputMaybe<TermObjectsConnectionOrderbyEnum>;
   /** Whether to pad the quantity of a term's children in the quantity of each term's "count" object variable. Default false. */
-  padCounts?: InputMaybe<Scalars['Boolean']>;
+  padCounts: InputMaybe<Scalars['Boolean']>;
   /** Parent term ID to retrieve direct-child terms of. Default empty. */
-  parent?: InputMaybe<Scalars['Int']>;
+  parent: InputMaybe<Scalars['Int']>;
   /** Search criteria to match terms. Will be SQL-formatted with wildcards before and after. Default empty. */
-  search?: InputMaybe<Scalars['String']>;
+  search: InputMaybe<Scalars['String']>;
   /** Array of slugs to return term(s) for. Default empty. */
-  slug?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  slug: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   /** Array of term taxonomy IDs, to match when querying terms. */
-  termTaxonomId?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  termTaxonomId: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Whether to prime meta caches for matched terms. Default true. */
-  updateTermMetaCache?: InputMaybe<Scalars['Boolean']>;
+  updateTermMetaCache: InputMaybe<Scalars['Boolean']>;
 };
 
 /** Connection between the post type and the Comment type */
@@ -3755,63 +3755,63 @@ export type PostToCommentConnectionEdge = {
 /** Arguments for filtering the PostToCommentConnection connection */
 export type PostToCommentConnectionWhereArgs = {
   /** Comment author email address. */
-  authorEmail?: InputMaybe<Scalars['String']>;
+  authorEmail: InputMaybe<Scalars['String']>;
   /** Array of author IDs to include comments for. */
-  authorIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  authorIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Array of author IDs to exclude comments for. */
-  authorNotIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  authorNotIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Comment author URL. */
-  authorUrl?: InputMaybe<Scalars['String']>;
+  authorUrl: InputMaybe<Scalars['String']>;
   /** Array of comment IDs to include. */
-  commentIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  commentIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Array of IDs of users whose unapproved comments will be returned by the query regardless of status. */
-  commentNotIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  commentNotIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Include comments of a given type. */
-  commentType?: InputMaybe<Scalars['String']>;
+  commentType: InputMaybe<Scalars['String']>;
   /** Include comments from a given array of comment types. */
-  commentTypeIn?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  commentTypeIn: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   /** Exclude comments from a given array of comment types. */
-  commentTypeNotIn?: InputMaybe<Scalars['String']>;
+  commentTypeNotIn: InputMaybe<Scalars['String']>;
   /** Content object author ID to limit results by. */
-  contentAuthor?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  contentAuthor: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Array of author IDs to retrieve comments for. */
-  contentAuthorIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  contentAuthorIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Array of author IDs *not* to retrieve comments for. */
-  contentAuthorNotIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  contentAuthorNotIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Limit results to those affiliated with a given content object ID. */
-  contentId?: InputMaybe<Scalars['ID']>;
+  contentId: InputMaybe<Scalars['ID']>;
   /** Array of content object IDs to include affiliated comments for. */
-  contentIdIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  contentIdIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Array of content object IDs to exclude affiliated comments for. */
-  contentIdNotIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  contentIdNotIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Content object name to retrieve affiliated comments for. */
-  contentName?: InputMaybe<Scalars['String']>;
+  contentName: InputMaybe<Scalars['String']>;
   /** Content Object parent ID to retrieve affiliated comments for. */
-  contentParent?: InputMaybe<Scalars['Int']>;
+  contentParent: InputMaybe<Scalars['Int']>;
   /** Array of content object statuses to retrieve affiliated comments for. Pass 'any' to match any value. */
-  contentStatus?: InputMaybe<Array<InputMaybe<PostStatusEnum>>>;
+  contentStatus: InputMaybe<Array<InputMaybe<PostStatusEnum>>>;
   /** Content object type or array of types to retrieve affiliated comments for. Pass 'any' to match any value. */
-  contentType?: InputMaybe<Array<InputMaybe<ContentTypeEnum>>>;
+  contentType: InputMaybe<Array<InputMaybe<ContentTypeEnum>>>;
   /** Array of IDs or email addresses of users whose unapproved comments will be returned by the query regardless of $status. Default empty */
-  includeUnapproved?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  includeUnapproved: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Karma score to retrieve matching comments for. */
-  karma?: InputMaybe<Scalars['Int']>;
+  karma: InputMaybe<Scalars['Int']>;
   /** The cardinality of the order of the connection */
-  order?: InputMaybe<OrderEnum>;
+  order: InputMaybe<OrderEnum>;
   /** Field to order the comments by. */
-  orderby?: InputMaybe<CommentsConnectionOrderbyEnum>;
+  orderby: InputMaybe<CommentsConnectionOrderbyEnum>;
   /** Parent ID of comment to retrieve children of. */
-  parent?: InputMaybe<Scalars['Int']>;
+  parent: InputMaybe<Scalars['Int']>;
   /** Array of parent IDs of comments to retrieve children for. */
-  parentIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  parentIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Array of parent IDs of comments *not* to retrieve children for. */
-  parentNotIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  parentNotIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Search term(s) to retrieve matching comments for. */
-  search?: InputMaybe<Scalars['String']>;
+  search: InputMaybe<Scalars['String']>;
   /** Comment status to limit results by. */
-  status?: InputMaybe<Scalars['String']>;
+  status: InputMaybe<Scalars['String']>;
   /** Include comments for a specific user ID. */
-  userId?: InputMaybe<Scalars['ID']>;
+  userId: InputMaybe<Scalars['ID']>;
 };
 
 /** Connection between the post type and the postFormat type */
@@ -3837,43 +3837,43 @@ export type PostToPostFormatConnectionEdge = {
 /** Arguments for filtering the PostToPostFormatConnection connection */
 export type PostToPostFormatConnectionWhereArgs = {
   /** Unique cache key to be produced when this query is stored in an object cache. Default is 'core'. */
-  cacheDomain?: InputMaybe<Scalars['String']>;
+  cacheDomain: InputMaybe<Scalars['String']>;
   /** Term ID to retrieve child terms of. If multiple taxonomies are passed, $child_of is ignored. Default 0. */
-  childOf?: InputMaybe<Scalars['Int']>;
+  childOf: InputMaybe<Scalars['Int']>;
   /** True to limit results to terms that have no children. This parameter has no effect on non-hierarchical taxonomies. Default false. */
-  childless?: InputMaybe<Scalars['Boolean']>;
+  childless: InputMaybe<Scalars['Boolean']>;
   /** Retrieve terms where the description is LIKE the input value. Default empty. */
-  descriptionLike?: InputMaybe<Scalars['String']>;
+  descriptionLike: InputMaybe<Scalars['String']>;
   /** Array of term ids to exclude. If $include is non-empty, $exclude is ignored. Default empty array. */
-  exclude?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  exclude: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Array of term ids to exclude along with all of their descendant terms. If $include is non-empty, $exclude_tree is ignored. Default empty array. */
-  excludeTree?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  excludeTree: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Whether to hide terms not assigned to any posts. Accepts true or false. Default false */
-  hideEmpty?: InputMaybe<Scalars['Boolean']>;
+  hideEmpty: InputMaybe<Scalars['Boolean']>;
   /** Whether to include terms that have non-empty descendants (even if $hide_empty is set to true). Default true. */
-  hierarchical?: InputMaybe<Scalars['Boolean']>;
+  hierarchical: InputMaybe<Scalars['Boolean']>;
   /** Array of term ids to include. Default empty array. */
-  include?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  include: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Array of names to return term(s) for. Default empty. */
-  name?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  name: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   /** Retrieve terms where the name is LIKE the input value. Default empty. */
-  nameLike?: InputMaybe<Scalars['String']>;
+  nameLike: InputMaybe<Scalars['String']>;
   /** Array of object IDs. Results will be limited to terms associated with these objects. */
-  objectIds?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  objectIds: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Field(s) to order terms by. Defaults to 'name'. */
-  orderby?: InputMaybe<TermObjectsConnectionOrderbyEnum>;
+  orderby: InputMaybe<TermObjectsConnectionOrderbyEnum>;
   /** Whether to pad the quantity of a term's children in the quantity of each term's "count" object variable. Default false. */
-  padCounts?: InputMaybe<Scalars['Boolean']>;
+  padCounts: InputMaybe<Scalars['Boolean']>;
   /** Parent term ID to retrieve direct-child terms of. Default empty. */
-  parent?: InputMaybe<Scalars['Int']>;
+  parent: InputMaybe<Scalars['Int']>;
   /** Search criteria to match terms. Will be SQL-formatted with wildcards before and after. Default empty. */
-  search?: InputMaybe<Scalars['String']>;
+  search: InputMaybe<Scalars['String']>;
   /** Array of slugs to return term(s) for. Default empty. */
-  slug?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  slug: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   /** Array of term taxonomy IDs, to match when querying terms. */
-  termTaxonomId?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  termTaxonomId: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Whether to prime meta caches for matched terms. Default true. */
-  updateTermMetaCache?: InputMaybe<Scalars['Boolean']>;
+  updateTermMetaCache: InputMaybe<Scalars['Boolean']>;
 };
 
 /** Connection between the post type and the post type */
@@ -3906,65 +3906,65 @@ export type PostToRevisionConnectionEdge = {
 /** Arguments for filtering the postToRevisionConnection connection */
 export type PostToRevisionConnectionWhereArgs = {
   /** The user that's connected as the author of the object. Use the userId for the author object. */
-  author?: InputMaybe<Scalars['Int']>;
+  author: InputMaybe<Scalars['Int']>;
   /** Find objects connected to author(s) in the array of author's userIds */
-  authorIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  authorIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Find objects connected to the author by the author's nicename */
-  authorName?: InputMaybe<Scalars['String']>;
+  authorName: InputMaybe<Scalars['String']>;
   /** Find objects NOT connected to author(s) in the array of author's userIds */
-  authorNotIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  authorNotIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Category ID */
-  categoryId?: InputMaybe<Scalars['Int']>;
+  categoryId: InputMaybe<Scalars['Int']>;
   /** Array of category IDs, used to display objects from one category OR another */
-  categoryIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  categoryIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Use Category Slug */
-  categoryName?: InputMaybe<Scalars['String']>;
+  categoryName: InputMaybe<Scalars['String']>;
   /** Array of category IDs, used to display objects from one category OR another */
-  categoryNotIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  categoryNotIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Filter the connection based on dates */
-  dateQuery?: InputMaybe<DateQueryInput>;
+  dateQuery: InputMaybe<DateQueryInput>;
   /** True for objects with passwords; False for objects without passwords; null for all objects with or without passwords */
-  hasPassword?: InputMaybe<Scalars['Boolean']>;
+  hasPassword: InputMaybe<Scalars['Boolean']>;
   /** Specific ID of the object */
-  id?: InputMaybe<Scalars['Int']>;
+  id: InputMaybe<Scalars['Int']>;
   /** Array of IDs for the objects to retrieve */
-  in?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  in: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Get objects with a specific mimeType property */
-  mimeType?: InputMaybe<MimeTypeEnum>;
+  mimeType: InputMaybe<MimeTypeEnum>;
   /** Slug / post_name of the object */
-  name?: InputMaybe<Scalars['String']>;
+  name: InputMaybe<Scalars['String']>;
   /** Specify objects to retrieve. Use slugs */
-  nameIn?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  nameIn: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
-  notIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  notIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** What paramater to use to order the objects by. */
-  orderby?: InputMaybe<Array<InputMaybe<PostObjectsConnectionOrderbyInput>>>;
+  orderby: InputMaybe<Array<InputMaybe<PostObjectsConnectionOrderbyInput>>>;
   /** Use ID to return only children. Use 0 to return only top-level items */
-  parent?: InputMaybe<Scalars['ID']>;
+  parent: InputMaybe<Scalars['ID']>;
   /** Specify objects whose parent is in an array */
-  parentIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  parentIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Specify posts whose parent is not in an array */
-  parentNotIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  parentNotIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Show posts with a specific password. */
-  password?: InputMaybe<Scalars['String']>;
+  password: InputMaybe<Scalars['String']>;
   /** Show Posts based on a keyword search */
-  search?: InputMaybe<Scalars['String']>;
-  stati?: InputMaybe<Array<InputMaybe<PostStatusEnum>>>;
-  status?: InputMaybe<PostStatusEnum>;
+  search: InputMaybe<Scalars['String']>;
+  stati: InputMaybe<Array<InputMaybe<PostStatusEnum>>>;
+  status: InputMaybe<PostStatusEnum>;
   /** Tag Slug */
-  tag?: InputMaybe<Scalars['String']>;
+  tag: InputMaybe<Scalars['String']>;
   /** Use Tag ID */
-  tagId?: InputMaybe<Scalars['String']>;
+  tagId: InputMaybe<Scalars['String']>;
   /** Array of tag IDs, used to display objects from one tag OR another */
-  tagIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  tagIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Array of tag IDs, used to display objects from one tag OR another */
-  tagNotIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  tagNotIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Array of tag slugs, used to display objects from one tag OR another */
-  tagSlugAnd?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  tagSlugAnd: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   /** Array of tag slugs, used to exclude objects in specified tags */
-  tagSlugIn?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  tagSlugIn: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   /** Title of the object */
-  title?: InputMaybe<Scalars['String']>;
+  title: InputMaybe<Scalars['String']>;
 };
 
 /** Connection between the post type and the tag type */
@@ -3990,43 +3990,43 @@ export type PostToTagConnectionEdge = {
 /** Arguments for filtering the PostToTagConnection connection */
 export type PostToTagConnectionWhereArgs = {
   /** Unique cache key to be produced when this query is stored in an object cache. Default is 'core'. */
-  cacheDomain?: InputMaybe<Scalars['String']>;
+  cacheDomain: InputMaybe<Scalars['String']>;
   /** Term ID to retrieve child terms of. If multiple taxonomies are passed, $child_of is ignored. Default 0. */
-  childOf?: InputMaybe<Scalars['Int']>;
+  childOf: InputMaybe<Scalars['Int']>;
   /** True to limit results to terms that have no children. This parameter has no effect on non-hierarchical taxonomies. Default false. */
-  childless?: InputMaybe<Scalars['Boolean']>;
+  childless: InputMaybe<Scalars['Boolean']>;
   /** Retrieve terms where the description is LIKE the input value. Default empty. */
-  descriptionLike?: InputMaybe<Scalars['String']>;
+  descriptionLike: InputMaybe<Scalars['String']>;
   /** Array of term ids to exclude. If $include is non-empty, $exclude is ignored. Default empty array. */
-  exclude?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  exclude: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Array of term ids to exclude along with all of their descendant terms. If $include is non-empty, $exclude_tree is ignored. Default empty array. */
-  excludeTree?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  excludeTree: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Whether to hide terms not assigned to any posts. Accepts true or false. Default false */
-  hideEmpty?: InputMaybe<Scalars['Boolean']>;
+  hideEmpty: InputMaybe<Scalars['Boolean']>;
   /** Whether to include terms that have non-empty descendants (even if $hide_empty is set to true). Default true. */
-  hierarchical?: InputMaybe<Scalars['Boolean']>;
+  hierarchical: InputMaybe<Scalars['Boolean']>;
   /** Array of term ids to include. Default empty array. */
-  include?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  include: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Array of names to return term(s) for. Default empty. */
-  name?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  name: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   /** Retrieve terms where the name is LIKE the input value. Default empty. */
-  nameLike?: InputMaybe<Scalars['String']>;
+  nameLike: InputMaybe<Scalars['String']>;
   /** Array of object IDs. Results will be limited to terms associated with these objects. */
-  objectIds?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  objectIds: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Field(s) to order terms by. Defaults to 'name'. */
-  orderby?: InputMaybe<TermObjectsConnectionOrderbyEnum>;
+  orderby: InputMaybe<TermObjectsConnectionOrderbyEnum>;
   /** Whether to pad the quantity of a term's children in the quantity of each term's "count" object variable. Default false. */
-  padCounts?: InputMaybe<Scalars['Boolean']>;
+  padCounts: InputMaybe<Scalars['Boolean']>;
   /** Parent term ID to retrieve direct-child terms of. Default empty. */
-  parent?: InputMaybe<Scalars['Int']>;
+  parent: InputMaybe<Scalars['Int']>;
   /** Search criteria to match terms. Will be SQL-formatted with wildcards before and after. Default empty. */
-  search?: InputMaybe<Scalars['String']>;
+  search: InputMaybe<Scalars['String']>;
   /** Array of slugs to return term(s) for. Default empty. */
-  slug?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  slug: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   /** Array of term taxonomy IDs, to match when querying terms. */
-  termTaxonomId?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  termTaxonomId: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Whether to prime meta caches for matched terms. Default true. */
-  updateTermMetaCache?: InputMaybe<Scalars['Boolean']>;
+  updateTermMetaCache: InputMaybe<Scalars['Boolean']>;
 };
 
 /** Connection between the post type and the TermNode type */
@@ -4052,45 +4052,45 @@ export type PostToTermNodeConnectionEdge = {
 /** Arguments for filtering the PostToTermNodeConnection connection */
 export type PostToTermNodeConnectionWhereArgs = {
   /** Unique cache key to be produced when this query is stored in an object cache. Default is 'core'. */
-  cacheDomain?: InputMaybe<Scalars['String']>;
+  cacheDomain: InputMaybe<Scalars['String']>;
   /** Term ID to retrieve child terms of. If multiple taxonomies are passed, $child_of is ignored. Default 0. */
-  childOf?: InputMaybe<Scalars['Int']>;
+  childOf: InputMaybe<Scalars['Int']>;
   /** True to limit results to terms that have no children. This parameter has no effect on non-hierarchical taxonomies. Default false. */
-  childless?: InputMaybe<Scalars['Boolean']>;
+  childless: InputMaybe<Scalars['Boolean']>;
   /** Retrieve terms where the description is LIKE the input value. Default empty. */
-  descriptionLike?: InputMaybe<Scalars['String']>;
+  descriptionLike: InputMaybe<Scalars['String']>;
   /** Array of term ids to exclude. If $include is non-empty, $exclude is ignored. Default empty array. */
-  exclude?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  exclude: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Array of term ids to exclude along with all of their descendant terms. If $include is non-empty, $exclude_tree is ignored. Default empty array. */
-  excludeTree?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  excludeTree: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Whether to hide terms not assigned to any posts. Accepts true or false. Default false */
-  hideEmpty?: InputMaybe<Scalars['Boolean']>;
+  hideEmpty: InputMaybe<Scalars['Boolean']>;
   /** Whether to include terms that have non-empty descendants (even if $hide_empty is set to true). Default true. */
-  hierarchical?: InputMaybe<Scalars['Boolean']>;
+  hierarchical: InputMaybe<Scalars['Boolean']>;
   /** Array of term ids to include. Default empty array. */
-  include?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  include: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Array of names to return term(s) for. Default empty. */
-  name?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  name: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   /** Retrieve terms where the name is LIKE the input value. Default empty. */
-  nameLike?: InputMaybe<Scalars['String']>;
+  nameLike: InputMaybe<Scalars['String']>;
   /** Array of object IDs. Results will be limited to terms associated with these objects. */
-  objectIds?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  objectIds: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Field(s) to order terms by. Defaults to 'name'. */
-  orderby?: InputMaybe<TermObjectsConnectionOrderbyEnum>;
+  orderby: InputMaybe<TermObjectsConnectionOrderbyEnum>;
   /** Whether to pad the quantity of a term's children in the quantity of each term's "count" object variable. Default false. */
-  padCounts?: InputMaybe<Scalars['Boolean']>;
+  padCounts: InputMaybe<Scalars['Boolean']>;
   /** Parent term ID to retrieve direct-child terms of. Default empty. */
-  parent?: InputMaybe<Scalars['Int']>;
+  parent: InputMaybe<Scalars['Int']>;
   /** Search criteria to match terms. Will be SQL-formatted with wildcards before and after. Default empty. */
-  search?: InputMaybe<Scalars['String']>;
+  search: InputMaybe<Scalars['String']>;
   /** Array of slugs to return term(s) for. Default empty. */
-  slug?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  slug: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   /** The Taxonomy to filter terms by */
-  taxonomies?: InputMaybe<Array<InputMaybe<TaxonomyEnum>>>;
+  taxonomies: InputMaybe<Array<InputMaybe<TaxonomyEnum>>>;
   /** Array of term taxonomy IDs, to match when querying terms. */
-  termTaxonomId?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  termTaxonomId: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Whether to prime meta caches for matched terms. Default true. */
-  updateTermMetaCache?: InputMaybe<Scalars['Boolean']>;
+  updateTermMetaCache: InputMaybe<Scalars['Boolean']>;
 };
 
 /** Details for labels of the PostType */
@@ -4158,38 +4158,38 @@ export type ReadingSettings = {
 /** Input for the registerUser mutation */
 export type RegisterUserInput = {
   /** User's AOL IM account. */
-  aim?: InputMaybe<Scalars['String']>;
-  clientMutationId?: InputMaybe<Scalars['String']>;
+  aim: InputMaybe<Scalars['String']>;
+  clientMutationId: InputMaybe<Scalars['String']>;
   /** A string containing content about the user. */
-  description?: InputMaybe<Scalars['String']>;
+  description: InputMaybe<Scalars['String']>;
   /** A string that will be shown on the site. Defaults to user's username. It is likely that you will want to change this, for both appearance and security through obscurity (that is if you dont use and delete the default admin user). */
-  displayName?: InputMaybe<Scalars['String']>;
+  displayName: InputMaybe<Scalars['String']>;
   /** A string containing the user's email address. */
-  email?: InputMaybe<Scalars['String']>;
+  email: InputMaybe<Scalars['String']>;
   /** 	The user's first name. */
-  firstName?: InputMaybe<Scalars['String']>;
+  firstName: InputMaybe<Scalars['String']>;
   /** User's Jabber account. */
-  jabber?: InputMaybe<Scalars['String']>;
+  jabber: InputMaybe<Scalars['String']>;
   /** The user's last name. */
-  lastName?: InputMaybe<Scalars['String']>;
+  lastName: InputMaybe<Scalars['String']>;
   /** User's locale. */
-  locale?: InputMaybe<Scalars['String']>;
+  locale: InputMaybe<Scalars['String']>;
   /** A string that contains a URL-friendly name for the user. The default is the user's username. */
-  nicename?: InputMaybe<Scalars['String']>;
+  nicename: InputMaybe<Scalars['String']>;
   /** The user's nickname, defaults to the user's username. */
-  nickname?: InputMaybe<Scalars['String']>;
+  nickname: InputMaybe<Scalars['String']>;
   /** A string that contains the plain text password for the user. */
-  password?: InputMaybe<Scalars['String']>;
+  password: InputMaybe<Scalars['String']>;
   /** The date the user registered. Format is Y-m-d H:i:s. */
-  registered?: InputMaybe<Scalars['String']>;
+  registered: InputMaybe<Scalars['String']>;
   /** A string for whether to enable the rich editor or not. False if not empty. */
-  richEditing?: InputMaybe<Scalars['String']>;
+  richEditing: InputMaybe<Scalars['String']>;
   /** A string that contains the user's username. */
   username: Scalars['String'];
   /** A string containing the user's URL for the user's web site. */
-  websiteUrl?: InputMaybe<Scalars['String']>;
+  websiteUrl: InputMaybe<Scalars['String']>;
   /** User's Yahoo IM account. */
-  yim?: InputMaybe<Scalars['String']>;
+  yim: InputMaybe<Scalars['String']>;
 };
 
 /** The payload for the registerUser mutation */
@@ -4207,13 +4207,13 @@ export enum RelationEnum {
 
 /** Input for the resetUserPassword mutation */
 export type ResetUserPasswordInput = {
-  clientMutationId?: InputMaybe<Scalars['String']>;
+  clientMutationId: InputMaybe<Scalars['String']>;
   /** Password reset key */
-  key?: InputMaybe<Scalars['String']>;
+  key: InputMaybe<Scalars['String']>;
   /** The user's login (username). */
-  login?: InputMaybe<Scalars['String']>;
+  login: InputMaybe<Scalars['String']>;
   /** The new password. */
-  password?: InputMaybe<Scalars['String']>;
+  password: InputMaybe<Scalars['String']>;
 };
 
 /** The payload for the resetUserPassword mutation */
@@ -4225,7 +4225,7 @@ export type ResetUserPasswordPayload = {
 
 /** Input for the restoreComment mutation */
 export type RestoreCommentInput = {
-  clientMutationId?: InputMaybe<Scalars['String']>;
+  clientMutationId: InputMaybe<Scalars['String']>;
   /** The ID of the comment to be restored */
   id: Scalars['ID'];
 };
@@ -4421,7 +4421,7 @@ export type RootMutationDeleteUserArgs = {
 
 /** The root mutation */
 export type RootMutationIncreaseCountArgs = {
-  count?: InputMaybe<Scalars['Int']>;
+  count: InputMaybe<Scalars['Int']>;
 };
 
 
@@ -4633,45 +4633,45 @@ export type RootQuery = {
 
 /** The root entry point into the Graph */
 export type RootQueryActionMonitorActionArgs = {
-  asPreview?: InputMaybe<Scalars['Boolean']>;
+  asPreview: InputMaybe<Scalars['Boolean']>;
   id: Scalars['ID'];
-  idType?: InputMaybe<ActionMonitorActionIdType>;
+  idType: InputMaybe<ActionMonitorActionIdType>;
 };
 
 
 /** The root entry point into the Graph */
 export type RootQueryActionMonitorActionByArgs = {
-  actionMonitorActionId?: InputMaybe<Scalars['Int']>;
-  id?: InputMaybe<Scalars['ID']>;
-  slug?: InputMaybe<Scalars['String']>;
-  uri?: InputMaybe<Scalars['String']>;
+  actionMonitorActionId: InputMaybe<Scalars['Int']>;
+  id: InputMaybe<Scalars['ID']>;
+  slug: InputMaybe<Scalars['String']>;
+  uri: InputMaybe<Scalars['String']>;
 };
 
 
 /** The root entry point into the Graph */
 export type RootQueryActionMonitorActionsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  where?: InputMaybe<RootQueryToActionMonitorActionConnectionWhereArgs>;
+  after: InputMaybe<Scalars['String']>;
+  before: InputMaybe<Scalars['String']>;
+  first: InputMaybe<Scalars['Int']>;
+  last: InputMaybe<Scalars['Int']>;
+  where: InputMaybe<RootQueryToActionMonitorActionConnectionWhereArgs>;
 };
 
 
 /** The root entry point into the Graph */
 export type RootQueryCategoriesArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  where?: InputMaybe<RootQueryToCategoryConnectionWhereArgs>;
+  after: InputMaybe<Scalars['String']>;
+  before: InputMaybe<Scalars['String']>;
+  first: InputMaybe<Scalars['Int']>;
+  last: InputMaybe<Scalars['Int']>;
+  where: InputMaybe<RootQueryToCategoryConnectionWhereArgs>;
 };
 
 
 /** The root entry point into the Graph */
 export type RootQueryCategoryArgs = {
   id: Scalars['ID'];
-  idType?: InputMaybe<CategoryIdType>;
+  idType: InputMaybe<CategoryIdType>;
 };
 
 
@@ -4683,113 +4683,113 @@ export type RootQueryCommentArgs = {
 
 /** The root entry point into the Graph */
 export type RootQueryCommentsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  where?: InputMaybe<RootQueryToCommentConnectionWhereArgs>;
+  after: InputMaybe<Scalars['String']>;
+  before: InputMaybe<Scalars['String']>;
+  first: InputMaybe<Scalars['Int']>;
+  last: InputMaybe<Scalars['Int']>;
+  where: InputMaybe<RootQueryToCommentConnectionWhereArgs>;
 };
 
 
 /** The root entry point into the Graph */
 export type RootQueryContentNodeArgs = {
-  asPreview?: InputMaybe<Scalars['Boolean']>;
-  contentType?: InputMaybe<ContentTypeEnum>;
+  asPreview: InputMaybe<Scalars['Boolean']>;
+  contentType: InputMaybe<ContentTypeEnum>;
   id: Scalars['ID'];
-  idType?: InputMaybe<ContentNodeIdTypeEnum>;
+  idType: InputMaybe<ContentNodeIdTypeEnum>;
 };
 
 
 /** The root entry point into the Graph */
 export type RootQueryContentNodesArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  where?: InputMaybe<RootQueryToContentNodeConnectionWhereArgs>;
+  after: InputMaybe<Scalars['String']>;
+  before: InputMaybe<Scalars['String']>;
+  first: InputMaybe<Scalars['Int']>;
+  last: InputMaybe<Scalars['Int']>;
+  where: InputMaybe<RootQueryToContentNodeConnectionWhereArgs>;
 };
 
 
 /** The root entry point into the Graph */
 export type RootQueryContentTypeArgs = {
   id: Scalars['ID'];
-  idType?: InputMaybe<ContentTypeIdTypeEnum>;
+  idType: InputMaybe<ContentTypeIdTypeEnum>;
 };
 
 
 /** The root entry point into the Graph */
 export type RootQueryContentTypesArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
+  after: InputMaybe<Scalars['String']>;
+  before: InputMaybe<Scalars['String']>;
+  first: InputMaybe<Scalars['Int']>;
+  last: InputMaybe<Scalars['Int']>;
 };
 
 
 /** The root entry point into the Graph */
 export type RootQueryMediaItemArgs = {
-  asPreview?: InputMaybe<Scalars['Boolean']>;
+  asPreview: InputMaybe<Scalars['Boolean']>;
   id: Scalars['ID'];
-  idType?: InputMaybe<MediaItemIdType>;
+  idType: InputMaybe<MediaItemIdType>;
 };
 
 
 /** The root entry point into the Graph */
 export type RootQueryMediaItemByArgs = {
-  id?: InputMaybe<Scalars['ID']>;
-  mediaItemId?: InputMaybe<Scalars['Int']>;
-  slug?: InputMaybe<Scalars['String']>;
-  uri?: InputMaybe<Scalars['String']>;
+  id: InputMaybe<Scalars['ID']>;
+  mediaItemId: InputMaybe<Scalars['Int']>;
+  slug: InputMaybe<Scalars['String']>;
+  uri: InputMaybe<Scalars['String']>;
 };
 
 
 /** The root entry point into the Graph */
 export type RootQueryMediaItemsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  where?: InputMaybe<RootQueryToMediaItemConnectionWhereArgs>;
+  after: InputMaybe<Scalars['String']>;
+  before: InputMaybe<Scalars['String']>;
+  first: InputMaybe<Scalars['Int']>;
+  last: InputMaybe<Scalars['Int']>;
+  where: InputMaybe<RootQueryToMediaItemConnectionWhereArgs>;
 };
 
 
 /** The root entry point into the Graph */
 export type RootQueryMenuArgs = {
   id: Scalars['ID'];
-  idType?: InputMaybe<MenuNodeIdTypeEnum>;
+  idType: InputMaybe<MenuNodeIdTypeEnum>;
 };
 
 
 /** The root entry point into the Graph */
 export type RootQueryMenuItemArgs = {
   id: Scalars['ID'];
-  idType?: InputMaybe<MenuItemNodeIdTypeEnum>;
+  idType: InputMaybe<MenuItemNodeIdTypeEnum>;
 };
 
 
 /** The root entry point into the Graph */
 export type RootQueryMenuItemsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  where?: InputMaybe<RootQueryToMenuItemConnectionWhereArgs>;
+  after: InputMaybe<Scalars['String']>;
+  before: InputMaybe<Scalars['String']>;
+  first: InputMaybe<Scalars['Int']>;
+  last: InputMaybe<Scalars['Int']>;
+  where: InputMaybe<RootQueryToMenuItemConnectionWhereArgs>;
 };
 
 
 /** The root entry point into the Graph */
 export type RootQueryMenusArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  where?: InputMaybe<RootQueryToMenuConnectionWhereArgs>;
+  after: InputMaybe<Scalars['String']>;
+  before: InputMaybe<Scalars['String']>;
+  first: InputMaybe<Scalars['Int']>;
+  last: InputMaybe<Scalars['Int']>;
+  where: InputMaybe<RootQueryToMenuConnectionWhereArgs>;
 };
 
 
 /** The root entry point into the Graph */
 export type RootQueryNodeArgs = {
-  id?: InputMaybe<Scalars['ID']>;
+  id: InputMaybe<Scalars['ID']>;
 };
 
 
@@ -4801,27 +4801,27 @@ export type RootQueryNodeByUriArgs = {
 
 /** The root entry point into the Graph */
 export type RootQueryPageArgs = {
-  asPreview?: InputMaybe<Scalars['Boolean']>;
+  asPreview: InputMaybe<Scalars['Boolean']>;
   id: Scalars['ID'];
-  idType?: InputMaybe<PageIdType>;
+  idType: InputMaybe<PageIdType>;
 };
 
 
 /** The root entry point into the Graph */
 export type RootQueryPageByArgs = {
-  id?: InputMaybe<Scalars['ID']>;
-  pageId?: InputMaybe<Scalars['Int']>;
-  uri?: InputMaybe<Scalars['String']>;
+  id: InputMaybe<Scalars['ID']>;
+  pageId: InputMaybe<Scalars['Int']>;
+  uri: InputMaybe<Scalars['String']>;
 };
 
 
 /** The root entry point into the Graph */
 export type RootQueryPagesArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  where?: InputMaybe<RootQueryToPageConnectionWhereArgs>;
+  after: InputMaybe<Scalars['String']>;
+  before: InputMaybe<Scalars['String']>;
+  first: InputMaybe<Scalars['Int']>;
+  last: InputMaybe<Scalars['Int']>;
+  where: InputMaybe<RootQueryToPageConnectionWhereArgs>;
 };
 
 
@@ -4833,133 +4833,133 @@ export type RootQueryPluginArgs = {
 
 /** The root entry point into the Graph */
 export type RootQueryPluginsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
+  after: InputMaybe<Scalars['String']>;
+  before: InputMaybe<Scalars['String']>;
+  first: InputMaybe<Scalars['Int']>;
+  last: InputMaybe<Scalars['Int']>;
 };
 
 
 /** The root entry point into the Graph */
 export type RootQueryPostArgs = {
-  asPreview?: InputMaybe<Scalars['Boolean']>;
+  asPreview: InputMaybe<Scalars['Boolean']>;
   id: Scalars['ID'];
-  idType?: InputMaybe<PostIdType>;
+  idType: InputMaybe<PostIdType>;
 };
 
 
 /** The root entry point into the Graph */
 export type RootQueryPostByArgs = {
-  id?: InputMaybe<Scalars['ID']>;
-  postId?: InputMaybe<Scalars['Int']>;
-  slug?: InputMaybe<Scalars['String']>;
-  uri?: InputMaybe<Scalars['String']>;
+  id: InputMaybe<Scalars['ID']>;
+  postId: InputMaybe<Scalars['Int']>;
+  slug: InputMaybe<Scalars['String']>;
+  uri: InputMaybe<Scalars['String']>;
 };
 
 
 /** The root entry point into the Graph */
 export type RootQueryPostFormatArgs = {
   id: Scalars['ID'];
-  idType?: InputMaybe<PostFormatIdType>;
+  idType: InputMaybe<PostFormatIdType>;
 };
 
 
 /** The root entry point into the Graph */
 export type RootQueryPostFormatsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  where?: InputMaybe<RootQueryToPostFormatConnectionWhereArgs>;
+  after: InputMaybe<Scalars['String']>;
+  before: InputMaybe<Scalars['String']>;
+  first: InputMaybe<Scalars['Int']>;
+  last: InputMaybe<Scalars['Int']>;
+  where: InputMaybe<RootQueryToPostFormatConnectionWhereArgs>;
 };
 
 
 /** The root entry point into the Graph */
 export type RootQueryPostsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  where?: InputMaybe<RootQueryToPostConnectionWhereArgs>;
+  after: InputMaybe<Scalars['String']>;
+  before: InputMaybe<Scalars['String']>;
+  first: InputMaybe<Scalars['Int']>;
+  last: InputMaybe<Scalars['Int']>;
+  where: InputMaybe<RootQueryToPostConnectionWhereArgs>;
 };
 
 
 /** The root entry point into the Graph */
 export type RootQueryRegisteredScriptsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
+  after: InputMaybe<Scalars['String']>;
+  before: InputMaybe<Scalars['String']>;
+  first: InputMaybe<Scalars['Int']>;
+  last: InputMaybe<Scalars['Int']>;
 };
 
 
 /** The root entry point into the Graph */
 export type RootQueryRegisteredStylesheetsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
+  after: InputMaybe<Scalars['String']>;
+  before: InputMaybe<Scalars['String']>;
+  first: InputMaybe<Scalars['Int']>;
+  last: InputMaybe<Scalars['Int']>;
 };
 
 
 /** The root entry point into the Graph */
 export type RootQueryRevisionsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  where?: InputMaybe<RootQueryToContentRevisionUnionConnectionWhereArgs>;
+  after: InputMaybe<Scalars['String']>;
+  before: InputMaybe<Scalars['String']>;
+  first: InputMaybe<Scalars['Int']>;
+  last: InputMaybe<Scalars['Int']>;
+  where: InputMaybe<RootQueryToContentRevisionUnionConnectionWhereArgs>;
 };
 
 
 /** The root entry point into the Graph */
 export type RootQueryTagArgs = {
   id: Scalars['ID'];
-  idType?: InputMaybe<TagIdType>;
+  idType: InputMaybe<TagIdType>;
 };
 
 
 /** The root entry point into the Graph */
 export type RootQueryTagsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  where?: InputMaybe<RootQueryToTagConnectionWhereArgs>;
+  after: InputMaybe<Scalars['String']>;
+  before: InputMaybe<Scalars['String']>;
+  first: InputMaybe<Scalars['Int']>;
+  last: InputMaybe<Scalars['Int']>;
+  where: InputMaybe<RootQueryToTagConnectionWhereArgs>;
 };
 
 
 /** The root entry point into the Graph */
 export type RootQueryTaxonomiesArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
+  after: InputMaybe<Scalars['String']>;
+  before: InputMaybe<Scalars['String']>;
+  first: InputMaybe<Scalars['Int']>;
+  last: InputMaybe<Scalars['Int']>;
 };
 
 
 /** The root entry point into the Graph */
 export type RootQueryTaxonomyArgs = {
   id: Scalars['ID'];
-  idType?: InputMaybe<TaxonomyIdTypeEnum>;
+  idType: InputMaybe<TaxonomyIdTypeEnum>;
 };
 
 
 /** The root entry point into the Graph */
 export type RootQueryTermNodeArgs = {
   id: Scalars['ID'];
-  idType?: InputMaybe<TermNodeIdTypeEnum>;
-  taxonomy?: InputMaybe<TaxonomyEnum>;
+  idType: InputMaybe<TermNodeIdTypeEnum>;
+  taxonomy: InputMaybe<TaxonomyEnum>;
 };
 
 
 /** The root entry point into the Graph */
 export type RootQueryTermsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  where?: InputMaybe<RootQueryToTermNodeConnectionWhereArgs>;
+  after: InputMaybe<Scalars['String']>;
+  before: InputMaybe<Scalars['String']>;
+  first: InputMaybe<Scalars['Int']>;
+  last: InputMaybe<Scalars['Int']>;
+  where: InputMaybe<RootQueryToTermNodeConnectionWhereArgs>;
 };
 
 
@@ -4971,17 +4971,17 @@ export type RootQueryThemeArgs = {
 
 /** The root entry point into the Graph */
 export type RootQueryThemesArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
+  after: InputMaybe<Scalars['String']>;
+  before: InputMaybe<Scalars['String']>;
+  first: InputMaybe<Scalars['Int']>;
+  last: InputMaybe<Scalars['Int']>;
 };
 
 
 /** The root entry point into the Graph */
 export type RootQueryUserArgs = {
   id: Scalars['ID'];
-  idType?: InputMaybe<UserNodeIdTypeEnum>;
+  idType: InputMaybe<UserNodeIdTypeEnum>;
 };
 
 
@@ -4993,20 +4993,20 @@ export type RootQueryUserRoleArgs = {
 
 /** The root entry point into the Graph */
 export type RootQueryUserRolesArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
+  after: InputMaybe<Scalars['String']>;
+  before: InputMaybe<Scalars['String']>;
+  first: InputMaybe<Scalars['Int']>;
+  last: InputMaybe<Scalars['Int']>;
 };
 
 
 /** The root entry point into the Graph */
 export type RootQueryUsersArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  where?: InputMaybe<RootQueryToUserConnectionWhereArgs>;
+  after: InputMaybe<Scalars['String']>;
+  before: InputMaybe<Scalars['String']>;
+  first: InputMaybe<Scalars['Int']>;
+  last: InputMaybe<Scalars['Int']>;
+  where: InputMaybe<RootQueryToUserConnectionWhereArgs>;
 };
 
 
@@ -5039,41 +5039,41 @@ export type RootQueryToActionMonitorActionConnectionEdge = {
 /** Arguments for filtering the RootQueryToActionMonitorActionConnection connection */
 export type RootQueryToActionMonitorActionConnectionWhereArgs = {
   /** Filter the connection based on dates */
-  dateQuery?: InputMaybe<DateQueryInput>;
+  dateQuery: InputMaybe<DateQueryInput>;
   /** True for objects with passwords; False for objects without passwords; null for all objects with or without passwords */
-  hasPassword?: InputMaybe<Scalars['Boolean']>;
+  hasPassword: InputMaybe<Scalars['Boolean']>;
   /** Specific ID of the object */
-  id?: InputMaybe<Scalars['Int']>;
+  id: InputMaybe<Scalars['Int']>;
   /** Array of IDs for the objects to retrieve */
-  in?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  in: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Get objects with a specific mimeType property */
-  mimeType?: InputMaybe<MimeTypeEnum>;
+  mimeType: InputMaybe<MimeTypeEnum>;
   /** Slug / post_name of the object */
-  name?: InputMaybe<Scalars['String']>;
+  name: InputMaybe<Scalars['String']>;
   /** Specify objects to retrieve. Use slugs */
-  nameIn?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  nameIn: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
-  notIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  notIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** What paramater to use to order the objects by. */
-  orderby?: InputMaybe<Array<InputMaybe<PostObjectsConnectionOrderbyInput>>>;
+  orderby: InputMaybe<Array<InputMaybe<PostObjectsConnectionOrderbyInput>>>;
   /** Use ID to return only children. Use 0 to return only top-level items */
-  parent?: InputMaybe<Scalars['ID']>;
+  parent: InputMaybe<Scalars['ID']>;
   /** Specify objects whose parent is in an array */
-  parentIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  parentIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Specify posts whose parent is not in an array */
-  parentNotIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  parentNotIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Show posts with a specific password. */
-  password?: InputMaybe<Scalars['String']>;
+  password: InputMaybe<Scalars['String']>;
   /** List Actions of the PREVIEW stream type. */
-  previewStream?: InputMaybe<Scalars['Boolean']>;
+  previewStream: InputMaybe<Scalars['Boolean']>;
   /** Show Posts based on a keyword search */
-  search?: InputMaybe<Scalars['String']>;
+  search: InputMaybe<Scalars['String']>;
   /** List Actions performed since a timestamp. */
-  sinceTimestamp?: InputMaybe<Scalars['Float']>;
-  stati?: InputMaybe<Array<InputMaybe<PostStatusEnum>>>;
-  status?: InputMaybe<PostStatusEnum>;
+  sinceTimestamp: InputMaybe<Scalars['Float']>;
+  stati: InputMaybe<Array<InputMaybe<PostStatusEnum>>>;
+  status: InputMaybe<PostStatusEnum>;
   /** Title of the object */
-  title?: InputMaybe<Scalars['String']>;
+  title: InputMaybe<Scalars['String']>;
 };
 
 /** Connection between the RootQuery type and the category type */
@@ -5099,43 +5099,43 @@ export type RootQueryToCategoryConnectionEdge = {
 /** Arguments for filtering the RootQueryToCategoryConnection connection */
 export type RootQueryToCategoryConnectionWhereArgs = {
   /** Unique cache key to be produced when this query is stored in an object cache. Default is 'core'. */
-  cacheDomain?: InputMaybe<Scalars['String']>;
+  cacheDomain: InputMaybe<Scalars['String']>;
   /** Term ID to retrieve child terms of. If multiple taxonomies are passed, $child_of is ignored. Default 0. */
-  childOf?: InputMaybe<Scalars['Int']>;
+  childOf: InputMaybe<Scalars['Int']>;
   /** True to limit results to terms that have no children. This parameter has no effect on non-hierarchical taxonomies. Default false. */
-  childless?: InputMaybe<Scalars['Boolean']>;
+  childless: InputMaybe<Scalars['Boolean']>;
   /** Retrieve terms where the description is LIKE the input value. Default empty. */
-  descriptionLike?: InputMaybe<Scalars['String']>;
+  descriptionLike: InputMaybe<Scalars['String']>;
   /** Array of term ids to exclude. If $include is non-empty, $exclude is ignored. Default empty array. */
-  exclude?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  exclude: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Array of term ids to exclude along with all of their descendant terms. If $include is non-empty, $exclude_tree is ignored. Default empty array. */
-  excludeTree?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  excludeTree: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Whether to hide terms not assigned to any posts. Accepts true or false. Default false */
-  hideEmpty?: InputMaybe<Scalars['Boolean']>;
+  hideEmpty: InputMaybe<Scalars['Boolean']>;
   /** Whether to include terms that have non-empty descendants (even if $hide_empty is set to true). Default true. */
-  hierarchical?: InputMaybe<Scalars['Boolean']>;
+  hierarchical: InputMaybe<Scalars['Boolean']>;
   /** Array of term ids to include. Default empty array. */
-  include?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  include: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Array of names to return term(s) for. Default empty. */
-  name?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  name: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   /** Retrieve terms where the name is LIKE the input value. Default empty. */
-  nameLike?: InputMaybe<Scalars['String']>;
+  nameLike: InputMaybe<Scalars['String']>;
   /** Array of object IDs. Results will be limited to terms associated with these objects. */
-  objectIds?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  objectIds: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Field(s) to order terms by. Defaults to 'name'. */
-  orderby?: InputMaybe<TermObjectsConnectionOrderbyEnum>;
+  orderby: InputMaybe<TermObjectsConnectionOrderbyEnum>;
   /** Whether to pad the quantity of a term's children in the quantity of each term's "count" object variable. Default false. */
-  padCounts?: InputMaybe<Scalars['Boolean']>;
+  padCounts: InputMaybe<Scalars['Boolean']>;
   /** Parent term ID to retrieve direct-child terms of. Default empty. */
-  parent?: InputMaybe<Scalars['Int']>;
+  parent: InputMaybe<Scalars['Int']>;
   /** Search criteria to match terms. Will be SQL-formatted with wildcards before and after. Default empty. */
-  search?: InputMaybe<Scalars['String']>;
+  search: InputMaybe<Scalars['String']>;
   /** Array of slugs to return term(s) for. Default empty. */
-  slug?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  slug: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   /** Array of term taxonomy IDs, to match when querying terms. */
-  termTaxonomId?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  termTaxonomId: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Whether to prime meta caches for matched terms. Default true. */
-  updateTermMetaCache?: InputMaybe<Scalars['Boolean']>;
+  updateTermMetaCache: InputMaybe<Scalars['Boolean']>;
 };
 
 /** Connection between the RootQuery type and the Comment type */
@@ -5161,63 +5161,63 @@ export type RootQueryToCommentConnectionEdge = {
 /** Arguments for filtering the RootQueryToCommentConnection connection */
 export type RootQueryToCommentConnectionWhereArgs = {
   /** Comment author email address. */
-  authorEmail?: InputMaybe<Scalars['String']>;
+  authorEmail: InputMaybe<Scalars['String']>;
   /** Array of author IDs to include comments for. */
-  authorIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  authorIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Array of author IDs to exclude comments for. */
-  authorNotIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  authorNotIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Comment author URL. */
-  authorUrl?: InputMaybe<Scalars['String']>;
+  authorUrl: InputMaybe<Scalars['String']>;
   /** Array of comment IDs to include. */
-  commentIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  commentIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Array of IDs of users whose unapproved comments will be returned by the query regardless of status. */
-  commentNotIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  commentNotIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Include comments of a given type. */
-  commentType?: InputMaybe<Scalars['String']>;
+  commentType: InputMaybe<Scalars['String']>;
   /** Include comments from a given array of comment types. */
-  commentTypeIn?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  commentTypeIn: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   /** Exclude comments from a given array of comment types. */
-  commentTypeNotIn?: InputMaybe<Scalars['String']>;
+  commentTypeNotIn: InputMaybe<Scalars['String']>;
   /** Content object author ID to limit results by. */
-  contentAuthor?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  contentAuthor: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Array of author IDs to retrieve comments for. */
-  contentAuthorIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  contentAuthorIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Array of author IDs *not* to retrieve comments for. */
-  contentAuthorNotIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  contentAuthorNotIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Limit results to those affiliated with a given content object ID. */
-  contentId?: InputMaybe<Scalars['ID']>;
+  contentId: InputMaybe<Scalars['ID']>;
   /** Array of content object IDs to include affiliated comments for. */
-  contentIdIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  contentIdIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Array of content object IDs to exclude affiliated comments for. */
-  contentIdNotIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  contentIdNotIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Content object name to retrieve affiliated comments for. */
-  contentName?: InputMaybe<Scalars['String']>;
+  contentName: InputMaybe<Scalars['String']>;
   /** Content Object parent ID to retrieve affiliated comments for. */
-  contentParent?: InputMaybe<Scalars['Int']>;
+  contentParent: InputMaybe<Scalars['Int']>;
   /** Array of content object statuses to retrieve affiliated comments for. Pass 'any' to match any value. */
-  contentStatus?: InputMaybe<Array<InputMaybe<PostStatusEnum>>>;
+  contentStatus: InputMaybe<Array<InputMaybe<PostStatusEnum>>>;
   /** Content object type or array of types to retrieve affiliated comments for. Pass 'any' to match any value. */
-  contentType?: InputMaybe<Array<InputMaybe<ContentTypeEnum>>>;
+  contentType: InputMaybe<Array<InputMaybe<ContentTypeEnum>>>;
   /** Array of IDs or email addresses of users whose unapproved comments will be returned by the query regardless of $status. Default empty */
-  includeUnapproved?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  includeUnapproved: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Karma score to retrieve matching comments for. */
-  karma?: InputMaybe<Scalars['Int']>;
+  karma: InputMaybe<Scalars['Int']>;
   /** The cardinality of the order of the connection */
-  order?: InputMaybe<OrderEnum>;
+  order: InputMaybe<OrderEnum>;
   /** Field to order the comments by. */
-  orderby?: InputMaybe<CommentsConnectionOrderbyEnum>;
+  orderby: InputMaybe<CommentsConnectionOrderbyEnum>;
   /** Parent ID of comment to retrieve children of. */
-  parent?: InputMaybe<Scalars['Int']>;
+  parent: InputMaybe<Scalars['Int']>;
   /** Array of parent IDs of comments to retrieve children for. */
-  parentIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  parentIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Array of parent IDs of comments *not* to retrieve children for. */
-  parentNotIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  parentNotIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Search term(s) to retrieve matching comments for. */
-  search?: InputMaybe<Scalars['String']>;
+  search: InputMaybe<Scalars['String']>;
   /** Comment status to limit results by. */
-  status?: InputMaybe<Scalars['String']>;
+  status: InputMaybe<Scalars['String']>;
   /** Include comments for a specific user ID. */
-  userId?: InputMaybe<Scalars['ID']>;
+  userId: InputMaybe<Scalars['ID']>;
 };
 
 /** Connection between the RootQuery type and the ContentNode type */
@@ -5243,39 +5243,39 @@ export type RootQueryToContentNodeConnectionEdge = {
 /** Arguments for filtering the RootQueryToContentNodeConnection connection */
 export type RootQueryToContentNodeConnectionWhereArgs = {
   /** The Types of content to filter */
-  contentTypes?: InputMaybe<Array<InputMaybe<ContentTypeEnum>>>;
+  contentTypes: InputMaybe<Array<InputMaybe<ContentTypeEnum>>>;
   /** Filter the connection based on dates */
-  dateQuery?: InputMaybe<DateQueryInput>;
+  dateQuery: InputMaybe<DateQueryInput>;
   /** True for objects with passwords; False for objects without passwords; null for all objects with or without passwords */
-  hasPassword?: InputMaybe<Scalars['Boolean']>;
+  hasPassword: InputMaybe<Scalars['Boolean']>;
   /** Specific ID of the object */
-  id?: InputMaybe<Scalars['Int']>;
+  id: InputMaybe<Scalars['Int']>;
   /** Array of IDs for the objects to retrieve */
-  in?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  in: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Get objects with a specific mimeType property */
-  mimeType?: InputMaybe<MimeTypeEnum>;
+  mimeType: InputMaybe<MimeTypeEnum>;
   /** Slug / post_name of the object */
-  name?: InputMaybe<Scalars['String']>;
+  name: InputMaybe<Scalars['String']>;
   /** Specify objects to retrieve. Use slugs */
-  nameIn?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  nameIn: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
-  notIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  notIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** What paramater to use to order the objects by. */
-  orderby?: InputMaybe<Array<InputMaybe<PostObjectsConnectionOrderbyInput>>>;
+  orderby: InputMaybe<Array<InputMaybe<PostObjectsConnectionOrderbyInput>>>;
   /** Use ID to return only children. Use 0 to return only top-level items */
-  parent?: InputMaybe<Scalars['ID']>;
+  parent: InputMaybe<Scalars['ID']>;
   /** Specify objects whose parent is in an array */
-  parentIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  parentIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Specify posts whose parent is not in an array */
-  parentNotIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  parentNotIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Show posts with a specific password. */
-  password?: InputMaybe<Scalars['String']>;
+  password: InputMaybe<Scalars['String']>;
   /** Show Posts based on a keyword search */
-  search?: InputMaybe<Scalars['String']>;
-  stati?: InputMaybe<Array<InputMaybe<PostStatusEnum>>>;
-  status?: InputMaybe<PostStatusEnum>;
+  search: InputMaybe<Scalars['String']>;
+  stati: InputMaybe<Array<InputMaybe<PostStatusEnum>>>;
+  status: InputMaybe<PostStatusEnum>;
   /** Title of the object */
-  title?: InputMaybe<Scalars['String']>;
+  title: InputMaybe<Scalars['String']>;
 };
 
 /** Connection between the RootQuery type and the ContentRevisionUnion type */
@@ -5301,37 +5301,37 @@ export type RootQueryToContentRevisionUnionConnectionEdge = {
 /** Arguments for filtering the RootQueryToContentRevisionUnionConnection connection */
 export type RootQueryToContentRevisionUnionConnectionWhereArgs = {
   /** Filter the connection based on dates */
-  dateQuery?: InputMaybe<DateQueryInput>;
+  dateQuery: InputMaybe<DateQueryInput>;
   /** True for objects with passwords; False for objects without passwords; null for all objects with or without passwords */
-  hasPassword?: InputMaybe<Scalars['Boolean']>;
+  hasPassword: InputMaybe<Scalars['Boolean']>;
   /** Specific ID of the object */
-  id?: InputMaybe<Scalars['Int']>;
+  id: InputMaybe<Scalars['Int']>;
   /** Array of IDs for the objects to retrieve */
-  in?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  in: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Get objects with a specific mimeType property */
-  mimeType?: InputMaybe<MimeTypeEnum>;
+  mimeType: InputMaybe<MimeTypeEnum>;
   /** Slug / post_name of the object */
-  name?: InputMaybe<Scalars['String']>;
+  name: InputMaybe<Scalars['String']>;
   /** Specify objects to retrieve. Use slugs */
-  nameIn?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  nameIn: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
-  notIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  notIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** What paramater to use to order the objects by. */
-  orderby?: InputMaybe<Array<InputMaybe<PostObjectsConnectionOrderbyInput>>>;
+  orderby: InputMaybe<Array<InputMaybe<PostObjectsConnectionOrderbyInput>>>;
   /** Use ID to return only children. Use 0 to return only top-level items */
-  parent?: InputMaybe<Scalars['ID']>;
+  parent: InputMaybe<Scalars['ID']>;
   /** Specify objects whose parent is in an array */
-  parentIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  parentIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Specify posts whose parent is not in an array */
-  parentNotIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  parentNotIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Show posts with a specific password. */
-  password?: InputMaybe<Scalars['String']>;
+  password: InputMaybe<Scalars['String']>;
   /** Show Posts based on a keyword search */
-  search?: InputMaybe<Scalars['String']>;
-  stati?: InputMaybe<Array<InputMaybe<PostStatusEnum>>>;
-  status?: InputMaybe<PostStatusEnum>;
+  search: InputMaybe<Scalars['String']>;
+  stati: InputMaybe<Array<InputMaybe<PostStatusEnum>>>;
+  status: InputMaybe<PostStatusEnum>;
   /** Title of the object */
-  title?: InputMaybe<Scalars['String']>;
+  title: InputMaybe<Scalars['String']>;
 };
 
 /** Connection between the RootQuery type and the ContentType type */
@@ -5417,45 +5417,45 @@ export type RootQueryToMediaItemConnectionEdge = {
 /** Arguments for filtering the RootQueryToMediaItemConnection connection */
 export type RootQueryToMediaItemConnectionWhereArgs = {
   /** The user that's connected as the author of the object. Use the userId for the author object. */
-  author?: InputMaybe<Scalars['Int']>;
+  author: InputMaybe<Scalars['Int']>;
   /** Find objects connected to author(s) in the array of author's userIds */
-  authorIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  authorIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Find objects connected to the author by the author's nicename */
-  authorName?: InputMaybe<Scalars['String']>;
+  authorName: InputMaybe<Scalars['String']>;
   /** Find objects NOT connected to author(s) in the array of author's userIds */
-  authorNotIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  authorNotIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Filter the connection based on dates */
-  dateQuery?: InputMaybe<DateQueryInput>;
+  dateQuery: InputMaybe<DateQueryInput>;
   /** True for objects with passwords; False for objects without passwords; null for all objects with or without passwords */
-  hasPassword?: InputMaybe<Scalars['Boolean']>;
+  hasPassword: InputMaybe<Scalars['Boolean']>;
   /** Specific ID of the object */
-  id?: InputMaybe<Scalars['Int']>;
+  id: InputMaybe<Scalars['Int']>;
   /** Array of IDs for the objects to retrieve */
-  in?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  in: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Get objects with a specific mimeType property */
-  mimeType?: InputMaybe<MimeTypeEnum>;
+  mimeType: InputMaybe<MimeTypeEnum>;
   /** Slug / post_name of the object */
-  name?: InputMaybe<Scalars['String']>;
+  name: InputMaybe<Scalars['String']>;
   /** Specify objects to retrieve. Use slugs */
-  nameIn?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  nameIn: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
-  notIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  notIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** What paramater to use to order the objects by. */
-  orderby?: InputMaybe<Array<InputMaybe<PostObjectsConnectionOrderbyInput>>>;
+  orderby: InputMaybe<Array<InputMaybe<PostObjectsConnectionOrderbyInput>>>;
   /** Use ID to return only children. Use 0 to return only top-level items */
-  parent?: InputMaybe<Scalars['ID']>;
+  parent: InputMaybe<Scalars['ID']>;
   /** Specify objects whose parent is in an array */
-  parentIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  parentIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Specify posts whose parent is not in an array */
-  parentNotIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  parentNotIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Show posts with a specific password. */
-  password?: InputMaybe<Scalars['String']>;
+  password: InputMaybe<Scalars['String']>;
   /** Show Posts based on a keyword search */
-  search?: InputMaybe<Scalars['String']>;
-  stati?: InputMaybe<Array<InputMaybe<PostStatusEnum>>>;
-  status?: InputMaybe<PostStatusEnum>;
+  search: InputMaybe<Scalars['String']>;
+  stati: InputMaybe<Array<InputMaybe<PostStatusEnum>>>;
+  status: InputMaybe<PostStatusEnum>;
   /** Title of the object */
-  title?: InputMaybe<Scalars['String']>;
+  title: InputMaybe<Scalars['String']>;
 };
 
 /** Connection between the RootQuery type and the Menu type */
@@ -5481,11 +5481,11 @@ export type RootQueryToMenuConnectionEdge = {
 /** Arguments for filtering the RootQueryToMenuConnection connection */
 export type RootQueryToMenuConnectionWhereArgs = {
   /** The ID of the object */
-  id?: InputMaybe<Scalars['Int']>;
+  id: InputMaybe<Scalars['Int']>;
   /** The menu location for the menu being queried */
-  location?: InputMaybe<MenuLocationEnum>;
+  location: InputMaybe<MenuLocationEnum>;
   /** The slug of the menu to query items for */
-  slug?: InputMaybe<Scalars['String']>;
+  slug: InputMaybe<Scalars['String']>;
 };
 
 /** Connection between the RootQuery type and the MenuItem type */
@@ -5511,13 +5511,13 @@ export type RootQueryToMenuItemConnectionEdge = {
 /** Arguments for filtering the RootQueryToMenuItemConnection connection */
 export type RootQueryToMenuItemConnectionWhereArgs = {
   /** The ID of the object */
-  id?: InputMaybe<Scalars['Int']>;
+  id: InputMaybe<Scalars['Int']>;
   /** The menu location for the menu being queried */
-  location?: InputMaybe<MenuLocationEnum>;
+  location: InputMaybe<MenuLocationEnum>;
   /** The database ID of the parent menu object */
-  parentDatabaseId?: InputMaybe<Scalars['Int']>;
+  parentDatabaseId: InputMaybe<Scalars['Int']>;
   /** The ID of the parent menu object */
-  parentId?: InputMaybe<Scalars['ID']>;
+  parentId: InputMaybe<Scalars['ID']>;
 };
 
 /** Connection between the RootQuery type and the page type */
@@ -5543,45 +5543,45 @@ export type RootQueryToPageConnectionEdge = {
 /** Arguments for filtering the RootQueryToPageConnection connection */
 export type RootQueryToPageConnectionWhereArgs = {
   /** The user that's connected as the author of the object. Use the userId for the author object. */
-  author?: InputMaybe<Scalars['Int']>;
+  author: InputMaybe<Scalars['Int']>;
   /** Find objects connected to author(s) in the array of author's userIds */
-  authorIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  authorIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Find objects connected to the author by the author's nicename */
-  authorName?: InputMaybe<Scalars['String']>;
+  authorName: InputMaybe<Scalars['String']>;
   /** Find objects NOT connected to author(s) in the array of author's userIds */
-  authorNotIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  authorNotIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Filter the connection based on dates */
-  dateQuery?: InputMaybe<DateQueryInput>;
+  dateQuery: InputMaybe<DateQueryInput>;
   /** True for objects with passwords; False for objects without passwords; null for all objects with or without passwords */
-  hasPassword?: InputMaybe<Scalars['Boolean']>;
+  hasPassword: InputMaybe<Scalars['Boolean']>;
   /** Specific ID of the object */
-  id?: InputMaybe<Scalars['Int']>;
+  id: InputMaybe<Scalars['Int']>;
   /** Array of IDs for the objects to retrieve */
-  in?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  in: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Get objects with a specific mimeType property */
-  mimeType?: InputMaybe<MimeTypeEnum>;
+  mimeType: InputMaybe<MimeTypeEnum>;
   /** Slug / post_name of the object */
-  name?: InputMaybe<Scalars['String']>;
+  name: InputMaybe<Scalars['String']>;
   /** Specify objects to retrieve. Use slugs */
-  nameIn?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  nameIn: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
-  notIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  notIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** What paramater to use to order the objects by. */
-  orderby?: InputMaybe<Array<InputMaybe<PostObjectsConnectionOrderbyInput>>>;
+  orderby: InputMaybe<Array<InputMaybe<PostObjectsConnectionOrderbyInput>>>;
   /** Use ID to return only children. Use 0 to return only top-level items */
-  parent?: InputMaybe<Scalars['ID']>;
+  parent: InputMaybe<Scalars['ID']>;
   /** Specify objects whose parent is in an array */
-  parentIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  parentIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Specify posts whose parent is not in an array */
-  parentNotIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  parentNotIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Show posts with a specific password. */
-  password?: InputMaybe<Scalars['String']>;
+  password: InputMaybe<Scalars['String']>;
   /** Show Posts based on a keyword search */
-  search?: InputMaybe<Scalars['String']>;
-  stati?: InputMaybe<Array<InputMaybe<PostStatusEnum>>>;
-  status?: InputMaybe<PostStatusEnum>;
+  search: InputMaybe<Scalars['String']>;
+  stati: InputMaybe<Array<InputMaybe<PostStatusEnum>>>;
+  status: InputMaybe<PostStatusEnum>;
   /** Title of the object */
-  title?: InputMaybe<Scalars['String']>;
+  title: InputMaybe<Scalars['String']>;
 };
 
 /** Connection between the RootQuery type and the Plugin type */
@@ -5627,65 +5627,65 @@ export type RootQueryToPostConnectionEdge = {
 /** Arguments for filtering the RootQueryToPostConnection connection */
 export type RootQueryToPostConnectionWhereArgs = {
   /** The user that's connected as the author of the object. Use the userId for the author object. */
-  author?: InputMaybe<Scalars['Int']>;
+  author: InputMaybe<Scalars['Int']>;
   /** Find objects connected to author(s) in the array of author's userIds */
-  authorIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  authorIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Find objects connected to the author by the author's nicename */
-  authorName?: InputMaybe<Scalars['String']>;
+  authorName: InputMaybe<Scalars['String']>;
   /** Find objects NOT connected to author(s) in the array of author's userIds */
-  authorNotIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  authorNotIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Category ID */
-  categoryId?: InputMaybe<Scalars['Int']>;
+  categoryId: InputMaybe<Scalars['Int']>;
   /** Array of category IDs, used to display objects from one category OR another */
-  categoryIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  categoryIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Use Category Slug */
-  categoryName?: InputMaybe<Scalars['String']>;
+  categoryName: InputMaybe<Scalars['String']>;
   /** Array of category IDs, used to display objects from one category OR another */
-  categoryNotIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  categoryNotIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Filter the connection based on dates */
-  dateQuery?: InputMaybe<DateQueryInput>;
+  dateQuery: InputMaybe<DateQueryInput>;
   /** True for objects with passwords; False for objects without passwords; null for all objects with or without passwords */
-  hasPassword?: InputMaybe<Scalars['Boolean']>;
+  hasPassword: InputMaybe<Scalars['Boolean']>;
   /** Specific ID of the object */
-  id?: InputMaybe<Scalars['Int']>;
+  id: InputMaybe<Scalars['Int']>;
   /** Array of IDs for the objects to retrieve */
-  in?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  in: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Get objects with a specific mimeType property */
-  mimeType?: InputMaybe<MimeTypeEnum>;
+  mimeType: InputMaybe<MimeTypeEnum>;
   /** Slug / post_name of the object */
-  name?: InputMaybe<Scalars['String']>;
+  name: InputMaybe<Scalars['String']>;
   /** Specify objects to retrieve. Use slugs */
-  nameIn?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  nameIn: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
-  notIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  notIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** What paramater to use to order the objects by. */
-  orderby?: InputMaybe<Array<InputMaybe<PostObjectsConnectionOrderbyInput>>>;
+  orderby: InputMaybe<Array<InputMaybe<PostObjectsConnectionOrderbyInput>>>;
   /** Use ID to return only children. Use 0 to return only top-level items */
-  parent?: InputMaybe<Scalars['ID']>;
+  parent: InputMaybe<Scalars['ID']>;
   /** Specify objects whose parent is in an array */
-  parentIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  parentIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Specify posts whose parent is not in an array */
-  parentNotIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  parentNotIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Show posts with a specific password. */
-  password?: InputMaybe<Scalars['String']>;
+  password: InputMaybe<Scalars['String']>;
   /** Show Posts based on a keyword search */
-  search?: InputMaybe<Scalars['String']>;
-  stati?: InputMaybe<Array<InputMaybe<PostStatusEnum>>>;
-  status?: InputMaybe<PostStatusEnum>;
+  search: InputMaybe<Scalars['String']>;
+  stati: InputMaybe<Array<InputMaybe<PostStatusEnum>>>;
+  status: InputMaybe<PostStatusEnum>;
   /** Tag Slug */
-  tag?: InputMaybe<Scalars['String']>;
+  tag: InputMaybe<Scalars['String']>;
   /** Use Tag ID */
-  tagId?: InputMaybe<Scalars['String']>;
+  tagId: InputMaybe<Scalars['String']>;
   /** Array of tag IDs, used to display objects from one tag OR another */
-  tagIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  tagIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Array of tag IDs, used to display objects from one tag OR another */
-  tagNotIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  tagNotIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Array of tag slugs, used to display objects from one tag OR another */
-  tagSlugAnd?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  tagSlugAnd: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   /** Array of tag slugs, used to exclude objects in specified tags */
-  tagSlugIn?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  tagSlugIn: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   /** Title of the object */
-  title?: InputMaybe<Scalars['String']>;
+  title: InputMaybe<Scalars['String']>;
 };
 
 /** Connection between the RootQuery type and the postFormat type */
@@ -5711,43 +5711,43 @@ export type RootQueryToPostFormatConnectionEdge = {
 /** Arguments for filtering the RootQueryToPostFormatConnection connection */
 export type RootQueryToPostFormatConnectionWhereArgs = {
   /** Unique cache key to be produced when this query is stored in an object cache. Default is 'core'. */
-  cacheDomain?: InputMaybe<Scalars['String']>;
+  cacheDomain: InputMaybe<Scalars['String']>;
   /** Term ID to retrieve child terms of. If multiple taxonomies are passed, $child_of is ignored. Default 0. */
-  childOf?: InputMaybe<Scalars['Int']>;
+  childOf: InputMaybe<Scalars['Int']>;
   /** True to limit results to terms that have no children. This parameter has no effect on non-hierarchical taxonomies. Default false. */
-  childless?: InputMaybe<Scalars['Boolean']>;
+  childless: InputMaybe<Scalars['Boolean']>;
   /** Retrieve terms where the description is LIKE the input value. Default empty. */
-  descriptionLike?: InputMaybe<Scalars['String']>;
+  descriptionLike: InputMaybe<Scalars['String']>;
   /** Array of term ids to exclude. If $include is non-empty, $exclude is ignored. Default empty array. */
-  exclude?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  exclude: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Array of term ids to exclude along with all of their descendant terms. If $include is non-empty, $exclude_tree is ignored. Default empty array. */
-  excludeTree?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  excludeTree: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Whether to hide terms not assigned to any posts. Accepts true or false. Default false */
-  hideEmpty?: InputMaybe<Scalars['Boolean']>;
+  hideEmpty: InputMaybe<Scalars['Boolean']>;
   /** Whether to include terms that have non-empty descendants (even if $hide_empty is set to true). Default true. */
-  hierarchical?: InputMaybe<Scalars['Boolean']>;
+  hierarchical: InputMaybe<Scalars['Boolean']>;
   /** Array of term ids to include. Default empty array. */
-  include?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  include: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Array of names to return term(s) for. Default empty. */
-  name?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  name: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   /** Retrieve terms where the name is LIKE the input value. Default empty. */
-  nameLike?: InputMaybe<Scalars['String']>;
+  nameLike: InputMaybe<Scalars['String']>;
   /** Array of object IDs. Results will be limited to terms associated with these objects. */
-  objectIds?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  objectIds: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Field(s) to order terms by. Defaults to 'name'. */
-  orderby?: InputMaybe<TermObjectsConnectionOrderbyEnum>;
+  orderby: InputMaybe<TermObjectsConnectionOrderbyEnum>;
   /** Whether to pad the quantity of a term's children in the quantity of each term's "count" object variable. Default false. */
-  padCounts?: InputMaybe<Scalars['Boolean']>;
+  padCounts: InputMaybe<Scalars['Boolean']>;
   /** Parent term ID to retrieve direct-child terms of. Default empty. */
-  parent?: InputMaybe<Scalars['Int']>;
+  parent: InputMaybe<Scalars['Int']>;
   /** Search criteria to match terms. Will be SQL-formatted with wildcards before and after. Default empty. */
-  search?: InputMaybe<Scalars['String']>;
+  search: InputMaybe<Scalars['String']>;
   /** Array of slugs to return term(s) for. Default empty. */
-  slug?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  slug: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   /** Array of term taxonomy IDs, to match when querying terms. */
-  termTaxonomId?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  termTaxonomId: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Whether to prime meta caches for matched terms. Default true. */
-  updateTermMetaCache?: InputMaybe<Scalars['Boolean']>;
+  updateTermMetaCache: InputMaybe<Scalars['Boolean']>;
 };
 
 /** Connection between the RootQuery type and the tag type */
@@ -5773,43 +5773,43 @@ export type RootQueryToTagConnectionEdge = {
 /** Arguments for filtering the RootQueryToTagConnection connection */
 export type RootQueryToTagConnectionWhereArgs = {
   /** Unique cache key to be produced when this query is stored in an object cache. Default is 'core'. */
-  cacheDomain?: InputMaybe<Scalars['String']>;
+  cacheDomain: InputMaybe<Scalars['String']>;
   /** Term ID to retrieve child terms of. If multiple taxonomies are passed, $child_of is ignored. Default 0. */
-  childOf?: InputMaybe<Scalars['Int']>;
+  childOf: InputMaybe<Scalars['Int']>;
   /** True to limit results to terms that have no children. This parameter has no effect on non-hierarchical taxonomies. Default false. */
-  childless?: InputMaybe<Scalars['Boolean']>;
+  childless: InputMaybe<Scalars['Boolean']>;
   /** Retrieve terms where the description is LIKE the input value. Default empty. */
-  descriptionLike?: InputMaybe<Scalars['String']>;
+  descriptionLike: InputMaybe<Scalars['String']>;
   /** Array of term ids to exclude. If $include is non-empty, $exclude is ignored. Default empty array. */
-  exclude?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  exclude: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Array of term ids to exclude along with all of their descendant terms. If $include is non-empty, $exclude_tree is ignored. Default empty array. */
-  excludeTree?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  excludeTree: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Whether to hide terms not assigned to any posts. Accepts true or false. Default false */
-  hideEmpty?: InputMaybe<Scalars['Boolean']>;
+  hideEmpty: InputMaybe<Scalars['Boolean']>;
   /** Whether to include terms that have non-empty descendants (even if $hide_empty is set to true). Default true. */
-  hierarchical?: InputMaybe<Scalars['Boolean']>;
+  hierarchical: InputMaybe<Scalars['Boolean']>;
   /** Array of term ids to include. Default empty array. */
-  include?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  include: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Array of names to return term(s) for. Default empty. */
-  name?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  name: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   /** Retrieve terms where the name is LIKE the input value. Default empty. */
-  nameLike?: InputMaybe<Scalars['String']>;
+  nameLike: InputMaybe<Scalars['String']>;
   /** Array of object IDs. Results will be limited to terms associated with these objects. */
-  objectIds?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  objectIds: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Field(s) to order terms by. Defaults to 'name'. */
-  orderby?: InputMaybe<TermObjectsConnectionOrderbyEnum>;
+  orderby: InputMaybe<TermObjectsConnectionOrderbyEnum>;
   /** Whether to pad the quantity of a term's children in the quantity of each term's "count" object variable. Default false. */
-  padCounts?: InputMaybe<Scalars['Boolean']>;
+  padCounts: InputMaybe<Scalars['Boolean']>;
   /** Parent term ID to retrieve direct-child terms of. Default empty. */
-  parent?: InputMaybe<Scalars['Int']>;
+  parent: InputMaybe<Scalars['Int']>;
   /** Search criteria to match terms. Will be SQL-formatted with wildcards before and after. Default empty. */
-  search?: InputMaybe<Scalars['String']>;
+  search: InputMaybe<Scalars['String']>;
   /** Array of slugs to return term(s) for. Default empty. */
-  slug?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  slug: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   /** Array of term taxonomy IDs, to match when querying terms. */
-  termTaxonomId?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  termTaxonomId: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Whether to prime meta caches for matched terms. Default true. */
-  updateTermMetaCache?: InputMaybe<Scalars['Boolean']>;
+  updateTermMetaCache: InputMaybe<Scalars['Boolean']>;
 };
 
 /** Connection between the RootQuery type and the Taxonomy type */
@@ -5855,45 +5855,45 @@ export type RootQueryToTermNodeConnectionEdge = {
 /** Arguments for filtering the RootQueryToTermNodeConnection connection */
 export type RootQueryToTermNodeConnectionWhereArgs = {
   /** Unique cache key to be produced when this query is stored in an object cache. Default is 'core'. */
-  cacheDomain?: InputMaybe<Scalars['String']>;
+  cacheDomain: InputMaybe<Scalars['String']>;
   /** Term ID to retrieve child terms of. If multiple taxonomies are passed, $child_of is ignored. Default 0. */
-  childOf?: InputMaybe<Scalars['Int']>;
+  childOf: InputMaybe<Scalars['Int']>;
   /** True to limit results to terms that have no children. This parameter has no effect on non-hierarchical taxonomies. Default false. */
-  childless?: InputMaybe<Scalars['Boolean']>;
+  childless: InputMaybe<Scalars['Boolean']>;
   /** Retrieve terms where the description is LIKE the input value. Default empty. */
-  descriptionLike?: InputMaybe<Scalars['String']>;
+  descriptionLike: InputMaybe<Scalars['String']>;
   /** Array of term ids to exclude. If $include is non-empty, $exclude is ignored. Default empty array. */
-  exclude?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  exclude: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Array of term ids to exclude along with all of their descendant terms. If $include is non-empty, $exclude_tree is ignored. Default empty array. */
-  excludeTree?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  excludeTree: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Whether to hide terms not assigned to any posts. Accepts true or false. Default false */
-  hideEmpty?: InputMaybe<Scalars['Boolean']>;
+  hideEmpty: InputMaybe<Scalars['Boolean']>;
   /** Whether to include terms that have non-empty descendants (even if $hide_empty is set to true). Default true. */
-  hierarchical?: InputMaybe<Scalars['Boolean']>;
+  hierarchical: InputMaybe<Scalars['Boolean']>;
   /** Array of term ids to include. Default empty array. */
-  include?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  include: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Array of names to return term(s) for. Default empty. */
-  name?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  name: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   /** Retrieve terms where the name is LIKE the input value. Default empty. */
-  nameLike?: InputMaybe<Scalars['String']>;
+  nameLike: InputMaybe<Scalars['String']>;
   /** Array of object IDs. Results will be limited to terms associated with these objects. */
-  objectIds?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  objectIds: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Field(s) to order terms by. Defaults to 'name'. */
-  orderby?: InputMaybe<TermObjectsConnectionOrderbyEnum>;
+  orderby: InputMaybe<TermObjectsConnectionOrderbyEnum>;
   /** Whether to pad the quantity of a term's children in the quantity of each term's "count" object variable. Default false. */
-  padCounts?: InputMaybe<Scalars['Boolean']>;
+  padCounts: InputMaybe<Scalars['Boolean']>;
   /** Parent term ID to retrieve direct-child terms of. Default empty. */
-  parent?: InputMaybe<Scalars['Int']>;
+  parent: InputMaybe<Scalars['Int']>;
   /** Search criteria to match terms. Will be SQL-formatted with wildcards before and after. Default empty. */
-  search?: InputMaybe<Scalars['String']>;
+  search: InputMaybe<Scalars['String']>;
   /** Array of slugs to return term(s) for. Default empty. */
-  slug?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  slug: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   /** The Taxonomy to filter terms by */
-  taxonomies?: InputMaybe<Array<InputMaybe<TaxonomyEnum>>>;
+  taxonomies: InputMaybe<Array<InputMaybe<TaxonomyEnum>>>;
   /** Array of term taxonomy IDs, to match when querying terms. */
-  termTaxonomId?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  termTaxonomId: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Whether to prime meta caches for matched terms. Default true. */
-  updateTermMetaCache?: InputMaybe<Scalars['Boolean']>;
+  updateTermMetaCache: InputMaybe<Scalars['Boolean']>;
 };
 
 /** Connection between the RootQuery type and the Theme type */
@@ -5939,35 +5939,35 @@ export type RootQueryToUserConnectionEdge = {
 /** Arguments for filtering the RootQueryToUserConnection connection */
 export type RootQueryToUserConnectionWhereArgs = {
   /** Array of userIds to exclude. */
-  exclude?: InputMaybe<Array<InputMaybe<Scalars['Int']>>>;
+  exclude: InputMaybe<Array<InputMaybe<Scalars['Int']>>>;
   /** Pass an array of post types to filter results to users who have published posts in those post types. */
-  hasPublishedPosts?: InputMaybe<Array<InputMaybe<ContentTypeEnum>>>;
+  hasPublishedPosts: InputMaybe<Array<InputMaybe<ContentTypeEnum>>>;
   /** Array of userIds to include. */
-  include?: InputMaybe<Array<InputMaybe<Scalars['Int']>>>;
+  include: InputMaybe<Array<InputMaybe<Scalars['Int']>>>;
   /** The user login. */
-  login?: InputMaybe<Scalars['String']>;
+  login: InputMaybe<Scalars['String']>;
   /** An array of logins to include. Users matching one of these logins will be included in results. */
-  loginIn?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  loginIn: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   /** An array of logins to exclude. Users matching one of these logins will not be included in results. */
-  loginNotIn?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  loginNotIn: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   /** The user nicename. */
-  nicename?: InputMaybe<Scalars['String']>;
+  nicename: InputMaybe<Scalars['String']>;
   /** An array of nicenames to include. Users matching one of these nicenames will be included in results. */
-  nicenameIn?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  nicenameIn: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   /** An array of nicenames to exclude. Users matching one of these nicenames will not be included in results. */
-  nicenameNotIn?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  nicenameNotIn: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   /** What paramater to use to order the objects by. */
-  orderby?: InputMaybe<Array<InputMaybe<UsersConnectionOrderbyInput>>>;
+  orderby: InputMaybe<Array<InputMaybe<UsersConnectionOrderbyInput>>>;
   /** An array of role names that users must match to be included in results. Note that this is an inclusive list: users must match *each* role. */
-  role?: InputMaybe<UserRoleEnum>;
+  role: InputMaybe<UserRoleEnum>;
   /** An array of role names. Matched users must have at least one of these roles. */
-  roleIn?: InputMaybe<Array<InputMaybe<UserRoleEnum>>>;
+  roleIn: InputMaybe<Array<InputMaybe<UserRoleEnum>>>;
   /** An array of role names to exclude. Users matching one or more of these roles will not be included in results. */
-  roleNotIn?: InputMaybe<Array<InputMaybe<UserRoleEnum>>>;
+  roleNotIn: InputMaybe<Array<InputMaybe<UserRoleEnum>>>;
   /** Search keyword. Searches for possible string matches on columns. When "searchColumns" is left empty, it tries to determine which column to search in based on search string. */
-  search?: InputMaybe<Scalars['String']>;
+  search: InputMaybe<Scalars['String']>;
   /** Array of column names to be searched. Accepts 'ID', 'login', 'nicename', 'email', 'url'. */
-  searchColumns?: InputMaybe<Array<InputMaybe<UsersConnectionSearchColumnEnum>>>;
+  searchColumns: InputMaybe<Array<InputMaybe<UsersConnectionSearchColumnEnum>>>;
 };
 
 /** Connection between the RootQuery type and the UserRole type */
@@ -5992,7 +5992,7 @@ export type RootQueryToUserRoleConnectionEdge = {
 
 /** Input for the sendPasswordResetEmail mutation */
 export type SendPasswordResetEmailInput = {
-  clientMutationId?: InputMaybe<Scalars['String']>;
+  clientMutationId: InputMaybe<Scalars['String']>;
   /** A string that contains the user's username or email address. */
   username: Scalars['String'];
 };
@@ -6085,39 +6085,39 @@ export type Tag = DatabaseIdentifier & MenuItemLinkable & Node & TermNode & Unif
 
 /** The tag type */
 export type TagContentNodesArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  where?: InputMaybe<TagToContentNodeConnectionWhereArgs>;
+  after: InputMaybe<Scalars['String']>;
+  before: InputMaybe<Scalars['String']>;
+  first: InputMaybe<Scalars['Int']>;
+  last: InputMaybe<Scalars['Int']>;
+  where: InputMaybe<TagToContentNodeConnectionWhereArgs>;
 };
 
 
 /** The tag type */
 export type TagEnqueuedScriptsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
+  after: InputMaybe<Scalars['String']>;
+  before: InputMaybe<Scalars['String']>;
+  first: InputMaybe<Scalars['Int']>;
+  last: InputMaybe<Scalars['Int']>;
 };
 
 
 /** The tag type */
 export type TagEnqueuedStylesheetsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
+  after: InputMaybe<Scalars['String']>;
+  before: InputMaybe<Scalars['String']>;
+  first: InputMaybe<Scalars['Int']>;
+  last: InputMaybe<Scalars['Int']>;
 };
 
 
 /** The tag type */
 export type TagPostsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  where?: InputMaybe<TagToPostConnectionWhereArgs>;
+  after: InputMaybe<Scalars['String']>;
+  before: InputMaybe<Scalars['String']>;
+  first: InputMaybe<Scalars['Int']>;
+  last: InputMaybe<Scalars['Int']>;
+  where: InputMaybe<TagToPostConnectionWhereArgs>;
 };
 
 /** The Type of Identifier used to fetch a single resource. Default is ID. */
@@ -6157,37 +6157,37 @@ export type TagToContentNodeConnectionEdge = {
 /** Arguments for filtering the TagToContentNodeConnection connection */
 export type TagToContentNodeConnectionWhereArgs = {
   /** Filter the connection based on dates */
-  dateQuery?: InputMaybe<DateQueryInput>;
+  dateQuery: InputMaybe<DateQueryInput>;
   /** True for objects with passwords; False for objects without passwords; null for all objects with or without passwords */
-  hasPassword?: InputMaybe<Scalars['Boolean']>;
+  hasPassword: InputMaybe<Scalars['Boolean']>;
   /** Specific ID of the object */
-  id?: InputMaybe<Scalars['Int']>;
+  id: InputMaybe<Scalars['Int']>;
   /** Array of IDs for the objects to retrieve */
-  in?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  in: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Get objects with a specific mimeType property */
-  mimeType?: InputMaybe<MimeTypeEnum>;
+  mimeType: InputMaybe<MimeTypeEnum>;
   /** Slug / post_name of the object */
-  name?: InputMaybe<Scalars['String']>;
+  name: InputMaybe<Scalars['String']>;
   /** Specify objects to retrieve. Use slugs */
-  nameIn?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  nameIn: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
-  notIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  notIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** What paramater to use to order the objects by. */
-  orderby?: InputMaybe<Array<InputMaybe<PostObjectsConnectionOrderbyInput>>>;
+  orderby: InputMaybe<Array<InputMaybe<PostObjectsConnectionOrderbyInput>>>;
   /** Use ID to return only children. Use 0 to return only top-level items */
-  parent?: InputMaybe<Scalars['ID']>;
+  parent: InputMaybe<Scalars['ID']>;
   /** Specify objects whose parent is in an array */
-  parentIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  parentIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Specify posts whose parent is not in an array */
-  parentNotIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  parentNotIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Show posts with a specific password. */
-  password?: InputMaybe<Scalars['String']>;
+  password: InputMaybe<Scalars['String']>;
   /** Show Posts based on a keyword search */
-  search?: InputMaybe<Scalars['String']>;
-  stati?: InputMaybe<Array<InputMaybe<PostStatusEnum>>>;
-  status?: InputMaybe<PostStatusEnum>;
+  search: InputMaybe<Scalars['String']>;
+  stati: InputMaybe<Array<InputMaybe<PostStatusEnum>>>;
+  status: InputMaybe<PostStatusEnum>;
   /** Title of the object */
-  title?: InputMaybe<Scalars['String']>;
+  title: InputMaybe<Scalars['String']>;
 };
 
 /** Connection between the tag type and the post type */
@@ -6213,65 +6213,65 @@ export type TagToPostConnectionEdge = {
 /** Arguments for filtering the TagToPostConnection connection */
 export type TagToPostConnectionWhereArgs = {
   /** The user that's connected as the author of the object. Use the userId for the author object. */
-  author?: InputMaybe<Scalars['Int']>;
+  author: InputMaybe<Scalars['Int']>;
   /** Find objects connected to author(s) in the array of author's userIds */
-  authorIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  authorIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Find objects connected to the author by the author's nicename */
-  authorName?: InputMaybe<Scalars['String']>;
+  authorName: InputMaybe<Scalars['String']>;
   /** Find objects NOT connected to author(s) in the array of author's userIds */
-  authorNotIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  authorNotIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Category ID */
-  categoryId?: InputMaybe<Scalars['Int']>;
+  categoryId: InputMaybe<Scalars['Int']>;
   /** Array of category IDs, used to display objects from one category OR another */
-  categoryIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  categoryIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Use Category Slug */
-  categoryName?: InputMaybe<Scalars['String']>;
+  categoryName: InputMaybe<Scalars['String']>;
   /** Array of category IDs, used to display objects from one category OR another */
-  categoryNotIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  categoryNotIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Filter the connection based on dates */
-  dateQuery?: InputMaybe<DateQueryInput>;
+  dateQuery: InputMaybe<DateQueryInput>;
   /** True for objects with passwords; False for objects without passwords; null for all objects with or without passwords */
-  hasPassword?: InputMaybe<Scalars['Boolean']>;
+  hasPassword: InputMaybe<Scalars['Boolean']>;
   /** Specific ID of the object */
-  id?: InputMaybe<Scalars['Int']>;
+  id: InputMaybe<Scalars['Int']>;
   /** Array of IDs for the objects to retrieve */
-  in?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  in: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Get objects with a specific mimeType property */
-  mimeType?: InputMaybe<MimeTypeEnum>;
+  mimeType: InputMaybe<MimeTypeEnum>;
   /** Slug / post_name of the object */
-  name?: InputMaybe<Scalars['String']>;
+  name: InputMaybe<Scalars['String']>;
   /** Specify objects to retrieve. Use slugs */
-  nameIn?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  nameIn: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
-  notIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  notIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** What paramater to use to order the objects by. */
-  orderby?: InputMaybe<Array<InputMaybe<PostObjectsConnectionOrderbyInput>>>;
+  orderby: InputMaybe<Array<InputMaybe<PostObjectsConnectionOrderbyInput>>>;
   /** Use ID to return only children. Use 0 to return only top-level items */
-  parent?: InputMaybe<Scalars['ID']>;
+  parent: InputMaybe<Scalars['ID']>;
   /** Specify objects whose parent is in an array */
-  parentIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  parentIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Specify posts whose parent is not in an array */
-  parentNotIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  parentNotIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Show posts with a specific password. */
-  password?: InputMaybe<Scalars['String']>;
+  password: InputMaybe<Scalars['String']>;
   /** Show Posts based on a keyword search */
-  search?: InputMaybe<Scalars['String']>;
-  stati?: InputMaybe<Array<InputMaybe<PostStatusEnum>>>;
-  status?: InputMaybe<PostStatusEnum>;
+  search: InputMaybe<Scalars['String']>;
+  stati: InputMaybe<Array<InputMaybe<PostStatusEnum>>>;
+  status: InputMaybe<PostStatusEnum>;
   /** Tag Slug */
-  tag?: InputMaybe<Scalars['String']>;
+  tag: InputMaybe<Scalars['String']>;
   /** Use Tag ID */
-  tagId?: InputMaybe<Scalars['String']>;
+  tagId: InputMaybe<Scalars['String']>;
   /** Array of tag IDs, used to display objects from one tag OR another */
-  tagIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  tagIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Array of tag IDs, used to display objects from one tag OR another */
-  tagNotIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  tagNotIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Array of tag slugs, used to display objects from one tag OR another */
-  tagSlugAnd?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  tagSlugAnd: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   /** Array of tag slugs, used to exclude objects in specified tags */
-  tagSlugIn?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  tagSlugIn: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   /** Title of the object */
-  title?: InputMaybe<Scalars['String']>;
+  title: InputMaybe<Scalars['String']>;
 };
 
 /** Connection between the tag type and the Taxonomy type */
@@ -6331,10 +6331,10 @@ export type Taxonomy = Node & {
 
 /** A taxonomy object */
 export type TaxonomyConnectedContentTypesArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
+  after: InputMaybe<Scalars['String']>;
+  before: InputMaybe<Scalars['String']>;
+  first: InputMaybe<Scalars['Int']>;
+  last: InputMaybe<Scalars['Int']>;
 };
 
 /** Allowed taxonomies */
@@ -6412,19 +6412,19 @@ export type TermNode = {
 
 /** Terms are nodes within a Taxonomy, used to group and relate other nodes. */
 export type TermNodeEnqueuedScriptsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
+  after: InputMaybe<Scalars['String']>;
+  before: InputMaybe<Scalars['String']>;
+  first: InputMaybe<Scalars['Int']>;
+  last: InputMaybe<Scalars['Int']>;
 };
 
 
 /** Terms are nodes within a Taxonomy, used to group and relate other nodes. */
 export type TermNodeEnqueuedStylesheetsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
+  after: InputMaybe<Scalars['String']>;
+  before: InputMaybe<Scalars['String']>;
+  first: InputMaybe<Scalars['Int']>;
+  last: InputMaybe<Scalars['Int']>;
 };
 
 /** The Type of Identifier used to fetch a single resource. Default is "ID". To be used along with the "id" field. */
@@ -7447,23 +7447,23 @@ export type UniformResourceIdentifiable = {
 
 /** Input for the updateActionMonitorAction mutation */
 export type UpdateActionMonitorActionInput = {
-  clientMutationId?: InputMaybe<Scalars['String']>;
+  clientMutationId: InputMaybe<Scalars['String']>;
   /** The content of the object */
-  content?: InputMaybe<Scalars['String']>;
+  content: InputMaybe<Scalars['String']>;
   /** The date of the object. Preferable to enter as year/month/day (e.g. 01/31/2017) as it will rearrange date as fit if it is not specified. Incomplete dates may have unintended results for example, "2017" as the input will use current date with timestamp 20:17  */
-  date?: InputMaybe<Scalars['String']>;
+  date: InputMaybe<Scalars['String']>;
   /** The ID of the ActionMonitorAction object */
   id: Scalars['ID'];
   /** A field used for ordering posts. This is typically used with nav menu items or for special ordering of hierarchical content types. */
-  menuOrder?: InputMaybe<Scalars['Int']>;
+  menuOrder: InputMaybe<Scalars['Int']>;
   /** The password used to protect the content of the object */
-  password?: InputMaybe<Scalars['String']>;
+  password: InputMaybe<Scalars['String']>;
   /** The slug of the object */
-  slug?: InputMaybe<Scalars['String']>;
+  slug: InputMaybe<Scalars['String']>;
   /** The status of the object */
-  status?: InputMaybe<PostStatusEnum>;
+  status: InputMaybe<PostStatusEnum>;
   /** The title of the object */
-  title?: InputMaybe<Scalars['String']>;
+  title: InputMaybe<Scalars['String']>;
 };
 
 /** The payload for the updateActionMonitorAction mutation */
@@ -7476,18 +7476,18 @@ export type UpdateActionMonitorActionPayload = {
 /** Input for the UpdateCategory mutation */
 export type UpdateCategoryInput = {
   /** The slug that the category will be an alias of */
-  aliasOf?: InputMaybe<Scalars['String']>;
-  clientMutationId?: InputMaybe<Scalars['String']>;
+  aliasOf: InputMaybe<Scalars['String']>;
+  clientMutationId: InputMaybe<Scalars['String']>;
   /** The description of the category object */
-  description?: InputMaybe<Scalars['String']>;
+  description: InputMaybe<Scalars['String']>;
   /** The ID of the category object to update */
   id: Scalars['ID'];
   /** The name of the category object to mutate */
-  name?: InputMaybe<Scalars['String']>;
+  name: InputMaybe<Scalars['String']>;
   /** The ID of the category that should be set as the parent */
-  parentId?: InputMaybe<Scalars['ID']>;
+  parentId: InputMaybe<Scalars['ID']>;
   /** If this argument exists then the slug will be checked to see if it is not an existing valid term. If that check succeeds (it is not a valid term), then it is added and the term id is given. If it fails, then a check is made to whether the taxonomy is hierarchical and the parent argument is not empty. If the second check succeeds, the term will be inserted and the term id will be given. If the slug argument is empty, then it will be calculated from the term name. */
-  slug?: InputMaybe<Scalars['String']>;
+  slug: InputMaybe<Scalars['String']>;
 };
 
 /** The payload for the UpdateCategory mutation */
@@ -7501,26 +7501,26 @@ export type UpdateCategoryPayload = {
 /** Input for the updateComment mutation */
 export type UpdateCommentInput = {
   /** The approval status of the comment. */
-  approved?: InputMaybe<Scalars['String']>;
+  approved: InputMaybe<Scalars['String']>;
   /** The name of the comment's author. */
-  author?: InputMaybe<Scalars['String']>;
+  author: InputMaybe<Scalars['String']>;
   /** The email of the comment's author. */
-  authorEmail?: InputMaybe<Scalars['String']>;
+  authorEmail: InputMaybe<Scalars['String']>;
   /** The url of the comment's author. */
-  authorUrl?: InputMaybe<Scalars['String']>;
-  clientMutationId?: InputMaybe<Scalars['String']>;
+  authorUrl: InputMaybe<Scalars['String']>;
+  clientMutationId: InputMaybe<Scalars['String']>;
   /** The ID of the post object the comment belongs to. */
-  commentOn?: InputMaybe<Scalars['Int']>;
+  commentOn: InputMaybe<Scalars['Int']>;
   /** Content of the comment. */
-  content?: InputMaybe<Scalars['String']>;
+  content: InputMaybe<Scalars['String']>;
   /** The date of the object. Preferable to enter as year/month/day ( e.g. 01/31/2017 ) as it will rearrange date as fit if it is not specified. Incomplete dates may have unintended results for example, "2017" as the input will use current date with timestamp 20:17  */
-  date?: InputMaybe<Scalars['String']>;
+  date: InputMaybe<Scalars['String']>;
   /** The ID of the comment being updated. */
   id: Scalars['ID'];
   /** Parent comment of current comment. */
-  parent?: InputMaybe<Scalars['ID']>;
+  parent: InputMaybe<Scalars['ID']>;
   /** Type of comment. */
-  type?: InputMaybe<Scalars['String']>;
+  type: InputMaybe<Scalars['String']>;
 };
 
 /** The payload for the updateComment mutation */
@@ -7536,36 +7536,36 @@ export type UpdateCommentPayload = {
 /** Input for the updateMediaItem mutation */
 export type UpdateMediaItemInput = {
   /** Alternative text to display when mediaItem is not displayed */
-  altText?: InputMaybe<Scalars['String']>;
+  altText: InputMaybe<Scalars['String']>;
   /** The userId to assign as the author of the mediaItem */
-  authorId?: InputMaybe<Scalars['ID']>;
+  authorId: InputMaybe<Scalars['ID']>;
   /** The caption for the mediaItem */
-  caption?: InputMaybe<Scalars['String']>;
-  clientMutationId?: InputMaybe<Scalars['String']>;
+  caption: InputMaybe<Scalars['String']>;
+  clientMutationId: InputMaybe<Scalars['String']>;
   /** The comment status for the mediaItem */
-  commentStatus?: InputMaybe<Scalars['String']>;
+  commentStatus: InputMaybe<Scalars['String']>;
   /** The date of the mediaItem */
-  date?: InputMaybe<Scalars['String']>;
+  date: InputMaybe<Scalars['String']>;
   /** The date (in GMT zone) of the mediaItem */
-  dateGmt?: InputMaybe<Scalars['String']>;
+  dateGmt: InputMaybe<Scalars['String']>;
   /** Description of the mediaItem */
-  description?: InputMaybe<Scalars['String']>;
+  description: InputMaybe<Scalars['String']>;
   /** The file name of the mediaItem */
-  filePath?: InputMaybe<Scalars['String']>;
+  filePath: InputMaybe<Scalars['String']>;
   /** The file type of the mediaItem */
-  fileType?: InputMaybe<MimeTypeEnum>;
+  fileType: InputMaybe<MimeTypeEnum>;
   /** The ID of the mediaItem object */
   id: Scalars['ID'];
   /** The WordPress post ID or the graphQL postId of the parent object */
-  parentId?: InputMaybe<Scalars['ID']>;
+  parentId: InputMaybe<Scalars['ID']>;
   /** The ping status for the mediaItem */
-  pingStatus?: InputMaybe<Scalars['String']>;
+  pingStatus: InputMaybe<Scalars['String']>;
   /** The slug of the mediaItem */
-  slug?: InputMaybe<Scalars['String']>;
+  slug: InputMaybe<Scalars['String']>;
   /** The status of the mediaItem */
-  status?: InputMaybe<MediaItemStatusEnum>;
+  status: InputMaybe<MediaItemStatusEnum>;
   /** The title of the mediaItem */
-  title?: InputMaybe<Scalars['String']>;
+  title: InputMaybe<Scalars['String']>;
 };
 
 /** The payload for the updateMediaItem mutation */
@@ -7578,28 +7578,28 @@ export type UpdateMediaItemPayload = {
 /** Input for the updatePage mutation */
 export type UpdatePageInput = {
   /** The userId to assign as the author of the object */
-  authorId?: InputMaybe<Scalars['ID']>;
-  clientMutationId?: InputMaybe<Scalars['String']>;
+  authorId: InputMaybe<Scalars['ID']>;
+  clientMutationId: InputMaybe<Scalars['String']>;
   /** The comment status for the object */
-  commentStatus?: InputMaybe<Scalars['String']>;
+  commentStatus: InputMaybe<Scalars['String']>;
   /** The content of the object */
-  content?: InputMaybe<Scalars['String']>;
+  content: InputMaybe<Scalars['String']>;
   /** The date of the object. Preferable to enter as year/month/day (e.g. 01/31/2017) as it will rearrange date as fit if it is not specified. Incomplete dates may have unintended results for example, "2017" as the input will use current date with timestamp 20:17  */
-  date?: InputMaybe<Scalars['String']>;
+  date: InputMaybe<Scalars['String']>;
   /** The ID of the page object */
   id: Scalars['ID'];
   /** A field used for ordering posts. This is typically used with nav menu items or for special ordering of hierarchical content types. */
-  menuOrder?: InputMaybe<Scalars['Int']>;
+  menuOrder: InputMaybe<Scalars['Int']>;
   /** The ID of the parent object */
-  parentId?: InputMaybe<Scalars['ID']>;
+  parentId: InputMaybe<Scalars['ID']>;
   /** The password used to protect the content of the object */
-  password?: InputMaybe<Scalars['String']>;
+  password: InputMaybe<Scalars['String']>;
   /** The slug of the object */
-  slug?: InputMaybe<Scalars['String']>;
+  slug: InputMaybe<Scalars['String']>;
   /** The status of the object */
-  status?: InputMaybe<PostStatusEnum>;
+  status: InputMaybe<PostStatusEnum>;
   /** The title of the object */
-  title?: InputMaybe<Scalars['String']>;
+  title: InputMaybe<Scalars['String']>;
 };
 
 /** The payload for the updatePage mutation */
@@ -7612,16 +7612,16 @@ export type UpdatePagePayload = {
 /** Input for the UpdatePostFormat mutation */
 export type UpdatePostFormatInput = {
   /** The slug that the post_format will be an alias of */
-  aliasOf?: InputMaybe<Scalars['String']>;
-  clientMutationId?: InputMaybe<Scalars['String']>;
+  aliasOf: InputMaybe<Scalars['String']>;
+  clientMutationId: InputMaybe<Scalars['String']>;
   /** The description of the post_format object */
-  description?: InputMaybe<Scalars['String']>;
+  description: InputMaybe<Scalars['String']>;
   /** The ID of the postFormat object to update */
   id: Scalars['ID'];
   /** The name of the post_format object to mutate */
-  name?: InputMaybe<Scalars['String']>;
+  name: InputMaybe<Scalars['String']>;
   /** If this argument exists then the slug will be checked to see if it is not an existing valid term. If that check succeeds (it is not a valid term), then it is added and the term id is given. If it fails, then a check is made to whether the taxonomy is hierarchical and the parent argument is not empty. If the second check succeeds, the term will be inserted and the term id will be given. If the slug argument is empty, then it will be calculated from the term name. */
-  slug?: InputMaybe<Scalars['String']>;
+  slug: InputMaybe<Scalars['String']>;
 };
 
 /** The payload for the UpdatePostFormat mutation */
@@ -7635,40 +7635,40 @@ export type UpdatePostFormatPayload = {
 /** Input for the updatePost mutation */
 export type UpdatePostInput = {
   /** The userId to assign as the author of the object */
-  authorId?: InputMaybe<Scalars['ID']>;
+  authorId: InputMaybe<Scalars['ID']>;
   /** Set connections between the post and categories */
-  categories?: InputMaybe<PostCategoriesInput>;
-  clientMutationId?: InputMaybe<Scalars['String']>;
+  categories: InputMaybe<PostCategoriesInput>;
+  clientMutationId: InputMaybe<Scalars['String']>;
   /** The comment status for the object */
-  commentStatus?: InputMaybe<Scalars['String']>;
+  commentStatus: InputMaybe<Scalars['String']>;
   /** The content of the object */
-  content?: InputMaybe<Scalars['String']>;
+  content: InputMaybe<Scalars['String']>;
   /** The date of the object. Preferable to enter as year/month/day (e.g. 01/31/2017) as it will rearrange date as fit if it is not specified. Incomplete dates may have unintended results for example, "2017" as the input will use current date with timestamp 20:17  */
-  date?: InputMaybe<Scalars['String']>;
+  date: InputMaybe<Scalars['String']>;
   /** The excerpt of the object */
-  excerpt?: InputMaybe<Scalars['String']>;
+  excerpt: InputMaybe<Scalars['String']>;
   /** The ID of the post object */
   id: Scalars['ID'];
   /** A field used for ordering posts. This is typically used with nav menu items or for special ordering of hierarchical content types. */
-  menuOrder?: InputMaybe<Scalars['Int']>;
+  menuOrder: InputMaybe<Scalars['Int']>;
   /** The password used to protect the content of the object */
-  password?: InputMaybe<Scalars['String']>;
+  password: InputMaybe<Scalars['String']>;
   /** The ping status for the object */
-  pingStatus?: InputMaybe<Scalars['String']>;
+  pingStatus: InputMaybe<Scalars['String']>;
   /** URLs that have been pinged. */
-  pinged?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  pinged: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   /** Set connections between the post and postFormats */
-  postFormats?: InputMaybe<PostPostFormatsInput>;
+  postFormats: InputMaybe<PostPostFormatsInput>;
   /** The slug of the object */
-  slug?: InputMaybe<Scalars['String']>;
+  slug: InputMaybe<Scalars['String']>;
   /** The status of the object */
-  status?: InputMaybe<PostStatusEnum>;
+  status: InputMaybe<PostStatusEnum>;
   /** Set connections between the post and tags */
-  tags?: InputMaybe<PostTagsInput>;
+  tags: InputMaybe<PostTagsInput>;
   /** The title of the object */
-  title?: InputMaybe<Scalars['String']>;
+  title: InputMaybe<Scalars['String']>;
   /** URLs queued to be pinged. */
-  toPing?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  toPing: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
 };
 
 /** The payload for the updatePost mutation */
@@ -7680,37 +7680,37 @@ export type UpdatePostPayload = {
 
 /** Input for the updateSettings mutation */
 export type UpdateSettingsInput = {
-  clientMutationId?: InputMaybe<Scalars['String']>;
+  clientMutationId: InputMaybe<Scalars['String']>;
   /** Allow people to post comments on new articles. */
-  discussionSettingsDefaultCommentStatus?: InputMaybe<Scalars['String']>;
+  discussionSettingsDefaultCommentStatus: InputMaybe<Scalars['String']>;
   /** Allow link notifications from other blogs (pingbacks and trackbacks) on new articles. */
-  discussionSettingsDefaultPingStatus?: InputMaybe<Scalars['String']>;
+  discussionSettingsDefaultPingStatus: InputMaybe<Scalars['String']>;
   /** A date format for all date strings. */
-  generalSettingsDateFormat?: InputMaybe<Scalars['String']>;
+  generalSettingsDateFormat: InputMaybe<Scalars['String']>;
   /** Site tagline. */
-  generalSettingsDescription?: InputMaybe<Scalars['String']>;
+  generalSettingsDescription: InputMaybe<Scalars['String']>;
   /** This address is used for admin purposes, like new user notification. */
-  generalSettingsEmail?: InputMaybe<Scalars['String']>;
+  generalSettingsEmail: InputMaybe<Scalars['String']>;
   /** WordPress locale code. */
-  generalSettingsLanguage?: InputMaybe<Scalars['String']>;
+  generalSettingsLanguage: InputMaybe<Scalars['String']>;
   /** A day number of the week that the week should start on. */
-  generalSettingsStartOfWeek?: InputMaybe<Scalars['Int']>;
+  generalSettingsStartOfWeek: InputMaybe<Scalars['Int']>;
   /** A time format for all time strings. */
-  generalSettingsTimeFormat?: InputMaybe<Scalars['String']>;
+  generalSettingsTimeFormat: InputMaybe<Scalars['String']>;
   /** A city in the same timezone as you. */
-  generalSettingsTimezone?: InputMaybe<Scalars['String']>;
+  generalSettingsTimezone: InputMaybe<Scalars['String']>;
   /** Site title. */
-  generalSettingsTitle?: InputMaybe<Scalars['String']>;
+  generalSettingsTitle: InputMaybe<Scalars['String']>;
   /** Site URL. */
-  generalSettingsUrl?: InputMaybe<Scalars['String']>;
+  generalSettingsUrl: InputMaybe<Scalars['String']>;
   /** Blog pages show at most. */
-  readingSettingsPostsPerPage?: InputMaybe<Scalars['Int']>;
+  readingSettingsPostsPerPage: InputMaybe<Scalars['Int']>;
   /** Default post category. */
-  writingSettingsDefaultCategory?: InputMaybe<Scalars['Int']>;
+  writingSettingsDefaultCategory: InputMaybe<Scalars['Int']>;
   /** Default post format. */
-  writingSettingsDefaultPostFormat?: InputMaybe<Scalars['String']>;
+  writingSettingsDefaultPostFormat: InputMaybe<Scalars['String']>;
   /** Convert emoticons like :-) and :-P to graphics on display. */
-  writingSettingsUseSmilies?: InputMaybe<Scalars['Boolean']>;
+  writingSettingsUseSmilies: InputMaybe<Scalars['Boolean']>;
 };
 
 /** The payload for the updateSettings mutation */
@@ -7727,16 +7727,16 @@ export type UpdateSettingsPayload = {
 /** Input for the UpdateTag mutation */
 export type UpdateTagInput = {
   /** The slug that the post_tag will be an alias of */
-  aliasOf?: InputMaybe<Scalars['String']>;
-  clientMutationId?: InputMaybe<Scalars['String']>;
+  aliasOf: InputMaybe<Scalars['String']>;
+  clientMutationId: InputMaybe<Scalars['String']>;
   /** The description of the post_tag object */
-  description?: InputMaybe<Scalars['String']>;
+  description: InputMaybe<Scalars['String']>;
   /** The ID of the tag object to update */
   id: Scalars['ID'];
   /** The name of the post_tag object to mutate */
-  name?: InputMaybe<Scalars['String']>;
+  name: InputMaybe<Scalars['String']>;
   /** If this argument exists then the slug will be checked to see if it is not an existing valid term. If that check succeeds (it is not a valid term), then it is added and the term id is given. If it fails, then a check is made to whether the taxonomy is hierarchical and the parent argument is not empty. If the second check succeeds, the term will be inserted and the term id will be given. If the slug argument is empty, then it will be calculated from the term name. */
-  slug?: InputMaybe<Scalars['String']>;
+  slug: InputMaybe<Scalars['String']>;
 };
 
 /** The payload for the UpdateTag mutation */
@@ -7750,40 +7750,40 @@ export type UpdateTagPayload = {
 /** Input for the updateUser mutation */
 export type UpdateUserInput = {
   /** User's AOL IM account. */
-  aim?: InputMaybe<Scalars['String']>;
-  clientMutationId?: InputMaybe<Scalars['String']>;
+  aim: InputMaybe<Scalars['String']>;
+  clientMutationId: InputMaybe<Scalars['String']>;
   /** A string containing content about the user. */
-  description?: InputMaybe<Scalars['String']>;
+  description: InputMaybe<Scalars['String']>;
   /** A string that will be shown on the site. Defaults to user's username. It is likely that you will want to change this, for both appearance and security through obscurity (that is if you dont use and delete the default admin user). */
-  displayName?: InputMaybe<Scalars['String']>;
+  displayName: InputMaybe<Scalars['String']>;
   /** A string containing the user's email address. */
-  email?: InputMaybe<Scalars['String']>;
+  email: InputMaybe<Scalars['String']>;
   /** 	The user's first name. */
-  firstName?: InputMaybe<Scalars['String']>;
+  firstName: InputMaybe<Scalars['String']>;
   /** The ID of the user */
   id: Scalars['ID'];
   /** User's Jabber account. */
-  jabber?: InputMaybe<Scalars['String']>;
+  jabber: InputMaybe<Scalars['String']>;
   /** The user's last name. */
-  lastName?: InputMaybe<Scalars['String']>;
+  lastName: InputMaybe<Scalars['String']>;
   /** User's locale. */
-  locale?: InputMaybe<Scalars['String']>;
+  locale: InputMaybe<Scalars['String']>;
   /** A string that contains a URL-friendly name for the user. The default is the user's username. */
-  nicename?: InputMaybe<Scalars['String']>;
+  nicename: InputMaybe<Scalars['String']>;
   /** The user's nickname, defaults to the user's username. */
-  nickname?: InputMaybe<Scalars['String']>;
+  nickname: InputMaybe<Scalars['String']>;
   /** A string that contains the plain text password for the user. */
-  password?: InputMaybe<Scalars['String']>;
+  password: InputMaybe<Scalars['String']>;
   /** The date the user registered. Format is Y-m-d H:i:s. */
-  registered?: InputMaybe<Scalars['String']>;
+  registered: InputMaybe<Scalars['String']>;
   /** A string for whether to enable the rich editor or not. False if not empty. */
-  richEditing?: InputMaybe<Scalars['String']>;
+  richEditing: InputMaybe<Scalars['String']>;
   /** An array of roles to be assigned to the user. */
-  roles?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  roles: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   /** A string containing the user's URL for the user's web site. */
-  websiteUrl?: InputMaybe<Scalars['String']>;
+  websiteUrl: InputMaybe<Scalars['String']>;
   /** User's Yahoo IM account. */
-  yim?: InputMaybe<Scalars['String']>;
+  yim: InputMaybe<Scalars['String']>;
 };
 
 /** The payload for the updateUser mutation */
@@ -7862,86 +7862,86 @@ export type User = Commenter & DatabaseIdentifier & Node & UniformResourceIdenti
 
 /** A User object */
 export type UserAvatarArgs = {
-  forceDefault?: InputMaybe<Scalars['Boolean']>;
-  rating?: InputMaybe<AvatarRatingEnum>;
+  forceDefault: InputMaybe<Scalars['Boolean']>;
+  rating: InputMaybe<AvatarRatingEnum>;
   size?: InputMaybe<Scalars['Int']>;
 };
 
 
 /** A User object */
 export type UserCommentsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  where?: InputMaybe<UserToCommentConnectionWhereArgs>;
+  after: InputMaybe<Scalars['String']>;
+  before: InputMaybe<Scalars['String']>;
+  first: InputMaybe<Scalars['Int']>;
+  last: InputMaybe<Scalars['Int']>;
+  where: InputMaybe<UserToCommentConnectionWhereArgs>;
 };
 
 
 /** A User object */
 export type UserEnqueuedScriptsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
+  after: InputMaybe<Scalars['String']>;
+  before: InputMaybe<Scalars['String']>;
+  first: InputMaybe<Scalars['Int']>;
+  last: InputMaybe<Scalars['Int']>;
 };
 
 
 /** A User object */
 export type UserEnqueuedStylesheetsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
+  after: InputMaybe<Scalars['String']>;
+  before: InputMaybe<Scalars['String']>;
+  first: InputMaybe<Scalars['Int']>;
+  last: InputMaybe<Scalars['Int']>;
 };
 
 
 /** A User object */
 export type UserMediaItemsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  where?: InputMaybe<UserToMediaItemConnectionWhereArgs>;
+  after: InputMaybe<Scalars['String']>;
+  before: InputMaybe<Scalars['String']>;
+  first: InputMaybe<Scalars['Int']>;
+  last: InputMaybe<Scalars['Int']>;
+  where: InputMaybe<UserToMediaItemConnectionWhereArgs>;
 };
 
 
 /** A User object */
 export type UserPagesArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  where?: InputMaybe<UserToPageConnectionWhereArgs>;
+  after: InputMaybe<Scalars['String']>;
+  before: InputMaybe<Scalars['String']>;
+  first: InputMaybe<Scalars['Int']>;
+  last: InputMaybe<Scalars['Int']>;
+  where: InputMaybe<UserToPageConnectionWhereArgs>;
 };
 
 
 /** A User object */
 export type UserPostsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  where?: InputMaybe<UserToPostConnectionWhereArgs>;
+  after: InputMaybe<Scalars['String']>;
+  before: InputMaybe<Scalars['String']>;
+  first: InputMaybe<Scalars['Int']>;
+  last: InputMaybe<Scalars['Int']>;
+  where: InputMaybe<UserToPostConnectionWhereArgs>;
 };
 
 
 /** A User object */
 export type UserRevisionsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
-  where?: InputMaybe<UserToContentRevisionUnionConnectionWhereArgs>;
+  after: InputMaybe<Scalars['String']>;
+  before: InputMaybe<Scalars['String']>;
+  first: InputMaybe<Scalars['Int']>;
+  last: InputMaybe<Scalars['Int']>;
+  where: InputMaybe<UserToContentRevisionUnionConnectionWhereArgs>;
 };
 
 
 /** A User object */
 export type UserRolesArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
+  after: InputMaybe<Scalars['String']>;
+  before: InputMaybe<Scalars['String']>;
+  first: InputMaybe<Scalars['Int']>;
+  last: InputMaybe<Scalars['Int']>;
 };
 
 /** The Type of Identifier used to fetch a single User node. To be used along with the "id" field. Default is "ID". */
@@ -8007,63 +8007,63 @@ export type UserToCommentConnectionEdge = {
 /** Arguments for filtering the UserToCommentConnection connection */
 export type UserToCommentConnectionWhereArgs = {
   /** Comment author email address. */
-  authorEmail?: InputMaybe<Scalars['String']>;
+  authorEmail: InputMaybe<Scalars['String']>;
   /** Array of author IDs to include comments for. */
-  authorIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  authorIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Array of author IDs to exclude comments for. */
-  authorNotIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  authorNotIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Comment author URL. */
-  authorUrl?: InputMaybe<Scalars['String']>;
+  authorUrl: InputMaybe<Scalars['String']>;
   /** Array of comment IDs to include. */
-  commentIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  commentIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Array of IDs of users whose unapproved comments will be returned by the query regardless of status. */
-  commentNotIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  commentNotIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Include comments of a given type. */
-  commentType?: InputMaybe<Scalars['String']>;
+  commentType: InputMaybe<Scalars['String']>;
   /** Include comments from a given array of comment types. */
-  commentTypeIn?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  commentTypeIn: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   /** Exclude comments from a given array of comment types. */
-  commentTypeNotIn?: InputMaybe<Scalars['String']>;
+  commentTypeNotIn: InputMaybe<Scalars['String']>;
   /** Content object author ID to limit results by. */
-  contentAuthor?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  contentAuthor: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Array of author IDs to retrieve comments for. */
-  contentAuthorIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  contentAuthorIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Array of author IDs *not* to retrieve comments for. */
-  contentAuthorNotIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  contentAuthorNotIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Limit results to those affiliated with a given content object ID. */
-  contentId?: InputMaybe<Scalars['ID']>;
+  contentId: InputMaybe<Scalars['ID']>;
   /** Array of content object IDs to include affiliated comments for. */
-  contentIdIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  contentIdIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Array of content object IDs to exclude affiliated comments for. */
-  contentIdNotIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  contentIdNotIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Content object name to retrieve affiliated comments for. */
-  contentName?: InputMaybe<Scalars['String']>;
+  contentName: InputMaybe<Scalars['String']>;
   /** Content Object parent ID to retrieve affiliated comments for. */
-  contentParent?: InputMaybe<Scalars['Int']>;
+  contentParent: InputMaybe<Scalars['Int']>;
   /** Array of content object statuses to retrieve affiliated comments for. Pass 'any' to match any value. */
-  contentStatus?: InputMaybe<Array<InputMaybe<PostStatusEnum>>>;
+  contentStatus: InputMaybe<Array<InputMaybe<PostStatusEnum>>>;
   /** Content object type or array of types to retrieve affiliated comments for. Pass 'any' to match any value. */
-  contentType?: InputMaybe<Array<InputMaybe<ContentTypeEnum>>>;
+  contentType: InputMaybe<Array<InputMaybe<ContentTypeEnum>>>;
   /** Array of IDs or email addresses of users whose unapproved comments will be returned by the query regardless of $status. Default empty */
-  includeUnapproved?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  includeUnapproved: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Karma score to retrieve matching comments for. */
-  karma?: InputMaybe<Scalars['Int']>;
+  karma: InputMaybe<Scalars['Int']>;
   /** The cardinality of the order of the connection */
-  order?: InputMaybe<OrderEnum>;
+  order: InputMaybe<OrderEnum>;
   /** Field to order the comments by. */
-  orderby?: InputMaybe<CommentsConnectionOrderbyEnum>;
+  orderby: InputMaybe<CommentsConnectionOrderbyEnum>;
   /** Parent ID of comment to retrieve children of. */
-  parent?: InputMaybe<Scalars['Int']>;
+  parent: InputMaybe<Scalars['Int']>;
   /** Array of parent IDs of comments to retrieve children for. */
-  parentIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  parentIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Array of parent IDs of comments *not* to retrieve children for. */
-  parentNotIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  parentNotIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Search term(s) to retrieve matching comments for. */
-  search?: InputMaybe<Scalars['String']>;
+  search: InputMaybe<Scalars['String']>;
   /** Comment status to limit results by. */
-  status?: InputMaybe<Scalars['String']>;
+  status: InputMaybe<Scalars['String']>;
   /** Include comments for a specific user ID. */
-  userId?: InputMaybe<Scalars['ID']>;
+  userId: InputMaybe<Scalars['ID']>;
 };
 
 /** Connection between the User type and the ContentRevisionUnion type */
@@ -8089,37 +8089,37 @@ export type UserToContentRevisionUnionConnectionEdge = {
 /** Arguments for filtering the UserToContentRevisionUnionConnection connection */
 export type UserToContentRevisionUnionConnectionWhereArgs = {
   /** Filter the connection based on dates */
-  dateQuery?: InputMaybe<DateQueryInput>;
+  dateQuery: InputMaybe<DateQueryInput>;
   /** True for objects with passwords; False for objects without passwords; null for all objects with or without passwords */
-  hasPassword?: InputMaybe<Scalars['Boolean']>;
+  hasPassword: InputMaybe<Scalars['Boolean']>;
   /** Specific ID of the object */
-  id?: InputMaybe<Scalars['Int']>;
+  id: InputMaybe<Scalars['Int']>;
   /** Array of IDs for the objects to retrieve */
-  in?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  in: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Get objects with a specific mimeType property */
-  mimeType?: InputMaybe<MimeTypeEnum>;
+  mimeType: InputMaybe<MimeTypeEnum>;
   /** Slug / post_name of the object */
-  name?: InputMaybe<Scalars['String']>;
+  name: InputMaybe<Scalars['String']>;
   /** Specify objects to retrieve. Use slugs */
-  nameIn?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  nameIn: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
-  notIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  notIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** What paramater to use to order the objects by. */
-  orderby?: InputMaybe<Array<InputMaybe<PostObjectsConnectionOrderbyInput>>>;
+  orderby: InputMaybe<Array<InputMaybe<PostObjectsConnectionOrderbyInput>>>;
   /** Use ID to return only children. Use 0 to return only top-level items */
-  parent?: InputMaybe<Scalars['ID']>;
+  parent: InputMaybe<Scalars['ID']>;
   /** Specify objects whose parent is in an array */
-  parentIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  parentIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Specify posts whose parent is not in an array */
-  parentNotIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  parentNotIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Show posts with a specific password. */
-  password?: InputMaybe<Scalars['String']>;
+  password: InputMaybe<Scalars['String']>;
   /** Show Posts based on a keyword search */
-  search?: InputMaybe<Scalars['String']>;
-  stati?: InputMaybe<Array<InputMaybe<PostStatusEnum>>>;
-  status?: InputMaybe<PostStatusEnum>;
+  search: InputMaybe<Scalars['String']>;
+  stati: InputMaybe<Array<InputMaybe<PostStatusEnum>>>;
+  status: InputMaybe<PostStatusEnum>;
   /** Title of the object */
-  title?: InputMaybe<Scalars['String']>;
+  title: InputMaybe<Scalars['String']>;
 };
 
 /** Connection between the User type and the EnqueuedScript type */
@@ -8185,45 +8185,45 @@ export type UserToMediaItemConnectionEdge = {
 /** Arguments for filtering the UserToMediaItemConnection connection */
 export type UserToMediaItemConnectionWhereArgs = {
   /** The user that's connected as the author of the object. Use the userId for the author object. */
-  author?: InputMaybe<Scalars['Int']>;
+  author: InputMaybe<Scalars['Int']>;
   /** Find objects connected to author(s) in the array of author's userIds */
-  authorIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  authorIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Find objects connected to the author by the author's nicename */
-  authorName?: InputMaybe<Scalars['String']>;
+  authorName: InputMaybe<Scalars['String']>;
   /** Find objects NOT connected to author(s) in the array of author's userIds */
-  authorNotIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  authorNotIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Filter the connection based on dates */
-  dateQuery?: InputMaybe<DateQueryInput>;
+  dateQuery: InputMaybe<DateQueryInput>;
   /** True for objects with passwords; False for objects without passwords; null for all objects with or without passwords */
-  hasPassword?: InputMaybe<Scalars['Boolean']>;
+  hasPassword: InputMaybe<Scalars['Boolean']>;
   /** Specific ID of the object */
-  id?: InputMaybe<Scalars['Int']>;
+  id: InputMaybe<Scalars['Int']>;
   /** Array of IDs for the objects to retrieve */
-  in?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  in: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Get objects with a specific mimeType property */
-  mimeType?: InputMaybe<MimeTypeEnum>;
+  mimeType: InputMaybe<MimeTypeEnum>;
   /** Slug / post_name of the object */
-  name?: InputMaybe<Scalars['String']>;
+  name: InputMaybe<Scalars['String']>;
   /** Specify objects to retrieve. Use slugs */
-  nameIn?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  nameIn: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
-  notIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  notIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** What paramater to use to order the objects by. */
-  orderby?: InputMaybe<Array<InputMaybe<PostObjectsConnectionOrderbyInput>>>;
+  orderby: InputMaybe<Array<InputMaybe<PostObjectsConnectionOrderbyInput>>>;
   /** Use ID to return only children. Use 0 to return only top-level items */
-  parent?: InputMaybe<Scalars['ID']>;
+  parent: InputMaybe<Scalars['ID']>;
   /** Specify objects whose parent is in an array */
-  parentIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  parentIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Specify posts whose parent is not in an array */
-  parentNotIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  parentNotIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Show posts with a specific password. */
-  password?: InputMaybe<Scalars['String']>;
+  password: InputMaybe<Scalars['String']>;
   /** Show Posts based on a keyword search */
-  search?: InputMaybe<Scalars['String']>;
-  stati?: InputMaybe<Array<InputMaybe<PostStatusEnum>>>;
-  status?: InputMaybe<PostStatusEnum>;
+  search: InputMaybe<Scalars['String']>;
+  stati: InputMaybe<Array<InputMaybe<PostStatusEnum>>>;
+  status: InputMaybe<PostStatusEnum>;
   /** Title of the object */
-  title?: InputMaybe<Scalars['String']>;
+  title: InputMaybe<Scalars['String']>;
 };
 
 /** Connection between the User type and the page type */
@@ -8249,45 +8249,45 @@ export type UserToPageConnectionEdge = {
 /** Arguments for filtering the UserToPageConnection connection */
 export type UserToPageConnectionWhereArgs = {
   /** The user that's connected as the author of the object. Use the userId for the author object. */
-  author?: InputMaybe<Scalars['Int']>;
+  author: InputMaybe<Scalars['Int']>;
   /** Find objects connected to author(s) in the array of author's userIds */
-  authorIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  authorIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Find objects connected to the author by the author's nicename */
-  authorName?: InputMaybe<Scalars['String']>;
+  authorName: InputMaybe<Scalars['String']>;
   /** Find objects NOT connected to author(s) in the array of author's userIds */
-  authorNotIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  authorNotIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Filter the connection based on dates */
-  dateQuery?: InputMaybe<DateQueryInput>;
+  dateQuery: InputMaybe<DateQueryInput>;
   /** True for objects with passwords; False for objects without passwords; null for all objects with or without passwords */
-  hasPassword?: InputMaybe<Scalars['Boolean']>;
+  hasPassword: InputMaybe<Scalars['Boolean']>;
   /** Specific ID of the object */
-  id?: InputMaybe<Scalars['Int']>;
+  id: InputMaybe<Scalars['Int']>;
   /** Array of IDs for the objects to retrieve */
-  in?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  in: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Get objects with a specific mimeType property */
-  mimeType?: InputMaybe<MimeTypeEnum>;
+  mimeType: InputMaybe<MimeTypeEnum>;
   /** Slug / post_name of the object */
-  name?: InputMaybe<Scalars['String']>;
+  name: InputMaybe<Scalars['String']>;
   /** Specify objects to retrieve. Use slugs */
-  nameIn?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  nameIn: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
-  notIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  notIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** What paramater to use to order the objects by. */
-  orderby?: InputMaybe<Array<InputMaybe<PostObjectsConnectionOrderbyInput>>>;
+  orderby: InputMaybe<Array<InputMaybe<PostObjectsConnectionOrderbyInput>>>;
   /** Use ID to return only children. Use 0 to return only top-level items */
-  parent?: InputMaybe<Scalars['ID']>;
+  parent: InputMaybe<Scalars['ID']>;
   /** Specify objects whose parent is in an array */
-  parentIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  parentIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Specify posts whose parent is not in an array */
-  parentNotIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  parentNotIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Show posts with a specific password. */
-  password?: InputMaybe<Scalars['String']>;
+  password: InputMaybe<Scalars['String']>;
   /** Show Posts based on a keyword search */
-  search?: InputMaybe<Scalars['String']>;
-  stati?: InputMaybe<Array<InputMaybe<PostStatusEnum>>>;
-  status?: InputMaybe<PostStatusEnum>;
+  search: InputMaybe<Scalars['String']>;
+  stati: InputMaybe<Array<InputMaybe<PostStatusEnum>>>;
+  status: InputMaybe<PostStatusEnum>;
   /** Title of the object */
-  title?: InputMaybe<Scalars['String']>;
+  title: InputMaybe<Scalars['String']>;
 };
 
 /** Connection between the User type and the post type */
@@ -8313,65 +8313,65 @@ export type UserToPostConnectionEdge = {
 /** Arguments for filtering the UserToPostConnection connection */
 export type UserToPostConnectionWhereArgs = {
   /** The user that's connected as the author of the object. Use the userId for the author object. */
-  author?: InputMaybe<Scalars['Int']>;
+  author: InputMaybe<Scalars['Int']>;
   /** Find objects connected to author(s) in the array of author's userIds */
-  authorIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  authorIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Find objects connected to the author by the author's nicename */
-  authorName?: InputMaybe<Scalars['String']>;
+  authorName: InputMaybe<Scalars['String']>;
   /** Find objects NOT connected to author(s) in the array of author's userIds */
-  authorNotIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  authorNotIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Category ID */
-  categoryId?: InputMaybe<Scalars['Int']>;
+  categoryId: InputMaybe<Scalars['Int']>;
   /** Array of category IDs, used to display objects from one category OR another */
-  categoryIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  categoryIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Use Category Slug */
-  categoryName?: InputMaybe<Scalars['String']>;
+  categoryName: InputMaybe<Scalars['String']>;
   /** Array of category IDs, used to display objects from one category OR another */
-  categoryNotIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  categoryNotIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Filter the connection based on dates */
-  dateQuery?: InputMaybe<DateQueryInput>;
+  dateQuery: InputMaybe<DateQueryInput>;
   /** True for objects with passwords; False for objects without passwords; null for all objects with or without passwords */
-  hasPassword?: InputMaybe<Scalars['Boolean']>;
+  hasPassword: InputMaybe<Scalars['Boolean']>;
   /** Specific ID of the object */
-  id?: InputMaybe<Scalars['Int']>;
+  id: InputMaybe<Scalars['Int']>;
   /** Array of IDs for the objects to retrieve */
-  in?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  in: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Get objects with a specific mimeType property */
-  mimeType?: InputMaybe<MimeTypeEnum>;
+  mimeType: InputMaybe<MimeTypeEnum>;
   /** Slug / post_name of the object */
-  name?: InputMaybe<Scalars['String']>;
+  name: InputMaybe<Scalars['String']>;
   /** Specify objects to retrieve. Use slugs */
-  nameIn?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  nameIn: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
-  notIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  notIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** What paramater to use to order the objects by. */
-  orderby?: InputMaybe<Array<InputMaybe<PostObjectsConnectionOrderbyInput>>>;
+  orderby: InputMaybe<Array<InputMaybe<PostObjectsConnectionOrderbyInput>>>;
   /** Use ID to return only children. Use 0 to return only top-level items */
-  parent?: InputMaybe<Scalars['ID']>;
+  parent: InputMaybe<Scalars['ID']>;
   /** Specify objects whose parent is in an array */
-  parentIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  parentIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Specify posts whose parent is not in an array */
-  parentNotIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  parentNotIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Show posts with a specific password. */
-  password?: InputMaybe<Scalars['String']>;
+  password: InputMaybe<Scalars['String']>;
   /** Show Posts based on a keyword search */
-  search?: InputMaybe<Scalars['String']>;
-  stati?: InputMaybe<Array<InputMaybe<PostStatusEnum>>>;
-  status?: InputMaybe<PostStatusEnum>;
+  search: InputMaybe<Scalars['String']>;
+  stati: InputMaybe<Array<InputMaybe<PostStatusEnum>>>;
+  status: InputMaybe<PostStatusEnum>;
   /** Tag Slug */
-  tag?: InputMaybe<Scalars['String']>;
+  tag: InputMaybe<Scalars['String']>;
   /** Use Tag ID */
-  tagId?: InputMaybe<Scalars['String']>;
+  tagId: InputMaybe<Scalars['String']>;
   /** Array of tag IDs, used to display objects from one tag OR another */
-  tagIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  tagIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Array of tag IDs, used to display objects from one tag OR another */
-  tagNotIn?: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
+  tagNotIn: InputMaybe<Array<InputMaybe<Scalars['ID']>>>;
   /** Array of tag slugs, used to display objects from one tag OR another */
-  tagSlugAnd?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  tagSlugAnd: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   /** Array of tag slugs, used to exclude objects in specified tags */
-  tagSlugIn?: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
+  tagSlugIn: InputMaybe<Array<InputMaybe<Scalars['String']>>>;
   /** Title of the object */
-  title?: InputMaybe<Scalars['String']>;
+  title: InputMaybe<Scalars['String']>;
 };
 
 /** Connection between the User type and the UserRole type */
@@ -8417,7 +8417,7 @@ export enum UsersConnectionOrderbyEnum {
 /** Options for ordering the connection */
 export type UsersConnectionOrderbyInput = {
   field: UsersConnectionOrderbyEnum;
-  order?: InputMaybe<OrderEnum>;
+  order: InputMaybe<OrderEnum>;
 };
 
 /** Names of available user roles */
@@ -8480,12 +8480,12 @@ export type PageQueryVariables = Exact<{
 }>;
 
 
-export type PageQuery = { __typename?: 'RootQuery', pages: { __typename?: 'RootQueryToPageConnection', nodes: Array<{ __typename?: 'Page', title: string | null | undefined, content: string | null | undefined } | null | undefined> | null | undefined } | null | undefined };
+export type PageQuery = { __typename?: 'RootQuery', page: { __typename?: 'Category' } | { __typename?: 'ContentType' } | { __typename?: 'MediaItem' } | { __typename?: 'Page', title: string | null | undefined, content: string | null | undefined } | { __typename?: 'Post' } | { __typename?: 'PostFormat' } | { __typename?: 'Tag' } | { __typename?: 'User' } | null | undefined };
 
 export type PageIndexQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type PageIndexQuery = { __typename?: 'RootQuery', pages: { __typename?: 'RootQueryToPageConnection', nodes: Array<{ __typename?: 'Page', id: string, slug: string | null | undefined, link: string | null | undefined, status: string | null | undefined } | null | undefined> | null | undefined } | null | undefined };
+export type PageIndexQuery = { __typename?: 'RootQuery', pages: { __typename?: 'RootQueryToPageConnection', nodes: Array<{ __typename?: 'Page', id: string, slug: string | null | undefined, link: string | null | undefined, status: string | null | undefined, uri: string } | null | undefined> | null | undefined } | null | undefined };
 
 export type MainMenuQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -8495,8 +8495,8 @@ export type MainMenuQuery = { __typename?: 'RootQuery', menuItems: { __typename?
 
 export const PageDocument = gql`
     query Page($slug: String!) {
-  pages(where: {name: $slug}) {
-    nodes {
+  page: nodeByUri(uri: $slug) {
+    ... on Page {
       title
       content
     }
@@ -8509,12 +8509,13 @@ export function usePageQuery(options: Omit<Urql.UseQueryArgs<PageQueryVariables>
 };
 export const PageIndexDocument = gql`
     query PageIndex {
-  pages(where: {status: PUBLISH}) {
+  pages(where: {status: PUBLISH}, last: 100) {
     nodes {
       id
       slug
       link
       status
+      uri
     }
   }
 }

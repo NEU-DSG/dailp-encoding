@@ -1,4 +1,4 @@
-import { useState, useEffect, createElement, Fragment } from "react"
+import { Fragment, createElement, useEffect, useState } from "react"
 
 export function useHasMounted() {
   const [hasMounted, setHasMounted] = useState(false)
@@ -8,7 +8,7 @@ export function useHasMounted() {
   return hasMounted
 }
 
-export const isProductionDeployment = () => process.env.TF_STAGE === "prod"
+export const isProductionDeployment = () => false
 
 export const ClientOnly = (props: { children: any }) => {
   const hasMounted = useHasMounted()

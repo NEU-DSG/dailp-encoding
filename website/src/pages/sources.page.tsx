@@ -1,18 +1,17 @@
+import { join, sortBy } from "lodash"
 import React from "react"
-import { css } from "@emotion/react"
-import { sortBy, join } from "lodash"
-import Layout from "../layout"
-import { fullWidth, std, typography, paddedWidth } from "../theme"
-import { sourceCitationId } from "../routes"
 import * as Dailp from "src/graphql/dailp"
+import Layout from "../layout"
+import { sourceCitationId } from "../routes"
+import { apaCitation, wideChild, wideList } from "./sources.css"
 
 const SourcesPage = () => {
   const [{ data: dailp }] = Dailp.useAllSourcesQuery()
   return (
     <Layout title="Sources Index">
-      <main css={wideChildren}>
-        <h1>Sources of Cherokee Language Data</h1>
-        <p>
+      <main>
+        <h1 className={wideChild}>Sources of Cherokee Language Data</h1>
+        <p className={wideChild}>
           This is a cited list of the lexical language resources that we use to
           identify and correlate words in a document. The list includes
           dictionaries and grammars written as early as the 18th century and as
@@ -23,7 +22,7 @@ const SourcesPage = () => {
           <i>Title of the document</i>. Number of words referenced.
         </p>
 
-        <ul css={wide}>
+        <ul className={wideList}>
           {sortBy(
             dailp?.allDocuments.filter((d) => d.isReference),
             (doc) => doc.id
@@ -49,30 +48,9 @@ const DocumentCitation = (p: { document: LocalDocument }) => {
   )
   const wordCount = doc.formCount ? ` ${doc.formCount} words.` : null
   return (
-    <li id={sourceCitationId(doc.id)} css={apaCitation}>
-      <span css={bolded}>{doc.id}</span> = {authors} {year && `(${year})`}.{" "}
-      <i>{doc.title}</i>.{wordCount}
+    <li id={sourceCitationId(doc.id)} className={apaCitation}>
+      <b>{doc.id}</b>: {authors} {year && `(${year})`}. <i>{doc.title}</i>.
+      {wordCount}
     </li>
   )
 }
-
-const apaCitation = css`
-  padding-left: 4ch;
-  text-indent: -4ch;
-  margin-bottom: ${typography.rhythm(1)};
-`
-const wideChildren = css`
-  & > * {
-    ${fullWidth};
-    ${paddedWidth};
-  }
-`
-
-const bolded = css`
-  font-weight: bold;
-`
-
-const wide = css`
-  list-style: none;
-  margin-left: 0;
-`

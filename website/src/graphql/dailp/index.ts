@@ -250,12 +250,12 @@ export enum DocumentType {
 }
 
 export type FormQuery = {
-  englishGloss?: InputMaybe<Scalars['String']>;
-  id?: InputMaybe<Scalars['String']>;
-  normalizedSource?: InputMaybe<Scalars['String']>;
-  simplePhonetics?: InputMaybe<Scalars['String']>;
-  source?: InputMaybe<Scalars['String']>;
-  unresolved?: InputMaybe<Scalars['Boolean']>;
+  englishGloss: InputMaybe<Scalars['String']>;
+  id: InputMaybe<Scalars['String']>;
+  normalizedSource: InputMaybe<Scalars['String']>;
+  simplePhonetics: InputMaybe<Scalars['String']>;
+  source: InputMaybe<Scalars['String']>;
+  unresolved: InputMaybe<Scalars['Boolean']>;
 };
 
 export type FormsInTime = {
@@ -355,7 +355,7 @@ export type MorphemeSegment = {
 
 
 export type MorphemeSegmentMorphemeArgs = {
-  system?: InputMaybe<CherokeeOrthography>;
+  system: InputMaybe<CherokeeOrthography>;
 };
 
 /**
@@ -521,7 +521,7 @@ export type Query = {
 
 
 export type QueryAllDocumentsArgs = {
-  collection?: InputMaybe<Scalars['String']>;
+  collection: InputMaybe<Scalars['String']>;
 };
 
 
@@ -562,7 +562,7 @@ export type QueryMorphemesByDocumentArgs = {
 
 
 export type QueryMorphemesByShapeArgs = {
-  compareBy?: InputMaybe<CherokeeOrthography>;
+  compareBy: InputMaybe<CherokeeOrthography>;
   gloss: Scalars['String'];
 };
 

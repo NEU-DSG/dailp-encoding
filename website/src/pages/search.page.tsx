@@ -1,19 +1,19 @@
-import React, { useEffect } from "react"
-import Link from "next/link"
-import { useRouter } from "next/router"
-import { css } from "@emotion/react"
-import { Input } from "reakit/Input"
 import { useDebounce } from "@react-hook/debounce"
-import { wordRow, bolden } from "./timeline"
-import { fullWidth, typography } from "../theme"
+import cx from "classnames"
+import QueryString from "query-string"
+import React, { useEffect } from "react"
+import { Input } from "reakit/Input"
+import { usePageContext } from "renderer/PageShell"
+import * as Dailp from "src/graphql/dailp"
+import Link from "src/link"
+import { closeBlock, fullWidth } from "src/sprinkles.css"
 import Layout from "../layout"
 import { sourceCitationRoute } from "../routes"
-import queryString from "query-string"
-import * as Dailp from "src/graphql/dailp"
+import { boldWordRow, wordRow } from "./timeline.css"
 
 const SearchPage = () => {
-  const router = useRouter()
-  const defaultParams = router.query
+  const router = usePageContext()
+  const defaultParams = router.urlParsed!.search
   const [morphemeId, setMorpheme] = useDebounce(
     defaultParams.query as string,
     200
@@ -24,8 +24,8 @@ const SearchPage = () => {
       window.history.replaceState(
         null,
         "",
-        queryString.stringifyUrl({
-          url: window.location.pathname,
+        QueryString.stringifyUrl({
+          url: "",
           query: { query: morphemeId },
         })
       )
@@ -35,7 +35,7 @@ const SearchPage = () => {
   return (
     <Layout title="Search">
       <main>
-        <p css={wide}>
+        <p className={fullWidth}>
           Type a search query in Cherokee syllabary, simple phonetics, English
           translation, or romanized source. All words from{" "}
           <Link href="/sources">dictionaries and grammars</Link> that contain
@@ -43,7 +43,7 @@ const SearchPage = () => {
           collection of manuscripts yet.
         </p>
         <Input
-          css={searchBox}
+          className={searchBox}
           defaultValue={morphemeId}
           placeholder="Search query"
           onChange={(e) => {
@@ -75,8 +75,8 @@ const Timeline = (p: { gloss: string }) => {
     return <>No results found.</>
   } else {
     return (
-      <div css={wide}>
-        <div css={[wordRow, bolden]}>
+      <div className={fullWidth}>
+        <div className={boldWordRow}>
           <div>Document ID</div>
           <div>Transcription</div>
           <div>Normalization</div>
@@ -85,7 +85,7 @@ const Timeline = (p: { gloss: string }) => {
         </div>
         {timeline.data.wordSearch.map(
           (form: Dailp.AnnotatedForm, i: number) => (
-            <div key={i} css={wordRow}>
+            <div key={i} className={wordRow}>
               <Link href={sourceCitationRoute(form.documentId)}>
                 {form.documentId}
               </Link>
@@ -101,11 +101,4 @@ const Timeline = (p: { gloss: string }) => {
   }
 }
 
-const wide = css`
-  ${fullWidth};
-`
-
-const searchBox = css`
-  ${fullWidth};
-  margin-bottom: ${typography.rhythm(0.5)};
-`
+const searchBox = cx(fullWidth, closeBlock)
