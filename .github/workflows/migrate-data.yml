@@ -42,10 +42,19 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
+      - name: Add public IP to AWS security group
+        uses: sohelamin/aws-security-group-add-ip-action@master
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+          aws-security-group-id: ${{ secrets.AWS_DEPLOYMENT_SECURITY_GROUP }}
+          port: 27017
+          to-port: 27017
+          protocol: tcp
       - name: Build project
         run: |
           nix build --impure -L
-          cp -f ./result/config.tf.json ./config.tf.json
       - name: Migrate data to MongoDB
         run: |
           nix run --impure -L .#tf-plan
