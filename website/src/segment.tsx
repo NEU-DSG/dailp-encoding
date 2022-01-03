@@ -227,33 +227,22 @@ const MorphemicSegmentation = (p: {
       </i>
 
       <div>
-        {intersperse(
-          p.segments!.map(function (segment, i) {
-            return (
+        {p.segments!.map(function (segment, i) {
+          return (
+            <React.Fragment key={i}>
+              {i > 0 ? p.segments![i - 1].nextSeparator : null}
               <MorphemeSegment
-                key={i}
                 segment={segment}
                 tagSet={p.tagSet}
                 dialog={p.dialog}
                 onOpenDetails={p.onOpenDetails}
               />
-            )
-          }),
-          function (i) {
-            return (
-              <React.Fragment key={100 * (i + 1)}>
-                {p.segments![i].nextSeparator}
-              </React.Fragment>
-            )
-          }
-        )}
+            </React.Fragment>
+          )
+        })}
       </div>
     </>
   )
-}
-
-function intersperse<T>(arr: T[], separator: (n: number) => T): T[] {
-  return flatMap(arr, (a, i) => (i > 0 ? [separator(i - 1), a] : [a]))
 }
 
 /** One morpheme that can be clicked to see further details. */

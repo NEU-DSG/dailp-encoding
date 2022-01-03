@@ -20,7 +20,7 @@ const CollectionPage = ({ slug }) => {
   const [{ data: wp }] = Wordpress.usePageQuery({
     variables: { slug },
   })
-  const wpPage = wp?.page.__typename === "Page" && wp.page
+  const wpPage = wp?.page?.__typename === "Page" && wp.page
   const documents = [...(dailp?.collection.documents ?? [])]
   // Sort documents into natural order by their ID.
   // This means that "10" comes after "9" instead of after "1".

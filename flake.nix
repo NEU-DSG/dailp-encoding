@@ -188,7 +188,7 @@
               (writers.writeBashBin "dev-website" ''
                 cd website
                 yarn install
-                yarn start
+                yarn dev
               '')
             ] ++ lib.optionals stdenv.isDarwin [
               darwin.apple_sdk.frameworks.Security
