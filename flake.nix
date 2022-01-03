@@ -187,6 +187,7 @@
               '')
               (writers.writeBashBin "dev-website" ''
                 cd website
+                yarn install
                 yarn start
               '')
             ] ++ lib.optionals stdenv.isDarwin [
