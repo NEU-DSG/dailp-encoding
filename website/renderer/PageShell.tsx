@@ -1,21 +1,30 @@
 import React from "react"
 import { HelmetData } from "react-helmet"
+import { Provider as ReakitProvider } from "reakit"
 import { TinaCMS, TinaProvider } from "tinacms"
+import { Client as GraphQLClient, Provider as GraphQLProvider } from "urql"
 import type { PageContextBuiltInClient } from "vite-plugin-ssr/client"
 
-export { PageShell }
+export const rootElementId = "app-root"
 
-function PageShell({
-  children,
+export function PageShell({
   pageContext,
+  client,
 }: {
-  children: React.ReactNode
   pageContext: PageContext
+  client: GraphQLClient
 }) {
+  const { Page, pageProps, routeParams } = pageContext
   return (
     <React.StrictMode>
       <PageContextProvider pageContext={pageContext}>
-        <InnerRoot>{children}</InnerRoot>
+        <GraphQLProvider value={client}>
+          <ReakitProvider>
+            <InnerRoot>
+              <Page {...routeParams} {...pageProps} />
+            </InnerRoot>
+          </ReakitProvider>
+        </GraphQLProvider>
       </PageContextProvider>
     </React.StrictMode>
   )
