@@ -7,7 +7,7 @@ export const Breadcrumbs = (p: React.HTMLAttributes<HTMLUListElement>) => {
     <li className={css.breadcrumbElement}>{e}</li>
   ))
   return (
-    <ul className={css.breadcrumbs} {...rest}>
+    <ul className={css.breadcrumbs} aria-label="Breadcrumbs" {...rest}>
       {children}
     </ul>
   )

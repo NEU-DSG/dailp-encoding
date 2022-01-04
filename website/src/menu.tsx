@@ -7,9 +7,9 @@ import {
   useDialogState,
 } from "reakit/Dialog"
 import { Menu, MenuButton, MenuItem, useMenuState } from "reakit/Menu"
-import { usePageContext } from "renderer/PageShell"
 import * as Wordpress from "src/graphql/wordpress"
 import { Link } from "src/link"
+import { usePageContext } from "src/renderer/PageShell"
 import {
   desktopNav,
   drawerBg,

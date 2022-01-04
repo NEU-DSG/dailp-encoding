@@ -52,16 +52,13 @@ function PageContextProvider({
 }
 
 const usePageContext = () => React.useContext(Context)
+export const useLocation = () => usePageContext().urlParsed
+export const useRouteParams = () => usePageContext().routeParams
 
 interface Location {
   pathname: string
   search: Record<string, string>
   hash: string
-}
-
-export function useLocation(): Location {
-  const context = usePageContext()
-  return context.urlParsed
 }
 
 export type PageProps = {}
