@@ -3,16 +3,87 @@ import React from "react"
 import ReactDOMServer from "react-dom/server"
 import { Helmet } from "react-helmet"
 import prepass from "react-ssr-prepass"
-import { Provider as ReakitProvider } from "reakit"
-import { Provider, ssrExchange } from "urql"
+import { ssrExchange } from "urql"
 import { dangerouslySkipEscape, escapeInject } from "vite-plugin-ssr"
 import type { PageContextBuiltIn } from "vite-plugin-ssr/types"
 import { customClient } from "src/graphql"
-import { PageContext, PageShell } from "./PageShell"
+import { PageContext, PageShell, rootElementId } from "./PageShell"
 
-// See https://vite-plugin-ssr.com/data-fetching
+/**
+ * In production, render every page on the server then hydrate it on the client.
+ */
+export function render(pageContext: PageContextBuiltIn & PageContext) {
+  if (process.env.NODE_ENV === "development") {
+    // In development, don't do SSR, just let the client render.
+    return escapeInject`<!DOCTYPE html>
+    <html>
+      <head>${baseScript}</head>
+      <body><div id="${rootElementId}"/></body>
+    </html>`
+  } else {
+    const { pageHtml, pageHead } = pageContext
+    return escapeInject`<!DOCTYPE html>
+    <html ${pageHead.htmlAttributes.toString()}>
+      <head>
+        ${baseScript}
+        ${dangerouslySkipEscape(pageHead.title.toString())}
+        ${dangerouslySkipEscape(pageHead.meta.toString())}
+        ${dangerouslySkipEscape(pageHead.link.toString())}
+      </head>
+      <body ${pageHead.bodyAttributes.toString()}>
+        <div id="${rootElementId}">${dangerouslySkipEscape(pageHtml)}</div>
+      </body>
+    </html>`
+  }
+}
+
+/**
+ * Gather the required data for each page before rendering it.
+ */
+export async function onBeforeRender(
+  pageContext: PageContextBuiltIn & PageContext
+) {
+  // Don't prerender in development mode, let the client do all the rendering.
+  // This keeps pages loading quickly as they change.
+  if (process.env.NODE_ENV === "development") {
+    return {
+      pageContext: { urqlState: {} },
+    }
+  } else {
+    const { Page, pageProps, routeParams } = pageContext
+    const ssr = ssrExchange({ initialState: undefined, isClient: false })
+    const client = customClient(true, [ssr])
+
+    const page = <PageShell pageContext={pageContext} client={client} />
+
+    // This is the first pass, due to suspense it will work with prepass and populate the initial cache
+    await prepass(page)
+    // Then we construct an initial html with renderToString as our cache is hydrated
+    const pageHtml = ReactDOMServer.renderToString(page)
+
+    // Embed the initial head data into the static HTML.
+    const pageHead = Helmet.renderStatic()
+
+    return {
+      pageContext: {
+        pageHtml,
+        pageHead,
+        urqlState: ssr.extractData(),
+      },
+    }
+  }
+}
+
+/**
+ * Pass these props to the client-side after server-side rendering.
+ * See https://vite-plugin-ssr.com/data-fetching
+ */
 export const passToClient = ["pageProps", "urqlState", "routeParams"]
 
+/**
+ * Embed these environment variables into the client HTML.
+ * So don't add any sensitive data.
+ */
 const clientEnv = pick(process.env, [
   "DAILP_AWS_REGION",
   "DAILP_USER_POOL",
@@ -22,62 +93,15 @@ const clientEnv = pick(process.env, [
   "AWS_REGION",
 ])
 
-export async function render(pageContext: PageContextBuiltIn & PageContext) {
-  const { pageHtml } = pageContext
-  const pageHead = Helmet.renderStatic()
+const clientProcess = dangerouslySkipEscape(JSON.stringify({ env: clientEnv }))
 
-  return escapeInject`<!DOCTYPE html>
-    <html ${pageHead.htmlAttributes.toString()}>
-      <head>
-<script>
-  if (global === undefined) {
-    var global = window;
-  }
-  var process = { env: ${dangerouslySkipEscape(JSON.stringify(clientEnv))} };
-</script>
-        ${dangerouslySkipEscape(pageHead.title.toString())}
-        ${dangerouslySkipEscape(pageHead.meta.toString())}
-        ${dangerouslySkipEscape(pageHead.link.toString())}
-      </head>
-      <body ${pageHead.bodyAttributes.toString()}>
-        <div id="page-view">${dangerouslySkipEscape(pageHtml)}</div>
-      </body>
-    </html>`
-}
-
-export const onBeforeRender = async (
-  pageContext: PageContextBuiltIn & PageContext
-) => {
-  const { Page, pageProps, routeParams } = pageContext
-
-  if (process.env.NODE_ENV === "development") {
-    return {
-      pageContext: { pageHtml: "", urqlState: {} },
+// Define `global` for some scripts that depend on it, and process.env to pass
+// along some important environment variables.
+const baseScript = escapeInject`
+  <script>
+    if (global === undefined) {
+      var global = window;
     }
-  }
-
-  const ssr = ssrExchange({ initialState: undefined, isClient: false })
-  const client = customClient(true, [ssr])
-
-  const page = () => (
-    <PageShell pageContext={pageContext}>
-      <Provider value={client}>
-        <ReakitProvider>
-          <Page {...routeParams} {...pageProps} />
-        </ReakitProvider>
-      </Provider>
-    </PageShell>
-  )
-
-  // This is the first pass, due to suspense: true it will work with prepass and populate the initial cache
-  await prepass(page())
-  // After we can construct an initial html with renderToString as our cache is hydrated
-  const pageHtml = ReactDOMServer.renderToString(page())
-
-  return {
-    pageContext: {
-      pageHtml,
-      urqlState: ssr.extractData(),
-    },
-  }
-}
+    var process = ${clientProcess};
+  </script>
+`

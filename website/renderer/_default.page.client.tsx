@@ -1,28 +1,19 @@
 import React from "react"
 import ReactDOM from "react-dom"
-import { Provider as ReakitProvider } from "reakit"
-import { Provider, ssrExchange } from "urql"
+import { ssrExchange } from "urql"
 import { useClientRouter } from "vite-plugin-ssr/client/router"
 import { customClient } from "src/graphql"
-import { PageContext, PageShell } from "./PageShell"
+import { PageContext, PageShell, rootElementId } from "./PageShell"
 
 const ssr = ssrExchange({ isClient: true, initialState: {} })
 const client = customClient(false, [ssr])
 
 const { hydrationPromise } = useClientRouter({
   async render(pageContext: PageContext) {
-    const { Page, pageProps, urqlState, isHydration, routeParams } = pageContext
+    const { urqlState, isHydration } = pageContext
     ssr.restoreData(urqlState)
-    const page = (
-      <PageShell pageContext={pageContext}>
-        <Provider value={client}>
-          <ReakitProvider>
-            <Page {...routeParams} {...pageProps} />
-          </ReakitProvider>
-        </Provider>
-      </PageShell>
-    )
-    const elem = document.getElementById("page-view")
+    const page = <PageShell pageContext={pageContext} client={client} />
+    const elem = document.getElementById(rootElementId)
     // `pageContext.isHydration` is set by `vite-plugin-ssr` and is `true` when the page
     // is already rendered to HTML.
     if (isHydration && process.env.NODE_ENV === "production") {
@@ -34,14 +25,6 @@ const { hydrationPromise } = useClientRouter({
       ReactDOM.render(page, elem)
     }
   },
-
-  // If `ensureHydration: true` then `vite-plugin-ssr` ensures that the first render is always
-  // a hydration. I.e. the first `render()` call is never interrupted — even if the user clicks
-  // on a link. Default value: `false`.
-  // If we use Vue, we set `ensureHydration: true` to avoid "Hydration Mismatch" errors.
-  // If we use React, we leave `ensureHydration: false` for a slight performance boost.
-  /* ensureHydration: true, */
-
   // Prefetch `<a>` links when they appear in the user's viewport.
   // We can override individual links: `<a data-prefetch="true" href="/some-link" />`.
   // Default value: `false`.
