@@ -1,5 +1,5 @@
 import gql from 'graphql-tag';
-import * as Urql from '../urql-wordpress';
+import * as Urql from './urql';
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
@@ -8480,7 +8480,7 @@ export type PageQueryVariables = Exact<{
 }>;
 
 
-export type PageQuery = { __typename?: 'RootQuery', page: { __typename?: 'Category' } | { __typename?: 'ContentType' } | { __typename?: 'MediaItem' } | { __typename?: 'Page', title: string | null | undefined, content: string | null | undefined } | { __typename?: 'Post' } | { __typename?: 'PostFormat' } | { __typename?: 'Tag' } | { __typename?: 'User' } | null | undefined };
+export type PageQuery = { __typename?: 'RootQuery', page: { __typename: 'Category' } | { __typename: 'ContentType' } | { __typename: 'MediaItem' } | { __typename: 'Page', title: string | null | undefined, content: string | null | undefined } | { __typename: 'Post' } | { __typename: 'PostFormat' } | { __typename: 'Tag' } | { __typename: 'User' } | null | undefined };
 
 export type PageIndexQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -8496,6 +8496,7 @@ export type MainMenuQuery = { __typename?: 'RootQuery', menuItems: { __typename?
 export const PageDocument = gql`
     query Page($slug: String!) {
   page: nodeByUri(uri: $slug) {
+    __typename
     ... on Page {
       title
       content

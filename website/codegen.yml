@@ -14,7 +14,7 @@ generates:
       - typescript-operations
       - typescript-urql
     config:
-      urqlImportFrom: ../urql-wordpress
+      urqlImportFrom: ./urql
 config:
   avoidOptionals: true
   useTypeImports: true
