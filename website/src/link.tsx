@@ -1,6 +1,6 @@
 import React from "react"
-import { usePageContext } from "renderer/PageShell"
 import { navigate } from "vite-plugin-ssr/client/router"
+import { usePageContext } from "src/renderer/PageShell"
 
 export { Link }
 

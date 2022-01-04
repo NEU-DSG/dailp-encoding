@@ -20,5 +20,5 @@ export default (p: { children: any }) => (
 
 const LayoutCMS = (p: { children: any; creds: any }) => {
   usePlugin(PageCreatorPlugin)
-  return <>{p.children}</>
+  return p.children
 }
