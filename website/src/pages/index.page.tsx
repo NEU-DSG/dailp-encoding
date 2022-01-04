@@ -1,18 +1,15 @@
 import React from "react"
 import { Link } from "src/link"
 import { fullWidth, paddedCenterColumn } from "src/sprinkles.css"
+import WordpressPage from "src/wordpress-page"
 import { Carousel } from "../carousel"
 import * as Dailp from "../graphql/dailp"
-import * as Wordpress from "../graphql/wordpress"
 import Layout from "../layout"
 import { collectionRoute } from "../routes"
 
 /** Lists all documents in our database */
 const IndexPage = () => {
   const [{ data: dailp }] = Dailp.useCollectionsListingQuery()
-  const [{ data: wp }] = Wordpress.usePageQuery({ variables: { slug: "/" } })
-  const wpPage = wp?.page?.__typename === "Page" && wp.page
-
   return (
     <Layout title="Collections">
       <main className={paddedCenterColumn}>
@@ -21,7 +18,8 @@ const IndexPage = () => {
             images={carouselImages}
             caption="Digital Archive of American Indian Languages Preservation and Perseverance"
           />
-          <div dangerouslySetInnerHTML={{ __html: wpPage.content }} />
+          <WordpressPage slug="/" />
+
           <h1>Cherokee Manuscript Collections</h1>
           <ul>
             {dailp?.allCollections.map((collection) => (
