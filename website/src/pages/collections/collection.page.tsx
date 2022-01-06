@@ -1,5 +1,6 @@
 import React from "react"
 import { Breadcrumbs } from "src/breadcrumbs"
+import Link from "src/components/link"
 import * as Dailp from "src/graphql/dailp"
 import Layout from "src/layout"
 import { usePageContext } from "src/renderer/PageShell"
@@ -30,7 +31,7 @@ const CollectionPage = () => {
         <article className={fullWidth}>
           <header>
             <Breadcrumbs>
-              <a href="/">Collections</a>
+              <Link href="/">Collections</Link>
             </Breadcrumbs>
             <h1>{dailp?.collection.name}</h1>
           </header>
@@ -38,7 +39,9 @@ const CollectionPage = () => {
           <ul>
             {documents.map((document) => (
               <li key={document.slug}>
-                <a href={documentRoute(document.slug)}>{document.title}</a>
+                <Link href={documentRoute(document.slug)}>
+                  {document.title}
+                </Link>
                 {document.date && ` (${document.date.year})`}
               </li>
             ))}

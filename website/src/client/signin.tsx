@@ -2,7 +2,7 @@ import Amplify, { Auth } from "aws-amplify"
 import React, { useEffect } from "react"
 import { useCMS } from "tinacms"
 import { Button } from "src/components"
-import Link from "src/link"
+import Link from "src/components/link"
 import { UserProvider, useCredentials } from "../auth"
 
 const ClientSignIn = () => {

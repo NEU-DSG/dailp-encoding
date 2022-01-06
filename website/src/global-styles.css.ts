@@ -1,4 +1,4 @@
-import { globalStyle } from "@vanilla-extract/css"
+import { globalFontFace, globalStyle } from "@vanilla-extract/css"
 import { important } from "polished"
 import {
   colors,

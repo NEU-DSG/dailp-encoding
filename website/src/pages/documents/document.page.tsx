@@ -8,9 +8,9 @@ import { Tab, TabList, TabPanel } from "reakit/Tab"
 import { DocumentAudio } from "src/audio-player"
 import { Breadcrumbs } from "src/breadcrumbs"
 import { Button } from "src/components"
+import Link from "src/components/link"
 import * as Dailp from "src/graphql/dailp"
 import Layout from "src/layout"
-import Link from "src/link"
 import { ExperiencePicker, selectedMode, selectedPhonetics } from "src/mode"
 import { MorphemeDetails } from "src/morpheme"
 import {
@@ -218,11 +218,11 @@ export const DocumentTitleHeader = (p: {
 }) => (
   <header className={css.docHeader}>
     <Breadcrumbs aria-label="Breadcrumbs">
-      <a href="/">Collections</a>
+      <Link href="/">Collections</Link>
       {p.doc.collection && (
-        <a href={collectionRoute(p.doc.collection.slug!)}>
+        <Link href={collectionRoute(p.doc.collection.slug!)}>
           {p.doc.collection.name}
-        </a>
+        </Link>
       )}
     </Breadcrumbs>
 

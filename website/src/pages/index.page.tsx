@@ -1,5 +1,5 @@
 import React from "react"
-import { Link } from "src/link"
+import Link from "src/components/link"
 import { fullWidth, paddedCenterColumn } from "src/sprinkles.css"
 import WordpressPage from "src/wordpress-page"
 import { Carousel } from "../carousel"
