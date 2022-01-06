@@ -1,5 +1,4 @@
 import React from "react"
-import "vite/client"
 
 const baseUrl = import.meta.env.BASE_URL
 
@@ -9,9 +8,12 @@ const baseUrl = import.meta.env.BASE_URL
  */
 export default function Link(props: React.HTMLProps<HTMLAnchorElement>) {
   const { href, ...rest } = props
-  if (!href.startsWith("/")) {
-    throw new Error("Link href should start with /")
+  let finalHref
+  if (href.startsWith("/")) {
+    finalHref = baseUrl + href.slice(1)
+  } else {
+    console.warn(`Link href '${href}' should start with / or #`)
+    finalHref = href
   }
-  const finalHref = baseUrl + href.slice(1)
   return <a href={finalHref} {...rest} />
 }

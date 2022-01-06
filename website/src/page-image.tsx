@@ -43,9 +43,7 @@ const PageImages = (p: {
       {p.document.sources.length ? (
         <figcaption className={css.caption}>
           Source:{" "}
-          <Link href={p.document.sources[0].link}>
-            {p.document.sources[0].name}
-          </Link>
+          <a href={p.document.sources[0].link}>{p.document.sources[0].name}</a>
         </figcaption>
       ) : null}
     </figure>

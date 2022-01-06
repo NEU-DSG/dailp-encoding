@@ -25,6 +25,10 @@
       "module": "CommonJS"
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx"],
-  "exclude": ["node_modules"]
+  "include": [
+    "next-env.d.ts",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "node_modules/vite/**/*.d.ts"
+  ]
 }

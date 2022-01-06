@@ -161,7 +161,26 @@
             unpackPhase = "true";
             RUST_LOG = "info";
             LD_LIBRARY_PATH = "${lib.makeLibraryPath buildInputs}";
-            buildInputs = [
+            buildInputs = let
+              dev-database = (writers.writeBashBin "dev-database" ''
+                mkdir -p .mongo
+                mongod --dbpath .mongo
+              '');
+              dev-graphql = (writers.writeBashBin "dev-graphql" ''
+                cargo run --bin dailp-graphql-local
+              '');
+              dev-website = (writers.writeBashBin "dev-website" ''
+                cd website
+                yarn install
+                yarn dev
+              '');
+              in-parallel = writeShellScript "in-parallel" ''
+                (trap 'kill 0' SIGINT; $@)
+              '';
+              dev-start = writers.writeBashBin "dev-start" ''
+                ${in-parallel} ${dev-database}/bin/dev-database & ${dev-graphql}/bin/dev-graphql & ${dev-website}/bin/dev-website
+              '';
+            in [
               autoconf
               automake
               libtool
@@ -175,21 +194,13 @@
               nixpkgs-server.mongodb-4_2
               docker
               pkgs-unstable.act
-              (writers.writeBashBin "dev-database" ''
-                mkdir -p .mongo
-                mongod --dbpath .mongo
-              '')
-              (writers.writeBashBin "dev-graphql" ''
-                cargo run --bin dailp-graphql-local
-              '')
               (writers.writeBashBin "dev-migrate" ''
                 cargo run --bin dailp-migration
               '')
-              (writers.writeBashBin "dev-website" ''
-                cd website
-                yarn install
-                yarn dev
-              '')
+              dev-database
+              dev-graphql
+              dev-website
+              dev-start
             ] ++ lib.optionals stdenv.isDarwin [
               darwin.apple_sdk.frameworks.Security
               libiconv
