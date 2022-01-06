@@ -1,4 +1,4 @@
-import { createTheme, style } from "@vanilla-extract/css"
+import { createTheme, fontFace, style } from "@vanilla-extract/css"
 import { createSprinkles, defineProperties } from "@vanilla-extract/sprinkles"
 import { paddingX } from "src/style-utils"
 
@@ -8,6 +8,11 @@ function rhythm(v: number): string {
 }
 
 export const rootFontSize = "19px"
+
+const digohweli = fontFace({
+  src: `url("./assets/Digohweli_1_7.ttf") format("truetype")`,
+  fontDisplay: "swap",
+})
 
 export const [themeClass, theme] = createTheme({
   fontSizes: {
@@ -26,8 +31,8 @@ export const [themeClass, theme] = createTheme({
   },
   fonts: {
     header: `"Quattrocento Sans", "Segoe UI", "Arial", "sans-serif"`,
-    body: `"Charis SIL", Digohweli, serif, Arial`,
-    cherokee: `"Digohweli", "Charis SIL", "serif", "Arial"`,
+    body: `"Charis SIL", ${digohweli}, serif, Arial`,
+    cherokee: `${digohweli}, "Charis SIL", "serif", "Arial"`,
     smallCaps: "Charis SIL",
   },
 })

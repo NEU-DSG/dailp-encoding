@@ -3,6 +3,7 @@ import { Helmet } from "react-helmet"
 import { FaMinus, FaPlus } from "react-icons/fa"
 import { TransformComponent, TransformWrapper } from "react-zoom-pan-pinch"
 import { Button, IconButton } from "src/components"
+import Link from "src/components/link"
 import * as Dailp from "src/graphql/dailp"
 import { Document } from "src/pages/documents/document.page"
 import * as css from "./page-image.css"
@@ -42,7 +43,9 @@ const PageImages = (p: {
       {p.document.sources.length ? (
         <figcaption className={css.caption}>
           Source:{" "}
-          <a href={p.document.sources[0].link}>{p.document.sources[0].name}</a>
+          <Link href={p.document.sources[0].link}>
+            {p.document.sources[0].name}
+          </Link>
         </figcaption>
       ) : null}
     </figure>

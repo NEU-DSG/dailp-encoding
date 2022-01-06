@@ -3,7 +3,7 @@ import { groupBy } from "lodash"
 import pluralize from "pluralize"
 import React, { useState } from "react"
 import * as Dailp from "src/graphql/dailp"
-import Link from "src/link"
+import Link from "src/components/link"
 import {
   closeBlock,
   edgePadded,

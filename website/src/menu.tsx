@@ -8,7 +8,7 @@ import {
 } from "reakit/Dialog"
 import { Menu, MenuButton, MenuItem, useMenuState } from "reakit/Menu"
 import * as Wordpress from "src/graphql/wordpress"
-import { Link } from "src/link"
+import { Link } from "src/components/link"
 import { usePageContext } from "src/renderer/PageShell"
 import {
   desktopNav,
