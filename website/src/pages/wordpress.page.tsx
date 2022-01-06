@@ -29,11 +29,9 @@ export default WordpressPage
 
 const Contents = () => {
   const { "*": slug } = useRouteParams()
-  const [{ data }] = Wordpress.usePageQuery({ variables: { slug } })
+  const [{ data, fetching }] = Wordpress.usePageQuery({ variables: { slug } })
   const page = data?.page?.__typename === "Page" && data?.page
-  if (!page) {
-    return <p>Wordpress page not found.</p>
-  } else {
+  if (page) {
     return (
       <>
         <header>
@@ -42,5 +40,9 @@ const Contents = () => {
         <div dangerouslySetInnerHTML={{ __html: page.content }} />
       </>
     )
+  } else if (fetching) {
+    return <p>Loading...</p>
+  } else {
+    return <p>Wordpress page not found.</p>
   }
 }
