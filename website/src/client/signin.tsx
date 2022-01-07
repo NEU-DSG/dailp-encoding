@@ -1,4 +1,4 @@
-import Amplify, { Auth } from "aws-amplify"
+import { Auth } from "aws-amplify"
 import React, { useEffect } from "react"
 import { useCMS } from "tinacms"
 import { Button } from "src/components"

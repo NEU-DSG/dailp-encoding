@@ -3,6 +3,7 @@ import { Helmet } from "react-helmet"
 import * as Wordpress from "src/graphql/wordpress"
 import { useRouteParams } from "src/renderer/PageShell"
 import { edgePadded, fullWidth } from "src/sprinkles.css"
+import { WordpressContents } from "src/wordpress-page"
 import Layout from "../layout"
 import { wordpressUrl } from "../theme"
 
@@ -37,7 +38,7 @@ const Contents = () => {
         <header>
           <h1>{page.title}</h1>
         </header>
-        <div dangerouslySetInnerHTML={{ __html: page.content }} />
+        <WordpressContents content={page.content} />
       </>
     )
   } else if (fetching) {

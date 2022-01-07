@@ -42,6 +42,7 @@ globalStyle("html", {
 globalStyle("body", {
   margin: 0,
   padding: 0,
+  fontFamily: theme.fonts.body,
   ...important({ backgroundColor: colors.footer }),
   "@media": {
     [mediaQueries.print]: important({
@@ -81,21 +82,22 @@ globalStyle("a", {
   color: colors.link,
   textDecorationThickness: "0.08em",
   textDecorationSkipInk: "none",
+  textDecorationStyle: "dotted",
   borderRadius: 0,
-  // selectors: {
-  //   "&:hover": {
-  //     textDecorationStyle: "solid",
-  //   },
-  //   "&:active, &:focus": {
-  //     textDecoration: "none",
-  //   },
-  // },
   "@media": {
     [mediaQueries.print]: {
       color: "inherit",
       textDecoration: "none",
     },
   },
+})
+
+globalStyle("a:hover", {
+  textDecorationStyle: "solid",
+})
+
+globalStyle("a:active, a:focus", {
+  textDecoration: "none",
 })
 
 globalStyle("button:focus, a:focus, img:focus, *[tabindex]:focus", {
@@ -159,6 +161,10 @@ globalStyle("figure", {
 
 globalStyle("dd", {
   marginLeft: vspace.one,
+})
+
+globalStyle("textarea", {
+  maxWidth: "100%",
 })
 
 let t = typography.toJSON()
