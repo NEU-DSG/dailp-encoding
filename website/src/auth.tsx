@@ -1,6 +1,6 @@
 import { HubCallback } from "@aws-amplify/core"
 import Amplify, { Auth, Hub } from "aws-amplify"
-import React, { createContext, useContext, useEffect, useState } from "react"
+import React, { createContext, useContext, useState } from "react"
 
 const UserContext = createContext(null)
 

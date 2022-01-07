@@ -1,5 +1,13 @@
+import parse, {
+  Element,
+  HTMLReactParserOptions,
+  attributesToProps,
+  domToReact,
+} from "html-react-parser"
 import React from "react"
+import Link from "src/components/link"
 import * as Wordpress from "src/graphql/wordpress"
+import { wordpressUrl } from "src/theme"
 
 interface Props {
   slug: string
@@ -12,7 +20,7 @@ const WordpressPage = ({ slug }: Props) => {
   const wpPage = data?.page?.__typename === "Page" && data.page
 
   if (wpPage) {
-    return <div dangerouslySetInnerHTML={{ __html: wpPage.content }} />
+    return <WordpressContents content={wpPage.content} />
   } else if (fetching) {
     return (
       <div>
@@ -25,3 +33,27 @@ const WordpressPage = ({ slug }: Props) => {
 }
 
 export default WordpressPage
+
+export const WordpressContents = ({ content }: { content: string }) => {
+  const parsed = parse(content, parseOptions)
+  return <>{parsed}</>
+}
+
+const parseOptions: HTMLReactParserOptions = {
+  replace(node) {
+    // Replace WordPress links with absolute local paths.
+    // "https://wp.dailp.northeastern.edu/" => "/"
+    if (
+      node instanceof Element &&
+      node.name === "a" &&
+      node.attribs?.href?.startsWith(wordpressUrl)
+    ) {
+      const props = attributesToProps(node.attribs)
+      return (
+        <Link {...props} href={props.href.slice(wordpressUrl.length)}>
+          {domToReact(node.children, parseOptions)}
+        </Link>
+      )
+    }
+  },
+}

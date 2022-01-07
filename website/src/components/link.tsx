@@ -12,7 +12,6 @@ export default function Link(props: React.HTMLProps<HTMLAnchorElement>) {
   if (href.startsWith("/")) {
     finalHref = baseUrl + href.slice(1)
   } else {
-    console.warn(`Link href '${href}' should start with / or #`)
     finalHref = href
   }
   return <a href={finalHref} {...rest} />

@@ -45,7 +45,7 @@ function DocumentDetails({ id }: Props) {
       {doc.sources.length ? (
         <section className={fullWidth}>
           Original document provided courtesy of{" "}
-          <Link href={doc.sources[0].link}>{doc.sources[0].name}</Link>.
+          <a href={doc.sources[0].link}>{doc.sources[0].name}</a>.
         </section>
       ) : null}
     </>
