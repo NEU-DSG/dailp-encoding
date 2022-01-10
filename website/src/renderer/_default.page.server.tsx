@@ -37,6 +37,9 @@ export function render(pageContext: PageContextBuiltIn & PageContext) {
   }
 }
 
+const ssr = ssrExchange({ initialState: undefined, isClient: false })
+const client = customClient(true, [ssr])
+
 /**
  * Gather the required data for each page before rendering it.
  */
@@ -50,9 +53,8 @@ export async function onBeforeRender(
       pageContext: { urqlState: {} },
     }
   } else {
-    const { Page, pageProps, routeParams } = pageContext
-    const ssr = ssrExchange({ initialState: undefined, isClient: false })
-    const client = customClient(true, [ssr])
+    // Clear the SSR data store before prerendering.
+    ssr.restoreData({})
 
     const page = <PageShell pageContext={pageContext} client={client} />
 
