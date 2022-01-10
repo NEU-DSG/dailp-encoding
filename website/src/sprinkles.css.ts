@@ -1,4 +1,4 @@
-import { createTheme, style } from "@vanilla-extract/css"
+import { createTheme, createVar, style } from "@vanilla-extract/css"
 import { createSprinkles, defineProperties } from "@vanilla-extract/sprinkles"
 import { paddingX } from "src/style-utils"
 
@@ -257,7 +257,15 @@ export const std = {
 export const paddedWidth = style(paddingX(hspace.edge))
 
 export const largeDialog = style({
-  width: "var(--most-width)",
+  width: "95%",
+  "@media": {
+    [mediaQueries.medium]: {
+      width: "35rem",
+    },
+    [mediaQueries.large]: {
+      width: "45rem",
+    },
+  },
 })
 
 export const button = style([

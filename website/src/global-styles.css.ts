@@ -1,4 +1,4 @@
-import { globalFontFace, globalStyle } from "@vanilla-extract/css"
+import { globalStyle } from "@vanilla-extract/css"
 import { important } from "polished"
 import {
   colors,
@@ -16,21 +16,6 @@ for (const selector in t) {
 }
 
 globalStyle("*", { boxSizing: "border-box" })
-
-// TODO Use a typed variable for this!
-globalStyle(":root", {
-  vars: {
-    "--most-width": "95%",
-  },
-  "@media": {
-    [mediaQueries.medium]: {
-      vars: { "--most-width": "35rem" },
-    },
-    [mediaQueries.large]: {
-      vars: { "--most-width": "45rem" },
-    },
-  },
-})
 
 globalStyle("html", {
   margin: 0,
