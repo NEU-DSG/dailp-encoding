@@ -10,6 +10,11 @@ import {
 import { paddingY } from "./style-utils"
 import { typography } from "./theme"
 
+const t = typography.toJSON()
+for (const selector in t) {
+  globalStyle(selector, t[selector])
+}
+
 globalStyle("*", { boxSizing: "border-box" })
 
 // TODO Use a typed variable for this!
@@ -43,10 +48,8 @@ globalStyle("body", {
   margin: 0,
   padding: 0,
   fontFamily: theme.fonts.body,
-  ...important({ backgroundColor: colors.footer }),
   "@media": {
     [mediaQueries.print]: important({
-      backgroundColor: "none",
       color: "black",
     }),
   },
@@ -166,11 +169,6 @@ globalStyle("dd", {
 globalStyle("textarea", {
   maxWidth: "100%",
 })
-
-let t = typography.toJSON()
-for (const selector in t) {
-  globalStyle(selector, t[selector])
-}
 
 // These styles affect all pages.
 // const globalStyles = css`

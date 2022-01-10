@@ -1,6 +1,6 @@
 import { vanillaExtractPlugin } from "@vanilla-extract/vite-plugin"
 import react from "@vitejs/plugin-react"
-import { UserConfig, defineConfig } from "vite"
+import { defineConfig } from "vite"
 import ssr from "vite-plugin-ssr/plugin"
 import tsconfigPaths from "vite-tsconfig-paths"
 
