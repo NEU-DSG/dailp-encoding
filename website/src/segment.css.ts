@@ -1,34 +1,44 @@
 import { StyleRule, style, styleVariants } from "@vanilla-extract/css"
 import { margin } from "polished"
-import sprinkles, { mediaQueries, std, theme, vspace } from "src/sprinkles.css"
+import {
+  colors,
+  hspace,
+  mediaQueries,
+  radii,
+  std,
+  theme,
+  thickness,
+  vspace,
+} from "src/sprinkles.css"
+import { marginY, paddingY } from "./style-utils"
 
-export const pageBreak = style([
-  sprinkles({
-    display: { any: "block", print: "none" },
-    paddingTop: "half",
-  }),
-  {
-    width: "40%",
-    margin: "auto",
-    textAlign: "center",
-    borderTop: "1px solid gray",
+export const pageBreak = style({
+  display: "block",
+  width: "40%",
+  margin: "auto",
+  textAlign: "center",
+  borderTop: "1px solid gray",
+  paddingTop: vspace.half,
+  "@media": {
+    [mediaQueries.print]: {
+      display: "none",
+    },
   },
-])
+})
 
 export const inheritFont = style({
   fontFamily: "inherit",
   fontSize: "inherit",
 })
 
-const morphemeBase = style([
-  sprinkles({
-    color: "inherit",
-    padding: 0,
-    display: "inline-block",
-    minWidth: "edge",
-  }),
-  { border: "none", background: "none" },
-])
+const morphemeBase = style({
+  border: "none",
+  background: "none",
+  color: "inherit",
+  padding: 0,
+  display: "inline-block",
+  minWidth: hspace.edge,
+})
 
 export const morphemeButton = styleVariants({
   lexical: [morphemeBase, inheritFont],
@@ -36,29 +46,29 @@ export const morphemeButton = styleVariants({
 })
 
 export const wordGroup = style([
-  sprinkles({
-    display: { any: "block", medium: "inline-block", print: "inline-block" },
-    position: "relative",
-    marginY: "half",
-    paddingY: "half",
-    paddingLeft: "halfEdge",
-    paddingRight: 0,
-    borderWidth: "thick",
-    borderStyle: "solid",
-    borderColor: "borders",
-    borderRadius: "medium",
-    lineHeight: "one",
-  }),
+  marginY(vspace.half),
+  paddingY(vspace.half),
   {
+    display: "block",
+    paddingLeft: hspace.halfEdge,
+    paddingRight: 0,
+    borderWidth: thickness.thick,
+    borderStyle: "solid",
+    borderColor: colors.borders,
+    borderRadius: radii.medium,
+    lineHeight: vspace.one,
+    position: "relative",
     pageBreakInside: "avoid",
     breakInside: "avoid",
     "@media": {
       [mediaQueries.medium]: {
+        display: "inline-block",
         padding: 0,
         border: "none",
         ...margin(vspace.half, "3rem", vspace.one, 0),
       },
       [mediaQueries.print]: {
+        display: "inline-block",
         padding: 0,
         border: "none",
         ...margin(0, "3.5rem", vspace[1.5], 0),
@@ -72,24 +82,26 @@ export const syllabaryLayer = style({
   fontSize: "1.15rem",
 })
 
-export const plainSyllabary = style([syllabaryLayer, { marginRight: "1ch" }])
+export const plainSyllabary = style({
+  marginRight: hspace.char,
+  fontFamily: theme.fonts.cherokee,
+  fontSize: "1.15rem",
+})
 
-const documentBlockBase = style([
-  {
-    position: "relative",
-    display: "block",
-    breakAfter: "avoid",
-    marginTop: vspace[1.5],
-    marginBottom: vspace.one,
-    paddingBottom: vspace.one,
-    "@media": {
-      [mediaQueries.print]: {
-        paddingBottom: vspace.quarter,
-        marginBottom: vspace.double,
-      },
+const documentBlockBase = style({
+  position: "relative",
+  display: "block",
+  breakAfter: "avoid",
+  marginTop: vspace[1.5],
+  marginBottom: vspace.one,
+  paddingBottom: vspace.one,
+  "@media": {
+    [mediaQueries.print]: {
+      paddingBottom: vspace.quarter,
+      marginBottom: vspace.double,
     },
   },
-])
+})
 
 const borderedBase: StyleRule = {
   borderBottom: `1px solid ${theme.colors.text}`,
@@ -117,8 +129,11 @@ export const documentBlock = styleVariants({
   wordByWord: [documentBlockBase, bordered],
 })
 
-export const inlineBlock = sprinkles({
-  display: { medium: "inline-block", print: "inline-block" },
+export const inlineBlock = style({
+  "@media": {
+    [mediaQueries.medium]: { display: "inline-block" },
+    [mediaQueries.print]: { display: "inline-block" },
+  },
 })
 
 export const storySection = style({
@@ -141,14 +156,14 @@ export const annotationSection = styleVariants({
 
 export const audioContainer = style({ paddingLeft: "40%" })
 
-export const infoIcon = style([
-  sprinkles({
-    display: { print: "none" },
-    marginLeft: "halfEdge",
-  }),
-  {
-    cursor: "help",
+export const infoIcon = style({
+  cursor: "help",
+  marginLeft: hspace.halfEdge,
+  "@media": {
+    [mediaQueries.print]: {
+      display: "none",
+    },
   },
-])
+})
 
-export const linkSvg = sprinkles({ fill: "link" })
+export const linkSvg = style({ fill: colors.link })

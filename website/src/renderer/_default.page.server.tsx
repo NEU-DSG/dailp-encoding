@@ -23,22 +23,19 @@ export function render(pageContext: PageContextBuiltIn & PageContext) {
   } else {
     const { pageHtml, pageHead } = pageContext
     return escapeInject`<!DOCTYPE html>
-    <html ${pageHead.htmlAttributes.toString()}>
+    <html ${dangerouslySkipEscape(pageHead.htmlAttributes.toString())}>
       <head>
         ${baseScript}
         ${dangerouslySkipEscape(pageHead.title.toString())}
         ${dangerouslySkipEscape(pageHead.meta.toString())}
         ${dangerouslySkipEscape(pageHead.link.toString())}
       </head>
-      <body ${pageHead.bodyAttributes.toString()}>
+      <body ${dangerouslySkipEscape(pageHead.bodyAttributes.toString())}>
         <div id="${rootElementId}">${dangerouslySkipEscape(pageHtml)}</div>
       </body>
     </html>`
   }
 }
-
-const ssr = ssrExchange({ initialState: undefined, isClient: false })
-const client = customClient(true, [ssr])
 
 /**
  * Gather the required data for each page before rendering it.
@@ -53,8 +50,8 @@ export async function onBeforeRender(
       pageContext: { urqlState: {} },
     }
   } else {
-    // Clear the SSR data store before prerendering.
-    ssr.restoreData({})
+    const ssr = ssrExchange({ initialState: undefined, isClient: false })
+    const client = customClient(true, [ssr])
 
     const page = <PageShell pageContext={pageContext} client={client} />
 

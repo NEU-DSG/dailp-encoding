@@ -1,13 +1,11 @@
 import React from "react"
-import { wordpressUrl } from "./theme"
-import { FaGithub } from "react-icons/fa"
+import { wordpressUrl } from "src/theme"
 import * as css from "./footer.css"
-import { hideOnPrint } from "./sprinkles.css"
 
 /** University affiliation, related navigation links, and contact info.  */
 const Footer = () => {
   return (
-    <footer className={hideOnPrint}>
+    <footer className={css.darkTheme}>
       <div className={css.light}>
         <div className={css.content} style={{ display: "block" }}>
           This project was created using{" "}
@@ -23,6 +21,7 @@ const Footer = () => {
         <div className={css.content}>
           <a href="https://northeastern.edu">
             <img
+              className={css.image}
               src={`${wordpressUrl}/wp-content/themes/quest-child/images/nu-light.svg`}
               alt="Northeastern University"
               width={180}
@@ -33,7 +32,6 @@ const Footer = () => {
             Browse the source code
           </a>
         </div>
-        <div className={css.content}>Last Updated on</div>
       </div>
     </footer>
   )

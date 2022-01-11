@@ -14,3 +14,11 @@ export function paddingX(x: StyleRule["padding"]): StyleRule {
 export function paddingY(x: StyleRule["padding"]): StyleRule {
   return { paddingTop: x, paddingBottom: x }
 }
+
+export function marginX(x: StyleRule["margin"]): StyleRule {
+  return { marginLeft: x, marginRight: x }
+}
+
+export function marginY(x: StyleRule["margin"]): StyleRule {
+  return { marginTop: x, marginBottom: x }
+}

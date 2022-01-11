@@ -661,15 +661,23 @@ export type DocumentsPagesQuery = { __typename?: 'Query', allDocuments: Array<{ 
 
 export type AnnotatedDocumentQueryVariables = Exact<{
   id: Scalars['String'];
+}>;
+
+
+export type AnnotatedDocumentQuery = { __typename?: 'Query', document: { __typename?: 'AnnotatedDoc', id: string, title: string, slug: string, isReference: boolean, collection: { __typename?: 'DocumentCollection', name: string, slug: string } | null | undefined, date: { __typename?: 'Date', year: number } | null | undefined, sources: Array<{ __typename?: 'SourceAttribution', name: string, link: string }>, pageImages: { __typename?: 'IiifImages', urls: Array<string> } | null | undefined, audioRecording: { __typename?: 'AudioSlice', resourceUrl: string, startTime: number | null | undefined, endTime: number | null | undefined } | null | undefined } | null | undefined };
+
+export type DocumentContentsQueryVariables = Exact<{
+  id: Scalars['String'];
+  morphemeSystem: InputMaybe<CherokeeOrthography>;
   isReference: Scalars['Boolean'];
 }>;
 
 
-export type AnnotatedDocumentQuery = { __typename?: 'Query', document: { __typename?: 'AnnotatedDoc', id: string, title: string, slug: string, collection: { __typename?: 'DocumentCollection', name: string, slug: string } | null | undefined, date: { __typename?: 'Date', year: number } | null | undefined, sources: Array<{ __typename?: 'SourceAttribution', name: string, link: string }>, pageImages: { __typename?: 'IiifImages', urls: Array<string> } | null | undefined, translatedSegments?: Array<{ __typename?: 'TranslatedSection', source: { __typename: 'AnnotatedForm', index: number, source: string, romanizedSource: string | null | undefined, simplePhonetics: string | null | undefined, phonemic: string | null | undefined, englishGloss: Array<string>, commentary: string | null | undefined, segments: Array<{ __typename?: 'MorphemeSegment', gloss: string, nextSeparator: string | null | undefined, shapeTth: string, shapeDt: string, shapeDtSimple: string, matchingTag: { __typename?: 'MorphemeTag', id: string, taoc: { __typename?: 'TagForm', tag: string, title: string } | null | undefined, learner: { __typename?: 'TagForm', tag: string, title: string } | null | undefined, crg: { __typename?: 'TagForm', tag: string, title: string } | null | undefined } | null | undefined }> | null | undefined, audioTrack: { __typename?: 'AudioSlice', index: number, resourceUrl: string, startTime: number | null | undefined, endTime: number | null | undefined } | null | undefined } | { __typename: 'AnnotatedPhrase', ty: BlockType, index: number, parts: Array<{ __typename?: 'AnnotatedForm', index: number, source: string, romanizedSource: string | null | undefined, simplePhonetics: string | null | undefined, phonemic: string | null | undefined, englishGloss: Array<string>, commentary: string | null | undefined, segments: Array<{ __typename?: 'MorphemeSegment', gloss: string, nextSeparator: string | null | undefined, shapeTth: string, shapeDt: string, shapeDtSimple: string, matchingTag: { __typename?: 'MorphemeTag', id: string, taoc: { __typename?: 'TagForm', tag: string, title: string } | null | undefined, learner: { __typename?: 'TagForm', tag: string, title: string } | null | undefined, crg: { __typename?: 'TagForm', tag: string, title: string } | null | undefined } | null | undefined }> | null | undefined, audioTrack: { __typename?: 'AudioSlice', index: number, resourceUrl: string, startTime: number | null | undefined, endTime: number | null | undefined } | null | undefined } | { __typename?: 'AnnotatedPhrase' } | { __typename?: 'LineBreak' } | { __typename?: 'PageBreak' }> } | { __typename: 'LineBreak' } | { __typename: 'PageBreak', index: number }, translation: { __typename?: 'TranslationBlock', text: string } | null | undefined }> | null | undefined, forms?: Array<{ __typename?: 'AnnotatedForm', index: number, source: string, romanizedSource: string | null | undefined, simplePhonetics: string | null | undefined, phonemic: string | null | undefined, englishGloss: Array<string>, commentary: string | null | undefined, segments: Array<{ __typename?: 'MorphemeSegment', gloss: string, nextSeparator: string | null | undefined, shapeTth: string, shapeDt: string, shapeDtSimple: string, matchingTag: { __typename?: 'MorphemeTag', id: string, taoc: { __typename?: 'TagForm', tag: string, title: string } | null | undefined, learner: { __typename?: 'TagForm', tag: string, title: string } | null | undefined, crg: { __typename?: 'TagForm', tag: string, title: string } | null | undefined } | null | undefined }> | null | undefined, audioTrack: { __typename?: 'AudioSlice', index: number, resourceUrl: string, startTime: number | null | undefined, endTime: number | null | undefined } | null | undefined }>, audioRecording: { __typename?: 'AudioSlice', resourceUrl: string, startTime: number | null | undefined, endTime: number | null | undefined } | null | undefined } | null | undefined };
+export type DocumentContentsQuery = { __typename?: 'Query', document: { __typename?: 'AnnotatedDoc', translatedSegments?: Array<{ __typename?: 'TranslatedSection', source: { __typename: 'AnnotatedForm', index: number, source: string, romanizedSource: string | null | undefined, simplePhonetics: string | null | undefined, phonemic: string | null | undefined, englishGloss: Array<string>, commentary: string | null | undefined, segments: Array<{ __typename?: 'MorphemeSegment', morpheme: string, gloss: string, nextSeparator: string | null | undefined, matchingTag: { __typename?: 'MorphemeTag', id: string, taoc: { __typename?: 'TagForm', tag: string, title: string } | null | undefined, learner: { __typename?: 'TagForm', tag: string, title: string } | null | undefined, crg: { __typename?: 'TagForm', tag: string, title: string } | null | undefined } | null | undefined }> | null | undefined, audioTrack: { __typename?: 'AudioSlice', index: number, resourceUrl: string, startTime: number | null | undefined, endTime: number | null | undefined } | null | undefined } | { __typename: 'AnnotatedPhrase', ty: BlockType, index: number, parts: Array<{ __typename?: 'AnnotatedForm', index: number, source: string, romanizedSource: string | null | undefined, simplePhonetics: string | null | undefined, phonemic: string | null | undefined, englishGloss: Array<string>, commentary: string | null | undefined, segments: Array<{ __typename?: 'MorphemeSegment', morpheme: string, gloss: string, nextSeparator: string | null | undefined, matchingTag: { __typename?: 'MorphemeTag', id: string, taoc: { __typename?: 'TagForm', tag: string, title: string } | null | undefined, learner: { __typename?: 'TagForm', tag: string, title: string } | null | undefined, crg: { __typename?: 'TagForm', tag: string, title: string } | null | undefined } | null | undefined }> | null | undefined, audioTrack: { __typename?: 'AudioSlice', index: number, resourceUrl: string, startTime: number | null | undefined, endTime: number | null | undefined } | null | undefined } | { __typename?: 'AnnotatedPhrase' } | { __typename?: 'LineBreak' } | { __typename?: 'PageBreak' }> } | { __typename: 'LineBreak' } | { __typename: 'PageBreak', index: number }, translation: { __typename?: 'TranslationBlock', text: string } | null | undefined }> | null | undefined, forms?: Array<{ __typename?: 'AnnotatedForm', index: number, source: string, romanizedSource: string | null | undefined, simplePhonetics: string | null | undefined, phonemic: string | null | undefined, englishGloss: Array<string>, commentary: string | null | undefined, segments: Array<{ __typename?: 'MorphemeSegment', morpheme: string, gloss: string, nextSeparator: string | null | undefined, matchingTag: { __typename?: 'MorphemeTag', id: string, taoc: { __typename?: 'TagForm', tag: string, title: string } | null | undefined, learner: { __typename?: 'TagForm', tag: string, title: string } | null | undefined, crg: { __typename?: 'TagForm', tag: string, title: string } | null | undefined } | null | undefined }> | null | undefined, audioTrack: { __typename?: 'AudioSlice', index: number, resourceUrl: string, startTime: number | null | undefined, endTime: number | null | undefined } | null | undefined }> } | null | undefined };
 
-export type BlockFieldsFragment = { __typename?: 'AnnotatedPhrase', ty: BlockType, index: number, parts: Array<{ __typename?: 'AnnotatedForm', index: number, source: string, romanizedSource: string | null | undefined, simplePhonetics: string | null | undefined, phonemic: string | null | undefined, englishGloss: Array<string>, commentary: string | null | undefined, segments: Array<{ __typename?: 'MorphemeSegment', gloss: string, nextSeparator: string | null | undefined, shapeTth: string, shapeDt: string, shapeDtSimple: string, matchingTag: { __typename?: 'MorphemeTag', id: string, taoc: { __typename?: 'TagForm', tag: string, title: string } | null | undefined, learner: { __typename?: 'TagForm', tag: string, title: string } | null | undefined, crg: { __typename?: 'TagForm', tag: string, title: string } | null | undefined } | null | undefined }> | null | undefined, audioTrack: { __typename?: 'AudioSlice', index: number, resourceUrl: string, startTime: number | null | undefined, endTime: number | null | undefined } | null | undefined } | { __typename?: 'AnnotatedPhrase' } | { __typename?: 'LineBreak' } | { __typename?: 'PageBreak' }> };
+export type BlockFieldsFragment = { __typename?: 'AnnotatedPhrase', ty: BlockType, index: number, parts: Array<{ __typename?: 'AnnotatedForm', index: number, source: string, romanizedSource: string | null | undefined, simplePhonetics: string | null | undefined, phonemic: string | null | undefined, englishGloss: Array<string>, commentary: string | null | undefined, segments: Array<{ __typename?: 'MorphemeSegment', morpheme: string, gloss: string, nextSeparator: string | null | undefined, matchingTag: { __typename?: 'MorphemeTag', id: string, taoc: { __typename?: 'TagForm', tag: string, title: string } | null | undefined, learner: { __typename?: 'TagForm', tag: string, title: string } | null | undefined, crg: { __typename?: 'TagForm', tag: string, title: string } | null | undefined } | null | undefined }> | null | undefined, audioTrack: { __typename?: 'AudioSlice', index: number, resourceUrl: string, startTime: number | null | undefined, endTime: number | null | undefined } | null | undefined } | { __typename?: 'AnnotatedPhrase' } | { __typename?: 'LineBreak' } | { __typename?: 'PageBreak' }> };
 
-export type FormFieldsFragment = { __typename?: 'AnnotatedForm', index: number, source: string, romanizedSource: string | null | undefined, simplePhonetics: string | null | undefined, phonemic: string | null | undefined, englishGloss: Array<string>, commentary: string | null | undefined, segments: Array<{ __typename?: 'MorphemeSegment', gloss: string, nextSeparator: string | null | undefined, shapeTth: string, shapeDt: string, shapeDtSimple: string, matchingTag: { __typename?: 'MorphemeTag', id: string, taoc: { __typename?: 'TagForm', tag: string, title: string } | null | undefined, learner: { __typename?: 'TagForm', tag: string, title: string } | null | undefined, crg: { __typename?: 'TagForm', tag: string, title: string } | null | undefined } | null | undefined }> | null | undefined, audioTrack: { __typename?: 'AudioSlice', index: number, resourceUrl: string, startTime: number | null | undefined, endTime: number | null | undefined } | null | undefined };
+export type FormFieldsFragment = { __typename?: 'AnnotatedForm', index: number, source: string, romanizedSource: string | null | undefined, simplePhonetics: string | null | undefined, phonemic: string | null | undefined, englishGloss: Array<string>, commentary: string | null | undefined, segments: Array<{ __typename?: 'MorphemeSegment', morpheme: string, gloss: string, nextSeparator: string | null | undefined, matchingTag: { __typename?: 'MorphemeTag', id: string, taoc: { __typename?: 'TagForm', tag: string, title: string } | null | undefined, learner: { __typename?: 'TagForm', tag: string, title: string } | null | undefined, crg: { __typename?: 'TagForm', tag: string, title: string } | null | undefined } | null | undefined }> | null | undefined, audioTrack: { __typename?: 'AudioSlice', index: number, resourceUrl: string, startTime: number | null | undefined, endTime: number | null | undefined } | null | undefined };
 
 export type CollectionQueryVariables = Exact<{
   slug: Scalars['String'];
@@ -745,9 +753,7 @@ export const FormFieldsFragmentDoc = gql`
   simplePhonetics
   phonemic
   segments {
-    shapeTth: morpheme(system: TAOC)
-    shapeDt: morpheme(system: CRG)
-    shapeDtSimple: morpheme(system: LEARNER)
+    morpheme(system: $morphemeSystem)
     gloss
     matchingTag {
       id
@@ -813,11 +819,12 @@ export function useDocumentsPagesQuery(options: Omit<Urql.UseQueryArgs<Documents
   return Urql.useQuery<DocumentsPagesQuery>({ query: DocumentsPagesDocument, ...options });
 };
 export const AnnotatedDocumentDocument = gql`
-    query AnnotatedDocument($id: String!, $isReference: Boolean!) {
+    query AnnotatedDocument($id: String!) {
   document(id: $id) {
     id
     title
     slug
+    isReference
     collection {
       name
       slug
@@ -832,6 +839,21 @@ export const AnnotatedDocumentDocument = gql`
     pageImages {
       urls
     }
+    audioRecording {
+      resourceUrl
+      startTime
+      endTime
+    }
+  }
+}
+    `;
+
+export function useAnnotatedDocumentQuery(options: Omit<Urql.UseQueryArgs<AnnotatedDocumentQueryVariables>, 'query'> = {}) {
+  return Urql.useQuery<AnnotatedDocumentQuery>({ query: AnnotatedDocumentDocument, ...options });
+};
+export const DocumentContentsDocument = gql`
+    query DocumentContents($id: String!, $morphemeSystem: CherokeeOrthography, $isReference: Boolean!) {
+  document(id: $id) {
     translatedSegments @skip(if: $isReference) {
       source {
         __typename
@@ -852,18 +874,13 @@ export const AnnotatedDocumentDocument = gql`
     forms @include(if: $isReference) {
       ...FormFields
     }
-    audioRecording {
-      resourceUrl
-      startTime
-      endTime
-    }
   }
 }
     ${FormFieldsFragmentDoc}
 ${BlockFieldsFragmentDoc}`;
 
-export function useAnnotatedDocumentQuery(options: Omit<Urql.UseQueryArgs<AnnotatedDocumentQueryVariables>, 'query'> = {}) {
-  return Urql.useQuery<AnnotatedDocumentQuery>({ query: AnnotatedDocumentDocument, ...options });
+export function useDocumentContentsQuery(options: Omit<Urql.UseQueryArgs<DocumentContentsQueryVariables>, 'query'> = {}) {
+  return Urql.useQuery<DocumentContentsQuery>({ query: DocumentContentsDocument, ...options });
 };
 export const CollectionDocument = gql`
     query Collection($slug: String!) {

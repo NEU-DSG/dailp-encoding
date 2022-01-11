@@ -13,11 +13,12 @@ query DocumentsPages {
   }
 }
 
-query AnnotatedDocument($id: String!, $isReference: Boolean!) {
+query AnnotatedDocument($id: String!) {
   document(id: $id) {
     id
     title
     slug
+    isReference
     collection {
       name
       slug
@@ -32,6 +33,16 @@ query AnnotatedDocument($id: String!, $isReference: Boolean!) {
     pageImages {
       urls
     }
+    audioRecording {
+      resourceUrl
+      startTime
+      endTime
+    }
+  }
+}
+
+query DocumentContents($id: String!, $morphemeSystem: CherokeeOrthography, $isReference: Boolean!) {
+  document(id: $id) {
     translatedSegments @skip(if: $isReference) {
       source {
         __typename
@@ -52,11 +63,6 @@ query AnnotatedDocument($id: String!, $isReference: Boolean!) {
     forms @include(if: $isReference) {
       ...FormFields
     }
-    audioRecording {
-      resourceUrl
-      startTime
-      endTime
-    }
   }
 }
 
@@ -76,9 +82,7 @@ fragment FormFields on AnnotatedForm {
   simplePhonetics
   phonemic
   segments {
-    shapeTth: morpheme(system: TAOC)
-    shapeDt: morpheme(system: CRG)
-    shapeDtSimple: morpheme(system: LEARNER)
+    morpheme(system: $morphemeSystem)
     gloss
     matchingTag {
       id

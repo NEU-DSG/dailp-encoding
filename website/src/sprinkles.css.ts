@@ -1,6 +1,6 @@
-import { createTheme, createVar, style } from "@vanilla-extract/css"
+import { createTheme, style } from "@vanilla-extract/css"
 import { createSprinkles, defineProperties } from "@vanilla-extract/sprinkles"
-import { paddingX } from "src/style-utils"
+import { marginX, paddingX, paddingY } from "src/style-utils"
 
 function rhythm(v: number): string {
   const size = v * 1.49
@@ -38,13 +38,13 @@ export const colors = {
   inherit: "inherit",
 }
 
-const radii = {
+export const radii = {
   none: 0,
   small: "1px",
   medium: "2px",
 }
 
-const thickness = {
+export const thickness = {
   none: 0,
   thin: "1px",
   thick: "2px",
@@ -196,11 +196,15 @@ const tooltip = style([
   },
 ])
 
-export const fullWidth = sprinkles({
-  width: {
-    any: "full",
-    medium: "medium",
-    large: "large",
+export const fullWidth = style({
+  width: hsize.full,
+  "@media": {
+    [mediaQueries.medium]: {
+      width: hsize.medium,
+    },
+    [mediaQueries.large]: {
+      width: hsize.large,
+    },
   },
 })
 
@@ -241,8 +245,8 @@ export const wrappedColumn = style({
 })
 
 const smallCaps = style([
-  sprinkles({ fontFamily: "smallCaps" }),
   {
+    fontFamily: theme.fonts.smallCaps,
     fontFeatureSettings: `"smcp"`,
     textTransform: "lowercase",
   },
@@ -257,32 +261,32 @@ export const std = {
 export const paddedWidth = style(paddingX(hspace.edge))
 
 export const largeDialog = style({
-  width: "95%",
-  "@media": {
-    [mediaQueries.medium]: {
-      width: "35rem",
-    },
-    [mediaQueries.large]: {
-      width: "45rem",
-    },
-  },
+  width: "95vw",
+  // "@media": {
+  //   [mediaQueries.medium]: {
+  //     width: "35rem",
+  //   },
+  //   [mediaQueries.large]: {
+  //     width: "45rem",
+  //   },
+  // },
 })
 
 export const button = style([
   sprinkles({
-    fontFamily: "header",
     color: { any: "link", hover: "headings" },
     // background-color: ${Color(theme.colors.button).lighten(0.2).hsl().string()};
     backgroundColor: { any: "button", hover: "button" },
-    paddingX: "char",
-    paddingY: "quarter",
-    marginX: "edge",
-    cursor: "pointer",
     borderWidth: "thick",
     borderColor: "headings",
     borderStyle: "solid",
   }),
+  paddingX(hspace.char),
+  paddingY(vspace.quarter),
+  marginX(hspace.edge),
   {
+    cursor: "pointer",
+    fontFamily: theme.fonts.header,
     selectors: {
       "&:focus, &:active": {
         outline: "none",
@@ -300,10 +304,8 @@ export const button = style([
 
 export const iconButton = style([
   button,
-  sprinkles({
-    padding: "large",
-  }),
   {
+    padding: space.large,
     border: "none",
     margin: 0,
   },

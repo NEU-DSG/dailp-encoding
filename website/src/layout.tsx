@@ -1,14 +1,12 @@
-import "@fontsource/charis-sil/400-italic.css"
-import "@fontsource/charis-sil/400.css"
-import "@fontsource/charis-sil/700-italic.css"
-import "@fontsource/charis-sil/700.css"
 import "@fontsource/quattrocento-sans/latin.css"
 import lazy from "@loadable/component"
+import "normalize.css"
 import React from "react"
 import { isMobile } from "react-device-detect"
 import { Helmet } from "react-helmet"
 import Sticky from "react-stickynode"
-import ClientLayout from "./client/layout"
+
+/* import ClientLayout from "./client/layout" */
 import { isProductionDeployment, useHasMounted } from "./cms/routes"
 import Footer from "./footer"
 import "./global-styles.css"
@@ -17,7 +15,7 @@ import { MobileNav, NavMenu } from "./menu"
 import { hideOnPrint, themeClass } from "./sprinkles.css"
 import "./wordpress.css"
 
-const ClientSignIn = lazy(() => import("./client/signin"))
+/* const ClientSignIn = lazy(() => import("./client/signin")) */
 
 /** Wrapper for most site pages, providing them with a navigation header and footer. */
 const Layout = (p: { title?: string; children: any }) => {
@@ -43,24 +41,23 @@ const Layout = (p: { title?: string; children: any }) => {
                 Perseverance
               </span>
             </div>
-            <SignIn />
           </div>
           <NavMenu />
         </header>
       </Sticky>
-      <ClientLayout>{p.children}</ClientLayout>
+      {p.children}
       <Footer />
     </>
   )
 }
 
-export const SignIn = () => {
-  const hasMounted = useHasMounted()
-  if (hasMounted && !isProductionDeployment()) {
-    return <ClientSignIn />
-  } else {
-    return null
-  }
-}
+/* export const SignIn = () => {
+ *   const hasMounted = useHasMounted()
+ *   if (hasMounted && !isProductionDeployment()) {
+ *     return <ClientSignIn />
+ *   } else {
+ *     return null
+ *   }
+ * } */
 
 export default Layout

@@ -16,11 +16,13 @@ const WP_GRAPHQL_URL = "https://wp.dailp.northeastern.edu/graphql"
 
 export { useQuery }
 
+const context = { url: WP_GRAPHQL_URL }
+
 export function useWpQuery<Data = any, Variables = object>(
   params: UseQueryArgs<Variables, Data>
 ) {
   return useQuery({
-    context: useMemo(() => ({ url: WP_GRAPHQL_URL }), []),
+    context,
     ...params,
   })
 }

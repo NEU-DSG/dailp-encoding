@@ -1,5 +1,14 @@
 import { style } from "@vanilla-extract/css"
-import sprinkles, { std } from "src/sprinkles.css"
+import sprinkles, { hideOnPrint, std, theme } from "src/sprinkles.css"
+
+export const darkTheme = style([
+  hideOnPrint,
+  {
+    vars: {
+      [theme.colors.link]: "white",
+    },
+  },
+])
 
 export const container = style([
   sprinkles({
@@ -16,11 +25,6 @@ export const container = style([
     alignItems: "center",
   },
 ])
-
-export const link = sprinkles({
-  color: { any: "body", selected: "header" },
-  outlineColor: { selected: "header" },
-})
 
 export const image = sprinkles({ marginBottom: 0 })
 

@@ -4,7 +4,8 @@ import * as Dailp from "src/graphql/dailp"
 import { useLocation } from "src/renderer/PageShell"
 import { useHasMounted } from "../cms/routes"
 import Layout from "../layout"
-import { EditablePageContents } from "../templates/editable-page"
+
+/* import { EditablePageContents } from "../templates/editable-page" */
 
 /**
  Handle client-only routes for pages that haven't been statically renderered
@@ -24,12 +25,13 @@ const ClientPage = () => {
   if (fetching) {
     return null
   } else if (data && data.page) {
-    return (
-      <EditablePageContents
-        data={{ dailp: data }}
-        pageContext={{ id: window.location.pathname }}
-      />
-    )
+    return null
+    /* return (
+     *   <EditablePageContents
+     *     data={{ dailp: data }}
+     *     pageContext={{ id: window.location.pathname }}
+     *   />
+     * ) */
   } else {
     return <NotFound />
   }

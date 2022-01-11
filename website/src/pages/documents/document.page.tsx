@@ -1,9 +1,9 @@
-import lazy from "@loadable/component"
+import { DialogContent, DialogOverlay } from "@reach/dialog"
+import "@reach/dialog/styles.css"
 import { ParsedUrlQuery } from "querystring"
-import React, { useState } from "react"
+import React, { lazy, useState } from "react"
 import { isMobile } from "react-device-detect"
 import Sticky from "react-stickynode"
-import { Dialog, DialogBackdrop, useDialogState } from "reakit/Dialog"
 import { Tab, TabList, TabPanel } from "reakit/Tab"
 import { DocumentAudio } from "src/audio-player"
 import { Breadcrumbs } from "src/breadcrumbs"
@@ -26,9 +26,8 @@ import {
   ViewMode,
   tagSetForMode,
 } from "src/types"
+import PageImages from "../../page-image"
 import * as css from "./document.css"
-
-const PageImages = lazy(() => import("../../page-image"))
 
 enum Tabs {
   ANNOTATION = "annotation-tab",
@@ -40,7 +39,7 @@ export type Document = Dailp.AnnotatedDocumentQuery["document"]
 /** A full annotated document, including all metadata and the translation(s) */
 const AnnotatedDocumentPage = (props) => {
   const [{ data }] = Dailp.useAnnotatedDocumentQuery({
-    variables: { id: props.id, isReference: false },
+    variables: { id: props.id },
   })
   const doc = data?.document
   if (!doc) {
@@ -131,11 +130,17 @@ const WideSticky = (props: { top: string; children: any; className?: any }) => (
   </Sticky>
 )
 
-const TranslationTab = ({ doc }) => {
-  const dialog = useDialogState()
+const TranslationTab = ({ doc }: { doc: Document }) => {
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const closeDialog = () => setDialogOpen(false)
+
   const [selectedMorpheme, setMorpheme] = useState<BasicMorphemeSegment | null>(
     null
   )
+  const openDetails = (morpheme: BasicMorphemeSegment) => {
+    setMorpheme(morpheme)
+    setDialogOpen(true)
+  }
 
   const [phoneticRepresentation, setPhoneticRepresentation] =
     useState<PhoneticRepresentation>(selectedPhonetics())
@@ -147,9 +152,12 @@ const TranslationTab = ({ doc }) => {
   const tagSet = tagSetForMode(experienceLevel)
   return (
     <>
-      <DialogBackdrop className={css.morphemeDialogBackdrop} {...dialog}>
-        <Dialog
-          {...dialog}
+      <DialogOverlay
+        className={css.morphemeDialogBackdrop}
+        isOpen={dialogOpen}
+        onDismiss={closeDialog}
+      >
+        <DialogContent
           className={css.morphemeDialog}
           aria-label="Segment Details"
         >
@@ -157,12 +165,12 @@ const TranslationTab = ({ doc }) => {
             <MorphemeDetails
               documentId={doc.id}
               segment={selectedMorpheme}
-              dialog={dialog}
+              hideDialog={closeDialog}
               tagSet={tagSet}
             />
           ) : null}
-        </Dialog>
-      </DialogBackdrop>
+        </DialogContent>
+      </DialogOverlay>
 
       <p className={css.paragraph}>
         Each mode below displays different information about the words on the
@@ -177,33 +185,67 @@ const TranslationTab = ({ doc }) => {
       </SolidSticky>
 
       <article className={css.annotationContents}>
-        {doc.translatedSegments?.map((seg, i) => (
-          <Segment
-            key={i}
-            segment={seg.source}
-            dialog={dialog}
-            onOpenDetails={setMorpheme}
-            viewMode={experienceLevel}
-            tagSet={tagSet}
-            translations={seg.translation as Dailp.TranslationBlock}
-            pageImages={doc.pageImages}
-            phoneticRepresentation={phoneticRepresentation}
-          />
-        ))}
-        {doc.forms?.map((form, i) => (
-          <AnnotatedForm
-            key={i}
-            segment={form}
-            dialog={dialog}
-            onOpenDetails={setMorpheme}
-            viewMode={experienceLevel}
-            tagSet={tagSet}
-            phoneticRepresentation={phoneticRepresentation}
-            translations={null}
-            pageImages={doc.pageImages}
-          />
-        ))}
+        <DocumentContents
+          {...{
+            experienceLevel,
+            doc,
+            openDetails,
+            tagSet,
+            phoneticRepresentation,
+          }}
+        />
       </article>
+    </>
+  )
+}
+
+const DocumentContents = ({
+  experienceLevel,
+  doc,
+  openDetails,
+  tagSet,
+  phoneticRepresentation,
+}) => {
+  let morphemeSystem = Dailp.CherokeeOrthography.Learner
+  if (experienceLevel === ViewMode.AnalysisDt) {
+    morphemeSystem = Dailp.CherokeeOrthography.Crg
+  } else if (experienceLevel === ViewMode.AnalysisTth) {
+    morphemeSystem = Dailp.CherokeeOrthography.Taoc
+  }
+
+  const [{ data }] = Dailp.useDocumentContentsQuery({
+    variables: { id: doc.id, isReference: doc.isReference, morphemeSystem },
+  })
+  const docContents = data?.document
+  if (!docContents) {
+    return <>Loading...</>
+  }
+  return (
+    <>
+      {docContents.translatedSegments?.map((seg, i) => (
+        <Segment
+          key={i}
+          segment={seg.source}
+          onOpenDetails={openDetails}
+          viewMode={experienceLevel}
+          tagSet={tagSet}
+          translations={seg.translation as Dailp.TranslationBlock}
+          pageImages={doc.pageImages?.urls}
+          phoneticRepresentation={phoneticRepresentation}
+        />
+      ))}
+      {docContents.forms?.map((form, i) => (
+        <AnnotatedForm
+          key={i}
+          segment={form}
+          onOpenDetails={openDetails}
+          viewMode={experienceLevel}
+          tagSet={tagSet}
+          phoneticRepresentation={phoneticRepresentation}
+          translations={null}
+          pageImages={doc.pageImages?.urls}
+        />
+      ))}
     </>
   )
 }
