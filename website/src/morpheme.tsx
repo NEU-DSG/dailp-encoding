@@ -2,9 +2,8 @@ import { groupBy } from "lodash"
 import React from "react"
 import { MdClose } from "react-icons/md"
 import { Clickable } from "reakit/Clickable"
-import { DialogStateReturn } from "reakit/Dialog"
-import * as Dailp from "src/graphql/dailp"
 import Link from "src/components/link"
+import * as Dailp from "src/graphql/dailp"
 import * as css from "./morpheme.css"
 import { glossaryRoute } from "./routes"
 import { TagSet, morphemeDisplayTag } from "./types"
@@ -16,7 +15,7 @@ export const MorphemeDetails = (props: {
   documentId: string
   segment: BasicMorphemeSegment
   tagSet: TagSet
-  dialog: DialogStateReturn
+  hideDialog: () => void
 }) => {
   // Use the right tag name from the jump.
   const matchingTag = morphemeDisplayTag(
@@ -62,7 +61,7 @@ export const MorphemeDetails = (props: {
         className={css.closeButton}
         role="button"
         aria-label="Close Dialog"
-        onClick={props.dialog.hide}
+        onClick={props.hideDialog}
       >
         <MdClose size={32} />
       </Clickable>
@@ -71,7 +70,7 @@ export const MorphemeDetails = (props: {
         <SimilarMorphemeList
           documentId={props.documentId}
           gloss={props.segment.gloss!}
-          dialog={props.dialog}
+          hideDialog={props.hideDialog}
           isGlobal={!!props.segment.matchingTag}
         />
       </div>
@@ -87,7 +86,7 @@ const SimilarMorphemeList = (props: {
   gloss: string
   documentId: string
   isGlobal: boolean
-  dialog: DialogStateReturn
+  hideDialog: () => void
 }) => {
   const [{ data, fetching, error }] = Dailp.useMorphemeQuery({
     pause: !props.gloss,

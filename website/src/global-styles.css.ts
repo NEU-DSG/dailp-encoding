@@ -72,6 +72,7 @@ globalStyle("a", {
   textDecorationSkipInk: "none",
   textDecorationStyle: "dotted",
   borderRadius: 0,
+  outlineColor: colors.link,
   "@media": {
     [mediaQueries.print]: {
       color: "inherit",
@@ -154,8 +155,3 @@ globalStyle("dd", {
 globalStyle("textarea", {
   maxWidth: "100%",
 })
-
-// These styles affect all pages.
-// const globalStyles = css`
-//   ${typography.toString()}
-// `

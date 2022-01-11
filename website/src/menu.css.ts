@@ -1,37 +1,36 @@
 import { style } from "@vanilla-extract/css"
 import { position, rgba } from "polished"
-import { paddingX } from "src/style-utils"
 import sprinkles, {
-  theme,
   colors,
   fullWidth,
   hspace,
-  vspace,
   mediaQueries,
+  theme,
+  thickness,
+  vspace,
 } from "src/sprinkles.css"
+import { paddingX, paddingY } from "src/style-utils"
 
-export const navMenu = style([
-  sprinkles({
-    display: "flex",
-    backgroundColor: "body",
-    borderColor: "link",
-    borderWidth: "thick",
-    borderStyle: "solid",
-  }),
-  {
-    flexFlow: "column",
-    selectors: { "&:focus": { outline: "none" } },
-  },
-])
+export const navMenu = style({
+  display: "flex",
+  backgroundColor: colors.body,
+  borderColor: colors.link,
+  borderWidth: thickness.thick,
+  borderStyle: "solid",
+  flexFlow: "column",
+  selectors: { "&:focus": { outline: "none" } },
+})
 
 export const navLink = style([
   sprinkles({
-    paddingY: "quarter",
-    paddingX: { any: "char", large: "edge" },
-    color: { any: "text", currentPage: "link", hover: "link", focus: "link" },
-    borderColor: { any: "transparent", currentPage: "link" },
+    color: { currentPage: "link", hover: "link", focus: "link" },
+    borderColor: { currentPage: "link" },
   }),
+  paddingY(vspace.quarter),
+  paddingX(hspace.char),
   {
+    color: colors.text,
+    borderColor: "transparent",
     textDecoration: "none",
     background: "none",
     border: "none",
@@ -39,6 +38,9 @@ export const navLink = style([
     display: "flex",
     flexFlow: "row",
     alignItems: "center",
+    "@media": {
+      [mediaQueries.large]: paddingX(hspace.edge),
+    },
   },
 ])
 
@@ -87,23 +89,21 @@ export const drawerList = style({
   paddingInlineStart: 0,
 })
 
-export const drawerBg = style([
-  {
-    position: "fixed",
-    inset: 0,
-    zIndex: 999,
-    backgroundColor: rgba(0, 0, 0, 0.2),
-    transition: "opacity 100ms ease-in-out",
-    opacity: 0,
-    "@media": {
-      [mediaQueries.medium]: {
-        display: "none",
-      },
-    },
-    selectors: {
-      "&[data-enter]": {
-        opacity: 1,
-      },
+export const drawerBg = style({
+  position: "fixed",
+  inset: 0,
+  zIndex: 999,
+  backgroundColor: rgba(0, 0, 0, 0.2),
+  transition: "opacity 100ms ease-in-out",
+  opacity: 0,
+  "@media": {
+    [mediaQueries.medium]: {
+      display: "none",
     },
   },
-])
+  selectors: {
+    "&[data-enter]": {
+      opacity: 1,
+    },
+  },
+})

@@ -1,11 +1,8 @@
 import { Tooltip } from "@reach/tooltip"
 import "@reach/tooltip/styles.css"
-import cx from "classnames"
 import { Howl } from "howler"
-import { flatMap } from "lodash"
 import React from "react"
 import { MdInfoOutline } from "react-icons/md"
-import { DialogDisclosure, DialogStateReturn } from "reakit/Dialog"
 import * as Dailp from "src/graphql/dailp"
 import { Document } from "src/pages/documents/document.page"
 import { FormAudio } from "./audio-player"
@@ -23,7 +20,6 @@ type Segment = Document["translatedSegments"][0]["source"]
 
 interface Props {
   segment: Segment
-  dialog: DialogStateReturn
   onOpenDetails: (morpheme: BasicMorphemeSegment) => void
   viewMode: ViewMode
   translations: Dailp.TranslationBlock
@@ -44,7 +40,6 @@ export const Segment = (p: Props & { howl?: Howl }) => {
           <Segment
             key={i}
             segment={seg}
-            dialog={p.dialog}
             onOpenDetails={p.onOpenDetails}
             viewMode={p.viewMode}
             translations={p.translations}
@@ -137,7 +132,6 @@ export const AnnotatedForm = (
         {showSegments ? (
           <MorphemicSegmentation
             segments={p.segment.segments}
-            dialog={p.dialog}
             onOpenDetails={p.onOpenDetails}
             level={p.viewMode}
             tagSet={p.tagSet}
@@ -171,10 +165,9 @@ const WithTooltip = (p: {
   hint: string
   children: any
   "aria-label"?: string
-  className?: string
 }) => (
   <Tooltip
-    className={cx(std.tooltip, p.className)}
+    className={std.tooltip}
     label={p.hint || ""}
     aria-label={p["aria-label"]}
   >
@@ -189,13 +182,12 @@ const WithTooltip = (p: {
 const MorphemicSegmentation = (p: {
   segments: Dailp.FormFieldsFragment["segments"]
   tagSet: TagSet
-  dialog: Props["dialog"]
   onOpenDetails: Props["onOpenDetails"]
   level: ViewMode
 }) => {
   // If there is no segmentation, return two line breaks for the
   // morphemic segmentation and morpheme gloss layers.
-  if (!p.segments || !p.segments.length) {
+  if (!p.segments?.length) {
     return (
       <>
         <br />
@@ -204,37 +196,26 @@ const MorphemicSegmentation = (p: {
     )
   }
 
+  // Adapt the segment shape to the chosen experience level.
+  let segmentation = ""
+  for (const seg of p.segments) {
+    segmentation += seg.morpheme
+    if (seg.nextSeparator) {
+      segmentation += seg.nextSeparator
+    }
+  }
+
   return (
     <>
-      <i>
-        {p
-          .segments!.map(function (segment) {
-            // Adapt the segment shape to the chosen experience level.
-            let seg = segment.shapeTth
-            if (p.level === ViewMode.AnalysisDt) {
-              seg = segment.shapeDt
-            } else if (p.level === ViewMode.Segmentation) {
-              seg = segment.shapeDtSimple
-            }
-
-            if (segment.nextSeparator) {
-              return seg + segment.nextSeparator
-            } else {
-              return seg
-            }
-          })
-          .join("")}
-      </i>
-
+      <i>{segmentation}</i>
       <div>
-        {p.segments!.map(function (segment, i) {
+        {p.segments.map(function (segment, i) {
           return (
             <React.Fragment key={i}>
               {i > 0 ? p.segments![i - 1].nextSeparator : null}
               <MorphemeSegment
                 segment={segment}
                 tagSet={p.tagSet}
-                dialog={p.dialog}
                 onOpenDetails={p.onOpenDetails}
               />
             </React.Fragment>
@@ -249,7 +230,6 @@ const MorphemicSegmentation = (p: {
 const MorphemeSegment = (p: {
   segment: BasicMorphemeSegment
   tagSet: TagSet
-  dialog: Props["dialog"]
   onOpenDetails: Props["onOpenDetails"]
 }) => {
   const matchingTag = morphemeDisplayTag(p.segment.matchingTag, p.tagSet)
@@ -259,36 +239,33 @@ const MorphemeSegment = (p: {
   if (matchingTag && matchingTag.title) {
     return (
       <WithTooltip hint={matchingTag.title}>
-        <DialogDisclosure
-          {...p.dialog}
+        <button
           className={css.morphemeButton.functional}
           onClick={() => p.onOpenDetails(p.segment)}
         >
           {gloss}
-        </DialogDisclosure>
+        </button>
       </WithTooltip>
     )
   } else if (gloss === "?") {
     return (
       <WithTooltip hint="Unanalyzed or unfamiliar segment">
-        <DialogDisclosure
-          {...p.dialog}
+        <button
           className={css.morphemeButton.lexical}
           onClick={() => p.onOpenDetails(p.segment)}
         >
           {gloss}
-        </DialogDisclosure>
+        </button>
       </WithTooltip>
     )
   } else {
     return (
-      <DialogDisclosure
-        {...p.dialog}
+      <button
         className={css.morphemeButton.lexical}
         onClick={() => p.onOpenDetails(p.segment)}
       >
         {gloss}
-      </DialogDisclosure>
+      </button>
     )
   }
 }

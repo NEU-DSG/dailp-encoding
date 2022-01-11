@@ -1,5 +1,15 @@
 import { style } from "@vanilla-extract/css"
-import sprinkles, { std, theme, vspace } from "../../sprinkles.css"
+import sprinkles, {
+  colors,
+  hspace,
+  mediaQueries,
+  radii,
+  std,
+  theme,
+  thickness,
+  vspace,
+} from "src/sprinkles.css"
+import { paddingX, paddingY } from "src/style-utils"
 
 export const docTitle = std.fullWidth
 
@@ -7,30 +17,28 @@ export const annotationContents = style({
   width: "100%",
 })
 
-export const topMargin = sprinkles({
-  marginTop: "half",
+export const topMargin = style({
+  marginTop: vspace.half,
 })
 
-export const bottomPadded = style([
-  sprinkles({ marginBottom: "half" }),
-  {
-    display: "flex",
-    flexFlow: "row wrap",
-    alignItems: "center",
-    justifyContent: "space-between",
-    "@media": {
-      print: {
-        display: "none",
-      },
+export const bottomPadded = style({
+  marginBottom: vspace.half,
+  display: "flex",
+  flexFlow: "row wrap",
+  alignItems: "center",
+  justifyContent: "space-between",
+  "@media": {
+    [mediaQueries.print]: {
+      display: "none",
     },
   },
-])
+})
 
 export const wideAndTop = style({
   width: "100%",
   zIndex: 1,
   "@media": {
-    print: {
+    [mediaQueries.print]: {
       display: "none",
       height: 0,
     },
@@ -65,13 +73,11 @@ export const docTabs = style([
 ])
 export const docTabPanel = style([
   std.fullWidth,
-  sprinkles({
-    paddingX: {
-      any: "halfEdge",
-      medium: "none",
-    },
-  }),
+  paddingX(hspace.halfEdge),
   {
+    "@media": {
+      [mediaQueries.medium]: paddingX(0),
+    },
     selectors: {
       "&:focus": {
         outline: "none",
@@ -84,31 +90,27 @@ export const imageTabPanel = style([std.fullWidth, { outline: "none" }])
 
 export const docHeader = style([
   std.fullWidth,
-  sprinkles({
-    paddingX: {
-      any: "edge",
-      print: "none",
-    },
-    paddingY: "none",
-  }),
-])
-
-export const morphemeDialog = style([
-  sprinkles({
-    borderRadius: "medium",
-    borderColor: "borders",
-    borderWidth: "thin",
-    backgroundColor: "body",
-  }),
+  paddingY(0),
+  paddingX(hspace.edge),
   {
-    position: "fixed",
-    top: "50%",
-    left: "50%",
-    transform: "translate(-50%, -50%)",
-    maxWidth: "100vw",
-    zIndex: 999,
+    "@media": {
+      [mediaQueries.print]: paddingX(0),
+    },
   },
 ])
+
+export const morphemeDialog = style({
+  borderRadius: radii.medium,
+  borderColor: colors.borders,
+  borderWidth: thickness.thin,
+  backgroundColor: colors.body,
+  position: "fixed",
+  top: "50%",
+  left: "50%",
+  transform: "translate(-50%, -50%)",
+  maxWidth: "100vw",
+  zIndex: 999,
+})
 
 export const morphemeDialogBackdrop = style({
   position: "fixed",
@@ -117,17 +119,19 @@ export const morphemeDialogBackdrop = style({
   zIndex: 998,
 })
 
-export const annotatedDocument = style([
-  sprinkles({
-    paddingX: { medium: "edge" },
-  }),
-  { alignItems: "center" },
-])
+export const annotatedDocument = style({
+  alignItems: "center",
+  "@media": {
+    [mediaQueries.medium]: paddingX(hspace.edge),
+  },
+})
 
 export const audioContainer = style([wideAndTop, topMargin, bottomPadded])
 
-export const hideOnPrint = sprinkles({
-  display: { print: "none" },
+export const hideOnPrint = style({
+  "@media": {
+    print: { display: "none" },
+  },
 })
 
 export const paragraph = style([topMargin, hideOnPrint])

@@ -1,6 +1,8 @@
 import React from "react"
-import { withAuthenticator, AmplifySignIn } from "@aws-amplify/ui-react"
-import { useCredentials } from "../auth"
+
+/* import { withAuthenticator, AmplifySignIn } from "@aws-amplify/ui-react" */
+
+/* import { useCredentials } from "../auth" */
 import Layout from "../layout"
 
 const SignInPage = () => (
@@ -12,12 +14,14 @@ const SignInPage = () => (
 )
 export default SignInPage
 
-const SignIn = withAuthenticator(() => {
-  const creds = useCredentials()
-  if (creds) {
-    // Redirect to profile page?
-    return <p>Already signed in</p>
-  } else {
-    return <AmplifySignIn />
-  }
-})
+const SignIn = () => <p>Already signed in</p>
+
+/* const SignIn = withAuthenticator(() => {
+ *   const creds = useCredentials()
+ *   if (creds) {
+ *     // Redirect to profile page?
+ *     return <p>Already signed in</p>
+ *   } else {
+ *     return <AmplifySignIn />
+ *   }
+ * }) */
