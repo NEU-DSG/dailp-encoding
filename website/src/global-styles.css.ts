@@ -155,3 +155,7 @@ globalStyle("dd", {
 globalStyle("textarea", {
   maxWidth: "100%",
 })
+
+globalStyle("img", {
+  maxWidth: "initial",
+})
