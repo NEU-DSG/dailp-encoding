@@ -161,16 +161,19 @@
             unpackPhase = "true";
             RUST_LOG = "info";
             LD_LIBRARY_PATH = "${lib.makeLibraryPath buildInputs}";
+            shellHook = ''
+              export PROJECT_ROOT=$PWD
+            '';
             buildInputs = let
               dev-database = (writers.writeBashBin "dev-database" ''
-                mkdir -p .mongo
-                mongod --dbpath .mongo
+                mkdir -p $PROJECT_ROOT/.mongo
+                mongod --dbpath $PROJECT_ROOT/.mongo
               '');
               dev-graphql = (writers.writeBashBin "dev-graphql" ''
                 cargo run --bin dailp-graphql-local
               '');
               dev-website = (writers.writeBashBin "dev-website" ''
-                cd website
+                cd $PROJECT_ROOT/website
                 yarn install
                 yarn dev
               '');

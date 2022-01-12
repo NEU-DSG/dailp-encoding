@@ -24,7 +24,6 @@ Each layer of the architecture is split into its own directory, starting with th
 - [`graphql/`](graphql) exposes a public [GraphQL](https://graphql.org/) endpoint (deployed on [AWS Lambda](https://aws.amazon.com/lambda/)) that allows one to query DAILP data from the database.
   [Play with the data here](https://dailp.northeastern.edu/graphql).
 - [`website/`](website) renders a static site with [Gatsby](https://gatsbyjs.org/) using our GraphQL endpoint at build time and at runtime (to handle user queries).
-- [`xml/`](xml) contains templates and a schema for defining TEI XML documents using DAILP data.
 
 Read more on [the wiki](https://github.com/NEU-DSG/dailp-encoding/wiki/Technical-Design).
 
@@ -50,19 +49,17 @@ Once you are in the development shell, you can manage the back-end with [Cargo](
 $ cargo test
 ```
 
-Inside the `nix develop` shell, the next commands start a local version of the front-end.
+Inside the `nix develop` shell, the following commands launch various pieces of our infrastructure locally.
 
 ```sh
-$ cd website
-$ yarn install
-$ yarn start
+$ dev-database
+$ dev-graphql
+$ dev-website
 ```
 
-The next command runs a local version of the GraphQL server.
-
-``` sh
-$ cargo run --bin dailp-graphql-local
-```
+If you run each of these commands in a separate shell, then you'll have a fully operational local test environment.
+If it's your first time running the project locally, your database is probably empty.
+With `dev-database` running, run the command `dev-migrate` to populate it with data from the DAILP spreadsheets.
 
 ### Cleaning Up
 
