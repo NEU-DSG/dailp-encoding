@@ -1,5 +1,5 @@
-import sprinkles from "src/sprinkles.css"
 import { style } from "@vanilla-extract/css"
+import sprinkles from "src/sprinkles.css"
 
 export const margined = sprinkles({
   marginX: "edge",

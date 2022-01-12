@@ -1,4 +1,4 @@
-import { useForm, useCMS, Field, BlockTemplate } from "tinacms"
+import { BlockTemplate, Field, useCMS, useForm } from "tinacms"
 import { NewPageDocument } from "src/graphql/dailp"
 
 type CustomBlockTemplate = BlockTemplate & { key?: string }

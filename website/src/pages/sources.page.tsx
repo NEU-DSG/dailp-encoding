@@ -1,5 +1,6 @@
 import { join, sortBy } from "lodash"
 import React from "react"
+import { Helmet } from "react-helmet"
 import * as Dailp from "src/graphql/dailp"
 import Layout from "../layout"
 import { sourceCitationId } from "../routes"
@@ -8,7 +9,8 @@ import { apaCitation, wideChild, wideList } from "./sources.css"
 const SourcesPage = () => {
   const [{ data: dailp }] = Dailp.useAllSourcesQuery()
   return (
-    <Layout title="Sources Index">
+    <Layout>
+      <Helmet title="Sources Index" />
       <main>
         <h1 className={wideChild}>Sources of Cherokee Language Data</h1>
         <p className={wideChild}>

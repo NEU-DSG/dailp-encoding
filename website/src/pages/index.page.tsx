@@ -1,4 +1,5 @@
 import React from "react"
+import { Helmet } from "react-helmet"
 import Link from "src/components/link"
 import { fullWidth, paddedCenterColumn } from "src/sprinkles.css"
 import WordpressPage from "src/wordpress-page"
@@ -11,7 +12,8 @@ import { collectionRoute } from "../routes"
 const IndexPage = () => {
   const [{ data: dailp }] = Dailp.useCollectionsListingQuery()
   return (
-    <Layout title="Collections">
+    <Layout>
+      <Helmet title="Collections" />
       <main className={paddedCenterColumn}>
         <article className={fullWidth}>
           <Carousel

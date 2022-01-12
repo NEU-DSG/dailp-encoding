@@ -1,14 +1,14 @@
-import React from "react"
-import { BiRightArrow, BiLeftArrow } from "react-icons/bi"
 import {
-  CarouselProvider,
-  Slider,
-  Slide,
   ButtonBack,
   ButtonNext,
+  CarouselProvider,
+  Slide,
+  Slider,
 } from "pure-react-carousel"
-import * as css from "./carousel.css"
 import "pure-react-carousel/dist/react-carousel.es.css"
+import React from "react"
+import { BiLeftArrow, BiRightArrow } from "react-icons/bi"
+import * as css from "./carousel.css"
 
 export const Carousel = (p: {
   caption: any
