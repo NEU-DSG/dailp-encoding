@@ -1,4 +1,5 @@
 import React from "react"
+import { Helmet } from "react-helmet"
 import { Breadcrumbs } from "src/breadcrumbs"
 import Link from "src/components/link"
 import * as Dailp from "src/graphql/dailp"
@@ -26,7 +27,8 @@ const CollectionPage = () => {
     )
 
   return (
-    <Layout title={dailp?.collection.name}>
+    <Layout>
+      <Helmet title={dailp?.collection.name} />
       <main className={paddedCenterColumn}>
         <article className={fullWidth}>
           <header>

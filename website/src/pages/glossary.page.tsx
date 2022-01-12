@@ -2,8 +2,9 @@ import cx from "classnames"
 import { groupBy } from "lodash"
 import pluralize from "pluralize"
 import React, { useState } from "react"
-import * as Dailp from "src/graphql/dailp"
+import { Helmet } from "react-helmet"
 import Link from "src/components/link"
+import * as Dailp from "src/graphql/dailp"
 import {
   closeBlock,
   edgePadded,
@@ -23,7 +24,8 @@ const GlossaryPage = () => {
   const groupedTags = groupBy(tags, (t) => t.morphemeType)
   const [tagSet, setTagSet] = useState<TagSet>(TagSet.Learner)
   return (
-    <Layout title="Glossary of Terms">
+    <Layout>
+      <Helmet title="Glossary of Terms" />
       <main className={edgePadded}>
         <header className={fullWidth}>
           <h1>Glossary of Terms</h1>

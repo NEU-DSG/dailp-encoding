@@ -41,7 +41,11 @@ query AnnotatedDocument($id: String!) {
   }
 }
 
-query DocumentContents($id: String!, $morphemeSystem: CherokeeOrthography, $isReference: Boolean!) {
+query DocumentContents(
+  $id: String!
+  $morphemeSystem: CherokeeOrthography
+  $isReference: Boolean!
+) {
   document(id: $id) {
     translatedSegments @skip(if: $isReference) {
       source {

@@ -1,8 +1,8 @@
 import { DialogContent, DialogOverlay } from "@reach/dialog"
 import "@reach/dialog/styles.css"
-import { ParsedUrlQuery } from "querystring"
-import React, { lazy, useState } from "react"
+import React, { useState } from "react"
 import { isMobile } from "react-device-detect"
+import { Helmet } from "react-helmet"
 import Sticky from "react-stickynode"
 import { Tab, TabList, TabPanel } from "reakit/Tab"
 import { DocumentAudio } from "src/audio-player"
@@ -37,7 +37,7 @@ enum Tabs {
 export type Document = Dailp.AnnotatedDocumentQuery["document"]
 
 /** A full annotated document, including all metadata and the translation(s) */
-const AnnotatedDocumentPage = (props) => {
+const AnnotatedDocumentPage = (props: { id: string }) => {
   const [{ data }] = Dailp.useAnnotatedDocumentQuery({
     variables: { id: props.id },
   })
@@ -46,7 +46,8 @@ const AnnotatedDocumentPage = (props) => {
     return null
   }
   return (
-    <Layout title={doc?.title}>
+    <Layout>
+      <Helmet title={doc?.title} />
       <main className={css.annotatedDocument}>
         <DocumentTitleHeader doc={doc} showDetails={true} />
         <TabSet doc={doc} />
@@ -55,10 +56,6 @@ const AnnotatedDocumentPage = (props) => {
   )
 }
 export default AnnotatedDocumentPage
-
-interface Params extends ParsedUrlQuery {
-  id: string
-}
 
 const TabSet = ({ doc }: { doc: Document }) => {
   const tabs = useScrollableTabState({ selectedId: Tabs.ANNOTATION })
@@ -106,37 +103,21 @@ const TabSet = ({ doc }: { doc: Document }) => {
   )
 }
 
-const SolidSticky = (props: {
-  top: string
-  children: any
-  className?: any
-}) => (
-  <Sticky
-    innerClass={css.solidSticky}
-    top={props.top}
-    className={props.className}
-  >
-    {props.children}
-  </Sticky>
+const SolidSticky = (props: Omit<Sticky.Props, "innerClass">) => (
+  <Sticky innerClass={css.solidSticky} {...props} />
 )
 
-const WideSticky = (props: { top: string; children: any; className?: any }) => (
-  <Sticky
-    innerClass={css.wideSticky}
-    top={props.top}
-    className={props.className}
-  >
-    {props.children}
-  </Sticky>
+const WideSticky = (props: Omit<Sticky.Props, "innerClass">) => (
+  <Sticky innerClass={css.wideSticky} {...props} />
 )
 
 const TranslationTab = ({ doc }: { doc: Document }) => {
-  const [dialogOpen, setDialogOpen] = useState(false)
-  const closeDialog = () => setDialogOpen(false)
-
   const [selectedMorpheme, setMorpheme] = useState<BasicMorphemeSegment | null>(
     null
   )
+
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const closeDialog = () => setDialogOpen(false)
   const openDetails = (morpheme: BasicMorphemeSegment) => {
     setMorpheme(morpheme)
     setDialogOpen(true)
@@ -178,10 +159,8 @@ const TranslationTab = ({ doc }: { doc: Document }) => {
       </p>
 
       <SolidSticky top="#document-tabs-header">
-        <>
-          <ExperiencePicker onSelect={setExperienceLevel} />
-          {/*<PhoneticsPicker onSelect={setPhoneticRepresentation} />*/}
-        </>
+        <ExperiencePicker onSelect={setExperienceLevel} />
+        {/*<PhoneticsPicker onSelect={setPhoneticRepresentation} />*/}
       </SolidSticky>
 
       <article className={css.annotationContents}>

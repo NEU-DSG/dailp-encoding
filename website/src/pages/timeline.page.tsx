@@ -1,5 +1,6 @@
 import { groupBy, uniq } from "lodash"
 import React, { useRef, useState } from "react"
+import { Helmet } from "react-helmet"
 import { Button } from "reakit/Button"
 import { Input } from "reakit/Input"
 import * as Dailp from "src/graphql/dailp"
@@ -11,7 +12,8 @@ const TimelinePage = () => {
   const staticMorphemeId = useRef("")
   const [morphemeId, setMorpheme] = useState(null)
   return (
-    <Layout title="Timeline">
+    <Layout>
+      <Helmet title="Timeline" />
       <main>
         <Input
           placeholder="Morpheme ID"

@@ -2,9 +2,10 @@ import { useDebounce } from "@react-hook/debounce"
 import cx from "classnames"
 import QueryString from "query-string"
 import React, { useEffect } from "react"
+import { Helmet } from "react-helmet"
 import { Input } from "reakit/Input"
-import * as Dailp from "src/graphql/dailp"
 import Link from "src/components/link"
+import * as Dailp from "src/graphql/dailp"
 import { usePageContext } from "src/renderer/PageShell"
 import { closeBlock, fullWidth } from "src/sprinkles.css"
 import Layout from "../layout"
@@ -33,7 +34,8 @@ const SearchPage = () => {
   }, [morphemeId])
 
   return (
-    <Layout title="Search">
+    <Layout>
+      <Helmet title="Search" />
       <main>
         <p className={fullWidth}>
           Type a search query in Cherokee syllabary, simple phonetics, English
