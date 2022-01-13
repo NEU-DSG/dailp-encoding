@@ -864,7 +864,7 @@ export type DocumentContentsQuery = {
           | null
           | undefined
         forms?: Array<{
-          __typename?: "AnnotatedForm"
+          __typename: "AnnotatedForm"
           index: number
           source: string
           romanizedSource: string | null | undefined
@@ -1409,6 +1409,7 @@ export const DocumentContentsDocument = gql`
         }
       }
       forms @include(if: $isReference) {
+        __typename
         ...FormFields
       }
     }

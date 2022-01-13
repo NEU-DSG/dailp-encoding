@@ -25,11 +25,12 @@ const PageImages = (p: {
         />
       </Helmet>
       <TransformWrapper
-        defaultScale={1}
-        positionX={0}
-        positionY={0}
+        initialScale={1}
+        initialPositionX={0}
+        initialPositionY={0}
         wheel={{ disabled: true }}
-        options={{ maxScale: 6, centerContent: true }}
+        maxScale={6}
+        centerOnInit={true}
       >
         {({ setTransform, zoomIn, zoomOut }) => (
           <CurrentPageImage

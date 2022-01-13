@@ -2,6 +2,7 @@ import React from "react"
 import { HelmetData } from "react-helmet"
 import { Provider as ReakitProvider } from "reakit"
 import { Client as GraphQLClient, Provider as GraphQLProvider } from "urql"
+import type { PageContextBuiltIn } from "vite-plugin-ssr"
 import type { PageContextBuiltInClient } from "vite-plugin-ssr/client"
 
 export const rootElementId = "app-root"
@@ -13,13 +14,13 @@ export function PageShell({
   pageContext: PageContext
   client: GraphQLClient
 }) {
-  const { Page, pageProps, routeParams } = pageContext
+  const { Page, routeParams } = pageContext
   return (
     <React.StrictMode>
       <PageContextProvider pageContext={pageContext}>
         <GraphQLProvider value={client}>
           <ReakitProvider>
-            <Page {...routeParams} {...pageProps} />
+            <Page {...routeParams} />
           </ReakitProvider>
         </GraphQLProvider>
       </PageContextProvider>
@@ -52,18 +53,25 @@ interface Location {
   hash: string
 }
 
-export type PageProps = {}
 // The `pageContext` that are available in both on the server-side and browser-side
-export interface PageContext extends PageContextBuiltInClient {
-  urqlState: { [key: string]: any }
-  pageHtml: string
-  pageHead: HelmetData
+export interface PageContextServer extends PageContextBuiltIn {
   Page: (pageProps: PageProps) => React.ReactElement
-  pageProps: PageProps
-  routeParams: Record<string, string>
-  urlPathname: string
-  documentProps?: {
-    title?: string
-    description?: string
-  }
+  pageHtml?: string
+  pageHead?: HelmetData
+  urqlState?: { [key: string]: any }
+  buildDate: Date
 }
+
+export type PageContext = Pick<
+  PageContextServer,
+  | "buildDate"
+  | "urqlState"
+  | "routeParams"
+  | "buildDate"
+  | "urlParsed"
+  | "urlPathname"
+  | "Page"
+> &
+  PageContextBuiltInClient
+
+export type PageProps = {}
