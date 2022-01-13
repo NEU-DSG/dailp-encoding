@@ -1,9 +1,11 @@
 import React from "react"
 import { wordpressUrl } from "src/theme"
 import * as css from "./footer.css"
+import { usePageContext } from "./renderer/PageShell"
 
 /** University affiliation, related navigation links, and contact info.  */
 const Footer = () => {
+  const { buildDate } = usePageContext()
   return (
     <footer className={css.darkTheme}>
       <div className={css.light}>
@@ -31,6 +33,9 @@ const Footer = () => {
           <a href="https://github.com/neu-dsg/dailp-encoding">
             Browse the source code
           </a>
+        </div>
+        <div className={css.content}>
+          Last Updated on {buildDate.toDateString()}
         </div>
       </div>
     </footer>

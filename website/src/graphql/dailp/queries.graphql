@@ -65,6 +65,7 @@ query DocumentContents(
       }
     }
     forms @include(if: $isReference) {
+      __typename
       ...FormFields
     }
   }

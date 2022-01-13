@@ -7,7 +7,7 @@ import {
   useDialogState,
 } from "reakit/Dialog"
 import { Menu, MenuButton, MenuItem, useMenuState } from "reakit/Menu"
-import { Link } from "src/components/link"
+import Link from "src/components/link"
 import * as Wordpress from "src/graphql/wordpress"
 import { usePageContext } from "src/renderer/PageShell"
 import {
@@ -47,7 +47,7 @@ export const NavMenu = () => {
             url = new URL(item.path)
           }
           return (
-            <a
+            <Link
               key={item.path}
               href={url.pathname}
               className={navLink}
@@ -56,7 +56,7 @@ export const NavMenu = () => {
               }
             >
               {item.label}
-            </a>
+            </Link>
           )
         }
       })}
@@ -135,7 +135,7 @@ export const MobileNav = () => {
                 }
                 return (
                   <li className={closeBlock} key={item.path}>
-                    <a
+                    <Link
                       className={drawerItem}
                       href={url.pathname}
                       aria-current={
@@ -143,7 +143,7 @@ export const MobileNav = () => {
                       }
                     >
                       {item.label}
-                    </a>
+                    </Link>
                   </li>
                 )
               })

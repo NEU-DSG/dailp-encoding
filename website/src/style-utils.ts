@@ -1,11 +1,17 @@
 import { StyleRule } from "@vanilla-extract/css"
 import cx from "classnames"
-import { withProps } from "recompose"
+import React from "react"
 
-export const withClass = (css: string) =>
-  withProps(({ className }) => ({
-    className: cx(css, className),
-  }))
+export function withClass<T extends { className?: string }>(
+  css: string,
+  Component: React.FC<T>
+) {
+  return (props: React.PropsWithChildren<T>) =>
+    React.createElement(Component, {
+      ...props,
+      className: cx(css, props.className),
+    })
+}
 
 export function paddingX(x: StyleRule["padding"]): StyleRule {
   return { paddingLeft: x, paddingRight: x }

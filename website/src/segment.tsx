@@ -4,7 +4,7 @@ import { Howl } from "howler"
 import React from "react"
 import { MdInfoOutline } from "react-icons/md"
 import * as Dailp from "src/graphql/dailp"
-import { Document } from "src/pages/documents/document.page"
+import { DocumentContents } from "src/pages/documents/document.page"
 import { FormAudio } from "./audio-player"
 import * as css from "./segment.css"
 import { std } from "./sprinkles.css"
@@ -16,7 +16,7 @@ import {
   morphemeDisplayTag,
 } from "./types"
 
-type Segment = Document["translatedSegments"][0]["source"]
+type Segment = DocumentContents["translatedSegments"][0]["source"]
 
 interface Props {
   segment: Segment

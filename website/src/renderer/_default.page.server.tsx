@@ -7,12 +7,17 @@ import { ssrExchange } from "urql"
 import { dangerouslySkipEscape, escapeInject } from "vite-plugin-ssr"
 import type { PageContextBuiltIn } from "vite-plugin-ssr/types"
 import { customClient } from "src/graphql"
-import { PageContext, PageShell, rootElementId } from "./PageShell"
+import {
+  PageContext,
+  PageContextServer,
+  PageShell,
+  rootElementId,
+} from "./PageShell"
 
 /**
  * In production, render every page on the server then hydrate it on the client.
  */
-export function render(pageContext: PageContextBuiltIn & PageContext) {
+export function render(pageContext: PageContextServer) {
   if (process.env.NODE_ENV === "development") {
     // In development, don't do SSR, just let the client render.
     return escapeInject`<!DOCTYPE html>
@@ -41,19 +46,21 @@ export function render(pageContext: PageContextBuiltIn & PageContext) {
  * Gather the required data for each page before rendering it.
  */
 export async function onBeforeRender(
-  pageContext: PageContextBuiltIn & PageContext
-) {
+  pageContext: PageContextBuiltIn
+): Promise<{ pageContext: Partial<PageContextServer> }> {
+  const buildDate = new Date()
+  const baseContext = { urqlState: {}, buildDate }
   // Don't prerender in development mode, let the client do all the rendering.
   // This keeps pages loading quickly as they change.
   if (process.env.NODE_ENV === "development") {
-    return {
-      pageContext: { urqlState: {} },
-    }
+    return { pageContext: baseContext }
   } else {
     const ssr = ssrExchange({ initialState: undefined, isClient: false })
     const client = customClient(true, [ssr])
 
-    const page = <PageShell pageContext={pageContext} client={client} />
+    const context = { ...pageContext, buildDate }
+
+    const page = <PageShell pageContext={context} client={client} />
 
     // This is the first pass, due to suspense it will work with prepass and populate the initial cache
     await prepass(page)
@@ -67,6 +74,7 @@ export async function onBeforeRender(
       pageContext: {
         pageHtml,
         pageHead,
+        buildDate,
         urqlState: ssr.extractData(),
       },
     }
@@ -77,7 +85,12 @@ export async function onBeforeRender(
  * Pass these props to the client-side after server-side rendering.
  * See https://vite-plugin-ssr.com/data-fetching
  */
-export const passToClient = ["pageProps", "urqlState", "routeParams"]
+export const passToClient = [
+  "pageProps",
+  "urqlState",
+  "routeParams",
+  "buildDate",
+]
 
 /**
  * Embed these environment variables into the client HTML.

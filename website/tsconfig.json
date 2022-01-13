@@ -3,7 +3,7 @@
     "baseUrl": ".",
     "target": "esnext",
     "module": "es2020",
-    "lib": ["dom"],
+    "lib": ["dom", "dom.iterable", "esnext"],
     "types": ["vite/client"],
     "strict": false,
     "esModuleInterop": true,
@@ -19,7 +19,9 @@
     "incremental": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "useDefineForClassFields": true
+    "useDefineForClassFields": true,
+    "sourceMap": true,
+    "stripInternal": true
   },
   "ts-node": {
     "transpileOnly": true,

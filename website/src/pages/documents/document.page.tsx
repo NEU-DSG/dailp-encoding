@@ -35,6 +35,7 @@ enum Tabs {
 }
 
 export type Document = Dailp.AnnotatedDocumentQuery["document"]
+export type DocumentContents = Dailp.DocumentContentsQuery["document"]
 
 /** A full annotated document, including all metadata and the translation(s) */
 const AnnotatedDocumentPage = (props: { id: string }) => {
