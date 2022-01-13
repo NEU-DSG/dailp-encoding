@@ -2,6 +2,7 @@ import { style } from "@vanilla-extract/css"
 import sprinkles, {
   colors,
   hspace,
+  largeDialog,
   mediaQueries,
   radii,
   std,
@@ -99,18 +100,23 @@ export const docHeader = style([
   },
 ])
 
-export const morphemeDialog = style({
-  borderRadius: radii.medium,
-  borderColor: colors.borders,
-  borderWidth: thickness.thin,
-  backgroundColor: colors.body,
-  position: "fixed",
-  top: "50%",
-  left: "50%",
-  transform: "translate(-50%, -50%)",
-  maxWidth: "100vw",
-  zIndex: 999,
-})
+export const morphemeDialog = style([
+  largeDialog,
+  {
+    borderRadius: radii.medium,
+    borderColor: colors.borders,
+    borderWidth: thickness.thin,
+    backgroundColor: colors.body,
+    position: "fixed",
+    top: "50%",
+    left: "50%",
+    transform: "translate(-50%, -50%)",
+    maxWidth: "100vw",
+    margin: 0,
+    padding: 0,
+    zIndex: 999,
+  },
+])
 
 export const morphemeDialogBackdrop = style({
   position: "fixed",
