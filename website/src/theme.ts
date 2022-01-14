@@ -1,6 +1,4 @@
-import Color from "color"
 import CSS from "csstype"
-import { Button as BaseButton } from "reakit/Button"
 import Typography from "typography"
 
 const theme = {
@@ -39,8 +37,8 @@ const theme = {
 
 export const wordpressUrl = "https://wp.dailp.northeastern.edu"
 
-theme.fonts.body = theme.fonts.bodyArr.join(",")
-theme.fonts.header = theme.fonts.headerArr.join(",")
+// theme.fonts.body = theme.fonts.bodyArr.join(",")
+// theme.fonts.header = theme.fonts.headerArr.join(",")
 
 export interface CSSProps extends CSS.Properties {
   // Add fallback objects to support arbitrary nested selectors

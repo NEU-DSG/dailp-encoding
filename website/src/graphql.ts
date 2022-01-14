@@ -2,6 +2,7 @@ import fetch from "isomorphic-unfetch"
 import { useMemo } from "react"
 import {
   Client,
+  Exchange,
   UseQueryArgs,
   cacheExchange,
   createClient,
@@ -40,7 +41,7 @@ export const client = {
   }),
 }
 
-export const customClient = (suspense = true, exchanges = []) =>
+export const customClient = (suspense: boolean, exchanges: Exchange[]) =>
   createClient({
     url: GRAPHQL_URL,
     exchanges: [dedupExchange, sharedCache, ...exchanges, fetchExchange],

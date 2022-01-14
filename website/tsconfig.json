@@ -1,19 +1,17 @@
 {
   "compilerOptions": {
     "baseUrl": ".",
-    "target": "esnext",
+    "target": "es2019",
     "module": "es2020",
+    "moduleResolution": "node",
     "lib": ["dom", "dom.iterable", "esnext"],
+    "strict": true,
     "types": ["vite/client"],
-    "strict": false,
     "esModuleInterop": true,
     "jsx": "preserve",
     "allowJs": true,
-    "noImplicitAny": false,
     "noEmit": true,
-    "experimentalDecorators": true,
     "skipLibCheck": true,
-    "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
     "incremental": true,
@@ -21,7 +19,8 @@
     "isolatedModules": true,
     "useDefineForClassFields": true,
     "sourceMap": true,
-    "stripInternal": true
+    "stripInternal": true,
+    "declaration": true
   },
   "ts-node": {
     "transpileOnly": true,
@@ -29,5 +28,6 @@
       "module": "CommonJS"
     }
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx"]
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "exclude": ["node_modules"]
 }

@@ -19,3 +19,5 @@ config:
   avoidOptionals: true
   useTypeImports: true
   dedupeFragments: true
+  immutableTypes: true
+  preResolveTypes: false

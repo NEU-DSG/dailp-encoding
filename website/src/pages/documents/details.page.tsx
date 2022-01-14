@@ -22,10 +22,10 @@ export default function DocumentDetailsPage({ id }: Props) {
 
 function DocumentDetails({ id }: Props) {
   const [{ data }] = Dailp.useDocumentDetailsQuery({ variables: { id } })
-  if (!data) {
+  const doc = data?.document
+  if (!doc) {
     return null
   }
-  const doc = data.document
   return (
     <>
       <Helmet>

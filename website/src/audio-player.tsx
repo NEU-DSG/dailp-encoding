@@ -34,7 +34,7 @@ export const FormAudio = (props: Dailp.AudioSlice & { howl?: Howl }) => {
     <span>
       <AudioPlayer
         audioUrl={props.resourceUrl}
-        slices={{ start: props.startTime, end: props.endTime }}
+        slices={{ start: props.startTime!, end: props.endTime! }}
       />
     </span>
   )
@@ -49,17 +49,18 @@ export const DocumentAudio = (props: { audioUrl: string }) => {
   )
 }
 
+interface Props {
+  audioUrl: string
+  showProgress?: boolean
+  preload?: boolean
+  slices?: { start: number; end: number }
+  existingHowl?: Howl
+}
 class AudioPlayer extends React.Component<
-  {
-    audioUrl: string
-    showProgress?: boolean
-    preload?: boolean
-    slices?: { start: number; end: number }
-    existingHowl?: Howl
-  },
+  Props,
   { progress: number; howl: Howl }
 > {
-  constructor(props) {
+  constructor(props: Props) {
     super(props)
     // let slices = this.props.slices && {
     //   ...this.props.slices.map((a) => {this.props.slices.indexOf(a)}), ...this.props.slices
@@ -69,7 +70,7 @@ class AudioPlayer extends React.Component<
       howl: new Howl({
         src: [this.props.audioUrl],
         html5: true,
-        format: ".wav",
+        format: [".wav"],
         preload: this.props.preload || false,
         onplay: () => {
           this.onPlay()

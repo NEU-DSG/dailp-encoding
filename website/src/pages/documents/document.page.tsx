@@ -23,6 +23,7 @@ import { AnnotatedForm, Segment } from "src/segment"
 import {
   BasicMorphemeSegment,
   PhoneticRepresentation,
+  TagSet,
   ViewMode,
   tagSetForMode,
 } from "src/types"
@@ -34,8 +35,15 @@ enum Tabs {
   IMAGES = "source-image-tab",
 }
 
-export type Document = Dailp.AnnotatedDocumentQuery["document"]
-export type DocumentContents = Dailp.DocumentContentsQuery["document"]
+export type Document = NonNullable<Dailp.AnnotatedDocumentQuery["document"]>
+export type DocumentContents = NonNullable<
+  Dailp.DocumentContentsQuery["document"]
+>
+
+type NullPick<T, F extends keyof NonNullable<T>> = Pick<
+  NonNullable<T>,
+  F
+> | null
 
 /** A full annotated document, including all metadata and the translation(s) */
 const AnnotatedDocumentPage = (props: { id: string }) => {
@@ -185,6 +193,12 @@ const DocumentContents = ({
   openDetails,
   tagSet,
   phoneticRepresentation,
+}: {
+  doc: Document
+  experienceLevel: ViewMode
+  tagSet: TagSet
+  openDetails: (morpheme: any) => void
+  phoneticRepresentation: PhoneticRepresentation
 }) => {
   let morphemeSystem = Dailp.CherokeeOrthography.Learner
   if (experienceLevel === ViewMode.AnalysisDt) {
@@ -210,7 +224,7 @@ const DocumentContents = ({
           viewMode={experienceLevel}
           tagSet={tagSet}
           translations={seg.translation as Dailp.TranslationBlock}
-          pageImages={doc.pageImages?.urls}
+          pageImages={doc.pageImages?.urls!}
           phoneticRepresentation={phoneticRepresentation}
         />
       ))}
@@ -223,7 +237,7 @@ const DocumentContents = ({
           tagSet={tagSet}
           phoneticRepresentation={phoneticRepresentation}
           translations={null}
-          pageImages={doc.pageImages?.urls}
+          pageImages={doc.pageImages?.urls!}
         />
       ))}
     </>
@@ -232,9 +246,12 @@ const DocumentContents = ({
 
 export const DocumentTitleHeader = (p: {
   doc: Pick<Dailp.AnnotatedDoc, "slug" | "title"> & {
-    date: Pick<Dailp.AnnotatedDoc["date"], "year">
-    collection: Pick<Dailp.AnnotatedDoc["collection"], "name" | "slug">
-    audioRecording?: Pick<Dailp.AnnotatedDoc["audioRecording"], "resourceUrl">
+    date: NullPick<Dailp.AnnotatedDoc["date"], "year">
+    collection: NullPick<Dailp.AnnotatedDoc["collection"], "name" | "slug">
+    audioRecording?: NullPick<
+      Dailp.AnnotatedDoc["audioRecording"],
+      "resourceUrl"
+    >
   }
   showDetails?: boolean
 }) => (

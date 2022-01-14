@@ -9,7 +9,7 @@ export async function prerender() {
     >(Dailp.CollectionsListingDocument)
     .toPromise()
 
-  return data.allCollections.map((collection) => ({
+  return data!.allCollections.map((collection) => ({
     url: `/collections/${collection.slug}`,
   }))
 }

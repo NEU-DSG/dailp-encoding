@@ -4,7 +4,9 @@
   "description": "Front-end for exploring Cherokee documents from DAILP",
   "scripts": {
     "dev": "ts-node ./server",
-    "build": "vite build && vite build --ssr && vite-plugin-ssr prerender",
+    "build:rustdoc": "cd .. && cargo doc --no-deps --workspace",
+    "build:vite": "vite build && vite build --ssr && vite-plugin-ssr prerender",
+    "build": "npm-run-all --parallel build:vite build:rustdoc && rm -rf dist/client/rustdoc && cp -r ../target/doc dist/client/rustdoc",
     "serve": "http-server dist/client -p 3001",
     "generate": "graphql-codegen && prettier --write src/graphql"
   },
@@ -67,6 +69,7 @@
     "@graphql-codegen/typescript-urql": "^3.4.1",
     "@trivago/prettier-plugin-sort-imports": "^3.1.1",
     "@types/color": "^3.0.1",
+    "@types/howler": "^2.2.4",
     "@types/js-cookie": "^3.0.1",
     "@types/lodash": "^4.14.178",
     "@types/node": "^15.6.2",

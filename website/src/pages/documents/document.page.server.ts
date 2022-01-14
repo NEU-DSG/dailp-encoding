@@ -9,7 +9,7 @@ export async function prerender() {
     )
     .toPromise()
 
-  return flatMap(data.allDocuments, (document) => {
+  return flatMap(data!.allDocuments, (document) => {
     const id = document.id.toLowerCase()
     return [{ url: `/documents/${id}` }, { url: `/documents/${id}/details` }]
   })

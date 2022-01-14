@@ -1,8 +1,9 @@
 import { style } from "@vanilla-extract/css"
-import theme, { typography } from "./theme"
+import { colors, fonts } from "src/sprinkles.css"
+import { typography } from "./theme"
 
 export const breadcrumbs = style({
-  fontFamily: theme.fonts.body,
+  fontFamily: fonts.body,
   fontWeight: "normal",
   listStyle: "none",
   paddingInlineStart: 0,
@@ -18,7 +19,7 @@ export const breadcrumbElement = style({
     "&:after": {
       padding: "0 0.5rem",
       content: `"/"`,
-      color: theme.colors.text,
+      color: colors.text,
     },
   },
 })

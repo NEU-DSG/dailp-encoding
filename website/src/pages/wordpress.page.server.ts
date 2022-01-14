@@ -8,7 +8,7 @@ export async function prerender() {
     )
     .toPromise()
 
-  return data.pages.nodes.map((page) => ({
-    url: page.uri,
+  return data!.pages!.nodes!.map((page) => ({
+    url: page!.uri,
   }))
 }

@@ -2,10 +2,10 @@ import { HubCallback } from "@aws-amplify/core"
 import Amplify, { Auth, Hub } from "aws-amplify"
 import React, { createContext, useContext, useState } from "react"
 
-const UserContext = createContext(null)
+const UserContext = createContext<CognitoUser | null>(null)
 
 export const UserProvider = (props: { children: any }) => {
-  const [user, setUser] = useState(null)
+  const [user, setUser] = useState<CognitoUser | null>(null)
   React.useEffect(() => {
     Amplify.configure({
       Auth: {
@@ -46,4 +46,8 @@ export const useCredentials = () => {
     throw new Error("`useUser` must be within a `UserProvider`")
   }
   return context
+}
+
+interface CognitoUser {
+  signInUserSession: { idToken: { jwtToken: string } }
 }

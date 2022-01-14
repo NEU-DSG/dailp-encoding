@@ -10,7 +10,7 @@ import { boldWordRow, margined, underlined, wordRow } from "./timeline.css"
 
 const TimelinePage = () => {
   const staticMorphemeId = useRef("")
-  const [morphemeId, setMorpheme] = useState(null)
+  const [morphemeId, setMorpheme] = useState("")
   return (
     <Layout>
       <Helmet title="Timeline" />
@@ -22,7 +22,7 @@ const TimelinePage = () => {
         <Button onClick={() => setMorpheme(staticMorphemeId.current)}>
           Search
         </Button>
-        <Timeline gloss={morphemeId} />
+        {!!morphemeId && <Timeline gloss={morphemeId} />}
       </main>
     </Layout>
   )
@@ -32,15 +32,15 @@ export default TimelinePage
 const Timeline = (p: { gloss: string }) => {
   const [timeline] = Dailp.useTimelineQuery({
     variables: { gloss: p.gloss },
-    pause: !p.gloss,
   })
+
   if (timeline.fetching || !timeline.data) {
     return <>Loading...</>
-  }
-  if (timeline.error) {
+  } else if (timeline.error) {
     console.error(timeline.error)
     return <>Error!</>
   }
+
   return (
     <div className={fullWidth}>
       <div className={boldWordRow}>

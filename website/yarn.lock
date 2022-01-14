@@ -3571,6 +3571,11 @@
     "@types/react" "*"
     hoist-non-react-statics "^3.3.0"
 
+"@types/howler@^2.2.4":
+  version "2.2.4"
+  resolved "https://registry.yarnpkg.com/@types/howler/-/howler-2.2.4.tgz#fb7d02bc335d20cc141987f16c195b1af77d756a"
+  integrity sha512-/Bs5TyNUWuXPnWe3RB6bS6giQzGHRXmSycq4Mo/2i4C6zwfR7foaAAx1Vo5pMyOAT/ufTfU6WZQHhdvCDBKRig==
+
 "@types/is-hotkey@^0.1.1":
   version "0.1.7"
   resolved "https://registry.yarnpkg.com/@types/is-hotkey/-/is-hotkey-0.1.7.tgz#30ec6d4234895230b576728ef77e70a52962f3b3"
@@ -6820,7 +6825,7 @@ graphql-ws@^5.4.1:
   resolved "https://registry.yarnpkg.com/graphql-ws/-/graphql-ws-5.5.5.tgz#f375486d3f196e2a2527b503644693ae3a8670a9"
   integrity sha512-hvyIS71vs4Tu/yUYHPvGXsTgo0t3arU820+lT5VjZS2go0ewp2LqyCgxEN56CzOG7Iys52eRhHBiD1gGRdiQtw==
 
-graphql@15.8.0, "graphql@^14.0.0 || ^15.0.0", graphql@^15.1.0, graphql@^15.4.0:
+graphql@15.8.0, graphql@^15.1.0, graphql@^15.4.0:
   version "15.8.0"
   resolved "https://registry.yarnpkg.com/graphql/-/graphql-15.8.0.tgz#33410e96b012fa3bdb1091cc99a94769db212b38"
   integrity sha512-5gghUc24tP9HRznNpV2+FIoq3xKkj5dTQqf4v0CpdPbFVwFkWoxOM+o+2OC9ZSvjEMTjfmG9QT+gcvggTwW1zw==
@@ -11049,14 +11054,6 @@ vite-plugin-checker@^0.3.4:
     vscode-languageserver "^7.0.0"
     vscode-languageserver-textdocument "^1.0.1"
     vscode-uri "^3.0.2"
-
-vite-plugin-graphql-codegen@^1.1.1:
-  version "1.1.1"
-  resolved "https://registry.yarnpkg.com/vite-plugin-graphql-codegen/-/vite-plugin-graphql-codegen-1.1.1.tgz#b78d0b9788be4a396cb2758031130dbd2d7927bc"
-  integrity sha512-o4turFCOf0VAf9THHNVPJjPYqowVZv1XTcJzuFa/ZaMz5p28O1OdWiilN9HhrBYqBofreYKnZSIQZMPhX73UxQ==
-  dependencies:
-    graphql "^14.0.0 || ^15.0.0"
-    minimatch "^3.0.4"
 
 vite-plugin-import-build@^0.1.2:
   version "0.1.2"

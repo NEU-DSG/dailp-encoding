@@ -44,21 +44,16 @@ function PageContextProvider({
 }
 
 const usePageContext = () => React.useContext(Context)
+export type Location = PageContext["urlParsed"]
 export const useLocation = () => usePageContext().urlParsed
 export const useRouteParams = () => usePageContext().routeParams
-
-interface Location {
-  pathname: string
-  search: Record<string, string>
-  hash: string
-}
 
 // The `pageContext` that are available in both on the server-side and browser-side
 export interface PageContextServer extends PageContextBuiltIn {
   Page: (pageProps: PageProps) => React.ReactElement
-  pageHtml?: string
-  pageHead?: HelmetData
-  urqlState?: { [key: string]: any }
+  pageHtml: string
+  pageHead: HelmetData
+  urqlState: { [key: string]: any }
   buildDate: Date
 }
 
