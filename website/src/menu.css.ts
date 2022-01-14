@@ -71,6 +71,7 @@ export const navDrawer = style([
   position("fixed", 0, "initial", 0, 0),
   paddingX(hspace.edge),
   {
+    paddingTop: vspace.one,
     width: "16rem",
     backgroundColor: colors.body,
     fontFamily: theme.fonts.header,
