@@ -828,7 +828,10 @@ export type DocumentContentsQuery = { readonly __typename?: "Query" } & {
                           })
                       | { readonly __typename: "AnnotatedPhrase" }
                       | { readonly __typename: "LineBreak" }
-                      | { readonly __typename: "PageBreak" }
+                      | ({ readonly __typename: "PageBreak" } & Pick<
+                          PageBreak,
+                          "index"
+                        >)
                     >
                   })
               | { readonly __typename: "LineBreak" }
@@ -959,7 +962,7 @@ export type BlockFieldsFragment = {
           })
       | { readonly __typename: "AnnotatedPhrase" }
       | { readonly __typename: "LineBreak" }
-      | { readonly __typename: "PageBreak" }
+      | ({ readonly __typename: "PageBreak" } & Pick<PageBreak, "index">)
     >
   }
 
@@ -1290,6 +1293,9 @@ export const BlockFieldsFragmentDoc = gql`
       __typename
       ... on AnnotatedForm {
         ...FormFields
+      }
+      ... on PageBreak {
+        index
       }
     }
   }

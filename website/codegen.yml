@@ -21,3 +21,6 @@ config:
   dedupeFragments: true
   immutableTypes: true
   preResolveTypes: false
+hooks:
+  afterAllFileWrite:
+    - prettier --write
