@@ -1,5 +1,4 @@
 import fetch from "isomorphic-unfetch"
-import { useMemo } from "react"
 import {
   Client,
   Exchange,

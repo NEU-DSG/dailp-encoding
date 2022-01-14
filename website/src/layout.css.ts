@@ -23,7 +23,6 @@ export const headerContents = style([
   fullWidth,
   wrappedRow,
   {
-    justifyContent: "space-between",
     alignItems: "center",
   },
 ])
