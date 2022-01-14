@@ -32,6 +32,8 @@ export const [themeClass, theme] = createTheme({
   },
 })
 
+export const fonts = theme.fonts
+
 export const colors = {
   ...theme.colors,
   transparent: "transparent",

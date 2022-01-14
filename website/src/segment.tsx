@@ -16,13 +16,13 @@ import {
   morphemeDisplayTag,
 } from "./types"
 
-type Segment = DocumentContents["translatedSegments"][0]["source"]
+type Segment = NonNullable<DocumentContents["translatedSegments"]>[0]["source"]
 
 interface Props {
   segment: Segment
   onOpenDetails: (morpheme: BasicMorphemeSegment) => void
   viewMode: ViewMode
-  translations: Dailp.TranslationBlock
+  translations: Dailp.TranslationBlock | null
   tagSet: TagSet
   pageImages: readonly string[]
   phoneticRepresentation: PhoneticRepresentation
@@ -35,11 +35,11 @@ export const Segment = (p: Props & { howl?: Howl }) => {
     return <AnnotatedForm {...p} segment={segment} />
   } else if (segment.__typename === "AnnotatedPhrase") {
     const children =
-      segment.parts?.map(function (seg: Segment, i) {
+      segment.parts?.map(function (seg, i) {
         return (
           <Segment
             key={i}
-            segment={seg}
+            segment={seg as Segment}
             onOpenDetails={p.onOpenDetails}
             viewMode={p.viewMode}
             translations={p.translations}
@@ -232,7 +232,7 @@ const MorphemeSegment = (p: {
   tagSet: TagSet
   onOpenDetails: Props["onOpenDetails"]
 }) => {
-  const matchingTag = morphemeDisplayTag(p.segment.matchingTag, p.tagSet)
+  const matchingTag = morphemeDisplayTag(p.segment.matchingTag!, p.tagSet)
   const gloss = matchingTag?.tag || p.segment.gloss
   // Display functional tags in small-caps, per interlinear typesetting practice.
 

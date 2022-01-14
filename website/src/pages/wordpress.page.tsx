@@ -38,7 +38,7 @@ const Contents = () => {
         <header>
           <h1>{page.title}</h1>
         </header>
-        <WordpressContents content={page.content} />
+        <WordpressContents content={page.content!} />
       </>
     )
   } else if (fetching) {

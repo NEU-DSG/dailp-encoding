@@ -54,21 +54,21 @@ const EditablePageInner = (props: Props) => {
       label: "Edit Page",
       id: props.pageContext?.id,
       variables: { id: props.pageContext?.id },
-      transformIn: ({ page: { body, ...page } }) => ({
+      transformIn: ({ page: { body, ...page } }: any) => ({
         ...page,
         body:
           body &&
-          body.map(({ __typename, ...block }) => ({
+          body.map(({ __typename, ...block }: any) => ({
             _template: __typename,
             ...block,
           })),
       }),
-      transformOut: ({ body, id, ...page }) => ({
+      transformOut: ({ body, id, ...page }: any) => ({
         ...page,
         _id: id,
         body:
           body &&
-          body.map(({ _template, ...block }) => ({
+          body.map(({ _template, ...block }: any) => ({
             __typename: _template,
             ...block,
           })),

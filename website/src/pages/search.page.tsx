@@ -6,17 +6,16 @@ import { Helmet } from "react-helmet"
 import { Input } from "reakit/Input"
 import Link from "src/components/link"
 import * as Dailp from "src/graphql/dailp"
-import { usePageContext } from "src/renderer/PageShell"
+import { useLocation, usePageContext } from "src/renderer/PageShell"
 import { closeBlock, fullWidth } from "src/sprinkles.css"
 import Layout from "../layout"
 import { sourceCitationRoute } from "../routes"
 import { boldWordRow, wordRow } from "./timeline.css"
 
 const SearchPage = () => {
-  const router = usePageContext()
-  const defaultParams = router.urlParsed!.search
+  const location = useLocation()
   const [morphemeId, setMorpheme] = useDebounce(
-    defaultParams.query as string,
+    location.search?.query || null,
     200
   )
 
@@ -46,14 +45,14 @@ const SearchPage = () => {
         </p>
         <Input
           className={searchBox}
-          defaultValue={morphemeId}
+          defaultValue={morphemeId ?? ""}
           placeholder="Search query"
           onChange={(e) => {
-            setMorpheme(e.target.value.length > 0 ? e.target.value : null)
+            setMorpheme(e.target.value || null)
           }}
         />
 
-        <Timeline gloss={morphemeId} />
+        {!!morphemeId && <Timeline gloss={morphemeId} />}
       </main>
     </Layout>
   )
@@ -63,7 +62,6 @@ export default SearchPage
 const Timeline = (p: { gloss: string }) => {
   const [timeline] = Dailp.useWordSearchQuery({
     variables: { query: p.gloss },
-    pause: !p.gloss,
   })
 
   if (!p.gloss) {
@@ -85,19 +83,17 @@ const Timeline = (p: { gloss: string }) => {
           <div>Simple Phonetics</div>
           <div>Translation</div>
         </div>
-        {timeline.data.wordSearch.map(
-          (form: Dailp.AnnotatedForm, i: number) => (
-            <div key={i} className={wordRow}>
-              <Link href={sourceCitationRoute(form.documentId)}>
-                {form.documentId}
-              </Link>
-              <div>{form.source}</div>
-              <div>{form.normalizedSource}</div>
-              <div>{form.simplePhonetics}</div>
-              <div>{form.englishGloss.join(", ")}</div>
-            </div>
-          )
-        )}
+        {timeline.data.wordSearch.map((form, i) => (
+          <div key={i} className={wordRow}>
+            <Link href={sourceCitationRoute(form.documentId)}>
+              {form.documentId}
+            </Link>
+            <div>{form.source}</div>
+            <div>{form.normalizedSource}</div>
+            <div>{form.simplePhonetics}</div>
+            <div>{form.englishGloss.join(", ")}</div>
+          </div>
+        ))}
       </div>
     )
   }

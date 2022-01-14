@@ -75,8 +75,12 @@ fragment BlockFields on AnnotatedPhrase {
   ty
   index
   parts {
+    __typename
     ... on AnnotatedForm {
       ...FormFields
+    }
+    ... on PageBreak {
+      index
     }
   }
 }

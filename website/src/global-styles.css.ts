@@ -10,7 +10,7 @@ import {
 import { paddingY } from "./style-utils"
 import { typography } from "./theme"
 
-const t = typography.toJSON()
+const t: Record<string, any> = typography.toJSON()
 for (const selector in t) {
   globalStyle(selector, t[selector])
 }

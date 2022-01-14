@@ -58,7 +58,12 @@ export async function onBeforeRender(
     const ssr = ssrExchange({ initialState: undefined, isClient: false })
     const client = customClient(true, [ssr])
 
-    const context = { ...pageContext, buildDate }
+    const context = {
+      ...pageContext,
+      buildDate,
+      isHydration: false,
+      urqlState: {},
+    }
 
     const page = <PageShell pageContext={context} client={client} />
 

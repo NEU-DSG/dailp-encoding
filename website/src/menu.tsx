@@ -9,7 +9,7 @@ import {
 import { Menu, MenuButton, MenuItem, useMenuState } from "reakit/Menu"
 import Link from "src/components/link"
 import * as Wordpress from "src/graphql/wordpress"
-import { usePageContext } from "src/renderer/PageShell"
+import { Location, useLocation, usePageContext } from "src/renderer/PageShell"
 import {
   desktopNav,
   drawerBg,
@@ -22,14 +22,14 @@ import {
 import { closeBlock } from "./sprinkles.css"
 
 export const NavMenu = () => {
-  const router = usePageContext()
+  const location = useLocation()
   const [{ data }] = Wordpress.useMainMenuQuery()
-  if (!data) {
+  const menuItems = data?.menuItems?.nodes
+  if (!menuItems) {
     return null
   }
 
-  const menuItems = data?.menuItems?.nodes
-  const isTopLevel = (a) =>
+  const isTopLevel = (a: typeof menuItems[0]) =>
     !menuItems?.some((b) =>
       b?.childItems?.nodes?.some((b) => b?.path === a?.path)
     )
@@ -39,8 +39,8 @@ export const NavMenu = () => {
       {menuItems?.filter(isTopLevel).map((item) => {
         if (!item) {
           return null
-        } else if (item.childItems.nodes.length) {
-          return <SubMenu key={item.label} item={item} router={router} />
+        } else if (item.childItems?.nodes?.length) {
+          return <SubMenu key={item.label} item={item} location={location} />
         } else {
           let url = { pathname: item.path }
           if (item.path.startsWith("http")) {
@@ -52,7 +52,7 @@ export const NavMenu = () => {
               href={url.pathname}
               className={navLink}
               aria-current={
-                router.urlPathname === url.pathname ? "page" : undefined
+                location.pathname === url.pathname ? "page" : undefined
               }
             >
               {item.label}
@@ -64,7 +64,7 @@ export const NavMenu = () => {
   )
 }
 
-const SubMenu = ({ item, router }) => {
+const SubMenu = ({ item, location }: { location: Location; item: any }) => {
   const menu = useMenuState()
   return (
     <>
@@ -73,7 +73,7 @@ const SubMenu = ({ item, router }) => {
         <MdArrowDropDown aria-label="Menu" />
       </MenuButton>
       <Menu {...menu} aria-label={item.label} className={navMenu}>
-        {item.childItems.nodes.map((item) => {
+        {item.childItems.nodes.map((item: any) => {
           let url = { pathname: item.path }
           if (item.path.startsWith("http")) {
             url = new URL(item.path)
@@ -85,7 +85,7 @@ const SubMenu = ({ item, router }) => {
               key={item.path}
               href={url.pathname}
               aria-current={
-                router.urlPathname === url.pathname ? "page" : undefined
+                location.pathname === url.pathname ? "page" : undefined
               }
               className={navLink}
             >
@@ -102,9 +102,14 @@ export const MobileNav = () => {
   const router = usePageContext()
   const dialog = useDialogState({ animated: true })
   const [{ data }] = Wordpress.useMainMenuQuery()
-  const menuItems = data?.menuItems.nodes
-  const isTopLevel = (a) =>
-    !menuItems?.some((b) => b?.childItems.nodes.some((b) => b.path === a?.path))
+  const menuItems = data?.menuItems?.nodes
+  if (!menuItems) {
+    return null
+  }
+  const isTopLevel = (a: typeof menuItems[0]) =>
+    !menuItems?.some((b) =>
+      b?.childItems!.nodes!.some((b) => b?.path === a?.path)
+    )
 
   return (
     <>
@@ -129,6 +134,9 @@ export const MobileNav = () => {
                 items = [item]
               }
               return items?.map((item) => {
+                if (!item) {
+                  return null
+                }
                 let url = { pathname: item.path }
                 if (item.path.startsWith("http")) {
                   url = new URL(item.path)

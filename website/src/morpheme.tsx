@@ -1,5 +1,6 @@
 import { groupBy } from "lodash"
 import React from "react"
+import { ReactNode } from "react"
 import { MdClose } from "react-icons/md"
 import { Clickable } from "reakit/Clickable"
 import Link from "src/components/link"
@@ -32,14 +33,10 @@ export const MorphemeDetails = (props: {
     variables: { gloss: props.segment.gloss },
   })
 
-  let titleArea = null
+  let titleArea: ReactNode | null = null
   let content = occurrences
-  if (tag.data && tag.data.tag) {
-    const matchingTag = morphemeDisplayTag<{
-      title: string
-      tag: string
-      definition: string
-    }>(tag.data.tag, props.tagSet)
+  if (tag.data?.tag) {
+    const matchingTag = morphemeDisplayTag(tag.data.tag, props.tagSet)
     titleArea = matchingTag?.title ? (
       <h2 className={css.margined}>{matchingTag.title}</h2>
     ) : null
