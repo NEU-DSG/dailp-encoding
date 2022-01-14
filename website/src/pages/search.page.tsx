@@ -16,7 +16,7 @@ const SearchPage = () => {
   const location = useLocation()
   const [morphemeId, setMorpheme] = useDebounce(
     location.search?.query || null,
-    200
+    300
   )
 
   useEffect(() => {

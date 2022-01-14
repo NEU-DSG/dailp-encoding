@@ -88,6 +88,7 @@ const SubMenu = ({ item, location }: { location: Location; item: any }) => {
                 location.pathname === url.pathname ? "page" : undefined
               }
               className={navLink}
+              onClick={() => menu.hide()}
             >
               {item.label}
             </MenuItem>
