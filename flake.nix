@@ -156,7 +156,7 @@
         '';
 
         devShell = with pkgs;
-          stdenv.mkDerivation rec {
+          mkShell rec {
             name = "dailp-dev";
             unpackPhase = "true";
             RUST_LOG = "info";
