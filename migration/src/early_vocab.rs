@@ -1,35 +1,38 @@
 use anyhow::Result;
-use dailp::Contributor;
+use dailp::{Contributor, Database};
 
 const COLLECTION_NAME: &str = "Early Vocabularies";
 
-pub async fn migrate_all() -> Result<()> {
+pub async fn migrate_all(db: &Database) -> Result<()> {
     // Most of our early vocabularies have a consistent format, so we can parse
     // them the exact same way.
-    migrate_new_vocabs(&[
-        // AG1836
-        "1EPsHXNIqGgsPtTP-V86ItFfJ5vwxKIV2qx9sycrARsg",
-        // DC1800
-        "1zq0qQ6jv8ym6VZNIAoiavGQeGhIWM0M1ZfOM9ngA49w",
-        // TS1822
-        "1sZEhIBoEGp1nTsvpDcFqLm6HAjz0YBTlWW-uzkAzQkM",
-        // jdb1771
-        "1pYYS_jv01rccXhue2vX0xnLqMnCg-PoFDE4WSOA6hVQ",
-        // BH1784
-        "1fhV3DTHzh9ffqUFfHPSALjotgkXEvKKMNfE5G8ZYVC8",
-        // WP1796
-        "1H2Z26jHh6bb1p7xVfv3P2vvD73eifiLR7Ss5k1HpUfM",
-        // JH1823
-        "1Uj7bk1wvTbXopL52mm-b9s3RLw7iSA_RFAt_ccFg_bQ",
-        // DB1884
-        "1hLPiRBdKUX7jaLVE6MFLgfrTMBJGNHFb8P-2MM81YIo",
-        // BB1797
-        "1SRTn65vbHrjmc54hVFSmBba6Cnh8KPn5LQ8qmk_kJMc",
-        // BB1819
-        "1OTtJuh1n5Z05JYxFVbilwvwjvhCUETUHhzhMw1zWGsw",
-        // JA1775
-        "1Gfa_Ef1KFKp9ig1AlF65hxaXe43ffV_U_xKQGkD0mnc",
-    ])
+    migrate_new_vocabs(
+        db,
+        &[
+            // AG1836
+            "1EPsHXNIqGgsPtTP-V86ItFfJ5vwxKIV2qx9sycrARsg",
+            // DC1800
+            "1zq0qQ6jv8ym6VZNIAoiavGQeGhIWM0M1ZfOM9ngA49w",
+            // TS1822
+            "1sZEhIBoEGp1nTsvpDcFqLm6HAjz0YBTlWW-uzkAzQkM",
+            // jdb1771
+            "1pYYS_jv01rccXhue2vX0xnLqMnCg-PoFDE4WSOA6hVQ",
+            // BH1784
+            "1fhV3DTHzh9ffqUFfHPSALjotgkXEvKKMNfE5G8ZYVC8",
+            // WP1796
+            "1H2Z26jHh6bb1p7xVfv3P2vvD73eifiLR7Ss5k1HpUfM",
+            // JH1823
+            "1Uj7bk1wvTbXopL52mm-b9s3RLw7iSA_RFAt_ccFg_bQ",
+            // DB1884
+            "1hLPiRBdKUX7jaLVE6MFLgfrTMBJGNHFb8P-2MM81YIo",
+            // BB1797
+            "1SRTn65vbHrjmc54hVFSmBba6Cnh8KPn5LQ8qmk_kJMc",
+            // BB1819
+            "1OTtJuh1n5Z05JYxFVbilwvwjvhCUETUHhzhMw1zWGsw",
+            // JA1775
+            "1Gfa_Ef1KFKp9ig1AlF65hxaXe43ffV_U_xKQGkD0mnc",
+        ],
+    )
     .await?;
 
     // A few others have slight differences.
@@ -37,6 +40,7 @@ pub async fn migrate_all() -> Result<()> {
     // TODO Include all three dialectal variants somehow!
     // JM1887
     parse_early_vocab(
+        db,
         "1RqtDUzYCRMx7AOSp7aICCis40m4kZQpUsd2thav_m50",
         1,
         false,
@@ -50,14 +54,15 @@ pub async fn migrate_all() -> Result<()> {
     Ok(())
 }
 
-async fn migrate_new_vocabs(sheet_ids: &[&str]) -> Result<()> {
+async fn migrate_new_vocabs(db: &Database, sheet_ids: &[&str]) -> Result<()> {
     for s in sheet_ids {
-        parse_early_vocab(s, 0, true, false, true, true, 3).await?;
+        parse_early_vocab(db, s, 0, true, false, true, true, 3).await?;
     }
     Ok(())
 }
 
 async fn parse_early_vocab(
+    db: &Database,
     sheet_id: &str,
     to_skip: usize,
     has_norm: bool,
@@ -96,7 +101,7 @@ async fn parse_early_vocab(
         order_index: 0,
     };
 
-    let entries: Vec<_> = sheet
+    let entries = sheet
         .values
         .into_iter()
         // The first row is just a header.
@@ -177,19 +182,22 @@ async fn parse_early_vocab(
                 },
                 links,
             })
-        })
-        .collect();
+        });
 
     // Push all forms and links to the database.
-    crate::update_form(entries.iter().map(|x| &x.form)).await?;
-    crate::update_connection(entries.iter().flat_map(|x| &x.links)).await?;
+    for entry in entries {
+        db.update_form(entry.form).await?;
+        for link in entry.links {
+            db.update_connection(link).await?;
+        }
+    }
 
     // Update document metadata record
     let doc = dailp::AnnotatedDoc {
         meta,
         segments: None,
     };
-    crate::update_document(&[doc]).await?;
+    db.update_document(doc).await?;
 
     Ok(())
 }
