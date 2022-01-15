@@ -127,7 +127,12 @@ export const AnnotatedForm = (
                 startTime={p.segment.audioTrack.startTime}
               />
             </div>
-          )) || <br />
+          )) || (
+            <>
+              <br />
+              <br />
+            </>
+          )
         )}
         {showSegments ? (
           <MorphemicSegmentation

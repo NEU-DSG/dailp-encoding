@@ -9,7 +9,8 @@ mod spreadsheets;
 mod tags;
 mod translations;
 
-use anyhow::{bail, Result};
+use anyhow::Result;
+use dailp::Database;
 use log::{error, info};
 use std::time::Duration;
 
@@ -20,48 +21,50 @@ pub const REFERENCES_SHEET_NAME: &str = "References";
 #[tokio::main]
 async fn main() -> Result<()> {
     dotenv::dotenv().ok();
-
     pretty_env_logger::init();
+
+    let db = Database::new()?;
+
     info!("Migrating Image Sources");
-    migrate_image_sources().await?;
+    migrate_image_sources(&db).await?;
     info!("Migrating contributors");
-    contributors::migrate_all().await?;
+    contributors::migrate_all(&db).await?;
 
     info!("Migrating connections...");
-    connections::migrate_connections().await?;
+    connections::migrate_connections(&db).await?;
 
-    migrate_data().await?;
+    migrate_data(&db).await?;
 
     info!("Migrating early vocabularies...");
-    early_vocab::migrate_all().await?;
+    early_vocab::migrate_all(&db).await?;
 
     info!("Migrating DF1975 and DF2003...");
-    lexical::migrate_dictionaries().await?;
+    lexical::migrate_dictionaries(&db).await?;
 
     info!("Migrating tags to database...");
-    tags::migrate_tags().await?;
+    tags::migrate_tags(&db).await?;
 
     Ok(())
 }
 
-async fn migrate_image_sources() -> Result<()> {
+async fn migrate_image_sources(db: &Database) -> Result<()> {
     use dailp::{ImageSource, ImageSourceId};
-    update_image_source(&[
-        ImageSource {
-            id: ImageSourceId("beinecke".to_owned()),
-            url: "https://collections.library.yale.edu/iiif/2".to_owned(),
-        },
-        ImageSource {
-            id: ImageSourceId("dailp".to_owned()),
-            url: "https://wd0ahsivs3.execute-api.us-east-1.amazonaws.com/latest/iiif/2".to_owned(),
-        },
-    ])
-    .await
+    db.update_image_source(ImageSource {
+        id: ImageSourceId("beinecke".to_owned()),
+        url: "https://collections.library.yale.edu/iiif/2".to_owned(),
+    })
+    .await?;
+    db.update_image_source(ImageSource {
+        id: ImageSourceId("dailp".to_owned()),
+        url: "https://wd0ahsivs3.execute-api.us-east-1.amazonaws.com/latest/iiif/2".to_owned(),
+    })
+    .await?;
+    Ok(())
 }
 
 /// Parses our annotated document spreadsheets, migrating that data to our
 /// database and writing them into TEI XML files.
-async fn migrate_data() -> Result<()> {
+async fn migrate_data(db: &Database) -> Result<()> {
     // Pull the list of annotated documents from our index sheet.
     let index =
         spreadsheets::SheetResult::from_sheet("1sDTRFoJylUqsZlxU57k1Uj8oHhbM3MAzU8sDgTfO7Mk", None)
@@ -78,7 +81,7 @@ async fn migrate_data() -> Result<()> {
     for (order_index, sheet_id) in index.sheet_ids.iter().enumerate() {
         if let Some((doc, refs)) = fetch_sheet(sheet_id, order_index as i64).await? {
             spreadsheets::write_to_file(&doc)?;
-            spreadsheets::migrate_documents_to_db(&[(doc, refs)]).await?;
+            spreadsheets::migrate_documents_to_db(db, (doc, refs)).await?;
         } else {
             error!("Failed to process {}", sheet_id);
         }
@@ -146,112 +149,4 @@ async fn fetch_sheet(
     } else {
         Ok(None)
     }
-}
-
-async fn graphql_mutate(
-    method: &str,
-    content_list: impl IntoIterator<Item = String>,
-) -> Result<()> {
-    use itertools::Itertools as _;
-    lazy_static::lazy_static! {
-        static ref CLIENT: reqwest::Client = reqwest::Client::new();
-        static ref ENDPOINT: String = format!(
-            "{}/graphql",
-            std::env::var("DAILP_API_URL")
-                .expect("Missing DAILP_API_URL environment variable")
-        );
-        static ref PASSWORD: String = std::env::var("MONGODB_PASSWORD")
-            .expect("Missing MONGODB_PASSWORD environment variable");
-    }
-    // Chunk our contents to make fewer requests to the server that handles
-    // pushing this data to the database.
-    for mut chunk in content_list
-        .into_iter()
-        // Each item corresponds to one GraphQL method call.
-        // For now, all the mutation calls are structured the same way to make
-        // this easier.
-        .enumerate()
-        .map(|(i, x)| {
-            format!(
-                "r{}: {}(password: \"{}\", contents: \"{}\")\n",
-                i,
-                method,
-                *PASSWORD,
-                base64::encode(&x)
-            )
-        })
-        .chunks(10)
-        .into_iter()
-    {
-        let s = chunk.join("");
-        let query = serde_json::json!({
-            "operationName": null,
-            "query": format!("mutation {{\n{}\n}}", s)
-        });
-        let response = CLIENT
-            .post(&*ENDPOINT)
-            .json(&query)
-            .send()
-            .await?
-            .json::<serde_json::Value>()
-            .await?;
-        if let Some(errors) = response.get("errors") {
-            bail!("Mutation '{}' failed: {}", method, errors);
-        }
-    }
-    Ok(())
-}
-
-async fn update_tag(tag: impl IntoIterator<Item = &dailp::MorphemeTag>) -> Result<()> {
-    graphql_mutate(
-        "updateTag",
-        tag.into_iter()
-            .map(|tag| serde_json::to_string(tag).unwrap()),
-    )
-    .await
-}
-
-async fn update_document(tag: impl IntoIterator<Item = &dailp::AnnotatedDoc>) -> Result<()> {
-    graphql_mutate(
-        "updateDocument",
-        tag.into_iter()
-            .map(|tag| serde_json::to_string(tag).unwrap()),
-    )
-    .await
-}
-
-async fn update_form(tag: impl IntoIterator<Item = &dailp::AnnotatedForm>) -> Result<()> {
-    graphql_mutate(
-        "updateForm",
-        tag.into_iter()
-            .map(|tag| serde_json::to_string(tag).unwrap()),
-    )
-    .await
-}
-
-async fn update_connection(tag: impl IntoIterator<Item = &dailp::LexicalConnection>) -> Result<()> {
-    graphql_mutate(
-        "updateConnection",
-        tag.into_iter()
-            .map(|tag| serde_json::to_string(tag).unwrap()),
-    )
-    .await
-}
-
-async fn update_person(tag: impl IntoIterator<Item = &dailp::ContributorDetails>) -> Result<()> {
-    graphql_mutate(
-        "updatePerson",
-        tag.into_iter()
-            .map(|tag| serde_json::to_string(tag).unwrap()),
-    )
-    .await
-}
-
-async fn update_image_source(tag: impl IntoIterator<Item = &dailp::ImageSource>) -> Result<()> {
-    graphql_mutate(
-        "updateImageSource",
-        tag.into_iter()
-            .map(|tag| serde_json::to_string(tag).unwrap()),
-    )
-    .await
 }

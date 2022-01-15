@@ -11,10 +11,6 @@ use {
     serde_with::{rust::StringWithSeparator, CommaSeparator},
 };
 
-lazy_static::lazy_static! {
-    static ref MONGODB_PASSWORD: String = std::env::var("MONGODB_PASSWORD").unwrap();
-}
-
 /// Home for all read-only queries
 pub struct Query;
 
@@ -281,120 +277,6 @@ impl Mutation {
         "1.0"
     }
 
-    #[graphql(visible = false)]
-    async fn update_tag(
-        &self,
-        context: &Context<'_>,
-        #[graphql(secret)] password: String,
-        // Data encoded as JSON for now.
-        // FIXME Use real input objects.
-        contents: String,
-    ) -> FieldResult<bool> {
-        if password != *MONGODB_PASSWORD {
-            Ok(false)
-        } else {
-            let b = base64::decode(&contents)?;
-            let tag = serde_json::from_slice(&b)?;
-            context.data::<Database>()?.update_tag(tag).await?;
-            Ok(true)
-        }
-    }
-
-    #[graphql(visible = false)]
-    async fn update_document(
-        &self,
-        context: &Context<'_>,
-        #[graphql(secret)] password: String,
-        // Data encoded as JSON for now.
-        // FIXME Use real input objects.
-        contents: String,
-    ) -> FieldResult<bool> {
-        if password != *MONGODB_PASSWORD {
-            Ok(false)
-        } else {
-            let b = base64::decode(&contents)?;
-            let tag = serde_json::from_slice(&b)?;
-            context.data::<Database>()?.update_document(tag).await?;
-            Ok(true)
-        }
-    }
-
-    #[graphql(visible = false)]
-    async fn update_form(
-        &self,
-        context: &Context<'_>,
-        #[graphql(secret)] password: String,
-        // Data encoded as JSON for now.
-        // FIXME Use real input objects.
-        contents: String,
-    ) -> FieldResult<bool> {
-        if password != *MONGODB_PASSWORD {
-            Ok(false)
-        } else {
-            let b = base64::decode(&contents)?;
-            let tag = serde_json::from_slice(&b)?;
-            context.data::<Database>()?.update_form(tag).await?;
-            Ok(true)
-        }
-    }
-
-    #[graphql(visible = false)]
-    async fn update_connection(
-        &self,
-        context: &Context<'_>,
-        #[graphql(secret)] password: String,
-        // Data encoded as JSON for now.
-        // FIXME Use real input objects.
-        contents: String,
-    ) -> FieldResult<bool> {
-        if password != *MONGODB_PASSWORD {
-            Ok(false)
-        } else {
-            let b = base64::decode(&contents)?;
-            let tag = serde_json::from_slice(&b)?;
-            context.data::<Database>()?.update_connection(tag).await?;
-            Ok(true)
-        }
-    }
-
-    #[graphql(visible = false)]
-    async fn update_person(
-        &self,
-        context: &Context<'_>,
-        #[graphql(secret)] password: String,
-        // Data encoded as JSON for now.
-        // FIXME Use real input objects.
-        contents: String,
-    ) -> FieldResult<bool> {
-        if password != *MONGODB_PASSWORD {
-            Ok(false)
-        } else {
-            let b = base64::decode(&contents)?;
-            let tag = serde_json::from_slice(&b)?;
-            context.data::<Database>()?.update_person(tag).await?;
-            Ok(true)
-        }
-    }
-
-    #[graphql(visible = false)]
-    async fn update_image_source(
-        &self,
-        context: &Context<'_>,
-        #[graphql(secret)] password: String,
-        // Data encoded as JSON for now.
-        // FIXME Use real input objects.
-        contents: String,
-    ) -> FieldResult<bool> {
-        if password != *MONGODB_PASSWORD {
-            Ok(false)
-        } else {
-            let b = base64::decode(&contents)?;
-            let tag = serde_json::from_slice(&b)?;
-            context.data::<Database>()?.update_image_source(tag).await?;
-            Ok(true)
-        }
-    }
-
     #[graphql(guard(GroupGuard(group = "UserGroup::Editor")))]
     async fn update_page(
         &self,
@@ -419,20 +301,6 @@ impl Mutation {
             .update(data.0)
             .await?;
         Ok(true)
-    }
-
-    #[graphql(visible = false)]
-    async fn clear_database(
-        &self,
-        context: &Context<'_>,
-        #[graphql(secret)] password: String,
-    ) -> FieldResult<bool> {
-        if password != *MONGODB_PASSWORD {
-            Ok(false)
-        } else {
-            context.data::<Database>()?.clear_all().await?;
-            Ok(true)
-        }
     }
 }
 
