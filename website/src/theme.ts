@@ -1,4 +1,3 @@
-import CSS from "csstype"
 import Typography from "typography"
 
 const theme = {
@@ -39,11 +38,6 @@ export const wordpressUrl = "https://wp.dailp.northeastern.edu"
 
 // theme.fonts.body = theme.fonts.bodyArr.join(",")
 // theme.fonts.header = theme.fonts.headerArr.join(",")
-
-export interface CSSProps extends CSS.Properties {
-  // Add fallback objects to support arbitrary nested selectors
-  // [k: string]: CSSProps
-}
 
 export const typography = new Typography({
   baseFontSize: theme.fontSizes.root,
