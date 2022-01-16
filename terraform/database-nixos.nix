@@ -36,6 +36,10 @@ in {
       };
     };
 
+  config.output = mkMerge (map (node: {
+    "${node.name}_ip" = { value = "\${aws_instance.${node.name}.public_ip}"; };
+  }) config.servers.mongodb.nodes);
+
   config.resource = let
     mkAttachedVolume = (volume: {
       aws_ebs_volume."${volume.name}" = {
