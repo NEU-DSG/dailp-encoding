@@ -6,7 +6,7 @@ import { Helmet } from "react-helmet"
 import { Input } from "reakit/Input"
 import Link from "src/components/link"
 import * as Dailp from "src/graphql/dailp"
-import { useLocation, usePageContext } from "src/renderer/PageShell"
+import { useLocation } from "src/renderer/PageShell"
 import { closeBlock, fullWidth } from "src/sprinkles.css"
 import Layout from "../layout"
 import { sourceCitationRoute } from "../routes"
@@ -15,7 +15,7 @@ import { boldWordRow, wordRow } from "./timeline.css"
 const SearchPage = () => {
   const location = useLocation()
   const [morphemeId, setMorpheme] = useDebounce(
-    location.search?.query || null,
+    location.search && location.search["query"] || null,
     300
   )
 

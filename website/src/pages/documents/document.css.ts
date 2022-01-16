@@ -1,5 +1,5 @@
 import { style } from "@vanilla-extract/css"
-import sprinkles, {
+import {
   colors,
   hspace,
   largeDialog,

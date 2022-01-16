@@ -132,7 +132,7 @@ const TranslationTab = ({ doc }: { doc: Document }) => {
     setDialogOpen(true)
   }
 
-  const [phoneticRepresentation, setPhoneticRepresentation] =
+  const [phoneticRepresentation, _setPhoneticRepresentation] =
     useState<PhoneticRepresentation>(selectedPhonetics())
 
   const [experienceLevel, setExperienceLevel] = useState<ViewMode>(

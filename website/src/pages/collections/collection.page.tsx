@@ -4,18 +4,15 @@ import { Breadcrumbs } from "src/breadcrumbs"
 import Link from "src/components/link"
 import * as Dailp from "src/graphql/dailp"
 import Layout from "src/layout"
-import { usePageContext } from "src/renderer/PageShell"
+import { useRouteParams } from "src/renderer/PageShell"
 import { documentRoute } from "src/routes"
 import { fullWidth, paddedCenterColumn } from "src/sprinkles.css"
 import WordpressPage from "src/wordpress-page"
 
 const CollectionPage = () => {
-  const {
-    routeParams: { slug },
-  } = usePageContext()
-
+  const { slug } = useRouteParams()
   const [{ data: dailp }] = Dailp.useCollectionQuery({
-    variables: { slug },
+    variables: { slug: slug! },
   })
   const documents = [...(dailp?.collection.documents ?? [])]
   // Sort documents into natural order by their ID.
@@ -37,7 +34,7 @@ const CollectionPage = () => {
             </Breadcrumbs>
             <h1>{dailp?.collection.name}</h1>
           </header>
-          <WordpressPage slug={slug} />
+          <WordpressPage slug={slug!} />
           <ul>
             {documents.map((document) => (
               <li key={document.slug}>

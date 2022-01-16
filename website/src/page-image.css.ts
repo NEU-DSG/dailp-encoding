@@ -1,4 +1,4 @@
-import { globalStyle, style } from "@vanilla-extract/css"
+import { style } from "@vanilla-extract/css"
 import sprinkles, { mediaQueries } from "src/sprinkles.css"
 
 export const floatingControls = sprinkles({

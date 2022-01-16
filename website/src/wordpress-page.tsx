@@ -46,14 +46,16 @@ const parseOptions: HTMLReactParserOptions = {
     if (
       node instanceof Element &&
       node.name === "a" &&
-      node.attribs?.href?.startsWith(wordpressUrl)
+      node.attribs &&
+      node.attribs["href"]?.startsWith(wordpressUrl)
     ) {
       const props = attributesToProps(node.attribs)
       return (
-        <Link {...props} href={props.href.slice(wordpressUrl.length)}>
+        <Link {...props} href={props["href"]!.slice(wordpressUrl.length)}>
           {domToReact(node.children, parseOptions)}
         </Link>
       )
     }
+    return undefined
   },
 }

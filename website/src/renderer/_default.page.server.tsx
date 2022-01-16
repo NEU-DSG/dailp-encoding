@@ -8,7 +8,6 @@ import { dangerouslySkipEscape, escapeInject } from "vite-plugin-ssr"
 import type { PageContextBuiltIn } from "vite-plugin-ssr/types"
 import { customClient } from "src/graphql"
 import {
-  PageContext,
   PageContextServer,
   PageShell,
   rootElementId,
@@ -18,7 +17,7 @@ import {
  * In production, render every page on the server then hydrate it on the client.
  */
 export function render(pageContext: PageContextServer) {
-  if (process.env.NODE_ENV === "development") {
+  if (process.env["NODE_ENV"] === "development") {
     // In development, don't do SSR, just let the client render.
     return escapeInject`<!DOCTYPE html>
     <html>
@@ -52,7 +51,7 @@ export async function onBeforeRender(
   const baseContext = { urqlState: {}, buildDate }
   // Don't prerender in development mode, let the client do all the rendering.
   // This keeps pages loading quickly as they change.
-  if (process.env.NODE_ENV === "development") {
+  if (process.env["NODE_ENV"] === "development") {
     return { pageContext: baseContext }
   } else {
     const ssr = ssrExchange({ initialState: undefined, isClient: false })

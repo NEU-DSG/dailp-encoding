@@ -22,8 +22,8 @@ export function useGraphQLForm<T>(
   const cms = useCMS()
   return useForm({
     loadInitialValues: async () => {
-      if (cms.api.graphql) {
-        const { data } = await cms.api.graphql.query(query, config.variables)
+      if ("graphql" in cms.api) {
+        const { data } = await cms.api["graphql"].query(query, config.variables)
         return config.transformIn ? config.transformIn(data) : data
       } else {
         return initialData
@@ -33,7 +33,7 @@ export function useGraphQLForm<T>(
       const finalData = config.transformOut
         ? config.transformOut(formData)
         : formData
-      const { data, errors } = await cms.api.graphql.mutate(mutation, {
+      const { data, errors } = await cms.api["graphql"].mutate(mutation, {
         ...config.variables,
         data: finalData,
       })
@@ -95,6 +95,7 @@ export const PageCreatorPlugin = {
       component: "text",
       validation(title: string) {
         if (!title) return "Required."
+        return undefined
       },
     },
     {

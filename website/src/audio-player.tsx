@@ -1,24 +1,13 @@
-import { Tooltip } from "@reach/tooltip"
-import "@reach/tooltip/styles.css"
 import cx from "classnames"
 import { Howl } from "howler"
-import { flatMap } from "lodash"
 import React from "react"
 import {
-  MdHearing,
   MdPauseCircleOutline,
   MdPlayCircleOutline,
 } from "react-icons/md"
-import { DialogDisclosure, DialogStateReturn } from "reakit/Dialog"
 import * as Dailp from "src/graphql/dailp"
 import { hideOnPrint } from "src/sprinkles.css"
 import * as css from "./audio-player.css"
-import {
-  BasicMorphemeSegment,
-  TagSet,
-  ViewMode,
-  morphemeDisplayTag,
-} from "./types"
 
 const segmentClass = cx(hideOnPrint, css.audioElement)
 export const SegmentAudio = (props: { audioUrl: string }) => {
@@ -75,9 +64,9 @@ class AudioPlayer extends React.Component<
         onplay: () => {
           this.onPlay()
         }, // What happens when a sound starts playing?
-        onend: () => {}, // What happens when a sound finishes playing?
-        onpause: () => {}, // What happens when a sound is paused?
-        onseek: () => {}, // What happens when a sound seeks?
+        onend: () => { }, // What happens when a sound finishes playing?
+        onpause: () => { }, // What happens when a sound is paused?
+        onseek: () => { }, // What happens when a sound seeks?
       }),
     }
     if (this.props.slices) {
@@ -120,7 +109,7 @@ class AudioPlayer extends React.Component<
     this.state.howl.seek((newProgress / 100) * this.state.howl.duration())
   }
 
-  render() {
+  override render() {
     let button
     let progress = this.state.progress
 
@@ -170,7 +159,7 @@ const ProgressBar = (props: {
       <div
         className={css.fill}
         style={{ width: `${props.progress}%` }}
-        onDrag={() => {}}
+        onDrag={() => { }}
       />
       {/*<div css={timestamp}>*/}
       {/*  <span></span>*/}
