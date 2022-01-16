@@ -1,6 +1,5 @@
 import React from "react"
 import { Helmet } from "react-helmet"
-import Link from "src/components/link"
 import * as Dailp from "src/graphql/dailp"
 import Layout from "src/layout"
 import { fullWidth } from "src/sprinkles.css"
@@ -42,10 +41,10 @@ function DocumentDetails({ id }: Props) {
           ))}
         </ul>
       </section>
-      {doc.sources.length ? (
+      {doc.sources.length > 0 ? (
         <section className={fullWidth}>
           Original document provided courtesy of{" "}
-          <a href={doc.sources[0].link}>{doc.sources[0].name}</a>.
+          <a href={doc.sources[0]!.link}>{doc.sources[0]!.name}</a>.
         </section>
       ) : null}
     </>

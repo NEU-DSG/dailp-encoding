@@ -1,13 +1,11 @@
 import fetch from "isomorphic-unfetch"
 import {
-  Client,
   Exchange,
   UseQueryArgs,
   cacheExchange,
   createClient,
   dedupExchange,
   fetchExchange,
-  ssrExchange,
   useQuery,
 } from "urql"
 

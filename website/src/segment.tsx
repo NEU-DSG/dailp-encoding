@@ -35,7 +35,7 @@ export const Segment = (p: Props & { howl?: Howl }) => {
     return <AnnotatedForm {...p} segment={segment} />
   } else if (segment.__typename === "AnnotatedPhrase") {
     const children =
-      segment.parts?.map(function (seg, i) {
+      segment.parts?.map(function(seg, i) {
         return (
           <Segment
             key={i}
@@ -214,15 +214,15 @@ const MorphemicSegmentation = (p: {
     <>
       <i>{segmentation}</i>
       <div>
-        {p.segments.map(function (segment, i) {
+        {p.segments.map(function(segment, i) {
           return (
             <React.Fragment key={i}>
-              {i > 0 ? p.segments![i - 1].nextSeparator : null}
               <MorphemeSegment
                 segment={segment}
                 tagSet={p.tagSet}
                 onOpenDetails={p.onOpenDetails}
               />
+              {segment.nextSeparator}
             </React.Fragment>
           )
         })}

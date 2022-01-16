@@ -1,13 +1,12 @@
 import React from "react"
 import { Helmet } from "react-helmet"
 import Markdown from "react-markdown"
-
-/* import { MarkdownFieldPlugin } from "react-tinacms-editor" */
+//import { MarkdownFieldPlugin } from "react-tinacms-editor"
 import gfm from "remark-gfm"
 import { usePlugin } from "tinacms"
 import * as Dailp from "src/graphql/dailp"
 import { fullWidth, paddedWidth } from "src/sprinkles.css"
-import { useCredentials } from "../auth"
+//import { useCredentials } from "../auth"
 import { blocksField, useGraphQLForm } from "../cms/graphql-form"
 import Layout from "../layout"
 
@@ -33,14 +32,14 @@ export const EditablePageContents = (props: Props) => (
   </main>
 )
 
-const EditablePageSSR = (props: Props) => {
-  const creds = useCredentials()
-  if (creds) {
-    return <EditablePageInner {...props} />
-  } else {
-    return <PageContents page={props.data.dailp.page} />
-  }
-}
+/* const EditablePageSSR = (props: Props) => {
+*   const creds = useCredentials()
+*   if (creds) {
+*     return <EditablePageInner {...props} />
+*   } else {
+*     return <PageContents page={props.data.dailp.page} />
+*   }
+* } */
 
 const EditablePageInner = (props: Props) => {
   const staticData = props.data.dailp.page

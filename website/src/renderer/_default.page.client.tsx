@@ -16,7 +16,7 @@ const { hydrationPromise } = useClientRouter({
     const elem = document.getElementById(rootElementId)
     // `pageContext.isHydration` is set by `vite-plugin-ssr` and is `true` when the page
     // is already rendered to HTML.
-    if (isHydration && process.env.NODE_ENV === "production") {
+    if (isHydration && process.env["NODE_ENV"] === "production") {
       // When we render the first page. (Since we do SSR, the first page is already
       // rendered to HTML and we merely have to hydrate it.)
       ReactDOM.hydrate(page, elem)

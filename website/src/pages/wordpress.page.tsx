@@ -1,13 +1,12 @@
 import React from "react"
 import { Helmet } from "react-helmet"
 import * as Wordpress from "src/graphql/wordpress"
-import { useRouteParams } from "src/renderer/PageShell"
 import { edgePadded, fullWidth } from "src/sprinkles.css"
 import { WordpressContents } from "src/wordpress-page"
 import Layout from "../layout"
 import { wordpressUrl } from "../theme"
 
-const WordpressPage = () => (
+const WordpressPage = (props: { "*": string }) => (
   <Layout>
     <Helmet>
       <link
@@ -20,7 +19,7 @@ const WordpressPage = () => (
     </Helmet>
     <main className={edgePadded}>
       <article className={fullWidth}>
-        <Contents />
+        <Contents slug={props["*"]} />
       </article>
     </main>
   </Layout>
@@ -28,9 +27,8 @@ const WordpressPage = () => (
 
 export default WordpressPage
 
-const Contents = () => {
-  const { "*": slug } = useRouteParams()
-  const [{ data, fetching }] = Wordpress.usePageQuery({ variables: { slug } })
+const Contents = (props: { slug: string }) => {
+  const [{ data, fetching }] = Wordpress.usePageQuery({ variables: { slug: props.slug } })
   const page = data?.page?.__typename === "Page" && data?.page
   if (page) {
     return (

@@ -10,9 +10,9 @@ export const UserProvider = (props: { children: any }) => {
     Amplify.configure({
       Auth: {
         // TODO How to get these variables from the server?
-        region: process.env.DAILP_AWS_REGION,
-        userPoolId: process.env.DAILP_USER_POOL,
-        userPoolWebClientId: process.env.DAILP_USER_POOL_CLIENT,
+        region: process.env["DAILP_AWS_REGION"],
+        userPoolId: process.env["DAILP_USER_POOL"],
+        userPoolWebClientId: process.env["DAILP_USER_POOL_CLIENT"],
       },
     })
 
