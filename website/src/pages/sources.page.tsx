@@ -20,7 +20,7 @@ const SourcesPage = () => {
           recent as the 2000s. Each citation is written generally following the{" "}
           <a href="https://apastyle.apa.org/">APA style</a>, like so:
           <br />
-          Document ID = Last name, First name; ... (Year published).{" "}
+          <b>Document ID:</b> Last name, First name; ... (Year published).{" "}
           <i>Title of the document</i>. Number of words referenced.
         </p>
 
@@ -51,7 +51,7 @@ const DocumentCitation = (p: { document: LocalDocument }) => {
   const wordCount = doc.formCount ? ` ${doc.formCount} words.` : null
   return (
     <li id={sourceCitationId(doc.id)} className={apaCitation}>
-      <b>{doc.id}</b>: {authors} {year && `(${year})`}. <i>{doc.title}</i>.
+      <b>{doc.id}:</b> {authors} {year && `(${year})`}. <i>{doc.title}</i>.
       {wordCount}
     </li>
   )
