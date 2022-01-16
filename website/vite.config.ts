@@ -13,6 +13,7 @@ export default defineConfig({
     ssr(),
     checker({ typescript: true }),
   ],
+  publicDir: "static",
   resolve: {
     alias: {
       "./runtimeConfig": "./runtimeConfig.browser",
