@@ -1,11 +1,22 @@
-import { style } from "@vanilla-extract/css"
-import sprinkles, { mediaQueries } from "src/sprinkles.css"
+import { globalStyle, style } from "@vanilla-extract/css"
+import sprinkles, {
+  colors,
+  hspace,
+  mediaQueries,
+  vspace,
+} from "src/sprinkles.css"
+import { marginX } from "./style-utils"
 
-export const floatingControls = sprinkles({
+export const floatingControls = style({
   position: "absolute",
-  right: "halfEdge",
-  bottom: "half",
-  backgroundColor: "body",
+  right: hspace.halfEdge,
+  bottom: vspace.half,
+  backgroundColor: colors.body,
+  display: "block",
+})
+
+globalStyle(`${floatingControls} > *`, {
+  display: "block",
 })
 
 export const control = sprinkles({ display: "block" })
@@ -19,20 +30,21 @@ export const pageNav = style([
   },
 ])
 
-export const pageImage = sprinkles({
-  width: "full",
+export const pageImage = style({
+  width: "100%",
   height: "auto",
-  marginBottom: "small",
+  marginBottom: vspace.small,
 })
 
-export const caption = sprinkles({
-  marginTop: "half",
-  marginX: "edge",
+export const caption = style({
+  marginTop: vspace.half,
+  ...marginX(hspace.edge),
 })
 
-export const annotationFigure = sprinkles({
-  width: "full",
-  marginBottom: "double",
+export const annotationFigure = style({
+  width: "100%",
+  marginBottom: vspace.double,
+  marginLeft: 0,
 })
 
 export const transformWrapper = style({

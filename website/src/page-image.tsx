@@ -43,7 +43,9 @@ const PageImages = (p: {
       {p.document.sources.length > 0 ? (
         <figcaption className={css.caption}>
           Source:{" "}
-          <a href={p.document.sources[0]!.link}>{p.document.sources[0]!.name}</a>
+          <a href={p.document.sources[0]!.link}>
+            {p.document.sources[0]!.name}
+          </a>
         </figcaption>
       ) : null}
     </figure>
@@ -99,10 +101,10 @@ const CurrentPageImage = (p: {
           />
         </TransformComponent>
         <div className={css.floatingControls}>
-          <IconButton onClick={p.zoomIn} aria-label="Zoom In">
+          <IconButton onClick={() => p.zoomIn()} aria-label="Zoom In">
             <FaPlus size={20} />
           </IconButton>
-          <IconButton onClick={p.zoomOut} aria-label="Zoom Out">
+          <IconButton onClick={() => p.zoomOut()} aria-label="Zoom Out">
             <FaMinus size={20} />
           </IconButton>
         </div>
