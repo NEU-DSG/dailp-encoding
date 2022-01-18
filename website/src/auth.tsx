@@ -1,17 +1,18 @@
-import React, { useContext, useEffect, useState, createContext } from "react"
-import Amplify, { Auth, Hub } from "aws-amplify"
 import { HubCallback } from "@aws-amplify/core"
+import Amplify, { Auth, Hub } from "aws-amplify"
+import React, { createContext, useContext, useState } from "react"
 
-const UserContext = createContext(null)
+const UserContext = createContext<CognitoUser | null>(null)
 
 export const UserProvider = (props: { children: any }) => {
-  const [user, setUser] = useState(null)
+  const [user, setUser] = useState<CognitoUser | null>(null)
   React.useEffect(() => {
     Amplify.configure({
       Auth: {
-        region: process.env.DAILP_AWS_REGION,
-        userPoolId: process.env.DAILP_USER_POOL,
-        userPoolWebClientId: process.env.DAILP_USER_POOL_CLIENT,
+        // TODO How to get these variables from the server?
+        region: process.env["DAILP_AWS_REGION"],
+        userPoolId: process.env["DAILP_USER_POOL"],
+        userPoolWebClientId: process.env["DAILP_USER_POOL_CLIENT"],
       },
     })
 
@@ -45,4 +46,8 @@ export const useCredentials = () => {
     throw new Error("`useUser` must be within a `UserProvider`")
   }
   return context
+}
+
+interface CognitoUser {
+  signInUserSession: { idToken: { jwtToken: string } }
 }

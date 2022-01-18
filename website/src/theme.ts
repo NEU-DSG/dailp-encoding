@@ -1,9 +1,4 @@
-import { css } from "@emotion/react"
-import styled from "@emotion/styled"
-import Color from "color"
 import Typography from "typography"
-import CSS from "csstype"
-import { Button as BaseButton } from "reakit/Button"
 
 const theme = {
   fonts: {
@@ -41,13 +36,8 @@ const theme = {
 
 export const wordpressUrl = "https://wp.dailp.northeastern.edu"
 
-theme.fonts.body = theme.fonts.bodyArr.join(",")
-theme.fonts.header = theme.fonts.headerArr.join(",")
-
-export interface CSSProps extends CSS.Properties {
-  // Add fallback objects to support arbitrary nested selectors
-  // [k: string]: CSSProps
-}
+// theme.fonts.body = theme.fonts.bodyArr.join(",")
+// theme.fonts.header = theme.fonts.headerArr.join(",")
 
 export const typography = new Typography({
   baseFontSize: theme.fontSizes.root,
@@ -58,97 +48,13 @@ export const typography = new Typography({
   headerColor: theme.colors.headings,
 })
 
-const paddingX = (x) => css({ paddingLeft: x, paddingRight: x })
-
-export const paddedWidth = paddingX(theme.edgeSpacing)
-
-export const fullWidth = css({
-  width: "100%",
-  [theme.mediaQueries.medium]: {
-    width: "41rem",
-  },
-  [theme.mediaQueries.large]: {
-    width: "50rem",
-  },
-})
-
-export const largeDialog = css({
-  width: "var(--most-width)",
-})
-
-export const hideOnPrint = css({
-  [theme.mediaQueries.print]: {
-    display: "none",
-  },
-})
-
-export const withBg = css(hideOnPrint, {
-  zIndex: 999,
-  backgroundColor: theme.colors.body,
-  padding: `${typography.rhythm(1 / 6)} 1ch`,
-  border: `1px solid ${theme.colors.text}`,
-  [theme.mediaQueries.medium]: {
-    maxWidth: "70vw",
-  },
-})
-
-const tooltip = css(withBg, {
-  fontFamily: theme.fonts.body,
-  color: theme.colors.text,
-  fontSize: "0.9rem",
-  right: "auto",
-})
-
-export const Button = styled(BaseButton)`
-  font-family: ${theme.fonts.header};
-  color: ${theme.colors.link};
-  background-color: ${theme.colors.button};
-  padding: ${typography.rhythm(1 / 3)} 1ch;
-  margin: 0 1rem;
-  cursor: pointer;
-  border: 2px solid ${theme.colors.headings};
-  &:hover {
-    color: ${theme.colors.headings};
-    background-color: ${Color(theme.colors.button).lighten(0.2).hsl().string()};
-  }
-  &:focus,
-  &:active {
-    outline: none;
-    border-style: dashed;
-  }
-
-  &[disabled] {
-    color: darkgray;
-    background-color: lightgray;
-    border-color: darkgray;
-    opacity: 80;
-  }
-`
-
-const iconButton = css`
-  border: none;
-  margin: 0;
-  padding: 8px;
-  & > svg {
-    display: block;
-  }
-`
-
-const smallCaps = css`
-  font-family: ${theme.fonts.smallCaps};
-  font-feature-settings: "smcp";
-  text-transform: lowercase;
-`
-
-const closeBlock = css`
-  margin-bottom: ${typography.rhythm(0.5)};
-`
-
-export const std = {
-  iconButton,
-  smallCaps,
-  tooltip,
-  closeBlock,
-}
+// const iconButton = css`
+//   border: none;
+//   margin: 0;
+//   padding: 8px;
+//   & > svg {
+//     display: block;
+//   }
+// `
 
 export default theme

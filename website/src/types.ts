@@ -1,3 +1,5 @@
+import * as Dailp from "src/graphql/dailp"
+
 export enum ViewMode {
   Story = 0,
   Pronunciation = 1,
@@ -19,15 +21,15 @@ export enum PhoneticRepresentation {
   //Ipa,
 }
 export type BasicMorphemeSegment = NonNullable<
-  GatsbyTypes.FormFieldsFragment["segments"]
+  Dailp.FormFieldsFragment["segments"]
 >[0]
 
 export type BasicMorphemeTag = BasicMorphemeSegment["matchingTag"]
 
 export function morphemeDisplayTag<T>(
-  tag: { readonly taoc: T; readonly crg: T; readonly learner: T },
+  tag: { readonly taoc: T; readonly crg: T; readonly learner: T } | null,
   tagSet: TagSet
-): T {
+): T | null {
   let matchingTag = tag?.taoc
   if (tag) {
     if (tagSet === TagSet.Learner) {
@@ -38,7 +40,7 @@ export function morphemeDisplayTag<T>(
       matchingTag = tag.crg
     }
   }
-  return matchingTag
+  return matchingTag ?? null
 }
 
 export const tagSetForMode = (experienceLevel: ViewMode) => {

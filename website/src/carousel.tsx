@@ -1,14 +1,14 @@
-import React from "react"
-import { css, ClassNames } from "@emotion/react"
-import { BiRightArrow, BiLeftArrow } from "react-icons/bi"
 import {
-  CarouselProvider,
-  Slider,
-  Slide,
   ButtonBack,
   ButtonNext,
+  CarouselProvider,
+  Slide,
+  Slider,
 } from "pure-react-carousel"
 import "pure-react-carousel/dist/react-carousel.es.css"
+import React from "react"
+import { BiLeftArrow, BiRightArrow } from "react-icons/bi"
+import * as css from "./carousel.css"
 
 export const Carousel = (p: {
   caption: any
@@ -16,7 +16,7 @@ export const Carousel = (p: {
 }) => (
   <>
     <CarouselProvider
-      css={carousel}
+      className={css.carousel}
       totalSlides={2}
       naturalSlideWidth={100}
       naturalSlideHeight={40}
@@ -30,43 +30,17 @@ export const Carousel = (p: {
           </CenteredSlide>
         ))}
       </Slider>
-      <ButtonBack css={[carouselButton, onLeft]}>
+      <ButtonBack className={css.leftButton}>
         <BiLeftArrow aria-label="Previous" size={24} />
       </ButtonBack>
-      <ButtonNext css={[carouselButton, onRight]}>
+      <ButtonNext className={css.rightButton}>
         <BiRightArrow aria-label="Next" size={24} />
       </ButtonNext>
     </CarouselProvider>
-    {p.caption ? <h5 css={{ textAlign: "center" }}>{p.caption}</h5> : null}
+    {p.caption ? <h5 className={css.centerText}>{p.caption}</h5> : null}
   </>
 )
 
 const CenteredSlide = (props: any) => (
-  <ClassNames>
-    {({ css }) => (
-      <Slide innerClassName={css({ textAlign: "center" })} {...props} />
-    )}
-  </ClassNames>
+  <Slide innerClassName={css.centerText} {...props} />
 )
-
-const carousel = css`
-  position: relative;
-`
-
-const carouselButton = css`
-  position: absolute;
-  top: 0;
-  height: 100%;
-  outline: none;
-  border: none;
-  background: none;
-  width: 4rem;
-`
-
-const onLeft = css`
-  left: 0;
-`
-
-const onRight = css`
-  right: 0;
-`

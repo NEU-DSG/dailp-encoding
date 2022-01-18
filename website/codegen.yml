@@ -1,0 +1,26 @@
+generates:
+  ./src/graphql/dailp/index.ts:
+    schema: http://localhost:8080/graphql
+    documents: src/graphql/dailp/**/*.graphql
+    plugins:
+      - typescript
+      - typescript-operations
+      - typescript-urql
+  ./src/graphql/wordpress/index.ts:
+    schema: https://wp.dailp.northeastern.edu/graphql
+    documents: src/graphql/wordpress/**/*.graphql
+    plugins:
+      - typescript
+      - typescript-operations
+      - typescript-urql
+    config:
+      urqlImportFrom: ./urql
+config:
+  avoidOptionals: true
+  useTypeImports: true
+  dedupeFragments: true
+  immutableTypes: true
+  preResolveTypes: false
+hooks:
+  afterAllFileWrite:
+    - prettier --write

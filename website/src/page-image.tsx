@@ -1,16 +1,21 @@
 import React, { useState } from "react"
-import { css } from "@emotion/react"
-import theme, { hideOnPrint, std, typography, Button } from "./theme"
-import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch"
 import { Helmet } from "react-helmet"
 import { FaMinus, FaPlus } from "react-icons/fa"
+import { TransformComponent, TransformWrapper } from "react-zoom-pan-pinch"
+import { Button, IconButton } from "src/components"
+import * as Dailp from "src/graphql/dailp"
+import { Document } from "src/pages/documents/document.page"
+import * as css from "./page-image.css"
 
 const PageImages = (p: {
-  document: GatsbyTypes.Dailp_AnnotatedDoc
-  pageImages: GatsbyTypes.Dailp_IiifImages
+  document: Document
+  pageImages: Pick<Dailp.IiifImages, "urls">
 }) => {
   return (
-    <figure css={annotationFigure} aria-label="Manuscript Source Images">
+    <figure
+      className={css.annotationFigure}
+      aria-label="Manuscript Source Images"
+    >
       <Helmet>
         <link
           href="https://brbl-media.library.yale.edu"
@@ -19,11 +24,12 @@ const PageImages = (p: {
         />
       </Helmet>
       <TransformWrapper
-        defaultScale={1}
-        positionX={0}
-        positionY={0}
+        initialScale={1}
+        initialPositionX={0}
+        initialPositionY={0}
         wheel={{ disabled: true }}
-        options={{ maxScale: 6, centerContent: true }}
+        maxScale={6}
+        centerOnInit={true}
       >
         {({ setTransform, zoomIn, zoomOut }) => (
           <CurrentPageImage
@@ -34,10 +40,12 @@ const PageImages = (p: {
           />
         )}
       </TransformWrapper>
-      {p.document.sources.length ? (
-        <figcaption css={caption}>
+      {p.document.sources.length > 0 ? (
+        <figcaption className={css.caption}>
           Source:{" "}
-          <a href={p.document.sources[0].link}>{p.document.sources[0].name}</a>
+          <a href={p.document.sources[0]!.link}>
+            {p.document.sources[0]!.name}
+          </a>
         </figcaption>
       ) : null}
     </figure>
@@ -49,7 +57,7 @@ const CurrentPageImage = (p: {
   resetTransform: () => void
   zoomIn: () => void
   zoomOut: () => void
-  pageImages: GatsbyTypes.Dailp_IiifImages
+  pageImages: Pick<Dailp.IiifImages, "urls">
 }) => {
   const [selectedPage, setSelectedPage] = useState(0)
   const imageCount = p.pageImages.urls.length
@@ -57,7 +65,7 @@ const CurrentPageImage = (p: {
   return (
     <>
       {imageCount > 1 && (
-        <nav aria-label="Pagination" css={[pageNav, hideOnPrint]}>
+        <nav aria-label="Pagination" className={css.pageNav}>
           <Button
             onClick={() => {
               p.resetTransform()
@@ -86,74 +94,21 @@ const CurrentPageImage = (p: {
       <div style={{ position: "relative" }}>
         <TransformComponent>
           <img
-            css={pageImage}
+            className={css.pageImage}
             src={url}
             alt={`Manuscript Page ${selectedPage + 1}`}
             loading="lazy"
           />
         </TransformComponent>
-        <div css={floatingControls}>
-          <Button onClick={p.zoomIn} css={std.iconButton} aria-label="Zoom In">
+        <div className={css.floatingControls}>
+          <IconButton onClick={() => p.zoomIn()} aria-label="Zoom In">
             <FaPlus size={20} />
-          </Button>
-          <Button
-            onClick={p.zoomOut}
-            css={std.iconButton}
-            aria-label="Zoom Out"
-          >
+          </IconButton>
+          <IconButton onClick={() => p.zoomOut()} aria-label="Zoom Out">
             <FaMinus size={20} />
-          </Button>
+          </IconButton>
         </div>
       </div>
     </>
   )
 }
-
-const floatingControls = css`
-  position: absolute;
-  right: 0.5rem;
-  bottom: 0.5rem;
-  background: ${theme.colors.body};
-  & > * {
-    display: block;
-  }
-`
-
-const pageNav = css`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-`
-
-const pageImage = css`
-  width: 100%;
-  height: auto;
-  margin-bottom: 1px;
-`
-
-const caption = css`
-  margin-top: ${typography.rhythm(0.5)};
-  margin-left: ${theme.edgeSpacing};
-  margin-right: ${theme.edgeSpacing};
-`
-
-const annotationFigure = css`
-  width: 100%;
-  margin: 0;
-  margin-bottom: ${typography.rhythm(2)};
-  .react-transform-component {
-    position: relative;
-    cursor: move;
-    cursor: grab;
-    max-height: 20rem;
-    ${theme.mediaQueries.medium} {
-      max-height: 30rem;
-    }
-    ${theme.mediaQueries.print} {
-      max-height: initial;
-    }
-  }
-  .react-transform-element {
-    width: 100%;
-  }
-`

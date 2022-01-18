@@ -1,13 +1,13 @@
-import { gql } from "@apollo/client"
-import { useForm, useCMS, Field, BlockTemplate } from "tinacms"
+import { BlockTemplate, Field, useCMS, useForm } from "tinacms"
+import { NewPageDocument } from "src/graphql/dailp"
 
 type CustomBlockTemplate = BlockTemplate & { key?: string }
 type CustomField = Field & { templates?: Record<string, CustomBlockTemplate> }
 
 // For the query, we need variables that stay the same for all queries, like
 // entity ID. For mutations, we also need to pass in the change as the variable $data.
-export const useGraphQLForm = (
-  initialData: any,
+export function useGraphQLForm<T>(
+  initialData: T,
   query: any,
   mutation: any,
   config: {
@@ -15,18 +15,15 @@ export const useGraphQLForm = (
     id: any
     variables: Record<string, any>
     fields: CustomField[]
-    transformIn?: (input: any) => any
-    transformOut?: (input: any) => any
+    transformIn?: (input: T) => any
+    transformOut?: (input: any) => T
   }
-) => {
+) {
   const cms = useCMS()
   return useForm({
     loadInitialValues: async () => {
-      if (cms.api.graphql) {
-        const { data } = await cms.api.graphql.query({
-          query,
-          variables: config.variables,
-        })
+      if ("graphql" in cms.api) {
+        const { data } = await cms.api["graphql"].query(query, config.variables)
         return config.transformIn ? config.transformIn(data) : data
       } else {
         return initialData
@@ -36,9 +33,9 @@ export const useGraphQLForm = (
       const finalData = config.transformOut
         ? config.transformOut(formData)
         : formData
-      const { data, errors } = await cms.api.graphql.mutate({
-        mutation,
-        variables: { ...config.variables, data: finalData },
+      const { data, errors } = await cms.api["graphql"].mutate(mutation, {
+        ...config.variables,
+        data: finalData,
       })
       if (errors) {
         console.error(errors)
@@ -98,6 +95,7 @@ export const PageCreatorPlugin = {
       component: "text",
       validation(title: string) {
         if (!title) return "Required."
+        return undefined
       },
     },
     {
@@ -107,35 +105,9 @@ export const PageCreatorPlugin = {
       description: "Where does this page live?",
     },
   ],
-  async onSubmit(values, cms) {
+  async onSubmit(values: any, cms: any) {
     // Add the new page to the database.
-    await cms.api.graphql.mutate({
-      mutation: mutatePage,
-      // Add an empty body to the new page.
-      variables: {
-        data: { ...values, body: [] },
-      },
-    })
+    // Add an empty body to the new page.
+    await cms.api.graphql.mutate(NewPageDocument, { ...values, body: [] })
   },
 }
-
-export const mutatePage = gql`
-  mutation NewPage($data: JSON!) {
-    updatePage(data: $data)
-  }
-`
-
-export const queryPage = gql`
-  query Page($id: String!) {
-    page(id: $id) {
-      id
-      title
-      body {
-        __typename
-        ... on Markdown {
-          content
-        }
-      }
-    }
-  }
-`
