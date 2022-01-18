@@ -9,7 +9,7 @@ import {
   useQuery,
 } from "urql"
 
-const GRAPHQL_URL = `${process.env.DAILP_API_URI}/graphql`
+const GRAPHQL_URL = `${process.env["DAILP_API_URL"]}/graphql`
 const WP_GRAPHQL_URL = "https://wp.dailp.northeastern.edu/graphql"
 
 export { useQuery }
