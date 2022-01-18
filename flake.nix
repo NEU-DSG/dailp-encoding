@@ -156,12 +156,34 @@
         '';
 
         devShell = with pkgs;
-          stdenv.mkDerivation rec {
+          mkShell rec {
             name = "dailp-dev";
             unpackPhase = "true";
             RUST_LOG = "info";
             LD_LIBRARY_PATH = "${lib.makeLibraryPath buildInputs}";
-            buildInputs = [
+            shellHook = ''
+              export PROJECT_ROOT=$PWD
+            '';
+            buildInputs = let
+              dev-database = (writers.writeBashBin "dev-database" ''
+                mkdir -p $PROJECT_ROOT/.mongo
+                mongod --dbpath $PROJECT_ROOT/.mongo
+              '');
+              dev-graphql = (writers.writeBashBin "dev-graphql" ''
+                cargo run --bin dailp-graphql-local
+              '');
+              dev-website = (writers.writeBashBin "dev-website" ''
+                cd $PROJECT_ROOT/website
+                yarn install
+                yarn dev
+              '');
+              in-parallel = writeShellScript "in-parallel" ''
+                (trap 'kill 0' SIGINT; $@)
+              '';
+              dev-start = writers.writeBashBin "dev-start" ''
+                ${in-parallel} ${dev-database}/bin/dev-database & ${dev-graphql}/bin/dev-graphql & ${dev-website}/bin/dev-website
+              '';
+            in [
               autoconf
               automake
               libtool
@@ -175,20 +197,13 @@
               nixpkgs-server.mongodb-4_2
               docker
               pkgs-unstable.act
-              (writers.writeBashBin "dev-database" ''
-                mkdir -p .mongo
-                mongod --dbpath .mongo
-              '')
-              (writers.writeBashBin "dev-graphql" ''
-                cargo run --bin dailp-graphql-local
-              '')
               (writers.writeBashBin "dev-migrate" ''
                 cargo run --bin dailp-migration
               '')
-              (writers.writeBashBin "dev-website" ''
-                cd website
-                yarn start
-              '')
+              dev-database
+              dev-graphql
+              dev-website
+              dev-start
             ] ++ lib.optionals stdenv.isDarwin [
               darwin.apple_sdk.frameworks.Security
               libiconv

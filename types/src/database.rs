@@ -118,6 +118,14 @@ impl Database {
             .collect())
     }
 
+    pub async fn collection(&self, slug: String) -> Result<DocumentCollection> {
+        let collections = self.all_collections().await?;
+        Ok(collections
+            .into_iter()
+            .find(|coll| coll.make_slug() == slug)
+            .unwrap())
+    }
+
     pub async fn all_tags(&self) -> Result<Vec<MorphemeTag>> {
         self.client
             .collection(Self::TAGS)

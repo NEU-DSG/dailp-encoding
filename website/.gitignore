@@ -3,3 +3,6 @@ public/
 .cache/
 .log/
 .linaria-cache/
+out/
+.next/
+dist/

@@ -1,17 +1,35 @@
 {
   "compilerOptions": {
-    "target": "es2018",
+    "baseUrl": ".",
+    "target": "esnext",
     "module": "esnext",
-    "lib": ["dom"],
-    "strict": false,
-    "esModuleInterop": true,
-    "jsx": "preserve",
-    "allowJs": true,
-    "noImplicitAny": false,
-    "noEmit": true,
-    "experimentalDecorators": true,
-    "skipLibCheck": true,
     "moduleResolution": "node",
-    "jsxImportSource": "@emotion/react"
-  }
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "types": ["vite/client"],
+    "jsx": "preserve",
+    "strict": true,
+    "esModuleInterop": true,
+    "allowJs": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noUncheckedIndexedAccess": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
+    "composite": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "useDefineForClassFields": true,
+    "sourceMap": true
+  },
+  "ts-node": {
+    "transpileOnly": true,
+    "compilerOptions": {
+      "module": "CommonJS"
+    }
+  },
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "exclude": ["node_modules"]
 }

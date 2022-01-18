@@ -1,26 +1,22 @@
-import React from "react"
-import { Clickable } from "reakit/Clickable"
-import { DialogStateReturn } from "reakit/Dialog"
-import { css } from "@emotion/react"
-import { useQuery, gql } from "@apollo/client"
 import { groupBy } from "lodash"
+import React from "react"
+import { ReactNode } from "react"
 import { MdClose } from "react-icons/md"
-import { AnchorLink } from "./link"
-import theme, { typography } from "./theme"
-import { morphemeDisplayTag, TagSet } from "./types"
-import { Link } from "gatsby"
-import { glossaryRoute, morphemeTagId } from "./routes"
+import { Clickable } from "reakit/Clickable"
+import Link from "src/components/link"
+import * as Dailp from "src/graphql/dailp"
+import * as css from "./morpheme.css"
+import { glossaryRoute } from "./routes"
+import { TagSet, morphemeDisplayTag } from "./types"
 
-type BasicMorphemeSegment = NonNullable<
-  GatsbyTypes.FormFieldsFragment["segments"]
->[0]
+type BasicMorphemeSegment = NonNullable<Dailp.FormFieldsFragment["segments"]>[0]
 
 /** Specific details about some morpheme */
 export const MorphemeDetails = (props: {
   documentId: string
   segment: BasicMorphemeSegment
   tagSet: TagSet
-  dialog: DialogStateReturn
+  hideDialog: () => void
 }) => {
   // Use the right tag name from the jump.
   const matchingTag = morphemeDisplayTag(
@@ -32,27 +28,23 @@ export const MorphemeDetails = (props: {
 
   // Get the morpheme title and definition from the server.
   // TODO Only request the specific definition we need, not all three.
-  const tag = useQuery(tagQuery, {
-    skip: !props.segment.gloss,
+  const [tag] = Dailp.useTagQuery({
+    pause: !props.segment.gloss,
     variables: { gloss: props.segment.gloss },
   })
 
-  let titleArea = null
+  let titleArea: ReactNode | null = null
   let content = occurrences
-  if (tag.data && tag.data.tag) {
-    const matchingTag = morphemeDisplayTag<{
-      title: string
-      tag: string
-      definition: string
-    }>(tag.data.tag, props.tagSet)
+  if (tag.data?.tag) {
+    const matchingTag = morphemeDisplayTag(tag.data.tag, props.tagSet)
     titleArea = matchingTag?.title ? (
-      <h2 css={margined}>{matchingTag.title}</h2>
+      <h2 className={css.margined}>{matchingTag.title}</h2>
     ) : null
     content = (
       <>
         {matchingTag?.definition ? <p>{matchingTag.definition}</p> : null}
         <p>
-          <Link to={glossaryRoute(tag.data.tag.id)}>View in glossary</Link>
+          <Link href={glossaryRoute(tag.data.tag.id)}>View in glossary</Link>
         </p>
         {occurrences}
       </>
@@ -63,51 +55,25 @@ export const MorphemeDetails = (props: {
     <>
       {titleArea}
       <Clickable
-        css={closeButton}
+        className={css.closeButton}
         role="button"
         aria-label="Close Dialog"
-        onClick={props.dialog.hide}
+        onClick={props.hideDialog}
       >
         <MdClose size={32} />
       </Clickable>
-      <div css={[scrollable, padded]}>
+      <div className={css.scrollable}>
         {content}
         <SimilarMorphemeList
           documentId={props.documentId}
           gloss={props.segment.gloss!}
-          dialog={props.dialog}
+          hideDialog={props.hideDialog}
           isGlobal={!!props.segment.matchingTag}
         />
       </div>
     </>
   )
 }
-
-const margined = css`
-  margin: ${typography.rhythm(1 / 2)} 1rem;
-`
-
-const padded = css`
-  padding: ${typography.rhythm(1 / 2)} 1rem;
-`
-
-const scrollable = css`
-  overflow-y: scroll;
-  -webkit-overflow-scrolling: touch;
-  width: 100%;
-  max-height: 75vh;
-  min-height: 20rem;
-`
-
-const closeButton = css`
-  position: absolute;
-  top: ${typography.rhythm(1 / 2)};
-  right: ${typography.rhythm(1 / 2)};
-  cursor: pointer;
-  border: none;
-  background: none;
-  padding: 0;
-`
 
 /**
  * List of morphemes that share the given gloss, and all words that contain
@@ -117,10 +83,10 @@ const SimilarMorphemeList = (props: {
   gloss: string
   documentId: string
   isGlobal: boolean
-  dialog: DialogStateReturn
+  hideDialog: () => void
 }) => {
-  const { data, loading, error } = useQuery(morphemeQuery, {
-    skip: !props.gloss,
+  const [{ data, fetching, error }] = Dailp.useMorphemeQuery({
+    pause: !props.gloss,
     variables: {
       morphemeId: props.isGlobal
         ? props.gloss
@@ -128,14 +94,14 @@ const SimilarMorphemeList = (props: {
     },
   })
 
-  if (loading) {
+  if (fetching) {
     return <p>Loading...</p>
   } else if (error) {
     return <p>Error! {error}</p>
   } else if (!data || !data.documents) {
     return <p>None Found</p>
   } else {
-    const docs = data.documents as GatsbyTypes.Dailp_WordsInDocument[]
+    const docs = data.documents as Dailp.WordsInDocument[]
     const docTypes = groupBy(docs, "documentType")
     const similarWords = Object.entries(docTypes).map(([ty, documents]) => (
       <section key={ty}>
@@ -149,14 +115,13 @@ const SimilarMorphemeList = (props: {
                 {word.documentId ? (
                   <>
                     {word.index ? (
-                      <AnchorLink
-                        to={`/documents/${word.documentId?.toLowerCase()}#w${
+                      <Link
+                        href={`/documents/${word.documentId?.toLowerCase()}#w${
                           word.index
                         }`}
-                        onClick={() => props.dialog.hide()}
                       >
                         {word.documentId}
-                      </AnchorLink>
+                      </Link>
                     ) : (
                       <>{word.documentId}</>
                     )}
@@ -183,43 +148,3 @@ function documentTypeToHeading(ty: string) {
     return "Miscellaneous"
   }
 }
-
-const morphemeQuery = gql`
-  query Morpheme($morphemeId: String!) {
-    documents: morphemesByDocument(morphemeId: $morphemeId) {
-      documentId
-      documentType
-      forms {
-        index
-        source
-        normalizedSource
-        documentId
-        englishGloss
-      }
-    }
-  }
-`
-
-const tagQuery = gql`
-  query Tag($gloss: String!) {
-    tag: morphemeTag(id: $gloss) {
-      id
-      morphemeType
-      taoc {
-        tag
-        title
-        definition
-      }
-      crg {
-        tag
-        title
-        definition
-      }
-      learner {
-        tag
-        title
-        definition
-      }
-    }
-  }
-`

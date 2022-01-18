@@ -46,6 +46,14 @@ impl Query {
         Ok(context.data::<Database>()?.all_collections().await?)
     }
 
+    async fn collection(
+        &self,
+        context: &Context<'_>,
+        slug: String,
+    ) -> FieldResult<dailp::DocumentCollection> {
+        Ok(context.data::<Database>()?.collection(slug).await?)
+    }
+
     /// List all contributors to documents and lexical resources.
     async fn all_contributors(
         &self,
@@ -62,7 +70,7 @@ impl Query {
     ) -> FieldResult<Option<AnnotatedDoc>> {
         Ok(context
             .data::<DataLoader<Database>>()?
-            .load_one(dailp::DocumentId(id))
+            .load_one(dailp::DocumentId(id.to_ascii_uppercase()))
             .await?)
     }
 

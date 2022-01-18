@@ -1,79 +1,46 @@
 import React from "react"
-import { css } from "@emotion/react"
-import { Link, graphql, useStaticQuery } from "gatsby"
-import { useLocation } from "@gatsbyjs/reach-router"
-import theme, { fullWidth, typography } from "./theme"
+import { MdArrowDropDown, MdMenu } from "react-icons/md"
 import {
-  useDialogState,
   Dialog,
-  DialogDisclosure,
   DialogBackdrop,
+  DialogDisclosure,
+  useDialogState,
 } from "reakit/Dialog"
-import { useMenuState, Menu, MenuItem, MenuButton } from "reakit/Menu"
-import { MdMenu, MdArrowDropDown } from "react-icons/md"
-
-const useMenu = () =>
-  useStaticQuery(graphql`
-    query {
-      wpMenu {
-        menuItems {
-          nodes {
-            label
-            path
-            childItems {
-              nodes {
-                label
-                path
-              }
-            }
-          }
-        }
-      }
-    }
-  `)
+import { Menu, MenuButton, MenuItem, useMenuState } from "reakit/Menu"
+import Link from "src/components/link"
+import * as Wordpress from "src/graphql/wordpress"
+import { Location, useLocation, usePageContext } from "src/renderer/PageShell"
+import {
+  desktopNav,
+  drawerBg,
+  drawerItem,
+  navButton,
+  navDrawer,
+  navLink,
+  navMenu,
+} from "./menu.css"
+import { closeBlock } from "./sprinkles.css"
 
 export const NavMenu = () => {
   const location = useLocation()
-  const data = useMenu()
-  const menuItems = data.wpMenu.menuItems.nodes
-  const isTopLevel = (a) =>
-    !menuItems.some((b) => b.childItems.nodes.some((b) => b.path === a.path))
+  const [{ data }] = Wordpress.useMainMenuQuery()
+  const menuItems = data?.menuItems?.nodes
+  if (!menuItems) {
+    return null
+  }
+
+  const isTopLevel = (a: typeof menuItems[0]) =>
+    !menuItems?.some((b) =>
+      b?.childItems?.nodes?.some((b) => b?.path === a?.path)
+    )
 
   return (
-    <nav css={desktopNav}>
-      {menuItems.filter(isTopLevel).map((item) => {
-        if (item.childItems.nodes.length) {
-          const menu = useMenuState()
-          return (
-            <React.Fragment key={item.label}>
-              <MenuButton {...menu} css={navLink}>
-                {item.label}
-                <MdArrowDropDown aria-label="Menu" />
-              </MenuButton>
-              <Menu {...menu} aria-label={item.label} css={navMenu}>
-                {item.childItems.nodes.map((item) => {
-                  let url = { pathname: item.path }
-                  if (item.path.startsWith("http")) {
-                    url = new URL(item.path)
-                  }
-                  return (
-                    <MenuItem
-                      {...menu}
-                      as={Link}
-                      to={url.pathname}
-                      key={item.path}
-                      css={navLink}
-                      aria-current={
-                        location.pathname === url.pathname ? "page" : undefined
-                      }
-                    >
-                      {item.label}
-                    </MenuItem>
-                  )
-                })}
-              </Menu>
-            </React.Fragment>
-          )
+    <nav className={desktopNav}>
+      {menuItems?.filter(isTopLevel).map((item) => {
+        if (!item) {
+          return null
+        } else if (item.childItems?.nodes?.length) {
+          return <SubMenu key={item.label} item={item} location={location} />
         } else {
           let url = { pathname: item.path }
           if (item.path.startsWith("http")) {
@@ -82,11 +49,11 @@ export const NavMenu = () => {
           return (
             <Link
               key={item.path}
-              to={url.pathname}
+              href={url.pathname}
+              className={navLink}
               aria-current={
                 location.pathname === url.pathname ? "page" : undefined
               }
-              css={navLink}
             >
               {item.label}
             </Link>
@@ -97,49 +64,92 @@ export const NavMenu = () => {
   )
 }
 
+const SubMenu = ({ item, location }: { location: Location; item: any }) => {
+  const menu = useMenuState()
+  return (
+    <>
+      <MenuButton {...menu} className={navLink}>
+        {item.label}
+        <MdArrowDropDown aria-label="Menu" />
+      </MenuButton>
+      <Menu {...menu} aria-label={item.label} className={navMenu}>
+        {item.childItems.nodes.map((item: any) => {
+          let url = { pathname: item.path }
+          if (item.path.startsWith("http")) {
+            url = new URL(item.path)
+          }
+          return (
+            <MenuItem
+              {...menu}
+              as="a"
+              key={item.path}
+              href={url.pathname}
+              aria-current={
+                location.pathname === url.pathname ? "page" : undefined
+              }
+              className={navLink}
+              onClick={() => menu.hide()}
+            >
+              {item.label}
+            </MenuItem>
+          )
+        })}
+      </Menu>
+    </>
+  )
+}
+
 export const MobileNav = () => {
-  const location = useLocation()
+  const router = usePageContext()
   const dialog = useDialogState({ animated: true })
-  const data = useMenu()
-  const menuItems = data.wpMenu.menuItems.nodes
-  const isTopLevel = (a) =>
-    !menuItems.some((b) => b.childItems.nodes.some((b) => b.path === a.path))
+  const [{ data }] = Wordpress.useMainMenuQuery()
+  const menuItems = data?.menuItems?.nodes
+  if (!menuItems) {
+    return null
+  }
+  const isTopLevel = (a: typeof menuItems[0]) =>
+    !menuItems?.some((b) =>
+      b?.childItems!.nodes!.some((b) => b?.path === a?.path)
+    )
 
   return (
     <>
       <DialogDisclosure
         {...dialog}
-        css={navButton}
+        className={navButton}
         aria-label="Open Mobile Navigation Drawer"
       >
         <MdMenu size={32} />
       </DialogDisclosure>
-      <DialogBackdrop {...dialog} css={drawerBg}>
+      <DialogBackdrop {...dialog} className={drawerBg}>
         <Dialog
           {...dialog}
           as="nav"
-          css={navDrawer}
+          className={navDrawer}
           aria-label="Navigation Drawer"
         >
           <ul>
-            {menuItems.filter(isTopLevel).map((item) => {
-              let items = item.childItems.nodes
-              if (!items.length) {
+            {menuItems?.filter(isTopLevel).map((item) => {
+              let items = item?.childItems?.nodes
+              if (items && !items.length) {
                 items = [item]
               }
-              return items.map((item) => {
+              return items?.map((item) => {
+                if (!item) {
+                  return null
+                }
                 let url = { pathname: item.path }
                 if (item.path.startsWith("http")) {
                   url = new URL(item.path)
                 }
                 return (
-                  <li css={drawerItem} key={item.path}>
+                  <li className={closeBlock} key={item.path}>
                     <Link
-                      to={url.pathname}
+                      className={drawerItem}
+                      href={url.pathname}
                       aria-current={
-                        location.pathname === url.pathname ? "page" : undefined
+                        router.urlPathname === url.pathname ? "page" : undefined
                       }
-                      css={navLink}
                     >
                       {item.label}
                     </Link>
@@ -153,112 +163,3 @@ export const MobileNav = () => {
     </>
   )
 }
-
-const navMenu = css`
-  display: flex;
-  flex-flow: column;
-  background-color: ${theme.colors.body};
-  border: 2px solid ${theme.colors.link};
-  &:focus {
-    outline: none;
-  }
-`
-
-const navLink = css`
-  padding: ${typography.rhythm(1 / 4)} 1ch;
-  text-decoration: none;
-  color: ${theme.colors.text};
-  background: none;
-  border: none;
-  border-bottom: 2px solid transparent;
-  display: flex;
-  flex-flow: row;
-  align-items: center;
-
-  ${theme.mediaQueries.large} {
-    padding-left: 1rem;
-    padding-right: 1rem;
-  }
-
-  &[aria-current="page"] {
-    color: ${theme.colors.link};
-    border-color: ${theme.colors.link};
-  }
-  &:hover,
-  &:focus {
-    color: ${theme.colors.link};
-  }
-`
-
-const drawerItem = css`
-  margin-bottom: ${typography.rhythm(1 / 2)};
-  & > a {
-    padding: ${typography.rhythm(1 / 2)};
-    text-decoration: none;
-    color: ${theme.colors.text};
-
-    &[aria-current="page"],
-    &:hover,
-    &:focus {
-      color: ${theme.colors.link};
-    }
-  }
-`
-
-const desktopNav = css`
-  ${fullWidth};
-  display: none;
-  ${theme.mediaQueries.medium} {
-    display: flex;
-  }
-`
-
-const navButton = css`
-  ${theme.mediaQueries.medium} {
-    display: none;
-  }
-  border: none;
-  padding: 0;
-  background: none;
-  margin-right: 1rem;
-  height: 32px;
-`
-
-const navDrawer = css`
-  position: fixed;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  background-color: ${theme.colors.body};
-  width: 16rem;
-  font-family: ${theme.fonts.header};
-  transition: transform 150ms ease-in-out;
-  transform: translateX(-16rem);
-  &[data-enter] {
-    transform: translateX(0);
-  }
-
-  padding: 0 ${theme.edgeSpacing};
-  ul {
-    list-style: none;
-    padding-inline-start: 0;
-  }
-`
-
-const drawerBg = css`
-  ${theme.mediaQueries.medium} {
-    display: none;
-  }
-  z-index: 999;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  position: fixed;
-  background-color: rgba(0, 0, 0, 0.2);
-  transition: opacity 100ms ease-in-out;
-  opacity: 0;
-  &[data-enter] {
-    opacity: 1;
-  }
-`
