@@ -1,5 +1,6 @@
 import { createTheme, style } from "@vanilla-extract/css"
 import { createSprinkles, defineProperties } from "@vanilla-extract/sprinkles"
+import { lighten } from "polished"
 import { marginX, paddingX, paddingY } from "src/style-utils"
 
 function rhythm(v: number): string {
@@ -16,6 +17,7 @@ export const [themeClass, theme] = createTheme({
   colors: {
     header: "#f7eeed",
     button: "#f7eeed",
+    buttonHover: lighten(0.2, "#f7eeed"),
     footer: "#405372",
     altFooter: "#4f5970",
     body: "white",
@@ -277,12 +279,13 @@ export const largeDialog = style({
 export const button = style([
   sprinkles({
     color: { any: "link", hover: "headings" },
-    // background-color: ${Color(theme.colors.button).lighten(0.2).hsl().string()};
-    backgroundColor: { any: "button", hover: "button" },
-    borderWidth: "thick",
-    borderColor: "headings",
-    borderStyle: "solid",
+    backgroundColor: { any: "button", hover: "buttonHover" },
   }),
+  {
+    borderWidth: thickness.thick,
+    borderColor: colors.headings,
+    borderStyle: "solid",
+  },
   paddingX(hspace.char),
   paddingY(vspace.quarter),
   marginX(hspace.edge),
@@ -293,6 +296,7 @@ export const button = style([
       "&:focus, &:active": {
         outline: "none",
         borderStyle: "dashed",
+        borderColor: colors.headings,
       },
       "&[disabled]": {
         color: "darkgray",
@@ -307,8 +311,8 @@ export const button = style([
 export const iconButton = style([
   button,
   {
-    padding: space.large,
-    border: "none",
+    padding: space.medium,
+    borderColor: colors.button,
     margin: 0,
   },
 ])
