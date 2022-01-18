@@ -59,6 +59,7 @@ jobs:
         run: |
           nix run --impure -L .#tf-plan
           export DAILP_API_URL=$(nix run --impure .#tf-output functions_url)
+          export MONGODB_URI=mongodb://$(nix run --impure .#tf-output mongodb_primary_ip):27017
           nix run --impure -L .#migrate-data
       - name: Publish website
         run: |
