@@ -7,8 +7,8 @@
     "dev:generate": "graphql-codegen --watch",
     "dev": "npm-run-all --parallel dev:generate dev:server",
     "build:rustdoc": "cd .. && cargo doc --no-deps --workspace",
-    "build:vite": "vite build && vite build --ssr && vite-plugin-ssr prerender && rsync -a --delete dist/client/ public/",
-    "build": "npm-run-all --parallel build:vite build:rustdoc && rsync -a --delete ../target/doc/ public/rustdoc/",
+    "build:vite": "vite build && vite build --ssr && vite-plugin-ssr prerender && cp -rfT dist/client/ public/",
+    "build": "npm-run-all --parallel build:vite build:rustdoc && cp -rfT ../target/doc/ public/rustdoc/",
     "serve": "NODE_ENV=production ts-node ./server",
     "generate": "graphql-codegen"
   },
