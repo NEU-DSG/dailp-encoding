@@ -29,7 +29,11 @@ with lib; {
       tags = { "Terraform" = "true"; } // config.setup.global_tags;
       lifecycle.prevent_destroy = true;
       logging = {
-        target_bucket = "s3-server-access-logs-783177801354";
+        # These logging buckets are externally managed.
+        target_bucket = if config.setup.stage == "dev" then
+          "s3-server-access-logs-783177801354"
+        else
+          "s3-server-access-logs-363539660090";
         target_prefix = "/${config.setup.state.bucket}";
       };
     };
