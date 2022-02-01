@@ -167,3 +167,15 @@ export const infoIcon = style({
 })
 
 export const linkSvg = style({ fill: colors.link })
+
+export const fillerLine = style([
+  {
+    "@media": {
+      [mediaQueries.medium]: {
+        borderBottom: "1px solid black",
+        padding: 0,
+        ...margin(vspace.one, "3rem", vspace.one, 0),
+      },
+    },
+  },
+])
