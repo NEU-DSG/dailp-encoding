@@ -18,7 +18,7 @@ import {
 
 type Segment = NonNullable<DocumentContents["translatedSegments"]>[0]["source"]
 
-interface Props {
+interface Props { 
   segment: Segment
   onOpenDetails: (morpheme: BasicMorphemeSegment) => void
   viewMode: ViewMode
@@ -190,16 +190,15 @@ const MorphemicSegmentation = (p: {
   onOpenDetails: Props["onOpenDetails"]
   level: ViewMode
 }) => {
-  // If there is no segmentation, return two line breaks for the
+  // If there is no segmentation, return a hard break for the
   // morphemic segmentation and morpheme gloss layers.
   if (!p.segments?.length) {
     return (
       <>
-        <br />
-        <br />
+        <hr className={css.fillerLine}/>
       </>
     )
-  }
+  }   
 
   // Adapt the segment shape to the chosen experience level.
   let segmentation = ""
