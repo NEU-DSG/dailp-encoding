@@ -170,7 +170,7 @@
                 mongod --dbpath $PROJECT_ROOT/.mongo
               '');
               dev-graphql = (writers.writeBashBin "dev-graphql" ''
-                cargo run --bin dailp-graphql-local
+                cargo watch -x "run --bin dailp-graphql-local" -w types -w graphql
               '');
               dev-website = (writers.writeBashBin "dev-website" ''
                 cd $PROJECT_ROOT/website
@@ -195,6 +195,7 @@
               nodejs-14_x
               yarn
               nixpkgs-server.mongodb-4_2
+              cargo-watch
               docker
               pkgs-unstable.act
               (writers.writeBashBin "dev-migrate" ''
