@@ -3,7 +3,7 @@ use {
     anyhow::Result,
     async_graphql::dataloader::*,
     futures::executor,
-    futures::future::join_all,
+    futures::future::{join_all, try_join},
     mongodb::bson,
     serde::Serialize,
     std::collections::{HashMap, HashSet},
@@ -183,13 +183,18 @@ impl Database {
     }
 
     pub async fn word_search(&self, query: bson::Document) -> Result<Vec<AnnotatedForm>> {
-        self.client
+        let corpus_search = self.doc_search(query.clone());
+        let lexical_search = self
+            .client
             .collection(Self::WORDS)
             .find(query, None)
             .await?
             .map::<Result<_>, _>(|d| Ok(bson::from_document(d?)?))
-            .collect()
-            .await
+            .collect::<Result<Vec<_>>>();
+        // Search both document and lexical sources in parallel.
+        let (corpus_results, lexical_results) = try_join(corpus_search, lexical_search).await?;
+        // Then, chain the two result lists together.
+        Ok(corpus_results.into_iter().chain(lexical_results).collect())
     }
 
     pub async fn potential_syllabary_matches(&self, syllabary: &str) -> Result<Vec<AnnotatedForm>> {
@@ -350,6 +355,22 @@ impl Database {
             .flat_map(|x| x)
             .filter_map(|d| bson::from_bson(d).ok())
             .collect())
+    }
+
+    async fn doc_search(&self, query: bson::Document) -> Result<Vec<AnnotatedForm>> {
+        let steps = vec![
+            bson::doc! { "$unwind": "$segments" },
+            bson::doc! { "$replaceRoot": { "newRoot": "$segments.source" } },
+            bson::doc! { "$unwind": "$parts" },
+            bson::doc! { "$replaceRoot": { "newRoot": "$parts" } },
+            bson::doc! { "$match": query },
+        ];
+        let coll = self.client.collection::<AnnotatedDoc>(Self::DOCUMENTS);
+        coll.aggregate(steps, None)
+            .await?
+            .map::<Result<_>, _>(|d| Ok(bson::from_document(d?)?))
+            .collect()
+            .await
     }
 
     async fn doc_matches(&self, morpheme: &MorphemeId) -> Result<Vec<AnnotatedForm>> {
