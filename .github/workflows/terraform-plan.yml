@@ -4,9 +4,13 @@ on:
   pull_request:
     branches: [main]
     paths:
-      - "terraform/**/*.nix"
-      - "flake.nix"
+      - "types/**"
+      - "migration/**"
+      - "graphql/**"
+      - "**.nix"
+      - "*.toml"
       - "flake.lock"
+      - "Cargo.lock"
 jobs:
   plan:
     runs-on: ubuntu-20.04
@@ -48,5 +52,5 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
-      - name: Terraform Plan
+      - name: Build and test back-end
         run: nix run --impure -L .#tf-plan
