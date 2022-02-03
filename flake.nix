@@ -67,6 +67,7 @@
           root = ./.;
           src = packageSrc;
           doCheck = true;
+          doTest = true;
 
           nativeBuildInputs = [ cc ];
 
