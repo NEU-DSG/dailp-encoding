@@ -170,12 +170,21 @@ export const linkSvg = style({ fill: colors.link })
 
 export const fillerLine = style([
   {
-    "@media": {
-      [mediaQueries.medium]: {
-        borderBottom: "1px solid black",
-        padding: 0,
-        ...margin(vspace.one, "3rem", vspace.one, 0),
-      },
-    },
+    borderWidth: 0,
+    borderBottom: `1px solid ${theme.colors.text}`,
+    background: "none",
+    textAlign: "start",
+    width: "100%",
   },
 ])
+
+export const lineBox = style([
+  {
+    height: "1.5em",
+    verticalAlign: "middle",
+    textAlign: "start",
+    padding: ".75em",
+    marginLeft: 0,
+    paddingLeft: "0em"
+  },
+]) 

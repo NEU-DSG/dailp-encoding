@@ -18,7 +18,7 @@ import {
 
 type Segment = NonNullable<DocumentContents["translatedSegments"]>[0]["source"]
 
-interface Props { 
+interface Props {
   segment: Segment
   onOpenDetails: (morpheme: BasicMorphemeSegment) => void
   viewMode: ViewMode
@@ -35,7 +35,7 @@ export const Segment = (p: Props & { howl?: Howl }) => {
     return <AnnotatedForm {...p} segment={segment} />
   } else if (segment.__typename === "AnnotatedPhrase") {
     const children =
-      segment.parts?.map(function(seg, i) {
+      segment.parts?.map(function (seg, i) {
         return (
           <Segment
             key={i}
@@ -129,8 +129,8 @@ export const AnnotatedForm = (
             </div>
           )) || (
             <>
-              <br />
-              <br />
+              <FillerLine />
+              <FillerLine />
             </>
           )
         )}
@@ -142,7 +142,7 @@ export const AnnotatedForm = (
             tagSet={p.tagSet}
           />
         ) : null}
-        {translation.length ? <div>&lsquo;{translation}&rsquo;</div> : <br />}
+        {translation.length ? <div>&lsquo;{translation}&rsquo;</div> : FillerLine}
       </div>
     )
   } else {
@@ -180,6 +180,8 @@ const WithTooltip = (p: {
   </Tooltip>
 )
 
+const FillerLine = () => (<div className={css.lineBox}> <hr className={css.fillerLine} /> </div>)
+
 /**
  * Displays the break-down of a word into its units of meaning and the English
  * glosses for each morpheme.
@@ -195,10 +197,11 @@ const MorphemicSegmentation = (p: {
   if (!p.segments?.length) {
     return (
       <>
-        <hr className={css.fillerLine}/>
+        <FillerLine />
+        <FillerLine />
       </>
     )
-  }   
+  }
 
   // Adapt the segment shape to the chosen experience level.
   let segmentation = ""
@@ -213,7 +216,7 @@ const MorphemicSegmentation = (p: {
     <>
       <i>{segmentation}</i>
       <div>
-        {p.segments.map(function(segment, i) {
+        {p.segments.map(function (segment, i) {
           return (
             <React.Fragment key={i}>
               <MorphemeSegment
