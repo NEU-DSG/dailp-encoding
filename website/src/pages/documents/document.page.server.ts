@@ -3,13 +3,17 @@ import { client } from "src/graphql"
 import * as Dailp from "src/graphql/dailp"
 
 export async function prerender() {
-  const { data } = await client.dailp
+  const { data, error } = await client.dailp
     .query<Dailp.DocumentsPagesQuery, Dailp.DocumentsPagesQueryVariables>(
       Dailp.DocumentsPagesDocument
     )
     .toPromise()
 
-  return flatMap(data!.allDocuments, (document) => {
+  if (error) {
+    throw error
+  }
+
+  return flatMap(data?.allDocuments, (document) => {
     const id = document.id.toLowerCase()
     return [{ url: `/documents/${id}` }, { url: `/documents/${id}/details` }]
   })
