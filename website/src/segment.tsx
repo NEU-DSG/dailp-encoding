@@ -186,8 +186,7 @@ const WithTooltip = (p: {
 
 const FillerLine = () => (
   <div className={css.lineBox}>
-    {" "}
-    <hr className={css.fillerLine} />{" "}
+    <hr className={css.fillerLine} />
   </div>
 )
 

@@ -146,7 +146,12 @@ const annotationSectionBase = style([
     width: "100%",
     position: "relative",
     marginBottom: vspace.half,
-    display: "flex",
+    "@media": {
+      [mediaQueries.medium]: {
+        display: "flex",
+        flexFlow: "row wrap",
+      },
+    },
   },
 ])
 
@@ -182,10 +187,8 @@ export const fillerLine = style([
 export const lineBox = style([
   {
     height: "1.5em",
-    verticalAlign: "middle",
-    textAlign: "start",
     padding: ".75em",
-    marginLeft: 0,
     paddingLeft: "0em",
+    paddingRight: "0.75em",
   },
 ])
