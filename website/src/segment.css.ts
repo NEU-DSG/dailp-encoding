@@ -146,6 +146,7 @@ const annotationSectionBase = style([
     width: "100%",
     position: "relative",
     marginBottom: vspace.half,
+    display: "flex",
   },
 ])
 
@@ -185,6 +186,6 @@ export const lineBox = style([
     textAlign: "start",
     padding: ".75em",
     marginLeft: 0,
-    paddingLeft: "0em"
+    paddingLeft: "0em",
   },
-]) 
+])

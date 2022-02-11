@@ -142,7 +142,11 @@ export const AnnotatedForm = (
             tagSet={p.tagSet}
           />
         ) : null}
-        {translation.length ? <div>&lsquo;{translation}&rsquo;</div> : FillerLine}
+        {translation.length ? (
+          <div>&lsquo;{translation}&rsquo;</div>
+        ) : (
+          <FillerLine />
+        )}
       </div>
     )
   } else {
@@ -180,7 +184,12 @@ const WithTooltip = (p: {
   </Tooltip>
 )
 
-const FillerLine = () => (<div className={css.lineBox}> <hr className={css.fillerLine} /> </div>)
+const FillerLine = () => (
+  <div className={css.lineBox}>
+    {" "}
+    <hr className={css.fillerLine} />{" "}
+  </div>
+)
 
 /**
  * Displays the break-down of a word into its units of meaning and the English
