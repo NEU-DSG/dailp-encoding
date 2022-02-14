@@ -1,5 +1,6 @@
 import { style } from "@vanilla-extract/css"
-import {
+import { position, rgba } from "polished"
+import sprinkles, {
   colors,
   hspace,
   largeDialog,
@@ -16,6 +17,7 @@ export const docTitle = std.fullWidth
 
 export const annotationContents = style({
   width: "100%",
+  flex: 3,
 })
 
 export const topMargin = style({
@@ -155,3 +157,34 @@ export const wideSticky = style({
   width: "100% !important",
   zIndex: 1,
 })
+
+export const contentContainer = style({
+  display: "flex",
+  flexDirection: "row",
+  flexWrap: "nowrap",
+})
+
+export const contentSection2 = style([
+  sprinkles({ display: { any: "none", medium: "block" } }),
+  {
+    flex: 1,
+  }
+])
+
+export const mobileWordPanel = style([
+  position("fixed", 0, 0, 0, "initial"),
+  paddingX(hspace.edge),
+  {
+    paddingTop: vspace.one,
+    width: "16rem",
+    backgroundColor: colors.body,
+    fontFamily: theme.fonts.header,
+    transition: "transform 150ms ease-in-out",
+    transform: "translateX(16rem)",
+    selectors: {
+      "&[data-enter]": {
+        transform: "translateX(0)",
+      },
+    },
+  },
+])
