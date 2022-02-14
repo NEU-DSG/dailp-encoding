@@ -1,5 +1,5 @@
 import { StyleRule, style, styleVariants } from "@vanilla-extract/css"
-import { margin } from "polished"
+import { borderWidth, margin } from "polished"
 import {
   colors,
   hspace,
@@ -50,8 +50,7 @@ export const wordGroup = style([
   paddingY(vspace.half),
   {
     display: "block",
-    paddingLeft: hspace.halfEdge,
-    paddingRight: 0,
+    padding: hspace.halfEdge,
     borderWidth: thickness.thick,
     borderStyle: "solid",
     borderColor: colors.borders,
@@ -80,6 +79,18 @@ export const wordGroup = style([
 export const syllabaryLayer = style({
   fontFamily: theme.fonts.cherokee,
   fontSize: "1.15rem",
+})
+
+export const syllabarySelectedLayer = style({
+  fontFamily: theme.fonts.cherokee,
+  fontSize: "1.15rem",
+  display: "block",
+  borderWidth: thickness.thick,
+  borderStyle: "solid",
+  borderColor: colors.borders,
+  borderRadius: radii.medium,
+  paddingLeft: hspace.halfEdge,
+  paddingRight: hspace.halfEdge,
 })
 
 export const plainSyllabary = style({
