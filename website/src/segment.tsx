@@ -1,7 +1,8 @@
+import { DialogOverlay } from "@reach/dialog"
 import { Tooltip } from "@reach/tooltip"
 import "@reach/tooltip/styles.css"
 import { Howl } from "howler"
-import React from "react"
+import React, { Dispatch, SetStateAction, useState } from "react"
 import { MdInfoOutline } from "react-icons/md"
 import * as Dailp from "src/graphql/dailp"
 import { DocumentContents } from "src/pages/documents/document.page"
@@ -15,6 +16,7 @@ import {
   ViewMode,
   morphemeDisplayTag,
 } from "./types"
+import { wordPanelDetails } from "./word-panel"
 
 type Segment = NonNullable<DocumentContents["translatedSegments"]>[0]["source"]
 
@@ -26,6 +28,7 @@ interface Props {
   tagSet: TagSet
   pageImages: readonly string[]
   phoneticRepresentation: PhoneticRepresentation
+  wordPanelInfo: wordPanelDetails
 }
 
 /** Displays one segment of the document, which may be a word, block, or phrase. */
@@ -46,6 +49,7 @@ export const Segment = (p: Props & { howl?: Howl }) => {
             tagSet={p.tagSet}
             pageImages={p.pageImages}
             phoneticRepresentation={p.phoneticRepresentation}
+            wordPanelInfo={p.wordPanelInfo}
           />
         )
       }) ?? null
@@ -85,13 +89,22 @@ export const AnnotatedForm = (
     return null
   }
   const showAnything = p.viewMode > ViewMode.Story
+  let wordCSS = css.syllabaryLayer
+  if (p.wordPanelInfo.currContents?.source === p.segment.source) {
+    wordCSS = css.syllabarySelectedLayer
+  }
   if (showAnything) {
     const showSegments = p.viewMode >= ViewMode.Segmentation
     const translation = p.segment.englishGloss.join(", ")
 
     return (
       <div className={css.wordGroup} id={`w${p.segment.index}`}>
-        <div className={css.syllabaryLayer} lang="chr">
+        
+        
+        <div 
+        className={wordCSS} 
+        lang="chr" 
+        onClick={() => p.wordPanelInfo.setCurrContents(p.segment)}>
           {p.segment.source}
           {p.segment.commentary && p.viewMode >= ViewMode.Pronunciation && (
             <WordCommentaryInfo commentary={p.segment.commentary} />
@@ -184,7 +197,7 @@ const WithTooltip = (p: {
  * Displays the break-down of a word into its units of meaning and the English
  * glosses for each morpheme.
  */
-const MorphemicSegmentation = (p: {
+export const MorphemicSegmentation = (p: {
   segments: Dailp.FormFieldsFragment["segments"]
   tagSet: TagSet
   onOpenDetails: Props["onOpenDetails"]
