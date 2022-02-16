@@ -17,7 +17,7 @@ export const docTitle = std.fullWidth
 
 export const annotationContents = style({
   width: "100%",
-  flex: 3,
+  flex: 2,
 })
 
 export const topMargin = style({
