@@ -16,7 +16,7 @@ import {
   ViewMode,
   morphemeDisplayTag,
 } from "./types"
-import { wordPanelDetails } from "./word-panel"
+import { WordPanelDetails } from "./word-panel"
 
 type Segment = NonNullable<DocumentContents["translatedSegments"]>[0]["source"]
 
@@ -28,7 +28,7 @@ interface Props {
   tagSet: TagSet
   pageImages: readonly string[]
   phoneticRepresentation: PhoneticRepresentation
-  wordPanelInfo: wordPanelDetails
+  wordPanelDetails: WordPanelDetails
 }
 
 /** Displays one segment of the document, which may be a word, block, or phrase. */
@@ -38,7 +38,7 @@ export const Segment = (p: Props & { howl?: Howl }) => {
     return <AnnotatedForm {...p} segment={segment} />
   } else if (segment.__typename === "AnnotatedPhrase") {
     const children =
-      segment.parts?.map(function(seg, i) {
+      segment.parts?.map(function (seg, i) {
         return (
           <Segment
             key={i}
@@ -49,7 +49,7 @@ export const Segment = (p: Props & { howl?: Howl }) => {
             tagSet={p.tagSet}
             pageImages={p.pageImages}
             phoneticRepresentation={p.phoneticRepresentation}
-            wordPanelInfo={p.wordPanelInfo}
+            wordPanelDetails={p.wordPanelDetails}
           />
         )
       }) ?? null
@@ -90,7 +90,7 @@ export const AnnotatedForm = (
   }
   const showAnything = p.viewMode > ViewMode.Story
   let wordCSS = css.syllabaryLayer
-  if (p.wordPanelInfo.currContents?.source === p.segment.source) {
+  if (p.wordPanelDetails.currContents?.source === p.segment.source) {
     wordCSS = css.syllabarySelectedLayer
   }
   if (showAnything) {
@@ -99,23 +99,37 @@ export const AnnotatedForm = (
 
     return (
       <div className={css.wordGroup} id={`w${p.segment.index}`}>
-        
-        
-        <div 
-        className={wordCSS} 
-        lang="chr" 
-        onClick={() => p.wordPanelInfo.setCurrContents(p.segment)}>
+        <div
+          className={wordCSS}
+          lang="chr"
+          onClick={() => p.wordPanelDetails.setCurrContents(p.segment)}
+        >
           {p.segment.source}
           {p.segment.commentary && p.viewMode >= ViewMode.Pronunciation && (
             <WordCommentaryInfo commentary={p.segment.commentary} />
           )}
-        </div>
-        {p.segment.simplePhonetics ? (
-          <>
-            <div>{p.segment.romanizedSource}</div>
-            <div>
-              {p.segment.simplePhonetics}
-              {p.segment.audioTrack && (
+          {p.segment.simplePhonetics ? (
+            <>
+              <div>{p.segment.romanizedSource}</div>
+              <div>
+                {p.segment.simplePhonetics}
+                {p.segment.audioTrack && (
+                  <FormAudio
+                    endTime={p.segment.audioTrack.endTime}
+                    index={p.segment.audioTrack.index}
+                    parentTrack=""
+                    resourceUrl={p.segment.audioTrack.resourceUrl}
+                    startTime={p.segment.audioTrack.startTime}
+                  />
+                )}
+                {p.segment.phonemic && p.viewMode >= ViewMode.Pronunciation && (
+                  <div />
+                )}
+              </div>
+            </>
+          ) : (
+            (p.segment.audioTrack && (
+              <div className={css.audioContainer}>
                 <FormAudio
                   endTime={p.segment.audioTrack.endTime}
                   index={p.segment.audioTrack.index}
@@ -123,39 +137,24 @@ export const AnnotatedForm = (
                   resourceUrl={p.segment.audioTrack.resourceUrl}
                   startTime={p.segment.audioTrack.startTime}
                 />
-              )}
-              {p.segment.phonemic && p.viewMode >= ViewMode.Pronunciation && (
-                <div />
-              )}
-            </div>
-          </>
-        ) : (
-          (p.segment.audioTrack && (
-            <div className={css.audioContainer}>
-              <FormAudio
-                endTime={p.segment.audioTrack.endTime}
-                index={p.segment.audioTrack.index}
-                parentTrack=""
-                resourceUrl={p.segment.audioTrack.resourceUrl}
-                startTime={p.segment.audioTrack.startTime}
-              />
-            </div>
-          )) || (
-            <>
-              <br />
-              <br />
-            </>
-          )
-        )}
-        {showSegments ? (
-          <MorphemicSegmentation
-            segments={p.segment.segments}
-            onOpenDetails={p.onOpenDetails}
-            level={p.viewMode}
-            tagSet={p.tagSet}
-          />
-        ) : null}
-        {translation.length ? <div>&lsquo;{translation}&rsquo;</div> : <br />}
+              </div>
+            )) || (
+              <>
+                <br />
+                <br />
+              </>
+            )
+          )}
+          {showSegments ? (
+            <MorphemicSegmentation
+              segments={p.segment.segments}
+              onOpenDetails={p.onOpenDetails}
+              level={p.viewMode}
+              tagSet={p.tagSet}
+            />
+          ) : null}
+          {translation.length ? <div>&lsquo;{translation}&rsquo;</div> : <br />}
+        </div>
       </div>
     )
   } else {
@@ -227,7 +226,7 @@ export const MorphemicSegmentation = (p: {
     <>
       <i>{segmentation}</i>
       <div>
-        {p.segments.map(function(segment, i) {
+        {p.segments.map(function (segment, i) {
           return (
             <React.Fragment key={i}>
               <MorphemeSegment
