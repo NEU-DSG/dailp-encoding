@@ -4,6 +4,12 @@ import React, { Dispatch, SetStateAction, useState } from "react"
 import { isMobile } from "react-device-detect"
 import { Helmet } from "react-helmet"
 import Sticky from "react-stickynode"
+import {
+  Dialog,
+  DialogBackdrop,
+  DialogDisclosure,
+  useDialogState,
+} from "reakit/Dialog"
 import { Tab, TabList, TabPanel } from "reakit/Tab"
 import { DocumentAudio } from "src/audio-player"
 import { Breadcrumbs } from "src/breadcrumbs"
@@ -11,6 +17,7 @@ import { Button } from "src/components"
 import Link from "src/components/link"
 import * as Dailp from "src/graphql/dailp"
 import Layout from "src/layout"
+import { drawerBg, navButton, navDrawer } from "src/menu.css"
 import { ExperiencePicker, selectedMode, selectedPhonetics } from "src/mode"
 import { MorphemeDetails } from "src/morpheme"
 import {
@@ -20,7 +27,6 @@ import {
 } from "src/routes"
 import { useScrollableTabState } from "src/scrollable-tabs"
 import { AnnotatedForm, Segment } from "src/segment"
-import { WordPanel, wordPanelDetails } from "src/word-panel"
 import {
   BasicMorphemeSegment,
   PhoneticRepresentation,
@@ -28,10 +34,9 @@ import {
   ViewMode,
   tagSetForMode,
 } from "src/types"
+import { WordPanel, WordPanelDetails } from "src/word-panel"
 import PageImages from "../../page-image"
 import * as css from "./document.css"
-import { Dialog, DialogBackdrop, DialogDisclosure, useDialogState } from "reakit/Dialog"
-import { navButton, drawerBg, navDrawer } from "src/menu.css"
 
 enum Tabs {
   ANNOTATION = "annotation-tab",
@@ -135,10 +140,11 @@ const TranslationTab = ({ doc }: { doc: Document }) => {
     setDialogOpen(true)
   }
 
-  const dialog = useDialogState({ animated: true})
-  const [wordPanelContents, setwpContents] = useState<Dailp.FormFieldsFragment | null>(null)
-  const setWordPanelContents = (content: Dailp.FormFieldsFragment | null) => {
-    setwpContents(content)
+  const dialog = useDialogState({ animated: true })
+  const [selectedWord, setSelectedWord] =
+    useState<Dailp.FormFieldsFragment | null>(null)
+  const selectAndShowWord = (content: Dailp.FormFieldsFragment | null) => {
+    setSelectedWord(content)
     if (content) {
       dialog.show()
     } else {
@@ -146,8 +152,8 @@ const TranslationTab = ({ doc }: { doc: Document }) => {
     }
   }
   let wordPanelInfo = {
-    currContents: wordPanelContents,
-    setCurrContents: setWordPanelContents,
+    currContents: selectedWord,
+    setCurrContents: selectAndShowWord,
   }
 
   const [phoneticRepresentation, _setPhoneticRepresentation] =
@@ -181,7 +187,6 @@ const TranslationTab = ({ doc }: { doc: Document }) => {
         </DialogContent>
       </DialogOverlay>
 
-      
       <DialogBackdrop {...dialog} className={drawerBg}>
         <Dialog
           {...dialog}
@@ -206,9 +211,9 @@ const TranslationTab = ({ doc }: { doc: Document }) => {
       </p>
 
       <SolidSticky top="#document-tabs-header">
-        <ExperiencePicker onSelect={setExperienceLevel}/>
+        <ExperiencePicker onSelect={setExperienceLevel} />
         {/*<PhoneticsPicker onSelect={setPhoneticRepresentation} />*/}
-      </SolidSticky> 
+      </SolidSticky>
 
       <section className={css.contentContainer}>
         <article className={css.annotationContents}>
@@ -219,11 +224,11 @@ const TranslationTab = ({ doc }: { doc: Document }) => {
               openDetails,
               tagSet,
               phoneticRepresentation,
-              wordPanelInfo,
+              wordPanelDetails: wordPanelInfo,
             }}
           />
         </article>
-        {wordPanelContents ? (
+        {selectedWord ? (
           <div className={css.contentSection2}>
             <WordPanel
               segment={wordPanelInfo.currContents}
@@ -233,10 +238,7 @@ const TranslationTab = ({ doc }: { doc: Document }) => {
               tagSet={tagSet}
             />
           </div>
-        ) : (
-          null
-        )}
-
+        ) : null}
       </section>
     </>
   )
@@ -248,14 +250,14 @@ const DocumentContents = ({
   openDetails,
   tagSet,
   phoneticRepresentation,
-  wordPanelInfo,
+  wordPanelDetails,
 }: {
   doc: Document
   experienceLevel: ViewMode
   tagSet: TagSet
   openDetails: (morpheme: any) => void
   phoneticRepresentation: PhoneticRepresentation
-  wordPanelInfo: wordPanelDetails
+  wordPanelDetails: WordPanelDetails
 }) => {
   let morphemeSystem = Dailp.CherokeeOrthography.Learner
   if (experienceLevel === ViewMode.AnalysisDt) {
@@ -283,7 +285,7 @@ const DocumentContents = ({
           translations={seg.translation as Dailp.TranslationBlock}
           pageImages={doc.pageImages?.urls!}
           phoneticRepresentation={phoneticRepresentation}
-          wordPanelInfo={wordPanelInfo}
+          wordPanelDetails={wordPanelDetails}
         />
       ))}
       {docContents.forms?.map((form, i) => (
@@ -296,7 +298,7 @@ const DocumentContents = ({
           phoneticRepresentation={phoneticRepresentation}
           translations={null}
           pageImages={doc.pageImages?.urls!}
-          wordPanelInfo={wordPanelInfo}
+          wordPanelDetails={wordPanelDetails}
         />
       ))}
     </>
