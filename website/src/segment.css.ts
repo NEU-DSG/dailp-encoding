@@ -62,7 +62,15 @@ export const wordGroup = style([
     "@media": {
       [mediaQueries.medium]: {
         display: "inline-block",
-        padding: 0,
+      }
+    }
+  },
+])
+
+export const wordGroupSelection = styleVariants({
+  unselected: [wordGroup, {
+    "@media": {
+      [mediaQueries.medium]: {
         border: "none",
         ...margin(vspace.half, "3rem", vspace.one, 0),
       },
@@ -73,8 +81,9 @@ export const wordGroup = style([
         ...margin(0, "3.5rem", vspace[1.5], 0),
       },
     },
-  },
-])
+  }],
+  selected: [wordGroup],
+})
 
 export const syllabaryLayer = style({
   fontFamily: theme.fonts.cherokee,
