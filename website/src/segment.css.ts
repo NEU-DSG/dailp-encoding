@@ -82,7 +82,10 @@ export const wordGroupSelection = styleVariants({
       },
     },
   }],
-  selected: [wordGroup],
+  selected: [wordGroup, {
+    borderColor: "black",
+    backgroundColor: colors.header,
+  }],
 })
 
 export const syllabaryLayer = style({
