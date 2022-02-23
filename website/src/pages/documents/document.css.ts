@@ -176,7 +176,7 @@ export const mobileWordPanel = style([
   paddingX(hspace.edge),
   {
     paddingTop: vspace.one,
-    width: "16rem",
+    width: "20rem",
     backgroundColor: colors.body,
     fontFamily: theme.fonts.header,
     transition: "transform 150ms ease-in-out",
