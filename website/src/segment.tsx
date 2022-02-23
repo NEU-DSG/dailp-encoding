@@ -99,15 +99,14 @@ export const AnnotatedForm = (
 
     return (
       <div className={wordCSS} id={`w${p.segment.index}`}>
-        <div
-          className={css.syllabaryLayer}
-          lang="chr"
-          onClick={() => p.wordPanelDetails.setCurrContents(p.segment)}
-        >
+        <div className={css.syllabaryLayer} lang="chr">
           {p.segment.source}
-          {p.segment.commentary && p.viewMode >= ViewMode.Pronunciation && (
-            <WordCommentaryInfo commentary={p.segment.commentary} />
-          )}
+          <span
+            className={css.infoIcon}
+            onClick={() => p.wordPanelDetails.setCurrContents(p.segment)}
+          >
+            <MdInfoOutline size={20} className={css.linkSvg} />
+          </span>
         </div>
         {p.segment.simplePhonetics ? (
           <>
