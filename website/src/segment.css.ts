@@ -62,6 +62,7 @@ export const wordGroup = style([
     "@media": {
       [mediaQueries.medium]: {
         display: "inline-block",
+        ...margin(vspace.half, "3rem", vspace.one, 0),
       }
     }
   },
@@ -71,12 +72,10 @@ export const wordGroupSelection = styleVariants({
   unselected: [wordGroup, {
     "@media": {
       [mediaQueries.medium]: {
-        border: "none",
-        ...margin(vspace.half, "3rem", vspace.one, 0),
+        borderColor: "transparent",
       },
       [mediaQueries.print]: {
         display: "inline-block",
-        padding: 0,
         border: "none",
         ...margin(0, "3.5rem", vspace[1.5], 0),
       },
@@ -180,7 +179,7 @@ export const annotationSection = styleVariants({
 export const audioContainer = style({ paddingLeft: "40%" })
 
 export const infoIcon = style({
-  cursor: "help",
+  cursor: "pointer",
   marginLeft: hspace.halfEdge,
   "@media": {
     [mediaQueries.print]: {
