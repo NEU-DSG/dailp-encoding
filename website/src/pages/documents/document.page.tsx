@@ -215,7 +215,7 @@ const TranslationTab = ({ doc }: { doc: Document }) => {
         {/*<PhoneticsPicker onSelect={setPhoneticRepresentation} />*/}
       </SolidSticky>
 
-      <section className={css.contentContainer}>
+      <div className={css.contentContainer}>
         <article className={css.annotationContents}>
           <DocumentContents
             {...{
@@ -239,7 +239,7 @@ const TranslationTab = ({ doc }: { doc: Document }) => {
             />
           </div>
         ) : null}
-      </section>
+      </div>
     </>
   )
 }
