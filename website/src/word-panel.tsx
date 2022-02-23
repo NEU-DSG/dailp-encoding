@@ -65,28 +65,28 @@ export const WordPanel = (p: {
     }
 
     return (
-      <div className={css.wholePanel}>
-        <div className={css.wordPanelContent}>
-          <Button
-            className={css.wordPanelButton}
-            onClick={() => p.setContent(null)}
-            aria-label="Close Word Details"
-          >
-            <MdClose size={32} />
-          </Button>
-          <h2>Selected word:</h2>
-          <h1>{p.segment.source}</h1>
-          {phonetics}
-          {
-            <MorphemicSegmentation
-              segments={p.segment.segments}
-              onOpenDetails={p.onOpenDetails}
-              level={p.viewMode}
-              tagSet={p.tagSet}
-            />
-          }
-          {translation.length ? <div>&lsquo;{translation}&rsquo;</div> : <br />}
-        </div>
+      <div className={css.wordPanelContent}>
+        <Button
+          className={css.wordPanelButton.basic}
+          onClick={() => p.setContent(null)}
+          aria-label="Close Word Details"
+        >
+          <MdClose size={32} />
+        </Button>
+        <h1>Selected word:</h1>
+        <h2>{p.segment.source}</h2>
+        {phonetics}
+        {
+          <MorphemicSegmentation
+            segments={p.segment.segments}
+            onOpenDetails={p.onOpenDetails}
+            level={p.viewMode}
+            tagSet={p.tagSet}
+          />
+        }
+        {translation.length ? <div>&lsquo;{translation}&rsquo;</div> : <br />}
+        <br />
+        <p>{p.segment.commentary}</p>
       </div>
     )
   } else {
