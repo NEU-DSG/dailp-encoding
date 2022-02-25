@@ -9,7 +9,7 @@ export const wordPanelButton = styleVariants({
 export const wordPanelContent = style({
   position: "sticky",
   top: 125,
-  height: "25rem",
+  height: "calc(100vh - 150px)",
   border: "none",
   borderRadius: "4px",
   padding: "8px",
