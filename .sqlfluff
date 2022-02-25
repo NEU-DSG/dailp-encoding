@@ -1,0 +1,24 @@
+[sqlfluff]
+dialect = postgres
+templater = placeholder
+exclude_rules = L031, L057
+
+[sqlfluff:indentation]
+indented_joins = True
+
+[sqlfluff:rules]
+tab_space_size = 2
+
+[sqlfluff:templater:placeholder]
+param_style = numeric_dollar
+1 = 'one'
+2 = 'two'
+3 = 'three'
+4 = 'four'
+5 = 'five'
+6 = 'six'
+7 = 'seven'
+8 = 'eight'
+9 = 'nine'
+10 = 'ten'
+11 = 'eleven'

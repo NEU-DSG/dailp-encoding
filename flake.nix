@@ -211,6 +211,7 @@
               dev-start
               postgresql_14
               sqlx-cli
+              pkgs-unstable.sqlfluff
             ] ++ lib.optionals stdenv.isDarwin [
               darwin.apple_sdk.frameworks.Security
               libiconv
