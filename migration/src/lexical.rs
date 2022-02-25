@@ -1,12 +1,50 @@
 use crate::spreadsheets::{LexicalEntryWithForms, SheetResult};
 use anyhow::Result;
 use dailp::{
-    convert_udb, seg_verb_surface_forms, AnnotatedDoc, AnnotatedForm, Contributor, Database, Date,
-    DocumentMetadata, LexicalConnection, MorphemeId, MorphemeSegment, PositionInDocument,
+    convert_udb, database_sql::Database, seg_verb_surface_forms, AnnotatedDoc, AnnotatedForm,
+    Contributor, Date, DocumentMetadata, LexicalConnection, MorphemeId, MorphemeSegment,
+    PositionInDocument,
 };
 use log::info;
 
 pub async fn migrate_dictionaries(db: &Database) -> Result<()> {
+    let docs = vec![
+        DocumentMetadata {
+            id: dailp::DocumentId("DF1975".to_string()),
+            title: "Cherokee–English Dictionary".to_string(),
+            sources: Vec::new(),
+            collection: Some("Lexical Resources".to_string()),
+            contributors: vec![
+                Contributor::new_author("Feeling, Durbin".to_string()),
+                Contributor::new_author("Pulte, William".to_string()),
+            ],
+            date: Some(dailp::Date::from_ymd(1975, 1, 1)),
+            genre: None,
+            translation: None,
+            page_images: None,
+            is_reference: true,
+            audio_recording: None,
+            order_index: 0,
+        },
+        DocumentMetadata {
+            id: dailp::DocumentId("DF2003".to_string()),
+            title: "A handbook of the Cherokee verb: a preliminary study".to_string(),
+            sources: Vec::new(),
+            collection: Some("Lexical Resources".to_string()),
+            contributors: vec![Contributor::new_author("Feeling, Durbin".to_string())],
+            date: Some(dailp::Date::from_ymd(2003, 1, 1)),
+            genre: None,
+            translation: None,
+            page_images: None,
+            is_reference: true,
+            audio_recording: None,
+            order_index: 0,
+        },
+    ];
+    for doc in docs {
+        db.insert_dictionary_document(doc).await?;
+    }
+
     let df1975 = parse_new_df1975(
         SheetResult::from_sheet("11ssqdimOQc_hp3Zk8Y55m6DFfKR96OOpclUg5wcGSVE", None).await?,
         "DF1975",
@@ -54,7 +92,8 @@ pub async fn migrate_dictionaries(db: &Database) -> Result<()> {
     )
     .await?;
 
-    ingest_particle_index(db, "1YppMsIvNixHdq7oM_iCnYE1ZI4y0TMSf-mVibji7pJ4").await?;
+    // FIXME has items from a bunch of different documents.
+    // ingest_particle_index(db, "1YppMsIvNixHdq7oM_iCnYE1ZI4y0TMSf-mVibji7pJ4").await?;
 
     ingest_ac1995(db, "1x02KTuF0yyEFcrJwkfFiBKj79ysQTZfLKB6hKeq-ZT8").await?;
 
@@ -73,54 +112,8 @@ pub async fn migrate_dictionaries(db: &Database) -> Result<()> {
     info!("Pushing entries to database...");
     // Push all lexical entries to the database.
     for entry in entries {
-        db.update_form(entry.entry).await?;
         // Push all the surface forms to the sea of words.
-        for form in entry.forms {
-            db.update_form(form).await?;
-        }
-    }
-
-    let docs = vec![
-        AnnotatedDoc {
-            meta: DocumentMetadata {
-                id: dailp::DocumentId("DF1975".to_string()),
-                title: "Cherokee–English Dictionary".to_string(),
-                sources: Vec::new(),
-                collection: Some("Lexical Resources".to_string()),
-                contributors: vec![
-                    Contributor::new_author("Feeling, Durbin".to_string()),
-                    Contributor::new_author("Pulte, William".to_string()),
-                ],
-                date: Some(dailp::Date::from_ymd(1975, 1, 1)),
-                genre: None,
-                translation: None,
-                page_images: None,
-                is_reference: true,
-                audio_recording: None,
-                order_index: 0,
-            },
-            segments: None,
-        },
-        AnnotatedDoc {
-            meta: DocumentMetadata {
-                id: dailp::DocumentId("DF2003".to_string()),
-                title: "A handbook of the Cherokee verb: a preliminary study".to_string(),
-                sources: Vec::new(),
-                collection: Some("Lexical Resources".to_string()),
-                contributors: vec![Contributor::new_author("Feeling, Durbin".to_string())],
-                date: Some(dailp::Date::from_ymd(2003, 1, 1)),
-                genre: None,
-                translation: None,
-                page_images: None,
-                is_reference: true,
-                audio_recording: None,
-                order_index: 0,
-            },
-            segments: None,
-        },
-    ];
-    for doc in docs {
-        db.update_document(doc).await?;
+        db.insert_lexical_entry(entry.entry, entry.forms).await?;
     }
 
     Ok(())
@@ -154,7 +147,7 @@ async fn parse_numerals(db: &Database, sheet_id: &str, doc_id: &str, year: i32) 
                 PositionInDocument::new(dailp::DocumentId(doc_id.to_string()), page_num, key);
             let segments = vec![MorphemeSegment::new(root_dailp, gloss.clone(), None)];
             Some(AnnotatedForm {
-                id: position.make_id(&gloss, true),
+                id: None,
                 position,
                 normalized_source: None,
                 simple_phonetics: Some(simple_phonetics),
@@ -170,9 +163,7 @@ async fn parse_numerals(db: &Database, sheet_id: &str, doc_id: &str, year: i32) 
             })
         });
 
-    for form in forms {
-        db.update_form(form).await?;
-    }
+    db.insert_lexical_forms(forms).await?;
 
     Ok(())
 }
@@ -208,6 +199,7 @@ async fn parse_meta(sheet_id: &str, collection: &str) -> Result<DocumentMetadata
 async fn parse_appendix(db: &Database, sheet_id: &str, to_skip: usize) -> Result<()> {
     let sheet = SheetResult::from_sheet(sheet_id, None).await?;
     let meta = parse_meta(sheet_id, "Vocabularies").await?;
+    db.insert_dictionary_document(meta.clone()).await?;
 
     let forms = sheet
         .values
@@ -230,7 +222,7 @@ async fn parse_appendix(db: &Database, sheet_id: &str, to_skip: usize) -> Result
             let morpheme_segments = values.next()?;
             let segments = MorphemeSegment::parse_many(&morpheme_segments, &morpheme_gloss)?;
             Some(AnnotatedForm {
-                id: position.make_form_id(&segments),
+                id: None,
                 position,
                 source: syllabary,
                 normalized_source: None,
@@ -246,27 +238,20 @@ async fn parse_appendix(db: &Database, sheet_id: &str, to_skip: usize) -> Result
             })
         });
 
-    for form in forms {
-        db.update_form(form).await?;
-    }
+    db.insert_lexical_forms(forms).await?;
 
-    let links = SheetResult::from_sheet(sheet_id, Some("References")).await?;
-    let links = links.values.into_iter().skip(1).filter_map(|row| {
-        let mut row = row.into_iter();
-        Some(LexicalConnection::new(
-            MorphemeId::new(Some(meta.id.clone()), None, row.next()?),
-            MorphemeId::parse(&row.next()?)?,
-        ))
-    });
-    for link in links {
-        db.update_connection(link).await?;
-    }
-
-    let doc = AnnotatedDoc {
-        meta,
-        segments: None,
-    };
-    db.update_document(doc).await?;
+    // FIXME add function to Database
+    // let links = SheetResult::from_sheet(sheet_id, Some("References")).await?;
+    // let links = links.values.into_iter().skip(1).filter_map(|row| {
+    //     let mut row = row.into_iter();
+    //     Some(LexicalConnection::new(
+    //         MorphemeId::new(Some(meta.id.clone()), None, row.next()?),
+    //         MorphemeId::parse(&row.next()?)?,
+    //     ))
+    // });
+    // for link in links {
+    //     db.update_connection(link).await?;
+    // }
 
     Ok(())
 }
@@ -312,7 +297,7 @@ fn parse_new_df1975(
                         has_comment,
                     ),
                     entry: AnnotatedForm {
-                        id: pos.make_id(&root_gloss, true),
+                        id: None,
                         simple_phonetics: None,
                         normalized_source: None,
                         phonemic: None,
@@ -357,7 +342,7 @@ async fn ingest_particle_index(db: &Database, document_id: &str) -> Result<()> {
             let pos =
                 PositionInDocument::new(source.document_id.clone()?, source.gloss, index as i32);
             Some(AnnotatedForm {
-                id: pos.make_raw_id(&translation, false),
+                id: None,
                 simple_phonetics: Some(simple_phonetics),
                 normalized_source: None,
                 phonemic: None,
@@ -374,9 +359,7 @@ async fn ingest_particle_index(db: &Database, document_id: &str) -> Result<()> {
         });
 
     // Push the forms to the database.
-    for form in forms {
-        db.update_form(form).await?;
-    }
+    db.insert_lexical_forms(forms).await?;
 
     Ok(())
 }
@@ -384,6 +367,10 @@ async fn ingest_particle_index(db: &Database, document_id: &str) -> Result<()> {
 async fn ingest_ac1995(db: &Database, sheet_id: &str) -> Result<()> {
     let sheet = SheetResult::from_sheet(sheet_id, None).await?;
     let meta = parse_meta(sheet_id, "Vocabularies").await?;
+
+    // Update the document metadata.
+    db.insert_dictionary_document(meta.clone()).await?;
+
     let forms = sheet.values.into_iter().filter_map(|row| {
         let mut row = row.into_iter();
         let index: i32 = row.next()?.parse().ok()?;
@@ -394,7 +381,7 @@ async fn ingest_ac1995(db: &Database, sheet_id: &str) -> Result<()> {
         let translation = row.next()?;
         let pos = PositionInDocument::new(meta.id.clone(), "1".to_owned(), index);
         Some(AnnotatedForm {
-            id: form_id,
+            id: None,
             simple_phonetics: Some(normalized),
             normalized_source: None,
             phonemic: None,
@@ -411,16 +398,7 @@ async fn ingest_ac1995(db: &Database, sheet_id: &str) -> Result<()> {
     });
 
     // Push the forms to the database.
-    for form in forms {
-        db.update_form(form).await?;
-    }
-
-    // Update the document metadata.
-    db.update_document(AnnotatedDoc {
-        meta,
-        segments: None,
-    })
-    .await?;
+    db.insert_lexical_forms(forms).await?;
 
     Ok(())
 }

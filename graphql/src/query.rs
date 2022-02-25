@@ -3,8 +3,8 @@
 use {
     dailp::async_graphql::{self, dataloader::DataLoader, guard::Guard, Context, FieldResult},
     dailp::{
-        AnnotatedDoc, CherokeeOrthography, Database, MorphemeId, MorphemeReference, MorphemeTag,
-        WordsInDocument,
+        database_sql, AnnotatedDoc, CherokeeOrthography, Database, MorphemeId, MorphemeReference,
+        MorphemeTag, WordsInDocument,
     },
     mongodb::bson,
     serde::{Deserialize, Serialize},
@@ -43,7 +43,10 @@ impl Query {
         &self,
         context: &Context<'_>,
     ) -> FieldResult<Vec<dailp::DocumentCollection>> {
-        Ok(context.data::<Database>()?.all_collections().await?)
+        Ok(context
+            .data::<database_sql::Database>()?
+            .top_collections()
+            .await?)
     }
 
     async fn collection(
@@ -51,7 +54,10 @@ impl Query {
         context: &Context<'_>,
         slug: String,
     ) -> FieldResult<dailp::DocumentCollection> {
-        Ok(context.data::<Database>()?.collection(slug).await?)
+        Ok(context
+            .data::<database_sql::Database>()?
+            .collection(slug)
+            .await?)
     }
 
     /// List all contributors to documents and lexical resources.
@@ -69,7 +75,7 @@ impl Query {
         id: String,
     ) -> FieldResult<Option<AnnotatedDoc>> {
         Ok(context
-            .data::<DataLoader<Database>>()?
+            .data::<DataLoader<database_sql::Database>>()?
             .load_one(dailp::DocumentId(id.to_ascii_uppercase()))
             .await?)
     }
@@ -201,14 +207,12 @@ impl Query {
     async fn word_search(
         &self,
         context: &Context<'_>,
-        queries: Vec<FormQuery>,
+        query: String,
     ) -> FieldResult<Vec<dailp::AnnotatedForm>> {
-        // Convert the queries to valid BSON to send to MongoDB.
-        let bson_queries: Vec<_> = queries.into_iter().map(|q| q.into_bson()).collect();
-        // Match against any of the given queries.
-        let q = bson::doc! { "$or": bson_queries };
-        // Return the matching words, if any.
-        Ok(context.data::<Database>()?.word_search(q).await?)
+        Ok(context
+            .data::<database_sql::Database>()?
+            .search_words_any_field(query)
+            .await?)
     }
 
     /// Search for words with the exact same syllabary string, or with very

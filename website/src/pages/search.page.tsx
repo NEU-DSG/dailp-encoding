@@ -15,7 +15,7 @@ import { boldWordRow, wordRow } from "./timeline.css"
 const SearchPage = () => {
   const location = useLocation()
   const [morphemeId, setMorpheme] = useDebounce(
-    location.search && location.search["query"] || null,
+    (location.search && location.search["query"]) || null,
     300
   )
 

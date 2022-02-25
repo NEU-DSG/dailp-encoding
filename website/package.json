@@ -91,10 +91,7 @@
     "trailingComma": "es5",
     "semi": false,
     "tabWidth": 2,
-    "importOrder": [
-      "^src/(.*)$",
-      "^[./]"
-    ],
+    "importOrder": ["^src/(.*)$", "^[./]"],
     "importOrderSeparation": false,
     "importOrderSortSpecifiers": true
   },

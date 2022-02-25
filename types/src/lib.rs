@@ -21,6 +21,7 @@
 pub mod annotation;
 mod audio;
 mod database;
+pub mod database_sql;
 mod date;
 mod document;
 mod form;
@@ -38,6 +39,7 @@ mod translation;
 // Re-export dependencies for downstream to use.
 pub use async_graphql;
 pub use chrono;
+pub use sqlx::types::Uuid;
 
 pub use audio::*;
 pub use database::*;

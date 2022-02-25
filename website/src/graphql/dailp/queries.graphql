@@ -19,7 +19,7 @@ query AnnotatedDocument($id: String!) {
     title
     slug
     isReference
-    collection {
+    breadcrumbs(superCollection: "") {
       name
       slug
     }
@@ -47,21 +47,16 @@ query DocumentContents(
   $isReference: Boolean!
 ) {
   document(id: $id) {
-    translatedSegments @skip(if: $isReference) {
-      source {
-        __typename
-        ... on AnnotatedForm {
-          ...FormFields
+    translatedPages @skip(if: $isReference) {
+      pageNumber
+      paragraphs {
+        source {
+          __typename
+          ... on AnnotatedForm {
+            ...FormFields
+          }
         }
-        ... on AnnotatedPhrase {
-          ...BlockFields
-        }
-        ... on PageBreak {
-          index
-        }
-      }
-      translation {
-        text
+        translation
       }
     }
     forms @include(if: $isReference) {
@@ -71,19 +66,6 @@ query DocumentContents(
   }
 }
 
-fragment BlockFields on AnnotatedPhrase {
-  ty
-  index
-  parts {
-    __typename
-    ... on AnnotatedForm {
-      ...FormFields
-    }
-    ... on PageBreak {
-      index
-    }
-  }
-}
 fragment FormFields on AnnotatedForm {
   index
   source
@@ -136,14 +118,7 @@ query Collection($slug: String!) {
 }
 
 query WordSearch($query: String!) {
-  wordSearch(
-    queries: [
-      { source: $query }
-      { normalizedSource: $query }
-      { simplePhonetics: $query }
-      { englishGloss: $query }
-    ]
-  ) {
+  wordSearch(query: $query) {
     source
     normalizedSource
     simplePhonetics
@@ -213,7 +188,7 @@ query DocumentDetails($id: String!) {
     id
     slug
     title
-    collection {
+    breadcrumbs(superCollection: "") {
       name
       slug
     }

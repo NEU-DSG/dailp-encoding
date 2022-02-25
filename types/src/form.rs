@@ -1,8 +1,10 @@
 use crate::{
-    AnnotatedDoc, AudioSlice, Database, Date, MorphemeId, MorphemeSegment, PositionInDocument,
+    database_sql, AnnotatedDoc, AudioSlice, Database, Date, MorphemeId, MorphemeSegment,
+    PartsOfWord, PositionInDocument,
 };
 use async_graphql::{dataloader::DataLoader, FieldResult};
 use serde::{Deserialize, Serialize};
+use sqlx::types::Uuid;
 
 #[derive(Clone, Eq, PartialEq, Hash, Serialize, Deserialize, Debug, async_graphql::NewType)]
 pub struct FormId(pub String);
@@ -10,13 +12,15 @@ pub struct FormId(pub String);
 /// A single word in an annotated document.
 /// One word contains several layers of interpretation, including the original
 /// source text, multiple layers of linguistic annotation, and annotator notes.
+/// TODO Split into two types, one for migration and one for SQL + GraphQL
 #[derive(Clone, Serialize, Deserialize, Debug, async_graphql::SimpleObject)]
 #[serde(rename_all = "camelCase")]
 #[graphql(complex)]
 pub struct AnnotatedForm {
-    #[serde(rename = "_id")]
     /// Unique identifier of this form
-    pub id: String,
+    #[serde(skip)]
+    #[graphql(skip)]
+    pub id: Option<Uuid>,
     /// Original source text
     pub source: String,
     /// A normalized version of the word
@@ -27,6 +31,7 @@ pub struct AnnotatedForm {
     pub phonemic: Option<String>,
     /// Morphemic segmentation of the form that includes a phonemic
     /// representation and gloss for each
+    #[graphql(skip)]
     pub segments: Option<Vec<MorphemeSegment>>,
     #[serde(default)]
     /// English gloss for the whole word
@@ -58,6 +63,17 @@ impl AnnotatedForm {
         self.simple_phonetics
             .as_ref()
             .map(|phonetic| crate::lexical::simple_phonetics_to_worcester(phonetic))
+    }
+
+    async fn segments(
+        &self,
+        context: &async_graphql::Context<'_>,
+    ) -> FieldResult<Vec<MorphemeSegment>> {
+        Ok(context
+            .data::<DataLoader<database_sql::Database>>()?
+            .load_one(PartsOfWord(self.id.as_ref().unwrap().clone()))
+            .await?
+            .unwrap_or_default())
     }
 
     /// All other observed words with the same root morpheme as this word.

@@ -19,7 +19,7 @@ import {
   documentRoute,
 } from "src/routes"
 import { useScrollableTabState } from "src/scrollable-tabs"
-import { AnnotatedForm, Segment } from "src/segment"
+import { AnnotatedForm, DocumentPage, Segment } from "src/segment"
 import {
   BasicMorphemeSegment,
   PhoneticRepresentation,
@@ -216,14 +216,13 @@ const DocumentContents = ({
   }
   return (
     <>
-      {docContents.translatedSegments?.map((seg, i) => (
-        <Segment
+      {docContents.translatedPages?.map((seg, i) => (
+        <DocumentPage
           key={i}
-          segment={seg.source}
+          segment={seg}
           onOpenDetails={openDetails}
           viewMode={experienceLevel}
           tagSet={tagSet}
-          translations={seg.translation as Dailp.TranslationBlock}
           pageImages={doc.pageImages?.urls!}
           phoneticRepresentation={phoneticRepresentation}
         />
@@ -236,7 +235,6 @@ const DocumentContents = ({
           viewMode={experienceLevel}
           tagSet={tagSet}
           phoneticRepresentation={phoneticRepresentation}
-          translations={null}
           pageImages={doc.pageImages?.urls!}
         />
       ))}
@@ -247,7 +245,10 @@ const DocumentContents = ({
 export const DocumentTitleHeader = (p: {
   doc: Pick<Dailp.AnnotatedDoc, "slug" | "title"> & {
     date: NullPick<Dailp.AnnotatedDoc["date"], "year">
-    collection: NullPick<Dailp.AnnotatedDoc["collection"], "name" | "slug">
+    breadcrumbs: readonly Pick<
+      Dailp.AnnotatedDoc["breadcrumbs"][0],
+      "name" | "slug"
+    >[]
     audioRecording?: NullPick<
       Dailp.AnnotatedDoc["audioRecording"],
       "resourceUrl"
@@ -258,11 +259,10 @@ export const DocumentTitleHeader = (p: {
   <header className={css.docHeader}>
     <Breadcrumbs aria-label="Breadcrumbs">
       <Link href="/">Collections</Link>
-      {p.doc.collection && (
-        <Link href={collectionRoute(p.doc.collection.slug!)}>
-          {p.doc.collection.name}
-        </Link>
-      )}
+      {p.doc.breadcrumbs &&
+        p.doc.breadcrumbs.map((crumb) => (
+          <Link href={collectionRoute(crumb.slug)}>{crumb.name}</Link>
+        ))}
     </Breadcrumbs>
 
     <h1 className={css.docTitle}>

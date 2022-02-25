@@ -66,7 +66,8 @@ impl Database {
     }
 
     pub async fn update_form(&self, tag: AnnotatedForm) -> Result<()> {
-        upsert_one(&self.client.collection(Self::WORDS), &tag.id, &tag).await
+        // upsert_one(&self.client.collection(Self::WORDS), &tag.id, &tag).await
+        Ok(())
     }
 
     pub async fn update_person(&self, person: ContributorDetails) -> Result<()> {
@@ -112,9 +113,7 @@ impl Database {
             .await?
             .iter()
             .filter_map(|doc| doc.as_str())
-            .map(|name| DocumentCollection {
-                name: name.to_owned(),
-            })
+            .map(|name| DocumentCollection::from_name(name.to_owned()))
             .collect())
     }
 
@@ -122,7 +121,7 @@ impl Database {
         let collections = self.all_collections().await?;
         Ok(collections
             .into_iter()
-            .find(|coll| coll.make_slug() == slug)
+            .find(|coll| coll.slug == slug)
             .unwrap())
     }
 
@@ -272,22 +271,23 @@ impl Database {
     }
 
     async fn exact_connections(&self, morpheme: &MorphemeId) -> Result<Vec<MorphemeId>> {
-        let col = self
-            .client
-            .collection::<LexicalConnection>(Self::CONNECTIONS);
-        let morpheme = bson::to_bson(morpheme)?;
+        unimplemented!()
+        // let col = self
+        //     .client
+        //     .collection::<LexicalConnection>(Self::CONNECTIONS);
+        // let morpheme = bson::to_bson(morpheme)?;
 
-        // Find the connections containing this entry.
-        let froms = col.find(bson::doc! { "links": &morpheme }, None).await?;
+        // // Find the connections containing this entry.
+        // let froms = col.find(bson::doc! { "links": &morpheme }, None).await?;
 
-        let froms = froms.filter_map(|doc| doc.ok());
+        // let froms = froms.filter_map(|doc| doc.ok());
 
-        Ok(froms
-            .collect::<Vec<_>>()
-            .await
-            .into_iter()
-            .flat_map(|conn| conn.links)
-            .collect())
+        // Ok(froms
+        //     .collect::<Vec<_>>()
+        //     .await
+        //     .into_iter()
+        //     .flat_map(|conn| conn.links)
+        //     .collect())
     }
 
     async fn recursive_connections(&self, id: &MorphemeId) -> Result<HashSet<MorphemeId>> {
@@ -628,6 +628,9 @@ impl Loader<DocumentId> for Database {
             .collect())
     }
 }
+
+#[derive(Clone, Eq, PartialEq, Hash)]
+pub struct PartsOfWord(pub Uuid);
 
 #[derive(Clone, Eq, PartialEq, Hash)]
 pub struct PersonId(pub String);

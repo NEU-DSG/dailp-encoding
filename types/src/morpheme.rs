@@ -20,7 +20,8 @@ pub struct MorphemeSegment {
 
 /// The kind of segment that a particular sequence of characters in a morphemic
 /// segmentations represent.
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, sqlx::Type)]
+#[sqlx(type_name = "segment_type")]
 pub enum SegmentType {
     /// Separated by a hyphen '-'
     Morpheme,
@@ -104,23 +105,13 @@ impl MorphemeSegment {
     ) -> FieldResult<Option<MorphemeTag>> {
         use crate::database::TagId;
         use async_graphql::dataloader::*;
-        Ok(context
-            .data::<DataLoader<Database>>()?
-            .load_one(TagId(self.gloss.clone()))
-            .await
-            .ok()
-            .flatten())
-    }
-
-    /// All lexical entries that share the same gloss text as this morpheme.
-    /// This generally works for root morphemes.
-    async fn lexical_entry(
-        &self,
-        context: &async_graphql::Context<'_>,
-    ) -> FieldResult<Option<AnnotatedForm>> {
-        Ok(context
-            .data::<Database>()?
-            .lexical_entry(&self.gloss)
-            .await?)
+        // FIXME Use SQL for this
+        Ok(None)
+        // Ok(context
+        //     .data::<DataLoader<Database>>()?
+        //     .load_one(TagId(self.gloss.clone()))
+        //     .await
+        //     .ok()
+        //     .flatten())
     }
 }

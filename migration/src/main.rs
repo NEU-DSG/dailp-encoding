@@ -10,7 +10,7 @@ mod tags;
 mod translations;
 
 use anyhow::Result;
-use dailp::Database;
+use dailp::database_sql::Database;
 use log::{error, info};
 use std::time::Duration;
 
@@ -23,42 +23,43 @@ async fn main() -> Result<()> {
     dotenv::dotenv().ok();
     pretty_env_logger::init();
 
-    let db = Database::new()?;
+    let db = Database::connect().await?;
 
     info!("Migrating Image Sources");
     migrate_image_sources(&db).await?;
     info!("Migrating contributors");
-    contributors::migrate_all(&db).await?;
-
-    info!("Migrating connections...");
-    connections::migrate_connections(&db).await?;
-
-    migrate_data(&db).await?;
-
-    info!("Migrating early vocabularies...");
-    early_vocab::migrate_all(&db).await?;
+    // contributors::migrate_all(&db).await?;
 
     info!("Migrating DF1975 and DF2003...");
     lexical::migrate_dictionaries(&db).await?;
 
+    info!("Migrating connections...");
+
+    migrate_data(&db).await?;
+
+    info!("Migrating early vocabularies...");
+    // early_vocab::migrate_all(&db).await?;
+
     info!("Migrating tags to database...");
-    tags::migrate_tags(&db).await?;
+    // tags::migrate_tags(&db).await?;
+
+    // connections::migrate_connections(&db).await?;
 
     Ok(())
 }
 
 async fn migrate_image_sources(db: &Database) -> Result<()> {
     use dailp::{ImageSource, ImageSourceId};
-    db.update_image_source(ImageSource {
-        id: ImageSourceId("beinecke".to_owned()),
-        url: "https://collections.library.yale.edu/iiif/2".to_owned(),
-    })
-    .await?;
-    db.update_image_source(ImageSource {
-        id: ImageSourceId("dailp".to_owned()),
-        url: "https://wd0ahsivs3.execute-api.us-east-1.amazonaws.com/latest/iiif/2".to_owned(),
-    })
-    .await?;
+    // db.update_image_source(ImageSource {
+    //     id: ImageSourceId("beinecke".to_owned()),
+    //     url: "https://collections.library.yale.edu/iiif/2".to_owned(),
+    // })
+    // .await?;
+    // db.update_image_source(ImageSource {
+    //     id: ImageSourceId("dailp".to_owned()),
+    //     url: "https://wd0ahsivs3.execute-api.us-east-1.amazonaws.com/latest/iiif/2".to_owned(),
+    // })
+    // .await?;
     Ok(())
 }
 
@@ -78,14 +79,27 @@ async fn migrate_data(db: &Database) -> Result<()> {
     // rather than in parallel.
     // This process encodes the ordering in the Index sheet to allow us to
     // manually order different document collections.
-    for (order_index, sheet_id) in index.sheet_ids.iter().enumerate() {
-        if let Some((doc, refs)) = fetch_sheet(sheet_id, order_index as i64).await? {
-            spreadsheets::write_to_file(&doc)?;
-            spreadsheets::migrate_documents_to_db(db, (doc, refs)).await?;
-        } else {
-            error!("Failed to process {}", sheet_id);
+    let mut morpheme_relations = Vec::new();
+    for (coll_index, collection) in index.collections.into_iter().enumerate() {
+        let collection_id = db
+            .insert_top_collection(collection.title, coll_index as i64)
+            .await?;
+        for (order_index, sheet_id) in collection.sheet_ids.into_iter().enumerate() {
+            if let Some((doc, mut refs)) = fetch_sheet(&sheet_id, order_index as i64).await? {
+                morpheme_relations.append(&mut refs);
+                // spreadsheets::write_to_file(&doc)?;
+                spreadsheets::migrate_documents_to_db(db, doc, &collection_id, order_index as i64)
+                    .await?;
+            } else {
+                error!("Failed to process {}", sheet_id);
+            }
         }
     }
+
+    for l in morpheme_relations {
+        db.insert_morpheme_relation(l).await?;
+    }
+
     Ok(())
 }
 
@@ -139,7 +153,7 @@ async fn fetch_sheet(
             lines.last_mut().unwrap().ends_page = true;
 
             all_lines.append(&mut lines);
-            tokio::time::sleep(Duration::from_millis(1700)).await;
+            tokio::time::sleep(Duration::from_millis(1000)).await;
         }
         let annotated = AnnotatedLine::many_from_semantic(&all_lines, &meta);
         let segments = AnnotatedLine::lines_into_segments(annotated, &meta.id, &meta.date);

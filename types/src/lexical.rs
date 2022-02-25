@@ -49,7 +49,7 @@ impl PositionInDocument {
     pub fn make_raw_id(&self, raw_gloss: &str, use_index: bool) -> String {
         use itertools::Itertools as _;
         // Remove punctuation all together.
-        let gloss = raw_gloss.replace(&[',', '+', '(', ')', '[', ']'] as &[char], "");
+        let gloss = raw_gloss.replace(&[',', '+', '(', ')', '[', ']'] as &[char], " ");
         // Replace whitespace with dots.
         let gloss = gloss.split_whitespace().join(".");
         self.make_id(&gloss, use_index)
@@ -125,14 +125,16 @@ pub struct LexicalConnection {
     #[serde(rename = "_id")]
     pub id: String,
     /// List of all forms or morphemes to associate
-    pub links: Vec<MorphemeId>,
+    pub left: MorphemeId,
+    pub right: MorphemeId,
 }
 impl LexicalConnection {
     /// Make a new association between these two identifiers.
     pub fn new(from: MorphemeId, to: MorphemeId) -> Self {
         Self {
             id: format!("{}-{}", from, to),
-            links: vec![from, to],
+            left: from,
+            right: to,
         }
     }
 
@@ -268,7 +270,7 @@ pub fn seg_verb_surface_form(
     let segments = MorphemeSegment::parse_many(&morpheme_layer, &gloss_layer)?;
 
     Some(AnnotatedForm {
-        id: position.make_form_id(&segments),
+        id: None,
         position,
         source: syllabary,
         normalized_source: None,
@@ -379,7 +381,7 @@ pub fn root_verb_surface_form(
     let segments = MorphemeSegment::parse_many(&morpheme_layer, &gloss_layer)?;
 
     Some(AnnotatedForm {
-        id: position.make_form_id(&segments),
+        id: None,
         position: position.clone(),
         source: syllabary,
         normalized_source: None,
@@ -455,10 +457,9 @@ pub fn root_noun_surface_form(
     }
     let commentary = if has_comment { cols.next() } else { None };
     let segments = MorphemeSegment::parse_many(&morpheme_layer, &gloss_layer)?;
-    let id = position.make_form_id(&segments);
 
     Some(AnnotatedForm {
-        id,
+        id: None,
         position: position.clone(),
         source: syllabary,
         normalized_source: None,

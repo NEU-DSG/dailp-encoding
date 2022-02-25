@@ -1,45 +1,48 @@
 use crate::{
-    AnnotatedForm, AudioSlice, Contributor, Database, Date, SourceAttribution, Translation,
-    TranslationBlock,
+    database_sql, AnnotatedForm, AudioSlice, Contributor, Database, Date, SourceAttribution,
+    Translation, TranslationBlock,
 };
 use async_graphql::{dataloader::DataLoader, FieldResult};
+use itertools::Itertools;
 use serde::{Deserialize, Serialize};
+use sqlx::types::Uuid;
 use std::borrow::Cow;
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct AnnotatedDoc {
     #[serde(flatten)]
     pub meta: DocumentMetadata,
-    pub segments: Option<Vec<TranslatedSection>>,
+    pub segments: Option<Vec<TranslatedPage>>,
 }
 impl AnnotatedDoc {
-    pub fn new(meta: DocumentMetadata, segments: Vec<AnnotatedSeg>) -> Self {
-        let mut merged_segments = Vec::new();
+    pub fn new(meta: DocumentMetadata, segments: Vec<Vec<Vec<AnnotatedSeg>>>) -> Self {
         // Skip the first block of the translation, since this usually contains
         // the header and information for translators and editors.
-        let mut block_index = 1;
         let blocks = &meta
             .translation
             .as_ref()
             .expect(&format!("Missing translation for {}", meta.id.0))
-            .blocks;
-        for seg in segments {
-            // Only blocks have an associated translation.
-            let trans = if let AnnotatedSeg::Block(_) = &seg {
-                let t = blocks.get(block_index);
-                block_index += 1;
-                t.cloned()
-            } else {
-                None
-            };
-            merged_segments.push(TranslatedSection {
-                translation: trans,
-                source: seg,
-            });
+            .paragraphs;
+
+        let mut pages = Vec::new();
+        let mut paragraph_index = 0;
+        for page in segments {
+            let mut paragraphs = Vec::new();
+            for paragraph in page {
+                if paragraph_index > 0 {
+                    let trans = blocks.get(paragraph_index);
+                    paragraphs.push(TranslatedSection {
+                        translation: trans.map(TranslationBlock::get_text),
+                        source: paragraph,
+                    });
+                }
+                paragraph_index += 1;
+            }
+            pages.push(TranslatedPage { paragraphs });
         }
 
         Self {
-            segments: Some(merged_segments),
+            segments: Some(pages),
             meta,
         }
     }
@@ -63,8 +66,19 @@ impl AnnotatedDoc {
     }
 
     /// The original source(s) of this document, the most important first.
-    async fn sources(&self) -> &Vec<SourceAttribution> {
+    async fn sources(&self) -> &[SourceAttribution] {
         &self.meta.sources
+    }
+
+    async fn breadcrumbs(
+        &self,
+        context: &async_graphql::Context<'_>,
+        super_collection: String,
+    ) -> FieldResult<Vec<DocumentCollection>> {
+        Ok(context
+            .data::<database_sql::Database>()?
+            .document_breadcrumbs(&self.meta.id.0, &super_collection)
+            .await?)
     }
 
     /// Where the source document came from, maybe the name of a collection
@@ -72,9 +86,7 @@ impl AnnotatedDoc {
         self.meta
             .collection
             .as_ref()
-            .map(|name| DocumentCollection {
-                name: name.to_owned(),
-            })
+            .map(|name| DocumentCollection::from_name(name.to_owned()))
     }
 
     /// The genre of the document, used to group similar ones
@@ -116,50 +128,31 @@ impl AnnotatedDoc {
     }
 
     /// Segments of the document paired with their respective rough translations
-    async fn translated_segments(
+    async fn translated_pages(
         &self,
         context: &async_graphql::Context<'_>,
-    ) -> FieldResult<Option<Cow<'_, Vec<TranslatedSection>>>> {
-        // We may not have complete data.
-        if self.segments.is_some() {
-            Ok(self.segments.as_ref().map(|s| Cow::Borrowed(s)))
-        } else {
-            let db_doc = context
-                .data::<DataLoader<Database>>()?
-                .load_one(self.meta.id.clone())
-                .await?;
-            Ok(db_doc.and_then(|d| d.segments).map(Cow::Owned))
-        }
+    ) -> FieldResult<Option<Vec<DocumentPage>>> {
+        Ok(context
+            .data::<DataLoader<database_sql::Database>>()?
+            .load_one(PagesInDocument(self.meta.id.clone()))
+            .await?)
     }
 
     /// All the words contained in this document, dropping structural formatting
     /// like line and page breaks.
-    async fn forms(
-        &self,
-        context: &async_graphql::Context<'_>,
-    ) -> FieldResult<Vec<Cow<'_, AnnotatedForm>>> {
-        if let Some(segs) = &self.segments {
-            Ok(segs
-                .iter()
-                .flat_map(|s| s.source.forms())
-                .map(Cow::Borrowed)
-                .collect())
-        } else {
-            Ok(context
-                .data::<Database>()?
-                .words_in_document(&self.meta.id)
-                .await?
-                .into_iter()
-                .map(Cow::Owned)
-                .collect())
-        }
+    async fn forms(&self, context: &async_graphql::Context<'_>) -> FieldResult<Vec<AnnotatedForm>> {
+        Ok(context
+            .data::<database_sql::Database>()?
+            .words_in_document(&self.meta.id)
+            .await?
+            .collect())
     }
 
     async fn form_count(&self, context: &async_graphql::Context<'_>) -> FieldResult<i64> {
         Ok(context
-            .data::<Database>()?
+            .data::<database_sql::Database>()?
             .count_words_in_document(&self.meta.id)
-            .await? as i64)
+            .await?)
     }
 
     /// All words in the document that have unanalyzed or unfamiliar parts.
@@ -167,14 +160,72 @@ impl AnnotatedDoc {
     async fn unresolved_forms(
         &self,
         context: &async_graphql::Context<'_>,
-    ) -> FieldResult<Vec<Cow<'_, AnnotatedForm>>> {
-        let forms = self.forms(context).await?;
-        Ok(forms
-            .into_iter()
-            .filter(|form| form.is_unresolved())
-            .collect())
+    ) -> FieldResult<Vec<AnnotatedForm>> {
+        let forms = context
+            .data::<database_sql::Database>()?
+            .words_in_document(&self.meta.id)
+            .await?;
+        Ok(forms.filter(AnnotatedForm::is_unresolved).collect())
     }
 }
+
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+pub struct PagesInDocument(pub DocumentId);
+
+#[derive(Clone)]
+pub struct DocumentPage {
+    pub id: Uuid,
+    pub page_number: String,
+}
+
+#[async_graphql::Object]
+impl DocumentPage {
+    async fn page_number(&self) -> &str {
+        &self.page_number
+    }
+
+    async fn paragraphs(
+        &self,
+        context: &async_graphql::Context<'_>,
+    ) -> FieldResult<Vec<DocumentParagraph>> {
+        Ok(context
+            .data::<DataLoader<database_sql::Database>>()?
+            .load_one(ParagraphsInPage(self.id))
+            .await?
+            .unwrap_or_default())
+    }
+}
+
+/// Page ID meant for retrieving all paragraphs within.
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+pub struct ParagraphsInPage(pub Uuid);
+
+#[derive(Clone)]
+pub struct DocumentParagraph {
+    pub id: Uuid,
+    pub translation: String,
+}
+
+#[async_graphql::Object]
+impl DocumentParagraph {
+    pub async fn source(
+        &self,
+        context: &async_graphql::Context<'_>,
+    ) -> FieldResult<Vec<AnnotatedSeg>> {
+        Ok(context
+            .data::<DataLoader<database_sql::Database>>()?
+            .load_one(WordsInParagraph(self.id.clone()))
+            .await?
+            .unwrap_or_default())
+    }
+
+    pub async fn translation(&self) -> &str {
+        &self.translation
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+pub struct WordsInParagraph(pub Uuid);
 
 #[derive(async_graphql::Enum, Clone, Copy, PartialEq, Eq)]
 pub enum DocumentType {
@@ -183,11 +234,16 @@ pub enum DocumentType {
 }
 
 #[derive(async_graphql::SimpleObject, Serialize, Deserialize, Clone)]
+pub struct TranslatedPage {
+    pub paragraphs: Vec<TranslatedSection>,
+}
+
+#[derive(async_graphql::SimpleObject, Serialize, Deserialize, Clone)]
 pub struct TranslatedSection {
     /// Translation of this portion of the source text.
-    translation: Option<TranslationBlock>,
+    pub translation: Option<String>,
     /// Source text from the original document.
-    source: AnnotatedSeg,
+    pub source: Vec<AnnotatedSeg>,
 }
 
 // Ideal structure:
@@ -197,27 +253,19 @@ pub struct TranslatedSection {
 #[derive(Debug, async_graphql::Union, Serialize, Deserialize, Clone)]
 #[serde(tag = "type")]
 pub enum AnnotatedSeg {
-    Block(AnnotatedPhrase),
     Word(AnnotatedForm),
     LineBreak(LineBreak),
-    PageBreak(PageBreak),
+    // PageBreak(PageBreak),
 }
 impl AnnotatedSeg {
-    pub fn forms(&self) -> Vec<&AnnotatedForm> {
+    pub fn form(&self) -> Option<&AnnotatedForm> {
         use AnnotatedSeg::*;
         match self {
-            Block(block) => block.parts.iter().flat_map(|s| s.forms()).collect(),
-            Word(w) => vec![w],
-            LineBreak(_) => Vec::new(),
-            PageBreak(_) => Vec::new(),
+            Word(w) => Some(w),
+            LineBreak(_) => None,
+            // PageBreak(_) => None,
         }
     }
-}
-
-#[derive(Debug, async_graphql::Enum, Clone, Copy, Eq, PartialEq, Serialize, Deserialize)]
-pub enum BlockType {
-    Block,
-    Phrase,
 }
 
 #[derive(Debug, async_graphql::SimpleObject, Serialize, Deserialize, Clone)]
@@ -230,19 +278,11 @@ pub struct PageBreak {
     pub index: i32,
 }
 
-#[derive(async_graphql::SimpleObject, Debug, Serialize, Deserialize, Clone)]
-pub struct AnnotatedPhrase {
-    pub ty: BlockType,
-    pub index: i32,
-    pub parts: Vec<AnnotatedSeg>,
-}
-
 /// All the metadata associated with one particular document.
+/// TODO Make more of these fields on-demand.
 #[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
 pub struct DocumentMetadata {
     /// Official short identifier.
-    #[serde(rename = "_id")]
     pub id: DocumentId,
     /// Full title of the document.
     pub title: String,
@@ -275,7 +315,10 @@ pub struct DocumentMetadata {
     pub order_index: i64,
 }
 
-#[derive(Clone, Eq, PartialEq, Hash, Serialize, Deserialize, Debug, async_graphql::NewType)]
+#[derive(
+    Clone, Eq, PartialEq, Hash, Serialize, Deserialize, Debug, async_graphql::NewType, sqlx::Type,
+)]
+#[sqlx(transparent)]
 pub struct DocumentId(pub String);
 
 impl DocumentId {
@@ -342,33 +385,56 @@ impl IiifImages {
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct DocumentCollection {
-    pub name: String,
+    pub title: String,
+    pub slug: String,
 }
 impl DocumentCollection {
-    pub fn make_slug(&self) -> String {
-        slug::slugify(&self.name)
+    pub fn from_name(name: String) -> Self {
+        Self {
+            slug: slug::slugify(&name),
+            title: name,
+        }
     }
 }
 #[async_graphql::Object]
 impl DocumentCollection {
     /// Full name of this collection
     async fn name(&self) -> &str {
-        &self.name
+        &self.title
     }
 
     /// URL-ready slug for this collection, generated from the name
-    async fn slug(&self) -> String {
-        self.make_slug()
+    async fn slug(&self) -> &str {
+        &self.slug
     }
 
     /// All documents that are part of this collection
+    /// TODO Try to unify this return type into AnnotatedDoc
+    /// This probably requires adding a document_ids field so that we can just
+    /// pass that to the dataloader below.
     async fn documents(
         &self,
         context: &async_graphql::Context<'_>,
-    ) -> async_graphql::FieldResult<Vec<AnnotatedDoc>> {
+    ) -> async_graphql::FieldResult<Vec<DocumentReference>> {
         Ok(context
-            .data::<Database>()?
-            .all_documents(Some(&*self.name))
+            .data::<crate::database_sql::Database>()?
+            .documents_in_collection("", &self.slug)
             .await?)
+    }
+}
+
+#[derive(Clone, async_graphql::SimpleObject)]
+#[graphql(complex)]
+pub struct DocumentReference {
+    pub id: String,
+    pub title: String,
+    pub date: Option<Date>,
+    pub order_index: i64,
+}
+
+#[async_graphql::ComplexObject]
+impl DocumentReference {
+    pub async fn slug(&self) -> String {
+        slug::slugify(&self.id)
     }
 }

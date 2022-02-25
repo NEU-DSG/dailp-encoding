@@ -1,7 +1,7 @@
 {
   inputs = {
     pkgs.url = "github:nixos/nixpkgs/nixos-21.11";
-    pkgs-unstable.url = "github:nixos/nixpkgs/master";
+    pkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
     # Lock a version of nixpkgs that matches our MongoDB instances.
     nixpkgs-server.url = "github:nixos/nixpkgs/nixos-21.05";
     utils.url = "github:numtide/flake-utils";
@@ -164,13 +164,15 @@
             LD_LIBRARY_PATH = "${lib.makeLibraryPath buildInputs}";
             shellHook = ''
               export PROJECT_ROOT=$PWD
+              export PGDATA=$PROJECT_ROOT/.postgres
             '';
             buildInputs = let
               dev-database = (writers.writeBashBin "dev-database" ''
-                mkdir -p $PROJECT_ROOT/.mongo
-                mongod --dbpath $PROJECT_ROOT/.mongo
+                [ ! -d "$PGDATA" ] && initdb
+                postgres -c random_page_cost=1.1 -c cpu_tuple_cost=0.3 -c wal_compression=off -c effective_io_concurrency=200 -c fsync=on -c full_page_writes=off -c checkpoint_completion_target=0.9
               '');
               dev-graphql = (writers.writeBashBin "dev-graphql" ''
+                cd $PROJECT_ROOT
                 cargo watch -x "run --bin dailp-graphql-local" -w types -w graphql
               '');
               dev-website = (writers.writeBashBin "dev-website" ''
@@ -200,12 +202,15 @@
               docker
               pkgs-unstable.act
               (writers.writeBashBin "dev-migrate" ''
+                cd $PROJECT_ROOT
                 cargo run --bin dailp-migration
               '')
               dev-database
               dev-graphql
               dev-website
               dev-start
+              postgresql_14
+              sqlx-cli
             ] ++ lib.optionals stdenv.isDarwin [
               darwin.apple_sdk.frameworks.Security
               libiconv

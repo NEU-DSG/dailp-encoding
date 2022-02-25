@@ -28,6 +28,7 @@ export type AnnotatedDoc = {
   readonly __typename?: "AnnotatedDoc"
   /** The audio recording resource for this entire document */
   readonly audioRecording: Maybe<AudioSlice>
+  readonly breadcrumbs: ReadonlyArray<DocumentCollection>
   /** Where the source document came from, maybe the name of a collection */
   readonly collection: Maybe<DocumentCollection>
   /**
@@ -66,7 +67,7 @@ export type AnnotatedDoc = {
   /** Full title of the document */
   readonly title: Scalars["String"]
   /** Segments of the document paired with their respective rough translations */
-  readonly translatedSegments: Maybe<ReadonlyArray<TranslatedSection>>
+  readonly translatedPages: Maybe<ReadonlyArray<DocumentPage>>
   /**
    * All words in the document that have unanalyzed or unfamiliar parts.
    * These words need to be corrected or reviewed further.
@@ -74,10 +75,15 @@ export type AnnotatedDoc = {
   readonly unresolvedForms: ReadonlyArray<AnnotatedForm>
 }
 
+export type AnnotatedDocBreadcrumbsArgs = {
+  superCollection: Scalars["String"]
+}
+
 /**
  * A single word in an annotated document.
  * One word contains several layers of interpretation, including the original
  * source text, multiple layers of linguistic annotation, and annotator notes.
+ * TODO Split into two types, one for migration and one for SQL + GraphQL
  */
 export type AnnotatedForm = {
   readonly __typename?: "AnnotatedForm"
@@ -93,8 +99,6 @@ export type AnnotatedForm = {
   readonly documentId: Scalars["String"]
   /** English gloss for the whole word */
   readonly englishGloss: ReadonlyArray<Scalars["String"]>
-  /** Unique identifier of this form */
-  readonly id: Scalars["String"]
   /** Number of words preceding this one in the containing document */
   readonly index: Scalars["Int"]
   /** The character index of a mid-word line break, if there is one */
@@ -114,11 +118,7 @@ export type AnnotatedForm = {
    * corresponding to "catch."
    */
   readonly root: Maybe<MorphemeSegment>
-  /**
-   * Morphemic segmentation of the form that includes a phonemic
-   * representation and gloss for each
-   */
-  readonly segments: Maybe<ReadonlyArray<MorphemeSegment>>
+  readonly segments: ReadonlyArray<MorphemeSegment>
   /** All other observed words with the same root morpheme as this word. */
   readonly similarForms: ReadonlyArray<AnnotatedForm>
   /** Romanized version of the word for simple phonetic pronunciation */
@@ -127,18 +127,7 @@ export type AnnotatedForm = {
   readonly source: Scalars["String"]
 }
 
-export type AnnotatedPhrase = {
-  readonly __typename?: "AnnotatedPhrase"
-  readonly index: Scalars["Int"]
-  readonly parts: ReadonlyArray<AnnotatedSeg>
-  readonly ty: BlockType
-}
-
-export type AnnotatedSeg =
-  | AnnotatedForm
-  | AnnotatedPhrase
-  | LineBreak
-  | PageBreak
+export type AnnotatedSeg = AnnotatedForm | LineBreak
 
 /**
  * A segment of audio representing a document, word, phrase,
@@ -156,11 +145,6 @@ export type AudioSlice = {
   readonly resourceUrl: Scalars["String"]
   /** The time (in seconds) in the parent track where this slice begins. */
   readonly startTime: Maybe<Scalars["Int"]>
-}
-
-export enum BlockType {
-  Block = "BLOCK",
-  Phrase = "PHRASE",
 }
 
 /**
@@ -247,26 +231,43 @@ export type Date = {
 
 export type DocumentCollection = {
   readonly __typename?: "DocumentCollection"
-  /** All documents that are part of this collection */
-  readonly documents: ReadonlyArray<AnnotatedDoc>
+  /**
+   * All documents that are part of this collection
+   * TODO Try to unify this return type into AnnotatedDoc
+   * This probably requires adding a document_ids field so that we can just
+   * pass that to the dataloader below.
+   */
+  readonly documents: ReadonlyArray<DocumentReference>
   /** Full name of this collection */
   readonly name: Scalars["String"]
   /** URL-ready slug for this collection, generated from the name */
   readonly slug: Scalars["String"]
 }
 
+export type DocumentPage = {
+  readonly __typename?: "DocumentPage"
+  readonly pageNumber: Scalars["String"]
+  readonly paragraphs: ReadonlyArray<DocumentParagraph>
+}
+
+export type DocumentParagraph = {
+  readonly __typename?: "DocumentParagraph"
+  readonly source: ReadonlyArray<AnnotatedSeg>
+  readonly translation: Scalars["String"]
+}
+
+export type DocumentReference = {
+  readonly __typename?: "DocumentReference"
+  readonly date: Maybe<Date>
+  readonly id: Scalars["String"]
+  readonly orderIndex: Scalars["Int"]
+  readonly slug: Scalars["String"]
+  readonly title: Scalars["String"]
+}
+
 export enum DocumentType {
   Corpus = "CORPUS",
   Reference = "REFERENCE",
-}
-
-export type FormQuery = {
-  readonly englishGloss: InputMaybe<Scalars["String"]>
-  readonly id: InputMaybe<Scalars["String"]>
-  readonly normalizedSource: InputMaybe<Scalars["String"]>
-  readonly simplePhonetics: InputMaybe<Scalars["String"]>
-  readonly source: InputMaybe<Scalars["String"]>
-  readonly unresolved: InputMaybe<Scalars["Boolean"]>
 }
 
 export type FormsInTime = {
@@ -343,11 +344,6 @@ export type MorphemeSegment = {
   readonly __typename?: "MorphemeSegment"
   /** English gloss in standard DAILP format that refers to a lexical item */
   readonly gloss: Scalars["String"]
-  /**
-   * All lexical entries that share the same gloss text as this morpheme.
-   * This generally works for root morphemes.
-   */
-  readonly lexicalEntry: Maybe<AnnotatedForm>
   /**
    * If this morpheme represents a functional tag that we have further
    * information on, this is the corresponding database entry.
@@ -437,11 +433,6 @@ export type Page = {
    */
   readonly id: Scalars["String"]
   readonly title: Scalars["String"]
-}
-
-export type PageBreak = {
-  readonly __typename?: "PageBreak"
-  readonly index: Scalars["Int"]
 }
 
 /** The reference position within a document of one specific form */
@@ -574,7 +565,7 @@ export type QuerySyllabarySearchArgs = {
 }
 
 export type QueryWordSearchArgs = {
-  queries: ReadonlyArray<FormQuery>
+  query: Scalars["String"]
 }
 
 /**
@@ -606,22 +597,6 @@ export type TagForm = {
   readonly tag: Scalars["String"]
   /** Plain English title of the morpheme tag */
   readonly title: Scalars["String"]
-}
-
-export type TranslatedSection = {
-  readonly __typename?: "TranslatedSection"
-  /** Source text from the original document. */
-  readonly source: AnnotatedSeg
-  /** Translation of this portion of the source text. */
-  readonly translation: Maybe<TranslationBlock>
-}
-
-export type TranslationBlock = {
-  readonly __typename?: "TranslationBlock"
-  /** The text of this block split into segments (sentences or lines) */
-  readonly segments: ReadonlyArray<Scalars["String"]>
-  /** Full text of this block */
-  readonly text: Scalars["String"]
 }
 
 export enum UserGroup {
@@ -677,7 +652,7 @@ export type AnnotatedDocumentQuery = { readonly __typename?: "Query" } & {
       AnnotatedDoc,
       "id" | "title" | "slug" | "isReference"
     > & {
-        readonly collection: Maybe<
+        readonly breadcrumbs: ReadonlyArray<
           { readonly __typename?: "DocumentCollection" } & Pick<
             DocumentCollection,
             "name" | "slug"
@@ -714,66 +689,18 @@ export type DocumentContentsQueryVariables = Exact<{
 export type DocumentContentsQuery = { readonly __typename?: "Query" } & {
   readonly document: Maybe<
     { readonly __typename?: "AnnotatedDoc" } & {
-      readonly translatedSegments?: Maybe<
+      readonly translatedPages?: Maybe<
         ReadonlyArray<
-          { readonly __typename?: "TranslatedSection" } & {
-            readonly source:
-              | ({ readonly __typename: "AnnotatedForm" } & Pick<
-                  AnnotatedForm,
-                  | "index"
-                  | "source"
-                  | "romanizedSource"
-                  | "simplePhonetics"
-                  | "phonemic"
-                  | "englishGloss"
-                  | "commentary"
+          { readonly __typename?: "DocumentPage" } & Pick<
+            DocumentPage,
+            "pageNumber"
+          > & {
+              readonly paragraphs: ReadonlyArray<
+                { readonly __typename?: "DocumentParagraph" } & Pick<
+                  DocumentParagraph,
+                  "translation"
                 > & {
-                    readonly segments: Maybe<
-                      ReadonlyArray<
-                        { readonly __typename?: "MorphemeSegment" } & Pick<
-                          MorphemeSegment,
-                          "morpheme" | "gloss" | "nextSeparator"
-                        > & {
-                            readonly matchingTag: Maybe<
-                              { readonly __typename?: "MorphemeTag" } & Pick<
-                                MorphemeTag,
-                                "id"
-                              > & {
-                                  readonly taoc: Maybe<
-                                    { readonly __typename?: "TagForm" } & Pick<
-                                      TagForm,
-                                      "tag" | "title"
-                                    >
-                                  >
-                                  readonly learner: Maybe<
-                                    { readonly __typename?: "TagForm" } & Pick<
-                                      TagForm,
-                                      "tag" | "title"
-                                    >
-                                  >
-                                  readonly crg: Maybe<
-                                    { readonly __typename?: "TagForm" } & Pick<
-                                      TagForm,
-                                      "tag" | "title"
-                                    >
-                                  >
-                                }
-                            >
-                          }
-                      >
-                    >
-                    readonly audioTrack: Maybe<
-                      { readonly __typename?: "AudioSlice" } & Pick<
-                        AudioSlice,
-                        "index" | "resourceUrl" | "startTime" | "endTime"
-                      >
-                    >
-                  })
-              | ({ readonly __typename: "AnnotatedPhrase" } & Pick<
-                  AnnotatedPhrase,
-                  "ty" | "index"
-                > & {
-                    readonly parts: ReadonlyArray<
+                    readonly source: ReadonlyArray<
                       | ({ readonly __typename: "AnnotatedForm" } & Pick<
                           AnnotatedForm,
                           | "index"
@@ -784,37 +711,35 @@ export type DocumentContentsQuery = { readonly __typename?: "Query" } & {
                           | "englishGloss"
                           | "commentary"
                         > & {
-                            readonly segments: Maybe<
-                              ReadonlyArray<
-                                {
-                                  readonly __typename?: "MorphemeSegment"
-                                } & Pick<
-                                  MorphemeSegment,
-                                  "morpheme" | "gloss" | "nextSeparator"
-                                > & {
-                                    readonly matchingTag: Maybe<
-                                      {
-                                        readonly __typename?: "MorphemeTag"
-                                      } & Pick<MorphemeTag, "id"> & {
-                                          readonly taoc: Maybe<
-                                            {
-                                              readonly __typename?: "TagForm"
-                                            } & Pick<TagForm, "tag" | "title">
-                                          >
-                                          readonly learner: Maybe<
-                                            {
-                                              readonly __typename?: "TagForm"
-                                            } & Pick<TagForm, "tag" | "title">
-                                          >
-                                          readonly crg: Maybe<
-                                            {
-                                              readonly __typename?: "TagForm"
-                                            } & Pick<TagForm, "tag" | "title">
-                                          >
-                                        }
-                                    >
-                                  }
-                              >
+                            readonly segments: ReadonlyArray<
+                              {
+                                readonly __typename?: "MorphemeSegment"
+                              } & Pick<
+                                MorphemeSegment,
+                                "morpheme" | "gloss" | "nextSeparator"
+                              > & {
+                                  readonly matchingTag: Maybe<
+                                    {
+                                      readonly __typename?: "MorphemeTag"
+                                    } & Pick<MorphemeTag, "id"> & {
+                                        readonly taoc: Maybe<
+                                          {
+                                            readonly __typename?: "TagForm"
+                                          } & Pick<TagForm, "tag" | "title">
+                                        >
+                                        readonly learner: Maybe<
+                                          {
+                                            readonly __typename?: "TagForm"
+                                          } & Pick<TagForm, "tag" | "title">
+                                        >
+                                        readonly crg: Maybe<
+                                          {
+                                            readonly __typename?: "TagForm"
+                                          } & Pick<TagForm, "tag" | "title">
+                                        >
+                                      }
+                                  >
+                                }
                             >
                             readonly audioTrack: Maybe<
                               { readonly __typename?: "AudioSlice" } & Pick<
@@ -826,26 +751,11 @@ export type DocumentContentsQuery = { readonly __typename?: "Query" } & {
                               >
                             >
                           })
-                      | { readonly __typename: "AnnotatedPhrase" }
                       | { readonly __typename: "LineBreak" }
-                      | ({ readonly __typename: "PageBreak" } & Pick<
-                          PageBreak,
-                          "index"
-                        >)
                     >
-                  })
-              | { readonly __typename: "LineBreak" }
-              | ({ readonly __typename: "PageBreak" } & Pick<
-                  PageBreak,
-                  "index"
-                >)
-            readonly translation: Maybe<
-              { readonly __typename?: "TranslationBlock" } & Pick<
-                TranslationBlock,
-                "text"
+                  }
               >
-            >
-          }
+            }
         >
       >
       readonly forms?: ReadonlyArray<
@@ -859,39 +769,37 @@ export type DocumentContentsQuery = { readonly __typename?: "Query" } & {
           | "englishGloss"
           | "commentary"
         > & {
-            readonly segments: Maybe<
-              ReadonlyArray<
-                { readonly __typename?: "MorphemeSegment" } & Pick<
-                  MorphemeSegment,
-                  "morpheme" | "gloss" | "nextSeparator"
-                > & {
-                    readonly matchingTag: Maybe<
-                      { readonly __typename?: "MorphemeTag" } & Pick<
-                        MorphemeTag,
-                        "id"
-                      > & {
-                          readonly taoc: Maybe<
-                            { readonly __typename?: "TagForm" } & Pick<
-                              TagForm,
-                              "tag" | "title"
-                            >
+            readonly segments: ReadonlyArray<
+              { readonly __typename?: "MorphemeSegment" } & Pick<
+                MorphemeSegment,
+                "morpheme" | "gloss" | "nextSeparator"
+              > & {
+                  readonly matchingTag: Maybe<
+                    { readonly __typename?: "MorphemeTag" } & Pick<
+                      MorphemeTag,
+                      "id"
+                    > & {
+                        readonly taoc: Maybe<
+                          { readonly __typename?: "TagForm" } & Pick<
+                            TagForm,
+                            "tag" | "title"
                           >
-                          readonly learner: Maybe<
-                            { readonly __typename?: "TagForm" } & Pick<
-                              TagForm,
-                              "tag" | "title"
-                            >
+                        >
+                        readonly learner: Maybe<
+                          { readonly __typename?: "TagForm" } & Pick<
+                            TagForm,
+                            "tag" | "title"
                           >
-                          readonly crg: Maybe<
-                            { readonly __typename?: "TagForm" } & Pick<
-                              TagForm,
-                              "tag" | "title"
-                            >
+                        >
+                        readonly crg: Maybe<
+                          { readonly __typename?: "TagForm" } & Pick<
+                            TagForm,
+                            "tag" | "title"
                           >
-                        }
-                    >
-                  }
-              >
+                        >
+                      }
+                  >
+                }
             >
             readonly audioTrack: Maybe<
               { readonly __typename?: "AudioSlice" } & Pick<
@@ -905,67 +813,6 @@ export type DocumentContentsQuery = { readonly __typename?: "Query" } & {
   >
 }
 
-export type BlockFieldsFragment = {
-  readonly __typename?: "AnnotatedPhrase"
-} & Pick<AnnotatedPhrase, "ty" | "index"> & {
-    readonly parts: ReadonlyArray<
-      | ({ readonly __typename: "AnnotatedForm" } & Pick<
-          AnnotatedForm,
-          | "index"
-          | "source"
-          | "romanizedSource"
-          | "simplePhonetics"
-          | "phonemic"
-          | "englishGloss"
-          | "commentary"
-        > & {
-            readonly segments: Maybe<
-              ReadonlyArray<
-                { readonly __typename?: "MorphemeSegment" } & Pick<
-                  MorphemeSegment,
-                  "morpheme" | "gloss" | "nextSeparator"
-                > & {
-                    readonly matchingTag: Maybe<
-                      { readonly __typename?: "MorphemeTag" } & Pick<
-                        MorphemeTag,
-                        "id"
-                      > & {
-                          readonly taoc: Maybe<
-                            { readonly __typename?: "TagForm" } & Pick<
-                              TagForm,
-                              "tag" | "title"
-                            >
-                          >
-                          readonly learner: Maybe<
-                            { readonly __typename?: "TagForm" } & Pick<
-                              TagForm,
-                              "tag" | "title"
-                            >
-                          >
-                          readonly crg: Maybe<
-                            { readonly __typename?: "TagForm" } & Pick<
-                              TagForm,
-                              "tag" | "title"
-                            >
-                          >
-                        }
-                    >
-                  }
-              >
-            >
-            readonly audioTrack: Maybe<
-              { readonly __typename?: "AudioSlice" } & Pick<
-                AudioSlice,
-                "index" | "resourceUrl" | "startTime" | "endTime"
-              >
-            >
-          })
-      | { readonly __typename: "AnnotatedPhrase" }
-      | { readonly __typename: "LineBreak" }
-      | ({ readonly __typename: "PageBreak" } & Pick<PageBreak, "index">)
-    >
-  }
-
 export type FormFieldsFragment = {
   readonly __typename?: "AnnotatedForm"
 } & Pick<
@@ -978,39 +825,37 @@ export type FormFieldsFragment = {
   | "englishGloss"
   | "commentary"
 > & {
-    readonly segments: Maybe<
-      ReadonlyArray<
-        { readonly __typename?: "MorphemeSegment" } & Pick<
-          MorphemeSegment,
-          "morpheme" | "gloss" | "nextSeparator"
-        > & {
-            readonly matchingTag: Maybe<
-              { readonly __typename?: "MorphemeTag" } & Pick<
-                MorphemeTag,
-                "id"
-              > & {
-                  readonly taoc: Maybe<
-                    { readonly __typename?: "TagForm" } & Pick<
-                      TagForm,
-                      "tag" | "title"
-                    >
+    readonly segments: ReadonlyArray<
+      { readonly __typename?: "MorphemeSegment" } & Pick<
+        MorphemeSegment,
+        "morpheme" | "gloss" | "nextSeparator"
+      > & {
+          readonly matchingTag: Maybe<
+            { readonly __typename?: "MorphemeTag" } & Pick<
+              MorphemeTag,
+              "id"
+            > & {
+                readonly taoc: Maybe<
+                  { readonly __typename?: "TagForm" } & Pick<
+                    TagForm,
+                    "tag" | "title"
                   >
-                  readonly learner: Maybe<
-                    { readonly __typename?: "TagForm" } & Pick<
-                      TagForm,
-                      "tag" | "title"
-                    >
+                >
+                readonly learner: Maybe<
+                  { readonly __typename?: "TagForm" } & Pick<
+                    TagForm,
+                    "tag" | "title"
                   >
-                  readonly crg: Maybe<
-                    { readonly __typename?: "TagForm" } & Pick<
-                      TagForm,
-                      "tag" | "title"
-                    >
+                >
+                readonly crg: Maybe<
+                  { readonly __typename?: "TagForm" } & Pick<
+                    TagForm,
+                    "tag" | "title"
                   >
-                }
-            >
-          }
-      >
+                >
+              }
+          >
+        }
     >
     readonly audioTrack: Maybe<
       { readonly __typename?: "AudioSlice" } & Pick<
@@ -1030,8 +875,8 @@ export type CollectionQuery = { readonly __typename?: "Query" } & {
     "name"
   > & {
       readonly documents: ReadonlyArray<
-        { readonly __typename?: "AnnotatedDoc" } & Pick<
-          AnnotatedDoc,
+        { readonly __typename?: "DocumentReference" } & Pick<
+          DocumentReference,
           "id" | "slug" | "title" | "orderIndex"
         > & {
             readonly date: Maybe<
@@ -1143,7 +988,7 @@ export type DocumentDetailsQuery = { readonly __typename?: "Query" } & {
       AnnotatedDoc,
       "id" | "slug" | "title"
     > & {
-        readonly collection: Maybe<
+        readonly breadcrumbs: ReadonlyArray<
           { readonly __typename?: "DocumentCollection" } & Pick<
             DocumentCollection,
             "name" | "slug"
@@ -1285,21 +1130,6 @@ export const FormFieldsFragmentDoc = gql`
     }
   }
 `
-export const BlockFieldsFragmentDoc = gql`
-  fragment BlockFields on AnnotatedPhrase {
-    ty
-    index
-    parts {
-      __typename
-      ... on AnnotatedForm {
-        ...FormFields
-      }
-      ... on PageBreak {
-        index
-      }
-    }
-  }
-`
 export const CollectionsListingDocument = gql`
   query CollectionsListing {
     allCollections {
@@ -1345,7 +1175,7 @@ export const AnnotatedDocumentDocument = gql`
       title
       slug
       isReference
-      collection {
+      breadcrumbs(superCollection: "") {
         name
         slug
       }
@@ -1386,21 +1216,16 @@ export const DocumentContentsDocument = gql`
     $isReference: Boolean!
   ) {
     document(id: $id) {
-      translatedSegments @skip(if: $isReference) {
-        source {
-          __typename
-          ... on AnnotatedForm {
-            ...FormFields
+      translatedPages @skip(if: $isReference) {
+        pageNumber
+        paragraphs {
+          source {
+            __typename
+            ... on AnnotatedForm {
+              ...FormFields
+            }
           }
-          ... on AnnotatedPhrase {
-            ...BlockFields
-          }
-          ... on PageBreak {
-            index
-          }
-        }
-        translation {
-          text
+          translation
         }
       }
       forms @include(if: $isReference) {
@@ -1410,7 +1235,6 @@ export const DocumentContentsDocument = gql`
     }
   }
   ${FormFieldsFragmentDoc}
-  ${BlockFieldsFragmentDoc}
 `
 
 export function useDocumentContentsQuery(
@@ -1448,14 +1272,7 @@ export function useCollectionQuery(
 }
 export const WordSearchDocument = gql`
   query WordSearch($query: String!) {
-    wordSearch(
-      queries: [
-        { source: $query }
-        { normalizedSource: $query }
-        { simplePhonetics: $query }
-        { englishGloss: $query }
-      ]
-    ) {
+    wordSearch(query: $query) {
       source
       normalizedSource
       simplePhonetics
@@ -1559,7 +1376,7 @@ export const DocumentDetailsDocument = gql`
       id
       slug
       title
-      collection {
+      breadcrumbs(superCollection: "") {
         name
         slug
       }

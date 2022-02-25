@@ -70,7 +70,7 @@ impl Manifest {
                             .filter_map(|word| {
                                 if let Some(geometry) = &word.position.geometry {
                                     Some(Annotation {
-                                        id: format!("{}/{}", annotations_uri, word.id),
+                                        id: format!("{}/{:?}", annotations_uri, word.id),
                                         motivation: "supplementing".to_owned(),
                                         body: AnnotationBody::TextualBody(TextualBody {
                                             language: "en".to_string(),

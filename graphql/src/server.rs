@@ -22,8 +22,11 @@ async fn main() -> tide::Result<()> {
 
     // create schema
     let schema = Schema::build(query::Query, query::Mutation, EmptySubscription)
-        .data(dailp::Database::new().expect("Failed to initialize database"))
-        .data(DataLoader::new(dailp::Database::new().unwrap()))
+        // .data(dailp::Database::new().expect("Failed to initialize database"))
+        .data(dailp::database_sql::Database::connect().await?)
+        .data(DataLoader::new(
+            dailp::database_sql::Database::connect().await?,
+        ))
         .finish();
 
     let cors = CorsMiddleware::new()
