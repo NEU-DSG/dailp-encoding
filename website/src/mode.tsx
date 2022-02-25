@@ -1,7 +1,7 @@
 import { Tooltip } from "@reach/tooltip"
 import cx from "classnames"
 import Cookies from "js-cookie"
-import React, { useEffect } from "react"
+import React, { useEffect, useState } from "react"
 import {
   Radio,
   RadioGroup,
@@ -89,35 +89,38 @@ export const selectedMode = () =>
 export const selectedPhonetics = () =>
   Number.parseInt(Cookies.get("phonetics") ?? "0")
 
+
 export const ExperiencePicker = (p: { onSelect: (mode: ViewMode) => void }) => {
-  const radio = useRadioState({
-    state: selectedMode(),
-  })
+  const [value, setValue] = useState(selectedMode() as ViewMode)
 
   // Save the selected experience level throughout the session.
   useEffect(() => {
-    Cookies.set("experienceLevel", radio.state!.toString(), {
+    Cookies.set("experienceLevel", value.toString(), {
       sameSite: "strict",
       secure: true,
     })
-    p.onSelect(radio.state as ViewMode)
-  }, [radio.state])
-
+    p.onSelect(value as ViewMode)
+  }, [value])
   return (
-    <>
-      <RadioGroup
-        {...radio}
-        id="mode-picker"
-        className={css.levelGroup}
-        aria-label="Display Mode"
-      >
-        {Object.keys(ViewMode)
-          .filter(notNumber)
-          .map(function (level: string) {
-            return <ExperienceOption key={level} level={level} radio={radio} />
-          })}
-      </RadioGroup>
-    </>
+    <select
+      name="mode-picker"
+      onChange={(e) => setValue(Number.parseInt(e.target.value))}
+      className={css.levelGroup}
+      aria-label="Display Mode"
+    >
+      {Object.keys(ViewMode)
+        .filter(notNumber)
+        .map(function (mode: string) {
+          return (
+            <option
+              value={ViewMode[mode as keyof typeof ViewMode]}
+              selected={value === ViewMode[mode as keyof typeof ViewMode]}
+            >
+              {modeDetails(ViewMode[mode as keyof typeof ViewMode]).label}
+            </option>
+          )
+        })}
+    </select>
   )
 }
 
