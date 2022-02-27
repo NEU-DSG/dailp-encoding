@@ -131,7 +131,7 @@ impl Database {
     }
 
     pub async fn insert_dictionary_document(&self, document: DocumentMetadata) -> Result<()> {
-        query_file_scalar!(
+        query_file!(
             "queries/insert_document.sql",
             document.id.0,
             document.title,
@@ -139,7 +139,7 @@ impl Database {
             document.date as Option<Date>,
             None as Option<Uuid>,
         )
-        .fetch_one(&self.client)
+        .execute(&self.client)
         .await?;
         Ok(())
     }
