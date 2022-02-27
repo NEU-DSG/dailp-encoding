@@ -55,7 +55,8 @@ CREATE TABLE document_page (
   index_in_document bigint NOT NULL,
   iiif_source_id uuid REFERENCES iiif_source (id),
   iiif_oid text,
-  CONSTRAINT iiif_image_has_id CHECK (iiif_source_id IS NULL OR iiif_oid IS NOT NULL)
+  CONSTRAINT iiif_image_has_id CHECK (iiif_source_id IS NULL OR iiif_oid IS NOT NULL),
+  UNIQUE (document_id, index_in_document)
 );
 
 -- TODO Model character-based transcriptions first!
@@ -124,13 +125,14 @@ CREATE TABLE word (
   -- Position of the word within a document.
   document_id text NOT NULL REFERENCES document (id) ON DELETE CASCADE,
   page_number text,
-  index_in_document bigint,
+  index_in_document bigint not null,
   -- Position of the word on a physical page.
   page_id uuid REFERENCES document_page (id) ON DELETE SET NULL,
   -- Order of words in the paragraph is determined by character indices.
   character_range int8range,
   -- If this word is on a specific page, it must also have a character range.
-  CONSTRAINT word_page_position CHECK (page_id IS NULL OR character_range IS NOT NULL)
+  CONSTRAINT word_page_position CHECK (page_id IS NULL OR character_range IS NOT NULL),
+  UNIQUE (document_id, index_in_document)
 );
 
 CREATE TABLE morpheme_tag_system (

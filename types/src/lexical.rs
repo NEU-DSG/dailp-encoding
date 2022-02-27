@@ -119,7 +119,7 @@ impl PositionInDocument {
 }
 
 /// A connection between two lexical entries from the same or different sources
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct LexicalConnection {
     /// Unique ID of this connection, generally formatted as "FROM-TO"
     #[serde(rename = "_id")]

@@ -191,8 +191,8 @@ impl Database {
         if let Some(pages) = document.segments {
             let mut starting_char_index = 0;
             for (page_index, page) in pages.into_iter().enumerate() {
-                let page_id = query_scalar!(
-                    "insert into document_page (document_id, index_in_document) values ($1, $2) returning id",
+                let page_id = query_file_scalar!(
+                    "queries/upsert_document_page.sql",
                     &document_id,
                     page_index as i64
                 )
@@ -213,25 +213,28 @@ impl Database {
                         .sum();
                     let char_range: PgRange<_> =
                         (starting_char_index..starting_char_index + total_chars as i64).into();
-                    query!(
-                    "insert into paragraph (page_id, character_range, english_translation) values ($1, $2, $3)",
+                    query_file!(
+                        "queries/insert_paragraph.sql",
                         page_id,
                         char_range,
                         paragraph.translation.unwrap_or_default()
-                    ).execute(&mut tx).await?;
+                    )
+                    .execute(&mut tx)
+                    .await?;
 
                     for element in paragraph.source {
                         match element {
                             AnnotatedSeg::Word(word) => {
                                 let len = word.source.chars().count() as i64;
                                 for (char_index, character) in word.source.chars().enumerate() {
-                                    query!(
-                                    "insert into character_transcription (page_id, index_in_page, possible_transcriptions)
-                                       values ($1, $2, $3)",
-                                    page_id,
-                                    starting_char_index + char_index as i64,
-                                    &[character.to_string()] as &[String]
-                                ).execute(&mut tx).await?;
+                                    query_file!(
+                                        "queries/insert_character_transcription.sql",
+                                        page_id,
+                                        starting_char_index + char_index as i64,
+                                        &[character.to_string()] as &[String]
+                                    )
+                                    .execute(&mut tx)
+                                    .await?;
                                 }
                                 let char_range: PgRange<_> =
                                     (starting_char_index..starting_char_index + len).into();
@@ -296,7 +299,7 @@ impl Database {
             .split_whitespace()
             .join(".");
         let gloss_id = query_file_scalar!(
-            "queries/insert_dictionary_entry.sql",
+            "queries/upsert_dictionary_entry.sql",
             &doc_id,
             gloss,
             segment.morpheme
@@ -336,7 +339,7 @@ impl Database {
     ) -> Result<Uuid> {
         let mut tx = tx.begin().await?;
         let word_id: Uuid = query_file_scalar!(
-            "queries/insert_word_in_document.sql",
+            "queries/upsert_word_in_document.sql",
             form.source,
             form.simple_phonetics,
             form.phonemic,
@@ -361,23 +364,22 @@ impl Database {
                     .split_whitespace()
                     .join(".");
 
-                query!(
-                    "INSERT INTO word_segment (word_id, index_in_word, morpheme, gloss, followed_by)
-                       VALUES ($1, $2, $3, $4, $5)",
-                    word_id,
-                    index as i64,
-                    segment.morpheme,
-                    gloss,
-                    segment.followed_by as Option<SegmentType>
-                )
-                .execute(&mut tx)
-                .await?;
-
                 query_file!(
                     "queries/upsert_morpheme_gloss.sql",
                     document_id,
                     gloss,
                     None as Option<String>
+                )
+                .execute(&mut tx)
+                .await?;
+
+                query_file!(
+                    "queries/upsert_word_segment.sql",
+                    word_id,
+                    index as i64,
+                    segment.morpheme,
+                    gloss,
+                    segment.followed_by as Option<SegmentType>
                 )
                 .execute(&mut tx)
                 .await?;

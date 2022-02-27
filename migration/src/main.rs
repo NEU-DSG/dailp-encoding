@@ -97,6 +97,7 @@ async fn migrate_data(db: &Database) -> Result<()> {
     }
 
     for l in morpheme_relations {
+        info!("link {:?}", l);
         db.insert_morpheme_relation(l).await?;
     }
 
