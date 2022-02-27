@@ -1,7 +1,7 @@
-SELECT
+select
   title,
   slug
-FROM collection
-WHERE super_collection = ''
-  AND parent_id IS NULL
-ORDER BY index_in_parent ASC
+from collection
+where super_collection = ''
+  and parent_id is null
+order by index_in_parent asc

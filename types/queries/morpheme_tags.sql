@@ -1,3 +1,3 @@
-SELECT *
-FROM morpheme_tag
-WHERE morpheme_tag.abstract_id = ANY ($1)
+select *
+from morpheme_tag
+where morpheme_tag.abstract_id = any($1)

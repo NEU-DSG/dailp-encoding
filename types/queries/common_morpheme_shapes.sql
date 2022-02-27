@@ -1,6 +1,7 @@
-SELECT morpheme,
-  count(word_id) AS word_count
-FROM word_segment
-WHERE gloss = 'PFT'
-GROUP BY morpheme
-ORDER BY word_count DESC
+select
+  morpheme,
+  count(word_id) as word_count
+from word_segment
+where gloss = 'PFT'
+group by morpheme
+order by word_count desc

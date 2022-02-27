@@ -1,5 +1,5 @@
-SELECT
+select
   slug,
   title
-FROM super_collection
-WHERE slug = $1
+from super_collection
+where slug = $1

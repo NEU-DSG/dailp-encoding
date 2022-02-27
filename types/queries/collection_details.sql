@@ -1,6 +1,6 @@
-SELECT
+select
   slug,
   title,
   index_in_parent
-FROM collection
-WHERE slug = $1
+from collection
+where slug = $1

@@ -1,4 +1,4 @@
-SELECT *
-FROM paragraph
-WHERE page_id = ANY ($1)
-ORDER BY character_range ASC
+select *
+from paragraph
+where page_id = any($1)
+order by character_range asc

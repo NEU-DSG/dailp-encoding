@@ -9,6 +9,13 @@ indented_joins = True
 [sqlfluff:rules]
 tab_space_size = 2
 
+[sqlfluff:rules:L010]
+capitalisation_policy = lower
+
+[sqlfluff:rules:L030]
+capitalisation_policy = lower
+
+
 [sqlfluff:templater:placeholder]
 param_style = numeric_dollar
 1 = 'one'

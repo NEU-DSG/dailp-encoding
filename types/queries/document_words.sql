@@ -1,9 +1,13 @@
-SELECT word.*,
-  coalesce(jsonb_agg(word_segment ORDER BY index_in_word) FILTER (WHERE morpheme IS NOT NULL),
-    '[]') AS segmentation
-FROM word
-  LEFT JOIN word_segment ON word_segment.word_id = word.id
-WHERE word.document_id = $1
-  -- Include all joined primary keys in the GROUP BY clause.
-GROUP BY word.id
-ORDER BY word.index_in_document
+select
+  word.*,
+  coalesce(
+    jsonb_agg(
+      word_segment order by index_in_word
+    ) filter (where morpheme is not null),
+    '[]') as segmentation
+from word
+  left join word_segment on word_segment.word_id = word.id
+where word.document_id = $1
+-- Include all joined primary keys in the GROUP BY clause.
+group by word.id
+order by word.index_in_document

@@ -1,4 +1,7 @@
-SELECT id, index_in_document, document_id
-FROM document_page
-WHERE document_id = ANY ($1)
-ORDER BY index_in_document ASC
+select
+  id,
+  index_in_document,
+  document_id
+from document_page
+where document_id = any($1)
+order by index_in_document asc

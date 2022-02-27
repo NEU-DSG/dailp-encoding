@@ -1,11 +1,11 @@
-SELECT
+select
   d.id,
   d.title,
-  d.written_at AS "date: Date",
-  pos.index_in_collection AS order_index
-FROM document AS d
-  INNER JOIN document_collection_position AS pos ON pos.document_id = d.id
-  INNER JOIN collection ON collection.id = pos.collection_id
-WHERE collection.super_collection = $1
-  AND collection.slug = $2
-ORDER BY pos.index_in_collection ASC
+  d.written_at as "date: Date",
+  pos.index_in_collection as order_index
+from document as d
+  inner join document_collection_position as pos on pos.document_id = d.id
+  inner join collection on collection.id = pos.collection_id
+where collection.super_collection = $1
+  and collection.slug = $2
+order by pos.index_in_collection asc

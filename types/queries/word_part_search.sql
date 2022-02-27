@@ -1,6 +1,7 @@
-SELECT morpheme,
+select
+  morpheme,
   array_agg(word.document_id)
-FROM word_segment
-  JOIN word ON word.id = word_segment.word_id
-WHERE word_segment.gloss = '3SG.A'
-GROUP BY word_segment.morpheme
+from word_segment
+  inner join word on word.id = word_segment.word_id
+where word_segment.gloss = '3SG.A'
+group by word_segment.morpheme

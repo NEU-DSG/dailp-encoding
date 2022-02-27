@@ -1,11 +1,18 @@
-SELECT
+select
   d.*,
-  coalesce(jsonb_agg(jsonb_build_object('name', contributor_info.full_name, 'role', attr.contribution_role)) FILTER (WHERE contributor_info IS NOT NULL), '[]')
-    AS contributors
-FROM document d
-  LEFT JOIN contributor_attribution AS attr ON attr.document_id = d.id
-  LEFT JOIN contributor_info ON contributor_info.id = attr.contributor_id
-WHERE d.id = any($1)
-GROUP BY d.id,
+  coalesce(
+    jsonb_agg(
+      jsonb_build_object(
+        'name', contributor_info.full_name, 'role', attr.contribution_role
+      )
+    ) filter (where contributor_info is not null),
+    '[]'
+  )
+  as contributors
+from document as d
+  left join contributor_attribution as attr on attr.document_id = d.id
+  left join contributor_info on contributor_info.id = attr.contributor_id
+where d.id = any($1)
+group by d.id,
   attr.contributor_id,
   attr.document_id
