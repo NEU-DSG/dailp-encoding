@@ -1,6 +1,17 @@
 import { style, styleVariants } from "@vanilla-extract/css"
 import { closeButton } from "./morpheme.css"
-import sprinkles, { hspace, mediaQueries, theme, vspace } from "./sprinkles.css"
+import sprinkles, {
+  colors,
+  hspace,
+  mediaQueries,
+  theme,
+  vspace,
+} from "./sprinkles.css"
+
+export const cherHeader = style({
+  color: colors.headings,
+  fontFamily: theme.fonts.cherokee,
+})
 
 export const wordPanelButton = styleVariants({
   basic: [closeButton],
@@ -13,7 +24,7 @@ export const wordPanelContent = style({
   border: "none",
   borderRadius: "4px",
   padding: "8px",
-  fontFamily: theme.fonts.cherokee,
+  fontFamily: theme.fonts.body,
   "@media": {
     [mediaQueries.medium]: {
       border: "1px solid #ddd",
