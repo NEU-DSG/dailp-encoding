@@ -90,7 +90,10 @@ export const AnnotatedForm = (
   }
   const showAnything = p.viewMode > ViewMode.Story
   let wordCSS = css.wordGroupSelection.unselected
-  if (p.wordPanelDetails.currContents?.source === p.segment.source) {
+  if (
+    p.wordPanelDetails.currContents?.source === p.segment.source &&
+    p.wordPanelDetails.currContents?.index === p.segment.index
+  ) {
     wordCSS = css.wordGroupSelection.selected
   }
   if (showAnything) {
