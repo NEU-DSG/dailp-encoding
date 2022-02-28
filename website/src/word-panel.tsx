@@ -74,7 +74,7 @@ export const WordPanel = (p: {
           <MdClose size={32} />
         </Button>
         <h1>Selected word:</h1>
-        <h2>{p.segment.source}</h2>
+        <h2 className={css.cherHeader}>{p.segment.source}</h2>
         {phonetics}
         {
           <MorphemicSegmentation
