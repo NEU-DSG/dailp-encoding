@@ -151,6 +151,11 @@ const TranslationTab = ({ doc }: { doc: Document }) => {
       dialog.hide()
     }
   }
+  useEffect(() => {
+    if (!dialog.visible) {
+      selectAndShowWord(null)
+    }
+  }, [dialog.visible])
   let wordPanelInfo = {
     currContents: selectedWord,
     setCurrContents: selectAndShowWord,
