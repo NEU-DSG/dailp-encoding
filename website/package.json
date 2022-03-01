@@ -86,13 +86,15 @@
     "typography": "^0.16.19",
     "vite": "^2.7.7",
     "vite-plugin-checker": "^0.3.4",
-    "vite-tsconfig-paths": "^3.3.17"
+    "vite-tsconfig-paths": "^3.3.17",
+    "new-dependency": "1.0"
   },
   "browserslist": [
     "supports es6-module",
     "supports css-variables",
     "IE 11",
-    "maintained node versions"
+    "maintained node versions",
+    "another dead browser"
   ],
   "prettier": {
     "trailingComma": "es5",

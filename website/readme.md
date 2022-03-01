@@ -1,5 +1,7 @@
 # DAILP Website
 
+Add some extra words here.
+
 This package renders a static website using React and Gatsby that includes all annotated documents produced by the DAILP project.
 These documents are connected to a Cherokee lexical database using our GraphQL endpoint.
 The latest commit to the `main` branch is automatically deployed to [`dailp.northeastern.edu`](https://dailp.northeastern.edu).
@@ -34,6 +36,8 @@ yarn start
 ```
 
 ## Navigating the Code
+
+Add some more extra words here...
 
 Several folders have documentation to guide you in understanding the code.
 There are a few different entry points into the build process of the site.
