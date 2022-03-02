@@ -1,7 +1,7 @@
 [sqlfluff]
 dialect = postgres
 templater = placeholder
-exclude_rules = L031, L057
+exclude_rules = L031, L057, L027
 
 [sqlfluff:indentation]
 indented_joins = True
