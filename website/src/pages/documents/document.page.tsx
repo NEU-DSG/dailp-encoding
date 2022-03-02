@@ -163,7 +163,7 @@ const TranslationTab = ({ doc }: { doc: Document }) => {
       </DialogOverlay>
       <br />
       <SolidSticky top="#document-tabs-header">
-        Display Mode&ensp;
+        Display Mode:&ensp;
         <ExperiencePicker onSelect={setExperienceLevel} />
         {/*<PhoneticsPicker onSelect={setPhoneticRepresentation} />*/}
       </SolidSticky>
