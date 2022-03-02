@@ -130,13 +130,13 @@ impl Database {
         .await?)
     }
 
-    pub async fn insert_dictionary_document(&self, document: DocumentMetadata) -> Result<()> {
+    pub async fn insert_dictionary_document(&self, document: &DocumentMetadata) -> Result<()> {
         query_file!(
             "queries/insert_document.sql",
             document.id.0,
             document.title,
             document.is_reference,
-            document.date as Option<Date>,
+            &document.date as &Option<Date>,
             None as Option<Uuid>,
         )
         .execute(&self.client)
@@ -281,6 +281,13 @@ impl Database {
             .collect())
     }
 
+    pub async fn insert_one_word(&self, form: AnnotatedForm) -> Result<()> {
+        let doc_id = form.position.document_id.0.clone();
+        let mut tx = self.client.begin().await?;
+        self.insert_word(&mut tx, form, &doc_id, None, None).await?;
+        Ok(())
+    }
+
     pub async fn insert_lexical_entry(
         &self,
         stem: AnnotatedForm,
@@ -392,15 +399,18 @@ impl Database {
     }
 
     pub async fn insert_morpheme_relation(&self, link: LexicalConnection) -> Result<()> {
-        query_file!(
-            "queries/insert_morpheme_relation.sql",
-            link.left.document_id.unwrap().0,
-            link.left.gloss,
-            link.right.document_id.unwrap().0,
-            link.right.gloss
-        )
-        .execute(&self.client)
-        .await?;
+        // Don't crash if a morpheme relation fails to insert.
+        if let (Some(left_doc), Some(right_doc)) = (link.left.document_id, link.right.document_id) {
+            let _ = query_file!(
+                "queries/insert_morpheme_relation.sql",
+                left_doc.0,
+                link.left.gloss,
+                right_doc.0,
+                link.right.gloss
+            )
+            .execute(&self.client)
+            .await;
+        }
         Ok(())
     }
 

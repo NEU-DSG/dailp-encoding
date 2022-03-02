@@ -33,12 +33,12 @@ async fn main() -> Result<()> {
     info!("Migrating DF1975 and DF2003...");
     lexical::migrate_dictionaries(&db).await?;
 
+    info!("Migrating early vocabularies...");
+    early_vocab::migrate_all(&db).await?;
+
     info!("Migrating connections...");
 
     migrate_data(&db).await?;
-
-    info!("Migrating early vocabularies...");
-    // early_vocab::migrate_all(&db).await?;
 
     info!("Migrating tags to database...");
     // tags::migrate_tags(&db).await?;

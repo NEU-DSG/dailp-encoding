@@ -1,5 +1,5 @@
 use anyhow::Result;
-use dailp::{Contributor, Database};
+use dailp::{database_sql::Database, Contributor};
 
 const COLLECTION_NAME: &str = "Early Vocabularies";
 
@@ -55,8 +55,13 @@ pub async fn migrate_all(db: &Database) -> Result<()> {
 }
 
 async fn migrate_new_vocabs(db: &Database, sheet_ids: &[&str]) -> Result<()> {
+    let mut links = Vec::new();
     for s in sheet_ids {
-        parse_early_vocab(db, s, 0, true, false, true, true, 3).await?;
+        let mut new_links = parse_early_vocab(db, s, 0, true, false, true, true, 3).await?;
+        links.append(&mut new_links);
+    }
+    for l in links {
+        db.insert_morpheme_relation(l).await?;
     }
     Ok(())
 }
@@ -70,7 +75,7 @@ async fn parse_early_vocab(
     has_notes: bool,
     has_segmentation: bool,
     num_links: usize,
-) -> Result<()> {
+) -> Result<Vec<dailp::LexicalConnection>> {
     use crate::spreadsheets::SheetResult;
     use dailp::{Date, DocumentMetadata, MorphemeSegment};
 
@@ -100,6 +105,9 @@ async fn parse_early_vocab(
         audio_recording: None,
         order_index: 0,
     };
+
+    // Update document metadata record
+    db.insert_dictionary_document(&meta).await?;
 
     let entries = sheet
         .values
@@ -184,22 +192,15 @@ async fn parse_early_vocab(
             })
         });
 
+    let mut links = Vec::new();
+
     // Push all forms and links to the database.
-    for entry in entries {
-        db.update_form(entry.form).await?;
-        for link in entry.links {
-            db.update_connection(link).await?;
-        }
+    for mut entry in entries {
+        db.insert_one_word(entry.form).await?;
+        links.append(&mut entry.links);
     }
 
-    // Update document metadata record
-    let doc = dailp::AnnotatedDoc {
-        meta,
-        segments: None,
-    };
-    db.update_document(doc).await?;
-
-    Ok(())
+    Ok(links)
 }
 
 struct ConnectedForm {

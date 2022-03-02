@@ -42,7 +42,7 @@ pub async fn migrate_dictionaries(db: &Database) -> Result<()> {
         },
     ];
     for doc in docs {
-        db.insert_dictionary_document(doc).await?;
+        db.insert_dictionary_document(&doc).await?;
     }
 
     let df1975 = parse_new_df1975(
@@ -199,7 +199,7 @@ async fn parse_meta(sheet_id: &str, collection: &str) -> Result<DocumentMetadata
 async fn parse_appendix(db: &Database, sheet_id: &str, to_skip: usize) -> Result<()> {
     let sheet = SheetResult::from_sheet(sheet_id, None).await?;
     let meta = parse_meta(sheet_id, "Vocabularies").await?;
-    db.insert_dictionary_document(meta.clone()).await?;
+    db.insert_dictionary_document(&meta).await?;
 
     let forms = sheet
         .values
@@ -369,7 +369,7 @@ async fn ingest_ac1995(db: &Database, sheet_id: &str) -> Result<()> {
     let meta = parse_meta(sheet_id, "Vocabularies").await?;
 
     // Update the document metadata.
-    db.insert_dictionary_document(meta.clone()).await?;
+    db.insert_dictionary_document(&meta).await?;
 
     let forms = sheet.values.into_iter().filter_map(|row| {
         let mut row = row.into_iter();
