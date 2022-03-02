@@ -161,7 +161,7 @@ const TranslationTab = ({ doc }: { doc: Document }) => {
           ) : null}
         </DialogContent>
       </DialogOverlay>
-
+      <br />
       <SolidSticky top="#document-tabs-header">
         Display Mode&ensp;
         <ExperiencePicker onSelect={setExperienceLevel} />
