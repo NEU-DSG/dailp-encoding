@@ -95,6 +95,9 @@ export const AnnotatedForm = (
     p.wordPanelDetails.currContents?.index === p.segment.index
   ) {
     wordCSS = css.wordGroupSelection.selected
+    p.wordPanelDetails.setCurrContents(
+      p.segment
+    ) /* This makes sure the word panel updates for changes to the word panel*/
   }
   if (showAnything) {
     const showSegments = p.viewMode >= ViewMode.Segmentation
