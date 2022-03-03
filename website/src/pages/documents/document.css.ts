@@ -116,7 +116,7 @@ export const morphemeDialog = style([
     maxWidth: "100vw",
     margin: 0,
     padding: 0,
-    zIndex: 999,
+    zIndex: 1009,
   },
 ])
 
@@ -124,7 +124,7 @@ export const morphemeDialogBackdrop = style({
   position: "fixed",
   inset: 0,
   backgroundColor: "rgba(0,0,0,0.2)",
-  zIndex: 998,
+  zIndex: 1008,
 })
 
 export const annotatedDocument = style({
@@ -176,7 +176,7 @@ export const mobileWordPanel = style([
   paddingX(hspace.edge),
   {
     paddingTop: vspace.one,
-    width: "20rem",
+    width: "13rem",
     backgroundColor: colors.body,
     fontFamily: theme.fonts.header,
     transition: "transform 150ms ease-in-out",
