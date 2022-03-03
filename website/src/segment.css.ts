@@ -168,6 +168,12 @@ const annotationSectionBase = style([
     width: "100%",
     position: "relative",
     marginBottom: vspace.half,
+    "@media": {
+      [mediaQueries.medium]: {
+        display: "flex",
+        flexFlow: "row wrap",
+      },
+    },
   },
 ])
 
@@ -189,3 +195,22 @@ export const infoIcon = style({
 })
 
 export const linkSvg = style({ fill: colors.link })
+
+export const fillerLine = style([
+  {
+    borderWidth: 0,
+    borderBottom: `1px solid ${theme.colors.text}`,
+    background: "none",
+    textAlign: "start",
+    width: "100%",
+  },
+])
+
+export const lineBox = style([
+  {
+    height: "1.5em",
+    padding: ".75em",
+    paddingLeft: "0em",
+    paddingRight: "0.75em",
+  },
+])
