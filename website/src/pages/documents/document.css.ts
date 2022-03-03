@@ -1,5 +1,6 @@
 import { style } from "@vanilla-extract/css"
-import {
+import { position, rgba } from "polished"
+import sprinkles, {
   colors,
   hspace,
   largeDialog,
@@ -16,6 +17,7 @@ export const docTitle = std.fullWidth
 
 export const annotationContents = style({
   width: "100%",
+  flex: 2,
 })
 
 export const topMargin = style({
@@ -114,7 +116,7 @@ export const morphemeDialog = style([
     maxWidth: "100vw",
     margin: 0,
     padding: 0,
-    zIndex: 999,
+    zIndex: 1009,
   },
 ])
 
@@ -122,7 +124,7 @@ export const morphemeDialogBackdrop = style({
   position: "fixed",
   inset: 0,
   backgroundColor: "rgba(0,0,0,0.2)",
-  zIndex: 998,
+  zIndex: 1008,
 })
 
 export const annotatedDocument = style({
@@ -155,3 +157,34 @@ export const wideSticky = style({
   width: "100% !important",
   zIndex: 1,
 })
+
+export const contentContainer = style({
+  display: "flex",
+  flexDirection: "row",
+  flexWrap: "nowrap",
+})
+
+export const contentSection2 = style([
+  sprinkles({ display: { any: "none", medium: "block" } }),
+  {
+    flex: 1,
+  }
+])
+
+export const mobileWordPanel = style([
+  position("fixed", 0, 0, 0, "initial"),
+  paddingX(hspace.edge),
+  {
+    paddingTop: vspace.one,
+    width: "13rem",
+    backgroundColor: colors.body,
+    fontFamily: theme.fonts.header,
+    transition: "transform 150ms ease-in-out",
+    transform: "translateX(16rem)",
+    selectors: {
+      "&[data-enter]": {
+        transform: "translateX(0)",
+      },
+    },
+  },
+])
