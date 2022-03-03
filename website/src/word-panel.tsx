@@ -76,14 +76,12 @@ export const WordPanel = (p: {
         <h1>Selected word:</h1>
         <h2 className={css.cherHeader}>{p.segment.source}</h2>
         {phonetics}
-        {
-          <MorphemicSegmentation
-            segments={p.segment.segments}
-            onOpenDetails={p.onOpenDetails}
-            level={p.viewMode}
-            tagSet={p.tagSet}
-          />
-        }
+        <MorphemicSegmentation
+          segments={p.segment.segments}
+          onOpenDetails={p.onOpenDetails}
+          level={p.viewMode}
+          tagSet={p.tagSet}
+        />
         {translation.length ? <div>&lsquo;{translation}&rsquo;</div> : <br />}
         <br />
         <p>{p.segment.commentary}</p>
