@@ -161,13 +161,9 @@ const TranslationTab = ({ doc }: { doc: Document }) => {
           ) : null}
         </DialogContent>
       </DialogOverlay>
-
-      <p className={css.paragraph}>
-        Each mode below displays different information about the words on the
-        page. Hover over each mode for a specific description.
-      </p>
-
+      <br />
       <SolidSticky top="#document-tabs-header">
+        Display Mode:&ensp;
         <ExperiencePicker onSelect={setExperienceLevel} />
         {/*<PhoneticsPicker onSelect={setPhoneticRepresentation} />*/}
       </SolidSticky>
