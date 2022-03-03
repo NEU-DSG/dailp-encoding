@@ -1,7 +1,8 @@
+import { DialogOverlay } from "@reach/dialog"
 import { Tooltip } from "@reach/tooltip"
 import "@reach/tooltip/styles.css"
 import { Howl } from "howler"
-import React from "react"
+import React, { Dispatch, SetStateAction, useState } from "react"
 import { MdInfoOutline } from "react-icons/md"
 import * as Dailp from "src/graphql/dailp"
 import { DocumentContents } from "src/pages/documents/document.page"
@@ -15,6 +16,7 @@ import {
   ViewMode,
   morphemeDisplayTag,
 } from "./types"
+import { WordPanelDetails } from "./word-panel"
 
 type Segment = NonNullable<DocumentContents["translatedSegments"]>[0]["source"]
 
@@ -26,6 +28,7 @@ interface Props {
   tagSet: TagSet
   pageImages: readonly string[]
   phoneticRepresentation: PhoneticRepresentation
+  wordPanelDetails: WordPanelDetails
 }
 
 /** Displays one segment of the document, which may be a word, block, or phrase. */
@@ -46,6 +49,7 @@ export const Segment = (p: Props & { howl?: Howl }) => {
             tagSet={p.tagSet}
             pageImages={p.pageImages}
             phoneticRepresentation={p.phoneticRepresentation}
+            wordPanelDetails={p.wordPanelDetails}
           />
         )
       }) ?? null
@@ -85,17 +89,30 @@ export const AnnotatedForm = (
     return null
   }
   const showAnything = p.viewMode > ViewMode.Story
+  let wordCSS = css.wordGroupSelection.unselected
+  if (
+    p.wordPanelDetails.currContents?.source === p.segment.source &&
+    p.wordPanelDetails.currContents?.index === p.segment.index
+  ) {
+    wordCSS = css.wordGroupSelection.selected
+    p.wordPanelDetails.setCurrContents(
+      p.segment
+    ) /* This makes sure the word panel updates for changes to the word panel*/
+  }
   if (showAnything) {
     const showSegments = p.viewMode >= ViewMode.Segmentation
     const translation = p.segment.englishGloss.join(", ")
 
     return (
-      <div className={css.wordGroup} id={`w${p.segment.index}`}>
+      <div className={wordCSS} id={`w${p.segment.index}`}>
         <div className={css.syllabaryLayer} lang="chr">
           {p.segment.source}
-          {p.segment.commentary && p.viewMode >= ViewMode.Pronunciation && (
-            <WordCommentaryInfo commentary={p.segment.commentary} />
-          )}
+          <span
+            className={css.infoIcon}
+            onClick={() => p.wordPanelDetails.setCurrContents(p.segment)}
+          >
+            <MdInfoOutline size={20} className={css.linkSvg} />
+          </span>
         </div>
         {p.segment.simplePhonetics ? (
           <>
@@ -194,7 +211,7 @@ const FillerLine = () => (
  * Displays the break-down of a word into its units of meaning and the English
  * glosses for each morpheme.
  */
-const MorphemicSegmentation = (p: {
+export const MorphemicSegmentation = (p: {
   segments: Dailp.FormFieldsFragment["segments"]
   tagSet: TagSet
   onOpenDetails: Props["onOpenDetails"]
