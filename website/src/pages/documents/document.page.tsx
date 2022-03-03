@@ -140,7 +140,7 @@ const TranslationTab = ({ doc }: { doc: Document }) => {
     setDialogOpen(true)
   }
 
-  const dialog = useDialogState({ animated: true })
+  const dialog = useDialogState({ animated: true, modal: false })
   const [selectedWord, setSelectedWord] =
     useState<Dailp.FormFieldsFragment | null>(null)
   const selectAndShowWord = (content: Dailp.FormFieldsFragment | null) => {
@@ -151,11 +151,13 @@ const TranslationTab = ({ doc }: { doc: Document }) => {
       dialog.hide()
     }
   }
+  /* This useEffect makes that when the mobile version of the word panel is closed, the word is unselected*/
   useEffect(() => {
     if (!dialog.visible) {
       selectAndShowWord(null)
     }
   }, [dialog.visible])
+
   let wordPanelInfo = {
     currContents: selectedWord,
     setCurrContents: selectAndShowWord,
@@ -199,6 +201,7 @@ const TranslationTab = ({ doc }: { doc: Document }) => {
           className={css.mobileWordPanel}
           aria-label="Word Panel Drawer"
           preventBodyScroll={false}
+          hideOnClickOutside={false}
         >
           <WordPanel
             segment={wordPanelInfo.currContents}
@@ -233,7 +236,7 @@ const TranslationTab = ({ doc }: { doc: Document }) => {
             }}
           />
         </article>
-        {selectedWord ? (
+        {selectedWord && experienceLevel > 0 ? (
           <div className={css.contentSection2}>
             <WordPanel
               segment={wordPanelInfo.currContents}
