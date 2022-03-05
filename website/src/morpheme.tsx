@@ -19,10 +19,7 @@ export const MorphemeDetails = (props: {
   hideDialog: () => void
 }) => {
   // Use the right tag name from the jump.
-  const matchingTag = morphemeDisplayTag(
-    props.segment.matchingTag,
-    props.tagSet
-  )
+  const matchingTag = props.segment.matchingTag
   const gloss = matchingTag?.tag || props.segment.gloss
   const occurrences = <h3>Known Occurrences of "{gloss}"</h3>
 

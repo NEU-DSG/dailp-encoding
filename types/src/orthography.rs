@@ -6,7 +6,7 @@ use lazy_static::lazy_static;
 /// want to convert between them.
 /// This type enumerates all of the systems that we support and provides
 /// conversion from our internal orthography into any of these.
-#[derive(async_graphql::Enum, Clone, Copy, Eq, PartialEq)]
+#[derive(async_graphql::Enum, Clone, Copy, Eq, PartialEq, Hash)]
 pub enum CherokeeOrthography {
     /// The t/th system for transcribing the Cherokee syllabary.
     /// This orthography is favored by linguists as it is segmentally more accurate.

@@ -1,7 +1,7 @@
 -- https://blog.rustprooflabs.com/2021/06/postgres-bigint-by-default
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
-CREATE DOMAIN autoid uuid DEFAULT uuid_generate_v4 ();
+CREATE DOMAIN autouuid uuid DEFAULT uuid_generate_v4 ();
 
 CREATE TABLE super_collection (
   slug text PRIMARY KEY,
@@ -12,7 +12,7 @@ INSERT INTO super_collection (slug, title)
   VALUES ('', 'Cherokee Documents');
 
 CREATE TABLE collection (
-  id autoid PRIMARY KEY,
+  id autouuid PRIMARY KEY,
   super_collection text NOT NULL REFERENCES super_collection (slug) ON DELETE CASCADE ON UPDATE CASCADE,
   -- Allow sub-collections. Collections with null parent are top-level.
   parent_id uuid REFERENCES collection (id) ON DELETE CASCADE,
@@ -23,13 +23,13 @@ CREATE TABLE collection (
 );
 
 CREATE TABLE audio_resource (
-  id autoid PRIMARY KEY,
+  id autouuid PRIMARY KEY,
   url text NOT NULL,
   recorded_at date
 );
 
 CREATE TABLE audio_slice (
-  id autoid PRIMARY KEY,
+  id autouuid PRIMARY KEY,
   resource_id uuid NOT NULL REFERENCES audio_resource (id) ON DELETE CASCADE,
   time_range int8range
 );
@@ -43,14 +43,14 @@ CREATE TABLE document (
 );
 
 CREATE TABLE iiif_source (
-  id autoid PRIMARY KEY,
+  id autouuid PRIMARY KEY,
   title text NOT NULL,
   base_url text NOT NULL
 );
 
 -- TODO consider grouping paragraphs into pages which then have associated images.
 CREATE TABLE document_page (
-  id autoid PRIMARY KEY,
+  id autouuid PRIMARY KEY,
   document_id text NOT NULL REFERENCES document (id) ON DELETE CASCADE,
   index_in_document bigint NOT NULL,
   iiif_source_id uuid REFERENCES iiif_source (id),
@@ -61,10 +61,10 @@ CREATE TABLE document_page (
 
 -- TODO Model character-based transcriptions first!
 CREATE TABLE character_transcription (
-  id autoid PRIMARY KEY,
+  id autouuid PRIMARY KEY,
   page_id uuid NOT NULL REFERENCES document_page (id) ON DELETE CASCADE,
   index_in_page bigint NOT NULL,
-  possible_transcriptions text[],
+  possible_transcriptions text[] not null,
   image_area box,
   UNIQUE (page_id, index_in_page)
 );
@@ -82,7 +82,7 @@ CREATE TABLE document_collection_position (
 
 -- Used both for known static contributors and active users.
 CREATE TABLE contributor_info (
-  id autoid PRIMARY KEY,
+  id autouuid PRIMARY KEY,
   full_name text NOT NULL
 );
 
@@ -94,7 +94,7 @@ CREATE TABLE contributor_attribution (
 );
 
 CREATE TABLE document_source (
-  id autoid PRIMARY KEY,
+  id autouuid PRIMARY KEY,
   name text NOT NULL,
   url text NOT NULL
 );
@@ -107,14 +107,14 @@ CREATE TABLE document_source_citation (
 );
 
 CREATE TABLE paragraph (
-  id autoid PRIMARY KEY,
+  id autouuid PRIMARY KEY,
   page_id uuid NOT NULL REFERENCES document_page (id) ON DELETE CASCADE,
   character_range int8range NOT NULL,
   english_translation text NOT NULL
 );
 
 CREATE TABLE word (
-  id autoid PRIMARY KEY,
+  id autouuid PRIMARY KEY,
   source_text text NOT NULL,
   simple_phonetics text,
   phonemic text,
@@ -135,40 +135,29 @@ CREATE TABLE word (
   UNIQUE (document_id, index_in_document)
 );
 
-CREATE TABLE morpheme_tag_system (
-  id autoid PRIMARY KEY,
-  system_name text NOT NULL
+CREATE TABLE abbreviation_system (
+  id autouuid PRIMARY KEY,
+  short_name text not null,
+  title text NOT NULL
 );
 
 CREATE TABLE abstract_morpheme_tag (
-  tag text PRIMARY KEY,
-  morpheme_type text,
+  id autouuid primary key,
+  title text not null,
+  linguistic_type text,
   description text
 );
 
 CREATE TABLE morpheme_tag (
-  id autoid PRIMARY KEY,
-  abstract_id text NOT NULL REFERENCES abstract_morpheme_tag (tag),
-  tag_system_id uuid NOT NULL REFERENCES morpheme_tag_system (id),
-  UNIQUE (abstract_id, tag_system_id)
+  id autouuid PRIMARY KEY,
+  system_id uuid NOT NULL REFERENCES abbreviation_system (id),
+  abstract_ids uuid[] NOT NULL,
+  gloss text not null
 );
 
 CREATE TYPE segment_type AS enum (
   'Morpheme',
   'Clitic'
-);
-
-CREATE TABLE word_segment (
-  id autoid PRIMARY KEY,
-  word_id uuid NOT NULL REFERENCES word (id) ON DELETE CASCADE,
-  index_in_word bigint NOT NULL,
-  morpheme text NOT NULL,
-  -- May or may not be a reference to morpheme_tag
-  -- TODO Add an extra field for referring to abstract_morpheme_tag
-  gloss text NOT NULL,
-  -- TODO might be able to replace this with type of current segment.
-  followed_by segment_type,
-  UNIQUE (word_id, index_in_word)
 );
 
 -- Used for glossing related morphemes within a document.
@@ -178,12 +167,25 @@ CREATE TABLE word_segment (
 --
 -- This table is could also be used for lexical entries within DF1975.
 CREATE TABLE morpheme_gloss (
-  id autoid PRIMARY KEY,
+  id autouuid PRIMARY KEY,
   document_id text REFERENCES document (id) ON DELETE CASCADE,
   gloss text NOT NULL,
-  example_shape text,
   -- Each gloss is unique within its parent document.
-  UNIQUE (document_id, gloss)
+  UNIQUE (document_id, gloss),
+  example_shape text,
+  tag_id uuid references abstract_morpheme_tag (id) on delete set null
+);
+
+
+CREATE TABLE word_segment (
+  id autouuid PRIMARY KEY,
+  word_id uuid NOT NULL REFERENCES word (id) ON DELETE CASCADE,
+  index_in_word bigint NOT NULL,
+  morpheme text NOT NULL,
+  gloss_id uuid NOT NULL REFERENCES morpheme_gloss (id) ON DELETE RESTRICT,
+  -- TODO might be able to replace this with type of current segment.
+  followed_by segment_type,
+  UNIQUE (word_id, index_in_word)
 );
 
 -- Connect two morpheme glosses, i.e. "WJ46:walk" and "DF1975:walk"

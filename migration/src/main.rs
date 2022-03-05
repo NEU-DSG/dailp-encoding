@@ -27,8 +27,12 @@ async fn main() -> Result<()> {
 
     info!("Migrating Image Sources");
     migrate_image_sources(&db).await?;
+
     info!("Migrating contributors");
     // contributors::migrate_all(&db).await?;
+
+    info!("Migrating tags to database...");
+    tags::migrate_tags(&db).await?;
 
     info!("Migrating DF1975 and DF2003...");
     lexical::migrate_dictionaries(&db).await?;
@@ -39,9 +43,6 @@ async fn main() -> Result<()> {
     info!("Migrating connections...");
 
     migrate_data(&db).await?;
-
-    info!("Migrating tags to database...");
-    // tags::migrate_tags(&db).await?;
 
     // connections::migrate_connections(&db).await?;
 

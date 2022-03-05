@@ -652,6 +652,9 @@ impl Loader<PersonId> for Database {
 }
 
 #[derive(Clone, Eq, PartialEq, Hash)]
+pub struct TagForMorpheme(pub Uuid, pub CherokeeOrthography);
+
+#[derive(Clone, Eq, PartialEq, Hash)]
 pub struct PageId(pub String);
 
 #[async_trait::async_trait]

@@ -371,21 +371,30 @@ impl Database {
                     .split_whitespace()
                     .join(".");
 
-                query_file!(
-                    "queries/upsert_morpheme_gloss.sql",
-                    document_id,
-                    gloss,
-                    None as Option<String>
-                )
-                .execute(&mut tx)
-                .await?;
+                let morpheme_tag = query_file!("queries/find_global_gloss.sql", gloss)
+                    .fetch_one(&mut tx)
+                    .await;
+
+                let gloss_id = if let Ok(morpheme_tag) = morpheme_tag {
+                    morpheme_tag.gloss_id
+                } else {
+                    query_file_scalar!(
+                        "queries/upsert_morpheme_gloss.sql",
+                        document_id,
+                        gloss,
+                        None as Option<String>,
+                        None as Option<Uuid>
+                    )
+                    .fetch_one(&mut tx)
+                    .await?
+                };
 
                 query_file!(
                     "queries/upsert_word_segment.sql",
                     word_id,
                     index as i64,
                     segment.morpheme,
-                    gloss,
+                    gloss_id,
                     segment.followed_by as Option<SegmentType>
                 )
                 .execute(&mut tx)
@@ -396,6 +405,76 @@ impl Database {
         tx.commit().await?;
 
         Ok(word_id)
+    }
+
+    pub async fn insert_morpheme_system(&self, short_name: String, title: String) -> Result<Uuid> {
+        Ok(
+            query_file_scalar!("queries/insert_abbreviation_system.sql", short_name, title)
+                .fetch_one(&self.client)
+                .await?,
+        )
+    }
+
+    pub async fn insert_morpheme_tag(
+        &self,
+        tag: MorphemeTag,
+        crg_system_id: Uuid,
+        taoc_system_id: Uuid,
+        learner_system_id: Uuid,
+    ) -> Result<()> {
+        let learner = tag
+            .learner
+            .as_ref()
+            .ok_or_else(|| anyhow::format_err!("Tag {:?} missing a learner form", tag))?;
+        let abstract_id = query_file_scalar!(
+            "queries/upsert_morpheme_tag.sql",
+            learner.title,
+            learner.definition,
+            tag.morpheme_type
+        )
+        .fetch_one(&self.client)
+        .await?;
+
+        query_file!(
+            "queries/upsert_morpheme_gloss.sql",
+            None as Option<String>,
+            tag.id,
+            None as Option<String>,
+            Some(abstract_id)
+        )
+        .fetch_one(&self.client)
+        .await?;
+
+        let abstract_ids = vec![abstract_id];
+        query_file!(
+            "queries/upsert_concrete_tag.sql",
+            learner_system_id,
+            &abstract_ids[..],
+            learner.tag
+        )
+        .execute(&self.client)
+        .await?;
+        if let Some(concrete) = tag.crg {
+            query_file!(
+                "queries/upsert_concrete_tag.sql",
+                crg_system_id,
+                &abstract_ids[..],
+                concrete.tag
+            )
+            .execute(&self.client)
+            .await?;
+        }
+        if let Some(concrete) = tag.taoc {
+            query_file!(
+                "queries/upsert_concrete_tag.sql",
+                taoc_system_id,
+                &abstract_ids[..],
+                concrete.tag
+            )
+            .execute(&self.client)
+            .await?;
+        }
+        Ok(())
     }
 
     pub async fn insert_morpheme_relation(&self, link: LexicalConnection) -> Result<()> {
@@ -546,6 +625,7 @@ impl Loader<PartsOfWord> for Database {
                     MorphemeSegment {
                         morpheme: part.morpheme,
                         gloss: part.gloss,
+                        gloss_id: part.gloss_id,
                         followed_by: part.followed_by,
                     },
                 )
@@ -605,5 +685,56 @@ impl Loader<WordsInParagraph> for Database {
                 )
             })
             .into_group_map())
+    }
+}
+
+#[async_trait]
+impl Loader<TagForMorpheme> for Database {
+    type Value = TagForm;
+    type Error = Arc<sqlx::Error>;
+
+    async fn load(
+        &self,
+        keys: &[TagForMorpheme],
+    ) -> Result<HashMap<TagForMorpheme, Self::Value>, Self::Error> {
+        let gloss_ids: Vec<_> = keys.iter().map(|k| k.0.clone()).collect();
+        let systems: Vec<_> = keys
+            .iter()
+            .unique()
+            .map(|k| {
+                match k.1 {
+                    CherokeeOrthography::Crg => "CRG",
+                    CherokeeOrthography::Learner => "Learner",
+                    CherokeeOrthography::Taoc => "TAOC",
+                }
+                .to_owned()
+            })
+            .collect();
+        let items = query_file!("queries/morpheme_tags.sql", &gloss_ids, &systems)
+            .fetch_all(&self.client)
+            .await?;
+        Ok(items
+            .into_iter()
+            .map(|tag| {
+                (
+                    TagForMorpheme(
+                        tag.gloss_id.unwrap(),
+                        match &*tag.system_name.unwrap() {
+                            "CRG" => CherokeeOrthography::Crg,
+                            "Learner" => CherokeeOrthography::Learner,
+                            "TAOC" => CherokeeOrthography::Taoc,
+                            _ => unreachable!(),
+                        },
+                    ),
+                    TagForm {
+                        tag: tag.gloss.unwrap(),
+                        title: tag.title.unwrap(),
+                        shape: tag.example_shape,
+                        details_url: None,
+                        definition: tag.description.unwrap_or_default(),
+                    },
+                )
+            })
+            .collect())
     }
 }

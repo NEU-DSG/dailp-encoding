@@ -247,7 +247,7 @@ const MorphemeSegment = (p: {
   tagSet: TagSet
   onOpenDetails: Props["onOpenDetails"]
 }) => {
-  const matchingTag = morphemeDisplayTag(p.segment.matchingTag!, p.tagSet)
+  const matchingTag = p.segment.matchingTag
   const gloss = matchingTag?.tag || p.segment.gloss
   // Display functional tags in small-caps, per interlinear typesetting practice.
 

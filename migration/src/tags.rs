@@ -1,12 +1,15 @@
 use crate::spreadsheets::SheetResult;
 use anyhow::Result;
-use dailp::{Database, MorphemeTag, TagForm};
+use dailp::{database_sql::Database, MorphemeTag, TagForm};
 use log::info;
 
 /// Cherokee has many functional morphemes that are documented.
 /// Pulls all the details we have about each morpheme from our spreadsheets,
 /// parses it into typed data, then updates the database entry for each.
 pub async fn migrate_tags(db: &Database) -> Result<()> {
+    // Make sure all reference grammars are cited.
+    migrate_glossary_metadata(db, "17LSuDu7QHJfJyLDVJjO0f4wmTHQLVyHuSktr6OrbD_M").await?;
+
     let glossary = SheetResult::from_sheet(
         "17LSuDu7QHJfJyLDVJjO0f4wmTHQLVyHuSktr6OrbD_M",
         Some("DAILP Storage Tags"),
@@ -16,13 +19,20 @@ pub async fn migrate_tags(db: &Database) -> Result<()> {
     info!("Parsing sheet results...");
     let glossary = parse_tag_glossary(glossary?)?;
 
+    let crg = db
+        .insert_morpheme_system("CRG".into(), "Cherokee Reference Grammar".into())
+        .await?;
+    let taoc = db
+        .insert_morpheme_system("TAOC".into(), "Tone and Accent in Oklahoma Cherokee".into())
+        .await?;
+    let learner = db
+        .insert_morpheme_system("Learner".into(), "Learner System".into())
+        .await?;
+
     info!("Pushing tags to db...");
     for tag in glossary {
-        db.update_tag(tag).await?;
+        db.insert_morpheme_tag(tag, crg, taoc, learner).await?;
     }
-
-    // Make sure all reference grammars are cited.
-    migrate_glossary_metadata(db, "17LSuDu7QHJfJyLDVJjO0f4wmTHQLVyHuSktr6OrbD_M").await?;
 
     Ok(())
 }
@@ -35,7 +45,7 @@ fn parse_tag_glossary(sheet: SheetResult) -> Result<Vec<MorphemeTag>> {
         // The first row is headers.
         .skip(1)
         // There are a few empty spacing rows to ignore.
-        .filter(|row| !row.is_empty())
+        .filter(|row| !row.is_empty() && !row[0].is_empty())
         .filter_map(|row| {
             // Skip over allomorphs, and instead allow them to emerge from our texts.
             let mut cols = row.into_iter();
@@ -64,35 +74,32 @@ async fn migrate_glossary_metadata(db: &Database, sheet_id: &str) -> Result<()> 
     let sheet = SheetResult::from_sheet(sheet_id, Some("Metadata")).await?;
     let chunks = sheet.values.into_iter().chunks(7);
     let docs = chunks.into_iter().filter_map(|mut values| {
-        Some(dailp::AnnotatedDoc {
-            meta: dailp::DocumentMetadata {
-                id: dailp::DocumentId(values.next()?.pop()?),
-                title: values.next()?.pop()?,
-                date: Some(dailp::Date::from_ymd(
-                    values.next()?.pop()?.parse().unwrap(),
-                    1,
-                    1,
-                )),
-                contributors: values
-                    .next()?
-                    .into_iter()
-                    .skip(1)
-                    .map(dailp::Contributor::new_author)
-                    .collect(),
-                collection: Some("Reference Materials".to_owned()),
-                genre: None,
-                is_reference: true,
-                page_images: None,
-                sources: Vec::new(),
-                translation: None,
-                audio_recording: None,
-                order_index: 0,
-            },
-            segments: None,
+        Some(dailp::DocumentMetadata {
+            id: dailp::DocumentId(values.next()?.pop()?),
+            title: values.next()?.pop()?,
+            date: Some(dailp::Date::from_ymd(
+                values.next()?.pop()?.parse().unwrap(),
+                1,
+                1,
+            )),
+            contributors: values
+                .next()?
+                .into_iter()
+                .skip(1)
+                .map(dailp::Contributor::new_author)
+                .collect(),
+            collection: Some("Reference Materials".to_owned()),
+            genre: None,
+            is_reference: true,
+            page_images: None,
+            sources: Vec::new(),
+            translation: None,
+            audio_recording: None,
+            order_index: 0,
         })
     });
     for doc in docs {
-        db.update_document(doc).await?;
+        db.insert_dictionary_document(&doc).await?;
     }
     Ok(())
 }

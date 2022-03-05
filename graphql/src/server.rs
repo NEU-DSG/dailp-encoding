@@ -26,6 +26,7 @@ async fn main() -> tide::Result<()> {
         .data(dailp::database_sql::Database::connect().await?)
         .data(DataLoader::new(
             dailp::database_sql::Database::connect().await?,
+            tokio::spawn,
         ))
         .finish();
 
@@ -37,8 +38,7 @@ async fn main() -> tide::Result<()> {
     app.with(cors);
 
     // add tide endpoint
-    app.at("/graphql")
-        .post(async_graphql_tide::endpoint(schema));
+    app.at("/graphql").post(async_graphql_tide::graphql(schema));
 
     // enable graphql playground
     app.at("/graphql").get(|_| async move {

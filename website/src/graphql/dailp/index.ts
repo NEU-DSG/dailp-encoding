@@ -348,7 +348,7 @@ export type MorphemeSegment = {
    * If this morpheme represents a functional tag that we have further
    * information on, this is the corresponding database entry.
    */
-  readonly matchingTag: Maybe<MorphemeTag>
+  readonly matchingTag: Maybe<TagForm>
   /** Phonemic representation of the morpheme */
   readonly morpheme: Scalars["String"]
   /**
@@ -358,6 +358,10 @@ export type MorphemeSegment = {
    * the next one when reconstituting the full segmentation string.
    */
   readonly nextSeparator: Maybe<Scalars["String"]>
+}
+
+export type MorphemeSegmentMatchingTagArgs = {
+  system: InputMaybe<CherokeeOrthography>
 }
 
 export type MorphemeSegmentMorphemeArgs = {
@@ -719,25 +723,10 @@ export type DocumentContentsQuery = { readonly __typename?: "Query" } & {
                                 "morpheme" | "gloss" | "nextSeparator"
                               > & {
                                   readonly matchingTag: Maybe<
-                                    {
-                                      readonly __typename?: "MorphemeTag"
-                                    } & Pick<MorphemeTag, "id"> & {
-                                        readonly taoc: Maybe<
-                                          {
-                                            readonly __typename?: "TagForm"
-                                          } & Pick<TagForm, "tag" | "title">
-                                        >
-                                        readonly learner: Maybe<
-                                          {
-                                            readonly __typename?: "TagForm"
-                                          } & Pick<TagForm, "tag" | "title">
-                                        >
-                                        readonly crg: Maybe<
-                                          {
-                                            readonly __typename?: "TagForm"
-                                          } & Pick<TagForm, "tag" | "title">
-                                        >
-                                      }
+                                    { readonly __typename?: "TagForm" } & Pick<
+                                      TagForm,
+                                      "tag" | "title"
+                                    >
                                   >
                                 }
                             >
@@ -775,29 +764,10 @@ export type DocumentContentsQuery = { readonly __typename?: "Query" } & {
                 "morpheme" | "gloss" | "nextSeparator"
               > & {
                   readonly matchingTag: Maybe<
-                    { readonly __typename?: "MorphemeTag" } & Pick<
-                      MorphemeTag,
-                      "id"
-                    > & {
-                        readonly taoc: Maybe<
-                          { readonly __typename?: "TagForm" } & Pick<
-                            TagForm,
-                            "tag" | "title"
-                          >
-                        >
-                        readonly learner: Maybe<
-                          { readonly __typename?: "TagForm" } & Pick<
-                            TagForm,
-                            "tag" | "title"
-                          >
-                        >
-                        readonly crg: Maybe<
-                          { readonly __typename?: "TagForm" } & Pick<
-                            TagForm,
-                            "tag" | "title"
-                          >
-                        >
-                      }
+                    { readonly __typename?: "TagForm" } & Pick<
+                      TagForm,
+                      "tag" | "title"
+                    >
                   >
                 }
             >
@@ -831,29 +801,7 @@ export type FormFieldsFragment = {
         "morpheme" | "gloss" | "nextSeparator"
       > & {
           readonly matchingTag: Maybe<
-            { readonly __typename?: "MorphemeTag" } & Pick<
-              MorphemeTag,
-              "id"
-            > & {
-                readonly taoc: Maybe<
-                  { readonly __typename?: "TagForm" } & Pick<
-                    TagForm,
-                    "tag" | "title"
-                  >
-                >
-                readonly learner: Maybe<
-                  { readonly __typename?: "TagForm" } & Pick<
-                    TagForm,
-                    "tag" | "title"
-                  >
-                >
-                readonly crg: Maybe<
-                  { readonly __typename?: "TagForm" } & Pick<
-                    TagForm,
-                    "tag" | "title"
-                  >
-                >
-              }
+            { readonly __typename?: "TagForm" } & Pick<TagForm, "tag" | "title">
           >
         }
     >
@@ -1103,20 +1051,9 @@ export const FormFieldsFragmentDoc = gql`
     segments {
       morpheme(system: $morphemeSystem)
       gloss
-      matchingTag {
-        id
-        taoc {
-          tag
-          title
-        }
-        learner {
-          tag
-          title
-        }
-        crg {
-          tag
-          title
-        }
+      matchingTag(system: $morphemeSystem) {
+        tag
+        title
       }
       nextSeparator
     }

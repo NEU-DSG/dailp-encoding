@@ -1,7 +1,7 @@
 //! This piece of the project exposes a GraphQL endpoint that allows one to access DAILP data in a federated manner with specific queries.
 
 use {
-    dailp::async_graphql::{self, dataloader::DataLoader, guard::Guard, Context, FieldResult},
+    dailp::async_graphql::{self, dataloader::DataLoader, Context, FieldResult, Guard},
     dailp::{
         database_sql, AnnotatedDoc, CherokeeOrthography, Database, MorphemeId, MorphemeReference,
         MorphemeTag, WordsInDocument,
@@ -229,7 +229,7 @@ impl Query {
     }
 
     /// Basic information about the currently authenticated user, if any.
-    #[graphql(guard(AuthGuard()))]
+    #[graphql(guard = "AuthGuard")]
     async fn user_info<'a>(&self, context: &'a Context<'_>) -> &'a UserInfo {
         context.data_unchecked()
     }
@@ -281,7 +281,7 @@ impl Mutation {
         "1.0"
     }
 
-    #[graphql(guard(GroupGuard(group = "UserGroup::Editor")))]
+    #[graphql(guard = "GroupGuard::new(UserGroup::Editor)")]
     async fn update_page(
         &self,
         context: &Context<'_>,
@@ -292,7 +292,7 @@ impl Mutation {
         Ok(true)
     }
 
-    #[graphql(guard(GroupGuard(group = "UserGroup::Editor")))]
+    #[graphql(guard = "GroupGuard::new(UserGroup::Editor)")]
     async fn update_annotation(
         &self,
         context: &Context<'_>,
@@ -339,6 +339,12 @@ serde_plain::forward_display_to_serde!(UserGroup);
 /// Requires that the user is authenticated and a member of the given user group.
 struct GroupGuard {
     group: UserGroup,
+}
+
+impl GroupGuard {
+    fn new(group: UserGroup) -> Self {
+        Self { group }
+    }
 }
 
 #[async_trait::async_trait]

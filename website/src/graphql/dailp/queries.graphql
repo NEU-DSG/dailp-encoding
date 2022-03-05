@@ -75,20 +75,9 @@ fragment FormFields on AnnotatedForm {
   segments {
     morpheme(system: $morphemeSystem)
     gloss
-    matchingTag {
-      id
-      taoc {
-        tag
-        title
-      }
-      learner {
-        tag
-        title
-      }
-      crg {
-        tag
-        title
-      }
+    matchingTag(system: $morphemeSystem) {
+      tag
+      title
     }
     nextSeparator
   }
