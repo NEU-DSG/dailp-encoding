@@ -1,5 +1,7 @@
 import React from "react"
-import { MdClose } from "react-icons/md"
+import { AiFillCaretDown, AiFillCaretUp } from "react-icons/ai"
+import { IoEllipsisHorizontalCircle } from "react-icons/io5"
+import { MdClose, MdNotes, MdRecordVoiceOver } from "react-icons/md"
 import { Button } from "reakit/Button"
 import {
   Disclosure,
@@ -75,19 +77,77 @@ export const WordPanel = (p: {
         </Button>
         <h1>Selected word:</h1>
         <h2 className={css.cherHeader}>{p.segment.source}</h2>
-        {phonetics}
-        <MorphemicSegmentation
-          segments={p.segment.segments}
-          onOpenDetails={p.onOpenDetails}
-          level={p.viewMode}
-          tagSet={p.tagSet}
+        <CollapsiblePanel
+          title={"Phonetics"}
+          content={<>{phonetics}</>}
+          icon={
+            <MdRecordVoiceOver
+              size={24}
+              className={css.wordPanelButton.colpleft}
+            />
+          }
         />
-        {translation.length ? <div>&lsquo;{translation}&rsquo;</div> : <br />}
-        <br />
-        <p>{p.segment.commentary}</p>
+
+        <CollapsiblePanel
+          title={"Word Parts"}
+          content={
+            <>
+              <MorphemicSegmentation
+                segments={p.segment.segments}
+                onOpenDetails={p.onOpenDetails}
+                level={p.viewMode}
+                tagSet={p.tagSet}
+              />
+              {translation.length ? (
+                <div>&lsquo;{translation}&rsquo;</div>
+              ) : (
+                <br />
+              )}
+            </>
+          }
+          icon={
+            <IoEllipsisHorizontalCircle
+              size={24}
+              className={css.wordPanelButton.colpleft}
+            />
+          }
+        />
+        {p.segment.commentary ? (
+          <CollapsiblePanel
+            title={"Commentary"}
+            content={<>{p.segment.commentary}</>}
+            icon={
+              <MdNotes size={24} className={css.wordPanelButton.colpleft} />
+            }
+          />
+        ) : null}
       </div>
     )
   } else {
     return <p>No word has been selected</p>
   }
+}
+
+const CollapsiblePanel = (p: {
+  title: String
+  content: JSX.Element
+  icon: JSX.Element // Note : this is supposed to be an IconType
+}) => {
+  const disclosure = useDisclosureState({ visible: true })
+  return (
+    <div className={css.collPanel}>
+      <Disclosure {...disclosure} className={css.collPanelButton}>
+        {p.icon}
+        {" " + p.title}
+        {disclosure.visible ? (
+          <AiFillCaretDown className={css.wordPanelButton.colpright} />
+        ) : (
+          <AiFillCaretUp className={css.wordPanelButton.colpright} />
+        )}
+      </Disclosure>
+      <DisclosureContent {...disclosure} className={css.collPanelContent}>
+        {p.content}
+      </DisclosureContent>
+    </div>
+  )
 }
