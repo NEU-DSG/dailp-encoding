@@ -50,6 +50,7 @@ export const collPanelButton = style({
   border: "none",
   textAlign: "left",
   padding: wordPanelPadding,
+  fontFamily: theme.fonts.header,
 })
 
 export const collPanel = style({
@@ -65,8 +66,6 @@ export const wordPanelContent = style({
 
   border: "none",
   borderRadius: "4px",
-  padding: wordPanelPadding,
-  fontFamily: theme.fonts.body,
   "@media": {
     [mediaQueries.medium]: {
       border: "1px solid #ddd",
@@ -74,6 +73,11 @@ export const wordPanelContent = style({
     },
   },
   overflowY: "auto",
+})
+
+export const wordPanelHeader = style({
+  padding: wordPanelPadding,
+  fontFamily: theme.fonts.body,
 })
 
 export const audioContainer = style({ paddingLeft: "40%" })
