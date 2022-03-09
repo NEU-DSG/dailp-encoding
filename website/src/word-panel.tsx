@@ -1,4 +1,4 @@
-import React from "react"
+import React, { ReactNode } from "react"
 import { AiFillCaretDown, AiFillCaretUp } from "react-icons/ai"
 import { IoEllipsisHorizontalCircle } from "react-icons/io5"
 import { MdClose, MdNotes, MdRecordVoiceOver } from "react-icons/md"
@@ -75,8 +75,11 @@ export const WordPanel = (p: {
         >
           <MdClose size={32} />
         </Button>
-        <h1>Selected word:</h1>
-        <h2 className={css.cherHeader}>{p.segment.source}</h2>
+        <header className={css.wordPanelHeader}>
+          <h1>Selected word:</h1>
+          <h2 className={css.cherHeader}>{p.segment.source}</h2>
+        </header>
+
         <CollapsiblePanel
           title={"Phonetics"}
           content={<>{phonetics}</>}
@@ -100,9 +103,7 @@ export const WordPanel = (p: {
               />
               {translation.length ? (
                 <div>&lsquo;{translation}&rsquo;</div>
-              ) : (
-                <br />
-              )}
+              ) : null}
             </>
           }
           icon={
@@ -129,16 +130,15 @@ export const WordPanel = (p: {
 }
 
 const CollapsiblePanel = (p: {
-  title: String
-  content: JSX.Element
-  icon: JSX.Element // Note : this is supposed to be an IconType
+  title: string
+  content: ReactNode
+  icon: ReactNode // Note : this is supposed to be an IconType
 }) => {
   const disclosure = useDisclosureState({ visible: true })
   return (
-    <div className={css.collPanel}>
+    <div className={css.collPanel} aria-label={p.title}>
       <Disclosure {...disclosure} className={css.collPanelButton}>
-        {p.icon}
-        {" " + p.title}
+        {p.icon} {p.title}
         {disclosure.visible ? (
           <AiFillCaretDown className={css.wordPanelButton.colpright} />
         ) : (
