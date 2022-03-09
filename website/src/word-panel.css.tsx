@@ -57,7 +57,7 @@ export const collPanel = style({
   width: "inherit",
   display: "flex",
   flexDirection: "column",
-  border: "1px solid #ddd",
+  borderTop: "1px solid #ddd",
 })
 
 export const wordPanelContent = style({
