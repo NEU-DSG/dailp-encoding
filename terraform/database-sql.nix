@@ -26,7 +26,6 @@
       engine_version = "14";
       allow_major_version_upgrade = false;
       auto_minor_version_upgrade = true;
-      db_name = "dailp";
       username = "admin";
       password = config.servers.database.password;
 
