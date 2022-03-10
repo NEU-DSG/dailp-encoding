@@ -89,6 +89,12 @@ in {
     }];
   };
 
+  servers.database = {
+    password = getEnv "DATABASE_PASSWORD";
+    availability_zone = getEnv "AWS_ZONE_PRIMARY";
+    security_group_ids = [ "\${aws_security_group.nixos_test.id}" ];
+  };
+
   servers.mongodb.nodes = [
     {
       primary = true;
