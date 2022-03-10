@@ -63,6 +63,8 @@ in {
       id = "graphql";
       name = "dailp-graphql";
       env = {
+        DATABASE_URL =
+          "postgres://\${aws_db_instance.sql_database.username}:${config.servers.database.password}@\${aws_db_instance.sql_database.endpoint}/dailp";
         MONGODB_PASSWORD = getEnv "MONGODB_PASSWORD";
         MONGODB_URI =
           "mongodb://\${aws_instance.mongodb_primary.public_dns}:27017/admin?retryWrites=true&w=majority";
