@@ -52,4 +52,8 @@
       to_port = 5432;
     };
   };
+
+  config.output.database_endpoint = {
+    value = "\${aws_db_instance.sql_database.endpoint}";
+  };
 }
