@@ -24,7 +24,7 @@
       allocated_storage = 32;
       max_allocated_storage = 128;
 
-      engine = "postgresql";
+      engine = "postgres";
       engine_version = "14";
       port = 5432;
       allow_major_version_upgrade = false;
