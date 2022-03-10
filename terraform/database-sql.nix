@@ -9,13 +9,13 @@
 
   config.resource = let name = "dailp-database";
   in {
-    aws_db_subnet_group."${name}" = {
+    aws_db_subnet_group.sql_database = {
       name = name;
       subnet_ids = lib.attrValues config.setup.subnets;
       tags = { Name = "Subnet Group for DAILP"; };
     };
 
-    aws_db_instance."${name}" = {
+    aws_db_instance.sql_database = {
       identifier = "${name}-primary";
       tags = config.setup.global_tags // config.servers.database.tags;
       instance_class = "db.t4g.medium";
@@ -26,6 +26,7 @@
 
       engine = "postgresql";
       engine_version = "14";
+      port = 5432;
       allow_major_version_upgrade = false;
       auto_minor_version_upgrade = true;
       username = "admin";
@@ -39,6 +40,16 @@
 
       # Server times are in UTC, so this is 12am-3am PT
       maintenance_window = "Tue:08:00-Tue:11:00";
+    };
+
+    aws_security_group_rule.sql_database_external = {
+      type = "ingress";
+      security_group_id = "\${aws_security_group.nixos_test.id}";
+      source_security_group_id = "\${aws_security_group.mongodb_access.id}";
+      description = "RDS external access";
+      protocol = "tcp";
+      from_port = 5432;
+      to_port = 5432;
     };
   };
 }
