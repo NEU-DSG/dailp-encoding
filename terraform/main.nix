@@ -22,6 +22,7 @@ in {
     ./auth.nix
     ./website.nix
     ./nu-tags.nix
+    ./database-sql.nix
   ];
 
   # Gives all modules access to which stage we're deploying to, while also
