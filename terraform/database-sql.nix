@@ -4,6 +4,7 @@
       availability_zone = mkOption { type = str; };
       password = mkOption { type = str; };
       security_group_ids = mkOption { type = listOf str; };
+      tags = mkOption { type = attrsOf str; };
     };
 
   config.resource = let name = "dailp-database";
@@ -16,6 +17,7 @@
 
     aws_db_instance."${name}" = {
       identifier = "${name}-primary";
+      tags = config.setup.global_tags // config.servers.database.tags;
       instance_class = "db.t4g.medium";
       storage_type = "gp2";
       storage_encrypted = true;
@@ -34,6 +36,9 @@
       availability_zone = config.servers.database.availability_zone;
       db_subnet_group_name = name;
       vpc_security_group_ids = config.servers.database.security_group_ids;
+
+      # Server times are in UTC, so this is 12am-3am PT
+      maintenance_window = "Tue:08:00-Tue:11:00";
     };
   };
 }
