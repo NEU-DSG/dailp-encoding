@@ -22,6 +22,7 @@ in {
     ./auth.nix
     ./website.nix
     ./nu-tags.nix
+    ./database-sql.nix
   ];
 
   # Gives all modules access to which stage we're deploying to, while also
@@ -62,6 +63,8 @@ in {
       id = "graphql";
       name = "dailp-graphql";
       env = {
+        DATABASE_URL =
+          "postgres://\${aws_db_instance.sql_database.username}:${config.servers.database.password}@\${aws_db_instance.sql_database.endpoint}/dailp";
         MONGODB_PASSWORD = getEnv "MONGODB_PASSWORD";
         MONGODB_URI =
           "mongodb://\${aws_instance.mongodb_primary.public_dns}:27017/admin?retryWrites=true&w=majority";
@@ -87,6 +90,12 @@ in {
         # }
       ];
     }];
+  };
+
+  servers.database = {
+    password = getEnv "DATABASE_PASSWORD";
+    availability_zone = getEnv "AWS_ZONE_PRIMARY";
+    security_group_ids = [ "\${aws_security_group.nixos_test.id}" ];
   };
 
   servers.mongodb.nodes = [
