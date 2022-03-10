@@ -29,7 +29,7 @@
       port = 5432;
       allow_major_version_upgrade = false;
       auto_minor_version_upgrade = true;
-      username = "admin";
+      username = "dailp";
       password = config.servers.database.password;
 
       publicly_accessible = false;
