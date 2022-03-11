@@ -71,7 +71,7 @@ export const WordPanel = (p: {
         <Button
           className={css.wordPanelButton.basic}
           onClick={() => p.setContent(null)}
-          aria-label="Close Word Details"
+          aria-label="Dismiss selected word information"
         >
           <MdClose size={32} />
         </Button>
@@ -137,7 +137,11 @@ const CollapsiblePanel = (p: {
   const disclosure = useDisclosureState({ visible: true })
   return (
     <div className={css.collPanel} aria-label={p.title}>
-      <Disclosure {...disclosure} className={css.collPanelButton}>
+      <Disclosure
+        {...disclosure}
+        className={css.collPanelButton}
+        aria-label={`${p.title} header`}
+      >
         {p.icon} {p.title}
         {disclosure.visible ? (
           <AiFillCaretDown className={css.wordPanelButton.colpright} />
