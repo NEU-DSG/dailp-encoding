@@ -1,5 +1,5 @@
 import { StyleRule, style, styleVariants } from "@vanilla-extract/css"
-import { margin } from "polished"
+import { borderWidth, margin } from "polished"
 import {
   colors,
   hspace,
@@ -50,8 +50,7 @@ export const wordGroup = style([
   paddingY(vspace.half),
   {
     display: "block",
-    paddingLeft: hspace.halfEdge,
-    paddingRight: 0,
+    padding: hspace.halfEdge,
     borderWidth: thickness.thick,
     borderStyle: "solid",
     borderColor: colors.borders,
@@ -63,23 +62,46 @@ export const wordGroup = style([
     "@media": {
       [mediaQueries.medium]: {
         display: "inline-block",
-        padding: 0,
-        border: "none",
         ...margin(vspace.half, "3rem", vspace.one, 0),
+      }
+    }
+  },
+])
+
+export const wordGroupSelection = styleVariants({
+  unselected: [wordGroup, {
+    "@media": {
+      [mediaQueries.medium]: {
+        borderColor: "transparent",
       },
       [mediaQueries.print]: {
         display: "inline-block",
-        padding: 0,
         border: "none",
         ...margin(0, "3.5rem", vspace[1.5], 0),
       },
     },
-  },
-])
+  }],
+  selected: [wordGroup, {
+    borderColor: "black",
+    backgroundColor: colors.header,
+  }],
+})
 
 export const syllabaryLayer = style({
   fontFamily: theme.fonts.cherokee,
   fontSize: "1.15rem",
+})
+
+export const syllabarySelectedLayer = style({
+  fontFamily: theme.fonts.cherokee,
+  fontSize: "1.15rem",
+  display: "block",
+  borderWidth: thickness.thick,
+  borderStyle: "solid",
+  borderColor: colors.borders,
+  borderRadius: radii.medium,
+  paddingLeft: hspace.halfEdge,
+  paddingRight: hspace.halfEdge,
 })
 
 export const plainSyllabary = style({
@@ -146,6 +168,12 @@ const annotationSectionBase = style([
     width: "100%",
     position: "relative",
     marginBottom: vspace.half,
+    "@media": {
+      [mediaQueries.medium]: {
+        display: "flex",
+        flexFlow: "row wrap",
+      },
+    },
   },
 ])
 
@@ -157,7 +185,7 @@ export const annotationSection = styleVariants({
 export const audioContainer = style({ paddingLeft: "40%" })
 
 export const infoIcon = style({
-  cursor: "help",
+  cursor: "pointer",
   marginLeft: hspace.halfEdge,
   "@media": {
     [mediaQueries.print]: {
@@ -167,3 +195,22 @@ export const infoIcon = style({
 })
 
 export const linkSvg = style({ fill: colors.link })
+
+export const fillerLine = style([
+  {
+    borderWidth: 0,
+    borderBottom: `1px solid ${theme.colors.text}`,
+    background: "none",
+    textAlign: "start",
+    width: "100%",
+  },
+])
+
+export const lineBox = style([
+  {
+    height: "1.5em",
+    padding: ".75em",
+    paddingLeft: "0em",
+    paddingRight: "0.75em",
+  },
+])

@@ -11,6 +11,10 @@
       if config.setup.stage == "dev" then "library-dev" else "library-prod";
     "nu:application" = "dailp";
   };
+  servers.database.tags = {
+    "nu:function" = "database";
+    "nu:backups" = "no";
+  };
   servers.mongodb.instance_tags = {
     "nu:function" = "database";
     "nu:os" = "nixos";

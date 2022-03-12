@@ -78,6 +78,7 @@
     "eslint": "^8.6.0",
     "express": "^4.17.2",
     "npm-run-all": "^4.1.5",
+    "postcss-preset-env": "^7.3.0",
     "prettier": "^2.1.2",
     "react-ssr-prepass": "^1.4.0",
     "ts-node": "^10.4.0",
@@ -87,6 +88,12 @@
     "vite-plugin-checker": "^0.3.4",
     "vite-tsconfig-paths": "^3.3.17"
   },
+  "browserslist": [
+    "supports es6-module",
+    "supports css-variables",
+    "IE 11",
+    "maintained node versions"
+  ],
   "prettier": {
     "trailingComma": "es5",
     "semi": false,
@@ -94,6 +101,12 @@
     "importOrder": ["^src/(.*)$", "^[./]"],
     "importOrderSeparation": false,
     "importOrderSortSpecifiers": true
+  },
+  "postcss": {
+    "map": false,
+    "plugins": {
+      "postcss-preset-env": {}
+    }
   },
   "resolutions": {
     "graphql": "^15.4.0"

@@ -1,7 +1,8 @@
+import { DialogOverlay } from "@reach/dialog"
 import { Tooltip } from "@reach/tooltip"
 import "@reach/tooltip/styles.css"
 import { Howl } from "howler"
-import React from "react"
+import React, { Dispatch, SetStateAction, useState } from "react"
 import { MdInfoOutline } from "react-icons/md"
 import * as Dailp from "src/graphql/dailp"
 import { DocumentContents } from "src/pages/documents/document.page"
@@ -15,6 +16,7 @@ import {
   ViewMode,
   morphemeDisplayTag,
 } from "./types"
+import { WordPanelDetails } from "./word-panel"
 
 type TranslatedPage = NonNullable<DocumentContents["translatedPages"]>[0]
 type TranslatedParagraph = TranslatedPage["paragraphs"][0]
@@ -27,6 +29,7 @@ interface Props {
   tagSet: TagSet
   pageImages: readonly string[]
   phoneticRepresentation: PhoneticRepresentation
+  wordPanelDetails: WordPanelDetails
 }
 
 export const DocumentPage = (
@@ -64,6 +67,7 @@ export const DocumentParagraph = (
           tagSet={p.tagSet}
           pageImages={p.pageImages}
           phoneticRepresentation={p.phoneticRepresentation}
+          wordPanelDetails={p.wordPanelDetails}
         />
       )
     }) ?? null
@@ -95,17 +99,30 @@ export const AnnotatedForm = (
     return null
   }
   const showAnything = p.viewMode > ViewMode.Story
+  let wordCSS = css.wordGroupSelection.unselected
+  if (
+    p.wordPanelDetails.currContents?.source === p.segment.source &&
+    p.wordPanelDetails.currContents?.index === p.segment.index
+  ) {
+    wordCSS = css.wordGroupSelection.selected
+    p.wordPanelDetails.setCurrContents(
+      p.segment
+    ) /* This makes sure the word panel updates for changes to the word panel*/
+  }
   if (showAnything) {
     const showSegments = p.viewMode >= ViewMode.Segmentation
     const translation = p.segment.englishGloss.join(", ")
 
     return (
-      <div className={css.wordGroup} id={`w${p.segment.index}`}>
+      <div className={wordCSS} id={`w${p.segment.index}`}>
         <div className={css.syllabaryLayer} lang="chr">
           {p.segment.source}
-          {p.segment.commentary && p.viewMode >= ViewMode.Pronunciation && (
-            <WordCommentaryInfo commentary={p.segment.commentary} />
-          )}
+          <span
+            className={css.infoIcon}
+            onClick={() => p.wordPanelDetails.setCurrContents(p.segment)}
+          >
+            <MdInfoOutline size={20} className={css.linkSvg} />
+          </span>
         </div>
         {p.segment.simplePhonetics ? (
           <>
@@ -139,8 +156,8 @@ export const AnnotatedForm = (
             </div>
           )) || (
             <>
-              <br />
-              <br />
+              <FillerLine />
+              <FillerLine />
             </>
           )
         )}
@@ -152,7 +169,11 @@ export const AnnotatedForm = (
             tagSet={p.tagSet}
           />
         ) : null}
-        {translation.length ? <div>&lsquo;{translation}&rsquo;</div> : <br />}
+        {translation.length ? (
+          <div>&lsquo;{translation}&rsquo;</div>
+        ) : (
+          <FillerLine />
+        )}
       </div>
     )
   } else {
@@ -190,23 +211,29 @@ const WithTooltip = (p: {
   </Tooltip>
 )
 
+const FillerLine = () => (
+  <div className={css.lineBox}>
+    <hr className={css.fillerLine} />
+  </div>
+)
+
 /**
  * Displays the break-down of a word into its units of meaning and the English
  * glosses for each morpheme.
  */
-const MorphemicSegmentation = (p: {
+export const MorphemicSegmentation = (p: {
   segments: Dailp.FormFieldsFragment["segments"]
   tagSet: TagSet
   onOpenDetails: Props["onOpenDetails"]
   level: ViewMode
 }) => {
-  // If there is no segmentation, return two line breaks for the
+  // If there is no segmentation, return a hard break for the
   // morphemic segmentation and morpheme gloss layers.
   if (!p.segments?.length) {
     return (
       <>
-        <br />
-        <br />
+        <FillerLine />
+        <FillerLine />
       </>
     )
   }

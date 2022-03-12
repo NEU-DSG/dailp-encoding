@@ -6,7 +6,7 @@ jobs:
     runs-on: ubuntu-20.04
     environment: ${{ github.ref == 'refs/heads/main' && 'Development' || 'Production' }}
     env:
-      MONGODB_PASSWORD: ${{ secrets.MONGODB_PASSWORD }}
+      DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
       GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
       AWS_VPC_ID: ${{ secrets.AWS_VPC_ID }}
       AWS_SUBNET_PRIMARY: ${{ secrets.AWS_SUBNET_PRIMARY }}

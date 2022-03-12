@@ -1,9 +1,15 @@
 import { DialogContent, DialogOverlay } from "@reach/dialog"
 import "@reach/dialog/styles.css"
-import React, { useState } from "react"
+import React, { Dispatch, SetStateAction, useEffect, useState } from "react"
 import { isMobile } from "react-device-detect"
 import { Helmet } from "react-helmet"
 import Sticky from "react-stickynode"
+import {
+  Dialog,
+  DialogBackdrop,
+  DialogDisclosure,
+  useDialogState,
+} from "reakit/Dialog"
 import { Tab, TabList, TabPanel } from "reakit/Tab"
 import { DocumentAudio } from "src/audio-player"
 import { Breadcrumbs } from "src/breadcrumbs"
@@ -11,6 +17,7 @@ import { Button } from "src/components"
 import Link from "src/components/link"
 import * as Dailp from "src/graphql/dailp"
 import Layout from "src/layout"
+import { drawerBg, navButton, navDrawer } from "src/menu.css"
 import { ExperiencePicker, selectedMode, selectedPhonetics } from "src/mode"
 import { MorphemeDetails } from "src/morpheme"
 import {
@@ -27,6 +34,7 @@ import {
   ViewMode,
   tagSetForMode,
 } from "src/types"
+import { WordPanel, WordPanelDetails } from "src/word-panel"
 import PageImages from "../../page-image"
 import * as css from "./document.css"
 
@@ -132,6 +140,29 @@ const TranslationTab = ({ doc }: { doc: Document }) => {
     setDialogOpen(true)
   }
 
+  const dialog = useDialogState({ animated: true, modal: false })
+  const [selectedWord, setSelectedWord] =
+    useState<Dailp.FormFieldsFragment | null>(null)
+  const selectAndShowWord = (content: Dailp.FormFieldsFragment | null) => {
+    setSelectedWord(content)
+    if (content) {
+      dialog.show()
+    } else {
+      dialog.hide()
+    }
+  }
+  /* This useEffect makes that when the mobile version of the word panel is closed, the word is unselected*/
+  useEffect(() => {
+    if (!dialog.visible) {
+      selectAndShowWord(null)
+    }
+  }, [dialog.visible])
+
+  let wordPanelInfo = {
+    currContents: selectedWord,
+    setCurrContents: selectAndShowWord,
+  }
+
   const [phoneticRepresentation, _setPhoneticRepresentation] =
     useState<PhoneticRepresentation>(selectedPhonetics())
 
@@ -140,6 +171,7 @@ const TranslationTab = ({ doc }: { doc: Document }) => {
   )
 
   const tagSet = tagSetForMode(experienceLevel)
+
   return (
     <>
       <DialogOverlay
@@ -162,27 +194,56 @@ const TranslationTab = ({ doc }: { doc: Document }) => {
         </DialogContent>
       </DialogOverlay>
 
-      <p className={css.paragraph}>
-        Each mode below displays different information about the words on the
-        page. Hover over each mode for a specific description.
-      </p>
+      <DialogBackdrop {...dialog} className={drawerBg}>
+        <Dialog
+          {...dialog}
+          as="nav"
+          className={css.mobileWordPanel}
+          aria-label="Word Panel Drawer"
+          preventBodyScroll={false}
+          hideOnClickOutside={false}
+        >
+          <WordPanel
+            segment={wordPanelInfo.currContents}
+            setContent={wordPanelInfo.setCurrContents}
+            viewMode={experienceLevel}
+            onOpenDetails={openDetails}
+            tagSet={tagSet}
+          />
+        </Dialog>
+      </DialogBackdrop>
 
       <SolidSticky top="#document-tabs-header">
+        Display Mode:&ensp;
         <ExperiencePicker onSelect={setExperienceLevel} />
         {/*<PhoneticsPicker onSelect={setPhoneticRepresentation} />*/}
       </SolidSticky>
 
-      <article className={css.annotationContents}>
-        <DocumentContents
-          {...{
-            experienceLevel,
-            doc,
-            openDetails,
-            tagSet,
-            phoneticRepresentation,
-          }}
-        />
-      </article>
+      <div className={css.contentContainer}>
+        <article className={css.annotationContents}>
+          <DocumentContents
+            {...{
+              experienceLevel,
+              doc,
+              openDetails,
+              tagSet,
+              phoneticRepresentation,
+              wordPanelDetails: wordPanelInfo,
+            }}
+          />
+        </article>
+        {selectedWord && experienceLevel > 0 ? (
+          <div className={css.contentSection2}>
+            <WordPanel
+              segment={wordPanelInfo.currContents}
+              setContent={wordPanelInfo.setCurrContents}
+              viewMode={experienceLevel}
+              onOpenDetails={openDetails}
+              tagSet={tagSet}
+            />
+          </div>
+        ) : null}
+      </div>
     </>
   )
 }
@@ -193,12 +254,14 @@ const DocumentContents = ({
   openDetails,
   tagSet,
   phoneticRepresentation,
+  wordPanelDetails,
 }: {
   doc: Document
   experienceLevel: ViewMode
   tagSet: TagSet
   openDetails: (morpheme: any) => void
   phoneticRepresentation: PhoneticRepresentation
+  wordPanelDetails: WordPanelDetails
 }) => {
   let morphemeSystem = Dailp.CherokeeOrthography.Learner
   if (experienceLevel === ViewMode.AnalysisDt) {
@@ -225,6 +288,7 @@ const DocumentContents = ({
           tagSet={tagSet}
           pageImages={doc.pageImages?.urls!}
           phoneticRepresentation={phoneticRepresentation}
+          wordPanelDetails={wordPanelDetails}
         />
       ))}
       {docContents.forms?.map((form, i) => (
@@ -236,6 +300,7 @@ const DocumentContents = ({
           tagSet={tagSet}
           phoneticRepresentation={phoneticRepresentation}
           pageImages={doc.pageImages?.urls!}
+          wordPanelDetails={wordPanelDetails}
         />
       ))}
     </>
