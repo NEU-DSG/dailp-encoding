@@ -122,7 +122,6 @@ impl PositionInDocument {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct LexicalConnection {
     /// Unique ID of this connection, generally formatted as "FROM-TO"
-    #[serde(rename = "_id")]
     pub id: String,
     /// List of all forms or morphemes to associate
     pub left: MorphemeId,

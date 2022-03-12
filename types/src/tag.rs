@@ -11,7 +11,6 @@ pub struct MorphemeTag {
     /// Unique identifier for this morpheme which should be used in raw
     /// interlinear glosses of a word containing this morpheme.
     /// Standard annotation tag for this morpheme, defined by DAILP.
-    #[serde(rename = "_id")]
     pub id: String,
     /// The "learner" representation of this morpheme, a compromise between no
     /// interlinear glossing and standard linguistic terms.
@@ -33,14 +32,15 @@ impl MorphemeTag {
         &self,
         context: &async_graphql::Context<'_>,
     ) -> async_graphql::FieldResult<Vec<String>> {
-        let id = MorphemeId::new(None, None, self.id.clone());
-        Ok(context
-            .data::<Database>()?
-            .morphemes(&id, None)
-            .await?
-            .into_iter()
-            .map(|x| x.morpheme)
-            .collect())
+        todo!()
+        // let id = MorphemeId::new(None, None, self.id.clone());
+        // Ok(context
+        //     .data::<Database>()?
+        //     .morphemes(&id, None)
+        //     .await?
+        //     .into_iter()
+        //     .map(|x| x.morpheme)
+        //     .collect())
     }
 }
 

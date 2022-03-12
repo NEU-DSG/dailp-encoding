@@ -50,17 +50,13 @@ async fn main() -> Result<()> {
 }
 
 async fn migrate_image_sources(db: &Database) -> Result<()> {
-    use dailp::{ImageSource, ImageSourceId};
-    // db.update_image_source(ImageSource {
-    //     id: ImageSourceId("beinecke".to_owned()),
-    //     url: "https://collections.library.yale.edu/iiif/2".to_owned(),
-    // })
-    // .await?;
-    // db.update_image_source(ImageSource {
-    //     id: ImageSourceId("dailp".to_owned()),
-    //     url: "https://wd0ahsivs3.execute-api.us-east-1.amazonaws.com/latest/iiif/2".to_owned(),
-    // })
-    // .await?;
+    db.upsert_image_source("beinecke", "https://collections.library.yale.edu/iiif/2")
+        .await?;
+    db.upsert_image_source(
+        "dailp",
+        "https://wd0ahsivs3.execute-api.us-east-1.amazonaws.com/latest/iiif/2",
+    )
+    .await?;
     Ok(())
 }
 
@@ -86,7 +82,7 @@ async fn migrate_data(db: &Database) -> Result<()> {
             .insert_top_collection(collection.title, coll_index as i64)
             .await?;
         for (order_index, sheet_id) in collection.sheet_ids.into_iter().enumerate() {
-            if let Some((doc, mut refs)) = fetch_sheet(&sheet_id, order_index as i64).await? {
+            if let Some((doc, mut refs)) = fetch_sheet(db, &sheet_id, order_index as i64).await? {
                 morpheme_relations.append(&mut refs);
                 // spreadsheets::write_to_file(&doc)?;
                 spreadsheets::migrate_documents_to_db(db, doc, &collection_id, order_index as i64)
@@ -108,6 +104,7 @@ async fn migrate_data(db: &Database) -> Result<()> {
 /// Fetch the contents of the sheet with the given ID, validating the first page as
 /// annotation lines and the "Metadata" page as [dailp::DocumentMetadata].
 async fn fetch_sheet(
+    db: &Database,
     sheet_id: &str,
     order_index: i64,
 ) -> Result<Option<(dailp::AnnotatedDoc, Vec<dailp::LexicalConnection>)>> {
@@ -117,7 +114,7 @@ async fn fetch_sheet(
     // This includes publication information and a link to the translation.
     let meta = spreadsheets::SheetResult::from_sheet(sheet_id, Some(METADATA_SHEET_NAME)).await;
     if let Ok(meta_sheet) = meta {
-        let meta = meta_sheet.into_metadata(false, order_index).await?;
+        let meta = meta_sheet.into_metadata(db, false, order_index).await?;
 
         info!("---Processing document: {}---", meta.id.0);
 

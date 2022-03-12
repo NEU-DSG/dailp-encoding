@@ -4,7 +4,7 @@ use {
     dailp::async_graphql::{self, dataloader::DataLoader, Context, FieldResult, Guard},
     dailp::{
         database_sql, AnnotatedDoc, CherokeeOrthography, Database, MorphemeId, MorphemeReference,
-        MorphemeTag, WordsInDocument,
+        MorphemeTag, TagForm, WordsInDocument,
     },
     mongodb::bson,
     serde::{Deserialize, Serialize},
@@ -17,8 +17,15 @@ pub struct Query;
 #[async_graphql::Object]
 impl Query {
     /// List of all the functional morpheme tags available
-    async fn all_tags(&self, context: &Context<'_>) -> FieldResult<Vec<MorphemeTag>> {
-        Ok(context.data::<Database>()?.all_tags().await?)
+    async fn all_tags(
+        &self,
+        context: &Context<'_>,
+        system: CherokeeOrthography,
+    ) -> FieldResult<Vec<TagForm>> {
+        Ok(context
+            .data::<database_sql::Database>()?
+            .all_tags(system)
+            .await?)
     }
 
     /// Listing of all documents excluding their contents by default
@@ -187,18 +194,6 @@ impl Query {
         Ok(context
             .data::<DataLoader<Database>>()?
             .load_one(dailp::TagId(id))
-            .await?)
-    }
-
-    /// Details of one image source based on its short identifier string.
-    async fn image_source(
-        &self,
-        context: &Context<'_>,
-        id: String,
-    ) -> FieldResult<Option<dailp::ImageSource>> {
-        Ok(context
-            .data::<Database>()?
-            .image_source(&dailp::ImageSourceId(id))
             .await?)
     }
 

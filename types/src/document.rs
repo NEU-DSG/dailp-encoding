@@ -5,8 +5,8 @@ use crate::{
 use async_graphql::{dataloader::DataLoader, FieldResult};
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
-use sqlx::types::Uuid;
 use std::borrow::Cow;
+use uuid::Uuid;
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct AnnotatedDoc {
@@ -328,20 +328,19 @@ impl DocumentId {
     }
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct ImageSourceId(pub String);
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub struct ImageSourceId(pub Uuid);
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ImageSource {
-    #[serde(rename = "_id")]
     pub id: ImageSourceId,
     pub url: String,
 }
 #[async_graphql::Object]
 impl ImageSource {
-    async fn id(&self) -> &str {
-        &self.id.0
-    }
+    // async fn id(&self) -> &str {
+    //     &self.id.0
+    // }
     async fn url(&self) -> &str {
         &self.url
     }
@@ -364,8 +363,8 @@ impl IiifImages {
         context: &async_graphql::Context<'_>,
     ) -> async_graphql::FieldResult<ImageSource> {
         Ok(context
-            .data::<Database>()?
-            .image_source(&self.source)
+            .data::<DataLoader<database_sql::Database>>()?
+            .load_one(self.source.clone())
             .await?
             .ok_or_else(|| anyhow::format_err!("Image source not found"))?)
     }

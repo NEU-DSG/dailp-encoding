@@ -111,7 +111,7 @@ impl AnnotatedForm {
         context: &async_graphql::Context<'_>,
     ) -> FieldResult<Option<AnnotatedDoc>> {
         Ok(context
-            .data::<DataLoader<Database>>()?
+            .data::<DataLoader<database_sql::Database>>()?
             .load_one(self.position.document_id.clone())
             .await?)
     }

@@ -1,25 +1,35 @@
+-- Always use bigint instead of int.
 -- https://blog.rustprooflabs.com/2021/06/postgres-bigint-by-default
+
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+create extension if not exists "ltree";
 
 CREATE DOMAIN autouuid uuid DEFAULT uuid_generate_v4 ();
 
-CREATE TABLE super_collection (
-  slug text PRIMARY KEY,
-  title text NOT NULL
+-- Base website: Language > Group > Document
+-- CWKW: Collection > Chapter > Sub-chapter > Page + Document
+
+CREATE TABLE document_group (
+  id autouuid primary key,
+  slug text not null unique,
+  title text not null
 );
 
-INSERT INTO super_collection (slug, title)
-  VALUES ('', 'Cherokee Documents');
-
 CREATE TABLE collection (
+  slug text PRIMARY KEY,
+  title text NOT NULL
+  -- There will eventually be more details here.
+  -- WordPress menu ID
+  -- URL for logo file, perhaps?
+);
+
+CREATE TABLE collection_chapter (
   id autouuid PRIMARY KEY,
-  super_collection text NOT NULL REFERENCES super_collection (slug) ON DELETE CASCADE ON UPDATE CASCADE,
-  -- Allow sub-collections. Collections with null parent are top-level.
-  parent_id uuid REFERENCES collection (id) ON DELETE CASCADE,
+  -- Path always starts with the collection slug.
+  slug_path ltree not null unique,
   index_in_parent bigint NOT NULL DEFAULT 0,
-  slug text NOT NULL,
-  title text NOT NULL,
-  UNIQUE (super_collection, slug)
+  title text NOT NULL
+  -- Might add a chapter introduction text field.
 );
 
 CREATE TABLE audio_resource (
@@ -37,15 +47,23 @@ CREATE TABLE audio_slice (
 CREATE TABLE document (
   id text PRIMARY KEY,
   title text NOT NULL,
+  group_id uuid not null references document_group (id) on delete cascade,
+  index_in_group bigint not null default 0,
   is_reference boolean NOT NULL,
   written_at date,
   audio_slice_id uuid REFERENCES audio_slice (id) ON DELETE SET NULL
 );
 
+CREATE TABLE collection_page (
+  id autouuid primary key,
+  chapter_id uuid not null references collection_chapter (id) on delete cascade,
+  document_id text references document (id) on delete set null
+);
+
 CREATE TABLE iiif_source (
   id autouuid PRIMARY KEY,
   title text NOT NULL,
-  base_url text NOT NULL
+  base_url text NOT NULL unique
 );
 
 -- TODO consider grouping paragraphs into pages which then have associated images.
@@ -67,17 +85,6 @@ CREATE TABLE character_transcription (
   possible_transcriptions text[] not null,
   image_area box,
   UNIQUE (page_id, index_in_page)
-);
-
--- Place a document within a collection.
-CREATE TABLE document_collection_position (
-  collection_id uuid NOT NULL REFERENCES collection (id) ON DELETE CASCADE,
-  document_id text NOT NULL REFERENCES document (id) ON DELETE CASCADE,
-  index_in_collection bigint NOT NULL,
-  -- TODO Add associated description
-  -- TODO Figure out what other fields need to live here.
-  PRIMARY KEY (collection_id, document_id),
-  UNIQUE (collection_id, index_in_collection)
 );
 
 -- Used both for known static contributors and active users.

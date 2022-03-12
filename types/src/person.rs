@@ -47,7 +47,6 @@ impl Contributor {
 pub struct ContributorDetails {
     /// Full name of this person, this exact string must be used to identify
     /// them elsewhere, like in the attribution for a particular document.
-    #[serde(rename = "_id")]
     pub full_name: String,
     /// Alternate name of this person, may be in a different language or writing
     /// system. Used only for descriptive purposes.

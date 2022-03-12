@@ -1,12 +1,13 @@
 use crate::*;
 use lazy_static::lazy_static;
+use sqlx::postgres::*;
 
 /// One representation of Cherokee phonology.
 /// There are several different writing systems for Cherokee phonology and we
 /// want to convert between them.
 /// This type enumerates all of the systems that we support and provides
 /// conversion from our internal orthography into any of these.
-#[derive(async_graphql::Enum, Clone, Copy, Eq, PartialEq, Hash)]
+#[derive(async_graphql::Enum, Clone, Copy, Eq, PartialEq, Hash, sqlx::Type)]
 pub enum CherokeeOrthography {
     /// The t/th system for transcribing the Cherokee syllabary.
     /// This orthography is favored by linguists as it is segmentally more accurate.
@@ -19,6 +20,16 @@ pub enum CherokeeOrthography {
     /// Simplified system that uses d/t without tones, a compromise intended for
     /// language learners.
     Learner,
+}
+
+impl PgHasArrayType for CherokeeOrthography {
+    fn array_type_info() -> PgTypeInfo {
+        <&str as PgHasArrayType>::array_type_info()
+    }
+
+    fn array_compatible(ty: &PgTypeInfo) -> bool {
+        <&str as PgHasArrayType>::array_compatible(ty)
+    }
 }
 
 impl CherokeeOrthography {

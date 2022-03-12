@@ -17,7 +17,7 @@ lazy_static::lazy_static! {
     static ref SCHEMA: Schema<Query, Mutation, EmptySubscription> = {
         Schema::build(Query, Mutation, EmptySubscription)
             .data(dailp::Database::new().unwrap())
-            .data(DataLoader::new(dailp::Database::new().unwrap()))
+            .data(DataLoader::new(dailp::Database::new().unwrap(), tokio::spawn))
             .finish()
     };
 }

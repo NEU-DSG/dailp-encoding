@@ -35,6 +35,39 @@ impl Database {
         Ok(Database { client: conn })
     }
 
+    pub async fn upsert_image_source(&self, title: &str, url: &str) -> Result<Uuid> {
+        let id = query_file_scalar!("queries/insert_image_source.sql", title, url)
+            .fetch_one(&self.client)
+            .await?;
+        Ok(id)
+    }
+
+    pub async fn image_source_by_title(&self, title: &str) -> Result<Option<Uuid>> {
+        let results = query_file!("queries/image_source_by_title.sql", title)
+            .fetch_all(&self.client)
+            .await?;
+        Ok(results.first().map(|x| x.id))
+    }
+
+    pub async fn all_tags(&self, system: CherokeeOrthography) -> Result<Vec<TagForm>> {
+        let results = query_file!(
+            "queries/all_morpheme_tags.sql",
+            system as CherokeeOrthography
+        )
+        .fetch_all(&self.client)
+        .await?;
+        Ok(results
+            .into_iter()
+            .map(|tag| TagForm {
+                tag: tag.gloss,
+                title: tag.title,
+                shape: None,
+                details_url: None,
+                definition: tag.description.unwrap_or_default(),
+            })
+            .collect())
+    }
+
     pub async fn search_words_any_field(&self, query: String) -> Result<Vec<AnnotatedForm>> {
         let like_query = format!("%{}%", query);
         let results = query_file!("queries/search_words_any_field.sql", like_query)
@@ -63,7 +96,7 @@ impl Database {
 
     pub async fn top_collections(&self) -> Result<Vec<DocumentCollection>> {
         Ok(
-            query_file_as!(DocumentCollection, "queries/top_collections.sql")
+            query_file_as!(DocumentCollection, "queries/document_groups.sql")
                 .fetch_all(&self.client)
                 .await?,
         )
@@ -110,8 +143,7 @@ impl Database {
     ) -> Result<Vec<DocumentReference>> {
         Ok(query_file_as!(
             DocumentReference,
-            "queries/documents_in_collection.sql",
-            super_collection,
+            "queries/documents_in_group.sql",
             collection
         )
         .fetch_all(&self.client)
@@ -120,17 +152,18 @@ impl Database {
 
     pub async fn insert_top_collection(&self, title: String, index: i64) -> Result<Uuid> {
         Ok(query_file_scalar!(
-            "queries/insert_collection.sql",
-            None as Option<Uuid>,
+            "queries/insert_document_group.sql",
             slug::slugify(&title),
-            title.trim(),
-            index
+            title.trim()
         )
         .fetch_one(&self.client)
         .await?)
     }
 
     pub async fn insert_dictionary_document(&self, document: &DocumentMetadata) -> Result<()> {
+        let group_id = self
+            .insert_top_collection(document.collection.clone().unwrap(), 0)
+            .await?;
         query_file!(
             "queries/insert_document.sql",
             document.id.0,
@@ -138,6 +171,7 @@ impl Database {
             document.is_reference,
             &document.date as &Option<Date>,
             None as Option<Uuid>,
+            group_id
         )
         .execute(&self.client)
         .await?;
@@ -194,7 +228,13 @@ impl Database {
                 let page_id = query_file_scalar!(
                     "queries/upsert_document_page.sql",
                     &document_id,
-                    page_index as i64
+                    page_index as i64,
+                    document.meta.page_images.as_ref().map(|imgs| imgs.source.0),
+                    document
+                        .meta
+                        .page_images
+                        .as_ref()
+                        .and_then(|imgs| imgs.ids.get(page_index))
                 )
                 .fetch_one(&mut tx)
                 .await?;
@@ -264,21 +304,14 @@ impl Database {
         document_id: &str,
         super_collection: &str,
     ) -> Result<Vec<DocumentCollection>> {
-        let breadcrumbs = query_file!(
-            "queries/document_breadcrumbs.sql",
-            document_id,
-            super_collection
-        )
-        .fetch_all(&self.client)
-        .await?;
+        let item = query_file!("queries/document_group_crumb.sql", document_id)
+            .fetch_one(&self.client)
+            .await?;
 
-        Ok(breadcrumbs
-            .into_iter()
-            .map(|item| DocumentCollection {
-                slug: item.slug.unwrap(),
-                title: item.title.unwrap(),
-            })
-            .collect())
+        Ok(vec![DocumentCollection {
+            slug: item.slug,
+            title: item.title,
+        }])
     }
 
     pub async fn insert_one_word(&self, form: AnnotatedForm) -> Result<()> {
@@ -494,7 +527,7 @@ impl Database {
     }
 
     pub async fn collection(&self, slug: String) -> Result<DocumentCollection> {
-        let collection = query_file!("queries/collection_details.sql", slug)
+        let collection = query_file!("queries/document_group_details.sql", slug)
             .fetch_one(&self.client)
             .await?;
         Ok(DocumentCollection {
@@ -698,21 +731,14 @@ impl Loader<TagForMorpheme> for Database {
         keys: &[TagForMorpheme],
     ) -> Result<HashMap<TagForMorpheme, Self::Value>, Self::Error> {
         let gloss_ids: Vec<_> = keys.iter().map(|k| k.0.clone()).collect();
-        let systems: Vec<_> = keys
-            .iter()
-            .unique()
-            .map(|k| {
-                match k.1 {
-                    CherokeeOrthography::Crg => "CRG",
-                    CherokeeOrthography::Learner => "Learner",
-                    CherokeeOrthography::Taoc => "TAOC",
-                }
-                .to_owned()
-            })
-            .collect();
-        let items = query_file!("queries/morpheme_tags.sql", &gloss_ids, &systems)
-            .fetch_all(&self.client)
-            .await?;
+        let systems: Vec<_> = keys.iter().map(|k| k.1).unique().collect();
+        let items = query_file!(
+            "queries/morpheme_tags.sql",
+            &gloss_ids,
+            &systems[..] as &[CherokeeOrthography]
+        )
+        .fetch_all(&self.client)
+        .await?;
         Ok(items
             .into_iter()
             .map(|tag| {
@@ -732,6 +758,34 @@ impl Loader<TagForMorpheme> for Database {
                         shape: tag.example_shape,
                         details_url: None,
                         definition: tag.description.unwrap_or_default(),
+                    },
+                )
+            })
+            .collect())
+    }
+}
+
+#[async_trait]
+impl Loader<ImageSourceId> for Database {
+    type Value = ImageSource;
+    type Error = Arc<sqlx::Error>;
+
+    async fn load(
+        &self,
+        keys: &[ImageSourceId],
+    ) -> Result<HashMap<ImageSourceId, Self::Value>, Self::Error> {
+        let keys: Vec<_> = keys.iter().map(|k| k.0.clone()).collect();
+        let items = query_file!("queries/image_sources.sql", &keys)
+            .fetch_all(&self.client)
+            .await?;
+        Ok(items
+            .into_iter()
+            .map(|x| {
+                (
+                    ImageSourceId(x.id),
+                    ImageSource {
+                        id: ImageSourceId(x.id),
+                        url: x.base_url,
                     },
                 )
             })

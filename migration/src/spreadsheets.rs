@@ -304,6 +304,7 @@ impl SheetResult {
     /// Parse this sheet as a document metadata listing.
     pub async fn into_metadata(
         self,
+        db: &dailp::database_sql::Database,
         is_reference: bool,
         order_index: i64,
     ) -> Result<DocumentMetadata> {
@@ -389,10 +390,12 @@ impl SheetResult {
                     .into_translation(),
             ),
             page_images: if let (Some(ids), Some(source)) = (image_ids, image_source) {
-                Some(dailp::IiifImages {
-                    source: dailp::ImageSourceId(source),
-                    ids,
-                })
+                db.image_source_by_title(&source)
+                    .await?
+                    .map(|source| dailp::IiifImages {
+                        source: dailp::ImageSourceId(source),
+                        ids,
+                    })
             } else {
                 None
             },

@@ -80,12 +80,13 @@ impl Database {
     }
 
     pub async fn update_image_source(&self, source: ImageSource) -> Result<()> {
-        upsert_one(
-            &self.client.collection(Self::IMAGE_SOURCES),
-            &source.id.0,
-            &source,
-        )
-        .await
+        todo!()
+        // upsert_one(
+        //     &self.client.collection(Self::IMAGE_SOURCES),
+        //     &source.id.0,
+        //     &source,
+        // )
+        // .await
     }
 
     pub async fn all_documents(&self, collection: Option<&str>) -> Result<Vec<AnnotatedDoc>> {
@@ -146,12 +147,13 @@ impl Database {
     }
 
     pub async fn image_source(&self, id: &ImageSourceId) -> Result<Option<ImageSource>> {
-        Ok(self
-            .client
-            .collection(Self::IMAGE_SOURCES)
-            .find_one(bson::doc! { "_id": &id.0 }, None)
-            .await?
-            .and_then(|doc| bson::from_document(doc).ok()))
+        todo!()
+        // Ok(self
+        //     .client
+        //     .collection(Self::IMAGE_SOURCES)
+        //     .find_one(bson::doc! { "_id": &id.0 }, None)
+        //     .await?
+        //     .and_then(|doc| bson::from_document(doc).ok()))
     }
 
     pub async fn words_in_document(&self, doc_id: &DocumentId) -> Result<Vec<AnnotatedForm>> {
