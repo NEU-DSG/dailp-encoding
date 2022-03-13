@@ -59,4 +59,5 @@ pub struct TagForm {
     /// A prose description of what this morpheme means and how it works in
     /// context.
     pub definition: String,
+    pub morpheme_type: String,
 }

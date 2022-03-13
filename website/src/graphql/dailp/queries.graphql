@@ -30,13 +30,15 @@ query AnnotatedDocument($id: String!) {
       name
       link
     }
-    pageImages {
-      urls
-    }
     audioRecording {
       resourceUrl
       startTime
       endTime
+    }
+    translatedPages {
+      image {
+        url
+      }
     }
   }
 }
@@ -131,24 +133,11 @@ query AllSources {
   }
 }
 
-query Glossary {
-  allTags {
-    id
-    crg {
-      tag
-      title
-      definition
-    }
-    taoc {
-      tag
-      title
-      definition
-    }
-    learner {
-      tag
-      title
-      definition
-    }
+query Glossary($system: CherokeeOrthography!) {
+  allTags(system: $system) {
+    tag
+    title
+    definition
     morphemeType
   }
 }

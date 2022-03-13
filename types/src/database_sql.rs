@@ -44,12 +44,15 @@ impl Database {
     }
 
     pub async fn all_tags(&self, system: CherokeeOrthography) -> Result<Vec<TagForm>> {
-        let results = query_file!(
-            "queries/all_morpheme_tags.sql",
-            system as CherokeeOrthography
-        )
-        .fetch_all(&self.client)
-        .await?;
+        use async_graphql::InputType;
+        let system_name = if let async_graphql::Value::Enum(s) = system.to_value() {
+            s
+        } else {
+            unreachable!()
+        };
+        let results = query_file!("queries/all_morpheme_tags.sql", system_name.as_str())
+            .fetch_all(&self.client)
+            .await?;
         Ok(results
             .into_iter()
             .map(|tag| TagForm {
@@ -58,6 +61,7 @@ impl Database {
                 shape: None,
                 details_url: None,
                 definition: tag.description.unwrap_or_default(),
+                morpheme_type: tag.linguistic_type.unwrap_or_default(),
             })
             .collect())
     }
@@ -593,6 +597,16 @@ impl Loader<PagesInDocument> for Database {
                     DocumentPage {
                         id: page.id,
                         page_number: (page.index_in_document + 1).to_string(),
+                        image: if let (Some(source_id), Some(oid)) =
+                            (page.iiif_source_id, page.iiif_oid)
+                        {
+                            Some(PageImage {
+                                source_id: ImageSourceId(source_id),
+                                oid,
+                            })
+                        } else {
+                            None
+                        },
                     },
                 )
             })
@@ -724,27 +738,30 @@ impl Loader<TagForMorpheme> for Database {
         &self,
         keys: &[TagForMorpheme],
     ) -> Result<HashMap<TagForMorpheme, Self::Value>, Self::Error> {
+        use async_graphql::{InputType, Name, Value};
         let gloss_ids: Vec<_> = keys.iter().map(|k| k.0.clone()).collect();
-        let systems: Vec<_> = keys.iter().map(|k| k.1).unique().collect();
-        let items = query_file!(
-            "queries/morpheme_tags.sql",
-            &gloss_ids,
-            &systems[..] as &[CherokeeOrthography]
-        )
-        .fetch_all(&self.client)
-        .await?;
+        let systems: Vec<_> = keys
+            .iter()
+            .unique()
+            .map(|k| {
+                if let Value::Enum(s) = k.1.to_value() {
+                    s.as_str().to_owned()
+                } else {
+                    unreachable!()
+                }
+            })
+            .collect();
+        let items = query_file!("queries/morpheme_tags.sql", &gloss_ids, &systems)
+            .fetch_all(&self.client)
+            .await?;
         Ok(items
             .into_iter()
             .map(|tag| {
                 (
                     TagForMorpheme(
                         tag.gloss_id.unwrap(),
-                        match &*tag.system_name.unwrap() {
-                            "CRG" => CherokeeOrthography::Crg,
-                            "Learner" => CherokeeOrthography::Learner,
-                            "TAOC" => CherokeeOrthography::Taoc,
-                            _ => unreachable!(),
-                        },
+                        InputType::parse(Some(Value::Enum(Name::new(tag.system_name.unwrap()))))
+                            .unwrap(),
                     ),
                     TagForm {
                         tag: tag.gloss.unwrap(),
@@ -752,6 +769,7 @@ impl Loader<TagForMorpheme> for Database {
                         shape: tag.example_shape,
                         details_url: None,
                         definition: tag.description.unwrap_or_default(),
+                        morpheme_type: tag.linguistic_type.unwrap_or_default(),
                     },
                 )
             })

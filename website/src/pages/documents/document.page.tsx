@@ -112,8 +112,16 @@ const TabSet = ({ doc }: { doc: Document }) => {
         id={`${Tabs.IMAGES}-panel`}
         tabId={Tabs.IMAGES}
       >
-        {doc.pageImages ? (
-          <PageImages pageImages={doc.pageImages} document={doc} />
+        {doc.translatedPages ? (
+          <PageImages
+            pageImages={{
+              urls:
+                doc.translatedPages
+                  ?.filter((p) => !!p.image)
+                  .map((p) => p.image!.url) ?? [],
+            }}
+            document={doc}
+          />
         ) : null}
       </TabPanel>
     </>
@@ -286,7 +294,11 @@ const DocumentContents = ({
           onOpenDetails={openDetails}
           viewMode={experienceLevel}
           tagSet={tagSet}
-          pageImages={doc.pageImages?.urls!}
+          pageImages={
+            doc.translatedPages
+              ?.filter((p) => !!p.image)
+              .map((p) => p.image!.url) ?? []
+          }
           phoneticRepresentation={phoneticRepresentation}
           wordPanelDetails={wordPanelDetails}
         />
@@ -299,7 +311,7 @@ const DocumentContents = ({
           viewMode={experienceLevel}
           tagSet={tagSet}
           phoneticRepresentation={phoneticRepresentation}
-          pageImages={doc.pageImages?.urls!}
+          pageImages={[]}
           wordPanelDetails={wordPanelDetails}
         />
       ))}

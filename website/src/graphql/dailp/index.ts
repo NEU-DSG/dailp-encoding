@@ -246,6 +246,7 @@ export type DocumentCollection = {
 
 export type DocumentPage = {
   readonly __typename?: "DocumentPage"
+  readonly image: Maybe<PageImage>
   readonly pageNumber: Scalars["String"]
   readonly paragraphs: ReadonlyArray<DocumentParagraph>
 }
@@ -316,7 +317,6 @@ export type IiifImages = {
 
 export type ImageSource = {
   readonly __typename?: "ImageSource"
-  readonly id: Scalars["String"]
   readonly url: Scalars["String"]
 }
 
@@ -439,6 +439,12 @@ export type Page = {
   readonly title: Scalars["String"]
 }
 
+export type PageImage = {
+  readonly __typename?: "PageImage"
+  readonly source: ImageSource
+  readonly url: Scalars["String"]
+}
+
 /** The reference position within a document of one specific form */
 export type PositionInDocument = {
   readonly __typename?: "PositionInDocument"
@@ -481,12 +487,10 @@ export type Query = {
   /** List of all content pages */
   readonly allPages: ReadonlyArray<Page>
   /** List of all the functional morpheme tags available */
-  readonly allTags: ReadonlyArray<MorphemeTag>
+  readonly allTags: ReadonlyArray<TagForm>
   readonly collection: DocumentCollection
   /** Retrieves a full document from its unique identifier. */
   readonly document: Maybe<AnnotatedDoc>
-  /** Details of one image source based on its short identifier string. */
-  readonly imageSource: Maybe<ImageSource>
   readonly lexicalEntry: Maybe<AnnotatedForm>
   /**
    * Retrieve information for the morpheme that corresponds to the given tag
@@ -526,15 +530,15 @@ export type QueryAllDocumentsArgs = {
   collection: InputMaybe<Scalars["String"]>
 }
 
+export type QueryAllTagsArgs = {
+  system: CherokeeOrthography
+}
+
 export type QueryCollectionArgs = {
   slug: Scalars["String"]
 }
 
 export type QueryDocumentArgs = {
-  id: Scalars["String"]
-}
-
-export type QueryImageSourceArgs = {
   id: Scalars["String"]
 }
 
@@ -595,6 +599,7 @@ export type TagForm = {
   readonly definition: Scalars["String"]
   /** URL to an external page with more details about this morpheme. */
   readonly detailsUrl: Maybe<Scalars["String"]>
+  readonly morphemeType: Scalars["String"]
   /** How this morpheme looks in original language data */
   readonly shape: Maybe<Scalars["String"]>
   /** How this morpheme is represented in a gloss */
@@ -671,13 +676,19 @@ export type AnnotatedDocumentQuery = { readonly __typename?: "Query" } & {
             "name" | "link"
           >
         >
-        readonly pageImages: Maybe<
-          { readonly __typename?: "IiifImages" } & Pick<IiifImages, "urls">
-        >
         readonly audioRecording: Maybe<
           { readonly __typename?: "AudioSlice" } & Pick<
             AudioSlice,
             "resourceUrl" | "startTime" | "endTime"
+          >
+        >
+        readonly translatedPages: Maybe<
+          ReadonlyArray<
+            { readonly __typename?: "DocumentPage" } & {
+              readonly image: Maybe<
+                { readonly __typename?: "PageImage" } & Pick<PageImage, "url">
+              >
+            }
           >
         >
       }
@@ -870,33 +881,16 @@ export type AllSourcesQuery = { readonly __typename?: "Query" } & {
   >
 }
 
-export type GlossaryQueryVariables = Exact<{ [key: string]: never }>
+export type GlossaryQueryVariables = Exact<{
+  system: CherokeeOrthography
+}>
 
 export type GlossaryQuery = { readonly __typename?: "Query" } & {
   readonly allTags: ReadonlyArray<
-    { readonly __typename?: "MorphemeTag" } & Pick<
-      MorphemeTag,
-      "id" | "morphemeType"
-    > & {
-        readonly crg: Maybe<
-          { readonly __typename?: "TagForm" } & Pick<
-            TagForm,
-            "tag" | "title" | "definition"
-          >
-        >
-        readonly taoc: Maybe<
-          { readonly __typename?: "TagForm" } & Pick<
-            TagForm,
-            "tag" | "title" | "definition"
-          >
-        >
-        readonly learner: Maybe<
-          { readonly __typename?: "TagForm" } & Pick<
-            TagForm,
-            "tag" | "title" | "definition"
-          >
-        >
-      }
+    { readonly __typename?: "TagForm" } & Pick<
+      TagForm,
+      "tag" | "title" | "definition" | "morphemeType"
+    >
   >
 }
 
@@ -1123,13 +1117,15 @@ export const AnnotatedDocumentDocument = gql`
         name
         link
       }
-      pageImages {
-        urls
-      }
       audioRecording {
         resourceUrl
         startTime
         endTime
+      }
+      translatedPages {
+        image {
+          url
+        }
       }
     }
   }
@@ -1253,24 +1249,11 @@ export function useAllSourcesQuery(
   })
 }
 export const GlossaryDocument = gql`
-  query Glossary {
-    allTags {
-      id
-      crg {
-        tag
-        title
-        definition
-      }
-      taoc {
-        tag
-        title
-        definition
-      }
-      learner {
-        tag
-        title
-        definition
-      }
+  query Glossary($system: CherokeeOrthography!) {
+    allTags(system: $system) {
+      tag
+      title
+      definition
       morphemeType
     }
   }

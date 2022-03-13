@@ -4,7 +4,8 @@ select
   abbreviation_system.short_name as system_name,
   morpheme_tag.gloss,
   abstract_morpheme_tag.title,
-  abstract_morpheme_tag.description
+  abstract_morpheme_tag.description,
+  abstract_morpheme_tag.linguistic_type
 from morpheme_gloss
 inner join abstract_morpheme_tag on abstract_morpheme_tag.id = morpheme_gloss.tag_id
 left join abbreviation_system on abbreviation_system.short_name = any($2)

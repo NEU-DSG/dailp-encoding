@@ -26,7 +26,7 @@ pub async fn migrate_tags(db: &Database) -> Result<()> {
         .insert_morpheme_system("TAOC".into(), "Tone and Accent in Oklahoma Cherokee".into())
         .await?;
     let learner = db
-        .insert_morpheme_system("Learner".into(), "Learner System".into())
+        .insert_morpheme_system("LEARNER".into(), "Learner System".into())
         .await?;
 
     info!("Pushing tags to db...");
@@ -53,9 +53,9 @@ fn parse_tag_glossary(sheet: SheetResult) -> Result<Vec<MorphemeTag>> {
             let _name = cols.next()?;
             let morpheme_type = cols.next()?;
             let _dailp_form = cols.next()?;
-            let crg = parse_tag_section(&mut cols, true);
-            let taoc = parse_tag_section(&mut cols, true);
-            let learner = parse_tag_section(&mut cols, false);
+            let crg = parse_tag_section(&mut cols, true, &morpheme_type);
+            let taoc = parse_tag_section(&mut cols, true, &morpheme_type);
+            let learner = parse_tag_section(&mut cols, false, &morpheme_type);
             Some(MorphemeTag {
                 id,
                 taoc,
@@ -104,7 +104,11 @@ async fn migrate_glossary_metadata(db: &Database, sheet_id: &str) -> Result<()> 
     Ok(())
 }
 
-fn parse_tag_section(values: &mut impl Iterator<Item = String>, has_page: bool) -> Option<TagForm> {
+fn parse_tag_section(
+    values: &mut impl Iterator<Item = String>,
+    has_page: bool,
+    morpheme_type: &str,
+) -> Option<TagForm> {
     let tag = values.next()?;
     let title = values.next()?;
     let definition = values.next().unwrap_or_default();
@@ -118,6 +122,7 @@ fn parse_tag_section(values: &mut impl Iterator<Item = String>, has_page: bool) 
             definition,
             shape,
             details_url,
+            morpheme_type: morpheme_type.to_owned(),
         })
     } else {
         None

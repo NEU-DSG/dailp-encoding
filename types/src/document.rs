@@ -176,12 +176,17 @@ pub struct PagesInDocument(pub DocumentId);
 pub struct DocumentPage {
     pub id: Uuid,
     pub page_number: String,
+    pub image: Option<PageImage>,
 }
 
 #[async_graphql::Object]
 impl DocumentPage {
     async fn page_number(&self) -> &str {
         &self.page_number
+    }
+
+    async fn image(&self) -> &Option<PageImage> {
+        &self.image
     }
 
     async fn paragraphs(
@@ -236,6 +241,34 @@ pub enum DocumentType {
 #[derive(async_graphql::SimpleObject, Serialize, Deserialize, Clone)]
 pub struct TranslatedPage {
     pub paragraphs: Vec<TranslatedSection>,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct PageImage {
+    pub source_id: ImageSourceId,
+    pub oid: String,
+}
+
+#[async_graphql::Object]
+impl PageImage {
+    pub async fn source(
+        &self,
+        context: &async_graphql::Context<'_>,
+    ) -> async_graphql::FieldResult<ImageSource> {
+        Ok(context
+            .data::<DataLoader<database_sql::Database>>()?
+            .load_one(self.source_id.clone())
+            .await?
+            .ok_or_else(|| anyhow::format_err!("Image source not found"))?)
+    }
+
+    async fn url(
+        &self,
+        context: &async_graphql::Context<'_>,
+    ) -> async_graphql::FieldResult<String> {
+        let source = self.source(context).await?;
+        Ok(format!("{}/{}", source.url, self.oid))
+    }
 }
 
 #[derive(async_graphql::SimpleObject, Serialize, Deserialize, Clone)]
