@@ -29,6 +29,35 @@ impl Database {
         Ok(Database { client: conn })
     }
 
+    pub async fn all_documents(&self) -> Result<Vec<AnnotatedDoc>> {
+        let results = query_file!("queries/all_documents.sql")
+            .fetch_all(&self.client)
+            .await?;
+        Ok(results
+            .into_iter()
+            .map(|item| AnnotatedDoc {
+                meta: DocumentMetadata {
+                    id: DocumentId(item.id),
+                    title: item.title,
+                    is_reference: item.is_reference,
+                    date: item.written_at.map(Date::new),
+                    audio_recording: None,
+                    collection: None,
+                    contributors: item
+                        .contributors
+                        .and_then(|x| serde_json::from_value(x).ok())
+                        .unwrap_or_default(),
+                    genre: None,
+                    order_index: 0,
+                    page_images: None,
+                    sources: Vec::new(),
+                    translation: None,
+                },
+                segments: None,
+            })
+            .collect())
+    }
+
     pub async fn upsert_image_source(&self, title: &str, url: &str) -> Result<Uuid> {
         let id = query_file_scalar!("queries/insert_image_source.sql", title, url)
             .fetch_one(&self.client)

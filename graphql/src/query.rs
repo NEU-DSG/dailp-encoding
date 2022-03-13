@@ -29,14 +29,10 @@ impl Query {
     }
 
     /// Listing of all documents excluding their contents by default
-    async fn all_documents(
-        &self,
-        context: &Context<'_>,
-        collection: Option<String>,
-    ) -> FieldResult<Vec<AnnotatedDoc>> {
+    async fn all_documents(&self, context: &Context<'_>) -> FieldResult<Vec<AnnotatedDoc>> {
         Ok(context
-            .data::<Database>()?
-            .all_documents(collection.as_deref())
+            .data::<database_sql::Database>()?
+            .all_documents()
             .await?)
     }
 
