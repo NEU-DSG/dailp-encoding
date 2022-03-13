@@ -1,23 +1,17 @@
-use std::sync::Arc;
-
-use sqlx::types::Uuid;
-
 use {
     crate::*,
     anyhow::Result,
     async_graphql::dataloader::*,
     async_trait::async_trait,
-    futures::executor,
-    futures::future::{join_all, try_join},
     itertools::Itertools,
-    serde::Serialize,
-    sqlx::Acquire,
     sqlx::{
-        postgres::{self, types::PgRange, PgPoolOptions},
-        query, query_as, query_file, query_file_as, query_file_scalar, query_scalar,
+        postgres::{types::PgRange, PgPoolOptions},
+        query_file, query_file_as, query_file_scalar, Acquire,
     },
-    std::collections::{HashMap, HashSet},
+    std::collections::HashMap,
+    std::sync::Arc,
     tokio_stream::StreamExt,
+    uuid::Uuid,
 };
 
 /// Connects to our backing database instance, providing high level functions
@@ -29,7 +23,7 @@ impl Database {
     pub async fn connect() -> Result<Self> {
         let db_url = std::env::var("DATABASE_URL")?;
         let conn = PgPoolOptions::new()
-            .max_connections(5)
+            .max_connections(8)
             .connect(&db_url)
             .await?;
         Ok(Database { client: conn })

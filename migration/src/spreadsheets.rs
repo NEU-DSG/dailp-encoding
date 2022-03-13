@@ -740,16 +740,11 @@ impl<'a> AnnotatedLine {
             }
         }
 
-        // while let Some(p) = stack.pop() {
-        //     error!("dangling block!");
-        //     segments.push(AnnotatedSeg::Block(p));
-        // }
-
         // If the document ends in a page break, remove it.
         // This prevents having an extra page break at the end of each document.
-        // if let Some(AnnotatedSeg::PageBreak(..)) = segments.last() {
-        //     segments.pop();
-        // }
+        if pages.last().map_or(false, |s| s.is_empty()) {
+            pages.pop();
+        }
 
         pages
     }

@@ -73,7 +73,7 @@ CREATE TABLE document_page (
   index_in_document bigint NOT NULL,
   iiif_source_id uuid REFERENCES iiif_source (id),
   iiif_oid text,
-  CONSTRAINT iiif_image_has_id CHECK (iiif_source_id IS NULL OR iiif_oid IS NOT NULL),
+  CONSTRAINT document_page_iiif_image_has_id CHECK (iiif_source_id IS NULL OR iiif_oid IS NOT NULL),
   UNIQUE (document_id, index_in_document)
 );
 
