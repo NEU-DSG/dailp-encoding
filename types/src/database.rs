@@ -591,24 +591,25 @@ impl AnnotationsDb {
 }
 
 #[derive(Clone, Eq, PartialEq, Hash)]
-pub struct TagId(pub String);
+pub struct TagId(pub String, pub CherokeeOrthography);
 
 #[async_trait::async_trait]
 impl Loader<TagId> for Database {
     type Value = MorphemeTag;
     type Error = mongodb::error::Error;
     async fn load(&self, keys: &[TagId]) -> Result<HashMap<TagId, Self::Value>, Self::Error> {
-        let mut results = HashMap::new();
-        // Turn keys into strings for Mongo request.
-        let keys: Vec<_> = keys.iter().map(|x| &*x.0).collect();
-        let items: Vec<Self::Value> =
-            find_all_keys(self.client.collection(Self::TAGS), keys).await?;
+        todo!()
+        // let mut results = HashMap::new();
+        // // Turn keys into strings for Mongo request.
+        // let keys: Vec<_> = keys.iter().map(|x| &*x.0).collect();
+        // let items: Vec<Self::Value> =
+        //     find_all_keys(self.client.collection(Self::TAGS), keys).await?;
 
-        for tag in items {
-            results.insert(TagId(tag.id.clone()), tag);
-        }
+        // for tag in items {
+        //     results.insert(TagId(tag.id.clone()), tag);
+        // }
 
-        Ok(results)
+        // Ok(results)
     }
 }
 

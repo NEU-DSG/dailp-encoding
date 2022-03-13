@@ -7,7 +7,7 @@ import Link from "src/components/link"
 import * as Dailp from "src/graphql/dailp"
 import * as css from "./morpheme.css"
 import { glossaryRoute } from "./routes"
-import { TagSet, morphemeDisplayTag } from "./types"
+import { TagSet, morphemeDisplayTag, orthographyForTagSet } from "./types"
 
 type BasicMorphemeSegment = NonNullable<Dailp.FormFieldsFragment["segments"]>[0]
 
@@ -27,13 +27,16 @@ export const MorphemeDetails = (props: {
   // TODO Only request the specific definition we need, not all three.
   const [tag] = Dailp.useTagQuery({
     pause: !props.segment.gloss,
-    variables: { gloss: props.segment.gloss },
+    variables: {
+      gloss: props.segment.gloss,
+      system: orthographyForTagSet(props.tagSet),
+    },
   })
 
   let titleArea: ReactNode | null = null
   let content = occurrences
   if (tag.data?.tag) {
-    const matchingTag = morphemeDisplayTag(tag.data.tag, props.tagSet)
+    const matchingTag = tag.data.tag
     titleArea = matchingTag?.title ? (
       <h2 className={css.margined}>{matchingTag.title}</h2>
     ) : null
@@ -41,7 +44,7 @@ export const MorphemeDetails = (props: {
       <>
         {matchingTag?.definition ? <p>{matchingTag.definition}</p> : null}
         <p>
-          <Link href={glossaryRoute(tag.data.tag.id)}>View in glossary</Link>
+          <Link href={glossaryRoute(tag.data.tag.tag)}>View in glossary</Link>
         </p>
         {occurrences}
       </>

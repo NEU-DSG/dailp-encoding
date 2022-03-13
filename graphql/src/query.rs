@@ -63,14 +63,6 @@ impl Query {
             .await?)
     }
 
-    /// List all contributors to documents and lexical resources.
-    async fn all_contributors(
-        &self,
-        context: &Context<'_>,
-    ) -> FieldResult<Vec<dailp::ContributorDetails>> {
-        Ok(context.data::<Database>()?.all_people().await?)
-    }
-
     /// Retrieves a full document from its unique identifier.
     pub async fn document(
         &self,
@@ -93,14 +85,6 @@ impl Query {
             .data::<DataLoader<Database>>()?
             .load_one(dailp::PageId(id))
             .await?)
-    }
-
-    async fn lexical_entry(
-        &self,
-        context: &Context<'_>,
-        id: String,
-    ) -> FieldResult<Option<dailp::AnnotatedForm>> {
-        Ok(context.data::<Database>()?.lexical_entry(&id).await?)
     }
 
     /// Lists all forms containing a morpheme with the given gloss.
@@ -128,7 +112,10 @@ impl Query {
         morpheme_id: String,
     ) -> FieldResult<Vec<WordsInDocument>> {
         let id = MorphemeId::parse(&morpheme_id).unwrap();
-        Ok(context.data::<Database>()?.words_by_doc(&id).await?)
+        Ok(context
+            .data::<database_sql::Database>()?
+            .words_by_doc(id)
+            .await?)
     }
 
     /// Forms containing the given morpheme gloss or related ones clustered over time.
@@ -186,10 +173,11 @@ impl Query {
         &self,
         context: &Context<'_>,
         id: String,
-    ) -> FieldResult<Option<MorphemeTag>> {
+        system: CherokeeOrthography,
+    ) -> FieldResult<Option<TagForm>> {
         Ok(context
-            .data::<DataLoader<Database>>()?
-            .load_one(dailp::TagId(id))
+            .data::<DataLoader<database_sql::Database>>()?
+            .load_one(dailp::TagId(id, system))
             .await?)
     }
 

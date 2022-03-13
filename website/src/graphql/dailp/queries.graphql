@@ -197,25 +197,12 @@ query EditablePage($id: String!) {
   }
 }
 
-query Tag($gloss: String!) {
-  tag: morphemeTag(id: $gloss) {
-    id
+query Tag($gloss: String!, $system: CherokeeOrthography!) {
+  tag: morphemeTag(id: $gloss, system: $system) {
     morphemeType
-    taoc {
-      tag
-      title
-      definition
-    }
-    crg {
-      tag
-      title
-      definition
-    }
-    learner {
-      tag
-      title
-      definition
-    }
+    tag
+    title
+    definition
   }
 }
 

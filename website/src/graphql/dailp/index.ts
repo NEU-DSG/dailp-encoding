@@ -368,42 +368,6 @@ export type MorphemeSegmentMorphemeArgs = {
   system: InputMaybe<CherokeeOrthography>
 }
 
-/**
- * Represents a morphological gloss tag without committing to a single representation.
- *
- * - TODO: Use a more generic representation than fields for learner, TAOC, and CRG.
- */
-export type MorphemeTag = {
-  readonly __typename?: "MorphemeTag"
-  readonly attestedAllomorphs: ReadonlyArray<Scalars["String"]>
-  /**
-   * Representation of this morpheme that closely aligns with _Cherokee
-   * Reference Grammar_.
-   */
-  readonly crg: Maybe<TagForm>
-  /**
-   * Unique identifier for this morpheme which should be used in raw
-   * interlinear glosses of a word containing this morpheme.
-   * Standard annotation tag for this morpheme, defined by DAILP.
-   */
-  readonly id: Scalars["String"]
-  /**
-   * The "learner" representation of this morpheme, a compromise between no
-   * interlinear glossing and standard linguistic terms.
-   */
-  readonly learner: Maybe<TagForm>
-  /**
-   * What kind of functional morpheme is this?
-   * A few examples: "Prepronominal Prefix", "Clitic"
-   */
-  readonly morphemeType: Scalars["String"]
-  /**
-   * Representation of this morpheme that closely aligns with _Tone and
-   * Accent in Oklahoma Cherokee_.
-   */
-  readonly taoc: Maybe<TagForm>
-}
-
 export type Mutation = {
   readonly __typename?: "Mutation"
   /**
@@ -480,8 +444,6 @@ export type Query = {
   readonly __typename?: "Query"
   /** List of all the document collections available. */
   readonly allCollections: ReadonlyArray<DocumentCollection>
-  /** List all contributors to documents and lexical resources. */
-  readonly allContributors: ReadonlyArray<ContributorDetails>
   /** Listing of all documents excluding their contents by default */
   readonly allDocuments: ReadonlyArray<AnnotatedDoc>
   /** List of all content pages */
@@ -491,13 +453,12 @@ export type Query = {
   readonly collection: DocumentCollection
   /** Retrieves a full document from its unique identifier. */
   readonly document: Maybe<AnnotatedDoc>
-  readonly lexicalEntry: Maybe<AnnotatedForm>
   /**
    * Retrieve information for the morpheme that corresponds to the given tag
    * string. For example, "3PL.B" is the standard string referring to a 3rd
    * person plural prefix.
    */
-  readonly morphemeTag: Maybe<MorphemeTag>
+  readonly morphemeTag: Maybe<TagForm>
   /** Forms containing the given morpheme gloss or related ones clustered over time. */
   readonly morphemeTimeClusters: ReadonlyArray<FormsInTime>
   /**
@@ -526,10 +487,6 @@ export type Query = {
   readonly wordSearch: ReadonlyArray<AnnotatedForm>
 }
 
-export type QueryAllDocumentsArgs = {
-  collection: InputMaybe<Scalars["String"]>
-}
-
 export type QueryAllTagsArgs = {
   system: CherokeeOrthography
 }
@@ -542,12 +499,9 @@ export type QueryDocumentArgs = {
   id: Scalars["String"]
 }
 
-export type QueryLexicalEntryArgs = {
-  id: Scalars["String"]
-}
-
 export type QueryMorphemeTagArgs = {
   id: Scalars["String"]
+  system: CherokeeOrthography
 }
 
 export type QueryMorphemeTimeClustersArgs = {
@@ -972,33 +926,15 @@ export type EditablePageQuery = { readonly __typename?: "Query" } & {
 
 export type TagQueryVariables = Exact<{
   gloss: Scalars["String"]
+  system: CherokeeOrthography
 }>
 
 export type TagQuery = { readonly __typename?: "Query" } & {
   readonly tag: Maybe<
-    { readonly __typename?: "MorphemeTag" } & Pick<
-      MorphemeTag,
-      "id" | "morphemeType"
-    > & {
-        readonly taoc: Maybe<
-          { readonly __typename?: "TagForm" } & Pick<
-            TagForm,
-            "tag" | "title" | "definition"
-          >
-        >
-        readonly crg: Maybe<
-          { readonly __typename?: "TagForm" } & Pick<
-            TagForm,
-            "tag" | "title" | "definition"
-          >
-        >
-        readonly learner: Maybe<
-          { readonly __typename?: "TagForm" } & Pick<
-            TagForm,
-            "tag" | "title" | "definition"
-          >
-        >
-      }
+    { readonly __typename?: "TagForm" } & Pick<
+      TagForm,
+      "morphemeType" | "tag" | "title" | "definition"
+    >
   >
 }
 
@@ -1347,25 +1283,12 @@ export function useEditablePageQuery(
   })
 }
 export const TagDocument = gql`
-  query Tag($gloss: String!) {
-    tag: morphemeTag(id: $gloss) {
-      id
+  query Tag($gloss: String!, $system: CherokeeOrthography!) {
+    tag: morphemeTag(id: $gloss, system: $system) {
       morphemeType
-      taoc {
-        tag
-        title
-        definition
-      }
-      crg {
-        tag
-        title
-        definition
-      }
-      learner {
-        tag
-        title
-        definition
-      }
+      tag
+      title
+      definition
     }
   }
 `

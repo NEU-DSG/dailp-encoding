@@ -29,6 +29,52 @@ impl Database {
         Ok(Database { client: conn })
     }
 
+    pub async fn words_by_doc(&self, morpheme_id: MorphemeId) -> Result<Vec<WordsInDocument>> {
+        let words = query_file!(
+            "queries/morphemes_by_document.sql",
+            morpheme_id.gloss,
+            morpheme_id.document_id.map(|x| x.0)
+        )
+        .fetch_all(&self.client)
+        .await?;
+        Ok(words
+            .into_iter()
+            .group_by(|w| (w.document_id.clone(), w.is_reference))
+            .into_iter()
+            .map(|((document_id, is_reference), forms)| WordsInDocument {
+                document_id: Some(document_id),
+                document_type: if is_reference {
+                    Some(DocumentType::Reference)
+                } else {
+                    Some(DocumentType::Corpus)
+                },
+                forms: forms
+                    .into_iter()
+                    .map(|w| AnnotatedForm {
+                        id: Some(w.id),
+                        source: w.source_text,
+                        normalized_source: None,
+                        simple_phonetics: w.simple_phonetics,
+                        phonemic: w.phonemic,
+                        // TODO Fill in
+                        segments: None,
+                        english_gloss: w.english_gloss.map(|s| vec![s]).unwrap_or_default(),
+                        commentary: w.commentary,
+                        audio_track: None,
+                        date_recorded: None,
+                        line_break: None,
+                        page_break: None,
+                        position: PositionInDocument::new(
+                            DocumentId(w.document_id),
+                            "".to_owned(),
+                            1,
+                        ),
+                    })
+                    .collect(),
+            })
+            .collect())
+    }
+
     pub async fn all_documents(&self) -> Result<Vec<AnnotatedDoc>> {
         let results = query_file!("queries/all_documents.sql")
             .fetch_all(&self.client)
@@ -704,15 +750,49 @@ impl Loader<PartsOfWord> for Database {
     }
 }
 
-// #[async_trait]
-// impl Loader<TagId> for Database {
-//     type Value = MorphemeTag;
-//     type Error = Arc<sqlx::Error>;
-//     async fn load(&self, keys: &[TagId]) -> Result<HashMap<TagId, Self::Value>, Self::Error> {
-//         let keys: Vec<_> = keys.iter().map(|k| &k.0 as &str).collect();
-//         let items = query_file!("queries/")
-//     }
-// }
+#[async_trait]
+impl Loader<TagId> for Database {
+    type Value = TagForm;
+    type Error = Arc<sqlx::Error>;
+    async fn load(&self, keys: &[TagId]) -> Result<HashMap<TagId, Self::Value>, Self::Error> {
+        use async_graphql::{InputType, Name, Value};
+        let glosses: Vec<_> = keys.iter().map(|k| k.0.clone()).collect();
+        let systems: Vec<_> = keys
+            .iter()
+            .unique()
+            .map(|k| {
+                if let Value::Enum(s) = k.1.to_value() {
+                    s.as_str().to_owned()
+                } else {
+                    unreachable!()
+                }
+            })
+            .collect();
+        let items = query_file!("queries/morpheme_tags_by_gloss.sql", &glosses, &systems)
+            .fetch_all(&self.client)
+            .await?;
+        Ok(items
+            .into_iter()
+            .map(|tag| {
+                (
+                    TagId(
+                        tag.gloss.clone().unwrap(),
+                        InputType::parse(Some(Value::Enum(Name::new(tag.system_name.unwrap()))))
+                            .unwrap(),
+                    ),
+                    TagForm {
+                        tag: tag.gloss.unwrap(),
+                        title: tag.title.unwrap(),
+                        shape: tag.example_shape,
+                        details_url: None,
+                        definition: tag.description.unwrap_or_default(),
+                        morpheme_type: tag.linguistic_type.unwrap_or_default(),
+                    },
+                )
+            })
+            .collect())
+    }
+}
 
 #[async_trait]
 impl Loader<WordsInParagraph> for Database {
