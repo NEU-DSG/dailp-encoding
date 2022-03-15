@@ -3,6 +3,7 @@ use crate::{
     PartsOfWord, PositionInDocument,
 };
 use async_graphql::{dataloader::DataLoader, FieldResult};
+use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use sqlx::types::Uuid;
 
@@ -55,8 +56,17 @@ impl AnnotatedForm {
     /// The root morpheme of the word.
     /// For example, a verb form glossed as "he catches" might have a root morpheme
     /// corresponding to "catch."
-    async fn root(&self) -> Option<&MorphemeSegment> {
-        self.find_root()
+    async fn root(
+        &self,
+        context: &async_graphql::Context<'_>,
+    ) -> FieldResult<Option<MorphemeSegment>> {
+        let segments = self.segments(context).await?;
+        for seg in segments {
+            if is_root_morpheme(&seg.gloss) {
+                return Ok(Some(seg));
+            }
+        }
+        Ok(None)
     }
 
     async fn romanized_source(&self) -> Option<String> {
@@ -81,24 +91,22 @@ impl AnnotatedForm {
         &self,
         context: &async_graphql::Context<'_>,
     ) -> FieldResult<Vec<AnnotatedForm>> {
-        if let Some(root) = self.find_root() {
-            let db = context.data::<Database>()?;
+        if let Some(root) = self.root(context).await? {
+            let db = context.data::<database_sql::Database>()?;
             // Find the forms with the exact same root.
             let id = MorphemeId {
                 document_id: Some(self.position.document_id.clone()),
                 gloss: root.gloss.clone(),
                 index: None,
             };
-            let similar_roots = db.morphemes(&id, None);
+            // let similar_roots = db.morphemes(id.clone());
             // Find forms with directly linked roots.
-            let connected = db.connected_forms(&id);
-            let (connected, similar_roots) = futures::join!(connected, similar_roots);
-            Ok(similar_roots?
+            let connected = db.connected_forms(id).await?;
+            // let (connected, similar_roots) = futures::join!(connected, similar_roots);
+            Ok(connected
                 .into_iter()
-                .flat_map(|r| r.forms)
-                .chain(connected?)
                 // Only return other similar words.
-                .filter(|word| word.position != self.position || word.source != self.source)
+                .filter(|word| word.id != self.id)
                 .collect())
         } else {
             Ok(Vec::new())

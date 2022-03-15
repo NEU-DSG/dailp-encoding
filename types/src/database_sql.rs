@@ -29,6 +29,78 @@ impl Database {
         Ok(Database { client: conn })
     }
 
+    pub async fn connected_forms(&self, morpheme_id: MorphemeId) -> Result<Vec<AnnotatedForm>> {
+        let items = query_file!(
+            "queries/connected_forms.sql",
+            morpheme_id.gloss,
+            morpheme_id.document_id.map(|x| x.0)
+        )
+        .fetch_all(&self.client)
+        .await?;
+        Ok(items
+            .into_iter()
+            .map(|w| AnnotatedForm {
+                id: Some(w.id),
+                source: w.source_text,
+                normalized_source: None,
+                simple_phonetics: w.simple_phonetics,
+                phonemic: w.phonemic,
+                // TODO Fill in
+                segments: None,
+                english_gloss: w.english_gloss.map(|s| vec![s]).unwrap_or_default(),
+                commentary: w.commentary,
+                audio_track: None,
+                date_recorded: None,
+                line_break: None,
+                page_break: None,
+                position: PositionInDocument::new(DocumentId(w.document_id), "".to_owned(), 1),
+            })
+            .collect())
+    }
+
+    pub async fn morphemes(&self, morpheme_id: MorphemeId) -> Result<Vec<MorphemeReference>> {
+        let items = query_file!(
+            "queries/surface_forms.sql",
+            morpheme_id.gloss,
+            morpheme_id.document_id.map(|x| x.0)
+        )
+        .fetch_all(&self.client)
+        .await?;
+        Ok(items
+            .into_iter()
+            .group_by(|w| w.morpheme.clone())
+            .into_iter()
+            .map(|(shape, forms)| {
+                MorphemeReference {
+                    morpheme: shape,
+                    forms: forms
+                        .into_iter()
+                        .map(|w| AnnotatedForm {
+                            id: Some(w.word_id),
+                            source: w.source_text,
+                            normalized_source: None,
+                            simple_phonetics: w.simple_phonetics,
+                            phonemic: w.phonemic,
+                            // TODO Fill in
+                            segments: None,
+                            english_gloss: w.english_gloss.map(|s| vec![s]).unwrap_or_default(),
+                            commentary: w.commentary,
+                            audio_track: None,
+                            date_recorded: None,
+                            line_break: None,
+                            page_break: None,
+                            position: PositionInDocument::new(
+                                DocumentId(w.document_id),
+                                "".to_owned(),
+                                1,
+                            ),
+                        })
+                        .collect(),
+                }
+            })
+            .collect())
+    }
+
     pub async fn words_by_doc(&self, morpheme_id: MorphemeId) -> Result<Vec<WordsInDocument>> {
         let words = query_file!(
             "queries/morphemes_by_document.sql",
