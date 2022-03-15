@@ -5,7 +5,8 @@
 
 use crate::{
     annotation::{AnnotationAttachment, DocumentRegion},
-    AnnotatedDoc, Database,
+    database_sql::Database,
+    AnnotatedDoc,
 };
 use futures::join;
 use futures::stream::{self, StreamExt};
@@ -34,16 +35,21 @@ impl Manifest {
     /// Make a IIIF manifest from the given document
     pub async fn from_document(db: &Database, doc: AnnotatedDoc, manifest_uri: String) -> Self {
         let page_images = doc.meta.page_images.unwrap();
-        let (image_source, annotations, words) = {
-            let annot_db = db.annotations();
+        let (
+            image_source, // , _annotations
+            words,
+        ) = {
+            // let annot_db = db.annotations();
             join!(
-                db.image_source(&page_images.source),
-                annot_db.on_document(&doc.meta.id),
+                db.image_source_by_id(page_images.source),
+                // annot_db.on_document(&doc.meta.id),
                 db.words_in_document(&doc.meta.id)
             )
         };
-        let annotations = &annotations.unwrap();
-        let words = &words.unwrap();
+        let annotations: Vec<crate::annotation::Annotation> = Vec::new();
+        let words: Vec<_> = words.unwrap().collect();
+        let words = &words;
+        let annotations = &annotations;
         let image_source = &image_source.unwrap().unwrap();
         let manifest_uri = &manifest_uri;
         Self::new(

@@ -182,11 +182,57 @@ impl Database {
         Ok(id)
     }
 
-    pub async fn image_source_by_title(&self, title: &str) -> Result<Option<Uuid>> {
+    pub async fn image_source_by_title(&self, title: &str) -> Result<Option<ImageSource>> {
         let results = query_file!("queries/image_source_by_title.sql", title)
             .fetch_all(&self.client)
             .await?;
-        Ok(results.first().map(|x| x.id))
+        Ok(results.into_iter().next().map(|x| ImageSource {
+            id: ImageSourceId(x.id),
+            url: x.base_url,
+        }))
+    }
+
+    pub async fn image_source_by_id(&self, id: ImageSourceId) -> Result<Option<ImageSource>> {
+        let results = query_file!("queries/image_source_by_id.sql", id.0)
+            .fetch_all(&self.client)
+            .await?;
+        Ok(results.into_iter().next().map(|x| ImageSource {
+            id: ImageSourceId(x.id),
+            url: x.base_url,
+        }))
+    }
+
+    pub async fn document_manifest(
+        &self,
+        document_id: &DocumentId,
+        url: String,
+    ) -> Result<iiif::Manifest> {
+        // Retrieve the document from the DB.
+        let item = query_file!("queries/many_documents.sql", &[url.clone()] as &[String])
+            .fetch_one(&self.client)
+            .await?;
+        let doc = AnnotatedDoc {
+            meta: DocumentMetadata {
+                id: DocumentId(item.id),
+                title: item.title,
+                is_reference: item.is_reference,
+                date: item.written_at.map(Date::new),
+                audio_recording: None,
+                collection: None,
+                contributors: item
+                    .contributors
+                    .and_then(|x| serde_json::from_value(x).ok())
+                    .unwrap_or_default(),
+                genre: None,
+                order_index: 0,
+                page_images: None,
+                sources: Vec::new(),
+                translation: None,
+            },
+            segments: None,
+        };
+        // Build a IIIF manifest for this document.
+        Ok(iiif::Manifest::from_document(self, doc, url).await)
     }
 
     pub async fn all_tags(&self, system: CherokeeOrthography) -> Result<Vec<TagForm>> {

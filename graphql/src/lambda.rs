@@ -14,6 +14,7 @@ lazy_static::lazy_static! {
     // This prevents each lambda invocation from creating a new connection to
     // the database.
     static ref DATABASE: dailp::Database = dailp::Database::new().unwrap();
+    static ref SQL_DATABASE: dailp::database_sql::Database = dailp::database_sql::Database::new().unwrap();
     static ref SCHEMA: Schema<Query, Mutation, EmptySubscription> = {
         Schema::build(Query, Mutation, EmptySubscription)
             .data(dailp::Database::new().unwrap())
@@ -90,7 +91,7 @@ async fn handler(req: Request, _: lambda_runtime::Context) -> Result<impl IntoRe
         let full_path = req.uri().path();
         let mut parts = full_path.split("/");
         let document_id = parts.nth(2).expect("No manifest ID given");
-        let manifest = DATABASE
+        let manifest = SQL_DATABASE
             .document_manifest(&dailp::DocumentId(document_id.to_string()), full_url)
             .await?;
         let json = serde_json::to_string(&manifest)?;

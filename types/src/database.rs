@@ -520,23 +520,6 @@ impl Database {
         Ok(document_words.chain(dictionary_words).collect())
     }
 
-    pub async fn document_manifest(
-        &self,
-        document_id: &DocumentId,
-        url: String,
-    ) -> Result<iiif::Manifest> {
-        // Retrieve the document from the DB.
-        let doc: AnnotatedDoc = self
-            .client
-            .collection(Self::DOCUMENTS)
-            .find_one(bson::doc! { "_id": bson::to_bson(document_id)? }, None)
-            .await?
-            .and_then(|doc| bson::from_document(doc).ok())
-            .unwrap();
-        // Build a IIIF manifest for this document.
-        Ok(iiif::Manifest::from_document(self, doc, url).await)
-    }
-
     /// USE WITH CAUTION! Clears the entire database of words, documents, etc.
     pub async fn clear_all(&self) -> Result<()> {
         Ok(self.client.drop(None).await?)
