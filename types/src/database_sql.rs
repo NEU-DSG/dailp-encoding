@@ -278,25 +278,10 @@ impl Database {
         &self,
         document_id: &DocumentId,
     ) -> Result<impl Iterator<Item = AnnotatedForm>> {
-        let words = query_file!("queries/document_words.sql", &document_id.0)
+        let words = query_file_as!(BasicWord, "queries/document_words.sql", &document_id.0)
             .fetch_all(&self.client)
             .await?;
-        Ok(words.into_iter().map(|w| AnnotatedForm {
-            id: Some(w.id),
-            source: w.source_text,
-            normalized_source: None,
-            simple_phonetics: w.simple_phonetics,
-            phonemic: w.phonemic,
-            // TODO Fill in
-            segments: None,
-            english_gloss: w.english_gloss.map(|s| vec![s]).unwrap_or_default(),
-            commentary: w.commentary,
-            audio_track: None,
-            date_recorded: None,
-            line_break: None,
-            page_break: None,
-            position: PositionInDocument::new(DocumentId(w.document_id), "".to_owned(), 1),
-        }))
+        Ok(words.into_iter().map(Into::into))
     }
 
     pub async fn count_words_in_document(&self, document_id: &DocumentId) -> Result<i64> {
