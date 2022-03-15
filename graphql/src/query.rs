@@ -202,7 +202,7 @@ impl Query {
         query: String,
     ) -> FieldResult<Vec<dailp::AnnotatedForm>> {
         Ok(context
-            .data::<Database>()?
+            .data::<database_sql::Database>()?
             .potential_syllabary_matches(&query)
             .await?)
     }

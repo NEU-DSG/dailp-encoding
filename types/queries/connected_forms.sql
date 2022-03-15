@@ -1,5 +1,13 @@
 select distinct on (word.id)
-  word.*
+  word.id,
+  word.source_text,
+  word.simple_phonetics,
+  word.phonemic,
+  word.english_gloss,
+  word.commentary,
+  word.document_id,
+  word.index_in_document,
+  word.page_number
 from morpheme_gloss
   left join morpheme_gloss_relation as rl on rl.left_document_id = morpheme_gloss.document_id and rl.left_gloss = morpheme_gloss.gloss
   left join morpheme_gloss_relation as rr on rr.right_document_id = morpheme_gloss.document_id and rr.right_gloss = morpheme_gloss.gloss

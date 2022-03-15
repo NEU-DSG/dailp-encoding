@@ -29,33 +29,32 @@ impl Database {
         Ok(Database { client: conn })
     }
 
+    pub async fn potential_syllabary_matches(&self, syllabary: &str) -> Result<Vec<AnnotatedForm>> {
+        let alternate_spellings: Vec<_> = CherokeeOrthography::similar_syllabary_strings(syllabary)
+            .into_iter()
+            // Convert into "LIKE"-compatible format
+            .map(|x| format!("%{}%", x))
+            .collect();
+        let items = query_file_as!(
+            BasicWord,
+            "queries/search_syllabary.sql",
+            &alternate_spellings
+        )
+        .fetch_all(&self.client)
+        .await?;
+        Ok(items.into_iter().map(Into::into).collect())
+    }
+
     pub async fn connected_forms(&self, morpheme_id: MorphemeId) -> Result<Vec<AnnotatedForm>> {
-        let items = query_file!(
+        let items = query_file_as!(
+            BasicWord,
             "queries/connected_forms.sql",
             morpheme_id.gloss,
             morpheme_id.document_id.map(|x| x.0)
         )
         .fetch_all(&self.client)
         .await?;
-        Ok(items
-            .into_iter()
-            .map(|w| AnnotatedForm {
-                id: Some(w.id),
-                source: w.source_text,
-                normalized_source: None,
-                simple_phonetics: w.simple_phonetics,
-                phonemic: w.phonemic,
-                // TODO Fill in
-                segments: None,
-                english_gloss: w.english_gloss.map(|s| vec![s]).unwrap_or_default(),
-                commentary: w.commentary,
-                audio_track: None,
-                date_recorded: None,
-                line_break: None,
-                page_break: None,
-                position: PositionInDocument::new(DocumentId(w.document_id), "".to_owned(), 1),
-            })
-            .collect())
+        Ok(items.into_iter().map(Into::into).collect())
     }
 
     pub async fn morphemes(&self, morpheme_id: MorphemeId) -> Result<Vec<MorphemeReference>> {
@@ -91,8 +90,8 @@ impl Database {
                             page_break: None,
                             position: PositionInDocument::new(
                                 DocumentId(w.document_id),
-                                "".to_owned(),
-                                1,
+                                w.page_number.unwrap_or_default(),
+                                w.index_in_document as i32,
                             ),
                         })
                         .collect(),
@@ -215,28 +214,10 @@ impl Database {
 
     pub async fn search_words_any_field(&self, query: String) -> Result<Vec<AnnotatedForm>> {
         let like_query = format!("%{}%", query);
-        let results = query_file!("queries/search_words_any_field.sql", like_query)
+        let results = query_file_as!(BasicWord, "queries/search_words_any_field.sql", like_query)
             .fetch_all(&self.client)
             .await?;
-        Ok(results
-            .into_iter()
-            .map(|w| AnnotatedForm {
-                id: Some(w.id),
-                source: w.source_text,
-                normalized_source: None,
-                simple_phonetics: w.simple_phonetics,
-                phonemic: w.phonemic,
-                // TODO Fill in
-                segments: None,
-                english_gloss: w.english_gloss.map(|s| vec![s]).unwrap_or_default(),
-                commentary: w.commentary,
-                audio_track: None,
-                date_recorded: None,
-                line_break: None,
-                page_break: None,
-                position: PositionInDocument::new(DocumentId(w.document_id), "".to_owned(), 1),
-            })
-            .collect())
+        Ok(results.into_iter().map(Into::into).collect())
     }
 
     pub async fn top_collections(&self) -> Result<Vec<DocumentCollection>> {
@@ -983,5 +964,42 @@ impl Loader<ImageSourceId> for Database {
                 )
             })
             .collect())
+    }
+}
+
+struct BasicWord {
+    id: Uuid,
+    source_text: String,
+    simple_phonetics: Option<String>,
+    phonemic: Option<String>,
+    english_gloss: Option<String>,
+    commentary: Option<String>,
+    document_id: String,
+    index_in_document: i64,
+    page_number: Option<String>,
+}
+
+impl From<BasicWord> for AnnotatedForm {
+    fn from(w: BasicWord) -> Self {
+        Self {
+            id: Some(w.id),
+            source: w.source_text,
+            normalized_source: None,
+            simple_phonetics: w.simple_phonetics,
+            phonemic: w.phonemic,
+            // TODO Fill in?
+            segments: None,
+            english_gloss: w.english_gloss.map(|s| vec![s]).unwrap_or_default(),
+            commentary: w.commentary,
+            audio_track: None,
+            date_recorded: None,
+            line_break: None,
+            page_break: None,
+            position: PositionInDocument::new(
+                DocumentId(w.document_id),
+                w.page_number.unwrap_or_default(),
+                w.index_in_document as i32,
+            ),
+        }
     }
 }

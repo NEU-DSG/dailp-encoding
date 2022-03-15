@@ -9,6 +9,4 @@ select
   index_in_document,
   page_number
 from word
-where source_text ilike $1
-  or simple_phonetics ilike $1
-  or english_gloss ilike $1
+where source_text like any($1)
