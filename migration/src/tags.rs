@@ -1,6 +1,6 @@
 use crate::spreadsheets::SheetResult;
 use anyhow::Result;
-use dailp::{database_sql::Database, MorphemeTag, TagForm};
+use dailp::{Database, MorphemeTag, TagForm};
 use log::info;
 
 /// Cherokee has many functional morphemes that are documented.

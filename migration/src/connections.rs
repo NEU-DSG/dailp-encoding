@@ -1,5 +1,5 @@
 use crate::spreadsheets::SheetResult;
-use dailp::{database_sql::Database, LexicalConnection};
+use dailp::{Database, LexicalConnection};
 
 pub async fn migrate_connections(db: &Database) -> anyhow::Result<()> {
     use itertools::Itertools as _;

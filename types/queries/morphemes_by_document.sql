@@ -7,7 +7,9 @@ select
   word.phonemic,
   word.english_gloss,
   word.recorded_at,
-  word.commentary
+  word.commentary,
+  word.index_in_document,
+  word.page_number
 from word
   inner join document on document.id = word.document_id
   left join word_segment on word_segment.word_id = word.id

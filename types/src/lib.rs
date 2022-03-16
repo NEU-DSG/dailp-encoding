@@ -21,7 +21,7 @@
 pub mod annotation;
 mod audio;
 mod database;
-pub mod database_sql;
+mod database_sql;
 mod date;
 mod document;
 mod form;
@@ -43,6 +43,7 @@ pub use sqlx::types::Uuid;
 
 pub use audio::*;
 pub use database::*;
+pub use database_sql::*;
 pub use date::*;
 pub use document::*;
 pub use form::*;

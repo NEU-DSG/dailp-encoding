@@ -1,4 +1,4 @@
-use crate::{database_sql::Database, PersonFullName};
+use crate::{Database, PersonFullName};
 use serde::{Deserialize, Serialize};
 
 /// An individual or organization that contributed to the creation or analysis

@@ -1,5 +1,5 @@
 use anyhow::Result;
-use dailp::{database_sql::Database, Contributor};
+use dailp::{Contributor, Database};
 
 const COLLECTION_NAME: &str = "Early Vocabularies";
 

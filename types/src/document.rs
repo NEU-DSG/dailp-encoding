@@ -1,5 +1,5 @@
 use crate::{
-    database_sql, AnnotatedForm, AudioSlice, Contributor, Date, SourceAttribution, Translation,
+    AnnotatedForm, AudioSlice, Contributor, Database, Date, SourceAttribution, Translation,
     TranslationBlock,
 };
 use async_graphql::{dataloader::DataLoader, FieldResult};
@@ -74,7 +74,7 @@ impl AnnotatedDoc {
         super_collection: String,
     ) -> FieldResult<Vec<DocumentCollection>> {
         Ok(context
-            .data::<database_sql::Database>()?
+            .data::<Database>()?
             .document_breadcrumbs(&self.meta.id.0, &super_collection)
             .await?)
     }
@@ -104,7 +104,7 @@ impl AnnotatedDoc {
         context: &async_graphql::Context<'_>,
     ) -> FieldResult<Vec<Contributor>> {
         Ok(context
-            .data::<DataLoader<database_sql::Database>>()?
+            .data::<DataLoader<Database>>()?
             .load_one(crate::ContributorsForDocument(self.meta.id.0.clone()))
             .await?
             .unwrap_or_default())
@@ -138,7 +138,7 @@ impl AnnotatedDoc {
         context: &async_graphql::Context<'_>,
     ) -> FieldResult<Option<Vec<DocumentPage>>> {
         Ok(context
-            .data::<DataLoader<database_sql::Database>>()?
+            .data::<DataLoader<Database>>()?
             .load_one(PagesInDocument(self.meta.id.clone()))
             .await?)
     }
@@ -147,7 +147,7 @@ impl AnnotatedDoc {
     /// like line and page breaks.
     async fn forms(&self, context: &async_graphql::Context<'_>) -> FieldResult<Vec<AnnotatedForm>> {
         Ok(context
-            .data::<database_sql::Database>()?
+            .data::<Database>()?
             .words_in_document(&self.meta.id)
             .await?
             .collect())
@@ -155,7 +155,7 @@ impl AnnotatedDoc {
 
     async fn form_count(&self, context: &async_graphql::Context<'_>) -> FieldResult<i64> {
         Ok(context
-            .data::<database_sql::Database>()?
+            .data::<Database>()?
             .count_words_in_document(&self.meta.id)
             .await?)
     }
@@ -167,7 +167,7 @@ impl AnnotatedDoc {
         context: &async_graphql::Context<'_>,
     ) -> FieldResult<Vec<AnnotatedForm>> {
         let forms = context
-            .data::<database_sql::Database>()?
+            .data::<Database>()?
             .words_in_document(&self.meta.id)
             .await?;
         Ok(forms.filter(AnnotatedForm::is_unresolved).collect())
@@ -199,7 +199,7 @@ impl DocumentPage {
         context: &async_graphql::Context<'_>,
     ) -> FieldResult<Vec<DocumentParagraph>> {
         Ok(context
-            .data::<DataLoader<database_sql::Database>>()?
+            .data::<DataLoader<Database>>()?
             .load_one(ParagraphsInPage(self.id))
             .await?
             .unwrap_or_default())
@@ -223,7 +223,7 @@ impl DocumentParagraph {
         context: &async_graphql::Context<'_>,
     ) -> FieldResult<Vec<AnnotatedSeg>> {
         Ok(context
-            .data::<DataLoader<database_sql::Database>>()?
+            .data::<DataLoader<Database>>()?
             .load_one(WordsInParagraph(self.id.clone()))
             .await?
             .unwrap_or_default())
@@ -261,7 +261,7 @@ impl PageImage {
         context: &async_graphql::Context<'_>,
     ) -> async_graphql::FieldResult<ImageSource> {
         Ok(context
-            .data::<DataLoader<database_sql::Database>>()?
+            .data::<DataLoader<Database>>()?
             .load_one(self.source_id.clone())
             .await?
             .ok_or_else(|| anyhow::format_err!("Image source not found"))?)
@@ -401,7 +401,7 @@ impl IiifImages {
         context: &async_graphql::Context<'_>,
     ) -> async_graphql::FieldResult<ImageSource> {
         Ok(context
-            .data::<DataLoader<database_sql::Database>>()?
+            .data::<DataLoader<Database>>()?
             .load_one(self.source.clone())
             .await?
             .ok_or_else(|| anyhow::format_err!("Image source not found"))?)
@@ -454,7 +454,7 @@ impl DocumentCollection {
         context: &async_graphql::Context<'_>,
     ) -> async_graphql::FieldResult<Vec<DocumentReference>> {
         Ok(context
-            .data::<crate::database_sql::Database>()?
+            .data::<Database>()?
             .documents_in_collection("", &self.slug)
             .await?)
     }

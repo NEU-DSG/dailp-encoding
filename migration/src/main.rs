@@ -10,7 +10,7 @@ mod tags;
 mod translations;
 
 use anyhow::Result;
-use dailp::database_sql::Database;
+use dailp::Database;
 use log::{error, info};
 use std::time::Duration;
 

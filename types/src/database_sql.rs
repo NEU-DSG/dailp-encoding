@@ -138,7 +138,6 @@ impl Database {
                         normalized_source: None,
                         simple_phonetics: w.simple_phonetics,
                         phonemic: w.phonemic,
-                        // TODO Fill in
                         segments: None,
                         english_gloss: w.english_gloss.map(|s| vec![s]).unwrap_or_default(),
                         commentary: w.commentary,
@@ -148,8 +147,8 @@ impl Database {
                         page_break: None,
                         position: PositionInDocument::new(
                             DocumentId(w.document_id),
-                            "".to_owned(),
-                            1,
+                            w.page_number.unwrap_or_default(),
+                            w.index_in_document as i32,
                         ),
                     })
                     .collect(),
@@ -1134,4 +1133,42 @@ impl From<BasicWord> for AnnotatedForm {
             ),
         }
     }
+}
+
+#[derive(Clone, Eq, PartialEq, Hash)]
+pub struct TagId(pub String, pub CherokeeOrthography);
+
+#[derive(Clone, Eq, PartialEq, Hash)]
+pub struct PartsOfWord(pub Uuid);
+
+#[derive(Clone, Eq, PartialEq, Hash)]
+pub struct PersonFullName(pub String);
+
+#[derive(Clone, Eq, PartialEq, Hash)]
+pub struct ContributorsForDocument(pub String);
+
+#[derive(Clone, Eq, PartialEq, Hash)]
+pub struct TagForMorpheme(pub Uuid, pub CherokeeOrthography);
+
+#[derive(Clone, Eq, PartialEq, Hash)]
+pub struct PageId(pub String);
+
+/// One particular morpheme and all the known words that contain that exact morpheme.
+#[derive(async_graphql::SimpleObject)]
+pub struct MorphemeReference {
+    /// Phonemic shape of the morpheme.
+    pub morpheme: String,
+    /// List of words that contain this morpheme.
+    pub forms: Vec<AnnotatedForm>,
+}
+
+/// A list of words grouped by the document that contains them.
+#[derive(async_graphql::SimpleObject)]
+pub struct WordsInDocument {
+    /// Unique identifier of the containing document
+    pub document_id: Option<String>,
+    /// What kind of document contains these words (e.g. manuscript vs dictionary)
+    pub document_type: Option<DocumentType>,
+    /// List of annotated and potentially segmented forms
+    pub forms: Vec<AnnotatedForm>,
 }

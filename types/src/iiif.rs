@@ -5,8 +5,7 @@
 
 use crate::{
     annotation::{AnnotationAttachment, DocumentRegion},
-    database_sql::Database,
-    AnnotatedDoc,
+    AnnotatedDoc, Database,
 };
 use futures::join;
 use futures::stream::{self, StreamExt};

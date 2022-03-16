@@ -573,9 +573,6 @@ impl AnnotationsDb {
     }
 }
 
-#[derive(Clone, Eq, PartialEq, Hash)]
-pub struct TagId(pub String, pub CherokeeOrthography);
-
 #[async_trait::async_trait]
 impl Loader<TagId> for Database {
     type Value = MorphemeTag;
@@ -615,15 +612,6 @@ impl Loader<DocumentId> for Database {
     }
 }
 
-#[derive(Clone, Eq, PartialEq, Hash)]
-pub struct PartsOfWord(pub Uuid);
-
-#[derive(Clone, Eq, PartialEq, Hash)]
-pub struct PersonFullName(pub String);
-
-#[derive(Clone, Eq, PartialEq, Hash)]
-pub struct ContributorsForDocument(pub String);
-
 #[async_trait::async_trait]
 impl Loader<PersonFullName> for Database {
     type Value = ContributorDetails;
@@ -642,12 +630,6 @@ impl Loader<PersonFullName> for Database {
             .collect())
     }
 }
-
-#[derive(Clone, Eq, PartialEq, Hash)]
-pub struct TagForMorpheme(pub Uuid, pub CherokeeOrthography);
-
-#[derive(Clone, Eq, PartialEq, Hash)]
-pub struct PageId(pub String);
 
 #[async_trait::async_trait]
 impl Loader<PageId> for Database {
@@ -699,24 +681,4 @@ fn upsert() -> mongodb::options::UpdateOptions {
     mongodb::options::UpdateOptions::builder()
         .upsert(true)
         .build()
-}
-
-/// One particular morpheme and all the known words that contain that exact morpheme.
-#[derive(async_graphql::SimpleObject)]
-pub struct MorphemeReference {
-    /// Phonemic shape of the morpheme.
-    pub morpheme: String,
-    /// List of words that contain this morpheme.
-    pub forms: Vec<AnnotatedForm>,
-}
-
-/// A list of words grouped by the document that contains them.
-#[derive(async_graphql::SimpleObject)]
-pub struct WordsInDocument {
-    /// Unique identifier of the containing document
-    pub document_id: Option<String>,
-    /// What kind of document contains these words (e.g. manuscript vs dictionary)
-    pub document_type: Option<DocumentType>,
-    /// List of annotated and potentially segmented forms
-    pub forms: Vec<AnnotatedForm>,
 }

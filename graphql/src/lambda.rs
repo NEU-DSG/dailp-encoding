@@ -13,8 +13,7 @@ lazy_static::lazy_static! {
     // Share database connection between executions.
     // This prevents each lambda invocation from creating a new connection to
     // the database.
-    static ref DATABASE: dailp::Database = dailp::Database::new().unwrap();
-    static ref SQL_DATABASE: dailp::database_sql::Database = dailp::database_sql::Database::new().unwrap();
+    static ref SQL_DATABASE: dailp::Database = dailp::database_sql::Database::new().unwrap();
     static ref SCHEMA: Schema<Query, Mutation, EmptySubscription> = {
         Schema::build(Query, Mutation, EmptySubscription)
             .data(dailp::Database::new().unwrap())

@@ -112,7 +112,7 @@ impl MorphemeSegment {
     ) -> FieldResult<Option<TagForm>> {
         use async_graphql::dataloader::*;
         Ok(context
-            .data::<DataLoader<database_sql::Database>>()?
+            .data::<DataLoader<Database>>()?
             .load_one(TagForMorpheme(
                 self.gloss_id,
                 system.unwrap_or(CherokeeOrthography::Taoc),

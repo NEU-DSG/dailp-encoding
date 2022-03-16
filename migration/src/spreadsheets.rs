@@ -6,9 +6,9 @@ use crate::audio::AudioRes;
 use crate::translations::DocResult;
 use anyhow::Result;
 use dailp::{
-    convert_udb, database_sql::Database, root_noun_surface_forms, root_verb_surface_forms,
-    AnnotatedDoc, AnnotatedForm, AnnotatedSeg, AudioSlice, Contributor, Date, DocumentMetadata,
-    LexicalConnection, LineBreak, MorphemeId, MorphemeSegment, PageBreak, Uuid,
+    convert_udb, root_noun_surface_forms, root_verb_surface_forms, AnnotatedDoc, AnnotatedForm,
+    AnnotatedSeg, AudioSlice, Contributor, Database, Date, DocumentMetadata, LexicalConnection,
+    LineBreak, MorphemeId, MorphemeSegment, PageBreak, Uuid,
 };
 use dailp::{PositionInDocument, SourceAttribution};
 use log::{error, info, warn};
@@ -304,7 +304,7 @@ impl SheetResult {
     /// Parse this sheet as a document metadata listing.
     pub async fn into_metadata(
         self,
-        db: &dailp::database_sql::Database,
+        db: &dailp::Database,
         is_reference: bool,
         order_index: i64,
     ) -> Result<DocumentMetadata> {

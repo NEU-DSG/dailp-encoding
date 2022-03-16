@@ -23,9 +23,9 @@ async fn main() -> tide::Result<()> {
     // create schema
     let schema = Schema::build(query::Query, query::Mutation, EmptySubscription)
         // .data(dailp::Database::new().expect("Failed to initialize database"))
-        .data(dailp::database_sql::Database::connect().await?)
+        .data(dailp::Database::connect().await?)
         .data(DataLoader::new(
-            dailp::database_sql::Database::connect().await?,
+            dailp::Database::connect().await?,
             tokio::spawn,
         ))
         .finish();

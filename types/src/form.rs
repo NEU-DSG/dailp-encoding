@@ -1,5 +1,5 @@
 use crate::{
-    database_sql, AnnotatedDoc, AudioSlice, Date, MorphemeId, MorphemeSegment, PartsOfWord,
+    AnnotatedDoc, AudioSlice, Database, Date, MorphemeId, MorphemeSegment, PartsOfWord,
     PositionInDocument,
 };
 use async_graphql::{dataloader::DataLoader, FieldResult};
@@ -80,7 +80,7 @@ impl AnnotatedForm {
         context: &async_graphql::Context<'_>,
     ) -> FieldResult<Vec<MorphemeSegment>> {
         Ok(context
-            .data::<DataLoader<database_sql::Database>>()?
+            .data::<DataLoader<Database>>()?
             .load_one(PartsOfWord(self.id.as_ref().unwrap().clone()))
             .await?
             .unwrap_or_default())
@@ -92,7 +92,7 @@ impl AnnotatedForm {
         context: &async_graphql::Context<'_>,
     ) -> FieldResult<Vec<AnnotatedForm>> {
         if let Some(root) = self.root(context).await? {
-            let db = context.data::<database_sql::Database>()?;
+            let db = context.data::<Database>()?;
             // Find the forms with the exact same root.
             let id = MorphemeId {
                 document_id: Some(self.position.document_id.clone()),
@@ -119,7 +119,7 @@ impl AnnotatedForm {
         context: &async_graphql::Context<'_>,
     ) -> FieldResult<Option<AnnotatedDoc>> {
         Ok(context
-            .data::<DataLoader<database_sql::Database>>()?
+            .data::<DataLoader<Database>>()?
             .load_one(self.position.document_id.clone())
             .await?)
     }
