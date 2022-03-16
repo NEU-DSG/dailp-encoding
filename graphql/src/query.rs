@@ -6,7 +6,6 @@ use {
         AnnotatedDoc, CherokeeOrthography, Database, MorphemeId, MorphemeReference, TagForm,
         WordsInDocument,
     },
-    mongodb::bson,
     serde::{Deserialize, Serialize},
     serde_with::{rust::StringWithSeparator, CommaSeparator},
 };
@@ -224,41 +223,6 @@ impl Query {
     #[graphql(guard = "AuthGuard")]
     async fn user_info<'a>(&self, context: &'a Context<'_>) -> &'a UserInfo {
         context.data_unchecked()
-    }
-}
-
-#[derive(async_graphql::InputObject)]
-struct FormQuery {
-    id: Option<String>,
-    source: Option<String>,
-    normalized_source: Option<String>,
-    simple_phonetics: Option<String>,
-    english_gloss: Option<String>,
-    unresolved: Option<bool>,
-}
-impl FormQuery {
-    fn into_bson(self) -> bson::Document {
-        let regex_query = |q| bson::doc! { "$regex": q, "$options": "i" };
-        let mut doc = bson::Document::new();
-        if let Some(id) = self.id {
-            doc.insert("id", regex_query(id));
-        }
-        if let Some(source) = self.source {
-            doc.insert("source", regex_query(source));
-        }
-        if let Some(normalized_source) = self.normalized_source {
-            doc.insert("normalizedSource", regex_query(normalized_source));
-        }
-        if let Some(simple_phonetics) = self.simple_phonetics {
-            doc.insert("simplePhonetics", regex_query(simple_phonetics));
-        }
-        if let Some(english_gloss) = self.english_gloss {
-            doc.insert("englishGloss", regex_query(english_gloss));
-        }
-        if let Some(true) = self.unresolved {
-            doc.insert("segments", bson::doc! { "gloss": "?" });
-        }
-        doc
     }
 }
 
