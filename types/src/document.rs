@@ -74,7 +74,8 @@ impl AnnotatedDoc {
         super_collection: String,
     ) -> FieldResult<Vec<DocumentCollection>> {
         Ok(context
-            .data::<Database>()?
+            .data::<DataLoader<Database>>()?
+            .loader()
             .document_breadcrumbs(&self.meta.id.0, &super_collection)
             .await?)
     }
@@ -147,7 +148,8 @@ impl AnnotatedDoc {
     /// like line and page breaks.
     async fn forms(&self, context: &async_graphql::Context<'_>) -> FieldResult<Vec<AnnotatedForm>> {
         Ok(context
-            .data::<Database>()?
+            .data::<DataLoader<Database>>()?
+            .loader()
             .words_in_document(&self.meta.id)
             .await?
             .collect())
@@ -155,7 +157,8 @@ impl AnnotatedDoc {
 
     async fn form_count(&self, context: &async_graphql::Context<'_>) -> FieldResult<i64> {
         Ok(context
-            .data::<Database>()?
+            .data::<DataLoader<Database>>()?
+            .loader()
             .count_words_in_document(&self.meta.id)
             .await?)
     }
@@ -167,7 +170,8 @@ impl AnnotatedDoc {
         context: &async_graphql::Context<'_>,
     ) -> FieldResult<Vec<AnnotatedForm>> {
         let forms = context
-            .data::<Database>()?
+            .data::<DataLoader<Database>>()?
+            .loader()
             .words_in_document(&self.meta.id)
             .await?;
         Ok(forms.filter(AnnotatedForm::is_unresolved).collect())
@@ -454,7 +458,8 @@ impl DocumentCollection {
         context: &async_graphql::Context<'_>,
     ) -> async_graphql::FieldResult<Vec<DocumentReference>> {
         Ok(context
-            .data::<Database>()?
+            .data::<DataLoader<Database>>()?
+            .loader()
             .documents_in_collection("", &self.slug)
             .await?)
     }

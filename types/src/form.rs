@@ -92,7 +92,7 @@ impl AnnotatedForm {
         context: &async_graphql::Context<'_>,
     ) -> FieldResult<Vec<AnnotatedForm>> {
         if let Some(root) = self.root(context).await? {
-            let db = context.data::<Database>()?;
+            let db = context.data::<DataLoader<Database>>()?.loader();
             // Find the forms with the exact same root.
             let id = MorphemeId {
                 document_id: Some(self.position.document_id.clone()),

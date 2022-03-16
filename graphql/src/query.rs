@@ -22,17 +22,29 @@ impl Query {
         context: &Context<'_>,
         system: CherokeeOrthography,
     ) -> FieldResult<Vec<TagForm>> {
-        Ok(context.data::<Database>()?.all_tags(system).await?)
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .all_tags(system)
+            .await?)
     }
 
     /// Listing of all documents excluding their contents by default
     async fn all_documents(&self, context: &Context<'_>) -> FieldResult<Vec<AnnotatedDoc>> {
-        Ok(context.data::<Database>()?.all_documents().await?)
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .all_documents()
+            .await?)
     }
 
     /// List of all content pages
     async fn all_pages(&self, context: &Context<'_>) -> FieldResult<Vec<dailp::page::Page>> {
-        Ok(context.data::<Database>()?.all_pages().await?)
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .all_pages()
+            .await?)
     }
 
     /// List of all the document collections available.
@@ -40,7 +52,11 @@ impl Query {
         &self,
         context: &Context<'_>,
     ) -> FieldResult<Vec<dailp::DocumentCollection>> {
-        Ok(context.data::<Database>()?.top_collections().await?)
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .top_collections()
+            .await?)
     }
 
     async fn collection(
@@ -48,7 +64,11 @@ impl Query {
         context: &Context<'_>,
         slug: String,
     ) -> FieldResult<dailp::DocumentCollection> {
-        Ok(context.data::<Database>()?.collection(slug).await?)
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .collection(slug)
+            .await?)
     }
 
     /// Retrieves a full document from its unique identifier.
@@ -87,7 +107,8 @@ impl Query {
         compare_by: Option<CherokeeOrthography>,
     ) -> FieldResult<Vec<MorphemeReference>> {
         Ok(context
-            .data::<Database>()?
+            .data::<DataLoader<Database>>()?
+            .loader()
             .morphemes(MorphemeId::parse(&gloss).unwrap(), compare_by)
             .await?)
     }
@@ -100,7 +121,11 @@ impl Query {
         morpheme_id: String,
     ) -> FieldResult<Vec<WordsInDocument>> {
         let id = MorphemeId::parse(&morpheme_id).unwrap();
-        Ok(context.data::<Database>()?.words_by_doc(id).await?)
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .words_by_doc(id)
+            .await?)
     }
 
     /// Forms containing the given morpheme gloss or related ones clustered over time.
@@ -114,7 +139,8 @@ impl Query {
         use itertools::Itertools as _;
 
         let forms = context
-            .data::<Database>()?
+            .data::<DataLoader<Database>>()?
+            .loader()
             .connected_forms(dailp::MorphemeId::parse(&gloss).unwrap())
             .await?;
         // Cluster forms by the decade they were recorded in.
@@ -174,7 +200,8 @@ impl Query {
         query: String,
     ) -> FieldResult<Vec<dailp::AnnotatedForm>> {
         Ok(context
-            .data::<Database>()?
+            .data::<DataLoader<Database>>()?
+            .loader()
             .search_words_any_field(query)
             .await?)
     }
@@ -187,7 +214,8 @@ impl Query {
         query: String,
     ) -> FieldResult<Vec<dailp::AnnotatedForm>> {
         Ok(context
-            .data::<Database>()?
+            .data::<DataLoader<Database>>()?
+            .loader()
             .potential_syllabary_matches(&query)
             .await?)
     }
@@ -252,7 +280,11 @@ impl Mutation {
         // Data encoded as JSON for now.
         data: async_graphql::Json<dailp::page::Page>,
     ) -> FieldResult<bool> {
-        context.data::<Database>()?.update_page(data.0).await?;
+        context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .update_page(data.0)
+            .await?;
         Ok(true)
     }
 
@@ -264,7 +296,8 @@ impl Mutation {
         data: async_graphql::Json<dailp::annotation::Annotation>,
     ) -> FieldResult<bool> {
         context
-            .data::<Database>()?
+            .data::<DataLoader<Database>>()?
+            .loader()
             .update_annotation(data.0)
             .await?;
         Ok(true)

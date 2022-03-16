@@ -2,44 +2,48 @@ mod query;
 
 use {
     dailp::async_graphql::{self, dataloader::DataLoader, EmptySubscription, Schema},
-    lambda_http::{http::header, lambda_runtime, IntoResponse, Request, RequestExt, Response},
+    lambda_http::{http::header, IntoResponse, Request, RequestExt, Response},
     log::info,
     query::*,
 };
 
 type Error = Box<dyn std::error::Error + Sync + Send + 'static>;
 
-lazy_static::lazy_static! {
-    // Share database connection between executions.
-    // This prevents each lambda invocation from creating a new connection to
-    // the database.
-    static ref SQL_DATABASE: dailp::Database = dailp::database_sql::Database::new().unwrap();
-    static ref SCHEMA: Schema<Query, Mutation, EmptySubscription> = {
-        Schema::build(Query, Mutation, EmptySubscription)
-            .data(dailp::Database::new().unwrap())
-            .data(DataLoader::new(dailp::Database::new().unwrap(), tokio::spawn))
-            .finish()
-    };
-}
-
 #[tokio::main]
 async fn main() -> Result<(), Error> {
     pretty_env_logger::init();
-    lambda_runtime::run(lambda_http::handler(handler)).await?;
+    // Share database connection between executions.
+    // This prevents each lambda invocation from creating a new connection to
+    // the database.
+    let database = dailp::Database::connect().await?;
+    let schema = {
+        Schema::build(Query, Mutation, EmptySubscription)
+            .data(DataLoader::new(
+                dailp::Database::connect().await?,
+                tokio::spawn,
+            ))
+            .finish()
+    };
+    let database = &database;
+    let schema = &schema;
+    lambda_http::run(lambda_http::service_fn(|req| {
+        handler(req, database, schema)
+    }))
+    .await?;
     Ok(())
 }
 
 /// Takes an HTTP request containing a GraphQL query,
 /// processes it with our GraphQL schema, then returns a JSON response.
-async fn handler(req: Request, _: lambda_runtime::Context) -> Result<impl IntoResponse, Error> {
+async fn handler(
+    req: Request,
+    database: &dailp::Database,
+    schema: &Schema<Query, Mutation, EmptySubscription>,
+) -> Result<impl IntoResponse, Error> {
     info!("API Gateway Request: {:?}", req);
 
     let user: Option<UserInfo> = match req.request_context() {
-        lambda_http::request::RequestContext::ApiGatewayV2(ctx) => ctx
-            .authorizer
-            .get("claims")
-            .and_then(|claims| serde_json::from_value(claims.clone()).ok()),
-        lambda_http::request::RequestContext::ApiGateway(ctx) => ctx
+        lambda_http::request::RequestContext::ApiGatewayV1(ctx) => ctx
             .authorizer
             .get("claims")
             .and_then(|claims| serde_json::from_value(claims.clone()).ok()),
@@ -62,7 +66,6 @@ async fn handler(req: Request, _: lambda_runtime::Context) -> Result<impl IntoRe
         } else if let lambda_http::Body::Text(req) = req.into_body() {
             // Other requests (usually POST) should be processed as an actual
             // GraphQL query.
-            let schema = &*SCHEMA;
             let req: async_graphql::Request = serde_json::from_str(&req)?;
             // If the request was made by an authenticated user, add their
             // information to the request data.
@@ -90,7 +93,7 @@ async fn handler(req: Request, _: lambda_runtime::Context) -> Result<impl IntoRe
         let full_path = req.uri().path();
         let mut parts = full_path.split("/");
         let document_id = parts.nth(2).expect("No manifest ID given");
-        let manifest = SQL_DATABASE
+        let manifest = database
             .document_manifest(&dailp::DocumentId(document_id.to_string()), full_url)
             .await?;
         let json = serde_json::to_string(&manifest)?;
