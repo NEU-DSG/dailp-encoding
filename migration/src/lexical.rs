@@ -96,9 +96,6 @@ pub async fn migrate_dictionaries(db: &Database) -> Result<()> {
 
     ingest_ac1995(db, "1x02KTuF0yyEFcrJwkfFiBKj79ysQTZfLKB6hKeq-ZT8").await?;
 
-    // DF1975 Grammatical Appendix (PF1975)
-    parse_appendix(db, "1VjpKXMqb7CgFKE5lk9E6gqL-k6JKZ3FVUvhnqiMZYQg", 2).await?;
-
     let entries = df1975
         .chain(df2003)
         .chain(root_nouns)
@@ -114,6 +111,9 @@ pub async fn migrate_dictionaries(db: &Database) -> Result<()> {
         // Push all the surface forms to the sea of words.
         db.insert_lexical_entry(entry.entry, entry.forms).await?;
     }
+
+    // DF1975 Grammatical Appendix (PF1975)
+    parse_appendix(db, "1VjpKXMqb7CgFKE5lk9E6gqL-k6JKZ3FVUvhnqiMZYQg", 2).await?;
 
     Ok(())
 }
@@ -239,18 +239,17 @@ async fn parse_appendix(db: &Database, sheet_id: &str, to_skip: usize) -> Result
 
     db.insert_lexical_forms(forms).await?;
 
-    // FIXME add function to Database
-    // let links = SheetResult::from_sheet(sheet_id, Some("References")).await?;
-    // let links = links.values.into_iter().skip(1).filter_map(|row| {
-    //     let mut row = row.into_iter();
-    //     Some(LexicalConnection::new(
-    //         MorphemeId::new(Some(meta.id.clone()), None, row.next()?),
-    //         MorphemeId::parse(&row.next()?)?,
-    //     ))
-    // });
-    // for link in links {
-    //     db.update_connection(link).await?;
-    // }
+    let links = SheetResult::from_sheet(sheet_id, Some("References")).await?;
+    let links = links.values.into_iter().skip(1).filter_map(|row| {
+        let mut row = row.into_iter();
+        Some(LexicalConnection::new(
+            MorphemeId::new(Some(meta.id.clone()), None, row.next()?),
+            MorphemeId::parse(&row.next()?)?,
+        ))
+    });
+    for link in links {
+        db.insert_morpheme_relation(link).await?;
+    }
 
     Ok(())
 }

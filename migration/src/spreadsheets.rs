@@ -40,11 +40,7 @@ pub async fn migrate_documents_to_db(
     index: i64,
 ) -> Result<()> {
     // Write the contents of each document to our database.
-
     db.insert_document(d, collection_id, index).await?;
-    // for r in conns {
-    //     db.update_connection(r).await?;
-    // }
 
     Ok(())
 }
