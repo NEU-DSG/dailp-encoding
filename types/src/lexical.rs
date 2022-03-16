@@ -1,4 +1,4 @@
-use crate::{AnnotatedForm, Date, DocumentId, Geometry, MorphemeSegment};
+use crate::{database_sql::Database, AnnotatedForm, Date, DocumentId, Geometry, MorphemeSegment};
 use serde::{Deserialize, Serialize};
 
 /// The reference position within a document of one specific form
@@ -88,7 +88,7 @@ impl PositionInDocument {
         if let Some(geometry) = &self.geometry {
             // Retrieve the document instance.
             let doc = context
-                .data::<DataLoader<crate::Database>>()?
+                .data::<DataLoader<Database>>()?
                 .load_one(self.document_id.clone())
                 .await?
                 .ok_or_else(|| {

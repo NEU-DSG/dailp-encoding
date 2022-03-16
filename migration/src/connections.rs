@@ -1,5 +1,5 @@
 use crate::spreadsheets::SheetResult;
-use dailp::{Database, LexicalConnection};
+use dailp::{database_sql::Database, LexicalConnection};
 
 pub async fn migrate_connections(db: &Database) -> anyhow::Result<()> {
     use itertools::Itertools as _;
@@ -17,7 +17,7 @@ pub async fn migrate_connections(db: &Database) -> anyhow::Result<()> {
     // TODO Clear all connections before starting.
 
     for conn in connections {
-        db.update_connection(conn).await?;
+        db.insert_morpheme_relation(conn).await?;
     }
 
     Ok(())

@@ -44,7 +44,7 @@ async fn main() -> Result<()> {
 
     migrate_data(&db).await?;
 
-    // connections::migrate_connections(&db).await?;
+    connections::migrate_connections(&db).await?;
 
     Ok(())
 }

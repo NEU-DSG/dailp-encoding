@@ -29,6 +29,13 @@ impl Database {
         Ok(Database { client: conn })
     }
 
+    pub async fn update_person(&self, person: ContributorDetails) -> Result<()> {
+        query_file!("queries/upsert_contributor.sql", person.full_name)
+            .execute(&self.client)
+            .await?;
+        Ok(())
+    }
+
     pub async fn potential_syllabary_matches(&self, syllabary: &str) -> Result<Vec<AnnotatedForm>> {
         let alternate_spellings: Vec<_> = CherokeeOrthography::similar_syllabary_strings(syllabary)
             .into_iter()
@@ -57,7 +64,11 @@ impl Database {
         Ok(items.into_iter().map(Into::into).collect())
     }
 
-    pub async fn morphemes(&self, morpheme_id: MorphemeId) -> Result<Vec<MorphemeReference>> {
+    pub async fn morphemes(
+        &self,
+        morpheme_id: MorphemeId,
+        compare_by: Option<CherokeeOrthography>,
+    ) -> Result<Vec<MorphemeReference>> {
         let items = query_file!(
             "queries/surface_forms.sql",
             morpheme_id.gloss,
@@ -272,6 +283,18 @@ impl Database {
                 .fetch_all(&self.client)
                 .await?,
         )
+    }
+
+    pub async fn update_annotation(&self, annote: annotation::Annotation) -> Result<()> {
+        todo!("Implement image annotations")
+    }
+
+    pub async fn all_pages(&self) -> Result<Vec<page::Page>> {
+        todo!("Implement content pages")
+    }
+
+    pub async fn update_page(&self, page: page::Page) -> Result<()> {
+        todo!("Implement content pages")
     }
 
     pub async fn words_in_document(
@@ -995,6 +1018,73 @@ impl Loader<ImageSourceId> for Database {
                 )
             })
             .collect())
+    }
+}
+
+#[async_trait]
+impl Loader<ContributorsForDocument> for Database {
+    type Value = Vec<Contributor>;
+    type Error = Arc<sqlx::Error>;
+
+    async fn load(
+        &self,
+        keys: &[ContributorsForDocument],
+    ) -> Result<HashMap<ContributorsForDocument, Self::Value>, Self::Error> {
+        let keys: Vec<_> = keys.iter().map(|k| k.0.clone()).collect();
+        let items = query_file!("queries/document_contributors.sql", &keys)
+            .fetch_all(&self.client)
+            .await?;
+        Ok(items
+            .into_iter()
+            .map(|x| {
+                (
+                    ContributorsForDocument(x.document_id.unwrap()),
+                    Contributor {
+                        name: x.full_name.unwrap(),
+                        role: x.contribution_role.unwrap_or_default(),
+                    },
+                )
+            })
+            .into_group_map())
+    }
+}
+
+#[async_trait]
+impl Loader<PersonFullName> for Database {
+    type Value = ContributorDetails;
+    type Error = Arc<sqlx::Error>;
+
+    async fn load(
+        &self,
+        keys: &[PersonFullName],
+    ) -> Result<HashMap<PersonFullName, Self::Value>, Self::Error> {
+        let keys: Vec<_> = keys.iter().map(|k| k.0.clone()).collect();
+        let items = query_file!("queries/contributors_by_name.sql", &keys)
+            .fetch_all(&self.client)
+            .await?;
+        Ok(items
+            .into_iter()
+            .map(|x| {
+                (
+                    PersonFullName(x.full_name.clone()),
+                    ContributorDetails {
+                        full_name: x.full_name,
+                        alternate_name: None,
+                        birth_date: None,
+                    },
+                )
+            })
+            .collect())
+    }
+}
+
+#[async_trait]
+impl Loader<PageId> for Database {
+    type Value = page::Page;
+    type Error = Arc<sqlx::Error>;
+
+    async fn load(&self, keys: &[PageId]) -> Result<HashMap<PageId, Self::Value>, Self::Error> {
+        todo!("Implement content pages")
     }
 }
 

@@ -88,14 +88,14 @@ CREATE TABLE character_transcription (
 );
 
 -- Used both for known static contributors and active users.
-CREATE TABLE contributor_info (
+CREATE TABLE contributor (
   id autouuid PRIMARY KEY,
-  full_name text NOT NULL
+  full_name text NOT NULL UNIQUE
 );
 
 CREATE TABLE contributor_attribution (
   document_id text NOT NULL REFERENCES document (id) ON DELETE CASCADE,
-  contributor_id uuid NOT NULL REFERENCES contributor_info (id) ON DELETE CASCADE,
+  contributor_id uuid NOT NULL REFERENCES contributor (id) ON DELETE CASCADE,
   contribution_role text NOT NULL,
   PRIMARY KEY (document_id, contributor_id)
 );

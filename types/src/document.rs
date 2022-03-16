@@ -1,11 +1,9 @@
 use crate::{
-    database_sql, AnnotatedForm, AudioSlice, Contributor, Database, Date, SourceAttribution,
-    Translation, TranslationBlock,
+    database_sql, AnnotatedForm, AudioSlice, Contributor, Date, SourceAttribution, Translation,
+    TranslationBlock,
 };
 use async_graphql::{dataloader::DataLoader, FieldResult};
-use itertools::Itertools;
 use serde::{Deserialize, Serialize};
-use std::borrow::Cow;
 use uuid::Uuid;
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -101,8 +99,15 @@ impl AnnotatedDoc {
 
     /// The people involved in producing this document, including the original
     /// author, translators, and annotators
-    async fn contributors(&self) -> &Vec<Contributor> {
-        &self.meta.contributors
+    async fn contributors(
+        &self,
+        context: &async_graphql::Context<'_>,
+    ) -> FieldResult<Vec<Contributor>> {
+        Ok(context
+            .data::<DataLoader<database_sql::Database>>()?
+            .load_one(crate::ContributorsForDocument(self.meta.id.0.clone()))
+            .await?
+            .unwrap_or_default())
     }
 
     /// Is this document a reference source (unstructured list of words)?

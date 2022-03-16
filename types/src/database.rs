@@ -13,7 +13,7 @@ use {
 /// Connects to our backing database instance, providing high level functions
 /// for accessing the data therein.
 #[derive(Clone)]
-pub struct Database {
+struct Database {
     client: mongodb::Database,
 }
 
@@ -619,20 +619,26 @@ impl Loader<DocumentId> for Database {
 pub struct PartsOfWord(pub Uuid);
 
 #[derive(Clone, Eq, PartialEq, Hash)]
-pub struct PersonId(pub String);
+pub struct PersonFullName(pub String);
+
+#[derive(Clone, Eq, PartialEq, Hash)]
+pub struct ContributorsForDocument(pub String);
 
 #[async_trait::async_trait]
-impl Loader<PersonId> for Database {
+impl Loader<PersonFullName> for Database {
     type Value = ContributorDetails;
     type Error = mongodb::error::Error;
-    async fn load(&self, keys: &[PersonId]) -> Result<HashMap<PersonId, Self::Value>, Self::Error> {
+    async fn load(
+        &self,
+        keys: &[PersonFullName],
+    ) -> Result<HashMap<PersonFullName, Self::Value>, Self::Error> {
         // Turn keys into strings for Mongo request.
         let keys: Vec<_> = keys.iter().map(|x| &x.0 as &str).collect();
         let items: Vec<Self::Value> =
             find_all_keys(self.client.collection(Self::PEOPLE), keys).await?;
         Ok(items
             .into_iter()
-            .map(|tag| (PersonId(tag.full_name.clone()), tag))
+            .map(|tag| (PersonFullName(tag.full_name.clone()), tag))
             .collect())
     }
 }

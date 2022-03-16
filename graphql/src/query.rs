@@ -3,8 +3,8 @@
 use {
     dailp::async_graphql::{self, dataloader::DataLoader, Context, FieldResult, Guard},
     dailp::{
-        database_sql, AnnotatedDoc, CherokeeOrthography, Database, MorphemeId, MorphemeReference,
-        MorphemeTag, TagForm, WordsInDocument,
+        database_sql, AnnotatedDoc, CherokeeOrthography, MorphemeId, MorphemeReference, TagForm,
+        WordsInDocument,
     },
     mongodb::bson,
     serde::{Deserialize, Serialize},
@@ -38,7 +38,10 @@ impl Query {
 
     /// List of all content pages
     async fn all_pages(&self, context: &Context<'_>) -> FieldResult<Vec<dailp::page::Page>> {
-        Ok(context.data::<Database>()?.pages().all().await?)
+        Ok(context
+            .data::<database_sql::Database>()?
+            .all_pages()
+            .await?)
     }
 
     /// List of all the document collections available.
@@ -82,7 +85,7 @@ impl Query {
         id: String,
     ) -> FieldResult<Option<dailp::page::Page>> {
         Ok(context
-            .data::<DataLoader<Database>>()?
+            .data::<DataLoader<database_sql::Database>>()?
             .load_one(dailp::PageId(id))
             .await?)
     }
@@ -99,8 +102,8 @@ impl Query {
         compare_by: Option<CherokeeOrthography>,
     ) -> FieldResult<Vec<MorphemeReference>> {
         Ok(context
-            .data::<Database>()?
-            .morphemes(&MorphemeId::parse(&gloss).unwrap(), compare_by)
+            .data::<database_sql::Database>()?
+            .morphemes(MorphemeId::parse(&gloss).unwrap(), compare_by)
             .await?)
     }
 
@@ -129,8 +132,8 @@ impl Query {
         use itertools::Itertools as _;
 
         let forms = context
-            .data::<Database>()?
-            .connected_surface_forms(&dailp::MorphemeId::parse(&gloss).unwrap())
+            .data::<database_sql::Database>()?
+            .connected_forms(dailp::MorphemeId::parse(&gloss).unwrap())
             .await?;
         // Cluster forms by the decade they were recorded in.
         let clusters = forms
@@ -267,7 +270,10 @@ impl Mutation {
         // Data encoded as JSON for now.
         data: async_graphql::Json<dailp::page::Page>,
     ) -> FieldResult<bool> {
-        context.data::<Database>()?.pages().update(data.0).await?;
+        context
+            .data::<database_sql::Database>()?
+            .update_page(data.0)
+            .await?;
         Ok(true)
     }
 
@@ -279,9 +285,8 @@ impl Mutation {
         data: async_graphql::Json<dailp::annotation::Annotation>,
     ) -> FieldResult<bool> {
         context
-            .data::<Database>()?
-            .annotations()
-            .update(data.0)
+            .data::<database_sql::Database>()?
+            .update_annotation(data.0)
             .await?;
         Ok(true)
     }

@@ -393,7 +393,7 @@ impl SheetResult {
                 db.image_source_by_title(&source)
                     .await?
                     .map(|source| dailp::IiifImages {
-                        source: dailp::ImageSourceId(source),
+                        source: source.id,
                         ids,
                     })
             } else {

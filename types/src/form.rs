@@ -1,6 +1,6 @@
 use crate::{
-    database_sql, AnnotatedDoc, AudioSlice, Database, Date, MorphemeId, MorphemeSegment,
-    PartsOfWord, PositionInDocument,
+    database_sql, AnnotatedDoc, AudioSlice, Date, MorphemeId, MorphemeSegment, PartsOfWord,
+    PositionInDocument,
 };
 use async_graphql::{dataloader::DataLoader, FieldResult};
 use itertools::Itertools;

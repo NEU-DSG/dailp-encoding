@@ -1,3 +1,4 @@
+use crate::{database_sql::Database, PersonFullName};
 use serde::{Deserialize, Serialize};
 
 /// An individual or organization that contributed to the creation or analysis
@@ -29,8 +30,8 @@ impl Contributor {
     ) -> async_graphql::FieldResult<Option<ContributorDetails>> {
         use async_graphql::dataloader::*;
         Ok(ctx
-            .data::<DataLoader<crate::Database>>()?
-            .load_one(crate::PersonId(self.name.clone()))
+            .data::<DataLoader<Database>>()?
+            .load_one(PersonFullName(self.name.clone()))
             .await?)
     }
 }
