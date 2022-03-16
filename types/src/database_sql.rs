@@ -402,6 +402,17 @@ impl Database {
             return Ok(());
         }
 
+        for contributor in document.meta.contributors {
+            query_file!(
+                "queries/upsert_document_contributor.sql",
+                contributor.name,
+                &document_id,
+                contributor.role
+            )
+            .execute(&mut tx)
+            .await?;
+        }
+
         if let Some(pages) = document.segments {
             let mut starting_char_index = 0;
             for (page_index, page) in pages.into_iter().enumerate() {

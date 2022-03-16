@@ -29,7 +29,7 @@ async fn main() -> Result<()> {
     migrate_image_sources(&db).await?;
 
     info!("Migrating contributors");
-    // contributors::migrate_all(&db).await?;
+    contributors::migrate_all(&db).await?;
 
     info!("Migrating tags to database...");
     tags::migrate_tags(&db).await?;
