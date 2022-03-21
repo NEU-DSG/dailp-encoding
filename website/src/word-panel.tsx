@@ -136,11 +136,11 @@ const CollapsiblePanel = (p: {
 }) => {
   const disclosure = useDisclosureState({ visible: true })
   return (
-    <div className={css.collPanel} aria-label={p.title}>
+    <div className={css.collPanel}>
       <Disclosure
         {...disclosure}
         className={css.collPanelButton}
-        aria-label={`${p.title} header`}
+        aria-label={p.title}
       >
         {p.icon} {p.title}
         {disclosure.visible ? (
