@@ -76,6 +76,7 @@
           CARGO_BUILD_TARGET = target;
           TARGET_CC = "${cc}/bin/${target}-gcc";
           CARGO_BUILD_RUSTFLAGS = "-C target-feature=+crt-static";
+          SQLX_OFFLINE = "true";
         };
         hostPackage = naersk.buildPackage {
           root = ./.;
