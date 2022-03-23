@@ -20,6 +20,7 @@ jobs:
       OAUTH_TOKEN: ${{ secrets.OAUTH_TOKEN }}
       RUST_LOG: info
       TF_STAGE: ${{ github.ref == 'refs/heads/main' && 'dev' || 'prod' }}
+      SQLX_OFFLINE: true
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
