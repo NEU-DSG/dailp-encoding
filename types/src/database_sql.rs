@@ -365,6 +365,13 @@ impl Database {
     ) -> Result<()> {
         let mut tx = self.client.begin().await?;
 
+        let document_id = document.meta.id.0;
+
+        // Clear the document audio before re-inserting it.
+        query_file!("queries/delete_document_audio.sql", &document_id)
+            .execute(&mut tx)
+            .await?;
+
         let slice_id = if let Some(audio) = document.meta.audio_recording {
             let time_range: Option<PgRange<_>> = match (audio.start_time, audio.end_time) {
                 (Some(a), Some(b)) => Some((a as i64..b as i64).into()),
@@ -381,7 +388,6 @@ impl Database {
             None
         };
 
-        let document_id = document.meta.id.0;
         query_file!(
             "queries/insert_document_in_collection.sql",
             &document_id,

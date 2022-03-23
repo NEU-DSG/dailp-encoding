@@ -1211,6 +1211,18 @@
       ]
     }
   },
+  "a298194bf5d484e07232d9b74f2fca6cb1d207a9f1066c6aefe697f32b03d094": {
+    "query": "delete from audio_resource\nwhere id in (\n  select audio_slice.resource_id\n  from audio_slice\n    inner join document on document.audio_slice_id = audio_slice.id\n  where document.id = $1\n)\n",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      },
+      "nullable": []
+    }
+  },
   "a658233f55867be6d29c0ef7ba401c9cc3a8a17d75fc0d591913ecf0cc572e37": {
     "query": "insert into character_transcription (\n  page_id, index_in_page, possible_transcriptions\n)\nvalues ($1, $2, $3)\n",
     "describe": {
