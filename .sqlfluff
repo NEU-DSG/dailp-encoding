@@ -8,6 +8,7 @@ indented_joins = True
 
 [sqlfluff:rules]
 tab_space_size = 2
+max_line_length = 90
 
 [sqlfluff:rules:L010]
 capitalisation_policy = lower

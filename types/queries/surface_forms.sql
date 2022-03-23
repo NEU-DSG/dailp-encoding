@@ -10,8 +10,8 @@ select
   word.index_in_document,
   word.page_number
 from morpheme_gloss
-left join word_segment on word_segment.gloss_id = morpheme_gloss.id
-left join word on word.id = word_segment.word_id
+  left join word_segment on word_segment.gloss_id = morpheme_gloss.id
+  left join word on word.id = word_segment.word_id
 where morpheme_gloss.gloss = $1
   and morpheme_gloss.document_id = $2
 order by word_segment.morpheme
