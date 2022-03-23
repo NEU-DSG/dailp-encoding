@@ -154,7 +154,6 @@ CREATE TABLE abstract_morpheme_tag (
   -- Necessary for idempotent spreadsheet migrations.
   -- TODO Remove this once we aren't relying on spreadsheets.
   internal_gloss text not null unique,
-  title text not null,
   linguistic_type text,
   description text
 );
@@ -164,6 +163,7 @@ CREATE TABLE morpheme_tag (
   system_id uuid NOT NULL REFERENCES abbreviation_system (id),
   abstract_ids uuid[] NOT NULL,
   gloss text not null,
+  title text not null,
   -- TODO Remove this unique constraint once we aren't reliant on spreadsheets
   constraint morpheme_tag_unique unique (system_id, abstract_ids)
 );

@@ -659,7 +659,6 @@ impl Database {
         let abstract_id = query_file_scalar!(
             "queries/upsert_morpheme_tag.sql",
             &tag.id,
-            learner.title,
             learner.definition,
             tag.morpheme_type
         )
@@ -681,7 +680,8 @@ impl Database {
             "queries/upsert_concrete_tag.sql",
             learner_system_id,
             &abstract_ids[..],
-            learner.tag
+            learner.tag,
+            learner.title,
         )
         .execute(&self.client)
         .await?;
@@ -690,7 +690,8 @@ impl Database {
                 "queries/upsert_concrete_tag.sql",
                 crg_system_id,
                 &abstract_ids[..],
-                concrete.tag
+                concrete.tag,
+                concrete.title,
             )
             .execute(&self.client)
             .await?;
@@ -700,7 +701,8 @@ impl Database {
                 "queries/upsert_concrete_tag.sql",
                 taoc_system_id,
                 &abstract_ids[..],
-                concrete.tag
+                concrete.tag,
+                concrete.title,
             )
             .execute(&self.client)
             .await?;

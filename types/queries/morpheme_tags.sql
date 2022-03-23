@@ -3,7 +3,7 @@ select
   morpheme_gloss.example_shape,
   abbreviation_system.short_name as system_name,
   morpheme_tag.gloss,
-  abstract_morpheme_tag.title,
+  morpheme_tag.title,
   abstract_morpheme_tag.description,
   abstract_morpheme_tag.linguistic_type
 from morpheme_gloss
