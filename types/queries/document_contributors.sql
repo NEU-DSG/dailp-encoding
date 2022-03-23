@@ -4,5 +4,5 @@ select
   contributor.id,
   contributor.full_name
 from contributor_attribution as attr
-inner join contributor on contributor.id = attr.contributor_id
+  inner join contributor on contributor.id = attr.contributor_id
 where attr.document_id = any($1)

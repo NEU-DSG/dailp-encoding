@@ -134,7 +134,7 @@ CREATE TABLE word (
   page_number text,
   index_in_document bigint not null,
   -- Position of the word on a physical page.
-  page_id uuid REFERENCES document_page (id) ON DELETE SET NULL,
+  page_id uuid REFERENCES document_page (id) ON DELETE CASCADE,
   -- Order of words in the paragraph is determined by character indices.
   character_range int8range,
   -- If this word is on a specific page, it must also have a character range.
@@ -144,12 +144,16 @@ CREATE TABLE word (
 
 CREATE TABLE abbreviation_system (
   id autouuid PRIMARY KEY,
-  short_name text not null,
+  -- TODO Once we have live data, either remove this field or make it non-unique.
+  short_name text not null unique,
   title text NOT NULL
 );
 
 CREATE TABLE abstract_morpheme_tag (
   id autouuid primary key,
+  -- Necessary for idempotent spreadsheet migrations.
+  -- TODO Remove this once we aren't relying on spreadsheets.
+  internal_gloss text not null unique,
   title text not null,
   linguistic_type text,
   description text
@@ -159,7 +163,9 @@ CREATE TABLE morpheme_tag (
   id autouuid PRIMARY KEY,
   system_id uuid NOT NULL REFERENCES abbreviation_system (id),
   abstract_ids uuid[] NOT NULL,
-  gloss text not null
+  gloss text not null,
+  -- TODO Remove this unique constraint once we aren't reliant on spreadsheets
+  constraint morpheme_tag_unique unique (system_id, abstract_ids)
 );
 
 CREATE TYPE segment_type AS enum (

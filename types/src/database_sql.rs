@@ -29,7 +29,7 @@ impl Database {
         Ok(Database { client: conn })
     }
 
-    pub async fn update_person(&self, person: ContributorDetails) -> Result<()> {
+    pub async fn upsert_contributor(&self, person: ContributorDetails) -> Result<()> {
         query_file!("queries/upsert_contributor.sql", person.full_name)
             .execute(&self.client)
             .await?;
@@ -382,7 +382,7 @@ impl Database {
         };
 
         let document_id = document.meta.id.0;
-        let res = query_file!(
+        query_file!(
             "queries/insert_document_in_collection.sql",
             &document_id,
             document.meta.title,
@@ -393,13 +393,7 @@ impl Database {
             index_in_collection
         )
         .execute(&mut tx)
-        .await;
-
-        // Bail early without an error if the document already exists.
-        // TODO Write function to delete all data associated with a document
-        if res.is_err() {
-            return Ok(());
-        }
+        .await?;
 
         for contributor in document.meta.contributors {
             query_file!(
@@ -411,6 +405,13 @@ impl Database {
             .execute(&mut tx)
             .await?;
         }
+
+        // Delete all the document contents first, because trying to upsert them
+        // is difficult. Since all of these queries are within a transaction,
+        // any failure will rollback to the previous state.
+        query_file!("queries/delete_document_pages.sql", &document_id)
+            .execute(&mut tx)
+            .await?;
 
         if let Some(pages) = document.segments {
             let mut starting_char_index = 0;
@@ -651,6 +652,7 @@ impl Database {
             .ok_or_else(|| anyhow::format_err!("Tag {:?} missing a learner form", tag))?;
         let abstract_id = query_file_scalar!(
             "queries/upsert_morpheme_tag.sql",
+            &tag.id,
             learner.title,
             learner.definition,
             tag.morpheme_type
