@@ -89,7 +89,10 @@ export const selectedMode = () =>
 export const selectedPhonetics = () =>
   Number.parseInt(Cookies.get("phonetics") ?? "0")
 
-export const ExperiencePicker = (p: { onSelect: (mode: ViewMode) => void }) => {
+export const ExperiencePicker = (p: {
+  onSelect: (mode: ViewMode) => void
+  id?: string
+}) => {
   const [value, setValue] = useState(selectedMode() as ViewMode)
 
   // Save the selected experience level throughout the session.
@@ -102,9 +105,9 @@ export const ExperiencePicker = (p: { onSelect: (mode: ViewMode) => void }) => {
   }, [value])
   return (
     <select
+      id={p.id}
       name="mode-picker"
       onChange={(e) => setValue(Number.parseInt(e.target.value))}
-      aria-label="Display Mode"
     >
       {Object.keys(ViewMode)
         .filter(notNumber)
