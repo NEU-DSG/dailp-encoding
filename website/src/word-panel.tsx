@@ -26,63 +26,64 @@ export const WordPanel = (p: {
   onOpenDetails: (morpheme: BasicMorphemeSegment) => void
   tagSet: TagSet
 }) => {
-  if (p.segment) {
-    const translation = p.segment.englishGloss.join(", ")
-    let phonetics = (
+  if (!p.segment) {
+    return <p>No word has been selected</p>
+  }
+
+  const translation = p.segment.englishGloss.join(", ")
+  let phonetics = null
+  if (p.segment.simplePhonetics) {
+    phonetics = (
       <>
-        <br />
-        <br />
+        {p.segment.simplePhonetics !== p.segment.romanizedSource ? (
+          <div>{p.segment.romanizedSource}</div>
+        ) : null}
+        <div>
+          {p.segment.simplePhonetics}
+          {p.segment.audioTrack && (
+            <FormAudio
+              endTime={p.segment.audioTrack.endTime}
+              index={p.segment.audioTrack.index}
+              parentTrack=""
+              resourceUrl={p.segment.audioTrack.resourceUrl}
+              startTime={p.segment.audioTrack.startTime}
+            />
+          )}
+        </div>
       </>
     )
-    if (p.segment.simplePhonetics) {
-      phonetics = (
-        <>
-          <div>{p.segment.romanizedSource}</div>
-          <div>
-            {p.segment.simplePhonetics}
-            {p.segment.audioTrack && (
-              <FormAudio
-                endTime={p.segment.audioTrack.endTime}
-                index={p.segment.audioTrack.index}
-                parentTrack=""
-                resourceUrl={p.segment.audioTrack.resourceUrl}
-                startTime={p.segment.audioTrack.startTime}
-              />
-            )}
-          </div>
-        </>
-      )
-    } else if (p.segment.audioTrack) {
-      phonetics = (
-        <div className={css.audioContainer}>
-          <FormAudio
-            endTime={p.segment.audioTrack.endTime}
-            index={p.segment.audioTrack.index}
-            parentTrack=""
-            resourceUrl={p.segment.audioTrack.resourceUrl}
-            startTime={p.segment.audioTrack.startTime}
-          />
-        </div>
-      )
-    }
+  } else if (p.segment.audioTrack) {
+    phonetics = (
+      <div className={css.audioContainer}>
+        <FormAudio
+          endTime={p.segment.audioTrack.endTime}
+          index={p.segment.audioTrack.index}
+          parentTrack=""
+          resourceUrl={p.segment.audioTrack.resourceUrl}
+          startTime={p.segment.audioTrack.startTime}
+        />
+      </div>
+    )
+  }
 
-    return (
-      <div className={css.wordPanelContent}>
-        <Button
-          className={css.wordPanelButton.basic}
-          onClick={() => p.setContent(null)}
-          aria-label="Dismiss selected word information"
-        >
-          <MdClose size={32} />
-        </Button>
-        <header className={css.wordPanelHeader}>
-          <h1>Selected word:</h1>
-          <h2 className={css.cherHeader}>{p.segment.source}</h2>
-        </header>
+  return (
+    <div className={css.wordPanelContent}>
+      <Button
+        className={css.wordPanelButton.basic}
+        onClick={() => p.setContent(null)}
+        aria-label="Dismiss selected word information"
+      >
+        <MdClose size={32} />
+      </Button>
+      <header className={css.wordPanelHeader}>
+        <h1 className={css.noSpaceBelow}>Selected Word</h1>
+        <h2 className={css.cherHeader}>{p.segment.source}</h2>
+      </header>
 
+      {phonetics ? (
         <CollapsiblePanel
           title={"Phonetics"}
-          content={<>{phonetics}</>}
+          content={phonetics}
           icon={
             <MdRecordVoiceOver
               size={24}
@@ -90,7 +91,9 @@ export const WordPanel = (p: {
             />
           }
         />
+      ) : null}
 
+      {p.segment.segments?.length ? (
         <CollapsiblePanel
           title={"Word Parts"}
           content={
@@ -113,20 +116,16 @@ export const WordPanel = (p: {
             />
           }
         />
-        {p.segment.commentary ? (
-          <CollapsiblePanel
-            title={"Commentary"}
-            content={<>{p.segment.commentary}</>}
-            icon={
-              <MdNotes size={24} className={css.wordPanelButton.colpleft} />
-            }
-          />
-        ) : null}
-      </div>
-    )
-  } else {
-    return <p>No word has been selected</p>
-  }
+      ) : null}
+      {p.segment.commentary ? (
+        <CollapsiblePanel
+          title={"Commentary"}
+          content={<>{p.segment.commentary}</>}
+          icon={<MdNotes size={24} className={css.wordPanelButton.colpleft} />}
+        />
+      ) : null}
+    </div>
+  )
 }
 
 const CollapsiblePanel = (p: {
