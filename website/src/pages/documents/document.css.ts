@@ -173,9 +173,7 @@ export const contentSection2 = style([
 
 export const mobileWordPanel = style([
   position("fixed", 0, 0, 0, "initial"),
-  paddingX(hspace.edge),
   {
-    paddingTop: vspace.one,
     width: "13rem",
     backgroundColor: colors.body,
     fontFamily: theme.fonts.header,
