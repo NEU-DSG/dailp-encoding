@@ -37,10 +37,38 @@ export const bottomPadded = style({
   },
 })
 
+export const displayModeArea = style({
+  backgroundColor: colors.body,
+  position: "sticky",
+  top: `calc(55px + ${vspace[1.75]})`,
+  width: "100%",
+  zIndex: 1,
+  paddingTop: vspace.quarter,
+  paddingBottom: vspace.quarter,
+  "@media": {
+    [mediaQueries.medium]: {
+      top: vspace[1.75],
+    },
+    [mediaQueries.print]: {
+      display: "none",
+      height: 0,
+    },
+  },
+})
+
 export const wideAndTop = style({
+  left: 0,
+  display: "flex",
+  flexFlow: "column nowrap",
+  alignItems: "center",
+  position: "sticky",
+  top: 55,
   width: "100%",
   zIndex: 1,
   "@media": {
+    [mediaQueries.medium]: {
+      top: 0,
+    },
     [mediaQueries.print]: {
       display: "none",
       height: 0,
@@ -144,20 +172,6 @@ export const hideOnPrint = style({
 
 export const paragraph = style([topMargin, hideOnPrint])
 
-export const solidSticky = style({
-  backgroundColor: theme.colors.body,
-  zIndex: 1,
-})
-
-export const wideSticky = style({
-  left: 0,
-  display: "flex",
-  flexFlow: "column nowrap",
-  alignItems: "center",
-  width: "100% !important",
-  zIndex: 1,
-})
-
 export const contentContainer = style({
   display: "flex",
   flexDirection: "row",
@@ -168,13 +182,14 @@ export const contentSection2 = style([
   sprinkles({ display: { any: "none", medium: "block" } }),
   {
     flex: 1,
-  }
+  },
 ])
 
 export const mobileWordPanel = style([
   position("fixed", 0, 0, 0, "initial"),
   {
-    width: "13rem",
+    width: "15.5rem",
+    maxWidth: "90vw",
     backgroundColor: colors.body,
     fontFamily: theme.fonts.header,
     transition: "transform 150ms ease-in-out",
