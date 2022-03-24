@@ -13,8 +13,11 @@ import sprinkles, {
 const wordPanelPadding = "8px"
 
 export const cherHeader = style({
-  color: colors.headings,
   fontFamily: theme.fonts.cherokee,
+})
+
+export const noSpaceBelow = style({
+  marginBottom: vspace.half,
 })
 
 export const wordPanelButton = styleVariants({
@@ -61,9 +64,9 @@ export const collPanel = style({
 })
 
 export const wordPanelContent = style({
+  fontFamily: theme.fonts.body,
   position: "sticky",
-  top: 100,
-
+  top: 101,
   border: "none",
   borderRadius: "4px",
   "@media": {

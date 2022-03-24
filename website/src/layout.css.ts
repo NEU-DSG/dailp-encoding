@@ -3,7 +3,9 @@ import sprinkles, {
   centeredColumn,
   colors,
   fullWidth,
+  hideOnPrint,
   hspace,
+  mediaQueries,
   row,
   theme,
   wrappedRow,
@@ -13,9 +15,18 @@ import { paddingX } from "src/style-utils"
 export const header = style([
   paddingX(hspace.edge),
   centeredColumn,
+  hideOnPrint,
   {
     backgroundColor: colors.header,
     fontFamily: theme.fonts.header,
+    position: "sticky",
+    top: 0,
+    zIndex: 2,
+    "@media": {
+      [mediaQueries.medium]: {
+        position: "initial",
+      },
+    },
   },
 ])
 
