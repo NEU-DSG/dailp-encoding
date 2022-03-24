@@ -2,7 +2,6 @@
 -- https://blog.rustprooflabs.com/2021/06/postgres-bigint-by-default
 
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-create extension if not exists "ltree";
 
 CREATE DOMAIN autouuid uuid DEFAULT uuid_generate_v4 ();
 
@@ -13,23 +12,6 @@ CREATE TABLE document_group (
   id autouuid primary key,
   slug text not null unique,
   title text not null
-);
-
-CREATE TABLE collection (
-  slug text PRIMARY KEY,
-  title text NOT NULL
-  -- There will eventually be more details here.
-  -- WordPress menu ID
-  -- URL for logo file, perhaps?
-);
-
-CREATE TABLE collection_chapter (
-  id autouuid PRIMARY KEY,
-  -- Path always starts with the collection slug.
-  slug_path ltree not null unique,
-  index_in_parent bigint NOT NULL DEFAULT 0,
-  title text NOT NULL
-  -- Might add a chapter introduction text field.
 );
 
 CREATE TABLE audio_resource (
@@ -52,12 +34,6 @@ CREATE TABLE document (
   is_reference boolean NOT NULL,
   written_at date,
   audio_slice_id uuid REFERENCES audio_slice (id) ON DELETE SET NULL
-);
-
-CREATE TABLE collection_page (
-  id autouuid primary key,
-  chapter_id uuid not null references collection_chapter (id) on delete cascade,
-  document_id text references document (id) on delete set null
 );
 
 CREATE TABLE iiif_source (
