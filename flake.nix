@@ -33,7 +33,7 @@
         fenix = inputs.fenix.packages.${system};
         toolchainFile = {
           file = ./rust-toolchain.toml;
-          sha256 = "6PfBjfCI9DaNRyGigEmuUP2pcamWsWGc4g7SNEHqD2c=";
+          sha256 = "4IUZZWXHBBxcwRuQm9ekOwzc0oNqH/9NkI1ejW7KajU=";
         };
         rust-toolchain = fenix.fromToolchainFile toolchainFile;
         naersk = inputs.naersk.lib.${system}.override {
@@ -76,7 +76,6 @@
           CARGO_BUILD_TARGET = target;
           TARGET_CC = "${cc}/bin/${target}-gcc";
           CARGO_BUILD_RUSTFLAGS = "-C target-feature=+crt-static";
-          SQLX_OFFLINE = "true";
         };
         hostPackage = naersk.buildPackage {
           root = ./.;
@@ -206,12 +205,16 @@
                 cd $PROJECT_ROOT
                 cargo run --bin dailp-migration
               '')
+              (writers.writeBashBin "dev-generate-types" ''
+                cd $PROJECT_ROOT
+                cargo sqlx prepare -- -p dailp
+              '')
               dev-database
               dev-graphql
               dev-website
               dev-start
               postgresql_14
-              sqlx-cli
+              pkgs-unstable.sqlx-cli
               pkgs-unstable.sqlfluff
             ] ++ lib.optionals stdenv.isDarwin [
               darwin.apple_sdk.frameworks.Security
