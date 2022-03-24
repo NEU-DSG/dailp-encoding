@@ -44,12 +44,14 @@
         packageSrc = filter.filter {
           root = ./.;
           include = [
+            (filter.inDirectory ".cargo")
             (filter.inDirectory "types")
             (filter.inDirectory "graphql")
             (filter.inDirectory "migration")
             ./Cargo.toml
             ./Cargo.lock
-            ./rust-toolchain
+            ./rust-toolchain.toml
+            ./sqlx-data.json
           ];
         };
         # The rust compiler is internally a cross compiler, so a single
