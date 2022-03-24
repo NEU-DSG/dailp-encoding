@@ -33,3 +33,11 @@ export const wordPanelContent = style({
 })
 
 export const audioContainer = style({ paddingLeft: "40%" })
+
+export const table = style({
+  width: "max-content",
+  borderBottom: "0px solid #ddd",
+  fontFamily: theme.fonts.body,
+  padding: "0px",
+  borderRadius: "0px",
+})

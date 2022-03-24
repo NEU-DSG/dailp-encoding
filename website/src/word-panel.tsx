@@ -76,12 +76,11 @@ export const WordPanel = (p: {
         <h1>Selected word:</h1>
         <h2 className={css.cherHeader}>{p.segment.source}</h2>
         {phonetics}
-        <MorphemicSegmentation
-          segments={p.segment.segments}
-          onOpenDetails={p.onOpenDetails}
-          level={p.viewMode}
-          tagSet={p.tagSet}
-        />
+
+        <table className={css.table}>
+          <PartLines segments={p.segment.segments} />
+        </table>
+
         {translation.length ? <div>&lsquo;{translation}&rsquo;</div> : <br />}
         <br />
         <p>{p.segment.commentary}</p>
@@ -90,4 +89,27 @@ export const WordPanel = (p: {
   } else {
     return <p>No word has been selected</p>
   }
+}
+
+export const PartLines = (p: {
+  segments: Dailp.FormFieldsFragment["segments"]
+}) => {
+  if (p.segments) {
+    let length = p.segments.length
+    return (
+      <div>
+        {p.segments.map((part, index) => (
+          <tr>
+            <td className={css.table}>
+              {index > 0 ? "-" : null}
+              {part.morpheme}
+              {index === length - 1 ? null : "-"}
+            </td>
+            <td className={css.table}>{part.matchingTag?.learner?.title}</td>
+          </tr>
+        ))}
+      </div>
+    )
+  }
+  return null
 }
