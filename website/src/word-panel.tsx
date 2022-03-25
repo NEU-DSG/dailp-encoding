@@ -136,11 +136,15 @@ export const PartLines = (p: {
         {p.segments.map((part, index) => (
           <tr>
             <td className={css.table}>
-              {index > 0 ? "-" : null}
+              {index > 0 ? part.nextSeparator : null}
               {part.morpheme}
-              {index === length - 1 ? null : "-"}
+              {index !== length - 1 ? part.nextSeparator : null}
             </td>
-            <td className={css.table}>{part.matchingTag?.learner?.title}</td>
+            <td className={css.table}>
+              {part.matchingTag?.learner?.title
+                ? part.matchingTag.learner.title
+                : null}
+            </td>
           </tr>
         ))}
       </div>
