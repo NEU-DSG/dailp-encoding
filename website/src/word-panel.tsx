@@ -11,7 +11,12 @@ import {
 import * as Dailp from "src/graphql/dailp"
 import { FormAudio } from "./audio-player"
 import { MorphemicSegmentation } from "./segment"
-import { BasicMorphemeSegment, TagSet, ViewMode } from "./types"
+import {
+  BasicMorphemeSegment,
+  TagSet,
+  ViewMode,
+  morphemeDisplayTag,
+} from "./types"
 import * as css from "./word-panel.css"
 
 export interface WordPanelDetails {
@@ -95,9 +100,11 @@ export const WordPanel = (p: {
           title={"Word Parts"}
           content={
             <>
-              <table className={css.table}>
-                <PartLines segments={p.segment.segments} />
-              </table>
+              <VerticalMorphemicSegmentation
+                segments={p.segment.segments}
+                tagSet={p.tagSet}
+              />
+
               {translation.length ? (
                 <div>&lsquo;{translation}&rsquo;</div>
               ) : null}
@@ -126,28 +133,33 @@ export const WordPanel = (p: {
   }
 }
 
-export const PartLines = (p: {
+export const VerticalMorphemicSegmentation = (p: {
   segments: Dailp.FormFieldsFragment["segments"]
+  tagSet: TagSet
 }) => {
+  if (!p.segments) {
+    return null
+  }
   if (p.segments) {
-    let length = p.segments.length
+    let segmentCount = p.segments.length
+
     return (
-      <div>
-        {p.segments.map((part, index) => (
+      <table className={css.tableContainer}>
+        {p.segments.map((segment, index) => (
           <tr>
-            <td className={css.table}>
-              {index > 0 ? part.nextSeparator : null}
-              {part.morpheme}
-              {index !== length - 1 ? part.nextSeparator : null}
+            <td className={css.tableCells}>
+              {index > 0 ? "-" : null}
+              {segment.morpheme}
+              {index !== segmentCount - 1 ? segment.nextSeparator : null}
             </td>
-            <td className={css.table}>
-              {part.matchingTag?.learner?.title
-                ? part.matchingTag.learner.title
-                : null}
+            <td className={css.tableCells}>
+              {segment.matchingTag
+                ? morphemeDisplayTag(segment.matchingTag, p.tagSet)?.title
+                : segment.gloss}
             </td>
           </tr>
         ))}
-      </div>
+      </table>
     )
   }
   return null
