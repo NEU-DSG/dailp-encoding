@@ -18,6 +18,7 @@ export const navMenu = style({
   borderWidth: thickness.thick,
   borderStyle: "solid",
   flexFlow: "column",
+  zIndex: 999,
   selectors: { "&:focus": { outline: "none" } },
 })
 

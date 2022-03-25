@@ -21,10 +21,10 @@ export const header = style([
     fontFamily: theme.fonts.header,
     position: "sticky",
     top: 0,
-    zIndex: 2,
+    zIndex: 999,
     "@media": {
       [mediaQueries.medium]: {
-        position: "initial",
+        position: "static",
       },
     },
   },
