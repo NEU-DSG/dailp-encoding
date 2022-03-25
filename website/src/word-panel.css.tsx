@@ -82,10 +82,14 @@ export const wordPanelHeader = style({
 
 export const audioContainer = style({ paddingLeft: "40%" })
 
-export const table = style({
+export const tableContainer = style({
+  border: "0px solid transparent",
   width: "max-content",
-  borderBottom: "0px solid #ddd",
+})
+
+export const tableCells = style({
+  border: "0px solid transparent",
+  borderRight: "5px solid transparent",
   fontFamily: theme.fonts.body,
-  padding: "0px",
-  borderRadius: "0px",
+  padding: "3px",
 })
