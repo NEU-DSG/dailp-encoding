@@ -89,7 +89,7 @@ impl PositionInDocument {
             // Retrieve the document instance.
             let doc = context
                 .data::<DataLoader<Database>>()?
-                .load_one(self.document_id.clone())
+                .load_one(self.document_id)
                 .await?
                 .ok_or_else(|| {
                     anyhow::format_err!("Document {:?} missing from database.", self.document_id)
@@ -480,7 +480,7 @@ pub fn root_noun_surface_form(
 pub fn convert_udb(input: &str) -> PhonemicString {
     // UDB represents glottal stops with the single quote.
     // TODO Move this to the output conversion step.
-    let input = input.replace("'", "ʔ");
+    let input = input.replace('\'', "ʔ");
     let pat = regex::Regex::new("([^aeiouv]*)([aeiouv]:?)([!*`^\"])?").unwrap();
     let mut syllables = Vec::new();
     for caps in pat.captures_iter(&input) {

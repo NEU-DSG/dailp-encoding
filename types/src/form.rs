@@ -80,7 +80,7 @@ impl AnnotatedForm {
     ) -> FieldResult<Vec<MorphemeSegment>> {
         Ok(context
             .data::<DataLoader<Database>>()?
-            .load_one(PartsOfWord(self.id.as_ref().unwrap().clone()))
+            .load_one(PartsOfWord(*self.id.as_ref().unwrap()))
             .await?
             .unwrap_or_default())
     }
@@ -116,7 +116,7 @@ impl AnnotatedForm {
     ) -> FieldResult<Option<AnnotatedDoc>> {
         Ok(context
             .data::<DataLoader<Database>>()?
-            .load_one(self.position.document_id.clone())
+            .load_one(self.position.document_id)
             .await?)
     }
 

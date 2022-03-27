@@ -71,10 +71,9 @@ impl Manifest {
                     let annotations_uri = format!("{}/annotations", page_uri);
                     let annotation_page = AnnotationPage {
                         items: words
-                            .into_iter()
+                            .iter()
                             .filter_map(|word| {
-                                if let Some(geometry) = &word.position.geometry {
-                                    Some(Annotation {
+                                word.position.geometry.as_ref().map(|geometry| Annotation {
                                         id: format!("{}/{:?}", annotations_uri, word.id),
                                         motivation: "supplementing".to_owned(),
                                         body: AnnotationBody::TextualBody(TextualBody {
@@ -89,11 +88,8 @@ impl Manifest {
                                             },
                                         }),
                                     })
-                                } else {
-                                    None
-                                }
                             })
-                            .chain(annotations.into_iter().filter_map(|annote| {
+                            .chain(annotations.iter().filter_map(|annote| {
                                 match &annote.attached_to {
                                     AnnotationAttachment::DocumentRegion(DocumentRegion {
                                         region,

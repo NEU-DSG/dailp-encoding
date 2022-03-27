@@ -84,7 +84,7 @@ impl CherokeeOrthography {
     fn similar_syllabary_chars(c: char) -> Vec<char> {
         let group = CherokeeSyllabaryVisualGroups::from_char(c);
         if let Some(chars) = CHEROKEE_FALSE_FRIENDS.get(&group) {
-            chars.iter().copied().collect()
+            chars.to_vec()
         } else {
             vec![c]
         }

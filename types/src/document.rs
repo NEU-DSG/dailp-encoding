@@ -19,7 +19,7 @@ impl AnnotatedDoc {
         let blocks = &meta
             .translation
             .as_ref()
-            .expect(&format!("Missing translation for {}", meta.short_name))
+            .unwrap_or_else(|| panic!("Missing translation for {}", meta.short_name))
             .paragraphs;
 
         let mut pages = Vec::new();
@@ -228,7 +228,7 @@ impl DocumentParagraph {
     ) -> FieldResult<Vec<AnnotatedSeg>> {
         Ok(context
             .data::<DataLoader<Database>>()?
-            .load_one(WordsInParagraph(self.id.clone()))
+            .load_one(WordsInParagraph(self.id))
             .await?
             .unwrap_or_default())
     }

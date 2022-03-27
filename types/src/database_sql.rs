@@ -129,7 +129,7 @@ impl Database {
         .await?;
         Ok(words
             .into_iter()
-            .group_by(|w| (w.document_id.clone(), w.is_reference))
+            .group_by(|w| (w.document_id, w.is_reference))
             .into_iter()
             .map(|((document_id, is_reference), forms)| WordsInDocument {
                 document_id: Some(DocumentId(document_id)),
@@ -294,7 +294,7 @@ impl Database {
         )
     }
 
-    pub async fn update_annotation(&self, annote: annotation::Annotation) -> Result<()> {
+    pub async fn update_annotation(&self, _annote: annotation::Annotation) -> Result<()> {
         todo!("Implement image annotations")
     }
 
@@ -302,7 +302,7 @@ impl Database {
         todo!("Implement content pages")
     }
 
-    pub async fn update_page(&self, page: page::Page) -> Result<()> {
+    pub async fn update_page(&self, _page: page::Page) -> Result<()> {
         todo!("Implement content pages")
     }
 
@@ -532,7 +532,7 @@ impl Database {
     }
 
     pub async fn insert_one_word(&self, form: AnnotatedForm) -> Result<()> {
-        let doc_id = form.position.document_id.0.clone();
+        let doc_id = form.position.document_id.0;
         let mut tx = self.client.begin().await?;
         self.insert_word(&mut tx, form, doc_id, None, None).await?;
         Ok(())
@@ -555,7 +555,7 @@ impl Database {
             .replace(&[',', '+', '(', ')', '[', ']'] as &[char], " ")
             .split_whitespace()
             .join(".");
-        let gloss_id = query_file_scalar!(
+        let _gloss_id = query_file_scalar!(
             "queries/upsert_dictionary_entry.sql",
             &doc_id,
             gloss,
@@ -579,7 +579,7 @@ impl Database {
     ) -> Result<()> {
         let mut tx = self.client.begin().await?;
         for form in forms {
-            let doc_id = form.position.document_id.0.clone();
+            let doc_id = form.position.document_id.0;
             self.insert_word(&mut tx, form, doc_id, None, None).await?;
         }
         tx.commit().await?;
@@ -737,7 +737,7 @@ impl Database {
                 .fetch_all(&self.client)
                 .await?
                 .pop()
-                .map(|uuid| DocumentId(uuid)),
+                .map(DocumentId),
         )
     }
 
@@ -821,7 +821,7 @@ impl Loader<DocumentId> for Database {
                 },
                 segments: None,
             })
-            .map(|tag| (tag.meta.id.clone(), tag))
+            .map(|tag| (tag.meta.id, tag))
             .collect())
     }
 }
@@ -877,7 +877,7 @@ impl Loader<PagesInDocument> for Database {
         &self,
         keys: &[PagesInDocument],
     ) -> Result<HashMap<PagesInDocument, Self::Value>, Self::Error> {
-        let keys: Vec<_> = keys.iter().map(|k| (k.0).clone()).collect();
+        let keys: Vec<_> = keys.iter().map(|k| (k.0)).collect();
         let items = query_file!("queries/document_pages.sql", &keys[..])
             .fetch_all(&self.client)
             .await?;
@@ -915,7 +915,7 @@ impl Loader<ParagraphsInPage> for Database {
         &self,
         keys: &[ParagraphsInPage],
     ) -> Result<HashMap<ParagraphsInPage, Self::Value>, Self::Error> {
-        let keys: Vec<_> = keys.iter().map(|k| k.0.clone()).collect();
+        let keys: Vec<_> = keys.iter().map(|k| k.0).collect();
         let items = query_file!("queries/document_paragraphs.sql", &keys[..])
             .fetch_all(&self.client)
             .await?;
@@ -946,7 +946,7 @@ impl Loader<PartsOfWord> for Database {
         &self,
         keys: &[PartsOfWord],
     ) -> Result<HashMap<PartsOfWord, Self::Value>, Self::Error> {
-        let keys: Vec<_> = keys.iter().map(|k| k.0.clone()).collect();
+        let keys: Vec<_> = keys.iter().map(|k| k.0).collect();
         let items = query_file!("queries/word_parts.sql", &keys[..])
             .fetch_all(&self.client)
             .await?;
@@ -1020,7 +1020,7 @@ impl Loader<WordsInParagraph> for Database {
         &self,
         keys: &[WordsInParagraph],
     ) -> Result<HashMap<WordsInParagraph, Self::Value>, Self::Error> {
-        let keys: Vec<_> = keys.iter().map(|k| k.0.clone()).collect();
+        let keys: Vec<_> = keys.iter().map(|k| k.0).collect();
         let items = query_file!("queries/words_in_paragraph.sql", &keys[..])
             .fetch_all(&self.client)
             .await?;
@@ -1065,7 +1065,7 @@ impl Loader<TagForMorpheme> for Database {
         keys: &[TagForMorpheme],
     ) -> Result<HashMap<TagForMorpheme, Self::Value>, Self::Error> {
         use async_graphql::{InputType, Name, Value};
-        let gloss_ids: Vec<_> = keys.iter().map(|k| k.0.clone()).collect();
+        let gloss_ids: Vec<_> = keys.iter().map(|k| k.0).collect();
         let systems: Vec<_> = keys
             .iter()
             .unique()
@@ -1112,7 +1112,7 @@ impl Loader<ImageSourceId> for Database {
         &self,
         keys: &[ImageSourceId],
     ) -> Result<HashMap<ImageSourceId, Self::Value>, Self::Error> {
-        let keys: Vec<_> = keys.iter().map(|k| k.0.clone()).collect();
+        let keys: Vec<_> = keys.iter().map(|k| k.0).collect();
         let items = query_file!("queries/image_sources.sql", &keys)
             .fetch_all(&self.client)
             .await?;
@@ -1140,7 +1140,7 @@ impl Loader<ContributorsForDocument> for Database {
         &self,
         keys: &[ContributorsForDocument],
     ) -> Result<HashMap<ContributorsForDocument, Self::Value>, Self::Error> {
-        let keys: Vec<_> = keys.iter().map(|k| k.0.clone()).collect();
+        let keys: Vec<_> = keys.iter().map(|k| k.0).collect();
         let items = query_file!("queries/document_contributors.sql", &keys)
             .fetch_all(&self.client)
             .await?;
@@ -1193,7 +1193,7 @@ impl Loader<PageId> for Database {
     type Value = page::Page;
     type Error = Arc<sqlx::Error>;
 
-    async fn load(&self, keys: &[PageId]) -> Result<HashMap<PageId, Self::Value>, Self::Error> {
+    async fn load(&self, _keys: &[PageId]) -> Result<HashMap<PageId, Self::Value>, Self::Error> {
         todo!("Implement content pages")
     }
 }
