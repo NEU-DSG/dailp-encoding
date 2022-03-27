@@ -1,5 +1,6 @@
 select
   d.id,
+  d.short_name,
   d.title,
   d.written_at as "date: Date",
   d.index_in_group as order_index

@@ -22,6 +22,17 @@ export type Scalars = {
   Float: number
   /** A scalar that can represent any JSON value. */
   JSON: any
+  /**
+   * A UUID is a unique 128-bit number, stored as 16 octets. UUIDs are parsed as Strings
+   * within GraphQL. UUIDs are used to assign unique identifiers to entities without requiring a central
+   * allocating authority.
+   *
+   * # References
+   *
+   * * [Wikipedia: Universally Unique Identifier](http://en.wikipedia.org/wiki/Universally_unique_identifier)
+   * * [RFC4122: A Universally Unique IDentifier (UUID) URN Namespace](http://tools.ietf.org/html/rfc4122)
+   */
+  UUID: any
 }
 
 export type AnnotatedDoc = {
@@ -47,7 +58,7 @@ export type AnnotatedDoc = {
   /** The genre of the document, used to group similar ones */
   readonly genre: Maybe<Scalars["String"]>
   /** Official short identifier for this document */
-  readonly id: Scalars["String"]
+  readonly id: Scalars["UUID"]
   /**
    * Is this document a reference source (unstructured list of words)?
    * Otherwise, it is considered a structured document with a translation.
@@ -96,7 +107,7 @@ export type AnnotatedForm = {
   /** The document that contains this word. */
   readonly document: Maybe<AnnotatedDoc>
   /** Unique identifier of the containing document */
-  readonly documentId: Scalars["String"]
+  readonly documentId: Scalars["UUID"]
   /** English gloss for the whole word */
   readonly englishGloss: ReadonlyArray<Scalars["String"]>
   /** Number of words preceding this one in the containing document */
@@ -260,8 +271,9 @@ export type DocumentParagraph = {
 export type DocumentReference = {
   readonly __typename?: "DocumentReference"
   readonly date: Maybe<Date>
-  readonly id: Scalars["String"]
+  readonly id: Scalars["UUID"]
   readonly orderIndex: Scalars["Int"]
+  readonly shortName: Scalars["String"]
   readonly slug: Scalars["String"]
   readonly title: Scalars["String"]
 }
@@ -413,7 +425,7 @@ export type PageImage = {
 export type PositionInDocument = {
   readonly __typename?: "PositionInDocument"
   /** What document is this item within? */
-  readonly documentId: Scalars["String"]
+  readonly documentId: Scalars["UUID"]
   /** What section of the document image corresponds to this item? */
   readonly geometry: Maybe<Geometry>
   readonly iiifUrl: Maybe<Scalars["String"]>
@@ -451,7 +463,7 @@ export type Query = {
   /** List of all the functional morpheme tags available */
   readonly allTags: ReadonlyArray<TagForm>
   readonly collection: DocumentCollection
-  /** Retrieves a full document from its unique identifier. */
+  /** Retrieves a full document from its unique name. */
   readonly document: Maybe<AnnotatedDoc>
   /**
    * Retrieve information for the morpheme that corresponds to the given tag
@@ -496,7 +508,7 @@ export type QueryCollectionArgs = {
 }
 
 export type QueryDocumentArgs = {
-  id: Scalars["String"]
+  slug: Scalars["String"]
 }
 
 export type QueryMorphemeTagArgs = {
@@ -510,7 +522,8 @@ export type QueryMorphemeTimeClustersArgs = {
 }
 
 export type QueryMorphemesByDocumentArgs = {
-  morphemeId: Scalars["String"]
+  documentId: InputMaybe<Scalars["UUID"]>
+  morphemeGloss: Scalars["String"]
 }
 
 export type QueryMorphemesByShapeArgs = {
@@ -576,7 +589,7 @@ export type UserInfo = {
 export type WordsInDocument = {
   readonly __typename?: "WordsInDocument"
   /** Unique identifier of the containing document */
-  readonly documentId: Maybe<Scalars["String"]>
+  readonly documentId: Maybe<Scalars["UUID"]>
   /** What kind of document contains these words (e.g. manuscript vs dictionary) */
   readonly documentType: Maybe<DocumentType>
   /** List of annotated and potentially segmented forms */
@@ -606,7 +619,7 @@ export type DocumentsPagesQuery = { readonly __typename?: "Query" } & {
 }
 
 export type AnnotatedDocumentQueryVariables = Exact<{
-  id: Scalars["String"]
+  slug: Scalars["String"]
 }>
 
 export type AnnotatedDocumentQuery = { readonly __typename?: "Query" } & {
@@ -650,7 +663,7 @@ export type AnnotatedDocumentQuery = { readonly __typename?: "Query" } & {
 }
 
 export type DocumentContentsQueryVariables = Exact<{
-  id: Scalars["String"]
+  slug: Scalars["String"]
   morphemeSystem: InputMaybe<CherokeeOrthography>
   isReference: Scalars["Boolean"]
 }>
@@ -811,9 +824,16 @@ export type WordSearchQuery = { readonly __typename?: "Query" } & {
       | "source"
       | "normalizedSource"
       | "simplePhonetics"
-      | "documentId"
       | "englishGloss"
-    >
+      | "index"
+    > & {
+        readonly document: Maybe<
+          { readonly __typename?: "AnnotatedDoc" } & Pick<
+            AnnotatedDoc,
+            "slug" | "isReference"
+          >
+        >
+      }
   >
 }
 
@@ -823,7 +843,7 @@ export type AllSourcesQuery = { readonly __typename?: "Query" } & {
   readonly allDocuments: ReadonlyArray<
     { readonly __typename?: "AnnotatedDoc" } & Pick<
       AnnotatedDoc,
-      "isReference" | "id" | "title" | "formCount"
+      "isReference" | "id" | "slug" | "title" | "formCount"
     > & {
         readonly date: Maybe<
           { readonly __typename?: "Date" } & Pick<Date, "year">
@@ -875,7 +895,7 @@ export type TimelineQuery = { readonly __typename?: "Query" } & {
 }
 
 export type DocumentDetailsQueryVariables = Exact<{
-  id: Scalars["String"]
+  slug: Scalars["String"]
 }>
 
 export type DocumentDetailsQuery = { readonly __typename?: "Query" } & {
@@ -939,24 +959,28 @@ export type TagQuery = { readonly __typename?: "Query" } & {
 }
 
 export type MorphemeQueryVariables = Exact<{
-  morphemeId: Scalars["String"]
+  documentId: InputMaybe<Scalars["UUID"]>
+  morphemeGloss: Scalars["String"]
 }>
 
 export type MorphemeQuery = { readonly __typename?: "Query" } & {
   readonly documents: ReadonlyArray<
     { readonly __typename?: "WordsInDocument" } & Pick<
       WordsInDocument,
-      "documentId" | "documentType"
+      "documentType"
     > & {
         readonly forms: ReadonlyArray<
           { readonly __typename?: "AnnotatedForm" } & Pick<
             AnnotatedForm,
-            | "index"
-            | "source"
-            | "normalizedSource"
-            | "documentId"
-            | "englishGloss"
-          >
+            "index" | "source" | "normalizedSource" | "englishGloss"
+          > & {
+              readonly document: Maybe<
+                { readonly __typename?: "AnnotatedDoc" } & Pick<
+                  AnnotatedDoc,
+                  "slug"
+                >
+              >
+            }
         >
       }
   >
@@ -1036,8 +1060,8 @@ export function useDocumentsPagesQuery(
   })
 }
 export const AnnotatedDocumentDocument = gql`
-  query AnnotatedDocument($id: String!) {
-    document(id: $id) {
+  query AnnotatedDocument($slug: String!) {
+    document(slug: $slug) {
       id
       title
       slug
@@ -1080,11 +1104,11 @@ export function useAnnotatedDocumentQuery(
 }
 export const DocumentContentsDocument = gql`
   query DocumentContents(
-    $id: String!
+    $slug: String!
     $morphemeSystem: CherokeeOrthography
     $isReference: Boolean!
   ) {
-    document(id: $id) {
+    document(slug: $slug) {
       translatedPages @skip(if: $isReference) {
         pageNumber
         paragraphs {
@@ -1145,8 +1169,12 @@ export const WordSearchDocument = gql`
       source
       normalizedSource
       simplePhonetics
-      documentId
       englishGloss
+      index
+      document {
+        slug
+        isReference
+      }
     }
   }
 `
@@ -1164,6 +1192,7 @@ export const AllSourcesDocument = gql`
     allDocuments {
       isReference
       id
+      slug
       title
       date {
         year
@@ -1227,8 +1256,8 @@ export function useTimelineQuery(
   return Urql.useQuery<TimelineQuery>({ query: TimelineDocument, ...options })
 }
 export const DocumentDetailsDocument = gql`
-  query DocumentDetails($id: String!) {
-    document(id: $id) {
+  query DocumentDetails($slug: String!) {
+    document(slug: $slug) {
       id
       slug
       title
@@ -1299,16 +1328,20 @@ export function useTagQuery(
   return Urql.useQuery<TagQuery>({ query: TagDocument, ...options })
 }
 export const MorphemeDocument = gql`
-  query Morpheme($morphemeId: String!) {
-    documents: morphemesByDocument(morphemeId: $morphemeId) {
-      documentId
+  query Morpheme($documentId: UUID, $morphemeGloss: String!) {
+    documents: morphemesByDocument(
+      documentId: $documentId
+      morphemeGloss: $morphemeGloss
+    ) {
       documentType
       forms {
         index
         source
         normalizedSource
-        documentId
         englishGloss
+        document {
+          slug
+        }
       }
     }
   }

@@ -27,7 +27,8 @@ CREATE TABLE audio_slice (
 );
 
 CREATE TABLE document (
-  id text PRIMARY KEY,
+  id autouuid primary key,
+  short_name text not null unique,
   title text NOT NULL,
   group_id uuid not null references document_group (id) on delete cascade,
   index_in_group bigint not null default 0,
@@ -42,10 +43,9 @@ CREATE TABLE iiif_source (
   base_url text NOT NULL unique
 );
 
--- TODO consider grouping paragraphs into pages which then have associated images.
 CREATE TABLE document_page (
   id autouuid PRIMARY KEY,
-  document_id text NOT NULL REFERENCES document (id) ON DELETE CASCADE,
+  document_id uuid NOT NULL REFERENCES document (id) ON DELETE CASCADE,
   index_in_document bigint NOT NULL,
   iiif_source_id uuid REFERENCES iiif_source (id),
   iiif_oid text,
@@ -59,8 +59,7 @@ CREATE TABLE character_transcription (
   page_id uuid NOT NULL REFERENCES document_page (id) ON DELETE CASCADE,
   index_in_page bigint NOT NULL,
   possible_transcriptions text[] not null,
-  image_area box,
-  UNIQUE (page_id, index_in_page)
+  image_area box
 );
 
 -- Used both for known static contributors and active users.
@@ -70,7 +69,7 @@ CREATE TABLE contributor (
 );
 
 CREATE TABLE contributor_attribution (
-  document_id text NOT NULL REFERENCES document (id) ON DELETE CASCADE,
+  document_id uuid NOT NULL REFERENCES document (id) ON DELETE CASCADE,
   contributor_id uuid NOT NULL REFERENCES contributor (id) ON DELETE CASCADE,
   contribution_role text NOT NULL,
   PRIMARY KEY (document_id, contributor_id)
@@ -84,7 +83,7 @@ CREATE TABLE document_source (
 
 -- This table bridges from documents to sources.
 CREATE TABLE document_source_citation (
-  document_id text NOT NULL REFERENCES document (id) ON DELETE CASCADE,
+  document_id uuid NOT NULL REFERENCES document (id) ON DELETE CASCADE,
   source_id uuid NOT NULL REFERENCES document_source (id) ON DELETE CASCADE,
   PRIMARY KEY (document_id, source_id)
 );
@@ -106,7 +105,7 @@ CREATE TABLE word (
   commentary text,
   audio_slice_id uuid REFERENCES audio_slice (id) ON DELETE SET NULL,
   -- Position of the word within a document.
-  document_id text NOT NULL REFERENCES document (id) ON DELETE CASCADE,
+  document_id uuid NOT NULL REFERENCES document (id) ON DELETE CASCADE,
   page_number text,
   index_in_document bigint not null,
   -- Position of the word on a physical page.
@@ -157,7 +156,7 @@ CREATE TYPE segment_type AS enum (
 -- This table is could also be used for lexical entries within DF1975.
 CREATE TABLE morpheme_gloss (
   id autouuid PRIMARY KEY,
-  document_id text REFERENCES document (id) ON DELETE CASCADE,
+  document_id uuid REFERENCES document (id) ON DELETE CASCADE,
   gloss text NOT NULL,
   -- Each gloss is unique within its parent document.
   UNIQUE (document_id, gloss),
@@ -179,13 +178,9 @@ CREATE TABLE word_segment (
 
 -- Connect two morpheme glosses, i.e. "WJ46:walk" and "DF1975:walk"
 CREATE TABLE morpheme_gloss_relation (
-  left_document_id text NOT NULL,
-  left_gloss text NOT NULL,
-  FOREIGN KEY (left_document_id, left_gloss) REFERENCES morpheme_gloss (document_id, gloss) ON DELETE CASCADE,
-  right_document_id text NOT NULL,
-  right_gloss text NOT NULL,
-  FOREIGN KEY (right_document_id, right_gloss) REFERENCES morpheme_gloss (document_id, gloss) ON DELETE CASCADE,
-  PRIMARY KEY (left_document_id, left_gloss, right_document_id, right_gloss)
+  left_gloss_id uuid not null references morpheme_gloss (id) on delete cascade,
+  right_gloss_id uuid not null references morpheme_gloss (id) on delete cascade,
+  PRIMARY KEY (left_gloss_id, right_gloss_id)
 );
 
 -- Should we also be able to connect full words?

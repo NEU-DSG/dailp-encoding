@@ -1,4 +1,27 @@
-select distinct on (word.id)
+with recursive relations as (
+  -- Base case: all relations involving the input morpheme.
+  select
+    rl.left_gloss_id,
+    rl.right_gloss_id
+  from morpheme_gloss_relation as rl
+    inner join
+      morpheme_gloss on
+        rl.left_gloss_id = morpheme_gloss.id or rl.right_gloss_id = morpheme_gloss.id
+  where morpheme_gloss.gloss = $1 and morpheme_gloss.document_id = $2
+
+  -- Recursive case: saturate the graph (no duplicates)
+  union
+  select
+    rlr.left_gloss_id,
+    rlr.right_gloss_id
+  from morpheme_gloss_relation as rlr
+    -- Retrieve all relations that involve any previous sources or destinations
+    inner join
+      relations on
+        rlr.left_gloss_id = relations.right_gloss_id or rlr.right_gloss_id = relations.left_gloss_id or rlr.left_gloss_id = relations.left_gloss_id or rlr.right_gloss_id = relations.right_gloss_id
+)
+
+select
   word.id,
   word.source_text,
   word.simple_phonetics,
@@ -8,22 +31,10 @@ select distinct on (word.id)
   word.document_id,
   word.index_in_document,
   word.page_number
-from morpheme_gloss
-  left join
-    morpheme_gloss_relation as rl on
-      rl.left_document_id = morpheme_gloss.document_id and rl.left_gloss = morpheme_gloss.gloss
-  left join
-    morpheme_gloss_relation as rr on
-      rr.right_document_id = morpheme_gloss.document_id and rr.right_gloss = morpheme_gloss.gloss
+from relations
   inner join
-    morpheme_gloss as other on
-      (
-        other.document_id = rl.right_document_id and other.gloss = rl.right_gloss
-      ) or (
-        other.document_id = rr.left_document_id and other.gloss = rr.left_gloss
-      )
-  inner join
-    word_segment on
-      word_segment.gloss_id = other.id or word_segment.gloss_id = morpheme_gloss.id
+    morpheme_gloss on
+      morpheme_gloss.id = relations.left_gloss_id or morpheme_gloss.id = relations.right_gloss_id
+  inner join word_segment on word_segment.gloss_id = morpheme_gloss.id
   inner join word on word.id = word_segment.word_id
-where morpheme_gloss.gloss = $1 and morpheme_gloss.document_id = $2
+group by word.id

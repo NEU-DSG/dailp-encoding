@@ -75,7 +75,8 @@ async fn migrate_glossary_metadata(db: &Database, sheet_id: &str) -> Result<()> 
     let chunks = sheet.values.into_iter().chunks(7);
     let docs = chunks.into_iter().filter_map(|mut values| {
         Some(dailp::DocumentMetadata {
-            id: dailp::DocumentId(values.next()?.pop()?),
+            id: Default::default(),
+            short_name: values.next()?.pop()?,
             title: values.next()?.pop()?,
             date: Some(dailp::Date::from_ymd(
                 values.next()?.pop()?.parse().unwrap(),

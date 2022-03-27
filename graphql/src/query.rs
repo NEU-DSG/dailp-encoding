@@ -1,5 +1,7 @@
 //! This piece of the project exposes a GraphQL endpoint that allows one to access DAILP data in a federated manner with specific queries.
 
+use itertools::Itertools;
+
 use {
     dailp::async_graphql::{self, dataloader::DataLoader, Context, FieldResult, Guard},
     dailp::{
@@ -70,15 +72,15 @@ impl Query {
             .await?)
     }
 
-    /// Retrieves a full document from its unique identifier.
+    /// Retrieves a full document from its unique name.
     pub async fn document(
         &self,
         context: &Context<'_>,
-        id: String,
+        slug: String,
     ) -> FieldResult<Option<AnnotatedDoc>> {
         Ok(context
             .data::<DataLoader<Database>>()?
-            .load_one(dailp::DocumentId(id.to_ascii_uppercase()))
+            .load_one(dailp::DocumentShortName(slug.to_ascii_uppercase()))
             .await?)
     }
 
@@ -117,14 +119,32 @@ impl Query {
     async fn morphemes_by_document(
         &self,
         context: &Context<'_>,
-        morpheme_id: String,
+        document_id: Option<dailp::DocumentId>,
+        morpheme_gloss: String,
     ) -> FieldResult<Vec<WordsInDocument>> {
-        let id = MorphemeId::parse(&morpheme_id).unwrap();
-        Ok(context
-            .data::<DataLoader<Database>>()?
-            .loader()
-            .words_by_doc(id)
-            .await?)
+        if let Some(document_id) = document_id {
+            Ok(context
+                .data::<DataLoader<Database>>()?
+                .loader()
+                .connected_forms(Some(document_id), &morpheme_gloss)
+                .await?
+                .into_iter()
+                .map(|w| (w.position.document_id, w))
+                .into_group_map()
+                .into_iter()
+                .map(|(document_id, forms)| WordsInDocument {
+                    document_type: None,
+                    document_id: Some(document_id),
+                    forms,
+                })
+                .collect())
+        } else {
+            Ok(context
+                .data::<DataLoader<Database>>()?
+                .loader()
+                .words_by_doc(document_id, &morpheme_gloss)
+                .await?)
+        }
     }
 
     /// Forms containing the given morpheme gloss or related ones clustered over time.
@@ -137,11 +157,14 @@ impl Query {
         use dailp::chrono::Datelike;
         use itertools::Itertools as _;
 
-        let forms = context
-            .data::<DataLoader<Database>>()?
-            .loader()
-            .connected_forms(dailp::MorphemeId::parse(&gloss).unwrap())
-            .await?;
+        let db = context.data::<DataLoader<Database>>()?.loader();
+        let morpheme = dailp::MorphemeId::parse(&gloss).unwrap();
+        let doc_id = if let Some(short_name) = morpheme.document_name {
+            db.document_id_from_name(&short_name).await?
+        } else {
+            None
+        };
+        let forms = db.connected_forms(doc_id, &morpheme.gloss).await?;
         // Cluster forms by the decade they were recorded in.
         let clusters = forms
             .into_iter()

@@ -13,8 +13,8 @@ query DocumentsPages {
   }
 }
 
-query AnnotatedDocument($id: String!) {
-  document(id: $id) {
+query AnnotatedDocument($slug: String!) {
+  document(slug: $slug) {
     id
     title
     slug
@@ -44,11 +44,11 @@ query AnnotatedDocument($id: String!) {
 }
 
 query DocumentContents(
-  $id: String!
+  $slug: String!
   $morphemeSystem: CherokeeOrthography
   $isReference: Boolean!
 ) {
-  document(id: $id) {
+  document(slug: $slug) {
     translatedPages @skip(if: $isReference) {
       pageNumber
       paragraphs {
@@ -113,8 +113,12 @@ query WordSearch($query: String!) {
     source
     normalizedSource
     simplePhonetics
-    documentId
     englishGloss
+    index
+    document {
+      slug
+      isReference
+    }
   }
 }
 
@@ -122,6 +126,7 @@ query AllSources {
   allDocuments {
     isReference
     id
+    slug
     title
     date {
       year
@@ -161,8 +166,8 @@ query Timeline($gloss: String!) {
   }
 }
 
-query DocumentDetails($id: String!) {
-  document(id: $id) {
+query DocumentDetails($slug: String!) {
+  document(slug: $slug) {
     id
     slug
     title
@@ -206,16 +211,20 @@ query Tag($gloss: String!, $system: CherokeeOrthography!) {
   }
 }
 
-query Morpheme($morphemeId: String!) {
-  documents: morphemesByDocument(morphemeId: $morphemeId) {
-    documentId
+query Morpheme($documentId: UUID, $morphemeGloss: String!) {
+  documents: morphemesByDocument(
+    documentId: $documentId
+    morphemeGloss: $morphemeGloss
+  ) {
     documentType
     forms {
       index
       source
       normalizedSource
-      documentId
       englishGloss
+      document {
+        slug
+      }
     }
   }
 }

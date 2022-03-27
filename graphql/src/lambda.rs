@@ -92,10 +92,8 @@ async fn handler(
         let full_url = req.uri().to_string();
         let full_path = req.uri().path();
         let mut parts = full_path.split("/");
-        let document_id = parts.nth(2).expect("No manifest ID given");
-        let manifest = database
-            .document_manifest(&dailp::DocumentId(document_id.to_string()), full_url)
-            .await?;
+        let document_name = parts.nth(2).expect("No manifest ID given");
+        let manifest = database.document_manifest(document_name, full_url).await?;
         let json = serde_json::to_string(&manifest)?;
         let resp = Response::builder()
             .header(header::CONTENT_TYPE, "application/json")

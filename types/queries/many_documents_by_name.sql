@@ -1,9 +1,5 @@
 select
-  d.id,
-  d.short_name,
-  d.title,
-  d.written_at,
-  d.is_reference,
+  d.*,
   coalesce(
     jsonb_agg(
       jsonb_build_object(
@@ -16,6 +12,7 @@ select
 from document as d
   left join contributor_attribution as attr on attr.document_id = d.id
   left join contributor on contributor.id = attr.contributor_id
+where d.short_name = any($1)
 group by d.id,
   attr.contributor_id,
   attr.document_id

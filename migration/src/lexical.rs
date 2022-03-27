@@ -2,14 +2,16 @@ use crate::spreadsheets::{LexicalEntryWithForms, SheetResult};
 use anyhow::Result;
 use dailp::{
     convert_udb, seg_verb_surface_forms, AnnotatedDoc, AnnotatedForm, Contributor, Database, Date,
-    DocumentMetadata, LexicalConnection, MorphemeId, MorphemeSegment, PositionInDocument,
+    DocumentId, DocumentMetadata, LexicalConnection, MorphemeId, MorphemeSegment,
+    PositionInDocument,
 };
 use log::info;
 
 pub async fn migrate_dictionaries(db: &Database) -> Result<()> {
-    let docs = vec![
-        DocumentMetadata {
-            id: dailp::DocumentId("DF1975".to_string()),
+    let df1975_id = db
+        .insert_dictionary_document(&DocumentMetadata {
+            id: Default::default(),
+            short_name: "DF1975".to_string(),
             title: "Cherokee–English Dictionary".to_string(),
             sources: Vec::new(),
             collection: Some("Lexical Resources".to_string()),
@@ -24,9 +26,12 @@ pub async fn migrate_dictionaries(db: &Database) -> Result<()> {
             is_reference: true,
             audio_recording: None,
             order_index: 0,
-        },
-        DocumentMetadata {
-            id: dailp::DocumentId("DF2003".to_string()),
+        })
+        .await?;
+    let df2003_id = db
+        .insert_dictionary_document(&DocumentMetadata {
+            id: Default::default(),
+            short_name: "DF2003".to_string(),
             title: "A handbook of the Cherokee verb: a preliminary study".to_string(),
             sources: Vec::new(),
             collection: Some("Lexical Resources".to_string()),
@@ -38,15 +43,12 @@ pub async fn migrate_dictionaries(db: &Database) -> Result<()> {
             is_reference: true,
             audio_recording: None,
             order_index: 0,
-        },
-    ];
-    for doc in docs {
-        db.insert_dictionary_document(&doc).await?;
-    }
+        })
+        .await?;
 
     let df1975 = parse_new_df1975(
         SheetResult::from_sheet("11ssqdimOQc_hp3Zk8Y55m6DFfKR96OOpclUg5wcGSVE", None).await?,
-        "DF1975",
+        df1975_id,
         1975,
         3,
         true,
@@ -56,25 +58,25 @@ pub async fn migrate_dictionaries(db: &Database) -> Result<()> {
     );
     let root_nouns = SheetResult::from_sheet("1XuQIKzhGf_mGCH4-bHNBAaQqTAJDNtPbNHjQDhszVRo", None)
         .await?
-        .into_nouns("DF1975", 1975, 1, false)?;
+        .into_nouns(df1975_id, 1975, 1, false)?;
     let irreg_nouns = SheetResult::from_sheet("1urfgtarnSypCgb5lSOhQGhhDcg1ozQ1r4jtCJ8Bu-vw", None)
         .await?
-        .into_nouns("DF1975", 1975, 1, false)?;
+        .into_nouns(df1975_id, 1975, 1, false)?;
     let ptcp_nouns = SheetResult::from_sheet("1JRmOx5_LlnoLQhzhyb3NmA4FAfMM2XRoT9ntyWtPEnk", None)
         .await?
-        .into_nouns("DF1975", 1975, 0, false)?;
+        .into_nouns(df1975_id, 1975, 0, false)?;
     let inf_nouns = SheetResult::from_sheet("1feuNOuzm0-TpotKyjebKwuXV4MYv-jnU5zLamczqu5U", None)
         .await?
-        .into_nouns("DF1975", 1975, 0, true)?;
+        .into_nouns(df1975_id, 1975, 0, true)?;
     let body_parts = SheetResult::from_sheet("1xdnJuTsLBwxbCz9ffJmQNeX-xNYSmntoiRTu9Uwgu5I", None)
         .await?
-        .into_nouns("DF1975", 1975, 1, false)?;
+        .into_nouns(df1975_id, 1975, 1, false)?;
     let root_adjs = SheetResult::from_sheet("1R5EhHRq-hlMcYKLzwY2bLAvC-LEeVklHJEHgL6dt5L4", None)
         .await?
-        .into_adjs("DF1975", 1975)?;
+        .into_adjs(df1975_id, 1975)?;
     let df2003 = parse_new_df1975(
         SheetResult::from_sheet("18cKXgsfmVhRZ2ud8Cd7YDSHexs1ODHo6fkTPrmnwI1g", None).await?,
-        "DF2003",
+        df2003_id,
         2003,
         1,
         false,
@@ -86,7 +88,7 @@ pub async fn migrate_dictionaries(db: &Database) -> Result<()> {
     parse_numerals(
         db,
         "1MB_FCG3QhmX-pw9t9PyMtFlV8SCvgXzWz8B9BdvEtec",
-        "DF1975",
+        df1975_id,
         1975,
     )
     .await?;
@@ -118,7 +120,12 @@ pub async fn migrate_dictionaries(db: &Database) -> Result<()> {
     Ok(())
 }
 
-async fn parse_numerals(db: &Database, sheet_id: &str, doc_id: &str, year: i32) -> Result<()> {
+async fn parse_numerals(
+    db: &Database,
+    sheet_id: &str,
+    doc_id: DocumentId,
+    year: i32,
+) -> Result<()> {
     let numerals = SheetResult::from_sheet(sheet_id, None).await?;
     let date = Date::from_ymd(year, 1, 1);
 
@@ -142,8 +149,7 @@ async fn parse_numerals(db: &Database, sheet_id: &str, doc_id: &str, year: i32) 
             let _numeric = values.next()?;
             let simple_phonetics = values.next()?;
             let syllabary = values.next()?;
-            let position =
-                PositionInDocument::new(dailp::DocumentId(doc_id.to_string()), page_num, key);
+            let position = PositionInDocument::new(doc_id.clone(), page_num, key);
             let segments = vec![MorphemeSegment::new(root_dailp, gloss.clone(), None)];
             Some(AnnotatedForm {
                 id: None,
@@ -167,7 +173,11 @@ async fn parse_numerals(db: &Database, sheet_id: &str, doc_id: &str, year: i32) 
     Ok(())
 }
 
-async fn parse_meta(sheet_id: &str, collection: &str) -> Result<DocumentMetadata> {
+async fn insert_document_from_sheet(
+    db: &Database,
+    sheet_id: &str,
+    collection: &str,
+) -> Result<DocumentMetadata> {
     let meta = SheetResult::from_sheet(sheet_id, Some("Metadata")).await?;
     let mut meta_values = meta.values.into_iter();
     let document_id = meta_values.next().unwrap().pop().unwrap();
@@ -175,8 +185,9 @@ async fn parse_meta(sheet_id: &str, collection: &str) -> Result<DocumentMetadata
     let year = meta_values.next().unwrap().pop().unwrap().parse();
     let date_recorded = year.ok().map(|year| Date::from_ymd(year, 1, 1));
     let authors = meta_values.next().unwrap_or_default();
-    Ok(DocumentMetadata {
-        id: dailp::DocumentId(document_id),
+    let meta = DocumentMetadata {
+        id: Default::default(),
+        short_name: document_id,
         title,
         date: date_recorded,
         sources: Vec::new(),
@@ -192,13 +203,15 @@ async fn parse_meta(sheet_id: &str, collection: &str) -> Result<DocumentMetadata
         is_reference: true,
         audio_recording: None,
         order_index: 0,
-    })
+    };
+    let doc_id = db.insert_dictionary_document(&meta).await?;
+    // Include the newly minted UUID in the result.
+    Ok(DocumentMetadata { id: doc_id, ..meta })
 }
 
 async fn parse_appendix(db: &Database, sheet_id: &str, to_skip: usize) -> Result<()> {
     let sheet = SheetResult::from_sheet(sheet_id, None).await?;
-    let meta = parse_meta(sheet_id, "Vocabularies").await?;
-    db.insert_dictionary_document(&meta).await?;
+    let meta = insert_document_from_sheet(db, sheet_id, "Vocabularies").await?;
 
     let forms = sheet
         .values
@@ -209,7 +222,7 @@ async fn parse_appendix(db: &Database, sheet_id: &str, to_skip: usize) -> Result
             let mut values = row.into_iter();
             let index = values.next()?.parse().unwrap_or(1);
             let page_num = values.next()?;
-            let position = PositionInDocument::new(meta.id.clone(), page_num, index);
+            let position = PositionInDocument::new(meta.id, page_num, index);
             for _ in 0..to_skip {
                 values.next()?;
             }
@@ -243,7 +256,7 @@ async fn parse_appendix(db: &Database, sheet_id: &str, to_skip: usize) -> Result
     let links = links.values.into_iter().skip(1).filter_map(|row| {
         let mut row = row.into_iter();
         Some(LexicalConnection::new(
-            MorphemeId::new(Some(meta.id.clone()), None, row.next()?),
+            MorphemeId::new(Some(meta.short_name.clone()), None, row.next()?),
             MorphemeId::parse(&row.next()?)?,
         ))
     });
@@ -256,7 +269,7 @@ async fn parse_appendix(db: &Database, sheet_id: &str, to_skip: usize) -> Result
 
 fn parse_new_df1975(
     sheet: SheetResult,
-    doc_id: &str,
+    doc_id: DocumentId,
     year: i32,
     translation_count: usize,
     has_numeric: bool,
@@ -264,7 +277,6 @@ fn parse_new_df1975(
     after_root: usize,
     translations: usize,
 ) -> impl Iterator<Item = LexicalEntryWithForms> {
-    let doc_id = dailp::DocumentId(doc_id.to_owned());
     sheet
         .values
         .into_iter()
@@ -337,8 +349,12 @@ async fn ingest_particle_index(db: &Database, document_id: &str) -> Result<()> {
             let translation = row.next()?;
             let source_str = row.next()?;
             let source = MorphemeId::parse(&source_str)?;
-            let pos =
-                PositionInDocument::new(source.document_id.clone()?, source.gloss, index as i32);
+            // let doc_id = db.document_id_from_name(source.document_name).await?;
+            let pos = PositionInDocument::new(
+                todo!("Get the actual document ID from the short name provided."),
+                source.gloss,
+                index as i32,
+            );
             Some(AnnotatedForm {
                 id: None,
                 simple_phonetics: Some(simple_phonetics),
@@ -364,10 +380,7 @@ async fn ingest_particle_index(db: &Database, document_id: &str) -> Result<()> {
 
 async fn ingest_ac1995(db: &Database, sheet_id: &str) -> Result<()> {
     let sheet = SheetResult::from_sheet(sheet_id, None).await?;
-    let meta = parse_meta(sheet_id, "Vocabularies").await?;
-
-    // Update the document metadata.
-    db.insert_dictionary_document(&meta).await?;
+    let meta = insert_document_from_sheet(db, sheet_id, "Vocabularies").await?;
 
     let forms = sheet.values.into_iter().filter_map(|row| {
         let mut row = row.into_iter();

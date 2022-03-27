@@ -88,7 +88,8 @@ async fn parse_early_vocab(
     let date_recorded = year.ok().map(|year| Date::from_ymd(year, 1, 1));
     let authors = meta.next().unwrap_or_default();
     let meta = DocumentMetadata {
-        id: dailp::DocumentId(doc_id),
+        id: Default::default(),
+        short_name: doc_id,
         title,
         date: date_recorded,
         sources: Vec::new(),
@@ -107,7 +108,7 @@ async fn parse_early_vocab(
     };
 
     // Update document metadata record
-    db.insert_dictionary_document(&meta).await?;
+    let doc_id = db.insert_dictionary_document(&meta).await?;
 
     let entries = sheet
         .values
@@ -180,7 +181,7 @@ async fn parse_early_vocab(
                     line_break: None,
                     page_break: None,
                     position: dailp::PositionInDocument::new(
-                        meta.id.clone(),
+                        doc_id.clone(),
                         page_number,
                         index as i32 + 1,
                     ),

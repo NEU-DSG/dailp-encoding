@@ -19,7 +19,7 @@ impl AnnotatedDoc {
         let blocks = &meta
             .translation
             .as_ref()
-            .expect(&format!("Missing translation for {}", meta.id.0))
+            .expect(&format!("Missing translation for {}", meta.short_name))
             .paragraphs;
 
         let mut pages = Vec::new();
@@ -49,8 +49,8 @@ impl AnnotatedDoc {
 #[async_graphql::Object]
 impl AnnotatedDoc {
     /// Official short identifier for this document
-    async fn id(&self) -> &DocumentId {
-        &self.meta.id
+    async fn id(&self) -> DocumentId {
+        self.meta.id
     }
 
     /// Full title of the document
@@ -76,7 +76,7 @@ impl AnnotatedDoc {
         Ok(context
             .data::<DataLoader<Database>>()?
             .loader()
-            .document_breadcrumbs(&self.meta.id.0, &super_collection)
+            .document_breadcrumbs(self.meta.id, &super_collection)
             .await?)
     }
 
@@ -106,7 +106,7 @@ impl AnnotatedDoc {
     ) -> FieldResult<Vec<Contributor>> {
         Ok(context
             .data::<DataLoader<Database>>()?
-            .load_one(crate::ContributorsForDocument(self.meta.id.0.clone()))
+            .load_one(crate::ContributorsForDocument(self.meta.id.0))
             .await?
             .unwrap_or_default())
     }
@@ -130,7 +130,7 @@ impl AnnotatedDoc {
 
     /// URL-ready slug for this document, generated from the title
     async fn slug(&self) -> String {
-        self.meta.id.slug()
+        slug::slugify(&self.meta.short_name)
     }
 
     /// Segments of the document paired with their respective rough translations
@@ -140,7 +140,7 @@ impl AnnotatedDoc {
     ) -> FieldResult<Option<Vec<DocumentPage>>> {
         Ok(context
             .data::<DataLoader<Database>>()?
-            .load_one(PagesInDocument(self.meta.id.clone()))
+            .load_one(PagesInDocument(self.meta.id.0))
             .await?)
     }
 
@@ -150,7 +150,7 @@ impl AnnotatedDoc {
         Ok(context
             .data::<DataLoader<Database>>()?
             .loader()
-            .words_in_document(&self.meta.id)
+            .words_in_document(self.meta.id)
             .await?
             .collect())
     }
@@ -159,7 +159,7 @@ impl AnnotatedDoc {
         Ok(context
             .data::<DataLoader<Database>>()?
             .loader()
-            .count_words_in_document(&self.meta.id)
+            .count_words_in_document(self.meta.id)
             .await?)
     }
 
@@ -172,14 +172,14 @@ impl AnnotatedDoc {
         let forms = context
             .data::<DataLoader<Database>>()?
             .loader()
-            .words_in_document(&self.meta.id)
+            .words_in_document(self.meta.id)
             .await?;
         Ok(forms.filter(AnnotatedForm::is_unresolved).collect())
     }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
-pub struct PagesInDocument(pub DocumentId);
+pub struct PagesInDocument(pub Uuid);
 
 #[derive(Clone)]
 pub struct DocumentPage {
@@ -324,8 +324,9 @@ pub struct PageBreak {
 /// TODO Make more of these fields on-demand.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct DocumentMetadata {
-    /// Official short identifier.
     pub id: DocumentId,
+    /// Official short identifier.
+    pub short_name: String,
     /// Full title of the document.
     pub title: String,
     /// Further details about this particular document.
@@ -358,17 +359,9 @@ pub struct DocumentMetadata {
 }
 
 #[derive(
-    Clone, Eq, PartialEq, Hash, Serialize, Deserialize, Debug, async_graphql::NewType, sqlx::Type,
+    Clone, Copy, Eq, PartialEq, Hash, Serialize, Deserialize, Debug, async_graphql::NewType, Default,
 )]
-#[sqlx(transparent)]
-pub struct DocumentId(pub String);
-
-impl DocumentId {
-    /// Page slug based on this identifier
-    pub fn slug(&self) -> String {
-        slug::slugify(&self.0)
-    }
-}
+pub struct DocumentId(pub Uuid);
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct ImageSourceId(pub Uuid);
@@ -468,7 +461,8 @@ impl DocumentCollection {
 #[derive(Clone, async_graphql::SimpleObject)]
 #[graphql(complex)]
 pub struct DocumentReference {
-    pub id: String,
+    pub id: Uuid,
+    pub short_name: String,
     pub title: String,
     pub date: Option<Date>,
     pub order_index: i64,
@@ -477,6 +471,6 @@ pub struct DocumentReference {
 #[async_graphql::ComplexObject]
 impl DocumentReference {
     pub async fn slug(&self) -> String {
-        slug::slugify(&self.id)
+        slug::slugify(&self.short_name)
     }
 }

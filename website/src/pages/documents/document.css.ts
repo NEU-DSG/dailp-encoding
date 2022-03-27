@@ -168,7 +168,7 @@ export const contentSection2 = style([
   sprinkles({ display: { any: "none", medium: "block" } }),
   {
     flex: 1,
-  }
+  },
 ])
 
 export const mobileWordPanel = style([

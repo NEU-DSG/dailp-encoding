@@ -7,8 +7,8 @@ use crate::translations::DocResult;
 use anyhow::Result;
 use dailp::{
     convert_udb, root_noun_surface_forms, root_verb_surface_forms, AnnotatedDoc, AnnotatedForm,
-    AnnotatedSeg, AudioSlice, Contributor, Database, Date, DocumentMetadata, LexicalConnection,
-    LineBreak, MorphemeId, MorphemeSegment, PageBreak, Uuid,
+    AnnotatedSeg, AudioSlice, Contributor, Database, Date, DocumentId, DocumentMetadata,
+    LexicalConnection, LineBreak, MorphemeId, MorphemeSegment, PageBreak, Uuid,
 };
 use dailp::{PositionInDocument, SourceAttribution};
 use log::{error, info, warn};
@@ -30,28 +30,13 @@ pub struct LexicalEntryWithForms {
     pub forms: Vec<AnnotatedForm>,
 }
 
-/// Converts a set of annotated documents into our preferred access format, then
-/// pushes that data into the underlying database.
-/// Existing versions of these documents are overwritten with the new data.
-pub async fn migrate_documents_to_db(
-    db: &Database,
-    d: AnnotatedDoc,
-    collection_id: &Uuid,
-    index: i64,
-) -> Result<()> {
-    // Write the contents of each document to our database.
-    db.insert_document(d, collection_id, index).await?;
-
-    Ok(())
-}
-
 /// Takes an unprocessed document with metadata, passing it through our TEI
 /// template to produce an xml document named like the given title.
 pub fn write_to_file(doc: &AnnotatedDoc) -> Result<()> {
     let contents = render_template(doc)?;
     // Make sure the output folder exists.
     std::fs::create_dir_all(OUTPUT_DIR)?;
-    let file_name = format!("{}/{}.xml", OUTPUT_DIR, doc.meta.id.0);
+    let file_name = format!("{}/{}.xml", OUTPUT_DIR, doc.meta.short_name);
     info!("writing to {}", file_name);
     let mut f = File::create(file_name)?;
     f.write_all(contents.as_bytes())?;
@@ -145,7 +130,7 @@ impl SheetResult {
         })
     }
 
-    pub fn into_adjs(self, doc_id: &str, year: i32) -> Result<Vec<LexicalEntryWithForms>> {
+    pub fn into_adjs(self, doc_id: DocumentId, year: i32) -> Result<Vec<LexicalEntryWithForms>> {
         use rayon::prelude::*;
         Ok(self
             .values
@@ -168,11 +153,7 @@ impl SheetResult {
                 let page_number = root_values.next()?;
                 let mut form_values = root_values;
                 let date = Date::from_ymd(year, 1, 1);
-                let position = PositionInDocument::new(
-                    dailp::DocumentId(doc_id.to_string()),
-                    page_number,
-                    idx as i32 + 1,
-                );
+                let position = PositionInDocument::new(doc_id.clone(), page_number, idx as i32 + 1);
                 Some(LexicalEntryWithForms {
                     forms: root_verb_surface_forms(
                         &position,
@@ -210,7 +191,7 @@ impl SheetResult {
     }
     pub fn into_nouns(
         self,
-        doc_id: &str,
+        doc_id: DocumentId,
         year: i32,
         after_root: usize,
         has_comment: bool,
@@ -236,11 +217,7 @@ impl SheetResult {
                     // Skip page ref and category.
                     let mut form_values = root_values.skip(after_root);
                     let date = Date::from_ymd(year, 1, 1);
-                    let position = PositionInDocument::new(
-                        dailp::DocumentId(doc_id.to_owned()),
-                        page_number?,
-                        index,
-                    );
+                    let position = PositionInDocument::new(doc_id.clone(), page_number?, index);
                     Some(LexicalEntryWithForms {
                         forms: root_noun_surface_forms(
                             &position,
@@ -275,10 +252,7 @@ impl SheetResult {
             .collect())
     }
 
-    pub async fn into_references(
-        self,
-        doc_id: &dailp::DocumentId,
-    ) -> Vec<dailp::LexicalConnection> {
+    pub async fn into_references(self, doc_name: &str) -> Vec<dailp::LexicalConnection> {
         self.values
             .into_iter()
             // First column is the name of the field, useless when parsing so we ignore it.
@@ -287,7 +261,7 @@ impl SheetResult {
                 let mut row = row.into_iter();
                 Some(dailp::LexicalConnection::new(
                     MorphemeId {
-                        document_id: Some(doc_id.clone()),
+                        document_name: Some(doc_name.to_owned()),
                         gloss: row.next()?,
                         index: None,
                     },
@@ -374,7 +348,8 @@ impl SheetResult {
             .ok_or_else(|| anyhow::format_err!("No audio resources"))?;
 
         Ok(DocumentMetadata {
-            id: dailp::DocumentId(doc_id.remove(1)),
+            id: Default::default(),
+            short_name: doc_id.remove(1),
             title: title.remove(1),
             sources,
             collection: source.pop().filter(|s| !s.is_empty()),
@@ -569,7 +544,7 @@ impl<'a> AnnotatedLine {
                             id: None,
                             position: PositionInDocument::new(
                                 meta.id.clone(),
-                                1.to_string(),
+                                "1".to_owned(),
                                 word_index,
                             ),
                             source: line.rows[0].items[i].trim().replace(LINE_BREAK, ""),

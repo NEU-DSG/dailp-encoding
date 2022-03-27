@@ -150,15 +150,15 @@ impl LexicalConnection {
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, Hash)]
 #[serde(rename_all = "camelCase")]
 pub struct MorphemeId {
-    pub document_id: Option<DocumentId>,
+    pub document_name: Option<String>,
     pub gloss: String,
     pub index: Option<i32>,
 }
 impl MorphemeId {
     /// Make a new [`MorphemeId`]
-    pub fn new(document_id: Option<DocumentId>, index: Option<i32>, gloss: String) -> Self {
+    pub fn new(document_id: Option<String>, index: Option<i32>, gloss: String) -> Self {
         Self {
-            document_id,
+            document_name: document_id,
             index,
             gloss,
         }
@@ -183,7 +183,7 @@ impl MorphemeId {
             (None, None)
         };
         Some(Self {
-            document_id: document_id.map(str::to_owned).map(DocumentId),
+            document_name: document_id.map(str::to_owned),
             gloss: gloss.to_owned(),
             index: index.and_then(|i| i.parse().ok()),
         })
@@ -196,12 +196,12 @@ impl std::fmt::Display for MorphemeId {
             write!(
                 f,
                 "{}.{}:{}",
-                self.document_id.as_ref().unwrap().0,
+                self.document_name.as_ref().unwrap(),
                 index,
                 self.gloss
             )
-        } else if let Some(doc_id) = &self.document_id {
-            write!(f, "{}:{}", doc_id.0, self.gloss)
+        } else if let Some(doc_id) = &self.document_name {
+            write!(f, "{}:{}", doc_id, self.gloss)
         } else {
             write!(f, "{}", self.gloss)
         }
@@ -957,7 +957,7 @@ mod tests {
         let id = MorphemeId::parse("DF2018:55");
         assert_ne!(id, None);
         let id = id.unwrap();
-        assert_eq!(id.document_id.as_ref().map(|x| &*x.0), Some("DF2018"));
+        assert_eq!(id.document_name.as_ref().map(|x| &*x.0), Some("DF2018"));
         assert_eq!(id.gloss, "55");
     }
 
@@ -966,7 +966,7 @@ mod tests {
         let id = MorphemeId::parse("IN1861:1-24");
         assert_ne!(id, None);
         let id = id.unwrap();
-        assert_eq!(id.document_id.as_ref().map(|x| &*x.0), Some("IN1861"));
+        assert_eq!(id.document_name.as_ref().map(|x| &*x.0), Some("IN1861"));
         assert_eq!(id.gloss, "1-24");
     }
 

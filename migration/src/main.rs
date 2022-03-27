@@ -10,7 +10,7 @@ mod tags;
 mod translations;
 
 use anyhow::Result;
-use dailp::Database;
+use dailp::{Database, Uuid};
 use log::{error, info};
 use std::time::Duration;
 
@@ -82,11 +82,12 @@ async fn migrate_data(db: &Database) -> Result<()> {
             .insert_top_collection(collection.title, coll_index as i64)
             .await?;
         for (order_index, sheet_id) in collection.sheet_ids.into_iter().enumerate() {
-            if let Some((doc, mut refs)) = fetch_sheet(db, &sheet_id, order_index as i64).await? {
+            if let Some((doc, mut refs)) =
+                fetch_sheet(db, &sheet_id, collection_id, order_index as i64).await?
+            {
                 morpheme_relations.append(&mut refs);
                 // spreadsheets::write_to_file(&doc)?;
-                spreadsheets::migrate_documents_to_db(db, doc, &collection_id, order_index as i64)
-                    .await?;
+                db.insert_document_contents(doc).await?;
             } else {
                 error!("Failed to process {}", sheet_id);
             }
@@ -105,6 +106,7 @@ async fn migrate_data(db: &Database) -> Result<()> {
 async fn fetch_sheet(
     db: &Database,
     sheet_id: &str,
+    collection_id: Uuid,
     order_index: i64,
 ) -> Result<Option<(dailp::AnnotatedDoc, Vec<dailp::LexicalConnection>)>> {
     use crate::spreadsheets::AnnotatedLine;
@@ -115,16 +117,25 @@ async fn fetch_sheet(
     if let Ok(meta_sheet) = meta {
         let meta = meta_sheet.into_metadata(db, false, order_index).await?;
 
-        info!("---Processing document: {}---", meta.id.0);
+        info!("---Processing document: {}---", meta.short_name);
 
         // Parse references for this particular document.
         info!("parsing references...");
         let refs =
             spreadsheets::SheetResult::from_sheet(sheet_id, Some(REFERENCES_SHEET_NAME)).await;
         let refs = if let Ok(refs) = refs {
-            refs.into_references(&meta.id).await
+            refs.into_references(&meta.short_name).await
         } else {
             Vec::new()
+        };
+
+        let document_id = db
+            .insert_document(&meta, collection_id, order_index)
+            .await?;
+        // Fill in blank UUID.
+        let meta = dailp::DocumentMetadata {
+            id: document_id,
+            ..meta
         };
 
         let page_count = meta
@@ -154,7 +165,7 @@ async fn fetch_sheet(
             tokio::time::sleep(Duration::from_millis(1000)).await;
         }
         let annotated = AnnotatedLine::many_from_semantic(&all_lines, &meta);
-        let segments = AnnotatedLine::lines_into_segments(annotated, &meta.id, &meta.date);
+        let segments = AnnotatedLine::lines_into_segments(annotated, &document_id, &meta.date);
         let doc = dailp::AnnotatedDoc::new(meta, segments);
 
         Ok(Some((doc, refs)))

@@ -42,7 +42,7 @@ impl Manifest {
             join!(
                 db.image_source_by_id(page_images.source),
                 // annot_db.on_document(&doc.meta.id),
-                db.words_in_document(&doc.meta.id)
+                db.words_in_document(doc.meta.id)
             )
         };
         let annotations: Vec<crate::annotation::Annotation> = Vec::new();

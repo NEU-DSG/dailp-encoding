@@ -52,12 +52,16 @@ impl Database {
         Ok(items.into_iter().map(Into::into).collect())
     }
 
-    pub async fn connected_forms(&self, morpheme_id: MorphemeId) -> Result<Vec<AnnotatedForm>> {
+    pub async fn connected_forms(
+        &self,
+        document_id: Option<DocumentId>,
+        gloss: &str,
+    ) -> Result<Vec<AnnotatedForm>> {
         let items = query_file_as!(
             BasicWord,
             "queries/connected_forms.sql",
-            morpheme_id.gloss,
-            morpheme_id.document_id.map(|x| x.0)
+            gloss,
+            document_id.map(|id| id.0)
         )
         .fetch_all(&self.client)
         .await?;
@@ -72,7 +76,7 @@ impl Database {
         let items = query_file!(
             "queries/surface_forms.sql",
             morpheme_id.gloss,
-            morpheme_id.document_id.map(|x| x.0)
+            morpheme_id.document_name
         )
         .fetch_all(&self.client)
         .await?;
@@ -111,11 +115,15 @@ impl Database {
             .collect())
     }
 
-    pub async fn words_by_doc(&self, morpheme_id: MorphemeId) -> Result<Vec<WordsInDocument>> {
+    pub async fn words_by_doc(
+        &self,
+        document_id: Option<DocumentId>,
+        gloss: &str,
+    ) -> Result<Vec<WordsInDocument>> {
         let words = query_file!(
             "queries/morphemes_by_document.sql",
-            morpheme_id.gloss,
-            morpheme_id.document_id.map(|x| x.0)
+            gloss,
+            document_id.map(|id| id.0)
         )
         .fetch_all(&self.client)
         .await?;
@@ -124,7 +132,7 @@ impl Database {
             .group_by(|w| (w.document_id.clone(), w.is_reference))
             .into_iter()
             .map(|((document_id, is_reference), forms)| WordsInDocument {
-                document_id: Some(document_id),
+                document_id: Some(DocumentId(document_id)),
                 document_type: if is_reference {
                     Some(DocumentType::Reference)
                 } else {
@@ -165,6 +173,7 @@ impl Database {
             .map(|item| AnnotatedDoc {
                 meta: DocumentMetadata {
                     id: DocumentId(item.id),
+                    short_name: item.short_name,
                     title: item.title,
                     is_reference: item.is_reference,
                     date: item.written_at.map(Date::new),
@@ -214,7 +223,7 @@ impl Database {
 
     pub async fn document_manifest(
         &self,
-        document_id: &DocumentId,
+        document_name: &str,
         url: String,
     ) -> Result<iiif::Manifest> {
         // Retrieve the document from the DB.
@@ -224,6 +233,7 @@ impl Database {
         let doc = AnnotatedDoc {
             meta: DocumentMetadata {
                 id: DocumentId(item.id),
+                short_name: item.short_name,
                 title: item.title,
                 is_reference: item.is_reference,
                 date: item.written_at.map(Date::new),
@@ -298,17 +308,17 @@ impl Database {
 
     pub async fn words_in_document(
         &self,
-        document_id: &DocumentId,
+        document_id: DocumentId,
     ) -> Result<impl Iterator<Item = AnnotatedForm>> {
-        let words = query_file_as!(BasicWord, "queries/document_words.sql", &document_id.0)
+        let words = query_file_as!(BasicWord, "queries/document_words.sql", document_id.0)
             .fetch_all(&self.client)
             .await?;
         Ok(words.into_iter().map(Into::into))
     }
 
-    pub async fn count_words_in_document(&self, document_id: &DocumentId) -> Result<i64> {
+    pub async fn count_words_in_document(&self, document_id: DocumentId) -> Result<i64> {
         Ok(
-            query_file_scalar!("queries/count_words_in_document.sql", &document_id.0)
+            query_file_scalar!("queries/count_words_in_document.sql", document_id.0)
                 .fetch_one(&self.client)
                 .await?
                 .unwrap(),
@@ -339,40 +349,43 @@ impl Database {
         .await?)
     }
 
-    pub async fn insert_dictionary_document(&self, document: &DocumentMetadata) -> Result<()> {
+    pub async fn insert_dictionary_document(
+        &self,
+        document: &DocumentMetadata,
+    ) -> Result<DocumentId> {
         let group_id = self
             .insert_top_collection(document.collection.clone().unwrap(), 0)
             .await?;
-        query_file!(
+        let id = query_file_scalar!(
             "queries/insert_document.sql",
-            document.id.0,
+            document.short_name,
             document.title,
             document.is_reference,
             &document.date as &Option<Date>,
             None as Option<Uuid>,
             group_id
         )
-        .execute(&self.client)
+        .fetch_one(&self.client)
         .await?;
-        Ok(())
+        Ok(DocumentId(id))
     }
 
     pub async fn insert_document(
         &self,
-        document: AnnotatedDoc,
-        collection_id: &Uuid,
+        meta: &DocumentMetadata,
+        collection_id: Uuid,
         index_in_collection: i64,
-    ) -> Result<()> {
+    ) -> Result<DocumentId> {
         let mut tx = self.client.begin().await?;
 
-        let document_id = document.meta.id.0;
+        let document_id = &meta.short_name;
 
         // Clear the document audio before re-inserting it.
         query_file!("queries/delete_document_audio.sql", &document_id)
             .execute(&mut tx)
             .await?;
 
-        let slice_id = if let Some(audio) = document.meta.audio_recording {
+        let slice_id = if let Some(audio) = &meta.audio_recording {
             let time_range: Option<PgRange<_>> = match (audio.start_time, audio.end_time) {
                 (Some(a), Some(b)) => Some((a as i64..b as i64).into()),
                 (Some(a), None) => Some((a as i64..).into()),
@@ -388,34 +401,41 @@ impl Database {
             None
         };
 
-        query_file!(
+        let document_uuid = query_file_scalar!(
             "queries/insert_document_in_collection.sql",
             &document_id,
-            document.meta.title,
-            document.meta.is_reference,
-            document.meta.date as Option<Date>,
+            meta.title,
+            meta.is_reference,
+            &meta.date as &Option<Date>,
             slice_id,
             collection_id,
             index_in_collection
         )
-        .execute(&mut tx)
+        .fetch_one(&mut tx)
         .await?;
 
-        for contributor in document.meta.contributors {
+        for contributor in &meta.contributors {
             query_file!(
                 "queries/upsert_document_contributor.sql",
-                contributor.name,
-                &document_id,
-                contributor.role
+                &contributor.name,
+                &document_uuid,
+                &contributor.role
             )
             .execute(&mut tx)
             .await?;
         }
+        tx.commit().await?;
 
+        Ok(DocumentId(document_uuid))
+    }
+
+    pub async fn insert_document_contents(&self, document: AnnotatedDoc) -> Result<()> {
+        let mut tx = self.client.begin().await?;
+        let document_id = document.meta.id;
         // Delete all the document contents first, because trying to upsert them
         // is difficult. Since all of these queries are within a transaction,
         // any failure will rollback to the previous state.
-        query_file!("queries/delete_document_pages.sql", &document_id)
+        query_file!("queries/delete_document_pages.sql", document_id.0)
             .execute(&mut tx)
             .await?;
 
@@ -424,7 +444,7 @@ impl Database {
             for (page_index, page) in pages.into_iter().enumerate() {
                 let page_id = query_file_scalar!(
                     "queries/upsert_document_page.sql",
-                    &document_id,
+                    document_id.0,
                     page_index as i64,
                     document.meta.page_images.as_ref().map(|imgs| imgs.source.0),
                     document
@@ -478,7 +498,7 @@ impl Database {
                                 self.insert_word(
                                     &mut tx,
                                     word,
-                                    &document_id,
+                                    document_id.0,
                                     Some(page_id),
                                     Some(char_range),
                                 )
@@ -498,10 +518,10 @@ impl Database {
 
     pub async fn document_breadcrumbs(
         &self,
-        document_id: &str,
+        document_id: DocumentId,
         super_collection: &str,
     ) -> Result<Vec<DocumentCollection>> {
-        let item = query_file!("queries/document_group_crumb.sql", document_id)
+        let item = query_file!("queries/document_group_crumb.sql", document_id.0)
             .fetch_one(&self.client)
             .await?;
 
@@ -514,7 +534,7 @@ impl Database {
     pub async fn insert_one_word(&self, form: AnnotatedForm) -> Result<()> {
         let doc_id = form.position.document_id.0.clone();
         let mut tx = self.client.begin().await?;
-        self.insert_word(&mut tx, form, &doc_id, None, None).await?;
+        self.insert_word(&mut tx, form, doc_id, None, None).await?;
         Ok(())
     }
 
@@ -546,7 +566,7 @@ impl Database {
 
         // TODO When we end up referring to morpheme glosses by ID, pass that in.
         for form in surface_forms {
-            self.insert_word(&mut tx, form, &doc_id, None, None).await?;
+            self.insert_word(&mut tx, form, doc_id, None, None).await?;
         }
 
         tx.commit().await?;
@@ -560,7 +580,7 @@ impl Database {
         let mut tx = self.client.begin().await?;
         for form in forms {
             let doc_id = form.position.document_id.0.clone();
-            self.insert_word(&mut tx, form, &doc_id, None, None).await?;
+            self.insert_word(&mut tx, form, doc_id, None, None).await?;
         }
         tx.commit().await?;
         Ok(())
@@ -570,7 +590,7 @@ impl Database {
         &self,
         tx: &mut sqlx::Transaction<'a, sqlx::Postgres>,
         form: AnnotatedForm,
-        document_id: &str,
+        document_id: Uuid,
         page_id: Option<Uuid>,
         char_range: Option<PgRange<i64>>,
     ) -> Result<Uuid> {
@@ -665,9 +685,10 @@ impl Database {
         .fetch_one(&self.client)
         .await?;
 
+        let doc_id: Option<Uuid> = None;
         query_file!(
             "queries/upsert_morpheme_gloss.sql",
-            None as Option<String>,
+            doc_id,
             tag.id,
             None as Option<String>,
             Some(abstract_id)
@@ -710,18 +731,44 @@ impl Database {
         Ok(())
     }
 
+    pub async fn document_id_from_name(&self, short_name: &str) -> Result<Option<DocumentId>> {
+        Ok(
+            query_file_scalar!("queries/document_id_from_name.sql", short_name)
+                .fetch_all(&self.client)
+                .await?
+                .pop()
+                .map(|uuid| DocumentId(uuid)),
+        )
+    }
+
     pub async fn insert_morpheme_relation(&self, link: LexicalConnection) -> Result<()> {
         // Don't crash if a morpheme relation fails to insert.
-        if let (Some(left_doc), Some(right_doc)) = (link.left.document_id, link.right.document_id) {
-            let _ = query_file!(
-                "queries/insert_morpheme_relation.sql",
-                left_doc.0,
+        if let (Some(left_doc), Some(right_doc)) =
+            (link.left.document_name, link.right.document_name)
+        {
+            // Retrieve the database UUIDs for the morpheme glosses passed in.
+            // TODO Maybe merge this into the insert query?
+            let left_id = query_file_scalar!(
+                "queries/find_morpheme_gloss.sql",
                 link.left.gloss,
-                right_doc.0,
-                link.right.gloss
+                &left_doc
             )
-            .execute(&self.client)
-            .await;
+            .fetch_all(&self.client)
+            .await?
+            .pop();
+            let right_id = query_file_scalar!(
+                "queries/find_morpheme_gloss.sql",
+                link.right.gloss,
+                &right_doc
+            )
+            .fetch_all(&self.client)
+            .await?
+            .pop();
+            if let (Some(left_id), Some(right_id)) = (left_id, right_id) {
+                let _ = query_file!("queries/insert_morpheme_relation.sql", left_id, right_id,)
+                    .execute(&self.client)
+                    .await;
+            }
         }
         Ok(())
     }
@@ -747,8 +794,8 @@ impl Loader<DocumentId> for Database {
     ) -> Result<HashMap<DocumentId, Self::Value>, Self::Error> {
         // Turn keys into strings for database request.
         // TODO ideally I'd be able to pass `keys` directly instead of mapping it.
-        let keys: Vec<&str> = keys.iter().map(|x| &x.0 as &str).collect();
-        let items = query_file!("queries/many_documents.sql", keys as Vec<&str>)
+        let keys: Vec<_> = keys.iter().map(|x| x.0).collect();
+        let items = query_file!("queries/many_documents.sql", &keys[..])
             .fetch_all(&self.client)
             .await?;
         Ok(items
@@ -756,6 +803,7 @@ impl Loader<DocumentId> for Database {
             .map(|item| Self::Value {
                 meta: DocumentMetadata {
                     id: DocumentId(item.id),
+                    short_name: item.short_name,
                     title: item.title,
                     is_reference: item.is_reference,
                     date: item.written_at.map(Date::new),
@@ -779,6 +827,48 @@ impl Loader<DocumentId> for Database {
 }
 
 #[async_trait]
+impl Loader<DocumentShortName> for Database {
+    type Value = AnnotatedDoc;
+    type Error = Arc<sqlx::Error>;
+    async fn load(
+        &self,
+        keys: &[DocumentShortName],
+    ) -> Result<HashMap<DocumentShortName, Self::Value>, Self::Error> {
+        // Turn keys into strings for database request.
+        // TODO ideally I'd be able to pass `keys` directly instead of mapping it.
+        let keys: Vec<_> = keys.iter().map(|x| &x.0 as &str).collect();
+        let items = query_file!("queries/many_documents_by_name.sql", keys as Vec<&str>)
+            .fetch_all(&self.client)
+            .await?;
+        Ok(items
+            .into_iter()
+            .map(|item| Self::Value {
+                meta: DocumentMetadata {
+                    id: DocumentId(item.id),
+                    short_name: item.short_name,
+                    title: item.title,
+                    is_reference: item.is_reference,
+                    date: item.written_at.map(Date::new),
+                    audio_recording: None,
+                    collection: None,
+                    contributors: item
+                        .contributors
+                        .and_then(|x| serde_json::from_value(x).ok())
+                        .unwrap_or_default(),
+                    genre: None,
+                    order_index: 0,
+                    page_images: None,
+                    sources: Vec::new(),
+                    translation: None,
+                },
+                segments: None,
+            })
+            .map(|tag| (DocumentShortName(tag.meta.short_name.clone()), tag))
+            .collect())
+    }
+}
+
+#[async_trait]
 impl Loader<PagesInDocument> for Database {
     type Value = Vec<DocumentPage>;
     type Error = Arc<sqlx::Error>;
@@ -787,7 +877,7 @@ impl Loader<PagesInDocument> for Database {
         &self,
         keys: &[PagesInDocument],
     ) -> Result<HashMap<PagesInDocument, Self::Value>, Self::Error> {
-        let keys: Vec<_> = keys.iter().map(|k| (k.0).0.clone()).collect();
+        let keys: Vec<_> = keys.iter().map(|k| (k.0).clone()).collect();
         let items = query_file!("queries/document_pages.sql", &keys[..])
             .fetch_all(&self.client)
             .await?;
@@ -795,7 +885,7 @@ impl Loader<PagesInDocument> for Database {
             .into_iter()
             .map(|page| {
                 (
-                    PagesInDocument(DocumentId(page.document_id)),
+                    PagesInDocument(page.document_id),
                     DocumentPage {
                         id: page.id,
                         page_number: (page.index_in_document + 1).to_string(),
@@ -954,9 +1044,9 @@ impl Loader<WordsInParagraph> for Database {
                         line_break: None,
                         page_break: None,
                         position: PositionInDocument::new(
-                            DocumentId(String::new()),
-                            "".to_owned(),
-                            1,
+                            DocumentId(w.document_id),
+                            w.page_number.unwrap_or_default(),
+                            w.index_in_document as i32,
                         ),
                     }),
                 )
@@ -1115,7 +1205,7 @@ struct BasicWord {
     phonemic: Option<String>,
     english_gloss: Option<String>,
     commentary: Option<String>,
-    document_id: String,
+    document_id: Uuid,
     index_in_document: i64,
     page_number: Option<String>,
 }
@@ -1155,7 +1245,10 @@ pub struct PartsOfWord(pub Uuid);
 pub struct PersonFullName(pub String);
 
 #[derive(Clone, Eq, PartialEq, Hash)]
-pub struct ContributorsForDocument(pub String);
+pub struct ContributorsForDocument(pub Uuid);
+
+#[derive(Clone, Eq, PartialEq, Hash)]
+pub struct DocumentShortName(pub String);
 
 #[derive(Clone, Eq, PartialEq, Hash)]
 pub struct TagForMorpheme(pub Uuid, pub CherokeeOrthography);
@@ -1176,7 +1269,7 @@ pub struct MorphemeReference {
 #[derive(async_graphql::SimpleObject)]
 pub struct WordsInDocument {
     /// Unique identifier of the containing document
-    pub document_id: Option<String>,
+    pub document_id: Option<DocumentId>,
     /// What kind of document contains these words (e.g. manuscript vs dictionary)
     pub document_type: Option<DocumentType>,
     /// List of annotated and potentially segmented forms

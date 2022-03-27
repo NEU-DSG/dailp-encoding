@@ -15,6 +15,6 @@ from word
   left join word_segment on word_segment.word_id = word.id
   inner join morpheme_gloss on morpheme_gloss.id = word_segment.gloss_id
 where morpheme_gloss.gloss = $1
-  and (morpheme_gloss.document_id = $2 or $2 is null)
+  and (word.document_id = $2 or $2 is null)
 group by document.id, word.id
 order by document.id

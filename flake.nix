@@ -168,27 +168,7 @@
               export PROJECT_ROOT=$PWD
               export PGDATA=$PROJECT_ROOT/.postgres
             '';
-            buildInputs = let
-              dev-database = (writers.writeBashBin "dev-database" ''
-                [ ! -d "$PGDATA" ] && initdb
-                postgres -c random_page_cost=1.1 -c cpu_tuple_cost=0.3 -c wal_compression=off -c effective_io_concurrency=200 -c fsync=on -c full_page_writes=off -c checkpoint_completion_target=0.9
-              '');
-              dev-graphql = (writers.writeBashBin "dev-graphql" ''
-                cd $PROJECT_ROOT
-                cargo watch -x "run --bin dailp-graphql-local" -w types -w graphql
-              '');
-              dev-website = (writers.writeBashBin "dev-website" ''
-                cd $PROJECT_ROOT/website
-                yarn install
-                yarn dev
-              '');
-              in-parallel = writeShellScript "in-parallel" ''
-                (trap 'kill 0' SIGINT; $@)
-              '';
-              dev-start = writers.writeBashBin "dev-start" ''
-                ${in-parallel} ${dev-database}/bin/dev-database & ${dev-graphql}/bin/dev-graphql & ${dev-website}/bin/dev-website
-              '';
-            in [
+            buildInputs = [
               autoconf
               automake
               libtool
@@ -199,11 +179,30 @@
               rust-toolchain
               nodejs-14_x
               yarn
-              nixpkgs-server.mongodb-4_2
               cargo-watch
               docker
               pkgs-unstable.act
-              (writers.writeBashBin "dev-migrate" ''
+              postgresql_14
+              pkgs-unstable.sqlx-cli
+              pkgs-unstable.sqlfluff
+              (writers.writeBashBin "dev-database" ''
+                [ ! -d "$PGDATA" ] && initdb
+                postgres -c random_page_cost=1.1 -c cpu_tuple_cost=0.3 -c wal_compression=off -c effective_io_concurrency=200 -c fsync=on -c full_page_writes=off -c checkpoint_completion_target=0.9
+              '')
+              (writers.writeBashBin "dev-graphql" ''
+                cd $PROJECT_ROOT
+                cargo watch -x "run --bin dailp-graphql-local" -w types -w graphql
+              '')
+              (writers.writeBashBin "dev-website" ''
+                cd $PROJECT_ROOT/website
+                yarn install
+                yarn dev
+              '')
+              (writers.writeBashBin "dev-migrate-schema" ''
+                cd $PROJECT_ROOT/types
+                sqlx migrate run
+              '')
+              (writers.writeBashBin "dev-migrate-data" ''
                 cd $PROJECT_ROOT
                 cargo run --bin dailp-migration
               '')
@@ -211,13 +210,6 @@
                 cd $PROJECT_ROOT
                 cargo sqlx prepare -- -p dailp
               '')
-              dev-database
-              dev-graphql
-              dev-website
-              dev-start
-              postgresql_14
-              pkgs-unstable.sqlx-cli
-              pkgs-unstable.sqlfluff
             ] ++ lib.optionals stdenv.isDarwin [
               darwin.apple_sdk.frameworks.Security
               darwin.apple_sdk.frameworks.SystemConfiguration

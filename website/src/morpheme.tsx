@@ -6,7 +6,7 @@ import { Clickable } from "reakit/Clickable"
 import Link from "src/components/link"
 import * as Dailp from "src/graphql/dailp"
 import * as css from "./morpheme.css"
-import { glossaryRoute } from "./routes"
+import { documentWordPath, glossaryRoute } from "./routes"
 import { TagSet, morphemeDisplayTag, orthographyForTagSet } from "./types"
 
 type BasicMorphemeSegment = NonNullable<Dailp.FormFieldsFragment["segments"]>[0]
@@ -88,9 +88,8 @@ const SimilarMorphemeList = (props: {
   const [{ data, fetching, error }] = Dailp.useMorphemeQuery({
     pause: !props.gloss,
     variables: {
-      morphemeId: props.isGlobal
-        ? props.gloss
-        : `${props.documentId}:${props.gloss}`,
+      documentId: props.isGlobal ? null : props.documentId,
+      morphemeGloss: props.gloss,
     },
   })
 
@@ -112,18 +111,16 @@ const SimilarMorphemeList = (props: {
               <li key={i * 10000 + j}>
                 {word.normalizedSource ?? word.source}:{" "}
                 {word.englishGloss.join(", ")} (
-                {word.documentId ? (
+                {!!word.document ? (
                   <>
                     {word.index ? (
                       <Link
-                        href={`/documents/${word.documentId?.toLowerCase()}#w${
-                          word.index
-                        }`}
+                        href={documentWordPath(word.document?.slug, word.index)}
                       >
-                        {word.documentId}
+                        {word.document.slug.toUpperCase()}
                       </Link>
                     ) : (
-                      <>{word.documentId}</>
+                      <>{word.document.slug.toUpperCase()}</>
                     )}
                   </>
                 ) : null}

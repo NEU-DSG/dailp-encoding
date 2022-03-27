@@ -1,9 +1,8 @@
 use crate::{
-    AnnotatedDoc, AudioSlice, Database, Date, MorphemeId, MorphemeSegment, PartsOfWord,
+    AnnotatedDoc, AudioSlice, Database, Date, DocumentId, MorphemeSegment, PartsOfWord,
     PositionInDocument,
 };
 use async_graphql::{dataloader::DataLoader, FieldResult};
-use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use sqlx::types::Uuid;
 
@@ -94,14 +93,11 @@ impl AnnotatedForm {
         if let Some(root) = self.root(context).await? {
             let db = context.data::<DataLoader<Database>>()?.loader();
             // Find the forms with the exact same root.
-            let id = MorphemeId {
-                document_id: Some(self.position.document_id.clone()),
-                gloss: root.gloss.clone(),
-                index: None,
-            };
             // let similar_roots = db.morphemes(id.clone());
             // Find forms with directly linked roots.
-            let connected = db.connected_forms(id).await?;
+            let connected = db
+                .connected_forms(Some(self.position.document_id), &root.gloss)
+                .await?;
             // let (connected, similar_roots) = futures::join!(connected, similar_roots);
             Ok(connected
                 .into_iter()
@@ -130,8 +126,8 @@ impl AnnotatedForm {
     }
 
     /// Unique identifier of the containing document
-    async fn document_id(&self) -> &str {
-        &self.position.document_id.0
+    async fn document_id(&self) -> DocumentId {
+        self.position.document_id
     }
 }
 

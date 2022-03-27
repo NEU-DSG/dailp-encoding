@@ -56,7 +56,7 @@ type NullPick<T, F extends keyof NonNullable<T>> = Pick<
 /** A full annotated document, including all metadata and the translation(s) */
 const AnnotatedDocumentPage = (props: { id: string }) => {
   const [{ data }] = Dailp.useAnnotatedDocumentQuery({
-    variables: { id: props.id },
+    variables: { slug: props.id },
   })
   const doc = data?.document
   if (!doc) {
@@ -279,7 +279,7 @@ const DocumentContents = ({
   }
 
   const [{ data }] = Dailp.useDocumentContentsQuery({
-    variables: { id: doc.id, isReference: doc.isReference, morphemeSystem },
+    variables: { slug: doc.slug, isReference: doc.isReference, morphemeSystem },
   })
   const docContents = data?.document
   if (!docContents) {
