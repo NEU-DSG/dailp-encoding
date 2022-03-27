@@ -129,13 +129,12 @@ impl Query {
                 .connected_forms(Some(document_id), &morpheme_gloss)
                 .await?
                 .into_iter()
-                .map(|w| (w.position.document_id, w))
-                .into_group_map()
+                .group_by(|w| w.position.document_id)
                 .into_iter()
                 .map(|(document_id, forms)| WordsInDocument {
                     document_type: None,
                     document_id: Some(document_id),
-                    forms,
+                    forms: forms.collect(),
                 })
                 .collect())
         } else {

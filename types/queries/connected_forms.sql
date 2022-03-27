@@ -38,3 +38,4 @@ from relations
   inner join word_segment on word_segment.gloss_id = morpheme_gloss.id
   inner join word on word.id = word_segment.word_id
 group by word.id
+order by word.document_id

@@ -559,6 +559,27 @@
     },
     "query": "insert into morpheme_tag (system_id, abstract_ids, gloss, title)\nvalues ($1, $2, $3, $4)\non conflict (system_id, abstract_ids) do update set\n   gloss = excluded.gloss\n"
   },
+  "3fee4b718a8d56ed97158a6412b58b85d45f2ed351cb06fef62e303a0986f751": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        }
+      ],
+      "nullable": [
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Text"
+        ]
+      }
+    },
+    "query": "select morpheme_gloss.id\nfrom morpheme_gloss\n  left join document on document.id = morpheme_gloss.document_id\nwhere morpheme_gloss.gloss = $1 and document.short_name = $2\n"
+  },
   "43e42033828a07a488a1fbe4be6a5c7cea9d5c8d471d51a9fd39f939abd060f6": {
     "describe": {
       "columns": [
@@ -1075,27 +1096,6 @@
     },
     "query": "insert into contributor_attribution (contributor_id, document_id, contribution_role)\nselect contributor.id, $2, $3\nfrom contributor\nwhere contributor.full_name = $1\n-- If this document already has this contributor, move on.\non conflict do nothing\n"
   },
-  "82594349eef79f014670c592b751a49ad53d3f0540be06d8f676eee38a1b4d9d": {
-    "describe": {
-      "columns": [
-        {
-          "name": "id",
-          "ordinal": 0,
-          "type_info": "Uuid"
-        }
-      ],
-      "nullable": [
-        false
-      ],
-      "parameters": {
-        "Left": [
-          "Text",
-          "Text"
-        ]
-      }
-    },
-    "query": "select morpheme_gloss.id\nfrom morpheme_gloss\nleft join document on document.id = morpheme_gloss.document_id\nwhere morpheme_gloss.gloss = $1 and document.short_name = $2\n"
-  },
   "8981e87f36d0659675a8751da5ff534f693cd33a726995c59f92662eac87b84a": {
     "describe": {
       "columns": [
@@ -1342,75 +1342,6 @@
       }
     },
     "query": "insert into character_transcription (\n  page_id, index_in_page, possible_transcriptions\n)\nvalues ($1, $2, $3)\n"
-  },
-  "abd383c77268657ef0061bc61e6a61ed19e5d81014b38952b86df5e0de1ccc3a": {
-    "describe": {
-      "columns": [
-        {
-          "name": "id",
-          "ordinal": 0,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "source_text",
-          "ordinal": 1,
-          "type_info": "Text"
-        },
-        {
-          "name": "simple_phonetics",
-          "ordinal": 2,
-          "type_info": "Text"
-        },
-        {
-          "name": "phonemic",
-          "ordinal": 3,
-          "type_info": "Text"
-        },
-        {
-          "name": "english_gloss",
-          "ordinal": 4,
-          "type_info": "Text"
-        },
-        {
-          "name": "commentary",
-          "ordinal": 5,
-          "type_info": "Text"
-        },
-        {
-          "name": "document_id",
-          "ordinal": 6,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "index_in_document",
-          "ordinal": 7,
-          "type_info": "Int8"
-        },
-        {
-          "name": "page_number",
-          "ordinal": 8,
-          "type_info": "Text"
-        }
-      ],
-      "nullable": [
-        false,
-        false,
-        true,
-        true,
-        true,
-        true,
-        false,
-        false,
-        true
-      ],
-      "parameters": {
-        "Left": [
-          "Text",
-          "Uuid"
-        ]
-      }
-    },
-    "query": "with recursive relations as (\n  -- Base case: all relations involving the input morpheme.\n  select rl.left_gloss_id, rl.right_gloss_id\n  from morpheme_gloss_relation as rl\n  inner join morpheme_gloss on rl.left_gloss_id = morpheme_gloss.id or rl.right_gloss_id = morpheme_gloss.id\n  where morpheme_gloss.gloss = $1 and morpheme_gloss.document_id = $2\n\n  -- Recursive case: saturate the graph (no duplicates)\n  union\n  select rlr.left_gloss_id, rlr.right_gloss_id\n  from morpheme_gloss_relation as rlr\n  -- Retrieve all relations that go *from* any previous *destinations*\n  inner join relations on rlr.left_gloss_id = relations.right_gloss_id or rlr.right_gloss_id = relations.left_gloss_id or rlr.left_gloss_id = relations.left_gloss_id or rlr.right_gloss_id = relations.right_gloss_id\n)\nselect\n  word.id,\n  word.source_text,\n  word.simple_phonetics,\n  word.phonemic,\n  word.english_gloss,\n  word.commentary,\n  word.document_id,\n  word.index_in_document,\n  word.page_number\nfrom relations\ninner join morpheme_gloss on morpheme_gloss.id = relations.left_gloss_id or morpheme_gloss.id = relations.right_gloss_id\ninner join word_segment on word_segment.gloss_id = morpheme_gloss.id\ninner join word on word.id = word_segment.word_id\ngroup by word.id\n"
   },
   "af5208c19606b217df4c074733a60fa26b4dd41cfd61c4dbd0ac053ac068dcf3": {
     "describe": {
@@ -1660,6 +1591,75 @@
       }
     },
     "query": "INSERT INTO word (source_text, simple_phonetics, phonemic, english_gloss, recorded_at, commentary,\n  document_id, page_number, index_in_document, page_id, character_range)\n  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)\nON CONFLICT (document_id, index_in_document)\nDO UPDATE SET\n  source_text = EXCLUDED.source_text,\n  simple_phonetics = EXCLUDED.simple_phonetics,\n  phonemic = EXCLUDED.phonemic,\n  english_gloss = EXCLUDED.english_gloss,\n  commentary = EXCLUDED.commentary\nRETURNING id\n"
+  },
+  "ea65b10e5e5c6104fea19263c4da453b0d2d13b594f7eebcb3db8d8d0d06aee8": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "source_text",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "simple_phonetics",
+          "ordinal": 2,
+          "type_info": "Text"
+        },
+        {
+          "name": "phonemic",
+          "ordinal": 3,
+          "type_info": "Text"
+        },
+        {
+          "name": "english_gloss",
+          "ordinal": 4,
+          "type_info": "Text"
+        },
+        {
+          "name": "commentary",
+          "ordinal": 5,
+          "type_info": "Text"
+        },
+        {
+          "name": "document_id",
+          "ordinal": 6,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "index_in_document",
+          "ordinal": 7,
+          "type_info": "Int8"
+        },
+        {
+          "name": "page_number",
+          "ordinal": 8,
+          "type_info": "Text"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false,
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Uuid"
+        ]
+      }
+    },
+    "query": "with recursive relations as (\n  -- Base case: all relations involving the input morpheme.\n  select\n    rl.left_gloss_id,\n    rl.right_gloss_id\n  from morpheme_gloss_relation as rl\n    inner join\n      morpheme_gloss on\n        rl.left_gloss_id = morpheme_gloss.id or rl.right_gloss_id = morpheme_gloss.id\n  where morpheme_gloss.gloss = $1 and morpheme_gloss.document_id = $2\n\n  -- Recursive case: saturate the graph (no duplicates)\n  union\n  select\n    rlr.left_gloss_id,\n    rlr.right_gloss_id\n  from morpheme_gloss_relation as rlr\n    -- Retrieve all relations that involve any previous sources or destinations\n    inner join\n      relations on\n        rlr.left_gloss_id = relations.right_gloss_id or rlr.right_gloss_id = relations.left_gloss_id or rlr.left_gloss_id = relations.left_gloss_id or rlr.right_gloss_id = relations.right_gloss_id\n)\n\nselect\n  word.id,\n  word.source_text,\n  word.simple_phonetics,\n  word.phonemic,\n  word.english_gloss,\n  word.commentary,\n  word.document_id,\n  word.index_in_document,\n  word.page_number\nfrom relations\n  inner join\n    morpheme_gloss on\n      morpheme_gloss.id = relations.left_gloss_id or morpheme_gloss.id = relations.right_gloss_id\n  inner join word_segment on word_segment.gloss_id = morpheme_gloss.id\n  inner join word on word.id = word_segment.word_id\ngroup by word.id\norder by word.document_id\n"
   },
   "f86a2f62b58b5b404883e127574947027ff7a38f8ea4058a7dc4e9e68626c164": {
     "describe": {
