@@ -37,7 +37,6 @@ jobs:
       OAUTH_TOKEN: ${{ secrets.OAUTH_TOKEN }}
       RUST_LOG: info
       TF_STAGE: ${{ github.event_name == 'release' && 'prod' || 'dev' }}
-      SQLX_OFFLINE: true
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
