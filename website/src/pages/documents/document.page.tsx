@@ -1,6 +1,13 @@
 import { DialogContent, DialogOverlay } from "@reach/dialog"
 import "@reach/dialog/styles.css"
-import React, { Dispatch, SetStateAction, useEffect, useState } from "react"
+import Cookies from "js-cookie"
+import React, {
+  Dispatch,
+  SetStateAction,
+  useContext,
+  useEffect,
+  useState,
+} from "react"
 import { isMobile } from "react-device-detect"
 import { Helmet } from "react-helmet"
 import Sticky from "react-stickynode"
@@ -16,7 +23,7 @@ import { Breadcrumbs } from "src/breadcrumbs"
 import { Button } from "src/components"
 import Link from "src/components/link"
 import * as Dailp from "src/graphql/dailp"
-import Layout from "src/layout"
+import Layout, { experienceContext } from "src/layout"
 import { drawerBg, navButton, navDrawer } from "src/menu.css"
 import { ExperiencePicker, selectedMode, selectedPhonetics } from "src/mode"
 import { MorphemeDetails } from "src/morpheme"
@@ -166,9 +173,7 @@ const TranslationTab = ({ doc }: { doc: Document }) => {
   const [phoneticRepresentation, _setPhoneticRepresentation] =
     useState<PhoneticRepresentation>(selectedPhonetics())
 
-  const [experienceLevel, setExperienceLevel] = useState<ViewMode>(
-    selectedMode()
-  )
+  const experienceLevel = useContext(experienceContext).level
 
   const tagSet = tagSetForMode(experienceLevel)
 
@@ -212,13 +217,12 @@ const TranslationTab = ({ doc }: { doc: Document }) => {
           />
         </Dialog>
       </DialogBackdrop>
-
-      <SolidSticky top="#document-tabs-header">
-        Display Mode:&ensp;
-        <ExperiencePicker onSelect={setExperienceLevel} />
-        {/*<PhoneticsPicker onSelect={setPhoneticRepresentation} />*/}
-      </SolidSticky>
-
+      {/*
+        <SolidSticky top="#document-tabs-header">
+          <ExperiencePicker onSelect={setExperienceLevel} />
+          //<PhoneticsPicker onSelect={setPhoneticRepresentation} />
+        </SolidSticky>
+      */}
       <div className={css.contentContainer}>
         <article className={css.annotationContents}>
           <DocumentContents
