@@ -17,7 +17,7 @@ import {
   useRadioState,
 } from "reakit/Radio"
 import { std } from "src/sprinkles.css"
-import { experienceContext } from "./layout"
+import { preferencesContext } from "./layout"
 import { navLink, navMenu } from "./menu.css"
 import * as css from "./mode.css"
 import {
@@ -94,6 +94,9 @@ const phoneticRepresentationMapping = {
   // },
 }
 
+export const phonDetails = (representation: PhoneticRepresentation) =>
+  phoneticRepresentationMapping[representation]
+
 export const selectedMode = () =>
   Number.parseInt(Cookies.get("experienceLevel") ?? "0")
 
@@ -113,7 +116,7 @@ export const ExperiencePicker = (p: { onSelect: (mode: ViewMode) => void }) => {
   }, [value])
   return (
     <select
-      name="mode-picker"
+      name="experience-picker"
       onChange={(e) => setValue(Number.parseInt(e.target.value))}
       aria-label="Display Mode"
     >
@@ -131,6 +134,45 @@ export const ExperiencePicker = (p: { onSelect: (mode: ViewMode) => void }) => {
   )
 }
 
+export const PhoneticsPicker = (p: {
+  onSelect: (phonetics: PhoneticRepresentation) => void
+}) => {
+  const [value, setValue] = useState(
+    selectedPhonetics() as PhoneticRepresentation
+  )
+
+  // Save the selected representation throughout the session.
+  useEffect(() => {
+    Cookies.set("phonetics", value.toString(), {
+      sameSite: "strict",
+      secure: true,
+    })
+    p.onSelect(value as PhoneticRepresentation)
+  }, [value])
+  return (
+    <select
+      name="phonetics-picker"
+      onChange={(e) => setValue(Number.parseInt(e.target.value))}
+      aria-label="Romanization"
+    >
+      {Object.keys(PhoneticRepresentation)
+        .filter(notNumber)
+        .map(function (representation: string) {
+          var selectedPhon =
+            PhoneticRepresentation[
+              representation as keyof typeof PhoneticRepresentation
+            ]
+          return (
+            <option value={selectedPhon} selected={value === selectedPhon}>
+              {phonDetails(selectedPhon).label}
+            </option>
+          )
+        })}
+    </select>
+  )
+}
+
+/*
 export const PhoneticsPicker = (p: {
   onSelect: (phonetics: PhoneticRepresentation) => void
 }) => {
@@ -168,6 +210,7 @@ export const PhoneticsPicker = (p: {
     </RadioGroup>
   )
 }
+*/
 
 export const TagSetPicker = (p: { onSelect: (tagSet: TagSet) => void }) => {
   const radio = useRadioState({
@@ -239,22 +282,20 @@ const TagSetOption = (p: { radio: RadioStateReturn; level: string }) => {
 
 export const HeaderPref = () => {
   const disclosure = useDisclosureState()
-  const updater = useContext(experienceContext).levelUpdate
+  const preferences = useContext(preferencesContext)
   return (
     <div className={css.prefBand}>
       <Disclosure {...disclosure} className={css.prefButton}>
         {"Document Preferences"} <AiFillCaretDown />
       </Disclosure>
       <DisclosureContent {...disclosure}>
-        Display Mode:&ensp; {<ExperiencePicker onSelect={updater} />}
+        Display Mode:&ensp;{" "}
+        {<ExperiencePicker onSelect={preferences.expLevelUpdate} />}
+        <p>{levelNameMapping[preferences.expLevel].details}</p>
+        Romanization Method:&ensp;{" "}
+        {<PhoneticsPicker onSelect={preferences.phonRepUpdate} />}
+        <p>{phoneticRepresentationMapping[preferences.phonRep].details}</p>
       </DisclosureContent>
     </div>
   )
 }
-
-/**
- * TODO LIST:
- * GET DISPLAY MODE INTO THE PREFERENCES PANEL AND PROPAGATE IT
- * THEN WE'LL SPLIT IT INTO OPTIONS FOR ROMANIZATION,
- * THEN LEVEL OF DETAIL
- */

@@ -7,6 +7,7 @@ import { MdInfoOutline } from "react-icons/md"
 import * as Dailp from "src/graphql/dailp"
 import { DocumentContents } from "src/pages/documents/document.page"
 import { FormAudio } from "./audio-player"
+import { phonDetails } from "./mode"
 import * as css from "./segment.css"
 import { std } from "./sprinkles.css"
 import {
@@ -99,6 +100,19 @@ export const AnnotatedForm = (
       p.segment
     ) /* This makes sure the word panel updates for changes to the word panel*/
   }
+  let romanization = ""
+  if (
+    p.phoneticRepresentation == PhoneticRepresentation.Dailp &&
+    p.segment.simplePhonetics
+  ) {
+    romanization = p.segment.simplePhonetics
+  } else if (
+    p.phoneticRepresentation == PhoneticRepresentation.Worcester &&
+    p.segment.romanizedSource
+  ) {
+    romanization = p.segment.romanizedSource
+  }
+
   if (showAnything) {
     const showSegments = p.viewMode >= ViewMode.Segmentation
     const translation = p.segment.englishGloss.join(", ")
@@ -116,9 +130,8 @@ export const AnnotatedForm = (
         </div>
         {p.segment.simplePhonetics ? (
           <>
-            <div>{p.segment.romanizedSource}</div>
+            <div>{romanization}</div>
             <div>
-              {p.segment.simplePhonetics}
               {p.segment.audioTrack && (
                 <FormAudio
                   endTime={p.segment.audioTrack.endTime}
