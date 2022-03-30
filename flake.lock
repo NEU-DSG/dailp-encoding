@@ -3,7 +3,7 @@
     "fenix": {
       "inputs": {
         "nixpkgs": [
-          "pkgs"
+          "pkgs-unstable"
         ],
         "rust-analyzer-src": "rust-analyzer-src"
       },
@@ -24,7 +24,7 @@
     "naersk": {
       "inputs": {
         "nixpkgs": [
-          "pkgs"
+          "pkgs-unstable"
         ]
       },
       "locked": {
@@ -53,22 +53,6 @@
       "original": {
         "owner": "numtide",
         "repo": "nix-filter",
-        "type": "github"
-      }
-    },
-    "nixpkgs-server": {
-      "locked": {
-        "lastModified": 1639611175,
-        "narHash": "sha256-13B6tgKXygEBWxwj9+vIjuWyzwNF1XPLjJiFAvE7A88=",
-        "owner": "nixos",
-        "repo": "nixpkgs",
-        "rev": "6d684ea3adef590a2174f2723134e1ea377272d2",
-        "type": "github"
-      },
-      "original": {
-        "owner": "nixos",
-        "ref": "nixos-21.05",
-        "repo": "nixpkgs",
         "type": "github"
       }
     },
@@ -109,7 +93,6 @@
         "fenix": "fenix",
         "naersk": "naersk",
         "nix-filter": "nix-filter",
-        "nixpkgs-server": "nixpkgs-server",
         "pkgs": "pkgs",
         "pkgs-unstable": "pkgs-unstable",
         "utils": "utils"

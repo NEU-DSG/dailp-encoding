@@ -2,18 +2,16 @@
   inputs = {
     pkgs.url = "github:nixos/nixpkgs/nixos-21.11";
     pkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
-    # Lock a version of nixpkgs that matches our MongoDB instances.
-    nixpkgs-server.url = "github:nixos/nixpkgs/nixos-21.05";
     utils.url = "github:numtide/flake-utils";
     # Provides cargo dependencies.
     fenix = {
       url = "github:nix-community/fenix";
-      inputs.nixpkgs.follows = "pkgs";
+      inputs.nixpkgs.follows = "pkgs-unstable";
     };
     # Builds rust projects.
     naersk = {
       url = "github:nmattia/naersk";
-      inputs.nixpkgs.follows = "pkgs";
+      inputs.nixpkgs.follows = "pkgs-unstable";
     };
     nix-filter.url = "github:numtide/nix-filter";
   };
@@ -21,12 +19,7 @@
   outputs = inputs:
     inputs.utils.lib.eachDefaultSystem (system:
       let
-        pkgs = import inputs.pkgs {
-          inherit system;
-          config.allowUnfree = true;
-        };
-        pkgs-unstable = import inputs.pkgs-unstable { inherit system; };
-        nixpkgs-server = import inputs.nixpkgs-server {
+        pkgs = import inputs.pkgs-unstable {
           inherit system;
           config.allowUnfree = true;
         };
@@ -180,11 +173,10 @@
               nodejs-14_x
               yarn
               cargo-watch
-              docker
-              pkgs-unstable.act
+              act
               postgresql_14
-              pkgs-unstable.sqlx-cli
-              pkgs-unstable.sqlfluff
+              sqlx-cli
+              sqlfluff
               (writers.writeBashBin "dev-database" ''
                 [ ! -d "$PGDATA" ] && initdb
                 postgres -c random_page_cost=1.1 -c cpu_tuple_cost=0.3 -c wal_compression=off -c effective_io_concurrency=200 -c fsync=on -c full_page_writes=off -c checkpoint_completion_target=0.9
