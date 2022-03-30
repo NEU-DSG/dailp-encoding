@@ -746,29 +746,15 @@ impl Database {
         if let (Some(left_doc), Some(right_doc)) =
             (link.left.document_name, link.right.document_name)
         {
-            // Retrieve the database UUIDs for the morpheme glosses passed in.
-            // TODO Maybe merge this into the insert query?
-            let left_id = query_file_scalar!(
-                "queries/find_morpheme_gloss.sql",
+            let _ = query_file!(
+                "queries/insert_morpheme_relation.sql",
                 link.left.gloss,
-                &left_doc
-            )
-            .fetch_all(&self.client)
-            .await?
-            .pop();
-            let right_id = query_file_scalar!(
-                "queries/find_morpheme_gloss.sql",
+                &left_doc,
                 link.right.gloss,
                 &right_doc
             )
-            .fetch_all(&self.client)
-            .await?
-            .pop();
-            if let (Some(left_id), Some(right_id)) = (left_id, right_id) {
-                let _ = query_file!("queries/insert_morpheme_relation.sql", left_id, right_id,)
-                    .execute(&self.client)
-                    .await;
-            }
+            .execute(&self.client)
+            .await;
         }
         Ok(())
     }
