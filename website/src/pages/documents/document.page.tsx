@@ -23,9 +23,14 @@ import { Breadcrumbs } from "src/breadcrumbs"
 import { Button } from "src/components"
 import Link from "src/components/link"
 import * as Dailp from "src/graphql/dailp"
-import Layout, { experienceContext } from "src/layout"
+import Layout, { preferencesContext } from "src/layout"
 import { drawerBg, navButton, navDrawer } from "src/menu.css"
-import { ExperiencePicker, selectedMode, selectedPhonetics } from "src/mode"
+import {
+  ExperiencePicker,
+  phonDetails,
+  selectedMode,
+  selectedPhonetics,
+} from "src/mode"
 import { MorphemeDetails } from "src/morpheme"
 import {
   collectionRoute,
@@ -170,10 +175,9 @@ const TranslationTab = ({ doc }: { doc: Document }) => {
     setCurrContents: selectAndShowWord,
   }
 
-  const [phoneticRepresentation, _setPhoneticRepresentation] =
-    useState<PhoneticRepresentation>(selectedPhonetics())
+  const phoneticRepresentation = useContext(preferencesContext).phonRep
 
-  const experienceLevel = useContext(experienceContext).level
+  const experienceLevel = useContext(preferencesContext).expLevel
 
   const tagSet = tagSetForMode(experienceLevel)
 

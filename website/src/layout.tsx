@@ -10,25 +10,32 @@ import Footer from "./footer"
 import "./global-styles.css"
 import * as css from "./layout.css"
 import { MobileNav, NavMenu } from "./menu"
-import { HeaderPref } from "./mode"
+import { HeaderPref, selectedMode, selectedPhonetics } from "./mode"
 import { hideOnPrint, themeClass } from "./sprinkles.css"
-import { ViewMode } from "./types"
+import { PhoneticRepresentation, ViewMode } from "./types"
 import "./wordpress.css"
 
 /* const ClientSignIn = lazy(() => import("./client/signin")) */
 
 // Set up experiencelevel
-export const fetchSavedExperience = () =>
-  Number.parseInt(Cookies.get("experienceLevel") ?? "0") as ViewMode
-export const experienceContext = React.createContext({
-  level: 0 as ViewMode,
-  levelUpdate: (p: ViewMode) => {},
+export const preferencesContext = React.createContext({
+  expLevel: 0 as ViewMode,
+  expLevelUpdate: (p: ViewMode) => {},
+  phonRep: 0 as PhoneticRepresentation,
+  phonRepUpdate: (p: PhoneticRepresentation) => {},
 })
 
 /** Wrapper for most site pages, providing them with a navigation header and footer. */
 const Layout: React.FC = ({ children }) => {
   // Some experience level setup
-  const [expLevel, expLevelUpdate] = useState(fetchSavedExperience())
+  const [expLevel, expLevelUpdate] = useState(selectedMode())
+  const [phonRep, phonRepUpdate] = useState(selectedPhonetics())
+  const prefPack = {
+    expLevel: expLevel,
+    expLevelUpdate: expLevelUpdate,
+    phonRep: phonRep,
+    phonRepUpdate: phonRepUpdate,
+  }
   return (
     <>
       <Helmet titleTemplate="%s - DAILP" defaultTitle="DAILP">
@@ -54,19 +61,15 @@ const Layout: React.FC = ({ children }) => {
             </div>
           </div>
           <NavMenu />
-          <experienceContext.Provider
-            value={{ level: expLevel, levelUpdate: expLevelUpdate }}
-          >
+          <preferencesContext.Provider value={prefPack}>
             {<HeaderPref />}
-          </experienceContext.Provider>
+          </preferencesContext.Provider>
         </header>
       </Sticky>
 
-      <experienceContext.Provider
-        value={{ level: expLevel, levelUpdate: expLevelUpdate }}
-      >
+      <preferencesContext.Provider value={prefPack}>
         {children}
-      </experienceContext.Provider>
+      </preferencesContext.Provider>
       <Footer />
     </>
   )
