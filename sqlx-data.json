@@ -546,6 +546,36 @@
     },
     "query": "insert into abbreviation_system (short_name, title)\nvalues ($1, $2)\non conflict (short_name) do update set\n   title = excluded.title\nreturning id\n"
   },
+  "382c3894aed7a6a60aff297693bfefcc83358e99246e0d2b93feba99765d3355": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        }
+      ],
+      "nullable": [
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Text",
+          "Text",
+          "Text",
+          "Date",
+          "Text",
+          "Uuid",
+          "Text",
+          "Int8",
+          "Uuid",
+          "Int8Range"
+        ]
+      }
+    },
+    "query": "insert into word (source_text, simple_phonetics, phonemic, english_gloss, recorded_at, commentary,\n  document_id, page_number, index_in_document, page_id, character_range)\n  values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)\nreturning id\n"
+  },
   "384006c5df2ed9b1cc177734ae7cc0dc1b90e520bc183c02a29548549f38737b": {
     "describe": {
       "columns": [],
@@ -1098,36 +1128,6 @@
       }
     },
     "query": "select\n  document_group.title,\n  document_group.slug\nfrom document_group\n  left join document on document.group_id = document_group.id\nwhere document.is_reference is false\ngroup by document_group.id\norder by document_group.title asc\n"
-  },
-  "963a8b6d9bb32016e923300aa487f65f6f8e553b0b6883ff8f0aa3b55062da1e": {
-    "describe": {
-      "columns": [
-        {
-          "name": "id",
-          "ordinal": 0,
-          "type_info": "Uuid"
-        }
-      ],
-      "nullable": [
-        false
-      ],
-      "parameters": {
-        "Left": [
-          "Text",
-          "Text",
-          "Text",
-          "Text",
-          "Date",
-          "Text",
-          "Uuid",
-          "Text",
-          "Int8",
-          "Uuid",
-          "Int8Range"
-        ]
-      }
-    },
-    "query": "insert into word (source_text, simple_phonetics, phonemic, english_gloss, recorded_at, commentary,\n  document_id, page_number, index_in_document, page_id, character_range)\n  values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)\non conflict (document_id, index_in_document)\ndo update set\n  source_text = EXCLUDED.source_text,\n  simple_phonetics = EXCLUDED.simple_phonetics,\n  phonemic = EXCLUDED.phonemic,\n  english_gloss = EXCLUDED.english_gloss,\n  commentary = EXCLUDED.commentary\nreturning id\n"
   },
   "98f3ef23ebc76420a18f30502019f9d7e676ee9e7e2ebb14290beeda813c4fc4": {
     "describe": {
