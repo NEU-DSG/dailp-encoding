@@ -1,7 +1,15 @@
 import { Tooltip } from "@reach/tooltip"
 import cx from "classnames"
 import Cookies from "js-cookie"
-import React, { useEffect, useState } from "react"
+import React, { useContext, useEffect, useState } from "react"
+import { AiFillCaretDown, AiFillCaretUp } from "react-icons/ai"
+import { MdArrowDropDown, MdSettings } from "react-icons/md"
+import {
+  Disclosure,
+  DisclosureContent,
+  useDisclosureState,
+} from "reakit/Disclosure"
+import { Menu, MenuButton, MenuItem, useMenuState } from "reakit/Menu"
 import {
   Radio,
   RadioGroup,
@@ -9,6 +17,8 @@ import {
   useRadioState,
 } from "reakit/Radio"
 import { std } from "src/sprinkles.css"
+import { experienceContext } from "./layout"
+import { navLink, navMenu } from "./menu.css"
 import * as css from "./mode.css"
 import {
   PhoneticRepresentation,
@@ -16,6 +26,7 @@ import {
   ViewMode,
   tagSetForMode,
 } from "./types"
+import { wordPanelButton } from "./word-panel.css"
 
 const notNumber = (l: any) => isNaN(Number(l))
 const levelNameMapping = {
@@ -225,3 +236,25 @@ const TagSetOption = (p: { radio: RadioStateReturn; level: string }) => {
     </Tooltip>
   )
 }
+
+export const HeaderPref = () => {
+  const disclosure = useDisclosureState()
+  const updater = useContext(experienceContext).levelUpdate
+  return (
+    <div className={css.prefBand}>
+      <Disclosure {...disclosure} className={css.prefButton}>
+        {"Document Preferences"} <AiFillCaretDown />
+      </Disclosure>
+      <DisclosureContent {...disclosure}>
+        Display Mode:&ensp; {<ExperiencePicker onSelect={updater} />}
+      </DisclosureContent>
+    </div>
+  )
+}
+
+/**
+ * TODO LIST:
+ * GET DISPLAY MODE INTO THE PREFERENCES PANEL AND PROPAGATE IT
+ * THEN WE'LL SPLIT IT INTO OPTIONS FOR ROMANIZATION,
+ * THEN LEVEL OF DETAIL
+ */

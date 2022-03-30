@@ -1,5 +1,7 @@
 import { style } from "@vanilla-extract/css"
-import sprinkles from "src/sprinkles.css"
+import { BiSpaceBar } from "react-icons/bi"
+import sprinkles, { fullWidth, row, theme, vspace, wrappedRow } from "src/sprinkles.css"
+import { collPanelButton } from "./word-panel.css"
 
 export const highlightedLabel = sprinkles({
   outlineStyle: "dashed",
@@ -23,3 +25,15 @@ export const levelLabel = sprinkles({
   paddingX: "char",
   cursor: "pointer",
 })
+
+export const prefBand = style([
+  fullWidth,
+  {
+    paddingTop: vspace.half,
+    paddingBottom: vspace.half,
+  },
+])
+
+export const prefButton = style([
+  collPanelButton
+])
