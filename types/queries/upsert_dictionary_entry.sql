@@ -1,6 +1,6 @@
-INSERT INTO morpheme_gloss (document_id, gloss, example_shape)
-  VALUES ($1, $2, $3)
-ON CONFLICT (document_id, gloss)
-  DO UPDATE SET
-    example_shape = EXCLUDED.example_shape
-  RETURNING id
+insert into morpheme_gloss (document_id, gloss, example_shape)
+values ($1, $2, $3)
+on conflict (document_id, gloss)
+  do update set
+    example_shape = excluded.example_shape
+  returning id

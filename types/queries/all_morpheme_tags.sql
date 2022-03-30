@@ -1,4 +1,4 @@
-select * from (
+with t as (
   select distinct on (morpheme_tag.gloss)
     abbreviation_system.short_name as system_name,
     morpheme_tag.gloss,
@@ -12,5 +12,8 @@ select * from (
       abstract_morpheme_tag on
         abstract_morpheme_tag.id = any(morpheme_tag.abstract_ids)
   where abbreviation_system.short_name = $1
-) as t
+)
+
+select *
+from t
 order by linguistic_type asc, gloss asc;
