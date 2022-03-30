@@ -546,18 +546,6 @@
     },
     "query": "insert into abbreviation_system (short_name, title)\nvalues ($1, $2)\non conflict (short_name) do update set\n   title = excluded.title\nreturning id\n"
   },
-  "36be9bc7e59ae2d35306249910bc5e74dc1c013aad390acf6216f19f3a192355": {
-    "describe": {
-      "columns": [],
-      "nullable": [],
-      "parameters": {
-        "Left": [
-          "Text"
-        ]
-      }
-    },
-    "query": "delete from audio_resource\nwhere id in (\n  select audio_slice.resource_id\n  from audio_slice\n    inner join document on document.audio_slice_id = audio_slice.id\n  where document.short_name = $1\n)\n"
-  },
   "384006c5df2ed9b1cc177734ae7cc0dc1b90e520bc183c02a29548549f38737b": {
     "describe": {
       "columns": [],
@@ -788,6 +776,18 @@
       }
     },
     "query": "-- Retrieve the database UUIDs for the morpheme glosses passed in.\nwith left_gloss as (\n  select morpheme_gloss.id\n  from morpheme_gloss\n    left join document on document.id = morpheme_gloss.document_id\n  where morpheme_gloss.gloss = $1 and document.short_name = $2\n), right_gloss as (\n  select morpheme_gloss.id\n  from morpheme_gloss\n    left join document on document.id = morpheme_gloss.document_id\n  where morpheme_gloss.gloss = $3 and document.short_name = $4\n)\n\ninsert into morpheme_gloss_relation (left_gloss_id, right_gloss_id)\nselect left_gloss.id, right_gloss.id\nfrom left_gloss, right_gloss\non conflict\n  do nothing\n"
+  },
+  "6d5a72c97ad0bb2831e0b605a340630b28f70402023f5abec5ff2043f343f0b1": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      }
+    },
+    "query": "delete from media_resource\nwhere id in (\n  select media_slice.resource_id\n  from media_slice\n    inner join document on document.audio_slice_id = media_slice.id\n  where document.short_name = $1\n)\n"
   },
   "728770759c2d7e4f928ee6e867edbce9bb1fc5e23f8ce7c524aa978174c0c910": {
     "describe": {
@@ -1308,27 +1308,6 @@
     },
     "query": "insert into iiif_source (title, base_url)\nvalues ($1, $2)\non conflict (base_url) do update\nset title = excluded.title\nreturning id\n"
   },
-  "b129970bff8f9da232147ae06e38c18547e19867d4952376ae7a7e49d3e1e623": {
-    "describe": {
-      "columns": [
-        {
-          "name": "id",
-          "ordinal": 0,
-          "type_info": "Uuid"
-        }
-      ],
-      "nullable": [
-        false
-      ],
-      "parameters": {
-        "Left": [
-          "Text",
-          "Int8Range"
-        ]
-      }
-    },
-    "query": "with resource as (\n  insert into audio_resource (url)\n  values ($1)\n  on conflict (url) do update set\n     url = excluded.url\n  returning id\n)\n\ninsert into audio_slice (resource_id, time_range)\nselect\n  id,\n  $2\nfrom resource\nreturning id\n"
-  },
   "b30945f3bfd15aee9755bd937498b07200b10f20f390c8cf700f500e67c2a15f": {
     "describe": {
       "columns": [
@@ -1572,6 +1551,27 @@
       }
     },
     "query": "select\n  morpheme_gloss.id as gloss_id,\n  morpheme_gloss.example_shape,\n  abbreviation_system.short_name as system_name,\n  morpheme_tag.gloss,\n  morpheme_tag.title,\n  abstract_morpheme_tag.description,\n  abstract_morpheme_tag.linguistic_type\nfrom morpheme_gloss\n  inner join abstract_morpheme_tag on abstract_morpheme_tag.id = morpheme_gloss.tag_id\n  left join abbreviation_system on abbreviation_system.short_name = any($2)\n  inner join morpheme_tag on morpheme_tag.abstract_ids[1] = abstract_morpheme_tag.id\nwhere morpheme_gloss.gloss = any($1)\n  and morpheme_tag.system_id = abbreviation_system.id\n"
+  },
+  "e1ebe64b2e98a03f7803c63a2e9011b0a064d7a6819dfdbc1a8c4d4e1160db90": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        }
+      ],
+      "nullable": [
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Int8Range"
+        ]
+      }
+    },
+    "query": "with resource as (\n  insert into media_resource (url)\n  values ($1)\n  on conflict (url) do update set\n     url = excluded.url\n  returning id\n)\n\ninsert into media_slice (resource_id, time_range)\nselect\n  id,\n  $2\nfrom resource\nreturning id\n"
   },
   "ea65b10e5e5c6104fea19263c4da453b0d2d13b594f7eebcb3db8d8d0d06aee8": {
     "describe": {

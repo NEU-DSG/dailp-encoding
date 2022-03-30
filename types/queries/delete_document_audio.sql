@@ -1,7 +1,7 @@
-delete from audio_resource
+delete from media_resource
 where id in (
-  select audio_slice.resource_id
-  from audio_slice
-    inner join document on document.audio_slice_id = audio_slice.id
+  select media_slice.resource_id
+  from media_slice
+    inner join document on document.audio_slice_id = media_slice.id
   where document.short_name = $1
 )

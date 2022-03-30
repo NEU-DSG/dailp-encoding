@@ -14,15 +14,15 @@ create table document_group (
   title text not null
 );
 
-create table audio_resource (
+create table media_resource (
   id autouuid primary key,
   url text not null unique,
   recorded_at date
 );
 
-create table audio_slice (
+create table media_slice (
   id autouuid primary key,
-  resource_id uuid not null references audio_resource (id) on delete cascade,
+  resource_id uuid not null references media_resource (id) on delete cascade,
   time_range int8range
 );
 
@@ -34,7 +34,7 @@ create table document (
   index_in_group bigint not null default 0,
   is_reference boolean not null,
   written_at date,
-  audio_slice_id uuid references audio_slice (id) on delete set null
+  audio_slice_id uuid references media_slice (id) on delete set null
 );
 
 create table iiif_source (
@@ -103,7 +103,7 @@ create table word (
   english_gloss text,
   recorded_at date,
   commentary text,
-  audio_slice_id uuid references audio_slice (id) on delete set null,
+  audio_slice_id uuid references media_slice (id) on delete set null,
   -- Position of the word within a document.
   document_id uuid not null references document (id) on delete cascade,
   page_number text,
