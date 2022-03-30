@@ -3,7 +3,6 @@ import "@reach/dialog/styles.css"
 import React, { Dispatch, SetStateAction, useEffect, useState } from "react"
 import { isMobile } from "react-device-detect"
 import { Helmet } from "react-helmet"
-import Sticky from "react-stickynode"
 import {
   Dialog,
   DialogBackdrop,
@@ -78,8 +77,7 @@ const TabSet = ({ doc }: { doc: Document }) => {
   const tabs = useScrollableTabState({ selectedId: Tabs.ANNOTATION })
   return (
     <>
-      <WideSticky
-        top={isMobile ? "#header" : undefined}
+      <div
         className={css.wideAndTop}
       >
         <TabList
@@ -95,7 +93,7 @@ const TabSet = ({ doc }: { doc: Document }) => {
             Original Text
           </Tab>
         </TabList>
-      </WideSticky>
+      </div>
 
       <TabPanel
         {...tabs}
@@ -128,14 +126,6 @@ const TabSet = ({ doc }: { doc: Document }) => {
   )
 }
 
-const SolidSticky = (props: Omit<Sticky.Props, "innerClass">) => (
-  <Sticky innerClass={css.solidSticky} {...props} />
-)
-
-const WideSticky = (props: Omit<Sticky.Props, "innerClass">) => (
-  <Sticky innerClass={css.wideSticky} {...props} />
-)
-
 const TranslationTab = ({ doc }: { doc: Document }) => {
   const [selectedMorpheme, setMorpheme] = useState<BasicMorphemeSegment | null>(
     null
@@ -148,7 +138,7 @@ const TranslationTab = ({ doc }: { doc: Document }) => {
     setDialogOpen(true)
   }
 
-  const dialog = useDialogState({ animated: true, modal: false })
+  const dialog = useDialogState({ animated: true })
   const [selectedWord, setSelectedWord] =
     useState<Dailp.FormFieldsFragment | null>(null)
   const selectAndShowWord = (content: Dailp.FormFieldsFragment | null) => {
@@ -221,11 +211,14 @@ const TranslationTab = ({ doc }: { doc: Document }) => {
         </Dialog>
       </DialogBackdrop>
 
-      <SolidSticky top="#document-tabs-header">
-        Display Mode:&ensp;
-        <ExperiencePicker onSelect={setExperienceLevel} />
+      <div className={css.displayModeArea}>
+        <label htmlFor="display-mode-picker">Display Mode:</label>{" "}
+        <ExperiencePicker
+          id="display-mode-picker"
+          onSelect={setExperienceLevel}
+        />
         {/*<PhoneticsPicker onSelect={setPhoneticRepresentation} />*/}
-      </SolidSticky>
+      </div>
 
       <div className={css.contentContainer}>
         <article className={css.annotationContents}>
