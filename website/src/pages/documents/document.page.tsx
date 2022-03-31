@@ -221,12 +221,7 @@ const TranslationTab = ({ doc }: { doc: Document }) => {
           />
         </Dialog>
       </DialogBackdrop>
-      {/*
-        <SolidSticky top="#document-tabs-header">
-          <ExperiencePicker onSelect={setExperienceLevel} />
-          //<PhoneticsPicker onSelect={setPhoneticRepresentation} />
-        </SolidSticky>
-      */}
+
       <div className={css.contentContainer}>
         <article className={css.annotationContents}>
           <DocumentContents
