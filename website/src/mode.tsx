@@ -2,14 +2,13 @@ import { Tooltip } from "@reach/tooltip"
 import cx from "classnames"
 import Cookies from "js-cookie"
 import React, { useContext, useEffect, useState } from "react"
-import { AiFillCaretDown, AiFillCaretUp } from "react-icons/ai"
-import { MdArrowDropDown, MdSettings } from "react-icons/md"
+import { MdSettings } from "react-icons/md"
 import {
-  Disclosure,
-  DisclosureContent,
-  useDisclosureState,
-} from "reakit/Disclosure"
-import { Menu, MenuButton, MenuItem, useMenuState } from "reakit/Menu"
+  Dialog,
+  DialogBackdrop,
+  DialogDisclosure,
+  useDialogState,
+} from "reakit/Dialog"
 import {
   Radio,
   RadioGroup,
@@ -18,7 +17,6 @@ import {
 } from "reakit/Radio"
 import { std } from "src/sprinkles.css"
 import { preferencesContext } from "./layout"
-import { navLink, navMenu } from "./menu.css"
 import * as css from "./mode.css"
 import {
   PhoneticRepresentation,
@@ -26,7 +24,6 @@ import {
   ViewMode,
   tagSetForMode,
 } from "./types"
-import { wordPanelButton } from "./word-panel.css"
 
 const notNumber = (l: any) => isNaN(Number(l))
 const levelNameMapping = {
@@ -172,46 +169,6 @@ export const PhoneticsPicker = (p: {
   )
 }
 
-/*
-export const PhoneticsPicker = (p: {
-  onSelect: (phonetics: PhoneticRepresentation) => void
-}) => {
-  const radio = useRadioState({
-    state: selectedPhonetics(),
-  })
-
-  // Save the selected experience level throughout the session.
-  useEffect(() => {
-    Cookies.set("phonetics", radio.state!.toString(), {
-      sameSite: "strict",
-      secure: true,
-    })
-    p.onSelect(radio.state as PhoneticRepresentation)
-  }, [radio.state])
-
-  return (
-    <RadioGroup
-      {...radio}
-      id="phonetics-picker"
-      className={css.levelGroup}
-      aria-label="Phonetic Representation"
-    >
-      {Object.keys(PhoneticRepresentation)
-        .filter(notNumber)
-        .map(function (representation: string) {
-          return (
-            <PhoneticOption
-              key={representation}
-              representation={representation}
-              radio={radio}
-            />
-          )
-        })}
-    </RadioGroup>
-  )
-}
-*/
-
 export const TagSetPicker = (p: { onSelect: (tagSet: TagSet) => void }) => {
   const radio = useRadioState({
     state: tagSetForMode(selectedMode() as ViewMode),
@@ -280,22 +237,42 @@ const TagSetOption = (p: { radio: RadioStateReturn; level: string }) => {
   )
 }
 
-export const HeaderPref = () => {
-  const disclosure = useDisclosureState()
+export const PrefPanel = () => {
   const preferences = useContext(preferencesContext)
   return (
-    <div className={css.prefBand}>
-      <Disclosure {...disclosure} className={css.prefButton}>
-        {"Document Preferences"} <AiFillCaretDown />
-      </Disclosure>
-      <DisclosureContent {...disclosure}>
-        Display Mode:&ensp;{" "}
-        {<ExperiencePicker onSelect={preferences.expLevelUpdate} />}
-        <p>{levelNameMapping[preferences.expLevel].details}</p>
-        Romanization Method:&ensp;{" "}
-        {<PhoneticsPicker onSelect={preferences.phonRepUpdate} />}
-        <p>{phoneticRepresentationMapping[preferences.phonRep].details}</p>
-      </DisclosureContent>
+    <div>
+      <h3>Display Mode:&ensp; </h3>
+      {<ExperiencePicker onSelect={preferences.expLevelUpdate} />}
+      <p>{levelNameMapping[preferences.expLevel].details}</p>
+      <h3>Romanization Method:&ensp; </h3>
+      {<PhoneticsPicker onSelect={preferences.phonRepUpdate} />}
+      <p>{phoneticRepresentationMapping[preferences.phonRep].details}</p>
+    </div>
+  )
+}
+
+export const HeaderPrefDrawer = () => {
+  const dialog = useDialogState({ animated: true })
+
+  return (
+    <div aria-label="shell" className={css.prefButton.shell}>
+      <DialogDisclosure
+        {...dialog}
+        aria-label="Open Preferences Drawer"
+        className={css.prefButton.button}
+      >
+        <MdSettings size={32} />
+      </DialogDisclosure>
+      <DialogBackdrop {...dialog} className={css.prefBG}>
+        <Dialog
+          {...dialog}
+          as="nav"
+          className={css.prefDrawer}
+          aria-label="Preferences Drawer"
+        >
+          <PrefPanel />
+        </Dialog>
+      </DialogBackdrop>
     </div>
   )
 }

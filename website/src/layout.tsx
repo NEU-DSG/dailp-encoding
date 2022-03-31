@@ -1,5 +1,4 @@
 import "@fontsource/quattrocento-sans/latin.css"
-import Cookies from "js-cookie"
 import "normalize.css"
 import React, { useEffect, useState } from "react"
 import { isMobile } from "react-device-detect"
@@ -10,7 +9,7 @@ import Footer from "./footer"
 import "./global-styles.css"
 import * as css from "./layout.css"
 import { MobileNav, NavMenu } from "./menu"
-import { HeaderPref, selectedMode, selectedPhonetics } from "./mode"
+import { HeaderPrefDrawer, selectedMode, selectedPhonetics } from "./mode"
 import { hideOnPrint, themeClass } from "./sprinkles.css"
 import { PhoneticRepresentation, ViewMode } from "./types"
 import "./wordpress.css"
@@ -59,11 +58,11 @@ const Layout: React.FC = ({ children }) => {
                 Perseverance
               </span>
             </div>
+            <preferencesContext.Provider value={prefPack}>
+              {<HeaderPrefDrawer />}
+            </preferencesContext.Provider>
           </div>
           <NavMenu />
-          <preferencesContext.Provider value={prefPack}>
-            {<HeaderPref />}
-          </preferencesContext.Provider>
         </header>
       </Sticky>
 

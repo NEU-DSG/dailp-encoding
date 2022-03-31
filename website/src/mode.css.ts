@@ -1,6 +1,8 @@
-import { style } from "@vanilla-extract/css"
-import { BiSpaceBar } from "react-icons/bi"
-import sprinkles, { fullWidth, row, theme, vspace, wrappedRow } from "src/sprinkles.css"
+import { style, styleVariants } from "@vanilla-extract/css"
+import sprinkles, { fullWidth, hspace, mediaQueries, vspace } from "src/sprinkles.css"
+import { drawerBg } from "./menu.css"
+import { mobileWordPanel } from "./pages/documents/document.css"
+import { paddingX } from "./style-utils"
 import { collPanelButton } from "./word-panel.css"
 
 export const highlightedLabel = sprinkles({
@@ -34,6 +36,24 @@ export const prefBand = style([
   },
 ])
 
-export const prefButton = style([
-  collPanelButton
+export const prefButton = styleVariants({
+  shell: [{textAlign: "right", flex: 1}],
+  button: [collPanelButton]
+})
+
+export const prefBG = style([
+  drawerBg, {
+    "@media": {
+      [mediaQueries.medium]: {
+        display: "block",
+      },
+    },
+  }
+])
+
+export const prefDrawer = style([
+  mobileWordPanel,
+  paddingX(hspace.edge), {
+    paddingTop: vspace.one
+  }
 ])
