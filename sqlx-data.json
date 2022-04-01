@@ -546,36 +546,6 @@
     },
     "query": "insert into abbreviation_system (short_name, title)\nvalues ($1, $2)\non conflict (short_name) do update set\n   title = excluded.title\nreturning id\n"
   },
-  "382c3894aed7a6a60aff297693bfefcc83358e99246e0d2b93feba99765d3355": {
-    "describe": {
-      "columns": [
-        {
-          "name": "id",
-          "ordinal": 0,
-          "type_info": "Uuid"
-        }
-      ],
-      "nullable": [
-        false
-      ],
-      "parameters": {
-        "Left": [
-          "Text",
-          "Text",
-          "Text",
-          "Text",
-          "Date",
-          "Text",
-          "Uuid",
-          "Text",
-          "Int8",
-          "Uuid",
-          "Int8Range"
-        ]
-      }
-    },
-    "query": "insert into word (source_text, simple_phonetics, phonemic, english_gloss, recorded_at, commentary,\n  document_id, page_number, index_in_document, page_id, character_range)\n  values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)\nreturning id\n"
-  },
   "384006c5df2ed9b1cc177734ae7cc0dc1b90e520bc183c02a29548549f38737b": {
     "describe": {
       "columns": [],
@@ -1673,6 +1643,36 @@
       }
     },
     "query": "select\n  id,\n  title,\n  base_url\nfrom iiif_source\nwhere title = $1\n"
+  },
+  "fabf9dbd6f3d69ba5b942106fe45d482a0d1eec7bf3ca665159cf8f5acf032f9": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        }
+      ],
+      "nullable": [
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Text",
+          "Text",
+          "Text",
+          "Date",
+          "Text",
+          "Uuid",
+          "Text",
+          "Int8",
+          "Uuid",
+          "Int8Range"
+        ]
+      }
+    },
+    "query": "insert into word (source_text, simple_phonetics, phonemic, english_gloss, recorded_at, commentary,\n  document_id, page_number, index_in_document, page_id, character_range)\nvalues ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)\non conflict (document_id, index_in_document)\ndo update set\n  source_text = EXCLUDED.source_text,\n  simple_phonetics = EXCLUDED.simple_phonetics,\n  phonemic = EXCLUDED.phonemic,\n  english_gloss = EXCLUDED.english_gloss,\n  commentary = EXCLUDED.commentary\nreturning id\n"
   },
   "ff0aa95d3c2d21fdd4e03be8957b1637ffb6cffb6fae76021997b8a5c85e3e65": {
     "describe": {
