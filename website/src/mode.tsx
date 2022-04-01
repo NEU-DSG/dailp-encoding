@@ -16,8 +16,8 @@ import {
   useRadioState,
 } from "reakit/Radio"
 import { std } from "src/sprinkles.css"
-import { preferencesContext } from "./layout"
 import * as css from "./mode.css"
+import { PreferencesContext } from "./preferences-context"
 import {
   PhoneticRepresentation,
   TagSet,
@@ -26,7 +26,7 @@ import {
 } from "./types"
 
 const notNumber = (l: any) => isNaN(Number(l))
-const levelNameMapping = {
+export const levelNameMapping = {
   [ViewMode.Story]: {
     label: "Story",
     details: "Original text in the Cherokee syllabary with English translation",
@@ -98,7 +98,7 @@ export const selectedMode = () =>
   Number.parseInt(Cookies.get("experienceLevel") ?? "0")
 
 export const selectedPhonetics = () =>
-  Number.parseInt(Cookies.get("phonetics") ?? "0")
+  Number.parseInt(Cookies.get("phonetics") ?? "0") as PhoneticRepresentation
 
 export const ExperiencePicker = (p: { onSelect: (mode: ViewMode) => void }) => {
   const [value, setValue] = useState(selectedMode() as ViewMode)
@@ -134,9 +134,7 @@ export const ExperiencePicker = (p: { onSelect: (mode: ViewMode) => void }) => {
 export const PhoneticsPicker = (p: {
   onSelect: (phonetics: PhoneticRepresentation) => void
 }) => {
-  const [value, setValue] = useState(
-    selectedPhonetics() as PhoneticRepresentation
-  )
+  const [value, setValue] = useState(selectedPhonetics())
 
   // Save the selected representation throughout the session.
   useEffect(() => {
@@ -144,7 +142,7 @@ export const PhoneticsPicker = (p: {
       sameSite: "strict",
       secure: true,
     })
-    p.onSelect(value as PhoneticRepresentation)
+    p.onSelect(value)
   }, [value])
   return (
     <select
@@ -238,15 +236,33 @@ const TagSetOption = (p: { radio: RadioStateReturn; level: string }) => {
 }
 
 export const PrefPanel = () => {
-  const preferences = useContext(preferencesContext)
+  const preferences = useContext(PreferencesContext)
   return (
     <div>
-      <h3>Display Mode:&ensp; </h3>
-      {<ExperiencePicker onSelect={preferences.expLevelUpdate} />}
-      <p>{levelNameMapping[preferences.expLevel].details}</p>
-      <h3>Romanization Method:&ensp; </h3>
-      {<PhoneticsPicker onSelect={preferences.phonRepUpdate} />}
-      <p>{phoneticRepresentationMapping[preferences.phonRep].details}</p>
+      <label>Display Mode: </label>
+      {
+        <ExperiencePicker
+          aria-described-by={"Selected-ViewMode"}
+          onSelect={preferences.setViewMode}
+        />
+      }
+      <p id={"Selected-ViewMode"}>
+        {levelNameMapping[preferences.viewMode].details}
+      </p>
+
+      <label>Romanization Method: </label>
+      {
+        <PhoneticsPicker
+          aria-described-by={"Selected-Phonetics"}
+          onSelect={preferences.setPhoneticRepresentation}
+        />
+      }
+      <p id={"Selected-Phonetics"}>
+        {
+          phoneticRepresentationMapping[preferences.phoneticRepresentation]
+            .details
+        }
+      </p>
     </div>
   )
 }
@@ -266,7 +282,7 @@ export const HeaderPrefDrawer = () => {
       <DialogBackdrop {...dialog} className={css.prefBG}>
         <Dialog
           {...dialog}
-          as="nav"
+          as="div"
           className={css.prefDrawer}
           aria-label="Preferences Drawer"
         >

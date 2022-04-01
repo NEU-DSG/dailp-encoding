@@ -1,6 +1,6 @@
 import "@fontsource/quattrocento-sans/latin.css"
 import "normalize.css"
-import React, { useEffect, useState } from "react"
+import React from "react"
 import { isMobile } from "react-device-detect"
 import { Helmet } from "react-helmet"
 import Sticky from "react-stickynode"
@@ -9,34 +9,17 @@ import Footer from "./footer"
 import "./global-styles.css"
 import * as css from "./layout.css"
 import { MobileNav, NavMenu } from "./menu"
-import { HeaderPrefDrawer, selectedMode, selectedPhonetics } from "./mode"
+import { HeaderPrefDrawer } from "./mode"
+import { PreferencesProvider } from "./preferences-context"
 import { hideOnPrint, themeClass } from "./sprinkles.css"
-import { PhoneticRepresentation, ViewMode } from "./types"
 import "./wordpress.css"
 
 /* const ClientSignIn = lazy(() => import("./client/signin")) */
 
-// Set up experiencelevel
-export const preferencesContext = React.createContext({
-  expLevel: 0 as ViewMode,
-  expLevelUpdate: (p: ViewMode) => {},
-  phonRep: 0 as PhoneticRepresentation,
-  phonRepUpdate: (p: PhoneticRepresentation) => {},
-})
-
 /** Wrapper for most site pages, providing them with a navigation header and footer. */
 const Layout: React.FC = ({ children }) => {
-  // Some experience level setup
-  const [expLevel, expLevelUpdate] = useState(selectedMode())
-  const [phonRep, phonRepUpdate] = useState(selectedPhonetics())
-  const prefPack = {
-    expLevel: expLevel,
-    expLevelUpdate: expLevelUpdate,
-    phonRep: phonRep,
-    phonRepUpdate: phonRepUpdate,
-  }
   return (
-    <>
+    <PreferencesProvider>
       <Helmet titleTemplate="%s - DAILP" defaultTitle="DAILP">
         <html lang="en" />
         <meta charSet="UTF-8" />
@@ -58,19 +41,14 @@ const Layout: React.FC = ({ children }) => {
                 Perseverance
               </span>
             </div>
-            <preferencesContext.Provider value={prefPack}>
-              {<HeaderPrefDrawer />}
-            </preferencesContext.Provider>
+            <HeaderPrefDrawer />
           </div>
           <NavMenu />
         </header>
       </Sticky>
-
-      <preferencesContext.Provider value={prefPack}>
-        {children}
-      </preferencesContext.Provider>
+      {children}
       <Footer />
-    </>
+    </PreferencesProvider>
   )
 }
 

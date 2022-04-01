@@ -1,10 +1,6 @@
 import { DialogContent, DialogOverlay } from "@reach/dialog"
 import "@reach/dialog/styles.css"
-import Cookies from "js-cookie"
 import React, {
-  Dispatch,
-  SetStateAction,
-  useContext,
   useEffect,
   useState,
 } from "react"
@@ -14,7 +10,6 @@ import Sticky from "react-stickynode"
 import {
   Dialog,
   DialogBackdrop,
-  DialogDisclosure,
   useDialogState,
 } from "reakit/Dialog"
 import { Tab, TabList, TabPanel } from "reakit/Tab"
@@ -23,15 +18,10 @@ import { Breadcrumbs } from "src/breadcrumbs"
 import { Button } from "src/components"
 import Link from "src/components/link"
 import * as Dailp from "src/graphql/dailp"
-import Layout, { preferencesContext } from "src/layout"
-import { drawerBg, navButton, navDrawer } from "src/menu.css"
-import {
-  ExperiencePicker,
-  phonDetails,
-  selectedMode,
-  selectedPhonetics,
-} from "src/mode"
+import Layout from "src/layout"
+import { drawerBg } from "src/menu.css"
 import { MorphemeDetails } from "src/morpheme"
+import { usePreferences } from "src/preferences-context"
 import {
   collectionRoute,
   documentDetailsRoute,
@@ -175,11 +165,9 @@ const TranslationTab = ({ doc }: { doc: Document }) => {
     setCurrContents: selectAndShowWord,
   }
 
-  const phoneticRepresentation = useContext(preferencesContext).phonRep
+  const { viewMode, phoneticRepresentation } = usePreferences()
 
-  const experienceLevel = useContext(preferencesContext).expLevel
-
-  const tagSet = tagSetForMode(experienceLevel)
+  const tagSet = tagSetForMode(viewMode)
 
   return (
     <>
@@ -215,7 +203,7 @@ const TranslationTab = ({ doc }: { doc: Document }) => {
           <WordPanel
             segment={wordPanelInfo.currContents}
             setContent={wordPanelInfo.setCurrContents}
-            viewMode={experienceLevel}
+            viewMode={viewMode}
             onOpenDetails={openDetails}
             tagSet={tagSet}
           />
@@ -226,7 +214,7 @@ const TranslationTab = ({ doc }: { doc: Document }) => {
         <article className={css.annotationContents}>
           <DocumentContents
             {...{
-              experienceLevel,
+              experienceLevel: viewMode,
               doc,
               openDetails,
               tagSet,
@@ -235,12 +223,12 @@ const TranslationTab = ({ doc }: { doc: Document }) => {
             }}
           />
         </article>
-        {selectedWord && experienceLevel > 0 ? (
+        {selectedWord && viewMode > 0 ? (
           <div className={css.contentSection2}>
             <WordPanel
               segment={wordPanelInfo.currContents}
               setContent={wordPanelInfo.setCurrContents}
-              viewMode={experienceLevel}
+              viewMode={viewMode}
               onOpenDetails={openDetails}
               tagSet={tagSet}
             />
