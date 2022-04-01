@@ -1,13 +1,11 @@
-import { DialogOverlay } from "@reach/dialog"
 import { Tooltip } from "@reach/tooltip"
 import "@reach/tooltip/styles.css"
 import { Howl } from "howler"
-import React, { Dispatch, SetStateAction, useState } from "react"
+import React from "react"
 import { MdInfoOutline } from "react-icons/md"
 import * as Dailp from "src/graphql/dailp"
 import { DocumentContents } from "src/pages/documents/document.page"
 import { FormAudio } from "./audio-player"
-import { phonDetails } from "./mode"
 import * as css from "./segment.css"
 import { std } from "./sprinkles.css"
 import {
@@ -100,7 +98,7 @@ export const AnnotatedForm = (
       p.segment
     ) /* This makes sure the word panel updates for changes to the word panel*/
   }
-  let romanization = ""
+  let romanization = null
   if (
     p.phoneticRepresentation == PhoneticRepresentation.Dailp &&
     p.segment.simplePhonetics
@@ -128,7 +126,7 @@ export const AnnotatedForm = (
             <MdInfoOutline size={20} className={css.linkSvg} />
           </span>
         </div>
-        {p.segment.simplePhonetics ? (
+        {romanization ? (
           <>
             <div>{romanization}</div>
             <div>
