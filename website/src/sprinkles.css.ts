@@ -1,4 +1,4 @@
-import { createTheme, style } from "@vanilla-extract/css"
+import { createTheme, createThemeContract, style } from "@vanilla-extract/css"
 import { createSprinkles, defineProperties } from "@vanilla-extract/sprinkles"
 import { lighten } from "polished"
 import { marginX, paddingX, paddingY } from "src/style-utils"
@@ -10,7 +10,31 @@ function rhythm(v: number): string {
 
 export const rootFontSize = "19px"
 
-export const [themeClass, theme] = createTheme({
+export const theme = createThemeContract({
+  fontSizes: {
+    root: rootFontSize,
+  },
+  colors: {
+    header: null,
+    button: null,
+    buttonHover: null,
+    footer: null,
+    altFooter: null,
+    body: null,
+    text: null,
+    link: null,
+    headings: null,
+    borders: null,
+  },
+  fonts: {
+    header: null,
+    body: null,
+    cherokee: null,
+    smallCaps: null,
+  },
+})
+
+export const themeClass = createTheme(theme, {
   fontSizes: {
     root: rootFontSize,
   },
