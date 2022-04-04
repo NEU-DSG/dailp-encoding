@@ -14,7 +14,10 @@ export async function prerender() {
   }
 
   return flatMap(data?.allDocuments, (document) => {
-    const id = document.id.toLowerCase()
-    return [{ url: `/documents/${id}` }, { url: `/documents/${id}/details` }]
+    const slug = document.slug.toLowerCase()
+    return [
+      { url: `/documents/${slug}` },
+      { url: `/documents/${slug}/details` },
+    ]
   })
 }
