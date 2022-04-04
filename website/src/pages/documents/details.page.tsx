@@ -20,7 +20,7 @@ export default function DocumentDetailsPage({ id }: Props) {
 }
 
 function DocumentDetails({ id }: Props) {
-  const [{ data }] = Dailp.useDocumentDetailsQuery({ variables: { id } })
+  const [{ data }] = Dailp.useDocumentDetailsQuery({ variables: { slug: id } })
   const doc = data?.document
   if (!doc) {
     return null

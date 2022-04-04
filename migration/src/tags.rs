@@ -7,6 +7,9 @@ use log::info;
 /// Pulls all the details we have about each morpheme from our spreadsheets,
 /// parses it into typed data, then updates the database entry for each.
 pub async fn migrate_tags(db: &Database) -> Result<()> {
+    // Make sure all reference grammars are cited.
+    migrate_glossary_metadata(db, "17LSuDu7QHJfJyLDVJjO0f4wmTHQLVyHuSktr6OrbD_M").await?;
+
     let glossary = SheetResult::from_sheet(
         "17LSuDu7QHJfJyLDVJjO0f4wmTHQLVyHuSktr6OrbD_M",
         Some("DAILP Storage Tags"),
@@ -16,13 +19,20 @@ pub async fn migrate_tags(db: &Database) -> Result<()> {
     info!("Parsing sheet results...");
     let glossary = parse_tag_glossary(glossary?)?;
 
+    let crg = db
+        .insert_morpheme_system("CRG".into(), "Cherokee Reference Grammar".into())
+        .await?;
+    let taoc = db
+        .insert_morpheme_system("TAOC".into(), "Tone and Accent in Oklahoma Cherokee".into())
+        .await?;
+    let learner = db
+        .insert_morpheme_system("LEARNER".into(), "Learner System".into())
+        .await?;
+
     info!("Pushing tags to db...");
     for tag in glossary {
-        db.update_tag(tag).await?;
+        db.insert_morpheme_tag(tag, crg, taoc, learner).await?;
     }
-
-    // Make sure all reference grammars are cited.
-    migrate_glossary_metadata(db, "17LSuDu7QHJfJyLDVJjO0f4wmTHQLVyHuSktr6OrbD_M").await?;
 
     Ok(())
 }
@@ -35,7 +45,7 @@ fn parse_tag_glossary(sheet: SheetResult) -> Result<Vec<MorphemeTag>> {
         // The first row is headers.
         .skip(1)
         // There are a few empty spacing rows to ignore.
-        .filter(|row| !row.is_empty())
+        .filter(|row| !row.is_empty() && !row[0].is_empty())
         .filter_map(|row| {
             // Skip over allomorphs, and instead allow them to emerge from our texts.
             let mut cols = row.into_iter();
@@ -43,9 +53,9 @@ fn parse_tag_glossary(sheet: SheetResult) -> Result<Vec<MorphemeTag>> {
             let _name = cols.next()?;
             let morpheme_type = cols.next()?;
             let _dailp_form = cols.next()?;
-            let crg = parse_tag_section(&mut cols, true);
-            let taoc = parse_tag_section(&mut cols, true);
-            let learner = parse_tag_section(&mut cols, false);
+            let crg = parse_tag_section(&mut cols, true, &morpheme_type);
+            let taoc = parse_tag_section(&mut cols, true, &morpheme_type);
+            let learner = parse_tag_section(&mut cols, false, &morpheme_type);
             Some(MorphemeTag {
                 id,
                 taoc,
@@ -64,40 +74,42 @@ async fn migrate_glossary_metadata(db: &Database, sheet_id: &str) -> Result<()> 
     let sheet = SheetResult::from_sheet(sheet_id, Some("Metadata")).await?;
     let chunks = sheet.values.into_iter().chunks(7);
     let docs = chunks.into_iter().filter_map(|mut values| {
-        Some(dailp::AnnotatedDoc {
-            meta: dailp::DocumentMetadata {
-                id: dailp::DocumentId(values.next()?.pop()?),
-                title: values.next()?.pop()?,
-                date: Some(dailp::Date::from_ymd(
-                    values.next()?.pop()?.parse().unwrap(),
-                    1,
-                    1,
-                )),
-                contributors: values
-                    .next()?
-                    .into_iter()
-                    .skip(1)
-                    .map(dailp::Contributor::new_author)
-                    .collect(),
-                collection: Some("Reference Materials".to_owned()),
-                genre: None,
-                is_reference: true,
-                page_images: None,
-                sources: Vec::new(),
-                translation: None,
-                audio_recording: None,
-                order_index: 0,
-            },
-            segments: None,
+        Some(dailp::DocumentMetadata {
+            id: Default::default(),
+            short_name: values.next()?.pop()?,
+            title: values.next()?.pop()?,
+            date: Some(dailp::Date::from_ymd(
+                values.next()?.pop()?.parse().unwrap(),
+                1,
+                1,
+            )),
+            contributors: values
+                .next()?
+                .into_iter()
+                .skip(1)
+                .map(dailp::Contributor::new_author)
+                .collect(),
+            collection: Some("Reference Materials".to_owned()),
+            genre: None,
+            is_reference: true,
+            page_images: None,
+            sources: Vec::new(),
+            translation: None,
+            audio_recording: None,
+            order_index: 0,
         })
     });
     for doc in docs {
-        db.update_document(doc).await?;
+        db.insert_dictionary_document(&doc).await?;
     }
     Ok(())
 }
 
-fn parse_tag_section(values: &mut impl Iterator<Item = String>, has_page: bool) -> Option<TagForm> {
+fn parse_tag_section(
+    values: &mut impl Iterator<Item = String>,
+    has_page: bool,
+    morpheme_type: &str,
+) -> Option<TagForm> {
     let tag = values.next()?;
     let title = values.next()?;
     let definition = values.next().unwrap_or_default();
@@ -111,6 +123,7 @@ fn parse_tag_section(values: &mut impl Iterator<Item = String>, has_page: bool) 
             definition,
             shape,
             details_url,
+            morpheme_type: morpheme_type.to_owned(),
         })
     } else {
         None
