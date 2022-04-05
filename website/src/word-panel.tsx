@@ -11,7 +11,12 @@ import {
 import * as Dailp from "src/graphql/dailp"
 import { FormAudio } from "./audio-player"
 import { MorphemicSegmentation } from "./segment"
-import { BasicMorphemeSegment, TagSet, ViewMode } from "./types"
+import {
+  BasicMorphemeSegment,
+  TagSet,
+  ViewMode,
+  morphemeDisplayTag,
+} from "./types"
 import * as css from "./word-panel.css"
 
 export interface WordPanelDetails {
@@ -98,12 +103,11 @@ export const WordPanel = (p: {
           title={"Word Parts"}
           content={
             <>
-              <MorphemicSegmentation
+              <VerticalMorphemicSegmentation
                 segments={p.segment.segments}
-                onOpenDetails={p.onOpenDetails}
-                level={p.viewMode}
                 tagSet={p.tagSet}
               />
+
               {translation.length ? (
                 <div>&lsquo;{translation}&rsquo;</div>
               ) : null}
@@ -128,6 +132,37 @@ export const WordPanel = (p: {
   )
 }
 
+export const VerticalMorphemicSegmentation = (p: {
+  segments: Dailp.FormFieldsFragment["segments"]
+  tagSet: TagSet
+}) => {
+  if (!p.segments) {
+    return null
+  }
+  if (p.segments) {
+    let segmentCount = p.segments.length
+
+    return (
+      <table className={css.tableContainer}>
+        {p.segments.map((segment, index) => (
+          <tr>
+            <td className={css.tableCells}>
+              {index > 0 ? "-" : null}
+              {segment.morpheme}
+              {index !== segmentCount - 1 ? segment.nextSeparator : null}
+            </td>
+            <td className={css.tableCells}>
+              {segment.matchingTag
+                ? morphemeDisplayTag(segment.matchingTag, p.tagSet)?.title
+                : segment.gloss}
+            </td>
+          </tr>
+        ))}
+      </table>
+    )
+  }
+  return null
+}
 const CollapsiblePanel = (p: {
   title: string
   content: ReactNode
