@@ -92,5 +92,6 @@ export const tableCells = style({
   border: "4px solid transparent",
   fontFamily: theme.fonts.body,
   padding: "0px",
+  paddingRight: "3px",
   wordWrap: "break-word",
 })
