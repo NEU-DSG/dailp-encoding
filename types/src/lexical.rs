@@ -1,4 +1,4 @@
-use crate::{AnnotatedForm, Database, Date, DocumentId, Geometry, MorphemeSegment};
+use crate::{AnnotatedForm, Date, DocumentId, Geometry, MorphemeSegment};
 use serde::{Deserialize, Serialize};
 
 /// The reference position within a document of one specific form
@@ -49,7 +49,7 @@ impl PositionInDocument {
     pub fn make_raw_id(&self, raw_gloss: &str, use_index: bool) -> String {
         use itertools::Itertools as _;
         // Remove punctuation all together.
-        let gloss = raw_gloss.replace(&[',', '+', '(', ')', '[', ']'] as &[char], " ");
+        let gloss = raw_gloss.replace(&[',', '+', '(', ')', '[', ']'] as &[char], "");
         // Replace whitespace with dots.
         let gloss = gloss.split_whitespace().join(".");
         self.make_id(&gloss, use_index)
@@ -88,8 +88,8 @@ impl PositionInDocument {
         if let Some(geometry) = &self.geometry {
             // Retrieve the document instance.
             let doc = context
-                .data::<DataLoader<Database>>()?
-                .load_one(self.document_id)
+                .data::<DataLoader<crate::Database>>()?
+                .load_one(self.document_id.clone())
                 .await?
                 .ok_or_else(|| {
                     anyhow::format_err!("Document {:?} missing from database.", self.document_id)
@@ -119,21 +119,20 @@ impl PositionInDocument {
 }
 
 /// A connection between two lexical entries from the same or different sources
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Serialize, Deserialize)]
 pub struct LexicalConnection {
     /// Unique ID of this connection, generally formatted as "FROM-TO"
+    #[serde(rename = "_id")]
     pub id: String,
     /// List of all forms or morphemes to associate
-    pub left: MorphemeId,
-    pub right: MorphemeId,
+    pub links: Vec<MorphemeId>,
 }
 impl LexicalConnection {
     /// Make a new association between these two identifiers.
     pub fn new(from: MorphemeId, to: MorphemeId) -> Self {
         Self {
             id: format!("{}-{}", from, to),
-            left: from,
-            right: to,
+            links: vec![from, to],
         }
     }
 
@@ -150,15 +149,15 @@ impl LexicalConnection {
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, Hash)]
 #[serde(rename_all = "camelCase")]
 pub struct MorphemeId {
-    pub document_name: Option<String>,
+    pub document_id: Option<DocumentId>,
     pub gloss: String,
     pub index: Option<i32>,
 }
 impl MorphemeId {
     /// Make a new [`MorphemeId`]
-    pub fn new(document_id: Option<String>, index: Option<i32>, gloss: String) -> Self {
+    pub fn new(document_id: Option<DocumentId>, index: Option<i32>, gloss: String) -> Self {
         Self {
-            document_name: document_id,
+            document_id,
             index,
             gloss,
         }
@@ -183,7 +182,7 @@ impl MorphemeId {
             (None, None)
         };
         Some(Self {
-            document_name: document_id.map(str::to_owned),
+            document_id: document_id.map(str::to_owned).map(DocumentId),
             gloss: gloss.to_owned(),
             index: index.and_then(|i| i.parse().ok()),
         })
@@ -196,12 +195,12 @@ impl std::fmt::Display for MorphemeId {
             write!(
                 f,
                 "{}.{}:{}",
-                self.document_name.as_ref().unwrap(),
+                self.document_id.as_ref().unwrap().0,
                 index,
                 self.gloss
             )
-        } else if let Some(doc_id) = &self.document_name {
-            write!(f, "{}:{}", doc_id, self.gloss)
+        } else if let Some(doc_id) = &self.document_id {
+            write!(f, "{}:{}", doc_id.0, self.gloss)
         } else {
             write!(f, "{}", self.gloss)
         }
@@ -269,7 +268,7 @@ pub fn seg_verb_surface_form(
     let segments = MorphemeSegment::parse_many(&morpheme_layer, &gloss_layer)?;
 
     Some(AnnotatedForm {
-        id: None,
+        id: position.make_form_id(&segments),
         position,
         source: syllabary,
         normalized_source: None,
@@ -380,7 +379,7 @@ pub fn root_verb_surface_form(
     let segments = MorphemeSegment::parse_many(&morpheme_layer, &gloss_layer)?;
 
     Some(AnnotatedForm {
-        id: None,
+        id: position.make_form_id(&segments),
         position: position.clone(),
         source: syllabary,
         normalized_source: None,
@@ -456,9 +455,10 @@ pub fn root_noun_surface_form(
     }
     let commentary = if has_comment { cols.next() } else { None };
     let segments = MorphemeSegment::parse_many(&morpheme_layer, &gloss_layer)?;
+    let id = position.make_form_id(&segments);
 
     Some(AnnotatedForm {
-        id: None,
+        id,
         position: position.clone(),
         source: syllabary,
         normalized_source: None,
@@ -480,7 +480,7 @@ pub fn root_noun_surface_form(
 pub fn convert_udb(input: &str) -> PhonemicString {
     // UDB represents glottal stops with the single quote.
     // TODO Move this to the output conversion step.
-    let input = input.replace('\'', "ʔ");
+    let input = input.replace("'", "ʔ");
     let pat = regex::Regex::new("([^aeiouv]*)([aeiouv]:?)([!*`^\"])?").unwrap();
     let mut syllables = Vec::new();
     for caps in pat.captures_iter(&input) {
@@ -957,7 +957,7 @@ mod tests {
         let id = MorphemeId::parse("DF2018:55");
         assert_ne!(id, None);
         let id = id.unwrap();
-        assert_eq!(id.document_name.as_ref().map(|x| &**x), Some("DF2018"));
+        assert_eq!(id.document_id.as_ref().map(|x| &*x.0), Some("DF2018"));
         assert_eq!(id.gloss, "55");
     }
 
@@ -966,7 +966,7 @@ mod tests {
         let id = MorphemeId::parse("IN1861:1-24");
         assert_ne!(id, None);
         let id = id.unwrap();
-        assert_eq!(id.document_name.as_ref().map(|x| &**x), Some("IN1861"));
+        assert_eq!(id.document_id.as_ref().map(|x| &*x.0), Some("IN1861"));
         assert_eq!(id.gloss, "1-24");
     }
 
@@ -979,15 +979,15 @@ DF2018:54",
         assert_eq!(id, None);
     }
 
-    // #[test]
-    // fn morpheme_id_raw() {
-    //     let raw = "as for me (1SG.PRO + CS)";
-    //     let pos = PositionInDocument::new(
-    //         crate::DocumentId("AK1997".to_string()),
-    //         "116".to_string(),
-    //         1,
-    //     );
-    //     assert_eq!(pos.make_raw_id(raw, true), "AK1997.1:as.for.me.1SG.PRO.CS");
-    //     assert_eq!(pos.make_raw_id(raw, false), "AK1997:as.for.me.1SG.PRO.CS");
-    // }
+    #[test]
+    fn morpheme_id_raw() {
+        let raw = "as for me (1SG.PRO + CS)";
+        let pos = PositionInDocument::new(
+            crate::DocumentId("AK1997".to_string()),
+            "116".to_string(),
+            1,
+        );
+        assert_eq!(pos.make_raw_id(raw, true), "AK1997.1:as.for.me.1SG.PRO.CS");
+        assert_eq!(pos.make_raw_id(raw, false), "AK1997:as.for.me.1SG.PRO.CS");
+    }
 }

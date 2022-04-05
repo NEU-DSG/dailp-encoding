@@ -18,7 +18,7 @@ pub async fn migrate_all(db: &Database) -> Result<()> {
     });
 
     for person in contributors {
-        db.upsert_contributor(person).await?;
+        db.update_person(person).await?;
     }
     Ok(())
 }

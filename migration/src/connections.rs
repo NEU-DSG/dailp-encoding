@@ -17,7 +17,7 @@ pub async fn migrate_connections(db: &Database) -> anyhow::Result<()> {
     // TODO Clear all connections before starting.
 
     for conn in connections {
-        db.insert_morpheme_relation(conn).await?;
+        db.update_connection(conn).await?;
     }
 
     Ok(())

@@ -1,10 +1,8 @@
 use crate::{
-    AnnotatedDoc, AudioSlice, Database, Date, DocumentId, MorphemeSegment, PartsOfWord,
-    PositionInDocument,
+    AnnotatedDoc, AudioSlice, Database, Date, MorphemeId, MorphemeSegment, PositionInDocument,
 };
 use async_graphql::{dataloader::DataLoader, FieldResult};
 use serde::{Deserialize, Serialize};
-use sqlx::types::Uuid;
 
 #[derive(Clone, Eq, PartialEq, Hash, Serialize, Deserialize, Debug, async_graphql::NewType)]
 pub struct FormId(pub String);
@@ -12,15 +10,13 @@ pub struct FormId(pub String);
 /// A single word in an annotated document.
 /// One word contains several layers of interpretation, including the original
 /// source text, multiple layers of linguistic annotation, and annotator notes.
-/// TODO Split into two types, one for migration and one for SQL + GraphQL
 #[derive(Clone, Serialize, Deserialize, Debug, async_graphql::SimpleObject)]
 #[serde(rename_all = "camelCase")]
 #[graphql(complex)]
 pub struct AnnotatedForm {
+    #[serde(rename = "_id")]
     /// Unique identifier of this form
-    #[serde(skip)]
-    #[graphql(skip)]
-    pub id: Option<Uuid>,
+    pub id: String,
     /// Original source text
     pub source: String,
     /// A normalized version of the word
@@ -31,7 +27,6 @@ pub struct AnnotatedForm {
     pub phonemic: Option<String>,
     /// Morphemic segmentation of the form that includes a phonemic
     /// representation and gloss for each
-    #[graphql(skip)]
     pub segments: Option<Vec<MorphemeSegment>>,
     #[serde(default)]
     /// English gloss for the whole word
@@ -55,17 +50,8 @@ impl AnnotatedForm {
     /// The root morpheme of the word.
     /// For example, a verb form glossed as "he catches" might have a root morpheme
     /// corresponding to "catch."
-    async fn root(
-        &self,
-        context: &async_graphql::Context<'_>,
-    ) -> FieldResult<Option<MorphemeSegment>> {
-        let segments = self.segments(context).await?;
-        for seg in segments {
-            if is_root_morpheme(&seg.gloss) {
-                return Ok(Some(seg));
-            }
-        }
-        Ok(None)
+    async fn root(&self) -> Option<&MorphemeSegment> {
+        self.find_root()
     }
 
     async fn romanized_source(&self) -> Option<String> {
@@ -74,35 +60,29 @@ impl AnnotatedForm {
             .map(|phonetic| crate::lexical::simple_phonetics_to_worcester(phonetic))
     }
 
-    async fn segments(
-        &self,
-        context: &async_graphql::Context<'_>,
-    ) -> FieldResult<Vec<MorphemeSegment>> {
-        Ok(context
-            .data::<DataLoader<Database>>()?
-            .load_one(PartsOfWord(*self.id.as_ref().unwrap()))
-            .await?
-            .unwrap_or_default())
-    }
-
     /// All other observed words with the same root morpheme as this word.
     async fn similar_forms(
         &self,
         context: &async_graphql::Context<'_>,
     ) -> FieldResult<Vec<AnnotatedForm>> {
-        if let Some(root) = self.root(context).await? {
-            let db = context.data::<DataLoader<Database>>()?.loader();
+        if let Some(root) = self.find_root() {
+            let db = context.data::<Database>()?;
             // Find the forms with the exact same root.
-            // let similar_roots = db.morphemes(id.clone());
+            let id = MorphemeId {
+                document_id: Some(self.position.document_id.clone()),
+                gloss: root.gloss.clone(),
+                index: None,
+            };
+            let similar_roots = db.morphemes(&id, None);
             // Find forms with directly linked roots.
-            let connected = db
-                .connected_forms(Some(self.position.document_id), &root.gloss)
-                .await?;
-            // let (connected, similar_roots) = futures::join!(connected, similar_roots);
-            Ok(connected
+            let connected = db.connected_forms(&id);
+            let (connected, similar_roots) = futures::join!(connected, similar_roots);
+            Ok(similar_roots?
                 .into_iter()
+                .flat_map(|r| r.forms)
+                .chain(connected?)
                 // Only return other similar words.
-                .filter(|word| word.id != self.id)
+                .filter(|word| word.position != self.position || word.source != self.source)
                 .collect())
         } else {
             Ok(Vec::new())
@@ -116,7 +96,7 @@ impl AnnotatedForm {
     ) -> FieldResult<Option<AnnotatedDoc>> {
         Ok(context
             .data::<DataLoader<Database>>()?
-            .load_one(self.position.document_id)
+            .load_one(self.position.document_id.clone())
             .await?)
     }
 
@@ -126,8 +106,8 @@ impl AnnotatedForm {
     }
 
     /// Unique identifier of the containing document
-    async fn document_id(&self) -> DocumentId {
-        self.position.document_id
+    async fn document_id(&self) -> &str {
+        &self.position.document_id.0
     }
 }
 

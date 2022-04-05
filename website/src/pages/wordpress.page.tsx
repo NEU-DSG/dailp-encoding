@@ -28,9 +28,7 @@ const WordpressPage = (props: { "*": string }) => (
 export default WordpressPage
 
 const Contents = (props: { slug: string }) => {
-  const [{ data, fetching }] = Wordpress.usePageQuery({
-    variables: { slug: props.slug },
-  })
+  const [{ data, fetching }] = Wordpress.usePageQuery({ variables: { slug: props.slug } })
   const page = data?.page?.__typename === "Page" && data?.page
   if (page) {
     return (

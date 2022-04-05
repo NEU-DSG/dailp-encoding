@@ -2,7 +2,6 @@
 .idea
 *.log
 tmp/
-.postgres/
 
 node_modules/
 npm-debug.log*

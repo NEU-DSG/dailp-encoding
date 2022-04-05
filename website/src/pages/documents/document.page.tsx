@@ -25,7 +25,7 @@ import {
   documentRoute,
 } from "src/routes"
 import { useScrollableTabState } from "src/scrollable-tabs"
-import { AnnotatedForm, DocumentPage, Segment } from "src/segment"
+import { AnnotatedForm, Segment } from "src/segment"
 import {
   BasicMorphemeSegment,
   PhoneticRepresentation,
@@ -55,7 +55,7 @@ type NullPick<T, F extends keyof NonNullable<T>> = Pick<
 /** A full annotated document, including all metadata and the translation(s) */
 const AnnotatedDocumentPage = (props: { id: string }) => {
   const [{ data }] = Dailp.useAnnotatedDocumentQuery({
-    variables: { slug: props.id },
+    variables: { id: props.id },
   })
   const doc = data?.document
   if (!doc) {
@@ -110,16 +110,8 @@ const TabSet = ({ doc }: { doc: Document }) => {
         id={`${Tabs.IMAGES}-panel`}
         tabId={Tabs.IMAGES}
       >
-        {doc.translatedPages ? (
-          <PageImages
-            pageImages={{
-              urls:
-                doc.translatedPages
-                  ?.filter((p) => !!p.image)
-                  .map((p) => p.image!.url) ?? [],
-            }}
-            document={doc}
-          />
+        {doc.pageImages ? (
+          <PageImages pageImages={doc.pageImages} document={doc} />
         ) : null}
       </TabPanel>
     </>
@@ -272,7 +264,7 @@ const DocumentContents = ({
   }
 
   const [{ data }] = Dailp.useDocumentContentsQuery({
-    variables: { slug: doc.slug, isReference: doc.isReference, morphemeSystem },
+    variables: { id: doc.id, isReference: doc.isReference, morphemeSystem },
   })
   const docContents = data?.document
   if (!docContents) {
@@ -280,18 +272,15 @@ const DocumentContents = ({
   }
   return (
     <>
-      {docContents.translatedPages?.map((seg, i) => (
-        <DocumentPage
+      {docContents.translatedSegments?.map((seg, i) => (
+        <Segment
           key={i}
-          segment={seg}
+          segment={seg.source}
           onOpenDetails={openDetails}
           viewMode={experienceLevel}
           tagSet={tagSet}
-          pageImages={
-            doc.translatedPages
-              ?.filter((p) => !!p.image)
-              .map((p) => p.image!.url) ?? []
-          }
+          translations={seg.translation as Dailp.TranslationBlock}
+          pageImages={doc.pageImages?.urls!}
           phoneticRepresentation={phoneticRepresentation}
           wordPanelDetails={wordPanelDetails}
         />
@@ -304,7 +293,8 @@ const DocumentContents = ({
           viewMode={experienceLevel}
           tagSet={tagSet}
           phoneticRepresentation={phoneticRepresentation}
-          pageImages={[]}
+          translations={null}
+          pageImages={doc.pageImages?.urls!}
           wordPanelDetails={wordPanelDetails}
         />
       ))}
@@ -315,10 +305,7 @@ const DocumentContents = ({
 export const DocumentTitleHeader = (p: {
   doc: Pick<Dailp.AnnotatedDoc, "slug" | "title"> & {
     date: NullPick<Dailp.AnnotatedDoc["date"], "year">
-    breadcrumbs: readonly Pick<
-      Dailp.AnnotatedDoc["breadcrumbs"][0],
-      "name" | "slug"
-    >[]
+    collection: NullPick<Dailp.AnnotatedDoc["collection"], "name" | "slug">
     audioRecording?: NullPick<
       Dailp.AnnotatedDoc["audioRecording"],
       "resourceUrl"
@@ -329,10 +316,11 @@ export const DocumentTitleHeader = (p: {
   <header className={css.docHeader}>
     <Breadcrumbs aria-label="Breadcrumbs">
       <Link href="/">Collections</Link>
-      {p.doc.breadcrumbs &&
-        p.doc.breadcrumbs.map((crumb) => (
-          <Link href={collectionRoute(crumb.slug)}>{crumb.name}</Link>
-        ))}
+      {p.doc.collection && (
+        <Link href={collectionRoute(p.doc.collection.slug!)}>
+          {p.doc.collection.name}
+        </Link>
+      )}
     </Breadcrumbs>
 
     <h1 className={css.docTitle}>
