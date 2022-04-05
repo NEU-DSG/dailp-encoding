@@ -14,6 +14,3 @@ export const glossarySectionId = (key: string) => `sec-${kebabCase(key)}`
 
 export const sourceCitationId = (key: string) => `source-${key}`
 export const sourceCitationRoute = (key: string) => `/sources#source-${key}`
-
-export const documentWordPath = (documentSlug: string, wordIndex: number) =>
-  `${documentRoute(documentSlug)}#w${wordIndex}`

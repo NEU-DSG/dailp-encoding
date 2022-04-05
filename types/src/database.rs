@@ -3,8 +3,9 @@ use {
     anyhow::Result,
     async_graphql::dataloader::*,
     futures::executor,
-    futures::future::join_all,
+    futures::future::{join_all, try_join},
     mongodb::bson,
+    serde::Serialize,
     std::collections::{HashMap, HashSet},
     tokio_stream::StreamExt,
 };
@@ -12,7 +13,7 @@ use {
 /// Connects to our backing database instance, providing high level functions
 /// for accessing the data therein.
 #[derive(Clone)]
-struct Database {
+pub struct Database {
     client: mongodb::Database,
 }
 
@@ -52,6 +53,79 @@ impl Database {
         }
     }
 
+    pub async fn update_tag(&self, tag: MorphemeTag) -> Result<()> {
+        upsert_one(&self.client.collection(Self::TAGS), &tag.id, &tag).await
+    }
+
+    pub async fn update_document(&self, tag: AnnotatedDoc) -> Result<()> {
+        upsert_one(&self.client.collection(Self::DOCUMENTS), &tag.meta.id, &tag).await
+    }
+
+    pub async fn update_connection(&self, tag: LexicalConnection) -> Result<()> {
+        upsert_one(&self.client.collection(Self::CONNECTIONS), &tag.id, &tag).await
+    }
+
+    pub async fn update_form(&self, tag: AnnotatedForm) -> Result<()> {
+        upsert_one(&self.client.collection(Self::WORDS), &tag.id, &tag).await
+    }
+
+    pub async fn update_person(&self, person: ContributorDetails) -> Result<()> {
+        upsert_one(
+            &self.client.collection(Self::PEOPLE),
+            &person.full_name,
+            &person,
+        )
+        .await
+    }
+
+    pub async fn update_image_source(&self, source: ImageSource) -> Result<()> {
+        upsert_one(
+            &self.client.collection(Self::IMAGE_SOURCES),
+            &source.id.0,
+            &source,
+        )
+        .await
+    }
+
+    pub async fn all_documents(&self, collection: Option<&str>) -> Result<Vec<AnnotatedDoc>> {
+        self.client
+            .collection(Self::DOCUMENTS)
+            .find(
+                collection.map(|collection| {
+                    bson::doc! { "collection": collection }
+                }),
+                mongodb::options::FindOptions::builder()
+                    .projection(bson::doc! { "segments": 0 })
+                    .build(),
+            )
+            .await?
+            .map::<Result<_>, _>(|doc| Ok(bson::from_document(doc?)?))
+            .collect()
+            .await
+    }
+
+    pub async fn all_collections(&self) -> Result<Vec<DocumentCollection>> {
+        let coll = self.client.collection::<AnnotatedDoc>(Self::DOCUMENTS);
+        Ok(coll
+            // Only show non-reference collections in the list.
+            .distinct("collection", bson::doc! { "isReference": false }, None)
+            .await?
+            .iter()
+            .filter_map(|doc| doc.as_str())
+            .map(|name| DocumentCollection {
+                name: name.to_owned(),
+            })
+            .collect())
+    }
+
+    pub async fn collection(&self, slug: String) -> Result<DocumentCollection> {
+        let collections = self.all_collections().await?;
+        Ok(collections
+            .into_iter()
+            .find(|coll| coll.make_slug() == slug)
+            .unwrap())
+    }
+
     pub async fn all_tags(&self) -> Result<Vec<MorphemeTag>> {
         self.client
             .collection(Self::TAGS)
@@ -69,6 +143,67 @@ impl Database {
             .await?
             .map::<Result<_>, _>(|doc| Ok(bson::from_document(doc?)?))
             .collect()
+            .await
+    }
+
+    pub async fn image_source(&self, id: &ImageSourceId) -> Result<Option<ImageSource>> {
+        Ok(self
+            .client
+            .collection(Self::IMAGE_SOURCES)
+            .find_one(bson::doc! { "_id": &id.0 }, None)
+            .await?
+            .and_then(|doc| bson::from_document(doc).ok()))
+    }
+
+    pub async fn words_in_document(&self, doc_id: &DocumentId) -> Result<Vec<AnnotatedForm>> {
+        let mut forms: Vec<AnnotatedForm> = self
+            .client
+            .collection(Self::WORDS)
+            .find(
+                bson::doc! { "position.documentId": bson::to_bson(doc_id)? },
+                None,
+            )
+            .await?
+            .map::<Result<_>, _>(|d| Ok(bson::from_document(d?)?))
+            .collect::<Result<Vec<_>>>()
+            .await?;
+        forms.sort_by_key(|f| f.position.index);
+        Ok(forms)
+    }
+
+    /// The number of words that belong to the given document ID.
+    pub async fn count_words_in_document(&self, doc_id: &DocumentId) -> Result<u64> {
+        let coll = self.client.collection::<AnnotatedForm>(Self::WORDS);
+        Ok(coll
+            .count_documents(
+                bson::doc! { "position.documentId": bson::to_bson(doc_id)? },
+                None,
+            )
+            .await?)
+    }
+
+    pub async fn word_search(&self, query: bson::Document) -> Result<Vec<AnnotatedForm>> {
+        let corpus_search = self.doc_search(query.clone());
+        let lexical_search = self
+            .client
+            .collection(Self::WORDS)
+            .find(query, None)
+            .await?
+            .map::<Result<_>, _>(|d| Ok(bson::from_document(d?)?))
+            .collect::<Result<Vec<_>>>();
+        // Search both document and lexical sources in parallel.
+        let (corpus_results, lexical_results) = try_join(corpus_search, lexical_search).await?;
+        // Then, chain the two result lists together.
+        Ok(corpus_results.into_iter().chain(lexical_results).collect())
+    }
+
+    pub async fn potential_syllabary_matches(&self, syllabary: &str) -> Result<Vec<AnnotatedForm>> {
+        let alternate_spellings = CherokeeOrthography::similar_syllabary_strings(syllabary);
+        let spelling_queries: Vec<_> = alternate_spellings
+            .into_iter()
+            .map(|s| bson::doc! { "source": s })
+            .collect();
+        self.word_search(bson::doc! { "$or": spelling_queries })
             .await
     }
 
@@ -137,23 +272,22 @@ impl Database {
     }
 
     async fn exact_connections(&self, morpheme: &MorphemeId) -> Result<Vec<MorphemeId>> {
-        unimplemented!()
-        // let col = self
-        //     .client
-        //     .collection::<LexicalConnection>(Self::CONNECTIONS);
-        // let morpheme = bson::to_bson(morpheme)?;
+        let col = self
+            .client
+            .collection::<LexicalConnection>(Self::CONNECTIONS);
+        let morpheme = bson::to_bson(morpheme)?;
 
-        // // Find the connections containing this entry.
-        // let froms = col.find(bson::doc! { "links": &morpheme }, None).await?;
+        // Find the connections containing this entry.
+        let froms = col.find(bson::doc! { "links": &morpheme }, None).await?;
 
-        // let froms = froms.filter_map(|doc| doc.ok());
+        let froms = froms.filter_map(|doc| doc.ok());
 
-        // Ok(froms
-        //     .collect::<Vec<_>>()
-        //     .await
-        //     .into_iter()
-        //     .flat_map(|conn| conn.links)
-        //     .collect())
+        Ok(froms
+            .collect::<Vec<_>>()
+            .await
+            .into_iter()
+            .flat_map(|conn| conn.links)
+            .collect())
     }
 
     async fn recursive_connections(&self, id: &MorphemeId) -> Result<HashSet<MorphemeId>> {
@@ -384,6 +518,23 @@ impl Database {
         Ok(document_words.chain(dictionary_words).collect())
     }
 
+    pub async fn document_manifest(
+        &self,
+        document_id: &DocumentId,
+        url: String,
+    ) -> Result<iiif::Manifest> {
+        // Retrieve the document from the DB.
+        let doc: AnnotatedDoc = self
+            .client
+            .collection(Self::DOCUMENTS)
+            .find_one(bson::doc! { "_id": bson::to_bson(document_id)? }, None)
+            .await?
+            .and_then(|doc| bson::from_document(doc).ok())
+            .unwrap();
+        // Build a IIIF manifest for this document.
+        Ok(iiif::Manifest::from_document(self, doc, url).await)
+    }
+
     /// USE WITH CAUTION! Clears the entire database of words, documents, etc.
     pub async fn clear_all(&self) -> Result<()> {
         Ok(self.client.drop(None).await?)
@@ -394,6 +545,10 @@ pub struct PagesDb {
     conn: mongodb::Collection<crate::page::Page>,
 }
 impl PagesDb {
+    pub async fn update(&self, page: crate::page::Page) -> Result<()> {
+        upsert_one(&self.conn, &page.id, &page).await
+    }
+
     pub async fn all(&self) -> Result<Vec<crate::page::Page>> {
         self.conn
             .find(None, None)
@@ -427,25 +582,31 @@ impl AnnotationsDb {
             .collect()
             .await
     }
+
+    pub async fn update(&self, annote: annotation::Annotation) -> Result<()> {
+        upsert_one(&self.conn, &annote.id.0, &annote).await
+    }
 }
+
+#[derive(Clone, Eq, PartialEq, Hash)]
+pub struct TagId(pub String);
 
 #[async_trait::async_trait]
 impl Loader<TagId> for Database {
     type Value = MorphemeTag;
     type Error = mongodb::error::Error;
     async fn load(&self, keys: &[TagId]) -> Result<HashMap<TagId, Self::Value>, Self::Error> {
-        todo!()
-        // let mut results = HashMap::new();
-        // // Turn keys into strings for Mongo request.
-        // let keys: Vec<_> = keys.iter().map(|x| &*x.0).collect();
-        // let items: Vec<Self::Value> =
-        //     find_all_keys(self.client.collection(Self::TAGS), keys).await?;
+        let mut results = HashMap::new();
+        // Turn keys into strings for Mongo request.
+        let keys: Vec<_> = keys.iter().map(|x| &*x.0).collect();
+        let items: Vec<Self::Value> =
+            find_all_keys(self.client.collection(Self::TAGS), keys).await?;
 
-        // for tag in items {
-        //     results.insert(TagId(tag.id.clone()), tag);
-        // }
+        for tag in items {
+            results.insert(TagId(tag.id.clone()), tag);
+        }
 
-        // Ok(results)
+        Ok(results)
     }
 }
 
@@ -468,24 +629,27 @@ impl Loader<DocumentId> for Database {
     }
 }
 
+#[derive(Clone, Eq, PartialEq, Hash)]
+pub struct PersonId(pub String);
+
 #[async_trait::async_trait]
-impl Loader<PersonFullName> for Database {
+impl Loader<PersonId> for Database {
     type Value = ContributorDetails;
     type Error = mongodb::error::Error;
-    async fn load(
-        &self,
-        keys: &[PersonFullName],
-    ) -> Result<HashMap<PersonFullName, Self::Value>, Self::Error> {
+    async fn load(&self, keys: &[PersonId]) -> Result<HashMap<PersonId, Self::Value>, Self::Error> {
         // Turn keys into strings for Mongo request.
         let keys: Vec<_> = keys.iter().map(|x| &x.0 as &str).collect();
         let items: Vec<Self::Value> =
             find_all_keys(self.client.collection(Self::PEOPLE), keys).await?;
         Ok(items
             .into_iter()
-            .map(|tag| (PersonFullName(tag.full_name.clone()), tag))
+            .map(|tag| (PersonId(tag.full_name.clone()), tag))
             .collect())
     }
 }
+
+#[derive(Clone, Eq, PartialEq, Hash)]
+pub struct PageId(pub String);
 
 #[async_trait::async_trait]
 impl Loader<PageId> for Database {
@@ -517,4 +681,44 @@ where
         .filter_map(|doc| doc.ok())
         .collect()
         .await)
+}
+
+async fn upsert_one<T, K>(conn: &mongodb::Collection<T>, id: &K, item: &T) -> Result<()>
+where
+    K: Serialize,
+    T: Serialize,
+{
+    conn.update_one(
+        bson::doc! { "_id": bson::to_bson(id)? },
+        bson::doc! { "$set": bson::to_document(item)? },
+        upsert(),
+    )
+    .await?;
+    Ok(())
+}
+
+fn upsert() -> mongodb::options::UpdateOptions {
+    mongodb::options::UpdateOptions::builder()
+        .upsert(true)
+        .build()
+}
+
+/// One particular morpheme and all the known words that contain that exact morpheme.
+#[derive(async_graphql::SimpleObject)]
+pub struct MorphemeReference {
+    /// Phonemic shape of the morpheme.
+    pub morpheme: String,
+    /// List of words that contain this morpheme.
+    pub forms: Vec<AnnotatedForm>,
+}
+
+/// A list of words grouped by the document that contains them.
+#[derive(async_graphql::SimpleObject)]
+pub struct WordsInDocument {
+    /// Unique identifier of the containing document
+    pub document_id: Option<String>,
+    /// What kind of document contains these words (e.g. manuscript vs dictionary)
+    pub document_type: Option<DocumentType>,
+    /// List of annotated and potentially segmented forms
+    pub forms: Vec<AnnotatedForm>,
 }

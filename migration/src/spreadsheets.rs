@@ -7,8 +7,8 @@ use crate::translations::DocResult;
 use anyhow::Result;
 use dailp::{
     convert_udb, root_noun_surface_forms, root_verb_surface_forms, AnnotatedDoc, AnnotatedForm,
-    AnnotatedSeg, AudioSlice, Contributor, Database, Date, DocumentId, DocumentMetadata,
-    LexicalConnection, LineBreak, MorphemeId, MorphemeSegment, PageBreak, Uuid,
+    AnnotatedPhrase, AnnotatedSeg, AudioSlice, BlockType, Contributor, Database, Date,
+    DocumentMetadata, LexicalConnection, LineBreak, MorphemeId, MorphemeSegment, PageBreak,
 };
 use dailp::{PositionInDocument, SourceAttribution};
 use log::{error, info, warn};
@@ -30,13 +30,31 @@ pub struct LexicalEntryWithForms {
     pub forms: Vec<AnnotatedForm>,
 }
 
+/// Converts a set of annotated documents into our preferred access format, then
+/// pushes that data into the underlying database.
+/// Existing versions of these documents are overwritten with the new data.
+pub async fn migrate_documents_to_db(
+    db: &Database,
+    docs: (AnnotatedDoc, Vec<LexicalConnection>),
+) -> Result<()> {
+    // Write the contents of each document to our database.
+
+    let (d, conns) = docs;
+    db.update_document(d).await?;
+    for r in conns {
+        db.update_connection(r).await?;
+    }
+
+    Ok(())
+}
+
 /// Takes an unprocessed document with metadata, passing it through our TEI
 /// template to produce an xml document named like the given title.
 pub fn write_to_file(doc: &AnnotatedDoc) -> Result<()> {
     let contents = render_template(doc)?;
     // Make sure the output folder exists.
     std::fs::create_dir_all(OUTPUT_DIR)?;
-    let file_name = format!("{}/{}.xml", OUTPUT_DIR, doc.meta.short_name);
+    let file_name = format!("{}/{}.xml", OUTPUT_DIR, doc.meta.id.0);
     info!("writing to {}", file_name);
     let mut f = File::create(file_name)?;
     f.write_all(contents.as_bytes())?;
@@ -109,28 +127,18 @@ impl SheetResult {
     }
     /// Parse this sheet as the document index.
     pub fn into_index(self) -> Result<DocumentIndex> {
-        let mut sections = Vec::new();
-        for row in self.values.into_iter().skip(1) {
-            if row.len() >= 2 && row[0].is_empty() {
-                // This is a new section.
-                sections.push(DocumentIndexCollection {
-                    title: row[1].clone(),
-                    sheet_ids: Vec::new(),
-                });
-            } else if row.len() > 11 && !row[11].is_empty() {
-                sections
-                    .last_mut()
-                    .unwrap()
-                    .sheet_ids
-                    .push(Self::drive_url_to_id(&row[11]).to_owned());
-            }
-        }
         Ok(DocumentIndex {
-            collections: sections,
+            sheet_ids: self
+                .values
+                .iter()
+                .skip(1)
+                .filter(|row| row.len() > 11 && !row[11].is_empty())
+                .map(|row| Self::drive_url_to_id(&row[11]).to_owned())
+                .collect(),
         })
     }
 
-    pub fn into_adjs(self, doc_id: DocumentId, year: i32) -> Result<Vec<LexicalEntryWithForms>> {
+    pub fn into_adjs(self, doc_id: &str, year: i32) -> Result<Vec<LexicalEntryWithForms>> {
         use rayon::prelude::*;
         Ok(self
             .values
@@ -153,7 +161,11 @@ impl SheetResult {
                 let page_number = root_values.next()?;
                 let mut form_values = root_values;
                 let date = Date::from_ymd(year, 1, 1);
-                let position = PositionInDocument::new(doc_id.clone(), page_number, idx as i32 + 1);
+                let position = PositionInDocument::new(
+                    dailp::DocumentId(doc_id.to_string()),
+                    page_number,
+                    idx as i32 + 1,
+                );
                 Some(LexicalEntryWithForms {
                     forms: root_verb_surface_forms(
                         &position,
@@ -167,7 +179,7 @@ impl SheetResult {
                         false,
                     ),
                     entry: AnnotatedForm {
-                        id: None,
+                        id: position.make_id(&root_gloss, true),
                         normalized_source: None,
                         simple_phonetics: None,
                         phonemic: None,
@@ -191,7 +203,7 @@ impl SheetResult {
     }
     pub fn into_nouns(
         self,
-        doc_id: DocumentId,
+        doc_id: &str,
         year: i32,
         after_root: usize,
         has_comment: bool,
@@ -217,7 +229,11 @@ impl SheetResult {
                     // Skip page ref and category.
                     let mut form_values = root_values.skip(after_root);
                     let date = Date::from_ymd(year, 1, 1);
-                    let position = PositionInDocument::new(doc_id.clone(), page_number?, index);
+                    let position = PositionInDocument::new(
+                        dailp::DocumentId(doc_id.to_owned()),
+                        page_number?,
+                        index,
+                    );
                     Some(LexicalEntryWithForms {
                         forms: root_noun_surface_forms(
                             &position,
@@ -226,7 +242,7 @@ impl SheetResult {
                             has_comment,
                         ),
                         entry: AnnotatedForm {
-                            id: None,
+                            id: position.make_id(&root_gloss, true),
                             position,
                             normalized_source: None,
                             simple_phonetics: None,
@@ -252,7 +268,10 @@ impl SheetResult {
             .collect())
     }
 
-    pub async fn into_references(self, doc_name: &str) -> Vec<dailp::LexicalConnection> {
+    pub async fn into_references(
+        self,
+        doc_id: &dailp::DocumentId,
+    ) -> Vec<dailp::LexicalConnection> {
         self.values
             .into_iter()
             // First column is the name of the field, useless when parsing so we ignore it.
@@ -261,7 +280,7 @@ impl SheetResult {
                 let mut row = row.into_iter();
                 Some(dailp::LexicalConnection::new(
                     MorphemeId {
-                        document_name: Some(doc_name.to_owned()),
+                        document_id: Some(doc_id.clone()),
                         gloss: row.next()?,
                         index: None,
                     },
@@ -274,7 +293,6 @@ impl SheetResult {
     /// Parse this sheet as a document metadata listing.
     pub async fn into_metadata(
         self,
-        db: &dailp::Database,
         is_reference: bool,
         order_index: i64,
     ) -> Result<DocumentMetadata> {
@@ -348,8 +366,7 @@ impl SheetResult {
             .ok_or_else(|| anyhow::format_err!("No audio resources"))?;
 
         Ok(DocumentMetadata {
-            id: Default::default(),
-            short_name: doc_id.remove(1),
+            id: dailp::DocumentId(doc_id.remove(1)),
             title: title.remove(1),
             sources,
             collection: source.pop().filter(|s| !s.is_empty()),
@@ -361,12 +378,10 @@ impl SheetResult {
                     .into_translation(),
             ),
             page_images: if let (Some(ids), Some(source)) = (image_ids, image_source) {
-                db.image_source_by_title(&source)
-                    .await?
-                    .map(|source| dailp::IiifImages {
-                        source: source.id,
-                        ids,
-                    })
+                Some(dailp::IiifImages {
+                    source: dailp::ImageSourceId(source),
+                    ids,
+                })
             } else {
                 None
             },
@@ -456,12 +471,6 @@ impl SheetResult {
 
 #[derive(Debug, Serialize)]
 pub struct DocumentIndex {
-    pub collections: Vec<DocumentIndexCollection>,
-}
-
-#[derive(Debug, Serialize)]
-pub struct DocumentIndexCollection {
-    pub title: String,
     pub sheet_ids: Vec<String>,
 }
 
@@ -540,11 +549,10 @@ impl<'a> AnnotatedLine {
                             .map(|x| x.trim().to_owned());
                         let w = AnnotatedForm {
                             // TODO Extract into public function!
-                            // id: format!("{}.{}", meta.id.0, word_index),
-                            id: None,
+                            id: format!("{}.{}", meta.id.0, word_index),
                             position: PositionInDocument::new(
                                 meta.id.clone(),
-                                "1".to_owned(),
+                                1.to_string(),
                                 word_index,
                             ),
                             source: line.rows[0].items[i].trim().replace(LINE_BREAK, ""),
@@ -597,14 +605,18 @@ impl<'a> AnnotatedLine {
         lines: Vec<Self>,
         document_id: &dailp::DocumentId,
         date: &Option<Date>,
-    ) -> Vec<Vec<Vec<AnnotatedSeg>>> {
-        // The first page needs a break.
+    ) -> Vec<AnnotatedSeg> {
+        let mut segments = Vec::<AnnotatedSeg>::new();
+        let mut stack = Vec::<AnnotatedPhrase>::new();
+        let mut child_segments = Vec::<AnnotatedSeg>::new();
         let mut line_num = 0;
         let mut page_num = 0;
         let mut word_idx = 1;
         let mut seg_idx = 1;
         let mut block_idx = 1;
-        let mut pages = vec![vec![vec![]]];
+
+        // The first page needs a break.
+        segments.push(AnnotatedSeg::PageBreak(PageBreak { index: page_num }));
 
         // Process each line into a series of segments.
         for (line_idx, line) in lines.into_iter().enumerate() {
@@ -613,10 +625,10 @@ impl<'a> AnnotatedLine {
                 let lb = AnnotatedSeg::LineBreak(LineBreak {
                     index: line_num as i32,
                 });
-                if let Some(p) = pages.last_mut() {
-                    if let Some(p) = p.last_mut() {
-                        p.push(lb);
-                    }
+                if let Some(p) = stack.last_mut() {
+                    p.parts.push(lb);
+                } else {
+                    child_segments.push(lb);
                 }
                 line_num += 1;
             }
@@ -644,19 +656,24 @@ impl<'a> AnnotatedLine {
                 // Check for the start of a block.
                 while source.starts_with(BLOCK_START) {
                     source = &source[1..];
-                    pages.last_mut().unwrap().push(Vec::new());
+                    stack.push(AnnotatedPhrase {
+                        ty: BlockType::Block,
+                        index: block_idx,
+                        parts: child_segments,
+                    });
+                    child_segments = Vec::new();
                     block_idx += 1;
                 }
                 // Check for the start of a phrase.
-                // while source.starts_with(PHRASE_START) {
-                //     source = &source[1..];
-                //     stack.push(AnnotatedPhrase {
-                //         ty: BlockType::Phrase,
-                //         index: seg_idx,
-                //         parts: Vec::new(),
-                //     });
-                //     seg_idx += 1;
-                // }
+                while source.starts_with(PHRASE_START) {
+                    source = &source[1..];
+                    stack.push(AnnotatedPhrase {
+                        ty: BlockType::Phrase,
+                        index: seg_idx,
+                        parts: Vec::new(),
+                    });
+                    seg_idx += 1;
+                }
                 // Remove all ending brackets from the source.
                 let mut blocks_to_pop = 0;
                 while source.ends_with(BLOCK_END) {
@@ -664,10 +681,10 @@ impl<'a> AnnotatedLine {
                     blocks_to_pop += 1;
                 }
                 let mut count_to_pop = 0;
-                // while source.ends_with(PHRASE_END) {
-                //     source = &source[..source.len() - 1];
-                //     count_to_pop += 1;
-                // }
+                while source.ends_with(PHRASE_END) {
+                    source = &source[..source.len() - 1];
+                    count_to_pop += 1;
+                }
                 // Construct the final word.
                 let finished_word = AnnotatedSeg::Word(AnnotatedForm {
                     source: source.to_owned(),
@@ -677,47 +694,52 @@ impl<'a> AnnotatedLine {
                     ..word
                 });
                 // Add the current word to the current phrase or the root document.
-                if let Some(paragraphs) = pages.last_mut() {
-                    if let Some(p) = paragraphs.last_mut() {
-                        p.push(finished_word);
-                    }
+                if let Some(p) = stack.last_mut() {
+                    p.parts.push(finished_word);
+                } else {
+                    segments.push(finished_word);
                 }
                 // Check for the end of phrases.
-                // for _ in 0..count_to_pop {
-                //     if let Some(p) = stack.pop() {
-                //         let finished_p = AnnotatedSeg::Block(p);
-                //         if let Some(top) = stack.last_mut() {
-                //             top.parts.push(finished_p);
-                //         } else {
-                //             paragraphs.push(finished_p);
-                //         }
-                //     }
-                // }
+                for _ in 0..count_to_pop {
+                    if let Some(p) = stack.pop() {
+                        let finished_p = AnnotatedSeg::Block(p);
+                        if let Some(top) = stack.last_mut() {
+                            top.parts.push(finished_p);
+                        } else {
+                            segments.push(finished_p);
+                        }
+                    }
+                }
                 // Check for the end of blocks.
-                // for _ in 0..blocks_to_pop {
-                //     if let Some(p) = stack.pop() {
-                //         let finished_p = AnnotatedSeg::Block(p);
-                //         if let Some(top) = stack.last_mut() {
-                //             top.parts.push(finished_p);
-                //         } else {
-                //             paragraphs.push(finished_p);
-                //         }
-                //     }
-                // }
+                for _ in 0..blocks_to_pop {
+                    if let Some(p) = stack.pop() {
+                        let finished_p = AnnotatedSeg::Block(p);
+                        if let Some(top) = stack.last_mut() {
+                            top.parts.push(finished_p);
+                        } else {
+                            segments.push(finished_p);
+                        }
+                    }
+                }
             }
             if line.ends_page {
                 page_num += 1;
-                pages.push(Vec::new());
+                segments.push(AnnotatedSeg::PageBreak(PageBreak { index: page_num }));
             }
+        }
+
+        while let Some(p) = stack.pop() {
+            error!("dangling block!");
+            segments.push(AnnotatedSeg::Block(p));
         }
 
         // If the document ends in a page break, remove it.
         // This prevents having an extra page break at the end of each document.
-        if pages.last().map_or(false, |s| s.is_empty()) {
-            pages.pop();
+        if let Some(AnnotatedSeg::PageBreak(..)) = segments.last() {
+            segments.pop();
         }
 
-        pages
+        segments
     }
 }
 

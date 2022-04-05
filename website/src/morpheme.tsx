@@ -6,8 +6,8 @@ import { Clickable } from "reakit/Clickable"
 import Link from "src/components/link"
 import * as Dailp from "src/graphql/dailp"
 import * as css from "./morpheme.css"
-import { documentWordPath, glossaryRoute } from "./routes"
-import { TagSet, morphemeDisplayTag, orthographyForTagSet } from "./types"
+import { glossaryRoute } from "./routes"
+import { TagSet, morphemeDisplayTag } from "./types"
 
 type BasicMorphemeSegment = NonNullable<Dailp.FormFieldsFragment["segments"]>[0]
 
@@ -19,7 +19,10 @@ export const MorphemeDetails = (props: {
   hideDialog: () => void
 }) => {
   // Use the right tag name from the jump.
-  const matchingTag = props.segment.matchingTag
+  const matchingTag = morphemeDisplayTag(
+    props.segment.matchingTag,
+    props.tagSet
+  )
   const gloss = matchingTag?.tag || props.segment.gloss
   const occurrences = <h3>Known Occurrences of "{gloss}"</h3>
 
@@ -27,16 +30,13 @@ export const MorphemeDetails = (props: {
   // TODO Only request the specific definition we need, not all three.
   const [tag] = Dailp.useTagQuery({
     pause: !props.segment.gloss,
-    variables: {
-      gloss: props.segment.gloss,
-      system: orthographyForTagSet(props.tagSet),
-    },
+    variables: { gloss: props.segment.gloss },
   })
 
   let titleArea: ReactNode | null = null
   let content = occurrences
   if (tag.data?.tag) {
-    const matchingTag = tag.data.tag
+    const matchingTag = morphemeDisplayTag(tag.data.tag, props.tagSet)
     titleArea = matchingTag?.title ? (
       <h2 className={css.margined}>{matchingTag.title}</h2>
     ) : null
@@ -44,7 +44,7 @@ export const MorphemeDetails = (props: {
       <>
         {matchingTag?.definition ? <p>{matchingTag.definition}</p> : null}
         <p>
-          <Link href={glossaryRoute(tag.data.tag.tag)}>View in glossary</Link>
+          <Link href={glossaryRoute(tag.data.tag.id)}>View in glossary</Link>
         </p>
         {occurrences}
       </>
@@ -88,8 +88,9 @@ const SimilarMorphemeList = (props: {
   const [{ data, fetching, error }] = Dailp.useMorphemeQuery({
     pause: !props.gloss,
     variables: {
-      documentId: props.isGlobal ? null : props.documentId,
-      morphemeGloss: props.gloss,
+      morphemeId: props.isGlobal
+        ? props.gloss
+        : `${props.documentId}:${props.gloss}`,
     },
   })
 
@@ -111,16 +112,18 @@ const SimilarMorphemeList = (props: {
               <li key={i * 10000 + j}>
                 {word.normalizedSource ?? word.source}:{" "}
                 {word.englishGloss.join(", ")} (
-                {!!word.document ? (
+                {word.documentId ? (
                   <>
                     {word.index ? (
                       <Link
-                        href={documentWordPath(word.document?.slug, word.index)}
+                        href={`/documents/${word.documentId?.toLowerCase()}#w${
+                          word.index
+                        }`}
                       >
-                        {word.document.slug.toUpperCase()}
+                        {word.documentId}
                       </Link>
                     ) : (
-                      <>{word.document.slug.toUpperCase()}</>
+                      <>{word.documentId}</>
                     )}
                   </>
                 ) : null}

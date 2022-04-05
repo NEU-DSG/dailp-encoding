@@ -33,13 +33,13 @@ export const EditablePageContents = (props: Props) => (
 )
 
 /* const EditablePageSSR = (props: Props) => {
- *   const creds = useCredentials()
- *   if (creds) {
- *     return <EditablePageInner {...props} />
- *   } else {
- *     return <PageContents page={props.data.dailp.page} />
- *   }
- * } */
+*   const creds = useCredentials()
+*   if (creds) {
+*     return <EditablePageInner {...props} />
+*   } else {
+*     return <PageContents page={props.data.dailp.page} />
+*   }
+* } */
 
 const EditablePageInner = (props: Props) => {
   const staticData = props.data.dailp.page

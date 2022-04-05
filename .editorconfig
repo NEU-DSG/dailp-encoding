@@ -3,6 +3,3 @@ indent_size = 2
 
 [*.rs]
 indent_size = 4
-
-[*.sql]
-indent_size = 2
