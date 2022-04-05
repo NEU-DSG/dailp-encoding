@@ -1,7 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(sqlx::Type, Serialize, Deserialize, Clone, Debug, PartialOrd, Ord, PartialEq, Eq)]
-#[sqlx(transparent)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialOrd, Ord, PartialEq, Eq)]
 pub struct Date(pub chrono::NaiveDate);
 
 impl Date {

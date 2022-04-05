@@ -43,20 +43,6 @@ export function morphemeDisplayTag<T>(
   return matchingTag ?? null
 }
 
-export function orthographyForTagSet(
-  tagSet: TagSet
-): Dailp.CherokeeOrthography {
-  let system = Dailp.CherokeeOrthography.Taoc
-  if (tagSet === TagSet.Crg) {
-    system = Dailp.CherokeeOrthography.Crg
-  } else if (tagSet === TagSet.Taoc) {
-    system = Dailp.CherokeeOrthography.Taoc
-  } else if (tagSet === TagSet.Learner) {
-    system = Dailp.CherokeeOrthography.Learner
-  }
-  return system
-}
-
 export const tagSetForMode = (experienceLevel: ViewMode) => {
   let tagSet = TagSet.Dailp
   if (experienceLevel === ViewMode.AnalysisTth) {

@@ -15,22 +15,14 @@ import {
 import Layout from "../layout"
 import { TagSetPicker } from "../mode"
 import { glossarySectionId, morphemeTagId } from "../routes"
-import { TagSet } from "../types"
+import { TagSet, morphemeDisplayTag } from "../types"
 
 const GlossaryPage = () => {
-  const [tagSet, setTagSet] = useState<TagSet>(TagSet.Learner)
-  let system = Dailp.CherokeeOrthography.Taoc
-  if (tagSet === TagSet.Crg) {
-    system = Dailp.CherokeeOrthography.Crg
-  } else if (tagSet === TagSet.Taoc) {
-    system = Dailp.CherokeeOrthography.Taoc
-  } else if (tagSet === TagSet.Learner) {
-    system = Dailp.CherokeeOrthography.Learner
-  }
-  const [{ data }] = Dailp.useGlossaryQuery({ variables: { system } })
+  const [{ data }] = Dailp.useGlossaryQuery()
   const tags = data?.allTags
   // Group the tags by type.
   const groupedTags = groupBy(tags, (t) => t.morphemeType)
+  const [tagSet, setTagSet] = useState<TagSet>(TagSet.Learner)
   return (
     <Layout>
       <Helmet title="Glossary of Terms" />
@@ -65,15 +57,22 @@ const GlossaryPage = () => {
             <section key={ty} className={wideSection}>
               <h2 id={glossarySectionId(ty)}>{pluralize(ty)}</h2>
               <dl>
-                {tags.map((tag) => (
-                  <React.Fragment key={tag.tag}>
-                    <dt id={morphemeTagId(tag.tag)}>
-                      <span className={std.smallCaps}>{tag.tag}</span> –{" "}
-                      {tag.title}
-                    </dt>
-                    <dd>{tag.definition}</dd>
-                  </React.Fragment>
-                ))}
+                {tags.map((tag) => {
+                  const scopedTag = morphemeDisplayTag(tag, tagSet)
+                  if (scopedTag) {
+                    return (
+                      <React.Fragment key={tag.id}>
+                        <dt id={morphemeTagId(tag.id)}>
+                          <span className={std.smallCaps}>{scopedTag.tag}</span>{" "}
+                          – {scopedTag.title}
+                        </dt>
+                        <dd>{scopedTag.definition}</dd>
+                      </React.Fragment>
+                    )
+                  } else {
+                    return null
+                  }
+                })}
               </dl>
             </section>
           )
