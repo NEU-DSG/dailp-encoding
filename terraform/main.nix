@@ -69,7 +69,8 @@
     # for the current environment.
     state = {
       bucket = "dailp-${config.setup.stage}-terraform-state-bucket";
-      table = "dailp-${config.setup.stage}-terraform-state-locks";
+      table = ''
+        ''${var.deployment_stage == "dev" ? "dailp-dev-terraform-state-locks" : "dailp-prod-terraform-state-locks"}'';
     };
     vpc = "\${var.aws_vpc_id}";
     subnets = {
