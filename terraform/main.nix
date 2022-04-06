@@ -30,7 +30,7 @@
       default = "dev";
       validation = {
         condition = ''''${contains(["dev", "prod"], var.deployment_stage)}'';
-        error_message = "Deployment stage failed to match pattern";
+        error_message = ''Deployment stage must be either "dev" or "prod".'';
       };
     };
     aws_vpc_id = requiredString;
