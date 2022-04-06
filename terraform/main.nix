@@ -28,7 +28,6 @@
       type = "string";
       # Default to the 'dev' environment unless specified.
       default = "dev";
-      nullable = false;
     };
     aws_vpc_id = requiredString;
     aws_subnet_primary = requiredString;
