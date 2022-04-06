@@ -28,6 +28,10 @@
       type = "string";
       # Default to the 'dev' environment unless specified.
       default = "dev";
+      validation = {
+        condition = ''''${contains(["dev", "prod"], var.deployment_stage)}'';
+        error_message = "Deployment stage failed to match pattern";
+      };
     };
     aws_vpc_id = requiredString;
     aws_subnet_primary = requiredString;
