@@ -261,7 +261,7 @@ in {
           target_user = "root";
           target_host = "\${aws_instance.${name}.public_ip}";
           ssh_agent = false;
-          ssh_private_key = getEnv "AWS_SSH_KEY";
+          ssh_private_key = "\${var.aws_ssh_key}";
           arguments = mkMerge ([{
             hostName = config.resource.aws_instance."${name}".tags.Name;
             primaryAddress = primaryIp;

@@ -16,20 +16,19 @@ jobs:
     runs-on: ubuntu-20.04
     environment: ${{ github.base_ref == 'main' && 'Development' || 'Production' }}
     env:
-      DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
-      GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
-      AWS_VPC_ID: ${{ secrets.AWS_VPC_ID }}
-      AWS_SUBNET_PRIMARY: ${{ secrets.AWS_SUBNET_PRIMARY }}
-      AWS_ZONE_PRIMARY: ${{ secrets.AWS_ZONE_PRIMARY }}
-      AWS_SUBNET_SECONDARY0: ${{ secrets.AWS_SUBNET_SECONDARY0 }}
-      AWS_ZONE_SECONDARY0: ${{ secrets.AWS_ZONE_SECONDARY0 }}
-      AWS_SUBNET_SECONDARY1: ${{ secrets.AWS_SUBNET_SECONDARY1 }}
-      AWS_ZONE_SECONDARY1: ${{ secrets.AWS_ZONE_SECONDARY1 }}
-      AWS_SSH_KEY: ${{ secrets.AWS_SSH_KEY }}
-      GIT_REPOSITORY_URL: https://github.com/neu-dsg/dailp-encoding
-      OAUTH_TOKEN: ${{ secrets.OAUTH_TOKEN }}
+      TF_VAR_database_password: ${{ secrets.DATABASE_PASSWORD }}
+      TF_VAR_aws_vpc_id: ${{ secrets.AWS_VPC_ID }}
+      TF_VAR_aws_subnet_primary: ${{ secrets.AWS_SUBNET_PRIMARY }}
+      TF_VAR_aws_zone_primary: ${{ secrets.AWS_ZONE_PRIMARY }}
+      TF_VAR_aws_subnet_secondary0: ${{ secrets.AWS_SUBNET_SECONDARY0 }}
+      TF_VAR_aws_zone_secondary0: ${{ secrets.AWS_ZONE_SECONDARY0 }}
+      TF_VAR_aws_subnet_secondary1: ${{ secrets.AWS_SUBNET_SECONDARY1 }}
+      TF_VAR_aws_zone_secondary1: ${{ secrets.AWS_ZONE_SECONDARY1 }}
+      TF_VAR_aws_ssh_key: ${{ secrets.AWS_SSH_KEY }}
+      TF_VAR_git_repository_url: https://github.com/neu-dsg/dailp-encoding
+      TF_VAR_github_oauth_token: ${{ secrets.OAUTH_TOKEN }}
+      TF_VAR_deployment_stage: ${{ github.base_ref == 'main' && 'dev' || 'prod' }}
       RUST_LOG: info
-      TF_STAGE: ${{ github.base_ref == 'main' && 'dev' || 'prod' }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v2

@@ -33,8 +33,8 @@ with builtins; {
         tags = config.setup.global_tags;
         description =
           "Digital Archive of American Indian Languages Preservation and Perseverance";
-        repository = lib.toLower (getEnv "GIT_REPOSITORY_URL");
-        oauth_token = getEnv "OAUTH_TOKEN";
+        repository = "\${var.git_repository_url}";
+        oauth_token = "\${var.github_oauth_token}";
         iam_service_role_arn = "\${aws_iam_role.amplify_role.arn}";
         custom_rule = [
           {
