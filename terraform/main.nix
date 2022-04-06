@@ -24,15 +24,6 @@
     requiredString = { type = "string"; };
     sensitiveString = requiredString // { sensitive = true; };
   in {
-    deployment_stage = {
-      type = "string";
-      # Default to the 'dev' environment unless specified.
-      default = "dev";
-      validation = {
-        condition = ''''${contains(["dev", "prod"], var.deployment_stage)}'';
-        error_message = ''Deployment stage must be either "dev" or "prod".'';
-      };
-    };
     aws_vpc_id = requiredString;
     aws_subnet_primary = requiredString;
     aws_subnet_secondary0 = requiredString;
@@ -50,7 +41,7 @@
 
   # Gives all modules access to which stage we're deploying to, while also
   # verifying that its one of the stages we actually use.
-  setup.stage = "\${var.deployment_stage}";
+  setup.stage = builtins.getEnv "TF_VAR_deployment_stage";
 
   terraform.required_providers.aws = {
     source = "hashicorp/aws";
@@ -69,8 +60,7 @@
     # for the current environment.
     state = {
       bucket = "dailp-${config.setup.stage}-terraform-state-bucket";
-      table = ''
-        ''${var.deployment_stage == "dev" ? "dailp-dev-terraform-state-locks" : "dailp-prod-terraform-state-locks"}'';
+      table = "dailp-${config.setup.stage}-terraform-state-locks";
     };
     vpc = "\${var.aws_vpc_id}";
     subnets = {
