@@ -21,10 +21,7 @@
   ];
 
   variable = let
-    requiredString = {
-      type = "string";
-      nullable = false;
-    };
+    requiredString = { type = "string"; };
     sensitiveString = requiredString // { sensitive = true; };
   in {
     deployment_stage = {
