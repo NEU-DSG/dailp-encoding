@@ -5,7 +5,7 @@ with lib; {
       bucket = mkOption { type = str; };
       table = mkOption { type = str; };
     };
-    stage = mkOption { type = enum [ "dev" "prod" ]; };
+    stage = mkOption { type = str; };
     vpc = mkOption { type = str; };
     subnets = mkOption { type = attrsOf str; };
     global_tags = mkOption {
@@ -30,10 +30,8 @@ with lib; {
       lifecycle.prevent_destroy = true;
       logging = {
         # These logging buckets are externally managed.
-        target_bucket = if config.setup.stage == "dev" then
-          "s3-server-access-logs-783177801354"
-        else
-          "s3-server-access-logs-363539660090";
+        target_bucket = ''
+          ''${var.deployment_stage == "dev" ? "s3-server-access-logs-783177801354" : "s3-server-access-logs-363539660090"}'';
         target_prefix = "/${config.setup.state.bucket}";
       };
     };
