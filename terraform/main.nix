@@ -9,12 +9,7 @@
 #   with Terraform property names.
 # - Functions should be in "camelCase" because that aligns with Nix standard practice.
 # - File names in this folder should be "kebab-case.nix"
-let
-  inherit (builtins) getEnv;
-  stage_var = getEnv "TF_STAGE";
-  # Default to the 'dev' environment unless specified.
-  stage = if stage_var == "" then "dev" else stage_var;
-in {
+{
   imports = [
     ./bootstrap.nix
     ./functions.nix
@@ -23,11 +18,32 @@ in {
     ./website.nix
     ./nu-tags.nix
     ./database-sql.nix
+    ./ci-runner.nix
   ];
+
+  variable = let
+    requiredString = { type = "string"; };
+    sensitiveString = requiredString // { sensitive = true; };
+  in {
+    aws_vpc_id = requiredString;
+    aws_subnet_primary = requiredString;
+    aws_subnet_secondary0 = requiredString;
+    aws_subnet_secondary1 = requiredString;
+    aws_zone_primary = requiredString;
+    aws_zone_secondary0 = requiredString;
+    aws_zone_secondary1 = requiredString;
+    git_repository_url = requiredString;
+
+    # Sensitive secret input variables
+    database_password = sensitiveString;
+    github_oauth_token = sensitiveString;
+    aws_ssh_key = sensitiveString;
+    cluster_join_token = sensitiveString;
+  };
 
   # Gives all modules access to which stage we're deploying to, while also
   # verifying that its one of the stages we actually use.
-  setup.stage = stage;
+  setup.stage = builtins.getEnv "TF_VAR_deployment_stage";
 
   terraform.required_providers.aws = {
     source = "hashicorp/aws";
@@ -48,11 +64,11 @@ in {
       bucket = "dailp-${config.setup.stage}-terraform-state-bucket";
       table = "dailp-${config.setup.stage}-terraform-state-locks";
     };
-    vpc = getEnv "AWS_VPC_ID";
+    vpc = "\${var.aws_vpc_id}";
     subnets = {
-      primary = getEnv "AWS_SUBNET_PRIMARY";
-      secondary = getEnv "AWS_SUBNET_SECONDARY0";
-      tertiary = getEnv "AWS_SUBNET_SECONDARY1";
+      primary = "\${var.aws_subnet_primary}";
+      secondary = "\${var.aws_subnet_secondary0}";
+      tertiary = "\${var.aws_subnet_secondary1}";
     };
   };
 
@@ -91,28 +107,33 @@ in {
     }];
   };
 
+  servers.ci = {
+    availability_zone = "\${var.aws_zone_primary}";
+    subnet = config.setup.subnets.primary;
+  };
+
   servers.database = {
-    password = getEnv "DATABASE_PASSWORD";
-    availability_zone = getEnv "AWS_ZONE_PRIMARY";
+    password = "\${var.database_password}";
+    availability_zone = "\${var.aws_zone_primary}";
     security_group_ids = [ "\${aws_security_group.nixos_test.id}" ];
   };
 
   servers.mongodb.nodes = [
     {
       primary = true;
-      availability_zone = getEnv "AWS_ZONE_PRIMARY";
+      availability_zone = "\${var.aws_zone_primary}";
       name = "mongodb_primary";
       subnet_id = config.setup.subnets.primary;
     }
     {
       primary = false;
-      availability_zone = getEnv "AWS_ZONE_SECONDARY0";
+      availability_zone = "\${var.aws_zone_secondary0}";
       name = "mongodb_secondary0";
       subnet_id = config.setup.subnets.secondary;
     }
     {
       primary = false;
-      availability_zone = getEnv "AWS_ZONE_SECONDARY1";
+      availability_zone = "\${var.aws_zone_secondary1}";
       name = "mongodb_secondary1";
       subnet_id = config.setup.subnets.tertiary;
     }

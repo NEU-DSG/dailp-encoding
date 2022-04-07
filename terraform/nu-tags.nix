@@ -20,6 +20,11 @@
     "nu:os" = "nixos";
     "nu:backups" = "no";
   };
+  servers.ci.instance_tags = {
+    "nu:function" = "ci";
+    "nu:os" = "nixos";
+    "nu:backups" = "no";
+  };
   servers.mongodb.storage_tags = {
     "nu:function" = "database";
     "nu:backups" = "no";
