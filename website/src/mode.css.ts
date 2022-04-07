@@ -6,9 +6,9 @@ import sprinkles, {
   vspace,
 } from "src/sprinkles.css"
 import { drawerBg } from "./menu.css"
-import { mobileWordPanel } from "./pages/documents/document.css"
+import { mobileWordPanel, morphemeDialog } from "./pages/documents/document.css"
 import { paddingX } from "./style-utils"
-import { collPanelButton } from "./word-panel.css"
+import { collPanelButton, wordPanelButton } from "./word-panel.css"
 
 export const highlightedLabel = sprinkles({
   outlineStyle: "dashed",
@@ -58,7 +58,10 @@ export const prefBG = style([
 ])
 
 export const prefDrawer = style([
-  mobileWordPanel,
+  morphemeDialog,
+  //mobileWordPanel,
   paddingX(hspace.edge),
   { paddingTop: vspace.one },
 ])
+
+export const closeButton = style([wordPanelButton.basic])

@@ -2,7 +2,8 @@ import { Tooltip } from "@reach/tooltip"
 import cx from "classnames"
 import Cookies from "js-cookie"
 import React, { useContext, useEffect, useState } from "react"
-import { MdSettings } from "react-icons/md"
+import { MdClose, MdSettings } from "react-icons/md"
+import { Button } from "reakit/Button"
 import {
   Dialog,
   DialogBackdrop,
@@ -274,7 +275,7 @@ export const HeaderPrefDrawer = () => {
     <div aria-label="shell" className={css.prefButton.shell}>
       <DialogDisclosure
         {...dialog}
-        aria-label="Open Preferences Drawer"
+        aria-label="Open Settings"
         className={css.prefButton.button}
       >
         <MdSettings size={32} />
@@ -284,8 +285,16 @@ export const HeaderPrefDrawer = () => {
           {...dialog}
           as="div"
           className={css.prefDrawer}
-          aria-label="Preferences Drawer"
+          aria-label="Settings Dialog"
         >
+          <h1>Document Settings</h1>
+          <Button
+            className={css.closeButton}
+            onClick={dialog.hide}
+            aria-label="Dismiss selected word information"
+          >
+            <MdClose size={32} />
+          </Button>
           <PrefPanel />
         </Dialog>
       </DialogBackdrop>
