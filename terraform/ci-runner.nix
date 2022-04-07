@@ -3,8 +3,9 @@
 let
   inherit (builtins) map filter getEnv replaceStrings toJSON toString;
   inherit (lib) mkMerge concatStringsSep imap0;
-  terraform_nixos_repo = "https://github.com/tomferon/terraform-nixos.git";
-  terraform_nixos_ref = "caa6191b952f8c92a097a67fc21200e2927e3d10";
+  terraform_nixos_repo =
+    "https://github.com/numtide/terraform-deploy-nixos-flakes.git";
+  terraform_nixos_ref = "b4093274bb1f0ae833c2e02298f5f032691601ac";
   terraform_nixos =
     "git::${terraform_nixos_repo}//deploy_nixos?ref=${terraform_nixos_ref}";
 in {
@@ -25,15 +26,12 @@ in {
   config.module = {
     deploy_ci_runner = {
       source = terraform_nixos;
-      nixos_config = toString ./ci-configuration.nix;
-      hermetic = true;
+      flake = "..";
+      flake_host = "dailp-ci-runner";
       target_user = "root";
       target_host = "\${aws_instance.ci_runner.public_ip}";
       ssh_agent = false;
       ssh_private_key = "\${var.aws_ssh_key}";
-      arguments = {
-        hostName = config.resource.aws_instance.ci_runner.tags.Name;
-      };
       keys = {
         cluster_join_token = "\${var.cluster_join_token}";
         binary_caches_json = builtins.toJSON { };
