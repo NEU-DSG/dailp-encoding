@@ -67,7 +67,7 @@ in {
     aws_iam_instance_profile.ci_runner = {
       path = "/";
       # Use the MongoDB node role for now because it already configures VPC access.
-      role = "\${aws_iam_role.mongodb_node}";
+      role = "\${aws_iam_role.mongodb_node.id}";
     };
 
     aws_network_interface.ci_runner = {
