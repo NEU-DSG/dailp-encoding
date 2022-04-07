@@ -37,6 +37,7 @@
     database_password = sensitiveString;
     github_oauth_token = sensitiveString;
     aws_ssh_key = sensitiveString;
+    cluster_join_token = sensitiveString;
   };
 
   # Gives all modules access to which stage we're deploying to, while also

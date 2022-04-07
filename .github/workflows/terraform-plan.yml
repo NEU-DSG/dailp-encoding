@@ -28,6 +28,7 @@ jobs:
       TF_VAR_git_repository_url: https://github.com/neu-dsg/dailp-encoding
       TF_VAR_github_oauth_token: ${{ secrets.OAUTH_TOKEN }}
       TF_VAR_deployment_stage: ${{ github.base_ref == 'main' && 'dev' || 'prod' }}
+      TF_VAR_cluster_join_token: ${{ secrets.HERCULES_CLUSTER_JOIN_TOKEN }}
       RUST_LOG: info
     steps:
       - name: Checkout code

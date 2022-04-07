@@ -5,6 +5,8 @@ let
   inherit (lib) mkMerge concatStringsSep imap0;
   terraform_nixos_repo = "https://github.com/tomferon/terraform-nixos.git";
   terraform_nixos_ref = "caa6191b952f8c92a097a67fc21200e2927e3d10";
+  terraform_nixos =
+    "git::${terraform_nixos_repo}//deploy_nixos?ref=${terraform_nixos_ref}";
   toKebabCase = s: replaceStrings [ "_" ] [ "-" ] s;
 in {
   options.servers.mongodb = with lib;
@@ -239,8 +241,7 @@ in {
   config.module = mkMerge [
     {
       nixos_image = {
-        source =
-          "git::${terraform_nixos_repo}//aws_image_nixos?ref=${terraform_nixos_ref}";
+        source = terraform_nixos;
         release = "20.09";
       };
     }
@@ -254,8 +255,7 @@ in {
         secondaries = if node.primary then "[${secondariesStr}]" else "null";
       in {
         "deploy_${name}" = {
-          source =
-            "git::${terraform_nixos_repo}//deploy_nixos?ref=${terraform_nixos_ref}";
+          source = terraform_nixos;
           nixos_config = toString ./mongodb-configuration.nix;
           hermetic = true;
           target_user = "root";
