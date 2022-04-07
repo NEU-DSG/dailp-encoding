@@ -18,6 +18,7 @@
     ./website.nix
     ./nu-tags.nix
     ./database-sql.nix
+    ./ci-runner.nix
   ];
 
   variable = let
@@ -104,6 +105,11 @@
         # }
       ];
     }];
+  };
+
+  servers.ci = {
+    availability_zone = "\${var.aws_zone_primary}";
+    subnet = config.setup.subnets.primary;
   };
 
   servers.database = {

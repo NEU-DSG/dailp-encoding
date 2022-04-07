@@ -10,7 +10,7 @@ let
 in {
   options.servers.ci = with lib;
     with types; {
-      subnet = { type = str; };
+      subnet = mkOption { type = str; };
       availability_zone = mkOption { type = str; };
       instance_type = mkOption {
         type = str;
