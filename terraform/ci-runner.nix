@@ -6,8 +6,7 @@ let
   terraform_nixos_repo =
     "https://github.com/numtide/terraform-deploy-nixos-flakes.git";
   terraform_nixos_ref = "b4093274bb1f0ae833c2e02298f5f032691601ac";
-  terraform_nixos =
-    "git::${terraform_nixos_repo}//deploy_nixos?ref=${terraform_nixos_ref}";
+  terraform_nixos = "git::${terraform_nixos_repo}?ref=${terraform_nixos_ref}";
 in {
   options.servers.ci = with lib;
     with types; {
