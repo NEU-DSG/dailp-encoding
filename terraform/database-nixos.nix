@@ -241,7 +241,8 @@ in {
   config.module = mkMerge [
     {
       nixos_image = {
-        source = terraform_nixos;
+        source =
+          "git::${terraform_nixos_repo}//aws_image_nixos?ref=${terraform_nixos_ref}";
         release = "20.09";
       };
     }
