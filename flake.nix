@@ -1,17 +1,16 @@
 {
   inputs = {
-    pkgs.url = "github:nixos/nixpkgs/nixos-21.11";
-    pkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
+    pkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     utils.url = "github:numtide/flake-utils";
     # Provides cargo dependencies.
     fenix = {
       url = "github:nix-community/fenix";
-      inputs.nixpkgs.follows = "pkgs-unstable";
+      inputs.nixpkgs.follows = "pkgs";
     };
     # Builds rust projects.
     naersk = {
       url = "github:nmattia/naersk";
-      inputs.nixpkgs.follows = "pkgs-unstable";
+      inputs.nixpkgs.follows = "pkgs";
     };
     nix-filter.url = "github:numtide/nix-filter";
   };
@@ -19,7 +18,7 @@
   outputs = inputs:
     inputs.utils.lib.eachDefaultSystem (system:
       let
-        pkgs = import inputs.pkgs-unstable {
+        pkgs = import inputs.pkgs {
           inherit system;
           config.allowUnfree = true;
         };
@@ -192,6 +191,7 @@
               '')
               (writers.writeBashBin "dev-migrate-schema" ''
                 cd $PROJECT_ROOT/types
+                sqlx database create
                 sqlx migrate run
               '')
               (writers.writeBashBin "dev-migrate-data" ''
