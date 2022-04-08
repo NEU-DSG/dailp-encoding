@@ -5,7 +5,7 @@
   };
 
   config.module.bastion_host = {
-    source = "github.com/cloudposse/terraform-aws-ec2-bastion-server?rev=7f8fc52095ef466fedd1c06876e281a1ac6bb75b";
+    source = "github.com/cloudposse/terraform-aws-ec2-bastion-server?ref=7f8fc52095ef466fedd1c06876e281a1ac6bb75b";
     enabled = true;
     instance_type = "t4g.micro";
 
