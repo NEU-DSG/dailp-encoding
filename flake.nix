@@ -131,6 +131,12 @@
           exePath = "/bin/dailp-migration";
         };
 
+        apps.migrate-schema = mkBashApp "migrate-schema" ''
+          cd types
+          ${pkgs.sqlx-cli}/bin/sqlx database create
+          ${pkgs.sqlx-cli}/bin/sqlx migrate run
+        '';
+
         apps.tf-plan = mkBashApp "plan" ''
           ${tfInit}
           ${tf} plan
