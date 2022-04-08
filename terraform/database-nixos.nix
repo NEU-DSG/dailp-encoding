@@ -75,7 +75,7 @@ in {
                 network_interface_id = "\${aws_network_interface.${name}.id}";
                 device_index = 0;
               };
-              key_name = "dailp-deployment-terraform";
+              key_name = "dailp-deployment-april-2022";
               iam_instance_profile = "\${aws_iam_instance_profile.${name}.id}";
               root_block_device = {
                 volume_size = root_volume_size;

@@ -15,7 +15,7 @@
     stage = config.setup.stage;
     name = "bastion";
 
-    key_name = "dailp-deployment-terraform";
+    key_name = "dailp-deployment-april-2022";
 
     assign_eip_address = true;
     associate_public_ip_address = true;
