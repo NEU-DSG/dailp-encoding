@@ -8,6 +8,7 @@
     source = "github.com/cloudposse/terraform-aws-ec2-bastion-server?ref=7f8fc52095ef466fedd1c06876e281a1ac6bb75b";
     enabled = true;
     instance_type = "t4g.micro";
+    ami = "ami-03190fe20ef6b1419";
 
     # ID will be constructed from these namespace, stage, and name for some reason.
     namespace = "dailp";
