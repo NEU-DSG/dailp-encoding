@@ -77,9 +77,7 @@ const TabSet = ({ doc }: { doc: Document }) => {
   const tabs = useScrollableTabState({ selectedId: Tabs.ANNOTATION })
   return (
     <>
-      <div
-        className={css.wideAndTop}
-      >
+      <div className={css.wideAndTop}>
         <TabList
           {...tabs}
           id="document-tabs-header"
