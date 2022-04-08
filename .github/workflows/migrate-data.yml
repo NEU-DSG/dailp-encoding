@@ -16,6 +16,7 @@ jobs:
       AWS_SUBNET_SECONDARY1: ${{ secrets.AWS_SUBNET_SECONDARY1 }}
       AWS_ZONE_SECONDARY1: ${{ secrets.AWS_ZONE_SECONDARY1 }}
       AWS_SSH_KEY: ${{ secrets.AWS_SSH_KEY }}
+      AWS_BASTION_SSH_KEY: ${{ secrets.AWS_BASTION_SSH_KEY }}
       GIT_REPOSITORY_URL: https://github.com/neu-dsg/dailp-encoding
       OAUTH_TOKEN: ${{ secrets.OAUTH_TOKEN }}
       RUST_LOG: info
@@ -56,10 +57,20 @@ jobs:
         run: |
           nix build --impure -L
       - name: Migrate data to MongoDB
+        # Port forward 5432 to remote database
         run: |
+          echo $AWS_BASTION_SSH_KEY > dailp-deployment-key.pem
+          chmod 400 dailp-deployment-key.pem
+          BASTION_IP=$(nix run --impure .#tf-output bastion_ip)
+          DATABASE_ENDPOINT=$(nix run --impure .#tf-output database_endpoint)
+          mkdir -p ~/.ssh
+          ssh-keyscan -H $BASTION_IP >> ~/.ssh/known_hosts
+          ssh -i dailp-deployment-key.pem -f -N -L 5432:$DATABASE_ENDPOINT ec2-user@$BASTION_IP
+
           nix run --impure -L .#tf-plan
           export DAILP_API_URL=$(nix run --impure .#tf-output functions_url)
           export MONGODB_URI=mongodb://$(nix run --impure .#tf-output mongodb_primary_ip):27017
+          export DATABASE_URL=postgres://dailp:$DATABASE_PASSWORD@localhost:5432/dailp
           nix run --impure -L .#migrate-data
       - name: Publish website
         run: |

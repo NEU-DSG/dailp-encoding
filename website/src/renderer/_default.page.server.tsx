@@ -7,11 +7,7 @@ import { ssrExchange } from "urql"
 import { dangerouslySkipEscape, escapeInject } from "vite-plugin-ssr"
 import type { PageContextBuiltIn } from "vite-plugin-ssr/types"
 import { customClient } from "src/graphql"
-import {
-  PageContextServer,
-  PageShell,
-  rootElementId,
-} from "./PageShell"
+import { PageContextServer, PageShell, rootElementId } from "./PageShell"
 
 /**
  * In production, render every page on the server then hydrate it on the client.

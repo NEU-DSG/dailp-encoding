@@ -1,3 +1,4 @@
+use itertools::Itertools as _;
 use serde::{Deserialize, Serialize};
 
 /// One full translation broken into several [`TranslationBlock`](#struct.TranslationBlock)s.
@@ -5,7 +6,7 @@ use serde::{Deserialize, Serialize};
 pub struct Translation {
     /// List of blocks or paragraphs that, in this order, constitute the full
     /// translation.
-    pub blocks: Vec<TranslationBlock>,
+    pub paragraphs: Vec<TranslationBlock>,
 }
 
 /// One block or paragraph of a translation document that should correspond to a
@@ -18,12 +19,17 @@ pub struct TranslationBlock {
     pub segments: Vec<String>,
 }
 
+impl TranslationBlock {
+    pub fn get_text(&self) -> String {
+        self.segments.iter().join(" ")
+    }
+}
+
 #[async_graphql::Object]
 impl TranslationBlock {
     /// Full text of this block
     pub async fn text(&self) -> String {
-        use itertools::Itertools as _;
-        self.segments.iter().join(" ")
+        self.get_text()
     }
 
     /// The text of this block split into segments (sentences or lines)

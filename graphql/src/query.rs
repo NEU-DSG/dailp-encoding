@@ -1,12 +1,13 @@
 //! This piece of the project exposes a GraphQL endpoint that allows one to access DAILP data in a federated manner with specific queries.
 
+use itertools::Itertools;
+
 use {
-    dailp::async_graphql::{self, dataloader::DataLoader, guard::Guard, Context, FieldResult},
+    dailp::async_graphql::{self, dataloader::DataLoader, Context, FieldResult, Guard},
     dailp::{
-        AnnotatedDoc, CherokeeOrthography, Database, MorphemeId, MorphemeReference, MorphemeTag,
+        AnnotatedDoc, CherokeeOrthography, Database, MorphemeId, MorphemeReference, TagForm,
         WordsInDocument,
     },
-    mongodb::bson,
     serde::{Deserialize, Serialize},
     serde_with::{rust::StringWithSeparator, CommaSeparator},
 };
@@ -17,25 +18,34 @@ pub struct Query;
 #[async_graphql::Object]
 impl Query {
     /// List of all the functional morpheme tags available
-    async fn all_tags(&self, context: &Context<'_>) -> FieldResult<Vec<MorphemeTag>> {
-        Ok(context.data::<Database>()?.all_tags().await?)
+    async fn all_tags(
+        &self,
+        context: &Context<'_>,
+        system: CherokeeOrthography,
+    ) -> FieldResult<Vec<TagForm>> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .all_tags(system)
+            .await?)
     }
 
     /// Listing of all documents excluding their contents by default
-    async fn all_documents(
-        &self,
-        context: &Context<'_>,
-        collection: Option<String>,
-    ) -> FieldResult<Vec<AnnotatedDoc>> {
+    async fn all_documents(&self, context: &Context<'_>) -> FieldResult<Vec<AnnotatedDoc>> {
         Ok(context
-            .data::<Database>()?
-            .all_documents(collection.as_deref())
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .all_documents()
             .await?)
     }
 
     /// List of all content pages
     async fn all_pages(&self, context: &Context<'_>) -> FieldResult<Vec<dailp::page::Page>> {
-        Ok(context.data::<Database>()?.pages().all().await?)
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .all_pages()
+            .await?)
     }
 
     /// List of all the document collections available.
@@ -43,7 +53,11 @@ impl Query {
         &self,
         context: &Context<'_>,
     ) -> FieldResult<Vec<dailp::DocumentCollection>> {
-        Ok(context.data::<Database>()?.all_collections().await?)
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .top_collections()
+            .await?)
     }
 
     async fn collection(
@@ -51,26 +65,22 @@ impl Query {
         context: &Context<'_>,
         slug: String,
     ) -> FieldResult<dailp::DocumentCollection> {
-        Ok(context.data::<Database>()?.collection(slug).await?)
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .collection(slug)
+            .await?)
     }
 
-    /// List all contributors to documents and lexical resources.
-    async fn all_contributors(
-        &self,
-        context: &Context<'_>,
-    ) -> FieldResult<Vec<dailp::ContributorDetails>> {
-        Ok(context.data::<Database>()?.all_people().await?)
-    }
-
-    /// Retrieves a full document from its unique identifier.
+    /// Retrieves a full document from its unique name.
     pub async fn document(
         &self,
         context: &Context<'_>,
-        id: String,
+        slug: String,
     ) -> FieldResult<Option<AnnotatedDoc>> {
         Ok(context
             .data::<DataLoader<Database>>()?
-            .load_one(dailp::DocumentId(id.to_ascii_uppercase()))
+            .load_one(dailp::DocumentShortName(slug.to_ascii_uppercase()))
             .await?)
     }
 
@@ -86,14 +96,6 @@ impl Query {
             .await?)
     }
 
-    async fn lexical_entry(
-        &self,
-        context: &Context<'_>,
-        id: String,
-    ) -> FieldResult<Option<dailp::AnnotatedForm>> {
-        Ok(context.data::<Database>()?.lexical_entry(&id).await?)
-    }
-
     /// Lists all forms containing a morpheme with the given gloss.
     /// Groups these words by the phonemic shape of the target morpheme.
     pub async fn morphemes_by_shape(
@@ -106,8 +108,9 @@ impl Query {
         compare_by: Option<CherokeeOrthography>,
     ) -> FieldResult<Vec<MorphemeReference>> {
         Ok(context
-            .data::<Database>()?
-            .morphemes(&MorphemeId::parse(&gloss).unwrap(), compare_by)
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .morphemes(MorphemeId::parse(&gloss).unwrap(), compare_by)
             .await?)
     }
 
@@ -116,10 +119,31 @@ impl Query {
     async fn morphemes_by_document(
         &self,
         context: &Context<'_>,
-        morpheme_id: String,
+        document_id: Option<dailp::DocumentId>,
+        morpheme_gloss: String,
     ) -> FieldResult<Vec<WordsInDocument>> {
-        let id = MorphemeId::parse(&morpheme_id).unwrap();
-        Ok(context.data::<Database>()?.words_by_doc(&id).await?)
+        if let Some(document_id) = document_id {
+            Ok(context
+                .data::<DataLoader<Database>>()?
+                .loader()
+                .connected_forms(Some(document_id), &morpheme_gloss)
+                .await?
+                .into_iter()
+                .group_by(|w| w.position.document_id)
+                .into_iter()
+                .map(|(document_id, forms)| WordsInDocument {
+                    document_type: None,
+                    document_id: Some(document_id),
+                    forms: forms.collect(),
+                })
+                .collect())
+        } else {
+            Ok(context
+                .data::<DataLoader<Database>>()?
+                .loader()
+                .words_by_doc(document_id, &morpheme_gloss)
+                .await?)
+        }
     }
 
     /// Forms containing the given morpheme gloss or related ones clustered over time.
@@ -132,10 +156,14 @@ impl Query {
         use dailp::chrono::Datelike;
         use itertools::Itertools as _;
 
-        let forms = context
-            .data::<Database>()?
-            .connected_surface_forms(&dailp::MorphemeId::parse(&gloss).unwrap())
-            .await?;
+        let db = context.data::<DataLoader<Database>>()?.loader();
+        let morpheme = dailp::MorphemeId::parse(&gloss).unwrap();
+        let doc_id = if let Some(short_name) = morpheme.document_name {
+            db.document_id_from_name(&short_name).await?
+        } else {
+            None
+        };
+        let forms = db.connected_forms(doc_id, &morpheme.gloss).await?;
         // Cluster forms by the decade they were recorded in.
         let clusters = forms
             .into_iter()
@@ -177,22 +205,11 @@ impl Query {
         &self,
         context: &Context<'_>,
         id: String,
-    ) -> FieldResult<Option<MorphemeTag>> {
+        system: CherokeeOrthography,
+    ) -> FieldResult<Option<TagForm>> {
         Ok(context
             .data::<DataLoader<Database>>()?
-            .load_one(dailp::TagId(id))
-            .await?)
-    }
-
-    /// Details of one image source based on its short identifier string.
-    async fn image_source(
-        &self,
-        context: &Context<'_>,
-        id: String,
-    ) -> FieldResult<Option<dailp::ImageSource>> {
-        Ok(context
-            .data::<Database>()?
-            .image_source(&dailp::ImageSourceId(id))
+            .load_one(dailp::TagId(id, system))
             .await?)
     }
 
@@ -201,14 +218,13 @@ impl Query {
     async fn word_search(
         &self,
         context: &Context<'_>,
-        queries: Vec<FormQuery>,
+        query: String,
     ) -> FieldResult<Vec<dailp::AnnotatedForm>> {
-        // Convert the queries to valid BSON to send to MongoDB.
-        let bson_queries: Vec<_> = queries.into_iter().map(|q| q.into_bson()).collect();
-        // Match against any of the given queries.
-        let q = bson::doc! { "$or": bson_queries };
-        // Return the matching words, if any.
-        Ok(context.data::<Database>()?.word_search(q).await?)
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .search_words_any_field(query)
+            .await?)
     }
 
     /// Search for words with the exact same syllabary string, or with very
@@ -219,50 +235,16 @@ impl Query {
         query: String,
     ) -> FieldResult<Vec<dailp::AnnotatedForm>> {
         Ok(context
-            .data::<Database>()?
+            .data::<DataLoader<Database>>()?
+            .loader()
             .potential_syllabary_matches(&query)
             .await?)
     }
 
     /// Basic information about the currently authenticated user, if any.
-    #[graphql(guard(AuthGuard()))]
+    #[graphql(guard = "AuthGuard")]
     async fn user_info<'a>(&self, context: &'a Context<'_>) -> &'a UserInfo {
         context.data_unchecked()
-    }
-}
-
-#[derive(async_graphql::InputObject)]
-struct FormQuery {
-    id: Option<String>,
-    source: Option<String>,
-    normalized_source: Option<String>,
-    simple_phonetics: Option<String>,
-    english_gloss: Option<String>,
-    unresolved: Option<bool>,
-}
-impl FormQuery {
-    fn into_bson(self) -> bson::Document {
-        let regex_query = |q| bson::doc! { "$regex": q, "$options": "i" };
-        let mut doc = bson::Document::new();
-        if let Some(id) = self.id {
-            doc.insert("id", regex_query(id));
-        }
-        if let Some(source) = self.source {
-            doc.insert("source", regex_query(source));
-        }
-        if let Some(normalized_source) = self.normalized_source {
-            doc.insert("normalizedSource", regex_query(normalized_source));
-        }
-        if let Some(simple_phonetics) = self.simple_phonetics {
-            doc.insert("simplePhonetics", regex_query(simple_phonetics));
-        }
-        if let Some(english_gloss) = self.english_gloss {
-            doc.insert("englishGloss", regex_query(english_gloss));
-        }
-        if let Some(true) = self.unresolved {
-            doc.insert("segments", bson::doc! { "gloss": "?" });
-        }
-        doc
     }
 }
 
@@ -277,18 +259,22 @@ impl Mutation {
         "1.0"
     }
 
-    #[graphql(guard(GroupGuard(group = "UserGroup::Editor")))]
+    #[graphql(guard = "GroupGuard::new(UserGroup::Editor)")]
     async fn update_page(
         &self,
         context: &Context<'_>,
         // Data encoded as JSON for now.
         data: async_graphql::Json<dailp::page::Page>,
     ) -> FieldResult<bool> {
-        context.data::<Database>()?.pages().update(data.0).await?;
+        context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .update_page(data.0)
+            .await?;
         Ok(true)
     }
 
-    #[graphql(guard(GroupGuard(group = "UserGroup::Editor")))]
+    #[graphql(guard = "GroupGuard::new(UserGroup::Editor)")]
     async fn update_annotation(
         &self,
         context: &Context<'_>,
@@ -296,9 +282,9 @@ impl Mutation {
         data: async_graphql::Json<dailp::annotation::Annotation>,
     ) -> FieldResult<bool> {
         context
-            .data::<Database>()?
-            .annotations()
-            .update(data.0)
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .update_annotation(data.0)
             .await?;
         Ok(true)
     }
@@ -335,6 +321,12 @@ serde_plain::forward_display_to_serde!(UserGroup);
 /// Requires that the user is authenticated and a member of the given user group.
 struct GroupGuard {
     group: UserGroup,
+}
+
+impl GroupGuard {
+    fn new(group: UserGroup) -> Self {
+        Self { group }
+    }
 }
 
 #[async_trait::async_trait]

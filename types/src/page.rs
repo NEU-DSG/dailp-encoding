@@ -7,7 +7,6 @@ use serde::{Deserialize, Serialize};
 pub struct Page {
     /// The path that this page lives at, which also uniquely identifies it.
     /// For example, "/our-team"
-    #[serde(rename = "_id")]
     pub id: String,
     title: String,
     body: Vec<ContentBlock>,
