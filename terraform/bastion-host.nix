@@ -22,7 +22,7 @@
     # Don't create a new security group for this server.
     security_group_enabled = false;
     # Use the existing one setup for MongoDB access.
-    security_groups = ["\${aws_security_group.nixos_test.id}"];
+    security_groups = ["\${aws_security_group.mongodb_access.id}" "\${aws_security_group.nixos_test.id}"];
 
     tags = config.setup.global_tags // config.servers.bastion.instance_tags;
   };
