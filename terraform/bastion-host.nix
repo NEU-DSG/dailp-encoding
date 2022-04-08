@@ -29,4 +29,8 @@
 
     tags = config.setup.global_tags // config.servers.bastion.instance_tags;
   };
+
+  config.output.bastion_ip = {
+    value = "\${module.bastion_host.public_ip}";
+  };
 }
