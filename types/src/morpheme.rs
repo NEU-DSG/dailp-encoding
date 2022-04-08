@@ -11,6 +11,8 @@ pub struct MorphemeSegment {
     pub morpheme: String,
     /// Target language representation of this segment.
     pub gloss: String,
+    #[serde(skip)]
+    pub gloss_id: Uuid,
     /// What kind of thing is the next segment?
     ///
     /// This field determines what character should separate this segment from
@@ -20,7 +22,8 @@ pub struct MorphemeSegment {
 
 /// The kind of segment that a particular sequence of characters in a morphemic
 /// segmentations represent.
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, sqlx::Type)]
+#[sqlx(type_name = "segment_type")]
 pub enum SegmentType {
     /// Separated by a hyphen '-'
     Morpheme,
@@ -34,6 +37,9 @@ impl MorphemeSegment {
         Self {
             morpheme,
             gloss,
+            // FIXME Shortcut to keep this function the same while allowing
+            // migration code to create this data structure.
+            gloss_id: Uuid::new_v4(),
             followed_by,
         }
     }
@@ -101,26 +107,16 @@ impl MorphemeSegment {
     async fn matching_tag(
         &self,
         context: &async_graphql::Context<'_>,
-    ) -> FieldResult<Option<MorphemeTag>> {
-        use crate::database::TagId;
+        // TODO make this non-optional
+        system: Option<CherokeeOrthography>,
+    ) -> FieldResult<Option<TagForm>> {
         use async_graphql::dataloader::*;
         Ok(context
             .data::<DataLoader<Database>>()?
-            .load_one(TagId(self.gloss.clone()))
-            .await
-            .ok()
-            .flatten())
-    }
-
-    /// All lexical entries that share the same gloss text as this morpheme.
-    /// This generally works for root morphemes.
-    async fn lexical_entry(
-        &self,
-        context: &async_graphql::Context<'_>,
-    ) -> FieldResult<Option<AnnotatedForm>> {
-        Ok(context
-            .data::<Database>()?
-            .lexical_entry(&self.gloss)
+            .load_one(TagForMorpheme(
+                self.gloss_id,
+                system.unwrap_or(CherokeeOrthography::Taoc),
+            ))
             .await?)
     }
 }
