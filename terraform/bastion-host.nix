@@ -14,6 +14,8 @@
     stage = config.setup.stage;
     name = "bastion";
 
+    key_name = "dailp-deployment-terraform";
+
     assign_eip_address = true;
     associate_public_ip_address = true;
     vpc_id = config.setup.vpc;
