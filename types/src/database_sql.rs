@@ -23,7 +23,7 @@ impl Database {
     pub async fn connect() -> Result<Self> {
         let db_url = std::env::var("DATABASE_URL")?;
         let conn = PgPoolOptions::new()
-            .max_connections(8)
+            .max_connections(1)
             .connect(&db_url)
             .await?;
         Ok(Database { client: conn })
