@@ -107,7 +107,7 @@ pub async fn migrate_dictionaries(db: &Database) -> Result<()> {
         .chain(ptcp_nouns)
         .chain(inf_nouns);
 
-    info!("Pushing entries to database...");
+    println!("Pushing entries to database...");
     // Push all lexical entries to the database.
     for entry in entries {
         // Push all the surface forms to the sea of words.

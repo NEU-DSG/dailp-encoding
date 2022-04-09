@@ -16,7 +16,7 @@ pub async fn migrate_tags(db: &Database) -> Result<()> {
     )
     .await;
 
-    info!("Parsing sheet results...");
+    println!("Parsing sheet results...");
     let glossary = parse_tag_glossary(glossary?)?;
 
     let crg = db
@@ -29,7 +29,7 @@ pub async fn migrate_tags(db: &Database) -> Result<()> {
         .insert_morpheme_system("LEARNER".into(), "Learner System".into())
         .await?;
 
-    info!("Pushing tags to db...");
+    println!("Pushing tags to db...");
     for tag in glossary {
         db.insert_morpheme_tag(tag, crg, taoc, learner).await?;
     }
