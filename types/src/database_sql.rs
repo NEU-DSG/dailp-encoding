@@ -3,6 +3,7 @@ use {
     anyhow::Result,
     async_graphql::dataloader::*,
     async_trait::async_trait,
+    futures::future::try_join_all,
     itertools::Itertools,
     sqlx::{
         postgres::{types::PgRange, PgPoolOptions},
@@ -23,7 +24,7 @@ impl Database {
     pub async fn connect() -> Result<Self> {
         let db_url = std::env::var("DATABASE_URL")?;
         let conn = PgPoolOptions::new()
-            .max_connections(1)
+            .max_connections(2)
             .connect(&db_url)
             .await?;
         Ok(Database { client: conn })
@@ -577,13 +578,18 @@ impl Database {
         &self,
         forms: impl Iterator<Item = AnnotatedForm>,
     ) -> Result<()> {
-        let mut tx = self.client.begin().await?;
-        for form in forms {
-            let doc_id = form.position.document_id.0;
-            self.insert_word(&mut tx, form, doc_id, None, None).await?;
-        }
-        tx.commit().await?;
+        try_join_all(forms.map(|form| self.only_insert_word(form))).await?;
         Ok(())
+    }
+
+    async fn only_insert_word<'a>(&self, form: AnnotatedForm) -> Result<Uuid> {
+        let mut tx = self.client.begin().await?;
+        let document_id = form.position.document_id.0;
+        let id = self
+            .insert_word(&mut tx, form, document_id, None, None)
+            .await?;
+        tx.commit().await?;
+        Ok(id)
     }
 
     pub async fn insert_word<'a>(

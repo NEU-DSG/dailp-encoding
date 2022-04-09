@@ -11,6 +11,7 @@ mod translations;
 
 use anyhow::Result;
 use dailp::{Database, Uuid};
+use futures::future::try_join_all;
 use log::{error, info};
 use std::time::Duration;
 
@@ -93,9 +94,12 @@ async fn migrate_data(db: &Database) -> Result<()> {
         }
     }
 
-    for l in morpheme_relations {
-        db.insert_morpheme_relation(l).await?;
-    }
+    try_join_all(
+        morpheme_relations
+            .into_iter()
+            .map(|l| db.insert_morpheme_relation(l)),
+    )
+    .await?;
 
     Ok(())
 }

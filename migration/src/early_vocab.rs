@@ -1,5 +1,6 @@
 use anyhow::Result;
 use dailp::{Contributor, Database};
+use futures::future::try_join_all;
 
 const COLLECTION_NAME: &str = "Early Vocabularies";
 
@@ -60,9 +61,7 @@ async fn migrate_new_vocabs(db: &Database, sheet_ids: &[&str]) -> Result<()> {
         let mut new_links = parse_early_vocab(db, s, 0, true, false, true, true, 3).await?;
         links.append(&mut new_links);
     }
-    for l in links {
-        db.insert_morpheme_relation(l).await?;
-    }
+    try_join_all(links.into_iter().map(|l| db.insert_morpheme_relation(l))).await?;
     Ok(())
 }
 
@@ -169,8 +168,8 @@ async fn parse_early_vocab(
                 }
             }
 
-            Some(ConnectedForm {
-                form: dailp::AnnotatedForm {
+            Some((
+                dailp::AnnotatedForm {
                     normalized_source,
                     simple_phonetics,
                     segments,
@@ -190,18 +189,15 @@ async fn parse_early_vocab(
                     audio_track: None,
                 },
                 links,
-            })
+            ))
         });
 
-    let mut links = Vec::new();
+    let (forms, links): (Vec<_>, Vec<_>) = entries.unzip();
 
     // Push all forms and links to the database.
-    for mut entry in entries {
-        db.insert_one_word(entry.form).await?;
-        links.append(&mut entry.links);
-    }
+    try_join_all(forms.into_iter().map(|form| db.insert_one_word(form))).await?;
 
-    Ok(links)
+    Ok(links.into_iter().flatten().collect())
 }
 
 struct ConnectedForm {
