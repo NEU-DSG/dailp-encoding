@@ -115,15 +115,18 @@ jobs:
       - name: Deploy back-end to AWS via terraform
         run: nix run --impure -L .#tf-apply-now
       - name: Encode documents as TEI and database entries
-        if: steps.filter.outputs.data == 'true' || github.event_name == 'release'
         # Sets up port forwarding to remote database on port 5432
         run: |
+          echo "Creating SSH key file..."
           echo $AWS_BASTION_SSH_KEY > dailp-deployment-key.pem
           chmod 400 dailp-deployment-key.pem
+          echo "Retrieving terraform outputs..."
           BASTION_IP=$(nix run --impure .#tf-output bastion_ip)
           DATABASE_ENDPOINT=$(nix run --impure .#tf-output database_endpoint)
+          echo "Configuring SSH client..."
           mkdir -p ~/.ssh
           ssh-keyscan -H $BASTION_IP >> ~/.ssh/known_hosts
+          echo "Forwarding port 5432 to remote database"
           ssh -i dailp-deployment-key.pem -f -N -L 5432:$DATABASE_ENDPOINT ec2-user@$BASTION_IP
 
           export DAILP_API_URL=$(nix run --impure .#tf-output functions_url)
