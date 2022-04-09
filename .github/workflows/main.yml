@@ -125,8 +125,8 @@ jobs:
           echo "Configuring SSH client..."
           mkdir -p ~/.ssh
           ssh-keyscan -H $BASTION_IP >> ~/.ssh/known_hosts
-          echo "Forwarding port 5432 to remote database"
-          ssh -i ./dailp-deployment-key.pem -f -N -L 5432:$DATABASE_ENDPOINT ec2-user@$BASTION_IP
+          echo "Forwarding port 5432 to remote database $DATABASE_ENDPOINT through $BASTION_IP"
+          ssh -i ./dailp-deployment-key.pem -f -N -L 5432:$DATABASE_ENDPOINT ec2-user@$BASTION_IP -v
 
           export DAILP_API_URL=$(nix run --impure .#tf-output functions_url)
           export MONGODB_URI=mongodb://$(nix run --impure .#tf-output mongodb_primary_ip):27017
