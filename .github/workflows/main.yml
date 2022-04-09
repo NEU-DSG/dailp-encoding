@@ -33,7 +33,6 @@ jobs:
       AWS_SUBNET_SECONDARY1: ${{ secrets.AWS_SUBNET_SECONDARY1 }}
       AWS_ZONE_SECONDARY1: ${{ secrets.AWS_ZONE_SECONDARY1 }}
       AWS_SSH_KEY: ${{ secrets.AWS_SSH_KEY }}
-      AWS_BASTION_SSH_KEY: ${{ secrets.AWS_BASTION_SSH_KEY }}
       GIT_REPOSITORY_URL: https://github.com/neu-dsg/dailp-encoding
       OAUTH_TOKEN: ${{ secrets.OAUTH_TOKEN }}
       RUST_LOG: info
@@ -118,8 +117,8 @@ jobs:
         # Sets up port forwarding to remote database on port 5432
         run: |
           echo "Creating SSH key file..."
-          echo $AWS_BASTION_SSH_KEY > dailp-deployment-key.pem
-          chmod 400 dailp-deployment-key.pem
+          echo "${{secrets.AWS_BASTION_SSH_KEY}}" > dailp-deployment-key.pem
+          chmod 400 ./dailp-deployment-key.pem
           echo "Retrieving terraform outputs..."
           BASTION_IP=$(nix run --impure .#tf-output bastion_ip)
           DATABASE_ENDPOINT=$(nix run --impure .#tf-output database_endpoint)
@@ -127,7 +126,7 @@ jobs:
           mkdir -p ~/.ssh
           ssh-keyscan -H $BASTION_IP >> ~/.ssh/known_hosts
           echo "Forwarding port 5432 to remote database"
-          ssh -i dailp-deployment-key.pem -f -N -L 5432:$DATABASE_ENDPOINT ec2-user@$BASTION_IP
+          ssh -i ./dailp-deployment-key.pem -f -N -L 5432:$DATABASE_ENDPOINT ec2-user@$BASTION_IP
 
           export DAILP_API_URL=$(nix run --impure .#tf-output functions_url)
           export MONGODB_URI=mongodb://$(nix run --impure .#tf-output mongodb_primary_ip):27017
