@@ -137,6 +137,8 @@
           ${pkgs.sqlx-cli}/bin/sqlx migrate run
         '';
 
+        apps.tf-init = mkBashApp "tf-init" tfInit;
+
         apps.tf-plan = mkBashApp "plan" ''
           ${tfInit}
           ${tf} plan
