@@ -24,7 +24,7 @@ impl Database {
         let db_url = std::env::var("DATABASE_URL")?;
         let conn = PgPoolOptions::new()
             .max_connections(std::thread::available_parallelism().map_or(2, |x| x.get() as u32))
-            .connect_timeout(Duration::from_secs(60 * 2))
+            .connect_timeout(Duration::from_secs(60 * 4))
             // Disable excessive pings to the database.
             .test_before_acquire(false)
             .connect(&db_url)
