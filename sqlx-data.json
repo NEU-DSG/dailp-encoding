@@ -78,7 +78,7 @@
     },
     "query": "select *\nfrom paragraph\nwhere page_id = any($1)\norder by character_range asc\n"
   },
-  "1059bd59ac70297bfb47db46d3fd344b4a05dfd32fb7f5c462ae350ebc95da07": {
+  "0c697fa7d3e8459a4577e54b76a3b17bf1c872d3aa5cecb7a585d1b664261350": {
     "describe": {
       "columns": [
         {
@@ -94,11 +94,36 @@
         "Left": [
           "Uuid",
           "Text",
-          "Text"
+          "Text",
+          "Uuid"
         ]
       }
     },
-    "query": "insert into morpheme_gloss (document_id, gloss, example_shape)\nvalues ($1, $2, $3)\non conflict (document_id, gloss)\n  do update set\n    example_shape = excluded.example_shape\n  returning id\n"
+    "query": "insert into morpheme_gloss (document_id, gloss, example_shape, tag_id)\n  values ($1, $2, $3, $4)\non conflict (coalesce(document_id, uuid_nil()), gloss)\n  do update set example_shape = excluded.example_shape,\n     tag_id = excluded.tag_id\nreturning id\n"
+  },
+  "121a02e46205c1111f5f18bbc368100b5a967e25739d32eb05f4411de6340078": {
+    "describe": {
+      "columns": [
+        {
+          "name": "title",
+          "ordinal": 0,
+          "type_info": "Text"
+        },
+        {
+          "name": "slug",
+          "ordinal": 1,
+          "type_info": "Text"
+        }
+      ],
+      "nullable": [
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": []
+      }
+    },
+    "query": "select\n    document_group.title,\n    document_group.slug\nfrom document_group\nleft join document on document.group_id = document_group.id\nwhere document.is_reference is false\ngroup by document_group.id\norder by document_group.title asc\n"
   },
   "18653ee1dc513510ca36ff2490d5cd5100acfe13527ccfe19b825a3c983c5ea5": {
     "describe": {
@@ -201,77 +226,6 @@
       }
     },
     "query": "select\n  document.id as document_id,\n  document.is_reference,\n  word.id,\n  word.source_text,\n  word.simple_phonetics,\n  word.phonemic,\n  word.english_gloss,\n  word.recorded_at,\n  word.commentary,\n  word.index_in_document,\n  word.page_number\nfrom word\n  inner join document on document.id = word.document_id\n  left join word_segment on word_segment.word_id = word.id\n  inner join morpheme_gloss on morpheme_gloss.id = word_segment.gloss_id\nwhere morpheme_gloss.gloss = $1\n  and (word.document_id = $2 or $2 is null)\ngroup by document.id, word.id\norder by document.id\n"
-  },
-  "1ea36577479a55b94dc863ab16c4d824ba357ae3327e99397c985a24803b6a3e": {
-    "describe": {
-      "columns": [
-        {
-          "name": "id",
-          "ordinal": 0,
-          "type_info": "Uuid"
-        }
-      ],
-      "nullable": [
-        false
-      ],
-      "parameters": {
-        "Left": [
-          "Uuid",
-          "Text",
-          "Text",
-          "Uuid"
-        ]
-      }
-    },
-    "query": "insert into morpheme_gloss (document_id, gloss, example_shape, tag_id)\n  values ($1, $2, $3, $4)\non conflict (document_id, gloss)\n  do update set example_shape = excluded.example_shape,\n     tag_id = excluded.tag_id\nreturning id\n"
-  },
-  "271ddc6e129a3b2b8a6fed0d17222ae54ba19990886b020b5fd96789e9e43d80": {
-    "describe": {
-      "columns": [
-        {
-          "name": "id",
-          "ordinal": 0,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "short_name",
-          "ordinal": 1,
-          "type_info": "Text"
-        },
-        {
-          "name": "title",
-          "ordinal": 2,
-          "type_info": "Text"
-        },
-        {
-          "name": "written_at",
-          "ordinal": 3,
-          "type_info": "Date"
-        },
-        {
-          "name": "is_reference",
-          "ordinal": 4,
-          "type_info": "Bool"
-        },
-        {
-          "name": "contributors",
-          "ordinal": 5,
-          "type_info": "Jsonb"
-        }
-      ],
-      "nullable": [
-        false,
-        false,
-        false,
-        true,
-        false,
-        null
-      ],
-      "parameters": {
-        "Left": []
-      }
-    },
-    "query": "select\n  d.id,\n  d.short_name,\n  d.title,\n  d.written_at,\n  d.is_reference,\n  coalesce(\n    jsonb_agg(\n      jsonb_build_object(\n        'name', contributor.full_name, 'role', attr.contribution_role\n      )\n    ) filter (where contributor is not null),\n    '[]'\n  )\n  as contributors\nfrom document as d\n  left join contributor_attribution as attr on attr.document_id = d.id\n  left join contributor on contributor.id = attr.contributor_id\ngroup by d.id\n"
   },
   "2874ae8f9cec1ce09c268adc74b096a15ca1d90cbb324289c679df9e451cb2ee": {
     "describe": {
@@ -726,6 +680,28 @@
     },
     "query": "select\n  id,\n  source_text,\n  simple_phonetics,\n  phonemic,\n  english_gloss,\n  commentary,\n  document_id,\n  index_in_document,\n  page_number\nfrom word\nwhere document_id = $1\norder by index_in_document\n"
   },
+  "57cedb81c9005af95d0cecf175ab81fbe7904e8d74d4c96a31be15a5c48c4377": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        }
+      ],
+      "nullable": [
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Text",
+          "Text"
+        ]
+      }
+    },
+    "query": "insert into morpheme_gloss (document_id, gloss, example_shape)\nvalues ($1, $2, $3)\non conflict (coalesce(document_id, uuid_nil()), gloss)\n  do update set\n    example_shape = excluded.example_shape\n  returning id\n"
+  },
   "5b699e0fcc9467aed4c1b5ae6361341ed338c32e286e1ae47a3ded10bba0bbf2": {
     "describe": {
       "columns": [
@@ -1103,30 +1079,6 @@
     },
     "query": "select\n  id,\n  source_text,\n  simple_phonetics,\n  phonemic,\n  english_gloss,\n  commentary,\n  document_id,\n  index_in_document,\n  page_number\nfrom word\nwhere source_text like any($1)\n"
   },
-  "93a6c0a72e2d56064fffad8eda07a6b8aa73080106ce3283a087b010bc3658dd": {
-    "describe": {
-      "columns": [
-        {
-          "name": "title",
-          "ordinal": 0,
-          "type_info": "Text"
-        },
-        {
-          "name": "slug",
-          "ordinal": 1,
-          "type_info": "Text"
-        }
-      ],
-      "nullable": [
-        false,
-        false
-      ],
-      "parameters": {
-        "Left": []
-      }
-    },
-    "query": "select\n  document_group.title,\n  document_group.slug\nfrom document_group\n  left join document on document.group_id = document_group.id\nwhere document.is_reference is false\ngroup by document_group.id\norder by document_group.title asc\n"
-  },
   "98f3ef23ebc76420a18f30502019f9d7e676ee9e7e2ebb14290beeda813c4fc4": {
     "describe": {
       "columns": [],
@@ -1324,32 +1276,53 @@
     },
     "query": "with t as (\n  select distinct on (morpheme_tag.gloss)\n    abbreviation_system.short_name as system_name,\n    morpheme_tag.gloss,\n    morpheme_tag.title,\n    abstract_morpheme_tag.description,\n    abstract_morpheme_tag.linguistic_type\n  from abbreviation_system\n    inner join\n      morpheme_tag on abbreviation_system.id = morpheme_tag.system_id\n    inner join\n      abstract_morpheme_tag on\n        abstract_morpheme_tag.id = any(morpheme_tag.abstract_ids)\n  where abbreviation_system.short_name = $1\n)\n\nselect *\nfrom t\norder by linguistic_type asc, gloss asc;\n"
   },
-  "ca83210b006993f01c2ad98d67410d22e0f633d560482988b442bfb10dd6a1f0": {
+  "b35269a448a177e9291461e25614e7f7779c46d962dbf9f8418982025ec0452b": {
     "describe": {
-      "columns": [],
-      "nullable": [],
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "short_name",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "title",
+          "ordinal": 2,
+          "type_info": "Text"
+        },
+        {
+          "name": "written_at",
+          "ordinal": 3,
+          "type_info": "Date"
+        },
+        {
+          "name": "is_reference",
+          "ordinal": 4,
+          "type_info": "Bool"
+        },
+        {
+          "name": "contributors",
+          "ordinal": 5,
+          "type_info": "Jsonb"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        true,
+        false,
+        null
+      ],
       "parameters": {
-        "Left": [
-          "Uuid",
-          "Text",
-          "Uuid",
-          "Int8",
-          "Text",
-          {
-            "Custom": {
-              "kind": {
-                "Enum": [
-                  "Morpheme",
-                  "Clitic"
-                ]
-              },
-              "name": "segment_type"
-            }
-          }
-        ]
+        "Left": []
       }
     },
-    "query": "-- Look for a matching global gloss before trying to create a document-local gloss.\nwith global_gloss as (\n  select morpheme_gloss.id\n  from morpheme_gloss\n    inner join\n      abstract_morpheme_tag as abstract on morpheme_gloss.tag_id = abstract.id\n  where document_id is null and gloss = $2\n  limit 1\n), inserted_gloss as (\n  insert into morpheme_gloss (document_id, gloss)\n    select $1, $2\n    where not exists (select id from global_gloss)\n  on conflict (document_id, gloss)\n    do update set example_shape = excluded.example_shape,\n       tag_id = excluded.tag_id\n  returning id\n)\n\ninsert into word_segment (word_id, index_in_word, morpheme, gloss_id, followed_by)\nselect $3, $4, $5, coalesce(global_gloss.id, inserted_gloss.id), $6\nfrom global_gloss, inserted_gloss\non conflict (word_id, index_in_word)\n  do update set\n    morpheme = EXCLUDED.morpheme,\n    gloss_id = EXCLUDED.gloss_id,\n    followed_by = EXCLUDED.followed_by\n"
+    "query": "select\n    document.id,\n    document.short_name,\n    document.title,\n    document.written_at,\n    document.is_reference,\n    coalesce(\n        jsonb_agg(\n            jsonb_build_object(\n                'name',\n                contributor.full_name,\n                'role',\n                contributor_attribution.contribution_role\n            )\n        ) filter (where contributor is not null),\n        '[]'\n    )\n    as contributors\nfrom document\nleft join\n    contributor_attribution on contributor_attribution.document_id = document.id\nleft join contributor on contributor.id = contributor_attribution.contributor_id\ngroup by document.id\n"
   },
   "d6377d5a54a702f7df73f287390c0c45a1309f7e705c93d49842b409a947a1fd": {
     "describe": {
@@ -1571,6 +1544,33 @@
       }
     },
     "query": "with resource as (\n  insert into media_resource (url)\n  values ($1)\n  on conflict (url) do update set\n     url = excluded.url\n  returning id\n)\n\ninsert into media_slice (resource_id, time_range)\nselect\n  id,\n  $2\nfrom resource\nreturning id\n"
+  },
+  "e81a4c2c38e1660c1e2a874f3b95bc9f5ae3bb8c69c9235bf6b47709dbe1d8f7": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Text",
+          "Uuid",
+          "Int8",
+          "Text",
+          {
+            "Custom": {
+              "kind": {
+                "Enum": [
+                  "Morpheme",
+                  "Clitic"
+                ]
+              },
+              "name": "segment_type"
+            }
+          }
+        ]
+      }
+    },
+    "query": "-- Look for a matching global gloss before trying to create a document-local gloss.\nwith global_gloss as (\n  select morpheme_gloss.id\n  from morpheme_gloss\n  where document_id is null and gloss = $2\n), inserted_gloss as (\n  insert into morpheme_gloss (document_id, gloss)\n    select $1, $2\n    where not exists (select from global_gloss)\n  on conflict (coalesce(document_id, uuid_nil()), gloss)\n    do update set example_shape = excluded.example_shape,\n       tag_id = excluded.tag_id\n  returning id\n)\n\ninsert into word_segment (word_id, index_in_word, morpheme, gloss_id, followed_by)\nselect $3, $4, $5, coalesce(global_gloss.id, inserted_gloss.id), $6\nfrom global_gloss\nfull outer join inserted_gloss on true\non conflict (word_id, index_in_word)\n  do update set\n    morpheme = EXCLUDED.morpheme,\n    gloss_id = EXCLUDED.gloss_id,\n    followed_by = EXCLUDED.followed_by\n"
   },
   "ea65b10e5e5c6104fea19263c4da453b0d2d13b594f7eebcb3db8d8d0d06aee8": {
     "describe": {
