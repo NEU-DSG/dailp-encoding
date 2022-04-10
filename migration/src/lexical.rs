@@ -1,3 +1,4 @@
+use crate::batch_join_all;
 use crate::spreadsheets::{LexicalEntryWithForms, SheetResult};
 use anyhow::Result;
 use dailp::{
@@ -5,7 +6,6 @@ use dailp::{
     DocumentId, DocumentMetadata, LexicalConnection, MorphemeId, MorphemeSegment,
     PositionInDocument,
 };
-use futures::future::try_join_all;
 use log::info;
 
 pub async fn migrate_dictionaries(db: &Database) -> Result<()> {
@@ -169,7 +169,7 @@ async fn parse_numerals(
             })
         });
 
-    db.insert_lexical_forms(forms).await?;
+    batch_join_all(forms.into_iter().map(|f| db.only_insert_word(f))).await?;
 
     Ok(())
 }
@@ -251,7 +251,7 @@ async fn parse_appendix(db: &Database, sheet_id: &str, to_skip: usize) -> Result
             })
         });
 
-    db.insert_lexical_forms(forms).await?;
+    batch_join_all(forms.into_iter().map(|f| db.only_insert_word(f))).await?;
 
     let links = SheetResult::from_sheet(sheet_id, Some("References")).await?;
     let links = links.values.into_iter().skip(1).filter_map(|row| {
@@ -262,7 +262,7 @@ async fn parse_appendix(db: &Database, sheet_id: &str, to_skip: usize) -> Result
         ))
     });
 
-    try_join_all(
+    batch_join_all(
         links
             .into_iter()
             .map(|link| db.insert_morpheme_relation(link)),
@@ -378,7 +378,7 @@ async fn ingest_particle_index(db: &Database, document_id: &str) -> Result<()> {
         });
 
     // Push the forms to the database.
-    db.insert_lexical_forms(forms).await?;
+    batch_join_all(forms.into_iter().map(|f| db.only_insert_word(f))).await?;
 
     Ok(())
 }
@@ -414,7 +414,7 @@ async fn ingest_ac1995(db: &Database, sheet_id: &str) -> Result<()> {
     });
 
     // Push the forms to the database.
-    db.insert_lexical_forms(forms).await?;
+    batch_join_all(forms.into_iter().map(|f| db.only_insert_word(f))).await?;
 
     Ok(())
 }

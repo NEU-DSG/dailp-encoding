@@ -11,7 +11,6 @@ mod translations;
 
 use anyhow::Result;
 use dailp::{Database, Uuid};
-use futures::future::try_join_all;
 use log::{error, info};
 use std::time::Duration;
 
@@ -95,20 +94,35 @@ async fn migrate_data(db: &Database) -> Result<()> {
         }
     }
 
-    try_join_all(
+    batch_join_all(
         document_contents
             .into_iter()
             .map(|doc| db.insert_document_contents(doc)),
     )
     .await?;
 
-    try_join_all(
+    batch_join_all(
         morpheme_relations
             .into_iter()
             .map(|l| db.insert_morpheme_relation(l)),
     )
     .await?;
 
+    Ok(())
+}
+
+pub async fn batch_join_all<
+    T,
+    F: std::future::Future<Output = Result<T>>,
+    I: Iterator<Item = F>,
+>(
+    it: I,
+) -> Result<()> {
+    use futures::StreamExt;
+    let mut all_done = futures::stream::iter(it).buffer_unordered(4);
+    while let Some(res) = all_done.next().await {
+        res?;
+    }
     Ok(())
 }
 
