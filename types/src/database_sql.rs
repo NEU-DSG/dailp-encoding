@@ -621,30 +621,13 @@ impl Database {
                     .split_whitespace()
                     .join(".");
 
-                let morpheme_tag = query_file!("queries/find_global_gloss.sql", gloss)
-                    .fetch_one(&mut tx)
-                    .await;
-
-                let gloss_id = if let Ok(morpheme_tag) = morpheme_tag {
-                    morpheme_tag.gloss_id
-                } else {
-                    query_file_scalar!(
-                        "queries/upsert_morpheme_gloss.sql",
-                        document_id,
-                        gloss,
-                        None as Option<String>,
-                        None as Option<Uuid>
-                    )
-                    .fetch_one(&mut tx)
-                    .await?
-                };
-
                 query_file!(
                     "queries/upsert_word_segment.sql",
+                    document_id,
+                    gloss,
                     word_id,
                     index as i64,
                     segment.morpheme,
-                    gloss_id,
                     segment.followed_by as Option<SegmentType>
                 )
                 .execute(&mut tx)
