@@ -69,7 +69,7 @@ pub struct AudioRes {
 impl AudioRes {
     /// Calls the DRS API and collates the returned metadata
     pub async fn new(audio_drs_id: &str, annotation_drs_id: &str) -> Result<Self, anyhow::Error> {
-        info!("Creating new Audio Resource");
+        println!("Creating new Audio Resource...");
         // Prepare to call the DRS repeatedly
         let client = Client::new();
         // Get the DRS object for the audio file, using a provided ID

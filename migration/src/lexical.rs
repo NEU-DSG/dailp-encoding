@@ -5,6 +5,7 @@ use dailp::{
     DocumentId, DocumentMetadata, LexicalConnection, MorphemeId, MorphemeSegment,
     PositionInDocument,
 };
+use futures::future::try_join_all;
 use log::info;
 
 pub async fn migrate_dictionaries(db: &Database) -> Result<()> {
@@ -107,7 +108,7 @@ pub async fn migrate_dictionaries(db: &Database) -> Result<()> {
         .chain(ptcp_nouns)
         .chain(inf_nouns);
 
-    info!("Pushing entries to database...");
+    println!("Pushing entries to database...");
     // Push all lexical entries to the database.
     for entry in entries {
         // Push all the surface forms to the sea of words.
@@ -260,9 +261,13 @@ async fn parse_appendix(db: &Database, sheet_id: &str, to_skip: usize) -> Result
             MorphemeId::parse(&row.next()?)?,
         ))
     });
-    for link in links {
-        db.insert_morpheme_relation(link).await?;
-    }
+
+    try_join_all(
+        links
+            .into_iter()
+            .map(|link| db.insert_morpheme_relation(link)),
+    )
+    .await?;
 
     Ok(())
 }
