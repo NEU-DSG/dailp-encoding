@@ -110,11 +110,10 @@ pub async fn migrate_dictionaries(db: &Database) -> Result<()> {
 
     println!("Pushing entries to database...");
     // Push all lexical entries to the database.
-    try_join_all(entries.into_iter().map(|entry| {
+    for entry in entries {
         // Push all the surface forms to the sea of words.
-        db.insert_lexical_entry(entry.entry, entry.forms)
-    }))
-    .await?;
+        db.insert_lexical_entry(entry.entry, entry.forms).await?;
+    }
 
     // DF1975 Grammatical Appendix (PF1975)
     parse_appendix(db, "1VjpKXMqb7CgFKE5lk9E6gqL-k6JKZ3FVUvhnqiMZYQg", 2).await?;

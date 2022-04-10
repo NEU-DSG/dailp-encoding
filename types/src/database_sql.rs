@@ -11,6 +11,7 @@ use {
     },
     std::collections::HashMap,
     std::sync::Arc,
+    std::time::Duration,
     tokio_stream::StreamExt,
     uuid::Uuid,
 };
@@ -24,7 +25,8 @@ impl Database {
     pub async fn connect() -> Result<Self> {
         let db_url = std::env::var("DATABASE_URL")?;
         let conn = PgPoolOptions::new()
-            .max_connections(2)
+            .max_connections(std::thread::available_parallelism().map_or(2, |x| x.get() as u32))
+            .connect_timeout(Duration::from_secs(60))
             .connect(&db_url)
             .await?;
         Ok(Database { client: conn })
