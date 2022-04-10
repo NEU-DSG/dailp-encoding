@@ -225,6 +225,54 @@
     },
     "query": "insert into morpheme_gloss (document_id, gloss, example_shape, tag_id)\n  values ($1, $2, $3, $4)\non conflict (document_id, gloss)\n  do update set example_shape = excluded.example_shape,\n     tag_id = excluded.tag_id\nreturning id\n"
   },
+  "271ddc6e129a3b2b8a6fed0d17222ae54ba19990886b020b5fd96789e9e43d80": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "short_name",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "title",
+          "ordinal": 2,
+          "type_info": "Text"
+        },
+        {
+          "name": "written_at",
+          "ordinal": 3,
+          "type_info": "Date"
+        },
+        {
+          "name": "is_reference",
+          "ordinal": 4,
+          "type_info": "Bool"
+        },
+        {
+          "name": "contributors",
+          "ordinal": 5,
+          "type_info": "Jsonb"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        true,
+        false,
+        null
+      ],
+      "parameters": {
+        "Left": []
+      }
+    },
+    "query": "select\n  d.id,\n  d.short_name,\n  d.title,\n  d.written_at,\n  d.is_reference,\n  coalesce(\n    jsonb_agg(\n      jsonb_build_object(\n        'name', contributor.full_name, 'role', attr.contribution_role\n      )\n    ) filter (where contributor is not null),\n    '[]'\n  )\n  as contributors\nfrom document as d\n  left join contributor_attribution as attr on attr.document_id = d.id\n  left join contributor on contributor.id = attr.contributor_id\ngroup by d.id\n"
+  },
   "2874ae8f9cec1ce09c268adc74b096a15ca1d90cbb324289c679df9e451cb2ee": {
     "describe": {
       "columns": [],
@@ -1673,53 +1721,5 @@
       }
     },
     "query": "insert into word (source_text, simple_phonetics, phonemic, english_gloss, recorded_at, commentary,\n  document_id, page_number, index_in_document, page_id, character_range)\nvalues ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)\non conflict (document_id, index_in_document)\ndo update set\n  source_text = EXCLUDED.source_text,\n  simple_phonetics = EXCLUDED.simple_phonetics,\n  phonemic = EXCLUDED.phonemic,\n  english_gloss = EXCLUDED.english_gloss,\n  commentary = EXCLUDED.commentary\nreturning id\n"
-  },
-  "ff0aa95d3c2d21fdd4e03be8957b1637ffb6cffb6fae76021997b8a5c85e3e65": {
-    "describe": {
-      "columns": [
-        {
-          "name": "id",
-          "ordinal": 0,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "short_name",
-          "ordinal": 1,
-          "type_info": "Text"
-        },
-        {
-          "name": "title",
-          "ordinal": 2,
-          "type_info": "Text"
-        },
-        {
-          "name": "written_at",
-          "ordinal": 3,
-          "type_info": "Date"
-        },
-        {
-          "name": "is_reference",
-          "ordinal": 4,
-          "type_info": "Bool"
-        },
-        {
-          "name": "contributors",
-          "ordinal": 5,
-          "type_info": "Jsonb"
-        }
-      ],
-      "nullable": [
-        false,
-        false,
-        false,
-        true,
-        false,
-        null
-      ],
-      "parameters": {
-        "Left": []
-      }
-    },
-    "query": "select\n  d.id,\n  d.short_name,\n  d.title,\n  d.written_at,\n  d.is_reference,\n  coalesce(\n    jsonb_agg(\n      jsonb_build_object(\n        'name', contributor.full_name, 'role', attr.contribution_role\n      )\n    ) filter (where contributor is not null),\n    '[]'\n  )\n  as contributors\nfrom document as d\n  left join contributor_attribution as attr on attr.document_id = d.id\n  left join contributor on contributor.id = attr.contributor_id\ngroup by d.id,\n  attr.contributor_id,\n  attr.document_id\n"
   }
 }

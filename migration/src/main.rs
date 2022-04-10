@@ -11,6 +11,7 @@ mod translations;
 
 use anyhow::Result;
 use dailp::{Database, Uuid};
+use futures::future::try_join_all;
 use log::{error, info};
 use std::time::Duration;
 
@@ -25,25 +26,24 @@ async fn main() -> Result<()> {
 
     let db = Database::connect().await?;
 
-    info!("Migrating Image Sources");
+    println!("Migrating Image Sources...");
     migrate_image_sources(&db).await?;
 
-    info!("Migrating contributors");
+    println!("Migrating contributors...");
     contributors::migrate_all(&db).await?;
 
-    info!("Migrating tags to database...");
+    println!("Migrating tags to database...");
     tags::migrate_tags(&db).await?;
 
-    info!("Migrating DF1975 and DF2003...");
+    println!("Migrating DF1975 and DF2003...");
     lexical::migrate_dictionaries(&db).await?;
 
-    info!("Migrating early vocabularies...");
+    println!("Migrating early vocabularies...");
     early_vocab::migrate_all(&db).await?;
-
-    info!("Migrating connections...");
 
     migrate_data(&db).await?;
 
+    println!("Migrating connections...");
     connections::migrate_connections(&db).await?;
 
     Ok(())
@@ -69,7 +69,7 @@ async fn migrate_data(db: &Database) -> Result<()> {
             .await?
             .into_index()?;
 
-    info!("Migrating documents to database...");
+    println!("Migrating documents to database...");
 
     // Retrieve data for spreadsheets in sequence.
     // Because of Google API rate limits, we have to process them sequentially
@@ -77,6 +77,7 @@ async fn migrate_data(db: &Database) -> Result<()> {
     // This process encodes the ordering in the Index sheet to allow us to
     // manually order different document collections.
     let mut morpheme_relations = Vec::new();
+    let mut document_contents = Vec::new();
     for (coll_index, collection) in index.collections.into_iter().enumerate() {
         let collection_id = db
             .insert_top_collection(collection.title, coll_index as i64)
@@ -87,16 +88,26 @@ async fn migrate_data(db: &Database) -> Result<()> {
             {
                 morpheme_relations.append(&mut refs);
                 // spreadsheets::write_to_file(&doc)?;
-                db.insert_document_contents(doc).await?;
+                document_contents.push(doc);
             } else {
                 error!("Failed to process {}", sheet_id);
             }
         }
     }
 
-    for l in morpheme_relations {
-        db.insert_morpheme_relation(l).await?;
-    }
+    try_join_all(
+        document_contents
+            .into_iter()
+            .map(|doc| db.insert_document_contents(doc)),
+    )
+    .await?;
+
+    try_join_all(
+        morpheme_relations
+            .into_iter()
+            .map(|l| db.insert_morpheme_relation(l)),
+    )
+    .await?;
 
     Ok(())
 }
@@ -117,10 +128,10 @@ async fn fetch_sheet(
     if let Ok(meta_sheet) = meta {
         let meta = meta_sheet.into_metadata(db, false, order_index).await?;
 
-        info!("---Processing document: {}---", meta.short_name);
+        println!("---Processing document: {}---", meta.short_name);
 
         // Parse references for this particular document.
-        info!("parsing references...");
+        println!("parsing references...");
         let refs =
             spreadsheets::SheetResult::from_sheet(sheet_id, Some(REFERENCES_SHEET_NAME)).await;
         let refs = if let Ok(refs) = refs {
@@ -147,7 +158,7 @@ async fn fetch_sheet(
         // Each document page lives in its own tab.
         for index in 0..page_count {
             let tab_name = if page_count > 1 {
-                info!("Pulling Page {}...", index + 1);
+                println!("Pulling Page {}...", index + 1);
                 Some(format!("Page {}", index + 1))
             } else {
                 None
