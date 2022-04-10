@@ -353,26 +353,6 @@
     },
     "query": "select\n  id,\n  source_text,\n  simple_phonetics,\n  phonemic,\n  english_gloss,\n  commentary,\n  document_id,\n  index_in_document,\n  page_number\nfrom word\nwhere source_text ilike $1\n  or simple_phonetics ilike $1\n  or english_gloss ilike $1\n"
   },
-  "2d0fce2bf80b70718b421e5ace5ecbe7bca8a2b5cb3b421ef76431c4599f0cd6": {
-    "describe": {
-      "columns": [
-        {
-          "name": "gloss_id",
-          "ordinal": 0,
-          "type_info": "Uuid"
-        }
-      ],
-      "nullable": [
-        false
-      ],
-      "parameters": {
-        "Left": [
-          "Text"
-        ]
-      }
-    },
-    "query": "select morpheme_gloss.id as gloss_id\nfrom morpheme_gloss\n  inner join\n    abstract_morpheme_tag as abstract on morpheme_gloss.tag_id = abstract.id\nwhere document_id is null and gloss = $1\n"
-  },
   "30cd42e3b5c9974cb94b5b116e35555ca460648807f08265a80375f2edd92c53": {
     "describe": {
       "columns": [
@@ -1159,32 +1139,6 @@
     },
     "query": "insert into contributor (full_name)\nvalues ($1)\non conflict (full_name) do update\nset full_name = EXCLUDED.full_name\n"
   },
-  "992e1fe8f13bc7d96a99bd4672fd5135cd536202fba0c78a668888dd6224637f": {
-    "describe": {
-      "columns": [],
-      "nullable": [],
-      "parameters": {
-        "Left": [
-          "Uuid",
-          "Int8",
-          "Text",
-          "Uuid",
-          {
-            "Custom": {
-              "kind": {
-                "Enum": [
-                  "Morpheme",
-                  "Clitic"
-                ]
-              },
-              "name": "segment_type"
-            }
-          }
-        ]
-      }
-    },
-    "query": "insert into word_segment (word_id, index_in_word, morpheme, gloss_id, followed_by)\nvalues ($1, $2, $3, $4, $5)\non conflict (word_id, index_in_word)\n  do update set\n    morpheme = EXCLUDED.morpheme,\n    gloss_id = EXCLUDED.gloss_id,\n    followed_by = EXCLUDED.followed_by\n"
-  },
   "992ff11ed26e43847c6b73fa0c8be2eb3b4268f192fa309f39252b5b68e00eb9": {
     "describe": {
       "columns": [
@@ -1369,6 +1323,33 @@
       }
     },
     "query": "with t as (\n  select distinct on (morpheme_tag.gloss)\n    abbreviation_system.short_name as system_name,\n    morpheme_tag.gloss,\n    morpheme_tag.title,\n    abstract_morpheme_tag.description,\n    abstract_morpheme_tag.linguistic_type\n  from abbreviation_system\n    inner join\n      morpheme_tag on abbreviation_system.id = morpheme_tag.system_id\n    inner join\n      abstract_morpheme_tag on\n        abstract_morpheme_tag.id = any(morpheme_tag.abstract_ids)\n  where abbreviation_system.short_name = $1\n)\n\nselect *\nfrom t\norder by linguistic_type asc, gloss asc;\n"
+  },
+  "ca83210b006993f01c2ad98d67410d22e0f633d560482988b442bfb10dd6a1f0": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Text",
+          "Uuid",
+          "Int8",
+          "Text",
+          {
+            "Custom": {
+              "kind": {
+                "Enum": [
+                  "Morpheme",
+                  "Clitic"
+                ]
+              },
+              "name": "segment_type"
+            }
+          }
+        ]
+      }
+    },
+    "query": "-- Look for a matching global gloss before trying to create a document-local gloss.\nwith global_gloss as (\n  select morpheme_gloss.id\n  from morpheme_gloss\n    inner join\n      abstract_morpheme_tag as abstract on morpheme_gloss.tag_id = abstract.id\n  where document_id is null and gloss = $2\n  limit 1\n), inserted_gloss as (\n  insert into morpheme_gloss (document_id, gloss)\n    select $1, $2\n    where not exists (select id from global_gloss)\n  on conflict (document_id, gloss)\n    do update set example_shape = excluded.example_shape,\n       tag_id = excluded.tag_id\n  returning id\n)\n\ninsert into word_segment (word_id, index_in_word, morpheme, gloss_id, followed_by)\nselect $3, $4, $5, coalesce(global_gloss.id, inserted_gloss.id), $6\nfrom global_gloss, inserted_gloss\non conflict (word_id, index_in_word)\n  do update set\n    morpheme = EXCLUDED.morpheme,\n    gloss_id = EXCLUDED.gloss_id,\n    followed_by = EXCLUDED.followed_by\n"
   },
   "d6377d5a54a702f7df73f287390c0c45a1309f7e705c93d49842b409a947a1fd": {
     "describe": {
