@@ -77,6 +77,7 @@ async fn migrate_data(db: &Database) -> Result<()> {
     // This process encodes the ordering in the Index sheet to allow us to
     // manually order different document collections.
     let mut morpheme_relations = Vec::new();
+    let mut document_contents = Vec::new();
     for (coll_index, collection) in index.collections.into_iter().enumerate() {
         let collection_id = db
             .insert_top_collection(collection.title, coll_index as i64)
@@ -87,12 +88,19 @@ async fn migrate_data(db: &Database) -> Result<()> {
             {
                 morpheme_relations.append(&mut refs);
                 // spreadsheets::write_to_file(&doc)?;
-                db.insert_document_contents(doc).await?;
+                document_contents.push(doc);
             } else {
                 error!("Failed to process {}", sheet_id);
             }
         }
     }
+
+    try_join_all(
+        document_contents
+            .into_iter()
+            .map(|doc| db.insert_document_contents(doc)),
+    )
+    .await?;
 
     try_join_all(
         morpheme_relations
