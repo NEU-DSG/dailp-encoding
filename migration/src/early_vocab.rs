@@ -1,6 +1,6 @@
+use crate::batch_join_all;
 use anyhow::Result;
 use dailp::{Contributor, Database};
-use futures::future::try_join_all;
 
 const COLLECTION_NAME: &str = "Early Vocabularies";
 
@@ -61,7 +61,7 @@ async fn migrate_new_vocabs(db: &Database, sheet_ids: &[&str]) -> Result<()> {
         let mut new_links = parse_early_vocab(db, s, 0, true, false, true, true, 3).await?;
         links.append(&mut new_links);
     }
-    try_join_all(links.into_iter().map(|l| db.insert_morpheme_relation(l))).await?;
+    batch_join_all(links.into_iter().map(|l| db.insert_morpheme_relation(l))).await?;
     Ok(())
 }
 
@@ -195,7 +195,7 @@ async fn parse_early_vocab(
     let (forms, links): (Vec<_>, Vec<_>) = entries.unzip();
 
     // Push all forms and links to the database.
-    try_join_all(forms.into_iter().map(|form| db.insert_one_word(form))).await?;
+    batch_join_all(forms.into_iter().map(|form| db.insert_one_word(form))).await?;
 
     Ok(links.into_iter().flatten().collect())
 }

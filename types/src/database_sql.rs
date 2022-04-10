@@ -3,7 +3,6 @@ use {
     anyhow::Result,
     async_graphql::dataloader::*,
     async_trait::async_trait,
-    futures::future::try_join_all,
     itertools::Itertools,
     sqlx::{
         postgres::{types::PgRange, PgPoolOptions},
@@ -12,7 +11,6 @@ use {
     std::collections::HashMap,
     std::sync::Arc,
     std::time::Duration,
-    tokio_stream::StreamExt,
     uuid::Uuid,
 };
 
@@ -26,7 +24,7 @@ impl Database {
         let db_url = std::env::var("DATABASE_URL")?;
         let conn = PgPoolOptions::new()
             .max_connections(std::thread::available_parallelism().map_or(2, |x| x.get() as u32))
-            .connect_timeout(Duration::from_secs(60))
+            .connect_timeout(Duration::from_secs(60 * 2))
             .connect(&db_url)
             .await?;
         Ok(Database { client: conn })
@@ -576,15 +574,7 @@ impl Database {
         Ok(())
     }
 
-    pub async fn insert_lexical_forms(
-        &self,
-        forms: impl Iterator<Item = AnnotatedForm>,
-    ) -> Result<()> {
-        try_join_all(forms.map(|form| self.only_insert_word(form))).await?;
-        Ok(())
-    }
-
-    async fn only_insert_word<'a>(&self, form: AnnotatedForm) -> Result<Uuid> {
+    pub async fn only_insert_word(&self, form: AnnotatedForm) -> Result<Uuid> {
         let mut tx = self.client.begin().await?;
         let document_id = form.position.document_id.0;
         let id = self
