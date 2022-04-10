@@ -152,9 +152,7 @@ export const VerticalMorphemicSegmentation = (p: {
               {index !== segmentCount - 1 ? segment.nextSeparator : null}
             </td>
             <td className={css.tableCells}>
-              {segment.matchingTag
-                ? morphemeDisplayTag(segment.matchingTag, p.tagSet)?.title
-                : segment.gloss}
+              {segment.matchingTag ? segment.matchingTag.title : segment.gloss}
             </td>
           </tr>
         ))}
