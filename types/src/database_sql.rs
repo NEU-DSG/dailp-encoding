@@ -24,7 +24,9 @@ impl Database {
         let db_url = std::env::var("DATABASE_URL")?;
         let conn = PgPoolOptions::new()
             .max_connections(std::thread::available_parallelism().map_or(2, |x| x.get() as u32))
-            .connect_timeout(Duration::from_secs(60 * 2))
+            .connect_timeout(Duration::from_secs(60 * 4))
+            // Disable excessive pings to the database.
+            .test_before_acquire(false)
             .connect(&db_url)
             .await?;
         Ok(Database { client: conn })
@@ -619,30 +621,13 @@ impl Database {
                     .split_whitespace()
                     .join(".");
 
-                let morpheme_tag = query_file!("queries/find_global_gloss.sql", gloss)
-                    .fetch_one(&mut tx)
-                    .await;
-
-                let gloss_id = if let Ok(morpheme_tag) = morpheme_tag {
-                    morpheme_tag.gloss_id
-                } else {
-                    query_file_scalar!(
-                        "queries/upsert_morpheme_gloss.sql",
-                        document_id,
-                        gloss,
-                        None as Option<String>,
-                        None as Option<Uuid>
-                    )
-                    .fetch_one(&mut tx)
-                    .await?
-                };
-
                 query_file!(
                     "queries/upsert_word_segment.sql",
+                    document_id,
+                    gloss,
                     word_id,
                     index as i64,
                     segment.morpheme,
-                    gloss_id,
                     segment.followed_by as Option<SegmentType>
                 )
                 .execute(&mut tx)

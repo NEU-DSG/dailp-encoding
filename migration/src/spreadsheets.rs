@@ -501,43 +501,45 @@ impl<'a> AnnotatedLine {
             .map(|(line_idx, line)| {
                 // Number of words = length of the longest row in this line.
                 let num_words = line.rows.iter().map(|row| row.items.len()).max().unwrap();
+                let line_num = line_idx + 1;
+                let source_row = line
+                    .rows
+                    .get(0)
+                    .expect(&format!("No source row for line {}", line_num));
+                let simple_phonetics_row = line
+                    .rows
+                    .get(2)
+                    .expect(&format!("No simple phonetics for line {}", line_num));
+                let phonemic_row = line
+                    .rows
+                    .get(3)
+                    .expect(&format!("No phonemic representation for line {}", line_num));
+                let morpheme_row = line
+                    .rows
+                    .get(4)
+                    .expect(&format!("No morphemic segmentation for line {}", line_num));
+                let gloss_row = line
+                    .rows
+                    .get(5)
+                    .expect(&format!("No morphemic gloss for line {}", line_num));
+                let translation_row = line
+                    .rows
+                    .get(6)
+                    .expect(&format!("No translation for line {}", line_num));
+                let commentary_row = line
+                    .rows
+                    .get(7)
+                    .expect(&format!("No commentary for line {}", line_num));
                 // For each word, extract the necessary data from every row.
                 let words = (0..num_words)
                     // Only use words with a syllabary source entry.
-                    .filter(|i| line.rows.get(0).and_then(|r| r.items.get(*i)).is_some())
+                    .filter(|i| source_row.items.get(*i).is_some())
                     .map(|i| {
-                        let pb = line.rows[0].items[i].find(PAGE_BREAK);
-                        let morphemes = line
-                            .rows
-                            .get(4)
-                            .expect(&format!(
-                                "No morphemic segmentation for line {}, word {}",
-                                line_idx + 1,
-                                i + 1
-                            ))
-                            .items
-                            .get(i);
-                        let glosses = line
-                            .rows
-                            .get(5)
-                            .expect(&format!(
-                                "No morphemic gloss for line {}, word {}",
-                                line_idx + 1,
-                                i + 1
-                            ))
-                            .items
-                            .get(i);
-                        let translation = line
-                            .rows
-                            .get(6)
-                            .expect(&format!(
-                                "No translation for line {}, word {}",
-                                line_idx + 1,
-                                i + 1
-                            ))
-                            .items
-                            .get(i)
-                            .map(|x| x.trim().to_owned());
+                        let source_text = &source_row.items[i];
+                        let pb = source_text.find(PAGE_BREAK);
+                        let morphemes = morpheme_row.items.get(i);
+                        let glosses = gloss_row.items.get(i);
+                        let translation = translation_row.items.get(i).map(|x| x.trim().to_owned());
                         let w = AnnotatedForm {
                             // TODO Extract into public function!
                             // id: format!("{}.{}", meta.id.0, word_index),
@@ -547,13 +549,13 @@ impl<'a> AnnotatedLine {
                                 "1".to_owned(),
                                 word_index,
                             ),
-                            source: line.rows[0].items[i].trim().replace(LINE_BREAK, ""),
+                            source: source_text.trim().replace(LINE_BREAK, ""),
                             normalized_source: None,
-                            simple_phonetics: line.rows[2]
+                            simple_phonetics: simple_phonetics_row
                                 .items
                                 .get(i)
                                 .map(|x| x.replace("ʔ", "'")),
-                            phonemic: line.rows[3].items.get(i).map(|x| x.to_owned()),
+                            phonemic: phonemic_row.items.get(i).map(|x| x.to_owned()),
                             segments: if let (Some(m), Some(g)) = (morphemes, glosses) {
                                 MorphemeSegment::parse_many(m, g)
                             } else {
@@ -563,10 +565,10 @@ impl<'a> AnnotatedLine {
                                 .into_iter()
                                 .filter_map(|x| x)
                                 .collect(),
-                            commentary: line.rows[7].items.get(i).map(|x| x.to_owned()),
+                            commentary: commentary_row.items.get(i).map(|x| x.to_owned()),
                             page_break: pb.map(|i| i as i32),
                             line_break: pb
-                                .or_else(|| line.rows[0].items[i].find(LINE_BREAK))
+                                .or_else(|| source_text.find(LINE_BREAK))
                                 .map(|i| i as i32),
                             date_recorded: None,
                             audio_track: if meta.audio_recording.is_some() // if audio file and annotation exists

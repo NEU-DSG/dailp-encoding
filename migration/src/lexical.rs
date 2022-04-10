@@ -86,6 +86,17 @@ pub async fn migrate_dictionaries(db: &Database) -> Result<()> {
         3,
     );
 
+    let entries = df1975
+        .chain(df2003)
+        .chain(root_nouns)
+        .chain(root_adjs)
+        .chain(body_parts)
+        .chain(irreg_nouns)
+        .chain(ptcp_nouns)
+        .chain(inf_nouns);
+
+    println!("Pushing entries to database...");
+
     parse_numerals(
         db,
         "1MB_FCG3QhmX-pw9t9PyMtFlV8SCvgXzWz8B9BdvEtec",
@@ -99,16 +110,6 @@ pub async fn migrate_dictionaries(db: &Database) -> Result<()> {
 
     ingest_ac1995(db, "1x02KTuF0yyEFcrJwkfFiBKj79ysQTZfLKB6hKeq-ZT8").await?;
 
-    let entries = df1975
-        .chain(df2003)
-        .chain(root_nouns)
-        .chain(root_adjs)
-        .chain(body_parts)
-        .chain(irreg_nouns)
-        .chain(ptcp_nouns)
-        .chain(inf_nouns);
-
-    println!("Pushing entries to database...");
     // Push all lexical entries to the database.
     for entry in entries {
         // Push all the surface forms to the sea of words.
