@@ -240,7 +240,7 @@ export const PrefPanel = () => {
   const preferences = useContext(PreferencesContext)
   return (
     <div>
-      <label>Display Mode: </label>
+      <label>Display Mode: </label><br/>
       {
         <ExperiencePicker
           aria-described-by={"Selected-ViewMode"}
@@ -251,7 +251,7 @@ export const PrefPanel = () => {
         {levelNameMapping[preferences.viewMode].details}
       </p>
 
-      <label>Romanization Method: </label>
+      <label>Romanization Method: </label><br/>
       {
         <PhoneticsPicker
           aria-described-by={"Selected-Phonetics"}
