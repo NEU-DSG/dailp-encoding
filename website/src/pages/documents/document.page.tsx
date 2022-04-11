@@ -6,7 +6,6 @@ import React, {
 } from "react"
 import { isMobile } from "react-device-detect"
 import { Helmet } from "react-helmet"
-import Sticky from "react-stickynode"
 import {
   Dialog,
   DialogBackdrop,
@@ -28,7 +27,7 @@ import {
   documentRoute,
 } from "src/routes"
 import { useScrollableTabState } from "src/scrollable-tabs"
-import { AnnotatedForm, Segment } from "src/segment"
+import { AnnotatedForm, DocumentPage, Segment } from "src/segment"
 import {
   BasicMorphemeSegment,
   PhoneticRepresentation,
@@ -58,7 +57,7 @@ type NullPick<T, F extends keyof NonNullable<T>> = Pick<
 /** A full annotated document, including all metadata and the translation(s) */
 const AnnotatedDocumentPage = (props: { id: string }) => {
   const [{ data }] = Dailp.useAnnotatedDocumentQuery({
-    variables: { id: props.id },
+    variables: { slug: props.id },
   })
   const doc = data?.document
   if (!doc) {
@@ -80,8 +79,7 @@ const TabSet = ({ doc }: { doc: Document }) => {
   const tabs = useScrollableTabState({ selectedId: Tabs.ANNOTATION })
   return (
     <>
-      <WideSticky
-        top={isMobile ? "#header" : undefined}
+      <div
         className={css.wideAndTop}
       >
         <TabList
@@ -97,7 +95,7 @@ const TabSet = ({ doc }: { doc: Document }) => {
             Original Text
           </Tab>
         </TabList>
-      </WideSticky>
+      </div>
 
       <TabPanel
         {...tabs}
@@ -114,21 +112,21 @@ const TabSet = ({ doc }: { doc: Document }) => {
         id={`${Tabs.IMAGES}-panel`}
         tabId={Tabs.IMAGES}
       >
-        {doc.pageImages ? (
-          <PageImages pageImages={doc.pageImages} document={doc} />
+        {doc.translatedPages ? (
+          <PageImages
+            pageImages={{
+              urls:
+                doc.translatedPages
+                  ?.filter((p) => !!p.image)
+                  .map((p) => p.image!.url) ?? [],
+            }}
+            document={doc}
+          />
         ) : null}
       </TabPanel>
     </>
   )
 }
-
-const SolidSticky = (props: Omit<Sticky.Props, "innerClass">) => (
-  <Sticky innerClass={css.solidSticky} {...props} />
-)
-
-const WideSticky = (props: Omit<Sticky.Props, "innerClass">) => (
-  <Sticky innerClass={css.wideSticky} {...props} />
-)
 
 const TranslationTab = ({ doc }: { doc: Document }) => {
   const [selectedMorpheme, setMorpheme] = useState<BasicMorphemeSegment | null>(
@@ -142,7 +140,7 @@ const TranslationTab = ({ doc }: { doc: Document }) => {
     setDialogOpen(true)
   }
 
-  const dialog = useDialogState({ animated: true, modal: false })
+  const dialog = useDialogState({ animated: true })
   const [selectedWord, setSelectedWord] =
     useState<Dailp.FormFieldsFragment | null>(null)
   const selectAndShowWord = (content: Dailp.FormFieldsFragment | null) => {
@@ -262,7 +260,7 @@ const DocumentContents = ({
   }
 
   const [{ data }] = Dailp.useDocumentContentsQuery({
-    variables: { id: doc.id, isReference: doc.isReference, morphemeSystem },
+    variables: { slug: doc.slug, isReference: doc.isReference, morphemeSystem },
   })
   const docContents = data?.document
   if (!docContents) {
@@ -270,15 +268,18 @@ const DocumentContents = ({
   }
   return (
     <>
-      {docContents.translatedSegments?.map((seg, i) => (
-        <Segment
+      {docContents.translatedPages?.map((seg, i) => (
+        <DocumentPage
           key={i}
-          segment={seg.source}
+          segment={seg}
           onOpenDetails={openDetails}
           viewMode={experienceLevel}
           tagSet={tagSet}
-          translations={seg.translation as Dailp.TranslationBlock}
-          pageImages={doc.pageImages?.urls!}
+          pageImages={
+            doc.translatedPages
+              ?.filter((p) => !!p.image)
+              .map((p) => p.image!.url) ?? []
+          }
           phoneticRepresentation={phoneticRepresentation}
           wordPanelDetails={wordPanelDetails}
         />
@@ -291,8 +292,7 @@ const DocumentContents = ({
           viewMode={experienceLevel}
           tagSet={tagSet}
           phoneticRepresentation={phoneticRepresentation}
-          translations={null}
-          pageImages={doc.pageImages?.urls!}
+          pageImages={[]}
           wordPanelDetails={wordPanelDetails}
         />
       ))}
@@ -303,7 +303,10 @@ const DocumentContents = ({
 export const DocumentTitleHeader = (p: {
   doc: Pick<Dailp.AnnotatedDoc, "slug" | "title"> & {
     date: NullPick<Dailp.AnnotatedDoc["date"], "year">
-    collection: NullPick<Dailp.AnnotatedDoc["collection"], "name" | "slug">
+    breadcrumbs: readonly Pick<
+      Dailp.AnnotatedDoc["breadcrumbs"][0],
+      "name" | "slug"
+    >[]
     audioRecording?: NullPick<
       Dailp.AnnotatedDoc["audioRecording"],
       "resourceUrl"
@@ -314,11 +317,10 @@ export const DocumentTitleHeader = (p: {
   <header className={css.docHeader}>
     <Breadcrumbs aria-label="Breadcrumbs">
       <Link href="/">Collections</Link>
-      {p.doc.collection && (
-        <Link href={collectionRoute(p.doc.collection.slug!)}>
-          {p.doc.collection.name}
-        </Link>
-      )}
+      {p.doc.breadcrumbs &&
+        p.doc.breadcrumbs.map((crumb) => (
+          <Link href={collectionRoute(crumb.slug)}>{crumb.name}</Link>
+        ))}
     </Breadcrumbs>
 
     <h1 className={css.docTitle}>

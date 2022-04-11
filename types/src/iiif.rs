@@ -34,16 +34,21 @@ impl Manifest {
     /// Make a IIIF manifest from the given document
     pub async fn from_document(db: &Database, doc: AnnotatedDoc, manifest_uri: String) -> Self {
         let page_images = doc.meta.page_images.unwrap();
-        let (image_source, annotations, words) = {
-            let annot_db = db.annotations();
+        let (
+            image_source, // , _annotations
+            words,
+        ) = {
+            // let annot_db = db.annotations();
             join!(
-                db.image_source(&page_images.source),
-                annot_db.on_document(&doc.meta.id),
-                db.words_in_document(&doc.meta.id)
+                db.image_source_by_id(page_images.source),
+                // annot_db.on_document(&doc.meta.id),
+                db.words_in_document(doc.meta.id)
             )
         };
-        let annotations = &annotations.unwrap();
-        let words = &words.unwrap();
+        let annotations: Vec<crate::annotation::Annotation> = Vec::new();
+        let words: Vec<_> = words.unwrap().collect();
+        let words = &words;
+        let annotations = &annotations;
         let image_source = &image_source.unwrap().unwrap();
         let manifest_uri = &manifest_uri;
         Self::new(
@@ -66,11 +71,10 @@ impl Manifest {
                     let annotations_uri = format!("{}/annotations", page_uri);
                     let annotation_page = AnnotationPage {
                         items: words
-                            .into_iter()
+                            .iter()
                             .filter_map(|word| {
-                                if let Some(geometry) = &word.position.geometry {
-                                    Some(Annotation {
-                                        id: format!("{}/{}", annotations_uri, word.id),
+                                word.position.geometry.as_ref().map(|geometry| Annotation {
+                                        id: format!("{}/{:?}", annotations_uri, word.id),
                                         motivation: "supplementing".to_owned(),
                                         body: AnnotationBody::TextualBody(TextualBody {
                                             language: "en".to_string(),
@@ -84,11 +88,8 @@ impl Manifest {
                                             },
                                         }),
                                     })
-                                } else {
-                                    None
-                                }
                             })
-                            .chain(annotations.into_iter().filter_map(|annote| {
+                            .chain(annotations.iter().filter_map(|annote| {
                                 match &annote.attached_to {
                                     AnnotationAttachment::DocumentRegion(DocumentRegion {
                                         region,

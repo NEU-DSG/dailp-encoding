@@ -35,7 +35,7 @@ jobs:
       AWS_SSH_KEY: ${{ secrets.AWS_SSH_KEY }}
       GIT_REPOSITORY_URL: https://github.com/neu-dsg/dailp-encoding
       OAUTH_TOKEN: ${{ secrets.OAUTH_TOKEN }}
-      RUST_LOG: info
+      RUST_LOG: warn
       TF_STAGE: ${{ github.event_name == 'release' && 'prod' || 'dev' }}
 
     # Steps represent a sequence of tasks that will be executed as part of the job
@@ -114,10 +114,24 @@ jobs:
       - name: Deploy back-end to AWS via terraform
         run: nix run --impure -L .#tf-apply-now
       - name: Encode documents as TEI and database entries
-        if: steps.filter.outputs.data == 'true' || github.event_name == 'release'
+        # Sets up port forwarding to remote database on port 5432
         run: |
+          echo "Creating SSH key file..."
+          echo "${{secrets.AWS_BASTION_SSH_KEY}}" > dailp-deployment-key.pem
+          chmod 400 ./dailp-deployment-key.pem
+          echo "Retrieving terraform outputs..."
+          BASTION_IP=$(nix run --impure .#tf-output bastion_ip)
+          DATABASE_ENDPOINT=$(nix run --impure .#tf-output database_endpoint)
+          echo "Configuring SSH client..."
+          mkdir -p ~/.ssh
+          ssh-keyscan -H $BASTION_IP >> ~/.ssh/known_hosts
+          echo "Forwarding port 5432 to remote database $DATABASE_ENDPOINT through $BASTION_IP"
+          ssh -i ./dailp-deployment-key.pem -f -N -L 5432:$DATABASE_ENDPOINT ec2-user@$BASTION_IP
+
           export DAILP_API_URL=$(nix run --impure .#tf-output functions_url)
           export MONGODB_URI=mongodb://$(nix run --impure .#tf-output mongodb_primary_ip):27017
+          export DATABASE_URL=postgres://dailp:$DATABASE_PASSWORD@localhost:5432/dailp
+          nix run --impure -L .#migrate-schema
           nix run --impure -L .#migrate-data
       - name: Publish website
         run: |

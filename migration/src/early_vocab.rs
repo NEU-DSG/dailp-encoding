@@ -1,3 +1,4 @@
+use crate::batch_join_all;
 use anyhow::Result;
 use dailp::{Contributor, Database};
 
@@ -55,9 +56,12 @@ pub async fn migrate_all(db: &Database) -> Result<()> {
 }
 
 async fn migrate_new_vocabs(db: &Database, sheet_ids: &[&str]) -> Result<()> {
+    let mut links = Vec::new();
     for s in sheet_ids {
-        parse_early_vocab(db, s, 0, true, false, true, true, 3).await?;
+        let mut new_links = parse_early_vocab(db, s, 0, true, false, true, true, 3).await?;
+        links.append(&mut new_links);
     }
+    batch_join_all(links.into_iter().map(|l| db.insert_morpheme_relation(l))).await?;
     Ok(())
 }
 
@@ -70,7 +74,7 @@ async fn parse_early_vocab(
     has_notes: bool,
     has_segmentation: bool,
     num_links: usize,
-) -> Result<()> {
+) -> Result<Vec<dailp::LexicalConnection>> {
     use crate::spreadsheets::SheetResult;
     use dailp::{Date, DocumentMetadata, MorphemeSegment};
 
@@ -83,7 +87,8 @@ async fn parse_early_vocab(
     let date_recorded = year.ok().map(|year| Date::from_ymd(year, 1, 1));
     let authors = meta.next().unwrap_or_default();
     let meta = DocumentMetadata {
-        id: dailp::DocumentId(doc_id),
+        id: Default::default(),
+        short_name: doc_id,
         title,
         date: date_recorded,
         sources: Vec::new(),
@@ -100,6 +105,9 @@ async fn parse_early_vocab(
         audio_recording: None,
         order_index: 0,
     };
+
+    // Update document metadata record
+    let doc_id = db.insert_dictionary_document(&meta).await?;
 
     let entries = sheet
         .values
@@ -160,8 +168,8 @@ async fn parse_early_vocab(
                 }
             }
 
-            Some(ConnectedForm {
-                form: dailp::AnnotatedForm {
+            Some((
+                dailp::AnnotatedForm {
                     normalized_source,
                     simple_phonetics,
                     segments,
@@ -172,34 +180,24 @@ async fn parse_early_vocab(
                     line_break: None,
                     page_break: None,
                     position: dailp::PositionInDocument::new(
-                        meta.id.clone(),
+                        doc_id.clone(),
                         page_number,
                         index as i32 + 1,
                     ),
                     date_recorded: meta.date.clone(),
-                    id,
+                    id: None,
                     audio_track: None,
                 },
                 links,
-            })
+            ))
         });
 
+    let (forms, links): (Vec<_>, Vec<_>) = entries.unzip();
+
     // Push all forms and links to the database.
-    for entry in entries {
-        db.update_form(entry.form).await?;
-        for link in entry.links {
-            db.update_connection(link).await?;
-        }
-    }
+    batch_join_all(forms.into_iter().map(|form| db.insert_one_word(form))).await?;
 
-    // Update document metadata record
-    let doc = dailp::AnnotatedDoc {
-        meta,
-        segments: None,
-    };
-    db.update_document(doc).await?;
-
-    Ok(())
+    Ok(links.into_iter().flatten().collect())
 }
 
 struct ConnectedForm {

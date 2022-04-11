@@ -10,7 +10,7 @@ mod tags;
 mod translations;
 
 use anyhow::Result;
-use dailp::Database;
+use dailp::{Database, Uuid};
 use log::{error, info};
 use std::time::Duration;
 
@@ -23,41 +23,38 @@ async fn main() -> Result<()> {
     dotenv::dotenv().ok();
     pretty_env_logger::init();
 
-    let db = Database::new()?;
+    let db = Database::connect().await?;
 
-    info!("Migrating Image Sources");
+    println!("Migrating Image Sources...");
     migrate_image_sources(&db).await?;
-    info!("Migrating contributors");
+
+    println!("Migrating contributors...");
     contributors::migrate_all(&db).await?;
 
-    info!("Migrating connections...");
-    connections::migrate_connections(&db).await?;
+    println!("Migrating tags to database...");
+    tags::migrate_tags(&db).await?;
+
+    println!("Migrating DF1975 and DF2003...");
+    lexical::migrate_dictionaries(&db).await?;
+
+    println!("Migrating early vocabularies...");
+    early_vocab::migrate_all(&db).await?;
 
     migrate_data(&db).await?;
 
-    info!("Migrating early vocabularies...");
-    early_vocab::migrate_all(&db).await?;
-
-    info!("Migrating DF1975 and DF2003...");
-    lexical::migrate_dictionaries(&db).await?;
-
-    info!("Migrating tags to database...");
-    tags::migrate_tags(&db).await?;
+    println!("Migrating connections...");
+    connections::migrate_connections(&db).await?;
 
     Ok(())
 }
 
 async fn migrate_image_sources(db: &Database) -> Result<()> {
-    use dailp::{ImageSource, ImageSourceId};
-    db.update_image_source(ImageSource {
-        id: ImageSourceId("beinecke".to_owned()),
-        url: "https://collections.library.yale.edu/iiif/2".to_owned(),
-    })
-    .await?;
-    db.update_image_source(ImageSource {
-        id: ImageSourceId("dailp".to_owned()),
-        url: "https://wd0ahsivs3.execute-api.us-east-1.amazonaws.com/latest/iiif/2".to_owned(),
-    })
+    db.upsert_image_source("beinecke", "https://collections.library.yale.edu/iiif/2")
+        .await?;
+    db.upsert_image_source(
+        "dailp",
+        "https://wd0ahsivs3.execute-api.us-east-1.amazonaws.com/latest/iiif/2",
+    )
     .await?;
     Ok(())
 }
@@ -71,20 +68,60 @@ async fn migrate_data(db: &Database) -> Result<()> {
             .await?
             .into_index()?;
 
-    info!("Migrating documents to database...");
+    println!("Migrating documents to database...");
 
     // Retrieve data for spreadsheets in sequence.
     // Because of Google API rate limits, we have to process them sequentially
     // rather than in parallel.
     // This process encodes the ordering in the Index sheet to allow us to
     // manually order different document collections.
-    for (order_index, sheet_id) in index.sheet_ids.iter().enumerate() {
-        if let Some((doc, refs)) = fetch_sheet(sheet_id, order_index as i64).await? {
-            spreadsheets::write_to_file(&doc)?;
-            spreadsheets::migrate_documents_to_db(db, (doc, refs)).await?;
-        } else {
-            error!("Failed to process {}", sheet_id);
+    let mut morpheme_relations = Vec::new();
+    let mut document_contents = Vec::new();
+    for (coll_index, collection) in index.collections.into_iter().enumerate() {
+        let collection_id = db
+            .insert_top_collection(collection.title, coll_index as i64)
+            .await?;
+        for (order_index, sheet_id) in collection.sheet_ids.into_iter().enumerate() {
+            if let Some((doc, mut refs)) =
+                fetch_sheet(db, &sheet_id, collection_id, order_index as i64).await?
+            {
+                morpheme_relations.append(&mut refs);
+                // spreadsheets::write_to_file(&doc)?;
+                document_contents.push(doc);
+            } else {
+                error!("Failed to process {}", sheet_id);
+            }
         }
+    }
+
+    batch_join_all(
+        document_contents
+            .into_iter()
+            .map(|doc| db.insert_document_contents(doc)),
+    )
+    .await?;
+
+    batch_join_all(
+        morpheme_relations
+            .into_iter()
+            .map(|l| db.insert_morpheme_relation(l)),
+    )
+    .await?;
+
+    Ok(())
+}
+
+pub async fn batch_join_all<
+    T,
+    F: std::future::Future<Output = Result<T>>,
+    I: Iterator<Item = F>,
+>(
+    it: I,
+) -> Result<()> {
+    use futures::StreamExt;
+    let mut all_done = futures::stream::iter(it).buffer_unordered(6);
+    while let Some(res) = all_done.next().await {
+        res?;
     }
     Ok(())
 }
@@ -92,7 +129,9 @@ async fn migrate_data(db: &Database) -> Result<()> {
 /// Fetch the contents of the sheet with the given ID, validating the first page as
 /// annotation lines and the "Metadata" page as [dailp::DocumentMetadata].
 async fn fetch_sheet(
+    db: &Database,
     sheet_id: &str,
+    collection_id: Uuid,
     order_index: i64,
 ) -> Result<Option<(dailp::AnnotatedDoc, Vec<dailp::LexicalConnection>)>> {
     use crate::spreadsheets::AnnotatedLine;
@@ -101,18 +140,27 @@ async fn fetch_sheet(
     // This includes publication information and a link to the translation.
     let meta = spreadsheets::SheetResult::from_sheet(sheet_id, Some(METADATA_SHEET_NAME)).await;
     if let Ok(meta_sheet) = meta {
-        let meta = meta_sheet.into_metadata(false, order_index).await?;
+        let meta = meta_sheet.into_metadata(db, false, order_index).await?;
 
-        info!("---Processing document: {}---", meta.id.0);
+        println!("---Processing document: {}---", meta.short_name);
 
         // Parse references for this particular document.
-        info!("parsing references...");
+        println!("parsing references...");
         let refs =
             spreadsheets::SheetResult::from_sheet(sheet_id, Some(REFERENCES_SHEET_NAME)).await;
         let refs = if let Ok(refs) = refs {
-            refs.into_references(&meta.id).await
+            refs.into_references(&meta.short_name).await
         } else {
             Vec::new()
+        };
+
+        let document_id = db
+            .insert_document(&meta, collection_id, order_index)
+            .await?;
+        // Fill in blank UUID.
+        let meta = dailp::DocumentMetadata {
+            id: document_id,
+            ..meta
         };
 
         let page_count = meta
@@ -124,7 +172,7 @@ async fn fetch_sheet(
         // Each document page lives in its own tab.
         for index in 0..page_count {
             let tab_name = if page_count > 1 {
-                info!("Pulling Page {}...", index + 1);
+                println!("Pulling Page {}...", index + 1);
                 Some(format!("Page {}", index + 1))
             } else {
                 None
@@ -139,10 +187,10 @@ async fn fetch_sheet(
             lines.last_mut().unwrap().ends_page = true;
 
             all_lines.append(&mut lines);
-            tokio::time::sleep(Duration::from_millis(1700)).await;
+            tokio::time::sleep(Duration::from_millis(1000)).await;
         }
         let annotated = AnnotatedLine::many_from_semantic(&all_lines, &meta);
-        let segments = AnnotatedLine::lines_into_segments(annotated, &meta.id, &meta.date);
+        let segments = AnnotatedLine::lines_into_segments(annotated, &document_id, &meta.date);
         let doc = dailp::AnnotatedDoc::new(meta, segments);
 
         Ok(Some((doc, refs)))
