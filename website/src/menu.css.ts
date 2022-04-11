@@ -18,6 +18,7 @@ export const navMenu = style({
   borderWidth: thickness.thick,
   borderStyle: "solid",
   flexFlow: "column",
+  zIndex: 999,
   selectors: { "&:focus": { outline: "none" } },
 })
 
@@ -48,7 +49,12 @@ export const drawerItem = style([
   sprinkles({
     color: { any: "text", currentPage: "link", hover: "link", focus: "link" },
   }),
-  { padding: vspace.half, textDecoration: "none", color: colors.text },
+  {
+    display: "inline-block",
+    padding: vspace.quarter,
+    textDecoration: "none",
+    color: colors.text,
+  },
 ])
 
 export const desktopNav = style([

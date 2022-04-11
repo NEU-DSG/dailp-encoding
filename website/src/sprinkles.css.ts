@@ -1,4 +1,4 @@
-import { createTheme, style } from "@vanilla-extract/css"
+import { createTheme, createThemeContract, style } from "@vanilla-extract/css"
 import { createSprinkles, defineProperties } from "@vanilla-extract/sprinkles"
 import { lighten } from "polished"
 import { marginX, paddingX, paddingY } from "src/style-utils"
@@ -10,7 +10,32 @@ function rhythm(v: number): string {
 
 export const rootFontSize = "19px"
 
-export const [themeClass, theme] = createTheme({
+export const theme = createThemeContract({
+  fontSizes: {
+    root: rootFontSize,
+  },
+  colors: {
+    header: null,
+    button: null,
+    buttonHover: null,
+    footer: null,
+    altFooter: null,
+    body: null,
+    text: null,
+    link: null,
+    headings: null,
+    bodyHeadings: null,
+    borders: null,
+  },
+  fonts: {
+    header: null,
+    body: null,
+    cherokee: null,
+    smallCaps: null,
+  },
+})
+
+export const themeClass = createTheme(theme, {
   fontSizes: {
     root: rootFontSize,
   },
@@ -24,6 +49,7 @@ export const [themeClass, theme] = createTheme({
     text: "hsl(0, 0%, 0%, 0.95)",
     link: "#405372",
     headings: "#9f4c43",
+    bodyHeadings: "black",
     borders: "darkgray",
   },
   fonts: {
@@ -316,5 +342,15 @@ export const iconButton = style([
     margin: 0,
   },
 ])
+
+export const cleanButton = style(  {
+    padding: space.small,
+    background: "none",
+    border: "none",
+    outline: "none",
+    cursor: "pointer",
+    margin: 0,
+  },
+)
 
 export const paddedCenterColumn = style([edgePadded, centeredColumn])

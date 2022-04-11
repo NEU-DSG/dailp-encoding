@@ -24,5 +24,10 @@
     "nu:function" = "database";
     "nu:backups" = "no";
   };
+  servers.bastion.instance_tags = {
+    "nu:function" = "bastion";
+    "nu:os" = "linux";
+    "nu:backups" = "no";
+  };
   functions.tags = { "nu:function" = "application-server"; };
 }
