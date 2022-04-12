@@ -1,4 +1,3 @@
-import { DialogOverlay } from "@reach/dialog"
 import { Tooltip } from "@reach/tooltip"
 import "@reach/tooltip/styles.css"
 import { Howl } from "howler"
@@ -110,6 +109,19 @@ export const AnnotatedForm = (
       p.segment
     ) /* This makes sure the word panel updates for changes to the word panel*/
   }
+  let romanization = null
+  if (
+    p.phoneticRepresentation == PhoneticRepresentation.Dailp &&
+    p.segment.simplePhonetics
+  ) {
+    romanization = p.segment.simplePhonetics
+  } else if (
+    p.phoneticRepresentation == PhoneticRepresentation.Worcester &&
+    p.segment.romanizedSource
+  ) {
+    romanization = p.segment.romanizedSource
+  }
+
   if (showAnything) {
     const showSegments = p.viewMode >= ViewMode.Segmentation
     const translation = p.segment.englishGloss.join(", ")
@@ -129,11 +141,10 @@ export const AnnotatedForm = (
             )}
           </CleanButton>
         </div>
-        {p.segment.simplePhonetics ? (
+        {romanization ? (
           <>
-            <div>{p.segment.romanizedSource}</div>
+            <div>{romanization}</div>
             <div>
-              {p.segment.simplePhonetics}
               {p.segment.audioTrack && (
                 <FormAudio
                   endTime={p.segment.audioTrack.endTime}
