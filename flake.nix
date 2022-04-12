@@ -186,7 +186,7 @@
               sqlfluff
               (writers.writeBashBin "dev-database" ''
                 [ ! -d "$PGDATA" ] && initdb
-                postgres -c random_page_cost=1.1 -c cpu_tuple_cost=0.3 -c wal_compression=off -c effective_io_concurrency=200 -c fsync=on -c full_page_writes=off -c checkpoint_completion_target=0.9
+                postgres -D $PGDATA -c unix_socket_directories=/tmp
               '')
               (writers.writeBashBin "dev-graphql" ''
                 cd $PROJECT_ROOT
