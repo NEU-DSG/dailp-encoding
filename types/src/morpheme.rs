@@ -12,7 +12,7 @@ pub struct MorphemeSegment {
     /// Target language representation of this segment.
     pub gloss: String,
     #[serde(skip)]
-    pub gloss_id: Uuid,
+    pub gloss_id: Option<Uuid>,
     /// What kind of thing is the next segment?
     ///
     /// This field determines what character should separate this segment from
@@ -39,7 +39,7 @@ impl MorphemeSegment {
             gloss,
             // FIXME Shortcut to keep this function the same while allowing
             // migration code to create this data structure.
-            gloss_id: Uuid::new_v4(),
+            gloss_id: None,
             followed_by,
         }
     }
@@ -111,12 +111,16 @@ impl MorphemeSegment {
         system: Option<CherokeeOrthography>,
     ) -> FieldResult<Option<TagForm>> {
         use async_graphql::dataloader::*;
-        Ok(context
-            .data::<DataLoader<Database>>()?
-            .load_one(TagForMorpheme(
-                self.gloss_id,
-                system.unwrap_or(CherokeeOrthography::Taoc),
-            ))
-            .await?)
+        if let Some(gloss_id) = self.gloss_id {
+            Ok(context
+                .data::<DataLoader<Database>>()?
+                .load_one(TagForMorpheme(
+                    gloss_id,
+                    system.unwrap_or(CherokeeOrthography::Taoc),
+                ))
+                .await?)
+        } else {
+            Ok(None)
+        }
     }
 }
