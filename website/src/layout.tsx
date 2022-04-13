@@ -24,7 +24,6 @@ const Layout: React.FC = ({ children }) => {
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <body className={themeClass} />
       </Helmet>
-      <Sticky enabled={isMobile} innerZ={2} className={hideOnPrint}>
         <header aria-label="Site Header" id="header" className={css.header}>
           <div className={css.headerContents}>
             <MobileNav />
@@ -43,7 +42,6 @@ const Layout: React.FC = ({ children }) => {
           </div>
           <NavMenu />
         </header>
-      </Sticky>
       {children}
       <Footer />
     </PreferencesProvider>
