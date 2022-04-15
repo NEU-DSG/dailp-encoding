@@ -24,24 +24,24 @@ const Layout: React.FC = ({ children }) => {
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <body className={themeClass} />
       </Helmet>
-        <header aria-label="Site Header" id="header" className={css.header}>
-          <div className={css.headerContents}>
-            <MobileNav />
-            <div className={css.contentContainer}>
-              <h1 className={css.siteTitle}>
-                <Link className={css.siteLink} href="/">
-                  DAILP
-                </Link>
-              </h1>
-              <span className={css.subHeader}>
-                Digital Archive of American Indian Languages Preservation and
-                Perseverance
-              </span>
-            </div>
-            <HeaderPrefDrawer />
+      <header aria-label="Site Header" id="header" className={css.header}>
+        <div className={css.headerContents}>
+          <MobileNav />
+          <div className={css.contentContainer}>
+            <h1 className={css.siteTitle}>
+              <Link className={css.siteLink} href="/">
+                DAILP
+              </Link>
+            </h1>
+            <span className={css.subHeader}>
+              Digital Archive of American Indian Languages Preservation and
+              Perseverance
+            </span>
           </div>
-          <NavMenu />
-        </header>
+          <HeaderPrefDrawer />
+        </div>
+        <NavMenu />
+      </header>
       {children}
       <Footer />
     </PreferencesProvider>
