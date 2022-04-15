@@ -119,7 +119,7 @@ pub async fn batch_join_all<
     it: I,
 ) -> Result<()> {
     use futures::StreamExt;
-    let mut all_done = futures::stream::iter(it).buffer_unordered(6);
+    let mut all_done = futures::stream::iter(it).buffer_unordered(4);
     while let Some(res) = all_done.next().await {
         res?;
     }
