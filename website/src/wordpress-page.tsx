@@ -20,7 +20,7 @@ const WordpressPage = ({ slug }: Props) => {
   const wpPage = data?.page?.__typename === "Page" && data.page
 
   if (wpPage) {
-    return <WordpressContents content={wpPage.content!} />
+    return <WordpressContents content={wpPage.content ?? ""} />
   } else if (fetching) {
     return (
       <div>
