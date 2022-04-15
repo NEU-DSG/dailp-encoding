@@ -94,12 +94,11 @@ async fn migrate_data(db: &Database) -> Result<()> {
         }
     }
 
-    batch_join_all(
-        document_contents
-            .into_iter()
-            .map(|doc| db.insert_document_contents(doc)),
-    )
-    .await?;
+    // Each document takes a bunch of operations to insert, so do them
+    // sequentially instead of concurrently to avoid starving the tasks.
+    for doc in document_contents {
+        db.insert_document_contents(doc).await?;
+    }
 
     batch_join_all(
         morpheme_relations
