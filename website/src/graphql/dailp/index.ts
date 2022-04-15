@@ -1031,10 +1031,7 @@ export const CollectionsListingDocument = gql`
 `
 
 export function useCollectionsListingQuery(
-  options: Omit<
-    Urql.UseQueryArgs<CollectionsListingQueryVariables>,
-    "query"
-  > = {}
+  options?: Omit<Urql.UseQueryArgs<CollectionsListingQueryVariables>, "query">
 ) {
   return Urql.useQuery<CollectionsListingQuery>({
     query: CollectionsListingDocument,
@@ -1052,7 +1049,7 @@ export const DocumentsPagesDocument = gql`
 `
 
 export function useDocumentsPagesQuery(
-  options: Omit<Urql.UseQueryArgs<DocumentsPagesQueryVariables>, "query"> = {}
+  options?: Omit<Urql.UseQueryArgs<DocumentsPagesQueryVariables>, "query">
 ) {
   return Urql.useQuery<DocumentsPagesQuery>({
     query: DocumentsPagesDocument,
@@ -1092,10 +1089,7 @@ export const AnnotatedDocumentDocument = gql`
 `
 
 export function useAnnotatedDocumentQuery(
-  options: Omit<
-    Urql.UseQueryArgs<AnnotatedDocumentQueryVariables>,
-    "query"
-  > = {}
+  options: Omit<Urql.UseQueryArgs<AnnotatedDocumentQueryVariables>, "query">
 ) {
   return Urql.useQuery<AnnotatedDocumentQuery>({
     query: AnnotatedDocumentDocument,
@@ -1131,7 +1125,7 @@ export const DocumentContentsDocument = gql`
 `
 
 export function useDocumentContentsQuery(
-  options: Omit<Urql.UseQueryArgs<DocumentContentsQueryVariables>, "query"> = {}
+  options: Omit<Urql.UseQueryArgs<DocumentContentsQueryVariables>, "query">
 ) {
   return Urql.useQuery<DocumentContentsQuery>({
     query: DocumentContentsDocument,
@@ -1156,7 +1150,7 @@ export const CollectionDocument = gql`
 `
 
 export function useCollectionQuery(
-  options: Omit<Urql.UseQueryArgs<CollectionQueryVariables>, "query"> = {}
+  options: Omit<Urql.UseQueryArgs<CollectionQueryVariables>, "query">
 ) {
   return Urql.useQuery<CollectionQuery>({
     query: CollectionDocument,
@@ -1180,7 +1174,7 @@ export const WordSearchDocument = gql`
 `
 
 export function useWordSearchQuery(
-  options: Omit<Urql.UseQueryArgs<WordSearchQueryVariables>, "query"> = {}
+  options: Omit<Urql.UseQueryArgs<WordSearchQueryVariables>, "query">
 ) {
   return Urql.useQuery<WordSearchQuery>({
     query: WordSearchDocument,
@@ -1206,7 +1200,7 @@ export const AllSourcesDocument = gql`
 `
 
 export function useAllSourcesQuery(
-  options: Omit<Urql.UseQueryArgs<AllSourcesQueryVariables>, "query"> = {}
+  options?: Omit<Urql.UseQueryArgs<AllSourcesQueryVariables>, "query">
 ) {
   return Urql.useQuery<AllSourcesQuery>({
     query: AllSourcesDocument,
@@ -1225,7 +1219,7 @@ export const GlossaryDocument = gql`
 `
 
 export function useGlossaryQuery(
-  options: Omit<Urql.UseQueryArgs<GlossaryQueryVariables>, "query"> = {}
+  options: Omit<Urql.UseQueryArgs<GlossaryQueryVariables>, "query">
 ) {
   return Urql.useQuery<GlossaryQuery>({ query: GlossaryDocument, ...options })
 }
@@ -1251,7 +1245,7 @@ export const TimelineDocument = gql`
 `
 
 export function useTimelineQuery(
-  options: Omit<Urql.UseQueryArgs<TimelineQueryVariables>, "query"> = {}
+  options: Omit<Urql.UseQueryArgs<TimelineQueryVariables>, "query">
 ) {
   return Urql.useQuery<TimelineQuery>({ query: TimelineDocument, ...options })
 }
@@ -1281,7 +1275,7 @@ export const DocumentDetailsDocument = gql`
 `
 
 export function useDocumentDetailsQuery(
-  options: Omit<Urql.UseQueryArgs<DocumentDetailsQueryVariables>, "query"> = {}
+  options: Omit<Urql.UseQueryArgs<DocumentDetailsQueryVariables>, "query">
 ) {
   return Urql.useQuery<DocumentDetailsQuery>({
     query: DocumentDetailsDocument,
@@ -1304,7 +1298,7 @@ export const EditablePageDocument = gql`
 `
 
 export function useEditablePageQuery(
-  options: Omit<Urql.UseQueryArgs<EditablePageQueryVariables>, "query"> = {}
+  options: Omit<Urql.UseQueryArgs<EditablePageQueryVariables>, "query">
 ) {
   return Urql.useQuery<EditablePageQuery>({
     query: EditablePageDocument,
@@ -1323,7 +1317,7 @@ export const TagDocument = gql`
 `
 
 export function useTagQuery(
-  options: Omit<Urql.UseQueryArgs<TagQueryVariables>, "query"> = {}
+  options: Omit<Urql.UseQueryArgs<TagQueryVariables>, "query">
 ) {
   return Urql.useQuery<TagQuery>({ query: TagDocument, ...options })
 }
@@ -1348,7 +1342,7 @@ export const MorphemeDocument = gql`
 `
 
 export function useMorphemeQuery(
-  options: Omit<Urql.UseQueryArgs<MorphemeQueryVariables>, "query"> = {}
+  options: Omit<Urql.UseQueryArgs<MorphemeQueryVariables>, "query">
 ) {
   return Urql.useQuery<MorphemeQuery>({ query: MorphemeDocument, ...options })
 }
