@@ -1,7 +1,15 @@
 import { Tooltip } from "@reach/tooltip"
 import cx from "classnames"
 import Cookies from "js-cookie"
-import React, { useEffect, useState } from "react"
+import React, { useContext, useEffect, useState } from "react"
+import { MdClose, MdSettings } from "react-icons/md"
+import { Button } from "reakit/Button"
+import {
+  Dialog,
+  DialogBackdrop,
+  DialogDisclosure,
+  useDialogState,
+} from "reakit/Dialog"
 import {
   Radio,
   RadioGroup,
@@ -10,6 +18,7 @@ import {
 } from "reakit/Radio"
 import { std } from "src/sprinkles.css"
 import * as css from "./mode.css"
+import { PreferencesContext } from "./preferences-context"
 import {
   PhoneticRepresentation,
   TagSet,
@@ -18,7 +27,7 @@ import {
 } from "./types"
 
 const notNumber = (l: any) => isNaN(Number(l))
-const levelNameMapping = {
+export const levelNameMapping = {
   [ViewMode.Story]: {
     label: "Story",
     details: "Original text in the Cherokee syllabary with English translation",
@@ -83,11 +92,14 @@ const phoneticRepresentationMapping = {
   // },
 }
 
+export const phonDetails = (representation: PhoneticRepresentation) =>
+  phoneticRepresentationMapping[representation]
+
 export const selectedMode = () =>
   Number.parseInt(Cookies.get("experienceLevel") ?? "0")
 
 export const selectedPhonetics = () =>
-  Number.parseInt(Cookies.get("phonetics") ?? "0")
+  Number.parseInt(Cookies.get("phonetics") ?? "0") as PhoneticRepresentation
 
 export const ExperiencePicker = (p: {
   onSelect: (mode: ViewMode) => void
@@ -105,8 +117,8 @@ export const ExperiencePicker = (p: {
   }, [value])
   return (
     <select
+      name="experience-picker"
       id={p.id}
-      name="mode-picker"
       onChange={(e) => setValue(Number.parseInt(e.target.value))}
     >
       {Object.keys(ViewMode)
@@ -126,38 +138,36 @@ export const ExperiencePicker = (p: {
 export const PhoneticsPicker = (p: {
   onSelect: (phonetics: PhoneticRepresentation) => void
 }) => {
-  const radio = useRadioState({
-    state: selectedPhonetics(),
-  })
+  const [value, setValue] = useState(selectedPhonetics())
 
-  // Save the selected experience level throughout the session.
+  // Save the selected representation throughout the session.
   useEffect(() => {
-    Cookies.set("phonetics", radio.state!.toString(), {
+    Cookies.set("phonetics", value.toString(), {
       sameSite: "strict",
       secure: true,
     })
-    p.onSelect(radio.state as PhoneticRepresentation)
-  }, [radio.state])
-
+    p.onSelect(value)
+  }, [value])
   return (
-    <RadioGroup
-      {...radio}
-      id="phonetics-picker"
-      className={css.levelGroup}
-      aria-label="Phonetic Representation"
+    <select
+      name="phonetics-picker"
+      onChange={(e) => setValue(Number.parseInt(e.target.value))}
+      aria-label="Romanization"
     >
       {Object.keys(PhoneticRepresentation)
         .filter(notNumber)
         .map(function (representation: string) {
+          var selectedPhon =
+            PhoneticRepresentation[
+              representation as keyof typeof PhoneticRepresentation
+            ]
           return (
-            <PhoneticOption
-              key={representation}
-              representation={representation}
-              radio={radio}
-            />
+            <option value={selectedPhon} selected={value === selectedPhon}>
+              {phonDetails(selectedPhon).label}
+            </option>
           )
         })}
-    </RadioGroup>
+    </select>
   )
 }
 
@@ -226,5 +236,71 @@ const TagSetOption = (p: { radio: RadioStateReturn; level: string }) => {
         {tagSetMapping[value].label}
       </label>
     </Tooltip>
+  )
+}
+
+export const PrefPanel = () => {
+  const preferences = useContext(PreferencesContext)
+  return (
+    <div>
+      <label>Display Mode: </label><br/>
+      {
+        <ExperiencePicker
+          aria-described-by={"Selected-ViewMode"}
+          onSelect={preferences.setViewMode}
+        />
+      }
+      <p id={"Selected-ViewMode"}>
+        {levelNameMapping[preferences.viewMode].details}
+      </p>
+
+      <label>Romanization Method: </label><br/>
+      {
+        <PhoneticsPicker
+          aria-described-by={"Selected-Phonetics"}
+          onSelect={preferences.setPhoneticRepresentation}
+        />
+      }
+      <p id={"Selected-Phonetics"}>
+        {
+          phoneticRepresentationMapping[preferences.phoneticRepresentation]
+            .details
+        }
+      </p>
+    </div>
+  )
+}
+
+export const HeaderPrefDrawer = () => {
+  const dialog = useDialogState({ animated: true })
+
+  return (
+    <div aria-label="shell" className={css.prefButton.shell}>
+      <DialogDisclosure
+        {...dialog}
+        aria-label="Open Settings"
+        className={css.prefButton.button}
+      >
+        <MdSettings size={32} />
+      </DialogDisclosure>
+      <DialogBackdrop {...dialog} className={css.prefBG}>
+        <Dialog
+          {...dialog}
+          as="div"
+          className={css.prefDrawer}
+          aria-label="Settings Dialog"
+        >
+          <h1>Document Settings</h1>
+          <Button
+            className={css.closeButton}
+            onClick={dialog.hide}
+            aria-label="Dismiss selected word information"
+          >
+            <MdClose size={32} />
+          </Button>
+          <PrefPanel />
+        </Dialog>
+      </DialogBackdrop>
+    </div>
   )
 }

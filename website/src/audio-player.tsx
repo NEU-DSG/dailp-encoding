@@ -234,19 +234,17 @@ const ProgressBar = (props: {
     onClick = () => {} // So word audio doesn't get messed by clicks
   }
   return (
-    <>
-      <div className={css.container} onClick={onClick} aria-label={"container"}>
-        <div
-          className={css.fill}
-          style={{ width: `${progPtr}%` }}
-          onDrag={() => {}}
-          aria-label={"fill"}
-        />
-        {/*<div css={timestamp}>*/}
-        {/*  <span></span>*/}
-        {/*  <span></span>*/}
-        {/*</div>*/}
-      </div>
-    </>
+    <div className={css.container} onClick={onClick} aria-label={"container"}>
+      <div
+        className={css.fill}
+        style={{ width: `${progPtr}%` }}
+        onDrag={() => {}}
+        aria-label={"fill"}
+      />
+      {/*<div css={timestamp}>*/}
+      {/*  <span></span>*/}
+      {/*  <span></span>*/}
+      {/*</div>*/}
+    </div>
   )
 }

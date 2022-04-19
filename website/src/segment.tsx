@@ -1,4 +1,3 @@
-import { DialogOverlay } from "@reach/dialog"
 import { Tooltip } from "@reach/tooltip"
 import "@reach/tooltip/styles.css"
 import { Howl } from "howler"
@@ -19,17 +18,68 @@ import {
 } from "./types"
 import { WordPanelDetails } from "./word-panel"
 
-type Segment = NonNullable<DocumentContents["translatedSegments"]>[0]["source"]
+type TranslatedPage = NonNullable<DocumentContents["translatedPages"]>[0]
+type TranslatedParagraph = TranslatedPage["paragraphs"][0]
+type Segment = TranslatedParagraph["source"][0]
 
 interface Props {
   segment: Segment
   onOpenDetails: (morpheme: BasicMorphemeSegment) => void
   viewMode: ViewMode
-  translations: Dailp.TranslationBlock | null
   tagSet: TagSet
   pageImages: readonly string[]
   phoneticRepresentation: PhoneticRepresentation
   wordPanelDetails: WordPanelDetails
+}
+
+export const DocumentPage = (
+  p: Omit<Props, "segment"> & { segment: TranslatedPage }
+) => {
+  return (
+    <>
+      {p.segment.pageNumber !== "1" ? (
+        <div
+          id={`document-page-${p.segment.pageNumber}`}
+          className={css.pageBreak}
+          aria-label={`Start of page ${p.segment.pageNumber}`}
+        >
+          Page {p.segment.pageNumber}
+        </div>
+      ) : null}
+      {p.segment.paragraphs.map((paragraph, i) => (
+        <DocumentParagraph key={i} {...p} segment={paragraph} />
+      ))}
+    </>
+  )
+}
+
+export const DocumentParagraph = (
+  p: Omit<Props, "segment"> & { segment: TranslatedParagraph }
+) => {
+  const children =
+    p.segment.source?.map(function (seg, i) {
+      return (
+        <Segment
+          key={i}
+          segment={seg as Segment}
+          onOpenDetails={p.onOpenDetails}
+          viewMode={p.viewMode}
+          tagSet={p.tagSet}
+          pageImages={p.pageImages}
+          phoneticRepresentation={p.phoneticRepresentation}
+          wordPanelDetails={p.wordPanelDetails}
+        />
+      )
+    }) ?? null
+
+  const variant = p.viewMode > ViewMode.Story ? "wordByWord" : "story"
+  return (
+    <section className={css.documentBlock[variant]}>
+      <div className={css.annotationSection[variant]}>{children}</div>
+      <p className={css.inlineBlock}>{p.segment.translation ?? null}</p>
+      {/*<SegmentAudio/>*/}
+    </section>
+  )
 }
 
 /** Displays one segment of the document, which may be a word, block, or phrase. */
@@ -37,47 +87,6 @@ export const Segment = (p: Props & { howl?: Howl }) => {
   const segment = p.segment
   if (segment.__typename === "AnnotatedForm") {
     return <AnnotatedForm {...p} segment={segment} />
-  } else if (segment.__typename === "AnnotatedPhrase") {
-    const children =
-      segment.parts?.map(function (seg, i) {
-        return (
-          <Segment
-            key={i}
-            segment={seg as Segment}
-            onOpenDetails={p.onOpenDetails}
-            viewMode={p.viewMode}
-            translations={p.translations}
-            tagSet={p.tagSet}
-            pageImages={p.pageImages}
-            phoneticRepresentation={p.phoneticRepresentation}
-            wordPanelDetails={p.wordPanelDetails}
-          />
-        )
-      }) ?? null
-
-    if (segment.ty === "BLOCK") {
-      const variant = p.viewMode > ViewMode.Story ? "wordByWord" : "story"
-      return (
-        <section className={css.documentBlock[variant]}>
-          <div className={css.annotationSection[variant]}>{children}</div>
-          <p className={css.inlineBlock}>{p.translations?.text ?? null}</p>
-          {/*<SegmentAudio/>*/}
-        </section>
-      )
-    } else {
-      return <>{children}</>
-    }
-  } else if (p.segment.__typename === "PageBreak" && p.segment.index > 0) {
-    const num = p.segment.index + 1
-    return (
-      <div
-        id={`document-page-${num}`}
-        className={css.pageBreak}
-        aria-label={`Start of page ${num}`}
-      >
-        Page {num}
-      </div>
-    )
   } else {
     return null
   }
@@ -100,6 +109,19 @@ export const AnnotatedForm = (
       p.segment
     ) /* This makes sure the word panel updates for changes to the word panel*/
   }
+  let romanization = null
+  if (
+    p.phoneticRepresentation == PhoneticRepresentation.Dailp &&
+    p.segment.simplePhonetics
+  ) {
+    romanization = p.segment.simplePhonetics
+  } else if (
+    p.phoneticRepresentation == PhoneticRepresentation.Worcester &&
+    p.segment.romanizedSource
+  ) {
+    romanization = p.segment.romanizedSource
+  }
+
   if (showAnything) {
     const showSegments = p.viewMode >= ViewMode.Segmentation
     const translation = p.segment.englishGloss.join(", ")
@@ -119,11 +141,10 @@ export const AnnotatedForm = (
             )}
           </CleanButton>
         </div>
-        {p.segment.simplePhonetics ? (
+        {romanization ? (
           <>
-            <div>{p.segment.romanizedSource}</div>
+            <div>{romanization}</div>
             <div>
-              {p.segment.simplePhonetics}
               {p.segment.audioTrack && (
                 <FormAudio
                   endTime={p.segment.audioTrack.endTime}
@@ -269,7 +290,7 @@ const MorphemeSegment = (p: {
   tagSet: TagSet
   onOpenDetails: Props["onOpenDetails"]
 }) => {
-  const matchingTag = morphemeDisplayTag(p.segment.matchingTag!, p.tagSet)
+  const matchingTag = p.segment.matchingTag
   const gloss = matchingTag?.tag || p.segment.gloss
   // Display functional tags in small-caps, per interlinear typesetting practice.
 

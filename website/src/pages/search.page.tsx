@@ -9,13 +9,13 @@ import * as Dailp from "src/graphql/dailp"
 import { useLocation } from "src/renderer/PageShell"
 import { closeBlock, fullWidth } from "src/sprinkles.css"
 import Layout from "../layout"
-import { sourceCitationRoute } from "../routes"
+import { documentWordPath, sourceCitationRoute } from "../routes"
 import { boldWordRow, wordRow } from "./timeline.css"
 
 const SearchPage = () => {
   const location = useLocation()
   const [morphemeId, setMorpheme] = useDebounce(
-    location.search && location.search["query"] || null,
+    (location.search && location.search["query"]) || null,
     300
   )
 
@@ -85,9 +85,17 @@ const Timeline = (p: { gloss: string }) => {
         </div>
         {timeline.data.wordSearch.map((form, i) => (
           <div key={i} className={wordRow}>
-            <Link href={sourceCitationRoute(form.documentId)}>
-              {form.documentId}
-            </Link>
+            {!!form.document ? (
+              <Link
+                href={
+                  form.document.isReference
+                    ? sourceCitationRoute(form.document.slug)
+                    : documentWordPath(form.document.slug, form.index)
+                }
+              >
+                {form.document.slug.toUpperCase()}
+              </Link>
+            ) : null}
             <div>{form.source}</div>
             <div>{form.normalizedSource}</div>
             <div>{form.simplePhonetics}</div>

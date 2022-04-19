@@ -1,12 +1,14 @@
 import { DialogContent, DialogOverlay } from "@reach/dialog"
 import "@reach/dialog/styles.css"
-import React, { Dispatch, SetStateAction, useEffect, useState } from "react"
+import React, {
+  useEffect,
+  useState,
+} from "react"
 import { isMobile } from "react-device-detect"
 import { Helmet } from "react-helmet"
 import {
   Dialog,
   DialogBackdrop,
-  DialogDisclosure,
   useDialogState,
 } from "reakit/Dialog"
 import { Tab, TabList, TabPanel } from "reakit/Tab"
@@ -16,16 +18,16 @@ import { Button } from "src/components"
 import Link from "src/components/link"
 import * as Dailp from "src/graphql/dailp"
 import Layout from "src/layout"
-import { drawerBg, navButton, navDrawer } from "src/menu.css"
-import { ExperiencePicker, selectedMode, selectedPhonetics } from "src/mode"
+import { drawerBg } from "src/menu.css"
 import { MorphemeDetails } from "src/morpheme"
+import { usePreferences } from "src/preferences-context"
 import {
   collectionRoute,
   documentDetailsRoute,
   documentRoute,
 } from "src/routes"
 import { useScrollableTabState } from "src/scrollable-tabs"
-import { AnnotatedForm, Segment } from "src/segment"
+import { AnnotatedForm, DocumentPage, Segment } from "src/segment"
 import {
   BasicMorphemeSegment,
   PhoneticRepresentation,
@@ -55,7 +57,7 @@ type NullPick<T, F extends keyof NonNullable<T>> = Pick<
 /** A full annotated document, including all metadata and the translation(s) */
 const AnnotatedDocumentPage = (props: { id: string }) => {
   const [{ data }] = Dailp.useAnnotatedDocumentQuery({
-    variables: { id: props.id },
+    variables: { slug: props.id },
   })
   const doc = data?.document
   if (!doc) {
@@ -108,8 +110,16 @@ const TabSet = ({ doc }: { doc: Document }) => {
         id={`${Tabs.IMAGES}-panel`}
         tabId={Tabs.IMAGES}
       >
-        {doc.pageImages ? (
-          <PageImages pageImages={doc.pageImages} document={doc} />
+        {doc.translatedPages ? (
+          <PageImages
+            pageImages={{
+              urls:
+                doc.translatedPages
+                  ?.filter((p) => !!p.image)
+                  .map((p) => p.image!.url) ?? [],
+            }}
+            document={doc}
+          />
         ) : null}
       </TabPanel>
     </>
@@ -151,14 +161,9 @@ const TranslationTab = ({ doc }: { doc: Document }) => {
     setCurrContents: selectAndShowWord,
   }
 
-  const [phoneticRepresentation, _setPhoneticRepresentation] =
-    useState<PhoneticRepresentation>(selectedPhonetics())
+  const { viewMode, phoneticRepresentation } = usePreferences()
 
-  const [experienceLevel, setExperienceLevel] = useState<ViewMode>(
-    selectedMode()
-  )
-
-  const tagSet = tagSetForMode(experienceLevel)
+  const tagSet = tagSetForMode(viewMode)
 
   return (
     <>
@@ -194,27 +199,18 @@ const TranslationTab = ({ doc }: { doc: Document }) => {
           <WordPanel
             segment={wordPanelInfo.currContents}
             setContent={wordPanelInfo.setCurrContents}
-            viewMode={experienceLevel}
+            viewMode={viewMode}
             onOpenDetails={openDetails}
             tagSet={tagSet}
           />
         </Dialog>
       </DialogBackdrop>
 
-      <div className={css.displayModeArea}>
-        <label htmlFor="display-mode-picker">Display Mode:</label>{" "}
-        <ExperiencePicker
-          id="display-mode-picker"
-          onSelect={setExperienceLevel}
-        />
-        {/*<PhoneticsPicker onSelect={setPhoneticRepresentation} />*/}
-      </div>
-
       <div className={css.contentContainer}>
         <article className={css.annotationContents}>
           <DocumentContents
             {...{
-              experienceLevel,
+              experienceLevel: viewMode,
               doc,
               openDetails,
               tagSet,
@@ -223,12 +219,12 @@ const TranslationTab = ({ doc }: { doc: Document }) => {
             }}
           />
         </article>
-        {selectedWord && experienceLevel > 0 ? (
+        {selectedWord && viewMode > 0 ? (
           <div className={css.contentSection2}>
             <WordPanel
               segment={wordPanelInfo.currContents}
               setContent={wordPanelInfo.setCurrContents}
-              viewMode={experienceLevel}
+              viewMode={viewMode}
               onOpenDetails={openDetails}
               tagSet={tagSet}
             />
@@ -262,7 +258,7 @@ const DocumentContents = ({
   }
 
   const [{ data }] = Dailp.useDocumentContentsQuery({
-    variables: { id: doc.id, isReference: doc.isReference, morphemeSystem },
+    variables: { slug: doc.slug, isReference: doc.isReference, morphemeSystem },
   })
   const docContents = data?.document
   if (!docContents) {
@@ -270,15 +266,18 @@ const DocumentContents = ({
   }
   return (
     <>
-      {docContents.translatedSegments?.map((seg, i) => (
-        <Segment
+      {docContents.translatedPages?.map((seg, i) => (
+        <DocumentPage
           key={i}
-          segment={seg.source}
+          segment={seg}
           onOpenDetails={openDetails}
           viewMode={experienceLevel}
           tagSet={tagSet}
-          translations={seg.translation as Dailp.TranslationBlock}
-          pageImages={doc.pageImages?.urls!}
+          pageImages={
+            doc.translatedPages
+              ?.filter((p) => !!p.image)
+              .map((p) => p.image!.url) ?? []
+          }
           phoneticRepresentation={phoneticRepresentation}
           wordPanelDetails={wordPanelDetails}
         />
@@ -291,8 +290,7 @@ const DocumentContents = ({
           viewMode={experienceLevel}
           tagSet={tagSet}
           phoneticRepresentation={phoneticRepresentation}
-          translations={null}
-          pageImages={doc.pageImages?.urls!}
+          pageImages={[]}
           wordPanelDetails={wordPanelDetails}
         />
       ))}
@@ -303,7 +301,10 @@ const DocumentContents = ({
 export const DocumentTitleHeader = (p: {
   doc: Pick<Dailp.AnnotatedDoc, "slug" | "title"> & {
     date: NullPick<Dailp.AnnotatedDoc["date"], "year">
-    collection: NullPick<Dailp.AnnotatedDoc["collection"], "name" | "slug">
+    breadcrumbs: readonly Pick<
+      Dailp.AnnotatedDoc["breadcrumbs"][0],
+      "name" | "slug"
+    >[]
     audioRecording?: NullPick<
       Dailp.AnnotatedDoc["audioRecording"],
       "resourceUrl"
@@ -314,11 +315,10 @@ export const DocumentTitleHeader = (p: {
   <header className={css.docHeader}>
     <Breadcrumbs aria-label="Breadcrumbs">
       <Link href="/">Collections</Link>
-      {p.doc.collection && (
-        <Link href={collectionRoute(p.doc.collection.slug!)}>
-          {p.doc.collection.name}
-        </Link>
-      )}
+      {p.doc.breadcrumbs &&
+        p.doc.breadcrumbs.map((crumb) => (
+          <Link href={collectionRoute(crumb.slug)}>{crumb.name}</Link>
+        ))}
     </Breadcrumbs>
 
     <h1 className={css.docTitle}>

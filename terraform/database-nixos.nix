@@ -151,8 +151,7 @@ in {
         protocol = "tcp";
         from_port = 22;
         to_port = 22;
-        cidr_blocks =
-          [ "129.10.0.0/16" "68.160.191.121/32" "148.64.110.197/32" ];
+        cidr_blocks = [ "129.10.0.0/16" ];
       };
 
       aws_security_group_rule.mongodb_external = {

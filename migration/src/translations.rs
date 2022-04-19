@@ -74,7 +74,7 @@ impl DocResult {
             });
 
         Translation {
-            blocks: blocks.collect(),
+            paragraphs: blocks.collect(),
         }
     }
 }
