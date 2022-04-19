@@ -40,6 +40,86 @@
     },
     "query": "select id\nfrom document\nwhere short_name = $1\n"
   },
+  "09f2617963dffc018f0939736e1f761b1e18794aeaaef7e778d234e574ed5c1f": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "short_name",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "title",
+          "ordinal": 2,
+          "type_info": "Text"
+        },
+        {
+          "name": "group_id",
+          "ordinal": 3,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "index_in_group",
+          "ordinal": 4,
+          "type_info": "Int8"
+        },
+        {
+          "name": "is_reference",
+          "ordinal": 5,
+          "type_info": "Bool"
+        },
+        {
+          "name": "written_at",
+          "ordinal": 6,
+          "type_info": "Date"
+        },
+        {
+          "name": "audio_slice_id",
+          "ordinal": 7,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "contributors",
+          "ordinal": 8,
+          "type_info": "Jsonb"
+        },
+        {
+          "name": "audio_url",
+          "ordinal": 9,
+          "type_info": "Text"
+        },
+        {
+          "name": "audio_slice",
+          "ordinal": 10,
+          "type_info": "Int8Range"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        true,
+        true,
+        null,
+        false,
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "TextArray"
+        ]
+      }
+    },
+    "query": "select\n  d.*,\n  coalesce(\n    jsonb_agg(\n      jsonb_build_object(\n        'name', contributor.full_name, 'role', attr.contribution_role\n      )\n    ) filter (where contributor is not null),\n    '[]'\n  )\n  as contributors,\n  media_resource.url as audio_url,\n  media_slice.time_range as audio_slice\nfrom document as d\n  left join contributor_attribution as attr on attr.document_id = d.id\n  left join contributor on contributor.id = attr.contributor_id\n  left join media_slice on media_slice.id = d.audio_slice_id\n  left join media_resource on media_resource.id = media_slice.resource_id\nwhere d.short_name = any($1)\ngroup by d.id,\n  media_slice.id,\n  media_resource.id\n"
+  },
   "0a7e8a0aaa1382daa8686211d2e0469e86cf302d41a282643266908e93179718": {
     "describe": {
       "columns": [
@@ -146,6 +226,86 @@
     },
     "query": "-- Insert a collection with a certain slug.\ninsert into document_group (slug, title)\nvalues ($1, $2)\non conflict (slug)\n  do update set\n    title = excluded.title\n  returning id\n"
   },
+  "18b4d42a876bd0eb8185c8b573f3e20c213e711b797215987483a29a2e3780f6": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "source_text",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "simple_phonetics",
+          "ordinal": 2,
+          "type_info": "Text"
+        },
+        {
+          "name": "phonemic",
+          "ordinal": 3,
+          "type_info": "Text"
+        },
+        {
+          "name": "english_gloss",
+          "ordinal": 4,
+          "type_info": "Text"
+        },
+        {
+          "name": "commentary",
+          "ordinal": 5,
+          "type_info": "Text"
+        },
+        {
+          "name": "document_id",
+          "ordinal": 6,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "index_in_document",
+          "ordinal": 7,
+          "type_info": "Int8"
+        },
+        {
+          "name": "page_number",
+          "ordinal": 8,
+          "type_info": "Text"
+        },
+        {
+          "name": "audio_url?",
+          "ordinal": 9,
+          "type_info": "Text"
+        },
+        {
+          "name": "audio_slice?",
+          "ordinal": 10,
+          "type_info": "Int8Range"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false,
+        true,
+        false,
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "select\n  word.id,\n  word.source_text,\n  word.simple_phonetics,\n  word.phonemic,\n  word.english_gloss,\n  word.commentary,\n  word.document_id,\n  word.index_in_document,\n  word.page_number,\n  media_resource.url as \"audio_url?\",\n  media_slice.time_range as \"audio_slice?\"\nfrom word\n  left join media_slice on media_slice.id = word.audio_slice_id\n  left join media_resource on media_resource.id = media_slice.resource_id\nwhere document_id = $1\norder by index_in_document\n"
+  },
   "1dcec22261dae61c4404af7c630eb24e3cd2acc5b4717bcc9706f14c6dde7efc": {
     "describe": {
       "columns": [
@@ -238,74 +398,6 @@
       }
     },
     "query": "-- Delete all document pages, which will cascade to delete all associated\n-- paragraphs and words.\ndelete from document_page\nwhere document_id = $1\n"
-  },
-  "2a36ddc21ac1db7d812481263fb92bf12e789150b1b0a46a116bbc95130b8c7f": {
-    "describe": {
-      "columns": [
-        {
-          "name": "id",
-          "ordinal": 0,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "source_text",
-          "ordinal": 1,
-          "type_info": "Text"
-        },
-        {
-          "name": "simple_phonetics",
-          "ordinal": 2,
-          "type_info": "Text"
-        },
-        {
-          "name": "phonemic",
-          "ordinal": 3,
-          "type_info": "Text"
-        },
-        {
-          "name": "english_gloss",
-          "ordinal": 4,
-          "type_info": "Text"
-        },
-        {
-          "name": "commentary",
-          "ordinal": 5,
-          "type_info": "Text"
-        },
-        {
-          "name": "document_id",
-          "ordinal": 6,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "index_in_document",
-          "ordinal": 7,
-          "type_info": "Int8"
-        },
-        {
-          "name": "page_number",
-          "ordinal": 8,
-          "type_info": "Text"
-        }
-      ],
-      "nullable": [
-        false,
-        false,
-        true,
-        true,
-        true,
-        true,
-        false,
-        false,
-        true
-      ],
-      "parameters": {
-        "Left": [
-          "Text"
-        ]
-      }
-    },
-    "query": "select\n  id,\n  source_text,\n  simple_phonetics,\n  phonemic,\n  english_gloss,\n  commentary,\n  document_id,\n  index_in_document,\n  page_number\nfrom word\nwhere source_text ilike $1\n  or simple_phonetics ilike $1\n  or english_gloss ilike $1\n"
   },
   "30cd42e3b5c9974cb94b5b116e35555ca460648807f08265a80375f2edd92c53": {
     "describe": {
@@ -439,74 +531,6 @@
     },
     "query": "select\n  word_segment.morpheme,\n  word.id as word_id,\n  word.source_text,\n  word.simple_phonetics,\n  word.phonemic,\n  word.english_gloss,\n  word.commentary,\n  word.document_id,\n  word.index_in_document,\n  word.page_number\nfrom morpheme_gloss\n  inner join document on document.id = morpheme_gloss.document_id\n  left join word_segment on word_segment.gloss_id = morpheme_gloss.id\n  left join word on word.id = word_segment.word_id\nwhere morpheme_gloss.gloss = $1\n  and document.short_name = $2\norder by word_segment.morpheme\n"
   },
-  "32495ddb03087a8dfa5c929ac2ed6a0d950d18ea0137bf5f00fe958e8491cc59": {
-    "describe": {
-      "columns": [
-        {
-          "name": "id",
-          "ordinal": 0,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "short_name",
-          "ordinal": 1,
-          "type_info": "Text"
-        },
-        {
-          "name": "title",
-          "ordinal": 2,
-          "type_info": "Text"
-        },
-        {
-          "name": "group_id",
-          "ordinal": 3,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "index_in_group",
-          "ordinal": 4,
-          "type_info": "Int8"
-        },
-        {
-          "name": "is_reference",
-          "ordinal": 5,
-          "type_info": "Bool"
-        },
-        {
-          "name": "written_at",
-          "ordinal": 6,
-          "type_info": "Date"
-        },
-        {
-          "name": "audio_slice_id",
-          "ordinal": 7,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "contributors",
-          "ordinal": 8,
-          "type_info": "Jsonb"
-        }
-      ],
-      "nullable": [
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        true,
-        true,
-        null
-      ],
-      "parameters": {
-        "Left": [
-          "UuidArray"
-        ]
-      }
-    },
-    "query": "select\n  d.*,\n  coalesce(\n    jsonb_agg(\n      jsonb_build_object(\n        'name', contributor.full_name, 'role', attr.contribution_role\n      )\n    ) filter (where contributor is not null),\n    '[]'\n  )\n  as contributors\nfrom document as d\n  left join contributor_attribution as attr on attr.document_id = d.id\n  left join contributor on contributor.id = attr.contributor_id\nwhere d.id = any($1)\ngroup by d.id,\n  attr.contributor_id,\n  attr.document_id\n"
-  },
   "36b9fae68fe9f0285a0d9261962a98e75a2c9d930ebfb24dd9e8f238a18f729c": {
     "describe": {
       "columns": [
@@ -612,7 +636,7 @@
     },
     "query": "select\n  id,\n  index_in_document,\n  document_id,\n  iiif_source_id,\n  iiif_oid\nfrom document_page\nwhere document_id = any($1)\norder by index_in_document asc\n"
   },
-  "540a9d3aac0adbcab2fd1aebbd46610aa21f527258fcfafa0f1dfbd6c228a777": {
+  "525b865b4c051117ca43bc0c2582bce2f5fee479d52e75340873ce0a1441a506": {
     "describe": {
       "columns": [
         {
@@ -659,6 +683,16 @@
           "name": "page_number",
           "ordinal": 8,
           "type_info": "Text"
+        },
+        {
+          "name": "audio_url?",
+          "ordinal": 9,
+          "type_info": "Text"
+        },
+        {
+          "name": "audio_slice?",
+          "ordinal": 10,
+          "type_info": "Int8Range"
         }
       ],
       "nullable": [
@@ -670,15 +704,17 @@
         true,
         false,
         false,
+        true,
+        true,
         true
       ],
       "parameters": {
         "Left": [
-          "Uuid"
+          "TextArray"
         ]
       }
     },
-    "query": "select\n  id,\n  source_text,\n  simple_phonetics,\n  phonemic,\n  english_gloss,\n  commentary,\n  document_id,\n  index_in_document,\n  page_number\nfrom word\nwhere document_id = $1\norder by index_in_document\n"
+    "query": "select\n  word.id,\n  word.source_text,\n  word.simple_phonetics,\n  word.phonemic,\n  word.english_gloss,\n  word.commentary,\n  word.document_id,\n  word.index_in_document,\n  word.page_number,\n  media_resource.url as \"audio_url?\",\n  media_slice.time_range as \"audio_slice?\"\nfrom word\n  left join media_slice on media_slice.id = word.audio_slice_id\n  left join media_resource on media_resource.id = media_slice.resource_id\nwhere source_text like any($1)\n"
   },
   "57cedb81c9005af95d0cecf175ab81fbe7904e8d74d4c96a31be15a5c48c4377": {
     "describe": {
@@ -873,7 +909,47 @@
     },
     "query": "insert into document (short_name, title, is_reference, written_at, audio_slice_id, group_id, index_in_group)\nvalues ($1, $2, $3, $4, $5, $6, $7)\non conflict (short_name) do update set\n   title = excluded.title,\n   is_reference = excluded.is_reference,\n   written_at = excluded.written_at,\n   audio_slice_id = excluded.audio_slice_id,\n   group_id = excluded.group_id,\n   index_in_group = excluded.index_in_group\nreturning id\n"
   },
-  "76404f209295e2f6974d57b87534031ac6ed5336ca36cf2335e660aa3754bae3": {
+  "7860f1d60b1f09d62987a89d413a7243cb23005b6f19bb539b88311dbfbd223d": {
+    "describe": {
+      "columns": [
+        {
+          "name": "slug",
+          "ordinal": 0,
+          "type_info": "Text"
+        },
+        {
+          "name": "title",
+          "ordinal": 1,
+          "type_info": "Text"
+        }
+      ],
+      "nullable": [
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "select\n  document_group.slug,\n  document_group.title\nfrom document\n  inner join document_group on document_group.id = document.group_id\nwhere document.id = $1\n"
+  },
+  "7893a479a995a4deb24303bce0679a252ff88ca7f917d50854bb0ccb59557f17": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Uuid",
+          "Text"
+        ]
+      }
+    },
+    "query": "insert into contributor_attribution (contributor_id, document_id, contribution_role)\nselect contributor.id, $2, $3\nfrom contributor\nwhere contributor.full_name = $1\n-- If this document already has this contributor, move on.\non conflict do nothing\n"
+  },
+  "8a52b7e9c887cda81e1aa0e82c16ce078d37d4c92831710c18f3714210392113": {
     "describe": {
       "columns": [
         {
@@ -945,6 +1021,16 @@
           "name": "paragraph_id",
           "ordinal": 13,
           "type_info": "Uuid"
+        },
+        {
+          "name": "audio_slice",
+          "ordinal": 14,
+          "type_info": "Int8Range"
+        },
+        {
+          "name": "audio_url",
+          "ordinal": 15,
+          "type_info": "Text"
         }
       ],
       "nullable": [
@@ -960,6 +1046,8 @@
         true,
         false,
         true,
+        true,
+        false,
         true,
         false
       ],
@@ -969,49 +1057,9 @@
         ]
       }
     },
-    "query": "select\n  word.*,\n  paragraph.id as paragraph_id\nfrom word\n  inner join paragraph on paragraph.page_id = word.page_id\nwhere paragraph.id = any($1)\n  and word.character_range is not null\n  -- Include words that overlap with the paragraph range\n  and word.character_range && paragraph.character_range\n  -- Exclude words that start before the paragraph, which means that words are\n  -- always included in the paragraph that they start in. This is the same logic\n  -- as line breaks.\n  and word.character_range &> paragraph.character_range\n-- Include all joined primary keys in the GROUP BY clause.\ngroup by word.id,\n  paragraph.id\norder by word.character_range\n"
+    "query": "select\n  word.*,\n  paragraph.id as paragraph_id,\n  media_slice.time_range as audio_slice,\n  media_resource.url as audio_url\nfrom word\n  inner join paragraph on paragraph.page_id = word.page_id\n  left join media_slice on media_slice.id = word.audio_slice_id\n  left join media_resource on media_resource.id = media_slice.resource_id\nwhere paragraph.id = any($1)\n  and word.character_range is not null\n  -- Include words that overlap with the paragraph range\n  and word.character_range && paragraph.character_range\n  -- Exclude words that start before the paragraph, which means that words are\n  -- always included in the paragraph that they start in. This is the same logic\n  -- as line breaks.\n  and word.character_range &> paragraph.character_range\n-- Include all joined primary keys in the GROUP BY clause.\ngroup by word.id,\n  paragraph.id,\n  media_slice.id,\n  media_resource.id\norder by word.character_range\n"
   },
-  "7860f1d60b1f09d62987a89d413a7243cb23005b6f19bb539b88311dbfbd223d": {
-    "describe": {
-      "columns": [
-        {
-          "name": "slug",
-          "ordinal": 0,
-          "type_info": "Text"
-        },
-        {
-          "name": "title",
-          "ordinal": 1,
-          "type_info": "Text"
-        }
-      ],
-      "nullable": [
-        false,
-        false
-      ],
-      "parameters": {
-        "Left": [
-          "Uuid"
-        ]
-      }
-    },
-    "query": "select\n  document_group.slug,\n  document_group.title\nfrom document\n  inner join document_group on document_group.id = document.group_id\nwhere document.id = $1\n"
-  },
-  "7893a479a995a4deb24303bce0679a252ff88ca7f917d50854bb0ccb59557f17": {
-    "describe": {
-      "columns": [],
-      "nullable": [],
-      "parameters": {
-        "Left": [
-          "Text",
-          "Uuid",
-          "Text"
-        ]
-      }
-    },
-    "query": "insert into contributor_attribution (contributor_id, document_id, contribution_role)\nselect contributor.id, $2, $3\nfrom contributor\nwhere contributor.full_name = $1\n-- If this document already has this contributor, move on.\non conflict do nothing\n"
-  },
-  "8a79138bce7ccb5138248b039f7975b434d552b8c1ded144f9c519255bcd402f": {
+  "8ecfe399e5e6da5a750c519bea8af91364076a89f472e9087afafda4b02599f4": {
     "describe": {
       "columns": [
         {
@@ -1058,6 +1106,16 @@
           "name": "page_number",
           "ordinal": 8,
           "type_info": "Text"
+        },
+        {
+          "name": "audio_url?",
+          "ordinal": 9,
+          "type_info": "Text"
+        },
+        {
+          "name": "audio_slice?",
+          "ordinal": 10,
+          "type_info": "Int8Range"
         }
       ],
       "nullable": [
@@ -1069,15 +1127,17 @@
         true,
         false,
         false,
+        true,
+        false,
         true
       ],
       "parameters": {
         "Left": [
-          "TextArray"
+          "Text"
         ]
       }
     },
-    "query": "select\n  id,\n  source_text,\n  simple_phonetics,\n  phonemic,\n  english_gloss,\n  commentary,\n  document_id,\n  index_in_document,\n  page_number\nfrom word\nwhere source_text like any($1)\n"
+    "query": "select\n  word.id,\n  word.source_text,\n  word.simple_phonetics,\n  word.phonemic,\n  word.english_gloss,\n  word.commentary,\n  word.document_id,\n  word.index_in_document,\n  word.page_number,\n  media_resource.url as \"audio_url?\",\n  media_slice.time_range as \"audio_slice?\"\nfrom word\n  left join media_slice on media_slice.id = word.audio_slice_id\n  left join media_resource on media_resource.id = media_slice.resource_id\nwhere source_text ilike $1\n  or simple_phonetics ilike $1\n  or english_gloss ilike $1\n"
   },
   "98f3ef23ebc76420a18f30502019f9d7e676ee9e7e2ebb14290beeda813c4fc4": {
     "describe": {
@@ -1232,6 +1292,117 @@
     },
     "query": "insert into iiif_source (title, base_url)\nvalues ($1, $2)\non conflict (base_url) do update\nset title = excluded.title\nreturning id\n"
   },
+  "b079aeb69f26a8cb62928b7b088de36e3b1f26bd164a8a4010b06fbfdd8fa3b5": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        }
+      ],
+      "nullable": [
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Text",
+          "Text",
+          "Text",
+          "Date",
+          "Text",
+          "Uuid",
+          "Text",
+          "Int8",
+          "Uuid",
+          "Int8Range",
+          "Uuid"
+        ]
+      }
+    },
+    "query": "insert into word (source_text, simple_phonetics, phonemic, english_gloss, recorded_at, commentary,\n  document_id, page_number, index_in_document, page_id, character_range, audio_slice_id)\nvalues ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)\non conflict (document_id, index_in_document)\ndo update set\n  source_text = EXCLUDED.source_text,\n  simple_phonetics = EXCLUDED.simple_phonetics,\n  phonemic = EXCLUDED.phonemic,\n  english_gloss = EXCLUDED.english_gloss,\n  commentary = EXCLUDED.commentary,\n  audio_slice_id = EXCLUDED.audio_slice_id\nreturning id\n"
+  },
+  "b205187859974db58424e64869cb67b125dfcdd159c4f6c9b8500dc5372b0c08": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "short_name",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "title",
+          "ordinal": 2,
+          "type_info": "Text"
+        },
+        {
+          "name": "group_id",
+          "ordinal": 3,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "index_in_group",
+          "ordinal": 4,
+          "type_info": "Int8"
+        },
+        {
+          "name": "is_reference",
+          "ordinal": 5,
+          "type_info": "Bool"
+        },
+        {
+          "name": "written_at",
+          "ordinal": 6,
+          "type_info": "Date"
+        },
+        {
+          "name": "audio_slice_id",
+          "ordinal": 7,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "contributors",
+          "ordinal": 8,
+          "type_info": "Jsonb"
+        },
+        {
+          "name": "audio_url",
+          "ordinal": 9,
+          "type_info": "Text"
+        },
+        {
+          "name": "audio_slice",
+          "ordinal": 10,
+          "type_info": "Int8Range"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        true,
+        true,
+        null,
+        false,
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "UuidArray"
+        ]
+      }
+    },
+    "query": "select\n  d.*,\n  coalesce(\n    jsonb_agg(\n      jsonb_build_object(\n        'name', contributor.full_name, 'role', attr.contribution_role\n      )\n    ) filter (where contributor is not null),\n    '[]'\n  )\n  as contributors,\n  media_resource.url as audio_url,\n  media_slice.time_range as audio_slice\nfrom document as d\n  left join contributor_attribution as attr on attr.document_id = d.id\n  left join contributor on contributor.id = attr.contributor_id\n  left join media_slice on media_slice.id = d.audio_slice_id\n  left join media_resource on media_resource.id = media_slice.resource_id\nwhere d.id = any($1)\ngroup by d.id,\n  media_slice.id,\n  media_resource.id\n"
+  },
   "b30945f3bfd15aee9755bd937498b07200b10f20f390c8cf700f500e67c2a15f": {
     "describe": {
       "columns": [
@@ -1324,6 +1495,87 @@
     },
     "query": "select\n    document.id,\n    document.short_name,\n    document.title,\n    document.written_at,\n    document.is_reference,\n    coalesce(\n        jsonb_agg(\n            jsonb_build_object(\n                'name',\n                contributor.full_name,\n                'role',\n                contributor_attribution.contribution_role\n            )\n        ) filter (where contributor is not null),\n        '[]'\n    )\n    as contributors\nfrom document\nleft join\n    contributor_attribution on contributor_attribution.document_id = document.id\nleft join contributor on contributor.id = contributor_attribution.contributor_id\ngroup by document.id\n"
   },
+  "bdd747242014027a29ecc063d3e437ef8f289e6168b7c1d41d77622520bc224a": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "source_text",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "simple_phonetics",
+          "ordinal": 2,
+          "type_info": "Text"
+        },
+        {
+          "name": "phonemic",
+          "ordinal": 3,
+          "type_info": "Text"
+        },
+        {
+          "name": "english_gloss",
+          "ordinal": 4,
+          "type_info": "Text"
+        },
+        {
+          "name": "commentary",
+          "ordinal": 5,
+          "type_info": "Text"
+        },
+        {
+          "name": "document_id",
+          "ordinal": 6,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "index_in_document",
+          "ordinal": 7,
+          "type_info": "Int8"
+        },
+        {
+          "name": "page_number",
+          "ordinal": 8,
+          "type_info": "Text"
+        },
+        {
+          "name": "audio_url?",
+          "ordinal": 9,
+          "type_info": "Text"
+        },
+        {
+          "name": "audio_slice?",
+          "ordinal": 10,
+          "type_info": "Int8Range"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false,
+        true,
+        false,
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Uuid"
+        ]
+      }
+    },
+    "query": "with recursive relations as (\n  -- Base case: all relations involving the input morpheme.\n  select\n    rl.left_gloss_id,\n    rl.right_gloss_id\n  from morpheme_gloss_relation as rl\n    inner join\n      morpheme_gloss on\n        rl.left_gloss_id = morpheme_gloss.id or rl.right_gloss_id = morpheme_gloss.id\n  where morpheme_gloss.gloss = $1 and morpheme_gloss.document_id = $2\n\n  -- Recursive case: saturate the graph (no duplicates)\n  union\n  select\n    rlr.left_gloss_id,\n    rlr.right_gloss_id\n  from morpheme_gloss_relation as rlr\n    -- Retrieve all relations that involve any previous sources or destinations\n    inner join\n      relations on\n        rlr.left_gloss_id = relations.right_gloss_id or rlr.right_gloss_id = relations.left_gloss_id or rlr.left_gloss_id = relations.left_gloss_id or rlr.right_gloss_id = relations.right_gloss_id\n)\n\nselect\n  word.id,\n  word.source_text,\n  word.simple_phonetics,\n  word.phonemic,\n  word.english_gloss,\n  word.commentary,\n  word.document_id,\n  word.index_in_document,\n  word.page_number,\n  media_resource.url as \"audio_url?\",\n  media_slice.time_range as \"audio_slice?\"\nfrom relations\n  inner join\n    morpheme_gloss on\n      morpheme_gloss.id = relations.left_gloss_id or morpheme_gloss.id = relations.right_gloss_id\n  inner join word_segment on word_segment.gloss_id = morpheme_gloss.id\n  inner join word on word.id = word_segment.word_id\n  left join media_slice on media_slice.id = word.audio_slice_id\n  left join media_resource on media_resource.id = media_slice.resource_id\norder by word.document_id\n"
+  },
   "d6377d5a54a702f7df73f287390c0c45a1309f7e705c93d49842b409a947a1fd": {
     "describe": {
       "columns": [
@@ -1398,74 +1650,6 @@
       }
     },
     "query": "select\n  id,\n  title,\n  base_url\nfrom iiif_source\nwhere id = any($1)\n"
-  },
-  "d9f165aefafa490a73920ec34bb743216b00e1c9786187b5ffc8c2d5f434b8d6": {
-    "describe": {
-      "columns": [
-        {
-          "name": "id",
-          "ordinal": 0,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "short_name",
-          "ordinal": 1,
-          "type_info": "Text"
-        },
-        {
-          "name": "title",
-          "ordinal": 2,
-          "type_info": "Text"
-        },
-        {
-          "name": "group_id",
-          "ordinal": 3,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "index_in_group",
-          "ordinal": 4,
-          "type_info": "Int8"
-        },
-        {
-          "name": "is_reference",
-          "ordinal": 5,
-          "type_info": "Bool"
-        },
-        {
-          "name": "written_at",
-          "ordinal": 6,
-          "type_info": "Date"
-        },
-        {
-          "name": "audio_slice_id",
-          "ordinal": 7,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "contributors",
-          "ordinal": 8,
-          "type_info": "Jsonb"
-        }
-      ],
-      "nullable": [
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        true,
-        true,
-        null
-      ],
-      "parameters": {
-        "Left": [
-          "TextArray"
-        ]
-      }
-    },
-    "query": "select\n  d.*,\n  coalesce(\n    jsonb_agg(\n      jsonb_build_object(\n        'name', contributor.full_name, 'role', attr.contribution_role\n      )\n    ) filter (where contributor is not null),\n    '[]'\n  )\n  as contributors\nfrom document as d\n  left join contributor_attribution as attr on attr.document_id = d.id\n  left join contributor on contributor.id = attr.contributor_id\nwhere d.short_name = any($1)\ngroup by d.id,\n  attr.contributor_id,\n  attr.document_id\n"
   },
   "dca1e24c7740e8d32a9d7cecd80f28c95831b0bc9ea94297d1ef775f9524c8c5": {
     "describe": {
@@ -1572,75 +1756,6 @@
     },
     "query": "-- Look for a matching global gloss before trying to create a document-local gloss.\nwith global_gloss as (\n  select morpheme_gloss.id\n  from morpheme_gloss\n  where document_id is null and gloss = $2\n), inserted_gloss as (\n  insert into morpheme_gloss (document_id, gloss)\n    select $1, $2\n    where not exists (select from global_gloss)\n  on conflict (coalesce(document_id, uuid_nil()), gloss)\n    do update set example_shape = excluded.example_shape,\n       tag_id = excluded.tag_id\n  returning id\n)\n\ninsert into word_segment (word_id, index_in_word, morpheme, gloss_id, followed_by)\nselect $3, $4, $5, coalesce(global_gloss.id, inserted_gloss.id), $6\nfrom global_gloss\nfull outer join inserted_gloss on true\non conflict (word_id, index_in_word)\n  do update set\n    morpheme = EXCLUDED.morpheme,\n    gloss_id = EXCLUDED.gloss_id,\n    followed_by = EXCLUDED.followed_by\n"
   },
-  "ea65b10e5e5c6104fea19263c4da453b0d2d13b594f7eebcb3db8d8d0d06aee8": {
-    "describe": {
-      "columns": [
-        {
-          "name": "id",
-          "ordinal": 0,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "source_text",
-          "ordinal": 1,
-          "type_info": "Text"
-        },
-        {
-          "name": "simple_phonetics",
-          "ordinal": 2,
-          "type_info": "Text"
-        },
-        {
-          "name": "phonemic",
-          "ordinal": 3,
-          "type_info": "Text"
-        },
-        {
-          "name": "english_gloss",
-          "ordinal": 4,
-          "type_info": "Text"
-        },
-        {
-          "name": "commentary",
-          "ordinal": 5,
-          "type_info": "Text"
-        },
-        {
-          "name": "document_id",
-          "ordinal": 6,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "index_in_document",
-          "ordinal": 7,
-          "type_info": "Int8"
-        },
-        {
-          "name": "page_number",
-          "ordinal": 8,
-          "type_info": "Text"
-        }
-      ],
-      "nullable": [
-        false,
-        false,
-        true,
-        true,
-        true,
-        true,
-        false,
-        false,
-        true
-      ],
-      "parameters": {
-        "Left": [
-          "Text",
-          "Uuid"
-        ]
-      }
-    },
-    "query": "with recursive relations as (\n  -- Base case: all relations involving the input morpheme.\n  select\n    rl.left_gloss_id,\n    rl.right_gloss_id\n  from morpheme_gloss_relation as rl\n    inner join\n      morpheme_gloss on\n        rl.left_gloss_id = morpheme_gloss.id or rl.right_gloss_id = morpheme_gloss.id\n  where morpheme_gloss.gloss = $1 and morpheme_gloss.document_id = $2\n\n  -- Recursive case: saturate the graph (no duplicates)\n  union\n  select\n    rlr.left_gloss_id,\n    rlr.right_gloss_id\n  from morpheme_gloss_relation as rlr\n    -- Retrieve all relations that involve any previous sources or destinations\n    inner join\n      relations on\n        rlr.left_gloss_id = relations.right_gloss_id or rlr.right_gloss_id = relations.left_gloss_id or rlr.left_gloss_id = relations.left_gloss_id or rlr.right_gloss_id = relations.right_gloss_id\n)\n\nselect\n  word.id,\n  word.source_text,\n  word.simple_phonetics,\n  word.phonemic,\n  word.english_gloss,\n  word.commentary,\n  word.document_id,\n  word.index_in_document,\n  word.page_number\nfrom relations\n  inner join\n    morpheme_gloss on\n      morpheme_gloss.id = relations.left_gloss_id or morpheme_gloss.id = relations.right_gloss_id\n  inner join word_segment on word_segment.gloss_id = morpheme_gloss.id\n  inner join word on word.id = word_segment.word_id\ngroup by word.id\norder by word.document_id\n"
-  },
   "f86a2f62b58b5b404883e127574947027ff7a38f8ea4058a7dc4e9e68626c164": {
     "describe": {
       "columns": [
@@ -1672,35 +1787,5 @@
       }
     },
     "query": "select\n  id,\n  title,\n  base_url\nfrom iiif_source\nwhere title = $1\n"
-  },
-  "fabf9dbd6f3d69ba5b942106fe45d482a0d1eec7bf3ca665159cf8f5acf032f9": {
-    "describe": {
-      "columns": [
-        {
-          "name": "id",
-          "ordinal": 0,
-          "type_info": "Uuid"
-        }
-      ],
-      "nullable": [
-        false
-      ],
-      "parameters": {
-        "Left": [
-          "Text",
-          "Text",
-          "Text",
-          "Text",
-          "Date",
-          "Text",
-          "Uuid",
-          "Text",
-          "Int8",
-          "Uuid",
-          "Int8Range"
-        ]
-      }
-    },
-    "query": "insert into word (source_text, simple_phonetics, phonemic, english_gloss, recorded_at, commentary,\n  document_id, page_number, index_in_document, page_id, character_range)\nvalues ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)\non conflict (document_id, index_in_document)\ndo update set\n  source_text = EXCLUDED.source_text,\n  simple_phonetics = EXCLUDED.simple_phonetics,\n  phonemic = EXCLUDED.phonemic,\n  english_gloss = EXCLUDED.english_gloss,\n  commentary = EXCLUDED.commentary\nreturning id\n"
   }
 }
