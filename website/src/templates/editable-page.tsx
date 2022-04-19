@@ -1,13 +1,6 @@
 import React from "react"
 import { Helmet } from "react-helmet"
-import Markdown from "react-markdown"
-//import { MarkdownFieldPlugin } from "react-tinacms-editor"
-import gfm from "remark-gfm"
-import { usePlugin } from "tinacms"
-import * as Dailp from "src/graphql/dailp"
 import { fullWidth, paddedWidth } from "src/sprinkles.css"
-//import { useCredentials } from "../auth"
-import { blocksField, useGraphQLForm } from "../cms/graphql-form"
 import Layout from "../layout"
 
 interface Props {
@@ -27,67 +20,58 @@ export default EditablePage
 export const EditablePageContents = (props: Props) => (
   <main className={paddedWidth}>
     <article className={fullWidth}>
-      <EditablePageInner {...props} />
+      {/* <EditablePageInner {...props} /> */}
     </article>
   </main>
 )
 
-/* const EditablePageSSR = (props: Props) => {
-*   const creds = useCredentials()
-*   if (creds) {
-*     return <EditablePageInner {...props} />
-*   } else {
-*     return <PageContents page={props.data.dailp.page} />
-*   }
-* } */
+//const EditablePageInner = (props: Props) => {
+//  const staticData = props.data.dailp.page
+/* usePlugin(MarkdownFieldPlugin) */
 
-const EditablePageInner = (props: Props) => {
-  const staticData = props.data.dailp.page
-  /* usePlugin(MarkdownFieldPlugin) */
-
-  const [data, form] = useGraphQLForm(
-    staticData,
-    Dailp.EditablePageDocument,
-    Dailp.NewPageDocument,
-    {
-      label: "Edit Page",
-      id: props.pageContext?.id,
-      variables: { id: props.pageContext?.id },
-      transformIn: ({ page: { body, ...page } }: any) => ({
-        ...page,
-        body:
-          body &&
-          body.map(({ __typename, ...block }: any) => ({
-            _template: __typename,
-            ...block,
-          })),
-      }),
-      transformOut: ({ body, id, ...page }: any) => ({
-        ...page,
-        _id: id,
-        body:
-          body &&
-          body.map(({ _template, ...block }: any) => ({
-            __typename: _template,
-            ...block,
-          })),
-      }),
-
-      fields: [
-        { name: "id", label: "Path", component: "text" },
-        { name: "title", label: "Title", component: "text" },
-        blocksField({
-          name: "body",
-          label: "Page Sections",
-        }),
-      ],
-    }
-  )
-
-  usePlugin(form)
-
-  return <PageContents page={data && data.body ? data : staticData} />
-}
+//  const [data, form] = useGraphQLForm(
+//    staticData,
+//    Dailp.EditablePageDocument,
+//    Dailp.NewPageDocument,
+//    {
+//      label: "Edit Page",
+//      id: props.pageContext?.id,
+//      variables: { id: props.pageContext?.id },
+//      transformIn: ({ page: { body, ...page } }: any) => ({
+//        ...page,
+//        body:
+//          body &&
+//          body.map(({ __typename, ...block }: any) => ({
+//            _template: __typename,
+//            ...block,
+//          })),
+//      }),
+//      transformOut: ({ body, id, ...page }: any) => ({
+//        ...page,
+//        _id: id,
+//        body:
+//          body &&
+//          body.map(({ _template, ...block }: any) => ({
+//            __typename: _template,
+//            ...block,
+//          })),
+//      }),
+//
+//      fields: [
+//        { name: "id", label: "Path", component: "text" },
+//        { name: "title", label: "Title", component: "text" },
+//        blocksField({
+//          name: "body",
+//          label: "Page Sections",
+//        }),
+//      ],
+//    }
+//  )
+//
+//  usePlugin(form)
+//
+//  return <PageContents page={data && data.body ? data : staticData} />
+//}
 
 const PageContents = (props: { page: any }) => (
   <>
@@ -111,7 +95,8 @@ const BlocksRenderer = (props: { children: any[] }) => (
 const BlockRenderer = (props: { children: any }) => {
   const ty = getType(props.children)
   if (ty === "Markdown") {
-    return <Markdown children={props.children.content} remarkPlugins={[gfm]} />
+    /* return <Markdown children={props.children.content} remarkPlugins={[gfm]} /> */
+    return null
   } else {
     return null
   }

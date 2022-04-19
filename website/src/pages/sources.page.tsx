@@ -27,7 +27,7 @@ const SourcesPage = () => {
         <ul className={wideList}>
           {sortBy(
             dailp?.allDocuments.filter((d) => d.isReference),
-            (doc) => doc.id
+            (doc) => doc.slug
           ).map((doc) => (
             // Cite each source in APA format.
             <DocumentCitation key={doc.id} document={doc} />
@@ -50,9 +50,9 @@ const DocumentCitation = (p: { document: LocalDocument }) => {
   )
   const wordCount = doc.formCount ? ` ${doc.formCount} words.` : null
   return (
-    <li id={sourceCitationId(doc.id)} className={apaCitation}>
-      <b>{doc.id}:</b> {authors} {year && `(${year})`}. <i>{doc.title}</i>.
-      {wordCount}
+    <li id={sourceCitationId(doc.slug)} className={apaCitation}>
+      <b>{doc.slug.toUpperCase()}:</b> {authors} {year && `(${year})`}.{" "}
+      <i>{doc.title}</i>.{wordCount}
     </li>
   )
 }

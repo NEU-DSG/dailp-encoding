@@ -63,28 +63,34 @@ export const wordGroup = style([
       [mediaQueries.medium]: {
         display: "inline-block",
         ...margin(vspace.half, "3rem", vspace.one, 0),
-      }
-    }
+      },
+    },
   },
 ])
 
 export const wordGroupSelection = styleVariants({
-  unselected: [wordGroup, {
-    "@media": {
-      [mediaQueries.medium]: {
-        borderColor: "transparent",
-      },
-      [mediaQueries.print]: {
-        display: "inline-block",
-        border: "none",
-        ...margin(0, "3.5rem", vspace[1.5], 0),
+  unselected: [
+    wordGroup,
+    {
+      "@media": {
+        [mediaQueries.medium]: {
+          borderColor: "transparent",
+        },
+        [mediaQueries.print]: {
+          display: "inline-block",
+          border: "none",
+          ...margin(0, "3.5rem", vspace[1.5], 0),
+        },
       },
     },
-  }],
-  selected: [wordGroup, {
-    borderColor: "black",
-    backgroundColor: colors.header,
-  }],
+  ],
+  selected: [
+    wordGroup,
+    {
+      borderColor: "black",
+      backgroundColor: colors.header,
+    },
+  ],
 })
 
 export const syllabaryLayer = style({
