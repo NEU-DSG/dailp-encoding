@@ -1,5 +1,5 @@
 import { style } from "@vanilla-extract/css"
-import sprinkles, { hideOnPrint, std, theme } from "src/sprinkles.css"
+import sprinkles, { colors, hideOnPrint, std, theme } from "src/sprinkles.css"
 
 export const darkTheme = style([
   hideOnPrint,
@@ -39,7 +39,9 @@ export const content = style([
 
 export const light = style([
   container,
-  sprinkles({
-    backgroundColor: "altFooter",
-  }),
+  {
+    backgroundColor: colors.body,
+    color: colors.text,
+    justifyContent: "space-evenly",
+  },
 ])
