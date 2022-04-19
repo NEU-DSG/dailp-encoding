@@ -1,3 +1,5 @@
+use std::ops::Bound;
+
 use {
     crate::*,
     anyhow::Result,
@@ -595,6 +597,24 @@ impl Database {
         char_range: Option<PgRange<i64>>,
     ) -> Result<Uuid> {
         let mut tx = tx.begin().await?;
+
+        // Insert audio resource if there is one for this word.
+        let audio_slice_id = if let Some(track) = form.audio_track {
+            let time_range: Option<PgRange<_>> = match (track.start_time, track.end_time) {
+                (Some(a), Some(b)) => Some((a as i64..b as i64).into()),
+                (Some(a), None) => Some((a as i64..).into()),
+                (None, Some(b)) => Some((..b as i64).into()),
+                (None, None) => None,
+            };
+            Some(
+                query_file_scalar!("queries/insert_audio.sql", track.resource_url, time_range)
+                    .fetch_one(&mut tx)
+                    .await?,
+            )
+        } else {
+            None
+        };
+
         let word_id: Uuid = query_file_scalar!(
             "queries/upsert_word_in_document.sql",
             form.source,
@@ -607,7 +627,8 @@ impl Database {
             form.position.page_number,
             form.position.index as i64,
             page_id,
-            char_range
+            char_range,
+            audio_slice_id
         )
         .fetch_one(&mut tx)
         .await?;
@@ -776,7 +797,20 @@ impl Loader<DocumentId> for Database {
                     title: item.title,
                     is_reference: item.is_reference,
                     date: item.written_at.map(Date::new),
-                    audio_recording: None,
+                    audio_recording: Some(AudioSlice {
+                        resource_url: item.audio_url,
+                        parent_track: None,
+                        annotations: None,
+                        index: 0,
+                        start_time: item.audio_slice.as_ref().and_then(|r| match r.start {
+                            Bound::Unbounded => None,
+                            Bound::Included(t) | Bound::Excluded(t) => Some(t as i32),
+                        }),
+                        end_time: item.audio_slice.and_then(|r| match r.end {
+                            Bound::Unbounded => None,
+                            Bound::Included(t) | Bound::Excluded(t) => Some(t as i32),
+                        }),
+                    }),
                     collection: None,
                     contributors: item
                         .contributors
@@ -818,7 +852,20 @@ impl Loader<DocumentShortName> for Database {
                     title: item.title,
                     is_reference: item.is_reference,
                     date: item.written_at.map(Date::new),
-                    audio_recording: None,
+                    audio_recording: Some(AudioSlice {
+                        resource_url: item.audio_url,
+                        parent_track: None,
+                        annotations: None,
+                        index: 0,
+                        start_time: item.audio_slice.as_ref().and_then(|r| match r.start {
+                            Bound::Unbounded => None,
+                            Bound::Included(t) | Bound::Excluded(t) => Some(t as i32),
+                        }),
+                        end_time: item.audio_slice.and_then(|r| match r.end {
+                            Bound::Unbounded => None,
+                            Bound::Included(t) | Bound::Excluded(t) => Some(t as i32),
+                        }),
+                    }),
                     collection: None,
                     contributors: item
                         .contributors
@@ -1008,7 +1055,20 @@ impl Loader<WordsInParagraph> for Database {
                         segments: None,
                         english_gloss: w.english_gloss.map(|s| vec![s]).unwrap_or_default(),
                         commentary: w.commentary,
-                        audio_track: None,
+                        audio_track: Some(AudioSlice {
+                            resource_url: w.audio_url,
+                            parent_track: None,
+                            annotations: None,
+                            index: 0,
+                            start_time: w.audio_slice.as_ref().and_then(|r| match r.start {
+                                Bound::Unbounded => None,
+                                Bound::Included(t) | Bound::Excluded(t) => Some(t as i32),
+                            }),
+                            end_time: w.audio_slice.and_then(|r| match r.end {
+                                Bound::Unbounded => None,
+                                Bound::Included(t) | Bound::Excluded(t) => Some(t as i32),
+                            }),
+                        }),
                         date_recorded: None,
                         line_break: None,
                         page_break: None,
@@ -1177,6 +1237,8 @@ struct BasicWord {
     document_id: Uuid,
     index_in_document: i64,
     page_number: Option<String>,
+    audio_url: Option<String>,
+    audio_slice: Option<PgRange<i64>>,
 }
 
 impl From<BasicWord> for AnnotatedForm {
@@ -1191,7 +1253,20 @@ impl From<BasicWord> for AnnotatedForm {
             segments: None,
             english_gloss: w.english_gloss.map(|s| vec![s]).unwrap_or_default(),
             commentary: w.commentary,
-            audio_track: None,
+            audio_track: w.audio_url.map(move |audio_url| AudioSlice {
+                resource_url: audio_url,
+                parent_track: None,
+                annotations: None,
+                index: 0,
+                start_time: w.audio_slice.as_ref().and_then(|r| match r.start {
+                    Bound::Unbounded => None,
+                    Bound::Included(t) | Bound::Excluded(t) => Some(t as i32),
+                }),
+                end_time: w.audio_slice.and_then(|r| match r.end {
+                    Bound::Unbounded => None,
+                    Bound::Included(t) | Bound::Excluded(t) => Some(t as i32),
+                }),
+            }),
             date_recorded: None,
             line_break: None,
             page_break: None,
