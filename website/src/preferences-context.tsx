@@ -3,7 +3,7 @@ import { selectedMode, selectedPhonetics } from "./mode"
 import { PhoneticRepresentation, ViewMode } from "./types"
 
 // Set up context for preferences
-export const PreferencesContext = React.createContext({
+const PreferencesContext = React.createContext({
   viewMode: ViewMode.Story,
   setViewMode: (p: ViewMode) => {},
   phoneticRepresentation: PhoneticRepresentation.Dailp,
@@ -29,11 +29,4 @@ export const PreferencesProvider = (props: any) => {
   )
 }
 
-export const usePreferences = () => {
-  const phoneticRepresentation =
-    useContext(PreferencesContext).phoneticRepresentation
-
-  const viewMode = useContext(PreferencesContext).viewMode
-
-  return { viewMode, phoneticRepresentation }
-}
+export const usePreferences = () => useContext(PreferencesContext)

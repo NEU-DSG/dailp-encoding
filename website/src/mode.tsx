@@ -18,7 +18,7 @@ import {
 } from "reakit/Radio"
 import { std } from "src/sprinkles.css"
 import * as css from "./mode.css"
-import { PreferencesContext } from "./preferences-context"
+import { usePreferences } from "./preferences-context"
 import {
   PhoneticRepresentation,
   TagSet,
@@ -96,7 +96,7 @@ export const phonDetails = (representation: PhoneticRepresentation) =>
   phoneticRepresentationMapping[representation]
 
 export const selectedMode = () =>
-  Number.parseInt(Cookies.get("experienceLevel") ?? "0")
+  Number.parseInt(Cookies.get("experienceLevel") ?? "0") as ViewMode
 
 export const selectedPhonetics = () =>
   Number.parseInt(Cookies.get("phonetics") ?? "0") as PhoneticRepresentation
@@ -105,7 +105,7 @@ export const ExperiencePicker = (p: {
   onSelect: (mode: ViewMode) => void
   id?: string
 }) => {
-  const [value, setValue] = useState(selectedMode() as ViewMode)
+  const [value, setValue] = useState(selectedMode())
 
   // Save the selected experience level throughout the session.
   useEffect(() => {
@@ -124,7 +124,7 @@ export const ExperiencePicker = (p: {
       {Object.keys(ViewMode)
         .filter(notNumber)
         .map(function (mode: string) {
-          var selectedMode = ViewMode[mode as keyof typeof ViewMode]
+          const selectedMode = ViewMode[mode as keyof typeof ViewMode]
           return (
             <option value={selectedMode} selected={value === selectedMode}>
               {modeDetails(selectedMode).label}
@@ -173,7 +173,7 @@ export const PhoneticsPicker = (p: {
 
 export const TagSetPicker = (p: { onSelect: (tagSet: TagSet) => void }) => {
   const radio = useRadioState({
-    state: tagSetForMode(selectedMode() as ViewMode),
+    state: tagSetForMode(selectedMode()),
   })
 
   useEffect(() => p.onSelect(radio.state as TagSet), [radio.state])
@@ -203,29 +203,6 @@ const ExperienceOption = (p: { radio: RadioStateReturn; level: string }) => {
   )
 }
 
-const PhoneticOption = (p: {
-  radio: RadioStateReturn
-  representation: string
-}) => {
-  const value =
-    PhoneticRepresentation[
-      p.representation as keyof typeof PhoneticRepresentation
-    ]
-  const isSelected = p.radio.state === value
-  return (
-    <Tooltip
-      className={std.tooltip}
-      label={phoneticRepresentationMapping[value].details}
-    >
-      <label className={cx(css.levelLabel, isSelected && css.highlightedLabel)}>
-        <Radio {...p.radio} value={value} />
-        {"  "}
-        {phoneticRepresentationMapping[value].label}
-      </label>
-    </Tooltip>
-  )
-}
-
 const TagSetOption = (p: { radio: RadioStateReturn; level: string }) => {
   const value = TagSet[p.level as keyof typeof TagSet]
   return (
@@ -240,27 +217,23 @@ const TagSetOption = (p: { radio: RadioStateReturn; level: string }) => {
 }
 
 export const PrefPanel = () => {
-  const preferences = useContext(PreferencesContext)
+  const preferences = usePreferences()
   return (
-    <div>
-      <label>Display Mode: </label><br/>
-      {
-        <ExperiencePicker
-          aria-described-by={"Selected-ViewMode"}
-          onSelect={preferences.setViewMode}
-        />
-      }
+    <div className={css.settingsContainer}>
+      <label>Level of Detail:</label>
+      <ExperiencePicker
+        aria-described-by={"Selected-ViewMode"}
+        onSelect={preferences.setViewMode}
+      />
       <p id={"Selected-ViewMode"}>
         {levelNameMapping[preferences.viewMode].details}
       </p>
 
-      <label>Romanization Method: </label><br/>
-      {
-        <PhoneticsPicker
-          aria-described-by={"Selected-Phonetics"}
-          onSelect={preferences.setPhoneticRepresentation}
-        />
-      }
+      <label>Romanization System:</label>
+      <PhoneticsPicker
+        aria-described-by={"Selected-Phonetics"}
+        onSelect={preferences.setPhoneticRepresentation}
+      />
       <p id={"Selected-Phonetics"}>
         {
           phoneticRepresentationMapping[preferences.phoneticRepresentation]
@@ -275,11 +248,11 @@ export const HeaderPrefDrawer = () => {
   const dialog = useDialogState({ animated: true })
 
   return (
-    <div aria-label="shell" className={css.prefButton.shell}>
+    <div className={css.prefButtonShell}>
       <DialogDisclosure
         {...dialog}
-        aria-label="Open Settings"
-        className={css.prefButton.button}
+        aria-label="Settings"
+        className={css.prefButton}
       >
         <MdSettings size={32} />
       </DialogDisclosure>
@@ -290,11 +263,11 @@ export const HeaderPrefDrawer = () => {
           className={css.prefDrawer}
           aria-label="Settings Dialog"
         >
-          <h1>Document Settings</h1>
+          <h1>Display Settings</h1>
           <Button
             className={css.closeButton}
             onClick={dialog.hide}
-            aria-label="Dismiss selected word information"
+            aria-label="Dismiss display settings dialog"
           >
             <MdClose size={32} />
           </Button>
