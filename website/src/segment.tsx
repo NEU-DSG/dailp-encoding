@@ -194,13 +194,15 @@ export const AnnotatedForm = (
     )
   } else {
     return (
-      <span
-        className={css.plainSyllabary}
-        id={`w${p.segment.index}`}
-        lang="chr"
-      >
-        {p.segment.source}
-      </span>
+      <>
+        <span
+          className={css.plainSyllabary}
+          id={`w${p.segment.index}`}
+          lang="chr"
+        >
+          {p.segment.source}
+        </span>{" "}
+      </>
     )
   }
 }

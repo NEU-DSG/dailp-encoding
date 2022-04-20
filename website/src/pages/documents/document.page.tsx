@@ -1,16 +1,10 @@
 import { DialogContent, DialogOverlay } from "@reach/dialog"
 import "@reach/dialog/styles.css"
-import React, {
-  useEffect,
-  useState,
-} from "react"
+import React, { useEffect, useState } from "react"
 import { isMobile } from "react-device-detect"
 import { Helmet } from "react-helmet"
-import {
-  Dialog,
-  DialogBackdrop,
-  useDialogState,
-} from "reakit/Dialog"
+import { MdSettings } from "react-icons/md"
+import { Dialog, DialogBackdrop, useDialogState } from "reakit/Dialog"
 import { Tab, TabList, TabPanel } from "reakit/Tab"
 import { DocumentAudio } from "src/audio-player"
 import { Breadcrumbs } from "src/breadcrumbs"
@@ -79,9 +73,7 @@ const TabSet = ({ doc }: { doc: Document }) => {
   const tabs = useScrollableTabState({ selectedId: Tabs.ANNOTATION })
   return (
     <>
-      <div
-        className={css.wideAndTop}
-      >
+      <div className={css.wideAndTop}>
         <TabList
           {...tabs}
           id="document-tabs-header"
@@ -151,7 +143,8 @@ const TranslationTab = ({ doc }: { doc: Document }) => {
       dialog.hide()
     }
   }
-  /* This useEffect makes that when the mobile version of the word panel is closed, the word is unselected*/
+
+  // When the mobile version of the word panel is closed, remove any word selection.
   useEffect(() => {
     if (!dialog.visible) {
       selectAndShowWord(null)
@@ -210,6 +203,15 @@ const TranslationTab = ({ doc }: { doc: Document }) => {
 
       <div className={css.contentContainer}>
         <article className={css.annotationContents}>
+          <p className={css.topMargin}>
+            Use the{" "}
+            <span>
+              <MdSettings size={32} style={{ verticalAlign: "middle" }} />{" "}
+              Settings
+            </span>{" "}
+            button at the top of the page to change how documents are
+            translated.
+          </p>
           <DocumentContents
             {...{
               experienceLevel: viewMode,
@@ -221,7 +223,7 @@ const TranslationTab = ({ doc }: { doc: Document }) => {
             }}
           />
         </article>
-        {selectedWord && viewMode > 0 ? (
+        {selectedWord && viewMode > ViewMode.Story ? (
           <div className={css.contentSection2}>
             <WordPanel
               segment={wordPanelInfo.currContents}
