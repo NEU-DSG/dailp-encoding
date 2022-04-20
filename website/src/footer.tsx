@@ -1,14 +1,15 @@
 import React from "react"
+import Link from "src/components/link"
+import { usePageContext } from "src/renderer/PageShell"
 import { wordpressUrl } from "src/theme"
 import * as css from "./footer.css"
-import { usePageContext } from "./renderer/PageShell"
 
 /** University affiliation, related navigation links, and contact info.  */
 const Footer = () => {
   const { buildDate } = usePageContext()
   return (
-    <footer className={css.darkTheme}>
-      <div className={css.container}>
+    <footer className={css.footer}>
+      <div className={css.dark}>
         <p className={css.content} style={{ display: "block" }}>
           This project was created with help from the{" "}
           <a href="http://dsg.northeastern.edu/">Digital Scholarship Group</a>{" "}
@@ -36,19 +37,21 @@ const Footer = () => {
         </div>
       </div>
       <div className={css.light}>
-        <h4>Supported by</h4>
+        <h4>
+          <Link href="/support">Supported by</Link>
+        </h4>
         <div className={css.content}>
           <a href="https://www.hluce.org/">
             <img
               src={`${wordpressUrl}/wp-content/uploads/2021/04/LUCE-Logo-Full-Color-L-768x242.png`}
-              width={150}
+              height={68}
               alt="Henry Luce Foundation"
             />
           </a>
           <a href="https://www.archives.gov/nhprc">
             <img
               src={`${wordpressUrl}/wp-content/uploads/2021/12/nhprc-logo-239x300.jpg`}
-              width={150}
+              width={120}
               alt="National Archives: National Historical Publications & Records Commission"
             />
           </a>
