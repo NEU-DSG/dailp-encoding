@@ -5,6 +5,7 @@ import React, { useState } from "react"
 import { Helmet } from "react-helmet"
 import Link from "src/components/link"
 import * as Dailp from "src/graphql/dailp"
+import { usePreferences } from "src/preferences-context"
 import {
   closeBlock,
   edgePadded,
@@ -13,12 +14,12 @@ import {
   std,
 } from "src/sprinkles.css"
 import Layout from "../layout"
-import { TagSetPicker } from "../mode"
 import { glossarySectionId, morphemeTagId } from "../routes"
-import { TagSet } from "../types"
+import { TagSet, tagSetForMode } from "../types"
 
 const GlossaryPage = () => {
-  const [tagSet, setTagSet] = useState<TagSet>(TagSet.Learner)
+  const { viewMode } = usePreferences()
+  const tagSet = tagSetForMode(viewMode)
   let system = Dailp.CherokeeOrthography.Taoc
   if (tagSet === TagSet.Crg) {
     system = Dailp.CherokeeOrthography.Crg
@@ -38,13 +39,6 @@ const GlossaryPage = () => {
         <header className={fullWidth}>
           <h1>Glossary of Terms</h1>
         </header>
-        <p className={fullWidth}>
-          There are multiple conventions for describing the parts of a Cherokee
-          word. Hover over each terminology mode below to see more details about
-          what they offer.
-        </p>
-
-        <TagSetPicker onSelect={setTagSet} />
 
         <ul className={fullWidth}>
           <h4 className={closeBlock}>Table of Contents</h4>
