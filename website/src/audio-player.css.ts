@@ -36,7 +36,7 @@ export const audioElement = style([
     width: "full",
   }),
   {
-    textAlign: "center",
+    alignItems: "center",
   },
 ])
 

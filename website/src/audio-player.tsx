@@ -203,15 +203,25 @@ const FunctionalAudioPlayer = (props: Props) => {
   )
 }
 
+const ButtonSize = 28
+
 const PauseButton = (props: { howl: Howl }) => {
-  return <MdPauseCircleOutline onClick={() => props.howl.pause()} />
+  return (
+    <MdPauseCircleOutline
+      size={ButtonSize}
+      onClick={() => props.howl.pause()}
+    />
+  )
 }
 
 const PlayButton = (props: { howl: Howl; isSprite?: boolean }) => {
   return props.isSprite ? (
-    <MdPlayCircleOutline onClick={() => props.howl.play("sound")} />
+    <MdPlayCircleOutline
+      size={ButtonSize}
+      onClick={() => props.howl.play("sound")}
+    />
   ) : (
-    <MdPlayCircleOutline onClick={() => props.howl.play()} />
+    <MdPlayCircleOutline size={ButtonSize} onClick={() => props.howl.play()} />
   )
 }
 // TODO: Implement Seek
