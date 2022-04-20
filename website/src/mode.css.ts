@@ -41,10 +41,12 @@ export const prefBand = style([
   },
 ])
 
-export const prefButton = styleVariants({
-  shell: [{ textAlign: "right", flex: 1 }],
-  button: [collPanelButton],
+export const prefButtonShell = style({
+  textAlign: "right",
+  flex: 1,
 })
+
+export const prefButton = collPanelButton
 
 export const prefBG = style([
   drawerBg,
@@ -63,5 +65,10 @@ export const prefDrawer = style([
   paddingX(hspace.edge),
   { paddingTop: vspace.one },
 ])
+
+export const settingsContainer = style({
+  display: "flex",
+  flexFlow: "column nowrap",
+})
 
 export const closeButton = style([wordPanelButton.basic])
