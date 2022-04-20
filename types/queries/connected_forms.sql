@@ -30,12 +30,15 @@ select
   word.commentary,
   word.document_id,
   word.index_in_document,
-  word.page_number
+  word.page_number,
+  media_resource.url as "audio_url?",
+  media_slice.time_range as "audio_slice?"
 from relations
   inner join
     morpheme_gloss on
       morpheme_gloss.id = relations.left_gloss_id or morpheme_gloss.id = relations.right_gloss_id
   inner join word_segment on word_segment.gloss_id = morpheme_gloss.id
   inner join word on word.id = word_segment.word_id
-group by word.id
+  left join media_slice on media_slice.id = word.audio_slice_id
+  left join media_resource on media_resource.id = media_slice.resource_id
 order by word.document_id
