@@ -74,23 +74,23 @@ impl Manifest {
                             .iter()
                             .filter_map(|word| {
                                 word.position.geometry.as_ref().map(|geometry| Annotation {
-                                        id: format!("{}/{:?}", annotations_uri, word.id),
-                                        motivation: "supplementing".to_owned(),
-                                        body: AnnotationBody::TextualBody(TextualBody {
-                                            language: "en".to_string(),
-                                            format: "text/html".to_string(),
-                                            value: word.source.clone(),
-                                        }),
-                                        target: AnnotationTarget::Selector(TargetSelector {
-                                            id: canvas_uri.clone(),
-                                            selector: FragmentSelector {
-                                                value: geometry.to_selector_string(),
-                                            },
-                                        }),
-                                    })
+                                    id: format!("{}/{:?}", annotations_uri, word.id),
+                                    motivation: "supplementing".to_owned(),
+                                    body: AnnotationBody::TextualBody(TextualBody {
+                                        language: "en".to_string(),
+                                        format: "text/html".to_string(),
+                                        value: word.source.clone(),
+                                    }),
+                                    target: AnnotationTarget::Selector(TargetSelector {
+                                        id: canvas_uri.clone(),
+                                        selector: FragmentSelector {
+                                            value: geometry.to_selector_string(),
+                                        },
+                                    }),
+                                })
                             })
-                            .chain(annotations.iter().filter_map(|annote| {
-                                match &annote.attached_to {
+                            .chain(annotations.iter().filter_map(
+                                |annote| match &annote.attached_to {
                                     AnnotationAttachment::DocumentRegion(DocumentRegion {
                                         region,
                                         page: Some(annote_page),
@@ -116,8 +116,8 @@ impl Manifest {
                                     }),
 
                                     _ => None,
-                                }
-                            }))
+                                },
+                            ))
                             .collect(),
                         id: annotations_uri,
                     };
@@ -170,7 +170,7 @@ impl Manifest {
             homepage: vec![Text {
                 id: "https://dailp.northeastern.edu/".to_owned(),
                 label: LanguageString::english(
-                    "Digital Archive of American Indian Languages Preservation and Perseverance",
+                    "Digital Archive of Indigenous Language Persistence",
                 ),
                 format: "text/html".to_owned(),
             }],

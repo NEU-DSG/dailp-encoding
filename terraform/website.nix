@@ -31,8 +31,7 @@ with builtins; {
         lifecycle.prevent_destroy = true;
         name = "dailp";
         tags = config.setup.global_tags;
-        description =
-          "Digital Archive of American Indian Languages Preservation and Perseverance";
+        description = "Digital Archive of Indigenous Language Persistence";
         repository = lib.toLower (getEnv "GIT_REPOSITORY_URL");
         oauth_token = getEnv "OAUTH_TOKEN";
         iam_service_role_arn = "\${aws_iam_role.amplify_role.arn}";
