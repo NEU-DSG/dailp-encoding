@@ -1,8 +1,8 @@
 select
   word.*,
   paragraph.id as paragraph_id,
-  media_slice.time_range as audio_slice,
-  media_resource.url as audio_url
+  media_slice.time_range as "audio_slice?",
+  media_resource.url as "audio_url?"
 from word
   inner join paragraph on paragraph.page_id = word.page_id
   left join media_slice on media_slice.id = word.audio_slice_id

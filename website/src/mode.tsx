@@ -119,6 +119,7 @@ export const ExperiencePicker = (p: {
     <select
       name="experience-picker"
       id={p.id}
+      value={value}
       onChange={(e) => setValue(Number.parseInt(e.target.value))}
     >
       {Object.keys(ViewMode)
@@ -126,7 +127,7 @@ export const ExperiencePicker = (p: {
         .map(function (mode: string) {
           const selectedMode = ViewMode[mode as keyof typeof ViewMode]
           return (
-            <option value={selectedMode} selected={value === selectedMode}>
+            <option value={selectedMode} key={selectedMode}>
               {modeDetails(selectedMode).label}
             </option>
           )
@@ -151,18 +152,19 @@ export const PhoneticsPicker = (p: {
   return (
     <select
       name="phonetics-picker"
+      value={value}
       onChange={(e) => setValue(Number.parseInt(e.target.value))}
       aria-label="Romanization"
     >
       {Object.keys(PhoneticRepresentation)
         .filter(notNumber)
         .map(function (representation: string) {
-          var selectedPhon =
+          const selectedPhon =
             PhoneticRepresentation[
               representation as keyof typeof PhoneticRepresentation
             ]
           return (
-            <option value={selectedPhon} selected={value === selectedPhon}>
+            <option value={selectedPhon} key={selectedPhon}>
               {phonDetails(selectedPhon).label}
             </option>
           )

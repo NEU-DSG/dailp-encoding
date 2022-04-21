@@ -9,8 +9,8 @@ select
     '[]'
   )
   as contributors,
-  media_resource.url as audio_url,
-  media_slice.time_range as audio_slice
+  media_resource.url as "audio_url?",
+  media_slice.time_range as "audio_slice?"
 from document as d
   left join contributor_attribution as attr on attr.document_id = d.id
   left join contributor on contributor.id = attr.contributor_id

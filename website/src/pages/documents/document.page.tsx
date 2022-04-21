@@ -321,7 +321,9 @@ export const DocumentTitleHeader = (p: {
       <Link href="/">Collections</Link>
       {p.doc.breadcrumbs &&
         p.doc.breadcrumbs.map((crumb) => (
-          <Link href={collectionRoute(crumb.slug)}>{crumb.name}</Link>
+          <Link href={collectionRoute(crumb.slug)} key={crumb.slug}>
+            {crumb.name}
+          </Link>
         ))}
     </Breadcrumbs>
 
