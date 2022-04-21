@@ -11,3 +11,10 @@ export const listItem = style({
     counterIncrement: "item",
   },
 })
+
+export const numberedOrderedList = style({
+  display: "block",
+  listStyleType: "lower-roman",
+  listStylePosition: "inside",
+  marginBottom: 0,
+})
