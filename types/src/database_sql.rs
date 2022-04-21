@@ -797,8 +797,8 @@ impl Loader<DocumentId> for Database {
                     title: item.title,
                     is_reference: item.is_reference,
                     date: item.written_at.map(Date::new),
-                    audio_recording: Some(AudioSlice {
-                        resource_url: item.audio_url,
+                    audio_recording: item.audio_url.map(|resource_url| AudioSlice {
+                        resource_url,
                         parent_track: None,
                         annotations: None,
                         index: 0,
@@ -852,8 +852,8 @@ impl Loader<DocumentShortName> for Database {
                     title: item.title,
                     is_reference: item.is_reference,
                     date: item.written_at.map(Date::new),
-                    audio_recording: Some(AudioSlice {
-                        resource_url: item.audio_url,
+                    audio_recording: item.audio_url.map(|resource_url| AudioSlice {
+                        resource_url,
                         parent_track: None,
                         annotations: None,
                         index: 0,
@@ -1055,8 +1055,8 @@ impl Loader<WordsInParagraph> for Database {
                         segments: None,
                         english_gloss: w.english_gloss.map(|s| vec![s]).unwrap_or_default(),
                         commentary: w.commentary,
-                        audio_track: Some(AudioSlice {
-                            resource_url: w.audio_url,
+                        audio_track: w.audio_url.map(|resource_url| AudioSlice {
+                            resource_url,
                             parent_track: None,
                             annotations: None,
                             index: 0,
