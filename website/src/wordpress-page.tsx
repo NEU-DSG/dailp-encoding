@@ -44,8 +44,9 @@ const parseOptions: HTMLReactParserOptions = {
     // Replace WordPress links with absolute local paths.
     // "https://wp.dailp.northeastern.edu/" => "/"
     if (
-      node instanceof Element &&
+      "name" in node &&
       node.name === "a" &&
+      "attribs" in node &&
       node.attribs &&
       node.attribs["href"]?.startsWith(wordpressUrl)
     ) {
