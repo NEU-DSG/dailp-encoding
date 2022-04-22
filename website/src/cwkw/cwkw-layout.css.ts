@@ -1,0 +1,18 @@
+import { style } from "@vanilla-extract/css"
+import * as baseLayout from "../layout.css"
+import { colors } from "./theme.css"
+
+export const header = style([baseLayout.header])
+
+export const headerContents = style([baseLayout.headerContents])
+
+export const subHeader = style([
+  baseLayout.subHeader,
+  { color: colors.text, fontSize: "larger" },
+])
+
+export const siteTitle = style([baseLayout.siteTitle])
+
+export const siteLink = style([baseLayout.siteLink])
+
+export const contentContainer = style([baseLayout.contentContainer])
