@@ -10,6 +10,7 @@ import { DocumentAudio } from "src/audio-player"
 import { Breadcrumbs } from "src/breadcrumbs"
 import { Button } from "src/components"
 import Link from "src/components/link"
+import CWKWLayout from "src/cwkw/cwkw-layout"
 import * as Dailp from "src/graphql/dailp"
 import Layout from "src/layout"
 import { drawerBg } from "src/menu.css"
@@ -58,13 +59,13 @@ const AnnotatedDocumentPage = (props: { id: string }) => {
     return null
   }
   return (
-    <Layout>
+    <CWKWLayout>
       <Helmet title={doc?.title} />
       <main className={css.annotatedDocument}>
         <DocumentTitleHeader doc={doc} showDetails={true} />
         <TabSet doc={doc} />
       </main>
-    </Layout>
+    </CWKWLayout>
   )
 }
 export default AnnotatedDocumentPage

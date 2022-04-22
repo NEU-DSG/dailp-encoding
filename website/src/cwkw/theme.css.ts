@@ -1,9 +1,8 @@
-import { createTheme, createThemeContract, style } from "@vanilla-extract/css";
-import { createSprinkles, defineProperties } from "@vanilla-extract/sprinkles";
-import { lighten } from "polished";
-import { colors, rootFontSize, theme } from "src/sprinkles.css";
-import { marginX, paddingX, paddingY } from "src/style-utils";
-
+import { createTheme, createThemeContract, style } from "@vanilla-extract/css"
+import { createSprinkles, defineProperties } from "@vanilla-extract/sprinkles"
+import { lighten } from "polished"
+import { rootFontSize, theme } from "src/sprinkles.css"
+import { marginX, paddingX, paddingY } from "src/style-utils"
 
 export const themeClass = createTheme(theme, {
   fontSizes: {
@@ -29,3 +28,9 @@ export const themeClass = createTheme(theme, {
     smallCaps: "Charis SIL",
   },
 })
+
+export const colors = {
+  ...theme.colors,
+  transparent: "transparent",
+  inherit: "inherit",
+}
