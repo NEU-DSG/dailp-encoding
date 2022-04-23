@@ -18,7 +18,7 @@ What we tell a tester at the beginning of the session.
 
 ### Language Learner
 
-I work with the Digital Archive of American Indian Languages Preservation and Perseverence (DAILP) at Northeastern University.
+I work with the Digital Archive of Indigenous Language Persistence (DAILP) at Northeastern University.
 As you may know, we have collected and translated a collection of Cherokee documents, and hope for this collection to be a tool that brings together learners and linguists.
 Would you be open to looking at our website, and going through a few tasks to help us figure out how we can best serve your needs?
 
@@ -26,7 +26,7 @@ Would you be open to looking at our website, and going through a few tasks to he
 
 Is it okay with you if I record this session for record keeping?
 
-I work with the Digital Archive of American Indian Languages Preservation and Perseverence (DAILP) at Northeastern University.
+I work with the Digital Archive of Indigenous Language Persistence (DAILP) at Northeastern University.
 The goal of DAILP is to support the ongoing creation of indigenous peoples’ knowledge, interpretations, and representations of the past by preserving and analyzing historical texts.
 We have collected and translated a collection of Cherokee documents from the early 20th century, and hope for this collection to be a tool that brings together learners and linguists.
 I'd like to have you complete a few tasks on our website and ask for your feedback.

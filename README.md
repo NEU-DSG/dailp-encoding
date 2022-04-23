@@ -2,7 +2,7 @@
 
 ![CI](https://github.com/NEU-DSG/dailp-encoding/workflows/CI/badge.svg)
 
-This is a repository for the data structure and website code of the Digital Archive of American Indian Languages Preservation and Perseverance ([DAILP](https://dailp.northeastern.edu)) project at [Northeastern University](https://northeastern.edu).
+This is a repository for the data structure and website code of the Digital Archive of Indigenous Language Persistence ([DAILP](https://dailp.northeastern.edu)) project at [Northeastern University](https://northeastern.edu).
 
 Check out the [project wiki](https://github.com/NEU-DSG/dailp-encoding/wiki) for further information about the project, how it's built, and how to contribute.
 
