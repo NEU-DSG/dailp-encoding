@@ -1,4 +1,3 @@
-use crate::{Database, MorphemeId};
 use serde::{Deserialize, Serialize};
 
 /// Represents a morphological gloss tag without committing to a single representation.
@@ -6,12 +5,10 @@ use serde::{Deserialize, Serialize};
 /// - TODO: Use a more generic representation than fields for learner, TAOC, and CRG.
 #[derive(Serialize, Deserialize, Debug, Clone, async_graphql::SimpleObject)]
 #[serde(rename_all = "camelCase")]
-#[graphql(complex)]
 pub struct MorphemeTag {
     /// Unique identifier for this morpheme which should be used in raw
     /// interlinear glosses of a word containing this morpheme.
     /// Standard annotation tag for this morpheme, defined by DAILP.
-    #[serde(rename = "_id")]
     pub id: String,
     /// The "learner" representation of this morpheme, a compromise between no
     /// interlinear glossing and standard linguistic terms.
@@ -25,23 +22,6 @@ pub struct MorphemeTag {
     /// What kind of functional morpheme is this?
     /// A few examples: "Prepronominal Prefix", "Clitic"
     pub morpheme_type: String,
-}
-
-#[async_graphql::ComplexObject]
-impl MorphemeTag {
-    async fn attested_allomorphs(
-        &self,
-        context: &async_graphql::Context<'_>,
-    ) -> async_graphql::FieldResult<Vec<String>> {
-        let id = MorphemeId::new(None, None, self.id.clone());
-        Ok(context
-            .data::<Database>()?
-            .morphemes(&id, None)
-            .await?
-            .into_iter()
-            .map(|x| x.morpheme)
-            .collect())
-    }
 }
 
 /// A concrete representation of a particular functional morpheme.
@@ -59,4 +39,5 @@ pub struct TagForm {
     /// A prose description of what this morpheme means and how it works in
     /// context.
     pub definition: String,
+    pub morpheme_type: String,
 }

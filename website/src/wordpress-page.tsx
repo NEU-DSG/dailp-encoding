@@ -20,7 +20,7 @@ const WordpressPage = ({ slug }: Props) => {
   const wpPage = data?.page?.__typename === "Page" && data.page
 
   if (wpPage) {
-    return <WordpressContents content={wpPage.content!} />
+    return <WordpressContents content={wpPage.content ?? ""} />
   } else if (fetching) {
     return (
       <div>
@@ -44,8 +44,9 @@ const parseOptions: HTMLReactParserOptions = {
     // Replace WordPress links with absolute local paths.
     // "https://wp.dailp.northeastern.edu/" => "/"
     if (
-      node instanceof Element &&
+      "name" in node &&
       node.name === "a" &&
+      "attribs" in node &&
       node.attribs &&
       node.attribs["href"]?.startsWith(wordpressUrl)
     ) {

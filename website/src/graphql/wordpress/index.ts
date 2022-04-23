@@ -8616,7 +8616,7 @@ export const PageDocument = gql`
 `
 
 export function usePageQuery(
-  options: Omit<Urql.UseQueryArgs<PageQueryVariables>, "query"> = {}
+  options: Omit<Urql.UseQueryArgs<PageQueryVariables>, "query">
 ) {
   return Urql.useQuery<PageQuery>({ query: PageDocument, ...options })
 }
@@ -8635,7 +8635,7 @@ export const PageIndexDocument = gql`
 `
 
 export function usePageIndexQuery(
-  options: Omit<Urql.UseQueryArgs<PageIndexQueryVariables>, "query"> = {}
+  options?: Omit<Urql.UseQueryArgs<PageIndexQueryVariables>, "query">
 ) {
   return Urql.useQuery<PageIndexQuery>({ query: PageIndexDocument, ...options })
 }
@@ -8657,7 +8657,7 @@ export const MainMenuDocument = gql`
 `
 
 export function useMainMenuQuery(
-  options: Omit<Urql.UseQueryArgs<MainMenuQueryVariables>, "query"> = {}
+  options?: Omit<Urql.UseQueryArgs<MainMenuQueryVariables>, "query">
 ) {
   return Urql.useQuery<MainMenuQuery>({ query: MainMenuDocument, ...options })
 }

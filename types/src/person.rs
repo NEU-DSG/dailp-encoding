@@ -1,3 +1,4 @@
+use crate::{Database, PersonFullName};
 use serde::{Deserialize, Serialize};
 
 /// An individual or organization that contributed to the creation or analysis
@@ -29,8 +30,8 @@ impl Contributor {
     ) -> async_graphql::FieldResult<Option<ContributorDetails>> {
         use async_graphql::dataloader::*;
         Ok(ctx
-            .data::<DataLoader<crate::Database>>()?
-            .load_one(crate::PersonId(self.name.clone()))
+            .data::<DataLoader<Database>>()?
+            .load_one(PersonFullName(self.name.clone()))
             .await?)
     }
 }
@@ -47,7 +48,6 @@ impl Contributor {
 pub struct ContributorDetails {
     /// Full name of this person, this exact string must be used to identify
     /// them elsewhere, like in the attribution for a particular document.
-    #[serde(rename = "_id")]
     pub full_name: String,
     /// Alternate name of this person, may be in a different language or writing
     /// system. Used only for descriptive purposes.

@@ -5,6 +5,7 @@ import React, { useState } from "react"
 import { Helmet } from "react-helmet"
 import Link from "src/components/link"
 import * as Dailp from "src/graphql/dailp"
+import { usePreferences } from "src/preferences-context"
 import {
   closeBlock,
   edgePadded,
@@ -13,16 +14,24 @@ import {
   std,
 } from "src/sprinkles.css"
 import Layout from "../layout"
-import { TagSetPicker } from "../mode"
 import { glossarySectionId, morphemeTagId } from "../routes"
-import { TagSet, morphemeDisplayTag } from "../types"
+import { TagSet, tagSetForMode } from "../types"
 
 const GlossaryPage = () => {
-  const [{ data }] = Dailp.useGlossaryQuery()
+  const { viewMode } = usePreferences()
+  const tagSet = tagSetForMode(viewMode)
+  let system = Dailp.CherokeeOrthography.Taoc
+  if (tagSet === TagSet.Crg) {
+    system = Dailp.CherokeeOrthography.Crg
+  } else if (tagSet === TagSet.Taoc) {
+    system = Dailp.CherokeeOrthography.Taoc
+  } else if (tagSet === TagSet.Learner) {
+    system = Dailp.CherokeeOrthography.Learner
+  }
+  const [{ data }] = Dailp.useGlossaryQuery({ variables: { system } })
   const tags = data?.allTags
   // Group the tags by type.
   const groupedTags = groupBy(tags, (t) => t.morphemeType)
-  const [tagSet, setTagSet] = useState<TagSet>(TagSet.Learner)
   return (
     <Layout>
       <Helmet title="Glossary of Terms" />
@@ -30,13 +39,6 @@ const GlossaryPage = () => {
         <header className={fullWidth}>
           <h1>Glossary of Terms</h1>
         </header>
-        <p className={fullWidth}>
-          There are multiple conventions for describing the parts of a Cherokee
-          word. Hover over each terminology mode below to see more details about
-          what they offer.
-        </p>
-
-        <TagSetPicker onSelect={setTagSet} />
 
         <ul className={fullWidth}>
           <h4 className={closeBlock}>Table of Contents</h4>
@@ -57,22 +59,15 @@ const GlossaryPage = () => {
             <section key={ty} className={wideSection}>
               <h2 id={glossarySectionId(ty)}>{pluralize(ty)}</h2>
               <dl>
-                {tags.map((tag) => {
-                  const scopedTag = morphemeDisplayTag(tag, tagSet)
-                  if (scopedTag) {
-                    return (
-                      <React.Fragment key={tag.id}>
-                        <dt id={morphemeTagId(tag.id)}>
-                          <span className={std.smallCaps}>{scopedTag.tag}</span>{" "}
-                          – {scopedTag.title}
-                        </dt>
-                        <dd>{scopedTag.definition}</dd>
-                      </React.Fragment>
-                    )
-                  } else {
-                    return null
-                  }
-                })}
+                {tags.map((tag) => (
+                  <React.Fragment key={tag.tag}>
+                    <dt id={morphemeTagId(tag.tag)}>
+                      <span className={std.smallCaps}>{tag.tag}</span> –{" "}
+                      {tag.title}
+                    </dt>
+                    <dd>{tag.definition}</dd>
+                  </React.Fragment>
+                ))}
               </dl>
             </section>
           )

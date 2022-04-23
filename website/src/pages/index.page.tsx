@@ -18,7 +18,7 @@ const IndexPage = () => {
         <article className={fullWidth}>
           <Carousel
             images={carouselImages}
-            caption="Digital Archive of American Indian Languages Preservation and Perseverance"
+            caption="Digital Archive of Indigenous Language Persistence"
           />
           <WordpressPage slug="/" />
 
