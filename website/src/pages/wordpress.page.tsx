@@ -28,7 +28,9 @@ const WordpressPage = (props: { "*": string }) => (
 export default WordpressPage
 
 const Contents = (props: { slug: string }) => {
-  const [{ data, fetching }] = Wordpress.usePageQuery({ variables: { slug: props.slug } })
+  const [{ data, fetching }] = Wordpress.usePageQuery({
+    variables: { slug: props.slug },
+  })
   const page = data?.page?.__typename === "Page" && data?.page
   if (page) {
     return (
@@ -36,7 +38,7 @@ const Contents = (props: { slug: string }) => {
         <header>
           <h1>{page.title}</h1>
         </header>
-        <WordpressContents content={page.content!} />
+        <WordpressContents content={page.content ?? ""} />
       </>
     )
   } else if (fetching) {

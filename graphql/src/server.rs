@@ -22,8 +22,10 @@ async fn main() -> tide::Result<()> {
 
     // create schema
     let schema = Schema::build(query::Query, query::Mutation, EmptySubscription)
-        .data(dailp::Database::new().expect("Failed to initialize database"))
-        .data(DataLoader::new(dailp::Database::new().unwrap()))
+        .data(DataLoader::new(
+            dailp::Database::connect().await?,
+            tokio::spawn,
+        ))
         .finish();
 
     let cors = CorsMiddleware::new()
@@ -34,8 +36,7 @@ async fn main() -> tide::Result<()> {
     app.with(cors);
 
     // add tide endpoint
-    app.at("/graphql")
-        .post(async_graphql_tide::endpoint(schema));
+    app.at("/graphql").post(async_graphql_tide::graphql(schema));
 
     // enable graphql playground
     app.at("/graphql").get(|_| async move {

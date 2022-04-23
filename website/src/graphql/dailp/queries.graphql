@@ -13,13 +13,13 @@ query DocumentsPages {
   }
 }
 
-query AnnotatedDocument($id: String!) {
-  document(id: $id) {
+query AnnotatedDocument($slug: String!) {
+  document(slug: $slug) {
     id
     title
     slug
     isReference
-    collection {
+    breadcrumbs(superCollection: "") {
       name
       slug
     }
@@ -30,38 +30,35 @@ query AnnotatedDocument($id: String!) {
       name
       link
     }
-    pageImages {
-      urls
-    }
     audioRecording {
       resourceUrl
       startTime
       endTime
     }
+    translatedPages {
+      image {
+        url
+      }
+    }
   }
 }
 
 query DocumentContents(
-  $id: String!
+  $slug: String!
   $morphemeSystem: CherokeeOrthography
   $isReference: Boolean!
 ) {
-  document(id: $id) {
-    translatedSegments @skip(if: $isReference) {
-      source {
-        __typename
-        ... on AnnotatedForm {
-          ...FormFields
+  document(slug: $slug) {
+    translatedPages @skip(if: $isReference) {
+      pageNumber
+      paragraphs {
+        source {
+          __typename
+          ... on AnnotatedForm {
+            ...FormFields
+          }
         }
-        ... on AnnotatedPhrase {
-          ...BlockFields
-        }
-        ... on PageBreak {
-          index
-        }
-      }
-      translation {
-        text
+        translation
       }
     }
     forms @include(if: $isReference) {
@@ -71,19 +68,6 @@ query DocumentContents(
   }
 }
 
-fragment BlockFields on AnnotatedPhrase {
-  ty
-  index
-  parts {
-    __typename
-    ... on AnnotatedForm {
-      ...FormFields
-    }
-    ... on PageBreak {
-      index
-    }
-  }
-}
 fragment FormFields on AnnotatedForm {
   index
   source
@@ -93,20 +77,9 @@ fragment FormFields on AnnotatedForm {
   segments {
     morpheme(system: $morphemeSystem)
     gloss
-    matchingTag {
-      id
-      taoc {
-        tag
-        title
-      }
-      learner {
-        tag
-        title
-      }
-      crg {
-        tag
-        title
-      }
+    matchingTag(system: $morphemeSystem) {
+      tag
+      title
     }
     nextSeparator
   }
@@ -136,19 +109,16 @@ query Collection($slug: String!) {
 }
 
 query WordSearch($query: String!) {
-  wordSearch(
-    queries: [
-      { source: $query }
-      { normalizedSource: $query }
-      { simplePhonetics: $query }
-      { englishGloss: $query }
-    ]
-  ) {
+  wordSearch(query: $query) {
     source
     normalizedSource
     simplePhonetics
-    documentId
     englishGloss
+    index
+    document {
+      slug
+      isReference
+    }
   }
 }
 
@@ -156,6 +126,7 @@ query AllSources {
   allDocuments {
     isReference
     id
+    slug
     title
     date {
       year
@@ -167,24 +138,11 @@ query AllSources {
   }
 }
 
-query Glossary {
-  allTags {
-    id
-    crg {
-      tag
-      title
-      definition
-    }
-    taoc {
-      tag
-      title
-      definition
-    }
-    learner {
-      tag
-      title
-      definition
-    }
+query Glossary($system: CherokeeOrthography!) {
+  allTags(system: $system) {
+    tag
+    title
+    definition
     morphemeType
   }
 }
@@ -208,12 +166,12 @@ query Timeline($gloss: String!) {
   }
 }
 
-query DocumentDetails($id: String!) {
-  document(id: $id) {
+query DocumentDetails($slug: String!) {
+  document(slug: $slug) {
     id
     slug
     title
-    collection {
+    breadcrumbs(superCollection: "") {
       name
       slug
     }
@@ -244,38 +202,29 @@ query EditablePage($id: String!) {
   }
 }
 
-query Tag($gloss: String!) {
-  tag: morphemeTag(id: $gloss) {
-    id
+query Tag($gloss: String!, $system: CherokeeOrthography!) {
+  tag: morphemeTag(id: $gloss, system: $system) {
     morphemeType
-    taoc {
-      tag
-      title
-      definition
-    }
-    crg {
-      tag
-      title
-      definition
-    }
-    learner {
-      tag
-      title
-      definition
-    }
+    tag
+    title
+    definition
   }
 }
 
-query Morpheme($morphemeId: String!) {
-  documents: morphemesByDocument(morphemeId: $morphemeId) {
-    documentId
+query Morpheme($documentId: UUID, $morphemeGloss: String!) {
+  documents: morphemesByDocument(
+    documentId: $documentId
+    morphemeGloss: $morphemeGloss
+  ) {
     documentType
     forms {
       index
       source
       normalizedSource
-      documentId
       englishGloss
+      document {
+        slug
+      }
     }
   }
 }

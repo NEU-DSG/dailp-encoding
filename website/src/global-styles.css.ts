@@ -123,6 +123,10 @@ globalStyle("h1, h2, h3, h4, h5, h6, header", {
   },
 })
 
+globalStyle("label", {
+  fontWeight: "bold",
+})
+
 globalStyle("hr", {
   width: "40%",
   margin: "auto",

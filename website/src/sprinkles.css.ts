@@ -343,4 +343,14 @@ export const iconButton = style([
   },
 ])
 
+export const cleanButton = style(  {
+    padding: space.small,
+    background: "none",
+    border: "none",
+    outline: "none",
+    cursor: "pointer",
+    margin: 0,
+  },
+)
+
 export const paddedCenterColumn = style([edgePadded, centeredColumn])

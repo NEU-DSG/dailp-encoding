@@ -14,6 +14,7 @@ import {
   desktopNav,
   drawerBg,
   drawerItem,
+  drawerList,
   navButton,
   navDrawer,
   navLink,
@@ -128,7 +129,7 @@ export const MobileNav = () => {
           className={navDrawer}
           aria-label="Navigation Drawer"
         >
-          <ul>
+          <ul className={drawerList}>
             {menuItems?.filter(isTopLevel).map((item) => {
               let items = item?.childItems?.nodes
               if (items && !items.length) {
@@ -143,7 +144,7 @@ export const MobileNav = () => {
                   url = new URL(item.path)
                 }
                 return (
-                  <li className={closeBlock} key={item.path}>
+                  <li key={item.path}>
                     <Link
                       className={drawerItem}
                       href={url.pathname}
