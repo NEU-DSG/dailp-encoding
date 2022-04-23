@@ -15,15 +15,6 @@
     "nu:function" = "database";
     "nu:backups" = "no";
   };
-  servers.mongodb.instance_tags = {
-    "nu:function" = "database";
-    "nu:os" = "nixos";
-    "nu:backups" = "no";
-  };
-  servers.mongodb.storage_tags = {
-    "nu:function" = "database";
-    "nu:backups" = "no";
-  };
   servers.bastion.instance_tags = {
     "nu:function" = "bastion";
     "nu:os" = "linux";

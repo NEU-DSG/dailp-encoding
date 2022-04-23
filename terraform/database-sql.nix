@@ -51,6 +51,33 @@
       from_port = 5432;
       to_port = 5432;
     };
+
+    aws_security_group.nixos_test = {
+      name = "dailp-nixos-test";
+      vpc_id = config.setup.vpc;
+      description = "DAILP servers should live here";
+      # GitHub Actions relies on the ID staying the same.
+      lifecycle.prevent_destroy = true;
+    };
+
+    aws_security_group.mongodb_access = {
+      name = "dailp-database-access";
+      vpc_id = config.setup.vpc;
+      description = "Gives access to DAILP servers";
+      ingress = [ ];
+      egress = [{
+        description = "All egress";
+        from_port = 0;
+        to_port = 0;
+        protocol = "-1";
+        cidr_blocks = [ "0.0.0.0/0" ];
+        ipv6_cidr_blocks = [ "::/0" ];
+        self = false;
+        security_groups = [ ];
+        prefix_list_ids = [ ];
+      }];
+      lifecycle.prevent_destroy = true;
+    };
   };
 
   config.output.database_endpoint = {

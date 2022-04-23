@@ -20,7 +20,7 @@ The back-end is implemented in [Rust](https://rust-lang.org) and the front-end i
 Each layer of the architecture is split into its own directory, starting with the back-end.
 
 - [`types/`](types) defines all the types that our data adheres to in the database, GraphQL, and front-end.
-- [`migration/`](migration) pulls data from several Google Drive spreadsheets, conforms it to consistent types, then writes it all to a MongoDB instance.
+- [`migration/`](migration) pulls data from several Google Drive spreadsheets, conforms it to consistent types, then writes it all to a database.
 - [`graphql/`](graphql) exposes a public [GraphQL](https://graphql.org/) endpoint (deployed on [AWS Lambda](https://aws.amazon.com/lambda/)) that allows one to query DAILP data from the database.
   [Play with the data here](https://dailp.northeastern.edu/graphql).
 - [`website/`](website) renders a static site with [Gatsby](https://gatsbyjs.org/) using our GraphQL endpoint at build time and at runtime (to handle user queries).

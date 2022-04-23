@@ -55,7 +55,7 @@ jobs:
       - name: Build project
         run: |
           nix build --impure -L
-      - name: Migrate data to MongoDB
+      - name: Migrate from spreadsheets to database
         # Port forward 5432 to remote database
         run: |
           nix run --impure -L .#tf-init
@@ -73,7 +73,6 @@ jobs:
           ssh -i dailp-deployment-key.pem -f -N -L 5432:$DATABASE_ENDPOINT ec2-user@$BASTION_IP
 
           export DAILP_API_URL=$(nix run --impure .#tf-output functions_url)
-          export MONGODB_URI=mongodb://$(nix run --impure .#tf-output mongodb_primary_ip):27017
           export DATABASE_URL=postgres://dailp:$DATABASE_PASSWORD@localhost:5432/dailp
           nix run --impure -L .#migrate-data
       - name: Publish website

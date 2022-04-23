@@ -114,7 +114,7 @@
           ${tf} init
         '';
       in rec {
-        # Add extra binary caches for quicker builds of the rust toolchain and MongoDB.
+        # Add extra binary caches for quicker builds of the rust toolchain
         nixConfig = {
           binaryCaches =
             [ "https://nix-community.cachix.org" "https://dailp.cachix.org" ];
