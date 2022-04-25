@@ -1,5 +1,7 @@
 select
   d.*,
+  media_resource.url as "audio_url?",
+  media_slice.time_range as "audio_slice?",
   coalesce(
     jsonb_agg(
       jsonb_build_object(
@@ -8,9 +10,7 @@ select
     ) filter (where contributor is not null),
     '[]'
   )
-  as contributors,
-  media_resource.url as "audio_url?",
-  media_slice.time_range as "audio_slice?"
+  as contributors
 from document as d
   left join contributor_attribution as attr on attr.document_id = d.id
   left join contributor on contributor.id = attr.contributor_id
