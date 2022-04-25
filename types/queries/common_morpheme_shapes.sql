@@ -1,6 +1,6 @@
 select
-    morpheme,
-    count(word_id) as word_count
+  morpheme,
+  count(word_id) as word_count
 from word_segment
 where gloss = 'PFT'
 group by morpheme
