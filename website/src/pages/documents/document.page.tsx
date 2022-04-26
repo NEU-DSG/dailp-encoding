@@ -59,13 +59,13 @@ const AnnotatedDocumentPage = (props: { id: string }) => {
     return null
   }
   return (
-    <CWKWLayout>
+    <Layout>
       <Helmet title={doc?.title} />
       <main className={css.annotatedDocument}>
         <DocumentTitleHeader doc={doc} showDetails={true} />
         <TabSet doc={doc} />
       </main>
-    </CWKWLayout>
+    </Layout>
   )
 }
 export default AnnotatedDocumentPage
