@@ -40,7 +40,7 @@ const CWKWLayout: React.FC = ({ children }) => {
             // NOTE TO SELF: header drawer needs a new mode with a more visible button
           }
         </div>
-        <NavMenu />
+        <NavMenu menuID={"171"} />
       </header>
       {children}
       <Footer />
