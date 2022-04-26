@@ -23,6 +23,7 @@ const Layout: React.FC = ({ children }) => {
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <body className={themeClass} />
+        ``
       </Helmet>
       <header aria-label="Site Header" id="header" className={css.header}>
         <div className={css.headerContents}>
@@ -39,7 +40,7 @@ const Layout: React.FC = ({ children }) => {
           </div>
           <HeaderPrefDrawer />
         </div>
-        <NavMenu />
+        <NavMenu menuID="4" />
       </header>
       {children}
       <Footer />

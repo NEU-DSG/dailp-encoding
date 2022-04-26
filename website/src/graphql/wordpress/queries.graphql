@@ -21,7 +21,22 @@ query PageIndex {
 }
 
 query MainMenu {
-  menuItems(where: { parentId: 1 }) {
+  menuItems(where: { parentId: 171 }) {
+    nodes {
+      label
+      path
+      childItems {
+        nodes {
+          label
+          path
+        }
+      }
+    }
+  }
+}
+
+query Menu($slug: ID!) {
+  menuItems(where: { parentId: $slug }) {
     nodes {
       label
       path
