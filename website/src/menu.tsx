@@ -65,6 +65,55 @@ export const NavMenu = () => {
   )
 }
 
+export const BetterNavMenu = (p: { menuID: number }) => {
+  const location = useLocation()
+  const [{ data }] = Wordpress.useCwkwMenuQuery({
+    variables: { slug: p.menuID },
+  })
+  const menus = data?.menus?.nodes
+  if (!menus) {
+    return null
+  }
+  const menu = menus[0]
+  const menuItems = menu?.menuItems?.nodes
+  if (!menuItems) {
+    return null
+  }
+  const isTopLevel = (a: typeof menuItems[0]) =>
+    !menuItems?.some((b) =>
+      b?.childItems?.nodes?.some((b) => b?.path === a?.path)
+    )
+
+  return (
+    <nav className={desktopNav}>
+      {menuItems?.filter(isTopLevel).map((item) => {
+        if (!item) {
+          return null
+        } else if (item.childItems?.nodes?.length) {
+          return <SubMenu key={item.label} item={item} location={location} />
+        } else {
+          let url = { pathname: item.path }
+          if (item.path.startsWith("http")) {
+            url = new URL(item.path)
+          }
+          return (
+            <Link
+              key={item.path}
+              href={url.pathname}
+              className={navLink}
+              aria-current={
+                location.pathname === url.pathname ? "page" : undefined
+              }
+            >
+              {item.label}
+            </Link>
+          )
+        }
+      })}
+    </nav>
+  )
+}
+
 const SubMenu = ({ item, location }: { location: Location; item: any }) => {
   const menu = useMenuState()
   return (

@@ -8603,7 +8603,9 @@ export type MainMenuQuery = { readonly __typename?: "RootQuery" } & {
   >
 }
 
-export type CwkwMenuQueryVariables = Exact<{ [key: string]: never }>
+export type CwkwMenuQueryVariables = Exact<{
+  slug: Scalars["Int"]
+}>
 
 export type CwkwMenuQuery = { readonly __typename?: "RootQuery" } & {
   readonly menus: Maybe<
@@ -8709,8 +8711,8 @@ export function useMainMenuQuery(
   return Urql.useQuery<MainMenuQuery>({ query: MainMenuDocument, ...options })
 }
 export const CwkwMenuDocument = gql`
-  query CwkwMenu {
-    menus(where: { id: 171 }) {
+  query CwkwMenu($slug: Int!) {
+    menus(where: { id: $slug }) {
       nodes {
         databaseId
         menuItems {
@@ -8731,7 +8733,7 @@ export const CwkwMenuDocument = gql`
 `
 
 export function useCwkwMenuQuery(
-  options?: Omit<Urql.UseQueryArgs<CwkwMenuQueryVariables>, "query">
+  options: Omit<Urql.UseQueryArgs<CwkwMenuQueryVariables>, "query">
 ) {
   return Urql.useQuery<CwkwMenuQuery>({ query: CwkwMenuDocument, ...options })
 }
