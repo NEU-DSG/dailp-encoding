@@ -45,6 +45,13 @@ export const navLink = style([
   },
 ])
 
+export const subMenuItems = style([
+  navLink,
+  {
+    color: "black",
+  },
+])
+
 export const drawerItem = style([
   sprinkles({
     color: { any: "text", currentPage: "link", hover: "link", focus: "link" },
