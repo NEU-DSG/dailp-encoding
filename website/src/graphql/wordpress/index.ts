@@ -8603,6 +8603,53 @@ export type MainMenuQuery = { readonly __typename?: "RootQuery" } & {
   >
 }
 
+export type CwkwMenuQueryVariables = Exact<{ [key: string]: never }>
+
+export type CwkwMenuQuery = { readonly __typename?: "RootQuery" } & {
+  readonly menus: Maybe<
+    { readonly __typename?: "RootQueryToMenuConnection" } & {
+      readonly nodes: Maybe<
+        ReadonlyArray<
+          Maybe<
+            { readonly __typename?: "Menu" } & Pick<Menu, "databaseId"> & {
+                readonly menuItems: Maybe<
+                  { readonly __typename?: "MenuToMenuItemConnection" } & {
+                    readonly nodes: Maybe<
+                      ReadonlyArray<
+                        Maybe<
+                          { readonly __typename?: "MenuItem" } & Pick<
+                            MenuItem,
+                            "label" | "path"
+                          > & {
+                              readonly childItems: Maybe<
+                                {
+                                  readonly __typename?: "MenuItemToMenuItemConnection"
+                                } & {
+                                  readonly nodes: Maybe<
+                                    ReadonlyArray<
+                                      Maybe<
+                                        {
+                                          readonly __typename?: "MenuItem"
+                                        } & Pick<MenuItem, "label" | "path">
+                                      >
+                                    >
+                                  >
+                                }
+                              >
+                            }
+                        >
+                      >
+                    >
+                  }
+                >
+              }
+          >
+        >
+      >
+    }
+  >
+}
+
 export const PageDocument = gql`
   query Page($slug: String!) {
     page: nodeByUri(uri: $slug) {
@@ -8660,4 +8707,31 @@ export function useMainMenuQuery(
   options?: Omit<Urql.UseQueryArgs<MainMenuQueryVariables>, "query">
 ) {
   return Urql.useQuery<MainMenuQuery>({ query: MainMenuDocument, ...options })
+}
+export const CwkwMenuDocument = gql`
+  query CwkwMenu {
+    menus(where: { id: 171 }) {
+      nodes {
+        databaseId
+        menuItems {
+          nodes {
+            label
+            path
+            childItems {
+              nodes {
+                label
+                path
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+`
+
+export function useCwkwMenuQuery(
+  options?: Omit<Urql.UseQueryArgs<CwkwMenuQueryVariables>, "query">
+) {
+  return Urql.useQuery<CwkwMenuQuery>({ query: CwkwMenuDocument, ...options })
 }
