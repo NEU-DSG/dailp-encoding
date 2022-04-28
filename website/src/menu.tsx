@@ -19,12 +19,13 @@ import {
   navDrawer,
   navLink,
   navMenu,
+  subMenuItems,
 } from "./menu.css"
 import { closeBlock } from "./sprinkles.css"
 
-export const NavMenu = () => {
+export const NavMenu = (p: { menuID: string }) => {
   const location = useLocation()
-  const [{ data }] = Wordpress.useMainMenuQuery()
+  const [{ data }] = Wordpress.useMenuQuery({ variables: { slug: p.menuID } })
   const menuItems = data?.menuItems?.nodes
   if (!menuItems) {
     return null
@@ -137,7 +138,7 @@ const SubMenu = ({ item, location }: { location: Location; item: any }) => {
               aria-current={
                 location.pathname === url.pathname ? "page" : undefined
               }
-              className={navLink}
+              className={subMenuItems}
               onClick={() => menu.hide()}
             >
               {item.label}

@@ -8603,6 +8603,42 @@ export type MainMenuQuery = { readonly __typename?: "RootQuery" } & {
   >
 }
 
+export type MenuQueryVariables = Exact<{
+  slug: Scalars["ID"]
+}>
+
+export type MenuQuery = { readonly __typename?: "RootQuery" } & {
+  readonly menuItems: Maybe<
+    { readonly __typename?: "RootQueryToMenuItemConnection" } & {
+      readonly nodes: Maybe<
+        ReadonlyArray<
+          Maybe<
+            { readonly __typename?: "MenuItem" } & Pick<
+              MenuItem,
+              "label" | "path"
+            > & {
+                readonly childItems: Maybe<
+                  { readonly __typename?: "MenuItemToMenuItemConnection" } & {
+                    readonly nodes: Maybe<
+                      ReadonlyArray<
+                        Maybe<
+                          { readonly __typename?: "MenuItem" } & Pick<
+                            MenuItem,
+                            "label" | "path"
+                          >
+                        >
+                      >
+                    >
+                  }
+                >
+              }
+          >
+        >
+      >
+    }
+  >
+}
+
 export type CwkwMenuQueryVariables = Exact<{
   slug: Scalars["Int"]
 }>
@@ -8690,7 +8726,7 @@ export function usePageIndexQuery(
 }
 export const MainMenuDocument = gql`
   query MainMenu {
-    menuItems(where: { parentId: 1 }) {
+    menuItems(where: { parentId: 171 }) {
       nodes {
         label
         path
@@ -8709,6 +8745,28 @@ export function useMainMenuQuery(
   options?: Omit<Urql.UseQueryArgs<MainMenuQueryVariables>, "query">
 ) {
   return Urql.useQuery<MainMenuQuery>({ query: MainMenuDocument, ...options })
+}
+export const MenuDocument = gql`
+  query Menu($slug: ID!) {
+    menuItems(where: { parentId: $slug }) {
+      nodes {
+        label
+        path
+        childItems {
+          nodes {
+            label
+            path
+          }
+        }
+      }
+    }
+  }
+`
+
+export function useMenuQuery(
+  options: Omit<Urql.UseQueryArgs<MenuQueryVariables>, "query">
+) {
+  return Urql.useQuery<MenuQuery>({ query: MenuDocument, ...options })
 }
 export const CwkwMenuDocument = gql`
   query CwkwMenu($slug: Int!) {
