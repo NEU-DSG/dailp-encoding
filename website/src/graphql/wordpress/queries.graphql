@@ -35,8 +35,8 @@ query MainMenu {
   }
 }
 
-query CwkwMenu {
-  menus(where: { id: 171 }) {
+query CwkwMenu($slug: Int!) {
+  menus(where: { id: $slug }) {
     nodes {
       databaseId
       menuItems {

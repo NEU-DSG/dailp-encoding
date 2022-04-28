@@ -6,7 +6,7 @@ import Link from "src/components/link"
 import Footer from "./footer"
 import "./global-styles.css"
 import * as css from "./layout.css"
-import { MobileNav, NavMenu } from "./menu"
+import { BetterNavMenu, MobileNav, NavMenu } from "./menu"
 import { HeaderPrefDrawer } from "./mode"
 import { PreferencesProvider } from "./preferences-context"
 import { hideOnPrint, themeClass } from "./sprinkles.css"
@@ -39,7 +39,7 @@ const Layout: React.FC = ({ children }) => {
           </div>
           <HeaderPrefDrawer />
         </div>
-        <NavMenu />
+        <BetterNavMenu menuID={2} />
       </header>
       {children}
       <Footer />
