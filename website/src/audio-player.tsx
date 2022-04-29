@@ -18,16 +18,11 @@ export const SegmentAudio = (props: { audioUrl: string }) => {
 export const FormAudio = (
   props: Dailp.AudioSlice & { howl?: Howl; showProgress?: boolean }
 ) => {
-  let showBar = false
-  if (props.showProgress) {
-    showBar = props.showProgress
-  }
-
   return (
     <span>
       <FunctionalAudioPlayer
         audioUrl={props.resourceUrl}
-        showProgress={showBar}
+        showProgress={!!props.showProgress}
         slices={{ start: props.startTime!, end: props.endTime! }}
       />
     </span>
@@ -165,11 +160,12 @@ const FunctionalAudioPlayer = (props: Props) => {
   }
 
   if (props.slices) {
-    let slices = {
-      __default: [props.slices.start, props.slices.end - props.slices.start],
-      sound: [props.slices.start, props.slices.end - props.slices.start],
-    }
-    Object.assign(howl, { _sprite: slices })
+    Object.assign(howl, {
+      _sprite: {
+        __default: [props.slices.start, props.slices.end - props.slices.start],
+        sound: [props.slices.start, props.slices.end - props.slices.start],
+      },
+    })
   }
 
   const onSeek = (newProgress: number) => {
@@ -183,13 +179,12 @@ const FunctionalAudioPlayer = (props: Props) => {
     button = <PauseButton howl={howl} />
   else button = <PlayButton howl={howl} isSprite={!!props.slices} />
 
-  let bounds = null
-  if (props.slices) {
-    bounds = {
-      start: props.slices.start / (howl.duration() * 10),
-      end: props.slices.end / (howl.duration() * 10),
-    }
-  }
+  const bounds = props.slices
+    ? {
+        start: props.slices.start / (howl.duration() * 10),
+        end: props.slices.end / (howl.duration() * 10),
+      }
+    : null
 
   // Finally return call
   // Conditionally hide the bar
@@ -203,12 +198,12 @@ const FunctionalAudioPlayer = (props: Props) => {
   )
 }
 
-const ButtonSize = 28
+const buttonSize = 28
 
 const PauseButton = (props: { howl: Howl }) => {
   return (
     <MdPauseCircleOutline
-      size={ButtonSize}
+      size={buttonSize}
       onClick={() => props.howl.pause()}
     />
   )
@@ -217,11 +212,11 @@ const PauseButton = (props: { howl: Howl }) => {
 const PlayButton = (props: { howl: Howl; isSprite?: boolean }) => {
   return props.isSprite ? (
     <MdPlayCircleOutline
-      size={ButtonSize}
+      size={buttonSize}
       onClick={() => props.howl.play("sound")}
     />
   ) : (
-    <MdPlayCircleOutline size={ButtonSize} onClick={() => props.howl.play()} />
+    <MdPlayCircleOutline size={buttonSize} onClick={() => props.howl.play()} />
   )
 }
 // TODO: Implement Seek

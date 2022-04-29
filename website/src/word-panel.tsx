@@ -173,20 +173,18 @@ const AudioPanel = (p: { segment: Dailp.FormFieldsFragment }) => {
         <CollapsiblePanel
           title={"Audio"}
           content={
-            <>
-              <div>
-                {
-                  <FormAudio
-                    endTime={p.segment.audioTrack.endTime}
-                    index={p.segment.audioTrack.index}
-                    parentTrack=""
-                    resourceUrl={p.segment.audioTrack.resourceUrl}
-                    startTime={p.segment.audioTrack.startTime}
-                    showProgress={true}
-                  />
-                }
-              </div>
-            </>
+            <div>
+              {
+                <FormAudio
+                  endTime={p.segment.audioTrack.endTime}
+                  index={p.segment.audioTrack.index}
+                  parentTrack=""
+                  resourceUrl={p.segment.audioTrack.resourceUrl}
+                  startTime={p.segment.audioTrack.startTime}
+                  showProgress={true}
+                />
+              }
+            </div>
           }
           icon={
             <AiFillSound size={24} className={css.wordPanelButton.colpleft} />
