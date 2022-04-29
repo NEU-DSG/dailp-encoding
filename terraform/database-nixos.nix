@@ -54,7 +54,7 @@ in {
         tags = {
           Name = "dailp-${toKebabCase volume.name}";
         } // config.setup.global_tags // config.servers.mongodb.storage_tags;
-        lifecycle.prevent_destroy = true;
+        lifecycle.prevent_destroy = false;
       };
 
       aws_volume_attachment."${volume.name}" = {
@@ -85,7 +85,7 @@ in {
                 Name = "dailp-${toKebabCase name}";
               } // config.setup.global_tags
                 // config.servers.mongodb.instance_tags;
-              lifecycle.prevent_destroy = true;
+              lifecycle.prevent_destroy = false;
             };
 
             aws_iam_instance_profile."${name}" = {
