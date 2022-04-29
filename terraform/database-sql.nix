@@ -55,7 +55,7 @@
     aws_security_group.nixos_test = {
       name = "dailp-nixos-test";
       vpc_id = config.setup.vpc;
-      description = "DAILP servers should live here";
+      description = "MongoDB on NixOS test";
       # GitHub Actions relies on the ID staying the same.
       lifecycle.prevent_destroy = true;
     };
@@ -63,7 +63,7 @@
     aws_security_group.mongodb_access = {
       name = "dailp-database-access";
       vpc_id = config.setup.vpc;
-      description = "Gives access to DAILP servers";
+      description = "Access DAILP MongoDB servers";
       ingress = [ ];
       egress = [{
         description = "All egress";
