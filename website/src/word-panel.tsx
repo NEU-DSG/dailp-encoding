@@ -140,16 +140,16 @@ export const VerticalMorphemicSegmentation = (p: {
     return null
   }
   if (p.segments) {
-    let segmentCount = p.segments.length
+    const segmentCount = p.segments.length
 
     return (
       <table className={css.tableContainer}>
         {p.segments.map((segment, index) => (
           <tr>
             <td className={css.tableCells}>
-              {index > 0 ? "-" : null}
+              {index > 0 ? segment.previousSeparator : null}
               {segment.morpheme}
-              {index !== segmentCount - 1 ? segment.nextSeparator : null}
+              {index < segmentCount - 1 ? p.segments[index + 1]!.previousSeparator : null}
             </td>
             <td className={css.tableCells}>
               {segment.matchingTag ? segment.matchingTag.title : segment.gloss}

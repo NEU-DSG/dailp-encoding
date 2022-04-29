@@ -45,7 +45,7 @@ query AnnotatedDocument($slug: String!) {
 
 query DocumentContents(
   $slug: String!
-  $morphemeSystem: CherokeeOrthography
+  $morphemeSystem: CherokeeOrthography!
   $isReference: Boolean!
 ) {
   document(slug: $slug) {
@@ -74,14 +74,14 @@ fragment FormFields on AnnotatedForm {
   romanizedSource
   simplePhonetics
   phonemic
-  segments {
-    morpheme(system: $morphemeSystem)
+  segments(system: $morphemeSystem) {
+    morpheme
     gloss
-    matchingTag(system: $morphemeSystem) {
+    matchingTag {
       tag
       title
     }
-    nextSeparator
+    previousSeparator
   }
   englishGloss
   commentary

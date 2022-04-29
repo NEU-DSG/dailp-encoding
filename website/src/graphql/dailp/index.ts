@@ -138,6 +138,16 @@ export type AnnotatedForm = {
   readonly source: Scalars["String"]
 }
 
+/**
+ * A single word in an annotated document.
+ * One word contains several layers of interpretation, including the original
+ * source text, multiple layers of linguistic annotation, and annotator notes.
+ * TODO Split into two types, one for migration and one for SQL + GraphQL
+ */
+export type AnnotatedFormSegmentsArgs = {
+  system: CherokeeOrthography
+}
+
 export type AnnotatedSeg = AnnotatedForm | LineBreak
 
 /**
@@ -369,7 +379,7 @@ export type MorphemeSegment = {
    * This field determines what character should separate this segment from
    * the next one when reconstituting the full segmentation string.
    */
-  readonly nextSeparator: Maybe<Scalars["String"]>
+  readonly previousSeparator: Maybe<Scalars["String"]>
 }
 
 export type MorphemeSegmentMatchingTagArgs = {
@@ -544,6 +554,19 @@ export type QueryWordSearchArgs = {
 }
 
 /**
+ * The kind of segment that a particular sequence of characters in a morphemic
+ * segmentations represent.
+ */
+export enum SegmentType {
+  /** Separated by an equals sign '=' */
+  Clitic = "CLITIC",
+  /** Separated by a colon ':' */
+  Combine = "COMBINE",
+  /** Separated by a hyphen '-' */
+  Morpheme = "MORPHEME",
+}
+
+/**
  * Attribution for a particular source, whether an institution or an individual.
  * Most commonly, this will represent the details of a library or archive that
  * houses documents used elsewhere.
@@ -566,7 +589,9 @@ export type TagForm = {
   readonly definition: Scalars["String"]
   /** URL to an external page with more details about this morpheme. */
   readonly detailsUrl: Maybe<Scalars["String"]>
+  readonly internalTags: ReadonlyArray<Scalars["String"]>
   readonly morphemeType: Scalars["String"]
+  readonly segmentType: SegmentType
   /** How this morpheme looks in original language data */
   readonly shape: Maybe<Scalars["String"]>
   /** How this morpheme is represented in a gloss */
@@ -664,7 +689,7 @@ export type AnnotatedDocumentQuery = { readonly __typename?: "Query" } & {
 
 export type DocumentContentsQueryVariables = Exact<{
   slug: Scalars["String"]
-  morphemeSystem: InputMaybe<CherokeeOrthography>
+  morphemeSystem: CherokeeOrthography
   isReference: Scalars["Boolean"]
 }>
 
@@ -698,7 +723,7 @@ export type DocumentContentsQuery = { readonly __typename?: "Query" } & {
                                 readonly __typename?: "MorphemeSegment"
                               } & Pick<
                                 MorphemeSegment,
-                                "morpheme" | "gloss" | "nextSeparator"
+                                "morpheme" | "gloss" | "previousSeparator"
                               > & {
                                   readonly matchingTag: Maybe<
                                     { readonly __typename?: "TagForm" } & Pick<
@@ -739,7 +764,7 @@ export type DocumentContentsQuery = { readonly __typename?: "Query" } & {
             readonly segments: ReadonlyArray<
               { readonly __typename?: "MorphemeSegment" } & Pick<
                 MorphemeSegment,
-                "morpheme" | "gloss" | "nextSeparator"
+                "morpheme" | "gloss" | "previousSeparator"
               > & {
                   readonly matchingTag: Maybe<
                     { readonly __typename?: "TagForm" } & Pick<
@@ -776,7 +801,7 @@ export type FormFieldsFragment = {
     readonly segments: ReadonlyArray<
       { readonly __typename?: "MorphemeSegment" } & Pick<
         MorphemeSegment,
-        "morpheme" | "gloss" | "nextSeparator"
+        "morpheme" | "gloss" | "previousSeparator"
       > & {
           readonly matchingTag: Maybe<
             { readonly __typename?: "TagForm" } & Pick<TagForm, "tag" | "title">
@@ -1002,14 +1027,14 @@ export const FormFieldsFragmentDoc = gql`
     romanizedSource
     simplePhonetics
     phonemic
-    segments {
-      morpheme(system: $morphemeSystem)
+    segments(system: $morphemeSystem) {
+      morpheme
       gloss
-      matchingTag(system: $morphemeSystem) {
+      matchingTag {
         tag
         title
       }
-      nextSeparator
+      previousSeparator
     }
     englishGloss
     commentary
@@ -1099,7 +1124,7 @@ export function useAnnotatedDocumentQuery(
 export const DocumentContentsDocument = gql`
   query DocumentContents(
     $slug: String!
-    $morphemeSystem: CherokeeOrthography
+    $morphemeSystem: CherokeeOrthography!
     $isReference: Boolean!
   ) {
     document(slug: $slug) {

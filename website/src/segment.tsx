@@ -259,10 +259,11 @@ export const MorphemicSegmentation = (p: {
   // Adapt the segment shape to the chosen experience level.
   let segmentation = ""
   for (const seg of p.segments) {
-    segmentation += seg.morpheme
-    if (seg.nextSeparator) {
-      segmentation += seg.nextSeparator
+    // TODO Use more robust check than looking for ":"
+    if (seg.previousSeparator && segmentation.length > 0 && seg.previousSeparator !== ":") {
+      segmentation += seg.previousSeparator
     }
+    segmentation += seg.morpheme
   }
 
   return (
@@ -272,12 +273,12 @@ export const MorphemicSegmentation = (p: {
         {p.segments.map(function (segment, i) {
           return (
             <React.Fragment key={i}>
+              {i > 0 && segment.previousSeparator}
               <MorphemeSegment
                 segment={segment}
                 tagSet={p.tagSet}
                 onOpenDetails={p.onOpenDetails}
               />
-              {segment.nextSeparator}
             </React.Fragment>
           )
         })}
