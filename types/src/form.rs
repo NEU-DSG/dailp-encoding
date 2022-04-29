@@ -1,8 +1,9 @@
 use crate::{
-    AnnotatedDoc, AudioSlice, Database, Date, DocumentId, MorphemeSegment, PartsOfWord,
-    PositionInDocument,
+    AnnotatedDoc, AudioSlice, CherokeeOrthography, Database, Date, DocumentId, MorphemeSegment,
+    PartsOfWord, PositionInDocument, TagId,
 };
 use async_graphql::{dataloader::DataLoader, FieldResult};
+use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use sqlx::types::Uuid;
 
@@ -59,7 +60,7 @@ impl AnnotatedForm {
         &self,
         context: &async_graphql::Context<'_>,
     ) -> FieldResult<Option<MorphemeSegment>> {
-        let segments = self.segments(context).await?;
+        let segments = self.segments(context, CherokeeOrthography::Taoc).await?;
         for seg in segments {
             if is_root_morpheme(&seg.gloss) {
                 return Ok(Some(seg));
@@ -77,12 +78,77 @@ impl AnnotatedForm {
     async fn segments(
         &self,
         context: &async_graphql::Context<'_>,
+        system: CherokeeOrthography,
     ) -> FieldResult<Vec<MorphemeSegment>> {
-        Ok(context
-            .data::<DataLoader<Database>>()?
+        let db = context.data::<DataLoader<Database>>()?;
+        // 1. To convert to a concrete analysis, start with a list of abstract tags.
+        let abstract_segments = db
             .load_one(PartsOfWord(*self.id.as_ref().unwrap()))
             .await?
-            .unwrap_or_default())
+            .unwrap_or_default();
+
+        println!("\nabstract segments: {:?}", abstract_segments);
+
+        // 2. Request all concrete tags that start with each abstract tag.
+        let concrete_tag_matches = db
+            .load_many(
+                abstract_segments
+                    .iter()
+                    .map(|seg| TagId(seg.gloss.clone(), system)),
+            )
+            .await?;
+
+        println!("concrete matches: {:#?}", concrete_tag_matches);
+
+        // 3. Pick the longest match for each abstract segment.
+        let mut concrete_segments = Vec::new();
+        let mut curr_index = 0;
+        for (idx, abstract_segment) in abstract_segments.iter().enumerate() {
+            // If this segment has already been filled by a previous match, skip it.
+            if idx < curr_index {
+                continue;
+            }
+
+            let concrete_tags =
+                concrete_tag_matches.get(&TagId(abstract_segment.gloss.clone(), system));
+            if let Some(concrete_tags) = concrete_tags {
+                for concrete_tag in concrete_tags {
+                    // Check whether the whole sequence of abstract tags is the current
+                    // start of the abstract segment list.
+                    let abstract_matches = concrete_tag
+                        .internal_tags
+                        .iter()
+                        .zip(abstract_segments.iter().skip(curr_index));
+                    let is_match = abstract_matches.clone().all(|(a, b)| *a == b.gloss);
+                    println!("matching against {:?}", concrete_tag);
+                    if is_match {
+                        concrete_segments.push(MorphemeSegment {
+                            system: None,
+                            morpheme: abstract_segments
+                                .iter()
+                                .skip(curr_index)
+                                .take(concrete_tag.internal_tags.len())
+                                .map(|seg| &seg.morpheme)
+                                .join(""),
+                            gloss: concrete_tag.tag.clone(),
+                            gloss_id: None,
+                            segment_type: Some(concrete_tag.segment_type),
+                        });
+                        curr_index += concrete_tag.internal_tags.len();
+                        break;
+                    }
+                }
+            } else {
+                // If this abstract segment was unmatched (probably a root),
+                // then just use it directly.
+                concrete_segments.push(abstract_segment.clone());
+                curr_index += 1;
+            }
+            // if !success {
+            //     anyhow::bail!("Failed to generate all morpheme tags");
+            // }
+        }
+        Ok(concrete_segments)
     }
 
     /// All other observed words with the same root morpheme as this word.

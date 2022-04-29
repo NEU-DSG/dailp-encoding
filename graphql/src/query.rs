@@ -210,7 +210,10 @@ impl Query {
         Ok(context
             .data::<DataLoader<Database>>()?
             .load_one(dailp::TagId(id, system))
-            .await?)
+            .await?
+            .unwrap_or_default()
+            .into_iter()
+            .next())
     }
 
     /// Search for words that match any one of the given queries.

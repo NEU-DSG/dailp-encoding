@@ -1,10 +1,13 @@
-select
+select distinct on (word_segment.word_id, word_segment.index_in_word)
+  word_segment.index_in_word,
   word_segment.word_id,
   word_segment.morpheme,
   word_segment.gloss_id,
   morpheme_gloss.gloss,
-  word_segment.followed_by as "followed_by: SegmentType"
+  morpheme_tag.segment_type
 from word_segment
   inner join morpheme_gloss on morpheme_gloss.id = word_segment.gloss_id
-where word_id = any($1)
-order by index_in_word
+  left join abstract_morpheme_tag on abstract_morpheme_tag.id = morpheme_gloss.tag_id
+  left join morpheme_tag on abstract_morpheme_tag.id = morpheme_tag.abstract_ids[1]
+where word_segment.word_id = any($1)
+order by word_segment.word_id, word_segment.index_in_word

@@ -1,3 +1,4 @@
+use crate::SegmentType;
 use serde::{Deserialize, Serialize};
 
 /// Represents a morphological gloss tag without committing to a single representation.
@@ -10,15 +11,6 @@ pub struct MorphemeTag {
     /// interlinear glosses of a word containing this morpheme.
     /// Standard annotation tag for this morpheme, defined by DAILP.
     pub id: String,
-    /// The "learner" representation of this morpheme, a compromise between no
-    /// interlinear glossing and standard linguistic terms.
-    pub learner: Option<TagForm>,
-    /// Representation of this morpheme that closely aligns with _Tone and
-    /// Accent in Oklahoma Cherokee_.
-    pub taoc: Option<TagForm>,
-    /// Representation of this morpheme that closely aligns with _Cherokee
-    /// Reference Grammar_.
-    pub crg: Option<TagForm>,
     /// What kind of functional morpheme is this?
     /// A few examples: "Prepronominal Prefix", "Clitic"
     pub morpheme_type: String,
@@ -28,6 +20,7 @@ pub struct MorphemeTag {
 #[derive(async_graphql::SimpleObject, Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct TagForm {
+    pub internal_tags: Vec<String>,
     /// How this morpheme is represented in a gloss
     pub tag: String,
     /// Plain English title of the morpheme tag
@@ -40,4 +33,5 @@ pub struct TagForm {
     /// context.
     pub definition: String,
     pub morpheme_type: String,
+    pub segment_type: SegmentType,
 }

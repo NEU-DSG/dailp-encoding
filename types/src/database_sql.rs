@@ -1,6 +1,7 @@
 use std::ops::Bound;
 
 use {
+    async_graphql::InputType,
     crate::*,
     anyhow::Result,
     async_graphql::dataloader::*,
@@ -261,8 +262,8 @@ impl Database {
     }
 
     pub async fn all_tags(&self, system: CherokeeOrthography) -> Result<Vec<TagForm>> {
-        use async_graphql::InputType;
-        let system_name = if let async_graphql::Value::Enum(s) = system.to_value() {
+        use async_graphql::{Name, Value};
+        let system_name = if let Value::Enum(s) = system.to_value() {
             s
         } else {
             unreachable!()
@@ -273,12 +274,15 @@ impl Database {
         Ok(results
             .into_iter()
             .map(|tag| TagForm {
+                internal_tags: Vec::new(),
                 tag: tag.gloss,
                 title: tag.title,
                 shape: None,
                 details_url: None,
                 definition: tag.description.unwrap_or_default(),
                 morpheme_type: tag.linguistic_type.unwrap_or_default(),
+                segment_type: tag.segment_type.and_then(|s| InputType::parse(Some(Value::Enum(Name::new(s)))).ok())
+                    .unwrap_or(SegmentType::Morpheme),
             })
             .collect())
     }
@@ -648,8 +652,7 @@ impl Database {
                     gloss,
                     word_id,
                     index as i64,
-                    segment.morpheme,
-                    segment.followed_by as Option<SegmentType>
+                    segment.morpheme
                 )
                 .execute(&mut tx)
                 .await?;
@@ -669,26 +672,14 @@ impl Database {
         )
     }
 
-    pub async fn insert_morpheme_tag(
-        &self,
-        tag: MorphemeTag,
-        crg_system_id: Uuid,
-        taoc_system_id: Uuid,
-        learner_system_id: Uuid,
-    ) -> Result<()> {
-        let learner = tag
-            .learner
-            .as_ref()
-            .ok_or_else(|| anyhow::format_err!("Tag {:?} missing a learner form", tag))?;
+    pub async fn insert_abstract_tag(&self, tag: MorphemeTag) -> Result<()> {
         let abstract_id = query_file_scalar!(
             "queries/upsert_morpheme_tag.sql",
             &tag.id,
-            learner.definition,
             tag.morpheme_type
         )
         .fetch_one(&self.client)
         .await?;
-
         let doc_id: Option<Uuid> = None;
         query_file!(
             "queries/upsert_morpheme_gloss.sql",
@@ -699,39 +690,40 @@ impl Database {
         )
         .fetch_one(&self.client)
         .await?;
+        Ok(())
+    }
 
-        let abstract_ids = vec![abstract_id];
+    pub async fn insert_morpheme_tag(&self, form: TagForm, system_id: Uuid) -> Result<()> {
+        let abstract_ids: Result<Vec<_>> = query_file_scalar!(
+            "queries/abstract_tag_ids_from_glosses.sql",
+            &form.internal_tags[..]
+        )
+        .fetch_all(&self.client)
+        .await?
+        .into_iter()
+        .map(|x| {
+            if let Some(x) = x {
+                Ok(x)
+            } else {
+                anyhow::bail!("Sucks")
+            }
+        })
+        .collect();
+        let segment_type = form.segment_type.to_value();
         query_file!(
             "queries/upsert_concrete_tag.sql",
-            learner_system_id,
-            &abstract_ids[..],
-            learner.tag,
-            learner.title,
+            system_id,
+            &abstract_ids?[..],
+            form.tag,
+            form.title,
+if let async_graphql::Value::Enum(s) = segment_type {
+                    s.as_str().to_owned()
+                } else {
+                    unreachable!()
+                }
         )
         .execute(&self.client)
         .await?;
-        if let Some(concrete) = tag.crg {
-            query_file!(
-                "queries/upsert_concrete_tag.sql",
-                crg_system_id,
-                &abstract_ids[..],
-                concrete.tag,
-                concrete.title,
-            )
-            .execute(&self.client)
-            .await?;
-        }
-        if let Some(concrete) = tag.taoc {
-            query_file!(
-                "queries/upsert_concrete_tag.sql",
-                taoc_system_id,
-                &abstract_ids[..],
-                concrete.tag,
-                concrete.title,
-            )
-            .execute(&self.client)
-            .await?;
-        }
         Ok(())
     }
 
@@ -962,6 +954,7 @@ impl Loader<PartsOfWord> for Database {
         &self,
         keys: &[PartsOfWord],
     ) -> Result<HashMap<PartsOfWord, Self::Value>, Self::Error> {
+        use async_graphql::{Value, Name};
         let keys: Vec<_> = keys.iter().map(|k| k.0).collect();
         let items = query_file!("queries/word_parts.sql", &keys[..])
             .fetch_all(&self.client)
@@ -972,10 +965,11 @@ impl Loader<PartsOfWord> for Database {
                 (
                     PartsOfWord(part.word_id),
                     MorphemeSegment {
+                        system: None,
                         morpheme: part.morpheme,
                         gloss: part.gloss,
                         gloss_id: part.gloss_id,
-                        followed_by: part.followed_by,
+                segment_type: Some(part.segment_type.and_then(|s| InputType::parse(Some(Value::Enum(Name::new(s)))).ok()).unwrap_or(SegmentType::Morpheme)),
                     },
                 )
             })
@@ -985,7 +979,7 @@ impl Loader<PartsOfWord> for Database {
 
 #[async_trait]
 impl Loader<TagId> for Database {
-    type Value = TagForm;
+    type Value = Vec<TagForm>;
     type Error = Arc<sqlx::Error>;
     async fn load(&self, keys: &[TagId]) -> Result<HashMap<TagId, Self::Value>, Self::Error> {
         use async_graphql::{InputType, Name, Value};
@@ -1009,21 +1003,23 @@ impl Loader<TagId> for Database {
             .map(|tag| {
                 (
                     TagId(
-                        tag.gloss.clone().unwrap(),
-                        InputType::parse(Some(Value::Enum(Name::new(tag.system_name.unwrap()))))
-                            .unwrap(),
+                        tag.abstract_gloss.clone(),
+                        InputType::parse(Some(Value::Enum(Name::new(tag.system_name)))).unwrap(),
                     ),
                     TagForm {
-                        tag: tag.gloss.unwrap(),
-                        title: tag.title.unwrap(),
+                        internal_tags: tag.internal_tags.unwrap_or_default(),
+                        tag: tag.concrete_gloss,
+                        title: tag.title,
                         shape: tag.example_shape,
                         details_url: None,
                         definition: tag.description.unwrap_or_default(),
                         morpheme_type: tag.linguistic_type.unwrap_or_default(),
+                segment_type: tag.segment_type.and_then(|s| InputType::parse(Some(Value::Enum(Name::new(s)))).ok())
+                    .unwrap_or(SegmentType::Morpheme),
                     },
                 )
             })
-            .collect())
+            .into_group_map())
     }
 }
 
@@ -1119,12 +1115,15 @@ impl Loader<TagForMorpheme> for Database {
                             .unwrap(),
                     ),
                     TagForm {
+                        internal_tags: Vec::new(),
                         tag: tag.gloss.unwrap(),
                         title: tag.title.unwrap(),
                         shape: tag.example_shape,
                         details_url: None,
                         definition: tag.description.unwrap_or_default(),
                         morpheme_type: tag.linguistic_type.unwrap_or_default(),
+                segment_type: tag.segment_type.and_then(|s| InputType::parse(Some(Value::Enum(Name::new(s)))).ok())
+                    .unwrap_or(SegmentType::Morpheme),
                     },
                 )
             })
@@ -1279,7 +1278,7 @@ impl From<BasicWord> for AnnotatedForm {
     }
 }
 
-#[derive(Clone, Eq, PartialEq, Hash)]
+#[derive(Clone, Eq, PartialEq, Hash, Debug)]
 pub struct TagId(pub String, pub CherokeeOrthography);
 
 #[derive(Clone, Eq, PartialEq, Hash)]

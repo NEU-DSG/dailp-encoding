@@ -13,12 +13,11 @@ with global_gloss as (
   returning id
 )
 
-insert into word_segment (word_id, index_in_word, morpheme, gloss_id, followed_by)
-select $3, $4, $5, coalesce(global_gloss.id, inserted_gloss.id), $6
+insert into word_segment (word_id, index_in_word, morpheme, gloss_id)
+select $3, $4, $5, coalesce(global_gloss.id, inserted_gloss.id)
 from global_gloss
 full outer join inserted_gloss on true
 on conflict (word_id, index_in_word)
   do update set
     morpheme = EXCLUDED.morpheme,
-    gloss_id = EXCLUDED.gloss_id,
-    followed_by = EXCLUDED.followed_by
+    gloss_id = EXCLUDED.gloss_id

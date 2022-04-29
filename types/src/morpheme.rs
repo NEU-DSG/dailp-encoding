@@ -7,6 +7,8 @@ use std::borrow::Cow;
 #[derive(Serialize, Clone, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct MorphemeSegment {
+    #[serde(skip)]
+    pub system: Option<CherokeeOrthography>,
     /// Source language representation of this segment.
     pub morpheme: String,
     /// Target language representation of this segment.
@@ -17,30 +19,35 @@ pub struct MorphemeSegment {
     ///
     /// This field determines what character should separate this segment from
     /// the next one when reconstituting the full segmentation string.
-    pub followed_by: Option<SegmentType>,
+    pub segment_type: Option<SegmentType>,
 }
 
 /// The kind of segment that a particular sequence of characters in a morphemic
 /// segmentations represent.
-#[derive(Clone, Debug, Serialize, Deserialize, sqlx::Type)]
+#[derive(
+    Clone, Copy, Debug, Serialize, Deserialize, sqlx::Type, async_graphql::Enum, PartialEq, Eq,
+)]
 #[sqlx(type_name = "segment_type")]
 pub enum SegmentType {
     /// Separated by a hyphen '-'
     Morpheme,
     /// Separated by an equals sign '='
     Clitic,
+    /// Separated by a colon ':'
+    Combine,
 }
 
 impl MorphemeSegment {
     /// Make a new morpheme segment
-    pub fn new(morpheme: String, gloss: String, followed_by: Option<SegmentType>) -> Self {
+    pub fn new(morpheme: String, gloss: String, segment_type: Option<SegmentType>) -> Self {
         Self {
+            system: None,
             morpheme,
             gloss,
             // FIXME Shortcut to keep this function the same while allowing
             // migration code to create this data structure.
             gloss_id: None,
-            followed_by,
+            segment_type,
         }
     }
 
@@ -54,11 +61,12 @@ impl MorphemeSegment {
 
     /// The separator that should follow this segment, based on the type of the
     /// next segment.
-    pub fn get_next_separator(&self) -> Option<&'static str> {
+    pub fn get_previous_separator(&self) -> Option<&'static str> {
         use SegmentType::*;
-        self.followed_by.as_ref().map(|ty| match ty {
+        self.segment_type.as_ref().map(|ty| match ty {
             Morpheme => "-",
             Clitic => "=",
+            Combine => ":",
         })
     }
 
@@ -68,7 +76,7 @@ impl MorphemeSegment {
         use itertools::Itertools;
         segments
             .into_iter()
-            .flat_map(|s| vec![&*s.gloss, s.get_next_separator().unwrap_or("")])
+            .flat_map(|s| vec![s.get_previous_separator().unwrap_or(""), &*s.gloss])
             .join("")
     }
 
@@ -98,8 +106,8 @@ impl MorphemeSegment {
     ///
     /// This field determines what character should separate this segment from
     /// the next one when reconstituting the full segmentation string.
-    async fn next_separator(&self) -> Option<&str> {
-        self.get_next_separator()
+    async fn previous_separator(&self) -> Option<&str> {
+        self.get_previous_separator()
     }
 
     /// If this morpheme represents a functional tag that we have further

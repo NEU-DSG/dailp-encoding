@@ -11,7 +11,7 @@ use nom::{
 
 struct GlossSegment<'a> {
     tag: &'a [u8],
-    followed_by: Option<SegmentType>,
+    segment_type: Option<SegmentType>,
 }
 
 const SEPARATORS: &str = "-=~\\";
@@ -31,7 +31,7 @@ pub fn parse_gloss_layers<'a>(
                     String::from_utf8_lossy(morpheme.tag).trim().to_owned(),
                     String::from_utf8_lossy(gloss.tag).trim().to_owned(),
                     // The gloss line is most likely to have the correct separator.
-                    gloss.followed_by,
+                    gloss.segment_type,
                 )
             })
             .collect(),
@@ -46,9 +46,9 @@ fn gloss_line(input: &[u8]) -> IResult<&[u8], Vec<GlossSegment>> {
 }
 
 fn tailed_morpheme(input: &[u8]) -> IResult<&[u8], GlossSegment> {
-    map(pair(morpheme, opt(morpheme_sep)), |(m, sep)| GlossSegment {
+    map(pair(opt(morpheme_sep), morpheme), |(sep, m)| GlossSegment {
         tag: m,
-        followed_by: sep,
+        segment_type: sep,
     })(input)
 }
 

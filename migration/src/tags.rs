@@ -1,7 +1,7 @@
 use crate::batch_join_all;
 use crate::spreadsheets::SheetResult;
 use anyhow::Result;
-use dailp::{Database, MorphemeTag, TagForm};
+use dailp::{Database, MorphemeTag, SegmentType, TagForm, Uuid};
 use log::info;
 
 /// Cherokee has many functional morphemes that are documented.
@@ -20,24 +20,57 @@ pub async fn migrate_tags(db: &Database) -> Result<()> {
     println!("Parsing sheet results...");
     let glossary = parse_tag_glossary(glossary?)?;
 
+    // Insert all of the internal tags that each system will convert from.
+    batch_join_all(glossary.into_iter().map(|tag| db.insert_abstract_tag(tag))).await?;
+
     let crg = db
         .insert_morpheme_system("CRG".into(), "Cherokee Reference Grammar".into())
         .await?;
+    sync_morpheme_system(db, "CRG Merged Glossary", crg).await?;
     let taoc = db
         .insert_morpheme_system("TAOC".into(), "Tone and Accent in Oklahoma Cherokee".into())
         .await?;
+    sync_morpheme_system(db, "TAOC Glossary", taoc).await?;
     let learner = db
         .insert_morpheme_system("LEARNER".into(), "Learner System".into())
         .await?;
+    sync_morpheme_system(db, "Learner Glossary", learner).await?;
 
-    println!("Pushing tags to db...");
-    batch_join_all(
-        glossary
-            .into_iter()
-            .map(|tag| db.insert_morpheme_tag(tag, crg, taoc, learner)),
+    Ok(())
+}
+
+async fn sync_morpheme_system(db: &Database, sheet_name: &str, system_id: Uuid) -> Result<()> {
+    let sheet = SheetResult::from_sheet(
+        "17LSuDu7QHJfJyLDVJjO0f4wmTHQLVyHuSktr6OrbD_M",
+        Some(sheet_name),
     )
     .await?;
+    let glossary = sheet.values.into_iter().skip(1).filter_map(|row| {
+        let mut cols = row.into_iter();
+        let internal_tags_str = cols.next()?;
+        let target_tag = cols.next()?;
+        let name = cols.next()?;
+        let definition = cols.next().unwrap_or_default();
+        let _page_num = cols.next().filter(|x| !x.is_empty());
+        let shape = cols.next().filter(|x| !x.is_empty());
+        let details_url = cols.next().filter(|x| !x.is_empty());
+        let segment_type = cols.next().map_or(SegmentType::Morpheme, |s| match s.trim() {
+            "Combine" => SegmentType::Combine,
+            _ => SegmentType::Morpheme,
+        });
+        Some(TagForm {
+            internal_tags: internal_tags_str.split("-").map(|s| s.to_owned()).collect(),
+            tag: target_tag,
+            title: name,
+            definition,
+            shape,
+            details_url,
+            morpheme_type: String::new(),
+            segment_type,
+        })
+    });
 
+    batch_join_all(glossary.map(|tag| db.insert_morpheme_tag(tag, system_id))).await?;
     Ok(())
 }
 
@@ -49,7 +82,6 @@ fn parse_tag_glossary(sheet: SheetResult) -> Result<Vec<MorphemeTag>> {
         // The first row is headers.
         .skip(1)
         // There are a few empty spacing rows to ignore.
-        .filter(|row| !row.is_empty() && !row[0].is_empty())
         .filter_map(|row| {
             // Skip over allomorphs, and instead allow them to emerge from our texts.
             let mut cols = row.into_iter();
@@ -57,16 +89,7 @@ fn parse_tag_glossary(sheet: SheetResult) -> Result<Vec<MorphemeTag>> {
             let _name = cols.next()?;
             let morpheme_type = cols.next()?;
             let _dailp_form = cols.next()?;
-            let crg = parse_tag_section(&mut cols, true, &morpheme_type);
-            let taoc = parse_tag_section(&mut cols, true, &morpheme_type);
-            let learner = parse_tag_section(&mut cols, false, &morpheme_type);
-            Some(MorphemeTag {
-                id,
-                taoc,
-                crg,
-                morpheme_type,
-                learner,
-            })
+            Some(MorphemeTag { id, morpheme_type })
         })
         .collect())
 }
@@ -107,29 +130,4 @@ async fn migrate_glossary_metadata(db: &Database, sheet_id: &str) -> Result<()> 
         db.insert_dictionary_document(&doc).await?;
     }
     Ok(())
-}
-
-fn parse_tag_section(
-    values: &mut impl Iterator<Item = String>,
-    has_page: bool,
-    morpheme_type: &str,
-) -> Option<TagForm> {
-    let tag = values.next()?;
-    let title = values.next()?;
-    let definition = values.next().unwrap_or_default();
-    let _page_num = if has_page { values.next() } else { None };
-    let shape = values.next().filter(|x| !x.is_empty());
-    let details_url = values.next().filter(|x| !x.is_empty());
-    if !tag.is_empty() {
-        Some(TagForm {
-            tag,
-            title,
-            definition,
-            shape,
-            details_url,
-            morpheme_type: morpheme_type.to_owned(),
-        })
-    } else {
-        None
-    }
 }
