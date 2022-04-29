@@ -16,6 +16,7 @@ import {
   drawerItem,
   drawerList,
   navButton,
+  navButtonChoices,
   navDrawer,
   navLink,
   navMenu,
@@ -107,7 +108,7 @@ const SubMenu = ({ item, location }: { location: Location; item: any }) => {
   )
 }
 
-export const MobileNav = (p: { menuID: number }) => {
+export const MobileNav = (p: { menuID: number; cwkw?: boolean }) => {
   const router = usePageContext()
   const dialog = useDialogState({ animated: true })
   const [{ data }] = Wordpress.useMenuByIdQuery({
@@ -131,7 +132,7 @@ export const MobileNav = (p: { menuID: number }) => {
     <>
       <DialogDisclosure
         {...dialog}
-        className={navButton}
+        className={p.cwkw ? navButtonChoices.cwkw : navButtonChoices.base}
         aria-label="Open Mobile Navigation Drawer"
       >
         <MdMenu size={32} />

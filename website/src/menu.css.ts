@@ -1,4 +1,4 @@
-import { style } from "@vanilla-extract/css"
+import { style, styleVariants } from "@vanilla-extract/css"
 import { position, rgba } from "polished"
 import sprinkles, {
   colors,
@@ -10,6 +10,7 @@ import sprinkles, {
   vspace,
 } from "src/sprinkles.css"
 import { paddingX, paddingY } from "src/style-utils"
+import * as cwkwTheme from "./cwkw/theme.css"
 
 export const navMenu = style({
   display: "flex",
@@ -79,6 +80,11 @@ export const navButton = style([
     height: 32,
   },
 ])
+
+export const navButtonChoices = styleVariants({
+  cwkw: [navButton, { color: cwkwTheme.colors.text }],
+  base: [navButton],
+})
 
 export const navDrawer = style([
   position("fixed", 0, "initial", 0, 0),
