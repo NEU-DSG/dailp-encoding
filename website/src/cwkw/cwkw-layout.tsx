@@ -5,7 +5,7 @@ import { Helmet } from "react-helmet"
 import Link from "src/components/link"
 import Footer from "../footer"
 import "../global-styles.css"
-import { BetterNavMenu, MobileNav, NavMenu } from "../menu"
+import { MobileNav, NavMenu } from "../menu"
 import { HeaderPrefDrawer } from "../mode"
 import { PreferencesProvider } from "../preferences-context"
 import "../wordpress.css"
@@ -24,7 +24,7 @@ const CWKWLayout: React.FC = ({ children }) => {
       </Helmet>
       <header aria-label="Site Header" id="header" className={css.header}>
         <div className={css.headerContents}>
-          <MobileNav />
+          <MobileNav menuID={171} />
           <div className={css.contentContainer}>
             <h1 className={css.siteTitle}>
               <Link className={css.siteLink} href="/">
@@ -40,7 +40,7 @@ const CWKWLayout: React.FC = ({ children }) => {
             // NOTE TO SELF: header drawer needs a new mode with a more visible button
           }
         </div>
-        <BetterNavMenu menuID={171} />
+        <NavMenu menuID={171} />
       </header>
       {children}
       <Footer />

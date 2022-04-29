@@ -35,26 +35,11 @@ query MainMenu {
   }
 }
 
-query Menu($slug: ID!) {
-  menuItems(where: { parentId: $slug }) {
-    nodes {
-      label
-      path
-      childItems {
-        nodes {
-          label
-          path
-        }
-      }
-    }
-  }
-}
-
-query CwkwMenu($slug: Int!) {
+query MenuByID($slug: Int!) {
   menus(where: { id: $slug }) {
     nodes {
       databaseId
-      menuItems {
+      menuItems(where: { parentDatabaseId: 0 }) {
         nodes {
           label
           path

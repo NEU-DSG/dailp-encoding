@@ -6,7 +6,7 @@ import Link from "src/components/link"
 import Footer from "./footer"
 import "./global-styles.css"
 import * as css from "./layout.css"
-import { BetterNavMenu, MobileNav, NavMenu } from "./menu"
+import { MobileNav, NavMenu } from "./menu"
 import { HeaderPrefDrawer } from "./mode"
 import { PreferencesProvider } from "./preferences-context"
 import { hideOnPrint, themeClass } from "./sprinkles.css"
@@ -26,7 +26,7 @@ const Layout: React.FC = ({ children }) => {
       </Helmet>
       <header aria-label="Site Header" id="header" className={css.header}>
         <div className={css.headerContents}>
-          <MobileNav />
+          <MobileNav menuID={2} />
           <div className={css.contentContainer}>
             <h1 className={css.siteTitle}>
               <Link className={css.siteLink} href="/">
@@ -39,7 +39,7 @@ const Layout: React.FC = ({ children }) => {
           </div>
           <HeaderPrefDrawer />
         </div>
-        <BetterNavMenu menuID={2} />
+        <NavMenu menuID={2} />
       </header>
       {children}
       <Footer />
