@@ -24,7 +24,7 @@ const CWKWLayout: React.FC = ({ children }) => {
       </Helmet>
       <header aria-label="Site Header" id="header" className={css.header}>
         <div className={css.headerContents}>
-          <MobileNav menuID={171} />
+          <MobileNav menuID={171} cwkw={true} />
           <div className={css.contentContainer}>
             <h1 className={css.siteTitle}>
               <Link className={css.siteLink} href="/">
@@ -36,9 +36,6 @@ const CWKWLayout: React.FC = ({ children }) => {
             </span>
           </div>
           <HeaderPrefDrawer cwkw={true} />
-          {
-            // NOTE TO SELF: header drawer needs a new mode with a more visible button
-          }
         </div>
         <NavMenu menuID={171} />
       </header>
