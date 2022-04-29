@@ -60,7 +60,7 @@ export const drawerItem = style([
     display: "inline-block",
     padding: vspace.quarter,
     textDecoration: "none",
-    color: colors.text,
+    color: "black",
   },
 ])
 

@@ -23,52 +23,9 @@ import {
 } from "./menu.css"
 import { closeBlock } from "./sprinkles.css"
 
-export const NavMenu = (p: { menuID: string }) => {
+export const NavMenu = (p: { menuID: number }) => {
   const location = useLocation()
-  const [{ data }] = Wordpress.useMenuQuery({ variables: { slug: p.menuID } })
-  const menuItems = data?.menuItems?.nodes
-  if (!menuItems) {
-    return null
-  }
-
-  const isTopLevel = (a: typeof menuItems[0]) =>
-    !menuItems?.some((b) =>
-      b?.childItems?.nodes?.some((b) => b?.path === a?.path)
-    )
-
-  return (
-    <nav className={desktopNav}>
-      {menuItems?.filter(isTopLevel).map((item) => {
-        if (!item) {
-          return null
-        } else if (item.childItems?.nodes?.length) {
-          return <SubMenu key={item.label} item={item} location={location} />
-        } else {
-          let url = { pathname: item.path }
-          if (item.path.startsWith("http")) {
-            url = new URL(item.path)
-          }
-          return (
-            <Link
-              key={item.path}
-              href={url.pathname}
-              className={navLink}
-              aria-current={
-                location.pathname === url.pathname ? "page" : undefined
-              }
-            >
-              {item.label}
-            </Link>
-          )
-        }
-      })}
-    </nav>
-  )
-}
-
-export const BetterNavMenu = (p: { menuID: number }) => {
-  const location = useLocation()
-  const [{ data }] = Wordpress.useCwkwMenuQuery({
+  const [{ data }] = Wordpress.useMenuByIdQuery({
     variables: { slug: p.menuID },
   })
   const menus = data?.menus?.nodes
@@ -150,11 +107,18 @@ const SubMenu = ({ item, location }: { location: Location; item: any }) => {
   )
 }
 
-export const MobileNav = () => {
+export const MobileNav = (p: { menuID: number }) => {
   const router = usePageContext()
   const dialog = useDialogState({ animated: true })
-  const [{ data }] = Wordpress.useMainMenuQuery()
-  const menuItems = data?.menuItems?.nodes
+  const [{ data }] = Wordpress.useMenuByIdQuery({
+    variables: { slug: p.menuID },
+  })
+  const menus = data?.menus?.nodes
+  if (!menus) {
+    return null
+  }
+  const menu = menus[0]
+  const menuItems = menu?.menuItems?.nodes
   if (!menuItems) {
     return null
   }
