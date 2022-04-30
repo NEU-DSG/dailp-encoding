@@ -18,7 +18,6 @@ in {
   imports = [
     ./bootstrap.nix
     ./functions.nix
-    ./database-nixos.nix
     ./auth.nix
     ./website.nix
     ./nu-tags.nix
@@ -95,25 +94,4 @@ in {
     availability_zone = getEnv "AWS_ZONE_PRIMARY";
     security_group_ids = [ "\${aws_security_group.nixos_test.id}" ];
   };
-
-  servers.mongodb.nodes = [
-    {
-      primary = true;
-      availability_zone = getEnv "AWS_ZONE_PRIMARY";
-      name = "mongodb_primary";
-      subnet_id = config.setup.subnets.primary;
-    }
-    {
-      primary = false;
-      availability_zone = getEnv "AWS_ZONE_SECONDARY0";
-      name = "mongodb_secondary0";
-      subnet_id = config.setup.subnets.secondary;
-    }
-    {
-      primary = false;
-      availability_zone = getEnv "AWS_ZONE_SECONDARY1";
-      name = "mongodb_secondary1";
-      subnet_id = config.setup.subnets.tertiary;
-    }
-  ];
 }

@@ -51,9 +51,36 @@
       from_port = 5432;
       to_port = 5432;
     };
+
+    aws_security_group.nixos_test = {
+      name = "dailp-database-access";
+      vpc_id = config.setup.vpc;
+      description = "Access DAILP resources";
+    };
+
+    aws_security_group.mongodb_access = {
+      name = "dailp-database";
+      vpc_id = config.setup.vpc;
+      description = "DAILP servers live here";
+      ingress = [ ];
+      egress = [{
+        description = "All egress";
+        from_port = 0;
+        to_port = 0;
+        protocol = "-1";
+        cidr_blocks = [ "0.0.0.0/0" ];
+        ipv6_cidr_blocks = [ "::/0" ];
+        self = false;
+        security_groups = [ ];
+        prefix_list_ids = [ ];
+      }];
+    };
   };
 
   config.output.database_endpoint = {
     value = "\${aws_db_instance.sql_database.endpoint}";
+  };
+  config.output.access_security_group_id = {
+    value = "\${aws_security_group.nixos_test.id}";
   };
 }

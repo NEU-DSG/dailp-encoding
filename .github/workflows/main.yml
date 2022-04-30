@@ -87,32 +87,25 @@ jobs:
           # If you chose API tokens for write access OR if you have a private cache
           authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
           pushFilter: "(-dailp$|-dailp-|-terraform-config$|-source$|\\.tar\\.gz$|-output$|-plan$|-apply-now$|-apply$)"
-      - name: Allow SSH access to MongoDB servers
-        uses: sohelamin/aws-security-group-add-ip-action@master
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
-          aws-security-group-id: ${{ secrets.AWS_DEPLOYMENT_SECURITY_GROUP }}
-          port: 22
-          to-port: 22
-          protocol: tcp
-      - name: Allow MongoDB access
-        uses: sohelamin/aws-security-group-add-ip-action@master
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
-          aws-security-group-id: ${{ secrets.AWS_DEPLOYMENT_SECURITY_GROUP }}
-          port: 27017
-          to-port: 27017
-          protocol: tcp
       - name: Build and test project
         # nix -L argument shows the full build log and --impure allows it to access environment variables.
         run: |
           nix build --impure -L
       - name: Deploy back-end to AWS via terraform
-        run: nix run --impure -L .#tf-apply-now
+        run: |
+          nix run --impure -L .#tf-apply-now
+          SECURITY_GROUP_ID=$(nix run --impure .#tf-output access_security_group_id)
+          echo "ACCESS_SECURITY_GROUP=$SECURITY_GROUP_ID" >> $GITHUB_ENV
+      - name: Allow SSH access to bastion host
+        uses: sohelamin/aws-security-group-add-ip-action@master
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+          aws-security-group-id: ${{ env.ACCESS_SECURITY_GROUP }}
+          port: 22
+          to-port: 22
+          protocol: tcp
       - name: Encode documents as TEI and database entries
         # Sets up port forwarding to remote database on port 5432
         run: |
@@ -129,7 +122,6 @@ jobs:
           ssh -i ./dailp-deployment-key.pem -f -N -L 5432:$DATABASE_ENDPOINT ec2-user@$BASTION_IP
 
           export DAILP_API_URL=$(nix run --impure .#tf-output functions_url)
-          export MONGODB_URI=mongodb://$(nix run --impure .#tf-output mongodb_primary_ip):27017
           export DATABASE_URL=postgres://dailp:$DATABASE_PASSWORD@localhost:5432/dailp
           nix run --impure -L .#migrate-schema
           nix run --impure -L .#migrate-data
