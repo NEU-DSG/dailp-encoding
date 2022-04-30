@@ -17,7 +17,7 @@ use std::time::Duration;
 pub const METADATA_SHEET_NAME: &str = "Metadata";
 pub const REFERENCES_SHEET_NAME: &str = "References";
 
-/// Migrates DAILP data from several Google spreadsheets to a MongoDB instance.
+/// Migrates DAILP data from several Google spreadsheets to a database.
 #[tokio::main]
 async fn main() -> Result<()> {
     dotenv::dotenv().ok();
