@@ -53,15 +53,15 @@
     };
 
     aws_security_group.nixos_test = {
-      name = "dailp-nixos-test";
+      name = "dailp-database-access";
       vpc_id = config.setup.vpc;
-      description = "MongoDB on NixOS test";
+      description = "Access DAILP resources";
     };
 
     aws_security_group.mongodb_access = {
-      name = "dailp-database-access";
+      name = "dailp-database";
       vpc_id = config.setup.vpc;
-      description = "Access DAILP MongoDB servers";
+      description = "DAILP servers live here";
       ingress = [ ];
       egress = [{
         description = "All egress";
