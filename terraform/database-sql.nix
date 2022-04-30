@@ -56,8 +56,6 @@
       name = "dailp-nixos-test";
       vpc_id = config.setup.vpc;
       description = "MongoDB on NixOS test";
-      # GitHub Actions relies on the ID staying the same.
-      lifecycle.prevent_destroy = true;
     };
 
     aws_security_group.mongodb_access = {
@@ -76,11 +74,13 @@
         security_groups = [ ];
         prefix_list_ids = [ ];
       }];
-      lifecycle.prevent_destroy = true;
     };
   };
 
   config.output.database_endpoint = {
     value = "\${aws_db_instance.sql_database.endpoint}";
+  };
+  config.output.access_security_group_id = {
+    value = "\${aws_security_group.nixos_test.id}";
   };
 }
