@@ -53,14 +53,14 @@
     };
 
     aws_security_group.nixos_test = {
-      name = "dailp-database-access";
+      name = "dailp-nixos-test";
       vpc_id = config.setup.vpc;
       description = "Access DAILP resources";
       lifecycle.create_before_destroy = true;
     };
 
     aws_security_group.mongodb_access = {
-      name = "dailp-database";
+      name = "dailp-mongodb-access";
       vpc_id = config.setup.vpc;
       description = "DAILP servers live here";
       ingress = [ ];
