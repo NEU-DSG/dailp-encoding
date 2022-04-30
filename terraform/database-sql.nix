@@ -56,6 +56,7 @@
       name = "dailp-database-access";
       vpc_id = config.setup.vpc;
       description = "Access DAILP resources";
+      lifecycle.create_before_destroy = true;
     };
 
     aws_security_group.mongodb_access = {
@@ -74,6 +75,7 @@
         security_groups = [ ];
         prefix_list_ids = [ ];
       }];
+      lifecycle.create_before_destroy = true;
     };
   };
 
