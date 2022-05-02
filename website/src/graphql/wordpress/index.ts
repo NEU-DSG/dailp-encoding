@@ -8569,42 +8569,8 @@ export type PageIndexQuery = { readonly __typename?: "RootQuery" } & {
   >
 }
 
-export type MainMenuQueryVariables = Exact<{ [key: string]: never }>
-
-export type MainMenuQuery = { readonly __typename?: "RootQuery" } & {
-  readonly menuItems: Maybe<
-    { readonly __typename?: "RootQueryToMenuItemConnection" } & {
-      readonly nodes: Maybe<
-        ReadonlyArray<
-          Maybe<
-            { readonly __typename?: "MenuItem" } & Pick<
-              MenuItem,
-              "label" | "path"
-            > & {
-                readonly childItems: Maybe<
-                  { readonly __typename?: "MenuItemToMenuItemConnection" } & {
-                    readonly nodes: Maybe<
-                      ReadonlyArray<
-                        Maybe<
-                          { readonly __typename?: "MenuItem" } & Pick<
-                            MenuItem,
-                            "label" | "path"
-                          >
-                        >
-                      >
-                    >
-                  }
-                >
-              }
-          >
-        >
-      >
-    }
-  >
-}
-
 export type MenuByIdQueryVariables = Exact<{
-  slug: Scalars["Int"]
+  id: Scalars["Int"]
 }>
 
 export type MenuByIdQuery = { readonly __typename?: "RootQuery" } & {
@@ -8688,31 +8654,9 @@ export function usePageIndexQuery(
 ) {
   return Urql.useQuery<PageIndexQuery>({ query: PageIndexDocument, ...options })
 }
-export const MainMenuDocument = gql`
-  query MainMenu {
-    menuItems(where: { parentId: 171 }) {
-      nodes {
-        label
-        path
-        childItems {
-          nodes {
-            label
-            path
-          }
-        }
-      }
-    }
-  }
-`
-
-export function useMainMenuQuery(
-  options?: Omit<Urql.UseQueryArgs<MainMenuQueryVariables>, "query">
-) {
-  return Urql.useQuery<MainMenuQuery>({ query: MainMenuDocument, ...options })
-}
 export const MenuByIdDocument = gql`
-  query MenuByID($slug: Int!) {
-    menus(where: { id: $slug }) {
+  query MenuByID($id: Int!) {
+    menus(where: { id: $id }) {
       nodes {
         databaseId
         menuItems(where: { parentDatabaseId: 0 }) {

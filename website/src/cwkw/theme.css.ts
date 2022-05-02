@@ -15,7 +15,7 @@ export const themeClass = createTheme(theme, {
     footer: "#9d2832",
     altFooter: "#9d2832",
     body: "#fbf6ec",
-    text: "#fbf4e5",
+    text: "black",
     link: "#970b26",
     headings: "#e6b469",
     bodyHeadings: "black",

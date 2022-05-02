@@ -246,7 +246,7 @@ export const PrefPanel = () => {
   )
 }
 
-export const HeaderPrefDrawer = (p: { cwkw?: boolean }) => {
+export const HeaderPrefDrawer = () => {
   const dialog = useDialogState({ animated: true })
 
   return (
@@ -254,7 +254,7 @@ export const HeaderPrefDrawer = (p: { cwkw?: boolean }) => {
       <DialogDisclosure
         {...dialog}
         aria-label="Settings"
-        className={p.cwkw ? css.prefButton.cwkw : css.prefButton.base}
+        className={css.prefButton}
       >
         <MdSettings size={32} />
       </DialogDisclosure>

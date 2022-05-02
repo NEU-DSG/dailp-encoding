@@ -47,10 +47,10 @@ export const prefButtonShell = style({
   flex: 1,
 })
 
-export const prefButton = styleVariants({
-  cwkw: [collPanelButton, { color: cwkwTheme.colors.text }],
-  base: [collPanelButton],
-})
+export const prefButton = style([
+  collPanelButton,
+  { color: cwkwTheme.colors.text },
+])
 
 export const prefBG = style([
   drawerBg,

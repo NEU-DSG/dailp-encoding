@@ -24,7 +24,7 @@ const CWKWLayout: React.FC = ({ children }) => {
       </Helmet>
       <header aria-label="Site Header" id="header" className={css.header}>
         <div className={css.headerContents}>
-          <MobileNav menuID={171} cwkw={true} />
+          <MobileNav menuID={171} />
           <div className={css.contentContainer}>
             <h1 className={css.siteTitle}>
               <Link className={css.siteLink} href="/">
@@ -35,7 +35,7 @@ const CWKWLayout: React.FC = ({ children }) => {
               Cherokees Writing the Keetoowah Way
             </span>
           </div>
-          <HeaderPrefDrawer cwkw={true} />
+          <HeaderPrefDrawer />
         </div>
         <NavMenu menuID={171} />
       </header>
