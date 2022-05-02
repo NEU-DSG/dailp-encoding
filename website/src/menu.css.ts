@@ -10,7 +10,6 @@ import sprinkles, {
   vspace,
 } from "src/sprinkles.css"
 import { paddingX, paddingY } from "src/style-utils"
-import * as cwkwTheme from "./cwkw/theme.css"
 
 export const navMenu = style({
   display: "flex",
@@ -61,7 +60,7 @@ export const drawerItem = style([
     display: "inline-block",
     padding: vspace.quarter,
     textDecoration: "none",
-    color: "black",
+    color: colors.text,
   },
 ])
 
@@ -78,13 +77,9 @@ export const navButton = style([
     background: "none",
     marginRight: hspace.edge,
     height: 32,
+    color: colors.text,
   },
 ])
-
-export const navButtonChoices = styleVariants({
-  cwkw: [navButton, { color: cwkwTheme.colors.text }],
-  base: [navButton],
-})
 
 export const navDrawer = style([
   position("fixed", 0, "initial", 0, 0),

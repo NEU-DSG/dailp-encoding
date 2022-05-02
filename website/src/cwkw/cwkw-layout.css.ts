@@ -2,7 +2,7 @@ import { style } from "@vanilla-extract/css"
 import * as baseLayout from "../layout.css"
 import { colors } from "./theme.css"
 
-export const header = style([baseLayout.header])
+export const header = baseLayout.header
 
 export const headerContents = style([baseLayout.headerContents])
 

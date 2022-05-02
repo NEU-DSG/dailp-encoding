@@ -16,7 +16,6 @@ import {
   drawerItem,
   drawerList,
   navButton,
-  navButtonChoices,
   navDrawer,
   navLink,
   navMenu,
@@ -27,7 +26,7 @@ import { closeBlock } from "./sprinkles.css"
 export const NavMenu = (p: { menuID: number }) => {
   const location = useLocation()
   const [{ data }] = Wordpress.useMenuByIdQuery({
-    variables: { slug: p.menuID },
+    variables: { id: p.menuID },
   })
   const menus = data?.menus?.nodes
   if (!menus) {
@@ -108,11 +107,11 @@ const SubMenu = ({ item, location }: { location: Location; item: any }) => {
   )
 }
 
-export const MobileNav = (p: { menuID: number; cwkw?: boolean }) => {
+export const MobileNav = (p: { menuID: number }) => {
   const router = usePageContext()
   const dialog = useDialogState({ animated: true })
   const [{ data }] = Wordpress.useMenuByIdQuery({
-    variables: { slug: p.menuID },
+    variables: { id: p.menuID },
   })
   const menus = data?.menus?.nodes
   if (!menus) {
@@ -132,7 +131,7 @@ export const MobileNav = (p: { menuID: number; cwkw?: boolean }) => {
     <>
       <DialogDisclosure
         {...dialog}
-        className={p.cwkw ? navButtonChoices.cwkw : navButtonChoices.base}
+        className={navButton}
         aria-label="Open Mobile Navigation Drawer"
       >
         <MdMenu size={32} />
