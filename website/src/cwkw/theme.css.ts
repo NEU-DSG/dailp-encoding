@@ -10,7 +10,7 @@ export const themeClass = createTheme(theme, {
   },
   colors: {
     header: "black",
-    button: "black",
+    button: "#fbf6ec",
     buttonHover: lighten(0.2, "black"),
     footer: "#9d2832",
     altFooter: "#9d2832",

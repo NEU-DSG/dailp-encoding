@@ -41,7 +41,7 @@ export const themeClass = createTheme(theme, {
   },
   colors: {
     header: "#f7eeed",
-    button: "#f7eeed",
+    button: "black",
     buttonHover: lighten(0.2, "#f7eeed"),
     footer: "#405372",
     altFooter: "#4f5970",
@@ -343,14 +343,13 @@ export const iconButton = style([
   },
 ])
 
-export const cleanButton = style(  {
-    padding: space.small,
-    background: "none",
-    border: "none",
-    outline: "none",
-    cursor: "pointer",
-    margin: 0,
-  },
-)
+export const cleanButton = style({
+  padding: space.small,
+  background: "none",
+  border: "none",
+  outline: "none",
+  cursor: "pointer",
+  margin: 0,
+})
 
 export const paddedCenterColumn = style([edgePadded, centeredColumn])
