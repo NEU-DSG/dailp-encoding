@@ -6,10 +6,7 @@ export const header = baseLayout.header
 
 export const headerContents = style([baseLayout.headerContents])
 
-export const subHeader = style([
-  baseLayout.subHeader,
-  { color: colors.text, fontSize: "larger" },
-])
+export const subHeader = style([baseLayout.subHeader, { fontSize: "larger" }])
 
 export const siteTitle = style([baseLayout.siteTitle])
 
