@@ -30,7 +30,7 @@ export const navLink = style([
   paddingY(vspace.quarter),
   paddingX(hspace.char),
   {
-    color: colors.text,
+    color: colors.button,
     borderColor: "transparent",
     textDecoration: "none",
     background: "none",
