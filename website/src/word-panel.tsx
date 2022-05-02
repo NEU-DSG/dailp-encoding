@@ -1,5 +1,5 @@
-import React, { ReactNode } from "react"
-import { AiFillCaretDown, AiFillCaretUp } from "react-icons/ai"
+import React, { ReactNode, useEffect, useState } from "react"
+import { AiFillCaretDown, AiFillCaretUp, AiFillSound } from "react-icons/ai"
 import { IoEllipsisHorizontalCircle } from "react-icons/io5"
 import { MdClose, MdNotes, MdRecordVoiceOver } from "react-icons/md"
 import { Button } from "reakit/Button"
@@ -37,37 +37,15 @@ export const WordPanel = (p: {
 
   const translation = p.segment.englishGloss.join(", ")
   let phonetics = null
+
   if (p.segment.simplePhonetics) {
     phonetics = (
       <>
         {p.segment.simplePhonetics !== p.segment.romanizedSource ? (
           <div>{p.segment.romanizedSource}</div>
         ) : null}
-        <div>
-          {p.segment.simplePhonetics}
-          {p.segment.audioTrack && (
-            <FormAudio
-              endTime={p.segment.audioTrack.endTime}
-              index={p.segment.audioTrack.index}
-              parentTrack=""
-              resourceUrl={p.segment.audioTrack.resourceUrl}
-              startTime={p.segment.audioTrack.startTime}
-            />
-          )}
-        </div>
+        <div>{p.segment.simplePhonetics}</div>
       </>
-    )
-  } else if (p.segment.audioTrack) {
-    phonetics = (
-      <div className={css.audioContainer}>
-        <FormAudio
-          endTime={p.segment.audioTrack.endTime}
-          index={p.segment.audioTrack.index}
-          parentTrack=""
-          resourceUrl={p.segment.audioTrack.resourceUrl}
-          startTime={p.segment.audioTrack.startTime}
-        />
-      </div>
     )
   }
 
@@ -84,7 +62,7 @@ export const WordPanel = (p: {
         <h1 className={css.noSpaceBelow}>Selected Word</h1>
         <h2 className={css.cherHeader}>{p.segment.source}</h2>
       </header>
-
+      <AudioPanel segment={p.segment} />
       {phonetics ? (
         <CollapsiblePanel
           title={"Phonetics"}
@@ -185,5 +163,34 @@ const CollapsiblePanel = (p: {
         {p.content}
       </DisclosureContent>
     </div>
+  )
+}
+
+const AudioPanel = (p: { segment: Dailp.FormFieldsFragment }) => {
+  return (
+    <>
+      {p.segment.audioTrack && (
+        <CollapsiblePanel
+          title={"Audio"}
+          content={
+            <div>
+              {
+                <FormAudio
+                  endTime={p.segment.audioTrack.endTime}
+                  index={p.segment.audioTrack.index}
+                  parentTrack=""
+                  resourceUrl={p.segment.audioTrack.resourceUrl}
+                  startTime={p.segment.audioTrack.startTime}
+                  showProgress={true}
+                />
+              }
+            </div>
+          }
+          icon={
+            <AiFillSound size={24} className={css.wordPanelButton.colpleft} />
+          }
+        />
+      )}
+    </>
   )
 }
