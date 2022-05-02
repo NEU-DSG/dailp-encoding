@@ -1,11 +1,11 @@
 import { style, styleVariants } from "@vanilla-extract/css"
 import sprinkles, {
+  colors,
   fullWidth,
   hspace,
   mediaQueries,
   vspace,
 } from "src/sprinkles.css"
-import * as cwkwTheme from "./cwkw/theme.css"
 import { drawerBg } from "./menu.css"
 import { mobileWordPanel, morphemeDialog } from "./pages/documents/document.css"
 import { paddingX } from "./style-utils"
@@ -47,10 +47,7 @@ export const prefButtonShell = style({
   flex: 1,
 })
 
-export const prefButton = style([
-  collPanelButton,
-  { color: cwkwTheme.colors.text },
-])
+export const prefButton = style([collPanelButton, { color: colors.button }])
 
 export const prefBG = style([
   drawerBg,

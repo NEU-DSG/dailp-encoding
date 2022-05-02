@@ -77,7 +77,7 @@ export const navButton = style([
     background: "none",
     marginRight: hspace.edge,
     height: 32,
-    color: colors.text,
+    color: colors.button,
   },
 ])
 
