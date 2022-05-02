@@ -1,6 +1,6 @@
 import cx from "classnames"
 import { Howl } from "howler"
-import React from "react"
+import React, { useEffect, useState } from "react"
 import { MdPauseCircleOutline, MdPlayCircleOutline } from "react-icons/md"
 import * as Dailp from "src/graphql/dailp"
 import { hideOnPrint } from "src/sprinkles.css"
@@ -15,11 +15,14 @@ export const SegmentAudio = (props: { audioUrl: string }) => {
   )
 }
 
-export const FormAudio = (props: Dailp.AudioSlice & { howl?: Howl }) => {
+export const FormAudio = (
+  props: Dailp.AudioSlice & { howl?: Howl; showProgress?: boolean }
+) => {
   return (
     <span>
-      <AudioPlayer
+      <FunctionalAudioPlayer
         audioUrl={props.resourceUrl}
+        showProgress={!!props.showProgress}
         slices={{ start: props.startTime!, end: props.endTime! }}
       />
     </span>
@@ -129,15 +132,91 @@ class AudioPlayer extends React.Component<
   }
 }
 
+const FunctionalAudioPlayer = (props: Props) => {
+  const [progress, setProgress] = useState(0)
+  const [howl, setHowl] = useState(
+    new Howl({
+      src: [props.audioUrl],
+      html5: true,
+      format: [".wav"],
+      preload: props.preload || false,
+      onplay: () => {
+        onPlay()
+      }, // What happens when a sound starts playing?
+      onend: () => {}, // What happens when a sound finishes playing?
+      onpause: () => {}, // What happens when a sound is paused?
+      onseek: () => {}, // What happens when a sound seeks?
+    })
+  )
+  const onPlay = () => {
+    requestAnimationFrame(nextStep)
+  }
+  const nextStep = () => {
+    let seek = howl.seek() || 0
+    setProgress((seek / howl.duration()) * 100)
+    if (howl.playing()) {
+      requestAnimationFrame(nextStep)
+    }
+  }
+
+  if (props.slices) {
+    Object.assign(howl, {
+      _sprite: {
+        __default: [props.slices.start, props.slices.end - props.slices.start],
+        sound: [props.slices.start, props.slices.end - props.slices.start],
+      },
+    })
+  }
+
+  const onSeek = (newProgress: number) => {
+    setProgress(newProgress)
+    howl.seek((newProgress / 100) * howl.duration())
+  }
+
+  // Button set up
+  let button
+  if (progress > 0 && progress < 100 && howl.playing())
+    button = <PauseButton howl={howl} />
+  else button = <PlayButton howl={howl} isSprite={!!props.slices} />
+
+  const bounds = props.slices
+    ? {
+        start: props.slices.start / (howl.duration() * 10),
+        end: props.slices.end / (howl.duration() * 10),
+      }
+    : null
+
+  // Finally return call
+  // Conditionally hide the bar
+  return (
+    <div className={css.audioElement}>
+      {button}
+      {props.showProgress && (
+        <ProgressBar progress={progress} seek={onSeek} bounds={bounds} />
+      )}
+    </div>
+  )
+}
+
+const buttonSize = 28
+
 const PauseButton = (props: { howl: Howl }) => {
-  return <MdPauseCircleOutline onClick={() => props.howl.pause()} />
+  return (
+    <MdPauseCircleOutline
+      size={buttonSize}
+      onClick={() => props.howl.pause()}
+    />
+  )
 }
 
 const PlayButton = (props: { howl: Howl; isSprite?: boolean }) => {
   return props.isSprite ? (
-    <MdPlayCircleOutline onClick={() => props.howl.play("sound")} />
+    <MdPlayCircleOutline
+      size={buttonSize}
+      onClick={() => props.howl.play("sound")}
+    />
   ) : (
-    <MdPlayCircleOutline onClick={() => props.howl.play()} />
+    <MdPlayCircleOutline size={buttonSize} onClick={() => props.howl.play()} />
   )
 }
 // TODO: Implement Seek
@@ -145,18 +224,27 @@ const PlayButton = (props: { howl: Howl; isSprite?: boolean }) => {
 const ProgressBar = (props: {
   progress: number
   seek: (n: number) => void
+  bounds?: { start: number; end: number } | null
 }) => {
+  let progPtr = props.progress
+  let onClick = () => {
+    props.seek(3)
+  }
+  if (props.bounds) {
+    progPtr = Math.min(
+      100,
+      (100 * (props.progress - props.bounds.start)) /
+        (props.bounds.end - props.bounds.start)
+    )
+    onClick = () => {} // So word audio doesn't get messed by clicks
+  }
   return (
-    <div
-      className={css.container}
-      onClick={() => {
-        props.seek(3)
-      }}
-    >
+    <div className={css.container} onClick={onClick} aria-label={"container"}>
       <div
         className={css.fill}
-        style={{ width: `${props.progress}%` }}
+        style={{ width: `${progPtr}%` }}
         onDrag={() => {}}
+        aria-label={"fill"}
       />
       {/*<div css={timestamp}>*/}
       {/*  <span></span>*/}

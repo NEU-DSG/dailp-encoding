@@ -8,7 +8,7 @@ export const container = style([
     height: "quarter",
     borderRadius: "medium",
     marginX: "halfEdge",
-    marginY: "half",
+    marginY: "medium",
   }),
   {
     display: "inline-block",
@@ -36,7 +36,7 @@ export const audioElement = style([
     width: "full",
   }),
   {
-    textAlign: "center",
+    alignItems: "center",
   },
 ])
 
