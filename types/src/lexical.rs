@@ -957,7 +957,7 @@ mod tests {
         let id = MorphemeId::parse("DF2018:55");
         assert_ne!(id, None);
         let id = id.unwrap();
-        assert_eq!(id.document_name.as_ref().map(|x| &**x), Some("DF2018"));
+        assert_eq!(id.document_name.as_deref(), Some("DF2018"));
         assert_eq!(id.gloss, "55");
     }
 
@@ -966,7 +966,7 @@ mod tests {
         let id = MorphemeId::parse("IN1861:1-24");
         assert_ne!(id, None);
         let id = id.unwrap();
-        assert_eq!(id.document_name.as_ref().map(|x| &**x), Some("IN1861"));
+        assert_eq!(id.document_name.as_deref(), Some("IN1861"));
         assert_eq!(id.gloss, "1-24");
     }
 

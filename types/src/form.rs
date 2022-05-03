@@ -122,17 +122,23 @@ impl AnnotatedForm {
                     let is_match = abstract_matches.clone().all(|(a, b)| *a == b.gloss);
                     println!("matching against {:?}", concrete_tag);
                     if is_match {
+                        let corresponding_segments = abstract_segments
+                            .iter()
+                            .skip(curr_index)
+                            .take(concrete_tag.internal_tags.len());
                         concrete_segments.push(MorphemeSegment {
                             system: None,
-                            morpheme: abstract_segments
-                                .iter()
-                                .skip(curr_index)
-                                .take(concrete_tag.internal_tags.len())
-                                .map(|seg| &seg.morpheme)
-                                .join(""),
+                            // Use the segment type of the first abstract one
+                            // unless the concrete segment overrides the segment type.
+                            segment_type: concrete_tag.segment_type.or_else(|| {
+                                corresponding_segments
+                                    .clone()
+                                    .next()
+                                    .and_then(|seg| seg.segment_type)
+                            }),
+                            morpheme: corresponding_segments.map(|seg| &seg.morpheme).join(""),
                             gloss: concrete_tag.tag.clone(),
                             gloss_id: None,
-                            segment_type: Some(concrete_tag.segment_type),
                         });
                         curr_index += concrete_tag.internal_tags.len();
                         break;

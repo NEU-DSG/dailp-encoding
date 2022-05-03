@@ -5,7 +5,7 @@ select
   morpheme_tag.gloss,
   morpheme_tag.title,
   morpheme_tag.description,
-  morpheme_tag.segment_type,
+  morpheme_tag.segment_type as "segment_type: SegmentType",
   abstract_morpheme_tag.linguistic_type
 from morpheme_gloss
   inner join abstract_morpheme_tag on abstract_morpheme_tag.id = morpheme_gloss.tag_id

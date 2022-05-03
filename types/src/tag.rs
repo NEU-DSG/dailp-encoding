@@ -33,5 +33,6 @@ pub struct TagForm {
     /// context.
     pub definition: String,
     pub morpheme_type: String,
-    pub segment_type: SegmentType,
+    /// Overrides the segment type of instances of this tag.
+    pub segment_type: Option<SegmentType>,
 }

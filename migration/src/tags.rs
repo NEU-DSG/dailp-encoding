@@ -54,9 +54,10 @@ async fn sync_morpheme_system(db: &Database, sheet_name: &str, system_id: Uuid) 
         let _page_num = cols.next().filter(|x| !x.is_empty());
         let shape = cols.next().filter(|x| !x.is_empty());
         let details_url = cols.next().filter(|x| !x.is_empty());
-        let segment_type = cols.next().map_or(SegmentType::Morpheme, |s| match s.trim() {
-            "Combine" => SegmentType::Combine,
-            _ => SegmentType::Morpheme,
+        let segment_type = cols.next().and_then(|s| match s.trim() {
+            "Combine" => Some(SegmentType::Combine),
+            "Clitic" => Some(SegmentType::Clitic),
+            _ => None,
         });
         Some(TagForm {
             internal_tags: internal_tags_str.split("-").map(|s| s.to_owned()).collect(),

@@ -1,10 +1,10 @@
 use std::ops::Bound;
 
 use {
-    async_graphql::InputType,
     crate::*,
     anyhow::Result,
     async_graphql::dataloader::*,
+    async_graphql::InputType,
     async_trait::async_trait,
     itertools::Itertools,
     sqlx::{
@@ -77,7 +77,7 @@ impl Database {
     pub async fn morphemes(
         &self,
         morpheme_id: MorphemeId,
-        compare_by: Option<CherokeeOrthography>,
+        _compare_by: Option<CherokeeOrthography>,
     ) -> Result<Vec<MorphemeReference>> {
         let items = query_file!(
             "queries/surface_forms.sql",
@@ -229,7 +229,7 @@ impl Database {
 
     pub async fn document_manifest(
         &self,
-        document_name: &str,
+        _document_name: &str,
         url: String,
     ) -> Result<iiif::Manifest> {
         // Retrieve the document from the DB.
@@ -262,7 +262,7 @@ impl Database {
     }
 
     pub async fn all_tags(&self, system: CherokeeOrthography) -> Result<Vec<TagForm>> {
-        use async_graphql::{Name, Value};
+        use async_graphql::Value;
         let system_name = if let Value::Enum(s) = system.to_value() {
             s
         } else {
@@ -281,8 +281,7 @@ impl Database {
                 details_url: None,
                 definition: tag.description.unwrap_or_default(),
                 morpheme_type: tag.linguistic_type.unwrap_or_default(),
-                segment_type: tag.segment_type.and_then(|s| InputType::parse(Some(Value::Enum(Name::new(s)))).ok())
-                    .unwrap_or(SegmentType::Morpheme),
+                segment_type: tag.segment_type,
             })
             .collect())
     }
@@ -336,7 +335,7 @@ impl Database {
 
     pub async fn documents_in_collection(
         &self,
-        super_collection: &str,
+        _super_collection: &str,
         collection: &str,
     ) -> Result<Vec<DocumentReference>> {
         Ok(query_file_as!(
@@ -348,7 +347,7 @@ impl Database {
         .await?)
     }
 
-    pub async fn insert_top_collection(&self, title: String, index: i64) -> Result<Uuid> {
+    pub async fn insert_top_collection(&self, title: String, _index: i64) -> Result<Uuid> {
         Ok(query_file_scalar!(
             "queries/insert_document_group.sql",
             slug::slugify(&title),
@@ -528,7 +527,7 @@ impl Database {
     pub async fn document_breadcrumbs(
         &self,
         document_id: DocumentId,
-        super_collection: &str,
+        _super_collection: &str,
     ) -> Result<Vec<DocumentCollection>> {
         let item = query_file!("queries/document_group_crumb.sql", document_id.0)
             .fetch_one(&self.client)
@@ -652,7 +651,8 @@ impl Database {
                     gloss,
                     word_id,
                     index as i64,
-                    segment.morpheme
+                    segment.morpheme,
+                    segment.segment_type.unwrap_or(SegmentType::Morpheme) as SegmentType
                 )
                 .execute(&mut tx)
                 .await?;
@@ -709,18 +709,13 @@ impl Database {
             }
         })
         .collect();
-        let segment_type = form.segment_type.to_value();
         query_file!(
             "queries/upsert_concrete_tag.sql",
             system_id,
             &abstract_ids?[..],
             form.tag,
             form.title,
-if let async_graphql::Value::Enum(s) = segment_type {
-                    s.as_str().to_owned()
-                } else {
-                    unreachable!()
-                }
+            form.segment_type as Option<SegmentType>
         )
         .execute(&self.client)
         .await?;
@@ -954,7 +949,6 @@ impl Loader<PartsOfWord> for Database {
         &self,
         keys: &[PartsOfWord],
     ) -> Result<HashMap<PartsOfWord, Self::Value>, Self::Error> {
-        use async_graphql::{Value, Name};
         let keys: Vec<_> = keys.iter().map(|k| k.0).collect();
         let items = query_file!("queries/word_parts.sql", &keys[..])
             .fetch_all(&self.client)
@@ -969,7 +963,7 @@ impl Loader<PartsOfWord> for Database {
                         morpheme: part.morpheme,
                         gloss: part.gloss,
                         gloss_id: part.gloss_id,
-                segment_type: Some(part.segment_type.and_then(|s| InputType::parse(Some(Value::Enum(Name::new(s)))).ok()).unwrap_or(SegmentType::Morpheme)),
+                        segment_type: Some(part.segment_type),
                     },
                 )
             })
@@ -1014,8 +1008,7 @@ impl Loader<TagId> for Database {
                         details_url: None,
                         definition: tag.description.unwrap_or_default(),
                         morpheme_type: tag.linguistic_type.unwrap_or_default(),
-                segment_type: tag.segment_type.and_then(|s| InputType::parse(Some(Value::Enum(Name::new(s)))).ok())
-                    .unwrap_or(SegmentType::Morpheme),
+                        segment_type: tag.segment_type,
                     },
                 )
             })
@@ -1122,8 +1115,7 @@ impl Loader<TagForMorpheme> for Database {
                         details_url: None,
                         definition: tag.description.unwrap_or_default(),
                         morpheme_type: tag.linguistic_type.unwrap_or_default(),
-                segment_type: tag.segment_type.and_then(|s| InputType::parse(Some(Value::Enum(Name::new(s)))).ok())
-                    .unwrap_or(SegmentType::Morpheme),
+                        segment_type: tag.segment_type,
                     },
                 )
             })
