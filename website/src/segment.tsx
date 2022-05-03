@@ -145,37 +145,16 @@ export const AnnotatedForm = (
           <>
             <div>{romanization}</div>
             <div>
-              {p.segment.audioTrack && (
-                <FormAudio
-                  endTime={p.segment.audioTrack.endTime}
-                  index={p.segment.audioTrack.index}
-                  parentTrack=""
-                  resourceUrl={p.segment.audioTrack.resourceUrl}
-                  startTime={p.segment.audioTrack.startTime}
-                />
-              )}
               {p.segment.phonemic && p.viewMode >= ViewMode.Pronunciation && (
                 <div />
               )}
             </div>
           </>
         ) : (
-          (p.segment.audioTrack && (
-            <div className={css.audioContainer}>
-              <FormAudio
-                endTime={p.segment.audioTrack.endTime}
-                index={p.segment.audioTrack.index}
-                parentTrack=""
-                resourceUrl={p.segment.audioTrack.resourceUrl}
-                startTime={p.segment.audioTrack.startTime}
-              />
-            </div>
-          )) || (
-            <>
-              <FillerLine />
-              <FillerLine />
-            </>
-          )
+          <>
+            <FillerLine />
+            <FillerLine />
+          </>
         )}
         {showSegments ? (
           <MorphemicSegmentation
