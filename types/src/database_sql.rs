@@ -694,28 +694,20 @@ impl Database {
     }
 
     pub async fn insert_morpheme_tag(&self, form: TagForm, system_id: Uuid) -> Result<()> {
-        let abstract_ids: Result<Vec<_>> = query_file_scalar!(
+        let abstract_ids = query_file_scalar!(
             "queries/abstract_tag_ids_from_glosses.sql",
             &form.internal_tags[..]
         )
         .fetch_all(&self.client)
-        .await?
-        .into_iter()
-        .map(|x| {
-            if let Some(x) = x {
-                Ok(x)
-            } else {
-                anyhow::bail!("Sucks")
-            }
-        })
-        .collect();
+        .await?;
         query_file!(
             "queries/upsert_concrete_tag.sql",
             system_id,
-            &abstract_ids?[..],
+            &abstract_ids,
             form.tag,
             form.title,
-            form.segment_type as Option<SegmentType>
+            form.segment_type as Option<SegmentType>,
+            form.definition
         )
         .execute(&self.client)
         .await?;
@@ -964,6 +956,7 @@ impl Loader<PartsOfWord> for Database {
                         gloss: part.gloss,
                         gloss_id: part.gloss_id,
                         segment_type: Some(part.segment_type),
+                        matching_tag: None,
                     },
                 )
             })

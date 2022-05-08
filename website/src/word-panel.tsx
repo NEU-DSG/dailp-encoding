@@ -124,7 +124,7 @@ export const VerticalMorphemicSegmentation = (p: {
       <table className={css.tableContainer}>
         {p.segments.map((segment, index) => (
           <tr>
-            <td className={css.tableCells}>
+            <td className={css.morphemeCell}>
               {index > 0 ? segment.previousSeparator : null}
               {segment.morpheme}
               {index < segmentCount - 1 ? p.segments[index + 1]!.previousSeparator : null}

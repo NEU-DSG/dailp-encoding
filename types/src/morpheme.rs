@@ -20,6 +20,7 @@ pub struct MorphemeSegment {
     /// This field determines what character should separate this segment from
     /// the next one when reconstituting the full segmentation string.
     pub segment_type: Option<SegmentType>,
+    pub matching_tag: Option<TagForm>,
 }
 
 /// The kind of segment that a particular sequence of characters in a morphemic
@@ -48,6 +49,7 @@ impl MorphemeSegment {
             // migration code to create this data structure.
             gloss_id: None,
             segment_type,
+            matching_tag: None,
         }
     }
 
@@ -115,16 +117,16 @@ impl MorphemeSegment {
     async fn matching_tag(
         &self,
         context: &async_graphql::Context<'_>,
-        // TODO make this non-optional
-        system: Option<CherokeeOrthography>,
     ) -> FieldResult<Option<TagForm>> {
         use async_graphql::dataloader::*;
-        if let Some(gloss_id) = self.gloss_id {
+        if let Some(matching_tag) = &self.matching_tag {
+            Ok(Some(matching_tag.clone()))
+        } else if let Some(gloss_id) = self.gloss_id {
             Ok(context
                 .data::<DataLoader<Database>>()?
                 .load_one(TagForMorpheme(
                     gloss_id,
-                    system.unwrap_or(CherokeeOrthography::Taoc),
+                    self.system.unwrap_or(CherokeeOrthography::Taoc),
                 ))
                 .await?)
         } else {

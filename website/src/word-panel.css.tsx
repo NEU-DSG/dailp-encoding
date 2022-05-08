@@ -66,15 +66,17 @@ export const collPanel = style({
 export const wordPanelContent = style({
   fontFamily: theme.fonts.body,
   position: "sticky",
-  top: 101,
+  top: 50,
   border: "none",
   borderRadius: "4px",
   "@media": {
     [mediaQueries.medium]: {
+      width: 350,
       border: "1px solid #ddd",
-      height: "calc(100vh - 125px)",
+      height: "calc(100vh - 50px)",
     },
   },
+  overflowX: "hidden",
   overflowY: "auto",
 })
 
@@ -86,15 +88,21 @@ export const wordPanelHeader = style({
 export const audioContainer = style({ paddingLeft: "40%" })
 
 export const tableContainer = style({
-  border: "0px solid transparent",
-  width: "max-content",
-  margin: "0px",
+  border: "none",
+  margin: 0,
 })
 
 export const tableCells = style({
-  border: "4px solid transparent",
+  border: "none",
   fontFamily: theme.fonts.body,
-  padding: "0px",
-  paddingRight: "3px",
+  padding: hspace.small,
+  paddingRight: hspace.medium,
   wordWrap: "break-word",
 })
+
+export const morphemeCell = style([
+  tableCells,
+  {
+    fontStyle: "italic",
+  },
+])

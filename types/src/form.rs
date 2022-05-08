@@ -120,7 +120,6 @@ impl AnnotatedForm {
                         .iter()
                         .zip(abstract_segments.iter().skip(curr_index));
                     let is_match = abstract_matches.clone().all(|(a, b)| *a == b.gloss);
-                    println!("matching against {:?}", concrete_tag);
                     if is_match {
                         let corresponding_segments = abstract_segments
                             .iter()
@@ -139,6 +138,7 @@ impl AnnotatedForm {
                             morpheme: corresponding_segments.map(|seg| &seg.morpheme).join(""),
                             gloss: concrete_tag.tag.clone(),
                             gloss_id: None,
+                            matching_tag: Some(concrete_tag.clone()),
                         });
                         curr_index += concrete_tag.internal_tags.len();
                         break;

@@ -382,10 +382,6 @@ export type MorphemeSegment = {
   readonly previousSeparator: Maybe<Scalars["String"]>
 }
 
-export type MorphemeSegmentMatchingTagArgs = {
-  system: InputMaybe<CherokeeOrthography>
-}
-
 export type MorphemeSegmentMorphemeArgs = {
   system: InputMaybe<CherokeeOrthography>
 }
@@ -591,7 +587,8 @@ export type TagForm = {
   readonly detailsUrl: Maybe<Scalars["String"]>
   readonly internalTags: ReadonlyArray<Scalars["String"]>
   readonly morphemeType: Scalars["String"]
-  readonly segmentType: SegmentType
+  /** Overrides the segment type of instances of this tag. */
+  readonly segmentType: Maybe<SegmentType>
   /** How this morpheme looks in original language data */
   readonly shape: Maybe<Scalars["String"]>
   /** How this morpheme is represented in a gloss */
