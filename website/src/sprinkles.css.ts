@@ -72,6 +72,7 @@ export const radii = {
   none: 0,
   small: "1px",
   medium: "2px",
+  large: "4px",
 }
 
 export const thickness = {
@@ -343,14 +344,13 @@ export const iconButton = style([
   },
 ])
 
-export const cleanButton = style(  {
-    padding: space.small,
-    background: "none",
-    border: "none",
-    outline: "none",
-    cursor: "pointer",
-    margin: 0,
-  },
-)
+export const cleanButton = style({
+  padding: space.small,
+  background: "none",
+  border: "none",
+  outline: "none",
+  cursor: "pointer",
+  margin: 0,
+})
 
 export const paddedCenterColumn = style([edgePadded, centeredColumn])

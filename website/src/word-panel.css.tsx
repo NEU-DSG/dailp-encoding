@@ -66,14 +66,15 @@ export const collPanel = style({
 export const wordPanelContent = style({
   fontFamily: theme.fonts.body,
   position: "sticky",
-  top: 50,
+  top: 58,
   border: "none",
-  borderRadius: "4px",
+  borderRadius: radii.large,
+  marginTop: 8,
   "@media": {
     [mediaQueries.medium]: {
       width: 350,
       border: "1px solid #ddd",
-      height: "calc(100vh - 50px)",
+      height: "calc(100vh - 66px)",
     },
   },
   overflowX: "hidden",
@@ -90,6 +91,7 @@ export const audioContainer = style({ paddingLeft: "40%" })
 export const tableContainer = style({
   border: "none",
   margin: 0,
+  marginBottom: vspace.quarter,
 })
 
 export const tableCells = style({
