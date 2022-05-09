@@ -194,7 +194,6 @@ const TranslationTab = ({ doc }: { doc: Document }) => {
           <WordPanel
             segment={wordPanelInfo.currContents}
             setContent={wordPanelInfo.setCurrContents}
-            viewMode={viewMode}
             onOpenDetails={openDetails}
             tagSet={tagSet}
           />
@@ -228,7 +227,6 @@ const TranslationTab = ({ doc }: { doc: Document }) => {
             <WordPanel
               segment={wordPanelInfo.currContents}
               setContent={wordPanelInfo.setCurrContents}
-              viewMode={viewMode}
               onOpenDetails={openDetails}
               tagSet={tagSet}
             />

@@ -7,6 +7,7 @@ import * as Dailp from "src/graphql/dailp"
 import { DocumentContents } from "src/pages/documents/document.page"
 import { FormAudio } from "./audio-player"
 import { CleanButton, IconButton } from "./components"
+import { romanizationFromSystem } from "./mode"
 import * as css from "./segment.css"
 import { std } from "./sprinkles.css"
 import {
@@ -109,18 +110,11 @@ export const AnnotatedForm = (
       p.segment
     ) /* This makes sure the word panel updates for changes to the word panel*/
   }
-  let romanization = null
-  if (
-    p.phoneticRepresentation == PhoneticRepresentation.Dailp &&
-    p.segment.simplePhonetics
-  ) {
-    romanization = p.segment.simplePhonetics
-  } else if (
-    p.phoneticRepresentation == PhoneticRepresentation.Worcester &&
-    p.segment.romanizedSource
-  ) {
-    romanization = p.segment.romanizedSource
-  }
+
+  const romanization = romanizationFromSystem(
+    p.phoneticRepresentation,
+    p.segment
+  )
 
   if (showAnything) {
     const showSegments = p.viewMode >= ViewMode.Segmentation
@@ -239,7 +233,11 @@ export const MorphemicSegmentation = (p: {
   let segmentation = ""
   for (const seg of p.segments) {
     // TODO Use more robust check than looking for ":"
-    if (seg.previousSeparator && segmentation.length > 0 && seg.previousSeparator !== ":") {
+    if (
+      seg.previousSeparator &&
+      segmentation.length > 0 &&
+      seg.previousSeparator !== ":"
+    ) {
       segmentation += seg.previousSeparator
     }
     segmentation += seg.morpheme

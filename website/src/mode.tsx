@@ -17,6 +17,7 @@ import {
   useRadioState,
 } from "reakit/Radio"
 import { std } from "src/sprinkles.css"
+import * as Dailp from "./graphql/dailp"
 import * as css from "./mode.css"
 import { usePreferences } from "./preferences-context"
 import {
@@ -100,6 +101,21 @@ export const selectedMode = () =>
 
 export const selectedPhonetics = () =>
   Number.parseInt(Cookies.get("phonetics") ?? "0") as PhoneticRepresentation
+
+export const romanizationFromSystem = (
+  system: PhoneticRepresentation,
+  word: Pick<Dailp.AnnotatedForm, "romanizedSource" | "simplePhonetics">
+) => {
+  if (system == PhoneticRepresentation.Dailp && word.simplePhonetics) {
+    return word.simplePhonetics
+  } else if (
+    system == PhoneticRepresentation.Worcester &&
+    word.romanizedSource
+  ) {
+    return word.romanizedSource
+  }
+  return null
+}
 
 export const ExperiencePicker = (p: {
   onSelect: (mode: ViewMode) => void

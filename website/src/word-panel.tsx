@@ -1,4 +1,4 @@
-import React, { ReactNode, useEffect, useState } from "react"
+import React, { ReactNode } from "react"
 import { AiFillCaretDown, AiFillCaretUp, AiFillSound } from "react-icons/ai"
 import { IoEllipsisHorizontalCircle } from "react-icons/io5"
 import { MdClose, MdNotes, MdRecordVoiceOver } from "react-icons/md"
@@ -10,13 +10,9 @@ import {
 } from "reakit/Disclosure"
 import * as Dailp from "src/graphql/dailp"
 import { FormAudio } from "./audio-player"
-import { MorphemicSegmentation } from "./segment"
-import {
-  BasicMorphemeSegment,
-  TagSet,
-  ViewMode,
-  morphemeDisplayTag,
-} from "./types"
+import { romanizationFromSystem } from "./mode"
+import { usePreferences } from "./preferences-context"
+import { BasicMorphemeSegment, TagSet } from "./types"
 import * as css from "./word-panel.css"
 
 export interface WordPanelDetails {
@@ -27,27 +23,16 @@ export interface WordPanelDetails {
 export const WordPanel = (p: {
   segment: Dailp.FormFieldsFragment | null
   setContent: (content: Dailp.FormFieldsFragment | null) => void
-  viewMode: ViewMode
   onOpenDetails: (morpheme: BasicMorphemeSegment) => void
   tagSet: TagSet
 }) => {
+  const { phoneticRepresentation } = usePreferences()
   if (!p.segment) {
     return <p>No word has been selected</p>
   }
 
   const translation = p.segment.englishGloss.join(", ")
-  let phonetics = null
-
-  if (p.segment.simplePhonetics) {
-    phonetics = (
-      <>
-        {p.segment.simplePhonetics !== p.segment.romanizedSource ? (
-          <div>{p.segment.romanizedSource}</div>
-        ) : null}
-        <div>{p.segment.simplePhonetics}</div>
-      </>
-    )
-  }
+  const romanization = romanizationFromSystem(phoneticRepresentation, p.segment)
 
   return (
     <div className={css.wordPanelContent}>
@@ -63,10 +48,10 @@ export const WordPanel = (p: {
         <h2 className={css.cherHeader}>{p.segment.source}</h2>
       </header>
       <AudioPanel segment={p.segment} />
-      {phonetics ? (
+      {romanization ? (
         <CollapsiblePanel
           title={"Phonetics"}
-          content={phonetics}
+          content={<div>{romanization}</div>}
           icon={
             <MdRecordVoiceOver
               size={24}
