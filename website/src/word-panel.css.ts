@@ -15,10 +15,11 @@ const wordPanelPadding = "8px"
 
 export const cherHeader = style({
   fontFamily: theme.fonts.cherokee,
+  marginBottom: vspace.eighth,
 })
 
 export const noSpaceBelow = style({
-  marginBottom: vspace.half,
+  marginBottom: vspace.quarter,
 })
 
 export const wordPanelButton = styleVariants({
