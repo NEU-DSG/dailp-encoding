@@ -9,6 +9,7 @@ import sprinkles, {
   thickness,
   vspace,
 } from "./sprinkles.css"
+import { paddingX, paddingY } from "./style-utils"
 
 const wordPanelPadding = "8px"
 
@@ -94,17 +95,28 @@ export const tableContainer = style({
   marginBottom: vspace.quarter,
 })
 
-export const tableCells = style({
-  border: "none",
-  fontFamily: theme.fonts.body,
-  padding: hspace.small,
-  paddingRight: hspace.medium,
-  wordWrap: "break-word",
-})
+const tableCells = style([
+  paddingY(vspace.eighth),
+  paddingX(0),
+  {
+    border: "none",
+    fontFamily: theme.fonts.body,
+    wordWrap: "break-word",
+  },
+])
+
+export const glossCell = style([
+  tableCells,
+  {
+    width: "100%",
+    paddingLeft: hspace.halfEdge,
+  },
+])
 
 export const morphemeCell = style([
   tableCells,
   {
     fontStyle: "italic",
+    paddingRight: hspace.halfEdge,
   },
 ])

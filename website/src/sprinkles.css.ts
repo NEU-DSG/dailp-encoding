@@ -99,6 +99,7 @@ export const hspace = {
 
 export const vspace = {
   ...space,
+  eighth: rhythm(1 / 8),
   quarter: rhythm(1 / 4),
   half: rhythm(1 / 2),
   one: rhythm(1),

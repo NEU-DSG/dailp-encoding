@@ -145,7 +145,7 @@ export const VerticalMorphemicSegmentation = (p: {
                   ? p.segments[index + 1]!.previousSeparator
                   : null}
               </td>
-              <td className={css.tableCells}>
+              <td className={css.glossCell}>
                 {segment.matchingTag
                   ? segment.matchingTag.title
                   : segment.gloss.replaceAll(".", " ")}
