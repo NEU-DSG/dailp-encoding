@@ -6,7 +6,6 @@ import { MdCircle, MdInfoOutline } from "react-icons/md"
 import * as Dailp from "src/graphql/dailp"
 import { DocumentContents } from "src/pages/documents/document.page"
 import { CleanButton } from "./components"
-import { romanizationFromSystem } from "./mode"
 import * as css from "./segment.css"
 import { std } from "./sprinkles.css"
 import { BasicMorphemeSegment, ViewMode } from "./types"
@@ -100,8 +99,6 @@ export const AnnotatedForm = (
     ) /* This makes sure the word panel updates for changes to the word panel*/
   }
 
-  const romanization = romanizationFromSystem(p.linguisticSystem, p.segment)
-
   if (showAnything) {
     const showSegments = p.viewMode >= ViewMode.Segmentation
     const translation = p.segment.englishGloss.join(", ")
@@ -121,9 +118,9 @@ export const AnnotatedForm = (
             )}
           </CleanButton>
         </div>
-        {romanization ? (
+        {p.segment.romanizedSource ? (
           <>
-            <div>{romanization}</div>
+            <div>{p.segment.romanizedSource}</div>
             <div>
               {p.segment.phonemic && p.viewMode >= ViewMode.Pronunciation && (
                 <div />

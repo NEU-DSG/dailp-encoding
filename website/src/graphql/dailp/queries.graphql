@@ -71,8 +71,7 @@ query DocumentContents(
 fragment FormFields on AnnotatedForm {
   index
   source
-  romanizedSource
-  simplePhonetics
+  romanizedSource(system: $morphemeSystem)
   phonemic
   segments(system: $morphemeSystem) {
     morpheme
@@ -112,7 +111,7 @@ query WordSearch($query: String!) {
   wordSearch(query: $query) {
     source
     normalizedSource
-    simplePhonetics
+    romanizedSource(system: LEARNER)
     englishGloss
     index
     document {
@@ -158,7 +157,7 @@ query Timeline($gloss: String!) {
     forms {
       source
       normalizedSource
-      simplePhonetics
+      romanizedSource(system: LEARNER)
       phonemic
       documentId
       englishGloss

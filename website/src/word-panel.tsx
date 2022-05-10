@@ -10,7 +10,6 @@ import {
 } from "reakit/Disclosure"
 import * as Dailp from "src/graphql/dailp"
 import { FormAudio } from "./audio-player"
-import { romanizationFromSystem } from "./mode"
 import { usePreferences } from "./preferences-context"
 import { BasicMorphemeSegment } from "./types"
 import * as css from "./word-panel.css"
@@ -31,7 +30,6 @@ export const WordPanel = (p: {
   }
 
   const translation = p.segment.englishGloss.join(", ")
-  const romanization = romanizationFromSystem(linguisticSystem, p.segment)
 
   return (
     <div className={css.wordPanelContent}>
@@ -47,10 +45,10 @@ export const WordPanel = (p: {
         <h2 className={css.cherHeader}>{p.segment.source}</h2>
       </header>
       <AudioPanel segment={p.segment} />
-      {romanization ? (
+      {p.segment.romanizedSource ? (
         <CollapsiblePanel
           title={"Phonetics"}
-          content={<div>{romanization}</div>}
+          content={<div>{p.segment.romanizedSource}</div>}
           icon={
             <MdRecordVoiceOver
               size={24}

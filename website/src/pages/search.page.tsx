@@ -98,7 +98,7 @@ const Timeline = (p: { gloss: string }) => {
             ) : null}
             <div>{form.source}</div>
             <div>{form.normalizedSource}</div>
-            <div>{form.simplePhonetics}</div>
+            <div>{form.romanizedSource}</div>
             <div>{form.englishGloss.join(", ")}</div>
           </div>
         ))}

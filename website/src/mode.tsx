@@ -70,21 +70,6 @@ export const selectedLinguisticSystem = (): Dailp.CherokeeOrthography =>
   (Cookies.get(LINGUISTIC_SYSTEM_KEY) as Dailp.CherokeeOrthography) ??
   Dailp.CherokeeOrthography.Learner
 
-export const romanizationFromSystem = (
-  system: Dailp.CherokeeOrthography,
-  word: Pick<Dailp.AnnotatedForm, "romanizedSource" | "simplePhonetics">
-) => {
-  if (system != Dailp.CherokeeOrthography.Learner && word.simplePhonetics) {
-    return word.simplePhonetics
-  } else if (
-    system == Dailp.CherokeeOrthography.Learner &&
-    word.romanizedSource
-  ) {
-    return word.romanizedSource
-  }
-  return null
-}
-
 export const ExperiencePicker = (p: {
   onSelect: (mode: ViewMode) => void
   id?: string

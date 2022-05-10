@@ -132,10 +132,18 @@ export type AnnotatedForm = {
   readonly segments: ReadonlyArray<MorphemeSegment>
   /** All other observed words with the same root morpheme as this word. */
   readonly similarForms: ReadonlyArray<AnnotatedForm>
-  /** Romanized version of the word for simple phonetic pronunciation */
-  readonly simplePhonetics: Maybe<Scalars["String"]>
   /** Original source text */
   readonly source: Scalars["String"]
+}
+
+/**
+ * A single word in an annotated document.
+ * One word contains several layers of interpretation, including the original
+ * source text, multiple layers of linguistic annotation, and annotator notes.
+ * TODO Split into two types, one for migration and one for SQL + GraphQL
+ */
+export type AnnotatedFormRomanizedSourceArgs = {
+  system: CherokeeOrthography
 }
 
 /**
@@ -185,7 +193,7 @@ export enum CherokeeOrthography {
   Crg = "CRG",
   /**
    * Simplified system that uses d/t without tones, a compromise intended for
-   * language learners.
+   * language learners. qu and ts
    */
   Learner = "LEARNER",
   /**
@@ -380,10 +388,6 @@ export type MorphemeSegment = {
    * the next one when reconstituting the full segmentation string.
    */
   readonly previousSeparator: Maybe<Scalars["String"]>
-}
-
-export type MorphemeSegmentMorphemeArgs = {
-  system: InputMaybe<CherokeeOrthography>
 }
 
 export type Mutation = {
@@ -710,7 +714,6 @@ export type DocumentContentsQuery = { readonly __typename?: "Query" } & {
                           | "index"
                           | "source"
                           | "romanizedSource"
-                          | "simplePhonetics"
                           | "phonemic"
                           | "englishGloss"
                           | "commentary"
@@ -753,7 +756,6 @@ export type DocumentContentsQuery = { readonly __typename?: "Query" } & {
           | "index"
           | "source"
           | "romanizedSource"
-          | "simplePhonetics"
           | "phonemic"
           | "englishGloss"
           | "commentary"
@@ -790,7 +792,6 @@ export type FormFieldsFragment = {
   | "index"
   | "source"
   | "romanizedSource"
-  | "simplePhonetics"
   | "phonemic"
   | "englishGloss"
   | "commentary"
@@ -845,7 +846,7 @@ export type WordSearchQuery = { readonly __typename?: "Query" } & {
       AnnotatedForm,
       | "source"
       | "normalizedSource"
-      | "simplePhonetics"
+      | "romanizedSource"
       | "englishGloss"
       | "index"
     > & {
@@ -906,7 +907,7 @@ export type TimelineQuery = { readonly __typename?: "Query" } & {
           AnnotatedForm,
           | "source"
           | "normalizedSource"
-          | "simplePhonetics"
+          | "romanizedSource"
           | "phonemic"
           | "documentId"
           | "englishGloss"
@@ -1021,8 +1022,7 @@ export const FormFieldsFragmentDoc = gql`
   fragment FormFields on AnnotatedForm {
     index
     source
-    romanizedSource
-    simplePhonetics
+    romanizedSource(system: $morphemeSystem)
     phonemic
     segments(system: $morphemeSystem) {
       morpheme
@@ -1184,7 +1184,7 @@ export const WordSearchDocument = gql`
     wordSearch(query: $query) {
       source
       normalizedSource
-      simplePhonetics
+      romanizedSource(system: LEARNER)
       englishGloss
       index
       document {
@@ -1257,7 +1257,7 @@ export const TimelineDocument = gql`
       forms {
         source
         normalizedSource
-        simplePhonetics
+        romanizedSource(system: LEARNER)
         phonemic
         documentId
         englishGloss

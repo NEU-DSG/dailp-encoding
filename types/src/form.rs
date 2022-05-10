@@ -6,6 +6,7 @@ use async_graphql::{dataloader::DataLoader, FieldResult};
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use sqlx::types::Uuid;
+use std::borrow::Cow;
 
 #[derive(Clone, Eq, PartialEq, Hash, Serialize, Deserialize, Debug, async_graphql::NewType)]
 pub struct FormId(pub String);
@@ -26,6 +27,7 @@ pub struct AnnotatedForm {
     pub source: String,
     /// A normalized version of the word
     pub normalized_source: Option<String>,
+    #[graphql(skip)]
     /// Romanized version of the word for simple phonetic pronunciation
     pub simple_phonetics: Option<String>,
     /// Underlying phonemic representation of this word
@@ -69,10 +71,14 @@ impl AnnotatedForm {
         Ok(None)
     }
 
-    async fn romanized_source(&self) -> Option<String> {
-        self.simple_phonetics
-            .as_ref()
-            .map(|phonetic| crate::lexical::simple_phonetics_to_worcester(phonetic))
+    async fn romanized_source(&self, system: CherokeeOrthography) -> Option<Cow<'_, str>> {
+        self.simple_phonetics.as_ref().map(|phonetic| {
+            if system == CherokeeOrthography::Learner {
+                crate::lexical::simple_phonetics_to_worcester(phonetic).into()
+            } else {
+                phonetic.into()
+            }
+        })
     }
 
     async fn segments(
