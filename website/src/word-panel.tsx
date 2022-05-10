@@ -47,7 +47,7 @@ export const WordPanel = (p: {
       <AudioPanel segment={p.segment} />
       {p.segment.romanizedSource ? (
         <CollapsiblePanel
-          title={"Phonetics"}
+          title={"Simple Phonetics"}
           content={<div>{p.segment.romanizedSource}</div>}
           icon={
             <MdRecordVoiceOver

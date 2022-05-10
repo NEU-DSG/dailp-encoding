@@ -10,7 +10,7 @@ import {
   thickness,
   vspace,
 } from "src/sprinkles.css"
-import { marginY, paddingY } from "./style-utils"
+import { marginY, paddingX, paddingY } from "./style-utils"
 
 export const pageBreak = style({
   display: "block",
@@ -45,14 +45,37 @@ export const morphemeButton = styleVariants({
   functional: [morphemeBase, std.smallCaps],
 })
 
-export const wordGroup = style([
-  marginY(vspace.half),
+const wordShared = style([
   paddingY(vspace.half),
+  paddingX(hspace.halfEdge),
+  {
+    borderWidth: thickness.thick,
+    borderColor: "transparent",
+    borderStyle: "solid",
+    "@media": {
+      [mediaQueries.print]: {
+        display: "inline-block",
+        border: "none",
+        ...margin(0, "3.5rem", vspace[1.5], 0),
+      },
+      [mediaQueries.medium]: margin(vspace.half, "2.5rem", vspace.one, 0),
+    },
+  },
+])
+
+export const wordGroupInline = style([
+  wordShared,
+  margin(vspace.half, "1.5rem", vspace.half, 0),
+  {
+    display: "inline-block",
+  },
+])
+
+export const wordGroup = style([
+  wordShared,
+  marginY(vspace.half),
   {
     display: "block",
-    padding: hspace.halfEdge,
-    borderWidth: thickness.thick,
-    borderStyle: "solid",
     borderColor: colors.borders,
     borderRadius: radii.medium,
     lineHeight: vspace.one,
@@ -62,35 +85,20 @@ export const wordGroup = style([
     "@media": {
       [mediaQueries.medium]: {
         display: "inline-block",
-        ...margin(vspace.half, "3rem", vspace.one, 0),
+        borderColor: "transparent",
       },
     },
   },
 ])
 
-export const wordGroupSelection = styleVariants({
-  unselected: [
-    wordGroup,
-    {
-      "@media": {
-        [mediaQueries.medium]: {
-          borderColor: "transparent",
-        },
-        [mediaQueries.print]: {
-          display: "inline-block",
-          border: "none",
-          ...margin(0, "3.5rem", vspace[1.5], 0),
-        },
-      },
-    },
-  ],
-  selected: [
-    wordGroup,
-    {
+export const selectedWord = style({
+  borderColor: "black",
+  backgroundColor: colors.header,
+  "@media": {
+    [mediaQueries.medium]: {
       borderColor: "black",
-      backgroundColor: colors.header,
     },
-  ],
+  },
 })
 
 export const syllabaryLayer = style({
@@ -131,8 +139,8 @@ const documentBlockBase = style({
   },
 })
 
-const borderedBase: StyleRule = {
-  borderBottom: `1px solid ${theme.colors.text}`,
+const bordered = style({
+  borderBottom: `${thickness.thin} solid ${colors.text}`,
   selectors: {
     "&:last-of-type": {
       borderBottom: "none",
@@ -140,13 +148,8 @@ const borderedBase: StyleRule = {
       paddingBottom: 0,
     },
   },
-}
-
-export const bordered = style({
   "@media": {
-    [mediaQueries.medium]: borderedBase,
     [mediaQueries.print]: {
-      ...borderedBase,
       borderBottom: "1px solid black",
     },
   },
@@ -164,28 +167,27 @@ export const inlineBlock = style({
   },
 })
 
-export const storySection = style({
+const annotationSectionBase = style({
   display: "flex",
   flexFlow: "row wrap",
+  width: "100%",
+  position: "relative",
+  marginBottom: vspace.half,
 })
 
-const annotationSectionBase = style([
-  {
-    width: "100%",
-    position: "relative",
-    marginBottom: vspace.half,
-    "@media": {
-      [mediaQueries.medium]: {
-        display: "flex",
-        flexFlow: "row wrap",
+export const annotationSection = styleVariants({
+  story: [annotationSectionBase],
+  wordParts: [
+    annotationSectionBase,
+    {
+      flexFlow: "column nowrap",
+      "@media": {
+        [mediaQueries.medium]: {
+          flexFlow: "row wrap",
+        },
       },
     },
-  },
-])
-
-export const annotationSection = styleVariants({
-  story: [annotationSectionBase, storySection],
-  wordByWord: [annotationSectionBase],
+  ],
 })
 
 export const audioContainer = style({ paddingLeft: "40%" })

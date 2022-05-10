@@ -1,5 +1,6 @@
 import { Tooltip } from "@reach/tooltip"
 import "@reach/tooltip/styles.css"
+import cx from "classnames"
 import { Howl } from "howler"
 import React from "react"
 import { MdCircle, MdInfoOutline } from "react-icons/md"
@@ -61,10 +62,17 @@ export const DocumentParagraph = (
       )
     }) ?? null
 
-  const variant = p.viewMode > ViewMode.Story ? "wordByWord" : "story"
+  const blockStyle =
+    p.viewMode > ViewMode.Story
+      ? css.documentBlock.wordByWord
+      : css.documentBlock.story
+  const annotationStyle =
+    p.viewMode > ViewMode.Pronunciation
+      ? css.annotationSection.wordParts
+      : css.annotationSection.story
   return (
-    <section className={css.documentBlock[variant]}>
-      <div className={css.annotationSection[variant]}>{children}</div>
+    <section className={blockStyle}>
+      <div className={annotationStyle}>{children}</div>
       <p className={css.inlineBlock}>{p.segment.translation ?? null}</p>
       {/*<SegmentAudio/>*/}
     </section>
@@ -88,20 +96,21 @@ export const AnnotatedForm = (
     return null
   }
   const showAnything = p.viewMode > ViewMode.Story
-  const isSelected =
-    p.wordPanelDetails.currContents?.source === p.segment.source &&
-    p.wordPanelDetails.currContents?.index === p.segment.index
-  let wordCSS = css.wordGroupSelection.unselected
-  if (isSelected) {
-    wordCSS = css.wordGroupSelection.selected
-    p.wordPanelDetails.setCurrContents(
-      p.segment
-    ) /* This makes sure the word panel updates for changes to the word panel*/
-  }
-
   if (showAnything) {
     const showSegments = p.viewMode >= ViewMode.Segmentation
     const translation = p.segment.englishGloss.join(", ")
+
+    const isSelected =
+      p.wordPanelDetails.currContents?.source === p.segment.source &&
+      p.wordPanelDetails.currContents?.index === p.segment.index
+
+    let wordCSS = showSegments ? css.wordGroup : css.wordGroupInline
+    if (isSelected) {
+      wordCSS = cx(wordCSS, css.selectedWord)
+      p.wordPanelDetails.setCurrContents(
+        p.segment
+      ) /* This makes sure the word panel updates for changes to the word panel*/
+    }
 
     return (
       <div className={wordCSS} id={`w${p.segment.index}`}>
