@@ -19,7 +19,6 @@ import * as css from "./mode.css"
 import { usePreferences } from "./preferences-context"
 import { ViewMode } from "./types"
 
-const notNumber = (l: any) => isNaN(Number(l))
 export const levelNameMapping = {
   [ViewMode.Story]: {
     label: "Story",
@@ -38,20 +37,20 @@ export const levelNameMapping = {
 export const modeDetails = (mode: ViewMode) => levelNameMapping[mode]
 
 const linguisticSystemMapping = {
-  [Dailp.CherokeeOrthography.Crg]: {
-    label: "CRG",
-    details:
-      "Linguistic analysis using terms from Cherokee Reference Grammar (CRG). In romanizations uses kw, gw, and j.",
-  },
-  [Dailp.CherokeeOrthography.Taoc]: {
-    label: "TAOC",
-    details:
-      "Linguistic analysis using terms from Tone and Accent in Oklahoma Cherokee (TAOC). In romanizations uses kw, gw, and j.",
-  },
   [Dailp.CherokeeOrthography.Learner]: {
     label: "Learner",
     details:
       "A more traditional phonetics view, aligned with the Worcester syllabary. Uses qu and ts.",
+  },
+  [Dailp.CherokeeOrthography.Crg]: {
+    label: "Cherokee Reference Grammar",
+    details:
+      "Linguistic analysis using terms from Cherokee Reference Grammar (CRG). In romanizations uses kw, gw, and j.",
+  },
+  [Dailp.CherokeeOrthography.Taoc]: {
+    label: "Tone and Accent in Oklahoma Cherokee",
+    details:
+      "Linguistic analysis using terms from Tone and Accent in Oklahoma Cherokee (TAOC). In romanizations uses kw, gw, and j.",
   },
 }
 
@@ -91,16 +90,11 @@ export const ExperiencePicker = (p: {
       value={value}
       onChange={(e) => setValue(Number.parseInt(e.target.value))}
     >
-      {Object.keys(ViewMode)
-        .filter(notNumber)
-        .map(function (mode: string) {
-          const selectedMode = ViewMode[mode as keyof typeof ViewMode]
-          return (
-            <option value={selectedMode} key={selectedMode}>
-              {modeDetails(selectedMode).label}
-            </option>
-          )
-        })}
+      {Object.entries(levelNameMapping).map(([viewMode, details]) => (
+        <option value={viewMode} key={viewMode}>
+          {details.label}
+        </option>
+      ))}
     </select>
   )
 }
@@ -125,19 +119,11 @@ export const PhoneticsPicker = (p: {
       onChange={(e) => setValue(e.target.value as Dailp.CherokeeOrthography)}
       aria-label="Romanization"
     >
-      {Object.keys(Dailp.CherokeeOrthography)
-        .filter(notNumber)
-        .map(function (representation: string) {
-          const selectedSystem =
-            Dailp.CherokeeOrthography[
-              representation as keyof typeof Dailp.CherokeeOrthography
-            ]
-          return (
-            <option value={selectedSystem} key={selectedSystem}>
-              {linguisticSystemDetails(selectedSystem).label}
-            </option>
-          )
-        })}
+      {Object.entries(linguisticSystemMapping).map(([system, details]) => (
+        <option value={system} key={system}>
+          {details.label}
+        </option>
+      ))}
     </select>
   )
 }
@@ -155,7 +141,7 @@ export const PrefPanel = () => {
         {levelNameMapping[preferences.viewMode].details}
       </p>
 
-      <label>Romanization System:</label>
+      <label>Linguistic System:</label>
       <PhoneticsPicker
         aria-described-by={"Selected-Phonetics"}
         onSelect={preferences.setLinguisticSystem}
