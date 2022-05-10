@@ -126,7 +126,7 @@ impl AnnotatedForm {
                             .skip(curr_index)
                             .take(concrete_tag.internal_tags.len());
                         concrete_segments.push(MorphemeSegment {
-                            system: None,
+                            system: Some(system),
                             // Use the segment type of the first abstract one
                             // unless the concrete segment overrides the segment type.
                             segment_type: concrete_tag.segment_type.or_else(|| {
@@ -147,7 +147,10 @@ impl AnnotatedForm {
             } else {
                 // If this abstract segment was unmatched (probably a root),
                 // then just use it directly.
-                concrete_segments.push(abstract_segment.clone());
+                concrete_segments.push(MorphemeSegment {
+                    system: Some(system),
+                    ..abstract_segment.clone()
+                });
                 curr_index += 1;
             }
             // if !success {

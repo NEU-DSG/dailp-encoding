@@ -12,7 +12,7 @@ import * as Dailp from "src/graphql/dailp"
 import { FormAudio } from "./audio-player"
 import { romanizationFromSystem } from "./mode"
 import { usePreferences } from "./preferences-context"
-import { BasicMorphemeSegment, TagSet } from "./types"
+import { BasicMorphemeSegment } from "./types"
 import * as css from "./word-panel.css"
 
 export interface WordPanelDetails {
@@ -24,15 +24,14 @@ export const WordPanel = (p: {
   segment: Dailp.FormFieldsFragment | null
   setContent: (content: Dailp.FormFieldsFragment | null) => void
   onOpenDetails: (morpheme: BasicMorphemeSegment) => void
-  tagSet: TagSet
 }) => {
-  const { phoneticRepresentation } = usePreferences()
+  const { linguisticSystem } = usePreferences()
   if (!p.segment) {
     return <p>No word has been selected</p>
   }
 
   const translation = p.segment.englishGloss.join(", ")
-  const romanization = romanizationFromSystem(phoneticRepresentation, p.segment)
+  const romanization = romanizationFromSystem(linguisticSystem, p.segment)
 
   return (
     <div className={css.wordPanelContent}>
@@ -68,7 +67,7 @@ export const WordPanel = (p: {
             <>
               <VerticalMorphemicSegmentation
                 segments={p.segment.segments}
-                tagSet={p.tagSet}
+                linguisticSystem={linguisticSystem}
               />
 
               {translation.length ? (
@@ -99,7 +98,7 @@ type Writeable<T> = { -readonly [P in keyof T]: T[P] }
 
 export const VerticalMorphemicSegmentation = (p: {
   segments: Dailp.FormFieldsFragment["segments"]
-  tagSet: TagSet
+  linguisticSystem: Dailp.CherokeeOrthography
 }) => {
   if (!p.segments) {
     return null

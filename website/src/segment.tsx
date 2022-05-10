@@ -1,22 +1,15 @@
 import { Tooltip } from "@reach/tooltip"
 import "@reach/tooltip/styles.css"
 import { Howl } from "howler"
-import React, { Dispatch, SetStateAction, useState } from "react"
+import React from "react"
 import { MdCircle, MdInfoOutline } from "react-icons/md"
 import * as Dailp from "src/graphql/dailp"
 import { DocumentContents } from "src/pages/documents/document.page"
-import { FormAudio } from "./audio-player"
-import { CleanButton, IconButton } from "./components"
+import { CleanButton } from "./components"
 import { romanizationFromSystem } from "./mode"
 import * as css from "./segment.css"
 import { std } from "./sprinkles.css"
-import {
-  BasicMorphemeSegment,
-  PhoneticRepresentation,
-  TagSet,
-  ViewMode,
-  morphemeDisplayTag,
-} from "./types"
+import { BasicMorphemeSegment, ViewMode } from "./types"
 import { WordPanelDetails } from "./word-panel"
 
 type TranslatedPage = NonNullable<DocumentContents["translatedPages"]>[0]
@@ -27,32 +20,29 @@ interface Props {
   segment: Segment
   onOpenDetails: (morpheme: BasicMorphemeSegment) => void
   viewMode: ViewMode
-  tagSet: TagSet
+  linguisticSystem: Dailp.CherokeeOrthography
   pageImages: readonly string[]
-  phoneticRepresentation: PhoneticRepresentation
   wordPanelDetails: WordPanelDetails
 }
 
 export const DocumentPage = (
   p: Omit<Props, "segment"> & { segment: TranslatedPage }
-) => {
-  return (
-    <>
-      {p.segment.pageNumber !== "1" ? (
-        <div
-          id={`document-page-${p.segment.pageNumber}`}
-          className={css.pageBreak}
-          aria-label={`Start of page ${p.segment.pageNumber}`}
-        >
-          Page {p.segment.pageNumber}
-        </div>
-      ) : null}
-      {p.segment.paragraphs.map((paragraph, i) => (
-        <DocumentParagraph key={i} {...p} segment={paragraph} />
-      ))}
-    </>
-  )
-}
+) => (
+  <>
+    {p.segment.pageNumber !== "1" ? (
+      <div
+        id={`document-page-${p.segment.pageNumber}`}
+        className={css.pageBreak}
+        aria-label={`Start of page ${p.segment.pageNumber}`}
+      >
+        Page {p.segment.pageNumber}
+      </div>
+    ) : null}
+    {p.segment.paragraphs.map((paragraph, i) => (
+      <DocumentParagraph key={i} {...p} segment={paragraph} />
+    ))}
+  </>
+)
 
 export const DocumentParagraph = (
   p: Omit<Props, "segment"> & { segment: TranslatedParagraph }
@@ -65,9 +55,8 @@ export const DocumentParagraph = (
           segment={seg as Segment}
           onOpenDetails={p.onOpenDetails}
           viewMode={p.viewMode}
-          tagSet={p.tagSet}
+          linguisticSystem={p.linguisticSystem}
           pageImages={p.pageImages}
-          phoneticRepresentation={p.phoneticRepresentation}
           wordPanelDetails={p.wordPanelDetails}
         />
       )
@@ -111,10 +100,7 @@ export const AnnotatedForm = (
     ) /* This makes sure the word panel updates for changes to the word panel*/
   }
 
-  const romanization = romanizationFromSystem(
-    p.phoneticRepresentation,
-    p.segment
-  )
+  const romanization = romanizationFromSystem(p.linguisticSystem, p.segment)
 
   if (showAnything) {
     const showSegments = p.viewMode >= ViewMode.Segmentation
@@ -145,17 +131,14 @@ export const AnnotatedForm = (
             </div>
           </>
         ) : (
-          <>
-            <FillerLine />
-            <FillerLine />
-          </>
+          <FillerLine />
         )}
         {showSegments ? (
           <MorphemicSegmentation
             segments={p.segment.segments}
             onOpenDetails={p.onOpenDetails}
-            level={p.viewMode}
-            tagSet={p.tagSet}
+            viewMode={p.viewMode}
+            linguisticSystem={p.linguisticSystem}
           />
         ) : null}
         {translation.length ? (
@@ -179,14 +162,6 @@ export const AnnotatedForm = (
     )
   }
 }
-
-const WordCommentaryInfo = (p: { commentary: string }) => (
-  <WithTooltip hint={p.commentary} aria-label="Commentary on this word">
-    <span className={css.infoIcon}>
-      <MdInfoOutline size={20} className={css.linkSvg} />
-    </span>
-  </WithTooltip>
-)
 
 const WithTooltip = (p: {
   hint: string
@@ -214,9 +189,9 @@ const FillerLine = () => (
  */
 export const MorphemicSegmentation = (p: {
   segments: Dailp.FormFieldsFragment["segments"]
-  tagSet: TagSet
+  linguisticSystem: Dailp.CherokeeOrthography
   onOpenDetails: Props["onOpenDetails"]
-  level: ViewMode
+  viewMode: ViewMode
 }) => {
   // If there is no segmentation, return a hard break for the
   // morphemic segmentation and morpheme gloss layers.
@@ -253,7 +228,7 @@ export const MorphemicSegmentation = (p: {
               {i > 0 && segment.previousSeparator}
               <MorphemeSegment
                 segment={segment}
-                tagSet={p.tagSet}
+                linguisticSystem={p.linguisticSystem}
                 onOpenDetails={p.onOpenDetails}
               />
             </React.Fragment>
@@ -267,7 +242,7 @@ export const MorphemicSegmentation = (p: {
 /** One morpheme that can be clicked to see further details. */
 const MorphemeSegment = (p: {
   segment: BasicMorphemeSegment
-  tagSet: TagSet
+  linguisticSystem: Dailp.CherokeeOrthography
   onOpenDetails: Props["onOpenDetails"]
 }) => {
   const matchingTag = p.segment.matchingTag

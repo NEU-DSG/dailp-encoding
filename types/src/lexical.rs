@@ -798,7 +798,7 @@ impl PhonemicString {
                 .join("")
                 .nfc()
                 .to_string(),
-            PhonemicString::Consonant(s) => tth_to_dt(&s, true, Some("xx")),
+            PhonemicString::Consonant(s) => tth_to_dt(&s, true, Some("xx"), false),
             PhonemicString::Vowel(v, ty) => match ty {
                 // Short vowels in CRG match TAOC.
                 ShortLow => v,
@@ -822,9 +822,18 @@ impl PhonemicString {
         use itertools::Itertools;
         match self {
             PhonemicString::Form(all) => all.into_iter().map(|x| x.into_learner()).join(""),
-            PhonemicString::Consonant(s) => tth_to_dt(&s, false, Some("")),
-            PhonemicString::Vowel(v, _ty) => v,
+            PhonemicString::Consonant(s) => tth_to_dt(&s, false, Some(""), true),
+            PhonemicString::Vowel(v, _ty) => reduce_long_vowels(&v).to_owned(),
         }
+    }
+}
+
+fn reduce_long_vowels(input: &str) -> &str {
+    let first_char = input.chars().nth(0).unwrap();
+    if input.chars().all(|c| c == first_char) {
+        &input[0..1]
+    } else {
+        input
     }
 }
 
@@ -889,7 +898,12 @@ pub fn simple_phonetics_to_worcester(input: &str) -> String {
     result.into_owned()
 }
 
-fn tth_to_dt(input: &str, keep_glottal_stops: bool, replace_colons: Option<&str>) -> String {
+fn tth_to_dt(
+    input: &str,
+    keep_glottal_stops: bool,
+    replace_colons: Option<&str>,
+    qu_and_ts: bool,
+) -> String {
     use {
         lazy_static::lazy_static,
         regex::{Captures, Regex},
@@ -902,15 +916,39 @@ fn tth_to_dt(input: &str, keep_glottal_stops: bool, replace_colons: Option<&str>
     let result = TTH_PATTERN.replace_all(input, |cap: &Captures| match &cap[0] {
         "tlh" => "tl",
         "tl" => "dl",
-        "qu" => "gw",
-        "kwh" => "kw",
-        "kw" => "gw",
+        "qu" => {
+            if qu_and_ts {
+                "qu"
+            } else {
+                "gw"
+            }
+        }
+        "kwh" => {
+            if qu_and_ts {
+                "qu"
+            } else {
+                "kw"
+            }
+        }
+        "kw" => {
+            if qu_and_ts {
+                "qu"
+            } else {
+                "gw"
+            }
+        }
         "kh" => "k",
         "th" => "t",
         "ch" => "ch", // Not sure I've ever seen this segment in data before.
         "k" => "g",
         "t" => "d",
-        "c" => "j",
+        "c" => {
+            if qu_and_ts {
+                "ts"
+            } else {
+                "j"
+            }
+        }
         "ʔ" => {
             if keep_glottal_stops {
                 "ʔ"
@@ -927,7 +965,13 @@ fn tth_to_dt(input: &str, keep_glottal_stops: bool, replace_colons: Option<&str>
         }
         // Any other matches we should leave as-is, retaining for example "ts"
         // and "ks" in the d/t representation.
-        "ts" => "j",
+        "ts" => {
+            if qu_and_ts {
+                "ts"
+            } else {
+                "j"
+            }
+        }
         "ks" => "ks",
         _ => unreachable!(),
     });

@@ -1,29 +1,31 @@
 import React, { useContext, useState } from "react"
-import { selectedMode, selectedPhonetics } from "./mode"
-import { PhoneticRepresentation, ViewMode } from "./types"
+import * as Dailp from "src/graphql/dailp"
+import { selectedLinguisticSystem, selectedViewMode } from "./mode"
+import { ViewMode } from "./types"
 
 // Set up context for preferences
 const PreferencesContext = React.createContext({
-  viewMode: ViewMode.Story,
+  viewMode: ViewMode.Pronunciation,
   setViewMode: (p: ViewMode) => {},
-  phoneticRepresentation: PhoneticRepresentation.Dailp,
-  setPhoneticRepresentation: (p: PhoneticRepresentation) => {},
+  linguisticSystem: Dailp.CherokeeOrthography.Learner,
+  setLinguisticSystem: (p: Dailp.CherokeeOrthography) => {},
 })
 
 export const PreferencesProvider = (props: any) => {
   // Some preferences hooks setup
-  const [viewMode, setViewMode] = useState(selectedMode())
-  const [phoneticRepresentation, setPhoneticRepresentation] = useState(
-    selectedPhonetics()
+  const [viewMode, setViewMode] = useState(selectedViewMode())
+  const [linguisticSystem, setLinguisticSystem] = useState(
+    selectedLinguisticSystem()
   )
-  const prefPack = {
-    viewMode: viewMode,
-    setViewMode: setViewMode,
-    phoneticRepresentation: phoneticRepresentation,
-    setPhoneticRepresentation: setPhoneticRepresentation,
-  }
   return (
-    <PreferencesContext.Provider value={prefPack}>
+    <PreferencesContext.Provider
+      value={{
+        viewMode,
+        setViewMode,
+        linguisticSystem,
+        setLinguisticSystem,
+      }}
+    >
       {props.children}
     </PreferencesContext.Provider>
   )

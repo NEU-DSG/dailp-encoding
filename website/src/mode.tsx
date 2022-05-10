@@ -1,7 +1,5 @@
-import { Tooltip } from "@reach/tooltip"
-import cx from "classnames"
 import Cookies from "js-cookie"
-import React, { useContext, useEffect, useState } from "react"
+import React, { useEffect, useState } from "react"
 import { MdClose, MdSettings } from "react-icons/md"
 import { Button } from "reakit/Button"
 import {
@@ -16,16 +14,10 @@ import {
   RadioStateReturn,
   useRadioState,
 } from "reakit/Radio"
-import { std } from "src/sprinkles.css"
-import * as Dailp from "./graphql/dailp"
+import * as Dailp from "src/graphql/dailp"
 import * as css from "./mode.css"
 import { usePreferences } from "./preferences-context"
-import {
-  PhoneticRepresentation,
-  TagSet,
-  ViewMode,
-  tagSetForMode,
-} from "./types"
+import { ViewMode } from "./types"
 
 const notNumber = (l: any) => isNaN(Number(l))
 export const levelNameMapping = {
@@ -41,75 +33,51 @@ export const levelNameMapping = {
     label: "Word Parts",
     details: "Each word broken down into its component parts",
   },
-  [ViewMode.AnalysisDt]: {
-    label: "Analysis (CRG)",
-    details:
-      "Linguistic analysis using terms from Cherokee Reference Grammar (CRG)",
-  },
-  [ViewMode.AnalysisTth]: {
-    label: "Analysis (TAOC)",
-    details:
-      "Linguistic analysis using terms from Tone and Accent in Oklahoma Cherokee (TAOC)",
-  },
 }
 
 export const modeDetails = (mode: ViewMode) => levelNameMapping[mode]
 
-const tagSetMapping = {
-  [TagSet.Crg]: {
+const linguisticSystemMapping = {
+  [Dailp.CherokeeOrthography.Crg]: {
     label: "CRG",
     details:
-      "Cherokee Reference Grammar. A common resource for more advanced students.",
+      "Linguistic analysis using terms from Cherokee Reference Grammar (CRG). In romanizations uses kw, gw, and j.",
   },
-  [TagSet.Learner]: {
-    label: "Study",
-    details: "Simplified tag set for learning Cherokee",
-  },
-  [TagSet.Taoc]: {
+  [Dailp.CherokeeOrthography.Taoc]: {
     label: "TAOC",
     details:
-      "Tone and Accent in Ohlahoma Cherokee. The foundation of DAILP's analysis practices.",
+      "Linguistic analysis using terms from Tone and Accent in Oklahoma Cherokee (TAOC). In romanizations uses kw, gw, and j.",
   },
-  [TagSet.Dailp]: {
-    label: "DAILP",
-    details: "The hybrid terminology that DAILP uses in linguistic analysis",
-  },
-}
-
-const phoneticRepresentationMapping = {
-  [PhoneticRepresentation.Dailp]: {
-    label: "Simple Phonetics",
-    details:
-      "The DAILP simple phonetics, made for learners. Uses kw, gw, and j",
-  },
-  [PhoneticRepresentation.Worcester]: {
-    label: "Worcester Phonetics",
+  [Dailp.CherokeeOrthography.Learner]: {
+    label: "Learner",
     details:
       "A more traditional phonetics view, aligned with the Worcester syllabary. Uses qu and ts.",
   },
-  // [PhoneticRepresentation.Ipa]: {
-  //   label: "IPA",
-  //   details: "The international phonetic alphabet, a way of representing sounds across languages",
-  // },
 }
 
-export const phonDetails = (representation: PhoneticRepresentation) =>
-  phoneticRepresentationMapping[representation]
+export const linguisticSystemDetails = (system: Dailp.CherokeeOrthography) =>
+  linguisticSystemMapping[system]
 
-export const selectedMode = () =>
-  Number.parseInt(Cookies.get("experienceLevel") ?? "0") as ViewMode
+// Avoid changing these keys at all costs, because that will essentially reset
+// saved user preferences.
+const VIEW_MODE_KEY = "experienceLevel"
+const LINGUISTIC_SYSTEM_KEY = "cherokeeSystem"
 
-export const selectedPhonetics = () =>
-  Number.parseInt(Cookies.get("phonetics") ?? "0") as PhoneticRepresentation
+export const selectedViewMode = () =>
+  Number.parseInt(Cookies.get(VIEW_MODE_KEY) ?? "1") as ViewMode
+
+export const selectedLinguisticSystem = (): Dailp.CherokeeOrthography =>
+  (Cookies.get(LINGUISTIC_SYSTEM_KEY) as Dailp.CherokeeOrthography) ??
+  Dailp.CherokeeOrthography.Learner
 
 export const romanizationFromSystem = (
-  system: PhoneticRepresentation,
+  system: Dailp.CherokeeOrthography,
   word: Pick<Dailp.AnnotatedForm, "romanizedSource" | "simplePhonetics">
 ) => {
-  if (system == PhoneticRepresentation.Dailp && word.simplePhonetics) {
+  if (system != Dailp.CherokeeOrthography.Learner && word.simplePhonetics) {
     return word.simplePhonetics
   } else if (
-    system == PhoneticRepresentation.Worcester &&
+    system == Dailp.CherokeeOrthography.Learner &&
     word.romanizedSource
   ) {
     return word.romanizedSource
@@ -121,11 +89,11 @@ export const ExperiencePicker = (p: {
   onSelect: (mode: ViewMode) => void
   id?: string
 }) => {
-  const [value, setValue] = useState(selectedMode())
+  const [value, setValue] = useState(selectedViewMode())
 
-  // Save the selected experience level throughout the session.
+  // Save the selected view mode throughout the session.
   useEffect(() => {
-    Cookies.set("experienceLevel", value.toString(), {
+    Cookies.set(VIEW_MODE_KEY, value.toString(), {
       sameSite: "strict",
       secure: true,
     })
@@ -153,13 +121,13 @@ export const ExperiencePicker = (p: {
 }
 
 export const PhoneticsPicker = (p: {
-  onSelect: (phonetics: PhoneticRepresentation) => void
+  onSelect: (phonetics: Dailp.CherokeeOrthography) => void
 }) => {
-  const [value, setValue] = useState(selectedPhonetics())
+  const [value, setValue] = useState(selectedLinguisticSystem())
 
   // Save the selected representation throughout the session.
   useEffect(() => {
-    Cookies.set("phonetics", value.toString(), {
+    Cookies.set(LINGUISTIC_SYSTEM_KEY, value.toString(), {
       sameSite: "strict",
       secure: true,
     })
@@ -169,68 +137,23 @@ export const PhoneticsPicker = (p: {
     <select
       name="phonetics-picker"
       value={value}
-      onChange={(e) => setValue(Number.parseInt(e.target.value))}
+      onChange={(e) => setValue(e.target.value as Dailp.CherokeeOrthography)}
       aria-label="Romanization"
     >
-      {Object.keys(PhoneticRepresentation)
+      {Object.keys(Dailp.CherokeeOrthography)
         .filter(notNumber)
         .map(function (representation: string) {
-          const selectedPhon =
-            PhoneticRepresentation[
-              representation as keyof typeof PhoneticRepresentation
+          const selectedSystem =
+            Dailp.CherokeeOrthography[
+              representation as keyof typeof Dailp.CherokeeOrthography
             ]
           return (
-            <option value={selectedPhon} key={selectedPhon}>
-              {phonDetails(selectedPhon).label}
+            <option value={selectedSystem} key={selectedSystem}>
+              {linguisticSystemDetails(selectedSystem).label}
             </option>
           )
         })}
     </select>
-  )
-}
-
-export const TagSetPicker = (p: { onSelect: (tagSet: TagSet) => void }) => {
-  const radio = useRadioState({
-    state: tagSetForMode(selectedMode()),
-  })
-
-  useEffect(() => p.onSelect(radio.state as TagSet), [radio.state])
-
-  return (
-    <RadioGroup {...radio} id="tag-set-picker" className={css.levelGroup}>
-      {Object.keys(TagSet)
-        .filter(notNumber)
-        .map(function (tagSet: string) {
-          return <TagSetOption key={tagSet} level={tagSet} radio={radio} />
-        })}
-    </RadioGroup>
-  )
-}
-
-const ExperienceOption = (p: { radio: RadioStateReturn; level: string }) => {
-  const value = ViewMode[p.level as keyof typeof ViewMode]
-  const isSelected = p.radio.state === value
-  return (
-    <Tooltip className={std.tooltip} label={levelNameMapping[value].details}>
-      <label className={cx(css.levelLabel, isSelected && css.highlightedLabel)}>
-        <Radio {...p.radio} value={value} />
-        {"  "}
-        {levelNameMapping[value].label}
-      </label>
-    </Tooltip>
-  )
-}
-
-const TagSetOption = (p: { radio: RadioStateReturn; level: string }) => {
-  const value = TagSet[p.level as keyof typeof TagSet]
-  return (
-    <Tooltip className={std.tooltip} label={tagSetMapping[value].details}>
-      <label className={css.levelLabel}>
-        <Radio {...p.radio} value={value} />
-        {"  "}
-        {tagSetMapping[value].label}
-      </label>
-    </Tooltip>
   )
 }
 
@@ -250,13 +173,10 @@ export const PrefPanel = () => {
       <label>Romanization System:</label>
       <PhoneticsPicker
         aria-described-by={"Selected-Phonetics"}
-        onSelect={preferences.setPhoneticRepresentation}
+        onSelect={preferences.setLinguisticSystem}
       />
       <p id={"Selected-Phonetics"}>
-        {
-          phoneticRepresentationMapping[preferences.phoneticRepresentation]
-            .details
-        }
+        {linguisticSystemMapping[preferences.linguisticSystem].details}
       </p>
     </div>
   )

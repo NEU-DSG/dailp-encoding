@@ -18,7 +18,7 @@ pub enum CherokeeOrthography {
     /// TODO Option for /qu/ instead of /gw/ or /kw/
     Crg,
     /// Simplified system that uses d/t without tones, a compromise intended for
-    /// language learners.
+    /// language learners. qu and ts
     Learner,
 }
 
@@ -182,7 +182,7 @@ mod tests {
         // Test the learner orthography.
         assert_eq!(
             CherokeeOrthography::Learner.convert(orig),
-            "unadodagwasgv'i"
+            "unadodaquasgv'i"
         );
         // Test the CRG orthography.
         assert_eq!(

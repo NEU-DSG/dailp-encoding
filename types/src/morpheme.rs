@@ -84,8 +84,8 @@ impl MorphemeSegment {
 
     /// Convert the source representation of this segment into the given
     /// phonemic writing system.
-    pub fn get_morpheme(&self, system: Option<CherokeeOrthography>) -> Cow<'_, str> {
-        match system {
+    pub fn get_morpheme(&self) -> Cow<'_, str> {
+        match self.system {
             Some(orthography) => Cow::Owned(orthography.convert(&self.morpheme)),
             _ => Cow::Borrowed(&*self.morpheme),
         }
@@ -95,8 +95,8 @@ impl MorphemeSegment {
 #[async_graphql::Object]
 impl MorphemeSegment {
     /// Phonemic representation of the morpheme
-    async fn morpheme(&self, system: Option<CherokeeOrthography>) -> Cow<'_, str> {
-        self.get_morpheme(system)
+    async fn morpheme(&self) -> Cow<'_, str> {
+        self.get_morpheme()
     }
 
     /// English gloss in standard DAILP format that refers to a lexical item
