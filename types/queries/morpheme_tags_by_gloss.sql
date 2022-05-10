@@ -8,8 +8,10 @@ select
   morpheme_tag.description,
   morpheme_tag.segment_type as "segment_type: SegmentType",
   abstract_morpheme_tag.linguistic_type,
-  array(select abstract_morpheme_tag.internal_gloss from unnest(morpheme_tag.abstract_ids) as abstract_id
-        inner join abstract_morpheme_tag on abstract_morpheme_tag.id = abstract_id) as internal_tags
+  array(
+    select abstract_morpheme_tag.internal_gloss
+    from unnest(morpheme_tag.abstract_ids) as abstract_id
+      inner join abstract_morpheme_tag on abstract_morpheme_tag.id = abstract_id) as internal_tags
 from morpheme_gloss
   inner join abstract_morpheme_tag on abstract_morpheme_tag.id = morpheme_gloss.tag_id
   left join abbreviation_system on abbreviation_system.short_name = any($2)
