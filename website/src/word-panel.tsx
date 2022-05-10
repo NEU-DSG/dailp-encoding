@@ -105,7 +105,7 @@ export const VerticalMorphemicSegmentation = (p: {
     // Combine certain morphemes.
     const combinedSegments: typeof p.segments = p.segments.reduce(
       (result, segment) => {
-        if (segment.previousSeparator === ":") {
+        if (segment.segmentType === Dailp.SegmentType.Combine) {
           const lastSegment = result[result.length - 1]!
           result[result.length - 1] = {
             ...lastSegment,

@@ -382,12 +382,12 @@ export type MorphemeSegment = {
   /** Phonemic representation of the morpheme */
   readonly morpheme: Scalars["String"]
   /**
-   * What kind of thing is the next segment?
-   *
    * This field determines what character should separate this segment from
-   * the next one when reconstituting the full segmentation string.
+   * the previous one when reconstituting the full segmentation string.
    */
   readonly previousSeparator: Maybe<Scalars["String"]>
+  /** What kind of thing is this segment? */
+  readonly segmentType: Maybe<SegmentType>
 }
 
 export type Mutation = {
@@ -723,7 +723,10 @@ export type DocumentContentsQuery = { readonly __typename?: "Query" } & {
                                 readonly __typename?: "MorphemeSegment"
                               } & Pick<
                                 MorphemeSegment,
-                                "morpheme" | "gloss" | "previousSeparator"
+                                | "morpheme"
+                                | "gloss"
+                                | "segmentType"
+                                | "previousSeparator"
                               > & {
                                   readonly matchingTag: Maybe<
                                     { readonly __typename?: "TagForm" } & Pick<
@@ -763,7 +766,7 @@ export type DocumentContentsQuery = { readonly __typename?: "Query" } & {
             readonly segments: ReadonlyArray<
               { readonly __typename?: "MorphemeSegment" } & Pick<
                 MorphemeSegment,
-                "morpheme" | "gloss" | "previousSeparator"
+                "morpheme" | "gloss" | "segmentType" | "previousSeparator"
               > & {
                   readonly matchingTag: Maybe<
                     { readonly __typename?: "TagForm" } & Pick<
@@ -799,7 +802,7 @@ export type FormFieldsFragment = {
     readonly segments: ReadonlyArray<
       { readonly __typename?: "MorphemeSegment" } & Pick<
         MorphemeSegment,
-        "morpheme" | "gloss" | "previousSeparator"
+        "morpheme" | "gloss" | "segmentType" | "previousSeparator"
       > & {
           readonly matchingTag: Maybe<
             { readonly __typename?: "TagForm" } & Pick<TagForm, "tag" | "title">
@@ -1031,6 +1034,7 @@ export const FormFieldsFragmentDoc = gql`
         tag
         title
       }
+      segmentType
       previousSeparator
     }
     englishGloss

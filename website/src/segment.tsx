@@ -204,11 +204,10 @@ export const MorphemicSegmentation = (p: {
   // Adapt the segment shape to the chosen experience level.
   let segmentation = ""
   for (const seg of p.segments) {
-    // TODO Use more robust check than looking for ":"
     if (
-      seg.previousSeparator &&
       segmentation.length > 0 &&
-      seg.previousSeparator !== ":"
+      seg.segmentType &&
+      seg.segmentType !== Dailp.SegmentType.Combine
     ) {
       segmentation += seg.previousSeparator
     }

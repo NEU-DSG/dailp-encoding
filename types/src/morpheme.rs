@@ -104,10 +104,13 @@ impl MorphemeSegment {
         &self.gloss
     }
 
-    /// What kind of thing is the next segment?
-    ///
+    /// What kind of thing is this segment?
+    async fn segment_type(&self) -> Option<SegmentType> {
+        self.segment_type
+    }
+
     /// This field determines what character should separate this segment from
-    /// the next one when reconstituting the full segmentation string.
+    /// the previous one when reconstituting the full segmentation string.
     async fn previous_separator(&self) -> Option<&str> {
         self.get_previous_separator()
     }
