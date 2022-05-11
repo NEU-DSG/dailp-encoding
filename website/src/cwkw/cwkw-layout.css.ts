@@ -1,6 +1,5 @@
 import { style } from "@vanilla-extract/css"
 import * as baseLayout from "../layout.css"
-import { colors } from "./theme.css"
 
 export const header = baseLayout.header
 

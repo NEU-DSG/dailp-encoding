@@ -20,6 +20,7 @@ export const themeClass = createTheme(theme, {
     headings: "#e6b469",
     bodyHeadings: "black",
     borders: "darkgray",
+    headerButton: "#fbf6ec",
   },
   fonts: {
     header: `"Quattrocento Sans", "Segoe UI", "Arial", "sans-serif"`,
@@ -28,9 +29,3 @@ export const themeClass = createTheme(theme, {
     smallCaps: "Charis SIL",
   },
 })
-
-export const colors = {
-  ...theme.colors,
-  transparent: "transparent",
-  inherit: "inherit",
-}

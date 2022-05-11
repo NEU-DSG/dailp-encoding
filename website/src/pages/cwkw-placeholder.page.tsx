@@ -1,7 +1,11 @@
+import { Helmet } from "react-helmet"
 import CWKWLayout from "src/cwkw/cwkw-layout"
 
 const CWKWPlaceholderPage = () => (
   <CWKWLayout>
+    <Helmet>
+      <meta name="robots" content="noindex,nofollow" />
+    </Helmet>
     <main>
       <p>This page is a placeholder to show off what cwkw layout looks like</p>
       <p>
