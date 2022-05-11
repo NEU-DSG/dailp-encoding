@@ -26,6 +26,7 @@ export const theme = createThemeContract({
     headings: null,
     bodyHeadings: null,
     borders: null,
+    headerButton: null,
   },
   fonts: {
     header: null,
@@ -41,7 +42,7 @@ export const themeClass = createTheme(theme, {
   },
   colors: {
     header: "#f7eeed",
-    button: "black",
+    button: "#f7eeed",
     buttonHover: lighten(0.2, "#f7eeed"),
     footer: "#405372",
     altFooter: "#4f5970",
@@ -51,6 +52,7 @@ export const themeClass = createTheme(theme, {
     headings: "#9f4c43",
     bodyHeadings: "black",
     borders: "darkgray",
+    headerButton: "black",
   },
   fonts: {
     header: `"Quattrocento Sans", "Segoe UI", "Arial", "sans-serif"`,

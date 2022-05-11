@@ -47,7 +47,10 @@ export const prefButtonShell = style({
   flex: 1,
 })
 
-export const prefButton = style([collPanelButton, { color: colors.button }])
+export const prefButton = style([
+  collPanelButton,
+  { color: colors.headerButton },
+])
 
 export const prefBG = style([
   drawerBg,
