@@ -1,4 +1,4 @@
-import { style } from "@vanilla-extract/css"
+import { style, styleVariants } from "@vanilla-extract/css"
 import { position, rgba } from "polished"
 import sprinkles, {
   colors,
@@ -30,7 +30,7 @@ export const navLink = style([
   paddingY(vspace.quarter),
   paddingX(hspace.char),
   {
-    color: colors.text,
+    color: colors.headerButton,
     borderColor: "transparent",
     textDecoration: "none",
     background: "none",
@@ -42,6 +42,13 @@ export const navLink = style([
     "@media": {
       [mediaQueries.large]: paddingX(hspace.edge),
     },
+  },
+])
+
+export const subMenuItems = style([
+  navLink,
+  {
+    color: "black",
   },
 ])
 
@@ -70,6 +77,7 @@ export const navButton = style([
     background: "none",
     marginRight: hspace.edge,
     height: 32,
+    color: colors.button,
   },
 ])
 
