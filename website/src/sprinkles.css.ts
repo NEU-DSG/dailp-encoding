@@ -26,6 +26,7 @@ export const theme = createThemeContract({
     headings: null,
     bodyHeadings: null,
     borders: null,
+    headerButton: null,
   },
   fonts: {
     header: null,
@@ -51,6 +52,7 @@ export const themeClass = createTheme(theme, {
     headings: "#9f4c43",
     bodyHeadings: "black",
     borders: "darkgray",
+    headerButton: "black",
   },
   fonts: {
     header: `"Quattrocento Sans", "Segoe UI", "Arial", "sans-serif"`,
@@ -343,14 +345,13 @@ export const iconButton = style([
   },
 ])
 
-export const cleanButton = style(  {
-    padding: space.small,
-    background: "none",
-    border: "none",
-    outline: "none",
-    cursor: "pointer",
-    margin: 0,
-  },
-)
+export const cleanButton = style({
+  padding: space.small,
+  background: "none",
+  border: "none",
+  outline: "none",
+  cursor: "pointer",
+  margin: 0,
+})
 
 export const paddedCenterColumn = style([edgePadded, centeredColumn])

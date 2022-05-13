@@ -1,5 +1,6 @@
 import { style, styleVariants } from "@vanilla-extract/css"
 import sprinkles, {
+  colors,
   fullWidth,
   hspace,
   mediaQueries,
@@ -46,7 +47,10 @@ export const prefButtonShell = style({
   flex: 1,
 })
 
-export const prefButton = collPanelButton
+export const prefButton = style([
+  collPanelButton,
+  { color: colors.headerButton },
+])
 
 export const prefBG = style([
   drawerBg,
