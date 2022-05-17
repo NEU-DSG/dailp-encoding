@@ -42,12 +42,12 @@ create table document (
 create table chapter (
   id autouuid primary key,
   chapter_title text not null,
-  document_title text not null,
-  author text not null,
-  document_id bigint,
+  document_title text,
+  author text,
+  document_id text,
   wordpress_id bigint,
   collection_path ltree not null,
-)
+);
 
 create table iiif_source (
   id autouuid primary key,
