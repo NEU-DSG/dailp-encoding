@@ -3,8 +3,6 @@
 
 create extension if not exists "uuid-ossp";
 
-create extension if not exists "ltree";
-
 create domain autouuid uuid default uuid_generate_v4 ();
 
 -- Base website: Language > Group > Document
@@ -37,16 +35,6 @@ create table document (
   is_reference boolean not null,
   written_at date,
   audio_slice_id uuid references media_slice (id) on delete set null
-);
-
-create table chapter (
-  id autouuid primary key,
-  chapter_title text not null,
-  document_title text,
-  author text,
-  document_id text,
-  wordpress_id bigint,
-  collection_path ltree not null,
 );
 
 create table iiif_source (
