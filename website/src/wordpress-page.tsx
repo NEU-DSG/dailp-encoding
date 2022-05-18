@@ -46,7 +46,7 @@ export const WordpressContents = ({ content }: { content: string }) => {
 
 const parseOptions: HTMLReactParserOptions = {
   replace(node) {
-    if (isText(node) && node.data.startsWith("[")) {
+    if (isText(node) && node.data.startsWith("[") && node.data.endsWith("]")) {
       const text = node.data.trim()
       const doc = text.slice(1, 4)
       const start = text.slice(4, 5)
