@@ -46,17 +46,11 @@ export const WordpressContents = ({ content }: { content: string }) => {
 
 const parseOptions: HTMLReactParserOptions = {
   replace(node) {
-    if (isText(node) && node.data.startsWith("[") && node.data.endsWith("]")) {
-      const text = node.data.trim()
-      const doc = text.slice(1, 4)
-      const start = text.slice(4, 5)
-      // if (text.indexOf(":") !== -1)
-      //   return mockfunction(
-      //     doc,
-      //     start,
-      //     text.slice(text.indexOf(":") + 1, text.indexOf(":") + 1)
-      //   )
-      // return mockfunction(doc,start)
+    if (isText(node) && node.data.startsWith("[") && node.data.endsWith("]") && node.data.indexOf(":") !== -1) {
+      const text = node.data.split(/[\[,\],:,-]/).filter((x) => x !== "") // figure out why empty strings in start and end of array
+      console.log(text)
+      if (text.length === 3) return pullWords(text[0], text[1], text[2])
+      return pullWords(text[0], text[1])
     }
 
     // Replace WordPress links with absolute local paths.
@@ -84,4 +78,11 @@ const parseOptions: HTMLReactParserOptions = {
     } */
     return undefined
   },
+}
+function pullWords(
+  arg0: string | undefined,
+  arg1: string | undefined,
+  arg2?: string | undefined
+): false | void | object | JSX.Element | null | undefined {
+  throw new Error("Function not implemented.")
 }
