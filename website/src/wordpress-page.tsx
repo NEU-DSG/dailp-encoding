@@ -48,7 +48,6 @@ const parseOptions: HTMLReactParserOptions = {
   replace(node) {
     if (isText(node) && node.data.startsWith("[") && node.data.endsWith("]") && node.data.indexOf(":") !== -1) {
       const text = node.data.split(/[\[,\],:,-]/).filter((x) => x !== "") // figure out why empty strings in start and end of array
-      console.log(text)
       if (text.length === 3) return pullWords(text[0], text[1], text[2])
       return pullWords(text[0], text[1])
     }
