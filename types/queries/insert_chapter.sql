@@ -10,7 +10,7 @@ with
 new_index_tree as (
     select (select index_tree from chapter where id=$6
     union
-    select slug from collections where id=$6)||$4)
+    select slug from collections where id=$6)||$4::text)
 insert into chapter (
     title, 
     document_id, 
