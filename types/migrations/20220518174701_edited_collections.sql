@@ -1,17 +1,16 @@
 -- Add migration script here
 
--- A file for collections and chapters
+-- A file for collection and chapters
 
 create extension if not exists "ltree";
 
-create table collections (
+create table edited_collection (
   id autouuid primary key,
-  collection_name text not null,
-  collection_desc text,
+  title text not null,
   slug ltree not null unique -- keep it the same type as chapter ltree
 );
 
-create table chapter (
+create table collection_chapter (
   id autouuid primary key,
   title text not null,
   document_id uuid references document(id),
@@ -20,8 +19,8 @@ create table chapter (
   slug text not null
 );
 
-create table chapter_attribution (
-  chapter_id uuid not null references chapter (id) on delete cascade,
+create table collection_chapter_attribution (
+  chapter_id uuid not null references collection_chapter (id) on delete cascade,
   contributor_id uuid not null references contributor (id) on delete cascade,
   contribution_role text not null,
   primary key (chapter_id, contributor_id)
