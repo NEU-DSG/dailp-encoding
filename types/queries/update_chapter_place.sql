@@ -11,6 +11,8 @@ index_tree = (
     select index_tree from chapter where id=$3
     union
     select slug from collections where id=$3
-) || subpath (
-    index_tree, nlevel((select index_tree from current_tree)) - 1) 
+) || subpath ( 
+    $2::text || subpath (index_tree || '0', nlevel((select index_tree from current_tree))), 
+    0, -1
+)
     from chapter where index_tree <@ (select index_tree from current_tree)
