@@ -26,8 +26,3 @@ create table chapter_attribution (
   contribution_role text not null,
   primary key (chapter_id, contributor_id)
 );
-
-create table index_trees (
-  title text not null,
-  index_tree ltree not null
-)
