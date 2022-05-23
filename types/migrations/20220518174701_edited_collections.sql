@@ -16,7 +16,7 @@ create table chapter (
   title text not null,
   document_id uuid references document(id),
   wordpress_id bigint,
-  index_tree ltree not null,
+  index_tree ltree not null unique,
   slug text not null
 );
 
