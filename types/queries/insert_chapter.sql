@@ -8,9 +8,9 @@ $6: ref parent_id
 */
 with 
 new_index_tree as (
-    select (select index_tree from chapter where id=$6
+    select (select index_tree from collection_chapter where id=$6
     union
-    select slug from collections where id=$6)||$4::text)
+    select slug from edited_collection where id=$6)||$4::text)
 insert into chapter (
     title, 
     document_id, 

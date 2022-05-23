@@ -1,10 +1,10 @@
 select 
-    chapter.id
-    chapter.title
-    chapter.document_id
-    chapter.wordpress_id
-    chapter.collection_path
+    collection_chapter.id
+    collection_chapter.title
+    collection_chapter.document_id
+    collection_chapter.wordpress_id
+    collection_chapter.slug
 from 
-    chapter
+    collection_chapter
 where
-    $1 @> chapter.collection_path
+    (select index_tree from collection_chapter where id=$1) @> collection_chapter.collection_path
