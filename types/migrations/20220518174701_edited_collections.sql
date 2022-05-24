@@ -7,6 +7,7 @@ create extension if not exists "ltree";
 create table edited_collection (
   id autouuid primary key,
   title text not null,
+  wordpress_menu_id bigint;
   slug ltree not null unique -- keep it the same type as chapter ltree
 );
 
