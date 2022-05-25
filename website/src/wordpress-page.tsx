@@ -1,14 +1,9 @@
 import parse, {
-  Element,
   HTMLReactParserOptions,
   attributesToProps,
   domToReact,
 } from "html-react-parser"
-import {
-  NodeWithChildren,
-  isText,
-} from "html-react-parser/node_modules/domhandler"
-import { indexOf } from "lodash"
+import { isText } from "html-react-parser/node_modules/domhandler"
 import React from "react"
 import Link from "src/components/link"
 import * as Wordpress from "src/graphql/wordpress"
@@ -46,10 +41,9 @@ export const WordpressContents = ({ content }: { content: string }) => {
 
 const parseOptions: HTMLReactParserOptions = {
   replace(node) {
-    if (isText(node) && node.data.startsWith("[") && node.data.endsWith("]") && node.data.indexOf(":") !== -1) {
-      const text = node.data.split(/[\[,\],:,-]/).filter((x) => x !== "") // figure out why empty strings in start and end of array
-      if (text.length === 3) return pullWords(text[0], text[1], text[2])
-      return pullWords(text[0], text[1])
+    const style = /\[(\w*):([0-9]*)-?([0-9]*)?\]/ // [DocName:Start(:OptionalEnd)]
+    if (isText(node) && node.data.match(style)) {
+      return pullWords(style.exec(node.data))
     }
 
     // Replace WordPress links with absolute local paths.
@@ -78,10 +72,6 @@ const parseOptions: HTMLReactParserOptions = {
     return undefined
   },
 }
-function pullWords(
-  arg0: string | undefined,
-  arg1: string | undefined,
-  arg2?: string | undefined
-): false | void | object | JSX.Element | null | undefined {
-  throw new Error("Function not implemented.")
+function pullWords(array: RegExpExecArray | null): JSX.Element {
+  return <div>full array ${array}</div>
 }
