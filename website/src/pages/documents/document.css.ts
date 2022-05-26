@@ -182,6 +182,7 @@ export const contentSection2 = style([
   sprinkles({ display: { any: "none", medium: "block" } }),
   {
     flex: 1,
+    width: "25vw",
   },
 ])
 

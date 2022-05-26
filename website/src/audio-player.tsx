@@ -24,6 +24,7 @@ export const FormAudio = (
         audioUrl={props.resourceUrl}
         showProgress={!!props.showProgress}
         slices={{ start: props.startTime!, end: props.endTime! }}
+        preload
       />
     </span>
   )
@@ -194,6 +195,7 @@ const FunctionalAudioPlayer = (props: Props) => {
       {props.showProgress && (
         <ProgressBar progress={progress} seek={onSeek} bounds={bounds} />
       )}
+      {howl.state()}
     </div>
   )
 }
