@@ -14,7 +14,7 @@ type BasicMorphemeSegment = NonNullable<Dailp.FormFieldsFragment["segments"]>[0]
 export const MorphemeDetails = (props: {
   documentId: string
   segment: BasicMorphemeSegment
-  linguisticSystem: Dailp.CherokeeOrthography
+  cherokeeRepresentation: Dailp.CherokeeOrthography
   hideDialog: () => void
 }) => {
   // Use the right tag name from the jump.
@@ -28,7 +28,7 @@ export const MorphemeDetails = (props: {
     pause: !props.segment.gloss,
     variables: {
       gloss: props.segment.gloss,
-      system: props.linguisticSystem,
+      system: props.cherokeeRepresentation,
     },
   })
 

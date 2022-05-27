@@ -17,9 +17,9 @@ import Layout from "../layout"
 import { glossarySectionId, morphemeTagId } from "../routes"
 
 const GlossaryPage = () => {
-  const { linguisticSystem } = usePreferences()
+  const { cherokeeRepresentation } = usePreferences()
   const [{ data }] = Dailp.useGlossaryQuery({
-    variables: { system: linguisticSystem },
+    variables: { system: cherokeeRepresentation },
   })
   const tags = data?.allTags
   // Group the tags by type.

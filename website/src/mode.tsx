@@ -1,5 +1,4 @@
-import Cookies from "js-cookie"
-import React, { useEffect, useState } from "react"
+import React, { useEffect } from "react"
 import { MdClose, MdSettings } from "react-icons/md"
 import { Button } from "reakit/Button"
 import {
@@ -36,7 +35,7 @@ export const levelNameMapping = {
 
 export const modeDetails = (mode: ViewMode) => levelNameMapping[mode]
 
-const linguisticSystemMapping = {
+const cherokeeRepresentationMapping = {
   [Dailp.CherokeeOrthography.Learner]: {
     label: "Learner",
     details:
@@ -54,34 +53,19 @@ const linguisticSystemMapping = {
   },
 }
 
-export const linguisticSystemDetails = (system: Dailp.CherokeeOrthography) =>
-  linguisticSystemMapping[system]
-
-// Avoid changing these keys at all costs, because that will essentially reset
-// saved user preferences.
-const VIEW_MODE_KEY = "experienceLevel"
-const LINGUISTIC_SYSTEM_KEY = "cherokeeSystem"
-
-export const selectedViewMode = () =>
-  Number.parseInt(Cookies.get(VIEW_MODE_KEY) ?? "1") as ViewMode
-
-export const selectedLinguisticSystem = (): Dailp.CherokeeOrthography =>
-  (Cookies.get(LINGUISTIC_SYSTEM_KEY) as Dailp.CherokeeOrthography) ??
-  Dailp.CherokeeOrthography.Learner
+export const cherokeeRepresentationDetails = (
+  system: Dailp.CherokeeOrthography
+) => cherokeeRepresentationMapping[system]
 
 export const ExperiencePicker = (p: {
   onSelect: (mode: ViewMode) => void
   id?: string
 }) => {
-  const [value, setValue] = useState(selectedViewMode())
+  const { viewMode: value, setViewMode: setValue } = usePreferences()
 
   // Save the selected view mode throughout the session.
   useEffect(() => {
-    Cookies.set(VIEW_MODE_KEY, value.toString(), {
-      sameSite: "strict",
-      secure: true,
-    })
-    p.onSelect(value as ViewMode)
+    p.onSelect(value)
   }, [value])
   return (
     <select
@@ -102,14 +86,11 @@ export const ExperiencePicker = (p: {
 export const PhoneticsPicker = (p: {
   onSelect: (phonetics: Dailp.CherokeeOrthography) => void
 }) => {
-  const [value, setValue] = useState(selectedLinguisticSystem())
+  const { cherokeeRepresentation: value, setCherokeeRepresentation: setValue } =
+    usePreferences()
 
   // Save the selected representation throughout the session.
   useEffect(() => {
-    Cookies.set(LINGUISTIC_SYSTEM_KEY, value.toString(), {
-      sameSite: "strict",
-      secure: true,
-    })
     p.onSelect(value)
   }, [value])
   return (
@@ -119,11 +100,13 @@ export const PhoneticsPicker = (p: {
       onChange={(e) => setValue(e.target.value as Dailp.CherokeeOrthography)}
       aria-label="Romanization"
     >
-      {Object.entries(linguisticSystemMapping).map(([system, details]) => (
-        <option value={system} key={system}>
-          {details.label}
-        </option>
-      ))}
+      {Object.entries(cherokeeRepresentationMapping).map(
+        ([system, details]) => (
+          <option value={system} key={system}>
+            {details.label}
+          </option>
+        )
+      )}
     </select>
   )
 }
@@ -138,16 +121,19 @@ export const PrefPanel = () => {
         onSelect={preferences.setViewMode}
       />
       <p id={"Selected-ViewMode"}>
-        {levelNameMapping[preferences.viewMode].details}
+        {modeDetails(preferences.viewMode).details}
       </p>
 
       <label>Linguistic System:</label>
       <PhoneticsPicker
         aria-described-by={"Selected-Phonetics"}
-        onSelect={preferences.setLinguisticSystem}
+        onSelect={preferences.setCherokeeRepresentation}
       />
       <p id={"Selected-Phonetics"}>
-        {linguisticSystemMapping[preferences.linguisticSystem].details}
+        {
+          cherokeeRepresentationDetails(preferences.cherokeeRepresentation)
+            .details
+        }
       </p>
     </div>
   )

@@ -150,7 +150,7 @@ const TranslationTab = ({ doc }: { doc: Document }) => {
     setCurrContents: selectAndShowWord,
   }
 
-  const { viewMode, linguisticSystem } = usePreferences()
+  const { viewMode, cherokeeRepresentation } = usePreferences()
 
   return (
     <>
@@ -168,7 +168,7 @@ const TranslationTab = ({ doc }: { doc: Document }) => {
               documentId={doc.id}
               segment={selectedMorpheme}
               hideDialog={closeDialog}
-              linguisticSystem={linguisticSystem}
+              cherokeeRepresentation={cherokeeRepresentation}
             />
           ) : null}
         </DialogContent>
@@ -205,7 +205,7 @@ const TranslationTab = ({ doc }: { doc: Document }) => {
               viewMode: viewMode,
               doc,
               openDetails,
-              linguisticSystem,
+              cherokeeRepresentation,
               wordPanelDetails: wordPanelInfo,
             }}
           />
@@ -228,12 +228,12 @@ const DocumentContents = ({
   viewMode,
   doc,
   openDetails,
-  linguisticSystem,
+  cherokeeRepresentation,
   wordPanelDetails,
 }: {
   doc: Document
   viewMode: ViewMode
-  linguisticSystem: Dailp.CherokeeOrthography
+  cherokeeRepresentation: Dailp.CherokeeOrthography
   openDetails: (morpheme: any) => void
   wordPanelDetails: WordPanelDetails
 }) => {
@@ -241,7 +241,7 @@ const DocumentContents = ({
     variables: {
       slug: doc.slug,
       isReference: doc.isReference,
-      morphemeSystem: linguisticSystem,
+      morphemeSystem: cherokeeRepresentation,
     },
   })
   const docContents = data?.document
@@ -256,7 +256,7 @@ const DocumentContents = ({
           segment={seg}
           onOpenDetails={openDetails}
           viewMode={viewMode}
-          linguisticSystem={linguisticSystem}
+          cherokeeRepresentation={cherokeeRepresentation}
           pageImages={
             doc.translatedPages
               ?.filter((p) => !!p.image)
@@ -271,7 +271,7 @@ const DocumentContents = ({
           segment={form}
           onOpenDetails={openDetails}
           viewMode={viewMode}
-          linguisticSystem={linguisticSystem}
+          cherokeeRepresentation={cherokeeRepresentation}
           pageImages={[]}
           wordPanelDetails={wordPanelDetails}
         />

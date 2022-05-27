@@ -24,7 +24,7 @@ export const WordPanel = (p: {
   setContent: (content: Dailp.FormFieldsFragment | null) => void
   onOpenDetails: (morpheme: BasicMorphemeSegment) => void
 }) => {
-  const { linguisticSystem } = usePreferences()
+  const { cherokeeRepresentation } = usePreferences()
   if (!p.segment) {
     return <p>No word has been selected</p>
   }
@@ -65,7 +65,7 @@ export const WordPanel = (p: {
             <>
               <VerticalMorphemicSegmentation
                 segments={p.segment.segments}
-                linguisticSystem={linguisticSystem}
+                cherokeeRepresentation={cherokeeRepresentation}
               />
 
               {translation.length ? (
@@ -96,7 +96,7 @@ type Writeable<T> = { -readonly [P in keyof T]: T[P] }
 
 export const VerticalMorphemicSegmentation = (p: {
   segments: Dailp.FormFieldsFragment["segments"]
-  linguisticSystem: Dailp.CherokeeOrthography
+  cherokeeRepresentation: Dailp.CherokeeOrthography
 }) => {
   if (!p.segments) {
     return null

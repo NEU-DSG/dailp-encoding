@@ -20,7 +20,7 @@ interface Props {
   segment: Segment
   onOpenDetails: (morpheme: BasicMorphemeSegment) => void
   viewMode: ViewMode
-  linguisticSystem: Dailp.CherokeeOrthography
+  cherokeeRepresentation: Dailp.CherokeeOrthography
   pageImages: readonly string[]
   wordPanelDetails: WordPanelDetails
 }
@@ -55,7 +55,7 @@ export const DocumentParagraph = (
           segment={seg as Segment}
           onOpenDetails={p.onOpenDetails}
           viewMode={p.viewMode}
-          linguisticSystem={p.linguisticSystem}
+          cherokeeRepresentation={p.cherokeeRepresentation}
           pageImages={p.pageImages}
           wordPanelDetails={p.wordPanelDetails}
         />
@@ -144,7 +144,7 @@ export const AnnotatedForm = (
             segments={p.segment.segments}
             onOpenDetails={p.onOpenDetails}
             viewMode={p.viewMode}
-            linguisticSystem={p.linguisticSystem}
+            cherokeeRepresentation={p.cherokeeRepresentation}
           />
         ) : null}
         {translation.length ? (
@@ -195,7 +195,7 @@ const FillerLine = () => (
  */
 export const MorphemicSegmentation = (p: {
   segments: Dailp.FormFieldsFragment["segments"]
-  linguisticSystem: Dailp.CherokeeOrthography
+  cherokeeRepresentation: Dailp.CherokeeOrthography
   onOpenDetails: Props["onOpenDetails"]
   viewMode: ViewMode
 }) => {
@@ -233,7 +233,7 @@ export const MorphemicSegmentation = (p: {
               {i > 0 && segment.previousSeparator}
               <MorphemeSegment
                 segment={segment}
-                linguisticSystem={p.linguisticSystem}
+                cherokeeRepresentation={p.cherokeeRepresentation}
                 onOpenDetails={p.onOpenDetails}
               />
             </React.Fragment>
@@ -247,7 +247,7 @@ export const MorphemicSegmentation = (p: {
 /** One morpheme that can be clicked to see further details. */
 const MorphemeSegment = (p: {
   segment: BasicMorphemeSegment
-  linguisticSystem: Dailp.CherokeeOrthography
+  cherokeeRepresentation: Dailp.CherokeeOrthography
   onOpenDetails: Props["onOpenDetails"]
 }) => {
   const matchingTag = p.segment.matchingTag
