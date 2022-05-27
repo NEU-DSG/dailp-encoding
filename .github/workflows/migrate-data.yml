@@ -55,8 +55,8 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
           aws-security-group-id: ${{ env.ACCESS_SECURITY_GROUP }}
-          port: 27017
-          to-port: 27017
+          port: 22
+          to-port: 22
           protocol: tcp
       - name: Migrate from spreadsheets to database
         # Port forward 5432 to remote database
