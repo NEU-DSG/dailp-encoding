@@ -8,18 +8,18 @@ $6: ref parent_id
 */
 with 
 new_index_tree as (
-    select (select index_tree from collection_chapter where id=$6
+    select (select slug_tree from collection_chapter where id=$6
     union
-    select slug from edited_collection where id=$6)||$4::text)
-insert into chapter (
+    select slug::ltree from edited_collection where id=$6)||$5)
+insert into collection_chapter (
     title, 
     document_id, 
     wordpress_id, 
-    index_tree,
-    slug)
+    index_in_parent,
+    slug_tree)
 select 
     $1,
     $2, 
     $3,
-    cast ((select concat from new_index_tree) as ltree),
-    $5;
+    $4,
+    (select * from new_index_tree)

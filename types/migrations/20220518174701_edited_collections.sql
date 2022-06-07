@@ -7,8 +7,8 @@ create extension if not exists "ltree";
 create table edited_collection (
   id autouuid primary key,
   title text not null,
-  wordpress_menu_id bigint;
-  slug ltree not null unique -- keep it the same type as chapter ltree
+  wordpress_menu_id bigint,
+  slug text not null unique -- keep it the same type as chapter ltree
 );
 
 create table collection_chapter (
@@ -16,8 +16,8 @@ create table collection_chapter (
   title text not null,
   document_id uuid references document(id),
   wordpress_id bigint,
-  index_tree ltree not null unique,
-  slug text not null
+  index_in_parent bigint not null ,
+  slug_tree ltree not null
 );
 
 create table collection_chapter_attribution (
