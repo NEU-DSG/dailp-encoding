@@ -17,7 +17,7 @@ create table collection_chapter (
   document_id uuid references document(id),
   wordpress_id bigint,
   index_in_parent bigint not null ,
-  slug_tree ltree not null
+  chapter_path ltree not null
 );
 
 create table collection_chapter_attribution (

@@ -3,8 +3,8 @@ select
     collection_chapter.title
     collection_chapter.document_id
     collection_chapter.wordpress_id
-    collection_chapter.slug_tree
+    collection_chapter.chapter_path
 from 
     collection_chapter
 where
-    (select slug_tree from collection_chapter where id=$1) @> collection_chapter.slug_tree
+    (select chapter_path from collection_chapter where id=$1) @> collection_chapter.chapter_path
