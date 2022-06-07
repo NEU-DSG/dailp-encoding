@@ -1,2 +1,2 @@
-insert into edited_collection(title, slug)
-values ($1, $2)
+insert into edited_collection(title, wordpress_menu_id, slug)
+values ($1, $2, $3)
