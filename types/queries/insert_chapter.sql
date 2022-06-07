@@ -8,7 +8,7 @@ $6: ref parent_id
 */
 with 
 new_index_tree as (
-    select (select slug_tree from collection_chapter where id=$6
+    select (select chapter_path from collection_chapter where id=$6
     union
     select slug::ltree from edited_collection where id=$6)||$5)
 insert into collection_chapter (
@@ -16,7 +16,7 @@ insert into collection_chapter (
     document_id, 
     wordpress_id, 
     index_in_parent,
-    slug_tree)
+    chapter_path)
 select 
     $1,
     $2, 
