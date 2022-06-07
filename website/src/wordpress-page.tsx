@@ -3,7 +3,6 @@ import parse, {
   attributesToProps,
   domToReact,
 } from "html-react-parser"
-import { isText } from "html-react-parser/node_modules/domhandler"
 import React from "react"
 import Link from "src/components/link"
 import * as Wordpress from "src/graphql/wordpress"
@@ -41,10 +40,23 @@ export const WordpressContents = ({ content }: { content: string }) => {
 
 const parseOptions: HTMLReactParserOptions = {
   replace(node) {
-    const style = /\[(\w*):([0-9]*)-?([0-9]*)?\]/ // [DocName:Start(:OptionalEnd)]
-    if (isText(node) && node.data.match(style)) {
-      return pullWords(style.exec(node.data))
+    const style = /\[(\w*):([0-9]*)-?([0-9]*)?\]/ // [DocName:Start(-OptionalEnd)]
+
+    if ("data" in node) {
+      const segments = node.data.match(style)?.filter((x) => x !== undefined)
+      if (segments) {
+        console.log(segments)
+
+        if (segments?.length === 4) {
+          return pullWords(segments[1]!, segments[2]!, segments[3]!)
+        }
+        if (segments?.length === 3) {
+          return pullWords(segments[1]!, segments[2]!)
+        }
+      }
     }
+
+    // }
 
     // Replace WordPress links with absolute local paths.
     // "https://wp.dailp.northeastern.edu/" => "/"
@@ -61,17 +73,14 @@ const parseOptions: HTMLReactParserOptions = {
           {domToReact(node.children, parseOptions)}
         </Link>
       )
-    } /*  else if (
-      "name" in node &&
-      "attribs" in node &&
-      node.attribs &&
-      node.attribs.startsWith?(wordpressUrl)
-    ) {
-      console.log(node.name)
-    } */
+    }
     return undefined
   },
 }
-function pullWords(array: RegExpExecArray | null): JSX.Element {
-  return <div>full array ${array}</div>
+const pullWords = (
+  docName: string,
+  start: string,
+  end?: string
+): JSX.Element => {
+  return <div>full array</div>
 }
