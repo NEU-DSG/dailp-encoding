@@ -1,5 +1,4 @@
 import parse, {
-  Element,
   HTMLReactParserOptions,
   attributesToProps,
   domToReact,
@@ -41,6 +40,24 @@ export const WordpressContents = ({ content }: { content: string }) => {
 
 const parseOptions: HTMLReactParserOptions = {
   replace(node) {
+    const style = /\[(\w*):([0-9]*)-?([0-9]*)?\]/ // [DocName:Start(-OptionalEnd)]
+
+    if ("data" in node) {
+      const segments = node.data.match(style)?.filter((x) => x !== undefined)
+      if (segments) {
+        console.log(segments)
+
+        if (segments?.length === 4) {
+          return pullWords(segments[1]!, segments[2]!, segments[3]!)
+        }
+        if (segments?.length === 3) {
+          return pullWords(segments[1]!, segments[2]!)
+        }
+      }
+    }
+
+    // }
+
     // Replace WordPress links with absolute local paths.
     // "https://wp.dailp.northeastern.edu/" => "/"
     if (
@@ -59,4 +76,11 @@ const parseOptions: HTMLReactParserOptions = {
     }
     return undefined
   },
+}
+const pullWords = (
+  docName: string,
+  start: string,
+  end?: string
+): JSX.Element => {
+  return <div>full array</div>
 }
