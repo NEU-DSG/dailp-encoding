@@ -19,7 +19,7 @@ futures = "0.3"
 uuid = { version = "0.8.2", default-features = false, features = ["std", "serde"] }
 sqlx = { version = "0.5", features = ["runtime-tokio-rustls", "postgres", "migrate", "macros", "chrono", "json", "uuid", "offline"] }
 lazy_static = "1.4"
-regex = "1.3"
+regex = "1.5"
 unicode-normalization = "0.1"
 chrono = {version = "0.4", features = ["serde"]}
 nom = {version = "6", default-features = false, features = ["std", "bitvec"]}
