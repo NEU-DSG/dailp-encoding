@@ -24,7 +24,7 @@ export const FormAudio = (
         audioUrl={props.resourceUrl}
         showProgress={!!props.showProgress}
         slices={{ start: props.startTime!, end: props.endTime! }}
-        preload
+        preload={true}
       />
     </span>
   )
@@ -175,10 +175,33 @@ const FunctionalAudioPlayer = (props: Props) => {
   }
 
   // Button set up
-  let button
-  if (progress > 0 && progress < 100 && howl.playing())
-    button = <PauseButton howl={howl} />
-  else button = <PlayButton howl={howl} isSprite={!!props.slices} />
+
+  const [soundID, setSoundID] = useState<number>()
+  const startPlay = () => {
+    let spriteID = howl.play(soundID ? soundID : "sound")
+    setSoundID(spriteID)
+  }
+  const pausePlay = () => {
+    howl.pause(soundID)
+  }
+  const togglePlay = () => {
+    howl.playing() ? pausePlay() : startPlay()
+  }
+  const pauseButton = (
+    <MdPauseCircleOutline size={buttonSize} onClick={togglePlay} />
+  )
+  const playButton = (
+    <MdPlayCircleOutline size={buttonSize} onClick={togglePlay} />
+  )
+  const [buttonIcon, setButtonIcon] = useState(playButton)
+  const button = buttonIcon
+  useEffect(() => {
+    howl.playing() ? setButtonIcon(pauseButton) : setButtonIcon(playButton)
+  })
+
+  useEffect(() => {
+    props.slices ? howl.seek(props.slices.start / 1000) : null
+  }, [props.slices])
 
   const bounds = props.slices
     ? {
@@ -195,7 +218,6 @@ const FunctionalAudioPlayer = (props: Props) => {
       {props.showProgress && (
         <ProgressBar progress={progress} seek={onSeek} bounds={bounds} />
       )}
-      {howl.state()}
     </div>
   )
 }
