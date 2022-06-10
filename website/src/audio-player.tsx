@@ -1,6 +1,7 @@
 import cx from "classnames"
 import { Howl } from "howler"
 import React, { useEffect, useState } from "react"
+import { FiLoader } from "react-icons/fi"
 import { MdPauseCircleOutline, MdPlayCircleOutline } from "react-icons/md"
 import * as Dailp from "src/graphql/dailp"
 import { hideOnPrint } from "src/sprinkles.css"
@@ -193,10 +194,15 @@ const FunctionalAudioPlayer = (props: Props) => {
   const playButton = (
     <MdPlayCircleOutline size={buttonSize} onClick={togglePlay} />
   )
+  const loadIcon = <FiLoader size={buttonSize} />
   const [buttonIcon, setButtonIcon] = useState(playButton)
   const button = buttonIcon
   useEffect(() => {
-    howl.playing() ? setButtonIcon(pauseButton) : setButtonIcon(playButton)
+    howl.playing()
+      ? setButtonIcon(pauseButton)
+      : howl.state() == "loading"
+      ? setButtonIcon(loadIcon)
+      : setButtonIcon(playButton)
   })
 
   useEffect(() => {
