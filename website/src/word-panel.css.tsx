@@ -75,6 +75,7 @@ export const wordPanelContent = style({
       height: "calc(100vh - 125px)",
     },
   },
+  height: "100vh",
   overflowY: "auto",
 })
 
