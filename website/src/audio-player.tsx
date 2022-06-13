@@ -1,6 +1,6 @@
 import cx from "classnames"
 import { Howl } from "howler"
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useMemo, useState } from "react"
 import { FiLoader } from "react-icons/fi"
 import { MdPauseCircleOutline, MdPlayCircleOutline } from "react-icons/md"
 import * as Dailp from "src/graphql/dailp"
@@ -136,22 +136,35 @@ class AudioPlayer extends React.Component<
 
 const FunctionalAudioPlayer = (props: Props) => {
   const [progress, setProgress] = useState(0)
-  const [howl, setHowl] = useState(
-    new Howl({
-      src: [props.audioUrl],
-      html5: true,
-      format: [".wav"],
-      preload: props.preload || false,
-      onplay: () => {
-        onPlay()
-      }, // What happens when a sound starts playing?
-      onend: () => {}, // What happens when a sound finishes playing?
-      onpause: () => {}, // What happens when a sound is paused?
-      onseek: () => {}, // What happens when a sound seeks?
-    })
+  const howl = useMemo(
+    () =>
+      new Howl({
+        src: [props.audioUrl],
+        html5: true,
+        format: [".wav"],
+        preload: props.preload || false,
+        onplay: () => {
+          onPlay()
+        }, // What happens when a sound starts playing?
+        onend: () => {
+          onEnd()
+        }, // What happens when a sound finishes playing?
+        onpause: () => {
+          onPause()
+        }, // What happens when a sound is paused?
+        onseek: () => {}, // What happens when a sound seeks?
+      }),
+    [props]
   )
   const onPlay = () => {
     requestAnimationFrame(nextStep)
+    setIsPlaying(true)
+  }
+  const onPause = () => {
+    setIsPlaying(false)
+  }
+  const onEnd = () => {
+    setIsPlaying(false)
   }
   const nextStep = () => {
     let seek = howl.seek() || 0
@@ -176,7 +189,7 @@ const FunctionalAudioPlayer = (props: Props) => {
   }
 
   // Button set up
-
+  const [isPlaying, setIsPlaying] = useState(false)
   const [soundID, setSoundID] = useState<number>()
   const startPlay = () => {
     let spriteID = howl.play(soundID ? soundID : "sound")
@@ -185,25 +198,18 @@ const FunctionalAudioPlayer = (props: Props) => {
   const pausePlay = () => {
     howl.pause(soundID)
   }
-  const togglePlay = () => {
-    howl.playing() ? pausePlay() : startPlay()
-  }
   const pauseButton = (
-    <MdPauseCircleOutline size={buttonSize} onClick={togglePlay} />
+    <MdPauseCircleOutline size={buttonSize} onClick={pausePlay} />
   )
   const playButton = (
-    <MdPlayCircleOutline size={buttonSize} onClick={togglePlay} />
+    <MdPlayCircleOutline size={buttonSize} onClick={startPlay} />
   )
   const loadIcon = <FiLoader size={buttonSize} />
-  const [buttonIcon, setButtonIcon] = useState(playButton)
-  const button = buttonIcon
-  useEffect(() => {
-    howl.playing()
-      ? setButtonIcon(pauseButton)
-      : howl.state() == "loading"
-      ? setButtonIcon(loadIcon)
-      : setButtonIcon(playButton)
-  })
+  const button = isPlaying
+    ? pauseButton
+    : howl.state() == "loading"
+    ? loadIcon
+    : playButton
 
   useEffect(() => {
     props.slices ? howl.seek(props.slices.start / 1000) : null
