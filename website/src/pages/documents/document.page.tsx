@@ -188,8 +188,6 @@ const TranslationTab = ({ doc }: { doc: Document }) => {
           as="nav"
           className={css.mobileWordPanel}
           aria-label="Word Panel Drawer"
-          preventBodyScroll={false}
-          hideOnClickOutside={false}
         >
           <WordPanel
             segment={wordPanelInfo.currContents}
