@@ -274,7 +274,7 @@ impl SheetResult {
     /// Parse this sheet as a document metadata listing.
     pub async fn into_metadata(
         self,
-        db: &dailp::Database,
+        db: Option<&dailp::Database>,
         is_reference: bool,
         order_index: i64,
     ) -> Result<DocumentMetadata> {
@@ -360,7 +360,8 @@ impl SheetResult {
                     .await?
                     .into_translation(),
             ),
-            page_images: if let (Some(ids), Some(source)) = (image_ids, image_source) {
+            page_images: if let (Some(db), Some(ids), Some(source)) = (db, image_ids, image_source)
+            {
                 db.image_source_by_title(&source)
                     .await?
                     .map(|source| dailp::IiifImages {
@@ -493,7 +494,10 @@ pub struct AnnotatedLine {
 }
 
 impl<'a> AnnotatedLine {
-    pub fn many_from_semantic(lines: &[SemanticLine], meta: &DocumentMetadata) -> Vec<Self> {
+    pub fn many_from_semantic(
+        lines: &[SemanticLine],
+        meta: &DocumentMetadata,
+    ) -> Result<Vec<Self>> {
         let mut word_index = 1;
         lines
             .iter()
@@ -531,10 +535,10 @@ impl<'a> AnnotatedLine {
                     .get(7)
                     .expect(&format!("No commentary for line {}", line_num));
                 // For each word, extract the necessary data from every row.
-                let words = (0..num_words)
+                let words: Result<Vec<_>> = (0..num_words)
                     // Only use words with a syllabary source entry.
                     .filter(|i| source_row.items.get(*i).is_some())
-                    .map(|i| {
+                    .map(|i| -> Result<AnnotatedForm> {
                         let source_text = &source_row.items[i];
                         let pb = source_text.find(PAGE_BREAK);
                         let morphemes = morpheme_row.items.get(i);
@@ -571,26 +575,29 @@ impl<'a> AnnotatedLine {
                                 .or_else(|| source_text.find(LINE_BREAK))
                                 .map(|i| i as i32),
                             date_recorded: None,
-                            audio_track: if meta.audio_recording.is_some() // if audio file and annotation exists
-                                 && meta.audio_recording.clone().unwrap().annotations.is_some()
+                            audio_track: if let Some(annotations) = meta
+                                .audio_recording
+                                .as_ref()
+                                .and_then(|audio| audio.annotations.as_ref())
                             {
                                 Some(
-                                    meta.audio_recording.clone().unwrap().annotations.unwrap()
-                                        [(word_index - 1) as usize]
-                                        .clone(),
+                                    annotations
+                                        .get((word_index - 1) as usize)
+                                        .cloned()
+                                        .ok_or(anyhow::anyhow!("Missing audio"))?,
                                 )
                             } else {
                                 None
                             },
                         };
                         word_index += 1;
-                        w
+                        Ok(w)
                     })
                     .collect();
-                Self {
-                    words,
+                Ok(Self {
+                    words: words?,
                     ends_page: line.ends_page,
-                }
+                })
             })
             .collect()
     }
