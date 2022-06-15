@@ -584,7 +584,13 @@ impl<'a> AnnotatedLine {
                                     annotations
                                         .get((word_index - 1) as usize)
                                         .cloned()
-                                        .ok_or(anyhow::anyhow!("Missing audio"))?,
+                                        .ok_or_else(|| {
+                                            anyhow::anyhow!(
+                                                "Missing audio for word {} in {}",
+                                                word_index,
+                                                meta.short_name
+                                            )
+                                        })?,
                                 )
                             } else {
                                 None
