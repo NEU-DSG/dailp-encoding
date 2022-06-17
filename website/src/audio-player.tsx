@@ -56,38 +56,43 @@ interface Props {
 }
 
 const AudioComponent = (props: Props) => {
-  const audio = useRef(new Audio(props.audioUrl))
+  const audio = useMemo(
+    () => new Audio(props.audioUrl),
+    [props.audioUrl, props.slices]
+  )
 
   const [progress, setProgress] = useState(0)
-  const [loadStatus, setLoadStatus] = useState(0)
+  const [loadStatus, setLoadStatus] = useState(false)
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setProgress(audio.current.currentTime)
-      setLoadStatus(audio.current.readyState)
+      setProgress(audio.currentTime)
     }, 100)
     return () => clearInterval(interval)
-  }, [])
+  }, [audio])
 
   const [start, end] = props.slices
     ? [props.slices.start / 1000, props.slices.end / 1000]
-    : [0, audio.current.duration]
+    : [0, audio.duration]
 
   const [isPlaying, setIsPlaying] = useState(false)
 
   useEffect(() => {
     if (isPlaying) {
-      audio.current.play()
-      console.log("bruh")
+      audio.play()
     } else {
-      audio.current.pause()
+      audio.pause()
     }
   }, [isPlaying])
 
   const setPlayStart = () => {
-    audio.current.currentTime = props.slices
-      ? (audio.current.currentTime = props.slices.start / 1000)
+    audio.currentTime = props.slices
+      ? (audio.currentTime = props.slices.start / 1000)
       : 0
+  }
+
+  audio.oncanplaythrough = () => {
+    setLoadStatus(true)
   }
 
   useEffect(() => {
@@ -99,11 +104,11 @@ const AudioComponent = (props: Props) => {
       setIsPlaying(false)
       setPlayStart()
     }
-  }, [progress])
+  }, [progress, end])
 
   return (
     <div className="audio-controls">
-      {loadStatus >= audio.current.HAVE_FUTURE_DATA ? (
+      {loadStatus ? (
         isPlaying ? (
           <MdPauseCircleOutline
             size={buttonSize}
