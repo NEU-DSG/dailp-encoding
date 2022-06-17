@@ -1,3 +1,5 @@
+#![allow(missing_docs)]
+
 use crate::{DocumentId, FormId, Geometry};
 use serde::{Deserialize, Serialize};
 
@@ -6,11 +8,16 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Annotation {
+    /// Database ID
     pub id: AnnotationId,
+    /// The text content of this annotation
     pub content: String,
+    /// What is this annotation attached to? Perhaps a word or this could be a reply to another
+    /// annotation.
     pub attached_to: AnnotationAttachment,
 }
 
+/// Database ID for a single annotation
 #[derive(Serialize, Deserialize, PartialEq, Clone, Hash)]
 pub struct AnnotationId(pub String);
 

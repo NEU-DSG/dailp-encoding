@@ -6,13 +6,20 @@ use async_graphql::{dataloader::DataLoader, FieldResult};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
+/// A document with associated metadata and content broken down into pages and further into
+/// paragraphs with an English translation. Also supports each word being broken down into
+/// component parts and having associated notes.
 #[derive(Serialize, Deserialize, Clone)]
 pub struct AnnotatedDoc {
+    /// All non-content metadata about this document
     #[serde(flatten)]
     pub meta: DocumentMetadata,
+    /// The meat of the document, all the pages which contain its contents.
     pub segments: Option<Vec<TranslatedPage>>,
 }
+
 impl AnnotatedDoc {
+    /// Build a document from its metadata and raw contents.
     pub fn new(meta: DocumentMetadata, segments: Vec<Vec<Vec<AnnotatedSeg>>>) -> Self {
         // Skip the first block of the translation, since this usually contains
         // the header and information for translators and editors.
@@ -68,6 +75,7 @@ impl AnnotatedDoc {
         &self.meta.sources
     }
 
+    /// Breadcrumbs from the top-level archive down to where this document lives.
     async fn breadcrumbs(
         &self,
         context: &async_graphql::Context<'_>,
@@ -178,26 +186,34 @@ impl AnnotatedDoc {
     }
 }
 
+/// Key to retrieve the pages of a document given a document ID
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct PagesInDocument(pub Uuid);
 
+/// One page of an [`AnnotatedDoc`]
 #[derive(Clone)]
 pub struct DocumentPage {
+    /// Database ID
     pub id: Uuid,
+    /// One-indexed page number
     pub page_number: String,
+    /// Resource of the image of this page
     pub image: Option<PageImage>,
 }
 
 #[async_graphql::Object]
 impl DocumentPage {
+    /// One-indexed page number
     async fn page_number(&self) -> &str {
         &self.page_number
     }
 
+    /// Scan of this page as a IIIF resource, if there is one
     async fn image(&self) -> &Option<PageImage> {
         &self.image
     }
 
+    /// Contents of this page as a list of paragraphs
     async fn paragraphs(
         &self,
         context: &async_graphql::Context<'_>,
@@ -214,18 +230,19 @@ impl DocumentPage {
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct ParagraphsInPage(pub Uuid);
 
+/// One paragraph within a [`DocumentPage`]
 #[derive(Clone)]
 pub struct DocumentParagraph {
+    /// Database ID
     pub id: Uuid,
+    /// English translation of the whole paragraph
     pub translation: String,
 }
 
 #[async_graphql::Object]
 impl DocumentParagraph {
-    pub async fn source(
-        &self,
-        context: &async_graphql::Context<'_>,
-    ) -> FieldResult<Vec<AnnotatedSeg>> {
+    /// Source text of the paragraph broken down into words
+    async fn source(&self, context: &async_graphql::Context<'_>) -> FieldResult<Vec<AnnotatedSeg>> {
         Ok(context
             .data::<DataLoader<Database>>()?
             .load_one(WordsInParagraph(self.id))
@@ -233,33 +250,46 @@ impl DocumentParagraph {
             .unwrap_or_default())
     }
 
-    pub async fn translation(&self) -> &str {
+    /// English translation of the whole paragraph
+    async fn translation(&self) -> &str {
         &self.translation
     }
 }
 
+/// Key to query the words within a paragraph given its database ID
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct WordsInParagraph(pub Uuid);
 
+/// The kind of a document in terms of what body it lives within. A reference
+/// document is a dictionary or grammar for example, while a corpus document
+/// might be a letter, journal, or notice.
 #[derive(async_graphql::Enum, Clone, Copy, PartialEq, Eq)]
 pub enum DocumentType {
+    /// Reference document, like a dictionary or grammar
     Reference,
+    /// Corpus text: a letter, journal, book, story, meeting minutes, etc.
     Corpus,
 }
 
+/// One page of a document containing one or more paragraphs
 #[derive(async_graphql::SimpleObject, Serialize, Deserialize, Clone)]
 pub struct TranslatedPage {
+    /// The paragraphs of content that make up this single page
     pub paragraphs: Vec<TranslatedSection>,
 }
 
+/// A single document image from a IIIF source
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct PageImage {
+    /// Database ID of the image source
     pub source_id: ImageSourceId,
+    /// Remote IIIF OID of the image
     pub oid: String,
 }
 
 #[async_graphql::Object]
 impl PageImage {
+    /// The IIIF source this page image comes from
     pub async fn source(
         &self,
         context: &async_graphql::Context<'_>,
@@ -271,7 +301,8 @@ impl PageImage {
             .ok_or_else(|| anyhow::format_err!("Image source not found"))?)
     }
 
-    async fn url(
+    /// The full IIIF url for this image resource
+    pub async fn url(
         &self,
         context: &async_graphql::Context<'_>,
     ) -> async_graphql::FieldResult<String> {
@@ -280,6 +311,7 @@ impl PageImage {
     }
 }
 
+/// One paragraph within a document with source text and overall English translation.
 #[derive(async_graphql::SimpleObject, Serialize, Deserialize, Clone)]
 pub struct TranslatedSection {
     /// Translation of this portion of the source text.
@@ -292,14 +324,18 @@ pub struct TranslatedSection {
 // documents: [{ meta, pages: [{ lines: [{ index, words }] }] }]
 // Basic to start: [{meta, lines: [{ index, words }]}]
 
+/// Element within a spreadsheet before being transformed into a full document.
 #[derive(Debug, async_graphql::Union, Serialize, Deserialize, Clone)]
 #[serde(tag = "type")]
 pub enum AnnotatedSeg {
+    /// A single annotated word
     Word(AnnotatedForm),
+    /// The beginning of a new line
     LineBreak(LineBreak),
     // PageBreak(PageBreak),
 }
 impl AnnotatedSeg {
+    /// If this segment is a word, return the inner [`AnnotatedForm`] otherwise `None`.
     pub fn form(&self) -> Option<&AnnotatedForm> {
         use AnnotatedSeg::*;
         match self {
@@ -310,13 +346,19 @@ impl AnnotatedSeg {
     }
 }
 
+/// Start of a new line
 #[derive(Debug, async_graphql::SimpleObject, Serialize, Deserialize, Clone)]
 pub struct LineBreak {
+    /// Index of this line break within the document. i.e. Indicates the start
+    /// of line X.
     pub index: i32,
 }
 
+/// Start of a new page
 #[derive(Debug, async_graphql::SimpleObject, Serialize, Deserialize, Clone)]
 pub struct PageBreak {
+    /// Index of this page break within the document. i.e. Indicates the start
+    /// of page X.
     pub index: i32,
 }
 
@@ -324,6 +366,7 @@ pub struct PageBreak {
 /// TODO Make more of these fields on-demand.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct DocumentMetadata {
+    /// Database ID
     pub id: DocumentId,
     /// Official short identifier.
     pub short_name: String,
@@ -336,6 +379,7 @@ pub struct DocumentMetadata {
     pub sources: Vec<SourceAttribution>,
     /// Where the source document came from, maybe the name of a collection.
     pub collection: Option<String>,
+    /// The genre this document is. TODO Evaluate whether we need this.
     pub genre: Option<String>,
     #[serde(default)]
     /// The people involved in collecting, translating, annotating.
@@ -346,6 +390,7 @@ pub struct DocumentMetadata {
     /// URL for an image of the original physical document.
     #[serde(default)]
     pub page_images: Option<IiifImages>,
+    /// The date this document was produced (or `None` if unknown)
     pub date: Option<Date>,
     /// Whether this document is a reference, therefore just a list of forms.
     pub is_reference: bool,
@@ -358,41 +403,50 @@ pub struct DocumentMetadata {
     pub order_index: i64,
 }
 
+/// Database ID for one document
 #[derive(
     Clone, Copy, Eq, PartialEq, Hash, Serialize, Deserialize, Debug, async_graphql::NewType, Default,
 )]
 pub struct DocumentId(pub Uuid);
 
+/// Database ID for an image source
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct ImageSourceId(pub Uuid);
 
+/// A IIIF server we use as an image source
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ImageSource {
+    /// Database ID for this source
     pub id: ImageSourceId,
+    /// Base URL for the IIIF server
     pub url: String,
 }
 #[async_graphql::Object]
 impl ImageSource {
-    // async fn id(&self) -> &str {
-    //     &self.id.0
-    // }
+    /// Base URL for the IIIF server
     async fn url(&self) -> &str {
         &self.url
     }
 }
 
+/// Collection of images coming from a IIIF source. Generally used to represent
+/// the scans of multi-page manuscripts sourced from libraries/archives.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct IiifImages {
+    /// Database ID for the image source
     pub source: ImageSourceId,
+    /// Remote IIIF OIDs for the images
     pub ids: Vec<String>,
 }
 impl IiifImages {
+    /// Number of images in this collection
     pub fn count(&self) -> usize {
         self.ids.len()
     }
 }
 #[async_graphql::Object]
 impl IiifImages {
+    /// Information about the data source for this set of images
     pub async fn source(
         &self,
         context: &async_graphql::Context<'_>,
@@ -404,6 +458,7 @@ impl IiifImages {
             .ok_or_else(|| anyhow::format_err!("Image source not found"))?)
     }
 
+    /// List of urls for all the images in this collection
     async fn urls(
         &self,
         context: &async_graphql::Context<'_>,
@@ -417,12 +472,17 @@ impl IiifImages {
     }
 }
 
+/// Reference to a document collection
 #[derive(Clone, Serialize, Deserialize)]
 pub struct DocumentCollection {
+    /// General title of the collection
     pub title: String,
+    /// Unique slug used to generate URL paths
     pub slug: String,
 }
 impl DocumentCollection {
+    /// Create a collection reference using the given title and generating a
+    /// slug from it.
     pub fn from_name(name: String) -> Self {
         Self {
             slug: slug::slugify(&name),
@@ -458,18 +518,26 @@ impl DocumentCollection {
     }
 }
 
+/// Reference to a document with a limited subset of fields, namely no contents
+/// of the document.
 #[derive(Clone, async_graphql::SimpleObject)]
 #[graphql(complex)]
 pub struct DocumentReference {
+    /// Database ID for the document
     pub id: Uuid,
+    /// Unique short name
     pub short_name: String,
+    /// Long title of the document
     pub title: String,
+    /// Date the document was produced (or `None` if unknown)
     pub date: Option<Date>,
+    /// Index of the document within its group, used purely for ordering
     pub order_index: i64,
 }
 
 #[async_graphql::ComplexObject]
 impl DocumentReference {
+    /// URL slug for this document
     pub async fn slug(&self) -> String {
         slug::slugify(&self.short_name)
     }
