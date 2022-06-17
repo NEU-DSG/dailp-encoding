@@ -7181,8 +7181,6 @@ export enum TimezoneEnum {
   AustraliaBrisbane = "AUSTRALIA_BRISBANE",
   /** Broken Hill */
   AustraliaBrokenHill = "AUSTRALIA_BROKEN_HILL",
-  /** Currie */
-  AustraliaCurrie = "AUSTRALIA_CURRIE",
   /** Darwin */
   AustraliaDarwin = "AUSTRALIA_DARWIN",
   /** Eucla */
@@ -7355,8 +7353,6 @@ export enum TimezoneEnum {
   PacificEaster = "PACIFIC_EASTER",
   /** Efate */
   PacificEfate = "PACIFIC_EFATE",
-  /** Enderbury */
-  PacificEnderbury = "PACIFIC_ENDERBURY",
   /** Fakaofo */
   PacificFakaofo = "PACIFIC_FAKAOFO",
   /** Fiji */
@@ -7373,6 +7369,8 @@ export enum TimezoneEnum {
   PacificGuam = "PACIFIC_GUAM",
   /** Honolulu */
   PacificHonolulu = "PACIFIC_HONOLULU",
+  /** Kanton */
+  PacificKanton = "PACIFIC_KANTON",
   /** Kiritimati */
   PacificKiritimati = "PACIFIC_KIRITIMATI",
   /** Kosrae */

@@ -1,146 +1,176 @@
-import React, { FormEvent, useContext, useState } from "react"
-import { centeredColumn } from "src/sprinkles.css"
-import { centeredForm, loginFormBox, loginHeader, positionButton, skinnyWidth, submitButton } from "./login.css"
-import Layout from "../layout"
-import Link from "src/components/link"
-import { UserContext } from "src/auth"
-
+import { CognitoUser } from "amazon-cognito-identity-js"
+import React from "react"
 import {
-  CognitoUserPool,
-  CognitoUser,
-  AuthenticationDetails
-} from 'amazon-cognito-identity-js'
+  unstable_Form as Form,
+  unstable_FormInput as FormInput,
+  unstable_FormLabel as FormLabel,
+  unstable_FormMessage as FormMessage,
+  unstable_FormSubmitButton as FormSubmitButton,
+  unstable_FormStateReturn,
+  unstable_useFormState as useFormState,
+} from "reakit/Form"
+import { Popover, PopoverDisclosure, usePopoverState } from "reakit/Popover"
+import { useUser } from "src/auth"
+import Link from "src/components/link"
+import { centeredColumn } from "src/sprinkles.css"
+import Layout from "../layout"
+import {
+  centeredForm,
+  loginFormBox,
+  loginHeader,
+  logoutPopover,
+  positionButton,
+  skinnyWidth,
+  submitButton,
+} from "./login.css"
+import { ResetLink } from "./reset-password.page"
 
-const userPool = new CognitoUserPool({
-  UserPoolId: process.env["DAILP_USER_POOL"] ?? "",
-  ClientId: process.env["DAILP_USER_POOL_CLIENT"] ?? "",
-});
+interface FormFieldsType {
+  form: unstable_FormStateReturn<any | undefined>
+  name: any
+  label: string
+  type?: string | undefined
+  placeholder: string
+}
+
+export const FormFields = ({
+  form,
+  name,
+  label,
+  type,
+  placeholder,
+}: FormFieldsType) => {
+  return (
+    <>
+      <FormLabel {...form} name={name} label={label} />
+
+      <FormInput
+        {...form}
+        name={name}
+        className={loginFormBox}
+        type={type}
+        placeholder={placeholder}
+      />
+    </>
+  )
+}
 
 const LoginPage = () => {
+  const { loginUser } = useUser().operations
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-
-  // gets the user and its setUser from the context, to update info on the current user
-  const context = useContext(UserContext);
-
-  function submitLogin(e: FormEvent<HTMLFormElement>, username: string, password: string) {
-    e.preventDefault();
-
-    const user = new CognitoUser({
-      Username: username,
-      Pool: userPool,
-    })
-
-    const authDetails = new AuthenticationDetails({
-      Username: username,
-      Password: password,
-    })
-
-    // logs in the user with the authentication details
-    user.authenticateUser(authDetails, {
-      onSuccess: (data) => {
-        console.log('Login success. Result: ', data);
-        alert("Login successful");
-
-        context.setUser(user);
-      },
-      onFailure: (data) => {
-        console.error('Login failed. Result: ', data);
-        alert("Login failed");
-      },
-      newPasswordRequired: (data) => {
-        console.log('New password required. Result: ', data);
-        alert("New password is required");
+  const loginForm = useFormState({
+    values: { username: "", password: "" },
+    onValidate: (values) => {
+      if (!values.username || !values.password) {
+        throw (
+          (!values.username && { username: "A username is required" }) || {
+            password: "A password is required",
+          }
+        )
       }
-    });
+    },
+    onSubmit: (values) => {
+      loginUser(values.username, values.password)
+    },
+  })
 
-  }
+  return (
+    <Layout>
+      <main className={skinnyWidth}>
+        <header>
+          <h1 className={centeredColumn}>Login to Your Account</h1>
+          <h4>
+            Login to contribute to the archive by transcribing documents,
+            recording pronunciations, providing cultural commentary, and more.
+          </h4>
+        </header>
 
-  return (<Layout>
-    <main className={skinnyWidth}>
-      <header>
-        <h1 className={centeredColumn}>Login to Your Account</h1>
-        <h4>Login to contribute to the archive by transcribing documents, recording pronunciations, providing cultural commentary, and more.</h4>
-      </header>
+        <Form {...loginForm} className={centeredForm}>
+          <FormFields
+            form={loginForm}
+            name="username"
+            label="Email *"
+            placeholder="mail@website.com"
+          />
 
-      <form className={centeredForm} onSubmit={e => submitLogin(e, email, password)}>
-        <div >
-          <label>
-            Email *</label>
-          <input
-            className={loginFormBox}
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            placeholder="mail@website.com" />
-        </div>
-
-        <div>
-          <label>
-            Password *</label>
-          <input
-            className={loginFormBox}
+          <FormFields
+            form={loginForm}
+            name="password"
+            label="Password *"
             type="password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            placeholder="enter password" />
-        </div>
+            placeholder="enter password"
+          />
 
-        {/* TODO: */}
-        <div>
-          <label>
-            Forgot your password? <Link href="/reset-password">Reset password</Link>
-          </label>
-        </div>
+          <FormMessage {...loginForm} name="username" />
+          <FormMessage {...loginForm} name="password" />
 
-        {/* TODO: */}
-        <div>
-          <label>
-            No account? <Link href="/signup">Create account</Link>
-          </label>
-        </div>
+          <ResetLink />
 
-        <div className={positionButton}>
-          <input className={submitButton} type="submit" value="Login" />
-        </div>
-      </form>
-
-    </main>
-  </Layout >)
+          <div className={positionButton}>
+            <FormSubmitButton {...loginForm} className={submitButton}>
+              Log in
+            </FormSubmitButton>
+          </div>
+        </Form>
+      </main>
+    </Layout>
+  )
 }
 
 // the login button that appears in the header of the website
-export const LoginButton = () => {
-  // get info on the current user via the context
-  const context = useContext(UserContext);
+export const LoginHeaderButton = () => {
+  const { user } = useUser()
+  const { logoutUser } = useUser().operations
 
   return (
     <>
       <div className={loginHeader}>
         {/* show a logout button if user is signed in, otherwise show login */}
-        {context.user !== null ?
-          <Link href=""
-            onClick={(e) => {
-              e.preventDefault();
-              context.user?.signOut();
-              context.setUser(null);
-            }}>Logout</Link>
-          : <Link href="/login">Login</Link>}
+        {user != null ? (
+          <ConfirmLogout user={user} logoutUser={logoutUser} />
+        ) : (
+          <Link href="/login">Log in</Link>
+        )}
       </div>
     </>
+  )
+}
 
+// a popover handling user log out
+const ConfirmLogout = (props: {
+  user: CognitoUser
+  logoutUser: (user: CognitoUser) => void
+}) => {
+  const popover = usePopoverState()
+
+  return (
+    <>
+      <PopoverDisclosure {...popover}>Log out</PopoverDisclosure>
+      <Popover {...popover} tabIndex={0}>
+        <div className={logoutPopover}>
+          <div>Log out of DAILP?</div>
+          <Link
+            href=""
+            onClick={(e) => {
+              e.preventDefault()
+              props.logoutUser(props.user)
+            }}
+          >
+            Yes
+          </Link>
+          <Link
+            href=""
+            onClick={(e) => {
+              e.preventDefault()
+              popover.hide()
+            }}
+          >
+            No
+          </Link>
+        </div>
+      </Popover>
+    </>
   )
 }
 
 export default LoginPage
-
-
-/* const SignIn = withAuthenticator(() => {
- *   const creds = useCredentials()
- *   if (creds) {
- *     // Redirect to profile page?
- *     return <p>Already signed in</p>
- *   } else {
- *     return <AmplifySignIn />
- *   }
- * }) */
