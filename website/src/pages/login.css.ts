@@ -8,6 +8,15 @@ export const loginHeader = style({
   padding: "8px",
 })
 
+export const logoutPopover = style({
+  display: "flex",
+  flexDirection: "column",
+  backgroundColor: "white",
+  padding: "16px",
+  borderRadius: "10%",
+  textAlign: "center",
+})
+
 export const skinnyWidth = style([
   edgePadded,
   centeredColumn,
@@ -22,6 +31,10 @@ export const centeredForm = style({
 
 export const loginFormBox = style({ width: "100%", padding: "1%" })
 
-export const positionButton = style({ marginLeft: "80%", marginTop: "5%" })
+export const positionButton = style({
+  display: "flex",
+  justifyContent: "flex-end",
+  marginTop: "5%",
+})
 
-export const submitButton = style([button, { borderRadius: "10%" }])
+export const submitButton = style([button, { margin: 0, borderRadius: "10%" }])

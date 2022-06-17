@@ -9,7 +9,7 @@ import "./global-styles.css"
 import * as css from "./layout.css"
 import { MobileNav, NavMenu } from "./menu"
 import { HeaderPrefDrawer } from "./mode"
-import { LoginButton } from "./pages/login.page"
+import { LoginHeaderButton } from "./pages/login.page"
 import { PreferencesProvider } from "./preferences-context"
 import { themeClass } from "./sprinkles.css"
 import "./wordpress.css"
@@ -20,13 +20,13 @@ import "./wordpress.css"
 const Layout: React.FC = ({ children }) => {
   return (
     <PreferencesProvider>
+      <Helmet titleTemplate="%s - DAILP" defaultTitle="DAILP">
+        <html lang="en" />
+        <meta charSet="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <body className={themeClass} />
+      </Helmet>
       <LayoutClient>
-        <Helmet titleTemplate="%s - DAILP" defaultTitle="DAILP">
-          <html lang="en" />
-          <meta charSet="UTF-8" />
-          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-          <body className={themeClass} />
-        </Helmet>
         <header aria-label="Site Header" id="header" className={css.header}>
           <div className={css.headerContents}>
             <MobileNav menuID={2} />
@@ -40,7 +40,7 @@ const Layout: React.FC = ({ children }) => {
                 Digital Archive of Indigenous Language Persistence
               </span>
             </div>
-            <LoginButton />
+            <LoginHeaderButton />
             <HeaderPrefDrawer />
           </div>
           <NavMenu menuID={2} />
@@ -51,14 +51,5 @@ const Layout: React.FC = ({ children }) => {
     </PreferencesProvider>
   )
 }
-
-/* export const SignIn = () => {
- *   const hasMounted = useHasMounted()
- *   if (hasMounted && !isProductionDeployment()) {
- *     return <ClientSignIn />
- *   } else {
- *     return null
- *   }
- * } */
 
 export default Layout
