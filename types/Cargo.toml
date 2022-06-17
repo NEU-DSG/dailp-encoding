@@ -14,10 +14,10 @@ serde_json = "1"
 tokio-stream = "0.1"
 anyhow = "1.0"
 itertools = "0.9"
-async-graphql = { version = "3", features = ["dataloader", "uuid"] }
+async-graphql = { version = "4", features = ["dataloader", "uuid"] }
 futures = "0.3"
-uuid = { version = "0.8.2", default-features = false, features = ["std", "serde"] }
-sqlx = { version = "0.5", features = ["runtime-tokio-rustls", "postgres", "migrate", "macros", "chrono", "json", "uuid", "offline"] }
+uuid = { version = "1", default-features = false, features = ["std", "serde"] }
+sqlx = { version = "0.6", features = ["runtime-tokio-rustls", "postgres", "migrate", "macros", "chrono", "json", "uuid", "offline"] }
 lazy_static = "1.4"
 regex = "1.5"
 unicode-normalization = "0.1"

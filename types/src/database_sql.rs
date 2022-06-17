@@ -28,7 +28,7 @@ impl Database {
         let db_url = std::env::var("DATABASE_URL")?;
         let conn = PgPoolOptions::new()
             .max_connections(std::thread::available_parallelism().map_or(2, |x| x.get() as u32))
-            .connect_timeout(Duration::from_secs(60 * 4))
+            .acquire_timeout(Duration::from_secs(60 * 4))
             // Disable excessive pings to the database.
             .test_before_acquire(false)
             .connect(&db_url)
@@ -1011,13 +1011,12 @@ impl Loader<TagId> for Database {
             .map(|tag| {
                 (
                     TagId(
-                        tag.gloss.clone().unwrap(),
-                        InputType::parse(Some(Value::Enum(Name::new(tag.system_name.unwrap()))))
-                            .unwrap(),
+                        tag.gloss.clone(),
+                        InputType::parse(Some(Value::Enum(Name::new(tag.system_name)))).unwrap(),
                     ),
                     TagForm {
-                        tag: tag.gloss.unwrap(),
-                        title: tag.title.unwrap(),
+                        tag: tag.gloss,
+                        title: tag.title,
                         shape: tag.example_shape,
                         details_url: None,
                         definition: tag.description.unwrap_or_default(),
@@ -1116,13 +1115,12 @@ impl Loader<TagForMorpheme> for Database {
             .map(|tag| {
                 (
                     TagForMorpheme(
-                        tag.gloss_id.unwrap(),
-                        InputType::parse(Some(Value::Enum(Name::new(tag.system_name.unwrap()))))
-                            .unwrap(),
+                        tag.gloss_id,
+                        InputType::parse(Some(Value::Enum(Name::new(tag.system_name)))).unwrap(),
                     ),
                     TagForm {
-                        tag: tag.gloss.unwrap(),
-                        title: tag.title.unwrap(),
+                        tag: tag.gloss,
+                        title: tag.title,
                         shape: tag.example_shape,
                         details_url: None,
                         definition: tag.description.unwrap_or_default(),
@@ -1179,10 +1177,10 @@ impl Loader<ContributorsForDocument> for Database {
             .into_iter()
             .map(|x| {
                 (
-                    ContributorsForDocument(x.document_id.unwrap()),
+                    ContributorsForDocument(x.document_id),
                     Contributor {
-                        name: x.full_name.unwrap(),
-                        role: x.contribution_role.unwrap_or_default(),
+                        name: x.full_name,
+                        role: x.contribution_role,
                     },
                 )
             })
