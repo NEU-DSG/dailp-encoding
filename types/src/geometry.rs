@@ -26,6 +26,8 @@ pub struct Geometry {
 
 type Scalar = f64;
 impl Geometry {
+    /// Make a new rectangle with coordinates in percentage units of the
+    /// containing document.
     pub fn new(x_min: Scalar, y_min: Scalar, x_max: Scalar, y_max: Scalar) -> Self {
         Self {
             x_min,
@@ -34,12 +36,15 @@ impl Geometry {
             y_max,
         }
     }
+    /// Total width of the rectangle in percentage points
     pub fn width(&self) -> Scalar {
         (self.x_max - self.x_min).abs()
     }
+    /// Total height of the rectangle in percentage points
     pub fn height(&self) -> Scalar {
         (self.y_max - self.y_min).abs()
     }
+    /// Usable in IIIF URL queries.
     pub fn to_iiif_string(&self) -> String {
         format!(
             "pct:{},{},{},{}",
@@ -49,6 +54,7 @@ impl Geometry {
             self.height()
         )
     }
+    /// Usable in IIIF API calls.
     pub fn to_selector_string(&self) -> String {
         format!(
             "xywh={},{},{},{}",

@@ -39,5 +39,7 @@ pub struct TagForm {
     /// A prose description of what this morpheme means and how it works in
     /// context.
     pub definition: String,
+    /// What kind of morpheme is this? Examples are "Prepronominal Prefix" or
+    /// "Aspectual Suffix"
     pub morpheme_type: String,
 }

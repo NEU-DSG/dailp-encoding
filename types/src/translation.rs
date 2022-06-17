@@ -20,6 +20,7 @@ pub struct TranslationBlock {
 }
 
 impl TranslationBlock {
+    /// All sentences/lines of this block joined together into one string
     pub fn get_text(&self) -> String {
         self.segments.iter().join(" ")
     }
