@@ -11,7 +11,7 @@ const segmentClass = cx(hideOnPrint, css.audioElement)
 export const SegmentAudio = (props: { audioUrl: string }) => {
   return (
     <span className={segmentClass}>
-      <AudioComponent audioUrl={props.audioUrl} />
+      <AudioWrapper audioUrl={props.audioUrl} />
     </span>
   )
 }
@@ -21,18 +21,10 @@ export const FormAudio = (
 ) => {
   return (
     <span>
-      {/**
-       * <FunctionalAudioPlayer
-        audioUrl={props.resourceUrl}
-        showProgress={!!props.showProgress}
-        slices={{ start: props.startTime!, end: props.endTime! }}
-        preload={true}
-      />
-       * 
-       */}
-      <AudioComponent
+      <AudioWrapper
         audioUrl={props.resourceUrl}
         slices={{ start: props.startTime!, end: props.endTime! }}
+        showProgress={props.showProgress}
       />
     </span>
   )
@@ -42,7 +34,7 @@ export const DocumentAudio = (props: { audioUrl: string }) => {
   return (
     <div className={css.wide}>
       <span>Document Audio:</span>
-      <AudioComponent audioUrl={props.audioUrl} preload showProgress />
+      <AudioWrapper audioUrl={props.audioUrl} showProgress />
     </div>
   )
 }
@@ -50,9 +42,21 @@ export const DocumentAudio = (props: { audioUrl: string }) => {
 interface Props {
   audioUrl: string
   showProgress?: boolean
-  preload?: boolean
   slices?: { start: number; end: number }
-  existingHowl?: Howl
+}
+
+const AudioWrapper = (props: Props) => {
+  if (typeof window !== "undefined") {
+    return (
+      <AudioComponent
+        audioUrl={props.audioUrl}
+        showProgress={props.showProgress}
+        slices={props.slices}
+      />
+    )
+  } else {
+    return null
+  }
 }
 
 const AudioComponent = (props: Props) => {
@@ -125,7 +129,9 @@ const AudioComponent = (props: Props) => {
       ) : (
         <FiLoader size={buttonSize} />
       )}
-      <ProgressBar progress={progress} bounds={{ start, end }} />
+      {props.showProgress ? (
+        <ProgressBar progress={progress} bounds={{ start, end }} />
+      ) : null}
     </div>
   )
 }
