@@ -10,6 +10,7 @@ import { DocumentAudio } from "src/audio-player"
 import { Breadcrumbs } from "src/breadcrumbs"
 import { Button } from "src/components"
 import Link from "src/components/link"
+import { useMediaQuery } from "src/custom-hooks"
 import * as Dailp from "src/graphql/dailp"
 import Layout from "src/layout"
 import { drawerBg } from "src/menu.css"
@@ -22,6 +23,7 @@ import {
 } from "src/routes"
 import { useScrollableTabState } from "src/scrollable-tabs"
 import { AnnotatedForm, DocumentPage, Segment } from "src/segment"
+import { mediaQueries } from "src/sprinkles.css"
 import {
   BasicMorphemeSegment,
   PhoneticRepresentation,
@@ -160,6 +162,8 @@ const TranslationTab = ({ doc }: { doc: Document }) => {
 
   const tagSet = tagSetForMode(viewMode)
 
+  const isDesktop = useMediaQuery(mediaQueries.medium)
+
   return (
     <>
       <DialogOverlay
@@ -182,22 +186,25 @@ const TranslationTab = ({ doc }: { doc: Document }) => {
         </DialogContent>
       </DialogOverlay>
 
-      <DialogBackdrop {...dialog} className={drawerBg}>
-        <Dialog
-          {...dialog}
-          as="nav"
-          className={css.mobileWordPanel}
-          aria-label="Word Panel Drawer"
-        >
-          <WordPanel
-            segment={wordPanelInfo.currContents}
-            setContent={wordPanelInfo.setCurrContents}
-            viewMode={viewMode}
-            onOpenDetails={openDetails}
-            tagSet={tagSet}
-          />
-        </Dialog>
-      </DialogBackdrop>
+      {!isDesktop ? (
+        <DialogBackdrop {...dialog} className={drawerBg}>
+          <Dialog
+            {...dialog}
+            as="nav"
+            className={css.mobileWordPanel}
+            aria-label="Word Panel Drawer"
+            preventBodyScroll={true}
+          >
+            <WordPanel
+              segment={wordPanelInfo.currContents}
+              setContent={wordPanelInfo.setCurrContents}
+              viewMode={viewMode}
+              onOpenDetails={openDetails}
+              tagSet={tagSet}
+            />
+          </Dialog>
+        </DialogBackdrop>
+      ) : null}
 
       <div className={css.contentContainer}>
         <article className={css.annotationContents}>
