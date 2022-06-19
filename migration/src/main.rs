@@ -23,6 +23,9 @@ async fn main() -> Result<()> {
     dotenv::dotenv().ok();
     pretty_env_logger::init();
 
+    println!("Validating manuscript spreadsheets...");
+    validate_documents().await?;
+
     let db = Database::connect().await?;
 
     println!("Migrating Image Sources...");
@@ -83,7 +86,7 @@ async fn migrate_data(db: &Database) -> Result<()> {
             .await?;
         for (order_index, sheet_id) in collection.sheet_ids.into_iter().enumerate() {
             if let Some((doc, mut refs)) =
-                fetch_sheet(db, &sheet_id, collection_id, order_index as i64).await?
+                fetch_sheet(Some(db), &sheet_id, collection_id, order_index as i64).await?
             {
                 morpheme_relations.append(&mut refs);
                 // spreadsheets::write_to_file(&doc)?;
@@ -110,6 +113,56 @@ async fn migrate_data(db: &Database) -> Result<()> {
     Ok(())
 }
 
+/// Parses our annotated document spreadsheets, migrating that data to our
+/// database and writing them into TEI XML files.
+async fn validate_documents() -> Result<()> {
+    // Pull the list of annotated documents from our index sheet.
+    let index =
+        spreadsheets::SheetResult::from_sheet("1sDTRFoJylUqsZlxU57k1Uj8oHhbM3MAzU8sDgTfO7Mk", None)
+            .await?
+            .into_index()?;
+
+    println!("Migrating documents to database...");
+
+    // Retrieve data for spreadsheets in sequence.
+    // Because of Google API rate limits, we have to process them sequentially
+    // rather than in parallel.
+    // This process encodes the ordering in the Index sheet to allow us to
+    // manually order different document collections.
+    let mut results = Vec::new();
+    for collection in index.collections {
+        let collection_id = Default::default();
+        for (order_index, sheet_id) in collection.sheet_ids.into_iter().enumerate() {
+            results.push((
+                sheet_id.clone(),
+                fetch_sheet(None, &sheet_id, collection_id, order_index as i64).await,
+            ));
+        }
+    }
+
+    let mut failed = false;
+    for (sheet_id, r) in results {
+        match r {
+            Err(e) => {
+                error!("Failed to process {}: {}", sheet_id, e);
+                failed = true;
+            }
+            Ok(None) => {
+                error!("Failed to process {}", sheet_id);
+            }
+            Ok(Some(_)) => {
+                info!("{} validated", sheet_id);
+            }
+        }
+    }
+
+    if failed {
+        Err(anyhow::anyhow!("One or more documents failed to process"))
+    } else {
+        Ok(())
+    }
+}
+
 pub async fn batch_join_all<
     T,
     F: std::future::Future<Output = Result<T>>,
@@ -128,7 +181,7 @@ pub async fn batch_join_all<
 /// Fetch the contents of the sheet with the given ID, validating the first page as
 /// annotation lines and the "Metadata" page as [dailp::DocumentMetadata].
 async fn fetch_sheet(
-    db: &Database,
+    db: Option<&Database>,
     sheet_id: &str,
     collection_id: Uuid,
     order_index: i64,
@@ -153,9 +206,12 @@ async fn fetch_sheet(
             Vec::new()
         };
 
-        let document_id = db
-            .insert_document(&meta, collection_id, order_index)
-            .await?;
+        let document_id = if let Some(db) = db {
+            db.insert_document(&meta, collection_id, order_index)
+                .await?
+        } else {
+            Default::default()
+        };
         // Fill in blank UUID.
         let meta = dailp::DocumentMetadata {
             id: document_id,
@@ -188,7 +244,7 @@ async fn fetch_sheet(
             all_lines.append(&mut lines);
             tokio::time::sleep(Duration::from_millis(1000)).await;
         }
-        let annotated = AnnotatedLine::many_from_semantic(&all_lines, &meta);
+        let annotated = AnnotatedLine::many_from_semantic(&all_lines, &meta)?;
         let segments = AnnotatedLine::lines_into_segments(annotated, &document_id, &meta.date);
         let doc = dailp::AnnotatedDoc::new(meta, segments);
 
