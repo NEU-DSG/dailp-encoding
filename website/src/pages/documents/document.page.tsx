@@ -23,7 +23,7 @@ import {
 } from "src/routes"
 import { useScrollableTabState } from "src/scrollable-tabs"
 import { AnnotatedForm, DocumentPage, Segment } from "src/segment"
-import { mediaQueries } from "src/sprinkles.css"
+import { mediaQueries } from "src/style/constants"
 import {
   BasicMorphemeSegment,
   PhoneticRepresentation,
