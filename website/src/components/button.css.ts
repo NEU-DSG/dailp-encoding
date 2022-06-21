@@ -1,4 +1,5 @@
 import { style } from "@vanilla-extract/css"
+import { recipe } from "@vanilla-extract/recipes"
 import { rgba } from "polished"
 import {
   colors,
@@ -45,17 +46,23 @@ export const button = style([
   marginX(hspace.edge),
 ])
 
-export const iconButton = style([
-  {
-    padding: space.medium,
-    margin: 0,
-    borderRadius: "50%",
-    background: "none",
-    border: "none",
-    lineHeight: 0,
+export const iconButton = recipe({
+  base: [
+    {
+      padding: space.medium,
+      margin: 0,
+      background: "none",
+      border: "none",
+      lineHeight: 0,
+    },
+    onHover({ backgroundColor: rgba("black", 0.15) }),
+  ],
+  variants: {
+    round: {
+      true: { borderRadius: "50%" },
+    },
   },
-  onHover({ backgroundColor: rgba("black", 0.15) }),
-])
+})
 
 export const cleanButton = style({
   padding: space.small,
