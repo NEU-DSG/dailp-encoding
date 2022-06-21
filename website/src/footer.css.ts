@@ -37,7 +37,7 @@ export const content = style([
     display: "flex",
     flexFlow: "row wrap",
     justifyContent: "space-between",
-    alignItems: "start",
+    alignItems: "flex-start",
   },
 ])
 
