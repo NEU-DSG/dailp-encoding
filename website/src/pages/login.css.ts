@@ -1,26 +1,48 @@
 import { style } from "@vanilla-extract/css"
-import { button, centeredColumn, edgePadded } from "src/sprinkles.css"
+import sprinkles, {
+  button,
+  centeredColumn,
+  colors,
+  edgePadded,
+  fullWidth,
+  hspace,
+  mediaQueries,
+  radii,
+  vspace,
+} from "src/sprinkles.css"
 
 export const loginHeader = style({
   display: "flex",
   justifyContent: "flex-end",
-  flex: 5,
-  padding: "8px",
+  flex: 6,
+})
+
+export const linkStyle = style({
+  color: colors.headerButton,
+  textDecoration: "none",
 })
 
 export const logoutPopover = style({
   display: "flex",
   flexDirection: "column",
-  backgroundColor: "white",
-  padding: "16px",
-  borderRadius: "10%",
+  backgroundColor: colors.body,
   textAlign: "center",
+  padding: hspace.large,
+  borderRadius: radii.medium,
 })
 
 export const skinnyWidth = style([
+  fullWidth,
   edgePadded,
-  centeredColumn,
-  { margin: "auto", width: "35%" },
+
+  {
+    margin: "auto",
+    "@media": {
+      [mediaQueries.medium]: {
+        width: "35vw",
+      },
+    },
+  },
 ])
 
 export const centeredForm = style({
@@ -29,12 +51,15 @@ export const centeredForm = style({
   width: "100%",
 })
 
-export const loginFormBox = style({ width: "100%", padding: "1%" })
+export const loginFormBox = style({ width: "100%", padding: hspace.medium })
 
 export const positionButton = style({
   display: "flex",
   justifyContent: "flex-end",
-  marginTop: "5%",
+  marginTop: vspace.large,
 })
 
-export const submitButton = style([button, { margin: 0, borderRadius: "10%" }])
+export const loginButton = style([
+  button,
+  { margin: 0, borderRadius: radii.medium },
+])
