@@ -34,12 +34,11 @@ export const logoutPopover = style({
 export const skinnyWidth = style([
   fullWidth,
   edgePadded,
-
   {
     margin: "auto",
     "@media": {
       [mediaQueries.medium]: {
-        width: "35vw",
+        width: "25rem",
       },
     },
   },
