@@ -1,5 +1,6 @@
 import { CognitoUser } from "amazon-cognito-identity-js"
 import React from "react"
+import { Button } from "reakit/Button"
 import {
   unstable_Form as Form,
   unstable_FormInput as FormInput,
@@ -12,18 +13,20 @@ import {
 import { Popover, PopoverDisclosure, usePopoverState } from "reakit/Popover"
 import { useUser } from "src/auth"
 import Link from "src/components/link"
-import { centeredColumn } from "src/sprinkles.css"
+import { centeredColumn, cleanButton } from "src/sprinkles.css"
 import Layout from "../layout"
 import {
   centeredForm,
+  linkStyle,
+  loginButton,
   loginFormBox,
   loginHeader,
   logoutPopover,
   positionButton,
   skinnyWidth,
-  submitButton,
 } from "./login.css"
-import { ResetLink } from "./reset-password.page"
+
+// import { ResetLink } from "./reset-password.page"
 
 interface FormFieldsType {
   form: unstable_FormStateReturn<any | undefined>
@@ -51,6 +54,8 @@ export const FormFields = ({
         type={type}
         placeholder={placeholder}
       />
+
+      <FormMessage {...form} name={name} />
     </>
   )
 }
@@ -59,26 +64,24 @@ const LoginPage = () => {
   const { loginUser } = useUser().operations
 
   const loginForm = useFormState({
-    values: { username: "", password: "" },
+    values: { email: "", password: "" },
     onValidate: (values) => {
-      if (!values.username || !values.password) {
-        throw (
-          (!values.username && { username: "A username is required" }) || {
-            password: "A password is required",
-          }
-        )
+      if (!values.email) {
+        throw { email: "An email is required" }
+      } else if (!values.password) {
+        throw { password: "A password is required" }
       }
     },
     onSubmit: (values) => {
-      loginUser(values.username, values.password)
+      loginUser(values.email, values.password)
     },
   })
 
   return (
     <Layout>
       <main className={skinnyWidth}>
-        <header>
-          <h1 className={centeredColumn}>Login to Your Account</h1>
+        <header className={centeredColumn}>
+          <h1>Login to Your Account</h1>
           <h4>
             Login to contribute to the archive by transcribing documents,
             recording pronunciations, providing cultural commentary, and more.
@@ -88,7 +91,7 @@ const LoginPage = () => {
         <Form {...loginForm} className={centeredForm}>
           <FormFields
             form={loginForm}
-            name="username"
+            name="email"
             label="Email *"
             placeholder="mail@website.com"
           />
@@ -100,14 +103,10 @@ const LoginPage = () => {
             type="password"
             placeholder="enter password"
           />
-
-          <FormMessage {...loginForm} name="username" />
-          <FormMessage {...loginForm} name="password" />
-
-          <ResetLink />
+          {/* <ResetLink /> */}
 
           <div className={positionButton}>
-            <FormSubmitButton {...loginForm} className={submitButton}>
+            <FormSubmitButton {...loginForm} className={loginButton}>
               Log in
             </FormSubmitButton>
           </div>
@@ -119,55 +118,53 @@ const LoginPage = () => {
 
 // the login button that appears in the header of the website
 export const LoginHeaderButton = () => {
-  const { user } = useUser()
-  const { logoutUser } = useUser().operations
+  const { user, setUser } = useUser()
 
   return (
-    <>
-      <div className={loginHeader}>
-        {/* show a logout button if user is signed in, otherwise show login */}
-        {user != null ? (
-          <ConfirmLogout user={user} logoutUser={logoutUser} />
-        ) : (
-          <Link href="/login">Log in</Link>
-        )}
-      </div>
-    </>
+    <div className={loginHeader}>
+      {/* show a logout button if user is signed in, otherwise show login */}
+      {user != null ? (
+        <ConfirmLogout user={user} setUser={setUser} />
+      ) : (
+        <Link className={linkStyle} href="/login">
+          Log in
+        </Link>
+      )}
+    </div>
   )
 }
 
 // a popover handling user log out
 const ConfirmLogout = (props: {
   user: CognitoUser
-  logoutUser: (user: CognitoUser) => void
+  setUser: (user: CognitoUser | null) => void
 }) => {
   const popover = usePopoverState()
 
   return (
     <>
-      <PopoverDisclosure {...popover}>Log out</PopoverDisclosure>
-      <Popover {...popover} tabIndex={0}>
-        <div className={logoutPopover}>
-          <div>Log out of DAILP?</div>
-          <Link
-            href=""
-            onClick={(e) => {
-              e.preventDefault()
-              props.logoutUser(props.user)
-            }}
-          >
-            Yes
-          </Link>
-          <Link
-            href=""
-            onClick={(e) => {
-              e.preventDefault()
-              popover.hide()
-            }}
-          >
-            No
-          </Link>
-        </div>
+      <PopoverDisclosure {...popover} className={cleanButton}>
+        Log out
+      </PopoverDisclosure>
+      <Popover {...popover} className={logoutPopover} tabIndex={0}>
+        Log out of DAILP?
+        <Button
+          className={cleanButton}
+          onClick={() => {
+            props.user.signOut()
+            props.setUser(null)
+          }}
+        >
+          Yes
+        </Button>
+        <Button
+          className={cleanButton}
+          onClick={() => {
+            popover.hide()
+          }}
+        >
+          No
+        </Button>
       </Popover>
     </>
   )

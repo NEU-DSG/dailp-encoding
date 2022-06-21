@@ -10,9 +10,9 @@ import React, { createContext, useContext, useEffect, useState } from "react"
 
 type UserContextType = {
   user: CognitoUser | null
+  setUser: (user: CognitoUser | null) => void
   operations: {
     loginUser: (username: string, password: string) => void
-    logoutUser: (user: CognitoUser) => void
   }
 }
 
@@ -38,36 +38,6 @@ export const UserProvider = (props: { children: any }) => {
       })
     }
   }, [])
-
-  // React.useEffect(() => {
-  // Amplify.configure({
-  //   Auth: {
-  //     // TODO How to get these variables from the server?
-  //     region: process.env["DAILP_AWS_REGION"],
-  //     userPoolId: process.env["DAILP_USER_POOL"],
-  //     userPoolWebClientId: process.env["DAILP_USER_POOL_CLIENT"],
-  //   },
-  // })
-
-  // Auth.currentUserPoolUser()
-  //   .then((user) => setUser(user))
-  //   .catch(() => setUser(null))
-
-  //   const listener: HubCallback = async (data) => {
-  //     switch (data.payload.event) {
-  //       case "signIn":
-  //         setUser(userPool.getCurrentUser());
-  //       case "signUp":
-  //       // setUser(await Auth.currentUserPoolUser())
-  //       // break
-  //       case "signOut":
-  //         setUser(null)
-  //         break
-  //     }
-  //   }
-  //   Hub.listen("auth", listener)
-  //   return () => Hub.remove("auth", listener)
-  // }, [])
 
   function loginUser(username: string, password: string) {
     const user = new CognitoUser({
@@ -98,15 +68,8 @@ export const UserProvider = (props: { children: any }) => {
     })
   }
 
-  function logoutUser(user: CognitoUser) {
-    user?.signOut()
-    setUser(null)
-  }
-
   return (
-    <UserContext.Provider
-      value={{ user, operations: { loginUser, logoutUser } }}
-    >
+    <UserContext.Provider value={{ user, setUser, operations: { loginUser } }}>
       {props.children}
     </UserContext.Provider>
   )
