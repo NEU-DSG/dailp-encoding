@@ -7,8 +7,8 @@ import {
   rhythm,
   rootFontSize,
   thickness,
+  typography,
 } from "src/style/constants"
-import { typography } from "src/style/theme-contract"
 import { paddingY } from "src/style/utils"
 
 const t: Record<string, any> = typography.toJSON()

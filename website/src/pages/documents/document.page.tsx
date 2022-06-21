@@ -172,7 +172,7 @@ const TranslationTab = ({ doc }: { doc: Document }) => {
         onDismiss={closeDialog}
       >
         <DialogContent
-          className={css.morphemeDialog}
+          className={css.unpaddedMorphemeDialog}
           aria-label="Segment Details"
         >
           {selectedMorpheme ? (

@@ -1,4 +1,5 @@
 import { style } from "@vanilla-extract/css"
+import { padding } from "polished"
 import {
   colors,
   fonts,
@@ -9,7 +10,7 @@ import {
   thickness,
   vspace,
 } from "./constants"
-import { media, padding, paddingX, paddingY } from "./utils"
+import { media, paddingX, paddingY } from "./utils"
 
 export const hideOnPrint = media(mediaQueries.print, { display: "none" })
 
@@ -113,7 +114,4 @@ export const largeDialog = style({
 
 export const paddedCenterColumn = style([edgePadded, centeredColumn])
 
-export const paddingAround = style([
-  paddingX(hspace.edge),
-  paddingY(rhythm(3 / 4)),
-])
+export const paddingAround = style(padding(rhythm(3 / 4), hspace.edge))

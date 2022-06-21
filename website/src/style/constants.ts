@@ -1,6 +1,16 @@
-import themeContract, { typography } from "./theme-contract"
+import Typography from "typography"
+import themeContract from "./theme-contract.css"
 
 export const rootFontSize = "19px"
+
+export const typography = new Typography({
+  baseFontSize: rootFontSize,
+  baseLineHeight: 1.47,
+  // headerFontFamily: theme.fonts.headerArr,
+  // bodyFontFamily: theme.fonts.bodyArr,
+  // bodyColor: theme.colors.text,
+  // headerColor: theme.colors.headings,
+})
 
 export const rhythm = typography.rhythm
 

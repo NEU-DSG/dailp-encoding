@@ -15,10 +15,8 @@ export const scrollable = style([
   },
 ])
 
-export const closeButton = style([
-  {
-    position: "absolute",
-    top: vspace.half,
-    right: hspace.halfEdge,
-  },
-])
+export const closeButton = style({
+  position: "absolute",
+  top: vspace.half,
+  right: hspace.halfEdge,
+})
