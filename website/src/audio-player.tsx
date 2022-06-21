@@ -1,6 +1,6 @@
 import cx from "classnames"
 import { Howl } from "howler"
-import React, { useEffect, useMemo, useRef, useState } from "react"
+import React, { useEffect, useMemo, useState } from "react"
 import { FiLoader } from "react-icons/fi"
 import { MdPauseCircleOutline, MdPlayCircleOutline } from "react-icons/md"
 import * as Dailp from "src/graphql/dailp"
@@ -11,7 +11,7 @@ const segmentClass = cx(hideOnPrint, css.audioElement)
 export const SegmentAudio = (props: { audioUrl: string }) => {
   return (
     <span className={segmentClass}>
-      <AudioWrapper audioUrl={props.audioUrl} />
+      <AudioPlayer audioUrl={props.audioUrl} />
     </span>
   )
 }
@@ -21,7 +21,7 @@ export const FormAudio = (
 ) => {
   return (
     <span>
-      <AudioWrapper
+      <AudioPlayer
         audioUrl={props.resourceUrl}
         slices={{ start: props.startTime!, end: props.endTime! }}
         showProgress={props.showProgress}
@@ -34,7 +34,7 @@ export const DocumentAudio = (props: { audioUrl: string }) => {
   return (
     <div className={css.wide}>
       <span>Document Audio:</span>
-      <AudioWrapper audioUrl={props.audioUrl} showProgress />
+      <AudioPlayer audioUrl={props.audioUrl} showProgress />
     </div>
   )
 }
@@ -45,41 +45,47 @@ interface Props {
   slices?: { start: number; end: number }
 }
 
-const AudioWrapper = (props: Props) => {
+export const AudioPlayer = (props: Props) => {
   if (typeof window !== "undefined") {
-    return (
-      <AudioComponent
-        audioUrl={props.audioUrl}
-        showProgress={props.showProgress}
-        slices={props.slices}
-      />
-    )
+    return <AudioPlayerImpl {...props} />
   } else {
     return null
   }
 }
 
-const AudioComponent = (props: Props) => {
-  const audio = useMemo(
-    () => new Audio(props.audioUrl),
-    [props.audioUrl, props.slices]
-  )
+const AudioPlayerImpl = (props: Props) => {
+  const audio = useMemo(() => new Audio(props.audioUrl), [props.audioUrl])
 
   const [progress, setProgress] = useState(0)
   const [loadStatus, setLoadStatus] = useState(false)
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setProgress(audio.currentTime)
-    }, 100)
-    return () => clearInterval(interval)
-  }, [audio])
+  const [isPlaying, setIsPlaying] = useState(false)
 
   const [start, end] = props.slices
     ? [props.slices.start / 1000, props.slices.end / 1000]
     : [0, audio.duration]
 
-  const [isPlaying, setIsPlaying] = useState(false)
+  const reset = () => {
+    audio.currentTime = start
+    setIsPlaying(false)
+  }
+
+  useEffect(() => {
+    reset()
+  }, [audio, start, setIsPlaying])
+
+  useEffect(() => {
+    setProgress(audio.currentTime)
+    if (isPlaying) {
+      const interval = setInterval(() => {
+        if (audio.currentTime >= end) {
+          reset()
+        }
+        setProgress(audio.currentTime)
+      }, 80)
+      return () => clearInterval(interval)
+    }
+    return undefined
+  }, [audio, start, end, isPlaying, setIsPlaying])
 
   useEffect(() => {
     if (isPlaying) {
@@ -89,26 +95,9 @@ const AudioComponent = (props: Props) => {
     }
   }, [isPlaying])
 
-  const setPlayStart = () => {
-    audio.currentTime = props.slices
-      ? (audio.currentTime = props.slices.start / 1000)
-      : 0
-  }
-
   audio.oncanplaythrough = () => {
     setLoadStatus(true)
   }
-
-  useEffect(() => {
-    setPlayStart()
-  }, [props.slices])
-
-  useEffect(() => {
-    if (progress >= end) {
-      setIsPlaying(false)
-      setPlayStart()
-    }
-  }, [progress, end])
 
   return (
     <div className="audio-controls">
@@ -154,7 +143,7 @@ const ProgressBar = (props: {
     <div className={css.container} aria-label={"container"}>
       <div
         className={css.fill}
-        style={{ width: `${progPtr}%` }}
+        style={{ transform: `scaleX(${progPtr / 100})` }}
         onDrag={() => {}}
         aria-label={"fill"}
       />
