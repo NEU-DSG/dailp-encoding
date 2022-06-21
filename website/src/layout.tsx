@@ -37,7 +37,6 @@ const Layout: React.FC = ({ children }) => {
             <span className={css.subHeader}>
               Digital Archive of Indigenous Language Persistence
             </span>
-            <Button>Log in</Button>
           </div>
           <HeaderPrefDrawer />
         </div>

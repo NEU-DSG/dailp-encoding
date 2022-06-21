@@ -144,8 +144,14 @@ export const morphemeDialog = style([
     transform: "translate(-50%, -50%)",
     maxWidth: "100vw",
     margin: 0,
-    padding: 0,
     zIndex: 1009,
+  },
+])
+
+export const unpaddedMorphemeDialog = style([
+  morphemeDialog,
+  {
+    padding: 0,
   },
 ])
 

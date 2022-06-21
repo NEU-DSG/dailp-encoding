@@ -1,4 +1,5 @@
 import { style } from "@vanilla-extract/css"
+import { rgba } from "polished"
 import {
   colors,
   fonts,
@@ -15,11 +16,11 @@ export const button = style([
     backgroundColor: colors.primary,
     borderWidth: thickness.thin,
     borderStyle: "solid",
-    boxShadow: `${space.small} ${space.small} darkgray`,
+    boxShadow: `${space.small} ${space.small} rgba(0,0,0,0.25)`,
     fontFamily: fonts.header,
     ":active": {
       boxShadow: "none",
-      transform: "translate(3px, 3px)",
+      transform: `translate(${space.small}, ${space.small})`,
       outline: "none",
     },
     ":disabled": {
@@ -53,7 +54,7 @@ export const iconButton = style([
     border: "none",
     lineHeight: 0,
   },
-  onHover({ backgroundColor: colors.secondaryDark }),
+  onHover({ backgroundColor: rgba("black", 0.15) }),
 ])
 
 export const cleanButton = style({

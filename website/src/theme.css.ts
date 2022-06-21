@@ -1,7 +1,7 @@
 import { createTheme } from "@vanilla-extract/css"
 import { darken, lighten, padding, rgba } from "polished"
 import { rootFontSize } from "src/style/constants"
-import themeContract from "src/style/theme-contract"
+import themeContract from "src/style/theme-contract.css"
 
 const theme = {
   fonts: {

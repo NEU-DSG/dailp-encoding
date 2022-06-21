@@ -1,4 +1,4 @@
-import { style } from "@vanilla-extract/css"
+import { globalStyle, style } from "@vanilla-extract/css"
 import {
   colors,
   hspace,
@@ -74,6 +74,10 @@ export const prefDrawer = style([
 export const settingsContainer = style({
   display: "flex",
   flexFlow: "column nowrap",
+})
+
+globalStyle(`${settingsContainer} > :last-child`, {
+  marginBottom: 0,
 })
 
 export const closeButton = style([wordPanelButton.basic])
