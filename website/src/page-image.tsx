@@ -101,10 +101,18 @@ const CurrentPageImage = (p: {
           />
         </TransformComponent>
         <div className={css.floatingControls}>
-          <IconButton onClick={() => p.zoomIn()} aria-label="Zoom In">
+          <IconButton
+            round={false}
+            onClick={() => p.zoomIn()}
+            aria-label="Zoom In"
+          >
             <FaPlus size={20} />
           </IconButton>
-          <IconButton onClick={() => p.zoomOut()} aria-label="Zoom Out">
+          <IconButton
+            round={false}
+            onClick={() => p.zoomOut()}
+            aria-label="Zoom Out"
+          >
             <FaMinus size={20} />
           </IconButton>
         </div>
