@@ -32,7 +32,7 @@ export const WordPanel = (p: {
   tagSet: TagSet
 }) => {
   if (!p.segment) {
-    return <p>No word has been selected</p>
+    return null
   }
 
   const translation = p.segment.englishGloss.join(", ")

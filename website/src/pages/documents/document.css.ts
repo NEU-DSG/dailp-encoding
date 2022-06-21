@@ -182,7 +182,7 @@ export const contentSection2 = style([
   sprinkles({ display: { any: "none", medium: "block" } }),
   {
     flex: 1,
-    width: "25vw",
+    maxWidth: "20rem",
   },
 ])
 
@@ -198,6 +198,11 @@ export const mobileWordPanel = style([
     selectors: {
       "&[data-enter]": {
         transform: "translateX(0)",
+      },
+    },
+    "@media": {
+      [mediaQueries.medium]: {
+        display: "none",
       },
     },
   },
