@@ -25,6 +25,7 @@ import {
   positionButton,
   skinnyWidth,
 } from "./login.css"
+import { ResetLink } from "./reset-password.page"
 
 // import { ResetLink } from "./reset-password.page"
 
@@ -103,7 +104,7 @@ const LoginPage = () => {
             type="password"
             placeholder="enter password"
           />
-          {/* <ResetLink /> */}
+          <ResetLink />
 
           <div className={positionButton}>
             <FormSubmitButton {...loginForm} className={loginButton}>
