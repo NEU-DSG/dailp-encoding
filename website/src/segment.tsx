@@ -5,10 +5,10 @@ import React, { Dispatch, SetStateAction, useState } from "react"
 import { MdCircle, MdInfoOutline } from "react-icons/md"
 import * as Dailp from "src/graphql/dailp"
 import { DocumentContents } from "src/pages/documents/document.page"
+import { std } from "src/style/utils.css"
 import { FormAudio } from "./audio-player"
 import { CleanButton, IconButton } from "./components"
 import * as css from "./segment.css"
-import { std } from "./sprinkles.css"
 import {
   BasicMorphemeSegment,
   PhoneticRepresentation,

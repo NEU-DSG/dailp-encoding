@@ -4,9 +4,9 @@ import parse, {
   domToReact,
 } from "html-react-parser"
 import React from "react"
-import Link from "src/components/link"
+import { Button, Link } from "src/components"
 import * as Wordpress from "src/graphql/wordpress"
-import { wordpressUrl } from "src/theme"
+import { wordpressUrl } from "src/theme.css"
 
 interface Props {
   slug: string
@@ -58,25 +58,27 @@ const parseOptions: HTMLReactParserOptions = {
 
     // }
 
-    // Replace WordPress links with absolute local paths.
-    // "https://wp.dailp.northeastern.edu/" => "/"
-    if (
-      "name" in node &&
-      node.name === "a" &&
-      "attribs" in node &&
-      node.attribs &&
-      node.attribs["href"]?.startsWith(wordpressUrl)
-    ) {
-      const props = attributesToProps(node.attribs)
-      return (
-        <Link {...props} href={props["href"]!.slice(wordpressUrl.length)}>
-          {domToReact(node.children, parseOptions)}
-        </Link>
-      )
+    if ("name" in node && "attribs" in node) {
+      // Replace WordPress links with absolute local paths.
+      // "https://wp.dailp.northeastern.edu/" => "/"
+      if (node.name === "a") {
+        const props = attributesToProps(node.attribs)
+        if (props["href"]?.startsWith(wordpressUrl)) {
+          props["href"] = props["href"].slice(wordpressUrl.length)
+        }
+        return <Link {...props}>{domToReact(node.children, parseOptions)}</Link>
+      } else if (node.name === "button") {
+        return (
+          <Button {...attributesToProps(node.attribs)}>
+            {domToReact(node.children, parseOptions)}
+          </Button>
+        )
+      }
     }
     return undefined
   },
 }
+
 const pullWords = (
   docName: string,
   start: string,

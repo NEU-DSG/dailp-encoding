@@ -4,7 +4,7 @@ import React, { useEffect, useMemo, useState } from "react"
 import { FiLoader } from "react-icons/fi"
 import { MdPauseCircleOutline, MdPlayCircleOutline } from "react-icons/md"
 import * as Dailp from "src/graphql/dailp"
-import { hideOnPrint } from "src/sprinkles.css"
+import { hideOnPrint } from "src/style/utils.css"
 import * as css from "./audio-player.css"
 
 const segmentClass = cx(hideOnPrint, css.audioElement)

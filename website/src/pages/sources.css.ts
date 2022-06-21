@@ -1,5 +1,6 @@
 import { style } from "@vanilla-extract/css"
-import { fullWidth, paddedWidth, vspace } from "src/sprinkles.css"
+import { vspace } from "src/style/constants"
+import { fullWidth, paddedWidth } from "src/style/utils.css"
 
 export const apaCitation = style({
   paddingLeft: "4ch",

@@ -2,12 +2,12 @@ import React, { ReactNode, useEffect, useState } from "react"
 import { AiFillCaretDown, AiFillCaretUp, AiFillSound } from "react-icons/ai"
 import { IoEllipsisHorizontalCircle } from "react-icons/io5"
 import { MdClose, MdNotes, MdRecordVoiceOver } from "react-icons/md"
-import { Button } from "reakit/Button"
 import {
   Disclosure,
   DisclosureContent,
   useDisclosureState,
 } from "reakit/Disclosure"
+import { IconButton } from "src/components"
 import * as Dailp from "src/graphql/dailp"
 import { FormAudio } from "./audio-player"
 import { MorphemicSegmentation } from "./segment"
@@ -51,13 +51,13 @@ export const WordPanel = (p: {
 
   return (
     <div className={css.wordPanelContent}>
-      <Button
+      <IconButton
         className={css.wordPanelButton.basic}
         onClick={() => p.setContent(null)}
         aria-label="Dismiss selected word information"
       >
         <MdClose size={32} />
-      </Button>
+      </IconButton>
       <header className={css.wordPanelHeader}>
         <h1 className={css.noSpaceBelow}>Selected Word</h1>
         <h2 className={css.cherHeader}>{p.segment.source}</h2>

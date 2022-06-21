@@ -2,14 +2,15 @@ import "@fontsource/quattrocento-sans/latin.css"
 import "normalize.css"
 import React from "react"
 import { Helmet } from "react-helmet"
+import { Button } from "src/components"
 import Link from "src/components/link"
+import { themeClass } from "src/theme.css"
 import Footer from "./footer"
 import "./global-styles.css"
 import * as css from "./layout.css"
 import { MobileNav, NavMenu } from "./menu"
 import { HeaderPrefDrawer } from "./mode"
 import { PreferencesProvider } from "./preferences-context"
-import { hideOnPrint, themeClass } from "./sprinkles.css"
 import "./wordpress.css"
 
 /* const ClientSignIn = lazy(() => import("./client/signin")) */
@@ -36,6 +37,7 @@ const Layout: React.FC = ({ children }) => {
             <span className={css.subHeader}>
               Digital Archive of Indigenous Language Persistence
             </span>
+            <Button>Log in</Button>
           </div>
           <HeaderPrefDrawer />
         </div>

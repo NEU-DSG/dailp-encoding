@@ -1,11 +1,7 @@
 import { globalStyle, style } from "@vanilla-extract/css"
-import sprinkles, {
-  colors,
-  hspace,
-  mediaQueries,
-  vspace,
-} from "src/sprinkles.css"
-import { marginX } from "./style-utils"
+import { colors, hspace, mediaQueries, vspace } from "src/style/constants"
+import { marginX } from "src/style/utils"
+import { hideOnPrint } from "src/style/utils.css"
 
 export const floatingControls = style({
   position: "absolute",
@@ -19,10 +15,10 @@ globalStyle(`${floatingControls} > *`, {
   display: "block",
 })
 
-export const control = sprinkles({ display: "block" })
+export const control = style({ display: "block" })
 
 export const pageNav = style([
-  sprinkles({ display: { print: "none" } }),
+  hideOnPrint,
   {
     display: "flex",
     justifyContent: "space-between",
@@ -57,4 +53,4 @@ export const transformWrapper = style({
   },
 })
 
-export const transformContent = sprinkles({ width: "full" })
+export const transformContent = style({ width: "100%" })

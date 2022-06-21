@@ -1,38 +1,40 @@
-import { style, styleVariants } from "@vanilla-extract/css"
-import sprinkles, {
+import { style } from "@vanilla-extract/css"
+import {
   colors,
-  fullWidth,
   hspace,
   mediaQueries,
+  thickness,
   vspace,
-} from "src/sprinkles.css"
+} from "src/style/constants"
+import { marginY, paddingX } from "src/style/utils"
+import { fullWidth, hideOnPrint, paddingAround } from "src/style/utils.css"
 import { drawerBg } from "./menu.css"
 import { mobileWordPanel, morphemeDialog } from "./pages/documents/document.css"
-import { paddingX } from "./style-utils"
 import { collPanelButton, wordPanelButton } from "./word-panel.css"
 
-export const highlightedLabel = sprinkles({
+export const highlightedLabel = style({
   outlineStyle: "dashed",
-  outlineColor: "headings",
-  outlineWidth: "thick",
+  outlineColor: colors.headings,
+  outlineWidth: thickness.thick,
 })
 
 export const levelGroup = style([
-  sprinkles({
-    display: { any: "flex", print: "none" },
-    marginY: "quarter",
-  }),
+  hideOnPrint,
+  marginY(vspace.quarter),
   {
+    display: "flex",
     flexFlow: "row wrap",
     justifyContent: "center",
   },
 ])
 
-export const levelLabel = sprinkles({
-  marginRight: "edge",
-  paddingX: "char",
-  cursor: "pointer",
-})
+export const levelLabel = style([
+  paddingX(hspace.char),
+  {
+    marginRight: hspace.edge,
+    cursor: "pointer",
+  },
+])
 
 export const prefBand = style([
   fullWidth,
@@ -49,7 +51,7 @@ export const prefButtonShell = style({
 
 export const prefButton = style([
   collPanelButton,
-  { color: colors.headerButton },
+  { color: colors.secondaryText },
 ])
 
 export const prefBG = style([
@@ -66,8 +68,7 @@ export const prefBG = style([
 export const prefDrawer = style([
   morphemeDialog,
   //mobileWordPanel,
-  paddingX(hspace.edge),
-  { paddingTop: vspace.one },
+  paddingAround,
 ])
 
 export const settingsContainer = style({
