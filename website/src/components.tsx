@@ -1,7 +1,3 @@
-import { Button as ButtonBase } from "reakit/Button"
-import { button, cleanButton, iconButton } from "src/sprinkles.css"
-import { withClass } from "src/style-utils"
-
-export const Button = withClass(button, ButtonBase)
-export const IconButton = withClass(iconButton, ButtonBase)
-export const CleanButton = withClass(cleanButton, ButtonBase)
+export { Button, IconButton, CleanButton } from "./components/button"
+export { default as Link } from "./components/link"
+export { Select, Label } from "./components/select"

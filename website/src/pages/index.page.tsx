@@ -1,7 +1,7 @@
 import React from "react"
 import { Helmet } from "react-helmet"
 import Link from "src/components/link"
-import { fullWidth, paddedCenterColumn } from "src/sprinkles.css"
+import { fullWidth, paddedCenterColumn } from "src/style/utils.css"
 import WordpressPage from "src/wordpress-page"
 import { Carousel } from "../carousel"
 import * as Dailp from "../graphql/dailp"

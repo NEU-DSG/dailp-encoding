@@ -1,10 +1,10 @@
 import React from "react"
 import { Helmet } from "react-helmet"
 import * as Wordpress from "src/graphql/wordpress"
-import { edgePadded, fullWidth } from "src/sprinkles.css"
+import { edgePadded, fullWidth } from "src/style/utils.css"
 import { WordpressContents } from "src/wordpress-page"
 import Layout from "../layout"
-import { wordpressUrl } from "../theme"
+import { wordpressUrl } from "../theme.css"
 
 const WordpressPage = (props: { "*": string }) => (
   <Layout>

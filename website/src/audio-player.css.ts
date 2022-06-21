@@ -1,20 +1,18 @@
 import { globalStyle, style } from "@vanilla-extract/css"
-import sprinkles, { theme } from "src/sprinkles.css"
+import { important, margin } from "polished"
+import { colors, hspace, radii, vspace } from "src/style/constants"
 
-export const wide = sprinkles({ width: "full" })
+export const wide = style({ width: "100%" })
 
 export const container = style([
-  sprinkles({
-    height: "quarter",
-    borderRadius: "medium",
-    marginX: "halfEdge",
-    marginY: "medium",
-  }),
   {
     display: "inline-block",
-    width: "75% !important",
     background: "#a9a9a9",
+    height: vspace.quarter,
+    borderRadius: radii.medium,
   },
+  important({ width: "75%" }),
+  margin(vspace.medium, hspace.halfEdge),
 ])
 
 export const fill = style({
@@ -26,20 +24,16 @@ export const fill = style({
   textAlign: "right",
 })
 
-export const audioElement = style([
-  sprinkles({
-    display: "inline",
-    marginLeft: "halfEdge",
-    cursor: "pointer",
-    width: "full",
-  }),
-  {
-    alignItems: "center",
-  },
-])
+export const audioElement = style({
+  display: "inline",
+  marginLeft: hspace.halfEdge,
+  cursor: "pointer",
+  width: "100%",
+  alignItems: "center",
+})
 
 globalStyle(`${audioElement} svg`, {
-  fill: theme.colors.link,
+  fill: colors.primary,
 })
 
 // export const timestamp = css`

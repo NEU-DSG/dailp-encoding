@@ -1,20 +1,21 @@
 import { style, styleVariants } from "@vanilla-extract/css"
-import { position, rgba } from "polished"
-import sprinkles, {
+import { border, padding, position, rgba } from "polished"
+import {
   colors,
-  fullWidth,
+  fonts,
   hspace,
   mediaQueries,
-  theme,
+  selectors,
   thickness,
   vspace,
-} from "src/sprinkles.css"
-import { paddingX, paddingY } from "src/style-utils"
+} from "src/style/constants"
+import { onFocus, onHover, paddingX, paddingY } from "src/style/utils"
+import { fullWidth } from "src/style/utils.css"
 
 export const navMenu = style({
   display: "flex",
   backgroundColor: colors.body,
-  borderColor: colors.link,
+  borderColor: colors.primary,
   borderWidth: thickness.thick,
   borderStyle: "solid",
   flexFlow: "column",
@@ -23,19 +24,21 @@ export const navMenu = style({
 })
 
 export const navLink = style([
-  sprinkles({
-    color: { currentPage: "link", hover: "link", focus: "link" },
-    borderColor: { currentPage: "link" },
+  padding(vspace.quarter, hspace.char),
+  onHover({
+    color: colors.primary,
   }),
-  paddingY(vspace.quarter),
-  paddingX(hspace.char),
   {
-    color: colors.headerButton,
-    borderColor: "transparent",
+    color: colors.secondaryText,
+    selectors: {
+      [selectors.currentPage]: {
+        color: colors.primary,
+        borderColor: colors.primary,
+      },
+    },
     textDecoration: "none",
     background: "none",
     border: "none",
-    borderBottom: "2px solid transparent",
     display: "flex",
     flexFlow: "row",
     alignItems: "center",
@@ -43,6 +46,7 @@ export const navLink = style([
       [mediaQueries.large]: paddingX(hspace.edge),
     },
   },
+  border("bottom", thickness.thick, "solid", "transparent"),
 ])
 
 export const subMenuItems = style([
@@ -53,33 +57,45 @@ export const subMenuItems = style([
 ])
 
 export const drawerItem = style([
-  sprinkles({
-    color: { any: "text", currentPage: "link", hover: "link", focus: "link" },
-  }),
   {
     display: "inline-block",
     padding: vspace.quarter,
     textDecoration: "none",
-    color: colors.text,
+    selectors: {
+      [selectors.currentPage]: {
+        color: colors.primary,
+      },
+    },
   },
+  onHover({ color: colors.primary }),
+  onFocus({ color: colors.primary }, { color: colors.text }),
 ])
 
 export const desktopNav = style([
   fullWidth,
-  sprinkles({ display: { any: "none", medium: "flex" } }),
-])
-
-export const navButton = style([
-  sprinkles({ display: { medium: "none" } }),
   {
-    border: "none",
-    padding: 0,
-    background: "none",
-    marginRight: hspace.edge,
-    height: 32,
-    color: colors.button,
+    display: "none",
+    "@media": {
+      [mediaQueries.medium]: {
+        display: "flex",
+      },
+    },
   },
 ])
+
+export const navButton = style({
+  border: "none",
+  padding: 0,
+  background: "none",
+  marginRight: hspace.edge,
+  height: 32,
+  color: colors.primary,
+  "@media": {
+    [mediaQueries.medium]: {
+      display: "none",
+    },
+  },
+})
 
 export const navDrawer = style([
   position("fixed", 0, "initial", 0, 0),
@@ -88,7 +104,7 @@ export const navDrawer = style([
     paddingTop: vspace.one,
     width: "16rem",
     backgroundColor: colors.body,
-    fontFamily: theme.fonts.header,
+    fontFamily: fonts.header,
     transition: "transform 150ms ease-in-out",
     transform: "translateX(-16rem)",
     selectors: {
