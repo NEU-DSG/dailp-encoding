@@ -1,7 +1,7 @@
 import Typography from "typography"
-import themeContract from "./theme-contract.css"
+import { colors, fonts, rootFontSize } from "./theme-contract.css"
 
-export const rootFontSize = "19px"
+export { rootFontSize, fonts, colors }
 
 export const typography = new Typography({
   baseFontSize: rootFontSize,
@@ -13,14 +13,6 @@ export const typography = new Typography({
 })
 
 export const rhythm = typography.rhythm
-
-export const fonts = themeContract.fonts
-
-export const colors = {
-  ...themeContract.colors,
-  transparent: "transparent",
-  inherit: "inherit",
-}
 
 export const radii = {
   none: 0,

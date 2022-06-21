@@ -1,7 +1,7 @@
 import { createTheme } from "@vanilla-extract/css"
 import { darken, rgba } from "polished"
 import { rootFontSize } from "src/style/constants"
-import themeContract from "src/style/theme-contract.css"
+import { themeContract } from "src/style/theme-contract.css"
 
 export const themeClass = createTheme(themeContract, {
   fontSizes: {
@@ -60,5 +60,3 @@ export const wordpressUrl = "https://wp.dailp.northeastern.edu"
 //     display: block;
 //   }
 // `
-
-export default themeClass

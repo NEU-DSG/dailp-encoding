@@ -1,7 +1,8 @@
 import { createThemeContract } from "@vanilla-extract/css"
-import { rootFontSize } from "./constants"
 
-export default createThemeContract({
+export const rootFontSize = "19px"
+
+export const themeContract = createThemeContract({
   fontSizes: {
     root: rootFontSize,
   },
@@ -29,3 +30,7 @@ export default createThemeContract({
     smallCaps: null,
   },
 })
+
+export const fonts = themeContract.fonts
+
+export const colors = themeContract.colors
