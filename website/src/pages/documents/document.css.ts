@@ -169,7 +169,14 @@ export const annotatedDocument = style({
   },
 })
 
-export const audioContainer = style([wideAndTop, topMargin, bottomPadded])
+export const audioContainer = style([
+  {
+    display: "flex",
+    flexFlow: "row nowrap",
+  },
+  topMargin,
+  bottomPadded,
+])
 
 export const hideOnPrint = style({
   "@media": {

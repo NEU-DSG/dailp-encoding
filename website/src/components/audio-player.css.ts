@@ -1,6 +1,7 @@
 import { globalStyle, style } from "@vanilla-extract/css"
 import { important, margin } from "polished"
 import { colors, hspace, radii, vspace } from "src/style/constants"
+import { hideOnPrint } from "src/style/utils.css"
 
 export const wide = style({ width: "100%" })
 
@@ -10,8 +11,8 @@ export const container = style([
     background: "#a9a9a9",
     height: vspace.quarter,
     borderRadius: radii.medium,
+    flex: 1,
   },
-  important({ width: "75%" }),
   margin(vspace.medium, hspace.halfEdge),
 ])
 
@@ -24,16 +25,18 @@ export const fill = style({
   textAlign: "right",
 })
 
-export const audioElement = style({
-  display: "inline",
-  marginLeft: hspace.halfEdge,
-  cursor: "pointer",
-  width: "100%",
-  alignItems: "center",
-})
+export const audioElement = style([
+  hideOnPrint,
+  {
+    display: "flex",
+    marginLeft: hspace.halfEdge,
+    alignItems: "center",
+  },
+])
 
 globalStyle(`${audioElement} svg`, {
   fill: colors.primary,
+  cursor: "pointer",
 })
 
 // export const timestamp = css`

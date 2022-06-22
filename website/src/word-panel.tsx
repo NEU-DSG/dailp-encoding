@@ -7,9 +7,8 @@ import {
   DisclosureContent,
   useDisclosureState,
 } from "reakit/Disclosure"
-import { IconButton } from "src/components"
+import { AudioPlayer, IconButton } from "src/components"
 import * as Dailp from "src/graphql/dailp"
-import { FormAudio } from "./audio-player"
 import { MorphemicSegmentation } from "./segment"
 import {
   BasicMorphemeSegment,
@@ -175,13 +174,13 @@ const AudioPanel = (p: { segment: Dailp.FormFieldsFragment }) => {
           content={
             <div>
               {
-                <FormAudio
-                  endTime={p.segment.audioTrack.endTime}
-                  index={p.segment.audioTrack.index}
-                  parentTrack=""
-                  resourceUrl={p.segment.audioTrack.resourceUrl}
-                  startTime={p.segment.audioTrack.startTime}
-                  showProgress={true}
+                <AudioPlayer
+                  audioUrl={p.segment.audioTrack.resourceUrl}
+                  slices={{
+                    start: p.segment.audioTrack.startTime!,
+                    end: p.segment.audioTrack.endTime!,
+                  }}
+                  showProgress
                 />
               }
             </div>

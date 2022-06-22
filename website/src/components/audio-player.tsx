@@ -1,48 +1,13 @@
-import cx from "classnames"
-import { Howl } from "howler"
 import React, { useEffect, useMemo, useState } from "react"
 import { FiLoader } from "react-icons/fi"
 import { MdPauseCircleOutline, MdPlayCircleOutline } from "react-icons/md"
-import * as Dailp from "src/graphql/dailp"
-import { hideOnPrint } from "src/style/utils.css"
 import * as css from "./audio-player.css"
-
-const segmentClass = cx(hideOnPrint, css.audioElement)
-export const SegmentAudio = (props: { audioUrl: string }) => {
-  return (
-    <span className={segmentClass}>
-      <AudioPlayer audioUrl={props.audioUrl} />
-    </span>
-  )
-}
-
-export const FormAudio = (
-  props: Dailp.AudioSlice & { howl?: Howl; showProgress?: boolean }
-) => {
-  return (
-    <span>
-      <AudioPlayer
-        audioUrl={props.resourceUrl}
-        slices={{ start: props.startTime!, end: props.endTime! }}
-        showProgress={props.showProgress}
-      />
-    </span>
-  )
-}
-
-export const DocumentAudio = (props: { audioUrl: string }) => {
-  return (
-    <div className={css.wide}>
-      <span>Document Audio:</span>
-      <AudioPlayer audioUrl={props.audioUrl} showProgress />
-    </div>
-  )
-}
 
 interface Props {
   audioUrl: string
   showProgress?: boolean
   slices?: { start: number; end: number }
+  style?: any
 }
 
 export const AudioPlayer = (props: Props) => {
@@ -100,7 +65,7 @@ const AudioPlayerImpl = (props: Props) => {
   }
 
   return (
-    <div className="audio-controls">
+    <div className={css.audioElement} style={props.style}>
       {loadStatus ? (
         isPlaying ? (
           <MdPauseCircleOutline
