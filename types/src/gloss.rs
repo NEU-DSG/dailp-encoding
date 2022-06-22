@@ -16,6 +16,7 @@ struct GlossSegment<'a> {
 
 const SEPARATORS: &str = "-=~\\";
 
+/// Parse a canonical morphemic segmentation from the two layers: morphemes and glosses.
 pub fn parse_gloss_layers<'a>(
     layer_one: &'a str,
     layer_two: &'a str,

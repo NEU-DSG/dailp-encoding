@@ -11,6 +11,8 @@ pub struct MorphemeSegment {
     pub morpheme: String,
     /// Target language representation of this segment.
     pub gloss: String,
+    /// Database ID for the associated gloss, which may be shared by several
+    /// morphemes in the same document.
     #[serde(skip)]
     pub gloss_id: Option<Uuid>,
     /// What kind of thing is the next segment?
