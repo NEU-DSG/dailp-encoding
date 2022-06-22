@@ -335,11 +335,11 @@
         }
       ],
       "nullable": [
+        false,
         true,
-        true,
-        true,
-        true,
-        true,
+        false,
+        false,
+        false,
         true,
         true
       ],
@@ -685,10 +685,10 @@
         }
       ],
       "nullable": [
-        true,
-        true,
-        true,
-        true
+        false,
+        false,
+        false,
+        false
       ],
       "parameters": {
         "Left": [
@@ -1611,11 +1611,11 @@
         }
       ],
       "nullable": [
+        false,
         true,
-        true,
-        true,
-        true,
-        true,
+        false,
+        false,
+        false,
         true,
         true
       ],

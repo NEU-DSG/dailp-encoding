@@ -1,3 +1,5 @@
+#![allow(missing_docs)]
+
 use std::ops::Bound;
 
 use {
@@ -26,7 +28,7 @@ impl Database {
         let db_url = std::env::var("DATABASE_URL")?;
         let conn = PgPoolOptions::new()
             .max_connections(std::thread::available_parallelism().map_or(2, |x| x.get() as u32))
-            .connect_timeout(Duration::from_secs(60 * 4))
+            .acquire_timeout(Duration::from_secs(60 * 4))
             // Disable excessive pings to the database.
             .test_before_acquire(false)
             .connect(&db_url)
@@ -76,7 +78,7 @@ impl Database {
     pub async fn morphemes(
         &self,
         morpheme_id: MorphemeId,
-        compare_by: Option<CherokeeOrthography>,
+        _compare_by: Option<CherokeeOrthography>,
     ) -> Result<Vec<MorphemeReference>> {
         let items = query_file!(
             "queries/surface_forms.sql",
@@ -228,7 +230,7 @@ impl Database {
 
     pub async fn document_manifest(
         &self,
-        document_name: &str,
+        _document_name: &str,
         url: String,
     ) -> Result<iiif::Manifest> {
         // Retrieve the document from the DB.
@@ -332,7 +334,7 @@ impl Database {
 
     pub async fn documents_in_collection(
         &self,
-        super_collection: &str,
+        _super_collection: &str,
         collection: &str,
     ) -> Result<Vec<DocumentReference>> {
         Ok(query_file_as!(
@@ -344,7 +346,7 @@ impl Database {
         .await?)
     }
 
-    pub async fn insert_top_collection(&self, title: String, index: i64) -> Result<Uuid> {
+    pub async fn insert_top_collection(&self, title: String, _index: i64) -> Result<Uuid> {
         Ok(query_file_scalar!(
             "queries/insert_document_group.sql",
             slug::slugify(&title),
@@ -524,7 +526,7 @@ impl Database {
     pub async fn document_breadcrumbs(
         &self,
         document_id: DocumentId,
-        super_collection: &str,
+        _super_collection: &str,
     ) -> Result<Vec<DocumentCollection>> {
         let item = query_file!("queries/document_group_crumb.sql", document_id.0)
             .fetch_one(&self.client)
@@ -1009,13 +1011,12 @@ impl Loader<TagId> for Database {
             .map(|tag| {
                 (
                     TagId(
-                        tag.gloss.clone().unwrap(),
-                        InputType::parse(Some(Value::Enum(Name::new(tag.system_name.unwrap()))))
-                            .unwrap(),
+                        tag.gloss.clone(),
+                        InputType::parse(Some(Value::Enum(Name::new(tag.system_name)))).unwrap(),
                     ),
                     TagForm {
-                        tag: tag.gloss.unwrap(),
-                        title: tag.title.unwrap(),
+                        tag: tag.gloss,
+                        title: tag.title,
                         shape: tag.example_shape,
                         details_url: None,
                         definition: tag.description.unwrap_or_default(),
@@ -1114,13 +1115,12 @@ impl Loader<TagForMorpheme> for Database {
             .map(|tag| {
                 (
                     TagForMorpheme(
-                        tag.gloss_id.unwrap(),
-                        InputType::parse(Some(Value::Enum(Name::new(tag.system_name.unwrap()))))
-                            .unwrap(),
+                        tag.gloss_id,
+                        InputType::parse(Some(Value::Enum(Name::new(tag.system_name)))).unwrap(),
                     ),
                     TagForm {
-                        tag: tag.gloss.unwrap(),
-                        title: tag.title.unwrap(),
+                        tag: tag.gloss,
+                        title: tag.title,
                         shape: tag.example_shape,
                         details_url: None,
                         definition: tag.description.unwrap_or_default(),
@@ -1177,10 +1177,10 @@ impl Loader<ContributorsForDocument> for Database {
             .into_iter()
             .map(|x| {
                 (
-                    ContributorsForDocument(x.document_id.unwrap()),
+                    ContributorsForDocument(x.document_id),
                     Contributor {
-                        name: x.full_name.unwrap(),
-                        role: x.contribution_role.unwrap_or_default(),
+                        name: x.full_name,
+                        role: x.contribution_role,
                     },
                 )
             })
