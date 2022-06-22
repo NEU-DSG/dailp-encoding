@@ -12,7 +12,7 @@ import {
 } from "./constants"
 import { media, paddingX, paddingY } from "./utils"
 
-export const hideOnPrint = media(mediaQueries.print, { display: "none" })
+export const hideOnPrint = style(media(mediaQueries.print, { display: "none" }))
 
 export const withBg = style([
   hideOnPrint,

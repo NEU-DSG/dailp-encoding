@@ -6,10 +6,8 @@ import { Helmet } from "react-helmet"
 import { MdSettings } from "react-icons/md"
 import { Dialog, DialogBackdrop, useDialogState } from "reakit/Dialog"
 import { Tab, TabList, TabPanel } from "reakit/Tab"
-import { DocumentAudio } from "src/audio-player"
 import { Breadcrumbs } from "src/breadcrumbs"
-import { Button } from "src/components"
-import Link from "src/components/link"
+import { AudioPlayer, Button, Link } from "src/components"
 import { useMediaQuery } from "src/custom-hooks"
 import * as Dailp from "src/graphql/dailp"
 import Layout from "src/layout"
@@ -346,7 +344,12 @@ export const DocumentTitleHeader = (p: {
     </div>
     {p.doc.audioRecording && ( // TODO Implement sticky audio bar
       <div id="document-audio-player" className={css.audioContainer}>
-        <DocumentAudio audioUrl={p.doc.audioRecording.resourceUrl} />
+        <span>Document Audio:</span>
+        <AudioPlayer
+          style={{ flex: 1 }}
+          audioUrl={p.doc.audioRecording.resourceUrl}
+          showProgress
+        />
       </div>
     )}
   </header>
