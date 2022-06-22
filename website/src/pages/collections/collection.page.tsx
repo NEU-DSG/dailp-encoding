@@ -1,7 +1,6 @@
 import React from "react"
 import { Helmet } from "react-helmet"
-import { Breadcrumbs } from "src/breadcrumbs"
-import Link from "src/components/link"
+import { Breadcrumbs, Link } from "src/components"
 import * as Dailp from "src/graphql/dailp"
 import Layout from "src/layout"
 import { useRouteParams } from "src/renderer/PageShell"
