@@ -23,9 +23,9 @@ export type Scalars = {
   /** A scalar that can represent any JSON value. */
   JSON: any
   /**
-   * A UUID is a unique 128-bit number, stored as 16 octets. UUIDs are parsed as Strings
-   * within GraphQL. UUIDs are used to assign unique identifiers to entities without requiring a central
-   * allocating authority.
+   * A UUID is a unique 128-bit number, stored as 16 octets. UUIDs are parsed as
+   * Strings within GraphQL. UUIDs are used to assign unique identifiers to
+   * entities without requiring a central allocating authority.
    *
    * # References
    *
@@ -39,6 +39,7 @@ export type AnnotatedDoc = {
   readonly __typename?: "AnnotatedDoc"
   /** The audio recording resource for this entire document */
   readonly audioRecording: Maybe<AudioSlice>
+  /** Breadcrumbs from the top-level archive down to where this document lives. */
   readonly breadcrumbs: ReadonlyArray<DocumentCollection>
   /** Where the source document came from, maybe the name of a collection */
   readonly collection: Maybe<DocumentCollection>
@@ -138,6 +139,7 @@ export type AnnotatedForm = {
   readonly source: Scalars["String"]
 }
 
+/** Element within a spreadsheet before being transformed into a full document. */
 export type AnnotatedSeg = AnnotatedForm | LineBreak
 
 /**
@@ -237,6 +239,7 @@ export type Date = {
   readonly __typename?: "Date"
   /** Formatted version of the date for humans to read */
   readonly formattedDate: Scalars["String"]
+  /** The year of this date */
   readonly year: Scalars["Int"]
 }
 
@@ -257,29 +260,51 @@ export type DocumentCollection = {
 
 export type DocumentPage = {
   readonly __typename?: "DocumentPage"
+  /** Scan of this page as a IIIF resource, if there is one */
   readonly image: Maybe<PageImage>
+  /** One-indexed page number */
   readonly pageNumber: Scalars["String"]
+  /** Contents of this page as a list of paragraphs */
   readonly paragraphs: ReadonlyArray<DocumentParagraph>
 }
 
 export type DocumentParagraph = {
   readonly __typename?: "DocumentParagraph"
+  /** Source text of the paragraph broken down into words */
   readonly source: ReadonlyArray<AnnotatedSeg>
+  /** English translation of the whole paragraph */
   readonly translation: Scalars["String"]
 }
 
+/**
+ * Reference to a document with a limited subset of fields, namely no contents
+ * of the document.
+ */
 export type DocumentReference = {
   readonly __typename?: "DocumentReference"
+  /** Date the document was produced (or `None` if unknown) */
   readonly date: Maybe<Date>
+  /** Database ID for the document */
   readonly id: Scalars["UUID"]
+  /** Index of the document within its group, used purely for ordering */
   readonly orderIndex: Scalars["Int"]
+  /** Unique short name */
   readonly shortName: Scalars["String"]
+  /** URL slug for this document */
   readonly slug: Scalars["String"]
+  /** Long title of the document */
   readonly title: Scalars["String"]
 }
 
+/**
+ * The kind of a document in terms of what body it lives within. A reference
+ * document is a dictionary or grammar for example, while a corpus document
+ * might be a letter, journal, or notice.
+ */
 export enum DocumentType {
+  /** Corpus text: a letter, journal, book, story, meeting minutes, etc. */
   Corpus = "CORPUS",
+  /** Reference document, like a dictionary or grammar */
   Reference = "REFERENCE",
 }
 
@@ -323,17 +348,25 @@ export type Geometry = {
 
 export type IiifImages = {
   readonly __typename?: "IiifImages"
+  /** Information about the data source for this set of images */
   readonly source: ImageSource
+  /** List of urls for all the images in this collection */
   readonly urls: ReadonlyArray<Scalars["String"]>
 }
 
 export type ImageSource = {
   readonly __typename?: "ImageSource"
+  /** Base URL for the IIIF server */
   readonly url: Scalars["String"]
 }
 
+/** Start of a new line */
 export type LineBreak = {
   readonly __typename?: "LineBreak"
+  /**
+   * Index of this line break within the document. i.e. Indicates the start
+   * of line X.
+   */
   readonly index: Scalars["Int"]
 }
 
@@ -417,7 +450,9 @@ export type Page = {
 
 export type PageImage = {
   readonly __typename?: "PageImage"
+  /** The IIIF source this page image comes from */
   readonly source: ImageSource
+  /** The full IIIF url for this image resource */
   readonly url: Scalars["String"]
 }
 
@@ -566,6 +601,10 @@ export type TagForm = {
   readonly definition: Scalars["String"]
   /** URL to an external page with more details about this morpheme. */
   readonly detailsUrl: Maybe<Scalars["String"]>
+  /**
+   * What kind of morpheme is this? Examples are "Prepronominal Prefix" or
+   * "Aspectual Suffix"
+   */
   readonly morphemeType: Scalars["String"]
   /** How this morpheme looks in original language data */
   readonly shape: Maybe<Scalars["String"]>
