@@ -6,12 +6,13 @@ import {
   fetchExchange,
   makeOperation,
 } from "urql"
+import { Environment, deploymentEnvironment } from "./env"
 
 export const apolloClient = (token: string | null) =>
   createClient({
     url:
       process.env["DAILP_API_URL"] +
-      (token && process.env["NODE_ENV"] === "production"
+      (token && deploymentEnvironment !== Environment.Local
         ? "/graphql-edit"
         : "/graphql"),
     exchanges: [
