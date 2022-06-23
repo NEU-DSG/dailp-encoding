@@ -1,4 +1,3 @@
-import { CognitoUser } from "amazon-cognito-identity-js"
 import React from "react"
 import { Button } from "reakit/Button"
 import {
@@ -26,38 +25,6 @@ import {
   skinnyWidth,
 } from "./login.css"
 import { ResetLink } from "./reset-password.page"
-
-interface FormFieldsType {
-  form: unstable_FormStateReturn<any | undefined>
-  name: any
-  label: string
-  type?: string | undefined
-  placeholder: string
-}
-
-export const FormFields = ({
-  form,
-  name,
-  label,
-  type,
-  placeholder,
-}: FormFieldsType) => {
-  return (
-    <>
-      <FormLabel {...form} name={name} label={label} />
-
-      <FormInput
-        {...form}
-        name={name}
-        className={loginFormBox}
-        type={type}
-        placeholder={placeholder}
-      />
-
-      <FormMessage {...form} name={name} />
-    </>
-  )
-}
 
 const LoginPage = () => {
   const { loginUser } = useUser().operations
@@ -117,13 +84,13 @@ const LoginPage = () => {
 
 // the login button that appears in the header of the website
 export const LoginHeaderButton = () => {
-  const { user, setUser } = useUser()
+  const { authenticated } = useUser()
 
   return (
     <div className={loginHeader}>
       {/* show a logout button if user is signed in, otherwise show login */}
-      {user != null ? (
-        <ConfirmLogout user={user} setUser={setUser} />
+      {authenticated ? (
+        <ConfirmLogout />
       ) : (
         <Link className={linkStyle} href="/login">
           Log in
@@ -134,10 +101,8 @@ export const LoginHeaderButton = () => {
 }
 
 // a popover handling user log out
-const ConfirmLogout = (props: {
-  user: CognitoUser
-  setUser: (user: CognitoUser | null) => void
-}) => {
+const ConfirmLogout = () => {
+  const { user, setUser } = useUser()
   const popover = usePopoverState()
 
   return (
@@ -150,8 +115,8 @@ const ConfirmLogout = (props: {
         <Button
           className={cleanButton}
           onClick={() => {
-            props.user.signOut()
-            props.setUser(null)
+            user?.signOut()
+            setUser(null)
           }}
         >
           Yes
@@ -165,6 +130,38 @@ const ConfirmLogout = (props: {
           No
         </Button>
       </Popover>
+    </>
+  )
+}
+
+interface FormFieldsType {
+  form: unstable_FormStateReturn<any | undefined>
+  name: any
+  label: string
+  type?: string | undefined
+  placeholder: string
+}
+
+export const FormFields = ({
+  form,
+  name,
+  label,
+  type,
+  placeholder,
+}: FormFieldsType) => {
+  return (
+    <>
+      <FormLabel {...form} name={name} label={label} />
+
+      <FormInput
+        {...form}
+        name={name}
+        className={loginFormBox}
+        type={type}
+        placeholder={placeholder}
+      />
+
+      <FormMessage {...form} name={name} />
     </>
   )
 }

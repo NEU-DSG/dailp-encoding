@@ -1,12 +1,11 @@
-import { CognitoUser, CognitoUserSession } from "amazon-cognito-identity-js"
-import React, { useState } from "react"
+import React, { useEffect } from "react"
 import {
   unstable_Form as Form,
   unstable_FormSubmitButton as FormSubmitButton,
   unstable_FormStateReturn,
   unstable_useFormState as useFormState,
 } from "reakit/Form"
-import { userPool } from "src/auth"
+import { useUser } from "src/auth"
 import Link from "src/components/link"
 import Layout from "src/layout"
 import { centeredColumn } from "src/sprinkles.css"
@@ -19,7 +18,8 @@ import {
 import { FormFields } from "./login.page"
 
 const ResetPasswordPage = () => {
-  const [email, setEmail] = useState("")
+  const { user } = useUser()
+  const { resetPassword, changePassword } = useUser().operations
 
   const resetForm = useFormState({
     values: { email: "" },
@@ -32,58 +32,32 @@ const ResetPasswordPage = () => {
       }
     },
     onSubmit: (values) => {
-      const user = new CognitoUser({
-        Username: values.email,
-        Pool: userPool,
-      })
-
-      user.forgotPassword({
-        onSuccess: (data: CognitoUserSession) => {
-          console.log("Password reset successful. Result: ", data)
-          setEmail(values.email)
-        },
-        onFailure: (err: Error) => {
-          console.log("Password reset unsuccessful. Error: ", err)
-          alert("Email address does not exist")
-        },
-      })
+      resetPassword(values.email)
     },
   })
 
   const changeForm = useFormState({
-    values: { verificationCode: "", newPassword: "" },
+    values: { verificationCode: "", newPassword: "", confirmPassword: "" },
     onValidate: (values) => {
       if (!values.verificationCode) {
         throw {
           username: "A verification code is required",
         }
-      } else if (!values.newPassword) {
+      } else if (values.newPassword !== values.confirmPassword) {
         throw {
-          newPassword: "A new password is required",
+          confirmPassword: "Passwords must be the same",
         }
       }
     },
     onSubmit: (values) => {
-      const user = new CognitoUser({
-        Username: email,
-        Pool: userPool,
-      })
-
-      user.confirmPassword(values.verificationCode, values.newPassword, {
-        onSuccess(data: string) {
-          console.log(data)
-        },
-        onFailure(err: Error) {
-          console.log(err)
-        },
-      })
+      changePassword(values.verificationCode, values.newPassword)
     },
   })
 
   return (
     <Layout>
       <main className={skinnyWidth}>
-        {email === "" ? (
+        {user === null ? (
           <ResetPassword {...resetForm} />
         ) : (
           <ChangePassword {...changeForm} />
@@ -123,8 +97,17 @@ const ChangePassword = (
   form: unstable_FormStateReturn<{
     verificationCode: string
     newPassword: string
+    confirmPassword: string
   }>
 ) => {
+  const { setUser } = useUser()
+
+  useEffect(() => {
+    return () => {
+      setUser(null) // prevents user email from being preserved between component refreshes
+    }
+  }, [])
+
   return (
     <>
       <header>
@@ -146,8 +129,17 @@ const ChangePassword = (
         <FormFields
           form={form}
           name="newPassword"
+          type="password"
           label="New Password *"
           placeholder="enter password"
+        />
+
+        <FormFields
+          form={form}
+          name="confirmPassword"
+          type="password"
+          label="Confirm Password *"
+          placeholder="confirm password"
         />
 
         <div className={positionButton}>

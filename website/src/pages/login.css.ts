@@ -1,7 +1,6 @@
 import { style } from "@vanilla-extract/css"
-import sprinkles, {
+import {
   button,
-  centeredColumn,
   colors,
   edgePadded,
   fullWidth,
@@ -50,15 +49,20 @@ export const centeredForm = style({
   width: "100%",
 })
 
-export const loginFormBox = style({ width: "100%", padding: hspace.medium })
+export const loginFormBox = style({
+  padding: vspace.medium,
+})
 
 export const positionButton = style({
   display: "flex",
   justifyContent: "flex-end",
-  marginTop: vspace.large,
+  marginTop: vspace.medium,
 })
 
 export const loginButton = style([
   button,
-  { margin: 0, borderRadius: radii.medium },
+  {
+    margin: 0,
+    borderRadius: radii.medium,
+  },
 ])
