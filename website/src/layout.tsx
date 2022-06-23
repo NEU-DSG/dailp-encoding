@@ -4,6 +4,7 @@ import React from "react"
 import { Helmet } from "react-helmet"
 import Link from "src/components/link"
 import { LayoutClient } from "./client/layout"
+import { Environment, deploymentEnvironment } from "./env"
 import Footer from "./footer"
 import "./global-styles.css"
 import * as css from "./layout.css"
@@ -40,7 +41,11 @@ const Layout: React.FC = ({ children }) => {
                 Digital Archive of Indigenous Language Persistence
               </span>
             </div>
-            <LoginHeaderButton />
+
+            {deploymentEnvironment !== Environment.Production && (
+              <LoginHeaderButton />
+            )}
+
             <HeaderPrefDrawer />
           </div>
           <NavMenu menuID={2} />

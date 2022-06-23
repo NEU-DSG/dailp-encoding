@@ -17,16 +17,14 @@ export const container = style([
   },
 ])
 
-export const fill = style([
-  sprinkles({
-    height: "full",
-  }),
-  {
-    background: "#444444",
-    borderRadius: "inherit",
-    textAlign: "right",
-  },
-])
+export const fill = style({
+  width: "100%",
+  height: "100%",
+  transformOrigin: "left",
+  background: "#444444",
+  borderRadius: "inherit",
+  textAlign: "right",
+})
 
 export const audioElement = style([
   sprinkles({
