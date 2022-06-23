@@ -1,6 +1,5 @@
 import { CognitoUser } from "amazon-cognito-identity-js"
 import React from "react"
-import { Button } from "reakit/Button"
 import {
   unstable_Form as Form,
   unstable_FormInput as FormInput,
@@ -12,12 +11,10 @@ import {
 } from "reakit/Form"
 import { Popover, PopoverDisclosure, usePopoverState } from "reakit/Popover"
 import { useUser } from "src/auth"
-import Link from "src/components/link"
-import { centeredColumn, cleanButton } from "src/sprinkles.css"
+import { Button, CleanButton, Link } from "src/components"
 import Layout from "../layout"
 import {
   centeredForm,
-  linkStyle,
   loginButton,
   loginFormBox,
   loginHeader,
@@ -80,8 +77,8 @@ const LoginPage = () => {
   return (
     <Layout>
       <main className={skinnyWidth}>
-        <header className={centeredColumn}>
-          <h1>Login to Your Account</h1>
+        <header>
+          <h1>Log into your account</h1>
           <h4>
             Login to contribute to the archive by transcribing documents,
             recording pronunciations, providing cultural commentary, and more.
@@ -106,7 +103,11 @@ const LoginPage = () => {
           {/* <ResetLink /> */}
 
           <div className={positionButton}>
-            <FormSubmitButton {...loginForm} className={loginButton}>
+            <FormSubmitButton
+              {...loginForm}
+              as={Button}
+              className={loginButton}
+            >
               Log in
             </FormSubmitButton>
           </div>
@@ -126,9 +127,7 @@ export const LoginHeaderButton = () => {
       {user != null ? (
         <ConfirmLogout user={user} setUser={setUser} />
       ) : (
-        <Link className={linkStyle} href="/login">
-          Log in
-        </Link>
+        <Link href="/login">Log in</Link>
       )}
     </div>
   )
@@ -143,28 +142,26 @@ const ConfirmLogout = (props: {
 
   return (
     <>
-      <PopoverDisclosure {...popover} className={cleanButton}>
+      <PopoverDisclosure {...popover} as={CleanButton}>
         Log out
       </PopoverDisclosure>
       <Popover {...popover} className={logoutPopover} tabIndex={0}>
         Log out of DAILP?
-        <Button
-          className={cleanButton}
+        <CleanButton
           onClick={() => {
             props.user.signOut()
             props.setUser(null)
           }}
         >
           Yes
-        </Button>
-        <Button
-          className={cleanButton}
+        </CleanButton>
+        <CleanButton
           onClick={() => {
             popover.hide()
           }}
         >
           No
-        </Button>
+        </CleanButton>
       </Popover>
     </>
   )
