@@ -1,25 +1,17 @@
 import { style } from "@vanilla-extract/css"
-import sprinkles, {
-  button,
-  centeredColumn,
+import {
   colors,
-  edgePadded,
-  fullWidth,
   hspace,
   mediaQueries,
   radii,
   vspace,
-} from "src/sprinkles.css"
+} from "src/style/constants"
+import { edgePadded, fullWidth } from "src/style/utils.css"
 
 export const loginHeader = style({
   display: "flex",
   justifyContent: "flex-end",
   flex: 6,
-})
-
-export const linkStyle = style({
-  color: colors.headerButton,
-  textDecoration: "none",
 })
 
 export const logoutPopover = style({
@@ -58,7 +50,4 @@ export const positionButton = style({
   marginTop: vspace.large,
 })
 
-export const loginButton = style([
-  button,
-  { margin: 0, borderRadius: radii.medium },
-])
+export const loginButton = style([{ margin: 0, borderRadius: radii.medium }])
