@@ -1,8 +1,9 @@
 import React from "react"
 import { Helmet } from "react-helmet"
+import { Link } from "src/components"
 import * as Dailp from "src/graphql/dailp"
 import Layout from "src/layout"
-import { fullWidth } from "src/sprinkles.css"
+import { fullWidth } from "src/style/utils.css"
 import { DocumentTitleHeader } from "./document.page"
 
 interface Props {
@@ -44,7 +45,7 @@ function DocumentDetails({ id }: Props) {
       {doc.sources.length > 0 ? (
         <section className={fullWidth}>
           Original document provided courtesy of{" "}
-          <a href={doc.sources[0]!.link}>{doc.sources[0]!.name}</a>.
+          <Link href={doc.sources[0]!.link}>{doc.sources[0]!.name}</Link>.
         </section>
       ) : null}
     </>

@@ -3,7 +3,6 @@ import cx from "classnames"
 import Cookies from "js-cookie"
 import React, { useContext, useEffect, useState } from "react"
 import { MdClose, MdSettings } from "react-icons/md"
-import { Button } from "reakit/Button"
 import {
   Dialog,
   DialogBackdrop,
@@ -16,7 +15,8 @@ import {
   RadioStateReturn,
   useRadioState,
 } from "reakit/Radio"
-import { std } from "src/sprinkles.css"
+import { IconButton, Label, Select } from "src/components"
+import { std } from "src/style/utils.css"
 import * as css from "./mode.css"
 import { usePreferences } from "./preferences-context"
 import {
@@ -116,7 +116,7 @@ export const ExperiencePicker = (p: {
     p.onSelect(value as ViewMode)
   }, [value])
   return (
-    <select
+    <Select
       name="experience-picker"
       id={p.id}
       value={value}
@@ -132,7 +132,7 @@ export const ExperiencePicker = (p: {
             </option>
           )
         })}
-    </select>
+    </Select>
   )
 }
 
@@ -150,7 +150,7 @@ export const PhoneticsPicker = (p: {
     p.onSelect(value)
   }, [value])
   return (
-    <select
+    <Select
       name="phonetics-picker"
       value={value}
       onChange={(e) => setValue(Number.parseInt(e.target.value))}
@@ -169,7 +169,7 @@ export const PhoneticsPicker = (p: {
             </option>
           )
         })}
-    </select>
+    </Select>
   )
 }
 
@@ -196,11 +196,11 @@ const ExperienceOption = (p: { radio: RadioStateReturn; level: string }) => {
   const isSelected = p.radio.state === value
   return (
     <Tooltip className={std.tooltip} label={levelNameMapping[value].details}>
-      <label className={cx(css.levelLabel, isSelected && css.highlightedLabel)}>
+      <Label className={cx(css.levelLabel, isSelected && css.highlightedLabel)}>
         <Radio {...p.radio} value={value} />
         {"  "}
         {levelNameMapping[value].label}
-      </label>
+      </Label>
     </Tooltip>
   )
 }
@@ -209,11 +209,11 @@ const TagSetOption = (p: { radio: RadioStateReturn; level: string }) => {
   const value = TagSet[p.level as keyof typeof TagSet]
   return (
     <Tooltip className={std.tooltip} label={tagSetMapping[value].details}>
-      <label className={css.levelLabel}>
+      <Label className={css.levelLabel}>
         <Radio {...p.radio} value={value} />
         {"  "}
         {tagSetMapping[value].label}
-      </label>
+      </Label>
     </Tooltip>
   )
 }
@@ -222,7 +222,7 @@ export const PrefPanel = () => {
   const preferences = usePreferences()
   return (
     <div className={css.settingsContainer}>
-      <label>Level of Detail:</label>
+      <Label>Level of Detail:</Label>
       <ExperiencePicker
         aria-described-by={"Selected-ViewMode"}
         onSelect={preferences.setViewMode}
@@ -231,7 +231,7 @@ export const PrefPanel = () => {
         {levelNameMapping[preferences.viewMode].details}
       </p>
 
-      <label>Romanization System:</label>
+      <Label>Romanization System:</Label>
       <PhoneticsPicker
         aria-described-by={"Selected-Phonetics"}
         onSelect={preferences.setPhoneticRepresentation}
@@ -251,28 +251,23 @@ export const HeaderPrefDrawer = () => {
 
   return (
     <div className={css.prefButtonShell}>
-      <DialogDisclosure
-        {...dialog}
-        aria-label="Settings"
-        className={css.prefButton}
-      >
+      <DialogDisclosure {...dialog} aria-label="Settings" as={IconButton}>
         <MdSettings size={32} />
       </DialogDisclosure>
       <DialogBackdrop {...dialog} className={css.prefBG}>
         <Dialog
           {...dialog}
-          as="div"
           className={css.prefDrawer}
           aria-label="Settings Dialog"
         >
           <h1>Display Settings</h1>
-          <Button
+          <IconButton
             className={css.closeButton}
             onClick={dialog.hide}
             aria-label="Dismiss display settings dialog"
           >
             <MdClose size={32} />
-          </Button>
+          </IconButton>
           <PrefPanel />
         </Dialog>
       </DialogBackdrop>

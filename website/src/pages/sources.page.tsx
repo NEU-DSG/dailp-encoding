@@ -1,6 +1,7 @@
 import { join, sortBy } from "lodash"
 import React from "react"
 import { Helmet } from "react-helmet"
+import { Link } from "src/components"
 import * as Dailp from "src/graphql/dailp"
 import Layout from "../layout"
 import { sourceCitationId } from "../routes"
@@ -18,7 +19,7 @@ const SourcesPage = () => {
           identify and correlate words in a document. The list includes
           dictionaries and grammars written as early as the 18th century and as
           recent as the 2000s. Each citation is written generally following the{" "}
-          <a href="https://apastyle.apa.org/">APA style</a>, like so:
+          <Link href="https://apastyle.apa.org/">APA style</Link>, like so:
           <br />
           <b>Document ID:</b> Last name, First name; ... (Year published).{" "}
           <i>Title of the document</i>. Number of words referenced.

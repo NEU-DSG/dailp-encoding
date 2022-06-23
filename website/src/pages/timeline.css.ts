@@ -1,5 +1,5 @@
 import { globalStyle, style } from "@vanilla-extract/css"
-import { vspace } from "src/sprinkles.css"
+import { vspace } from "src/style/constants"
 
 export const underlined = style({
   borderBottom: "1px solid gray",
