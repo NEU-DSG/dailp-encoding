@@ -19,7 +19,7 @@ const WordpressPage = ({ slug }: Props) => {
   const wpPage = data?.page?.__typename === "Page" && data.page
 
   if (wpPage) {
-    return <WordpressContents content={wpPage.content ?? ""} />
+    return <WordpressPageContents content={wpPage.content} />
   } else if (fetching) {
     return (
       <div>
@@ -33,9 +33,17 @@ const WordpressPage = ({ slug }: Props) => {
 
 export default WordpressPage
 
-export const WordpressContents = ({ content }: { content: string }) => {
-  const parsed = parse(content, parseOptions)
-  return <>{parsed}</>
+export const WordpressPageContents = ({
+  content,
+}: {
+  content: string | null
+}) => {
+  if (content) {
+    const parsed = parse(content, parseOptions)
+    return <>{parsed}</>
+  } else {
+    return null
+  }
 }
 
 const parseOptions: HTMLReactParserOptions = {

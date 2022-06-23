@@ -1,12 +1,11 @@
 import React from "react"
 import { Helmet } from "react-helmet"
-import { Breadcrumbs, Link } from "src/components"
+import { Breadcrumbs, Link, WordpressPage } from "src/components"
 import * as Dailp from "src/graphql/dailp"
 import Layout from "src/layout"
 import { useRouteParams } from "src/renderer/PageShell"
 import { documentRoute } from "src/routes"
 import { fullWidth, paddedCenterColumn } from "src/style/utils.css"
-import WordpressPage from "src/wordpress-page"
 
 const CollectionPage = () => {
   const { slug } = useRouteParams()
