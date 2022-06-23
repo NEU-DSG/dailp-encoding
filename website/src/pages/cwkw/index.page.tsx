@@ -1,5 +1,5 @@
 import { Helmet } from "react-helmet"
-import WordpressPage from "src/wordpress-page"
+import { WordpressPage } from "src/components"
 
 const IndexPage = () => (
   <>
