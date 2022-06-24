@@ -122,86 +122,6 @@
     },
     "query": "-- Insert a collection with a certain slug.\ninsert into document_group (slug, title)\nvalues ($1, $2)\non conflict (slug)\n  do update set\n    title = excluded.title\n  returning id\n"
   },
-  "18b4d42a876bd0eb8185c8b573f3e20c213e711b797215987483a29a2e3780f6": {
-    "describe": {
-      "columns": [
-        {
-          "name": "id",
-          "ordinal": 0,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "source_text",
-          "ordinal": 1,
-          "type_info": "Text"
-        },
-        {
-          "name": "simple_phonetics",
-          "ordinal": 2,
-          "type_info": "Text"
-        },
-        {
-          "name": "phonemic",
-          "ordinal": 3,
-          "type_info": "Text"
-        },
-        {
-          "name": "english_gloss",
-          "ordinal": 4,
-          "type_info": "Text"
-        },
-        {
-          "name": "commentary",
-          "ordinal": 5,
-          "type_info": "Text"
-        },
-        {
-          "name": "document_id",
-          "ordinal": 6,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "index_in_document",
-          "ordinal": 7,
-          "type_info": "Int8"
-        },
-        {
-          "name": "page_number",
-          "ordinal": 8,
-          "type_info": "Text"
-        },
-        {
-          "name": "audio_url?",
-          "ordinal": 9,
-          "type_info": "Text"
-        },
-        {
-          "name": "audio_slice?",
-          "ordinal": 10,
-          "type_info": "Int8Range"
-        }
-      ],
-      "nullable": [
-        false,
-        false,
-        true,
-        true,
-        true,
-        true,
-        false,
-        false,
-        true,
-        false,
-        true
-      ],
-      "parameters": {
-        "Left": [
-          "Uuid"
-        ]
-      }
-    },
-    "query": "select\n  word.id,\n  word.source_text,\n  word.simple_phonetics,\n  word.phonemic,\n  word.english_gloss,\n  word.commentary,\n  word.document_id,\n  word.index_in_document,\n  word.page_number,\n  media_resource.url as \"audio_url?\",\n  media_slice.time_range as \"audio_slice?\"\nfrom word\n  left join media_slice on media_slice.id = word.audio_slice_id\n  left join media_resource on media_resource.id = media_slice.resource_id\nwhere document_id = $1\norder by index_in_document\n"
-  },
   "1dcec22261dae61c4404af7c630eb24e3cd2acc5b4717bcc9706f14c6dde7efc": {
     "describe": {
       "columns": [
@@ -804,6 +724,88 @@
       }
     },
     "query": "insert into document (short_name, title, is_reference, written_at, audio_slice_id, group_id, index_in_group)\nvalues ($1, $2, $3, $4, $5, $6, $7)\non conflict (short_name) do update set\n   title = excluded.title,\n   is_reference = excluded.is_reference,\n   written_at = excluded.written_at,\n   audio_slice_id = excluded.audio_slice_id,\n   group_id = excluded.group_id,\n   index_in_group = excluded.index_in_group\nreturning id\n"
+  },
+  "77cba7c2170986f8ded11b2e00972b38ac1ca0d66cc185d5be91da89dfd7989b": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "source_text",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "simple_phonetics",
+          "ordinal": 2,
+          "type_info": "Text"
+        },
+        {
+          "name": "phonemic",
+          "ordinal": 3,
+          "type_info": "Text"
+        },
+        {
+          "name": "english_gloss",
+          "ordinal": 4,
+          "type_info": "Text"
+        },
+        {
+          "name": "commentary",
+          "ordinal": 5,
+          "type_info": "Text"
+        },
+        {
+          "name": "document_id",
+          "ordinal": 6,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "index_in_document",
+          "ordinal": 7,
+          "type_info": "Int8"
+        },
+        {
+          "name": "page_number",
+          "ordinal": 8,
+          "type_info": "Text"
+        },
+        {
+          "name": "audio_url?",
+          "ordinal": 9,
+          "type_info": "Text"
+        },
+        {
+          "name": "audio_slice?",
+          "ordinal": 10,
+          "type_info": "Int8Range"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false,
+        true,
+        false,
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Int8",
+          "Int8"
+        ]
+      }
+    },
+    "query": "select\n  word.id,\n  word.source_text,\n  word.simple_phonetics,\n  word.phonemic,\n  word.english_gloss,\n  word.commentary,\n  word.document_id,\n  word.index_in_document,\n  word.page_number,\n  media_resource.url as \"audio_url?\",\n  media_slice.time_range as \"audio_slice?\"\nfrom word\n  left join media_slice on media_slice.id = word.audio_slice_id\n  left join media_resource on media_resource.id = media_slice.resource_id\nwhere document_id = $1 AND (word.index_in_document >= $2 or $2 is null) and (word.index_in_document < $3 or $3 is null)\norder by index_in_document\n"
   },
   "7860f1d60b1f09d62987a89d413a7243cb23005b6f19bb539b88311dbfbd223d": {
     "describe": {
