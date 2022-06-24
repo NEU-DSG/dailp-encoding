@@ -15,14 +15,14 @@ pub struct PositionInDocument {
     /// 1-indexed position indicating where the form sits in the ordering of all
     /// forms in the document. Used for relative ordering of forms from the
     /// same document.
-    pub index: i32,
+    pub index: i64,
     /// What section of the document image corresponds to this item?
     pub geometry: Option<Geometry>,
 }
 
 impl PositionInDocument {
     /// Make a new document position from the document ID, page number, and item index.
-    pub fn new(document_id: DocumentId, page_number: String, index: i32) -> Self {
+    pub fn new(document_id: DocumentId, page_number: String, index: i64) -> Self {
         Self {
             document_id,
             page_number,

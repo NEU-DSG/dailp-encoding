@@ -1,0 +1,2 @@
+alter table word
+drop constraint word_document_id_index_in_document_key;
