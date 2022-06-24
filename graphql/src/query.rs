@@ -307,6 +307,14 @@ pub struct UserInfo {
     )]
     groups: Vec<UserGroup>,
 }
+impl UserInfo {
+    pub fn new_test_admin() -> Self {
+        Self {
+            email: "test@dailp.northeastern.edu".to_string(),
+            groups: vec![UserGroup::Editor],
+        }
+    }
+}
 
 #[derive(Eq, PartialEq, Copy, Clone, Serialize, Deserialize, Debug, async_graphql::Enum)]
 enum UserGroup {
