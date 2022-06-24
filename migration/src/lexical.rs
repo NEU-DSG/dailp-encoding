@@ -87,34 +87,49 @@ pub async fn migrate_dictionaries(db: &Database) -> Result<()> {
         3,
     );
 
-    let df1975_entries = df1975
-        .into_iter()
-        .chain(root_nouns)
-        .chain(root_adjs)
-        .chain(body_parts)
-        .chain(irreg_nouns)
-        .chain(ptcp_nouns)
-        .chain(inf_nouns);
+    {
+        println!("Pushing DF1975 to database...");
+        let df1975_entries = df1975
+            .into_iter()
+            .chain(root_nouns)
+            .chain(root_adjs)
+            .chain(body_parts)
+            .chain(irreg_nouns)
+            .chain(ptcp_nouns)
+            .chain(inf_nouns);
 
-    println!("Pushing entries to database...");
-    // Push all lexical entries to the database.
+        // Push all the DF1975 surface forms to the sea of words.
+        let (roots, surface_forms): (Vec<_>, Vec<_>) = df1975_entries
+            .map(|entry| (entry.entry, entry.forms))
+            .unzip();
 
-    // Push all the surface forms to the sea of words.
-    let (roots, surface_forms): (Vec<_>, Vec<_>) = df1975_entries
-        .map(|entry| (entry.entry, entry.forms))
-        .unzip();
-    let surface_forms: Vec<_> = surface_forms.into_iter().flatten().collect();
-    db.insert_lexical_entries(df1975_id, roots, surface_forms)
+        let numerals = parse_numerals(
+            "1MB_FCG3QhmX-pw9t9PyMtFlV8SCvgXzWz8B9BdvEtec",
+            df1975_id,
+            1975,
+        )
         .await?;
 
-    println!("Ingesting numerals...");
-    parse_numerals(
-        db,
-        "1MB_FCG3QhmX-pw9t9PyMtFlV8SCvgXzWz8B9BdvEtec",
-        df1975_id,
-        1975,
-    )
-    .await?;
+        let surface_forms: Vec<_> = surface_forms
+            .into_iter()
+            .flatten()
+            .chain(numerals)
+            .collect();
+
+        db.insert_lexical_entries(df1975_id, roots, surface_forms)
+            .await?;
+    }
+
+    {
+        println!("Pushing DF2003 to database...");
+        let (roots, surface_forms): (Vec<_>, Vec<_>) = df2003
+            .into_iter()
+            .map(|entry| (entry.entry, entry.forms))
+            .unzip();
+        let surface_forms: Vec<_> = surface_forms.into_iter().flatten().collect();
+        db.insert_lexical_entries(df2003_id, roots, surface_forms)
+            .await?;
+    }
 
     // FIXME has items from a bunch of different documents.
     // ingest_particle_index(db, "1YppMsIvNixHdq7oM_iCnYE1ZI4y0TMSf-mVibji7pJ4").await?;
@@ -130,11 +145,10 @@ pub async fn migrate_dictionaries(db: &Database) -> Result<()> {
 }
 
 async fn parse_numerals(
-    db: &Database,
     sheet_id: &str,
     doc_id: DocumentId,
     year: i32,
-) -> Result<()> {
+) -> Result<Vec<AnnotatedForm>> {
     let numerals = SheetResult::from_sheet(sheet_id, None).await?;
     let date = Date::from_ymd(year, 1, 1);
 
@@ -177,9 +191,7 @@ async fn parse_numerals(
             })
         });
 
-    db.only_insert_words(doc_id, forms.collect()).await?;
-
-    Ok(())
+    Ok(forms.collect())
 }
 
 async fn insert_document_from_sheet(
