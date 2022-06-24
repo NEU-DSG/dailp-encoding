@@ -2,12 +2,10 @@ use crate::batch_join_all;
 use crate::spreadsheets::{LexicalEntryWithForms, SheetResult};
 use anyhow::Result;
 use dailp::{
-    convert_udb, seg_verb_surface_forms, AnnotatedDoc, AnnotatedForm, Contributor, Database, Date,
-    DocumentId, DocumentMetadata, LexicalConnection, MorphemeId, MorphemeSegment,
-    PositionInDocument,
+    convert_udb, seg_verb_surface_forms, AnnotatedForm, Contributor, Database, Date, DocumentId,
+    DocumentMetadata, LexicalConnection, MorphemeId, MorphemeSegment, PositionInDocument,
 };
 use itertools::Itertools;
-use log::info;
 
 pub async fn migrate_dictionaries(db: &Database) -> Result<()> {
     let df1975_id = db
