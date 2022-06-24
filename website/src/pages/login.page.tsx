@@ -1,4 +1,5 @@
 import React from "react"
+import { setUserAgent } from "react-device-detect"
 import { Button } from "reakit/Button"
 import {
   unstable_Form as Form,
@@ -102,7 +103,7 @@ export const LoginHeaderButton = () => {
 
 // a popover handling user log out
 const ConfirmLogout = () => {
-  const { user, setUser } = useUser()
+  const { user, setUser, setAuthenticated } = useUser()
   const popover = usePopoverState()
 
   return (
