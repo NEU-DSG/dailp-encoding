@@ -29,7 +29,7 @@ export const UserProvider = (props: { children: any }) => {
   const [authenticated, setAuthenticated] = useState(false)
 
   const [user, setUser] = useState<CognitoUser | null>(
-    authenticated ? userPool.getCurrentUser() : null
+    userPool.getCurrentUser()
   )
 
   // refreshes last authenticated user
@@ -37,11 +37,15 @@ export const UserProvider = (props: { children: any }) => {
     if (user != null) {
       user.getSession(function (err: Error, result: CognitoUserSession | null) {
         if (result) {
+          setAuthenticated(true)
           console.log("You are now logged in.")
         }
       })
+    } else if (authenticated) {
+      // else if there is no current user but authentication is true, make sure it's set to false
+      setAuthenticated(false)
     }
-  }, [])
+  }, [user])
 
   function loginUser(username: string, password: string) {
     const user = new CognitoUser({
