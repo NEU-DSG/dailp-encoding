@@ -122,7 +122,7 @@ impl AnnotatedForm {
     }
 
     /// Number of words preceding this one in the containing document
-    async fn index(&self) -> i32 {
+    async fn index(&self) -> i64 {
         self.position.index
     }
 
