@@ -122,8 +122,6 @@ async fn validate_documents() -> Result<()> {
             .await?
             .into_index()?;
 
-    println!("Migrating documents to database...");
-
     // Retrieve data for spreadsheets in sequence.
     // Because of Google API rate limits, we have to process them sequentially
     // rather than in parallel.
@@ -137,7 +135,7 @@ async fn validate_documents() -> Result<()> {
                 sheet_id.clone(),
                 fetch_sheet(None, &sheet_id, collection_id, order_index as i64).await,
             ));
-            tokio::time::sleep(Duration::from_millis(1000)).await;
+            tokio::time::sleep(Duration::from_millis(1300)).await;
         }
     }
 

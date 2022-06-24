@@ -2,11 +2,10 @@ use crate::batch_join_all;
 use crate::spreadsheets::{LexicalEntryWithForms, SheetResult};
 use anyhow::Result;
 use dailp::{
-    convert_udb, seg_verb_surface_forms, AnnotatedDoc, AnnotatedForm, Contributor, Database, Date,
-    DocumentId, DocumentMetadata, LexicalConnection, MorphemeId, MorphemeSegment,
-    PositionInDocument,
+    convert_udb, seg_verb_surface_forms, AnnotatedForm, Contributor, Database, Date, DocumentId,
+    DocumentMetadata, LexicalConnection, MorphemeId, MorphemeSegment, PositionInDocument,
 };
-use log::info;
+use itertools::Itertools;
 
 pub async fn migrate_dictionaries(db: &Database) -> Result<()> {
     let df1975_id = db
@@ -86,36 +85,57 @@ pub async fn migrate_dictionaries(db: &Database) -> Result<()> {
         3,
     );
 
-    let entries = df1975
-        .chain(df2003)
-        .chain(root_nouns)
-        .chain(root_adjs)
-        .chain(body_parts)
-        .chain(irreg_nouns)
-        .chain(ptcp_nouns)
-        .chain(inf_nouns);
+    {
+        println!("Pushing DF1975 to database...");
+        let df1975_entries = df1975
+            .into_iter()
+            .chain(root_nouns)
+            .chain(root_adjs)
+            .chain(body_parts)
+            .chain(irreg_nouns)
+            .chain(ptcp_nouns)
+            .chain(inf_nouns);
 
-    println!("Pushing entries to database...");
+        // Push all the DF1975 surface forms to the sea of words.
+        let (roots, surface_forms): (Vec<_>, Vec<_>) = df1975_entries
+            .map(|entry| (entry.entry, entry.forms))
+            .unzip();
 
-    parse_numerals(
-        db,
-        "1MB_FCG3QhmX-pw9t9PyMtFlV8SCvgXzWz8B9BdvEtec",
-        df1975_id,
-        1975,
-    )
-    .await?;
+        let numerals = parse_numerals(
+            "1MB_FCG3QhmX-pw9t9PyMtFlV8SCvgXzWz8B9BdvEtec",
+            df1975_id,
+            1975,
+        )
+        .await?;
+
+        let surface_forms: Vec<_> = surface_forms
+            .into_iter()
+            .flatten()
+            .chain(numerals)
+            .collect();
+
+        db.insert_lexical_entries(df1975_id, roots, surface_forms)
+            .await?;
+    }
+
+    {
+        println!("Pushing DF2003 to database...");
+        let (roots, surface_forms): (Vec<_>, Vec<_>) = df2003
+            .into_iter()
+            .map(|entry| (entry.entry, entry.forms))
+            .unzip();
+        let surface_forms: Vec<_> = surface_forms.into_iter().flatten().collect();
+        db.insert_lexical_entries(df2003_id, roots, surface_forms)
+            .await?;
+    }
 
     // FIXME has items from a bunch of different documents.
     // ingest_particle_index(db, "1YppMsIvNixHdq7oM_iCnYE1ZI4y0TMSf-mVibji7pJ4").await?;
 
+    println!("Ingesting AC1995...");
     ingest_ac1995(db, "1x02KTuF0yyEFcrJwkfFiBKj79ysQTZfLKB6hKeq-ZT8").await?;
 
-    // Push all lexical entries to the database.
-    for entry in entries {
-        // Push all the surface forms to the sea of words.
-        db.insert_lexical_entry(entry.entry, entry.forms).await?;
-    }
-
+    println!("Ingesting PF1975 grammatical appendix...");
     // DF1975 Grammatical Appendix (PF1975)
     parse_appendix(db, "1VjpKXMqb7CgFKE5lk9E6gqL-k6JKZ3FVUvhnqiMZYQg", 2).await?;
 
@@ -123,11 +143,10 @@ pub async fn migrate_dictionaries(db: &Database) -> Result<()> {
 }
 
 async fn parse_numerals(
-    db: &Database,
     sheet_id: &str,
     doc_id: DocumentId,
     year: i32,
-) -> Result<()> {
+) -> Result<Vec<AnnotatedForm>> {
     let numerals = SheetResult::from_sheet(sheet_id, None).await?;
     let date = Date::from_ymd(year, 1, 1);
 
@@ -138,7 +157,7 @@ async fn parse_numerals(
         .enumerate()
         .filter_map(|(index, cols)| {
             let mut values = cols.into_iter();
-            let key = values.next()?.parse().unwrap_or(index as i32);
+            let key = values.next()?.parse().unwrap_or(index as i64 + 1);
             // UDB t/th
             let root = values.next().filter(|s| !s.is_empty())?;
             let root_dailp = convert_udb(&root).into_dailp();
@@ -170,9 +189,7 @@ async fn parse_numerals(
             })
         });
 
-    batch_join_all(forms.into_iter().map(|f| db.only_insert_word(f))).await?;
-
-    Ok(())
+    Ok(forms.collect())
 }
 
 async fn insert_document_from_sheet(
@@ -252,7 +269,7 @@ async fn parse_appendix(db: &Database, sheet_id: &str, to_skip: usize) -> Result
             })
         });
 
-    batch_join_all(forms.into_iter().map(|f| db.only_insert_word(f))).await?;
+    db.only_insert_words(meta.id, forms.collect()).await?;
 
     let links = SheetResult::from_sheet(sheet_id, Some("References")).await?;
     let links = links.values.into_iter().skip(1).filter_map(|row| {
@@ -282,64 +299,74 @@ fn parse_new_df1975(
     has_comment: bool,
     after_root: usize,
     translations: usize,
-) -> impl Iterator<Item = LexicalEntryWithForms> {
+) -> Vec<LexicalEntryWithForms> {
     sheet
         .values
         .into_iter()
         // The first two rows are simply headers.
         .skip(2)
+        .filter(|cols| cols.len() > 4 && !cols[2].is_empty())
+        .group_by(|columns| {
+            columns
+                .get(0)
+                .and_then(|s| s.split(",").next().unwrap().parse::<i64>().ok())
+        })
+        .into_iter()
+        .enumerate()
         // The rest are relevant to the verb itself.
-        .filter_map(move |columns| {
+        .filter_map(move |(index, (key, rows))| {
+            let rows: Vec<_> = rows.collect();
+            let columns = rows.get(0)?.clone();
+
             // The columns are as follows: key, page number, root, root gloss,
             // translations 1, 2, 3, transitivity, UDB class, blank, surface forms.
-            if columns.len() > 4 && !columns[2].is_empty() {
-                // Skip reference numbers for now.
-                let mut root_values = columns.into_iter();
-                let key = root_values.next()?;
-                let page_number = root_values.next()?;
-                let root = root_values.next().filter(|s| !s.is_empty())?;
-                let root_gloss = root_values.next().filter(|s| !s.is_empty())?;
-                let mut form_values = root_values.clone().skip(after_root + translations);
-                let date = Date::from_ymd(year, 1, 1);
-                let pos =
-                    PositionInDocument::new(doc_id.clone(), page_number, key.parse().unwrap_or(1));
-                Some(LexicalEntryWithForms {
-                    forms: seg_verb_surface_forms(
-                        &pos,
-                        &date,
-                        &mut form_values,
-                        translation_count,
-                        has_numeric,
-                        has_comment,
-                    ),
-                    entry: AnnotatedForm {
-                        id: None,
-                        simple_phonetics: None,
-                        normalized_source: None,
-                        phonemic: None,
-                        commentary: None,
-                        line_break: None,
-                        page_break: None,
-                        english_gloss: root_values
-                            .take(translations)
-                            .map(|s| s.trim().to_owned())
-                            .filter(|s| !s.is_empty())
-                            .collect(),
-                        segments: Some(vec![MorphemeSegment::new(
-                            convert_udb(&root).into_dailp(),
-                            root_gloss.to_owned(),
-                            None,
-                        )]),
-                        date_recorded: Some(date),
-                        source: root,
-                        position: pos,
-                        audio_track: None,
-                    },
-                })
-            } else {
-                None
-            }
+            // Skip reference numbers for now.
+            let mut root_values = columns.into_iter().skip(1);
+            let key = key.unwrap_or(index as i64 + 1);
+            let page_number = root_values.next()?;
+            let root = root_values.next().filter(|s| !s.is_empty())?;
+            let root_gloss = root_values.next().filter(|s| !s.is_empty())?;
+            let glosses = root_values
+                .take(translations)
+                .map(|s| s.trim().to_owned())
+                .filter(|s| !s.is_empty())
+                .collect();
+            let date = Date::from_ymd(year, 1, 1);
+            let pos = PositionInDocument::new(doc_id.clone(), page_number, key);
+            let mut form_cells = rows
+                .into_iter()
+                .flat_map(|row| row.into_iter().skip(4 + translations + after_root));
+            Some(LexicalEntryWithForms {
+                forms: seg_verb_surface_forms(
+                    &pos,
+                    &date,
+                    &mut form_cells,
+                    translation_count,
+                    has_numeric,
+                    has_comment,
+                ),
+                entry: AnnotatedForm {
+                    id: None,
+                    simple_phonetics: None,
+                    normalized_source: None,
+                    phonemic: None,
+                    commentary: None,
+                    line_break: None,
+                    page_break: None,
+                    english_gloss: glosses,
+                    segments: Some(vec![MorphemeSegment::new(
+                        convert_udb(&root).into_dailp(),
+                        root_gloss.to_owned(),
+                        None,
+                    )]),
+                    date_recorded: Some(date),
+                    source: root,
+                    position: pos,
+                    audio_track: None,
+                },
+            })
         })
+        .collect()
 }
 
 async fn ingest_particle_index(db: &Database, document_id: &str) -> Result<()> {
@@ -359,7 +386,7 @@ async fn ingest_particle_index(db: &Database, document_id: &str) -> Result<()> {
             let pos = PositionInDocument::new(
                 todo!("Get the actual document ID from the short name provided."),
                 source.gloss,
-                index as i32,
+                index as i64,
             );
             Some(AnnotatedForm {
                 id: None,
@@ -379,7 +406,7 @@ async fn ingest_particle_index(db: &Database, document_id: &str) -> Result<()> {
         });
 
     // Push the forms to the database.
-    batch_join_all(forms.into_iter().map(|f| db.only_insert_word(f))).await?;
+    // db.only_insert_words(forms).await?;
 
     Ok(())
 }
@@ -390,7 +417,7 @@ async fn ingest_ac1995(db: &Database, sheet_id: &str) -> Result<()> {
 
     let forms = sheet.values.into_iter().filter_map(|row| {
         let mut row = row.into_iter();
-        let index: i32 = row.next()?.parse().ok()?;
+        let index: i64 = row.next()?.parse().ok()?;
         let form_id = row.next()?;
         let syllabary = row.next()?;
         let _romanized = row.next()?;
@@ -415,7 +442,7 @@ async fn ingest_ac1995(db: &Database, sheet_id: &str) -> Result<()> {
     });
 
     // Push the forms to the database.
-    batch_join_all(forms.into_iter().map(|f| db.only_insert_word(f))).await?;
+    db.only_insert_words(meta.id, forms.collect()).await?;
 
     Ok(())
 }

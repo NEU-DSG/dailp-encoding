@@ -14,7 +14,7 @@ reqwest = { version = "0.11", features = ["json", "rustls-tls"], default-feature
 tokio = { version = "1.5", features = ["full", "time"] }
 futures-retry = "0.6"
 anyhow = "1.0"
-itertools = "0.9"
+itertools = "0.10"
 futures = "0.3"
 dotenv = "0.15"
 regex = "1.5"

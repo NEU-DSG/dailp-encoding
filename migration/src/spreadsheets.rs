@@ -11,6 +11,7 @@ use dailp::{
     LexicalConnection, LineBreak, MorphemeId, MorphemeSegment, PageBreak, Uuid,
 };
 use dailp::{PositionInDocument, SourceAttribution};
+use itertools::Itertools;
 use log::{error, info, warn};
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, fs::File, io::Write, time::Duration};
@@ -136,7 +137,7 @@ impl SheetResult {
             .values
             .into_par_iter()
             // First two rows are simply headers.
-            .skip(2)
+            .skip(1)
             .enumerate()
             .filter(|(_idx, cols)| cols.len() > 4 && !cols[1].is_empty())
             // The rest are relevant to the noun itself.
@@ -146,14 +147,14 @@ impl SheetResult {
 
                 // Skip reference numbers for now.
                 let mut root_values = columns.into_iter();
-                let _key = root_values.next()?;
+                let key = root_values.next()?.parse().unwrap_or(idx as i64 + 1);
                 let root = root_values.next()?;
                 let root_gloss = root_values.next()?;
                 // Skip page ref.
                 let page_number = root_values.next()?;
                 let mut form_values = root_values;
                 let date = Date::from_ymd(year, 1, 1);
-                let position = PositionInDocument::new(doc_id.clone(), page_number, idx as i32 + 1);
+                let position = PositionInDocument::new(doc_id.clone(), page_number, key);
                 Some(LexicalEntryWithForms {
                     forms: root_verb_surface_forms(
                         &position,
@@ -199,55 +200,59 @@ impl SheetResult {
         use rayon::prelude::*;
         Ok(self
             .values
-            .into_par_iter()
+            .into_iter()
             // First two rows are simply headers.
             .skip(2)
+            .filter(|cols| cols.len() > 4 && !cols[2].is_empty())
+            .group_by(|cols| cols.get(0).and_then(|s| s.parse::<i64>().ok()))
+            .into_iter()
+            .enumerate()
             // The rest are relevant to the noun itself.
-            .filter_map(|columns| {
+            .filter_map(|(index, (key, rows))| {
+                let rows: Vec<_> = rows.collect();
+                let columns = rows.get(0)?.clone();
                 // The columns are as follows: key, root, root gloss, page ref,
                 // category, tags, surface forms.
 
-                if columns.len() > 4 && !columns[1].is_empty() {
-                    // Skip reference numbers for now.
-                    let mut root_values = columns.into_iter();
-                    let index = root_values.next()?.parse().unwrap_or(1);
-                    let page_number = root_values.next();
-                    let root = root_values.next()?;
-                    let root_gloss = root_values.next()?;
-                    // Skip page ref and category.
-                    let mut form_values = root_values.skip(after_root);
-                    let date = Date::from_ymd(year, 1, 1);
-                    let position = PositionInDocument::new(doc_id.clone(), page_number?, index);
-                    Some(LexicalEntryWithForms {
-                        forms: root_noun_surface_forms(
-                            &position,
-                            &date,
-                            &mut form_values,
-                            has_comment,
-                        ),
-                        entry: AnnotatedForm {
-                            id: None,
-                            position,
-                            normalized_source: None,
-                            simple_phonetics: None,
-                            phonemic: None,
-                            segments: Some(vec![MorphemeSegment::new(
-                                convert_udb(&root).into_dailp(),
-                                root_gloss.clone(),
-                                None,
-                            )]),
-                            english_gloss: vec![root_gloss],
-                            source: root,
-                            commentary: None,
-                            date_recorded: Some(date),
-                            line_break: None,
-                            page_break: None,
-                            audio_track: None,
-                        },
-                    })
-                } else {
-                    None
-                }
+                // Skip reference numbers for now.
+                let mut root_values = columns.into_iter();
+                let index = root_values
+                    .next()?
+                    .split(",")
+                    .next()?
+                    .parse()
+                    .unwrap_or(index as i64 + 1);
+                let page_number = root_values.next();
+                let root = root_values.next()?;
+                let root_gloss = root_values.next()?;
+                // Skip page ref and category.
+                let mut form_values = rows
+                    .into_iter()
+                    .flat_map(|row| row.into_iter().skip(4 + after_root));
+                let date = Date::from_ymd(year, 1, 1);
+                let position = PositionInDocument::new(doc_id.clone(), page_number?, index);
+                Some(LexicalEntryWithForms {
+                    forms: root_noun_surface_forms(&position, &date, &mut form_values, has_comment),
+                    entry: AnnotatedForm {
+                        id: None,
+                        position,
+                        normalized_source: None,
+                        simple_phonetics: None,
+                        phonemic: None,
+                        segments: Some(vec![MorphemeSegment::new(
+                            convert_udb(&root).into_dailp(),
+                            root_gloss.clone(),
+                            None,
+                        )]),
+                        english_gloss: vec![root_gloss],
+                        source: root,
+                        commentary: None,
+                        date_recorded: Some(date),
+                        line_break: None,
+                        page_break: None,
+                        audio_track: None,
+                    },
+                })
             })
             .collect())
     }

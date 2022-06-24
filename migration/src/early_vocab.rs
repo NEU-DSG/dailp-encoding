@@ -182,7 +182,7 @@ async fn parse_early_vocab(
                     position: dailp::PositionInDocument::new(
                         doc_id.clone(),
                         page_number,
-                        index as i32 + 1,
+                        index as i64 + 1,
                     ),
                     date_recorded: meta.date.clone(),
                     id: None,
@@ -195,7 +195,7 @@ async fn parse_early_vocab(
     let (forms, links): (Vec<_>, Vec<_>) = entries.unzip();
 
     // Push all forms and links to the database.
-    batch_join_all(forms.into_iter().map(|form| db.insert_one_word(form))).await?;
+    db.only_insert_words(doc_id, forms).await?;
 
     Ok(links.into_iter().flatten().collect())
 }
