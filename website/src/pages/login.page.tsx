@@ -103,7 +103,7 @@ export const LoginHeaderButton = () => {
 
 // a popover handling user log out
 const ConfirmLogout = () => {
-  const { user, setUser, setAuthenticated } = useUser()
+  const { user, setUser } = useUser()
   const popover = usePopoverState()
 
   return (
