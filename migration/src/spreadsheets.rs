@@ -137,7 +137,7 @@ impl SheetResult {
             .values
             .into_par_iter()
             // First two rows are simply headers.
-            .skip(2)
+            .skip(1)
             .enumerate()
             .filter(|(_idx, cols)| cols.len() > 4 && !cols[1].is_empty())
             // The rest are relevant to the noun itself.

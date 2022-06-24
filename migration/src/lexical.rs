@@ -306,7 +306,11 @@ fn parse_new_df1975(
         // The first two rows are simply headers.
         .skip(2)
         .filter(|cols| cols.len() > 4 && !cols[2].is_empty())
-        .group_by(|columns| columns.get(0).and_then(|s| s.parse::<i64>().ok()))
+        .group_by(|columns| {
+            columns
+                .get(0)
+                .and_then(|s| s.split(",").next().unwrap().parse::<i64>().ok())
+        })
         .into_iter()
         .enumerate()
         // The rest are relevant to the verb itself.
@@ -322,11 +326,16 @@ fn parse_new_df1975(
             let page_number = root_values.next()?;
             let root = root_values.next().filter(|s| !s.is_empty())?;
             let root_gloss = root_values.next().filter(|s| !s.is_empty())?;
+            let glosses = root_values
+                .take(translations)
+                .map(|s| s.trim().to_owned())
+                .filter(|s| !s.is_empty())
+                .collect();
             let date = Date::from_ymd(year, 1, 1);
             let pos = PositionInDocument::new(doc_id.clone(), page_number, key);
             let mut form_cells = rows
                 .into_iter()
-                .flat_map(|row| row.into_iter().skip(4 + after_root + translations));
+                .flat_map(|row| row.into_iter().skip(4 + translations + after_root));
             Some(LexicalEntryWithForms {
                 forms: seg_verb_surface_forms(
                     &pos,
@@ -344,11 +353,7 @@ fn parse_new_df1975(
                     commentary: None,
                     line_break: None,
                     page_break: None,
-                    english_gloss: root_values
-                        .take(translations)
-                        .map(|s| s.trim().to_owned())
-                        .filter(|s| !s.is_empty())
-                        .collect(),
+                    english_gloss: glosses,
                     segments: Some(vec![MorphemeSegment::new(
                         convert_udb(&root).into_dailp(),
                         root_gloss.to_owned(),
