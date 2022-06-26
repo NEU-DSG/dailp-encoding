@@ -617,6 +617,20 @@
     },
     "query": "select\n  attr.document_id,\n  attr.contribution_role,\n  contributor.id,\n  contributor.full_name\nfrom contributor_attribution as attr\n  inner join contributor on contributor.id = attr.contributor_id\nwhere attr.document_id = any($1)\n"
   },
+  "6858e67c5a27aa4f38366244a46c9a4a50546c164a2b91599301aad1bc8f3cd0": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "TextArray",
+          "UuidArray",
+          "TextArray"
+        ]
+      }
+    },
+    "query": "insert into contributor_attribution (contributor_id, document_id, contribution_role)\nselect\n  contributor.id,\n  input_data.doc_id,\n  input_data.contribution_role\nfrom\n  unnest(\n    $1::text[], $2::uuid[], $3::text[]\n  ) as input_data(full_name, doc_id, contribution_role)\n  inner join contributor on contributor.full_name = input_data.full_name\n-- If this document already has this contributor, move on.\non conflict do nothing\n"
+  },
   "6d5a72c97ad0bb2831e0b605a340630b28f70402023f5abec5ff2043f343f0b1": {
     "describe": {
       "columns": [],
@@ -762,20 +776,6 @@
       }
     },
     "query": "select\n  document_group.slug,\n  document_group.title\nfrom document\n  inner join document_group on document_group.id = document.group_id\nwhere document.id = $1\n"
-  },
-  "7893a479a995a4deb24303bce0679a252ff88ca7f917d50854bb0ccb59557f17": {
-    "describe": {
-      "columns": [],
-      "nullable": [],
-      "parameters": {
-        "Left": [
-          "Text",
-          "Uuid",
-          "Text"
-        ]
-      }
-    },
-    "query": "insert into contributor_attribution (contributor_id, document_id, contribution_role)\nselect contributor.id, $2, $3\nfrom contributor\nwhere contributor.full_name = $1\n-- If this document already has this contributor, move on.\non conflict do nothing\n"
   },
   "7a6c5fc86cb220cb8e0dcbfbbb994b6288490c39e31cef7bc46a9ccc7e321438": {
     "describe": {
@@ -1201,39 +1201,6 @@
     },
     "query": "select\n  id,\n  base_url\nfrom iiif_source\nwhere id = $1\n"
   },
-  "adcb2464294d9285975b9b8311a2bf20cc9b7020bde9d5e5b1f1c36cb0fb023f": {
-    "describe": {
-      "columns": [
-        {
-          "name": "id",
-          "ordinal": 0,
-          "type_info": "Uuid"
-        }
-      ],
-      "nullable": [
-        false
-      ],
-      "parameters": {
-        "Left": [
-          "Text",
-          "Text",
-          "Text",
-          "Text",
-          "Date",
-          "Text",
-          "Uuid",
-          "Text",
-          "Int8",
-          "Uuid",
-          "Int8Range",
-          "Text",
-          "Int8",
-          "Int8"
-        ]
-      }
-    },
-    "query": "-- Insert audio resource if there is one for this word.\nwith inserted_audio_resource as (\n  insert into media_resource (url)\n  select $12::text\n  where $12 is not null\n  on conflict (url) do nothing\n  returning id\n),\ninserted_audio_slice as (\n  insert into media_slice (resource_id, time_range)\n  select id, int8range($13, $14)\n  from inserted_audio_resource\n  returning id\n)\ninsert into word (\n  source_text, simple_phonetics, phonemic, english_gloss, recorded_at, commentary,\n  document_id, page_number, index_in_document, page_id, character_range, audio_slice_id)\nselect $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, inserted_audio_slice.id\nfrom inserted_audio_slice\nreturning id\n"
-  },
   "afca9b69fc11aef29379ab4d753d0b644b6ee3a698f3a6e857bfb6a83a4b38f1": {
     "describe": {
       "columns": [
@@ -1549,6 +1516,39 @@
       }
     },
     "query": "select\n  document.id,\n  document.short_name,\n  document.title,\n  document.written_at,\n  document.is_reference,\n  coalesce(\n    jsonb_agg(\n      jsonb_build_object(\n        'name',\n        contributor.full_name,\n        'role',\n        contributor_attribution.contribution_role\n      )\n    ) filter (where contributor is not null),\n    '[]'\n  )\n  as contributors\nfrom document\n  left join\n    contributor_attribution on contributor_attribution.document_id = document.id\n  left join contributor on contributor.id = contributor_attribution.contributor_id\ngroup by document.id\n"
+  },
+  "c3b0cc321a2dd0def741309c0538e13f0d70696635d88623cd1faa231220ba53": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        }
+      ],
+      "nullable": [
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Text",
+          "Text",
+          "Text",
+          "Date",
+          "Text",
+          "Uuid",
+          "Text",
+          "Int8",
+          "Uuid",
+          "Int8Range",
+          "Text",
+          "Int8",
+          "Int8"
+        ]
+      }
+    },
+    "query": "-- Insert audio resource if there is one for this word.\nwith inserted_audio_resource as (\n  insert into media_resource (url)\n  select $12::text\n  where $12 is not null\n  on conflict (url) do nothing\n  returning id\n),\ninserted_audio_slice as (\n  insert into media_slice (resource_id, time_range)\n  select id, int8range($13, $14)\n  from inserted_audio_resource\n  returning id\n)\ninsert into word (\n  source_text, simple_phonetics, phonemic, english_gloss, recorded_at, commentary,\n  document_id, page_number, index_in_document, page_id, character_range, audio_slice_id)\nselect $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, inserted_audio_slice.id\nfrom (values (1)) as t\nleft join inserted_audio_slice on true\nreturning id\n"
   },
   "cc71e3a7b4c013adc4d0cb79acd702aa0daa0290013a31e9fee3bd1f5990fa4f": {
     "describe": {

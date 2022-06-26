@@ -421,16 +421,22 @@ impl Database {
         .fetch_one(&mut tx)
         .await?;
 
-        for contributor in &meta.contributors {
+        {
+            let (name, doc, role): (Vec<_>, Vec<_>, Vec<_>) = meta
+                .contributors
+                .iter()
+                .map(|contributor| (&*contributor.name, document_uuid, &*contributor.role))
+                .multiunzip();
             query_file!(
-                "queries/upsert_document_contributor.sql",
-                &contributor.name,
-                &document_uuid,
-                &contributor.role
+                "queries/upsert_document_contributors.sql",
+                &*name as _,
+                &*doc,
+                &*role as _
             )
             .execute(&mut tx)
             .await?;
         }
+
         tx.commit().await?;
 
         Ok(DocumentId(document_uuid))
