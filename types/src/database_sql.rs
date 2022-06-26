@@ -616,10 +616,7 @@ impl Database {
             .execute(&mut tx)
             .await?;
 
-        for form in forms {
-            self.insert_word(&mut tx, form, document_id.0, None, None)
-                .await?;
-        }
+        self.insert_lexical_words(&mut tx, forms).await?;
 
         tx.commit().await?;
         Ok(())
@@ -683,32 +680,53 @@ impl Database {
         .fetch_all(&mut tx)
         .await?;
 
-        let forms_with_id = forms.into_iter().zip(ids);
+        let (doc_id, gloss, word_id, index, morpheme, followed_by): (
+            Vec<_>,
+            Vec<_>,
+            Vec<_>,
+            Vec<_>,
+            Vec<_>,
+            Vec<_>,
+        ) = forms
+            .into_iter()
+            .zip(ids)
+            .filter_map(move |(form, word_id)| {
+                form.segments.map(move |segments| {
+                    segments
+                        .into_iter()
+                        .enumerate()
+                        .map(move |(index, segment)| {
+                            let gloss = segment
+                                .gloss
+                                .replace(&[',', '+', '(', ')', '[', ']'] as &[char], " ")
+                                .split_whitespace()
+                                .join(".");
 
-        for (form, word_id) in forms_with_id {
-            if let Some(segments) = &form.segments {
-                for (index, segment) in segments.into_iter().enumerate() {
-                    // FIXME Get rid of this sanitize step.
-                    let gloss = segment
-                        .gloss
-                        .replace(&[',', '+', '(', ')', '[', ']'] as &[char], " ")
-                        .split_whitespace()
-                        .join(".");
+                            (
+                                form.position.document_id.0,
+                                gloss,
+                                word_id,
+                                index as i64,
+                                segment.morpheme,
+                                segment.followed_by,
+                            )
+                        })
+                })
+            })
+            .flatten()
+            .multiunzip();
 
-                    query_file!(
-                        "queries/upsert_word_segment.sql",
-                        form.position.document_id.0,
-                        gloss,
-                        word_id,
-                        index as i64,
-                        segment.morpheme,
-                        &segment.followed_by as &Option<SegmentType>
-                    )
-                    .execute(&mut tx)
-                    .await?;
-                }
-            }
-        }
+        query_file!(
+            "queries/upsert_many_word_segments.sql",
+            &*doc_id,
+            &*gloss,
+            &*word_id,
+            &*index,
+            &*morpheme,
+            &*followed_by as _
+        )
+        .execute(&mut tx)
+        .await?;
 
         tx.commit().await?;
 
@@ -725,23 +743,16 @@ impl Database {
     ) -> Result<Uuid> {
         let mut tx = tx.begin().await?;
 
-        // Insert audio resource if there is one for this word.
-        let audio_slice_id = if let Some(track) = form.audio_track {
-            let time_range: Option<PgRange<_>> = match (track.start_time, track.end_time) {
-                (Some(a), Some(b)) => Some((a as i64..b as i64).into()),
-                (Some(a), None) => Some((a as i64..).into()),
-                (None, Some(b)) => Some((..b as i64).into()),
-                (None, None) => None,
-            };
-            Some(
-                query_file_scalar!("queries/insert_audio.sql", track.resource_url, time_range)
-                    .fetch_one(&mut tx)
-                    .await?,
-            )
-        } else {
-            None
-        };
-
+        let audio_start = form
+            .audio_track
+            .as_ref()
+            .and_then(|t| t.start_time)
+            .map(i64::from);
+        let audio_end = form
+            .audio_track
+            .as_ref()
+            .and_then(|t| t.end_time)
+            .map(i64::from);
         let word_id: Uuid = query_file_scalar!(
             "queries/upsert_word_in_document.sql",
             form.source,
@@ -755,32 +766,54 @@ impl Database {
             form.position.index as i64,
             page_id,
             char_range,
-            audio_slice_id
+            form.audio_track.map(|t| t.resource_url),
+            audio_start,
+            audio_end
         )
         .fetch_one(&mut tx)
         .await?;
 
         if let Some(segments) = form.segments {
-            for (index, segment) in segments.into_iter().enumerate() {
-                // FIXME Get rid of this sanitize step.
-                let gloss = segment
-                    .gloss
-                    .replace(&[',', '+', '(', ')', '[', ']'] as &[char], " ")
-                    .split_whitespace()
-                    .join(".");
+            let (document_id, gloss, word_id, index, morpheme, followed_by): (
+                Vec<_>,
+                Vec<_>,
+                Vec<_>,
+                Vec<_>,
+                Vec<_>,
+                Vec<_>,
+            ) = segments
+                .into_iter()
+                .enumerate()
+                .map(move |(index, segment)| {
+                    // FIXME Get rid of this sanitize step.
+                    let gloss = segment
+                        .gloss
+                        .replace(&[',', '+', '(', ')', '[', ']'] as &[char], " ")
+                        .split_whitespace()
+                        .join(".");
 
-                query_file!(
-                    "queries/upsert_word_segment.sql",
-                    document_id,
-                    gloss,
-                    word_id,
-                    index as i64,
-                    segment.morpheme,
-                    segment.followed_by as Option<SegmentType>
-                )
-                .execute(&mut tx)
-                .await?;
-            }
+                    (
+                        document_id,
+                        gloss.clone(),
+                        word_id,
+                        index as i64,
+                        segment.morpheme,
+                        segment.followed_by as Option<SegmentType>,
+                    )
+                })
+                .multiunzip();
+
+            query_file!(
+                "queries/upsert_many_word_segments.sql",
+                &*document_id,
+                &*gloss,
+                &*word_id,
+                &*index,
+                &*morpheme,
+                &*followed_by as _
+            )
+            .execute(&mut tx)
+            .await?;
         }
 
         tx.commit().await?;
@@ -872,21 +905,31 @@ impl Database {
         )
     }
 
-    pub async fn insert_morpheme_relation(&self, link: LexicalConnection) -> Result<()> {
+    pub async fn insert_morpheme_relations(&self, links: Vec<LexicalConnection>) -> Result<()> {
+        // Ignores glosses without a document ID.
+        // TODO Consider whether that's a reasonable constraint.
+        let (left_doc, left_gloss, right_doc, right_gloss): (Vec<_>, Vec<_>, Vec<_>, Vec<_>) =
+            links
+                .into_iter()
+                .filter_map(|link| {
+                    Some((
+                        link.left.document_name?,
+                        link.left.gloss,
+                        link.right.document_name?,
+                        link.right.gloss,
+                    ))
+                })
+                .multiunzip();
         // Don't crash if a morpheme relation fails to insert.
-        if let (Some(left_doc), Some(right_doc)) =
-            (link.left.document_name, link.right.document_name)
-        {
-            let _ = query_file!(
-                "queries/insert_morpheme_relation.sql",
-                link.left.gloss,
-                &left_doc,
-                link.right.gloss,
-                &right_doc
-            )
-            .execute(&self.client)
-            .await;
-        }
+        let _ = query_file!(
+            "queries/insert_morpheme_relations.sql",
+            &*left_doc,
+            &*left_gloss,
+            &*right_doc,
+            &*right_gloss,
+        )
+        .execute(&self.client)
+        .await;
         Ok(())
     }
 

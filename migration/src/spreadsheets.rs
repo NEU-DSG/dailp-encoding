@@ -73,7 +73,7 @@ impl SheetResult {
             if r.is_ok() || tries >= 3 {
                 break r;
             }
-            sleep(Duration::from_millis(1000 * 2_u64.pow(tries))).await;
+            sleep(Duration::from_millis(2000 * 2_u64.pow(tries))).await;
             tries += 1;
         }
     }
