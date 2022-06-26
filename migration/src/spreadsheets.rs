@@ -15,6 +15,7 @@ use itertools::Itertools;
 use log::{error, info, warn};
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, fs::File, io::Write, time::Duration};
+use tokio::time::sleep;
 
 // Define the delimiters used in spreadsheets for marking phrases, blocks,
 // lines, and pages.
@@ -64,26 +65,17 @@ pub struct SheetResult {
 
 impl SheetResult {
     pub async fn from_sheet(sheet_id: &str, sheet_name: Option<&str>) -> Result<Self> {
-        use futures_retry::{FutureRetry, RetryPolicy};
         info!("parsing sheet {}, {:?}...", sheet_id, sheet_name);
         let mut tries = 0;
-        let (t, _attempt) = FutureRetry::new(
-            || Self::from_sheet_weak(sheet_id, sheet_name),
-            |e| {
-                // Try a few times before giving up.
-                if tries >= 3 {
-                    RetryPolicy::<anyhow::Error>::ForwardError(e)
-                } else {
-                    tries += 1;
-                    error!("{}", e);
-                    warn!("Retrying for the {}th time...", tries);
-                    RetryPolicy::<anyhow::Error>::WaitRetry(Duration::from_millis(10000))
-                }
-            },
-        )
-        .await
-        .map_err(|(e, _attempts)| e)?;
-        Ok(t)
+        loop {
+            let r = Self::from_sheet_weak(sheet_id, sheet_name).await;
+            // Try a few times before giving up.
+            if r.is_ok() || tries >= 3 {
+                break r;
+            }
+            sleep(Duration::from_millis(1000 * 2_u64.pow(tries))).await;
+            tries += 1;
+        }
     }
     async fn from_sheet_weak(sheet_id: &str, sheet_name: Option<&str>) -> Result<Self> {
         let api_key = std::env::var("GOOGLE_API_KEY")?;
