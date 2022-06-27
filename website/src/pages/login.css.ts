@@ -49,7 +49,7 @@ export const loginFormBox = style({
 export const positionButton = style({
   display: "flex",
   justifyContent: "flex-end",
-  marginTop: vspace.medium,
+  marginTop: vspace.large,
 })
 
 export const loginButton = style([{ margin: 0, borderRadius: radii.medium }])

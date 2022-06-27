@@ -6,16 +6,10 @@ import {
   unstable_useFormState as useFormState,
 } from "reakit/Form"
 import { useUser } from "src/auth"
-import Link from "src/components/link"
-import Layout from "src/layout"
-import { centeredColumn } from "src/sprinkles.css"
-import {
-  centeredForm,
-  loginButton,
-  positionButton,
-  skinnyWidth,
-} from "./login.css"
-import { FormFields } from "./login.page"
+import { Button, Link } from "src/components"
+import { centeredColumn } from "src/style/utils.css"
+import { centeredForm, loginButton, positionButton } from "./login.css"
+import { FormFields, LoginPageTemplate } from "./login.page"
 
 const ResetPasswordPage = () => {
   const { user } = useUser()
@@ -55,41 +49,42 @@ const ResetPasswordPage = () => {
   })
 
   return (
-    <Layout>
-      <main className={skinnyWidth}>
-        {user === null ? (
-          <ResetPassword {...resetForm} />
-        ) : (
-          <ChangePassword {...changeForm} />
-        )}
-      </main>
-    </Layout>
+    <>
+      {user === null ? (
+        <ResetPassword {...resetForm} />
+      ) : (
+        <ChangePassword {...changeForm} />
+      )}
+    </>
   )
 }
 
 const ResetPassword = (form: unstable_FormStateReturn<{ email: string }>) => {
   return (
-    <>
-      <header>
-        <h1 className={centeredColumn}>Reset Password</h1>
-        <h4>Enter the email associated with your account.</h4>
-      </header>
+    <LoginPageTemplate
+      header={
+        <>
+          <h1>Reset Password</h1>
+          <h4>Enter the email associated with your account.</h4>
+        </>
+      }
+      content={
+        <Form {...form} className={centeredForm}>
+          <FormFields
+            form={form}
+            name="email"
+            label="Email *"
+            placeholder="mail@website.com"
+          />
 
-      <Form {...form} className={centeredForm}>
-        <FormFields
-          form={form}
-          name="email"
-          label="Email *"
-          placeholder="mail@website.com"
-        />
-
-        <div className={positionButton}>
-          <FormSubmitButton {...form} className={loginButton}>
-            Reset
-          </FormSubmitButton>
-        </div>
-      </Form>
-    </>
+          <div className={positionButton}>
+            <FormSubmitButton {...form} as={Button} className={loginButton}>
+              Reset
+            </FormSubmitButton>
+          </div>
+        </Form>
+      }
+    ></LoginPageTemplate>
   )
 }
 
@@ -109,46 +104,49 @@ const ChangePassword = (
   }, [])
 
   return (
-    <>
-      <header>
-        <h1 className={centeredColumn}>Change Password</h1>
-        <h4>
-          Enter the verification code sent to your email address and your new
-          password.
-        </h4>
-      </header>
+    <LoginPageTemplate
+      header={
+        <>
+          <h1 className={centeredColumn}>Change Password</h1>
+          <h4>
+            Enter the verification code sent to your email address and your new
+            password.
+          </h4>
+        </>
+      }
+      content={
+        <Form {...form} className={centeredForm}>
+          <FormFields
+            form={form}
+            name="verificationCode"
+            label="Verification Code *"
+            placeholder="enter code"
+          />
 
-      <Form {...form} className={centeredForm}>
-        <FormFields
-          form={form}
-          name="verificationCode"
-          label="Verification Code *"
-          placeholder="enter code"
-        />
+          <FormFields
+            form={form}
+            name="newPassword"
+            type="password"
+            label="New Password *"
+            placeholder="enter password"
+          />
 
-        <FormFields
-          form={form}
-          name="newPassword"
-          type="password"
-          label="New Password *"
-          placeholder="enter password"
-        />
+          <FormFields
+            form={form}
+            name="confirmPassword"
+            type="password"
+            label="Confirm Password *"
+            placeholder="confirm password"
+          />
 
-        <FormFields
-          form={form}
-          name="confirmPassword"
-          type="password"
-          label="Confirm Password *"
-          placeholder="confirm password"
-        />
-
-        <div className={positionButton}>
-          <FormSubmitButton {...form} className={loginButton}>
-            Confirm
-          </FormSubmitButton>
-        </div>
-      </Form>
-    </>
+          <div className={positionButton}>
+            <FormSubmitButton {...form} as={Button} className={loginButton}>
+              Confirm
+            </FormSubmitButton>
+          </div>
+        </Form>
+      }
+    ></LoginPageTemplate>
   )
 }
 

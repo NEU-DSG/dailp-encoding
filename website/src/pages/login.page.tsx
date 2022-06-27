@@ -11,6 +11,8 @@ import {
 import { Popover, PopoverDisclosure, usePopoverState } from "reakit/Popover"
 import { useUser } from "src/auth"
 import { Button, CleanButton, Link } from "src/components"
+import { cleanButton } from "src/components/button.css"
+import { centeredColumn } from "src/style/utils.css"
 import Layout from "../layout"
 import {
   centeredForm,
@@ -22,6 +24,17 @@ import {
   skinnyWidth,
 } from "./login.css"
 import { ResetLink } from "./reset-password.page"
+
+export const LoginPageTemplate = (props: { header: any; content: any }) => {
+  return (
+    <Layout>
+      <main className={skinnyWidth}>
+        <header className={centeredColumn}>{props.header}</header>
+        {props.content}
+      </main>
+    </Layout>
+  )
+}
 
 const LoginPage = () => {
   const { loginUser } = useUser().operations
@@ -41,16 +54,17 @@ const LoginPage = () => {
   })
 
   return (
-    <Layout>
-      <main className={skinnyWidth}>
-        <header>
+    <LoginPageTemplate
+      header={
+        <>
           <h1>Log into your account</h1>
           <h4>
             Login to contribute to the archive by transcribing documents,
             recording pronunciations, providing cultural commentary, and more.
           </h4>
-        </header>
-
+        </>
+      }
+      content={
         <Form {...loginForm} className={centeredForm}>
           <FormFields
             form={loginForm}
@@ -78,8 +92,8 @@ const LoginPage = () => {
             </FormSubmitButton>
           </div>
         </Form>
-      </main>
-    </Layout>
+      }
+    ></LoginPageTemplate>
   )
 }
 
@@ -102,9 +116,10 @@ const ConfirmLogout = () => {
 
   return (
     <>
-      <PopoverDisclosure {...popover} as={CleanButton}>
+      <PopoverDisclosure {...popover} className={cleanButton}>
         Log out
       </PopoverDisclosure>
+
       <Popover {...popover} className={logoutPopover} tabIndex={0}>
         Log out of DAILP?
         <CleanButton
