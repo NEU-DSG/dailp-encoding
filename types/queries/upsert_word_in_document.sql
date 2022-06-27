@@ -3,15 +3,13 @@ with inserted_audio_resource as (
   insert into media_resource (url)
   select $12::text
   where $12 is not null
-  -- An update is required to return the ID on conflict
-  on conflict (url) do update set
-    url = excluded.url
-  returning id
+  on conflict (url) do nothing
 ),
 inserted_audio_slice as (
   insert into media_slice (resource_id, time_range)
-  select id, int8range($13, $14)
-  from inserted_audio_resource
+  select media_resource.id, int8range($13, $14)
+  from media_resource
+  where media_resource.url = $12
   returning id
 )
 insert into word (
