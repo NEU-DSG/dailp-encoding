@@ -1,4 +1,3 @@
-use crate::batch_join_all;
 use crate::spreadsheets::{LexicalEntryWithForms, SheetResult};
 use anyhow::Result;
 use dailp::{
@@ -280,12 +279,7 @@ async fn parse_appendix(db: &Database, sheet_id: &str, to_skip: usize) -> Result
         ))
     });
 
-    batch_join_all(
-        links
-            .into_iter()
-            .map(|link| db.insert_morpheme_relation(link)),
-    )
-    .await?;
+    db.insert_morpheme_relations(links.collect()).await?;
 
     Ok(())
 }

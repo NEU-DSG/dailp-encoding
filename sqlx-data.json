@@ -331,6 +331,40 @@
     },
     "query": "select\n  morpheme_gloss.id as gloss_id,\n  morpheme_gloss.example_shape,\n  abbreviation_system.short_name as system_name,\n  morpheme_tag.gloss,\n  morpheme_tag.title,\n  abstract_morpheme_tag.description,\n  abstract_morpheme_tag.linguistic_type\nfrom morpheme_gloss\n  inner join abstract_morpheme_tag on abstract_morpheme_tag.id = morpheme_gloss.tag_id\n  left join abbreviation_system on abbreviation_system.short_name = any($2)\n  inner join morpheme_tag on morpheme_tag.abstract_ids[1] = abstract_morpheme_tag.id\nwhere morpheme_gloss.id = any($1)\n  and morpheme_tag.system_id = abbreviation_system.id\n"
   },
+  "31290d078379088e9e3cab9406a65ecca508cb3baf8999668947efa3b2135443": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "UuidArray",
+          "TextArray",
+          "UuidArray",
+          "Int8Array",
+          "TextArray",
+          {
+            "Custom": {
+              "kind": {
+                "Array": {
+                  "Custom": {
+                    "kind": {
+                      "Enum": [
+                        "Morpheme",
+                        "Clitic"
+                      ]
+                    },
+                    "name": "segment_type"
+                  }
+                }
+              },
+              "name": "_segment_type"
+            }
+          }
+        ]
+      }
+    },
+    "query": "-- Insert a document-local morpheme gloss if and only if there's no matching\n-- global gloss.\nwith inserted_gloss as (\n  insert into morpheme_gloss (document_id, gloss)\n    select * from unnest($1::uuid[], $2::text[]) as input_data(document_id, gloss)\n    where not exists (select from morpheme_gloss where morpheme_gloss.document_id is null and morpheme_gloss.gloss = input_data.gloss)\n  -- An update is required to return data on conflict.\n  on conflict (coalesce(document_id, uuid_nil()), gloss) do nothing\n)\n\ninsert into word_segment (gloss_id, word_id, index_in_word, morpheme, followed_by)\n-- Fill in glosses that weren't inserted with their global match.\nselect coalesce(inserted_gloss.id, global_gloss.id), word_id, index, morpheme, followed_by from unnest($1::uuid[], $2::text[], $3::uuid[], $4::bigint[], $5::text[], $6::segment_type[]) as input_data(doc_id, gloss, word_id, index, morpheme, followed_by)\n  left join morpheme_gloss as inserted_gloss on inserted_gloss.document_id = input_data.doc_id and inserted_gloss.gloss = input_data.gloss\n  left join morpheme_gloss as global_gloss on global_gloss.document_id is null and global_gloss.gloss = input_data.gloss\non conflict (word_id, index_in_word)\n  do update set\n    morpheme = excluded.morpheme,\n    gloss_id = excluded.gloss_id,\n    followed_by = excluded.followed_by\n"
+  },
   "32052923a631af8b0a51564e9d08578fc30b5d0e58b1593e8651f53343c91156": {
     "describe": {
       "columns": [
@@ -405,21 +439,6 @@
       }
     },
     "query": "select\n  word_segment.morpheme,\n  word.id as word_id,\n  word.source_text,\n  word.simple_phonetics,\n  word.phonemic,\n  word.english_gloss,\n  word.commentary,\n  word.document_id,\n  word.index_in_document,\n  word.page_number\nfrom morpheme_gloss\n  inner join document on document.id = morpheme_gloss.document_id\n  left join word_segment on word_segment.gloss_id = morpheme_gloss.id\n  left join word on word.id = word_segment.word_id\nwhere morpheme_gloss.gloss = $1\n  and document.short_name = $2\norder by word_segment.morpheme\n"
-  },
-  "32c0f1e507152b91ab343c85dc6a54af138a8d97eff8213774e07fb3aff483a6": {
-    "describe": {
-      "columns": [],
-      "nullable": [],
-      "parameters": {
-        "Left": [
-          "Text",
-          "Text",
-          "Text",
-          "Text"
-        ]
-      }
-    },
-    "query": "-- Retrieve the database UUIDs for the morpheme glosses passed in.\nwith left_gloss as (\n  select morpheme_gloss.id\n  from morpheme_gloss\n    left join document on document.id = morpheme_gloss.document_id\n  where morpheme_gloss.gloss = $1 and document.short_name = $2\n),\n\nright_gloss as (\n  select morpheme_gloss.id\n  from morpheme_gloss\n    left join document on document.id = morpheme_gloss.document_id\n  where morpheme_gloss.gloss = $3 and document.short_name = $4\n)\n\ninsert into morpheme_gloss_relation (left_gloss_id, right_gloss_id)\nselect\n  left_gloss.id,\n  right_gloss.id\nfrom left_gloss, right_gloss\non conflict do nothing\n"
   },
   "43e42033828a07a488a1fbe4be6a5c7cea9d5c8d471d51a9fd39f939abd060f6": {
     "describe": {
@@ -632,6 +651,20 @@
     },
     "query": "select\n  attr.document_id,\n  attr.contribution_role,\n  contributor.id,\n  contributor.full_name\nfrom contributor_attribution as attr\n  inner join contributor on contributor.id = attr.contributor_id\nwhere attr.document_id = any($1)\n"
   },
+  "6858e67c5a27aa4f38366244a46c9a4a50546c164a2b91599301aad1bc8f3cd0": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "TextArray",
+          "UuidArray",
+          "TextArray"
+        ]
+      }
+    },
+    "query": "insert into contributor_attribution (contributor_id, document_id, contribution_role)\nselect\n  contributor.id,\n  input_data.doc_id,\n  input_data.contribution_role\nfrom\n  unnest(\n    $1::text[], $2::uuid[], $3::text[]\n  ) as input_data(full_name, doc_id, contribution_role)\n  inner join contributor on contributor.full_name = input_data.full_name\n-- If this document already has this contributor, move on.\non conflict do nothing\n"
+  },
   "6d5a72c97ad0bb2831e0b605a340630b28f70402023f5abec5ff2043f343f0b1": {
     "describe": {
       "columns": [],
@@ -777,20 +810,6 @@
       }
     },
     "query": "select\n  document_group.slug,\n  document_group.title\nfrom document\n  inner join document_group on document_group.id = document.group_id\nwhere document.id = $1\n"
-  },
-  "7893a479a995a4deb24303bce0679a252ff88ca7f917d50854bb0ccb59557f17": {
-    "describe": {
-      "columns": [],
-      "nullable": [],
-      "parameters": {
-        "Left": [
-          "Text",
-          "Uuid",
-          "Text"
-        ]
-      }
-    },
-    "query": "insert into contributor_attribution (contributor_id, document_id, contribution_role)\nselect contributor.id, $2, $3\nfrom contributor\nwhere contributor.full_name = $1\n-- If this document already has this contributor, move on.\non conflict do nothing\n"
   },
   "7a6c5fc86cb220cb8e0dcbfbbb994b6288490c39e31cef7bc46a9ccc7e321438": {
     "describe": {
@@ -1247,37 +1266,6 @@
     },
     "query": "with t as (\n  select distinct on (morpheme_tag.gloss)\n    abbreviation_system.short_name as system_name,\n    morpheme_tag.gloss,\n    morpheme_tag.title,\n    abstract_morpheme_tag.description,\n    abstract_morpheme_tag.linguistic_type\n  from abbreviation_system\n    inner join\n      morpheme_tag on abbreviation_system.id = morpheme_tag.system_id\n    inner join\n      abstract_morpheme_tag on\n        abstract_morpheme_tag.id = any(morpheme_tag.abstract_ids)\n  where abbreviation_system.short_name = $1\n)\n\nselect *\nfrom t\norder by linguistic_type asc, gloss asc;\n"
   },
-  "b86d7ec126dc788f0e7d2db8efb3f77fe6aff902435898298178fc5a9dd4f6db": {
-    "describe": {
-      "columns": [
-        {
-          "name": "id",
-          "ordinal": 0,
-          "type_info": "Uuid"
-        }
-      ],
-      "nullable": [
-        false
-      ],
-      "parameters": {
-        "Left": [
-          "Text",
-          "Text",
-          "Text",
-          "Text",
-          "Date",
-          "Text",
-          "Uuid",
-          "Text",
-          "Int8",
-          "Uuid",
-          "Int8Range",
-          "Uuid"
-        ]
-      }
-    },
-    "query": "insert into word (\n  source_text, simple_phonetics, phonemic, english_gloss, recorded_at, commentary,\n  document_id, page_number, index_in_document, page_id, character_range, audio_slice_id)\nvalues ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)\nreturning id\n"
-  },
   "b8b71d5fe6c8a443d6173fc86d1b7dc4148fb67c1c934a55674945c568107a60": {
     "describe": {
       "columns": [
@@ -1529,6 +1517,21 @@
     },
     "query": "select\n  document.id,\n  document.short_name,\n  document.title,\n  document.written_at,\n  document.is_reference,\n  coalesce(\n    jsonb_agg(\n      jsonb_build_object(\n        'name',\n        contributor.full_name,\n        'role',\n        contributor_attribution.contribution_role\n      )\n    ) filter (where contributor is not null),\n    '[]'\n  )\n  as contributors\nfrom document\n  left join\n    contributor_attribution on contributor_attribution.document_id = document.id\n  left join contributor on contributor.id = contributor_attribution.contributor_id\ngroup by document.id\n"
   },
+  "cc71e3a7b4c013adc4d0cb79acd702aa0daa0290013a31e9fee3bd1f5990fa4f": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "TextArray",
+          "TextArray",
+          "TextArray",
+          "TextArray"
+        ]
+      }
+    },
+    "query": "insert into morpheme_gloss_relation (left_gloss_id, right_gloss_id)\nselect\n  left_gloss.id,\n  right_gloss.id\nfrom\n  unnest(\n    $1::text[], $2::text[], $3::text[], $4::text[]\n  ) as input_relation(left_doc_name, left_gloss, right_doc_name, right_gloss)\n  inner join document as left_doc on left_doc.short_name = input_relation.left_doc_name\n  inner join\n    morpheme_gloss as left_gloss on\n      left_gloss.gloss = input_relation.left_gloss and left_gloss.document_id = left_doc.id\n  inner join\n    document as right_doc on right_doc.short_name = input_relation.right_doc_name\n  inner join\n    morpheme_gloss as right_gloss on\n      right_gloss.gloss = input_relation.right_gloss and right_gloss.document_id = right_doc.id\non conflict do nothing\n"
+  },
   "d6377d5a54a702f7df73f287390c0c45a1309f7e705c93d49842b409a947a1fd": {
     "describe": {
       "columns": [
@@ -1580,6 +1583,39 @@
       }
     },
     "query": "select\n  id,\n  title,\n  base_url\nfrom iiif_source\nwhere id = any($1)\n"
+  },
+  "db92442ab1f2d6fe6acc1aeef1f512b784d40f51a4ab958968e95be7fd95f99a": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        }
+      ],
+      "nullable": [
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Text",
+          "Text",
+          "Text",
+          "Date",
+          "Text",
+          "Uuid",
+          "Text",
+          "Int8",
+          "Uuid",
+          "Int8Range",
+          "Text",
+          "Int8",
+          "Int8"
+        ]
+      }
+    },
+    "query": "-- Insert audio resource if there is one for this word.\nwith inserted_audio_resource as (\n  insert into media_resource (url)\n  select $12::text\n  where $12 is not null\n  on conflict (url) do nothing\n),\ninserted_audio_slice as (\n  insert into media_slice (resource_id, time_range)\n  select media_resource.id, int8range($13, $14)\n  from media_resource\n  where media_resource.url = $12\n  returning id\n)\ninsert into word (\n  source_text, simple_phonetics, phonemic, english_gloss, recorded_at, commentary,\n  document_id, page_number, index_in_document, page_id, character_range, audio_slice_id)\nselect $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, inserted_audio_slice.id\nfrom (values (1)) as t\nleft join inserted_audio_slice on true\nreturning id\n"
   },
   "dca1e24c7740e8d32a9d7cecd80f28c95831b0bc9ea94297d1ef775f9524c8c5": {
     "describe": {
@@ -1738,33 +1774,6 @@
       }
     },
     "query": "select\n  d.*,\n  media_resource.url as \"audio_url?\",\n  media_slice.time_range as \"audio_slice?\",\n  coalesce(\n    jsonb_agg(\n      jsonb_build_object(\n        'name', contributor.full_name, 'role', attr.contribution_role\n      )\n    ) filter (where contributor is not null),\n    '[]'\n  )\n  as contributors\nfrom document as d\n  left join contributor_attribution as attr on attr.document_id = d.id\n  left join contributor on contributor.id = attr.contributor_id\n  left join media_slice on media_slice.id = d.audio_slice_id\n  left join media_resource on media_resource.id = media_slice.resource_id\nwhere d.id = any($1)\ngroup by d.id,\n  media_slice.id,\n  media_resource.id\n"
-  },
-  "e81a4c2c38e1660c1e2a874f3b95bc9f5ae3bb8c69c9235bf6b47709dbe1d8f7": {
-    "describe": {
-      "columns": [],
-      "nullable": [],
-      "parameters": {
-        "Left": [
-          "Uuid",
-          "Text",
-          "Uuid",
-          "Int8",
-          "Text",
-          {
-            "Custom": {
-              "kind": {
-                "Enum": [
-                  "Morpheme",
-                  "Clitic"
-                ]
-              },
-              "name": "segment_type"
-            }
-          }
-        ]
-      }
-    },
-    "query": "-- Look for a matching global gloss before trying to create a document-local gloss.\nwith global_gloss as (\n  select morpheme_gloss.id\n  from morpheme_gloss\n  where document_id is null and gloss = $2\n), inserted_gloss as (\n  insert into morpheme_gloss (document_id, gloss)\n    select $1, $2\n    where not exists (select from global_gloss)\n  on conflict (coalesce(document_id, uuid_nil()), gloss)\n    do update set example_shape = excluded.example_shape,\n       tag_id = excluded.tag_id\n  returning id\n)\n\ninsert into word_segment (word_id, index_in_word, morpheme, gloss_id, followed_by)\nselect $3, $4, $5, coalesce(global_gloss.id, inserted_gloss.id), $6\nfrom global_gloss\nfull outer join inserted_gloss on true\non conflict (word_id, index_in_word)\n  do update set\n    morpheme = EXCLUDED.morpheme,\n    gloss_id = EXCLUDED.gloss_id,\n    followed_by = EXCLUDED.followed_by\n"
   },
   "f345a80beccb174132f764cb4da803a97a82b034c64f5e7f047b844c10573b2f": {
     "describe": {

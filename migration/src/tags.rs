@@ -1,4 +1,3 @@
-use crate::batch_join_all;
 use crate::spreadsheets::SheetResult;
 use anyhow::Result;
 use dailp::{Database, MorphemeTag, TagForm};
@@ -31,12 +30,9 @@ pub async fn migrate_tags(db: &Database) -> Result<()> {
         .await?;
 
     println!("Pushing tags to db...");
-    batch_join_all(
-        glossary
-            .into_iter()
-            .map(|tag| db.insert_morpheme_tag(tag, crg, taoc, learner)),
-    )
-    .await?;
+    for tag in glossary {
+        db.insert_morpheme_tag(tag, crg, taoc, learner).await?;
+    }
 
     Ok(())
 }

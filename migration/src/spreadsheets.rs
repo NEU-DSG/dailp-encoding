@@ -70,10 +70,10 @@ impl SheetResult {
         loop {
             let r = Self::from_sheet_weak(sheet_id, sheet_name).await;
             // Try a few times before giving up.
-            if r.is_ok() || tries >= 3 {
+            if r.is_ok() || tries > 3 {
                 break r;
             }
-            sleep(Duration::from_millis(1000 * 2_u64.pow(tries))).await;
+            sleep(Duration::from_millis(3000 * 2_u64.pow(tries))).await;
             tries += 1;
         }
     }

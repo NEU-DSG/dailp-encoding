@@ -103,12 +103,7 @@ async fn migrate_data(db: &Database) -> Result<()> {
         db.insert_document_contents(doc).await?;
     }
 
-    batch_join_all(
-        morpheme_relations
-            .into_iter()
-            .map(|l| db.insert_morpheme_relation(l)),
-    )
-    .await?;
+    db.insert_morpheme_relations(morpheme_relations).await?;
 
     Ok(())
 }
@@ -160,21 +155,6 @@ async fn validate_documents() -> Result<()> {
     } else {
         Ok(())
     }
-}
-
-pub async fn batch_join_all<
-    T,
-    F: std::future::Future<Output = Result<T>>,
-    I: Iterator<Item = F>,
->(
-    it: I,
-) -> Result<()> {
-    use futures::StreamExt;
-    let mut all_done = futures::stream::iter(it).buffer_unordered(4);
-    while let Some(res) = all_done.next().await {
-        res?;
-    }
-    Ok(())
 }
 
 /// Fetch the contents of the sheet with the given ID, validating the first page as
