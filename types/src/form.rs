@@ -2,7 +2,7 @@ use crate::{
     AnnotatedDoc, AudioSlice, Database, Date, DocumentId, MorphemeSegment, PartsOfWord,
     PositionInDocument,
 };
-use async_graphql::{dataloader::DataLoader, FieldResult};
+use async_graphql::{dataloader::DataLoader, FieldResult, MaybeUndefined};
 use serde::{Deserialize, Serialize};
 use sqlx::types::Uuid;
 
