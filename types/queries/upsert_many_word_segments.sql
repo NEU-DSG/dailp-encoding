@@ -4,7 +4,9 @@ with inserted_gloss as (
   insert into morpheme_gloss (document_id, gloss)
     select * from unnest($1::uuid[], $2::text[]) as input_data(document_id, gloss)
     where not exists (select from morpheme_gloss where morpheme_gloss.document_id is null and morpheme_gloss.gloss = input_data.gloss)
-  on conflict (coalesce(document_id, uuid_nil()), gloss) do nothing
+  -- An update is required to return data on conflict.
+  on conflict (coalesce(document_id, uuid_nil()), gloss) do update set
+    gloss = excluded.gloss
   returning gloss, id
 )
 

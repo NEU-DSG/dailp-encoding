@@ -3,7 +3,9 @@ with inserted_audio_resource as (
   insert into media_resource (url)
   select $12::text
   where $12 is not null
-  on conflict (url) do nothing
+  -- An update is required to return the ID on conflict
+  on conflict (url) do update set
+    url = excluded.url
   returning id
 ),
 inserted_audio_slice as (
