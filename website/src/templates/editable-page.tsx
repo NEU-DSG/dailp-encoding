@@ -1,6 +1,6 @@
 import React from "react"
 import { Helmet } from "react-helmet"
-import { fullWidth, paddedWidth } from "src/sprinkles.css"
+import { fullWidth, paddedWidth } from "src/style/utils.css"
 import Layout from "../layout"
 
 interface Props {

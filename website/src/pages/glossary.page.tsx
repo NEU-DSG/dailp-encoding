@@ -12,7 +12,7 @@ import {
   fullWidth,
   paragraph,
   std,
-} from "src/sprinkles.css"
+} from "src/style/utils.css"
 import Layout from "../layout"
 import { glossarySectionId, morphemeTagId } from "../routes"
 import { TagSet, tagSetForMode } from "../types"

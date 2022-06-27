@@ -1,24 +1,27 @@
 import { style } from "@vanilla-extract/css"
-import sprinkles, {
-  centeredColumn,
+import {
   colors,
-  fullWidth,
-  hideOnPrint,
+  fonts,
   hspace,
   mediaQueries,
+  vspace,
+} from "src/style/constants"
+import { marginY, media, paddingX } from "src/style/utils"
+import {
+  centeredColumn,
+  fullWidth,
+  hideOnPrint,
   row,
-  theme,
   wrappedRow,
-} from "src/sprinkles.css"
-import { paddingX } from "src/style-utils"
+} from "src/style/utils.css"
 
 export const header = style([
   paddingX(hspace.edge),
   centeredColumn,
   hideOnPrint,
   {
-    backgroundColor: colors.header,
-    fontFamily: theme.fonts.header,
+    backgroundColor: colors.secondary,
+    fontFamily: fonts.header,
     position: "sticky",
     top: 0,
     zIndex: 999,
@@ -38,23 +41,27 @@ export const headerContents = style([
   },
 ])
 
-export const subHeader = style([
-  sprinkles({ display: { any: "none", medium: "initial" } }),
-  {
-    color: colors.headings,
-    paddingLeft: hspace.edge,
+export const subHeader = style({
+  display: "none",
+  color: colors.secondaryContrast,
+  paddingLeft: hspace.edge,
+  "@media": {
+    [mediaQueries.medium]: {
+      display: "initial",
+    },
   },
-])
+})
 
 export const siteTitle = style([
-  sprinkles({ marginY: { any: "quarter", medium: "one" } }),
+  marginY(vspace.quarter),
+  media(mediaQueries.medium, marginY(vspace.one)),
   {
     // runningHead: "title",
   },
 ])
 
 export const siteLink = style({
-  color: colors.headings,
+  color: colors.secondaryContrast,
   textDecoration: "none",
 })
 

@@ -21,7 +21,6 @@ import {
   navMenu,
   subMenuItems,
 } from "./menu.css"
-import { closeBlock } from "./sprinkles.css"
 
 export const NavMenu = (p: { menuID: number }) => {
   const location = useLocation()
