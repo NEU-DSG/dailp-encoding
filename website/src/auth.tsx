@@ -9,8 +9,6 @@ import React, { createContext, useContext, useEffect, useState } from "react"
 type UserContextType = {
   user: CognitoUser | null
   setUser: (user: CognitoUser | null) => void
-  authenticated: boolean
-  setAuthenticated: (newState: boolean) => void
   operations: {
     loginUser: (username: string, password: string) => void
     resetPassword: (username: string) => void
@@ -26,24 +24,20 @@ const userPool = new CognitoUserPool({
 })
 
 export const UserProvider = (props: { children: any }) => {
-  const [authenticated, setAuthenticated] = useState(false)
-
   const [user, setUser] = useState<CognitoUser | null>(
+    // gets the last user that logged in via this user pool
     userPool.getCurrentUser()
   )
 
-  // refreshes last authenticated user
   useEffect(() => {
+    // if there is an authenticated user present
     if (user != null) {
+      // getSession() refreshes last authenticated user's tokens
       user.getSession(function (err: Error, result: CognitoUserSession | null) {
         if (result) {
-          setAuthenticated(true)
           console.log("You are now logged in.")
         }
       })
-    } else if (authenticated) {
-      // else if there is no current user but authentication is true, make sure it's set to false
-      setAuthenticated(false)
     }
   }, [user])
 
@@ -62,7 +56,6 @@ export const UserProvider = (props: { children: any }) => {
     user.authenticateUser(authDetails, {
       onSuccess: (data: CognitoUserSession) => {
         setUser(user)
-        setAuthenticated(true)
 
         console.log("Login success. Result: ", data)
         alert("Login successful")
@@ -79,6 +72,7 @@ export const UserProvider = (props: { children: any }) => {
   }
 
   function resetPassword(username: string) {
+    // instantiate a new user with the given credentials to access Cognito API methods
     const user = new CognitoUser({
       Username: username,
       Pool: userPool,
@@ -86,7 +80,7 @@ export const UserProvider = (props: { children: any }) => {
 
     user.forgotPassword({
       onSuccess: (data: CognitoUserSession) => {
-        setUser(user)
+        setUser(user) // set current user, since a reset password flow was initialized
         console.log("Reset password successful. Result: ", data)
         alert("Reset email successfully sent")
       },
@@ -100,7 +94,7 @@ export const UserProvider = (props: { children: any }) => {
   function changePassword(verificationCode: string, newPassword: string) {
     user?.confirmPassword(verificationCode, newPassword, {
       onSuccess(data: string) {
-        setUser(null)
+        setUser(null) // since user successfully changed password, reset current user's state
         window.location.href = "/login" // redirect to login page
         console.log("Change password successful. Result: ", data)
         alert("Password successfully changed")
@@ -117,8 +111,6 @@ export const UserProvider = (props: { children: any }) => {
       value={{
         user,
         setUser,
-        authenticated,
-        setAuthenticated,
         operations: { loginUser, resetPassword, changePassword },
       }}
     >

@@ -5,7 +5,7 @@ import {
   unstable_FormStateReturn,
   unstable_useFormState as useFormState,
 } from "reakit/Form"
-import { useUser } from "src/auth"
+import { useCredentials, useUser } from "src/auth"
 import { Button, Link } from "src/components"
 import { centeredColumn } from "src/style/utils.css"
 import { centeredForm, loginButton, positionButton } from "./login.css"
@@ -14,6 +14,7 @@ import { FormFields, LoginPageTemplate } from "./login.page"
 const ResetPasswordPage = () => {
   const { user } = useUser()
   const { resetPassword, changePassword } = useUser().operations
+  const token = useCredentials()
 
   const resetForm = useFormState({
     values: { email: "" },
@@ -50,7 +51,9 @@ const ResetPasswordPage = () => {
 
   return (
     <>
-      {user === null ? (
+      {/* if no user has been set to initialize the reset password flow */}
+      {/* OR if a user is already authenticated but wants to reset their password, show the reset password page */}
+      {user === null || token ? (
         <ResetPassword {...resetForm} />
       ) : (
         <ChangePassword {...changeForm} />
@@ -99,7 +102,7 @@ const ChangePassword = (
 
   useEffect(() => {
     return () => {
-      setUser(null) // prevents user email from being preserved between component refreshes
+      setUser(null) // prevents user state from being preserved between component refreshes, in case user does not complete change password flow
     }
   }, [])
 

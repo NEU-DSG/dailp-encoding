@@ -1,11 +1,6 @@
 import { style } from "@vanilla-extract/css"
-import {
-  colors,
-  hspace,
-  mediaQueries,
-  radii,
-  vspace,
-} from "src/style/constants"
+import { hspace, mediaQueries, radii, vspace } from "src/style/constants"
+import { paddingX, paddingY } from "src/style/utils"
 import { edgePadded, fullWidth } from "src/style/utils.css"
 
 export const loginHeader = style({
@@ -14,14 +9,11 @@ export const loginHeader = style({
   flex: 6,
 })
 
-export const logoutPopover = style({
-  display: "flex",
-  flexDirection: "column",
-  backgroundColor: colors.body,
-  textAlign: "center",
-  padding: hspace.large,
-  borderRadius: radii.medium,
-})
+export const popoverButton = style([
+  paddingX(hspace.large),
+  paddingY(vspace.medium),
+  { margin: 0 },
+])
 
 export const skinnyWidth = style([
   fullWidth,
