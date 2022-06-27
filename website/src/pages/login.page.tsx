@@ -1,6 +1,4 @@
 import React from "react"
-import { setUserAgent } from "react-device-detect"
-import { Button } from "reakit/Button"
 import {
   unstable_Form as Form,
   unstable_FormInput as FormInput,
@@ -12,12 +10,10 @@ import {
 } from "reakit/Form"
 import { Popover, PopoverDisclosure, usePopoverState } from "reakit/Popover"
 import { useUser } from "src/auth"
-import Link from "src/components/link"
-import { centeredColumn, cleanButton } from "src/sprinkles.css"
+import { Button, CleanButton, Link } from "src/components"
 import Layout from "../layout"
 import {
   centeredForm,
-  linkStyle,
   loginButton,
   loginFormBox,
   loginHeader,
@@ -47,8 +43,8 @@ const LoginPage = () => {
   return (
     <Layout>
       <main className={skinnyWidth}>
-        <header className={centeredColumn}>
-          <h1>Login to Your Account</h1>
+        <header>
+          <h1>Log into your account</h1>
           <h4>
             Login to contribute to the archive by transcribing documents,
             recording pronunciations, providing cultural commentary, and more.
@@ -73,7 +69,11 @@ const LoginPage = () => {
           <ResetLink />
 
           <div className={positionButton}>
-            <FormSubmitButton {...loginForm} className={loginButton}>
+            <FormSubmitButton
+              {...loginForm}
+              as={Button}
+              className={loginButton}
+            >
               Log in
             </FormSubmitButton>
           </div>
@@ -90,13 +90,7 @@ export const LoginHeaderButton = () => {
   return (
     <div className={loginHeader}>
       {/* show a logout button if user is signed in, otherwise show login */}
-      {authenticated ? (
-        <ConfirmLogout />
-      ) : (
-        <Link className={linkStyle} href="/login">
-          Log in
-        </Link>
-      )}
+      {authenticated ? <ConfirmLogout /> : <Link href="/login">Log in</Link>}
     </div>
   )
 }
@@ -108,28 +102,26 @@ const ConfirmLogout = () => {
 
   return (
     <>
-      <PopoverDisclosure {...popover} className={cleanButton}>
+      <PopoverDisclosure {...popover} as={CleanButton}>
         Log out
       </PopoverDisclosure>
       <Popover {...popover} className={logoutPopover} tabIndex={0}>
         Log out of DAILP?
-        <Button
-          className={cleanButton}
+        <CleanButton
           onClick={() => {
             user?.signOut()
             setUser(null)
           }}
         >
           Yes
-        </Button>
-        <Button
-          className={cleanButton}
+        </CleanButton>
+        <CleanButton
           onClick={() => {
             popover.hide()
           }}
         >
           No
-        </Button>
+        </CleanButton>
       </Popover>
     </>
   )

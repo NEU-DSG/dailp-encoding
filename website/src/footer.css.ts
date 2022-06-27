@@ -1,16 +1,16 @@
 import { style } from "@vanilla-extract/css"
-import sprinkles, { colors, hideOnPrint, std, theme } from "src/sprinkles.css"
+import { padding } from "polished"
+import { linkColor } from "src/components/link.css"
+import { colors, fonts, hspace, vspace } from "src/style/constants"
+import { hideOnPrint, std } from "src/style/utils.css"
 
 export const footer = style([hideOnPrint])
 
 export const container = style([
-  sprinkles({
-    fontFamily: "header",
-    paddingY: "one",
-    paddingX: "edge",
-    backgroundColor: "footer",
-  }),
+  padding(vspace.one, hspace.edge),
   {
+    fontFamily: fonts.header,
+    backgroundColor: colors.primary,
     color: colors.body,
     fontSize: "0.9rem",
     display: "flex",
@@ -23,12 +23,13 @@ export const dark = style([
   container,
   {
     vars: {
-      [theme.colors.link]: "white",
+      [linkColor]: "white",
+      [colors.focus]: "white",
     },
   },
 ])
 
-export const image = sprinkles({ marginBottom: 0 })
+export const image = style({ marginBottom: 0 })
 
 export const content = style([
   std.fullWidth,
@@ -36,7 +37,7 @@ export const content = style([
     display: "flex",
     flexFlow: "row wrap",
     justifyContent: "space-between",
-    alignItems: "start",
+    alignItems: "flex-start",
   },
 ])
 

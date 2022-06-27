@@ -1,6 +1,7 @@
 use crate::*;
 use async_graphql::FieldResult;
 use serde::{Deserialize, Serialize};
+use sqlx::postgres::{PgHasArrayType, PgTypeInfo};
 use std::borrow::Cow;
 
 /// A single unit of meaning and its corresponding English gloss.
@@ -31,6 +32,16 @@ pub enum SegmentType {
     Morpheme,
     /// Separated by an equals sign '='
     Clitic,
+}
+
+impl PgHasArrayType for SegmentType {
+    fn array_type_info() -> PgTypeInfo {
+        <&str as PgHasArrayType>::array_type_info()
+    }
+
+    fn array_compatible(ty: &PgTypeInfo) -> bool {
+        <&str as PgHasArrayType>::array_compatible(ty)
+    }
 }
 
 impl MorphemeSegment {

@@ -15,14 +15,14 @@ pub struct PositionInDocument {
     /// 1-indexed position indicating where the form sits in the ordering of all
     /// forms in the document. Used for relative ordering of forms from the
     /// same document.
-    pub index: i32,
+    pub index: i64,
     /// What section of the document image corresponds to this item?
     pub geometry: Option<Geometry>,
 }
 
 impl PositionInDocument {
     /// Make a new document position from the document ID, page number, and item index.
-    pub fn new(document_id: DocumentId, page_number: String, index: i32) -> Self {
+    pub fn new(document_id: DocumentId, page_number: String, index: i64) -> Self {
         Self {
             document_id,
             page_number,
@@ -338,24 +338,22 @@ pub fn root_verb_surface_form(
     // Each form has an empty column before it.
     // Then follows the morphemic segmentation.
     // All tags except the last one come before the root.
-    let (mut morpheme_tags, phonemic) = all_tags(&mut cols.filter(|x| !x.is_empty()));
+    let (morpheme_tags, phonemic) = all_tags(cols);
     if morpheme_tags.is_empty() {
         return None;
     }
-    let asp_morpheme = morpheme_tags.remove(0);
-    let mod_morpheme = morpheme_tags.pop()?;
+
     let mut morphemes = morpheme_tags
         .iter()
         .map(|(_tag, src)| src.trim())
-        .chain(vec![root, &asp_morpheme.1, &mod_morpheme.1])
-        .filter(|s| !s.is_empty())
+        .chain(vec![root])
         .map(|s| convert_udb(s).into_dailp());
     let morpheme_layer = morphemes.join("-");
+
     let mut morpheme_glosses = morpheme_tags
         .iter()
         .map(|(tag, _src)| tag.trim())
-        .chain(vec![root_gloss, &*asp_morpheme.0, &*mod_morpheme.0])
-        .filter(|s| !s.is_empty());
+        .chain(vec![root_gloss]);
     let gloss_layer = morpheme_glosses.join("-");
     // Then, the representations of the full word.
     let phonemic = phonemic?;
@@ -407,7 +405,7 @@ pub fn root_verb_surface_form(
 /// with the phonemic shape of the whole root.
 fn all_tags(cols: &mut impl Iterator<Item = String>) -> (Vec<(String, String)>, Option<String>) {
     let mut tags = Vec::new();
-    let mut cols = cols.by_ref().peekable();
+    let mut cols = cols.peekable();
     // Tags are all uppercase ascii and numbers, followed by the corresponding morpheme.
     while let Some(true) = cols
         .peek()

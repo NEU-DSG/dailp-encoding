@@ -103,12 +103,7 @@ async fn migrate_data(db: &Database) -> Result<()> {
         db.insert_document_contents(doc).await?;
     }
 
-    batch_join_all(
-        morpheme_relations
-            .into_iter()
-            .map(|l| db.insert_morpheme_relation(l)),
-    )
-    .await?;
+    db.insert_morpheme_relations(morpheme_relations).await?;
 
     Ok(())
 }
@@ -121,8 +116,6 @@ async fn validate_documents() -> Result<()> {
         spreadsheets::SheetResult::from_sheet("1sDTRFoJylUqsZlxU57k1Uj8oHhbM3MAzU8sDgTfO7Mk", None)
             .await?
             .into_index()?;
-
-    println!("Migrating documents to database...");
 
     // Retrieve data for spreadsheets in sequence.
     // Because of Google API rate limits, we have to process them sequentially
@@ -137,7 +130,7 @@ async fn validate_documents() -> Result<()> {
                 sheet_id.clone(),
                 fetch_sheet(None, &sheet_id, collection_id, order_index as i64).await,
             ));
-            tokio::time::sleep(Duration::from_millis(1000)).await;
+            tokio::time::sleep(Duration::from_millis(1300)).await;
         }
     }
 
@@ -162,21 +155,6 @@ async fn validate_documents() -> Result<()> {
     } else {
         Ok(())
     }
-}
-
-pub async fn batch_join_all<
-    T,
-    F: std::future::Future<Output = Result<T>>,
-    I: Iterator<Item = F>,
->(
-    it: I,
-) -> Result<()> {
-    use futures::StreamExt;
-    let mut all_done = futures::stream::iter(it).buffer_unordered(4);
-    while let Some(res) = all_done.next().await {
-        res?;
-    }
-    Ok(())
 }
 
 /// Fetch the contents of the sheet with the given ID, validating the first page as
