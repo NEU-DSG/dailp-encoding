@@ -149,13 +149,13 @@ impl AnnotatedDoc {
     async fn forms(
         &self,
         context: &async_graphql::Context<'_>,
-        start_index: Option<i64>,
-        end_index: Option<i64>,
+        start: Option<i64>,
+        end: Option<i64>,
     ) -> FieldResult<Vec<AnnotatedForm>> {
         Ok(context
             .data::<DataLoader<Database>>()?
             .loader()
-            .words_in_document(self.meta.id, start_index, end_index)
+            .words_in_document(self.meta.id, start, end)
             .await?
             .collect())
     }

@@ -314,15 +314,15 @@ impl Database {
     pub async fn words_in_document(
         &self,
         document_id: DocumentId,
-        start_index: Option<i64>,
-        end_index: Option<i64>,
+        start: Option<i64>,
+        end: Option<i64>,
     ) -> Result<impl Iterator<Item = AnnotatedForm>> {
         let words = query_file_as!(
             BasicWord,
             "queries/document_words.sql",
             document_id.0,
-            start_index,
-            end_index
+            start,
+            end
         )
         .fetch_all(&self.client)
         .await?;
