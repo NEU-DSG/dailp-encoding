@@ -9,8 +9,8 @@ import {
   unstable_useFormState as useFormState,
 } from "reakit/Form"
 import { Popover, PopoverDisclosure, usePopoverState } from "reakit/Popover"
-import { useUser } from "src/auth"
-import { Button, CleanButton, Link } from "src/components"
+import { useCredentials, useUser } from "src/auth"
+import { Button, Link } from "src/components"
 import { cleanButton } from "src/components/button.css"
 import { centeredColumn } from "src/style/utils.css"
 import Layout from "../layout"
@@ -19,7 +19,7 @@ import {
   loginButton,
   loginFormBox,
   loginHeader,
-  logoutPopover,
+  popoverButton,
   positionButton,
   skinnyWidth,
 } from "./login.css"
@@ -99,44 +99,37 @@ const LoginPage = () => {
 
 // the login button that appears in the header of the website
 export const LoginHeaderButton = () => {
-  const { authenticated } = useUser()
+  // get the current user's auth token
+  const token = useCredentials()
 
   return (
     <div className={loginHeader}>
-      {/* show a logout button if user is signed in, otherwise show login */}
-      {authenticated ? <ConfirmLogout /> : <Link href="/login">Log in</Link>}
+      {/* if an auth token exists, that means a user is logged in */}
+      {token ? <ConfirmLogout /> : <Link href="/login">Log in</Link>}
     </div>
   )
 }
 
-// a popover handling user log out
 const ConfirmLogout = () => {
   const { user, setUser } = useUser()
-  const popover = usePopoverState()
+  const popover = usePopoverState({ gutter: 2 })
 
   return (
     <>
       <PopoverDisclosure {...popover} className={cleanButton}>
-        Log out
+        {popover.visible ? "Cancel" : "Log out"}
       </PopoverDisclosure>
 
-      <Popover {...popover} className={logoutPopover} tabIndex={0}>
-        Log out of DAILP?
-        <CleanButton
+      <Popover {...popover} tabIndex={0}>
+        <Button
+          className={popoverButton}
           onClick={() => {
             user?.signOut()
-            setUser(null)
+            setUser(null) // set current user to null because user has completed reset password flow and will need to relogin
           }}
         >
-          Yes
-        </CleanButton>
-        <CleanButton
-          onClick={() => {
-            popover.hide()
-          }}
-        >
-          No
-        </CleanButton>
+          Log out
+        </Button>
       </Popover>
     </>
   )
