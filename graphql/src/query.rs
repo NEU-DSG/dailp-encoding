@@ -5,8 +5,8 @@ use itertools::Itertools;
 use {
     dailp::async_graphql::{self, dataloader::DataLoader, Context, FieldResult, Guard},
     dailp::{
-        AnnotatedDoc, CherokeeOrthography, Database, MorphemeId, MorphemeReference, TagForm,
-        WordsInDocument,
+        AnnotatedDoc, AnnotatedFormUpdate, CherokeeOrthography, Database, MorphemeId,
+        MorphemeReference, TagForm, WordsInDocument,
     },
     serde::{Deserialize, Serialize},
     serde_with::{rust::StringWithSeparator, CommaSeparator},
@@ -287,6 +287,18 @@ impl Mutation {
             .update_annotation(data.0)
             .await?;
         Ok(true)
+    }
+
+    async fn update_word(
+        &self,
+        context: &Context<'_>,
+        annotation_form: AnnotatedFormUpdate,
+    ) -> FieldResult<Uuid> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .update_word(&annotation_form)
+            .await?)
     }
 }
 
