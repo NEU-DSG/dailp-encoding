@@ -1,7 +1,7 @@
-use std::time::Duration;
 use dailp::{Translation, TranslationBlock};
 use itertools::Itertools;
 use serde::Deserialize;
+use std::time::Duration;
 use tokio::time::sleep;
 
 /// Result obtained directly from the raw Google document.

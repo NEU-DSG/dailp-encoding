@@ -1,4 +1,3 @@
-use crate::batch_join_all;
 use anyhow::Result;
 use dailp::{Contributor, Database};
 
@@ -61,7 +60,7 @@ async fn migrate_new_vocabs(db: &Database, sheet_ids: &[&str]) -> Result<()> {
         let mut new_links = parse_early_vocab(db, s, 0, true, false, true, true, 3).await?;
         links.append(&mut new_links);
     }
-    batch_join_all(links.into_iter().map(|l| db.insert_morpheme_relation(l))).await?;
+    db.insert_morpheme_relations(links).await?;
     Ok(())
 }
 
