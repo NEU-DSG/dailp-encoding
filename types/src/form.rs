@@ -167,3 +167,12 @@ impl AnnotatedForm {
 pub fn is_root_morpheme(s: &str) -> bool {
     s.contains(|c: char| c.is_lowercase())
 }
+
+/// A single word in an annotated document that can be edited.
+#[derive(async_graphql::InputObject)]
+pub struct AnnotatedFormUpdate {
+    /// Unique identifier of the form
+    pub id: Uuid,
+    /// Original source text that can be either undefined or null
+    pub source: MaybeUndefined<String>,
+}
