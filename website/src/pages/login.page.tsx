@@ -12,6 +12,7 @@ import {
 import { Popover, PopoverDisclosure, usePopoverState } from "reakit/Popover"
 import { useUser } from "src/auth"
 import { Button, CleanButton, Link } from "src/components"
+import { centeredColumn } from "src/style/utils.css"
 import Layout from "../layout"
 import {
   centeredForm,

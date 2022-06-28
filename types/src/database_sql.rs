@@ -305,6 +305,14 @@ impl Database {
         todo!("Implement image annotations")
     }
 
+    pub async fn update_word(&self, word: &AnnotatedFormUpdate) -> Result<Uuid> {
+        query_file!("queries/update_word.sql", word.id, word.source.value())
+            .execute(&self.client)
+            .await?;
+
+        Ok(word.id)
+    }
+
     pub async fn all_pages(&self) -> Result<Vec<page::Page>> {
         todo!("Implement content pages")
     }
