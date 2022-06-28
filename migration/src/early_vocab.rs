@@ -1,4 +1,3 @@
-use crate::batch_join_all;
 use anyhow::Result;
 use dailp::{Contributor, Database};
 
@@ -61,7 +60,7 @@ async fn migrate_new_vocabs(db: &Database, sheet_ids: &[&str]) -> Result<()> {
         let mut new_links = parse_early_vocab(db, s, 0, true, false, true, true, 3).await?;
         links.append(&mut new_links);
     }
-    batch_join_all(links.into_iter().map(|l| db.insert_morpheme_relation(l))).await?;
+    db.insert_morpheme_relations(links).await?;
     Ok(())
 }
 
@@ -182,7 +181,7 @@ async fn parse_early_vocab(
                     position: dailp::PositionInDocument::new(
                         doc_id.clone(),
                         page_number,
-                        index as i32 + 1,
+                        index as i64 + 1,
                     ),
                     date_recorded: meta.date.clone(),
                     id: None,
@@ -195,7 +194,7 @@ async fn parse_early_vocab(
     let (forms, links): (Vec<_>, Vec<_>) = entries.unzip();
 
     // Push all forms and links to the database.
-    batch_join_all(forms.into_iter().map(|form| db.insert_one_word(form))).await?;
+    db.only_insert_words(doc_id, forms).await?;
 
     Ok(links.into_iter().flatten().collect())
 }

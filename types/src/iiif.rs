@@ -1,3 +1,5 @@
+#![allow(missing_docs)]
+
 //! This module includes types which are intended to represent the [IIIF
 //! Presentation API specification](https://iiif.io/api/presentation/3.0/).
 //! We use these types to build IIIF manifests for any annotated document,

@@ -1,6 +1,6 @@
 # DAILP Website
 
-This package renders a static website using React and Gatsby that includes all annotated documents produced by the DAILP project.
+This package renders a static website using React that includes all annotated documents produced by the DAILP project.
 These documents are connected to a Cherokee lexical database using our GraphQL endpoint.
 The latest commit to the `main` branch is automatically deployed to [`dailp.northeastern.edu`](https://dailp.northeastern.edu).
 
@@ -46,14 +46,13 @@ Other components in the [`src`](src) folder are general components to be used in
 Our whole stack is type-checked.
 When data from spreadsheets and other sources are pulled into our database, its format is verified and data types are enforced.
 The GraphQL layer mediating access to this data uses the exact same data types, automatically providing access to them in the GraphQL schema.
-The front-end build process ingests the GraphQL schema on demand to produce [TypeScript types](src/__generated__/gatsby-types.d.ts).
+The front-end build process ingests the GraphQL schema on demand to produce [TypeScript types](src/graphql/dailp/index.ts).
 Thus, we define our types once in the [back-end](../types) and those definitions propagate all the way here.
 
 ## Features of this approach
 
-- Built with [`gatsby`](https://www.gatsbyjs.com/) as a static site to minimize load times and remove the need for a web server. [Comparison to Wordpress](https://www.gatsbyjs.com/features/cms/gatsby-vs-wordpress/) and [explanation for content creators](https://www.gatsbyjs.com/docs/winning-over-content-creators/)
-- Pre-caching and offline access using a web manifest and [`gatsby-plugin-offline`](https://www.gatsbyjs.com/plugins/gatsby-plugin-offline)
+- Built with [`vite-plugin-ssr`](https://vite-plugin-ssr.com/) as a static site to minimize load times and remove the need for a web server. Gatsby has some helpful pages that also apply to vite: [Comparison to Wordpress](https://www.gatsbyjs.com/features/cms/gatsby-vs-wordpress/) and [explanation for content creators](https://www.gatsbyjs.com/docs/winning-over-content-creators/)
 - Uses [`typescript`](https://www.typescriptlang.org/) to provide compile-time type safety and validation to Javascript.
-- Uses [`emotion`](https://emotion.sh) for styling so that we can write scoped styles that live directly on React components without managing CSS classes.
-  Incurs relatively small runtime overhead as styles are extracted at build time, but they do have to be hydrated at runtime.
-  Themeing and dynamic styling becomes very easy with Emotion, while staying compatible with all browsers.
+- Uses [`vanilla-extract`](https://vanilla-extract.style/) for styling so that we can write scoped styles directly in Typescript with some dynamic features.
+  Incurs zero runtime overhead as styles are extracted at build time.
+  Themeing and dynamic styling becomes very easy with vanilla-extract, while compatible with all browsers (except Internet Explorer, which is now discontinued).

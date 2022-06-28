@@ -1,17 +1,16 @@
 import { style } from "@vanilla-extract/css"
-import { position, rgba } from "polished"
-import sprinkles, {
+import { important, position, rgba } from "polished"
+import {
   colors,
+  fonts,
   hspace,
-  largeDialog,
   mediaQueries,
   radii,
-  std,
-  theme,
   thickness,
   vspace,
-} from "src/sprinkles.css"
-import { paddingX, paddingY } from "src/style-utils"
+} from "src/style/constants"
+import { paddingX, paddingY } from "src/style/utils"
+import { largeDialog, std } from "src/style/utils.css"
 
 export const docTitle = std.fullWidth
 
@@ -81,24 +80,26 @@ export const docTab = style({
   border: "none",
   flexGrow: 1,
   cursor: "pointer",
-  fontFamily: theme.fonts.header,
+  fontFamily: fonts.header,
   fontSize: "1.1rem",
-  backgroundColor: theme.colors.header,
-  color: theme.colors.headings,
-  outlineColor: theme.colors.headings,
+  backgroundColor: colors.secondary,
+  color: colors.secondaryContrast,
+  outlineColor: colors.secondaryContrast,
   selectors: {
     '&[aria-selected="true"]': {
-      borderBottom: `2px solid ${theme.colors.headings}`,
+      borderBottom: `2px solid ${colors.secondaryContrast}`,
     },
   },
 })
 
 export const docTabs = style([
   std.fullWidth,
+  important({
+    margin: 0,
+  }),
   {
     display: "flex",
     flexFlow: "row nowrap",
-    margin: "0 !important",
     height: vspace[1.75],
   },
 ])
@@ -143,8 +144,14 @@ export const morphemeDialog = style([
     transform: "translate(-50%, -50%)",
     maxWidth: "100vw",
     margin: 0,
-    padding: 0,
     zIndex: 1009,
+  },
+])
+
+export const unpaddedMorphemeDialog = style([
+  morphemeDialog,
+  {
+    padding: 0,
   },
 ])
 
@@ -162,7 +169,14 @@ export const annotatedDocument = style({
   },
 })
 
-export const audioContainer = style([wideAndTop, topMargin, bottomPadded])
+export const audioContainer = style([
+  {
+    display: "flex",
+    flexFlow: "row nowrap",
+  },
+  topMargin,
+  bottomPadded,
+])
 
 export const hideOnPrint = style({
   "@media": {
@@ -178,12 +192,16 @@ export const contentContainer = style({
   flexWrap: "nowrap",
 })
 
-export const contentSection2 = style([
-  sprinkles({ display: { any: "none", medium: "block" } }),
-  {
-    flex: 1,
+export const contentSection2 = style({
+  display: "none",
+  flex: 1,
+  maxWidth: "20rem",
+  "@media": {
+    [mediaQueries.medium]: {
+      display: "block",
+    },
   },
-])
+})
 
 export const mobileWordPanel = style([
   position("fixed", 0, 0, 0, "initial"),
@@ -191,12 +209,17 @@ export const mobileWordPanel = style([
     width: "15.5rem",
     maxWidth: "90vw",
     backgroundColor: colors.body,
-    fontFamily: theme.fonts.header,
+    fontFamily: fonts.header,
     transition: "transform 150ms ease-in-out",
     transform: "translateX(16rem)",
     selectors: {
       "&[data-enter]": {
         transform: "translateX(0)",
+      },
+    },
+    "@media": {
+      [mediaQueries.medium]: {
+        display: "none",
       },
     },
   },

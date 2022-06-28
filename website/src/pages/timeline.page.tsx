@@ -4,7 +4,7 @@ import { Helmet } from "react-helmet"
 import { Button } from "reakit/Button"
 import { Input } from "reakit/Input"
 import * as Dailp from "src/graphql/dailp"
-import { fullWidth } from "src/sprinkles.css"
+import { fullWidth } from "src/style/utils.css"
 import Layout from "../layout"
 import { boldWordRow, margined, underlined, wordRow } from "./timeline.css"
 

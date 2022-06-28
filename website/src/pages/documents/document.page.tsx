@@ -6,10 +6,8 @@ import { Helmet } from "react-helmet"
 import { MdSettings } from "react-icons/md"
 import { Dialog, DialogBackdrop, useDialogState } from "reakit/Dialog"
 import { Tab, TabList, TabPanel } from "reakit/Tab"
-import { DocumentAudio } from "src/audio-player"
-import { Breadcrumbs } from "src/breadcrumbs"
-import { Button } from "src/components"
-import Link from "src/components/link"
+import { AudioPlayer, Breadcrumbs, Button, Link } from "src/components"
+import { useMediaQuery } from "src/custom-hooks"
 import * as Dailp from "src/graphql/dailp"
 import Layout from "src/layout"
 import { drawerBg } from "src/menu.css"
@@ -22,6 +20,7 @@ import {
 } from "src/routes"
 import { useScrollableTabState } from "src/scrollable-tabs"
 import { AnnotatedForm, DocumentPage, Segment } from "src/segment"
+import { mediaQueries } from "src/style/constants"
 import {
   BasicMorphemeSegment,
   PhoneticRepresentation,
@@ -160,6 +159,8 @@ const TranslationTab = ({ doc }: { doc: Document }) => {
 
   const tagSet = tagSetForMode(viewMode)
 
+  const isDesktop = useMediaQuery(mediaQueries.medium)
+
   return (
     <>
       <DialogOverlay
@@ -168,7 +169,7 @@ const TranslationTab = ({ doc }: { doc: Document }) => {
         onDismiss={closeDialog}
       >
         <DialogContent
-          className={css.morphemeDialog}
+          className={css.unpaddedMorphemeDialog}
           aria-label="Segment Details"
         >
           {selectedMorpheme ? (
@@ -182,24 +183,25 @@ const TranslationTab = ({ doc }: { doc: Document }) => {
         </DialogContent>
       </DialogOverlay>
 
-      <DialogBackdrop {...dialog} className={drawerBg}>
-        <Dialog
-          {...dialog}
-          as="nav"
-          className={css.mobileWordPanel}
-          aria-label="Word Panel Drawer"
-          preventBodyScroll={false}
-          hideOnClickOutside={false}
-        >
-          <WordPanel
-            segment={wordPanelInfo.currContents}
-            setContent={wordPanelInfo.setCurrContents}
-            viewMode={viewMode}
-            onOpenDetails={openDetails}
-            tagSet={tagSet}
-          />
-        </Dialog>
-      </DialogBackdrop>
+      {!isDesktop ? (
+        <DialogBackdrop {...dialog} className={drawerBg}>
+          <Dialog
+            {...dialog}
+            as="nav"
+            className={css.mobileWordPanel}
+            aria-label="Word Panel Drawer"
+            preventBodyScroll={true}
+          >
+            <WordPanel
+              segment={wordPanelInfo.currContents}
+              setContent={wordPanelInfo.setCurrContents}
+              viewMode={viewMode}
+              onOpenDetails={openDetails}
+              tagSet={tagSet}
+            />
+          </Dialog>
+        </DialogBackdrop>
+      ) : null}
 
       <div className={css.contentContainer}>
         <article className={css.annotationContents}>
@@ -341,7 +343,12 @@ export const DocumentTitleHeader = (p: {
     </div>
     {p.doc.audioRecording && ( // TODO Implement sticky audio bar
       <div id="document-audio-player" className={css.audioContainer}>
-        <DocumentAudio audioUrl={p.doc.audioRecording.resourceUrl} />
+        <span>Document Audio:</span>
+        <AudioPlayer
+          style={{ flex: 1 }}
+          audioUrl={p.doc.audioRecording.resourceUrl}
+          showProgress
+        />
       </div>
     )}
   </header>

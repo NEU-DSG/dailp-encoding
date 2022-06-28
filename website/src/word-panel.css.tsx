@@ -1,19 +1,11 @@
 import { style, styleVariants } from "@vanilla-extract/css"
+import { fonts, mediaQueries, vspace } from "src/style/constants"
 import { closeButton } from "./morpheme.css"
-import sprinkles, {
-  colors,
-  hspace,
-  mediaQueries,
-  radii,
-  theme,
-  thickness,
-  vspace,
-} from "./sprinkles.css"
 
 const wordPanelPadding = "8px"
 
 export const cherHeader = style({
-  fontFamily: theme.fonts.cherokee,
+  fontFamily: fonts.cherokee,
 })
 
 export const noSpaceBelow = style({
@@ -53,7 +45,7 @@ export const collPanelButton = style({
   border: "none",
   textAlign: "left",
   padding: wordPanelPadding,
-  fontFamily: theme.fonts.header,
+  fontFamily: fonts.header,
 })
 
 export const collPanel = style({
@@ -64,7 +56,7 @@ export const collPanel = style({
 })
 
 export const wordPanelContent = style({
-  fontFamily: theme.fonts.body,
+  fontFamily: fonts.body,
   position: "sticky",
   top: 101,
   border: "none",
@@ -75,12 +67,13 @@ export const wordPanelContent = style({
       height: "calc(100vh - 125px)",
     },
   },
+  height: "100vh",
   overflowY: "auto",
 })
 
 export const wordPanelHeader = style({
   padding: wordPanelPadding,
-  fontFamily: theme.fonts.body,
+  fontFamily: fonts.body,
 })
 
 export const audioContainer = style({ paddingLeft: "40%" })
@@ -93,7 +86,7 @@ export const tableContainer = style({
 
 export const tableCells = style({
   border: "4px solid transparent",
-  fontFamily: theme.fonts.body,
+  fontFamily: fonts.body,
   padding: "0px",
   paddingRight: "3px",
   wordWrap: "break-word",

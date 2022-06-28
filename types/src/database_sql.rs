@@ -1,3 +1,5 @@
+#![allow(missing_docs)]
+
 use std::ops::Bound;
 
 use {
@@ -26,7 +28,7 @@ impl Database {
         let db_url = std::env::var("DATABASE_URL")?;
         let conn = PgPoolOptions::new()
             .max_connections(std::thread::available_parallelism().map_or(2, |x| x.get() as u32))
-            .connect_timeout(Duration::from_secs(60 * 4))
+            .acquire_timeout(Duration::from_secs(60 * 4))
             // Disable excessive pings to the database.
             .test_before_acquire(false)
             .connect(&db_url)
@@ -76,7 +78,7 @@ impl Database {
     pub async fn morphemes(
         &self,
         morpheme_id: MorphemeId,
-        compare_by: Option<CherokeeOrthography>,
+        _compare_by: Option<CherokeeOrthography>,
     ) -> Result<Vec<MorphemeReference>> {
         let items = query_file!(
             "queries/surface_forms.sql",
@@ -111,7 +113,7 @@ impl Database {
                             position: PositionInDocument::new(
                                 DocumentId(w.document_id),
                                 w.page_number.unwrap_or_default(),
-                                w.index_in_document as i32,
+                                w.index_in_document as i64,
                             ),
                         })
                         .collect(),
@@ -161,7 +163,7 @@ impl Database {
                         position: PositionInDocument::new(
                             DocumentId(w.document_id),
                             w.page_number.unwrap_or_default(),
-                            w.index_in_document as i32,
+                            w.index_in_document as i64,
                         ),
                     })
                     .collect(),
@@ -228,7 +230,7 @@ impl Database {
 
     pub async fn document_manifest(
         &self,
-        document_name: &str,
+        _document_name: &str,
         url: String,
     ) -> Result<iiif::Manifest> {
         // Retrieve the document from the DB.
@@ -340,7 +342,7 @@ impl Database {
 
     pub async fn documents_in_collection(
         &self,
-        super_collection: &str,
+        _super_collection: &str,
         collection: &str,
     ) -> Result<Vec<DocumentReference>> {
         Ok(query_file_as!(
@@ -352,7 +354,7 @@ impl Database {
         .await?)
     }
 
-    pub async fn insert_top_collection(&self, title: String, index: i64) -> Result<Uuid> {
+    pub async fn insert_top_collection(&self, title: String, _index: i64) -> Result<Uuid> {
         Ok(query_file_scalar!(
             "queries/insert_document_group.sql",
             slug::slugify(&title),
@@ -427,16 +429,22 @@ impl Database {
         .fetch_one(&mut tx)
         .await?;
 
-        for contributor in &meta.contributors {
+        {
+            let (name, doc, role): (Vec<_>, Vec<_>, Vec<_>) = meta
+                .contributors
+                .iter()
+                .map(|contributor| (&*contributor.name, document_uuid, &*contributor.role))
+                .multiunzip();
             query_file!(
-                "queries/upsert_document_contributor.sql",
-                &contributor.name,
-                &document_uuid,
-                &contributor.role
+                "queries/upsert_document_contributors.sql",
+                &*name as _,
+                &*doc,
+                &*role as _
             )
             .execute(&mut tx)
             .await?;
         }
+
         tx.commit().await?;
 
         Ok(DocumentId(document_uuid))
@@ -496,16 +504,23 @@ impl Database {
                         match element {
                             AnnotatedSeg::Word(word) => {
                                 let len = word.source.chars().count() as i64;
-                                for (char_index, character) in word.source.chars().enumerate() {
-                                    query_file!(
-                                        "queries/insert_character_transcription.sql",
-                                        page_id,
-                                        starting_char_index + char_index as i64,
-                                        &[character.to_string()] as &[String]
-                                    )
-                                    .execute(&mut tx)
-                                    .await?;
-                                }
+                                let (char_index, character): (Vec<_>, Vec<_>) = word
+                                    .source
+                                    .chars()
+                                    .enumerate()
+                                    .map(|(idx, c)| {
+                                        (starting_char_index + idx as i64, c.to_string())
+                                    })
+                                    .unzip();
+                                query_file!(
+                                    "queries/insert_character_transcription.sql",
+                                    page_id,
+                                    &*char_index,
+                                    &*character
+                                )
+                                .execute(&mut tx)
+                                .await?;
+
                                 let char_range: PgRange<_> =
                                     (starting_char_index..starting_char_index + len).into();
                                 self.insert_word(
@@ -532,7 +547,7 @@ impl Database {
     pub async fn document_breadcrumbs(
         &self,
         document_id: DocumentId,
-        super_collection: &str,
+        _super_collection: &str,
     ) -> Result<Vec<DocumentCollection>> {
         let item = query_file!("queries/document_group_crumb.sql", document_id.0)
             .fetch_one(&self.client)
@@ -551,49 +566,185 @@ impl Database {
         Ok(())
     }
 
-    pub async fn insert_lexical_entry(
+    pub async fn insert_lexical_entries(
         &self,
-        stem: AnnotatedForm,
+        document_id: DocumentId,
+        stems: Vec<AnnotatedForm>,
         surface_forms: Vec<AnnotatedForm>,
     ) -> Result<()> {
-        let doc_id = stem.position.document_id.0;
         let mut tx = self.client.begin().await?;
-        let segment = &stem.segments.unwrap()[0];
-        // TODO Instead of sanitizing like this, just adjust the glosses in EFN documents.
-        // That will reduce having to handle special cases. We should be able to
-        // support whatever characters in morpheme glosses and just maybe
-        // sanitize for display purposes if absolutely necessary.
-        let gloss = segment
-            .gloss
-            .replace(&[',', '+', '(', ')', '[', ']'] as &[char], " ")
-            .split_whitespace()
-            .join(".");
-        let _gloss_id = query_file_scalar!(
+
+        // Clear all contents before inserting more.
+        query_file!("queries/clear_dictionary_document.sql", document_id.0)
+            .execute(&mut tx)
+            .await?;
+
+        // Convert the list of stems into a list for each field to prepare for a
+        // bulk DB insertion.
+        let (glosses, shapes): (Vec<_>, Vec<_>) = stems
+            .into_iter()
+            .map(|stem| {
+                (
+                    stem.segments.as_ref().unwrap()[0]
+                        .gloss
+                        .replace(&[',', '+', '(', ')', '[', ']'] as &[char], " ")
+                        .split_whitespace()
+                        .join("."),
+                    stem,
+                )
+            })
+            .unique_by(|(gloss, _)| gloss.clone())
+            .map(|(gloss, stem)| {
+                (
+                    gloss.clone(),
+                    stem.segments.as_ref().unwrap()[0].morpheme.clone(),
+                )
+            })
+            .multiunzip();
+
+        // Insert all the morpheme glosses from this dictionary at once.
+        query_file!(
             "queries/upsert_dictionary_entry.sql",
-            &doc_id,
-            gloss,
-            segment.morpheme
+            document_id.0,
+            &*glosses,
+            &*shapes
         )
-        .fetch_one(&mut tx)
+        .execute(&mut tx)
         .await?;
 
         // TODO When we end up referring to morpheme glosses by ID, pass that in.
-        for form in surface_forms {
-            self.insert_word(&mut tx, form, doc_id, None, None).await?;
-        }
+        self.insert_lexical_words(&mut tx, surface_forms).await?;
 
         tx.commit().await?;
         Ok(())
     }
 
-    pub async fn only_insert_word(&self, form: AnnotatedForm) -> Result<Uuid> {
+    pub async fn only_insert_words(
+        &self,
+        document_id: DocumentId,
+        forms: Vec<AnnotatedForm>,
+    ) -> Result<()> {
         let mut tx = self.client.begin().await?;
-        let document_id = form.position.document_id.0;
-        let id = self
-            .insert_word(&mut tx, form, document_id, None, None)
+        // Clear all contents before inserting more.
+        query_file!("queries/clear_dictionary_document.sql", document_id.0)
+            .execute(&mut tx)
             .await?;
+
+        self.insert_lexical_words(&mut tx, forms).await?;
+
         tx.commit().await?;
-        Ok(id)
+        Ok(())
+    }
+
+    pub async fn insert_lexical_words<'a>(
+        &self,
+        tx: &mut sqlx::Transaction<'a, sqlx::Postgres>,
+        forms: Vec<AnnotatedForm>,
+    ) -> Result<()> {
+        let mut tx = tx.begin().await?;
+        let (
+            document_id,
+            source_text,
+            simple_phonetics,
+            phonemic,
+            english_gloss,
+            recorded_at,
+            commentary,
+            page_number,
+            index_in_document,
+        ): (
+            Vec<_>,
+            Vec<_>,
+            Vec<_>,
+            Vec<_>,
+            Vec<_>,
+            Vec<_>,
+            Vec<_>,
+            Vec<_>,
+            Vec<_>,
+        ) = forms
+            .iter()
+            .map(|form| {
+                (
+                    form.position.document_id.0,
+                    &*form.source,
+                    form.simple_phonetics.as_deref(),
+                    form.phonemic.as_deref(),
+                    form.english_gloss.get(0).map(|s| &**s),
+                    form.date_recorded.as_ref().map(|d| d.0.clone()),
+                    form.commentary.as_deref(),
+                    &*form.position.page_number,
+                    form.position.index as i64,
+                )
+            })
+            .multiunzip();
+
+        let ids = query_file_scalar!(
+            "queries/insert_many_words_in_document.sql",
+            &*document_id,
+            &*source_text as _,
+            &*simple_phonetics as _,
+            &*phonemic as _,
+            &*english_gloss as _,
+            &*recorded_at as _,
+            &*commentary as _,
+            &*page_number as _,
+            &*index_in_document
+        )
+        .fetch_all(&mut tx)
+        .await?;
+
+        let (doc_id, gloss, word_id, index, morpheme, followed_by): (
+            Vec<_>,
+            Vec<_>,
+            Vec<_>,
+            Vec<_>,
+            Vec<_>,
+            Vec<_>,
+        ) = forms
+            .into_iter()
+            .zip(ids)
+            .filter_map(move |(form, word_id)| {
+                form.segments.map(move |segments| {
+                    segments
+                        .into_iter()
+                        .enumerate()
+                        .map(move |(index, segment)| {
+                            let gloss = segment
+                                .gloss
+                                .replace(&[',', '+', '(', ')', '[', ']'] as &[char], " ")
+                                .split_whitespace()
+                                .join(".");
+
+                            (
+                                form.position.document_id.0,
+                                gloss,
+                                word_id,
+                                index as i64,
+                                segment.morpheme,
+                                segment.followed_by,
+                            )
+                        })
+                })
+            })
+            .flatten()
+            .multiunzip();
+
+        query_file!(
+            "queries/upsert_many_word_segments.sql",
+            &*doc_id,
+            &*gloss,
+            &*word_id,
+            &*index,
+            &*morpheme,
+            &*followed_by as _
+        )
+        .execute(&mut tx)
+        .await?;
+
+        tx.commit().await?;
+
+        Ok(())
     }
 
     pub async fn insert_word<'a>(
@@ -606,23 +757,16 @@ impl Database {
     ) -> Result<Uuid> {
         let mut tx = tx.begin().await?;
 
-        // Insert audio resource if there is one for this word.
-        let audio_slice_id = if let Some(track) = form.audio_track {
-            let time_range: Option<PgRange<_>> = match (track.start_time, track.end_time) {
-                (Some(a), Some(b)) => Some((a as i64..b as i64).into()),
-                (Some(a), None) => Some((a as i64..).into()),
-                (None, Some(b)) => Some((..b as i64).into()),
-                (None, None) => None,
-            };
-            Some(
-                query_file_scalar!("queries/insert_audio.sql", track.resource_url, time_range)
-                    .fetch_one(&mut tx)
-                    .await?,
-            )
-        } else {
-            None
-        };
-
+        let audio_start = form
+            .audio_track
+            .as_ref()
+            .and_then(|t| t.start_time)
+            .map(i64::from);
+        let audio_end = form
+            .audio_track
+            .as_ref()
+            .and_then(|t| t.end_time)
+            .map(i64::from);
         let word_id: Uuid = query_file_scalar!(
             "queries/upsert_word_in_document.sql",
             form.source,
@@ -636,32 +780,54 @@ impl Database {
             form.position.index as i64,
             page_id,
             char_range,
-            audio_slice_id
+            form.audio_track.map(|t| t.resource_url),
+            audio_start,
+            audio_end
         )
         .fetch_one(&mut tx)
         .await?;
 
         if let Some(segments) = form.segments {
-            for (index, segment) in segments.into_iter().enumerate() {
-                // FIXME Get rid of this sanitize step.
-                let gloss = segment
-                    .gloss
-                    .replace(&[',', '+', '(', ')', '[', ']'] as &[char], " ")
-                    .split_whitespace()
-                    .join(".");
+            let (document_id, gloss, word_id, index, morpheme, followed_by): (
+                Vec<_>,
+                Vec<_>,
+                Vec<_>,
+                Vec<_>,
+                Vec<_>,
+                Vec<_>,
+            ) = segments
+                .into_iter()
+                .enumerate()
+                .map(move |(index, segment)| {
+                    // FIXME Get rid of this sanitize step.
+                    let gloss = segment
+                        .gloss
+                        .replace(&[',', '+', '(', ')', '[', ']'] as &[char], " ")
+                        .split_whitespace()
+                        .join(".");
 
-                query_file!(
-                    "queries/upsert_word_segment.sql",
-                    document_id,
-                    gloss,
-                    word_id,
-                    index as i64,
-                    segment.morpheme,
-                    segment.followed_by as Option<SegmentType>
-                )
-                .execute(&mut tx)
-                .await?;
-            }
+                    (
+                        document_id,
+                        gloss.clone(),
+                        word_id,
+                        index as i64,
+                        segment.morpheme,
+                        segment.followed_by as Option<SegmentType>,
+                    )
+                })
+                .multiunzip();
+
+            query_file!(
+                "queries/upsert_many_word_segments.sql",
+                &*document_id,
+                &*gloss,
+                &*word_id,
+                &*index,
+                &*morpheme,
+                &*followed_by as _
+            )
+            .execute(&mut tx)
+            .await?;
         }
 
         tx.commit().await?;
@@ -753,21 +919,31 @@ impl Database {
         )
     }
 
-    pub async fn insert_morpheme_relation(&self, link: LexicalConnection) -> Result<()> {
+    pub async fn insert_morpheme_relations(&self, links: Vec<LexicalConnection>) -> Result<()> {
+        // Ignores glosses without a document ID.
+        // TODO Consider whether that's a reasonable constraint.
+        let (left_doc, left_gloss, right_doc, right_gloss): (Vec<_>, Vec<_>, Vec<_>, Vec<_>) =
+            links
+                .into_iter()
+                .filter_map(|link| {
+                    Some((
+                        link.left.document_name?,
+                        link.left.gloss,
+                        link.right.document_name?,
+                        link.right.gloss,
+                    ))
+                })
+                .multiunzip();
         // Don't crash if a morpheme relation fails to insert.
-        if let (Some(left_doc), Some(right_doc)) =
-            (link.left.document_name, link.right.document_name)
-        {
-            let _ = query_file!(
-                "queries/insert_morpheme_relation.sql",
-                link.left.gloss,
-                &left_doc,
-                link.right.gloss,
-                &right_doc
-            )
-            .execute(&self.client)
-            .await;
-        }
+        let _ = query_file!(
+            "queries/insert_morpheme_relations.sql",
+            &*left_doc,
+            &*left_gloss,
+            &*right_doc,
+            &*right_gloss,
+        )
+        .execute(&self.client)
+        .await;
         Ok(())
     }
 
@@ -1017,13 +1193,12 @@ impl Loader<TagId> for Database {
             .map(|tag| {
                 (
                     TagId(
-                        tag.gloss.clone().unwrap(),
-                        InputType::parse(Some(Value::Enum(Name::new(tag.system_name.unwrap()))))
-                            .unwrap(),
+                        tag.gloss.clone(),
+                        InputType::parse(Some(Value::Enum(Name::new(tag.system_name)))).unwrap(),
                     ),
                     TagForm {
-                        tag: tag.gloss.unwrap(),
-                        title: tag.title.unwrap(),
+                        tag: tag.gloss,
+                        title: tag.title,
                         shape: tag.example_shape,
                         details_url: None,
                         definition: tag.description.unwrap_or_default(),
@@ -1083,7 +1258,7 @@ impl Loader<WordsInParagraph> for Database {
                         position: PositionInDocument::new(
                             DocumentId(w.document_id),
                             w.page_number.unwrap_or_default(),
-                            w.index_in_document as i32,
+                            w.index_in_document as i64,
                         ),
                     }),
                 )
@@ -1122,13 +1297,12 @@ impl Loader<TagForMorpheme> for Database {
             .map(|tag| {
                 (
                     TagForMorpheme(
-                        tag.gloss_id.unwrap(),
-                        InputType::parse(Some(Value::Enum(Name::new(tag.system_name.unwrap()))))
-                            .unwrap(),
+                        tag.gloss_id,
+                        InputType::parse(Some(Value::Enum(Name::new(tag.system_name)))).unwrap(),
                     ),
                     TagForm {
-                        tag: tag.gloss.unwrap(),
-                        title: tag.title.unwrap(),
+                        tag: tag.gloss,
+                        title: tag.title,
                         shape: tag.example_shape,
                         details_url: None,
                         definition: tag.description.unwrap_or_default(),
@@ -1185,10 +1359,10 @@ impl Loader<ContributorsForDocument> for Database {
             .into_iter()
             .map(|x| {
                 (
-                    ContributorsForDocument(x.document_id.unwrap()),
+                    ContributorsForDocument(x.document_id),
                     Contributor {
-                        name: x.full_name.unwrap(),
-                        role: x.contribution_role.unwrap_or_default(),
+                        name: x.full_name,
+                        role: x.contribution_role,
                     },
                 )
             })
@@ -1281,7 +1455,7 @@ impl From<BasicWord> for AnnotatedForm {
             position: PositionInDocument::new(
                 DocumentId(w.document_id),
                 w.page_number.unwrap_or_default(),
-                w.index_in_document as i32,
+                w.index_in_document as i64,
             ),
         }
     }

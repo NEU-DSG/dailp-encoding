@@ -6,6 +6,7 @@ use async_graphql::{dataloader::DataLoader, FieldResult};
 use serde::{Deserialize, Serialize};
 use sqlx::types::Uuid;
 
+/// Mostly unused type
 #[derive(Clone, Eq, PartialEq, Hash, Serialize, Deserialize, Debug, async_graphql::NewType)]
 pub struct FormId(pub String);
 
@@ -121,7 +122,7 @@ impl AnnotatedForm {
     }
 
     /// Number of words preceding this one in the containing document
-    async fn index(&self) -> i32 {
+    async fn index(&self) -> i64 {
         self.position.index
     }
 
@@ -132,18 +133,22 @@ impl AnnotatedForm {
 }
 
 impl AnnotatedForm {
+    /// Look for a root morpheme in the word using crude case checks.
     pub fn find_root(&self) -> Option<&MorphemeSegment> {
         self.segments
             .as_ref()
             .and_then(|segments| segments.iter().find(|seg| is_root_morpheme(&seg.gloss)))
     }
 
+    /// Find a morpheme within this word with the given exact gloss.
     pub fn find_morpheme(&self, gloss: &str) -> Option<&MorphemeSegment> {
         self.segments
             .as_ref()
             .and_then(|segments| segments.iter().find(|seg| seg.gloss == gloss))
     }
 
+    /// Are there any unidentified segments within this word? Just checks if
+    /// there are morphemes or glosses consisting of a question mark "?"
     pub fn is_unresolved(&self) -> bool {
         if let Some(segments) = &self.segments {
             segments
@@ -155,6 +160,10 @@ impl AnnotatedForm {
     }
 }
 
+/// Is the given gloss for a root morpheme? This is a crude calculation that just
+/// checks if there are any lowercase characters. Convention says that typically
+/// functional morpheme tags are all uppercase (plus numbers and punctuation),
+/// so having lowercase characters indicates a lexical morpheme gloss.
 pub fn is_root_morpheme(s: &str) -> bool {
     s.contains(|c: char| c.is_lowercase())
 }

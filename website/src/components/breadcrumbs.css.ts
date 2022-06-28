@@ -1,13 +1,12 @@
 import { style } from "@vanilla-extract/css"
-import { colors, fonts } from "src/sprinkles.css"
-import { typography } from "./theme"
+import { colors, fonts, hspace, rhythm } from "src/style/constants"
 
 export const breadcrumbs = style({
   fontFamily: fonts.body,
   fontWeight: "normal",
   listStyle: "none",
   paddingInlineStart: 0,
-  marginBottom: typography.rhythm(1 / 2),
+  marginBottom: rhythm(1 / 2),
   marginLeft: 0,
   marginTop: 0,
 })
@@ -17,7 +16,7 @@ export const breadcrumbElement = style({
   fontSize: "1rem",
   selectors: {
     "&:after": {
-      padding: "0 0.5rem",
+      padding: `0 ${hspace.halfEdge}`,
       content: `"/"`,
       color: colors.text,
     },

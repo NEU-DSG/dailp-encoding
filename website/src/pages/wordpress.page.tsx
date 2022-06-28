@@ -1,10 +1,10 @@
 import React from "react"
 import { Helmet } from "react-helmet"
+import { WordpressPageContents } from "src/components"
 import * as Wordpress from "src/graphql/wordpress"
-import { edgePadded, fullWidth } from "src/sprinkles.css"
-import { WordpressContents } from "src/wordpress-page"
+import { edgePadded, fullWidth } from "src/style/utils.css"
 import Layout from "../layout"
-import { wordpressUrl } from "../theme"
+import { wordpressUrl } from "../theme.css"
 
 const WordpressPage = (props: { "*": string }) => (
   <Layout>
@@ -38,7 +38,7 @@ const Contents = (props: { slug: string }) => {
         <header>
           <h1>{page.title}</h1>
         </header>
-        <WordpressContents content={page.content ?? ""} />
+        <WordpressPageContents content={page.content} />
       </>
     )
   } else if (fetching) {
