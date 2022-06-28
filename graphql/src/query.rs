@@ -290,15 +290,16 @@ impl Mutation {
         Ok(true)
     }
 
+    #[graphql(guard = "GroupGuard::new(UserGroup::Editor)")]
     async fn update_word(
         &self,
         context: &Context<'_>,
-        annotation_form: AnnotatedFormUpdate,
+        word: AnnotatedFormUpdate,
     ) -> FieldResult<Uuid> {
         Ok(context
             .data::<DataLoader<Database>>()?
             .loader()
-            .update_word(&annotation_form)
+            .update_word(&word)
             .await?)
     }
 }
