@@ -34,5 +34,3 @@ serverless.manifest.json
 
 config.tf.json
 *.pem
-
-.vscode
