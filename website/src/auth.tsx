@@ -96,8 +96,7 @@ export const UserProvider = (props: { children: any }) => {
     user?.confirmPassword(verificationCode, newPassword, {
       async onSuccess(data: string) {
         setUser(null) // since user successfully changed password, reset current user's state
-        const navigationPromise = navigate("/login")
-        await navigationPromise
+        await navigate("/login")
 
         console.log("Change password successful. Result: ", data)
         alert("Password successfully changed")
