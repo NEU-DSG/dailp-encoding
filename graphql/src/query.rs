@@ -1,12 +1,13 @@
 //! This piece of the project exposes a GraphQL endpoint that allows one to access DAILP data in a federated manner with specific queries.
 
+use dailp::Uuid;
 use itertools::Itertools;
 
 use {
     dailp::async_graphql::{self, dataloader::DataLoader, Context, FieldResult, Guard},
     dailp::{
-        AnnotatedDoc, CherokeeOrthography, Database, MorphemeId, MorphemeReference, TagForm,
-        WordsInDocument,
+        AnnotatedDoc, AnnotatedFormUpdate, CherokeeOrthography, Database, MorphemeId,
+        MorphemeReference, TagForm, WordsInDocument,
     },
     serde::{Deserialize, Serialize},
     serde_with::{rust::StringWithSeparator, CommaSeparator},
@@ -288,6 +289,19 @@ impl Mutation {
             .await?;
         Ok(true)
     }
+
+    #[graphql(guard = "GroupGuard::new(UserGroup::Editor)")]
+    async fn update_word(
+        &self,
+        context: &Context<'_>,
+        word: AnnotatedFormUpdate,
+    ) -> FieldResult<Uuid> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .update_word(&word)
+            .await?)
+    }
 }
 
 #[derive(async_graphql::SimpleObject)]
@@ -306,6 +320,14 @@ pub struct UserInfo {
         with = "StringWithSeparator::<CommaSeparator>"
     )]
     groups: Vec<UserGroup>,
+}
+impl UserInfo {
+    pub fn new_test_admin() -> Self {
+        Self {
+            email: "test@dailp.northeastern.edu".to_string(),
+            groups: vec![UserGroup::Editor],
+        }
+    }
 }
 
 #[derive(Eq, PartialEq, Copy, Clone, Serialize, Deserialize, Debug, async_graphql::Enum)]
