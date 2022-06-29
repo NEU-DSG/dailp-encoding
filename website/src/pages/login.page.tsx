@@ -1,4 +1,4 @@
-import React from "react"
+import React, { ReactNode } from "react"
 import {
   unstable_Form as Form,
   unstable_FormInput as FormInput,
@@ -16,6 +16,7 @@ import { centeredColumn } from "src/style/utils.css"
 import Layout from "../layout"
 import {
   centeredForm,
+  centeredHeader,
   loginButton,
   loginFormBox,
   loginHeader,
@@ -25,12 +26,15 @@ import {
 } from "./login.css"
 import { ResetLink } from "./reset-password.page"
 
-export const LoginPageTemplate = (props: { header: any; content: any }) => {
+export const LoginPageTemplate = (props: {
+  header: ReactNode
+  children: ReactNode
+}) => {
   return (
     <Layout>
       <main className={skinnyWidth}>
-        <header className={centeredColumn}>{props.header}</header>
-        {props.content}
+        <header className={centeredHeader}>{props.header}</header>
+        {props.children}
       </main>
     </Layout>
   )
@@ -64,36 +68,31 @@ const LoginPage = () => {
           </h4>
         </>
       }
-      content={
-        <Form {...loginForm} className={centeredForm}>
-          <FormFields
-            form={loginForm}
-            name="email"
-            label="Email *"
-            placeholder="mail@website.com"
-          />
+    >
+      <Form {...loginForm} className={centeredForm}>
+        <FormFields
+          form={loginForm}
+          name="email"
+          label="Email *"
+          placeholder="mail@website.com"
+        />
 
-          <FormFields
-            form={loginForm}
-            name="password"
-            label="Password *"
-            type="password"
-            placeholder="enter password"
-          />
-          <ResetLink />
+        <FormFields
+          form={loginForm}
+          name="password"
+          label="Password *"
+          type="password"
+          placeholder="enter password"
+        />
+        <ResetLink />
 
-          <div className={positionButton}>
-            <FormSubmitButton
-              {...loginForm}
-              as={Button}
-              className={loginButton}
-            >
-              Log in
-            </FormSubmitButton>
-          </div>
-        </Form>
-      }
-    ></LoginPageTemplate>
+        <div className={positionButton}>
+          <FormSubmitButton {...loginForm} as={Button} className={loginButton}>
+            Log in
+          </FormSubmitButton>
+        </div>
+      </Form>
+    </LoginPageTemplate>
   )
 }
 

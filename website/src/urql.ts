@@ -8,13 +8,9 @@ import {
 } from "urql"
 import { Environment, deploymentEnvironment } from "./env"
 
-export const apolloClient = (token: string | null) =>
+export const urqlClient = (token: string | null) =>
   createClient({
-    url:
-      process.env["DAILP_API_URL"] +
-      (token && deploymentEnvironment !== Environment.Local
-        ? "/graphql-edit"
-        : "/graphql"),
+    url: process.env["DAILP_API_URL"] + (token ? "/graphql-edit" : "/graphql"),
     exchanges: [
       dedupExchange,
       cacheExchange,
