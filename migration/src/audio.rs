@@ -41,10 +41,10 @@ impl DrsRes {
                 .json::<DrsRes>()
                 .await;
 
-            if r.is_ok() || tries > 3 {
+            if r.is_ok() || tries > 7 {
                 break r;
             }
-            sleep(Duration::from_millis(500 * 2_u64.pow(tries))).await;
+            sleep(Duration::from_millis(1000 * 2_u64.pow(tries))).await;
             tries += 1;
         }?)
     }
