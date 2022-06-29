@@ -1,12 +1,7 @@
 import { style } from "@vanilla-extract/css"
-import {
-  colors,
-  hspace,
-  mediaQueries,
-  radii,
-  vspace,
-} from "src/style/constants"
-import { edgePadded, fullWidth } from "src/style/utils.css"
+import { hspace, mediaQueries, radii, vspace } from "src/style/constants"
+import { paddingX, paddingY } from "src/style/utils"
+import { centeredColumn, edgePadded, fullWidth } from "src/style/utils.css"
 
 export const loginHeader = style({
   display: "flex",
@@ -14,14 +9,11 @@ export const loginHeader = style({
   flex: 6,
 })
 
-export const logoutPopover = style({
-  display: "flex",
-  flexDirection: "column",
-  backgroundColor: colors.body,
-  textAlign: "center",
-  padding: hspace.large,
-  borderRadius: radii.medium,
-})
+export const popoverButton = style([
+  paddingX(hspace.large),
+  paddingY(vspace.medium),
+  { margin: 0 },
+])
 
 export const skinnyWidth = style([
   fullWidth,
@@ -42,7 +34,16 @@ export const centeredForm = style({
   width: "100%",
 })
 
-export const loginFormBox = style({ width: "100%", padding: hspace.medium })
+export const centeredHeader = style([
+  centeredColumn,
+  {
+    textAlign: "justify",
+  },
+])
+
+export const loginFormBox = style({
+  padding: vspace.medium,
+})
 
 export const positionButton = style({
   display: "flex",
