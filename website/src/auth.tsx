@@ -5,6 +5,7 @@ import {
   CognitoUserSession,
 } from "amazon-cognito-identity-js"
 import React, { createContext, useContext, useEffect, useState } from "react"
+import { navigate } from "vite-plugin-ssr/client/router"
 
 type UserContextType = {
   user: CognitoUser | null
@@ -93,9 +94,11 @@ export const UserProvider = (props: { children: any }) => {
 
   function changePassword(verificationCode: string, newPassword: string) {
     user?.confirmPassword(verificationCode, newPassword, {
-      onSuccess(data: string) {
+      async onSuccess(data: string) {
         setUser(null) // since user successfully changed password, reset current user's state
-        window.location.href = "/login" // redirect to login page
+        const navigationPromise = navigate("/login")
+        await navigationPromise
+
         console.log("Change password successful. Result: ", data)
         alert("Password successfully changed")
       },

@@ -52,8 +52,7 @@ const ResetPasswordPage = () => {
   return (
     <>
       {/* if no user has been set to initialize the reset password flow */}
-      {/* OR if a user is already authenticated but wants to reset their password, show the reset password page */}
-      {user === null || token ? (
+      {user === null ? (
         <ResetPassword {...resetForm} />
       ) : (
         <ChangePassword {...changeForm} />
@@ -71,23 +70,22 @@ const ResetPassword = (form: unstable_FormStateReturn<{ email: string }>) => {
           <h4>Enter the email associated with your account.</h4>
         </>
       }
-      content={
-        <Form {...form} className={centeredForm}>
-          <FormFields
-            form={form}
-            name="email"
-            label="Email *"
-            placeholder="mail@website.com"
-          />
+    >
+      <Form {...form} className={centeredForm}>
+        <FormFields
+          form={form}
+          name="email"
+          label="Email *"
+          placeholder="mail@website.com"
+        />
 
-          <div className={positionButton}>
-            <FormSubmitButton {...form} as={Button} className={loginButton}>
-              Reset
-            </FormSubmitButton>
-          </div>
-        </Form>
-      }
-    ></LoginPageTemplate>
+        <div className={positionButton}>
+          <FormSubmitButton {...form} as={Button} className={loginButton}>
+            Reset
+          </FormSubmitButton>
+        </div>
+      </Form>
+    </LoginPageTemplate>
   )
 }
 
@@ -117,47 +115,53 @@ const ChangePassword = (
           </h4>
         </>
       }
-      content={
-        <Form {...form} className={centeredForm}>
-          <FormFields
-            form={form}
-            name="verificationCode"
-            label="Verification Code *"
-            placeholder="enter code"
-          />
+    >
+      <Form {...form} className={centeredForm}>
+        <FormFields
+          form={form}
+          name="verificationCode"
+          label="Verification Code *"
+          placeholder="enter code"
+        />
 
-          <FormFields
-            form={form}
-            name="newPassword"
-            type="password"
-            label="New Password *"
-            placeholder="enter password"
-          />
+        <FormFields
+          form={form}
+          name="newPassword"
+          type="password"
+          label="New Password *"
+          placeholder="enter password"
+        />
 
-          <FormFields
-            form={form}
-            name="confirmPassword"
-            type="password"
-            label="Confirm Password *"
-            placeholder="confirm password"
-          />
+        <FormFields
+          form={form}
+          name="confirmPassword"
+          type="password"
+          label="Confirm Password *"
+          placeholder="confirm password"
+        />
 
-          <div className={positionButton}>
-            <FormSubmitButton {...form} as={Button} className={loginButton}>
-              Confirm
-            </FormSubmitButton>
-          </div>
-        </Form>
-      }
-    ></LoginPageTemplate>
+        <div className={positionButton}>
+          <FormSubmitButton {...form} as={Button} className={loginButton}>
+            Confirm
+          </FormSubmitButton>
+        </div>
+      </Form>
+    </LoginPageTemplate>
   )
 }
 
 export const ResetLink = () => {
+  const token = useCredentials()
+
   return (
-    <label>
-      Forgot your password? <Link href="/reset-password">Reset password</Link>
-    </label>
+    <>
+      {!token && (
+        <label>
+          Forgot your password?{" "}
+          <Link href="/reset-password">Reset password</Link>
+        </label>
+      )}
+    </>
   )
 }
 
