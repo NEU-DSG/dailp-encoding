@@ -1,5 +1,4 @@
-import { CognitoUser } from "amazon-cognito-identity-js"
-import React from "react"
+import React, { ReactNode } from "react"
 import {
   unstable_Form as Form,
   unstable_FormInput as FormInput,
@@ -10,21 +9,129 @@ import {
   unstable_useFormState as useFormState,
 } from "reakit/Form"
 import { Popover, PopoverDisclosure, usePopoverState } from "reakit/Popover"
-import { useUser } from "src/auth"
-import { Button, CleanButton, Link } from "src/components"
-import { centeredColumn } from "src/style/utils.css"
+import { useCredentials, useUser } from "src/auth"
+import { Button, Link } from "src/components"
+import { cleanButton } from "src/components/button.css"
 import Layout from "../layout"
 import {
   centeredForm,
+  centeredHeader,
   loginButton,
   loginFormBox,
   loginHeader,
-  logoutPopover,
+  popoverButton,
   positionButton,
   skinnyWidth,
 } from "./login.css"
+import { ResetLink } from "./reset-password.page"
 
-// import { ResetLink } from "./reset-password.page"
+export const LoginPageTemplate = (props: {
+  header: ReactNode
+  children: ReactNode
+}) => {
+  return (
+    <Layout>
+      <main className={skinnyWidth}>
+        <header className={centeredHeader}>{props.header}</header>
+        {props.children}
+      </main>
+    </Layout>
+  )
+}
+
+const LoginPage = () => {
+  const { loginUser } = useUser().operations
+
+  const loginForm = useFormState({
+    values: { email: "", password: "" },
+    onValidate: (values) => {
+      if (!values.email) {
+        throw { email: "An email is required" }
+      } else if (!values.password) {
+        throw { password: "A password is required" }
+      }
+    },
+    onSubmit: (values) => {
+      loginUser(values.email, values.password)
+    },
+  })
+
+  return (
+    <LoginPageTemplate
+      header={
+        <>
+          <h1>Log into your account</h1>
+          <h4>
+            Login to contribute to the archive by transcribing documents,
+            recording pronunciations, providing cultural commentary, and more.
+          </h4>
+        </>
+      }
+    >
+      <Form {...loginForm} className={centeredForm}>
+        <FormFields
+          form={loginForm}
+          name="email"
+          label="Email *"
+          placeholder="mail@website.com"
+        />
+
+        <FormFields
+          form={loginForm}
+          name="password"
+          label="Password *"
+          type="password"
+          placeholder="enter password"
+        />
+        <ResetLink />
+
+        <div className={positionButton}>
+          <FormSubmitButton {...loginForm} as={Button} className={loginButton}>
+            Log in
+          </FormSubmitButton>
+        </div>
+      </Form>
+    </LoginPageTemplate>
+  )
+}
+
+// the login button that appears in the header of the website
+export const LoginHeaderButton = () => {
+  // get the current user's auth token
+  const token = useCredentials()
+
+  return (
+    <div className={loginHeader}>
+      {/* if an auth token exists, that means a user is logged in */}
+      {token ? <ConfirmLogout /> : <Link href="/login">Log in</Link>}
+    </div>
+  )
+}
+
+const ConfirmLogout = () => {
+  const { user, setUser } = useUser()
+  const popover = usePopoverState({ gutter: 2 })
+
+  return (
+    <>
+      <PopoverDisclosure {...popover} className={cleanButton}>
+        {popover.visible ? "Cancel" : "Log out"}
+      </PopoverDisclosure>
+
+      <Popover {...popover} tabIndex={0}>
+        <Button
+          className={popoverButton}
+          onClick={() => {
+            user?.signOut()
+            setUser(null) // set current user to null because user has completed reset password flow and will need to relogin
+          }}
+        >
+          Log out
+        </Button>
+      </Popover>
+    </>
+  )
+}
 
 interface FormFieldsType {
   form: unstable_FormStateReturn<any | undefined>
@@ -54,116 +161,6 @@ export const FormFields = ({
       />
 
       <FormMessage {...form} name={name} />
-    </>
-  )
-}
-
-const LoginPage = () => {
-  const { loginUser } = useUser().operations
-
-  const loginForm = useFormState({
-    values: { email: "", password: "" },
-    onValidate: (values) => {
-      if (!values.email) {
-        throw { email: "An email is required" }
-      } else if (!values.password) {
-        throw { password: "A password is required" }
-      }
-    },
-    onSubmit: (values) => {
-      loginUser(values.email, values.password)
-    },
-  })
-
-  return (
-    <Layout>
-      <main className={skinnyWidth}>
-        <header>
-          <h1>Log into your account</h1>
-          <h4>
-            Login to contribute to the archive by transcribing documents,
-            recording pronunciations, providing cultural commentary, and more.
-          </h4>
-        </header>
-
-        <Form {...loginForm} className={centeredForm}>
-          <FormFields
-            form={loginForm}
-            name="email"
-            label="Email *"
-            placeholder="mail@website.com"
-          />
-
-          <FormFields
-            form={loginForm}
-            name="password"
-            label="Password *"
-            type="password"
-            placeholder="enter password"
-          />
-          {/* <ResetLink /> */}
-
-          <div className={positionButton}>
-            <FormSubmitButton
-              {...loginForm}
-              as={Button}
-              className={loginButton}
-            >
-              Log in
-            </FormSubmitButton>
-          </div>
-        </Form>
-      </main>
-    </Layout>
-  )
-}
-
-// the login button that appears in the header of the website
-export const LoginHeaderButton = () => {
-  const { user, setUser } = useUser()
-
-  return (
-    <div className={loginHeader}>
-      {/* show a logout button if user is signed in, otherwise show login */}
-      {user != null ? (
-        <ConfirmLogout user={user} setUser={setUser} />
-      ) : (
-        <Link href="/login">Log in</Link>
-      )}
-    </div>
-  )
-}
-
-// a popover handling user log out
-const ConfirmLogout = (props: {
-  user: CognitoUser
-  setUser: (user: CognitoUser | null) => void
-}) => {
-  const popover = usePopoverState()
-
-  return (
-    <>
-      <PopoverDisclosure {...popover} as={CleanButton}>
-        Log out
-      </PopoverDisclosure>
-      <Popover {...popover} className={logoutPopover} tabIndex={0}>
-        Log out of DAILP?
-        <CleanButton
-          onClick={() => {
-            props.user.signOut()
-            props.setUser(null)
-          }}
-        >
-          Yes
-        </CleanButton>
-        <CleanButton
-          onClick={() => {
-            popover.hide()
-          }}
-        >
-          No
-        </CleanButton>
-      </Popover>
     </>
   )
 }
