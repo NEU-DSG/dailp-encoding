@@ -92,8 +92,8 @@ export type AnnotatedDocBreadcrumbsArgs = {
 }
 
 export type AnnotatedDocFormsArgs = {
-  endIndex: InputMaybe<Scalars["Int"]>
-  startIndex: InputMaybe<Scalars["Int"]>
+  end: InputMaybe<Scalars["Int"]>
+  start: InputMaybe<Scalars["Int"]>
 }
 
 /**
@@ -1041,8 +1041,8 @@ export type NewPageMutation = { readonly __typename?: "Mutation" } & Pick<
 
 export type DocSliceQueryVariables = Exact<{
   slug: Scalars["String"]
-  startIndex: Scalars["Int"]
-  endIndex: InputMaybe<Scalars["Int"]>
+  start: Scalars["Int"]
+  end: InputMaybe<Scalars["Int"]>
 }>
 
 export type DocSliceQuery = { readonly __typename?: "Query" } & {
@@ -1421,9 +1421,9 @@ export function useNewPageMutation() {
   )
 }
 export const DocSliceDocument = gql`
-  query DocSlice($slug: String!, $startIndex: Int!, $endIndex: Int) {
+  query DocSlice($slug: String!, $start: Int!, $end: Int) {
     document(slug: $slug) {
-      forms(startIndex: $startIndex, endIndex: $endIndex) {
+      forms(start: $start, end: $end) {
         englishGloss
       }
     }
