@@ -154,11 +154,16 @@ impl AnnotatedDoc {
 
     /// All the words contained in this document, dropping structural formatting
     /// like line and page breaks.
-    async fn forms(&self, context: &async_graphql::Context<'_>) -> FieldResult<Vec<AnnotatedForm>> {
+    async fn forms(
+        &self,
+        context: &async_graphql::Context<'_>,
+        start: Option<i64>,
+        end: Option<i64>,
+    ) -> FieldResult<Vec<AnnotatedForm>> {
         Ok(context
             .data::<DataLoader<Database>>()?
             .loader()
-            .words_in_document(self.meta.id)
+            .words_in_document(self.meta.id, start, end)
             .await?
             .collect())
     }
@@ -180,7 +185,7 @@ impl AnnotatedDoc {
         let forms = context
             .data::<DataLoader<Database>>()?
             .loader()
-            .words_in_document(self.meta.id)
+            .words_in_document(self.meta.id, None, None)
             .await?;
         Ok(forms.filter(AnnotatedForm::is_unresolved).collect())
     }

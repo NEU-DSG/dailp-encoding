@@ -91,6 +91,11 @@ export type AnnotatedDocBreadcrumbsArgs = {
   superCollection: Scalars["String"]
 }
 
+export type AnnotatedDocFormsArgs = {
+  end: InputMaybe<Scalars["Int"]>
+  start: InputMaybe<Scalars["Int"]>
+}
+
 /**
  * A single word in an annotated document.
  * One word contains several layers of interpretation, including the original
@@ -1034,6 +1039,25 @@ export type NewPageMutation = { readonly __typename?: "Mutation" } & Pick<
   "updatePage"
 >
 
+export type DocSliceQueryVariables = Exact<{
+  slug: Scalars["String"]
+  start: Scalars["Int"]
+  end: InputMaybe<Scalars["Int"]>
+}>
+
+export type DocSliceQuery = { readonly __typename?: "Query" } & {
+  readonly document: Maybe<
+    { readonly __typename?: "AnnotatedDoc" } & {
+      readonly forms: ReadonlyArray<
+        { readonly __typename?: "AnnotatedForm" } & Pick<
+          AnnotatedForm,
+          "englishGloss"
+        >
+      >
+    }
+  >
+}
+
 export const FormFieldsFragmentDoc = gql`
   fragment FormFields on AnnotatedForm {
     index
@@ -1395,4 +1419,19 @@ export function useNewPageMutation() {
   return Urql.useMutation<NewPageMutation, NewPageMutationVariables>(
     NewPageDocument
   )
+}
+export const DocSliceDocument = gql`
+  query DocSlice($slug: String!, $start: Int!, $end: Int) {
+    document(slug: $slug) {
+      forms(start: $start, end: $end) {
+        englishGloss
+      }
+    }
+  }
+`
+
+export function useDocSliceQuery(
+  options: Omit<Urql.UseQueryArgs<DocSliceQueryVariables>, "query">
+) {
+  return Urql.useQuery<DocSliceQuery>({ query: DocSliceDocument, ...options })
 }
