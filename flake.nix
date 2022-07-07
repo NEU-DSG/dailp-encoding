@@ -167,6 +167,7 @@
             shellHook = ''
               export PROJECT_ROOT=$PWD
               export PGDATA=$PROJECT_ROOT/.postgres
+              source $PROJECT_ROOT/.env
             '';
             buildInputs = [
               autoconf
