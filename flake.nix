@@ -167,7 +167,7 @@
             shellHook = ''
               export PROJECT_ROOT=$PWD
               export PGDATA=$PROJECT_ROOT/.postgres
-              source $PROJECT_ROOT/.env
+              [ ! -f .env ] || export $(grep -v '^#' $PWD/.env | xargs)
             '';
             buildInputs = [
               autoconf
