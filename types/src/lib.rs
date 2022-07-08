@@ -20,6 +20,8 @@
 
 pub mod annotation;
 mod audio;
+pub mod chapter;
+pub mod collection;
 mod database_sql;
 mod date;
 mod document;
@@ -41,6 +43,8 @@ pub use chrono;
 pub use sqlx::types::Uuid;
 
 pub use audio::*;
+pub use chapter::*;
+pub use collection::*;
 pub use database_sql::*;
 pub use date::*;
 pub use document::*;

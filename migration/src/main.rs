@@ -8,6 +8,7 @@ mod lexical;
 mod spreadsheets;
 mod tags;
 mod translations;
+mod edited_collection;
 
 use anyhow::Result;
 use dailp::{Database, Uuid};
@@ -25,25 +26,28 @@ async fn main() -> Result<()> {
 
     let db = Database::connect().await?;
 
-    println!("Migrating Image Sources...");
-    migrate_image_sources(&db).await?;
+    // println!("Migrating Image Sources...");
+    // migrate_image_sources(&db).await?;
 
-    println!("Migrating contributors...");
-    contributors::migrate_all(&db).await?;
+    // println!("Migrating contributors...");
+    // contributors::migrate_all(&db).await?;
 
-    println!("Migrating tags to database...");
-    tags::migrate_tags(&db).await?;
+    // println!("Migrating tags to database...");
+    // tags::migrate_tags(&db).await?;
 
-    println!("Migrating DF1975 and DF2003...");
-    lexical::migrate_dictionaries(&db).await?;
+    // println!("Migrating DF1975 and DF2003...");
+    // lexical::migrate_dictionaries(&db).await?;
 
-    println!("Migrating early vocabularies...");
-    early_vocab::migrate_all(&db).await?;
+    // println!("Migrating early vocabularies...");
+    // early_vocab::migrate_all(&db).await?;
 
-    migrate_data(&db).await?;
+    // migrate_data(&db).await?;
 
-    println!("Migrating connections...");
-    connections::migrate_connections(&db).await?;
+    // println!("Migrating connections...");
+    // connections::migrate_connections(&db).await?;
+
+    println!("Migrating collections...");
+    edited_collection::migrate_edited_collection(&db).await?;
 
     Ok(())
 }

@@ -3,6 +3,8 @@
 //! specified in modules under `dailp`.
 
 use crate::audio::AudioRes;
+use dailp::chapter::Chapter;
+use dailp::collection::Collection;
 use crate::translations::DocResult;
 use anyhow::Result;
 use dailp::{
@@ -128,6 +130,68 @@ impl SheetResult {
         Ok(DocumentIndex {
             collections: sections,
         })
+    }
+
+    /// Parse this sheet as the collection index. Updates a Collection 
+    /// which contains two Chapter Groups, each of which 
+    /// has a list of associated Chapters.
+    pub fn into_collection_index(self,
+        self_title: &String, 
+        self_wordpress_menu_id: &i64) -> Result<Collection> {
+        let mut chapters = Vec::new();
+        let mut self_intro_chapters = Vec::new();
+        for row in self.values.into_iter().skip(2){
+            if row[0].is_empty(){
+                self_intro_chapters = chapters.clone();
+                chapters = Vec::<Chapter>::new();
+            }
+            else {
+                let index_in_parent_string = row[0].clone();
+                let index_i64 = index_in_parent_string.parse::<i64>().unwrap();
+
+                let document_if_applicable = row[3].clone();
+                let mut doc_string= None;
+
+                let wp_id_if_applicable = row[5].clone();
+                let mut wp_id = None;
+
+                if wp_id_if_applicable.is_empty(){
+                    wp_id = None;
+                }
+                else {
+                    wp_id = Some(wp_id_if_applicable.parse::<i64>().unwrap());
+                }
+
+                if document_if_applicable.is_empty() {
+                    doc_string = None;
+                }
+                else {
+                    doc_string = Some(document_if_applicable);
+                }
+
+                let new_chapter = Chapter {
+                    index_in_parent: index_i64,
+                    url_slug: row[1].clone(),
+                    chapter_name: row[2].clone(),
+                    document_title: doc_string,
+                    id: None,
+                    document_id: None,
+                    wordpress_id: wp_id,
+                };
+
+                chapters.push(new_chapter.clone());
+
+                }
+        
+            }
+            let self_genre_chapters = chapters;
+
+            Ok(Collection{
+                title: self_title.to_string(),
+                wordpress_menu_id: *self_wordpress_menu_id,
+                intro_chapters: self_intro_chapters,
+                genre_chapters: self_genre_chapters,
+            })
     }
 
     pub fn into_adjs(self, doc_id: DocumentId, year: i32) -> Result<Vec<LexicalEntryWithForms>> {
@@ -453,6 +517,7 @@ impl SheetResult {
         all_lines
     }
 }
+
 
 #[derive(Debug, Serialize)]
 pub struct DocumentIndex {
