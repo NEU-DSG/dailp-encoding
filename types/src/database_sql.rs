@@ -389,9 +389,14 @@ impl Database {
     }
 
     pub async fn update_word(&self, word: &AnnotatedFormUpdate) -> Result<Uuid> {
-        query_file!("queries/update_word.sql", word.id, word.source.value())
-            .execute(&self.client)
-            .await?;
+        query_file!(
+            "queries/update_word.sql",
+            word.id,
+            word.source.value(),
+            word.commentary.value()
+        )
+        .execute(&self.client)
+        .await?;
 
         Ok(word.id)
     }

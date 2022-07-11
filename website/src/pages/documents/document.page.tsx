@@ -13,7 +13,7 @@ import * as Dailp from "src/graphql/dailp"
 import Layout from "src/layout"
 import { drawerBg } from "src/menu.css"
 import { MorphemeDetails } from "src/morpheme"
-import { Panel, PanelDetails } from "src/panel"
+import { PanelDetails, PanelLayout } from "src/panel-layout"
 import { usePreferences } from "src/preferences-context"
 import {
   collectionRoute,
@@ -129,8 +129,10 @@ const TranslationTab = ({ doc }: { doc: Document }) => {
   }
 
   const dialog = useDialogState({ animated: true })
+
   const [selectedWord, setSelectedWord] =
     useState<Dailp.FormFieldsFragment | null>(null)
+
   const selectAndShowWord = (content: Dailp.FormFieldsFragment | null) => {
     setSelectedWord(content)
     if (content) {
@@ -187,7 +189,7 @@ const TranslationTab = ({ doc }: { doc: Document }) => {
             aria-label="Word Panel Drawer"
             preventBodyScroll={true}
           >
-            <Panel
+            <PanelLayout
               segment={wordPanelInfo.currContents}
               setContent={wordPanelInfo.setCurrContents}
             />
@@ -218,7 +220,7 @@ const TranslationTab = ({ doc }: { doc: Document }) => {
         </article>
         {selectedWord && levelOfDetail > LevelOfDetail.Story ? (
           <div className={css.contentSection2}>
-            <Panel
+            <PanelLayout
               segment={wordPanelInfo.currContents}
               setContent={wordPanelInfo.setCurrContents}
             />
@@ -249,11 +251,21 @@ const DocumentContents = ({
       morphemeSystem: cherokeeRepresentation,
     },
   })
-  const docContents = data?.document
+
+  const docContents = result.data?.document
+
+  const { isEditing } = useForm()
+
+  useEffect(() => {
+    if (!isEditing) {
+      rerunQuery({ requestPolicy: "network-only" })
+    }
+  }, [isEditing])
 
   if (!docContents) {
     return <>Loading...</>
   }
+
   return (
     <>
       {docContents.translatedPages?.map((seg, i) => (

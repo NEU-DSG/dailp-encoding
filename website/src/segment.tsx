@@ -8,7 +8,7 @@ import { DocumentContents } from "src/pages/documents/document.page"
 import { std } from "src/style/utils.css"
 import { CleanButton } from "./components"
 import { useForm } from "./form-context"
-import { PanelDetails } from "./panel"
+import { PanelDetails } from "./panel-layout"
 import * as css from "./segment.css"
 import { BasicMorphemeSegment, LevelOfDetail } from "./types"
 
@@ -100,11 +100,10 @@ export const AnnotatedForm = (
     const showSegments = p.levelOfDetail >= LevelOfDetail.Segmentation
     const translation = p.segment.englishGloss.join(", ")
 
-    const isSelected =
-      p.wordPanelDetails.currContents?.source === p.segment.source &&
-      p.wordPanelDetails.currContents?.index === p.segment.index
+    const isSelected = p.wordPanelDetails.currContents?.id === p.segment.id
 
     let wordCSS = showSegments ? css.wordGroup : css.wordGroupInline
+
     if (isSelected) {
       wordCSS = cx(wordCSS, css.selectedWord)
       p.wordPanelDetails.setCurrContents(

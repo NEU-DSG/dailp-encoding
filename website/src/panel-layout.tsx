@@ -1,5 +1,6 @@
 import React, { ReactNode } from "react"
-import { AiFillCaretDown, AiFillCaretUp, AiFillSound } from "react-icons/ai"
+import { AiFillSound } from "react-icons/ai"
+import { GrDown, GrUp } from "react-icons/gr"
 import { IoEllipsisHorizontalCircle } from "react-icons/io5"
 import { MdClose, MdNotes, MdRecordVoiceOver } from "react-icons/md"
 import {
@@ -8,11 +9,12 @@ import {
   useDisclosureState,
 } from "reakit/Disclosure"
 import { unstable_Form as Form } from "reakit/Form"
+import { useCredentials } from "./auth"
 import { AudioPlayer, IconButton } from "./components"
 import EditWordPanel, { EditButton } from "./edit-word-panel"
 import { useForm } from "./form-context"
 import { FormFieldsFragment } from "./graphql/dailp"
-import * as css from "./panel.css"
+import * as css from "./panel-layout.css"
 import { WordPanel } from "./word-panel"
 
 export interface PanelDetails {
@@ -21,7 +23,7 @@ export interface PanelDetails {
 }
 
 /** Displays the right-side panel information of the currently selected word. */
-export const Panel = (props: {
+export const PanelLayout = (props: {
   segment: FormFieldsFragment | null
   setContent: (content: FormFieldsFragment | null) => void
 }) => {
@@ -30,6 +32,7 @@ export const Panel = (props: {
   }
 
   const { form, isEditing } = useForm()
+  const token = useCredentials()
 
   return (
     <div className={css.wordPanelContent}>
@@ -42,11 +45,14 @@ export const Panel = (props: {
             <MdClose size={32} />
           </IconButton>
 
-          <EditButton />
+          {token && <EditButton />}
         </div>
 
         <h2 className={css.cherHeader}>{props.segment.source}</h2>
       </header>
+
+      {/* Renders audio recording. */}
+      <AudioPanel segment={props.segment} />
 
       {isEditing ? (
         <Form {...form}>
@@ -68,17 +74,41 @@ export const PanelContent = (props: {
   const phoneticsContent = (
     <>
       {props.word.source && (
-        <props.panelType word={props.word} features={["source"]} />
+        <props.panelType
+          word={props.word}
+          feature={"source"}
+          label="Syllabary Characters"
+        />
       )}
 
       {props.word.simplePhonetics && (
-        <props.panelType word={props.word} features={["simplePhonetics"]} />
+        <props.panelType
+          word={props.word}
+          feature={"simplePhonetics"}
+          label="Simple Phonetics"
+        />
       )}
 
       {props.word.romanizedSource &&
         props.word.romanizedSource !== props.word.simplePhonetics && (
-          <props.panelType word={props.word} features={["romanizedSource"]} />
+          <props.panelType
+            word={props.word}
+            feature={"romanizedSource"}
+            label="Romanized Source"
+          />
         )}
+    </>
+  )
+
+  const translation = (
+    <>
+      {props.word.englishGloss[0] !== "" && (
+        <props.panelType
+          word={props.word}
+          feature={"englishGloss"}
+          label="English Translation"
+        />
+      )}
     </>
   )
 
@@ -90,22 +120,25 @@ export const PanelContent = (props: {
         segments={props.word.segments}
       />
 
-      {props.word.englishGloss[0] !== "" && (
-        <props.panelType word={props.word} features={["englishGloss"]} />
+      {props.panelType === WordPanel ? (
+        <div style={{ display: "flex" }}>‘{translation}’</div>
+      ) : (
+        <>{translation}</>
       )}
     </>
   )
 
   // Contains a component rendering a word's commentary.
   const commentaryContent = (
-    <props.panelType word={props.word} features={["commentary"]} />
+    <props.panelType
+      word={props.word}
+      feature={"commentary"}
+      input="textarea"
+    />
   )
 
   return (
     <>
-      {/* Renders audio recording. */}
-      <AudioPanel segment={props.word} />
-
       <CollapsiblePanel
         title={"Phonetics"}
         content={phoneticsContent}
@@ -155,48 +188,20 @@ export const VerticalMorphemicSegmentation = (p: {
 
   return (
     <table className={css.tableContainer}>
-      <>
-        {p.panelType === WordPanel
-          ? p.segments.map((segment, index) => (
-              <tr>
-                <td className={css.tableCells}>
-                  {index > 0 ? "-" : null}
-                  {segment.morpheme}
-                  {index !== segmentCount - 1 ? segment.nextSeparator : null}
-                </td>
-                <td className={css.tableCells}>
-                  {segment.matchingTag
-                    ? segment.matchingTag.title
-                    : segment.gloss}
-                </td>
-              </tr>
-            ))
-          : p.segments.map((segment, index) => (
-              <tr>
-                <td className={css.tableCells}>
-                  <p.panelType
-                    features={["segments", index.toString(), "morpheme"]}
-                  />
-                </td>
-                <td className={css.tableCells}>
-                  {segment.matchingTag ? (
-                    <p.panelType
-                      features={[
-                        "segments",
-                        index.toString(),
-                        "matchingTag",
-                        "title",
-                      ]}
-                    />
-                  ) : (
-                    <p.panelType
-                      features={["segments", index.toString(), "gloss"]}
-                    />
-                  )}
-                </td>
-              </tr>
-            ))}
-      </>
+      <tbody>
+        {p.segments.map((segment, index) => (
+          <tr key={index}>
+            <td className={css.tableCells}>
+              {index > 0 ? "-" : null}
+              {segment.morpheme}
+              {index !== segmentCount - 1 ? segment.nextSeparator : null}
+            </td>
+            <td className={css.tableCells}>
+              {segment.matchingTag ? segment.matchingTag.title : segment.gloss}
+            </td>
+          </tr>
+        ))}
+      </tbody>
     </table>
   )
 }
@@ -207,6 +212,7 @@ export const CollapsiblePanel = (p: {
   icon: ReactNode // Note : this is supposed to be an IconType
 }) => {
   const disclosure = useDisclosureState({ visible: true })
+
   return (
     <div className={css.collPanel}>
       <Disclosure
@@ -216,9 +222,9 @@ export const CollapsiblePanel = (p: {
       >
         {p.icon} {p.title}
         {disclosure.visible ? (
-          <AiFillCaretDown className={css.wordPanelButton.colpright} />
+          <GrDown className={css.wordPanelButton.colpright} />
         ) : (
-          <AiFillCaretUp className={css.wordPanelButton.colpright} />
+          <GrUp className={css.wordPanelButton.colpright} />
         )}
       </Disclosure>
       <DisclosureContent {...disclosure} className={css.collPanelContent}>

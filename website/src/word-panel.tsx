@@ -13,11 +13,6 @@ import { usePreferences } from "./preferences-context"
 import { BasicMorphemeSegment } from "./types"
 import * as css from "./word-panel.css"
 
-export interface WordPanelDetails {
-  currContents: Dailp.FormFieldsFragment | null
-  setCurrContents: (currContents: Dailp.FormFieldsFragment | null) => void
-}
-
 export const WordPanel = (p: {
   segment: Dailp.FormFieldsFragment | null
   setContent: (content: Dailp.FormFieldsFragment | null) => void

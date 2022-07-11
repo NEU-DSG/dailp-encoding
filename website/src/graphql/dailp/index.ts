@@ -166,9 +166,9 @@ export type AnnotatedFormSegmentsArgs = {
 
 /** A single word in an annotated document that can be edited. */
 export type AnnotatedFormUpdate = {
+  readonly commentary: InputMaybe<Scalars["String"]>
   /** Unique identifier of the form */
   readonly id: Scalars["UUID"]
-  /** Original source text that can be either undefined or null */
   readonly source: InputMaybe<Scalars["String"]>
 }
 

@@ -1,11 +1,7 @@
 import { style, styleVariants } from "@vanilla-extract/css"
 import { fonts, hspace, mediaQueries, radii, vspace } from "src/style/constants"
-import { paddingX, paddingY } from "src/style/utils"
 import { closeButton } from "./morpheme.css"
-<<<<<<<< HEAD:website/src/word-panel.css.ts
-========
 import { marginX, paddingX, paddingY } from "./style/utils"
->>>>>>>> 793cd1e (Modified styling and edit-word-panel structure):website/src/panel-layout.css.tsx
 
 const wordPanelPadding = "12px"
 
@@ -80,16 +76,10 @@ export const wordPanelContent = style({
       border: "1px solid #ddd",
       height: "calc(100vh - 66px)",
     },
-    [mediaQueries.large]: {
-      width: "20rem",
-    },
   },
-<<<<<<<< HEAD:website/src/word-panel.css.ts
-  overflowX: "hidden",
-========
   height: "100vh",
->>>>>>>> 793cd1e (Modified styling and edit-word-panel structure):website/src/panel-layout.css.tsx
   overflowY: "auto",
+  overflowX: "hidden",
 })
 
 export const wordPanelHeader = style({
@@ -100,15 +90,9 @@ export const wordPanelHeader = style({
 export const audioContainer = style({ paddingLeft: "40%" })
 
 export const tableContainer = style({
-<<<<<<<< HEAD:website/src/word-panel.css.ts
   border: "none",
   margin: 0,
   marginBottom: vspace.quarter,
-========
-  border: "0px solid transparent",
-  width: "100%",
-  margin: "0px",
->>>>>>>> 793cd1e (Modified styling and edit-word-panel structure):website/src/panel-layout.css.tsx
 })
 
 const tableCells = style([
@@ -121,7 +105,6 @@ const tableCells = style([
   },
 ])
 
-<<<<<<<< HEAD:website/src/word-panel.css.ts
 export const glossCell = style([
   tableCells,
   {
@@ -135,20 +118,5 @@ export const morphemeCell = style([
   {
     fontStyle: "italic",
     paddingRight: hspace.halfEdge,
-========
-export const editMorphemeCells = style([
-  paddingX(hspace.small),
-  paddingY(0),
-  {
-    display: "flex",
-    flex: 1,
-  },
-])
-
-export const editMatchingCells = style([
-  editMorphemeCells,
-  {
-    flex: 5,
->>>>>>>> 793cd1e (Modified styling and edit-word-panel structure):website/src/panel-layout.css.tsx
   },
 ])

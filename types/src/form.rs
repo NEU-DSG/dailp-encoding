@@ -248,10 +248,11 @@ pub fn is_root_morpheme(s: &str) -> bool {
 }
 
 /// A single word in an annotated document that can be edited.
+/// All fields except id are optional.
 #[derive(async_graphql::InputObject)]
 pub struct AnnotatedFormUpdate {
     /// Unique identifier of the form
     pub id: Uuid,
-    /// Original source text that could also be undefined
     pub source: MaybeUndefined<String>,
+    pub commentary: MaybeUndefined<String>,
 }

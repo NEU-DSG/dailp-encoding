@@ -1,18 +1,29 @@
 import { style, styleVariants } from "@vanilla-extract/css"
+<<<<<<<< HEAD:website/src/word-panel.css.ts
 import { fonts, hspace, mediaQueries, radii, vspace } from "src/style/constants"
 import { paddingX, paddingY } from "src/style/utils"
-import { closeButton } from "./morpheme.css"
-<<<<<<<< HEAD:website/src/word-panel.css.ts
 ========
-import { marginX, paddingX, paddingY } from "./style/utils"
->>>>>>>> 793cd1e (Modified styling and edit-word-panel structure):website/src/panel-layout.css.tsx
+import { fonts, hspace, mediaQueries, vspace } from "src/style/constants"
+>>>>>>>> f6e248d (Added an editable word panel on documents):website/src/panel.css.tsx
+import { closeButton } from "./morpheme.css"
+import { marginX } from "./style/utils"
 
 const wordPanelPadding = "12px"
 
+<<<<<<<< HEAD:website/src/word-panel.css.ts
 export const cherHeader = style({
   fontFamily: fonts.cherokee,
   marginBottom: vspace.eighth,
 })
+========
+export const cherHeader = style([
+  marginX(hspace.large),
+  {
+    fontFamily: fonts.cherokee,
+    marginTop: vspace.one,
+  },
+])
+>>>>>>>> f6e248d (Added an editable word panel on documents):website/src/panel.css.tsx
 
 export const noSpaceBelow = style({
   marginBottom: vspace.quarter,
@@ -47,7 +58,6 @@ export const headerButtons = style({
 
 export const collPanelContent = style({
   padding: wordPanelPadding,
-  paddingTop: 0,
   marginBottom: "0px",
 })
 
@@ -84,11 +94,7 @@ export const wordPanelContent = style({
       width: "20rem",
     },
   },
-<<<<<<<< HEAD:website/src/word-panel.css.ts
   overflowX: "hidden",
-========
-  height: "100vh",
->>>>>>>> 793cd1e (Modified styling and edit-word-panel structure):website/src/panel-layout.css.tsx
   overflowY: "auto",
 })
 
@@ -100,17 +106,12 @@ export const wordPanelHeader = style({
 export const audioContainer = style({ paddingLeft: "40%" })
 
 export const tableContainer = style({
-<<<<<<<< HEAD:website/src/word-panel.css.ts
   border: "none",
   margin: 0,
   marginBottom: vspace.quarter,
-========
-  border: "0px solid transparent",
-  width: "100%",
-  margin: "0px",
->>>>>>>> 793cd1e (Modified styling and edit-word-panel structure):website/src/panel-layout.css.tsx
 })
 
+<<<<<<<< HEAD:website/src/word-panel.css.ts
 const tableCells = style([
   paddingY(vspace.eighth),
   paddingX(0),
@@ -121,7 +122,6 @@ const tableCells = style([
   },
 ])
 
-<<<<<<<< HEAD:website/src/word-panel.css.ts
 export const glossCell = style([
   tableCells,
   {
@@ -135,20 +135,15 @@ export const morphemeCell = style([
   {
     fontStyle: "italic",
     paddingRight: hspace.halfEdge,
+  },
+])
 ========
-export const editMorphemeCells = style([
-  paddingX(hspace.small),
-  paddingY(0),
+export const tableCells = style([
   {
-    display: "flex",
-    flex: 1,
+    border: "transparent",
+    fontFamily: fonts.body,
+    padding: hspace.small,
+    wordWrap: "break-word",
   },
 ])
-
-export const editMatchingCells = style([
-  editMorphemeCells,
-  {
-    flex: 5,
->>>>>>>> 793cd1e (Modified styling and edit-word-panel structure):website/src/panel-layout.css.tsx
-  },
-])
+>>>>>>>> f6e248d (Added an editable word panel on documents):website/src/panel.css.tsx

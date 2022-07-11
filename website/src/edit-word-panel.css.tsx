@@ -1,34 +1,42 @@
 import { style } from "@vanilla-extract/css"
 import { button } from "src/components/button.css"
-import { hspace, radii, vspace } from "src/style/constants"
-import { marginX, paddingX, paddingY } from "src/style/utils"
+import { fonts, hspace, radii, vspace } from "src/style/constants"
+import { paddingX, paddingY } from "src/style/utils"
 
-export const formStyle = style({
+export const form = style({
   display: "flex",
   justifyContent: "flex-end",
   flex: 1,
   margin: 0,
 })
 
-export const buttonStyle = style([
+export const editPanelButton = style([
   button,
-  paddingX(hspace.medium),
-  paddingY(vspace.small),
-  marginX(hspace.large),
+  paddingX(hspace.large),
+  paddingY(vspace.medium),
   {
     display: "flex",
-    alignItems: "center",
-    justifyContent: "space-evenly",
-    gap: hspace.small,
+    justifyContent: "space-around",
+    marginLeft: hspace.small,
   },
 ])
 
-export const inputStyle = style([
+export const cancelButton = style([
+  { fontFamily: fonts.header, width: "4.5rem" },
+])
+
+export const formInputLabel = style({
+  fontFamily: fonts.header,
+  fontWeight: "normal",
+  fontSize: "0.9rem",
+})
+
+export const formInput = style([
+  paddingX(vspace.medium),
   {
     width: "100%",
-    height: vspace["1.5"],
-    padding: vspace.medium,
     borderRadius: radii.medium,
+    textOverflow: "ellipsis",
     resize: "none",
   },
 ])

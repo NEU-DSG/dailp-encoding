@@ -37,7 +37,7 @@ export const FormProvider = (props: { children: any }) => {
     },
     onValidate: (values) => {},
     onSubmit: (values) => {
-      if (!values.word || !values.word["id"] || !values.word["source"]) {
+      if (!values.word) {
         throw { values: { word: "No word found" } }
       }
 
@@ -47,6 +47,7 @@ export const FormProvider = (props: { children: any }) => {
         word: {
           id: values.word["id"],
           source: values.word["source"],
+          commentary: values.word["commentary"],
         },
       })
     },

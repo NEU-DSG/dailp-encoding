@@ -30,6 +30,8 @@ export const UserProvider = (props: { children: any }) => {
     userPool.getCurrentUser()
   )
 
+  const token = useCredentials()
+
   useEffect(() => {
     // if there is an authenticated user present
     if (user != null) {
@@ -40,7 +42,7 @@ export const UserProvider = (props: { children: any }) => {
         }
       })
     }
-  }, [user])
+  }, [token])
 
   function loginUser(username: string, password: string) {
     const user = new CognitoUser({
