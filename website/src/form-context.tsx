@@ -6,6 +6,7 @@ import {
 import {
   AnnotatedFormUpdate,
   FormFieldsFragment,
+  MorphemeSegmentUpdate,
   useUpdateWordMutation,
 } from "./graphql/dailp"
 
@@ -17,7 +18,7 @@ type FormContextType = {
 
 const FormContext = createContext<FormContextType>({} as FormContextType)
 
-/** Instantiates a form state used to keep track of the current word and information about all its features. */
+// Instantiates a form state used to keep track of the current word and information about all its features.
 export const FormProvider = (props: { children: any }) => {
   const [isEditing, setIsEditing] = useState(false)
   const word: FormFieldsFragment = {} as FormFieldsFragment
@@ -41,11 +42,24 @@ export const FormProvider = (props: { children: any }) => {
     onSubmit: (values) => {
       setIsEditing(false)
 
+      // Create an array of MorphemeSegmentUpdate type to send to the backend.
+      const updatedSegments: Array<MorphemeSegmentUpdate> = values.word[
+        "segments"
+      ].map((segment) => {
+        return {
+          morpheme: segment.morpheme,
+          gloss: segment.gloss,
+          role: segment.role,
+        }
+      })
+
       runUpdate({
         word: {
           id: values.word["id"],
+          docId: values.word["position"].documentId,
           source: values.word["source"],
           commentary: values.word["commentary"],
+          segments: updatedSegments,
         },
       })
     },

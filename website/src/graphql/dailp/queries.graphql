@@ -92,6 +92,9 @@ fragment FormFields on AnnotatedForm {
     startTime
     endTime
   }
+  position {
+    documentId
+  }
 }
 
 query Collection($slug: String!) {
