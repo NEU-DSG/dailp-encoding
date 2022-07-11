@@ -928,19 +928,6 @@
     },
     "query": "select\n  document_group.slug,\n  document_group.title\nfrom document\n  inner join document_group on document_group.id = document.group_id\nwhere document.id = $1\n"
   },
-  "79390aad3432fbd919aba5149bedfa3808fdc6aabc85225f6829694752f956ae": {
-    "describe": {
-      "columns": [],
-      "nullable": [],
-      "parameters": {
-        "Left": [
-          "Uuid",
-          "Text"
-        ]
-      }
-    },
-    "query": "update word set source_text = $2 where id = $1\n"
-  },
   "7a6c5fc86cb220cb8e0dcbfbbb994b6288490c39e31cef7bc46a9ccc7e321438": {
     "describe": {
       "columns": [],
@@ -1878,6 +1865,20 @@
       }
     },
     "query": "select\n  id,\n  title,\n  base_url\nfrom iiif_source\nwhere id = any($1)\n"
+  },
+  "d8ff5de5ff0ab7503f0152837c24a68d3543b889ecbf2c41198a70e4ad2d5024": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "TextArray",
+          "TextArray"
+        ]
+      }
+    },
+    "query": "update word set\n    source_text =\n        case\n            when $2::text[] != '{}' and $2[1] is not null then $2[1]\n            else source_text\n        end,\n    commentary =\n        case\n            when $3::text[] != '{}' then $3[1]\n            else commentary\n        end\nwhere id = $1\n"
   },
   "de7d4677f080eb9d0e580d7ec40b241b6717d3616e881ab601f77167b442509c": {
     "describe": {
