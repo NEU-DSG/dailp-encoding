@@ -7,9 +7,10 @@ import * as Dailp from "src/graphql/dailp"
 import { DocumentContents } from "src/pages/documents/document.page"
 import { std } from "src/style/utils.css"
 import { CleanButton } from "./components"
+import { useForm } from "./form-context"
+import { PanelDetails } from "./panel"
 import * as css from "./segment.css"
 import { BasicMorphemeSegment, LevelOfDetail } from "./types"
-import { WordPanelDetails } from "./word-panel"
 
 type TranslatedPage = NonNullable<DocumentContents["translatedPages"]>[0]
 type TranslatedParagraph = TranslatedPage["paragraphs"][0]
@@ -21,7 +22,7 @@ interface Props {
   levelOfDetail: LevelOfDetail
   cherokeeRepresentation: Dailp.CherokeeOrthography
   pageImages: readonly string[]
-  wordPanelDetails: WordPanelDetails
+  wordPanelDetails: PanelDetails
 }
 
 export const DocumentPage = (
@@ -111,13 +112,18 @@ export const AnnotatedForm = (
       ) /* This makes sure the word panel updates for changes to the word panel*/
     }
 
+    const { form } = useForm()
+
     return (
       <div className={wordCSS} id={`w${p.segment.index}`}>
         <div className={css.syllabaryLayer} lang="chr">
           {p.segment.source}
           <CleanButton
             title={`View word details for '${p.segment.source}'`}
-            onClick={() => p.wordPanelDetails.setCurrContents(p.segment)}
+            onClick={() => {
+              p.wordPanelDetails.setCurrContents(p.segment)
+              form.update("word", p.segment)
+            }}
           >
             {isSelected ? (
               <MdCircle size={20} className={css.linkSvg} />

@@ -1,14 +1,29 @@
 import { style, styleVariants } from "@vanilla-extract/css"
+<<<<<<<< HEAD:website/src/word-panel.css.ts
 import { fonts, hspace, mediaQueries, radii, vspace } from "src/style/constants"
 import { paddingX, paddingY } from "src/style/utils"
+========
+import { fonts, hspace, mediaQueries, vspace } from "src/style/constants"
+>>>>>>>> f6e248d (Added an editable word panel on documents):website/src/panel.css.tsx
 import { closeButton } from "./morpheme.css"
+import { marginX } from "./style/utils"
 
-const wordPanelPadding = "8px"
+const wordPanelPadding = "12px"
 
+<<<<<<<< HEAD:website/src/word-panel.css.ts
 export const cherHeader = style({
   fontFamily: fonts.cherokee,
   marginBottom: vspace.eighth,
 })
+========
+export const cherHeader = style([
+  marginX(hspace.large),
+  {
+    fontFamily: fonts.cherokee,
+    marginTop: vspace.one,
+  },
+])
+>>>>>>>> f6e248d (Added an editable word panel on documents):website/src/panel.css.tsx
 
 export const noSpaceBelow = style({
   marginBottom: vspace.quarter,
@@ -34,6 +49,11 @@ export const wordPanelButton = styleVariants({
       left: "0px",
     },
   ],
+})
+
+export const headerButtons = style({
+  display: "flex",
+  alignItems: "center",
 })
 
 export const collPanelContent = style({
@@ -70,13 +90,16 @@ export const wordPanelContent = style({
       border: "1px solid #ddd",
       height: "calc(100vh - 66px)",
     },
+    [mediaQueries.large]: {
+      width: "20rem",
+    },
   },
   overflowX: "hidden",
   overflowY: "auto",
 })
 
 export const wordPanelHeader = style({
-  padding: wordPanelPadding,
+  padding: vspace.medium,
   fontFamily: fonts.body,
 })
 
@@ -88,6 +111,7 @@ export const tableContainer = style({
   marginBottom: vspace.quarter,
 })
 
+<<<<<<<< HEAD:website/src/word-panel.css.ts
 const tableCells = style([
   paddingY(vspace.eighth),
   paddingX(0),
@@ -113,3 +137,13 @@ export const morphemeCell = style([
     paddingRight: hspace.halfEdge,
   },
 ])
+========
+export const tableCells = style([
+  {
+    border: "transparent",
+    fontFamily: fonts.body,
+    padding: hspace.small,
+    wordWrap: "break-word",
+  },
+])
+>>>>>>>> f6e248d (Added an editable word panel on documents):website/src/panel.css.tsx

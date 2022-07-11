@@ -8,10 +8,12 @@ import { Dialog, DialogBackdrop, useDialogState } from "reakit/Dialog"
 import { Tab, TabList, TabPanel } from "reakit/Tab"
 import { AudioPlayer, Breadcrumbs, Button, Link } from "src/components"
 import { useMediaQuery } from "src/custom-hooks"
+import { FormProvider } from "src/form-context"
 import * as Dailp from "src/graphql/dailp"
 import Layout from "src/layout"
 import { drawerBg } from "src/menu.css"
 import { MorphemeDetails } from "src/morpheme"
+import { Panel, PanelDetails } from "src/panel"
 import { usePreferences } from "src/preferences-context"
 import {
   collectionRoute,
@@ -19,10 +21,9 @@ import {
   documentRoute,
 } from "src/routes"
 import { useScrollableTabState } from "src/scrollable-tabs"
-import { AnnotatedForm, DocumentPage, Segment } from "src/segment"
+import { AnnotatedForm, DocumentPage } from "src/segment"
 import { mediaQueries } from "src/style/constants"
 import { BasicMorphemeSegment, LevelOfDetail } from "src/types"
-import { WordPanel, WordPanelDetails } from "src/word-panel"
 import PageImages from "../../page-image"
 import * as css from "./document.css"
 
@@ -53,10 +54,12 @@ const AnnotatedDocumentPage = (props: { id: string }) => {
   return (
     <Layout>
       <Helmet title={doc?.title} />
-      <main className={css.annotatedDocument}>
-        <DocumentTitleHeader doc={doc} showDetails={true} />
-        <TabSet doc={doc} />
-      </main>
+      <FormProvider>
+        <main className={css.annotatedDocument}>
+          <DocumentTitleHeader doc={doc} showDetails={true} />
+          <TabSet doc={doc} />
+        </main>
+      </FormProvider>
     </Layout>
   )
 }
@@ -175,7 +178,7 @@ const TranslationTab = ({ doc }: { doc: Document }) => {
         </DialogContent>
       </DialogOverlay>
 
-      {!isDesktop ? (
+      {!isDesktop && (
         <DialogBackdrop {...dialog} className={drawerBg}>
           <Dialog
             {...dialog}
@@ -184,14 +187,13 @@ const TranslationTab = ({ doc }: { doc: Document }) => {
             aria-label="Word Panel Drawer"
             preventBodyScroll={true}
           >
-            <WordPanel
+            <Panel
               segment={wordPanelInfo.currContents}
               setContent={wordPanelInfo.setCurrContents}
-              onOpenDetails={openDetails}
             />
           </Dialog>
         </DialogBackdrop>
-      ) : null}
+      )}
 
       <div className={css.contentContainer}>
         <article className={css.annotationContents}>
@@ -216,13 +218,12 @@ const TranslationTab = ({ doc }: { doc: Document }) => {
         </article>
         {selectedWord && levelOfDetail > LevelOfDetail.Story ? (
           <div className={css.contentSection2}>
-            <WordPanel
+            <Panel
               segment={wordPanelInfo.currContents}
               setContent={wordPanelInfo.setCurrContents}
-              onOpenDetails={openDetails}
             />
           </div>
-        ) : null}
+        )}
       </div>
     </>
   )
@@ -239,7 +240,7 @@ const DocumentContents = ({
   levelOfDetail: LevelOfDetail
   cherokeeRepresentation: Dailp.CherokeeOrthography
   openDetails: (morpheme: any) => void
-  wordPanelDetails: WordPanelDetails
+  wordPanelDetails: PanelDetails
 }) => {
   const [{ data }] = Dailp.useDocumentContentsQuery({
     variables: {
@@ -249,6 +250,7 @@ const DocumentContents = ({
     },
   })
   const docContents = data?.document
+
   if (!docContents) {
     return <>Loading...</>
   }

@@ -116,6 +116,8 @@ export type AnnotatedForm = {
   readonly documentId: Scalars["UUID"]
   /** English gloss for the whole word */
   readonly englishGloss: ReadonlyArray<Scalars["String"]>
+  /** Unique identifier of this form */
+  readonly id: Scalars["UUID"]
   /** Number of words preceding this one in the containing document */
   readonly index: Scalars["Int"]
   /** The character index of a mid-word line break, if there is one */
@@ -773,6 +775,7 @@ export type DocumentContentsQuery = { readonly __typename?: "Query" } & {
                     readonly source: ReadonlyArray<
                       | ({ readonly __typename: "AnnotatedForm" } & Pick<
                           AnnotatedForm,
+                          | "id"
                           | "index"
                           | "source"
                           | "romanizedSource"
@@ -815,6 +818,7 @@ export type DocumentContentsQuery = { readonly __typename?: "Query" } & {
       readonly forms?: ReadonlyArray<
         { readonly __typename: "AnnotatedForm" } & Pick<
           AnnotatedForm,
+          | "id"
           | "index"
           | "source"
           | "romanizedSource"
@@ -851,6 +855,7 @@ export type FormFieldsFragment = {
   readonly __typename?: "AnnotatedForm"
 } & Pick<
   AnnotatedForm,
+  | "id"
   | "index"
   | "source"
   | "romanizedSource"
@@ -1102,8 +1107,18 @@ export type DocSliceQuery = { readonly __typename?: "Query" } & {
   >
 }
 
+export type UpdateWordMutationVariables = Exact<{
+  word: AnnotatedFormUpdate
+}>
+
+export type UpdateWordMutation = { readonly __typename?: "Mutation" } & Pick<
+  Mutation,
+  "updateWord"
+>
+
 export const FormFieldsFragmentDoc = gql`
   fragment FormFields on AnnotatedForm {
+    id
     index
     source
     romanizedSource(system: $morphemeSystem)
@@ -1478,4 +1493,15 @@ export function useDocSliceQuery(
   options: Omit<Urql.UseQueryArgs<DocSliceQueryVariables>, "query">
 ) {
   return Urql.useQuery<DocSliceQuery>({ query: DocSliceDocument, ...options })
+}
+export const UpdateWordDocument = gql`
+  mutation UpdateWord($word: AnnotatedFormUpdate!) {
+    updateWord(word: $word)
+  }
+`
+
+export function useUpdateWordMutation() {
+  return Urql.useMutation<UpdateWordMutation, UpdateWordMutationVariables>(
+    UpdateWordDocument
+  )
 }

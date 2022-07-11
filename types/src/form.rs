@@ -204,6 +204,11 @@ impl AnnotatedForm {
     async fn document_id(&self) -> DocumentId {
         self.position.document_id
     }
+
+    /// Unique identifier of this form
+    async fn id(&self) -> Uuid {
+        self.id.unwrap_or_default()
+    }
 }
 
 impl AnnotatedForm {
@@ -247,6 +252,6 @@ pub fn is_root_morpheme(s: &str) -> bool {
 pub struct AnnotatedFormUpdate {
     /// Unique identifier of the form
     pub id: Uuid,
-    /// Original source text that can be either undefined or null
+    /// Original source text that could also be undefined
     pub source: MaybeUndefined<String>,
 }
