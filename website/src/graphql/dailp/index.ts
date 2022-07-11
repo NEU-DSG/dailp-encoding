@@ -169,9 +169,15 @@ export type AnnotatedFormSegmentsArgs = {
  * All fields except id are optional.
  */
 export type AnnotatedFormUpdate = {
+  /** Updated commentary */
   readonly commentary: InputMaybe<Scalars["String"]>
+  /** The document id where the given form lives */
+  readonly docId: Scalars["UUID"]
   /** Unique identifier of the form */
   readonly id: Scalars["UUID"]
+  /** Updated segments */
+  readonly segments: InputMaybe<ReadonlyArray<MorphemeSegmentUpdate>>
+  /** Updated source text */
   readonly source: InputMaybe<Scalars["String"]>
 }
 
@@ -403,6 +409,19 @@ export type MorphemeReference = {
   readonly forms: ReadonlyArray<AnnotatedForm>
   /** Phonemic shape of the morpheme. */
   readonly morpheme: Scalars["String"]
+}
+
+/** A single unit of meaning and its gloss which can be edited. */
+export type MorphemeSegmentUpdate = {
+  /** Target language representation of this segment. */
+  readonly gloss: Scalars["String"]
+  /** Source language representation of this segment. */
+  readonly morpheme: Scalars["String"]
+  /**
+   * This field determines what character should separate this segment from
+   * the next one when reconstituting the full segmentation string.
+   */
+  readonly role: WordSegmentRole
 }
 
 /** A concrete representation of a particular functional morpheme. */
@@ -791,6 +810,9 @@ export type DocumentContentsQuery = { readonly __typename?: "Query" } & {
                                 | "endTime"
                               >
                             >
+                            readonly position: {
+                              readonly __typename?: "PositionInDocument"
+                            } & Pick<PositionInDocument, "documentId">
                           })
                       | { readonly __typename: "LineBreak" }
                     >
@@ -829,6 +851,9 @@ export type DocumentContentsQuery = { readonly __typename?: "Query" } & {
                 "index" | "resourceUrl" | "startTime" | "endTime"
               >
             >
+            readonly position: {
+              readonly __typename?: "PositionInDocument"
+            } & Pick<PositionInDocument, "documentId">
           }
       >
     }
@@ -865,6 +890,10 @@ export type FormFieldsFragment = {
         AudioSlice,
         "index" | "resourceUrl" | "startTime" | "endTime"
       >
+    >
+    readonly position: { readonly __typename?: "PositionInDocument" } & Pick<
+      PositionInDocument,
+      "documentId"
     >
   }
 
@@ -1085,6 +1114,7 @@ export type DocSliceQuery = { readonly __typename?: "Query" } & {
       readonly forms: ReadonlyArray<
         { readonly __typename: "AnnotatedForm" } & Pick<
           AnnotatedForm,
+          | "id"
           | "index"
           | "source"
           | "romanizedSource"
@@ -1111,6 +1141,9 @@ export type DocSliceQuery = { readonly __typename?: "Query" } & {
                 "index" | "resourceUrl" | "startTime" | "endTime"
               >
             >
+            readonly position: {
+              readonly __typename?: "PositionInDocument"
+            } & Pick<PositionInDocument, "documentId">
           }
       >
     }
@@ -1150,6 +1183,9 @@ export const FormFieldsFragmentDoc = gql`
       resourceUrl
       startTime
       endTime
+    }
+    position {
+      documentId
     }
   }
 `

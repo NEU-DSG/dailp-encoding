@@ -1,17 +1,23 @@
+import { groupBy } from "lodash"
 import React, { ReactNode } from "react"
 import { AiFillSound } from "react-icons/ai"
 import { GrDown, GrUp } from "react-icons/gr"
 import { IoEllipsisHorizontalCircle } from "react-icons/io5"
 import { MdClose, MdNotes, MdRecordVoiceOver } from "react-icons/md"
+import { OnChangeValue } from "react-select"
 import {
   Disclosure,
   DisclosureContent,
   useDisclosureState,
 } from "reakit/Disclosure"
 import { unstable_Form as Form } from "reakit/Form"
+import { unstable_FormInput as FormInput } from "reakit/Form"
+import * as Dailp from "src/graphql/dailp"
 import { useCredentials } from "./auth"
 import { AudioPlayer, IconButton } from "./components"
+import { CustomCreatable } from "./components/creatable"
 import EditWordPanel, { EditButton } from "./edit-word-panel"
+import { formInput } from "./edit-word-panel.css"
 import { useForm } from "./form-context"
 import { FormFieldsFragment } from "./graphql/dailp"
 import * as css from "./panel-layout.css"
@@ -19,8 +25,8 @@ import { usePreferences } from "./preferences-context"
 import { VerticalMorphemicSegmentation, WordPanel } from "./word-panel"
 
 enum PanelType {
-  EditWordPanel,
   WordPanel,
+  EditWordPanel,
 }
 
 export interface PanelDetails {
@@ -39,6 +45,34 @@ export const PanelLayout = (p: {
 
   const { form, isEditing } = useForm()
   const token = useCredentials()
+
+  // Get all global glosses / matching tags to display.
+  const { cherokeeRepresentation } = usePreferences()
+  const [{ data }] = Dailp.useGlossaryQuery({
+    variables: { system: cherokeeRepresentation },
+  })
+
+  if (!data) {
+    return <p>Loading...</p>
+  }
+
+  // Get all the tags except for those which are empty/undefined.
+  const allTags = data.allTags.filter((tag) => tag.tag !== "")
+  const groupedTags = groupBy(allTags, (t) => t.morphemeType)
+
+  // Creates a selectable option out of each functional tag, and groups them together by morpheme type.
+  const groupedOptions = Object.entries(groupedTags).map(([group, tags]) => {
+    return {
+      label: group,
+      options: tags.map((tag) => {
+        return {
+          // Value is a custom type to track data of a morpheme's gloss in its string form and its matching tag, if there is one.
+          value: tag.tag,
+          label: tag.title,
+        }
+      }),
+    }
+  })
 
   return (
     <div className={css.wordPanelContent}>
@@ -80,7 +114,11 @@ export const PanelLayout = (p: {
 
       {isEditing ? (
         <Form {...form}>
-          <PanelContent panel={PanelType.EditWordPanel} word={p.segment} />
+          <PanelContent
+            panel={PanelType.EditWordPanel}
+            word={p.segment}
+            groupedOptions={groupedOptions}
+          />
         </Form>
       ) : (
         <WordPanel word={p.segment} setContent={p.setContent} />
@@ -93,6 +131,13 @@ export const PanelLayout = (p: {
 export const PanelContent = (p: {
   panel: PanelType
   word: FormFieldsFragment
+  groupedOptions: {
+    label: string
+    options: {
+      value: string
+      label: string
+    }[]
+  }[]
 }) => {
   const PanelComponent =
     p.panel === PanelType.EditWordPanel ? EditWordPanel : WordPanel
@@ -112,7 +157,7 @@ export const PanelContent = (p: {
         <PanelComponent
           word={p.word}
           feature={"romanizedSource"}
-          label="Romanized Source"
+          label="Simple Phonetics"
         />
       )}
     </>
@@ -135,10 +180,17 @@ export const PanelContent = (p: {
   // Contains components rendering a word's segments and its english translation.
   const wordPartsContent = (
     <>
-      <VerticalMorphemicSegmentation
-        cherokeeRepresentation={cherokeeRepresentation}
-        segments={p.word.segments}
-      />
+      {p.panel === PanelType.WordPanel ? (
+        <VerticalMorphemicSegmentation
+          cherokeeRepresentation={cherokeeRepresentation}
+          segments={p.word.segments}
+        />
+      ) : (
+        <EditSegmentation
+          segments={p.word.segments}
+          groupedOptions={p.groupedOptions}
+        />
+      )}
 
       {p.panel === PanelType.WordPanel ? (
         <div style={{ display: "flex" }}>‘{translation}’</div>
@@ -189,6 +241,111 @@ export const PanelContent = (p: {
         />
       )}
     </>
+  )
+}
+
+// An editable view of a word's parts / segments.
+const EditSegmentation = (p: {
+  segments: FormFieldsFragment["segments"]
+  groupedOptions: {
+    label: string
+    options: {
+      value: string
+      label: string
+    }[]
+  }[]
+}) => {
+  const { form } = useForm()
+
+  // Create a new list of morphemes for this word. If the index matches the updated morpheme's index, then push in the new morpheme. Else, push in the unchanged morpheme.
+  const updateMorpheme = (
+    newMorpheme: FormFieldsFragment["segments"][0],
+    index: number
+  ) => {
+    const updatedMorphemes: Dailp.FormFieldsFragment["segments"] =
+      p.segments.map((segment, idx) => {
+        if (idx === index) {
+          return newMorpheme
+        }
+        return segment
+      })
+
+    form.update(["word", "segments"], updatedMorphemes)
+  }
+
+  return (
+    <table className={css.tableContainer}>
+      <tbody>
+        {p.segments.map((segment, index) => (
+          <tr style={{ display: "flex" }}>
+            <td className={css.editMorphemeCells}>
+              {/* This is disabled at the moment to be fully implemented later. */}
+              <FormInput
+                {...form}
+                disabled
+                className={formInput}
+                name={["word", "segments", index.toString(), "morpheme"]}
+              />
+            </td>
+            <td className={css.editGlossCells}>
+              {/* Displays global glosses and allows user to create custom glosses on keyboard input. */}
+              <EditGloss
+                // TODO: this key will need to be changed later since a morpheme can be changed
+                key={segment.morpheme}
+                morpheme={segment}
+                index={index}
+                updateMorpheme={updateMorpheme}
+                groupedOptions={p.groupedOptions}
+              />
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  )
+}
+
+// Component that allows editing of a morpheme's gloss. Users can enter a custom gloss or select from global glosses / functional tags.
+const EditGloss = (props: {
+  morpheme: FormFieldsFragment["segments"][0]
+  index: number
+  updateMorpheme: (
+    morpheme: FormFieldsFragment["segments"][0],
+    index: number
+  ) => void
+  groupedOptions: {
+    label: string
+    options: {
+      value: string
+      label: string
+    }[]
+  }[]
+}) => {
+  // Handles gloss selection, and creation of new glosses.
+  const handleChange = (
+    newValue: OnChangeValue<{ value: string; label: string }, false>
+  ) => {
+    if (newValue?.value) {
+      // Updates current list of morphemes to include one with a matching tag, or add a morpheme with a custom gloss.
+      props.updateMorpheme(
+        {
+          ...props.morpheme,
+          gloss: newValue.value,
+        },
+        props.index
+      )
+    }
+  }
+
+  return (
+    <CustomCreatable
+      onChange={handleChange}
+      options={props.groupedOptions}
+      defaultValue={{
+        value: props.morpheme.gloss,
+        label: props.morpheme.matchingTag?.title ?? props.morpheme.gloss,
+      }}
+    />
   )
 }
 

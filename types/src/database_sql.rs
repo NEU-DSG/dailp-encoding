@@ -1,5 +1,7 @@
 #![allow(missing_docs)]
 
+use crate::CollectionSection::Body;
+use crate::CollectionSection::Intro;
 use sqlx::postgres::types::PgLQuery;
 use sqlx::postgres::types::PgLTree;
 use std::ops::Bound;
@@ -388,8 +390,6 @@ impl Database {
         todo!("Implement image annotations")
     }
 
-    // pub async fn maybe_undefined_to_vec() -> Vec<Option<String>> {}
-
     pub async fn update_word(&self, word: AnnotatedFormUpdate) -> Result<Uuid> {
         let source = word.source.into_vec();
         let commentary = word.commentary.into_vec();
@@ -398,7 +398,57 @@ impl Database {
             "queries/update_word.sql",
             word.id,
             &source as _,
-            &commentary as _
+            &commentary as _,
+        )
+        .execute(&self.client)
+        .await?;
+
+        // If word segmentation was not changed, then return early since SQL update queries need to be called.
+        if word.segments.is_undefined() {
+            return Ok(word.id);
+        }
+
+        let (doc_id, gloss, word_id, index, morpheme, role): (
+            Vec<_>,
+            Vec<_>,
+            Vec<_>,
+            Vec<_>,
+            Vec<_>,
+            Vec<_>,
+        ) = word
+            .segments
+            .take()
+            .unwrap()
+            .into_iter()
+            .enumerate()
+            .map(move |(index, segment)| {
+                (
+                    word.doc_id,
+                    segment.gloss,
+                    word.id,
+                    index as i64, // index of the segment in the word
+                    segment.morpheme,
+                    segment.role,
+                )
+            })
+            .multiunzip();
+
+        query_file!(
+            "queries/upsert_local_morpheme_glosses.sql",
+            &*doc_id,
+            &*gloss
+        )
+        .execute(&self.client)
+        .await?;
+
+        query_file!(
+            "queries/upsert_many_word_segments.sql",
+            &*doc_id,
+            &*gloss,
+            &*word_id,
+            &*index,
+            &*morpheme,
+            &*role as _
         )
         .execute(&self.client)
         .await?;
