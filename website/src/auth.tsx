@@ -30,6 +30,7 @@ export const UserProvider = (props: { children: any }) => {
     userPool.getCurrentUser()
   )
 
+  // Allows persistence of the current user's session between browser refreshes.
   useEffect(() => {
     // if there is an authenticated user present
     if (user != null) {
@@ -134,7 +135,7 @@ export const useCredentials = () => {
     throw new Error("`useUser` must be within a `UserProvider`")
   }
 
-  // gets the jwt token of the current signed in user
+  // gets the jwt token of the currently signed in user
   const creds = context.user?.getSignInUserSession()?.getIdToken().getJwtToken()
 
   return creds ?? null

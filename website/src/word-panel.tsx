@@ -1,53 +1,34 @@
 import React, { ReactNode } from "react"
 import { AiFillCaretDown, AiFillCaretUp, AiFillSound } from "react-icons/ai"
 import { IoEllipsisHorizontalCircle } from "react-icons/io5"
-import { MdClose, MdNotes, MdRecordVoiceOver } from "react-icons/md"
+import { MdNotes, MdRecordVoiceOver } from "react-icons/md"
 import {
   Disclosure,
   DisclosureContent,
   useDisclosureState,
 } from "reakit/Disclosure"
-import { AudioPlayer, IconButton } from "src/components"
+import { AudioPlayer } from "src/components"
 import * as Dailp from "src/graphql/dailp"
+import * as css from "./panel-layout.css"
 import { usePreferences } from "./preferences-context"
-import { BasicMorphemeSegment } from "./types"
-import * as css from "./word-panel.css"
-
-export interface WordPanelDetails {
-  currContents: Dailp.FormFieldsFragment | null
-  setCurrContents: (currContents: Dailp.FormFieldsFragment | null) => void
-}
 
 export const WordPanel = (p: {
-  segment: Dailp.FormFieldsFragment | null
-  setContent: (content: Dailp.FormFieldsFragment | null) => void
-  onOpenDetails: (morpheme: BasicMorphemeSegment) => void
+  word: Dailp.FormFieldsFragment | null
+  setContent?: (content: Dailp.FormFieldsFragment | null) => void
 }) => {
   const { cherokeeRepresentation } = usePreferences()
-  if (!p.segment) {
+  if (!p.word) {
     return null
   }
 
-  const translation = p.segment.englishGloss.join(", ")
+  const translation = p.word.englishGloss.join(", ")
 
   return (
-    <div className={css.wordPanelContent}>
-      <IconButton
-        className={css.wordPanelButton.basic}
-        onClick={() => p.setContent(null)}
-        aria-label="Dismiss selected word information"
-      >
-        <MdClose size={32} />
-      </IconButton>
-      <header className={css.wordPanelHeader}>
-        <h1 className={css.noSpaceBelow}>Selected Word</h1>
-        <h2 className={css.cherHeader}>{p.segment.source}</h2>
-      </header>
-      <AudioPanel segment={p.segment} />
-      {p.segment.romanizedSource ? (
+    <>
+      {p.word.romanizedSource ? (
         <CollapsiblePanel
           title={"Simple Phonetics"}
-          content={<div>{p.segment.romanizedSource}</div>}
+          content={<div>{p.word.romanizedSource}</div>}
           icon={
             <MdRecordVoiceOver
               size={24}
@@ -57,13 +38,13 @@ export const WordPanel = (p: {
         />
       ) : null}
 
-      {p.segment.segments?.length ? (
+      {p.word.segments?.length ? (
         <CollapsiblePanel
           title={"Word Parts"}
           content={
             <>
               <VerticalMorphemicSegmentation
-                segments={p.segment.segments}
+                segments={p.word.segments}
                 cherokeeRepresentation={cherokeeRepresentation}
               />
 
@@ -80,14 +61,14 @@ export const WordPanel = (p: {
           }
         />
       ) : null}
-      {p.segment.commentary ? (
+      {p.word.commentary ? (
         <CollapsiblePanel
           title={"Commentary"}
-          content={<>{p.segment.commentary}</>}
+          content={<>{p.word.commentary}</>}
           icon={<MdNotes size={24} className={css.wordPanelButton.colpleft} />}
         />
       ) : null}
-    </div>
+    </>
   )
 }
 

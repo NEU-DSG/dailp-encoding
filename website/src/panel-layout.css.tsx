@@ -1,7 +1,8 @@
 import { style, styleVariants } from "@vanilla-extract/css"
+import { rgba } from "polished"
 import { fonts, hspace, mediaQueries, radii, vspace } from "src/style/constants"
-import { paddingX, paddingY } from "src/style/utils"
 import { closeButton } from "./morpheme.css"
+import { marginX, paddingX, paddingY } from "./style/utils"
 
 const wordPanelPadding = "8px"
 
@@ -70,9 +71,11 @@ export const wordPanelContent = style({
       border: "1px solid #ddd",
       height: "calc(100vh - 66px)",
     },
+    [mediaQueries.large]: {
+      width: "20rem",
+    },
   },
   overflowX: "hidden",
-  overflowY: "auto",
 })
 
 export const wordPanelHeader = style({
@@ -111,5 +114,57 @@ export const morphemeCell = style([
   {
     fontStyle: "italic",
     paddingRight: hspace.halfEdge,
+  },
+])
+
+export const editCherHeader = style([
+  marginX(hspace.large),
+  {
+    fontFamily: fonts.cherokee,
+    marginTop: vspace.one,
+  },
+])
+export const headerButtons = style({
+  display: "flex",
+  alignItems: "center",
+  // Set this min-height here so the header space, as a flex-box, will not shrink when the close button disappears.
+  minHeight: vspace.double,
+})
+
+export const editMorphemeCells = style([
+  paddingX(hspace.small),
+  paddingY(0),
+  {
+    display: "flex",
+    flex: 1,
+  },
+])
+
+export const editGlossCells = style([
+  editMorphemeCells,
+  {
+    flex: 4,
+  },
+])
+
+export const glossOption = style({
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+})
+
+export const selectedGlossOption = style({
+  textOverflow: "ellipsis",
+  whiteSpace: "nowrap",
+  overflow: "hidden",
+})
+
+export const globalGlossTag = style([
+  paddingX(hspace.small),
+  {
+    fontFamily: fonts.header,
+    fontSize: "0.8rem",
+    backgroundColor: rgba("black", 0.15),
+    borderRadius: radii.medium,
   },
 ])
