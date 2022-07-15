@@ -144,6 +144,14 @@ export type AnnotatedForm = {
   readonly source: Scalars["String"]
 }
 
+/** A single word in an annotated document that can be edited. */
+export type AnnotatedFormUpdate = {
+  /** Unique identifier of the form */
+  readonly id: Scalars["UUID"]
+  /** Original source text that can be either undefined or null */
+  readonly source: InputMaybe<Scalars["String"]>
+}
+
 /** Element within a spreadsheet before being transformed into a full document. */
 export type AnnotatedSeg = AnnotatedForm | LineBreak
 
@@ -428,6 +436,7 @@ export type Mutation = {
   readonly apiVersion: Scalars["String"]
   readonly updateAnnotation: Scalars["Boolean"]
   readonly updatePage: Scalars["Boolean"]
+  readonly updateWord: Scalars["UUID"]
 }
 
 export type MutationUpdateAnnotationArgs = {
@@ -436,6 +445,10 @@ export type MutationUpdateAnnotationArgs = {
 
 export type MutationUpdatePageArgs = {
   data: Scalars["JSON"]
+}
+
+export type MutationUpdateWordArgs = {
+  word: AnnotatedFormUpdate
 }
 
 /**
