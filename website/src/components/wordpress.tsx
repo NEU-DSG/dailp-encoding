@@ -3,10 +3,21 @@ import parse, {
   attributesToProps,
   domToReact,
 } from "html-react-parser"
-import React from "react"
+import React, { useState } from "react"
+import { useDialogState } from "reakit/Dialog"
 import { Button, Link } from "src/components"
+import * as Dailp from "src/graphql/dailp"
 import * as Wordpress from "src/graphql/wordpress"
+import { usePreferences } from "src/preferences-context"
+import { AnnotatedForm, DocumentParagraph, Segment } from "src/segment"
 import { wordpressUrl } from "src/theme.css"
+import {
+  BasicMorphemeSegment,
+  PhoneticRepresentation,
+  TagSet,
+  ViewMode,
+  tagSetForMode,
+} from "src/types"
 
 interface Props {
   slug: string
@@ -53,13 +64,22 @@ const parseOptions: HTMLReactParserOptions = {
     if ("data" in node) {
       const segments = node.data.match(style)?.filter((x) => x !== undefined)
       if (segments) {
-        console.log(segments)
-
         if (segments?.length === 4) {
-          return pullWords(segments[1]!, segments[2]!, segments[3]!)
+          return (
+            <PullWords
+              slug={segments[1]!}
+              start={parseInt(segments[2]!)}
+              end={parseInt(segments[3]!)}
+            ></PullWords>
+          )
         }
         if (segments?.length === 3) {
-          return pullWords(segments[1]!, segments[2]!)
+          return (
+            <PullWords
+              slug={segments[1]!}
+              start={parseInt(segments[2]!)}
+            ></PullWords>
+          )
         }
       }
     }
@@ -87,10 +107,81 @@ const parseOptions: HTMLReactParserOptions = {
   },
 }
 
-const pullWords = (
-  docName: string,
-  start: string,
-  end?: string
-): JSX.Element => {
-  return <div>full array</div>
+const PullWords = (props: { slug: string; start: number; end?: number }) => {
+  const slug = props.slug
+  const start = props.start
+
+  var end
+  if (!props.end) {
+    end = start + 1
+  } else {
+    end = props.end
+  }
+
+  const [selectedMorpheme, setMorpheme] = useState<BasicMorphemeSegment | null>(
+    null
+  )
+
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const openDetails = (morpheme: BasicMorphemeSegment) => {
+    setMorpheme(morpheme)
+    setDialogOpen(true)
+  }
+
+  const { viewMode, phoneticRepresentation } = usePreferences()
+
+  const tagSet = tagSetForMode(viewMode)
+
+  const [selectedWord, setSelectedWord] =
+    useState<Dailp.FormFieldsFragment | null>(null)
+
+  const dialog = useDialogState({ animated: true })
+  const selectAndShowWord = (content: Dailp.FormFieldsFragment | null) => {
+    setSelectedWord(content)
+    if (content) {
+      dialog.show()
+    } else {
+      dialog.hide()
+    }
+  }
+
+  let wordPanelInfo = {
+    currContents: selectedWord,
+    setCurrContents: selectAndShowWord,
+  }
+
+  let morphemeSystem = Dailp.CherokeeOrthography.Learner
+  if (viewMode === ViewMode.AnalysisDt) {
+    morphemeSystem = Dailp.CherokeeOrthography.Crg
+  } else if (viewMode === ViewMode.AnalysisTth) {
+    morphemeSystem = Dailp.CherokeeOrthography.Taoc
+  }
+
+  const [{ data }] = Dailp.useDocSliceQuery({
+    variables: { slug, start, end, morphemeSystem },
+  })
+
+  const docContents = data?.document
+  if (!docContents?.forms) {
+    return <>Loading...</>
+  }
+  return (
+    <>
+      {docContents.forms.map((form, i) => (
+        <div>
+          {i}
+          <AnnotatedForm
+            key={i}
+            segment={form as any}
+            onOpenDetails={openDetails}
+            viewMode={viewMode}
+            tagSet={tagSet}
+            phoneticRepresentation={phoneticRepresentation}
+            pageImages={[]}
+            wordPanelDetails={wordPanelInfo}
+          />
+        </div>
+      ))}
+    </>
+  )
 }

@@ -144,6 +144,14 @@ export type AnnotatedForm = {
   readonly source: Scalars["String"]
 }
 
+/** A single word in an annotated document that can be edited. */
+export type AnnotatedFormUpdate = {
+  /** Unique identifier of the form */
+  readonly id: Scalars["UUID"]
+  /** Original source text that can be either undefined or null */
+  readonly source: InputMaybe<Scalars["String"]>
+}
+
 /** Element within a spreadsheet before being transformed into a full document. */
 export type AnnotatedSeg = AnnotatedForm | LineBreak
 
@@ -428,6 +436,7 @@ export type Mutation = {
   readonly apiVersion: Scalars["String"]
   readonly updateAnnotation: Scalars["Boolean"]
   readonly updatePage: Scalars["Boolean"]
+  readonly updateWord: Scalars["UUID"]
 }
 
 export type MutationUpdateAnnotationArgs = {
@@ -436,6 +445,10 @@ export type MutationUpdateAnnotationArgs = {
 
 export type MutationUpdatePageArgs = {
   data: Scalars["JSON"]
+}
+
+export type MutationUpdateWordArgs = {
+  word: AnnotatedFormUpdate
 }
 
 /**
@@ -1043,16 +1056,43 @@ export type DocSliceQueryVariables = Exact<{
   slug: Scalars["String"]
   start: Scalars["Int"]
   end: InputMaybe<Scalars["Int"]>
+  morphemeSystem: InputMaybe<CherokeeOrthography>
 }>
 
 export type DocSliceQuery = { readonly __typename?: "Query" } & {
   readonly document: Maybe<
     { readonly __typename?: "AnnotatedDoc" } & {
       readonly forms: ReadonlyArray<
-        { readonly __typename?: "AnnotatedForm" } & Pick<
+        { readonly __typename: "AnnotatedForm" } & Pick<
           AnnotatedForm,
-          "englishGloss"
-        >
+          | "index"
+          | "source"
+          | "romanizedSource"
+          | "simplePhonetics"
+          | "phonemic"
+          | "englishGloss"
+          | "commentary"
+        > & {
+            readonly segments: ReadonlyArray<
+              { readonly __typename?: "MorphemeSegment" } & Pick<
+                MorphemeSegment,
+                "morpheme" | "gloss" | "nextSeparator"
+              > & {
+                  readonly matchingTag: Maybe<
+                    { readonly __typename?: "TagForm" } & Pick<
+                      TagForm,
+                      "tag" | "title"
+                    >
+                  >
+                }
+            >
+            readonly audioTrack: Maybe<
+              { readonly __typename?: "AudioSlice" } & Pick<
+                AudioSlice,
+                "index" | "resourceUrl" | "startTime" | "endTime"
+              >
+            >
+          }
       >
     }
   >
@@ -1421,13 +1461,20 @@ export function useNewPageMutation() {
   )
 }
 export const DocSliceDocument = gql`
-  query DocSlice($slug: String!, $start: Int!, $end: Int) {
+  query DocSlice(
+    $slug: String!
+    $start: Int!
+    $end: Int
+    $morphemeSystem: CherokeeOrthography
+  ) {
     document(slug: $slug) {
       forms(start: $start, end: $end) {
-        englishGloss
+        __typename
+        ...FormFields
       }
     }
   }
+  ${FormFieldsFragmentDoc}
 `
 
 export function useDocSliceQuery(
