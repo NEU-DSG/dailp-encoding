@@ -82,6 +82,7 @@ export const DocumentParagraph = (
 /** Displays one segment of the document, which may be a word, block, or phrase. */
 export const Segment = (p: Props) => {
   const segment = p.segment
+
   if (segment.__typename === "AnnotatedForm") {
     return <AnnotatedForm {...p} segment={segment} />
   } else {
@@ -90,7 +91,9 @@ export const Segment = (p: Props) => {
 }
 
 export const AnnotatedForm = (
-  p: Props & { segment: Dailp.FormFieldsFragment }
+  p: Props & {
+    segment: Dailp.FormFieldsFragment
+  }
 ) => {
   if (!p.segment.source) {
     return null
@@ -99,6 +102,19 @@ export const AnnotatedForm = (
   if (showAnything) {
     const showSegments = p.levelOfDetail >= LevelOfDetail.Segmentation
     const translation = p.segment.englishGloss.join(", ")
+
+    const isSelected = p.wordPanelDetails.currContents?.id === p.segment.id
+
+    let wordCSS = showSegments ? css.wordGroup : css.wordGroupInline
+
+    if (isSelected) {
+      wordCSS = cx(wordCSS, css.selectedWord)
+      p.wordPanelDetails.setCurrContents(
+        p.segment
+      ) /* This makes sure the word panel updates for changes to the word panel*/
+    }
+
+    const { form } = useForm()
 
     const isSelected = p.wordPanelDetails.currContents?.id === p.segment.id
 

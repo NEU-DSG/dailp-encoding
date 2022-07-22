@@ -253,13 +253,18 @@ const DocumentContents = ({
   })
 
   const docContents = result.data?.document
-
-  const { isEditing } = useForm()
+  const { form, isEditing } = useForm()
 
   useEffect(() => {
-    if (!isEditing) {
+    // If the form has been submitted, update the panel's current contents to be the currently selected word
+    if (form.submitting) {
+      wordPanelDetails.setCurrContents(form.values.word)
+      // Query of document contents is rerun to ensure frontend and backend are in sync
       rerunQuery({ requestPolicy: "network-only" })
     }
+
+    // Update the form's current word
+    form.update("word", wordPanelDetails.currContents)
   }, [isEditing])
 
   if (!docContents) {
