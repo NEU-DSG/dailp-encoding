@@ -40,17 +40,17 @@ const cherokeeRepresentationMapping = {
   [Dailp.CherokeeOrthography.Learner]: {
     label: "Learner",
     details:
-      "A more traditional phonetics view, aligned with the Worcester syllabary. Uses qu and ts.",
+      "A more traditional representation of Cherokee. Uses the Worcester romanization of the syllabary with qu and ts. Displays no tone or vowel length information.",
   },
   [Dailp.CherokeeOrthography.Crg]: {
     label: "Cherokee Reference Grammar",
     details:
-      "Linguistic analysis using terms from Cherokee Reference Grammar (CRG). In romanizations uses kw, gw, and j.",
+      "Linguistic analysis using terms from Cherokee Reference Grammar (CRG). This romanization of the syllabary uses gw and j. Displays tone and vowel length information using accents.",
   },
   [Dailp.CherokeeOrthography.Taoc]: {
     label: "Tone and Accent in Oklahoma Cherokee",
     details:
-      "Linguistic analysis using terms from Tone and Accent in Oklahoma Cherokee (TAOC). In romanizations uses kw, gw, and j.",
+      "Linguistic analysis using terms from Tone and Accent in Oklahoma Cherokee (TAOC). This romanization of the syllabary uses kw and c. Displays extensive tone and vowel length information using accents.",
   },
 }
 
