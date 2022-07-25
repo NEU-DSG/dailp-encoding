@@ -1,6 +1,8 @@
 with input_data as (
-  select * from unnest($1::uuid[], $2::text[], $3::uuid[], $4::bigint[], $5::text[], $6::segment_type[]) as input_data(document_id, gloss, word_id, index, morpheme, segment_type)
+  select *
+  from unnest($1::uuid[], $2::text[], $3::uuid[], $4::bigint[], $5::text[], $6::segment_type[]) as input_data(document_id, gloss, word_id, index, morpheme, segment_type)
 ),
+
 -- Insert a document-local morpheme gloss if and only if there's no matching
 -- global gloss.
 inserted_gloss as (

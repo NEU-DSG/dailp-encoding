@@ -40,7 +40,7 @@ const cherokeeRepresentationMapping = {
   [Dailp.CherokeeOrthography.Learner]: {
     label: "Learner",
     details:
-      "A more traditional representation of Cherokee. Uses the Worcester romanization of the syllabary with qu and ts. Displays no tone or vowel length information.",
+      "A more traditional representation of Cherokee words. Transcribes the syllabary using the Worcester romanization with qu and ts. Displays minimal tone and vowel length information.",
   },
   [Dailp.CherokeeOrthography.Crg]: {
     label: "Cherokee Reference Grammar",
@@ -125,7 +125,7 @@ export const PrefPanel = () => {
         {modeDetails(preferences.viewMode).details}
       </p>
 
-      <label>Linguistic System:</label>
+      <label>Cherokee Transcription Style:</label>
       <PhoneticsPicker
         aria-described-by={"Selected-Phonetics"}
         onSelect={preferences.setCherokeeRepresentation}
