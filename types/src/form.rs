@@ -94,8 +94,6 @@ impl AnnotatedForm {
             .await?
             .unwrap_or_default();
 
-        println!("\nabstract segments: {:?}", abstract_segments);
-
         // 2. Request all concrete tags that start with each abstract tag.
         let concrete_tag_matches = db
             .load_many(
@@ -104,8 +102,6 @@ impl AnnotatedForm {
                     .map(|seg| TagId(seg.gloss.clone(), system)),
             )
             .await?;
-
-        println!("concrete matches: {:#?}", concrete_tag_matches);
 
         // 3. Pick the longest match for each abstract segment.
         let mut concrete_segments = Vec::new();
