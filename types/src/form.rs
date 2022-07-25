@@ -1,6 +1,6 @@
 use crate::{
     AnnotatedDoc, AudioSlice, CherokeeOrthography, Database, Date, DocumentId, MorphemeSegment,
-    PartsOfWord, PositionInDocument, TagId,
+    PartsOfWord, PositionInDocument, SegmentType, TagId,
 };
 use async_graphql::{dataloader::DataLoader, FieldResult, MaybeUndefined};
 use itertools::Itertools;
@@ -136,12 +136,15 @@ impl AnnotatedForm {
                             system: Some(system),
                             // Use the segment type of the first abstract one
                             // unless the concrete segment overrides the segment type.
-                            segment_type: concrete_tag.segment_type.or_else(|| {
-                                corresponding_segments
-                                    .clone()
-                                    .next()
-                                    .and_then(|seg| seg.segment_type)
-                            }),
+                            segment_type: concrete_tag
+                                .segment_type
+                                .or_else(|| {
+                                    corresponding_segments
+                                        .clone()
+                                        .next()
+                                        .map(|seg| seg.segment_type)
+                                })
+                                .unwrap_or(SegmentType::Morpheme),
                             morpheme: corresponding_segments.map(|seg| &seg.morpheme).join(""),
                             gloss: concrete_tag.tag.clone(),
                             gloss_id: None,

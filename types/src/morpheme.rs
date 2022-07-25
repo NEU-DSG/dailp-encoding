@@ -22,7 +22,7 @@ pub struct MorphemeSegment {
     ///
     /// This field determines what character should separate this segment from
     /// the next one when reconstituting the full segmentation string.
-    pub segment_type: Option<SegmentType>,
+    pub segment_type: SegmentType,
     pub matching_tag: Option<TagForm>,
 }
 
@@ -61,7 +61,7 @@ impl MorphemeSegment {
             // FIXME Shortcut to keep this function the same while allowing
             // migration code to create this data structure.
             gloss_id: None,
-            segment_type,
+            segment_type: segment_type.unwrap_or(SegmentType::Morpheme),
             matching_tag: None,
         }
     }
@@ -76,13 +76,13 @@ impl MorphemeSegment {
 
     /// The separator that should follow this segment, based on the type of the
     /// next segment.
-    pub fn get_previous_separator(&self) -> Option<&'static str> {
+    pub fn get_previous_separator(&self) -> &str {
         use SegmentType::*;
-        self.segment_type.as_ref().map(|ty| match ty {
+        match self.segment_type {
             Morpheme => "-",
             Clitic => "=",
             Combine => ":",
-        })
+        }
     }
 
     /// Build a string of the morpheme gloss line, used in interlinear gloss
@@ -91,7 +91,17 @@ impl MorphemeSegment {
         use itertools::Itertools;
         segments
             .into_iter()
-            .flat_map(|s| vec![s.get_previous_separator().unwrap_or(""), &*s.gloss])
+            .enumerate()
+            .flat_map(|(index, s)| {
+                vec![
+                    if index > 0 {
+                        s.get_previous_separator()
+                    } else {
+                        ""
+                    },
+                    &*s.gloss,
+                ]
+            })
             .join("")
     }
 
@@ -118,13 +128,13 @@ impl MorphemeSegment {
     }
 
     /// What kind of thing is this segment?
-    async fn segment_type(&self) -> Option<SegmentType> {
+    async fn segment_type(&self) -> SegmentType {
         self.segment_type
     }
 
     /// This field determines what character should separate this segment from
     /// the previous one when reconstituting the full segmentation string.
-    async fn previous_separator(&self) -> Option<&str> {
+    async fn previous_separator(&self) -> &str {
         self.get_previous_separator()
     }
 

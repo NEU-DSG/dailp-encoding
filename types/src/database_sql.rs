@@ -823,7 +823,7 @@ impl Database {
                         word_id,
                         index as i64,
                         segment.morpheme,
-                        segment.segment_type.unwrap_or(SegmentType::Morpheme) as SegmentType,
+                        segment.segment_type as SegmentType,
                     )
                 })
                 .multiunzip();
@@ -1147,7 +1147,7 @@ impl Loader<PartsOfWord> for Database {
                         morpheme: part.morpheme,
                         gloss: part.gloss,
                         gloss_id: part.gloss_id,
-                        segment_type: Some(part.segment_type),
+                        segment_type: part.segment_type,
                         matching_tag: None,
                     },
                 )
