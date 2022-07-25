@@ -4,11 +4,11 @@ mod audio;
 mod connections;
 mod contributors;
 mod early_vocab;
+mod edited_collection;
 mod lexical;
 mod spreadsheets;
 mod tags;
 mod translations;
-mod edited_collection;
 
 use anyhow::Result;
 use dailp::{Database, Uuid};

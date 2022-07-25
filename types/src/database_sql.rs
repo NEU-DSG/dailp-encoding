@@ -225,76 +225,76 @@ impl Database {
         }))
     }
 
-    pub async fn upsert_collection(
-        &self,
-        collection: &Collection) -> Result<String>{
+    pub async fn upsert_collection(&self, collection: &Collection) -> Result<String> {
         query_file!(
             "queries/upsert_collection.sql",
             collection.slug,
             collection.title,
-            collection.wordpress_menu_id)
-            .execute(&self.client)
-            .await?;
+            collection.wordpress_menu_id
+        )
+        .execute(&self.client)
+        .await?;
         Ok((collection.slug).to_string())
     }
 
     pub async fn insert_all_chapters(
         &self,
         chapters: Vec<Chapter>,
-        slug: String) -> Result<String>{
-
+        slug: String,
+    ) -> Result<String> {
         let mut tx = self.client.begin().await?;
 
         // Delete all chapter data before re-inserting
-        query_file!(
-            "queries/delete_chapters.sql")
-        .execute(&mut tx)
-        .await?;
-        
-        let mut chapter_stack = Vec::new();  
+        query_file!("queries/delete_chapters.sql")
+            .execute(&mut tx)
+            .await?;
+
+        let mut chapter_stack = Vec::new();
         let initial_tuple = (0, slug.clone());
         chapter_stack.push(initial_tuple);
 
         for current_chapter in chapters {
-
             let chapter_doc_name = current_chapter.document_short_name;
-            
+
             // Use stack to build chapter slug
             let mut before_chapter_index = chapter_stack.last().clone().unwrap().0;
-            while before_chapter_index != (current_chapter.index_in_parent - 1)  {
+            while before_chapter_index != (current_chapter.index_in_parent - 1) {
                 let last_chapter_index = chapter_stack.last().unwrap().0;
                 if last_chapter_index >= current_chapter.index_in_parent {
                     chapter_stack.pop();
-                }  
-                before_chapter_index = chapter_stack.last().clone().unwrap().0; 
+                }
+                before_chapter_index = chapter_stack.last().clone().unwrap().0;
             }
 
             // Concatenate URL Slugs of all chapters on the path
             let mut chapter_stack_cur = chapter_stack.clone();
             let mut url_slug_cur = current_chapter.url_slug.clone();
-            let final_path = (current_chapter.index_in_parent, current_chapter.url_slug.clone());
+            let final_path = (
+                current_chapter.index_in_parent,
+                current_chapter.url_slug.clone(),
+            );
             chapter_stack.push(final_path);
 
-            while !(chapter_stack_cur.is_empty()){
+            while !(chapter_stack_cur.is_empty()) {
                 let temp_chapter = chapter_stack_cur.pop().unwrap();
                 let cur_slug = temp_chapter.1;
                 url_slug_cur = format!("{}.{}", cur_slug, url_slug_cur);
             }
 
-             // Insert chapter data into database
-             query_file!(
-                 "queries/insert_all_chapters.sql",
-                 current_chapter.chapter_name,
-                 chapter_doc_name,
-                 current_chapter.wordpress_id,
-                 current_chapter.index_in_parent,
-                 url_slug_cur,
-             )
-             .execute(&mut tx)
-             .await?;
+            // Insert chapter data into database
+            query_file!(
+                "queries/insert_all_chapters.sql",
+                current_chapter.chapter_name,
+                chapter_doc_name,
+                current_chapter.wordpress_id,
+                current_chapter.index_in_parent,
+                url_slug_cur,
+            )
+            .execute(&mut tx)
+            .await?;
         }
         tx.commit().await?;
-       
+
         Ok(slug)
     }
 

@@ -1,7 +1,5 @@
+use crate::*;
 use uuid::Uuid;
-use {
-    crate::*,
-};
 
 #[derive(Debug, Clone)]
 pub struct Collection {
@@ -13,13 +11,13 @@ pub struct Collection {
 
     pub intro_chapters: Vec<Chapter>,
 
-    pub genre_chapters: Vec<Chapter>
+    pub genre_chapters: Vec<Chapter>,
 }
 
 #[derive(Debug, Clone)]
 pub struct Chapter {
     pub id: Option<Uuid>,
-    
+
     pub url_slug: String,
 
     pub index_in_parent: i64,

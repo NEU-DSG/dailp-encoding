@@ -3,10 +3,10 @@
 //! specified in modules under `dailp`.
 
 use crate::audio::AudioRes;
-use dailp::collection::Collection;
-use dailp::collection::Chapter;
 use crate::translations::DocResult;
 use anyhow::Result;
+use dailp::collection::Chapter;
+use dailp::collection::Collection;
 use dailp::{
     convert_udb, root_noun_surface_forms, root_verb_surface_forms, AnnotatedDoc, AnnotatedForm,
     AnnotatedSeg, AudioSlice, Contributor, Database, Date, DocumentId, DocumentMetadata,
@@ -132,24 +132,29 @@ impl SheetResult {
         })
     }
 
-    /// Parse this sheet as the collection index. Updates a Collection 
-    /// which contains two Chapter Groups, each of which 
+    /// Parse this sheet as the collection index. Updates a Collection
+    /// which contains two Chapter Groups, each of which
     /// has a list of associated Chapters.
-    pub fn into_collection_index(self,
-        self_title: &String, 
+    pub fn into_collection_index(
+        self,
+        self_title: &String,
         self_wordpress_menu_id: &i64,
-        self_slug: &String) -> Result<Collection> {
+        self_slug: &String,
+    ) -> Result<Collection> {
         let mut chapters = Vec::new();
         let mut self_intro_chapters = Vec::new();
         let mut row = self.values.into_iter();
-        let first_value = row.next().ok_or_else(|| anyhow::format_err!("Missing first value"))?;
-        let second_value = row.next().ok_or_else(|| anyhow::format_err!("Missing second value"))?;
-        for cur_row in row{
-            if cur_row[0].is_empty(){
+        let first_value = row
+            .next()
+            .ok_or_else(|| anyhow::format_err!("Missing first value"))?;
+        let second_value = row
+            .next()
+            .ok_or_else(|| anyhow::format_err!("Missing second value"))?;
+        for cur_row in row {
+            if cur_row[0].is_empty() {
                 self_intro_chapters = chapters;
                 chapters = Vec::<Chapter>::new();
-            }
-            else {
+            } else {
                 // Return error if no index in parent is specified.
                 let index_i64 = (&cur_row[0]).parse::<i64>()?;
 
@@ -168,19 +173,17 @@ impl SheetResult {
                 };
 
                 chapters.push(new_chapter);
-
-                }
-        
             }
-            let self_genre_chapters = chapters;
+        }
+        let self_genre_chapters = chapters;
 
-            Ok(Collection{
-                title: self_title.to_string(),
-                wordpress_menu_id: Some(*self_wordpress_menu_id),
-                slug: self_slug.to_string(),
-                intro_chapters: self_intro_chapters,
-                genre_chapters: self_genre_chapters,
-            })
+        Ok(Collection {
+            title: self_title.to_string(),
+            wordpress_menu_id: Some(*self_wordpress_menu_id),
+            slug: self_slug.to_string(),
+            intro_chapters: self_intro_chapters,
+            genre_chapters: self_genre_chapters,
+        })
     }
 
     pub fn into_adjs(self, doc_id: DocumentId, year: i32) -> Result<Vec<LexicalEntryWithForms>> {
@@ -506,7 +509,6 @@ impl SheetResult {
         all_lines
     }
 }
-
 
 #[derive(Debug, Serialize)]
 pub struct DocumentIndex {
