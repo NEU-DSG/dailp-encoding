@@ -5,10 +5,13 @@ insert into collection_chapter (
     index_in_parent,
     chapter_path)
 values (
-    $1, 
-    (select id
+    $1,
+    ( select id
     from document
-    where title = $2), 
-    $3, 
+    where short_name = $2),
+    $3,
     $4,
-    text2ltree ($5))
+    text2ltree ($5)
+)
+
+

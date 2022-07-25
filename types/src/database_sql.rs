@@ -227,17 +227,15 @@ impl Database {
 
     pub async fn upsert_collection(
         &self,
-        title: String,
-        wordpress_menu_id: i64,
-        slug: String) -> Result<String>{
+        collection: &Collection) -> Result<String>{
         query_file!(
             "queries/upsert_collection.sql",
-            slug,
-            title,
-            wordpress_menu_id)
+            collection.slug,
+            collection.title,
+            collection.wordpress_menu_id)
             .execute(&self.client)
             .await?;
-        Ok(slug)
+        Ok((collection.slug).to_string())
     }
 
     pub async fn insert_all_chapters(
@@ -259,14 +257,12 @@ impl Database {
 
         for current_chapter in chapters {
 
-            // Get chapter Doc ID from document title --> do in query
-            let chapter_doc_name = current_chapter.document_title;
+            let chapter_doc_name = current_chapter.document_short_name;
             
             // Use stack to build chapter slug
             let mut before_chapter_index = chapter_stack.last().clone().unwrap().0;
             while before_chapter_index != (current_chapter.index_in_parent - 1)  {
-                let last_chapter = chapter_stack.last().unwrap();
-                let last_chapter_index = last_chapter.0;
+                let last_chapter_index = chapter_stack.last().unwrap().0;
                 if last_chapter_index >= current_chapter.index_in_parent {
                     chapter_stack.pop();
                 }  
@@ -282,7 +278,7 @@ impl Database {
             while !(chapter_stack_cur.is_empty()){
                 let temp_chapter = chapter_stack_cur.pop().unwrap();
                 let cur_slug = temp_chapter.1;
-                url_slug_cur = cur_slug + "." + &url_slug_cur;
+                url_slug_cur = format!("{}.{}", cur_slug, url_slug_cur);
             }
 
              // Insert chapter data into database

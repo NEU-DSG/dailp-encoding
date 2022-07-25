@@ -3,8 +3,8 @@
 //! specified in modules under `dailp`.
 
 use crate::audio::AudioRes;
-use dailp::chapter::Chapter;
 use dailp::collection::Collection;
+use dailp::collection::Chapter;
 use crate::translations::DocResult;
 use anyhow::Result;
 use dailp::{
@@ -137,49 +137,37 @@ impl SheetResult {
     /// has a list of associated Chapters.
     pub fn into_collection_index(self,
         self_title: &String, 
-        self_wordpress_menu_id: &i64) -> Result<Collection> {
+        self_wordpress_menu_id: &i64,
+        self_slug: &String) -> Result<Collection> {
         let mut chapters = Vec::new();
         let mut self_intro_chapters = Vec::new();
-        for row in self.values.into_iter().skip(2){
-            if row[0].is_empty(){
-                self_intro_chapters = chapters.clone();
+        let mut row = self.values.into_iter();
+        let first_value = row.next().ok_or_else(|| anyhow::format_err!("Missing first value"))?;
+        let second_value = row.next().ok_or_else(|| anyhow::format_err!("Missing second value"))?;
+        for cur_row in row{
+            if cur_row[0].is_empty(){
+                self_intro_chapters = chapters;
                 chapters = Vec::<Chapter>::new();
             }
             else {
-                let index_in_parent_string = row[0].clone();
-                let index_i64 = index_in_parent_string.parse::<i64>().unwrap();
+                // Return error if no index in parent is specified.
+                let index_i64 = (&cur_row[0]).parse::<i64>()?;
 
-                let document_if_applicable = row[3].clone();
-                let mut doc_string= None;
-
-                let wp_id_if_applicable = row[5].clone();
-                let mut wp_id = None;
-
-                if wp_id_if_applicable.is_empty(){
-                    wp_id = None;
-                }
-                else {
-                    wp_id = Some(wp_id_if_applicable.parse::<i64>().unwrap());
-                }
-
-                if document_if_applicable.is_empty() {
-                    doc_string = None;
-                }
-                else {
-                    doc_string = Some(document_if_applicable);
-                }
+                // Both of these fields are optional
+                let wp_id = (&cur_row[4]).parse::<i64>().ok();
+                let doc_string = Some(cur_row[5].to_string());
 
                 let new_chapter = Chapter {
                     index_in_parent: index_i64,
-                    url_slug: row[1].clone(),
-                    chapter_name: row[2].clone(),
-                    document_title: doc_string,
+                    url_slug: (&cur_row[1]).to_string(),
+                    chapter_name: (&cur_row[2]).to_string(),
+                    document_short_name: doc_string,
                     id: None,
                     document_id: None,
                     wordpress_id: wp_id,
                 };
 
-                chapters.push(new_chapter.clone());
+                chapters.push(new_chapter);
 
                 }
         
@@ -188,7 +176,8 @@ impl SheetResult {
 
             Ok(Collection{
                 title: self_title.to_string(),
-                wordpress_menu_id: *self_wordpress_menu_id,
+                wordpress_menu_id: Some(*self_wordpress_menu_id),
+                slug: self_slug.to_string(),
                 intro_chapters: self_intro_chapters,
                 genre_chapters: self_genre_chapters,
             })
