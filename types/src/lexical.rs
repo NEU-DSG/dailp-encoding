@@ -15,14 +15,14 @@ pub struct PositionInDocument {
     /// 1-indexed position indicating where the form sits in the ordering of all
     /// forms in the document. Used for relative ordering of forms from the
     /// same document.
-    pub index: i32,
+    pub index: i64,
     /// What section of the document image corresponds to this item?
     pub geometry: Option<Geometry>,
 }
 
 impl PositionInDocument {
     /// Make a new document position from the document ID, page number, and item index.
-    pub fn new(document_id: DocumentId, page_number: String, index: i32) -> Self {
+    pub fn new(document_id: DocumentId, page_number: String, index: i64) -> Self {
         Self {
             document_id,
             page_number,
@@ -55,6 +55,7 @@ impl PositionInDocument {
         self.make_id(&gloss, use_index)
     }
 
+    /// Create a rough URI-like string for this word with the given morphemic segmentation.
     pub fn make_form_id(&self, segments: &[MorphemeSegment]) -> String {
         format!(
             "{}.{}:{}",
@@ -123,8 +124,9 @@ impl PositionInDocument {
 pub struct LexicalConnection {
     /// Unique ID of this connection, generally formatted as "FROM-TO"
     pub id: String,
-    /// List of all forms or morphemes to associate
+    /// First morpheme to associate
     pub left: MorphemeId,
+    /// Second morpheme to associate
     pub right: MorphemeId,
 }
 impl LexicalConnection {
@@ -145,13 +147,16 @@ impl LexicalConnection {
     }
 }
 
-/// Uniquely identifies a particular form based on its parent [`DocumentId`],
-/// gloss, and index within that document.
+/// Uniquely identifies a particular generalized morpheme based on its parent
+/// document, gloss, and index within that document.
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, Hash)]
 #[serde(rename_all = "camelCase")]
 pub struct MorphemeId {
+    /// Short name of the document containing this morpheme gloss
     pub document_name: Option<String>,
+    /// English gloss translating the morpheme
     pub gloss: String,
+    /// Zero-based index within the containing word
     pub index: Option<i32>,
 }
 impl MorphemeId {
@@ -208,6 +213,7 @@ impl std::fmt::Display for MorphemeId {
     }
 }
 
+/// Parse spreadsheet cells into many verb forms with morphemic segmentations.
 pub fn seg_verb_surface_forms(
     position: &PositionInDocument,
     date: &Date,
@@ -230,6 +236,7 @@ pub fn seg_verb_surface_forms(
     forms
 }
 
+/// Parse spreadsheet cells into one verb form with a morphemic segmentation.
 pub fn seg_verb_surface_form(
     position: PositionInDocument,
     date: &Date,
@@ -331,24 +338,22 @@ pub fn root_verb_surface_form(
     // Each form has an empty column before it.
     // Then follows the morphemic segmentation.
     // All tags except the last one come before the root.
-    let (mut morpheme_tags, phonemic) = all_tags(&mut cols.filter(|x| !x.is_empty()));
+    let (morpheme_tags, phonemic) = all_tags(cols);
     if morpheme_tags.is_empty() {
         return None;
     }
-    let asp_morpheme = morpheme_tags.remove(0);
-    let mod_morpheme = morpheme_tags.pop()?;
+
     let mut morphemes = morpheme_tags
         .iter()
         .map(|(_tag, src)| src.trim())
-        .chain(vec![root, &asp_morpheme.1, &mod_morpheme.1])
-        .filter(|s| !s.is_empty())
+        .chain(vec![root])
         .map(|s| convert_udb(s).into_dailp());
     let morpheme_layer = morphemes.join("-");
+
     let mut morpheme_glosses = morpheme_tags
         .iter()
         .map(|(tag, _src)| tag.trim())
-        .chain(vec![root_gloss, &*asp_morpheme.0, &*mod_morpheme.0])
-        .filter(|s| !s.is_empty());
+        .chain(vec![root_gloss]);
     let gloss_layer = morpheme_glosses.join("-");
     // Then, the representations of the full word.
     let phonemic = phonemic?;
@@ -400,7 +405,7 @@ pub fn root_verb_surface_form(
 /// with the phonemic shape of the whole root.
 fn all_tags(cols: &mut impl Iterator<Item = String>) -> (Vec<(String, String)>, Option<String>) {
     let mut tags = Vec::new();
-    let mut cols = cols.by_ref().peekable();
+    let mut cols = cols.peekable();
     // Tags are all uppercase ascii and numbers, followed by the corresponding morpheme.
     while let Some(true) = cols
         .peek()
@@ -415,6 +420,8 @@ fn all_tags(cols: &mut impl Iterator<Item = String>) -> (Vec<(String, String)>, 
     (tags, cols.next())
 }
 
+/// Parse an iterator of spreadsheet cells into root noun forms ready to insert
+/// into the database.
 pub fn root_noun_surface_forms(
     position: &PositionInDocument,
     date: &Date,
@@ -537,6 +544,7 @@ pub fn convert_udb(input: &str) -> PhonemicString {
 /// Vowels: struct-defined
 #[derive(Debug)]
 pub enum PhonemicString {
+    /// A whole word consisting of several consonant and vowel clusters
     Form(Vec<PhonemicString>),
     /// For example, "hn"
     Consonant(String),
@@ -544,6 +552,7 @@ pub enum PhonemicString {
     Vowel(String, VowelType),
 }
 impl PhonemicString {
+    /// Parse a phonetic romanization in internal DAILP form.
     pub fn parse_dailp(input: &str) -> Self {
         use {
             lazy_static::lazy_static, maplit::hashmap, std::collections::HashMap,
@@ -651,6 +660,8 @@ impl PhonemicString {
             PhonemicString::Form(syllables)
         }
     }
+
+    /// Parse a phonetic romanization in CRG form.
     pub fn parse_crg(input: &str) -> Self {
         use {
             lazy_static::lazy_static, maplit::hashmap, std::collections::HashMap,
@@ -763,6 +774,8 @@ impl PhonemicString {
         }
     }
 
+    /// Convert the consonants and vowels in this Cherokee phonetic string into
+    /// the internal DAILP representation.
     pub fn into_dailp(self) -> String {
         use {itertools::Itertools, unicode_normalization::UnicodeNormalization};
         match self {
@@ -788,6 +801,8 @@ impl PhonemicString {
         }
     }
 
+    /// Convert the consonants and vowels in this Cherokee phonetic string into
+    /// a form compatible with Cherokee Reference Grammar (CRG).
     pub fn into_crg(self) -> String {
         use {itertools::Itertools, unicode_normalization::UnicodeNormalization, VowelType::*};
         match self {
@@ -879,6 +894,8 @@ fn dt_to_tth(input: &str, keep_glottal_stops: bool, replace_colons: Option<&str>
     result.into_owned()
 }
 
+/// Convert consonants in the given d/t phonetics string into their Worcester
+/// phonetics equivalents. gw => qu, j => ts
 pub fn simple_phonetics_to_worcester(input: &str) -> String {
     use {
         lazy_static::lazy_static,
@@ -978,17 +995,28 @@ fn tth_to_dt(
     result.into_owned()
 }
 
+/// Cherokee vowel categories based on tone and length
 #[derive(Debug, Clone, Copy)]
 pub enum VowelType {
+    /// Short sound, low flat tone
     ShortLow,
+    /// Short sound, high flat tone
     ShortHigh,
+    /// Short sound, low falling tone
     ShortLowfall,
+    /// Short sound, high rising tone
     ShortSuperhigh,
+    /// Long sound, low flat tone
     LongLow,
+    /// Long sound, high flat tone
     LongHigh,
+    /// Long sound, rising tone
     Rising,
+    /// Long sound, falling tone
     Falling,
+    /// Long sound, low falling tone
     Lowfall,
+    /// Long sound, high rising tone
     Superhigh,
 }
 

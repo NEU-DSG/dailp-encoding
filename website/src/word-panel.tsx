@@ -2,14 +2,13 @@ import React, { ReactNode } from "react"
 import { AiFillCaretDown, AiFillCaretUp, AiFillSound } from "react-icons/ai"
 import { IoEllipsisHorizontalCircle } from "react-icons/io5"
 import { MdClose, MdNotes, MdRecordVoiceOver } from "react-icons/md"
-import { Button } from "reakit/Button"
 import {
   Disclosure,
   DisclosureContent,
   useDisclosureState,
 } from "reakit/Disclosure"
+import { AudioPlayer, IconButton } from "src/components"
 import * as Dailp from "src/graphql/dailp"
-import { FormAudio } from "./audio-player"
 import { usePreferences } from "./preferences-context"
 import { BasicMorphemeSegment } from "./types"
 import * as css from "./word-panel.css"
@@ -26,20 +25,20 @@ export const WordPanel = (p: {
 }) => {
   const { cherokeeRepresentation } = usePreferences()
   if (!p.segment) {
-    return <p>No word has been selected</p>
+    return null
   }
 
   const translation = p.segment.englishGloss.join(", ")
 
   return (
     <div className={css.wordPanelContent}>
-      <Button
+      <IconButton
         className={css.wordPanelButton.basic}
         onClick={() => p.setContent(null)}
         aria-label="Dismiss selected word information"
       >
         <MdClose size={32} />
-      </Button>
+      </IconButton>
       <header className={css.wordPanelHeader}>
         <h1 className={css.noSpaceBelow}>Selected Word</h1>
         <h2 className={css.cherHeader}>{p.segment.source}</h2>
@@ -191,13 +190,13 @@ const AudioPanel = (p: { segment: Dailp.FormFieldsFragment }) => {
           content={
             <div>
               {
-                <FormAudio
-                  endTime={p.segment.audioTrack.endTime}
-                  index={p.segment.audioTrack.index}
-                  parentTrack=""
-                  resourceUrl={p.segment.audioTrack.resourceUrl}
-                  startTime={p.segment.audioTrack.startTime}
-                  showProgress={true}
+                <AudioPlayer
+                  audioUrl={p.segment.audioTrack.resourceUrl}
+                  slices={{
+                    start: p.segment.audioTrack.startTime!,
+                    end: p.segment.audioTrack.endTime!,
+                  }}
+                  showProgress
                 />
               }
             </div>

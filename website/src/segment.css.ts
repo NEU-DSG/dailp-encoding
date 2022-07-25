@@ -2,15 +2,15 @@ import { StyleRule, style, styleVariants } from "@vanilla-extract/css"
 import { borderWidth, margin } from "polished"
 import {
   colors,
+  fonts,
   hspace,
   mediaQueries,
   radii,
-  std,
-  theme,
   thickness,
   vspace,
-} from "src/sprinkles.css"
-import { marginY, paddingX, paddingY } from "./style-utils"
+} from "src/style/constants"
+import { marginY, paddingX, paddingY } from "src/style/utils"
+import { std } from "src/style/utils.css"
 
 export const pageBreak = style({
   display: "block",
@@ -93,7 +93,7 @@ export const wordGroup = style([
 
 export const selectedWord = style({
   borderColor: "black",
-  backgroundColor: colors.header,
+  backgroundColor: colors.bodyDark,
   "@media": {
     [mediaQueries.medium]: {
       borderColor: "black",
@@ -102,12 +102,12 @@ export const selectedWord = style({
 })
 
 export const syllabaryLayer = style({
-  fontFamily: theme.fonts.cherokee,
+  fontFamily: fonts.cherokee,
   fontSize: "1.15rem",
 })
 
 export const syllabarySelectedLayer = style({
-  fontFamily: theme.fonts.cherokee,
+  fontFamily: fonts.cherokee,
   fontSize: "1.15rem",
   display: "block",
   borderWidth: thickness.thick,
@@ -120,7 +120,7 @@ export const syllabarySelectedLayer = style({
 
 export const plainSyllabary = style({
   marginRight: hspace.char,
-  fontFamily: theme.fonts.cherokee,
+  fontFamily: fonts.cherokee,
   fontSize: "1.15rem",
 })
 
@@ -202,12 +202,12 @@ export const infoIcon = style({
   },
 })
 
-export const linkSvg = style({ fill: colors.link })
+export const linkSvg = style({ fill: colors.primary })
 
 export const fillerLine = style([
   {
     borderWidth: 0,
-    borderBottom: `1px solid ${theme.colors.text}`,
+    borderBottom: `1px solid ${colors.text}`,
     background: "none",
     textAlign: "start",
     width: "100%",

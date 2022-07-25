@@ -1,6 +1,5 @@
 import React, { useEffect } from "react"
 import { MdClose, MdSettings } from "react-icons/md"
-import { Button } from "reakit/Button"
 import {
   Dialog,
   DialogBackdrop,
@@ -13,7 +12,9 @@ import {
   RadioStateReturn,
   useRadioState,
 } from "reakit/Radio"
+import { IconButton, Label, Select } from "src/components"
 import * as Dailp from "src/graphql/dailp"
+import { std } from "src/style/utils.css"
 import * as css from "./mode.css"
 import { usePreferences } from "./preferences-context"
 import { ViewMode } from "./types"
@@ -68,7 +69,7 @@ export const ExperiencePicker = (p: {
     p.onSelect(value)
   }, [value])
   return (
-    <select
+    <Select
       name="experience-picker"
       id={p.id}
       value={value}
@@ -79,7 +80,7 @@ export const ExperiencePicker = (p: {
           {details.label}
         </option>
       ))}
-    </select>
+    </Select>
   )
 }
 
@@ -94,7 +95,7 @@ export const PhoneticsPicker = (p: {
     p.onSelect(value)
   }, [value])
   return (
-    <select
+    <Select
       name="phonetics-picker"
       value={value}
       onChange={(e) => setValue(e.target.value as Dailp.CherokeeOrthography)}
@@ -107,7 +108,7 @@ export const PhoneticsPicker = (p: {
           </option>
         )
       )}
-    </select>
+    </Select>
   )
 }
 
@@ -115,7 +116,7 @@ export const PrefPanel = () => {
   const preferences = usePreferences()
   return (
     <div className={css.settingsContainer}>
-      <label>Level of Detail:</label>
+      <Label>Level of Detail:</Label>
       <ExperiencePicker
         aria-described-by={"Selected-ViewMode"}
         onSelect={preferences.setViewMode}
@@ -144,28 +145,23 @@ export const HeaderPrefDrawer = () => {
 
   return (
     <div className={css.prefButtonShell}>
-      <DialogDisclosure
-        {...dialog}
-        aria-label="Settings"
-        className={css.prefButton}
-      >
+      <DialogDisclosure {...dialog} aria-label="Settings" as={IconButton}>
         <MdSettings size={32} />
       </DialogDisclosure>
       <DialogBackdrop {...dialog} className={css.prefBG}>
         <Dialog
           {...dialog}
-          as="div"
           className={css.prefDrawer}
           aria-label="Settings Dialog"
         >
           <h1>Display Settings</h1>
-          <Button
+          <IconButton
             className={css.closeButton}
             onClick={dialog.hide}
             aria-label="Dismiss display settings dialog"
           >
             <MdClose size={32} />
-          </Button>
+          </IconButton>
           <PrefPanel />
         </Dialog>
       </DialogBackdrop>

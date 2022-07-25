@@ -1,6 +1,7 @@
 use crate::*;
 use async_graphql::FieldResult;
 use serde::{Deserialize, Serialize};
+use sqlx::postgres::{PgHasArrayType, PgTypeInfo};
 use std::borrow::Cow;
 
 /// A single unit of meaning and its corresponding English gloss.
@@ -13,6 +14,8 @@ pub struct MorphemeSegment {
     pub morpheme: String,
     /// Target language representation of this segment.
     pub gloss: String,
+    /// Database ID for the associated gloss, which may be shared by several
+    /// morphemes in the same document.
     #[serde(skip)]
     pub gloss_id: Option<Uuid>,
     /// What kind of thing is the next segment?
@@ -36,6 +39,16 @@ pub enum SegmentType {
     Clitic,
     /// Separated by a colon ':'
     Combine,
+}
+
+impl PgHasArrayType for SegmentType {
+    fn array_type_info() -> PgTypeInfo {
+        <&str as PgHasArrayType>::array_type_info()
+    }
+
+    fn array_compatible(ty: &PgTypeInfo) -> bool {
+        <&str as PgHasArrayType>::array_compatible(ty)
+    }
 }
 
 impl MorphemeSegment {

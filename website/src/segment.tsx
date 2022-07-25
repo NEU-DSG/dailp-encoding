@@ -1,14 +1,13 @@
 import { Tooltip } from "@reach/tooltip"
 import "@reach/tooltip/styles.css"
 import cx from "classnames"
-import { Howl } from "howler"
 import React from "react"
 import { MdCircle, MdInfoOutline } from "react-icons/md"
 import * as Dailp from "src/graphql/dailp"
 import { DocumentContents } from "src/pages/documents/document.page"
+import { std } from "src/style/utils.css"
 import { CleanButton } from "./components"
 import * as css from "./segment.css"
-import { std } from "./sprinkles.css"
 import { BasicMorphemeSegment, ViewMode } from "./types"
 import { WordPanelDetails } from "./word-panel"
 
@@ -80,7 +79,7 @@ export const DocumentParagraph = (
 }
 
 /** Displays one segment of the document, which may be a word, block, or phrase. */
-export const Segment = (p: Props & { howl?: Howl }) => {
+export const Segment = (p: Props) => {
   const segment = p.segment
   if (segment.__typename === "AnnotatedForm") {
     return <AnnotatedForm {...p} segment={segment} />

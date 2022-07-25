@@ -2,8 +2,7 @@ import { groupBy } from "lodash"
 import React from "react"
 import { ReactNode } from "react"
 import { MdClose } from "react-icons/md"
-import { Clickable } from "reakit/Clickable"
-import Link from "src/components/link"
+import { IconButton, Link } from "src/components"
 import * as Dailp from "src/graphql/dailp"
 import * as css from "./morpheme.css"
 import { documentWordPath, glossaryRoute } from "./routes"
@@ -53,14 +52,13 @@ export const MorphemeDetails = (props: {
   return (
     <>
       {titleArea}
-      <Clickable
+      <IconButton
         className={css.closeButton}
-        role="button"
         aria-label="Close Dialog"
         onClick={props.hideDialog}
       >
         <MdClose size={32} />
-      </Clickable>
+      </IconButton>
       <div className={css.scrollable}>
         {content}
         <SimilarMorphemeList

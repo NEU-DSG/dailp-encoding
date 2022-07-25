@@ -1,3 +1,5 @@
+#![allow(missing_docs)]
+
 //! This module includes types which are intended to represent the [IIIF
 //! Presentation API specification](https://iiif.io/api/presentation/3.0/).
 //! We use these types to build IIIF manifests for any annotated document,
@@ -42,7 +44,7 @@ impl Manifest {
             join!(
                 db.image_source_by_id(page_images.source),
                 // annot_db.on_document(&doc.meta.id),
-                db.words_in_document(doc.meta.id)
+                db.words_in_document(doc.meta.id, None, None)
             )
         };
         let annotations: Vec<crate::annotation::Annotation> = Vec::new();

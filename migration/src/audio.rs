@@ -1,13 +1,14 @@
 use dailp::{AudioSlice, DocumentAudioId};
-use reqwest::Client;
-use serde::{Deserialize, Serialize};
-
-extern crate pretty_env_logger;
-
 use itertools::Itertools;
 use log::{error, info};
+use reqwest::Client;
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use std::collections::{HashMap, HashSet};
+use std::{
+    collections::{HashMap, HashSet},
+    time::Duration,
+};
+use tokio::time::sleep;
 
 /// The string ID for a DRS item, usu. prefixed with "neu:"
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -31,12 +32,21 @@ impl DrsRes {
     // TODO: flatten information held in ComplexDrsObjects
     pub async fn new(client: &Client, drs_id: &str) -> Result<Self, anyhow::Error> {
         let drs = "https://repository.library.northeastern.edu/api/v1/files/";
-        Ok(client
-            .get(format!("{}{}", drs, drs_id))
-            .send()
-            .await?
-            .json::<DrsRes>()
-            .await?)
+        let mut tries = 0;
+        Ok(loop {
+            let r = client
+                .get(format!("{}{}", drs, drs_id))
+                .send()
+                .await?
+                .json::<DrsRes>()
+                .await;
+
+            if r.is_ok() || tries > 7 {
+                break r;
+            }
+            sleep(Duration::from_millis(1000 * 2_u64.pow(tries))).await;
+            tries += 1;
+        }?)
     }
 }
 

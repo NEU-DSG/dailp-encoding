@@ -7,7 +7,7 @@ import {
   makeOperation,
 } from "urql"
 
-export const apolloClient = (token: string | null) =>
+export const graphqlClient = (token: string | null) =>
   createClient({
     url: process.env["DAILP_API_URL"] + (token ? "/graphql-edit" : "/graphql"),
     exchanges: [

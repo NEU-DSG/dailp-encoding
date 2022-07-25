@@ -7181,8 +7181,6 @@ export enum TimezoneEnum {
   AustraliaBrisbane = "AUSTRALIA_BRISBANE",
   /** Broken Hill */
   AustraliaBrokenHill = "AUSTRALIA_BROKEN_HILL",
-  /** Currie */
-  AustraliaCurrie = "AUSTRALIA_CURRIE",
   /** Darwin */
   AustraliaDarwin = "AUSTRALIA_DARWIN",
   /** Eucla */
@@ -7355,8 +7353,6 @@ export enum TimezoneEnum {
   PacificEaster = "PACIFIC_EASTER",
   /** Efate */
   PacificEfate = "PACIFIC_EFATE",
-  /** Enderbury */
-  PacificEnderbury = "PACIFIC_ENDERBURY",
   /** Fakaofo */
   PacificFakaofo = "PACIFIC_FAKAOFO",
   /** Fiji */
@@ -7373,6 +7369,8 @@ export enum TimezoneEnum {
   PacificGuam = "PACIFIC_GUAM",
   /** Honolulu */
   PacificHonolulu = "PACIFIC_HONOLULU",
+  /** Kanton */
+  PacificKanton = "PACIFIC_KANTON",
   /** Kiritimati */
   PacificKiritimati = "PACIFIC_KIRITIMATI",
   /** Kosrae */
@@ -8569,27 +8567,42 @@ export type PageIndexQuery = { readonly __typename?: "RootQuery" } & {
   >
 }
 
-export type MainMenuQueryVariables = Exact<{ [key: string]: never }>
+export type MenuByIdQueryVariables = Exact<{
+  id: Scalars["Int"]
+}>
 
-export type MainMenuQuery = { readonly __typename?: "RootQuery" } & {
-  readonly menuItems: Maybe<
-    { readonly __typename?: "RootQueryToMenuItemConnection" } & {
+export type MenuByIdQuery = { readonly __typename?: "RootQuery" } & {
+  readonly menus: Maybe<
+    { readonly __typename?: "RootQueryToMenuConnection" } & {
       readonly nodes: Maybe<
         ReadonlyArray<
           Maybe<
-            { readonly __typename?: "MenuItem" } & Pick<
-              MenuItem,
-              "label" | "path"
-            > & {
-                readonly childItems: Maybe<
-                  { readonly __typename?: "MenuItemToMenuItemConnection" } & {
+            { readonly __typename?: "Menu" } & Pick<Menu, "databaseId"> & {
+                readonly menuItems: Maybe<
+                  { readonly __typename?: "MenuToMenuItemConnection" } & {
                     readonly nodes: Maybe<
                       ReadonlyArray<
                         Maybe<
                           { readonly __typename?: "MenuItem" } & Pick<
                             MenuItem,
                             "label" | "path"
-                          >
+                          > & {
+                              readonly childItems: Maybe<
+                                {
+                                  readonly __typename?: "MenuItemToMenuItemConnection"
+                                } & {
+                                  readonly nodes: Maybe<
+                                    ReadonlyArray<
+                                      Maybe<
+                                        {
+                                          readonly __typename?: "MenuItem"
+                                        } & Pick<MenuItem, "label" | "path">
+                                      >
+                                    >
+                                  >
+                                }
+                              >
+                            }
                         >
                       >
                     >
@@ -8639,16 +8652,21 @@ export function usePageIndexQuery(
 ) {
   return Urql.useQuery<PageIndexQuery>({ query: PageIndexDocument, ...options })
 }
-export const MainMenuDocument = gql`
-  query MainMenu {
-    menuItems(where: { parentId: 1 }) {
+export const MenuByIdDocument = gql`
+  query MenuByID($id: Int!) {
+    menus(where: { id: $id }) {
       nodes {
-        label
-        path
-        childItems {
+        databaseId
+        menuItems(where: { parentDatabaseId: 0 }) {
           nodes {
             label
             path
+            childItems {
+              nodes {
+                label
+                path
+              }
+            }
           }
         }
       }
@@ -8656,8 +8674,8 @@ export const MainMenuDocument = gql`
   }
 `
 
-export function useMainMenuQuery(
-  options?: Omit<Urql.UseQueryArgs<MainMenuQueryVariables>, "query">
+export function useMenuByIdQuery(
+  options: Omit<Urql.UseQueryArgs<MenuByIdQueryVariables>, "query">
 ) {
-  return Urql.useQuery<MainMenuQuery>({ query: MainMenuDocument, ...options })
+  return Urql.useQuery<MenuByIdQuery>({ query: MenuByIdDocument, ...options })
 }

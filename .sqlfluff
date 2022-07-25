@@ -31,3 +31,5 @@ param_style = numeric_dollar
 10 = 'ten'
 11 = 'eleven'
 12 = 'twelve'
+13 = 'thirteen'
+14 = 'fourteen'

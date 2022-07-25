@@ -1,16 +1,11 @@
 import { style } from "@vanilla-extract/css"
-import sprinkles from "src/sprinkles.css"
+import { margin, padding } from "polished"
+import { hspace, vspace } from "src/style/constants"
 
-export const margined = sprinkles({
-  marginX: "edge",
-  marginY: "half",
-})
+export const margined = style(margin(vspace.half, hspace.edge))
 
 export const scrollable = style([
-  sprinkles({
-    paddingY: "half",
-    paddingX: "edge",
-  }),
+  padding(vspace.half, hspace.edge),
   {
     overflowY: "scroll",
     WebkitOverflowScrolling: "touch",
@@ -20,16 +15,8 @@ export const scrollable = style([
   },
 ])
 
-export const closeButton = style([
-  sprinkles({
-    position: "absolute",
-    top: "half",
-    right: "halfEdge",
-    padding: 0,
-  }),
-  {
-    cursor: "pointer",
-    border: "none",
-    background: "none",
-  },
-])
+export const closeButton = style({
+  position: "absolute",
+  top: vspace.half,
+  right: hspace.halfEdge,
+})

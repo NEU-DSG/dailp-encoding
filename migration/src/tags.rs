@@ -1,4 +1,3 @@
-use crate::batch_join_all;
 use crate::spreadsheets::SheetResult;
 use anyhow::Result;
 use dailp::{Database, MorphemeTag, SegmentType, TagForm, Uuid};
@@ -21,7 +20,9 @@ pub async fn migrate_tags(db: &Database) -> Result<()> {
     let glossary = parse_tag_glossary(glossary?)?;
 
     // Insert all of the internal tags that each system will convert from.
-    batch_join_all(glossary.into_iter().map(|tag| db.insert_abstract_tag(tag))).await?;
+    for tag in glossary {
+        db.insert_abstract_tag(tag).await?;
+    }
 
     let crg = db
         .insert_morpheme_system("CRG".into(), "Cherokee Reference Grammar".into())
@@ -71,7 +72,11 @@ async fn sync_morpheme_system(db: &Database, sheet_name: &str, system_id: Uuid) 
         })
     });
 
-    batch_join_all(glossary.map(|tag| db.insert_morpheme_tag(tag, system_id))).await?;
+    println!("Pushing tags to db...");
+    for tag in glossary {
+        db.insert_morpheme_tag(tag, system_id).await?;
+    }
+
     Ok(())
 }
 

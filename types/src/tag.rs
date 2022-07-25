@@ -32,6 +32,8 @@ pub struct TagForm {
     /// A prose description of what this morpheme means and how it works in
     /// context.
     pub definition: String,
+    /// What kind of morpheme is this? Examples are "Prepronominal Prefix" or
+    /// "Aspectual Suffix"
     pub morpheme_type: String,
     /// Overrides the segment type of instances of this tag.
     pub segment_type: Option<SegmentType>,

@@ -2,13 +2,14 @@ import { globalStyle } from "@vanilla-extract/css"
 import { important } from "polished"
 import {
   colors,
+  fonts,
   mediaQueries,
+  rhythm,
   rootFontSize,
-  theme,
-  vspace,
-} from "./sprinkles.css"
-import { paddingY } from "./style-utils"
-import { typography } from "./theme"
+  thickness,
+  typography,
+} from "src/style/constants"
+import { paddingY } from "src/style/utils"
 
 const t: Record<string, any> = typography.toJSON()
 for (const selector in t) {
@@ -32,7 +33,8 @@ globalStyle("html", {
 globalStyle("body", {
   margin: 0,
   padding: 0,
-  fontFamily: theme.fonts.body,
+  fontFamily: fonts.body,
+  backgroundColor: colors.body,
   "@media": {
     [mediaQueries.print]: important({
       color: "black",
@@ -66,31 +68,10 @@ globalStyle("@page :right :header", {
   content: "first(chapter), , decimal(pageno)",
 })
 
-globalStyle("a", {
-  color: colors.link,
-  textDecorationThickness: "0.08em",
-  textDecorationSkipInk: "none",
-  textDecorationStyle: "dotted",
-  borderRadius: 0,
-  outlineColor: colors.link,
-  "@media": {
-    [mediaQueries.print]: {
-      color: "inherit",
-      textDecoration: "none",
-    },
-  },
-})
-
-globalStyle("a:hover", {
-  textDecorationStyle: "solid",
-})
-
-globalStyle("a:active, a:focus", {
-  textDecoration: "none",
-})
-
-globalStyle("button:focus, a:focus, img:focus, *[tabindex]:focus", {
-  outline: `thin solid ${colors.link}`,
+globalStyle("*:focus", {
+  ...important({
+    outline: `${thickness.thick} solid ${colors.focus}`,
+  }),
   outlineOffset: 0,
   "@media": {
     [mediaQueries.print]: {
@@ -99,12 +80,18 @@ globalStyle("button:focus, a:focus, img:focus, *[tabindex]:focus", {
   },
 })
 
+globalStyle(
+  "*:focus:not(:focus-visible)",
+  important({
+    outline: "none",
+  })
+)
+
 globalStyle("main", {
-  backgroundColor: colors.body,
   display: "flex",
   flexFlow: "column wrap",
   alignItems: "center",
-  ...paddingY(vspace.one),
+  ...paddingY(rhythm(1)),
   "@media": {
     [mediaQueries.print]: {
       display: "block",
@@ -115,7 +102,7 @@ globalStyle("main", {
 
 globalStyle("h1, h2, h3, h4, h5, h6, header", {
   color: colors.headings,
-  fontFamily: theme.fonts.header,
+  fontFamily: fonts.header,
   "@media": {
     [mediaQueries.print]: {
       color: "black",
@@ -153,7 +140,7 @@ globalStyle("figure", {
 })
 
 globalStyle("dd", {
-  marginLeft: vspace.one,
+  marginLeft: rhythm(1),
 })
 
 globalStyle("textarea", {
