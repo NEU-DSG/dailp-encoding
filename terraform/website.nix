@@ -62,6 +62,7 @@ with builtins; {
             DAILP_USER_POOL = "\${aws_cognito_user_pool.main.id}";
             DAILP_USER_POOL_CLIENT = "\${aws_cognito_user_pool_client.main.id}";
             TF_STAGE = config.setup.stage;
+            VITE_DEPLOYMENT_ENV = config.setup.stage;
           };
           frontend = {
             artifacts = {
