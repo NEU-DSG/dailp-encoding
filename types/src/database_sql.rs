@@ -248,7 +248,7 @@ impl Database {
         let mut tx = self.client.begin().await?;
 
         // Delete previous chapter data stored for a particular collection before re-inserting
-        let collection_slug = PgLQuery::from_str(&[slug.clone(), ".*".to_string()].concat())?;
+        let collection_slug = PgLQuery::from_str(&(format!("{}.*", slug)))?;
         query_file!("queries/delete_chapters_in_collection.sql", collection_slug,)
             .execute(&mut tx)
             .await?;

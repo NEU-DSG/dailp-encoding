@@ -175,7 +175,7 @@ impl SheetResult {
 
                 let mut doc_string = None;
                 if row_values.peek().is_some() {
-                    doc_string = Some(row_values.next().unwrap());
+                    doc_string = row_values.next();
                 }
 
                 let new_chapter = Chapter {
