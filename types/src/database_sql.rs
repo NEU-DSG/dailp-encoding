@@ -1,4 +1,7 @@
+use sqlx::postgres::types::PgLQuery;
+use sqlx::postgres::types::PgLTree;
 use std::ops::Bound;
+use std::str::FromStr;
 use {
     crate::*,
     anyhow::Result,
@@ -244,8 +247,9 @@ impl Database {
     ) -> Result<String> {
         let mut tx = self.client.begin().await?;
 
-        // Delete all chapter data before re-inserting
-        query_file!("queries/delete_chapters.sql")
+        // Delete previous chapter data stored for a particular collection before re-inserting
+        let collection_slug = PgLQuery::from_str(&[slug.clone(), ".*".to_string()].concat())?;
+        query_file!("queries/delete_chapters_in_collection.sql", collection_slug,)
             .execute(&mut tx)
             .await?;
 
@@ -281,14 +285,16 @@ impl Database {
                 url_slug_cur = format!("{}.{}", cur_slug, url_slug_cur);
             }
 
+            let url_slug = PgLTree::from_str(&url_slug_cur)?;
+
             // Insert chapter data into database
             query_file!(
-                "queries/insert_all_chapters.sql",
+                "queries/insert_one_chapter.sql",
                 current_chapter.chapter_name,
                 chapter_doc_name,
                 current_chapter.wordpress_id,
                 current_chapter.index_in_parent,
-                url_slug_cur,
+                url_slug,
             )
             .execute(&mut tx)
             .await?;

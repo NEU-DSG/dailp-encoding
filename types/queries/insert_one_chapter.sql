@@ -11,7 +11,7 @@ values (
     where short_name = $2),
     $3,
     $4,
-    text2ltree ($5)
+    $5
 )
 
 

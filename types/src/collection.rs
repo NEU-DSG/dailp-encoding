@@ -26,7 +26,5 @@ pub struct Chapter {
 
     pub document_short_name: Option<String>,
 
-    pub document_id: Option<DocumentId>,
-
     pub wordpress_id: Option<i64>,
 }

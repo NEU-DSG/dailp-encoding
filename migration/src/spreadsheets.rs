@@ -155,20 +155,35 @@ impl SheetResult {
                 self_intro_chapters = chapters;
                 chapters = Vec::<Chapter>::new();
             } else {
-                // Return error if no index in parent is specified.
-                let index_i64 = (&cur_row[0]).parse::<i64>()?;
+                let mut row_values = cur_row.into_iter().peekable();
 
-                // Both of these fields are optional
-                let wp_id = (&cur_row[4]).parse::<i64>().ok();
-                let doc_string = Some(cur_row[5].to_string());
+                // Chapter Depth, URL Slug, and Chapter Name are all required
+                let index_i64 = row_values.next().unwrap().parse()?;
+                let chapter_url_slug = row_values.next().unwrap();
+                let cur_chapter_name = row_values.next().unwrap();
+
+                // Next field is author, which is optional, and not stored
+                if row_values.peek().is_some() {
+                    row_values.next().unwrap();
+                }
+
+                // Both of these fields are optional, and will panic if out of bounds
+                let mut wp_id = None;
+                if row_values.peek().is_some() {
+                    wp_id = row_values.next().unwrap().parse::<i64>().ok();
+                }
+
+                let mut doc_string = None;
+                if row_values.peek().is_some() {
+                    doc_string = Some(row_values.next().unwrap());
+                }
 
                 let new_chapter = Chapter {
                     index_in_parent: index_i64,
-                    url_slug: (&cur_row[1]).to_string(),
-                    chapter_name: (&cur_row[2]).to_string(),
+                    url_slug: chapter_url_slug,
+                    chapter_name: cur_chapter_name,
                     document_short_name: doc_string,
                     id: None,
-                    document_id: None,
                     wordpress_id: wp_id,
                 };
 
