@@ -8,6 +8,7 @@ use std::borrow::Cow;
 #[derive(Serialize, Clone, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct MorphemeSegment {
+    /// Which Cherokee representation system is this segment written with?
     #[serde(skip)]
     pub system: Option<CherokeeOrthography>,
     /// Source language representation of this segment.
@@ -21,8 +22,10 @@ pub struct MorphemeSegment {
     /// What kind of thing is the next segment?
     ///
     /// This field determines what character should separate this segment from
-    /// the next one when reconstituting the full segmentation string.
+    /// the next one when reconstituting a full segmentation string.
     pub segment_type: SegmentType,
+    /// Optional glossary entry for this segment which gives further information,
+    /// like a definition and example usages.
     pub matching_tag: Option<TagForm>,
 }
 
