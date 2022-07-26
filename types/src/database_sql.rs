@@ -607,7 +607,7 @@ impl Database {
             .unique_by(|(gloss, _)| gloss.clone())
             .map(|(gloss, stem)| {
                 (
-                    gloss.clone(),
+                    gloss,
                     stem.segments.as_ref().unwrap()[0].morpheme.clone(),
                 )
             })
@@ -682,7 +682,7 @@ impl Database {
                     form.simple_phonetics.as_deref(),
                     form.phonemic.as_deref(),
                     form.english_gloss.get(0).map(|s| &**s),
-                    form.date_recorded.as_ref().map(|d| d.0.clone()),
+                    form.date_recorded.as_ref().map(|d| d.0),
                     form.commentary.as_deref(),
                     &*form.position.page_number,
                     form.position.index as i64,
@@ -819,7 +819,7 @@ impl Database {
 
                     (
                         document_id,
-                        gloss.clone(),
+                        gloss,
                         word_id,
                         index as i64,
                         segment.morpheme,

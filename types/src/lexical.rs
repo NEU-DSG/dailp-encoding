@@ -844,7 +844,7 @@ impl PhonemicString {
 }
 
 fn reduce_long_vowels(input: &str) -> &str {
-    let first_char = input.chars().nth(0).unwrap();
+    let first_char = input.chars().next().unwrap();
     if input.chars().all(|c| c == first_char) {
         &input[0..1]
     } else {
