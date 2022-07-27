@@ -20,13 +20,13 @@ export const IconButton = ({
 
 type IconTextButtonProps<C extends React.ElementType> = ButtonProps & {
   icon: ReactNode
-  text: string
+  children: ReactNode
   as?: C
 }
 
 export const IconTextButton = <C extends React.ElementType>({
   icon,
-  text,
+  children,
   as,
   ...props
 }: IconTextButtonProps<C>) => {
@@ -35,7 +35,7 @@ export const IconTextButton = <C extends React.ElementType>({
   return (
     <Component {...props}>
       {icon}
-      {text}
+      {children}
     </Component>
   )
 }

@@ -25,9 +25,10 @@ export const EditButton = () => {
           <IconButton
             className={css.cancelButton}
             round={false}
-            aria-label="Cancel editing the selected word and its features"
             onClick={() => {
               setIsEditing(false)
+              // Since no changes were made to this word, make sure to reset its form.
+              form.reset()
             }}
           >
             Cancel
@@ -36,22 +37,22 @@ export const EditButton = () => {
           <IconTextButton
             {...form}
             icon={<IoCheckmarkSharp />}
-            text={"Save"}
             className={css.editPanelButton}
             as={FormSubmitButton}
-            aria-label="Save the selected word and its features"
-          />
+          >
+            Save
+          </IconTextButton>
         </>
       ) : (
         <IconTextButton
           icon={<HiPencilAlt />}
-          text={"Edit"}
           className={css.editPanelButton}
           onClick={() => {
             setIsEditing(true)
           }}
-          aria-label="Edit the selected word and its features"
-        />
+        >
+          Edit
+        </IconTextButton>
       )}
     </Form>
   )

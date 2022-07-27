@@ -15,7 +15,13 @@ import EditWordPanel, { EditButton } from "./edit-word-panel"
 import { useForm } from "./form-context"
 import { FormFieldsFragment } from "./graphql/dailp"
 import * as css from "./panel-layout.css"
-import { WordPanel } from "./word-panel"
+import { usePreferences } from "./preferences-context"
+import { VerticalMorphemicSegmentation, WordPanel } from "./word-panel"
+
+enum PanelType {
+  EditWordPanel,
+  WordPanel,
+}
 
 export interface PanelDetails {
   currContents: FormFieldsFragment | null
@@ -23,11 +29,11 @@ export interface PanelDetails {
 }
 
 /** Displays the right-side panel information of the currently selected word. */
-export const PanelLayout = (props: {
+export const PanelLayout = (p: {
   segment: FormFieldsFragment | null
   setContent: (content: FormFieldsFragment | null) => void
 }) => {
-  if (!props.segment) {
+  if (!p.segment) {
     return null
   }
 
@@ -36,75 +42,87 @@ export const PanelLayout = (props: {
 
   return (
     <div className={css.wordPanelContent}>
-      <header className={css.wordPanelHeader}>
-        <div className={css.headerButtons}>
+      {/* If the user is logged in, then display an edit button on the word panel along with its corresponding formatted header. Otherwise, display the normal word panel.*/}
+      {token ? (
+        <header className={css.wordPanelHeader}>
+          <div className={css.headerButtons}>
+            {!isEditing && (
+              <IconButton
+                onClick={() => p.setContent(null)}
+                aria-label="Dismiss selected word information"
+              >
+                <MdClose size={32} />
+              </IconButton>
+            )}
+
+            <EditButton />
+          </div>
+          <h2 className={css.editCherHeader}>{p.segment.source}</h2>
+        </header>
+      ) : (
+        <>
           <IconButton
-            onClick={() => props.setContent(null)}
+            className={css.wordPanelButton.basic}
+            onClick={() => p.setContent(null)}
             aria-label="Dismiss selected word information"
           >
             <MdClose size={32} />
           </IconButton>
-
-          {token && <EditButton />}
-        </div>
-
-        <h2 className={css.cherHeader}>{props.segment.source}</h2>
-      </header>
+          <header className={css.wordPanelHeader}>
+            <h1 className={css.noSpaceBelow}>Selected Word</h1>
+            <h2 className={css.cherHeader}>{p.segment.source}</h2>
+          </header>
+        </>
+      )}
 
       {/* Renders audio recording. */}
-      <AudioPanel segment={props.segment} />
+      <AudioPanel segment={p.segment} />
 
       {isEditing ? (
         <Form {...form}>
-          <PanelContent panelType={EditWordPanel} word={props.segment} />
+          <PanelContent panel={PanelType.EditWordPanel} word={p.segment} />
         </Form>
       ) : (
-        <PanelContent panelType={WordPanel} word={props.segment} />
+        <WordPanel word={p.segment} setContent={p.setContent} />
       )}
     </div>
   )
 }
 
 /** Dispatches to the corresponding panel type to render a normal word panel or an editable word panel. */
-export const PanelContent = (props: {
-  panelType: typeof EditWordPanel | typeof WordPanel
+export const PanelContent = (p: {
+  panel: PanelType
   word: FormFieldsFragment
 }) => {
+  const PanelComponent =
+    p.panel === PanelType.EditWordPanel ? EditWordPanel : WordPanel
+
   // Contains components rendering data of a word's phonetics.
   const phoneticsContent = (
     <>
-      {props.word.source && (
-        <props.panelType
-          word={props.word}
+      {p.word.source && (
+        <PanelComponent
+          word={p.word}
           feature={"source"}
           label="Syllabary Characters"
         />
       )}
 
-      {props.word.simplePhonetics && (
-        <props.panelType
-          word={props.word}
-          feature={"simplePhonetics"}
-          label="Simple Phonetics"
+      {p.word.romanizedSource && (
+        <PanelComponent
+          word={p.word}
+          feature={"romanizedSource"}
+          label="Romanized Source"
         />
       )}
-
-      {props.word.romanizedSource &&
-        props.word.romanizedSource !== props.word.simplePhonetics && (
-          <props.panelType
-            word={props.word}
-            feature={"romanizedSource"}
-            label="Romanized Source"
-          />
-        )}
     </>
   )
 
   const translation = (
     <>
-      {props.word.englishGloss[0] !== "" && (
-        <props.panelType
-          word={props.word}
+      {p.word.englishGloss[0] !== "" && (
+        <PanelComponent
+          word={p.word}
           feature={"englishGloss"}
           label="English Translation"
         />
@@ -112,15 +130,17 @@ export const PanelContent = (props: {
     </>
   )
 
+  const { cherokeeRepresentation } = usePreferences()
+
   // Contains components rendering a word's segments and its english translation.
   const wordPartsContent = (
     <>
       <VerticalMorphemicSegmentation
-        panelType={props.panelType}
-        segments={props.word.segments}
+        cherokeeRepresentation={cherokeeRepresentation}
+        segments={p.word.segments}
       />
 
-      {props.panelType === WordPanel ? (
+      {p.panel === PanelType.WordPanel ? (
         <div style={{ display: "flex" }}>‘{translation}’</div>
       ) : (
         <>{translation}</>
@@ -130,11 +150,7 @@ export const PanelContent = (props: {
 
   // Contains a component rendering a word's commentary.
   const commentaryContent = (
-    <props.panelType
-      word={props.word}
-      feature={"commentary"}
-      input="textarea"
-    />
+    <PanelComponent word={p.word} feature={"commentary"} input="textarea" />
   )
 
   return (
@@ -151,7 +167,7 @@ export const PanelContent = (props: {
       />
 
       {/* If there are no segments, does not display Word Parts panel */}
-      {props.word.segments.length > 0 && (
+      {p.word.segments.length > 0 && (
         <CollapsiblePanel
           title={"Word Parts"}
           content={wordPartsContent}
@@ -165,7 +181,7 @@ export const PanelContent = (props: {
       )}
 
       {/* If there is no commentary, does not display Commentary panel */}
-      {props.word.commentary && (
+      {p.word.commentary && p.word.commentary.length > 0 && (
         <CollapsiblePanel
           title={"Commentary"}
           content={commentaryContent}
@@ -173,36 +189,6 @@ export const PanelContent = (props: {
         />
       )}
     </>
-  )
-}
-
-export const VerticalMorphemicSegmentation = (p: {
-  panelType: typeof EditWordPanel | typeof WordPanel
-  segments: FormFieldsFragment["segments"]
-}) => {
-  if (!p.segments) {
-    return null
-  }
-
-  let segmentCount = p.segments.length
-
-  return (
-    <table className={css.tableContainer}>
-      <tbody>
-        {p.segments.map((segment, index) => (
-          <tr key={index}>
-            <td className={css.tableCells}>
-              {index > 0 ? "-" : null}
-              {segment.morpheme}
-              {index !== segmentCount - 1 ? segment.nextSeparator : null}
-            </td>
-            <td className={css.tableCells}>
-              {segment.matchingTag ? segment.matchingTag.title : segment.gloss}
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
   )
 }
 

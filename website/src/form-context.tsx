@@ -20,27 +20,25 @@ const FormContext = createContext<FormContextType>({} as FormContextType)
 /** Instantiates a form state used to keep track of the current word and information about all its features. */
 export const FormProvider = (props: { children: any }) => {
   const [isEditing, setIsEditing] = useState(false)
-  const word: FormFieldsFragment | undefined = undefined
+  const word: FormFieldsFragment = {} as FormFieldsFragment
 
   const [updateWordResult, updateWord] = useUpdateWordMutation()
 
   /** Calls the backend GraphQL mutation to update a word. */
-  const runUpdate = (variables: { word: AnnotatedFormUpdate }) => {
-    updateWord(variables).then((result) => {
-      console.log(result.data)
-    })
+  const runUpdate = async (variables: { word: AnnotatedFormUpdate }) => {
+    await updateWord(variables)
   }
 
   const form = useFormState({
     values: {
       word,
     },
-    onValidate: (values) => {},
-    onSubmit: (values) => {
-      if (!values.word) {
-        throw { values: { word: "No word found" } }
+    onValidate: (values) => {
+      if (!values || !values.word) {
+        throw { values: "No word found" }
       }
-
+    },
+    onSubmit: (values) => {
       setIsEditing(false)
 
       runUpdate({

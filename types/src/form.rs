@@ -206,8 +206,9 @@ impl AnnotatedForm {
     }
 
     /// Unique identifier of this form
-    async fn id(&self) -> Uuid {
-        self.id.unwrap_or_default()
+    async fn id(&self) -> anyhow::Result<Uuid> {
+        self.id
+            .ok_or_else(|| anyhow::format_err!("No AnnotatedForm ID"))
     }
 }
 
@@ -255,4 +256,20 @@ pub struct AnnotatedFormUpdate {
     pub id: Uuid,
     pub source: MaybeUndefined<String>,
     pub commentary: MaybeUndefined<String>,
+}
+
+/// Trait that defines function which takes in a possibly undefined value.
+pub trait MaybeUndefinedExt<T> {
+    /// If the given value is undefined, convert into a vector of option. Otherwise, return an empty vector.
+    fn into_vec(self) -> Vec<Option<T>>;
+}
+
+impl<T> MaybeUndefinedExt<T> for MaybeUndefined<T> {
+    fn into_vec(self) -> Vec<Option<T>> {
+        if self.is_undefined() {
+            return Vec::new();
+        } else {
+            return vec![self.take()];
+        };
+    }
 }

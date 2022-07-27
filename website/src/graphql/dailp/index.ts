@@ -164,7 +164,10 @@ export type AnnotatedFormSegmentsArgs = {
   system: CherokeeOrthography
 }
 
-/** A single word in an annotated document that can be edited. */
+/**
+ * A single word in an annotated document that can be edited.
+ * All fields except id are optional.
+ */
 export type AnnotatedFormUpdate = {
   readonly commentary: InputMaybe<Scalars["String"]>
   /** Unique identifier of the form */

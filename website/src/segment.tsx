@@ -98,11 +98,14 @@ export const AnnotatedForm = (
   if (!p.segment.source) {
     return null
   }
+
+  const { form } = useForm()
+
   const showAnything = p.levelOfDetail > LevelOfDetail.Story
+
   if (showAnything) {
     const showSegments = p.levelOfDetail >= LevelOfDetail.Segmentation
     const translation = p.segment.englishGloss.join(", ")
-
     const isSelected = p.wordPanelDetails.currContents?.id === p.segment.id
 
     let wordCSS = showSegments ? css.wordGroup : css.wordGroupInline
@@ -113,21 +116,6 @@ export const AnnotatedForm = (
         p.segment
       ) /* This makes sure the word panel updates for changes to the word panel*/
     }
-
-    const { form } = useForm()
-
-    const isSelected = p.wordPanelDetails.currContents?.id === p.segment.id
-
-    let wordCSS = showSegments ? css.wordGroup : css.wordGroupInline
-
-    if (isSelected) {
-      wordCSS = cx(wordCSS, css.selectedWord)
-      p.wordPanelDetails.setCurrContents(
-        p.segment
-      ) /* This makes sure the word panel updates for changes to the word panel*/
-    }
-
-    const { form } = useForm()
 
     return (
       <div className={wordCSS} id={`w${p.segment.index}`}>

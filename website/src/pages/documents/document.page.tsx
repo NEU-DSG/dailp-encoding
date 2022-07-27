@@ -8,7 +8,7 @@ import { Dialog, DialogBackdrop, useDialogState } from "reakit/Dialog"
 import { Tab, TabList, TabPanel } from "reakit/Tab"
 import { AudioPlayer, Breadcrumbs, Button, Link } from "src/components"
 import { useMediaQuery } from "src/custom-hooks"
-import { FormProvider } from "src/form-context"
+import { FormProvider, useForm } from "src/form-context"
 import * as Dailp from "src/graphql/dailp"
 import Layout from "src/layout"
 import { drawerBg } from "src/menu.css"
@@ -54,12 +54,10 @@ const AnnotatedDocumentPage = (props: { id: string }) => {
   return (
     <Layout>
       <Helmet title={doc?.title} />
-      <FormProvider>
-        <main className={css.annotatedDocument}>
-          <DocumentTitleHeader doc={doc} showDetails={true} />
-          <TabSet doc={doc} />
-        </main>
-      </FormProvider>
+      <main className={css.annotatedDocument}>
+        <DocumentTitleHeader doc={doc} showDetails={true} />
+        <TabSet doc={doc} />
+      </main>
     </Layout>
   )
 }
@@ -159,7 +157,7 @@ const TranslationTab = ({ doc }: { doc: Document }) => {
   const isDesktop = useMediaQuery(mediaQueries.medium)
 
   return (
-    <>
+    <FormProvider>
       <DialogOverlay
         className={css.morphemeDialogBackdrop}
         isOpen={dialogOpen}
@@ -218,7 +216,7 @@ const TranslationTab = ({ doc }: { doc: Document }) => {
             }}
           />
         </article>
-        {selectedWord && levelOfDetail > LevelOfDetail.Story ? (
+        {selectedWord && levelOfDetail > LevelOfDetail.Story && (
           <div className={css.contentSection2}>
             <PanelLayout
               segment={wordPanelInfo.currContents}
@@ -227,7 +225,7 @@ const TranslationTab = ({ doc }: { doc: Document }) => {
           </div>
         )}
       </div>
-    </>
+    </FormProvider>
   )
 }
 
@@ -244,7 +242,7 @@ const DocumentContents = ({
   openDetails: (morpheme: any) => void
   wordPanelDetails: PanelDetails
 }) => {
-  const [{ data }] = Dailp.useDocumentContentsQuery({
+  const [result, rerunQuery] = Dailp.useDocumentContentsQuery({
     variables: {
       slug: doc.slug,
       isReference: doc.isReference,
@@ -258,13 +256,11 @@ const DocumentContents = ({
   useEffect(() => {
     // If the form has been submitted, update the panel's current contents to be the currently selected word
     if (form.submitting) {
+      // Update the form's current word
       wordPanelDetails.setCurrContents(form.values.word)
       // Query of document contents is rerun to ensure frontend and backend are in sync
       rerunQuery({ requestPolicy: "network-only" })
     }
-
-    // Update the form's current word
-    form.update("word", wordPanelDetails.currContents)
   }, [isEditing])
 
   if (!docContents) {

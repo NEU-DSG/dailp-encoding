@@ -388,12 +388,17 @@ impl Database {
         todo!("Implement image annotations")
     }
 
-    pub async fn update_word(&self, word: &AnnotatedFormUpdate) -> Result<Uuid> {
+    // pub async fn maybe_undefined_to_vec() -> Vec<Option<String>> {}
+
+    pub async fn update_word(&self, word: AnnotatedFormUpdate) -> Result<Uuid> {
+        let source = word.source.into_vec();
+        let commentary = word.commentary.into_vec();
+
         query_file!(
             "queries/update_word.sql",
             word.id,
-            word.source.value(),
-            word.commentary.value()
+            &source as _,
+            &commentary as _
         )
         .execute(&self.client)
         .await?;

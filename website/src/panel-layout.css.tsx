@@ -3,7 +3,7 @@ import { fonts, hspace, mediaQueries, radii, vspace } from "src/style/constants"
 import { closeButton } from "./morpheme.css"
 import { marginX, paddingX, paddingY } from "./style/utils"
 
-const wordPanelPadding = "12px"
+const wordPanelPadding = "8px"
 
 export const cherHeader = style({
   fontFamily: fonts.cherokee,
@@ -36,14 +36,8 @@ export const wordPanelButton = styleVariants({
   ],
 })
 
-export const headerButtons = style({
-  display: "flex",
-  alignItems: "center",
-})
-
 export const collPanelContent = style({
   padding: wordPanelPadding,
-  paddingTop: 0,
   marginBottom: "0px",
 })
 
@@ -83,7 +77,7 @@ export const wordPanelContent = style({
 })
 
 export const wordPanelHeader = style({
-  padding: vspace.medium,
+  padding: wordPanelPadding,
   fontFamily: fonts.body,
 })
 
@@ -120,3 +114,18 @@ export const morphemeCell = style([
     paddingRight: hspace.halfEdge,
   },
 ])
+
+export const editCherHeader = style([
+  marginX(hspace.large),
+  {
+    fontFamily: fonts.cherokee,
+    marginTop: vspace.one,
+  },
+])
+
+export const headerButtons = style({
+  display: "flex",
+  alignItems: "center",
+  // Set this min-height here so the header space, as a flex-box, will not shrink when the close button disappears.
+  minHeight: vspace.double,
+})
