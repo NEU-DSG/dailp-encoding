@@ -431,9 +431,9 @@ export type MorphemeSegment = {
    * This field determines what character should separate this segment from
    * the previous one when reconstituting the full segmentation string.
    */
-  readonly previousSeparator: Maybe<Scalars["String"]>
+  readonly previousSeparator: Scalars["String"]
   /** What kind of thing is this segment? */
-  readonly segmentType: Maybe<SegmentType>
+  readonly segmentType: SegmentType
 }
 
 export type Mutation = {
