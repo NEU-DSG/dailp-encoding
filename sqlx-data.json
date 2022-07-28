@@ -436,6 +436,19 @@
     },
     "query": "select\n  word.id,\n  word.source_text,\n  word.simple_phonetics,\n  word.phonemic,\n  word.english_gloss,\n  word.commentary,\n  word.document_id,\n  word.index_in_document,\n  word.page_number,\n  media_resource.url as \"audio_url?\",\n  media_slice.time_range as \"audio_slice?\"\nfrom word\n  left join media_slice on media_slice.id = word.audio_slice_id\n  left join media_resource on media_resource.id = media_slice.resource_id\nwhere source_text like any($1)\n"
   },
+  "587e868e1c86816469a9169bf07be80df5add11ef357029f74629e112d88b88e": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "UuidArray",
+          "TextArray"
+        ]
+      }
+    },
+    "query": "-- Insert a document-local morpheme gloss if and only if there's no matching\n-- global gloss.\ninsert into morpheme_gloss (document_id, gloss)\nselect document_id, gloss from unnest($1::uuid[], $2::text[]) as input_data(document_id, gloss)\nwhere not exists (select from morpheme_gloss where morpheme_gloss.document_id is null and morpheme_gloss.gloss = input_data.gloss)\non conflict (coalesce(document_id, uuid_nil()), gloss) do nothing\n"
+  },
   "5b699e0fcc9467aed4c1b5ae6361341ed338c32e286e1ae47a3ded10bba0bbf2": {
     "describe": {
       "columns": [
@@ -581,6 +594,41 @@
       }
     },
     "query": "select\n  word_segment.index_in_word,\n  word_segment.word_id,\n  word_segment.morpheme,\n  word_segment.gloss_id,\n  morpheme_gloss.gloss,\n  word_segment.segment_type as \"segment_type: SegmentType\"\nfrom word_segment\n  inner join morpheme_gloss on morpheme_gloss.id = word_segment.gloss_id\nwhere word_segment.word_id = any($1)\norder by word_segment.index_in_word\n"
+  },
+  "631df0147cf3d4a3576198b5d417fa360b3e32e29b566d497b684905a85c8e9e": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "UuidArray",
+          "TextArray",
+          "UuidArray",
+          "Int8Array",
+          "TextArray",
+          {
+            "Custom": {
+              "kind": {
+                "Array": {
+                  "Custom": {
+                    "kind": {
+                      "Enum": [
+                        "Morpheme",
+                        "Clitic",
+                        "Combine"
+                      ]
+                    },
+                    "name": "segment_type"
+                  }
+                }
+              },
+              "name": "_segment_type"
+            }
+          }
+        ]
+      }
+    },
+    "query": "insert into word_segment (gloss_id, word_id, index_in_word, morpheme, segment_type)\n-- Fill in glosses that weren't inserted with their global match.\nselect\n  coalesce(inserted_gloss.id, global_gloss.id),\n  word_id,\n  index,\n  morpheme,\n  segment_type\nfrom\n  unnest(\n    $1::uuid[], $2::text[], $3::uuid[], $4::bigint[], $5::text[], $6::segment_type[]\n  ) as input_data(document_id, gloss, word_id, index, morpheme, segment_type)\n  left join\n    morpheme_gloss as inserted_gloss on\n      inserted_gloss.document_id = input_data.document_id and inserted_gloss.gloss = input_data.gloss\n  left join\n    morpheme_gloss as global_gloss on\n      global_gloss.document_id is null and global_gloss.gloss = input_data.gloss\non conflict (word_id, index_in_word)\ndo update set\nmorpheme = excluded.morpheme,\ngloss_id = excluded.gloss_id,\nsegment_type = excluded.segment_type\n"
   },
   "6858e67c5a27aa4f38366244a46c9a4a50546c164a2b91599301aad1bc8f3cd0": {
     "describe": {
@@ -848,41 +896,6 @@
       }
     },
     "query": "insert into abbreviation_system (short_name, title)\nvalues ($1, $2)\non conflict (short_name) do update set\ntitle = excluded.title\nreturning id\n"
-  },
-  "85357b10c6ef175497946d3b677d728d521bae82f683424330b60fb1e64c2713": {
-    "describe": {
-      "columns": [],
-      "nullable": [],
-      "parameters": {
-        "Left": [
-          "UuidArray",
-          "TextArray",
-          "UuidArray",
-          "Int8Array",
-          "TextArray",
-          {
-            "Custom": {
-              "kind": {
-                "Array": {
-                  "Custom": {
-                    "kind": {
-                      "Enum": [
-                        "Morpheme",
-                        "Clitic",
-                        "Combine"
-                      ]
-                    },
-                    "name": "segment_type"
-                  }
-                }
-              },
-              "name": "_segment_type"
-            }
-          }
-        ]
-      }
-    },
-    "query": "with input_data as (\n  select *\n  from unnest($1::uuid[], $2::text[], $3::uuid[], $4::bigint[], $5::text[], $6::segment_type[]) as input_data(document_id, gloss, word_id, index, morpheme, segment_type)\n),\n\n-- Insert a document-local morpheme gloss if and only if there's no matching\n-- global gloss.\ninserted_gloss as (\n  insert into morpheme_gloss (document_id, gloss)\n    select document_id, gloss from input_data\n    where not exists (select from morpheme_gloss where morpheme_gloss.document_id is null and morpheme_gloss.gloss = input_data.gloss)\n  on conflict (coalesce(document_id, uuid_nil()), gloss) do update set\n    gloss = excluded.gloss\n  returning *\n)\n\ninsert into word_segment (gloss_id, word_id, index_in_word, morpheme, segment_type)\n-- Fill in glosses that weren't inserted with their global match.\nselect coalesce(inserted_gloss.id, global_gloss.id), word_id, index, morpheme, segment_type\nfrom input_data\n  left join inserted_gloss on inserted_gloss.document_id = input_data.document_id and inserted_gloss.gloss = input_data.gloss\n  left join morpheme_gloss as global_gloss on global_gloss.document_id is null and global_gloss.gloss = input_data.gloss\non conflict (word_id, index_in_word)\n  do update set\n    morpheme = excluded.morpheme,\n    gloss_id = excluded.gloss_id,\n    segment_type = excluded.segment_type\n"
   },
   "8560200ace3f76678ea54c3d60676d2f0a5d924d2c08a245f65eb90078af3468": {
     "describe": {

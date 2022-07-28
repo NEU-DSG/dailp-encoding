@@ -605,12 +605,7 @@ impl Database {
                 )
             })
             .unique_by(|(gloss, _)| gloss.clone())
-            .map(|(gloss, stem)| {
-                (
-                    gloss,
-                    stem.segments.as_ref().unwrap()[0].morpheme.clone(),
-                )
-            })
+            .map(|(gloss, stem)| (gloss, stem.segments.as_ref().unwrap()[0].morpheme.clone()))
             .multiunzip();
 
         // Insert all the morpheme glosses from this dictionary at once.
@@ -742,6 +737,14 @@ impl Database {
             .multiunzip();
 
         query_file!(
+            "queries/upsert_local_morpheme_glosses.sql",
+            &*doc_id,
+            &*gloss
+        )
+        .execute(&mut tx)
+        .await?;
+
+        query_file!(
             "queries/upsert_many_word_segments.sql",
             &*doc_id,
             &*gloss,
@@ -827,6 +830,14 @@ impl Database {
                     )
                 })
                 .multiunzip();
+
+            query_file!(
+                "queries/upsert_local_morpheme_glosses.sql",
+                &*document_id,
+                &*gloss
+            )
+            .execute(&mut tx)
+            .await?;
 
             query_file!(
                 "queries/upsert_many_word_segments.sql",
