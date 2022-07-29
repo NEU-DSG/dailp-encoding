@@ -1,3 +1,5 @@
+use sqlx::postgres::types::PgLQuery;
+use sqlx::postgres::types::PgLTree;
 use std::ops::Bound;
 use std::str::FromStr;
 use {
@@ -15,8 +17,6 @@ use {
     std::time::Duration,
     uuid::Uuid,
 };
-use sqlx::postgres::types::PgLQuery;
-use sqlx::postgres::types::PgLTree;
 
 /// Connects to our backing database instance, providing high level functions
 /// for accessing the data therein.
