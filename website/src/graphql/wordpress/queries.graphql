@@ -20,15 +20,20 @@ query PageIndex {
   }
 }
 
-query MainMenu {
-  menuItems(where: { parentId: 1 }) {
+query MenuByID($id: Int!) {
+  menus(where: { id: $id }) {
     nodes {
-      label
-      path
-      childItems {
+      databaseId
+      menuItems(where: { parentDatabaseId: 0 }) {
         nodes {
           label
           path
+          childItems {
+            nodes {
+              label
+              path
+            }
+          }
         }
       }
     }

@@ -19,17 +19,24 @@ import {
   navDrawer,
   navLink,
   navMenu,
+  subMenuItems,
 } from "./menu.css"
 import { closeBlock } from "./sprinkles.css"
 
-export const NavMenu = () => {
+export const NavMenu = (p: { menuID: number }) => {
   const location = useLocation()
-  const [{ data }] = Wordpress.useMainMenuQuery()
-  const menuItems = data?.menuItems?.nodes
+  const [{ data }] = Wordpress.useMenuByIdQuery({
+    variables: { id: p.menuID },
+  })
+  const menus = data?.menus?.nodes
+  if (!menus) {
+    return null
+  }
+  const menu = menus[0]
+  const menuItems = menu?.menuItems?.nodes
   if (!menuItems) {
     return null
   }
-
   const isTopLevel = (a: typeof menuItems[0]) =>
     !menuItems?.some((b) =>
       b?.childItems?.nodes?.some((b) => b?.path === a?.path)
@@ -88,7 +95,7 @@ const SubMenu = ({ item, location }: { location: Location; item: any }) => {
               aria-current={
                 location.pathname === url.pathname ? "page" : undefined
               }
-              className={navLink}
+              className={subMenuItems}
               onClick={() => menu.hide()}
             >
               {item.label}
@@ -100,11 +107,18 @@ const SubMenu = ({ item, location }: { location: Location; item: any }) => {
   )
 }
 
-export const MobileNav = () => {
+export const MobileNav = (p: { menuID: number }) => {
   const router = usePageContext()
   const dialog = useDialogState({ animated: true })
-  const [{ data }] = Wordpress.useMainMenuQuery()
-  const menuItems = data?.menuItems?.nodes
+  const [{ data }] = Wordpress.useMenuByIdQuery({
+    variables: { id: p.menuID },
+  })
+  const menus = data?.menus?.nodes
+  if (!menus) {
+    return null
+  }
+  const menu = menus[0]
+  const menuItems = menu?.menuItems?.nodes
   if (!menuItems) {
     return null
   }
