@@ -283,6 +283,27 @@
     },
     "query": "select\n  document.id as document_id,\n  document.is_reference,\n  word.id,\n  word.source_text,\n  word.simple_phonetics,\n  word.phonemic,\n  word.english_gloss,\n  word.recorded_at,\n  word.commentary,\n  word.index_in_document,\n  word.page_number\nfrom word\n  inner join document on document.id = word.document_id\n  left join word_segment on word_segment.word_id = word.id\n  inner join morpheme_gloss on morpheme_gloss.id = word_segment.gloss_id\nwhere morpheme_gloss.gloss = $1\n  and (word.document_id = $2 or $2 is null)\ngroup by document.id, word.id\norder by document.id\n"
   },
+  "245e69e24a570a31cc43113e560ab05d906a3cbaff8d42172cf97b760eac1b47": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Text",
+          "Int8",
+          "Int8",
+          {
+            "Custom": {
+              "kind": "Simple",
+              "name": "ltree"
+            }
+          }
+        ]
+      }
+    },
+    "query": "insert into collection_chapter (\n  title,\n  document_id,\n  wordpress_id,\n  index_in_parent,\n  chapter_path)\nvalues (\n  $1,\n  ( select id\n    from document\n    where short_name = $2),\n  $3,\n  $4,\n  $5\n)\n"
+  },
   "2874ae8f9cec1ce09c268adc74b096a15ca1d90cbb324289c679df9e451cb2ee": {
     "describe": {
       "columns": [],
@@ -726,27 +747,6 @@
       }
     },
     "query": "-- Retrieve the database UUIDs for the morpheme glosses passed in.\nwith left_gloss as (\n  select morpheme_gloss.id\n  from morpheme_gloss\n    left join document on document.id = morpheme_gloss.document_id\n  where morpheme_gloss.gloss = $1 and document.short_name = $2\n), right_gloss as (\n  select morpheme_gloss.id\n  from morpheme_gloss\n    left join document on document.id = morpheme_gloss.document_id\n  where morpheme_gloss.gloss = $3 and document.short_name = $4\n)\n\ninsert into morpheme_gloss_relation (left_gloss_id, right_gloss_id)\nselect left_gloss.id, right_gloss.id\nfrom left_gloss, right_gloss\non conflict\n  do nothing\n"
-  },
-  "6c90abdea5f52feba5a1b5f0f058b631f57639f4ce21eae8811e6007c6e544b7": {
-    "describe": {
-      "columns": [],
-      "nullable": [],
-      "parameters": {
-        "Left": [
-          "Text",
-          "Text",
-          "Int8",
-          "Int8",
-          {
-            "Custom": {
-              "kind": "Simple",
-              "name": "ltree"
-            }
-          }
-        ]
-      }
-    },
-    "query": "insert into collection_chapter (\n    title, \n    document_id, \n    wordpress_id, \n    index_in_parent,\n    chapter_path)\nvalues (\n    $1,\n    ( select id\n    from document\n    where short_name = $2),\n    $3,\n    $4,\n    $5\n)\n\n\n"
   },
   "6d5a72c97ad0bb2831e0b605a340630b28f70402023f5abec5ff2043f343f0b1": {
     "describe": {
