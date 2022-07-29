@@ -1,6 +1,7 @@
 import React from "react"
 import { HelmetData } from "react-helmet"
 import { Provider as ReakitProvider } from "reakit"
+import { UserProvider } from "src/auth"
 import { Client as GraphQLClient, Provider as GraphQLProvider } from "urql"
 import type { PageContextBuiltIn } from "vite-plugin-ssr"
 import type { PageContextBuiltInClient } from "vite-plugin-ssr/client"
@@ -20,7 +21,9 @@ export function PageShell({
       <PageContextProvider pageContext={pageContext}>
         <GraphQLProvider value={client}>
           <ReakitProvider>
-            <Page {...routeParams} />
+            <UserProvider>
+              <Page {...routeParams} />
+            </UserProvider>
           </ReakitProvider>
         </GraphQLProvider>
       </PageContextProvider>

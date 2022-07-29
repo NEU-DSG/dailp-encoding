@@ -1,16 +1,14 @@
 import React, { useMemo } from "react"
-import { apolloClient } from "../apollo"
-import { UserProvider, useCredentials } from "../auth"
+import { Provider as GraphQLProvider } from "urql"
+import { useCredentials } from "../auth"
+import { graphqlClient } from "../graphql/client"
 
-const LayoutClient = (p: { children: any }) => {
-  const creds = useCredentials()
-  const token = creds?.signInUserSession.idToken.jwtToken ?? null
-  const client = useMemo(() => apolloClient(token), [token])
-  return p.children
+export const LayoutClient = (p: { children: any }) => {
+  const token = useCredentials() // uses credentials
+  const client = useMemo(() => graphqlClient(token), [token])
+  if (token) {
+    return <GraphQLProvider value={client}>{p.children}</GraphQLProvider>
+  } else {
+    return p.children
+  }
 }
-
-export default (p: { children: any }) => (
-  <UserProvider>
-    <LayoutClient {...p} />
-  </UserProvider>
-)

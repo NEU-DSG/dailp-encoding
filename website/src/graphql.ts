@@ -6,6 +6,7 @@ import {
   createClient,
   dedupExchange,
   fetchExchange,
+  ssrExchange,
   useQuery,
 } from "urql"
 
@@ -25,7 +26,8 @@ export function useWpQuery<Data = any, Variables = object>(
   })
 }
 
-const sharedCache = cacheExchange
+export const sharedCache = cacheExchange
+export const sharedSsr = ssrExchange({ isClient: true, initialState: {} })
 
 export const client = {
   dailp: createClient({

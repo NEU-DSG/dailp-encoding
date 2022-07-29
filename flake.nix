@@ -167,6 +167,7 @@
             shellHook = ''
               export PROJECT_ROOT=$PWD
               export PGDATA=$PROJECT_ROOT/.postgres
+              eval $(${direnv}/bin/direnv dotenv)
             '';
             buildInputs = [
               autoconf
@@ -179,7 +180,6 @@
               rust-toolchain
               nodejs-14_x
               yarn
-              cargo-watch
               act
               postgresql_14
               sqlx-cli
@@ -190,7 +190,7 @@
               '')
               (writers.writeBashBin "dev-graphql" ''
                 cd $PROJECT_ROOT
-                cargo watch -x "run --bin dailp-graphql-local" -w types -w graphql
+                cargo run --bin dailp-graphql-local
               '')
               (writers.writeBashBin "dev-website" ''
                 cd $PROJECT_ROOT/website

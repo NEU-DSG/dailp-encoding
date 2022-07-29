@@ -20,7 +20,7 @@ futures = "0.3"
 lambda_http = "0.5"
 dotenv = "0.15"
 lazy_static = "1.4"
-itertools = "0.9"
+itertools = "0.10"
 async_once = "0.2"
 base64 = "0.13"
 serde = "1"
@@ -30,7 +30,7 @@ async-trait = "*"
 log = "0.4"
 pretty_env_logger = "0.4"
 # Used for running a local server.
-async-graphql-tide = "3"
+async-graphql-tide = "4"
 tide = "0.16"
 async-std = { version = "1", features = ["attributes", "tokio1"] }
 

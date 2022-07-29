@@ -1,18 +1,14 @@
 import { authExchange } from "@urql/exchange-auth"
-import {
-  cacheExchange,
-  createClient,
-  dedupExchange,
-  fetchExchange,
-  makeOperation,
-} from "urql"
+import { createClient, dedupExchange, fetchExchange, makeOperation } from "urql"
+import { sharedCache, sharedSsr } from "../graphql"
 
-export const apolloClient = (token: string | null) =>
+export const graphqlClient = (token: string | null) =>
   createClient({
     url: process.env["DAILP_API_URL"] + (token ? "/graphql-edit" : "/graphql"),
     exchanges: [
       dedupExchange,
-      cacheExchange,
+      sharedCache,
+      sharedSsr,
       ...(token ? [authLink(token)] : []),
       fetchExchange,
     ],

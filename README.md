@@ -23,7 +23,7 @@ Each layer of the architecture is split into its own directory, starting with th
 - [`migration/`](migration) pulls data from several Google Drive spreadsheets, conforms it to consistent types, then writes it all to a database.
 - [`graphql/`](graphql) exposes a public [GraphQL](https://graphql.org/) endpoint (deployed on [AWS Lambda](https://aws.amazon.com/lambda/)) that allows one to query DAILP data from the database.
   [Play with the data here](https://dailp.northeastern.edu/graphql).
-- [`website/`](website) renders a static site with [Gatsby](https://gatsbyjs.org/) using our GraphQL endpoint at build time and at runtime (to handle user queries).
+- [`website/`](website) renders a static site using our GraphQL endpoint at build time and at runtime (to handle user queries).
 
 Read more on [the wiki](https://github.com/NEU-DSG/dailp-encoding/wiki/Technical-Design).
 

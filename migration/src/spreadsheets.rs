@@ -13,9 +13,11 @@ use dailp::{
     LexicalConnection, LineBreak, MorphemeId, MorphemeSegment, PageBreak, Uuid,
 };
 use dailp::{PositionInDocument, SourceAttribution};
+use itertools::Itertools;
 use log::{error, info, warn};
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, fs::File, io::Write, time::Duration};
+use tokio::time::sleep;
 
 // Define the delimiters used in spreadsheets for marking phrases, blocks,
 // lines, and pages.
@@ -65,26 +67,17 @@ pub struct SheetResult {
 
 impl SheetResult {
     pub async fn from_sheet(sheet_id: &str, sheet_name: Option<&str>) -> Result<Self> {
-        use futures_retry::{FutureRetry, RetryPolicy};
         info!("parsing sheet {}, {:?}...", sheet_id, sheet_name);
         let mut tries = 0;
-        let (t, _attempt) = FutureRetry::new(
-            || Self::from_sheet_weak(sheet_id, sheet_name),
-            |e| {
-                // Try a few times before giving up.
-                if tries >= 3 {
-                    RetryPolicy::<anyhow::Error>::ForwardError(e)
-                } else {
-                    tries += 1;
-                    error!("{}", e);
-                    warn!("Retrying for the {}th time...", tries);
-                    RetryPolicy::<anyhow::Error>::WaitRetry(Duration::from_millis(10000))
-                }
-            },
-        )
-        .await
-        .map_err(|(e, _attempts)| e)?;
-        Ok(t)
+        loop {
+            let r = Self::from_sheet_weak(sheet_id, sheet_name).await;
+            // Try a few times before giving up.
+            if r.is_ok() || tries > 3 {
+                break r;
+            }
+            sleep(Duration::from_millis(3000 * 2_u64.pow(tries))).await;
+            tries += 1;
+        }
     }
     async fn from_sheet_weak(sheet_id: &str, sheet_name: Option<&str>) -> Result<Self> {
         let api_key = std::env::var("GOOGLE_API_KEY")?;
@@ -207,7 +200,7 @@ impl SheetResult {
             .values
             .into_par_iter()
             // First two rows are simply headers.
-            .skip(2)
+            .skip(1)
             .enumerate()
             .filter(|(_idx, cols)| cols.len() > 4 && !cols[1].is_empty())
             // The rest are relevant to the noun itself.
@@ -217,14 +210,14 @@ impl SheetResult {
 
                 // Skip reference numbers for now.
                 let mut root_values = columns.into_iter();
-                let _key = root_values.next()?;
+                let key = root_values.next()?.parse().unwrap_or(idx as i64 + 1);
                 let root = root_values.next()?;
                 let root_gloss = root_values.next()?;
                 // Skip page ref.
                 let page_number = root_values.next()?;
                 let mut form_values = root_values;
                 let date = Date::from_ymd(year, 1, 1);
-                let position = PositionInDocument::new(doc_id.clone(), page_number, idx as i32 + 1);
+                let position = PositionInDocument::new(doc_id.clone(), page_number, key);
                 Some(LexicalEntryWithForms {
                     forms: root_verb_surface_forms(
                         &position,
@@ -270,55 +263,59 @@ impl SheetResult {
         use rayon::prelude::*;
         Ok(self
             .values
-            .into_par_iter()
+            .into_iter()
             // First two rows are simply headers.
             .skip(2)
+            .filter(|cols| cols.len() > 4 && !cols[2].is_empty())
+            .group_by(|cols| cols.get(0).and_then(|s| s.parse::<i64>().ok()))
+            .into_iter()
+            .enumerate()
             // The rest are relevant to the noun itself.
-            .filter_map(|columns| {
+            .filter_map(|(index, (key, rows))| {
+                let rows: Vec<_> = rows.collect();
+                let columns = rows.get(0)?.clone();
                 // The columns are as follows: key, root, root gloss, page ref,
                 // category, tags, surface forms.
 
-                if columns.len() > 4 && !columns[1].is_empty() {
-                    // Skip reference numbers for now.
-                    let mut root_values = columns.into_iter();
-                    let index = root_values.next()?.parse().unwrap_or(1);
-                    let page_number = root_values.next();
-                    let root = root_values.next()?;
-                    let root_gloss = root_values.next()?;
-                    // Skip page ref and category.
-                    let mut form_values = root_values.skip(after_root);
-                    let date = Date::from_ymd(year, 1, 1);
-                    let position = PositionInDocument::new(doc_id.clone(), page_number?, index);
-                    Some(LexicalEntryWithForms {
-                        forms: root_noun_surface_forms(
-                            &position,
-                            &date,
-                            &mut form_values,
-                            has_comment,
-                        ),
-                        entry: AnnotatedForm {
-                            id: None,
-                            position,
-                            normalized_source: None,
-                            simple_phonetics: None,
-                            phonemic: None,
-                            segments: Some(vec![MorphemeSegment::new(
-                                convert_udb(&root).into_dailp(),
-                                root_gloss.clone(),
-                                None,
-                            )]),
-                            english_gloss: vec![root_gloss],
-                            source: root,
-                            commentary: None,
-                            date_recorded: Some(date),
-                            line_break: None,
-                            page_break: None,
-                            audio_track: None,
-                        },
-                    })
-                } else {
-                    None
-                }
+                // Skip reference numbers for now.
+                let mut root_values = columns.into_iter();
+                let index = root_values
+                    .next()?
+                    .split(",")
+                    .next()?
+                    .parse()
+                    .unwrap_or(index as i64 + 1);
+                let page_number = root_values.next();
+                let root = root_values.next()?;
+                let root_gloss = root_values.next()?;
+                // Skip page ref and category.
+                let mut form_values = rows
+                    .into_iter()
+                    .flat_map(|row| row.into_iter().skip(4 + after_root));
+                let date = Date::from_ymd(year, 1, 1);
+                let position = PositionInDocument::new(doc_id.clone(), page_number?, index);
+                Some(LexicalEntryWithForms {
+                    forms: root_noun_surface_forms(&position, &date, &mut form_values, has_comment),
+                    entry: AnnotatedForm {
+                        id: None,
+                        position,
+                        normalized_source: None,
+                        simple_phonetics: None,
+                        phonemic: None,
+                        segments: Some(vec![MorphemeSegment::new(
+                            convert_udb(&root).into_dailp(),
+                            root_gloss.clone(),
+                            None,
+                        )]),
+                        english_gloss: vec![root_gloss],
+                        source: root,
+                        commentary: None,
+                        date_recorded: Some(date),
+                        line_break: None,
+                        page_break: None,
+                        audio_track: None,
+                    },
+                })
             })
             .collect())
     }
@@ -345,7 +342,7 @@ impl SheetResult {
     /// Parse this sheet as a document metadata listing.
     pub async fn into_metadata(
         self,
-        db: &dailp::Database,
+        db: Option<&dailp::Database>,
         is_reference: bool,
         order_index: i64,
     ) -> Result<DocumentMetadata> {
@@ -431,7 +428,8 @@ impl SheetResult {
                     .await?
                     .into_translation(),
             ),
-            page_images: if let (Some(ids), Some(source)) = (image_ids, image_source) {
+            page_images: if let (Some(db), Some(ids), Some(source)) = (db, image_ids, image_source)
+            {
                 db.image_source_by_title(&source)
                     .await?
                     .map(|source| dailp::IiifImages {
@@ -564,7 +562,10 @@ pub struct AnnotatedLine {
 }
 
 impl<'a> AnnotatedLine {
-    pub fn many_from_semantic(lines: &[SemanticLine], meta: &DocumentMetadata) -> Vec<Self> {
+    pub fn many_from_semantic(
+        lines: &[SemanticLine],
+        meta: &DocumentMetadata,
+    ) -> Result<Vec<Self>> {
         let mut word_index = 1;
         lines
             .iter()
@@ -602,10 +603,10 @@ impl<'a> AnnotatedLine {
                     .get(7)
                     .expect(&format!("No commentary for line {}", line_num));
                 // For each word, extract the necessary data from every row.
-                let words = (0..num_words)
+                let words: Result<Vec<_>> = (0..num_words)
                     // Only use words with a syllabary source entry.
                     .filter(|i| source_row.items.get(*i).is_some())
-                    .map(|i| {
+                    .map(|i| -> Result<AnnotatedForm> {
                         let source_text = &source_row.items[i];
                         let pb = source_text.find(PAGE_BREAK);
                         let morphemes = morpheme_row.items.get(i);
@@ -642,26 +643,35 @@ impl<'a> AnnotatedLine {
                                 .or_else(|| source_text.find(LINE_BREAK))
                                 .map(|i| i as i32),
                             date_recorded: None,
-                            audio_track: if meta.audio_recording.is_some() // if audio file and annotation exists
-                                 && meta.audio_recording.clone().unwrap().annotations.is_some()
+                            audio_track: if let Some(annotations) = meta
+                                .audio_recording
+                                .as_ref()
+                                .and_then(|audio| audio.annotations.as_ref())
                             {
                                 Some(
-                                    meta.audio_recording.clone().unwrap().annotations.unwrap()
-                                        [(word_index - 1) as usize]
-                                        .clone(),
+                                    annotations
+                                        .get((word_index - 1) as usize)
+                                        .cloned()
+                                        .ok_or_else(|| {
+                                            anyhow::anyhow!(
+                                                "Missing audio for word {} in {}",
+                                                word_index,
+                                                meta.short_name
+                                            )
+                                        })?,
                                 )
                             } else {
                                 None
                             },
                         };
                         word_index += 1;
-                        w
+                        Ok(w)
                     })
                     .collect();
-                Self {
-                    words,
+                Ok(Self {
+                    words: words?,
                     ends_page: line.ends_page,
-                }
+                })
             })
             .collect()
     }
