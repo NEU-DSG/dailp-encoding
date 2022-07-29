@@ -727,6 +727,27 @@
     },
     "query": "-- Retrieve the database UUIDs for the morpheme glosses passed in.\nwith left_gloss as (\n  select morpheme_gloss.id\n  from morpheme_gloss\n    left join document on document.id = morpheme_gloss.document_id\n  where morpheme_gloss.gloss = $1 and document.short_name = $2\n), right_gloss as (\n  select morpheme_gloss.id\n  from morpheme_gloss\n    left join document on document.id = morpheme_gloss.document_id\n  where morpheme_gloss.gloss = $3 and document.short_name = $4\n)\n\ninsert into morpheme_gloss_relation (left_gloss_id, right_gloss_id)\nselect left_gloss.id, right_gloss.id\nfrom left_gloss, right_gloss\non conflict\n  do nothing\n"
   },
+  "6c90abdea5f52feba5a1b5f0f058b631f57639f4ce21eae8811e6007c6e544b7": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Text",
+          "Int8",
+          "Int8",
+          {
+            "Custom": {
+              "kind": "Simple",
+              "name": "ltree"
+            }
+          }
+        ]
+      }
+    },
+    "query": "insert into collection_chapter (\n    title, \n    document_id, \n    wordpress_id, \n    index_in_parent,\n    chapter_path)\nvalues (\n    $1,\n    ( select id\n    from document\n    where short_name = $2),\n    $3,\n    $4,\n    $5\n)\n\n\n"
+  },
   "6d5a72c97ad0bb2831e0b605a340630b28f70402023f5abec5ff2043f343f0b1": {
     "describe": {
       "columns": [],
@@ -859,16 +880,6 @@
     },
     "query": "insert into contributor_attribution (contributor_id, document_id, contribution_role)\nselect contributor.id, $2, $3\nfrom contributor\nwhere contributor.full_name = $1\n-- If this document already has this contributor, move on.\non conflict do nothing\n"
   },
-  "7c270b8370febddb2e411c78ad6bf15799408226a91d2fd0380f14846a94d8b2": {
-    "describe": {
-      "columns": [],
-      "nullable": [],
-      "parameters": {
-        "Left": []
-      }
-    },
-    "query": "delete from collection_chapter;\n"
-  },
   "7c5b7543e8a03f45b536b36b6f6f5328d1932a9f9e038dd33157ecd5b8b18e73": {
     "describe": {
       "columns": [
@@ -948,22 +959,6 @@
       }
     },
     "query": "select\n  d.*,\n  media_resource.url as \"audio_url?\",\n  media_slice.time_range as \"audio_slice?\",\n  coalesce(\n    jsonb_agg(\n      jsonb_build_object(\n        'name', contributor.full_name, 'role', attr.contribution_role\n      )\n    ) filter (where contributor is not null),\n    '[]'\n  )\n  as contributors\nfrom document as d\n  left join contributor_attribution as attr on attr.document_id = d.id\n  left join contributor on contributor.id = attr.contributor_id\n  left join media_slice on media_slice.id = d.audio_slice_id\n  left join media_resource on media_resource.id = media_slice.resource_id\nwhere d.short_name = any($1)\ngroup by d.id,\n  media_slice.id,\n  media_resource.id\n"
-  },
-  "7e76fabf03724dbbdb4c437afb20fe1e3dd6fbecdf3ddc5067dd7b6f919d03cc": {
-    "describe": {
-      "columns": [],
-      "nullable": [],
-      "parameters": {
-        "Left": [
-          "Text",
-          "Text",
-          "Int8",
-          "Int8",
-          "Text"
-        ]
-      }
-    },
-    "query": "insert into collection_chapter (\n    title, \n    document_id, \n    wordpress_id, \n    index_in_parent,\n    chapter_path)\nvalues (\n    $1, \n    (select id\n    from document\n    where title = $2), \n    $3, \n    $4,\n    text2ltree ($5))\n"
   },
   "8ecfe399e5e6da5a750c519bea8af91364076a89f472e9087afafda4b02599f4": {
     "describe": {
@@ -1667,6 +1662,23 @@
       }
     },
     "query": "select\n  morpheme_gloss.id as gloss_id,\n  morpheme_gloss.example_shape,\n  abbreviation_system.short_name as system_name,\n  morpheme_tag.gloss,\n  morpheme_tag.title,\n  abstract_morpheme_tag.description,\n  abstract_morpheme_tag.linguistic_type\nfrom morpheme_gloss\n  inner join abstract_morpheme_tag on abstract_morpheme_tag.id = morpheme_gloss.tag_id\n  left join abbreviation_system on abbreviation_system.short_name = any($2)\n  inner join morpheme_tag on morpheme_tag.abstract_ids[1] = abstract_morpheme_tag.id\nwhere morpheme_gloss.gloss = any($1)\n  and morpheme_tag.system_id = abbreviation_system.id\n"
+  },
+  "de7d4677f080eb9d0e580d7ec40b241b6717d3616e881ab601f77167b442509c": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          {
+            "Custom": {
+              "kind": "Simple",
+              "name": "lquery"
+            }
+          }
+        ]
+      }
+    },
+    "query": "delete from collection_chapter\nwhere chapter_path ~ $1;\n"
   },
   "e1ebe64b2e98a03f7803c63a2e9011b0a064d7a6819dfdbc1a8c4d4e1160db90": {
     "describe": {
