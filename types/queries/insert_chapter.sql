@@ -6,8 +6,7 @@ $4: int index
 $5: str slug
 $6: ref parent_id
 */
-with
-new_index_tree as (
+with new_index_tree as (
   select (select chapter_path from collection_chapter where id = $6
     union
     select slug::ltree from edited_collection where id = $6) || $5
