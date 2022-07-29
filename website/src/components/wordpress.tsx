@@ -112,11 +112,7 @@ const PullWords = (props: { slug: string; start: number; end?: number }) => {
   const start = props.start
 
   var end
-  if (!props.end) {
-    end = start + 1
-  } else {
-    end = props.end
-  }
+  end = props.end ? props.end : start + 1
 
   const [selectedMorpheme, setMorpheme] = useState<BasicMorphemeSegment | null>(
     null
@@ -138,11 +134,8 @@ const PullWords = (props: { slug: string; start: number; end?: number }) => {
   const dialog = useDialogState({ animated: true })
   const selectAndShowWord = (content: Dailp.FormFieldsFragment | null) => {
     setSelectedWord(content)
-    if (content) {
-      dialog.show()
-    } else {
-      dialog.hide()
-    }
+
+    content ? dialog.show() : dialog.hide()
   }
 
   let wordPanelInfo = {
