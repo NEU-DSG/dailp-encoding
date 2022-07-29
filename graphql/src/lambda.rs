@@ -15,11 +15,12 @@ async fn main() -> Result<(), Error> {
     // Share database connection between executions.
     // This prevents each lambda invocation from creating a new connection to
     // the database.
-    let database = dailp::Database::connect().await?;
+    let connections = Some(16);
+    let database = dailp::Database::connect(connections).await?;
     let schema = {
         Schema::build(Query, Mutation, EmptySubscription)
             .data(DataLoader::new(
-                dailp::Database::connect().await?,
+                dailp::Database::connect(connections).await?,
                 tokio::spawn,
             ))
             .finish()

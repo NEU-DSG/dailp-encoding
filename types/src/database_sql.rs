@@ -1,7 +1,7 @@
 #![allow(missing_docs)]
 
 use std::ops::Bound;
-
+use std::str::FromStr;
 use {
     crate::*,
     anyhow::Result,
@@ -18,6 +18,8 @@ use {
     std::time::Duration,
     uuid::Uuid,
 };
+use sqlx::postgres::types::PgLQuery;
+use sqlx::postgres::types::PgLTree;
 
 /// Connects to our backing database instance, providing high level functions
 /// for accessing the data therein.
@@ -25,11 +27,13 @@ pub struct Database {
     client: sqlx::Pool<sqlx::Postgres>,
 }
 impl Database {
-    pub async fn connect() -> Result<Self> {
+    pub async fn connect(num_connections: Option<u32>) -> Result<Self> {
         let db_url = std::env::var("DATABASE_URL")?;
         let conn = PgPoolOptions::new()
-            .max_connections(std::thread::available_parallelism().map_or(2, |x| x.get() as u32))
-            .acquire_timeout(Duration::from_secs(60 * 4))
+            .max_connections(num_connections.unwrap_or_else(|| {
+                std::thread::available_parallelism().map_or(2, |x| x.get() as u32)
+            }))
+            .acquire_timeout(Duration::from_secs(60 * 8))
             // Disable excessive pings to the database.
             .test_before_acquire(false)
             .connect(&db_url)
@@ -227,6 +231,82 @@ impl Database {
             id: ImageSourceId(x.id),
             url: x.base_url,
         }))
+    }
+
+    pub async fn upsert_collection(&self, collection: &Collection) -> Result<String> {
+        query_file!(
+            "queries/upsert_collection.sql",
+            collection.slug,
+            collection.title,
+            collection.wordpress_menu_id
+        )
+        .execute(&self.client)
+        .await?;
+        Ok((collection.slug).to_string())
+    }
+
+    pub async fn insert_all_chapters(
+        &self,
+        chapters: Vec<Chapter>,
+        slug: String,
+    ) -> Result<String> {
+        let mut tx = self.client.begin().await?;
+
+        // Delete previous chapter data stored for a particular collection before re-inserting
+        let collection_slug = PgLQuery::from_str(&(format!("{}.*", slug)))?;
+        query_file!("queries/delete_chapters_in_collection.sql", collection_slug,)
+            .execute(&mut tx)
+            .await?;
+
+        let mut chapter_stack = Vec::new();
+        let initial_tuple = (0, slug.clone());
+        chapter_stack.push(initial_tuple);
+
+        for current_chapter in chapters {
+            let chapter_doc_name = current_chapter.document_short_name;
+
+            // Use stack to build chapter slug
+            let mut before_chapter_index = chapter_stack.last().clone().unwrap().0;
+            while before_chapter_index != (current_chapter.index_in_parent - 1) {
+                let last_chapter_index = chapter_stack.last().unwrap().0;
+                if last_chapter_index >= current_chapter.index_in_parent {
+                    chapter_stack.pop();
+                }
+                before_chapter_index = chapter_stack.last().clone().unwrap().0;
+            }
+
+            // Concatenate URL Slugs of all chapters on the path
+            let mut chapter_stack_cur = chapter_stack.clone();
+            let mut url_slug_cur = current_chapter.url_slug.clone();
+            let final_path = (
+                current_chapter.index_in_parent,
+                current_chapter.url_slug.clone(),
+            );
+            chapter_stack.push(final_path);
+
+            while !(chapter_stack_cur.is_empty()) {
+                let temp_chapter = chapter_stack_cur.pop().unwrap();
+                let cur_slug = temp_chapter.1;
+                url_slug_cur = format!("{}.{}", cur_slug, url_slug_cur);
+            }
+
+            let url_slug = PgLTree::from_str(&url_slug_cur)?;
+
+            // Insert chapter data into database
+            query_file!(
+                "queries/insert_one_chapter.sql",
+                current_chapter.chapter_name,
+                chapter_doc_name,
+                current_chapter.wordpress_id,
+                current_chapter.index_in_parent,
+                url_slug,
+            )
+            .execute(&mut tx)
+            .await?;
+        }
+        tx.commit().await?;
+
+        Ok(slug)
     }
 
     pub async fn document_manifest(
