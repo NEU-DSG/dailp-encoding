@@ -4,6 +4,7 @@ mod audio;
 mod connections;
 mod contributors;
 mod early_vocab;
+mod edited_collection;
 mod lexical;
 mod spreadsheets;
 mod tags;
@@ -47,6 +48,9 @@ async fn main() -> Result<()> {
 
     println!("Migrating connections...");
     connections::migrate_connections(&db).await?;
+
+    println!("Migrating collections...");
+    edited_collection::migrate_edited_collection(&db).await?;
 
     Ok(())
 }
