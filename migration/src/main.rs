@@ -27,7 +27,7 @@ async fn main() -> Result<()> {
     println!("Validating manuscript spreadsheets...");
     validate_documents().await?;
 
-    let db = Database::connect().await?;
+    let db = Database::connect(Some(1)).await?;
 
     println!("Migrating Image Sources...");
     migrate_image_sources(&db).await?;
