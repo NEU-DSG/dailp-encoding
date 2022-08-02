@@ -470,20 +470,6 @@
     },
     "query": "-- Insert a document-local morpheme gloss if and only if there's no matching\n-- global gloss.\ninsert into morpheme_gloss (document_id, gloss)\nselect document_id, gloss from unnest($1::uuid[], $2::text[]) as input_data(document_id, gloss)\nwhere not exists (select from morpheme_gloss where morpheme_gloss.document_id is null and morpheme_gloss.gloss = input_data.gloss)\non conflict (coalesce(document_id, uuid_nil()), gloss) do nothing\n"
   },
-  "594bb95b67ed4eb10b0ebc4d3a22496281ccdba1d2a6e5ca0a9016e6e728b940": {
-    "describe": {
-      "columns": [],
-      "nullable": [],
-      "parameters": {
-        "Left": [
-          "Text",
-          "Text",
-          "Int8"
-        ]
-      }
-    },
-    "query": "insert into edited_collection (slug, title, wordpress_menu_id)\nvalues ($1, $2, $3)\non conflict (slug) do update \nset title = excluded.title,\n    wordpress_menu_id = excluded.wordpress_menu_id"
-  },
   "5b699e0fcc9467aed4c1b5ae6361341ed338c32e286e1ae47a3ded10bba0bbf2": {
     "describe": {
       "columns": [
@@ -1549,6 +1535,20 @@
       }
     },
     "query": "select\n  word.*,\n  paragraph.id as paragraph_id,\n  media_slice.time_range as \"audio_slice?\",\n  media_resource.url as \"audio_url?\"\nfrom word\n  inner join paragraph on paragraph.page_id = word.page_id\n  left join media_slice on media_slice.id = word.audio_slice_id\n  left join media_resource on media_resource.id = media_slice.resource_id\nwhere paragraph.id = any($1)\n  and word.character_range is not null\n  -- Include words that overlap with the paragraph range\n  and word.character_range && paragraph.character_range\n  -- Exclude words that start before the paragraph, which means that words are\n  -- always included in the paragraph that they start in. This is the same logic\n  -- as line breaks.\n  and word.character_range &> paragraph.character_range\n-- Include all joined primary keys in the GROUP BY clause.\ngroup by word.id,\n  paragraph.id,\n  media_slice.id,\n  media_resource.id\norder by word.character_range\n"
+  },
+  "bba471ad9b42019470e67093fe974374468b993c472479dfae34b60d505188c0": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Text",
+          "Int8"
+        ]
+      }
+    },
+    "query": "insert into edited_collection (slug, title, wordpress_menu_id)\nvalues ($1, $2, $3)\non conflict (slug) do update\nset title = excluded.title,\nwordpress_menu_id = excluded.wordpress_menu_id\n"
   },
   "bdd747242014027a29ecc063d3e437ef8f289e6168b7c1d41d77622520bc224a": {
     "describe": {
