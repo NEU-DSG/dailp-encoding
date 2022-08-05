@@ -1,10 +1,4 @@
-# Database Tables
-
-| Shorthand             | SQL                                | Rust           |
-|-----------------------|------------------------------------|----------------|
-| `type`                | `type not null`                    | `Type`         |
-| `type?`               | `type` (nullable)                  | `Option<Type>` |
-| `uuid -> other_table` | `uuid references other_table (id)` | `Uuid`         |
+# Documents
 
 ## `document_group`
 | column  | type            | description                                                  |
