@@ -25,7 +25,7 @@ async fn main() -> Result<()> {
     pretty_env_logger::init();
 
     println!("Validating manuscript spreadsheets...");
-   // validate_documents().await?;
+    validate_documents().await?;
 
     let db = Database::connect(Some(1)).await?;
 
