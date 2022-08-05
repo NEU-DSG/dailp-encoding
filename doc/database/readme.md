@@ -6,11 +6,14 @@ If you work with database tables that aren't sufficiently documented here, pleas
 
 ## Abbreviations in this Folder
 
-| Shorthand             | SQL                                | Rust           |
-|-----------------------|------------------------------------|----------------|
-| `type`                | `type not null`                    | `Type`         |
-| `type?`               | `type` (nullable)                  | `Option<Type>` |
-| `uuid -> other_table` | `uuid references other_table (id)` | `Uuid`         |
+Most of our columns are `not null`, which is long to write so we introduced shorthand for describing database columns.
+
+| Column type shorthand       | SQL                                 | Rust           |
+|-----------------------------|-------------------------------------|----------------|
+| `type`                      | `type not null`                     | `Type`         |
+| `type?`                     | `type` (nullable)                   | `Option<Type>` |
+| `uuid -> other_table`       | `uuid references other_table (id)`  |                |
+| `type -> other_table (key)` | `type references other_table (key)` |                |
 
 ## Common SQL to Rust type mappings
 
