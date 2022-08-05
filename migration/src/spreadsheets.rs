@@ -7,9 +7,6 @@ use crate::translations::DocResult;
 use anyhow::Result;
 use dailp::collection::Chapter;
 use dailp::collection::Collection;
-use dailp::collection::CollectionSection;
-use dailp::collection::CollectionSection::Intro;
-use dailp::collection::CollectionSection::Body;
 use dailp::{
     convert_udb, root_noun_surface_forms, root_verb_surface_forms, AnnotatedDoc, AnnotatedForm,
     AnnotatedSeg, AudioSlice, Contributor, Database, Date, DocumentId, DocumentMetadata,
@@ -146,10 +143,8 @@ impl SheetResult {
         let second_value = row
             .next()
             .ok_or_else(|| anyhow::format_err!("Missing second value"))?;
-        let mut is_intro = true;
         for cur_row in row {
             if cur_row[0].is_empty() {
-                is_intro = false;
                 self_intro_chapters = chapters;
                 chapters = Vec::<Chapter>::new();
             } else {
@@ -176,11 +171,6 @@ impl SheetResult {
                     doc_string = row_values.next();
                 }
 
-                let mut intro_or_genre = Body;
-                if is_intro == true {
-                    intro_or_genre = Intro;
-                }
-
                 let new_chapter = Chapter {
                     index_in_parent: index_i64,
                     url_slug: chapter_url_slug,
@@ -188,7 +178,6 @@ impl SheetResult {
                     document_short_name: doc_string,
                     id: None,
                     wordpress_id: wp_id,
-                    chapter_type: intro_or_genre,
                 };
 
                 chapters.push(new_chapter);

@@ -19,8 +19,6 @@ use {
 };
 use sqlx::postgres::types::PgLQuery;
 use sqlx::postgres::types::PgLTree;
-use crate::CollectionSection::Intro;
-use crate::CollectionSection::Body;
 
 /// Connects to our backing database instance, providing high level functions
 /// for accessing the data therein.
@@ -293,41 +291,22 @@ impl Database {
 
             let url_slug = PgLTree::from_str(&url_slug_cur)?;
 
-            let collection_section = current_chapter.chapter_type;
-
             // Insert chapter data into database
-            if collection_section == Intro {
-                query_file!(
-                    "queries/insert_chapter_mark_type_intro.sql",
-                    current_chapter.chapter_name,
-                    chapter_doc_name,
-                    current_chapter.wordpress_id,
-                    current_chapter.index_in_parent,
-                    url_slug,
-                )
-                .execute(&mut tx)
-                .await?;
-            }
-
-            if collection_section == Body {
-                query_file!(
-                    "queries/insert_chapter_mark_type_genre.sql",
-                    current_chapter.chapter_name,
-                    chapter_doc_name,
-                    current_chapter.wordpress_id,
-                    current_chapter.index_in_parent,
-                    url_slug,
-                )
-                .execute(&mut tx)
-                .await?;
-            }
-            
+            query_file!(
+                "queries/insert_one_chapter.sql",
+                current_chapter.chapter_name,
+                chapter_doc_name,
+                current_chapter.wordpress_id,
+                current_chapter.index_in_parent,
+                url_slug,
+            )
+            .execute(&mut tx)
+            .await?;
         }
         tx.commit().await?;
 
         Ok(slug)
     }
-
 
     pub async fn document_manifest(
         &self,

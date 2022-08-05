@@ -1,6 +1,5 @@
 use crate::*;
 use uuid::Uuid;
-use sqlx::postgres::{PgHasArrayType, PgTypeInfo};
 
 #[derive(Debug, Clone)]
 pub struct Collection {
@@ -28,13 +27,4 @@ pub struct Chapter {
     pub document_short_name: Option<String>,
 
     pub wordpress_id: Option<i64>,
-
-    pub chapter_type: CollectionSection,
-}
-
-#[derive(Debug, Clone, PartialEq, sqlx::Type)]
-#[sqlx(type_name = "collection_section")]
-pub enum CollectionSection {
-    Intro,
-    Body,
 }
