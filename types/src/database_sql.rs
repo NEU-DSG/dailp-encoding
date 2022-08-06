@@ -1,5 +1,7 @@
 #![allow(missing_docs)]
 
+use sqlx::postgres::types::PgLQuery;
+use sqlx::postgres::types::PgLTree;
 use std::ops::Bound;
 use std::str::FromStr;
 use {
@@ -18,8 +20,6 @@ use {
     std::time::Duration,
     uuid::Uuid,
 };
-use sqlx::postgres::types::PgLQuery;
-use sqlx::postgres::types::PgLTree;
 
 /// Connects to our backing database instance, providing high level functions
 /// for accessing the data therein.
@@ -343,7 +343,7 @@ impl Database {
         Ok(iiif::Manifest::from_document(self, doc, url).await)
     }
 
-    pub async fn all_tags(&self, system: CherokeeOrthography) -> Result<Vec<TagForm>> {
+    pub async fn all_tags(&self, system: CherokeeOrthography) -> Result<Vec<ConcreteMorphemeTag>> {
         use async_graphql::Value;
         let system_name = if let Value::Enum(s) = system.to_value() {
             s
@@ -355,7 +355,7 @@ impl Database {
             .await?;
         Ok(results
             .into_iter()
-            .map(|tag| TagForm {
+            .map(|tag| ConcreteMorphemeTag {
                 internal_tags: Vec::new(),
                 tag: tag.gloss,
                 title: tag.title,
@@ -363,7 +363,7 @@ impl Database {
                 details_url: None,
                 definition: tag.description.unwrap_or_default(),
                 morpheme_type: tag.linguistic_type.unwrap_or_default(),
-                segment_type: tag.segment_type,
+                role_override: tag.role_override,
             })
             .collect())
     }
@@ -780,7 +780,7 @@ impl Database {
         .fetch_all(&mut tx)
         .await?;
 
-        let (doc_id, gloss, word_id, index, morpheme, segment_type): (
+        let (doc_id, gloss, word_id, index, morpheme, role): (
             Vec<_>,
             Vec<_>,
             Vec<_>,
@@ -808,7 +808,7 @@ impl Database {
                                 word_id,
                                 index as i64,
                                 segment.morpheme,
-                                segment.segment_type,
+                                segment.role,
                             )
                         })
                 })
@@ -831,7 +831,7 @@ impl Database {
             &*word_id,
             &*index,
             &*morpheme,
-            &*segment_type as _
+            &*role as _
         )
         .execute(&mut tx)
         .await?;
@@ -882,7 +882,7 @@ impl Database {
         .await?;
 
         if let Some(segments) = form.segments {
-            let (document_id, gloss, word_id, index, morpheme, segment_type): (
+            let (document_id, gloss, word_id, index, morpheme, role): (
                 Vec<_>,
                 Vec<_>,
                 Vec<_>,
@@ -906,7 +906,7 @@ impl Database {
                         word_id,
                         index as i64,
                         segment.morpheme,
-                        segment.segment_type as SegmentType,
+                        segment.role as WordSegmentRole,
                     )
                 })
                 .multiunzip();
@@ -926,7 +926,7 @@ impl Database {
                 &*word_id,
                 &*index,
                 &*morpheme,
-                &*segment_type as _
+                &*role as _
             )
             .execute(&mut tx)
             .await?;
@@ -945,7 +945,7 @@ impl Database {
         )
     }
 
-    pub async fn insert_abstract_tag(&self, tag: MorphemeTag) -> Result<()> {
+    pub async fn insert_abstract_tag(&self, tag: AbstractMorphemeTag) -> Result<()> {
         let abstract_id = query_file_scalar!(
             "queries/upsert_morpheme_tag.sql",
             &tag.id,
@@ -966,7 +966,11 @@ impl Database {
         Ok(())
     }
 
-    pub async fn insert_morpheme_tag(&self, form: TagForm, system_id: Uuid) -> Result<()> {
+    pub async fn insert_morpheme_tag(
+        &self,
+        form: ConcreteMorphemeTag,
+        system_id: Uuid,
+    ) -> Result<()> {
         let abstract_ids = query_file_scalar!(
             "queries/abstract_tag_ids_from_glosses.sql",
             &form.internal_tags[..]
@@ -979,7 +983,7 @@ impl Database {
             &abstract_ids,
             form.tag,
             form.title,
-            form.segment_type as Option<SegmentType>,
+            form.role_override as Option<WordSegmentRole>,
             form.definition
         )
         .execute(&self.client)
@@ -1217,7 +1221,7 @@ impl Loader<ParagraphsInPage> for Database {
 
 #[async_trait]
 impl Loader<PartsOfWord> for Database {
-    type Value = Vec<MorphemeSegment>;
+    type Value = Vec<WordSegment>;
     type Error = Arc<sqlx::Error>;
 
     async fn load(
@@ -1233,12 +1237,12 @@ impl Loader<PartsOfWord> for Database {
             .map(|part| {
                 (
                     PartsOfWord(part.word_id),
-                    MorphemeSegment {
+                    WordSegment {
                         system: None,
                         morpheme: part.morpheme,
                         gloss: part.gloss,
                         gloss_id: part.gloss_id,
-                        segment_type: part.segment_type,
+                        role: part.role,
                         matching_tag: None,
                     },
                 )
@@ -1249,7 +1253,7 @@ impl Loader<PartsOfWord> for Database {
 
 #[async_trait]
 impl Loader<TagId> for Database {
-    type Value = Vec<TagForm>;
+    type Value = Vec<ConcreteMorphemeTag>;
     type Error = Arc<sqlx::Error>;
     async fn load(&self, keys: &[TagId]) -> Result<HashMap<TagId, Self::Value>, Self::Error> {
         use async_graphql::{InputType, Name, Value};
@@ -1276,7 +1280,7 @@ impl Loader<TagId> for Database {
                         tag.abstract_gloss.clone(),
                         InputType::parse(Some(Value::Enum(Name::new(tag.system_name)))).unwrap(),
                     ),
-                    TagForm {
+                    ConcreteMorphemeTag {
                         internal_tags: tag.internal_tags.unwrap_or_default(),
                         tag: tag.concrete_gloss,
                         title: tag.title,
@@ -1284,7 +1288,7 @@ impl Loader<TagId> for Database {
                         details_url: None,
                         definition: tag.description.unwrap_or_default(),
                         morpheme_type: tag.linguistic_type.unwrap_or_default(),
-                        segment_type: tag.segment_type,
+                        role_override: tag.role_override,
                     },
                 )
             })
@@ -1351,7 +1355,7 @@ impl Loader<WordsInParagraph> for Database {
 
 #[async_trait]
 impl Loader<TagForMorpheme> for Database {
-    type Value = TagForm;
+    type Value = ConcreteMorphemeTag;
     type Error = Arc<sqlx::Error>;
 
     async fn load(
@@ -1382,7 +1386,7 @@ impl Loader<TagForMorpheme> for Database {
                         tag.gloss_id,
                         InputType::parse(Some(Value::Enum(Name::new(tag.system_name)))).unwrap(),
                     ),
-                    TagForm {
+                    ConcreteMorphemeTag {
                         internal_tags: Vec::new(),
                         tag: tag.gloss,
                         title: tag.title,
@@ -1390,7 +1394,7 @@ impl Loader<TagForMorpheme> for Database {
                         details_url: None,
                         definition: tag.description.unwrap_or_default(),
                         morpheme_type: tag.linguistic_type.unwrap_or_default(),
-                        segment_type: tag.segment_type,
+                        role_override: tag.role_override,
                     },
                 )
             })

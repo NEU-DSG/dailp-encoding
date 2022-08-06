@@ -1,4 +1,4 @@
-use crate::SegmentType;
+use crate::WordSegmentRole;
 use serde::{Deserialize, Serialize};
 
 /// Represents a morphological gloss tag without committing to a single representation.
@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 /// - TODO: Use a more generic representation than fields for learner, TAOC, and CRG.
 #[derive(Serialize, Deserialize, Debug, Clone, async_graphql::SimpleObject)]
 #[serde(rename_all = "camelCase")]
-pub struct MorphemeTag {
+pub struct AbstractMorphemeTag {
     /// Unique identifier for this morpheme which should be used in raw
     /// interlinear glosses of a word containing this morpheme.
     /// Standard annotation tag for this morpheme, defined by DAILP.
@@ -19,7 +19,7 @@ pub struct MorphemeTag {
 /// A concrete representation of a particular functional morpheme.
 #[derive(async_graphql::SimpleObject, Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
-pub struct TagForm {
+pub struct ConcreteMorphemeTag {
     /// Internal representation of this functional item, which may be one or
     /// more word parts in the raw annotation. For example, ["X", "Y"] could map
     /// to "Z" in a particular display format.
@@ -39,5 +39,5 @@ pub struct TagForm {
     /// "Aspectual Suffix"
     pub morpheme_type: String,
     /// Overrides the segment type of instances of this tag.
-    pub segment_type: Option<SegmentType>,
+    pub role_override: Option<WordSegmentRole>,
 }

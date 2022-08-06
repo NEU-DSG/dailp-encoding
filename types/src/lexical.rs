@@ -1,4 +1,4 @@
-use crate::{AnnotatedForm, Database, Date, DocumentId, Geometry, MorphemeSegment};
+use crate::{AnnotatedForm, Database, Date, DocumentId, Geometry, WordSegment};
 use serde::{Deserialize, Serialize};
 
 /// The reference position within a document of one specific form
@@ -56,12 +56,12 @@ impl PositionInDocument {
     }
 
     /// Create a rough URI-like string for this word with the given morphemic segmentation.
-    pub fn make_form_id(&self, segments: &[MorphemeSegment]) -> String {
+    pub fn make_form_id(&self, segments: &[WordSegment]) -> String {
         format!(
             "{}.{}:{}",
             self.document_id.0,
             self.index,
-            MorphemeSegment::gloss_layer(segments)
+            WordSegment::gloss_layer(segments)
         )
     }
 }
@@ -273,7 +273,7 @@ pub fn seg_verb_surface_form(
         None
     };
 
-    let segments = MorphemeSegment::parse_many(&morpheme_layer, &gloss_layer)?;
+    let segments = WordSegment::parse_many(&morpheme_layer, &gloss_layer)?;
 
     Some(AnnotatedForm {
         id: None,
@@ -382,7 +382,7 @@ pub fn root_verb_surface_form(
         cols.next();
     }
 
-    let segments = MorphemeSegment::parse_many(&morpheme_layer, &gloss_layer)?;
+    let segments = WordSegment::parse_many(&morpheme_layer, &gloss_layer)?;
 
     Some(AnnotatedForm {
         id: None,
@@ -462,7 +462,7 @@ pub fn root_noun_surface_form(
         }
     }
     let commentary = if has_comment { cols.next() } else { None };
-    let segments = MorphemeSegment::parse_many(&morpheme_layer, &gloss_layer)?;
+    let segments = WordSegment::parse_many(&morpheme_layer, &gloss_layer)?;
 
     Some(AnnotatedForm {
         id: None,

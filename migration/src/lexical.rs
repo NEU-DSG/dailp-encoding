@@ -2,7 +2,7 @@ use crate::spreadsheets::{LexicalEntryWithForms, SheetResult};
 use anyhow::Result;
 use dailp::{
     convert_udb, seg_verb_surface_forms, AnnotatedForm, Contributor, Database, Date, DocumentId,
-    DocumentMetadata, LexicalConnection, MorphemeId, MorphemeSegment, PositionInDocument,
+    DocumentMetadata, LexicalConnection, MorphemeId, PositionInDocument, WordSegment,
 };
 use itertools::Itertools;
 
@@ -170,7 +170,7 @@ async fn parse_numerals(
             let simple_phonetics = values.next()?;
             let syllabary = values.next()?;
             let position = PositionInDocument::new(doc_id.clone(), page_num, key);
-            let segments = vec![MorphemeSegment::new(root_dailp, gloss.clone(), None)];
+            let segments = vec![WordSegment::new(root_dailp, gloss.clone(), None)];
             Some(AnnotatedForm {
                 id: None,
                 position,
@@ -250,7 +250,7 @@ async fn parse_appendix(db: &Database, sheet_id: &str, to_skip: usize) -> Result
             let phonemic = values.next();
             let morpheme_gloss = values.next()?;
             let morpheme_segments = values.next()?;
-            let segments = MorphemeSegment::parse_many(&morpheme_segments, &morpheme_gloss)?;
+            let segments = WordSegment::parse_many(&morpheme_segments, &morpheme_gloss)?;
             Some(AnnotatedForm {
                 id: None,
                 position,
@@ -348,7 +348,7 @@ fn parse_new_df1975(
                     line_break: None,
                     page_break: None,
                     english_gloss: glosses,
-                    segments: Some(vec![MorphemeSegment::new(
+                    segments: Some(vec![WordSegment::new(
                         convert_udb(&root).into_dailp(),
                         root_gloss.to_owned(),
                         None,
