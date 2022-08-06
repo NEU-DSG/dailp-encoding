@@ -1,6 +1,6 @@
 use crate::spreadsheets::SheetResult;
 use anyhow::Result;
-use dailp::{AbstractMorphemeTag, ConcreteMorphemeTag, Database, Uuid, WordSegmentRole};
+use dailp::{AbstractMorphemeTag, Database, MorphemeTag, Uuid, WordSegmentRole};
 use log::info;
 
 /// Cherokee has many functional morphemes that are documented.
@@ -60,7 +60,7 @@ async fn sync_morpheme_system(db: &Database, sheet_name: &str, system_id: Uuid) 
             "Clitic" => Some(WordSegmentRole::Clitic),
             _ => None,
         });
-        Some(ConcreteMorphemeTag {
+        Some(MorphemeTag {
             internal_tags: internal_tags_str.split("-").map(|s| s.to_owned()).collect(),
             tag: target_tag,
             title: name,

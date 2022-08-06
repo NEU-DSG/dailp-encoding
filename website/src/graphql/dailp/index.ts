@@ -218,37 +218,6 @@ export enum CherokeeOrthography {
   Taoc = "TAOC",
 }
 
-/** A concrete representation of a particular functional morpheme. */
-export type ConcreteMorphemeTag = {
-  readonly __typename?: "ConcreteMorphemeTag"
-  /**
-   * A prose description of what this morpheme means and how it works in
-   * context.
-   */
-  readonly definition: Scalars["String"]
-  /** URL to an external page with more details about this morpheme. */
-  readonly detailsUrl: Maybe<Scalars["String"]>
-  /**
-   * Internal representation of this functional item, which may be one or
-   * more word parts in the raw annotation. For example, ["X", "Y"] could map
-   * to "Z" in a particular display format.
-   */
-  readonly internalTags: ReadonlyArray<Scalars["String"]>
-  /**
-   * What kind of morpheme is this? Examples are "Prepronominal Prefix" or
-   * "Aspectual Suffix"
-   */
-  readonly morphemeType: Scalars["String"]
-  /** Overrides the segment type of instances of this tag. */
-  readonly roleOverride: Maybe<WordSegmentRole>
-  /** How this morpheme looks in original language data */
-  readonly shape: Maybe<Scalars["String"]>
-  /** How this morpheme is represented in a gloss */
-  readonly tag: Scalars["String"]
-  /** Plain English title of the morpheme tag */
-  readonly title: Scalars["String"]
-}
-
 /**
  * A block of content, which may be one of several types.
  * Each page contains several blocks.
@@ -447,6 +416,37 @@ export type MorphemeReference = {
   readonly morpheme: Scalars["String"]
 }
 
+/** A concrete representation of a particular functional morpheme. */
+export type MorphemeTag = {
+  readonly __typename?: "MorphemeTag"
+  /**
+   * A prose description of what this morpheme means and how it works in
+   * context.
+   */
+  readonly definition: Scalars["String"]
+  /** URL to an external page with more details about this morpheme. */
+  readonly detailsUrl: Maybe<Scalars["String"]>
+  /**
+   * Internal representation of this functional item, which may be one or
+   * more word parts in the raw annotation. For example, ["X", "Y"] could map
+   * to "Z" in a particular display format.
+   */
+  readonly internalTags: ReadonlyArray<Scalars["String"]>
+  /**
+   * What kind of morpheme is this? Examples are "Prepronominal Prefix" or
+   * "Aspectual Suffix"
+   */
+  readonly morphemeType: Scalars["String"]
+  /** Overrides the segment type of instances of this tag. */
+  readonly roleOverride: Maybe<WordSegmentRole>
+  /** How this morpheme looks in original language data */
+  readonly shape: Maybe<Scalars["String"]>
+  /** How this morpheme is represented in a gloss */
+  readonly tag: Scalars["String"]
+  /** Plain English title of the morpheme tag */
+  readonly title: Scalars["String"]
+}
+
 export type Mutation = {
   readonly __typename?: "Mutation"
   /**
@@ -535,7 +535,7 @@ export type Query = {
   /** List of all content pages */
   readonly allPages: ReadonlyArray<Page>
   /** List of all the functional morpheme tags available */
-  readonly allTags: ReadonlyArray<ConcreteMorphemeTag>
+  readonly allTags: ReadonlyArray<MorphemeTag>
   readonly collection: DocumentCollection
   /** Retrieves a full document from its unique name. */
   readonly document: Maybe<AnnotatedDoc>
@@ -544,7 +544,7 @@ export type Query = {
    * string. For example, "3PL.B" is the standard string referring to a 3rd
    * person plural prefix.
    */
-  readonly morphemeTag: Maybe<ConcreteMorphemeTag>
+  readonly morphemeTag: Maybe<MorphemeTag>
   /** Forms containing the given morpheme gloss or related ones clustered over time. */
   readonly morphemeTimeClusters: ReadonlyArray<FormsInTime>
   /**
@@ -648,7 +648,7 @@ export type WordSegment = {
    * If this morpheme represents a functional tag that we have further
    * information on, this is the corresponding database entry.
    */
-  readonly matchingTag: Maybe<ConcreteMorphemeTag>
+  readonly matchingTag: Maybe<MorphemeTag>
   /** Phonemic representation of the morpheme */
   readonly morpheme: Scalars["String"]
   /**
@@ -790,11 +790,8 @@ export type DocumentContentsQuery = { readonly __typename?: "Query" } & {
                               > & {
                                   readonly matchingTag: Maybe<
                                     {
-                                      readonly __typename?: "ConcreteMorphemeTag"
-                                    } & Pick<
-                                      ConcreteMorphemeTag,
-                                      "tag" | "title"
-                                    >
+                                      readonly __typename?: "MorphemeTag"
+                                    } & Pick<MorphemeTag, "tag" | "title">
                                   >
                                 }
                             >
@@ -831,8 +828,8 @@ export type DocumentContentsQuery = { readonly __typename?: "Query" } & {
                 "morpheme" | "gloss" | "role" | "previousSeparator"
               > & {
                   readonly matchingTag: Maybe<
-                    { readonly __typename?: "ConcreteMorphemeTag" } & Pick<
-                      ConcreteMorphemeTag,
+                    { readonly __typename?: "MorphemeTag" } & Pick<
+                      MorphemeTag,
                       "tag" | "title"
                     >
                   >
@@ -867,8 +864,8 @@ export type FormFieldsFragment = {
         "morpheme" | "gloss" | "role" | "previousSeparator"
       > & {
           readonly matchingTag: Maybe<
-            { readonly __typename?: "ConcreteMorphemeTag" } & Pick<
-              ConcreteMorphemeTag,
+            { readonly __typename?: "MorphemeTag" } & Pick<
+              MorphemeTag,
               "tag" | "title"
             >
           >
@@ -952,8 +949,8 @@ export type GlossaryQueryVariables = Exact<{
 
 export type GlossaryQuery = { readonly __typename?: "Query" } & {
   readonly allTags: ReadonlyArray<
-    { readonly __typename?: "ConcreteMorphemeTag" } & Pick<
-      ConcreteMorphemeTag,
+    { readonly __typename?: "MorphemeTag" } & Pick<
+      MorphemeTag,
       "tag" | "title" | "definition" | "morphemeType"
     >
   >
@@ -1042,8 +1039,8 @@ export type TagQueryVariables = Exact<{
 
 export type TagQuery = { readonly __typename?: "Query" } & {
   readonly tag: Maybe<
-    { readonly __typename?: "ConcreteMorphemeTag" } & Pick<
-      ConcreteMorphemeTag,
+    { readonly __typename?: "MorphemeTag" } & Pick<
+      MorphemeTag,
       "morphemeType" | "tag" | "title" | "definition"
     >
   >

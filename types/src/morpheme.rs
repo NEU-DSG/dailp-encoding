@@ -26,7 +26,7 @@ pub struct WordSegment {
     pub role: WordSegmentRole,
     /// Optional glossary entry for this segment which gives further information,
     /// like a definition and example usages.
-    pub matching_tag: Option<ConcreteMorphemeTag>,
+    pub matching_tag: Option<MorphemeTag>,
 }
 
 /// The kind of segment that a particular sequence of characters in a morphemic
@@ -146,7 +146,7 @@ impl WordSegment {
     async fn matching_tag(
         &self,
         context: &async_graphql::Context<'_>,
-    ) -> FieldResult<Option<ConcreteMorphemeTag>> {
+    ) -> FieldResult<Option<MorphemeTag>> {
         use async_graphql::dataloader::*;
         if let Some(matching_tag) = &self.matching_tag {
             Ok(Some(matching_tag.clone()))

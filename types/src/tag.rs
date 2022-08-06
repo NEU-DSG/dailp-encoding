@@ -19,7 +19,7 @@ pub struct AbstractMorphemeTag {
 /// A concrete representation of a particular functional morpheme.
 #[derive(async_graphql::SimpleObject, Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
-pub struct ConcreteMorphemeTag {
+pub struct MorphemeTag {
     /// Internal representation of this functional item, which may be one or
     /// more word parts in the raw annotation. For example, ["X", "Y"] could map
     /// to "Z" in a particular display format.

@@ -343,7 +343,7 @@ impl Database {
         Ok(iiif::Manifest::from_document(self, doc, url).await)
     }
 
-    pub async fn all_tags(&self, system: CherokeeOrthography) -> Result<Vec<ConcreteMorphemeTag>> {
+    pub async fn all_tags(&self, system: CherokeeOrthography) -> Result<Vec<MorphemeTag>> {
         use async_graphql::Value;
         let system_name = if let Value::Enum(s) = system.to_value() {
             s
@@ -355,7 +355,7 @@ impl Database {
             .await?;
         Ok(results
             .into_iter()
-            .map(|tag| ConcreteMorphemeTag {
+            .map(|tag| MorphemeTag {
                 internal_tags: Vec::new(),
                 tag: tag.gloss,
                 title: tag.title,
@@ -966,11 +966,7 @@ impl Database {
         Ok(())
     }
 
-    pub async fn insert_morpheme_tag(
-        &self,
-        form: ConcreteMorphemeTag,
-        system_id: Uuid,
-    ) -> Result<()> {
+    pub async fn insert_morpheme_tag(&self, form: MorphemeTag, system_id: Uuid) -> Result<()> {
         let abstract_ids = query_file_scalar!(
             "queries/abstract_tag_ids_from_glosses.sql",
             &form.internal_tags[..]
@@ -1253,7 +1249,7 @@ impl Loader<PartsOfWord> for Database {
 
 #[async_trait]
 impl Loader<TagId> for Database {
-    type Value = Vec<ConcreteMorphemeTag>;
+    type Value = Vec<MorphemeTag>;
     type Error = Arc<sqlx::Error>;
     async fn load(&self, keys: &[TagId]) -> Result<HashMap<TagId, Self::Value>, Self::Error> {
         use async_graphql::{InputType, Name, Value};
@@ -1280,7 +1276,7 @@ impl Loader<TagId> for Database {
                         tag.abstract_gloss.clone(),
                         InputType::parse(Some(Value::Enum(Name::new(tag.system_name)))).unwrap(),
                     ),
-                    ConcreteMorphemeTag {
+                    MorphemeTag {
                         internal_tags: tag.internal_tags.unwrap_or_default(),
                         tag: tag.concrete_gloss,
                         title: tag.title,
@@ -1355,7 +1351,7 @@ impl Loader<WordsInParagraph> for Database {
 
 #[async_trait]
 impl Loader<TagForMorpheme> for Database {
-    type Value = ConcreteMorphemeTag;
+    type Value = MorphemeTag;
     type Error = Arc<sqlx::Error>;
 
     async fn load(
@@ -1386,7 +1382,7 @@ impl Loader<TagForMorpheme> for Database {
                         tag.gloss_id,
                         InputType::parse(Some(Value::Enum(Name::new(tag.system_name)))).unwrap(),
                     ),
-                    ConcreteMorphemeTag {
+                    MorphemeTag {
                         internal_tags: Vec::new(),
                         tag: tag.gloss,
                         title: tag.title,
