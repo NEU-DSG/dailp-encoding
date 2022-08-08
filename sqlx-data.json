@@ -290,6 +290,67 @@
     },
     "query": "select\n  word_segment.morpheme,\n  word.id as word_id,\n  word.source_text,\n  word.simple_phonetics,\n  word.phonemic,\n  word.english_gloss,\n  word.commentary,\n  word.document_id,\n  word.index_in_document,\n  word.page_number\nfrom morpheme_gloss\n  inner join document on document.id = morpheme_gloss.document_id\n  left join word_segment on word_segment.gloss_id = morpheme_gloss.id\n  left join word on word.id = word_segment.word_id\nwhere morpheme_gloss.gloss = $1\n  and document.short_name = $2\norder by word_segment.morpheme\n"
   },
+  "35acc71b364ed7efb64b5082a4a23c1424955963bbad243dba6269984a8f69c7": {
+    "describe": {
+      "columns": [
+        {
+          "name": "index_in_word",
+          "ordinal": 0,
+          "type_info": "Int8"
+        },
+        {
+          "name": "word_id",
+          "ordinal": 1,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "morpheme",
+          "ordinal": 2,
+          "type_info": "Text"
+        },
+        {
+          "name": "gloss_id",
+          "ordinal": 3,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "gloss",
+          "ordinal": 4,
+          "type_info": "Text"
+        },
+        {
+          "name": "role: WordSegmentRole",
+          "ordinal": 5,
+          "type_info": {
+            "Custom": {
+              "kind": {
+                "Enum": [
+                  "Morpheme",
+                  "Clitic",
+                  "Modifier"
+                ]
+              },
+              "name": "word_segment_role"
+            }
+          }
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        true,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "UuidArray"
+        ]
+      }
+    },
+    "query": "select\n  word_segment.index_in_word,\n  word_segment.word_id,\n  word_segment.morpheme,\n  word_segment.gloss_id,\n  morpheme_gloss.gloss,\n  word_segment.role as \"role: WordSegmentRole\"\nfrom word_segment\n  inner join morpheme_gloss on morpheme_gloss.id = word_segment.gloss_id\nwhere word_segment.word_id = any($1)\norder by word_segment.index_in_word\n"
+  },
   "388c671a0e5cf32298db07a5286a1ecb0efe59c9ddbdff1c7c49f79454a21801": {
     "describe": {
       "columns": [
@@ -376,6 +437,166 @@
       }
     },
     "query": "insert into document_page (document_id, index_in_document, iiif_source_id, iiif_oid)\nvalues ($1, $2, $3, $4)\non conflict (document_id, index_in_document) do update set\nindex_in_document = excluded.index_in_document,\niiif_source_id = excluded.iiif_source_id,\niiif_oid = excluded.iiif_oid\nreturning id\n"
+  },
+  "485b68540ad5d84e5e98c8ec34d4bbc9ddf5a4d129dca5aa9a87b5217c26e9a0": {
+    "describe": {
+      "columns": [
+        {
+          "name": "gloss_id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "example_shape",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "system_name",
+          "ordinal": 2,
+          "type_info": "Text"
+        },
+        {
+          "name": "abstract_gloss",
+          "ordinal": 3,
+          "type_info": "Text"
+        },
+        {
+          "name": "concrete_gloss",
+          "ordinal": 4,
+          "type_info": "Text"
+        },
+        {
+          "name": "title",
+          "ordinal": 5,
+          "type_info": "Text"
+        },
+        {
+          "name": "description",
+          "ordinal": 6,
+          "type_info": "Text"
+        },
+        {
+          "name": "role_override: WordSegmentRole",
+          "ordinal": 7,
+          "type_info": {
+            "Custom": {
+              "kind": {
+                "Enum": [
+                  "Morpheme",
+                  "Clitic",
+                  "Modifier"
+                ]
+              },
+              "name": "word_segment_role"
+            }
+          }
+        },
+        {
+          "name": "linguistic_type",
+          "ordinal": 8,
+          "type_info": "Text"
+        },
+        {
+          "name": "internal_tags",
+          "ordinal": 9,
+          "type_info": "TextArray"
+        }
+      ],
+      "nullable": [
+        false,
+        true,
+        false,
+        false,
+        false,
+        false,
+        true,
+        true,
+        true,
+        null
+      ],
+      "parameters": {
+        "Left": [
+          "TextArray",
+          "TextArray"
+        ]
+      }
+    },
+    "query": "select\n  morpheme_gloss.id as gloss_id,\n  morpheme_gloss.example_shape,\n  abbreviation_system.short_name as system_name,\n  morpheme_gloss.gloss as abstract_gloss,\n  morpheme_tag.gloss as concrete_gloss,\n  morpheme_tag.title,\n  morpheme_tag.description,\n  morpheme_tag.role_override as \"role_override: WordSegmentRole\",\n  abstract_morpheme_tag.linguistic_type,\n  array(\n    select abstract_morpheme_tag.internal_gloss\n    from unnest(morpheme_tag.abstract_ids) as abstract_id\n      inner join abstract_morpheme_tag on abstract_morpheme_tag.id = abstract_id) as internal_tags\nfrom morpheme_gloss\n  inner join abstract_morpheme_tag on abstract_morpheme_tag.id = morpheme_gloss.tag_id\n  left join abbreviation_system on abbreviation_system.short_name = any($2)\n  inner join morpheme_tag on morpheme_tag.abstract_ids[1] = abstract_morpheme_tag.id\nwhere morpheme_gloss.gloss = any($1)\n  and morpheme_tag.system_id = abbreviation_system.id\norder by array_length(morpheme_tag.abstract_ids, 1) desc\n"
+  },
+  "49f26a45b73a43fe847fdeba747d4b857705f380fa7a5f314c9d5ae1103d81a9": {
+    "describe": {
+      "columns": [
+        {
+          "name": "gloss_id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "example_shape",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "system_name",
+          "ordinal": 2,
+          "type_info": "Text"
+        },
+        {
+          "name": "gloss",
+          "ordinal": 3,
+          "type_info": "Text"
+        },
+        {
+          "name": "title",
+          "ordinal": 4,
+          "type_info": "Text"
+        },
+        {
+          "name": "description",
+          "ordinal": 5,
+          "type_info": "Text"
+        },
+        {
+          "name": "role_override: WordSegmentRole",
+          "ordinal": 6,
+          "type_info": {
+            "Custom": {
+              "kind": {
+                "Enum": [
+                  "Morpheme",
+                  "Clitic",
+                  "Modifier"
+                ]
+              },
+              "name": "word_segment_role"
+            }
+          }
+        },
+        {
+          "name": "linguistic_type",
+          "ordinal": 7,
+          "type_info": "Text"
+        }
+      ],
+      "nullable": [
+        false,
+        true,
+        false,
+        false,
+        false,
+        true,
+        true,
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "UuidArray",
+          "TextArray"
+        ]
+      }
+    },
+    "query": "select\n  morpheme_gloss.id as gloss_id,\n  morpheme_gloss.example_shape,\n  abbreviation_system.short_name as system_name,\n  morpheme_tag.gloss,\n  morpheme_tag.title,\n  morpheme_tag.description,\n  morpheme_tag.role_override as \"role_override: WordSegmentRole\",\n  abstract_morpheme_tag.linguistic_type\nfrom morpheme_gloss\n  inner join abstract_morpheme_tag on abstract_morpheme_tag.id = morpheme_gloss.tag_id\n  left join abbreviation_system on abbreviation_system.short_name = any($2)\n  inner join morpheme_tag on morpheme_tag.abstract_ids[1] = abstract_morpheme_tag.id\nwhere morpheme_gloss.id = any($1)\n  and morpheme_tag.system_id = abbreviation_system.id\n"
   },
   "525b865b4c051117ca43bc0c2582bce2f5fee479d52e75340873ce0a1441a506": {
     "describe": {
@@ -555,102 +776,6 @@
     },
     "query": "select\n  attr.document_id,\n  attr.contribution_role,\n  contributor.id,\n  contributor.full_name\nfrom contributor_attribution as attr\n  inner join contributor on contributor.id = attr.contributor_id\nwhere attr.document_id = any($1)\n"
   },
-  "5f059d34a493d5b51076adb51a3f60475a131b42939f0e5e4cf93f62e5e4387f": {
-    "describe": {
-      "columns": [
-        {
-          "name": "index_in_word",
-          "ordinal": 0,
-          "type_info": "Int8"
-        },
-        {
-          "name": "word_id",
-          "ordinal": 1,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "morpheme",
-          "ordinal": 2,
-          "type_info": "Text"
-        },
-        {
-          "name": "gloss_id",
-          "ordinal": 3,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "gloss",
-          "ordinal": 4,
-          "type_info": "Text"
-        },
-        {
-          "name": "segment_type: SegmentType",
-          "ordinal": 5,
-          "type_info": {
-            "Custom": {
-              "kind": {
-                "Enum": [
-                  "Morpheme",
-                  "Clitic",
-                  "Combine"
-                ]
-              },
-              "name": "segment_type"
-            }
-          }
-        }
-      ],
-      "nullable": [
-        false,
-        false,
-        false,
-        true,
-        false,
-        false
-      ],
-      "parameters": {
-        "Left": [
-          "UuidArray"
-        ]
-      }
-    },
-    "query": "select\n  word_segment.index_in_word,\n  word_segment.word_id,\n  word_segment.morpheme,\n  word_segment.gloss_id,\n  morpheme_gloss.gloss,\n  word_segment.segment_type as \"segment_type: SegmentType\"\nfrom word_segment\n  inner join morpheme_gloss on morpheme_gloss.id = word_segment.gloss_id\nwhere word_segment.word_id = any($1)\norder by word_segment.index_in_word\n"
-  },
-  "631df0147cf3d4a3576198b5d417fa360b3e32e29b566d497b684905a85c8e9e": {
-    "describe": {
-      "columns": [],
-      "nullable": [],
-      "parameters": {
-        "Left": [
-          "UuidArray",
-          "TextArray",
-          "UuidArray",
-          "Int8Array",
-          "TextArray",
-          {
-            "Custom": {
-              "kind": {
-                "Array": {
-                  "Custom": {
-                    "kind": {
-                      "Enum": [
-                        "Morpheme",
-                        "Clitic",
-                        "Combine"
-                      ]
-                    },
-                    "name": "segment_type"
-                  }
-                }
-              },
-              "name": "_segment_type"
-            }
-          }
-        ]
-      }
-    },
-    "query": "insert into word_segment (gloss_id, word_id, index_in_word, morpheme, segment_type)\n-- Fill in glosses that weren't inserted with their global match.\nselect\n  coalesce(inserted_gloss.id, global_gloss.id),\n  word_id,\n  index,\n  morpheme,\n  segment_type\nfrom\n  unnest(\n    $1::uuid[], $2::text[], $3::uuid[], $4::bigint[], $5::text[], $6::segment_type[]\n  ) as input_data(document_id, gloss, word_id, index, morpheme, segment_type)\n  left join\n    morpheme_gloss as inserted_gloss on\n      inserted_gloss.document_id = input_data.document_id and inserted_gloss.gloss = input_data.gloss\n  left join\n    morpheme_gloss as global_gloss on\n      global_gloss.document_id is null and global_gloss.gloss = input_data.gloss\non conflict (word_id, index_in_word)\ndo update set\nmorpheme = excluded.morpheme,\ngloss_id = excluded.gloss_id,\nsegment_type = excluded.segment_type\n"
-  },
   "6858e67c5a27aa4f38366244a46c9a4a50546c164a2b91599301aad1bc8f3cd0": {
     "describe": {
       "columns": [],
@@ -704,6 +829,41 @@
       }
     },
     "query": "insert into word (document_id, source_text, simple_phonetics, phonemic, english_gloss, recorded_at, commentary,\n  page_number, index_in_document)\nselect * from unnest($1::uuid[], $2::text[], $3::text[], $4::text[], $5::text[], $6::date[], $7::text[], $8::text[], $9::bigint[])\nreturning id\n"
+  },
+  "73409561936ce0fa2234c9b37c12419fd61bed4d25a4a87599bbf646b80c7d9f": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "UuidArray",
+          "TextArray",
+          "UuidArray",
+          "Int8Array",
+          "TextArray",
+          {
+            "Custom": {
+              "kind": {
+                "Array": {
+                  "Custom": {
+                    "kind": {
+                      "Enum": [
+                        "Morpheme",
+                        "Clitic",
+                        "Modifier"
+                      ]
+                    },
+                    "name": "word_segment_role"
+                  }
+                }
+              },
+              "name": "_word_segment_role"
+            }
+          }
+        ]
+      }
+    },
+    "query": "insert into word_segment (gloss_id, word_id, index_in_word, morpheme, role)\n-- Fill in glosses that weren't inserted with their global match.\nselect\n  coalesce(inserted_gloss.id, global_gloss.id),\n  word_id,\n  index,\n  morpheme,\n  role\nfrom\n  unnest(\n    $1::uuid[], $2::text[], $3::uuid[], $4::bigint[], $5::text[], $6::word_segment_role[]\n  ) as input_data(document_id, gloss, word_id, index, morpheme, role)\n  left join\n    morpheme_gloss as inserted_gloss on\n      inserted_gloss.document_id = input_data.document_id and inserted_gloss.gloss = input_data.gloss\n  left join\n    morpheme_gloss as global_gloss on\n      global_gloss.document_id is null and global_gloss.gloss = input_data.gloss\non conflict (word_id, index_in_word)\ndo update set\nmorpheme = excluded.morpheme,\ngloss_id = excluded.gloss_id,\nrole = excluded.role\n"
   },
   "736bb1b4c8d050434299383e2f3278824c9bf68ba926e888642e65fdb19b3d2c": {
     "describe": {
@@ -918,146 +1078,33 @@
     },
     "query": "insert into abbreviation_system (short_name, title)\nvalues ($1, $2)\non conflict (short_name) do update set\ntitle = excluded.title\nreturning id\n"
   },
-  "8560200ace3f76678ea54c3d60676d2f0a5d924d2c08a245f65eb90078af3468": {
+  "8469d3fbe5939fa87e81b7afb2bbb614596235e99472eb0db600b000a3775207": {
     "describe": {
-      "columns": [
-        {
-          "name": "system_name",
-          "ordinal": 0,
-          "type_info": "Text"
-        },
-        {
-          "name": "abstract_ids",
-          "ordinal": 1,
-          "type_info": "UuidArray"
-        },
-        {
-          "name": "gloss",
-          "ordinal": 2,
-          "type_info": "Text"
-        },
-        {
-          "name": "title",
-          "ordinal": 3,
-          "type_info": "Text"
-        },
-        {
-          "name": "description",
-          "ordinal": 4,
-          "type_info": "Text"
-        },
-        {
-          "name": "segment_type: SegmentType",
-          "ordinal": 5,
-          "type_info": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "UuidArray",
+          "Text",
+          "Text",
+          {
             "Custom": {
               "kind": {
                 "Enum": [
                   "Morpheme",
                   "Clitic",
-                  "Combine"
+                  "Modifier"
                 ]
               },
-              "name": "segment_type"
+              "name": "word_segment_role"
             }
-          }
-        },
-        {
-          "name": "linguistic_type",
-          "ordinal": 6,
-          "type_info": "Text"
-        }
-      ],
-      "nullable": [
-        false,
-        false,
-        false,
-        false,
-        true,
-        true,
-        true
-      ],
-      "parameters": {
-        "Left": [
+          },
           "Text"
         ]
       }
     },
-    "query": "with t as (\n  select distinct on (morpheme_tag.gloss)\n    abbreviation_system.short_name as system_name,\n    morpheme_tag.abstract_ids,\n    morpheme_tag.gloss,\n    morpheme_tag.title,\n    morpheme_tag.description,\n    morpheme_tag.segment_type as \"segment_type: SegmentType\",\n    abstract_morpheme_tag.linguistic_type\n  from abbreviation_system\n    inner join\n      morpheme_tag on abbreviation_system.id = morpheme_tag.system_id\n    inner join\n      abstract_morpheme_tag on\n        abstract_morpheme_tag.id = any(morpheme_tag.abstract_ids)\n  where abbreviation_system.short_name = $1\n)\n\nselect *\nfrom t\norder by linguistic_type asc, gloss asc;\n"
-  },
-  "8745dd0df2b5eb1fbb0ba3ff91e5dde20307ca59ce01e404df608b4add4ef2ba": {
-    "describe": {
-      "columns": [
-        {
-          "name": "gloss_id",
-          "ordinal": 0,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "example_shape",
-          "ordinal": 1,
-          "type_info": "Text"
-        },
-        {
-          "name": "system_name",
-          "ordinal": 2,
-          "type_info": "Text"
-        },
-        {
-          "name": "gloss",
-          "ordinal": 3,
-          "type_info": "Text"
-        },
-        {
-          "name": "title",
-          "ordinal": 4,
-          "type_info": "Text"
-        },
-        {
-          "name": "description",
-          "ordinal": 5,
-          "type_info": "Text"
-        },
-        {
-          "name": "segment_type: SegmentType",
-          "ordinal": 6,
-          "type_info": {
-            "Custom": {
-              "kind": {
-                "Enum": [
-                  "Morpheme",
-                  "Clitic",
-                  "Combine"
-                ]
-              },
-              "name": "segment_type"
-            }
-          }
-        },
-        {
-          "name": "linguistic_type",
-          "ordinal": 7,
-          "type_info": "Text"
-        }
-      ],
-      "nullable": [
-        false,
-        true,
-        false,
-        false,
-        false,
-        true,
-        true,
-        true
-      ],
-      "parameters": {
-        "Left": [
-          "UuidArray",
-          "TextArray"
-        ]
-      }
-    },
-    "query": "select\n  morpheme_gloss.id as gloss_id,\n  morpheme_gloss.example_shape,\n  abbreviation_system.short_name as system_name,\n  morpheme_tag.gloss,\n  morpheme_tag.title,\n  morpheme_tag.description,\n  morpheme_tag.segment_type as \"segment_type: SegmentType\",\n  abstract_morpheme_tag.linguistic_type\nfrom morpheme_gloss\n  inner join abstract_morpheme_tag on abstract_morpheme_tag.id = morpheme_gloss.tag_id\n  left join abbreviation_system on abbreviation_system.short_name = any($2)\n  inner join morpheme_tag on morpheme_tag.abstract_ids[1] = abstract_morpheme_tag.id\nwhere morpheme_gloss.id = any($1)\n  and morpheme_tag.system_id = abbreviation_system.id\n"
+    "query": "insert into morpheme_tag (\n  system_id, abstract_ids, gloss, title, role_override, description\n)\nvalues ($1, $2, $3, $4, $5, $6)\non conflict (system_id, abstract_ids) do update set\ngloss = excluded.gloss,\ntitle = excluded.title,\nrole_override = excluded.role_override,\ndescription = excluded.description\n"
   },
   "8d3ceaae6a15910949eceeeff805e3a93231b1d234897dc2f8bd71fc6df3baaa": {
     "describe": {
@@ -1319,92 +1366,6 @@
     },
     "query": "select\n  id,\n  base_url\nfrom iiif_source\nwhere id = $1\n"
   },
-  "af1d25307571845bdc8343b0ba23105229b4674b7250d839006febde48adf524": {
-    "describe": {
-      "columns": [
-        {
-          "name": "gloss_id",
-          "ordinal": 0,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "example_shape",
-          "ordinal": 1,
-          "type_info": "Text"
-        },
-        {
-          "name": "system_name",
-          "ordinal": 2,
-          "type_info": "Text"
-        },
-        {
-          "name": "abstract_gloss",
-          "ordinal": 3,
-          "type_info": "Text"
-        },
-        {
-          "name": "concrete_gloss",
-          "ordinal": 4,
-          "type_info": "Text"
-        },
-        {
-          "name": "title",
-          "ordinal": 5,
-          "type_info": "Text"
-        },
-        {
-          "name": "description",
-          "ordinal": 6,
-          "type_info": "Text"
-        },
-        {
-          "name": "segment_type: SegmentType",
-          "ordinal": 7,
-          "type_info": {
-            "Custom": {
-              "kind": {
-                "Enum": [
-                  "Morpheme",
-                  "Clitic",
-                  "Combine"
-                ]
-              },
-              "name": "segment_type"
-            }
-          }
-        },
-        {
-          "name": "linguistic_type",
-          "ordinal": 8,
-          "type_info": "Text"
-        },
-        {
-          "name": "internal_tags",
-          "ordinal": 9,
-          "type_info": "TextArray"
-        }
-      ],
-      "nullable": [
-        false,
-        true,
-        false,
-        false,
-        false,
-        false,
-        true,
-        true,
-        true,
-        null
-      ],
-      "parameters": {
-        "Left": [
-          "TextArray",
-          "TextArray"
-        ]
-      }
-    },
-    "query": "select\n  morpheme_gloss.id as gloss_id,\n  morpheme_gloss.example_shape,\n  abbreviation_system.short_name as system_name,\n  morpheme_gloss.gloss as abstract_gloss,\n  morpheme_tag.gloss as concrete_gloss,\n  morpheme_tag.title,\n  morpheme_tag.description,\n  morpheme_tag.segment_type as \"segment_type: SegmentType\",\n  abstract_morpheme_tag.linguistic_type,\n  array(\n    select abstract_morpheme_tag.internal_gloss\n    from unnest(morpheme_tag.abstract_ids) as abstract_id\n      inner join abstract_morpheme_tag on abstract_morpheme_tag.id = abstract_id) as internal_tags\nfrom morpheme_gloss\n  inner join abstract_morpheme_tag on abstract_morpheme_tag.id = morpheme_gloss.tag_id\n  left join abbreviation_system on abbreviation_system.short_name = any($2)\n  inner join morpheme_tag on morpheme_tag.abstract_ids[1] = abstract_morpheme_tag.id\nwhere morpheme_gloss.gloss = any($1)\n  and morpheme_tag.system_id = abbreviation_system.id\norder by array_length(morpheme_tag.abstract_ids, 1) desc\n"
-  },
   "afca9b69fc11aef29379ab4d753d0b644b6ee3a698f3a6e857bfb6a83a4b38f1": {
     "describe": {
       "columns": [
@@ -1643,6 +1604,73 @@
     },
     "query": "delete from word\nwhere document_id = $1\n"
   },
+  "c09634d274c938e314ed1c2e9bb282851576c7df5a919681cf45b67d3cbe8f4e": {
+    "describe": {
+      "columns": [
+        {
+          "name": "system_name",
+          "ordinal": 0,
+          "type_info": "Text"
+        },
+        {
+          "name": "abstract_ids",
+          "ordinal": 1,
+          "type_info": "UuidArray"
+        },
+        {
+          "name": "gloss",
+          "ordinal": 2,
+          "type_info": "Text"
+        },
+        {
+          "name": "title",
+          "ordinal": 3,
+          "type_info": "Text"
+        },
+        {
+          "name": "description",
+          "ordinal": 4,
+          "type_info": "Text"
+        },
+        {
+          "name": "role_override: WordSegmentRole",
+          "ordinal": 5,
+          "type_info": {
+            "Custom": {
+              "kind": {
+                "Enum": [
+                  "Morpheme",
+                  "Clitic",
+                  "Modifier"
+                ]
+              },
+              "name": "word_segment_role"
+            }
+          }
+        },
+        {
+          "name": "linguistic_type",
+          "ordinal": 6,
+          "type_info": "Text"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        true,
+        true,
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      }
+    },
+    "query": "with t as (\n  select distinct on (morpheme_tag.gloss)\n    abbreviation_system.short_name as system_name,\n    morpheme_tag.abstract_ids,\n    morpheme_tag.gloss,\n    morpheme_tag.title,\n    morpheme_tag.description,\n    morpheme_tag.role_override as \"role_override: WordSegmentRole\",\n    abstract_morpheme_tag.linguistic_type\n  from abbreviation_system\n    inner join\n      morpheme_tag on abbreviation_system.id = morpheme_tag.system_id\n    inner join\n      abstract_morpheme_tag on\n        abstract_morpheme_tag.id = any(morpheme_tag.abstract_ids)\n  where abbreviation_system.short_name = $1\n)\n\nselect *\nfrom t\norder by linguistic_type asc, gloss asc;\n"
+  },
   "c27cbc62be58bb934f7dec5403f49dfca60a977229ded0fb017b8201f8714758": {
     "describe": {
       "columns": [
@@ -1877,34 +1905,6 @@
       }
     },
     "query": "with resource as (\n  insert into media_resource (url)\n  values ($1)\n  on conflict (url) do update set\n     url = excluded.url\n  returning id\n)\n\ninsert into media_slice (resource_id, time_range)\nselect\n  id,\n  $2\nfrom resource\nreturning id\n"
-  },
-  "e28589cd31265f26c558b7045f7b9d354199678c02db780dd154820a0c776e95": {
-    "describe": {
-      "columns": [],
-      "nullable": [],
-      "parameters": {
-        "Left": [
-          "Uuid",
-          "UuidArray",
-          "Text",
-          "Text",
-          {
-            "Custom": {
-              "kind": {
-                "Enum": [
-                  "Morpheme",
-                  "Clitic",
-                  "Combine"
-                ]
-              },
-              "name": "segment_type"
-            }
-          },
-          "Text"
-        ]
-      }
-    },
-    "query": "insert into morpheme_tag (\n  system_id, abstract_ids, gloss, title, segment_type, description\n)\nvalues ($1, $2, $3, $4, $5, $6)\non conflict (system_id, abstract_ids) do update set\ngloss = excluded.gloss,\ntitle = excluded.title,\nsegment_type = excluded.segment_type,\ndescription = excluded.description\n"
   },
   "e36a7ea38a54495cca4e743a5508d81384adf850009d9c1f9f74438042c0d6d0": {
     "describe": {
