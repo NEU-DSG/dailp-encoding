@@ -1,9 +1,11 @@
 with t as (
   select distinct on (morpheme_tag.gloss)
     abbreviation_system.short_name as system_name,
+    morpheme_tag.abstract_ids,
     morpheme_tag.gloss,
     morpheme_tag.title,
-    abstract_morpheme_tag.description,
+    morpheme_tag.description,
+    morpheme_tag.role_override as "role_override: WordSegmentRole",
     abstract_morpheme_tag.linguistic_type
   from abbreviation_system
     inner join

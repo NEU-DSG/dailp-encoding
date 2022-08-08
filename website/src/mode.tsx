@@ -1,7 +1,4 @@
-import { Tooltip } from "@reach/tooltip"
-import cx from "classnames"
-import Cookies from "js-cookie"
-import React, { useContext, useEffect, useState } from "react"
+import React, { useEffect } from "react"
 import { MdClose, MdSettings } from "react-icons/md"
 import {
   Dialog,
@@ -16,104 +13,61 @@ import {
   useRadioState,
 } from "reakit/Radio"
 import { IconButton, Label, Select } from "src/components"
-import { std } from "src/style/utils.css"
+import * as Dailp from "src/graphql/dailp"
 import * as css from "./mode.css"
 import { usePreferences } from "./preferences-context"
-import {
-  PhoneticRepresentation,
-  TagSet,
-  ViewMode,
-  tagSetForMode,
-} from "./types"
+import { ViewMode } from "./types"
 
-const notNumber = (l: any) => isNaN(Number(l))
 export const levelNameMapping = {
   [ViewMode.Story]: {
-    label: "Story",
-    details: "Original text in the Cherokee syllabary with English translation",
+    label: "Syllabary",
+    details: "Syllabary text only with English translations for each paragraph",
   },
   [ViewMode.Pronunciation]: {
-    label: "Pronunciation",
-    details: "Word by word pronunciation and translation",
+    label: "Syllabary and Simple Phonetics",
+    details:
+      "Syllabary text with phonetics and English translations for each word",
   },
   [ViewMode.Segmentation]: {
-    label: "Word Parts",
-    details: "Each word broken down into its component parts",
-  },
-  [ViewMode.AnalysisDt]: {
-    label: "Analysis (CRG)",
+    label: "Syllabary, Phonetics, and Word Parts",
     details:
-      "Linguistic analysis using terms from Cherokee Reference Grammar (CRG)",
-  },
-  [ViewMode.AnalysisTth]: {
-    label: "Analysis (TAOC)",
-    details:
-      "Linguistic analysis using terms from Tone and Accent in Oklahoma Cherokee (TAOC)",
+      "Syllabary text with each word broken down into its component parts, and English translations for each word and paragraph",
   },
 }
 
 export const modeDetails = (mode: ViewMode) => levelNameMapping[mode]
 
-const tagSetMapping = {
-  [TagSet.Crg]: {
-    label: "CRG",
+const cherokeeRepresentationMapping = {
+  [Dailp.CherokeeOrthography.Learner]: {
+    label: "Learner",
     details:
-      "Cherokee Reference Grammar. A common resource for more advanced students.",
+      "Transliterates the syllbary using Worcester's qu and ts spellings. Omits tone, accent, and vowel length information.",
   },
-  [TagSet.Learner]: {
-    label: "Study",
-    details: "Simplified tag set for learning Cherokee",
-  },
-  [TagSet.Taoc]: {
-    label: "TAOC",
+  [Dailp.CherokeeOrthography.Crg]: {
+    label: "Linguist: Cherokee Reference Grammar",
     details:
-      "Tone and Accent in Ohlahoma Cherokee. The foundation of DAILP's analysis practices.",
+      "Linguistic analysis using terms from Cherokee Reference Grammar (CRG). Transliterates the syllabary with gw and j. Displays tone and vowel length information using accents.",
   },
-  [TagSet.Dailp]: {
-    label: "DAILP",
-    details: "The hybrid terminology that DAILP uses in linguistic analysis",
+  [Dailp.CherokeeOrthography.Taoc]: {
+    label: "Linguist: Tone and Accent in Oklahoma Cherokee",
+    details:
+      "Linguistic analysis using terms from Tone and Accent in Oklahoma Cherokee (TAOC). Transliterates the syllabary with kw and c. Displays extensive tone and vowel length information using accents.",
   },
 }
 
-const phoneticRepresentationMapping = {
-  [PhoneticRepresentation.Dailp]: {
-    label: "Simple Phonetics",
-    details:
-      "The DAILP simple phonetics, made for learners. Uses kw, gw, and j",
-  },
-  [PhoneticRepresentation.Worcester]: {
-    label: "Worcester Phonetics",
-    details:
-      "A more traditional phonetics view, aligned with the Worcester syllabary. Uses qu and ts.",
-  },
-  // [PhoneticRepresentation.Ipa]: {
-  //   label: "IPA",
-  //   details: "The international phonetic alphabet, a way of representing sounds across languages",
-  // },
-}
-
-export const phonDetails = (representation: PhoneticRepresentation) =>
-  phoneticRepresentationMapping[representation]
-
-export const selectedMode = () =>
-  Number.parseInt(Cookies.get("experienceLevel") ?? "0") as ViewMode
-
-export const selectedPhonetics = () =>
-  Number.parseInt(Cookies.get("phonetics") ?? "0") as PhoneticRepresentation
+export const cherokeeRepresentationDetails = (
+  system: Dailp.CherokeeOrthography
+) => cherokeeRepresentationMapping[system]
 
 export const ExperiencePicker = (p: {
   onSelect: (mode: ViewMode) => void
   id?: string
 }) => {
-  const [value, setValue] = useState(selectedMode())
+  const { viewMode: value, setViewMode: setValue } = usePreferences()
 
-  // Save the selected experience level throughout the session.
+  // Save the selected view mode throughout the session.
   useEffect(() => {
-    Cookies.set("experienceLevel", value.toString(), {
-      sameSite: "strict",
-      secure: true,
-    })
-    p.onSelect(value as ViewMode)
+    p.onSelect(value)
   }, [value])
   return (
     <Select
@@ -122,99 +76,40 @@ export const ExperiencePicker = (p: {
       value={value}
       onChange={(e) => setValue(Number.parseInt(e.target.value))}
     >
-      {Object.keys(ViewMode)
-        .filter(notNumber)
-        .map(function (mode: string) {
-          const selectedMode = ViewMode[mode as keyof typeof ViewMode]
-          return (
-            <option value={selectedMode} key={selectedMode}>
-              {modeDetails(selectedMode).label}
-            </option>
-          )
-        })}
+      {Object.entries(levelNameMapping).map(([viewMode, details]) => (
+        <option value={viewMode} key={viewMode}>
+          {details.label}
+        </option>
+      ))}
     </Select>
   )
 }
 
 export const PhoneticsPicker = (p: {
-  onSelect: (phonetics: PhoneticRepresentation) => void
+  onSelect: (phonetics: Dailp.CherokeeOrthography) => void
 }) => {
-  const [value, setValue] = useState(selectedPhonetics())
+  const { cherokeeRepresentation: value, setCherokeeRepresentation: setValue } =
+    usePreferences()
 
   // Save the selected representation throughout the session.
   useEffect(() => {
-    Cookies.set("phonetics", value.toString(), {
-      sameSite: "strict",
-      secure: true,
-    })
     p.onSelect(value)
   }, [value])
   return (
     <Select
       name="phonetics-picker"
       value={value}
-      onChange={(e) => setValue(Number.parseInt(e.target.value))}
+      onChange={(e) => setValue(e.target.value as Dailp.CherokeeOrthography)}
       aria-label="Romanization"
     >
-      {Object.keys(PhoneticRepresentation)
-        .filter(notNumber)
-        .map(function (representation: string) {
-          const selectedPhon =
-            PhoneticRepresentation[
-              representation as keyof typeof PhoneticRepresentation
-            ]
-          return (
-            <option value={selectedPhon} key={selectedPhon}>
-              {phonDetails(selectedPhon).label}
-            </option>
-          )
-        })}
+      {Object.entries(cherokeeRepresentationMapping).map(
+        ([system, details]) => (
+          <option value={system} key={system}>
+            {details.label}
+          </option>
+        )
+      )}
     </Select>
-  )
-}
-
-export const TagSetPicker = (p: { onSelect: (tagSet: TagSet) => void }) => {
-  const radio = useRadioState({
-    state: tagSetForMode(selectedMode()),
-  })
-
-  useEffect(() => p.onSelect(radio.state as TagSet), [radio.state])
-
-  return (
-    <RadioGroup {...radio} id="tag-set-picker" className={css.levelGroup}>
-      {Object.keys(TagSet)
-        .filter(notNumber)
-        .map(function (tagSet: string) {
-          return <TagSetOption key={tagSet} level={tagSet} radio={radio} />
-        })}
-    </RadioGroup>
-  )
-}
-
-const ExperienceOption = (p: { radio: RadioStateReturn; level: string }) => {
-  const value = ViewMode[p.level as keyof typeof ViewMode]
-  const isSelected = p.radio.state === value
-  return (
-    <Tooltip className={std.tooltip} label={levelNameMapping[value].details}>
-      <Label className={cx(css.levelLabel, isSelected && css.highlightedLabel)}>
-        <Radio {...p.radio} value={value} />
-        {"  "}
-        {levelNameMapping[value].label}
-      </Label>
-    </Tooltip>
-  )
-}
-
-const TagSetOption = (p: { radio: RadioStateReturn; level: string }) => {
-  const value = TagSet[p.level as keyof typeof TagSet]
-  return (
-    <Tooltip className={std.tooltip} label={tagSetMapping[value].details}>
-      <Label className={css.levelLabel}>
-        <Radio {...p.radio} value={value} />
-        {"  "}
-        {tagSetMapping[value].label}
-      </Label>
-    </Tooltip>
   )
 }
 
@@ -228,17 +123,17 @@ export const PrefPanel = () => {
         onSelect={preferences.setViewMode}
       />
       <p id={"Selected-ViewMode"}>
-        {levelNameMapping[preferences.viewMode].details}
+        {modeDetails(preferences.viewMode).details}
       </p>
 
-      <Label>Romanization System:</Label>
+      <label>Cherokee Representation:</label>
       <PhoneticsPicker
         aria-described-by={"Selected-Phonetics"}
-        onSelect={preferences.setPhoneticRepresentation}
+        onSelect={preferences.setCherokeeRepresentation}
       />
       <p id={"Selected-Phonetics"}>
         {
-          phoneticRepresentationMapping[preferences.phoneticRepresentation]
+          cherokeeRepresentationDetails(preferences.cherokeeRepresentation)
             .details
         }
       </p>

@@ -18,6 +18,7 @@ export const radii = {
   none: 0,
   small: "1px",
   medium: "2px",
+  large: "4px",
 }
 
 export const thickness = {
@@ -44,6 +45,7 @@ export const hspace = {
 
 export const vspace = {
   ...space,
+  eighth: rhythm(1 / 8),
   quarter: rhythm(1 / 4),
   half: rhythm(1 / 2),
   one: rhythm(1),

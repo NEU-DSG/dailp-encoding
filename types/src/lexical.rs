@@ -1,4 +1,4 @@
-use crate::{AnnotatedForm, Database, Date, DocumentId, Geometry, MorphemeSegment};
+use crate::{AnnotatedForm, Database, Date, DocumentId, Geometry, WordSegment};
 use serde::{Deserialize, Serialize};
 
 /// The reference position within a document of one specific form
@@ -56,12 +56,12 @@ impl PositionInDocument {
     }
 
     /// Create a rough URI-like string for this word with the given morphemic segmentation.
-    pub fn make_form_id(&self, segments: &[MorphemeSegment]) -> String {
+    pub fn make_form_id(&self, segments: &[WordSegment]) -> String {
         format!(
             "{}.{}:{}",
             self.document_id.0,
             self.index,
-            MorphemeSegment::gloss_layer(segments)
+            WordSegment::gloss_layer(segments)
         )
     }
 }
@@ -273,7 +273,7 @@ pub fn seg_verb_surface_form(
         None
     };
 
-    let segments = MorphemeSegment::parse_many(&morpheme_layer, &gloss_layer)?;
+    let segments = WordSegment::parse_many(&morpheme_layer, &gloss_layer)?;
 
     Some(AnnotatedForm {
         id: None,
@@ -382,7 +382,7 @@ pub fn root_verb_surface_form(
         cols.next();
     }
 
-    let segments = MorphemeSegment::parse_many(&morpheme_layer, &gloss_layer)?;
+    let segments = WordSegment::parse_many(&morpheme_layer, &gloss_layer)?;
 
     Some(AnnotatedForm {
         id: None,
@@ -462,7 +462,7 @@ pub fn root_noun_surface_form(
         }
     }
     let commentary = if has_comment { cols.next() } else { None };
-    let segments = MorphemeSegment::parse_many(&morpheme_layer, &gloss_layer)?;
+    let segments = WordSegment::parse_many(&morpheme_layer, &gloss_layer)?;
 
     Some(AnnotatedForm {
         id: None,
@@ -813,7 +813,7 @@ impl PhonemicString {
                 .join("")
                 .nfc()
                 .to_string(),
-            PhonemicString::Consonant(s) => tth_to_dt(&s, true, Some("xx")),
+            PhonemicString::Consonant(s) => tth_to_dt(&s, true, Some("xx"), false, false),
             PhonemicString::Vowel(v, ty) => match ty {
                 // Short vowels in CRG match TAOC.
                 ShortLow => v,
@@ -837,9 +837,18 @@ impl PhonemicString {
         use itertools::Itertools;
         match self {
             PhonemicString::Form(all) => all.into_iter().map(|x| x.into_learner()).join(""),
-            PhonemicString::Consonant(s) => tth_to_dt(&s, false, Some("")),
-            PhonemicString::Vowel(v, _ty) => v,
+            PhonemicString::Consonant(s) => tth_to_dt(&s, false, Some(""), true, true),
+            PhonemicString::Vowel(v, _ty) => reduce_long_vowels(&v).to_owned(),
         }
+    }
+}
+
+fn reduce_long_vowels(input: &str) -> &str {
+    let first_char = input.chars().next().unwrap();
+    if input.chars().all(|c| c == first_char) {
+        &input[0..1]
+    } else {
+        input
     }
 }
 
@@ -906,10 +915,28 @@ pub fn simple_phonetics_to_worcester(input: &str) -> String {
     result.into_owned()
 }
 
-fn tth_to_dt(input: &str, keep_glottal_stops: bool, replace_colons: Option<&str>) -> String {
+fn tth_to_dt(
+    input: &str,
+    keep_glottal_stops: bool,
+    replace_colons: Option<&str>,
+    qu_and_ts: bool,
+    drop_initial_glottal_stop: bool,
+) -> String {
     use {
         lazy_static::lazy_static,
         regex::{Captures, Regex},
+    };
+    let glottal_stop_len = 'ʔ'.len_utf8();
+    let input = if drop_initial_glottal_stop && input.len() > glottal_stop_len {
+        if input.starts_with('ʔ') {
+            &input[glottal_stop_len..]
+        } else if input.ends_with('ʔ') {
+            &input[..input.len() - glottal_stop_len]
+        } else {
+            input
+        }
+    } else {
+        input
     };
     // Convert the t/th consonants to d/t
     lazy_static! {
@@ -919,15 +946,39 @@ fn tth_to_dt(input: &str, keep_glottal_stops: bool, replace_colons: Option<&str>
     let result = TTH_PATTERN.replace_all(input, |cap: &Captures| match &cap[0] {
         "tlh" => "tl",
         "tl" => "dl",
-        "qu" => "gw",
-        "kwh" => "kw",
-        "kw" => "gw",
+        "qu" => {
+            if qu_and_ts {
+                "qu"
+            } else {
+                "gw"
+            }
+        }
+        "kwh" => {
+            if qu_and_ts {
+                "qu"
+            } else {
+                "kw"
+            }
+        }
+        "kw" => {
+            if qu_and_ts {
+                "qu"
+            } else {
+                "gw"
+            }
+        }
         "kh" => "k",
         "th" => "t",
         "ch" => "ch", // Not sure I've ever seen this segment in data before.
         "k" => "g",
         "t" => "d",
-        "c" => "j",
+        "c" => {
+            if qu_and_ts {
+                "ts"
+            } else {
+                "j"
+            }
+        }
         "ʔ" => {
             if keep_glottal_stops {
                 "ʔ"
@@ -944,7 +995,13 @@ fn tth_to_dt(input: &str, keep_glottal_stops: bool, replace_colons: Option<&str>
         }
         // Any other matches we should leave as-is, retaining for example "ts"
         // and "ks" in the d/t representation.
-        "ts" => "j",
+        "ts" => {
+            if qu_and_ts {
+                "ts"
+            } else {
+                "j"
+            }
+        }
         "ks" => "ks",
         _ => unreachable!(),
     });

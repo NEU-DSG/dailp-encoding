@@ -71,13 +71,13 @@ const Timeline = (p: { gloss: string }) => {
                   <div key={idx} className={wordRow}>
                     <div>{form.documentId}</div>
                     <div>{form.source}</div>
-                    <div>{form.simplePhonetics}</div>
+                    <div>{form.romanizedSource}</div>
                     <div>{form.englishGloss.join(", ")}</div>
                   </div>
                 )
               } else {
-                const simplePhonetics = forms.find(
-                  (w) => w.simplePhonetics?.length
+                const wordWithRomanization = forms.find(
+                  (w) => w.romanizedSource?.length
                 )
                 const englishGloss = forms.find((w) => w.englishGloss?.length)
                 const docIds = uniq(forms.map((w) => w.documentId))
@@ -86,7 +86,7 @@ const Timeline = (p: { gloss: string }) => {
                     <div>{docIds.join(", ")}</div>
                     <div>{key}</div>
                     <div />
-                    <div>{simplePhonetics?.simplePhonetics}</div>
+                    <div>{wordWithRomanization?.romanizedSource}</div>
                     <div>{englishGloss?.englishGloss.join(", ")}</div>
                   </div>
                 )

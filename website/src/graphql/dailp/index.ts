@@ -134,14 +134,32 @@ export type AnnotatedForm = {
    * For example, a verb form glossed as "he catches" might have a root morpheme
    * corresponding to "catch."
    */
-  readonly root: Maybe<MorphemeSegment>
-  readonly segments: ReadonlyArray<MorphemeSegment>
+  readonly root: Maybe<WordSegment>
+  readonly segments: ReadonlyArray<WordSegment>
   /** All other observed words with the same root morpheme as this word. */
   readonly similarForms: ReadonlyArray<AnnotatedForm>
-  /** Romanized version of the word for simple phonetic pronunciation */
-  readonly simplePhonetics: Maybe<Scalars["String"]>
   /** Original source text */
   readonly source: Scalars["String"]
+}
+
+/**
+ * A single word in an annotated document.
+ * One word contains several layers of interpretation, including the original
+ * source text, multiple layers of linguistic annotation, and annotator notes.
+ * TODO Split into two types, one for migration and one for SQL + GraphQL
+ */
+export type AnnotatedFormRomanizedSourceArgs = {
+  system: CherokeeOrthography
+}
+
+/**
+ * A single word in an annotated document.
+ * One word contains several layers of interpretation, including the original
+ * source text, multiple layers of linguistic annotation, and annotator notes.
+ * TODO Split into two types, one for migration and one for SQL + GraphQL
+ */
+export type AnnotatedFormSegmentsArgs = {
+  system: CherokeeOrthography
 }
 
 /** A single word in an annotated document that can be edited. */
@@ -190,7 +208,7 @@ export enum CherokeeOrthography {
   Crg = "CRG",
   /**
    * Simplified system that uses d/t without tones, a compromise intended for
-   * language learners.
+   * language learners. qu and ts
    */
   Learner = "LEARNER",
   /**
@@ -398,32 +416,35 @@ export type MorphemeReference = {
   readonly morpheme: Scalars["String"]
 }
 
-export type MorphemeSegment = {
-  readonly __typename?: "MorphemeSegment"
-  /** English gloss in standard DAILP format that refers to a lexical item */
-  readonly gloss: Scalars["String"]
+/** A concrete representation of a particular functional morpheme. */
+export type MorphemeTag = {
+  readonly __typename?: "MorphemeTag"
   /**
-   * If this morpheme represents a functional tag that we have further
-   * information on, this is the corresponding database entry.
+   * A prose description of what this morpheme means and how it works in
+   * context.
    */
-  readonly matchingTag: Maybe<TagForm>
-  /** Phonemic representation of the morpheme */
-  readonly morpheme: Scalars["String"]
+  readonly definition: Scalars["String"]
+  /** URL to an external page with more details about this morpheme. */
+  readonly detailsUrl: Maybe<Scalars["String"]>
   /**
-   * What kind of thing is the next segment?
-   *
-   * This field determines what character should separate this segment from
-   * the next one when reconstituting the full segmentation string.
+   * Internal representation of this functional item, which may be one or
+   * more word parts in the raw annotation. For example, ["X", "Y"] could map
+   * to "Z" in a particular display format.
    */
-  readonly nextSeparator: Maybe<Scalars["String"]>
-}
-
-export type MorphemeSegmentMatchingTagArgs = {
-  system: InputMaybe<CherokeeOrthography>
-}
-
-export type MorphemeSegmentMorphemeArgs = {
-  system: InputMaybe<CherokeeOrthography>
+  readonly internalTags: ReadonlyArray<Scalars["String"]>
+  /**
+   * What kind of morpheme is this? Examples are "Prepronominal Prefix" or
+   * "Aspectual Suffix"
+   */
+  readonly morphemeType: Scalars["String"]
+  /** Overrides the segment type of instances of this tag. */
+  readonly roleOverride: Maybe<WordSegmentRole>
+  /** How this morpheme looks in original language data */
+  readonly shape: Maybe<Scalars["String"]>
+  /** How this morpheme is represented in a gloss */
+  readonly tag: Scalars["String"]
+  /** Plain English title of the morpheme tag */
+  readonly title: Scalars["String"]
 }
 
 export type Mutation = {
@@ -514,7 +535,7 @@ export type Query = {
   /** List of all content pages */
   readonly allPages: ReadonlyArray<Page>
   /** List of all the functional morpheme tags available */
-  readonly allTags: ReadonlyArray<TagForm>
+  readonly allTags: ReadonlyArray<MorphemeTag>
   readonly collection: DocumentCollection
   /** Retrieves a full document from its unique name. */
   readonly document: Maybe<AnnotatedDoc>
@@ -523,7 +544,7 @@ export type Query = {
    * string. For example, "3PL.B" is the standard string referring to a 3rd
    * person plural prefix.
    */
-  readonly morphemeTag: Maybe<TagForm>
+  readonly morphemeTag: Maybe<MorphemeTag>
   /** Forms containing the given morpheme gloss or related ones clustered over time. */
   readonly morphemeTimeClusters: ReadonlyArray<FormsInTime>
   /**
@@ -609,29 +630,6 @@ export type SourceAttribution = {
   readonly name: Scalars["String"]
 }
 
-/** A concrete representation of a particular functional morpheme. */
-export type TagForm = {
-  readonly __typename?: "TagForm"
-  /**
-   * A prose description of what this morpheme means and how it works in
-   * context.
-   */
-  readonly definition: Scalars["String"]
-  /** URL to an external page with more details about this morpheme. */
-  readonly detailsUrl: Maybe<Scalars["String"]>
-  /**
-   * What kind of morpheme is this? Examples are "Prepronominal Prefix" or
-   * "Aspectual Suffix"
-   */
-  readonly morphemeType: Scalars["String"]
-  /** How this morpheme looks in original language data */
-  readonly shape: Maybe<Scalars["String"]>
-  /** How this morpheme is represented in a gloss */
-  readonly tag: Scalars["String"]
-  /** Plain English title of the morpheme tag */
-  readonly title: Scalars["String"]
-}
-
 export enum UserGroup {
   Editor = "EDITOR",
 }
@@ -640,6 +638,39 @@ export type UserInfo = {
   readonly __typename?: "UserInfo"
   readonly email: Scalars["String"]
   readonly groups: ReadonlyArray<UserGroup>
+}
+
+export type WordSegment = {
+  readonly __typename?: "WordSegment"
+  /** English gloss in standard DAILP format that refers to a lexical item */
+  readonly gloss: Scalars["String"]
+  /**
+   * If this morpheme represents a functional tag that we have further
+   * information on, this is the corresponding database entry.
+   */
+  readonly matchingTag: Maybe<MorphemeTag>
+  /** Phonemic representation of the morpheme */
+  readonly morpheme: Scalars["String"]
+  /**
+   * This field determines what character should separate this segment from
+   * the previous one when reconstituting the full segmentation string.
+   */
+  readonly previousSeparator: Scalars["String"]
+  /** What kind of thing is this segment? */
+  readonly role: WordSegmentRole
+}
+
+/**
+ * The kind of segment that a particular sequence of characters in a morphemic
+ * segmentations represent.
+ */
+export enum WordSegmentRole {
+  /** Separated by an equals sign '=' */
+  Clitic = "CLITIC",
+  /** Separated by a colon ':' */
+  Modifier = "MODIFIER",
+  /** Separated by a hyphen '-' */
+  Morpheme = "MORPHEME",
 }
 
 /** A list of words grouped by the document that contains them. */
@@ -721,7 +752,7 @@ export type AnnotatedDocumentQuery = { readonly __typename?: "Query" } & {
 
 export type DocumentContentsQueryVariables = Exact<{
   slug: Scalars["String"]
-  morphemeSystem: InputMaybe<CherokeeOrthography>
+  morphemeSystem: CherokeeOrthography
   isReference: Scalars["Boolean"]
 }>
 
@@ -745,23 +776,22 @@ export type DocumentContentsQuery = { readonly __typename?: "Query" } & {
                           | "index"
                           | "source"
                           | "romanizedSource"
-                          | "simplePhonetics"
                           | "phonemic"
                           | "englishGloss"
                           | "commentary"
                         > & {
                             readonly segments: ReadonlyArray<
-                              {
-                                readonly __typename?: "MorphemeSegment"
-                              } & Pick<
-                                MorphemeSegment,
-                                "morpheme" | "gloss" | "nextSeparator"
+                              { readonly __typename?: "WordSegment" } & Pick<
+                                WordSegment,
+                                | "morpheme"
+                                | "gloss"
+                                | "role"
+                                | "previousSeparator"
                               > & {
                                   readonly matchingTag: Maybe<
-                                    { readonly __typename?: "TagForm" } & Pick<
-                                      TagForm,
-                                      "tag" | "title"
-                                    >
+                                    {
+                                      readonly __typename?: "MorphemeTag"
+                                    } & Pick<MorphemeTag, "tag" | "title">
                                   >
                                 }
                             >
@@ -788,19 +818,18 @@ export type DocumentContentsQuery = { readonly __typename?: "Query" } & {
           | "index"
           | "source"
           | "romanizedSource"
-          | "simplePhonetics"
           | "phonemic"
           | "englishGloss"
           | "commentary"
         > & {
             readonly segments: ReadonlyArray<
-              { readonly __typename?: "MorphemeSegment" } & Pick<
-                MorphemeSegment,
-                "morpheme" | "gloss" | "nextSeparator"
+              { readonly __typename?: "WordSegment" } & Pick<
+                WordSegment,
+                "morpheme" | "gloss" | "role" | "previousSeparator"
               > & {
                   readonly matchingTag: Maybe<
-                    { readonly __typename?: "TagForm" } & Pick<
-                      TagForm,
+                    { readonly __typename?: "MorphemeTag" } & Pick<
+                      MorphemeTag,
                       "tag" | "title"
                     >
                   >
@@ -825,18 +854,20 @@ export type FormFieldsFragment = {
   | "index"
   | "source"
   | "romanizedSource"
-  | "simplePhonetics"
   | "phonemic"
   | "englishGloss"
   | "commentary"
 > & {
     readonly segments: ReadonlyArray<
-      { readonly __typename?: "MorphemeSegment" } & Pick<
-        MorphemeSegment,
-        "morpheme" | "gloss" | "nextSeparator"
+      { readonly __typename?: "WordSegment" } & Pick<
+        WordSegment,
+        "morpheme" | "gloss" | "role" | "previousSeparator"
       > & {
           readonly matchingTag: Maybe<
-            { readonly __typename?: "TagForm" } & Pick<TagForm, "tag" | "title">
+            { readonly __typename?: "MorphemeTag" } & Pick<
+              MorphemeTag,
+              "tag" | "title"
+            >
           >
         }
     >
@@ -880,7 +911,7 @@ export type WordSearchQuery = { readonly __typename?: "Query" } & {
       AnnotatedForm,
       | "source"
       | "normalizedSource"
-      | "simplePhonetics"
+      | "romanizedSource"
       | "englishGloss"
       | "index"
     > & {
@@ -918,8 +949,8 @@ export type GlossaryQueryVariables = Exact<{
 
 export type GlossaryQuery = { readonly __typename?: "Query" } & {
   readonly allTags: ReadonlyArray<
-    { readonly __typename?: "TagForm" } & Pick<
-      TagForm,
+    { readonly __typename?: "MorphemeTag" } & Pick<
+      MorphemeTag,
       "tag" | "title" | "definition" | "morphemeType"
     >
   >
@@ -941,7 +972,7 @@ export type TimelineQuery = { readonly __typename?: "Query" } & {
           AnnotatedForm,
           | "source"
           | "normalizedSource"
-          | "simplePhonetics"
+          | "romanizedSource"
           | "phonemic"
           | "documentId"
           | "englishGloss"
@@ -1008,8 +1039,8 @@ export type TagQueryVariables = Exact<{
 
 export type TagQuery = { readonly __typename?: "Query" } & {
   readonly tag: Maybe<
-    { readonly __typename?: "TagForm" } & Pick<
-      TagForm,
+    { readonly __typename?: "MorphemeTag" } & Pick<
+      MorphemeTag,
       "morphemeType" | "tag" | "title" | "definition"
     >
   >
@@ -1075,17 +1106,17 @@ export const FormFieldsFragmentDoc = gql`
   fragment FormFields on AnnotatedForm {
     index
     source
-    romanizedSource
-    simplePhonetics
+    romanizedSource(system: $morphemeSystem)
     phonemic
-    segments {
-      morpheme(system: $morphemeSystem)
+    segments(system: $morphemeSystem) {
+      morpheme
       gloss
-      matchingTag(system: $morphemeSystem) {
+      matchingTag {
         tag
         title
       }
-      nextSeparator
+      role
+      previousSeparator
     }
     englishGloss
     commentary
@@ -1175,7 +1206,7 @@ export function useAnnotatedDocumentQuery(
 export const DocumentContentsDocument = gql`
   query DocumentContents(
     $slug: String!
-    $morphemeSystem: CherokeeOrthography
+    $morphemeSystem: CherokeeOrthography!
     $isReference: Boolean!
   ) {
     document(slug: $slug) {
@@ -1238,7 +1269,7 @@ export const WordSearchDocument = gql`
     wordSearch(query: $query) {
       source
       normalizedSource
-      simplePhonetics
+      romanizedSource(system: LEARNER)
       englishGloss
       index
       document {
@@ -1311,7 +1342,7 @@ export const TimelineDocument = gql`
       forms {
         source
         normalizedSource
-        simplePhonetics
+        romanizedSource(system: LEARNER)
         phonemic
         documentId
         englishGloss
