@@ -1,6 +1,6 @@
 use crate::spreadsheets::SheetResult;
 use anyhow::Result;
-use dailp::{Database, MorphemeTag, SegmentType, TagForm, Uuid};
+use dailp::{AbstractMorphemeTag, Database, MorphemeTag, Uuid, WordSegmentRole};
 use log::info;
 
 /// Cherokee has many functional morphemes that are documented.
@@ -55,12 +55,12 @@ async fn sync_morpheme_system(db: &Database, sheet_name: &str, system_id: Uuid) 
         let _page_num = cols.next().filter(|x| !x.is_empty());
         let shape = cols.next().filter(|x| !x.is_empty());
         let details_url = cols.next().filter(|x| !x.is_empty());
-        let segment_type = cols.next().and_then(|s| match s.trim() {
-            "Combine" => Some(SegmentType::Combine),
-            "Clitic" => Some(SegmentType::Clitic),
+        let role_override = cols.next().and_then(|s| match s.trim() {
+            "Modifier" => Some(WordSegmentRole::Modifier),
+            "Clitic" => Some(WordSegmentRole::Clitic),
             _ => None,
         });
-        Some(TagForm {
+        Some(MorphemeTag {
             internal_tags: internal_tags_str.split("-").map(|s| s.to_owned()).collect(),
             tag: target_tag,
             title: name,
@@ -68,7 +68,7 @@ async fn sync_morpheme_system(db: &Database, sheet_name: &str, system_id: Uuid) 
             shape,
             details_url,
             morpheme_type: String::new(),
-            segment_type,
+            role_override,
         })
     });
 
@@ -81,7 +81,7 @@ async fn sync_morpheme_system(db: &Database, sheet_name: &str, system_id: Uuid) 
 }
 
 /// Transforms a spreadsheet of morpheme information into a list of type-safe tag objects.
-fn parse_tag_glossary(sheet: SheetResult) -> Result<Vec<MorphemeTag>> {
+fn parse_tag_glossary(sheet: SheetResult) -> Result<Vec<AbstractMorphemeTag>> {
     Ok(sheet
         .values
         .into_iter()
@@ -95,7 +95,7 @@ fn parse_tag_glossary(sheet: SheetResult) -> Result<Vec<MorphemeTag>> {
             let _name = cols.next()?;
             let morpheme_type = cols.next()?;
             let _dailp_form = cols.next()?;
-            Some(MorphemeTag { id, morpheme_type })
+            Some(AbstractMorphemeTag { id, morpheme_type })
         })
         .collect())
 }

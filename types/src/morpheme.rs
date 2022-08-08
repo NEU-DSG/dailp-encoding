@@ -7,7 +7,7 @@ use std::borrow::Cow;
 /// A single unit of meaning and its corresponding English gloss.
 #[derive(Serialize, Clone, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
-pub struct MorphemeSegment {
+pub struct WordSegment {
     /// Which Cherokee representation system is this segment written with?
     #[serde(skip)]
     pub system: Option<CherokeeOrthography>,
@@ -23,10 +23,10 @@ pub struct MorphemeSegment {
     ///
     /// This field determines what character should separate this segment from
     /// the next one when reconstituting a full segmentation string.
-    pub segment_type: SegmentType,
+    pub role: WordSegmentRole,
     /// Optional glossary entry for this segment which gives further information,
     /// like a definition and example usages.
-    pub matching_tag: Option<TagForm>,
+    pub matching_tag: Option<MorphemeTag>,
 }
 
 /// The kind of segment that a particular sequence of characters in a morphemic
@@ -34,17 +34,17 @@ pub struct MorphemeSegment {
 #[derive(
     Clone, Copy, Debug, Serialize, Deserialize, sqlx::Type, async_graphql::Enum, PartialEq, Eq,
 )]
-#[sqlx(type_name = "segment_type")]
-pub enum SegmentType {
+#[sqlx(type_name = "word_segment_role")]
+pub enum WordSegmentRole {
     /// Separated by a hyphen '-'
     Morpheme,
     /// Separated by an equals sign '='
     Clitic,
     /// Separated by a colon ':'
-    Combine,
+    Modifier,
 }
 
-impl PgHasArrayType for SegmentType {
+impl PgHasArrayType for WordSegmentRole {
     fn array_type_info() -> PgTypeInfo {
         <&str as PgHasArrayType>::array_type_info()
     }
@@ -54,9 +54,9 @@ impl PgHasArrayType for SegmentType {
     }
 }
 
-impl MorphemeSegment {
+impl WordSegment {
     /// Make a new morpheme segment
-    pub fn new(morpheme: String, gloss: String, segment_type: Option<SegmentType>) -> Self {
+    pub fn new(morpheme: String, gloss: String, role: Option<WordSegmentRole>) -> Self {
         Self {
             system: None,
             morpheme,
@@ -64,7 +64,7 @@ impl MorphemeSegment {
             // FIXME Shortcut to keep this function the same while allowing
             // migration code to create this data structure.
             gloss_id: None,
-            segment_type: segment_type.unwrap_or(SegmentType::Morpheme),
+            role: role.unwrap_or(WordSegmentRole::Morpheme),
             matching_tag: None,
         }
     }
@@ -80,17 +80,17 @@ impl MorphemeSegment {
     /// The separator that should follow this segment, based on the type of the
     /// next segment.
     pub fn get_previous_separator(&self) -> &str {
-        use SegmentType::*;
-        match self.segment_type {
+        use WordSegmentRole::*;
+        match self.role {
             Morpheme => "-",
             Clitic => "=",
-            Combine => ":",
+            Modifier => ":",
         }
     }
 
     /// Build a string of the morpheme gloss line, used in interlinear gloss
     /// text (IGT).
-    pub fn gloss_layer<'a>(segments: impl IntoIterator<Item = &'a MorphemeSegment>) -> String {
+    pub fn gloss_layer<'a>(segments: impl IntoIterator<Item = &'a WordSegment>) -> String {
         use itertools::Itertools;
         segments
             .into_iter()
@@ -119,7 +119,7 @@ impl MorphemeSegment {
 }
 
 #[async_graphql::Object]
-impl MorphemeSegment {
+impl WordSegment {
     /// Phonemic representation of the morpheme
     async fn morpheme(&self) -> Cow<'_, str> {
         self.get_morpheme()
@@ -131,8 +131,8 @@ impl MorphemeSegment {
     }
 
     /// What kind of thing is this segment?
-    async fn segment_type(&self) -> SegmentType {
-        self.segment_type
+    async fn role(&self) -> WordSegmentRole {
+        self.role
     }
 
     /// This field determines what character should separate this segment from
@@ -146,7 +146,7 @@ impl MorphemeSegment {
     async fn matching_tag(
         &self,
         context: &async_graphql::Context<'_>,
-    ) -> FieldResult<Option<TagForm>> {
+    ) -> FieldResult<Option<MorphemeTag>> {
         use async_graphql::dataloader::*;
         if let Some(matching_tag) = &self.matching_tag {
             Ok(Some(matching_tag.clone()))

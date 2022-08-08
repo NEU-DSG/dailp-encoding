@@ -14,23 +14,24 @@ import {
 } from "reakit/Radio"
 import { IconButton, Label, Select } from "src/components"
 import * as Dailp from "src/graphql/dailp"
-import { std } from "src/style/utils.css"
 import * as css from "./mode.css"
 import { usePreferences } from "./preferences-context"
 import { ViewMode } from "./types"
 
 export const levelNameMapping = {
   [ViewMode.Story]: {
-    label: "Story",
-    details: "Original text in the Cherokee syllabary with English translation",
+    label: "Syllabary",
+    details: "Syllabary text only with English translations for each paragraph",
   },
   [ViewMode.Pronunciation]: {
-    label: "Pronunciation",
-    details: "Word by word pronunciation and translation",
+    label: "Syllabary and Simple Phonetics",
+    details:
+      "Syllabary text with phonetics and English translations for each word",
   },
   [ViewMode.Segmentation]: {
-    label: "Word Parts",
-    details: "Each word broken down into its component parts",
+    label: "Syllabary, Phonetics, and Word Parts",
+    details:
+      "Syllabary text with each word broken down into its component parts, and English translations for each word and paragraph",
   },
 }
 
@@ -40,17 +41,17 @@ const cherokeeRepresentationMapping = {
   [Dailp.CherokeeOrthography.Learner]: {
     label: "Learner",
     details:
-      "Transcribes the syllbary with Worcester's original qu and ts spellings. Displays minimal tone and vowel length information.",
+      "Transliterates the syllbary using Worcester's qu and ts spellings. Omits tone, accent, and vowel length information.",
   },
   [Dailp.CherokeeOrthography.Crg]: {
     label: "Linguist: Cherokee Reference Grammar",
     details:
-      "Linguistic analysis using terms from Cherokee Reference Grammar (CRG). Transcribes the syllabary with gw and j. Displays tone and vowel length information using accents.",
+      "Linguistic analysis using terms from Cherokee Reference Grammar (CRG). Transliterates the syllabary with gw and j. Displays tone and vowel length information using accents.",
   },
   [Dailp.CherokeeOrthography.Taoc]: {
     label: "Linguist: Tone and Accent in Oklahoma Cherokee",
     details:
-      "Linguistic analysis using terms from Tone and Accent in Oklahoma Cherokee (TAOC). Transcribes the syllabary with kw and c. Displays extensive tone and vowel length information using accents.",
+      "Linguistic analysis using terms from Tone and Accent in Oklahoma Cherokee (TAOC). Transliterates the syllabary with kw and c. Displays extensive tone and vowel length information using accents.",
   },
 }
 
@@ -125,7 +126,7 @@ export const PrefPanel = () => {
         {modeDetails(preferences.viewMode).details}
       </p>
 
-      <label>Cherokee Transcription Style:</label>
+      <label>Cherokee Representation:</label>
       <PhoneticsPicker
         aria-described-by={"Selected-Phonetics"}
         onSelect={preferences.setCherokeeRepresentation}

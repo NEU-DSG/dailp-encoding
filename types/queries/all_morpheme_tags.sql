@@ -5,7 +5,7 @@ with t as (
     morpheme_tag.gloss,
     morpheme_tag.title,
     morpheme_tag.description,
-    morpheme_tag.segment_type as "segment_type: SegmentType",
+    morpheme_tag.role_override as "role_override: WordSegmentRole",
     abstract_morpheme_tag.linguistic_type
   from abbreviation_system
     inner join

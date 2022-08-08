@@ -4,6 +4,7 @@ mod audio;
 mod connections;
 mod contributors;
 mod early_vocab;
+mod edited_collection;
 mod lexical;
 mod spreadsheets;
 mod tags;
@@ -26,7 +27,7 @@ async fn main() -> Result<()> {
     println!("Validating manuscript spreadsheets...");
     validate_documents().await?;
 
-    let db = Database::connect().await?;
+    let db = Database::connect(Some(1)).await?;
 
     println!("Migrating Image Sources...");
     migrate_image_sources(&db).await?;
@@ -47,6 +48,9 @@ async fn main() -> Result<()> {
 
     println!("Migrating connections...");
     connections::migrate_connections(&db).await?;
+
+    println!("Migrating collections...");
+    edited_collection::migrate_edited_collection(&db).await?;
 
     Ok(())
 }

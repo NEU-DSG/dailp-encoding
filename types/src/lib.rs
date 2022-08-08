@@ -21,6 +21,7 @@
 pub mod annotation;
 mod audio;
 mod cherokee;
+pub mod collection;
 mod database_sql;
 mod date;
 mod document;
@@ -42,6 +43,7 @@ pub use sqlx::types::Uuid;
 
 pub use audio::*;
 pub use cherokee::*;
+pub use collection::*;
 pub use database_sql::*;
 pub use date::*;
 pub use document::*;

@@ -214,8 +214,8 @@ export const MorphemicSegmentation = (p: {
   for (const seg of p.segments) {
     if (
       segmentation.length > 0 &&
-      seg.segmentType &&
-      seg.segmentType !== Dailp.SegmentType.Combine
+      seg.role &&
+      seg.role !== Dailp.WordSegmentRole.Modifier
     ) {
       segmentation += seg.previousSeparator
     }

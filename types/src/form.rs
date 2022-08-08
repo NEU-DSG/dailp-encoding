@@ -1,6 +1,6 @@
 use crate::{
-    AnnotatedDoc, AudioSlice, CherokeeOrthography, Database, Date, DocumentId, MorphemeSegment,
-    PartsOfWord, PositionInDocument, SegmentType, TagId,
+    AnnotatedDoc, AudioSlice, CherokeeOrthography, Database, Date, DocumentId, PartsOfWord,
+    PositionInDocument, TagId, WordSegment, WordSegmentRole,
 };
 use async_graphql::{dataloader::DataLoader, FieldResult, MaybeUndefined};
 use itertools::Itertools;
@@ -36,7 +36,7 @@ pub struct AnnotatedForm {
     /// Morphemic segmentation of the form that includes a phonemic
     /// representation and gloss for each
     #[graphql(skip)]
-    pub segments: Option<Vec<MorphemeSegment>>,
+    pub segments: Option<Vec<WordSegment>>,
     #[serde(default)]
     /// English gloss for the whole word
     pub english_gloss: Vec<String>,
@@ -59,10 +59,7 @@ impl AnnotatedForm {
     /// The root morpheme of the word.
     /// For example, a verb form glossed as "he catches" might have a root morpheme
     /// corresponding to "catch."
-    async fn root(
-        &self,
-        context: &async_graphql::Context<'_>,
-    ) -> FieldResult<Option<MorphemeSegment>> {
+    async fn root(&self, context: &async_graphql::Context<'_>) -> FieldResult<Option<WordSegment>> {
         let segments = self.segments(context, CherokeeOrthography::Taoc).await?;
         for seg in segments {
             if is_root_morpheme(&seg.gloss) {
@@ -86,7 +83,7 @@ impl AnnotatedForm {
         &self,
         context: &async_graphql::Context<'_>,
         system: CherokeeOrthography,
-    ) -> FieldResult<Vec<MorphemeSegment>> {
+    ) -> FieldResult<Vec<WordSegment>> {
         let db = context.data::<DataLoader<Database>>()?;
         // 1. To convert to a concrete analysis, start with a list of abstract tags.
         let abstract_segments = db
@@ -128,19 +125,16 @@ impl AnnotatedForm {
                             .iter()
                             .skip(curr_index)
                             .take(concrete_tag.internal_tags.len());
-                        concrete_segments.push(MorphemeSegment {
+                        concrete_segments.push(WordSegment {
                             system: Some(system),
                             // Use the segment type of the first abstract one
                             // unless the concrete segment overrides the segment type.
-                            segment_type: concrete_tag
-                                .segment_type
+                            role: concrete_tag
+                                .role_override
                                 .or_else(|| {
-                                    corresponding_segments
-                                        .clone()
-                                        .next()
-                                        .map(|seg| seg.segment_type)
+                                    corresponding_segments.clone().next().map(|seg| seg.role)
                                 })
-                                .unwrap_or(SegmentType::Morpheme),
+                                .unwrap_or(WordSegmentRole::Morpheme),
                             morpheme: corresponding_segments.map(|seg| &seg.morpheme).join(""),
                             gloss: concrete_tag.tag.clone(),
                             gloss_id: None,
@@ -153,7 +147,7 @@ impl AnnotatedForm {
             } else {
                 // If this abstract segment was unmatched (probably a root),
                 // then just use it directly.
-                concrete_segments.push(MorphemeSegment {
+                concrete_segments.push(WordSegment {
                     system: Some(system),
                     ..abstract_segment.clone()
                 });
@@ -214,14 +208,14 @@ impl AnnotatedForm {
 
 impl AnnotatedForm {
     /// Look for a root morpheme in the word using crude case checks.
-    pub fn find_root(&self) -> Option<&MorphemeSegment> {
+    pub fn find_root(&self) -> Option<&WordSegment> {
         self.segments
             .as_ref()
             .and_then(|segments| segments.iter().find(|seg| is_root_morpheme(&seg.gloss)))
     }
 
     /// Find a morpheme within this word with the given exact gloss.
-    pub fn find_morpheme(&self, gloss: &str) -> Option<&MorphemeSegment> {
+    pub fn find_morpheme(&self, gloss: &str) -> Option<&WordSegment> {
         self.segments
             .as_ref()
             .and_then(|segments| segments.iter().find(|seg| seg.gloss == gloss))

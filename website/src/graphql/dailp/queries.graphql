@@ -80,7 +80,7 @@ fragment FormFields on AnnotatedForm {
       tag
       title
     }
-    segmentType
+    role
     previousSeparator
   }
   englishGloss

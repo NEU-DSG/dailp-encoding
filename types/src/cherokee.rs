@@ -200,7 +200,7 @@ mod tests {
 
         assert_eq!(
             CherokeeOrthography::Learner.convert("t-uu-alihthat-:iinvvʔs-ééʔi"),
-            "d-u-alihtad-inv's-e'i"
+            "d-u-alihtad-invs-e'i"
         );
 
         assert_eq!(
@@ -213,7 +213,7 @@ mod tests {
         assert_eq!(CherokeeOrthography::Learner.convert("uu"), "u");
         assert_eq!(
             CherokeeOrthography::Learner.convert("(a)listaʔyvv"),
-            "(a)lisda'yv"
+            "(a)lisdayv"
         );
     }
 

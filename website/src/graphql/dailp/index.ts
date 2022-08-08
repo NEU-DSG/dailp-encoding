@@ -134,8 +134,8 @@ export type AnnotatedForm = {
    * For example, a verb form glossed as "he catches" might have a root morpheme
    * corresponding to "catch."
    */
-  readonly root: Maybe<MorphemeSegment>
-  readonly segments: ReadonlyArray<MorphemeSegment>
+  readonly root: Maybe<WordSegment>
+  readonly segments: ReadonlyArray<WordSegment>
   /** All other observed words with the same root morpheme as this word. */
   readonly similarForms: ReadonlyArray<AnnotatedForm>
   /** Original source text */
@@ -416,24 +416,35 @@ export type MorphemeReference = {
   readonly morpheme: Scalars["String"]
 }
 
-export type MorphemeSegment = {
-  readonly __typename?: "MorphemeSegment"
-  /** English gloss in standard DAILP format that refers to a lexical item */
-  readonly gloss: Scalars["String"]
+/** A concrete representation of a particular functional morpheme. */
+export type MorphemeTag = {
+  readonly __typename?: "MorphemeTag"
   /**
-   * If this morpheme represents a functional tag that we have further
-   * information on, this is the corresponding database entry.
+   * A prose description of what this morpheme means and how it works in
+   * context.
    */
-  readonly matchingTag: Maybe<TagForm>
-  /** Phonemic representation of the morpheme */
-  readonly morpheme: Scalars["String"]
+  readonly definition: Scalars["String"]
+  /** URL to an external page with more details about this morpheme. */
+  readonly detailsUrl: Maybe<Scalars["String"]>
   /**
-   * This field determines what character should separate this segment from
-   * the previous one when reconstituting the full segmentation string.
+   * Internal representation of this functional item, which may be one or
+   * more word parts in the raw annotation. For example, ["X", "Y"] could map
+   * to "Z" in a particular display format.
    */
-  readonly previousSeparator: Scalars["String"]
-  /** What kind of thing is this segment? */
-  readonly segmentType: SegmentType
+  readonly internalTags: ReadonlyArray<Scalars["String"]>
+  /**
+   * What kind of morpheme is this? Examples are "Prepronominal Prefix" or
+   * "Aspectual Suffix"
+   */
+  readonly morphemeType: Scalars["String"]
+  /** Overrides the segment type of instances of this tag. */
+  readonly roleOverride: Maybe<WordSegmentRole>
+  /** How this morpheme looks in original language data */
+  readonly shape: Maybe<Scalars["String"]>
+  /** How this morpheme is represented in a gloss */
+  readonly tag: Scalars["String"]
+  /** Plain English title of the morpheme tag */
+  readonly title: Scalars["String"]
 }
 
 export type Mutation = {
@@ -524,7 +535,7 @@ export type Query = {
   /** List of all content pages */
   readonly allPages: ReadonlyArray<Page>
   /** List of all the functional morpheme tags available */
-  readonly allTags: ReadonlyArray<TagForm>
+  readonly allTags: ReadonlyArray<MorphemeTag>
   readonly collection: DocumentCollection
   /** Retrieves a full document from its unique name. */
   readonly document: Maybe<AnnotatedDoc>
@@ -533,7 +544,7 @@ export type Query = {
    * string. For example, "3PL.B" is the standard string referring to a 3rd
    * person plural prefix.
    */
-  readonly morphemeTag: Maybe<TagForm>
+  readonly morphemeTag: Maybe<MorphemeTag>
   /** Forms containing the given morpheme gloss or related ones clustered over time. */
   readonly morphemeTimeClusters: ReadonlyArray<FormsInTime>
   /**
@@ -607,19 +618,6 @@ export type QueryWordSearchArgs = {
 }
 
 /**
- * The kind of segment that a particular sequence of characters in a morphemic
- * segmentations represent.
- */
-export enum SegmentType {
-  /** Separated by an equals sign '=' */
-  Clitic = "CLITIC",
-  /** Separated by a colon ':' */
-  Combine = "COMBINE",
-  /** Separated by a hyphen '-' */
-  Morpheme = "MORPHEME",
-}
-
-/**
  * Attribution for a particular source, whether an institution or an individual.
  * Most commonly, this will represent the details of a library or archive that
  * houses documents used elsewhere.
@@ -632,32 +630,6 @@ export type SourceAttribution = {
   readonly name: Scalars["String"]
 }
 
-/** A concrete representation of a particular functional morpheme. */
-export type TagForm = {
-  readonly __typename?: "TagForm"
-  /**
-   * A prose description of what this morpheme means and how it works in
-   * context.
-   */
-  readonly definition: Scalars["String"]
-  /** URL to an external page with more details about this morpheme. */
-  readonly detailsUrl: Maybe<Scalars["String"]>
-  readonly internalTags: ReadonlyArray<Scalars["String"]>
-  /**
-   * What kind of morpheme is this? Examples are "Prepronominal Prefix" or
-   * "Aspectual Suffix"
-   */
-  readonly morphemeType: Scalars["String"]
-  /** Overrides the segment type of instances of this tag. */
-  readonly segmentType: Maybe<SegmentType>
-  /** How this morpheme looks in original language data */
-  readonly shape: Maybe<Scalars["String"]>
-  /** How this morpheme is represented in a gloss */
-  readonly tag: Scalars["String"]
-  /** Plain English title of the morpheme tag */
-  readonly title: Scalars["String"]
-}
-
 export enum UserGroup {
   Editor = "EDITOR",
 }
@@ -666,6 +638,39 @@ export type UserInfo = {
   readonly __typename?: "UserInfo"
   readonly email: Scalars["String"]
   readonly groups: ReadonlyArray<UserGroup>
+}
+
+export type WordSegment = {
+  readonly __typename?: "WordSegment"
+  /** English gloss in standard DAILP format that refers to a lexical item */
+  readonly gloss: Scalars["String"]
+  /**
+   * If this morpheme represents a functional tag that we have further
+   * information on, this is the corresponding database entry.
+   */
+  readonly matchingTag: Maybe<MorphemeTag>
+  /** Phonemic representation of the morpheme */
+  readonly morpheme: Scalars["String"]
+  /**
+   * This field determines what character should separate this segment from
+   * the previous one when reconstituting the full segmentation string.
+   */
+  readonly previousSeparator: Scalars["String"]
+  /** What kind of thing is this segment? */
+  readonly role: WordSegmentRole
+}
+
+/**
+ * The kind of segment that a particular sequence of characters in a morphemic
+ * segmentations represent.
+ */
+export enum WordSegmentRole {
+  /** Separated by an equals sign '=' */
+  Clitic = "CLITIC",
+  /** Separated by a colon ':' */
+  Modifier = "MODIFIER",
+  /** Separated by a hyphen '-' */
+  Morpheme = "MORPHEME",
 }
 
 /** A list of words grouped by the document that contains them. */
@@ -776,20 +781,17 @@ export type DocumentContentsQuery = { readonly __typename?: "Query" } & {
                           | "commentary"
                         > & {
                             readonly segments: ReadonlyArray<
-                              {
-                                readonly __typename?: "MorphemeSegment"
-                              } & Pick<
-                                MorphemeSegment,
+                              { readonly __typename?: "WordSegment" } & Pick<
+                                WordSegment,
                                 | "morpheme"
                                 | "gloss"
-                                | "segmentType"
+                                | "role"
                                 | "previousSeparator"
                               > & {
                                   readonly matchingTag: Maybe<
-                                    { readonly __typename?: "TagForm" } & Pick<
-                                      TagForm,
-                                      "tag" | "title"
-                                    >
+                                    {
+                                      readonly __typename?: "MorphemeTag"
+                                    } & Pick<MorphemeTag, "tag" | "title">
                                   >
                                 }
                             >
@@ -821,13 +823,13 @@ export type DocumentContentsQuery = { readonly __typename?: "Query" } & {
           | "commentary"
         > & {
             readonly segments: ReadonlyArray<
-              { readonly __typename?: "MorphemeSegment" } & Pick<
-                MorphemeSegment,
-                "morpheme" | "gloss" | "segmentType" | "previousSeparator"
+              { readonly __typename?: "WordSegment" } & Pick<
+                WordSegment,
+                "morpheme" | "gloss" | "role" | "previousSeparator"
               > & {
                   readonly matchingTag: Maybe<
-                    { readonly __typename?: "TagForm" } & Pick<
-                      TagForm,
+                    { readonly __typename?: "MorphemeTag" } & Pick<
+                      MorphemeTag,
                       "tag" | "title"
                     >
                   >
@@ -857,12 +859,15 @@ export type FormFieldsFragment = {
   | "commentary"
 > & {
     readonly segments: ReadonlyArray<
-      { readonly __typename?: "MorphemeSegment" } & Pick<
-        MorphemeSegment,
-        "morpheme" | "gloss" | "segmentType" | "previousSeparator"
+      { readonly __typename?: "WordSegment" } & Pick<
+        WordSegment,
+        "morpheme" | "gloss" | "role" | "previousSeparator"
       > & {
           readonly matchingTag: Maybe<
-            { readonly __typename?: "TagForm" } & Pick<TagForm, "tag" | "title">
+            { readonly __typename?: "MorphemeTag" } & Pick<
+              MorphemeTag,
+              "tag" | "title"
+            >
           >
         }
     >
@@ -944,8 +949,8 @@ export type GlossaryQueryVariables = Exact<{
 
 export type GlossaryQuery = { readonly __typename?: "Query" } & {
   readonly allTags: ReadonlyArray<
-    { readonly __typename?: "TagForm" } & Pick<
-      TagForm,
+    { readonly __typename?: "MorphemeTag" } & Pick<
+      MorphemeTag,
       "tag" | "title" | "definition" | "morphemeType"
     >
   >
@@ -1034,8 +1039,8 @@ export type TagQueryVariables = Exact<{
 
 export type TagQuery = { readonly __typename?: "Query" } & {
   readonly tag: Maybe<
-    { readonly __typename?: "TagForm" } & Pick<
-      TagForm,
+    { readonly __typename?: "MorphemeTag" } & Pick<
+      MorphemeTag,
       "morphemeType" | "tag" | "title" | "definition"
     >
   >
@@ -1110,7 +1115,7 @@ export const FormFieldsFragmentDoc = gql`
         tag
         title
       }
-      segmentType
+      role
       previousSeparator
     }
     englishGloss

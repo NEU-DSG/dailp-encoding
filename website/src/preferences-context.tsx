@@ -23,10 +23,10 @@ export const PreferencesProvider = (props: any) => {
     <PreferencesContext.Provider
       value={{
         viewMode,
-        setViewMode: persistLocally(VIEW_MODE_KEY, setViewMode),
+        setViewMode: persistLocally(PreferenceKey.ViewMode, setViewMode),
         cherokeeRepresentation,
         setCherokeeRepresentation: persistLocally(
-          CHEROKEE_REPRESENTATION_KEY,
+          PreferenceKey.CherokeeRepresentation,
           setCherokeeRepresentation
         ),
       }}
@@ -37,7 +37,7 @@ export const PreferencesProvider = (props: any) => {
 }
 
 function persistLocally<T extends { toString: () => string }>(
-  key: string,
+  key: PreferenceKey,
   setValue: (value: T) => void
 ) {
   return function (value: T) {
@@ -51,12 +51,15 @@ function persistLocally<T extends { toString: () => string }>(
 
 // Avoid changing these keys at all costs, because that will essentially reset
 // saved user preferences.
-const VIEW_MODE_KEY = "experienceLevel"
-const CHEROKEE_REPRESENTATION_KEY = "cherokeeSystem"
+enum PreferenceKey {
+  ViewMode = "experienceLevel",
+  CherokeeRepresentation = "cherokeeSystem",
+}
 
 const savedViewMode = () =>
-  Number.parseInt(Cookies.get(VIEW_MODE_KEY) ?? "1") as ViewMode
+  Number.parseInt(Cookies.get(PreferenceKey.ViewMode) ?? "1") as ViewMode
 
 const savedCherokeeRepresentation = (): Dailp.CherokeeOrthography =>
-  (Cookies.get(CHEROKEE_REPRESENTATION_KEY) as Dailp.CherokeeOrthography) ??
-  Dailp.CherokeeOrthography.Learner
+  (Cookies.get(
+    PreferenceKey.CherokeeRepresentation
+  ) as Dailp.CherokeeOrthography) ?? Dailp.CherokeeOrthography.Learner

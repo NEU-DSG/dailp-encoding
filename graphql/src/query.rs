@@ -7,7 +7,7 @@ use {
     dailp::async_graphql::{self, dataloader::DataLoader, Context, FieldResult, Guard},
     dailp::{
         AnnotatedDoc, AnnotatedFormUpdate, CherokeeOrthography, Database, MorphemeId,
-        MorphemeReference, TagForm, WordsInDocument,
+        MorphemeReference, MorphemeTag, WordsInDocument,
     },
     serde::{Deserialize, Serialize},
     serde_with::{rust::StringWithSeparator, CommaSeparator},
@@ -23,7 +23,7 @@ impl Query {
         &self,
         context: &Context<'_>,
         system: CherokeeOrthography,
-    ) -> FieldResult<Vec<TagForm>> {
+    ) -> FieldResult<Vec<MorphemeTag>> {
         Ok(context
             .data::<DataLoader<Database>>()?
             .loader()
@@ -207,7 +207,7 @@ impl Query {
         context: &Context<'_>,
         id: String,
         system: CherokeeOrthography,
-    ) -> FieldResult<Option<TagForm>> {
+    ) -> FieldResult<Option<MorphemeTag>> {
         Ok(context
             .data::<DataLoader<Database>>()?
             .load_one(dailp::TagId(id, system))
