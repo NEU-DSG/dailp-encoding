@@ -927,12 +927,17 @@ fn tth_to_dt(
         regex::{Captures, Regex},
     };
     let glottal_stop_len = 'ʔ'.len_utf8();
-    let input =
-        if drop_initial_glottal_stop && input.starts_with('ʔ') && input.len() > glottal_stop_len {
+    let input = if drop_initial_glottal_stop && input.len() > glottal_stop_len {
+        if input.starts_with('ʔ') {
             &input[glottal_stop_len..]
+        } else if input.ends_with('ʔ') {
+            &input[..input.len() - glottal_stop_len]
         } else {
             input
-        };
+        }
+    } else {
+        input
+    };
     // Convert the t/th consonants to d/t
     lazy_static! {
         static ref TTH_PATTERN: Regex =
