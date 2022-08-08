@@ -266,13 +266,13 @@ impl Database {
             let chapter_doc_name = current_chapter.document_short_name;
 
             // Use stack to build chapter slug
-            let mut before_chapter_index = chapter_stack.last().clone().unwrap().0;
+            let mut before_chapter_index = chapter_stack.last().unwrap().0;
             while before_chapter_index != (current_chapter.index_in_parent - 1) {
                 let last_chapter_index = chapter_stack.last().unwrap().0;
                 if last_chapter_index >= current_chapter.index_in_parent {
                     chapter_stack.pop();
                 }
-                before_chapter_index = chapter_stack.last().clone().unwrap().0;
+                before_chapter_index = chapter_stack.last().unwrap().0;
             }
 
             // Concatenate URL Slugs of all chapters on the path
