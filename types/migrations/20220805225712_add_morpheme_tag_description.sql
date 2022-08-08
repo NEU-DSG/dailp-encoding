@@ -28,12 +28,12 @@ add column role word_segment_role not null default 'Morpheme';
 -- Set the type of each segment to the "followed_by" of the segment that comes
 -- before it.
 update word_segment
-set role = (
-  select coalesce(prev.followed_by, 'Morpheme')
+set role = coalesce((
+  select prev.followed_by
   from word_segment as prev
   where prev.word_id = word_segment.word_id
     and prev.index_in_word = word_segment.index_in_word - 1
-);
+  ), 'Morpheme');
 
 alter table word_segment
 drop column followed_by;
