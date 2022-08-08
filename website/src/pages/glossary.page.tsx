@@ -1,7 +1,7 @@
 import cx from "classnames"
 import { groupBy } from "lodash"
 import pluralize from "pluralize"
-import React, { useState } from "react"
+import React from "react"
 import { Helmet } from "react-helmet"
 import Link from "src/components/link"
 import * as Dailp from "src/graphql/dailp"
@@ -15,20 +15,12 @@ import {
 } from "src/style/utils.css"
 import Layout from "../layout"
 import { glossarySectionId, morphemeTagId } from "../routes"
-import { TagSet, tagSetForMode } from "../types"
 
 const GlossaryPage = () => {
-  const { viewMode } = usePreferences()
-  const tagSet = tagSetForMode(viewMode)
-  let system = Dailp.CherokeeOrthography.Taoc
-  if (tagSet === TagSet.Crg) {
-    system = Dailp.CherokeeOrthography.Crg
-  } else if (tagSet === TagSet.Taoc) {
-    system = Dailp.CherokeeOrthography.Taoc
-  } else if (tagSet === TagSet.Learner) {
-    system = Dailp.CherokeeOrthography.Learner
-  }
-  const [{ data }] = Dailp.useGlossaryQuery({ variables: { system } })
+  const { cherokeeRepresentation } = usePreferences()
+  const [{ data }] = Dailp.useGlossaryQuery({
+    variables: { system: cherokeeRepresentation },
+  })
   const tags = data?.allTags
   // Group the tags by type.
   const groupedTags = groupBy(tags, (t) => t.morphemeType)

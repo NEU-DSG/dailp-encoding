@@ -92,7 +92,7 @@ async fn handler(
     else if path.starts_with("/manifests") {
         let full_url = req.uri().to_string();
         let full_path = req.uri().path();
-        let mut parts = full_path.split("/");
+        let mut parts = full_path.split('/');
         let document_name = parts.nth(2).expect("No manifest ID given");
         let manifest = database.document_manifest(document_name, full_url).await?;
         let json = serde_json::to_string(&manifest)?;

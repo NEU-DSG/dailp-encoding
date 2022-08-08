@@ -4,7 +4,8 @@ select
   abbreviation_system.short_name as system_name,
   morpheme_tag.gloss,
   morpheme_tag.title,
-  abstract_morpheme_tag.description,
+  morpheme_tag.description,
+  morpheme_tag.role_override as "role_override: WordSegmentRole",
   abstract_morpheme_tag.linguistic_type
 from morpheme_gloss
   inner join abstract_morpheme_tag on abstract_morpheme_tag.id = morpheme_gloss.tag_id

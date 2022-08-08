@@ -75,7 +75,7 @@ async fn parse_early_vocab(
     num_links: usize,
 ) -> Result<Vec<dailp::LexicalConnection>> {
     use crate::spreadsheets::SheetResult;
-    use dailp::{Date, DocumentMetadata, MorphemeSegment};
+    use dailp::{Date, DocumentMetadata, WordSegment};
 
     let sheet = SheetResult::from_sheet(sheet_id, None).await?;
     let meta = SheetResult::from_sheet(sheet_id, Some(crate::METADATA_SHEET_NAME)).await?;
@@ -151,7 +151,7 @@ async fn parse_early_vocab(
                     row.next().filter(|s| !s.is_empty()),
                     row.next().filter(|s| !s.is_empty()),
                 ) {
-                    MorphemeSegment::parse_many(&segs, &glosses)
+                    WordSegment::parse_many(&segs, &glosses)
                 } else {
                     None
                 }

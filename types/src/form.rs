@@ -1,10 +1,12 @@
 use crate::{
-    AnnotatedDoc, AudioSlice, Database, Date, DocumentId, MorphemeSegment, PartsOfWord,
-    PositionInDocument,
+    AnnotatedDoc, AudioSlice, CherokeeOrthography, Database, Date, DocumentId, PartsOfWord,
+    PositionInDocument, TagId, WordSegment, WordSegmentRole,
 };
 use async_graphql::{dataloader::DataLoader, FieldResult, MaybeUndefined};
+use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use sqlx::types::Uuid;
+use std::borrow::Cow;
 
 /// Mostly unused type
 #[derive(Clone, Eq, PartialEq, Hash, Serialize, Deserialize, Debug, async_graphql::NewType)]
@@ -26,6 +28,7 @@ pub struct AnnotatedForm {
     pub source: String,
     /// A normalized version of the word
     pub normalized_source: Option<String>,
+    #[graphql(skip)]
     /// Romanized version of the word for simple phonetic pronunciation
     pub simple_phonetics: Option<String>,
     /// Underlying phonemic representation of this word
@@ -33,7 +36,7 @@ pub struct AnnotatedForm {
     /// Morphemic segmentation of the form that includes a phonemic
     /// representation and gloss for each
     #[graphql(skip)]
-    pub segments: Option<Vec<MorphemeSegment>>,
+    pub segments: Option<Vec<WordSegment>>,
     #[serde(default)]
     /// English gloss for the whole word
     pub english_gloss: Vec<String>,
@@ -56,11 +59,8 @@ impl AnnotatedForm {
     /// The root morpheme of the word.
     /// For example, a verb form glossed as "he catches" might have a root morpheme
     /// corresponding to "catch."
-    async fn root(
-        &self,
-        context: &async_graphql::Context<'_>,
-    ) -> FieldResult<Option<MorphemeSegment>> {
-        let segments = self.segments(context).await?;
+    async fn root(&self, context: &async_graphql::Context<'_>) -> FieldResult<Option<WordSegment>> {
+        let segments = self.segments(context, CherokeeOrthography::Taoc).await?;
         for seg in segments {
             if is_root_morpheme(&seg.gloss) {
                 return Ok(Some(seg));
@@ -69,21 +69,95 @@ impl AnnotatedForm {
         Ok(None)
     }
 
-    async fn romanized_source(&self) -> Option<String> {
-        self.simple_phonetics
-            .as_ref()
-            .map(|phonetic| crate::lexical::simple_phonetics_to_worcester(phonetic))
+    async fn romanized_source(&self, system: CherokeeOrthography) -> Option<Cow<'_, str>> {
+        self.simple_phonetics.as_ref().map(|phonetic| {
+            if system == CherokeeOrthography::Learner {
+                crate::lexical::simple_phonetics_to_worcester(phonetic).into()
+            } else {
+                phonetic.into()
+            }
+        })
     }
 
     async fn segments(
         &self,
         context: &async_graphql::Context<'_>,
-    ) -> FieldResult<Vec<MorphemeSegment>> {
-        Ok(context
-            .data::<DataLoader<Database>>()?
+        system: CherokeeOrthography,
+    ) -> FieldResult<Vec<WordSegment>> {
+        let db = context.data::<DataLoader<Database>>()?;
+        // 1. To convert to a concrete analysis, start with a list of abstract tags.
+        let abstract_segments = db
             .load_one(PartsOfWord(*self.id.as_ref().unwrap()))
             .await?
-            .unwrap_or_default())
+            .unwrap_or_default();
+
+        // 2. Request all concrete tags that start with each abstract tag.
+        let concrete_tag_matches = db
+            .load_many(
+                abstract_segments
+                    .iter()
+                    .map(|seg| TagId(seg.gloss.clone(), system)),
+            )
+            .await?;
+
+        // 3. Pick the longest match for each abstract segment.
+        let mut concrete_segments = Vec::new();
+        let mut curr_index = 0;
+        for (idx, abstract_segment) in abstract_segments.iter().enumerate() {
+            // If this segment has already been filled by a previous match, skip it.
+            if idx < curr_index {
+                continue;
+            }
+
+            let concrete_tags =
+                concrete_tag_matches.get(&TagId(abstract_segment.gloss.clone(), system));
+            if let Some(concrete_tags) = concrete_tags {
+                for concrete_tag in concrete_tags {
+                    // Check whether the whole sequence of abstract tags is the current
+                    // start of the abstract segment list.
+                    let abstract_matches = concrete_tag
+                        .internal_tags
+                        .iter()
+                        .zip(abstract_segments.iter().skip(curr_index));
+                    let is_match = abstract_matches.clone().all(|(a, b)| *a == b.gloss);
+                    if is_match {
+                        let corresponding_segments = abstract_segments
+                            .iter()
+                            .skip(curr_index)
+                            .take(concrete_tag.internal_tags.len());
+                        concrete_segments.push(WordSegment {
+                            system: Some(system),
+                            // Use the segment type of the first abstract one
+                            // unless the concrete segment overrides the segment type.
+                            role: concrete_tag
+                                .role_override
+                                .or_else(|| {
+                                    corresponding_segments.clone().next().map(|seg| seg.role)
+                                })
+                                .unwrap_or(WordSegmentRole::Morpheme),
+                            morpheme: corresponding_segments.map(|seg| &seg.morpheme).join(""),
+                            gloss: concrete_tag.tag.clone(),
+                            gloss_id: None,
+                            matching_tag: Some(concrete_tag.clone()),
+                        });
+                        curr_index += concrete_tag.internal_tags.len();
+                        break;
+                    }
+                }
+            } else {
+                // If this abstract segment was unmatched (probably a root),
+                // then just use it directly.
+                concrete_segments.push(WordSegment {
+                    system: Some(system),
+                    ..abstract_segment.clone()
+                });
+                curr_index += 1;
+            }
+            // if !success {
+            //     anyhow::bail!("Failed to generate all morpheme tags");
+            // }
+        }
+        Ok(concrete_segments)
     }
 
     /// All other observed words with the same root morpheme as this word.
@@ -134,14 +208,14 @@ impl AnnotatedForm {
 
 impl AnnotatedForm {
     /// Look for a root morpheme in the word using crude case checks.
-    pub fn find_root(&self) -> Option<&MorphemeSegment> {
+    pub fn find_root(&self) -> Option<&WordSegment> {
         self.segments
             .as_ref()
             .and_then(|segments| segments.iter().find(|seg| is_root_morpheme(&seg.gloss)))
     }
 
     /// Find a morpheme within this word with the given exact gloss.
-    pub fn find_morpheme(&self, gloss: &str) -> Option<&MorphemeSegment> {
+    pub fn find_morpheme(&self, gloss: &str) -> Option<&WordSegment> {
         self.segments
             .as_ref()
             .and_then(|segments| segments.iter().find(|seg| seg.gloss == gloss))
