@@ -41,7 +41,7 @@ const cherokeeRepresentationMapping = {
   [Dailp.CherokeeOrthography.Learner]: {
     label: "Learner",
     details:
-      "Transliterates the syllbary using Worcester's qu and ts spellings. Omits tone, accent, and vowel length information.",
+      "Transliterates the syllabary using Worcester's qu and ts spellings. Omits tone, accent, and vowel length information.",
   },
   [Dailp.CherokeeOrthography.Crg]: {
     label: "Linguist: Cherokee Reference Grammar",
