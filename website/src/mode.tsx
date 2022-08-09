@@ -16,26 +16,24 @@ import { IconButton, Label, Select } from "src/components"
 import * as Dailp from "src/graphql/dailp"
 import * as css from "./mode.css"
 import { usePreferences } from "./preferences-context"
-import { ViewMode } from "./types"
+import { LevelOfDetail } from "./types"
 
 export const levelNameMapping = {
-  [ViewMode.Story]: {
+  [LevelOfDetail.Story]: {
     label: "Syllabary",
     details: "Syllabary text only with English translations for each paragraph",
   },
-  [ViewMode.Pronunciation]: {
+  [LevelOfDetail.Pronunciation]: {
     label: "Syllabary and Simple Phonetics",
     details:
       "Syllabary text with phonetics and English translations for each word",
   },
-  [ViewMode.Segmentation]: {
+  [LevelOfDetail.Segmentation]: {
     label: "Syllabary, Phonetics, and Word Parts",
     details:
       "Syllabary text with each word broken down into its component parts, and English translations for each word and paragraph",
   },
 }
-
-export const modeDetails = (mode: ViewMode) => levelNameMapping[mode]
 
 const cherokeeRepresentationMapping = {
   [Dailp.CherokeeOrthography.Learner]: {
@@ -55,15 +53,12 @@ const cherokeeRepresentationMapping = {
   },
 }
 
-export const cherokeeRepresentationDetails = (
-  system: Dailp.CherokeeOrthography
-) => cherokeeRepresentationMapping[system]
-
-export const ExperiencePicker = (p: {
-  onSelect: (mode: ViewMode) => void
-  id?: string
+export const SelectLevelOfDetail = (p: {
+  id: string
+  "aria-described-by"?: string
+  onSelect: (mode: LevelOfDetail) => void
 }) => {
-  const { viewMode: value, setViewMode: setValue } = usePreferences()
+  const { levelOfDetail: value, setLevelOfDetail: setValue } = usePreferences()
 
   // Save the selected view mode throughout the session.
   useEffect(() => {
@@ -72,12 +67,13 @@ export const ExperiencePicker = (p: {
   return (
     <Select
       name="experience-picker"
-      id={p.id}
       value={value}
       onChange={(e) => setValue(Number.parseInt(e.target.value))}
+      id={p.id}
+      aria-described-by={p["aria-described-by"]}
     >
-      {Object.entries(levelNameMapping).map(([viewMode, details]) => (
-        <option value={viewMode} key={viewMode}>
+      {Object.entries(levelNameMapping).map(([levelOfDetail, details]) => (
+        <option value={levelOfDetail} key={levelOfDetail}>
           {details.label}
         </option>
       ))}
@@ -85,7 +81,9 @@ export const ExperiencePicker = (p: {
   )
 }
 
-export const PhoneticsPicker = (p: {
+export const SelectCherokeeRepresentation = (p: {
+  id: string
+  "aria-described-by"?: string
   onSelect: (phonetics: Dailp.CherokeeOrthography) => void
 }) => {
   const { cherokeeRepresentation: value, setCherokeeRepresentation: setValue } =
@@ -97,10 +95,11 @@ export const PhoneticsPicker = (p: {
   }, [value])
   return (
     <Select
-      name="phonetics-picker"
+      name="cherokee-representation"
       value={value}
       onChange={(e) => setValue(e.target.value as Dailp.CherokeeOrthography)}
-      aria-label="Romanization"
+      id={p.id}
+      aria-described-by={p["aria-described-by"]}
     >
       {Object.entries(cherokeeRepresentationMapping).map(
         ([system, details]) => (
@@ -117,23 +116,25 @@ export const PrefPanel = () => {
   const preferences = usePreferences()
   return (
     <div className={css.settingsContainer}>
-      <Label>Level of Detail:</Label>
-      <ExperiencePicker
-        aria-described-by={"Selected-ViewMode"}
-        onSelect={preferences.setViewMode}
+      <Label htmlFor="level-of-detail">Level of Detail:</Label>
+      <SelectLevelOfDetail
+        id="level-of-detail"
+        aria-described-by="selected-lod"
+        onSelect={preferences.setLevelOfDetail}
       />
-      <p id={"Selected-ViewMode"}>
-        {modeDetails(preferences.viewMode).details}
+      <p id={"selected-lod"}>
+        {levelNameMapping[preferences.levelOfDetail].details}
       </p>
 
-      <label>Cherokee Representation:</label>
-      <PhoneticsPicker
-        aria-described-by={"Selected-Phonetics"}
+      <Label htmlFor="cherokee-representation">Cherokee Representation:</Label>
+      <SelectCherokeeRepresentation
+        id="cherokee-representation"
+        aria-described-by="selected-representation"
         onSelect={preferences.setCherokeeRepresentation}
       />
-      <p id={"Selected-Phonetics"}>
+      <p id={"selected-representation"}>
         {
-          cherokeeRepresentationDetails(preferences.cherokeeRepresentation)
+          cherokeeRepresentationMapping[preferences.cherokeeRepresentation]
             .details
         }
       </p>
