@@ -55,62 +55,45 @@ const cherokeeRepresentationMapping = {
 
 export const SelectLevelOfDetail = (p: {
   id: string
-  "aria-described-by"?: string
+  value: LevelOfDetail
   onSelect: (mode: LevelOfDetail) => void
-}) => {
-  const { levelOfDetail: value, setLevelOfDetail: setValue } = usePreferences()
-
-  // Save the selected view mode throughout the session.
-  useEffect(() => {
-    p.onSelect(value)
-  }, [value])
-  return (
-    <Select
-      name="experience-picker"
-      value={value}
-      onChange={(e) => setValue(Number.parseInt(e.target.value))}
-      id={p.id}
-      aria-described-by={p["aria-described-by"]}
-    >
-      {Object.entries(levelNameMapping).map(([levelOfDetail, details]) => (
-        <option value={levelOfDetail} key={levelOfDetail}>
-          {details.label}
-        </option>
-      ))}
-    </Select>
-  )
-}
+}) => (
+  <Select
+    id={p.id}
+    name="experience-picker"
+    value={p.value}
+    onChange={(e) => p.onSelect(Number.parseInt(e.target.value))}
+  >
+    {Object.entries(levelNameMapping).map(([levelOfDetail, details]) => (
+      <option
+        value={levelOfDetail}
+        key={levelOfDetail}
+        aria-description={details.details}
+      >
+        {details.label}
+      </option>
+    ))}
+  </Select>
+)
 
 export const SelectCherokeeRepresentation = (p: {
   id: string
-  "aria-described-by"?: string
+  value: Dailp.CherokeeOrthography
   onSelect: (phonetics: Dailp.CherokeeOrthography) => void
-}) => {
-  const { cherokeeRepresentation: value, setCherokeeRepresentation: setValue } =
-    usePreferences()
-
-  // Save the selected representation throughout the session.
-  useEffect(() => {
-    p.onSelect(value)
-  }, [value])
-  return (
-    <Select
-      name="cherokee-representation"
-      value={value}
-      onChange={(e) => setValue(e.target.value as Dailp.CherokeeOrthography)}
-      id={p.id}
-      aria-described-by={p["aria-described-by"]}
-    >
-      {Object.entries(cherokeeRepresentationMapping).map(
-        ([system, details]) => (
-          <option value={system} key={system}>
-            {details.label}
-          </option>
-        )
-      )}
-    </Select>
-  )
-}
+}) => (
+  <Select
+    id={p.id}
+    name="cherokee-representation"
+    value={p.value}
+    onChange={(e) => p.onSelect(e.target.value as Dailp.CherokeeOrthography)}
+  >
+    {Object.entries(cherokeeRepresentationMapping).map(([system, details]) => (
+      <option value={system} key={system} aria-description={details.details}>
+        {details.label}
+      </option>
+    ))}
+  </Select>
+)
 
 export const PrefPanel = () => {
   const preferences = usePreferences()
@@ -119,20 +102,18 @@ export const PrefPanel = () => {
       <Label htmlFor="level-of-detail">Level of Detail:</Label>
       <SelectLevelOfDetail
         id="level-of-detail"
-        aria-described-by="selected-lod"
+        value={preferences.levelOfDetail}
         onSelect={preferences.setLevelOfDetail}
       />
-      <p id={"selected-lod"}>
-        {levelNameMapping[preferences.levelOfDetail].details}
-      </p>
+      <p>{levelNameMapping[preferences.levelOfDetail].details}</p>
 
       <Label htmlFor="cherokee-representation">Cherokee Representation:</Label>
       <SelectCherokeeRepresentation
         id="cherokee-representation"
-        aria-described-by="selected-representation"
+        value={preferences.cherokeeRepresentation}
         onSelect={preferences.setCherokeeRepresentation}
       />
-      <p id={"selected-representation"}>
+      <p>
         {
           cherokeeRepresentationMapping[preferences.cherokeeRepresentation]
             .details
