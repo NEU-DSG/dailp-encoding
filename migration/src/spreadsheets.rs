@@ -166,20 +166,12 @@ impl SheetResult {
                 }
 
                 // Both of these fields are optional, and will panic if out of bounds
-                let mut wp_id = None;
-                if row_values.peek().is_some() {
-                    wp_id = row_values.next().unwrap().parse::<i64>().ok();
-                }
 
-                let mut doc_string = None;
-                if row_values.peek().is_some() {
-                    doc_string = row_values.next();
-                }
+                let wp_id = if row_values.peek().is_some() {row_values.next().unwrap().parse::<i64>().ok()} else {None};
 
-                let mut intro_or_genre = Body;
-                if is_intro == true {
-                    intro_or_genre = Intro;
-                }
+                let doc_string = if row_values.peek().is_some() {row_values.next()} else {None};
+
+                let intro_or_body = if is_intro {Intro} else {Body};
 
                 let new_chapter = Chapter {
                     index_in_parent: index_i64,
@@ -188,20 +180,20 @@ impl SheetResult {
                     document_short_name: doc_string,
                     id: None,
                     wordpress_id: wp_id,
-                    chapter_type: intro_or_genre,
+                    section: intro_or_body,
                 };
 
                 chapters.push(new_chapter);
             }
         }
-        let self_genre_chapters = chapters;
+        let self_body_chapters = chapters;
 
         Ok(Collection {
             title: self_title.to_string(),
             wordpress_menu_id: Some(*self_wordpress_menu_id),
             slug: self_slug.to_string(),
             intro_chapters: self_intro_chapters,
-            genre_chapters: self_genre_chapters,
+            body_chapters: self_body_chapters,
         })
     }
 

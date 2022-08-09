@@ -20,7 +20,7 @@ pub async fn migrate_edited_collection(db: &Database) -> anyhow::Result<()> {
     // Append both intro and genre chapters together
     // to add all chapters to the database at the same time
     let mut chapter_group_one = collection.intro_chapters;
-    let mut chapter_group_two = collection.genre_chapters;
+    let mut chapter_group_two = collection.body_chapters;
 
     let chapter_result: Vec<Chapter> = chapter_group_one
         .into_iter()

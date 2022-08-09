@@ -12,7 +12,7 @@ pub struct Collection {
 
     pub intro_chapters: Vec<Chapter>,
 
-    pub genre_chapters: Vec<Chapter>,
+    pub body_chapters: Vec<Chapter>,
 }
 
 #[derive(Debug, Clone)]
@@ -29,7 +29,7 @@ pub struct Chapter {
 
     pub wordpress_id: Option<i64>,
 
-    pub chapter_type: CollectionSection,
+    pub section: CollectionSection,
 }
 
 #[derive(Debug, Clone, PartialEq, sqlx::Type)]

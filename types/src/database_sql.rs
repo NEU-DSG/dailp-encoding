@@ -293,35 +293,17 @@ impl Database {
 
             let url_slug = PgLTree::from_str(&url_slug_cur)?;
 
-            let collection_section = current_chapter.chapter_type;
-
-            // Insert chapter data into database
-            if collection_section == Intro {
-                query_file!(
-                    "queries/insert_chapter_mark_type_intro.sql",
-                    current_chapter.chapter_name,
-                    chapter_doc_name,
-                    current_chapter.wordpress_id,
-                    current_chapter.index_in_parent,
-                    url_slug,
-                )
-                .execute(&mut tx)
-                .await?;
-            }
-
-            if collection_section == Body {
-                query_file!(
-                    "queries/insert_chapter_mark_type_genre.sql",
-                    current_chapter.chapter_name,
-                    chapter_doc_name,
-                    current_chapter.wordpress_id,
-                    current_chapter.index_in_parent,
-                    url_slug,
-                )
-                .execute(&mut tx)
-                .await?;
-            }
-            
+            query_file!(
+                "queries/insert_one_chapter_marking_intro_or_body.sql",
+                current_chapter.chapter_name,
+                chapter_doc_name,
+                current_chapter.wordpress_id,
+                current_chapter.index_in_parent,
+                url_slug,
+                current_chapter.section as _ 
+            )
+            .execute(&mut tx)
+            .await?; 
         }
         tx.commit().await?;
 
