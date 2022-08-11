@@ -60,7 +60,7 @@ export const SelectLevelOfDetail = (p: {
 }) => (
   <Select
     id={p.id}
-    name="experience-picker"
+    name="level-of-detail"
     value={p.value}
     onChange={(e) => p.onSelect(Number.parseInt(e.target.value))}
   >
@@ -107,7 +107,9 @@ export const PrefPanel = () => {
       />
       <p>{levelNameMapping[preferences.levelOfDetail].details}</p>
 
-      <Label htmlFor="cherokee-representation">Cherokee Representation:</Label>
+      <Label htmlFor="cherokee-representation">
+        Cherokee Description Style:
+      </Label>
       <SelectCherokeeRepresentation
         id="cherokee-representation"
         value={preferences.cherokeeRepresentation}
