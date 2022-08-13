@@ -1,6 +1,6 @@
 import * as Dailp from "src/graphql/dailp"
 
-export enum ViewMode {
+export enum LevelOfDetail {
   Story = 0,
   Pronunciation = 1,
   Segmentation = 2,

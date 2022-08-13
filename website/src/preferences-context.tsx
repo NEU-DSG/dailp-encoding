@@ -1,12 +1,12 @@
 import Cookies from "js-cookie"
-import React, { useContext, useState } from "react"
+import React, { useContext, useEffect, useState } from "react"
 import * as Dailp from "src/graphql/dailp"
-import { ViewMode } from "./types"
+import { LevelOfDetail } from "./types"
 
 // Set up context for preferences
 const PreferencesContext = React.createContext({
-  viewMode: ViewMode.Pronunciation,
-  setViewMode: (p: ViewMode) => {},
+  levelOfDetail: LevelOfDetail.Pronunciation,
+  setLevelOfDetail: (p: LevelOfDetail) => {},
   cherokeeRepresentation: Dailp.CherokeeOrthography.Learner,
   setCherokeeRepresentation: (p: Dailp.CherokeeOrthography) => {},
 })
@@ -15,20 +15,30 @@ export const usePreferences = () => useContext(PreferencesContext)
 
 export const PreferencesProvider = (props: any) => {
   // Some preferences hooks setup
-  const [viewMode, setViewMode] = useState(savedViewMode())
+  const [levelOfDetail, setLevelOfDetail] = useState(savedLevelOfDetail())
   const [cherokeeRepresentation, setCherokeeRepresentation] = useState(
     savedCherokeeRepresentation()
   )
+
+  useEffect(() => {
+    save(PreferenceKey.LevelOfDetail, levelOfDetail)
+    save(PreferenceKey.CherokeeRepresentation, cherokeeRepresentation)
+  }, [levelOfDetail, cherokeeRepresentation])
+
+  useEffect(() => {
+    // Remove all deprecated cookies, keep this code for at least several months
+    // to let users clear their site cookies.
+    Cookies.remove(DeprecatedCookie.LevelOfDetail)
+    Cookies.remove(DeprecatedCookie.Romanization)
+  }, [])
+
   return (
     <PreferencesContext.Provider
       value={{
-        viewMode,
-        setViewMode: persistLocally(PreferenceKey.ViewMode, setViewMode),
+        levelOfDetail,
+        setLevelOfDetail,
         cherokeeRepresentation,
-        setCherokeeRepresentation: persistLocally(
-          PreferenceKey.CherokeeRepresentation,
-          setCherokeeRepresentation
-        ),
+        setCherokeeRepresentation,
       }}
     >
       {props.children}
@@ -36,30 +46,61 @@ export const PreferencesProvider = (props: any) => {
   )
 }
 
-function persistLocally<T extends { toString: () => string }>(
-  key: PreferenceKey,
-  setValue: (value: T) => void
-) {
-  return function (value: T) {
-    Cookies.set(key, value.toString(), {
-      sameSite: "strict",
-      secure: true,
-    })
-    return setValue(value)
-  }
+function save(key: PreferenceKey, value: any) {
+  LocalStorage.setItem(key, value.toString())
 }
 
 // Avoid changing these keys at all costs, because that will essentially reset
 // saved user preferences.
 enum PreferenceKey {
-  ViewMode = "experienceLevel",
-  CherokeeRepresentation = "cherokeeSystem",
+  LevelOfDetail = "level-of-detail",
+  CherokeeRepresentation = "cherokee-system",
 }
 
-const savedViewMode = () =>
-  Number.parseInt(Cookies.get(PreferenceKey.ViewMode) ?? "1") as ViewMode
+enum DeprecatedCookie {
+  // TODO Remove this after several months, giving users time to have their
+  // settings migrated.
+  LevelOfDetail = "experienceLevel",
+  Romanization = "phonetics",
+}
 
-const savedCherokeeRepresentation = (): Dailp.CherokeeOrthography =>
-  (Cookies.get(
+const LocalStorage =
+  typeof window !== "undefined"
+    ? window.localStorage
+    : { getItem: () => null, setItem: () => {} }
+
+const savedLevelOfDetail = (): LevelOfDetail => {
+  const newValue = LocalStorage.getItem(PreferenceKey.LevelOfDetail)
+  const oldValue = Cookies.get(DeprecatedCookie.LevelOfDetail)
+
+  if (newValue) {
+    return Number.parseInt(newValue) as LevelOfDetail
+  } else if (oldValue) {
+    const parsed = Number.parseInt(oldValue) as LevelOfDetail
+    return Math.min(parsed, LevelOfDetail.Segmentation)
+  } else {
+    return LevelOfDetail.Pronunciation
+  }
+}
+
+const savedCherokeeRepresentation = (): Dailp.CherokeeOrthography => {
+  const newValue = LocalStorage.getItem(
     PreferenceKey.CherokeeRepresentation
-  ) as Dailp.CherokeeOrthography) ?? Dailp.CherokeeOrthography.Learner
+  ) as Dailp.CherokeeOrthography
+  const oldValue = Cookies.get(DeprecatedCookie.LevelOfDetail)
+
+  if (newValue) {
+    return newValue
+  } else if (oldValue) {
+    const parsed = Number.parseInt(oldValue)
+    if (parsed === 3) {
+      return Dailp.CherokeeOrthography.Crg
+    } else if (parsed === 4) {
+      return Dailp.CherokeeOrthography.Taoc
+    } else {
+      return Dailp.CherokeeOrthography.Learner
+    }
+  } else {
+    return Dailp.CherokeeOrthography.Learner
+  }
+}

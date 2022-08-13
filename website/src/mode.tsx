@@ -16,32 +16,35 @@ import { IconButton, Label, Select } from "src/components"
 import * as Dailp from "src/graphql/dailp"
 import * as css from "./mode.css"
 import { usePreferences } from "./preferences-context"
-import { ViewMode } from "./types"
+import { LevelOfDetail } from "./types"
 
-export const levelNameMapping = {
-  [ViewMode.Story]: {
+type PreferenceDetails = { label: string; details: string }
+
+export const levelNameMapping: Record<LevelOfDetail, PreferenceDetails> = {
+  [LevelOfDetail.Story]: {
     label: "Syllabary",
     details: "Syllabary text only with English translations for each paragraph",
   },
-  [ViewMode.Pronunciation]: {
+  [LevelOfDetail.Pronunciation]: {
     label: "Syllabary and Simple Phonetics",
     details:
       "Syllabary text with phonetics and English translations for each word",
   },
-  [ViewMode.Segmentation]: {
+  [LevelOfDetail.Segmentation]: {
     label: "Syllabary, Phonetics, and Word Parts",
     details:
       "Syllabary text with each word broken down into its component parts, and English translations for each word and paragraph",
   },
 }
 
-export const modeDetails = (mode: ViewMode) => levelNameMapping[mode]
-
-const cherokeeRepresentationMapping = {
+const cherokeeRepresentationMapping: Record<
+  Dailp.CherokeeOrthography,
+  PreferenceDetails
+> = {
   [Dailp.CherokeeOrthography.Learner]: {
     label: "Learner",
     details:
-      "Transliterates the syllbary using Worcester's qu and ts spellings. Omits tone, accent, and vowel length information.",
+      "Transliterates the syllabary using Worcester's qu and ts spellings. Omits tone, accent, and vowel length information.",
   },
   [Dailp.CherokeeOrthography.Crg]: {
     label: "Linguist: Cherokee Reference Grammar",
@@ -55,60 +58,24 @@ const cherokeeRepresentationMapping = {
   },
 }
 
-export const cherokeeRepresentationDetails = (
-  system: Dailp.CherokeeOrthography
-) => cherokeeRepresentationMapping[system]
-
-export const ExperiencePicker = (p: {
-  onSelect: (mode: ViewMode) => void
-  id?: string
-}) => {
-  const { viewMode: value, setViewMode: setValue } = usePreferences()
-
-  // Save the selected view mode throughout the session.
-  useEffect(() => {
-    p.onSelect(value)
-  }, [value])
+function PreferenceSelect<T extends string | number>(p: {
+  id: string
+  value: string
+  onChange: (value: string) => void
+  mapping: Record<T, PreferenceDetails>
+}) {
   return (
     <Select
-      name="experience-picker"
       id={p.id}
-      value={value}
-      onChange={(e) => setValue(Number.parseInt(e.target.value))}
+      name={p.id}
+      value={p.value}
+      onChange={(e) => p.onChange(e.target.value)}
     >
-      {Object.entries(levelNameMapping).map(([viewMode, details]) => (
-        <option value={viewMode} key={viewMode}>
+      {Object.entries<PreferenceDetails>(p.mapping).map(([value, details]) => (
+        <option value={value} key={value} aria-description={details.details}>
           {details.label}
         </option>
       ))}
-    </Select>
-  )
-}
-
-export const PhoneticsPicker = (p: {
-  onSelect: (phonetics: Dailp.CherokeeOrthography) => void
-}) => {
-  const { cherokeeRepresentation: value, setCherokeeRepresentation: setValue } =
-    usePreferences()
-
-  // Save the selected representation throughout the session.
-  useEffect(() => {
-    p.onSelect(value)
-  }, [value])
-  return (
-    <Select
-      name="phonetics-picker"
-      value={value}
-      onChange={(e) => setValue(e.target.value as Dailp.CherokeeOrthography)}
-      aria-label="Romanization"
-    >
-      {Object.entries(cherokeeRepresentationMapping).map(
-        ([system, details]) => (
-          <option value={system} key={system}>
-            {details.label}
-          </option>
-        )
-      )}
     </Select>
   )
 }
@@ -117,23 +84,30 @@ export const PrefPanel = () => {
   const preferences = usePreferences()
   return (
     <div className={css.settingsContainer}>
-      <Label>Level of Detail:</Label>
-      <ExperiencePicker
-        aria-described-by={"Selected-ViewMode"}
-        onSelect={preferences.setViewMode}
-      />
-      <p id={"Selected-ViewMode"}>
-        {modeDetails(preferences.viewMode).details}
-      </p>
+      <Label htmlFor="level-of-detail">Level of Detail:</Label>
 
-      <label>Cherokee Representation:</label>
-      <PhoneticsPicker
-        aria-described-by={"Selected-Phonetics"}
-        onSelect={preferences.setCherokeeRepresentation}
+      <PreferenceSelect
+        id="level-of-detail"
+        value={preferences.levelOfDetail.toString()}
+        onChange={(x) => preferences.setLevelOfDetail(Number.parseInt(x))}
+        mapping={levelNameMapping}
       />
-      <p id={"Selected-Phonetics"}>
+      <p>{levelNameMapping[preferences.levelOfDetail].details}</p>
+
+      <Label htmlFor="cherokee-representation">
+        Cherokee Description Style:
+      </Label>
+      <PreferenceSelect
+        id="cherokee-representation"
+        value={preferences.cherokeeRepresentation}
+        onChange={(x) =>
+          preferences.setCherokeeRepresentation(x as Dailp.CherokeeOrthography)
+        }
+        mapping={cherokeeRepresentationMapping}
+      />
+      <p>
         {
-          cherokeeRepresentationDetails(preferences.cherokeeRepresentation)
+          cherokeeRepresentationMapping[preferences.cherokeeRepresentation]
             .details
         }
       </p>

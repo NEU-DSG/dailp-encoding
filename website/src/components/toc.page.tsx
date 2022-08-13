@@ -1,7 +1,6 @@
-import Link from "src/components/link";
-import { MediaItemStatusEnum } from "src/graphql/wordpress";
-import { listItem, numberedOrderedList, orderedList } from "./toc.css";
-
+import Link from "src/components/link"
+import { MediaItemStatusEnum } from "src/graphql/wordpress"
+import { listItem, numberedOrderedList, orderedList } from "./toc.css"
 
 type TOCData = {
   title: string
@@ -9,7 +8,10 @@ type TOCData = {
   children?: TOCData[]
 }
 
-export const TOC = (props: { introChapters?: TOCData[]; bodyChapters: TOCData[] }) => (
+export const TOC = (props: {
+  introChapters?: TOCData[]
+  bodyChapters: TOCData[]
+}) => (
   <>
     <ol className={numberedOrderedList}>
       {props.introChapters?.map((items, index) => (

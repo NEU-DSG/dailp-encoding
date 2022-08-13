@@ -21,7 +21,7 @@ import {
 import { useScrollableTabState } from "src/scrollable-tabs"
 import { AnnotatedForm, DocumentPage, Segment } from "src/segment"
 import { mediaQueries } from "src/style/constants"
-import { BasicMorphemeSegment, ViewMode } from "src/types"
+import { BasicMorphemeSegment, LevelOfDetail } from "src/types"
 import { WordPanel, WordPanelDetails } from "src/word-panel"
 import PageImages from "../../page-image"
 import * as css from "./document.css"
@@ -149,7 +149,7 @@ const TranslationTab = ({ doc }: { doc: Document }) => {
     setCurrContents: selectAndShowWord,
   }
 
-  const { viewMode, cherokeeRepresentation } = usePreferences()
+  const { levelOfDetail, cherokeeRepresentation } = usePreferences()
 
   const isDesktop = useMediaQuery(mediaQueries.medium)
 
@@ -206,7 +206,7 @@ const TranslationTab = ({ doc }: { doc: Document }) => {
           </p>
           <DocumentContents
             {...{
-              viewMode: viewMode,
+              levelOfDetail,
               doc,
               openDetails,
               cherokeeRepresentation,
@@ -214,7 +214,7 @@ const TranslationTab = ({ doc }: { doc: Document }) => {
             }}
           />
         </article>
-        {selectedWord && viewMode > ViewMode.Story ? (
+        {selectedWord && levelOfDetail > LevelOfDetail.Story ? (
           <div className={css.contentSection2}>
             <WordPanel
               segment={wordPanelInfo.currContents}
@@ -229,14 +229,14 @@ const TranslationTab = ({ doc }: { doc: Document }) => {
 }
 
 const DocumentContents = ({
-  viewMode,
+  levelOfDetail,
   doc,
   openDetails,
   cherokeeRepresentation,
   wordPanelDetails,
 }: {
   doc: Document
-  viewMode: ViewMode
+  levelOfDetail: LevelOfDetail
   cherokeeRepresentation: Dailp.CherokeeOrthography
   openDetails: (morpheme: any) => void
   wordPanelDetails: WordPanelDetails
@@ -259,7 +259,7 @@ const DocumentContents = ({
           key={i}
           segment={seg}
           onOpenDetails={openDetails}
-          viewMode={viewMode}
+          levelOfDetail={levelOfDetail}
           cherokeeRepresentation={cherokeeRepresentation}
           pageImages={
             doc.translatedPages
@@ -274,7 +274,7 @@ const DocumentContents = ({
           key={i}
           segment={form}
           onOpenDetails={openDetails}
-          viewMode={viewMode}
+          levelOfDetail={levelOfDetail}
           cherokeeRepresentation={cherokeeRepresentation}
           pageImages={[]}
           wordPanelDetails={wordPanelDetails}
