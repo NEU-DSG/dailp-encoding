@@ -9,7 +9,7 @@ If you work with database tables that aren't sufficiently documented here, pleas
 Most of our columns are `not null`, which is long to write so we introduced shorthand for describing database columns.
 
 | Column type shorthand       | SQL                                 | Rust           |
-|-----------------------------|-------------------------------------|----------------|
+| --------------------------- | ----------------------------------- | -------------- |
 | `type`                      | `type not null`                     | `Type`         |
 | `type?`                     | `type` (nullable)                   | `Option<Type>` |
 | `uuid -> other_table`       | `uuid references other_table (id)`  |                |
@@ -18,7 +18,7 @@ Most of our columns are `not null`, which is long to write so we introduced shor
 ## Common SQL to Rust type mappings
 
 | SQL         | Rust               |
-|-------------|--------------------|
+| ----------- | ------------------ |
 | `bigint`    | `i64`              |
 | `boolean`   | `bool`             |
 | `text`      | `String` or `&str` |
@@ -28,5 +28,8 @@ Most of our columns are `not null`, which is long to write so we introduced shor
 | `type[]`    | `Vec<T>` or `&[T]` |
 
 ## Table of Contents
+
 - [documents](./documents.md): Annotated documents tables
 - [collections](./collections.md): Edited collections tables
+- [words](./words.md): Words, word parts, and abbreviation systems
+- [media](./media.md): Audio and image resources
