@@ -8,7 +8,7 @@ import { DocumentContents } from "src/pages/documents/document.page"
 import { std } from "src/style/utils.css"
 import { CleanButton } from "./components"
 import * as css from "./segment.css"
-import { BasicMorphemeSegment, ViewMode } from "./types"
+import { BasicMorphemeSegment, LevelOfDetail } from "./types"
 import { WordPanelDetails } from "./word-panel"
 
 type TranslatedPage = NonNullable<DocumentContents["translatedPages"]>[0]
@@ -18,7 +18,7 @@ type Segment = TranslatedParagraph["source"][0]
 interface Props {
   segment: Segment
   onOpenDetails: (morpheme: BasicMorphemeSegment) => void
-  viewMode: ViewMode
+  levelOfDetail: LevelOfDetail
   cherokeeRepresentation: Dailp.CherokeeOrthography
   pageImages: readonly string[]
   wordPanelDetails: WordPanelDetails
@@ -53,7 +53,7 @@ export const DocumentParagraph = (
           key={i}
           segment={seg as Segment}
           onOpenDetails={p.onOpenDetails}
-          viewMode={p.viewMode}
+          levelOfDetail={p.levelOfDetail}
           cherokeeRepresentation={p.cherokeeRepresentation}
           pageImages={p.pageImages}
           wordPanelDetails={p.wordPanelDetails}
@@ -62,11 +62,11 @@ export const DocumentParagraph = (
     }) ?? null
 
   const blockStyle =
-    p.viewMode > ViewMode.Story
+    p.levelOfDetail > LevelOfDetail.Story
       ? css.documentBlock.wordByWord
       : css.documentBlock.story
   const annotationStyle =
-    p.viewMode > ViewMode.Pronunciation
+    p.levelOfDetail > LevelOfDetail.Pronunciation
       ? css.annotationSection.wordParts
       : css.annotationSection.story
   return (
@@ -94,9 +94,9 @@ export const AnnotatedForm = (
   if (!p.segment.source) {
     return null
   }
-  const showAnything = p.viewMode > ViewMode.Story
+  const showAnything = p.levelOfDetail > LevelOfDetail.Story
   if (showAnything) {
-    const showSegments = p.viewMode >= ViewMode.Segmentation
+    const showSegments = p.levelOfDetail >= LevelOfDetail.Segmentation
     const translation = p.segment.englishGloss.join(", ")
 
     const isSelected =
@@ -130,9 +130,8 @@ export const AnnotatedForm = (
           <>
             <div>{p.segment.romanizedSource}</div>
             <div>
-              {p.segment.phonemic && p.viewMode >= ViewMode.Pronunciation && (
-                <div />
-              )}
+              {p.segment.phonemic &&
+                p.levelOfDetail >= LevelOfDetail.Pronunciation && <div />}
             </div>
           </>
         ) : (
@@ -142,7 +141,7 @@ export const AnnotatedForm = (
           <MorphemicSegmentation
             segments={p.segment.segments}
             onOpenDetails={p.onOpenDetails}
-            viewMode={p.viewMode}
+            levelOfDetail={p.levelOfDetail}
             cherokeeRepresentation={p.cherokeeRepresentation}
           />
         ) : null}
@@ -196,7 +195,7 @@ export const MorphemicSegmentation = (p: {
   segments: Dailp.FormFieldsFragment["segments"]
   cherokeeRepresentation: Dailp.CherokeeOrthography
   onOpenDetails: Props["onOpenDetails"]
-  viewMode: ViewMode
+  levelOfDetail: LevelOfDetail
 }) => {
   // If there is no segmentation, return a hard break for the
   // morphemic segmentation and morpheme gloss layers.
