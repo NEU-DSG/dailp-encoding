@@ -23,11 +23,14 @@ export const PreferencesProvider = (props: any) => {
   useEffect(() => {
     save(PreferenceKey.LevelOfDetail, levelOfDetail)
     save(PreferenceKey.CherokeeRepresentation, cherokeeRepresentation)
+  }, [levelOfDetail, cherokeeRepresentation])
+
+  useEffect(() => {
     // Remove all deprecated cookies, keep this code for at least several months
     // to let users clear their site cookies.
     Cookies.remove(DeprecatedCookie.LevelOfDetail)
     Cookies.remove(DeprecatedCookie.Romanization)
-  }, [levelOfDetail, cherokeeRepresentation])
+  }, [])
 
   return (
     <PreferencesContext.Provider
@@ -67,13 +70,13 @@ const LocalStorage =
     : { getItem: () => null, setItem: () => {} }
 
 const savedLevelOfDetail = (): LevelOfDetail => {
-  const newCookie = LocalStorage.getItem(PreferenceKey.LevelOfDetail)
-  const oldCookie = Cookies.get(DeprecatedCookie.LevelOfDetail)
+  const newValue = LocalStorage.getItem(PreferenceKey.LevelOfDetail)
+  const oldValue = Cookies.get(DeprecatedCookie.LevelOfDetail)
 
-  if (newCookie) {
-    return Number.parseInt(newCookie) as LevelOfDetail
-  } else if (oldCookie) {
-    const parsed = Number.parseInt(oldCookie) as LevelOfDetail
+  if (newValue) {
+    return Number.parseInt(newValue) as LevelOfDetail
+  } else if (oldValue) {
+    const parsed = Number.parseInt(oldValue) as LevelOfDetail
     return Math.min(parsed, LevelOfDetail.Segmentation)
   } else {
     return LevelOfDetail.Pronunciation
@@ -81,15 +84,15 @@ const savedLevelOfDetail = (): LevelOfDetail => {
 }
 
 const savedCherokeeRepresentation = (): Dailp.CherokeeOrthography => {
-  const newCookie = LocalStorage.getItem(
+  const newValue = LocalStorage.getItem(
     PreferenceKey.CherokeeRepresentation
   ) as Dailp.CherokeeOrthography
-  const oldCookie = Cookies.get(DeprecatedCookie.LevelOfDetail)
+  const oldValue = Cookies.get(DeprecatedCookie.LevelOfDetail)
 
-  if (newCookie) {
-    return newCookie
-  } else if (oldCookie) {
-    const parsed = Number.parseInt(oldCookie)
+  if (newValue) {
+    return newValue
+  } else if (oldValue) {
+    const parsed = Number.parseInt(oldValue)
     if (parsed === 3) {
       return Dailp.CherokeeOrthography.Crg
     } else if (parsed === 4) {
