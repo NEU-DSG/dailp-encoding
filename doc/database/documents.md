@@ -61,6 +61,8 @@ One written character on a page, which may have multiple potential transcription
 
 ## `document_source`
 
+**Currently unused table!**
+
 Original source for documents, which are usually archives or libraries which house the physical materials or at least images of them.
 
 | column | type   | description                           |
@@ -70,6 +72,8 @@ Original source for documents, which are usually archives or libraries which hou
 | `url`  | `text` | Homepage URL                          |
 
 ## `document_source_citation`
+
+**Currently unused table!**
 
 This bridge table allows a many to many relationship between `document` and `document_source`, in case a document has components that come from multiple sources.
 
