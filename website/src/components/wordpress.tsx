@@ -70,7 +70,7 @@ const parseOptions: HTMLReactParserOptions = {
               slug={segments[1]!}
               start={parseInt(segments[2]!)}
               end={segments.length >= 4 ? parseInt(segments[3]!) : undefined}
-            ></PullWords>
+            />
           )
         }
       }
