@@ -64,20 +64,12 @@ const parseOptions: HTMLReactParserOptions = {
     if ("data" in node) {
       const segments = node.data.match(style)?.filter((x) => x !== undefined)
       if (segments) {
-        if (segments?.length === 4) {
+        if (segments?.length >= 3) {
           return (
             <PullWords
               slug={segments[1]!}
               start={parseInt(segments[2]!)}
-              end={parseInt(segments[3]!)}
-            ></PullWords>
-          )
-        }
-        if (segments?.length === 3) {
-          return (
-            <PullWords
-              slug={segments[1]!}
-              start={parseInt(segments[2]!)}
+              end={segments.length >= 4 ? parseInt(segments[3]!) : undefined}
             ></PullWords>
           )
         }
@@ -111,8 +103,7 @@ const PullWords = (props: { slug: string; start: number; end?: number }) => {
   const slug = props.slug
   const start = props.start
 
-  var end
-  end = props.end ? props.end : start + 1
+  const end = props.end ? props.end : start + 1
 
   const [selectedMorpheme, setMorpheme] = useState<BasicMorphemeSegment | null>(
     null
