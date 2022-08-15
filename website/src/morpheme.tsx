@@ -6,7 +6,6 @@ import { IconButton, Link } from "src/components"
 import * as Dailp from "src/graphql/dailp"
 import * as css from "./morpheme.css"
 import { documentWordPath, glossaryRoute } from "./routes"
-import { TagSet, morphemeDisplayTag, orthographyForTagSet } from "./types"
 
 type BasicMorphemeSegment = NonNullable<Dailp.FormFieldsFragment["segments"]>[0]
 
@@ -14,7 +13,7 @@ type BasicMorphemeSegment = NonNullable<Dailp.FormFieldsFragment["segments"]>[0]
 export const MorphemeDetails = (props: {
   documentId: string
   segment: BasicMorphemeSegment
-  tagSet: TagSet
+  cherokeeRepresentation: Dailp.CherokeeOrthography
   hideDialog: () => void
 }) => {
   // Use the right tag name from the jump.
@@ -28,7 +27,7 @@ export const MorphemeDetails = (props: {
     pause: !props.segment.gloss,
     variables: {
       gloss: props.segment.gloss,
-      system: orthographyForTagSet(props.tagSet),
+      system: props.cherokeeRepresentation,
     },
   })
 

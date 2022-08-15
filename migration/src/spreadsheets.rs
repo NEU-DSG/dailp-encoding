@@ -5,10 +5,12 @@
 use crate::audio::AudioRes;
 use crate::translations::DocResult;
 use anyhow::Result;
+use dailp::collection::Chapter;
+use dailp::collection::Collection;
 use dailp::{
     convert_udb, root_noun_surface_forms, root_verb_surface_forms, AnnotatedDoc, AnnotatedForm,
     AnnotatedSeg, AudioSlice, Contributor, Database, Date, DocumentId, DocumentMetadata,
-    LexicalConnection, LineBreak, MorphemeId, MorphemeSegment, PageBreak, Uuid,
+    LexicalConnection, LineBreak, MorphemeId, PageBreak, Uuid, WordSegment,
 };
 use dailp::{PositionInDocument, SourceAttribution};
 use itertools::Itertools;
@@ -123,6 +125,75 @@ impl SheetResult {
         })
     }
 
+    /// Parse this sheet as the collection index. Updates a Collection
+    /// which contains two Chapter Groups, each of which
+    /// has a list of associated Chapters.
+    pub fn into_collection_index(
+        self,
+        self_title: &String,
+        self_wordpress_menu_id: &i64,
+        self_slug: &String,
+    ) -> Result<Collection> {
+        let mut chapters = Vec::new();
+        let mut self_intro_chapters = Vec::new();
+        let mut row = self.values.into_iter();
+        let first_value = row
+            .next()
+            .ok_or_else(|| anyhow::format_err!("Missing first value"))?;
+        let second_value = row
+            .next()
+            .ok_or_else(|| anyhow::format_err!("Missing second value"))?;
+        for cur_row in row {
+            if cur_row[0].is_empty() {
+                self_intro_chapters = chapters;
+                chapters = Vec::<Chapter>::new();
+            } else {
+                let mut row_values = cur_row.into_iter().peekable();
+
+                // Chapter Depth, URL Slug, and Chapter Name are all required
+                let index_i64 = row_values.next().unwrap().parse()?;
+                let chapter_url_slug = row_values.next().unwrap();
+                let cur_chapter_name = row_values.next().unwrap();
+
+                // Next field is author, which is optional, and not stored
+                if row_values.peek().is_some() {
+                    row_values.next().unwrap();
+                }
+
+                // Both of these fields are optional, and will panic if out of bounds
+                let mut wp_id = None;
+                if row_values.peek().is_some() {
+                    wp_id = row_values.next().unwrap().parse::<i64>().ok();
+                }
+
+                let mut doc_string = None;
+                if row_values.peek().is_some() {
+                    doc_string = row_values.next();
+                }
+
+                let new_chapter = Chapter {
+                    index_in_parent: index_i64,
+                    url_slug: chapter_url_slug,
+                    chapter_name: cur_chapter_name,
+                    document_short_name: doc_string,
+                    id: None,
+                    wordpress_id: wp_id,
+                };
+
+                chapters.push(new_chapter);
+            }
+        }
+        let self_genre_chapters = chapters;
+
+        Ok(Collection {
+            title: self_title.to_string(),
+            wordpress_menu_id: Some(*self_wordpress_menu_id),
+            slug: self_slug.to_string(),
+            intro_chapters: self_intro_chapters,
+            genre_chapters: self_genre_chapters,
+        })
+    }
+
     pub fn into_adjs(self, doc_id: DocumentId, year: i32) -> Result<Vec<LexicalEntryWithForms>> {
         use rayon::prelude::*;
         Ok(self
@@ -167,7 +238,7 @@ impl SheetResult {
                         commentary: None,
                         line_break: None,
                         page_break: None,
-                        segments: Some(vec![MorphemeSegment::new(
+                        segments: Some(vec![WordSegment::new(
                             convert_udb(&root).into_dailp(),
                             root_gloss.clone(),
                             None,
@@ -231,7 +302,7 @@ impl SheetResult {
                         normalized_source: None,
                         simple_phonetics: None,
                         phonemic: None,
-                        segments: Some(vec![MorphemeSegment::new(
+                        segments: Some(vec![WordSegment::new(
                             convert_udb(&root).into_dailp(),
                             root_gloss.clone(),
                             None,
@@ -558,7 +629,7 @@ impl<'a> AnnotatedLine {
                                 .map(|x| x.replace("ʔ", "'")),
                             phonemic: phonemic_row.items.get(i).map(|x| x.to_owned()),
                             segments: if let (Some(m), Some(g)) = (morphemes, glosses) {
-                                MorphemeSegment::parse_many(m, g)
+                                WordSegment::parse_many(m, g)
                             } else {
                                 None
                             },

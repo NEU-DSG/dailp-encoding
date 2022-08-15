@@ -7,7 +7,10 @@ use std::borrow::Cow;
 /// A single unit of meaning and its corresponding English gloss.
 #[derive(Serialize, Clone, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
-pub struct MorphemeSegment {
+pub struct WordSegment {
+    /// Which Cherokee representation system is this segment written with?
+    #[serde(skip)]
+    pub system: Option<CherokeeOrthography>,
     /// Source language representation of this segment.
     pub morpheme: String,
     /// Target language representation of this segment.
@@ -19,22 +22,29 @@ pub struct MorphemeSegment {
     /// What kind of thing is the next segment?
     ///
     /// This field determines what character should separate this segment from
-    /// the next one when reconstituting the full segmentation string.
-    pub followed_by: Option<SegmentType>,
+    /// the next one when reconstituting a full segmentation string.
+    pub role: WordSegmentRole,
+    /// Optional glossary entry for this segment which gives further information,
+    /// like a definition and example usages.
+    pub matching_tag: Option<MorphemeTag>,
 }
 
 /// The kind of segment that a particular sequence of characters in a morphemic
 /// segmentations represent.
-#[derive(Clone, Debug, Serialize, Deserialize, sqlx::Type)]
-#[sqlx(type_name = "segment_type")]
-pub enum SegmentType {
+#[derive(
+    Clone, Copy, Debug, Serialize, Deserialize, sqlx::Type, async_graphql::Enum, PartialEq, Eq,
+)]
+#[sqlx(type_name = "word_segment_role")]
+pub enum WordSegmentRole {
     /// Separated by a hyphen '-'
     Morpheme,
     /// Separated by an equals sign '='
     Clitic,
+    /// Separated by a colon ':'
+    Modifier,
 }
 
-impl PgHasArrayType for SegmentType {
+impl PgHasArrayType for WordSegmentRole {
     fn array_type_info() -> PgTypeInfo {
         <&str as PgHasArrayType>::array_type_info()
     }
@@ -44,16 +54,18 @@ impl PgHasArrayType for SegmentType {
     }
 }
 
-impl MorphemeSegment {
+impl WordSegment {
     /// Make a new morpheme segment
-    pub fn new(morpheme: String, gloss: String, followed_by: Option<SegmentType>) -> Self {
+    pub fn new(morpheme: String, gloss: String, role: Option<WordSegmentRole>) -> Self {
         Self {
+            system: None,
             morpheme,
             gloss,
             // FIXME Shortcut to keep this function the same while allowing
             // migration code to create this data structure.
             gloss_id: None,
-            followed_by,
+            role: role.unwrap_or(WordSegmentRole::Morpheme),
+            matching_tag: None,
         }
     }
 
@@ -67,28 +79,39 @@ impl MorphemeSegment {
 
     /// The separator that should follow this segment, based on the type of the
     /// next segment.
-    pub fn get_next_separator(&self) -> Option<&'static str> {
-        use SegmentType::*;
-        self.followed_by.as_ref().map(|ty| match ty {
+    pub fn get_previous_separator(&self) -> &str {
+        use WordSegmentRole::*;
+        match self.role {
             Morpheme => "-",
             Clitic => "=",
-        })
+            Modifier => ":",
+        }
     }
 
     /// Build a string of the morpheme gloss line, used in interlinear gloss
     /// text (IGT).
-    pub fn gloss_layer<'a>(segments: impl IntoIterator<Item = &'a MorphemeSegment>) -> String {
+    pub fn gloss_layer<'a>(segments: impl IntoIterator<Item = &'a WordSegment>) -> String {
         use itertools::Itertools;
         segments
             .into_iter()
-            .flat_map(|s| vec![&*s.gloss, s.get_next_separator().unwrap_or("")])
+            .enumerate()
+            .flat_map(|(index, s)| {
+                vec![
+                    if index > 0 {
+                        s.get_previous_separator()
+                    } else {
+                        ""
+                    },
+                    &*s.gloss,
+                ]
+            })
             .join("")
     }
 
     /// Convert the source representation of this segment into the given
     /// phonemic writing system.
-    pub fn get_morpheme(&self, system: Option<CherokeeOrthography>) -> Cow<'_, str> {
-        match system {
+    pub fn get_morpheme(&self) -> Cow<'_, str> {
+        match self.system {
             Some(orthography) => Cow::Owned(orthography.convert(&self.morpheme)),
             _ => Cow::Borrowed(&*self.morpheme),
         }
@@ -96,10 +119,10 @@ impl MorphemeSegment {
 }
 
 #[async_graphql::Object]
-impl MorphemeSegment {
+impl WordSegment {
     /// Phonemic representation of the morpheme
-    async fn morpheme(&self, system: Option<CherokeeOrthography>) -> Cow<'_, str> {
-        self.get_morpheme(system)
+    async fn morpheme(&self) -> Cow<'_, str> {
+        self.get_morpheme()
     }
 
     /// English gloss in standard DAILP format that refers to a lexical item
@@ -107,12 +130,15 @@ impl MorphemeSegment {
         &self.gloss
     }
 
-    /// What kind of thing is the next segment?
-    ///
+    /// What kind of thing is this segment?
+    async fn role(&self) -> WordSegmentRole {
+        self.role
+    }
+
     /// This field determines what character should separate this segment from
-    /// the next one when reconstituting the full segmentation string.
-    async fn next_separator(&self) -> Option<&str> {
-        self.get_next_separator()
+    /// the previous one when reconstituting the full segmentation string.
+    async fn previous_separator(&self) -> &str {
+        self.get_previous_separator()
     }
 
     /// If this morpheme represents a functional tag that we have further
@@ -120,16 +146,16 @@ impl MorphemeSegment {
     async fn matching_tag(
         &self,
         context: &async_graphql::Context<'_>,
-        // TODO make this non-optional
-        system: Option<CherokeeOrthography>,
-    ) -> FieldResult<Option<TagForm>> {
+    ) -> FieldResult<Option<MorphemeTag>> {
         use async_graphql::dataloader::*;
-        if let Some(gloss_id) = self.gloss_id {
+        if let Some(matching_tag) = &self.matching_tag {
+            Ok(Some(matching_tag.clone()))
+        } else if let Some(gloss_id) = self.gloss_id {
             Ok(context
                 .data::<DataLoader<Database>>()?
                 .load_one(TagForMorpheme(
                     gloss_id,
-                    system.unwrap_or(CherokeeOrthography::Taoc),
+                    self.system.unwrap_or(CherokeeOrthography::Taoc),
                 ))
                 .await?)
         } else {

@@ -1,17 +1,15 @@
 import React from "react"
 import ReactDOM from "react-dom"
-import { ssrExchange } from "urql"
 import { useClientRouter } from "vite-plugin-ssr/client/router"
-import { customClient } from "src/graphql"
+import { customClient, sharedSsr } from "src/graphql"
 import { PageContext, PageShell, rootElementId } from "./PageShell"
 
-const ssr = ssrExchange({ isClient: true, initialState: {} })
-const client = customClient(false, [ssr])
+const client = customClient(false, [sharedSsr])
 
 const { hydrationPromise } = useClientRouter({
   async render(pageContext: PageContext) {
     const { urqlState, isHydration } = pageContext
-    ssr.restoreData(urqlState)
+    sharedSsr.restoreData(urqlState)
     const page = <PageShell pageContext={pageContext} client={client} />
     const elem = document.getElementById(rootElementId)
     // `pageContext.isHydration` is set by `vite-plugin-ssr` and is `true` when the page

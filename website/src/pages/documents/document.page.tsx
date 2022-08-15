@@ -21,13 +21,7 @@ import {
 import { useScrollableTabState } from "src/scrollable-tabs"
 import { AnnotatedForm, DocumentPage, Segment } from "src/segment"
 import { mediaQueries } from "src/style/constants"
-import {
-  BasicMorphemeSegment,
-  PhoneticRepresentation,
-  TagSet,
-  ViewMode,
-  tagSetForMode,
-} from "src/types"
+import { BasicMorphemeSegment, LevelOfDetail } from "src/types"
 import { WordPanel, WordPanelDetails } from "src/word-panel"
 import PageImages from "../../page-image"
 import * as css from "./document.css"
@@ -155,9 +149,7 @@ const TranslationTab = ({ doc }: { doc: Document }) => {
     setCurrContents: selectAndShowWord,
   }
 
-  const { viewMode, phoneticRepresentation } = usePreferences()
-
-  const tagSet = tagSetForMode(viewMode)
+  const { levelOfDetail, cherokeeRepresentation } = usePreferences()
 
   const isDesktop = useMediaQuery(mediaQueries.medium)
 
@@ -177,7 +169,7 @@ const TranslationTab = ({ doc }: { doc: Document }) => {
               documentId={doc.id}
               segment={selectedMorpheme}
               hideDialog={closeDialog}
-              tagSet={tagSet}
+              cherokeeRepresentation={cherokeeRepresentation}
             />
           ) : null}
         </DialogContent>
@@ -195,9 +187,7 @@ const TranslationTab = ({ doc }: { doc: Document }) => {
             <WordPanel
               segment={wordPanelInfo.currContents}
               setContent={wordPanelInfo.setCurrContents}
-              viewMode={viewMode}
               onOpenDetails={openDetails}
-              tagSet={tagSet}
             />
           </Dialog>
         </DialogBackdrop>
@@ -216,23 +206,20 @@ const TranslationTab = ({ doc }: { doc: Document }) => {
           </p>
           <DocumentContents
             {...{
-              experienceLevel: viewMode,
+              levelOfDetail,
               doc,
               openDetails,
-              tagSet,
-              phoneticRepresentation,
+              cherokeeRepresentation,
               wordPanelDetails: wordPanelInfo,
             }}
           />
         </article>
-        {selectedWord && viewMode > ViewMode.Story ? (
+        {selectedWord && levelOfDetail > LevelOfDetail.Story ? (
           <div className={css.contentSection2}>
             <WordPanel
               segment={wordPanelInfo.currContents}
               setContent={wordPanelInfo.setCurrContents}
-              viewMode={viewMode}
               onOpenDetails={openDetails}
-              tagSet={tagSet}
             />
           </div>
         ) : null}
@@ -242,29 +229,24 @@ const TranslationTab = ({ doc }: { doc: Document }) => {
 }
 
 const DocumentContents = ({
-  experienceLevel,
+  levelOfDetail,
   doc,
   openDetails,
-  tagSet,
-  phoneticRepresentation,
+  cherokeeRepresentation,
   wordPanelDetails,
 }: {
   doc: Document
-  experienceLevel: ViewMode
-  tagSet: TagSet
+  levelOfDetail: LevelOfDetail
+  cherokeeRepresentation: Dailp.CherokeeOrthography
   openDetails: (morpheme: any) => void
-  phoneticRepresentation: PhoneticRepresentation
   wordPanelDetails: WordPanelDetails
 }) => {
-  let morphemeSystem = Dailp.CherokeeOrthography.Learner
-  if (experienceLevel === ViewMode.AnalysisDt) {
-    morphemeSystem = Dailp.CherokeeOrthography.Crg
-  } else if (experienceLevel === ViewMode.AnalysisTth) {
-    morphemeSystem = Dailp.CherokeeOrthography.Taoc
-  }
-
   const [{ data }] = Dailp.useDocumentContentsQuery({
-    variables: { slug: doc.slug, isReference: doc.isReference, morphemeSystem },
+    variables: {
+      slug: doc.slug,
+      isReference: doc.isReference,
+      morphemeSystem: cherokeeRepresentation,
+    },
   })
   const docContents = data?.document
   if (!docContents) {
@@ -277,14 +259,13 @@ const DocumentContents = ({
           key={i}
           segment={seg}
           onOpenDetails={openDetails}
-          viewMode={experienceLevel}
-          tagSet={tagSet}
+          levelOfDetail={levelOfDetail}
+          cherokeeRepresentation={cherokeeRepresentation}
           pageImages={
             doc.translatedPages
               ?.filter((p) => !!p.image)
               .map((p) => p.image!.url) ?? []
           }
-          phoneticRepresentation={phoneticRepresentation}
           wordPanelDetails={wordPanelDetails}
         />
       ))}
@@ -293,9 +274,8 @@ const DocumentContents = ({
           key={i}
           segment={form}
           onOpenDetails={openDetails}
-          viewMode={experienceLevel}
-          tagSet={tagSet}
-          phoneticRepresentation={phoneticRepresentation}
+          levelOfDetail={levelOfDetail}
+          cherokeeRepresentation={cherokeeRepresentation}
           pageImages={[]}
           wordPanelDetails={wordPanelDetails}
         />

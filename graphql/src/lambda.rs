@@ -15,11 +15,12 @@ async fn main() -> Result<(), Error> {
     // Share database connection between executions.
     // This prevents each lambda invocation from creating a new connection to
     // the database.
-    let database = dailp::Database::connect().await?;
+    let connections = Some(16);
+    let database = dailp::Database::connect(connections).await?;
     let schema = {
         Schema::build(Query, Mutation, EmptySubscription)
             .data(DataLoader::new(
-                dailp::Database::connect().await?,
+                dailp::Database::connect(connections).await?,
                 tokio::spawn,
             ))
             .finish()
@@ -91,7 +92,7 @@ async fn handler(
     else if path.starts_with("/manifests") {
         let full_url = req.uri().to_string();
         let full_path = req.uri().path();
-        let mut parts = full_path.split("/");
+        let mut parts = full_path.split('/');
         let document_name = parts.nth(2).expect("No manifest ID given");
         let manifest = database.document_manifest(document_name, full_url).await?;
         let json = serde_json::to_string(&manifest)?;

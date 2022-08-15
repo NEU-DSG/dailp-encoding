@@ -13,5 +13,8 @@ select
 from word
   left join media_slice on media_slice.id = word.audio_slice_id
   left join media_resource on media_resource.id = media_slice.resource_id
-where document_id = $1 AND (word.index_in_document >= $2 or $2 is null) and (word.index_in_document < $3 or $3 is null)
+where
+  document_id = $1 and (
+    word.index_in_document >= $2 or $2 is null
+  ) and (word.index_in_document < $3 or $3 is null)
 order by index_in_document

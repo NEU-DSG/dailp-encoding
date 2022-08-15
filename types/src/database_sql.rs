@@ -1,11 +1,14 @@
 #![allow(missing_docs)]
 
+use sqlx::postgres::types::PgLQuery;
+use sqlx::postgres::types::PgLTree;
 use std::ops::Bound;
-
+use std::str::FromStr;
 use {
     crate::*,
     anyhow::Result,
     async_graphql::dataloader::*,
+    async_graphql::InputType,
     async_trait::async_trait,
     itertools::Itertools,
     sqlx::{
@@ -24,11 +27,13 @@ pub struct Database {
     client: sqlx::Pool<sqlx::Postgres>,
 }
 impl Database {
-    pub async fn connect() -> Result<Self> {
+    pub async fn connect(num_connections: Option<u32>) -> Result<Self> {
         let db_url = std::env::var("DATABASE_URL")?;
         let conn = PgPoolOptions::new()
-            .max_connections(std::thread::available_parallelism().map_or(2, |x| x.get() as u32))
-            .acquire_timeout(Duration::from_secs(60 * 4))
+            .max_connections(num_connections.unwrap_or_else(|| {
+                std::thread::available_parallelism().map_or(2, |x| x.get() as u32)
+            }))
+            .acquire_timeout(Duration::from_secs(60 * 8))
             // Disable excessive pings to the database.
             .test_before_acquire(false)
             .connect(&db_url)
@@ -228,6 +233,82 @@ impl Database {
         }))
     }
 
+    pub async fn upsert_collection(&self, collection: &Collection) -> Result<String> {
+        query_file!(
+            "queries/upsert_collection.sql",
+            collection.slug,
+            collection.title,
+            collection.wordpress_menu_id
+        )
+        .execute(&self.client)
+        .await?;
+        Ok((collection.slug).to_string())
+    }
+
+    pub async fn insert_all_chapters(
+        &self,
+        chapters: Vec<Chapter>,
+        slug: String,
+    ) -> Result<String> {
+        let mut tx = self.client.begin().await?;
+
+        // Delete previous chapter data stored for a particular collection before re-inserting
+        let collection_slug = PgLQuery::from_str(&(format!("{}.*", slug)))?;
+        query_file!("queries/delete_chapters_in_collection.sql", collection_slug,)
+            .execute(&mut tx)
+            .await?;
+
+        let mut chapter_stack = Vec::new();
+        let initial_tuple = (0, slug.clone());
+        chapter_stack.push(initial_tuple);
+
+        for current_chapter in chapters {
+            let chapter_doc_name = current_chapter.document_short_name;
+
+            // Use stack to build chapter slug
+            let mut before_chapter_index = chapter_stack.last().unwrap().0;
+            while before_chapter_index != (current_chapter.index_in_parent - 1) {
+                let last_chapter_index = chapter_stack.last().unwrap().0;
+                if last_chapter_index >= current_chapter.index_in_parent {
+                    chapter_stack.pop();
+                }
+                before_chapter_index = chapter_stack.last().unwrap().0;
+            }
+
+            // Concatenate URL Slugs of all chapters on the path
+            let mut chapter_stack_cur = chapter_stack.clone();
+            let mut url_slug_cur = current_chapter.url_slug.clone();
+            let final_path = (
+                current_chapter.index_in_parent,
+                current_chapter.url_slug.clone(),
+            );
+            chapter_stack.push(final_path);
+
+            while !(chapter_stack_cur.is_empty()) {
+                let temp_chapter = chapter_stack_cur.pop().unwrap();
+                let cur_slug = temp_chapter.1;
+                url_slug_cur = format!("{}.{}", cur_slug, url_slug_cur);
+            }
+
+            let url_slug = PgLTree::from_str(&url_slug_cur)?;
+
+            // Insert chapter data into database
+            query_file!(
+                "queries/insert_one_chapter.sql",
+                current_chapter.chapter_name,
+                chapter_doc_name,
+                current_chapter.wordpress_id,
+                current_chapter.index_in_parent,
+                url_slug,
+            )
+            .execute(&mut tx)
+            .await?;
+        }
+        tx.commit().await?;
+
+        Ok(slug)
+    }
+
     pub async fn document_manifest(
         &self,
         _document_name: &str,
@@ -262,9 +343,9 @@ impl Database {
         Ok(iiif::Manifest::from_document(self, doc, url).await)
     }
 
-    pub async fn all_tags(&self, system: CherokeeOrthography) -> Result<Vec<TagForm>> {
-        use async_graphql::InputType;
-        let system_name = if let async_graphql::Value::Enum(s) = system.to_value() {
+    pub async fn all_tags(&self, system: CherokeeOrthography) -> Result<Vec<MorphemeTag>> {
+        use async_graphql::Value;
+        let system_name = if let Value::Enum(s) = system.to_value() {
             s
         } else {
             unreachable!()
@@ -274,13 +355,15 @@ impl Database {
             .await?;
         Ok(results
             .into_iter()
-            .map(|tag| TagForm {
+            .map(|tag| MorphemeTag {
+                internal_tags: Vec::new(),
                 tag: tag.gloss,
                 title: tag.title,
                 shape: None,
                 details_url: None,
                 definition: tag.description.unwrap_or_default(),
                 morpheme_type: tag.linguistic_type.unwrap_or_default(),
+                role_override: tag.role_override,
             })
             .collect())
     }
@@ -602,12 +685,7 @@ impl Database {
                 )
             })
             .unique_by(|(gloss, _)| gloss.clone())
-            .map(|(gloss, stem)| {
-                (
-                    gloss.clone(),
-                    stem.segments.as_ref().unwrap()[0].morpheme.clone(),
-                )
-            })
+            .map(|(gloss, stem)| (gloss, stem.segments.as_ref().unwrap()[0].morpheme.clone()))
             .multiunzip();
 
         // Insert all the morpheme glosses from this dictionary at once.
@@ -679,7 +757,7 @@ impl Database {
                     form.simple_phonetics.as_deref(),
                     form.phonemic.as_deref(),
                     form.english_gloss.get(0).map(|s| &**s),
-                    form.date_recorded.as_ref().map(|d| d.0.clone()),
+                    form.date_recorded.as_ref().map(|d| d.0),
                     form.commentary.as_deref(),
                     &*form.position.page_number,
                     form.position.index as i64,
@@ -702,7 +780,7 @@ impl Database {
         .fetch_all(&mut tx)
         .await?;
 
-        let (doc_id, gloss, word_id, index, morpheme, followed_by): (
+        let (doc_id, gloss, word_id, index, morpheme, role): (
             Vec<_>,
             Vec<_>,
             Vec<_>,
@@ -730,7 +808,7 @@ impl Database {
                                 word_id,
                                 index as i64,
                                 segment.morpheme,
-                                segment.followed_by,
+                                segment.role,
                             )
                         })
                 })
@@ -739,13 +817,21 @@ impl Database {
             .multiunzip();
 
         query_file!(
+            "queries/upsert_local_morpheme_glosses.sql",
+            &*doc_id,
+            &*gloss
+        )
+        .execute(&mut tx)
+        .await?;
+
+        query_file!(
             "queries/upsert_many_word_segments.sql",
             &*doc_id,
             &*gloss,
             &*word_id,
             &*index,
             &*morpheme,
-            &*followed_by as _
+            &*role as _
         )
         .execute(&mut tx)
         .await?;
@@ -796,7 +882,7 @@ impl Database {
         .await?;
 
         if let Some(segments) = form.segments {
-            let (document_id, gloss, word_id, index, morpheme, followed_by): (
+            let (document_id, gloss, word_id, index, morpheme, role): (
                 Vec<_>,
                 Vec<_>,
                 Vec<_>,
@@ -816,14 +902,22 @@ impl Database {
 
                     (
                         document_id,
-                        gloss.clone(),
+                        gloss,
                         word_id,
                         index as i64,
                         segment.morpheme,
-                        segment.followed_by as Option<SegmentType>,
+                        segment.role as WordSegmentRole,
                     )
                 })
                 .multiunzip();
+
+            query_file!(
+                "queries/upsert_local_morpheme_glosses.sql",
+                &*document_id,
+                &*gloss
+            )
+            .execute(&mut tx)
+            .await?;
 
             query_file!(
                 "queries/upsert_many_word_segments.sql",
@@ -832,7 +926,7 @@ impl Database {
                 &*word_id,
                 &*index,
                 &*morpheme,
-                &*followed_by as _
+                &*role as _
             )
             .execute(&mut tx)
             .await?;
@@ -851,26 +945,14 @@ impl Database {
         )
     }
 
-    pub async fn insert_morpheme_tag(
-        &self,
-        tag: MorphemeTag,
-        crg_system_id: Uuid,
-        taoc_system_id: Uuid,
-        learner_system_id: Uuid,
-    ) -> Result<()> {
-        let learner = tag
-            .learner
-            .as_ref()
-            .ok_or_else(|| anyhow::format_err!("Tag {:?} missing a learner form", tag))?;
+    pub async fn insert_abstract_tag(&self, tag: AbstractMorphemeTag) -> Result<()> {
         let abstract_id = query_file_scalar!(
             "queries/upsert_morpheme_tag.sql",
             &tag.id,
-            learner.definition,
             tag.morpheme_type
         )
         .fetch_one(&self.client)
         .await?;
-
         let doc_id: Option<Uuid> = None;
         query_file!(
             "queries/upsert_morpheme_gloss.sql",
@@ -881,39 +963,27 @@ impl Database {
         )
         .fetch_one(&self.client)
         .await?;
+        Ok(())
+    }
 
-        let abstract_ids = vec![abstract_id];
+    pub async fn insert_morpheme_tag(&self, form: MorphemeTag, system_id: Uuid) -> Result<()> {
+        let abstract_ids = query_file_scalar!(
+            "queries/abstract_tag_ids_from_glosses.sql",
+            &form.internal_tags[..]
+        )
+        .fetch_all(&self.client)
+        .await?;
         query_file!(
             "queries/upsert_concrete_tag.sql",
-            learner_system_id,
-            &abstract_ids[..],
-            learner.tag,
-            learner.title,
+            system_id,
+            &abstract_ids,
+            form.tag,
+            form.title,
+            form.role_override as Option<WordSegmentRole>,
+            form.definition
         )
         .execute(&self.client)
         .await?;
-        if let Some(concrete) = tag.crg {
-            query_file!(
-                "queries/upsert_concrete_tag.sql",
-                crg_system_id,
-                &abstract_ids[..],
-                concrete.tag,
-                concrete.title,
-            )
-            .execute(&self.client)
-            .await?;
-        }
-        if let Some(concrete) = tag.taoc {
-            query_file!(
-                "queries/upsert_concrete_tag.sql",
-                taoc_system_id,
-                &abstract_ids[..],
-                concrete.tag,
-                concrete.title,
-            )
-            .execute(&self.client)
-            .await?;
-        }
         Ok(())
     }
 
@@ -1147,7 +1217,7 @@ impl Loader<ParagraphsInPage> for Database {
 
 #[async_trait]
 impl Loader<PartsOfWord> for Database {
-    type Value = Vec<MorphemeSegment>;
+    type Value = Vec<WordSegment>;
     type Error = Arc<sqlx::Error>;
 
     async fn load(
@@ -1163,11 +1233,13 @@ impl Loader<PartsOfWord> for Database {
             .map(|part| {
                 (
                     PartsOfWord(part.word_id),
-                    MorphemeSegment {
+                    WordSegment {
+                        system: None,
                         morpheme: part.morpheme,
                         gloss: part.gloss,
                         gloss_id: part.gloss_id,
-                        followed_by: part.followed_by,
+                        role: part.role,
+                        matching_tag: None,
                     },
                 )
             })
@@ -1177,7 +1249,7 @@ impl Loader<PartsOfWord> for Database {
 
 #[async_trait]
 impl Loader<TagId> for Database {
-    type Value = TagForm;
+    type Value = Vec<MorphemeTag>;
     type Error = Arc<sqlx::Error>;
     async fn load(&self, keys: &[TagId]) -> Result<HashMap<TagId, Self::Value>, Self::Error> {
         use async_graphql::{InputType, Name, Value};
@@ -1201,20 +1273,22 @@ impl Loader<TagId> for Database {
             .map(|tag| {
                 (
                     TagId(
-                        tag.gloss.clone(),
+                        tag.abstract_gloss.clone(),
                         InputType::parse(Some(Value::Enum(Name::new(tag.system_name)))).unwrap(),
                     ),
-                    TagForm {
-                        tag: tag.gloss,
+                    MorphemeTag {
+                        internal_tags: tag.internal_tags.unwrap_or_default(),
+                        tag: tag.concrete_gloss,
                         title: tag.title,
                         shape: tag.example_shape,
                         details_url: None,
                         definition: tag.description.unwrap_or_default(),
                         morpheme_type: tag.linguistic_type.unwrap_or_default(),
+                        role_override: tag.role_override,
                     },
                 )
             })
-            .collect())
+            .into_group_map())
     }
 }
 
@@ -1277,7 +1351,7 @@ impl Loader<WordsInParagraph> for Database {
 
 #[async_trait]
 impl Loader<TagForMorpheme> for Database {
-    type Value = TagForm;
+    type Value = MorphemeTag;
     type Error = Arc<sqlx::Error>;
 
     async fn load(
@@ -1308,13 +1382,15 @@ impl Loader<TagForMorpheme> for Database {
                         tag.gloss_id,
                         InputType::parse(Some(Value::Enum(Name::new(tag.system_name)))).unwrap(),
                     ),
-                    TagForm {
+                    MorphemeTag {
+                        internal_tags: Vec::new(),
                         tag: tag.gloss,
                         title: tag.title,
                         shape: tag.example_shape,
                         details_url: None,
                         definition: tag.description.unwrap_or_default(),
                         morpheme_type: tag.linguistic_type.unwrap_or_default(),
+                        role_override: tag.role_override,
                     },
                 )
             })
@@ -1469,7 +1545,7 @@ impl From<BasicWord> for AnnotatedForm {
     }
 }
 
-#[derive(Clone, Eq, PartialEq, Hash)]
+#[derive(Clone, Eq, PartialEq, Hash, Debug)]
 pub struct TagId(pub String, pub CherokeeOrthography);
 
 #[derive(Clone, Eq, PartialEq, Hash)]

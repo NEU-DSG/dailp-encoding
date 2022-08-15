@@ -6,5 +6,9 @@ import { graphqlClient } from "../graphql/client"
 export const LayoutClient = (p: { children: any }) => {
   const token = useCredentials() // uses credentials
   const client = useMemo(() => graphqlClient(token), [token])
-  return <GraphQLProvider value={client}>{p.children}</GraphQLProvider>
+  if (token) {
+    return <GraphQLProvider value={client}>{p.children}</GraphQLProvider>
+  } else {
+    return p.children
+  }
 }

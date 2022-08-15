@@ -20,6 +20,8 @@
 
 pub mod annotation;
 mod audio;
+mod cherokee;
+pub mod collection;
 mod database_sql;
 mod date;
 mod document;
@@ -29,7 +31,6 @@ mod gloss;
 pub mod iiif;
 mod lexical;
 mod morpheme;
-mod orthography;
 pub mod page;
 mod person;
 mod tag;
@@ -41,6 +42,8 @@ pub use chrono;
 pub use sqlx::types::Uuid;
 
 pub use audio::*;
+pub use cherokee::*;
+pub use collection::*;
 pub use database_sql::*;
 pub use date::*;
 pub use document::*;
@@ -49,7 +52,6 @@ pub use geometry::*;
 pub use gloss::*;
 pub use lexical::*;
 pub use morpheme::*;
-pub use orthography::*;
 pub use person::*;
 pub use tag::*;
 pub use translation::*;
