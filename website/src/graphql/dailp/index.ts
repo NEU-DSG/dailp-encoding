@@ -1087,16 +1087,42 @@ export type DocSliceQueryVariables = Exact<{
   slug: Scalars["String"]
   start: Scalars["Int"]
   end: InputMaybe<Scalars["Int"]>
+  morphemeSystem: CherokeeOrthography
 }>
 
 export type DocSliceQuery = { readonly __typename?: "Query" } & {
   readonly document: Maybe<
     { readonly __typename?: "AnnotatedDoc" } & {
       readonly forms: ReadonlyArray<
-        { readonly __typename?: "AnnotatedForm" } & Pick<
+        { readonly __typename: "AnnotatedForm" } & Pick<
           AnnotatedForm,
-          "englishGloss"
-        >
+          | "index"
+          | "source"
+          | "romanizedSource"
+          | "phonemic"
+          | "englishGloss"
+          | "commentary"
+        > & {
+            readonly segments: ReadonlyArray<
+              { readonly __typename?: "WordSegment" } & Pick<
+                WordSegment,
+                "morpheme" | "gloss" | "role" | "previousSeparator"
+              > & {
+                  readonly matchingTag: Maybe<
+                    { readonly __typename?: "MorphemeTag" } & Pick<
+                      MorphemeTag,
+                      "tag" | "title"
+                    >
+                  >
+                }
+            >
+            readonly audioTrack: Maybe<
+              { readonly __typename?: "AudioSlice" } & Pick<
+                AudioSlice,
+                "index" | "resourceUrl" | "startTime" | "endTime"
+              >
+            >
+          }
       >
     }
   >
@@ -1465,13 +1491,20 @@ export function useNewPageMutation() {
   )
 }
 export const DocSliceDocument = gql`
-  query DocSlice($slug: String!, $start: Int!, $end: Int) {
+  query DocSlice(
+    $slug: String!
+    $start: Int!
+    $end: Int
+    $morphemeSystem: CherokeeOrthography!
+  ) {
     document(slug: $slug) {
       forms(start: $start, end: $end) {
-        englishGloss
+        __typename
+        ...FormFields
       }
     }
   }
+  ${FormFieldsFragmentDoc}
 `
 
 export function useDocSliceQuery(
