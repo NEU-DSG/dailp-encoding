@@ -1087,7 +1087,7 @@ export type DocSliceQueryVariables = Exact<{
   slug: Scalars["String"]
   start: Scalars["Int"]
   end: InputMaybe<Scalars["Int"]>
-  morphemeSystem: InputMaybe<CherokeeOrthography>
+  morphemeSystem: CherokeeOrthography
 }>
 
 export type DocSliceQuery = { readonly __typename?: "Query" } & {
@@ -1099,19 +1099,18 @@ export type DocSliceQuery = { readonly __typename?: "Query" } & {
           | "index"
           | "source"
           | "romanizedSource"
-          | "simplePhonetics"
           | "phonemic"
           | "englishGloss"
           | "commentary"
         > & {
             readonly segments: ReadonlyArray<
-              { readonly __typename?: "MorphemeSegment" } & Pick<
-                MorphemeSegment,
-                "morpheme" | "gloss" | "nextSeparator"
+              { readonly __typename?: "WordSegment" } & Pick<
+                WordSegment,
+                "morpheme" | "gloss" | "role" | "previousSeparator"
               > & {
                   readonly matchingTag: Maybe<
-                    { readonly __typename?: "TagForm" } & Pick<
-                      TagForm,
+                    { readonly __typename?: "MorphemeTag" } & Pick<
+                      MorphemeTag,
                       "tag" | "title"
                     >
                   >
@@ -1496,7 +1495,7 @@ export const DocSliceDocument = gql`
     $slug: String!
     $start: Int!
     $end: Int
-    $morphemeSystem: CherokeeOrthography
+    $morphemeSystem: CherokeeOrthography!
   ) {
     document(slug: $slug) {
       forms(start: $start, end: $end) {

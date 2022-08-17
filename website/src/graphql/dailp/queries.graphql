@@ -233,7 +233,12 @@ mutation NewPage($data: JSON!) {
   updatePage(data: $data)
 }
 
-query DocSlice($slug: String!, $start: Int!, $end: Int, $morphemeSystem: CherokeeOrthography) {
+query DocSlice(
+  $slug: String!
+  $start: Int!
+  $end: Int
+  $morphemeSystem: CherokeeOrthography!
+) {
   document(slug: $slug) {
     forms(start: $start, end: $end) {
       __typename

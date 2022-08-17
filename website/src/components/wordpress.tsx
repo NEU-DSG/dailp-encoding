@@ -9,15 +9,9 @@ import { Button, Link } from "src/components"
 import * as Dailp from "src/graphql/dailp"
 import * as Wordpress from "src/graphql/wordpress"
 import { usePreferences } from "src/preferences-context"
-import { AnnotatedForm, DocumentParagraph, Segment } from "src/segment"
+import { AnnotatedForm } from "src/segment"
 import { wordpressUrl } from "src/theme.css"
-import {
-  BasicMorphemeSegment,
-  PhoneticRepresentation,
-  TagSet,
-  ViewMode,
-  tagSetForMode,
-} from "src/types"
+import { BasicMorphemeSegment } from "src/types"
 
 interface Props {
   slug: string
@@ -115,9 +109,7 @@ const PullWords = (props: { slug: string; start: number; end?: number }) => {
     setDialogOpen(true)
   }
 
-  const { viewMode, phoneticRepresentation } = usePreferences()
-
-  const tagSet = tagSetForMode(viewMode)
+  const { levelOfDetail, cherokeeRepresentation } = usePreferences()
 
   const [selectedWord, setSelectedWord] =
     useState<Dailp.FormFieldsFragment | null>(null)
@@ -134,15 +126,13 @@ const PullWords = (props: { slug: string; start: number; end?: number }) => {
     setCurrContents: selectAndShowWord,
   }
 
-  let morphemeSystem = Dailp.CherokeeOrthography.Learner
-  if (viewMode === ViewMode.AnalysisDt) {
-    morphemeSystem = Dailp.CherokeeOrthography.Crg
-  } else if (viewMode === ViewMode.AnalysisTth) {
-    morphemeSystem = Dailp.CherokeeOrthography.Taoc
-  }
-
   const [{ data }] = Dailp.useDocSliceQuery({
-    variables: { slug, start, end, morphemeSystem },
+    variables: {
+      slug: slug,
+      start: start,
+      end: end,
+      morphemeSystem: cherokeeRepresentation,
+    },
   })
 
   const docContents = data?.document
@@ -158,9 +148,8 @@ const PullWords = (props: { slug: string; start: number; end?: number }) => {
             key={i}
             segment={form as any}
             onOpenDetails={openDetails}
-            viewMode={viewMode}
-            tagSet={tagSet}
-            phoneticRepresentation={phoneticRepresentation}
+            levelOfDetail={levelOfDetail}
+            cherokeeRepresentation={cherokeeRepresentation}
             pageImages={[]}
             wordPanelDetails={wordPanelInfo}
           />
