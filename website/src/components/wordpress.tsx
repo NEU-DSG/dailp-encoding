@@ -3,10 +3,15 @@ import parse, {
   attributesToProps,
   domToReact,
 } from "html-react-parser"
-import React from "react"
+import React, { useState } from "react"
+import { useDialogState } from "reakit/Dialog"
 import { Button, Link } from "src/components"
+import * as Dailp from "src/graphql/dailp"
 import * as Wordpress from "src/graphql/wordpress"
+import { usePreferences } from "src/preferences-context"
+import { AnnotatedForm } from "src/segment"
 import { wordpressUrl } from "src/theme.css"
+import { BasicMorphemeSegment } from "src/types"
 
 interface Props {
   slug: string
@@ -53,13 +58,14 @@ const parseOptions: HTMLReactParserOptions = {
     if ("data" in node) {
       const segments = node.data.match(style)?.filter((x) => x !== undefined)
       if (segments) {
-        console.log(segments)
-
-        if (segments?.length === 4) {
-          return pullWords(segments[1]!, segments[2]!, segments[3]!)
-        }
-        if (segments?.length === 3) {
-          return pullWords(segments[1]!, segments[2]!)
+        if (segments?.length >= 3) {
+          return (
+            <PullWords
+              slug={segments[1]!}
+              start={parseInt(segments[2]!)}
+              end={segments.length >= 4 ? parseInt(segments[3]!) : undefined}
+            />
+          )
         }
       }
     }
@@ -87,10 +93,68 @@ const parseOptions: HTMLReactParserOptions = {
   },
 }
 
-const pullWords = (
-  docName: string,
-  start: string,
-  end?: string
-): JSX.Element => {
-  return <div>full array</div>
+const PullWords = (props: { slug: string; start: number; end?: number }) => {
+  const slug = props.slug
+  const start = props.start
+
+  const end = props.end ? props.end : start + 1
+
+  const [selectedMorpheme, setMorpheme] = useState<BasicMorphemeSegment | null>(
+    null
+  )
+
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const openDetails = (morpheme: BasicMorphemeSegment) => {
+    setMorpheme(morpheme)
+    setDialogOpen(true)
+  }
+
+  const { levelOfDetail, cherokeeRepresentation } = usePreferences()
+
+  const [selectedWord, setSelectedWord] =
+    useState<Dailp.FormFieldsFragment | null>(null)
+
+  const dialog = useDialogState({ animated: true })
+  const selectAndShowWord = (content: Dailp.FormFieldsFragment | null) => {
+    setSelectedWord(content)
+
+    content ? dialog.show() : dialog.hide()
+  }
+
+  let wordPanelInfo = {
+    currContents: selectedWord,
+    setCurrContents: selectAndShowWord,
+  }
+
+  const [{ data }] = Dailp.useDocSliceQuery({
+    variables: {
+      slug: slug,
+      start: start,
+      end: end,
+      morphemeSystem: cherokeeRepresentation,
+    },
+  })
+
+  const docContents = data?.document
+  if (!docContents?.forms) {
+    return <>Loading...</>
+  }
+  return (
+    <>
+      {docContents.forms.map((form, i) => (
+        <div>
+          {i}
+          <AnnotatedForm
+            key={i}
+            segment={form as any}
+            onOpenDetails={openDetails}
+            levelOfDetail={levelOfDetail}
+            cherokeeRepresentation={cherokeeRepresentation}
+            pageImages={[]}
+            wordPanelDetails={wordPanelInfo}
+          />
+        </div>
+      ))}
+    </>
+  )
 }
