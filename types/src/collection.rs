@@ -10,9 +10,7 @@ pub struct Collection {
 
     pub wordpress_menu_id: Option<i64>,
 
-    pub intro_chapters: Vec<Chapter>,
-
-    pub body_chapters: Vec<Chapter>,
+    pub chapters: Vec<Chapter>,
 }
 
 #[derive(Debug, Clone)]

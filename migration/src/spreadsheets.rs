@@ -137,8 +137,7 @@ impl SheetResult {
         self_wordpress_menu_id: &i64,
         self_slug: &String,
     ) -> Result<Collection> {
-        let mut chapters = Vec::new();
-        let mut self_intro_chapters = Vec::new();
+        let mut collection_chapters = Vec::new();
         let mut row = self.values.into_iter();
         let first_value = row
             .next()
@@ -150,8 +149,6 @@ impl SheetResult {
         for cur_row in row {
             if cur_row[0].is_empty() {
                 is_intro = false;
-                self_intro_chapters = chapters;
-                chapters = Vec::<Chapter>::new();
             } else {
                 let mut row_values = cur_row.into_iter().peekable();
 
@@ -183,17 +180,15 @@ impl SheetResult {
                     section: intro_or_body,
                 };
 
-                chapters.push(new_chapter);
+                collection_chapters.push(new_chapter);
             }
         }
-        let self_body_chapters = chapters;
 
         Ok(Collection {
             title: self_title.to_string(),
             wordpress_menu_id: Some(*self_wordpress_menu_id),
             slug: self_slug.to_string(),
-            intro_chapters: self_intro_chapters,
-            body_chapters: self_body_chapters,
+            chapters: collection_chapters,
         })
     }
 
