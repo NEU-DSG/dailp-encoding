@@ -7,6 +7,9 @@ use crate::translations::DocResult;
 use anyhow::Result;
 use dailp::collection::Chapter;
 use dailp::collection::Collection;
+use dailp::collection::CollectionSection;
+use dailp::collection::CollectionSection::Intro;
+use dailp::collection::CollectionSection::Body;
 use dailp::{
     convert_udb, root_noun_surface_forms, root_verb_surface_forms, AnnotatedDoc, AnnotatedForm,
     AnnotatedSeg, AudioSlice, Contributor, Database, Date, DocumentId, DocumentMetadata,
@@ -134,8 +137,7 @@ impl SheetResult {
         self_wordpress_menu_id: &i64,
         self_slug: &String,
     ) -> Result<Collection> {
-        let mut chapters = Vec::new();
-        let mut self_intro_chapters = Vec::new();
+        let mut collection_chapters = Vec::new();
         let mut row = self.values.into_iter();
         let first_value = row
             .next()
@@ -143,10 +145,10 @@ impl SheetResult {
         let second_value = row
             .next()
             .ok_or_else(|| anyhow::format_err!("Missing second value"))?;
+        let mut is_intro = true;
         for cur_row in row {
             if cur_row[0].is_empty() {
-                self_intro_chapters = chapters;
-                chapters = Vec::<Chapter>::new();
+                is_intro = false;
             } else {
                 let mut row_values = cur_row.into_iter().peekable();
 
@@ -161,15 +163,12 @@ impl SheetResult {
                 }
 
                 // Both of these fields are optional, and will panic if out of bounds
-                let mut wp_id = None;
-                if row_values.peek().is_some() {
-                    wp_id = row_values.next().unwrap().parse::<i64>().ok();
-                }
 
-                let mut doc_string = None;
-                if row_values.peek().is_some() {
-                    doc_string = row_values.next();
-                }
+                let wp_id = if row_values.peek().is_some() {row_values.next().unwrap().parse::<i64>().ok()} else {None};
+
+                let doc_string = if row_values.peek().is_some() {row_values.next()} else {None};
+
+                let intro_or_body = if is_intro {Intro} else {Body};
 
                 let new_chapter = Chapter {
                     index_in_parent: index_i64,
@@ -178,19 +177,18 @@ impl SheetResult {
                     document_short_name: doc_string,
                     id: None,
                     wordpress_id: wp_id,
+                    section: intro_or_body,
                 };
 
-                chapters.push(new_chapter);
+                collection_chapters.push(new_chapter);
             }
         }
-        let self_genre_chapters = chapters;
 
         Ok(Collection {
             title: self_title.to_string(),
             wordpress_menu_id: Some(*self_wordpress_menu_id),
             slug: self_slug.to_string(),
-            intro_chapters: self_intro_chapters,
-            genre_chapters: self_genre_chapters,
+            chapters: collection_chapters,
         })
     }
 
