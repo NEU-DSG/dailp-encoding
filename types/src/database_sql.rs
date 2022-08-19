@@ -4,8 +4,6 @@ use std::ops::Bound;
 use std::str::FromStr;
 use sqlx::postgres::types::PgLQuery;
 use sqlx::postgres::types::PgLTree;
-use crate::CollectionSection::Intro;
-use crate::CollectionSection::Body;
 use {
     crate::*,
     anyhow::Result,
