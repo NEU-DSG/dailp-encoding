@@ -1,6 +1,6 @@
 //! Parse morpheme glosses and segmentations using the Leipzig Glossing Rules.
 
-use crate::{MorphemeSegment, SegmentType};
+use crate::{WordSegment, WordSegmentRole};
 use nom::{
     bytes::complete::*,
     combinator::{map, opt},
@@ -11,7 +11,7 @@ use nom::{
 
 struct GlossSegment<'a> {
     tag: &'a [u8],
-    followed_by: Option<SegmentType>,
+    role: Option<WordSegmentRole>,
 }
 
 const SEPARATORS: &str = "-=~\\";
@@ -20,7 +20,7 @@ const SEPARATORS: &str = "-=~\\";
 pub fn parse_gloss_layers<'a>(
     layer_one: &'a str,
     layer_two: &'a str,
-) -> IResult<&'a [u8], Vec<MorphemeSegment>> {
+) -> IResult<&'a [u8], Vec<WordSegment>> {
     let (_, one) = gloss_line(layer_one.as_bytes())?;
     let (_, two) = gloss_line(layer_two.as_bytes())?;
     Ok((
@@ -28,11 +28,11 @@ pub fn parse_gloss_layers<'a>(
         one.into_iter()
             .zip(two)
             .map(|(morpheme, gloss)| {
-                MorphemeSegment::new(
+                WordSegment::new(
                     String::from_utf8_lossy(morpheme.tag).trim().to_owned(),
                     String::from_utf8_lossy(gloss.tag).trim().to_owned(),
                     // The gloss line is most likely to have the correct separator.
-                    gloss.followed_by,
+                    gloss.role,
                 )
             })
             .collect(),
@@ -47,9 +47,9 @@ fn gloss_line(input: &[u8]) -> IResult<&[u8], Vec<GlossSegment>> {
 }
 
 fn tailed_morpheme(input: &[u8]) -> IResult<&[u8], GlossSegment> {
-    map(pair(morpheme, opt(morpheme_sep)), |(m, sep)| GlossSegment {
+    map(pair(opt(morpheme_sep), morpheme), |(sep, m)| GlossSegment {
         tag: m,
-        followed_by: sep,
+        role: sep,
     })(input)
 }
 
@@ -57,10 +57,10 @@ fn morpheme(input: &[u8]) -> IResult<&[u8], &[u8]> {
     take_while1(|c| !SEPARATORS.contains(c as char))(input)
 }
 
-fn morpheme_sep(input: &[u8]) -> IResult<&[u8], SegmentType> {
+fn morpheme_sep(input: &[u8]) -> IResult<&[u8], WordSegmentRole> {
     map(is_a(SEPARATORS), |c: &[u8]| match c[0] as char {
-        '-' => SegmentType::Morpheme,
-        '=' => SegmentType::Clitic,
+        '-' => WordSegmentRole::Morpheme,
+        '=' => WordSegmentRole::Clitic,
         _ => todo!("Unrecognized morpheme separator"),
     })(input)
 }

@@ -45,7 +45,7 @@ query AnnotatedDocument($slug: String!) {
 
 query DocumentContents(
   $slug: String!
-  $morphemeSystem: CherokeeOrthography
+  $morphemeSystem: CherokeeOrthography!
   $isReference: Boolean!
 ) {
   document(slug: $slug) {
@@ -71,17 +71,17 @@ query DocumentContents(
 fragment FormFields on AnnotatedForm {
   index
   source
-  romanizedSource
-  simplePhonetics
+  romanizedSource(system: $morphemeSystem)
   phonemic
-  segments {
-    morpheme(system: $morphemeSystem)
+  segments(system: $morphemeSystem) {
+    morpheme
     gloss
-    matchingTag(system: $morphemeSystem) {
+    matchingTag {
       tag
       title
     }
-    nextSeparator
+    role
+    previousSeparator
   }
   englishGloss
   commentary
@@ -112,7 +112,7 @@ query WordSearch($query: String!) {
   wordSearch(query: $query) {
     source
     normalizedSource
-    simplePhonetics
+    romanizedSource(system: LEARNER)
     englishGloss
     index
     document {
@@ -158,7 +158,7 @@ query Timeline($gloss: String!) {
     forms {
       source
       normalizedSource
-      simplePhonetics
+      romanizedSource(system: LEARNER)
       phonemic
       documentId
       englishGloss
@@ -233,11 +233,16 @@ mutation NewPage($data: JSON!) {
   updatePage(data: $data)
 }
 
-query DocSlice($slug: String!, $start: Int!, $end: Int) {
+query DocSlice(
+  $slug: String!
+  $start: Int!
+  $end: Int
+  $morphemeSystem: CherokeeOrthography!
+) {
   document(slug: $slug) {
     forms(start: $start, end: $end) {
-      englishGloss
-      # add other needed forms in new ticket
+      __typename
+      ...FormFields
     }
   }
 }

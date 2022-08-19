@@ -13,7 +13,7 @@ use dailp::collection::CollectionSection::Body;
 use dailp::{
     convert_udb, root_noun_surface_forms, root_verb_surface_forms, AnnotatedDoc, AnnotatedForm,
     AnnotatedSeg, AudioSlice, Contributor, Database, Date, DocumentId, DocumentMetadata,
-    LexicalConnection, LineBreak, MorphemeId, MorphemeSegment, PageBreak, Uuid,
+    LexicalConnection, LineBreak, MorphemeId, PageBreak, Uuid, WordSegment,
 };
 use dailp::{PositionInDocument, SourceAttribution};
 use itertools::Itertools;
@@ -236,7 +236,7 @@ impl SheetResult {
                         commentary: None,
                         line_break: None,
                         page_break: None,
-                        segments: Some(vec![MorphemeSegment::new(
+                        segments: Some(vec![WordSegment::new(
                             convert_udb(&root).into_dailp(),
                             root_gloss.clone(),
                             None,
@@ -300,7 +300,7 @@ impl SheetResult {
                         normalized_source: None,
                         simple_phonetics: None,
                         phonemic: None,
-                        segments: Some(vec![MorphemeSegment::new(
+                        segments: Some(vec![WordSegment::new(
                             convert_udb(&root).into_dailp(),
                             root_gloss.clone(),
                             None,
@@ -627,7 +627,7 @@ impl<'a> AnnotatedLine {
                                 .map(|x| x.replace("ʔ", "'")),
                             phonemic: phonemic_row.items.get(i).map(|x| x.to_owned()),
                             segments: if let (Some(m), Some(g)) = (morphemes, glosses) {
-                                MorphemeSegment::parse_many(m, g)
+                                WordSegment::parse_many(m, g)
                             } else {
                                 None
                             },

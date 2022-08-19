@@ -1,4 +1,4 @@
-import React, { ReactNode, useEffect, useState } from "react"
+import React, { ReactNode } from "react"
 import { AiFillCaretDown, AiFillCaretUp, AiFillSound } from "react-icons/ai"
 import { IoEllipsisHorizontalCircle } from "react-icons/io5"
 import { MdClose, MdNotes, MdRecordVoiceOver } from "react-icons/md"
@@ -9,13 +9,8 @@ import {
 } from "reakit/Disclosure"
 import { AudioPlayer, IconButton } from "src/components"
 import * as Dailp from "src/graphql/dailp"
-import { MorphemicSegmentation } from "./segment"
-import {
-  BasicMorphemeSegment,
-  TagSet,
-  ViewMode,
-  morphemeDisplayTag,
-} from "./types"
+import { usePreferences } from "./preferences-context"
+import { BasicMorphemeSegment } from "./types"
 import * as css from "./word-panel.css"
 
 export interface WordPanelDetails {
@@ -26,27 +21,14 @@ export interface WordPanelDetails {
 export const WordPanel = (p: {
   segment: Dailp.FormFieldsFragment | null
   setContent: (content: Dailp.FormFieldsFragment | null) => void
-  viewMode: ViewMode
   onOpenDetails: (morpheme: BasicMorphemeSegment) => void
-  tagSet: TagSet
 }) => {
+  const { cherokeeRepresentation } = usePreferences()
   if (!p.segment) {
     return null
   }
 
   const translation = p.segment.englishGloss.join(", ")
-  let phonetics = null
-
-  if (p.segment.simplePhonetics) {
-    phonetics = (
-      <>
-        {p.segment.simplePhonetics !== p.segment.romanizedSource ? (
-          <div>{p.segment.romanizedSource}</div>
-        ) : null}
-        <div>{p.segment.simplePhonetics}</div>
-      </>
-    )
-  }
 
   return (
     <div className={css.wordPanelContent}>
@@ -62,10 +44,10 @@ export const WordPanel = (p: {
         <h2 className={css.cherHeader}>{p.segment.source}</h2>
       </header>
       <AudioPanel segment={p.segment} />
-      {phonetics ? (
+      {p.segment.romanizedSource ? (
         <CollapsiblePanel
-          title={"Phonetics"}
-          content={phonetics}
+          title={"Simple Phonetics"}
+          content={<div>{p.segment.romanizedSource}</div>}
           icon={
             <MdRecordVoiceOver
               size={24}
@@ -82,7 +64,7 @@ export const WordPanel = (p: {
             <>
               <VerticalMorphemicSegmentation
                 segments={p.segment.segments}
-                tagSet={p.tagSet}
+                cherokeeRepresentation={cherokeeRepresentation}
               />
 
               {translation.length ? (
@@ -109,30 +91,64 @@ export const WordPanel = (p: {
   )
 }
 
+type Writeable<T> = { -readonly [P in keyof T]: T[P] }
+
 export const VerticalMorphemicSegmentation = (p: {
   segments: Dailp.FormFieldsFragment["segments"]
-  tagSet: TagSet
+  cherokeeRepresentation: Dailp.CherokeeOrthography
 }) => {
   if (!p.segments) {
     return null
   }
   if (p.segments) {
-    let segmentCount = p.segments.length
+    // Combine certain morphemes.
+    const combinedSegments: typeof p.segments = p.segments.reduce(
+      (result, segment) => {
+        if (segment.role === Dailp.WordSegmentRole.Modifier) {
+          const lastSegment = result[result.length - 1]!
+          result[result.length - 1] = {
+            ...lastSegment,
+            matchingTag: null,
+            morpheme: lastSegment.morpheme + segment.morpheme,
+            gloss: `${lastSegment.matchingTag?.title ?? lastSegment.gloss}, ${
+              segment.matchingTag?.title ?? segment.gloss
+            }`,
+          }
+        } else {
+          result.push(segment)
+        }
+        return result
+      },
+      [] as Writeable<typeof p.segments>
+    )
 
+    const segmentCount = combinedSegments.length
+    const firstRootIndex = combinedSegments.findIndex(
+      (segment) => !segment.matchingTag && segment.gloss !== "?"
+    )
     return (
       <table className={css.tableContainer}>
-        {p.segments.map((segment, index) => (
-          <tr>
-            <td className={css.tableCells}>
-              {index > 0 ? "-" : null}
-              {segment.morpheme}
-              {index !== segmentCount - 1 ? segment.nextSeparator : null}
-            </td>
-            <td className={css.tableCells}>
-              {segment.matchingTag ? segment.matchingTag.title : segment.gloss}
-            </td>
-          </tr>
-        ))}
+        {combinedSegments.map((segment, index) => {
+          const isRoot = !segment.matchingTag
+          return (
+            <tr>
+              <td className={css.morphemeCell}>
+                {index > 0 && index >= firstRootIndex && !isRoot
+                  ? segment.previousSeparator
+                  : null}
+                {segment.morpheme}
+                {index < segmentCount - 1 && index < firstRootIndex && !isRoot
+                  ? p.segments[index + 1]!.previousSeparator
+                  : null}
+              </td>
+              <td className={css.glossCell}>
+                {segment.matchingTag
+                  ? segment.matchingTag.title
+                  : segment.gloss.replaceAll(".", " ")}
+              </td>
+            </tr>
+          )
+        })}
       </table>
     )
   }

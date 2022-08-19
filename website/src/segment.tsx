@@ -1,5 +1,6 @@
 import { Tooltip } from "@reach/tooltip"
 import "@reach/tooltip/styles.css"
+import cx from "classnames"
 import React from "react"
 import { MdCircle, MdInfoOutline } from "react-icons/md"
 import * as Dailp from "src/graphql/dailp"
@@ -7,12 +8,7 @@ import { DocumentContents } from "src/pages/documents/document.page"
 import { std } from "src/style/utils.css"
 import { CleanButton } from "./components"
 import * as css from "./segment.css"
-import {
-  BasicMorphemeSegment,
-  PhoneticRepresentation,
-  TagSet,
-  ViewMode,
-} from "./types"
+import { BasicMorphemeSegment, LevelOfDetail } from "./types"
 import { WordPanelDetails } from "./word-panel"
 
 type TranslatedPage = NonNullable<DocumentContents["translatedPages"]>[0]
@@ -22,33 +18,30 @@ type Segment = TranslatedParagraph["source"][0]
 interface Props {
   segment: Segment
   onOpenDetails: (morpheme: BasicMorphemeSegment) => void
-  viewMode: ViewMode
-  tagSet: TagSet
+  levelOfDetail: LevelOfDetail
+  cherokeeRepresentation: Dailp.CherokeeOrthography
   pageImages: readonly string[]
-  phoneticRepresentation: PhoneticRepresentation
   wordPanelDetails: WordPanelDetails
 }
 
 export const DocumentPage = (
   p: Omit<Props, "segment"> & { segment: TranslatedPage }
-) => {
-  return (
-    <>
-      {p.segment.pageNumber !== "1" ? (
-        <div
-          id={`document-page-${p.segment.pageNumber}`}
-          className={css.pageBreak}
-          aria-label={`Start of page ${p.segment.pageNumber}`}
-        >
-          Page {p.segment.pageNumber}
-        </div>
-      ) : null}
-      {p.segment.paragraphs.map((paragraph, i) => (
-        <DocumentParagraph key={i} {...p} segment={paragraph} />
-      ))}
-    </>
-  )
-}
+) => (
+  <>
+    {p.segment.pageNumber !== "1" ? (
+      <div
+        id={`document-page-${p.segment.pageNumber}`}
+        className={css.pageBreak}
+        aria-label={`Start of page ${p.segment.pageNumber}`}
+      >
+        Page {p.segment.pageNumber}
+      </div>
+    ) : null}
+    {p.segment.paragraphs.map((paragraph, i) => (
+      <DocumentParagraph key={i} {...p} segment={paragraph} />
+    ))}
+  </>
+)
 
 export const DocumentParagraph = (
   p: Omit<Props, "segment"> & { segment: TranslatedParagraph }
@@ -60,19 +53,25 @@ export const DocumentParagraph = (
           key={i}
           segment={seg as Segment}
           onOpenDetails={p.onOpenDetails}
-          viewMode={p.viewMode}
-          tagSet={p.tagSet}
+          levelOfDetail={p.levelOfDetail}
+          cherokeeRepresentation={p.cherokeeRepresentation}
           pageImages={p.pageImages}
-          phoneticRepresentation={p.phoneticRepresentation}
           wordPanelDetails={p.wordPanelDetails}
         />
       )
     }) ?? null
 
-  const variant = p.viewMode > ViewMode.Story ? "wordByWord" : "story"
+  const blockStyle =
+    p.levelOfDetail > LevelOfDetail.Story
+      ? css.documentBlock.wordByWord
+      : css.documentBlock.story
+  const annotationStyle =
+    p.levelOfDetail > LevelOfDetail.Pronunciation
+      ? css.annotationSection.wordParts
+      : css.annotationSection.story
   return (
-    <section className={css.documentBlock[variant]}>
-      <div className={css.annotationSection[variant]}>{children}</div>
+    <section className={blockStyle}>
+      <div className={annotationStyle}>{children}</div>
       <p className={css.inlineBlock}>{p.segment.translation ?? null}</p>
       {/*<SegmentAudio/>*/}
     </section>
@@ -95,33 +94,22 @@ export const AnnotatedForm = (
   if (!p.segment.source) {
     return null
   }
-  const showAnything = p.viewMode > ViewMode.Story
-  const isSelected =
-    p.wordPanelDetails.currContents?.source === p.segment.source &&
-    p.wordPanelDetails.currContents?.index === p.segment.index
-  let wordCSS = css.wordGroupSelection.unselected
-  if (isSelected) {
-    wordCSS = css.wordGroupSelection.selected
-    p.wordPanelDetails.setCurrContents(
-      p.segment
-    ) /* This makes sure the word panel updates for changes to the word panel*/
-  }
-  let romanization = null
-  if (
-    p.phoneticRepresentation == PhoneticRepresentation.Dailp &&
-    p.segment.simplePhonetics
-  ) {
-    romanization = p.segment.simplePhonetics
-  } else if (
-    p.phoneticRepresentation == PhoneticRepresentation.Worcester &&
-    p.segment.romanizedSource
-  ) {
-    romanization = p.segment.romanizedSource
-  }
-
+  const showAnything = p.levelOfDetail > LevelOfDetail.Story
   if (showAnything) {
-    const showSegments = p.viewMode >= ViewMode.Segmentation
+    const showSegments = p.levelOfDetail >= LevelOfDetail.Segmentation
     const translation = p.segment.englishGloss.join(", ")
+
+    const isSelected =
+      p.wordPanelDetails.currContents?.source === p.segment.source &&
+      p.wordPanelDetails.currContents?.index === p.segment.index
+
+    let wordCSS = showSegments ? css.wordGroup : css.wordGroupInline
+    if (isSelected) {
+      wordCSS = cx(wordCSS, css.selectedWord)
+      p.wordPanelDetails.setCurrContents(
+        p.segment
+      ) /* This makes sure the word panel updates for changes to the word panel*/
+    }
 
     return (
       <div className={wordCSS} id={`w${p.segment.index}`}>
@@ -138,27 +126,23 @@ export const AnnotatedForm = (
             )}
           </CleanButton>
         </div>
-        {romanization ? (
+        {p.segment.romanizedSource ? (
           <>
-            <div>{romanization}</div>
+            <div>{p.segment.romanizedSource}</div>
             <div>
-              {p.segment.phonemic && p.viewMode >= ViewMode.Pronunciation && (
-                <div />
-              )}
+              {p.segment.phonemic &&
+                p.levelOfDetail >= LevelOfDetail.Pronunciation && <div />}
             </div>
           </>
         ) : (
-          <>
-            <FillerLine />
-            <FillerLine />
-          </>
+          <FillerLine />
         )}
         {showSegments ? (
           <MorphemicSegmentation
             segments={p.segment.segments}
             onOpenDetails={p.onOpenDetails}
-            level={p.viewMode}
-            tagSet={p.tagSet}
+            levelOfDetail={p.levelOfDetail}
+            cherokeeRepresentation={p.cherokeeRepresentation}
           />
         ) : null}
         {translation.length ? (
@@ -182,14 +166,6 @@ export const AnnotatedForm = (
     )
   }
 }
-
-const WordCommentaryInfo = (p: { commentary: string }) => (
-  <WithTooltip hint={p.commentary} aria-label="Commentary on this word">
-    <span className={css.infoIcon}>
-      <MdInfoOutline size={20} className={css.linkSvg} />
-    </span>
-  </WithTooltip>
-)
 
 const WithTooltip = (p: {
   hint: string
@@ -217,9 +193,9 @@ const FillerLine = () => (
  */
 export const MorphemicSegmentation = (p: {
   segments: Dailp.FormFieldsFragment["segments"]
-  tagSet: TagSet
+  cherokeeRepresentation: Dailp.CherokeeOrthography
   onOpenDetails: Props["onOpenDetails"]
-  level: ViewMode
+  levelOfDetail: LevelOfDetail
 }) => {
   // If there is no segmentation, return a hard break for the
   // morphemic segmentation and morpheme gloss layers.
@@ -235,10 +211,14 @@ export const MorphemicSegmentation = (p: {
   // Adapt the segment shape to the chosen experience level.
   let segmentation = ""
   for (const seg of p.segments) {
-    segmentation += seg.morpheme
-    if (seg.nextSeparator) {
-      segmentation += seg.nextSeparator
+    if (
+      segmentation.length > 0 &&
+      seg.role &&
+      seg.role !== Dailp.WordSegmentRole.Modifier
+    ) {
+      segmentation += seg.previousSeparator
     }
+    segmentation += seg.morpheme
   }
 
   return (
@@ -248,12 +228,12 @@ export const MorphemicSegmentation = (p: {
         {p.segments.map(function (segment, i) {
           return (
             <React.Fragment key={i}>
+              {i > 0 && segment.previousSeparator}
               <MorphemeSegment
                 segment={segment}
-                tagSet={p.tagSet}
+                cherokeeRepresentation={p.cherokeeRepresentation}
                 onOpenDetails={p.onOpenDetails}
               />
-              {segment.nextSeparator}
             </React.Fragment>
           )
         })}
@@ -265,7 +245,7 @@ export const MorphemicSegmentation = (p: {
 /** One morpheme that can be clicked to see further details. */
 const MorphemeSegment = (p: {
   segment: BasicMorphemeSegment
-  tagSet: TagSet
+  cherokeeRepresentation: Dailp.CherokeeOrthography
   onOpenDetails: Props["onOpenDetails"]
 }) => {
   const matchingTag = p.segment.matchingTag
