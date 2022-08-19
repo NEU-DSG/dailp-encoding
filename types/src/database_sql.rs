@@ -2,6 +2,10 @@
 
 use std::ops::Bound;
 use std::str::FromStr;
+use sqlx::postgres::types::PgLQuery;
+use sqlx::postgres::types::PgLTree;
+use crate::CollectionSection::Intro;
+use crate::CollectionSection::Body;
 use {
     crate::*,
     anyhow::Result,
@@ -17,10 +21,6 @@ use {
     std::time::Duration,
     uuid::Uuid,
 };
-use sqlx::postgres::types::PgLQuery;
-use sqlx::postgres::types::PgLTree;
-use crate::CollectionSection::Intro;
-use crate::CollectionSection::Body;
 
 /// Connects to our backing database instance, providing high level functions
 /// for accessing the data therein.
