@@ -9,7 +9,7 @@ git-staged() {
 
 # Require sqlx data to be generated when a SQL query is modified.
 if git-staged "types/queries/**.sql" && ! git-staged "sqlx-data.json"; then
-    printf "\nDatabase query changed without generating sqlx types.\nPlease run 'dev-generate-types'.\n"
+    printf "\nDatabase query changed without generating sqlx types.\nPlease stage changes to 'sqlx-data.json'.\n"
     HOOKS_FAILED=1
 fi
 
