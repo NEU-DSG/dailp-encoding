@@ -2,15 +2,6 @@ name: Terraform Plan
 on:
   pull_request:
     branches: [main]
-    paths:
-      - "types/**"
-      - "migration/**"
-      - "graphql/**"
-      - "**.nix"
-      - "*.toml"
-      - "flake.lock"
-      - "Cargo.lock"
-      - ".github/workflows/terraform-plan.yml"
 jobs:
   plan:
     runs-on: ubuntu-20.04
