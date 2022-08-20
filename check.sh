@@ -10,21 +10,25 @@ echo "--- DATABASE ---"
 if git-staged "types/queries/**.sql"; then
     echo "Generating SQL types..."
     dev-generate-types || exit 1
+    git add sqlx-data.json
 fi
 
 echo "--- SERVER ---"
 echo "Checking back-end for errors..."
+export SQLX_OFFLINE=true
 cargo check &> /dev/null \
     || (echo "Back-end build failed, run 'cargo check' for details." && exit 1)
 
 echo "Generating GraphQL schema..."
 cargo run --bin dailp-graphql-schema &> /dev/null \
     || (echo "GraphQL server build failed, run 'cargo check' for details." && exit 1)
+git add graphql/schema.graphql
 
 echo "--- WEBSITE ---"
 cd website
 echo "Generating Typescript types for GraphQL queries..."
 yarn generate
+git add src/graphql/*/index.ts
 echo "Checking website for errors..."
 yarn tsc || exit 1
 
