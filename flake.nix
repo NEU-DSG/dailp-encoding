@@ -124,7 +124,7 @@
           ];
         };
 
-        defaultPackage = terraformConfig;
+        packages.default = terraformConfig;
 
         apps.migrate-data = inputs.utils.lib.mkApp {
           drv = hostPackage;
@@ -158,7 +158,7 @@
           ${tf} output $1 | xargs
         '';
 
-        devShell = with pkgs;
+        devShells.default = with pkgs;
           mkShell rec {
             name = "dailp-dev";
             unpackPhase = "true";
@@ -167,6 +167,7 @@
             shellHook = ''
               export PROJECT_ROOT=$PWD
               export PGDATA=$PROJECT_ROOT/.postgres
+              git config --local core.hooksPath $PROJECT_ROOT/.git-hooks
               eval $(${direnv}/bin/direnv dotenv)
             '';
             buildInputs = [
