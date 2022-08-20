@@ -6,19 +6,28 @@ git-staged() {
 
 cd $PROJECT_ROOT
 
+echo "--- DATABASE ---"
 if git-staged "types/queries/**.sql"; then
     echo "Generating SQL types..."
     dev-generate-types || exit 1
 fi
 
+echo "--- SERVER ---"
 echo "Checking back-end for errors..."
-cargo check &> /dev/null || (printf "\nBack-end is broken, run 'cargo check' to see the errors.\n" && exit 1)
+cargo check &> /dev/null \
+    || (echo "Back-end build failed, run 'cargo check' for details." && exit 1)
 
 echo "Generating GraphQL schema..."
-cargo run --bin dailp-graphql-schema &> /dev/null || (echo "Failed, run 'cargo check' to see the errors." && exit 1)
+cargo run --bin dailp-graphql-schema &> /dev/null \
+    || (echo "GraphQL server build failed, run 'cargo check' for details." && exit 1)
+
+echo "--- WEBSITE ---"
+cd website
 echo "Generating Typescript types for GraphQL queries..."
-yarn --cwd website generate || exit 1
+yarn generate
+echo "Checking website for errors..."
+yarn tsc || exit 1
 
-./.git-hooks/pre-commit
-
-exit $HOOKS_FAILED
+echo "--- FINAL CHECKS ---"
+cd $PROJECT_ROOT
+./.git-hooks/pre-commit || exit 1
