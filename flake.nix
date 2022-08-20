@@ -185,12 +185,14 @@
               postgresql_14
               sqlx-cli
               sqlfluff
+              (writers.writeBashBin "dev-check" ./check.sh)
               (writers.writeBashBin "dev-database" ''
                 [ ! -d "$PGDATA" ] && initdb
                 postgres -D $PGDATA -c unix_socket_directories=/tmp
               '')
               (writers.writeBashBin "dev-graphql" ''
                 cd $PROJECT_ROOT
+                cargo run --bin dailp-graphql-schema
                 cargo run --bin dailp-graphql-local
               '')
               (writers.writeBashBin "dev-website" ''

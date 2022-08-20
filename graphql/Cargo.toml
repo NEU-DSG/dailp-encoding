@@ -12,6 +12,10 @@ path = "src/lambda.rs"
 name = "dailp-graphql-local"
 path = "src/server.rs"
 
+[[bin]]
+name = "dailp-graphql-schema"
+path = "src/generate-schema.rs"
+
 [dependencies]
 serde_json = "1.0"
 tokio = { version = "1.5", features = ["full", "time"] }
