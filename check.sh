@@ -14,6 +14,8 @@ if git-staged "types/queries/**.sql"; then
 fi
 
 echo "--- SERVER ---"
+echo "Formatting Rust code..."
+cargo fmt &> /dev/null
 echo "Checking back-end for errors..."
 export SQLX_OFFLINE=true
 cargo check &> /dev/null \
@@ -26,6 +28,8 @@ git add graphql/schema.graphql
 
 echo "--- WEBSITE ---"
 cd website
+echo "Formatting TypeScript code..."
+yarn prettier --write src &> /dev/null
 echo "Generating Typescript types for GraphQL queries..."
 yarn generate
 git add src/graphql/*/index.ts
@@ -35,3 +39,5 @@ yarn tsc || exit 1
 echo "--- FINAL CHECKS ---"
 cd $PROJECT_ROOT
 ./.git-hooks/pre-commit || exit 1
+
+echo "TODO: Please stage relevant formatting changes"
