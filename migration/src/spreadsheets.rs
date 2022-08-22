@@ -8,8 +8,8 @@ use anyhow::Result;
 use dailp::collection::Chapter;
 use dailp::collection::Collection;
 use dailp::collection::CollectionSection;
-use dailp::collection::CollectionSection::Intro;
 use dailp::collection::CollectionSection::Body;
+use dailp::collection::CollectionSection::Intro;
 use dailp::{
     convert_udb, root_noun_surface_forms, root_verb_surface_forms, AnnotatedDoc, AnnotatedForm,
     AnnotatedSeg, AudioSlice, Contributor, Database, Date, DocumentId, DocumentMetadata,
@@ -164,11 +164,19 @@ impl SheetResult {
 
                 // Both of these fields are optional, and will panic if out of bounds
 
-                let wp_id = if row_values.peek().is_some() {row_values.next().unwrap().parse::<i64>().ok()} else {None};
+                let wp_id = if row_values.peek().is_some() {
+                    row_values.next().unwrap().parse::<i64>().ok()
+                } else {
+                    None
+                };
 
-                let doc_string = if row_values.peek().is_some() {row_values.next()} else {None};
+                let doc_string = if row_values.peek().is_some() {
+                    row_values.next()
+                } else {
+                    None
+                };
 
-                let intro_or_body = if is_intro {Intro} else {Body};
+                let intro_or_body = if is_intro { Intro } else { Body };
 
                 let new_chapter = Chapter {
                     index_in_parent: index_i64,
