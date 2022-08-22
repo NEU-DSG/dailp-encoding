@@ -199,22 +199,8 @@ export type AudioSlice = {
  * conversion from our internal orthography into any of these.
  */
 export enum CherokeeOrthography {
-  /**
-   * The d/t system for transcribing the Cherokee syllabary.
-   * This orthography is favored by speakers.
-   * TODO Option for /ts/ instead of /j/
-   * TODO Option for /qu/ instead of /gw/ or /kw/
-   */
   Crg = "CRG",
-  /**
-   * Simplified system that uses d/t without tones, a compromise intended for
-   * language learners. qu and ts
-   */
   Learner = "LEARNER",
-  /**
-   * The t/th system for transcribing the Cherokee syllabary.
-   * This orthography is favored by linguists as it is segmentally more accurate.
-   */
   Taoc = "TAOC",
 }
 
@@ -333,9 +319,7 @@ export type DocumentReference = {
  * might be a letter, journal, or notice.
  */
 export enum DocumentType {
-  /** Corpus text: a letter, journal, book, story, meeting minutes, etc. */
   Corpus = "CORPUS",
-  /** Reference document, like a dictionary or grammar */
   Reference = "REFERENCE",
 }
 
@@ -665,11 +649,8 @@ export type WordSegment = {
  * segmentations represent.
  */
 export enum WordSegmentRole {
-  /** Separated by an equals sign '=' */
   Clitic = "CLITIC",
-  /** Separated by a colon ':' */
   Modifier = "MODIFIER",
-  /** Separated by a hyphen '-' */
   Morpheme = "MORPHEME",
 }
 

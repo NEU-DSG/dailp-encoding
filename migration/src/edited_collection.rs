@@ -16,7 +16,7 @@ pub async fn migrate_edited_collection(db: &Database) -> anyhow::Result<()> {
 
     // Insert collection into database
     db.upsert_collection(&collection).await?;
-    
+
     db.insert_all_chapters(collection.chapters, collection.slug)
         .await?;
 

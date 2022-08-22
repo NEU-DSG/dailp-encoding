@@ -299,17 +299,15 @@ impl Database {
                 current_chapter.wordpress_id,
                 current_chapter.index_in_parent,
                 url_slug,
-                current_chapter.section as _ 
+                current_chapter.section as _
             )
             .execute(&mut tx)
-            .await?;  
+            .await?;
         }
         tx.commit().await?;
 
         Ok(slug)
     }
-
-
 
     pub async fn document_manifest(
         &self,

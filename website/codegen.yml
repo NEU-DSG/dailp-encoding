@@ -1,6 +1,6 @@
 generates:
   ./src/graphql/dailp/index.ts:
-    schema: http://localhost:8080/graphql
+    schema: ../graphql/schema.graphql
     documents: src/graphql/dailp/**/*.graphql
     plugins:
       - typescript
