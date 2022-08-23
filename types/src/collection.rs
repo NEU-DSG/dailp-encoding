@@ -1,6 +1,5 @@
-
-use uuid::Uuid;
 use sqlx::postgres::{PgHasArrayType, PgTypeInfo};
+use uuid::Uuid;
 
 #[derive(Debug, Clone)]
 pub struct Collection {
