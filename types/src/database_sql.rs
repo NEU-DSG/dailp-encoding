@@ -292,14 +292,14 @@ impl Database {
 
             let url_slug = PgLTree::from_str(&url_slug_cur)?;
 
-            // Insert chapter data into database
             query_file!(
-                "queries/insert_one_chapter.sql",
+                "queries/insert_one_chapter_marking_intro_or_body.sql",
                 current_chapter.chapter_name,
                 chapter_doc_name,
                 current_chapter.wordpress_id,
                 current_chapter.index_in_parent,
                 url_slug,
+                current_chapter.section as _
             )
             .execute(&mut tx)
             .await?;

@@ -182,27 +182,6 @@
     },
     "query": "select\n  document.id as document_id,\n  document.is_reference,\n  word.id,\n  word.source_text,\n  word.simple_phonetics,\n  word.phonemic,\n  word.english_gloss,\n  word.recorded_at,\n  word.commentary,\n  word.index_in_document,\n  word.page_number\nfrom word\n  inner join document on document.id = word.document_id\n  left join word_segment on word_segment.word_id = word.id\n  inner join morpheme_gloss on morpheme_gloss.id = word_segment.gloss_id\nwhere morpheme_gloss.gloss = $1\n  and (word.document_id = $2 or $2 is null)\ngroup by document.id, word.id\norder by document.id\n"
   },
-  "245e69e24a570a31cc43113e560ab05d906a3cbaff8d42172cf97b760eac1b47": {
-    "describe": {
-      "columns": [],
-      "nullable": [],
-      "parameters": {
-        "Left": [
-          "Text",
-          "Text",
-          "Int8",
-          "Int8",
-          {
-            "Custom": {
-              "kind": "Simple",
-              "name": "ltree"
-            }
-          }
-        ]
-      }
-    },
-    "query": "insert into collection_chapter (\n  title,\n  document_id,\n  wordpress_id,\n  index_in_parent,\n  chapter_path)\nvalues (\n  $1,\n  ( select id\n    from document\n    where short_name = $2),\n  $3,\n  $4,\n  $5\n)\n"
-  },
   "2874ae8f9cec1ce09c268adc74b096a15ca1d90cbb324289c679df9e451cb2ee": {
     "describe": {
       "columns": [],
@@ -1078,6 +1057,38 @@
       }
     },
     "query": "insert into abbreviation_system (short_name, title)\nvalues ($1, $2)\non conflict (short_name) do update set\ntitle = excluded.title\nreturning id\n"
+  },
+  "829f9c2b35731454ad938f666f546edd281de1873a2899710b5a6b9d694a2012": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Text",
+          "Int8",
+          "Int8",
+          {
+            "Custom": {
+              "kind": "Simple",
+              "name": "ltree"
+            }
+          },
+          {
+            "Custom": {
+              "kind": {
+                "Enum": [
+                  "Intro",
+                  "Body"
+                ]
+              },
+              "name": "collection_section"
+            }
+          }
+        ]
+      }
+    },
+    "query": "insert into collection_chapter (\n  title,\n  document_id,\n  wordpress_id,\n  index_in_parent,\n  chapter_path,\n  section)\nvalues (\n  $1,\n  ( select id\n    from document\n    where short_name = $2),\n  $3,\n  $4,\n  $5,\n  $6\n)\n"
   },
   "8469d3fbe5939fa87e81b7afb2bbb614596235e99472eb0db600b000a3775207": {
     "describe": {
