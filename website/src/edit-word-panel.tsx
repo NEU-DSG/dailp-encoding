@@ -7,15 +7,18 @@ import {
   unstable_FormLabel as FormLabel,
 } from "reakit/Form"
 import { unstable_FormSubmitButton as FormSubmitButton } from "reakit/Form"
+import * as Dailp from "src/graphql/dailp"
 import { IconButton } from "./components"
 import { IconTextButton } from "./components/button"
 import * as css from "./edit-word-panel.css"
 import { useForm } from "./form-context"
-import { FormFieldsFragment } from "./graphql/dailp"
+import { usePreferences } from "./preferences-context"
 
 /** Button that allows user to enter edit mode in the word panel, and edit fields of a word. */
 export const EditButton = () => {
   const { form, isEditing, setIsEditing } = useForm()
+
+  const { cherokeeRepresentation } = usePreferences()
 
   return (
     <Form {...form} className={css.form}>
@@ -46,7 +49,13 @@ export const EditButton = () => {
           icon={<HiPencilAlt />}
           className={css.editPanelButton}
           onClick={() => {
-            setIsEditing(true)
+            if (cherokeeRepresentation === Dailp.CherokeeOrthography.Taoc) {
+              setIsEditing(true)
+            } else {
+              alert(
+                "Currently, only the linguistic analysis using terms from Tone and Accent in Oklahoma Cherokee (TAOC) is supported for editing. Please update your Cherokee description style in the display settings."
+              )
+            }
           }}
         >
           Edit
@@ -58,7 +67,7 @@ export const EditButton = () => {
 
 /** Displays a FormInput with its corresponding feature data from the Reakit form. */
 const EditWordPanel = (props: {
-  feature: keyof FormFieldsFragment
+  feature: keyof Dailp.FormFieldsFragment
   label?: string
   input?: React.ElementType
 }) => {
