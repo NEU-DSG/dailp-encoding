@@ -142,10 +142,15 @@ type AnnotatedForm {
 	Unique identifier of the containing document
 	"""
 	documentId: UUID!
+	"""
+	Unique identifier of this form
+	"""
+	id: UUID!
 }
 
 """
 A single word in an annotated document that can be edited.
+All fields except id are optional.
 """
 input AnnotatedFormUpdate {
 	"""
@@ -153,9 +158,21 @@ input AnnotatedFormUpdate {
 	"""
 	id: UUID!
 	"""
-	Original source text that can be either undefined or null
+	The document id where the given form lives
+	"""
+	docId: UUID!
+	"""
+	Updated source text
 	"""
 	source: String
+	"""
+	Updated commentary
+	"""
+	commentary: String
+	"""
+	Updated segments
+	"""
+	segments: [MorphemeSegmentUpdate!]
 }
 
 """
@@ -445,6 +462,25 @@ type MorphemeReference {
 	List of words that contain this morpheme.
 	"""
 	forms: [AnnotatedForm!]!
+}
+
+"""
+A single unit of meaning and its gloss which can be edited.
+"""
+input MorphemeSegmentUpdate {
+	"""
+	Source language representation of this segment.
+	"""
+	morpheme: String!
+	"""
+	Target language representation of this segment.
+	"""
+	gloss: String!
+	"""
+	This field determines what character should separate this segment from
+	the next one when reconstituting the full segmentation string.
+	"""
+	role: WordSegmentRole!
 }
 
 """
