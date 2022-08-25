@@ -3,28 +3,25 @@ import CreatableSelect from "react-select/creatable"
 import * as css from "../panel-layout.css"
 
 const customStyles = {
-  container: (provided: any, state: any) => {
-    const width = "100%"
-
-    return { ...provided, width }
-  },
-  input: (provided: any, state: any) => {
-    const gridArea = "1/1/2/2"
-
-    return {
-      ...provided,
-      gridArea,
-    }
-  },
-  singleValue: (provided: any, state: any) => {
-    const gridArea = "1/1/2/2"
-
-    return { ...provided, gridArea }
-  },
+  container: (provided: any, state: any) => ({
+    ...provided,
+    width: "100%",
+  }),
+  input: (provided: any, state: any) => ({
+    ...provided,
+    gridArea: "1/1/2/2",
+    input: {
+      outline: "none !important",
+    },
+  }),
+  singleValue: (provided: any, state: any) => ({
+    ...provided,
+    gridArea: "1/1/2/2",
+  }),
 }
 
 // This formats the options shown in the Select component.
-const formatOptionLabel = (
+const formatCreatableOptions = (
   data: {
     value: string
     label: string
@@ -50,6 +47,6 @@ export const CustomCreatable = (props: any) => (
   <CreatableSelect
     {...props}
     styles={customStyles}
-    formatOptionLabel={formatOptionLabel}
+    formatOptionLabel={formatCreatableOptions}
   />
 )
