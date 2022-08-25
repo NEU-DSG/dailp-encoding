@@ -192,11 +192,14 @@ export const PanelContent = (p: {
         />
       )}
 
-      {p.panel === PanelType.WordPanel ? (
+      {/* Since editing translations is not yet supported, just display the translation for now. */}
+      <div style={{ display: "flex" }}>‘{p.word.englishGloss}’</div>
+
+      {/* {p.panel === PanelType.WordPanel ? (
         <div style={{ display: "flex" }}>‘{translation}’</div>
       ) : (
         <>{translation}</>
-      )}
+      )} */}
     </>
   )
 

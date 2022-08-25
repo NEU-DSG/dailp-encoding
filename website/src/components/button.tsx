@@ -20,7 +20,7 @@ export const IconButton = ({
 
 type IconTextButtonProps<C extends React.ElementType> = ButtonProps & {
   icon: ReactNode
-  children: ReactNode
+  children: string
   as?: C
 }
 
