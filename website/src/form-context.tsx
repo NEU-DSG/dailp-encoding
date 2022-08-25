@@ -3,12 +3,8 @@ import {
   unstable_FormStateReturn as FormStateReturn,
   unstable_useFormState as useFormState,
 } from "reakit/Form"
-import {
-  AnnotatedFormUpdate,
-  FormFieldsFragment,
-  MorphemeSegmentUpdate,
-  useUpdateWordMutation,
-} from "./graphql/dailp"
+import * as Dailp from "./graphql/dailp"
+import { usePreferences } from "./preferences-context"
 
 type FormContextType = {
   form: FormStateReturn<any | undefined>
@@ -21,12 +17,14 @@ const FormContext = createContext<FormContextType>({} as FormContextType)
 // Instantiates a form state used to keep track of the current word and information about all its features.
 export const FormProvider = (props: { children: any }) => {
   const [isEditing, setIsEditing] = useState(false)
-  const word: FormFieldsFragment = {} as FormFieldsFragment
+  const word: Dailp.FormFieldsFragment = {} as Dailp.FormFieldsFragment
 
-  const [updateWordResult, updateWord] = useUpdateWordMutation()
+  const [updateWordResult, updateWord] = Dailp.useUpdateWordMutation()
+
+  const { cherokeeRepresentation } = usePreferences()
 
   /** Calls the backend GraphQL mutation to update a word. */
-  const runUpdate = async (variables: { word: AnnotatedFormUpdate }) => {
+  const runUpdate = async (variables: { word: Dailp.AnnotatedFormUpdate }) => {
     await updateWord(variables)
   }
 
@@ -40,28 +38,34 @@ export const FormProvider = (props: { children: any }) => {
       }
     },
     onSubmit: (values) => {
-      setIsEditing(false)
+      if (cherokeeRepresentation === Dailp.CherokeeOrthography.Taoc) {
+        setIsEditing(false)
 
-      // Create an array of MorphemeSegmentUpdate type to send to the backend.
-      const updatedSegments: Array<MorphemeSegmentUpdate> = values.word[
-        "segments"
-      ].map((segment) => {
-        return {
-          morpheme: segment.morpheme,
-          gloss: segment.gloss,
-          role: segment.role,
-        }
-      })
+        // Create an array of MorphemeSegmentUpdate type to send to the backend.
+        const updatedSegments: Array<Dailp.MorphemeSegmentUpdate> = values.word[
+          "segments"
+        ].map((segment) => {
+          return {
+            morpheme: segment.morpheme,
+            gloss: segment.gloss,
+            role: segment.role,
+          }
+        })
 
-      runUpdate({
-        word: {
-          id: values.word["id"],
-          docId: values.word["position"].documentId,
-          source: values.word["source"],
-          commentary: values.word["commentary"],
-          segments: updatedSegments,
-        },
-      })
+        runUpdate({
+          word: {
+            id: values.word["id"],
+            docId: values.word["position"].documentId,
+            source: values.word["source"],
+            commentary: values.word["commentary"],
+            segments: updatedSegments,
+          },
+        })
+      } else {
+        alert(
+          "Currently, only the linguistic analysis using terms from Tone and Accent in Oklahoma Cherokee (TAOC) is supported for editing. Please update your Cherokee description style in the display settings."
+        )
+      }
     },
   })
 
