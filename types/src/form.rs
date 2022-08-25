@@ -204,6 +204,12 @@ impl AnnotatedForm {
     async fn document_id(&self) -> DocumentId {
         self.position.document_id
     }
+
+    /// Unique identifier of this form
+    async fn id(&self) -> anyhow::Result<Uuid> {
+        self.id
+            .ok_or_else(|| anyhow::format_err!("No AnnotatedForm ID"))
+    }
 }
 
 impl AnnotatedForm {
@@ -243,10 +249,27 @@ pub fn is_root_morpheme(s: &str) -> bool {
 }
 
 /// A single word in an annotated document that can be edited.
+/// All fields except id are optional.
 #[derive(async_graphql::InputObject)]
 pub struct AnnotatedFormUpdate {
     /// Unique identifier of the form
     pub id: Uuid,
-    /// Original source text that can be either undefined or null
     pub source: MaybeUndefined<String>,
+    pub commentary: MaybeUndefined<String>,
+}
+
+/// Trait that defines function which takes in a possibly undefined value.
+pub trait MaybeUndefinedExt<T> {
+    /// If the given value is undefined, convert into a vector of option. Otherwise, return an empty vector.
+    fn into_vec(self) -> Vec<Option<T>>;
+}
+
+impl<T> MaybeUndefinedExt<T> for MaybeUndefined<T> {
+    fn into_vec(self) -> Vec<Option<T>> {
+        if self.is_undefined() {
+            return Vec::new();
+        } else {
+            return vec![self.take()];
+        };
+    }
 }

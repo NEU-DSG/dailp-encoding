@@ -1,5 +1,5 @@
 import { style } from "@vanilla-extract/css"
-import { important, position, rgba } from "polished"
+import { important, position } from "polished"
 import {
   colors,
   fonts,
@@ -194,8 +194,8 @@ export const contentContainer = style({
 
 export const contentSection2 = style({
   display: "none",
-  flex: 1,
-  maxWidth: "20rem",
+  width: "20rem",
+  minWidth: 0,
   "@media": {
     [mediaQueries.medium]: {
       display: "block",

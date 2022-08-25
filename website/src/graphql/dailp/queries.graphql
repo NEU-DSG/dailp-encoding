@@ -69,6 +69,7 @@ query DocumentContents(
 }
 
 fragment FormFields on AnnotatedForm {
+  id
   index
   source
   romanizedSource(system: $morphemeSystem)
@@ -245,4 +246,8 @@ query DocSlice(
       ...FormFields
     }
   }
+}
+
+mutation UpdateWord($word: AnnotatedFormUpdate!) {
+  updateWord(word: $word)
 }

@@ -1,5 +1,5 @@
 import cx from "classnames"
-import React from "react"
+import React, { ReactNode } from "react"
 import { Button as ButtonBase, ButtonProps } from "reakit/Button"
 import { withClass } from "src/style/utils"
 import * as css from "./button.css"
@@ -17,3 +17,25 @@ export const IconButton = ({
 }: IconButtonProps) => (
   <ButtonBase {...props} className={cx(css.iconButton({ round }), className)} />
 )
+
+type IconTextButtonProps<C extends React.ElementType> = ButtonProps & {
+  icon: ReactNode
+  children: ReactNode
+  as?: C
+}
+
+export const IconTextButton = <C extends React.ElementType>({
+  icon,
+  children,
+  as,
+  ...props
+}: IconTextButtonProps<C>) => {
+  const Component = as || ButtonBase
+
+  return (
+    <Component {...props}>
+      {icon}
+      {children}
+    </Component>
+  )
+}

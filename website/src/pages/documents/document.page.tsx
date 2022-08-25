@@ -8,10 +8,12 @@ import { Dialog, DialogBackdrop, useDialogState } from "reakit/Dialog"
 import { Tab, TabList, TabPanel } from "reakit/Tab"
 import { AudioPlayer, Breadcrumbs, Button, Link } from "src/components"
 import { useMediaQuery } from "src/custom-hooks"
+import { FormProvider, useForm } from "src/form-context"
 import * as Dailp from "src/graphql/dailp"
 import Layout from "src/layout"
 import { drawerBg } from "src/menu.css"
 import { MorphemeDetails } from "src/morpheme"
+import { PanelDetails, PanelLayout } from "src/panel-layout"
 import { usePreferences } from "src/preferences-context"
 import {
   collectionRoute,
@@ -19,10 +21,9 @@ import {
   documentRoute,
 } from "src/routes"
 import { useScrollableTabState } from "src/scrollable-tabs"
-import { AnnotatedForm, DocumentPage, Segment } from "src/segment"
+import { AnnotatedForm, DocumentPage } from "src/segment"
 import { mediaQueries } from "src/style/constants"
 import { BasicMorphemeSegment, LevelOfDetail } from "src/types"
-import { WordPanel, WordPanelDetails } from "src/word-panel"
 import PageImages from "../../page-image"
 import * as css from "./document.css"
 
@@ -126,8 +127,10 @@ const TranslationTab = ({ doc }: { doc: Document }) => {
   }
 
   const dialog = useDialogState({ animated: true })
+
   const [selectedWord, setSelectedWord] =
     useState<Dailp.FormFieldsFragment | null>(null)
+
   const selectAndShowWord = (content: Dailp.FormFieldsFragment | null) => {
     setSelectedWord(content)
     if (content) {
@@ -154,7 +157,7 @@ const TranslationTab = ({ doc }: { doc: Document }) => {
   const isDesktop = useMediaQuery(mediaQueries.medium)
 
   return (
-    <>
+    <FormProvider>
       <DialogOverlay
         className={css.morphemeDialogBackdrop}
         isOpen={dialogOpen}
@@ -175,7 +178,7 @@ const TranslationTab = ({ doc }: { doc: Document }) => {
         </DialogContent>
       </DialogOverlay>
 
-      {!isDesktop ? (
+      {!isDesktop && (
         <DialogBackdrop {...dialog} className={drawerBg}>
           <Dialog
             {...dialog}
@@ -184,14 +187,13 @@ const TranslationTab = ({ doc }: { doc: Document }) => {
             aria-label="Word Panel Drawer"
             preventBodyScroll={true}
           >
-            <WordPanel
+            <PanelLayout
               segment={wordPanelInfo.currContents}
               setContent={wordPanelInfo.setCurrContents}
-              onOpenDetails={openDetails}
             />
           </Dialog>
         </DialogBackdrop>
-      ) : null}
+      )}
 
       <div className={css.contentContainer}>
         <article className={css.annotationContents}>
@@ -214,17 +216,16 @@ const TranslationTab = ({ doc }: { doc: Document }) => {
             }}
           />
         </article>
-        {selectedWord && levelOfDetail > LevelOfDetail.Story ? (
+        {selectedWord && levelOfDetail > LevelOfDetail.Story && (
           <div className={css.contentSection2}>
-            <WordPanel
+            <PanelLayout
               segment={wordPanelInfo.currContents}
               setContent={wordPanelInfo.setCurrContents}
-              onOpenDetails={openDetails}
             />
           </div>
-        ) : null}
+        )}
       </div>
-    </>
+    </FormProvider>
   )
 }
 
@@ -239,19 +240,33 @@ const DocumentContents = ({
   levelOfDetail: LevelOfDetail
   cherokeeRepresentation: Dailp.CherokeeOrthography
   openDetails: (morpheme: any) => void
-  wordPanelDetails: WordPanelDetails
+  wordPanelDetails: PanelDetails
 }) => {
-  const [{ data }] = Dailp.useDocumentContentsQuery({
+  const [result, rerunQuery] = Dailp.useDocumentContentsQuery({
     variables: {
       slug: doc.slug,
       isReference: doc.isReference,
       morphemeSystem: cherokeeRepresentation,
     },
   })
-  const docContents = data?.document
+
+  const docContents = result.data?.document
+  const { form, isEditing } = useForm()
+
+  useEffect(() => {
+    // If the form has been submitted, update the panel's current contents to be the currently selected word
+    if (form.submitting) {
+      // Update the form's current word
+      wordPanelDetails.setCurrContents(form.values.word)
+      // Query of document contents is rerun to ensure frontend and backend are in sync
+      rerunQuery({ requestPolicy: "network-only" })
+    }
+  }, [isEditing])
+
   if (!docContents) {
     return <>Loading...</>
   }
+
   return (
     <>
       {docContents.translatedPages?.map((seg, i) => (

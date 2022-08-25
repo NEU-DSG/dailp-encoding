@@ -1,7 +1,7 @@
 import { style, styleVariants } from "@vanilla-extract/css"
 import { fonts, hspace, mediaQueries, radii, vspace } from "src/style/constants"
-import { paddingX, paddingY } from "src/style/utils"
 import { closeButton } from "./morpheme.css"
+import { marginX, paddingX, paddingY } from "./style/utils"
 
 const wordPanelPadding = "8px"
 
@@ -71,8 +71,9 @@ export const wordPanelContent = style({
       height: "calc(100vh - 66px)",
     },
   },
-  overflowX: "hidden",
+  height: "100vh",
   overflowY: "auto",
+  overflowX: "hidden",
 })
 
 export const wordPanelHeader = style({
@@ -113,3 +114,18 @@ export const morphemeCell = style([
     paddingRight: hspace.halfEdge,
   },
 ])
+
+export const editCherHeader = style([
+  marginX(hspace.large),
+  {
+    fontFamily: fonts.cherokee,
+    marginTop: vspace.one,
+  },
+])
+
+export const headerButtons = style({
+  display: "flex",
+  alignItems: "center",
+  // Set this min-height here so the header space, as a flex-box, will not shrink when the close button disappears.
+  minHeight: vspace.double,
+})
