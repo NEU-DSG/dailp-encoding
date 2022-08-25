@@ -302,7 +302,7 @@ impl Mutation {
         Ok(context
             .data::<DataLoader<Database>>()?
             .loader()
-            .update_word(&word)
+            .update_word(word)
             .await?)
     }
 }
