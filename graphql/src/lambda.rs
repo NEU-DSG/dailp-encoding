@@ -16,11 +16,11 @@ async fn main() -> Result<(), Error> {
     // This prevents each lambda invocation from creating a new connection to
     // the database.
     let connections = Some(16);
-    let database = dailp::Database::connect(connections).await?;
+    let database = dailp::Database::connect(connections)?;
     let schema = {
         Schema::build(Query, Mutation, EmptySubscription)
             .data(DataLoader::new(
-                dailp::Database::connect(connections).await?,
+                dailp::Database::connect(connections)?,
                 tokio::spawn,
             ))
             .finish()

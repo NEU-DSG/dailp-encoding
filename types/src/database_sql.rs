@@ -27,17 +27,17 @@ pub struct Database {
     client: sqlx::Pool<sqlx::Postgres>,
 }
 impl Database {
-    pub async fn connect(num_connections: Option<u32>) -> Result<Self> {
+    pub fn connect(num_connections: Option<u32>) -> Result<Self> {
         let db_url = std::env::var("DATABASE_URL")?;
         let conn = PgPoolOptions::new()
             .max_connections(num_connections.unwrap_or_else(|| {
                 std::thread::available_parallelism().map_or(2, |x| x.get() as u32)
             }))
             .acquire_timeout(Duration::from_secs(60 * 8))
+            .max_lifetime(Duration::from_secs(60 * 20))
             // Disable excessive pings to the database.
             .test_before_acquire(false)
-            .connect(&db_url)
-            .await?;
+            .connect_lazy(&db_url)?;
         Ok(Database { client: conn })
     }
 
