@@ -24,14 +24,14 @@ async fn main() -> tide::Result<()> {
     // create schema
     let schema = Schema::build(query::Query, query::Mutation, EmptySubscription)
         .data(DataLoader::new(
-            dailp::Database::connect(None).await?,
+            dailp::Database::connect(None)?,
             tokio::spawn,
         ))
         .finish();
 
     let authed_schema = Schema::build(query::Query, query::Mutation, EmptySubscription)
         .data(DataLoader::new(
-            dailp::Database::connect(None).await?,
+            dailp::Database::connect(None)?,
             tokio::spawn,
         ))
         .data(UserInfo::new_test_admin())
