@@ -210,12 +210,6 @@ impl AnnotatedForm {
         self.id
             .ok_or_else(|| anyhow::format_err!("No AnnotatedForm ID"))
     }
-
-    /// Unique identifier of this form
-    async fn id(&self) -> anyhow::Result<Uuid> {
-        self.id
-            .ok_or_else(|| anyhow::format_err!("No AnnotatedForm ID"))
-    }
 }
 
 impl AnnotatedForm {
