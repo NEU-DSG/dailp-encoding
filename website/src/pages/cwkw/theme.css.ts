@@ -1,4 +1,4 @@
-import { createTheme, createThemeContract, style } from "@vanilla-extract/css"
+import { createTheme } from "@vanilla-extract/css"
 import { darken, lighten, rgba } from "polished"
 import { rootFontSize } from "src/style/constants"
 import { themeContract } from "src/style/theme-contract.css"
@@ -21,19 +21,19 @@ export const themeClass = createTheme(themeContract, {
     // bodyHeadings: "black",
     // borders: "darkgray",
     // headerButton: "#fbf6ec",
-    primary: "#fbf6ec",
+    primary: "#405372",
     primaryDark: lighten(0.2, "black"),
     primaryContrast: "white",
     primaryText: "white",
-    secondary: "#9d2832",
+    secondary: "#c36d68",
     secondaryDark: darken(0.2, "#9d2832"),
     secondaryContrast: lighten(0.6, "#9d2832"),
     secondaryText: "black",
-    body: "#fbf6ec",
+    body: "white",
     bodyDark: darken(0.1, "#fbf6ec"),
     text: rgba("black", 0.95),
-    link: "#970b26",
-    headings: "#e6b469",
+    link: "#405372",
+    headings: "#ad7d77",
     focus: "#e6b469",
     borders: "darkgray",
   },
