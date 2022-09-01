@@ -10,6 +10,7 @@ const customStyles = {
   input: (provided: any, state: any) => ({
     ...provided,
     gridArea: "1/1/2/2",
+    overflow: "hidden",
     input: {
       outline: "none !important",
     },
