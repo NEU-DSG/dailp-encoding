@@ -10,8 +10,9 @@ import * as Dailp from "src/graphql/dailp"
 import * as Wordpress from "src/graphql/wordpress"
 import { usePreferences } from "src/preferences-context"
 import { AnnotatedForm } from "src/segment"
+import { annotationSection } from "src/segment.css"
 import { wordpressUrl } from "src/theme.css"
-import { BasicMorphemeSegment } from "src/types"
+import { BasicMorphemeSegment, LevelOfDetail } from "src/types"
 
 interface Props {
   slug: string
@@ -56,21 +57,17 @@ const parseOptions: HTMLReactParserOptions = {
     const style = /\[(\w*):([0-9]*)-?([0-9]*)?\]/ // [DocName:Start(-OptionalEnd)]
 
     if ("data" in node) {
-      const segments = node.data.match(style)?.filter((x) => x !== undefined)
-      if (segments) {
-        if (segments?.length >= 3) {
-          return (
-            <PullWords
-              slug={segments[1]!}
-              start={parseInt(segments[2]!)}
-              end={segments.length >= 4 ? parseInt(segments[3]!) : undefined}
-            />
-          )
-        }
+      const segments = node.data.match(style)?.filter((x) => !!x)
+      if (segments && segments.length >= 3) {
+        return (
+          <PullWords
+            slug={segments[1]!}
+            first={parseInt(segments[2]!)}
+            last={segments.length >= 4 ? parseInt(segments[3]!) : undefined}
+          />
+        )
       }
     }
-
-    // }
 
     if ("name" in node && "attribs" in node) {
       // Replace WordPress links with absolute local paths.
@@ -93,44 +90,26 @@ const parseOptions: HTMLReactParserOptions = {
   },
 }
 
-const PullWords = (props: { slug: string; start: number; end?: number }) => {
-  const slug = props.slug
-  const start = props.start
-
-  const end = props.end ? props.end : start + 1
-
-  const [selectedMorpheme, setMorpheme] = useState<BasicMorphemeSegment | null>(
-    null
-  )
-
-  const [dialogOpen, setDialogOpen] = useState(false)
-  const openDetails = (morpheme: BasicMorphemeSegment) => {
-    setMorpheme(morpheme)
-    setDialogOpen(true)
-  }
-
+const PullWords = (props: {
+  slug: string
+  /** First word number, 1-indexed **/
+  first: number
+  /** Last word number, 1-indexed inclusive **/
+  last?: number
+}) => {
   const { levelOfDetail, cherokeeRepresentation } = usePreferences()
 
-  const [selectedWord, setSelectedWord] =
-    useState<Dailp.FormFieldsFragment | null>(null)
-
-  const dialog = useDialogState({ animated: true })
-  const selectAndShowWord = (content: Dailp.FormFieldsFragment | null) => {
-    setSelectedWord(content)
-
-    content ? dialog.show() : dialog.hide()
-  }
-
   let wordPanelInfo = {
-    currContents: selectedWord,
-    setCurrContents: selectAndShowWord,
+    currContents: null,
+    setCurrContents: () => {},
   }
 
   const [{ data }] = Dailp.useDocSliceQuery({
     variables: {
-      slug: slug,
-      start: start,
-      end: end,
+      slug: props.slug,
+      // Convert our inclusive 1-indexed range into an exclusive 0-indexed range.
+      start: props.first - 1,
+      end: props.last ?? props.first,
       morphemeSystem: cherokeeRepresentation,
     },
   })
@@ -139,22 +118,24 @@ const PullWords = (props: { slug: string; start: number; end?: number }) => {
   if (!docContents?.forms) {
     return <>Loading...</>
   }
+
+  const annotationStyle =
+    levelOfDetail > LevelOfDetail.Pronunciation
+      ? annotationSection.wordParts
+      : annotationSection.story
   return (
-    <>
+    <div className={annotationStyle}>
       {docContents.forms.map((form, i) => (
-        <div>
-          {i}
-          <AnnotatedForm
-            key={i}
-            segment={form as any}
-            onOpenDetails={openDetails}
-            levelOfDetail={levelOfDetail}
-            cherokeeRepresentation={cherokeeRepresentation}
-            pageImages={[]}
-            wordPanelDetails={wordPanelInfo}
-          />
-        </div>
+        <AnnotatedForm
+          key={i}
+          segment={form as any}
+          onOpenDetails={() => {}}
+          levelOfDetail={levelOfDetail}
+          cherokeeRepresentation={cherokeeRepresentation}
+          pageImages={[]}
+          wordPanelDetails={wordPanelInfo}
+        />
       ))}
-    </>
+    </div>
   )
 }
