@@ -3,11 +3,7 @@ import {
   unstable_FormStateReturn as FormStateReturn,
   unstable_useFormState as useFormState,
 } from "reakit/Form"
-import {
-  AnnotatedFormUpdate,
-  FormFieldsFragment,
-  useUpdateWordMutation,
-} from "./graphql/dailp"
+import * as Dailp from "./graphql/dailp"
 
 type FormContextType = {
   form: FormStateReturn<any | undefined>
@@ -20,12 +16,12 @@ const FormContext = createContext<FormContextType>({} as FormContextType)
 /** Instantiates a form state used to keep track of the current word and information about all its features. */
 export const FormProvider = (props: { children: any }) => {
   const [isEditing, setIsEditing] = useState(false)
-  const word: FormFieldsFragment = {} as FormFieldsFragment
+  const word: Dailp.FormFieldsFragment = {} as Dailp.FormFieldsFragment
 
-  const [updateWordResult, updateWord] = useUpdateWordMutation()
+  const [updateWordResult, updateWord] = Dailp.useUpdateWordMutation()
 
   /** Calls the backend GraphQL mutation to update a word. */
-  const runUpdate = async (variables: { word: AnnotatedFormUpdate }) => {
+  const runUpdate = async (variables: { word: Dailp.AnnotatedFormUpdate }) => {
     await updateWord(variables)
   }
 
