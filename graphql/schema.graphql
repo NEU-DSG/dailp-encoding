@@ -142,20 +142,23 @@ type AnnotatedForm {
 	Unique identifier of the containing document
 	"""
 	documentId: UUID!
+	"""
+	Unique identifier of this form
+	"""
+	id: UUID!
 }
 
 """
 A single word in an annotated document that can be edited.
+All fields except id are optional.
 """
 input AnnotatedFormUpdate {
 	"""
 	Unique identifier of the form
 	"""
 	id: UUID!
-	"""
-	Original source text that can be either undefined or null
-	"""
 	source: String
+	commentary: String
 }
 
 """
