@@ -254,8 +254,6 @@ pub fn is_root_morpheme(s: &str) -> bool {
 pub struct AnnotatedFormUpdate {
     /// Unique identifier of the form
     pub id: Uuid,
-    /// The document id where the given form lives
-    pub doc_id: Uuid,
     /// Updated source text
     pub source: MaybeUndefined<String>,
     /// Updated commentary

@@ -1616,6 +1616,98 @@
     },
     "query": "delete from word\nwhere document_id = $1\n"
   },
+  "bfc478cec2a670dd58da9f284cc279d0358774625ec4a36cf23b7f5ef627d4f8": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "source_text",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "simple_phonetics",
+          "ordinal": 2,
+          "type_info": "Text"
+        },
+        {
+          "name": "phonemic",
+          "ordinal": 3,
+          "type_info": "Text"
+        },
+        {
+          "name": "english_gloss",
+          "ordinal": 4,
+          "type_info": "Text"
+        },
+        {
+          "name": "recorded_at",
+          "ordinal": 5,
+          "type_info": "Date"
+        },
+        {
+          "name": "commentary",
+          "ordinal": 6,
+          "type_info": "Text"
+        },
+        {
+          "name": "audio_slice_id",
+          "ordinal": 7,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "document_id",
+          "ordinal": 8,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "page_number",
+          "ordinal": 9,
+          "type_info": "Text"
+        },
+        {
+          "name": "index_in_document",
+          "ordinal": 10,
+          "type_info": "Int8"
+        },
+        {
+          "name": "page_id",
+          "ordinal": 11,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "character_range",
+          "ordinal": 12,
+          "type_info": "Int8Range"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false,
+        true,
+        false,
+        true,
+        true
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "select * from word where id = $1"
+  },
   "c09634d274c938e314ed1c2e9bb282851576c7df5a919681cf45b67d3cbe8f4e": {
     "describe": {
       "columns": [
@@ -1879,20 +1971,6 @@
       }
     },
     "query": "select\n  id,\n  title,\n  base_url\nfrom iiif_source\nwhere id = any($1)\n"
-  },
-  "d8ff5de5ff0ab7503f0152837c24a68d3543b889ecbf2c41198a70e4ad2d5024": {
-    "describe": {
-      "columns": [],
-      "nullable": [],
-      "parameters": {
-        "Left": [
-          "Uuid",
-          "TextArray",
-          "TextArray"
-        ]
-      }
-    },
-    "query": "update word set\n    source_text =\n        case\n            when $2::text[] != '{}' and $2[1] is not null then $2[1]\n            else source_text\n        end,\n    commentary =\n        case\n            when $3::text[] != '{}' then $3[1]\n            else commentary\n        end\nwhere id = $1\n"
   },
   "de7d4677f080eb9d0e580d7ec40b241b6717d3616e881ab601f77167b442509c": {
     "describe": {

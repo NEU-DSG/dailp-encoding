@@ -408,6 +408,11 @@ impl Database {
             return Ok(word.id);
         }
 
+        let document_id = query_file!("queries/word_by_id.sql", word.id)
+            .fetch_one(&self.client)
+            .await?
+            .document_id;
+
         let (doc_id, gloss, word_id, index, morpheme, role): (
             Vec<_>,
             Vec<_>,
@@ -423,7 +428,7 @@ impl Database {
             .enumerate()
             .map(move |(index, segment)| {
                 (
-                    word.doc_id,
+                    document_id,
                     segment.gloss,
                     word.id,
                     index as i64, // index of the segment in the word

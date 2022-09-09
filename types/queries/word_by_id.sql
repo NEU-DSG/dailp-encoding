@@ -1,0 +1,1 @@
+select * from word where id = $1
