@@ -171,8 +171,6 @@ export type AnnotatedFormSegmentsArgs = {
 export type AnnotatedFormUpdate = {
   /** Updated commentary */
   readonly commentary: InputMaybe<Scalars["String"]>
-  /** The document id where the given form lives */
-  readonly docId: Scalars["UUID"]
   /** Unique identifier of the form */
   readonly id: Scalars["UUID"]
   /** Updated segments */

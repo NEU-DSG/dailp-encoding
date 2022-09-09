@@ -158,10 +158,6 @@ input AnnotatedFormUpdate {
 	"""
 	id: UUID!
 	"""
-	The document id where the given form lives
-	"""
-	docId: UUID!
-	"""
 	Updated source text
 	"""
 	source: String

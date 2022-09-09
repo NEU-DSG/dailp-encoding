@@ -83,3 +83,11 @@ export const mediaQueries = {
 export const selectors = {
   currentPage: "&[aria-current='page']",
 }
+
+export const buttonSize = {
+  small: "4.5rem",
+}
+
+export const fontSize = {
+  small: "0.9rem",
+}
