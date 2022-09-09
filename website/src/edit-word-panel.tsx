@@ -67,7 +67,7 @@ export const EditButton = () => {
 
 /** Displays a FormInput with its corresponding feature data from the Reakit form. */
 const EditWordPanel = (props: {
-  feature: keyof Dailp.FormFieldsFragment
+  feature: keyof Dailp.Dailp.FormFieldsFragment
   label?: string
   input?: React.ElementType
 }) => {
