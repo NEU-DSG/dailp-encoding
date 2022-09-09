@@ -1085,6 +1085,7 @@ export type DocSliceQuery = { readonly __typename?: "Query" } & {
       readonly forms: ReadonlyArray<
         { readonly __typename: "AnnotatedForm" } & Pick<
           AnnotatedForm,
+          | "id"
           | "index"
           | "source"
           | "romanizedSource"
