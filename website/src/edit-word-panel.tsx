@@ -11,7 +11,7 @@ import { IconButton } from "./components"
 import { IconTextButton } from "./components/button"
 import * as css from "./edit-word-panel.css"
 import { useForm } from "./form-context"
-import { FormFieldsFragment } from "./graphql/dailp"
+import * as Dailp from "./graphql/dailp"
 
 /** Button that allows user to enter edit mode in the word panel, and edit fields of a word. */
 export const EditButton = () => {
@@ -60,7 +60,7 @@ export const EditButton = () => {
 
 /** Displays a FormInput with its corresponding feature data from the Reakit form. */
 const EditWordPanel = (props: {
-  feature: keyof FormFieldsFragment
+  feature: keyof Dailp.FormFieldsFragment
   label?: string
   input?: React.ElementType
 }) => {

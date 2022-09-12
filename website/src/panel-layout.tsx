@@ -13,7 +13,7 @@ import { useCredentials } from "./auth"
 import { AudioPlayer, IconButton } from "./components"
 import EditWordPanel, { EditButton } from "./edit-word-panel"
 import { useForm } from "./form-context"
-import { FormFieldsFragment } from "./graphql/dailp"
+import * as Dailp from "./graphql/dailp"
 import * as css from "./panel-layout.css"
 import { usePreferences } from "./preferences-context"
 import { VerticalMorphemicSegmentation, WordPanel } from "./word-panel"
@@ -24,14 +24,14 @@ enum PanelType {
 }
 
 export interface PanelDetails {
-  currContents: FormFieldsFragment | null
-  setCurrContents: (currContents: FormFieldsFragment | null) => void
+  currContents: Dailp.FormFieldsFragment | null
+  setCurrContents: (currContents: Dailp.FormFieldsFragment | null) => void
 }
 
 /** Displays the right-side panel information of the currently selected word. */
 export const PanelLayout = (p: {
-  segment: FormFieldsFragment | null
-  setContent: (content: FormFieldsFragment | null) => void
+  segment: Dailp.FormFieldsFragment | null
+  setContent: (content: Dailp.FormFieldsFragment | null) => void
 }) => {
   if (!p.segment) {
     return null
@@ -92,7 +92,7 @@ export const PanelLayout = (p: {
 /** Dispatches to the corresponding panel type to render a normal word panel or an editable word panel. */
 export const PanelContent = (p: {
   panel: PanelType
-  word: FormFieldsFragment
+  word: Dailp.FormFieldsFragment
 }) => {
   const PanelComponent =
     p.panel === PanelType.EditWordPanel ? EditWordPanel : WordPanel
@@ -220,7 +220,7 @@ export const CollapsiblePanel = (p: {
   )
 }
 
-export const AudioPanel = (p: { segment: FormFieldsFragment }) => {
+export const AudioPanel = (p: { segment: Dailp.FormFieldsFragment }) => {
   return (
     <>
       {p.segment.audioTrack && (
