@@ -19,7 +19,6 @@ import { CustomCreatable } from "./components/creatable"
 import EditWordPanel, { EditButton } from "./edit-word-panel"
 import { formInput } from "./edit-word-panel.css"
 import { useForm } from "./form-context"
-import * as Dailp from "./graphql/dailp"
 import * as css from "./panel-layout.css"
 import { usePreferences } from "./preferences-context"
 import { VerticalMorphemicSegmentation, WordPanel } from "./word-panel"
@@ -130,7 +129,7 @@ export const PanelLayout = (p: {
 /** Dispatches to the corresponding panel type to render a normal word panel or an editable word panel. */
 export const PanelContent = (p: {
   panel: PanelType
-  word: FormFieldsFragment
+  word: Dailp.FormFieldsFragment
   groupedOptions: {
     label: string
     options: {
@@ -249,7 +248,7 @@ export const PanelContent = (p: {
 
 // An editable view of a word's parts / segments.
 const EditSegmentation = (p: {
-  segments: FormFieldsFragment["segments"]
+  segments: Dailp.FormFieldsFragment["segments"]
   groupedOptions: {
     label: string
     options: {
@@ -262,7 +261,7 @@ const EditSegmentation = (p: {
 
   // Create a new list of morphemes for this word. If the index matches the updated morpheme's index, then push in the new morpheme. Else, push in the unchanged morpheme.
   const updateMorpheme = (
-    newMorpheme: FormFieldsFragment["segments"][0],
+    newMorpheme: Dailp.FormFieldsFragment["segments"][0],
     index: number
   ) => {
     const updatedMorphemes: Dailp.FormFieldsFragment["segments"] =
@@ -310,10 +309,10 @@ const EditSegmentation = (p: {
 
 // Component that allows editing of a morpheme's gloss. Users can enter a custom gloss or select from global glosses / functional tags.
 const EditGloss = (props: {
-  morpheme: FormFieldsFragment["segments"][0]
+  morpheme: Dailp.FormFieldsFragment["segments"][0]
   index: number
   updateMorpheme: (
-    morpheme: FormFieldsFragment["segments"][0],
+    morpheme: Dailp.FormFieldsFragment["segments"][0],
     index: number
   ) => void
   groupedOptions: {
