@@ -203,6 +203,7 @@ type AudioSlice {
 	endTime: Int
 }
 
+
 """
 One representation of Cherokee phonology.
 There are several different writing systems for Cherokee phonology and we
@@ -364,6 +365,7 @@ enum DocumentType {
 	CORPUS
 }
 
+
 type FormsInTime {
 	start: Date
 	end: Date
@@ -401,6 +403,7 @@ type Geometry {
 	yMax: Float!
 }
 
+
 type IiifImages {
 	"""
 	Information about the data source for this set of images
@@ -418,6 +421,7 @@ type ImageSource {
 	"""
 	url: String!
 }
+
 
 """
 A scalar that can represent any JSON value.
@@ -568,7 +572,7 @@ type PositionInDocument {
 	pageNumber: String!
 	"""
 	How many items come before this one in the whole document?
-
+	
 	1-indexed position indicating where the form sits in the ordering of all
 	forms in the document. Used for relative ordering of forms from the
 	same document.
@@ -622,18 +626,12 @@ type Query {
 	Lists all forms containing a morpheme with the given gloss.
 	Groups these words by the phonemic shape of the target morpheme.
 	"""
-	morphemesByShape(
-		gloss: String!
-		compareBy: CherokeeOrthography
-	): [MorphemeReference!]!
+	morphemesByShape(gloss: String!, compareBy: CherokeeOrthography): [MorphemeReference!]!
 	"""
 	Lists all words containing a morpheme with the given gloss.
 	Groups these words by the document containing them.
 	"""
-	morphemesByDocument(
-		documentId: UUID
-		morphemeGloss: String!
-	): [WordsInDocument!]!
+	morphemesByDocument(documentId: UUID, morphemeGloss: String!): [WordsInDocument!]!
 	"""
 	Forms containing the given morpheme gloss or related ones clustered over time.
 	"""
@@ -675,6 +673,7 @@ type SourceAttribution {
 	"""
 	link: String!
 }
+
 
 """
 A UUID is a unique 128-bit number, stored as 16 octets. UUIDs are parsed as
