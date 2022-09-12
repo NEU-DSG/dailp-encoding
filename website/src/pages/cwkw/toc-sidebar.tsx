@@ -1,12 +1,6 @@
 import React from "react"
 import { BsArrowBarLeft, BsArrowBarRight } from "react-icons/bs"
-import { HiOutlineBookOpen, HiOutlineChevronRight } from "react-icons/hi"
-import {
-  Dialog,
-  DialogBackdrop,
-  DialogDisclosure,
-  useDialogState,
-} from "reakit/Dialog"
+import { HiOutlineChevronRight } from "react-icons/hi"
 import { IconButton } from "src/components"
 import * as css from "./toc-sidebar.css"
 
@@ -14,11 +8,8 @@ import * as css from "./toc-sidebar.css"
 const TOCSidebar = (p: {
   isOpen: boolean
   setIsOpen: (bool: boolean) => void
-  isDesktop: boolean
 }) => {
-  const dialog = useDialogState({ animated: true })
-
-  const desktopPanel = (
+  return (
     // If the sidebar is open, give its container more space in the flexbox.
     <div style={{ flex: p.isOpen ? 2 : 1 }}>
       <nav className={css.sidebar}>
@@ -55,38 +46,6 @@ const TOCSidebar = (p: {
       </nav>
     </div>
   )
-
-  const mobilePanel = (
-    <>
-      <DialogBackdrop {...dialog} className={css.tocDrawerBg}>
-        <Dialog
-          {...dialog}
-          className={css.tocDrawer}
-          as="nav"
-          aria-label="Table of Contents"
-          preventBodyScroll={true}
-        >
-          <nav className={css.sidebar}>
-            <div className={css.tocHeader}>
-              <div>Table of Contents</div>
-            </div>
-            <Chapters />
-          </nav>
-        </Dialog>
-      </DialogBackdrop>
-
-      <DialogDisclosure
-        {...dialog}
-        className={css.tocMobileButton}
-        as={IconButton}
-        aria-label="Open Table of Contents Panel"
-      >
-        <HiOutlineBookOpen size={32} color="#E2E2E2" />
-      </DialogDisclosure>
-    </>
-  )
-
-  return <>{p.isDesktop ? desktopPanel : mobilePanel}</>
 }
 
 // TOC chapters content

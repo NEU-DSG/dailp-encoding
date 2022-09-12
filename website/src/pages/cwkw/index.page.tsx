@@ -22,7 +22,7 @@ const CWKWPage = () => {
   ]
 
   const isDesktop = useMediaQuery(mediaQueries.large)
-  const [isOpen, setIsOpen] = useState(false)
+  const [isOpen, setIsOpen] = useState(true)
 
   return (
     <CWKWLayout>
@@ -30,11 +30,7 @@ const CWKWPage = () => {
         <meta name="robots" content="noindex,nofollow" />
       </Helmet>
       <main className={isDesktop ? css.rightColumn : css.centerColumn}>
-        <TOCSidebar
-          isOpen={isOpen}
-          setIsOpen={setIsOpen}
-          isDesktop={isDesktop}
-        />
+        {isDesktop && <TOCSidebar isOpen={isOpen} setIsOpen={setIsOpen} />}
         <article
           className={
             // Shifts the center content towards the right to allow for room of the sidebar.
