@@ -196,6 +196,17 @@ export type AudioSlice = {
   readonly startTime: Maybe<Scalars["Int"]>
 }
 
+export type Chapter = {
+  readonly __typename?: "Chapter"
+  readonly chapterName: Scalars["String"]
+  readonly documentShortName: Maybe<Scalars["String"]>
+  readonly id: Maybe<Scalars["UUID"]>
+  readonly indexInParent: Scalars["Int"]
+  readonly section: CollectionSection
+  readonly urlSlug: Scalars["String"]
+  readonly wordpressId: Maybe<Scalars["Int"]>
+}
+
 /**
  * One representation of Cherokee phonology.
  * There are several different writing systems for Cherokee phonology and we
@@ -207,6 +218,11 @@ export enum CherokeeOrthography {
   Crg = "CRG",
   Learner = "LEARNER",
   Taoc = "TAOC",
+}
+
+export enum CollectionSection {
+  Body = "BODY",
+  Intro = "INTRO",
 }
 
 /**
@@ -525,6 +541,7 @@ export type Query = {
   readonly allPages: ReadonlyArray<Page>
   /** List of all the functional morpheme tags available */
   readonly allTags: ReadonlyArray<MorphemeTag>
+  readonly chapter: Chapter
   readonly collection: DocumentCollection
   /** Retrieves a full document from its unique name. */
   readonly document: Maybe<AnnotatedDoc>
@@ -564,6 +581,11 @@ export type Query = {
 
 export type QueryAllTagsArgs = {
   system: CherokeeOrthography
+}
+
+export type QueryChapterArgs = {
+  chapterSlug: Scalars["String"]
+  collectionSlug: Scalars["String"]
 }
 
 export type QueryCollectionArgs = {

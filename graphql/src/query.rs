@@ -97,6 +97,19 @@ impl Query {
             .await?)
     }
 
+    pub async fn chapter(
+        &self,
+        context: &Context<'_>,
+        collection_slug: String,
+        chapter_slug: String,
+    ) -> FieldResult<dailp::Chapter> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .chapter(collection_slug, chapter_slug)
+            .await?)
+    }
+
     /// Lists all forms containing a morpheme with the given gloss.
     /// Groups these words by the phonemic shape of the target morpheme.
     pub async fn morphemes_by_shape(
