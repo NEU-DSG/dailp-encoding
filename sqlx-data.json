@@ -417,6 +417,44 @@
     },
     "query": "insert into document_page (document_id, index_in_document, iiif_source_id, iiif_oid)\nvalues ($1, $2, $3, $4)\non conflict (document_id, index_in_document) do update set\nindex_in_document = excluded.index_in_document,\niiif_source_id = excluded.iiif_source_id,\niiif_oid = excluded.iiif_oid\nreturning id\n"
   },
+  "47b487e7f70a9c10dbf1bc17d2a975c2e6a7edf9f6c11f6e295b4adc25b9a351": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "title",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "wordpress_menu_id",
+          "ordinal": 2,
+          "type_info": "Int8"
+        },
+        {
+          "name": "slug",
+          "ordinal": 3,
+          "type_info": "Text"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        true,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "TextArray"
+        ]
+      }
+    },
+    "query": "select id, title, wordpress_menu_id, slug\nfrom edited_collection\nwhere slug = any($1)"
+  },
   "485b68540ad5d84e5e98c8ec34d4bbc9ddf5a4d129dca5aa9a87b5217c26e9a0": {
     "describe": {
       "columns": [
@@ -909,6 +947,50 @@
       }
     },
     "query": "select\n  document_group.slug,\n  document_group.title\nfrom document\n  inner join document_group on document_group.id = document.group_id\nwhere document.id = $1\n"
+  },
+  "78aed91efb1c370974d58cec9c28461ab229f5f9f4cb37fe80e2fe08dc2a0d13": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "title",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "wordpress_id",
+          "ordinal": 2,
+          "type_info": "Int8"
+        },
+        {
+          "name": "index_in_parent",
+          "ordinal": 3,
+          "type_info": "Int8"
+        },
+        {
+          "name": "slug!",
+          "ordinal": 4,
+          "type_info": "Text"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        true,
+        false,
+        null
+      ],
+      "parameters": {
+        "Left": [
+          "TextArray"
+        ]
+      }
+    },
+    "query": "select id, title, wordpress_id, index_in_parent, ltree2text(subpath(chapter_path, 0, 1)) AS \"slug!\"\n-- \"\" and ! makes it non nullable\n--ltree2text first part of chapter path\n-- get first part of chapter path\nfrom collection_chapter\nwhere ltree2text(subpath(chapter_path, 0, 1)) = any($1);\n-- Receives string. Alter chapter_path to subpath and turn into string. match with input arg\n-- "
   },
   "7a6c5fc86cb220cb8e0dcbfbbb994b6288490c39e31cef7bc46a9ccc7e321438": {
     "describe": {

@@ -6,8 +6,8 @@ use itertools::Itertools;
 use {
     dailp::async_graphql::{self, dataloader::DataLoader, Context, FieldResult, Guard},
     dailp::{
-        AnnotatedDoc, AnnotatedFormUpdate, CherokeeOrthography, Database, MorphemeId,
-        MorphemeReference, MorphemeTag, WordsInDocument,
+        AnnotatedDoc, AnnotatedFormUpdate, CherokeeOrthography, Database, EditedCollection,
+        MorphemeId, MorphemeReference, MorphemeTag, WordsInDocument,
     },
     serde::{Deserialize, Serialize},
     serde_with::{rust::StringWithSeparator, CommaSeparator},
@@ -18,6 +18,21 @@ pub struct Query;
 
 #[async_graphql::Object]
 impl Query {
+    // query for 1 collection based on slug, and make a collection object with all the stuff in it.
+    // #[async_graphql::SimpleObject]
+    // impl EditedCollection {
+    async fn get_collection(
+        &self,
+        context: &Context<'_>,
+        slug: String,
+    ) -> FieldResult<Option<Vec<EditedCollection>>> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .load_one(dailp::CollectionObject(slug))
+            .await?)
+    }
+    // }
+
     /// List of all the functional morpheme tags available
     async fn all_tags(
         &self,
