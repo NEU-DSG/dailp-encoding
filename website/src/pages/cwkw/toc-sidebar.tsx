@@ -1,7 +1,7 @@
 import React from "react"
 import { BsArrowBarLeft, BsArrowBarRight } from "react-icons/bs"
-import { HiOutlineChevronRight } from "react-icons/hi"
 import { IconButton } from "src/components"
+import Tox1 from "src/components/toc.page"
 import * as css from "./toc-sidebar.css"
 
 // Renders a sidebar on the left side of the screen that displays a table of contents.
@@ -42,60 +42,9 @@ const TOCSidebar = (p: {
           )}
         </div>
         {/* If the panel is open, show the chapters content. */}
-        {p.isOpen && <Chapters />}
+        {p.isOpen && <Tox1 />}
       </nav>
     </div>
-  )
-}
-
-// TOC chapters content
-export const Chapters = () => {
-  // Placeholder for intro chapters.
-  const introChapters = [
-    { title: "Preface to Cherokees Writing the Keetoowah Way" },
-    { title: "Acknowledgements" },
-  ]
-
-  // Placeholder for main chapters.
-  const mainChapters = [
-    { title: "Stories", author: "Carly Dou" },
-    { title: "Governance Documents", author: "John Doe" },
-  ]
-
-  return (
-    <>
-      <ol type="i" className={css.list}>
-        {introChapters.map((chapter, index) => (
-          <li key={index} className={css.listItem}>
-            {/* Chapter title */}
-            <div className={css.listItemContent}>
-              <div className={css.chapterTitle}>{chapter.title}</div>
-
-              {/* Arrow navigation button */}
-              <IconButton aria-label={`Open ${chapter.title}`}>
-                <HiOutlineChevronRight size={22} color="#7D7D7D" />
-              </IconButton>
-            </div>
-          </li>
-        ))}
-      </ol>
-      <ol className={css.list}>
-        {mainChapters.map((chapter, index) => (
-          <li key={index} className={css.listItem}>
-            {/* Chapter title */}
-            <div className={css.listItemContent}>
-              <div className={css.chapterTitle}>{`${chapter.title},
-                  ${chapter.author}`}</div>
-
-              {/* Arrow navigation button */}
-              <IconButton aria-label={`Open ${chapter.title}`}>
-                <HiOutlineChevronRight size={22} color="#7D7D7D" />
-              </IconButton>
-            </div>
-          </li>
-        ))}
-      </ol>
-    </>
   )
 }
 
