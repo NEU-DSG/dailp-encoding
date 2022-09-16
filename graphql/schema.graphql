@@ -195,6 +195,28 @@ type AudioSlice {
 
 
 """
+Structure to represent a single chapter. Used to send data to the front end.
+"""
+type ChapterSingle {
+	"""
+	UUID for the chapter
+	"""
+	id: UUID!
+	"""
+	Full title of the chapter
+	"""
+	title: String!
+	"""
+	ID of WordPress page with text of the chapter
+	"""
+	wordpressId: Int
+	"""
+	Order within the parent chapter or collection
+	"""
+	indexInParent: Int!
+}
+
+"""
 One representation of Cherokee phonology.
 There are several different writing systems for Cherokee phonology and we
 want to convert between them.
@@ -353,6 +375,30 @@ might be a letter, journal, or notice.
 enum DocumentType {
 	REFERENCE
 	CORPUS
+}
+
+"""
+Structure to represent an edited collection. Missing certain fields and chapters in it.
+Used for sending data to the front end
+"""
+type EditedCollection {
+	"""
+	UUID for the collection
+	"""
+	id: UUID!
+	"""
+	Full title of the collection
+	"""
+	title: String!
+	"""
+	ID of WordPress menu for navigating the collection
+	"""
+	wordpressMenuId: Int
+	"""
+	URL slug for the collection, like "cwkw"
+	"""
+	slug: String!
+	allChapters: [ChapterSingle!]
 }
 
 
@@ -568,6 +614,7 @@ type PositionInDocument {
 }
 
 type Query {
+	getCollection(slug: String!): [EditedCollection!]
 	"""
 	List of all the functional morpheme tags available
 	"""
