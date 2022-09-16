@@ -1045,21 +1045,25 @@ impl Database {
         })
     }
 
-    pub async fn chapter(&self, collection_slug: String, chapter_slug: String) -> Result<Chapter> {
-        let slug = format!("{}.{}", collection_slug, chapter_slug);
+    pub async fn chapter(
+        &self,
+        collection_slug: String,
+        chapter_slug: String,
+    ) -> Result<CollectionChapter> {
+        let chapter = query_file!(
+            "queries/chapter_contents.sql",
+            collection_slug,
+            chapter_slug
+        )
+        .fetch_one(&self.client)
+        .await?;
 
-        let chapter_path: PgLTree = PgLTree::from_str(&slug)?;
-
-        let chapter = query_file!("queries/chapter_contents.sql", chapter_path)
-            .fetch_one(&self.client)
-            .await?;
-
-        Ok(Chapter {
+        Ok(CollectionChapter {
             id: Some(chapter.id),
             url_slug: chapter.chapter_path.to_string(),
             index_in_parent: chapter.index_in_parent,
             chapter_name: chapter.title,
-            document_short_name: Some(chapter.short_name),
+            document_id: chapter.document_id,
             wordpress_id: chapter.wordpress_id,
             section: if chapter.section == Some("Intro".to_string()) {
                 CollectionSection::Intro

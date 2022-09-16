@@ -11,7 +11,7 @@ pub struct Collection {
     pub chapters: Vec<Chapter>,
 }
 
-#[derive(Debug, Clone, async_graphql::SimpleObject)]
+#[derive(Debug, Clone)]
 pub struct Chapter {
     pub id: Option<Uuid>,
 

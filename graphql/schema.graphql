@@ -194,16 +194,6 @@ type AudioSlice {
 }
 
 
-type Chapter {
-	id: UUID
-	urlSlug: String!
-	indexInParent: Int!
-	chapterName: String!
-	documentShortName: String
-	wordpressId: Int
-	section: CollectionSection!
-}
-
 """
 One representation of Cherokee phonology.
 There are several different writing systems for Cherokee phonology and we
@@ -217,9 +207,8 @@ enum CherokeeOrthography {
 	LEARNER
 }
 
-enum CollectionSection {
-	INTRO
-	BODY
+type CollectionChapter {
+	document: AnnotatedDoc
 }
 
 """
@@ -608,7 +597,7 @@ type Query {
 	Retrieves a full document from its unique identifier.
 	"""
 	page(id: String!): Page
-	chapter(collectionSlug: String!, chapterSlug: String!): Chapter!
+	chapter(collectionSlug: String!, chapterSlug: String!): CollectionChapter!
 	"""
 	Lists all forms containing a morpheme with the given gloss.
 	Groups these words by the phonemic shape of the target morpheme.

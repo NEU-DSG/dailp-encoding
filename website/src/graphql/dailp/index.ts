@@ -196,17 +196,6 @@ export type AudioSlice = {
   readonly startTime: Maybe<Scalars["Int"]>
 }
 
-export type Chapter = {
-  readonly __typename?: "Chapter"
-  readonly chapterName: Scalars["String"]
-  readonly documentShortName: Maybe<Scalars["String"]>
-  readonly id: Maybe<Scalars["UUID"]>
-  readonly indexInParent: Scalars["Int"]
-  readonly section: CollectionSection
-  readonly urlSlug: Scalars["String"]
-  readonly wordpressId: Maybe<Scalars["Int"]>
-}
-
 /**
  * One representation of Cherokee phonology.
  * There are several different writing systems for Cherokee phonology and we
@@ -218,6 +207,24 @@ export enum CherokeeOrthography {
   Crg = "CRG",
   Learner = "LEARNER",
   Taoc = "TAOC",
+}
+
+export type CollectionChapter = {
+  readonly __typename?: "CollectionChapter"
+  /** Name of this chapter. */
+  readonly chapterName: Scalars["String"]
+  /** Document id of this chapter if it contains a document. */
+  readonly documentId: Maybe<Scalars["UUID"]>
+  /** Chapter's id. */
+  readonly id: Maybe<Scalars["UUID"]>
+  /** Index of this chapter within its parent collection. */
+  readonly indexInParent: Scalars["Int"]
+  /** A section within this chapter. */
+  readonly section: CollectionSection
+  /** Chapter's url as a string. */
+  readonly urlSlug: Scalars["String"]
+  /** Wordpress id of this chapter if it contains a Wordpress page. */
+  readonly wordpressId: Maybe<Scalars["Int"]>
 }
 
 export enum CollectionSection {
@@ -541,7 +548,7 @@ export type Query = {
   readonly allPages: ReadonlyArray<Page>
   /** List of all the functional morpheme tags available */
   readonly allTags: ReadonlyArray<MorphemeTag>
-  readonly chapter: Chapter
+  readonly chapter: CollectionChapter
   readonly collection: DocumentCollection
   /** Retrieves a full document from its unique name. */
   readonly document: Maybe<AnnotatedDoc>

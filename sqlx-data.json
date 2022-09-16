@@ -78,6 +78,68 @@
     },
     "query": "select *\nfrom paragraph\nwhere page_id = any($1)\norder by character_range asc\n"
   },
+  "0c03c19e59165e546ad61ccb5e9ec1afe9cfc6327663d540d4ac5a5c124819f9": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "title",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "document_id",
+          "ordinal": 2,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "wordpress_id",
+          "ordinal": 3,
+          "type_info": "Int8"
+        },
+        {
+          "name": "index_in_parent",
+          "ordinal": 4,
+          "type_info": "Int8"
+        },
+        {
+          "name": "chapter_path",
+          "ordinal": 5,
+          "type_info": {
+            "Custom": {
+              "kind": "Simple",
+              "name": "ltree"
+            }
+          }
+        },
+        {
+          "name": "section",
+          "ordinal": 6,
+          "type_info": "Text"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        true,
+        true,
+        false,
+        false,
+        null
+      ],
+      "parameters": {
+        "Left": [
+          "Text",
+          "Text"
+        ]
+      }
+    },
+    "query": "select c.id, \n    c.title, \n    c.document_id, \n    c.wordpress_id, \n    c.index_in_parent, \n    c.chapter_path, \n    c.section::text\nfrom collection_chapter as c\nwhere chapter_path ~ ($1 || '.*.' || $2)::lquery;"
+  },
   "0c697fa7d3e8459a4577e54b76a3b17bf1c872d3aa5cecb7a585d1b664261350": {
     "describe": {
       "columns": [
@@ -1812,72 +1874,6 @@
       }
     },
     "query": "select\n  document.id,\n  document.short_name,\n  document.title,\n  document.written_at,\n  document.is_reference,\n  coalesce(\n    jsonb_agg(\n      jsonb_build_object(\n        'name',\n        contributor.full_name,\n        'role',\n        contributor_attribution.contribution_role\n      )\n    ) filter (where contributor is not null),\n    '[]'\n  )\n  as contributors\nfrom document\n  left join\n    contributor_attribution on contributor_attribution.document_id = document.id\n  left join contributor on contributor.id = contributor_attribution.contributor_id\ngroup by document.id\n"
-  },
-  "c7609bb0299980dd63520ba7f18b1fe8fb989e065b53fa64b31b04758ddbe394": {
-    "describe": {
-      "columns": [
-        {
-          "name": "id",
-          "ordinal": 0,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "title",
-          "ordinal": 1,
-          "type_info": "Text"
-        },
-        {
-          "name": "short_name",
-          "ordinal": 2,
-          "type_info": "Text"
-        },
-        {
-          "name": "wordpress_id",
-          "ordinal": 3,
-          "type_info": "Int8"
-        },
-        {
-          "name": "index_in_parent",
-          "ordinal": 4,
-          "type_info": "Int8"
-        },
-        {
-          "name": "chapter_path",
-          "ordinal": 5,
-          "type_info": {
-            "Custom": {
-              "kind": "Simple",
-              "name": "ltree"
-            }
-          }
-        },
-        {
-          "name": "section",
-          "ordinal": 6,
-          "type_info": "Text"
-        }
-      ],
-      "nullable": [
-        false,
-        false,
-        false,
-        true,
-        false,
-        false,
-        null
-      ],
-      "parameters": {
-        "Left": [
-          {
-            "Custom": {
-              "kind": "Simple",
-              "name": "ltree"
-            }
-          }
-        ]
-      }
-    },
-    "query": "select c.id, \n    c.title, \n    document.short_name, \n    c.wordpress_id, \n    c.index_in_parent, \n    c.chapter_path, \n    c.section::text\nfrom collection_chapter as c\n    left join document on c.document_id = document.id\nwhere chapter_path = $1"
   },
   "cc71e3a7b4c013adc4d0cb79acd702aa0daa0290013a31e9fee3bd1f5990fa4f": {
     "describe": {
