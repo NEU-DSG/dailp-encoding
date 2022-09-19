@@ -19,8 +19,6 @@ pub struct Query;
 #[async_graphql::Object]
 impl Query {
     // query for 1 collection based on slug, and make a collection object with all the stuff in it.
-    // #[async_graphql::SimpleObject]
-    // impl EditedCollection {
     async fn get_collection(
         &self,
         context: &Context<'_>,
@@ -31,7 +29,6 @@ impl Query {
             .load_one(dailp::CollectionObject(slug))
             .await?)
     }
-    // }
 
     /// List of all the functional morpheme tags available
     async fn all_tags(
