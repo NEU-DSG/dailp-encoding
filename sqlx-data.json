@@ -657,6 +657,27 @@
     },
     "query": "select\n  word.id,\n  word.source_text,\n  word.simple_phonetics,\n  word.phonemic,\n  word.english_gloss,\n  word.commentary,\n  word.document_id,\n  word.index_in_document,\n  word.page_number,\n  media_resource.url as \"audio_url?\",\n  media_slice.time_range as \"audio_slice?\"\nfrom word\n  left join media_slice on media_slice.id = word.audio_slice_id\n  left join media_resource on media_resource.id = media_slice.resource_id\nwhere source_text like any($1)\n"
   },
+  "561b7e609c00b7dd78008b769b30a65b1f9358fb11f410c57a60f80bf656b19e": {
+    "describe": {
+      "columns": [
+        {
+          "name": "internal_gloss",
+          "ordinal": 0,
+          "type_info": "Text"
+        }
+      ],
+      "nullable": [
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "TextArray",
+          "Text"
+        ]
+      }
+    },
+    "query": "-- Given the system and the system-specific gloss.\nselect internal_gloss\nfrom abstract_morpheme_tag\n  inner join morpheme_tag on abstract_morpheme_tag.id = morpheme_tag.abstract_ids[1]\n  inner join unnest($1::text[]) as input_gloss on input_gloss = morpheme_tag.gloss\n  inner join abbreviation_system on abbreviation_system.id = morpheme_tag.system_id\nwhere abbreviation_system.short_name = $2::text"
+  },
   "587e868e1c86816469a9169bf07be80df5add11ef357029f74629e112d88b88e": {
     "describe": {
       "columns": [],

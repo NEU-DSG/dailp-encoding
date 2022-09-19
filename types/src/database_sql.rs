@@ -1,7 +1,5 @@
 #![allow(missing_docs)]
 
-use crate::CollectionSection::Body;
-use crate::CollectionSection::Intro;
 use sqlx::postgres::types::PgLQuery;
 use sqlx::postgres::types::PgLTree;
 use std::ops::Bound;
@@ -413,6 +411,10 @@ impl Database {
             .await?
             .document_id;
 
+        let segments = word.segments.take().unwrap();
+
+        let system_name: Option<CherokeeOrthography> = *(&segments[0].system.clone());
+
         let (doc_id, gloss, word_id, index, morpheme, role): (
             Vec<_>,
             Vec<_>,
@@ -420,10 +422,7 @@ impl Database {
             Vec<_>,
             Vec<_>,
             Vec<_>,
-        ) = word
-            .segments
-            .take()
-            .unwrap()
+        ) = segments
             .into_iter()
             .enumerate()
             .map(move |(index, segment)| {
@@ -438,6 +437,7 @@ impl Database {
             })
             .multiunzip();
 
+        // First update any potentially new created local glosses.
         query_file!(
             "queries/upsert_local_morpheme_glosses.sql",
             &*doc_id,
@@ -446,10 +446,22 @@ impl Database {
         .execute(&self.client)
         .await?;
 
+        // Then, convert the given glosses if they have an internal for to add to the database.
+        let internal_glosses: Vec<String> = query_file_scalar!(
+            "queries/find_internal_glosses.sql",
+            &*gloss,
+            match system_name {
+                Some(CherokeeOrthography::Taoc) => "TAOC",
+                _ => "TAOC",
+            }
+        )
+        .fetch_all(&self.client)
+        .await?;
+
         query_file!(
             "queries/upsert_many_word_segments.sql",
             &*doc_id,
-            &*gloss,
+            &*internal_glosses,
             &*word_id,
             &*index,
             &*morpheme,
