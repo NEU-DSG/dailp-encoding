@@ -167,6 +167,8 @@ impl WordSegment {
 /// A single unit of meaning and its gloss which can be edited.
 #[derive(async_graphql::InputObject)]
 pub struct MorphemeSegmentUpdate {
+    /// Which Cherokee representation system is this segment written with?
+    pub system: Option<CherokeeOrthography>,
     /// Source language representation of this segment.
     pub morpheme: String,
     /// Target language representation of this segment.

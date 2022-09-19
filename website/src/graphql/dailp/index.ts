@@ -420,6 +420,8 @@ export type MorphemeSegmentUpdate = {
    * the next one when reconstituting the full segmentation string.
    */
   readonly role: WordSegmentRole
+  /** Which Cherokee representation system is this segment written with? */
+  readonly system: InputMaybe<CherokeeOrthography>
 }
 
 /** A concrete representation of a particular functional morpheme. */

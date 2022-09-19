@@ -465,6 +465,10 @@ A single unit of meaning and its gloss which can be edited.
 """
 input MorphemeSegmentUpdate {
 	"""
+	Which Cherokee representation system is this segment written with?
+	"""
+	system: CherokeeOrthography
+	"""
 	Source language representation of this segment.
 	"""
 	morpheme: String!
