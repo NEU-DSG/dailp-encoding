@@ -614,7 +614,7 @@ type PositionInDocument {
 }
 
 type Query {
-	getCollection(slug: String!): [EditedCollection!]
+	getEditedCollection(slug: String!): [EditedCollection!]
 	"""
 	List of all the functional morpheme tags available
 	"""

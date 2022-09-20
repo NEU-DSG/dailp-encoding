@@ -558,7 +558,7 @@ export type Query = {
   readonly collection: DocumentCollection
   /** Retrieves a full document from its unique name. */
   readonly document: Maybe<AnnotatedDoc>
-  readonly getCollection: Maybe<ReadonlyArray<EditedCollection>>
+  readonly getEditedCollection: Maybe<ReadonlyArray<EditedCollection>>
   /**
    * Retrieve information for the morpheme that corresponds to the given tag
    * string. For example, "3PL.B" is the standard string referring to a 3rd
@@ -605,7 +605,7 @@ export type QueryDocumentArgs = {
   slug: Scalars["String"]
 }
 
-export type QueryGetCollectionArgs = {
+export type QueryGetEditedCollectionArgs = {
   slug: Scalars["String"]
 }
 

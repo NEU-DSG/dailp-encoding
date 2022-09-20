@@ -1,6 +1,6 @@
 use uuid::Uuid;
 
-/// Structure to represent an Edited Collection
+/// Structure to represent an Edited Collection in its hierarchical form
 #[derive(Debug, Clone)]
 pub struct Collection {
     /// UUID for the collection
@@ -33,7 +33,7 @@ pub struct Chapter {
 }
 
 /// Enum to represent the sections in an edited collection
-#[derive(Debug, Clone, PartialEq, sqlx::Type)]
+#[derive(async_graphql::Enum, Clone, Copy, PartialEq, Eq, Debug, sqlx::Type)]
 #[sqlx(type_name = "collection_section")]
 pub enum CollectionSection {
     /// Intro chapter
