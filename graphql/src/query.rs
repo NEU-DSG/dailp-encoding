@@ -19,7 +19,7 @@ pub struct Query;
 #[async_graphql::Object]
 impl Query {
     // query for 1 collection based on slug, and make a collection object with all the stuff in it.
-    async fn get_collection(
+    async fn get_edited_collection(
         &self,
         context: &Context<'_>,
         slug: String,

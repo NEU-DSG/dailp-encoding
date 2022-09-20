@@ -1,14 +1,9 @@
 use crate::Uuid;
+use std::option::Option;
 use {
     crate::async_graphql::{self, dataloader::DataLoader, Context, FieldResult},
     crate::Database,
 };
-
-#[derive(async_graphql::Enum, Clone, Copy, PartialEq, Eq, Debug)]
-pub enum CollectionSection {
-    Intro,
-    Body,
-}
 
 /// Structure to represent an edited collection. Missing certain fields and chapters in it.
 /// Used for sending data to the front end
@@ -20,7 +15,7 @@ pub struct EditedCollection {
     /// Full title of the collection
     pub title: String,
     /// ID of WordPress menu for navigating the collection
-    pub wordpress_menu_id: std::option::Option<i64>,
+    pub wordpress_menu_id: Option<i64>,
     /// URL slug for the collection, like "cwkw"
     pub slug: String,
 }
