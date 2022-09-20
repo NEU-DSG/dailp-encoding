@@ -1564,7 +1564,7 @@ impl Loader<CollectionChapter> for Database {
     type Value = Vec<ChapterSingle>;
     type Error = Arc<sqlx::Error>;
 
-    // string can look like "cwkw".cha.pter1. But assume user only passes "cwkw"
+    // string slug can look like "cwkw".chapter1.doc1 But assume user only passes "cwkw"
 
     async fn load(
         &self,
@@ -1578,7 +1578,7 @@ impl Loader<CollectionChapter> for Database {
             .into_iter()
             .map(|chapter| {
                 (
-                    CollectionChapter(chapter.slug),
+                    CollectionChapter(chapter.collection_slug),
                     ChapterSingle {
                         id: chapter.id,
                         title: chapter.title,
