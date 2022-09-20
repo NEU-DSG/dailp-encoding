@@ -203,6 +203,8 @@ export type ChapterSingle = {
   readonly id: Scalars["UUID"]
   /** Order within the parent chapter or collection */
   readonly indexInParent: Scalars["Int"]
+  /** Whether the chapter is an "Intro" or "Body" chapter */
+  readonly section: CollectionSection
   /** Full title of the chapter */
   readonly title: Scalars["String"]
   /** ID of WordPress page with text of the chapter */
@@ -220,6 +222,12 @@ export enum CherokeeOrthography {
   Crg = "CRG",
   Learner = "LEARNER",
   Taoc = "TAOC",
+}
+
+/** Enum to represent the sections in an edited collection */
+export enum CollectionSection {
+  Body = "BODY",
+  Intro = "INTRO",
 }
 
 /**

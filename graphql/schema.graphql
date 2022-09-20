@@ -214,6 +214,10 @@ type ChapterSingle {
 	Order within the parent chapter or collection
 	"""
 	indexInParent: Int!
+	"""
+	Whether the chapter is an "Intro" or "Body" chapter
+	"""
+	section: CollectionSection!
 }
 
 """
@@ -227,6 +231,14 @@ enum CherokeeOrthography {
 	TAOC
 	CRG
 	LEARNER
+}
+
+"""
+Enum to represent the sections in an edited collection
+"""
+enum CollectionSection {
+	INTRO
+	BODY
 }
 
 """
