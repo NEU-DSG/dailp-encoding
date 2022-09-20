@@ -1584,6 +1584,11 @@ impl Loader<CollectionChapter> for Database {
                         title: chapter.title,
                         wordpress_id: chapter.wordpress_id,
                         index_in_parent: chapter.index_in_parent,
+                        section: if chapter.section == Some("Intro".to_string()) {
+                            CollectionSection::Intro
+                        } else {
+                            CollectionSection::Body
+                        },
                     },
                 )
             })

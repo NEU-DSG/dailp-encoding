@@ -1177,50 +1177,6 @@
     },
     "query": "-- Insert a collection with a certain slug.\ninsert into document_group (slug, title)\nvalues ($1, $2)\non conflict (slug) do update set\ntitle = excluded.title\nreturning id\n"
   },
-  "8dbff33383540f41a57845b221b0a35d4ffd670e756d09251b8db5c24d334286": {
-    "describe": {
-      "columns": [
-        {
-          "name": "id",
-          "ordinal": 0,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "title",
-          "ordinal": 1,
-          "type_info": "Text"
-        },
-        {
-          "name": "wordpress_id",
-          "ordinal": 2,
-          "type_info": "Int8"
-        },
-        {
-          "name": "index_in_parent",
-          "ordinal": 3,
-          "type_info": "Int8"
-        },
-        {
-          "name": "collection_slug!",
-          "ordinal": 4,
-          "type_info": "Text"
-        }
-      ],
-      "nullable": [
-        false,
-        false,
-        true,
-        false,
-        null
-      ],
-      "parameters": {
-        "Left": [
-          "TextArray"
-        ]
-      }
-    },
-    "query": "select id, title, wordpress_id, index_in_parent, ltree2text(subpath(chapter_path, 0, 1)) AS \"collection_slug!\"\nfrom collection_chapter\nwhere ltree2text(subpath(chapter_path, 0, 1)) = any($1);"
-  },
   "8ecfe399e5e6da5a750c519bea8af91364076a89f472e9087afafda4b02599f4": {
     "describe": {
       "columns": [
@@ -1459,6 +1415,56 @@
       }
     },
     "query": "select\n  id,\n  base_url\nfrom iiif_source\nwhere id = $1\n"
+  },
+  "a866a6f2dbc665b07edd221482d53f041cc48de471b87b2bba02fc56d5acfc79": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "title",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "wordpress_id",
+          "ordinal": 2,
+          "type_info": "Int8"
+        },
+        {
+          "name": "index_in_parent",
+          "ordinal": 3,
+          "type_info": "Int8"
+        },
+        {
+          "name": "section",
+          "ordinal": 4,
+          "type_info": "Text"
+        },
+        {
+          "name": "collection_slug!",
+          "ordinal": 5,
+          "type_info": "Text"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        true,
+        false,
+        null,
+        null
+      ],
+      "parameters": {
+        "Left": [
+          "TextArray"
+        ]
+      }
+    },
+    "query": "select id, title, wordpress_id, index_in_parent, section::text , ltree2text(subpath(chapter_path, 0, 1)) AS \"collection_slug!\"\nfrom collection_chapter\nwhere ltree2text(subpath(chapter_path, 0, 1)) = any($1);"
   },
   "afca9b69fc11aef29379ab4d753d0b644b6ee3a698f3a6e857bfb6a83a4b38f1": {
     "describe": {

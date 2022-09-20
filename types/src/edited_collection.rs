@@ -1,4 +1,5 @@
-use crate::Uuid;
+use crate::CollectionSection;
+use crate::{Collection, Uuid};
 use std::option::Option;
 use {
     crate::async_graphql::{self, dataloader::DataLoader, Context, FieldResult},
@@ -31,6 +32,8 @@ pub struct ChapterSingle {
     pub wordpress_id: std::option::Option<i64>,
     /// Order within the parent chapter or collection
     pub index_in_parent: i64,
+    /// Whether the chapter is an "Intro" or "Body" chapter
+    pub section: CollectionSection,
 }
 
 #[async_graphql::ComplexObject]
