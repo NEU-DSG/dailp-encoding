@@ -1,6 +1,6 @@
 //! This piece of the project exposes a GraphQL endpoint that allows one to access DAILP data in a federated manner with specific queries.
 
-use dailp::Uuid;
+use dailp::{CollectionChapter, Uuid};
 use itertools::Itertools;
 
 use {
@@ -94,6 +94,19 @@ impl Query {
         Ok(context
             .data::<DataLoader<Database>>()?
             .load_one(dailp::PageId(id))
+            .await?)
+    }
+
+    pub async fn chapter(
+        &self,
+        context: &Context<'_>,
+        collection_slug: String,
+        chapter_slug: String,
+    ) -> FieldResult<CollectionChapter> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .chapter(collection_slug, chapter_slug)
             .await?)
     }
 
