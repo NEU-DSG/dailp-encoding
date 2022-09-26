@@ -1,14 +1,5 @@
 @media print {
-  /* Formats links. */
-  a {
-    color: #9e4c43 !important;
-  }
-
-  /* Hides buttons. */
-  button {
-    display: none;
-  }
-
+  /* CUSTOM CLASSES */
   /* Displays element on print. */
   .show-on-print {
     display: block !important;
@@ -17,6 +8,27 @@
   /* A page break will always show on elements with this class. */
   .page {
     page-break-before: always;
+  }
+
+  /* Keeps elements on the same page in print format. */
+  .section {
+    break-inside: avoid;
+  }
+
+  /* Removes line-breaking whitespace to give some content full-width of the page if needed.*/
+  .prose br {
+    display: none;
+  }
+
+  /* GLOBAL STYLES */
+  /* Formats links. */
+  a {
+    color: #9e4c43 !important;
+  }
+
+  /* Hides buttons. */
+  button {
+    display: none;
   }
 
   /* INPUT/TEXTBOX STYLES */
@@ -57,16 +69,6 @@
 
   textarea {
     resize: none;
-  }
-
-  /* Keeps elements on the same page in print format. */
-  .section {
-    break-inside: avoid;
-  }
-
-  /* Removes line-breaking whitespace to give some content full-width of the page if needed.*/
-  .prose br {
-    display: none;
   }
 
   /* IMAGE AND CAPTION STYLING */

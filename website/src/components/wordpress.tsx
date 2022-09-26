@@ -13,6 +13,7 @@ import { AnnotatedForm } from "src/segment"
 import { annotationSection } from "src/segment.css"
 import { wordpressUrl } from "src/theme.css"
 import { BasicMorphemeSegment, LevelOfDetail } from "src/types"
+import "./print.css"
 
 interface Props {
   slug: string
