@@ -10,6 +10,18 @@
     page-break-before: always;
   }
 
+  /* Formats links. */
+  .page a,
+  .prose a {
+    color: #9e4c43 !important;
+  }
+
+  /* Hides buttons. */
+  .page button,
+  .prose button {
+    display: none;
+  }
+
   /* Keeps elements on the same page in print format. */
   .section {
     break-inside: avoid;
@@ -20,20 +32,10 @@
     display: none;
   }
 
-  /* GLOBAL STYLES */
-  /* Formats links. */
-  a {
-    color: #9e4c43 !important;
-  }
-
-  /* Hides buttons. */
-  button {
-    display: none;
-  }
-
   /* INPUT/TEXTBOX STYLES */
   /* Replaces input/textboxes with a solid bottom line. */
-  input {
+  .page input,
+  .prose input {
     border: none;
     border-bottom: 1px solid black;
   }
@@ -67,7 +69,8 @@
     gap: 50px;
   }
 
-  textarea {
+  .page textarea,
+  .prose textarea {
     resize: none;
   }
 
