@@ -5,26 +5,19 @@
     display: block !important;
   }
 
-  /* A page break will always show on elements with this class. */
-  .page {
-    page-break-before: always;
+  /* Keeps elements on the same page. */
+  .section {
+    break-inside: avoid;
   }
 
   /* Formats links. */
-  .page a,
-  .prose a {
+  .section a {
     color: #9e4c43 !important;
   }
 
   /* Hides buttons. */
-  .page button,
-  .prose button {
+  .section button {
     display: none;
-  }
-
-  /* Keeps elements on the same page in print format. */
-  .section {
-    break-inside: avoid;
   }
 
   /* Removes line-breaking whitespace to give some content full-width of the page if needed.*/
@@ -34,8 +27,7 @@
 
   /* INPUT/TEXTBOX STYLES */
   /* Replaces input/textboxes with a solid bottom line. */
-  .page input,
-  .prose input {
+  .section input {
     border: none;
     border-bottom: 1px solid black;
   }
@@ -69,8 +61,7 @@
     gap: 50px;
   }
 
-  .page textarea,
-  .prose textarea {
+  .section textarea {
     resize: none;
   }
 
