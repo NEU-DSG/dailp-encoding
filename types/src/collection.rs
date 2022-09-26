@@ -1,4 +1,3 @@
-use sqlx::postgres::{PgHasArrayType, PgTypeInfo};
 use uuid::Uuid;
 
 #[derive(Debug, Clone)]
@@ -29,7 +28,7 @@ pub struct Chapter {
     pub section: CollectionSection,
 }
 
-#[derive(Debug, Clone, PartialEq, sqlx::Type)]
+#[derive(async_graphql::Enum, Copy, Eq, Debug, Clone, PartialEq, sqlx::Type)]
 #[sqlx(type_name = "collection_section")]
 pub enum CollectionSection {
     Intro,
