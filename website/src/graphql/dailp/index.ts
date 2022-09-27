@@ -209,6 +209,29 @@ export enum CherokeeOrthography {
   Taoc = "TAOC",
 }
 
+export type CollectionChapter = {
+  readonly __typename?: "CollectionChapter"
+  /** Name of this chapter. */
+  readonly chapterName: Scalars["String"]
+  /** Document id of this chapter if it contains a document. */
+  readonly documentId: Maybe<Scalars["UUID"]>
+  /** Chapter's id. */
+  readonly id: Maybe<Scalars["UUID"]>
+  /** Index of this chapter within its parent collection. */
+  readonly indexInParent: Scalars["Int"]
+  /** A section within this chapter. */
+  readonly section: CollectionSection
+  /** Chapter's url as a string. */
+  readonly urlSlug: Scalars["String"]
+  /** Wordpress id of this chapter if it contains a Wordpress page. */
+  readonly wordpressId: Maybe<Scalars["Int"]>
+}
+
+export enum CollectionSection {
+  Body = "BODY",
+  Intro = "INTRO",
+}
+
 /**
  * A block of content, which may be one of several types.
  * Each page contains several blocks.
@@ -525,6 +548,7 @@ export type Query = {
   readonly allPages: ReadonlyArray<Page>
   /** List of all the functional morpheme tags available */
   readonly allTags: ReadonlyArray<MorphemeTag>
+  readonly chapter: CollectionChapter
   readonly collection: DocumentCollection
   /** Retrieves a full document from its unique name. */
   readonly document: Maybe<AnnotatedDoc>
@@ -564,6 +588,11 @@ export type Query = {
 
 export type QueryAllTagsArgs = {
   system: CherokeeOrthography
+}
+
+export type QueryChapterArgs = {
+  chapterSlug: Scalars["String"]
+  collectionSlug: Scalars["String"]
 }
 
 export type QueryCollectionArgs = {

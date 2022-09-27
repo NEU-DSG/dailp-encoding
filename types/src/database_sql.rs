@@ -1044,6 +1044,34 @@ impl Database {
             title: collection.title,
         })
     }
+
+    pub async fn chapter(
+        &self,
+        collection_slug: String,
+        chapter_slug: String,
+    ) -> Result<CollectionChapter> {
+        let chapter = query_file!(
+            "queries/chapter_contents.sql",
+            collection_slug,
+            chapter_slug
+        )
+        .fetch_one(&self.client)
+        .await?;
+
+        Ok(CollectionChapter {
+            id: Some(chapter.id),
+            url_slug: chapter.chapter_path.to_string(),
+            index_in_parent: chapter.index_in_parent,
+            chapter_name: chapter.title,
+            document_id: chapter.document_id,
+            wordpress_id: chapter.wordpress_id,
+            section: if chapter.section == Some("Intro".to_string()) {
+                CollectionSection::Intro
+            } else {
+                CollectionSection::Body
+            },
+        })
+    }
 }
 
 #[async_trait]

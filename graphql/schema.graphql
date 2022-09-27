@@ -207,6 +207,10 @@ enum CherokeeOrthography {
 	LEARNER
 }
 
+type CollectionChapter {
+	document: AnnotatedDoc
+}
+
 """
 A block of content, which may be one of several types.
 Each page contains several blocks.
@@ -593,6 +597,7 @@ type Query {
 	Retrieves a full document from its unique identifier.
 	"""
 	page(id: String!): Page
+	chapter(collectionSlug: String!, chapterSlug: String!): CollectionChapter!
 	"""
 	Lists all forms containing a morpheme with the given gloss.
 	Groups these words by the phonemic shape of the target morpheme.
