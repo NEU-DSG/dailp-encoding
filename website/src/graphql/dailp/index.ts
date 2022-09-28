@@ -350,7 +350,6 @@ export enum DocumentType {
 }
 
 /**
- * NEW FILE ///
  * Structure to represent an edited collection. Missing certain fields and chapters in it.
  * Used for sending data to the front end
  */
