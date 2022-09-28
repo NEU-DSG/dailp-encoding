@@ -5,8 +5,8 @@
 use crate::audio::AudioRes;
 use crate::translations::DocResult;
 use anyhow::Result;
-use dailp::collection::Chapter;
-use dailp::collection::Collection;
+use dailp::collection::raw::CollectionChapter;
+use dailp::collection::raw::EditedCollection;
 use dailp::collection::CollectionSection;
 use dailp::collection::CollectionSection::Body;
 use dailp::collection::CollectionSection::Intro;

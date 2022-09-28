@@ -19,14 +19,14 @@ pub struct Query;
 #[async_graphql::Object]
 impl Query {
     // query for 1 collection based on slug, and make a collection object with all the stuff in it.
-    async fn get_edited_collection(
+    async fn edited_collection(
         &self,
         context: &Context<'_>,
         slug: String,
-    ) -> FieldResult<Option<Vec<EditedCollection>>> {
+    ) -> FieldResult<Option<EditedCollection>> {
         Ok(context
             .data::<DataLoader<Database>>()?
-            .load_one(dailp::CollectionObject(slug))
+            .load_one(dailp::EditedCollectionDetails(slug))
             .await?)
     }
 

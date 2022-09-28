@@ -196,21 +196,6 @@ export type AudioSlice = {
   readonly startTime: Maybe<Scalars["Int"]>
 }
 
-/** Structure to represent a single chapter. Used to send data to the front end. */
-export type ChapterSingle = {
-  readonly __typename?: "ChapterSingle"
-  /** UUID for the chapter */
-  readonly id: Scalars["UUID"]
-  /** Order within the parent chapter or collection */
-  readonly indexInParent: Scalars["Int"]
-  /** Whether the chapter is an "Intro" or "Body" chapter */
-  readonly section: CollectionSection
-  /** Full title of the chapter */
-  readonly title: Scalars["String"]
-  /** ID of WordPress page with text of the chapter */
-  readonly wordpressId: Maybe<Scalars["Int"]>
-}
-
 /**
  * One representation of Cherokee phonology.
  * There are several different writing systems for Cherokee phonology and we
@@ -222,6 +207,21 @@ export enum CherokeeOrthography {
   Crg = "CRG",
   Learner = "LEARNER",
   Taoc = "TAOC",
+}
+
+/** Structure to represent a single chapter. Used to send data to the front end. */
+export type CollectionChapter = {
+  readonly __typename?: "CollectionChapter"
+  /** UUID for the chapter */
+  readonly id: Scalars["UUID"]
+  /** Order within the parent chapter or collection */
+  readonly indexInParent: Scalars["Int"]
+  /** Whether the chapter is an "Intro" or "Body" chapter */
+  readonly section: CollectionSection
+  /** Full title of the chapter */
+  readonly title: Scalars["String"]
+  /** ID of WordPress page with text of the chapter */
+  readonly wordpressId: Maybe<Scalars["Int"]>
 }
 
 /** Enum to represent the sections in an edited collection */
@@ -350,12 +350,13 @@ export enum DocumentType {
 }
 
 /**
+ * NEW FILE ///
  * Structure to represent an edited collection. Missing certain fields and chapters in it.
  * Used for sending data to the front end
  */
 export type EditedCollection = {
   readonly __typename?: "EditedCollection"
-  readonly allChapters: Maybe<ReadonlyArray<ChapterSingle>>
+  readonly chapters: Maybe<ReadonlyArray<CollectionChapter>>
   /** UUID for the collection */
   readonly id: Scalars["UUID"]
   /** URL slug for the collection, like "cwkw" */
@@ -566,7 +567,7 @@ export type Query = {
   readonly collection: DocumentCollection
   /** Retrieves a full document from its unique name. */
   readonly document: Maybe<AnnotatedDoc>
-  readonly getEditedCollection: Maybe<ReadonlyArray<EditedCollection>>
+  readonly editedCollection: Maybe<EditedCollection>
   /**
    * Retrieve information for the morpheme that corresponds to the given tag
    * string. For example, "3PL.B" is the standard string referring to a 3rd
@@ -613,7 +614,7 @@ export type QueryDocumentArgs = {
   slug: Scalars["String"]
 }
 
-export type QueryGetEditedCollectionArgs = {
+export type QueryEditedCollectionArgs = {
   slug: Scalars["String"]
 }
 
