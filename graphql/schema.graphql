@@ -195,9 +195,22 @@ type AudioSlice {
 
 
 """
+One representation of Cherokee phonology.
+There are several different writing systems for Cherokee phonology and we
+want to convert between them.
+This type enumerates all of the systems that we support and provides
+conversion from our internal orthography into any of these.
+"""
+enum CherokeeOrthography {
+	TAOC
+	CRG
+	LEARNER
+}
+
+"""
 Structure to represent a single chapter. Used to send data to the front end.
 """
-type ChapterSingle {
+type CollectionChapter {
 	"""
 	UUID for the chapter
 	"""
@@ -218,19 +231,6 @@ type ChapterSingle {
 	Whether the chapter is an "Intro" or "Body" chapter
 	"""
 	section: CollectionSection!
-}
-
-"""
-One representation of Cherokee phonology.
-There are several different writing systems for Cherokee phonology and we
-want to convert between them.
-This type enumerates all of the systems that we support and provides
-conversion from our internal orthography into any of these.
-"""
-enum CherokeeOrthography {
-	TAOC
-	CRG
-	LEARNER
 }
 
 """
@@ -390,6 +390,7 @@ enum DocumentType {
 }
 
 """
+NEW FILE ///
 Structure to represent an edited collection. Missing certain fields and chapters in it.
 Used for sending data to the front end
 """
@@ -410,7 +411,7 @@ type EditedCollection {
 	URL slug for the collection, like "cwkw"
 	"""
 	slug: String!
-	allChapters: [ChapterSingle!]
+	chapters: [CollectionChapter!]
 }
 
 
@@ -626,7 +627,7 @@ type PositionInDocument {
 }
 
 type Query {
-	getEditedCollection(slug: String!): [EditedCollection!]
+	editedCollection(slug: String!): EditedCollection
 	"""
 	List of all the functional morpheme tags available
 	"""

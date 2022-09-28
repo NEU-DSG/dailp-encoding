@@ -5,8 +5,8 @@ use sqlx::postgres::types::PgLTree;
 use std::ops::Bound;
 use std::str::FromStr;
 
-use crate::edited_collection::ChapterSingle;
-use crate::edited_collection::EditedCollection;
+use crate::collection::CollectionChapter;
+use crate::collection::EditedCollection;
 use {
     crate::*,
     anyhow::Result,
@@ -236,7 +236,7 @@ impl Database {
         }))
     }
 
-    pub async fn upsert_collection(&self, collection: &Collection) -> Result<String> {
+    pub async fn upsert_collection(&self, collection: &raw::EditedCollection) -> Result<String> {
         query_file!(
             "queries/upsert_collection.sql",
             collection.slug,
@@ -250,7 +250,7 @@ impl Database {
 
     pub async fn insert_all_chapters(
         &self,
-        chapters: Vec<Chapter>,
+        chapters: Vec<raw::CollectionChapter>,
         slug: String,
     ) -> Result<String> {
         let mut tx = self.client.begin().await?;
@@ -1560,16 +1560,16 @@ impl From<BasicWord> for AnnotatedForm {
 
 // Loader to get each chapter id from the database regardless if it's a subchapter or not.
 #[async_trait]
-impl Loader<CollectionChapter> for Database {
-    type Value = Vec<ChapterSingle>;
+impl Loader<ChaptersInCollection> for Database {
+    type Value = Vec<CollectionChapter>;
     type Error = Arc<sqlx::Error>;
 
     // string slug can look like "cwkw".chapter1.doc1 But assume user only passes "cwkw"
 
     async fn load(
         &self,
-        keys: &[CollectionChapter],
-    ) -> Result<HashMap<CollectionChapter, Self::Value>, Self::Error> {
+        keys: &[ChaptersInCollection],
+    ) -> Result<HashMap<ChaptersInCollection, Self::Value>, Self::Error> {
         let keys: Vec<_> = keys.iter().map(|k| k.0.clone()).collect();
         let items = query_file!("queries/collection_chapters.sql", &keys)
             .fetch_all(&self.client)
@@ -1578,17 +1578,13 @@ impl Loader<CollectionChapter> for Database {
             .into_iter()
             .map(|chapter| {
                 (
-                    CollectionChapter(chapter.collection_slug),
-                    ChapterSingle {
+                    ChaptersInCollection(chapter.collection_slug),
+                    CollectionChapter {
                         id: chapter.id,
                         title: chapter.title,
                         wordpress_id: chapter.wordpress_id,
                         index_in_parent: chapter.index_in_parent,
-                        section: if chapter.section == Some("Intro".to_string()) {
-                            CollectionSection::Intro
-                        } else {
-                            CollectionSection::Body
-                        },
+                        section: chapter.section,
                     },
                 )
             })
@@ -1597,14 +1593,14 @@ impl Loader<CollectionChapter> for Database {
 }
 
 #[async_trait]
-impl Loader<CollectionObject> for Database {
-    type Value = Vec<EditedCollection>;
+impl Loader<EditedCollectionDetails> for Database {
+    type Value = EditedCollection;
     type Error = Arc<sqlx::Error>;
 
     async fn load(
         &self,
-        keys: &[CollectionObject],
-    ) -> Result<HashMap<CollectionObject, Self::Value>, Self::Error> {
+        keys: &[EditedCollectionDetails],
+    ) -> Result<HashMap<EditedCollectionDetails, Self::Value>, Self::Error> {
         let keys: Vec<_> = keys.iter().map(|k| k.0.clone()).collect();
         let items = query_file!("queries/collection_attributes.sql", &keys)
             .fetch_all(&self.client)
@@ -1613,7 +1609,7 @@ impl Loader<CollectionObject> for Database {
             .into_iter()
             .map(|collection| {
                 (
-                    CollectionObject(collection.slug.clone()),
+                    EditedCollectionDetails(collection.slug.clone()),
                     EditedCollection {
                         id: collection.id,
                         title: collection.title,
@@ -1622,7 +1618,7 @@ impl Loader<CollectionObject> for Database {
                     },
                 )
             })
-            .into_group_map())
+            .collect())
     }
 }
 
@@ -1648,10 +1644,10 @@ pub struct TagForMorpheme(pub Uuid, pub CherokeeOrthography);
 pub struct PageId(pub String);
 
 #[derive(Clone, Eq, PartialEq, Hash)]
-pub struct CollectionChapter(pub String);
+pub struct ChaptersInCollection(pub String);
 
 #[derive(Clone, Eq, PartialEq, Hash)]
-pub struct CollectionObject(pub String);
+pub struct EditedCollectionDetails(pub String);
 
 /// One particular morpheme and all the known words that contain that exact morpheme.
 #[derive(async_graphql::SimpleObject)]

@@ -1,7 +1,7 @@
 use crate::spreadsheets::SheetResult;
 use anyhow::Result;
-use dailp::collection::Chapter;
-use dailp::collection::Collection;
+use dailp::collection::raw::CollectionChapter;
+use dailp::collection::raw::EditedCollection;
 use dailp::Database;
 
 pub async fn migrate_edited_collection(db: &Database) -> anyhow::Result<()> {
