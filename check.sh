@@ -4,7 +4,7 @@ cd $PROJECT_ROOT
 
 echo "--- DATABASE ---"
 echo "Checking if SQL types are up to date..."
-if $(cd types && cargo sqlx prepare --check &>/dev/null); then
+if $(cd types && cargo sqlx prepare --check -- -p dailp &>/dev/null); then
     echo "Generating SQL types..."
     cargo sqlx prepare -- -p dailp || exit 1
 fi
