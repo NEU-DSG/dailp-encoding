@@ -15,7 +15,7 @@ import { annotationSection } from "src/segment.css"
 import { mediaQueries } from "src/style/constants"
 import { wordpressUrl } from "src/theme.css"
 import { BasicMorphemeSegment, LevelOfDetail } from "src/types"
-import * as css from "./print.css"
+import * as wpCss from "./print-lesson.css"
 
 interface Props {
   slug: string
@@ -83,7 +83,7 @@ const parseOptions: HTMLReactParserOptions = {
         return <Link {...props}>{domToReact(node.children, parseOptions)}</Link>
       } else if (node.attribs["class"]?.includes("print-lesson")) {
         return (
-          <div className={css.wp}>
+          <div className={wpCss.wp}>
             {domToReact(node.children, parseOptions)}
           </div>
         )
