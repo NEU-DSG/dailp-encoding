@@ -1,5 +1,4 @@
 import Link from "src/components/link"
-import { MediaItemStatusEnum } from "src/graphql/wordpress"
 import { listItem, numberedOrderedList, orderedList } from "./toc.css"
 
 type TOCData = {
@@ -87,8 +86,8 @@ const data: TOCData[] = [
   data10,
 ]
 
-const tox1 = () => {
+const Tox1 = () => {
   return <TOC introChapters={data} bodyChapters={data}></TOC>
 }
 
-export default tox1
+export default Tox1
