@@ -236,10 +236,7 @@ impl Database {
         }))
     }
 
-    pub async fn upsert_collection(
-        &self,
-        collection: &raw::raw::EditedCollection,
-    ) -> Result<String> {
+    pub async fn upsert_collection(&self, collection: &raw::EditedCollection) -> Result<String> {
         query_file!(
             "queries/upsert_collection.sql",
             collection.slug,
@@ -253,7 +250,7 @@ impl Database {
 
     pub async fn insert_all_chapters(
         &self,
-        chapters: Vec<raw::raw::CollectionChapter>,
+        chapters: Vec<raw::CollectionChapter>,
         slug: String,
     ) -> Result<String> {
         let mut tx = self.client.begin().await?;
