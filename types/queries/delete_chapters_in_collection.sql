@@ -1,2 +1,2 @@
 delete from collection_chapter
-where chapter_path ~ $1;
+where collection_slug = $1;

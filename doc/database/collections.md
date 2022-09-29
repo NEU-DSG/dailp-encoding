@@ -23,7 +23,9 @@ A chapter within a collection which has an optional document associated with it,
 | `wordpress_id`    | `bigint?`            | ID of WordPress page with text of the chapter                                                                                                                                                                               |
 | `index_in_parent` | `bigint`             | Order within the parent chapter or collection                                                                                                                                                                               |
 | `chapter_path`    | `ltree`              | Hierarchical path which defines which collection this belongs to and what its parent chapters are, using their URL slugs. First segment is the collection slug, last segment is this chapter's slug. Ex: `cwkw.letters.dd5` |
-| `section`         | `collection_section` | Which section of the collection this chapter lives in. Ex: `Intro` or `Body`                                                                                                                                                                                                                            |
+| `slug`            | `text`               | Slug for this chapter, unique within the collection. Generated from `chapter_path`.                                                                                                                                         |
+| `collection_slug` | `text`               | Slug of the collection this chapter lives in. Generated from `chapter_path`.                                                                                                                                                                                                                            |
+| `section`         | `collection_section` | Which section of the collection this chapter lives in. Ex: `Intro` or `Body`                                                                                                                                                |
 
 ## `collection_chapter_attribution`
 
