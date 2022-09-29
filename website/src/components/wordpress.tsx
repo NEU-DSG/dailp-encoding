@@ -6,14 +6,16 @@ import parse, {
 import React, { useState } from "react"
 import { useDialogState } from "reakit/Dialog"
 import { Button, Link } from "src/components"
+import { useMediaQuery } from "src/custom-hooks"
 import * as Dailp from "src/graphql/dailp"
 import * as Wordpress from "src/graphql/wordpress"
 import { usePreferences } from "src/preferences-context"
 import { AnnotatedForm } from "src/segment"
 import { annotationSection } from "src/segment.css"
+import { mediaQueries } from "src/style/constants"
 import { wordpressUrl } from "src/theme.css"
 import { BasicMorphemeSegment, LevelOfDetail } from "src/types"
-import "./print.css"
+import * as css from "./print.css"
 
 interface Props {
   slug: string
@@ -79,6 +81,12 @@ const parseOptions: HTMLReactParserOptions = {
           props["href"] = props["href"].slice(wordpressUrl.length)
         }
         return <Link {...props}>{domToReact(node.children, parseOptions)}</Link>
+      } else if (node.attribs["class"]?.includes("print-lesson")) {
+        return (
+          <div className={css.wp}>
+            {domToReact(node.children, parseOptions)}
+          </div>
+        )
       } else if (node.name === "button") {
         return (
           <Button {...attributesToProps(node.attribs)}>

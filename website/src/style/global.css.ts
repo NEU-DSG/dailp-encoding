@@ -123,6 +123,11 @@ globalStyle(`button, input[type="radio"]`, {
   cursor: "pointer",
   fontFamily: "inherit",
   fontSize: "inherit",
+  "@media": {
+    [mediaQueries.print]: {
+      display: "none",
+    },
+  },
 })
 
 globalStyle("table", {
@@ -145,8 +150,23 @@ globalStyle("dd", {
 
 globalStyle("textarea", {
   maxWidth: "100%",
+  "@media": {
+    [mediaQueries.print]: {
+      resize: "none",
+      border: `${thickness.thin} solid ${colors.text}`,
+    },
+  },
 })
 
 globalStyle("img", {
   maxWidth: "initial",
+})
+
+globalStyle("input", {
+  "@media": {
+    [mediaQueries.print]: {
+      border: "none",
+      borderBottom: `${thickness.thin} solid ${colors.text}`,
+    },
+  },
 })
