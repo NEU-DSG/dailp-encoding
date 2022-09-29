@@ -26,11 +26,7 @@ const ParagraphPanel = (p: {
       </IconButton>
 
       <header className={css.wordPanelHeader}>
-        <h1 className={css.noSpaceBelow}>
-          Selected
-          <br />
-          Paragraph
-        </h1>
+        <h1 className={css.noSpaceBelow}>{`Paragraph ${p.segment.index}`}</h1>
       </header>
 
       <CollapsiblePanel

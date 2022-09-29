@@ -78,7 +78,7 @@ export const PanelLayout = (p: {
               <MdClose size={32} />
             </IconButton>
             <header className={css.wordPanelHeader}>
-              <h1 className={css.noSpaceBelow}>Selected Word</h1>
+              <h1 className={css.noSpaceBelow}>{`Word ${p.segment.index}`}</h1>
               <h2 className={css.cherHeader}>{p.segment.source}</h2>
             </header>
           </>
