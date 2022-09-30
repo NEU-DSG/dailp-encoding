@@ -4,6 +4,9 @@ use sqlx::postgres::types::PgLQuery;
 use sqlx::postgres::types::PgLTree;
 use std::ops::Bound;
 use std::str::FromStr;
+
+use crate::collection::CollectionChapter;
+use crate::collection::EditedCollection;
 use {
     crate::*,
     anyhow::Result,
@@ -233,7 +236,7 @@ impl Database {
         }))
     }
 
-    pub async fn upsert_collection(&self, collection: &Collection) -> Result<String> {
+    pub async fn upsert_collection(&self, collection: &raw::EditedCollection) -> Result<String> {
         query_file!(
             "queries/upsert_collection.sql",
             collection.slug,
@@ -247,7 +250,7 @@ impl Database {
 
     pub async fn insert_all_chapters(
         &self,
-        chapters: Vec<Chapter>,
+        chapters: Vec<raw::CollectionChapter>,
         slug: String,
     ) -> Result<String> {
         let mut tx = self.client.begin().await?;
@@ -1058,17 +1061,17 @@ impl Database {
         .await?;
 
         Ok(CollectionChapter {
-            id: Some(chapter.id),
-            url_slug: chapter.chapter_path.to_string(),
+            id: chapter.id,
+            path: chapter
+                .chapter_path
+                .into_iter()
+                .map(|s| (*s).into())
+                .collect(),
             index_in_parent: chapter.index_in_parent,
-            chapter_name: chapter.title,
-            document_id: chapter.document_id,
+            title: chapter.title,
+            document_id: chapter.document_id.map(|id| DocumentId(id)),
             wordpress_id: chapter.wordpress_id,
-            section: if chapter.section == Some("Intro".to_string()) {
-                CollectionSection::Intro
-            } else {
-                CollectionSection::Body
-            },
+            section: chapter.section,
         })
     }
 }
@@ -1582,6 +1585,76 @@ impl From<BasicWord> for AnnotatedForm {
     }
 }
 
+// Loader to get each chapter id from the database regardless if it's a subchapter or not.
+#[async_trait]
+impl Loader<ChaptersInCollection> for Database {
+    type Value = Vec<CollectionChapter>;
+    type Error = Arc<sqlx::Error>;
+
+    // string slug can look like "cwkw".chapter1.doc1 But assume user only passes "cwkw"
+
+    async fn load(
+        &self,
+        keys: &[ChaptersInCollection],
+    ) -> Result<HashMap<ChaptersInCollection, Self::Value>, Self::Error> {
+        let keys: Vec<_> = keys.iter().map(|k| k.0.clone()).collect();
+        let items = query_file!("queries/collection_chapters.sql", &keys)
+            .fetch_all(&self.client)
+            .await?;
+        Ok(items
+            .into_iter()
+            .map(|chapter| {
+                (
+                    ChaptersInCollection(chapter.collection_slug),
+                    CollectionChapter {
+                        id: chapter.id,
+                        title: chapter.title,
+                        document_id: chapter.document_id.map(|id| DocumentId(id)),
+                        wordpress_id: chapter.wordpress_id,
+                        index_in_parent: chapter.index_in_parent,
+                        section: chapter.section,
+                        path: chapter
+                            .chapter_path
+                            .into_iter()
+                            .map(|s| (*s).into())
+                            .collect(),
+                    },
+                )
+            })
+            .into_group_map())
+    }
+}
+
+#[async_trait]
+impl Loader<EditedCollectionDetails> for Database {
+    type Value = EditedCollection;
+    type Error = Arc<sqlx::Error>;
+
+    async fn load(
+        &self,
+        keys: &[EditedCollectionDetails],
+    ) -> Result<HashMap<EditedCollectionDetails, Self::Value>, Self::Error> {
+        let keys: Vec<_> = keys.iter().map(|k| k.0.clone()).collect();
+        let items = query_file!("queries/collection_attributes.sql", &keys)
+            .fetch_all(&self.client)
+            .await?;
+        Ok(items
+            .into_iter()
+            .map(|collection| {
+                (
+                    EditedCollectionDetails(collection.slug.clone()),
+                    EditedCollection {
+                        id: collection.id,
+                        title: collection.title,
+                        wordpress_menu_id: collection.wordpress_menu_id,
+                        slug: collection.slug,
+                    },
+                )
+            })
+            .collect())
+    }
+}
+
 #[derive(Clone, Eq, PartialEq, Hash, Debug)]
 pub struct TagId(pub String, pub CherokeeOrthography);
 
@@ -1602,6 +1675,12 @@ pub struct TagForMorpheme(pub Uuid, pub CherokeeOrthography);
 
 #[derive(Clone, Eq, PartialEq, Hash)]
 pub struct PageId(pub String);
+
+#[derive(Clone, Eq, PartialEq, Hash)]
+pub struct ChaptersInCollection(pub String);
+
+#[derive(Clone, Eq, PartialEq, Hash)]
+pub struct EditedCollectionDetails(pub String);
 
 /// One particular morpheme and all the known words that contain that exact morpheme.
 #[derive(async_graphql::SimpleObject)]

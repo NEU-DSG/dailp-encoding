@@ -209,24 +209,24 @@ export enum CherokeeOrthography {
   Taoc = "TAOC",
 }
 
+/** Structure to represent a single chapter. Used to send data to the front end. */
 export type CollectionChapter = {
   readonly __typename?: "CollectionChapter"
-  /** Name of this chapter. */
-  readonly chapterName: Scalars["String"]
-  /** Document id of this chapter if it contains a document. */
-  readonly documentId: Maybe<Scalars["UUID"]>
-  /** Chapter's id. */
-  readonly id: Maybe<Scalars["UUID"]>
-  /** Index of this chapter within its parent collection. */
+  /** UUID for the chapter */
+  readonly id: Scalars["UUID"]
+  /** Order within the parent chapter or collection */
   readonly indexInParent: Scalars["Int"]
-  /** A section within this chapter. */
+  /** Full path of the chapter */
+  readonly path: ReadonlyArray<Scalars["String"]>
+  /** Whether the chapter is an "Intro" or "Body" chapter */
   readonly section: CollectionSection
-  /** Chapter's url as a string. */
-  readonly urlSlug: Scalars["String"]
-  /** Wordpress id of this chapter if it contains a Wordpress page. */
+  /** Full title of the chapter */
+  readonly title: Scalars["String"]
+  /** ID of WordPress page with text of the chapter */
   readonly wordpressId: Maybe<Scalars["Int"]>
 }
 
+/** Enum to represent the sections in an edited collection */
 export enum CollectionSection {
   Body = "BODY",
   Intro = "INTRO",
@@ -349,6 +349,23 @@ export type DocumentReference = {
 export enum DocumentType {
   Corpus = "CORPUS",
   Reference = "REFERENCE",
+}
+
+/**
+ * Structure to represent an edited collection. Missing certain fields and chapters in it.
+ * Used for sending data to the front end
+ */
+export type EditedCollection = {
+  readonly __typename?: "EditedCollection"
+  readonly chapters: Maybe<ReadonlyArray<CollectionChapter>>
+  /** UUID for the collection */
+  readonly id: Scalars["UUID"]
+  /** URL slug for the collection, like "cwkw" */
+  readonly slug: Scalars["String"]
+  /** Full title of the collection */
+  readonly title: Scalars["String"]
+  /** ID of WordPress menu for navigating the collection */
+  readonly wordpressMenuId: Maybe<Scalars["Int"]>
 }
 
 export type FormsInTime = {
@@ -548,10 +565,10 @@ export type Query = {
   readonly allPages: ReadonlyArray<Page>
   /** List of all the functional morpheme tags available */
   readonly allTags: ReadonlyArray<MorphemeTag>
-  readonly chapter: CollectionChapter
   readonly collection: DocumentCollection
   /** Retrieves a full document from its unique name. */
   readonly document: Maybe<AnnotatedDoc>
+  readonly editedCollection: Maybe<EditedCollection>
   /**
    * Retrieve information for the morpheme that corresponds to the given tag
    * string. For example, "3PL.B" is the standard string referring to a 3rd
@@ -590,16 +607,15 @@ export type QueryAllTagsArgs = {
   system: CherokeeOrthography
 }
 
-export type QueryChapterArgs = {
-  chapterSlug: Scalars["String"]
-  collectionSlug: Scalars["String"]
-}
-
 export type QueryCollectionArgs = {
   slug: Scalars["String"]
 }
 
 export type QueryDocumentArgs = {
+  slug: Scalars["String"]
+}
+
+export type QueryEditedCollectionArgs = {
   slug: Scalars["String"]
 }
 
