@@ -207,10 +207,6 @@ enum CherokeeOrthography {
 	LEARNER
 }
 
-type CollectionChapter {
-	document: AnnotatedDoc
-}
-
 """
 Structure to represent a single chapter. Used to send data to the front end.
 """
@@ -235,6 +231,10 @@ type CollectionChapter {
 	Whether the chapter is an "Intro" or "Body" chapter
 	"""
 	section: CollectionSection!
+	"""
+	Full path of the chapter
+	"""
+	path: [String!]!
 }
 
 """
@@ -656,7 +656,6 @@ type Query {
 	Retrieves a full document from its unique identifier.
 	"""
 	page(id: String!): Page
-	chapter(collectionSlug: String!, chapterSlug: String!): CollectionChapter!
 	"""
 	Lists all forms containing a morpheme with the given gloss.
 	Groups these words by the phonemic shape of the target morpheme.

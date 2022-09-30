@@ -212,11 +212,12 @@ export enum CherokeeOrthography {
 /** Structure to represent a single chapter. Used to send data to the front end. */
 export type CollectionChapter = {
   readonly __typename?: "CollectionChapter"
-  readonly document: Maybe<AnnotatedDoc>
   /** UUID for the chapter */
   readonly id: Scalars["UUID"]
   /** Order within the parent chapter or collection */
   readonly indexInParent: Scalars["Int"]
+  /** Full path of the chapter */
+  readonly path: ReadonlyArray<Scalars["String"]>
   /** Whether the chapter is an "Intro" or "Body" chapter */
   readonly section: CollectionSection
   /** Full title of the chapter */
@@ -564,7 +565,6 @@ export type Query = {
   readonly allPages: ReadonlyArray<Page>
   /** List of all the functional morpheme tags available */
   readonly allTags: ReadonlyArray<MorphemeTag>
-  readonly chapter: CollectionChapter
   readonly collection: DocumentCollection
   /** Retrieves a full document from its unique name. */
   readonly document: Maybe<AnnotatedDoc>
@@ -605,11 +605,6 @@ export type Query = {
 
 export type QueryAllTagsArgs = {
   system: CherokeeOrthography
-}
-
-export type QueryChapterArgs = {
-  chapterSlug: Scalars["String"]
-  collectionSlug: Scalars["String"]
 }
 
 export type QueryCollectionArgs = {
