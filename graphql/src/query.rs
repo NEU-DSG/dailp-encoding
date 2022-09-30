@@ -1,13 +1,13 @@
 //! This piece of the project exposes a GraphQL endpoint that allows one to access DAILP data in a federated manner with specific queries.
 
-use dailp::Uuid;
+use dailp::{CollectionChapter, Uuid};
 use itertools::Itertools;
 
 use {
     dailp::async_graphql::{self, dataloader::DataLoader, Context, FieldResult, Guard},
     dailp::{
-        AnnotatedDoc, AnnotatedFormUpdate, CherokeeOrthography, Database, MorphemeId,
-        MorphemeReference, MorphemeTag, WordsInDocument,
+        AnnotatedDoc, AnnotatedFormUpdate, CherokeeOrthography, Database, EditedCollection,
+        MorphemeId, MorphemeReference, MorphemeTag, WordsInDocument,
     },
     serde::{Deserialize, Serialize},
     serde_with::{rust::StringWithSeparator, CommaSeparator},
@@ -18,6 +18,18 @@ pub struct Query;
 
 #[async_graphql::Object]
 impl Query {
+    // query for 1 collection based on slug, and make a collection object with all the stuff in it.
+    async fn edited_collection(
+        &self,
+        context: &Context<'_>,
+        slug: String,
+    ) -> FieldResult<Option<EditedCollection>> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .load_one(dailp::EditedCollectionDetails(slug))
+            .await?)
+    }
+
     /// List of all the functional morpheme tags available
     async fn all_tags(
         &self,

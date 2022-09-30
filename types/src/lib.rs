@@ -33,6 +33,7 @@ mod lexical;
 mod morpheme;
 pub mod page;
 mod person;
+pub mod raw;
 mod tag;
 mod translation;
 
