@@ -117,6 +117,11 @@ globalStyle("label", {
 globalStyle("hr", {
   width: "40%",
   margin: "auto",
+  "@media": {
+    [mediaQueries.print]: {
+      display: "none",
+    },
+  },
 })
 
 globalStyle(`button, input[type="radio"]`, {

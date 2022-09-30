@@ -10,12 +10,13 @@ import { useMediaQuery } from "src/custom-hooks"
 import * as Dailp from "src/graphql/dailp"
 import * as Wordpress from "src/graphql/wordpress"
 import { usePreferences } from "src/preferences-context"
+import { useLocation, useRouteParams } from "src/renderer/PageShell"
 import { AnnotatedForm } from "src/segment"
 import { annotationSection } from "src/segment.css"
 import { mediaQueries } from "src/style/constants"
 import { wordpressUrl } from "src/theme.css"
 import { BasicMorphemeSegment, LevelOfDetail } from "src/types"
-import * as wpCss from "./print-lesson.css"
+import * as printLessonCSS from "./print-lesson.css"
 
 interface Props {
   slug: string
@@ -47,8 +48,22 @@ export const WordpressPageContents = ({
 }: {
   content: string | null
 }) => {
+  const { "*": slug } = useRouteParams()
+
+  let parsed
+
   if (content) {
-    const parsed = parse(content, parseOptions)
+    // If the slug includes "lessons/", include a parent element that styles its children's elements for printed media.
+    if (slug?.includes("lessons/")) {
+      parsed = (
+        <div className={printLessonCSS.lesson}>
+          {parse(content, parseOptions)}
+        </div>
+      )
+    } else {
+      parsed = parse(content, parseOptions)
+    }
+
     return <>{parsed}</>
   } else {
     return null
@@ -81,12 +96,6 @@ const parseOptions: HTMLReactParserOptions = {
           props["href"] = props["href"].slice(wordpressUrl.length)
         }
         return <Link {...props}>{domToReact(node.children, parseOptions)}</Link>
-      } else if (node.attribs["class"]?.includes("print-lesson")) {
-        return (
-          <div className={wpCss.wp}>
-            {domToReact(node.children, parseOptions)}
-          </div>
-        )
       } else if (node.name === "button") {
         return (
           <Button {...attributesToProps(node.attribs)}>
