@@ -5,11 +5,11 @@
 use crate::audio::AudioRes;
 use crate::translations::DocResult;
 use anyhow::Result;
-use dailp::collection::Chapter;
-use dailp::collection::Collection;
 use dailp::collection::CollectionSection;
 use dailp::collection::CollectionSection::Body;
 use dailp::collection::CollectionSection::Intro;
+use dailp::raw::CollectionChapter;
+use dailp::raw::EditedCollection;
 use dailp::{
     convert_udb, root_noun_surface_forms, root_verb_surface_forms, AnnotatedDoc, AnnotatedForm,
     AnnotatedSeg, AudioSlice, Contributor, Database, Date, DocumentId, DocumentMetadata,
@@ -136,7 +136,7 @@ impl SheetResult {
         self_title: &String,
         self_wordpress_menu_id: &i64,
         self_slug: &String,
-    ) -> Result<Collection> {
+    ) -> Result<dailp::raw::EditedCollection> {
         let mut collection_chapters = Vec::new();
         let mut row = self.values.into_iter();
         let first_value = row
@@ -178,7 +178,7 @@ impl SheetResult {
 
                 let intro_or_body = if is_intro { Intro } else { Body };
 
-                let new_chapter = Chapter {
+                let new_chapter = dailp::raw::CollectionChapter {
                     index_in_parent: index_i64,
                     url_slug: chapter_url_slug,
                     chapter_name: cur_chapter_name,
@@ -192,7 +192,7 @@ impl SheetResult {
             }
         }
 
-        Ok(Collection {
+        Ok(dailp::raw::EditedCollection {
             title: self_title.to_string(),
             wordpress_menu_id: Some(*self_wordpress_menu_id),
             slug: self_slug.to_string(),
