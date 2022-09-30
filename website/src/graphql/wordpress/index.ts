@@ -7239,10 +7239,10 @@ export enum TimezoneEnum {
   EuropeJersey = "EUROPE_JERSEY",
   /** Kaliningrad */
   EuropeKaliningrad = "EUROPE_KALININGRAD",
-  /** Kiev */
-  EuropeKiev = "EUROPE_KIEV",
   /** Kirov */
   EuropeKirov = "EUROPE_KIROV",
+  /** Kyiv */
+  EuropeKyiv = "EUROPE_KYIV",
   /** Lisbon */
   EuropeLisbon = "EUROPE_LISBON",
   /** Ljubljana */
