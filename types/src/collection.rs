@@ -1,8 +1,8 @@
-use std::option::Option;
 use uuid::Uuid;
 use {
     crate::async_graphql::{self, dataloader::DataLoader, Context, FieldResult},
     crate::Database,
+    crate::DocumentId,
 };
 
 /// Structure to represent an edited collection. Missing certain fields and chapters in it.
@@ -33,6 +33,11 @@ pub struct CollectionChapter {
     pub index_in_parent: i64,
     /// Whether the chapter is an "Intro" or "Body" chapter
     pub section: CollectionSection,
+    /// Document id
+    #[graphql(skip = true)]
+    pub document_id: Option<DocumentId>,
+    /// Full path of the chapter
+    pub path: Vec<String>,
 }
 
 /// Enum to represent the sections in an edited collection

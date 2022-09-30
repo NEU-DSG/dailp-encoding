@@ -1,9 +1,5 @@
 use std::option::Option;
 use uuid::Uuid;
-use {
-    crate::async_graphql::{self, dataloader::DataLoader, Context, FieldResult},
-    crate::Database,
-};
 
 /// Structure to represent an Edited Collection in its hierarchical form
 #[derive(Debug, Clone)]

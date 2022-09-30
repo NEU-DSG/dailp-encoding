@@ -1,5 +1,5 @@
 import { style } from "@vanilla-extract/css"
-import * as baseLayout from "../layout.css"
+import * as baseLayout from "../../layout.css"
 
 export const header = baseLayout.header
 
