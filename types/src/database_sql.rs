@@ -256,8 +256,7 @@ impl Database {
         let mut tx = self.client.begin().await?;
 
         // Delete previous chapter data stored for a particular collection before re-inserting
-        let collection_slug = PgLQuery::from_str(&(format!("{}.*", slug)))?;
-        query_file!("queries/delete_chapters_in_collection.sql", collection_slug,)
+        query_file!("queries/delete_chapters_in_collection.sql", &*slug)
             .execute(&mut tx)
             .await?;
 
@@ -1047,6 +1046,34 @@ impl Database {
             title: collection.title,
         })
     }
+
+    pub async fn chapter(
+        &self,
+        collection_slug: String,
+        chapter_slug: String,
+    ) -> Result<CollectionChapter> {
+        let chapter = query_file!(
+            "queries/chapter_contents.sql",
+            collection_slug,
+            chapter_slug
+        )
+        .fetch_one(&self.client)
+        .await?;
+
+        Ok(CollectionChapter {
+            id: chapter.id,
+            path: chapter
+                .chapter_path
+                .into_iter()
+                .map(|s| (*s).into())
+                .collect(),
+            index_in_parent: chapter.index_in_parent,
+            title: chapter.title,
+            document_id: chapter.document_id.map(|id| DocumentId(id)),
+            wordpress_id: chapter.wordpress_id,
+            section: chapter.section,
+        })
+    }
 }
 
 #[async_trait]
@@ -1582,9 +1609,15 @@ impl Loader<ChaptersInCollection> for Database {
                     CollectionChapter {
                         id: chapter.id,
                         title: chapter.title,
+                        document_id: chapter.document_id.map(|id| DocumentId(id)),
                         wordpress_id: chapter.wordpress_id,
                         index_in_parent: chapter.index_in_parent,
                         section: chapter.section,
+                        path: chapter
+                            .chapter_path
+                            .into_iter()
+                            .map(|s| (*s).into())
+                            .collect(),
                     },
                 )
             })
