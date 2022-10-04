@@ -18,7 +18,7 @@ jobs:
       AWS_SSH_KEY: ${{ secrets.AWS_SSH_KEY }}
       GIT_REPOSITORY_URL: https://github.com/neu-dsg/dailp-encoding
       OAUTH_TOKEN: ${{ secrets.OAUTH_TOKEN }}
-      RUST_LOG: warn
+      RUST_LOG: info
       TF_STAGE: dev
     steps:
       - name: Checkout code

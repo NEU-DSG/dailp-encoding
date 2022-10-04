@@ -14,7 +14,7 @@ import { AudioPlayer, IconButton } from "./components"
 import EditWordPanel, { EditButton } from "./edit-word-panel"
 import { content } from "./footer.css"
 import { useForm } from "./form-context"
-import { FormFieldsFragment } from "./graphql/dailp"
+import * as Dailp from "./graphql/dailp"
 import * as css from "./panel-layout.css"
 import ParagraphPanel from "./paragraph-panel"
 import { usePreferences } from "./preferences-context"
@@ -108,7 +108,7 @@ export const PanelLayout = (p: {
 /** Dispatches to the corresponding panel type to render a normal word panel or an editable word panel. */
 export const PanelContent = (p: {
   panel: PanelType
-  word: FormFieldsFragment
+  word: Dailp.FormFieldsFragment
 }) => {
   const PanelComponent =
     p.panel === PanelType.EditWordPanel ? EditWordPanel : WordPanel
@@ -236,7 +236,7 @@ export const CollapsiblePanel = (p: {
   )
 }
 
-export const AudioPanel = (p: { segment: FormFieldsFragment }) => {
+export const AudioPanel = (p: { segment: Dailp.FormFieldsFragment }) => {
   return (
     <>
       {p.segment.audioTrack && (

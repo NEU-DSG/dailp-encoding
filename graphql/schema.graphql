@@ -208,6 +208,44 @@ enum CherokeeOrthography {
 }
 
 """
+Structure to represent a single chapter. Used to send data to the front end.
+"""
+type CollectionChapter {
+	"""
+	UUID for the chapter
+	"""
+	id: UUID!
+	"""
+	Full title of the chapter
+	"""
+	title: String!
+	"""
+	ID of WordPress page with text of the chapter
+	"""
+	wordpressId: Int
+	"""
+	Order within the parent chapter or collection
+	"""
+	indexInParent: Int!
+	"""
+	Whether the chapter is an "Intro" or "Body" chapter
+	"""
+	section: CollectionSection!
+	"""
+	Full path of the chapter
+	"""
+	path: [String!]!
+}
+
+"""
+Enum to represent the sections in an edited collection
+"""
+enum CollectionSection {
+	INTRO
+	BODY
+}
+
+"""
 A block of content, which may be one of several types.
 Each page contains several blocks.
 
@@ -354,6 +392,30 @@ might be a letter, journal, or notice.
 enum DocumentType {
 	REFERENCE
 	CORPUS
+}
+
+"""
+Structure to represent an edited collection. Missing certain fields and chapters in it.
+Used for sending data to the front end
+"""
+type EditedCollection {
+	"""
+	UUID for the collection
+	"""
+	id: UUID!
+	"""
+	Full title of the collection
+	"""
+	title: String!
+	"""
+	ID of WordPress menu for navigating the collection
+	"""
+	wordpressMenuId: Int
+	"""
+	URL slug for the collection, like "cwkw"
+	"""
+	slug: String!
+	chapters: [CollectionChapter!]
 }
 
 
@@ -569,6 +631,7 @@ type PositionInDocument {
 }
 
 type Query {
+	editedCollection(slug: String!): EditedCollection
 	"""
 	List of all the functional morpheme tags available
 	"""
