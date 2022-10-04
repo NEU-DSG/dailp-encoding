@@ -453,6 +453,8 @@ export type MorphemeReference = {
 export type MorphemeSegmentUpdate = {
   /** Target language representation of this segment. */
   readonly gloss: Scalars["String"]
+  /** Index of this segment in a word. */
+  readonly index: Scalars["Int"]
   /** Source language representation of this segment. */
   readonly morpheme: Scalars["String"]
   /**

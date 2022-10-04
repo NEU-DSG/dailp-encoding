@@ -1,6 +1,14 @@
 import { style, styleVariants } from "@vanilla-extract/css"
 import { rgba } from "polished"
-import { fonts, hspace, mediaQueries, radii, vspace } from "src/style/constants"
+import {
+  fontSize,
+  fonts,
+  hspace,
+  mediaQueries,
+  radii,
+  rootFontSize,
+  vspace,
+} from "src/style/constants"
 import { closeButton } from "./morpheme.css"
 import { marginX, paddingX, paddingY } from "./style/utils"
 
@@ -163,7 +171,7 @@ export const globalGlossTag = style([
   paddingX(hspace.small),
   {
     fontFamily: fonts.header,
-    fontSize: "0.8rem",
+    fontSize: fontSize.tiny,
     backgroundColor: rgba("black", 0.15),
     borderRadius: radii.medium,
   },

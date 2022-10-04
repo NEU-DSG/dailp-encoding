@@ -89,5 +89,6 @@ export const buttonSize = {
 }
 
 export const fontSize = {
+  tiny: "0.8rem",
   small: "0.9rem",
 }
