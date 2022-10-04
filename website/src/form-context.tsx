@@ -48,7 +48,7 @@ export const FormProvider = (props: { children: ReactNode }) => {
         const updatedSegments: Array<Dailp.MorphemeSegmentUpdate> = values.word[
           "segments"
         ].map((segment) => ({
-          system: Dailp.CherokeeOrthography.Taoc,
+          system: cherokeeRepresentation,
           morpheme: segment.morpheme,
           gloss: segment.gloss,
           role: segment.role,

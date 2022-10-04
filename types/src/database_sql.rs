@@ -391,27 +391,26 @@ impl Database {
     }
 
     pub async fn update_word(&self, word: AnnotatedFormUpdate) -> Result<Uuid> {
+        let mut tx = self.client.begin().await?;
+
         let source = word.source.into_vec();
         let commentary = word.commentary.into_vec();
 
-        query_file!(
+        let document_id = query_file!(
             "queries/update_word.sql",
             word.id,
             &source as _,
             &commentary as _,
         )
-        .execute(&self.client)
-        .await?;
+        .fetch_one(&mut tx)
+        .await?
+        .document_id;
 
         // If word segmentation was not changed, then return early since SQL update queries need to be called.
         if word.segments.is_undefined() {
+            tx.commit().await?;
             return Ok(word.id);
         }
-
-        let document_id = query_file!("queries/word_by_id.sql", word.id)
-            .fetch_one(&self.client)
-            .await?
-            .document_id;
 
         let segments = word.segments.take().unwrap();
 
@@ -439,38 +438,43 @@ impl Database {
             })
             .multiunzip();
 
-        // First update any potentially new created local glosses.
-        query_file!(
-            "queries/upsert_local_morpheme_glosses.sql",
-            &*doc_id,
-            &*gloss
-        )
-        .execute(&self.client)
-        .await?;
-
-        // Then, convert the given glosses if they have an internal for to add to the database.
-        let internal_glosses: Vec<String> = query_file_scalar!(
+        // Convert the given glosses if they have an internal for to add to the database.
+        let internal_glosses = query_file_scalar!(
             "queries/find_internal_glosses.sql",
             &*gloss,
             match system_name {
                 Some(CherokeeOrthography::Taoc) => "TAOC",
-                _ => "TAOC",
+                _ =>
+                    return Err(anyhow::anyhow!(
+                        "Other Cherokee systems are currently not supported"
+                    )),
             }
         )
-        .fetch_all(&self.client)
+        .fetch_all(&mut tx)
+        .await?;
+
+        // Add any newly created local glosses into morpheme gloss table.
+        query_file!(
+            "queries/upsert_local_morpheme_glosses.sql",
+            &*doc_id,
+            &*internal_glosses as _,
+        )
+        .execute(&mut tx)
         .await?;
 
         query_file!(
             "queries/upsert_many_word_segments.sql",
             &*doc_id,
-            &*internal_glosses,
+            &*internal_glosses as _,
             &*word_id,
             &*index,
             &*morpheme,
             &*role as _
         )
-        .execute(&self.client)
+        .execute(&mut tx)
         .await?;
+
+        tx.commit().await?;
 
         Ok(word.id)
     }

@@ -40,18 +40,6 @@
     },
     "query": "select id\nfrom document\nwhere short_name = $1\n"
   },
-  "06b8461f89e4dc227c28b2fa754688c67ec2cdb8dfc3f82d34002bf24b886d3d": {
-    "describe": {
-      "columns": [],
-      "nullable": [],
-      "parameters": {
-        "Left": [
-          "Text"
-        ]
-      }
-    },
-    "query": "delete from collection_chapter\nwhere collection_slug = $1;\n"
-  },
   "0a7e8a0aaa1382daa8686211d2e0469e86cf302d41a282643266908e93179718": {
     "describe": {
       "columns": [
@@ -707,27 +695,6 @@
     },
     "query": "select\n  word.id,\n  word.source_text,\n  word.simple_phonetics,\n  word.phonemic,\n  word.english_gloss,\n  word.commentary,\n  word.document_id,\n  word.index_in_document,\n  word.page_number,\n  media_resource.url as \"audio_url?\",\n  media_slice.time_range as \"audio_slice?\"\nfrom word\n  left join media_slice on media_slice.id = word.audio_slice_id\n  left join media_resource on media_resource.id = media_slice.resource_id\nwhere source_text like any($1)\n"
   },
-  "561b7e609c00b7dd78008b769b30a65b1f9358fb11f410c57a60f80bf656b19e": {
-    "describe": {
-      "columns": [
-        {
-          "name": "internal_gloss",
-          "ordinal": 0,
-          "type_info": "Text"
-        }
-      ],
-      "nullable": [
-        false
-      ],
-      "parameters": {
-        "Left": [
-          "TextArray",
-          "Text"
-        ]
-      }
-    },
-    "query": "-- Given the system and the system-specific gloss.\nselect internal_gloss\nfrom abstract_morpheme_tag\n  inner join morpheme_tag on abstract_morpheme_tag.id = morpheme_tag.abstract_ids[1]\n  inner join unnest($1::text[]) as input_gloss on input_gloss = morpheme_tag.gloss\n  inner join abbreviation_system on abbreviation_system.id = morpheme_tag.system_id\nwhere abbreviation_system.short_name = $2::text"
-  },
   "587e868e1c86816469a9169bf07be80df5add11ef357029f74629e112d88b88e": {
     "describe": {
       "columns": [],
@@ -825,20 +792,6 @@
       }
     },
     "query": "select\n  attr.document_id,\n  attr.contribution_role,\n  contributor.id,\n  contributor.full_name\nfrom contributor_attribution as attr\n  inner join contributor on contributor.id = attr.contributor_id\nwhere attr.document_id = any($1)\n"
-  },
-  "65df9af112fc60fc834c143ae8af09ce810ba316d912c08f2ba77b6ba877331f": {
-    "describe": {
-      "columns": [],
-      "nullable": [],
-      "parameters": {
-        "Left": [
-          "Uuid",
-          "TextArray",
-          "TextArray"
-        ]
-      }
-    },
-    "query": "update word set\n    source_text =\n        case\n            when $2::text[] != '{}' and $2[1] is not null then $2[1]\n            else source_text\n        end,\n    commentary =\n        case\n            when $3::text[] != '{}' then $3[1]\n            else commentary\n        end\nwhere id = $1"
   },
   "6858e67c5a27aa4f38366244a46c9a4a50546c164a2b91599301aad1bc8f3cd0": {
     "describe": {
@@ -1340,6 +1293,28 @@
     },
     "query": "select\n  document_group.title,\n  document_group.slug\nfrom document_group\n  left join document on document.group_id = document_group.id\nwhere document.is_reference is false\ngroup by document_group.id\norder by document_group.title asc\n"
   },
+  "958ee8a09f73dbfa64ba57e184e28342627ea3593ded2a08b451bfa52a2382b6": {
+    "describe": {
+      "columns": [
+        {
+          "name": "document_id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        }
+      ],
+      "nullable": [
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "TextArray",
+          "TextArray"
+        ]
+      }
+    },
+    "query": "update word set\n    source_text =\n        case\n            when $2::text[] != '{}' and $2[1] is not null then $2[1]\n            else source_text\n        end,\n    commentary =\n        case\n            when $3::text[] != '{}' then $3[1]\n            else commentary\n        end\nwhere id = $1\nreturning word.document_id;"
+  },
   "9e02521e2e4f9bb5ee2e1c9dd33e18bb9b0ee8b7d584cf9867b889b92334f082": {
     "describe": {
       "columns": [
@@ -1764,98 +1739,6 @@
     },
     "query": "delete from word\nwhere document_id = $1\n"
   },
-  "bfc478cec2a670dd58da9f284cc279d0358774625ec4a36cf23b7f5ef627d4f8": {
-    "describe": {
-      "columns": [
-        {
-          "name": "id",
-          "ordinal": 0,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "source_text",
-          "ordinal": 1,
-          "type_info": "Text"
-        },
-        {
-          "name": "simple_phonetics",
-          "ordinal": 2,
-          "type_info": "Text"
-        },
-        {
-          "name": "phonemic",
-          "ordinal": 3,
-          "type_info": "Text"
-        },
-        {
-          "name": "english_gloss",
-          "ordinal": 4,
-          "type_info": "Text"
-        },
-        {
-          "name": "recorded_at",
-          "ordinal": 5,
-          "type_info": "Date"
-        },
-        {
-          "name": "commentary",
-          "ordinal": 6,
-          "type_info": "Text"
-        },
-        {
-          "name": "audio_slice_id",
-          "ordinal": 7,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "document_id",
-          "ordinal": 8,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "page_number",
-          "ordinal": 9,
-          "type_info": "Text"
-        },
-        {
-          "name": "index_in_document",
-          "ordinal": 10,
-          "type_info": "Int8"
-        },
-        {
-          "name": "page_id",
-          "ordinal": 11,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "character_range",
-          "ordinal": 12,
-          "type_info": "Int8Range"
-        }
-      ],
-      "nullable": [
-        false,
-        false,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        false,
-        true,
-        false,
-        true,
-        true
-      ],
-      "parameters": {
-        "Left": [
-          "Uuid"
-        ]
-      }
-    },
-    "query": "select * from word where id = $1"
-  },
   "c09634d274c938e314ed1c2e9bb282851576c7df5a919681cf45b67d3cbe8f4e": {
     "describe": {
       "columns": [
@@ -2120,6 +2003,27 @@
     },
     "query": "select\n  id,\n  title,\n  base_url\nfrom iiif_source\nwhere id = any($1)\n"
   },
+  "deb628916a9795082db6af0735a43fb0e935d6b41493ff8fd65f2c8356fb510f": {
+    "describe": {
+      "columns": [
+        {
+          "name": "internal_gloss",
+          "ordinal": 0,
+          "type_info": "Text"
+        }
+      ],
+      "nullable": [
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "TextArray",
+          "Text"
+        ]
+      }
+    },
+    "query": "-- Given the system and the system-specific gloss.\nselect internal_gloss\nfrom abstract_morpheme_tag\n  inner join morpheme_tag \n    on abstract_morpheme_tag.id = morpheme_tag.abstract_ids[1]\n  inner join unnest($1::text[]) as input_gloss \n    on input_gloss = morpheme_tag.gloss\n  inner join abbreviation_system \n    on abbreviation_system.id = morpheme_tag.system_id\nwhere abbreviation_system.short_name = $2::text\n-- If the array length of the abstract ids is one, then return \n  and array_length(morpheme_tag.abstract_ids, 1) = 1"
+  },
   "e1ebe64b2e98a03f7803c63a2e9011b0a064d7a6819dfdbc1a8c4d4e1160db90": {
     "describe": {
       "columns": [
@@ -2220,78 +2124,6 @@
       }
     },
     "query": "select\n  d.*,\n  media_resource.url as \"audio_url?\",\n  media_slice.time_range as \"audio_slice?\",\n  coalesce(\n    jsonb_agg(\n      jsonb_build_object(\n        'name', contributor.full_name, 'role', attr.contribution_role\n      )\n    ) filter (where contributor is not null),\n    '[]'\n  )\n  as contributors\nfrom document as d\n  left join contributor_attribution as attr on attr.document_id = d.id\n  left join contributor on contributor.id = attr.contributor_id\n  left join media_slice on media_slice.id = d.audio_slice_id\n  left join media_resource on media_resource.id = media_slice.resource_id\nwhere d.id = any($1)\ngroup by d.id,\n  media_slice.id,\n  media_resource.id\n"
-  },
-  "e482b08ffa95a64085847ed112c22f364d725df7c552a230cd3d17782c48168d": {
-    "describe": {
-      "columns": [
-        {
-          "name": "id",
-          "ordinal": 0,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "title",
-          "ordinal": 1,
-          "type_info": "Text"
-        },
-        {
-          "name": "document_id",
-          "ordinal": 2,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "wordpress_id",
-          "ordinal": 3,
-          "type_info": "Int8"
-        },
-        {
-          "name": "index_in_parent",
-          "ordinal": 4,
-          "type_info": "Int8"
-        },
-        {
-          "name": "chapter_path",
-          "ordinal": 5,
-          "type_info": {
-            "Custom": {
-              "kind": "Simple",
-              "name": "ltree"
-            }
-          }
-        },
-        {
-          "name": "section: CollectionSection",
-          "ordinal": 6,
-          "type_info": {
-            "Custom": {
-              "kind": {
-                "Enum": [
-                  "Intro",
-                  "Body"
-                ]
-              },
-              "name": "collection_section"
-            }
-          }
-        }
-      ],
-      "nullable": [
-        false,
-        false,
-        true,
-        true,
-        false,
-        false,
-        false
-      ],
-      "parameters": {
-        "Left": [
-          "Text",
-          "Text"
-        ]
-      }
-    },
-    "query": "select\n  c.id,\n  c.title,\n  c.document_id,\n  c.wordpress_id,\n  c.index_in_parent,\n  c.chapter_path,\n  c.section as \"section: CollectionSection\"\nfrom collection_chapter as c\nwhere c.collection_slug = $1 \n  and c.slug = $2;\n"
   },
   "f86a2f62b58b5b404883e127574947027ff7a38f8ea4058a7dc4e9e68626c164": {
     "describe": {

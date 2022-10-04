@@ -60,7 +60,7 @@ export const PanelLayout = (p: {
   const groupedTags = groupBy(allTags, (t) => t.morphemeType)
 
   // Creates a selectable option out of each functional tag, and groups them together by morpheme type.
-  const groupedOptions = Object.entries(groupedTags).map(([group, tags]) => {
+  const options = Object.entries(groupedTags).map(([group, tags]) => {
     return {
       label: group,
       options: tags.map((tag) => {
@@ -116,7 +116,7 @@ export const PanelLayout = (p: {
           <PanelContent
             panel={PanelType.EditWordPanel}
             word={p.segment}
-            groupedOptions={groupedOptions}
+            options={options}
           />
         </Form>
       ) : (
@@ -126,17 +126,19 @@ export const PanelLayout = (p: {
   )
 }
 
+type GroupedOption = {
+  label: string
+  options: {
+    value: string
+    label: string
+  }[]
+}
+
 /** Dispatches to the corresponding panel type to render a normal word panel or an editable word panel. */
 export const PanelContent = (p: {
   panel: PanelType
   word: Dailp.FormFieldsFragment
-  groupedOptions: {
-    label: string
-    options: {
-      value: string
-      label: string
-    }[]
-  }[]
+  options: GroupedOption[]
 }) => {
   const PanelComponent =
     p.panel === PanelType.EditWordPanel ? EditWordPanel : WordPanel
@@ -185,10 +187,7 @@ export const PanelContent = (p: {
           segments={p.word.segments}
         />
       ) : (
-        <EditSegmentation
-          segments={p.word.segments}
-          groupedOptions={p.groupedOptions}
-        />
+        <EditSegmentation segments={p.word.segments} options={p.options} />
       )}
 
       {/* Since editing translations is not yet supported, just display the translation for now. */}
@@ -249,31 +248,9 @@ export const PanelContent = (p: {
 // An editable view of a word's parts / segments.
 const EditSegmentation = (p: {
   segments: Dailp.FormFieldsFragment["segments"]
-  groupedOptions: {
-    label: string
-    options: {
-      value: string
-      label: string
-    }[]
-  }[]
+  options: GroupedOption[]
 }) => {
   const { form } = useForm()
-
-  // Create a new list of morphemes for this word. If the index matches the updated morpheme's index, then push in the new morpheme. Else, push in the unchanged morpheme.
-  const updateMorpheme = (
-    newMorpheme: Dailp.FormFieldsFragment["segments"][0],
-    index: number
-  ) => {
-    const updatedMorphemes: Dailp.FormFieldsFragment["segments"] =
-      p.segments.map((segment, idx) => {
-        if (idx === index) {
-          return newMorpheme
-        }
-        return segment
-      })
-
-    form.update(["word", "segments"], updatedMorphemes)
-  }
 
   return (
     <table className={css.tableContainer}>
@@ -296,8 +273,7 @@ const EditSegmentation = (p: {
                 key={segment.morpheme}
                 morpheme={segment}
                 index={index}
-                updateMorpheme={updateMorpheme}
-                groupedOptions={p.groupedOptions}
+                options={p.options}
               />
             </td>
           </tr>
@@ -311,38 +287,30 @@ const EditSegmentation = (p: {
 const EditGloss = (props: {
   morpheme: Dailp.FormFieldsFragment["segments"][0]
   index: number
-  updateMorpheme: (
-    morpheme: Dailp.FormFieldsFragment["segments"][0],
-    index: number
-  ) => void
-  groupedOptions: {
-    label: string
-    options: {
-      value: string
-      label: string
-    }[]
-  }[]
+  options: GroupedOption[]
 }) => {
-  // Handles gloss selection, and creation of new glosses.
+  const { form } = useForm()
+
+  // Handles gloss selection and creation of new glosses.
   const handleChange = (
     newValue: OnChangeValue<{ value: string; label: string }, false>
   ) => {
     if (newValue?.value) {
-      // Updates current list of morphemes to include one with a matching tag, or add a morpheme with a custom gloss.
-      props.updateMorpheme(
-        {
-          ...props.morpheme,
-          gloss: newValue.value,
-        },
-        props.index
-      )
+      const newMorpheme: Dailp.FormFieldsFragment["segments"][0] = {
+        ...props.morpheme,
+        gloss: newValue.value,
+      }
+
+      // Updates current list of morphemes to include one with a matching tag,
+      // or one with a custom gloss.
+      form.update(["word", "segments", props.index], newMorpheme)
     }
   }
 
   return (
     <CustomCreatable
       onChange={handleChange}
-      options={props.groupedOptions}
+      options={props.options}
       defaultValue={{
         value: props.morpheme.gloss,
         label: props.morpheme.matchingTag?.title ?? props.morpheme.gloss,
