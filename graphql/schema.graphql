@@ -543,10 +543,6 @@ input MorphemeSegmentUpdate {
 	the next one when reconstituting the full segmentation string.
 	"""
 	role: WordSegmentRole!
-	"""
-	Index of this segment in a word.
-	"""
-	index: Int!
 }
 
 """
