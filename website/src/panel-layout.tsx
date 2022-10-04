@@ -26,7 +26,7 @@ enum PanelType {
   WordPanel,
 }
 
-export type PanelSegment = FormFieldsFragment | TranslatedParagraph
+export type PanelSegment = Dailp.FormFieldsFragment | TranslatedParagraph
 
 export interface PanelDetails {
   currContents: PanelSegment | null
