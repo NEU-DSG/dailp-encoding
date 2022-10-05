@@ -6,7 +6,8 @@ import * as css from "./audio-player.css"
 interface Props {
   audioUrl: string
   showProgress?: boolean
-  slices?: { start: number; end: number }
+  start?: number
+  end?: number
   style?: any
 }
 
@@ -19,31 +20,31 @@ export const AudioPlayer = (props: Props) => {
 }
 
 const AudioPlayerImpl = (props: Props) => {
-  const audio = useMemo(() => new Audio(props.audioUrl), [props.audioUrl])
+  const audio = useMemo(
+    () => new Audio(props.audioUrl),
+    [props.audioUrl, props.start, props.end]
+  )
 
   const [progress, setProgress] = useState(0)
   const [loadStatus, setLoadStatus] = useState(false)
   const [isPlaying, setIsPlaying] = useState(false)
 
-  const [start, end] = props.slices
-    ? [props.slices.start / 1000, props.slices.end / 1000]
-    : [0, audio.duration]
-
-  const reset = () => {
-    audio.currentTime = start
-    setIsPlaying(false)
-  }
+  const start = props.start ? props.start / 1000 : 0
+  const end = props.end ? props.end / 1000 : audio.duration
 
   useEffect(() => {
-    reset()
-  }, [audio, start, setIsPlaying])
+    audio.currentTime = start
+    setIsPlaying(false)
+    setLoadStatus(audio.readyState > 2)
+  }, [audio, start, end, setIsPlaying])
 
   useEffect(() => {
     setProgress(audio.currentTime)
     if (isPlaying) {
       const interval = setInterval(() => {
         if (audio.currentTime >= end) {
-          reset()
+          audio.currentTime = start
+          setIsPlaying(false)
         }
         setProgress(audio.currentTime)
       }, 80)

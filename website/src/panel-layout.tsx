@@ -231,10 +231,8 @@ export const AudioPanel = (p: { segment: Dailp.FormFieldsFragment }) => {
               {
                 <AudioPlayer
                   audioUrl={p.segment.audioTrack.resourceUrl}
-                  slices={{
-                    start: p.segment.audioTrack.startTime!,
-                    end: p.segment.audioTrack.endTime!,
-                  }}
+                  start={p.segment.audioTrack.startTime!}
+                  end={p.segment.audioTrack.endTime!}
                   showProgress
                 />
               }
