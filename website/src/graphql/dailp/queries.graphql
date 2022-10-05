@@ -248,6 +248,40 @@ query DocSlice(
   }
 }
 
+query CollectionChapter($collectionSlug: String!, $chapterSlug: String!) {
+  chapter(collectionSlug: $collectionSlug, chapterSlug: $chapterSlug) {
+    chapterName
+    wordpressId
+    document {
+      id
+      title
+      slug
+      isReference
+      breadcrumbs(superCollection: "") {
+        name
+        slug
+      }
+      date {
+        year
+      }
+      sources {
+        name
+        link
+      }
+      audioRecording {
+        resourceUrl
+        startTime
+        endTime
+      }
+      translatedPages {
+        image {
+          url
+        }
+      }
+    }
+  }
+}
+
 mutation UpdateWord($word: AnnotatedFormUpdate!) {
   updateWord(word: $word)
 }
