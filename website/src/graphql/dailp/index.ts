@@ -209,12 +209,17 @@ export enum CherokeeOrthography {
   Taoc = "TAOC",
 }
 
-/** Structure to represent a single chapter. Used to send data to the front end. */
+/** A chapter within a collection, which can either contain a document or a Wordpress page. */
 export type CollectionChapter = {
   readonly __typename?: "CollectionChapter"
-  /** UUID for the chapter */
-  readonly id: Scalars["UUID"]
-  /** Order within the parent chapter or collection */
+  /** Name of this chapter. */
+  readonly chapterName: Scalars["String"]
+  readonly document: Maybe<AnnotatedDoc>
+  /** Document id of this chapter if it contains a document. */
+  readonly documentId: Maybe<Scalars["UUID"]>
+  /** Chapter's id. */
+  readonly id: Maybe<Scalars["UUID"]>
+  /** Index of this chapter within its parent collection. */
   readonly indexInParent: Scalars["Int"]
   /** Full path of the chapter */
   readonly path: ReadonlyArray<Scalars["String"]>
@@ -1163,6 +1168,59 @@ export type DocSliceQuery = { readonly __typename?: "Query" } & {
   >
 }
 
+export type CollectionChapterQueryVariables = Exact<{
+  collectionSlug: Scalars["String"]
+  chapterSlug: Scalars["String"]
+}>
+
+export type CollectionChapterQuery = { readonly __typename?: "Query" } & {
+  readonly chapter: { readonly __typename?: "CollectionChapter" } & Pick<
+    CollectionChapter,
+    "chapterName" | "wordpressId"
+  > & {
+      readonly document: Maybe<
+        { readonly __typename?: "AnnotatedDoc" } & Pick<
+          AnnotatedDoc,
+          "id" | "title" | "slug" | "isReference"
+        > & {
+            readonly breadcrumbs: ReadonlyArray<
+              { readonly __typename?: "DocumentCollection" } & Pick<
+                DocumentCollection,
+                "name" | "slug"
+              >
+            >
+            readonly date: Maybe<
+              { readonly __typename?: "Date" } & Pick<Date, "year">
+            >
+            readonly sources: ReadonlyArray<
+              { readonly __typename?: "SourceAttribution" } & Pick<
+                SourceAttribution,
+                "name" | "link"
+              >
+            >
+            readonly audioRecording: Maybe<
+              { readonly __typename?: "AudioSlice" } & Pick<
+                AudioSlice,
+                "resourceUrl" | "startTime" | "endTime"
+              >
+            >
+            readonly translatedPages: Maybe<
+              ReadonlyArray<
+                { readonly __typename?: "DocumentPage" } & {
+                  readonly image: Maybe<
+                    { readonly __typename?: "PageImage" } & Pick<
+                      PageImage,
+                      "url"
+                    >
+                  >
+                }
+              >
+            >
+          }
+      >
+    }
+}
+
 export type UpdateWordMutationVariables = Exact<{
   word: AnnotatedFormUpdate
 }>
@@ -1556,6 +1614,50 @@ export function useDocSliceQuery(
   options: Omit<Urql.UseQueryArgs<DocSliceQueryVariables>, "query">
 ) {
   return Urql.useQuery<DocSliceQuery>({ query: DocSliceDocument, ...options })
+}
+export const CollectionChapterDocument = gql`
+  query CollectionChapter($collectionSlug: String!, $chapterSlug: String!) {
+    chapter(collectionSlug: $collectionSlug, chapterSlug: $chapterSlug) {
+      chapterName
+      wordpressId
+      document {
+        id
+        title
+        slug
+        isReference
+        breadcrumbs(superCollection: "") {
+          name
+          slug
+        }
+        date {
+          year
+        }
+        sources {
+          name
+          link
+        }
+        audioRecording {
+          resourceUrl
+          startTime
+          endTime
+        }
+        translatedPages {
+          image {
+            url
+          }
+        }
+      }
+    }
+  }
+`
+
+export function useCollectionChapterQuery(
+  options: Omit<Urql.UseQueryArgs<CollectionChapterQueryVariables>, "query">
+) {
+  return Urql.useQuery<CollectionChapterQuery>({
+    query: CollectionChapterDocument,
+    ...options,
+  })
 }
 export const UpdateWordDocument = gql`
   mutation UpdateWord($word: AnnotatedFormUpdate!) {
