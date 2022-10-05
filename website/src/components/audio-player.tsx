@@ -33,6 +33,7 @@ const AudioPlayerImpl = (props: Props) => {
   const end = props.end ? props.end / 1000 : audio.duration
 
   useEffect(() => {
+    audio.preload = "auto"
     setLoadStatus(audio.readyState > 2 || !audio.preload)
     audio.currentTime = start
     setIsPlaying(false)
