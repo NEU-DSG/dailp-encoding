@@ -1,7 +1,7 @@
 import React from "react"
 import { BsArrowBarLeft, BsArrowBarRight } from "react-icons/bs"
 import { IconButton } from "src/components"
-import Tox1 from "src/components/toc.page"
+import Tox1, { TOC } from "src/components/toc.page"
 import * as css from "./toc-sidebar.css"
 
 // Renders a sidebar on the left side of the screen that displays a table of contents.
@@ -42,7 +42,7 @@ const TOCSidebar = (p: {
           )}
         </div>
         {/* If the panel is open, show the chapters content. */}
-        {p.isOpen && <Tox1 />}
+        {p.isOpen && <TOC slug="cwkw" />}
       </nav>
     </div>
   )
