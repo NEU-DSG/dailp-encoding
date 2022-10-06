@@ -5,6 +5,8 @@ import * as Dailp from "src/graphql/dailp"
 import { usePreferences } from "src/preferences-context"
 import { fullWidth, paddedCenterColumn } from "src/style/utils.css"
 import CWKWLayout from "../cwkw/cwkw-layout"
+import * as css from "./document.css"
+import { DocumentTitleHeader, TabSet } from "./document.page"
 
 const ChapterPage = (props: {
   collectionSlug: string
@@ -27,11 +29,16 @@ const ChapterPage = (props: {
 
   return (
     <CWKWLayout>
-      <Helmet title={chapter.chapterName} />
+      <Helmet title={chapter.title} />
       <main className={paddedCenterColumn}>
         <article className={fullWidth}>
-          <header>Chapter Name: {chapter.chapterName}</header>
-          {doc && <TabSet doc={doc} />}
+          <header>Title: {chapter.title}</header>
+          {doc && (
+            <main className={css.annotatedDocument}>
+              <DocumentTitleHeader doc={doc} showDetails={true} />
+              <TabSet doc={doc} />
+            </main>
+          )}
         </article>
       </main>
     </CWKWLayout>
