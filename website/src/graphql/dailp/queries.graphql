@@ -250,7 +250,7 @@ query DocSlice(
 
 query CollectionChapter($collectionSlug: String!, $chapterSlug: String!) {
   chapter(collectionSlug: $collectionSlug, chapterSlug: $chapterSlug) {
-    chapterName
+    title
     wordpressId
     document {
       id

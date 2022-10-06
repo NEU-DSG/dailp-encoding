@@ -30,6 +30,20 @@ impl Query {
             .await?)
     }
 
+    /// Retrieves a chapter and its contents by its collection and chapter slug.
+    async fn chapter(
+        &self,
+        context: &Context<'_>,
+        collection_slug: String,
+        chapter_slug: String,
+    ) -> FieldResult<CollectionChapter> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .chapter(collection_slug, chapter_slug)
+            .await?)
+    }
+
     /// List of all the functional morpheme tags available
     async fn all_tags(
         &self,

@@ -209,17 +209,13 @@ export enum CherokeeOrthography {
   Taoc = "TAOC",
 }
 
-/** A chapter within a collection, which can either contain a document or a Wordpress page. */
+/** Structure to represent a single chapter. Used to send data to the front end. */
 export type CollectionChapter = {
   readonly __typename?: "CollectionChapter"
-  /** Name of this chapter. */
-  readonly chapterName: Scalars["String"]
   readonly document: Maybe<AnnotatedDoc>
-  /** Document id of this chapter if it contains a document. */
-  readonly documentId: Maybe<Scalars["UUID"]>
-  /** Chapter's id. */
-  readonly id: Maybe<Scalars["UUID"]>
-  /** Index of this chapter within its parent collection. */
+  /** UUID for the chapter */
+  readonly id: Scalars["UUID"]
+  /** Order within the parent chapter or collection */
   readonly indexInParent: Scalars["Int"]
   /** Full path of the chapter */
   readonly path: ReadonlyArray<Scalars["String"]>
@@ -570,6 +566,8 @@ export type Query = {
   readonly allPages: ReadonlyArray<Page>
   /** List of all the functional morpheme tags available */
   readonly allTags: ReadonlyArray<MorphemeTag>
+  /** Retrieves a chapter and its contents by its collection and chapter slug. */
+  readonly chapter: CollectionChapter
   readonly collection: DocumentCollection
   /** Retrieves a full document from its unique name. */
   readonly document: Maybe<AnnotatedDoc>
@@ -610,6 +608,11 @@ export type Query = {
 
 export type QueryAllTagsArgs = {
   system: CherokeeOrthography
+}
+
+export type QueryChapterArgs = {
+  chapterSlug: Scalars["String"]
+  collectionSlug: Scalars["String"]
 }
 
 export type QueryCollectionArgs = {
@@ -1176,7 +1179,7 @@ export type CollectionChapterQueryVariables = Exact<{
 export type CollectionChapterQuery = { readonly __typename?: "Query" } & {
   readonly chapter: { readonly __typename?: "CollectionChapter" } & Pick<
     CollectionChapter,
-    "chapterName" | "wordpressId"
+    "title" | "wordpressId"
   > & {
       readonly document: Maybe<
         { readonly __typename?: "AnnotatedDoc" } & Pick<
@@ -1618,7 +1621,7 @@ export function useDocSliceQuery(
 export const CollectionChapterDocument = gql`
   query CollectionChapter($collectionSlug: String!, $chapterSlug: String!) {
     chapter(collectionSlug: $collectionSlug, chapterSlug: $chapterSlug) {
-      chapterName
+      title
       wordpressId
       document {
         id
