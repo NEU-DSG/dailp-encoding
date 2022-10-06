@@ -19,7 +19,6 @@ globalStyle(`${lesson} input`, {
     [mobileQuery]: important({
       width: "100%",
       height: mobileInputSize,
-      marginBottom: vspace.medium,
     }),
   },
 })
