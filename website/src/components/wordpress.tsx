@@ -9,10 +9,12 @@ import { Button, Link } from "src/components"
 import * as Dailp from "src/graphql/dailp"
 import * as Wordpress from "src/graphql/wordpress"
 import { usePreferences } from "src/preferences-context"
+import { useRouteParams } from "src/renderer/PageShell"
 import { AnnotatedForm } from "src/segment"
 import { annotationSection } from "src/segment.css"
 import { wordpressUrl } from "src/theme.css"
 import { BasicMorphemeSegment, LevelOfDetail } from "src/types"
+import * as lessonCSS from "./lesson.css"
 
 interface Props {
   slug: string
@@ -44,8 +46,19 @@ export const WordpressPageContents = ({
 }: {
   content: string | null
 }) => {
+  const { "*": slug } = useRouteParams()
+
+  let parsed
+
   if (content) {
-    const parsed = parse(content, parseOptions)
+    // If the slug includes "lessons/", include a parent element that styles its children's elements for printed media.
+    if (slug?.includes("lessons/")) {
+      parsed = (
+        <div className={lessonCSS.lesson}>{parse(content, parseOptions)}</div>
+      )
+    } else {
+      parsed = parse(content, parseOptions)
+    }
     return <>{parsed}</>
   } else {
     return null
