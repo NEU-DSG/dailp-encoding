@@ -1,7 +1,14 @@
 import { globalStyle, style } from "@vanilla-extract/css"
 import { important, padding } from "polished"
 import { Styles } from "polished/lib/types/style"
-import { hspace, vspace } from "src/style/constants"
+import {
+  colors,
+  hsize,
+  hspace,
+  space,
+  thickness,
+  vspace,
+} from "src/style/constants"
 import { marginY, paddingX } from "src/style/utils"
 
 // Parent class defining a Wordpress page.
@@ -17,7 +24,7 @@ const mobileInputSize = `calc(1rem * 2)`
 globalStyle(`${lesson} input`, {
   "@media": {
     [mobileQuery]: important({
-      width: "100%",
+      width: hsize.full,
       height: mobileInputSize,
     }),
   },
@@ -40,7 +47,7 @@ globalStyle(figure, {
   flexDirection: "row",
   alignItems: "center",
   textAlign: "left",
-  gap: "30px",
+  gap: `calc(${space.large} * 2)`,
 
   "@media": {
     [mobileQuery]: important({
@@ -52,7 +59,7 @@ globalStyle(figure, {
 
 // Styles the caption text of figures.
 globalStyle(`${figure} figcaption > *`, {
-  color: "#405372",
+  color: colors.primary,
   display: "flex",
   flexDirection: "column",
   alignItems: "start",
@@ -67,7 +74,7 @@ globalStyle(`${lesson} table tr`, {
     [mobileQuery]: important({
       display: "flex",
       flexDirection: "column",
-      border: "1px solid black",
+      border: `${thickness.thin} solid ${colors.text}`,
       ...(marginY(vspace.large) as Styles),
     }),
   },
@@ -78,23 +85,26 @@ globalStyle(`${lesson} table tr`, {
 globalStyle(`${lesson} table td`, {
   "@media": {
     [mobileQuery]: important({
-      width: "100%",
+      width: hsize.full,
       ...padding(hspace.medium),
     }),
   },
 })
 
 /// HORIZONTAL LINE STYLES
-globalStyle(`${lesson} hr`, important({ width: "100%", marginBottom: "2rem" }))
+globalStyle(
+  `${lesson} hr`,
+  important({ width: hsize.full, marginBottom: vspace["1.5"] })
+)
 
 /// BLOCKQUOTES STYLES
 // By default, set this width to 500px, but on mobile make width auto to
 // compensate for the smaller size screen.
 globalStyle(`${lesson} blockquote`, {
-  width: "500px",
+  width: `calc(${hsize.large} / 2)`,
   "@media": {
     [mobileQuery]: important({
-      width: "auto",
+      width: hsize.auto,
     }),
   },
 })
