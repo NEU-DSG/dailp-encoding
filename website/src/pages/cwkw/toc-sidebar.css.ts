@@ -7,7 +7,7 @@ export const sidebar = style([
   {
     display: "flex",
     flexDirection: "column",
-    backgroundColor: "#353535",
+    backgroundColor: "#585858",
     overflow: "auto",
     width: "max-content",
     maxWidth: "90%",

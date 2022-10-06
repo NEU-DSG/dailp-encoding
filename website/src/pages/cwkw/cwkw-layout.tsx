@@ -10,7 +10,7 @@ import {
   useDialogState,
 } from "reakit/Dialog"
 import { Link } from "src/components"
-import Tox1 from "src/components/toc.page"
+import Tox1, { TOC } from "src/components/toc.page"
 import { useMediaQuery } from "src/custom-hooks"
 import Footer from "src/footer"
 import { mediaQueries } from "src/style/constants"
@@ -73,7 +73,7 @@ const MobileTOC = () => {
             <div className={tocCss.tocHeader}>
               <div>Table of Contents</div>
             </div>
-            <Tox1 />
+            <TOC slug="cwkw" />
           </nav>
         </Dialog>
       </DialogBackdrop>

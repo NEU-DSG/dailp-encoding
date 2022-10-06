@@ -1,4 +1,6 @@
 import Link from "src/components/link"
+import * as Dailp from "src/graphql/dailp"
+import { useRouteParams } from "src/renderer/PageShell"
 import { listItem, numberedOrderedList, orderedList } from "./toc.css"
 
 type TOCData = {
@@ -7,28 +9,44 @@ type TOCData = {
   children?: TOCData[]
 }
 
-export const TOC = (props: {
-  introChapters?: TOCData[]
-  bodyChapters: TOCData[]
-}) => (
-  <>
-    <ol className={numberedOrderedList}>
-      {props.introChapters?.map((items, index) => (
-        <li>
-          <Link href={items.path}>{items.title}</Link>
-        </li>
-      ))}
-    </ol>
-    <ol className={orderedList}>
-      {props.bodyChapters.map((items, index) => (
-        <li className={listItem}>
-          <Link href={items.path}>{items.title}</Link>
-          {items.children ? <TOC bodyChapters={items.children}></TOC> : null}
-        </li>
-      ))}
-    </ol>
-  </>
-)
+export const TOC = (props: { slug: string }) => {
+  const [{ data }] = Dailp.useEditedCollectionQuery({
+    variables: { slug: props.slug! },
+  })
+
+  if (!data) {
+    return <>Loading...</>
+  }
+
+  const collection = data.editedCollection
+
+  const introChapters = collection?.chapters?.filter(
+    (chapter) => chapter.section == Dailp.CollectionSection.Intro
+  )
+
+  const bodyChapters = collection?.chapters?.filter(
+    (chapter) => chapter.section == Dailp.CollectionSection.Body
+  )
+  return (
+    <>
+      <ol className={numberedOrderedList}>
+        {introChapters?.map((items, index) => (
+          <li>
+            <Link href={items.path.join("/")}>{items.title}</Link>
+          </li>
+        ))}
+      </ol>
+      <ol className={orderedList}>
+        {bodyChapters?.map((items, index) => (
+          <li className={listItem}>
+            <Link href={items.path.join("/")}>{items.title}</Link>
+            {/* {items.children ? <TOC bodyChapters={items.children}></TOC> : null} */}
+          </li>
+        ))}
+      </ol>
+    </>
+  )
+}
 
 const data1: TOCData = {
   title: "1",
@@ -86,8 +104,27 @@ const data: TOCData[] = [
   data10,
 ]
 
-const Tox1 = () => {
-  return <TOC introChapters={data} bodyChapters={data}></TOC>
-}
+// const Tox1 = () => {
+//   const slug = "cwkw"
+//   const [{ data }] = Dailp.useEditedCollectionQuery({
+//     variables: { slug: slug! },
+//   })
 
-export default Tox1
+//   if (!data) {
+//     return <>Loading...</>
+//   }
+
+//   const collection = data.editedCollection
+
+//   const introChapters = collection?.chapters?.filter(
+//     (chapter) => chapter.section == Dailp.CollectionSection.Intro
+//   )
+
+//   const bodyChapters = collection?.chapters?.filter(
+//     (chapter) => chapter.section == Dailp.CollectionSection.Body
+//   )
+
+//   return <TOC introChapters={introChapters} bodyChapters={bodyChapters}></TOC>
+// }
+
+export default TOC
