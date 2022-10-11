@@ -2,7 +2,7 @@ use crate::{
     AnnotatedForm, AudioSlice, Contributor, Database, Date, SourceAttribution, Translation,
     TranslationBlock,
 };
-use async_graphql::{dataloader::DataLoader, FieldResult};
+use async_graphql::{dataloader::DataLoader, FieldResult, MaybeUndefined};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -242,6 +242,14 @@ pub struct DocumentParagraph {
     pub id: Uuid,
     /// English translation of the whole paragraph
     pub translation: String,
+}
+
+/// A paragraph in an annotated document that can be edited.
+#[derive(async_graphql::InputObject)]
+pub struct ParagraphUpdate {
+    /// Unique identifier of the form
+    pub id: Uuid,
+    pub translation: MaybeUndefined<String>,
 }
 
 #[async_graphql::Object]
