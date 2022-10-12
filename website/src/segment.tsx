@@ -7,6 +7,7 @@ import * as Dailp from "src/graphql/dailp"
 import { DocumentContents } from "src/pages/documents/document.page"
 import { std } from "src/style/utils.css"
 import { CleanButton } from "./components"
+import { Environment, deploymentEnvironment } from "./env"
 import { useForm } from "./form-context"
 import { PanelDetails } from "./panel-layout"
 import * as css from "./segment.css"
@@ -102,11 +103,16 @@ export const DocumentParagraph = (
     <section className={blockStyle}>
       <div className={wordCSS}>
         <div className={annotationStyle}>
-          {children} {p.levelOfDetail === LevelOfDetail.Story && detailButton}
+          {children}
+          {deploymentEnvironment !== Environment.Production &&
+            p.levelOfDetail === LevelOfDetail.Story &&
+            detailButton}
         </div>
         <p className={css.inlineBlock}>
-          {p.segment.translation ?? null}{" "}
-          {p.levelOfDetail >= LevelOfDetail.Pronunciation && detailButton}
+          {p.segment.translation ?? null}
+          {deploymentEnvironment !== Environment.Production &&
+            p.levelOfDetail >= LevelOfDetail.Pronunciation &&
+            detailButton}
         </p>
 
         {/*<SegmentAudio/>*/}
