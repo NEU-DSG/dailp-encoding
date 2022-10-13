@@ -242,6 +242,8 @@ pub struct DocumentParagraph {
     pub id: Uuid,
     /// English translation of the whole paragraph
     pub translation: String,
+    /// 1-indexed position of this paragraph in a document
+    pub index: i64,
 }
 
 #[async_graphql::Object]
@@ -258,6 +260,10 @@ impl DocumentParagraph {
     /// English translation of the whole paragraph
     async fn translation(&self) -> &str {
         &self.translation
+    }
+
+    async fn index(&self) -> &i64 {
+        &self.index
     }
 }
 
