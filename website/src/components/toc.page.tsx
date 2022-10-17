@@ -63,7 +63,7 @@ export const TOC = ({ introChapters, bodyChapters }: Chapters) => {
             <>
               <li key={item.leaf} className={css.listItem}>
                 <Link
-                  href={`#`}
+                  href={`${chapterPath}${item.leaf}`}
                   className={css.link}
                   onClick={() => {
                     if (selected === item) {
