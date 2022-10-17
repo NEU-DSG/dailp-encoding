@@ -19,6 +19,7 @@ export const orderedList = style([
   {
     counterReset: "item",
     selectors: {
+      // Removes the left margin in an ordered list.
       [`${sidebar} > &`]: { marginLeft: "0px" },
     },
   },
@@ -34,6 +35,7 @@ export const listItem = style([
       counterIncrement: "item",
     },
     selectors: {
+      // Removes the padding at the bottom of an item that is the last of its type in a nested list, to avoid double padding.
       [`${orderedList} ${orderedList} &:last-of-type`]: {
         paddingBottom: "0px",
       },
@@ -55,6 +57,7 @@ export const divider = style([
     backgroundColor: colors.borders,
     width: "100%",
     selectors: {
+      // Removes the horizontal line when its the last in a list, to avoid double lines.
       [`${orderedList} ${listItem} &:last-of-type`]: { display: "none" },
     },
   },
