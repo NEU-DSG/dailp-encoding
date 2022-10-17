@@ -3,24 +3,12 @@ import { Helmet } from "react-helmet"
 import { Link } from "src/components"
 import { useMediaQuery } from "src/custom-hooks"
 import { mediaQueries } from "src/style/constants"
+import * as css from "../edited-collections/edited-collection.page.css"
+import TOCSidebar from "../edited-collections/sidebar"
 import CWKWLayout from "./cwkw-layout"
-import * as css from "./index.page.css"
-import TOCSidebar from "./toc-sidebar"
 
 // Renders the homepage for CWKW.
 const CWKWPage = () => {
-  // Placeholder for intro chapters.
-  const introChapters = [
-    { title: "Preface to Cherokees Writing the Keetoowah Way" },
-    { title: "Acknowledgements" },
-  ]
-
-  // Placeholder for main chapters.
-  const mainChapters = [
-    { title: "Stories", author: "Carly Dou" },
-    { title: "Governance Documents", author: "John Doe" },
-  ]
-
   const isDesktop = useMediaQuery(mediaQueries.large)
   const [isOpen, setIsOpen] = useState(true)
 
@@ -59,29 +47,9 @@ const CWKWPage = () => {
           <h3>
             <Link href="#">Begin reading</Link>
           </h3>
-
-          <h1>Overview of Collection</h1>
-          <ol type="i">
-            {introChapters.map((chapter, index) => (
-              <li key={index}>
-                <Link href="#">{`${chapter.title}`}</Link>
-              </li>
-            ))}
-          </ol>
-
-          <ol>
-            {mainChapters.map((chapter, index) => (
-              <li key={index}>
-                <Link href="#">
-                  {`${chapter.title},
-                  ${chapter.author}`}
-                </Link>
-              </li>
-            ))}
-          </ol>
         </article>
         {/* Div here to keep center spacing of the middle. */}
-        <div style={{ flex: 1 }}></div>
+        <div style={{ flex: 1 }} />
       </main>
     </CWKWLayout>
   )
