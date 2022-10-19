@@ -1242,12 +1242,14 @@ impl Loader<ParagraphsInPage> for Database {
         // reimplement that with try_fold()
         Ok(items
             .into_iter()
-            .map(|p| {
+            .enumerate()
+            .map(|(index, p)| {
                 (
                     ParagraphsInPage(p.page_id),
                     DocumentParagraph {
                         id: p.id,
                         translation: p.english_translation,
+                        index: (index as i64) + 1,
                     },
                 )
             })

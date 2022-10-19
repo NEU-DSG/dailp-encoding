@@ -315,6 +315,7 @@ export type DocumentPage = {
 
 export type DocumentParagraph = {
   readonly __typename?: "DocumentParagraph"
+  readonly index: Scalars["Int"]
   /** Source text of the paragraph broken down into words */
   readonly source: ReadonlyArray<AnnotatedSeg>
   /** English translation of the whole paragraph */
@@ -799,7 +800,7 @@ export type DocumentContentsQuery = { readonly __typename?: "Query" } & {
               readonly paragraphs: ReadonlyArray<
                 { readonly __typename?: "DocumentParagraph" } & Pick<
                   DocumentParagraph,
-                  "translation"
+                  "translation" | "index"
                 > & {
                     readonly source: ReadonlyArray<
                       | ({ readonly __typename: "AnnotatedForm" } & Pick<
@@ -1310,6 +1311,7 @@ export const DocumentContentsDocument = gql`
             }
           }
           translation
+          index
         }
       }
       forms @include(if: $isReference) {
