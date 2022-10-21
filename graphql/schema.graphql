@@ -351,6 +351,7 @@ type DocumentParagraph {
 	English translation of the whole paragraph
 	"""
 	translation: String!
+	index: Int!
 }
 
 """
