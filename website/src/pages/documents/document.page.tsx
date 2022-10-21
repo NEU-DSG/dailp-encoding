@@ -13,7 +13,7 @@ import * as Dailp from "src/graphql/dailp"
 import Layout from "src/layout"
 import { drawerBg } from "src/menu.css"
 import { MorphemeDetails } from "src/morpheme"
-import { PanelDetails, PanelLayout } from "src/panel-layout"
+import { PanelDetails, PanelLayout, PanelSegment } from "src/panel-layout"
 import { usePreferences } from "src/preferences-context"
 import {
   collectionRoute,
@@ -21,7 +21,7 @@ import {
   documentRoute,
 } from "src/routes"
 import { useScrollableTabState } from "src/scrollable-tabs"
-import { AnnotatedForm, DocumentPage } from "src/segment"
+import { AnnotatedForm, DocumentPage, TranslatedParagraph } from "src/segment"
 import { mediaQueries } from "src/style/constants"
 import { BasicMorphemeSegment, LevelOfDetail } from "src/types"
 import PageImages from "../../page-image"
@@ -128,11 +128,13 @@ export const TranslationTab = ({ doc }: { doc: Document }) => {
 
   const dialog = useDialogState({ animated: true })
 
-  const [selectedWord, setSelectedWord] =
-    useState<Dailp.FormFieldsFragment | null>(null)
+  const [selectedSegment, setSelectedSegment] = useState<PanelSegment | null>(
+    null
+  )
 
-  const selectAndShowWord = (content: Dailp.FormFieldsFragment | null) => {
-    setSelectedWord(content)
+  const selectAndShowContent = (content: PanelSegment | null) => {
+    setSelectedSegment(content)
+
     if (content) {
       dialog.show()
     } else {
@@ -140,16 +142,17 @@ export const TranslationTab = ({ doc }: { doc: Document }) => {
     }
   }
 
-  // When the mobile version of the word panel is closed, remove any word selection.
+  // When the mobile version of the word panel is closed, remove any segment selection.
   useEffect(() => {
     if (!dialog.visible) {
-      selectAndShowWord(null)
+      selectAndShowContent(null)
     }
   }, [dialog.visible])
 
-  let wordPanelInfo = {
-    currContents: selectedWord,
-    setCurrContents: selectAndShowWord,
+  // This can now be either a word or paragraph.
+  let panelInfo = {
+    currContents: selectedSegment,
+    setCurrContents: selectAndShowContent,
   }
 
   const { levelOfDetail, cherokeeRepresentation } = usePreferences()
@@ -188,8 +191,8 @@ export const TranslationTab = ({ doc }: { doc: Document }) => {
             preventBodyScroll={true}
           >
             <PanelLayout
-              segment={wordPanelInfo.currContents}
-              setContent={wordPanelInfo.setCurrContents}
+              segment={panelInfo.currContents}
+              setContent={panelInfo.setCurrContents}
             />
           </Dialog>
         </DialogBackdrop>
@@ -212,15 +215,15 @@ export const TranslationTab = ({ doc }: { doc: Document }) => {
               doc,
               openDetails,
               cherokeeRepresentation,
-              wordPanelDetails: wordPanelInfo,
+              wordPanelDetails: panelInfo,
             }}
           />
         </article>
-        {selectedWord && levelOfDetail > LevelOfDetail.Story && (
+        {selectedSegment && (
           <div className={css.contentSection2}>
             <PanelLayout
-              segment={wordPanelInfo.currContents}
-              setContent={wordPanelInfo.setCurrContents}
+              segment={panelInfo.currContents}
+              setContent={panelInfo.setCurrContents}
             />
           </div>
         )}
