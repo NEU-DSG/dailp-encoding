@@ -1,6 +1,5 @@
 import { style } from "@vanilla-extract/css"
 import { margin } from "polished"
-import { sidebar, textColor } from "src/pages/edited-collections/sidebar.css"
 import { colors, hspace, vspace } from "src/style/constants"
 import { onHover, paddingX, paddingY } from "src/style/utils"
 
@@ -20,7 +19,7 @@ export const orderedList = style([
     counterReset: "item",
     selectors: {
       // Removes the left margin in an ordered list.
-      [`${sidebar} > &`]: { marginLeft: "0px" },
+      [`nav > &`]: { marginLeft: "0px" },
     },
   },
 ])
@@ -30,6 +29,7 @@ export const listItem = style([
   paddingY(vspace.large),
   {
     display: "block",
+    color: colors.primaryText,
     ":before": {
       content: 'counters(item, ".") " "',
       counterIncrement: "item",
@@ -46,8 +46,8 @@ export const listItem = style([
 export const link = style([
   paddingX(hspace.medium),
   onHover({ color: colors.borders }),
-  textColor,
   {
+    color: colors.primaryText,
     textDecoration: "none",
   },
 ])

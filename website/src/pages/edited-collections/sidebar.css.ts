@@ -1,47 +1,34 @@
 import { style } from "@vanilla-extract/css"
 import { padding } from "polished"
-import { drawerBg, navButton, navDrawer } from "src/menu.css"
-import { colors, hsize, mediaQueries, vspace } from "src/style/constants"
-import { paddedWidth } from "src/style/utils.css"
+import { navButton, navDrawer } from "src/menu.css"
+import {
+  colors,
+  hspace,
+  mediaQueries,
+  radii,
+  vspace,
+} from "src/style/constants"
+import { marginY } from "src/style/utils"
 
-export const textColor = style({ color: colors.primaryText })
+export const drawerWidth = "20rem"
 export const bgColor = style({ backgroundColor: "#585858" })
+export const iconSize = "32px"
 
-const bg = style([bgColor, textColor, padding(vspace.one)])
-
-export const sidebar = style([
-  bg,
+export const drawer = style([
+  navDrawer,
+  bgColor,
+  padding(vspace.one),
   {
-    display: "flex",
-    flexDirection: "column",
-    overflow: hsize.auto,
+    overflowY: "auto",
     "@media": {
-      [mediaQueries.large]: {
-        height: "100vh",
-        maxWidth: hsize.medium,
-        width: hsize.small,
-      },
-    },
-  },
-])
-
-export const closedSidebar = style([
-  bg,
-  {
-    display: "flex",
-    alignItems: "flex-start",
-    justifyContent: "center",
-    "@media": {
-      [mediaQueries.large]: {
-        height: "100vh",
-        width: hsize.edge,
+      [mediaQueries.medium]: {
+        width: drawerWidth,
       },
     },
   },
 ])
 
 export const header = style([
-  textColor,
   {
     display: "flex",
     alignItems: "center",
@@ -50,31 +37,38 @@ export const header = style([
 ])
 
 export const title = style([
+  marginY(vspace.medium),
   {
+    color: colors.primaryText,
     fontWeight: "bolder",
   },
 ])
 
-export const sidebarDrawerBg = style([
-  drawerBg,
+export const desktopNav = style([
+  navButton,
+  bgColor,
   {
     "@media": {
       [mediaQueries.medium]: {
         display: "block",
+        position: "absolute",
+        color: colors.body,
+        borderRadius: radii.medium,
+        top: vspace.large,
+        left: hspace[0],
       },
     },
   },
 ])
 
-export const drawer = style([navDrawer, bgColor])
+export const openNav = style([
+  desktopNav,
+  padding(vspace.small),
+  { transform: `translateX(${drawerWidth})` },
+])
 
-export const sidebarNavButton = style([
-  navButton,
-  {
-    "@media": {
-      [mediaQueries.medium]: {
-        display: "block",
-      },
-    },
-  },
+export const closedNav = style([
+  desktopNav,
+  padding(vspace.small),
+  { transform: `translateX(${hspace[0]})` },
 ])
