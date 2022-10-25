@@ -27,8 +27,6 @@ export const EditButton = () => {
             round={false}
             onClick={() => {
               setIsEditing(false)
-              // Since no changes were made to this word, make sure to reset its form.
-              form.reset()
             }}
           >
             Cancel
