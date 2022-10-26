@@ -329,6 +329,8 @@ export type DocumentParagraph = {
  */
 export type DocumentReference = {
   readonly __typename?: "DocumentReference"
+  /** Collection chapter's path for this document */
+  readonly chapterPath: Maybe<ReadonlyArray<Scalars["String"]>>
   /** Date the document was produced (or `None` if unknown) */
   readonly date: Maybe<Date>
   /** Database ID for the document */
@@ -934,7 +936,7 @@ export type CollectionQuery = { readonly __typename?: "Query" } & {
       readonly documents: ReadonlyArray<
         { readonly __typename?: "DocumentReference" } & Pick<
           DocumentReference,
-          "id" | "slug" | "title" | "orderIndex"
+          "id" | "slug" | "title" | "orderIndex" | "chapterPath"
         > & {
             readonly date: Maybe<
               { readonly __typename?: "Date" } & Pick<Date, "year">
@@ -942,6 +944,25 @@ export type CollectionQuery = { readonly __typename?: "Query" } & {
           }
       >
     }
+}
+
+export type EditedCollectionQueryVariables = Exact<{
+  slug: Scalars["String"]
+}>
+
+export type EditedCollectionQuery = { readonly __typename?: "Query" } & {
+  readonly editedCollection: Maybe<
+    { readonly __typename?: "EditedCollection" } & {
+      readonly chapters: Maybe<
+        ReadonlyArray<
+          { readonly __typename?: "CollectionChapter" } & Pick<
+            CollectionChapter,
+            "title" | "indexInParent" | "section" | "path"
+          >
+        >
+      >
+    }
+  >
 }
 
 export type WordSearchQueryVariables = Exact<{
@@ -1385,6 +1406,7 @@ export const CollectionDocument = gql`
           year
         }
         orderIndex
+        chapterPath
       }
     }
   }
@@ -1395,6 +1417,27 @@ export function useCollectionQuery(
 ) {
   return Urql.useQuery<CollectionQuery>({
     query: CollectionDocument,
+    ...options,
+  })
+}
+export const EditedCollectionDocument = gql`
+  query EditedCollection($slug: String!) {
+    editedCollection(slug: $slug) {
+      chapters {
+        title
+        indexInParent
+        section
+        path
+      }
+    }
+  }
+`
+
+export function useEditedCollectionQuery(
+  options: Omit<Urql.UseQueryArgs<EditedCollectionQueryVariables>, "query">
+) {
+  return Urql.useQuery<EditedCollectionQuery>({
+    query: EditedCollectionDocument,
     ...options,
   })
 }

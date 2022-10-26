@@ -1,6 +1,6 @@
 use crate::{
-    AnnotatedForm, AudioSlice, Contributor, Database, Date, SourceAttribution, Translation,
-    TranslationBlock,
+    AnnotatedForm, AudioSlice, CollectionChapter, Contributor, Database, Date, SourceAttribution,
+    Translation, TranslationBlock,
 };
 use async_graphql::{dataloader::DataLoader, FieldResult};
 use serde::{Deserialize, Serialize};
@@ -551,5 +551,17 @@ impl DocumentReference {
     /// URL slug for this document
     pub async fn slug(&self) -> String {
         slug::slugify(&self.short_name)
+    }
+
+    /// Collection chapter's path for this document
+    pub async fn chapter_path(
+        &self,
+        context: &async_graphql::Context<'_>,
+    ) -> FieldResult<Option<Vec<String>>> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .chapter_path_by_doc(DocumentId(self.id))
+            .await?)
     }
 }

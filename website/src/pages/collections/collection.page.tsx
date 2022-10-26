@@ -4,7 +4,7 @@ import { Breadcrumbs, Link, WordpressPage } from "src/components"
 import * as Dailp from "src/graphql/dailp"
 import Layout from "src/layout"
 import { useRouteParams } from "src/renderer/PageShell"
-import { documentRoute } from "src/routes"
+import { chapterRoute, documentRoute } from "src/routes"
 import { fullWidth, paddedCenterColumn } from "src/style/utils.css"
 
 const CollectionPage = () => {
@@ -37,14 +37,29 @@ const CollectionPage = () => {
           </header>
           <WordpressPage slug={slug!} />
           <ul>
-            {documents.map((document) => (
-              <li key={document.slug}>
-                <Link href={documentRoute(document.slug)}>
-                  {document.title}
-                </Link>
-                {document.date && ` (${document.date.year})`}
-              </li>
-            ))}
+            {documents.map((document) => {
+              let chapterPath = undefined
+
+              if (document.chapterPath) {
+                chapterPath =
+                  document.chapterPath[document.chapterPath.length - 1]
+              }
+
+              return (
+                <li key={document.slug}>
+                  <Link
+                    href={
+                      chapterPath
+                        ? chapterRoute(chapterPath)
+                        : documentRoute(document.slug)
+                    }
+                  >
+                    {document.title}
+                  </Link>
+                  {document.date && ` (${document.date.year})`}
+                </li>
+              )
+            })}
           </ul>
         </article>
       </main>

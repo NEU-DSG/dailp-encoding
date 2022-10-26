@@ -106,6 +106,18 @@ query Collection($slug: String!) {
         year
       }
       orderIndex
+      chapterPath
+    }
+  }
+}
+
+query EditedCollection($slug: String!) {
+  editedCollection(slug: $slug) {
+    chapters {
+      title
+      indexInParent
+      section
+      path
     }
   }
 }

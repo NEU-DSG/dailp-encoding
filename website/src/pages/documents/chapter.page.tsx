@@ -4,6 +4,7 @@ import { Link, WordpressPage } from "src/components"
 import * as Dailp from "src/graphql/dailp"
 import { fullWidth, paddedCenterColumn } from "src/style/utils.css"
 import CWKWLayout from "../cwkw/cwkw-layout"
+import { useSubchapters } from "./chapters-context"
 import { DocumentTitleHeader, TabSet } from "./document.page"
 
 const ChapterPage = (props: {
@@ -23,10 +24,9 @@ const ChapterPage = (props: {
     return <>Loading...</>
   }
 
-  const { document } = chapter
-  const { wordpressId } = chapter
+  const { document, wordpressId } = chapter
 
-  const subchapters = [{ title: "subchaptere", path: "subchaptere" }]
+  const subchapters = useSubchapters(props.chapterSlug)
 
   return (
     <CWKWLayout>
@@ -46,18 +46,19 @@ const ChapterPage = (props: {
             </>
           )}
 
-          <div>
-            Subchapters:
-            <ul>
-              {subchapters.map((chapter) => (
-                <li>
-                  <Link key={chapter.path} href={`${chapter.path}`}>
-                    {chapter.title}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
+          <ul>
+            {subchapters && (
+              <>
+                {subchapters.map((chapter) => (
+                  <li>
+                    <Link key={chapter.leaf} href={`${chapter.leaf}`}>
+                      {chapter.title}
+                    </Link>
+                  </li>
+                ))}
+              </>
+            )}
+          </ul>
         </article>
       </main>
     </CWKWLayout>
