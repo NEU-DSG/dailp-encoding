@@ -1,11 +1,9 @@
 import React from "react"
 import { Helmet } from "react-helmet"
-import { WordpressPage } from "src/components"
+import { Link, WordpressPage } from "src/components"
 import * as Dailp from "src/graphql/dailp"
-import { usePreferences } from "src/preferences-context"
 import { fullWidth, paddedCenterColumn } from "src/style/utils.css"
 import CWKWLayout from "../cwkw/cwkw-layout"
-import * as css from "./document.css"
 import { DocumentTitleHeader, TabSet } from "./document.page"
 
 const ChapterPage = (props: {
@@ -25,7 +23,10 @@ const ChapterPage = (props: {
     return <>Loading...</>
   }
 
-  const doc = chapter.document
+  const { document } = chapter
+  const { wordpressId } = chapter
+
+  const subchapters = [{ title: "subchaptere", path: "subchaptere" }]
 
   return (
     <CWKWLayout>
@@ -33,12 +34,30 @@ const ChapterPage = (props: {
       <main className={paddedCenterColumn}>
         <article className={fullWidth}>
           <header>Title: {chapter.title}</header>
-          {doc && (
-            <main className={css.annotatedDocument}>
-              <DocumentTitleHeader doc={doc} showDetails={true} />
-              <TabSet doc={doc} />
-            </main>
+
+          {/* If this chapter contains or is a Wordpress page, display the WP page contents. */}
+          {wordpressId && <WordpressPage slug={wordpressId.toString()} />}
+
+          {/* If this chapter is a document, display the document contents. */}
+          {document && (
+            <>
+              <DocumentTitleHeader doc={document} showDetails={true} />
+              <TabSet doc={document} />
+            </>
           )}
+
+          <div>
+            Subchapters:
+            <ul>
+              {subchapters.map((chapter) => (
+                <li>
+                  <Link key={chapter.path} href={`${chapter.path}`}>
+                    {chapter.title}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
         </article>
       </main>
     </CWKWLayout>
