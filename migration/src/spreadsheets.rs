@@ -178,8 +178,8 @@ impl SheetResult {
                     None
                 };
 
-                let intro_or_body = if chapter_type==0 { Intro } 
-                else if chapter_type==1 { Body } 
+                let chapter_type_name = if chapter_type == 0 { Intro } 
+                else if chapter_type == 1 { Body } 
                 else { Credit };
 
                 let new_chapter = dailp::raw::CollectionChapter {
@@ -189,7 +189,7 @@ impl SheetResult {
                     document_short_name: doc_string,
                     id: None,
                     wordpress_id: wp_id,
-                    section: intro_or_body,
+                    section: chapter_type_name,
                 };
 
                 collection_chapters.push(new_chapter);
