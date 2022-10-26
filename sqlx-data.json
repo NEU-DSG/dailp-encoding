@@ -1129,7 +1129,8 @@
               "kind": {
                 "Enum": [
                   "Intro",
-                  "Body"
+                  "Body",
+                  "Credit"
                 ]
               },
               "name": "collection_section"
@@ -1485,7 +1486,8 @@
               "kind": {
                 "Enum": [
                   "Intro",
-                  "Body"
+                  "Body",
+                  "Credit"
                 ]
               },
               "name": "collection_section"
@@ -2154,7 +2156,8 @@
               "kind": {
                 "Enum": [
                   "Intro",
-                  "Body"
+                  "Body",
+                  "Credit"
                 ]
               },
               "name": "collection_section"
