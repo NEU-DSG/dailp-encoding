@@ -819,6 +819,37 @@
     },
     "query": "update word set\n    source_text =\n        case\n            when $2::text[] != '{}' and $2[1] is not null then $2[1]\n            else source_text\n        end,\n    commentary =\n        case\n            when $3::text[] != '{}' then $3[1]\n            else commentary\n        end\nwhere id = $1"
   },
+  "67cbfadc18a6d8a69599c876489e8ce6d7022d1ba30198685fb1c0c8a1c6a434": {
+    "describe": {
+      "columns": [
+        {
+          "name": "document_id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "chapter_path",
+          "ordinal": 1,
+          "type_info": {
+            "Custom": {
+              "kind": "Simple",
+              "name": "ltree"
+            }
+          }
+        }
+      ],
+      "nullable": [
+        true,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "select\n  c.document_id,\n  c.chapter_path\nfrom collection_chapter as c\nwhere c.document_id = $1"
+  },
   "6858e67c5a27aa4f38366244a46c9a4a50546c164a2b91599301aad1bc8f3cd0": {
     "describe": {
       "columns": [],

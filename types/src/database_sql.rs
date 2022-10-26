@@ -1074,6 +1074,20 @@ impl Database {
             section: chapter.section,
         })
     }
+
+    pub async fn chapter_path_by_doc(&self, doc_id: DocumentId) -> Result<Option<Vec<String>>> {
+        let chapter = query_file!("queries/chapter_by_doc_id.sql", doc_id.0)
+            .fetch_one(&self.client)
+            .await?;
+
+        Ok(Some(
+            chapter
+                .chapter_path
+                .into_iter()
+                .map(|s| (*s).into())
+                .collect(),
+        ))
+    }
 }
 
 #[async_trait]

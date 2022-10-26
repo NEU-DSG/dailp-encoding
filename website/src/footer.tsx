@@ -3,10 +3,12 @@ import { Link } from "src/components"
 import { usePageContext } from "src/renderer/PageShell"
 import { wordpressUrl } from "src/theme.css"
 import * as css from "./footer.css"
+import { useChapters } from "./pages/documents/chapters-context"
 
 /** University affiliation, related navigation links, and contact info.  */
 const Footer = () => {
   const { buildDate } = usePageContext()
+
   return (
     <footer className={css.footer}>
       <div className={css.dark}>

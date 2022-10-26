@@ -383,6 +383,10 @@ type DocumentReference {
 	URL slug for this document
 	"""
 	slug: String!
+	"""
+	Collection chapter's path for this document
+	"""
+	chapterPath: [String!]
 }
 
 """
