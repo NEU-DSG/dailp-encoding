@@ -544,6 +544,8 @@ pub struct DocumentReference {
     pub date: Option<Date>,
     /// Index of the document within its group, used purely for ordering
     pub order_index: i64,
+    /// Collection chapter's path for this document
+    pub chapter_path: Option<Vec<String>>,
 }
 
 #[async_graphql::ComplexObject]
@@ -551,17 +553,5 @@ impl DocumentReference {
     /// URL slug for this document
     pub async fn slug(&self) -> String {
         slug::slugify(&self.short_name)
-    }
-
-    /// Collection chapter's path for this document
-    pub async fn chapter_path(
-        &self,
-        context: &async_graphql::Context<'_>,
-    ) -> FieldResult<Option<Vec<String>>> {
-        Ok(context
-            .data::<DataLoader<Database>>()?
-            .loader()
-            .chapter_path_by_doc(DocumentId(self.id))
-            .await?)
     }
 }

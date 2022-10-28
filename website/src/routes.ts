@@ -7,7 +7,8 @@ export const documentDetailsRoute = (slug: string) =>
 
 export const collectionRoute = (slug: string) => `/collections/${slug}`
 
-export const chapterRoute = (slug: string) => `/chapters/${slug}`
+export const chapterRoute = (collectionSlug: string, slug: string) =>
+  `/${collectionSlug}/chapters/${slug}`
 
 export const morphemeTagId = (tag: string) => `tag-${kebabCase(tag)}`
 export const glossaryRoute = (tag: string) => `/glossary#${morphemeTagId(tag)}`

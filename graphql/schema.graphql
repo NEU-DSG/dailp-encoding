@@ -380,13 +380,13 @@ type DocumentReference {
 	"""
 	orderIndex: Int!
 	"""
-	URL slug for this document
-	"""
-	slug: String!
-	"""
 	Collection chapter's path for this document
 	"""
 	chapterPath: [String!]
+	"""
+	URL slug for this document
+	"""
+	slug: String!
 }
 
 """

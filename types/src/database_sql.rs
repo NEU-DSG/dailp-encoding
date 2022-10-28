@@ -448,13 +448,31 @@ impl Database {
         _super_collection: &str,
         collection: &str,
     ) -> Result<Vec<DocumentReference>> {
-        Ok(query_file_as!(
-            DocumentReference,
-            "queries/documents_in_group.sql",
-            collection
-        )
-        .fetch_all(&self.client)
-        .await?)
+        let documents = query_file!("queries/documents_in_group.sql", collection)
+            .fetch_all(&self.client)
+            .await?;
+
+        Ok(documents
+            .into_iter()
+            .map(|doc| DocumentReference {
+                id: doc.id,
+                short_name: doc.short_name,
+                title: doc.title,
+                date: doc.date,
+                order_index: doc.order_index,
+                chapter_path: if doc.chapter_path.is_none() {
+                    None
+                } else {
+                    Some(
+                        doc.chapter_path
+                            .unwrap()
+                            .into_iter()
+                            .map(|s| (*s).into())
+                            .collect(),
+                    )
+                },
+            })
+            .collect())
     }
 
     pub async fn insert_top_collection(&self, title: String, _index: i64) -> Result<Uuid> {
@@ -1073,20 +1091,6 @@ impl Database {
             wordpress_id: chapter.wordpress_id,
             section: chapter.section,
         })
-    }
-
-    pub async fn chapter_path_by_doc(&self, doc_id: DocumentId) -> Result<Option<Vec<String>>> {
-        let chapter = query_file!("queries/chapter_by_doc_id.sql", doc_id.0)
-            .fetch_one(&self.client)
-            .await?;
-
-        Ok(Some(
-            chapter
-                .chapter_path
-                .into_iter()
-                .map(|s| (*s).into())
-                .collect(),
-        ))
     }
 }
 
