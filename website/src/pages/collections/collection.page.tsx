@@ -9,9 +9,7 @@ import { fullWidth, paddedCenterColumn } from "src/style/utils.css"
 
 const CollectionPage = () => {
   const { slug } = useRouteParams()
-  useEffect(() => {
-    console.log(slug)
-  }, [slug])
+
   const [{ data: dailp }] = Dailp.useCollectionQuery({
     variables: { slug: slug! },
   })
