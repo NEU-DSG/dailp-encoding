@@ -37,29 +37,24 @@ const CollectionPage = () => {
           </header>
           <WordpressPage slug={slug!} />
           <ul>
-            {documents.map((document) => {
-              let chapterPath = undefined
-
-              if (document.chapterPath) {
-                chapterPath =
-                  document.chapterPath[document.chapterPath.length - 1]
-              }
-
-              return (
-                <li key={document.slug}>
-                  <Link
-                    href={
-                      chapterPath
-                        ? chapterRoute(chapterPath)
-                        : documentRoute(document.slug)
-                    }
-                  >
-                    {document.title}
-                  </Link>
-                  {document.date && ` (${document.date.year})`}
-                </li>
-              )
-            })}
+            {documents.map((document) => (
+              <li key={document.slug}>
+                <Link
+                  href={
+                    // If this document exists within a collection's chapter, then redirect to that chapter page.
+                    document.chapterPath && document.chapterPath.length > 1
+                      ? chapterRoute(
+                          document.chapterPath[0]!,
+                          document.chapterPath[document.chapterPath.length - 1]!
+                        )
+                      : documentRoute(document.slug)
+                  }
+                >
+                  {document.title}
+                </Link>
+                {document.date && ` (${document.date.year})`}
+              </li>
+            ))}
           </ul>
         </article>
       </main>
