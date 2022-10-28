@@ -40,6 +40,61 @@
     },
     "query": "select id\nfrom document\nwhere short_name = $1\n"
   },
+  "02cf184e3264deaaaf6052a41c44555080312db700a1c3e4d4f07d0afbc87e7b": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "short_name",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "title",
+          "ordinal": 2,
+          "type_info": "Text"
+        },
+        {
+          "name": "date: Date",
+          "ordinal": 3,
+          "type_info": "Date"
+        },
+        {
+          "name": "order_index",
+          "ordinal": 4,
+          "type_info": "Int8"
+        },
+        {
+          "name": "chapter_path?",
+          "ordinal": 5,
+          "type_info": {
+            "Custom": {
+              "kind": "Simple",
+              "name": "ltree"
+            }
+          }
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        true,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      }
+    },
+    "query": "select\n  d.id,\n  d.short_name,\n  d.title,\n  d.written_at as \"date: Date\",\n  d.index_in_group as order_index,\n  c.chapter_path as \"chapter_path?\"\nfrom document_group\n  inner join document as d on document_group.id = d.group_id\n  left join collection_chapter as c on c.document_id = d.id\nwhere document_group.slug = $1\norder by d.index_in_group asc\n"
+  },
   "06b8461f89e4dc227c28b2fa754688c67ec2cdb8dfc3f82d34002bf24b886d3d": {
     "describe": {
       "columns": [],
@@ -707,61 +762,6 @@
     },
     "query": "select\n  word.id,\n  word.source_text,\n  word.simple_phonetics,\n  word.phonemic,\n  word.english_gloss,\n  word.commentary,\n  word.document_id,\n  word.index_in_document,\n  word.page_number,\n  media_resource.url as \"audio_url?\",\n  media_slice.time_range as \"audio_slice?\"\nfrom word\n  left join media_slice on media_slice.id = word.audio_slice_id\n  left join media_resource on media_resource.id = media_slice.resource_id\nwhere source_text like any($1)\n"
   },
-  "57c8d1312769757349180385ae639c767006819da82c9e77471e2097e290d620": {
-    "describe": {
-      "columns": [
-        {
-          "name": "id",
-          "ordinal": 0,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "short_name",
-          "ordinal": 1,
-          "type_info": "Text"
-        },
-        {
-          "name": "title",
-          "ordinal": 2,
-          "type_info": "Text"
-        },
-        {
-          "name": "date: Date",
-          "ordinal": 3,
-          "type_info": "Date"
-        },
-        {
-          "name": "order_index",
-          "ordinal": 4,
-          "type_info": "Int8"
-        },
-        {
-          "name": "chapter_path",
-          "ordinal": 5,
-          "type_info": {
-            "Custom": {
-              "kind": "Simple",
-              "name": "ltree"
-            }
-          }
-        }
-      ],
-      "nullable": [
-        false,
-        false,
-        false,
-        true,
-        false,
-        false
-      ],
-      "parameters": {
-        "Left": [
-          "Text"
-        ]
-      }
-    },
-    "query": "select\n  d.id,\n  d.short_name,\n  d.title,\n  d.written_at as \"date: Date\",\n  d.index_in_group as order_index,\n  c.chapter_path\nfrom document_group\n  inner join document as d on document_group.id = d.group_id\n  left join collection_chapter as c on c.document_id = d.id\nwhere document_group.slug = $1\norder by d.index_in_group asc\n"
-  },
   "587e868e1c86816469a9169bf07be80df5add11ef357029f74629e112d88b88e": {
     "describe": {
       "columns": [],
@@ -873,37 +873,6 @@
       }
     },
     "query": "update word set\n    source_text =\n        case\n            when $2::text[] != '{}' and $2[1] is not null then $2[1]\n            else source_text\n        end,\n    commentary =\n        case\n            when $3::text[] != '{}' then $3[1]\n            else commentary\n        end\nwhere id = $1"
-  },
-  "67cbfadc18a6d8a69599c876489e8ce6d7022d1ba30198685fb1c0c8a1c6a434": {
-    "describe": {
-      "columns": [
-        {
-          "name": "document_id",
-          "ordinal": 0,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "chapter_path",
-          "ordinal": 1,
-          "type_info": {
-            "Custom": {
-              "kind": "Simple",
-              "name": "ltree"
-            }
-          }
-        }
-      ],
-      "nullable": [
-        true,
-        false
-      ],
-      "parameters": {
-        "Left": [
-          "Uuid"
-        ]
-      }
-    },
-    "query": "select\n  c.document_id,\n  c.chapter_path\nfrom collection_chapter as c\nwhere c.document_id = $1"
   },
   "6858e67c5a27aa4f38366244a46c9a4a50546c164a2b91599301aad1bc8f3cd0": {
     "describe": {

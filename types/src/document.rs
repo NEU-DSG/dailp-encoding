@@ -1,6 +1,6 @@
 use crate::{
-    AnnotatedForm, AudioSlice, CollectionChapter, Contributor, Database, Date, SourceAttribution,
-    Translation, TranslationBlock,
+    AnnotatedForm, AudioSlice, Contributor, Database, Date, SourceAttribution, Translation,
+    TranslationBlock,
 };
 use async_graphql::{dataloader::DataLoader, FieldResult};
 use serde::{Deserialize, Serialize};

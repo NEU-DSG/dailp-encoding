@@ -19,7 +19,6 @@ import "src/style/global.css"
 import { HeaderPrefDrawer } from "../../mode"
 import { PreferencesProvider } from "../../preferences-context"
 import "../../wordpress.css"
-import { ChaptersProvider } from "../documents/chapters-context"
 import * as css from "./cwkw-layout.css"
 import { themeClass } from "./theme.css"
 import * as tocCss from "./toc-sidebar.css"
@@ -27,7 +26,6 @@ import * as tocCss from "./toc-sidebar.css"
 /** Wrapper for cwkw site pages, providing them with a navigation header and footer. */
 const CWKWLayout: React.FC = ({ children }) => {
   const isDesktop = useMediaQuery(mediaQueries.large)
-  const collectionSlug = "cwkw"
 
   return (
     <PreferencesProvider>
