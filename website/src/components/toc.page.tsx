@@ -4,7 +4,7 @@ import { CollectionSection } from "src/graphql/dailp"
 import {
   Chapter,
   useChapters,
-} from "src/pages/edited-collections/chapters-context"
+} from "src/pages/edited-collections/edited-collection-context"
 import { useRouteParams } from "src/renderer/PageShell"
 import * as css from "./toc.css"
 

@@ -1,4 +1,5 @@
 import React, { createContext, useContext } from "react"
+import { DialogStateReturn, useDialogState } from "reakit/Dialog"
 import * as Dailp from "src/graphql/dailp"
 import { useRouteParams } from "src/renderer/PageShell"
 
@@ -10,9 +11,16 @@ export type Chapter = {
   children?: Chapter[]
 }
 
-const ChaptersContext = createContext<Chapter[] | undefined>([])
+type CollectionContext = {
+  chapters: Chapter[] | undefined
+  dialog: DialogStateReturn
+}
 
-export const ChaptersProvider = (props: { children: any }) => {
+const CollectionContext = createContext<CollectionContext>(
+  {} as CollectionContext
+)
+
+export const CollectionProvider = (props: { children: any }) => {
   const { collectionSlug } = useRouteParams()
 
   // Queries for chapters of a collection.
@@ -23,17 +31,28 @@ export const ChaptersProvider = (props: { children: any }) => {
   // Gets the converted nested chapters using the backend query.
   const chapters = flatToNested(data?.editedCollection?.chapters)
 
+  // Gets the dialog state for the TOC
+  const dialog = useDialogState({
+    animated: true,
+  })
+
   return (
-    <ChaptersContext.Provider value={chapters}>
+    <CollectionContext.Provider value={{ chapters, dialog }}>
       {props.children}
-    </ChaptersContext.Provider>
+    </CollectionContext.Provider>
   )
 }
 
 export const useChapters = () => {
-  const context = useContext(ChaptersContext)
+  const context = useContext(CollectionContext)
 
-  return context
+  return context.chapters
+}
+
+export const useDialog = () => {
+  const context = useContext(CollectionContext)
+
+  return context.dialog
 }
 
 // Returns the subchapters given a parent chapter's leaf.

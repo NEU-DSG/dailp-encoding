@@ -1,7 +1,14 @@
 import { style } from "@vanilla-extract/css"
 import { margin } from "polished"
-import { colors, fonts, hsize, hspace, mediaQueries } from "src/style/constants"
-import { paddingX } from "src/style/utils"
+import {
+  colors,
+  fonts,
+  hsize,
+  hspace,
+  mediaQueries,
+  vspace,
+} from "src/style/constants"
+import { paddingX, paddingY } from "src/style/utils"
 import { hideOnPrint, row } from "src/style/utils.css"
 import * as baseLayout from "../../layout.css"
 import { drawerWidth } from "../edited-collections/sidebar.css"
@@ -12,10 +19,16 @@ export const openHeader = style([
   paddingX(hspace.edge),
   hideOnPrint,
   {
+    position: "sticky",
     backgroundColor: colors.secondary,
     fontFamily: fonts.header,
-    display: "flex",
-    justifyContent: "center",
+    "@media": {
+      [mediaQueries.medium]: {
+        position: "static",
+        display: "flex",
+        justifyContent: "center",
+      },
+    },
   },
 ])
 
@@ -23,11 +36,14 @@ export const headerContents = style([baseLayout.headerContents])
 
 export const subHeader = style([baseLayout.subHeader, { fontSize: "larger" }])
 
-export const siteTitle = style([baseLayout.siteTitle])
+export const siteTitle = style([baseLayout.siteTitle, { flex: 1 }])
 
-export const siteLink = style([baseLayout.siteLink])
+export const siteLink = style([baseLayout.siteLink, { display: "flex" }])
 
-export const contentContainer = style([baseLayout.contentContainer])
+export const contentContainer = style([
+  baseLayout.contentContainer,
+  { flex: 1 },
+])
 
 export const leftMargin = style({
   "@media": {
@@ -42,16 +58,21 @@ export const openHeaderContents = style([
   row,
   leftMargin,
   {
-    alignItems: "center",
-    width: hsize.large,
+    "@media": {
+      [mediaQueries.medium]: {
+        alignItems: "center",
+        width: hsize.large,
+      },
+    },
   },
 ])
 
 export const banner = style([
+  margin(0),
+  paddingY(vspace.medium),
   {
     "@media": {
       [mediaQueries.medium]: {
-        ...margin(0),
         width: hsize.small,
       },
     },

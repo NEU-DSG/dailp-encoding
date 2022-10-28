@@ -9,7 +9,7 @@ import { drawerBg, navButton } from "src/menu.css"
 import "src/style/global.css"
 import { colors } from "src/style/theme-contract.css"
 import "../../wordpress.css"
-import { useDialog } from "../cwkw/dialog-context"
+import { useDialog } from "./edited-collection-context"
 import * as css from "./sidebar.css"
 
 // Renders a sidebar on the left side of the screen containing a drawer.
@@ -19,7 +19,6 @@ export const Sidebar = () => {
   // On load, make sure drawer appears for desktop screens.
   useEffect(() => {
     dialog.setVisible(true)
-    dialog.setModal(false)
   }, [])
 
   return (

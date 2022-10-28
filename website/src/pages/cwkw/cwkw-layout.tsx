@@ -4,17 +4,18 @@ import React from "react"
 import { Helmet } from "react-helmet"
 import { Link } from "src/components"
 import { useMediaQuery } from "src/custom-hooks"
+import { HeaderPrefDrawer } from "src/mode"
+import { PreferencesProvider } from "src/preferences-context"
 import { useRouteParams } from "src/renderer/PageShell"
 import { colors, mediaQueries } from "src/style/constants"
 import "src/style/global.css"
-import { HeaderPrefDrawer } from "../../mode"
-import { PreferencesProvider } from "../../preferences-context"
 import "../../wordpress.css"
+import { useDialog } from "../edited-collections/edited-collection-context"
 import { MobileSidebar } from "../edited-collections/sidebar"
 import Sidebar from "../edited-collections/sidebar"
+import CWKWBanner from "./cwkw-banner.svg"
 import * as css from "./cwkw-layout.css"
-import { useDialog } from "./dialog-context"
-import CWKWBanner from "./logo-no-background.svg"
+import MobileCWKWBanner from "./mobile-cwkw-banner.svg"
 import { themeClass } from "./theme.css"
 
 /** Wrapper for cwkw site pages, providing them with a navigation header and footer. */
@@ -36,11 +37,13 @@ const CWKWLayout: React.FC = ({ children }) => {
       <header
         aria-label="Site Header"
         id="header"
-        className={dialog.visible ? css.openHeader : css.header}
+        className={dialog.visible && isDesktop ? css.openHeader : css.header}
       >
         <div
           className={
-            dialog.visible ? css.openHeaderContents : css.headerContents
+            dialog.visible && isDesktop
+              ? css.openHeaderContents
+              : css.headerContents
           }
         >
           {isDesktop ? <Sidebar /> : <MobileSidebar />}
@@ -48,7 +51,7 @@ const CWKWLayout: React.FC = ({ children }) => {
             <h1 className={css.siteTitle}>
               <Link className={css.siteLink} href={`/${collectionSlug}`}>
                 <img
-                  src={CWKWBanner}
+                  src={isDesktop ? CWKWBanner : MobileCWKWBanner}
                   alt="Red basket with the text CWKW Cherokees Writing the Keetoowah Way"
                   className={css.banner}
                 />

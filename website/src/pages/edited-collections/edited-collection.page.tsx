@@ -1,11 +1,10 @@
 import React from "react"
 import { Helmet } from "react-helmet"
 import { Link } from "src/components"
-import { useRouteParams } from "src/renderer/PageShell"
 import * as util from "src/style/utils.css"
 import CWKWLayout from "../cwkw/cwkw-layout"
 import * as css from "../cwkw/cwkw-layout.css"
-import { useDialog } from "../cwkw/dialog-context"
+import { useDialog } from "./edited-collection-context"
 
 // Renders an edited collection page based on the route parameters.
 const EditedCollectionPage = () => {
