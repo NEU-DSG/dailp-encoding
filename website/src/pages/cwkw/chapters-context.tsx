@@ -14,6 +14,7 @@ const ChaptersContext = createContext<Chapter[] | undefined>([])
 
 export const ChaptersProvider = (props: { children: any }) => {
   const { collectionSlug } = useRouteParams()
+
   // Queries for chapters of a collection.
   const [{ data }] = Dailp.useEditedCollectionQuery({
     variables: { slug: collectionSlug! },

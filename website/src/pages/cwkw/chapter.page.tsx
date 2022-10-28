@@ -3,9 +3,9 @@ import { Helmet } from "react-helmet"
 import { Link, WordpressPage } from "src/components"
 import * as Dailp from "src/graphql/dailp"
 import { fullWidth, paddedCenterColumn } from "src/style/utils.css"
-import CWKWLayout from "../cwkw/cwkw-layout"
+import { DocumentTitleHeader, TabSet } from "../documents/document.page"
 import { useSubchapters } from "./chapters-context"
-import { DocumentTitleHeader, TabSet } from "./document.page"
+import CWKWLayout from "./cwkw-layout"
 
 const ChapterPage = (props: {
   collectionSlug: string
