@@ -1,6 +1,10 @@
 import { useState } from "react"
 import Link from "src/components/link"
-import * as Dailp from "src/graphql/dailp"
+import { CollectionSection } from "src/graphql/dailp"
+import {
+  Chapter,
+  useChapters,
+} from "src/pages/edited-collections/chapters-context"
 import { useRouteParams } from "src/renderer/PageShell"
 import * as css from "./toc.css"
 
@@ -10,19 +14,30 @@ type TOCData = {
   children?: TOCData[]
 }
 
-type Chapter = {
-  title: string
-  leaf: string
-  indexInParent: number
-  children?: Chapter[]
-}
-
 interface Chapters {
   introChapters?: Chapter[]
   bodyChapters: Chapter[]
 }
 
-export const TOC = ({ introChapters, bodyChapters }: Chapters) => {
+const CollectionTOC = () => {
+  const chapters = useChapters()
+
+  if (!chapters) {
+    return null
+  }
+
+  const introChapters = chapters.filter((c) => {
+    return c.section === CollectionSection.Intro
+  })
+
+  const bodyChapters = chapters.filter((c) => {
+    return c.section === CollectionSection.Body
+  })
+
+  return <TOC introChapters={introChapters} bodyChapters={bodyChapters} />
+}
+
+const TOC = ({ introChapters, bodyChapters }: Chapters) => {
   const { collectionSlug } = useRouteParams()
 
   const chapterPath = `${collectionSlug}/chapters/`
@@ -145,101 +160,5 @@ const data: TOCData[] = [
   data9,
   data10,
 ]
-
-// Gets the chapters from a query.
-export const CollectionTOC = () => {
-  const { collectionSlug } = useRouteParams()
-
-  const [{ data }] = Dailp.useEditedCollectionQuery({
-    variables: { slug: collectionSlug! },
-  })
-
-  if (!data) {
-    return <>Loading...</>
-  }
-
-  const collection = data.editedCollection
-
-  const introChapters = collection?.chapters?.filter(
-    (chapter) => chapter.section == Dailp.CollectionSection.Intro
-  )
-
-  const bodyChapters = collection?.chapters?.filter(
-    (chapter) => chapter.section == Dailp.CollectionSection.Body
-  )
-
-  const nestedIntroChapters = flatToNested(introChapters)
-  const nestedBodyChapters = flatToNested(bodyChapters)
-
-  return (
-    <TOC
-      introChapters={nestedIntroChapters}
-      bodyChapters={nestedBodyChapters}
-    />
-  )
-}
-
-type FlatChapter =
-  | ({
-      readonly __typename?: "CollectionChapter" | undefined
-    } & Pick<
-      Dailp.CollectionChapter,
-      "section" | "title" | "path" | "indexInParent"
-    >)[]
-  | undefined
-
-// Converts a flat-list into a nested-list structure.
-function flatToNested(chapters: FlatChapter) {
-  if (!chapters) {
-    return []
-  }
-
-  const nestedChapters: Chapter[] = []
-  const stack: Chapter[] = []
-
-  for (let i = 0; i < chapters.length; i++) {
-    const curr = chapters[i]
-    const leaf = curr?.path[curr?.indexInParent]
-
-    if (curr && leaf) {
-      // Create a new Chapter with the backend chapter's fields.
-      let chapter: Chapter = {
-        title: curr.title,
-        leaf,
-        indexInParent: curr.indexInParent,
-        children: [],
-      }
-
-      // If the index is 1, then this chapter has no parent chapter.
-      if (curr.indexInParent === 1) {
-        // Since this chapter has no parent, it needs to be added to the nested list.
-        nestedChapters.push(chapter)
-        // In case there was a chapter previously, we'll need to pop it off the stack since we now it no longer has any more children to add to it.
-        stack.pop()
-        // Push this chapter onto the stack to check for its children.
-        stack.push(chapter)
-      } else {
-        // Get the item last pushed onto the stack.
-        let lastPushed = stack[stack.length - 1]
-        // Gets the second to last string element in the current chapter's path, which is this chapter's parent leaf.
-        let parentChapterLeaf = curr.path[curr.indexInParent - 1]
-
-        // Check if the current chapter's parent leaf matches the last pushed chapter's leaf.
-        // If it doesn't, the last pushed chapter is not the parent and needs to be popped.
-        // Continue through the stack until the parent of this chapter is found.
-        while (parentChapterLeaf !== lastPushed?.leaf) {
-          stack.pop()
-          lastPushed = stack[stack.length - 1]
-        }
-        // Add this chapter to the parent chapter's list of children.
-        lastPushed?.children?.push(chapter)
-        // Push this chapter onto the stack to check for its children next.
-        stack.push(chapter)
-      }
-    }
-  }
-
-  return nestedChapters
-}
 
 export default CollectionTOC

@@ -7297,8 +7297,6 @@ export enum TimezoneEnum {
   EuropeTirane = "EUROPE_TIRANE",
   /** Ulyanovsk */
   EuropeUlyanovsk = "EUROPE_ULYANOVSK",
-  /** Uzhgorod */
-  EuropeUzhgorod = "EUROPE_UZHGOROD",
   /** Vaduz */
   EuropeVaduz = "EUROPE_VADUZ",
   /** Vatican */
@@ -7313,8 +7311,6 @@ export enum TimezoneEnum {
   EuropeWarsaw = "EUROPE_WARSAW",
   /** Zagreb */
   EuropeZagreb = "EUROPE_ZAGREB",
-  /** Zaporozhye */
-  EuropeZaporozhye = "EUROPE_ZAPOROZHYE",
   /** Zurich */
   EuropeZurich = "EUROPE_ZURICH",
   /** Antananarivo */

@@ -5,7 +5,7 @@ import { Helmet } from "react-helmet"
 import { Link } from "src/components"
 import { useMediaQuery } from "src/custom-hooks"
 import { useRouteParams } from "src/renderer/PageShell"
-import { mediaQueries } from "src/style/constants"
+import { colors, mediaQueries } from "src/style/constants"
 import "src/style/global.css"
 import { HeaderPrefDrawer } from "../../mode"
 import { PreferencesProvider } from "../../preferences-context"
@@ -55,7 +55,7 @@ const CWKWLayout: React.FC = ({ children }) => {
               </Link>
             </h1>
           </div>
-          <HeaderPrefDrawer />
+          <HeaderPrefDrawer color={colors.body} />
         </div>
       </header>
       {children}
