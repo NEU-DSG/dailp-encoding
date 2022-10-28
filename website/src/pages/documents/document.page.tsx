@@ -331,11 +331,19 @@ export const DocumentTitleHeader = (p: {
       {p.doc.title}
       {p.doc.date && ` (${p.doc.date.year})`}{" "}
     </h1>
+        
+    
+
     <div className={css.bottomPadded}>
       {p.showDetails ? (
         <Link href={documentDetailsRoute(p.doc.slug!)}>View Details</Link>
       ) : (
         <Link href={documentRoute(p.doc.slug!)}>View Contents</Link>
+      )}
+      {p.doc.audioRecording && (
+        <div>
+        {!isMobile ? <a href={p.doc.audioRecording?.resourceUrl}><Button>Download Audio</Button></a> : null}
+        </div>
       )}
       {!isMobile ? <Button onClick={() => window.print()}>Print</Button> : null}
     </div>
