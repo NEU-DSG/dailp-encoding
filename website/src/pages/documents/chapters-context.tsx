@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from "react"
+import React, { createContext, useContext } from "react"
 import * as Dailp from "src/graphql/dailp"
 import { useRouteParams } from "src/renderer/PageShell"
 
@@ -71,9 +71,6 @@ function findSubchapters(
 
   return undefined
 }
-
-// Given a document slug, return the associated collection chapter route.
-function findChapterRoute(documentSlug: string) {}
 
 // Chapter type of collection chapters that comes from the backend.
 type FlatChapters =
