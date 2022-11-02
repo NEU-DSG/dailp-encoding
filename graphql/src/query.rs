@@ -7,7 +7,7 @@ use {
     dailp::async_graphql::{self, dataloader::DataLoader, Context, FieldResult, Guard},
     dailp::{
         AnnotatedDoc, AnnotatedFormUpdate, CherokeeOrthography, Database, EditedCollection,
-        MorphemeId, MorphemeReference, MorphemeTag, WordsInDocument,
+        MorphemeId, MorphemeReference, MorphemeTag, ParagraphUpdate, WordsInDocument,
     },
     serde::{Deserialize, Serialize},
     serde_with::{rust::StringWithSeparator, CommaSeparator},
@@ -287,6 +287,20 @@ impl Mutation {
     /// the future.
     async fn api_version(&self) -> &str {
         "1.0"
+    }
+
+    /// Mutation for paragraph and translation editing
+    #[graphql(guard = "GroupGuard::new(UserGroup::Editor)")]
+    async fn update_paragraph(
+        &self,
+        context: &Context<'_>,
+        paragraph: ParagraphUpdate,
+    ) -> FieldResult<Uuid> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .update_paragraph(paragraph)
+            .await?)
     }
 
     #[graphql(guard = "GroupGuard::new(UserGroup::Editor)")]
