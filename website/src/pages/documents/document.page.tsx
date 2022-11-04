@@ -340,9 +340,9 @@ export const DocumentTitleHeader = (p: {
       ) : (
         <Link href={documentRoute(p.doc.slug!)}>View Contents</Link>
       )}
-      {p.doc.audioRecording && (
-        <div>
-        {!isMobile ? <a href={p.doc.audioRecording?.resourceUrl}><Button>Download Audio</Button></a> : null}
+      {!p.doc.audioRecording && (
+        <div id="no-audio-message">
+        {!isMobile ? <a><b>No Audio Available</b></a> : null}
         </div>
       )}
       {!isMobile ? <Button onClick={() => window.print()}>Print</Button> : null}
@@ -355,7 +355,13 @@ export const DocumentTitleHeader = (p: {
           audioUrl={p.doc.audioRecording.resourceUrl}
           showProgress
         />
+        {p.doc.audioRecording && (
+        <div>
+        {!isMobile ? <a href={p.doc.audioRecording?.resourceUrl} download={"audio"}><Button>Download Audio</Button></a> : null}
+        </div>
+      )}
       </div>
     )}
+    
   </header>
 )
