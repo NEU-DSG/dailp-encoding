@@ -103,18 +103,24 @@ type FlatChapters =
   | null
 
 // Converts a flat-list into a nested-list structure.
-function flatToNested(chapters: FlatChapters | undefined) {
+function flatToNested(
+  chapters: FlatChapters | undefined
+): Chapter[] | undefined {
   if (!chapters) {
     return undefined
   }
 
+  // The final result.
   const nestedChapters: Chapter[] = []
-  const stack: Chapter[] = []
+
+  // Key: Chapter's leaf
+  // Value: Chapter
+  const leafToChapter = new Map<string, Chapter>()
 
   for (let i = 0; i < chapters.length; i++) {
     const curr = chapters[i]
+    // The leaf is the last string in the chapter's path. i.e. cwkw.chaptera -> leaf: chaptera
     const leaf = curr?.path[curr?.indexInParent]
-
     if (curr && leaf) {
       // Create a new Chapter with the backend chapter's fields.
       let chapter: Chapter = {
@@ -125,39 +131,25 @@ function flatToNested(chapters: FlatChapters | undefined) {
         children: undefined,
       }
 
-      // If the index is 1, then this chapter has no parent chapter.
-      if (curr.indexInParent === 1) {
-        // Since this chapter has no parent, it needs to be added to the nested list.
-        nestedChapters.push(chapter)
-        // In case there was a chapter previously, we'll need to pop it off the stack since we now it no longer has any more children to add to it.
-        stack.pop()
-        // Push this chapter onto the stack to check for its children.
-        stack.push(chapter)
-      } else {
-        // Get the item last pushed onto the stack.
-        let lastPushed = stack[stack.length - 1]
-        // Gets the second to last string element in the current chapter's path, which is this chapter's parent leaf.
-        let parentChapterLeaf = curr.path[curr.indexInParent - 1]
+      // Create a key-value pair with the chapter's leaf and the chapter itself.
+      leafToChapter.set(leaf, chapter)
 
-        // Check if the current chapter's parent leaf matches the last pushed chapter's leaf.
-        // If it doesn't, the last pushed chapter is not the parent and needs to be popped.
-        // Continue through the stack until the parent of this chapter is found.
-        while (parentChapterLeaf !== lastPushed?.leaf) {
-          stack.pop()
-          lastPushed = stack[stack.length - 1]
+      // Get this chapter's parent leaf, which is the second to last string in its path. i.e. cwkw.chaptera -> parent leaf: cwkw
+      const parentLeaf = curr.path[curr.indexInParent - 1]
+
+      if (parentLeaf) {
+        // Get the parent chapter itself from the parent leaf.
+        const parentChapter = leafToChapter.get(parentLeaf)
+
+        // If there is a parent chapter, add this chapter to its list of children.
+        if (parentChapter) {
+          parentChapter?.children
+            ? parentChapter.children.push(chapter)
+            : (parentChapter.children = [chapter])
+        } else {
+          // Otherwise, add it to the nested list of chapters (the final result).
+          nestedChapters.push(chapter)
         }
-
-        // Add this chapter to the parent chapter's list of children.
-        if (lastPushed) {
-          if (!lastPushed.children) {
-            lastPushed.children = [chapter]
-          } else {
-            lastPushed?.children.push(chapter)
-          }
-        }
-
-        // Push this chapter onto the stack to check for its children next.
-        stack.push(chapter)
       }
     }
   }

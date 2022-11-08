@@ -17,6 +17,7 @@ type TOCData = {
 interface Chapters {
   introChapters?: Chapter[]
   bodyChapters: Chapter[]
+  creditChapters?: Chapter[]
 }
 
 const CollectionTOC = () => {
