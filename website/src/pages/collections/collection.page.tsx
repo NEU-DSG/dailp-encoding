@@ -1,4 +1,4 @@
-import React, { useEffect } from "react"
+import React from "react"
 import { Helmet } from "react-helmet"
 import { Breadcrumbs, Link, WordpressPage } from "src/components"
 import * as Dailp from "src/graphql/dailp"
@@ -9,7 +9,6 @@ import { fullWidth, paddedCenterColumn } from "src/style/utils.css"
 
 const CollectionPage = () => {
   const { slug } = useRouteParams()
-
   const [{ data: dailp }] = Dailp.useCollectionQuery({
     variables: { slug: slug! },
   })
