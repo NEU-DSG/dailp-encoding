@@ -707,6 +707,19 @@
     },
     "query": "select\n  word.id,\n  word.source_text,\n  word.simple_phonetics,\n  word.phonemic,\n  word.english_gloss,\n  word.commentary,\n  word.document_id,\n  word.index_in_document,\n  word.page_number,\n  media_resource.url as \"audio_url?\",\n  media_slice.time_range as \"audio_slice?\"\nfrom word\n  left join media_slice on media_slice.id = word.audio_slice_id\n  left join media_resource on media_resource.id = media_slice.resource_id\nwhere source_text like any($1)\n"
   },
+  "57df2982e788599773dc55b1fc70dfd0739f4dcd6702079f93cd6ff24a992bff": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "TextArray"
+        ]
+      }
+    },
+    "query": "update paragraph set\n    english_translation =\n        case\n            when $2::text[] != '{}' and $2[1] is not null then $2[1]\n            else english_translation\n        end\nwhere id = $1"
+  },
   "587e868e1c86816469a9169bf07be80df5add11ef357029f74629e112d88b88e": {
     "describe": {
       "columns": [],
