@@ -408,6 +408,20 @@ impl Database {
         Ok(word.id)
     }
 
+    pub async fn update_paragraph(&self, paragraph: ParagraphUpdate) -> Result<Uuid> {
+        let translation = paragraph.translation.into_vec();
+
+        query_file!(
+            "queries/update_paragraph.sql",
+            paragraph.id,
+            &translation as _
+        )
+        .execute(&self.client)
+        .await?;
+
+        Ok(paragraph.id)
+    }
+
     pub async fn all_pages(&self) -> Result<Vec<page::Page>> {
         todo!("Implement content pages")
     }
@@ -1242,12 +1256,14 @@ impl Loader<ParagraphsInPage> for Database {
         // reimplement that with try_fold()
         Ok(items
             .into_iter()
-            .map(|p| {
+            .enumerate()
+            .map(|(index, p)| {
                 (
                     ParagraphsInPage(p.page_id),
                     DocumentParagraph {
                         id: p.id,
                         translation: p.english_translation,
+                        index: (index as i64) + 1,
                     },
                 )
             })

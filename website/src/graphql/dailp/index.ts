@@ -315,6 +315,7 @@ export type DocumentPage = {
 
 export type DocumentParagraph = {
   readonly __typename?: "DocumentParagraph"
+  readonly index: Scalars["Int"]
   /** Source text of the paragraph broken down into words */
   readonly source: ReadonlyArray<AnnotatedSeg>
   /** English translation of the whole paragraph */
@@ -486,6 +487,8 @@ export type Mutation = {
   readonly apiVersion: Scalars["String"]
   readonly updateAnnotation: Scalars["Boolean"]
   readonly updatePage: Scalars["Boolean"]
+  /** Mutation for paragraph and translation editing */
+  readonly updateParagraph: Scalars["UUID"]
   readonly updateWord: Scalars["UUID"]
 }
 
@@ -495,6 +498,10 @@ export type MutationUpdateAnnotationArgs = {
 
 export type MutationUpdatePageArgs = {
   data: Scalars["JSON"]
+}
+
+export type MutationUpdateParagraphArgs = {
+  paragraph: ParagraphUpdate
 }
 
 export type MutationUpdateWordArgs = {
@@ -522,6 +529,13 @@ export type PageImage = {
   readonly source: ImageSource
   /** The full IIIF url for this image resource */
   readonly url: Scalars["String"]
+}
+
+/** A paragraph in an annotated document that can be edited. */
+export type ParagraphUpdate = {
+  /** Unique identifier of the form */
+  readonly id: Scalars["UUID"]
+  readonly translation: InputMaybe<Scalars["String"]>
 }
 
 /** The reference position within a document of one specific form */
@@ -799,7 +813,7 @@ export type DocumentContentsQuery = { readonly __typename?: "Query" } & {
               readonly paragraphs: ReadonlyArray<
                 { readonly __typename?: "DocumentParagraph" } & Pick<
                   DocumentParagraph,
-                  "translation"
+                  "translation" | "index"
                 > & {
                     readonly source: ReadonlyArray<
                       | ({ readonly __typename: "AnnotatedForm" } & Pick<
@@ -1291,6 +1305,7 @@ export const DocumentContentsDocument = gql`
             }
           }
           translation
+          index
         }
       }
       forms @include(if: $isReference) {

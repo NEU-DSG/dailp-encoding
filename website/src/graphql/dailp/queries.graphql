@@ -59,6 +59,7 @@ query DocumentContents(
           }
         }
         translation
+        index
       }
     }
     forms @include(if: $isReference) {
