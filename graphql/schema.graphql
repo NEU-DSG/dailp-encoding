@@ -562,6 +562,10 @@ type Mutation {
 	the future.
 	"""
 	apiVersion: String!
+	"""
+	Mutation for paragraph and translation editing
+	"""
+	updateParagraph(paragraph: ParagraphUpdate!): UUID!
 	updatePage(data: JSON!): Boolean!
 	updateAnnotation(data: JSON!): Boolean!
 	updateWord(word: AnnotatedFormUpdate!): UUID!
@@ -590,6 +594,17 @@ type PageImage {
 	The full IIIF url for this image resource
 	"""
 	url: String!
+}
+
+"""
+A paragraph in an annotated document that can be edited.
+"""
+input ParagraphUpdate {
+	"""
+	Unique identifier of the form
+	"""
+	id: UUID!
+	translation: String
 }
 
 """

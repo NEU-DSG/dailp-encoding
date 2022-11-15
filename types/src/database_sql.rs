@@ -413,6 +413,20 @@ impl Database {
         Ok(word.id)
     }
 
+    pub async fn update_paragraph(&self, paragraph: ParagraphUpdate) -> Result<Uuid> {
+        let translation = paragraph.translation.into_vec();
+
+        query_file!(
+            "queries/update_paragraph.sql",
+            paragraph.id,
+            &translation as _
+        )
+        .execute(&self.client)
+        .await?;
+
+        Ok(paragraph.id)
+    }
+
     pub async fn all_pages(&self) -> Result<Vec<page::Page>> {
         todo!("Implement content pages")
     }
