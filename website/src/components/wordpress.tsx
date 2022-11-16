@@ -8,6 +8,7 @@ import { useDialogState } from "reakit/Dialog"
 import { AudioPlayer, Button, Link } from "src/components"
 import { useMediaQuery } from "src/custom-hooks"
 import * as Dailp from "src/graphql/dailp"
+import { AnnotatedDoc } from "src/graphql/dailp"
 import * as Wordpress from "src/graphql/wordpress"
 import { usePreferences } from "src/preferences-context"
 import { useLocation, useRouteParams } from "src/renderer/PageShell"
@@ -72,18 +73,20 @@ export const WordpressPageContents = ({
 
 const parseOptions: HTMLReactParserOptions = {
   replace(node) {
-    const style = /\[(\$*)?(\w*):([0-9]*)-?([0-9]*)?\]/ // [DocName:Start(-OptionalEnd)]
+    const style = /\[(audio)?(join)?:?(\w*):([0-9]*)-?([0-9]*)?\]/ // [DocName:Start(-OptionalEnd)]
 
     if ("data" in node) {
       const segments = node.data.match(style)?.filter((x) => !!x)
 
+      console.log(segments)
       if (segments && segments.length >= 3) {
-        if (segments[1] === "$") {
+        if (segments[2] === "audio") {
           return (
             <PullAudio
-              slug={segments[2]!}
-              first={parseInt(segments[3]!)}
-              last={segments.length >= 5 ? parseInt(segments[4]!) : undefined}
+              slug={segments[3]!}
+              first={parseInt(segments[4]!)}
+              last={segments.length >= 5 ? parseInt(segments[5]!) : undefined}
+              combined={segments[3] === "join"}
             />
           )
         } else {
@@ -125,6 +128,8 @@ const PullAudio = (props: {
   first: number
   /** Last word number, 1-indexed inclusive **/
   last?: number
+  // Whether multiple words should be combined into one playable audio, or can be played separately.
+  combined: boolean
 }) => {
   const { cherokeeRepresentation } = usePreferences()
 
@@ -138,33 +143,51 @@ const PullAudio = (props: {
     },
   })
 
-  const audioTracks = data?.document?.forms.map((f) => {
-    return f.audioTrack
-  })
+  const doc =
+    data?.document?.__typename === "AnnotatedDoc"
+      ? (data.document as AnnotatedDoc)
+      : undefined
 
-  if (!audioTracks) {
-    return <>Loading...</>
+  const docAudio = doc?.audioRecording
+  const audioTracks = doc?.forms.map((form) => form.audioTrack)
+
+  if (!docAudio || !audioTracks) {
+    return null
   }
 
-  console.log(audioTracks)
-
-  return (
-    <>
-      {audioTracks.map(
-        (audio, i) =>
-          audio && (
-            <AudioPlayer
-              audioUrl={audio.resourceUrl}
-              slices={{
-                start: audio.startTime!,
-                end: audio.endTime!,
-              }}
-              showProgress
-            />
-          )
-      )}
-    </>
-  )
+  if (!props.combined) {
+    return (
+      <>
+        {audioTracks.map(
+          (audio, i) =>
+            audio && (
+              <AudioPlayer
+                key={i}
+                audioUrl={audio.resourceUrl}
+                slices={{
+                  start: audio.startTime!,
+                  end: audio.endTime!,
+                }}
+                showProgress
+              />
+            )
+        )}
+      </>
+    )
+  } else {
+    return (
+      <AudioPlayer
+        audioUrl={docAudio.resourceUrl}
+        slices={{
+          start: doc.forms[props.first - 1]?.audioTrack?.startTime!,
+          end: props.last
+            ? doc.forms[props.last]?.audioTrack?.endTime!
+            : doc.forms[props.first - 1]?.audioTrack?.startTime!,
+        }}
+        showProgress
+      />
+    )
+  }
 }
 
 const PullWords = (props: {
