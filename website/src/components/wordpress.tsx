@@ -5,7 +5,7 @@ import parse, {
 } from "html-react-parser"
 import React, { useState } from "react"
 import { useDialogState } from "reakit/Dialog"
-import { Button, Link } from "src/components"
+import { AudioPlayer, Button, Link } from "src/components"
 import { useMediaQuery } from "src/custom-hooks"
 import * as Dailp from "src/graphql/dailp"
 import * as Wordpress from "src/graphql/wordpress"
@@ -72,18 +72,29 @@ export const WordpressPageContents = ({
 
 const parseOptions: HTMLReactParserOptions = {
   replace(node) {
-    const style = /\[(\w*):([0-9]*)-?([0-9]*)?\]/ // [DocName:Start(-OptionalEnd)]
+    const style = /\[(\$*)?(\w*):([0-9]*)-?([0-9]*)?\]/ // [DocName:Start(-OptionalEnd)]
 
     if ("data" in node) {
       const segments = node.data.match(style)?.filter((x) => !!x)
+
       if (segments && segments.length >= 3) {
-        return (
-          <PullWords
-            slug={segments[1]!}
-            first={parseInt(segments[2]!)}
-            last={segments.length >= 4 ? parseInt(segments[3]!) : undefined}
-          />
-        )
+        if (segments[1] === "$") {
+          return (
+            <PullAudio
+              slug={segments[2]!}
+              first={parseInt(segments[3]!)}
+              last={segments.length >= 5 ? parseInt(segments[4]!) : undefined}
+            />
+          )
+        } else {
+          return (
+            <PullWords
+              slug={segments[1]!}
+              first={parseInt(segments[2]!)}
+              last={segments.length >= 4 ? parseInt(segments[3]!) : undefined}
+            />
+          )
+        }
       }
     }
 
@@ -106,6 +117,54 @@ const parseOptions: HTMLReactParserOptions = {
     }
     return undefined
   },
+}
+
+const PullAudio = (props: {
+  slug: string
+  /** First word number, 1-indexed **/
+  first: number
+  /** Last word number, 1-indexed inclusive **/
+  last?: number
+}) => {
+  const { cherokeeRepresentation } = usePreferences()
+
+  const [{ data }] = Dailp.useDocSliceQuery({
+    variables: {
+      slug: props.slug,
+      // Convert our inclusive 1-indexed range into an exclusive 0-indexed range.
+      start: props.first - 1,
+      end: props.last ?? props.first,
+      morphemeSystem: cherokeeRepresentation,
+    },
+  })
+
+  const audioTracks = data?.document?.forms.map((f) => {
+    return f.audioTrack
+  })
+
+  if (!audioTracks) {
+    return <>Loading...</>
+  }
+
+  console.log(audioTracks)
+
+  return (
+    <>
+      {audioTracks.map(
+        (audio, i) =>
+          audio && (
+            <AudioPlayer
+              audioUrl={audio.resourceUrl}
+              slices={{
+                start: audio.startTime!,
+                end: audio.endTime!,
+              }}
+              showProgress
+            />
+          )
+      )}
+    </>
+  )
 }
 
 const PullWords = (props: {
