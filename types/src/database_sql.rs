@@ -265,7 +265,12 @@ impl Database {
         chapter_stack.push(initial_tuple);
 
         for current_chapter in chapters {
-            let chapter_doc_name = current_chapter.document_short_name;
+
+            let mut chapter_doc_name = "".to_string();
+
+            if current_chapter.document_short_name.is_some(){
+                chapter_doc_name = current_chapter.document_short_name.unwrap();
+            }
 
             // Use stack to build chapter slug
             let mut before_chapter_index = chapter_stack.last().unwrap().0;
