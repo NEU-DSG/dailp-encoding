@@ -1,5 +1,12 @@
+import { useState } from "react"
 import Link from "src/components/link"
-import { listItem, numberedOrderedList, orderedList } from "./toc.css"
+import { CollectionSection } from "src/graphql/dailp"
+import {
+  Chapter,
+  useChapters,
+} from "src/pages/edited-collections/edited-collection-context"
+import { useRouteParams } from "src/renderer/PageShell"
+import * as css from "./toc.css"
 
 type TOCData = {
   title: string
@@ -7,28 +14,97 @@ type TOCData = {
   children?: TOCData[]
 }
 
-export const TOC = (props: {
-  introChapters?: TOCData[]
-  bodyChapters: TOCData[]
-}) => (
-  <>
-    <ol className={numberedOrderedList}>
-      {props.introChapters?.map((items, index) => (
-        <li>
-          <Link href={items.path}>{items.title}</Link>
-        </li>
-      ))}
-    </ol>
-    <ol className={orderedList}>
-      {props.bodyChapters.map((items, index) => (
-        <li className={listItem}>
-          <Link href={items.path}>{items.title}</Link>
-          {items.children ? <TOC bodyChapters={items.children}></TOC> : null}
-        </li>
-      ))}
-    </ol>
-  </>
-)
+interface Chapters {
+  introChapters?: Chapter[]
+  bodyChapters: Chapter[]
+  creditChapters?: Chapter[]
+}
+
+const CollectionTOC = () => {
+  const chapters = useChapters()
+
+  if (!chapters) {
+    return null
+  }
+
+  const introChapters = chapters.filter((c) => {
+    return c.section === CollectionSection.Intro
+  })
+
+  const bodyChapters = chapters.filter((c) => {
+    return c.section === CollectionSection.Body
+  })
+
+  return <TOC introChapters={introChapters} bodyChapters={bodyChapters} />
+}
+
+const TOC = ({ introChapters, bodyChapters }: Chapters) => {
+  const { collectionSlug } = useRouteParams()
+
+  const chapterPath = `${collectionSlug}/chapters/`
+
+  const [selected, setSelected] = useState<Chapter | null>(null)
+
+  return (
+    <>
+      {/* Intro Chapters */}
+      {introChapters && (
+        <ol className={css.numberedOrderedList}>
+          {introChapters?.map((item) => (
+            <>
+              <li key={item.leaf} className={css.listItem}>
+                <Link
+                  href={`${chapterPath}${item.leaf}`}
+                  className={css.link}
+                  onClick={() => {
+                    if (selected === item) {
+                      setSelected(null)
+                    } else {
+                      setSelected(item)
+                    }
+                  }}
+                >
+                  {item.title}
+                </Link>
+              </li>
+              <hr className={css.divider} />
+            </>
+          ))}
+        </ol>
+      )}
+      {/* Body Chapters */}
+      {bodyChapters && (
+        <ol className={css.orderedList}>
+          {bodyChapters?.map((item) => (
+            <>
+              <li key={item.leaf} className={css.listItem}>
+                <Link
+                  href={`${chapterPath}${item.leaf}`}
+                  className={css.link}
+                  onClick={() => {
+                    if (selected === item) {
+                      setSelected(null)
+                    } else {
+                      setSelected(item)
+                    }
+                  }}
+                >
+                  {item.title}
+                </Link>
+
+                {/* If this item is selected, show its child chapters if there are any. */}
+                {item === selected && item.children?.length ? (
+                  <TOC bodyChapters={item.children} />
+                ) : null}
+              </li>
+              <hr className={css.divider} />
+            </>
+          ))}
+        </ol>
+      )}
+    </>
+  )
+}
 
 const data1: TOCData = {
   title: "1",
@@ -86,8 +162,4 @@ const data: TOCData[] = [
   data10,
 ]
 
-const Tox1 = () => {
-  return <TOC introChapters={data} bodyChapters={data}></TOC>
-}
-
-export default Tox1
+export default CollectionTOC
