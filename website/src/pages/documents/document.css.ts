@@ -11,6 +11,7 @@ import {
 } from "src/style/constants"
 import { paddingX, paddingY } from "src/style/utils"
 import { largeDialog, std } from "src/style/utils.css"
+import { callbackify } from "util"
 
 export const docTitle = std.fullWidth
 
@@ -224,3 +225,18 @@ export const mobileWordPanel = style([
     },
   },
 ])
+
+export const scrollTop = style({
+  display: "flex",
+  flexDirection: "row",
+  flexWrap: "wrap",
+  flexFlow: "column nowrap",
+  justifyContent: "flex-end",
+  alignContent: "center",
+  alignItems: "center",
+  alignSelf: "flex-end",
+  position: "sticky",
+  zIndex: 1,
+  top: `calc(100vh - 80px)`,
+  right: 30,
+})
