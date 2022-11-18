@@ -26,6 +26,7 @@ import { mediaQueries } from "src/style/constants"
 import { BasicMorphemeSegment, LevelOfDetail } from "src/types"
 import PageImages from "../../page-image"
 import * as css from "./document.css"
+import { RiArrowUpCircleFill } from "react-icons/ri"
 
 enum Tabs {
   ANNOTATION = "annotation-tab",
@@ -82,6 +83,10 @@ const TabSet = ({ doc }: { doc: Document }) => {
           </Tab>
         </TabList>
       </div>
+      <div id="scroll-top" className={css.scrollTop} onClick={() => window.scrollTo({top: 0, behavior: 'smooth'})}>
+      <h3><RiArrowUpCircleFill size={55}/></h3>
+      </div>
+      
 
       <TabPanel
         {...tabs}
