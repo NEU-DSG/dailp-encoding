@@ -67,6 +67,7 @@ export const hsize = {
   [0]: 0,
   none: 0,
   full: "100%",
+  small: "20rem",
   medium: "41rem",
   large: "50rem",
   auto: "auto",

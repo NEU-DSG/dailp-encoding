@@ -949,6 +949,25 @@ export type CollectionQuery = { readonly __typename?: "Query" } & {
     }
 }
 
+export type EditedCollectionQueryVariables = Exact<{
+  slug: Scalars["String"]
+}>
+
+export type EditedCollectionQuery = { readonly __typename?: "Query" } & {
+  readonly editedCollection: Maybe<
+    { readonly __typename?: "EditedCollection" } & {
+      readonly chapters: Maybe<
+        ReadonlyArray<
+          { readonly __typename?: "CollectionChapter" } & Pick<
+            CollectionChapter,
+            "title" | "indexInParent" | "section" | "path"
+          >
+        >
+      >
+    }
+  >
+}
+
 export type WordSearchQueryVariables = Exact<{
   query: Scalars["String"]
 }>
@@ -1347,6 +1366,27 @@ export function useCollectionQuery(
 ) {
   return Urql.useQuery<CollectionQuery>({
     query: CollectionDocument,
+    ...options,
+  })
+}
+export const EditedCollectionDocument = gql`
+  query EditedCollection($slug: String!) {
+    editedCollection(slug: $slug) {
+      chapters {
+        title
+        indexInParent
+        section
+        path
+      }
+    }
+  }
+`
+
+export function useEditedCollectionQuery(
+  options: Omit<Urql.UseQueryArgs<EditedCollectionQueryVariables>, "query">
+) {
+  return Urql.useQuery<EditedCollectionQuery>({
+    query: EditedCollectionDocument,
     ...options,
   })
 }
