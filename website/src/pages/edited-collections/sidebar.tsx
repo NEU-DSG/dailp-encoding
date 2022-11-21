@@ -1,6 +1,6 @@
 import "@fontsource/quattrocento-sans/latin.css"
 import "normalize.css"
-import React, { useEffect } from "react"
+import { useEffect } from "react"
 import { BsArrowBarLeft, BsArrowBarRight } from "react-icons/bs"
 import { MdMenu } from "react-icons/md"
 import { Dialog, DialogBackdrop, DialogDisclosure } from "reakit/Dialog"
@@ -29,7 +29,6 @@ export const Sidebar = () => {
         as="nav"
         aria-label="Table of Contents"
       >
-        <h3 className={css.title}>Chapters</h3>
         <CollectionTOC />
       </Dialog>
       <DialogDisclosure
@@ -63,7 +62,6 @@ export const MobileSidebar = () => {
           aria-label="Table of Contents"
           preventBodyScroll={true}
         >
-          <h3 className={css.title}>Chapters</h3>
           <CollectionTOC />
         </Dialog>
       </DialogBackdrop>
