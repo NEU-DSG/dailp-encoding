@@ -8,7 +8,6 @@ import {
   radii,
   vspace,
 } from "src/style/constants"
-import { marginY } from "src/style/utils"
 
 export const drawerWidth = "20rem"
 export const bgColor = style({ backgroundColor: "#585858" })
@@ -20,6 +19,7 @@ export const drawer = style([
   padding(vspace.one),
   {
     overflowY: "auto",
+    scrollbarGutter: "stable",
     "@media": {
       [mediaQueries.medium]: {
         width: drawerWidth,
@@ -33,14 +33,6 @@ export const header = style([
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
-  },
-])
-
-export const title = style([
-  marginY(vspace.medium),
-  {
-    color: colors.primaryText,
-    fontWeight: "bolder",
   },
 ])
 
