@@ -1,1 +1,1 @@
-export default "/cwkw"
+export default "/edited-collections/:collectionSlug"
