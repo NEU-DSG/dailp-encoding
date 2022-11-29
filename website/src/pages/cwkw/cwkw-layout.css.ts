@@ -70,7 +70,9 @@ export const openHeaderContents = style([
 export const banner = style([
   margin(0),
   paddingY(vspace.medium),
+
   {
+    width: `calc(${hsize.small} / 3)`,
     "@media": {
       [mediaQueries.medium]: {
         width: hsize.small,
