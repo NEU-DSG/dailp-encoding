@@ -229,6 +229,7 @@ export type CollectionChapter = {
 /** Enum to represent the sections in an edited collection */
 export enum CollectionSection {
   Body = "BODY",
+  Credit = "CREDIT",
   Intro = "INTRO",
 }
 
