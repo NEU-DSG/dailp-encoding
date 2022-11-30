@@ -72,7 +72,7 @@ export const banner = style([
   paddingY(vspace.medium),
 
   {
-    width: `calc(${hsize.small} / 3)`,
+    width: hsize.xsmall,
     "@media": {
       [mediaQueries.medium]: {
         width: hsize.small,
