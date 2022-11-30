@@ -83,9 +83,10 @@ const TabSet = ({ doc }: { doc: Document }) => {
           </Tab>
         </TabList>
       </div>
-      <div id="scroll-top" className={css.scrollTop} onClick={() => window.scrollTo({top: 0, behavior: 'smooth'})}>
-      <h3><RiArrowUpCircleFill size={55}/></h3>
-      </div>
+      <Button id="scroll-top" className={css.scrollTop} onClick={() => window.scrollTo({top: 0, behavior: 'smooth'})}>
+        <div><a><RiArrowUpCircleFill size={45}/></a></div>
+        <div>Top</div>
+      </Button>
       
 
       <TabPanel
@@ -347,7 +348,7 @@ export const DocumentTitleHeader = (p: {
       )}
       {!p.doc.audioRecording && (
         <div id="no-audio-message">
-        {!isMobile ? <a><b>No Audio Available</b></a> : null}
+        {!isMobile ? <strong>No Audio Available</strong> : null}
         </div>
       )}
       {!isMobile ? <Button onClick={() => window.print()}>Print</Button> : null}
