@@ -6871,8 +6871,6 @@ export enum TimezoneEnum {
   AmericaNassau = "AMERICA_NASSAU",
   /** New York */
   AmericaNewYork = "AMERICA_NEW_YORK",
-  /** Nipigon */
-  AmericaNipigon = "AMERICA_NIPIGON",
   /** Nome */
   AmericaNome = "AMERICA_NOME",
   /** Noronha */
@@ -6905,8 +6903,6 @@ export enum TimezoneEnum {
   AmericaPuertoRico = "AMERICA_PUERTO_RICO",
   /** Punta Arenas */
   AmericaPuntaArenas = "AMERICA_PUNTA_ARENAS",
-  /** Rainy River */
-  AmericaRainyRiver = "AMERICA_RAINY_RIVER",
   /** Rankin Inlet */
   AmericaRankinInlet = "AMERICA_RANKIN_INLET",
   /** Recife */
@@ -6947,8 +6943,6 @@ export enum TimezoneEnum {
   AmericaTegucigalpa = "AMERICA_TEGUCIGALPA",
   /** Thule */
   AmericaThule = "AMERICA_THULE",
-  /** Thunder Bay */
-  AmericaThunderBay = "AMERICA_THUNDER_BAY",
   /** Tijuana */
   AmericaTijuana = "AMERICA_TIJUANA",
   /** Toronto */
