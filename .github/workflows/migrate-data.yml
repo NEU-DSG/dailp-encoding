@@ -46,6 +46,8 @@ jobs:
           nix run --impure -L .#tf-init
           SECURITY_GROUP_ID=$(nix run --impure .#tf-output access_security_group_id)
           echo "ACCESS_SECURITY_GROUP=$SECURITY_GROUP_ID" >> $GITHUB_ENV
+      - name: Validate spreadsheets
+        run: nix run --impure -L .#validate-data
       - name: Add public IP to AWS security group
         uses: sohelamin/aws-security-group-add-ip-action@master
         with:
