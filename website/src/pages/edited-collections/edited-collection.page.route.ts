@@ -1,1 +1,1 @@
-export default "/edited-collections/:collectionSlug"
+export default "/:collectionSlug"
