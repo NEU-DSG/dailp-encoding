@@ -244,6 +244,7 @@ Enum to represent the sections in an edited collection
 enum CollectionSection {
 	INTRO
 	BODY
+	CREDIT
 }
 
 """

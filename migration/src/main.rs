@@ -24,8 +24,8 @@ async fn main() -> Result<()> {
     dotenv::dotenv().ok();
     pretty_env_logger::init();
 
-    println!("Validating manuscript spreadsheets...");
-    validate_documents().await?;
+    // println!("Validating manuscript spreadsheets...");
+    // validate_documents().await?;
 
     let db = Database::connect(Some(1))?;
 
