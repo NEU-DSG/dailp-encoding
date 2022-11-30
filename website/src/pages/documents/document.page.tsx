@@ -30,6 +30,7 @@ import * as css from "./document.css"
 enum Tabs {
   ANNOTATION = "annotation-tab",
   IMAGES = "source-image-tab",
+  INFO = "info-tab"
 }
 
 export type Document = NonNullable<Dailp.AnnotatedDocumentQuery["document"]>
@@ -80,6 +81,9 @@ const TabSet = ({ doc }: { doc: Document }) => {
           <Tab {...tabs} id={Tabs.IMAGES} className={css.docTab}>
             Original Text
           </Tab>
+          <Tab {...tabs} id={Tabs.INFO} className={css.docTab}>
+            Document Info
+          </Tab>
         </TabList>
       </div>
 
@@ -109,6 +113,15 @@ const TabSet = ({ doc }: { doc: Document }) => {
             document={doc}
           />
         ) : null}
+      </TabPanel>
+
+      <TabPanel
+        {...tabs}
+        className={css.imageTabPanel}
+        id={`${Tabs.INFO}-panel`}
+        tabId={Tabs.INFO}
+        >
+          
       </TabPanel>
     </>
   )
