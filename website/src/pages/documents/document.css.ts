@@ -11,7 +11,6 @@ import {
 } from "src/style/constants"
 import { paddingX, paddingY } from "src/style/utils"
 import { largeDialog, std } from "src/style/utils.css"
-import { callbackify } from "util"
 
 export const docTitle = std.fullWidth
 
@@ -237,6 +236,10 @@ export const scrollTop = style({
   alignSelf: "flex-end",
   position: "sticky",
   zIndex: 1,
-  top: `calc(100vh - 80px)`,
-  right: 30,
+  top: `calc(100vh - 105px)`,
+  right: 0,
+  padding: `7px`,
+  color: colors.secondaryContrast,
+  outlineColor: colors.secondaryContrast,
+  backgroundColor: colors.secondary,
 })
