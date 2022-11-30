@@ -5,7 +5,7 @@ import { Client as GraphQLClient, Provider as GraphQLProvider } from "urql"
 import type { PageContextBuiltIn } from "vite-plugin-ssr"
 import type { PageContextBuiltInClient } from "vite-plugin-ssr/client"
 import { UserProvider } from "src/auth"
-import { ChaptersProvider } from "src/pages/cwkw/chapters-context"
+import { CollectionProvider } from "src/pages/edited-collections/edited-collection-context"
 
 export const rootElementId = "app-root"
 
@@ -23,9 +23,9 @@ export function PageShell({
         <GraphQLProvider value={client}>
           <ReakitProvider>
             <UserProvider>
-              <ChaptersProvider>
+              <CollectionProvider>
                 <Page {...routeParams} />
-              </ChaptersProvider>
+              </CollectionProvider>
             </UserProvider>
           </ReakitProvider>
         </GraphQLProvider>

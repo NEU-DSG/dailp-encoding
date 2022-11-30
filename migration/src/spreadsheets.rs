@@ -8,6 +8,7 @@ use anyhow::Result;
 use dailp::collection::CollectionSection;
 use dailp::collection::CollectionSection::Body;
 use dailp::collection::CollectionSection::Intro;
+use dailp::collection::CollectionSection::Credit;
 use dailp::raw::CollectionChapter;
 use dailp::raw::EditedCollection;
 use dailp::{
@@ -145,10 +146,11 @@ impl SheetResult {
         let second_value = row
             .next()
             .ok_or_else(|| anyhow::format_err!("Missing second value"))?;
-        let mut is_intro = true;
+        // 0 for Intro, 1 for Body, 2 for Credit
+        let mut chapter_type = 0;
         for cur_row in row {
             if cur_row[0].is_empty() {
-                is_intro = false;
+                chapter_type = chapter_type + 1;
             } else {
                 let mut row_values = cur_row.into_iter().peekable();
 
@@ -176,7 +178,9 @@ impl SheetResult {
                     None
                 };
 
-                let intro_or_body = if is_intro { Intro } else { Body };
+                let chapter_type_name = if chapter_type == 0 { Intro } 
+                else if chapter_type == 1 { Body } 
+                else { Credit };
 
                 let new_chapter = dailp::raw::CollectionChapter {
                     index_in_parent: index_i64,
@@ -185,7 +189,7 @@ impl SheetResult {
                     document_short_name: doc_string,
                     id: None,
                     wordpress_id: wp_id,
-                    section: intro_or_body,
+                    section: chapter_type_name,
                 };
 
                 collection_chapters.push(new_chapter);

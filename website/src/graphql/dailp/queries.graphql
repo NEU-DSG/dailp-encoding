@@ -122,6 +122,17 @@ query EditedCollection($slug: String!) {
   }
 }
 
+query EditedCollection($slug: String!) {
+  editedCollection(slug: $slug) {
+    chapters {
+      title
+      indexInParent
+      section
+      path
+    }
+  }
+}
+
 query WordSearch($query: String!) {
   wordSearch(query: $query) {
     source
