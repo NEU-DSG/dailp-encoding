@@ -52,7 +52,7 @@ pub enum CollectionSection {
     /// Body chapter
     Body,
     /// Credit
-    Credit
+    Credit,
 }
 
 #[async_graphql::ComplexObject]
@@ -68,13 +68,13 @@ impl EditedCollection {
 #[async_graphql::ComplexObject]
 impl CollectionChapter {
     async fn document(&self, context: &Context<'_>) -> FieldResult<Option<AnnotatedDoc>> {
-        if self.document_id.is_none() {
-            return Ok(None);
+        if let Some(doc_id) = &self.document_id {
+            Ok(context
+                .data::<DataLoader<Database>>()?
+                .load_one(self.document_id.unwrap())
+                .await?)
+        } else {
+            Ok(None)
         }
-
-        Ok(context
-            .data::<DataLoader<Database>>()?
-            .load_one(self.document_id.unwrap())
-            .await?)
     }
 }
