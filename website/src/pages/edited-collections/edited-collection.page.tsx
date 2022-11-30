@@ -1,4 +1,3 @@
-import React from "react"
 import { Helmet } from "react-helmet"
 import { Link } from "src/components"
 import * as util from "src/style/utils.css"
