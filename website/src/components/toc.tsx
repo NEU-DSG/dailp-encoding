@@ -1,25 +1,16 @@
-import { useState } from "react"
 import Link from "src/components/link"
 import { CollectionSection } from "src/graphql/dailp"
 import {
   Chapter,
   useChapters,
+  useSelected,
 } from "src/pages/edited-collections/edited-collection-context"
 import { useRouteParams } from "src/renderer/PageShell"
 import * as css from "./toc.css"
 
-type TOCData = {
-  title: string
-  path: string
-  children?: TOCData[]
-}
-
 type TOCProps = {
   section: CollectionSection
   chapters: Chapter[]
-  handleSelect: (item: Chapter) => void
-  selected: Chapter | null
-  getLink: (item: string) => string
 }
 
 const CollectionTOC = () => {
@@ -56,33 +47,13 @@ const CollectionTOC = () => {
     { section: CollectionSection.Credit, chapters: creditChapters },
   ]
 
-  const [selected, setSelected] = useState<Chapter | null>(null)
-
-  function handleSelect(item: Chapter) {
-    if (selected === item) {
-      setSelected(null)
-    } else {
-      setSelected(item)
-    }
-  }
-
-  function getLink(leaf: string) {
-    return `${collectionSlug}/chapters/${leaf}`
-  }
-
   return (
     <>
       {collection.map((coll) =>
         coll.chapters.length > 0 ? (
           <>
             <h3 className={css.title}>{coll.section}</h3>
-            <TOC
-              section={coll.section}
-              chapters={coll.chapters}
-              handleSelect={handleSelect}
-              selected={selected}
-              getLink={getLink}
-            />
+            <TOC section={coll.section} chapters={coll.chapters} />
           </>
         ) : null
       )}
@@ -90,13 +61,10 @@ const CollectionTOC = () => {
   )
 }
 
-const TOC = ({
-  section,
-  chapters,
-  handleSelect,
-  selected,
-  getLink,
-}: TOCProps) => {
+const TOC = ({ section, chapters }: TOCProps) => {
+  const { collectionSlug } = useRouteParams()
+  const { selected, setSelected } = useSelected()
+
   const listStyle =
     section === CollectionSection.Body
       ? css.orderedList
@@ -111,22 +79,15 @@ const TOC = ({
         <>
           <li key={item.leaf} className={listItemStyle}>
             <Link
-              href={getLink(item.leaf)}
+              href={`/${collectionSlug}/chapters/${item.leaf}`}
               className={css.link}
-              onClick={() => handleSelect(item)}
+              onClick={() => setSelected(item)}
             >
               {item.title}
             </Link>
-
             {/* If this item is selected, show its child chapters if there are any. */}
-            {item === selected && item.children ? (
-              <TOC
-                section={section}
-                chapters={item.children}
-                handleSelect={handleSelect}
-                selected={selected}
-                getLink={getLink}
-              />
+            {item.title === selected?.title && item.children ? (
+              <TOC section={section} chapters={item.children} />
             ) : null}
           </li>
           <hr className={css.divider} />

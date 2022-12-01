@@ -1,5 +1,6 @@
 import { style } from "@vanilla-extract/css"
 import { margin } from "polished"
+import { drawerWidth } from "src/components/sidebar.css"
 import {
   colors,
   fonts,
@@ -11,7 +12,6 @@ import {
 import { paddingX, paddingY } from "src/style/utils"
 import { hideOnPrint, row } from "src/style/utils.css"
 import * as baseLayout from "../../layout.css"
-import { drawerWidth } from "../edited-collections/sidebar.css"
 
 export const header = style([baseLayout.header])
 
