@@ -1,5 +1,6 @@
 import React, { useEffect } from "react"
-import { MdClose, MdSettings } from "react-icons/md"
+import { IconBaseProps } from "react-icons/lib"
+import { MdClose, MdSettings, MdStayPrimaryLandscape } from "react-icons/md"
 import {
   Dialog,
   DialogBackdrop,
@@ -16,6 +17,8 @@ import { IconButton, Label, Select } from "src/components"
 import * as Dailp from "src/graphql/dailp"
 import * as css from "./mode.css"
 import { usePreferences } from "./preferences-context"
+import { useRouteParams } from "./renderer/PageShell"
+import { colors } from "./style/theme-contract.css"
 import { LevelOfDetail } from "./types"
 
 type PreferenceDetails = { label: string; details: string }
@@ -115,13 +118,13 @@ export const PrefPanel = () => {
   )
 }
 
-export const HeaderPrefDrawer = () => {
+export const HeaderPrefDrawer = (props: IconBaseProps) => {
   const dialog = useDialogState({ animated: true })
 
   return (
     <div className={css.prefButtonShell}>
       <DialogDisclosure {...dialog} aria-label="Settings" as={IconButton}>
-        <MdSettings size={32} />
+        <MdSettings size={32} {...props} />
       </DialogDisclosure>
       <DialogBackdrop {...dialog} className={css.prefBG}>
         <Dialog
