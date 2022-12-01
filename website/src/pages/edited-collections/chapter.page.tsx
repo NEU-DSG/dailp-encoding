@@ -1,11 +1,10 @@
-import React from "react"
 import { Helmet } from "react-helmet"
 import { Link, WordpressPage } from "src/components"
 import * as Dailp from "src/graphql/dailp"
 import { fullWidth, paddedCenterColumn } from "src/style/utils.css"
+import CWKWLayout from "../cwkw/cwkw-layout"
 import { DocumentTitleHeader, TabSet } from "../documents/document.page"
-import { useSubchapters } from "./chapters-context"
-import CWKWLayout from "./cwkw-layout"
+import { useSubchapters } from "./edited-collection-context"
 
 const ChapterPage = (props: {
   collectionSlug: string
@@ -33,25 +32,26 @@ const ChapterPage = (props: {
       <Helmet title={chapter.title} />
       <main className={paddedCenterColumn}>
         <article className={fullWidth}>
-          <header>Title: {chapter.title}</header>
-
           {/* If this chapter contains or is a Wordpress page, display the WP page contents. */}
-          {wordpressId && <WordpressPage slug={wordpressId.toString()} />}
+          {wordpressId ? <WordpressPage slug={wordpressId.toString()} /> : null}
 
           {/* If this chapter is a document, display the document contents. */}
-          {document && (
+          {document ? (
             <>
               <DocumentTitleHeader doc={document} showDetails={true} />
               <TabSet doc={document} />
             </>
-          )}
+          ) : null}
 
           <ul>
             {subchapters && (
               <>
                 {subchapters.map((chapter) => (
                   <li>
-                    <Link key={chapter.leaf} href={`${chapter.leaf}`}>
+                    <Link
+                      key={chapter.leaf}
+                      href={`/${props.collectionSlug}/chapters/${chapter.leaf}`}
+                    >
                       {chapter.title}
                     </Link>
                   </li>

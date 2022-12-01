@@ -1,4 +1,4 @@
-import React, { createContext, useContext } from "react"
+import { createContext, useContext, useState } from "react"
 import { DialogStateReturn, useDialogState } from "reakit/Dialog"
 import * as Dailp from "src/graphql/dailp"
 import { useRouteParams } from "src/renderer/PageShell"
@@ -13,6 +13,8 @@ export type Chapter = {
 
 type CollectionContext = {
   chapters: Chapter[] | undefined
+  selected: Chapter | null
+  setSelected: (item: Chapter | null) => void
   dialog: DialogStateReturn
 }
 
@@ -30,6 +32,7 @@ export const CollectionProvider = (props: { children: any }) => {
 
   // Gets the converted nested chapters using the backend query.
   const chapters = flatToNested(data?.editedCollection?.chapters)
+  const [selected, setSelected] = useState<Chapter | null>(null)
 
   // Gets the dialog state for the TOC
   const dialog = useDialogState({
@@ -37,10 +40,17 @@ export const CollectionProvider = (props: { children: any }) => {
   })
 
   return (
-    <CollectionContext.Provider value={{ chapters, dialog }}>
+    <CollectionContext.Provider
+      value={{ chapters, dialog, selected, setSelected }}
+    >
       {props.children}
     </CollectionContext.Provider>
   )
+}
+
+export const useSelected = () => {
+  const { selected, setSelected } = useContext(CollectionContext)
+  return { selected, setSelected }
 }
 
 export const useChapters = () => {
