@@ -3,20 +3,15 @@ import parse, {
   attributesToProps,
   domToReact,
 } from "html-react-parser"
-import React, { useState } from "react"
-import { useDialogState } from "reakit/Dialog"
 import { AudioPlayer, Button, Link } from "src/components"
-import { useMediaQuery } from "src/custom-hooks"
 import * as Dailp from "src/graphql/dailp"
-import { AnnotatedDoc } from "src/graphql/dailp"
 import * as Wordpress from "src/graphql/wordpress"
 import { usePreferences } from "src/preferences-context"
-import { useLocation, useRouteParams } from "src/renderer/PageShell"
+import { useRouteParams } from "src/renderer/PageShell"
 import { AnnotatedForm } from "src/segment"
 import { annotationSection } from "src/segment.css"
-import { mediaQueries } from "src/style/constants"
 import { wordpressUrl } from "src/theme.css"
-import { BasicMorphemeSegment, LevelOfDetail } from "src/types"
+import { LevelOfDetail } from "src/types"
 import * as printLessonCSS from "./print-lesson.css"
 
 interface Props {
@@ -78,15 +73,14 @@ const parseOptions: HTMLReactParserOptions = {
     if ("data" in node) {
       const segments = node.data.match(style)?.filter((x) => !!x)
 
-      console.log(segments)
       if (segments && segments.length >= 3) {
-        if (segments[2] === "audio") {
+        if (segments[1] === "audio") {
           return (
             <PullAudio
-              slug={segments[3]!}
-              first={parseInt(segments[4]!)}
-              last={segments.length >= 5 ? parseInt(segments[5]!) : undefined}
-              combined={segments[3] === "join"}
+              slug={segments[2]!}
+              first={parseInt(segments[3]!)}
+              last={segments.length >= 4 ? parseInt(segments[4]!) : undefined}
+              combined={segments[2] === "join"}
             />
           )
         } else {
@@ -143,10 +137,7 @@ const PullAudio = (props: {
     },
   })
 
-  const doc =
-    data?.document?.__typename === "AnnotatedDoc"
-      ? (data.document as AnnotatedDoc)
-      : undefined
+  const doc = data?.document
 
   const docAudio = doc?.audioRecording
   const audioTracks = doc?.forms.map((form) => form.audioTrack)

@@ -253,6 +253,11 @@ query DocSlice(
   $morphemeSystem: CherokeeOrthography!
 ) {
   document(slug: $slug) {
+    audioRecording {
+      resourceUrl
+      startTime
+      endTime
+    }
     forms(start: $start, end: $end) {
       __typename
       ...FormFields
