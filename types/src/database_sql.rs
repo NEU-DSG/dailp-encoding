@@ -265,10 +265,9 @@ impl Database {
         chapter_stack.push(initial_tuple);
 
         for current_chapter in chapters {
-
             let mut chapter_doc_name = "".to_string();
 
-            if current_chapter.document_short_name.is_some(){
+            if current_chapter.document_short_name.is_some() {
                 chapter_doc_name = current_chapter.document_short_name.unwrap();
             }
 
@@ -479,17 +478,9 @@ impl Database {
                 title: doc.title,
                 date: doc.date,
                 order_index: doc.order_index,
-                chapter_path: if doc.chapter_path.is_none() {
-                    None
-                } else {
-                    Some(
-                        doc.chapter_path
-                            .unwrap()
-                            .into_iter()
-                            .map(|s| (*s).into())
-                            .collect(),
-                    )
-                },
+                chapter_path: doc
+                    .chapter_path
+                    .map(|s| s.into_iter().map(|s| (*s).into()).collect()),
             })
             .collect())
     }

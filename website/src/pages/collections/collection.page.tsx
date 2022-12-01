@@ -1,10 +1,9 @@
-import React from "react"
 import { Helmet } from "react-helmet"
 import { Breadcrumbs, Link, WordpressPage } from "src/components"
 import * as Dailp from "src/graphql/dailp"
 import Layout from "src/layout"
 import { useRouteParams } from "src/renderer/PageShell"
-import { chapterRoute, documentRoute } from "src/routes"
+import { redirectDocumentRoute } from "src/routes"
 import { fullWidth, paddedCenterColumn } from "src/style/utils.css"
 
 const CollectionPage = () => {
@@ -39,12 +38,9 @@ const CollectionPage = () => {
                 <Link
                   href={
                     // If this document exists within a collection's chapter, then redirect to that chapter page.
-                    document.chapterPath && document.chapterPath.length > 1
-                      ? chapterRoute(
-                          document.chapterPath[0]!,
-                          document.chapterPath[document.chapterPath.length - 1]!
-                        )
-                      : documentRoute(document.slug)
+                    document.chapterPath
+                      ? redirectDocumentRoute(document.chapterPath as string[])
+                      : undefined
                   }
                 >
                   {document.title}
