@@ -38,6 +38,9 @@ export const numberedListItem = style([
       [`${orderedList} ${orderedList} &:last-of-type`]: {
         paddingBottom: "0px",
       },
+      [`${numberedOrderedList} ${numberedOrderedList} &:last-of-type`]: {
+        paddingBottom: "0px",
+      },
     },
   },
 ])
@@ -68,7 +71,7 @@ export const divider = style([
     width: hsize.full,
     selectors: {
       // Removes the horizontal line when its the last in a list, to avoid double lines.
-      [`${orderedList} ${listItem} &:last-of-type`]: { display: "none" },
+      [`${numberedListItem} &:last-of-type`]: { display: "none" },
     },
   },
 ])

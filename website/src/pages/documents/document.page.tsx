@@ -63,7 +63,7 @@ const AnnotatedDocumentPage = (props: { id: string }) => {
 }
 export default AnnotatedDocumentPage
 
-const TabSet = ({ doc }: { doc: Document }) => {
+export const TabSet = ({ doc }: { doc: Document }) => {
   const tabs = useScrollableTabState({ selectedId: Tabs.ANNOTATION })
   return (
     <>
@@ -114,7 +114,7 @@ const TabSet = ({ doc }: { doc: Document }) => {
   )
 }
 
-const TranslationTab = ({ doc }: { doc: Document }) => {
+export const TranslationTab = ({ doc }: { doc: Document }) => {
   const [selectedMorpheme, setMorpheme] = useState<BasicMorphemeSegment | null>(
     null
   )
