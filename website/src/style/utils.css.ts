@@ -5,12 +5,13 @@ import {
   fonts,
   hsize,
   hspace,
+  layers,
   mediaQueries,
   rhythm,
   thickness,
   vspace,
 } from "./constants"
-import { media, paddingX, paddingY } from "./utils"
+import { media, paddingX } from "./utils"
 
 export const hideOnPrint = style(media(mediaQueries.print, { display: "none" }))
 
@@ -22,7 +23,7 @@ export const withBg = style([
     backgroundColor: colors.body,
     borderColor: colors.text,
     borderWidth: thickness.thin,
-    zIndex: 999,
+    zIndex: layers.second,
   },
 ])
 

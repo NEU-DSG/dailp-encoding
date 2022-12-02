@@ -3,7 +3,7 @@ import { CollectionSection } from "src/graphql/dailp"
 import {
   Chapter,
   useChapters,
-  useSelected,
+  useFunctions,
 } from "src/pages/edited-collections/edited-collection-context"
 import { useRouteParams } from "src/renderer/PageShell"
 import * as css from "./toc.css"
@@ -63,7 +63,7 @@ const CollectionTOC = () => {
 
 const TOC = ({ section, chapters }: TOCProps) => {
   const { collectionSlug } = useRouteParams()
-  const { selected, setSelected } = useSelected()
+  const { onSelect, isSelected } = useFunctions()
 
   const listStyle =
     section === CollectionSection.Body
@@ -81,12 +81,12 @@ const TOC = ({ section, chapters }: TOCProps) => {
             <Link
               href={`/${collectionSlug}/chapters/${item.leaf}`}
               className={css.link}
-              onClick={() => setSelected(item)}
+              onClick={() => onSelect(item)}
             >
               {item.title}
             </Link>
-            {/* If this item is selected, show its child chapters if there are any. */}
-            {item.title === selected?.title && item.children ? (
+
+            {isSelected(item) && item.children ? (
               <TOC section={section} chapters={item.children} />
             ) : null}
           </li>
