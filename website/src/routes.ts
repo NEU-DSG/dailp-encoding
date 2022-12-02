@@ -7,6 +7,20 @@ export const documentDetailsRoute = (slug: string) =>
 
 export const collectionRoute = (slug: string) => `/collections/${slug}`
 
+export const chapterRoute = (collectionSlug: string, slug: string) =>
+  `${collectionSlug}/chapters/${slug}`
+
+export const redirectDocumentRoute = (path: string[]) => {
+  const collectionSlug = path[0]!
+  const slug = path[path.length - 1]!
+
+  if (path && path.length > 1) {
+    return chapterRoute(collectionSlug, slug)
+  } else {
+    return documentRoute(slug)
+  }
+}
+
 export const morphemeTagId = (tag: string) => `tag-${kebabCase(tag)}`
 export const glossaryRoute = (tag: string) => `/glossary#${morphemeTagId(tag)}`
 

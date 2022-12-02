@@ -1,4 +1,6 @@
 use uuid::Uuid;
+
+use crate::AnnotatedDoc;
 use {
     crate::async_graphql::{self, dataloader::DataLoader, Context, FieldResult},
     crate::Database,
@@ -22,6 +24,7 @@ pub struct EditedCollection {
 
 /// Structure to represent a single chapter. Used to send data to the front end.
 #[derive(Debug, Clone, async_graphql::SimpleObject)]
+#[graphql(complex)]
 pub struct CollectionChapter {
     /// UUID for the chapter
     pub id: Uuid,
@@ -49,7 +52,7 @@ pub enum CollectionSection {
     /// Body chapter
     Body,
     /// Credit
-    Credit
+    Credit,
 }
 
 #[async_graphql::ComplexObject]
@@ -59,5 +62,19 @@ impl EditedCollection {
             .data::<DataLoader<Database>>()?
             .load_one(crate::ChaptersInCollection(self.slug.clone()))
             .await?)
+    }
+}
+
+#[async_graphql::ComplexObject]
+impl CollectionChapter {
+    async fn document(&self, context: &Context<'_>) -> FieldResult<Option<AnnotatedDoc>> {
+        if let Some(doc_id) = &self.document_id {
+            Ok(context
+                .data::<DataLoader<Database>>()?
+                .load_one(self.document_id.unwrap())
+                .await?)
+        } else {
+            Ok(None)
+        }
     }
 }

@@ -265,10 +265,9 @@ impl Database {
         chapter_stack.push(initial_tuple);
 
         for current_chapter in chapters {
-
             let mut chapter_doc_name = "".to_string();
 
-            if current_chapter.document_short_name.is_some(){
+            if current_chapter.document_short_name.is_some() {
                 chapter_doc_name = current_chapter.document_short_name.unwrap();
             }
 
@@ -467,13 +466,23 @@ impl Database {
         _super_collection: &str,
         collection: &str,
     ) -> Result<Vec<DocumentReference>> {
-        Ok(query_file_as!(
-            DocumentReference,
-            "queries/documents_in_group.sql",
-            collection
-        )
-        .fetch_all(&self.client)
-        .await?)
+        let documents = query_file!("queries/documents_in_group.sql", collection)
+            .fetch_all(&self.client)
+            .await?;
+
+        Ok(documents
+            .into_iter()
+            .map(|doc| DocumentReference {
+                id: doc.id,
+                short_name: doc.short_name,
+                title: doc.title,
+                date: doc.date,
+                order_index: doc.order_index,
+                chapter_path: doc
+                    .chapter_path
+                    .map(|s| s.into_iter().map(|s| (*s).into()).collect()),
+            })
+            .collect())
     }
 
     pub async fn insert_top_collection(&self, title: String, _index: i64) -> Result<Uuid> {

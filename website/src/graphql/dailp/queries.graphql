@@ -106,6 +106,18 @@ query Collection($slug: String!) {
         year
       }
       orderIndex
+      chapterPath
+    }
+  }
+}
+
+query EditedCollection($slug: String!) {
+  editedCollection(slug: $slug) {
+    chapters {
+      title
+      indexInParent
+      section
+      path
     }
   }
 }
@@ -256,6 +268,40 @@ query DocSlice(
     forms(start: $start, end: $end) {
       __typename
       ...FormFields
+    }
+  }
+}
+
+query CollectionChapter($collectionSlug: String!, $chapterSlug: String!) {
+  chapter(collectionSlug: $collectionSlug, chapterSlug: $chapterSlug) {
+    title
+    wordpressId
+    document {
+      id
+      title
+      slug
+      isReference
+      breadcrumbs(superCollection: "") {
+        name
+        slug
+      }
+      date {
+        year
+      }
+      sources {
+        name
+        link
+      }
+      audioRecording {
+        resourceUrl
+        startTime
+        endTime
+      }
+      translatedPages {
+        image {
+          url
+        }
+      }
     }
   }
 }

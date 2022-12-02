@@ -85,3 +85,9 @@ export const mediaQueries = {
 export const selectors = {
   currentPage: "&[aria-current='page']",
 }
+
+export const layers = {
+  top: 3,
+  middle: 2,
+  base: 1,
+}

@@ -552,6 +552,8 @@ pub struct DocumentReference {
     pub date: Option<Date>,
     /// Index of the document within its group, used purely for ordering
     pub order_index: i64,
+    /// Collection chapter's path for this document
+    pub chapter_path: Option<Vec<String>>,
 }
 
 #[async_graphql::ComplexObject]
