@@ -54,24 +54,34 @@ export const useFunctions = () => {
 
   // Defines the behavior once selecting a chapter.
   function onSelect(item: Chapter) {
-    const lastSelected = selected[selected.length - 1]
+    const updated = selected
+    let lastItem = updated[updated.length - 1]
 
-    // Since there was a chapter last selected, we know this isn't the top-most level chapter.
-    if (lastSelected) {
-      if (isSelected(item)) {
-        const idx = selected.indexOf(item)
-        const updated = selected.slice(0, idx - 1)
-        setSelected(updated)
-      }
-      if (lastSelected.indexInParent === item.indexInParent) {
-        const updated = selected
-        // Replace the most recently selected item with the newly selected, since each chapter selected must be on its own level.
-        updated[updated.length - 1] = item
-        setSelected(updated)
-      } else if (lastSelected.indexInParent < item.indexInParent) {
-        // The newly selected item must be a child of the last selected item, so push the new item onto the list of selected so far.
-        const updated = selected
+    // If the new item was already selected, remove the existing selected item and all its children.
+    if (isSelected(item)) {
+      const idx = updated.findIndex((chapter) => chapter.title === item.title)
+      updated.splice(idx, 1)
+      setSelected(updated)
+    }
+
+    // Since there was a chapter last selected, we know the newly selected isn't the top-most level chapter.
+    else if (lastItem) {
+      if (lastItem.indexInParent < item.indexInParent) {
         updated.push(item)
+        setSelected(updated)
+      } else if (lastItem.indexInParent > item.indexInParent) {
+        if (item.indexInParent === 1) {
+          setSelected([item])
+        } else {
+          while (lastItem && lastItem?.indexInParent > item.indexInParent) {
+            updated.pop()
+            lastItem = updated[updated.length - 1]
+          }
+          updated.push(item)
+          setSelected(updated)
+        }
+      } else if (lastItem.indexInParent === item.indexInParent) {
+        updated[updated.length - 1] = item
         setSelected(updated)
       }
     } else {
