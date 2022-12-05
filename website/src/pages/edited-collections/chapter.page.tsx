@@ -1,10 +1,11 @@
 import { Helmet } from "react-helmet"
 import { Link, WordpressPage } from "src/components"
 import * as Dailp from "src/graphql/dailp"
-import { fullWidth, paddedCenterColumn } from "src/style/utils.css"
+import * as util from "src/style/utils.css"
 import CWKWLayout from "../cwkw/cwkw-layout"
+import * as css from "../cwkw/cwkw-layout.css"
 import { DocumentTitleHeader, TabSet } from "../documents/document.page"
-import { useSubchapters } from "./edited-collection-context"
+import { useDialog, useSubchapters } from "./edited-collection-context"
 
 const ChapterPage = (props: {
   collectionSlug: string
@@ -16,6 +17,8 @@ const ChapterPage = (props: {
       chapterSlug: props.chapterSlug,
     },
   })
+
+  const dialog = useDialog()
 
   const chapter = data?.chapter
 
@@ -30,8 +33,8 @@ const ChapterPage = (props: {
   return (
     <CWKWLayout>
       <Helmet title={chapter.title} />
-      <main className={paddedCenterColumn}>
-        <article className={fullWidth}>
+      <main className={util.paddedCenterColumn}>
+        <article className={dialog.visible ? css.leftMargin : util.fullWidth}>
           {/* If this chapter contains or is a Wordpress page, display the WP page contents. */}
           {wordpressId ? <WordpressPage slug={wordpressId.toString()} /> : null}
 
