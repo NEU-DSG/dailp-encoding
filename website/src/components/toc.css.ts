@@ -65,6 +65,11 @@ export const link = style([
   },
 ])
 
+export const selectedLink = style([
+  link,
+  { color: colors.focus, textDecoration: "underline" },
+])
+
 export const divider = style([
   {
     backgroundColor: colors.borders,

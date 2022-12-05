@@ -63,7 +63,7 @@ const CollectionTOC = () => {
 
 const TOC = ({ section, chapters }: TOCProps) => {
   const { collectionSlug } = useRouteParams()
-  const { onSelect, isSelected } = useFunctions()
+  const { onSelect, isSelected, lastSelected } = useFunctions()
 
   const listStyle =
     section === CollectionSection.Body
@@ -80,7 +80,7 @@ const TOC = ({ section, chapters }: TOCProps) => {
           <li key={item.leaf} className={listItemStyle}>
             <Link
               href={`/${collectionSlug}/chapters/${item.leaf}`}
-              className={css.link}
+              className={lastSelected(item) ? css.selectedLink : css.link}
               onClick={() => onSelect(item)}
             >
               {item.title}

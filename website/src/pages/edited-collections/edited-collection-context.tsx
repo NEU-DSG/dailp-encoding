@@ -52,50 +52,40 @@ export const CollectionProvider = (props: { children: any }) => {
 export const useFunctions = () => {
   const { selected, setSelected } = useContext(CollectionContext)
 
-  // Defines the behavior once selecting a chapter.
-  function onSelect(item: Chapter) {
-    const updated = selected
-    let lastItem = updated[updated.length - 1]
+  function onSelect(chapter: Chapter) {
+    // The last chapter selected is the currentmost selected chapter.
+    let lastChapter = selected[selected.length - 1]
 
-    // If the new item was already selected, remove the existing selected item and all its children.
-    if (isSelected(item)) {
-      const idx = updated.findIndex((chapter) => chapter.title === item.title)
-      updated.splice(idx, 1)
-      setSelected(updated)
-    }
+    if (!lastChapter || chapter.indexInParent === 1) {
+      // If no chapter was last selected, then start a new list of selected chapters.
+      setSelected([chapter])
+    } else if (lastChapter) {
+      const idx = selected.findIndex(
+        (c) => c.indexInParent === chapter.indexInParent
+      )
 
-    // Since there was a chapter last selected, we know the newly selected isn't the top-most level chapter.
-    else if (lastItem) {
-      if (lastItem.indexInParent < item.indexInParent) {
-        updated.push(item)
-        setSelected(updated)
-      } else if (lastItem.indexInParent > item.indexInParent) {
-        if (item.indexInParent === 1) {
-          setSelected([item])
-        } else {
-          while (lastItem && lastItem?.indexInParent > item.indexInParent) {
-            updated.pop()
-            lastItem = updated[updated.length - 1]
-          }
-          updated.push(item)
-          setSelected(updated)
-        }
-      } else if (lastItem.indexInParent === item.indexInParent) {
-        updated[updated.length - 1] = item
-        setSelected(updated)
+      if (idx > 0) {
+        selected.splice(idx, selected.length - idx)
       }
-    } else {
-      // If there was no chapter last selected, this newly selected chapter must be on the top-most level (index = 1).
-      setSelected([item])
+
+      selected.push(chapter)
+      setSelected(selected)
     }
   }
 
   // Returns whether a chapter has been selected or not.
   function isSelected(item: Chapter) {
-    return selected.map((chapter) => chapter.title).includes(item.title)
+    return selected.map((chapter) => chapter.leaf).includes(item.leaf)
   }
 
-  return { onSelect, isSelected }
+  function lastSelected(item: Chapter) {
+    if (selected[selected.length - 1]?.leaf === item.leaf) {
+      return true
+    }
+    return false
+  }
+
+  return { onSelect, isSelected, lastSelected }
 }
 
 export const useChapters = () => {
