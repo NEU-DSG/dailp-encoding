@@ -8,7 +8,7 @@ export const documentDetailsRoute = (slug: string) =>
 export const collectionRoute = (slug: string) => `/collections/${slug}`
 
 export const chapterRoute = (collectionSlug: string, slug: string) =>
-  `${collectionSlug}/chapters/${slug}`
+  `/${collectionSlug}/chapters/${slug}`
 
 export const redirectDocumentRoute = (path: string[]) => {
   const collectionSlug = path[0]!
