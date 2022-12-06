@@ -4,8 +4,8 @@ import * as Dailp from "src/graphql/dailp"
 
 export async function prerender() {
   const { data, error } = await client.dailp
-    .query<Dailp.EditedCollectionQuery, Dailp.EditedCollectionQueryVariables>(
-      Dailp.EditedCollectionDocument
+    .query<Dailp.EditedCollectionsQuery, Dailp.EditedCollectionsQueryVariables>(
+      Dailp.EditedCollectionsDocument
     )
     .toPromise()
 
@@ -13,10 +13,11 @@ export async function prerender() {
     throw error
   }
 
-  return flatMap(data?.editedCollection?.chapters, (chapter) => {
-    const collectionSlug = data?.editedCollection
-    const slug = chapter.title
+  return flatMap(data?.allEditedCollections, (collection) => {
+    const collectionSlug = collection.slug
 
-    return [{ url: `/${collectionSlug}/chapters/${slug}` }]
+    return collection.chapters?.map((c) => {
+      url: `/${collectionSlug}/chapters/${c.path[c.path.length - 1]}`
+    })
   })
 }
