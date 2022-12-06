@@ -9,15 +9,17 @@ export async function prerender() {
     )
     .toPromise()
 
-  if (error) {
+  if (!data || error) {
     throw error
   }
 
-  return flatMap(data?.allEditedCollections, (collection) => {
+  return flatMap(data.allEditedCollections, (collection) => {
     const collectionSlug = collection.slug
 
     return collection.chapters?.map((c) => {
-      url: `/${collectionSlug}/chapters/${c.path[c.path.length - 1]}`
+      return {
+        url: `/${collectionSlug}/chapters/${c.path[c.path.length - 1]}`,
+      }
     })
   })
 }
