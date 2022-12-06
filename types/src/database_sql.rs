@@ -390,6 +390,14 @@ impl Database {
         )
     }
 
+    pub async fn all_edited_collections(&self) -> Result<Vec<EditedCollection>> {
+        Ok(
+            query_file_as!(EditedCollection, "queries/edited_collections.sql")
+                .fetch_all(&self.client)
+                .await?,
+        )
+    }
+
     pub async fn update_annotation(&self, _annote: annotation::Annotation) -> Result<()> {
         todo!("Implement image annotations")
     }
