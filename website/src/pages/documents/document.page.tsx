@@ -26,11 +26,14 @@ import { mediaQueries } from "src/style/constants"
 import { BasicMorphemeSegment, LevelOfDetail } from "src/types"
 import PageImages from "../../page-image"
 import * as css from "./document.css"
+import { fullWidth } from "src/style/utils.css"
+
+
 
 enum Tabs {
   ANNOTATION = "annotation-tab",
   IMAGES = "source-image-tab",
-  INFO = "info-tab"
+  INFO = "info-tab",
 }
 
 export type Document = NonNullable<Dailp.AnnotatedDocumentQuery["document"]>
@@ -66,6 +69,11 @@ export default AnnotatedDocumentPage
 
 const TabSet = ({ doc }: { doc: Document }) => {
   const tabs = useScrollableTabState({ selectedId: Tabs.ANNOTATION })
+  const [{ data }] = Dailp.useDocumentDetailsQuery({ variables: { slug: doc.slug! } })
+  const doc2 = data?.document
+  if (!doc2) {
+    return null
+  }
   return (
     <>
       <div className={css.wideAndTop}>
@@ -120,8 +128,27 @@ const TabSet = ({ doc }: { doc: Document }) => {
         className={css.imageTabPanel}
         id={`${Tabs.INFO}-panel`}
         tabId={Tabs.INFO}
-        >
-          
+      >
+        <Helmet>
+          <title>{doc2.title} - Details</title>
+        </Helmet>
+        <DocumentTitleHeader doc={doc2} showDetails={false} />
+        <section className={fullWidth}>
+          <h3>Contributors</h3>
+          <ul>
+            {doc2.contributors.map((person) => (
+              <li key={person.name}>
+                {person.name}: {person.role}
+              </li>
+            ))}
+          </ul>
+        </section>
+        {doc2.sources.length > 0 ? (
+          <section className={fullWidth}>
+            Original document provided courtesy of{" "}
+            <Link href={doc2.sources[0]!.link}>{doc2.sources[0]!.name}</Link>.
+          </section>
+        ) : null}
       </TabPanel>
     </>
   )

@@ -49,7 +49,7 @@ pub enum CollectionSection {
     /// Body chapter
     Body,
     /// Credit
-    Credit
+    Credit,
 }
 
 #[async_graphql::ComplexObject]

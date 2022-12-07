@@ -265,10 +265,9 @@ impl Database {
         chapter_stack.push(initial_tuple);
 
         for current_chapter in chapters {
-
             let mut chapter_doc_name = "".to_string();
 
-            if current_chapter.document_short_name.is_some(){
+            if current_chapter.document_short_name.is_some() {
                 chapter_doc_name = current_chapter.document_short_name.unwrap();
             }
 
