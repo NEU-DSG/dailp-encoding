@@ -14,6 +14,6 @@ export async function prerender() {
   }
 
   return flatMap(data.allEditedCollections, (collection) => {
-    return { url: `/${collection.slug}` }
+    return { url: `/collections/${collection.slug}` }
   })
 }
