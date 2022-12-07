@@ -1,6 +1,7 @@
 import { Helmet } from "react-helmet"
 import { Link, WordpressPage } from "src/components"
 import * as Dailp from "src/graphql/dailp"
+import { chapterRoute } from "src/routes"
 import * as util from "src/style/utils.css"
 import CWKWLayout from "../cwkw/cwkw-layout"
 import * as css from "../cwkw/cwkw-layout.css"

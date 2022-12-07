@@ -16,6 +16,7 @@ const EditedCollectionPage = () => {
 
   useEffect(() => {
     if (collectionSlug != "cwkw") {
+      // Put here in case someone has one of these old collections bookmarked, but can remove if necessary
       switch (collectionSlug) {
         case "dollie-duncan-letters":
           navigate(`/collections/cwkw/dollie_duncan`)
