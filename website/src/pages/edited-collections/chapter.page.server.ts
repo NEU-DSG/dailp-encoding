@@ -18,7 +18,7 @@ export async function prerender() {
 
     return collection.chapters?.map((c) => {
       return {
-        url: `/${collectionSlug}/chapters/${
+        url: `/collections/${collectionSlug}/${
           c.path.length > 0 ? c.path[c.path.length - 1] : ""
         }`,
       }
