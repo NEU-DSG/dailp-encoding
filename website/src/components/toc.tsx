@@ -1,4 +1,4 @@
-import Link from "src/components/link"
+import { navigate } from "vite-plugin-ssr/client/router"
 import { CollectionSection } from "src/graphql/dailp"
 import {
   Chapter,
@@ -7,6 +7,7 @@ import {
 } from "src/pages/edited-collections/edited-collection-context"
 import { useRouteParams } from "src/renderer/PageShell"
 import { chapterRoute } from "src/routes"
+import Link from "./link"
 import * as css from "./toc.css"
 
 type TOCProps = {
@@ -80,9 +81,11 @@ const TOC = ({ section, chapters }: TOCProps) => {
         <>
           <li key={item.leaf} className={listItemStyle}>
             <Link
-              href={chapterRoute(collectionSlug!, item.leaf)}
               className={lastSelected(item) ? css.selectedLink : css.link}
-              onClick={() => onSelect(item)}
+              onClick={() => {
+                navigate(chapterRoute(collectionSlug!, item.leaf))
+                onSelect(item)
+              }}
             >
               {item.title}
             </Link>
