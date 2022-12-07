@@ -7,8 +7,8 @@ use crate::translations::DocResult;
 use anyhow::Result;
 use dailp::collection::CollectionSection;
 use dailp::collection::CollectionSection::Body;
-use dailp::collection::CollectionSection::Intro;
 use dailp::collection::CollectionSection::Credit;
+use dailp::collection::CollectionSection::Intro;
 use dailp::raw::CollectionChapter;
 use dailp::raw::EditedCollection;
 use dailp::{
@@ -178,9 +178,13 @@ impl SheetResult {
                     None
                 };
 
-                let chapter_type_name = if chapter_type == 0 { Intro } 
-                else if chapter_type == 1 { Body } 
-                else { Credit };
+                let chapter_type_name = if chapter_type == 0 {
+                    Intro
+                } else if chapter_type == 1 {
+                    Body
+                } else {
+                    Credit
+                };
 
                 let new_chapter = dailp::raw::CollectionChapter {
                     index_in_parent: index_i64,
