@@ -16,13 +16,7 @@ export async function prerender() {
   return flatMap(data.allEditedCollections, (collection) => {
     const collectionSlug = collection.slug
 
-    if (!collection.chapters) {
-      return {
-        url: `/${collectionSlug}/`,
-      }
-    }
-
-    return collection.chapters.map((c) => {
+    return collection.chapters?.map((c) => {
       return {
         url: `/${collectionSlug}/chapters/${
           c.path.length > 0 ? c.path[c.path.length - 1] : ""
