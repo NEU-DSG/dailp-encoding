@@ -1,4 +1,5 @@
 import { Helmet } from "react-helmet"
+import { navigate } from "vite-plugin-ssr/client/router"
 import { Link, WordpressPage } from "src/components"
 import * as Dailp from "src/graphql/dailp"
 import { chapterRoute } from "src/routes"
@@ -54,7 +55,11 @@ const ChapterPage = (props: {
                   <li>
                     <Link
                       key={chapter.leaf}
-                      href={chapterRoute(props.collectionSlug, chapter.leaf)}
+                      onClick={() =>
+                        navigate(
+                          chapterRoute(props.collectionSlug!, chapter.leaf)
+                        )
+                      }
                     >
                       {chapter.title}
                     </Link>
