@@ -1,6 +1,7 @@
 import { Helmet } from "react-helmet"
 import { Link, WordpressPage } from "src/components"
 import * as Dailp from "src/graphql/dailp"
+import { chapterRoute } from "src/routes"
 import { fullWidth, paddedCenterColumn } from "src/style/utils.css"
 import CWKWLayout from "../cwkw/cwkw-layout"
 import { DocumentTitleHeader, TabSet } from "../documents/document.page"
@@ -50,7 +51,7 @@ const ChapterPage = (props: {
                   <li>
                     <Link
                       key={chapter.leaf}
-                      href={`/${props.collectionSlug}/chapters/${chapter.leaf}`}
+                      href={chapterRoute(props.collectionSlug, chapter.leaf)}
                     >
                       {chapter.title}
                     </Link>

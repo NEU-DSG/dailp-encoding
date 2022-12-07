@@ -8,6 +8,7 @@ import { useMediaQuery } from "src/custom-hooks"
 import { HeaderPrefDrawer } from "src/mode"
 import { PreferencesProvider } from "src/preferences-context"
 import { useRouteParams } from "src/renderer/PageShell"
+import { collectionRoute } from "src/routes"
 import { colors, mediaQueries } from "src/style/constants"
 import "src/style/global.css"
 import { useDialog } from "../edited-collections/edited-collection-context"
@@ -47,7 +48,10 @@ const CWKWLayout: React.FC = ({ children }) => {
           {isDesktop ? <Sidebar /> : <MobileSidebar />}
           <div className={css.contentContainer}>
             <h1 className={css.siteTitle}>
-              <Link className={css.siteLink} href={`/${collectionSlug}`}>
+              <Link
+                className={css.siteLink}
+                href={collectionRoute(collectionSlug!)}
+              >
                 <img
                   src={isDesktop ? CWKWBanner : MobileCWKWBanner}
                   alt="Red basket with the text CWKW Cherokees Writing the Keetoowah Way"

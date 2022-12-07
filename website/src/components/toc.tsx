@@ -6,6 +6,7 @@ import {
   useSelected,
 } from "src/pages/edited-collections/edited-collection-context"
 import { useRouteParams } from "src/renderer/PageShell"
+import { chapterRoute } from "src/routes"
 import * as css from "./toc.css"
 
 type TOCProps = {
@@ -79,7 +80,7 @@ const TOC = ({ section, chapters }: TOCProps) => {
         <>
           <li key={item.leaf} className={listItemStyle}>
             <Link
-              href={`/${collectionSlug}/chapters/${item.leaf}`}
+              href={chapterRoute(collectionSlug!, item.leaf)}
               className={css.link}
               onClick={() => setSelected(item)}
             >
