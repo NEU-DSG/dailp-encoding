@@ -2,6 +2,7 @@ import React, { useEffect } from "react"
 import { Helmet } from "react-helmet"
 import { navigate } from "vite-plugin-ssr/client/router"
 import { Link } from "src/components"
+import { useEditedCollectionQuery } from "src/graphql/dailp"
 import { useRouteParams } from "src/renderer/PageShell"
 import * as util from "src/style/utils.css"
 import CWKWLayout from "../cwkw/cwkw-layout"
@@ -10,16 +11,28 @@ import { useDialog } from "./edited-collection-context"
 
 // Renders an edited collection page based on the route parameters.
 const EditedCollectionPage = () => {
-  const { slug } = useRouteParams()
+  const { collectionSlug } = useRouteParams()
   const dialog = useDialog()
 
   useEffect(() => {
-    if (slug != "cwkw") {
-      navigate(`/collections/cwkw/${slug}`)
+    if (collectionSlug != "cwkw") {
+      switch (collectionSlug) {
+        case "dollie-duncan-letters":
+          navigate(`/collections/cwkw/dollie_duncan`)
+          break
+        case "echota-funeral-notices":
+          navigate(`/collections/cwkw/funeral_notices`)
+          break
+        case "government documents":
+          navigate(`/collections/cwkw/governance_documents`)
+          break
+        default:
+          navigate(`/404`)
+      }
     }
-  }, [slug])
+  }, [collectionSlug])
 
-  if (slug != "cwkw") {
+  if (collectionSlug != "cwkw") {
     return null
   }
 
