@@ -111,12 +111,11 @@ query Collection($slug: String!) {
   }
 }
 
-query EditedCollection($slug: String!) {
-  editedCollection(slug: $slug) {
+query EditedCollections {
+  allEditedCollections {
+    title
+    slug
     chapters {
-      title
-      indexInParent
-      section
       path
     }
   }
