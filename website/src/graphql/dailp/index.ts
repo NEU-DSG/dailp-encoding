@@ -579,6 +579,7 @@ export type Query = {
   readonly allCollections: ReadonlyArray<DocumentCollection>
   /** Listing of all documents excluding their contents by default */
   readonly allDocuments: ReadonlyArray<AnnotatedDoc>
+  readonly allEditedCollections: ReadonlyArray<EditedCollection>
   /** List of all content pages */
   readonly allPages: ReadonlyArray<Page>
   /** List of all the functional morpheme tags available */
@@ -958,6 +959,26 @@ export type CollectionQuery = { readonly __typename?: "Query" } & {
           }
       >
     }
+}
+
+export type EditedCollectionsQueryVariables = Exact<{ [key: string]: never }>
+
+export type EditedCollectionsQuery = { readonly __typename?: "Query" } & {
+  readonly allEditedCollections: ReadonlyArray<
+    { readonly __typename?: "EditedCollection" } & Pick<
+      EditedCollection,
+      "title" | "slug"
+    > & {
+        readonly chapters: Maybe<
+          ReadonlyArray<
+            { readonly __typename?: "CollectionChapter" } & Pick<
+              CollectionChapter,
+              "path"
+            >
+          >
+        >
+      }
+  >
 }
 
 export type EditedCollectionQueryVariables = Exact<{
@@ -1431,6 +1452,26 @@ export function useCollectionQuery(
 ) {
   return Urql.useQuery<CollectionQuery>({
     query: CollectionDocument,
+    ...options,
+  })
+}
+export const EditedCollectionsDocument = gql`
+  query EditedCollections {
+    allEditedCollections {
+      title
+      slug
+      chapters {
+        path
+      }
+    }
+  }
+`
+
+export function useEditedCollectionsQuery(
+  options?: Omit<Urql.UseQueryArgs<EditedCollectionsQueryVariables>, "query">
+) {
+  return Urql.useQuery<EditedCollectionsQuery>({
+    query: EditedCollectionsDocument,
     ...options,
   })
 }
