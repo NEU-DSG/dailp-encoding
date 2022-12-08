@@ -189,6 +189,15 @@ impl AnnotatedDoc {
             .await?;
         Ok(forms.filter(AnnotatedForm::is_unresolved).collect())
     }
+
+    /// Collection chapter path of this document
+    async fn chapter_path(&self) -> FieldResult<Option<Vec<String>>> {
+        if let Some(path) = &self.meta.chapter_path {
+            Ok((&self.meta.chapter_path).clone())
+        } else {
+            Ok(None)
+        }
+    }
 }
 
 /// Key to retrieve the pages of a document given a document ID
@@ -420,6 +429,8 @@ pub struct DocumentMetadata {
     /// Arbitrary number used for manually ordering documents in a collection.
     /// For collections without manual ordering, use zero here.
     pub order_index: i64,
+    /// Collection chapter's path for this document
+    pub chapter_path: Option<Vec<String>>,
 }
 
 /// Database ID for one document
@@ -552,8 +563,6 @@ pub struct DocumentReference {
     pub date: Option<Date>,
     /// Index of the document within its group, used purely for ordering
     pub order_index: i64,
-    /// Collection chapter's path for this document
-    pub chapter_path: Option<Vec<String>>,
 }
 
 #[async_graphql::ComplexObject]

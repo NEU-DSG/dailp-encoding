@@ -10,13 +10,16 @@ select
     ) filter (where contributor is not null),
     '[]'
   )
-  as contributors
+  as contributors,
+  c.chapter_path as "chapter_path?"
 from document as d
   left join contributor_attribution as attr on attr.document_id = d.id
   left join contributor on contributor.id = attr.contributor_id
   left join media_slice on media_slice.id = d.audio_slice_id
   left join media_resource on media_resource.id = media_slice.resource_id
+  left join collection_chapter as c on c.document_id = d.id
 where d.id = any($1)
 group by d.id,
   media_slice.id,
-  media_resource.id
+  media_resource.id,
+  c.chapter_path

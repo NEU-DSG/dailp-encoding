@@ -41,6 +41,8 @@ export type AnnotatedDoc = {
   readonly audioRecording: Maybe<AudioSlice>
   /** Breadcrumbs from the top-level archive down to where this document lives. */
   readonly breadcrumbs: ReadonlyArray<DocumentCollection>
+  /** Collection chapter path of this document */
+  readonly chapterPath: Maybe<ReadonlyArray<Scalars["String"]>>
   /** Where the source document came from, maybe the name of a collection */
   readonly collection: Maybe<DocumentCollection>
   /**
@@ -331,8 +333,6 @@ export type DocumentParagraph = {
  */
 export type DocumentReference = {
   readonly __typename?: "DocumentReference"
-  /** Collection chapter's path for this document */
-  readonly chapterPath: Maybe<ReadonlyArray<Scalars["String"]>>
   /** Date the document was produced (or `None` if unknown) */
   readonly date: Maybe<Date>
   /** Database ID for the document */
@@ -772,7 +772,7 @@ export type AnnotatedDocumentQuery = { readonly __typename?: "Query" } & {
   readonly document: Maybe<
     { readonly __typename?: "AnnotatedDoc" } & Pick<
       AnnotatedDoc,
-      "id" | "title" | "slug" | "isReference"
+      "id" | "title" | "slug" | "isReference" | "chapterPath"
     > & {
         readonly breadcrumbs: ReadonlyArray<
           { readonly __typename?: "DocumentCollection" } & Pick<
@@ -952,7 +952,7 @@ export type CollectionQuery = { readonly __typename?: "Query" } & {
       readonly documents: ReadonlyArray<
         { readonly __typename?: "DocumentReference" } & Pick<
           DocumentReference,
-          "id" | "slug" | "title" | "orderIndex" | "chapterPath"
+          "id" | "slug" | "title" | "orderIndex"
         > & {
             readonly date: Maybe<
               { readonly __typename?: "Date" } & Pick<Date, "year">
@@ -1242,7 +1242,7 @@ export type CollectionChapterQuery = { readonly __typename?: "Query" } & {
       readonly document: Maybe<
         { readonly __typename?: "AnnotatedDoc" } & Pick<
           AnnotatedDoc,
-          "id" | "title" | "slug" | "isReference"
+          "id" | "title" | "slug" | "isReference" | "chapterPath"
         > & {
             readonly breadcrumbs: ReadonlyArray<
               { readonly __typename?: "DocumentCollection" } & Pick<
@@ -1381,6 +1381,7 @@ export const AnnotatedDocumentDocument = gql`
           url
         }
       }
+      chapterPath
     }
   }
 `
@@ -1442,7 +1443,6 @@ export const CollectionDocument = gql`
           year
         }
         orderIndex
-        chapterPath
       }
     }
   }
@@ -1751,6 +1751,7 @@ export const CollectionChapterDocument = gql`
             url
           }
         }
+        chapterPath
       }
     }
   }

@@ -40,6 +40,7 @@ query AnnotatedDocument($slug: String!) {
         url
       }
     }
+    chapterPath
   }
 }
 
@@ -106,7 +107,6 @@ query Collection($slug: String!) {
         year
       }
       orderIndex
-      chapterPath
     }
   }
 }
@@ -302,6 +302,7 @@ query CollectionChapter($collectionSlug: String!, $chapterSlug: String!) {
           url
         }
       }
+      chapterPath
     }
   }
 }

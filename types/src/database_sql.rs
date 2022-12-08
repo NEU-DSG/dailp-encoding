@@ -203,6 +203,7 @@ impl Database {
                     page_images: None,
                     sources: Vec::new(),
                     translation: None,
+                    chapter_path: None,
                 },
                 segments: None,
             })
@@ -342,6 +343,7 @@ impl Database {
                 page_images: None,
                 sources: Vec::new(),
                 translation: None,
+                chapter_path: None,
             },
             segments: None,
         };
@@ -486,9 +488,6 @@ impl Database {
                 title: doc.title,
                 date: doc.date,
                 order_index: doc.order_index,
-                chapter_path: doc
-                    .chapter_path
-                    .map(|s| s.into_iter().map(|s| (*s).into()).collect()),
             })
             .collect())
     }
@@ -1159,6 +1158,9 @@ impl Loader<DocumentId> for Database {
                     page_images: None,
                     sources: Vec::new(),
                     translation: None,
+                    chapter_path: item
+                        .chapter_path
+                        .map(|s| s.into_iter().map(|s| (*s).into()).collect()),
                 },
                 segments: None,
             })
@@ -1214,6 +1216,9 @@ impl Loader<DocumentShortName> for Database {
                     page_images: None,
                     sources: Vec::new(),
                     translation: None,
+                    chapter_path: item
+                        .chapter_path
+                        .map(|s| s.into_iter().map(|s| (*s).into()).collect()),
                 },
                 segments: None,
             })
