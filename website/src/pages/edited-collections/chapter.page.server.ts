@@ -14,6 +14,14 @@ export async function prerender() {
   }
 
   return flatMap(data.allEditedCollections, (collection) => {
-    return { url: `/collections/${collection.slug}` }
+    const collectionSlug = collection.slug
+
+    return collection.chapters?.map((c) => {
+      return {
+        url: `/collections/${collectionSlug}/${
+          c.path.length > 0 ? c.path[c.path.length - 1] : ""
+        }`,
+      }
+    })
   })
 }

@@ -4,6 +4,7 @@ import {
   colors,
   fonts,
   hspace,
+  layers,
   mediaQueries,
   radii,
   thickness,
@@ -41,7 +42,7 @@ export const displayModeArea = style({
   position: "sticky",
   top: `calc(55px + ${vspace[1.75]})`,
   width: "100%",
-  zIndex: 1,
+  zIndex: layers.base,
   paddingTop: vspace.quarter,
   paddingBottom: vspace.quarter,
   "@media": {
@@ -63,7 +64,7 @@ export const wideAndTop = style({
   position: "sticky",
   top: 55,
   width: "100%",
-  zIndex: 1,
+  zIndex: layers.base,
   "@media": {
     [mediaQueries.medium]: {
       top: 0,
@@ -144,7 +145,7 @@ export const morphemeDialog = style([
     transform: "translate(-50%, -50%)",
     maxWidth: "100vw",
     margin: 0,
-    zIndex: 1009,
+    zIndex: layers.top,
   },
 ])
 
@@ -159,7 +160,7 @@ export const morphemeDialogBackdrop = style({
   position: "fixed",
   inset: 0,
   backgroundColor: "rgba(0,0,0,0.2)",
-  zIndex: 1008,
+  zIndex: layers.third,
 })
 
 export const annotatedDocument = style({

@@ -1,5 +1,9 @@
+import React, { useEffect } from "react"
 import { Helmet } from "react-helmet"
+import { navigate } from "vite-plugin-ssr/client/router"
 import { Link } from "src/components"
+import { useEditedCollectionQuery } from "src/graphql/dailp"
+import { useRouteParams } from "src/renderer/PageShell"
 import * as util from "src/style/utils.css"
 import CWKWLayout from "../cwkw/cwkw-layout"
 import * as css from "../cwkw/cwkw-layout.css"
@@ -7,7 +11,35 @@ import { useDialog } from "./edited-collection-context"
 
 // Renders an edited collection page based on the route parameters.
 const EditedCollectionPage = () => {
+  const { collectionSlug } = useRouteParams()
   const dialog = useDialog()
+
+  useEffect(() => {
+    redirectUrl()
+  }, [collectionSlug])
+
+  function redirectUrl() {
+    if (collectionSlug != "cwkw") {
+      // Put here in case someone has one of these old collections bookmarked, but can remove if necessary
+      switch (collectionSlug) {
+        case "dollie-duncan-letters":
+          window.location.replace("/collections/cwkw/dollie_duncan")
+          break
+        case "echota-funeral-notices":
+          window.location.replace("/collections/cwkw/funeral_notices")
+          break
+        case "government documents":
+          window.location.replace("/collections/cwkw/governance_documents")
+          break
+        default:
+          window.location.replace("/404")
+      }
+    }
+  }
+
+  if (collectionSlug != "cwkw") {
+    return null
+  }
 
   return (
     <CWKWLayout>
