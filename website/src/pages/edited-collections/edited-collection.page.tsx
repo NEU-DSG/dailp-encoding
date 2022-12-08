@@ -15,23 +15,27 @@ const EditedCollectionPage = () => {
   const dialog = useDialog()
 
   useEffect(() => {
+    redirectUrl()
+  }, [collectionSlug])
+
+  async function redirectUrl() {
     if (collectionSlug != "cwkw") {
       // Put here in case someone has one of these old collections bookmarked, but can remove if necessary
       switch (collectionSlug) {
         case "dollie-duncan-letters":
-          navigate(`/collections/cwkw/dollie_duncan`)
+          await navigate(`/collections/cwkw/dollie_duncan`)
           break
         case "echota-funeral-notices":
-          navigate(`/collections/cwkw/funeral_notices`)
+          await navigate(`/collections/cwkw/funeral_notices`)
           break
         case "government documents":
-          navigate(`/collections/cwkw/governance_documents`)
+          await navigate(`/collections/cwkw/governance_documents`)
           break
         default:
-          navigate(`/404`)
+          await navigate(`/404`)
       }
     }
-  }, [collectionSlug])
+  }
 
   if (collectionSlug != "cwkw") {
     return null
