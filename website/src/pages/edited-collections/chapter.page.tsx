@@ -54,12 +54,8 @@ const ChapterPage = (props: {
                 {subchapters.map((chapter) => (
                   <li>
                     <Link
+                      href={chapterRoute(props.collectionSlug!, chapter.leaf)}
                       key={chapter.leaf}
-                      onClick={() =>
-                        navigate(
-                          chapterRoute(props.collectionSlug!, chapter.leaf)
-                        )
-                      }
                     >
                       {chapter.title}
                     </Link>
