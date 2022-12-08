@@ -1,5 +1,4 @@
 import { Helmet } from "react-helmet"
-import { navigate } from "vite-plugin-ssr/client/router"
 import { Link, WordpressPage } from "src/components"
 import * as Dailp from "src/graphql/dailp"
 import { chapterRoute } from "src/routes"
@@ -38,7 +37,7 @@ const ChapterPage = (props: {
       <main className={util.paddedCenterColumn}>
         <article className={dialog.visible ? css.leftMargin : util.fullWidth}>
           {/* If this chapter contains or is a Wordpress page, display the WP page contents. */}
-          {wordpressId ? <WordpressPage slug={wordpressId.toString()} /> : null}
+          {wordpressId ? <WordpressPage slug={`/${chapter.title}`} /> : null}
 
           {/* If this chapter is a document, display the document contents. */}
           {document ? (
@@ -54,8 +53,8 @@ const ChapterPage = (props: {
                 {subchapters.map((chapter) => (
                   <li>
                     <Link
-                      href={chapterRoute(props.collectionSlug!, chapter.leaf)}
-                      key={chapter.leaf}
+                      href={chapterRoute(props.collectionSlug!, chapter.slug)}
+                      key={chapter.slug}
                     >
                       {chapter.title}
                     </Link>

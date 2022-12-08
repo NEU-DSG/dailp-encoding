@@ -235,6 +235,7 @@ type CollectionChapter {
 	Full path of the chapter
 	"""
 	path: [String!]!
+	slug: String!
 	document: AnnotatedDoc
 }
 

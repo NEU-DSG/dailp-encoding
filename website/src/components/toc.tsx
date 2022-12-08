@@ -79,9 +79,9 @@ const TOC = ({ section, chapters }: TOCProps) => {
     <ol className={listStyle}>
       {chapters.map((item) => (
         <>
-          <li key={item.leaf} className={listItemStyle}>
+          <li key={item.slug} className={listItemStyle}>
             <Link
-              href={chapterRoute(collectionSlug!, item.leaf)}
+              href={chapterRoute(collectionSlug!, item.slug)}
               className={lastSelected(item) ? css.selectedLink : css.link}
               onClick={() => onSelect(item)}
             >

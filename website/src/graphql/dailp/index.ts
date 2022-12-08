@@ -221,6 +221,7 @@ export type CollectionChapter = {
   readonly path: ReadonlyArray<Scalars["String"]>
   /** Whether the chapter is an "Intro" or "Body" chapter */
   readonly section: CollectionSection
+  readonly slug: Scalars["String"]
   /** Full title of the chapter */
   readonly title: Scalars["String"]
   /** ID of WordPress page with text of the chapter */
@@ -992,7 +993,7 @@ export type EditedCollectionQuery = { readonly __typename?: "Query" } & {
         ReadonlyArray<
           { readonly __typename?: "CollectionChapter" } & Pick<
             CollectionChapter,
-            "title" | "indexInParent" | "section" | "path"
+            "title" | "indexInParent" | "section" | "path" | "slug"
           >
         >
       >
@@ -1483,6 +1484,7 @@ export const EditedCollectionDocument = gql`
         indexInParent
         section
         path
+        slug
       }
     }
   }

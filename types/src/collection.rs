@@ -67,6 +67,10 @@ impl EditedCollection {
 
 #[async_graphql::ComplexObject]
 impl CollectionChapter {
+    async fn slug(&self) -> String {
+        slug::slugify(&self.path.last().unwrap())
+    }
+
     async fn document(&self, context: &Context<'_>) -> FieldResult<Option<AnnotatedDoc>> {
         if let Some(doc_id) = &self.document_id {
             Ok(context
