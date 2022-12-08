@@ -138,12 +138,12 @@ function findSubchapters(
 }
 
 // Chapter type of collection chapters that comes from the backend.
-type FlatChapter = NonNullable<
+type FlatChapters = NonNullable<
   Dailp.EditedCollectionQuery["editedCollection"]
 >["chapters"]
 
 // Converts a flat-list into a nested-list structure.
-function flatToNested(chapters?: FlatChapter): Chapter[] | undefined {
+function flatToNested(chapters?: FlatChapters): Chapter[] | undefined {
   if (!chapters) {
     return undefined
   }
@@ -157,6 +157,7 @@ function flatToNested(chapters?: FlatChapter): Chapter[] | undefined {
 
   for (let i = 0; i < chapters.length; i++) {
     const curr = chapters[i]
+
     if (curr) {
       // Create a new Chapter with the backend chapter's fields.
       let chapter: Chapter = {

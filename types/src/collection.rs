@@ -68,7 +68,7 @@ impl EditedCollection {
 #[async_graphql::ComplexObject]
 impl CollectionChapter {
     async fn slug(&self) -> String {
-        slug::slugify(&self.path.last().unwrap())
+        (&self.path.last()).unwrap().to_string()
     }
 
     async fn document(&self, context: &Context<'_>) -> FieldResult<Option<AnnotatedDoc>> {
