@@ -103,6 +103,7 @@ async fn parse_early_vocab(
         is_reference: true,
         audio_recording: None,
         order_index: 0,
+        chapter_path: None,
     };
 
     // Update document metadata record
