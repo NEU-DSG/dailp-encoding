@@ -87,7 +87,8 @@ export const selectors = {
 }
 
 export const layers = {
-  top: 3,
-  middle: 2,
+  top: 999,
+  third: 3,
+  second: 2,
   base: 1,
 }

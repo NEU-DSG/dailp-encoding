@@ -13,9 +13,9 @@ export type Chapter = {
 
 type CollectionContext = {
   chapters: Chapter[] | undefined
-  selected: Chapter | null
-  setSelected: (item: Chapter | null) => void
   dialog: DialogStateReturn
+  selected: Chapter[]
+  setSelected: (chapters: Chapter[]) => void
 }
 
 const CollectionContext = createContext<CollectionContext>(
@@ -32,7 +32,8 @@ export const CollectionProvider = (props: { children: any }) => {
 
   // Gets the converted nested chapters using the backend query.
   const chapters = flatToNested(data?.editedCollection?.chapters)
-  const [selected, setSelected] = useState<Chapter | null>(null)
+  // Keeps track of the chapters selected SO FAR that have the same TOP parent (index of 1).
+  const [selected, setSelected] = useState<Chapter[]>([])
 
   // Gets the dialog state for the TOC
   const dialog = useDialogState({
@@ -48,9 +49,43 @@ export const CollectionProvider = (props: { children: any }) => {
   )
 }
 
-export const useSelected = () => {
+export const useFunctions = () => {
   const { selected, setSelected } = useContext(CollectionContext)
-  return { selected, setSelected }
+
+  function onSelect(chapter: Chapter) {
+    // The last chapter selected is the currentmost selected chapter.
+    let lastChapter = selected[selected.length - 1]
+
+    if (!lastChapter || chapter.indexInParent === 1) {
+      // If no chapter was last selected, then start a new list of selected chapters.
+      setSelected([chapter])
+    } else if (lastChapter) {
+      const idx = selected.findIndex(
+        (c) => c.indexInParent === chapter.indexInParent
+      )
+
+      if (idx > 0) {
+        selected.splice(idx, selected.length - idx)
+      }
+
+      selected.push(chapter)
+      setSelected(selected)
+    }
+  }
+
+  // Returns whether a chapter has been selected or not.
+  function isSelected(item: Chapter) {
+    return selected.map((chapter) => chapter.leaf).includes(item.leaf)
+  }
+
+  function lastSelected(item: Chapter) {
+    if (selected[selected.length - 1]?.leaf === item.leaf) {
+      return true
+    }
+    return false
+  }
+
+  return { onSelect, isSelected, lastSelected }
 }
 
 export const useChapters = () => {

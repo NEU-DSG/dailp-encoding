@@ -1,1 +1,1 @@
-export default "/:collectionSlug/chapters/:chapterSlug"
+export default "/collections/:collectionSlug/:chapterSlug"
