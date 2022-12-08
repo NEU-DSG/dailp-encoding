@@ -81,11 +81,9 @@ const TOC = ({ section, chapters }: TOCProps) => {
         <>
           <li key={item.leaf} className={listItemStyle}>
             <Link
+              href={chapterRoute(collectionSlug!, item.leaf)}
               className={lastSelected(item) ? css.selectedLink : css.link}
-              onClick={() => {
-                navigate(chapterRoute(collectionSlug!, item.leaf))
-                onSelect(item)
-              }}
+              onClick={() => onSelect(item)}
             >
               {item.title}
             </Link>
