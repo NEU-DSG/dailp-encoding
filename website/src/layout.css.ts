@@ -3,6 +3,7 @@ import {
   colors,
   fonts,
   hspace,
+  layers,
   mediaQueries,
   vspace,
 } from "src/style/constants"
@@ -24,7 +25,7 @@ export const header = style([
     fontFamily: fonts.header,
     position: "sticky",
     top: 0,
-    zIndex: 999,
+    zIndex: layers.second,
     "@media": {
       [mediaQueries.medium]: {
         position: "static",
