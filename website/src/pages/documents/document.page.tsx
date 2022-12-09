@@ -83,9 +83,10 @@ const TabSet = ({ doc }: { doc: Document }) => {
           </Tab>
         </TabList>
       </div>
+      
       <Button id="scroll-top" className={css.scrollTop} onClick={() => window.scrollTo({top: 0, behavior: 'smooth'})}>
-        <div><a><RiArrowUpCircleFill size={45}/></a></div>
-        <div>Top</div>
+        <RiArrowUpCircleFill size={45}/>
+        {!isMobile ? <div>Scroll to Top</div> : null}
       </Button>
       
 
@@ -346,9 +347,9 @@ export const DocumentTitleHeader = (p: {
       ) : (
         <Link href={documentRoute(p.doc.slug!)}>View Contents</Link>
       )}
-      {!p.doc.audioRecording && (
+      {!p.doc.audioRecording && !isMobile && (
         <div id="no-audio-message">
-        {!isMobile ? <strong>No Audio Available</strong> : null}
+        <strong>No Audio Available</strong>
         </div>
       )}
       {!isMobile ? <Button onClick={() => window.print()}>Print</Button> : null}
@@ -361,9 +362,9 @@ export const DocumentTitleHeader = (p: {
           audioUrl={p.doc.audioRecording.resourceUrl}
           showProgress
         />
-        {p.doc.audioRecording && (
+        {p.doc.audioRecording && !isMobile && (
         <div>
-        {!isMobile ? <a href={p.doc.audioRecording?.resourceUrl} download={"audio"}><Button>Download Audio</Button></a> : null}
+        <a href={p.doc.audioRecording?.resourceUrl}><Button>Download Audio</Button></a>
         </div>
       )}
       </div>
