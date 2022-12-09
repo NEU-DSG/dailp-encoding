@@ -227,8 +227,6 @@ export const mobileWordPanel = style([
 
 export const scrollTop = style({
   display: "flex",
-  flexDirection: "row",
-  flexWrap: "wrap",
   flexFlow: "column nowrap",
   justifyContent: "flex-end",
   alignContent: "center",
@@ -236,9 +234,9 @@ export const scrollTop = style({
   alignSelf: "flex-end",
   position: "sticky",
   zIndex: 1,
-  top: `calc(100vh - 105px)`,
+  top: `calc(100vh - 100px)`,
   right: 0,
-  padding: `7px`,
+  padding: vspace.quarter,
   color: colors.secondaryContrast,
   outlineColor: colors.secondaryContrast,
   backgroundColor: colors.secondary,
