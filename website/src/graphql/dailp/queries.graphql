@@ -19,10 +19,6 @@ query AnnotatedDocument($slug: String!) {
     title
     slug
     isReference
-    breadcrumbs(superCollection: "") {
-      name
-      slug
-    }
     date {
       year
     }
@@ -195,10 +191,6 @@ query DocumentDetails($slug: String!) {
     id
     slug
     title
-    breadcrumbs(superCollection: "") {
-      name
-      slug
-    }
     date {
       year
     }
@@ -275,15 +267,15 @@ query CollectionChapter($collectionSlug: String!, $chapterSlug: String!) {
   chapter(collectionSlug: $collectionSlug, chapterSlug: $chapterSlug) {
     title
     wordpressId
+    breadcrumbs {
+      name
+      slug
+    }
     document {
       id
       title
       slug
       isReference
-      breadcrumbs(superCollection: "") {
-        name
-        slug
-      }
       date {
         year
       }

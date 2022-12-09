@@ -1,8 +1,7 @@
 import { Helmet } from "react-helmet"
-import { navigate } from "vite-plugin-ssr/client/router"
 import { Link, WordpressPage } from "src/components"
 import * as Dailp from "src/graphql/dailp"
-import { chapterRoute } from "src/routes"
+import { chapterRoute, collectionRoute } from "src/routes"
 import * as util from "src/style/utils.css"
 import CWKWLayout from "../cwkw/cwkw-layout"
 import * as css from "../cwkw/cwkw-layout.css"
@@ -43,26 +42,24 @@ const ChapterPage = (props: {
           {/* If this chapter is a document, display the document contents. */}
           {document ? (
             <>
-              <DocumentTitleHeader doc={document} showDetails={true} />
+              <DocumentTitleHeader
+                breadcrumbs={chapter.breadcrumbs}
+                rootPath={collectionRoute(props.collectionSlug)}
+                doc={document}
+                showDetails={true}
+              />
               <TabSet doc={document} />
             </>
           ) : null}
 
           <ul>
-            {subchapters && (
-              <>
-                {subchapters.map((chapter) => (
-                  <li>
-                    <Link
-                      href={chapterRoute(props.collectionSlug!, chapter.leaf)}
-                      key={chapter.leaf}
-                    >
-                      {chapter.title}
-                    </Link>
-                  </li>
-                ))}
-              </>
-            )}
+            {subchapters?.map((chapter) => (
+              <li key={chapter.leaf}>
+                <Link href={chapterRoute(props.collectionSlug!, chapter.leaf)}>
+                  {chapter.title}
+                </Link>
+              </li>
+            ))}
           </ul>
         </article>
       </main>

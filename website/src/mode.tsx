@@ -64,6 +64,7 @@ const cherokeeRepresentationMapping: Record<
 function PreferenceSelect<T extends string | number>(p: {
   id: string
   value: string
+  "aria-describedby"?: string
   onChange: (value: string) => void
   mapping: Record<T, PreferenceDetails>
 }) {
@@ -73,9 +74,10 @@ function PreferenceSelect<T extends string | number>(p: {
       name={p.id}
       value={p.value}
       onChange={(e) => p.onChange(e.target.value)}
+      aria-describedby={p["aria-describedby"]}
     >
       {Object.entries<PreferenceDetails>(p.mapping).map(([value, details]) => (
-        <option value={value} key={value} aria-description={details.details}>
+        <option value={value} key={value}>
           {details.label}
         </option>
       ))}
@@ -91,24 +93,28 @@ export const PrefPanel = () => {
 
       <PreferenceSelect
         id="level-of-detail"
+        aria-describedby="level-of-detail-desc"
         value={preferences.levelOfDetail.toString()}
         onChange={(x) => preferences.setLevelOfDetail(Number.parseInt(x))}
         mapping={levelNameMapping}
       />
-      <p>{levelNameMapping[preferences.levelOfDetail].details}</p>
+      <p id="level-of-detail-desc">
+        {levelNameMapping[preferences.levelOfDetail].details}
+      </p>
 
       <Label htmlFor="cherokee-representation">
         Cherokee Description Style:
       </Label>
       <PreferenceSelect
         id="cherokee-representation"
+        aria-describedby="cherokee-representation-desc"
         value={preferences.cherokeeRepresentation}
         onChange={(x) =>
           preferences.setCherokeeRepresentation(x as Dailp.CherokeeOrthography)
         }
         mapping={cherokeeRepresentationMapping}
       />
-      <p>
+      <p id="cherokee-representation-desc">
         {
           cherokeeRepresentationMapping[preferences.cherokeeRepresentation]
             .details
