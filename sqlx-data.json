@@ -707,6 +707,54 @@
     },
     "query": "select\n  word.id,\n  word.source_text,\n  word.simple_phonetics,\n  word.phonemic,\n  word.english_gloss,\n  word.commentary,\n  word.document_id,\n  word.index_in_document,\n  word.page_number,\n  media_resource.url as \"audio_url?\",\n  media_slice.time_range as \"audio_slice?\"\nfrom word\n  left join media_slice on media_slice.id = word.audio_slice_id\n  left join media_resource on media_resource.id = media_slice.resource_id\nwhere source_text like any($1)\n"
   },
+  "5549c7f2ae3991f56bf51c9aa562c2a4672277cd741b6ca303b5a24ccc508065": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "title",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "slug",
+          "ordinal": 2,
+          "type_info": "Text"
+        },
+        {
+          "name": "chapter_path",
+          "ordinal": 3,
+          "type_info": {
+            "Custom": {
+              "kind": "Simple",
+              "name": "ltree"
+            }
+          }
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          {
+            "Custom": {
+              "kind": "Simple",
+              "name": "ltree"
+            }
+          }
+        ]
+      }
+    },
+    "query": "select id, title, slug, chapter_path\nfrom collection_chapter\nwhere chapter_path @> $1 and chapter_path != $1\n"
+  },
   "57df2982e788599773dc55b1fc70dfd0739f4dcd6702079f93cd6ff24a992bff": {
     "describe": {
       "columns": [],

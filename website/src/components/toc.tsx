@@ -1,4 +1,4 @@
-import { navigate } from "vite-plugin-ssr/client/router"
+import { Fragment } from "react"
 import { CollectionSection } from "src/graphql/dailp"
 import {
   Chapter,
@@ -51,12 +51,12 @@ const CollectionTOC = () => {
 
   return (
     <>
-      {collection.map((coll) =>
+      {collection.map((coll, idx) =>
         coll.chapters.length > 0 ? (
-          <>
+          <Fragment key={idx}>
             <h3 className={css.title}>{coll.section}</h3>
             <TOC section={coll.section} chapters={coll.chapters} />
-          </>
+          </Fragment>
         ) : null
       )}
     </>
@@ -78,22 +78,19 @@ const TOC = ({ section, chapters }: TOCProps) => {
   return (
     <ol className={listStyle}>
       {chapters.map((item) => (
-        <>
-          <li key={item.slug} className={listItemStyle}>
-            <Link
-              href={chapterRoute(collectionSlug!, item.slug)}
-              className={lastSelected(item) ? css.selectedLink : css.link}
-              onClick={() => onSelect(item)}
-            >
-              {item.title}
-            </Link>
+        <li key={item.slug} className={listItemStyle}>
+          <Link
+            href={chapterRoute(collectionSlug!, item.slug)}
+            className={lastSelected(item) ? css.selectedLink : css.link}
+            onClick={() => onSelect(item)}
+          >
+            {item.title}
+          </Link>
 
-            {isSelected(item) && item.children ? (
-              <TOC section={section} chapters={item.children} />
-            ) : null}
-          </li>
-          <hr className={css.divider} />
-        </>
+          {isSelected(item) && item.children ? (
+            <TOC section={section} chapters={item.children} />
+          ) : null}
+        </li>
       ))}
     </ol>
   )

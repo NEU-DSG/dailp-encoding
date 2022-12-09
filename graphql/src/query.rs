@@ -48,7 +48,7 @@ impl Query {
         context: &Context<'_>,
         collection_slug: String,
         chapter_slug: String,
-    ) -> FieldResult<CollectionChapter> {
+    ) -> FieldResult<Option<CollectionChapter>> {
         Ok(context
             .data::<DataLoader<Database>>()?
             .loader()

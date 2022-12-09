@@ -8,33 +8,34 @@ import CWKWLayout from "../cwkw/cwkw-layout"
 import * as css from "../cwkw/cwkw-layout.css"
 import { useDialog } from "./edited-collection-context"
 
+function redirectUrl(collectionSlug: string) {
+  if (collectionSlug != "cwkw") {
+    // Put here in case someone has one of these old collections bookmarked, but can remove if necessary
+    switch (collectionSlug) {
+      case "dollie-duncan-letters":
+        navigate("/collections/cwkw/dollie_duncan")
+        break
+      case "echota-funeral-notices":
+        navigate("/collections/cwkw/funeral_notices")
+        break
+      case "government documents":
+        navigate("/collections/cwkw/governance_documents")
+        break
+      default:
+        // TODO Don't go to a 404 page!!!!! first rule of 404s... jesus.
+        navigate("/404")
+    }
+  }
+}
+
 // Renders an edited collection page based on the route parameters.
 const EditedCollectionPage = () => {
   const { collectionSlug } = useRouteParams()
   const dialog = useDialog()
 
   useEffect(() => {
-    redirectUrl()
+    redirectUrl(collectionSlug!)
   }, [collectionSlug])
-
-  function redirectUrl() {
-    if (collectionSlug != "cwkw") {
-      // Put here in case someone has one of these old collections bookmarked, but can remove if necessary
-      switch (collectionSlug) {
-        case "dollie-duncan-letters":
-          navigate("/collections/cwkw/dollie_duncan")
-          break
-        case "echota-funeral-notices":
-          navigate("/collections/cwkw/funeral_notices")
-          break
-        case "government documents":
-          navigate("/collections/cwkw/governance_documents")
-          break
-        default:
-          navigate("/404")
-      }
-    }
-  }
 
   if (collectionSlug != "cwkw") {
     return null

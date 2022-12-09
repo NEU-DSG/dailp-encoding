@@ -1,6 +1,5 @@
 #![allow(missing_docs)]
 
-use sqlx::postgres::types::PgLQuery;
 use sqlx::postgres::types::PgLTree;
 use std::ops::Bound;
 use std::str::FromStr;
@@ -697,6 +696,20 @@ impl Database {
         }])
     }
 
+    pub async fn chapter_breadcrumbs(&self, path: Vec<String>) -> Result<Vec<DocumentCollection>> {
+        let chapters = query_file!("queries/chapter_breadcrumbs.sql", PgLTree::from_iter(path)?)
+            .fetch_all(&self.client)
+            .await?;
+        Ok(chapters
+            .into_iter()
+            .sorted_by_key(|chapter| chapter.chapter_path.len())
+            .map(|chapter| DocumentCollection {
+                slug: chapter.slug,
+                title: chapter.title,
+            })
+            .collect())
+    }
+
     pub async fn insert_one_word(&self, form: AnnotatedForm) -> Result<()> {
         let doc_id = form.position.document_id.0;
         let mut tx = self.client.begin().await?;
@@ -1086,16 +1099,16 @@ impl Database {
         &self,
         collection_slug: String,
         chapter_slug: String,
-    ) -> Result<CollectionChapter> {
+    ) -> Result<Option<CollectionChapter>> {
         let chapter = query_file!(
             "queries/chapter_contents.sql",
             collection_slug,
             chapter_slug
         )
-        .fetch_one(&self.client)
+        .fetch_optional(&self.client)
         .await?;
 
-        Ok(CollectionChapter {
+        Ok(chapter.map(|chapter| CollectionChapter {
             id: chapter.id,
             path: chapter
                 .chapter_path
@@ -1107,7 +1120,7 @@ impl Database {
             document_id: chapter.document_id.map(|id| DocumentId(id)),
             wordpress_id: chapter.wordpress_id,
             section: chapter.section,
-        })
+        }))
     }
 }
 

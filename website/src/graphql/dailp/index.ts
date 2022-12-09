@@ -41,8 +41,6 @@ export type AnnotatedDoc = {
   readonly audioRecording: Maybe<AudioSlice>
   /** Breadcrumbs from the top-level archive down to where this document lives. */
   readonly breadcrumbs: ReadonlyArray<DocumentCollection>
-  /** Collection chapter path of this document */
-  readonly chapterPath: Maybe<ReadonlyArray<Scalars["String"]>>
   /** Where the source document came from, maybe the name of a collection */
   readonly collection: Maybe<DocumentCollection>
   /**
@@ -87,10 +85,6 @@ export type AnnotatedDoc = {
    * These words need to be corrected or reviewed further.
    */
   readonly unresolvedForms: ReadonlyArray<AnnotatedForm>
-}
-
-export type AnnotatedDocBreadcrumbsArgs = {
-  superCollection: Scalars["String"]
 }
 
 export type AnnotatedDocFormsArgs = {
@@ -214,6 +208,8 @@ export enum CherokeeOrthography {
 /** Structure to represent a single chapter. Used to send data to the front end. */
 export type CollectionChapter = {
   readonly __typename?: "CollectionChapter"
+  /** Breadcrumbs from the top-level archive down to where this document lives. */
+  readonly breadcrumbs: ReadonlyArray<DocumentCollection>
   readonly document: Maybe<AnnotatedDoc>
   /** UUID for the chapter */
   readonly id: Scalars["UUID"]
@@ -586,7 +582,7 @@ export type Query = {
   /** List of all the functional morpheme tags available */
   readonly allTags: ReadonlyArray<MorphemeTag>
   /** Retrieves a chapter and its contents by its collection and chapter slug. */
-  readonly chapter: CollectionChapter
+  readonly chapter: Maybe<CollectionChapter>
   readonly collection: DocumentCollection
   /** Retrieves a full document from its unique name. */
   readonly document: Maybe<AnnotatedDoc>
@@ -774,12 +770,6 @@ export type AnnotatedDocumentQuery = { readonly __typename?: "Query" } & {
       AnnotatedDoc,
       "id" | "title" | "slug" | "isReference" | "chapterPath"
     > & {
-        readonly breadcrumbs: ReadonlyArray<
-          { readonly __typename?: "DocumentCollection" } & Pick<
-            DocumentCollection,
-            "name" | "slug"
-          >
-        >
         readonly date: Maybe<
           { readonly __typename?: "Date" } & Pick<Date, "year">
         >
@@ -1092,12 +1082,6 @@ export type DocumentDetailsQuery = { readonly __typename?: "Query" } & {
       AnnotatedDoc,
       "id" | "slug" | "title"
     > & {
-        readonly breadcrumbs: ReadonlyArray<
-          { readonly __typename?: "DocumentCollection" } & Pick<
-            DocumentCollection,
-            "name" | "slug"
-          >
-        >
         readonly date: Maybe<
           { readonly __typename?: "Date" } & Pick<Date, "year">
         >
@@ -1242,7 +1226,7 @@ export type CollectionChapterQuery = { readonly __typename?: "Query" } & {
       readonly document: Maybe<
         { readonly __typename?: "AnnotatedDoc" } & Pick<
           AnnotatedDoc,
-          "id" | "title" | "slug" | "isReference" | "chapterPath"
+          "id" | "title" | "slug" | "isReference"
         > & {
             readonly breadcrumbs: ReadonlyArray<
               { readonly __typename?: "DocumentCollection" } & Pick<
@@ -1360,10 +1344,6 @@ export const AnnotatedDocumentDocument = gql`
       title
       slug
       isReference
-      breadcrumbs(superCollection: "") {
-        name
-        slug
-      }
       date {
         year
       }
@@ -1596,10 +1576,6 @@ export const DocumentDetailsDocument = gql`
       id
       slug
       title
-      breadcrumbs(superCollection: "") {
-        name
-        slug
-      }
       date {
         year
       }
@@ -1725,15 +1701,15 @@ export const CollectionChapterDocument = gql`
     chapter(collectionSlug: $collectionSlug, chapterSlug: $chapterSlug) {
       title
       wordpressId
+      breadcrumbs {
+        name
+        slug
+      }
       document {
         id
         title
         slug
         isReference
-        breadcrumbs(superCollection: "") {
-          name
-          slug
-        }
         date {
           year
         }
