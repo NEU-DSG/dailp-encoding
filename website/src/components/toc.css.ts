@@ -32,14 +32,19 @@ export const numberedListItem = style([
   margin(0),
   paddingY(vspace.large),
   {
+    borderBottom: `1px solid ${colors.borders}`,
+    width: "100%",
     color: colors.primaryText,
     selectors: {
       // Removes the padding at the bottom of an item that is the last of its type in a nested list, to avoid double padding.
-      [`${orderedList} ${orderedList} &:last-of-type`]: {
+      // Removes the horizontal line when its the last in a list, to avoid double lines.
+      [`${orderedList} &:last-of-type`]: {
         paddingBottom: "0px",
+        borderBottom: "none",
       },
-      [`${numberedOrderedList} ${numberedOrderedList} &:last-of-type`]: {
+      [`${numberedOrderedList} &:last-of-type`]: {
         paddingBottom: "0px",
+        borderBottom: "none",
       },
     },
   },
@@ -68,17 +73,6 @@ export const link = style([
 export const selectedLink = style([
   link,
   { color: colors.focus, textDecoration: "underline" },
-])
-
-export const divider = style([
-  {
-    backgroundColor: colors.borders,
-    width: hsize.full,
-    selectors: {
-      // Removes the horizontal line when its the last in a list, to avoid double lines.
-      [`${numberedListItem} &:last-of-type`]: { display: "none" },
-    },
-  },
 ])
 
 export const title = style([
