@@ -4,6 +4,7 @@ use crate::AnnotatedDoc;
 use {
     crate::async_graphql::{self, dataloader::DataLoader, Context, FieldResult},
     crate::Database,
+    crate::DocumentCollection,
     crate::DocumentId,
 };
 
@@ -71,10 +72,21 @@ impl CollectionChapter {
         if let Some(doc_id) = &self.document_id {
             Ok(context
                 .data::<DataLoader<Database>>()?
-                .load_one(self.document_id.unwrap())
+                .load_one(doc_id.clone())
                 .await?)
         } else {
             Ok(None)
         }
+    }
+    /// Breadcrumbs from the top-level archive down to where this document lives.
+    async fn breadcrumbs(
+        &self,
+        context: &async_graphql::Context<'_>,
+    ) -> FieldResult<Vec<DocumentCollection>> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .chapter_breadcrumbs(self.path.clone())
+            .await?)
     }
 }

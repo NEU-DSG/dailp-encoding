@@ -75,19 +75,6 @@ impl AnnotatedDoc {
         &self.meta.sources
     }
 
-    /// Breadcrumbs from the top-level archive down to where this document lives.
-    async fn breadcrumbs(
-        &self,
-        context: &async_graphql::Context<'_>,
-        super_collection: String,
-    ) -> FieldResult<Vec<DocumentCollection>> {
-        Ok(context
-            .data::<DataLoader<Database>>()?
-            .loader()
-            .document_breadcrumbs(self.meta.id, &super_collection)
-            .await?)
-    }
-
     /// Where the source document came from, maybe the name of a collection
     async fn collection(&self) -> Option<DocumentCollection> {
         self.meta
