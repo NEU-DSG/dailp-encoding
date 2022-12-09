@@ -177,13 +177,16 @@ impl AnnotatedDoc {
         Ok(forms.filter(AnnotatedForm::is_unresolved).collect())
     }
 
-    /// Collection chapter path of this document
-    async fn chapter_path(&self) -> FieldResult<Option<Vec<String>>> {
-        if let Some(path) = &self.meta.chapter_path {
-            Ok((&self.meta.chapter_path).clone())
-        } else {
-            Ok(None)
-        }
+    /// Collection chapters that contain this document.
+    async fn chapters(
+        &self,
+        context: &async_graphql::Context<'_>,
+    ) -> FieldResult<Option<Vec<crate::CollectionChapter>>> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .chapters_by_document(self.meta.short_name.clone())
+            .await?)
     }
 }
 
@@ -416,8 +419,6 @@ pub struct DocumentMetadata {
     /// Arbitrary number used for manually ordering documents in a collection.
     /// For collections without manual ordering, use zero here.
     pub order_index: i64,
-    /// Collection chapter's path for this document
-    pub chapter_path: Option<Vec<String>>,
 }
 
 /// Database ID for one document

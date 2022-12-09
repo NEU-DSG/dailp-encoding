@@ -66,9 +66,9 @@ type AnnotatedDoc {
 	"""
 	unresolvedForms: [AnnotatedForm!]!
 	"""
-	Collection chapter path of this document
+	Collection chapters that contain this document.
 	"""
-	chapterPath: [String!]
+	chapters: [CollectionChapter!]
 }
 
 """

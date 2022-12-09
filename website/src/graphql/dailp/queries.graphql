@@ -36,7 +36,9 @@ query AnnotatedDocument($slug: String!) {
         url
       }
     }
-    chapterPath
+    chapters {
+      path
+    }
   }
 }
 
@@ -268,6 +270,7 @@ query CollectionChapter($collectionSlug: String!, $chapterSlug: String!) {
   chapter(collectionSlug: $collectionSlug, chapterSlug: $chapterSlug) {
     title
     wordpressId
+    slug
     breadcrumbs {
       name
       slug
@@ -294,7 +297,9 @@ query CollectionChapter($collectionSlug: String!, $chapterSlug: String!) {
           url
         }
       }
-      chapterPath
+      chapters {
+        path
+      }
     }
   }
 }

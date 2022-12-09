@@ -202,7 +202,6 @@ impl Database {
                     page_images: None,
                     sources: Vec::new(),
                     translation: None,
-                    chapter_path: None,
                 },
                 segments: None,
             })
@@ -342,7 +341,6 @@ impl Database {
                 page_images: None,
                 sources: Vec::new(),
                 translation: None,
-                chapter_path: None,
             },
             segments: None,
         };
@@ -1122,6 +1120,39 @@ impl Database {
             section: chapter.section,
         }))
     }
+
+    // Returns the CollectionChapters that contain given document.
+    pub async fn chapters_by_document(
+        &self,
+        document_slug: String,
+    ) -> Result<Option<Vec<CollectionChapter>>> {
+        let chapters = query_file!("queries/chapters_by_document.sql", document_slug)
+            .fetch_all(&self.client)
+            .await?;
+
+        if chapters.is_empty() {
+            return Ok(None);
+        } else {
+            Ok(Some(
+                chapters
+                    .into_iter()
+                    .map(|chapter| CollectionChapter {
+                        id: chapter.id,
+                        path: chapter
+                            .chapter_path
+                            .into_iter()
+                            .map(|s| (*s).into())
+                            .collect(),
+                        index_in_parent: chapter.index_in_parent,
+                        title: chapter.title,
+                        document_id: chapter.document_id.map(|id| DocumentId(id)),
+                        wordpress_id: chapter.wordpress_id,
+                        section: chapter.section,
+                    })
+                    .collect(),
+            ))
+        }
+    }
 }
 
 #[async_trait]
@@ -1171,9 +1202,6 @@ impl Loader<DocumentId> for Database {
                     page_images: None,
                     sources: Vec::new(),
                     translation: None,
-                    chapter_path: item
-                        .chapter_path
-                        .map(|s| s.into_iter().map(|s| (*s).into()).collect()),
                 },
                 segments: None,
             })
@@ -1229,9 +1257,6 @@ impl Loader<DocumentShortName> for Database {
                     page_images: None,
                     sources: Vec::new(),
                     translation: None,
-                    chapter_path: item
-                        .chapter_path
-                        .map(|s| s.into_iter().map(|s| (*s).into()).collect()),
                 },
                 segments: None,
             })

@@ -62,9 +62,10 @@ const AnnotatedDocumentPage = (props: { id: string }) => {
 
   // Redirects this document to the corresponding collection chapter containing document.
   function redirectUrl() {
-    if (doc?.chapterPath) {
-      const collectionSlug = doc.chapterPath[0]
-      const chapterSlug = doc.chapterPath[doc.chapterPath.length - 1]
+    if (doc?.chapters?.length === 1) {
+      const chapter = doc.chapters[0]
+      const collectionSlug = chapter?.path[0]
+      const chapterSlug = chapter?.path[chapter.path.length - 1]
 
       navigate(chapterRoute(collectionSlug!, chapterSlug!))
     }

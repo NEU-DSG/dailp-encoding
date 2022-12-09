@@ -25,7 +25,6 @@ pub async fn migrate_dictionaries(db: &Database) -> Result<()> {
             is_reference: true,
             audio_recording: None,
             order_index: 0,
-            chapter_path: None,
         })
         .await?;
     let df2003_id = db
@@ -43,7 +42,6 @@ pub async fn migrate_dictionaries(db: &Database) -> Result<()> {
             is_reference: true,
             audio_recording: None,
             order_index: 0,
-            chapter_path: None,
         })
         .await?;
 
@@ -223,7 +221,6 @@ async fn insert_document_from_sheet(
         is_reference: true,
         audio_recording: None,
         order_index: 0,
-        chapter_path: None,
     };
     let doc_id = db.insert_dictionary_document(&meta).await?;
     // Include the newly minted UUID in the result.

@@ -39,8 +39,8 @@ export type AnnotatedDoc = {
   readonly __typename?: "AnnotatedDoc"
   /** The audio recording resource for this entire document */
   readonly audioRecording: Maybe<AudioSlice>
-  /** Breadcrumbs from the top-level archive down to where this document lives. */
-  readonly breadcrumbs: ReadonlyArray<DocumentCollection>
+  /** Collection chapters that contain this document. */
+  readonly chapters: Maybe<ReadonlyArray<CollectionChapter>>
   /** Where the source document came from, maybe the name of a collection */
   readonly collection: Maybe<DocumentCollection>
   /**
@@ -768,7 +768,7 @@ export type AnnotatedDocumentQuery = { readonly __typename?: "Query" } & {
   readonly document: Maybe<
     { readonly __typename?: "AnnotatedDoc" } & Pick<
       AnnotatedDoc,
-      "id" | "title" | "slug" | "isReference" | "chapterPath"
+      "id" | "title" | "slug" | "isReference"
     > & {
         readonly date: Maybe<
           { readonly __typename?: "Date" } & Pick<Date, "year">
@@ -792,6 +792,14 @@ export type AnnotatedDocumentQuery = { readonly __typename?: "Query" } & {
                 { readonly __typename?: "PageImage" } & Pick<PageImage, "url">
               >
             }
+          >
+        >
+        readonly chapters: Maybe<
+          ReadonlyArray<
+            { readonly __typename?: "CollectionChapter" } & Pick<
+              CollectionChapter,
+              "path"
+            >
           >
         >
       }
@@ -1219,51 +1227,61 @@ export type CollectionChapterQueryVariables = Exact<{
 }>
 
 export type CollectionChapterQuery = { readonly __typename?: "Query" } & {
-  readonly chapter: { readonly __typename?: "CollectionChapter" } & Pick<
-    CollectionChapter,
-    "title" | "wordpressId"
-  > & {
-      readonly document: Maybe<
-        { readonly __typename?: "AnnotatedDoc" } & Pick<
-          AnnotatedDoc,
-          "id" | "title" | "slug" | "isReference"
-        > & {
-            readonly breadcrumbs: ReadonlyArray<
-              { readonly __typename?: "DocumentCollection" } & Pick<
-                DocumentCollection,
-                "name" | "slug"
+  readonly chapter: Maybe<
+    { readonly __typename?: "CollectionChapter" } & Pick<
+      CollectionChapter,
+      "title" | "wordpressId" | "slug"
+    > & {
+        readonly breadcrumbs: ReadonlyArray<
+          { readonly __typename?: "DocumentCollection" } & Pick<
+            DocumentCollection,
+            "name" | "slug"
+          >
+        >
+        readonly document: Maybe<
+          { readonly __typename?: "AnnotatedDoc" } & Pick<
+            AnnotatedDoc,
+            "id" | "title" | "slug" | "isReference"
+          > & {
+              readonly date: Maybe<
+                { readonly __typename?: "Date" } & Pick<Date, "year">
               >
-            >
-            readonly date: Maybe<
-              { readonly __typename?: "Date" } & Pick<Date, "year">
-            >
-            readonly sources: ReadonlyArray<
-              { readonly __typename?: "SourceAttribution" } & Pick<
-                SourceAttribution,
-                "name" | "link"
+              readonly sources: ReadonlyArray<
+                { readonly __typename?: "SourceAttribution" } & Pick<
+                  SourceAttribution,
+                  "name" | "link"
+                >
               >
-            >
-            readonly audioRecording: Maybe<
-              { readonly __typename?: "AudioSlice" } & Pick<
-                AudioSlice,
-                "resourceUrl" | "startTime" | "endTime"
+              readonly audioRecording: Maybe<
+                { readonly __typename?: "AudioSlice" } & Pick<
+                  AudioSlice,
+                  "resourceUrl" | "startTime" | "endTime"
+                >
               >
-            >
-            readonly translatedPages: Maybe<
-              ReadonlyArray<
-                { readonly __typename?: "DocumentPage" } & {
-                  readonly image: Maybe<
-                    { readonly __typename?: "PageImage" } & Pick<
-                      PageImage,
-                      "url"
+              readonly translatedPages: Maybe<
+                ReadonlyArray<
+                  { readonly __typename?: "DocumentPage" } & {
+                    readonly image: Maybe<
+                      { readonly __typename?: "PageImage" } & Pick<
+                        PageImage,
+                        "url"
+                      >
                     >
-                  >
-                }
+                  }
+                >
               >
-            >
-          }
-      >
-    }
+              readonly chapters: Maybe<
+                ReadonlyArray<
+                  { readonly __typename?: "CollectionChapter" } & Pick<
+                    CollectionChapter,
+                    "path"
+                  >
+                >
+              >
+            }
+        >
+      }
+  >
 }
 
 export type UpdateWordMutationVariables = Exact<{
@@ -1361,7 +1379,9 @@ export const AnnotatedDocumentDocument = gql`
           url
         }
       }
-      chapterPath
+      chapters {
+        path
+      }
     }
   }
 `
@@ -1701,6 +1721,7 @@ export const CollectionChapterDocument = gql`
     chapter(collectionSlug: $collectionSlug, chapterSlug: $chapterSlug) {
       title
       wordpressId
+      slug
       breadcrumbs {
         name
         slug
@@ -1727,7 +1748,9 @@ export const CollectionChapterDocument = gql`
             url
           }
         }
-        chapterPath
+        chapters {
+          path
+        }
       }
     }
   }

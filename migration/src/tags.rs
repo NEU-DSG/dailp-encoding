@@ -130,7 +130,6 @@ async fn migrate_glossary_metadata(db: &Database, sheet_id: &str) -> Result<()> 
             translation: None,
             audio_recording: None,
             order_index: 0,
-            chapter_path: None,
         })
     });
     for doc in docs {

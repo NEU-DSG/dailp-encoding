@@ -468,7 +468,6 @@ impl SheetResult {
                 )
             },
             order_index,
-            chapter_path: None,
         })
     }
 
