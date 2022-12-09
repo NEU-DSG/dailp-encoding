@@ -132,9 +132,8 @@ const TabSet = ({ doc }: { doc: Document }) => {
         <Helmet>
           <title>{doc2.title} - Details</title>
         </Helmet>
-        <DocumentTitleHeader doc={doc2} showDetails={false} />
         <section className={fullWidth}>
-          <h3>Contributors</h3>
+          <h3 className={css.topMargin}>Contributors</h3>
           <ul>
             {doc2.contributors.map((person) => (
               <li key={person.name}>
