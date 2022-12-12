@@ -39,8 +39,6 @@ export type AnnotatedDoc = {
   readonly __typename?: "AnnotatedDoc"
   /** The audio recording resource for this entire document */
   readonly audioRecording: Maybe<AudioSlice>
-  /** Breadcrumbs from the top-level archive down to where this document lives. */
-  readonly breadcrumbs: ReadonlyArray<DocumentCollection>
   /** Where the source document came from, maybe the name of a collection */
   readonly collection: Maybe<DocumentCollection>
   /**
@@ -85,10 +83,6 @@ export type AnnotatedDoc = {
    * These words need to be corrected or reviewed further.
    */
   readonly unresolvedForms: ReadonlyArray<AnnotatedForm>
-}
-
-export type AnnotatedDocBreadcrumbsArgs = {
-  superCollection: Scalars["String"]
 }
 
 export type AnnotatedDocFormsArgs = {
@@ -212,6 +206,9 @@ export enum CherokeeOrthography {
 /** Structure to represent a single chapter. Used to send data to the front end. */
 export type CollectionChapter = {
   readonly __typename?: "CollectionChapter"
+  /** Breadcrumbs from the top-level archive down to where this document lives. */
+  readonly breadcrumbs: ReadonlyArray<DocumentCollection>
+  readonly document: Maybe<AnnotatedDoc>
   /** UUID for the chapter */
   readonly id: Scalars["UUID"]
   /** Order within the parent chapter or collection */
@@ -329,6 +326,8 @@ export type DocumentParagraph = {
  */
 export type DocumentReference = {
   readonly __typename?: "DocumentReference"
+  /** Collection chapter's path for this document */
+  readonly chapterPath: Maybe<ReadonlyArray<Scalars["String"]>>
   /** Date the document was produced (or `None` if unknown) */
   readonly date: Maybe<Date>
   /** Database ID for the document */
@@ -576,10 +575,13 @@ export type Query = {
   readonly allCollections: ReadonlyArray<DocumentCollection>
   /** Listing of all documents excluding their contents by default */
   readonly allDocuments: ReadonlyArray<AnnotatedDoc>
+  readonly allEditedCollections: ReadonlyArray<EditedCollection>
   /** List of all content pages */
   readonly allPages: ReadonlyArray<Page>
   /** List of all the functional morpheme tags available */
   readonly allTags: ReadonlyArray<MorphemeTag>
+  /** Retrieves a chapter and its contents by its collection and chapter slug. */
+  readonly chapter: Maybe<CollectionChapter>
   readonly collection: DocumentCollection
   /** Retrieves a full document from its unique name. */
   readonly document: Maybe<AnnotatedDoc>
@@ -620,6 +622,11 @@ export type Query = {
 
 export type QueryAllTagsArgs = {
   system: CherokeeOrthography
+}
+
+export type QueryChapterArgs = {
+  chapterSlug: Scalars["String"]
+  collectionSlug: Scalars["String"]
 }
 
 export type QueryCollectionArgs = {
@@ -762,12 +769,6 @@ export type AnnotatedDocumentQuery = { readonly __typename?: "Query" } & {
       AnnotatedDoc,
       "id" | "title" | "slug" | "isReference"
     > & {
-        readonly breadcrumbs: ReadonlyArray<
-          { readonly __typename?: "DocumentCollection" } & Pick<
-            DocumentCollection,
-            "name" | "slug"
-          >
-        >
         readonly date: Maybe<
           { readonly __typename?: "Date" } & Pick<Date, "year">
         >
@@ -940,7 +941,7 @@ export type CollectionQuery = { readonly __typename?: "Query" } & {
       readonly documents: ReadonlyArray<
         { readonly __typename?: "DocumentReference" } & Pick<
           DocumentReference,
-          "id" | "slug" | "title" | "orderIndex"
+          "id" | "slug" | "title" | "orderIndex" | "chapterPath"
         > & {
             readonly date: Maybe<
               { readonly __typename?: "Date" } & Pick<Date, "year">
@@ -948,6 +949,26 @@ export type CollectionQuery = { readonly __typename?: "Query" } & {
           }
       >
     }
+}
+
+export type EditedCollectionsQueryVariables = Exact<{ [key: string]: never }>
+
+export type EditedCollectionsQuery = { readonly __typename?: "Query" } & {
+  readonly allEditedCollections: ReadonlyArray<
+    { readonly __typename?: "EditedCollection" } & Pick<
+      EditedCollection,
+      "title" | "slug"
+    > & {
+        readonly chapters: Maybe<
+          ReadonlyArray<
+            { readonly __typename?: "CollectionChapter" } & Pick<
+              CollectionChapter,
+              "path"
+            >
+          >
+        >
+      }
+  >
 }
 
 export type EditedCollectionQueryVariables = Exact<{
@@ -1060,12 +1081,6 @@ export type DocumentDetailsQuery = { readonly __typename?: "Query" } & {
       AnnotatedDoc,
       "id" | "slug" | "title"
     > & {
-        readonly breadcrumbs: ReadonlyArray<
-          { readonly __typename?: "DocumentCollection" } & Pick<
-            DocumentCollection,
-            "name" | "slug"
-          >
-        >
         readonly date: Maybe<
           { readonly __typename?: "Date" } & Pick<Date, "year">
         >
@@ -1197,6 +1212,61 @@ export type DocSliceQuery = { readonly __typename?: "Query" } & {
   >
 }
 
+export type CollectionChapterQueryVariables = Exact<{
+  collectionSlug: Scalars["String"]
+  chapterSlug: Scalars["String"]
+}>
+
+export type CollectionChapterQuery = { readonly __typename?: "Query" } & {
+  readonly chapter: Maybe<
+    { readonly __typename?: "CollectionChapter" } & Pick<
+      CollectionChapter,
+      "title" | "wordpressId"
+    > & {
+        readonly breadcrumbs: ReadonlyArray<
+          { readonly __typename?: "DocumentCollection" } & Pick<
+            DocumentCollection,
+            "name" | "slug"
+          >
+        >
+        readonly document: Maybe<
+          { readonly __typename?: "AnnotatedDoc" } & Pick<
+            AnnotatedDoc,
+            "id" | "title" | "slug" | "isReference"
+          > & {
+              readonly date: Maybe<
+                { readonly __typename?: "Date" } & Pick<Date, "year">
+              >
+              readonly sources: ReadonlyArray<
+                { readonly __typename?: "SourceAttribution" } & Pick<
+                  SourceAttribution,
+                  "name" | "link"
+                >
+              >
+              readonly audioRecording: Maybe<
+                { readonly __typename?: "AudioSlice" } & Pick<
+                  AudioSlice,
+                  "resourceUrl" | "startTime" | "endTime"
+                >
+              >
+              readonly translatedPages: Maybe<
+                ReadonlyArray<
+                  { readonly __typename?: "DocumentPage" } & {
+                    readonly image: Maybe<
+                      { readonly __typename?: "PageImage" } & Pick<
+                        PageImage,
+                        "url"
+                      >
+                    >
+                  }
+                >
+              >
+            }
+        >
+      }
+  >
+}
+
 export type UpdateWordMutationVariables = Exact<{
   word: AnnotatedFormUpdate
 }>
@@ -1275,10 +1345,6 @@ export const AnnotatedDocumentDocument = gql`
       title
       slug
       isReference
-      breadcrumbs(superCollection: "") {
-        name
-        slug
-      }
       date {
         year
       }
@@ -1357,6 +1423,7 @@ export const CollectionDocument = gql`
           year
         }
         orderIndex
+        chapterPath
       }
     }
   }
@@ -1367,6 +1434,26 @@ export function useCollectionQuery(
 ) {
   return Urql.useQuery<CollectionQuery>({
     query: CollectionDocument,
+    ...options,
+  })
+}
+export const EditedCollectionsDocument = gql`
+  query EditedCollections {
+    allEditedCollections {
+      title
+      slug
+      chapters {
+        path
+      }
+    }
+  }
+`
+
+export function useEditedCollectionsQuery(
+  options?: Omit<Urql.UseQueryArgs<EditedCollectionsQueryVariables>, "query">
+) {
+  return Urql.useQuery<EditedCollectionsQuery>({
+    query: EditedCollectionsDocument,
     ...options,
   })
 }
@@ -1489,10 +1576,6 @@ export const DocumentDetailsDocument = gql`
       id
       slug
       title
-      breadcrumbs(superCollection: "") {
-        name
-        slug
-      }
       date {
         year
       }
@@ -1612,6 +1695,50 @@ export function useDocSliceQuery(
   options: Omit<Urql.UseQueryArgs<DocSliceQueryVariables>, "query">
 ) {
   return Urql.useQuery<DocSliceQuery>({ query: DocSliceDocument, ...options })
+}
+export const CollectionChapterDocument = gql`
+  query CollectionChapter($collectionSlug: String!, $chapterSlug: String!) {
+    chapter(collectionSlug: $collectionSlug, chapterSlug: $chapterSlug) {
+      title
+      wordpressId
+      breadcrumbs {
+        name
+        slug
+      }
+      document {
+        id
+        title
+        slug
+        isReference
+        date {
+          year
+        }
+        sources {
+          name
+          link
+        }
+        audioRecording {
+          resourceUrl
+          startTime
+          endTime
+        }
+        translatedPages {
+          image {
+            url
+          }
+        }
+      }
+    }
+  }
+`
+
+export function useCollectionChapterQuery(
+  options: Omit<Urql.UseQueryArgs<CollectionChapterQueryVariables>, "query">
+) {
+  return Urql.useQuery<CollectionChapterQuery>({
+    query: CollectionChapterDocument,
+    ...options,
+  })
 }
 export const UpdateWordDocument = gql`
   mutation UpdateWord($word: AnnotatedFormUpdate!) {

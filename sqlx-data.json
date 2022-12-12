@@ -40,6 +40,61 @@
     },
     "query": "select id\nfrom document\nwhere short_name = $1\n"
   },
+  "02cf184e3264deaaaf6052a41c44555080312db700a1c3e4d4f07d0afbc87e7b": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "short_name",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "title",
+          "ordinal": 2,
+          "type_info": "Text"
+        },
+        {
+          "name": "date: Date",
+          "ordinal": 3,
+          "type_info": "Date"
+        },
+        {
+          "name": "order_index",
+          "ordinal": 4,
+          "type_info": "Int8"
+        },
+        {
+          "name": "chapter_path?",
+          "ordinal": 5,
+          "type_info": {
+            "Custom": {
+              "kind": "Simple",
+              "name": "ltree"
+            }
+          }
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        true,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      }
+    },
+    "query": "select\n  d.id,\n  d.short_name,\n  d.title,\n  d.written_at as \"date: Date\",\n  d.index_in_group as order_index,\n  c.chapter_path as \"chapter_path?\"\nfrom document_group\n  inner join document as d on document_group.id = d.group_id\n  left join collection_chapter as c on c.document_id = d.id\nwhere document_group.slug = $1\norder by d.index_in_group asc\n"
+  },
   "06b8461f89e4dc227c28b2fa754688c67ec2cdb8dfc3f82d34002bf24b886d3d": {
     "describe": {
       "columns": [],
@@ -707,6 +762,54 @@
     },
     "query": "select\n  word.id,\n  word.source_text,\n  word.simple_phonetics,\n  word.phonemic,\n  word.english_gloss,\n  word.commentary,\n  word.document_id,\n  word.index_in_document,\n  word.page_number,\n  media_resource.url as \"audio_url?\",\n  media_slice.time_range as \"audio_slice?\"\nfrom word\n  left join media_slice on media_slice.id = word.audio_slice_id\n  left join media_resource on media_resource.id = media_slice.resource_id\nwhere source_text like any($1)\n"
   },
+  "5549c7f2ae3991f56bf51c9aa562c2a4672277cd741b6ca303b5a24ccc508065": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "title",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "slug",
+          "ordinal": 2,
+          "type_info": "Text"
+        },
+        {
+          "name": "chapter_path",
+          "ordinal": 3,
+          "type_info": {
+            "Custom": {
+              "kind": "Simple",
+              "name": "ltree"
+            }
+          }
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          {
+            "Custom": {
+              "kind": "Simple",
+              "name": "ltree"
+            }
+          }
+        ]
+      }
+    },
+    "query": "select id, title, slug, chapter_path\nfrom collection_chapter\nwhere chapter_path @> $1 and chapter_path != $1\n"
+  },
   "57df2982e788599773dc55b1fc70dfd0739f4dcd6702079f93cd6ff24a992bff": {
     "describe": {
       "columns": [],
@@ -1332,50 +1435,6 @@
       }
     },
     "query": "select\n  document_group.title,\n  document_group.slug\nfrom document_group\n  left join document on document.group_id = document_group.id\nwhere document.is_reference is false\ngroup by document_group.id\norder by document_group.title asc\n"
-  },
-  "9e02521e2e4f9bb5ee2e1c9dd33e18bb9b0ee8b7d584cf9867b889b92334f082": {
-    "describe": {
-      "columns": [
-        {
-          "name": "id",
-          "ordinal": 0,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "short_name",
-          "ordinal": 1,
-          "type_info": "Text"
-        },
-        {
-          "name": "title",
-          "ordinal": 2,
-          "type_info": "Text"
-        },
-        {
-          "name": "date: Date",
-          "ordinal": 3,
-          "type_info": "Date"
-        },
-        {
-          "name": "order_index",
-          "ordinal": 4,
-          "type_info": "Int8"
-        }
-      ],
-      "nullable": [
-        false,
-        false,
-        false,
-        true,
-        false
-      ],
-      "parameters": {
-        "Left": [
-          "Text"
-        ]
-      }
-    },
-    "query": "select\n  d.id,\n  d.short_name,\n  d.title,\n  d.written_at as \"date: Date\",\n  d.index_in_group as order_index\nfrom document_group\n  inner join document as d on document_group.id = d.group_id\nwhere document_group.slug = $1\norder by d.index_in_group asc\n"
   },
   "9f91be464c9e113d326e6ba91b03dc95f1b94adf482990dba756305fb68b0165": {
     "describe": {
@@ -2195,6 +2254,42 @@
       }
     },
     "query": "select\n  c.id,\n  c.title,\n  c.document_id,\n  c.wordpress_id,\n  c.index_in_parent,\n  c.chapter_path,\n  c.section as \"section: CollectionSection\"\nfrom collection_chapter as c\nwhere c.collection_slug = $1 \n  and c.slug = $2;\n"
+  },
+  "f2be609690eadbcc793760011c18927f3a51a9b661319472bbec19b5c89c6d27": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "title",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "wordpress_menu_id",
+          "ordinal": 2,
+          "type_info": "Int8"
+        },
+        {
+          "name": "slug",
+          "ordinal": 3,
+          "type_info": "Text"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        true,
+        false
+      ],
+      "parameters": {
+        "Left": []
+      }
+    },
+    "query": "select \n    e.id,\n    e.title,\n    e.wordpress_menu_id,\n    e.slug\nfrom edited_collection as e;"
   },
   "f86a2f62b58b5b404883e127574947027ff7a38f8ea4058a7dc4e9e68626c164": {
     "describe": {

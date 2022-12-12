@@ -1,7 +1,10 @@
 use uuid::Uuid;
+
+use crate::AnnotatedDoc;
 use {
     crate::async_graphql::{self, dataloader::DataLoader, Context, FieldResult},
     crate::Database,
+    crate::DocumentCollection,
     crate::DocumentId,
 };
 
@@ -22,6 +25,7 @@ pub struct EditedCollection {
 
 /// Structure to represent a single chapter. Used to send data to the front end.
 #[derive(Debug, Clone, async_graphql::SimpleObject)]
+#[graphql(complex)]
 pub struct CollectionChapter {
     /// UUID for the chapter
     pub id: Uuid,
@@ -58,6 +62,31 @@ impl EditedCollection {
         Ok(context
             .data::<DataLoader<Database>>()?
             .load_one(crate::ChaptersInCollection(self.slug.clone()))
+            .await?)
+    }
+}
+
+#[async_graphql::ComplexObject]
+impl CollectionChapter {
+    async fn document(&self, context: &Context<'_>) -> FieldResult<Option<AnnotatedDoc>> {
+        if let Some(doc_id) = &self.document_id {
+            Ok(context
+                .data::<DataLoader<Database>>()?
+                .load_one(doc_id.clone())
+                .await?)
+        } else {
+            Ok(None)
+        }
+    }
+    /// Breadcrumbs from the top-level archive down to where this document lives.
+    async fn breadcrumbs(
+        &self,
+        context: &async_graphql::Context<'_>,
+    ) -> FieldResult<Vec<DocumentCollection>> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .chapter_breadcrumbs(self.path.clone())
             .await?)
     }
 }

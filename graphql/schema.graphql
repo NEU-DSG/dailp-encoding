@@ -16,10 +16,6 @@ type AnnotatedDoc {
 	"""
 	sources: [SourceAttribution!]!
 	"""
-	Breadcrumbs from the top-level archive down to where this document lives.
-	"""
-	breadcrumbs(superCollection: String!): [DocumentCollection!]!
-	"""
 	Where the source document came from, maybe the name of a collection
 	"""
 	collection: DocumentCollection
@@ -235,6 +231,11 @@ type CollectionChapter {
 	Full path of the chapter
 	"""
 	path: [String!]!
+	document: AnnotatedDoc
+	"""
+	Breadcrumbs from the top-level archive down to where this document lives.
+	"""
+	breadcrumbs: [DocumentCollection!]!
 }
 
 """
@@ -379,6 +380,10 @@ type DocumentReference {
 	Index of the document within its group, used purely for ordering
 	"""
 	orderIndex: Int!
+	"""
+	Collection chapter's path for this document
+	"""
+	chapterPath: [String!]
 	"""
 	URL slug for this document
 	"""
@@ -647,7 +652,12 @@ type PositionInDocument {
 }
 
 type Query {
+	allEditedCollections: [EditedCollection!]!
 	editedCollection(slug: String!): EditedCollection
+	"""
+	Retrieves a chapter and its contents by its collection and chapter slug.
+	"""
+	chapter(collectionSlug: String!, chapterSlug: String!): CollectionChapter
 	"""
 	List of all the functional morpheme tags available
 	"""

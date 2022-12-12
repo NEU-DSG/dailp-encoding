@@ -94,6 +94,10 @@ jobs:
           nix run --impure -L .#tf-apply-now
           SECURITY_GROUP_ID=$(nix run --impure .#tf-output access_security_group_id)
           echo "ACCESS_SECURITY_GROUP=$SECURITY_GROUP_ID" >> $GITHUB_ENV
+      - name: Validate spreadsheets
+        env:
+          RUST_LOG: warn
+        run: nix run --impure -L .#validate-data
       - name: Allow SSH access to bastion host
         uses: sohelamin/aws-security-group-add-ip-action@master
         with:
