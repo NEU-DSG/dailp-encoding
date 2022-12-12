@@ -1131,7 +1131,7 @@ impl Database {
             .await?;
 
         if chapters.is_empty() {
-            return Ok(None);
+            Ok(None)
         } else {
             Ok(Some(
                 chapters
