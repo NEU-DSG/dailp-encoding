@@ -7,8 +7,8 @@ use crate::translations::DocResult;
 use anyhow::Result;
 use dailp::collection::CollectionSection;
 use dailp::collection::CollectionSection::Body;
-use dailp::collection::CollectionSection::Intro;
 use dailp::collection::CollectionSection::Credit;
+use dailp::collection::CollectionSection::Intro;
 use dailp::raw::CollectionChapter;
 use dailp::raw::EditedCollection;
 use dailp::{
@@ -79,7 +79,7 @@ impl SheetResult {
             if r.is_ok() || tries > 3 {
                 break r;
             }
-            sleep(Duration::from_millis(3000 * 2_u64.pow(tries))).await;
+            sleep(Duration::from_millis(2000 * 2_u64.pow(tries))).await;
             tries += 1;
         }
     }
@@ -178,13 +178,17 @@ impl SheetResult {
                     None
                 };
 
-                let chapter_type_name = if chapter_type == 0 { Intro } 
-                else if chapter_type == 1 { Body } 
-                else { Credit };
+                let chapter_type_name = if chapter_type == 0 {
+                    Intro
+                } else if chapter_type == 1 {
+                    Body
+                } else {
+                    Credit
+                };
 
                 let new_chapter = dailp::raw::CollectionChapter {
                     index_in_parent: index_i64,
-                    url_slug: chapter_url_slug,
+                    url_slug: chapter_url_slug.to_ascii_lowercase(),
                     chapter_name: cur_chapter_name,
                     document_short_name: doc_string,
                     id: None,
@@ -199,7 +203,7 @@ impl SheetResult {
         Ok(dailp::raw::EditedCollection {
             title: self_title.to_string(),
             wordpress_menu_id: Some(*self_wordpress_menu_id),
-            slug: self_slug.to_string(),
+            slug: self_slug.to_ascii_lowercase(),
             chapters: collection_chapters,
         })
     }

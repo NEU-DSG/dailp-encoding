@@ -16,6 +16,7 @@ import { MorphemeDetails } from "src/morpheme"
 import { PanelDetails, PanelLayout, PanelSegment } from "src/panel-layout"
 import { usePreferences } from "src/preferences-context"
 import {
+  chapterRoute,
   collectionRoute,
   documentDetailsRoute,
   documentRoute,
@@ -63,7 +64,7 @@ const AnnotatedDocumentPage = (props: { id: string }) => {
 }
 export default AnnotatedDocumentPage
 
-const TabSet = ({ doc }: { doc: Document }) => {
+export const TabSet = ({ doc }: { doc: Document }) => {
   const tabs = useScrollableTabState({ selectedId: Tabs.ANNOTATION })
   return (
     <>
@@ -114,7 +115,7 @@ const TabSet = ({ doc }: { doc: Document }) => {
   )
 }
 
-const TranslationTab = ({ doc }: { doc: Document }) => {
+export const TranslationTab = ({ doc }: { doc: Document }) => {
   const [selectedMorpheme, setMorpheme] = useState<BasicMorphemeSegment | null>(
     null
   )
@@ -303,12 +304,14 @@ const DocumentContents = ({
 }
 
 export const DocumentTitleHeader = (p: {
+  rootTitle?: string
+  rootPath?: string
+  breadcrumbs?: readonly Pick<
+    Dailp.CollectionChapter["breadcrumbs"][0],
+    "name" | "slug"
+  >[]
   doc: Pick<Dailp.AnnotatedDoc, "slug" | "title"> & {
     date: NullPick<Dailp.AnnotatedDoc["date"], "year">
-    breadcrumbs: readonly Pick<
-      Dailp.AnnotatedDoc["breadcrumbs"][0],
-      "name" | "slug"
-    >[]
     audioRecording?: NullPick<
       Dailp.AnnotatedDoc["audioRecording"],
       "resourceUrl"
@@ -317,15 +320,15 @@ export const DocumentTitleHeader = (p: {
   showDetails?: boolean
 }) => (
   <header className={css.docHeader}>
-    <Breadcrumbs aria-label="Breadcrumbs">
-      <Link href="/">Collections</Link>
-      {p.doc.breadcrumbs &&
-        p.doc.breadcrumbs.map((crumb) => (
-          <Link href={collectionRoute(crumb.slug)} key={crumb.slug}>
+    {p.breadcrumbs && (
+      <Breadcrumbs aria-label="Breadcrumbs">
+        {p.breadcrumbs.map((crumb) => (
+          <Link href={`${p.rootPath}/${crumb.slug}`} key={crumb.slug}>
             {crumb.name}
           </Link>
         ))}
-    </Breadcrumbs>
+      </Breadcrumbs>
+    )}
 
     <h1 className={css.docTitle}>
       {p.doc.title}

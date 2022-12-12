@@ -19,10 +19,6 @@ query AnnotatedDocument($slug: String!) {
     title
     slug
     isReference
-    breadcrumbs(superCollection: "") {
-      name
-      slug
-    }
     date {
       year
     }
@@ -106,6 +102,17 @@ query Collection($slug: String!) {
         year
       }
       orderIndex
+      chapterPath
+    }
+  }
+}
+
+query EditedCollections {
+  allEditedCollections {
+    title
+    slug
+    chapters {
+      path
     }
   }
 }
@@ -184,10 +191,6 @@ query DocumentDetails($slug: String!) {
     id
     slug
     title
-    breadcrumbs(superCollection: "") {
-      name
-      slug
-    }
     date {
       year
     }
@@ -261,6 +264,40 @@ query DocSlice(
     forms(start: $start, end: $end) {
       __typename
       ...FormFields
+    }
+  }
+}
+
+query CollectionChapter($collectionSlug: String!, $chapterSlug: String!) {
+  chapter(collectionSlug: $collectionSlug, chapterSlug: $chapterSlug) {
+    title
+    wordpressId
+    breadcrumbs {
+      name
+      slug
+    }
+    document {
+      id
+      title
+      slug
+      isReference
+      date {
+        year
+      }
+      sources {
+        name
+        link
+      }
+      audioRecording {
+        resourceUrl
+        startTime
+        endTime
+      }
+      translatedPages {
+        image {
+          url
+        }
+      }
     }
   }
 }
