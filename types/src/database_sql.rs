@@ -1,6 +1,5 @@
 #![allow(missing_docs)]
 
-use sqlx::postgres::types::PgLQuery;
 use sqlx::postgres::types::PgLTree;
 use std::ops::Bound;
 use std::str::FromStr;
@@ -390,6 +389,14 @@ impl Database {
         )
     }
 
+    pub async fn all_edited_collections(&self) -> Result<Vec<EditedCollection>> {
+        Ok(
+            query_file_as!(EditedCollection, "queries/edited_collections.sql")
+                .fetch_all(&self.client)
+                .await?,
+        )
+    }
+
     pub async fn update_annotation(&self, _annote: annotation::Annotation) -> Result<()> {
         todo!("Implement image annotations")
     }
@@ -466,13 +473,23 @@ impl Database {
         _super_collection: &str,
         collection: &str,
     ) -> Result<Vec<DocumentReference>> {
-        Ok(query_file_as!(
-            DocumentReference,
-            "queries/documents_in_group.sql",
-            collection
-        )
-        .fetch_all(&self.client)
-        .await?)
+        let documents = query_file!("queries/documents_in_group.sql", collection)
+            .fetch_all(&self.client)
+            .await?;
+
+        Ok(documents
+            .into_iter()
+            .map(|doc| DocumentReference {
+                id: doc.id,
+                short_name: doc.short_name,
+                title: doc.title,
+                date: doc.date,
+                order_index: doc.order_index,
+                chapter_path: doc
+                    .chapter_path
+                    .map(|s| s.into_iter().map(|s| (*s).into()).collect()),
+            })
+            .collect())
     }
 
     pub async fn insert_top_collection(&self, title: String, _index: i64) -> Result<Uuid> {
@@ -678,6 +695,20 @@ impl Database {
             slug: item.slug,
             title: item.title,
         }])
+    }
+
+    pub async fn chapter_breadcrumbs(&self, path: Vec<String>) -> Result<Vec<DocumentCollection>> {
+        let chapters = query_file!("queries/chapter_breadcrumbs.sql", PgLTree::from_iter(path)?)
+            .fetch_all(&self.client)
+            .await?;
+        Ok(chapters
+            .into_iter()
+            .sorted_by_key(|chapter| chapter.chapter_path.len())
+            .map(|chapter| DocumentCollection {
+                slug: chapter.slug,
+                title: chapter.title,
+            })
+            .collect())
     }
 
     pub async fn insert_one_word(&self, form: AnnotatedForm) -> Result<()> {
@@ -1069,16 +1100,16 @@ impl Database {
         &self,
         collection_slug: String,
         chapter_slug: String,
-    ) -> Result<CollectionChapter> {
+    ) -> Result<Option<CollectionChapter>> {
         let chapter = query_file!(
             "queries/chapter_contents.sql",
             collection_slug,
             chapter_slug
         )
-        .fetch_one(&self.client)
+        .fetch_optional(&self.client)
         .await?;
 
-        Ok(CollectionChapter {
+        Ok(chapter.map(|chapter| CollectionChapter {
             id: chapter.id,
             path: chapter
                 .chapter_path
@@ -1090,7 +1121,7 @@ impl Database {
             document_id: chapter.document_id.map(|id| DocumentId(id)),
             wordpress_id: chapter.wordpress_id,
             section: chapter.section,
-        })
+        }))
     }
 }
 

@@ -75,19 +75,6 @@ impl AnnotatedDoc {
         &self.meta.sources
     }
 
-    /// Breadcrumbs from the top-level archive down to where this document lives.
-    async fn breadcrumbs(
-        &self,
-        context: &async_graphql::Context<'_>,
-        super_collection: String,
-    ) -> FieldResult<Vec<DocumentCollection>> {
-        Ok(context
-            .data::<DataLoader<Database>>()?
-            .loader()
-            .document_breadcrumbs(self.meta.id, &super_collection)
-            .await?)
-    }
-
     /// Where the source document came from, maybe the name of a collection
     async fn collection(&self) -> Option<DocumentCollection> {
         self.meta
@@ -552,6 +539,8 @@ pub struct DocumentReference {
     pub date: Option<Date>,
     /// Index of the document within its group, used purely for ordering
     pub order_index: i64,
+    /// Collection chapter's path for this document
+    pub chapter_path: Option<Vec<String>>,
 }
 
 #[async_graphql::ComplexObject]

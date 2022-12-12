@@ -4,6 +4,7 @@ import { navButton, navDrawer } from "src/menu.css"
 import {
   colors,
   hspace,
+  layers,
   mediaQueries,
   radii,
   vspace,
@@ -18,6 +19,7 @@ export const drawer = style([
   bgColor,
   padding(vspace.one),
   {
+    zIndex: layers.top,
     overflowY: "auto",
     scrollbarGutter: "stable",
     "@media": {
