@@ -37,7 +37,7 @@ const ChapterPage = (props: {
       <main className={util.paddedCenterColumn}>
         <article className={dialog.visible ? css.leftMargin : util.fullWidth}>
           {/* If this chapter contains or is a Wordpress page, display the WP page contents. */}
-          {wordpressId ? <WordpressPage slug={wordpressId.toString()} /> : null}
+          {wordpressId ? <WordpressPage slug={`/${chapter.slug}`} /> : null}
 
           {/* If this chapter is a document, display the document contents. */}
           {document ? (
@@ -54,8 +54,8 @@ const ChapterPage = (props: {
 
           <ul>
             {subchapters?.map((chapter) => (
-              <li key={chapter.leaf}>
-                <Link href={chapterRoute(props.collectionSlug!, chapter.leaf)}>
+              <li key={chapter.slug}>
+                <Link href={chapterRoute(props.collectionSlug!, chapter.slug)}>
                   {chapter.title}
                 </Link>
               </li>
