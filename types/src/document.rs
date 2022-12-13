@@ -2,7 +2,7 @@ use crate::{
     AnnotatedForm, AudioSlice, Contributor, Database, Date, SourceAttribution, Translation,
     TranslationBlock,
 };
-use async_graphql::{dataloader::DataLoader, FieldResult};
+use async_graphql::{dataloader::DataLoader, FieldResult, MaybeUndefined};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -73,19 +73,6 @@ impl AnnotatedDoc {
     /// The original source(s) of this document, the most important first.
     async fn sources(&self) -> &[SourceAttribution] {
         &self.meta.sources
-    }
-
-    /// Breadcrumbs from the top-level archive down to where this document lives.
-    async fn breadcrumbs(
-        &self,
-        context: &async_graphql::Context<'_>,
-        super_collection: String,
-    ) -> FieldResult<Vec<DocumentCollection>> {
-        Ok(context
-            .data::<DataLoader<Database>>()?
-            .loader()
-            .document_breadcrumbs(self.meta.id, &super_collection)
-            .await?)
     }
 
     /// Where the source document came from, maybe the name of a collection
@@ -189,6 +176,18 @@ impl AnnotatedDoc {
             .await?;
         Ok(forms.filter(AnnotatedForm::is_unresolved).collect())
     }
+
+    /// Collection chapters that contain this document.
+    async fn chapters(
+        &self,
+        context: &async_graphql::Context<'_>,
+    ) -> FieldResult<Option<Vec<crate::CollectionChapter>>> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .chapters_by_document(self.meta.short_name.clone())
+            .await?)
+    }
 }
 
 /// Key to retrieve the pages of a document given a document ID
@@ -244,6 +243,14 @@ pub struct DocumentParagraph {
     pub translation: String,
     /// 1-indexed position of this paragraph in a document
     pub index: i64,
+}
+
+/// A paragraph in an annotated document that can be edited.
+#[derive(async_graphql::InputObject)]
+pub struct ParagraphUpdate {
+    /// Unique identifier of the form
+    pub id: Uuid,
+    pub translation: MaybeUndefined<String>,
 }
 
 #[async_graphql::Object]

@@ -25,7 +25,7 @@ export const themeClass = createTheme(themeContract, {
     primaryDark: lighten(0.2, "black"),
     primaryContrast: "white",
     primaryText: "white",
-    secondary: "#c36d68",
+    secondary: "#5C3A37",
     secondaryDark: darken(0.2, "#9d2832"),
     secondaryContrast: lighten(0.6, "#9d2832"),
     secondaryText: "white",
