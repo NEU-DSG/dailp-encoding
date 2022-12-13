@@ -6,6 +6,7 @@ import { Helmet } from "react-helmet"
 import { MdSettings } from "react-icons/md"
 import { Dialog, DialogBackdrop, useDialogState } from "reakit/Dialog"
 import { Tab, TabList, TabPanel } from "reakit/Tab"
+import { navigate } from "vite-plugin-ssr/client/router"
 import { AudioPlayer, Breadcrumbs, Button, Link } from "src/components"
 import { useMediaQuery } from "src/custom-hooks"
 import { FormProvider, useForm } from "src/form-context"
@@ -52,10 +53,28 @@ const AnnotatedDocumentPage = (props: { id: string }) => {
   const [{ data }] = Dailp.useAnnotatedDocumentQuery({
     variables: { slug: props.id },
   })
+
   const doc = data?.document
+
   if (!doc) {
     return null
   }
+
+  useEffect(() => {
+    redirectUrl()
+  }, [props.id])
+
+  // Redirects this document to the corresponding collection chapter containing document.
+  function redirectUrl() {
+    if (doc?.chapters?.length === 1) {
+      const chapter = doc.chapters[0]
+      const collectionSlug = chapter?.path[0]
+      const chapterSlug = chapter?.path[chapter.path.length - 1]
+
+      navigate(chapterRoute(collectionSlug!, chapterSlug!))
+    }
+  }
+
   return (
     <Layout>
       <Helmet title={doc?.title} />
