@@ -1,5 +1,7 @@
 import { style } from "@vanilla-extract/css"
+import { flowRight } from "lodash"
 import { important, position } from "polished"
+import { rightButton } from "src/components/carousel.css"
 import {
   colors,
   fonts,
@@ -22,6 +24,12 @@ export const annotationContents = style({
 
 export const topMargin = style({
   marginTop: vspace.half,
+})
+
+export const alignRight = style({
+  marginBottom: vspace.half,
+  display: "flex",
+  justifyContent: "right",
 })
 
 export const bottomPadded = style({
