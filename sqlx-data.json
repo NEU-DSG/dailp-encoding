@@ -707,6 +707,67 @@
     },
     "query": "select\n  word.id,\n  word.source_text,\n  word.simple_phonetics,\n  word.phonemic,\n  word.english_gloss,\n  word.commentary,\n  word.document_id,\n  word.index_in_document,\n  word.page_number,\n  media_resource.url as \"audio_url?\",\n  media_slice.time_range as \"audio_slice?\"\nfrom word\n  left join media_slice on media_slice.id = word.audio_slice_id\n  left join media_resource on media_resource.id = media_slice.resource_id\nwhere source_text like any($1)\n"
   },
+  "5549c7f2ae3991f56bf51c9aa562c2a4672277cd741b6ca303b5a24ccc508065": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "title",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "slug",
+          "ordinal": 2,
+          "type_info": "Text"
+        },
+        {
+          "name": "chapter_path",
+          "ordinal": 3,
+          "type_info": {
+            "Custom": {
+              "kind": "Simple",
+              "name": "ltree"
+            }
+          }
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          {
+            "Custom": {
+              "kind": "Simple",
+              "name": "ltree"
+            }
+          }
+        ]
+      }
+    },
+    "query": "select id, title, slug, chapter_path\nfrom collection_chapter\nwhere chapter_path @> $1 and chapter_path != $1\n"
+  },
+  "57df2982e788599773dc55b1fc70dfd0739f4dcd6702079f93cd6ff24a992bff": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "TextArray"
+        ]
+      }
+    },
+    "query": "update paragraph set\n    english_translation =\n        case\n            when $2::text[] != '{}' and $2[1] is not null then $2[1]\n            else english_translation\n        end\nwhere id = $1"
+  },
   "587e868e1c86816469a9169bf07be80df5add11ef357029f74629e112d88b88e": {
     "describe": {
       "columns": [],
@@ -1129,7 +1190,8 @@
               "kind": {
                 "Enum": [
                   "Intro",
-                  "Body"
+                  "Body",
+                  "Credit"
                 ]
               },
               "name": "collection_section"
@@ -1485,7 +1547,8 @@
               "kind": {
                 "Enum": [
                   "Intro",
-                  "Body"
+                  "Body",
+                  "Credit"
                 ]
               },
               "name": "collection_section"
@@ -2007,6 +2070,78 @@
     },
     "query": "select\n  id,\n  title,\n  base_url\nfrom iiif_source\nwhere id = any($1)\n"
   },
+  "da8fe05cd8a441259c19df0ab08edafe27d11640443b4f62bc2b983485f38278": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "title",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "document_id",
+          "ordinal": 2,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "wordpress_id",
+          "ordinal": 3,
+          "type_info": "Int8"
+        },
+        {
+          "name": "index_in_parent",
+          "ordinal": 4,
+          "type_info": "Int8"
+        },
+        {
+          "name": "chapter_path",
+          "ordinal": 5,
+          "type_info": {
+            "Custom": {
+              "kind": "Simple",
+              "name": "ltree"
+            }
+          }
+        },
+        {
+          "name": "section: CollectionSection",
+          "ordinal": 6,
+          "type_info": {
+            "Custom": {
+              "kind": {
+                "Enum": [
+                  "Intro",
+                  "Body",
+                  "Credit"
+                ]
+              },
+              "name": "collection_section"
+            }
+          }
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        true,
+        true,
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      }
+    },
+    "query": "-- Select all the chapters containing this document's id.\nselect\n    c.id,\n    c.title,\n    c.document_id,\n    c.wordpress_id,\n    c.index_in_parent,\n    c.chapter_path,\n    c.section as \"section: CollectionSection\"\nfrom collection_chapter as c\n    inner join\n        (select id from document where document.short_name = $1) as d on c.document_id = d.id;"
+  },
   "e1ebe64b2e98a03f7803c63a2e9011b0a064d7a6819dfdbc1a8c4d4e1160db90": {
     "describe": {
       "columns": [
@@ -2154,7 +2289,8 @@
               "kind": {
                 "Enum": [
                   "Intro",
-                  "Body"
+                  "Body",
+                  "Credit"
                 ]
               },
               "name": "collection_section"
@@ -2179,6 +2315,42 @@
       }
     },
     "query": "select\n  c.id,\n  c.title,\n  c.document_id,\n  c.wordpress_id,\n  c.index_in_parent,\n  c.chapter_path,\n  c.section as \"section: CollectionSection\"\nfrom collection_chapter as c\nwhere c.collection_slug = $1 \n  and c.slug = $2;\n"
+  },
+  "f2be609690eadbcc793760011c18927f3a51a9b661319472bbec19b5c89c6d27": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "title",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "wordpress_menu_id",
+          "ordinal": 2,
+          "type_info": "Int8"
+        },
+        {
+          "name": "slug",
+          "ordinal": 3,
+          "type_info": "Text"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        true,
+        false
+      ],
+      "parameters": {
+        "Left": []
+      }
+    },
+    "query": "select \n    e.id,\n    e.title,\n    e.wordpress_menu_id,\n    e.slug\nfrom edited_collection as e;"
   },
   "f86a2f62b58b5b404883e127574947027ff7a38f8ea4058a7dc4e9e68626c164": {
     "describe": {

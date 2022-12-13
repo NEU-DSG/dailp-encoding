@@ -67,6 +67,8 @@ export const hsize = {
   [0]: 0,
   none: 0,
   full: "100%",
+  xsmall: "6rem",
+  small: "20rem",
   medium: "41rem",
   large: "50rem",
   auto: "auto",
@@ -82,4 +84,11 @@ export const mediaQueries = {
 
 export const selectors = {
   currentPage: "&[aria-current='page']",
+}
+
+export const layers = {
+  top: 999,
+  third: 3,
+  second: 2,
+  base: 1,
 }

@@ -1,5 +1,6 @@
 import React, { useEffect } from "react"
-import { MdClose, MdSettings } from "react-icons/md"
+import { IconBaseProps } from "react-icons/lib"
+import { MdClose, MdSettings, MdStayPrimaryLandscape } from "react-icons/md"
 import {
   Dialog,
   DialogBackdrop,
@@ -16,6 +17,8 @@ import { IconButton, Label, Select } from "src/components"
 import * as Dailp from "src/graphql/dailp"
 import * as css from "./mode.css"
 import { usePreferences } from "./preferences-context"
+import { useRouteParams } from "./renderer/PageShell"
+import { colors } from "./style/theme-contract.css"
 import { LevelOfDetail } from "./types"
 
 type PreferenceDetails = { label: string; details: string }
@@ -61,6 +64,7 @@ const cherokeeRepresentationMapping: Record<
 function PreferenceSelect<T extends string | number>(p: {
   id: string
   value: string
+  "aria-describedby"?: string
   onChange: (value: string) => void
   mapping: Record<T, PreferenceDetails>
 }) {
@@ -70,9 +74,10 @@ function PreferenceSelect<T extends string | number>(p: {
       name={p.id}
       value={p.value}
       onChange={(e) => p.onChange(e.target.value)}
+      aria-describedby={p["aria-describedby"]}
     >
       {Object.entries<PreferenceDetails>(p.mapping).map(([value, details]) => (
-        <option value={value} key={value} aria-description={details.details}>
+        <option value={value} key={value}>
           {details.label}
         </option>
       ))}
@@ -88,24 +93,28 @@ export const PrefPanel = () => {
 
       <PreferenceSelect
         id="level-of-detail"
+        aria-describedby="level-of-detail-desc"
         value={preferences.levelOfDetail.toString()}
         onChange={(x) => preferences.setLevelOfDetail(Number.parseInt(x))}
         mapping={levelNameMapping}
       />
-      <p>{levelNameMapping[preferences.levelOfDetail].details}</p>
+      <p id="level-of-detail-desc">
+        {levelNameMapping[preferences.levelOfDetail].details}
+      </p>
 
       <Label htmlFor="cherokee-representation">
         Cherokee Description Style:
       </Label>
       <PreferenceSelect
         id="cherokee-representation"
+        aria-describedby="cherokee-representation-desc"
         value={preferences.cherokeeRepresentation}
         onChange={(x) =>
           preferences.setCherokeeRepresentation(x as Dailp.CherokeeOrthography)
         }
         mapping={cherokeeRepresentationMapping}
       />
-      <p>
+      <p id="cherokee-representation-desc">
         {
           cherokeeRepresentationMapping[preferences.cherokeeRepresentation]
             .details
@@ -115,13 +124,13 @@ export const PrefPanel = () => {
   )
 }
 
-export const HeaderPrefDrawer = () => {
+export const HeaderPrefDrawer = (props: IconBaseProps) => {
   const dialog = useDialogState({ animated: true })
 
   return (
     <div className={css.prefButtonShell}>
       <DialogDisclosure {...dialog} aria-label="Settings" as={IconButton}>
-        <MdSettings size={32} />
+        <MdSettings size={32} {...props} />
       </DialogDisclosure>
       <DialogBackdrop {...dialog} className={css.prefBG}>
         <Dialog
