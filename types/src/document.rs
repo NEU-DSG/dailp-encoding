@@ -176,6 +176,18 @@ impl AnnotatedDoc {
             .await?;
         Ok(forms.filter(AnnotatedForm::is_unresolved).collect())
     }
+
+    /// Collection chapters that contain this document.
+    async fn chapters(
+        &self,
+        context: &async_graphql::Context<'_>,
+    ) -> FieldResult<Option<Vec<crate::CollectionChapter>>> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .chapters_by_document(self.meta.short_name.clone())
+            .await?)
+    }
 }
 
 /// Key to retrieve the pages of a document given a document ID
@@ -539,8 +551,6 @@ pub struct DocumentReference {
     pub date: Option<Date>,
     /// Index of the document within its group, used purely for ordering
     pub order_index: i64,
-    /// Collection chapter's path for this document
-    pub chapter_path: Option<Vec<String>>,
 }
 
 #[async_graphql::ComplexObject]

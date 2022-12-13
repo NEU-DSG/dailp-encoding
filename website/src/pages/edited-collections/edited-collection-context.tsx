@@ -5,7 +5,7 @@ import { useRouteParams } from "src/renderer/PageShell"
 
 export type Chapter = {
   title: string
-  leaf: string
+  slug: string
   indexInParent: number
   section: Dailp.CollectionSection
   children?: Chapter[]
@@ -75,11 +75,11 @@ export const useFunctions = () => {
 
   // Returns whether a chapter has been selected or not.
   function isSelected(item: Chapter) {
-    return selected.map((chapter) => chapter.leaf).includes(item.leaf)
+    return selected.map((chapter) => chapter.slug).includes(item.slug)
   }
 
   function lastSelected(item: Chapter) {
-    if (selected[selected.length - 1]?.leaf === item.leaf) {
+    if (selected[selected.length - 1]?.slug === item.slug) {
       return true
     }
     return false
@@ -100,17 +100,17 @@ export const useDialog = () => {
   return context.dialog
 }
 
-// Returns the subchapters given a parent chapter's leaf.
-export const useSubchapters = (parentLeaf: string) => {
+// Returns the subchapters given a parent chapter's slug.
+export const useSubchapters = (parentSlug: string) => {
   const chapters = useChapters()
 
-  return findSubchapters(chapters, parentLeaf)
+  return findSubchapters(chapters, parentSlug)
 }
 
 // Returns the subchapters of a target chapter by looking through all the chapters and their children.
 function findSubchapters(
   chapters: Chapter[] | undefined,
-  targetLeaf: string
+  targetSlug: string
 ): Chapter[] | undefined {
   // If there are no more chapters to be found, return undefined.
   if (!chapters) {
@@ -121,12 +121,12 @@ function findSubchapters(
   for (let i = 0; i < chapters.length; i++) {
     let curr = chapters[i]
 
-    // If the current leaf matches the target leaf, then the parent has been found and its subchapters/children can be returned.
-    if (curr?.leaf === targetLeaf) {
+    // If the current slug matches the target slug, then the parent has been found and its subchapters/children can be returned.
+    if (curr?.slug === targetSlug) {
       return curr.children
     } else {
       // Else, the target chapter has not been found, so look through all this parent's subchapters/children.
-      const subchapters = findSubchapters(chapters[i]?.children, targetLeaf)
+      const subchapters = findSubchapters(chapters[i]?.children, targetSlug)
       // If the target chapter was found, return its subchapters.
       if (subchapters) {
         return subchapters
@@ -138,19 +138,12 @@ function findSubchapters(
 }
 
 // Chapter type of collection chapters that comes from the backend.
-type FlatChapters =
-  | readonly ({
-      readonly __typename?: "CollectionChapter" | undefined
-    } & Pick<
-      Dailp.CollectionChapter,
-      "section" | "title" | "path" | "indexInParent"
-    >)[]
-  | null
+type FlatChapters = NonNullable<
+  Dailp.EditedCollectionQuery["editedCollection"]
+>["chapters"]
 
 // Converts a flat-list into a nested-list structure.
-function flatToNested(
-  chapters: FlatChapters | undefined
-): Chapter[] | undefined {
+function flatToNested(chapters?: FlatChapters): Chapter[] | undefined {
   if (!chapters) {
     return undefined
   }
@@ -158,33 +151,32 @@ function flatToNested(
   // The final result.
   const nestedChapters: Chapter[] = []
 
-  // Key: Chapter's leaf
+  // Key: Chapter's slug
   // Value: Chapter
-  const leafToChapter = new Map<string, Chapter>()
+  const slugToChapter = new Map<string, Chapter>()
 
   for (let i = 0; i < chapters.length; i++) {
     const curr = chapters[i]
-    // The leaf is the last string in the chapter's path. i.e. cwkw.chaptera -> leaf: chaptera
-    const leaf = curr?.path[curr?.indexInParent]
-    if (curr && leaf) {
+
+    if (curr) {
       // Create a new Chapter with the backend chapter's fields.
       let chapter: Chapter = {
         title: curr.title,
-        leaf,
+        slug: curr.slug,
         indexInParent: curr.indexInParent,
         section: curr.section,
         children: undefined,
       }
 
-      // Create a key-value pair with the chapter's leaf and the chapter itself.
-      leafToChapter.set(leaf, chapter)
+      // Create a key-value pair with the chapter's slug and the chapter itself.
+      slugToChapter.set(curr.slug, chapter)
 
-      // Get this chapter's parent leaf, which is the second to last string in its path. i.e. cwkw.chaptera -> parent leaf: cwkw
-      const parentLeaf = curr.path[curr.indexInParent - 1]
+      // Get this chapter's parent slug, which is the second to last string in its path. i.e. cwkw.chaptera -> parent slug: cwkw
+      const parentSlug = curr.path[curr.indexInParent - 1]
 
-      if (parentLeaf) {
-        // Get the parent chapter itself from the parent leaf.
-        const parentChapter = leafToChapter.get(parentLeaf)
+      if (parentSlug) {
+        // Get the parent chapter itself from the parent slug.
+        const parentChapter = slugToChapter.get(parentSlug)
 
         // If there is a parent chapter, add this chapter to its list of children.
         if (parentChapter) {
