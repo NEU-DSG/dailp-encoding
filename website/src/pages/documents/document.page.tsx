@@ -71,8 +71,8 @@ export default AnnotatedDocumentPage
 export const TabSet = ({ doc }: { doc: Document }) => {
   const tabs = useScrollableTabState({ selectedId: Tabs.ANNOTATION })
   const [{ data }] = Dailp.useDocumentDetailsQuery({ variables: { slug: doc.slug! } })
-  const doc2 = data?.document
-  if (!doc2) {
+  const docData = data?.document
+  if (!docData) {
     return null
   }
   return (
@@ -131,22 +131,22 @@ export const TabSet = ({ doc }: { doc: Document }) => {
         tabId={Tabs.INFO}
       >
         <Helmet>
-          <title>{doc2.title} - Details</title>
+          <title>{docData.title} - Details</title>
         </Helmet>
         <section className={fullWidth}>
           <h3 className={css.topMargin}>Contributors</h3>
           <ul>
-            {doc2.contributors.map((person) => (
+            {docData.contributors.map((person) => (
               <li key={person.name}>
                 {person.name}: {person.role}
               </li>
             ))}
           </ul>
         </section>
-        {doc2.sources.length > 0 ? (
+        {docData.sources.length > 0 ? (
           <section className={fullWidth}>
             Original document provided courtesy of{" "}
-            <Link href={doc2.sources[0]!.link}>{doc2.sources[0]!.name}</Link>.
+            <Link href={docData.sources[0]!.link}>{docData.sources[0]!.name}</Link>.
           </section>
         ) : null}
       </TabPanel>
