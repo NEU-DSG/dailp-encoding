@@ -1,4 +1,3 @@
-import React from "react"
 import { Helmet } from "react-helmet"
 import { WordpressPageContents } from "src/components"
 import * as Wordpress from "src/graphql/wordpress"
