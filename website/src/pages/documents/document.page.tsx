@@ -29,10 +29,12 @@ import { BasicMorphemeSegment, LevelOfDetail } from "src/types"
 import PageImages from "../../page-image"
 import * as css from "./document.css"
 import { RiArrowUpCircleFill } from "react-icons/ri"
+import { fullWidth } from "src/style/utils.css"
 
 enum Tabs {
   ANNOTATION = "annotation-tab",
   IMAGES = "source-image-tab",
+  INFO = "info-tab",
 }
 
 export type Document = NonNullable<Dailp.AnnotatedDocumentQuery["document"]>
@@ -86,6 +88,11 @@ export default AnnotatedDocumentPage
 
 export const TabSet = ({ doc }: { doc: Document }) => {
   const tabs = useScrollableTabState({ selectedId: Tabs.ANNOTATION })
+  const [{ data }] = Dailp.useDocumentDetailsQuery({ variables: { slug: doc.slug! } })
+  const docData = data?.document
+  if (!docData) {
+    return null
+  }
   return (
     <>
       <div className={css.wideAndTop}>
@@ -100,6 +107,9 @@ export const TabSet = ({ doc }: { doc: Document }) => {
           </Tab>
           <Tab {...tabs} id={Tabs.IMAGES} className={css.docTab}>
             Original Text
+          </Tab>
+          <Tab {...tabs} id={Tabs.INFO} className={css.docTab}>
+            Document Info
           </Tab>
         </TabList>
       </div>
@@ -135,6 +145,33 @@ export const TabSet = ({ doc }: { doc: Document }) => {
             }}
             document={doc}
           />
+        ) : null}
+      </TabPanel>
+
+      <TabPanel
+        {...tabs}
+        className={css.imageTabPanel}
+        id={`${Tabs.INFO}-panel`}
+        tabId={Tabs.INFO}
+      >
+        <Helmet>
+          <title>{docData.title} - Details</title>
+        </Helmet>
+        <section className={fullWidth}>
+          <h3 className={css.topMargin}>Contributors</h3>
+          <ul>
+            {docData.contributors.map((person) => (
+              <li key={person.name}>
+                {person.name}: {person.role}
+              </li>
+            ))}
+          </ul>
+        </section>
+        {docData.sources.length > 0 ? (
+          <section className={fullWidth}>
+            Original document provided courtesy of{" "}
+            <Link href={docData.sources[0]!.link}>{docData.sources[0]!.name}</Link>.
+          </section>
         ) : null}
       </TabPanel>
     </>
@@ -374,6 +411,7 @@ export const DocumentTitleHeader = (p: {
         <strong>No Audio Available</strong>
         </div>
       )}
+    <div className={css.alignRight}>
       {!isMobile ? <Button onClick={() => window.print()}>Print</Button> : null}
     </div>
     {p.doc.audioRecording && ( // TODO Implement sticky audio bar

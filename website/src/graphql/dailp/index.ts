@@ -1185,6 +1185,12 @@ export type DocSliceQueryVariables = Exact<{
 export type DocSliceQuery = { readonly __typename?: "Query" } & {
   readonly document: Maybe<
     { readonly __typename?: "AnnotatedDoc" } & {
+      readonly audioRecording: Maybe<
+        { readonly __typename?: "AudioSlice" } & Pick<
+          AudioSlice,
+          "resourceUrl" | "startTime" | "endTime"
+        >
+      >
       readonly forms: ReadonlyArray<
         { readonly __typename: "AnnotatedForm" } & Pick<
           AnnotatedForm,
@@ -1702,6 +1708,11 @@ export const DocSliceDocument = gql`
     $morphemeSystem: CherokeeOrthography!
   ) {
     document(slug: $slug) {
+      audioRecording {
+        resourceUrl
+        startTime
+        endTime
+      }
       forms(start: $start, end: $end) {
         __typename
         ...FormFields
