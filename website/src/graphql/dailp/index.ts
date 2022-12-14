@@ -39,6 +39,8 @@ export type AnnotatedDoc = {
   readonly __typename?: "AnnotatedDoc"
   /** The audio recording resource for this entire document */
   readonly audioRecording: Maybe<AudioSlice>
+  /** Collection chapters that contain this document. */
+  readonly chapters: Maybe<ReadonlyArray<CollectionChapter>>
   /** Where the source document came from, maybe the name of a collection */
   readonly collection: Maybe<DocumentCollection>
   /**
@@ -217,6 +219,7 @@ export type CollectionChapter = {
   readonly path: ReadonlyArray<Scalars["String"]>
   /** Whether the chapter is an "Intro" or "Body" chapter */
   readonly section: CollectionSection
+  readonly slug: Scalars["String"]
   /** Full title of the chapter */
   readonly title: Scalars["String"]
   /** ID of WordPress page with text of the chapter */
@@ -326,8 +329,6 @@ export type DocumentParagraph = {
  */
 export type DocumentReference = {
   readonly __typename?: "DocumentReference"
-  /** Collection chapter's path for this document */
-  readonly chapterPath: Maybe<ReadonlyArray<Scalars["String"]>>
   /** Date the document was produced (or `None` if unknown) */
   readonly date: Maybe<Date>
   /** Database ID for the document */
@@ -793,6 +794,14 @@ export type AnnotatedDocumentQuery = { readonly __typename?: "Query" } & {
             }
           >
         >
+        readonly chapters: Maybe<
+          ReadonlyArray<
+            { readonly __typename?: "CollectionChapter" } & Pick<
+              CollectionChapter,
+              "path"
+            >
+          >
+        >
       }
   >
 }
@@ -941,7 +950,7 @@ export type CollectionQuery = { readonly __typename?: "Query" } & {
       readonly documents: ReadonlyArray<
         { readonly __typename?: "DocumentReference" } & Pick<
           DocumentReference,
-          "id" | "slug" | "title" | "orderIndex" | "chapterPath"
+          "id" | "slug" | "title" | "orderIndex"
         > & {
             readonly date: Maybe<
               { readonly __typename?: "Date" } & Pick<Date, "year">
@@ -982,7 +991,7 @@ export type EditedCollectionQuery = { readonly __typename?: "Query" } & {
         ReadonlyArray<
           { readonly __typename?: "CollectionChapter" } & Pick<
             CollectionChapter,
-            "title" | "indexInParent" | "section" | "path"
+            "title" | "indexInParent" | "section" | "path" | "slug"
           >
         >
       >
@@ -1227,7 +1236,7 @@ export type CollectionChapterQuery = { readonly __typename?: "Query" } & {
   readonly chapter: Maybe<
     { readonly __typename?: "CollectionChapter" } & Pick<
       CollectionChapter,
-      "title" | "wordpressId"
+      "title" | "wordpressId" | "slug"
     > & {
         readonly breadcrumbs: ReadonlyArray<
           { readonly __typename?: "DocumentCollection" } & Pick<
@@ -1265,6 +1274,14 @@ export type CollectionChapterQuery = { readonly __typename?: "Query" } & {
                       >
                     >
                   }
+                >
+              >
+              readonly chapters: Maybe<
+                ReadonlyArray<
+                  { readonly __typename?: "CollectionChapter" } & Pick<
+                    CollectionChapter,
+                    "path"
+                  >
                 >
               >
             }
@@ -1368,6 +1385,9 @@ export const AnnotatedDocumentDocument = gql`
           url
         }
       }
+      chapters {
+        path
+      }
     }
   }
 `
@@ -1429,7 +1449,6 @@ export const CollectionDocument = gql`
           year
         }
         orderIndex
-        chapterPath
       }
     }
   }
@@ -1471,6 +1490,7 @@ export const EditedCollectionDocument = gql`
         indexInParent
         section
         path
+        slug
       }
     }
   }
@@ -1712,6 +1732,7 @@ export const CollectionChapterDocument = gql`
     chapter(collectionSlug: $collectionSlug, chapterSlug: $chapterSlug) {
       title
       wordpressId
+      slug
       breadcrumbs {
         name
         slug
@@ -1737,6 +1758,9 @@ export const CollectionChapterDocument = gql`
           image {
             url
           }
+        }
+        chapters {
+          path
         }
       }
     }

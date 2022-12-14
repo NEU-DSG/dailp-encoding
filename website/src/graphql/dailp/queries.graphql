@@ -36,6 +36,9 @@ query AnnotatedDocument($slug: String!) {
         url
       }
     }
+    chapters {
+      path
+    }
   }
 }
 
@@ -102,7 +105,6 @@ query Collection($slug: String!) {
         year
       }
       orderIndex
-      chapterPath
     }
   }
 }
@@ -124,6 +126,7 @@ query EditedCollection($slug: String!) {
       indexInParent
       section
       path
+      slug
     }
   }
 }
@@ -272,6 +275,7 @@ query CollectionChapter($collectionSlug: String!, $chapterSlug: String!) {
   chapter(collectionSlug: $collectionSlug, chapterSlug: $chapterSlug) {
     title
     wordpressId
+    slug
     breadcrumbs {
       name
       slug
@@ -297,6 +301,9 @@ query CollectionChapter($collectionSlug: String!, $chapterSlug: String!) {
         image {
           url
         }
+      }
+      chapters {
+        path
       }
     }
   }

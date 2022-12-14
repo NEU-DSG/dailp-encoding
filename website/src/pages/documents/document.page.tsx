@@ -6,6 +6,7 @@ import { Helmet } from "react-helmet"
 import { MdSettings } from "react-icons/md"
 import { Dialog, DialogBackdrop, useDialogState } from "reakit/Dialog"
 import { Tab, TabList, TabPanel } from "reakit/Tab"
+import { navigate } from "vite-plugin-ssr/client/router"
 import { AudioPlayer, Breadcrumbs, Button, Link } from "src/components"
 import { useMediaQuery } from "src/custom-hooks"
 import { FormProvider, useForm } from "src/form-context"
@@ -27,10 +28,14 @@ import { mediaQueries } from "src/style/constants"
 import { BasicMorphemeSegment, LevelOfDetail } from "src/types"
 import PageImages from "../../page-image"
 import * as css from "./document.css"
+import { fullWidth } from "src/style/utils.css"
+
+
 
 enum Tabs {
   ANNOTATION = "annotation-tab",
   IMAGES = "source-image-tab",
+  INFO = "info-tab",
 }
 
 export type Document = NonNullable<Dailp.AnnotatedDocumentQuery["document"]>
@@ -48,10 +53,28 @@ const AnnotatedDocumentPage = (props: { id: string }) => {
   const [{ data }] = Dailp.useAnnotatedDocumentQuery({
     variables: { slug: props.id },
   })
+
   const doc = data?.document
+
   if (!doc) {
     return null
   }
+
+  useEffect(() => {
+    redirectUrl()
+  }, [props.id])
+
+  // Redirects this document to the corresponding collection chapter containing document.
+  function redirectUrl() {
+    if (doc?.chapters?.length === 1) {
+      const chapter = doc.chapters[0]
+      const collectionSlug = chapter?.path[0]
+      const chapterSlug = chapter?.path[chapter.path.length - 1]
+
+      navigate(chapterRoute(collectionSlug!, chapterSlug!))
+    }
+  }
+
   return (
     <Layout>
       <Helmet title={doc?.title} />
@@ -66,6 +89,11 @@ export default AnnotatedDocumentPage
 
 export const TabSet = ({ doc }: { doc: Document }) => {
   const tabs = useScrollableTabState({ selectedId: Tabs.ANNOTATION })
+  const [{ data }] = Dailp.useDocumentDetailsQuery({ variables: { slug: doc.slug! } })
+  const docData = data?.document
+  if (!docData) {
+    return null
+  }
   return (
     <>
       <div className={css.wideAndTop}>
@@ -80,6 +108,9 @@ export const TabSet = ({ doc }: { doc: Document }) => {
           </Tab>
           <Tab {...tabs} id={Tabs.IMAGES} className={css.docTab}>
             Original Text
+          </Tab>
+          <Tab {...tabs} id={Tabs.INFO} className={css.docTab}>
+            Document Info
           </Tab>
         </TabList>
       </div>
@@ -109,6 +140,33 @@ export const TabSet = ({ doc }: { doc: Document }) => {
             }}
             document={doc}
           />
+        ) : null}
+      </TabPanel>
+
+      <TabPanel
+        {...tabs}
+        className={css.imageTabPanel}
+        id={`${Tabs.INFO}-panel`}
+        tabId={Tabs.INFO}
+      >
+        <Helmet>
+          <title>{docData.title} - Details</title>
+        </Helmet>
+        <section className={fullWidth}>
+          <h3 className={css.topMargin}>Contributors</h3>
+          <ul>
+            {docData.contributors.map((person) => (
+              <li key={person.name}>
+                {person.name}: {person.role}
+              </li>
+            ))}
+          </ul>
+        </section>
+        {docData.sources.length > 0 ? (
+          <section className={fullWidth}>
+            Original document provided courtesy of{" "}
+            <Link href={docData.sources[0]!.link}>{docData.sources[0]!.name}</Link>.
+          </section>
         ) : null}
       </TabPanel>
     </>
@@ -334,12 +392,7 @@ export const DocumentTitleHeader = (p: {
       {p.doc.title}
       {p.doc.date && ` (${p.doc.date.year})`}{" "}
     </h1>
-    <div className={css.bottomPadded}>
-      {p.showDetails ? (
-        <Link href={documentDetailsRoute(p.doc.slug!)}>View Details</Link>
-      ) : (
-        <Link href={documentRoute(p.doc.slug!)}>View Contents</Link>
-      )}
+    <div className={css.alignRight}>
       {!isMobile ? <Button onClick={() => window.print()}>Print</Button> : null}
     </div>
     {p.doc.audioRecording && ( // TODO Implement sticky audio bar

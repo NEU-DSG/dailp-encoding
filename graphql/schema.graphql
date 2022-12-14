@@ -65,6 +65,10 @@ type AnnotatedDoc {
 	These words need to be corrected or reviewed further.
 	"""
 	unresolvedForms: [AnnotatedForm!]!
+	"""
+	Collection chapters that contain this document.
+	"""
+	chapters: [CollectionChapter!]
 }
 
 """
@@ -231,6 +235,7 @@ type CollectionChapter {
 	Full path of the chapter
 	"""
 	path: [String!]!
+	slug: String!
 	document: AnnotatedDoc
 	"""
 	Breadcrumbs from the top-level archive down to where this document lives.
@@ -380,10 +385,6 @@ type DocumentReference {
 	Index of the document within its group, used purely for ordering
 	"""
 	orderIndex: Int!
-	"""
-	Collection chapter's path for this document
-	"""
-	chapterPath: [String!]
 	"""
 	URL slug for this document
 	"""
