@@ -1,6 +1,6 @@
 import "@fontsource/quattrocento-sans/latin.css"
 import "normalize.css"
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { BsArrowBarLeft, BsArrowBarRight } from "react-icons/bs"
 import { MdMenu } from "react-icons/md"
 import { Dialog, DialogBackdrop, DialogDisclosure } from "reakit/Dialog"
@@ -14,17 +14,28 @@ import * as css from "./sidebar.css"
 // Renders a sidebar on the left side of the screen containing a drawer.
 export const Sidebar = () => {
   const dialog = useDialog()
+  // State variable that checks whether this component has loaded in.
+  const [loaded, setLoaded] = useState(false)
 
-  // On load, make sure drawer appears for desktop screens.
+  // On load, make sure drawer is initially visible and is non-modal for desktop screens.
   useEffect(() => {
     dialog.setVisible(true)
+    dialog.setModal(false)
   }, [])
+
+  useEffect(() => {
+    // If this sidebar's dialog has already animated, set the loaded state to true.
+    if (dialog.animating) {
+      setLoaded(true)
+    }
+  }, [dialog.visible])
 
   return (
     <>
       <Dialog
         {...dialog}
-        className={css.drawer}
+        // If the component has already loaded in, display the drawer with transitions.
+        className={loaded ? css.drawer : css.initDrawer}
         as="nav"
         aria-label="Table of Contents"
       >
@@ -32,14 +43,10 @@ export const Sidebar = () => {
       </Dialog>
       <DialogDisclosure
         {...dialog}
-        className={css.desktopNav}
+        className={dialog.visible ? css.openNavButton : css.closeNavButton}
         aria-label="Open Table of Contents"
       >
-        {dialog.visible ? (
-          <BsArrowBarLeft size={css.iconSize} className={css.openNav} />
-        ) : (
-          <BsArrowBarRight size={css.iconSize} className={css.closedNav} />
-        )}
+        <MdMenu size={css.iconSize} />
       </DialogDisclosure>
     </>
   )

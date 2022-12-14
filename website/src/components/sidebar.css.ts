@@ -1,8 +1,9 @@
 import { style } from "@vanilla-extract/css"
 import { padding } from "polished"
-import { navButton, navDrawer } from "src/menu.css"
+import { navDrawer } from "src/menu.css"
 import {
   colors,
+  hsize,
   hspace,
   layers,
   mediaQueries,
@@ -14,7 +15,7 @@ export const drawerWidth = "20rem"
 export const bgColor = style({ backgroundColor: "#585858" })
 export const iconSize = "32px"
 
-export const drawer = style([
+export const initDrawer = style([
   navDrawer,
   bgColor,
   padding(vspace.one),
@@ -22,9 +23,33 @@ export const drawer = style([
     zIndex: layers.top,
     overflowY: "auto",
     scrollbarGutter: "stable",
+
     "@media": {
       [mediaQueries.medium]: {
         width: drawerWidth,
+        transform: "none",
+        selectors: {
+          "&[data-enter]": {
+            transform: "none",
+          },
+        },
+      },
+    },
+  },
+])
+
+export const drawer = style([
+  initDrawer,
+  {
+    "@media": {
+      [mediaQueries.medium]: {
+        transition: "transform 0.5s ease-out",
+        transform: `translateX(-${drawerWidth})`,
+        selectors: {
+          "&[data-enter]": {
+            transform: "translateX(0)",
+          },
+        },
       },
     },
   },
@@ -38,31 +63,41 @@ export const header = style([
   },
 ])
 
-export const desktopNav = style([
-  navButton,
+export const openNavButton = style([
   bgColor,
+  padding(hspace.halfEdge),
   {
     "@media": {
       [mediaQueries.medium]: {
-        display: "block",
+        width: `calc(${hsize.xsmall} / 2)`,
+        height: `calc(${hsize.xsmall} / 2)`,
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
         position: "absolute",
+
+        top: vspace.double,
+
+        left: drawerWidth,
+
         color: colors.body,
-        borderRadius: radii.medium,
-        top: vspace.large,
-        left: hspace[0],
+        border: "none",
+        borderRadius: radii.large,
+
+        transition: "transform 0.5s ease-out",
+        transform: `translateX(0)`,
       },
     },
   },
 ])
 
-export const openNav = style([
-  desktopNav,
-  padding(vspace.small),
-  { transform: `translateX(${drawerWidth})` },
-])
-
-export const closedNav = style([
-  desktopNav,
-  padding(vspace.small),
-  { transform: `translateX(${hspace[0]})` },
+export const closeNavButton = style([
+  openNavButton,
+  {
+    "@media": {
+      [mediaQueries.medium]: {
+        transform: `translateX(-${drawerWidth})`,
+      },
+    },
+  },
 ])

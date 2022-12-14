@@ -38,6 +38,7 @@ export const CollectionProvider = (props: { children: any }) => {
   // Gets the dialog state for the TOC
   const dialog = useDialogState({
     animated: true,
+    visible: true,
   })
 
   return (
