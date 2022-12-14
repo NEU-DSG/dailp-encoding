@@ -411,8 +411,9 @@ export const DocumentTitleHeader = (p: {
         <strong>No Audio Available</strong>
         </div>
       )}
-    <div className={css.alignRight}>
-      {!isMobile ? <Button onClick={() => window.print()}>Print</Button> : null}
+        <div className={css.alignRight}>
+          {!isMobile ? <Button onClick={() => window.print()}>Print</Button> : null}
+        </div>
     </div>
     {p.doc.audioRecording && ( // TODO Implement sticky audio bar
       <div id="document-audio-player" className={css.audioContainer}>

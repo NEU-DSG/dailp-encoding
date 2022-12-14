@@ -237,7 +237,7 @@ export const mobileWordPanel = style([
 export const scrollTop = style({
   display: "flex",
   flexFlow: "column nowrap",
-  justifyContent: "flex-end",
+  justifyContent: "right",
   alignContent: "center",
   alignItems: "center",
   alignSelf: "flex-end",
