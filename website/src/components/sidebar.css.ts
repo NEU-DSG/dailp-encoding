@@ -74,9 +74,10 @@ export const openNavButton = style([
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        position: "absolute",
 
-        top: vspace.double,
+        position: "fixed",
+
+        top: vspace.large,
 
         left: drawerWidth,
 
