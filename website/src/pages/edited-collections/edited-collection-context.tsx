@@ -1,5 +1,5 @@
 import { createContext, useContext, useState } from "react"
-import { DialogStateReturn, useDialogState } from "reakit/Dialog"
+import { Dialog, DialogStateReturn, useDialogState } from "reakit/Dialog"
 import * as Dailp from "src/graphql/dailp"
 import { useRouteParams } from "src/renderer/PageShell"
 
@@ -38,7 +38,6 @@ export const CollectionProvider = (props: { children: any }) => {
   // Gets the dialog state for the TOC
   const dialog = useDialogState({
     animated: true,
-    visible: true,
   })
 
   return (

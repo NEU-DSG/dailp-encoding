@@ -3,7 +3,6 @@ import { padding } from "polished"
 import { navDrawer } from "src/menu.css"
 import {
   colors,
-  hsize,
   hspace,
   layers,
   mediaQueries,
@@ -39,7 +38,6 @@ export const initDrawer = style([
 ])
 
 export const drawer = style([
-  initDrawer,
   {
     "@media": {
       [mediaQueries.medium]: {
@@ -63,14 +61,14 @@ export const header = style([
   },
 ])
 
-export const openNavButton = style([
+export const baseNavButton = style([
   bgColor,
   padding(hspace.halfEdge),
   {
     "@media": {
       [mediaQueries.medium]: {
-        width: `calc(${hsize.xsmall} / 2)`,
-        height: `calc(${hsize.xsmall} / 2)`,
+        width: "3rem",
+        height: "3rem",
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
@@ -92,13 +90,10 @@ export const openNavButton = style([
   },
 ])
 
-export const closeNavButton = style([
-  openNavButton,
-  {
-    "@media": {
-      [mediaQueries.medium]: {
-        transform: `translateX(-${drawerWidth})`,
-      },
+export const closeNavButton = style({
+  "@media": {
+    [mediaQueries.medium]: {
+      transform: `translateX(-${drawerWidth})`,
     },
   },
-])
+})
