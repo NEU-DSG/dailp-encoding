@@ -1,6 +1,6 @@
 import "@fontsource/quattrocento-sans/latin.css"
 import "normalize.css"
-import React from "react"
+import React, { ReactNode, useEffect, useRef } from "react"
 import { Helmet } from "react-helmet"
 import { Link } from "src/components"
 import Sidebar, { MobileSidebar } from "src/components/sidebar"
@@ -23,7 +23,6 @@ const CWKWLayout: React.FC = ({ children }) => {
   const dialog = useDialog()
 
   const { collectionSlug } = useRouteParams()
-
   return (
     <PreferencesProvider>
       <Helmet titleTemplate="%s - DAILP" defaultTitle="DAILP">

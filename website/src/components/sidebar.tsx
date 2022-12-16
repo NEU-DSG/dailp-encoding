@@ -19,9 +19,15 @@ import * as css from "./sidebar.css"
 // Renders a sidebar on the left side of the screen containing a drawer.
 export const Sidebar = () => {
   // On load, make sure drawer is initially visible and is non-modal for desktop screens.
-  const dialog = useDialogState({ ...useDialog(), visible: true, modal: true })
+  const dialog = useDialog()
+
   // State variable that checks whether this component has loaded in.
   const [loaded, setLoaded] = useState(false)
+
+  useEffect(() => {
+    dialog.setVisible(true)
+    dialog.setModal(false)
+  }, [])
 
   useEffect(() => {
     // If this sidebar's dialog has already animated, set the loaded state to true.
