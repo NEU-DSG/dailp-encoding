@@ -38,7 +38,7 @@ const ChapterPage = (props: {
         <article className={dialog.visible ? css.leftMargin : util.fullWidth}>
           {/* If this chapter contains or is a Wordpress page, display the WP page contents. */}
           {wordpressId && chapter.slug ? (
-            <WordpressPage slug={`/${chapter.slug.replaceAll("_", "-")}`} />
+            <WordpressPage slug={`/${chapter.slug.replace(/_/g, "-")}`} />
           ) : null}
 
           {/* If this chapter is a document, display the document contents. */}
