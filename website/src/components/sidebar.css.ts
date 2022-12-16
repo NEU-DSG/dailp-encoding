@@ -1,6 +1,6 @@
 import { style } from "@vanilla-extract/css"
 import { padding } from "polished"
-import { navButton, navDrawer } from "src/menu.css"
+import { navDrawer } from "src/menu.css"
 import {
   colors,
   hspace,
@@ -14,7 +14,7 @@ export const drawerWidth = "20rem"
 export const bgColor = style({ backgroundColor: "#585858" })
 export const iconSize = "32px"
 
-export const drawer = style([
+export const initDrawer = style([
   navDrawer,
   bgColor,
   padding(vspace.one),
@@ -22,9 +22,32 @@ export const drawer = style([
     zIndex: layers.top,
     overflowY: "auto",
     scrollbarGutter: "stable",
+
     "@media": {
       [mediaQueries.medium]: {
         width: drawerWidth,
+        transform: "none",
+        selectors: {
+          "&[data-enter]": {
+            transform: "none",
+          },
+        },
+      },
+    },
+  },
+])
+
+export const drawer = style([
+  {
+    "@media": {
+      [mediaQueries.medium]: {
+        transition: "transform 0.5s ease-out",
+        transform: `translateX(-${drawerWidth})`,
+        selectors: {
+          "&[data-enter]": {
+            transform: "translateX(0)",
+          },
+        },
       },
     },
   },
@@ -38,31 +61,39 @@ export const header = style([
   },
 ])
 
-export const desktopNav = style([
-  navButton,
+export const baseNavButton = style([
   bgColor,
+  padding(hspace.halfEdge),
   {
     "@media": {
       [mediaQueries.medium]: {
-        display: "block",
-        position: "absolute",
-        color: colors.body,
-        borderRadius: radii.medium,
+        width: "3rem",
+        height: "3rem",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+
+        position: "fixed",
+
         top: vspace.large,
-        left: hspace[0],
+
+        left: drawerWidth,
+
+        color: colors.body,
+        border: "none",
+        borderRadius: radii.large,
+
+        transition: "transform 0.5s ease-out",
+        transform: `translateX(0)`,
       },
     },
   },
 ])
 
-export const openNav = style([
-  desktopNav,
-  padding(vspace.small),
-  { transform: `translateX(${drawerWidth})` },
-])
-
-export const closedNav = style([
-  desktopNav,
-  padding(vspace.small),
-  { transform: `translateX(${hspace[0]})` },
-])
+export const closeNavButton = style({
+  "@media": {
+    [mediaQueries.medium]: {
+      transform: `translateX(-${drawerWidth})`,
+    },
+  },
+})
