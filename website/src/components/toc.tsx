@@ -54,7 +54,10 @@ const CollectionTOC = () => {
       {collection.map((coll, idx) =>
         coll.chapters.length > 0 ? (
           <Fragment key={idx}>
-            <h3 className={css.title}>{coll.section}</h3>
+            <h3 className={css.title}>
+              {coll.section[0]?.toUpperCase() +
+                coll.section.slice(1).toLowerCase()}
+            </h3>
             <TOC section={coll.section} chapters={coll.chapters} />
           </Fragment>
         ) : null
