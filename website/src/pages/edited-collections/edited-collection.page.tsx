@@ -1,12 +1,14 @@
+import cx from "classnames"
 import React, { useEffect } from "react"
 import { Helmet } from "react-helmet"
 import { navigate } from "vite-plugin-ssr/client/router"
 import { Link } from "src/components"
 import { useRouteParams } from "src/renderer/PageShell"
+import { chapterRoute } from "src/routes"
 import * as util from "src/style/utils.css"
 import CWKWLayout from "../cwkw/cwkw-layout"
 import * as css from "../cwkw/cwkw-layout.css"
-import { useDialog } from "./edited-collection-context"
+import { useChapters, useDialog } from "./edited-collection-context"
 
 function redirectUrl(collectionSlug: string) {
   if (collectionSlug != "cwkw") {
@@ -33,6 +35,9 @@ const EditedCollectionPage = () => {
   const { collectionSlug } = useRouteParams()
   const dialog = useDialog()
 
+  const chapters = useChapters()
+  const firstChapter = chapters && chapters[0] ? chapters[0].slug : ""
+
   useEffect(() => {
     redirectUrl(collectionSlug!)
   }, [collectionSlug])
@@ -47,7 +52,9 @@ const EditedCollectionPage = () => {
         <meta name="robots" content="noindex,nofollow" />
       </Helmet>
       <main className={util.paddedCenterColumn}>
-        <article className={dialog.visible ? css.leftMargin : util.fullWidth}>
+        <article
+          className={cx(util.fullWidth, dialog.visible && css.leftMargin)}
+        >
           <header>
             <h1>Cherokees Writing the Keetoowah Way</h1>
           </header>
@@ -84,7 +91,9 @@ const EditedCollectionPage = () => {
             culpa qui officia deserunt mollit anim id est laborum.
           </p>
           <h3>
-            <Link href="#">Begin reading</Link>
+            <Link href={chapterRoute(collectionSlug, firstChapter)}>
+              Begin reading
+            </Link>
           </h3>
         </article>
       </main>

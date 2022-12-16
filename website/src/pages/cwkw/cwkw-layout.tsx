@@ -47,7 +47,7 @@ const CWKWLayout: React.FC = ({ children }) => {
         >
           {isDesktop ? <Sidebar /> : <MobileSidebar />}
           <div className={css.contentContainer}>
-            <h1 className={css.siteTitle}>
+            <div className={css.siteTitle}>
               <Link
                 className={css.siteLink}
                 href={collectionRoute(collectionSlug!)}
@@ -58,7 +58,7 @@ const CWKWLayout: React.FC = ({ children }) => {
                   className={css.banner}
                 />
               </Link>
-            </h1>
+            </div>
           </div>
           <HeaderPrefDrawer color={colors.body} />
         </div>

@@ -1,6 +1,6 @@
 import { style } from "@vanilla-extract/css"
 import { margin } from "polished"
-import { colors, hsize, hspace, vspace } from "src/style/constants"
+import { colors, fonts, hsize, hspace, vspace } from "src/style/constants"
 import { marginY, onHover, paddingX, paddingY } from "src/style/utils"
 
 // Styles intro chapters.
@@ -63,7 +63,7 @@ export const listItem = style([
 
 export const link = style([
   paddingX(hspace.medium),
-  onHover({ color: colors.borders }),
+  onHover({ color: colors.focus, textDecoration: "underline" }),
   {
     color: colors.primaryText,
     textDecoration: "none",
@@ -79,6 +79,7 @@ export const title = style([
   marginY(vspace.medium),
   {
     color: colors.primaryText,
+    fontFamily: fonts.smallCaps,
     fontWeight: "bolder",
   },
 ])

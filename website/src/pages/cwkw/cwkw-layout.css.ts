@@ -9,7 +9,7 @@ import {
   mediaQueries,
   vspace,
 } from "src/style/constants"
-import { paddingX, paddingY } from "src/style/utils"
+import { marginY, media, paddingX, paddingY } from "src/style/utils"
 import { hideOnPrint, row } from "src/style/utils.css"
 import * as baseLayout from "../../layout.css"
 
@@ -36,7 +36,11 @@ export const headerContents = style([baseLayout.headerContents])
 
 export const subHeader = style([baseLayout.subHeader, { fontSize: "larger" }])
 
-export const siteTitle = style([baseLayout.siteTitle, { flex: 1 }])
+export const siteTitle = style([
+  baseLayout.siteTitle,
+  media(mediaQueries.medium, marginY(vspace.half)),
+  { flex: 1 },
+])
 
 export const siteLink = style([baseLayout.siteLink, { display: "flex" }])
 
@@ -70,12 +74,11 @@ export const openHeaderContents = style([
 export const banner = style([
   margin(0),
   paddingY(vspace.medium),
-
   {
     width: hsize.xsmall,
     "@media": {
       [mediaQueries.medium]: {
-        width: hsize.small,
+        width: "15rem",
       },
     },
   },

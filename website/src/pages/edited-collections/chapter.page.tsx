@@ -1,3 +1,4 @@
+import cx from "classnames"
 import { Helmet } from "react-helmet"
 import { Link, WordpressPage } from "src/components"
 import * as Dailp from "src/graphql/dailp"
@@ -35,12 +36,13 @@ const ChapterPage = (props: {
     <CWKWLayout>
       <Helmet title={chapter.title} />
       <main className={util.paddedCenterColumn}>
-        <article className={dialog.visible ? css.leftMargin : util.fullWidth}>
+        <article
+          className={cx(util.fullWidth, dialog.visible && css.leftMargin)}
+        >
           {/* If this chapter contains or is a Wordpress page, display the WP page contents. */}
           {wordpressId && chapter.slug ? (
             <WordpressPage slug={`/${chapter.slug.replace(/_/g, "-")}`} />
           ) : null}
-
           {/* If this chapter is a document, display the document contents. */}
           {document ? (
             <>
