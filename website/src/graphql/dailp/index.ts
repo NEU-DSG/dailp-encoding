@@ -1184,46 +1184,46 @@ export type DocSliceQueryVariables = Exact<{
 
 export type DocSliceQuery = { readonly __typename?: "Query" } & {
   readonly document: Maybe<
-    { readonly __typename?: "AnnotatedDoc" } & {
-      readonly audioRecording: Maybe<
-        { readonly __typename?: "AudioSlice" } & Pick<
-          AudioSlice,
-          "resourceUrl" | "startTime" | "endTime"
+    { readonly __typename?: "AnnotatedDoc" } & Pick<AnnotatedDoc, "title"> & {
+        readonly audioRecording: Maybe<
+          { readonly __typename?: "AudioSlice" } & Pick<
+            AudioSlice,
+            "resourceUrl" | "startTime" | "endTime"
+          >
         >
-      >
-      readonly forms: ReadonlyArray<
-        { readonly __typename: "AnnotatedForm" } & Pick<
-          AnnotatedForm,
-          | "id"
-          | "index"
-          | "source"
-          | "romanizedSource"
-          | "phonemic"
-          | "englishGloss"
-          | "commentary"
-        > & {
-            readonly segments: ReadonlyArray<
-              { readonly __typename?: "WordSegment" } & Pick<
-                WordSegment,
-                "morpheme" | "gloss" | "role" | "previousSeparator"
-              > & {
-                  readonly matchingTag: Maybe<
-                    { readonly __typename?: "MorphemeTag" } & Pick<
-                      MorphemeTag,
-                      "tag" | "title"
+        readonly forms: ReadonlyArray<
+          { readonly __typename: "AnnotatedForm" } & Pick<
+            AnnotatedForm,
+            | "id"
+            | "index"
+            | "source"
+            | "romanizedSource"
+            | "phonemic"
+            | "englishGloss"
+            | "commentary"
+          > & {
+              readonly segments: ReadonlyArray<
+                { readonly __typename?: "WordSegment" } & Pick<
+                  WordSegment,
+                  "morpheme" | "gloss" | "role" | "previousSeparator"
+                > & {
+                    readonly matchingTag: Maybe<
+                      { readonly __typename?: "MorphemeTag" } & Pick<
+                        MorphemeTag,
+                        "tag" | "title"
+                      >
                     >
-                  >
-                }
-            >
-            readonly audioTrack: Maybe<
-              { readonly __typename?: "AudioSlice" } & Pick<
-                AudioSlice,
-                "index" | "resourceUrl" | "startTime" | "endTime"
+                  }
               >
-            >
-          }
-      >
-    }
+              readonly audioTrack: Maybe<
+                { readonly __typename?: "AudioSlice" } & Pick<
+                  AudioSlice,
+                  "index" | "resourceUrl" | "startTime" | "endTime"
+                >
+              >
+            }
+        >
+      }
   >
 }
 
@@ -1708,6 +1708,7 @@ export const DocSliceDocument = gql`
     $morphemeSystem: CherokeeOrthography!
   ) {
     document(slug: $slug) {
+      title
       audioRecording {
         resourceUrl
         startTime
