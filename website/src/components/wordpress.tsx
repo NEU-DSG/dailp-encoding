@@ -3,6 +3,7 @@ import parse, {
   attributesToProps,
   domToReact,
 } from "html-react-parser"
+import { first } from "lodash"
 import { AudioPlayer, Button, Link } from "src/components"
 import * as Dailp from "src/graphql/dailp"
 import * as Wordpress from "src/graphql/wordpress"
@@ -226,7 +227,35 @@ const PullWords = (props: {
     levelOfDetail > LevelOfDetail.Pronunciation
       ? annotationSection.wordParts
       : annotationSection.story
-  return (
+
+  if (props.last){
+    return (
+      <>
+      <div className={annotationStyle}>
+        {docContents.forms.map((form, i) => (
+          <AnnotatedForm
+            key={i}
+            segment={form as any}
+            onOpenDetails={() => {}}
+            levelOfDetail={levelOfDetail}
+            cherokeeRepresentation={cherokeeRepresentation}
+            pageImages={[]}
+            wordPanelDetails={wordPanelInfo}
+          />
+        ))}
+      </div>
+      <div>
+        <i>
+          {docContents.title + ", words " + props.first + " – " + props.last}
+        </i>
+      </div>
+      </>
+    )
+  }
+
+  else{
+    return (
+    <>
     <div className={annotationStyle}>
       {docContents.forms.map((form, i) => (
         <AnnotatedForm
@@ -240,5 +269,14 @@ const PullWords = (props: {
         />
       ))}
     </div>
+    <div>
+      <i>
+        {docContents.title + ", word " + props.first}
+      </i>
+    </div>
+    </>
   )
+
+  }
+
 }
