@@ -25,12 +25,10 @@ import {
 import { useScrollableTabState } from "src/scrollable-tabs"
 import { AnnotatedForm, DocumentPage, TranslatedParagraph } from "src/segment"
 import { mediaQueries } from "src/style/constants"
+import { fullWidth } from "src/style/utils.css"
 import { BasicMorphemeSegment, LevelOfDetail } from "src/types"
 import PageImages from "../../page-image"
 import * as css from "./document.css"
-import { fullWidth } from "src/style/utils.css"
-
-
 
 enum Tabs {
   ANNOTATION = "annotation-tab",
@@ -89,7 +87,9 @@ export default AnnotatedDocumentPage
 
 export const TabSet = ({ doc }: { doc: Document }) => {
   const tabs = useScrollableTabState({ selectedId: Tabs.ANNOTATION })
-  const [{ data }] = Dailp.useDocumentDetailsQuery({ variables: { slug: doc.slug! } })
+  const [{ data }] = Dailp.useDocumentDetailsQuery({
+    variables: { slug: doc.slug! },
+  })
   const docData = data?.document
   if (!docData) {
     return null
@@ -165,7 +165,10 @@ export const TabSet = ({ doc }: { doc: Document }) => {
         {docData.sources.length > 0 ? (
           <section className={fullWidth}>
             Original document provided courtesy of{" "}
-            <Link href={docData.sources[0]!.link}>{docData.sources[0]!.name}</Link>.
+            <Link href={docData.sources[0]!.link}>
+              {docData.sources[0]!.name}
+            </Link>
+            .
           </section>
         ) : null}
       </TabPanel>

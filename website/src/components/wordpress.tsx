@@ -228,9 +228,21 @@ const PullWords = (props: {
       ? annotationSection.wordParts
       : annotationSection.story
 
-  if (props.last){
-    return (
-      <>
+  let documentCitation = docContents.title + ", word " + props.first
+
+  if (props.last) {
+    documentCitation =
+      docContents.title + ", words " + props.first + " – " + props.last
+  }
+
+  let documentLink =
+    "https://dailp.northeastern.edu/documents/" +
+    props.slug.toLowerCase() +
+    "/#w" +
+    props.first
+
+  return (
+    <>
       <div className={annotationStyle}>
         {docContents.forms.map((form, i) => (
           <AnnotatedForm
@@ -246,37 +258,9 @@ const PullWords = (props: {
       </div>
       <div>
         <i>
-          {docContents.title + ", words " + props.first + " – " + props.last}
+          <a href={documentLink}>{documentCitation}</a>
         </i>
       </div>
-      </>
-    )
-  }
-
-  else{
-    return (
-    <>
-    <div className={annotationStyle}>
-      {docContents.forms.map((form, i) => (
-        <AnnotatedForm
-          key={i}
-          segment={form as any}
-          onOpenDetails={() => {}}
-          levelOfDetail={levelOfDetail}
-          cherokeeRepresentation={cherokeeRepresentation}
-          pageImages={[]}
-          wordPanelDetails={wordPanelInfo}
-        />
-      ))}
-    </div>
-    <div>
-      <i>
-        {docContents.title + ", word " + props.first}
-      </i>
-    </div>
     </>
   )
-
-  }
-
 }
