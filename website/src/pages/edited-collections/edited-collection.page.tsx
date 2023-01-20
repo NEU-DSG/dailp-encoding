@@ -91,4 +91,4 @@ const EditedCollectionPage = () => {
     </CWKWLayout>
   )
 }
-export default EditedCollectionPage
+export const Page = EditedCollectionPage

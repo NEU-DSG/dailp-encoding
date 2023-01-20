@@ -1,3 +1,4 @@
+import React from "react"
 import { Helmet } from "react-helmet"
 import { WordpressPageContents } from "src/components"
 import * as Wordpress from "src/graphql/wordpress"
@@ -24,7 +25,7 @@ const WordpressPage = (props: { "*": string }) => (
   </Layout>
 )
 
-export default WordpressPage
+export const Page = WordpressPage
 
 const Contents = (props: { slug: string }) => {
   const [{ data, fetching }] = Wordpress.usePageQuery({
