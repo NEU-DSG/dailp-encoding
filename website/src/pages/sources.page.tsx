@@ -1,4 +1,4 @@
-import { join, sortBy } from "lodash"
+import { join, sortBy } from "lodash-es"
 import React from "react"
 import { Helmet } from "react-helmet"
 import { Link } from "src/components"
@@ -38,7 +38,7 @@ const SourcesPage = () => {
     </Layout>
   )
 }
-export default SourcesPage
+export const Page = SourcesPage
 
 type LocalDocument = Dailp.AllSourcesQuery["allDocuments"][0]
 
