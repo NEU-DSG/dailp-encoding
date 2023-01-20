@@ -1,14 +1,10 @@
 import React, { ReactNode, useEffect } from "react"
-import { AiFillSound } from "react-icons/ai"
-import { GrDown, GrUp } from "react-icons/gr"
-import { IoEllipsisHorizontalCircle } from "react-icons/io5"
-import { MdClose, MdNotes, MdRecordVoiceOver } from "react-icons/md"
-import {
-  Disclosure,
-  DisclosureContent,
-  useDisclosureState,
-} from "reakit/Disclosure"
-import { unstable_Form as Form } from "reakit/Form"
+import { AiFillSound } from "react-icons/ai/index"
+import { GrDown, GrUp } from "react-icons/gr/index"
+import { IoEllipsisHorizontalCircle } from "react-icons/io5/index"
+import { MdClose, MdNotes, MdRecordVoiceOver } from "react-icons/md/index"
+import { Disclosure, DisclosureContent, useDisclosureState } from "reakit"
+import { unstable_Form as Form } from "reakit"
 import { useCredentials } from "./auth"
 import { AudioPlayer, IconButton } from "./components"
 import EditWordPanel, { EditButton } from "./edit-word-panel"
