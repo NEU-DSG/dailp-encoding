@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react"
-import { FiLoader } from "react-icons/fi"
-import { MdPauseCircleOutline, MdPlayCircleOutline } from "react-icons/md"
+import { FiLoader } from "react-icons/fi/index"
+import { MdPauseCircleOutline, MdPlayCircleOutline } from "react-icons/md/index"
 import * as css from "./audio-player.css"
 
 interface Props {

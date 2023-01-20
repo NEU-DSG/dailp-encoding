@@ -1,18 +1,17 @@
 import React, { useEffect } from "react"
 import { IconBaseProps } from "react-icons/lib"
-import { MdClose, MdSettings, MdStayPrimaryLandscape } from "react-icons/md"
+import {
+  MdClose,
+  MdSettings,
+  MdStayPrimaryLandscape,
+} from "react-icons/md/index"
 import {
   Dialog,
   DialogBackdrop,
   DialogDisclosure,
   useDialogState,
-} from "reakit/Dialog"
-import {
-  Radio,
-  RadioGroup,
-  RadioStateReturn,
-  useRadioState,
-} from "reakit/Radio"
+} from "reakit"
+import { Radio, RadioGroup, RadioStateReturn, useRadioState } from "reakit"
 import { IconButton, Label, Select } from "src/components"
 import * as Dailp from "src/graphql/dailp"
 import * as css from "./mode.css"

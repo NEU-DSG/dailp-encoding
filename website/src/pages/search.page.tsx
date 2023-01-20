@@ -3,7 +3,7 @@ import cx from "classnames"
 import QueryString from "query-string"
 import React, { useEffect } from "react"
 import { Helmet } from "react-helmet"
-import { Input } from "reakit/Input"
+import { Input } from "reakit"
 import Link from "src/components/link"
 import * as Dailp from "src/graphql/dailp"
 import { useLocation } from "src/renderer/PageShell"
@@ -57,7 +57,7 @@ const SearchPage = () => {
     </Layout>
   )
 }
-export default SearchPage
+export const Page = SearchPage
 
 const Timeline = (p: { gloss: string }) => {
   const [timeline] = Dailp.useWordSearchQuery({

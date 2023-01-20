@@ -4,7 +4,7 @@ import {
   unstable_FormSubmitButton as FormSubmitButton,
   unstable_FormStateReturn,
   unstable_useFormState as useFormState,
-} from "reakit/Form"
+} from "reakit"
 import { useCredentials, useUser } from "src/auth"
 import { Button, Link } from "src/components"
 import { centeredColumn } from "src/style/utils.css"
@@ -165,4 +165,4 @@ export const ResetLink = () => {
   )
 }
 
-export default ResetPasswordPage
+export const Page = ResetPasswordPage

@@ -1,5 +1,5 @@
 import React from "react"
-import { MdClose, MdNotes } from "react-icons/md"
+import { MdClose, MdNotes } from "react-icons/md/index"
 import { IconButton } from "./components"
 import { CollapsiblePanel, PanelSegment } from "./panel-layout"
 import * as css from "./panel-layout.css"

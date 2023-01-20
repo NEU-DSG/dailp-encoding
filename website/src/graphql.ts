@@ -1,5 +1,6 @@
 import fetch from "isomorphic-unfetch"
 import {
+  AnyVariables,
   Exchange,
   UseQueryArgs,
   cacheExchange,
@@ -17,7 +18,7 @@ export { useQuery }
 
 const context = { url: WP_GRAPHQL_URL }
 
-export function useWpQuery<Data = any, Variables = object>(
+export function useWpQuery<Data, Variables extends AnyVariables>(
   params: UseQueryArgs<Variables, Data>
 ) {
   return useQuery({

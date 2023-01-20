@@ -1,6 +1,6 @@
 import cx from "classnames"
 import React, { ReactNode } from "react"
-import { Button as ButtonBase, ButtonProps } from "reakit/Button"
+import { Button as ButtonBase, ButtonProps } from "reakit"
 import { withClass } from "src/style/utils"
 import * as css from "./button.css"
 
