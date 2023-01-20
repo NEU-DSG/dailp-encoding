@@ -20,9 +20,6 @@ export default defineConfig({
       }
     }),
   ],
-  // legacy: {
-  //   buildSsrCjsExternalHeuristics: true,
-  // },
   css: {
     postcss: {
       plugins: [
