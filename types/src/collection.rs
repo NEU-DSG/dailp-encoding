@@ -3,6 +3,7 @@ use uuid::Uuid;
 use crate::AnnotatedDoc;
 use {
     crate::async_graphql::{self, dataloader::DataLoader, Context, FieldResult},
+    crate::slugify,
     crate::Database,
     crate::DocumentCollection,
     crate::DocumentId,
@@ -19,6 +20,7 @@ pub struct EditedCollection {
     pub title: String,
     /// ID of WordPress menu for navigating the collection
     pub wordpress_menu_id: Option<i64>,
+    #[graphql(skip)]
     /// URL slug for the collection, like "cwkw"
     pub slug: String,
 }
@@ -38,8 +40,9 @@ pub struct CollectionChapter {
     /// Whether the chapter is an "Intro" or "Body" chapter
     pub section: CollectionSection,
     /// Document id
-    #[graphql(skip = true)]
+    #[graphql(skip)]
     pub document_id: Option<DocumentId>,
+    #[graphql(skip)]
     /// Full path of the chapter
     pub path: Vec<String>,
 }
@@ -58,6 +61,11 @@ pub enum CollectionSection {
 
 #[async_graphql::ComplexObject]
 impl EditedCollection {
+    /// URL slug for the collection, like "cwkw"
+    async fn slug(&self) -> String {
+        slugify(&self.slug)
+    }
+
     async fn chapters(&self, context: &Context<'_>) -> FieldResult<Option<Vec<CollectionChapter>>> {
         Ok(context
             .data::<DataLoader<Database>>()?
@@ -68,8 +76,13 @@ impl EditedCollection {
 
 #[async_graphql::ComplexObject]
 impl CollectionChapter {
+    /// Full path of the chapter
+    async fn path(&self) -> Vec<String> {
+        self.path.iter().map(slugify).collect()
+    }
+
     async fn slug(&self) -> String {
-        (&self.path.last()).unwrap().to_string()
+        slugify((&self.path.last()).unwrap())
     }
 
     async fn document(&self, context: &Context<'_>) -> FieldResult<Option<AnnotatedDoc>> {
