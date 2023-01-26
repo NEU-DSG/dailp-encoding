@@ -7,8 +7,8 @@ import {
   unstable_FormSubmitButton as FormSubmitButton,
   unstable_FormStateReturn,
   unstable_useFormState as useFormState,
-} from "reakit/Form"
-import { Popover, PopoverDisclosure, usePopoverState } from "reakit/Popover"
+} from "reakit"
+import { Popover, PopoverDisclosure, usePopoverState } from "reakit"
 import { useCredentials, useUser } from "src/auth"
 import { Button, Link } from "src/components"
 import { cleanButton } from "src/components/button.css"
@@ -165,4 +165,4 @@ export const FormFields = ({
   )
 }
 
-export default LoginPage
+export const Page = LoginPage

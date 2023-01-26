@@ -1,6 +1,6 @@
 import React, { useState } from "react"
 import { Helmet } from "react-helmet"
-import { FaMinus, FaPlus } from "react-icons/fa"
+import { FaMinus, FaPlus } from "react-icons/fa/index"
 import { TransformComponent, TransformWrapper } from "react-zoom-pan-pinch"
 import { Button, IconButton, Link } from "src/components"
 import * as Dailp from "src/graphql/dailp"

@@ -4,7 +4,8 @@ import * as Wordpress from "src/graphql/wordpress"
 export async function prerender() {
   const { data } = await client.wordpress
     .query<Wordpress.PageIndexQuery, Wordpress.PageIndexQueryVariables>(
-      Wordpress.PageIndexDocument
+      Wordpress.PageIndexDocument,
+      {}
     )
     .toPromise()
 

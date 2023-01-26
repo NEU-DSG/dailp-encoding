@@ -1,4 +1,4 @@
-import { pick } from "lodash"
+import { pick } from "lodash-es"
 import React from "react"
 import ReactDOMServer from "react-dom/server"
 import { Helmet } from "react-helmet"
@@ -54,9 +54,10 @@ export async function onBeforeRender(
     const client = customClient(true, [ssr])
 
     const context = {
+      isBackwardNavigation: false,
+      isHydration: true as true,
       ...pageContext,
       buildDate,
-      isHydration: false,
       urqlState: {},
     }
 
@@ -90,6 +91,8 @@ export const passToClient = [
   "urqlState",
   "routeParams",
   "buildDate",
+  "urlParsed",
+  "urlPathname",
 ]
 
 /**
