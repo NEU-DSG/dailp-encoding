@@ -113,6 +113,19 @@
     },
     "query": "insert into morpheme_gloss (document_id, gloss, example_shape, tag_id)\n  values ($1, $2, $3, $4)\non conflict (coalesce(document_id, uuid_nil()), gloss)\n  do update set example_shape = excluded.example_shape,\n     tag_id = excluded.tag_id\nreturning id\n"
   },
+  "16a151e6b4deeaf35fa60b209154e8ce8e1e7cbceac64fcc52b4422ced7ce236": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "TextArray",
+          "TextArray"
+        ]
+      }
+    },
+    "query": "insert into document_source (name, url)\nselect\n  input_data.name,\n  input_data.url\nfrom\n  unnest(\n    $1::text[], $2::text[]\n  ) as input_data(name, url)\n-- If this document already has this source, move on.\non conflict do nothing"
+  },
   "1dcec22261dae61c4404af7c630eb24e3cd2acc5b4717bcc9706f14c6dde7efc": {
     "describe": {
       "columns": [
