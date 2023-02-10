@@ -5,6 +5,7 @@ with lib; {
       bucket = mkOption { type = str; };
       table = mkOption { type = str; };
     };
+    access_log_bucket = mkOption { type = str; };
     stage = mkOption { type = enum [ "dev" "prod" ]; };
     vpc = mkOption { type = str; };
     subnets = mkOption { type = attrsOf str; };
@@ -29,11 +30,7 @@ with lib; {
       tags = { "Terraform" = "true"; } // config.setup.global_tags;
       lifecycle.prevent_destroy = true;
       logging = {
-        # These logging buckets are externally managed.
-        target_bucket = if config.setup.stage == "dev" then
-          "s3-server-access-logs-783177801354"
-        else
-          "s3-server-access-logs-363539660090";
+        target_bucket = config.setup.access_log_bucket;
         target_prefix = "/${config.setup.state.bucket}";
       };
     };
