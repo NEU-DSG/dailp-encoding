@@ -30,7 +30,7 @@ const CollectionTOC = () => {
   // Filter the chapters by their section.
   chapters.reduce(
     function (result, curr, i) {
-      if (i != 0 && curr.section === CollectionSection.Intro) {
+      if (curr.section === CollectionSection.Intro) {
         // i != 0 makes sure the landing page (first chapter) does not get added to the table of contents
         result[0]?.push(curr)
       } else if (curr.section === CollectionSection.Body) {
