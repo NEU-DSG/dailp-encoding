@@ -34,9 +34,7 @@ const EditedCollectionPage = () => {
   const dialog = useDialog()
 
   const chapters = useChapters()
-
-  const landingChapter = chapters ? chapters[0] : null
-  const firstChapter = chapters ? chapters[1] : null
+  const firstChapter = chapters ? chapters[0] : null
 
   useEffect(() => {
     redirectUrl(collectionSlug!)
@@ -61,7 +59,9 @@ const EditedCollectionPage = () => {
             A digital collection presented by{" "}
             <Link href="https://dailp.northeastern.edu/">DAILP</Link>
           </h3>
-          {landingChapter ? <WordpressPage slug={landingChapter.slug} /> : null}
+
+          <WordpressPage slug={`/${collectionSlug}`} />
+
           <h3>
             {firstChapter ? (
               <Link href={firstChapter.slug}>Begin reading</Link>
