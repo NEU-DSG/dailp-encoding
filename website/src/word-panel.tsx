@@ -1,12 +1,12 @@
 import React, { ReactNode } from "react"
-import { AiFillCaretDown, AiFillCaretUp, AiFillSound } from "react-icons/ai"
-import { IoEllipsisHorizontalCircle } from "react-icons/io5"
-import { MdNotes, MdRecordVoiceOver } from "react-icons/md"
 import {
-  Disclosure,
-  DisclosureContent,
-  useDisclosureState,
-} from "reakit/Disclosure"
+  AiFillCaretDown,
+  AiFillCaretUp,
+  AiFillSound,
+} from "react-icons/ai/index"
+import { IoEllipsisHorizontalCircle } from "react-icons/io5/index"
+import { MdNotes, MdRecordVoiceOver } from "react-icons/md/index"
+import { Disclosure, DisclosureContent, useDisclosureState } from "reakit"
 import { AudioPlayer } from "src/components"
 import * as Dailp from "src/graphql/dailp"
 import * as css from "./panel-layout.css"

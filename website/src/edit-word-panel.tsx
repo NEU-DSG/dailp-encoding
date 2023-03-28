@@ -1,12 +1,12 @@
 import React from "react"
-import { HiPencilAlt } from "react-icons/hi"
-import { IoCheckmarkSharp } from "react-icons/io5"
+import { HiPencilAlt } from "react-icons/hi/index"
+import { IoCheckmarkSharp } from "react-icons/io5/index"
 import {
   unstable_Form as Form,
   unstable_FormInput as FormInput,
   unstable_FormLabel as FormLabel,
+  unstable_FormSubmitButton as FormSubmitButton,
 } from "reakit/Form"
-import { unstable_FormSubmitButton as FormSubmitButton } from "reakit/Form"
 import * as Dailp from "src/graphql/dailp"
 import { IconButton } from "./components"
 import { IconTextButton } from "./components/button"

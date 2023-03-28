@@ -1,4 +1,4 @@
-import { kebabCase } from "lodash"
+import { kebabCase } from "lodash-es"
 
 export const documentRoute = (slug: string) => `/documents/${slug}`
 
@@ -6,6 +6,9 @@ export const documentDetailsRoute = (slug: string) =>
   `/documents/${slug}/details`
 
 export const collectionRoute = (slug: string) => `/collections/${slug}`
+
+export const chapterRoute = (collectionSlug: string, chapterSlug: string) =>
+  `/collections/${collectionSlug}/${chapterSlug}`
 
 export const morphemeTagId = (tag: string) => `tag-${kebabCase(tag)}`
 export const glossaryRoute = (tag: string) => `/glossary#${morphemeTagId(tag)}`

@@ -1,5 +1,5 @@
 import { groupBy } from "lodash"
-import React, { ReactNode } from "react"
+import React, { ReactNode, useEffect } from "react"
 import { AiFillSound } from "react-icons/ai"
 import { GrDown, GrUp } from "react-icons/gr"
 import { IoEllipsisHorizontalCircle } from "react-icons/io5"
@@ -10,17 +10,21 @@ import {
   DisclosureContent,
   useDisclosureState,
 } from "reakit/Disclosure"
-import { unstable_Form as Form } from "reakit/Form"
-import { unstable_FormInput as FormInput } from "reakit/Form"
-import * as Dailp from "src/graphql/dailp"
+import {
+  unstable_Form as Form,
+  unstable_FormInput as FormInput,
+} from "reakit/Form"
 import { useCredentials } from "./auth"
 import { AudioPlayer, IconButton } from "./components"
 import { CustomCreatable } from "./components/creatable"
 import EditWordPanel, { EditButton } from "./edit-word-panel"
 import { formInput } from "./edit-word-panel.css"
+import { content } from "./footer.css"
 import { useForm } from "./form-context"
 import * as css from "./panel-layout.css"
+import ParagraphPanel from "./paragraph-panel"
 import { usePreferences } from "./preferences-context"
+import { TranslatedParagraph } from "./segment"
 import { VerticalMorphemicSegmentation, WordPanel } from "./word-panel"
 
 enum PanelType {
@@ -28,15 +32,17 @@ enum PanelType {
   EditWordPanel,
 }
 
+export type PanelSegment = Dailp.FormFieldsFragment | TranslatedParagraph
+
 export interface PanelDetails {
-  currContents: Dailp.FormFieldsFragment | null
-  setCurrContents: (currContents: Dailp.FormFieldsFragment | null) => void
+  currContents: PanelSegment | null
+  setCurrContents: (currContents: PanelSegment | null) => void
 }
 
 /** Displays the right-side panel information of the currently selected word. */
 export const PanelLayout = (p: {
-  segment: Dailp.FormFieldsFragment | null
-  setContent: (content: Dailp.FormFieldsFragment | null) => void
+  segment: PanelSegment | null
+  setContent: (content: PanelSegment | null) => void
 }) => {
   if (!p.segment) {
     return null
@@ -73,55 +79,62 @@ export const PanelLayout = (p: {
     }
   })
 
+  let panel = null
+
+  if (p.segment.__typename === "AnnotatedForm") {
+    panel = (
+      <>
+        {/* If the user is logged in, then display an edit button on the word
+        panel along with its corresponding formatted header. Otherwise, display
+        the normal word panel. */}
+        {token ? (
+          <header className={css.wordPanelHeader}>
+            <div className={css.headerButtons}>
+              {!isEditing && (
+                <IconButton
+                  onClick={() => p.setContent(null)}
+                  aria-label="Dismiss selected word information"
+                >
+                  <MdClose size={32} />
+                </IconButton>
+              )}
+              <EditButton />
+            </div>
+            <h2 className={css.editCherHeader}>{p.segment.source}</h2>
+          </header>
+        ) : (
+          <>
+            <IconButton
+              className={css.wordPanelButton.basic}
+              onClick={() => p.setContent(null)}
+              aria-label="Dismiss selected word information"
+            >
+              <MdClose size={32} />
+            </IconButton>
+            <header className={css.wordPanelHeader}>
+              <h1 className={css.noSpaceBelow}>{`Word ${p.segment.index}`}</h1>
+              <h2 className={css.cherHeader}>{p.segment.source}</h2>
+            </header>
+          </>
+        )}
+        {/* Renders audio recording. */}
+        <AudioPanel segment={p.segment} />
+        {isEditing ? (
+          <Form {...form}>
+            <PanelContent panel={PanelType.EditWordPanel} word={p.segment} />
+          </Form>
+        ) : (
+          <WordPanel word={p.segment} setContent={p.setContent} />
+        )}
+      </>
+    )
+  } else if (p.segment.__typename === "DocumentParagraph") {
+    panel = <ParagraphPanel segment={p.segment} setContent={p.setContent} />
+  }
+
   return (
     <div className={css.wordPanelContent}>
-      {/* If the user is logged in, then display an edit button on the word panel along with its corresponding formatted header. Otherwise, display the normal word panel.*/}
-      {token ? (
-        <header className={css.wordPanelHeader}>
-          <div className={css.headerButtons}>
-            {!isEditing && (
-              <IconButton
-                onClick={() => p.setContent(null)}
-                aria-label="Dismiss selected word information"
-              >
-                <MdClose size={32} />
-              </IconButton>
-            )}
-
-            <EditButton />
-          </div>
-          <h2 className={css.editCherHeader}>{p.segment.source}</h2>
-        </header>
-      ) : (
-        <>
-          <IconButton
-            className={css.wordPanelButton.basic}
-            onClick={() => p.setContent(null)}
-            aria-label="Dismiss selected word information"
-          >
-            <MdClose size={32} />
-          </IconButton>
-          <header className={css.wordPanelHeader}>
-            <h1 className={css.noSpaceBelow}>Selected Word</h1>
-            <h2 className={css.cherHeader}>{p.segment.source}</h2>
-          </header>
-        </>
-      )}
-
-      {/* Renders audio recording. */}
-      <AudioPanel segment={p.segment} />
-
-      {isEditing ? (
-        <Form {...form}>
-          <PanelContent
-            panel={PanelType.EditWordPanel}
-            word={p.segment}
-            options={options}
-          />
-        </Form>
-      ) : (
-        <WordPanel word={p.segment} setContent={p.setContent} />
-      )}
+      <>{panel}</>
     </div>
   )
 }

@@ -2,7 +2,7 @@ import React, { ReactNode, createContext, useContext, useState } from "react"
 import {
   unstable_FormStateReturn as FormStateReturn,
   unstable_useFormState as useFormState,
-} from "reakit/Form"
+} from "reakit"
 import * as Dailp from "./graphql/dailp"
 import { usePreferences } from "./preferences-context"
 

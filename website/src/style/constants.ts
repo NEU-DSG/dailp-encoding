@@ -67,6 +67,8 @@ export const hsize = {
   [0]: 0,
   none: 0,
   full: "100%",
+  xsmall: "6rem",
+  small: "20rem",
   medium: "41rem",
   large: "50rem",
   auto: "auto",
@@ -91,4 +93,11 @@ export const buttonSize = {
 export const fontSize = {
   tiny: "0.8rem",
   small: "0.9rem",
+}
+
+export const layers = {
+  top: 999,
+  third: 3,
+  second: 2,
+  base: 1,
 }

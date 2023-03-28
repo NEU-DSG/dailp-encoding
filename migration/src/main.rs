@@ -24,9 +24,6 @@ async fn main() -> Result<()> {
     dotenv::dotenv().ok();
     pretty_env_logger::init();
 
-    println!("Validating manuscript spreadsheets...");
-    validate_documents().await?;
-
     let db = Database::connect(Some(1))?;
 
     println!("Migrating Image Sources...");
@@ -110,55 +107,6 @@ async fn migrate_data(db: &Database) -> Result<()> {
     db.insert_morpheme_relations(morpheme_relations).await?;
 
     Ok(())
-}
-
-/// Parses our annotated document spreadsheets, migrating that data to our
-/// database and writing them into TEI XML files.
-async fn validate_documents() -> Result<()> {
-    // Pull the list of annotated documents from our index sheet.
-    let index =
-        spreadsheets::SheetResult::from_sheet("1sDTRFoJylUqsZlxU57k1Uj8oHhbM3MAzU8sDgTfO7Mk", None)
-            .await?
-            .into_index()?;
-
-    // Retrieve data for spreadsheets in sequence.
-    // Because of Google API rate limits, we have to process them sequentially
-    // rather than in parallel.
-    // This process encodes the ordering in the Index sheet to allow us to
-    // manually order different document collections.
-    let mut results = Vec::new();
-    for collection in index.collections {
-        let collection_id = Default::default();
-        for (order_index, sheet_id) in collection.sheet_ids.into_iter().enumerate() {
-            results.push((
-                sheet_id.clone(),
-                fetch_sheet(None, &sheet_id, collection_id, order_index as i64).await,
-            ));
-            tokio::time::sleep(Duration::from_millis(1300)).await;
-        }
-    }
-
-    let mut failed = false;
-    for (sheet_id, r) in results {
-        match r {
-            Err(e) => {
-                error!("Failed to process {}: {}", sheet_id, e);
-                failed = true;
-            }
-            Ok(None) => {
-                error!("Failed to process {}", sheet_id);
-            }
-            Ok(Some(_)) => {
-                info!("{} validated", sheet_id);
-            }
-        }
-    }
-
-    if failed {
-        Err(anyhow::anyhow!("One or more documents failed to process"))
-    } else {
-        Ok(())
-    }
 }
 
 /// Fetch the contents of the sheet with the given ID, validating the first page as

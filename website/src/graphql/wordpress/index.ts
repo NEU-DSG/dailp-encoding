@@ -6745,6 +6745,8 @@ export enum TimezoneEnum {
   AmericaChicago = "AMERICA_CHICAGO",
   /** Chihuahua */
   AmericaChihuahua = "AMERICA_CHIHUAHUA",
+  /** Ciudad Juarez */
+  AmericaCiudadJuarez = "AMERICA_CIUDAD_JUAREZ",
   /** Costa Rica */
   AmericaCostaRica = "AMERICA_COSTA_RICA",
   /** Creston */
@@ -6871,8 +6873,6 @@ export enum TimezoneEnum {
   AmericaNassau = "AMERICA_NASSAU",
   /** New York */
   AmericaNewYork = "AMERICA_NEW_YORK",
-  /** Nipigon */
-  AmericaNipigon = "AMERICA_NIPIGON",
   /** Nome */
   AmericaNome = "AMERICA_NOME",
   /** Noronha */
@@ -6889,8 +6889,6 @@ export enum TimezoneEnum {
   AmericaOjinaga = "AMERICA_OJINAGA",
   /** Panama */
   AmericaPanama = "AMERICA_PANAMA",
-  /** Pangnirtung */
-  AmericaPangnirtung = "AMERICA_PANGNIRTUNG",
   /** Paramaribo */
   AmericaParamaribo = "AMERICA_PARAMARIBO",
   /** Phoenix */
@@ -6905,8 +6903,6 @@ export enum TimezoneEnum {
   AmericaPuertoRico = "AMERICA_PUERTO_RICO",
   /** Punta Arenas */
   AmericaPuntaArenas = "AMERICA_PUNTA_ARENAS",
-  /** Rainy River */
-  AmericaRainyRiver = "AMERICA_RAINY_RIVER",
   /** Rankin Inlet */
   AmericaRankinInlet = "AMERICA_RANKIN_INLET",
   /** Recife */
@@ -6947,8 +6943,6 @@ export enum TimezoneEnum {
   AmericaTegucigalpa = "AMERICA_TEGUCIGALPA",
   /** Thule */
   AmericaThule = "AMERICA_THULE",
-  /** Thunder Bay */
-  AmericaThunderBay = "AMERICA_THUNDER_BAY",
   /** Tijuana */
   AmericaTijuana = "AMERICA_TIJUANA",
   /** Toronto */
@@ -7297,8 +7291,6 @@ export enum TimezoneEnum {
   EuropeTirane = "EUROPE_TIRANE",
   /** Ulyanovsk */
   EuropeUlyanovsk = "EUROPE_ULYANOVSK",
-  /** Uzhgorod */
-  EuropeUzhgorod = "EUROPE_UZHGOROD",
   /** Vaduz */
   EuropeVaduz = "EUROPE_VADUZ",
   /** Vatican */
@@ -7313,8 +7305,6 @@ export enum TimezoneEnum {
   EuropeWarsaw = "EUROPE_WARSAW",
   /** Zagreb */
   EuropeZagreb = "EUROPE_ZAGREB",
-  /** Zaporozhye */
-  EuropeZaporozhye = "EUROPE_ZAPOROZHYE",
   /** Zurich */
   EuropeZurich = "EUROPE_ZURICH",
   /** Antananarivo */
@@ -8631,7 +8621,10 @@ export const PageDocument = gql`
 export function usePageQuery(
   options: Omit<Urql.UseQueryArgs<PageQueryVariables>, "query">
 ) {
-  return Urql.useQuery<PageQuery>({ query: PageDocument, ...options })
+  return Urql.useQuery<PageQuery, PageQueryVariables>({
+    query: PageDocument,
+    ...options,
+  })
 }
 export const PageIndexDocument = gql`
   query PageIndex {
@@ -8650,7 +8643,10 @@ export const PageIndexDocument = gql`
 export function usePageIndexQuery(
   options?: Omit<Urql.UseQueryArgs<PageIndexQueryVariables>, "query">
 ) {
-  return Urql.useQuery<PageIndexQuery>({ query: PageIndexDocument, ...options })
+  return Urql.useQuery<PageIndexQuery, PageIndexQueryVariables>({
+    query: PageIndexDocument,
+    ...options,
+  })
 }
 export const MenuByIdDocument = gql`
   query MenuByID($id: Int!) {
@@ -8677,5 +8673,8 @@ export const MenuByIdDocument = gql`
 export function useMenuByIdQuery(
   options: Omit<Urql.UseQueryArgs<MenuByIdQueryVariables>, "query">
 ) {
-  return Urql.useQuery<MenuByIdQuery>({ query: MenuByIdDocument, ...options })
+  return Urql.useQuery<MenuByIdQuery, MenuByIdQueryVariables>({
+    query: MenuByIdDocument,
+    ...options,
+  })
 }
