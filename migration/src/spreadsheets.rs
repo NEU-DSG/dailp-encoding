@@ -7,13 +7,14 @@ use crate::translations::DocResult;
 use anyhow::Result;
 use dailp::collection::CollectionSection;
 use dailp::collection::CollectionSection::Body;
+use dailp::collection::CollectionSection::Credit;
 use dailp::collection::CollectionSection::Intro;
 use dailp::raw::CollectionChapter;
 use dailp::raw::EditedCollection;
 use dailp::{
-    convert_udb, root_noun_surface_forms, root_verb_surface_forms, AnnotatedDoc, AnnotatedForm,
-    AnnotatedSeg, AudioSlice, Contributor, Database, Date, DocumentId, DocumentMetadata,
-    LexicalConnection, LineBreak, MorphemeId, PageBreak, Uuid, WordSegment,
+    convert_udb, root_noun_surface_forms, root_verb_surface_forms, slugify_ltree, AnnotatedDoc,
+    AnnotatedForm, AnnotatedSeg, AudioSlice, Contributor, Database, Date, DocumentId,
+    DocumentMetadata, LexicalConnection, LineBreak, MorphemeId, PageBreak, Uuid, WordSegment,
 };
 use dailp::{PositionInDocument, SourceAttribution};
 use itertools::Itertools;
@@ -78,7 +79,7 @@ impl SheetResult {
             if r.is_ok() || tries > 3 {
                 break r;
             }
-            sleep(Duration::from_millis(3000 * 2_u64.pow(tries))).await;
+            sleep(Duration::from_millis(2000 * 2_u64.pow(tries))).await;
             tries += 1;
         }
     }
@@ -145,10 +146,11 @@ impl SheetResult {
         let second_value = row
             .next()
             .ok_or_else(|| anyhow::format_err!("Missing second value"))?;
-        let mut is_intro = true;
+        // 0 for Intro, 1 for Body, 2 for Credit
+        let mut chapter_type = 0;
         for cur_row in row {
             if cur_row[0].is_empty() {
-                is_intro = false;
+                chapter_type = chapter_type + 1;
             } else {
                 let mut row_values = cur_row.into_iter().peekable();
 
@@ -176,16 +178,22 @@ impl SheetResult {
                     None
                 };
 
-                let intro_or_body = if is_intro { Intro } else { Body };
+                let chapter_type_name = if chapter_type == 0 {
+                    Intro
+                } else if chapter_type == 1 {
+                    Body
+                } else {
+                    Credit
+                };
 
                 let new_chapter = dailp::raw::CollectionChapter {
                     index_in_parent: index_i64,
-                    url_slug: chapter_url_slug,
+                    url_slug: slugify_ltree(chapter_url_slug),
                     chapter_name: cur_chapter_name,
                     document_short_name: doc_string,
                     id: None,
                     wordpress_id: wp_id,
-                    section: intro_or_body,
+                    section: chapter_type_name,
                 };
 
                 collection_chapters.push(new_chapter);
@@ -195,7 +203,7 @@ impl SheetResult {
         Ok(dailp::raw::EditedCollection {
             title: self_title.to_string(),
             wordpress_menu_id: Some(*self_wordpress_menu_id),
-            slug: self_slug.to_string(),
+            slug: self_slug.to_ascii_lowercase(),
             chapters: collection_chapters,
         })
     }

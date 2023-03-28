@@ -1,6 +1,5 @@
 #![allow(missing_docs)]
 
-use sqlx::postgres::types::PgLQuery;
 use sqlx::postgres::types::PgLTree;
 use std::ops::Bound;
 use std::str::FromStr;
@@ -265,7 +264,11 @@ impl Database {
         chapter_stack.push(initial_tuple);
 
         for current_chapter in chapters {
-            let chapter_doc_name = current_chapter.document_short_name;
+            let mut chapter_doc_name = "".to_string();
+
+            if current_chapter.document_short_name.is_some() {
+                chapter_doc_name = current_chapter.document_short_name.unwrap();
+            }
 
             // Use stack to build chapter slug
             let mut before_chapter_index = chapter_stack.last().unwrap().0;
@@ -386,6 +389,14 @@ impl Database {
         )
     }
 
+    pub async fn all_edited_collections(&self) -> Result<Vec<EditedCollection>> {
+        Ok(
+            query_file_as!(EditedCollection, "queries/edited_collections.sql")
+                .fetch_all(&self.client)
+                .await?,
+        )
+    }
+
     pub async fn update_annotation(&self, _annote: annotation::Annotation) -> Result<()> {
         todo!("Implement image annotations")
     }
@@ -479,6 +490,20 @@ impl Database {
         Ok(word.id)
     }
 
+    pub async fn update_paragraph(&self, paragraph: ParagraphUpdate) -> Result<Uuid> {
+        let translation = paragraph.translation.into_vec();
+
+        query_file!(
+            "queries/update_paragraph.sql",
+            paragraph.id,
+            &translation as _
+        )
+        .execute(&self.client)
+        .await?;
+
+        Ok(paragraph.id)
+    }
+
     pub async fn all_pages(&self) -> Result<Vec<page::Page>> {
         todo!("Implement content pages")
     }
@@ -519,13 +544,20 @@ impl Database {
         _super_collection: &str,
         collection: &str,
     ) -> Result<Vec<DocumentReference>> {
-        Ok(query_file_as!(
-            DocumentReference,
-            "queries/documents_in_group.sql",
-            collection
-        )
-        .fetch_all(&self.client)
-        .await?)
+        let documents = query_file!("queries/documents_in_group.sql", collection)
+            .fetch_all(&self.client)
+            .await?;
+
+        Ok(documents
+            .into_iter()
+            .map(|doc| DocumentReference {
+                id: doc.id,
+                short_name: doc.short_name,
+                title: doc.title,
+                date: doc.date,
+                order_index: doc.order_index,
+            })
+            .collect())
     }
 
     pub async fn insert_top_collection(&self, title: String, _index: i64) -> Result<Uuid> {
@@ -731,6 +763,20 @@ impl Database {
             slug: item.slug,
             title: item.title,
         }])
+    }
+
+    pub async fn chapter_breadcrumbs(&self, path: Vec<String>) -> Result<Vec<DocumentCollection>> {
+        let chapters = query_file!("queries/chapter_breadcrumbs.sql", PgLTree::from_iter(path)?)
+            .fetch_all(&self.client)
+            .await?;
+        Ok(chapters
+            .into_iter()
+            .sorted_by_key(|chapter| chapter.chapter_path.len())
+            .map(|chapter| DocumentCollection {
+                slug: chapter.slug,
+                title: chapter.title,
+            })
+            .collect())
     }
 
     pub async fn insert_one_word(&self, form: AnnotatedForm) -> Result<()> {
@@ -1122,16 +1168,16 @@ impl Database {
         &self,
         collection_slug: String,
         chapter_slug: String,
-    ) -> Result<CollectionChapter> {
+    ) -> Result<Option<CollectionChapter>> {
         let chapter = query_file!(
             "queries/chapter_contents.sql",
             collection_slug,
             chapter_slug
         )
-        .fetch_one(&self.client)
+        .fetch_optional(&self.client)
         .await?;
 
-        Ok(CollectionChapter {
+        Ok(chapter.map(|chapter| CollectionChapter {
             id: chapter.id,
             path: chapter
                 .chapter_path
@@ -1143,7 +1189,40 @@ impl Database {
             document_id: chapter.document_id.map(|id| DocumentId(id)),
             wordpress_id: chapter.wordpress_id,
             section: chapter.section,
-        })
+        }))
+    }
+
+    // Returns the CollectionChapters that contain given document.
+    pub async fn chapters_by_document(
+        &self,
+        document_slug: String,
+    ) -> Result<Option<Vec<CollectionChapter>>> {
+        let chapters = query_file!("queries/chapters_by_document.sql", document_slug)
+            .fetch_all(&self.client)
+            .await?;
+
+        if chapters.is_empty() {
+            Ok(None)
+        } else {
+            Ok(Some(
+                chapters
+                    .into_iter()
+                    .map(|chapter| CollectionChapter {
+                        id: chapter.id,
+                        path: chapter
+                            .chapter_path
+                            .into_iter()
+                            .map(|s| (*s).into())
+                            .collect(),
+                        index_in_parent: chapter.index_in_parent,
+                        title: chapter.title,
+                        document_id: chapter.document_id.map(|id| DocumentId(id)),
+                        wordpress_id: chapter.wordpress_id,
+                        section: chapter.section,
+                    })
+                    .collect(),
+            ))
+        }
     }
 }
 
@@ -1313,12 +1392,14 @@ impl Loader<ParagraphsInPage> for Database {
         // reimplement that with try_fold()
         Ok(items
             .into_iter()
-            .map(|p| {
+            .enumerate()
+            .map(|(index, p)| {
                 (
                     ParagraphsInPage(p.page_id),
                     DocumentParagraph {
                         id: p.id,
                         translation: p.english_translation,
+                        index: (index as i64) + 1,
                     },
                 )
             })

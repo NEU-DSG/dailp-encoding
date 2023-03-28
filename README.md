@@ -59,7 +59,7 @@ $ dev-website
 
 If you run each of these commands in a separate shell, then you'll have a fully operational local test environment.
 If it's your first time running the project locally, your database is probably empty.
-With `dev-database` running, run the command `dev-migrate` to populate it with data from the DAILP spreadsheets.
+With `dev-database` running, run the `dev-migrate-schema` and `dev-migrate-data` commands to structure your database and populate it with data from the DAILP spreadsheets.
 
 ### Cleaning Up
 
@@ -67,6 +67,6 @@ With `dev-database` running, run the command `dev-migrate` to populate it with d
 However, this can take up a lot of disk space if you're making lots of code changes.
 To clean up the nix cache, simply run:
 
-``` sh
+```sh
 $ nix-collect-garbage
 ```

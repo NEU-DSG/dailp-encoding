@@ -131,6 +131,11 @@
           exePath = "/bin/dailp-migration";
         };
 
+        apps.validate-data = inputs.utils.lib.mkApp {
+          drv = hostPackage;
+          exePath = "/bin/dailp-validate";
+        };
+
         apps.migrate-schema = mkBashApp "migrate-schema" ''
           cd types
           ${pkgs.sqlx-cli}/bin/sqlx database create

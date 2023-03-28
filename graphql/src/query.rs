@@ -1,13 +1,13 @@
 //! This piece of the project exposes a GraphQL endpoint that allows one to access DAILP data in a federated manner with specific queries.
 
-use dailp::{CollectionChapter, Uuid};
+use dailp::{slugify_ltree, CollectionChapter, Uuid};
 use itertools::Itertools;
 
 use {
     dailp::async_graphql::{self, dataloader::DataLoader, Context, FieldResult, Guard},
     dailp::{
         AnnotatedDoc, AnnotatedFormUpdate, CherokeeOrthography, Database, EditedCollection,
-        MorphemeId, MorphemeReference, MorphemeTag, WordsInDocument,
+        MorphemeId, MorphemeReference, MorphemeTag, ParagraphUpdate, WordsInDocument,
     },
     serde::{Deserialize, Serialize},
     serde_with::{rust::StringWithSeparator, CommaSeparator},
@@ -18,15 +18,42 @@ pub struct Query;
 
 #[async_graphql::Object]
 impl Query {
+    // List of all the edited collections available.
+    async fn all_edited_collections(
+        &self,
+        context: &Context<'_>,
+    ) -> FieldResult<Vec<EditedCollection>> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .all_edited_collections()
+            .await?)
+    }
+
     // query for 1 collection based on slug, and make a collection object with all the stuff in it.
     async fn edited_collection(
         &self,
         context: &Context<'_>,
         slug: String,
     ) -> FieldResult<Option<EditedCollection>> {
+        let slug = slugify_ltree(slug);
         Ok(context
             .data::<DataLoader<Database>>()?
             .load_one(dailp::EditedCollectionDetails(slug))
+            .await?)
+    }
+
+    /// Retrieves a chapter and its contents by its collection and chapter slug.
+    async fn chapter(
+        &self,
+        context: &Context<'_>,
+        collection_slug: String,
+        chapter_slug: String,
+    ) -> FieldResult<Option<CollectionChapter>> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .chapter(slugify_ltree(collection_slug), slugify_ltree(chapter_slug))
             .await?)
     }
 
@@ -273,6 +300,20 @@ impl Mutation {
     /// the future.
     async fn api_version(&self) -> &str {
         "1.0"
+    }
+
+    /// Mutation for paragraph and translation editing
+    #[graphql(guard = "GroupGuard::new(UserGroup::Editor)")]
+    async fn update_paragraph(
+        &self,
+        context: &Context<'_>,
+        paragraph: ParagraphUpdate,
+    ) -> FieldResult<Uuid> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .update_paragraph(paragraph)
+            .await?)
     }
 
     #[graphql(guard = "GroupGuard::new(UserGroup::Editor)")]

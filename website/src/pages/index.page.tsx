@@ -8,7 +8,7 @@ import { collectionRoute } from "../routes"
 
 /** Lists all documents in our database */
 const IndexPage = () => {
-  const [{ data: dailp }] = Dailp.useCollectionsListingQuery()
+  const [{ data: dailp }] = Dailp.useEditedCollectionsQuery()
   return (
     <Layout>
       <Helmet title="Collections" />
@@ -22,10 +22,10 @@ const IndexPage = () => {
 
           <h1>Cherokee Manuscript Collections</h1>
           <ul>
-            {dailp?.allCollections.map((collection) => (
+            {dailp?.allEditedCollections.map((collection) => (
               <li key={collection.slug}>
                 <Link href={collectionRoute(collection.slug)}>
-                  {collection.name}
+                  {collection.title}
                 </Link>
               </li>
             ))}
@@ -35,7 +35,7 @@ const IndexPage = () => {
     </Layout>
   )
 }
-export default IndexPage
+export const Page = IndexPage
 
 const carouselImages = [
   {
