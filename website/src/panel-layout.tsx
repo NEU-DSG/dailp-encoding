@@ -1,5 +1,5 @@
 import { groupBy } from "lodash"
-import React, { ReactNode, useEffect } from "react"
+import React, { ReactNode } from "react"
 import { AiFillSound } from "react-icons/ai"
 import { GrDown, GrUp } from "react-icons/gr"
 import { IoEllipsisHorizontalCircle } from "react-icons/io5"
@@ -14,6 +14,7 @@ import {
   unstable_Form as Form,
   unstable_FormInput as FormInput,
 } from "reakit/Form"
+import * as Dailp from "src/graphql/dailp"
 import { useCredentials } from "./auth"
 import { AudioPlayer, IconButton } from "./components"
 import { CustomCreatable } from "./components/creatable"
@@ -39,7 +40,7 @@ export interface PanelDetails {
   setCurrContents: (currContents: PanelSegment | null) => void
 }
 
-/** Displays the right-side panel information of the currently selected word. */
+// Displays the right-side panel information of the currently selected segment.
 export const PanelLayout = (p: {
   segment: PanelSegment | null
   setContent: (content: PanelSegment | null) => void
@@ -66,21 +67,24 @@ export const PanelLayout = (p: {
   const groupedTags = groupBy(allTags, (t) => t.morphemeType)
 
   // Creates a selectable option out of each functional tag, and groups them together by morpheme type.
-  const options = Object.entries(groupedTags).map(([group, tags]) => {
-    return {
-      label: group,
-      options: tags.map((tag) => {
-        return {
-          // Value is a custom type to track data of a morpheme's gloss in its string form and its matching tag, if there is one.
-          value: tag.tag,
-          label: tag.title,
-        }
-      }),
+  const options: GroupedOption[] = Object.entries(groupedTags).map(
+    ([group, tags]) => {
+      return {
+        label: group,
+        options: tags.map((tag) => {
+          return {
+            // Value is a custom type to track data of a morpheme's gloss in its string form and its matching tag, if there is one.
+            value: tag.tag,
+            label: tag.title,
+          }
+        }),
+      }
     }
-  })
+  )
 
   let panel = null
 
+  // Display the paragraph panel if the segment type is a word (AnnotatedForm).
   if (p.segment.__typename === "AnnotatedForm") {
     panel = (
       <>
@@ -121,7 +125,11 @@ export const PanelLayout = (p: {
         <AudioPanel segment={p.segment} />
         {isEditing ? (
           <Form {...form}>
-            <PanelContent panel={PanelType.EditWordPanel} word={p.segment} />
+            <PanelContent
+              panel={PanelType.EditWordPanel}
+              word={p.segment}
+              options={options}
+            />
           </Form>
         ) : (
           <WordPanel word={p.segment} setContent={p.setContent} />
@@ -129,6 +137,7 @@ export const PanelLayout = (p: {
       </>
     )
   } else if (p.segment.__typename === "DocumentParagraph") {
+    // Display the paragraph panel if the segment type is a paragraph.
     panel = <ParagraphPanel segment={p.segment} setContent={p.setContent} />
   }
 
@@ -139,6 +148,7 @@ export const PanelLayout = (p: {
   )
 }
 
+// A label associated with a list of options.
 type GroupedOption = {
   label: string
   options: {
@@ -179,6 +189,7 @@ export const PanelContent = (p: {
 
   const translation = (
     <>
+      {/* If the english gloss string is not empty, then display it. */}
       {p.word.englishGloss[0] !== "" && (
         <PanelComponent
           word={p.word}
