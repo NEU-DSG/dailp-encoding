@@ -3,6 +3,7 @@ import { Helmet } from "react-helmet"
 import { navigate } from "vite-plugin-ssr/client/router"
 import { Link, WordpressPage } from "src/components"
 import { useRouteParams } from "src/renderer/PageShell"
+import { chapterRoute } from "src/routes"
 import * as util from "src/style/utils.css"
 import CWKWLayout from "../cwkw/cwkw-layout"
 import * as css from "../cwkw/cwkw-layout.css"
@@ -64,7 +65,9 @@ const EditedCollectionPage = () => {
 
           <h3>
             {firstChapter ? (
-              <Link href={firstChapter.slug}>Begin reading</Link>
+              <Link href={chapterRoute(collectionSlug!, firstChapter.slug)}>
+                Begin reading
+              </Link>
             ) : null}
           </h3>
         </article>
