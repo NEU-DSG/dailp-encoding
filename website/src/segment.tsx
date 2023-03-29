@@ -142,6 +142,7 @@ export const AnnotatedForm = (
   }
 
   const { form } = useForm()
+
   const showAnything = p.levelOfDetail > LevelOfDetail.Story
 
   if (showAnything) {
