@@ -185,7 +185,7 @@ export const PanelContent = (p: {
 
   return (
     <>
-      {p.word.editedAudio.length && (
+      {(p.word.editedAudio.length || p.panel === PanelType.EditWordPanel) && (
         <CollapsiblePanel
           title={"Audio"}
           content={

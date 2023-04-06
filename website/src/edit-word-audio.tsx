@@ -1,8 +1,7 @@
 import { useMemo, useState } from "react"
-import { MdAddCircleOutline } from "react-icons/md"
-import { Button } from "reakit/ts"
+import { MdAddCircleOutline } from "react-icons/md/index"
 import { AudioPlayer, IconButton } from "./components"
-import { IconTextButton } from "./components/button"
+import { Button, IconTextButton } from "./components/button"
 import * as Dailp from "./graphql/dailp"
 import { WordAudio } from "./panel-layout"
 
