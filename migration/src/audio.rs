@@ -111,11 +111,51 @@ impl ComplexDrsObject {
 }
 
 /// Represents info associated with an object from the DRS.
+/// 
+/// # Examples:
+/// The HTTP Response
+/// ```text
+/// {
+///     "pid": "neu:br86b3634",
+///     "parent": "neu:n009w288x",
+///     "thumbnails": [
+///         "https://repository.library.northeastern.edu/downloads/neu:4f1738386?datastream_id=thumbnail_1",
+///         "https://repository.library.northeastern.edu/downloads/neu:4f1738386?datastream_id=thumbnail_2",
+///         "https://repository.library.northeastern.edu/downloads/neu:4f1738386?datastream_id=thumbnail_3",
+///         "https://repository.library.northeastern.edu/downloads/neu:4f1738386?datastream_id=thumbnail_4",
+///         "https://repository.library.northeastern.edu/downloads/neu:4f1738386?datastream_id=thumbnail_5"
+///         ],
+///     "canonical_object": {
+///         "https://repository.library.northeastern.edu/downloads/neu:4f173836n?datastream_id=content": "Audio File"
+///     },
+/// }
+/// ```
+/// becomes
+/// ```
+/// DrsRes {
+///     pid = "neu:br86b3634",
+///     parent = "neu:n009w288x",
+///     thumbnails = vec::new([
+///         "https://repository.library.northeastern.edu/downloads/neu:4f1738386?datastream_id=thumbnail_1",
+///         "https://repository.library.northeastern.edu/downloads/neu:4f1738386?datastream_id=thumbnail_2",
+///         "https://repository.library.northeastern.edu/downloads/neu:4f1738386?datastream_id=thumbnail_3",
+///         "https://repository.library.northeastern.edu/downloads/neu:4f1738386?datastream_id=thumbnail_4",
+///         "https://repository.library.northeastern.edu/downloads/neu:4f1738386?datastream_id=thumbnail_5"
+///     ])
+///     canonical_object: ComplexDrsObject(["https://repository.library.northeastern.edu/downloads/neu:4f173836n?datastream_id=content": "Audio File"])
+/// }
+/// ```
 #[derive(Serialize, Deserialize, Clone, Debug)]
 struct DrsRes {
+    /// The PID for a DRS Object. Takes the form "neu:XXXXXXXXX"
     pid: DrsId,
+    /// The PID for the parent collection of this object.
     parent: DrsId,
+    /// A list of URLs leading to this object's thumbnail image.
+    /// 
+    /// Each URL represents a different size of image.
     thumbnails: Vec<String>,
+    /// The primary data associated with this object and its data type.
     canonical_object: ComplexDrsObject,
 }
 
@@ -150,9 +190,10 @@ impl DrsRes {
     }
 }
 
-/// Represents annotation info associated with a single word
+/// Represents one line of an audio annotation table
 ///
-///
+/// One line typically represents one word, structured as
+/// Annotation Layer (optional) | Annotation Start Time | Annotation End Time | Annotation Text
 #[derive(Serialize, Deserialize, Clone, Debug)]
 struct AudioAnnotationRow {
     layer: Option<String>,
