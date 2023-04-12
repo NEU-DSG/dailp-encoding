@@ -212,9 +212,8 @@ impl AudioRes {
                 .ok()
                 .unwrap_or_else(|| String::from("dev"));
 
-            let aws_region = std::env::var("AWS_ZONE_PRIMARY")
-                .ok()
-                .unwrap_or_else(|| String::from("us-east-1"));
+            // Will this always be us-east-1? If so, modify url base below.
+            let aws_region = String::from("us-east-1");
 
             let s3_location = format!(
                 "https://dailp-{}-media-storage.s3.{}.amazonaws.com",
