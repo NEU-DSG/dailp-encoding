@@ -580,6 +580,22 @@ impl Database {
             .await?;
         }
 
+        // Upsert document sources based on the SourceAttribution in a document's metadata.
+        {
+            let (name, url): (Vec<_>, Vec<_>) = meta
+                .sources
+                .iter()
+                .map(|source| (&*source.name, &*source.link))
+                .multiunzip();
+            query_file!(
+                "queries/upsert_document_sources.sql",
+                &*name as _,
+                &*url as _
+            )
+            .execute(&mut tx)
+            .await?;
+        }
+
         tx.commit().await?;
 
         Ok(DocumentId(document_uuid))
