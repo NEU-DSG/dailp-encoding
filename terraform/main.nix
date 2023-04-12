@@ -23,6 +23,7 @@ in {
     ./nu-tags.nix
     ./database-sql.nix
     ./bastion-host.nix
+    ./media-storage.nix
   ];
 
   # Gives all modules access to which stage we're deploying to, while also
@@ -95,4 +96,10 @@ in {
     availability_zone = getEnv "AWS_ZONE_PRIMARY";
     security_group_ids = [ "\${aws_security_group.nixos_test.id}" ];
   };
+
+  # These logging buckets are externally managed.
+  setup.access_log_bucket = if config.setup.stage == "dev" then
+    "s3-server-access-logs-783177801354"
+  else
+    "s3-server-access-logs-363539660090";
 }
