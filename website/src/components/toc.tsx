@@ -31,6 +31,7 @@ const CollectionTOC = () => {
   chapters.reduce(
     function (result, curr, i) {
       if (curr.section === CollectionSection.Intro) {
+        // i != 0 makes sure the landing page (first chapter) does not get added to the table of contents
         result[0]?.push(curr)
       } else if (curr.section === CollectionSection.Body) {
         result[1]?.push(curr)

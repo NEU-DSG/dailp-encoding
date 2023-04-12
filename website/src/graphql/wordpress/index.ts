@@ -6745,6 +6745,8 @@ export enum TimezoneEnum {
   AmericaChicago = "AMERICA_CHICAGO",
   /** Chihuahua */
   AmericaChihuahua = "AMERICA_CHIHUAHUA",
+  /** Ciudad Juarez */
+  AmericaCiudadJuarez = "AMERICA_CIUDAD_JUAREZ",
   /** Costa Rica */
   AmericaCostaRica = "AMERICA_COSTA_RICA",
   /** Creston */
@@ -6887,8 +6889,6 @@ export enum TimezoneEnum {
   AmericaOjinaga = "AMERICA_OJINAGA",
   /** Panama */
   AmericaPanama = "AMERICA_PANAMA",
-  /** Pangnirtung */
-  AmericaPangnirtung = "AMERICA_PANGNIRTUNG",
   /** Paramaribo */
   AmericaParamaribo = "AMERICA_PARAMARIBO",
   /** Phoenix */
