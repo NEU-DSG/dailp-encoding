@@ -213,11 +213,12 @@ impl AudioRes {
         } else {
             println!("Found S3 Location");
 
-            let deploy_env = dotenv::var("VITE_DEPLOYMENT_ENV").unwrap();
+            let deploy_env = std::env::var("VITE_DEPLOYMENT_ENV")
+                .expect("VITE_DEPLOYMENT_ENV not found");
             let s3_location = 
                 format!("https://dailp-{}-media-storage.s3.{}.amazonaws.com",
                 if deploy_env.eq("local") {String::from("dev")} else {deploy_env},
-                dotenv::var("DAILP_AWS_REGION").unwrap());
+                std::env::var("DAILP_AWS_REGION").expect("DAILP_AWS_REGION not found"));
 
             println!("{}{}", s3_location, audio_ref_key);
 
