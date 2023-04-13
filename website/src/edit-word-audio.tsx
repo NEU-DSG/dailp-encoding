@@ -1,7 +1,11 @@
+import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3"
+import { env } from "process"
 import { useMemo, useState } from "react"
 import { MdAddCircleOutline } from "react-icons/md/index"
+import { useCredentials, useUser } from "./auth"
 import { AudioPlayer, IconButton } from "./components"
 import { Button, IconTextButton } from "./components/button"
+import { deploymentEnvironment } from "./env"
 import * as Dailp from "./graphql/dailp"
 import { WordAudio } from "./panel-layout"
 
@@ -173,6 +177,37 @@ export const EditWordAudio = (p: { word: Dailp.FormFieldsFragment }) => {
     stopRecording,
     requestMediaPermissions,
   } = useMediaRecorder()
+
+  const token = useCredentials()
+  const { user } = useUser()
+
+  function uploadToS3(data: Blob) {
+    if (!user) return
+    // Get the Amazon Cognito ID token for the user. 'getToken()' below.
+    const REGION = env["DAILP_AWS_REGION"]
+    const BUCKET_LOC = `dailp-${deploymentEnvironment}-media-storage.s3.${REGION}.amazonaws.com`
+    let COGNITO_ID = "COGNITO_ID" // 'COGNITO_ID' has the format 'cognito-idp.REGION.amazonaws.com/COGNITO_USER_POOL_ID'
+    let loginData = {
+      [COGNITO_ID]: token,
+    }
+    const s3Client = new S3Client({
+      region: REGION,
+      credentials: fromCognitoIdentityPool({
+        clientConfig: { region: REGION }, // Configure the underlying CognitoIdentityClient.
+        identityPoolId: "IDENTITY_POOL_ID",
+        logins: loginData,
+      }),
+    })
+
+    s3Client.send(
+      new PutObjectCommand({
+        Body: data,
+        Bucket: BUCKET_LOC,
+        Key: `userUploadedAudio/${user.getUserAttributes((err, ok) => void 0)}`,
+      })
+    )
+  }
+
   return (
     <div>
       <WordAudio word={p.word} />
@@ -201,13 +236,32 @@ export const EditWordAudio = (p: { word: Dailp.FormFieldsFragment }) => {
             {recordingStatus.isRecording ? "Stop" : "Start"} recording
           </Button>
           {recordingStatus.lastRecording && (
-            <AudioPlayer
-              audioUrl={recordingStatus.lastRecording.url}
-              showProgress
-            />
+            <>
+              <AudioPlayer
+                audioUrl={recordingStatus.lastRecording.url}
+                showProgress
+              />
+              <Button
+                onClick={() => {
+                  uploadToS3(recordingStatus.lastRecording!.data)
+                }}
+              >
+                Upload to s3
+              </Button>
+            </>
           )}
         </div>
       )}
     </div>
   )
+}
+function fromCognitoIdentityPool(arg0: {
+  clientConfig: { region: any } // Configure the underlying CognitoIdentityClient.
+  identityPoolId: string
+  logins: { [x: string]: string | null }
+}):
+  | import("@aws-sdk/types").Credentials
+  | import("@aws-sdk/types").Provider<import("@aws-sdk/types").Credentials>
+  | undefined {
+  throw new Error("Function not implemented.")
 }
