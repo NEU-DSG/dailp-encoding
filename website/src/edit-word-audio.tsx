@@ -1,7 +1,8 @@
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3"
-import { env } from "process"
+// import { fromCognitoIdentityPool } from "@aws-sdk/credential-provider-cognito-identity"
 import { useMemo, useState } from "react"
 import { MdAddCircleOutline } from "react-icons/md/index"
+import { v4 } from "uuid"
 import { useCredentials, useUser } from "./auth"
 import { AudioPlayer, IconButton } from "./components"
 import { Button, IconTextButton } from "./components/button"
@@ -182,28 +183,23 @@ export const EditWordAudio = (p: { word: Dailp.FormFieldsFragment }) => {
   const { user } = useUser()
 
   function uploadToS3(data: Blob) {
-    if (!user) return
+    if (!user || !token) return
     // Get the Amazon Cognito ID token for the user. 'getToken()' below.
-    const REGION = env["DAILP_AWS_REGION"]
+    const REGION = process.env["DAILP_AWS_REGION"]
     const BUCKET_LOC = `dailp-${deploymentEnvironment}-media-storage.s3.${REGION}.amazonaws.com`
-    let COGNITO_ID = "COGNITO_ID" // 'COGNITO_ID' has the format 'cognito-idp.REGION.amazonaws.com/COGNITO_USER_POOL_ID'
-    let loginData = {
-      [COGNITO_ID]: token,
-    }
+    // let accessToken = user.getSignInUserSession()?.getAccessToken() // 'COGNITO_ID' has the format 'cognito-idp.REGION.amazonaws.com/COGNITO_USER_POOL_ID'
+    // let loginData = {
+    //   [COGNITO_ID]: token,
+    // }
     const s3Client = new S3Client({
       region: REGION,
-      credentials: fromCognitoIdentityPool({
-        clientConfig: { region: REGION }, // Configure the underlying CognitoIdentityClient.
-        identityPoolId: "IDENTITY_POOL_ID",
-        logins: loginData,
-      }),
     })
 
     s3Client.send(
       new PutObjectCommand({
         Body: data,
         Bucket: BUCKET_LOC,
-        Key: `userUploadedAudio/${user.getUserAttributes((err, ok) => void 0)}`,
+        Key: `userUploadedAudio/${v4()}`,
       })
     )
   }
@@ -254,14 +250,4 @@ export const EditWordAudio = (p: { word: Dailp.FormFieldsFragment }) => {
       )}
     </div>
   )
-}
-function fromCognitoIdentityPool(arg0: {
-  clientConfig: { region: any } // Configure the underlying CognitoIdentityClient.
-  identityPoolId: string
-  logins: { [x: string]: string | null }
-}):
-  | import("@aws-sdk/types").Credentials
-  | import("@aws-sdk/types").Provider<import("@aws-sdk/types").Credentials>
-  | undefined {
-  throw new Error("Function not implemented.")
 }
