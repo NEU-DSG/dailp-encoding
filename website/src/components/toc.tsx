@@ -9,6 +9,7 @@ import { useRouteParams } from "src/renderer/PageShell"
 import { chapterRoute } from "src/routes"
 import Link from "./link"
 import * as css from "./toc.css"
+import { CreativeCommonsBy } from "./attributions/creative-commons"
 
 type TOCProps = {
   section: CollectionSection
@@ -60,6 +61,31 @@ const CollectionTOC = () => {
           </Fragment>
         ) : null
       )}
+      <div className={css.noticeText}>
+      <CreativeCommonsBy
+        title="Cherokees Writing the Keetoowah Way"
+        authors={[
+          {name: "Ellen Cushman", link:"https://www.ellencushman.com/"},
+          {name: "Ben Frey", link: "https://americanstudies.unc.edu/ben-frey/"},
+          {name: "Rachel Jackson", link: "https://www.ou.edu/cas/english/about/faculty/rachel-jackson"},
+          {name: "Ernestine Berry"},
+          {name: "Clara Proctor"},
+          {name: "Naomi Trevino"},
+          {name: "Jeffrey Bourns"},
+          {name: "Oleta Pritchett"},
+          {name: "Tyler Hodges"},
+          {name: "John Chewey"},
+          {name: "Taylor Snead", link:"https://snead.xyz"},
+          {name: "Chan Mi Oh", link: "https://chanmioh.github.io"},
+          {name: "Kush Patel"},
+          {name: "Shashwat Patel"},
+          {name: "Nop Lertsumitkul"},
+          {name: "Henry Volchonok"},
+          {name: "Hazelyn Aroian"},
+          {name: "Victor Mendevil"},
+        ]}
+      />
+      </div>
     </>
   )
 }
@@ -77,6 +103,7 @@ const TOC = ({ section, chapters }: TOCProps) => {
     section === CollectionSection.Body ? css.listItem : css.numberedListItem
 
   return (
+    <>
     <ol className={listStyle}>
       {chapters.map((item) => (
         <li key={item.slug} className={listItemStyle}>
@@ -94,6 +121,7 @@ const TOC = ({ section, chapters }: TOCProps) => {
         </li>
       ))}
     </ol>
+    </>
   )
 }
 
