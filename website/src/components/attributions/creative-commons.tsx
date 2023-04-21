@@ -12,7 +12,7 @@ export const CreativeCommonsBy = (props: Props) => {
         'xmlns:cc':"http://creativecommons.org/ns#",
         'xmlns:dct':"http://purl.org/dc/terms/"
     };
-    const authors = props.authors.length-1;
+    const authorCount = props.authors.length-1;
     return(
         <p {... licenceAttributes}>
             <a property="dct:title" rel="cc:attributionURL">
@@ -24,9 +24,9 @@ export const CreativeCommonsBy = (props: Props) => {
                         return(
                         <>
                             {p}
-                            {i == authors && "and "}
+                            {i == authorCount && "and "}
                             {(c.link && <Link href={c.link}>{c.name}</Link>) || c.name}
-                            {i < authors &&  ", "}
+                            {i < authorCount &&  ", "}
                         </>)
                     }
                     ,<></>)
