@@ -105,8 +105,11 @@ impl ComplexDrsObject {
     ///     "https://repository.library.northeastern.edu/downloads/neu:4f18fk930?datastream_id=content": "Audio File",
     ///     "https://repository.library.northeastern.edu/downloads/neu:4f18fk948?datastream_id=content": "Master Image"
     /// }
-    fn get_first_object_pid(&self) -> String {
-        self.0.keys().next().unwrap().clone()
+    fn get_first_object_pid(&self) -> Option<&String> {
+        self
+        .0
+        .keys()
+        .next()
     }
 }
 
@@ -186,7 +189,11 @@ impl DrsRes {
     }
     /// Retrieves the content URL associated with a DRS resource
     fn get_url(&self) -> String {
-        self.canonical_object.get_first_object_pid()
+        let val = self.canonical_object.get_first_object_pid();
+        if val.is_none() {
+            String::from("")
+        }
+        val.unwrap().clone()
     }
 }
 
