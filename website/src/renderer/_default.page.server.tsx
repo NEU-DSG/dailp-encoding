@@ -102,6 +102,7 @@ export const passToClient = [
 const clientEnv = pick(process.env, [
   "DAILP_AWS_REGION",
   "DAILP_USER_POOL",
+  "DAILP_IDENTITY_POOL",
   "DAILP_USER_POOL_CLIENT",
   "DAILP_API_URL",
   "TF_STAGE",
