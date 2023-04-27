@@ -1,5 +1,5 @@
-import { createContext, useContext, useState } from "react"
-import { Dialog, DialogStateReturn, useDialogState } from "reakit/Dialog"
+import React, { createContext, useContext, useState } from "react"
+import { DialogStateReturn, useDialogState } from "reakit"
 import * as Dailp from "src/graphql/dailp"
 import { useRouteParams } from "src/renderer/PageShell"
 

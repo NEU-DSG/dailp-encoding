@@ -1,8 +1,8 @@
-import { groupBy, uniq } from "lodash"
+import { groupBy, uniq } from "lodash-es"
 import React, { useRef, useState } from "react"
 import { Helmet } from "react-helmet"
-import { Button } from "reakit/Button"
-import { Input } from "reakit/Input"
+import { Button } from "reakit"
+import { Input } from "reakit"
 import * as Dailp from "src/graphql/dailp"
 import { fullWidth } from "src/style/utils.css"
 import Layout from "../layout"
@@ -27,7 +27,7 @@ const TimelinePage = () => {
     </Layout>
   )
 }
-export default TimelinePage
+export const Page = TimelinePage
 
 const Timeline = (p: { gloss: string }) => {
   const [timeline] = Dailp.useTimelineQuery({

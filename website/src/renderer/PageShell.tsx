@@ -73,6 +73,6 @@ export type PageContext = Pick<
   | "urlPathname"
   | "Page"
 > &
-  PageContextBuiltInClient
+  Omit<PageContextBuiltInClient, "isBackwardNavigation">
 
 export type PageProps = {}

@@ -1,4 +1,4 @@
-import cx from "classnames"
+import React from "react"
 import { Helmet } from "react-helmet"
 import { Link, WordpressPage } from "src/components"
 import * as Dailp from "src/graphql/dailp"
@@ -71,4 +71,4 @@ const ChapterPage = (props: {
   )
 }
 
-export default ChapterPage
+export const Page = ChapterPage

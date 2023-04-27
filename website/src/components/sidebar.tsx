@@ -1,14 +1,9 @@
 import "@fontsource/quattrocento-sans/latin.css"
 import cx from "classnames"
 import "normalize.css"
-import { useEffect, useState } from "react"
-import { MdMenu } from "react-icons/md"
-import {
-  Dialog,
-  DialogBackdrop,
-  DialogDisclosure,
-  useDialogState,
-} from "reakit/Dialog"
+import React, { useEffect, useState } from "react"
+import { MdMenu } from "react-icons/md/index"
+import { Dialog, DialogBackdrop, DialogDisclosure } from "reakit"
 import CollectionTOC from "src/components/toc"
 import { drawerBg, navButton } from "src/menu.css"
 import { useDialog } from "src/pages/edited-collections/edited-collection-context"

@@ -1338,10 +1338,10 @@ export const CollectionsListingDocument = gql`
 export function useCollectionsListingQuery(
   options?: Omit<Urql.UseQueryArgs<CollectionsListingQueryVariables>, "query">
 ) {
-  return Urql.useQuery<CollectionsListingQuery>({
-    query: CollectionsListingDocument,
-    ...options,
-  })
+  return Urql.useQuery<
+    CollectionsListingQuery,
+    CollectionsListingQueryVariables
+  >({ query: CollectionsListingDocument, ...options })
 }
 export const DocumentsPagesDocument = gql`
   query DocumentsPages {
@@ -1356,7 +1356,7 @@ export const DocumentsPagesDocument = gql`
 export function useDocumentsPagesQuery(
   options?: Omit<Urql.UseQueryArgs<DocumentsPagesQueryVariables>, "query">
 ) {
-  return Urql.useQuery<DocumentsPagesQuery>({
+  return Urql.useQuery<DocumentsPagesQuery, DocumentsPagesQueryVariables>({
     query: DocumentsPagesDocument,
     ...options,
   })
@@ -1395,10 +1395,9 @@ export const AnnotatedDocumentDocument = gql`
 export function useAnnotatedDocumentQuery(
   options: Omit<Urql.UseQueryArgs<AnnotatedDocumentQueryVariables>, "query">
 ) {
-  return Urql.useQuery<AnnotatedDocumentQuery>({
-    query: AnnotatedDocumentDocument,
-    ...options,
-  })
+  return Urql.useQuery<AnnotatedDocumentQuery, AnnotatedDocumentQueryVariables>(
+    { query: AnnotatedDocumentDocument, ...options }
+  )
 }
 export const DocumentContentsDocument = gql`
   query DocumentContents(
@@ -1432,7 +1431,7 @@ export const DocumentContentsDocument = gql`
 export function useDocumentContentsQuery(
   options: Omit<Urql.UseQueryArgs<DocumentContentsQueryVariables>, "query">
 ) {
-  return Urql.useQuery<DocumentContentsQuery>({
+  return Urql.useQuery<DocumentContentsQuery, DocumentContentsQueryVariables>({
     query: DocumentContentsDocument,
     ...options,
   })
@@ -1457,7 +1456,7 @@ export const CollectionDocument = gql`
 export function useCollectionQuery(
   options: Omit<Urql.UseQueryArgs<CollectionQueryVariables>, "query">
 ) {
-  return Urql.useQuery<CollectionQuery>({
+  return Urql.useQuery<CollectionQuery, CollectionQueryVariables>({
     query: CollectionDocument,
     ...options,
   })
@@ -1477,10 +1476,9 @@ export const EditedCollectionsDocument = gql`
 export function useEditedCollectionsQuery(
   options?: Omit<Urql.UseQueryArgs<EditedCollectionsQueryVariables>, "query">
 ) {
-  return Urql.useQuery<EditedCollectionsQuery>({
-    query: EditedCollectionsDocument,
-    ...options,
-  })
+  return Urql.useQuery<EditedCollectionsQuery, EditedCollectionsQueryVariables>(
+    { query: EditedCollectionsDocument, ...options }
+  )
 }
 export const EditedCollectionDocument = gql`
   query EditedCollection($slug: String!) {
@@ -1499,7 +1497,7 @@ export const EditedCollectionDocument = gql`
 export function useEditedCollectionQuery(
   options: Omit<Urql.UseQueryArgs<EditedCollectionQueryVariables>, "query">
 ) {
-  return Urql.useQuery<EditedCollectionQuery>({
+  return Urql.useQuery<EditedCollectionQuery, EditedCollectionQueryVariables>({
     query: EditedCollectionDocument,
     ...options,
   })
@@ -1523,7 +1521,7 @@ export const WordSearchDocument = gql`
 export function useWordSearchQuery(
   options: Omit<Urql.UseQueryArgs<WordSearchQueryVariables>, "query">
 ) {
-  return Urql.useQuery<WordSearchQuery>({
+  return Urql.useQuery<WordSearchQuery, WordSearchQueryVariables>({
     query: WordSearchDocument,
     ...options,
   })
@@ -1549,7 +1547,7 @@ export const AllSourcesDocument = gql`
 export function useAllSourcesQuery(
   options?: Omit<Urql.UseQueryArgs<AllSourcesQueryVariables>, "query">
 ) {
-  return Urql.useQuery<AllSourcesQuery>({
+  return Urql.useQuery<AllSourcesQuery, AllSourcesQueryVariables>({
     query: AllSourcesDocument,
     ...options,
   })
@@ -1568,7 +1566,10 @@ export const GlossaryDocument = gql`
 export function useGlossaryQuery(
   options: Omit<Urql.UseQueryArgs<GlossaryQueryVariables>, "query">
 ) {
-  return Urql.useQuery<GlossaryQuery>({ query: GlossaryDocument, ...options })
+  return Urql.useQuery<GlossaryQuery, GlossaryQueryVariables>({
+    query: GlossaryDocument,
+    ...options,
+  })
 }
 export const TimelineDocument = gql`
   query Timeline($gloss: String!) {
@@ -1594,7 +1595,10 @@ export const TimelineDocument = gql`
 export function useTimelineQuery(
   options: Omit<Urql.UseQueryArgs<TimelineQueryVariables>, "query">
 ) {
-  return Urql.useQuery<TimelineQuery>({ query: TimelineDocument, ...options })
+  return Urql.useQuery<TimelineQuery, TimelineQueryVariables>({
+    query: TimelineDocument,
+    ...options,
+  })
 }
 export const DocumentDetailsDocument = gql`
   query DocumentDetails($slug: String!) {
@@ -1620,7 +1624,7 @@ export const DocumentDetailsDocument = gql`
 export function useDocumentDetailsQuery(
   options: Omit<Urql.UseQueryArgs<DocumentDetailsQueryVariables>, "query">
 ) {
-  return Urql.useQuery<DocumentDetailsQuery>({
+  return Urql.useQuery<DocumentDetailsQuery, DocumentDetailsQueryVariables>({
     query: DocumentDetailsDocument,
     ...options,
   })
@@ -1643,7 +1647,7 @@ export const EditablePageDocument = gql`
 export function useEditablePageQuery(
   options: Omit<Urql.UseQueryArgs<EditablePageQueryVariables>, "query">
 ) {
-  return Urql.useQuery<EditablePageQuery>({
+  return Urql.useQuery<EditablePageQuery, EditablePageQueryVariables>({
     query: EditablePageDocument,
     ...options,
   })
@@ -1662,7 +1666,10 @@ export const TagDocument = gql`
 export function useTagQuery(
   options: Omit<Urql.UseQueryArgs<TagQueryVariables>, "query">
 ) {
-  return Urql.useQuery<TagQuery>({ query: TagDocument, ...options })
+  return Urql.useQuery<TagQuery, TagQueryVariables>({
+    query: TagDocument,
+    ...options,
+  })
 }
 export const MorphemeDocument = gql`
   query Morpheme($documentId: UUID, $morphemeGloss: String!) {
@@ -1687,7 +1694,10 @@ export const MorphemeDocument = gql`
 export function useMorphemeQuery(
   options: Omit<Urql.UseQueryArgs<MorphemeQueryVariables>, "query">
 ) {
-  return Urql.useQuery<MorphemeQuery>({ query: MorphemeDocument, ...options })
+  return Urql.useQuery<MorphemeQuery, MorphemeQueryVariables>({
+    query: MorphemeDocument,
+    ...options,
+  })
 }
 export const NewPageDocument = gql`
   mutation NewPage($data: JSON!) {
@@ -1725,7 +1735,10 @@ export const DocSliceDocument = gql`
 export function useDocSliceQuery(
   options: Omit<Urql.UseQueryArgs<DocSliceQueryVariables>, "query">
 ) {
-  return Urql.useQuery<DocSliceQuery>({ query: DocSliceDocument, ...options })
+  return Urql.useQuery<DocSliceQuery, DocSliceQueryVariables>({
+    query: DocSliceDocument,
+    ...options,
+  })
 }
 export const CollectionChapterDocument = gql`
   query CollectionChapter($collectionSlug: String!, $chapterSlug: String!) {
@@ -1770,10 +1783,9 @@ export const CollectionChapterDocument = gql`
 export function useCollectionChapterQuery(
   options: Omit<Urql.UseQueryArgs<CollectionChapterQueryVariables>, "query">
 ) {
-  return Urql.useQuery<CollectionChapterQuery>({
-    query: CollectionChapterDocument,
-    ...options,
-  })
+  return Urql.useQuery<CollectionChapterQuery, CollectionChapterQueryVariables>(
+    { query: CollectionChapterDocument, ...options }
+  )
 }
 export const UpdateWordDocument = gql`
   mutation UpdateWord($word: AnnotatedFormUpdate!) {
