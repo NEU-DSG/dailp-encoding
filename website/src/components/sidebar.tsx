@@ -64,7 +64,7 @@ export const MobileSidebar = () => {
       <DialogBackdrop {...dialog} className={drawerBg}>
         <Dialog
           {...dialog}
-          className={css.drawer}
+          className={css.initDrawer}
           as="nav"
           aria-label="Table of Contents"
           preventBodyScroll={true}
@@ -77,7 +77,7 @@ export const MobileSidebar = () => {
         className={navButton}
         aria-label="Open Table of Contents"
       >
-        <MdMenu size={css.iconSize} color={colors.body} />
+        <MdMenu size={css.iconSize} />
       </DialogDisclosure>
     </>
   )
