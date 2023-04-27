@@ -3,7 +3,6 @@ import { Helmet } from "react-helmet"
 import { Link, WordpressPage } from "src/components"
 import * as Dailp from "src/graphql/dailp"
 import { chapterRoute, collectionRoute } from "src/routes"
-import * as util from "src/style/utils.css"
 import CWKWLayout from "../cwkw/cwkw-layout"
 import * as css from "../cwkw/cwkw-layout.css"
 import { DocumentTitleHeader, TabSet } from "../documents/document.page"
@@ -35,10 +34,8 @@ const ChapterPage = (props: {
   return (
     <CWKWLayout>
       <Helmet title={chapter.title} />
-      <main className={util.paddedCenterColumn}>
-        <article
-          className={cx(util.fullWidth, dialog.visible && css.leftMargin)}
-        >
+      <main className={css.paddedCenterColumn}>
+        <article className={css.fullWidth}>
           {/* If this chapter contains or is a Wordpress page, display the WP page contents. */}
           {wordpressId && chapter.slug ? (
             <WordpressPage slug={`/${chapter.slug.replace(/_/g, "-")}`} />

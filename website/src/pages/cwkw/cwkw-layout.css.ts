@@ -19,11 +19,7 @@ export const headerContents = style([baseLayout.headerContents])
 
 export const subHeader = style([baseLayout.subHeader, { fontSize: "larger" }])
 
-export const siteTitle = style([
-  baseLayout.siteTitle,
-  media(mediaQueries.medium, marginY(vspace.half)),
-  { flex: 1 },
-])
+export const siteTitle = style([baseLayout.siteTitle])
 
 export const siteLink = style([baseLayout.siteLink, { display: "flex" }])
 

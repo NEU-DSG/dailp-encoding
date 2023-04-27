@@ -8,7 +8,6 @@ import CollectionTOC from "src/components/toc"
 import { drawerBg, navButton } from "src/menu.css"
 import { useDialog } from "src/pages/edited-collections/edited-collection-context"
 import "src/style/global.css"
-import { colors } from "src/style/theme-contract.css"
 import * as css from "./sidebar.css"
 
 // Renders a sidebar on the left side of the screen containing a drawer.

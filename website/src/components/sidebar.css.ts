@@ -1,6 +1,5 @@
 import { style } from "@vanilla-extract/css"
 import { padding } from "polished"
-import { navDrawer } from "src/menu.css"
 import {
   colors,
   hspace,
@@ -18,10 +17,12 @@ export const initDrawer = style([
   bgColor,
   padding(vspace.one),
   {
-    minWidth: drawerWidth,
-    maxWidth: drawerWidth,
     position: "sticky",
     top: 0,
+
+    minWidth: drawerWidth,
+    maxWidth: drawerWidth,
+    height: "100vh",
 
     zIndex: layers.top,
     overflowY: "auto",
