@@ -15,17 +15,20 @@ export const bgColor = style({ backgroundColor: "#585858" })
 export const iconSize = "32px"
 
 export const initDrawer = style([
-  navDrawer,
   bgColor,
   padding(vspace.one),
   {
+    minWidth: drawerWidth,
+    maxWidth: drawerWidth,
+    position: "sticky",
+    top: 0,
+
     zIndex: layers.top,
     overflowY: "auto",
     scrollbarGutter: "stable",
 
     "@media": {
       [mediaQueries.medium]: {
-        width: drawerWidth,
         transform: "none",
         selectors: {
           "&[data-enter]": {
@@ -73,9 +76,8 @@ export const baseNavButton = style([
         justifyContent: "center",
         alignItems: "center",
 
-        position: "fixed",
-
-        top: vspace.large,
+        position: "sticky",
+        top: 0,
 
         left: drawerWidth,
 

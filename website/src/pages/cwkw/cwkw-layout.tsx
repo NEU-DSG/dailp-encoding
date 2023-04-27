@@ -33,19 +33,8 @@ const CWKWLayout: React.FC = ({ children }) => {
         <body className={themeClass} />
       </Helmet>
 
-      <header
-        aria-label="Site Header"
-        id="header"
-        className={dialog.visible && isDesktop ? css.openHeader : css.header}
-      >
-        <div
-          className={
-            dialog.visible && isDesktop
-              ? css.openHeaderContents
-              : css.headerContents
-          }
-        >
-          {isDesktop ? <Sidebar /> : <MobileSidebar />}
+      <header aria-label="Site Header" id="header" className={css.header}>
+        <div className={css.headerContents}>
           <div className={css.contentContainer}>
             <div className={css.siteTitle}>
               <Link
@@ -63,7 +52,10 @@ const CWKWLayout: React.FC = ({ children }) => {
           <HeaderPrefDrawer color={colors.body} />
         </div>
       </header>
-      {children}
+      <div style={{ display: "flex" }}>
+        {isDesktop ? <Sidebar /> : <MobileSidebar />}
+        {children}
+      </div>
     </PreferencesProvider>
   )
 }

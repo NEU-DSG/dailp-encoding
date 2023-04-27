@@ -10,27 +10,10 @@ import {
   vspace,
 } from "src/style/constants"
 import { marginY, media, paddingX, paddingY } from "src/style/utils"
-import { hideOnPrint, row } from "src/style/utils.css"
+import * as utils from "src/style/utils.css"
 import * as baseLayout from "../../layout.css"
 
 export const header = style([baseLayout.header])
-
-export const openHeader = style([
-  paddingX(hspace.edge),
-  hideOnPrint,
-  {
-    position: "sticky",
-    backgroundColor: colors.secondary,
-    fontFamily: fonts.header,
-    "@media": {
-      [mediaQueries.medium]: {
-        position: "static",
-        display: "flex",
-        justifyContent: "center",
-      },
-    },
-  },
-])
 
 export const headerContents = style([baseLayout.headerContents])
 
@@ -49,29 +32,6 @@ export const contentContainer = style([
   { flex: 1 },
 ])
 
-export const leftMargin = style({
-  "@media": {
-    [mediaQueries.medium]: {
-      marginLeft: drawerWidth,
-      width: "100%",
-      maxWidth: hsize.large,
-    },
-  },
-})
-
-export const openHeaderContents = style([
-  row,
-  {
-    "@media": {
-      [mediaQueries.medium]: {
-        marginLeft: drawerWidth,
-        alignItems: "center",
-        width: hsize.large,
-      },
-    },
-  },
-])
-
 export const banner = style([
   margin(0),
   paddingY(vspace.medium),
@@ -84,3 +44,15 @@ export const banner = style([
     },
   },
 ])
+
+export const paddedCenterColumn = style([
+  utils.paddedCenterColumn,
+  {
+    width: "100%",
+  },
+])
+
+export const fullWidth = style({
+  width: "100%",
+  maxWidth: "50rem",
+})
