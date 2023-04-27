@@ -182,6 +182,10 @@ export const TranslationTab = ({ doc }: { doc: Document }) => {
     null
   )
 
+  useEffect(() => {
+    selectAndShowContent(null)
+  }, [doc.id])
+
   const [dialogOpen, setDialogOpen] = useState(false)
   const closeDialog = () => setDialogOpen(false)
   const openDetails = (morpheme: BasicMorphemeSegment) => {
