@@ -1,5 +1,5 @@
 import cx from "classnames"
-import { groupBy } from "lodash"
+import { groupBy } from "lodash-es"
 import pluralize from "pluralize"
 import React from "react"
 import { Helmet } from "react-helmet"
@@ -68,6 +68,6 @@ const GlossaryPage = () => {
     </Layout>
   )
 }
-export default GlossaryPage
+export const Page = GlossaryPage
 
 const wideSection = cx(fullWidth, paragraph)

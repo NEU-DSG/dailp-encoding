@@ -1,5 +1,5 @@
 import { style } from "@vanilla-extract/css"
-import { flowRight } from "lodash"
+import { flowRight } from "lodash-es"
 import { important, position } from "polished"
 import { rightButton } from "src/components/carousel.css"
 import {

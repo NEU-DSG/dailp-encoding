@@ -1,3 +1,4 @@
+import React from "react"
 import { Helmet } from "react-helmet"
 import { Link, WordpressPage } from "src/components"
 import * as Dailp from "src/graphql/dailp"
@@ -37,7 +38,9 @@ const ChapterPage = (props: {
       <main className={util.paddedCenterColumn}>
         <article className={dialog.visible ? css.leftMargin : util.fullWidth}>
           {/* If this chapter contains or is a Wordpress page, display the WP page contents. */}
-          {wordpressId ? <WordpressPage slug={`/${chapter.slug}`} /> : null}
+          {wordpressId && chapter.slug ? (
+            <WordpressPage slug={`/${chapter.slug.replace(/_/g, "-")}`} />
+          ) : null}
 
           {/* If this chapter is a document, display the document contents. */}
           {document ? (
@@ -67,4 +70,4 @@ const ChapterPage = (props: {
   )
 }
 
-export default ChapterPage
+export const Page = ChapterPage

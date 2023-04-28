@@ -1,1 +1,1 @@
-export default "/documents/:id"
+export default "/documents/@id"

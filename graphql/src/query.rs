@@ -1,6 +1,6 @@
 //! This piece of the project exposes a GraphQL endpoint that allows one to access DAILP data in a federated manner with specific queries.
 
-use dailp::{CollectionChapter, Uuid};
+use dailp::{slugify_ltree, CollectionChapter, Uuid};
 use itertools::Itertools;
 
 use {
@@ -36,6 +36,7 @@ impl Query {
         context: &Context<'_>,
         slug: String,
     ) -> FieldResult<Option<EditedCollection>> {
+        let slug = slugify_ltree(slug);
         Ok(context
             .data::<DataLoader<Database>>()?
             .load_one(dailp::EditedCollectionDetails(slug))
@@ -52,7 +53,7 @@ impl Query {
         Ok(context
             .data::<DataLoader<Database>>()?
             .loader()
-            .chapter(collection_slug, chapter_slug)
+            .chapter(slugify_ltree(collection_slug), slugify_ltree(chapter_slug))
             .await?)
     }
 

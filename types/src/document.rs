@@ -1,6 +1,6 @@
 use crate::{
-    AnnotatedForm, AudioSlice, Contributor, Database, Date, SourceAttribution, Translation,
-    TranslationBlock,
+    slugify, AnnotatedForm, AudioSlice, Contributor, Database, Date, SourceAttribution,
+    Translation, TranslationBlock,
 };
 use async_graphql::{dataloader::DataLoader, FieldResult, MaybeUndefined};
 use serde::{Deserialize, Serialize};
@@ -516,8 +516,8 @@ impl DocumentCollection {
     }
 
     /// URL-ready slug for this collection, generated from the name
-    async fn slug(&self) -> &str {
-        &self.slug
+    async fn slug(&self) -> String {
+        slugify(&self.slug)
     }
 
     /// All documents that are part of this collection

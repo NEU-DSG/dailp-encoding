@@ -3,9 +3,15 @@ import "@reach/dialog/styles.css"
 import React, { useEffect, useState } from "react"
 import { isMobile } from "react-device-detect"
 import { Helmet } from "react-helmet"
-import { MdSettings } from "react-icons/md"
-import { Dialog, DialogBackdrop, useDialogState } from "reakit/Dialog"
-import { Tab, TabList, TabPanel } from "reakit/Tab"
+import { MdSettings } from "react-icons/md/index"
+import {
+  Dialog,
+  DialogBackdrop,
+  Tab,
+  TabList,
+  TabPanel,
+  useDialogState,
+} from "reakit"
 import { navigate } from "vite-plugin-ssr/client/router"
 import { AudioPlayer, Breadcrumbs, Button, Link } from "src/components"
 import { useMediaQuery } from "src/custom-hooks"
@@ -16,20 +22,17 @@ import { drawerBg } from "src/menu.css"
 import { MorphemeDetails } from "src/morpheme"
 import { PanelDetails, PanelLayout, PanelSegment } from "src/panel-layout"
 import { usePreferences } from "src/preferences-context"
-import {
-  chapterRoute,
-  collectionRoute,
-  documentDetailsRoute,
-  documentRoute,
-} from "src/routes"
+import { chapterRoute } from "src/routes"
 import { useScrollableTabState } from "src/scrollable-tabs"
 import { AnnotatedForm, DocumentPage, TranslatedParagraph } from "src/segment"
 import { mediaQueries } from "src/style/constants"
+import { fullWidth } from "src/style/utils.css"
 import { BasicMorphemeSegment, LevelOfDetail } from "src/types"
 import PageImages from "../../page-image"
 import * as css from "./document.css"
 import { RiArrowUpCircleFill } from "react-icons/ri"
 import { fullWidth } from "src/style/utils.css"
+
 
 enum Tabs {
   ANNOTATION = "annotation-tab",
@@ -84,11 +87,13 @@ const AnnotatedDocumentPage = (props: { id: string }) => {
     </Layout>
   )
 }
-export default AnnotatedDocumentPage
+export const Page = AnnotatedDocumentPage
 
 export const TabSet = ({ doc }: { doc: Document }) => {
   const tabs = useScrollableTabState({ selectedId: Tabs.ANNOTATION })
-  const [{ data }] = Dailp.useDocumentDetailsQuery({ variables: { slug: doc.slug! } })
+  const [{ data }] = Dailp.useDocumentDetailsQuery({
+    variables: { slug: doc.slug! },
+  })
   const docData = data?.document
   if (!docData) {
     return null
@@ -170,7 +175,10 @@ export const TabSet = ({ doc }: { doc: Document }) => {
         {docData.sources.length > 0 ? (
           <section className={fullWidth}>
             Original document provided courtesy of{" "}
-            <Link href={docData.sources[0]!.link}>{docData.sources[0]!.name}</Link>.
+            <Link href={docData.sources[0]!.link}>
+              {docData.sources[0]!.name}
+            </Link>
+            .
           </section>
         ) : null}
       </TabPanel>

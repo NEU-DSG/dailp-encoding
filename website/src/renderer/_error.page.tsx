@@ -1,9 +1,9 @@
 import React from "react"
+import { useHasMounted } from "src/cms/routes"
 import Link from "src/components/link"
 import * as Dailp from "src/graphql/dailp"
+import Layout from "src/layout"
 import { useLocation } from "src/renderer/PageShell"
-import { useHasMounted } from "../cms/routes"
-import Layout from "../layout"
 
 /* import { EditablePageContents } from "../templates/editable-page" */
 
@@ -11,11 +11,10 @@ import Layout from "../layout"
  Handle client-only routes for pages that haven't been statically renderered
  yet, or those only available to authenticated users.
  */
-const NotFoundPage = () => {
+export const Page = () => {
   const content = useHasMounted() ? <ClientPage /> : <NotFound />
   return <Layout>{content}</Layout>
 }
-export default NotFoundPage
 
 const ClientPage = () => {
   const location = useLocation()
