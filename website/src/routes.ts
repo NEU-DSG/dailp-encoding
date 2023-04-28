@@ -1,4 +1,4 @@
-import { kebabCase } from "lodash"
+import { kebabCase } from "lodash-es"
 
 export const documentRoute = (slug: string) => `/documents/${slug}`
 

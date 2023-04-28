@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react"
-import { TabInitialState, useTabState } from "reakit/Tab"
+import { TabInitialState, useTabState } from "reakit"
 
 /** Retains scroll position for each tab */
 export const useScrollableTabState = (initialState?: TabInitialState) => {

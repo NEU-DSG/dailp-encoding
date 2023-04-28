@@ -1,12 +1,13 @@
 import React, { useEffect } from "react"
 import { Helmet } from "react-helmet"
 import { navigate } from "vite-plugin-ssr/client/router"
-import { Link } from "src/components"
+import { Link, WordpressPage } from "src/components"
 import { useRouteParams } from "src/renderer/PageShell"
+import { chapterRoute } from "src/routes"
 import * as util from "src/style/utils.css"
 import CWKWLayout from "../cwkw/cwkw-layout"
 import * as css from "../cwkw/cwkw-layout.css"
-import { useDialog } from "./edited-collection-context"
+import { useChapters, useDialog } from "./edited-collection-context"
 
 function redirectUrl(collectionSlug: string) {
   if (collectionSlug != "cwkw") {
@@ -33,6 +34,9 @@ const EditedCollectionPage = () => {
   const { collectionSlug } = useRouteParams()
   const dialog = useDialog()
 
+  const chapters = useChapters()
+  const firstChapter = chapters ? chapters[0] : null
+
   useEffect(() => {
     redirectUrl(collectionSlug!)
   }, [collectionSlug])
@@ -56,39 +60,19 @@ const EditedCollectionPage = () => {
             A digital collection presented by{" "}
             <Link href="https://dailp.northeastern.edu/">DAILP</Link>
           </h3>
-          <p>
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
-            eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim
-            ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut
-            aliquip ex ea commodo consequat. Duis aute irure dolor in
-            reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla
-            pariatur. Excepteur sint occaecat cupidatat non proident, sunt in
-            culpa qui officia deserunt mollit anim id est laborum.
-          </p>
-          <p>
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
-            eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim
-            ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut
-            aliquip ex ea commodo consequat. Duis aute irure dolor in
-            reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla
-            pariatur. Excepteur sint occaecat cupidatat non proident, sunt in
-            culpa qui officia deserunt mollit anim id est laborum.
-          </p>
-          <p>
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
-            eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim
-            ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut
-            aliquip ex ea commodo consequat. Duis aute irure dolor in
-            reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla
-            pariatur. Excepteur sint occaecat cupidatat non proident, sunt in
-            culpa qui officia deserunt mollit anim id est laborum.
-          </p>
+
+          <WordpressPage slug={`/${collectionSlug}`} />
+
           <h3>
-            <Link href="#">Begin reading</Link>
+            {firstChapter ? (
+              <Link href={chapterRoute(collectionSlug!, firstChapter.slug)}>
+                Begin reading
+              </Link>
+            ) : null}
           </h3>
         </article>
       </main>
     </CWKWLayout>
   )
 }
-export default EditedCollectionPage
+export const Page = EditedCollectionPage

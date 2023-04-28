@@ -6745,6 +6745,8 @@ export enum TimezoneEnum {
   AmericaChicago = "AMERICA_CHICAGO",
   /** Chihuahua */
   AmericaChihuahua = "AMERICA_CHIHUAHUA",
+  /** Ciudad Juarez */
+  AmericaCiudadJuarez = "AMERICA_CIUDAD_JUAREZ",
   /** Costa Rica */
   AmericaCostaRica = "AMERICA_COSTA_RICA",
   /** Creston */
@@ -6887,8 +6889,6 @@ export enum TimezoneEnum {
   AmericaOjinaga = "AMERICA_OJINAGA",
   /** Panama */
   AmericaPanama = "AMERICA_PANAMA",
-  /** Pangnirtung */
-  AmericaPangnirtung = "AMERICA_PANGNIRTUNG",
   /** Paramaribo */
   AmericaParamaribo = "AMERICA_PARAMARIBO",
   /** Phoenix */
@@ -8621,7 +8621,10 @@ export const PageDocument = gql`
 export function usePageQuery(
   options: Omit<Urql.UseQueryArgs<PageQueryVariables>, "query">
 ) {
-  return Urql.useQuery<PageQuery>({ query: PageDocument, ...options })
+  return Urql.useQuery<PageQuery, PageQueryVariables>({
+    query: PageDocument,
+    ...options,
+  })
 }
 export const PageIndexDocument = gql`
   query PageIndex {
@@ -8640,7 +8643,10 @@ export const PageIndexDocument = gql`
 export function usePageIndexQuery(
   options?: Omit<Urql.UseQueryArgs<PageIndexQueryVariables>, "query">
 ) {
-  return Urql.useQuery<PageIndexQuery>({ query: PageIndexDocument, ...options })
+  return Urql.useQuery<PageIndexQuery, PageIndexQueryVariables>({
+    query: PageIndexDocument,
+    ...options,
+  })
 }
 export const MenuByIdDocument = gql`
   query MenuByID($id: Int!) {
@@ -8667,5 +8673,8 @@ export const MenuByIdDocument = gql`
 export function useMenuByIdQuery(
   options: Omit<Urql.UseQueryArgs<MenuByIdQueryVariables>, "query">
 ) {
-  return Urql.useQuery<MenuByIdQuery>({ query: MenuByIdDocument, ...options })
+  return Urql.useQuery<MenuByIdQuery, MenuByIdQueryVariables>({
+    query: MenuByIdDocument,
+    ...options,
+  })
 }
