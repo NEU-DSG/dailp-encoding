@@ -260,7 +260,6 @@ query DocSlice(
 ) {
   document(slug: $slug) {
     title
-    url
     audioRecording {
       resourceUrl
       startTime
