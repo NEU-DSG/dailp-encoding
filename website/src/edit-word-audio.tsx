@@ -8,174 +8,42 @@ import { VisuallyHidden } from "reakit"
 import { v4 } from "uuid"
 import { useUser } from "./auth"
 import { AudioPlayer } from "./components"
-import { Button, CleanButton, IconTextButton } from "./components/button"
+import { CleanButton, IconTextButton } from "./components/button"
 import { subtleButton, subtleButtonActive } from "./edit-word-feature.css"
 import * as Dailp from "./graphql/dailp"
 import { WordAudio } from "./panel-layout"
+import { withClass } from "./style/utils"
+import { MediaPermissionStatus, useMediaRecorder } from "./use-media-recorder"
 
-enum MediaPermissionStatus {
-  UNREQUESTED,
-  NOT_SUPPORTED,
-  PENDING_APPROVAL,
-  DENIED,
-  APPROVED,
-}
+const Button = withClass(subtleButton, CleanButton)
 
-type RecordingStatus = {
-  isRecording: boolean
-  lastRecording?: { data: Blob; url: string }
-  currentRecordingChunks: Blob[]
-}
+function useAudioUpload(wordId: string) {
+  const { user } = useUser()
+  const [_wordUpdateResult, updateWord] = Dailp.useUpdateWordMutation()
 
-type UnapprovedState = {
-  permissionStatus: Exclude<
-    MediaPermissionStatus,
-    MediaPermissionStatus.APPROVED
-  >
-  recordingStatus?: undefined
-  mediaRecorder?: undefined
-}
-
-type ApprovedState = {
-  permissionStatus: MediaPermissionStatus.APPROVED
-  recordingStatus: RecordingStatus
-  mediaRecorder: MediaRecorder
-}
-
-type UseMediaRecorderState = UnapprovedState | ApprovedState
-
-function useMediaRecorder() {
-  const mediaSupported = useMemo(
+  const uploadAudio = useMemo(
     () =>
-      Boolean(navigator.mediaDevices && navigator.mediaDevices.getUserMedia),
-    []
+      async function (data: Blob) {
+        const { resourceUrl } = await uploadContributorAudioToS3(user!, data)
+        await updateWord({
+          word: {
+            id: wordId,
+            commentary: null,
+            source: null,
+            contributorAudioUrl: resourceUrl,
+          },
+        })
+      },
+    [user, updateWord, wordId]
   )
-  const [state, setState] = useState<UseMediaRecorderState>({
-    permissionStatus: mediaSupported
-      ? MediaPermissionStatus.UNREQUESTED
-      : MediaPermissionStatus.NOT_SUPPORTED,
-  })
 
-  function requestMediaPermissions() {
-    if (
-      navigator.mediaDevices &&
-      navigator.mediaDevices.getUserMedia &&
-      [
-        MediaPermissionStatus.UNREQUESTED,
-        MediaPermissionStatus.DENIED,
-      ].includes(state.permissionStatus)
-    ) {
-      setState({
-        permissionStatus: MediaPermissionStatus.PENDING_APPROVAL,
-      })
-      navigator.mediaDevices
-        .getUserMedia(
-          // constraints - only audio needed for this app
-          {
-            audio: true,
-          }
-        )
-
-        // Success callback
-        .then((stream) => {
-          const recorder = new MediaRecorder(stream)
-          recorder.ondataavailable = (e) => {
-            setState((s) => {
-              if (s.permissionStatus !== MediaPermissionStatus.APPROVED)
-                return s
-              else
-                return {
-                  ...s,
-                  recordingStatus: {
-                    ...s.recordingStatus,
-                    currentRecordingChunks: [
-                      ...s.recordingStatus.currentRecordingChunks,
-                      e.data,
-                    ],
-                  },
-                }
-            })
-          }
-          recorder.onstop = (e) => {
-            setState((s) => {
-              if (
-                s.permissionStatus !== MediaPermissionStatus.APPROVED ||
-                s.recordingStatus.isRecording === false
-              )
-                return s
-
-              const recordingBlob = new Blob(
-                s.recordingStatus.currentRecordingChunks,
-                {
-                  // what is the correct spec here?
-                  type: "audio/ogg; codecs=opus",
-                }
-              )
-
-              return {
-                ...s,
-                recordingStatus: {
-                  ...s.recordingStatus,
-                  isRecording: false,
-                  currentRecordingChunks: [],
-                  lastRecording: {
-                    data: recordingBlob,
-                    url: window.URL.createObjectURL(recordingBlob),
-                  },
-                },
-              }
-            })
-          }
-
-          setState({
-            mediaRecorder: recorder,
-            permissionStatus: MediaPermissionStatus.APPROVED,
-            recordingStatus: {
-              isRecording: false,
-              currentRecordingChunks: [],
-            },
-          })
-        })
-
-        // Error callback
-        .catch((err) => {
-          setState({
-            permissionStatus: MediaPermissionStatus.DENIED,
-          })
-        })
-    }
-  }
-
-  if (state.permissionStatus !== MediaPermissionStatus.APPROVED)
-    return {
-      permissionStatus: state.permissionStatus,
-      requestMediaPermissions,
-    }
-  else
-    return {
-      permissionStatus: state.permissionStatus,
-      recordingStatus: state.recordingStatus,
-      startRecording() {
-        // don't restart recording...?
-        if (state.recordingStatus.isRecording) return
-
-        setState({
-          ...state,
-          recordingStatus: { ...state.recordingStatus, isRecording: true },
-        })
-        state.mediaRecorder.start()
-      },
-      stopRecording() {
-        // don't stop recording if we aren't recording
-        if (!state.recordingStatus.isRecording) return
-        state.mediaRecorder.stop()
-      },
-    }
+  return uploadAudio
 }
 
 export const EditWordAudio = (p: { word: Dailp.FormFieldsFragment }) => {
   const [currentTab, setCurrentTab] = useState<"upload" | "record">()
   const [selectedFile, setSelectedFile] = useState<File>()
+  const uploadAudio = useAudioUpload(p.word.id)
 
   function onFileChanged(event: ChangeEvent<HTMLInputElement>) {
     if (!event.currentTarget.files) return
@@ -235,21 +103,26 @@ export const EditWordAudio = (p: { word: Dailp.FormFieldsFragment }) => {
       </div>
 
       {currentTab === "upload" && (
-        <UploadAudioSection selectedFile={selectedFile} />
+        <UploadAudioSection
+          selectedFile={selectedFile}
+          uploadAudio={uploadAudio}
+        />
       )}
 
-      {currentTab === "record" && <RecordAudioSection />}
+      {currentTab === "record" && (
+        <RecordAudioSection uploadAudio={uploadAudio} />
+      )}
     </div>
   )
 }
 
 function UploadAudioSection({
   selectedFile,
+  uploadAudio,
 }: {
   selectedFile?: File
+  uploadAudio: (data: Blob) => Promise<void>
 }): ReactElement {
-  const { user } = useUser()
-
   const selectedFileDataUrl = useMemo(
     () => selectedFile && window.URL.createObjectURL(selectedFile),
     [selectedFile]
@@ -265,27 +138,34 @@ function UploadAudioSection({
 
   return (
     <>
+      <em>
+        Below is the audio you selected. If you would like to select a different
+        file click "Upload audio" again.
+      </em>
       <AudioPlayer showProgress audioUrl={selectedFileDataUrl} />
       <CleanButton
         className={subtleButton}
         onClick={() => {
-          user && uploadToS3(user, selectedFile)
+          uploadAudio(selectedFile)
         }}
       >
-        Upload to s3
+        Save audio
       </CleanButton>
     </>
   )
 }
 
-function RecordAudioSection(): ReactElement {
-  const { user } = useUser()
-
+function RecordAudioSection({
+  uploadAudio,
+}: {
+  uploadAudio: (data: Blob) => Promise<void>
+}): ReactElement {
   const {
     permissionStatus,
     recordingStatus,
     startRecording,
     stopRecording,
+    clearRecording,
     requestMediaPermissions,
   } = useMediaRecorder()
 
@@ -303,36 +183,55 @@ function RecordAudioSection(): ReactElement {
 
   return (
     <div>
-      <Button
-        onClick={() =>
-          recordingStatus.isRecording ? stopRecording() : startRecording()
-        }
-      >
-        {recordingStatus.isRecording ? "Stop" : "Start"} recording
-      </Button>
-      {recordingStatus.lastRecording && (
+      <em>
+        Below are the controls to record audio on your device now. If you are
+        happy with your recording, you can hit "Save audio" below.
+      </em>
+      {recordingStatus.lastRecording === undefined ? (
+        <Button
+          onClick={() =>
+            recordingStatus.isRecording ? stopRecording() : startRecording()
+          }
+        >
+          {recordingStatus.isRecording ? "Stop" : "Start"} recording
+        </Button>
+      ) : (
         <>
           <AudioPlayer
             audioUrl={recordingStatus.lastRecording.url}
             showProgress
           />
-          <Button
-            onClick={() => {
-              user && uploadToS3(user, recordingStatus.lastRecording!.data)
+          <div
+            style={{
+              display: "flex",
+              textAlign: "center",
+              justifyContent: "space-between",
             }}
           >
-            Upload to s3
-          </Button>
+            <Button
+              onClick={() => {
+                uploadAudio(recordingStatus.lastRecording!.data)
+              }}
+            >
+              Save audio
+            </Button>
+            <Button
+              onClick={() => {
+                clearRecording()
+              }}
+            >
+              Delete recording
+            </Button>
+          </div>
         </>
       )}
     </div>
   )
 }
 
-function uploadToS3(user: CognitoUser, data: Blob) {
+async function uploadContributorAudioToS3(user: CognitoUser, data: Blob) {
   // Get the Amazon Cognito ID token for the user. 'getToken()' below.
   const REGION = process.env["DAILP_AWS_REGION"]
-  console.log(process.env)
   const BUCKET = `dailp-${
     process.env["NODE_ENV"] === "production" ? "prod" : "dev"
   }-media-storage`
@@ -355,11 +254,14 @@ function uploadToS3(user: CognitoUser, data: Blob) {
     }),
   })
 
-  s3Client.send(
+  const key = `user-uploaded-audio/${v4()}`
+  await s3Client.send(
     new PutObjectCommand({
       Body: data,
       Bucket: BUCKET,
-      Key: `user-uploaded-audio/${v4()}`,
+      Key: key,
     })
   )
+
+  return { resourceUrl: `https://d1q0qkah8ttfau.cloudfront.net/${key}` }
 }
