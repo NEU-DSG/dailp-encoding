@@ -192,8 +192,9 @@ impl DrsRes {
         let val = self.canonical_object.get_first_object_pid();
         if val.is_none() {
             String::from("")
+        } else {
+            val.unwrap().clone()
         }
-        val.unwrap().clone()
     }
 }
 
