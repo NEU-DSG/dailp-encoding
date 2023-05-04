@@ -4,6 +4,19 @@ The docs here describe every single one of our database tables and columns.
 If you write a database schema migration, you should change the corresponding docs in this folder to match the new shape of the database.
 If you work with database tables that aren't sufficiently documented here, please add!
 
+## How to write a new migration
+
+To create a migration file, use the follow command inside your `nix develop` shell.
+
+```zsh
+cd types
+sqlx migrate add <migration_description>
+```
+
+To test your migration without clearing your database, run `sqlx migrate run`.
+
+Other developers will get your migrations when they run `dev-migrate-schema`.
+
 ## Abbreviations in this Folder
 
 Most of our columns are `not null`, which is long to write so we introduced shorthand for describing database columns.
