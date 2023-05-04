@@ -2,7 +2,9 @@
 
 ## `user`
 
-Metadata assocated with a user. `user.id` on this table is equal to `sub` in AWS.
+Metadata assocated with a user. `user.id` on this table is equal to `sub` in
+AWS. Users are not to be confused with `contributor` entires, which are imported
+from Google Sheets.
 
 | column         | type    | description                                        |
 | -------------- | ------- | -------------------------------------------------- |
