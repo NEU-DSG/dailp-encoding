@@ -433,6 +433,23 @@ impl Database {
         .execute(&self.client)
         .await?;
 
+        println!("Update word is running!");
+
+        if let async_graphql::MaybeUndefined::Value(contributor_audio_url) =
+            word.contributor_audio_url
+        {
+            // query_file!(
+            //     "queries/upsert_contributor_word_audio.sql",
+            //     &contributorAudioUrl as _
+            // )
+            // .excecute(&self.client)
+            // .await?()
+            println!(
+                "Contributor audio uploaded by user {}",
+                contributor_audio_url
+            )
+        }
+
         Ok(word.id)
     }
 

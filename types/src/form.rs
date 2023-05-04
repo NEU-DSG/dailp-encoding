@@ -287,6 +287,9 @@ pub struct AnnotatedFormUpdate {
     pub source: MaybeUndefined<String>,
     /// Possible update to commentary
     pub commentary: MaybeUndefined<String>,
+    /// A URL to a Cloudfront-proxied user-recorded pronunciation of a word.
+    /// A new resource will be created to represent the recording if one does not exist already
+    pub contributor_audio_url: MaybeUndefined<String>,
 }
 
 /// Trait that defines function which takes in a possibly undefined value.

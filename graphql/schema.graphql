@@ -177,6 +177,11 @@ input AnnotatedFormUpdate {
 	Possible update to commentary
 	"""
 	commentary: String
+	"""
+	A URL to a Cloudfront-proxied user-recorded pronunciation of a word.
+	A new resource will be created to represent the recording if one does not exist already
+	"""
+	contributorAudioUrl: String
 }
 
 """

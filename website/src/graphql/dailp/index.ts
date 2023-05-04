@@ -179,6 +179,11 @@ export type AnnotatedFormSegmentsArgs = {
 export type AnnotatedFormUpdate = {
   /** Possible update to commentary */
   readonly commentary: InputMaybe<Scalars["String"]>
+  /**
+   * A URL to a Cloudfront-proxied user-recorded pronunciation of a word.
+   * A new resource will be created to represent the recording if one does not exist already
+   */
+  readonly contributorAudioUrl: InputMaybe<Scalars["String"]>
   /** Unique identifier of the form */
   readonly id: Scalars["UUID"]
   /** Possible update to source content */
