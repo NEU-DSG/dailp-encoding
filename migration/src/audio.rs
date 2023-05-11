@@ -191,9 +191,9 @@ impl DrsRes {
     fn get_url(&self) -> String {
         let val = self.canonical_object.get_first_object_pid();
         if val.is_none() {
-            String::from("")
+            return String::from("")
         }
-        val.unwrap().clone()
+        return val.unwrap().clone()
     }
 }
 
