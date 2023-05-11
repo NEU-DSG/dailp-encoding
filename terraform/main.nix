@@ -24,6 +24,7 @@ in {
     ./database-sql.nix
     ./bastion-host.nix
     ./media-storage.nix
+    ./user-roles.nix
   ];
 
   # Gives all modules access to which stage we're deploying to, while also
