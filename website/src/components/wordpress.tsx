@@ -70,10 +70,13 @@ export const WordpressPageContents = ({
 const parseOptions: HTMLReactParserOptions = {
   replace(node) {
     const style = /\[(\w*):([0-9]*)-?([0-9]*)?:?(audio)?(join)?\]/ // [DocName:Start(-OptionalEnd):?(audio?)(join?)]
+    const blockStyle = /\{[\s\S]*\}/ // { ... }
+    const tabStyle = /\|\s*\w*\s*\|[\s\S]*?(?=\||$)/ // | Label | ...Content...
 
-    if ("data" in node) {
+    if ("data" in node) {  
       const segments = node.data.match(style)?.filter((x) => !!x)
-
+      const blocks = node.data.match(blockStyle)?.filter((x) => !!x)
+      const tabs = node.data.match(tabStyle)?.filter((x) => !!x)
       if (
         segments &&
         segments.length > 2 &&
@@ -96,6 +99,10 @@ const parseOptions: HTMLReactParserOptions = {
           />
         )
       }
+
+      if (blocks) {
+        console.log(blocks)
+      }
     }
 
     if ("name" in node && "attribs" in node) {
@@ -113,6 +120,14 @@ const parseOptions: HTMLReactParserOptions = {
             {domToReact(node.children, parseOptions)}
           </Button>
         )
+      }
+    }
+
+    if ("data" in node) {
+      const testCond = node.data.match(bracketEnv)?.filter((x) => !!x)
+      const tabStyle = /\|*\|*/
+      if (testCond) {
+
       }
     }
     return undefined
