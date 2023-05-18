@@ -5,12 +5,12 @@
 A timed media resource like video or audio, from an external source.
 The main use case is audio recordings of each document.
 
-| column        | type            | description                                                                                  |
-| ------------- | --------------- | -------------------------------------------------------------------------------------------- |
-| `id`          | `uuid`          | Primary key                                                                                  |
-| `url`         | `text`          | Full URL for this media resource                                                             |
-| `recorded_at` | `date?`         | Date and time this resource was created                                                      |
-| `recorded_by` | `uuid? -> user` | The user that recorded this audio, if the audio was recorded by a Contributor on the website |
+| column        | type                  | description                                                                                  |
+| ------------- | --------------------- | -------------------------------------------------------------------------------------------- |
+| `id`          | `uuid`                | Primary key                                                                                  |
+| `url`         | `text`                | Full URL for this media resource                                                             |
+| `recorded_at` | `date?`               | Date and time this resource was created                                                      |
+| `recorded_by` | `uuid? -> dailp_user` | The user that recorded this audio, if the audio was recorded by a Contributor on the website |
 
 - Deleting also deletes all `media_slice` rows that reference it
 
