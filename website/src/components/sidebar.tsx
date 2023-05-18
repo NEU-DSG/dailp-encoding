@@ -1,30 +1,41 @@
 import "@fontsource/quattrocento-sans/latin.css"
+import cx from "classnames"
 import "normalize.css"
-import React, { useEffect } from "react"
-import { BsArrowBarLeft, BsArrowBarRight } from "react-icons/bs/index"
+import React, { useEffect, useState } from "react"
 import { MdMenu } from "react-icons/md/index"
 import { Dialog, DialogBackdrop, DialogDisclosure } from "reakit"
 import CollectionTOC from "src/components/toc"
 import { drawerBg, navButton } from "src/menu.css"
 import { useDialog } from "src/pages/edited-collections/edited-collection-context"
 import "src/style/global.css"
-import { colors } from "src/style/theme-contract.css"
 import * as css from "./sidebar.css"
 
 // Renders a sidebar on the left side of the screen containing a drawer.
 export const Sidebar = () => {
+  // On load, make sure drawer is initially visible and is non-modal for desktop screens.
   const dialog = useDialog()
 
-  // On load, make sure drawer appears for desktop screens.
+  // State variable that checks whether this component has loaded in.
+  const [loaded, setLoaded] = useState(false)
+
   useEffect(() => {
     dialog.setVisible(true)
+    dialog.setModal(false)
   }, [])
+
+  useEffect(() => {
+    // If this sidebar's dialog has already animated, set the loaded state to true.
+    if (dialog.animating) {
+      setLoaded(true)
+    }
+  }, [dialog.visible])
 
   return (
     <>
       <Dialog
         {...dialog}
-        className={css.drawer}
+        // If the component has already loaded in, display the drawer with transitions.
+        className={cx(css.initDrawer, loaded && css.drawer)}
         as="nav"
         aria-label="Table of Contents"
       >
@@ -32,14 +43,10 @@ export const Sidebar = () => {
       </Dialog>
       <DialogDisclosure
         {...dialog}
-        className={css.desktopNav}
+        className={cx(css.baseNavButton, !dialog.visible && css.closeNavButton)}
         aria-label="Open Table of Contents"
       >
-        {dialog.visible ? (
-          <BsArrowBarLeft size={css.iconSize} className={css.openNav} />
-        ) : (
-          <BsArrowBarRight size={css.iconSize} className={css.closedNav} />
-        )}
+        <MdMenu size={css.iconSize} />
       </DialogDisclosure>
     </>
   )
@@ -56,7 +63,7 @@ export const MobileSidebar = () => {
       <DialogBackdrop {...dialog} className={drawerBg}>
         <Dialog
           {...dialog}
-          className={css.drawer}
+          className={css.initDrawer}
           as="nav"
           aria-label="Table of Contents"
           preventBodyScroll={true}
@@ -69,7 +76,7 @@ export const MobileSidebar = () => {
         className={navButton}
         aria-label="Open Table of Contents"
       >
-        <MdMenu size={css.iconSize} color={colors.body} />
+        <MdMenu size={css.iconSize} />
       </DialogDisclosure>
     </>
   )

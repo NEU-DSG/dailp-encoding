@@ -33,21 +33,10 @@ const CWKWLayout: React.FC = ({ children }) => {
         <body className={themeClass} />
       </Helmet>
 
-      <header
-        aria-label="Site Header"
-        id="header"
-        className={dialog.visible && isDesktop ? css.openHeader : css.header}
-      >
-        <div
-          className={
-            dialog.visible && isDesktop
-              ? css.openHeaderContents
-              : css.headerContents
-          }
-        >
-          {isDesktop ? <Sidebar /> : <MobileSidebar />}
+      <header aria-label="Site Header" id="header" className={css.header}>
+        <div className={css.headerContents}>
           <div className={css.contentContainer}>
-            <h1 className={css.siteTitle}>
+            <div className={css.siteTitle}>
               <Link
                 className={css.siteLink}
                 href={collectionRoute(collectionSlug!)}
@@ -58,12 +47,15 @@ const CWKWLayout: React.FC = ({ children }) => {
                   className={css.banner}
                 />
               </Link>
-            </h1>
+            </div>
           </div>
           <HeaderPrefDrawer color={colors.body} />
         </div>
       </header>
-      {children}
+      <div style={{ display: "flex" }}>
+        {isDesktop ? <Sidebar /> : <MobileSidebar />}
+        {children}
+      </div>
     </PreferencesProvider>
   )
 }
