@@ -12,7 +12,7 @@ mod translations;
 
 use anyhow::Result;
 use dailp::{Database, Uuid};
-use log::{error};
+use log::error;
 use std::time::Duration;
 
 pub const METADATA_SHEET_NAME: &str = "Metadata";
