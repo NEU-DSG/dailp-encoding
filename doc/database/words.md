@@ -13,7 +13,7 @@
 | `commentary`             | `text?`                  | Linguistic or historical commentary supplied by an annotator                                        |
 | `audio_slice_id`         | `uuid? -> media_slice`   | Audio recording of the word read aloud, as ingested from Google Sheets.                             |
 | `curated_audio_slice_id` | `uuid? -> media_slice`   | A Contributor audio recording of the word read aloud, which has been selected by an Editor          |
-| `audio_curated_by`       | `uuid? -> user`          | The Editor who selected the Contributor audio recording to show, if one has been selected           |
+| `audio_curated_by`       | `uuid? -> dailp_user`    | The Editor who selected the Contributor audio recording to show, if one has been selected           |
 | `document_id`            | `uuid -> document`       | Document the word is in                                                                             |
 | `page_number`            | `text?`                  | Page number, only supplied for documents like dictionaries that may not have `document_page` rows   |
 | `index_in_document`      | `bigint`                 | Position of the word in the whole document                                                          |
