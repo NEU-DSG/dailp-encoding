@@ -69,32 +69,38 @@ export const WordpressPageContents = ({
 
 const parseOptions: HTMLReactParserOptions = {
   replace(node) {
-    const style = /\[(\w*):([0-9]*)-?([0-9]*)?:?(audio)?(join)?\]/ // [DocName:Start(-OptionalEnd):?(audio?)(join?)]
+    const wordEmbedStyle = /\[(\w*):([0-9]*)-?([0-9]*)?:?(audio)?(join)?\]/ // [DocName:Start(-End?):?(audio?)(join?)]
+    const referenceEmbedStyle = /\[(\w*)\]/ // [search | glossary]
 
     if ("data" in node) {
-      const segments = node.data.match(style)?.filter((x) => !!x)
+      const wordSegments = node.data.match(wordEmbedStyle)?.filter((x) => !!x)
+      const referenceSegments = node.data.match(referenceEmbedStyle)?.filter((x) => !!x)
 
       if (
-        segments &&
-        segments.length > 2 &&
-        (segments[3] === "audio" || segments[4] === "audio")
+        wordSegments &&
+        wordSegments.length > 2 &&
+        (wordSegments[3] === "audio" || wordSegments[4] === "audio")
       ) {
         return (
           <PullAudio
-            slug={segments[1]!}
-            first={parseInt(segments[2]!)}
-            last={segments[3] !== "audio" ? parseInt(segments[3]!) : undefined}
-            combined={segments[4] === "join" || segments[5] === "join"}
+            slug={wordSegments[1]!}
+            first={parseInt(wordSegments[2]!)}
+            last={wordSegments[3] !== "audio" ? parseInt(wordSegments[3]!) : undefined}
+            combined={wordSegments[4] === "join" || wordSegments[5] === "join"}
           />
         )
-      } else if (segments && segments.length > 2) {
+      } else if (wordSegments && wordSegments.length > 2) {
         return (
           <PullWords
-            slug={segments[1]!}
-            first={parseInt(segments[2]!)}
-            last={segments.length >= 4 ? parseInt(segments[3]!) : undefined}
+            slug={wordSegments[1]!}
+            first={parseInt(wordSegments[2]!)}
+            last={wordSegments.length >= 4 ? parseInt(wordSegments[3]!) : undefined}
           />
         )
+      }
+
+      if (referenceSegments && referenceSegments[1] === "search") {
+        return (<>A search bar will appear here</>)
       }
     }
 
