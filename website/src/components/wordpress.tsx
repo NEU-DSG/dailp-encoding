@@ -1,8 +1,12 @@
 import parse, {
+  DOMNode,
   HTMLReactParserOptions,
   attributesToProps,
   domToReact,
+  htmlToDOM,
 } from "html-react-parser"
+import * as domhandler from "domhandler"
+import { isText } from "domhandler"
 import React from "react"
 import { AudioPlayer, Button, Link } from "src/components"
 import * as Dailp from "src/graphql/dailp"
@@ -11,9 +15,17 @@ import { usePreferences } from "src/preferences-context"
 import { useRouteParams } from "src/renderer/PageShell"
 import { AnnotatedForm } from "src/segment"
 import { annotationSection } from "src/segment.css"
-import { wordpressUrl } from "src/theme.css"
+import { wordpressUrl, devUrl, prodUrl } from "src/theme.css"
 import { LevelOfDetail } from "src/types"
 import * as printLessonCSS from "./print-lesson.css"
+import * as css from "../pages/documents/document.css"
+import {
+  useTabState,
+  Tab,
+  TabList,
+  TabPanel,
+} from "reakit"
+import { useScrollableTabState } from "src/scrollable-tabs"
 
 interface Props {
   slug: string
@@ -69,67 +81,26 @@ export const WordpressPageContents = ({
 
 const parseOptions: HTMLReactParserOptions = {
   replace(node) {
-    const style = /\[(\w*):([0-9]*)-?([0-9]*)?:?(audio)?(join)?\]/ // [DocName:Start(-OptionalEnd):?(audio?)(join?)]
-    const blockStyle = /\{[\s\S]*\}/ // { ... }
-    const tabStyle = /\|\s*\w*\s*\|[\s\S]*?(?=\||$)/ // | Label | ...Content...
-
     if ("data" in node) {  
+      const style = /\[(\w*):([0-9]*)-?([0-9]*)?:?(audio)?(join)?\]/ // [DocName:Start(-OptionalEnd):?(audio?)(join?)]
       const segments = node.data.match(style)?.filter((x) => !!x)
-      const blocks = node.data.match(blockStyle)?.filter((x) => !!x)
-      const tabs = node.data.match(tabStyle)?.filter((x) => !!x)
-      if (
-        segments &&
-        segments.length > 2 &&
-        (segments[3] === "audio" || segments[4] === "audio")
-      ) {
-        return (
-          <PullAudio
-            slug={segments[1]!}
-            first={parseInt(segments[2]!)}
-            last={segments[3] !== "audio" ? parseInt(segments[3]!) : undefined}
-            combined={segments[4] === "join" || segments[5] === "join"}
-          />
-        )
-      } else if (segments && segments.length > 2) {
-        return (
-          <PullWords
-            slug={segments[1]!}
-            first={parseInt(segments[2]!)}
-            last={segments.length >= 4 ? parseInt(segments[3]!) : undefined}
-          />
-        )
+      if (segments) {
+        return parseWord(segments)
       }
-
-      if (blocks) {
-        console.log(blocks)
-      }
-    }
-
-    if ("name" in node && "attribs" in node) {
-      // Replace WordPress links with absolute local paths.
-      // "https://wp.dailp.northeastern.edu/" => "/"
+    } else if ("name" in node && "attribs" in node) {
       if (node.name === "a") {
-        const props = attributesToProps(node.attribs)
-        if (props["href"]?.startsWith(wordpressUrl)) {
-          props["href"] = props["href"].slice(wordpressUrl.length)
-        }
-        return <Link {...props}>{domToReact(node.children, parseOptions)}</Link>
+        return urlToAbsolutePath(node.attribs, node.children)
       } else if (node.name === "button") {
         return (
           <Button {...attributesToProps(node.attribs)}>
             {domToReact(node.children, parseOptions)}
           </Button>
         )
+      } else if (node.name === "div" && node.attribs["class"]?.includes("wpTabs")) {
+        return nodesToTabs(node.children)
       }
     }
 
-    if ("data" in node) {
-      const testCond = node.data.match(bracketEnv)?.filter((x) => !!x)
-      const tabStyle = /\|*\|*/
-      if (testCond) {
-
-      }
-    }
     return undefined
   },
 }
@@ -256,5 +227,97 @@ const PullWords = (props: {
         />
       ))}
     </div>
+  )
+}
+
+function parseWord(segments: string[] ): JSX.Element | undefined {
+  if (
+    segments.length > 2 &&
+    (segments[3] === "audio" || segments[4] === "audio")
+  ) {
+    return (
+      <PullAudio
+        slug={segments[1]!}
+        first={parseInt(segments[2]!)}
+        last={segments[3] !== "audio" ? parseInt(segments[3]!) : undefined}
+        combined={segments[4] === "join" || segments[5] === "join"}
+      />
+    )
+  } else if (segments.length > 2) {
+    return (
+      <PullWords
+        slug={segments[1]!}
+        first={parseInt(segments[2]!)}
+        last={segments.length >= 4 ? parseInt(segments[3]!) : undefined}
+      />
+    )
+  }
+  return undefined
+}
+
+/** Replace DAILP links in an element with absolute local paths.
+* @param attribs the attributes of the current element
+* @param children the children of the current element
+* @returns {JSX.Element} a Link with the href prop as a local path and containing the provided children
+*
+* "https://wp.dailp.northeastern.edu/" => "/"
+* "https://dev.dailp.northeastern.edu/" => "/"
+* "https://dailp.northeastern.edu/" => "/"
+*/
+function urlToAbsolutePath(attribs: {[name: string]:string}, children: any): JSX.Element {
+  const props = attributesToProps(attribs)
+
+  if (props["href"]?.startsWith(wordpressUrl)) {
+    props["href"] = props["href"].slice(wordpressUrl.length)
+  } else if (props["href"]?.startsWith(devUrl)) {
+    props["href"]?.slice(devUrl.length)
+  } else if (props["href"]?.startsWith(prodUrl)) {
+    props["href"].slice(prodUrl.length)
+  }
+
+  return <Link {...props}>{domToReact(children, parseOptions)}</Link>
+}
+
+function nodesToTabs (node: domhandler.Node[]) {
+  const headingStyle = /\|(.*)\|/
+
+  const tabList = node.filter((value) => {
+    if (!isText(value)) return false
+    let headings = value.data.match(headingStyle)?.filter(x => !!x)
+    return headings && headings.length > 1 
+  })
+  const init: DOMNode[][] = []
+  const tabPanelList = node.reduce((prev, curr) => {
+    if (isText(curr) && tabList.includes(curr)) {
+      prev.push([])
+    } else {
+      prev[prev.length - 1]?.push(curr)
+    }
+    return prev
+  }, init)
+  const tabState = useScrollableTabState()
+  return (
+  <>
+    <TabList 
+    {...tabState}
+    className={css.docTabs}
+    aria-label="My tabs">
+      {tabList.map((t, i) => {
+        return isText(t) && 
+        <Tab 
+          id={"tab-"+i}
+          className={css.docTab}
+          {...tabState}>
+            {t.data.match(headingStyle)?.filter(x => !!x)[1]}
+        </Tab>
+      })}
+    </TabList>
+    {tabPanelList.map((p, i) => {
+      return <TabPanel 
+        id={"tabPanel"+i}
+        tabId={"tab-"+i}
+        className={css.docTabPanel}
+        {...tabState}>{domToReact(p, parseOptions)}</TabPanel>})}
+  </>
   )
 }
