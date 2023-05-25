@@ -179,11 +179,6 @@ export type AnnotatedFormSegmentsArgs = {
 export type AnnotatedFormUpdate = {
   /** Possible update to commentary */
   readonly commentary: InputMaybe<Scalars["String"]>
-  /**
-   * A URL to a Cloudfront-proxied user-recorded pronunciation of a word.
-   * A new resource will be created to represent the recording if one does not exist already
-   */
-  readonly contributorAudioUrl: InputMaybe<Scalars["String"]>
   /** Unique identifier of the form */
   readonly id: Scalars["UUID"]
   /** Possible update to source content */
@@ -283,6 +278,17 @@ export type Contributor = {
   readonly name: Scalars["String"]
   /** The role that defines most of their contributions to the associated item */
   readonly role: Scalars["String"]
+}
+
+/** Request to attach user-recorded audio to a word */
+export type ContributorAudioUpload = {
+  /**
+   * A URL to a Cloudfront-proxied user-recorded pronunciation of a word.
+   * A new resource will be created to represent the recording if one does not exist already
+   */
+  readonly contributorAudioUrl: Scalars["String"]
+  /** Word to bind audio to */
+  readonly wordId: Scalars["UUID"]
 }
 
 /**
@@ -520,6 +526,7 @@ export type Mutation = {
   /** Mutation for paragraph and translation editing */
   readonly updateParagraph: Scalars["UUID"]
   readonly updateWord: Scalars["UUID"]
+  readonly uploadContributorAudio: Scalars["UUID"]
 }
 
 export type MutationUpdateAnnotationArgs = {
@@ -536,6 +543,10 @@ export type MutationUpdateParagraphArgs = {
 
 export type MutationUpdateWordArgs = {
   word: AnnotatedFormUpdate
+}
+
+export type MutationUploadContributorAudioArgs = {
+  word: ContributorAudioUpload
 }
 
 /**
@@ -730,6 +741,7 @@ export enum UserGroup {
   Editors = "EDITORS",
 }
 
+/** Auth metadata on the user making the current request. */
 export type UserInfo = {
   readonly __typename?: "UserInfo"
   readonly email: Scalars["String"]

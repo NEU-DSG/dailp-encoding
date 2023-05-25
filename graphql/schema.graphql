@@ -1,74 +1,74 @@
 type AnnotatedDoc {
-	"""
-	Official short identifier for this document
-	"""
-	id: UUID!
-	"""
-	Full title of the document
-	"""
-	title: String!
-	"""
-	Date and time this document was written or created
-	"""
-	date: Date
-	"""
-	The original source(s) of this document, the most important first.
-	"""
-	sources: [SourceAttribution!]!
-	"""
-	Where the source document came from, maybe the name of a collection
-	"""
-	collection: DocumentCollection
-	"""
-	The genre of the document, used to group similar ones
-	"""
-	genre: String
-	"""
-	Images of each source document page, in order
-	"""
-	pageImages: IiifImages
-	"""
-	The people involved in producing this document, including the original
-	author, translators, and annotators
-	"""
-	contributors: [Contributor!]!
-	"""
-	Is this document a reference source (unstructured list of words)?
-	Otherwise, it is considered a structured document with a translation.
-	"""
-	isReference: Boolean!
-	"""
-	The audio recording resource for this entire document
-	"""
-	audioRecording: AudioSlice
-	"""
-	Arbitrary number used for manually ordering documents in a collection.
-	For collections without manual ordering, use zero here.
-	"""
-	orderIndex: Int!
-	"""
-	URL-ready slug for this document, generated from the title
-	"""
-	slug: String!
-	"""
-	Segments of the document paired with their respective rough translations
-	"""
-	translatedPages: [DocumentPage!]
-	"""
-	All the words contained in this document, dropping structural formatting
-	like line and page breaks.
-	"""
-	forms(start: Int, end: Int): [AnnotatedForm!]!
-	formCount: Int!
-	"""
-	All words in the document that have unanalyzed or unfamiliar parts.
-	These words need to be corrected or reviewed further.
-	"""
-	unresolvedForms: [AnnotatedForm!]!
-	"""
-	Collection chapters that contain this document.
-	"""
-	chapters: [CollectionChapter!]
+  """
+  Official short identifier for this document
+  """
+  id: UUID!
+  """
+  Full title of the document
+  """
+  title: String!
+  """
+  Date and time this document was written or created
+  """
+  date: Date
+  """
+  The original source(s) of this document, the most important first.
+  """
+  sources: [SourceAttribution!]!
+  """
+  Where the source document came from, maybe the name of a collection
+  """
+  collection: DocumentCollection
+  """
+  The genre of the document, used to group similar ones
+  """
+  genre: String
+  """
+  Images of each source document page, in order
+  """
+  pageImages: IiifImages
+  """
+  The people involved in producing this document, including the original
+  author, translators, and annotators
+  """
+  contributors: [Contributor!]!
+  """
+  Is this document a reference source (unstructured list of words)?
+  Otherwise, it is considered a structured document with a translation.
+  """
+  isReference: Boolean!
+  """
+  The audio recording resource for this entire document
+  """
+  audioRecording: AudioSlice
+  """
+  Arbitrary number used for manually ordering documents in a collection.
+  For collections without manual ordering, use zero here.
+  """
+  orderIndex: Int!
+  """
+  URL-ready slug for this document, generated from the title
+  """
+  slug: String!
+  """
+  Segments of the document paired with their respective rough translations
+  """
+  translatedPages: [DocumentPage!]
+  """
+  All the words contained in this document, dropping structural formatting
+  like line and page breaks.
+  """
+  forms(start: Int, end: Int): [AnnotatedForm!]!
+  formCount: Int!
+  """
+  All words in the document that have unanalyzed or unfamiliar parts.
+  These words need to be corrected or reviewed further.
+  """
+  unresolvedForms: [AnnotatedForm!]!
+  """
+  Collection chapters that contain this document.
+  """
+  chapters: [CollectionChapter!]
 }
 
 """
@@ -78,86 +78,86 @@ source text, multiple layers of linguistic annotation, and annotator notes.
 TODO Split into two types, one for migration and one for SQL + GraphQL
 """
 type AnnotatedForm {
-	"""
-	Original source text
-	"""
-	source: String!
-	"""
-	A normalized version of the word
-	"""
-	normalizedSource: String
-	"""
-	Underlying phonemic representation of this word
-	"""
-	phonemic: String
-	"""
-	English gloss for the whole word
-	"""
-	englishGloss: [String!]!
-	"""
-	Further details about the annotation layers, including uncertainty
-	"""
-	commentary: String
-	"""
-	The character index of a mid-word line break, if there is one
-	"""
-	lineBreak: Int
-	"""
-	The character index of a mid-word page break, if there is one
-	"""
-	pageBreak: Int
-	"""
-	Position of the form within the context of its parent document
-	"""
-	position: PositionInDocument!
-	"""
-	The date and time this form was recorded
-	"""
-	dateRecorded: Date
-	"""
-	The audio for this word that was ingested from GoogleSheets, if there is any.
-	"""
-	ingestedAudioTrack: AudioSlice
-	"""
-	The root morpheme of the word.
-	For example, a verb form glossed as "he catches" might have a root morpheme
-	corresponding to "catch."
-	"""
-	root: WordSegment
-	romanizedSource(system: CherokeeOrthography!): String
-	segments(system: CherokeeOrthography!): [WordSegment!]!
-	"""
-	All other observed words with the same root morpheme as this word.
-	"""
-	similarForms: [AnnotatedForm!]!
-	"""
-	The document that contains this word.
-	"""
-	document: AnnotatedDoc
-	"""
-	Number of words preceding this one in the containing document
-	"""
-	index: Int!
-	"""
-	Unique identifier of the containing document
-	"""
-	documentId: UUID!
-	"""
-	Unique identifier of this form
-	"""
-	id: UUID!
-	"""
-	A slices of audio associated with this word in the context of a document.
-	This audio has been selected by an editor from contributions, or is the
-	same as the ingested audio track, if one is available.
-	"""
-	editedAudio: [AudioSlice!]!
-	"""
-	Audio for this word that has been recorded by community members. Will be
-	empty if user does not have access to uncurated contributions.
-	TODO! User guard for contributors only
-	"""
-	userContributedAudio: [AudioSlice!]!
+  """
+  Original source text
+  """
+  source: String!
+  """
+  A normalized version of the word
+  """
+  normalizedSource: String
+  """
+  Underlying phonemic representation of this word
+  """
+  phonemic: String
+  """
+  English gloss for the whole word
+  """
+  englishGloss: [String!]!
+  """
+  Further details about the annotation layers, including uncertainty
+  """
+  commentary: String
+  """
+  The character index of a mid-word line break, if there is one
+  """
+  lineBreak: Int
+  """
+  The character index of a mid-word page break, if there is one
+  """
+  pageBreak: Int
+  """
+  Position of the form within the context of its parent document
+  """
+  position: PositionInDocument!
+  """
+  The date and time this form was recorded
+  """
+  dateRecorded: Date
+  """
+  The audio for this word that was ingested from GoogleSheets, if there is any.
+  """
+  ingestedAudioTrack: AudioSlice
+  """
+  The root morpheme of the word.
+  For example, a verb form glossed as "he catches" might have a root morpheme
+  corresponding to "catch."
+  """
+  root: WordSegment
+  romanizedSource(system: CherokeeOrthography!): String
+  segments(system: CherokeeOrthography!): [WordSegment!]!
+  """
+  All other observed words with the same root morpheme as this word.
+  """
+  similarForms: [AnnotatedForm!]!
+  """
+  The document that contains this word.
+  """
+  document: AnnotatedDoc
+  """
+  Number of words preceding this one in the containing document
+  """
+  index: Int!
+  """
+  Unique identifier of the containing document
+  """
+  documentId: UUID!
+  """
+  Unique identifier of this form
+  """
+  id: UUID!
+  """
+  A slices of audio associated with this word in the context of a document.
+  This audio has been selected by an editor from contributions, or is the
+  same as the ingested audio track, if one is available.
+  """
+  editedAudio: [AudioSlice!]!
+  """
+  Audio for this word that has been recorded by community members. Will be
+  empty if user does not have access to uncurated contributions.
+  TODO! User guard for contributors only
+  """
+  userContributedAudio: [AudioSlice!]!
 }
 
 """
@@ -165,23 +165,18 @@ A single word in an annotated document that can be edited.
 All fields except id are optional.
 """
 input AnnotatedFormUpdate {
-	"""
-	Unique identifier of the form
-	"""
-	id: UUID!
-	"""
-	Possible update to source content
-	"""
-	source: String
-	"""
-	Possible update to commentary
-	"""
-	commentary: String
-	"""
-	A URL to a Cloudfront-proxied user-recorded pronunciation of a word.
-	A new resource will be created to represent the recording if one does not exist already
-	"""
-	contributorAudioUrl: String
+  """
+  Unique identifier of the form
+  """
+  id: UUID!
+  """
+  Possible update to source content
+  """
+  source: String
+  """
+  Possible update to commentary
+  """
+  commentary: String
 }
 
 """
@@ -194,48 +189,47 @@ A segment of audio representing a document, word, phrase,
 or other audio unit
 """
 type AudioSlice {
-	"""
-	The unique id for this audio slice. Will not be present if audio has not been inserted
-	"""
-	sliceId: String
-	"""
-	The audio resource this audio slice is taken from, generally pulled from the DRS API
-	"""
-	resourceUrl: String!
-	"""
-	An audio slice this slice is a subunit of, if there is one
-	"""
-	parentTrack: String
-	"""
-	When the track was recorded, if available
-	"""
-	recordedAt: Date
-	"""
-	Which user recorded the tracked, if uploaded by a user
-	"""
-	recordedBy: User
-	"""
-	True if audio should be shown to Readers.
-	"""
-	includeInEditedCollection: Boolean!
-	"""
-	Last Editor to decide if audio should be included in edited collection.
-	"""
-	editedBy: User
-	"""
-	This slice's relative position to other slices within an audio resource
-	"""
-	index: Int!
-	"""
-	The time (in seconds) in the parent track where this slice begins.
-	"""
-	startTime: Int
-	"""
-	The time (in seconds) in the parent track where this slice ends.
-	"""
-	endTime: Int
+  """
+  The unique id for this audio slice. Will not be present if audio has not been inserted
+  """
+  sliceId: String
+  """
+  The audio resource this audio slice is taken from, generally pulled from the DRS API
+  """
+  resourceUrl: String!
+  """
+  An audio slice this slice is a subunit of, if there is one
+  """
+  parentTrack: String
+  """
+  When the track was recorded, if available
+  """
+  recordedAt: Date
+  """
+  Which user recorded the tracked, if uploaded by a user
+  """
+  recordedBy: User
+  """
+  True if audio should be shown to Readers.
+  """
+  includeInEditedCollection: Boolean!
+  """
+  Last Editor to decide if audio should be included in edited collection.
+  """
+  editedBy: User
+  """
+  This slice's relative position to other slices within an audio resource
+  """
+  index: Int!
+  """
+  The time (in seconds) in the parent track where this slice begins.
+  """
+  startTime: Int
+  """
+  The time (in seconds) in the parent track where this slice ends.
+  """
+  endTime: Int
 }
-
 
 """
 One representation of Cherokee phonology.
@@ -245,54 +239,54 @@ This type enumerates all of the systems that we support and provides
 conversion from our internal orthography into any of these.
 """
 enum CherokeeOrthography {
-	TAOC
-	CRG
-	LEARNER
+  TAOC
+  CRG
+  LEARNER
 }
 
 """
 Structure to represent a single chapter. Used to send data to the front end.
 """
 type CollectionChapter {
-	"""
-	UUID for the chapter
-	"""
-	id: UUID!
-	"""
-	Full title of the chapter
-	"""
-	title: String!
-	"""
-	ID of WordPress page with text of the chapter
-	"""
-	wordpressId: Int
-	"""
-	Order within the parent chapter or collection
-	"""
-	indexInParent: Int!
-	"""
-	Whether the chapter is an "Intro" or "Body" chapter
-	"""
-	section: CollectionSection!
-	"""
-	Full path of the chapter
-	"""
-	path: [String!]!
-	slug: String!
-	document: AnnotatedDoc
-	"""
-	Breadcrumbs from the top-level archive down to where this document lives.
-	"""
-	breadcrumbs: [DocumentCollection!]!
+  """
+  UUID for the chapter
+  """
+  id: UUID!
+  """
+  Full title of the chapter
+  """
+  title: String!
+  """
+  ID of WordPress page with text of the chapter
+  """
+  wordpressId: Int
+  """
+  Order within the parent chapter or collection
+  """
+  indexInParent: Int!
+  """
+  Whether the chapter is an "Intro" or "Body" chapter
+  """
+  section: CollectionSection!
+  """
+  Full path of the chapter
+  """
+  path: [String!]!
+  slug: String!
+  document: AnnotatedDoc
+  """
+  Breadcrumbs from the top-level archive down to where this document lives.
+  """
+  breadcrumbs: [DocumentCollection!]!
 }
 
 """
 Enum to represent the sections in an edited collection
 """
 enum CollectionSection {
-	INTRO
-	BODY
-	CREDIT
+  INTRO
+  BODY
+  CREDIT
 }
 
 """
@@ -310,15 +304,30 @@ of a particular document or source. Each contributor has a name and a role
 that specifies the type of their contributions.
 """
 type Contributor {
-	"""
-	Full name of the contributor
-	"""
-	name: String!
-	"""
-	The role that defines most of their contributions to the associated item
-	"""
-	role: String!
-	details: ContributorDetails
+  """
+  Full name of the contributor
+  """
+  name: String!
+  """
+  The role that defines most of their contributions to the associated item
+  """
+  role: String!
+  details: ContributorDetails
+}
+
+"""
+Request to attach user-recorded audio to a word
+"""
+input ContributorAudioUpload {
+  """
+  Word to bind audio to
+  """
+  wordId: UUID!
+  """
+  A URL to a Cloudfront-proxied user-recorded pronunciation of a word.
+  A new resource will be created to represent the recording if one does not exist already
+  """
+  contributorAudioUrl: String!
 }
 
 """
@@ -331,76 +340,76 @@ This information can be used to track who contributed to the development of
 each individual document, and track contributions to the archive as a whole.
 """
 type ContributorDetails {
-	"""
-	Full name of this person, this exact string must be used to identify
-	them elsewhere, like in the attribution for a particular document.
-	"""
-	fullName: String!
-	"""
-	Alternate name of this person, may be in a different language or writing
-	system. Used only for descriptive purposes.
-	"""
-	alternateName: String
-	"""
-	The optional date that this contributor was born on.
-	"""
-	birthDate: Date
+  """
+  Full name of this person, this exact string must be used to identify
+  them elsewhere, like in the attribution for a particular document.
+  """
+  fullName: String!
+  """
+  Alternate name of this person, may be in a different language or writing
+  system. Used only for descriptive purposes.
+  """
+  alternateName: String
+  """
+  The optional date that this contributor was born on.
+  """
+  birthDate: Date
 }
 
 type Date {
-	"""
-	The year of this date
-	"""
-	year: Int!
-	"""
-	Formatted version of the date for humans to read
-	"""
-	formattedDate: String!
+  """
+  The year of this date
+  """
+  year: Int!
+  """
+  Formatted version of the date for humans to read
+  """
+  formattedDate: String!
 }
 
 type DocumentCollection {
-	"""
-	Full name of this collection
-	"""
-	name: String!
-	"""
-	URL-ready slug for this collection, generated from the name
-	"""
-	slug: String!
-	"""
-	All documents that are part of this collection
-	TODO Try to unify this return type into AnnotatedDoc
-	This probably requires adding a document_ids field so that we can just
-	pass that to the dataloader below.
-	"""
-	documents: [DocumentReference!]!
+  """
+  Full name of this collection
+  """
+  name: String!
+  """
+  URL-ready slug for this collection, generated from the name
+  """
+  slug: String!
+  """
+  All documents that are part of this collection
+  TODO Try to unify this return type into AnnotatedDoc
+  This probably requires adding a document_ids field so that we can just
+  pass that to the dataloader below.
+  """
+  documents: [DocumentReference!]!
 }
 
 type DocumentPage {
-	"""
-	One-indexed page number
-	"""
-	pageNumber: String!
-	"""
-	Scan of this page as a IIIF resource, if there is one
-	"""
-	image: PageImage
-	"""
-	Contents of this page as a list of paragraphs
-	"""
-	paragraphs: [DocumentParagraph!]!
+  """
+  One-indexed page number
+  """
+  pageNumber: String!
+  """
+  Scan of this page as a IIIF resource, if there is one
+  """
+  image: PageImage
+  """
+  Contents of this page as a list of paragraphs
+  """
+  paragraphs: [DocumentParagraph!]!
 }
 
 type DocumentParagraph {
-	"""
-	Source text of the paragraph broken down into words
-	"""
-	source: [AnnotatedSeg!]!
-	"""
-	English translation of the whole paragraph
-	"""
-	translation: String!
-	index: Int!
+  """
+  Source text of the paragraph broken down into words
+  """
+  source: [AnnotatedSeg!]!
+  """
+  English translation of the whole paragraph
+  """
+  translation: String!
+  index: Int!
 }
 
 """
@@ -408,30 +417,30 @@ Reference to a document with a limited subset of fields, namely no contents
 of the document.
 """
 type DocumentReference {
-	"""
-	Database ID for the document
-	"""
-	id: UUID!
-	"""
-	Unique short name
-	"""
-	shortName: String!
-	"""
-	Long title of the document
-	"""
-	title: String!
-	"""
-	Date the document was produced (or `None` if unknown)
-	"""
-	date: Date
-	"""
-	Index of the document within its group, used purely for ordering
-	"""
-	orderIndex: Int!
-	"""
-	URL slug for this document
-	"""
-	slug: String!
+  """
+  Database ID for the document
+  """
+  id: UUID!
+  """
+  Unique short name
+  """
+  shortName: String!
+  """
+  Long title of the document
+  """
+  title: String!
+  """
+  Date the document was produced (or `None` if unknown)
+  """
+  date: Date
+  """
+  Index of the document within its group, used purely for ordering
+  """
+  orderIndex: Int!
+  """
+  URL slug for this document
+  """
+  slug: String!
 }
 
 """
@@ -440,8 +449,8 @@ document is a dictionary or grammar for example, while a corpus document
 might be a letter, journal, or notice.
 """
 enum DocumentType {
-	REFERENCE
-	CORPUS
+  REFERENCE
+  CORPUS
 }
 
 """
@@ -449,37 +458,36 @@ Structure to represent an edited collection. Missing certain fields and chapters
 Used for sending data to the front end
 """
 type EditedCollection {
-	"""
-	UUID for the collection
-	"""
-	id: UUID!
-	"""
-	Full title of the collection
-	"""
-	title: String!
-	"""
-	ID of WordPress menu for navigating the collection
-	"""
-	wordpressMenuId: Int
-	"""
-	URL slug for the collection, like "cwkw"
-	"""
-	slug: String!
-	chapters: [CollectionChapter!]
+  """
+  UUID for the collection
+  """
+  id: UUID!
+  """
+  Full title of the collection
+  """
+  title: String!
+  """
+  ID of WordPress menu for navigating the collection
+  """
+  wordpressMenuId: Int
+  """
+  URL slug for the collection, like "cwkw"
+  """
+  slug: String!
+  chapters: [CollectionChapter!]
 }
 
-
 type FormsInTime {
-	start: Date
-	end: Date
-	forms: [AnnotatedForm!]!
+  start: Date
+  end: Date
+  forms: [AnnotatedForm!]!
 }
 
 """
 A gallery of images, which may be rendered as a slideshow or lightbox.
 """
 type Gallery {
-	mediaUrls: [String!]!
+  mediaUrls: [String!]!
 }
 
 """
@@ -500,31 +508,29 @@ comparison queries, we can request a list of all spatial annotations
 on the same document that lie within or around the geometry of this specific word.
 """
 type Geometry {
-	xMin: Float!
-	yMin: Float!
-	xMax: Float!
-	yMax: Float!
+  xMin: Float!
+  yMin: Float!
+  xMax: Float!
+  yMax: Float!
 }
 
-
 type IiifImages {
-	"""
-	Information about the data source for this set of images
-	"""
-	source: ImageSource!
-	"""
-	List of urls for all the images in this collection
-	"""
-	urls: [String!]!
+  """
+  Information about the data source for this set of images
+  """
+  source: ImageSource!
+  """
+  List of urls for all the images in this collection
+  """
+  urls: [String!]!
 }
 
 type ImageSource {
-	"""
-	Base URL for the IIIF server
-	"""
-	url: String!
+  """
+  Base URL for the IIIF server
+  """
+  url: String!
 }
-
 
 """
 A scalar that can represent any JSON value.
@@ -535,90 +541,91 @@ scalar JSON
 Start of a new line
 """
 type LineBreak {
-	"""
-	Index of this line break within the document. i.e. Indicates the start
-	of line X.
-	"""
-	index: Int!
+  """
+  Index of this line break within the document. i.e. Indicates the start
+  of line X.
+  """
+  index: Int!
 }
 
 """
 A block of prose content, formatted with [Markdown](https://commonmark.org/).
 """
 type Markdown {
-	content: String!
+  content: String!
 }
 
 """
 One particular morpheme and all the known words that contain that exact morpheme.
 """
 type MorphemeReference {
-	"""
-	Phonemic shape of the morpheme.
-	"""
-	morpheme: String!
-	"""
-	List of words that contain this morpheme.
-	"""
-	forms: [AnnotatedForm!]!
+  """
+  Phonemic shape of the morpheme.
+  """
+  morpheme: String!
+  """
+  List of words that contain this morpheme.
+  """
+  forms: [AnnotatedForm!]!
 }
 
 """
 A concrete representation of a particular functional morpheme.
 """
 type MorphemeTag {
-	"""
-	Internal representation of this functional item, which may be one or
-	more word parts in the raw annotation. For example, ["X", "Y"] could map
-	to "Z" in a particular display format.
-	"""
-	internalTags: [String!]!
-	"""
-	How this morpheme is represented in a gloss
-	"""
-	tag: String!
-	"""
-	Plain English title of the morpheme tag
-	"""
-	title: String!
-	"""
-	How this morpheme looks in original language data
-	"""
-	shape: String
-	"""
-	URL to an external page with more details about this morpheme.
-	"""
-	detailsUrl: String
-	"""
-	A prose description of what this morpheme means and how it works in
-	context.
-	"""
-	definition: String!
-	"""
-	What kind of morpheme is this? Examples are "Prepronominal Prefix" or
-	"Aspectual Suffix"
-	"""
-	morphemeType: String!
-	"""
-	Overrides the segment type of instances of this tag.
-	"""
-	roleOverride: WordSegmentRole
+  """
+  Internal representation of this functional item, which may be one or
+  more word parts in the raw annotation. For example, ["X", "Y"] could map
+  to "Z" in a particular display format.
+  """
+  internalTags: [String!]!
+  """
+  How this morpheme is represented in a gloss
+  """
+  tag: String!
+  """
+  Plain English title of the morpheme tag
+  """
+  title: String!
+  """
+  How this morpheme looks in original language data
+  """
+  shape: String
+  """
+  URL to an external page with more details about this morpheme.
+  """
+  detailsUrl: String
+  """
+  A prose description of what this morpheme means and how it works in
+  context.
+  """
+  definition: String!
+  """
+  What kind of morpheme is this? Examples are "Prepronominal Prefix" or
+  "Aspectual Suffix"
+  """
+  morphemeType: String!
+  """
+  Overrides the segment type of instances of this tag.
+  """
+  roleOverride: WordSegmentRole
 }
 
 type Mutation {
-	"""
-	Mutation must have at least one visible field for introspection to work
-	correctly, so we just provide an API version which might be useful in
-	the future.
-	"""
-	apiVersion: String!
-	"""
-	Mutation for paragraph and translation editing
-	"""
-	updateParagraph(paragraph: ParagraphUpdate!): UUID!
-	updatePage(data: JSON!): Boolean!
-	updateAnnotation(data: JSON!): Boolean!
-	updateWord(word: AnnotatedFormUpdate!): UUID!
+  """
+  Mutation must have at least one visible field for introspection to work
+  correctly, so we just provide an API version which might be useful in
+  the future.
+  """
+  apiVersion: String!
+  """
+  Mutation for paragraph and translation editing
+  """
+  updateParagraph(paragraph: ParagraphUpdate!): UUID!
+  updatePage(data: JSON!): Boolean!
+  updateAnnotation(data: JSON!): Boolean!
+  updateWord(word: AnnotatedFormUpdate!): UUID!
+  uploadContributorAudio(word: ContributorAudioUpload!): UUID!
 }
 
 """
@@ -626,141 +633,147 @@ A website page which lives at a specific URL and has a list of blocks that
 define its content.
 """
 type Page {
-	"""
-	The path that this page lives at, which also uniquely identifies it.
-	For example, "/our-team"
-	"""
-	id: String!
-	title: String!
-	body: [ContentBlock!]!
+  """
+  The path that this page lives at, which also uniquely identifies it.
+  For example, "/our-team"
+  """
+  id: String!
+  title: String!
+  body: [ContentBlock!]!
 }
 
 type PageImage {
-	"""
-	The IIIF source this page image comes from
-	"""
-	source: ImageSource!
-	"""
-	The full IIIF url for this image resource
-	"""
-	url: String!
+  """
+  The IIIF source this page image comes from
+  """
+  source: ImageSource!
+  """
+  The full IIIF url for this image resource
+  """
+  url: String!
 }
 
 """
 A paragraph in an annotated document that can be edited.
 """
 input ParagraphUpdate {
-	"""
-	Unique identifier of the form
-	"""
-	id: UUID!
-	translation: String
+  """
+  Unique identifier of the form
+  """
+  id: UUID!
+  translation: String
 }
 
 """
 The reference position within a document of one specific form
 """
 type PositionInDocument {
-	"""
-	What document is this item within?
-	"""
-	documentId: UUID!
-	"""
-	What page is it on (starting from 1)? May be a single page or range of pages.
-	"""
-	pageNumber: String!
-	"""
-	How many items come before this one in the whole document?
-	
-	1-indexed position indicating where the form sits in the ordering of all
-	forms in the document. Used for relative ordering of forms from the
-	same document.
-	"""
-	index: Int!
-	"""
-	What section of the document image corresponds to this item?
-	"""
-	geometry: Geometry
-	"""
-	Standard page reference for this position, which can be used in citation.
-	Generally formatted like ID:PAGE, i.e "DF2018:55"
-	"""
-	pageReference: String!
-	"""
-	Index reference for this position, more specific than `page_reference`.
-	Generally used in corpus documents where there are few pages containing
-	many forms each. Example: "WJ23:#21"
-	"""
-	indexReference: String!
-	iiifUrl: String
+  """
+  What document is this item within?
+  """
+  documentId: UUID!
+  """
+  What page is it on (starting from 1)? May be a single page or range of pages.
+  """
+  pageNumber: String!
+  """
+  How many items come before this one in the whole document?
+
+  1-indexed position indicating where the form sits in the ordering of all
+  forms in the document. Used for relative ordering of forms from the
+  same document.
+  """
+  index: Int!
+  """
+  What section of the document image corresponds to this item?
+  """
+  geometry: Geometry
+  """
+  Standard page reference for this position, which can be used in citation.
+  Generally formatted like ID:PAGE, i.e "DF2018:55"
+  """
+  pageReference: String!
+  """
+  Index reference for this position, more specific than `page_reference`.
+  Generally used in corpus documents where there are few pages containing
+  many forms each. Example: "WJ23:#21"
+  """
+  indexReference: String!
+  iiifUrl: String
 }
 
 type Query {
-	allEditedCollections: [EditedCollection!]!
-	editedCollection(slug: String!): EditedCollection
-	"""
-	Retrieves a chapter and its contents by its collection and chapter slug.
-	"""
-	chapter(collectionSlug: String!, chapterSlug: String!): CollectionChapter
-	"""
-	List of all the functional morpheme tags available
-	"""
-	allTags(system: CherokeeOrthography!): [MorphemeTag!]!
-	"""
-	Listing of all documents excluding their contents by default
-	"""
-	allDocuments: [AnnotatedDoc!]!
-	"""
-	List of all content pages
-	"""
-	allPages: [Page!]!
-	"""
-	List of all the document collections available.
-	"""
-	allCollections: [DocumentCollection!]!
-	collection(slug: String!): DocumentCollection!
-	"""
-	Retrieves a full document from its unique name.
-	"""
-	document(slug: String!): AnnotatedDoc
-	"""
-	Retrieves a full document from its unique identifier.
-	"""
-	page(id: String!): Page
-	"""
-	Lists all forms containing a morpheme with the given gloss.
-	Groups these words by the phonemic shape of the target morpheme.
-	"""
-	morphemesByShape(gloss: String!, compareBy: CherokeeOrthography): [MorphemeReference!]!
-	"""
-	Lists all words containing a morpheme with the given gloss.
-	Groups these words by the document containing them.
-	"""
-	morphemesByDocument(documentId: UUID, morphemeGloss: String!): [WordsInDocument!]!
-	"""
-	Forms containing the given morpheme gloss or related ones clustered over time.
-	"""
-	morphemeTimeClusters(gloss: String!, clusterYears: Int! = 10): [FormsInTime!]!
-	"""
-	Retrieve information for the morpheme that corresponds to the given tag
-	string. For example, "3PL.B" is the standard string referring to a 3rd
-	person plural prefix.
-	"""
-	morphemeTag(id: String!, system: CherokeeOrthography!): MorphemeTag
-	"""
-	Search for words that match any one of the given queries.
-	Each query may match against multiple fields of a word.
-	"""
-	wordSearch(query: String!): [AnnotatedForm!]!
-	"""
-	Search for words with the exact same syllabary string, or with very
-	similar looking characters.
-	"""
-	syllabarySearch(query: String!): [AnnotatedForm!]!
-	"""
-	Basic information about the currently authenticated user, if any.
-	"""
-	userInfo: UserInfo!
+  allEditedCollections: [EditedCollection!]!
+  editedCollection(slug: String!): EditedCollection
+  """
+  Retrieves a chapter and its contents by its collection and chapter slug.
+  """
+  chapter(collectionSlug: String!, chapterSlug: String!): CollectionChapter
+  """
+  List of all the functional morpheme tags available
+  """
+  allTags(system: CherokeeOrthography!): [MorphemeTag!]!
+  """
+  Listing of all documents excluding their contents by default
+  """
+  allDocuments: [AnnotatedDoc!]!
+  """
+  List of all content pages
+  """
+  allPages: [Page!]!
+  """
+  List of all the document collections available.
+  """
+  allCollections: [DocumentCollection!]!
+  collection(slug: String!): DocumentCollection!
+  """
+  Retrieves a full document from its unique name.
+  """
+  document(slug: String!): AnnotatedDoc
+  """
+  Retrieves a full document from its unique identifier.
+  """
+  page(id: String!): Page
+  """
+  Lists all forms containing a morpheme with the given gloss.
+  Groups these words by the phonemic shape of the target morpheme.
+  """
+  morphemesByShape(
+    gloss: String!
+    compareBy: CherokeeOrthography
+  ): [MorphemeReference!]!
+  """
+  Lists all words containing a morpheme with the given gloss.
+  Groups these words by the document containing them.
+  """
+  morphemesByDocument(
+    documentId: UUID
+    morphemeGloss: String!
+  ): [WordsInDocument!]!
+  """
+  Forms containing the given morpheme gloss or related ones clustered over time.
+  """
+  morphemeTimeClusters(gloss: String!, clusterYears: Int! = 10): [FormsInTime!]!
+  """
+  Retrieve information for the morpheme that corresponds to the given tag
+  string. For example, "3PL.B" is the standard string referring to a 3rd
+  person plural prefix.
+  """
+  morphemeTag(id: String!, system: CherokeeOrthography!): MorphemeTag
+  """
+  Search for words that match any one of the given queries.
+  Each query may match against multiple fields of a word.
+  """
+  wordSearch(query: String!): [AnnotatedForm!]!
+  """
+  Search for words with the exact same syllabary string, or with very
+  similar looking characters.
+  """
+  syllabarySearch(query: String!): [AnnotatedForm!]!
+  """
+  Basic information about the currently authenticated user, if any.
+  """
+  userInfo: UserInfo!
 }
 
 """
@@ -769,16 +782,15 @@ Most commonly, this will represent the details of a library or archive that
 houses documents used elsewhere.
 """
 type SourceAttribution {
-	"""
-	Name of the source, i.e. "The Newberry Library"
-	"""
-	name: String!
-	"""
-	URL of this source's homepage, i.e. "https://www.newberry.org/"
-	"""
-	link: String!
+  """
+  Name of the source, i.e. "The Newberry Library"
+  """
+  name: String!
+  """
+  URL of this source's homepage, i.e. "https://www.newberry.org/"
+  """
+  link: String!
 }
-
 
 """
 A UUID is a unique 128-bit number, stored as 16 octets. UUIDs are parsed as
@@ -796,53 +808,56 @@ scalar UUID
 A user record, for a contributor, editor, etc.
 """
 type User {
-	"""
-	Id of the user, which must be a AWS Cognito `sub` claim
-	"""
-	id: String!
-	"""
-	User-facing name for this contributor/curator
-	"""
-	displayName: String!
+  """
+  Id of the user, which must be a AWS Cognito `sub` claim
+  """
+  id: String!
+  """
+  User-facing name for this contributor/curator
+  """
+  displayName: String!
 }
 
 enum UserGroup {
-	CONTRIBUTORS
-	EDITORS
+  CONTRIBUTORS
+  EDITORS
 }
 
+"""
+Auth metadata on the user making the current request.
+"""
 type UserInfo {
-	"""
-	Unique ID for the User. Should be an AWS Cognito Sub.
-	"""
-	id: UUID!
-	email: String!
-	groups: [UserGroup!]!
+  """
+  Unique ID for the User. Should be an AWS Cognito Sub.
+  """
+  id: UUID!
+  email: String!
+  groups: [UserGroup!]!
 }
 
 type WordSegment {
-	"""
-	Phonemic representation of the morpheme
-	"""
-	morpheme: String!
-	"""
-	English gloss in standard DAILP format that refers to a lexical item
-	"""
-	gloss: String!
-	"""
-	What kind of thing is this segment?
-	"""
-	role: WordSegmentRole!
-	"""
-	This field determines what character should separate this segment from
-	the previous one when reconstituting the full segmentation string.
-	"""
-	previousSeparator: String!
-	"""
-	If this morpheme represents a functional tag that we have further
-	information on, this is the corresponding database entry.
-	"""
-	matchingTag: MorphemeTag
+  """
+  Phonemic representation of the morpheme
+  """
+  morpheme: String!
+  """
+  English gloss in standard DAILP format that refers to a lexical item
+  """
+  gloss: String!
+  """
+  What kind of thing is this segment?
+  """
+  role: WordSegmentRole!
+  """
+  This field determines what character should separate this segment from
+  the previous one when reconstituting the full segmentation string.
+  """
+  previousSeparator: String!
+  """
+  If this morpheme represents a functional tag that we have further
+  information on, this is the corresponding database entry.
+  """
+  matchingTag: MorphemeTag
 }
 
 """
@@ -850,30 +865,30 @@ The kind of segment that a particular sequence of characters in a morphemic
 segmentations represent.
 """
 enum WordSegmentRole {
-	MORPHEME
-	CLITIC
-	MODIFIER
+  MORPHEME
+  CLITIC
+  MODIFIER
 }
 
 """
 A list of words grouped by the document that contains them.
 """
 type WordsInDocument {
-	"""
-	Unique identifier of the containing document
-	"""
-	documentId: UUID
-	"""
-	What kind of document contains these words (e.g. manuscript vs dictionary)
-	"""
-	documentType: DocumentType
-	"""
-	List of annotated and potentially segmented forms
-	"""
-	forms: [AnnotatedForm!]!
+  """
+  Unique identifier of the containing document
+  """
+  documentId: UUID
+  """
+  What kind of document contains these words (e.g. manuscript vs dictionary)
+  """
+  documentType: DocumentType
+  """
+  List of annotated and potentially segmented forms
+  """
+  forms: [AnnotatedForm!]!
 }
 
 schema {
-	query: Query
-	mutation: Mutation
+  query: Query
+  mutation: Mutation
 }

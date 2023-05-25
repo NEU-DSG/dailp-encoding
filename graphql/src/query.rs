@@ -1,6 +1,6 @@
 //! This piece of the project exposes a GraphQL endpoint that allows one to access DAILP data in a federated manner with specific queries.
 
-use dailp::{slugify_ltree, CollectionChapter, Uuid};
+use dailp::{slugify_ltree, CollectionChapter, ContributorAudioUpload, Uuid};
 use itertools::Itertools;
 
 use {
@@ -357,6 +357,21 @@ impl Mutation {
             .update_word(word)
             .await?)
     }
+
+    #[graphql(guard = "GroupGuard::new(UserGroup::Editor)")]
+    async fn upload_contributor_audio(
+        &self,
+        context: &Context<'_>,
+        word: ContributorAudioUpload,
+    ) -> FieldResult<Uuid> {
+        // TODO: should this return a typed id ie. AudioSliceId?
+        let user = context.data_opt::<UserInfo>();
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .upload_contributor_audio(word, user.map(|u| u.id))
+            .await?)
+    }
 }
 
 #[derive(async_graphql::SimpleObject)]
@@ -366,6 +381,7 @@ struct FormsInTime {
     forms: Vec<dailp::AnnotatedForm>,
 }
 
+/// Auth metadata on the user making the current request.
 #[derive(Deserialize, Debug, async_graphql::SimpleObject)]
 pub struct UserInfo {
     /// Unique ID for the User. Should be an AWS Cognito Sub.
@@ -378,7 +394,7 @@ pub struct UserInfo {
 impl UserInfo {
     pub fn new_test_admin() -> Self {
         Self {
-            id: Uuid::parse_str("a0a9e9e6-a37a-4d09-bd4b-86b5e57be31a").unwrap(),
+            id: Uuid::parse_str("5f22a8bf-46c8-426c-a104-b4faf7c2d608").unwrap(),
             email: "test@dailp.northeastern.edu".to_string(),
             groups: vec![UserGroup::Editors],
         }
