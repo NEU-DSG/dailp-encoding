@@ -1,6 +1,6 @@
 import { style } from "@vanilla-extract/css"
-import { button, cleanButton } from "src/components/button.css"
-import { colors, fonts, hspace, radii, vspace } from "src/style/constants"
+import { button } from "src/components/button.css"
+import { fonts, hspace, radii, vspace } from "src/style/constants"
 import { paddingX, paddingY } from "src/style/utils"
 
 export const form = style({
@@ -38,27 +38,5 @@ export const formInput = style([
     borderRadius: radii.medium,
     textOverflow: "ellipsis",
     resize: "none",
-  },
-])
-
-export const subtleButton = style([
-  cleanButton,
-  {
-    lineHeight: "inherit",
-    alignItems: "center",
-    gap: 4,
-    display: "flex",
-    color: colors.text,
-    fontWeight: "normal",
-    border: `2px solid`,
-    borderColor: colors.borders,
-    borderRadius: radii.large,
-  },
-])
-
-export const subtleButtonActive = style([
-  subtleButton,
-  {
-    background: colors.bodyDark,
   },
 ])
