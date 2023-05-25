@@ -140,3 +140,52 @@ export const useCredentials = () => {
 
   return creds ?? null
 }
+
+export const useCognitoUserGroups = () => {
+  const { user } = useContext(UserContext)
+  const groups: string[] =
+    user?.getSignInUserSession()?.getIdToken().payload["cognito:groups"] ?? []
+  return groups
+}
+
+export enum UserRole {
+  READER = "READER",
+  CONTRIBUTOR = "CONTRIBUTOR",
+  EDITOR = "EDITOR",
+}
+
+export function useUserRole(): UserRole {
+  const groups = useCognitoUserGroups()
+  if (groups.includes("Editors")) return UserRole.EDITOR
+  else if (groups.includes("Contributors")) return UserRole.CONTRIBUTOR
+  else return UserRole.READER
+}
+
+export const useUserId = () => {
+  const { user } = useContext(UserContext)
+  const sub: string | null =
+    user?.getSignInUserSession()?.getIdToken().payload["sub"] ?? null
+  return sub
+}
+
+function getUserSessionAsync(
+  user: CognitoUser
+): Promise<CognitoUserSession | null> {
+  return new Promise((res, _rej) => {
+    user.getSession(function (err: Error, result: CognitoUserSession | null) {
+      res(result)
+    })
+  })
+}
+
+/**
+ * Plain old function to get credentials. If at all possible, use a hook for this.
+ */
+export async function getCredentials() {
+  const user = userPool.getCurrentUser()
+  if (!user) return null
+
+  const sess = await getUserSessionAsync(user)
+  const token = sess?.getIdToken().getJwtToken()
+  return token ?? null
+}
