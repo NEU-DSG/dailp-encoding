@@ -4,7 +4,7 @@ use dailp::{slugify_ltree, CollectionChapter, ContributorAudioUpload, Uuid};
 use itertools::Itertools;
 
 use {
-    dailp::async_graphql::{self, dataloader::DataLoader, Context, FieldResult, Guard},
+    dailp::async_graphql::{self, dataloader::DataLoader, Context, FieldResult, Guard, Object},
     dailp::{
         AnnotatedDoc, AnnotatedFormUpdate, CherokeeOrthography, Database, EditedCollection,
         MorphemeId, MorphemeReference, MorphemeTag, ParagraphUpdate, WordsInDocument,
@@ -358,18 +358,18 @@ impl Mutation {
             .await?)
     }
 
-    #[graphql(guard = "GroupGuard::new(UserGroup::Editor)")]
+    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
     async fn upload_contributor_audio(
         &self,
         context: &Context<'_>,
-        word: ContributorAudioUpload,
+        upload: ContributorAudioUpload,
     ) -> FieldResult<Uuid> {
         // TODO: should this return a typed id ie. AudioSliceId?
         let user = context.data_opt::<UserInfo>();
         Ok(context
             .data::<DataLoader<Database>>()?
             .loader()
-            .upload_contributor_audio(word, user.map(|u| u.id))
+            .upload_contributor_audio(upload, user.map(|u| u.id))
             .await?)
     }
 }

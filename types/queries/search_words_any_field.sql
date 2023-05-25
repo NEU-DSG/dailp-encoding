@@ -18,7 +18,7 @@ select
   editor.id as "audio_edited_by?",
   editor.display_name as "audio_edited_by_name?"
 from word
-  left join media_slice on media_slice.id = coalesce(word.curated_audio_slice_id, word.audio_slice_id)
+  left join media_slice on media_slice.id = word.audio_slice_id
   left join media_resource on media_resource.id = media_slice.resource_id
   left join dailp_user contributor on contributor.id = media_resource.recorded_by
   left join dailp_user editor on editor.id = media_resource.recorded_by

@@ -98,6 +98,14 @@ fragment FormFields on AnnotatedForm {
     startTime
     endTime
   }
+  userContributedAudio {
+    resourceUrl
+    startTime
+    endTime
+    recordedBy {
+      displayName
+    }
+  }
 }
 
 query Collection($slug: String!) {
@@ -318,4 +326,8 @@ query CollectionChapter($collectionSlug: String!, $chapterSlug: String!) {
 
 mutation UpdateWord($word: AnnotatedFormUpdate!) {
   updateWord(word: $word)
+}
+
+mutation UploadContributorAudio($upload: ContributorAudioUpload!) {
+  uploadContributorAudio(upload: $upload)
 }

@@ -42,7 +42,6 @@ export const FormProvider = (props: { children: any }) => {
           id: values.word["id"],
           source: values.word["source"],
           commentary: values.word["commentary"],
-          contributorAudioUrl: null,
         },
       })
     },

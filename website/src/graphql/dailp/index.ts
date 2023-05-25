@@ -546,7 +546,7 @@ export type MutationUpdateWordArgs = {
 }
 
 export type MutationUploadContributorAudioArgs = {
-  word: ContributorAudioUpload
+  upload: ContributorAudioUpload
 }
 
 /**
@@ -923,6 +923,19 @@ export type DocumentContentsQuery = { readonly __typename?: "Query" } & {
                                 | "endTime"
                               >
                             >
+                            readonly userContributedAudio: ReadonlyArray<
+                              { readonly __typename?: "AudioSlice" } & Pick<
+                                AudioSlice,
+                                "resourceUrl" | "startTime" | "endTime"
+                              > & {
+                                  readonly recordedBy: Maybe<
+                                    { readonly __typename?: "User" } & Pick<
+                                      User,
+                                      "displayName"
+                                    >
+                                  >
+                                }
+                            >
                           })
                       | { readonly __typename: "LineBreak" }
                     >
@@ -967,6 +980,16 @@ export type DocumentContentsQuery = { readonly __typename?: "Query" } & {
                 "index" | "resourceUrl" | "startTime" | "endTime"
               >
             >
+            readonly userContributedAudio: ReadonlyArray<
+              { readonly __typename?: "AudioSlice" } & Pick<
+                AudioSlice,
+                "resourceUrl" | "startTime" | "endTime"
+              > & {
+                  readonly recordedBy: Maybe<
+                    { readonly __typename?: "User" } & Pick<User, "displayName">
+                  >
+                }
+            >
           }
       >
     }
@@ -1009,6 +1032,16 @@ export type FormFieldsFragment = {
         AudioSlice,
         "index" | "resourceUrl" | "startTime" | "endTime"
       >
+    >
+    readonly userContributedAudio: ReadonlyArray<
+      { readonly __typename?: "AudioSlice" } & Pick<
+        AudioSlice,
+        "resourceUrl" | "startTime" | "endTime"
+      > & {
+          readonly recordedBy: Maybe<
+            { readonly __typename?: "User" } & Pick<User, "displayName">
+          >
+        }
     >
   }
 
@@ -1301,6 +1334,19 @@ export type DocSliceQuery = { readonly __typename?: "Query" } & {
                   "index" | "resourceUrl" | "startTime" | "endTime"
                 >
               >
+              readonly userContributedAudio: ReadonlyArray<
+                { readonly __typename?: "AudioSlice" } & Pick<
+                  AudioSlice,
+                  "resourceUrl" | "startTime" | "endTime"
+                > & {
+                    readonly recordedBy: Maybe<
+                      { readonly __typename?: "User" } & Pick<
+                        User,
+                        "displayName"
+                      >
+                    >
+                  }
+              >
             }
         >
       }
@@ -1379,6 +1425,14 @@ export type UpdateWordMutation = { readonly __typename?: "Mutation" } & Pick<
   "updateWord"
 >
 
+export type UploadContributorAudioMutationVariables = Exact<{
+  upload: ContributorAudioUpload
+}>
+
+export type UploadContributorAudioMutation = {
+  readonly __typename?: "Mutation"
+} & Pick<Mutation, "uploadContributorAudio">
+
 export const FormFieldsFragmentDoc = gql`
   fragment FormFields on AnnotatedForm {
     id
@@ -1409,6 +1463,14 @@ export const FormFieldsFragmentDoc = gql`
       resourceUrl
       startTime
       endTime
+    }
+    userContributedAudio {
+      resourceUrl
+      startTime
+      endTime
+      recordedBy {
+        displayName
+      }
     }
   }
 `
@@ -1884,4 +1946,16 @@ export function useUpdateWordMutation() {
   return Urql.useMutation<UpdateWordMutation, UpdateWordMutationVariables>(
     UpdateWordDocument
   )
+}
+export const UploadContributorAudioDocument = gql`
+  mutation UploadContributorAudio($upload: ContributorAudioUpload!) {
+    uploadContributorAudio(upload: $upload)
+  }
+`
+
+export function useUploadContributorAudioMutation() {
+  return Urql.useMutation<
+    UploadContributorAudioMutation,
+    UploadContributorAudioMutationVariables
+  >(UploadContributorAudioDocument)
 }
