@@ -10,7 +10,6 @@ use {
         MorphemeId, MorphemeReference, MorphemeTag, ParagraphUpdate, WordsInDocument,
     },
     serde::{Deserialize, Serialize},
-    serde_with::{rust::StringWithSeparator, CommaSeparator},
 };
 
 /// Home for all read-only queries
@@ -303,7 +302,7 @@ impl Mutation {
     }
 
     /// Mutation for paragraph and translation editing
-    #[graphql(guard = "GroupGuard::new(UserGroup::Editor)")]
+    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
     async fn update_paragraph(
         &self,
         context: &Context<'_>,
@@ -316,7 +315,7 @@ impl Mutation {
             .await?)
     }
 
-    #[graphql(guard = "GroupGuard::new(UserGroup::Editor)")]
+    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
     async fn update_page(
         &self,
         context: &Context<'_>,
@@ -331,7 +330,7 @@ impl Mutation {
         Ok(true)
     }
 
-    #[graphql(guard = "GroupGuard::new(UserGroup::Editor)")]
+    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
     async fn update_annotation(
         &self,
         context: &Context<'_>,
@@ -346,7 +345,7 @@ impl Mutation {
         Ok(true)
     }
 
-    #[graphql(guard = "GroupGuard::new(UserGroup::Editor)")]
+    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
     async fn update_word(
         &self,
         context: &Context<'_>,
@@ -369,26 +368,26 @@ struct FormsInTime {
 
 #[derive(Deserialize, Debug, async_graphql::SimpleObject)]
 pub struct UserInfo {
+    /// Unique ID for the User. Should be an AWS Cognito Sub.
+    #[serde(default, rename = "sub")]
+    id: Uuid,
     email: String,
-    #[serde(
-        default,
-        rename = "cognito:groups",
-        with = "StringWithSeparator::<CommaSeparator>"
-    )]
+    #[serde(default, rename = "cognito:groups")]
     groups: Vec<UserGroup>,
 }
 impl UserInfo {
     pub fn new_test_admin() -> Self {
         Self {
+            id: Uuid::parse_str("a0a9e9e6-a37a-4d09-bd4b-86b5e57be31a").unwrap(),
             email: "test@dailp.northeastern.edu".to_string(),
-            groups: vec![UserGroup::Editor],
+            groups: vec![UserGroup::Editors],
         }
     }
 }
 
 #[derive(Eq, PartialEq, Copy, Clone, Serialize, Deserialize, Debug, async_graphql::Enum)]
-enum UserGroup {
-    Editor,
+pub enum UserGroup {
+    Editors,
 }
 // Impl FromStr and Display automatically for UserGroup, using serde.
 // This allows us to (de)serialize lists of groups via a comma-separated string
@@ -412,6 +411,12 @@ impl Guard for GroupGuard {
     async fn check(&self, ctx: &async_graphql::Context<'_>) -> async_graphql::Result<()> {
         let user = ctx.data_opt::<UserInfo>();
         let has_group = user.map(|user| user.groups.iter().any(|group| group == &self.group));
+
+        match user {
+            Some(user) => log::info!("Debug user info groups={:?}", user.clone()),
+            None => log::info!("No user"),
+        };
+
         if has_group == Some(true) {
             Ok(())
         } else {

@@ -750,10 +750,14 @@ entities without requiring a central allocating authority.
 scalar UUID
 
 enum UserGroup {
-	EDITOR
+	EDITORS
 }
 
 type UserInfo {
+	"""
+	Unique ID for the User. Should be an AWS Cognito Sub.
+	"""
+	id: UUID!
 	email: String!
 	groups: [UserGroup!]!
 }
