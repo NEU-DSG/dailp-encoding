@@ -3,7 +3,6 @@ import parse, {
   attributesToProps,
   domToReact,
 } from "html-react-parser"
-import { first } from "lodash"
 import React from "react"
 import { AudioPlayer, Button, Link } from "src/components"
 import * as Dailp from "src/graphql/dailp"
