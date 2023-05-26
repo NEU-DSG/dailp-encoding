@@ -20,8 +20,10 @@ import {
   chapterRoute,
   collectionRoute,
   documentDetailsRoute,
+  collectionWordPath,
   documentRoute,
 } from "src/routes"
+import { Location, useLocation, usePageContext } from "src/renderer/PageShell"
 import { useScrollableTabState } from "src/scrollable-tabs"
 import { AnnotatedForm, DocumentPage, TranslatedParagraph } from "src/segment"
 import { mediaQueries } from "src/style/constants"
@@ -52,6 +54,8 @@ const AnnotatedDocumentPage = (props: { id: string }) => {
     variables: { slug: props.id },
   })
 
+  const wordIndex = useLocation().hash
+  const index = wordIndex?.replace("w", "")
   const doc = data?.document
 
   if (!doc) {
@@ -59,17 +63,17 @@ const AnnotatedDocumentPage = (props: { id: string }) => {
   }
 
   useEffect(() => {
-    redirectUrl()
+    redirectUrl(index)
   }, [props.id])
 
   // Redirects this document to the corresponding collection chapter containing document.
-  function redirectUrl() {
+  function redirectUrl(index: string | undefined) {
     if (doc?.chapters?.length === 1) {
       const chapter = doc.chapters[0]
       const collectionSlug = chapter?.path[0]
       const chapterSlug = chapter?.path[chapter.path.length - 1]
 
-      navigate(chapterRoute(collectionSlug!, chapterSlug!))
+      wordIndex ? navigate(collectionWordPath(collectionSlug!, chapterSlug!, parseInt(index!)) ) : navigate(chapterRoute(collectionSlug!, chapterSlug!))
     }
   }
 
