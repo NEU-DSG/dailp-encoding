@@ -4,7 +4,8 @@ import * as Dailp from "src/graphql/dailp"
 export async function prerender() {
   const { data, error } = await client.dailp
     .query<Dailp.EditedCollectionsQuery, Dailp.EditedCollectionsQueryVariables>(
-      Dailp.EditedCollectionsDocument
+      Dailp.EditedCollectionsDocument,
+      {}
     )
     .toPromise()
 
