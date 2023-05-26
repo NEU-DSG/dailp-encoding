@@ -106,15 +106,12 @@ impl ComplexDrsObject {
     ///     "https://repository.library.northeastern.edu/downloads/neu:4f18fk948?datastream_id=content": "Master Image"
     /// }
     fn get_first_object_pid(&self) -> Option<&String> {
-        self
-        .0
-        .keys()
-        .next()
+        self.0.keys().next()
     }
 }
 
 /// Represents info associated with an object from the DRS.
-/// 
+///
 /// # Examples:
 /// The HTTP Response
 /// ```text
@@ -155,7 +152,7 @@ struct DrsRes {
     /// The PID for the parent collection of this object.
     parent: DrsId,
     /// A list of URLs leading to this object's thumbnail image.
-    /// 
+    ///
     /// Each URL represents a different size of image.
     thumbnails: Vec<String>,
     /// The primary data associated with this object and its data type.
@@ -191,10 +188,9 @@ impl DrsRes {
     fn get_url(&self) -> String {
         let val = self.canonical_object.get_first_object_pid();
         if val.is_none() {
-            String::from("")
-        } else {
-            val.unwrap().clone()
+            return String::from("");
         }
+        return val.unwrap().clone();
     }
 }
 
