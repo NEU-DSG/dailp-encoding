@@ -35,7 +35,7 @@ const IndexPage = () => {
     </Layout>
   )
 }
-export default IndexPage
+export const Page = IndexPage
 
 const carouselImages = [
   {

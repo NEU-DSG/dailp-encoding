@@ -12,9 +12,9 @@ use dailp::collection::CollectionSection::Intro;
 use dailp::raw::CollectionChapter;
 use dailp::raw::EditedCollection;
 use dailp::{
-    convert_udb, root_noun_surface_forms, root_verb_surface_forms, AnnotatedDoc, AnnotatedForm,
-    AnnotatedSeg, AudioSlice, Contributor, Database, Date, DocumentId, DocumentMetadata,
-    LexicalConnection, LineBreak, MorphemeId, PageBreak, Uuid, WordSegment,
+    convert_udb, root_noun_surface_forms, root_verb_surface_forms, slugify_ltree, AnnotatedDoc,
+    AnnotatedForm, AnnotatedSeg, AudioSlice, Contributor, Database, Date, DocumentId,
+    DocumentMetadata, LexicalConnection, LineBreak, MorphemeId, PageBreak, Uuid, WordSegment,
 };
 use dailp::{PositionInDocument, SourceAttribution};
 use itertools::Itertools;
@@ -188,7 +188,7 @@ impl SheetResult {
 
                 let new_chapter = dailp::raw::CollectionChapter {
                     index_in_parent: index_i64,
-                    url_slug: chapter_url_slug.to_ascii_lowercase(),
+                    url_slug: slugify_ltree(chapter_url_slug),
                     chapter_name: cur_chapter_name,
                     document_short_name: doc_string,
                     id: None,

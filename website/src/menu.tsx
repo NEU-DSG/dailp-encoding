@@ -1,12 +1,12 @@
 import React from "react"
-import { MdArrowDropDown, MdMenu } from "react-icons/md"
+import { MdArrowDropDown, MdMenu } from "react-icons/md/index"
 import {
   Dialog,
   DialogBackdrop,
   DialogDisclosure,
   useDialogState,
-} from "reakit/Dialog"
-import { Menu, MenuButton, MenuItem, useMenuState } from "reakit/Menu"
+} from "reakit"
+import { Menu, MenuButton, MenuItem, useMenuState } from "reakit"
 import Link from "src/components/link"
 import * as Wordpress from "src/graphql/wordpress"
 import { Location, useLocation, usePageContext } from "src/renderer/PageShell"

@@ -3,9 +3,15 @@ import "@reach/dialog/styles.css"
 import React, { useEffect, useState } from "react"
 import { isMobile } from "react-device-detect"
 import { Helmet } from "react-helmet"
-import { MdSettings } from "react-icons/md"
-import { Dialog, DialogBackdrop, useDialogState } from "reakit/Dialog"
-import { Tab, TabList, TabPanel } from "reakit/Tab"
+import { MdSettings } from "react-icons/md/index"
+import {
+  Dialog,
+  DialogBackdrop,
+  Tab,
+  TabList,
+  TabPanel,
+  useDialogState,
+} from "reakit"
 import { navigate } from "vite-plugin-ssr/client/router"
 import { AudioPlayer, Breadcrumbs, Button, Link } from "src/components"
 import { useMediaQuery } from "src/custom-hooks"
@@ -18,14 +24,11 @@ import { PanelDetails, PanelLayout, PanelSegment } from "src/panel-layout"
 import { usePreferences } from "src/preferences-context"
 import {
   chapterRoute,
-  collectionRoute,
-  documentDetailsRoute,
-  collectionWordPath,
-  documentRoute,
+  collectionWordPath
 } from "src/routes"
-import { Location, useLocation, usePageContext } from "src/renderer/PageShell"
+import { useLocation} from "src/renderer/PageShell"
 import { useScrollableTabState } from "src/scrollable-tabs"
-import { AnnotatedForm, DocumentPage, TranslatedParagraph } from "src/segment"
+import { AnnotatedForm, DocumentPage } from "src/segment"
 import { mediaQueries } from "src/style/constants"
 import { fullWidth } from "src/style/utils.css"
 import { BasicMorphemeSegment, LevelOfDetail } from "src/types"
@@ -87,7 +90,7 @@ const AnnotatedDocumentPage = (props: { id: string }) => {
     </Layout>
   )
 }
-export default AnnotatedDocumentPage
+export const Page = AnnotatedDocumentPage
 
 export const TabSet = ({ doc }: { doc: Document }) => {
   const tabs = useScrollableTabState({ selectedId: Tabs.ANNOTATION })

@@ -49,6 +49,7 @@ export const leftMargin = style({
   "@media": {
     [mediaQueries.medium]: {
       marginLeft: drawerWidth,
+      width: "100%",
       maxWidth: hsize.large,
     },
   },
@@ -56,10 +57,10 @@ export const leftMargin = style({
 
 export const openHeaderContents = style([
   row,
-  leftMargin,
   {
     "@media": {
       [mediaQueries.medium]: {
+        marginLeft: drawerWidth,
         alignItems: "center",
         width: hsize.large,
       },

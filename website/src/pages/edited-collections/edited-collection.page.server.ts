@@ -1,11 +1,11 @@
-import { flatMap } from "lodash"
 import { client } from "src/graphql"
 import * as Dailp from "src/graphql/dailp"
 
 export async function prerender() {
   const { data, error } = await client.dailp
     .query<Dailp.EditedCollectionsQuery, Dailp.EditedCollectionsQueryVariables>(
-      Dailp.EditedCollectionsDocument
+      Dailp.EditedCollectionsDocument,
+      {}
     )
     .toPromise()
 
@@ -13,7 +13,7 @@ export async function prerender() {
     throw error
   }
 
-  return flatMap(data.allEditedCollections, (collection) => {
+  return data.allEditedCollections.flatMap((collection) => {
     return { url: `/collections/${collection.slug}` }
   })
 }
