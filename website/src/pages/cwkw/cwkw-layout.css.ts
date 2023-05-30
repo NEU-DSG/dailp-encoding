@@ -12,6 +12,8 @@ import {
 import { paddingX, paddingY } from "src/style/utils"
 import { hideOnPrint, row } from "src/style/utils.css"
 import * as baseLayout from "../../layout.css"
+import { linkColor } from "src/components/link.css"
+
 
 export const header = style([baseLayout.header])
 
@@ -80,4 +82,14 @@ export const banner = style([
       },
     },
   },
+])
+
+export const noticeText = style([
+  { paddingTop: vspace.large,
+    borderTop: `1px ridge ${colors.borders}`,
+    color: colors.primaryText,
+    vars: {
+      [linkColor]: "white",
+      [colors.focus]: "white",
+    },}
 ])
