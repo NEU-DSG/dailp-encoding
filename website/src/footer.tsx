@@ -1,8 +1,9 @@
 import React from "react"
-import { Link } from "src/components"
+import { CreativeCommons, Link } from "src/components"
 import { usePageContext } from "src/renderer/PageShell"
 import { wordpressUrl } from "src/theme.css"
 import * as css from "./footer.css"
+import { CreativeCommonsBy } from "./components/attributions/creative-commons"
 
 /** University affiliation, related navigation links, and contact info.  */
 const Footer = () => {
@@ -10,6 +11,19 @@ const Footer = () => {
   return (
     <footer className={css.footer}>
       <div className={css.dark}>
+        <span className={css.content} style={{ display: "block" }}>
+            <CreativeCommonsBy 
+              title="The Digital Archive of Indigenous Language Persistence (DAILP)"
+              authors={
+                [{name: "Ellen Cushman", link: "https://www.ellencushman.com"},
+                 {name: "Taylor Snead", link: "https://snead.xyz"},
+                 {name: "Naomi Trevino"},
+                 {name: "Jeffrey Bourns"},
+                 {name: "Aparna Dutta"},
+                 {name: "Henry Volchonok"}
+                ]
+                }/>
+              </span>
         <p className={css.content} style={{ display: "block" }}>
           This project was created with help from the{" "}
           <Link href="http://dsg.northeastern.edu/">
