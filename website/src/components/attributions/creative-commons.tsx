@@ -33,7 +33,7 @@ export const CreativeCommonsBy = (props: Props) => {
                 }
             {" "}
             is licensed under{" "}
-            <a href="http://creativecommons.org/licenses/by-nc/4.0/?ref=chooser-v1" target="_blank" rel="license noopener noreferrer" className={css.ccShortform}>
+            <a href="http://creativecommons.org/licenses/by-nc/4.0/?ref=chooser-v1" target="_blank" rel="license noopener noreferrer">
                 CC BY-NC 4.0
                 <CcIcon />
                 <ByIcon />
