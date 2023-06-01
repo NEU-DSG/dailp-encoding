@@ -15,6 +15,7 @@ import { wordpressUrl } from "src/theme.css"
 import { LevelOfDetail } from "src/types"
 import * as printLessonCSS from "./print-lesson.css"
 import { LexicalSearch } from "./lexical-search"
+import { Glossary } from "./glossary"
 
 interface Props {
   slug: string
@@ -102,6 +103,8 @@ const parseOptions: HTMLReactParserOptions = {
 
       if (referenceSegments && referenceSegments[1] === "search") {
         return (<LexicalSearch/>)
+      } else if (referenceSegments && referenceSegments[1] === "glossary") {
+        <Glossary/>
       }
     }
 

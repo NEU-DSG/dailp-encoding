@@ -30,6 +30,7 @@ import { fullWidth } from "src/style/utils.css"
 import { BasicMorphemeSegment, LevelOfDetail } from "src/types"
 import PageImages from "../../page-image"
 import * as css from "./document.css"
+import { useRouteParams } from "src/renderer/PageShell"
 
 enum Tabs {
   ANNOTATION = "annotation-tab",
@@ -70,7 +71,7 @@ const AnnotatedDocumentPage = (props: { id: string }) => {
       const collectionSlug = chapter?.path[0]
       const chapterSlug = chapter?.path[chapter.path.length - 1]
 
-      navigate(chapterRoute(collectionSlug!, chapterSlug!))
+      navigate(chapterRoute(collectionSlug!, chapterSlug!)+useRouteParams())
     }
   }
 
