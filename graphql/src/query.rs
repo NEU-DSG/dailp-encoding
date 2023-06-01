@@ -387,6 +387,7 @@ impl UserInfo {
 
 #[derive(Eq, PartialEq, Copy, Clone, Serialize, Deserialize, Debug, async_graphql::Enum)]
 pub enum UserGroup {
+    Contributors,
     Editors,
 }
 // Impl FromStr and Display automatically for UserGroup, using serde.

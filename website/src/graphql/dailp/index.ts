@@ -688,6 +688,7 @@ export type SourceAttribution = {
 }
 
 export enum UserGroup {
+  Contributors = "CONTRIBUTORS",
   Editors = "EDITORS",
 }
 
