@@ -34,6 +34,7 @@ import { fullWidth } from "src/style/utils.css"
 import { BasicMorphemeSegment, LevelOfDetail } from "src/types"
 import PageImages from "../../page-image"
 import * as css from "./document.css"
+import { useRouteParams } from "src/renderer/PageShell"
 
 enum Tabs {
   ANNOTATION = "annotation-tab",
@@ -75,7 +76,6 @@ const AnnotatedDocumentPage = (props: { id: string }) => {
       const chapter = doc.chapters[0]
       const collectionSlug = chapter?.path[0]
       const chapterSlug = chapter?.path[chapter.path.length - 1]
-
       wordIndex ? navigate(collectionWordPath(collectionSlug!, chapterSlug!, parseInt(index!)) ) : navigate(chapterRoute(collectionSlug!, chapterSlug!))
     }
   }

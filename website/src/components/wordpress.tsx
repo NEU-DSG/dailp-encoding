@@ -19,6 +19,8 @@ import { annotationSection } from "src/segment.css"
 import { wordpressUrl, devUrl, prodUrl } from "src/theme.css"
 import { LevelOfDetail } from "src/types"
 import * as printLessonCSS from "./print-lesson.css"
+import { LexicalSearch } from "./lexical-search"
+import { Glossary } from "./glossary"
 import * as css from "../pages/documents/document.css"
 import {
   useTabState,
@@ -82,14 +84,23 @@ export const WordpressPageContents = ({
 
 const parseOptions: HTMLReactParserOptions = {
   replace(node) {
-    if ("data" in node) {  
-      const style = /\[(\w*):([0-9]*)-?([0-9]*)?:?(audio)?(join)?(#)?(\w*)?\]/ // [DocName:Start(-OptionalEnd):?(audio?)(join?)#?OptionalChapterSlug?]
-      const segments = node.data.match(style)?.filter((x) => !!x)
-      if (segments) {
-        return parseWord(segments)
+    if ("data" in node) {
+      const referenceEmbedStyle = /\[(\w*)\]/ // [search | glossary]
+      const wordEmbedStyle = /\[(\w*):([0-9]*)-?([0-9]*)?:?(audio)?(join)?(#)?(\w*)?\]/ // [DocName:Start(-OptionalEnd):?(audio?)(join?)#?OptionalChapterSlug?]
 
+      const wordSegments = node.data.match(wordEmbedStyle)?.filter((x) => !!x)
+      const referenceSegments = node.data.match(referenceEmbedStyle)?.filter((x) => !!x)
+
+      if (referenceSegments && referenceSegments[1] === "search") {
+        return(<LexicalSearch/>)
+      } else if (referenceSegments && referenceSegments[1] === "glossary") {
+        return(<Glossary/>)
       }
-    } else if ("name" in node && "attribs" in node) {
+      if (wordSegments) {
+        return parseWord(wordSegments)
+      }
+     }
+     else if ("name" in node && "attribs" in node) {
       if (node.name === "a") {
         return urlToAbsolutePath(node.attribs, node.children)
       } else if (node.name === "button") {
@@ -102,7 +113,6 @@ const parseOptions: HTMLReactParserOptions = {
         return nodesToTabs(node.children)
       }
     }
-
     return undefined
   },
 }
