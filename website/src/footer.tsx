@@ -1,9 +1,9 @@
 import React from "react"
-import { CreativeCommons, Link } from "src/components"
+import { Link } from "src/components"
 import { usePageContext } from "src/renderer/PageShell"
 import { wordpressUrl } from "src/theme.css"
 import * as css from "./footer.css"
-import { CreativeCommonsBy } from "./components/attributions/creative-commons"
+import { CreativeCommonsBy } from "src/components/attributions/creative-commons"
 
 /** University affiliation, related navigation links, and contact info.  */
 const Footer = () => {
