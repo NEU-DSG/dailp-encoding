@@ -13,6 +13,7 @@ import * as Dailp from "src/graphql/dailp"
 import * as Wordpress from "src/graphql/wordpress"
 import { usePreferences } from "src/preferences-context"
 import { useRouteParams } from "src/renderer/PageShell"
+import { collectionWordPath, documentWordPath } from "src/routes"
 import { AnnotatedForm } from "src/segment"
 import { annotationSection } from "src/segment.css"
 import { wordpressUrl, devUrl, prodUrl } from "src/theme.css"
@@ -82,10 +83,11 @@ export const WordpressPageContents = ({
 const parseOptions: HTMLReactParserOptions = {
   replace(node) {
     if ("data" in node) {  
-      const style = /\[(\w*):([0-9]*)-?([0-9]*)?:?(audio)?(join)?\]/ // [DocName:Start(-OptionalEnd):?(audio?)(join?)]
+      const style = /\[(\w*):([0-9]*)-?([0-9]*)?:?(audio)?(join)?(#)?(\w*)?\]/ // [DocName:Start(-OptionalEnd):?(audio?)(join?)#?OptionalChapterSlug?]
       const segments = node.data.match(style)?.filter((x) => !!x)
       if (segments) {
         return parseWord(segments)
+
       }
     } else if ("name" in node && "attribs" in node) {
       if (node.name === "a") {
@@ -187,6 +189,8 @@ const PullWords = (props: {
   first: number
   /** Last word number, 1-indexed inclusive **/
   last?: number
+  /** Chapter slug of contained word as opposed to document slug if the citation is referenced within a collection*/
+  chapterSlug?: string
 }) => {
   const { levelOfDetail, cherokeeRepresentation } = usePreferences()
 
@@ -213,20 +217,40 @@ const PullWords = (props: {
     levelOfDetail > LevelOfDetail.Pronunciation
       ? annotationSection.wordParts
       : annotationSection.story
+
+  let documentCitation = docContents.title + ", word " + props.first
+
+  if (props.last) {
+    documentCitation =
+      docContents.title + ", words " + props.first + " – " + props.last
+  }
+
+  const { collectionSlug } = useRouteParams()
+
   return (
-    <div className={annotationStyle}>
-      {docContents.forms.map((form, i) => (
-        <AnnotatedForm
-          key={i}
-          segment={form as any}
-          onOpenDetails={() => {}}
-          levelOfDetail={levelOfDetail}
-          cherokeeRepresentation={cherokeeRepresentation}
-          pageImages={[]}
-          wordPanelDetails={wordPanelInfo}
-        />
-      ))}
-    </div>
+    <>
+      <div className={annotationStyle}>
+        {docContents.forms.map((form, i) => (
+          <AnnotatedForm
+            key={i}
+            segment={form as any}
+            onOpenDetails={() => {}}
+            levelOfDetail={levelOfDetail}
+            cherokeeRepresentation={cherokeeRepresentation}
+            pageImages={[]}
+            wordPanelDetails={wordPanelInfo}
+          />
+        ))}
+      </div>
+      <div>
+        <i>
+          {collectionSlug && props.chapterSlug ?
+           <Link href={collectionWordPath(collectionSlug, props.chapterSlug, props.first)}>{documentCitation}</Link> :
+           <Link href={documentWordPath(props.slug, props.first)}>{documentCitation}</Link>}
+          
+        </i>
+      </div>
+    </>
   )
 }
 
@@ -248,7 +272,8 @@ function parseWord(segments: string[] ): JSX.Element | undefined {
       <PullWords
         slug={segments[1]!}
         first={parseInt(segments[2]!)}
-        last={segments.length >= 4 ? parseInt(segments[3]!) : undefined}
+        last={segments.length < 4 || segments[4] === "#" ? undefined : parseInt(segments[3]!)}
+        chapterSlug={segments.length >= 4 ? (segments[5]!) : undefined}
       />
     )
   }
