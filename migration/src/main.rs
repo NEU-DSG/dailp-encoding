@@ -57,7 +57,7 @@ async fn migrate_image_sources(db: &Database) -> Result<()> {
         .await?;
     db.upsert_image_source(
         "dailp",
-        "https://wd0ahsivs3.execute-api.us-east-1.amazonaws.com/latest/iiif/2",
+        "https://images.library.northeastern.edu/iiif/2/images/dailp",
     )
     .await?;
     Ok(())

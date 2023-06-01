@@ -22,9 +22,13 @@ import { drawerBg } from "src/menu.css"
 import { MorphemeDetails } from "src/morpheme"
 import { PanelDetails, PanelLayout, PanelSegment } from "src/panel-layout"
 import { usePreferences } from "src/preferences-context"
-import { chapterRoute } from "src/routes"
+import {
+  chapterRoute,
+  collectionWordPath
+} from "src/routes"
+import { useLocation} from "src/renderer/PageShell"
 import { useScrollableTabState } from "src/scrollable-tabs"
-import { AnnotatedForm, DocumentPage, TranslatedParagraph } from "src/segment"
+import { AnnotatedForm, DocumentPage } from "src/segment"
 import { mediaQueries } from "src/style/constants"
 import { fullWidth } from "src/style/utils.css"
 import { BasicMorphemeSegment, LevelOfDetail } from "src/types"
@@ -54,6 +58,8 @@ const AnnotatedDocumentPage = (props: { id: string }) => {
     variables: { slug: props.id },
   })
 
+  const wordIndex = useLocation().hash
+  const index = wordIndex?.replace("w", "")
   const doc = data?.document
 
   if (!doc) {
@@ -61,17 +67,16 @@ const AnnotatedDocumentPage = (props: { id: string }) => {
   }
 
   useEffect(() => {
-    redirectUrl()
+    redirectUrl(index)
   }, [props.id])
 
   // Redirects this document to the corresponding collection chapter containing document.
-  function redirectUrl() {
+  function redirectUrl(index: string | undefined) {
     if (doc?.chapters?.length === 1) {
       const chapter = doc.chapters[0]
       const collectionSlug = chapter?.path[0]
       const chapterSlug = chapter?.path[chapter.path.length - 1]
-
-      navigate(chapterRoute(collectionSlug!, chapterSlug!)+useRouteParams())
+      wordIndex ? navigate(collectionWordPath(collectionSlug!, chapterSlug!, parseInt(index!)) ) : navigate(chapterRoute(collectionSlug!, chapterSlug!))
     }
   }
 
@@ -182,6 +187,10 @@ export const TranslationTab = ({ doc }: { doc: Document }) => {
   const [selectedMorpheme, setMorpheme] = useState<BasicMorphemeSegment | null>(
     null
   )
+
+  useEffect(() => {
+    selectAndShowContent(null)
+  }, [doc.id])
 
   const [dialogOpen, setDialogOpen] = useState(false)
   const closeDialog = () => setDialogOpen(false)
