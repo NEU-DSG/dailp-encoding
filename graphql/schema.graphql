@@ -750,6 +750,7 @@ entities without requiring a central allocating authority.
 scalar UUID
 
 enum UserGroup {
+	CONTRIBUTORS
 	EDITORS
 }
 
