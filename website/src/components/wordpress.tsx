@@ -97,10 +97,10 @@ const parseOptions: HTMLReactParserOptions = {
         return(<Glossary/>)
       }
       if (wordSegments) {
-        return parseWord(segments)
+        return parseWord(wordSegments)
       }
      }
-    } else if ("name" in node && "attribs" in node) {
+     else if ("name" in node && "attribs" in node) {
       if (node.name === "a") {
         return urlToAbsolutePath(node.attribs, node.children)
       } else if (node.name === "button") {
