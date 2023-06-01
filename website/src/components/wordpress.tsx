@@ -73,7 +73,7 @@ export const WordpressPageContents = ({
 const parseOptions: HTMLReactParserOptions = {
   replace(node) {
     const referenceEmbedStyle = /\[(\w*)\]/ // [search | glossary]
-    const wordEmbedstyle = /\[(\w*):([0-9]*)-?([0-9]*)?:?(audio)?(join)?(#)?(\w*)?\]/ // [DocName:Start(-OptionalEnd):?(audio?)(join?)#?OptionalChapterSlug?]
+    const wordEmbedStyle = /\[(\w*):([0-9]*)-?([0-9]*)?:?(audio)?(join)?(#)?(\w*)?\]/ // [DocName:Start(-OptionalEnd):?(audio?)(join?)#?OptionalChapterSlug?]
 
     if ("data" in node) {
       const wordSegments = node.data.match(wordEmbedStyle)?.filter((x) => !!x)
