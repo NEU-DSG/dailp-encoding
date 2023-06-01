@@ -37,7 +37,7 @@ export const Glossary = () => {
           {Object.entries(groupedTags).map(
             ([ty]) =>
               ty && (
-                <li>
+                <li key={`glossary-${glossarySectionId(ty)}`}>
                   <Link href={`#${glossarySectionId(ty)}`}>
                     {pluralize(ty)}
                   </Link>

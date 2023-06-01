@@ -102,9 +102,9 @@ const parseOptions: HTMLReactParserOptions = {
       }
 
       if (referenceSegments && referenceSegments[1] === "search") {
-        return (<LexicalSearch/>)
+        return(<LexicalSearch/>)
       } else if (referenceSegments && referenceSegments[1] === "glossary") {
-        <Glossary/>
+        return(<Glossary/>)
       }
     }
 
