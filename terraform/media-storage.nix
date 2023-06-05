@@ -19,9 +19,7 @@
         {
           sse_algorithm = "AES256";
         };
-    };
-    aws_s3_bucket_cors_configuration.media_storage_cors = {
-      bucket = config.resource.aws_s3_bucket.media_storage;
+
       # Currently, this rule is over-inclusive for dev testing. 
       # Before launching to prod, we will want tighter rules
       cors_rule = {
@@ -31,5 +29,5 @@
         max_age_seconds = 3600;
       };
     };
-  };
+    };
 }
