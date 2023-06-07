@@ -24,7 +24,9 @@ import { PanelDetails, PanelLayout, PanelSegment } from "src/panel-layout"
 import { usePreferences } from "src/preferences-context"
 import {
   chapterRoute,
-  collectionWordPath
+  collectionWordPath,
+  documentDetailsRoute,
+  documentRoute
 } from "src/routes"
 import { useLocation} from "src/renderer/PageShell"
 import { useScrollableTabState } from "src/scrollable-tabs"
