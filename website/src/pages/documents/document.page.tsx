@@ -35,7 +35,6 @@ import { BasicMorphemeSegment, LevelOfDetail } from "src/types"
 import PageImages from "../../page-image"
 import * as css from "./document.css"
 import { RiArrowUpCircleFill } from "react-icons/ri"
-import { fullWidth } from "src/style/utils.css"
 import { useRouteParams } from "src/renderer/PageShell"
 
 enum Tabs {
