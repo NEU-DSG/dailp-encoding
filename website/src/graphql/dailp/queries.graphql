@@ -262,6 +262,7 @@ query DocSlice(
   $morphemeSystem: CherokeeOrthography!
 ) {
   document(slug: $slug) {
+    title
     audioRecording {
       resourceUrl
       startTime
