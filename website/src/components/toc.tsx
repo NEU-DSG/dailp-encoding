@@ -77,6 +77,7 @@ const TOC = ({ section, chapters }: TOCProps) => {
     section === CollectionSection.Body ? css.listItem : css.numberedListItem
 
   return (
+    <>
     <ol className={listStyle}>
       {chapters.map((item) => (
         <li key={item.slug} className={listItemStyle}>
@@ -94,6 +95,7 @@ const TOC = ({ section, chapters }: TOCProps) => {
         </li>
       ))}
     </ol>
+    </>
   )
 }
 
