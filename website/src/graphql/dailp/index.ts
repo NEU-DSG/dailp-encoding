@@ -1244,16 +1244,15 @@ export type DocSliceQuery = { readonly __typename?: "Query" } & {
                     >
                   }
               >
-            readonly position: {
-              readonly __typename?: "PositionInDocument"
-            } & Pick<PositionInDocument, "documentId">
-          
               readonly audioTrack: Maybe<
                 { readonly __typename?: "AudioSlice" } & Pick<
                   AudioSlice,
                   "index" | "resourceUrl" | "startTime" | "endTime"
                 >
               >
+              readonly position: {
+                readonly __typename?: "PositionInDocument"
+              } & Pick<PositionInDocument, "documentId">
             }
         >
       }
