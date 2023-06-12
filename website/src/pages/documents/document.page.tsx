@@ -36,8 +36,7 @@ import { fullWidth } from "src/style/utils.css"
 import { BasicMorphemeSegment, LevelOfDetail } from "src/types"
 import PageImages from "../../page-image"
 import * as css from "./document.css"
-import { RiArrowUpCircleFill } from "react-icons/ri"
-import { useRouteParams } from "src/renderer/PageShell"
+import { RiArrowUpCircleFill } from "react-icons/ri/index"
 
 enum Tabs {
   ANNOTATION = "annotation-tab",
