@@ -28,7 +28,7 @@ export const FormProvider = (props: { children: ReactNode }) => {
 
   /** Calls the backend GraphQL mutation to update a word. */
   const runUpdate = async (variables: { word: Dailp.AnnotatedFormUpdate }) => {
-    await updateWord(variables)
+    return await updateWord(variables)
   }
 
   const form = useFormState({
@@ -61,6 +61,10 @@ export const FormProvider = (props: { children: ReactNode }) => {
             commentary: values.word["commentary"],
             segments: updatedSegments,
           },
+        }).then(({ data, error }) => {
+          if (error) {
+            alert(error)
+          }
         })
       } else {
         alert(settingsAlert)
