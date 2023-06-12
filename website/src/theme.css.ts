@@ -48,6 +48,8 @@ export const themeClass = createTheme(themeContract, {
 })
 
 export const wordpressUrl = "https://wp.dailp.northeastern.edu"
+export const devUrl = "https://dev.dailp.northeastern.edu"
+export const prodUrl = "https://dailp.northeastern.edu"
 
 // theme.fonts.body = theme.fonts.bodyArr.join(",")
 // theme.fonts.header = theme.fonts.headerArr.join(",")

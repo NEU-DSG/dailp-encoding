@@ -34,6 +34,7 @@ mod morpheme;
 pub mod page;
 mod person;
 pub mod raw;
+mod slugs;
 mod tag;
 mod translation;
 
@@ -54,5 +55,6 @@ pub use gloss::*;
 pub use lexical::*;
 pub use morpheme::*;
 pub use person::*;
+pub use slugs::*;
 pub use tag::*;
 pub use translation::*;

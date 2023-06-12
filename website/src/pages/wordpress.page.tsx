@@ -25,7 +25,7 @@ const WordpressPage = (props: { "*": string }) => (
   </Layout>
 )
 
-export default WordpressPage
+export const Page = WordpressPage
 
 const Contents = (props: { slug: string }) => {
   const [{ data, fetching }] = Wordpress.usePageQuery({

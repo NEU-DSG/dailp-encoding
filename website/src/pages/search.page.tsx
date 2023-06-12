@@ -3,7 +3,7 @@ import cx from "classnames"
 import QueryString from "query-string"
 import React, { useEffect } from "react"
 import { Helmet } from "react-helmet"
-import { Input } from "reakit/Input"
+import { Input } from "reakit"
 import Link from "src/components/link"
 import * as Dailp from "src/graphql/dailp"
 import { useLocation } from "src/renderer/PageShell"
@@ -11,6 +11,7 @@ import { closeBlock, fullWidth } from "src/style/utils.css"
 import Layout from "../layout"
 import { documentWordPath, sourceCitationRoute } from "../routes"
 import { boldWordRow, wordRow } from "./timeline.css"
+import { LexicalSearch } from "src/components/lexical-search"
 
 const SearchPage = () => {
   const location = useLocation()
@@ -34,30 +35,11 @@ const SearchPage = () => {
 
   return (
     <Layout>
-      <Helmet title="Search" />
-      <main>
-        <p className={fullWidth}>
-          Type a search query in Cherokee syllabary, simple phonetics, English
-          translation, or romanized source. All words from{" "}
-          <Link href="/sources">dictionaries and grammars</Link> that contain
-          your query will be shown below. These results do not include our
-          collection of manuscripts yet.
-        </p>
-        <Input
-          className={searchBox}
-          defaultValue={morphemeId ?? ""}
-          placeholder="Search query"
-          onChange={(e) => {
-            setMorpheme(e.target.value || null)
-          }}
-        />
-
-        {!!morphemeId && <Timeline gloss={morphemeId} />}
-      </main>
+      <LexicalSearch/>
     </Layout>
   )
 }
-export default SearchPage
+export const Page = SearchPage
 
 const Timeline = (p: { gloss: string }) => {
   const [timeline] = Dailp.useWordSearchQuery({

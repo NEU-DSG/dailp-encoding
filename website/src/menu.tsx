@@ -1,12 +1,12 @@
 import React from "react"
-import { MdArrowDropDown, MdMenu } from "react-icons/md"
+import { MdArrowDropDown, MdMenu } from "react-icons/md/index"
 import {
   Dialog,
   DialogBackdrop,
   DialogDisclosure,
   useDialogState,
-} from "reakit/Dialog"
-import { Menu, MenuButton, MenuItem, useMenuState } from "reakit/Menu"
+} from "reakit"
+import { Menu, MenuButton, MenuItem, useMenuState } from "reakit"
 import Link from "src/components/link"
 import * as Wordpress from "src/graphql/wordpress"
 import { Location, useLocation, usePageContext } from "src/renderer/PageShell"
@@ -50,13 +50,13 @@ export const NavMenu = (p: { menuID: number }) => {
           return <SubMenu key={item.label} item={item} location={location} />
         } else {
           let url = { pathname: item.path }
-          if (item.path.startsWith("http")) {
+          if (item.path && item.path.startsWith("http")) {
             url = new URL(item.path)
           }
           return (
             <Link
               key={item.path}
-              href={url.pathname}
+              href={url.pathname?.valueOf()}
               className={navLink}
               aria-current={
                 location.pathname === url.pathname ? "page" : undefined
@@ -153,14 +153,14 @@ export const MobileNav = (p: { menuID: number }) => {
                   return null
                 }
                 let url = { pathname: item.path }
-                if (item.path.startsWith("http")) {
+                if (item.path && item.path.startsWith("http")) {
                   url = new URL(item.path)
                 }
                 return (
                   <li key={item.path}>
                     <Link
                       className={drawerItem}
-                      href={url.pathname}
+                      href={url.pathname?.valueOf()}
                       aria-current={
                         router.urlPathname === url.pathname ? "page" : undefined
                       }

@@ -2,18 +2,19 @@ import { Tooltip } from "@reach/tooltip"
 import "@reach/tooltip/styles.css"
 import cx from "classnames"
 import React from "react"
-import { MdCircle, MdInfoOutline } from "react-icons/md"
+import { MdCircle, MdInfoOutline } from "react-icons/md/index"
 import * as Dailp from "src/graphql/dailp"
 import { DocumentContents } from "src/pages/documents/document.page"
 import { std } from "src/style/utils.css"
 import { CleanButton } from "./components"
+import { Environment, deploymentEnvironment } from "./env"
 import { useForm } from "./form-context"
 import { PanelDetails } from "./panel-layout"
 import * as css from "./segment.css"
 import { BasicMorphemeSegment, LevelOfDetail } from "./types"
 
 type TranslatedPage = NonNullable<DocumentContents["translatedPages"]>[0]
-type TranslatedParagraph = TranslatedPage["paragraphs"][0]
+export type TranslatedParagraph = TranslatedPage["paragraphs"][0]
 type Segment = TranslatedParagraph["source"][0]
 
 interface Props {
@@ -70,11 +71,52 @@ export const DocumentParagraph = (
     p.levelOfDetail > LevelOfDetail.Pronunciation
       ? css.annotationSection.wordParts
       : css.annotationSection.story
+
+  let isSelected = false
+
+  if (p.wordPanelDetails.currContents?.__typename === "DocumentParagraph") {
+    isSelected = p.wordPanelDetails.currContents.source === p.segment.source
+  }
+
+  const detailButton = (
+    <CleanButton
+      title="View paragraph details"
+      onClick={() => {
+        p.wordPanelDetails.setCurrContents(p.segment)
+      }}
+    >
+      {isSelected ? (
+        <MdCircle size={20} className={css.linkSvg} />
+      ) : (
+        <MdInfoOutline size={20} className={css.linkSvg} />
+      )}
+    </CleanButton>
+  )
+
+  let wordCSS = css.wordGroup
+
+  if (isSelected) {
+    wordCSS = cx(wordCSS, css.selectedWord)
+  }
+
   return (
     <section className={blockStyle}>
-      <div className={annotationStyle}>{children}</div>
-      <p className={css.inlineBlock}>{p.segment.translation ?? null}</p>
-      {/*<SegmentAudio/>*/}
+      <div className={wordCSS}>
+        <div className={annotationStyle}>
+          {children}
+          {deploymentEnvironment !== Environment.Production &&
+            p.levelOfDetail === LevelOfDetail.Story &&
+            detailButton}
+        </div>
+        <p className={css.inlineBlock}>
+          {p.segment.translation ?? null}
+          {deploymentEnvironment !== Environment.Production &&
+            p.levelOfDetail >= LevelOfDetail.Pronunciation &&
+            detailButton}
+        </p>
+
+        {/*<SegmentAudio/>*/}
+      </div>
     </section>
   )
 }
@@ -106,7 +148,9 @@ export const AnnotatedForm = (
   if (showAnything) {
     const showSegments = p.levelOfDetail >= LevelOfDetail.Segmentation
     const translation = p.segment.englishGloss.join(", ")
-    const isSelected = p.wordPanelDetails.currContents?.id === p.segment.id
+    const isSelected =
+      (p.wordPanelDetails.currContents as Dailp.FormFieldsFragment)?.id ===
+      p.segment.id
 
     let wordCSS = showSegments ? css.wordGroup : css.wordGroupInline
 

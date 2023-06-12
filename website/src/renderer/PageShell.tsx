@@ -5,6 +5,7 @@ import { Client as GraphQLClient, Provider as GraphQLProvider } from "urql"
 import type { PageContextBuiltIn } from "vite-plugin-ssr"
 import type { PageContextBuiltInClient } from "vite-plugin-ssr/client"
 import { UserProvider } from "src/auth"
+import { CollectionProvider } from "src/pages/edited-collections/edited-collection-context"
 
 export const rootElementId = "app-root"
 
@@ -22,7 +23,9 @@ export function PageShell({
         <GraphQLProvider value={client}>
           <ReakitProvider>
             <UserProvider>
-              <Page {...routeParams} />
+              <CollectionProvider>
+                <Page {...routeParams} />
+              </CollectionProvider>
             </UserProvider>
           </ReakitProvider>
         </GraphQLProvider>
@@ -70,6 +73,6 @@ export type PageContext = Pick<
   | "urlPathname"
   | "Page"
 > &
-  PageContextBuiltInClient
+  Omit<PageContextBuiltInClient, "isBackwardNavigation">
 
 export type PageProps = {}

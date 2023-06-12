@@ -15,7 +15,7 @@ const EditablePage = (props: Props) => (
     <EditablePageContents {...props} />
   </Layout>
 )
-export default EditablePage
+export const Page = EditablePage
 
 export const EditablePageContents = (props: Props) => (
   <main className={paddedWidth}>

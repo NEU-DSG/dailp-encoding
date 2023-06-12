@@ -1,9 +1,12 @@
 import { style } from "@vanilla-extract/css"
+import { flowRight } from "lodash-es"
 import { important, position } from "polished"
+import { rightButton } from "src/components/carousel.css"
 import {
   colors,
   fonts,
   hspace,
+  layers,
   mediaQueries,
   radii,
   thickness,
@@ -21,6 +24,12 @@ export const annotationContents = style({
 
 export const topMargin = style({
   marginTop: vspace.half,
+})
+
+export const alignRight = style({
+  marginBottom: vspace.half,
+  display: "flex",
+  justifyContent: "right",
 })
 
 export const bottomPadded = style({
@@ -41,7 +50,7 @@ export const displayModeArea = style({
   position: "sticky",
   top: `calc(55px + ${vspace[1.75]})`,
   width: "100%",
-  zIndex: 1,
+  zIndex: layers.base,
   paddingTop: vspace.quarter,
   paddingBottom: vspace.quarter,
   "@media": {
@@ -63,7 +72,7 @@ export const wideAndTop = style({
   position: "sticky",
   top: 55,
   width: "100%",
-  zIndex: 1,
+  zIndex: layers.base,
   "@media": {
     [mediaQueries.medium]: {
       top: 0,
@@ -144,7 +153,7 @@ export const morphemeDialog = style([
     transform: "translate(-50%, -50%)",
     maxWidth: "100vw",
     margin: 0,
-    zIndex: 1009,
+    zIndex: layers.top,
   },
 ])
 
@@ -159,7 +168,7 @@ export const morphemeDialogBackdrop = style({
   position: "fixed",
   inset: 0,
   backgroundColor: "rgba(0,0,0,0.2)",
-  zIndex: 1008,
+  zIndex: layers.third,
 })
 
 export const annotatedDocument = style({
@@ -224,3 +233,20 @@ export const mobileWordPanel = style([
     },
   },
 ])
+
+export const scrollTop = style({
+  display: "flex",
+  flexFlow: "column nowrap",
+  justifyContent: "flex-end",
+  alignContent: "center",
+  alignItems: "center",
+  alignSelf: "flex-end",
+  position: "sticky",
+  zIndex: 1,
+  top: `calc(100vh - 100px)`,
+  right: 0,
+  padding: vspace.quarter,
+  color: colors.secondaryContrast,
+  outlineColor: colors.secondaryContrast,
+  backgroundColor: colors.secondary,
+})
