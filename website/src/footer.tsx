@@ -16,7 +16,7 @@ const Footer = () => {
               title="The Digital Archive of Indigenous Language Persistence (DAILP)"
               authors={
                 [{name: "Ellen Cushman", link: "https://www.ellencushman.com"},
-                 {name: "Taylor Snead", link: "https://snead.xyz"},
+                 {name: "Shelby Snead", link: "https://snead.xyz"},
                  {name: "Naomi Trevino"},
                  {name: "Jeffrey Bourns"},
                  {name: "Aparna Dutta"},
