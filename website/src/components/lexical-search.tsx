@@ -37,8 +37,9 @@ export const LexicalSearch = () => {
       <main>
         <p className={fullWidth}>
           Type a search query in Cherokee syllabary, simple phonetics, English
-          translation, or romanized source. All words from{" "}
-          <Link href="/sources">dictionaries and grammars</Link> 
+          translation, or romanized source. All words are from our collection of{" "}
+          <Link href="/sources">dictionaries and grammars</Link> and{" "}
+          <Link href="/cwkw">edited collection of documents</Link>.
         </p>
         <Input
           className={searchBox}
