@@ -87,7 +87,7 @@ const CWKWLayout: React.FC = ({ children }) => {
           {name: "Oleta Pritchett"},
           {name: "Tyler Hodges"},
           {name: "John Chewey"},
-          {name: "Taylor Snead", link:"https://snead.xyz"},
+          {name: "Shelby Snead", link:"https://snead.xyz"},
           {name: "Chan Mi Oh", link: "https://chanmioh.github.io"},
           {name: "Kush Patel"},
           {name: "Shashwat Patel"},
