@@ -51,7 +51,7 @@ export async function onBeforeRender(
     return { pageContext: baseContext }
   } else {
     const ssr = ssrExchange({ initialState: undefined, isClient: false })
-    const client = customClient(true, [ssr])
+    const client = customClient(true, [ssr], null)
 
     const context = {
       isBackwardNavigation: false,

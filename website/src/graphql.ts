@@ -10,8 +10,10 @@ import {
   ssrExchange,
   useQuery,
 } from "urql"
+import { authLink } from "./graphql/client"
 
-const GRAPHQL_URL = `${process.env["DAILP_API_URL"]}/graphql`
+export const GRAPHQL_URL = (token: string | null) =>
+  process.env["DAILP_API_URL"] + (token ? "/graphql-edit" : "/graphql")
 const WP_GRAPHQL_URL = "https://wp.dailp.northeastern.edu/graphql"
 
 export { useQuery }
@@ -30,9 +32,9 @@ export function useWpQuery<Data, Variables extends AnyVariables>(
 export const sharedCache = cacheExchange
 export const sharedSsr = ssrExchange({ isClient: true, initialState: {} })
 
-export const client = {
+export const serverSideClients = {
   dailp: createClient({
-    url: GRAPHQL_URL,
+    url: GRAPHQL_URL(null),
     exchanges: [dedupExchange, sharedCache, fetchExchange],
   }),
   wordpress: createClient({
@@ -41,10 +43,20 @@ export const client = {
   }),
 }
 
-export const customClient = (suspense: boolean, exchanges: Exchange[]) =>
+export const customClient = (
+  suspense: boolean,
+  exchanges: Exchange[],
+  token: string | null
+) =>
   createClient({
-    url: GRAPHQL_URL,
-    exchanges: [dedupExchange, sharedCache, ...exchanges, fetchExchange],
+    url: GRAPHQL_URL(token),
+    exchanges: [
+      dedupExchange,
+      sharedCache,
+      ...exchanges,
+      ...(token ? [authLink(token)] : []),
+      fetchExchange,
+    ],
     suspense,
     fetch,
   })
