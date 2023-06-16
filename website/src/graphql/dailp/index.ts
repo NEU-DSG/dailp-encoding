@@ -688,13 +688,16 @@ export type SourceAttribution = {
 }
 
 export enum UserGroup {
-  Editor = "EDITOR",
+  Contributors = "CONTRIBUTORS",
+  Editors = "EDITORS",
 }
 
 export type UserInfo = {
   readonly __typename?: "UserInfo"
   readonly email: Scalars["String"]
   readonly groups: ReadonlyArray<UserGroup>
+  /** Unique ID for the User. Should be an AWS Cognito Sub. */
+  readonly id: Scalars["UUID"]
 }
 
 export type WordSegment = {
