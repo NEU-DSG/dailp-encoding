@@ -20,7 +20,7 @@ const IndexPage = () => {
           />
           <WordpressPage slug="/" />
 
-          <h1>Cherokee Manuscript Collections</h1>
+          <h1>Digital Edited Collections</h1>
           <ul>
             {dailp?.allEditedCollections.map((collection) => (
               <li key={collection.slug}>
