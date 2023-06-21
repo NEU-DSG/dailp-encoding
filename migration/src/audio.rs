@@ -261,7 +261,7 @@ impl AudioRes {
             let aws_region = String::from("us-east-1");
 
             let s3_location = format!(
-                "https://dailp-{}-media-storage.s3.{}.amazonaws.com",
+                "https://d1q0qkah8ttfau.cloudfront.net",
                 deploy_env, aws_region
             );
 
