@@ -5,6 +5,7 @@ import { fullWidth, paddedCenterColumn } from "src/style/utils.css"
 import * as Dailp from "../graphql/dailp"
 import Layout from "../layout"
 import { collectionRoute } from "../routes"
+import cwkwLogo from "src/assets/cwkw-logo.png"
 
 /** Lists all documents in our database */
 const IndexPage = () => {
@@ -24,7 +25,7 @@ const IndexPage = () => {
           <ul>
             {dailp?.allEditedCollections.map((collection) => (
               <Card
-                thumbnail={"/src/assets/cwkw-logo.png"}
+                thumbnail={cwkwLogo}
                 header={{
                   text: collection.title,
                   link: collectionRoute(collection.slug),
