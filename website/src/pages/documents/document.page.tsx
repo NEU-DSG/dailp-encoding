@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react"
 import { isMobile } from "react-device-detect"
 import { Helmet } from "react-helmet"
 import { MdSettings } from "react-icons/md/index"
+import { RiArrowUpCircleFill } from "react-icons/ri/index"
 import {
   Dialog,
   DialogBackdrop,
@@ -22,13 +23,13 @@ import { drawerBg } from "src/menu.css"
 import { MorphemeDetails } from "src/morpheme"
 import { PanelDetails, PanelLayout, PanelSegment } from "src/panel-layout"
 import { usePreferences } from "src/preferences-context"
+import { useLocation } from "src/renderer/PageShell"
 import {
   chapterRoute,
   collectionWordPath,
   documentDetailsRoute,
-  documentRoute
+  documentRoute,
 } from "src/routes"
-import { useLocation} from "src/renderer/PageShell"
 import { useScrollableTabState } from "src/scrollable-tabs"
 import { AnnotatedForm, DocumentPage } from "src/segment"
 import { mediaQueries } from "src/style/constants"
@@ -36,7 +37,6 @@ import { fullWidth } from "src/style/utils.css"
 import { BasicMorphemeSegment, LevelOfDetail } from "src/types"
 import PageImages from "../../page-image"
 import * as css from "./document.css"
-import { RiArrowUpCircleFill } from "react-icons/ri/index"
 
 enum Tabs {
   ANNOTATION = "annotation-tab",
@@ -78,7 +78,11 @@ const AnnotatedDocumentPage = (props: { id: string }) => {
       const chapter = doc.chapters[0]
       const collectionSlug = chapter?.path[0]
       const chapterSlug = chapter?.path[chapter.path.length - 1]
-      wordIndex ? navigate(collectionWordPath(collectionSlug!, chapterSlug!, parseInt(index!)) ) : navigate(chapterRoute(collectionSlug!, chapterSlug!))
+      wordIndex
+        ? navigate(
+            collectionWordPath(collectionSlug!, chapterSlug!, parseInt(index!))
+          )
+        : navigate(chapterRoute(collectionSlug!, chapterSlug!))
     }
   }
 
@@ -123,12 +127,15 @@ export const TabSet = ({ doc }: { doc: Document }) => {
           </Tab>
         </TabList>
       </div>
-      
-      <Button id="scroll-top" className={css.scrollTop} onClick={() => window.scrollTo({top: 0, behavior: 'smooth'})}>
-        <RiArrowUpCircleFill size={45}/>
+
+      <Button
+        id="scroll-top"
+        className={css.scrollTop}
+        onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+      >
+        <RiArrowUpCircleFill size={45} />
         {!isMobile ? <div>Scroll to Top</div> : null}
       </Button>
-      
 
       <TabPanel
         {...tabs}
@@ -414,8 +421,6 @@ export const DocumentTitleHeader = (p: {
       {p.doc.title}
       {p.doc.date && ` (${p.doc.date.year})`}{" "}
     </h1>
-        
-    
 
     <div className={css.bottomPadded}>
       {p.showDetails ? (
@@ -425,12 +430,14 @@ export const DocumentTitleHeader = (p: {
       )}
       {!p.doc.audioRecording && !isMobile && (
         <div id="no-audio-message">
-        <strong>No Audio Available</strong>
+          <strong>No Audio Available</strong>
         </div>
       )}
-        <div className={css.alignRight}>
-          {!isMobile ? <Button onClick={() => window.print()}>Print</Button> : null}
-        </div>
+      <div className={css.alignRight}>
+        {!isMobile ? (
+          <Button onClick={() => window.print()}>Print</Button>
+        ) : null}
+      </div>
     </div>
     {p.doc.audioRecording && ( // TODO Implement sticky audio bar
       <div id="document-audio-player" className={css.audioContainer}>
@@ -441,12 +448,13 @@ export const DocumentTitleHeader = (p: {
           showProgress
         />
         {p.doc.audioRecording && !isMobile && (
-        <div>
-        <a href={p.doc.audioRecording?.resourceUrl}><Button>Download Audio</Button></a>
-        </div>
-      )}
+          <div>
+            <a href={p.doc.audioRecording?.resourceUrl}>
+              <Button>Download Audio</Button>
+            </a>
+          </div>
+        )}
       </div>
     )}
-    
   </header>
 )

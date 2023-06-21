@@ -4,6 +4,7 @@ import QueryString from "query-string"
 import React, { useEffect } from "react"
 import { Helmet } from "react-helmet"
 import { Input } from "reakit"
+import { LexicalSearch } from "src/components/lexical-search"
 import Link from "src/components/link"
 import * as Dailp from "src/graphql/dailp"
 import { useLocation } from "src/renderer/PageShell"
@@ -11,7 +12,6 @@ import { closeBlock, fullWidth } from "src/style/utils.css"
 import Layout from "../layout"
 import { documentWordPath, sourceCitationRoute } from "../routes"
 import { boldWordRow, wordRow } from "./timeline.css"
-import { LexicalSearch } from "src/components/lexical-search"
 
 const SearchPage = () => {
   const location = useLocation()
@@ -35,7 +35,7 @@ const SearchPage = () => {
 
   return (
     <Layout>
-      <LexicalSearch/>
+      <LexicalSearch />
     </Layout>
   )
 }
