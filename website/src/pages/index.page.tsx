@@ -1,6 +1,6 @@
 import React from "react"
 import { Helmet } from "react-helmet"
-import { Carousel, Link, WordpressPage } from "src/components"
+import { Carousel, Card, WordpressPage } from "src/components"
 import { fullWidth, paddedCenterColumn } from "src/style/utils.css"
 import * as Dailp from "../graphql/dailp"
 import Layout from "../layout"
@@ -20,15 +20,17 @@ const IndexPage = () => {
           />
           <WordpressPage slug="/" />
 
-          <h1>Cherokee Manuscript Collections</h1>
+          <h1>Digital Edited Collections</h1>
           <ul>
             {dailp?.allEditedCollections.map((collection) => (
-              <li key={collection.slug}>
-                <Link href={collectionRoute(collection.slug)}>
-                  {collection.title}
-                </Link>
-              </li>
-            ))}
+              <Card 
+                thumbnail={"/src/assets/cwkw-logo.png"} 
+                header={{
+                  text: collection.title,
+                  link: collectionRoute(collection.slug)
+                }}
+                description={"A collection of eighty-seven Cherokee syllabary documents translated by Cherokee speakers and annotated by teams of students, linguists, and Cherokee community members. Audio files for each translation coming soon."}/>            
+              ))}
           </ul>
         </article>
       </main>
