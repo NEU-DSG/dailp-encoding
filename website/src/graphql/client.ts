@@ -1,10 +1,10 @@
 import { authExchange } from "@urql/exchange-auth"
 import { createClient, dedupExchange, fetchExchange, makeOperation } from "urql"
-import { sharedCache, sharedSsr } from "../graphql"
+import { GRAPHQL_URL, sharedCache, sharedSsr } from "../graphql"
 
 export const graphqlClient = (token: string | null) =>
   createClient({
-    url: process.env["DAILP_API_URL"] + (token ? "/graphql-edit" : "/graphql"),
+    url: GRAPHQL_URL(token),
     exchanges: [
       dedupExchange,
       sharedCache,
@@ -14,7 +14,7 @@ export const graphqlClient = (token: string | null) =>
     ],
   })
 
-const authLink = (token: string) =>
+export const authLink = (token: string) =>
   authExchange<{ token: string }>({
     async getAuth({ authState }) {
       if (!authState) {

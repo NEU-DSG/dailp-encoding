@@ -77,23 +77,25 @@ const TOC = ({ section, chapters }: TOCProps) => {
     section === CollectionSection.Body ? css.listItem : css.numberedListItem
 
   return (
-    <ol className={listStyle}>
-      {chapters.map((item) => (
-        <li key={item.slug} className={listItemStyle}>
-          <Link
-            href={chapterRoute(collectionSlug!, item.slug)}
-            className={lastSelected(item) ? css.selectedLink : css.link}
-            onClick={() => onSelect(item)}
-          >
-            {item.title}
-          </Link>
+    <>
+      <ol className={listStyle}>
+        {chapters.map((item) => (
+          <li key={item.slug} className={listItemStyle}>
+            <Link
+              href={chapterRoute(collectionSlug!, item.slug)}
+              className={lastSelected(item) ? css.selectedLink : css.link}
+              onClick={() => onSelect(item)}
+            >
+              {item.title}
+            </Link>
 
-          {isSelected(item) && item.children ? (
-            <TOC section={section} chapters={item.children} />
-          ) : null}
-        </li>
-      ))}
-    </ol>
+            {isSelected(item) && item.children ? (
+              <TOC section={section} chapters={item.children} />
+            ) : null}
+          </li>
+        ))}
+      </ol>
+    </>
   )
 }
 

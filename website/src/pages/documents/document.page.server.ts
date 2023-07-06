@@ -1,8 +1,8 @@
-import { client } from "src/graphql"
+import { serverSideClients } from "src/graphql"
 import * as Dailp from "src/graphql/dailp"
 
 export async function prerender() {
-  const { data, error } = await client.dailp
+  const { data, error } = await serverSideClients.dailp
     .query<Dailp.DocumentsPagesQuery, Dailp.DocumentsPagesQueryVariables>(
       Dailp.DocumentsPagesDocument,
       {}
