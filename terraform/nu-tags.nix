@@ -3,7 +3,7 @@
 {
   setup.global_tags = {
     # Placeholder values, these should be sourced from secrets.
-    "nu:index" = "256150";
+    "nu:index" = "000000";
     "nu:owner" = "dailp";
     "nu:creator" = "sysna.trevino";
     "nu:department" = "library";
@@ -12,6 +12,8 @@
       if config.setup.stage == "dev" then "development" else "production";
     "nu:application" = "dailp-app";
     "nu:notification" = "n.trevino@northeastern.edu";
+    "nu:index-division" = "0000000";
+    "nu:account-code"   = "0000000"
   };
   servers.database.tags = {
     "nu:function" = "database";
