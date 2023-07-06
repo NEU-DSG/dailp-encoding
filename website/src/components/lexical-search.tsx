@@ -4,16 +4,14 @@ import QueryString from "query-string"
 import React, { useEffect } from "react"
 import { Helmet } from "react-helmet"
 import { Input } from "reakit"
-import { LexicalSearch } from "src/components/lexical-search"
-import Link from "src/components/link"
 import * as Dailp from "src/graphql/dailp"
 import { useLocation } from "src/renderer/PageShell"
 import { closeBlock, fullWidth } from "src/style/utils.css"
-import Layout from "../layout"
+import { boldWordRow, wordRow } from "../pages/timeline.css"
 import { documentWordPath, sourceCitationRoute } from "../routes"
-import { boldWordRow, wordRow } from "./timeline.css"
+import Link from "./link"
 
-const SearchPage = () => {
+export const LexicalSearch = () => {
   const location = useLocation()
   const [morphemeId, setMorpheme] = useDebounce(
     (location.search && location.search["query"]) || null,
@@ -34,12 +32,29 @@ const SearchPage = () => {
   }, [morphemeId])
 
   return (
-    <Layout>
-      <LexicalSearch />
-    </Layout>
+    <>
+      <Helmet title="Search" />
+      <main>
+        <p className={fullWidth}>
+          Type a search query in Cherokee syllabary, simple phonetics, English
+          translation, or romanized source. All words are from our collection of{" "}
+          <Link href="/sources">dictionaries and grammars</Link> and{" "}
+          <Link href="/cwkw">edited collection of documents</Link>.
+        </p>
+        <Input
+          className={searchBox}
+          defaultValue={morphemeId ?? ""}
+          placeholder="Search query"
+          onChange={(e) => {
+            setMorpheme(e.target.value || null)
+          }}
+        />
+
+        {!!morphemeId && <Timeline gloss={morphemeId} />}
+      </main>
+    </>
   )
 }
-export const Page = SearchPage
 
 const Timeline = (p: { gloss: string }) => {
   const [timeline] = Dailp.useWordSearchQuery({
@@ -61,7 +76,6 @@ const Timeline = (p: { gloss: string }) => {
         <div className={boldWordRow}>
           <div>Document ID</div>
           <div>Transcription</div>
-          <div>Normalization</div>
           <div>Simple Phonetics</div>
           <div>Translation</div>
         </div>
@@ -79,7 +93,6 @@ const Timeline = (p: { gloss: string }) => {
               </Link>
             ) : null}
             <div>{form.source}</div>
-            <div>{form.normalizedSource}</div>
             <div>{form.romanizedSource}</div>
             <div>{form.englishGloss.join(", ")}</div>
           </div>

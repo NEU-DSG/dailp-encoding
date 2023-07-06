@@ -1,5 +1,6 @@
 import { style } from "@vanilla-extract/css"
 import { margin } from "polished"
+import { linkColor } from "src/components/link.css"
 import { drawerWidth } from "src/components/sidebar.css"
 import {
   colors,
@@ -78,6 +79,18 @@ export const banner = style([
       [mediaQueries.medium]: {
         width: hsize.small,
       },
+    },
+  },
+])
+
+export const noticeText = style([
+  {
+    paddingTop: vspace.large,
+    borderTop: `1px ridge ${colors.borders}`,
+    color: colors.primaryText,
+    vars: {
+      [linkColor]: "white",
+      [colors.focus]: "white",
     },
   },
 ])
