@@ -3,7 +3,7 @@
 {
   setup.global_tags = {
     # Placeholder values, these should be sourced from secrets.
-    "nu:index" = "0000000";
+    "nu:index" = "256150";
     "nu:owner" = "dailp";
     "nu:creator" = "sysna.trevino";
     "nu:department" = "library";
