@@ -13,7 +13,7 @@
     "nu:application" = "dailp-app";
     "nu:notification" = "n.trevino@northeastern.edu";
     "nu:index-division" = "0000000";
-    "nu:account-code"   = "0000000"
+    "nu:account-code"   = "0000000";
   };
   servers.database.tags = {
     "nu:function" = "database";
