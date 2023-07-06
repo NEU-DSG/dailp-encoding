@@ -260,10 +260,7 @@ impl AudioRes {
             // Will this always be us-east-1? If so, modify url base below.
             let aws_region = String::from("us-east-1");
 
-            let s3_location = format!(
-                "https://dailp-{}-media-storage.s3.{}.amazonaws.com",
-                deploy_env, aws_region
-            );
+            let s3_location = "https://d1q0qkah8ttfau.cloudfront.net";
 
             println!("{}{}", s3_location, audio_ref_key);
 
