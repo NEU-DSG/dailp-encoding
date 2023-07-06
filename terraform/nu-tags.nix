@@ -3,13 +3,15 @@
 {
   setup.global_tags = {
     # Placeholder values, these should be sourced from secrets.
-    "nu:account-code" = "0000000";
-    "nu:index-division" = "0000000";
-    "nu:owner" = "dsg";
-    "nu:creator" = "dailp-deployment";
+    "nu:index" = "256150";
+    "nu:owner" = "dailp";
+    "nu:creator" = "sysna.trevino";
+    "nu:department" = "library";
+    "nu:project" = "dailp";
     "nu:environment" =
-      if config.setup.stage == "dev" then "library-dev" else "library-prod";
-    "nu:application" = "dailp";
+      if config.setup.stage == "dev" then "development" else "production";
+    "nu:application" = "dailp-app";
+    "nu:notification" = "n.trevino@northeastern.edu";
   };
   servers.database.tags = {
     "nu:function" = "database";
@@ -22,3 +24,13 @@
   };
   functions.tags = { "nu:function" = "application-server"; };
 }
+/*
+~ global ~ 
+ nu:index 256150
+ ---
+ ~ Local ~
+ Name <name you have given the particular resource>
+ nu:function 
+  function name, e.g. file-server, web-server
+  application-server, database, messaging-server, terminal-server/remote-access, cyber/monitoring, virtualization, storage>nu:application dailp-app
+*/
