@@ -30,7 +30,7 @@ with lib; {
       tags = { 
         "Name" = "Terraform state storage";
         "Terraform" = "true";
-        "nu:function" = "storage>nu:application dailp-app";
+        # "nu:function" = "storage>nu:application dailp-app";
       } // config.setup.global_tags;
       lifecycle.prevent_destroy = true;
       logging = {
