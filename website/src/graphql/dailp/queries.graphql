@@ -86,7 +86,13 @@ fragment FormFields on AnnotatedForm {
   }
   englishGloss
   commentary
-  audioTrack {
+  ingestedAudioTrack {
+    index
+    resourceUrl
+    startTime
+    endTime
+  }
+  editedAudio {
     index
     resourceUrl
     startTime

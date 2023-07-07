@@ -1,11 +1,14 @@
 #![allow(missing_docs)]
 
+use chrono::NaiveDate;
 use sqlx::postgres::types::PgLTree;
 use std::ops::Bound;
 use std::str::FromStr;
 
 use crate::collection::CollectionChapter;
 use crate::collection::EditedCollection;
+use crate::user::User;
+use crate::user::UserId;
 use {
     crate::*,
     anyhow::Result,
@@ -113,7 +116,7 @@ impl Database {
                             segments: None,
                             english_gloss: w.english_gloss.map(|s| vec![s]).unwrap_or_default(),
                             commentary: w.commentary,
-                            audio_track: None,
+                            ingested_audio_track: None,
                             date_recorded: None,
                             line_break: None,
                             page_break: None,
@@ -126,6 +129,20 @@ impl Database {
                         .collect(),
                 }
             })
+            .collect())
+    }
+
+    pub async fn word_contributor_audio(&self, word_id: &Uuid) -> Result<Vec<AudioSlice>> {
+        let contributor_audio = query_file_as!(
+            BasicAudioSlice,
+            "queries/word_contributor_audio.sql",
+            word_id
+        )
+        .fetch_all(&self.client)
+        .await?;
+        Ok(contributor_audio
+            .into_iter()
+            .map(AudioSlice::from)
             .collect())
     }
 
@@ -163,7 +180,7 @@ impl Database {
                         segments: None,
                         english_gloss: w.english_gloss.map(|s| vec![s]).unwrap_or_default(),
                         commentary: w.commentary,
-                        audio_track: None,
+                        ingested_audio_track: None,
                         date_recorded: None,
                         line_break: None,
                         page_break: None,
@@ -417,6 +434,27 @@ impl Database {
         .await?;
 
         Ok(word.id)
+    }
+
+    /// TODO: does this actually upload the audio (no) -- it just dies it to a
+    /// word, so should we have a better name?
+    pub async fn upload_contributor_audio(
+        &self,
+        upload: ContributorAudioUpload,
+        user_id: Option<Uuid>,
+    ) -> Result<Uuid> {
+        let media_slice_id = query_file_scalar!(
+            "queries/upsert_user_contributed_audio.sql",
+            user_id
+                .ok_or_else(|| anyhow::format_err!("User must be signed in to contribute audio"))?,
+            &upload.contributor_audio_url as _,
+            0,
+            0,
+            upload.word_id
+        )
+        .fetch_one(&self.client)
+        .await?;
+        Ok(media_slice_id)
     }
 
     pub async fn update_paragraph(&self, paragraph: ParagraphUpdate) -> Result<Uuid> {
@@ -899,6 +937,7 @@ impl Database {
         Ok(())
     }
 
+    /// This is only used for
     pub async fn insert_word<'a>(
         &self,
         tx: &mut sqlx::Transaction<'a, sqlx::Postgres>,
@@ -910,12 +949,12 @@ impl Database {
         let mut tx = tx.begin().await?;
 
         let audio_start = form
-            .audio_track
+            .ingested_audio_track
             .as_ref()
             .and_then(|t| t.start_time)
             .map(i64::from);
         let audio_end = form
-            .audio_track
+            .ingested_audio_track
             .as_ref()
             .and_then(|t| t.end_time)
             .map(i64::from);
@@ -932,7 +971,7 @@ impl Database {
             form.position.index as i64,
             page_id,
             char_range,
-            form.audio_track.map(|t| t.resource_url),
+            form.ingested_audio_track.map(|t| t.resource_url),
             audio_start,
             audio_end
         )
@@ -1179,10 +1218,20 @@ impl Loader<DocumentId> for Database {
                     is_reference: item.is_reference,
                     date: item.written_at.map(Date::new),
                     audio_recording: item.audio_url.map(|resource_url| AudioSlice {
+                        slice_id: Some(AudioSliceId(item.audio_slice_id.unwrap().to_string())),
                         resource_url,
                         parent_track: None,
                         annotations: None,
                         index: 0,
+                        include_in_edited_collection: true,
+                        edited_by: None,
+                        recorded_at: item.recorded_at.map(|recorded_at| Date::new(recorded_at)),
+                        recorded_by: item.recorded_by.and_then(|user_id| {
+                            item.recorded_by_name.map(|display_name| User {
+                                id: UserId(user_id.to_string()),
+                                display_name,
+                            })
+                        }),
                         start_time: item.audio_slice.as_ref().and_then(|r| match r.start {
                             Bound::Unbounded => None,
                             Bound::Included(t) | Bound::Excluded(t) => Some(t as i32),
@@ -1234,10 +1283,21 @@ impl Loader<DocumentShortName> for Database {
                     is_reference: item.is_reference,
                     date: item.written_at.map(Date::new),
                     audio_recording: item.audio_url.map(|resource_url| AudioSlice {
+                        slice_id: Some(AudioSliceId(item.audio_slice_id.unwrap().to_string())),
                         resource_url,
                         parent_track: None,
                         annotations: None,
                         index: 0,
+                        /// TODO: is this a bad default?
+                        include_in_edited_collection: true,
+                        edited_by: None,
+                        recorded_at: item.recorded_at.map(|recorded_at| Date::new(recorded_at)),
+                        recorded_by: item.recorded_by.and_then(|user_id| {
+                            item.recorded_by_name.map(|display_name| User {
+                                id: UserId(user_id.to_string()),
+                                display_name,
+                            })
+                        }),
                         start_time: item.audio_slice.as_ref().and_then(|r| match r.start {
                             Bound::Unbounded => None,
                             Bound::Included(t) | Bound::Excluded(t) => Some(t as i32),
@@ -1431,39 +1491,30 @@ impl Loader<WordsInParagraph> for Database {
             .map(|w| {
                 (
                     WordsInParagraph(w.paragraph_id),
-                    AnnotatedSeg::Word(AnnotatedForm {
-                        id: Some(w.id),
-                        source: w.source_text,
-                        normalized_source: None,
-                        simple_phonetics: w.simple_phonetics,
-                        phonemic: w.phonemic,
-                        // TODO Fill in
-                        segments: None,
-                        english_gloss: w.english_gloss.map(|s| vec![s]).unwrap_or_default(),
-                        commentary: w.commentary,
-                        audio_track: w.audio_url.map(|resource_url| AudioSlice {
-                            resource_url,
-                            parent_track: None,
-                            annotations: None,
-                            index: 0,
-                            start_time: w.audio_slice.as_ref().and_then(|r| match r.start {
-                                Bound::Unbounded => None,
-                                Bound::Included(t) | Bound::Excluded(t) => Some(t as i32),
-                            }),
-                            end_time: w.audio_slice.and_then(|r| match r.end {
-                                Bound::Unbounded => None,
-                                Bound::Included(t) | Bound::Excluded(t) => Some(t as i32),
-                            }),
-                        }),
-                        date_recorded: None,
-                        line_break: None,
-                        page_break: None,
-                        position: PositionInDocument::new(
-                            DocumentId(w.document_id),
-                            w.page_number.unwrap_or_default(),
-                            w.index_in_document as i64,
-                        ),
-                    }),
+                    AnnotatedSeg::Word(
+                        (BasicWord {
+                            id: w.id,
+                            source_text: w.source_text,
+                            simple_phonetics: w.simple_phonetics,
+                            phonemic: w.phonemic,
+                            english_gloss: w.english_gloss,
+                            commentary: w.commentary,
+                            document_id: w.document_id,
+                            index_in_document: w.index_in_document,
+                            page_number: w.page_number,
+                            audio_url: w.audio_url,
+                            audio_slice_id: w.audio_slice_id,
+                            audio_slice: w.audio_slice,
+                            audio_recorded_at: w.audio_recorded_at,
+                            audio_recorded_by: w.audio_recorded_by,
+                            audio_recorded_by_name: w.audio_recorded_by_name,
+                            include_audio_in_edited_collection: w
+                                .include_audio_in_edited_collection,
+                            audio_edited_by: w.audio_edited_by,
+                            audio_edited_by_name: w.audio_edited_by_name,
+                        })
+                        .into(),
+                    ),
                 )
             })
             .into_group_map())
@@ -1614,6 +1665,55 @@ impl Loader<PageId> for Database {
     }
 }
 
+/// A struct representing an audio slice that can be easily pulled from the database
+struct BasicAudioSlice {
+    id: Uuid,
+    recorded_at: Option<NaiveDate>,
+    resource_url: String,
+    range: Option<PgRange<i64>>,
+    include_in_edited_collection: bool,
+    recorded_by: Option<Uuid>,
+    recorded_by_name: Option<String>,
+    edited_by: Option<Uuid>,
+    edited_by_name: Option<String>,
+}
+
+impl From<BasicAudioSlice> for AudioSlice {
+    fn from(b: BasicAudioSlice) -> Self {
+        AudioSlice {
+            slice_id: Some(AudioSliceId(b.id.to_string())),
+            resource_url: b.resource_url,
+            parent_track: None,
+            include_in_edited_collection: b.include_in_edited_collection,
+            edited_by: b.edited_by.and_then(|user_id| {
+                b.edited_by_name.map(|display_name| User {
+                    id: UserId::from(user_id),
+                    display_name,
+                })
+            }),
+            recorded_at: b.recorded_at.map(Date::new),
+            recorded_by: b.recorded_by.and_then(|user_id| {
+                b.recorded_by_name.map(|display_name| User {
+                    id: UserId::from(user_id),
+                    display_name,
+                })
+            }),
+            annotations: None,
+            index: 0,
+            start_time: b.range.as_ref().and_then(|r| match r.start {
+                Bound::Unbounded => None,
+                Bound::Included(t) | Bound::Excluded(t) => Some(t as i32),
+            }),
+            end_time: b.range.and_then(|r| match r.end {
+                Bound::Unbounded => None,
+                Bound::Included(t) | Bound::Excluded(t) => Some(t as i32),
+            }),
+        }
+    }
+}
+
+/// A struct representing a Word/AnnotatedForm that can be easily pulled from
+/// the database
 struct BasicWord {
     id: Uuid,
     source_text: String,
@@ -1625,11 +1725,36 @@ struct BasicWord {
     index_in_document: i64,
     page_number: Option<String>,
     audio_url: Option<String>,
+    audio_slice_id: Option<Uuid>,
     audio_slice: Option<PgRange<i64>>,
+    audio_recorded_at: Option<NaiveDate>,
+    audio_recorded_by: Option<Uuid>,
+    audio_recorded_by_name: Option<String>,
+    include_audio_in_edited_collection: bool,
+    audio_edited_by: Option<Uuid>,
+    audio_edited_by_name: Option<String>,
+}
+
+impl BasicWord {
+    fn audio_slice(&self) -> Option<BasicAudioSlice> {
+        Some(BasicAudioSlice {
+            id: self.audio_slice_id?.to_owned(),
+            resource_url: self.audio_url.as_ref()?.clone(),
+            range: self.audio_slice.to_owned(),
+            recorded_at: self.audio_recorded_at,
+            recorded_by: self.audio_recorded_by,
+            recorded_by_name: self.audio_recorded_by_name.to_owned(),
+            include_in_edited_collection: self.include_audio_in_edited_collection,
+            edited_by: self.audio_edited_by,
+            edited_by_name: self.audio_edited_by_name.to_owned(),
+        })
+    }
 }
 
 impl From<BasicWord> for AnnotatedForm {
     fn from(w: BasicWord) -> Self {
+        // up here because we need to borrow the basic type before we start moving things
+        let ingested_audio_track = w.audio_slice().map(AudioSlice::from);
         Self {
             id: Some(w.id),
             source: w.source_text,
@@ -1640,20 +1765,7 @@ impl From<BasicWord> for AnnotatedForm {
             segments: None,
             english_gloss: w.english_gloss.map(|s| vec![s]).unwrap_or_default(),
             commentary: w.commentary,
-            audio_track: w.audio_url.map(move |audio_url| AudioSlice {
-                resource_url: audio_url,
-                parent_track: None,
-                annotations: None,
-                index: 0,
-                start_time: w.audio_slice.as_ref().and_then(|r| match r.start {
-                    Bound::Unbounded => None,
-                    Bound::Included(t) | Bound::Excluded(t) => Some(t as i32),
-                }),
-                end_time: w.audio_slice.and_then(|r| match r.end {
-                    Bound::Unbounded => None,
-                    Bound::Included(t) | Bound::Excluded(t) => Some(t as i32),
-                }),
-            }),
+            ingested_audio_track,
             date_recorded: None,
             line_break: None,
             page_break: None,

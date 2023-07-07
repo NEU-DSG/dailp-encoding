@@ -1,6 +1,14 @@
 import { style } from "@vanilla-extract/css"
 import { borderWidth } from "polished"
-import { fonts, hsize, mediaQueries, radii, space, thickness, vspace } from "src/style/constants"
+import {
+  fonts,
+  hsize,
+  mediaQueries,
+  radii,
+  space,
+  thickness,
+  vspace,
+} from "src/style/constants"
 import { media, onHover } from "src/style/utils"
 
 export const card = style({
@@ -29,7 +37,7 @@ export const cardImage = style([
   media(mediaQueries.medium, {
     borderBottomLeftRadius: "inherit",
     gridRowEnd: "span 2",
-  })
+  }),
 ])
 
 export const cardHeader = style({
@@ -39,7 +47,7 @@ export const cardHeader = style({
   gridRowEnd: "span 1",
   gridColumnEnd: "span 1",
   placeSelf: "center stretch",
-  padding: space.small
+  padding: space.small,
 })
 
 export const cardText = style([
@@ -52,7 +60,7 @@ export const cardText = style([
     placeSelf: "center stretch",
     fontFamily: fonts.header,
     borderTopWidth: thickness.thin,
-    padding: space.small
+    padding: space.small,
   },
   media(mediaQueries.medium, {
     gridRowStart: "2",
@@ -61,6 +69,5 @@ export const cardText = style([
     gridColumnEnd: "span 1",
     placeSelf: "center stretch",
     borderTopWidth: thickness.none,
-  })
-  
+  }),
 ])

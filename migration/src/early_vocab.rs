@@ -185,7 +185,7 @@ async fn parse_early_vocab(
                     ),
                     date_recorded: meta.date.clone(),
                     id: None,
-                    audio_track: None,
+                    ingested_audio_track: None,
                 },
                 links,
             ))
