@@ -2,21 +2,23 @@
 
 ## `word`
 
-| column              | type                     | description                                                                                         |
-| ------------------- | ------------------------ | --------------------------------------------------------------------------------------------------- |
-| `id`                | `uuid`                   | Primary key                                                                                         |
-| `source_text`       | `text`                   | Unambiguous transcription of the whole word                                                         |
-| `simple_phonetics`  | `text?`                  | Romanized phonetic spelling                                                                         |
-| `phonemic`          | `text?`                  | Underlying phonemic representation, with more pronunciation details                                 |
-| `english_gloss`     | `text?`                  | English translation                                                                                 |
-| `recorded_at`       | `date?`                  | When this word was written, only specified if it differs from when the document overall was written |
-| `commentary`        | `text?`                  | Linguistic or historical commentary supplied by an annotator                                        |
-| `audio_slice_id`    | `uuid? -> media_slice`   | Audio recording of the word read aloud, as ingested from Google Sheets.                             |
-| `document_id`       | `uuid -> document`       | Document the word is in                                                                             |
-| `page_number`       | `text?`                  | Page number, only supplied for documents like dictionaries that may not have `document_page` rows   |
-| `index_in_document` | `bigint`                 | Position of the word in the whole document                                                          |
-| `page_id`           | `uuid? -> document_page` | Physical page containing this word                                                                  |
-| `character_range`   | `int8range?`             | Order of words in a paragraph is determined by character indices                                    |
+| column                               | type                     | description                                                                                         |
+| ------------------------------------ | ------------------------ | --------------------------------------------------------------------------------------------------- |
+| `id`                                 | `uuid`                   | Primary key                                                                                         |
+| `source_text`                        | `text`                   | Unambiguous transcription of the whole word                                                         |
+| `simple_phonetics`                   | `text?`                  | Romanized phonetic spelling                                                                         |
+| `phonemic`                           | `text?`                  | Underlying phonemic representation, with more pronunciation details                                 |
+| `english_gloss`                      | `text?`                  | English translation                                                                                 |
+| `recorded_at`                        | `date?`                  | When this word was written, only specified if it differs from when the document overall was written |
+| `commentary`                         | `text?`                  | Linguistic or historical commentary supplied by an annotator                                        |
+| `audio_slice_id`                     | `uuid? -> media_slice`   | Audio recording of the word read aloud, as ingested from Google Sheets.                             |
+| `include_audio_in_edited_collection` | `boolean`                | True if ingested audio should be shown to readers. Defaults to `true`.                              |
+| `audio_edited_by`                    | `uuid? -> User`          | Last Editor to decide if ingested audio should be shown to readers.                                 |
+| `document_id`                        | `uuid -> document`       | Document the word is in                                                                             |
+| `page_number`                        | `text?`                  | Page number, only supplied for documents like dictionaries that may not have `document_page` rows   |
+| `index_in_document`                  | `bigint`                 | Position of the word in the whole document                                                          |
+| `page_id`                            | `uuid? -> document_page` | Physical page containing this word                                                                  |
+| `character_range`                    | `int8range?`             | Order of words in a paragraph is determined by character indices                                    |
 
 - One of `page_id` or `character_range` must be supplied
 
