@@ -184,7 +184,7 @@ async fn parse_numerals(
                 date_recorded: Some(date.clone()),
                 line_break: None,
                 page_break: None,
-                audio_track: None,
+                ingested_audio_track: None,
             })
         });
 
@@ -264,7 +264,7 @@ async fn parse_appendix(db: &Database, sheet_id: &str, to_skip: usize) -> Result
                 page_break: None,
                 commentary: None,
                 date_recorded: meta.date.clone(),
-                audio_track: None,
+                ingested_audio_track: None,
             })
         });
 
@@ -356,7 +356,7 @@ fn parse_new_df1975(
                     date_recorded: Some(date),
                     source: root,
                     position: pos,
-                    audio_track: None,
+                    ingested_audio_track: None,
                 },
             })
         })
@@ -395,7 +395,7 @@ async fn ingest_particle_index(db: &Database, document_id: &str) -> Result<()> {
                 date_recorded: None,
                 source: syllabary,
                 position: pos,
-                audio_track: None,
+                ingested_audio_track: None,
             })
         });
 
@@ -431,7 +431,7 @@ async fn ingest_ac1995(db: &Database, sheet_id: &str) -> Result<()> {
             date_recorded: meta.date.clone(),
             source: syllabary,
             position: pos,
-            audio_track: None,
+            ingested_audio_track: None,
         })
     });
 
