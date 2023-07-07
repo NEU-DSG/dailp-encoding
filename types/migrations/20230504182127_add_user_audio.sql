@@ -6,9 +6,20 @@ create table dailp_user (
   created_at date not null
 );
 
+alter table word
+  add column include_audio_in_edited_collection boolean not null DEFAULT true,
+  add column audio_edited_by uuid,
+  add constraint audio_edited_by_fkey
+    foreign key (audio_edited_by)
+    references dailp_user (id)
+    on delete set null;
+
 alter table media_resource
     add column recorded_by uuid,
-    add constraint recorded_by_fkey foreign key (recorded_by) references dailp_user (id) on delete set null;
+    add constraint recorded_by_fkey
+      foreign key (recorded_by)
+      references dailp_user (id)
+      on delete set null;
 
 
 create table word_user_media (
