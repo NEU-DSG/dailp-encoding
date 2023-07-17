@@ -18,7 +18,7 @@
   servers.database.tags = {
     "nu:function" = "database";
     "nu:backups" = "no";
-    "Name" = "DAILP-db"
+    "Name" = "DAILP-db";
   };
   servers.bastion.instance_tags = {
     "nu:function" = "bastion";
