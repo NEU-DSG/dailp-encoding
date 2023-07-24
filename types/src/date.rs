@@ -34,3 +34,16 @@ impl Date {
         self.0.format("%B %e, %Y").to_string()
     }
 }
+
+#[derive(async_graphql::InputObject)]
+pub struct DateInput {
+    day: u32,
+    month: u32,
+    year: i32,
+}
+
+impl Into<Date> for &DateInput {
+    fn into(self) -> Date {
+        Date::from_ymd(self.year, self.month, self.day)
+    }
+}

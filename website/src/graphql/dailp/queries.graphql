@@ -313,3 +313,7 @@ query CollectionChapter($collectionSlug: String!, $chapterSlug: String!) {
 mutation UpdateWord($word: AnnotatedFormUpdate!) {
   updateWord(word: $word)
 }
+
+mutation UpdateDocumentMetadata($document: DocumentMetadataUpdate!) {
+  updateDocumentMetadata(document: $document)
+}

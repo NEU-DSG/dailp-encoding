@@ -289,6 +289,12 @@ export type Date = {
   readonly year: Scalars["Int"]
 }
 
+export type DateInput = {
+  readonly day: Scalars["Int"]
+  readonly month: Scalars["Int"]
+  readonly year: Scalars["Int"]
+}
+
 export type DocumentCollection = {
   readonly __typename?: "DocumentCollection"
   /**
@@ -302,6 +308,20 @@ export type DocumentCollection = {
   readonly name: Scalars["String"]
   /** URL-ready slug for this collection, generated from the name */
   readonly slug: Scalars["String"]
+}
+
+/**
+ * Used for updating document metadata.
+ * All fields except id are optional.
+ */
+export type DocumentMetadataUpdate = {
+  readonly audioSliceId: InputMaybe<Scalars["UUID"]>
+  readonly groupId: InputMaybe<Scalars["UUID"]>
+  readonly id: Scalars["UUID"]
+  readonly indexInGroup: InputMaybe<Scalars["Int"]>
+  readonly isReference: InputMaybe<Scalars["Boolean"]>
+  readonly title: InputMaybe<Scalars["String"]>
+  readonly writtenAt: InputMaybe<DateInput>
 }
 
 export type DocumentPage = {
@@ -487,6 +507,7 @@ export type Mutation = {
    */
   readonly apiVersion: Scalars["String"]
   readonly updateAnnotation: Scalars["Boolean"]
+  readonly updateDocumentMetadata: Scalars["UUID"]
   readonly updatePage: Scalars["Boolean"]
   /** Mutation for paragraph and translation editing */
   readonly updateParagraph: Scalars["UUID"]
@@ -495,6 +516,10 @@ export type Mutation = {
 
 export type MutationUpdateAnnotationArgs = {
   data: Scalars["JSON"]
+}
+
+export type MutationUpdateDocumentMetadataArgs = {
+  document: DocumentMetadataUpdate
 }
 
 export type MutationUpdatePageArgs = {
@@ -1302,6 +1327,14 @@ export type UpdateWordMutation = { readonly __typename?: "Mutation" } & Pick<
   "updateWord"
 >
 
+export type UpdateDocumentMetadataMutationVariables = Exact<{
+  document: DocumentMetadataUpdate
+}>
+
+export type UpdateDocumentMetadataMutation = {
+  readonly __typename?: "Mutation"
+} & Pick<Mutation, "updateDocumentMetadata">
+
 export const FormFieldsFragmentDoc = gql`
   fragment FormFields on AnnotatedForm {
     id
@@ -1801,4 +1834,16 @@ export function useUpdateWordMutation() {
   return Urql.useMutation<UpdateWordMutation, UpdateWordMutationVariables>(
     UpdateWordDocument
   )
+}
+export const UpdateDocumentMetadataDocument = gql`
+  mutation UpdateDocumentMetadata($document: DocumentMetadataUpdate!) {
+    updateDocumentMetadata(document: $document)
+  }
+`
+
+export function useUpdateDocumentMetadataMutation() {
+  return Urql.useMutation<
+    UpdateDocumentMetadataMutation,
+    UpdateDocumentMetadataMutationVariables
+  >(UpdateDocumentMetadataDocument)
 }

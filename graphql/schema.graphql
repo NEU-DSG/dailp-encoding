@@ -315,6 +315,12 @@ type Date {
 	formattedDate: String!
 }
 
+input DateInput {
+	day: Int!
+	month: Int!
+	year: Int!
+}
+
 type DocumentCollection {
 	"""
 	Full name of this collection
@@ -331,6 +337,20 @@ type DocumentCollection {
 	pass that to the dataloader below.
 	"""
 	documents: [DocumentReference!]!
+}
+
+"""
+Used for updating document metadata.
+All fields except id are optional.
+"""
+input DocumentMetadataUpdate {
+	id: UUID!
+	title: String
+	groupId: UUID
+	indexInGroup: Int
+	isReference: Boolean
+	writtenAt: DateInput
+	audioSliceId: UUID
 }
 
 type DocumentPage {
@@ -576,6 +596,7 @@ type Mutation {
 	updatePage(data: JSON!): Boolean!
 	updateAnnotation(data: JSON!): Boolean!
 	updateWord(word: AnnotatedFormUpdate!): UUID!
+	updateDocumentMetadata(document: DocumentMetadataUpdate!): UUID!
 }
 
 """

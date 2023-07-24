@@ -2018,6 +2018,24 @@
     },
     "query": "insert into morpheme_gloss_relation (left_gloss_id, right_gloss_id)\nselect\n  left_gloss.id,\n  right_gloss.id\nfrom\n  unnest(\n    $1::text[], $2::text[], $3::text[], $4::text[]\n  ) as input_relation(left_doc_name, left_gloss, right_doc_name, right_gloss)\n  inner join document as left_doc on left_doc.short_name = input_relation.left_doc_name\n  inner join\n    morpheme_gloss as left_gloss on\n      left_gloss.gloss = input_relation.left_gloss and left_gloss.document_id = left_doc.id\n  inner join\n    document as right_doc on right_doc.short_name = input_relation.right_doc_name\n  inner join\n    morpheme_gloss as right_gloss on\n      right_gloss.gloss = input_relation.right_gloss and right_gloss.document_id = right_doc.id\non conflict do nothing\n"
   },
+  "d3ba00dbb9f5ea3218ba9f724f3eb1ba8fc9ca810fec2aa45cd239a8e1913dae": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "TextArray",
+          "Uuid",
+          "Int8",
+          "Bool",
+          "Date",
+          "Uuid"
+        ]
+      }
+    },
+    "query": "update document set\n    title = \n        case\n            when $2::text[] != '{}' and $2[1] is not null then $2[1]\n            else title\n        end,\n    group_id =\n        case\n            when $3::uuid is not null then $3::uuid\n            else group_id\n        end,\n    index_in_group =\n        case\n            when $4::bigint is not null then $4::bigint\n            else index_in_group\n        end,\n    is_reference =\n        case\n            when $5::boolean is not null then $5::boolean\n            else is_reference\n        end,\n    written_at =\n        case\n            when $6::date is not null then $6::date\n            else written_at\n        end,\n    audio_slice_id =\n        case\n            when $7::uuid is not null then $7::uuid\n            else audio_slice_id\n        end\nwhere id = $1\n"
+  },
   "d6377d5a54a702f7df73f287390c0c45a1309f7e705c93d49842b409a947a1fd": {
     "describe": {
       "columns": [
