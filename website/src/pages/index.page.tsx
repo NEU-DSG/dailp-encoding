@@ -1,11 +1,11 @@
 import React from "react"
 import { Helmet } from "react-helmet"
+import cwkwLogo from "src/assets/cwkw-logo.png"
 import { Card, Carousel, WordpressPage } from "src/components"
 import { fullWidth, paddedCenterColumn } from "src/style/utils.css"
 import * as Dailp from "../graphql/dailp"
 import Layout from "../layout"
 import { collectionRoute } from "../routes"
-import cwkwLogo from "src/assets/cwkw-logo.png"
 
 /** Lists all documents in our database */
 const IndexPage = () => {

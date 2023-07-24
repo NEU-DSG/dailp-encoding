@@ -1,7 +1,8 @@
 use crate::{
-    slugify, AnnotatedForm, AudioSlice, Contributor, Database, Date, SourceAttribution,
-    Translation, TranslationBlock,
+    date::DateInput, slugify, AnnotatedForm, AudioSlice, Contributor, Database, Date,
+    SourceAttribution, Translation, TranslationBlock,
 };
+
 use async_graphql::{dataloader::DataLoader, FieldResult, MaybeUndefined};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -251,6 +252,19 @@ pub struct ParagraphUpdate {
     /// Unique identifier of the form
     pub id: Uuid,
     pub translation: MaybeUndefined<String>,
+}
+
+/// Used for updating document metadata.
+/// All fields except id are optional.
+#[derive(async_graphql::InputObject)]
+pub struct DocumentMetadataUpdate {
+    pub id: Uuid,
+    pub title: MaybeUndefined<String>,
+    pub group_id: MaybeUndefined<Uuid>,
+    pub index_in_group: MaybeUndefined<i64>,
+    pub is_reference: MaybeUndefined<bool>,
+    pub written_at: MaybeUndefined<DateInput>,
+    pub audio_slice_id: MaybeUndefined<Uuid>,
 }
 
 #[async_graphql::Object]

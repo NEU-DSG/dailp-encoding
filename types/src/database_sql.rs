@@ -403,6 +403,30 @@ impl Database {
 
     // pub async fn maybe_undefined_to_vec() -> Vec<Option<String>> {}
 
+    pub async fn update_document(&self, document: DocumentMetadataUpdate) -> Result<Uuid> {
+        let title = document.title.into_vec();
+        let group_id = document.group_id.into_vec();
+        let index_in_group = document.index_in_group.into_vec();
+        let is_reference = document.is_reference.into_vec();
+        let written_at: Option<Date> = document.written_at.value().map(Into::into);
+        let audio_slice_id = document.audio_slice_id.into_vec();
+
+        query_file!(
+            "queries/update_document_metadata.sql",
+            document.id,
+            &title as _,
+            &group_id as _,
+            &index_in_group as _,
+            &is_reference as _,
+            &written_at as _,
+            &audio_slice_id as _
+        )
+        .execute(&self.client)
+        .await?;
+
+        Ok(document.id)
+    }
+
     pub async fn update_word(&self, word: AnnotatedFormUpdate) -> Result<Uuid> {
         let source = word.source.into_vec();
         let commentary = word.commentary.into_vec();
