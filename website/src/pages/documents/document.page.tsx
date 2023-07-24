@@ -99,6 +99,20 @@ const AnnotatedDocumentPage = (props: { id: string }) => {
 export const Page = AnnotatedDocumentPage
 
 export const TabSet = ({ doc }: { doc: Document }) => {
+    const [isScrollVisible, setIsScrollVisible] = useState(false);
+    const handleScroll = () => {
+      setIsScrollVisible(window.scrollY > 700);
+    };
+    // Add the scroll event listener when the component is mounted.
+    // window (and document) cannot seem to be accessed on its own so we need to use this method instead.
+    useEffect(() => {
+      window.addEventListener('scroll', handleScroll);
+      // Remove the scroll event listener on component unmount
+      return () => {
+        window.removeEventListener('scroll', handleScroll);
+      };
+    }, []);
+    
   const tabs = useScrollableTabState({ selectedId: Tabs.ANNOTATION })
   const [{ data }] = Dailp.useDocumentDetailsQuery({
     variables: { slug: doc.slug! },
@@ -130,7 +144,7 @@ export const TabSet = ({ doc }: { doc: Document }) => {
 
       <Button
         id="scroll-top"
-        className={css.scrollTop}
+        className={isScrollVisible? css.showScrollTop : css.hideScrollTop}
         onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
       >
         <RiArrowUpCircleFill size={45} />
@@ -197,6 +211,7 @@ export const TabSet = ({ doc }: { doc: Document }) => {
     </>
   )
 }
+  
 
 export const TranslationTab = ({ doc }: { doc: Document }) => {
   const [selectedMorpheme, setMorpheme] = useState<BasicMorphemeSegment | null>(
