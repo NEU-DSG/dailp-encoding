@@ -101,7 +101,7 @@ export const Page = AnnotatedDocumentPage
 export const TabSet = ({ doc }: { doc: Document }) => {
     const [isScrollVisible, setIsScrollVisible] = useState(false);
     const handleScroll = () => {
-      setIsScrollVisible(window.scrollY > 700);
+      setIsScrollVisible(window.scrollY > 2000);
     };
     // Add the scroll event listener when the component is mounted.
     // window (and document) cannot seem to be accessed on its own so we need to use this method instead.
