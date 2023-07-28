@@ -30,7 +30,8 @@ export function useWpQuery<Data, Variables extends AnyVariables>(
 }
 
 export const sharedCache = cacheExchange
-export const sharedSsr = ssrExchange({ isClient: true, initialState: {} })
+// export const sharedSsr = ssrExchange({ isClient: true, initialState: {} })
+export const sharedSsr = null
 
 export const serverSideClients = {
   dailp: createClient({

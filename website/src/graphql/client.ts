@@ -8,7 +8,7 @@ export const graphqlClient = (token: string | null) =>
     exchanges: [
       dedupExchange,
       sharedCache,
-      sharedSsr,
+      // sharedSsr,
       ...(token ? [authLink(token)] : []),
       fetchExchange,
     ],
