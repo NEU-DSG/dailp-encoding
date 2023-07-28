@@ -233,19 +233,20 @@ export const CollapsiblePanel = (p: {
 }
 
 export const AudioPanel = (p: { segment: Dailp.FormFieldsFragment }) => {
+  const [audioTrack] = p.segment.editedAudio
   return (
     <>
-      {p.segment.audioTrack && (
+      {audioTrack && (
         <CollapsiblePanel
           title={"Audio"}
           content={
             <div>
               {
                 <AudioPlayer
-                  audioUrl={p.segment.audioTrack.resourceUrl}
+                  audioUrl={audioTrack.resourceUrl}
                   slices={{
-                    start: p.segment.audioTrack.startTime!,
-                    end: p.segment.audioTrack.endTime!,
+                    start: audioTrack.startTime!,
+                    end: audioTrack.endTime!,
                   }}
                   showProgress
                 />

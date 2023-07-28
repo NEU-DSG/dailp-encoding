@@ -12,14 +12,14 @@ export const Card = (props: {
   return (
     <Group className={card}>
       <img src={props.thumbnail} className={cardImage} />
-        <h2 className={cardHeader}>
-          {props.header.link ? (
-            <Link href={props.header.link}>{props.header.text}</Link>
-          ) : (
-            props.header.text
-          )}
-        </h2>
-        <p className={cardText}>{props.description}</p>
+      <h2 className={cardHeader}>
+        {props.header.link ? (
+          <Link href={props.header.link}>{props.header.text}</Link>
+        ) : (
+          props.header.text
+        )}
+      </h2>
+      <p className={cardText}>{props.description}</p>
     </Group>
   )
 }

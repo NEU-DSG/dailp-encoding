@@ -17,10 +17,11 @@ export default defineConfig({
       ? checker({ typescript: true })
       : undefined,
     ssr({
-      prerender: false,
-      // prerender: {
-      //   parallel: Math.min(4, os.cpus().length)
-      // }
+      // prerender: false,
+      // Prerendering seems to be required for Amplify to render a page
+      prerender: {
+        parallel: Math.min(4, os.cpus().length),
+      },
     }),
   ],
   css: {
