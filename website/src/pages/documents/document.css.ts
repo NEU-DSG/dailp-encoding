@@ -234,7 +234,49 @@ export const mobileWordPanel = style([
   },
 ])
 
-export const hideScrollTop = style({
+// export const hideScrollTop = style({
+//   display: "flex",
+//   flexFlow: "column nowrap",
+//   justifyContent: "flex-end",
+//   alignContent: "center",
+//   alignItems: "center",
+//   alignSelf: "flex-end",
+//   position: "sticky",
+//   zIndex: 1,
+//   top: `calc(100vh + 100px)`,
+//   right: 0,
+//   padding: vspace.quarter,
+//   color: colors.secondaryContrast,
+//   outlineColor: colors.secondaryContrast,
+//   backgroundColor: colors.secondary,
+//   visibility: "visible",
+//   opacity: 1, 
+//   transition: "top 0.8s",
+// })
+
+// export const showScrollTop = style(
+//   {
+//   display: "flex",
+//   flexFlow: "column nowrap",
+//   justifyContent: "flex-end",
+//   alignContent: "center",
+//   alignItems: "center",
+//   alignSelf: "flex-end",
+//   position: "sticky",
+//   zIndex: 1,
+//   top: `calc(100vh - 100px)`,
+//   right: 0,
+//   padding: vspace.quarter,
+//   color: colors.secondaryContrast,
+//   outlineColor: colors.secondaryContrast,
+//   backgroundColor: colors.secondary,
+//   visibility: "visible",
+//   opacity: 1,
+//   transition: "top 0.5s",
+//   }
+// )
+
+export const scrollTop = style({
   display: "flex",
   flexFlow: "column nowrap",
   justifyContent: "flex-end",
@@ -243,35 +285,34 @@ export const hideScrollTop = style({
   alignSelf: "flex-end",
   position: "sticky",
   zIndex: 1,
-  top: `calc(100vh + 100px)`,
   right: 0,
   padding: vspace.quarter,
   color: colors.secondaryContrast,
   outlineColor: colors.secondaryContrast,
   backgroundColor: colors.secondary,
+})
+
+export const hideScrollTop = style([
+  scrollTop,
+  {
+  top: `calc(100vh + 100px)`,
   visibility: "visible",
   opacity: 1, 
   transition: "top 0.8s",
-})
+  }
+])
 
-export const showScrollTop = style(
+export const showScrollTop = style([
+  scrollTop,
   {
-  display: "flex",
-  flexFlow: "column nowrap",
-  justifyContent: "flex-end",
-  alignContent: "center",
-  alignItems: "center",
-  alignSelf: "flex-end",
-  position: "sticky",
-  zIndex: 1,
   top: `calc(100vh - 100px)`,
-  right: 0,
-  padding: vspace.quarter,
-  color: colors.secondaryContrast,
-  outlineColor: colors.secondaryContrast,
-  backgroundColor: colors.secondary,
   visibility: "visible",
-  opacity: 1,
+  opacity: 1, 
   transition: "top 0.5s",
   }
-)
+])
+
+export const noScrollTop = style({
+  visibility: "hidden",
+  opacity: 0,
+})
