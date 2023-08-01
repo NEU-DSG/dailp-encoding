@@ -1,6 +1,6 @@
 import { DialogContent, DialogOverlay } from "@reach/dialog"
 import "@reach/dialog/styles.css"
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useState, useRef } from "react"
 import { isMobile } from "react-device-detect"
 import { Helmet } from "react-helmet"
 import { MdSettings } from "react-icons/md/index"
@@ -99,9 +99,13 @@ const AnnotatedDocumentPage = (props: { id: string }) => {
 export const Page = AnnotatedDocumentPage
 
 export const TabSet = ({ doc }: { doc: Document }) => {
-    const [isScrollVisible, setIsScrollVisible] = useState(false);
+    const [isScrollVisible, setIsScrollVisible] = useState(1);
     const handleScroll = () => {
-      setIsScrollVisible(window.scrollY > 2000);
+      if (document.documentElement.scrollHeight > 3000) {
+        setIsScrollVisible((window.scrollY > 2000)? 2 : 1);
+      } else {
+        setIsScrollVisible(0);
+      }
     };
     // Add the scroll event listener when the component is mounted.
     // window (and document) cannot seem to be accessed on its own so we need to use this method instead.
@@ -120,6 +124,16 @@ export const TabSet = ({ doc }: { doc: Document }) => {
   const docData = data?.document
   if (!docData) {
     return null
+  }
+  let scrollTopClass = null;
+  switch (isScrollVisible) {
+    case 0: scrollTopClass = css.noScrollTop;
+      break;
+    case 1: scrollTopClass = css.hideScrollTop;
+      break;
+    case 2: scrollTopClass = css.showScrollTop;
+      break;
+    default: scrollTopClass = css.noScrollTop;
   }
   return (
     <>
@@ -144,7 +158,7 @@ export const TabSet = ({ doc }: { doc: Document }) => {
 
       <Button
         id="scroll-top"
-        className={isScrollVisible? css.showScrollTop : css.hideScrollTop}
+        className={scrollTopClass}
         onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
       >
         <RiArrowUpCircleFill size={45} />
