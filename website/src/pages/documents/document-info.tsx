@@ -18,8 +18,8 @@ import { navigate } from "vite-plugin-ssr/client/router"
 import { useCredentials } from "src/auth"
 import { AudioPlayer, Breadcrumbs, Button, Link } from "src/components"
 import { useMediaQuery } from "src/custom-hooks"
-import { EditButton } from "src/edit-word-panel"
-import { FormProvider, useForm } from "src/form-context"
+import { EditButton } from "src/edit-doc-data-panel"
+import { FormProvider, useForm } from "src/edit-doc-data-form-context"
 import * as Dailp from "src/graphql/dailp"
 import Layout from "src/layout"
 import { drawerBg } from "src/menu.css"
@@ -38,8 +38,8 @@ import { AnnotatedForm, DocumentPage } from "src/segment"
 import { mediaQueries } from "src/style/constants"
 import { fullWidth } from "src/style/utils.css"
 import { BasicMorphemeSegment, LevelOfDetail } from "src/types"
-import PageImages from "./page-image"
-import * as css from "./pages/documents/document.css"
+import PageImages from "../../page-image"
+import * as css from "./document.css"
 
 export type Document = NonNullable<Dailp.AnnotatedDocumentQuery["document"]>
 
@@ -53,10 +53,41 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
   }
   const token = useCredentials()
   const { form, isEditing } = useForm()
-  let editButton = null
-  if (token) {
-    editButton = <EditButton />
-  }
+  // const [showEditDialog, setShowEditDialog] = useState(false)
+  // const handleButtonClick = () => setShowEditDialog(!showEditDialog)
+  // let editButton = null
+  // if (token) {
+  //   editButton = <EditButton />
+  // }
+
+  const panel = <>
+  {/* If the user is logged in, then display an edit button on the word
+  panel along with its corresponding formatted header. Otherwise, display
+  the normal word panel. */}
+  {token ? (
+    <>
+      {!isEditing && (
+        <div>have token</div>
+      )}
+      <EditButton />
+      </>
+  ) : (
+    <>
+      <div>no token</div>
+    </>
+  )}
+    {isEditing ? (
+      <Form {...form}>
+        <div>EDITING!!!!</div>
+      </Form>
+  ) : (
+    <div>not currently editing</div>
+  )}
+  </>
+
+
+
+
   return (
     <Fragment>
       <Helmet>
@@ -73,7 +104,7 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
         </ul>
       </section>
 
-      <>{editButton}</>
+      <>{panel }</>
 
       {docData.sources.length > 0 ? (
         <section className={fullWidth}>
@@ -87,3 +118,7 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
     </Fragment>
   )
 }
+
+const EditDocPanel: React.FC = () => {
+  return <div>Component Content</div>;
+};
