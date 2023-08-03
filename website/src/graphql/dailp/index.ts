@@ -100,8 +100,6 @@ export type AnnotatedDocFormsArgs = {
  */
 export type AnnotatedForm = {
   readonly __typename?: "AnnotatedForm"
-  /** A slice of audio associated with this word in the context of a document */
-  readonly audioTrack: Maybe<AudioSlice>
   /** Further details about the annotation layers, including uncertainty */
   readonly commentary: Maybe<Scalars["String"]>
   /** The date and time this form was recorded */
@@ -110,12 +108,20 @@ export type AnnotatedForm = {
   readonly document: Maybe<AnnotatedDoc>
   /** Unique identifier of the containing document */
   readonly documentId: Scalars["UUID"]
+  /**
+   * A slices of audio associated with this word in the context of a document.
+   * This audio has been selected by an editor from contributions, or is the
+   * same as the ingested audio track, if one is available.
+   */
+  readonly editedAudio: ReadonlyArray<AudioSlice>
   /** English gloss for the whole word */
   readonly englishGloss: ReadonlyArray<Scalars["String"]>
   /** Unique identifier of this form */
   readonly id: Scalars["UUID"]
   /** Number of words preceding this one in the containing document */
   readonly index: Scalars["Int"]
+  /** The audio for this word that was ingested from GoogleSheets, if there is any. */
+  readonly ingestedAudioTrack: Maybe<AudioSlice>
   /** The character index of a mid-word line break, if there is one */
   readonly lineBreak: Maybe<Scalars["Int"]>
   /** A normalized version of the word */
@@ -138,6 +144,12 @@ export type AnnotatedForm = {
   readonly similarForms: ReadonlyArray<AnnotatedForm>
   /** Original source text */
   readonly source: Scalars["String"]
+  /**
+   * Audio for this word that has been recorded by community members. Will be
+   * empty if user does not have access to uncurated contributions.
+   * TODO! User guard for contributors only
+   */
+  readonly userContributedAudio: ReadonlyArray<AudioSlice>
 }
 
 /**
@@ -165,9 +177,11 @@ export type AnnotatedFormSegmentsArgs = {
  * All fields except id are optional.
  */
 export type AnnotatedFormUpdate = {
+  /** Possible update to commentary */
   readonly commentary: InputMaybe<Scalars["String"]>
   /** Unique identifier of the form */
   readonly id: Scalars["UUID"]
+  /** Possible update to source content */
   readonly source: InputMaybe<Scalars["String"]>
 }
 
@@ -180,14 +194,24 @@ export type AnnotatedSeg = AnnotatedForm | LineBreak
  */
 export type AudioSlice = {
   readonly __typename?: "AudioSlice"
+  /** Last Editor to decide if audio should be included in edited collection. */
+  readonly editedBy: Maybe<User>
   /** The time (in seconds) in the parent track where this slice ends. */
   readonly endTime: Maybe<Scalars["Int"]>
+  /** True if audio should be shown to Readers. */
+  readonly includeInEditedCollection: Scalars["Boolean"]
   /** This slice's relative position to other slices within an audio resource */
   readonly index: Scalars["Int"]
   /** An audio slice this slice is a subunit of, if there is one */
   readonly parentTrack: Maybe<Scalars["String"]>
+  /** When the track was recorded, if available */
+  readonly recordedAt: Maybe<Date>
+  /** Which user recorded the tracked, if uploaded by a user */
+  readonly recordedBy: Maybe<User>
   /** The audio resource this audio slice is taken from, generally pulled from the DRS API */
   readonly resourceUrl: Scalars["String"]
+  /** The unique id for this audio slice. Will not be present if audio has not been inserted */
+  readonly sliceId: Maybe<Scalars["String"]>
   /** The time (in seconds) in the parent track where this slice begins. */
   readonly startTime: Maybe<Scalars["Int"]>
 }
@@ -687,6 +711,15 @@ export type SourceAttribution = {
   readonly name: Scalars["String"]
 }
 
+/** A user record, for a contributor, editor, etc. */
+export type User = {
+  readonly __typename?: "User"
+  /** User-facing name for this contributor/curator */
+  readonly displayName: Scalars["String"]
+  /** Id of the user, which must be a AWS Cognito `sub` claim */
+  readonly id: Scalars["String"]
+}
+
 export enum UserGroup {
   Contributors = "CONTRIBUTORS",
   Editors = "EDITORS",
@@ -855,7 +888,16 @@ export type DocumentContentsQuery = { readonly __typename?: "Query" } & {
                                   >
                                 }
                             >
-                            readonly audioTrack: Maybe<
+                            readonly ingestedAudioTrack: Maybe<
+                              { readonly __typename?: "AudioSlice" } & Pick<
+                                AudioSlice,
+                                | "index"
+                                | "resourceUrl"
+                                | "startTime"
+                                | "endTime"
+                              >
+                            >
+                            readonly editedAudio: ReadonlyArray<
                               { readonly __typename?: "AudioSlice" } & Pick<
                                 AudioSlice,
                                 | "index"
@@ -896,7 +938,13 @@ export type DocumentContentsQuery = { readonly __typename?: "Query" } & {
                   >
                 }
             >
-            readonly audioTrack: Maybe<
+            readonly ingestedAudioTrack: Maybe<
+              { readonly __typename?: "AudioSlice" } & Pick<
+                AudioSlice,
+                "index" | "resourceUrl" | "startTime" | "endTime"
+              >
+            >
+            readonly editedAudio: ReadonlyArray<
               { readonly __typename?: "AudioSlice" } & Pick<
                 AudioSlice,
                 "index" | "resourceUrl" | "startTime" | "endTime"
@@ -933,7 +981,13 @@ export type FormFieldsFragment = {
           >
         }
     >
-    readonly audioTrack: Maybe<
+    readonly ingestedAudioTrack: Maybe<
+      { readonly __typename?: "AudioSlice" } & Pick<
+        AudioSlice,
+        "index" | "resourceUrl" | "startTime" | "endTime"
+      >
+    >
+    readonly editedAudio: ReadonlyArray<
       { readonly __typename?: "AudioSlice" } & Pick<
         AudioSlice,
         "index" | "resourceUrl" | "startTime" | "endTime"
@@ -1218,7 +1272,13 @@ export type DocSliceQuery = { readonly __typename?: "Query" } & {
                     >
                   }
               >
-              readonly audioTrack: Maybe<
+              readonly ingestedAudioTrack: Maybe<
+                { readonly __typename?: "AudioSlice" } & Pick<
+                  AudioSlice,
+                  "index" | "resourceUrl" | "startTime" | "endTime"
+                >
+              >
+              readonly editedAudio: ReadonlyArray<
                 { readonly __typename?: "AudioSlice" } & Pick<
                   AudioSlice,
                   "index" | "resourceUrl" | "startTime" | "endTime"
@@ -1321,7 +1381,13 @@ export const FormFieldsFragmentDoc = gql`
     }
     englishGloss
     commentary
-    audioTrack {
+    ingestedAudioTrack {
+      index
+      resourceUrl
+      startTime
+      endTime
+    }
+    editedAudio {
       index
       resourceUrl
       startTime

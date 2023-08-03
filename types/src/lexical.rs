@@ -287,8 +287,8 @@ pub fn seg_verb_surface_form(
         commentary,
         line_break: None,
         page_break: None,
+        ingested_audio_track: None,
         date_recorded: Some(date.clone()),
-        audio_track: None,
     })
 }
 
@@ -397,7 +397,7 @@ pub fn root_verb_surface_form(
         line_break: None,
         page_break: None,
         date_recorded: Some(date.clone()),
-        audio_track: None,
+        ingested_audio_track: None,
     })
 }
 
@@ -477,7 +477,7 @@ pub fn root_noun_surface_form(
         line_break: None,
         page_break: None,
         date_recorded: Some(date.clone()),
-        audio_track: None,
+        ingested_audio_track: None,
     })
 }
 
