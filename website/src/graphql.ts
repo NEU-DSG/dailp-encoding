@@ -33,7 +33,7 @@ export const sharedCache = cacheExchange
 export const sharedSsr = ssrExchange({
   isClient: true,
   initialState: {},
-  // this let's us rehydrate our pages quickly but still get the most updated
+  // this lets us rehydrate our pages quickly but still get the most updated
   // date in a timely manner
   staleWhileRevalidate: true,
 })
