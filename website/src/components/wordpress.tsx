@@ -146,7 +146,7 @@ const PullAudio = (props: {
   // Gets the audio recording of this document slice.
   const docAudio = doc?.audioRecording
   // Gets the individual recordings of each word of this document slice.
-  const audioTracks = doc?.forms.map((form) => form.audioTrack)
+  const audioTracks = doc?.forms.map((form) => form.ingestedAudioTrack)
 
   if (!docAudio || !audioTracks) {
     return null

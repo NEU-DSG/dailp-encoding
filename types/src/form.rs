@@ -50,8 +50,9 @@ pub struct AnnotatedForm {
     pub position: PositionInDocument,
     /// The date and time this form was recorded
     pub date_recorded: Option<Date>,
-    /// A slice of audio associated with this word in the context of a document
-    pub audio_track: Option<AudioSlice>,
+    /// The audio for this word that was ingested from GoogleSheets, if there is any.
+    // TODO: #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    pub ingested_audio_track: Option<AudioSlice>,
 }
 
 #[async_graphql::ComplexObject]
@@ -210,6 +211,34 @@ impl AnnotatedForm {
         self.id
             .ok_or_else(|| anyhow::format_err!("No AnnotatedForm ID"))
     }
+
+    /// A slices of audio associated with this word in the context of a document.
+    /// This audio has been selected by an editor from contributions, or is the
+    /// same as the ingested audio track, if one is available.
+    async fn edited_audio(
+        &self,
+        context: &async_graphql::Context<'_>,
+    ) -> FieldResult<Vec<AudioSlice>> {
+        let mut audio_tracks = self.user_contributed_audio(context).await?;
+        // add ingested audio track as first element if it should be shown
+        if let Some(ingested_audio_track) = self.ingested_audio_track.to_owned() {
+            if ingested_audio_track.include_in_edited_collection {
+                audio_tracks.insert(0, ingested_audio_track);
+            }
+        }
+        return Ok(audio_tracks);
+    }
+
+    /// Audio for this word that has been recorded by community members. Will be
+    /// empty if user does not have access to uncurated contributions.
+    /// TODO! User guard for contributors only
+    async fn user_contributed_audio(
+        &self,
+        context: &async_graphql::Context<'_>,
+    ) -> FieldResult<Vec<AudioSlice>> {
+        let db = context.data::<DataLoader<Database>>()?.loader();
+        Ok(db.word_contributor_audio(self.id.as_ref().unwrap()).await?)
+    }
 }
 
 impl AnnotatedForm {
@@ -254,7 +283,9 @@ pub fn is_root_morpheme(s: &str) -> bool {
 pub struct AnnotatedFormUpdate {
     /// Unique identifier of the form
     pub id: Uuid,
+    /// Possible update to source content
     pub source: MaybeUndefined<String>,
+    /// Possible update to commentary
     pub commentary: MaybeUndefined<String>,
 }
 
