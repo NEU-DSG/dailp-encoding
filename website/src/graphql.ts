@@ -30,8 +30,13 @@ export function useWpQuery<Data, Variables extends AnyVariables>(
 }
 
 export const sharedCache = cacheExchange
-// export const sharedSsr = ssrExchange({ isClient: true, initialState: {} })
-export const sharedSsr = null
+export const sharedSsr = ssrExchange({
+  isClient: true,
+  initialState: {},
+  // this let's us rehydrate our pages quickly but still get the most updated
+  // date in a timely manner
+  staleWhileRevalidate: true,
+})
 
 export const serverSideClients = {
   dailp: createClient({
@@ -61,88 +66,3 @@ export const customClient = (
     suspense,
     fetch,
   })
-
-// export const withGraphQL = (component) =>
-//   withUrqlClientBase(
-//     (ssrExchange, ctx) => ({
-//       url: GRAPHQL_URL,
-//       exchanges: [dedupExchange, sharedCache, ssrExchange, fetchExchange],
-//     }),
-//     { ssr: false }
-//   )(component)
-
-// export async function getStaticQueries(
-//   dailpQuery?: (client: Client) => any[],
-//   wpQuery?: (client: Client) => any[]
-// ) {
-//   const ssrCache = ssrExchange({ isClient: false })
-//   if (dailpQuery) {
-//     const dailp = initUrqlClient(
-//       {
-//         url: GRAPHQL_URL,
-//         exchanges: [dedupExchange, sharedCache, ssrCache, fetchExchange],
-//       },
-//       false
-//     )
-//     const qs = dailpQuery(dailp)
-//     for (const q of qs) {
-//       await q.toPromise()
-//     }
-//   }
-
-//   if (wpQuery) {
-//     const wp = initUrqlClient(
-//       {
-//         url: WP_GRAPHQL_URL,
-//         exchanges: [dedupExchange, sharedCache, ssrCache, fetchExchange],
-//       },
-//       false
-//     )
-//     const qs = wpQuery(wp)
-//     for (const q of qs) {
-//       await q.toPromise()
-//     }
-//   }
-
-//   return {
-//     props: {
-//       urqlState: ssrCache.extractData(),
-//     },
-//   }
-// }
-
-// export function getStaticQueriesNew(
-//   makeQueries: (params: any, dailp: Client, wordpress: Client) => Promise<any>
-// ) {
-//   return async ({ params }) => {
-//     if (process.env.NODE_ENV === "development") {
-//       return { props: params || {} }
-//     }
-
-//     const ssrCache = ssrExchange({ isClient: false })
-//     const dailp = initUrqlClient(
-//       {
-//         url: GRAPHQL_URL,
-//         exchanges: [dedupExchange, sharedCache, ssrCache, fetchExchange],
-//       },
-//       false
-//     )
-
-//     const wp = initUrqlClient(
-//       {
-//         url: WP_GRAPHQL_URL,
-//         exchanges: [dedupExchange, sharedCache, ssrCache, fetchExchange],
-//       },
-//       false
-//     )
-
-//     const pageProps = (await makeQueries(params, dailp, wp)) || {}
-
-//     return {
-//       props: {
-//         urqlState: ssrCache.extractData(),
-//         ...pageProps,
-//       },
-//     }
-//   }
-// }
