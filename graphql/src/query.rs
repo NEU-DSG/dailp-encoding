@@ -358,7 +358,7 @@ impl Mutation {
             .await?)
     }
 
-    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    #[graphql(guard = "GroupGuard::new(UserGroup::Contributors)")]
     async fn upload_contributor_audio(
         &self,
         context: &Context<'_>,
