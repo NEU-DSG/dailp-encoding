@@ -414,6 +414,16 @@ impl Database {
         )
     }
 
+    /// Ensure that a user exists in the database
+    /// user_id should be a congnito sub claim
+    pub async fn upsert_dailp_user(&self, user_id: Uuid) -> Result<Uuid> {
+        query_file!("queries/upsert_dailp_user.sql", user_id,)
+            .execute(&self.client)
+            .await?;
+
+        Ok(user_id)
+    }
+
     pub async fn update_annotation(&self, _annote: annotation::Annotation) -> Result<()> {
         todo!("Implement image annotations")
     }

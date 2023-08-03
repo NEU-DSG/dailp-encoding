@@ -386,7 +386,7 @@ struct FormsInTime {
 pub struct UserInfo {
     /// Unique ID for the User. Should be an AWS Cognito Sub.
     #[serde(default, rename = "sub")]
-    id: Uuid,
+    pub id: Uuid,
     email: String,
     #[serde(default, rename = "cognito:groups")]
     groups: Vec<UserGroup>,
