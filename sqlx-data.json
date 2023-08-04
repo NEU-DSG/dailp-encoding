@@ -606,6 +606,18 @@
     },
     "query": "select\n  word_segment.index_in_word,\n  word_segment.word_id,\n  word_segment.morpheme,\n  word_segment.gloss_id,\n  morpheme_gloss.gloss,\n  word_segment.role as \"role: WordSegmentRole\"\nfrom word_segment\n  inner join morpheme_gloss on morpheme_gloss.id = word_segment.gloss_id\nwhere word_segment.word_id = any($1)\norder by word_segment.index_in_word\n"
   },
+  "363ece97aadc2e4337605619ae9c6a05618ec651a61aecddaa07ebc66698479c": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "insert into dailp_user (id, display_name, created_at)\nvalues (\n    -- hint for uuid type instead of autouuid (column type), which can't be used\n    -- as a parameter\n    $1::uuid,\n    '',\n    now()\n)\non conflict do nothing;\n"
+  },
   "388c671a0e5cf32298db07a5286a1ecb0efe59c9ddbdff1c7c49f79454a21801": {
     "describe": {
       "columns": [
