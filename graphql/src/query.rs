@@ -1,6 +1,6 @@
 //! This piece of the project exposes a GraphQL endpoint that allows one to access DAILP data in a federated manner with specific queries.
 
-use dailp::{slugify_ltree, CollectionChapter, ContributorAudioUpload, Uuid};
+use dailp::{slugify_ltree, AnnotatedForm, CollectionChapter, ContributorAudioUpload, Uuid};
 use itertools::Itertools;
 
 use {
@@ -350,11 +350,10 @@ impl Mutation {
         &self,
         context: &Context<'_>,
         word: AnnotatedFormUpdate,
-    ) -> FieldResult<Uuid> {
-        Ok(context
-            .data::<DataLoader<Database>>()?
-            .loader()
-            .update_word(word)
+    ) -> FieldResult<AnnotatedForm> {
+        let database = context.data::<DataLoader<Database>>()?.loader();
+        Ok(database
+            .word_by_id(&database.update_word(word).await?)
             .await?)
     }
 
@@ -363,13 +362,19 @@ impl Mutation {
         &self,
         context: &Context<'_>,
         upload: ContributorAudioUpload,
-    ) -> FieldResult<Uuid> {
+    ) -> FieldResult<dailp::AnnotatedForm> {
         // TODO: should this return a typed id ie. AudioSliceId?
         let user = context.data_opt::<UserInfo>();
-        Ok(context
+        let word_id = upload.word_id.clone();
+        context
             .data::<DataLoader<Database>>()?
             .loader()
             .upload_contributor_audio(upload, user.map(|u| u.id))
+            .await?;
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .word_by_id(&word_id)
             .await?)
     }
 }

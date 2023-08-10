@@ -7,7 +7,7 @@ import { Disclosure, DisclosureContent, useDisclosureState } from "reakit"
 import { unstable_Form as Form } from "reakit"
 import { useCredentials } from "./auth"
 import { AudioPlayer, IconButton } from "./components"
-import { EditWordAudio } from "./edit-word-audio"
+import { EditWordAudio } from "./components/edit-word-audio"
 import { EditButton, EditWordFeature } from "./edit-word-feature"
 import { content } from "./footer.css"
 import { useForm } from "./form-context"
@@ -188,12 +188,7 @@ export const PanelContent = (p: {
       {(p.word.editedAudio.length || p.panel === PanelType.EditWordPanel) && (
         <CollapsiblePanel
           title={"Audio"}
-          content={
-            <PanelAudioComponent
-              //typechecker won't pick up on upgraded type
-              word={p.word}
-            />
-          }
+          content={<PanelAudioComponent word={p.word} />}
           icon={
             <AiFillSound size={24} className={css.wordPanelButton.colpleft} />
           }
@@ -265,16 +260,19 @@ export const CollapsiblePanel = (p: {
 }
 
 export const WordAudio = (p: { word: Dailp.FormFieldsFragment }) => {
-  const [audioTrack] = p.word.editedAudio
-  if (!audioTrack) return null
+  if (p.word.editedAudio.length === 0) return null
   return (
-    <AudioPlayer
-      audioUrl={audioTrack.resourceUrl}
-      slices={{
-        start: audioTrack.startTime!,
-        end: audioTrack.endTime!,
-      }}
-      showProgress
-    />
+    <>
+      {p.word.editedAudio.map((audioTrack) => (
+        <AudioPlayer
+          audioUrl={audioTrack.resourceUrl}
+          slices={{
+            start: audioTrack.startTime!,
+            end: audioTrack.endTime!,
+          }}
+          showProgress
+        />
+      ))}
+    </>
   )
 }
