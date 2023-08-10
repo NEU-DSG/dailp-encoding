@@ -1,8 +1,8 @@
 import { ReactElement } from "react"
-import { UserRole, useCognitoUserGroups, useUserRole } from "./auth"
-import { ContributorEditWordAudio } from "./edit-word-audio-contributor"
-import { EditorEditWordAudio } from "./edit-word-audio-editor"
-import * as Dailp from "./graphql/dailp"
+import { UserRole, useCognitoUserGroups, useUserRole } from "../../auth"
+import * as Dailp from "../../graphql/dailp"
+import { ContributorEditWordAudio } from "./contributor"
+import { EditorEditWordAudio } from "./editor"
 
 export const EditWordAudio = (p: {
   word: Dailp.FormFieldsFragment

@@ -525,8 +525,8 @@ export type Mutation = {
   readonly updatePage: Scalars["Boolean"]
   /** Mutation for paragraph and translation editing */
   readonly updateParagraph: Scalars["UUID"]
-  readonly updateWord: Scalars["UUID"]
-  readonly uploadContributorAudio: Scalars["UUID"]
+  readonly updateWord: AnnotatedForm
+  readonly uploadContributorAudio: AnnotatedForm
 }
 
 export type MutationUpdateAnnotationArgs = {
@@ -908,6 +908,7 @@ export type DocumentContentsQuery = { readonly __typename?: "Query" } & {
                             readonly ingestedAudioTrack: Maybe<
                               { readonly __typename?: "AudioSlice" } & Pick<
                                 AudioSlice,
+                                | "sliceId"
                                 | "index"
                                 | "resourceUrl"
                                 | "startTime"
@@ -917,6 +918,7 @@ export type DocumentContentsQuery = { readonly __typename?: "Query" } & {
                             readonly editedAudio: ReadonlyArray<
                               { readonly __typename?: "AudioSlice" } & Pick<
                                 AudioSlice,
+                                | "sliceId"
                                 | "index"
                                 | "resourceUrl"
                                 | "startTime"
@@ -926,12 +928,16 @@ export type DocumentContentsQuery = { readonly __typename?: "Query" } & {
                             readonly userContributedAudio: ReadonlyArray<
                               { readonly __typename?: "AudioSlice" } & Pick<
                                 AudioSlice,
-                                "resourceUrl" | "startTime" | "endTime"
+                                | "sliceId"
+                                | "index"
+                                | "resourceUrl"
+                                | "startTime"
+                                | "endTime"
                               > & {
                                   readonly recordedBy: Maybe<
                                     { readonly __typename?: "User" } & Pick<
                                       User,
-                                      "displayName"
+                                      "id" | "displayName"
                                     >
                                   >
                                 }
@@ -971,22 +977,25 @@ export type DocumentContentsQuery = { readonly __typename?: "Query" } & {
             readonly ingestedAudioTrack: Maybe<
               { readonly __typename?: "AudioSlice" } & Pick<
                 AudioSlice,
-                "index" | "resourceUrl" | "startTime" | "endTime"
+                "sliceId" | "index" | "resourceUrl" | "startTime" | "endTime"
               >
             >
             readonly editedAudio: ReadonlyArray<
               { readonly __typename?: "AudioSlice" } & Pick<
                 AudioSlice,
-                "index" | "resourceUrl" | "startTime" | "endTime"
+                "sliceId" | "index" | "resourceUrl" | "startTime" | "endTime"
               >
             >
             readonly userContributedAudio: ReadonlyArray<
               { readonly __typename?: "AudioSlice" } & Pick<
                 AudioSlice,
-                "resourceUrl" | "startTime" | "endTime"
+                "sliceId" | "index" | "resourceUrl" | "startTime" | "endTime"
               > & {
                   readonly recordedBy: Maybe<
-                    { readonly __typename?: "User" } & Pick<User, "displayName">
+                    { readonly __typename?: "User" } & Pick<
+                      User,
+                      "id" | "displayName"
+                    >
                   >
                 }
             >
@@ -995,6 +1004,13 @@ export type DocumentContentsQuery = { readonly __typename?: "Query" } & {
     }
   >
 }
+
+export type AudioSliceFieldsFragment = {
+  readonly __typename?: "AudioSlice"
+} & Pick<
+  AudioSlice,
+  "sliceId" | "index" | "resourceUrl" | "startTime" | "endTime"
+>
 
 export type FormFieldsFragment = {
   readonly __typename?: "AnnotatedForm"
@@ -1024,22 +1040,22 @@ export type FormFieldsFragment = {
     readonly ingestedAudioTrack: Maybe<
       { readonly __typename?: "AudioSlice" } & Pick<
         AudioSlice,
-        "index" | "resourceUrl" | "startTime" | "endTime"
+        "sliceId" | "index" | "resourceUrl" | "startTime" | "endTime"
       >
     >
     readonly editedAudio: ReadonlyArray<
       { readonly __typename?: "AudioSlice" } & Pick<
         AudioSlice,
-        "index" | "resourceUrl" | "startTime" | "endTime"
+        "sliceId" | "index" | "resourceUrl" | "startTime" | "endTime"
       >
     >
     readonly userContributedAudio: ReadonlyArray<
       { readonly __typename?: "AudioSlice" } & Pick<
         AudioSlice,
-        "resourceUrl" | "startTime" | "endTime"
+        "sliceId" | "index" | "resourceUrl" | "startTime" | "endTime"
       > & {
           readonly recordedBy: Maybe<
-            { readonly __typename?: "User" } & Pick<User, "displayName">
+            { readonly __typename?: "User" } & Pick<User, "id" | "displayName">
           >
         }
     >
@@ -1325,24 +1341,24 @@ export type DocSliceQuery = { readonly __typename?: "Query" } & {
               readonly ingestedAudioTrack: Maybe<
                 { readonly __typename?: "AudioSlice" } & Pick<
                   AudioSlice,
-                  "index" | "resourceUrl" | "startTime" | "endTime"
+                  "sliceId" | "index" | "resourceUrl" | "startTime" | "endTime"
                 >
               >
               readonly editedAudio: ReadonlyArray<
                 { readonly __typename?: "AudioSlice" } & Pick<
                   AudioSlice,
-                  "index" | "resourceUrl" | "startTime" | "endTime"
+                  "sliceId" | "index" | "resourceUrl" | "startTime" | "endTime"
                 >
               >
               readonly userContributedAudio: ReadonlyArray<
                 { readonly __typename?: "AudioSlice" } & Pick<
                   AudioSlice,
-                  "resourceUrl" | "startTime" | "endTime"
+                  "sliceId" | "index" | "resourceUrl" | "startTime" | "endTime"
                 > & {
                     readonly recordedBy: Maybe<
                       { readonly __typename?: "User" } & Pick<
                         User,
-                        "displayName"
+                        "id" | "displayName"
                       >
                     >
                   }
@@ -1418,12 +1434,60 @@ export type CollectionChapterQuery = { readonly __typename?: "Query" } & {
 
 export type UpdateWordMutationVariables = Exact<{
   word: AnnotatedFormUpdate
+  morphemeSystem: CherokeeOrthography
 }>
 
-export type UpdateWordMutation = { readonly __typename?: "Mutation" } & Pick<
-  Mutation,
-  "updateWord"
->
+export type UpdateWordMutation = { readonly __typename?: "Mutation" } & {
+  readonly updateWord: { readonly __typename?: "AnnotatedForm" } & Pick<
+    AnnotatedForm,
+    | "id"
+    | "index"
+    | "source"
+    | "romanizedSource"
+    | "phonemic"
+    | "englishGloss"
+    | "commentary"
+  > & {
+      readonly segments: ReadonlyArray<
+        { readonly __typename?: "WordSegment" } & Pick<
+          WordSegment,
+          "morpheme" | "gloss" | "role" | "previousSeparator"
+        > & {
+            readonly matchingTag: Maybe<
+              { readonly __typename?: "MorphemeTag" } & Pick<
+                MorphemeTag,
+                "tag" | "title"
+              >
+            >
+          }
+      >
+      readonly ingestedAudioTrack: Maybe<
+        { readonly __typename?: "AudioSlice" } & Pick<
+          AudioSlice,
+          "sliceId" | "index" | "resourceUrl" | "startTime" | "endTime"
+        >
+      >
+      readonly editedAudio: ReadonlyArray<
+        { readonly __typename?: "AudioSlice" } & Pick<
+          AudioSlice,
+          "sliceId" | "index" | "resourceUrl" | "startTime" | "endTime"
+        >
+      >
+      readonly userContributedAudio: ReadonlyArray<
+        { readonly __typename?: "AudioSlice" } & Pick<
+          AudioSlice,
+          "sliceId" | "index" | "resourceUrl" | "startTime" | "endTime"
+        > & {
+            readonly recordedBy: Maybe<
+              { readonly __typename?: "User" } & Pick<
+                User,
+                "id" | "displayName"
+              >
+            >
+          }
+      >
+    }
+}
 
 export type UploadContributorAudioMutationVariables = Exact<{
   upload: ContributorAudioUpload
@@ -1431,8 +1495,35 @@ export type UploadContributorAudioMutationVariables = Exact<{
 
 export type UploadContributorAudioMutation = {
   readonly __typename?: "Mutation"
-} & Pick<Mutation, "uploadContributorAudio">
+} & {
+  readonly uploadContributorAudio: {
+    readonly __typename?: "AnnotatedForm"
+  } & Pick<AnnotatedForm, "id"> & {
+      readonly userContributedAudio: ReadonlyArray<
+        { readonly __typename?: "AudioSlice" } & Pick<
+          AudioSlice,
+          "sliceId" | "index" | "resourceUrl" | "startTime" | "endTime"
+        > & {
+            readonly recordedBy: Maybe<
+              { readonly __typename?: "User" } & Pick<
+                User,
+                "id" | "displayName"
+              >
+            >
+          }
+      >
+    }
+}
 
+export const AudioSliceFieldsFragmentDoc = gql`
+  fragment AudioSliceFields on AudioSlice {
+    sliceId
+    index
+    resourceUrl
+    startTime
+    endTime
+  }
+`
 export const FormFieldsFragmentDoc = gql`
   fragment FormFields on AnnotatedForm {
     id
@@ -1453,22 +1544,15 @@ export const FormFieldsFragmentDoc = gql`
     englishGloss
     commentary
     ingestedAudioTrack {
-      index
-      resourceUrl
-      startTime
-      endTime
+      ...AudioSliceFields
     }
     editedAudio {
-      index
-      resourceUrl
-      startTime
-      endTime
+      ...AudioSliceFields
     }
     userContributedAudio {
-      resourceUrl
-      startTime
-      endTime
+      ...AudioSliceFields
       recordedBy {
+        id
         displayName
       }
     }
@@ -1574,6 +1658,7 @@ export const DocumentContentsDocument = gql`
     }
   }
   ${FormFieldsFragmentDoc}
+  ${AudioSliceFieldsFragmentDoc}
 `
 
 export function useDocumentContentsQuery(
@@ -1879,6 +1964,7 @@ export const DocSliceDocument = gql`
     }
   }
   ${FormFieldsFragmentDoc}
+  ${AudioSliceFieldsFragmentDoc}
 `
 
 export function useDocSliceQuery(
@@ -1937,9 +2023,16 @@ export function useCollectionChapterQuery(
   )
 }
 export const UpdateWordDocument = gql`
-  mutation UpdateWord($word: AnnotatedFormUpdate!) {
-    updateWord(word: $word)
+  mutation UpdateWord(
+    $word: AnnotatedFormUpdate!
+    $morphemeSystem: CherokeeOrthography!
+  ) {
+    updateWord(word: $word) {
+      ...FormFields
+    }
   }
+  ${FormFieldsFragmentDoc}
+  ${AudioSliceFieldsFragmentDoc}
 `
 
 export function useUpdateWordMutation() {
@@ -1949,8 +2042,18 @@ export function useUpdateWordMutation() {
 }
 export const UploadContributorAudioDocument = gql`
   mutation UploadContributorAudio($upload: ContributorAudioUpload!) {
-    uploadContributorAudio(upload: $upload)
+    uploadContributorAudio(upload: $upload) {
+      id
+      userContributedAudio {
+        ...AudioSliceFields
+        recordedBy {
+          id
+          displayName
+        }
+      }
+    }
   }
+  ${AudioSliceFieldsFragmentDoc}
 `
 
 export function useUploadContributorAudioMutation() {

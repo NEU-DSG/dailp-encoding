@@ -2,6 +2,7 @@ import React from "react"
 import ReactDOM from "react-dom"
 import { Client } from "urql"
 import { getCredentials } from "src/auth"
+import { Environment, deploymentEnvironment } from "src/env"
 import { customClient, sharedSsr } from "src/graphql"
 import { PageContext, PageShell, rootElementId } from "./PageShell"
 

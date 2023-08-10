@@ -6,35 +6,39 @@ import { ChangeEvent, ReactElement, useEffect, useMemo, useState } from "react"
 import { MdRecordVoiceOver, MdUploadFile } from "react-icons/md/index"
 import { VisuallyHidden } from "reakit"
 import { v4 } from "uuid"
-import { useUser } from "./auth"
-import { AudioPlayer, CleanButton } from "./components"
-import { IconTextButton } from "./components/button"
-import { SubtleButton } from "./components/subtle-button"
+import { usePreferences } from "src/preferences-context"
+import { AudioPlayer, CleanButton } from ".."
+import { useUser, useUserId } from "../../auth"
+import * as Dailp from "../../graphql/dailp"
+import { WordAudio } from "../../panel-layout"
 import {
-  subtleButton,
-  subtleButtonActive,
-} from "./components/subtle-button.css"
-import * as Dailp from "./graphql/dailp"
-import { WordAudio } from "./panel-layout"
-import { MediaPermissionStatus, useMediaRecorder } from "./use-media-recorder"
+  MediaPermissionStatus,
+  useMediaRecorder,
+} from "../../use-media-recorder"
+import { IconTextButton } from "../button"
+import { SubtleButton } from "../subtle-button"
+import { subtleButton, subtleButtonActive } from "../subtle-button.css"
 
 function useAudioUpload(wordId: string) {
   const { user } = useUser()
-  const [_wordUpdateResult, updateWord] =
+  const [_contributeAudioResult, contributeAudio] =
     Dailp.useUploadContributorAudioMutation()
+
+  const { cherokeeRepresentation } = usePreferences()
 
   const uploadAudio = useMemo(
     () =>
       async function (data: Blob) {
         const { resourceUrl } = await uploadContributorAudioToS3(user!, data)
-        await updateWord({
+        await contributeAudio({
           upload: {
             wordId,
             contributorAudioUrl: resourceUrl,
           },
+          // morphemeSystem: cherokeeRepresentation,
         })
       },
-    [user, updateWord, wordId]
+    [user, contributeAudio, wordId]
   )
 
   return uploadAudio
@@ -43,6 +47,7 @@ function useAudioUpload(wordId: string) {
 export function ContributorEditWordAudio(p: {
   word: Dailp.FormFieldsFragment
 }) {
+  const userId = useUserId()
   const [currentTab, setCurrentTab] = useState<"upload" | "record">()
   const [selectedFile, setSelectedFile] = useState<File>()
   const uploadAudio = useAudioUpload(p.word.id)
@@ -57,9 +62,76 @@ export function ContributorEditWordAudio(p: {
     setCurrentTab("upload")
   }
 
+  const curatedAudioContent = p.word.editedAudio.length > 0 && (
+    <>
+      <strong>Curated audio (shown to all readers)</strong>
+      <WordAudio word={p.word} />
+    </>
+  )
+
+  const [audioByUser, audioByOthers] = p.word.userContributedAudio.reduce<
+    [
+      Dailp.FormFieldsFragment["userContributedAudio"],
+      Dailp.FormFieldsFragment["userContributedAudio"]
+    ]
+  >(
+    ([self, other], audio) =>
+      audio.recordedBy?.id === userId
+        ? [[...self, audio], other]
+        : [self, [...other, audio]],
+    [[], []]
+  )
+
+  const userAudioContent = audioByUser.length > 0 && (
+    <>
+      <strong>Audio you've contributed</strong>
+      {audioByUser.map((audio) => (
+        <AudioPlayer
+          audioUrl={audio.resourceUrl}
+          slices={
+            audio.startTime && audio.endTime
+              ? {
+                  start: audio.startTime,
+                  end: audio.endTime,
+                }
+              : undefined
+          }
+          showProgress
+        />
+      ))}
+    </>
+  )
+
+  const otherUserAudioContent = audioByOthers.length > 0 && (
+    <>
+      <strong>Audio from other speakers</strong>
+      {audioByOthers.map((audio) => (
+        <AudioPlayer
+          audioUrl={audio.resourceUrl}
+          slices={
+            audio.startTime && audio.endTime
+              ? {
+                  start: audio.startTime,
+                  end: audio.endTime,
+                }
+              : undefined
+          }
+          showProgress
+        />
+      ))}
+    </>
+  )
+
   return (
     <div>
-      <WordAudio word={p.word} />
+      {[curatedAudioContent, userAudioContent, otherUserAudioContent]
+        .filter((content) => content !== false)
+        .map((content, idx) => (
+          <>
+            {idx > 0 && <hr />}
+            {content}
+          </>
+        ))}
       <VisuallyHidden>
         <input type="file" id="file-upload" onChange={onFileChanged} />
       </VisuallyHidden>
