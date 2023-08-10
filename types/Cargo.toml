@@ -9,21 +9,37 @@ name = "dailp"
 path = "src/lib.rs"
 
 [dependencies]
-serde = {version = "1.0", features = ["derive"]}
+serde = { version = "1.0", features = ["derive"] }
 serde_json = "1"
 tokio-stream = "0.1"
 anyhow = "1.0"
 itertools = "0.10"
-async-graphql = { version = "4", features = ["dataloader", "uuid"] }
+async-graphql = { version = "4", features = [
+    "dataloader",
+    "uuid",
+    "apollo_tracing",
+] }
 futures = "0.3"
 uuid = { version = "1", default-features = false, features = ["std", "serde"] }
-sqlx = { version = "0.6", features = ["runtime-tokio-rustls", "postgres", "migrate", "macros", "chrono", "json", "uuid", "offline"] }
+sqlx = { version = "0.6", features = [
+    "runtime-tokio-rustls",
+    "postgres",
+    "migrate",
+    "macros",
+    "chrono",
+    "json",
+    "uuid",
+    "offline",
+] }
 lazy_static = "1.4"
 regex = "1.5"
 unicode-normalization = "0.1"
-chrono = {version = "0.4", features = ["serde"]}
-nom = {version = "6", default-features = false, features = ["std", "bitvec"]}
+chrono = { version = "0.4", features = ["serde"] }
+nom = { version = "6", default-features = false, features = ["std", "bitvec"] }
 slug = "0.1"
 maplit = "1"
 async-trait = "0.1.42"
-reqwest = { version = "0.11", features = ["json", "rustls-tls"], default-features = false }
+reqwest = { version = "0.11", features = [
+    "json",
+    "rustls-tls",
+], default-features = false }

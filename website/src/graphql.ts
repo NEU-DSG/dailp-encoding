@@ -1,16 +1,17 @@
-import fetch from "isomorphic-unfetch"
 import {
   AnyVariables,
   Exchange,
-  UseQueryArgs,
-  cacheExchange,
   createClient,
-  dedupExchange,
   fetchExchange,
   ssrExchange,
-  useQuery,
-} from "urql"
+} from "@urql/core"
+import { devtoolsExchange } from "@urql/devtools"
+import { cacheExchange } from "@urql/exchange-graphcache"
+import fetch from "isomorphic-unfetch"
+import { UseQueryArgs, useQuery } from "urql"
+import { Environment, deploymentEnvironment } from "./env"
 import { authLink } from "./graphql/client"
+import { DocumentPage } from "./graphql/dailp"
 
 export const GRAPHQL_URL = (token: string | null) =>
   process.env["DAILP_API_URL"] + (token ? "/graphql-edit" : "/graphql")
@@ -29,7 +30,14 @@ export function useWpQuery<Data, Variables extends AnyVariables>(
   })
 }
 
-export const sharedCache = cacheExchange
+export const sharedCache = cacheExchange({
+  keys: {
+    WordSegment: () => null,
+    MorphemeTag: () => null,
+    Contibutor: () => null,
+    // DocumentPage: (data) => data["pageNumber"]?.toString() ?? null,
+  },
+})
 export const sharedSsr = ssrExchange({
   isClient: true,
   initialState: {},
@@ -41,14 +49,18 @@ export const sharedSsr = ssrExchange({
 export const serverSideClients = {
   dailp: createClient({
     url: GRAPHQL_URL(null),
-    exchanges: [dedupExchange, sharedCache, fetchExchange],
+    exchanges: [sharedCache, fetchExchange],
   }),
   wordpress: createClient({
     url: WP_GRAPHQL_URL,
-    exchanges: [dedupExchange, sharedCache, fetchExchange],
+    exchanges: [sharedCache, fetchExchange],
   }),
 }
 
+const maybeDevExchange =
+  deploymentEnvironment === Environment.Production ? [] : [devtoolsExchange]
+
+console.log("[charlie]", { maybeDevExchange })
 export const customClient = (
   suspense: boolean,
   exchanges: Exchange[],
@@ -57,7 +69,7 @@ export const customClient = (
   createClient({
     url: GRAPHQL_URL(token),
     exchanges: [
-      dedupExchange,
+      ...maybeDevExchange,
       sharedCache,
       ...exchanges,
       ...(token ? [authLink(token)] : []),
