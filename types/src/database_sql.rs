@@ -46,6 +46,13 @@ impl Database {
         Ok(Database { client: conn })
     }
 
+    pub async fn word_by_id(&self, word_id: &Uuid) -> Result<AnnotatedForm> {
+        Ok(query_file_as!(BasicWord, "queries/word_by_id.sql", word_id)
+            .fetch_one(&self.client)
+            .await?
+            .into())
+    }
+
     pub async fn upsert_contributor(&self, person: ContributorDetails) -> Result<()> {
         query_file!("queries/upsert_contributor.sql", person.full_name)
             .execute(&self.client)

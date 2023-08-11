@@ -1651,6 +1651,128 @@
     },
     "query": "select\n  document_group.title,\n  document_group.slug\nfrom document_group\n  left join document on document.group_id = document_group.id\nwhere document.is_reference is false\ngroup by document_group.id\norder by document_group.title asc\n"
   },
+  "9404181792966be2d77b3a751ebba731341f0a2fb8bd5f231e6add7a438c525d": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "source_text",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "simple_phonetics",
+          "ordinal": 2,
+          "type_info": "Text"
+        },
+        {
+          "name": "phonemic",
+          "ordinal": 3,
+          "type_info": "Text"
+        },
+        {
+          "name": "english_gloss",
+          "ordinal": 4,
+          "type_info": "Text"
+        },
+        {
+          "name": "commentary",
+          "ordinal": 5,
+          "type_info": "Text"
+        },
+        {
+          "name": "document_id",
+          "ordinal": 6,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "index_in_document",
+          "ordinal": 7,
+          "type_info": "Int8"
+        },
+        {
+          "name": "page_number",
+          "ordinal": 8,
+          "type_info": "Text"
+        },
+        {
+          "name": "audio_recorded_at?",
+          "ordinal": 9,
+          "type_info": "Date"
+        },
+        {
+          "name": "audio_url?",
+          "ordinal": 10,
+          "type_info": "Text"
+        },
+        {
+          "name": "audio_slice?",
+          "ordinal": 11,
+          "type_info": "Int8Range"
+        },
+        {
+          "name": "audio_slice_id?",
+          "ordinal": 12,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "audio_recorded_by?",
+          "ordinal": 13,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "audio_recorded_by_name?",
+          "ordinal": 14,
+          "type_info": "Text"
+        },
+        {
+          "name": "include_audio_in_edited_collection",
+          "ordinal": 15,
+          "type_info": "Bool"
+        },
+        {
+          "name": "audio_edited_by?",
+          "ordinal": 16,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "audio_edited_by_name?",
+          "ordinal": 17,
+          "type_info": "Text"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false,
+        true,
+        true,
+        false,
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "select\n  word.id,\n  word.source_text,\n  word.simple_phonetics,\n  word.phonemic,\n  word.english_gloss,\n  word.commentary,\n  word.document_id,\n  word.index_in_document,\n  word.page_number,\n  media_resource.recorded_at as \"audio_recorded_at?\",\n  media_resource.url as \"audio_url?\",\n  media_slice.time_range as \"audio_slice?\",\n  media_slice.id as \"audio_slice_id?\",\n  contributor.id as \"audio_recorded_by?\",\n  contributor.display_name as \"audio_recorded_by_name?\",\n  word.include_audio_in_edited_collection,\n  editor.id as \"audio_edited_by?\",\n  editor.display_name as \"audio_edited_by_name?\"\nfrom word\n  left join media_slice on media_slice.id = word.audio_slice_id\n  left join media_resource on media_resource.id = media_slice.resource_id\n  left join dailp_user contributor on contributor.id = media_resource.recorded_by\n  left join dailp_user editor on editor.id = media_resource.recorded_by\nwhere\n  word.id = $1\n"
+  },
   "97727b783066365674f6cc8a0ee3d56d722c88abb2ef31d925af13ad6c3b15d6": {
     "describe": {
       "columns": [
