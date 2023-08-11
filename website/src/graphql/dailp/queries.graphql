@@ -74,6 +74,7 @@ fragment AudioSliceFields on AudioSlice {
   resourceUrl
   startTime
   endTime
+  includeInEditedCollection
 }
 
 fragment FormFields on AnnotatedForm {
@@ -334,8 +335,22 @@ mutation UpdateWord(
   }
 }
 
-mutation UploadContributorAudio($upload: ContributorAudioUpload!) {
-  uploadContributorAudio(upload: $upload) {
+mutation AttachAudioToWord($input: AttachAudioToWordInput!) {
+  attachAudioToWord(input: $input) {
+    # ...FormFields
+    id
+    userContributedAudio {
+      ...AudioSliceFields
+      recordedBy {
+        id
+        displayName
+      }
+    }
+  }
+}
+
+mutation CurateWordAudio($input: CurateWordAudioInput!) {
+  curateWordAudio(input: $input) {
     # ...FormFields
     id
     userContributedAudio {
