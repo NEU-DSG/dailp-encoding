@@ -1425,6 +1425,29 @@
     },
     "query": "insert into morpheme_gloss (document_id, gloss, example_shape)\nselect $1, * from unnest($2::text[], $3::text[])\non conflict (coalesce(document_id, uuid_nil()), gloss)\n  do update set\n    example_shape = excluded.example_shape\n"
   },
+  "749fb63d5984a981541e4e48f58a537362159925056c7c2ef2da6ef55ce95c53": {
+    "describe": {
+      "columns": [
+        {
+          "name": "word_id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        }
+      ],
+      "nullable": [
+        null
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Uuid",
+          "Bool",
+          "Uuid"
+        ]
+      }
+    },
+    "query": "-- Binds: word_id, slice_id, include_in_edited_collection, editor_id\n\nwith word_update as (\n  -- update ingested audio, if the slice_id was ingested audio\n  update word\n  set include_audio_in_edited_collection=$3,\n      audio_edited_by=$4\n  where word.id = $1\n    -- if the slice_id given doesn't match, we won't update\n    and word.audio_slice_id = $2 \n  returning word.id as word_id\n),\nword_user_media_update as (\n-- update user contributed audio, if the slice id is user contributed audio tied to the word\n  update word_user_media\n  set include_in_edited_collection=$3,\n      edited_by=$4\n  where word_id = $1\n    and media_slice_id = $2\n    returning word_id\n)\n\nselect distinct t.word_id\nfrom (\n  select word_id from word_update\n  union\n  select word_id from word_user_media_update\n) as t"
+  },
   "774aa2feee9734f0cb7270b3e330731422aecbd72551cdd4a7f24b5fb1dc7c66": {
     "describe": {
       "columns": [],
