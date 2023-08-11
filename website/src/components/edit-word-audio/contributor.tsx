@@ -21,14 +21,14 @@ import { subtleButton, subtleButtonActive } from "../subtle-button.css"
 function useAudioUpload(wordId: string) {
   const { user } = useUser()
   const [_contributeAudioResult, contributeAudio] =
-    Dailp.useUploadContributorAudioMutation()
+    Dailp.useAttachAudioToWordMutation()
 
   const uploadAudio = useMemo(
     () =>
       async function (data: Blob) {
         const { resourceUrl } = await uploadContributorAudioToS3(user!, data)
         await contributeAudio({
-          upload: {
+          input: {
             wordId,
             contributorAudioUrl: resourceUrl,
           },

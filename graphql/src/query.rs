@@ -1,6 +1,9 @@
 //! This piece of the project exposes a GraphQL endpoint that allows one to access DAILP data in a federated manner with specific queries.
 
-use dailp::{slugify_ltree, AnnotatedForm, CollectionChapter, ContributorAudioUpload, Uuid};
+use dailp::{
+    slugify_ltree, AnnotatedForm, AttachAudioToWordInput, CollectionChapter, CurateWordAudioInput,
+    Uuid,
+};
 use itertools::Itertools;
 
 use {
@@ -357,19 +360,50 @@ impl Mutation {
             .await?)
     }
 
-    #[graphql(guard = "GroupGuard::new(UserGroup::Contributors)")]
-    async fn upload_contributor_audio(
+    /// Decide if a piece audio should be included in edited collection
+    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    async fn curate_word_audio(
         &self,
         context: &Context<'_>,
-        upload: ContributorAudioUpload,
+        input: CurateWordAudioInput,
     ) -> FieldResult<dailp::AnnotatedForm> {
         // TODO: should this return a typed id ie. AudioSliceId?
-        let user = context.data_opt::<UserInfo>();
-        let word_id = upload.word_id.clone();
-        context
+        let user = context
+            .data_opt::<UserInfo>()
+            .ok_or_else(|| anyhow::format_err!("User is not signed in"))?;
+        let word_id = context
             .data::<DataLoader<Database>>()?
             .loader()
-            .upload_contributor_audio(upload, user.map(|u| u.id))
+            .update_audio_visibility(
+                &input.word_id,
+                &input.audio_slice_id,
+                input.include_in_edited_collection,
+                &user.id,
+            )
+            .await?;
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .word_by_id(&word_id.ok_or_else(|| anyhow::format_err!("Word audio not found"))?)
+            .await?)
+    }
+
+    /// Attach audio that has already been uploaded to S3 to a particular word
+    /// Assumes user requesting mutation recoreded the audio
+    #[graphql(guard = "GroupGuard::new(UserGroup::Contributors)")]
+    async fn attach_audio_to_word(
+        &self,
+        context: &Context<'_>,
+        input: AttachAudioToWordInput,
+    ) -> FieldResult<dailp::AnnotatedForm> {
+        // TODO: should this return a typed id ie. AudioSliceId?
+        let user = context
+            .data_opt::<UserInfo>()
+            .ok_or_else(|| anyhow::format_err!("User is not signed in"))?;
+        let word_id = context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .attach_audio_to_word(input, &user.id)
             .await?;
         Ok(context
             .data::<DataLoader<Database>>()?

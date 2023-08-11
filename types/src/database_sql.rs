@@ -453,17 +453,14 @@ impl Database {
         Ok(word.id)
     }
 
-    /// TODO: does this actually upload the audio (no) -- it just dies it to a
-    /// word, so should we have a better name?
-    pub async fn upload_contributor_audio(
+    pub async fn attach_audio_to_word(
         &self,
-        upload: ContributorAudioUpload,
-        user_id: Option<Uuid>,
+        upload: AttachAudioToWordInput,
+        contributor_id: &Uuid,
     ) -> Result<Uuid> {
         let media_slice_id = query_file_scalar!(
-            "queries/upsert_user_contributed_audio.sql",
-            user_id
-                .ok_or_else(|| anyhow::format_err!("User must be signed in to contribute audio"))?,
+            "queries/attach_audio_to_word.sql",
+            contributor_id,
             &upload.contributor_audio_url as _,
             0,
             0,
@@ -472,6 +469,27 @@ impl Database {
         .fetch_one(&self.client)
         .await?;
         Ok(media_slice_id)
+    }
+
+    /// Update if a piece of audio will be shown to readers
+    /// Will return None if the word and audio assocation could not be found, otherwise word id.
+    pub async fn update_audio_visibility(
+        &self,
+        word_id: &Uuid,
+        audio_slice_id: &Uuid,
+        include_in_edited_collection: bool,
+        editor_id: &Uuid,
+    ) -> Result<Option<Uuid>> {
+        let _word_id = query_file_scalar!(
+            "queries/update_audio_visibility.sql",
+            word_id,
+            audio_slice_id,
+            include_in_edited_collection,
+            editor_id
+        )
+        .fetch_one(&self.client)
+        .await?;
+        Ok(_word_id)
     }
 
     pub async fn update_paragraph(&self, paragraph: ParagraphUpdate) -> Result<Uuid> {
