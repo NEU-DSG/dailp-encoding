@@ -6,7 +6,6 @@ import { ChangeEvent, ReactElement, useEffect, useMemo, useState } from "react"
 import { MdRecordVoiceOver, MdUploadFile } from "react-icons/md/index"
 import { VisuallyHidden } from "reakit"
 import { v4 } from "uuid"
-import { usePreferences } from "src/preferences-context"
 import { AudioPlayer, CleanButton } from ".."
 import { useUser, useUserId } from "../../auth"
 import * as Dailp from "../../graphql/dailp"
@@ -24,8 +23,6 @@ function useAudioUpload(wordId: string) {
   const [_contributeAudioResult, contributeAudio] =
     Dailp.useUploadContributorAudioMutation()
 
-  const { cherokeeRepresentation } = usePreferences()
-
   const uploadAudio = useMemo(
     () =>
       async function (data: Blob) {
@@ -35,7 +32,6 @@ function useAudioUpload(wordId: string) {
             wordId,
             contributorAudioUrl: resourceUrl,
           },
-          // morphemeSystem: cherokeeRepresentation,
         })
       },
     [user, contributeAudio, wordId]
