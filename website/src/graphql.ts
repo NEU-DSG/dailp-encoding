@@ -31,11 +31,35 @@ export function useWpQuery<Data, Variables extends AnyVariables>(
 }
 
 export const sharedCache = cacheExchange({
+  schema: {
+    __schema: {
+      queryType: { name: "Query" },
+      mutationType: { name: "Mutation" },
+      subscriptionType: null,
+    },
+  },
+  resolvers: {
+    Query: {
+      document: (_, args, cache) => {
+        console.log(
+          cache.inspectFields({
+            __typename: "AnnotatedDoc",
+            slug: args["slug"]!,
+          })
+        )
+        return cache.keyOfEntity({
+          __typename: "AnnotatedDoc",
+          slug: args["slug"]!,
+        })
+      },
+    },
+  },
   keys: {
     WordSegment: () => null,
     MorphemeTag: () => null,
     Contibutor: () => null,
-    // DocumentPage: (data) => data["pageNumber"]?.toString() ?? null,
+    AnnotatedDoc: (data) => data["slug"] as string,
+    DocumentPage: () => null,
   },
 })
 export const sharedSsr = ssrExchange({

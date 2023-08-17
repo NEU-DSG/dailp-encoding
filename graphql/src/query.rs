@@ -1,6 +1,6 @@
 //! This piece of the project exposes a GraphQL endpoint that allows one to access DAILP data in a federated manner with specific queries.
 
-use dailp::{slugify_ltree, CollectionChapter, Uuid};
+use dailp::{slugify_ltree, AnnotatedForm, CollectionChapter, Uuid};
 use itertools::Itertools;
 
 use {
@@ -350,11 +350,16 @@ impl Mutation {
         &self,
         context: &Context<'_>,
         word: AnnotatedFormUpdate,
-    ) -> FieldResult<Uuid> {
-        Ok(context
+    ) -> FieldResult<AnnotatedForm> {
+        let word_id = context
             .data::<DataLoader<Database>>()?
             .loader()
             .update_word(word)
+            .await?;
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .word_by_id(&word_id)
             .await?)
     }
 }

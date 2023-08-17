@@ -48,6 +48,8 @@ query DocumentContents(
   $isReference: Boolean!
 ) {
   document(slug: $slug) {
+    id
+    slug
     translatedPages @skip(if: $isReference) {
       pageNumber
       paragraphs {
@@ -145,6 +147,7 @@ query WordSearch($query: String!) {
     englishGloss
     index
     document {
+      id
       slug
       isReference
     }
@@ -248,6 +251,7 @@ query Morpheme($documentId: UUID, $morphemeGloss: String!) {
       normalizedSource
       englishGloss
       document {
+        id
         slug
       }
     }
@@ -316,6 +320,11 @@ query CollectionChapter($collectionSlug: String!, $chapterSlug: String!) {
   }
 }
 
-mutation UpdateWord($word: AnnotatedFormUpdate!) {
-  updateWord(word: $word)
+mutation UpdateWord(
+  $word: AnnotatedFormUpdate!
+  $morphemeSystem: CherokeeOrthography!
+) {
+  updateWord(word: $word) {
+    ...FormFields
+  }
 }

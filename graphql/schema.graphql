@@ -613,7 +613,7 @@ type Mutation {
 	updateParagraph(paragraph: ParagraphUpdate!): UUID!
 	updatePage(data: JSON!): Boolean!
 	updateAnnotation(data: JSON!): Boolean!
-	updateWord(word: AnnotatedFormUpdate!): UUID!
+	updateWord(word: AnnotatedFormUpdate!): AnnotatedForm!
 }
 
 """

@@ -514,7 +514,7 @@ export type Mutation = {
   readonly updatePage: Scalars["Boolean"]
   /** Mutation for paragraph and translation editing */
   readonly updateParagraph: Scalars["UUID"]
-  readonly updateWord: Scalars["UUID"]
+  readonly updateWord: AnnotatedForm
 }
 
 export type MutationUpdateAnnotationArgs = {
@@ -850,109 +850,112 @@ export type DocumentContentsQueryVariables = Exact<{
 
 export type DocumentContentsQuery = { readonly __typename?: "Query" } & {
   readonly document: Maybe<
-    { readonly __typename?: "AnnotatedDoc" } & {
-      readonly translatedPages?: Maybe<
-        ReadonlyArray<
-          { readonly __typename?: "DocumentPage" } & Pick<
-            DocumentPage,
-            "pageNumber"
+    { readonly __typename?: "AnnotatedDoc" } & Pick<
+      AnnotatedDoc,
+      "id" | "slug"
+    > & {
+        readonly translatedPages?: Maybe<
+          ReadonlyArray<
+            { readonly __typename?: "DocumentPage" } & Pick<
+              DocumentPage,
+              "pageNumber"
+            > & {
+                readonly paragraphs: ReadonlyArray<
+                  { readonly __typename?: "DocumentParagraph" } & Pick<
+                    DocumentParagraph,
+                    "translation" | "index"
+                  > & {
+                      readonly source: ReadonlyArray<
+                        | ({ readonly __typename: "AnnotatedForm" } & Pick<
+                            AnnotatedForm,
+                            | "id"
+                            | "index"
+                            | "source"
+                            | "romanizedSource"
+                            | "phonemic"
+                            | "englishGloss"
+                            | "commentary"
+                          > & {
+                              readonly segments: ReadonlyArray<
+                                { readonly __typename?: "WordSegment" } & Pick<
+                                  WordSegment,
+                                  | "morpheme"
+                                  | "gloss"
+                                  | "role"
+                                  | "previousSeparator"
+                                > & {
+                                    readonly matchingTag: Maybe<
+                                      {
+                                        readonly __typename?: "MorphemeTag"
+                                      } & Pick<MorphemeTag, "tag" | "title">
+                                    >
+                                  }
+                              >
+                              readonly ingestedAudioTrack: Maybe<
+                                { readonly __typename?: "AudioSlice" } & Pick<
+                                  AudioSlice,
+                                  | "index"
+                                  | "resourceUrl"
+                                  | "startTime"
+                                  | "endTime"
+                                >
+                              >
+                              readonly editedAudio: ReadonlyArray<
+                                { readonly __typename?: "AudioSlice" } & Pick<
+                                  AudioSlice,
+                                  | "index"
+                                  | "resourceUrl"
+                                  | "startTime"
+                                  | "endTime"
+                                >
+                              >
+                            })
+                        | { readonly __typename: "LineBreak" }
+                      >
+                    }
+                >
+              }
+          >
+        >
+        readonly forms?: ReadonlyArray<
+          { readonly __typename: "AnnotatedForm" } & Pick<
+            AnnotatedForm,
+            | "id"
+            | "index"
+            | "source"
+            | "romanizedSource"
+            | "phonemic"
+            | "englishGloss"
+            | "commentary"
           > & {
-              readonly paragraphs: ReadonlyArray<
-                { readonly __typename?: "DocumentParagraph" } & Pick<
-                  DocumentParagraph,
-                  "translation" | "index"
+              readonly segments: ReadonlyArray<
+                { readonly __typename?: "WordSegment" } & Pick<
+                  WordSegment,
+                  "morpheme" | "gloss" | "role" | "previousSeparator"
                 > & {
-                    readonly source: ReadonlyArray<
-                      | ({ readonly __typename: "AnnotatedForm" } & Pick<
-                          AnnotatedForm,
-                          | "id"
-                          | "index"
-                          | "source"
-                          | "romanizedSource"
-                          | "phonemic"
-                          | "englishGloss"
-                          | "commentary"
-                        > & {
-                            readonly segments: ReadonlyArray<
-                              { readonly __typename?: "WordSegment" } & Pick<
-                                WordSegment,
-                                | "morpheme"
-                                | "gloss"
-                                | "role"
-                                | "previousSeparator"
-                              > & {
-                                  readonly matchingTag: Maybe<
-                                    {
-                                      readonly __typename?: "MorphemeTag"
-                                    } & Pick<MorphemeTag, "tag" | "title">
-                                  >
-                                }
-                            >
-                            readonly ingestedAudioTrack: Maybe<
-                              { readonly __typename?: "AudioSlice" } & Pick<
-                                AudioSlice,
-                                | "index"
-                                | "resourceUrl"
-                                | "startTime"
-                                | "endTime"
-                              >
-                            >
-                            readonly editedAudio: ReadonlyArray<
-                              { readonly __typename?: "AudioSlice" } & Pick<
-                                AudioSlice,
-                                | "index"
-                                | "resourceUrl"
-                                | "startTime"
-                                | "endTime"
-                              >
-                            >
-                          })
-                      | { readonly __typename: "LineBreak" }
+                    readonly matchingTag: Maybe<
+                      { readonly __typename?: "MorphemeTag" } & Pick<
+                        MorphemeTag,
+                        "tag" | "title"
+                      >
                     >
                   }
               >
+              readonly ingestedAudioTrack: Maybe<
+                { readonly __typename?: "AudioSlice" } & Pick<
+                  AudioSlice,
+                  "index" | "resourceUrl" | "startTime" | "endTime"
+                >
+              >
+              readonly editedAudio: ReadonlyArray<
+                { readonly __typename?: "AudioSlice" } & Pick<
+                  AudioSlice,
+                  "index" | "resourceUrl" | "startTime" | "endTime"
+                >
+              >
             }
         >
-      >
-      readonly forms?: ReadonlyArray<
-        { readonly __typename: "AnnotatedForm" } & Pick<
-          AnnotatedForm,
-          | "id"
-          | "index"
-          | "source"
-          | "romanizedSource"
-          | "phonemic"
-          | "englishGloss"
-          | "commentary"
-        > & {
-            readonly segments: ReadonlyArray<
-              { readonly __typename?: "WordSegment" } & Pick<
-                WordSegment,
-                "morpheme" | "gloss" | "role" | "previousSeparator"
-              > & {
-                  readonly matchingTag: Maybe<
-                    { readonly __typename?: "MorphemeTag" } & Pick<
-                      MorphemeTag,
-                      "tag" | "title"
-                    >
-                  >
-                }
-            >
-            readonly ingestedAudioTrack: Maybe<
-              { readonly __typename?: "AudioSlice" } & Pick<
-                AudioSlice,
-                "index" | "resourceUrl" | "startTime" | "endTime"
-              >
-            >
-            readonly editedAudio: ReadonlyArray<
-              { readonly __typename?: "AudioSlice" } & Pick<
-                AudioSlice,
-                "index" | "resourceUrl" | "startTime" | "endTime"
-              >
-            >
-          }
-      >
-    }
+      }
   >
 }
 
@@ -1073,7 +1076,7 @@ export type WordSearchQuery = { readonly __typename?: "Query" } & {
         readonly document: Maybe<
           { readonly __typename?: "AnnotatedDoc" } & Pick<
             AnnotatedDoc,
-            "slug" | "isReference"
+            "id" | "slug" | "isReference"
           >
         >
       }
@@ -1214,7 +1217,7 @@ export type MorphemeQuery = { readonly __typename?: "Query" } & {
               readonly document: Maybe<
                 { readonly __typename?: "AnnotatedDoc" } & Pick<
                   AnnotatedDoc,
-                  "slug"
+                  "id" | "slug"
                 >
               >
             }
@@ -1355,12 +1358,47 @@ export type CollectionChapterQuery = { readonly __typename?: "Query" } & {
 
 export type UpdateWordMutationVariables = Exact<{
   word: AnnotatedFormUpdate
+  morphemeSystem: CherokeeOrthography
 }>
 
-export type UpdateWordMutation = { readonly __typename?: "Mutation" } & Pick<
-  Mutation,
-  "updateWord"
->
+export type UpdateWordMutation = { readonly __typename?: "Mutation" } & {
+  readonly updateWord: { readonly __typename?: "AnnotatedForm" } & Pick<
+    AnnotatedForm,
+    | "id"
+    | "index"
+    | "source"
+    | "romanizedSource"
+    | "phonemic"
+    | "englishGloss"
+    | "commentary"
+  > & {
+      readonly segments: ReadonlyArray<
+        { readonly __typename?: "WordSegment" } & Pick<
+          WordSegment,
+          "morpheme" | "gloss" | "role" | "previousSeparator"
+        > & {
+            readonly matchingTag: Maybe<
+              { readonly __typename?: "MorphemeTag" } & Pick<
+                MorphemeTag,
+                "tag" | "title"
+              >
+            >
+          }
+      >
+      readonly ingestedAudioTrack: Maybe<
+        { readonly __typename?: "AudioSlice" } & Pick<
+          AudioSlice,
+          "index" | "resourceUrl" | "startTime" | "endTime"
+        >
+      >
+      readonly editedAudio: ReadonlyArray<
+        { readonly __typename?: "AudioSlice" } & Pick<
+          AudioSlice,
+          "index" | "resourceUrl" | "startTime" | "endTime"
+        >
+      >
+    }
+}
 
 export const FormFieldsFragmentDoc = gql`
   fragment FormFields on AnnotatedForm {
@@ -1475,6 +1513,8 @@ export const DocumentContentsDocument = gql`
     $isReference: Boolean!
   ) {
     document(slug: $slug) {
+      id
+      slug
       translatedPages @skip(if: $isReference) {
         pageNumber
         paragraphs {
@@ -1580,6 +1620,7 @@ export const WordSearchDocument = gql`
       englishGloss
       index
       document {
+        id
         slug
         isReference
       }
@@ -1753,6 +1794,7 @@ export const MorphemeDocument = gql`
         normalizedSource
         englishGloss
         document {
+          id
           slug
         }
       }
@@ -1858,9 +1900,15 @@ export function useCollectionChapterQuery(
   )
 }
 export const UpdateWordDocument = gql`
-  mutation UpdateWord($word: AnnotatedFormUpdate!) {
-    updateWord(word: $word)
+  mutation UpdateWord(
+    $word: AnnotatedFormUpdate!
+    $morphemeSystem: CherokeeOrthography!
+  ) {
+    updateWord(word: $word) {
+      ...FormFields
+    }
   }
+  ${FormFieldsFragmentDoc}
 `
 
 export function useUpdateWordMutation() {
