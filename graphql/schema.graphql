@@ -185,6 +185,21 @@ Element within a spreadsheet before being transformed into a full document.
 union AnnotatedSeg = AnnotatedForm | LineBreak
 
 """
+Request to attach user-recorded audio to a word
+"""
+input AttachAudioToWordInput {
+	"""
+	Word to bind audio to
+	"""
+	wordId: UUID!
+	"""
+	A URL to a Cloudfront-proxied user-recorded pronunciation of a word.
+	A new resource will be created to represent the recording if one does not exist already
+	"""
+	contributorAudioUrl: String!
+}
+
+"""
 A segment of audio representing a document, word, phrase,
 or other audio unit
 """
@@ -340,6 +355,24 @@ type ContributorDetails {
 	The optional date that this contributor was born on.
 	"""
 	birthDate: Date
+}
+
+"""
+Request to update if a piece of audio should be included in an edited collection
+"""
+input CurateWordAudioInput {
+	"""
+	Word audio is attached to
+	"""
+	wordId: UUID!
+	"""
+	Audio to include/exclude
+	"""
+	audioSliceId: UUID!
+	"""
+	New value
+	"""
+	includeInEditedCollection: Boolean!
 }
 
 type Date {
@@ -613,7 +646,9 @@ type Mutation {
 	updateParagraph(paragraph: ParagraphUpdate!): UUID!
 	updatePage(data: JSON!): Boolean!
 	updateAnnotation(data: JSON!): Boolean!
-	updateWord(word: AnnotatedFormUpdate!): UUID!
+	updateWord(word: AnnotatedFormUpdate!): AnnotatedForm!
+	curateWordAudio(input: CurateWordAudioInput!): AnnotatedForm!
+	attachAudioToWord(input: AttachAudioToWordInput!): AnnotatedForm!
 }
 
 """
@@ -806,6 +841,9 @@ enum UserGroup {
 	EDITORS
 }
 
+"""
+Auth metadata on the user making the current request.
+"""
 type UserInfo {
 	"""
 	Unique ID for the User. Should be an AWS Cognito Sub.
