@@ -4,6 +4,7 @@ import {
   unstable_useFormState as useFormState,
 } from "reakit"
 import * as Dailp from "./graphql/dailp"
+import { usePreferences } from "./preferences-context"
 
 type FormContextType = {
   form: FormStateReturn<any | undefined>
@@ -19,9 +20,13 @@ export const FormProvider = (props: { children: any }) => {
   const word: Dailp.FormFieldsFragment = {} as Dailp.FormFieldsFragment
 
   const [updateWordResult, updateWord] = Dailp.useUpdateWordMutation()
+  const { cherokeeRepresentation } = usePreferences()
 
   /** Calls the backend GraphQL mutation to update a word. */
-  const runUpdate = async (variables: { word: Dailp.AnnotatedFormUpdate }) => {
+  const runUpdate = async (variables: {
+    word: Dailp.AnnotatedFormUpdate
+    morphemeSystem: Dailp.CherokeeOrthography
+  }) => {
     await updateWord(variables)
   }
 
@@ -43,6 +48,7 @@ export const FormProvider = (props: { children: any }) => {
           source: values.word["source"],
           commentary: values.word["commentary"],
         },
+        morphemeSystem: cherokeeRepresentation,
       })
     },
   })
