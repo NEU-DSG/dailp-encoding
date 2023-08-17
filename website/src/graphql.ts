@@ -59,6 +59,7 @@ export const sharedCache = cacheExchange({
     MorphemeTag: () => null,
     Contibutor: () => null,
     AnnotatedDoc: (data) => data["slug"] as string,
+    AudioSlice: (data) => data["sliceId"] as string,
     DocumentPage: () => null,
   },
 })

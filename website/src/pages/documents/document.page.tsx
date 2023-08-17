@@ -350,7 +350,8 @@ const DocumentContents = ({
       // Update the form's current word
       wordPanelDetails.setCurrContents(form.values.word)
       // Query of document contents is rerun to ensure frontend and backend are in sync
-      rerunQuery({ requestPolicy: "network-only" })
+      // rerunQuery({ requestPolicy: "network-only" })
+      console.log("[charlie] Not rerunning query :)")
     }
   }, [isEditing])
 
