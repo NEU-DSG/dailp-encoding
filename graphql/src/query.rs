@@ -1,6 +1,9 @@
 //! This piece of the project exposes a GraphQL endpoint that allows one to access DAILP data in a federated manner with specific queries.
 
-use dailp::{slugify_ltree, CollectionChapter, Uuid};
+use dailp::{
+    slugify_ltree, CollectionChapter, DeleteContributorAttribution, UpdateContributorAttribution,
+    Uuid,
+};
 use itertools::Itertools;
 
 use {
@@ -299,6 +302,38 @@ impl Mutation {
     /// the future.
     async fn api_version(&self) -> &str {
         "1.0"
+    }
+
+    /// Mutation for adding/changing contributor attributions
+    #[graphql(
+        guard = "GroupGuard::new(UserGroup::Editors).or(GroupGuard::new(UserGroup::Contributors))"
+    )]
+    async fn update_contributor_attribution(
+        &self,
+        context: &Context<'_>,
+        contribution: UpdateContributorAttribution,
+    ) -> FieldResult<Uuid> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .update_contributor_attribution(contribution)
+            .await?)
+    }
+
+    ///Mutation for deleting contributor attributions
+    #[graphql(
+        guard = "GroupGuard::new(UserGroup::Editors).or(GroupGuard::new(UserGroup::Contributors))"
+    )]
+    async fn delete_contributor_attribution(
+        &self,
+        context: &Context<'_>,
+        contribution: DeleteContributorAttribution,
+    ) -> FieldResult<Uuid> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .delete_contributor_attribution(contribution)
+            .await?)
     }
 
     /// Mutation for paragraph and translation editing
