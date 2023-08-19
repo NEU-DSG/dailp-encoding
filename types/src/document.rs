@@ -253,6 +253,21 @@ pub struct ParagraphUpdate {
     pub translation: MaybeUndefined<String>,
 }
 
+/// Update the contributor attribution for a document
+#[derive(async_graphql::InputObject)]
+pub struct UpdateContributorAttribution {
+    pub document_id: Uuid,
+    pub contributor_id: Uuid,
+    pub contribution_role: String,
+}
+
+/// Delete a contributor attribution for a document based on the two ids
+#[derive(async_graphql::InputObject)]
+pub struct DeleteContributorAttribution {
+    pub document_id: Uuid,
+    pub contributor_id: Uuid,
+}
+
 #[async_graphql::Object]
 impl DocumentParagraph {
     /// Source text of the paragraph broken down into words
