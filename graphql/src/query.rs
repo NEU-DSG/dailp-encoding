@@ -358,7 +358,7 @@ impl Mutation {
             .await?)
     }
 
-    // #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
     async fn update_document_metadata(
         &self,
         context: &Context<'_>,
