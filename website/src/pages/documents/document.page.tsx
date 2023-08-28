@@ -18,14 +18,14 @@ import { navigate } from "vite-plugin-ssr/client/router"
 import { useCredentials } from "src/auth"
 import { AudioPlayer, Breadcrumbs, Button, Link } from "src/components"
 import { useMediaQuery } from "src/custom-hooks"
-import { DocumentInfo } from "src/pages/documents/document-info"
-import { EditButton } from "src/edit-word-panel"
-import { FormProvider, useForm } from "src/edit-word-form-context"
 import { FormProvider as FormProviderDoc } from "src/edit-doc-data-form-context"
+import { FormProvider, useForm } from "src/edit-word-form-context"
+import { EditButton } from "src/edit-word-panel"
 import * as Dailp from "src/graphql/dailp"
 import Layout from "src/layout"
 import { drawerBg } from "src/menu.css"
 import { MorphemeDetails } from "src/morpheme"
+import { DocumentInfo } from "src/pages/documents/document-info"
 import { PanelDetails, PanelLayout, PanelSegment } from "src/panel-layout"
 import { usePreferences } from "src/preferences-context"
 import { useLocation } from "src/renderer/PageShell"
@@ -184,7 +184,7 @@ export const TabSet = ({ doc }: { doc: Document }) => {
         {/* Document Info Component */}
         {/* Make sure form provider is around the component */}
         <FormProviderDoc>
-        <DocumentInfo doc={doc} />
+          <DocumentInfo doc={doc} />
         </FormProviderDoc>
       </TabPanel>
     </>

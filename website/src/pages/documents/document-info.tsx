@@ -18,8 +18,8 @@ import { navigate } from "vite-plugin-ssr/client/router"
 import { useCredentials } from "src/auth"
 import { AudioPlayer, Breadcrumbs, Button, Link } from "src/components"
 import { useMediaQuery } from "src/custom-hooks"
-import { EditButton } from "src/edit-doc-data-panel"
 import { FormProvider, useForm } from "src/edit-doc-data-form-context"
+import EditDocPanel, { EditButton } from "src/edit-doc-data-panel"
 import * as Dailp from "src/graphql/dailp"
 import Layout from "src/layout"
 import { drawerBg } from "src/menu.css"
@@ -41,13 +41,20 @@ import { BasicMorphemeSegment, LevelOfDetail } from "src/types"
 import PageImages from "../../page-image"
 import * as css from "./document.css"
 
+enum TabType {
+  InfoTab,
+  EditInfoTab,
+}
+
+export type TabSegment = Dailp.DocumentMetadataUpdate | Document
+
 export type Document = NonNullable<Dailp.AnnotatedDocumentQuery["document"]>
 
 export const DocumentInfo = ({ doc }: { doc: Document }) => {
   const [{ data }] = Dailp.useDocumentDetailsQuery({
     variables: { slug: doc.slug! },
   })
-  const docData = data?.document
+  const docData: Dailp.AnnotatedDoc = data?.document as Dailp.AnnotatedDoc
   if (!docData) {
     return null
   }
@@ -60,36 +67,8 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
   //   editButton = <EditButton />
   // }
 
-  const panel = <>
-  {/* If the user is logged in, then display an edit button on the word
-  panel along with its corresponding formatted header. Otherwise, display
-  the normal word panel. */}
-  {token ? (
+  const contributorsList = (
     <>
-      {!isEditing && (
-        <div>have token</div>
-      )}
-      <EditButton />
-      </>
-  ) : (
-    <>
-      <div>no token</div>
-    </>
-  )}
-    {isEditing ? (
-      <Form {...form}>
-        <div>EDITING!!!!</div>
-      </Form>
-  ) : (
-    <div>not currently editing</div>
-  )}
-  </>
-
-
-
-
-  return (
-    <Fragment>
       <Helmet>
         <title>{docData.title} - Details</title>
       </Helmet>
@@ -103,8 +82,41 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
           ))}
         </ul>
       </section>
+    </>
+  )
 
-      <>{panel }</>
+  const panel = (
+    <>
+      {/* If the user is logged in, then display an edit button on the word
+  panel along with its corresponding formatted header. Otherwise, display
+  the normal word panel. */}
+      {token ? (
+        <>
+          {!isEditing && (
+            <>
+              {contributorsList}
+            </>
+          )}
+          <EditButton />
+        </>
+      ) : (
+        <>
+          {contributorsList}
+        </>
+      )}
+      {isEditing ? (
+        <Form {...form}>
+          <EditDocPanel
+            document={docData}
+            />
+        </Form>
+      ) : (<></>)}
+    </>
+  )
+  // console.log(docData.id)
+  return (
+    <Fragment>
+      <>{panel}</>
 
       {docData.sources.length > 0 ? (
         <section className={fullWidth}>
@@ -119,6 +131,18 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
   )
 }
 
-const EditDocPanel: React.FC = () => {
-  return <div>Component Content</div>;
-};
+const EditDocPanel2: React.FC = () => {
+  return <div>Component Content</div>
+}
+
+// export const TabContent = (t: {
+//   tab: TabType
+//   doc: Dailp.DocumentMetadataUpdate
+// }) => {
+//   const TabComponent =
+//     t.tab === TabType.EditInfoTab ? EditDocPanel : DocumentInfo
+
+//     return(
+//       TabComponent
+//     )
+// }

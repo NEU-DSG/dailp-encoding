@@ -1,6 +1,7 @@
-import React from "react"
+import React, { useEffect, useState } from "react"
 import { HiPencilAlt } from "react-icons/hi/index"
 import { IoCheckmarkSharp } from "react-icons/io5/index"
+import { DatePickerComponent } from "@syncfusion/ej2-react-calendars";
 import {
   unstable_Form as Form,
   unstable_FormInput as FormInput,
@@ -9,8 +10,8 @@ import {
 import { unstable_FormSubmitButton as FormSubmitButton } from "reakit"
 import { IconButton } from "./components"
 import { IconTextButton } from "./components/button"
-import * as css from "./edit-word-panel.css"
 import { useForm } from "./edit-doc-data-form-context"
+import * as css from "./edit-word-panel.css"
 import * as Dailp from "./graphql/dailp"
 
 /** Button that allows user to enter edit mode in the word panel, and edit fields of a word. */
@@ -59,35 +60,85 @@ export const EditButton = () => {
 }
 
 /** Displays a FormInput with its corresponding feature data from the Reakit form. */
-const EditWordPanel = (props: {
-  feature: keyof Dailp.DocumentMetadataUpdate
-  label?: string
-  input?: React.ElementType
+export const EditDocPanel = (props: {
+  // feature: keyof Dailp.DocFormFieldsFragment
+  // label?: string
+  document?: Dailp.AnnotatedDoc
 }) => {
+  let docData = props.document as unknown as Dailp.AnnotatedDoc
+  // console.log("document id = " + docData.id)
   const { form } = useForm()
 
   if (!form || !form.values.document) {
     return null
   }
+  form.values.document["id "] = docData.id;
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [day, setDay] = useState<Number>();
+  const [month, setMonth] = useState<Number>();
+  const [year, setYear] = useState<Number>();
+
+  const handleDateChange = (e: any) => {
+    const selectedDateValue = e.value as Date;
+
+    if (selectedDateValue) {
+      setSelectedDate(selectedDateValue);
+
+      const selectedDay = selectedDateValue.getDate();
+      const selectedMonth = (selectedDateValue.getMonth() + 1);
+      const selectedYear = selectedDateValue.getFullYear();
+
+      setDay(selectedDay);
+      setMonth(selectedMonth);
+      setYear(selectedYear);
+      
+    }
+  };
+
+  // Use form.push to update the form state manually
+  useEffect(() => {
+    // console.log(day, month, year);
+    form.push(["document", "id"], [docData.id.toString()]) // push manually?
+    if (day && month && year) {
+      form.push(["document", "date"], [{"day": day, "month": month, "year": year}])
+    } else {
+      form.push(["document", "date"], [])
+    }
+  }, [day, month, year]);
 
   return (
     <>
+    <link rel="stylesheet" href="https://cdn.syncfusion.com/ej2/material.css"/>
       {/* Display a label for the form input if it exists. */}
       <FormLabel
         {...form}
         className={css.formInputLabel}
-        name={props.feature}
-        label={props.label}
+        name={"title"}
+        label={"Title"}
       />
-
       <FormInput
         {...form}
-        as={props.input ? props.input : "input"}
         className={css.formInput}
-        name={["document", props.feature]}
+        name={["document", "title"]}
       />
+      <p/>
+
+      <FormLabel
+        {...form}
+        className={css.formInputLabel}
+        name={"written_at"}
+        label={"Written At"}
+      />
+      <div className={css.dateInputConatiner}>
+        <DatePickerComponent
+          placeholder="Select a date"
+          value={selectedDate}
+          change={handleDateChange}
+        >
+        </DatePickerComponent>
+      </div>
     </>
   )
 }
 
-export default EditWordPanel
+export default EditDocPanel
