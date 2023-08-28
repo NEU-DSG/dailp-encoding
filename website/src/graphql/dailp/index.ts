@@ -283,8 +283,12 @@ export type ContributorDetails = {
 
 export type Date = {
   readonly __typename?: "Date"
+  /** The day of this date */
+  readonly day: Scalars["Int"]
   /** Formatted version of the date for humans to read */
   readonly formattedDate: Scalars["String"]
+  /** The month of this date */
+  readonly month: Scalars["Int"]
   /** The year of this date */
   readonly year: Scalars["Int"]
 }
@@ -315,11 +319,7 @@ export type DocumentCollection = {
  * All fields except id are optional.
  */
 export type DocumentMetadataUpdate = {
-  readonly audioSliceId: InputMaybe<Scalars["UUID"]>
-  readonly groupId: InputMaybe<Scalars["UUID"]>
   readonly id: Scalars["UUID"]
-  readonly indexInGroup: InputMaybe<Scalars["Int"]>
-  readonly isReference: InputMaybe<Scalars["Boolean"]>
   readonly title: InputMaybe<Scalars["String"]>
   readonly writtenAt: InputMaybe<DateInput>
 }
@@ -933,6 +933,14 @@ export type DocumentContentsQuery = { readonly __typename?: "Query" } & {
   >
 }
 
+export type DocFormFieldsFragment = {
+  readonly __typename?: "AnnotatedDoc"
+} & Pick<AnnotatedDoc, "id" | "title"> & {
+    readonly date: Maybe<
+      { readonly __typename?: "Date" } & Pick<Date, "day" | "month" | "year">
+    >
+  }
+
 export type FormFieldsFragment = {
   readonly __typename?: "AnnotatedForm"
 } & Pick<
@@ -1335,6 +1343,17 @@ export type UpdateDocumentMetadataMutation = {
   readonly __typename?: "Mutation"
 } & Pick<Mutation, "updateDocumentMetadata">
 
+export const DocFormFieldsFragmentDoc = gql`
+  fragment DocFormFields on AnnotatedDoc {
+    id
+    title
+    date {
+      day
+      month
+      year
+    }
+  }
+`
 export const FormFieldsFragmentDoc = gql`
   fragment FormFields on AnnotatedForm {
     id

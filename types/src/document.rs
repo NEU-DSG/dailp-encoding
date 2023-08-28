@@ -260,11 +260,7 @@ pub struct ParagraphUpdate {
 pub struct DocumentMetadataUpdate {
     pub id: Uuid,
     pub title: MaybeUndefined<String>,
-    pub group_id: MaybeUndefined<Uuid>,
-    pub index_in_group: MaybeUndefined<i64>,
-    pub is_reference: MaybeUndefined<bool>,
     pub written_at: MaybeUndefined<DateInput>,
-    pub audio_slice_id: MaybeUndefined<Uuid>,
 }
 
 #[async_graphql::Object]

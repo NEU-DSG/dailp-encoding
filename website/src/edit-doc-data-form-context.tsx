@@ -16,18 +16,22 @@ const FormContext = createContext<FormContextType>({} as FormContextType)
 /** Instantiates a form state used to keep track of the current document and information about all its features. */
 export const FormProvider = (props: { children: any }) => {
   const [isEditing, setIsEditing] = useState(false)
-  const document: Dailp.DocumentMetadataUpdate = {} as Dailp.DocumentMetadataUpdate
+  const document: Dailp.DocFormFieldsFragment =
+    {} as Dailp.DocFormFieldsFragment
 
   const [updateDocResult, updateDoc] = Dailp.useUpdateDocumentMetadataMutation()
 
   /** Calls the backend GraphQL mutation to update a document's metadata. */
-  const runUpdate = async (variables: { document: Dailp.DocumentMetadataUpdate }) => {
+  const runUpdate = async (variables: {
+    document: Dailp.DocumentMetadataUpdate
+  }) => {
     await updateDoc(variables)
   }
 
+
   const form = useFormState({
     values: {
-      document,
+      document
     },
     onValidate: (values) => {
       if (!values || !values.document) {
@@ -35,17 +39,17 @@ export const FormProvider = (props: { children: any }) => {
       }
     },
     onSubmit: (values) => {
+      // console.log("SUBMITTING")
+      // console.log(values.document["id"][0][0])
+      // console.log(values.document["title"])
+      // console.log(values.document["date"][values.document["date"].length - 1][0])
       setIsEditing(false)
 
       runUpdate({
         document: {
-            id: values.document["id"],
-            title: values.document["title"],
-            audioSliceId: values.document["audioSliceId"],
-            groupId: values.document["groupId"],
-            indexInGroup: values.document["indexInGroup"],
-            isReference: values.document["isReference"],
-            writtenAt: values.document["writtenAt"],
+          id: values.document["id"][0][0],
+          title: values.document["title"],
+          writtenAt: values.document["date"] ? values.document["date"][values.document["date"].length - 1][0] : {}
         },
       })
     },

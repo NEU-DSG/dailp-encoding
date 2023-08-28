@@ -310,6 +310,14 @@ type Date {
 	"""
 	year: Int!
 	"""
+	The month of this date
+	"""
+	month: Int!
+	"""
+	The day of this date
+	"""
+	day: Int!
+	"""
 	Formatted version of the date for humans to read
 	"""
 	formattedDate: String!
@@ -346,11 +354,7 @@ All fields except id are optional.
 input DocumentMetadataUpdate {
 	id: UUID!
 	title: String
-	groupId: UUID
-	indexInGroup: Int
-	isReference: Boolean
 	writtenAt: DateInput
-	audioSliceId: UUID
 }
 
 type DocumentPage {
