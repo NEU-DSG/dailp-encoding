@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react"
 import { HiPencilAlt } from "react-icons/hi/index"
 import { IoCheckmarkSharp } from "react-icons/io5/index"
-import pkg from '@syncfusion/ej2-react-calendars';
-const { DatePickerComponent } = pkg;
+import { DatePickerComponent } from "@syncfusion/ej2-react-calendars";
 import {
   unstable_Form as Form,
   unstable_FormInput as FormInput,
