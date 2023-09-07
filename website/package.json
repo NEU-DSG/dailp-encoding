@@ -25,7 +25,7 @@
     "@react-hook/debounce": "^4.0.0",
     "@urql/exchange-auth": "^1.0",
     "amazon-cognito-identity-js": "^5.2.9",
-    "aws-amplify": "^4.3.20",
+    "aws-amplify": "^5.3.8",
     "classnames": "^2.3.1",
     "graphql": "^16.3.0",
     "graphql-tag": "^2.11.0",
