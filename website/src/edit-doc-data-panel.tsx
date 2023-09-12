@@ -80,7 +80,7 @@ export const EditDocPanel = (props: {
 
   const handleDateChange = (e: Date) => {
     const selectedDateValue = e;
-    console.log("selected date = " + selectedDateValue)
+    // console.log("selected date = " + selectedDateValue)
 
     if (selectedDateValue) {
       setSelectedDate(selectedDateValue);
