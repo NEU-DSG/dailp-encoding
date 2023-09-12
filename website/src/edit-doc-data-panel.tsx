@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from "react"
+import DatePicker from 'react-date-picker'
+import 'react-date-picker/dist/DatePicker.css'
+import 'react-calendar/dist/Calendar.css';
 import { HiPencilAlt } from "react-icons/hi/index"
 import { IoCheckmarkSharp } from "react-icons/io5/index"
-import { DatePickerComponent } from "@syncfusion/ej2-react-calendars";
 import {
   unstable_Form as Form,
   unstable_FormInput as FormInput,
@@ -61,8 +63,6 @@ export const EditButton = () => {
 
 /** Displays a FormInput with its corresponding feature data from the Reakit form. */
 export const EditDocPanel = (props: {
-  // feature: keyof Dailp.DocFormFieldsFragment
-  // label?: string
   document?: Dailp.AnnotatedDoc
 }) => {
   let docData = props.document as unknown as Dailp.AnnotatedDoc
@@ -78,11 +78,15 @@ export const EditDocPanel = (props: {
   const [month, setMonth] = useState<Number>();
   const [year, setYear] = useState<Number>();
 
-  const handleDateChange = (e: any) => {
-    const selectedDateValue = e.value as Date;
+  const handleDateChange = (e: Date) => {
+    const selectedDateValue = e;
+    console.log("selected date = " + selectedDateValue)
 
     if (selectedDateValue) {
       setSelectedDate(selectedDateValue);
+      // console.log(selectedDate?.getDate());
+      // console.log(selectedDate?.getMonth());
+      // console.log(selectedDate?.getFullYear());
 
       const selectedDay = selectedDateValue.getDate();
       const selectedMonth = (selectedDateValue.getMonth() + 1);
@@ -97,9 +101,8 @@ export const EditDocPanel = (props: {
 
   // Use form.push to update the form state manually
   useEffect(() => {
-    // console.log(day, month, year);
-    form.push(["document", "id"], [docData.id.toString()]) // push manually?
-    if (day && month && year) {
+    form.push(["document", "id"], [docData.id.toString()]) // push manually
+    if (selectedDate) {
       form.push(["document", "date"], [{"day": day, "month": month, "year": year}])
     } else {
       form.push(["document", "date"], [])
@@ -108,7 +111,6 @@ export const EditDocPanel = (props: {
 
   return (
     <>
-    <link rel="stylesheet" href="https://cdn.syncfusion.com/ej2/material.css"/>
       {/* Display a label for the form input if it exists. */}
       <FormLabel
         {...form}
@@ -130,12 +132,12 @@ export const EditDocPanel = (props: {
         label={"Written At"}
       />
       <div className={css.dateInputConatiner}>
-        <DatePickerComponent
-          placeholder="Select a date"
-          value={selectedDate}
-          change={handleDateChange}
-        >
-        </DatePickerComponent>
+        <DatePicker
+          selected={selectedDate}
+          onChange={(date: Date) => handleDateChange(date)}
+          value = {selectedDate}
+          dateFormat='dd/MM/yyyy'
+          isClearable/>
       </div>
     </>
   )
