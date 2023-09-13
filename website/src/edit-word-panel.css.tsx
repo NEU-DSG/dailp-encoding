@@ -32,7 +32,7 @@ export const formInputLabel = style({
 })
 
 export const dateInputConatiner = style({
-  width: "25%"
+  width: "25%",
 })
 
 export const formInput = style([

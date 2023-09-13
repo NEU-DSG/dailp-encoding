@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react"
-import DatePicker from 'react-date-picker'
-import 'react-date-picker/dist/DatePicker.css'
-import 'react-calendar/dist/Calendar.css';
+import "react-calendar/dist/Calendar.css"
+import DatePicker from "react-date-picker"
+import "react-date-picker/dist/DatePicker.css"
 import { HiPencilAlt } from "react-icons/hi/index"
 import { IoCheckmarkSharp } from "react-icons/io5/index"
 import {
@@ -62,9 +62,7 @@ export const EditButton = () => {
 }
 
 /** Displays a FormInput with its corresponding feature data from the Reakit form. */
-export const EditDocPanel = (props: {
-  document?: Dailp.AnnotatedDoc
-}) => {
+export const EditDocPanel = (props: { document?: Dailp.AnnotatedDoc }) => {
   let docData = props.document as unknown as Dailp.AnnotatedDoc
   // console.log("document id = " + docData.id)
   const { form } = useForm()
@@ -72,42 +70,41 @@ export const EditDocPanel = (props: {
   if (!form || !form.values.document) {
     return null
   }
-  form.values.document["id "] = docData.id;
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
-  const [day, setDay] = useState<Number>();
-  const [month, setMonth] = useState<Number>();
-  const [year, setYear] = useState<Number>();
+  form.values.document["id "] = docData.id
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined)
+  const [day, setDay] = useState<Number>()
+  const [month, setMonth] = useState<Number>()
+  const [year, setYear] = useState<Number>()
 
-  const handleDateChange = (e: Date) => {
-    const selectedDateValue = e;
+  const handleDateChange = (e: any) => {
+    const selectedDateValue = e as Date
     // console.log("selected date = " + selectedDateValue)
 
     if (selectedDateValue) {
-      setSelectedDate(selectedDateValue);
+      setSelectedDate(selectedDateValue)
       // console.log(selectedDate?.getDate());
       // console.log(selectedDate?.getMonth());
       // console.log(selectedDate?.getFullYear());
 
-      const selectedDay = selectedDateValue.getDate();
-      const selectedMonth = (selectedDateValue.getMonth() + 1);
-      const selectedYear = selectedDateValue.getFullYear();
+      const selectedDay = selectedDateValue.getDate()
+      const selectedMonth = selectedDateValue.getMonth() + 1
+      const selectedYear = selectedDateValue.getFullYear()
 
-      setDay(selectedDay);
-      setMonth(selectedMonth);
-      setYear(selectedYear);
-      
+      setDay(selectedDay)
+      setMonth(selectedMonth)
+      setYear(selectedYear)
     }
-  };
+  }
 
   // Use form.push to update the form state manually
   useEffect(() => {
     form.push(["document", "id"], [docData.id.toString()]) // push manually
     if (selectedDate) {
-      form.push(["document", "date"], [{"day": day, "month": month, "year": year}])
+      form.push(["document", "date"], [{ day: day, month: month, year: year }])
     } else {
       form.push(["document", "date"], [])
     }
-  }, [day, month, year]);
+  }, [day, month, year])
 
   return (
     <>
@@ -123,7 +120,7 @@ export const EditDocPanel = (props: {
         className={css.formInput}
         name={["document", "title"]}
       />
-      <p/>
+      <p />
 
       <FormLabel
         {...form}
@@ -133,11 +130,10 @@ export const EditDocPanel = (props: {
       />
       <div className={css.dateInputConatiner}>
         <DatePicker
-          selected={selectedDate}
-          onChange={(date: Date) => handleDateChange(date)}
-          value = {selectedDate}
-          dateFormat='dd/MM/yyyy'
-          isClearable/>
+          onChange={(date: any) => handleDateChange(date)}
+          value={selectedDate}
+          format="dd-mm-y"
+        />
       </div>
     </>
   )

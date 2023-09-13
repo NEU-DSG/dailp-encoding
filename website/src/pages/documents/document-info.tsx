@@ -92,25 +92,19 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
   the normal word panel. */}
       {token ? (
         <>
-          {!isEditing && (
-            <>
-              {contributorsList}
-            </>
-          )}
+          {!isEditing && <>{contributorsList}</>}
           <EditButton />
         </>
       ) : (
-        <>
-          {contributorsList}
-        </>
+        <>{contributorsList}</>
       )}
       {isEditing ? (
         <Form {...form}>
-          <EditDocPanel
-            document={docData}
-            />
+          <EditDocPanel document={docData} />
         </Form>
-      ) : (<></>)}
+      ) : (
+        <></>
+      )}
     </>
   )
   // console.log(docData.id)
