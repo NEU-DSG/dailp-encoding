@@ -28,10 +28,9 @@ export const FormProvider = (props: { children: any }) => {
     await updateDoc(variables)
   }
 
-
   const form = useFormState({
     values: {
-      document
+      document,
     },
     onValidate: (values) => {
       if (!values || !values.document) {
@@ -42,14 +41,18 @@ export const FormProvider = (props: { children: any }) => {
       // console.log("SUBMITTING")
       // console.log(values.document["id"][0][0])
       // console.log(values.document["title"])
-      // console.log(values.document["date"][values.document["date"].length - 1][0])
+      // console.log(typeof values.document["date"])
       setIsEditing(false)
 
       runUpdate({
         document: {
           id: values.document["id"][0][0],
           title: values.document["title"],
-          writtenAt: values.document["date"] ? values.document["date"][values.document["date"].length - 1][0] : {}
+          writtenAt: values.document["date"]
+            ? (values.document["date"] as unknown as Array<any>)[
+                (values.document["date"] as unknown as Array<any>).length - 1
+              ][0]
+            : {},
         },
       })
     },
