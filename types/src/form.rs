@@ -219,14 +219,15 @@ impl AnnotatedForm {
         &self,
         context: &async_graphql::Context<'_>,
     ) -> FieldResult<Vec<AudioSlice>> {
-        let mut audio_tracks = self.user_contributed_audio(context).await?;
+        let mut all_audio = self.user_contributed_audio(context).await?;
         // add ingested audio track as first element if it should be shown
         if let Some(ingested_audio_track) = self.ingested_audio_track.to_owned() {
-            if ingested_audio_track.include_in_edited_collection {
-                audio_tracks.insert(0, ingested_audio_track);
-            }
+            all_audio.insert(0, ingested_audio_track);
         }
-        return Ok(audio_tracks);
+        return Ok(all_audio
+            .into_iter()
+            .filter(|audio| audio.include_in_edited_collection)
+            .collect_vec());
     }
 
     /// Audio for this word that has been recorded by community members. Will be

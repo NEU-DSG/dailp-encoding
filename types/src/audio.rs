@@ -41,10 +41,21 @@ pub struct AudioSlice {
 
 /// Request to attach user-recorded audio to a word
 #[derive(async_graphql::InputObject)]
-pub struct ContributorAudioUpload {
+pub struct AttachAudioToWordInput {
     /// Word to bind audio to
     pub word_id: Uuid,
     /// A URL to a Cloudfront-proxied user-recorded pronunciation of a word.
     /// A new resource will be created to represent the recording if one does not exist already
     pub contributor_audio_url: String,
+}
+
+/// Request to update if a piece of audio should be included in an edited collection
+#[derive(async_graphql::InputObject)]
+pub struct CurateWordAudioInput {
+    /// Word audio is attached to
+    pub word_id: Uuid,
+    /// Audio to include/exclude
+    pub audio_slice_id: Uuid,
+    /// New value
+    pub include_in_edited_collection: bool,
 }

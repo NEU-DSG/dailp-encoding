@@ -1,4 +1,4 @@
-import React, { ReactNode, useEffect } from "react"
+import React, { ReactNode } from "react"
 import { AiFillSound } from "react-icons/ai/index"
 import { GrDown, GrUp } from "react-icons/gr/index"
 import { IoEllipsisHorizontalCircle } from "react-icons/io5/index"
@@ -7,7 +7,8 @@ import { Disclosure, DisclosureContent, useDisclosureState } from "reakit"
 import { unstable_Form as Form } from "reakit"
 import { useCredentials } from "./auth"
 import { AudioPlayer, IconButton } from "./components"
-import EditWordPanel, { EditButton } from "./edit-word-panel"
+import { EditWordAudio } from "./components/edit-word-audio"
+import { EditButton, EditWordFeature } from "./edit-word-feature"
 import { content } from "./footer.css"
 import { useForm } from "./form-context"
 import * as Dailp from "./graphql/dailp"
@@ -15,7 +16,7 @@ import * as css from "./panel-layout.css"
 import ParagraphPanel from "./paragraph-panel"
 import { usePreferences } from "./preferences-context"
 import { TranslatedParagraph } from "./segment"
-import { VerticalMorphemicSegmentation, WordPanel } from "./word-panel"
+import { VerticalMorphemicSegmentation } from "./word-panel"
 
 enum PanelType {
   EditWordPanel,
@@ -80,13 +81,12 @@ export const PanelLayout = (p: {
           </>
         )}
         {/* Renders audio recording. */}
-        <AudioPanel segment={p.segment} />
         {isEditing ? (
           <Form {...form}>
             <PanelContent panel={PanelType.EditWordPanel} word={p.segment} />
           </Form>
         ) : (
-          <WordPanel word={p.segment} setContent={p.setContent} />
+          <PanelContent panel={PanelType.WordPanel} word={p.segment} />
         )}
       </>
     )
@@ -101,19 +101,32 @@ export const PanelLayout = (p: {
   )
 }
 
+function WordFeature(p: {
+  word: Dailp.FormFieldsFragment
+  feature: keyof Dailp.FormFieldsFragment
+  label?: string
+}) {
+  return <div>{p.word[p.feature]}</div>
+}
+
 /** Dispatches to the corresponding panel type to render a normal word panel or an editable word panel. */
 export const PanelContent = (p: {
   panel: PanelType
   word: Dailp.FormFieldsFragment
 }) => {
-  const PanelComponent =
-    p.panel === PanelType.EditWordPanel ? EditWordPanel : WordPanel
+  // what should be used to render word features? eg, syllabary, commentary, etc.
+  const PanelFeatureComponent =
+    p.panel === PanelType.EditWordPanel ? EditWordFeature : WordFeature
+
+  // what should be used to render word audio, if present?
+  const PanelAudioComponent =
+    p.panel === PanelType.EditWordPanel ? EditWordAudio : WordAudio
 
   // Contains components rendering data of a word's phonetics.
   const phoneticsContent = (
     <>
       {p.word.source && (
-        <PanelComponent
+        <PanelFeatureComponent
           word={p.word}
           feature={"source"}
           label="Syllabary Characters"
@@ -121,7 +134,7 @@ export const PanelContent = (p: {
       )}
 
       {p.word.romanizedSource && (
-        <PanelComponent
+        <PanelFeatureComponent
           word={p.word}
           feature={"romanizedSource"}
           label="Romanized Source"
@@ -133,7 +146,7 @@ export const PanelContent = (p: {
   const translation = (
     <>
       {p.word.englishGloss[0] !== "" && (
-        <PanelComponent
+        <PanelFeatureComponent
           word={p.word}
           feature={"englishGloss"}
           label="English Translation"
@@ -155,6 +168,7 @@ export const PanelContent = (p: {
       {p.panel === PanelType.WordPanel ? (
         <div style={{ display: "flex" }}>‘{translation}’</div>
       ) : (
+        // should this be a call to the parameterized component as well?
         <>{translation}</>
       )}
     </>
@@ -162,11 +176,24 @@ export const PanelContent = (p: {
 
   // Contains a component rendering a word's commentary.
   const commentaryContent = (
-    <PanelComponent word={p.word} feature={"commentary"} input="textarea" />
+    <PanelFeatureComponent
+      word={p.word}
+      feature={"commentary"}
+      input="textarea"
+    />
   )
 
   return (
     <>
+      {(p.word.editedAudio.length || p.panel === PanelType.EditWordPanel) && (
+        <CollapsiblePanel
+          title={"Audio"}
+          content={<PanelAudioComponent word={p.word} />}
+          icon={
+            <AiFillSound size={24} className={css.wordPanelButton.colpleft} />
+          }
+        />
+      )}
       <CollapsiblePanel
         title={"Phonetics"}
         content={phoneticsContent}
@@ -232,32 +259,27 @@ export const CollapsiblePanel = (p: {
   )
 }
 
-export const AudioPanel = (p: { segment: Dailp.FormFieldsFragment }) => {
-  const [audioTrack] = p.segment.editedAudio
+export const WordAudio = (p: { word: Dailp.FormFieldsFragment }) => {
+  if (p.word.editedAudio.length === 0) return null
   return (
     <>
-      {audioTrack && (
-        <CollapsiblePanel
-          title={"Audio"}
-          content={
-            <div>
-              {
-                <AudioPlayer
-                  audioUrl={audioTrack.resourceUrl}
-                  slices={{
-                    start: audioTrack.startTime!,
-                    end: audioTrack.endTime!,
-                  }}
-                  showProgress
-                />
-              }
-            </div>
+      {p.word.editedAudio.map((audioTrack) => (
+        <AudioPlayer
+          audioUrl={audioTrack.resourceUrl}
+          slices={
+            audioTrack.startTime !== undefined &&
+            audioTrack.startTime !== null &&
+            audioTrack.endTime !== undefined &&
+            audioTrack.endTime !== null
+              ? {
+                  start: audioTrack.startTime,
+                  end: audioTrack.endTime,
+                }
+              : undefined
           }
-          icon={
-            <AiFillSound size={24} className={css.wordPanelButton.colpleft} />
-          }
+          showProgress
         />
-      )}
+      ))}
     </>
   )
 }
