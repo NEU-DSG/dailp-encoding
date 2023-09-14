@@ -51,6 +51,10 @@ async fn handler(
         _ => None,
     };
 
+    if let Some(user_id) = user.as_ref().map(|u| u.id) {
+        database.upsert_dailp_user(user_id).await?;
+    }
+
     // TODO Hook up warp or tide instead of using a manual conditional.
     let path = req.uri().path();
     // GraphQL queries route to the /graphql endpoint.
