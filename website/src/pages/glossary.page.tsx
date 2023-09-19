@@ -1,9 +1,8 @@
 import React from "react"
-import Layout from "../layout"
 import { Glossary } from "src/components/glossary"
+import Layout from "../layout"
 
 const GlossaryPage = () => {
-  
   return (
     <Layout>
       <Glossary />
@@ -11,4 +10,3 @@ const GlossaryPage = () => {
   )
 }
 export const Page = GlossaryPage
-

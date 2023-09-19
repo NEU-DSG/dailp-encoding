@@ -64,41 +64,53 @@ const CWKWLayout: React.FC = ({ children }) => {
         </div>
       </header>
       {children}
-      <footer 
-      aria-label="Site Footer" 
-      className={dialog.visible && isDesktop ? css.openHeader : css.header}
-      id="footer">
-        <div className={
+      <footer
+        aria-label="Site Footer"
+        className={dialog.visible && isDesktop ? css.openHeader : css.header}
+        id="footer"
+      >
+        <div
+          className={
             dialog.visible && isDesktop
               ? css.openHeaderContents
               : css.headerContents
-           }>
-            <div className={css.noticeText}>
-      <CreativeCommonsBy
-        title="Cherokees Writing the Keetoowah Way"
-        authors={[
-          {name: "Ellen Cushman", link:"https://www.ellencushman.com/"},
-          {name: "Ben Frey", link: "https://americanstudies.unc.edu/ben-frey/"},
-          {name: "Rachel Jackson", link: "https://www.ou.edu/cas/english/about/faculty/rachel-jackson"},
-          {name: "Ernestine Berry"},
-          {name: "Clara Proctor"},
-          {name: "Naomi Trevino"},
-          {name: "Jeffrey Bourns"},
-          {name: "Oleta Pritchett"},
-          {name: "Tyler Hodges"},
-          {name: "John Chewey"},
-          {name: "Taylor Snead", link:"https://snead.xyz"},
-          {name: "Chan Mi Oh", link: "https://chanmioh.github.io"},
-          {name: "Kush Patel"},
-          {name: "Shashwat Patel"},
-          {name: "Nop Lertsumitkul"},
-          {name: "Henry Volchonok"},
-          {name: "Hazelyn Aroian"},
-          {name: "Victor Mendevil"},
-        ]}
-      />
-      </div>
-      </div>
+          }
+        >
+          <div className={css.noticeText}>
+            <CreativeCommonsBy
+              title="Cherokees Writing the Keetoowah Way"
+              authors={[
+                {
+                  name: "Ellen Cushman",
+                  link: "https://www.ellencushman.com/",
+                },
+                {
+                  name: "Ben Frey",
+                  link: "https://americanstudies.unc.edu/ben-frey/",
+                },
+                {
+                  name: "Rachel Jackson",
+                  link: "https://www.ou.edu/cas/english/about/faculty/rachel-jackson",
+                },
+                { name: "Ernestine Berry" },
+                { name: "Clara Proctor" },
+                { name: "Naomi Trevino" },
+                { name: "Jeffrey Bourns" },
+                { name: "Oleta Pritchett" },
+                { name: "Tyler Hodges" },
+                { name: "John Chewey" },
+                { name: "Shelby Snead", link: "https://snead.xyz" },
+                { name: "Chan Mi Oh", link: "https://chanmioh.github.io" },
+                { name: "Kush Patel" },
+                { name: "Shashwat Patel" },
+                { name: "Nop Lertsumitkul" },
+                { name: "Henry Volchonok" },
+                { name: "Hazelyn Aroian" },
+                { name: "Victor Mendevil" },
+              ]}
+            />
+          </div>
+        </div>
       </footer>
     </PreferencesProvider>
   )

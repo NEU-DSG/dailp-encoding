@@ -1,13 +1,8 @@
 import React, { ReactNode } from "react"
-import {
-  AiFillCaretDown,
-  AiFillCaretUp,
-  AiFillSound,
-} from "react-icons/ai/index"
+import { AiFillCaretDown, AiFillCaretUp } from "react-icons/ai/index"
 import { IoEllipsisHorizontalCircle } from "react-icons/io5/index"
 import { MdNotes, MdRecordVoiceOver } from "react-icons/md/index"
 import { Disclosure, DisclosureContent, useDisclosureState } from "reakit"
-import { AudioPlayer } from "src/components"
 import * as Dailp from "src/graphql/dailp"
 import * as css from "./panel-layout.css"
 import { usePreferences } from "./preferences-context"
@@ -159,34 +154,5 @@ const CollapsiblePanel = (p: {
         {p.content}
       </DisclosureContent>
     </div>
-  )
-}
-
-const AudioPanel = (p: { segment: Dailp.FormFieldsFragment }) => {
-  return (
-    <>
-      {p.segment.audioTrack && (
-        <CollapsiblePanel
-          title={"Audio"}
-          content={
-            <div>
-              {
-                <AudioPlayer
-                  audioUrl={p.segment.audioTrack.resourceUrl}
-                  slices={{
-                    start: p.segment.audioTrack.startTime!,
-                    end: p.segment.audioTrack.endTime!,
-                  }}
-                  showProgress
-                />
-              }
-            </div>
-          }
-          icon={
-            <AiFillSound size={24} className={css.wordPanelButton.colpleft} />
-          }
-        />
-      )}
-    </>
   )
 }

@@ -1,16 +1,18 @@
 //! This piece of the project exposes a GraphQL endpoint that allows one to access DAILP data in a federated manner with specific queries.
 
-use dailp::{slugify_ltree, CollectionChapter, Uuid};
+use dailp::{
+    slugify_ltree, AnnotatedForm, AttachAudioToWordInput, CollectionChapter, CurateWordAudioInput,
+    Uuid,
+};
 use itertools::Itertools;
 
 use {
-    dailp::async_graphql::{self, dataloader::DataLoader, Context, FieldResult, Guard},
+    dailp::async_graphql::{self, dataloader::DataLoader, Context, FieldResult, Guard, Object},
     dailp::{
         AnnotatedDoc, AnnotatedFormUpdate, CherokeeOrthography, Database, EditedCollection,
         MorphemeId, MorphemeReference, MorphemeTag, ParagraphUpdate, WordsInDocument,
     },
     serde::{Deserialize, Serialize},
-    serde_with::{rust::StringWithSeparator, CommaSeparator},
 };
 
 /// Home for all read-only queries
@@ -303,7 +305,7 @@ impl Mutation {
     }
 
     /// Mutation for paragraph and translation editing
-    #[graphql(guard = "GroupGuard::new(UserGroup::Editor)")]
+    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
     async fn update_paragraph(
         &self,
         context: &Context<'_>,
@@ -316,7 +318,7 @@ impl Mutation {
             .await?)
     }
 
-    #[graphql(guard = "GroupGuard::new(UserGroup::Editor)")]
+    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
     async fn update_page(
         &self,
         context: &Context<'_>,
@@ -331,7 +333,7 @@ impl Mutation {
         Ok(true)
     }
 
-    #[graphql(guard = "GroupGuard::new(UserGroup::Editor)")]
+    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
     async fn update_annotation(
         &self,
         context: &Context<'_>,
@@ -346,16 +348,67 @@ impl Mutation {
         Ok(true)
     }
 
-    #[graphql(guard = "GroupGuard::new(UserGroup::Editor)")]
+    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
     async fn update_word(
         &self,
         context: &Context<'_>,
         word: AnnotatedFormUpdate,
-    ) -> FieldResult<Uuid> {
+    ) -> FieldResult<AnnotatedForm> {
+        let database = context.data::<DataLoader<Database>>()?.loader();
+        Ok(database
+            .word_by_id(&database.update_word(word).await?)
+            .await?)
+    }
+
+    /// Decide if a piece audio should be included in edited collection
+    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    async fn curate_word_audio(
+        &self,
+        context: &Context<'_>,
+        input: CurateWordAudioInput,
+    ) -> FieldResult<dailp::AnnotatedForm> {
+        // TODO: should this return a typed id ie. AudioSliceId?
+        let user = context
+            .data_opt::<UserInfo>()
+            .ok_or_else(|| anyhow::format_err!("User is not signed in"))?;
+        let word_id = context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .update_audio_visibility(
+                &input.word_id,
+                &input.audio_slice_id,
+                input.include_in_edited_collection,
+                &user.id,
+            )
+            .await?;
         Ok(context
             .data::<DataLoader<Database>>()?
             .loader()
-            .update_word(word)
+            .word_by_id(&word_id.ok_or_else(|| anyhow::format_err!("Word audio not found"))?)
+            .await?)
+    }
+
+    /// Attach audio that has already been uploaded to S3 to a particular word
+    /// Assumes user requesting mutation recoreded the audio
+    #[graphql(guard = "GroupGuard::new(UserGroup::Contributors)")]
+    async fn attach_audio_to_word(
+        &self,
+        context: &Context<'_>,
+        input: AttachAudioToWordInput,
+    ) -> FieldResult<dailp::AnnotatedForm> {
+        // TODO: should this return a typed id ie. AudioSliceId?
+        let user = context
+            .data_opt::<UserInfo>()
+            .ok_or_else(|| anyhow::format_err!("User is not signed in"))?;
+        let word_id = context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .attach_audio_to_word(input, &user.id)
+            .await?;
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .word_by_id(&word_id)
             .await?)
     }
 }
@@ -367,28 +420,30 @@ struct FormsInTime {
     forms: Vec<dailp::AnnotatedForm>,
 }
 
+/// Auth metadata on the user making the current request.
 #[derive(Deserialize, Debug, async_graphql::SimpleObject)]
 pub struct UserInfo {
+    /// Unique ID for the User. Should be an AWS Cognito Sub.
+    #[serde(default, rename = "sub")]
+    pub id: Uuid,
     email: String,
-    #[serde(
-        default,
-        rename = "cognito:groups",
-        with = "StringWithSeparator::<CommaSeparator>"
-    )]
+    #[serde(default, rename = "cognito:groups")]
     groups: Vec<UserGroup>,
 }
 impl UserInfo {
     pub fn new_test_admin() -> Self {
         Self {
+            id: Uuid::parse_str("5f22a8bf-46c8-426c-a104-b4faf7c2d608").unwrap(),
             email: "test@dailp.northeastern.edu".to_string(),
-            groups: vec![UserGroup::Editor],
+            groups: vec![UserGroup::Editors],
         }
     }
 }
 
 #[derive(Eq, PartialEq, Copy, Clone, Serialize, Deserialize, Debug, async_graphql::Enum)]
-enum UserGroup {
-    Editor,
+pub enum UserGroup {
+    Contributors,
+    Editors,
 }
 // Impl FromStr and Display automatically for UserGroup, using serde.
 // This allows us to (de)serialize lists of groups via a comma-separated string
@@ -412,6 +467,12 @@ impl Guard for GroupGuard {
     async fn check(&self, ctx: &async_graphql::Context<'_>) -> async_graphql::Result<()> {
         let user = ctx.data_opt::<UserInfo>();
         let has_group = user.map(|user| user.groups.iter().any(|group| group == &self.group));
+
+        match user {
+            Some(user) => log::info!("Debug user info groups={:?}", user.clone()),
+            None => log::info!("No user"),
+        };
+
         if has_group == Some(true) {
             Ok(())
         } else {

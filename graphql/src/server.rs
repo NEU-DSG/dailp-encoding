@@ -1,3 +1,6 @@
+use log::error;
+
+mod cognito;
 mod query;
 
 use {
@@ -11,7 +14,7 @@ use {
         http::headers::HeaderValue,
         http::mime,
         security::{CorsMiddleware, Origin},
-        Body, Response, StatusCode,
+        Body, Endpoint, Response, StatusCode,
     },
 };
 
@@ -34,7 +37,6 @@ async fn main() -> tide::Result<()> {
             dailp::Database::connect(None)?,
             tokio::spawn,
         ))
-        .data(UserInfo::new_test_admin())
         .finish();
 
     let cors = CorsMiddleware::new()
@@ -46,8 +48,10 @@ async fn main() -> tide::Result<()> {
 
     // add tide endpoint
     app.at("/graphql").post(async_graphql_tide::graphql(schema));
-    app.at("/graphql-edit")
-        .post(async_graphql_tide::graphql(authed_schema));
+    app.at("/graphql-edit").post(AuthedEndpoint::new(
+        authed_schema,
+        dailp::Database::connect(None)?,
+    ));
 
     // enable graphql playground
     app.at("/graphql").get(|_| async move {
@@ -72,4 +76,52 @@ async fn main() -> tide::Result<()> {
     });
 
     Ok(app.listen("127.0.0.1:8080").await?)
+}
+
+struct AuthedEndpoint {
+    schema: Schema<query::Query, query::Mutation, EmptySubscription>,
+    database: dailp::Database,
+}
+
+impl AuthedEndpoint {
+    fn new(
+        schema: Schema<query::Query, query::Mutation, EmptySubscription>,
+        database: dailp::Database,
+    ) -> Self {
+        Self { schema, database }
+    }
+}
+
+#[async_trait::async_trait]
+impl Endpoint<()> for AuthedEndpoint {
+    async fn call(&self, req: tide::Request<()>) -> tide::Result {
+        let authorization = req.header("Authorization");
+
+        let user: Option<UserInfo> = authorization
+            .and_then(|values| values.iter().next())
+            .and_then(
+                |value| match cognito::user_info_from_authorization(value.as_str()) {
+                    Ok(value) => Some(value),
+                    Err(err) => {
+                        error!("{:?}", err);
+                        None
+                    }
+                },
+            );
+
+        if let Some(user_id) = user.as_ref().map(|u| u.id) {
+            self.database.upsert_dailp_user(user_id).await?;
+        }
+
+        let req = async_graphql_tide::receive_request(req).await?;
+        let req = if let Some(user) = user {
+            req.data(user)
+        } else {
+            req
+        };
+
+        let gql_resp = self.schema.execute(req).await;
+
+        return async_graphql_tide::respond(gql_resp);
+    }
 }

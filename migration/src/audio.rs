@@ -260,10 +260,7 @@ impl AudioRes {
             // Will this always be us-east-1? If so, modify url base below.
             let aws_region = String::from("us-east-1");
 
-            let s3_location = format!(
-                "https://dailp-{}-media-storage.s3.{}.amazonaws.com",
-                deploy_env, aws_region
-            );
+            let s3_location = "https://d1q0qkah8ttfau.cloudfront.net";
 
             println!("{}{}", s3_location, audio_ref_key);
 
@@ -302,12 +299,17 @@ impl AudioRes {
     /// Note: Documents cannot have parent tracks at this time.
     pub fn into_document_audio(self) -> AudioSlice {
         AudioSlice {
+            slice_id: None,
             resource_url: self.audio_url.clone(),
             parent_track: Some(DocumentAudioId("".to_string())),
             annotations: Some(self.into_audio_slices()),
             index: 0,
             start_time: None,
             end_time: None,
+            recorded_at: None,
+            recorded_by: None,
+            edited_by: None,
+            include_in_edited_collection: true,
         }
     }
 
@@ -331,22 +333,32 @@ impl AudioRes {
             if annotation_line.is_err() {
                 error!("Failed to add line {}", i);
                 result.push(AudioSlice {
+                    slice_id: None,
                     resource_url: self.audio_url.clone(),
                     parent_track: Some(DocumentAudioId("".to_string())),
                     annotations: None,
                     index: i,
                     start_time: None,
                     end_time: None,
+                    recorded_at: None,
+                    recorded_by: None,
+                    edited_by: None,
+                    include_in_edited_collection: true,
                 });
             } else {
                 let annotation = annotation_line.unwrap();
                 result.push(AudioSlice {
+                    slice_id: None,
                     resource_url: self.audio_url.clone(),
                     parent_track: Some(DocumentAudioId("".to_string())),
                     annotations: None,
                     index: i,
                     start_time: Some((annotation.start_time * 1000.0) as i32),
                     end_time: Some((annotation.end_time * 1000.0) as i32),
+                    recorded_at: None,
+                    recorded_by: None,
+                    edited_by: None,
+                    include_in_edited_collection: true,
                 });
                 info!(
                     "Successfully added from line {}.\nURL: {}\nStart:{}ms\nEnd:{}ms",

@@ -10,7 +10,7 @@ import {
 import * as Dailp from "src/graphql/dailp"
 import { IconButton } from "./components"
 import { IconTextButton } from "./components/button"
-import * as css from "./edit-word-panel.css"
+import * as css from "./edit-word-feature.css"
 import { useForm } from "./form-context"
 import { usePreferences } from "./preferences-context"
 
@@ -66,7 +66,7 @@ export const EditButton = () => {
 }
 
 /** Displays a FormInput with its corresponding feature data from the Reakit form. */
-const EditWordPanel = (props: {
+export const EditWordFeature = (props: {
   feature: keyof Dailp.FormFieldsFragment
   label?: string
   input?: React.ElementType
@@ -96,5 +96,3 @@ const EditWordPanel = (props: {
     </>
   )
 }
-
-export default EditWordPanel

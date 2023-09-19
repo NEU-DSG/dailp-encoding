@@ -115,9 +115,9 @@ type AnnotatedForm {
 	"""
 	dateRecorded: Date
 	"""
-	A slice of audio associated with this word in the context of a document
+	The audio for this word that was ingested from GoogleSheets, if there is any.
 	"""
-	audioTrack: AudioSlice
+	ingestedAudioTrack: AudioSlice
 	"""
 	The root morpheme of the word.
 	For example, a verb form glossed as "he catches" might have a root morpheme
@@ -146,6 +146,18 @@ type AnnotatedForm {
 	Unique identifier of this form
 	"""
 	id: UUID!
+	"""
+	A slices of audio associated with this word in the context of a document.
+	This audio has been selected by an editor from contributions, or is the
+	same as the ingested audio track, if one is available.
+	"""
+	editedAudio: [AudioSlice!]!
+	"""
+	Audio for this word that has been recorded by community members. Will be
+	empty if user does not have access to uncurated contributions.
+	TODO! User guard for contributors only
+	"""
+	userContributedAudio: [AudioSlice!]!
 }
 
 """
@@ -158,11 +170,11 @@ input AnnotatedFormUpdate {
 	"""
 	id: UUID!
 	"""
-	Updated source text
+	Possible update to source content
 	"""
 	source: String
 	"""
-	Updated commentary
+	Possible update to commentary
 	"""
 	commentary: String
 	"""
@@ -177,10 +189,29 @@ Element within a spreadsheet before being transformed into a full document.
 union AnnotatedSeg = AnnotatedForm | LineBreak
 
 """
+Request to attach user-recorded audio to a word
+"""
+input AttachAudioToWordInput {
+	"""
+	Word to bind audio to
+	"""
+	wordId: UUID!
+	"""
+	A URL to a Cloudfront-proxied user-recorded pronunciation of a word.
+	A new resource will be created to represent the recording if one does not exist already
+	"""
+	contributorAudioUrl: String!
+}
+
+"""
 A segment of audio representing a document, word, phrase,
 or other audio unit
 """
 type AudioSlice {
+	"""
+	The unique id for this audio slice. Will not be present if audio has not been inserted
+	"""
+	sliceId: String
 	"""
 	The audio resource this audio slice is taken from, generally pulled from the DRS API
 	"""
@@ -189,6 +220,22 @@ type AudioSlice {
 	An audio slice this slice is a subunit of, if there is one
 	"""
 	parentTrack: String
+	"""
+	When the track was recorded, if available
+	"""
+	recordedAt: Date
+	"""
+	Which user recorded the tracked, if uploaded by a user
+	"""
+	recordedBy: User
+	"""
+	True if audio should be shown to Readers.
+	"""
+	includeInEditedCollection: Boolean!
+	"""
+	Last Editor to decide if audio should be included in edited collection.
+	"""
+	editedBy: User
 	"""
 	This slice's relative position to other slices within an audio resource
 	"""
@@ -312,6 +359,24 @@ type ContributorDetails {
 	The optional date that this contributor was born on.
 	"""
 	birthDate: Date
+}
+
+"""
+Request to update if a piece of audio should be included in an edited collection
+"""
+input CurateWordAudioInput {
+	"""
+	Word audio is attached to
+	"""
+	wordId: UUID!
+	"""
+	Audio to include/exclude
+	"""
+	audioSliceId: UUID!
+	"""
+	New value
+	"""
+	includeInEditedCollection: Boolean!
 }
 
 type Date {
@@ -608,7 +673,16 @@ type Mutation {
 	updateParagraph(paragraph: ParagraphUpdate!): UUID!
 	updatePage(data: JSON!): Boolean!
 	updateAnnotation(data: JSON!): Boolean!
-	updateWord(word: AnnotatedFormUpdate!): UUID!
+	updateWord(word: AnnotatedFormUpdate!): AnnotatedForm!
+	"""
+	Decide if a piece audio should be included in edited collection
+	"""
+	curateWordAudio(input: CurateWordAudioInput!): AnnotatedForm!
+	"""
+	Attach audio that has already been uploaded to S3 to a particular word
+	Assumes user requesting mutation recoreded the audio
+	"""
+	attachAudioToWord(input: AttachAudioToWordInput!): AnnotatedForm!
 }
 
 """
@@ -782,11 +856,33 @@ entities without requiring a central allocating authority.
 """
 scalar UUID
 
-enum UserGroup {
-	EDITOR
+"""
+A user record, for a contributor, editor, etc.
+"""
+type User {
+	"""
+	Id of the user, which must be a AWS Cognito `sub` claim
+	"""
+	id: String!
+	"""
+	User-facing name for this contributor/curator
+	"""
+	displayName: String!
 }
 
+enum UserGroup {
+	CONTRIBUTORS
+	EDITORS
+}
+
+"""
+Auth metadata on the user making the current request.
+"""
 type UserInfo {
+	"""
+	Unique ID for the User. Should be an AWS Cognito Sub.
+	"""
+	id: UUID!
 	email: String!
 	groups: [UserGroup!]!
 }
