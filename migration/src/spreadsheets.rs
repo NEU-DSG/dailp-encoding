@@ -261,7 +261,7 @@ impl SheetResult {
                         date_recorded: Some(date),
                         source: root,
                         position,
-                        audio_track: None,
+                        ingested_audio_track: None,
                     },
                 })
             })
@@ -327,7 +327,7 @@ impl SheetResult {
                         date_recorded: Some(date),
                         line_break: None,
                         page_break: None,
-                        audio_track: None,
+                        ingested_audio_track: None,
                     },
                 })
             })
@@ -657,7 +657,7 @@ impl<'a> AnnotatedLine {
                                 .or_else(|| source_text.find(LINE_BREAK))
                                 .map(|i| i as i32),
                             date_recorded: None,
-                            audio_track: if let Some(annotations) = meta
+                            ingested_audio_track: if let Some(annotations) = meta
                                 .audio_recording
                                 .as_ref()
                                 .and_then(|audio| audio.annotations.as_ref())

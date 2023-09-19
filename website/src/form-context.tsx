@@ -20,6 +20,7 @@ export const FormProvider = (props: { children: ReactNode }) => {
   const word: Dailp.FormFieldsFragment = {} as Dailp.FormFieldsFragment
 
   const [updateWordResult, updateWord] = Dailp.useUpdateWordMutation()
+  const { cherokeeRepresentation } = usePreferences()
 
   const { cherokeeRepresentation } = usePreferences()
 
@@ -27,8 +28,11 @@ export const FormProvider = (props: { children: ReactNode }) => {
     "Currently, only the linguistic analysis using terms from Tone and Accent in Oklahoma Cherokee (TAOC) is supported for editing. Please update your Cherokee description style in the display settings."
 
   /** Calls the backend GraphQL mutation to update a word. */
-  const runUpdate = async (variables: { word: Dailp.AnnotatedFormUpdate }) => {
-    return await updateWord(variables)
+  const runUpdate = async (variables: {
+    word: Dailp.AnnotatedFormUpdate
+    morphemeSystem: Dailp.CherokeeOrthography
+  }) => {
+    await updateWord(variables)
   }
 
   const form = useFormState({

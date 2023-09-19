@@ -1,3 +1,5 @@
+import * as domhandler from "domhandler"
+import { isText } from "domhandler"
 import parse, {
   DOMNode,
   HTMLReactParserOptions,
@@ -5,30 +7,23 @@ import parse, {
   domToReact,
   htmlToDOM,
 } from "html-react-parser"
-import * as domhandler from "domhandler"
-import { isText } from "domhandler"
 import React from "react"
+import { Tab, TabList, TabPanel, useTabState } from "reakit"
 import { AudioPlayer, Button, Link } from "src/components"
 import * as Dailp from "src/graphql/dailp"
 import * as Wordpress from "src/graphql/wordpress"
 import { usePreferences } from "src/preferences-context"
 import { useRouteParams } from "src/renderer/PageShell"
 import { collectionWordPath, documentWordPath } from "src/routes"
+import { useScrollableTabState } from "src/scrollable-tabs"
 import { AnnotatedForm } from "src/segment"
 import { annotationSection } from "src/segment.css"
-import { wordpressUrl, devUrl, prodUrl } from "src/theme.css"
+import { devUrl, prodUrl, wordpressUrl } from "src/theme.css"
 import { LevelOfDetail } from "src/types"
-import * as printLessonCSS from "./print-lesson.css"
-import { LexicalSearch } from "./lexical-search"
-import { Glossary } from "./glossary"
 import * as css from "../pages/documents/document.css"
-import {
-  useTabState,
-  Tab,
-  TabList,
-  TabPanel,
-} from "reakit"
-import { useScrollableTabState } from "src/scrollable-tabs"
+import { Glossary } from "./glossary"
+import { LexicalSearch } from "./lexical-search"
+import * as printLessonCSS from "./print-lesson.css"
 
 interface Props {
   slug: string
@@ -86,21 +81,23 @@ const parseOptions: HTMLReactParserOptions = {
   replace(node) {
     if ("data" in node) {
       const referenceEmbedStyle = /\[(\w*)\]/ // [search | glossary]
-      const wordEmbedStyle = /\[(\w*):([0-9]*)-?([0-9]*)?:?(audio)?(join)?(#)?(\w*)?\]/ // [DocName:Start(-OptionalEnd):?(audio?)(join?)#?OptionalChapterSlug?]
+      const wordEmbedStyle =
+        /\[(\w*):([0-9]*)-?([0-9]*)?:?(audio)?(join)?(#)?(\w*)?\]/ // [DocName:Start(-OptionalEnd):?(audio?)(join?)#?OptionalChapterSlug?]
 
       const wordSegments = node.data.match(wordEmbedStyle)?.filter((x) => !!x)
-      const referenceSegments = node.data.match(referenceEmbedStyle)?.filter((x) => !!x)
+      const referenceSegments = node.data
+        .match(referenceEmbedStyle)
+        ?.filter((x) => !!x)
 
       if (referenceSegments && referenceSegments[1] === "search") {
-        return(<LexicalSearch/>)
+        return <LexicalSearch />
       } else if (referenceSegments && referenceSegments[1] === "glossary") {
-        return(<Glossary/>)
+        return <Glossary />
       }
       if (wordSegments) {
         return parseWord(wordSegments)
       }
-     }
-     else if ("name" in node && "attribs" in node) {
+    } else if ("name" in node && "attribs" in node) {
       if (node.name === "a") {
         return urlToAbsolutePath(node.attribs, node.children)
       } else if (node.name === "button") {
@@ -109,7 +106,10 @@ const parseOptions: HTMLReactParserOptions = {
             {domToReact(node.children, parseOptions)}
           </Button>
         )
-      } else if (node.name === "div" && node.attribs["class"]?.includes("wpTabs")) {
+      } else if (
+        node.name === "div" &&
+        node.attribs["class"]?.includes("wpTabs")
+      ) {
         return nodesToTabs(node.children)
       }
     }
@@ -146,7 +146,7 @@ const PullAudio = (props: {
   // Gets the audio recording of this document slice.
   const docAudio = doc?.audioRecording
   // Gets the individual recordings of each word of this document slice.
-  const audioTracks = doc?.forms.map((form) => form.audioTrack)
+  const audioTracks = doc?.forms.map((form) => form.ingestedAudioTrack)
 
   if (!docAudio || !audioTracks) {
     return null
@@ -254,17 +254,28 @@ const PullWords = (props: {
       </div>
       <div>
         <i>
-          {collectionSlug && props.chapterSlug ?
-           <Link href={collectionWordPath(collectionSlug, props.chapterSlug, props.first)}>{documentCitation}</Link> :
-           <Link href={documentWordPath(props.slug, props.first)}>{documentCitation}</Link>}
-          
+          {collectionSlug && props.chapterSlug ? (
+            <Link
+              href={collectionWordPath(
+                collectionSlug,
+                props.chapterSlug,
+                props.first
+              )}
+            >
+              {documentCitation}
+            </Link>
+          ) : (
+            <Link href={documentWordPath(props.slug, props.first)}>
+              {documentCitation}
+            </Link>
+          )}
         </i>
       </div>
     </>
   )
 }
 
-function parseWord(segments: string[] ): JSX.Element | undefined {
+function parseWord(segments: string[]): JSX.Element | undefined {
   if (
     segments.length > 2 &&
     (segments[3] === "audio" || segments[4] === "audio")
@@ -282,8 +293,12 @@ function parseWord(segments: string[] ): JSX.Element | undefined {
       <PullWords
         slug={segments[1]!}
         first={parseInt(segments[2]!)}
-        last={segments.length < 4 || segments[4] === "#" ? undefined : parseInt(segments[3]!)}
-        chapterSlug={segments.length >= 4 ? (segments[5]!) : undefined}
+        last={
+          segments.length < 4 || segments[4] === "#"
+            ? undefined
+            : parseInt(segments[3]!)
+        }
+        chapterSlug={segments.length >= 4 ? segments[5]! : undefined}
       />
     )
   }
@@ -291,15 +306,18 @@ function parseWord(segments: string[] ): JSX.Element | undefined {
 }
 
 /** Replace DAILP links in an element with absolute local paths.
-* @param attribs the attributes of the current element
-* @param children the children of the current element
-* @returns {JSX.Element} a Link with the href prop as a local path and containing the provided children
-*
-* "https://wp.dailp.northeastern.edu/" => "/"
-* "https://dev.dailp.northeastern.edu/" => "/"
-* "https://dailp.northeastern.edu/" => "/"
-*/
-function urlToAbsolutePath(attribs: {[name: string]:string}, children: any): JSX.Element {
+ * @param attribs the attributes of the current element
+ * @param children the children of the current element
+ * @returns {JSX.Element} a Link with the href prop as a local path and containing the provided children
+ *
+ * "https://wp.dailp.northeastern.edu/" => "/"
+ * "https://dev.dailp.northeastern.edu/" => "/"
+ * "https://dailp.northeastern.edu/" => "/"
+ */
+function urlToAbsolutePath(
+  attribs: { [name: string]: string },
+  children: any
+): JSX.Element {
   const props = attributesToProps(attribs)
 
   if (props["href"]?.startsWith(wordpressUrl)) {
@@ -313,13 +331,13 @@ function urlToAbsolutePath(attribs: {[name: string]:string}, children: any): JSX
   return <Link {...props}>{domToReact(children, parseOptions)}</Link>
 }
 
-function nodesToTabs (node: domhandler.Node[]) {
+function nodesToTabs(node: domhandler.Node[]) {
   const headingStyle = /\|(.*)\|/
 
   const tabList = node.filter((value) => {
     if (!isText(value)) return false
-    let headings = value.data.match(headingStyle)?.filter(x => !!x)
-    return headings && headings.length > 1 
+    let headings = value.data.match(headingStyle)?.filter((x) => !!x)
+    return headings && headings.length > 1
   })
   const init: DOMNode[][] = []
   const tabPanelList = node.reduce((prev, curr) => {
@@ -332,27 +350,30 @@ function nodesToTabs (node: domhandler.Node[]) {
   }, init)
   const tabState = useScrollableTabState()
   return (
-  <>
-    <TabList 
-    {...tabState}
-    className={css.docTabs}
-    aria-label="My tabs">
-      {tabList.map((t, i) => {
-        return isText(t) && 
-        <Tab 
-          id={"tab-"+i}
-          className={css.docTab}
-          {...tabState}>
-            {t.data.match(headingStyle)?.filter(x => !!x)[1]}
-        </Tab>
+    <>
+      <TabList {...tabState} className={css.docTabs} aria-label="My tabs">
+        {tabList.map((t, i) => {
+          return (
+            isText(t) && (
+              <Tab id={"tab-" + i} className={css.docTab} {...tabState}>
+                {t.data.match(headingStyle)?.filter((x) => !!x)[1]}
+              </Tab>
+            )
+          )
+        })}
+      </TabList>
+      {tabPanelList.map((p, i) => {
+        return (
+          <TabPanel
+            id={"tabPanel" + i}
+            tabId={"tab-" + i}
+            className={css.docTabPanel}
+            {...tabState}
+          >
+            {domToReact(p, parseOptions)}
+          </TabPanel>
+        )
       })}
-    </TabList>
-    {tabPanelList.map((p, i) => {
-      return <TabPanel 
-        id={"tabPanel"+i}
-        tabId={"tab-"+i}
-        className={css.docTabPanel}
-        {...tabState}>{domToReact(p, parseOptions)}</TabPanel>})}
-  </>
+    </>
   )
 }
