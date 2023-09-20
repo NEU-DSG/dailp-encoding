@@ -132,7 +132,7 @@ export const EditDocPanel = (props: { document?: Dailp.AnnotatedDoc }) => {
         <DatePicker
           onChange={(date: any) => handleDateChange(date)}
           value={selectedDate}
-          format="dd-mm-y"
+          format="dd-MM-y"
         />
       </div>
     </>
