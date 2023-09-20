@@ -531,7 +531,12 @@ export type Mutation = {
    * the future.
    */
   readonly apiVersion: Scalars["String"]
+  /**
+   * Attach audio that has already been uploaded to S3 to a particular word
+   * Assumes user requesting mutation recoreded the audio
+   */
   readonly attachAudioToWord: AnnotatedForm
+  /** Decide if a piece audio should be included in edited collection */
   readonly curateWordAudio: AnnotatedForm
   readonly updateAnnotation: Scalars["Boolean"]
   readonly updatePage: Scalars["Boolean"]
