@@ -4,6 +4,7 @@ import QueryString from "query-string"
 import React, { useEffect } from "react"
 import { Helmet } from "react-helmet"
 import { Input } from "reakit"
+import { LexicalSearch } from "src/components/lexical-search"
 import Link from "src/components/link"
 import * as Dailp from "src/graphql/dailp"
 import { useLocation } from "src/renderer/PageShell"
@@ -34,26 +35,7 @@ const SearchPage = () => {
 
   return (
     <Layout>
-      <Helmet title="Search" />
-      <main>
-        <p className={fullWidth}>
-          Type a search query in Cherokee syllabary, simple phonetics, English
-          translation, or romanized source. All words from{" "}
-          <Link href="/sources">dictionaries and grammars</Link> that contain
-          your query will be shown below. These results do not include our
-          collection of manuscripts yet.
-        </p>
-        <Input
-          className={searchBox}
-          defaultValue={morphemeId ?? ""}
-          placeholder="Search query"
-          onChange={(e) => {
-            setMorpheme(e.target.value || null)
-          }}
-        />
-
-        {!!morphemeId && <Timeline gloss={morphemeId} />}
-      </main>
+      <LexicalSearch />
     </Layout>
   )
 }

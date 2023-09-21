@@ -1,9 +1,10 @@
 import { DialogContent, DialogOverlay } from "@reach/dialog"
 import "@reach/dialog/styles.css"
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useState, useRef } from "react"
 import { isMobile } from "react-device-detect"
 import { Helmet } from "react-helmet"
 import { MdSettings } from "react-icons/md/index"
+import { RiArrowUpCircleFill } from "react-icons/ri/index"
 import {
   Dialog,
   DialogBackdrop,
@@ -22,9 +23,15 @@ import { drawerBg } from "src/menu.css"
 import { MorphemeDetails } from "src/morpheme"
 import { PanelDetails, PanelLayout, PanelSegment } from "src/panel-layout"
 import { usePreferences } from "src/preferences-context"
-import { chapterRoute } from "src/routes"
+import { useLocation } from "src/renderer/PageShell"
+import {
+  chapterRoute,
+  collectionWordPath,
+  documentDetailsRoute,
+  documentRoute,
+} from "src/routes"
 import { useScrollableTabState } from "src/scrollable-tabs"
-import { AnnotatedForm, DocumentPage, TranslatedParagraph } from "src/segment"
+import { AnnotatedForm, DocumentPage } from "src/segment"
 import { mediaQueries } from "src/style/constants"
 import { fullWidth } from "src/style/utils.css"
 import { BasicMorphemeSegment, LevelOfDetail } from "src/types"
@@ -53,6 +60,8 @@ const AnnotatedDocumentPage = (props: { id: string }) => {
     variables: { slug: props.id },
   })
 
+  const wordIndex = useLocation().hash
+  const index = wordIndex?.replace("w", "")
   const doc = data?.document
 
   if (!doc) {
@@ -60,17 +69,20 @@ const AnnotatedDocumentPage = (props: { id: string }) => {
   }
 
   useEffect(() => {
-    redirectUrl()
+    redirectUrl(index)
   }, [props.id])
 
   // Redirects this document to the corresponding collection chapter containing document.
-  function redirectUrl() {
+  function redirectUrl(index: string | undefined) {
     if (doc?.chapters?.length === 1) {
       const chapter = doc.chapters[0]
       const collectionSlug = chapter?.path[0]
       const chapterSlug = chapter?.path[chapter.path.length - 1]
-
-      navigate(chapterRoute(collectionSlug!, chapterSlug!))
+      wordIndex
+        ? navigate(
+            collectionWordPath(collectionSlug!, chapterSlug!, parseInt(index!))
+          )
+        : navigate(chapterRoute(collectionSlug!, chapterSlug!))
     }
   }
 
@@ -87,6 +99,24 @@ const AnnotatedDocumentPage = (props: { id: string }) => {
 export const Page = AnnotatedDocumentPage
 
 export const TabSet = ({ doc }: { doc: Document }) => {
+    const [isScrollVisible, setIsScrollVisible] = useState(1);
+    const handleScroll = () => {
+      if (document.documentElement.scrollHeight > 3000) {
+        setIsScrollVisible((window.scrollY > 2000)? 2 : 1);
+      } else {
+        setIsScrollVisible(0);
+      }
+    };
+    // Add the scroll event listener when the component is mounted.
+    // window (and document) cannot seem to be accessed on its own so we need to use this method instead.
+    useEffect(() => {
+      window.addEventListener('scroll', handleScroll);
+      // Remove the scroll event listener on component unmount
+      return () => {
+        window.removeEventListener('scroll', handleScroll);
+      };
+    }, []);
+    
   const tabs = useScrollableTabState({ selectedId: Tabs.ANNOTATION })
   const [{ data }] = Dailp.useDocumentDetailsQuery({
     variables: { slug: doc.slug! },
@@ -94,6 +124,16 @@ export const TabSet = ({ doc }: { doc: Document }) => {
   const docData = data?.document
   if (!docData) {
     return null
+  }
+  let scrollTopClass = null;
+  switch (isScrollVisible) {
+    case 0: scrollTopClass = css.noScrollTop;
+      break;
+    case 1: scrollTopClass = css.hideScrollTop;
+      break;
+    case 2: scrollTopClass = css.showScrollTop;
+      break;
+    default: scrollTopClass = css.noScrollTop;
   }
   return (
     <>
@@ -115,6 +155,15 @@ export const TabSet = ({ doc }: { doc: Document }) => {
           </Tab>
         </TabList>
       </div>
+
+      <Button
+        id="scroll-top"
+        className={scrollTopClass}
+        onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+      >
+        <RiArrowUpCircleFill size={45} />
+        {!isMobile ? <div>Scroll to Top</div> : null}
+      </Button>
 
       <TabPanel
         {...tabs}
@@ -176,11 +225,16 @@ export const TabSet = ({ doc }: { doc: Document }) => {
     </>
   )
 }
+  
 
 export const TranslationTab = ({ doc }: { doc: Document }) => {
   const [selectedMorpheme, setMorpheme] = useState<BasicMorphemeSegment | null>(
     null
   )
+
+  useEffect(() => {
+    selectAndShowContent(null)
+  }, [doc.id])
 
   const [dialogOpen, setDialogOpen] = useState(false)
   const closeDialog = () => setDialogOpen(false)
@@ -396,8 +450,23 @@ export const DocumentTitleHeader = (p: {
       {p.doc.title}
       {p.doc.date && ` (${p.doc.date.year})`}{" "}
     </h1>
-    <div className={css.alignRight}>
-      {!isMobile ? <Button onClick={() => window.print()}>Print</Button> : null}
+
+    <div className={css.bottomPadded}>
+      {p.showDetails ? (
+        <Link href={documentDetailsRoute(p.doc.slug!)}>View Details</Link>
+      ) : (
+        <Link href={documentRoute(p.doc.slug!)}>View Contents</Link>
+      )}
+      {!p.doc.audioRecording && !isMobile && (
+        <div id="no-audio-message">
+          <strong>No Audio Available</strong>
+        </div>
+      )}
+      <div className={css.alignRight}>
+        {!isMobile ? (
+          <Button onClick={() => window.print()}>Print</Button>
+        ) : null}
+      </div>
     </div>
     {p.doc.audioRecording && ( // TODO Implement sticky audio bar
       <div id="document-audio-player" className={css.audioContainer}>
@@ -407,6 +476,13 @@ export const DocumentTitleHeader = (p: {
           audioUrl={p.doc.audioRecording.resourceUrl}
           showProgress
         />
+        {p.doc.audioRecording && !isMobile && (
+          <div>
+            <a href={p.doc.audioRecording?.resourceUrl}>
+              <Button>Download Audio</Button>
+            </a>
+          </div>
+        )}
       </div>
     )}
   </header>

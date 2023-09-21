@@ -27,7 +27,11 @@ with lib; {
           sse_algorithm = "AES256";
         };
       versioning.enabled = true;
-      tags = { "Terraform" = "true"; } // config.setup.global_tags;
+      tags = { 
+        "Name" = "Terraform state storage";
+        "Terraform" = "true";
+        # "nu:function" = "storage>nu:application dailp-app";
+      } // config.setup.global_tags;
       lifecycle.prevent_destroy = true;
       logging = {
         target_bucket = config.setup.access_log_bucket;

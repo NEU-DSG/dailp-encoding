@@ -28,7 +28,9 @@ export type ActionMonitorAction = ContentNode &
   Node &
   NodeWithContentEditor &
   NodeWithTemplate &
-  NodeWithTitle & {
+  NodeWithTitle &
+  Previewable &
+  UniformResourceIdentifiable & {
     readonly __typename?: "ActionMonitorAction"
     /**
      * The id field matches the WP_Post-&gt;ID field.
@@ -41,7 +43,9 @@ export type ActionMonitorAction = ContentNode &
     readonly content: Maybe<Scalars["String"]>
     /** Connection between the ContentNode type and the ContentType type */
     readonly contentType: Maybe<ContentNodeToContentTypeConnectionEdge>
-    /** The ID of the node in the database. */
+    /** The name of the Content Type the node belongs to */
+    readonly contentTypeName: Scalars["String"]
+    /** The unique identifier stored in the database */
     readonly databaseId: Scalars["Int"]
     /** Post publishing date. */
     readonly date: Maybe<Scalars["String"]>
@@ -61,10 +65,14 @@ export type ActionMonitorAction = ContentNode &
     readonly guid: Maybe<Scalars["String"]>
     /** The globally unique identifier of the action_monitor object. */
     readonly id: Scalars["ID"]
+    /** Whether the node is a Content Node */
+    readonly isContentNode: Scalars["Boolean"]
     /** Whether the object is a node in the preview state */
     readonly isPreview: Maybe<Scalars["Boolean"]>
     /** Whether the object is restricted from the current viewer */
     readonly isRestricted: Maybe<Scalars["Boolean"]>
+    /** Whether the node is a Term */
+    readonly isTermNode: Scalars["Boolean"]
     /** The user that most recently edited the node */
     readonly lastEditedBy: Maybe<ContentNodeToEditLastConnectionEdge>
     /** The permalink of the post */
@@ -95,12 +103,12 @@ export type ActionMonitorAction = ContentNode &
     readonly slug: Maybe<Scalars["String"]>
     /** The current status of the object */
     readonly status: Maybe<Scalars["String"]>
-    /** The template assigned to a node of content */
+    /** The template assigned to the node */
     readonly template: Maybe<ContentTemplate>
     /** The title of the post. This is currently just the raw title. An amendment to support rendered title needs to be made. */
     readonly title: Maybe<Scalars["String"]>
-    /** URI path for the resource */
-    readonly uri: Scalars["String"]
+    /** The unique resource identifier path */
+    readonly uri: Maybe<Scalars["String"]>
   }
 
 /** The ActionMonitorAction type */
@@ -129,6 +137,36 @@ export type ActionMonitorActionTitleArgs = {
   format: InputMaybe<PostObjectFieldFormatEnum>
 }
 
+/** Connection to ActionMonitorAction Nodes */
+export type ActionMonitorActionConnection = {
+  /** A list of edges (relational context) between RootQuery and connected ActionMonitorAction Nodes */
+  readonly edges: ReadonlyArray<ActionMonitorActionConnectionEdge>
+  /** A list of connected ActionMonitorAction Nodes */
+  readonly nodes: ReadonlyArray<ActionMonitorAction>
+  /** Information about pagination in a connection. */
+  readonly pageInfo: ActionMonitorActionConnectionPageInfo
+}
+
+/** Edge between a Node and a connected ActionMonitorAction */
+export type ActionMonitorActionConnectionEdge = {
+  /** Opaque reference to the nodes position in the connection. Value can be used with pagination args. */
+  readonly cursor: Maybe<Scalars["String"]>
+  /** The connected ActionMonitorAction Node */
+  readonly node: ActionMonitorAction
+}
+
+/** Page Info on the connected ActionMonitorActionConnectionEdge */
+export type ActionMonitorActionConnectionPageInfo = {
+  /** When paginating forwards, the cursor to continue. */
+  readonly endCursor: Maybe<Scalars["String"]>
+  /** When paginating forwards, are there more items? */
+  readonly hasNextPage: Scalars["Boolean"]
+  /** When paginating backwards, are there more items? */
+  readonly hasPreviousPage: Scalars["Boolean"]
+  /** When paginating backwards, the cursor to continue. */
+  readonly startCursor: Maybe<Scalars["String"]>
+}
+
 /** The Type of Identifier used to fetch a single resource. Default is ID. */
 export enum ActionMonitorActionIdType {
   /** Identify a resource by the Database ID. */
@@ -142,11 +180,16 @@ export enum ActionMonitorActionIdType {
 }
 
 /** Connection between the ActionMonitorAction type and the ActionMonitorAction type */
-export type ActionMonitorActionToPreviewConnectionEdge = {
-  readonly __typename?: "ActionMonitorActionToPreviewConnectionEdge"
-  /** The nodes of the connection, without the edges */
-  readonly node: Maybe<ActionMonitorAction>
-}
+export type ActionMonitorActionToPreviewConnectionEdge =
+  ActionMonitorActionConnectionEdge &
+    Edge &
+    OneToOneConnection & {
+      readonly __typename?: "ActionMonitorActionToPreviewConnectionEdge"
+      /** Opaque reference to the nodes position in the connection. Value can be used with pagination args. */
+      readonly cursor: Maybe<Scalars["String"]>
+      /** The node of the connection, without the edges */
+      readonly node: ActionMonitorAction
+    }
 
 /** Avatars are profile images for users. WordPress by default uses the Gravatar service to host and fetch avatars from. */
 export type Avatar = {
@@ -177,14 +220,19 @@ export type Avatar = {
 
 /** What rating to display avatars up to. Accepts 'G', 'PG', 'R', 'X', and are judged in that order. Default is the value of the 'avatar_rating' option */
 export enum AvatarRatingEnum {
+  /** Indicates a G level avatar rating level. */
   G = "G",
+  /** Indicates a PG level avatar rating level. */
   Pg = "PG",
+  /** Indicates an R level avatar rating level. */
   R = "R",
+  /** Indicates an X level avatar rating level. */
   X = "X",
 }
 
 /** The category type */
 export type Category = DatabaseIdentifier &
+  HierarchicalNode &
   HierarchicalTermNode &
   MenuItemLinkable &
   Node &
@@ -198,13 +246,13 @@ export type Category = DatabaseIdentifier &
      * @deprecated Deprecated in favor of databaseId
      */
     readonly categoryId: Maybe<Scalars["Int"]>
-    /** Connection between the category type and the category type */
+    /** Connection between the category type and its children categories. */
     readonly children: Maybe<CategoryToCategoryConnection>
-    /** Connection between the category type and the ContentNode type */
+    /** Connection between the Category type and the ContentNode type */
     readonly contentNodes: Maybe<CategoryToContentNodeConnection>
     /** The number of objects connected to the object */
     readonly count: Maybe<Scalars["Int"]>
-    /** Identifies the primary key from the database. */
+    /** The unique identifier stored in the database */
     readonly databaseId: Scalars["Int"]
     /** The description of the object */
     readonly description: Maybe<Scalars["String"]>
@@ -212,32 +260,38 @@ export type Category = DatabaseIdentifier &
     readonly enqueuedScripts: Maybe<TermNodeToEnqueuedScriptConnection>
     /** Connection between the TermNode type and the EnqueuedStylesheet type */
     readonly enqueuedStylesheets: Maybe<TermNodeToEnqueuedStylesheetConnection>
-    /** The globally unique ID for the object */
+    /** The unique resource identifier path */
     readonly id: Scalars["ID"]
+    /** Whether the node is a Content Node */
+    readonly isContentNode: Scalars["Boolean"]
     /** Whether the object is restricted from the current viewer */
     readonly isRestricted: Maybe<Scalars["Boolean"]>
+    /** Whether the node is a Term */
+    readonly isTermNode: Scalars["Boolean"]
     /** The link to the term */
     readonly link: Maybe<Scalars["String"]>
     /** The human friendly name of the object. */
     readonly name: Maybe<Scalars["String"]>
-    /** Connection between the category type and the category type */
+    /** Connection between the category type and its parent category. */
     readonly parent: Maybe<CategoryToParentCategoryConnectionEdge>
     /** Database id of the parent node */
     readonly parentDatabaseId: Maybe<Scalars["Int"]>
     /** The globally unique identifier of the parent node. */
     readonly parentId: Maybe<Scalars["ID"]>
-    /** Connection between the category type and the post type */
+    /** Connection between the Category type and the post type */
     readonly posts: Maybe<CategoryToPostConnection>
     /** An alphanumeric identifier for the object unique to its type. */
     readonly slug: Maybe<Scalars["String"]>
-    /** Connection between the category type and the Taxonomy type */
+    /** Connection between the Category type and the Taxonomy type */
     readonly taxonomy: Maybe<CategoryToTaxonomyConnectionEdge>
+    /** The name of the taxonomy that the object is associated with */
+    readonly taxonomyName: Maybe<Scalars["String"]>
     /** The ID of the term group that this term object belongs to */
     readonly termGroupId: Maybe<Scalars["Int"]>
     /** The taxonomy ID that the object is associated with */
     readonly termTaxonomyId: Maybe<Scalars["Int"]>
     /** The unique resource identifier path */
-    readonly uri: Scalars["String"]
+    readonly uri: Maybe<Scalars["String"]>
   }
 
 /** The category type */
@@ -291,6 +345,36 @@ export type CategoryPostsArgs = {
   where: InputMaybe<CategoryToPostConnectionWhereArgs>
 }
 
+/** Connection to category Nodes */
+export type CategoryConnection = {
+  /** A list of edges (relational context) between RootQuery and connected category Nodes */
+  readonly edges: ReadonlyArray<CategoryConnectionEdge>
+  /** A list of connected category Nodes */
+  readonly nodes: ReadonlyArray<Category>
+  /** Information about pagination in a connection. */
+  readonly pageInfo: CategoryConnectionPageInfo
+}
+
+/** Edge between a Node and a connected category */
+export type CategoryConnectionEdge = {
+  /** Opaque reference to the nodes position in the connection. Value can be used with pagination args. */
+  readonly cursor: Maybe<Scalars["String"]>
+  /** The connected category Node */
+  readonly node: Category
+}
+
+/** Page Info on the connected CategoryConnectionEdge */
+export type CategoryConnectionPageInfo = {
+  /** When paginating forwards, the cursor to continue. */
+  readonly endCursor: Maybe<Scalars["String"]>
+  /** When paginating forwards, are there more items? */
+  readonly hasNextPage: Scalars["Boolean"]
+  /** When paginating backwards, are there more items? */
+  readonly hasPreviousPage: Scalars["Boolean"]
+  /** When paginating backwards, the cursor to continue. */
+  readonly startCursor: Maybe<Scalars["String"]>
+}
+
 /** The Type of Identifier used to fetch a single resource. Default is ID. */
 export enum CategoryIdType {
   /** The Database ID for the node */
@@ -305,47 +389,80 @@ export enum CategoryIdType {
   Uri = "URI",
 }
 
-/** Connection between the category type and the category type */
-export type CategoryToAncestorsCategoryConnection = {
-  readonly __typename?: "CategoryToAncestorsCategoryConnection"
-  /** Edges for the CategoryToAncestorsCategoryConnection connection */
-  readonly edges: Maybe<
-    ReadonlyArray<Maybe<CategoryToAncestorsCategoryConnectionEdge>>
-  >
-  /** The nodes of the connection, without the edges */
-  readonly nodes: Maybe<ReadonlyArray<Maybe<Category>>>
-  /** Information about pagination in a connection. */
-  readonly pageInfo: Maybe<WpPageInfo>
-}
+/** Connection between the Category type and the category type */
+export type CategoryToAncestorsCategoryConnection = CategoryConnection &
+  Connection & {
+    readonly __typename?: "CategoryToAncestorsCategoryConnection"
+    /** Edges for the CategoryToAncestorsCategoryConnection connection */
+    readonly edges: ReadonlyArray<CategoryToAncestorsCategoryConnectionEdge>
+    /** The nodes of the connection, without the edges */
+    readonly nodes: ReadonlyArray<Category>
+    /** Information about pagination in a connection. */
+    readonly pageInfo: CategoryToAncestorsCategoryConnectionPageInfo
+  }
 
 /** An edge in a connection */
-export type CategoryToAncestorsCategoryConnectionEdge = {
-  readonly __typename?: "CategoryToAncestorsCategoryConnectionEdge"
-  /** A cursor for use in pagination */
-  readonly cursor: Maybe<Scalars["String"]>
-  /** The item at the end of the edge */
-  readonly node: Maybe<Category>
-}
+export type CategoryToAncestorsCategoryConnectionEdge = CategoryConnectionEdge &
+  Edge & {
+    readonly __typename?: "CategoryToAncestorsCategoryConnectionEdge"
+    /** A cursor for use in pagination */
+    readonly cursor: Maybe<Scalars["String"]>
+    /** The item at the end of the edge */
+    readonly node: Category
+  }
 
-/** Connection between the category type and the category type */
-export type CategoryToCategoryConnection = {
-  readonly __typename?: "CategoryToCategoryConnection"
-  /** Edges for the CategoryToCategoryConnection connection */
-  readonly edges: Maybe<ReadonlyArray<Maybe<CategoryToCategoryConnectionEdge>>>
-  /** The nodes of the connection, without the edges */
-  readonly nodes: Maybe<ReadonlyArray<Maybe<Category>>>
-  /** Information about pagination in a connection. */
-  readonly pageInfo: Maybe<WpPageInfo>
-}
+/** Page Info on the &quot;CategoryToAncestorsCategoryConnection&quot; */
+export type CategoryToAncestorsCategoryConnectionPageInfo =
+  CategoryConnectionPageInfo &
+    PageInfo &
+    WpPageInfo & {
+      readonly __typename?: "CategoryToAncestorsCategoryConnectionPageInfo"
+      /** When paginating forwards, the cursor to continue. */
+      readonly endCursor: Maybe<Scalars["String"]>
+      /** When paginating forwards, are there more items? */
+      readonly hasNextPage: Scalars["Boolean"]
+      /** When paginating backwards, are there more items? */
+      readonly hasPreviousPage: Scalars["Boolean"]
+      /** When paginating backwards, the cursor to continue. */
+      readonly startCursor: Maybe<Scalars["String"]>
+    }
+
+/** Connection between the Category type and the category type */
+export type CategoryToCategoryConnection = CategoryConnection &
+  Connection & {
+    readonly __typename?: "CategoryToCategoryConnection"
+    /** Edges for the CategoryToCategoryConnection connection */
+    readonly edges: ReadonlyArray<CategoryToCategoryConnectionEdge>
+    /** The nodes of the connection, without the edges */
+    readonly nodes: ReadonlyArray<Category>
+    /** Information about pagination in a connection. */
+    readonly pageInfo: CategoryToCategoryConnectionPageInfo
+  }
 
 /** An edge in a connection */
-export type CategoryToCategoryConnectionEdge = {
-  readonly __typename?: "CategoryToCategoryConnectionEdge"
-  /** A cursor for use in pagination */
-  readonly cursor: Maybe<Scalars["String"]>
-  /** The item at the end of the edge */
-  readonly node: Maybe<Category>
-}
+export type CategoryToCategoryConnectionEdge = CategoryConnectionEdge &
+  Edge & {
+    readonly __typename?: "CategoryToCategoryConnectionEdge"
+    /** A cursor for use in pagination */
+    readonly cursor: Maybe<Scalars["String"]>
+    /** The item at the end of the edge */
+    readonly node: Category
+  }
+
+/** Page Info on the &quot;CategoryToCategoryConnection&quot; */
+export type CategoryToCategoryConnectionPageInfo = CategoryConnectionPageInfo &
+  PageInfo &
+  WpPageInfo & {
+    readonly __typename?: "CategoryToCategoryConnectionPageInfo"
+    /** When paginating forwards, the cursor to continue. */
+    readonly endCursor: Maybe<Scalars["String"]>
+    /** When paginating forwards, are there more items? */
+    readonly hasNextPage: Scalars["Boolean"]
+    /** When paginating backwards, are there more items? */
+    readonly hasPreviousPage: Scalars["Boolean"]
+    /** When paginating backwards, the cursor to continue. */
+    readonly startCursor: Maybe<Scalars["String"]>
+  }
 
 /** Arguments for filtering the CategoryToCategoryConnection connection */
 export type CategoryToCategoryConnectionWhereArgs = {
@@ -373,6 +490,8 @@ export type CategoryToCategoryConnectionWhereArgs = {
   readonly nameLike: InputMaybe<Scalars["String"]>
   /** Array of object IDs. Results will be limited to terms associated with these objects. */
   readonly objectIds: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
+  /** Direction the connection should be ordered in */
+  readonly order: InputMaybe<OrderEnum>
   /** Field(s) to order terms by. Defaults to 'name'. */
   readonly orderby: InputMaybe<TermObjectsConnectionOrderbyEnum>
   /** Whether to pad the quantity of a term's children in the quantity of each term's "count" object variable. Default false. */
@@ -385,39 +504,61 @@ export type CategoryToCategoryConnectionWhereArgs = {
   readonly slug: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
   /** Array of term taxonomy IDs, to match when querying terms. */
   readonly termTaxonomId: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
+  /** Array of term taxonomy IDs, to match when querying terms. */
+  readonly termTaxonomyId: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
   /** Whether to prime meta caches for matched terms. Default true. */
   readonly updateTermMetaCache: InputMaybe<Scalars["Boolean"]>
 }
 
-/** Connection between the category type and the ContentNode type */
-export type CategoryToContentNodeConnection = {
-  readonly __typename?: "CategoryToContentNodeConnection"
-  /** Edges for the CategoryToContentNodeConnection connection */
-  readonly edges: Maybe<
-    ReadonlyArray<Maybe<CategoryToContentNodeConnectionEdge>>
-  >
-  /** The nodes of the connection, without the edges */
-  readonly nodes: Maybe<ReadonlyArray<Maybe<ContentNode>>>
-  /** Information about pagination in a connection. */
-  readonly pageInfo: Maybe<WpPageInfo>
-}
+/** Connection between the Category type and the ContentNode type */
+export type CategoryToContentNodeConnection = Connection &
+  ContentNodeConnection & {
+    readonly __typename?: "CategoryToContentNodeConnection"
+    /** Edges for the CategoryToContentNodeConnection connection */
+    readonly edges: ReadonlyArray<CategoryToContentNodeConnectionEdge>
+    /** The nodes of the connection, without the edges */
+    readonly nodes: ReadonlyArray<ContentNode>
+    /** Information about pagination in a connection. */
+    readonly pageInfo: CategoryToContentNodeConnectionPageInfo
+  }
 
 /** An edge in a connection */
-export type CategoryToContentNodeConnectionEdge = {
-  readonly __typename?: "CategoryToContentNodeConnectionEdge"
-  /** A cursor for use in pagination */
-  readonly cursor: Maybe<Scalars["String"]>
-  /** The item at the end of the edge */
-  readonly node: Maybe<ContentNode>
-}
+export type CategoryToContentNodeConnectionEdge = ContentNodeConnectionEdge &
+  Edge & {
+    readonly __typename?: "CategoryToContentNodeConnectionEdge"
+    /** A cursor for use in pagination */
+    readonly cursor: Maybe<Scalars["String"]>
+    /** The item at the end of the edge */
+    readonly node: ContentNode
+  }
+
+/** Page Info on the &quot;CategoryToContentNodeConnection&quot; */
+export type CategoryToContentNodeConnectionPageInfo =
+  ContentNodeConnectionPageInfo &
+    PageInfo &
+    WpPageInfo & {
+      readonly __typename?: "CategoryToContentNodeConnectionPageInfo"
+      /** When paginating forwards, the cursor to continue. */
+      readonly endCursor: Maybe<Scalars["String"]>
+      /** When paginating forwards, are there more items? */
+      readonly hasNextPage: Scalars["Boolean"]
+      /** When paginating backwards, are there more items? */
+      readonly hasPreviousPage: Scalars["Boolean"]
+      /** When paginating backwards, the cursor to continue. */
+      readonly startCursor: Maybe<Scalars["String"]>
+    }
 
 /** Arguments for filtering the CategoryToContentNodeConnection connection */
 export type CategoryToContentNodeConnectionWhereArgs = {
+  /** The Types of content to filter */
+  readonly contentTypes: InputMaybe<
+    ReadonlyArray<InputMaybe<ContentTypesOfCategoryEnum>>
+  >
   /** Filter the connection based on dates */
   readonly dateQuery: InputMaybe<DateQueryInput>
   /** True for objects with passwords; False for objects without passwords; null for all objects with or without passwords */
   readonly hasPassword: InputMaybe<Scalars["Boolean"]>
-  /** Specific ID of the object */
+  /** Specific database ID of the object */
   readonly id: InputMaybe<Scalars["Int"]>
   /** Array of IDs for the objects to retrieve */
   readonly in: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
@@ -443,38 +584,61 @@ export type CategoryToContentNodeConnectionWhereArgs = {
   readonly password: InputMaybe<Scalars["String"]>
   /** Show Posts based on a keyword search */
   readonly search: InputMaybe<Scalars["String"]>
+  /** Retrieve posts where post status is in an array. */
   readonly stati: InputMaybe<ReadonlyArray<InputMaybe<PostStatusEnum>>>
+  /** Show posts with a specific status. */
   readonly status: InputMaybe<PostStatusEnum>
   /** Title of the object */
   readonly title: InputMaybe<Scalars["String"]>
 }
 
-/** Connection between the category type and the category type */
-export type CategoryToParentCategoryConnectionEdge = {
-  readonly __typename?: "CategoryToParentCategoryConnectionEdge"
-  /** The nodes of the connection, without the edges */
-  readonly node: Maybe<Category>
-}
+/** Connection between the Category type and the category type */
+export type CategoryToParentCategoryConnectionEdge = CategoryConnectionEdge &
+  Edge &
+  OneToOneConnection & {
+    readonly __typename?: "CategoryToParentCategoryConnectionEdge"
+    /** Opaque reference to the nodes position in the connection. Value can be used with pagination args. */
+    readonly cursor: Maybe<Scalars["String"]>
+    /** The node of the connection, without the edges */
+    readonly node: Category
+  }
 
-/** Connection between the category type and the post type */
-export type CategoryToPostConnection = {
-  readonly __typename?: "CategoryToPostConnection"
-  /** Edges for the CategoryToPostConnection connection */
-  readonly edges: Maybe<ReadonlyArray<Maybe<CategoryToPostConnectionEdge>>>
-  /** The nodes of the connection, without the edges */
-  readonly nodes: Maybe<ReadonlyArray<Maybe<Post>>>
-  /** Information about pagination in a connection. */
-  readonly pageInfo: Maybe<WpPageInfo>
-}
+/** Connection between the Category type and the post type */
+export type CategoryToPostConnection = Connection &
+  PostConnection & {
+    readonly __typename?: "CategoryToPostConnection"
+    /** Edges for the CategoryToPostConnection connection */
+    readonly edges: ReadonlyArray<CategoryToPostConnectionEdge>
+    /** The nodes of the connection, without the edges */
+    readonly nodes: ReadonlyArray<Post>
+    /** Information about pagination in a connection. */
+    readonly pageInfo: CategoryToPostConnectionPageInfo
+  }
 
 /** An edge in a connection */
-export type CategoryToPostConnectionEdge = {
-  readonly __typename?: "CategoryToPostConnectionEdge"
-  /** A cursor for use in pagination */
-  readonly cursor: Maybe<Scalars["String"]>
-  /** The item at the end of the edge */
-  readonly node: Maybe<Post>
-}
+export type CategoryToPostConnectionEdge = Edge &
+  PostConnectionEdge & {
+    readonly __typename?: "CategoryToPostConnectionEdge"
+    /** A cursor for use in pagination */
+    readonly cursor: Maybe<Scalars["String"]>
+    /** The item at the end of the edge */
+    readonly node: Post
+  }
+
+/** Page Info on the &quot;CategoryToPostConnection&quot; */
+export type CategoryToPostConnectionPageInfo = PageInfo &
+  PostConnectionPageInfo &
+  WpPageInfo & {
+    readonly __typename?: "CategoryToPostConnectionPageInfo"
+    /** When paginating forwards, the cursor to continue. */
+    readonly endCursor: Maybe<Scalars["String"]>
+    /** When paginating forwards, are there more items? */
+    readonly hasNextPage: Scalars["Boolean"]
+    /** When paginating backwards, are there more items? */
+    readonly hasPreviousPage: Scalars["Boolean"]
+    /** When paginating backwards, the cursor to continue. */
+    readonly startCursor: Maybe<Scalars["String"]>
+  }
 
 /** Arguments for filtering the CategoryToPostConnection connection */
 export type CategoryToPostConnectionWhereArgs = {
@@ -498,7 +662,7 @@ export type CategoryToPostConnectionWhereArgs = {
   readonly dateQuery: InputMaybe<DateQueryInput>
   /** True for objects with passwords; False for objects without passwords; null for all objects with or without passwords */
   readonly hasPassword: InputMaybe<Scalars["Boolean"]>
-  /** Specific ID of the object */
+  /** Specific database ID of the object */
   readonly id: InputMaybe<Scalars["Int"]>
   /** Array of IDs for the objects to retrieve */
   readonly in: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
@@ -524,7 +688,9 @@ export type CategoryToPostConnectionWhereArgs = {
   readonly password: InputMaybe<Scalars["String"]>
   /** Show Posts based on a keyword search */
   readonly search: InputMaybe<Scalars["String"]>
+  /** Retrieve posts where post status is in an array. */
   readonly stati: InputMaybe<ReadonlyArray<InputMaybe<PostStatusEnum>>>
+  /** Show posts with a specific status. */
   readonly status: InputMaybe<PostStatusEnum>
   /** Tag Slug */
   readonly tag: InputMaybe<Scalars["String"]>
@@ -534,20 +700,24 @@ export type CategoryToPostConnectionWhereArgs = {
   readonly tagIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
   /** Array of tag IDs, used to display objects from one tag OR another */
   readonly tagNotIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** Array of tag slugs, used to display objects from one tag OR another */
+  /** Array of tag slugs, used to display objects from one tag AND another */
   readonly tagSlugAnd: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
-  /** Array of tag slugs, used to exclude objects in specified tags */
+  /** Array of tag slugs, used to include objects in ANY specified tags */
   readonly tagSlugIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
   /** Title of the object */
   readonly title: InputMaybe<Scalars["String"]>
 }
 
-/** Connection between the category type and the Taxonomy type */
-export type CategoryToTaxonomyConnectionEdge = {
-  readonly __typename?: "CategoryToTaxonomyConnectionEdge"
-  /** The nodes of the connection, without the edges */
-  readonly node: Maybe<Taxonomy>
-}
+/** Connection between the Category type and the Taxonomy type */
+export type CategoryToTaxonomyConnectionEdge = Edge &
+  OneToOneConnection &
+  TaxonomyConnectionEdge & {
+    readonly __typename?: "CategoryToTaxonomyConnectionEdge"
+    /** Opaque reference to the nodes position in the connection. Value can be used with pagination args. */
+    readonly cursor: Maybe<Scalars["String"]>
+    /** The node of the connection, without the edges */
+    readonly node: Taxonomy
+  }
 
 /** A Comment object */
 export type Comment = DatabaseIdentifier &
@@ -555,7 +725,10 @@ export type Comment = DatabaseIdentifier &
     readonly __typename?: "Comment"
     /** User agent used to post the comment. This field is equivalent to WP_Comment-&gt;comment_agent and the value matching the &quot;comment_agent&quot; column in SQL. */
     readonly agent: Maybe<Scalars["String"]>
-    /** The approval status of the comment. This field is equivalent to WP_Comment-&gt;comment_approved and the value matching the &quot;comment_approved&quot; column in SQL. */
+    /**
+     * The approval status of the comment. This field is equivalent to WP_Comment-&gt;comment_approved and the value matching the &quot;comment_approved&quot; column in SQL.
+     * @deprecated Deprecated in favor of the `status` field
+     */
     readonly approved: Maybe<Scalars["Boolean"]>
     /** The author of the comment */
     readonly author: Maybe<CommentToCommenterConnectionEdge>
@@ -590,6 +763,8 @@ export type Comment = DatabaseIdentifier &
     readonly parentId: Maybe<Scalars["ID"]>
     /** Connection between the Comment type and the Comment type */
     readonly replies: Maybe<CommentToCommentConnection>
+    /** The approval status of the comment. This field is equivalent to WP_Comment-&gt;comment_approved and the value matching the &quot;comment_approved&quot; column in SQL. */
+    readonly status: Maybe<CommentStatusEnum>
     /** Type of comment. This field is equivalent to WP_Comment-&gt;comment_type and the value matching the &quot;comment_type&quot; column in SQL. */
     readonly type: Maybe<Scalars["String"]>
   }
@@ -615,9 +790,12 @@ export type CommentRepliesArgs = {
 
 /** A Comment Author object */
 export type CommentAuthor = Commenter &
+  DatabaseIdentifier &
   Node & {
     readonly __typename?: "CommentAuthor"
-    /** Identifies the primary key from the database. */
+    /** Avatar object for user. The avatar object can be retrieved in different sizes by specifying the size argument. */
+    readonly avatar: Maybe<Avatar>
+    /** The unique identifier stored in the database */
     readonly databaseId: Scalars["Int"]
     /** The email for the comment author */
     readonly email: Maybe<Scalars["String"]>
@@ -631,25 +809,99 @@ export type CommentAuthor = Commenter &
     readonly url: Maybe<Scalars["String"]>
   }
 
-/** Connection between the Comment type and the Comment type */
-export type CommentToCommentConnection = {
-  readonly __typename?: "CommentToCommentConnection"
-  /** Edges for the CommentToCommentConnection connection */
-  readonly edges: Maybe<ReadonlyArray<Maybe<CommentToCommentConnectionEdge>>>
-  /** The nodes of the connection, without the edges */
-  readonly nodes: Maybe<ReadonlyArray<Maybe<Comment>>>
-  /** Information about pagination in a connection. */
-  readonly pageInfo: Maybe<WpPageInfo>
+/** A Comment Author object */
+export type CommentAuthorAvatarArgs = {
+  forceDefault: InputMaybe<Scalars["Boolean"]>
+  rating: InputMaybe<AvatarRatingEnum>
+  size?: InputMaybe<Scalars["Int"]>
 }
 
-/** An edge in a connection */
-export type CommentToCommentConnectionEdge = {
-  readonly __typename?: "CommentToCommentConnectionEdge"
-  /** A cursor for use in pagination */
-  readonly cursor: Maybe<Scalars["String"]>
-  /** The item at the end of the edge */
-  readonly node: Maybe<Comment>
+/** Connection to Comment Nodes */
+export type CommentConnection = {
+  /** A list of edges (relational context) between RootQuery and connected Comment Nodes */
+  readonly edges: ReadonlyArray<CommentConnectionEdge>
+  /** A list of connected Comment Nodes */
+  readonly nodes: ReadonlyArray<Comment>
+  /** Information about pagination in a connection. */
+  readonly pageInfo: CommentConnectionPageInfo
 }
+
+/** Edge between a Node and a connected Comment */
+export type CommentConnectionEdge = {
+  /** Opaque reference to the nodes position in the connection. Value can be used with pagination args. */
+  readonly cursor: Maybe<Scalars["String"]>
+  /** The connected Comment Node */
+  readonly node: Comment
+}
+
+/** Page Info on the connected CommentConnectionEdge */
+export type CommentConnectionPageInfo = {
+  /** When paginating forwards, the cursor to continue. */
+  readonly endCursor: Maybe<Scalars["String"]>
+  /** When paginating forwards, are there more items? */
+  readonly hasNextPage: Scalars["Boolean"]
+  /** When paginating backwards, are there more items? */
+  readonly hasPreviousPage: Scalars["Boolean"]
+  /** When paginating backwards, the cursor to continue. */
+  readonly startCursor: Maybe<Scalars["String"]>
+}
+
+/** The Type of Identifier used to fetch a single comment node. Default is "ID". To be used along with the "id" field. */
+export enum CommentNodeIdTypeEnum {
+  /** Identify a resource by the Database ID. */
+  DatabaseId = "DATABASE_ID",
+  /** Identify a resource by the (hashed) Global ID. */
+  Id = "ID",
+}
+
+/** The status of the comment object. */
+export enum CommentStatusEnum {
+  /** Comments with the Approved status */
+  Approve = "APPROVE",
+  /** Comments with the Unapproved status */
+  Hold = "HOLD",
+  /** Comments with the Spam status */
+  Spam = "SPAM",
+  /** Comments with the Trash status */
+  Trash = "TRASH",
+}
+
+/** Connection between the Comment type and the Comment type */
+export type CommentToCommentConnection = CommentConnection &
+  Connection & {
+    readonly __typename?: "CommentToCommentConnection"
+    /** Edges for the CommentToCommentConnection connection */
+    readonly edges: ReadonlyArray<CommentToCommentConnectionEdge>
+    /** The nodes of the connection, without the edges */
+    readonly nodes: ReadonlyArray<Comment>
+    /** Information about pagination in a connection. */
+    readonly pageInfo: CommentToCommentConnectionPageInfo
+  }
+
+/** An edge in a connection */
+export type CommentToCommentConnectionEdge = CommentConnectionEdge &
+  Edge & {
+    readonly __typename?: "CommentToCommentConnectionEdge"
+    /** A cursor for use in pagination */
+    readonly cursor: Maybe<Scalars["String"]>
+    /** The item at the end of the edge */
+    readonly node: Comment
+  }
+
+/** Page Info on the &quot;CommentToCommentConnection&quot; */
+export type CommentToCommentConnectionPageInfo = CommentConnectionPageInfo &
+  PageInfo &
+  WpPageInfo & {
+    readonly __typename?: "CommentToCommentConnectionPageInfo"
+    /** When paginating forwards, the cursor to continue. */
+    readonly endCursor: Maybe<Scalars["String"]>
+    /** When paginating forwards, are there more items? */
+    readonly hasNextPage: Scalars["Boolean"]
+    /** When paginating backwards, are there more items? */
+    readonly hasPreviousPage: Scalars["Boolean"]
+    /** When paginating backwards, the cursor to continue. */
+    readonly startCursor: Maybe<Scalars["String"]>
+  }
 
 /** Arguments for filtering the CommentToCommentConnection connection */
 export type CommentToCommentConnectionWhereArgs = {
@@ -687,7 +939,7 @@ export type CommentToCommentConnectionWhereArgs = {
   readonly contentIdIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
   /** Array of content object IDs to exclude affiliated comments for. */
   readonly contentIdNotIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** Content object name to retrieve affiliated comments for. */
+  /** Content object name (i.e. slug ) to retrieve affiliated comments for. */
   readonly contentName: InputMaybe<Scalars["String"]>
   /** Content Object parent ID to retrieve affiliated comments for. */
   readonly contentParent: InputMaybe<Scalars["Int"]>
@@ -720,25 +972,37 @@ export type CommentToCommentConnectionWhereArgs = {
 }
 
 /** Connection between the Comment type and the Commenter type */
-export type CommentToCommenterConnectionEdge = {
-  readonly __typename?: "CommentToCommenterConnectionEdge"
-  /** The nodes of the connection, without the edges */
-  readonly node: Maybe<Commenter>
-}
+export type CommentToCommenterConnectionEdge = CommenterConnectionEdge &
+  Edge &
+  OneToOneConnection & {
+    readonly __typename?: "CommentToCommenterConnectionEdge"
+    /** Opaque reference to the nodes position in the connection. Value can be used with pagination args. */
+    readonly cursor: Maybe<Scalars["String"]>
+    /** The node of the connection, without the edges */
+    readonly node: Commenter
+  }
 
 /** Connection between the Comment type and the ContentNode type */
-export type CommentToContentNodeConnectionEdge = {
-  readonly __typename?: "CommentToContentNodeConnectionEdge"
-  /** The nodes of the connection, without the edges */
-  readonly node: Maybe<ContentNode>
-}
+export type CommentToContentNodeConnectionEdge = ContentNodeConnectionEdge &
+  Edge &
+  OneToOneConnection & {
+    readonly __typename?: "CommentToContentNodeConnectionEdge"
+    /** Opaque reference to the nodes position in the connection. Value can be used with pagination args. */
+    readonly cursor: Maybe<Scalars["String"]>
+    /** The node of the connection, without the edges */
+    readonly node: ContentNode
+  }
 
 /** Connection between the Comment type and the Comment type */
-export type CommentToParentCommentConnectionEdge = {
-  readonly __typename?: "CommentToParentCommentConnectionEdge"
-  /** The nodes of the connection, without the edges */
-  readonly node: Maybe<Comment>
-}
+export type CommentToParentCommentConnectionEdge = CommentConnectionEdge &
+  Edge &
+  OneToOneConnection & {
+    readonly __typename?: "CommentToParentCommentConnectionEdge"
+    /** Opaque reference to the nodes position in the connection. Value can be used with pagination args. */
+    readonly cursor: Maybe<Scalars["String"]>
+    /** The node of the connection, without the edges */
+    readonly node: Comment
+  }
 
 /** Arguments for filtering the CommentToParentCommentConnection connection */
 export type CommentToParentCommentConnectionWhereArgs = {
@@ -776,7 +1040,7 @@ export type CommentToParentCommentConnectionWhereArgs = {
   readonly contentIdIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
   /** Array of content object IDs to exclude affiliated comments for. */
   readonly contentIdNotIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** Content object name to retrieve affiliated comments for. */
+  /** Content object name (i.e. slug ) to retrieve affiliated comments for. */
   readonly contentName: InputMaybe<Scalars["String"]>
   /** Content Object parent ID to retrieve affiliated comments for. */
   readonly contentParent: InputMaybe<Scalars["Int"]>
@@ -810,6 +1074,8 @@ export type CommentToParentCommentConnectionWhereArgs = {
 
 /** The author of a comment */
 export type Commenter = {
+  /** Avatar object for user. The avatar object can be retrieved in different sizes by specifying the size argument. */
+  readonly avatar: Maybe<Avatar>
   /** Identifies the primary key from the database. */
   readonly databaseId: Scalars["Int"]
   /** The email address of the author of a comment. */
@@ -824,30 +1090,66 @@ export type Commenter = {
   readonly url: Maybe<Scalars["String"]>
 }
 
+/** Edge between a Node and a connected Commenter */
+export type CommenterConnectionEdge = {
+  /** Opaque reference to the nodes position in the connection. Value can be used with pagination args. */
+  readonly cursor: Maybe<Scalars["String"]>
+  /** The connected Commenter Node */
+  readonly node: Commenter
+}
+
 /** Options for ordering the connection */
 export enum CommentsConnectionOrderbyEnum {
+  /** Order by browser user agent of the commenter. */
   CommentAgent = "COMMENT_AGENT",
+  /** Order by approval status of the comment. */
   CommentApproved = "COMMENT_APPROVED",
+  /** Order by name of the comment author. */
   CommentAuthor = "COMMENT_AUTHOR",
+  /** Order by e-mail of the comment author. */
   CommentAuthorEmail = "COMMENT_AUTHOR_EMAIL",
+  /** Order by IP address of the comment author. */
   CommentAuthorIp = "COMMENT_AUTHOR_IP",
+  /** Order by URL address of the comment author. */
   CommentAuthorUrl = "COMMENT_AUTHOR_URL",
+  /** Order by the comment contents. */
   CommentContent = "COMMENT_CONTENT",
+  /** Order by date/time timestamp of the comment. */
   CommentDate = "COMMENT_DATE",
+  /** Order by GMT timezone date/time timestamp of the comment. */
   CommentDateGmt = "COMMENT_DATE_GMT",
+  /** Order by the globally unique identifier for the comment object */
   CommentId = "COMMENT_ID",
+  /** Order by the array list of comment IDs listed in the where clause. */
   CommentIn = "COMMENT_IN",
+  /** Order by the comment karma score. */
   CommentKarma = "COMMENT_KARMA",
+  /** Order by the comment parent ID. */
   CommentParent = "COMMENT_PARENT",
+  /** Order by the post object ID. */
   CommentPostId = "COMMENT_POST_ID",
+  /** Order by the the type of comment, such as 'comment', 'pingback', or 'trackback'. */
   CommentType = "COMMENT_TYPE",
+  /** Order by the user ID. */
   UserId = "USER_ID",
+}
+
+/** A plural connection from one Node Type in the Graph to another Node Type, with support for relational data via &quot;edges&quot;. */
+export type Connection = {
+  /** A list of edges (relational context) between connected nodes */
+  readonly edges: ReadonlyArray<Edge>
+  /** A list of connected nodes */
+  readonly nodes: ReadonlyArray<Node>
+  /** Information about pagination in a connection. */
+  readonly pageInfo: PageInfo
 }
 
 /** Nodes used to manage content */
 export type ContentNode = {
   /** Connection between the ContentNode type and the ContentType type */
   readonly contentType: Maybe<ContentNodeToContentTypeConnectionEdge>
+  /** The name of the Content Type the node belongs to */
+  readonly contentTypeName: Scalars["String"]
   /** The ID of the node in the database. */
   readonly databaseId: Scalars["Int"]
   /** Post publishing date. */
@@ -856,7 +1158,7 @@ export type ContentNode = {
   readonly dateGmt: Maybe<Scalars["String"]>
   /** The desired slug of the post */
   readonly desiredSlug: Maybe<Scalars["String"]>
-  /** If a user has edited the node within the past 15 seconds, this will return the user that last edited. Null if the edit lock doesn't exist or is greater than 15 seconds */
+  /** If a user has edited the node within the past 15 seconds, this will return the user that last edited. Null if the edit lock doesn&#039;t exist or is greater than 15 seconds */
   readonly editingLockedBy: Maybe<ContentNodeToEditLockConnectionEdge>
   /** The RSS enclosure for the object */
   readonly enclosure: Maybe<Scalars["String"]>
@@ -864,14 +1166,18 @@ export type ContentNode = {
   readonly enqueuedScripts: Maybe<ContentNodeToEnqueuedScriptConnection>
   /** Connection between the ContentNode type and the EnqueuedStylesheet type */
   readonly enqueuedStylesheets: Maybe<ContentNodeToEnqueuedStylesheetConnection>
-  /** The global unique identifier for this post. This currently matches the value stored in WP_Post->guid and the guid column in the "post_objects" database table. */
+  /** The global unique identifier for this post. This currently matches the value stored in WP_Post-&gt;guid and the guid column in the &quot;post_objects&quot; database table. */
   readonly guid: Maybe<Scalars["String"]>
-  /** The globally unique identifier of the node. */
+  /** The unique resource identifier path */
   readonly id: Scalars["ID"]
+  /** Whether the node is a Content Node */
+  readonly isContentNode: Scalars["Boolean"]
   /** Whether the object is a node in the preview state */
   readonly isPreview: Maybe<Scalars["Boolean"]>
   /** Whether the object is restricted from the current viewer */
   readonly isRestricted: Maybe<Scalars["Boolean"]>
+  /** Whether the node is a Term */
+  readonly isTermNode: Scalars["Boolean"]
   /** The user that most recently edited the node */
   readonly lastEditedBy: Maybe<ContentNodeToEditLastConnectionEdge>
   /** The permalink of the post */
@@ -884,14 +1190,14 @@ export type ContentNode = {
   readonly previewRevisionDatabaseId: Maybe<Scalars["Int"]>
   /** Whether the object is a node in the preview state */
   readonly previewRevisionId: Maybe<Scalars["ID"]>
-  /** The uri slug for the post. This is equivalent to the WP_Post->post_name field and the post_name column in the database for the "post_objects" table. */
+  /** The uri slug for the post. This is equivalent to the WP_Post-&gt;post_name field and the post_name column in the database for the &quot;post_objects&quot; table. */
   readonly slug: Maybe<Scalars["String"]>
   /** The current status of the object */
   readonly status: Maybe<Scalars["String"]>
   /** The template assigned to a node of content */
   readonly template: Maybe<ContentTemplate>
-  /** URI path for the resource */
-  readonly uri: Scalars["String"]
+  /** The unique resource identifier path */
+  readonly uri: Maybe<Scalars["String"]>
 }
 
 /** Nodes used to manage content */
@@ -910,6 +1216,36 @@ export type ContentNodeEnqueuedStylesheetsArgs = {
   last: InputMaybe<Scalars["Int"]>
 }
 
+/** Connection to ContentNode Nodes */
+export type ContentNodeConnection = {
+  /** A list of edges (relational context) between ContentType and connected ContentNode Nodes */
+  readonly edges: ReadonlyArray<ContentNodeConnectionEdge>
+  /** A list of connected ContentNode Nodes */
+  readonly nodes: ReadonlyArray<ContentNode>
+  /** Information about pagination in a connection. */
+  readonly pageInfo: ContentNodeConnectionPageInfo
+}
+
+/** Edge between a Node and a connected ContentNode */
+export type ContentNodeConnectionEdge = {
+  /** Opaque reference to the nodes position in the connection. Value can be used with pagination args. */
+  readonly cursor: Maybe<Scalars["String"]>
+  /** The connected ContentNode Node */
+  readonly node: ContentNode
+}
+
+/** Page Info on the connected ContentNodeConnectionEdge */
+export type ContentNodeConnectionPageInfo = {
+  /** When paginating forwards, the cursor to continue. */
+  readonly endCursor: Maybe<Scalars["String"]>
+  /** When paginating forwards, are there more items? */
+  readonly hasNextPage: Scalars["Boolean"]
+  /** When paginating backwards, are there more items? */
+  readonly hasPreviousPage: Scalars["Boolean"]
+  /** When paginating backwards, the cursor to continue. */
+  readonly startCursor: Maybe<Scalars["String"]>
+}
+
 /** The Type of Identifier used to fetch a single resource. Default is ID. */
 export enum ContentNodeIdTypeEnum {
   /** Identify a resource by the Database ID. */
@@ -921,73 +1257,115 @@ export enum ContentNodeIdTypeEnum {
 }
 
 /** Connection between the ContentNode type and the ContentType type */
-export type ContentNodeToContentTypeConnectionEdge = {
-  readonly __typename?: "ContentNodeToContentTypeConnectionEdge"
-  /** The nodes of the connection, without the edges */
-  readonly node: Maybe<ContentType>
-}
+export type ContentNodeToContentTypeConnectionEdge = ContentTypeConnectionEdge &
+  Edge &
+  OneToOneConnection & {
+    readonly __typename?: "ContentNodeToContentTypeConnectionEdge"
+    /** Opaque reference to the nodes position in the connection. Value can be used with pagination args. */
+    readonly cursor: Maybe<Scalars["String"]>
+    /** The node of the connection, without the edges */
+    readonly node: ContentType
+  }
 
 /** Connection between the ContentNode type and the User type */
-export type ContentNodeToEditLastConnectionEdge = {
-  readonly __typename?: "ContentNodeToEditLastConnectionEdge"
-  /** The nodes of the connection, without the edges */
-  readonly node: Maybe<User>
-}
+export type ContentNodeToEditLastConnectionEdge = Edge &
+  OneToOneConnection &
+  UserConnectionEdge & {
+    readonly __typename?: "ContentNodeToEditLastConnectionEdge"
+    /** Opaque reference to the nodes position in the connection. Value can be used with pagination args. */
+    readonly cursor: Maybe<Scalars["String"]>
+    /** The node of the connection, without the edges */
+    readonly node: User
+  }
 
 /** Connection between the ContentNode type and the User type */
-export type ContentNodeToEditLockConnectionEdge = {
-  readonly __typename?: "ContentNodeToEditLockConnectionEdge"
-  /** The timestamp for when the node was last edited */
-  readonly lockTimestamp: Maybe<Scalars["String"]>
-  /** The nodes of the connection, without the edges */
-  readonly node: Maybe<User>
-}
+export type ContentNodeToEditLockConnectionEdge = Edge &
+  OneToOneConnection &
+  UserConnectionEdge & {
+    readonly __typename?: "ContentNodeToEditLockConnectionEdge"
+    /** Opaque reference to the nodes position in the connection. Value can be used with pagination args. */
+    readonly cursor: Maybe<Scalars["String"]>
+    /** The timestamp for when the node was last edited */
+    readonly lockTimestamp: Maybe<Scalars["String"]>
+    /** The node of the connection, without the edges */
+    readonly node: User
+  }
 
 /** Connection between the ContentNode type and the EnqueuedScript type */
-export type ContentNodeToEnqueuedScriptConnection = {
-  readonly __typename?: "ContentNodeToEnqueuedScriptConnection"
-  /** Edges for the ContentNodeToEnqueuedScriptConnection connection */
-  readonly edges: Maybe<
-    ReadonlyArray<Maybe<ContentNodeToEnqueuedScriptConnectionEdge>>
-  >
-  /** The nodes of the connection, without the edges */
-  readonly nodes: Maybe<ReadonlyArray<Maybe<EnqueuedScript>>>
-  /** Information about pagination in a connection. */
-  readonly pageInfo: Maybe<WpPageInfo>
-}
+export type ContentNodeToEnqueuedScriptConnection = Connection &
+  EnqueuedScriptConnection & {
+    readonly __typename?: "ContentNodeToEnqueuedScriptConnection"
+    /** Edges for the ContentNodeToEnqueuedScriptConnection connection */
+    readonly edges: ReadonlyArray<ContentNodeToEnqueuedScriptConnectionEdge>
+    /** The nodes of the connection, without the edges */
+    readonly nodes: ReadonlyArray<EnqueuedScript>
+    /** Information about pagination in a connection. */
+    readonly pageInfo: ContentNodeToEnqueuedScriptConnectionPageInfo
+  }
 
 /** An edge in a connection */
-export type ContentNodeToEnqueuedScriptConnectionEdge = {
-  readonly __typename?: "ContentNodeToEnqueuedScriptConnectionEdge"
-  /** A cursor for use in pagination */
-  readonly cursor: Maybe<Scalars["String"]>
-  /** The item at the end of the edge */
-  readonly node: Maybe<EnqueuedScript>
-}
+export type ContentNodeToEnqueuedScriptConnectionEdge = Edge &
+  EnqueuedScriptConnectionEdge & {
+    readonly __typename?: "ContentNodeToEnqueuedScriptConnectionEdge"
+    /** A cursor for use in pagination */
+    readonly cursor: Maybe<Scalars["String"]>
+    /** The item at the end of the edge */
+    readonly node: EnqueuedScript
+  }
+
+/** Page Info on the &quot;ContentNodeToEnqueuedScriptConnection&quot; */
+export type ContentNodeToEnqueuedScriptConnectionPageInfo =
+  EnqueuedScriptConnectionPageInfo &
+    PageInfo &
+    WpPageInfo & {
+      readonly __typename?: "ContentNodeToEnqueuedScriptConnectionPageInfo"
+      /** When paginating forwards, the cursor to continue. */
+      readonly endCursor: Maybe<Scalars["String"]>
+      /** When paginating forwards, are there more items? */
+      readonly hasNextPage: Scalars["Boolean"]
+      /** When paginating backwards, are there more items? */
+      readonly hasPreviousPage: Scalars["Boolean"]
+      /** When paginating backwards, the cursor to continue. */
+      readonly startCursor: Maybe<Scalars["String"]>
+    }
 
 /** Connection between the ContentNode type and the EnqueuedStylesheet type */
-export type ContentNodeToEnqueuedStylesheetConnection = {
-  readonly __typename?: "ContentNodeToEnqueuedStylesheetConnection"
-  /** Edges for the ContentNodeToEnqueuedStylesheetConnection connection */
-  readonly edges: Maybe<
-    ReadonlyArray<Maybe<ContentNodeToEnqueuedStylesheetConnectionEdge>>
-  >
-  /** The nodes of the connection, without the edges */
-  readonly nodes: Maybe<ReadonlyArray<Maybe<EnqueuedStylesheet>>>
-  /** Information about pagination in a connection. */
-  readonly pageInfo: Maybe<WpPageInfo>
-}
+export type ContentNodeToEnqueuedStylesheetConnection = Connection &
+  EnqueuedStylesheetConnection & {
+    readonly __typename?: "ContentNodeToEnqueuedStylesheetConnection"
+    /** Edges for the ContentNodeToEnqueuedStylesheetConnection connection */
+    readonly edges: ReadonlyArray<ContentNodeToEnqueuedStylesheetConnectionEdge>
+    /** The nodes of the connection, without the edges */
+    readonly nodes: ReadonlyArray<EnqueuedStylesheet>
+    /** Information about pagination in a connection. */
+    readonly pageInfo: ContentNodeToEnqueuedStylesheetConnectionPageInfo
+  }
 
 /** An edge in a connection */
-export type ContentNodeToEnqueuedStylesheetConnectionEdge = {
-  readonly __typename?: "ContentNodeToEnqueuedStylesheetConnectionEdge"
-  /** A cursor for use in pagination */
-  readonly cursor: Maybe<Scalars["String"]>
-  /** The item at the end of the edge */
-  readonly node: Maybe<EnqueuedStylesheet>
-}
+export type ContentNodeToEnqueuedStylesheetConnectionEdge = Edge &
+  EnqueuedStylesheetConnectionEdge & {
+    readonly __typename?: "ContentNodeToEnqueuedStylesheetConnectionEdge"
+    /** A cursor for use in pagination */
+    readonly cursor: Maybe<Scalars["String"]>
+    /** The item at the end of the edge */
+    readonly node: EnqueuedStylesheet
+  }
 
-export type ContentRevisionUnion = Page | Post
+/** Page Info on the &quot;ContentNodeToEnqueuedStylesheetConnection&quot; */
+export type ContentNodeToEnqueuedStylesheetConnectionPageInfo =
+  EnqueuedStylesheetConnectionPageInfo &
+    PageInfo &
+    WpPageInfo & {
+      readonly __typename?: "ContentNodeToEnqueuedStylesheetConnectionPageInfo"
+      /** When paginating forwards, the cursor to continue. */
+      readonly endCursor: Maybe<Scalars["String"]>
+      /** When paginating forwards, are there more items? */
+      readonly hasNextPage: Scalars["Boolean"]
+      /** When paginating backwards, are there more items? */
+      readonly hasPreviousPage: Scalars["Boolean"]
+      /** When paginating backwards, the cursor to continue. */
+      readonly startCursor: Maybe<Scalars["String"]>
+    }
 
 /** The template assigned to a node of content */
 export type ContentTemplate = {
@@ -1023,12 +1401,16 @@ export type ContentType = Node &
     readonly hierarchical: Maybe<Scalars["Boolean"]>
     /** The globally unique identifier of the post-type object. */
     readonly id: Scalars["ID"]
+    /** Whether the node is a Content Node */
+    readonly isContentNode: Scalars["Boolean"]
     /** Whether this page is set to the static front page. */
     readonly isFrontPage: Scalars["Boolean"]
     /** Whether this page is set to the blog posts page. */
     readonly isPostsPage: Scalars["Boolean"]
     /** Whether the object is restricted from the current viewer */
     readonly isRestricted: Maybe<Scalars["Boolean"]>
+    /** Whether the node is a Term */
+    readonly isTermNode: Scalars["Boolean"]
     /** Display name of the content type. */
     readonly label: Maybe<Scalars["String"]>
     /** Details about the content type labels. */
@@ -1080,8 +1462,40 @@ export type ContentTypeContentNodesArgs = {
   where: InputMaybe<ContentTypeToContentNodeConnectionWhereArgs>
 }
 
+/** Connection to ContentType Nodes */
+export type ContentTypeConnection = {
+  /** A list of edges (relational context) between RootQuery and connected ContentType Nodes */
+  readonly edges: ReadonlyArray<ContentTypeConnectionEdge>
+  /** A list of connected ContentType Nodes */
+  readonly nodes: ReadonlyArray<ContentType>
+  /** Information about pagination in a connection. */
+  readonly pageInfo: ContentTypeConnectionPageInfo
+}
+
+/** Edge between a Node and a connected ContentType */
+export type ContentTypeConnectionEdge = {
+  /** Opaque reference to the nodes position in the connection. Value can be used with pagination args. */
+  readonly cursor: Maybe<Scalars["String"]>
+  /** The connected ContentType Node */
+  readonly node: ContentType
+}
+
+/** Page Info on the connected ContentTypeConnectionEdge */
+export type ContentTypeConnectionPageInfo = {
+  /** When paginating forwards, the cursor to continue. */
+  readonly endCursor: Maybe<Scalars["String"]>
+  /** When paginating forwards, are there more items? */
+  readonly hasNextPage: Scalars["Boolean"]
+  /** When paginating backwards, are there more items? */
+  readonly hasPreviousPage: Scalars["Boolean"]
+  /** When paginating backwards, the cursor to continue. */
+  readonly startCursor: Maybe<Scalars["String"]>
+}
+
 /** Allowed Content Types */
 export enum ContentTypeEnum {
+  /** The Type of Content object */
+  ActionMonitor = "ACTION_MONITOR",
   /** The Type of Content object */
   Attachment = "ATTACHMENT",
   /** The Type of Content object */
@@ -1099,34 +1513,52 @@ export enum ContentTypeIdTypeEnum {
 }
 
 /** Connection between the ContentType type and the ContentNode type */
-export type ContentTypeToContentNodeConnection = {
-  readonly __typename?: "ContentTypeToContentNodeConnection"
-  /** Edges for the ContentTypeToContentNodeConnection connection */
-  readonly edges: Maybe<
-    ReadonlyArray<Maybe<ContentTypeToContentNodeConnectionEdge>>
-  >
-  /** The nodes of the connection, without the edges */
-  readonly nodes: Maybe<ReadonlyArray<Maybe<ContentNode>>>
-  /** Information about pagination in a connection. */
-  readonly pageInfo: Maybe<WpPageInfo>
-}
+export type ContentTypeToContentNodeConnection = Connection &
+  ContentNodeConnection & {
+    readonly __typename?: "ContentTypeToContentNodeConnection"
+    /** Edges for the ContentTypeToContentNodeConnection connection */
+    readonly edges: ReadonlyArray<ContentTypeToContentNodeConnectionEdge>
+    /** The nodes of the connection, without the edges */
+    readonly nodes: ReadonlyArray<ContentNode>
+    /** Information about pagination in a connection. */
+    readonly pageInfo: ContentTypeToContentNodeConnectionPageInfo
+  }
 
 /** An edge in a connection */
-export type ContentTypeToContentNodeConnectionEdge = {
-  readonly __typename?: "ContentTypeToContentNodeConnectionEdge"
-  /** A cursor for use in pagination */
-  readonly cursor: Maybe<Scalars["String"]>
-  /** The item at the end of the edge */
-  readonly node: Maybe<ContentNode>
-}
+export type ContentTypeToContentNodeConnectionEdge = ContentNodeConnectionEdge &
+  Edge & {
+    readonly __typename?: "ContentTypeToContentNodeConnectionEdge"
+    /** A cursor for use in pagination */
+    readonly cursor: Maybe<Scalars["String"]>
+    /** The item at the end of the edge */
+    readonly node: ContentNode
+  }
+
+/** Page Info on the &quot;ContentTypeToContentNodeConnection&quot; */
+export type ContentTypeToContentNodeConnectionPageInfo =
+  ContentNodeConnectionPageInfo &
+    PageInfo &
+    WpPageInfo & {
+      readonly __typename?: "ContentTypeToContentNodeConnectionPageInfo"
+      /** When paginating forwards, the cursor to continue. */
+      readonly endCursor: Maybe<Scalars["String"]>
+      /** When paginating forwards, are there more items? */
+      readonly hasNextPage: Scalars["Boolean"]
+      /** When paginating backwards, are there more items? */
+      readonly hasPreviousPage: Scalars["Boolean"]
+      /** When paginating backwards, the cursor to continue. */
+      readonly startCursor: Maybe<Scalars["String"]>
+    }
 
 /** Arguments for filtering the ContentTypeToContentNodeConnection connection */
 export type ContentTypeToContentNodeConnectionWhereArgs = {
+  /** The Types of content to filter */
+  readonly contentTypes: InputMaybe<ReadonlyArray<InputMaybe<ContentTypeEnum>>>
   /** Filter the connection based on dates */
   readonly dateQuery: InputMaybe<DateQueryInput>
   /** True for objects with passwords; False for objects without passwords; null for all objects with or without passwords */
   readonly hasPassword: InputMaybe<Scalars["Boolean"]>
-  /** Specific ID of the object */
+  /** Specific database ID of the object */
   readonly id: InputMaybe<Scalars["Int"]>
   /** Array of IDs for the objects to retrieve */
   readonly in: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
@@ -1152,36 +1584,72 @@ export type ContentTypeToContentNodeConnectionWhereArgs = {
   readonly password: InputMaybe<Scalars["String"]>
   /** Show Posts based on a keyword search */
   readonly search: InputMaybe<Scalars["String"]>
+  /** Retrieve posts where post status is in an array. */
   readonly stati: InputMaybe<ReadonlyArray<InputMaybe<PostStatusEnum>>>
+  /** Show posts with a specific status. */
   readonly status: InputMaybe<PostStatusEnum>
   /** Title of the object */
   readonly title: InputMaybe<Scalars["String"]>
 }
 
 /** Connection between the ContentType type and the Taxonomy type */
-export type ContentTypeToTaxonomyConnection = {
-  readonly __typename?: "ContentTypeToTaxonomyConnection"
-  /** Edges for the ContentTypeToTaxonomyConnection connection */
-  readonly edges: Maybe<
-    ReadonlyArray<Maybe<ContentTypeToTaxonomyConnectionEdge>>
-  >
-  /** The nodes of the connection, without the edges */
-  readonly nodes: Maybe<ReadonlyArray<Maybe<Taxonomy>>>
-  /** Information about pagination in a connection. */
-  readonly pageInfo: Maybe<WpPageInfo>
-}
+export type ContentTypeToTaxonomyConnection = Connection &
+  TaxonomyConnection & {
+    readonly __typename?: "ContentTypeToTaxonomyConnection"
+    /** Edges for the ContentTypeToTaxonomyConnection connection */
+    readonly edges: ReadonlyArray<ContentTypeToTaxonomyConnectionEdge>
+    /** The nodes of the connection, without the edges */
+    readonly nodes: ReadonlyArray<Taxonomy>
+    /** Information about pagination in a connection. */
+    readonly pageInfo: ContentTypeToTaxonomyConnectionPageInfo
+  }
 
 /** An edge in a connection */
-export type ContentTypeToTaxonomyConnectionEdge = {
-  readonly __typename?: "ContentTypeToTaxonomyConnectionEdge"
-  /** A cursor for use in pagination */
-  readonly cursor: Maybe<Scalars["String"]>
-  /** The item at the end of the edge */
-  readonly node: Maybe<Taxonomy>
+export type ContentTypeToTaxonomyConnectionEdge = Edge &
+  TaxonomyConnectionEdge & {
+    readonly __typename?: "ContentTypeToTaxonomyConnectionEdge"
+    /** A cursor for use in pagination */
+    readonly cursor: Maybe<Scalars["String"]>
+    /** The item at the end of the edge */
+    readonly node: Taxonomy
+  }
+
+/** Page Info on the &quot;ContentTypeToTaxonomyConnection&quot; */
+export type ContentTypeToTaxonomyConnectionPageInfo = PageInfo &
+  TaxonomyConnectionPageInfo &
+  WpPageInfo & {
+    readonly __typename?: "ContentTypeToTaxonomyConnectionPageInfo"
+    /** When paginating forwards, the cursor to continue. */
+    readonly endCursor: Maybe<Scalars["String"]>
+    /** When paginating forwards, are there more items? */
+    readonly hasNextPage: Scalars["Boolean"]
+    /** When paginating backwards, are there more items? */
+    readonly hasPreviousPage: Scalars["Boolean"]
+    /** When paginating backwards, the cursor to continue. */
+    readonly startCursor: Maybe<Scalars["String"]>
+  }
+
+/** Allowed Content Types of the Category taxonomy. */
+export enum ContentTypesOfCategoryEnum {
+  /** The Type of Content object */
+  Post = "POST",
 }
 
-/** Input for the createActionMonitorAction mutation */
+/** Allowed Content Types of the PostFormat taxonomy. */
+export enum ContentTypesOfPostFormatEnum {
+  /** The Type of Content object */
+  Post = "POST",
+}
+
+/** Allowed Content Types of the Tag taxonomy. */
+export enum ContentTypesOfTagEnum {
+  /** The Type of Content object */
+  Post = "POST",
+}
+
+/** Input for the createActionMonitorAction mutation. */
 export type CreateActionMonitorActionInput = {
+  /** This is an ID that can be passed to a mutation by the client to track the progress of mutations and catch possible duplicate mutation submissions. */
   readonly clientMutationId: InputMaybe<Scalars["String"]>
   /** The content of the object */
   readonly content: InputMaybe<Scalars["String"]>
@@ -1199,17 +1667,20 @@ export type CreateActionMonitorActionInput = {
   readonly title: InputMaybe<Scalars["String"]>
 }
 
-/** The payload for the createActionMonitorAction mutation */
+/** The payload for the createActionMonitorAction mutation. */
 export type CreateActionMonitorActionPayload = {
   readonly __typename?: "CreateActionMonitorActionPayload"
+  /** The Post object mutation type. */
   readonly actionMonitorAction: Maybe<ActionMonitorAction>
+  /** If a &#039;clientMutationId&#039; input is provided to the mutation, it will be returned as output on the mutation. This ID can be used by the client to track the progress of mutations and catch possible duplicate mutation submissions. */
   readonly clientMutationId: Maybe<Scalars["String"]>
 }
 
-/** Input for the createCategory mutation */
+/** Input for the createCategory mutation. */
 export type CreateCategoryInput = {
   /** The slug that the category will be an alias of */
   readonly aliasOf: InputMaybe<Scalars["String"]>
+  /** This is an ID that can be passed to a mutation by the client to track the progress of mutations and catch possible duplicate mutation submissions. */
   readonly clientMutationId: InputMaybe<Scalars["String"]>
   /** The description of the category object */
   readonly description: InputMaybe<Scalars["String"]>
@@ -1221,15 +1692,16 @@ export type CreateCategoryInput = {
   readonly slug: InputMaybe<Scalars["String"]>
 }
 
-/** The payload for the createCategory mutation */
+/** The payload for the createCategory mutation. */
 export type CreateCategoryPayload = {
   readonly __typename?: "CreateCategoryPayload"
   /** The created category */
   readonly category: Maybe<Category>
+  /** If a &#039;clientMutationId&#039; input is provided to the mutation, it will be returned as output on the mutation. This ID can be used by the client to track the progress of mutations and catch possible duplicate mutation submissions. */
   readonly clientMutationId: Maybe<Scalars["String"]>
 }
 
-/** Input for the createComment mutation */
+/** Input for the createComment mutation. */
 export type CreateCommentInput = {
   /** The approval status of the comment. */
   readonly approved: InputMaybe<Scalars["String"]>
@@ -1239,22 +1711,26 @@ export type CreateCommentInput = {
   readonly authorEmail: InputMaybe<Scalars["String"]>
   /** The url of the comment's author. */
   readonly authorUrl: InputMaybe<Scalars["String"]>
+  /** This is an ID that can be passed to a mutation by the client to track the progress of mutations and catch possible duplicate mutation submissions. */
   readonly clientMutationId: InputMaybe<Scalars["String"]>
-  /** The ID of the post object the comment belongs to. */
+  /** The database ID of the post object the comment belongs to. */
   readonly commentOn: InputMaybe<Scalars["Int"]>
   /** Content of the comment. */
   readonly content: InputMaybe<Scalars["String"]>
   /** The date of the object. Preferable to enter as year/month/day ( e.g. 01/31/2017 ) as it will rearrange date as fit if it is not specified. Incomplete dates may have unintended results for example, "2017" as the input will use current date with timestamp 20:17  */
   readonly date: InputMaybe<Scalars["String"]>
-  /** Parent comment of current comment. */
+  /** Parent comment ID of current comment. */
   readonly parent: InputMaybe<Scalars["ID"]>
+  /** The approval status of the comment */
+  readonly status: InputMaybe<CommentStatusEnum>
   /** Type of comment. */
   readonly type: InputMaybe<Scalars["String"]>
 }
 
-/** The payload for the createComment mutation */
+/** The payload for the createComment mutation. */
 export type CreateCommentPayload = {
   readonly __typename?: "CreateCommentPayload"
+  /** If a &#039;clientMutationId&#039; input is provided to the mutation, it will be returned as output on the mutation. This ID can be used by the client to track the progress of mutations and catch possible duplicate mutation submissions. */
   readonly clientMutationId: Maybe<Scalars["String"]>
   /** The comment that was created */
   readonly comment: Maybe<Comment>
@@ -1262,7 +1738,7 @@ export type CreateCommentPayload = {
   readonly success: Maybe<Scalars["Boolean"]>
 }
 
-/** Input for the createMediaItem mutation */
+/** Input for the createMediaItem mutation. */
 export type CreateMediaItemInput = {
   /** Alternative text to display when mediaItem is not displayed */
   readonly altText: InputMaybe<Scalars["String"]>
@@ -1270,6 +1746,7 @@ export type CreateMediaItemInput = {
   readonly authorId: InputMaybe<Scalars["ID"]>
   /** The caption for the mediaItem */
   readonly caption: InputMaybe<Scalars["String"]>
+  /** This is an ID that can be passed to a mutation by the client to track the progress of mutations and catch possible duplicate mutation submissions. */
   readonly clientMutationId: InputMaybe<Scalars["String"]>
   /** The comment status for the mediaItem */
   readonly commentStatus: InputMaybe<Scalars["String"]>
@@ -1283,7 +1760,7 @@ export type CreateMediaItemInput = {
   readonly filePath: InputMaybe<Scalars["String"]>
   /** The file type of the mediaItem */
   readonly fileType: InputMaybe<MimeTypeEnum>
-  /** The WordPress post ID or the graphQL postId of the parent object */
+  /** The ID of the parent object */
   readonly parentId: InputMaybe<Scalars["ID"]>
   /** The ping status for the mediaItem */
   readonly pingStatus: InputMaybe<Scalars["String"]>
@@ -1295,17 +1772,20 @@ export type CreateMediaItemInput = {
   readonly title: InputMaybe<Scalars["String"]>
 }
 
-/** The payload for the createMediaItem mutation */
+/** The payload for the createMediaItem mutation. */
 export type CreateMediaItemPayload = {
   readonly __typename?: "CreateMediaItemPayload"
+  /** If a &#039;clientMutationId&#039; input is provided to the mutation, it will be returned as output on the mutation. This ID can be used by the client to track the progress of mutations and catch possible duplicate mutation submissions. */
   readonly clientMutationId: Maybe<Scalars["String"]>
+  /** The MediaItem object mutation type. */
   readonly mediaItem: Maybe<MediaItem>
 }
 
-/** Input for the createPage mutation */
+/** Input for the createPage mutation. */
 export type CreatePageInput = {
   /** The userId to assign as the author of the object */
   readonly authorId: InputMaybe<Scalars["ID"]>
+  /** This is an ID that can be passed to a mutation by the client to track the progress of mutations and catch possible duplicate mutation submissions. */
   readonly clientMutationId: InputMaybe<Scalars["String"]>
   /** The comment status for the object */
   readonly commentStatus: InputMaybe<Scalars["String"]>
@@ -1327,17 +1807,20 @@ export type CreatePageInput = {
   readonly title: InputMaybe<Scalars["String"]>
 }
 
-/** The payload for the createPage mutation */
+/** The payload for the createPage mutation. */
 export type CreatePagePayload = {
   readonly __typename?: "CreatePagePayload"
+  /** If a &#039;clientMutationId&#039; input is provided to the mutation, it will be returned as output on the mutation. This ID can be used by the client to track the progress of mutations and catch possible duplicate mutation submissions. */
   readonly clientMutationId: Maybe<Scalars["String"]>
+  /** The Post object mutation type. */
   readonly page: Maybe<Page>
 }
 
-/** Input for the createPostFormat mutation */
+/** Input for the createPostFormat mutation. */
 export type CreatePostFormatInput = {
   /** The slug that the post_format will be an alias of */
   readonly aliasOf: InputMaybe<Scalars["String"]>
+  /** This is an ID that can be passed to a mutation by the client to track the progress of mutations and catch possible duplicate mutation submissions. */
   readonly clientMutationId: InputMaybe<Scalars["String"]>
   /** The description of the post_format object */
   readonly description: InputMaybe<Scalars["String"]>
@@ -1347,20 +1830,22 @@ export type CreatePostFormatInput = {
   readonly slug: InputMaybe<Scalars["String"]>
 }
 
-/** The payload for the createPostFormat mutation */
+/** The payload for the createPostFormat mutation. */
 export type CreatePostFormatPayload = {
   readonly __typename?: "CreatePostFormatPayload"
+  /** If a &#039;clientMutationId&#039; input is provided to the mutation, it will be returned as output on the mutation. This ID can be used by the client to track the progress of mutations and catch possible duplicate mutation submissions. */
   readonly clientMutationId: Maybe<Scalars["String"]>
   /** The created post_format */
   readonly postFormat: Maybe<PostFormat>
 }
 
-/** Input for the createPost mutation */
+/** Input for the createPost mutation. */
 export type CreatePostInput = {
   /** The userId to assign as the author of the object */
   readonly authorId: InputMaybe<Scalars["ID"]>
   /** Set connections between the post and categories */
   readonly categories: InputMaybe<PostCategoriesInput>
+  /** This is an ID that can be passed to a mutation by the client to track the progress of mutations and catch possible duplicate mutation submissions. */
   readonly clientMutationId: InputMaybe<Scalars["String"]>
   /** The comment status for the object */
   readonly commentStatus: InputMaybe<Scalars["String"]>
@@ -1392,17 +1877,20 @@ export type CreatePostInput = {
   readonly toPing: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
 }
 
-/** The payload for the createPost mutation */
+/** The payload for the createPost mutation. */
 export type CreatePostPayload = {
   readonly __typename?: "CreatePostPayload"
+  /** If a &#039;clientMutationId&#039; input is provided to the mutation, it will be returned as output on the mutation. This ID can be used by the client to track the progress of mutations and catch possible duplicate mutation submissions. */
   readonly clientMutationId: Maybe<Scalars["String"]>
+  /** The Post object mutation type. */
   readonly post: Maybe<Post>
 }
 
-/** Input for the createTag mutation */
+/** Input for the createTag mutation. */
 export type CreateTagInput = {
   /** The slug that the post_tag will be an alias of */
   readonly aliasOf: InputMaybe<Scalars["String"]>
+  /** This is an ID that can be passed to a mutation by the client to track the progress of mutations and catch possible duplicate mutation submissions. */
   readonly clientMutationId: InputMaybe<Scalars["String"]>
   /** The description of the post_tag object */
   readonly description: InputMaybe<Scalars["String"]>
@@ -1412,18 +1900,20 @@ export type CreateTagInput = {
   readonly slug: InputMaybe<Scalars["String"]>
 }
 
-/** The payload for the createTag mutation */
+/** The payload for the createTag mutation. */
 export type CreateTagPayload = {
   readonly __typename?: "CreateTagPayload"
+  /** If a &#039;clientMutationId&#039; input is provided to the mutation, it will be returned as output on the mutation. This ID can be used by the client to track the progress of mutations and catch possible duplicate mutation submissions. */
   readonly clientMutationId: Maybe<Scalars["String"]>
   /** The created post_tag */
   readonly tag: Maybe<Tag>
 }
 
-/** Input for the createUser mutation */
+/** Input for the createUser mutation. */
 export type CreateUserInput = {
   /** User's AOL IM account. */
   readonly aim: InputMaybe<Scalars["String"]>
+  /** This is an ID that can be passed to a mutation by the client to track the progress of mutations and catch possible duplicate mutation submissions. */
   readonly clientMutationId: InputMaybe<Scalars["String"]>
   /** A string containing content about the user. */
   readonly description: InputMaybe<Scalars["String"]>
@@ -1459,10 +1949,12 @@ export type CreateUserInput = {
   readonly yim: InputMaybe<Scalars["String"]>
 }
 
-/** The payload for the createUser mutation */
+/** The payload for the createUser mutation. */
 export type CreateUserPayload = {
   readonly __typename?: "CreateUserPayload"
+  /** If a &#039;clientMutationId&#039; input is provided to the mutation, it will be returned as output on the mutation. This ID can be used by the client to track the progress of mutations and catch possible duplicate mutation submissions. */
   readonly clientMutationId: Maybe<Scalars["String"]>
+  /** The User object mutation type. */
   readonly user: Maybe<User>
 }
 
@@ -1519,44 +2011,51 @@ export type DefaultTemplate = ContentTemplate & {
   readonly templateName: Maybe<Scalars["String"]>
 }
 
-/** Input for the deleteActionMonitorAction mutation */
+/** Input for the deleteActionMonitorAction mutation. */
 export type DeleteActionMonitorActionInput = {
+  /** This is an ID that can be passed to a mutation by the client to track the progress of mutations and catch possible duplicate mutation submissions. */
   readonly clientMutationId: InputMaybe<Scalars["String"]>
   /** Whether the object should be force deleted instead of being moved to the trash */
   readonly forceDelete: InputMaybe<Scalars["Boolean"]>
   /** The ID of the ActionMonitorAction to delete */
   readonly id: Scalars["ID"]
+  /** Override the edit lock when another user is editing the post */
+  readonly ignoreEditLock: InputMaybe<Scalars["Boolean"]>
 }
 
-/** The payload for the deleteActionMonitorAction mutation */
+/** The payload for the deleteActionMonitorAction mutation. */
 export type DeleteActionMonitorActionPayload = {
   readonly __typename?: "DeleteActionMonitorActionPayload"
   /** The object before it was deleted */
   readonly actionMonitorAction: Maybe<ActionMonitorAction>
+  /** If a &#039;clientMutationId&#039; input is provided to the mutation, it will be returned as output on the mutation. This ID can be used by the client to track the progress of mutations and catch possible duplicate mutation submissions. */
   readonly clientMutationId: Maybe<Scalars["String"]>
   /** The ID of the deleted object */
   readonly deletedId: Maybe<Scalars["ID"]>
 }
 
-/** Input for the deleteCategory mutation */
+/** Input for the deleteCategory mutation. */
 export type DeleteCategoryInput = {
+  /** This is an ID that can be passed to a mutation by the client to track the progress of mutations and catch possible duplicate mutation submissions. */
   readonly clientMutationId: InputMaybe<Scalars["String"]>
   /** The ID of the category to delete */
   readonly id: Scalars["ID"]
 }
 
-/** The payload for the deleteCategory mutation */
+/** The payload for the deleteCategory mutation. */
 export type DeleteCategoryPayload = {
   readonly __typename?: "DeleteCategoryPayload"
   /** The deteted term object */
   readonly category: Maybe<Category>
+  /** If a &#039;clientMutationId&#039; input is provided to the mutation, it will be returned as output on the mutation. This ID can be used by the client to track the progress of mutations and catch possible duplicate mutation submissions. */
   readonly clientMutationId: Maybe<Scalars["String"]>
   /** The ID of the deleted object */
   readonly deletedId: Maybe<Scalars["ID"]>
 }
 
-/** Input for the deleteComment mutation */
+/** Input for the deleteComment mutation. */
 export type DeleteCommentInput = {
+  /** This is an ID that can be passed to a mutation by the client to track the progress of mutations and catch possible duplicate mutation submissions. */
   readonly clientMutationId: InputMaybe<Scalars["String"]>
   /** Whether the comment should be force deleted instead of being moved to the trash */
   readonly forceDelete: InputMaybe<Scalars["Boolean"]>
@@ -1564,9 +2063,10 @@ export type DeleteCommentInput = {
   readonly id: Scalars["ID"]
 }
 
-/** The payload for the deleteComment mutation */
+/** The payload for the deleteComment mutation. */
 export type DeleteCommentPayload = {
   readonly __typename?: "DeleteCommentPayload"
+  /** If a &#039;clientMutationId&#039; input is provided to the mutation, it will be returned as output on the mutation. This ID can be used by the client to track the progress of mutations and catch possible duplicate mutation submissions. */
   readonly clientMutationId: Maybe<Scalars["String"]>
   /** The deleted comment object */
   readonly comment: Maybe<Comment>
@@ -1574,8 +2074,9 @@ export type DeleteCommentPayload = {
   readonly deletedId: Maybe<Scalars["ID"]>
 }
 
-/** Input for the deleteMediaItem mutation */
+/** Input for the deleteMediaItem mutation. */
 export type DeleteMediaItemInput = {
+  /** This is an ID that can be passed to a mutation by the client to track the progress of mutations and catch possible duplicate mutation submissions. */
   readonly clientMutationId: InputMaybe<Scalars["String"]>
   /** Whether the mediaItem should be force deleted instead of being moved to the trash */
   readonly forceDelete: InputMaybe<Scalars["Boolean"]>
@@ -1583,9 +2084,10 @@ export type DeleteMediaItemInput = {
   readonly id: Scalars["ID"]
 }
 
-/** The payload for the deleteMediaItem mutation */
+/** The payload for the deleteMediaItem mutation. */
 export type DeleteMediaItemPayload = {
   readonly __typename?: "DeleteMediaItemPayload"
+  /** If a &#039;clientMutationId&#039; input is provided to the mutation, it will be returned as output on the mutation. This ID can be used by the client to track the progress of mutations and catch possible duplicate mutation submissions. */
   readonly clientMutationId: Maybe<Scalars["String"]>
   /** The ID of the deleted mediaItem */
   readonly deletedId: Maybe<Scalars["ID"]>
@@ -1593,18 +2095,22 @@ export type DeleteMediaItemPayload = {
   readonly mediaItem: Maybe<MediaItem>
 }
 
-/** Input for the deletePage mutation */
+/** Input for the deletePage mutation. */
 export type DeletePageInput = {
+  /** This is an ID that can be passed to a mutation by the client to track the progress of mutations and catch possible duplicate mutation submissions. */
   readonly clientMutationId: InputMaybe<Scalars["String"]>
   /** Whether the object should be force deleted instead of being moved to the trash */
   readonly forceDelete: InputMaybe<Scalars["Boolean"]>
   /** The ID of the page to delete */
   readonly id: Scalars["ID"]
+  /** Override the edit lock when another user is editing the post */
+  readonly ignoreEditLock: InputMaybe<Scalars["Boolean"]>
 }
 
-/** The payload for the deletePage mutation */
+/** The payload for the deletePage mutation. */
 export type DeletePagePayload = {
   readonly __typename?: "DeletePagePayload"
+  /** If a &#039;clientMutationId&#039; input is provided to the mutation, it will be returned as output on the mutation. This ID can be used by the client to track the progress of mutations and catch possible duplicate mutation submissions. */
   readonly clientMutationId: Maybe<Scalars["String"]>
   /** The ID of the deleted object */
   readonly deletedId: Maybe<Scalars["ID"]>
@@ -1612,16 +2118,18 @@ export type DeletePagePayload = {
   readonly page: Maybe<Page>
 }
 
-/** Input for the deletePostFormat mutation */
+/** Input for the deletePostFormat mutation. */
 export type DeletePostFormatInput = {
+  /** This is an ID that can be passed to a mutation by the client to track the progress of mutations and catch possible duplicate mutation submissions. */
   readonly clientMutationId: InputMaybe<Scalars["String"]>
   /** The ID of the postFormat to delete */
   readonly id: Scalars["ID"]
 }
 
-/** The payload for the deletePostFormat mutation */
+/** The payload for the deletePostFormat mutation. */
 export type DeletePostFormatPayload = {
   readonly __typename?: "DeletePostFormatPayload"
+  /** If a &#039;clientMutationId&#039; input is provided to the mutation, it will be returned as output on the mutation. This ID can be used by the client to track the progress of mutations and catch possible duplicate mutation submissions. */
   readonly clientMutationId: Maybe<Scalars["String"]>
   /** The ID of the deleted object */
   readonly deletedId: Maybe<Scalars["ID"]>
@@ -1629,18 +2137,22 @@ export type DeletePostFormatPayload = {
   readonly postFormat: Maybe<PostFormat>
 }
 
-/** Input for the deletePost mutation */
+/** Input for the deletePost mutation. */
 export type DeletePostInput = {
+  /** This is an ID that can be passed to a mutation by the client to track the progress of mutations and catch possible duplicate mutation submissions. */
   readonly clientMutationId: InputMaybe<Scalars["String"]>
   /** Whether the object should be force deleted instead of being moved to the trash */
   readonly forceDelete: InputMaybe<Scalars["Boolean"]>
   /** The ID of the post to delete */
   readonly id: Scalars["ID"]
+  /** Override the edit lock when another user is editing the post */
+  readonly ignoreEditLock: InputMaybe<Scalars["Boolean"]>
 }
 
-/** The payload for the deletePost mutation */
+/** The payload for the deletePost mutation. */
 export type DeletePostPayload = {
   readonly __typename?: "DeletePostPayload"
+  /** If a &#039;clientMutationId&#039; input is provided to the mutation, it will be returned as output on the mutation. This ID can be used by the client to track the progress of mutations and catch possible duplicate mutation submissions. */
   readonly clientMutationId: Maybe<Scalars["String"]>
   /** The ID of the deleted object */
   readonly deletedId: Maybe<Scalars["ID"]>
@@ -1648,16 +2160,18 @@ export type DeletePostPayload = {
   readonly post: Maybe<Post>
 }
 
-/** Input for the deleteTag mutation */
+/** Input for the deleteTag mutation. */
 export type DeleteTagInput = {
+  /** This is an ID that can be passed to a mutation by the client to track the progress of mutations and catch possible duplicate mutation submissions. */
   readonly clientMutationId: InputMaybe<Scalars["String"]>
   /** The ID of the tag to delete */
   readonly id: Scalars["ID"]
 }
 
-/** The payload for the deleteTag mutation */
+/** The payload for the deleteTag mutation. */
 export type DeleteTagPayload = {
   readonly __typename?: "DeleteTagPayload"
+  /** If a &#039;clientMutationId&#039; input is provided to the mutation, it will be returned as output on the mutation. This ID can be used by the client to track the progress of mutations and catch possible duplicate mutation submissions. */
   readonly clientMutationId: Maybe<Scalars["String"]>
   /** The ID of the deleted object */
   readonly deletedId: Maybe<Scalars["ID"]>
@@ -1665,8 +2179,9 @@ export type DeleteTagPayload = {
   readonly tag: Maybe<Tag>
 }
 
-/** Input for the deleteUser mutation */
+/** Input for the deleteUser mutation. */
 export type DeleteUserInput = {
+  /** This is an ID that can be passed to a mutation by the client to track the progress of mutations and catch possible duplicate mutation submissions. */
   readonly clientMutationId: InputMaybe<Scalars["String"]>
   /** The ID of the user you want to delete */
   readonly id: Scalars["ID"]
@@ -1674,9 +2189,10 @@ export type DeleteUserInput = {
   readonly reassignId: InputMaybe<Scalars["ID"]>
 }
 
-/** The payload for the deleteUser mutation */
+/** The payload for the deleteUser mutation. */
 export type DeleteUserPayload = {
   readonly __typename?: "DeleteUserPayload"
+  /** If a &#039;clientMutationId&#039; input is provided to the mutation, it will be returned as output on the mutation. This ID can be used by the client to track the progress of mutations and catch possible duplicate mutation submissions. */
   readonly clientMutationId: Maybe<Scalars["String"]>
   /** The ID of the user that you just deleted */
   readonly deletedId: Maybe<Scalars["ID"]>
@@ -1687,10 +2203,18 @@ export type DeleteUserPayload = {
 /** The discussion setting type */
 export type DiscussionSettings = {
   readonly __typename?: "DiscussionSettings"
-  /** Allow people to post comments on new articles. */
+  /** Allow people to submit comments on new posts. */
   readonly defaultCommentStatus: Maybe<Scalars["String"]>
   /** Allow link notifications from other blogs (pingbacks and trackbacks) on new articles. */
   readonly defaultPingStatus: Maybe<Scalars["String"]>
+}
+
+/** Relational context between connected nodes */
+export type Edge = {
+  /** Opaque reference to the nodes position in the connection. Value can be used with pagination args. */
+  readonly cursor: Maybe<Scalars["String"]>
+  /** The connected node */
+  readonly node: Node
 }
 
 /** Asset enqueued by the CMS */
@@ -1723,13 +2247,43 @@ export type EnqueuedScript = EnqueuedAsset &
     readonly extra: Maybe<Scalars["String"]>
     /** The handle of the enqueued asset */
     readonly handle: Maybe<Scalars["String"]>
-    /** The globally unique ID for the object */
+    /** The ID of the enqueued asset */
     readonly id: Scalars["ID"]
     /** The source of the asset */
     readonly src: Maybe<Scalars["String"]>
     /** The version of the enqueued asset */
     readonly version: Maybe<Scalars["String"]>
   }
+
+/** Connection to EnqueuedScript Nodes */
+export type EnqueuedScriptConnection = {
+  /** A list of edges (relational context) between ContentNode and connected EnqueuedScript Nodes */
+  readonly edges: ReadonlyArray<EnqueuedScriptConnectionEdge>
+  /** A list of connected EnqueuedScript Nodes */
+  readonly nodes: ReadonlyArray<EnqueuedScript>
+  /** Information about pagination in a connection. */
+  readonly pageInfo: EnqueuedScriptConnectionPageInfo
+}
+
+/** Edge between a Node and a connected EnqueuedScript */
+export type EnqueuedScriptConnectionEdge = {
+  /** Opaque reference to the nodes position in the connection. Value can be used with pagination args. */
+  readonly cursor: Maybe<Scalars["String"]>
+  /** The connected EnqueuedScript Node */
+  readonly node: EnqueuedScript
+}
+
+/** Page Info on the connected EnqueuedScriptConnectionEdge */
+export type EnqueuedScriptConnectionPageInfo = {
+  /** When paginating forwards, the cursor to continue. */
+  readonly endCursor: Maybe<Scalars["String"]>
+  /** When paginating forwards, are there more items? */
+  readonly hasNextPage: Scalars["Boolean"]
+  /** When paginating backwards, are there more items? */
+  readonly hasPreviousPage: Scalars["Boolean"]
+  /** When paginating backwards, the cursor to continue. */
+  readonly startCursor: Maybe<Scalars["String"]>
+}
 
 /** Stylesheet enqueued by the CMS */
 export type EnqueuedStylesheet = EnqueuedAsset &
@@ -1743,13 +2297,43 @@ export type EnqueuedStylesheet = EnqueuedAsset &
     readonly extra: Maybe<Scalars["String"]>
     /** The handle of the enqueued asset */
     readonly handle: Maybe<Scalars["String"]>
-    /** The globally unique ID for the object */
+    /** The ID of the enqueued asset */
     readonly id: Scalars["ID"]
     /** The source of the asset */
     readonly src: Maybe<Scalars["String"]>
     /** The version of the enqueued asset */
     readonly version: Maybe<Scalars["String"]>
   }
+
+/** Connection to EnqueuedStylesheet Nodes */
+export type EnqueuedStylesheetConnection = {
+  /** A list of edges (relational context) between ContentNode and connected EnqueuedStylesheet Nodes */
+  readonly edges: ReadonlyArray<EnqueuedStylesheetConnectionEdge>
+  /** A list of connected EnqueuedStylesheet Nodes */
+  readonly nodes: ReadonlyArray<EnqueuedStylesheet>
+  /** Information about pagination in a connection. */
+  readonly pageInfo: EnqueuedStylesheetConnectionPageInfo
+}
+
+/** Edge between a Node and a connected EnqueuedStylesheet */
+export type EnqueuedStylesheetConnectionEdge = {
+  /** Opaque reference to the nodes position in the connection. Value can be used with pagination args. */
+  readonly cursor: Maybe<Scalars["String"]>
+  /** The connected EnqueuedStylesheet Node */
+  readonly node: EnqueuedStylesheet
+}
+
+/** Page Info on the connected EnqueuedStylesheetConnectionEdge */
+export type EnqueuedStylesheetConnectionPageInfo = {
+  /** When paginating forwards, the cursor to continue. */
+  readonly endCursor: Maybe<Scalars["String"]>
+  /** When paginating forwards, are there more items? */
+  readonly hasNextPage: Scalars["Boolean"]
+  /** When paginating backwards, are there more items? */
+  readonly hasPreviousPage: Scalars["Boolean"]
+  /** When paginating backwards, the cursor to continue. */
+  readonly startCursor: Maybe<Scalars["String"]>
+}
 
 /** Gatsby Preview webhook data. */
 export type GatsbyPreviewData = {
@@ -1758,6 +2342,8 @@ export type GatsbyPreviewData = {
   readonly id: Maybe<Scalars["ID"]>
   /** Wether or not the preview is a draft. */
   readonly isDraft: Maybe<Scalars["Boolean"]>
+  /** A list of manifest ID&#039;s a preview action has seen during it&#039;s lifetime. */
+  readonly manifestIds: Maybe<ReadonlyArray<Maybe<Scalars["String"]>>>
   /** The modified time of the previewed node. */
   readonly modified: Maybe<Scalars["String"]>
   /** The WordPress database ID of the preview. If this is a draft it will potentially return 0, if it&#039;s a revision of a post, it will return the ID of the original post that this is a revision of. */
@@ -1801,12 +2387,64 @@ export type HierarchicalContentNode = {
   readonly ancestors: Maybe<HierarchicalContentNodeToContentNodeAncestorsConnection>
   /** Connection between the HierarchicalContentNode type and the ContentNode type */
   readonly children: Maybe<HierarchicalContentNodeToContentNodeChildrenConnection>
+  /** Connection between the ContentNode type and the ContentType type */
+  readonly contentType: Maybe<ContentNodeToContentTypeConnectionEdge>
+  /** The name of the Content Type the node belongs to */
+  readonly contentTypeName: Scalars["String"]
+  /** The unique identifier stored in the database */
+  readonly databaseId: Scalars["Int"]
+  /** Post publishing date. */
+  readonly date: Maybe<Scalars["String"]>
+  /** The publishing date set in GMT. */
+  readonly dateGmt: Maybe<Scalars["String"]>
+  /** The desired slug of the post */
+  readonly desiredSlug: Maybe<Scalars["String"]>
+  /** If a user has edited the node within the past 15 seconds, this will return the user that last edited. Null if the edit lock doesn&#039;t exist or is greater than 15 seconds */
+  readonly editingLockedBy: Maybe<ContentNodeToEditLockConnectionEdge>
+  /** The RSS enclosure for the object */
+  readonly enclosure: Maybe<Scalars["String"]>
+  /** Connection between the ContentNode type and the EnqueuedScript type */
+  readonly enqueuedScripts: Maybe<ContentNodeToEnqueuedScriptConnection>
+  /** Connection between the ContentNode type and the EnqueuedStylesheet type */
+  readonly enqueuedStylesheets: Maybe<ContentNodeToEnqueuedStylesheetConnection>
+  /** The global unique identifier for this post. This currently matches the value stored in WP_Post-&gt;guid and the guid column in the &quot;post_objects&quot; database table. */
+  readonly guid: Maybe<Scalars["String"]>
+  /** The globally unique ID for the object */
+  readonly id: Scalars["ID"]
+  /** Whether the node is a Content Node */
+  readonly isContentNode: Scalars["Boolean"]
+  /** Whether the object is a node in the preview state */
+  readonly isPreview: Maybe<Scalars["Boolean"]>
+  /** Whether the object is restricted from the current viewer */
+  readonly isRestricted: Maybe<Scalars["Boolean"]>
+  /** Whether the node is a Term */
+  readonly isTermNode: Scalars["Boolean"]
+  /** The user that most recently edited the node */
+  readonly lastEditedBy: Maybe<ContentNodeToEditLastConnectionEdge>
+  /** The permalink of the post */
+  readonly link: Maybe<Scalars["String"]>
+  /** The local modified time for a post. If a post was recently updated the modified field will change to match the corresponding time. */
+  readonly modified: Maybe<Scalars["String"]>
+  /** The GMT modified time for a post. If a post was recently updated the modified field will change to match the corresponding time in GMT. */
+  readonly modifiedGmt: Maybe<Scalars["String"]>
   /** The parent of the node. The parent object can be of various types */
   readonly parent: Maybe<HierarchicalContentNodeToParentContentNodeConnectionEdge>
   /** Database id of the parent node */
   readonly parentDatabaseId: Maybe<Scalars["Int"]>
   /** The globally unique identifier of the parent node. */
   readonly parentId: Maybe<Scalars["ID"]>
+  /** The database id of the preview node */
+  readonly previewRevisionDatabaseId: Maybe<Scalars["Int"]>
+  /** Whether the object is a node in the preview state */
+  readonly previewRevisionId: Maybe<Scalars["ID"]>
+  /** The uri slug for the post. This is equivalent to the WP_Post-&gt;post_name field and the post_name column in the database for the &quot;post_objects&quot; table. */
+  readonly slug: Maybe<Scalars["String"]>
+  /** The current status of the object */
+  readonly status: Maybe<Scalars["String"]>
+  /** The template assigned to a node of content */
+  readonly template: Maybe<ContentTemplate>
+  /** The unique resource identifier path */
+  readonly uri: Maybe<Scalars["String"]>
 }
 
 /** Content node with hierarchical (parent/child) relationships */
@@ -1827,37 +2465,71 @@ export type HierarchicalContentNodeChildrenArgs = {
   where: InputMaybe<HierarchicalContentNodeToContentNodeChildrenConnectionWhereArgs>
 }
 
-/** Connection between the HierarchicalContentNode type and the ContentNode type */
-export type HierarchicalContentNodeToContentNodeAncestorsConnection = {
-  readonly __typename?: "HierarchicalContentNodeToContentNodeAncestorsConnection"
-  /** Edges for the HierarchicalContentNodeToContentNodeAncestorsConnection connection */
-  readonly edges: Maybe<
-    ReadonlyArray<
-      Maybe<HierarchicalContentNodeToContentNodeAncestorsConnectionEdge>
-    >
-  >
-  /** The nodes of the connection, without the edges */
-  readonly nodes: Maybe<ReadonlyArray<Maybe<ContentNode>>>
-  /** Information about pagination in a connection. */
-  readonly pageInfo: Maybe<WpPageInfo>
+/** Content node with hierarchical (parent/child) relationships */
+export type HierarchicalContentNodeEnqueuedScriptsArgs = {
+  after: InputMaybe<Scalars["String"]>
+  before: InputMaybe<Scalars["String"]>
+  first: InputMaybe<Scalars["Int"]>
+  last: InputMaybe<Scalars["Int"]>
 }
 
-/** An edge in a connection */
-export type HierarchicalContentNodeToContentNodeAncestorsConnectionEdge = {
-  readonly __typename?: "HierarchicalContentNodeToContentNodeAncestorsConnectionEdge"
-  /** A cursor for use in pagination */
-  readonly cursor: Maybe<Scalars["String"]>
-  /** The item at the end of the edge */
-  readonly node: Maybe<ContentNode>
+/** Content node with hierarchical (parent/child) relationships */
+export type HierarchicalContentNodeEnqueuedStylesheetsArgs = {
+  after: InputMaybe<Scalars["String"]>
+  before: InputMaybe<Scalars["String"]>
+  first: InputMaybe<Scalars["Int"]>
+  last: InputMaybe<Scalars["Int"]>
 }
+
+/** Connection between the HierarchicalContentNode type and the ContentNode type */
+export type HierarchicalContentNodeToContentNodeAncestorsConnection =
+  Connection &
+    ContentNodeConnection & {
+      readonly __typename?: "HierarchicalContentNodeToContentNodeAncestorsConnection"
+      /** Edges for the HierarchicalContentNodeToContentNodeAncestorsConnection connection */
+      readonly edges: ReadonlyArray<HierarchicalContentNodeToContentNodeAncestorsConnectionEdge>
+      /** The nodes of the connection, without the edges */
+      readonly nodes: ReadonlyArray<ContentNode>
+      /** Information about pagination in a connection. */
+      readonly pageInfo: HierarchicalContentNodeToContentNodeAncestorsConnectionPageInfo
+    }
+
+/** An edge in a connection */
+export type HierarchicalContentNodeToContentNodeAncestorsConnectionEdge =
+  ContentNodeConnectionEdge &
+    Edge & {
+      readonly __typename?: "HierarchicalContentNodeToContentNodeAncestorsConnectionEdge"
+      /** A cursor for use in pagination */
+      readonly cursor: Maybe<Scalars["String"]>
+      /** The item at the end of the edge */
+      readonly node: ContentNode
+    }
+
+/** Page Info on the &quot;HierarchicalContentNodeToContentNodeAncestorsConnection&quot; */
+export type HierarchicalContentNodeToContentNodeAncestorsConnectionPageInfo =
+  ContentNodeConnectionPageInfo &
+    PageInfo &
+    WpPageInfo & {
+      readonly __typename?: "HierarchicalContentNodeToContentNodeAncestorsConnectionPageInfo"
+      /** When paginating forwards, the cursor to continue. */
+      readonly endCursor: Maybe<Scalars["String"]>
+      /** When paginating forwards, are there more items? */
+      readonly hasNextPage: Scalars["Boolean"]
+      /** When paginating backwards, are there more items? */
+      readonly hasPreviousPage: Scalars["Boolean"]
+      /** When paginating backwards, the cursor to continue. */
+      readonly startCursor: Maybe<Scalars["String"]>
+    }
 
 /** Arguments for filtering the HierarchicalContentNodeToContentNodeAncestorsConnection connection */
 export type HierarchicalContentNodeToContentNodeAncestorsConnectionWhereArgs = {
+  /** The Types of content to filter */
+  readonly contentTypes: InputMaybe<ReadonlyArray<InputMaybe<ContentTypeEnum>>>
   /** Filter the connection based on dates */
   readonly dateQuery: InputMaybe<DateQueryInput>
   /** True for objects with passwords; False for objects without passwords; null for all objects with or without passwords */
   readonly hasPassword: InputMaybe<Scalars["Boolean"]>
-  /** Specific ID of the object */
+  /** Specific database ID of the object */
   readonly id: InputMaybe<Scalars["Int"]>
   /** Array of IDs for the objects to retrieve */
   readonly in: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
@@ -1883,43 +2555,63 @@ export type HierarchicalContentNodeToContentNodeAncestorsConnectionWhereArgs = {
   readonly password: InputMaybe<Scalars["String"]>
   /** Show Posts based on a keyword search */
   readonly search: InputMaybe<Scalars["String"]>
+  /** Retrieve posts where post status is in an array. */
   readonly stati: InputMaybe<ReadonlyArray<InputMaybe<PostStatusEnum>>>
+  /** Show posts with a specific status. */
   readonly status: InputMaybe<PostStatusEnum>
   /** Title of the object */
   readonly title: InputMaybe<Scalars["String"]>
 }
 
 /** Connection between the HierarchicalContentNode type and the ContentNode type */
-export type HierarchicalContentNodeToContentNodeChildrenConnection = {
-  readonly __typename?: "HierarchicalContentNodeToContentNodeChildrenConnection"
-  /** Edges for the HierarchicalContentNodeToContentNodeChildrenConnection connection */
-  readonly edges: Maybe<
-    ReadonlyArray<
-      Maybe<HierarchicalContentNodeToContentNodeChildrenConnectionEdge>
-    >
-  >
-  /** The nodes of the connection, without the edges */
-  readonly nodes: Maybe<ReadonlyArray<Maybe<ContentNode>>>
-  /** Information about pagination in a connection. */
-  readonly pageInfo: Maybe<WpPageInfo>
-}
+export type HierarchicalContentNodeToContentNodeChildrenConnection =
+  Connection &
+    ContentNodeConnection & {
+      readonly __typename?: "HierarchicalContentNodeToContentNodeChildrenConnection"
+      /** Edges for the HierarchicalContentNodeToContentNodeChildrenConnection connection */
+      readonly edges: ReadonlyArray<HierarchicalContentNodeToContentNodeChildrenConnectionEdge>
+      /** The nodes of the connection, without the edges */
+      readonly nodes: ReadonlyArray<ContentNode>
+      /** Information about pagination in a connection. */
+      readonly pageInfo: HierarchicalContentNodeToContentNodeChildrenConnectionPageInfo
+    }
 
 /** An edge in a connection */
-export type HierarchicalContentNodeToContentNodeChildrenConnectionEdge = {
-  readonly __typename?: "HierarchicalContentNodeToContentNodeChildrenConnectionEdge"
-  /** A cursor for use in pagination */
-  readonly cursor: Maybe<Scalars["String"]>
-  /** The item at the end of the edge */
-  readonly node: Maybe<ContentNode>
-}
+export type HierarchicalContentNodeToContentNodeChildrenConnectionEdge =
+  ContentNodeConnectionEdge &
+    Edge & {
+      readonly __typename?: "HierarchicalContentNodeToContentNodeChildrenConnectionEdge"
+      /** A cursor for use in pagination */
+      readonly cursor: Maybe<Scalars["String"]>
+      /** The item at the end of the edge */
+      readonly node: ContentNode
+    }
+
+/** Page Info on the &quot;HierarchicalContentNodeToContentNodeChildrenConnection&quot; */
+export type HierarchicalContentNodeToContentNodeChildrenConnectionPageInfo =
+  ContentNodeConnectionPageInfo &
+    PageInfo &
+    WpPageInfo & {
+      readonly __typename?: "HierarchicalContentNodeToContentNodeChildrenConnectionPageInfo"
+      /** When paginating forwards, the cursor to continue. */
+      readonly endCursor: Maybe<Scalars["String"]>
+      /** When paginating forwards, are there more items? */
+      readonly hasNextPage: Scalars["Boolean"]
+      /** When paginating backwards, are there more items? */
+      readonly hasPreviousPage: Scalars["Boolean"]
+      /** When paginating backwards, the cursor to continue. */
+      readonly startCursor: Maybe<Scalars["String"]>
+    }
 
 /** Arguments for filtering the HierarchicalContentNodeToContentNodeChildrenConnection connection */
 export type HierarchicalContentNodeToContentNodeChildrenConnectionWhereArgs = {
+  /** The Types of content to filter */
+  readonly contentTypes: InputMaybe<ReadonlyArray<InputMaybe<ContentTypeEnum>>>
   /** Filter the connection based on dates */
   readonly dateQuery: InputMaybe<DateQueryInput>
   /** True for objects with passwords; False for objects without passwords; null for all objects with or without passwords */
   readonly hasPassword: InputMaybe<Scalars["Boolean"]>
-  /** Specific ID of the object */
+  /** Specific database ID of the object */
   readonly id: InputMaybe<Scalars["Int"]>
   /** Array of IDs for the objects to retrieve */
   readonly in: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
@@ -1945,34 +2637,102 @@ export type HierarchicalContentNodeToContentNodeChildrenConnectionWhereArgs = {
   readonly password: InputMaybe<Scalars["String"]>
   /** Show Posts based on a keyword search */
   readonly search: InputMaybe<Scalars["String"]>
+  /** Retrieve posts where post status is in an array. */
   readonly stati: InputMaybe<ReadonlyArray<InputMaybe<PostStatusEnum>>>
+  /** Show posts with a specific status. */
   readonly status: InputMaybe<PostStatusEnum>
   /** Title of the object */
   readonly title: InputMaybe<Scalars["String"]>
 }
 
 /** Connection between the HierarchicalContentNode type and the ContentNode type */
-export type HierarchicalContentNodeToParentContentNodeConnectionEdge = {
-  readonly __typename?: "HierarchicalContentNodeToParentContentNodeConnectionEdge"
-  /** The nodes of the connection, without the edges */
-  readonly node: Maybe<ContentNode>
-}
+export type HierarchicalContentNodeToParentContentNodeConnectionEdge =
+  ContentNodeConnectionEdge &
+    Edge &
+    OneToOneConnection & {
+      readonly __typename?: "HierarchicalContentNodeToParentContentNodeConnectionEdge"
+      /** Opaque reference to the nodes position in the connection. Value can be used with pagination args. */
+      readonly cursor: Maybe<Scalars["String"]>
+      /** The node of the connection, without the edges */
+      readonly node: ContentNode
+    }
 
-/** Term node with hierarchical (parent/child) relationships */
-export type HierarchicalTermNode = {
+/** Node with hierarchical (parent/child) relationships */
+export type HierarchicalNode = {
+  /** The unique identifier stored in the database */
+  readonly databaseId: Scalars["Int"]
+  /** The globally unique ID for the object */
+  readonly id: Scalars["ID"]
   /** Database id of the parent node */
   readonly parentDatabaseId: Maybe<Scalars["Int"]>
   /** The globally unique identifier of the parent node. */
   readonly parentId: Maybe<Scalars["ID"]>
 }
 
+/** Term node with hierarchical (parent/child) relationships */
+export type HierarchicalTermNode = {
+  /** The number of objects connected to the object */
+  readonly count: Maybe<Scalars["Int"]>
+  /** The unique identifier stored in the database */
+  readonly databaseId: Scalars["Int"]
+  /** The description of the object */
+  readonly description: Maybe<Scalars["String"]>
+  /** Connection between the TermNode type and the EnqueuedScript type */
+  readonly enqueuedScripts: Maybe<TermNodeToEnqueuedScriptConnection>
+  /** Connection between the TermNode type and the EnqueuedStylesheet type */
+  readonly enqueuedStylesheets: Maybe<TermNodeToEnqueuedStylesheetConnection>
+  /** The globally unique ID for the object */
+  readonly id: Scalars["ID"]
+  /** Whether the node is a Content Node */
+  readonly isContentNode: Scalars["Boolean"]
+  /** Whether the object is restricted from the current viewer */
+  readonly isRestricted: Maybe<Scalars["Boolean"]>
+  /** Whether the node is a Term */
+  readonly isTermNode: Scalars["Boolean"]
+  /** The link to the term */
+  readonly link: Maybe<Scalars["String"]>
+  /** The human friendly name of the object. */
+  readonly name: Maybe<Scalars["String"]>
+  /** Database id of the parent node */
+  readonly parentDatabaseId: Maybe<Scalars["Int"]>
+  /** The globally unique identifier of the parent node. */
+  readonly parentId: Maybe<Scalars["ID"]>
+  /** An alphanumeric identifier for the object unique to its type. */
+  readonly slug: Maybe<Scalars["String"]>
+  /** The name of the taxonomy that the object is associated with */
+  readonly taxonomyName: Maybe<Scalars["String"]>
+  /** The ID of the term group that this term object belongs to */
+  readonly termGroupId: Maybe<Scalars["Int"]>
+  /** The taxonomy ID that the object is associated with */
+  readonly termTaxonomyId: Maybe<Scalars["Int"]>
+  /** The unique resource identifier path */
+  readonly uri: Maybe<Scalars["String"]>
+}
+
+/** Term node with hierarchical (parent/child) relationships */
+export type HierarchicalTermNodeEnqueuedScriptsArgs = {
+  after: InputMaybe<Scalars["String"]>
+  before: InputMaybe<Scalars["String"]>
+  first: InputMaybe<Scalars["Int"]>
+  last: InputMaybe<Scalars["Int"]>
+}
+
+/** Term node with hierarchical (parent/child) relationships */
+export type HierarchicalTermNodeEnqueuedStylesheetsArgs = {
+  after: InputMaybe<Scalars["String"]>
+  before: InputMaybe<Scalars["String"]>
+  first: InputMaybe<Scalars["Int"]>
+  last: InputMaybe<Scalars["Int"]>
+}
+
 /** File details for a Media Item */
 export type MediaDetails = {
   readonly __typename?: "MediaDetails"
-  /** The height of the mediaItem */
+  /** The filename of the mediaItem */
   readonly file: Maybe<Scalars["String"]>
   /** The height of the mediaItem */
   readonly height: Maybe<Scalars["Int"]>
+  /** Meta information associated with the mediaItem */
   readonly meta: Maybe<MediaItemMeta>
   /** The available sizes of the mediaItem */
   readonly sizes: Maybe<ReadonlyArray<Maybe<MediaSize>>>
@@ -1980,10 +2740,17 @@ export type MediaDetails = {
   readonly width: Maybe<Scalars["Int"]>
 }
 
+/** File details for a Media Item */
+export type MediaDetailsSizesArgs = {
+  exclude: InputMaybe<ReadonlyArray<InputMaybe<MediaItemSizeEnum>>>
+  include: InputMaybe<ReadonlyArray<InputMaybe<MediaItemSizeEnum>>>
+}
+
 /** The mediaItem type */
 export type MediaItem = ContentNode &
   DatabaseIdentifier &
   HierarchicalContentNode &
+  HierarchicalNode &
   Node &
   NodeWithAuthor &
   NodeWithComments &
@@ -2009,11 +2776,13 @@ export type MediaItem = ContentNode &
     readonly commentCount: Maybe<Scalars["Int"]>
     /** Whether the comments are open or closed for this particular post. */
     readonly commentStatus: Maybe<Scalars["String"]>
-    /** Connection between the mediaItem type and the Comment type */
+    /** Connection between the MediaItem type and the Comment type */
     readonly comments: Maybe<MediaItemToCommentConnection>
     /** Connection between the ContentNode type and the ContentType type */
     readonly contentType: Maybe<ContentNodeToContentTypeConnectionEdge>
-    /** The ID of the node in the database. */
+    /** The name of the Content Type the node belongs to */
+    readonly contentTypeName: Scalars["String"]
+    /** The unique identifier stored in the database */
     readonly databaseId: Scalars["Int"]
     /** Post publishing date. */
     readonly date: Maybe<Scalars["String"]>
@@ -2037,10 +2806,14 @@ export type MediaItem = ContentNode &
     readonly guid: Maybe<Scalars["String"]>
     /** The globally unique identifier of the attachment object. */
     readonly id: Scalars["ID"]
+    /** Whether the node is a Content Node */
+    readonly isContentNode: Scalars["Boolean"]
     /** Whether the object is a node in the preview state */
     readonly isPreview: Maybe<Scalars["Boolean"]>
     /** Whether the object is restricted from the current viewer */
     readonly isRestricted: Maybe<Scalars["Boolean"]>
+    /** Whether the node is a Term */
+    readonly isTermNode: Scalars["Boolean"]
     /** The user that most recently edited the node */
     readonly lastEditedBy: Maybe<ContentNodeToEditLastConnectionEdge>
     /** The permalink of the post */
@@ -2086,8 +2859,8 @@ export type MediaItem = ContentNode &
     readonly template: Maybe<ContentTemplate>
     /** The title of the post. This is currently just the raw title. An amendment to support rendered title needs to be made. */
     readonly title: Maybe<Scalars["String"]>
-    /** URI path for the resource */
-    readonly uri: Scalars["String"]
+    /** The unique resource identifier path */
+    readonly uri: Maybe<Scalars["String"]>
   }
 
 /** The mediaItem type */
@@ -2168,6 +2941,36 @@ export type MediaItemTitleArgs = {
   format: InputMaybe<PostObjectFieldFormatEnum>
 }
 
+/** Connection to mediaItem Nodes */
+export type MediaItemConnection = {
+  /** A list of edges (relational context) between RootQuery and connected mediaItem Nodes */
+  readonly edges: ReadonlyArray<MediaItemConnectionEdge>
+  /** A list of connected mediaItem Nodes */
+  readonly nodes: ReadonlyArray<MediaItem>
+  /** Information about pagination in a connection. */
+  readonly pageInfo: MediaItemConnectionPageInfo
+}
+
+/** Edge between a Node and a connected mediaItem */
+export type MediaItemConnectionEdge = {
+  /** Opaque reference to the nodes position in the connection. Value can be used with pagination args. */
+  readonly cursor: Maybe<Scalars["String"]>
+  /** The connected mediaItem Node */
+  readonly node: MediaItem
+}
+
+/** Page Info on the connected MediaItemConnectionEdge */
+export type MediaItemConnectionPageInfo = {
+  /** When paginating forwards, the cursor to continue. */
+  readonly endCursor: Maybe<Scalars["String"]>
+  /** When paginating forwards, are there more items? */
+  readonly hasNextPage: Scalars["Boolean"]
+  /** When paginating backwards, are there more items? */
+  readonly hasPreviousPage: Scalars["Boolean"]
+  /** When paginating backwards, the cursor to continue. */
+  readonly startCursor: Maybe<Scalars["String"]>
+}
+
 /** The Type of Identifier used to fetch a single resource. Default is ID. */
 export enum MediaItemIdType {
   /** Identify a resource by the Database ID. */
@@ -2185,17 +2988,29 @@ export enum MediaItemIdType {
 /** Meta connected to a MediaItem */
 export type MediaItemMeta = {
   readonly __typename?: "MediaItemMeta"
+  /** Aperture measurement of the media item. */
   readonly aperture: Maybe<Scalars["Float"]>
+  /** Information about the camera used to create the media item. */
   readonly camera: Maybe<Scalars["String"]>
+  /** The text string description associated with the media item. */
   readonly caption: Maybe<Scalars["String"]>
+  /** Copyright information associated with the media item. */
   readonly copyright: Maybe<Scalars["String"]>
+  /** The date/time when the media was created. */
   readonly createdTimestamp: Maybe<Scalars["Int"]>
+  /** The original creator of the media item. */
   readonly credit: Maybe<Scalars["String"]>
+  /** The focal length value of the media item. */
   readonly focalLength: Maybe<Scalars["Float"]>
+  /** The ISO (International Organization for Standardization) value of the media item. */
   readonly iso: Maybe<Scalars["Int"]>
+  /** List of keywords used to describe or identfy the media item. */
   readonly keywords: Maybe<ReadonlyArray<Maybe<Scalars["String"]>>>
+  /** The vertical or horizontal aspect of the media item. */
   readonly orientation: Maybe<Scalars["String"]>
+  /** The shutter speed information of the media item. */
   readonly shutterSpeed: Maybe<Scalars["Float"]>
+  /** A useful title for the media item. */
   readonly title: Maybe<Scalars["String"]>
 }
 
@@ -2211,10 +3026,12 @@ export enum MediaItemSizeEnum {
   QuestBlogGrid = "QUEST_BLOG_GRID",
   /** MediaItem with the quest-gallery size */
   QuestGallery = "QUEST_GALLERY",
-  /** MediaItem with the sow-carousel-default size */
-  SowCarouselDefault = "SOW_CAROUSEL_DEFAULT",
   /** MediaItem with the thumbnail size */
   Thumbnail = "THUMBNAIL",
+  /** MediaItem with the 1536x1536 size */
+  "1536X1536" = "_1536X1536",
+  /** MediaItem with the 2048x2048 size */
+  "2048X2048" = "_2048X2048",
 }
 
 /** The status of the media item object. */
@@ -2229,25 +3046,42 @@ export enum MediaItemStatusEnum {
   Trash = "TRASH",
 }
 
-/** Connection between the mediaItem type and the Comment type */
-export type MediaItemToCommentConnection = {
-  readonly __typename?: "MediaItemToCommentConnection"
-  /** Edges for the MediaItemToCommentConnection connection */
-  readonly edges: Maybe<ReadonlyArray<Maybe<MediaItemToCommentConnectionEdge>>>
-  /** The nodes of the connection, without the edges */
-  readonly nodes: Maybe<ReadonlyArray<Maybe<Comment>>>
-  /** Information about pagination in a connection. */
-  readonly pageInfo: Maybe<WpPageInfo>
-}
+/** Connection between the MediaItem type and the Comment type */
+export type MediaItemToCommentConnection = CommentConnection &
+  Connection & {
+    readonly __typename?: "MediaItemToCommentConnection"
+    /** Edges for the MediaItemToCommentConnection connection */
+    readonly edges: ReadonlyArray<MediaItemToCommentConnectionEdge>
+    /** The nodes of the connection, without the edges */
+    readonly nodes: ReadonlyArray<Comment>
+    /** Information about pagination in a connection. */
+    readonly pageInfo: MediaItemToCommentConnectionPageInfo
+  }
 
 /** An edge in a connection */
-export type MediaItemToCommentConnectionEdge = {
-  readonly __typename?: "MediaItemToCommentConnectionEdge"
-  /** A cursor for use in pagination */
-  readonly cursor: Maybe<Scalars["String"]>
-  /** The item at the end of the edge */
-  readonly node: Maybe<Comment>
-}
+export type MediaItemToCommentConnectionEdge = CommentConnectionEdge &
+  Edge & {
+    readonly __typename?: "MediaItemToCommentConnectionEdge"
+    /** A cursor for use in pagination */
+    readonly cursor: Maybe<Scalars["String"]>
+    /** The item at the end of the edge */
+    readonly node: Comment
+  }
+
+/** Page Info on the &quot;MediaItemToCommentConnection&quot; */
+export type MediaItemToCommentConnectionPageInfo = CommentConnectionPageInfo &
+  PageInfo &
+  WpPageInfo & {
+    readonly __typename?: "MediaItemToCommentConnectionPageInfo"
+    /** When paginating forwards, the cursor to continue. */
+    readonly endCursor: Maybe<Scalars["String"]>
+    /** When paginating forwards, are there more items? */
+    readonly hasNextPage: Scalars["Boolean"]
+    /** When paginating backwards, are there more items? */
+    readonly hasPreviousPage: Scalars["Boolean"]
+    /** When paginating backwards, the cursor to continue. */
+    readonly startCursor: Maybe<Scalars["String"]>
+  }
 
 /** Arguments for filtering the MediaItemToCommentConnection connection */
 export type MediaItemToCommentConnectionWhereArgs = {
@@ -2285,7 +3119,7 @@ export type MediaItemToCommentConnectionWhereArgs = {
   readonly contentIdIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
   /** Array of content object IDs to exclude affiliated comments for. */
   readonly contentIdNotIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** Content object name to retrieve affiliated comments for. */
+  /** Content object name (i.e. slug ) to retrieve affiliated comments for. */
   readonly contentName: InputMaybe<Scalars["String"]>
   /** Content Object parent ID to retrieve affiliated comments for. */
   readonly contentParent: InputMaybe<Scalars["Int"]>
@@ -2320,19 +3154,19 @@ export type MediaItemToCommentConnectionWhereArgs = {
 /** Details of an available size for a media item */
 export type MediaSize = {
   readonly __typename?: "MediaSize"
-  /** The file of the for the referenced size */
+  /** The filename of the referenced size */
   readonly file: Maybe<Scalars["String"]>
   /** The filesize of the resource */
   readonly fileSize: Maybe<Scalars["Int"]>
-  /** The height of the for the referenced size */
+  /** The height of the referenced size */
   readonly height: Maybe<Scalars["String"]>
-  /** The mime type of the resource */
+  /** The mime type of the referenced size */
   readonly mimeType: Maybe<Scalars["String"]>
   /** The referenced size name */
   readonly name: Maybe<Scalars["String"]>
-  /** The url of the for the referenced size */
+  /** The url of the referenced size */
   readonly sourceUrl: Maybe<Scalars["String"]>
-  /** The width of the for the referenced size */
+  /** The width of the referenced size */
   readonly width: Maybe<Scalars["String"]>
 }
 
@@ -2348,6 +3182,7 @@ export type Menu = DatabaseIdentifier &
     readonly id: Scalars["ID"]
     /** Whether the object is restricted from the current viewer */
     readonly isRestricted: Maybe<Scalars["Boolean"]>
+    /** The locations a menu is assigned to */
     readonly locations: Maybe<ReadonlyArray<Maybe<MenuLocationEnum>>>
     /**
      * WP ID of the nav menu.
@@ -2369,6 +3204,36 @@ export type MenuMenuItemsArgs = {
   first: InputMaybe<Scalars["Int"]>
   last: InputMaybe<Scalars["Int"]>
   where: InputMaybe<MenuToMenuItemConnectionWhereArgs>
+}
+
+/** Connection to Menu Nodes */
+export type MenuConnection = {
+  /** A list of edges (relational context) between RootQuery and connected Menu Nodes */
+  readonly edges: ReadonlyArray<MenuConnectionEdge>
+  /** A list of connected Menu Nodes */
+  readonly nodes: ReadonlyArray<Menu>
+  /** Information about pagination in a connection. */
+  readonly pageInfo: MenuConnectionPageInfo
+}
+
+/** Edge between a Node and a connected Menu */
+export type MenuConnectionEdge = {
+  /** Opaque reference to the nodes position in the connection. Value can be used with pagination args. */
+  readonly cursor: Maybe<Scalars["String"]>
+  /** The connected Menu Node */
+  readonly node: Menu
+}
+
+/** Page Info on the connected MenuConnectionEdge */
+export type MenuConnectionPageInfo = {
+  /** When paginating forwards, the cursor to continue. */
+  readonly endCursor: Maybe<Scalars["String"]>
+  /** When paginating forwards, are there more items? */
+  readonly hasNextPage: Scalars["Boolean"]
+  /** When paginating backwards, are there more items? */
+  readonly hasPreviousPage: Scalars["Boolean"]
+  /** When paginating backwards, the cursor to continue. */
+  readonly startCursor: Maybe<Scalars["String"]>
 }
 
 /** Navigation menu items are the individual items assigned to a menu. These are rendered as the links in a navigation menu. */
@@ -2398,6 +3263,7 @@ export type MenuItem = DatabaseIdentifier &
     readonly label: Maybe<Scalars["String"]>
     /** Link relationship (XFN) of the menu item. */
     readonly linkRelationship: Maybe<Scalars["String"]>
+    /** The locations the menu item&#039;s Menu is assigned to */
     readonly locations: Maybe<ReadonlyArray<Maybe<MenuLocationEnum>>>
     /** The Menu a MenuItem is part of */
     readonly menu: Maybe<MenuItemToMenuConnectionEdge>
@@ -2413,11 +3279,13 @@ export type MenuItem = DatabaseIdentifier &
     /** The globally unique identifier of the parent nav menu item object. */
     readonly parentId: Maybe<Scalars["ID"]>
     /** Path for the resource. Relative path for internal resources. Absolute path for external resources. */
-    readonly path: Scalars["String"]
+    readonly path: Maybe<Scalars["String"]>
     /** Target attribute for the menu item link. */
     readonly target: Maybe<Scalars["String"]>
     /** Title attribute for the menu item link */
     readonly title: Maybe<Scalars["String"]>
+    /** The uri of the resource the menu item links to */
+    readonly uri: Maybe<Scalars["String"]>
     /** URL or destination of the menu item. */
     readonly url: Maybe<Scalars["String"]>
   }
@@ -2431,14 +3299,56 @@ export type MenuItemChildItemsArgs = {
   where: InputMaybe<MenuItemToMenuItemConnectionWhereArgs>
 }
 
+/** Connection to MenuItem Nodes */
+export type MenuItemConnection = {
+  /** A list of edges (relational context) between RootQuery and connected MenuItem Nodes */
+  readonly edges: ReadonlyArray<MenuItemConnectionEdge>
+  /** A list of connected MenuItem Nodes */
+  readonly nodes: ReadonlyArray<MenuItem>
+  /** Information about pagination in a connection. */
+  readonly pageInfo: MenuItemConnectionPageInfo
+}
+
+/** Edge between a Node and a connected MenuItem */
+export type MenuItemConnectionEdge = {
+  /** Opaque reference to the nodes position in the connection. Value can be used with pagination args. */
+  readonly cursor: Maybe<Scalars["String"]>
+  /** The connected MenuItem Node */
+  readonly node: MenuItem
+}
+
+/** Page Info on the connected MenuItemConnectionEdge */
+export type MenuItemConnectionPageInfo = {
+  /** When paginating forwards, the cursor to continue. */
+  readonly endCursor: Maybe<Scalars["String"]>
+  /** When paginating forwards, are there more items? */
+  readonly hasNextPage: Scalars["Boolean"]
+  /** When paginating backwards, are there more items? */
+  readonly hasPreviousPage: Scalars["Boolean"]
+  /** When paginating backwards, the cursor to continue. */
+  readonly startCursor: Maybe<Scalars["String"]>
+}
+
 /** Nodes that can be linked to as Menu Items */
 export type MenuItemLinkable = {
-  /** The unique resource identifier path */
+  /** The unique identifier stored in the database */
   readonly databaseId: Scalars["Int"]
   /** The unique resource identifier path */
   readonly id: Scalars["ID"]
+  /** Whether the node is a Content Node */
+  readonly isContentNode: Scalars["Boolean"]
+  /** Whether the node is a Term */
+  readonly isTermNode: Scalars["Boolean"]
   /** The unique resource identifier path */
-  readonly uri: Scalars["String"]
+  readonly uri: Maybe<Scalars["String"]>
+}
+
+/** Edge between a Node and a connected MenuItemLinkable */
+export type MenuItemLinkableConnectionEdge = {
+  /** Opaque reference to the nodes position in the connection. Value can be used with pagination args. */
+  readonly cursor: Maybe<Scalars["String"]>
+  /** The connected MenuItemLinkable Node */
+  readonly node: MenuItemLinkable
 }
 
 /** The Type of Identifier used to fetch a single node. Default is "ID". To be used along with the "id" field. */
@@ -2453,35 +3363,56 @@ export enum MenuItemNodeIdTypeEnum {
 export type MenuItemObjectUnion = Category | Page | Post | Tag
 
 /** Connection between the MenuItem type and the Menu type */
-export type MenuItemToMenuConnectionEdge = {
-  readonly __typename?: "MenuItemToMenuConnectionEdge"
-  /** The nodes of the connection, without the edges */
-  readonly node: Maybe<Menu>
-}
+export type MenuItemToMenuConnectionEdge = Edge &
+  MenuConnectionEdge &
+  OneToOneConnection & {
+    readonly __typename?: "MenuItemToMenuConnectionEdge"
+    /** Opaque reference to the nodes position in the connection. Value can be used with pagination args. */
+    readonly cursor: Maybe<Scalars["String"]>
+    /** The node of the connection, without the edges */
+    readonly node: Menu
+  }
 
 /** Connection between the MenuItem type and the MenuItem type */
-export type MenuItemToMenuItemConnection = {
-  readonly __typename?: "MenuItemToMenuItemConnection"
-  /** Edges for the MenuItemToMenuItemConnection connection */
-  readonly edges: Maybe<ReadonlyArray<Maybe<MenuItemToMenuItemConnectionEdge>>>
-  /** The nodes of the connection, without the edges */
-  readonly nodes: Maybe<ReadonlyArray<Maybe<MenuItem>>>
-  /** Information about pagination in a connection. */
-  readonly pageInfo: Maybe<WpPageInfo>
-}
+export type MenuItemToMenuItemConnection = Connection &
+  MenuItemConnection & {
+    readonly __typename?: "MenuItemToMenuItemConnection"
+    /** Edges for the MenuItemToMenuItemConnection connection */
+    readonly edges: ReadonlyArray<MenuItemToMenuItemConnectionEdge>
+    /** The nodes of the connection, without the edges */
+    readonly nodes: ReadonlyArray<MenuItem>
+    /** Information about pagination in a connection. */
+    readonly pageInfo: MenuItemToMenuItemConnectionPageInfo
+  }
 
 /** An edge in a connection */
-export type MenuItemToMenuItemConnectionEdge = {
-  readonly __typename?: "MenuItemToMenuItemConnectionEdge"
-  /** A cursor for use in pagination */
-  readonly cursor: Maybe<Scalars["String"]>
-  /** The item at the end of the edge */
-  readonly node: Maybe<MenuItem>
-}
+export type MenuItemToMenuItemConnectionEdge = Edge &
+  MenuItemConnectionEdge & {
+    readonly __typename?: "MenuItemToMenuItemConnectionEdge"
+    /** A cursor for use in pagination */
+    readonly cursor: Maybe<Scalars["String"]>
+    /** The item at the end of the edge */
+    readonly node: MenuItem
+  }
+
+/** Page Info on the &quot;MenuItemToMenuItemConnection&quot; */
+export type MenuItemToMenuItemConnectionPageInfo = MenuItemConnectionPageInfo &
+  PageInfo &
+  WpPageInfo & {
+    readonly __typename?: "MenuItemToMenuItemConnectionPageInfo"
+    /** When paginating forwards, the cursor to continue. */
+    readonly endCursor: Maybe<Scalars["String"]>
+    /** When paginating forwards, are there more items? */
+    readonly hasNextPage: Scalars["Boolean"]
+    /** When paginating backwards, are there more items? */
+    readonly hasPreviousPage: Scalars["Boolean"]
+    /** When paginating backwards, the cursor to continue. */
+    readonly startCursor: Maybe<Scalars["String"]>
+  }
 
 /** Arguments for filtering the MenuItemToMenuItemConnection connection */
 export type MenuItemToMenuItemConnectionWhereArgs = {
-  /** The ID of the object */
+  /** The database ID of the object */
   readonly id: InputMaybe<Scalars["Int"]>
   /** The menu location for the menu being queried */
   readonly location: InputMaybe<MenuLocationEnum>
@@ -2492,24 +3423,23 @@ export type MenuItemToMenuItemConnectionWhereArgs = {
 }
 
 /** Connection between the MenuItem type and the MenuItemLinkable type */
-export type MenuItemToMenuItemLinkableConnectionEdge = {
-  readonly __typename?: "MenuItemToMenuItemLinkableConnectionEdge"
-  /** The nodes of the connection, without the edges */
-  readonly node: Maybe<MenuItemLinkable>
-}
-
-/** Options for filtering the connection */
-export type MenuItemsWhereArgs = {
-  /** The ID of the object */
-  readonly id: InputMaybe<Scalars["Int"]>
-  /** The menu location for the menu being queried */
-  readonly location: InputMaybe<MenuLocationEnum>
-}
+export type MenuItemToMenuItemLinkableConnectionEdge = Edge &
+  MenuItemLinkableConnectionEdge &
+  OneToOneConnection & {
+    readonly __typename?: "MenuItemToMenuItemLinkableConnectionEdge"
+    /** Opaque reference to the nodes position in the connection. Value can be used with pagination args. */
+    readonly cursor: Maybe<Scalars["String"]>
+    /** The node of the connection, without the edges */
+    readonly node: MenuItemLinkable
+  }
 
 /** Registered menu locations */
 export enum MenuLocationEnum {
+  /** Put the menu in the gatsby-footer-menu location */
   GatsbyFooterMenu = "GATSBY_FOOTER_MENU",
+  /** Put the menu in the gatsby-header-menu location */
   GatsbyHeaderMenu = "GATSBY_HEADER_MENU",
+  /** Put the menu in the primary location */
   Primary = "PRIMARY",
 }
 
@@ -2519,33 +3449,54 @@ export enum MenuNodeIdTypeEnum {
   DatabaseId = "DATABASE_ID",
   /** Identify a menu node by the (hashed) Global ID. */
   Id = "ID",
-  /** Identify a menu node by it's name */
+  /** Identify a menu node by the slug of menu location to which it is assigned */
+  Location = "LOCATION",
+  /** Identify a menu node by its name */
   Name = "NAME",
+  /** Identify a menu node by its slug */
+  Slug = "SLUG",
 }
 
 /** Connection between the Menu type and the MenuItem type */
-export type MenuToMenuItemConnection = {
-  readonly __typename?: "MenuToMenuItemConnection"
-  /** Edges for the MenuToMenuItemConnection connection */
-  readonly edges: Maybe<ReadonlyArray<Maybe<MenuToMenuItemConnectionEdge>>>
-  /** The nodes of the connection, without the edges */
-  readonly nodes: Maybe<ReadonlyArray<Maybe<MenuItem>>>
-  /** Information about pagination in a connection. */
-  readonly pageInfo: Maybe<WpPageInfo>
-}
+export type MenuToMenuItemConnection = Connection &
+  MenuItemConnection & {
+    readonly __typename?: "MenuToMenuItemConnection"
+    /** Edges for the MenuToMenuItemConnection connection */
+    readonly edges: ReadonlyArray<MenuToMenuItemConnectionEdge>
+    /** The nodes of the connection, without the edges */
+    readonly nodes: ReadonlyArray<MenuItem>
+    /** Information about pagination in a connection. */
+    readonly pageInfo: MenuToMenuItemConnectionPageInfo
+  }
 
 /** An edge in a connection */
-export type MenuToMenuItemConnectionEdge = {
-  readonly __typename?: "MenuToMenuItemConnectionEdge"
-  /** A cursor for use in pagination */
-  readonly cursor: Maybe<Scalars["String"]>
-  /** The item at the end of the edge */
-  readonly node: Maybe<MenuItem>
-}
+export type MenuToMenuItemConnectionEdge = Edge &
+  MenuItemConnectionEdge & {
+    readonly __typename?: "MenuToMenuItemConnectionEdge"
+    /** A cursor for use in pagination */
+    readonly cursor: Maybe<Scalars["String"]>
+    /** The item at the end of the edge */
+    readonly node: MenuItem
+  }
+
+/** Page Info on the &quot;MenuToMenuItemConnection&quot; */
+export type MenuToMenuItemConnectionPageInfo = MenuItemConnectionPageInfo &
+  PageInfo &
+  WpPageInfo & {
+    readonly __typename?: "MenuToMenuItemConnectionPageInfo"
+    /** When paginating forwards, the cursor to continue. */
+    readonly endCursor: Maybe<Scalars["String"]>
+    /** When paginating forwards, are there more items? */
+    readonly hasNextPage: Scalars["Boolean"]
+    /** When paginating backwards, are there more items? */
+    readonly hasPreviousPage: Scalars["Boolean"]
+    /** When paginating backwards, the cursor to continue. */
+    readonly startCursor: Maybe<Scalars["String"]>
+  }
 
 /** Arguments for filtering the MenuToMenuItemConnection connection */
 export type MenuToMenuItemConnectionWhereArgs = {
-  /** The ID of the object */
+  /** The database ID of the object */
   readonly id: InputMaybe<Scalars["Int"]>
   /** The menu location for the menu being queried */
   readonly location: InputMaybe<MenuLocationEnum>
@@ -2557,92 +3508,183 @@ export type MenuToMenuItemConnectionWhereArgs = {
 
 /** The MimeType of the object */
 export enum MimeTypeEnum {
+  /** application/java mime type. */
   ApplicationJava = "APPLICATION_JAVA",
+  /** application/msword mime type. */
   ApplicationMsword = "APPLICATION_MSWORD",
+  /** application/octet-stream mime type. */
   ApplicationOctetStream = "APPLICATION_OCTET_STREAM",
+  /** application/onenote mime type. */
   ApplicationOnenote = "APPLICATION_ONENOTE",
+  /** application/oxps mime type. */
   ApplicationOxps = "APPLICATION_OXPS",
+  /** application/pdf mime type. */
   ApplicationPdf = "APPLICATION_PDF",
+  /** application/rar mime type. */
   ApplicationRar = "APPLICATION_RAR",
+  /** application/rtf mime type. */
   ApplicationRtf = "APPLICATION_RTF",
+  /** application/ttaf+xml mime type. */
   ApplicationTtafXml = "APPLICATION_TTAF_XML",
+  /** application/vnd.apple.keynote mime type. */
   ApplicationVndAppleKeynote = "APPLICATION_VND_APPLE_KEYNOTE",
+  /** application/vnd.apple.numbers mime type. */
   ApplicationVndAppleNumbers = "APPLICATION_VND_APPLE_NUMBERS",
+  /** application/vnd.apple.pages mime type. */
   ApplicationVndApplePages = "APPLICATION_VND_APPLE_PAGES",
+  /** application/vnd.ms-access mime type. */
   ApplicationVndMsAccess = "APPLICATION_VND_MS_ACCESS",
+  /** application/vnd.ms-excel mime type. */
   ApplicationVndMsExcel = "APPLICATION_VND_MS_EXCEL",
+  /** application/vnd.ms-excel.addin.macroEnabled.12 mime type. */
   ApplicationVndMsExcelAddinMacroenabled_12 = "APPLICATION_VND_MS_EXCEL_ADDIN_MACROENABLED_12",
+  /** application/vnd.ms-excel.sheet.binary.macroEnabled.12 mime type. */
   ApplicationVndMsExcelSheetBinaryMacroenabled_12 = "APPLICATION_VND_MS_EXCEL_SHEET_BINARY_MACROENABLED_12",
+  /** application/vnd.ms-excel.sheet.macroEnabled.12 mime type. */
   ApplicationVndMsExcelSheetMacroenabled_12 = "APPLICATION_VND_MS_EXCEL_SHEET_MACROENABLED_12",
+  /** application/vnd.ms-excel.template.macroEnabled.12 mime type. */
   ApplicationVndMsExcelTemplateMacroenabled_12 = "APPLICATION_VND_MS_EXCEL_TEMPLATE_MACROENABLED_12",
+  /** application/vnd.ms-powerpoint mime type. */
   ApplicationVndMsPowerpoint = "APPLICATION_VND_MS_POWERPOINT",
+  /** application/vnd.ms-powerpoint.addin.macroEnabled.12 mime type. */
   ApplicationVndMsPowerpointAddinMacroenabled_12 = "APPLICATION_VND_MS_POWERPOINT_ADDIN_MACROENABLED_12",
+  /** application/vnd.ms-powerpoint.presentation.macroEnabled.12 mime type. */
   ApplicationVndMsPowerpointPresentationMacroenabled_12 = "APPLICATION_VND_MS_POWERPOINT_PRESENTATION_MACROENABLED_12",
+  /** application/vnd.ms-powerpoint.slideshow.macroEnabled.12 mime type. */
   ApplicationVndMsPowerpointSlideshowMacroenabled_12 = "APPLICATION_VND_MS_POWERPOINT_SLIDESHOW_MACROENABLED_12",
+  /** application/vnd.ms-powerpoint.slide.macroEnabled.12 mime type. */
   ApplicationVndMsPowerpointSlideMacroenabled_12 = "APPLICATION_VND_MS_POWERPOINT_SLIDE_MACROENABLED_12",
+  /** application/vnd.ms-powerpoint.template.macroEnabled.12 mime type. */
   ApplicationVndMsPowerpointTemplateMacroenabled_12 = "APPLICATION_VND_MS_POWERPOINT_TEMPLATE_MACROENABLED_12",
+  /** application/vnd.ms-project mime type. */
   ApplicationVndMsProject = "APPLICATION_VND_MS_PROJECT",
+  /** application/vnd.ms-word.document.macroEnabled.12 mime type. */
   ApplicationVndMsWordDocumentMacroenabled_12 = "APPLICATION_VND_MS_WORD_DOCUMENT_MACROENABLED_12",
+  /** application/vnd.ms-word.template.macroEnabled.12 mime type. */
   ApplicationVndMsWordTemplateMacroenabled_12 = "APPLICATION_VND_MS_WORD_TEMPLATE_MACROENABLED_12",
+  /** application/vnd.ms-write mime type. */
   ApplicationVndMsWrite = "APPLICATION_VND_MS_WRITE",
+  /** application/vnd.ms-xpsdocument mime type. */
   ApplicationVndMsXpsdocument = "APPLICATION_VND_MS_XPSDOCUMENT",
+  /** application/vnd.oasis.opendocument.chart mime type. */
   ApplicationVndOasisOpendocumentChart = "APPLICATION_VND_OASIS_OPENDOCUMENT_CHART",
+  /** application/vnd.oasis.opendocument.database mime type. */
   ApplicationVndOasisOpendocumentDatabase = "APPLICATION_VND_OASIS_OPENDOCUMENT_DATABASE",
+  /** application/vnd.oasis.opendocument.formula mime type. */
   ApplicationVndOasisOpendocumentFormula = "APPLICATION_VND_OASIS_OPENDOCUMENT_FORMULA",
+  /** application/vnd.oasis.opendocument.graphics mime type. */
   ApplicationVndOasisOpendocumentGraphics = "APPLICATION_VND_OASIS_OPENDOCUMENT_GRAPHICS",
+  /** application/vnd.oasis.opendocument.presentation mime type. */
   ApplicationVndOasisOpendocumentPresentation = "APPLICATION_VND_OASIS_OPENDOCUMENT_PRESENTATION",
+  /** application/vnd.oasis.opendocument.spreadsheet mime type. */
   ApplicationVndOasisOpendocumentSpreadsheet = "APPLICATION_VND_OASIS_OPENDOCUMENT_SPREADSHEET",
+  /** application/vnd.oasis.opendocument.text mime type. */
   ApplicationVndOasisOpendocumentText = "APPLICATION_VND_OASIS_OPENDOCUMENT_TEXT",
+  /** application/vnd.openxmlformats-officedocument.presentationml.presentation mime type. */
   ApplicationVndOpenxmlformatsOfficedocumentPresentationmlPresentation = "APPLICATION_VND_OPENXMLFORMATS_OFFICEDOCUMENT_PRESENTATIONML_PRESENTATION",
+  /** application/vnd.openxmlformats-officedocument.presentationml.slide mime type. */
   ApplicationVndOpenxmlformatsOfficedocumentPresentationmlSlide = "APPLICATION_VND_OPENXMLFORMATS_OFFICEDOCUMENT_PRESENTATIONML_SLIDE",
+  /** application/vnd.openxmlformats-officedocument.presentationml.slideshow mime type. */
   ApplicationVndOpenxmlformatsOfficedocumentPresentationmlSlideshow = "APPLICATION_VND_OPENXMLFORMATS_OFFICEDOCUMENT_PRESENTATIONML_SLIDESHOW",
+  /** application/vnd.openxmlformats-officedocument.presentationml.template mime type. */
   ApplicationVndOpenxmlformatsOfficedocumentPresentationmlTemplate = "APPLICATION_VND_OPENXMLFORMATS_OFFICEDOCUMENT_PRESENTATIONML_TEMPLATE",
+  /** application/vnd.openxmlformats-officedocument.spreadsheetml.sheet mime type. */
   ApplicationVndOpenxmlformatsOfficedocumentSpreadsheetmlSheet = "APPLICATION_VND_OPENXMLFORMATS_OFFICEDOCUMENT_SPREADSHEETML_SHEET",
+  /** application/vnd.openxmlformats-officedocument.spreadsheetml.template mime type. */
   ApplicationVndOpenxmlformatsOfficedocumentSpreadsheetmlTemplate = "APPLICATION_VND_OPENXMLFORMATS_OFFICEDOCUMENT_SPREADSHEETML_TEMPLATE",
+  /** application/vnd.openxmlformats-officedocument.wordprocessingml.document mime type. */
   ApplicationVndOpenxmlformatsOfficedocumentWordprocessingmlDocument = "APPLICATION_VND_OPENXMLFORMATS_OFFICEDOCUMENT_WORDPROCESSINGML_DOCUMENT",
+  /** application/vnd.openxmlformats-officedocument.wordprocessingml.template mime type. */
   ApplicationVndOpenxmlformatsOfficedocumentWordprocessingmlTemplate = "APPLICATION_VND_OPENXMLFORMATS_OFFICEDOCUMENT_WORDPROCESSINGML_TEMPLATE",
+  /** application/wordperfect mime type. */
   ApplicationWordperfect = "APPLICATION_WORDPERFECT",
+  /** application/x-7z-compressed mime type. */
   ApplicationX_7ZCompressed = "APPLICATION_X_7Z_COMPRESSED",
+  /** application/x-gzip mime type. */
   ApplicationXGzip = "APPLICATION_X_GZIP",
+  /** application/x-tar mime type. */
   ApplicationXTar = "APPLICATION_X_TAR",
+  /** application/zip mime type. */
   ApplicationZip = "APPLICATION_ZIP",
+  /** audio/aac mime type. */
   AudioAac = "AUDIO_AAC",
+  /** audio/flac mime type. */
   AudioFlac = "AUDIO_FLAC",
+  /** audio/midi mime type. */
   AudioMidi = "AUDIO_MIDI",
+  /** audio/mpeg mime type. */
   AudioMpeg = "AUDIO_MPEG",
+  /** audio/ogg mime type. */
   AudioOgg = "AUDIO_OGG",
+  /** audio/wav mime type. */
   AudioWav = "AUDIO_WAV",
+  /** audio/x-matroska mime type. */
   AudioXMatroska = "AUDIO_X_MATROSKA",
+  /** audio/x-ms-wax mime type. */
   AudioXMsWax = "AUDIO_X_MS_WAX",
+  /** audio/x-ms-wma mime type. */
   AudioXMsWma = "AUDIO_X_MS_WMA",
+  /** audio/x-realaudio mime type. */
   AudioXRealaudio = "AUDIO_X_REALAUDIO",
+  /** image/bmp mime type. */
   ImageBmp = "IMAGE_BMP",
+  /** image/gif mime type. */
   ImageGif = "IMAGE_GIF",
+  /** image/heic mime type. */
+  ImageHeic = "IMAGE_HEIC",
+  /** image/jpeg mime type. */
   ImageJpeg = "IMAGE_JPEG",
+  /** image/png mime type. */
   ImagePng = "IMAGE_PNG",
+  /** image/tiff mime type. */
   ImageTiff = "IMAGE_TIFF",
+  /** image/webp mime type. */
+  ImageWebp = "IMAGE_WEBP",
+  /** image/x-icon mime type. */
   ImageXIcon = "IMAGE_X_ICON",
+  /** text/calendar mime type. */
   TextCalendar = "TEXT_CALENDAR",
+  /** text/css mime type. */
   TextCss = "TEXT_CSS",
+  /** text/csv mime type. */
   TextCsv = "TEXT_CSV",
+  /** text/plain mime type. */
   TextPlain = "TEXT_PLAIN",
+  /** text/richtext mime type. */
   TextRichtext = "TEXT_RICHTEXT",
+  /** text/tab-separated-values mime type. */
   TextTabSeparatedValues = "TEXT_TAB_SEPARATED_VALUES",
+  /** text/vtt mime type. */
   TextVtt = "TEXT_VTT",
+  /** video/3gpp mime type. */
   Video_3Gpp = "VIDEO_3GPP",
+  /** video/3gpp2 mime type. */
   Video_3Gpp2 = "VIDEO_3GPP2",
+  /** video/avi mime type. */
   VideoAvi = "VIDEO_AVI",
+  /** video/divx mime type. */
   VideoDivx = "VIDEO_DIVX",
+  /** video/mp4 mime type. */
   VideoMp4 = "VIDEO_MP4",
+  /** video/mpeg mime type. */
   VideoMpeg = "VIDEO_MPEG",
+  /** video/ogg mime type. */
   VideoOgg = "VIDEO_OGG",
+  /** video/quicktime mime type. */
   VideoQuicktime = "VIDEO_QUICKTIME",
+  /** video/webm mime type. */
   VideoWebm = "VIDEO_WEBM",
+  /** video/x-flv mime type. */
   VideoXFlv = "VIDEO_X_FLV",
+  /** video/x-matroska mime type. */
   VideoXMatroska = "VIDEO_X_MATROSKA",
+  /** video/x-ms-asf mime type. */
   VideoXMsAsf = "VIDEO_X_MS_ASF",
+  /** video/x-ms-wm mime type. */
   VideoXMsWm = "VIDEO_X_MS_WM",
+  /** video/x-ms-wmv mime type. */
   VideoXMsWmv = "VIDEO_X_MS_WMV",
+  /** video/x-ms-wmx mime type. */
   VideoXMsWmx = "VIDEO_X_MS_WMX",
 }
 
@@ -2660,14 +3702,20 @@ export type NodeWithAuthor = {
   readonly authorDatabaseId: Maybe<Scalars["Int"]>
   /** The globally unique identifier of the author of the node */
   readonly authorId: Maybe<Scalars["ID"]>
+  /** The globally unique ID for the object */
+  readonly id: Scalars["ID"]
 }
 
 /** Connection between the NodeWithAuthor type and the User type */
-export type NodeWithAuthorToUserConnectionEdge = {
-  readonly __typename?: "NodeWithAuthorToUserConnectionEdge"
-  /** The nodes of the connection, without the edges */
-  readonly node: Maybe<User>
-}
+export type NodeWithAuthorToUserConnectionEdge = Edge &
+  OneToOneConnection &
+  UserConnectionEdge & {
+    readonly __typename?: "NodeWithAuthorToUserConnectionEdge"
+    /** Opaque reference to the nodes position in the connection. Value can be used with pagination args. */
+    readonly cursor: Maybe<Scalars["String"]>
+    /** The node of the connection, without the edges */
+    readonly node: User
+  }
 
 /** A node that can have comments associated with it */
 export type NodeWithComments = {
@@ -2675,12 +3723,16 @@ export type NodeWithComments = {
   readonly commentCount: Maybe<Scalars["Int"]>
   /** Whether the comments are open or closed for this particular post. */
   readonly commentStatus: Maybe<Scalars["String"]>
+  /** The globally unique ID for the object */
+  readonly id: Scalars["ID"]
 }
 
 /** A node that supports the content editor */
 export type NodeWithContentEditor = {
   /** The content of the post. */
   readonly content: Maybe<Scalars["String"]>
+  /** The globally unique ID for the object */
+  readonly id: Scalars["ID"]
 }
 
 /** A node that supports the content editor */
@@ -2692,6 +3744,8 @@ export type NodeWithContentEditorContentArgs = {
 export type NodeWithExcerpt = {
   /** The excerpt of the post. */
   readonly excerpt: Maybe<Scalars["String"]>
+  /** The globally unique ID for the object */
+  readonly id: Scalars["ID"]
 }
 
 /** A node that can have an excerpt */
@@ -2707,23 +3761,33 @@ export type NodeWithFeaturedImage = {
   readonly featuredImageDatabaseId: Maybe<Scalars["Int"]>
   /** Globally unique ID of the featured image assigned to the node */
   readonly featuredImageId: Maybe<Scalars["ID"]>
+  /** The globally unique ID for the object */
+  readonly id: Scalars["ID"]
 }
 
 /** Connection between the NodeWithFeaturedImage type and the MediaItem type */
-export type NodeWithFeaturedImageToMediaItemConnectionEdge = {
-  readonly __typename?: "NodeWithFeaturedImageToMediaItemConnectionEdge"
-  /** The nodes of the connection, without the edges */
-  readonly node: Maybe<MediaItem>
-}
+export type NodeWithFeaturedImageToMediaItemConnectionEdge = Edge &
+  MediaItemConnectionEdge &
+  OneToOneConnection & {
+    readonly __typename?: "NodeWithFeaturedImageToMediaItemConnectionEdge"
+    /** Opaque reference to the nodes position in the connection. Value can be used with pagination args. */
+    readonly cursor: Maybe<Scalars["String"]>
+    /** The node of the connection, without the edges */
+    readonly node: MediaItem
+  }
 
 /** A node that can have page attributes */
 export type NodeWithPageAttributes = {
+  /** The globally unique ID for the object */
+  readonly id: Scalars["ID"]
   /** A field used for ordering posts. This is typically used with nav menu items or for special ordering of hierarchical content types. */
   readonly menuOrder: Maybe<Scalars["Int"]>
 }
 
 /** A node that can have revisions */
 export type NodeWithRevisions = {
+  /** The globally unique ID for the object */
+  readonly id: Scalars["ID"]
   /** True if the node is a revision of another node */
   readonly isRevision: Maybe<Scalars["Boolean"]>
   /** If the current node is a revision, this field exposes the node this is a revision of. Returns null if the node is not a revision of another node. */
@@ -2731,20 +3795,29 @@ export type NodeWithRevisions = {
 }
 
 /** Connection between the NodeWithRevisions type and the ContentNode type */
-export type NodeWithRevisionsToContentNodeConnectionEdge = {
-  readonly __typename?: "NodeWithRevisionsToContentNodeConnectionEdge"
-  /** The nodes of the connection, without the edges */
-  readonly node: Maybe<ContentNode>
-}
+export type NodeWithRevisionsToContentNodeConnectionEdge =
+  ContentNodeConnectionEdge &
+    Edge &
+    OneToOneConnection & {
+      readonly __typename?: "NodeWithRevisionsToContentNodeConnectionEdge"
+      /** Opaque reference to the nodes position in the connection. Value can be used with pagination args. */
+      readonly cursor: Maybe<Scalars["String"]>
+      /** The node of the connection, without the edges */
+      readonly node: ContentNode
+    }
 
 /** A node that can have a template associated with it */
 export type NodeWithTemplate = {
+  /** The globally unique ID for the object */
+  readonly id: Scalars["ID"]
   /** The template assigned to the node */
   readonly template: Maybe<ContentTemplate>
 }
 
 /** A node that NodeWith a title */
 export type NodeWithTitle = {
+  /** The globally unique ID for the object */
+  readonly id: Scalars["ID"]
   /** The title of the post. This is currently just the raw title. An amendment to support rendered title needs to be made. */
   readonly title: Maybe<Scalars["String"]>
 }
@@ -2756,6 +3829,8 @@ export type NodeWithTitleTitleArgs = {
 
 /** A node that can have trackbacks and pingbacks */
 export type NodeWithTrackbacks = {
+  /** The globally unique ID for the object */
+  readonly id: Scalars["ID"]
   /** Whether the pings are open or closed for this particular post. */
   readonly pingStatus: Maybe<Scalars["String"]>
   /** URLs that have been pinged. */
@@ -2764,9 +3839,19 @@ export type NodeWithTrackbacks = {
   readonly toPing: Maybe<ReadonlyArray<Maybe<Scalars["String"]>>>
 }
 
+/** A singular connection from one Node to another, with support for relational data on the &quot;edge&quot; of the connection. */
+export type OneToOneConnection = {
+  /** Opaque reference to the nodes position in the connection. Value can be used with pagination args. */
+  readonly cursor: Maybe<Scalars["String"]>
+  /** The connected node */
+  readonly node: Node
+}
+
 /** The cardinality of the connection order */
 export enum OrderEnum {
+  /** Sort the query result set in an ascending order */
   Asc = "ASC",
+  /** Sort the query result set in a descending order */
   Desc = "DESC",
 }
 
@@ -2774,6 +3859,7 @@ export enum OrderEnum {
 export type Page = ContentNode &
   DatabaseIdentifier &
   HierarchicalContentNode &
+  HierarchicalNode &
   MenuItemLinkable &
   Node &
   NodeWithAuthor &
@@ -2784,6 +3870,7 @@ export type Page = ContentNode &
   NodeWithRevisions &
   NodeWithTemplate &
   NodeWithTitle &
+  Previewable &
   UniformResourceIdentifiable & {
     readonly __typename?: "Page"
     /** Returns ancestors of the node. Default ordered as lowest (closest to the child) to highest (closest to the root). */
@@ -2800,13 +3887,15 @@ export type Page = ContentNode &
     readonly commentCount: Maybe<Scalars["Int"]>
     /** Whether the comments are open or closed for this particular post. */
     readonly commentStatus: Maybe<Scalars["String"]>
-    /** Connection between the page type and the Comment type */
+    /** Connection between the Page type and the Comment type */
     readonly comments: Maybe<PageToCommentConnection>
     /** The content of the post. */
     readonly content: Maybe<Scalars["String"]>
     /** Connection between the ContentNode type and the ContentType type */
     readonly contentType: Maybe<ContentNodeToContentTypeConnectionEdge>
-    /** The ID of the node in the database. */
+    /** The name of the Content Type the node belongs to */
+    readonly contentTypeName: Scalars["String"]
+    /** The unique identifier stored in the database */
     readonly databaseId: Scalars["Int"]
     /** Post publishing date. */
     readonly date: Maybe<Scalars["String"]>
@@ -2832,16 +3921,22 @@ export type Page = ContentNode &
     readonly guid: Maybe<Scalars["String"]>
     /** The globally unique identifier of the page object. */
     readonly id: Scalars["ID"]
+    /** Whether the node is a Content Node */
+    readonly isContentNode: Scalars["Boolean"]
     /** Whether this page is set to the static front page. */
     readonly isFrontPage: Scalars["Boolean"]
     /** Whether this page is set to the blog posts page. */
     readonly isPostsPage: Scalars["Boolean"]
     /** Whether the object is a node in the preview state */
     readonly isPreview: Maybe<Scalars["Boolean"]>
+    /** Whether this page is set to the privacy page. */
+    readonly isPrivacyPage: Scalars["Boolean"]
     /** Whether the object is restricted from the current viewer */
     readonly isRestricted: Maybe<Scalars["Boolean"]>
     /** True if the node is a revision of another node */
     readonly isRevision: Maybe<Scalars["Boolean"]>
+    /** Whether the node is a Term */
+    readonly isTermNode: Scalars["Boolean"]
     /** The user that most recently edited the node */
     readonly lastEditedBy: Maybe<ContentNodeToEditLastConnectionEdge>
     /** The permalink of the post */
@@ -2863,7 +3958,7 @@ export type Page = ContentNode &
     readonly parentDatabaseId: Maybe<Scalars["Int"]>
     /** The globally unique identifier of the parent node. */
     readonly parentId: Maybe<Scalars["ID"]>
-    /** Connection between the page type and the page type */
+    /** Connection between the Page type and the page type */
     readonly preview: Maybe<PageToPreviewConnectionEdge>
     /** The database id of the preview node */
     readonly previewRevisionDatabaseId: Maybe<Scalars["Int"]>
@@ -2871,7 +3966,7 @@ export type Page = ContentNode &
     readonly previewRevisionId: Maybe<Scalars["ID"]>
     /** If the current node is a revision, this field exposes the node this is a revision of. Returns null if the node is not a revision of another node. */
     readonly revisionOf: Maybe<NodeWithRevisionsToContentNodeConnectionEdge>
-    /** Connection between the page type and the page type */
+    /** Connection between the Page type and the page type */
     readonly revisions: Maybe<PageToRevisionConnection>
     /** The uri slug for the post. This is equivalent to the WP_Post-&gt;post_name field and the post_name column in the database for the &quot;post_objects&quot; table. */
     readonly slug: Maybe<Scalars["String"]>
@@ -2881,8 +3976,8 @@ export type Page = ContentNode &
     readonly template: Maybe<ContentTemplate>
     /** The title of the post. This is currently just the raw title. An amendment to support rendered title needs to be made. */
     readonly title: Maybe<Scalars["String"]>
-    /** URI path for the resource */
-    readonly uri: Scalars["String"]
+    /** The unique resource identifier path */
+    readonly uri: Maybe<Scalars["String"]>
   }
 
 /** The page type */
@@ -2947,6 +4042,36 @@ export type PageTitleArgs = {
   format: InputMaybe<PostObjectFieldFormatEnum>
 }
 
+/** Connection to page Nodes */
+export type PageConnection = {
+  /** A list of edges (relational context) between RootQuery and connected page Nodes */
+  readonly edges: ReadonlyArray<PageConnectionEdge>
+  /** A list of connected page Nodes */
+  readonly nodes: ReadonlyArray<Page>
+  /** Information about pagination in a connection. */
+  readonly pageInfo: PageConnectionPageInfo
+}
+
+/** Edge between a Node and a connected page */
+export type PageConnectionEdge = {
+  /** Opaque reference to the nodes position in the connection. Value can be used with pagination args. */
+  readonly cursor: Maybe<Scalars["String"]>
+  /** The connected page Node */
+  readonly node: Page
+}
+
+/** Page Info on the connected PageConnectionEdge */
+export type PageConnectionPageInfo = {
+  /** When paginating forwards, the cursor to continue. */
+  readonly endCursor: Maybe<Scalars["String"]>
+  /** When paginating forwards, are there more items? */
+  readonly hasNextPage: Scalars["Boolean"]
+  /** When paginating backwards, are there more items? */
+  readonly hasPreviousPage: Scalars["Boolean"]
+  /** When paginating backwards, the cursor to continue. */
+  readonly startCursor: Maybe<Scalars["String"]>
+}
+
 /** The Type of Identifier used to fetch a single resource. Default is ID. */
 export enum PageIdType {
   /** Identify a resource by the Database ID. */
@@ -2957,25 +4082,54 @@ export enum PageIdType {
   Uri = "URI",
 }
 
-/** Connection between the page type and the Comment type */
-export type PageToCommentConnection = {
-  readonly __typename?: "PageToCommentConnection"
-  /** Edges for the PageToCommentConnection connection */
-  readonly edges: Maybe<ReadonlyArray<Maybe<PageToCommentConnectionEdge>>>
-  /** The nodes of the connection, without the edges */
-  readonly nodes: Maybe<ReadonlyArray<Maybe<Comment>>>
-  /** Information about pagination in a connection. */
-  readonly pageInfo: Maybe<WpPageInfo>
+/** Information about pagination in a connection. */
+export type PageInfo = {
+  /** When paginating forwards, the cursor to continue. */
+  readonly endCursor: Maybe<Scalars["String"]>
+  /** When paginating forwards, are there more items? */
+  readonly hasNextPage: Scalars["Boolean"]
+  /** When paginating backwards, are there more items? */
+  readonly hasPreviousPage: Scalars["Boolean"]
+  /** When paginating backwards, the cursor to continue. */
+  readonly startCursor: Maybe<Scalars["String"]>
 }
 
+/** Connection between the Page type and the Comment type */
+export type PageToCommentConnection = CommentConnection &
+  Connection & {
+    readonly __typename?: "PageToCommentConnection"
+    /** Edges for the PageToCommentConnection connection */
+    readonly edges: ReadonlyArray<PageToCommentConnectionEdge>
+    /** The nodes of the connection, without the edges */
+    readonly nodes: ReadonlyArray<Comment>
+    /** Information about pagination in a connection. */
+    readonly pageInfo: PageToCommentConnectionPageInfo
+  }
+
 /** An edge in a connection */
-export type PageToCommentConnectionEdge = {
-  readonly __typename?: "PageToCommentConnectionEdge"
-  /** A cursor for use in pagination */
-  readonly cursor: Maybe<Scalars["String"]>
-  /** The item at the end of the edge */
-  readonly node: Maybe<Comment>
-}
+export type PageToCommentConnectionEdge = CommentConnectionEdge &
+  Edge & {
+    readonly __typename?: "PageToCommentConnectionEdge"
+    /** A cursor for use in pagination */
+    readonly cursor: Maybe<Scalars["String"]>
+    /** The item at the end of the edge */
+    readonly node: Comment
+  }
+
+/** Page Info on the &quot;PageToCommentConnection&quot; */
+export type PageToCommentConnectionPageInfo = CommentConnectionPageInfo &
+  PageInfo &
+  WpPageInfo & {
+    readonly __typename?: "PageToCommentConnectionPageInfo"
+    /** When paginating forwards, the cursor to continue. */
+    readonly endCursor: Maybe<Scalars["String"]>
+    /** When paginating forwards, are there more items? */
+    readonly hasNextPage: Scalars["Boolean"]
+    /** When paginating backwards, are there more items? */
+    readonly hasPreviousPage: Scalars["Boolean"]
+    /** When paginating backwards, the cursor to continue. */
+    readonly startCursor: Maybe<Scalars["String"]>
+  }
 
 /** Arguments for filtering the PageToCommentConnection connection */
 export type PageToCommentConnectionWhereArgs = {
@@ -3013,7 +4167,7 @@ export type PageToCommentConnectionWhereArgs = {
   readonly contentIdIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
   /** Array of content object IDs to exclude affiliated comments for. */
   readonly contentIdNotIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** Content object name to retrieve affiliated comments for. */
+  /** Content object name (i.e. slug ) to retrieve affiliated comments for. */
   readonly contentName: InputMaybe<Scalars["String"]>
   /** Content Object parent ID to retrieve affiliated comments for. */
   readonly contentParent: InputMaybe<Scalars["Int"]>
@@ -3045,34 +4199,55 @@ export type PageToCommentConnectionWhereArgs = {
   readonly userId: InputMaybe<Scalars["ID"]>
 }
 
-/** Connection between the page type and the page type */
-export type PageToPreviewConnectionEdge = {
-  readonly __typename?: "PageToPreviewConnectionEdge"
-  /** The nodes of the connection, without the edges */
-  readonly node: Maybe<Page>
-}
+/** Connection between the Page type and the page type */
+export type PageToPreviewConnectionEdge = Edge &
+  OneToOneConnection &
+  PageConnectionEdge & {
+    readonly __typename?: "PageToPreviewConnectionEdge"
+    /** Opaque reference to the nodes position in the connection. Value can be used with pagination args. */
+    readonly cursor: Maybe<Scalars["String"]>
+    /** The node of the connection, without the edges */
+    readonly node: Page
+  }
 
-/** Connection between the page type and the page type */
-export type PageToRevisionConnection = {
-  readonly __typename?: "PageToRevisionConnection"
-  /** Edges for the pageToRevisionConnection connection */
-  readonly edges: Maybe<ReadonlyArray<Maybe<PageToRevisionConnectionEdge>>>
-  /** The nodes of the connection, without the edges */
-  readonly nodes: Maybe<ReadonlyArray<Maybe<Page>>>
-  /** Information about pagination in a connection. */
-  readonly pageInfo: Maybe<WpPageInfo>
-}
+/** Connection between the Page type and the page type */
+export type PageToRevisionConnection = Connection &
+  PageConnection & {
+    readonly __typename?: "PageToRevisionConnection"
+    /** Edges for the PageToRevisionConnection connection */
+    readonly edges: ReadonlyArray<PageToRevisionConnectionEdge>
+    /** The nodes of the connection, without the edges */
+    readonly nodes: ReadonlyArray<Page>
+    /** Information about pagination in a connection. */
+    readonly pageInfo: PageToRevisionConnectionPageInfo
+  }
 
 /** An edge in a connection */
-export type PageToRevisionConnectionEdge = {
-  readonly __typename?: "PageToRevisionConnectionEdge"
-  /** A cursor for use in pagination */
-  readonly cursor: Maybe<Scalars["String"]>
-  /** The item at the end of the edge */
-  readonly node: Maybe<Page>
-}
+export type PageToRevisionConnectionEdge = Edge &
+  PageConnectionEdge & {
+    readonly __typename?: "PageToRevisionConnectionEdge"
+    /** A cursor for use in pagination */
+    readonly cursor: Maybe<Scalars["String"]>
+    /** The item at the end of the edge */
+    readonly node: Page
+  }
 
-/** Arguments for filtering the pageToRevisionConnection connection */
+/** Page Info on the &quot;PageToRevisionConnection&quot; */
+export type PageToRevisionConnectionPageInfo = PageConnectionPageInfo &
+  PageInfo &
+  WpPageInfo & {
+    readonly __typename?: "PageToRevisionConnectionPageInfo"
+    /** When paginating forwards, the cursor to continue. */
+    readonly endCursor: Maybe<Scalars["String"]>
+    /** When paginating forwards, are there more items? */
+    readonly hasNextPage: Scalars["Boolean"]
+    /** When paginating backwards, are there more items? */
+    readonly hasPreviousPage: Scalars["Boolean"]
+    /** When paginating backwards, the cursor to continue. */
+    readonly startCursor: Maybe<Scalars["String"]>
+  }
+
+/** Arguments for filtering the PageToRevisionConnection connection */
 export type PageToRevisionConnectionWhereArgs = {
   /** The user that's connected as the author of the object. Use the userId for the author object. */
   readonly author: InputMaybe<Scalars["Int"]>
@@ -3086,7 +4261,7 @@ export type PageToRevisionConnectionWhereArgs = {
   readonly dateQuery: InputMaybe<DateQueryInput>
   /** True for objects with passwords; False for objects without passwords; null for all objects with or without passwords */
   readonly hasPassword: InputMaybe<Scalars["Boolean"]>
-  /** Specific ID of the object */
+  /** Specific database ID of the object */
   readonly id: InputMaybe<Scalars["Int"]>
   /** Array of IDs for the objects to retrieve */
   readonly in: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
@@ -3112,7 +4287,9 @@ export type PageToRevisionConnectionWhereArgs = {
   readonly password: InputMaybe<Scalars["String"]>
   /** Show Posts based on a keyword search */
   readonly search: InputMaybe<Scalars["String"]>
+  /** Retrieve posts where post status is in an array. */
   readonly stati: InputMaybe<ReadonlyArray<InputMaybe<PostStatusEnum>>>
+  /** Show posts with a specific status. */
   readonly status: InputMaybe<PostStatusEnum>
   /** Title of the object */
   readonly title: InputMaybe<Scalars["String"]>
@@ -3141,6 +4318,54 @@ export type Plugin = Node & {
   readonly version: Maybe<Scalars["String"]>
 }
 
+/** Connection to Plugin Nodes */
+export type PluginConnection = {
+  /** A list of edges (relational context) between RootQuery and connected Plugin Nodes */
+  readonly edges: ReadonlyArray<PluginConnectionEdge>
+  /** A list of connected Plugin Nodes */
+  readonly nodes: ReadonlyArray<Plugin>
+  /** Information about pagination in a connection. */
+  readonly pageInfo: PluginConnectionPageInfo
+}
+
+/** Edge between a Node and a connected Plugin */
+export type PluginConnectionEdge = {
+  /** Opaque reference to the nodes position in the connection. Value can be used with pagination args. */
+  readonly cursor: Maybe<Scalars["String"]>
+  /** The connected Plugin Node */
+  readonly node: Plugin
+}
+
+/** Page Info on the connected PluginConnectionEdge */
+export type PluginConnectionPageInfo = {
+  /** When paginating forwards, the cursor to continue. */
+  readonly endCursor: Maybe<Scalars["String"]>
+  /** When paginating forwards, are there more items? */
+  readonly hasNextPage: Scalars["Boolean"]
+  /** When paginating backwards, are there more items? */
+  readonly hasPreviousPage: Scalars["Boolean"]
+  /** When paginating backwards, the cursor to continue. */
+  readonly startCursor: Maybe<Scalars["String"]>
+}
+
+/** The status of the WordPress plugin. */
+export enum PluginStatusEnum {
+  /** The plugin is currently active. */
+  Active = "ACTIVE",
+  /** The plugin is a drop-in plugin. */
+  DropIn = "DROP_IN",
+  /** The plugin is currently inactive. */
+  Inactive = "INACTIVE",
+  /** The plugin is a must-use plugin. */
+  MustUse = "MUST_USE",
+  /** The plugin is technically active but was paused while loading. */
+  Paused = "PAUSED",
+  /** The plugin was active recently. */
+  RecentlyActive = "RECENTLY_ACTIVE",
+  /** The plugin has an upgrade available. */
+  Upgrade = "UPGRADE",
+}
+
 /** The post type */
 export type Post = ContentNode &
   DatabaseIdentifier &
@@ -3155,6 +4380,7 @@ export type Post = ContentNode &
   NodeWithTemplate &
   NodeWithTitle &
   NodeWithTrackbacks &
+  Previewable &
   UniformResourceIdentifiable & {
     readonly __typename?: "Post"
     /** Connection between the NodeWithAuthor type and the User type */
@@ -3163,19 +4389,21 @@ export type Post = ContentNode &
     readonly authorDatabaseId: Maybe<Scalars["Int"]>
     /** The globally unique identifier of the author of the node */
     readonly authorId: Maybe<Scalars["ID"]>
-    /** Connection between the post type and the category type */
+    /** Connection between the Post type and the category type */
     readonly categories: Maybe<PostToCategoryConnection>
     /** The number of comments. Even though WPGraphQL denotes this field as an integer, in WordPress this field should be saved as a numeric string for compatibility. */
     readonly commentCount: Maybe<Scalars["Int"]>
     /** Whether the comments are open or closed for this particular post. */
     readonly commentStatus: Maybe<Scalars["String"]>
-    /** Connection between the post type and the Comment type */
+    /** Connection between the Post type and the Comment type */
     readonly comments: Maybe<PostToCommentConnection>
     /** The content of the post. */
     readonly content: Maybe<Scalars["String"]>
     /** Connection between the ContentNode type and the ContentType type */
     readonly contentType: Maybe<ContentNodeToContentTypeConnectionEdge>
-    /** The ID of the node in the database. */
+    /** The name of the Content Type the node belongs to */
+    readonly contentTypeName: Scalars["String"]
+    /** The unique identifier stored in the database */
     readonly databaseId: Scalars["Int"]
     /** Post publishing date. */
     readonly date: Maybe<Scalars["String"]>
@@ -3203,6 +4431,8 @@ export type Post = ContentNode &
     readonly guid: Maybe<Scalars["String"]>
     /** The globally unique identifier of the post object. */
     readonly id: Scalars["ID"]
+    /** Whether the node is a Content Node */
+    readonly isContentNode: Scalars["Boolean"]
     /** Whether the object is a node in the preview state */
     readonly isPreview: Maybe<Scalars["Boolean"]>
     /** Whether the object is restricted from the current viewer */
@@ -3211,6 +4441,8 @@ export type Post = ContentNode &
     readonly isRevision: Maybe<Scalars["Boolean"]>
     /** Whether this page is sticky */
     readonly isSticky: Scalars["Boolean"]
+    /** Whether the node is a Term */
+    readonly isTermNode: Scalars["Boolean"]
     /** The user that most recently edited the node */
     readonly lastEditedBy: Maybe<ContentNodeToEditLastConnectionEdge>
     /** The permalink of the post */
@@ -3223,14 +4455,14 @@ export type Post = ContentNode &
     readonly pingStatus: Maybe<Scalars["String"]>
     /** URLs that have been pinged. */
     readonly pinged: Maybe<ReadonlyArray<Maybe<Scalars["String"]>>>
-    /** Connection between the post type and the postFormat type */
+    /** Connection between the Post type and the postFormat type */
     readonly postFormats: Maybe<PostToPostFormatConnection>
     /**
      * The id field matches the WP_Post-&gt;ID field.
      * @deprecated Deprecated in favor of the databaseId field
      */
     readonly postId: Scalars["Int"]
-    /** Connection between the post type and the post type */
+    /** Connection between the Post type and the post type */
     readonly preview: Maybe<PostToPreviewConnectionEdge>
     /** The database id of the preview node */
     readonly previewRevisionDatabaseId: Maybe<Scalars["Int"]>
@@ -3238,24 +4470,24 @@ export type Post = ContentNode &
     readonly previewRevisionId: Maybe<Scalars["ID"]>
     /** If the current node is a revision, this field exposes the node this is a revision of. Returns null if the node is not a revision of another node. */
     readonly revisionOf: Maybe<NodeWithRevisionsToContentNodeConnectionEdge>
-    /** Connection between the post type and the post type */
+    /** Connection between the Post type and the post type */
     readonly revisions: Maybe<PostToRevisionConnection>
     /** The uri slug for the post. This is equivalent to the WP_Post-&gt;post_name field and the post_name column in the database for the &quot;post_objects&quot; table. */
     readonly slug: Maybe<Scalars["String"]>
     /** The current status of the object */
     readonly status: Maybe<Scalars["String"]>
-    /** Connection between the post type and the tag type */
+    /** Connection between the Post type and the tag type */
     readonly tags: Maybe<PostToTagConnection>
-    /** The template assigned to a node of content */
+    /** The template assigned to the node */
     readonly template: Maybe<ContentTemplate>
-    /** Connection between the post type and the TermNode type */
+    /** Connection between the Post type and the TermNode type */
     readonly terms: Maybe<PostToTermNodeConnection>
     /** The title of the post. This is currently just the raw title. An amendment to support rendered title needs to be made. */
     readonly title: Maybe<Scalars["String"]>
     /** URLs queued to be pinged. */
     readonly toPing: Maybe<ReadonlyArray<Maybe<Scalars["String"]>>>
-    /** URI path for the resource */
-    readonly uri: Scalars["String"]
+    /** The unique resource identifier path */
+    readonly uri: Maybe<Scalars["String"]>
   }
 
 /** The post type */
@@ -3347,6 +4579,7 @@ export type PostTitleArgs = {
 export type PostCategoriesInput = {
   /** If true, this will append the category to existing related categories. If false, this will replace existing relationships. Default true. */
   readonly append: InputMaybe<Scalars["Boolean"]>
+  /** The input list of items to set. */
   readonly nodes: InputMaybe<ReadonlyArray<InputMaybe<PostCategoriesNodeInput>>>
 }
 
@@ -3362,17 +4595,47 @@ export type PostCategoriesNodeInput = {
   readonly slug: InputMaybe<Scalars["String"]>
 }
 
+/** Connection to post Nodes */
+export type PostConnection = {
+  /** A list of edges (relational context) between RootQuery and connected post Nodes */
+  readonly edges: ReadonlyArray<PostConnectionEdge>
+  /** A list of connected post Nodes */
+  readonly nodes: ReadonlyArray<Post>
+  /** Information about pagination in a connection. */
+  readonly pageInfo: PostConnectionPageInfo
+}
+
+/** Edge between a Node and a connected post */
+export type PostConnectionEdge = {
+  /** Opaque reference to the nodes position in the connection. Value can be used with pagination args. */
+  readonly cursor: Maybe<Scalars["String"]>
+  /** The connected post Node */
+  readonly node: Post
+}
+
+/** Page Info on the connected PostConnectionEdge */
+export type PostConnectionPageInfo = {
+  /** When paginating forwards, the cursor to continue. */
+  readonly endCursor: Maybe<Scalars["String"]>
+  /** When paginating forwards, are there more items? */
+  readonly hasNextPage: Scalars["Boolean"]
+  /** When paginating backwards, are there more items? */
+  readonly hasPreviousPage: Scalars["Boolean"]
+  /** When paginating backwards, the cursor to continue. */
+  readonly startCursor: Maybe<Scalars["String"]>
+}
+
 /** The postFormat type */
 export type PostFormat = DatabaseIdentifier &
   Node &
   TermNode &
   UniformResourceIdentifiable & {
     readonly __typename?: "PostFormat"
-    /** Connection between the postFormat type and the ContentNode type */
+    /** Connection between the PostFormat type and the ContentNode type */
     readonly contentNodes: Maybe<PostFormatToContentNodeConnection>
     /** The number of objects connected to the object */
     readonly count: Maybe<Scalars["Int"]>
-    /** Identifies the primary key from the database. */
+    /** The unique identifier stored in the database */
     readonly databaseId: Scalars["Int"]
     /** The description of the object */
     readonly description: Maybe<Scalars["String"]>
@@ -3380,10 +4643,14 @@ export type PostFormat = DatabaseIdentifier &
     readonly enqueuedScripts: Maybe<TermNodeToEnqueuedScriptConnection>
     /** Connection between the TermNode type and the EnqueuedStylesheet type */
     readonly enqueuedStylesheets: Maybe<TermNodeToEnqueuedStylesheetConnection>
-    /** The globally unique ID for the object */
+    /** The unique resource identifier path */
     readonly id: Scalars["ID"]
+    /** Whether the node is a Content Node */
+    readonly isContentNode: Scalars["Boolean"]
     /** Whether the object is restricted from the current viewer */
     readonly isRestricted: Maybe<Scalars["Boolean"]>
+    /** Whether the node is a Term */
+    readonly isTermNode: Scalars["Boolean"]
     /** The link to the term */
     readonly link: Maybe<Scalars["String"]>
     /** The human friendly name of the object. */
@@ -3393,18 +4660,20 @@ export type PostFormat = DatabaseIdentifier &
      * @deprecated Deprecated in favor of databaseId
      */
     readonly postFormatId: Maybe<Scalars["Int"]>
-    /** Connection between the postFormat type and the post type */
+    /** Connection between the PostFormat type and the post type */
     readonly posts: Maybe<PostFormatToPostConnection>
     /** An alphanumeric identifier for the object unique to its type. */
     readonly slug: Maybe<Scalars["String"]>
-    /** Connection between the postFormat type and the Taxonomy type */
+    /** Connection between the PostFormat type and the Taxonomy type */
     readonly taxonomy: Maybe<PostFormatToTaxonomyConnectionEdge>
+    /** The name of the taxonomy that the object is associated with */
+    readonly taxonomyName: Maybe<Scalars["String"]>
     /** The ID of the term group that this term object belongs to */
     readonly termGroupId: Maybe<Scalars["Int"]>
     /** The taxonomy ID that the object is associated with */
     readonly termTaxonomyId: Maybe<Scalars["Int"]>
     /** The unique resource identifier path */
-    readonly uri: Scalars["String"]
+    readonly uri: Maybe<Scalars["String"]>
   }
 
 /** The postFormat type */
@@ -3441,6 +4710,36 @@ export type PostFormatPostsArgs = {
   where: InputMaybe<PostFormatToPostConnectionWhereArgs>
 }
 
+/** Connection to postFormat Nodes */
+export type PostFormatConnection = {
+  /** A list of edges (relational context) between RootQuery and connected postFormat Nodes */
+  readonly edges: ReadonlyArray<PostFormatConnectionEdge>
+  /** A list of connected postFormat Nodes */
+  readonly nodes: ReadonlyArray<PostFormat>
+  /** Information about pagination in a connection. */
+  readonly pageInfo: PostFormatConnectionPageInfo
+}
+
+/** Edge between a Node and a connected postFormat */
+export type PostFormatConnectionEdge = {
+  /** Opaque reference to the nodes position in the connection. Value can be used with pagination args. */
+  readonly cursor: Maybe<Scalars["String"]>
+  /** The connected postFormat Node */
+  readonly node: PostFormat
+}
+
+/** Page Info on the connected PostFormatConnectionEdge */
+export type PostFormatConnectionPageInfo = {
+  /** When paginating forwards, the cursor to continue. */
+  readonly endCursor: Maybe<Scalars["String"]>
+  /** When paginating forwards, are there more items? */
+  readonly hasNextPage: Scalars["Boolean"]
+  /** When paginating backwards, are there more items? */
+  readonly hasPreviousPage: Scalars["Boolean"]
+  /** When paginating backwards, the cursor to continue. */
+  readonly startCursor: Maybe<Scalars["String"]>
+}
+
 /** The Type of Identifier used to fetch a single resource. Default is ID. */
 export enum PostFormatIdType {
   /** The Database ID for the node */
@@ -3455,35 +4754,55 @@ export enum PostFormatIdType {
   Uri = "URI",
 }
 
-/** Connection between the postFormat type and the ContentNode type */
-export type PostFormatToContentNodeConnection = {
-  readonly __typename?: "PostFormatToContentNodeConnection"
-  /** Edges for the PostFormatToContentNodeConnection connection */
-  readonly edges: Maybe<
-    ReadonlyArray<Maybe<PostFormatToContentNodeConnectionEdge>>
-  >
-  /** The nodes of the connection, without the edges */
-  readonly nodes: Maybe<ReadonlyArray<Maybe<ContentNode>>>
-  /** Information about pagination in a connection. */
-  readonly pageInfo: Maybe<WpPageInfo>
-}
+/** Connection between the PostFormat type and the ContentNode type */
+export type PostFormatToContentNodeConnection = Connection &
+  ContentNodeConnection & {
+    readonly __typename?: "PostFormatToContentNodeConnection"
+    /** Edges for the PostFormatToContentNodeConnection connection */
+    readonly edges: ReadonlyArray<PostFormatToContentNodeConnectionEdge>
+    /** The nodes of the connection, without the edges */
+    readonly nodes: ReadonlyArray<ContentNode>
+    /** Information about pagination in a connection. */
+    readonly pageInfo: PostFormatToContentNodeConnectionPageInfo
+  }
 
 /** An edge in a connection */
-export type PostFormatToContentNodeConnectionEdge = {
-  readonly __typename?: "PostFormatToContentNodeConnectionEdge"
-  /** A cursor for use in pagination */
-  readonly cursor: Maybe<Scalars["String"]>
-  /** The item at the end of the edge */
-  readonly node: Maybe<ContentNode>
-}
+export type PostFormatToContentNodeConnectionEdge = ContentNodeConnectionEdge &
+  Edge & {
+    readonly __typename?: "PostFormatToContentNodeConnectionEdge"
+    /** A cursor for use in pagination */
+    readonly cursor: Maybe<Scalars["String"]>
+    /** The item at the end of the edge */
+    readonly node: ContentNode
+  }
+
+/** Page Info on the &quot;PostFormatToContentNodeConnection&quot; */
+export type PostFormatToContentNodeConnectionPageInfo =
+  ContentNodeConnectionPageInfo &
+    PageInfo &
+    WpPageInfo & {
+      readonly __typename?: "PostFormatToContentNodeConnectionPageInfo"
+      /** When paginating forwards, the cursor to continue. */
+      readonly endCursor: Maybe<Scalars["String"]>
+      /** When paginating forwards, are there more items? */
+      readonly hasNextPage: Scalars["Boolean"]
+      /** When paginating backwards, are there more items? */
+      readonly hasPreviousPage: Scalars["Boolean"]
+      /** When paginating backwards, the cursor to continue. */
+      readonly startCursor: Maybe<Scalars["String"]>
+    }
 
 /** Arguments for filtering the PostFormatToContentNodeConnection connection */
 export type PostFormatToContentNodeConnectionWhereArgs = {
+  /** The Types of content to filter */
+  readonly contentTypes: InputMaybe<
+    ReadonlyArray<InputMaybe<ContentTypesOfPostFormatEnum>>
+  >
   /** Filter the connection based on dates */
   readonly dateQuery: InputMaybe<DateQueryInput>
   /** True for objects with passwords; False for objects without passwords; null for all objects with or without passwords */
   readonly hasPassword: InputMaybe<Scalars["Boolean"]>
-  /** Specific ID of the object */
+  /** Specific database ID of the object */
   readonly id: InputMaybe<Scalars["Int"]>
   /** Array of IDs for the objects to retrieve */
   readonly in: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
@@ -3509,31 +4828,50 @@ export type PostFormatToContentNodeConnectionWhereArgs = {
   readonly password: InputMaybe<Scalars["String"]>
   /** Show Posts based on a keyword search */
   readonly search: InputMaybe<Scalars["String"]>
+  /** Retrieve posts where post status is in an array. */
   readonly stati: InputMaybe<ReadonlyArray<InputMaybe<PostStatusEnum>>>
+  /** Show posts with a specific status. */
   readonly status: InputMaybe<PostStatusEnum>
   /** Title of the object */
   readonly title: InputMaybe<Scalars["String"]>
 }
 
-/** Connection between the postFormat type and the post type */
-export type PostFormatToPostConnection = {
-  readonly __typename?: "PostFormatToPostConnection"
-  /** Edges for the PostFormatToPostConnection connection */
-  readonly edges: Maybe<ReadonlyArray<Maybe<PostFormatToPostConnectionEdge>>>
-  /** The nodes of the connection, without the edges */
-  readonly nodes: Maybe<ReadonlyArray<Maybe<Post>>>
-  /** Information about pagination in a connection. */
-  readonly pageInfo: Maybe<WpPageInfo>
-}
+/** Connection between the PostFormat type and the post type */
+export type PostFormatToPostConnection = Connection &
+  PostConnection & {
+    readonly __typename?: "PostFormatToPostConnection"
+    /** Edges for the PostFormatToPostConnection connection */
+    readonly edges: ReadonlyArray<PostFormatToPostConnectionEdge>
+    /** The nodes of the connection, without the edges */
+    readonly nodes: ReadonlyArray<Post>
+    /** Information about pagination in a connection. */
+    readonly pageInfo: PostFormatToPostConnectionPageInfo
+  }
 
 /** An edge in a connection */
-export type PostFormatToPostConnectionEdge = {
-  readonly __typename?: "PostFormatToPostConnectionEdge"
-  /** A cursor for use in pagination */
-  readonly cursor: Maybe<Scalars["String"]>
-  /** The item at the end of the edge */
-  readonly node: Maybe<Post>
-}
+export type PostFormatToPostConnectionEdge = Edge &
+  PostConnectionEdge & {
+    readonly __typename?: "PostFormatToPostConnectionEdge"
+    /** A cursor for use in pagination */
+    readonly cursor: Maybe<Scalars["String"]>
+    /** The item at the end of the edge */
+    readonly node: Post
+  }
+
+/** Page Info on the &quot;PostFormatToPostConnection&quot; */
+export type PostFormatToPostConnectionPageInfo = PageInfo &
+  PostConnectionPageInfo &
+  WpPageInfo & {
+    readonly __typename?: "PostFormatToPostConnectionPageInfo"
+    /** When paginating forwards, the cursor to continue. */
+    readonly endCursor: Maybe<Scalars["String"]>
+    /** When paginating forwards, are there more items? */
+    readonly hasNextPage: Scalars["Boolean"]
+    /** When paginating backwards, are there more items? */
+    readonly hasPreviousPage: Scalars["Boolean"]
+    /** When paginating backwards, the cursor to continue. */
+    readonly startCursor: Maybe<Scalars["String"]>
+  }
 
 /** Arguments for filtering the PostFormatToPostConnection connection */
 export type PostFormatToPostConnectionWhereArgs = {
@@ -3557,7 +4895,7 @@ export type PostFormatToPostConnectionWhereArgs = {
   readonly dateQuery: InputMaybe<DateQueryInput>
   /** True for objects with passwords; False for objects without passwords; null for all objects with or without passwords */
   readonly hasPassword: InputMaybe<Scalars["Boolean"]>
-  /** Specific ID of the object */
+  /** Specific database ID of the object */
   readonly id: InputMaybe<Scalars["Int"]>
   /** Array of IDs for the objects to retrieve */
   readonly in: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
@@ -3583,7 +4921,9 @@ export type PostFormatToPostConnectionWhereArgs = {
   readonly password: InputMaybe<Scalars["String"]>
   /** Show Posts based on a keyword search */
   readonly search: InputMaybe<Scalars["String"]>
+  /** Retrieve posts where post status is in an array. */
   readonly stati: InputMaybe<ReadonlyArray<InputMaybe<PostStatusEnum>>>
+  /** Show posts with a specific status. */
   readonly status: InputMaybe<PostStatusEnum>
   /** Tag Slug */
   readonly tag: InputMaybe<Scalars["String"]>
@@ -3593,20 +4933,24 @@ export type PostFormatToPostConnectionWhereArgs = {
   readonly tagIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
   /** Array of tag IDs, used to display objects from one tag OR another */
   readonly tagNotIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** Array of tag slugs, used to display objects from one tag OR another */
+  /** Array of tag slugs, used to display objects from one tag AND another */
   readonly tagSlugAnd: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
-  /** Array of tag slugs, used to exclude objects in specified tags */
+  /** Array of tag slugs, used to include objects in ANY specified tags */
   readonly tagSlugIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
   /** Title of the object */
   readonly title: InputMaybe<Scalars["String"]>
 }
 
-/** Connection between the postFormat type and the Taxonomy type */
-export type PostFormatToTaxonomyConnectionEdge = {
-  readonly __typename?: "PostFormatToTaxonomyConnectionEdge"
-  /** The nodes of the connection, without the edges */
-  readonly node: Maybe<Taxonomy>
-}
+/** Connection between the PostFormat type and the Taxonomy type */
+export type PostFormatToTaxonomyConnectionEdge = Edge &
+  OneToOneConnection &
+  TaxonomyConnectionEdge & {
+    readonly __typename?: "PostFormatToTaxonomyConnectionEdge"
+    /** Opaque reference to the nodes position in the connection. Value can be used with pagination args. */
+    readonly cursor: Maybe<Scalars["String"]>
+    /** The node of the connection, without the edges */
+    readonly node: Taxonomy
+  }
 
 /** The Type of Identifier used to fetch a single resource. Default is ID. */
 export enum PostIdType {
@@ -3622,17 +4966,17 @@ export enum PostIdType {
 
 /** The format of post field data. */
 export enum PostObjectFieldFormatEnum {
-  /** Provide the field value directly from database */
+  /** Provide the field value directly from database. Null on unauthenticated requests. */
   Raw = "RAW",
-  /** Apply the default WordPress rendering */
+  /** Provide the field value as rendered by WordPress. Default. */
   Rendered = "RENDERED",
 }
 
-export type PostObjectUnion = ActionMonitorAction | MediaItem | Page | Post
-
 /** The column to use when filtering by date */
 export enum PostObjectsConnectionDateColumnEnum {
+  /** The date the comment was created in local time. */
   Date = "DATE",
+  /** The most recent modification date of the comment. */
   Modified = "MODIFIED",
 }
 
@@ -3672,6 +5016,7 @@ export type PostObjectsConnectionOrderbyInput = {
 export type PostPostFormatsInput = {
   /** If true, this will append the postFormat to existing related postFormats. If false, this will replace existing relationships. Default true. */
   readonly append: InputMaybe<Scalars["Boolean"]>
+  /** The input list of items to set. */
   readonly nodes: InputMaybe<
     ReadonlyArray<InputMaybe<PostPostFormatsNodeInput>>
   >
@@ -3721,6 +5066,7 @@ export enum PostStatusEnum {
 export type PostTagsInput = {
   /** If true, this will append the tag to existing related tags. If false, this will replace existing relationships. Default true. */
   readonly append: InputMaybe<Scalars["Boolean"]>
+  /** The input list of items to set. */
   readonly nodes: InputMaybe<ReadonlyArray<InputMaybe<PostTagsNodeInput>>>
 }
 
@@ -3736,25 +5082,42 @@ export type PostTagsNodeInput = {
   readonly slug: InputMaybe<Scalars["String"]>
 }
 
-/** Connection between the post type and the category type */
-export type PostToCategoryConnection = {
-  readonly __typename?: "PostToCategoryConnection"
-  /** Edges for the PostToCategoryConnection connection */
-  readonly edges: Maybe<ReadonlyArray<Maybe<PostToCategoryConnectionEdge>>>
-  /** The nodes of the connection, without the edges */
-  readonly nodes: Maybe<ReadonlyArray<Maybe<Category>>>
-  /** Information about pagination in a connection. */
-  readonly pageInfo: Maybe<WpPageInfo>
-}
+/** Connection between the Post type and the category type */
+export type PostToCategoryConnection = CategoryConnection &
+  Connection & {
+    readonly __typename?: "PostToCategoryConnection"
+    /** Edges for the PostToCategoryConnection connection */
+    readonly edges: ReadonlyArray<PostToCategoryConnectionEdge>
+    /** The nodes of the connection, without the edges */
+    readonly nodes: ReadonlyArray<Category>
+    /** Information about pagination in a connection. */
+    readonly pageInfo: PostToCategoryConnectionPageInfo
+  }
 
 /** An edge in a connection */
-export type PostToCategoryConnectionEdge = {
-  readonly __typename?: "PostToCategoryConnectionEdge"
-  /** A cursor for use in pagination */
-  readonly cursor: Maybe<Scalars["String"]>
-  /** The item at the end of the edge */
-  readonly node: Maybe<Category>
-}
+export type PostToCategoryConnectionEdge = CategoryConnectionEdge &
+  Edge & {
+    readonly __typename?: "PostToCategoryConnectionEdge"
+    /** A cursor for use in pagination */
+    readonly cursor: Maybe<Scalars["String"]>
+    /** The item at the end of the edge */
+    readonly node: Category
+  }
+
+/** Page Info on the &quot;PostToCategoryConnection&quot; */
+export type PostToCategoryConnectionPageInfo = CategoryConnectionPageInfo &
+  PageInfo &
+  WpPageInfo & {
+    readonly __typename?: "PostToCategoryConnectionPageInfo"
+    /** When paginating forwards, the cursor to continue. */
+    readonly endCursor: Maybe<Scalars["String"]>
+    /** When paginating forwards, are there more items? */
+    readonly hasNextPage: Scalars["Boolean"]
+    /** When paginating backwards, are there more items? */
+    readonly hasPreviousPage: Scalars["Boolean"]
+    /** When paginating backwards, the cursor to continue. */
+    readonly startCursor: Maybe<Scalars["String"]>
+  }
 
 /** Arguments for filtering the PostToCategoryConnection connection */
 export type PostToCategoryConnectionWhereArgs = {
@@ -3782,6 +5145,8 @@ export type PostToCategoryConnectionWhereArgs = {
   readonly nameLike: InputMaybe<Scalars["String"]>
   /** Array of object IDs. Results will be limited to terms associated with these objects. */
   readonly objectIds: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
+  /** Direction the connection should be ordered in */
+  readonly order: InputMaybe<OrderEnum>
   /** Field(s) to order terms by. Defaults to 'name'. */
   readonly orderby: InputMaybe<TermObjectsConnectionOrderbyEnum>
   /** Whether to pad the quantity of a term's children in the quantity of each term's "count" object variable. Default false. */
@@ -3794,29 +5159,48 @@ export type PostToCategoryConnectionWhereArgs = {
   readonly slug: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
   /** Array of term taxonomy IDs, to match when querying terms. */
   readonly termTaxonomId: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
+  /** Array of term taxonomy IDs, to match when querying terms. */
+  readonly termTaxonomyId: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
   /** Whether to prime meta caches for matched terms. Default true. */
   readonly updateTermMetaCache: InputMaybe<Scalars["Boolean"]>
 }
 
-/** Connection between the post type and the Comment type */
-export type PostToCommentConnection = {
-  readonly __typename?: "PostToCommentConnection"
-  /** Edges for the PostToCommentConnection connection */
-  readonly edges: Maybe<ReadonlyArray<Maybe<PostToCommentConnectionEdge>>>
-  /** The nodes of the connection, without the edges */
-  readonly nodes: Maybe<ReadonlyArray<Maybe<Comment>>>
-  /** Information about pagination in a connection. */
-  readonly pageInfo: Maybe<WpPageInfo>
-}
+/** Connection between the Post type and the Comment type */
+export type PostToCommentConnection = CommentConnection &
+  Connection & {
+    readonly __typename?: "PostToCommentConnection"
+    /** Edges for the PostToCommentConnection connection */
+    readonly edges: ReadonlyArray<PostToCommentConnectionEdge>
+    /** The nodes of the connection, without the edges */
+    readonly nodes: ReadonlyArray<Comment>
+    /** Information about pagination in a connection. */
+    readonly pageInfo: PostToCommentConnectionPageInfo
+  }
 
 /** An edge in a connection */
-export type PostToCommentConnectionEdge = {
-  readonly __typename?: "PostToCommentConnectionEdge"
-  /** A cursor for use in pagination */
-  readonly cursor: Maybe<Scalars["String"]>
-  /** The item at the end of the edge */
-  readonly node: Maybe<Comment>
-}
+export type PostToCommentConnectionEdge = CommentConnectionEdge &
+  Edge & {
+    readonly __typename?: "PostToCommentConnectionEdge"
+    /** A cursor for use in pagination */
+    readonly cursor: Maybe<Scalars["String"]>
+    /** The item at the end of the edge */
+    readonly node: Comment
+  }
+
+/** Page Info on the &quot;PostToCommentConnection&quot; */
+export type PostToCommentConnectionPageInfo = CommentConnectionPageInfo &
+  PageInfo &
+  WpPageInfo & {
+    readonly __typename?: "PostToCommentConnectionPageInfo"
+    /** When paginating forwards, the cursor to continue. */
+    readonly endCursor: Maybe<Scalars["String"]>
+    /** When paginating forwards, are there more items? */
+    readonly hasNextPage: Scalars["Boolean"]
+    /** When paginating backwards, are there more items? */
+    readonly hasPreviousPage: Scalars["Boolean"]
+    /** When paginating backwards, the cursor to continue. */
+    readonly startCursor: Maybe<Scalars["String"]>
+  }
 
 /** Arguments for filtering the PostToCommentConnection connection */
 export type PostToCommentConnectionWhereArgs = {
@@ -3854,7 +5238,7 @@ export type PostToCommentConnectionWhereArgs = {
   readonly contentIdIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
   /** Array of content object IDs to exclude affiliated comments for. */
   readonly contentIdNotIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** Content object name to retrieve affiliated comments for. */
+  /** Content object name (i.e. slug ) to retrieve affiliated comments for. */
   readonly contentName: InputMaybe<Scalars["String"]>
   /** Content Object parent ID to retrieve affiliated comments for. */
   readonly contentParent: InputMaybe<Scalars["Int"]>
@@ -3886,25 +5270,42 @@ export type PostToCommentConnectionWhereArgs = {
   readonly userId: InputMaybe<Scalars["ID"]>
 }
 
-/** Connection between the post type and the postFormat type */
-export type PostToPostFormatConnection = {
-  readonly __typename?: "PostToPostFormatConnection"
-  /** Edges for the PostToPostFormatConnection connection */
-  readonly edges: Maybe<ReadonlyArray<Maybe<PostToPostFormatConnectionEdge>>>
-  /** The nodes of the connection, without the edges */
-  readonly nodes: Maybe<ReadonlyArray<Maybe<PostFormat>>>
-  /** Information about pagination in a connection. */
-  readonly pageInfo: Maybe<WpPageInfo>
-}
+/** Connection between the Post type and the postFormat type */
+export type PostToPostFormatConnection = Connection &
+  PostFormatConnection & {
+    readonly __typename?: "PostToPostFormatConnection"
+    /** Edges for the PostToPostFormatConnection connection */
+    readonly edges: ReadonlyArray<PostToPostFormatConnectionEdge>
+    /** The nodes of the connection, without the edges */
+    readonly nodes: ReadonlyArray<PostFormat>
+    /** Information about pagination in a connection. */
+    readonly pageInfo: PostToPostFormatConnectionPageInfo
+  }
 
 /** An edge in a connection */
-export type PostToPostFormatConnectionEdge = {
-  readonly __typename?: "PostToPostFormatConnectionEdge"
-  /** A cursor for use in pagination */
-  readonly cursor: Maybe<Scalars["String"]>
-  /** The item at the end of the edge */
-  readonly node: Maybe<PostFormat>
-}
+export type PostToPostFormatConnectionEdge = Edge &
+  PostFormatConnectionEdge & {
+    readonly __typename?: "PostToPostFormatConnectionEdge"
+    /** A cursor for use in pagination */
+    readonly cursor: Maybe<Scalars["String"]>
+    /** The item at the end of the edge */
+    readonly node: PostFormat
+  }
+
+/** Page Info on the &quot;PostToPostFormatConnection&quot; */
+export type PostToPostFormatConnectionPageInfo = PageInfo &
+  PostFormatConnectionPageInfo &
+  WpPageInfo & {
+    readonly __typename?: "PostToPostFormatConnectionPageInfo"
+    /** When paginating forwards, the cursor to continue. */
+    readonly endCursor: Maybe<Scalars["String"]>
+    /** When paginating forwards, are there more items? */
+    readonly hasNextPage: Scalars["Boolean"]
+    /** When paginating backwards, are there more items? */
+    readonly hasPreviousPage: Scalars["Boolean"]
+    /** When paginating backwards, the cursor to continue. */
+    readonly startCursor: Maybe<Scalars["String"]>
+  }
 
 /** Arguments for filtering the PostToPostFormatConnection connection */
 export type PostToPostFormatConnectionWhereArgs = {
@@ -3932,6 +5333,8 @@ export type PostToPostFormatConnectionWhereArgs = {
   readonly nameLike: InputMaybe<Scalars["String"]>
   /** Array of object IDs. Results will be limited to terms associated with these objects. */
   readonly objectIds: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
+  /** Direction the connection should be ordered in */
+  readonly order: InputMaybe<OrderEnum>
   /** Field(s) to order terms by. Defaults to 'name'. */
   readonly orderby: InputMaybe<TermObjectsConnectionOrderbyEnum>
   /** Whether to pad the quantity of a term's children in the quantity of each term's "count" object variable. Default false. */
@@ -3944,38 +5347,61 @@ export type PostToPostFormatConnectionWhereArgs = {
   readonly slug: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
   /** Array of term taxonomy IDs, to match when querying terms. */
   readonly termTaxonomId: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
+  /** Array of term taxonomy IDs, to match when querying terms. */
+  readonly termTaxonomyId: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
   /** Whether to prime meta caches for matched terms. Default true. */
   readonly updateTermMetaCache: InputMaybe<Scalars["Boolean"]>
 }
 
-/** Connection between the post type and the post type */
-export type PostToPreviewConnectionEdge = {
-  readonly __typename?: "PostToPreviewConnectionEdge"
-  /** The nodes of the connection, without the edges */
-  readonly node: Maybe<Post>
-}
+/** Connection between the Post type and the post type */
+export type PostToPreviewConnectionEdge = Edge &
+  OneToOneConnection &
+  PostConnectionEdge & {
+    readonly __typename?: "PostToPreviewConnectionEdge"
+    /** Opaque reference to the nodes position in the connection. Value can be used with pagination args. */
+    readonly cursor: Maybe<Scalars["String"]>
+    /** The node of the connection, without the edges */
+    readonly node: Post
+  }
 
-/** Connection between the post type and the post type */
-export type PostToRevisionConnection = {
-  readonly __typename?: "PostToRevisionConnection"
-  /** Edges for the postToRevisionConnection connection */
-  readonly edges: Maybe<ReadonlyArray<Maybe<PostToRevisionConnectionEdge>>>
-  /** The nodes of the connection, without the edges */
-  readonly nodes: Maybe<ReadonlyArray<Maybe<Post>>>
-  /** Information about pagination in a connection. */
-  readonly pageInfo: Maybe<WpPageInfo>
-}
+/** Connection between the Post type and the post type */
+export type PostToRevisionConnection = Connection &
+  PostConnection & {
+    readonly __typename?: "PostToRevisionConnection"
+    /** Edges for the PostToRevisionConnection connection */
+    readonly edges: ReadonlyArray<PostToRevisionConnectionEdge>
+    /** The nodes of the connection, without the edges */
+    readonly nodes: ReadonlyArray<Post>
+    /** Information about pagination in a connection. */
+    readonly pageInfo: PostToRevisionConnectionPageInfo
+  }
 
 /** An edge in a connection */
-export type PostToRevisionConnectionEdge = {
-  readonly __typename?: "PostToRevisionConnectionEdge"
-  /** A cursor for use in pagination */
-  readonly cursor: Maybe<Scalars["String"]>
-  /** The item at the end of the edge */
-  readonly node: Maybe<Post>
-}
+export type PostToRevisionConnectionEdge = Edge &
+  PostConnectionEdge & {
+    readonly __typename?: "PostToRevisionConnectionEdge"
+    /** A cursor for use in pagination */
+    readonly cursor: Maybe<Scalars["String"]>
+    /** The item at the end of the edge */
+    readonly node: Post
+  }
 
-/** Arguments for filtering the postToRevisionConnection connection */
+/** Page Info on the &quot;PostToRevisionConnection&quot; */
+export type PostToRevisionConnectionPageInfo = PageInfo &
+  PostConnectionPageInfo &
+  WpPageInfo & {
+    readonly __typename?: "PostToRevisionConnectionPageInfo"
+    /** When paginating forwards, the cursor to continue. */
+    readonly endCursor: Maybe<Scalars["String"]>
+    /** When paginating forwards, are there more items? */
+    readonly hasNextPage: Scalars["Boolean"]
+    /** When paginating backwards, are there more items? */
+    readonly hasPreviousPage: Scalars["Boolean"]
+    /** When paginating backwards, the cursor to continue. */
+    readonly startCursor: Maybe<Scalars["String"]>
+  }
+
+/** Arguments for filtering the PostToRevisionConnection connection */
 export type PostToRevisionConnectionWhereArgs = {
   /** The user that's connected as the author of the object. Use the userId for the author object. */
   readonly author: InputMaybe<Scalars["Int"]>
@@ -3997,7 +5423,7 @@ export type PostToRevisionConnectionWhereArgs = {
   readonly dateQuery: InputMaybe<DateQueryInput>
   /** True for objects with passwords; False for objects without passwords; null for all objects with or without passwords */
   readonly hasPassword: InputMaybe<Scalars["Boolean"]>
-  /** Specific ID of the object */
+  /** Specific database ID of the object */
   readonly id: InputMaybe<Scalars["Int"]>
   /** Array of IDs for the objects to retrieve */
   readonly in: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
@@ -4023,7 +5449,9 @@ export type PostToRevisionConnectionWhereArgs = {
   readonly password: InputMaybe<Scalars["String"]>
   /** Show Posts based on a keyword search */
   readonly search: InputMaybe<Scalars["String"]>
+  /** Retrieve posts where post status is in an array. */
   readonly stati: InputMaybe<ReadonlyArray<InputMaybe<PostStatusEnum>>>
+  /** Show posts with a specific status. */
   readonly status: InputMaybe<PostStatusEnum>
   /** Tag Slug */
   readonly tag: InputMaybe<Scalars["String"]>
@@ -4033,33 +5461,50 @@ export type PostToRevisionConnectionWhereArgs = {
   readonly tagIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
   /** Array of tag IDs, used to display objects from one tag OR another */
   readonly tagNotIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** Array of tag slugs, used to display objects from one tag OR another */
+  /** Array of tag slugs, used to display objects from one tag AND another */
   readonly tagSlugAnd: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
-  /** Array of tag slugs, used to exclude objects in specified tags */
+  /** Array of tag slugs, used to include objects in ANY specified tags */
   readonly tagSlugIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
   /** Title of the object */
   readonly title: InputMaybe<Scalars["String"]>
 }
 
-/** Connection between the post type and the tag type */
-export type PostToTagConnection = {
-  readonly __typename?: "PostToTagConnection"
-  /** Edges for the PostToTagConnection connection */
-  readonly edges: Maybe<ReadonlyArray<Maybe<PostToTagConnectionEdge>>>
-  /** The nodes of the connection, without the edges */
-  readonly nodes: Maybe<ReadonlyArray<Maybe<Tag>>>
-  /** Information about pagination in a connection. */
-  readonly pageInfo: Maybe<WpPageInfo>
-}
+/** Connection between the Post type and the tag type */
+export type PostToTagConnection = Connection &
+  TagConnection & {
+    readonly __typename?: "PostToTagConnection"
+    /** Edges for the PostToTagConnection connection */
+    readonly edges: ReadonlyArray<PostToTagConnectionEdge>
+    /** The nodes of the connection, without the edges */
+    readonly nodes: ReadonlyArray<Tag>
+    /** Information about pagination in a connection. */
+    readonly pageInfo: PostToTagConnectionPageInfo
+  }
 
 /** An edge in a connection */
-export type PostToTagConnectionEdge = {
-  readonly __typename?: "PostToTagConnectionEdge"
-  /** A cursor for use in pagination */
-  readonly cursor: Maybe<Scalars["String"]>
-  /** The item at the end of the edge */
-  readonly node: Maybe<Tag>
-}
+export type PostToTagConnectionEdge = Edge &
+  TagConnectionEdge & {
+    readonly __typename?: "PostToTagConnectionEdge"
+    /** A cursor for use in pagination */
+    readonly cursor: Maybe<Scalars["String"]>
+    /** The item at the end of the edge */
+    readonly node: Tag
+  }
+
+/** Page Info on the &quot;PostToTagConnection&quot; */
+export type PostToTagConnectionPageInfo = PageInfo &
+  TagConnectionPageInfo &
+  WpPageInfo & {
+    readonly __typename?: "PostToTagConnectionPageInfo"
+    /** When paginating forwards, the cursor to continue. */
+    readonly endCursor: Maybe<Scalars["String"]>
+    /** When paginating forwards, are there more items? */
+    readonly hasNextPage: Scalars["Boolean"]
+    /** When paginating backwards, are there more items? */
+    readonly hasPreviousPage: Scalars["Boolean"]
+    /** When paginating backwards, the cursor to continue. */
+    readonly startCursor: Maybe<Scalars["String"]>
+  }
 
 /** Arguments for filtering the PostToTagConnection connection */
 export type PostToTagConnectionWhereArgs = {
@@ -4087,6 +5532,8 @@ export type PostToTagConnectionWhereArgs = {
   readonly nameLike: InputMaybe<Scalars["String"]>
   /** Array of object IDs. Results will be limited to terms associated with these objects. */
   readonly objectIds: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
+  /** Direction the connection should be ordered in */
+  readonly order: InputMaybe<OrderEnum>
   /** Field(s) to order terms by. Defaults to 'name'. */
   readonly orderby: InputMaybe<TermObjectsConnectionOrderbyEnum>
   /** Whether to pad the quantity of a term's children in the quantity of each term's "count" object variable. Default false. */
@@ -4099,29 +5546,48 @@ export type PostToTagConnectionWhereArgs = {
   readonly slug: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
   /** Array of term taxonomy IDs, to match when querying terms. */
   readonly termTaxonomId: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
+  /** Array of term taxonomy IDs, to match when querying terms. */
+  readonly termTaxonomyId: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
   /** Whether to prime meta caches for matched terms. Default true. */
   readonly updateTermMetaCache: InputMaybe<Scalars["Boolean"]>
 }
 
-/** Connection between the post type and the TermNode type */
-export type PostToTermNodeConnection = {
-  readonly __typename?: "PostToTermNodeConnection"
-  /** Edges for the PostToTermNodeConnection connection */
-  readonly edges: Maybe<ReadonlyArray<Maybe<PostToTermNodeConnectionEdge>>>
-  /** The nodes of the connection, without the edges */
-  readonly nodes: Maybe<ReadonlyArray<Maybe<TermNode>>>
-  /** Information about pagination in a connection. */
-  readonly pageInfo: Maybe<WpPageInfo>
-}
+/** Connection between the Post type and the TermNode type */
+export type PostToTermNodeConnection = Connection &
+  TermNodeConnection & {
+    readonly __typename?: "PostToTermNodeConnection"
+    /** Edges for the PostToTermNodeConnection connection */
+    readonly edges: ReadonlyArray<PostToTermNodeConnectionEdge>
+    /** The nodes of the connection, without the edges */
+    readonly nodes: ReadonlyArray<TermNode>
+    /** Information about pagination in a connection. */
+    readonly pageInfo: PostToTermNodeConnectionPageInfo
+  }
 
 /** An edge in a connection */
-export type PostToTermNodeConnectionEdge = {
-  readonly __typename?: "PostToTermNodeConnectionEdge"
-  /** A cursor for use in pagination */
-  readonly cursor: Maybe<Scalars["String"]>
-  /** The item at the end of the edge */
-  readonly node: Maybe<TermNode>
-}
+export type PostToTermNodeConnectionEdge = Edge &
+  TermNodeConnectionEdge & {
+    readonly __typename?: "PostToTermNodeConnectionEdge"
+    /** A cursor for use in pagination */
+    readonly cursor: Maybe<Scalars["String"]>
+    /** The item at the end of the edge */
+    readonly node: TermNode
+  }
+
+/** Page Info on the &quot;PostToTermNodeConnection&quot; */
+export type PostToTermNodeConnectionPageInfo = PageInfo &
+  TermNodeConnectionPageInfo &
+  WpPageInfo & {
+    readonly __typename?: "PostToTermNodeConnectionPageInfo"
+    /** When paginating forwards, the cursor to continue. */
+    readonly endCursor: Maybe<Scalars["String"]>
+    /** When paginating forwards, are there more items? */
+    readonly hasNextPage: Scalars["Boolean"]
+    /** When paginating backwards, are there more items? */
+    readonly hasPreviousPage: Scalars["Boolean"]
+    /** When paginating backwards, the cursor to continue. */
+    readonly startCursor: Maybe<Scalars["String"]>
+  }
 
 /** Arguments for filtering the PostToTermNodeConnection connection */
 export type PostToTermNodeConnectionWhereArgs = {
@@ -4149,6 +5615,8 @@ export type PostToTermNodeConnectionWhereArgs = {
   readonly nameLike: InputMaybe<Scalars["String"]>
   /** Array of object IDs. Results will be limited to terms associated with these objects. */
   readonly objectIds: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
+  /** Direction the connection should be ordered in */
+  readonly order: InputMaybe<OrderEnum>
   /** Field(s) to order terms by. Defaults to 'name'. */
   readonly orderby: InputMaybe<TermObjectsConnectionOrderbyEnum>
   /** Whether to pad the quantity of a term's children in the quantity of each term's "count" object variable. Default false. */
@@ -4163,6 +5631,8 @@ export type PostToTermNodeConnectionWhereArgs = {
   readonly taxonomies: InputMaybe<ReadonlyArray<InputMaybe<TaxonomyEnum>>>
   /** Array of term taxonomy IDs, to match when querying terms. */
   readonly termTaxonomId: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
+  /** Array of term taxonomy IDs, to match when querying terms. */
+  readonly termTaxonomyId: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
   /** Whether to prime meta caches for matched terms. Default true. */
   readonly updateTermMetaCache: InputMaybe<Scalars["Boolean"]>
 }
@@ -4222,6 +5692,16 @@ export type PostTypeLabelDetails = {
   readonly viewItems: Maybe<Scalars["String"]>
 }
 
+/** Nodes that can be seen in a preview (unpublished) state. */
+export type Previewable = {
+  /** Whether the object is a node in the preview state */
+  readonly isPreview: Maybe<Scalars["Boolean"]>
+  /** The database id of the preview node */
+  readonly previewRevisionDatabaseId: Maybe<Scalars["Int"]>
+  /** Whether the object is a node in the preview state */
+  readonly previewRevisionId: Maybe<Scalars["ID"]>
+}
+
 /** The reading setting type */
 export type ReadingSettings = {
   readonly __typename?: "ReadingSettings"
@@ -4229,10 +5709,11 @@ export type ReadingSettings = {
   readonly postsPerPage: Maybe<Scalars["Int"]>
 }
 
-/** Input for the registerUser mutation */
+/** Input for the registerUser mutation. */
 export type RegisterUserInput = {
   /** User's AOL IM account. */
   readonly aim: InputMaybe<Scalars["String"]>
+  /** This is an ID that can be passed to a mutation by the client to track the progress of mutations and catch possible duplicate mutation submissions. */
   readonly clientMutationId: InputMaybe<Scalars["String"]>
   /** A string containing content about the user. */
   readonly description: InputMaybe<Scalars["String"]>
@@ -4266,21 +5747,26 @@ export type RegisterUserInput = {
   readonly yim: InputMaybe<Scalars["String"]>
 }
 
-/** The payload for the registerUser mutation */
+/** The payload for the registerUser mutation. */
 export type RegisterUserPayload = {
   readonly __typename?: "RegisterUserPayload"
+  /** If a &#039;clientMutationId&#039; input is provided to the mutation, it will be returned as output on the mutation. This ID can be used by the client to track the progress of mutations and catch possible duplicate mutation submissions. */
   readonly clientMutationId: Maybe<Scalars["String"]>
+  /** The User object mutation type. */
   readonly user: Maybe<User>
 }
 
 /** The logical relation between each item in the array when there are more than one. */
 export enum RelationEnum {
+  /** The logical AND condition returns true if both operands are true, otherwise, it returns false. */
   And = "AND",
+  /** The logical OR condition returns false if both operands are false, otherwise, it returns true. */
   Or = "OR",
 }
 
-/** Input for the resetUserPassword mutation */
+/** Input for the resetUserPassword mutation. */
 export type ResetUserPasswordInput = {
+  /** This is an ID that can be passed to a mutation by the client to track the progress of mutations and catch possible duplicate mutation submissions. */
   readonly clientMutationId: InputMaybe<Scalars["String"]>
   /** Password reset key */
   readonly key: InputMaybe<Scalars["String"]>
@@ -4290,23 +5776,27 @@ export type ResetUserPasswordInput = {
   readonly password: InputMaybe<Scalars["String"]>
 }
 
-/** The payload for the resetUserPassword mutation */
+/** The payload for the resetUserPassword mutation. */
 export type ResetUserPasswordPayload = {
   readonly __typename?: "ResetUserPasswordPayload"
+  /** If a &#039;clientMutationId&#039; input is provided to the mutation, it will be returned as output on the mutation. This ID can be used by the client to track the progress of mutations and catch possible duplicate mutation submissions. */
   readonly clientMutationId: Maybe<Scalars["String"]>
+  /** The User object mutation type. */
   readonly user: Maybe<User>
 }
 
-/** Input for the restoreComment mutation */
+/** Input for the restoreComment mutation. */
 export type RestoreCommentInput = {
+  /** This is an ID that can be passed to a mutation by the client to track the progress of mutations and catch possible duplicate mutation submissions. */
   readonly clientMutationId: InputMaybe<Scalars["String"]>
   /** The ID of the comment to be restored */
   readonly id: Scalars["ID"]
 }
 
-/** The payload for the restoreComment mutation */
+/** The payload for the restoreComment mutation. */
 export type RestoreCommentPayload = {
   readonly __typename?: "RestoreCommentPayload"
+  /** If a &#039;clientMutationId&#039; input is provided to the mutation, it will be returned as output on the mutation. This ID can be used by the client to track the progress of mutations and catch possible duplicate mutation submissions. */
   readonly clientMutationId: Maybe<Scalars["String"]>
   /** The restored comment object */
   readonly comment: Maybe<Comment>
@@ -4317,71 +5807,74 @@ export type RestoreCommentPayload = {
 /** The root mutation */
 export type RootMutation = {
   readonly __typename?: "RootMutation"
-  /** The payload for the createActionMonitorAction mutation */
+  /** The createActionMonitorAction mutation */
   readonly createActionMonitorAction: Maybe<CreateActionMonitorActionPayload>
-  /** The payload for the createCategory mutation */
+  /** The createCategory mutation */
   readonly createCategory: Maybe<CreateCategoryPayload>
-  /** The payload for the createComment mutation */
+  /** The createComment mutation */
   readonly createComment: Maybe<CreateCommentPayload>
-  /** The payload for the createMediaItem mutation */
+  /** The createMediaItem mutation */
   readonly createMediaItem: Maybe<CreateMediaItemPayload>
-  /** The payload for the createPage mutation */
+  /** The createPage mutation */
   readonly createPage: Maybe<CreatePagePayload>
-  /** The payload for the createPost mutation */
+  /** The createPost mutation */
   readonly createPost: Maybe<CreatePostPayload>
-  /** The payload for the createPostFormat mutation */
+  /** The createPostFormat mutation */
   readonly createPostFormat: Maybe<CreatePostFormatPayload>
-  /** The payload for the createTag mutation */
+  /** The createTag mutation */
   readonly createTag: Maybe<CreateTagPayload>
-  /** The payload for the createUser mutation */
+  /** The createUser mutation */
   readonly createUser: Maybe<CreateUserPayload>
-  /** The payload for the deleteActionMonitorAction mutation */
+  /** The deleteActionMonitorAction mutation */
   readonly deleteActionMonitorAction: Maybe<DeleteActionMonitorActionPayload>
-  /** The payload for the deleteCategory mutation */
+  /** The deleteCategory mutation */
   readonly deleteCategory: Maybe<DeleteCategoryPayload>
-  /** The payload for the deleteComment mutation */
+  /** The deleteComment mutation */
   readonly deleteComment: Maybe<DeleteCommentPayload>
-  /** The payload for the deleteMediaItem mutation */
+  /** The deleteMediaItem mutation */
   readonly deleteMediaItem: Maybe<DeleteMediaItemPayload>
-  /** The payload for the deletePage mutation */
+  /** The deletePage mutation */
   readonly deletePage: Maybe<DeletePagePayload>
-  /** The payload for the deletePost mutation */
+  /** The deletePost mutation */
   readonly deletePost: Maybe<DeletePostPayload>
-  /** The payload for the deletePostFormat mutation */
+  /** The deletePostFormat mutation */
   readonly deletePostFormat: Maybe<DeletePostFormatPayload>
-  /** The payload for the deleteTag mutation */
+  /** The deleteTag mutation */
   readonly deleteTag: Maybe<DeleteTagPayload>
-  /** The payload for the deleteUser mutation */
+  /** The deleteUser mutation */
   readonly deleteUser: Maybe<DeleteUserPayload>
+  /** Increase the count. */
   readonly increaseCount: Maybe<Scalars["Int"]>
-  /** The payload for the registerUser mutation */
+  /** The registerUser mutation */
   readonly registerUser: Maybe<RegisterUserPayload>
-  /** The payload for the resetUserPassword mutation */
+  /** The resetUserPassword mutation */
   readonly resetUserPassword: Maybe<ResetUserPasswordPayload>
-  /** The payload for the restoreComment mutation */
+  /** The restoreComment mutation */
   readonly restoreComment: Maybe<RestoreCommentPayload>
-  /** The payload for the sendPasswordResetEmail mutation */
+  /** Send password reset email to user */
   readonly sendPasswordResetEmail: Maybe<SendPasswordResetEmailPayload>
-  /** The payload for the updateActionMonitorAction mutation */
+  /** The updateActionMonitorAction mutation */
   readonly updateActionMonitorAction: Maybe<UpdateActionMonitorActionPayload>
-  /** The payload for the UpdateCategory mutation */
+  /** The updateCategory mutation */
   readonly updateCategory: Maybe<UpdateCategoryPayload>
-  /** The payload for the updateComment mutation */
+  /** The updateComment mutation */
   readonly updateComment: Maybe<UpdateCommentPayload>
-  /** The payload for the updateMediaItem mutation */
+  /** The updateMediaItem mutation */
   readonly updateMediaItem: Maybe<UpdateMediaItemPayload>
-  /** The payload for the updatePage mutation */
+  /** The updatePage mutation */
   readonly updatePage: Maybe<UpdatePagePayload>
-  /** The payload for the updatePost mutation */
+  /** The updatePost mutation */
   readonly updatePost: Maybe<UpdatePostPayload>
-  /** The payload for the UpdatePostFormat mutation */
+  /** The updatePostFormat mutation */
   readonly updatePostFormat: Maybe<UpdatePostFormatPayload>
-  /** The payload for the updateSettings mutation */
+  /** The updateSettings mutation */
   readonly updateSettings: Maybe<UpdateSettingsPayload>
-  /** The payload for the UpdateTag mutation */
+  /** The updateTag mutation */
   readonly updateTag: Maybe<UpdateTagPayload>
-  /** The payload for the updateUser mutation */
+  /** The updateUser mutation */
   readonly updateUser: Maybe<UpdateUserPayload>
+  /** The wpGatsbyRemotePreviewStatus mutation */
+  readonly wpGatsbyRemotePreviewStatus: Maybe<WpGatsbyRemotePreviewStatusPayload>
 }
 
 /** The root mutation */
@@ -4549,6 +6042,11 @@ export type RootMutationUpdateUserArgs = {
   input: UpdateUserInput
 }
 
+/** The root mutation */
+export type RootMutationWpGatsbyRemotePreviewStatusArgs = {
+  input: WpGatsbyRemotePreviewStatusInput
+}
+
 /** The root entry point into the Graph */
 export type RootQuery = {
   readonly __typename?: "RootQuery"
@@ -4579,7 +6077,9 @@ export type RootQuery = {
   readonly contentType: Maybe<ContentType>
   /** Connection between the RootQuery type and the ContentType type */
   readonly contentTypes: Maybe<RootQueryToContentTypeConnection>
+  /** Fields of the &#039;DiscussionSettings&#039; settings group */
   readonly discussionSettings: Maybe<DiscussionSettings>
+  /** Fields of the &#039;GeneralSettings&#039; settings group */
   readonly generalSettings: Maybe<GeneralSettings>
   /** Confirms this is a WP Gatsby site */
   readonly isWpGatsby: Maybe<Scalars["Boolean"]>
@@ -4602,6 +6102,7 @@ export type RootQuery = {
   readonly menus: Maybe<RootQueryToMenuConnection>
   /** Fetches an object given its ID */
   readonly node: Maybe<Node>
+  /** Fetches an object given its Unique Resource Identifier */
   readonly nodeByUri: Maybe<UniformResourceIdentifiable>
   /** An object of the page Type.  */
   readonly page: Maybe<Page>
@@ -4629,13 +6130,14 @@ export type RootQuery = {
   readonly postFormats: Maybe<RootQueryToPostFormatConnection>
   /** Connection between the RootQuery type and the post type */
   readonly posts: Maybe<RootQueryToPostConnection>
+  /** Fields of the &#039;ReadingSettings&#039; settings group */
   readonly readingSettings: Maybe<ReadingSettings>
   /** Connection between the RootQuery type and the EnqueuedScript type */
   readonly registeredScripts: Maybe<RootQueryToEnqueuedScriptConnection>
   /** Connection between the RootQuery type and the EnqueuedStylesheet type */
   readonly registeredStylesheets: Maybe<RootQueryToEnqueuedStylesheetConnection>
-  /** Connection between the RootQuery type and the ContentRevisionUnion type */
-  readonly revisions: Maybe<RootQueryToContentRevisionUnionConnection>
+  /** Connection between the RootQuery type and the ContentNode type */
+  readonly revisions: Maybe<RootQueryToRevisionsConnection>
   /** Returns an MD5 hash of the schema, useful in determining if the schema has changed. */
   readonly schemaMd5: Maybe<Scalars["String"]>
   /** A 0bject */
@@ -4668,6 +6170,7 @@ export type RootQuery = {
   readonly wpGatsby: Maybe<WpGatsby>
   /** Information about the compatibility of the WordPress server with a provided version of gatsby-source-wordpress. */
   readonly wpGatsbyCompatibility: Maybe<WpGatsbyCompatibility>
+  /** Fields of the &#039;WritingSettings&#039; settings group */
   readonly writingSettings: Maybe<WritingSettings>
 }
 
@@ -4713,6 +6216,7 @@ export type RootQueryCategoryArgs = {
 /** The root entry point into the Graph */
 export type RootQueryCommentArgs = {
   id: Scalars["ID"]
+  idType: InputMaybe<CommentNodeIdTypeEnum>
 }
 
 /** The root entry point into the Graph */
@@ -4853,6 +6357,7 @@ export type RootQueryPluginsArgs = {
   before: InputMaybe<Scalars["String"]>
   first: InputMaybe<Scalars["Int"]>
   last: InputMaybe<Scalars["Int"]>
+  where: InputMaybe<RootQueryToPluginConnectionWhereArgs>
 }
 
 /** The root entry point into the Graph */
@@ -4916,7 +6421,7 @@ export type RootQueryRevisionsArgs = {
   before: InputMaybe<Scalars["String"]>
   first: InputMaybe<Scalars["Int"]>
   last: InputMaybe<Scalars["Int"]>
-  where: InputMaybe<RootQueryToContentRevisionUnionConnectionWhereArgs>
+  where: InputMaybe<RootQueryToRevisionsConnectionWhereArgs>
 }
 
 /** The root entry point into the Graph */
@@ -5012,26 +6517,44 @@ export type RootQueryWpGatsbyCompatibilityArgs = {
 }
 
 /** Connection between the RootQuery type and the ActionMonitorAction type */
-export type RootQueryToActionMonitorActionConnection = {
-  readonly __typename?: "RootQueryToActionMonitorActionConnection"
-  /** Edges for the RootQueryToActionMonitorActionConnection connection */
-  readonly edges: Maybe<
-    ReadonlyArray<Maybe<RootQueryToActionMonitorActionConnectionEdge>>
-  >
-  /** The nodes of the connection, without the edges */
-  readonly nodes: Maybe<ReadonlyArray<Maybe<ActionMonitorAction>>>
-  /** Information about pagination in a connection. */
-  readonly pageInfo: Maybe<WpPageInfo>
-}
+export type RootQueryToActionMonitorActionConnection =
+  ActionMonitorActionConnection &
+    Connection & {
+      readonly __typename?: "RootQueryToActionMonitorActionConnection"
+      /** Edges for the RootQueryToActionMonitorActionConnection connection */
+      readonly edges: ReadonlyArray<RootQueryToActionMonitorActionConnectionEdge>
+      /** The nodes of the connection, without the edges */
+      readonly nodes: ReadonlyArray<ActionMonitorAction>
+      /** Information about pagination in a connection. */
+      readonly pageInfo: RootQueryToActionMonitorActionConnectionPageInfo
+    }
 
 /** An edge in a connection */
-export type RootQueryToActionMonitorActionConnectionEdge = {
-  readonly __typename?: "RootQueryToActionMonitorActionConnectionEdge"
-  /** A cursor for use in pagination */
-  readonly cursor: Maybe<Scalars["String"]>
-  /** The item at the end of the edge */
-  readonly node: Maybe<ActionMonitorAction>
-}
+export type RootQueryToActionMonitorActionConnectionEdge =
+  ActionMonitorActionConnectionEdge &
+    Edge & {
+      readonly __typename?: "RootQueryToActionMonitorActionConnectionEdge"
+      /** A cursor for use in pagination */
+      readonly cursor: Maybe<Scalars["String"]>
+      /** The item at the end of the edge */
+      readonly node: ActionMonitorAction
+    }
+
+/** Page Info on the &quot;RootQueryToActionMonitorActionConnection&quot; */
+export type RootQueryToActionMonitorActionConnectionPageInfo =
+  ActionMonitorActionConnectionPageInfo &
+    PageInfo &
+    WpPageInfo & {
+      readonly __typename?: "RootQueryToActionMonitorActionConnectionPageInfo"
+      /** When paginating forwards, the cursor to continue. */
+      readonly endCursor: Maybe<Scalars["String"]>
+      /** When paginating forwards, are there more items? */
+      readonly hasNextPage: Scalars["Boolean"]
+      /** When paginating backwards, are there more items? */
+      readonly hasPreviousPage: Scalars["Boolean"]
+      /** When paginating backwards, the cursor to continue. */
+      readonly startCursor: Maybe<Scalars["String"]>
+    }
 
 /** Arguments for filtering the RootQueryToActionMonitorActionConnection connection */
 export type RootQueryToActionMonitorActionConnectionWhereArgs = {
@@ -5039,7 +6562,7 @@ export type RootQueryToActionMonitorActionConnectionWhereArgs = {
   readonly dateQuery: InputMaybe<DateQueryInput>
   /** True for objects with passwords; False for objects without passwords; null for all objects with or without passwords */
   readonly hasPassword: InputMaybe<Scalars["Boolean"]>
-  /** Specific ID of the object */
+  /** Specific database ID of the object */
   readonly id: InputMaybe<Scalars["Int"]>
   /** Array of IDs for the objects to retrieve */
   readonly in: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
@@ -5069,31 +6592,50 @@ export type RootQueryToActionMonitorActionConnectionWhereArgs = {
   readonly search: InputMaybe<Scalars["String"]>
   /** List Actions performed since a timestamp. */
   readonly sinceTimestamp: InputMaybe<Scalars["Float"]>
+  /** Retrieve posts where post status is in an array. */
   readonly stati: InputMaybe<ReadonlyArray<InputMaybe<PostStatusEnum>>>
+  /** Show posts with a specific status. */
   readonly status: InputMaybe<PostStatusEnum>
   /** Title of the object */
   readonly title: InputMaybe<Scalars["String"]>
 }
 
 /** Connection between the RootQuery type and the category type */
-export type RootQueryToCategoryConnection = {
-  readonly __typename?: "RootQueryToCategoryConnection"
-  /** Edges for the RootQueryToCategoryConnection connection */
-  readonly edges: Maybe<ReadonlyArray<Maybe<RootQueryToCategoryConnectionEdge>>>
-  /** The nodes of the connection, without the edges */
-  readonly nodes: Maybe<ReadonlyArray<Maybe<Category>>>
-  /** Information about pagination in a connection. */
-  readonly pageInfo: Maybe<WpPageInfo>
-}
+export type RootQueryToCategoryConnection = CategoryConnection &
+  Connection & {
+    readonly __typename?: "RootQueryToCategoryConnection"
+    /** Edges for the RootQueryToCategoryConnection connection */
+    readonly edges: ReadonlyArray<RootQueryToCategoryConnectionEdge>
+    /** The nodes of the connection, without the edges */
+    readonly nodes: ReadonlyArray<Category>
+    /** Information about pagination in a connection. */
+    readonly pageInfo: RootQueryToCategoryConnectionPageInfo
+  }
 
 /** An edge in a connection */
-export type RootQueryToCategoryConnectionEdge = {
-  readonly __typename?: "RootQueryToCategoryConnectionEdge"
-  /** A cursor for use in pagination */
-  readonly cursor: Maybe<Scalars["String"]>
-  /** The item at the end of the edge */
-  readonly node: Maybe<Category>
-}
+export type RootQueryToCategoryConnectionEdge = CategoryConnectionEdge &
+  Edge & {
+    readonly __typename?: "RootQueryToCategoryConnectionEdge"
+    /** A cursor for use in pagination */
+    readonly cursor: Maybe<Scalars["String"]>
+    /** The item at the end of the edge */
+    readonly node: Category
+  }
+
+/** Page Info on the &quot;RootQueryToCategoryConnection&quot; */
+export type RootQueryToCategoryConnectionPageInfo = CategoryConnectionPageInfo &
+  PageInfo &
+  WpPageInfo & {
+    readonly __typename?: "RootQueryToCategoryConnectionPageInfo"
+    /** When paginating forwards, the cursor to continue. */
+    readonly endCursor: Maybe<Scalars["String"]>
+    /** When paginating forwards, are there more items? */
+    readonly hasNextPage: Scalars["Boolean"]
+    /** When paginating backwards, are there more items? */
+    readonly hasPreviousPage: Scalars["Boolean"]
+    /** When paginating backwards, the cursor to continue. */
+    readonly startCursor: Maybe<Scalars["String"]>
+  }
 
 /** Arguments for filtering the RootQueryToCategoryConnection connection */
 export type RootQueryToCategoryConnectionWhereArgs = {
@@ -5121,6 +6663,8 @@ export type RootQueryToCategoryConnectionWhereArgs = {
   readonly nameLike: InputMaybe<Scalars["String"]>
   /** Array of object IDs. Results will be limited to terms associated with these objects. */
   readonly objectIds: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
+  /** Direction the connection should be ordered in */
+  readonly order: InputMaybe<OrderEnum>
   /** Field(s) to order terms by. Defaults to 'name'. */
   readonly orderby: InputMaybe<TermObjectsConnectionOrderbyEnum>
   /** Whether to pad the quantity of a term's children in the quantity of each term's "count" object variable. Default false. */
@@ -5133,29 +6677,48 @@ export type RootQueryToCategoryConnectionWhereArgs = {
   readonly slug: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
   /** Array of term taxonomy IDs, to match when querying terms. */
   readonly termTaxonomId: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
+  /** Array of term taxonomy IDs, to match when querying terms. */
+  readonly termTaxonomyId: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
   /** Whether to prime meta caches for matched terms. Default true. */
   readonly updateTermMetaCache: InputMaybe<Scalars["Boolean"]>
 }
 
 /** Connection between the RootQuery type and the Comment type */
-export type RootQueryToCommentConnection = {
-  readonly __typename?: "RootQueryToCommentConnection"
-  /** Edges for the RootQueryToCommentConnection connection */
-  readonly edges: Maybe<ReadonlyArray<Maybe<RootQueryToCommentConnectionEdge>>>
-  /** The nodes of the connection, without the edges */
-  readonly nodes: Maybe<ReadonlyArray<Maybe<Comment>>>
-  /** Information about pagination in a connection. */
-  readonly pageInfo: Maybe<WpPageInfo>
-}
+export type RootQueryToCommentConnection = CommentConnection &
+  Connection & {
+    readonly __typename?: "RootQueryToCommentConnection"
+    /** Edges for the RootQueryToCommentConnection connection */
+    readonly edges: ReadonlyArray<RootQueryToCommentConnectionEdge>
+    /** The nodes of the connection, without the edges */
+    readonly nodes: ReadonlyArray<Comment>
+    /** Information about pagination in a connection. */
+    readonly pageInfo: RootQueryToCommentConnectionPageInfo
+  }
 
 /** An edge in a connection */
-export type RootQueryToCommentConnectionEdge = {
-  readonly __typename?: "RootQueryToCommentConnectionEdge"
-  /** A cursor for use in pagination */
-  readonly cursor: Maybe<Scalars["String"]>
-  /** The item at the end of the edge */
-  readonly node: Maybe<Comment>
-}
+export type RootQueryToCommentConnectionEdge = CommentConnectionEdge &
+  Edge & {
+    readonly __typename?: "RootQueryToCommentConnectionEdge"
+    /** A cursor for use in pagination */
+    readonly cursor: Maybe<Scalars["String"]>
+    /** The item at the end of the edge */
+    readonly node: Comment
+  }
+
+/** Page Info on the &quot;RootQueryToCommentConnection&quot; */
+export type RootQueryToCommentConnectionPageInfo = CommentConnectionPageInfo &
+  PageInfo &
+  WpPageInfo & {
+    readonly __typename?: "RootQueryToCommentConnectionPageInfo"
+    /** When paginating forwards, the cursor to continue. */
+    readonly endCursor: Maybe<Scalars["String"]>
+    /** When paginating forwards, are there more items? */
+    readonly hasNextPage: Scalars["Boolean"]
+    /** When paginating backwards, are there more items? */
+    readonly hasPreviousPage: Scalars["Boolean"]
+    /** When paginating backwards, the cursor to continue. */
+    readonly startCursor: Maybe<Scalars["String"]>
+  }
 
 /** Arguments for filtering the RootQueryToCommentConnection connection */
 export type RootQueryToCommentConnectionWhereArgs = {
@@ -5193,7 +6756,7 @@ export type RootQueryToCommentConnectionWhereArgs = {
   readonly contentIdIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
   /** Array of content object IDs to exclude affiliated comments for. */
   readonly contentIdNotIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** Content object name to retrieve affiliated comments for. */
+  /** Content object name (i.e. slug ) to retrieve affiliated comments for. */
   readonly contentName: InputMaybe<Scalars["String"]>
   /** Content Object parent ID to retrieve affiliated comments for. */
   readonly contentParent: InputMaybe<Scalars["Int"]>
@@ -5226,26 +6789,42 @@ export type RootQueryToCommentConnectionWhereArgs = {
 }
 
 /** Connection between the RootQuery type and the ContentNode type */
-export type RootQueryToContentNodeConnection = {
-  readonly __typename?: "RootQueryToContentNodeConnection"
-  /** Edges for the RootQueryToContentNodeConnection connection */
-  readonly edges: Maybe<
-    ReadonlyArray<Maybe<RootQueryToContentNodeConnectionEdge>>
-  >
-  /** The nodes of the connection, without the edges */
-  readonly nodes: Maybe<ReadonlyArray<Maybe<ContentNode>>>
-  /** Information about pagination in a connection. */
-  readonly pageInfo: Maybe<WpPageInfo>
-}
+export type RootQueryToContentNodeConnection = Connection &
+  ContentNodeConnection & {
+    readonly __typename?: "RootQueryToContentNodeConnection"
+    /** Edges for the RootQueryToContentNodeConnection connection */
+    readonly edges: ReadonlyArray<RootQueryToContentNodeConnectionEdge>
+    /** The nodes of the connection, without the edges */
+    readonly nodes: ReadonlyArray<ContentNode>
+    /** Information about pagination in a connection. */
+    readonly pageInfo: RootQueryToContentNodeConnectionPageInfo
+  }
 
 /** An edge in a connection */
-export type RootQueryToContentNodeConnectionEdge = {
-  readonly __typename?: "RootQueryToContentNodeConnectionEdge"
-  /** A cursor for use in pagination */
-  readonly cursor: Maybe<Scalars["String"]>
-  /** The item at the end of the edge */
-  readonly node: Maybe<ContentNode>
-}
+export type RootQueryToContentNodeConnectionEdge = ContentNodeConnectionEdge &
+  Edge & {
+    readonly __typename?: "RootQueryToContentNodeConnectionEdge"
+    /** A cursor for use in pagination */
+    readonly cursor: Maybe<Scalars["String"]>
+    /** The item at the end of the edge */
+    readonly node: ContentNode
+  }
+
+/** Page Info on the &quot;RootQueryToContentNodeConnection&quot; */
+export type RootQueryToContentNodeConnectionPageInfo =
+  ContentNodeConnectionPageInfo &
+    PageInfo &
+    WpPageInfo & {
+      readonly __typename?: "RootQueryToContentNodeConnectionPageInfo"
+      /** When paginating forwards, the cursor to continue. */
+      readonly endCursor: Maybe<Scalars["String"]>
+      /** When paginating forwards, are there more items? */
+      readonly hasNextPage: Scalars["Boolean"]
+      /** When paginating backwards, are there more items? */
+      readonly hasPreviousPage: Scalars["Boolean"]
+      /** When paginating backwards, the cursor to continue. */
+      readonly startCursor: Maybe<Scalars["String"]>
+    }
 
 /** Arguments for filtering the RootQueryToContentNodeConnection connection */
 export type RootQueryToContentNodeConnectionWhereArgs = {
@@ -5255,7 +6834,7 @@ export type RootQueryToContentNodeConnectionWhereArgs = {
   readonly dateQuery: InputMaybe<DateQueryInput>
   /** True for objects with passwords; False for objects without passwords; null for all objects with or without passwords */
   readonly hasPassword: InputMaybe<Scalars["Boolean"]>
-  /** Specific ID of the object */
+  /** Specific database ID of the object */
   readonly id: InputMaybe<Scalars["Int"]>
   /** Array of IDs for the objects to retrieve */
   readonly in: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
@@ -5281,159 +6860,165 @@ export type RootQueryToContentNodeConnectionWhereArgs = {
   readonly password: InputMaybe<Scalars["String"]>
   /** Show Posts based on a keyword search */
   readonly search: InputMaybe<Scalars["String"]>
+  /** Retrieve posts where post status is in an array. */
   readonly stati: InputMaybe<ReadonlyArray<InputMaybe<PostStatusEnum>>>
-  readonly status: InputMaybe<PostStatusEnum>
-  /** Title of the object */
-  readonly title: InputMaybe<Scalars["String"]>
-}
-
-/** Connection between the RootQuery type and the ContentRevisionUnion type */
-export type RootQueryToContentRevisionUnionConnection = {
-  readonly __typename?: "RootQueryToContentRevisionUnionConnection"
-  /** Edges for the RootQueryToContentRevisionUnionConnection connection */
-  readonly edges: Maybe<
-    ReadonlyArray<Maybe<RootQueryToContentRevisionUnionConnectionEdge>>
-  >
-  /** The nodes of the connection, without the edges */
-  readonly nodes: Maybe<ReadonlyArray<Maybe<ContentRevisionUnion>>>
-  /** Information about pagination in a connection. */
-  readonly pageInfo: Maybe<WpPageInfo>
-}
-
-/** An edge in a connection */
-export type RootQueryToContentRevisionUnionConnectionEdge = {
-  readonly __typename?: "RootQueryToContentRevisionUnionConnectionEdge"
-  /** A cursor for use in pagination */
-  readonly cursor: Maybe<Scalars["String"]>
-  /** The item at the end of the edge */
-  readonly node: Maybe<ContentRevisionUnion>
-}
-
-/** Arguments for filtering the RootQueryToContentRevisionUnionConnection connection */
-export type RootQueryToContentRevisionUnionConnectionWhereArgs = {
-  /** Filter the connection based on dates */
-  readonly dateQuery: InputMaybe<DateQueryInput>
-  /** True for objects with passwords; False for objects without passwords; null for all objects with or without passwords */
-  readonly hasPassword: InputMaybe<Scalars["Boolean"]>
-  /** Specific ID of the object */
-  readonly id: InputMaybe<Scalars["Int"]>
-  /** Array of IDs for the objects to retrieve */
-  readonly in: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** Get objects with a specific mimeType property */
-  readonly mimeType: InputMaybe<MimeTypeEnum>
-  /** Slug / post_name of the object */
-  readonly name: InputMaybe<Scalars["String"]>
-  /** Specify objects to retrieve. Use slugs */
-  readonly nameIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
-  /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
-  readonly notIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** What paramater to use to order the objects by. */
-  readonly orderby: InputMaybe<
-    ReadonlyArray<InputMaybe<PostObjectsConnectionOrderbyInput>>
-  >
-  /** Use ID to return only children. Use 0 to return only top-level items */
-  readonly parent: InputMaybe<Scalars["ID"]>
-  /** Specify objects whose parent is in an array */
-  readonly parentIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** Specify posts whose parent is not in an array */
-  readonly parentNotIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** Show posts with a specific password. */
-  readonly password: InputMaybe<Scalars["String"]>
-  /** Show Posts based on a keyword search */
-  readonly search: InputMaybe<Scalars["String"]>
-  readonly stati: InputMaybe<ReadonlyArray<InputMaybe<PostStatusEnum>>>
+  /** Show posts with a specific status. */
   readonly status: InputMaybe<PostStatusEnum>
   /** Title of the object */
   readonly title: InputMaybe<Scalars["String"]>
 }
 
 /** Connection between the RootQuery type and the ContentType type */
-export type RootQueryToContentTypeConnection = {
-  readonly __typename?: "RootQueryToContentTypeConnection"
-  /** Edges for the RootQueryToContentTypeConnection connection */
-  readonly edges: Maybe<
-    ReadonlyArray<Maybe<RootQueryToContentTypeConnectionEdge>>
-  >
-  /** The nodes of the connection, without the edges */
-  readonly nodes: Maybe<ReadonlyArray<Maybe<ContentType>>>
-  /** Information about pagination in a connection. */
-  readonly pageInfo: Maybe<WpPageInfo>
-}
+export type RootQueryToContentTypeConnection = Connection &
+  ContentTypeConnection & {
+    readonly __typename?: "RootQueryToContentTypeConnection"
+    /** Edges for the RootQueryToContentTypeConnection connection */
+    readonly edges: ReadonlyArray<RootQueryToContentTypeConnectionEdge>
+    /** The nodes of the connection, without the edges */
+    readonly nodes: ReadonlyArray<ContentType>
+    /** Information about pagination in a connection. */
+    readonly pageInfo: RootQueryToContentTypeConnectionPageInfo
+  }
 
 /** An edge in a connection */
-export type RootQueryToContentTypeConnectionEdge = {
-  readonly __typename?: "RootQueryToContentTypeConnectionEdge"
-  /** A cursor for use in pagination */
-  readonly cursor: Maybe<Scalars["String"]>
-  /** The item at the end of the edge */
-  readonly node: Maybe<ContentType>
-}
+export type RootQueryToContentTypeConnectionEdge = ContentTypeConnectionEdge &
+  Edge & {
+    readonly __typename?: "RootQueryToContentTypeConnectionEdge"
+    /** A cursor for use in pagination */
+    readonly cursor: Maybe<Scalars["String"]>
+    /** The item at the end of the edge */
+    readonly node: ContentType
+  }
+
+/** Page Info on the &quot;RootQueryToContentTypeConnection&quot; */
+export type RootQueryToContentTypeConnectionPageInfo =
+  ContentTypeConnectionPageInfo &
+    PageInfo &
+    WpPageInfo & {
+      readonly __typename?: "RootQueryToContentTypeConnectionPageInfo"
+      /** When paginating forwards, the cursor to continue. */
+      readonly endCursor: Maybe<Scalars["String"]>
+      /** When paginating forwards, are there more items? */
+      readonly hasNextPage: Scalars["Boolean"]
+      /** When paginating backwards, are there more items? */
+      readonly hasPreviousPage: Scalars["Boolean"]
+      /** When paginating backwards, the cursor to continue. */
+      readonly startCursor: Maybe<Scalars["String"]>
+    }
 
 /** Connection between the RootQuery type and the EnqueuedScript type */
-export type RootQueryToEnqueuedScriptConnection = {
-  readonly __typename?: "RootQueryToEnqueuedScriptConnection"
-  /** Edges for the RootQueryToEnqueuedScriptConnection connection */
-  readonly edges: Maybe<
-    ReadonlyArray<Maybe<RootQueryToEnqueuedScriptConnectionEdge>>
-  >
-  /** The nodes of the connection, without the edges */
-  readonly nodes: Maybe<ReadonlyArray<Maybe<EnqueuedScript>>>
-  /** Information about pagination in a connection. */
-  readonly pageInfo: Maybe<WpPageInfo>
-}
+export type RootQueryToEnqueuedScriptConnection = Connection &
+  EnqueuedScriptConnection & {
+    readonly __typename?: "RootQueryToEnqueuedScriptConnection"
+    /** Edges for the RootQueryToEnqueuedScriptConnection connection */
+    readonly edges: ReadonlyArray<RootQueryToEnqueuedScriptConnectionEdge>
+    /** The nodes of the connection, without the edges */
+    readonly nodes: ReadonlyArray<EnqueuedScript>
+    /** Information about pagination in a connection. */
+    readonly pageInfo: RootQueryToEnqueuedScriptConnectionPageInfo
+  }
 
 /** An edge in a connection */
-export type RootQueryToEnqueuedScriptConnectionEdge = {
-  readonly __typename?: "RootQueryToEnqueuedScriptConnectionEdge"
-  /** A cursor for use in pagination */
-  readonly cursor: Maybe<Scalars["String"]>
-  /** The item at the end of the edge */
-  readonly node: Maybe<EnqueuedScript>
-}
+export type RootQueryToEnqueuedScriptConnectionEdge = Edge &
+  EnqueuedScriptConnectionEdge & {
+    readonly __typename?: "RootQueryToEnqueuedScriptConnectionEdge"
+    /** A cursor for use in pagination */
+    readonly cursor: Maybe<Scalars["String"]>
+    /** The item at the end of the edge */
+    readonly node: EnqueuedScript
+  }
+
+/** Page Info on the &quot;RootQueryToEnqueuedScriptConnection&quot; */
+export type RootQueryToEnqueuedScriptConnectionPageInfo =
+  EnqueuedScriptConnectionPageInfo &
+    PageInfo &
+    WpPageInfo & {
+      readonly __typename?: "RootQueryToEnqueuedScriptConnectionPageInfo"
+      /** When paginating forwards, the cursor to continue. */
+      readonly endCursor: Maybe<Scalars["String"]>
+      /** When paginating forwards, are there more items? */
+      readonly hasNextPage: Scalars["Boolean"]
+      /** When paginating backwards, are there more items? */
+      readonly hasPreviousPage: Scalars["Boolean"]
+      /** When paginating backwards, the cursor to continue. */
+      readonly startCursor: Maybe<Scalars["String"]>
+    }
 
 /** Connection between the RootQuery type and the EnqueuedStylesheet type */
-export type RootQueryToEnqueuedStylesheetConnection = {
-  readonly __typename?: "RootQueryToEnqueuedStylesheetConnection"
-  /** Edges for the RootQueryToEnqueuedStylesheetConnection connection */
-  readonly edges: Maybe<
-    ReadonlyArray<Maybe<RootQueryToEnqueuedStylesheetConnectionEdge>>
-  >
-  /** The nodes of the connection, without the edges */
-  readonly nodes: Maybe<ReadonlyArray<Maybe<EnqueuedStylesheet>>>
-  /** Information about pagination in a connection. */
-  readonly pageInfo: Maybe<WpPageInfo>
-}
+export type RootQueryToEnqueuedStylesheetConnection = Connection &
+  EnqueuedStylesheetConnection & {
+    readonly __typename?: "RootQueryToEnqueuedStylesheetConnection"
+    /** Edges for the RootQueryToEnqueuedStylesheetConnection connection */
+    readonly edges: ReadonlyArray<RootQueryToEnqueuedStylesheetConnectionEdge>
+    /** The nodes of the connection, without the edges */
+    readonly nodes: ReadonlyArray<EnqueuedStylesheet>
+    /** Information about pagination in a connection. */
+    readonly pageInfo: RootQueryToEnqueuedStylesheetConnectionPageInfo
+  }
 
 /** An edge in a connection */
-export type RootQueryToEnqueuedStylesheetConnectionEdge = {
-  readonly __typename?: "RootQueryToEnqueuedStylesheetConnectionEdge"
-  /** A cursor for use in pagination */
-  readonly cursor: Maybe<Scalars["String"]>
-  /** The item at the end of the edge */
-  readonly node: Maybe<EnqueuedStylesheet>
-}
+export type RootQueryToEnqueuedStylesheetConnectionEdge = Edge &
+  EnqueuedStylesheetConnectionEdge & {
+    readonly __typename?: "RootQueryToEnqueuedStylesheetConnectionEdge"
+    /** A cursor for use in pagination */
+    readonly cursor: Maybe<Scalars["String"]>
+    /** The item at the end of the edge */
+    readonly node: EnqueuedStylesheet
+  }
+
+/** Page Info on the &quot;RootQueryToEnqueuedStylesheetConnection&quot; */
+export type RootQueryToEnqueuedStylesheetConnectionPageInfo =
+  EnqueuedStylesheetConnectionPageInfo &
+    PageInfo &
+    WpPageInfo & {
+      readonly __typename?: "RootQueryToEnqueuedStylesheetConnectionPageInfo"
+      /** When paginating forwards, the cursor to continue. */
+      readonly endCursor: Maybe<Scalars["String"]>
+      /** When paginating forwards, are there more items? */
+      readonly hasNextPage: Scalars["Boolean"]
+      /** When paginating backwards, are there more items? */
+      readonly hasPreviousPage: Scalars["Boolean"]
+      /** When paginating backwards, the cursor to continue. */
+      readonly startCursor: Maybe<Scalars["String"]>
+    }
 
 /** Connection between the RootQuery type and the mediaItem type */
-export type RootQueryToMediaItemConnection = {
-  readonly __typename?: "RootQueryToMediaItemConnection"
-  /** Edges for the RootQueryToMediaItemConnection connection */
-  readonly edges: Maybe<
-    ReadonlyArray<Maybe<RootQueryToMediaItemConnectionEdge>>
-  >
-  /** The nodes of the connection, without the edges */
-  readonly nodes: Maybe<ReadonlyArray<Maybe<MediaItem>>>
-  /** Information about pagination in a connection. */
-  readonly pageInfo: Maybe<WpPageInfo>
-}
+export type RootQueryToMediaItemConnection = Connection &
+  MediaItemConnection & {
+    readonly __typename?: "RootQueryToMediaItemConnection"
+    /** Edges for the RootQueryToMediaItemConnection connection */
+    readonly edges: ReadonlyArray<RootQueryToMediaItemConnectionEdge>
+    /** The nodes of the connection, without the edges */
+    readonly nodes: ReadonlyArray<MediaItem>
+    /** Information about pagination in a connection. */
+    readonly pageInfo: RootQueryToMediaItemConnectionPageInfo
+  }
 
 /** An edge in a connection */
-export type RootQueryToMediaItemConnectionEdge = {
-  readonly __typename?: "RootQueryToMediaItemConnectionEdge"
-  /** A cursor for use in pagination */
-  readonly cursor: Maybe<Scalars["String"]>
-  /** The item at the end of the edge */
-  readonly node: Maybe<MediaItem>
-}
+export type RootQueryToMediaItemConnectionEdge = Edge &
+  MediaItemConnectionEdge & {
+    readonly __typename?: "RootQueryToMediaItemConnectionEdge"
+    /** A cursor for use in pagination */
+    readonly cursor: Maybe<Scalars["String"]>
+    /** The item at the end of the edge */
+    readonly node: MediaItem
+  }
+
+/** Page Info on the &quot;RootQueryToMediaItemConnection&quot; */
+export type RootQueryToMediaItemConnectionPageInfo =
+  MediaItemConnectionPageInfo &
+    PageInfo &
+    WpPageInfo & {
+      readonly __typename?: "RootQueryToMediaItemConnectionPageInfo"
+      /** When paginating forwards, the cursor to continue. */
+      readonly endCursor: Maybe<Scalars["String"]>
+      /** When paginating forwards, are there more items? */
+      readonly hasNextPage: Scalars["Boolean"]
+      /** When paginating backwards, are there more items? */
+      readonly hasPreviousPage: Scalars["Boolean"]
+      /** When paginating backwards, the cursor to continue. */
+      readonly startCursor: Maybe<Scalars["String"]>
+    }
 
 /** Arguments for filtering the RootQueryToMediaItemConnection connection */
 export type RootQueryToMediaItemConnectionWhereArgs = {
@@ -5449,7 +7034,7 @@ export type RootQueryToMediaItemConnectionWhereArgs = {
   readonly dateQuery: InputMaybe<DateQueryInput>
   /** True for objects with passwords; False for objects without passwords; null for all objects with or without passwords */
   readonly hasPassword: InputMaybe<Scalars["Boolean"]>
-  /** Specific ID of the object */
+  /** Specific database ID of the object */
   readonly id: InputMaybe<Scalars["Int"]>
   /** Array of IDs for the objects to retrieve */
   readonly in: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
@@ -5475,35 +7060,54 @@ export type RootQueryToMediaItemConnectionWhereArgs = {
   readonly password: InputMaybe<Scalars["String"]>
   /** Show Posts based on a keyword search */
   readonly search: InputMaybe<Scalars["String"]>
+  /** Retrieve posts where post status is in an array. */
   readonly stati: InputMaybe<ReadonlyArray<InputMaybe<PostStatusEnum>>>
+  /** Show posts with a specific status. */
   readonly status: InputMaybe<PostStatusEnum>
   /** Title of the object */
   readonly title: InputMaybe<Scalars["String"]>
 }
 
 /** Connection between the RootQuery type and the Menu type */
-export type RootQueryToMenuConnection = {
-  readonly __typename?: "RootQueryToMenuConnection"
-  /** Edges for the RootQueryToMenuConnection connection */
-  readonly edges: Maybe<ReadonlyArray<Maybe<RootQueryToMenuConnectionEdge>>>
-  /** The nodes of the connection, without the edges */
-  readonly nodes: Maybe<ReadonlyArray<Maybe<Menu>>>
-  /** Information about pagination in a connection. */
-  readonly pageInfo: Maybe<WpPageInfo>
-}
+export type RootQueryToMenuConnection = Connection &
+  MenuConnection & {
+    readonly __typename?: "RootQueryToMenuConnection"
+    /** Edges for the RootQueryToMenuConnection connection */
+    readonly edges: ReadonlyArray<RootQueryToMenuConnectionEdge>
+    /** The nodes of the connection, without the edges */
+    readonly nodes: ReadonlyArray<Menu>
+    /** Information about pagination in a connection. */
+    readonly pageInfo: RootQueryToMenuConnectionPageInfo
+  }
 
 /** An edge in a connection */
-export type RootQueryToMenuConnectionEdge = {
-  readonly __typename?: "RootQueryToMenuConnectionEdge"
-  /** A cursor for use in pagination */
-  readonly cursor: Maybe<Scalars["String"]>
-  /** The item at the end of the edge */
-  readonly node: Maybe<Menu>
-}
+export type RootQueryToMenuConnectionEdge = Edge &
+  MenuConnectionEdge & {
+    readonly __typename?: "RootQueryToMenuConnectionEdge"
+    /** A cursor for use in pagination */
+    readonly cursor: Maybe<Scalars["String"]>
+    /** The item at the end of the edge */
+    readonly node: Menu
+  }
+
+/** Page Info on the &quot;RootQueryToMenuConnection&quot; */
+export type RootQueryToMenuConnectionPageInfo = MenuConnectionPageInfo &
+  PageInfo &
+  WpPageInfo & {
+    readonly __typename?: "RootQueryToMenuConnectionPageInfo"
+    /** When paginating forwards, the cursor to continue. */
+    readonly endCursor: Maybe<Scalars["String"]>
+    /** When paginating forwards, are there more items? */
+    readonly hasNextPage: Scalars["Boolean"]
+    /** When paginating backwards, are there more items? */
+    readonly hasPreviousPage: Scalars["Boolean"]
+    /** When paginating backwards, the cursor to continue. */
+    readonly startCursor: Maybe<Scalars["String"]>
+  }
 
 /** Arguments for filtering the RootQueryToMenuConnection connection */
 export type RootQueryToMenuConnectionWhereArgs = {
-  /** The ID of the object */
+  /** The database ID of the object */
   readonly id: InputMaybe<Scalars["Int"]>
   /** The menu location for the menu being queried */
   readonly location: InputMaybe<MenuLocationEnum>
@@ -5512,28 +7116,45 @@ export type RootQueryToMenuConnectionWhereArgs = {
 }
 
 /** Connection between the RootQuery type and the MenuItem type */
-export type RootQueryToMenuItemConnection = {
-  readonly __typename?: "RootQueryToMenuItemConnection"
-  /** Edges for the RootQueryToMenuItemConnection connection */
-  readonly edges: Maybe<ReadonlyArray<Maybe<RootQueryToMenuItemConnectionEdge>>>
-  /** The nodes of the connection, without the edges */
-  readonly nodes: Maybe<ReadonlyArray<Maybe<MenuItem>>>
-  /** Information about pagination in a connection. */
-  readonly pageInfo: Maybe<WpPageInfo>
-}
+export type RootQueryToMenuItemConnection = Connection &
+  MenuItemConnection & {
+    readonly __typename?: "RootQueryToMenuItemConnection"
+    /** Edges for the RootQueryToMenuItemConnection connection */
+    readonly edges: ReadonlyArray<RootQueryToMenuItemConnectionEdge>
+    /** The nodes of the connection, without the edges */
+    readonly nodes: ReadonlyArray<MenuItem>
+    /** Information about pagination in a connection. */
+    readonly pageInfo: RootQueryToMenuItemConnectionPageInfo
+  }
 
 /** An edge in a connection */
-export type RootQueryToMenuItemConnectionEdge = {
-  readonly __typename?: "RootQueryToMenuItemConnectionEdge"
-  /** A cursor for use in pagination */
-  readonly cursor: Maybe<Scalars["String"]>
-  /** The item at the end of the edge */
-  readonly node: Maybe<MenuItem>
-}
+export type RootQueryToMenuItemConnectionEdge = Edge &
+  MenuItemConnectionEdge & {
+    readonly __typename?: "RootQueryToMenuItemConnectionEdge"
+    /** A cursor for use in pagination */
+    readonly cursor: Maybe<Scalars["String"]>
+    /** The item at the end of the edge */
+    readonly node: MenuItem
+  }
+
+/** Page Info on the &quot;RootQueryToMenuItemConnection&quot; */
+export type RootQueryToMenuItemConnectionPageInfo = MenuItemConnectionPageInfo &
+  PageInfo &
+  WpPageInfo & {
+    readonly __typename?: "RootQueryToMenuItemConnectionPageInfo"
+    /** When paginating forwards, the cursor to continue. */
+    readonly endCursor: Maybe<Scalars["String"]>
+    /** When paginating forwards, are there more items? */
+    readonly hasNextPage: Scalars["Boolean"]
+    /** When paginating backwards, are there more items? */
+    readonly hasPreviousPage: Scalars["Boolean"]
+    /** When paginating backwards, the cursor to continue. */
+    readonly startCursor: Maybe<Scalars["String"]>
+  }
 
 /** Arguments for filtering the RootQueryToMenuItemConnection connection */
 export type RootQueryToMenuItemConnectionWhereArgs = {
-  /** The ID of the object */
+  /** The database ID of the object */
   readonly id: InputMaybe<Scalars["Int"]>
   /** The menu location for the menu being queried */
   readonly location: InputMaybe<MenuLocationEnum>
@@ -5544,24 +7165,41 @@ export type RootQueryToMenuItemConnectionWhereArgs = {
 }
 
 /** Connection between the RootQuery type and the page type */
-export type RootQueryToPageConnection = {
-  readonly __typename?: "RootQueryToPageConnection"
-  /** Edges for the RootQueryToPageConnection connection */
-  readonly edges: Maybe<ReadonlyArray<Maybe<RootQueryToPageConnectionEdge>>>
-  /** The nodes of the connection, without the edges */
-  readonly nodes: Maybe<ReadonlyArray<Maybe<Page>>>
-  /** Information about pagination in a connection. */
-  readonly pageInfo: Maybe<WpPageInfo>
-}
+export type RootQueryToPageConnection = Connection &
+  PageConnection & {
+    readonly __typename?: "RootQueryToPageConnection"
+    /** Edges for the RootQueryToPageConnection connection */
+    readonly edges: ReadonlyArray<RootQueryToPageConnectionEdge>
+    /** The nodes of the connection, without the edges */
+    readonly nodes: ReadonlyArray<Page>
+    /** Information about pagination in a connection. */
+    readonly pageInfo: RootQueryToPageConnectionPageInfo
+  }
 
 /** An edge in a connection */
-export type RootQueryToPageConnectionEdge = {
-  readonly __typename?: "RootQueryToPageConnectionEdge"
-  /** A cursor for use in pagination */
-  readonly cursor: Maybe<Scalars["String"]>
-  /** The item at the end of the edge */
-  readonly node: Maybe<Page>
-}
+export type RootQueryToPageConnectionEdge = Edge &
+  PageConnectionEdge & {
+    readonly __typename?: "RootQueryToPageConnectionEdge"
+    /** A cursor for use in pagination */
+    readonly cursor: Maybe<Scalars["String"]>
+    /** The item at the end of the edge */
+    readonly node: Page
+  }
+
+/** Page Info on the &quot;RootQueryToPageConnection&quot; */
+export type RootQueryToPageConnectionPageInfo = PageConnectionPageInfo &
+  PageInfo &
+  WpPageInfo & {
+    readonly __typename?: "RootQueryToPageConnectionPageInfo"
+    /** When paginating forwards, the cursor to continue. */
+    readonly endCursor: Maybe<Scalars["String"]>
+    /** When paginating forwards, are there more items? */
+    readonly hasNextPage: Scalars["Boolean"]
+    /** When paginating backwards, are there more items? */
+    readonly hasPreviousPage: Scalars["Boolean"]
+    /** When paginating backwards, the cursor to continue. */
+    readonly startCursor: Maybe<Scalars["String"]>
+  }
 
 /** Arguments for filtering the RootQueryToPageConnection connection */
 export type RootQueryToPageConnectionWhereArgs = {
@@ -5577,7 +7215,7 @@ export type RootQueryToPageConnectionWhereArgs = {
   readonly dateQuery: InputMaybe<DateQueryInput>
   /** True for objects with passwords; False for objects without passwords; null for all objects with or without passwords */
   readonly hasPassword: InputMaybe<Scalars["Boolean"]>
-  /** Specific ID of the object */
+  /** Specific database ID of the object */
   readonly id: InputMaybe<Scalars["Int"]>
   /** Array of IDs for the objects to retrieve */
   readonly in: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
@@ -5603,51 +7241,97 @@ export type RootQueryToPageConnectionWhereArgs = {
   readonly password: InputMaybe<Scalars["String"]>
   /** Show Posts based on a keyword search */
   readonly search: InputMaybe<Scalars["String"]>
+  /** Retrieve posts where post status is in an array. */
   readonly stati: InputMaybe<ReadonlyArray<InputMaybe<PostStatusEnum>>>
+  /** Show posts with a specific status. */
   readonly status: InputMaybe<PostStatusEnum>
   /** Title of the object */
   readonly title: InputMaybe<Scalars["String"]>
 }
 
 /** Connection between the RootQuery type and the Plugin type */
-export type RootQueryToPluginConnection = {
-  readonly __typename?: "RootQueryToPluginConnection"
-  /** Edges for the RootQueryToPluginConnection connection */
-  readonly edges: Maybe<ReadonlyArray<Maybe<RootQueryToPluginConnectionEdge>>>
-  /** The nodes of the connection, without the edges */
-  readonly nodes: Maybe<ReadonlyArray<Maybe<Plugin>>>
-  /** Information about pagination in a connection. */
-  readonly pageInfo: Maybe<WpPageInfo>
-}
+export type RootQueryToPluginConnection = Connection &
+  PluginConnection & {
+    readonly __typename?: "RootQueryToPluginConnection"
+    /** Edges for the RootQueryToPluginConnection connection */
+    readonly edges: ReadonlyArray<RootQueryToPluginConnectionEdge>
+    /** The nodes of the connection, without the edges */
+    readonly nodes: ReadonlyArray<Plugin>
+    /** Information about pagination in a connection. */
+    readonly pageInfo: RootQueryToPluginConnectionPageInfo
+  }
 
 /** An edge in a connection */
-export type RootQueryToPluginConnectionEdge = {
-  readonly __typename?: "RootQueryToPluginConnectionEdge"
-  /** A cursor for use in pagination */
-  readonly cursor: Maybe<Scalars["String"]>
-  /** The item at the end of the edge */
-  readonly node: Maybe<Plugin>
+export type RootQueryToPluginConnectionEdge = Edge &
+  PluginConnectionEdge & {
+    readonly __typename?: "RootQueryToPluginConnectionEdge"
+    /** A cursor for use in pagination */
+    readonly cursor: Maybe<Scalars["String"]>
+    /** The item at the end of the edge */
+    readonly node: Plugin
+  }
+
+/** Page Info on the &quot;RootQueryToPluginConnection&quot; */
+export type RootQueryToPluginConnectionPageInfo = PageInfo &
+  PluginConnectionPageInfo &
+  WpPageInfo & {
+    readonly __typename?: "RootQueryToPluginConnectionPageInfo"
+    /** When paginating forwards, the cursor to continue. */
+    readonly endCursor: Maybe<Scalars["String"]>
+    /** When paginating forwards, are there more items? */
+    readonly hasNextPage: Scalars["Boolean"]
+    /** When paginating backwards, are there more items? */
+    readonly hasPreviousPage: Scalars["Boolean"]
+    /** When paginating backwards, the cursor to continue. */
+    readonly startCursor: Maybe<Scalars["String"]>
+  }
+
+/** Arguments for filtering the RootQueryToPluginConnection connection */
+export type RootQueryToPluginConnectionWhereArgs = {
+  /** Show plugin based on a keyword search. */
+  readonly search: InputMaybe<Scalars["String"]>
+  /** Retrieve plugins where plugin status is in an array. */
+  readonly stati: InputMaybe<ReadonlyArray<InputMaybe<PluginStatusEnum>>>
+  /** Show plugins with a specific status. */
+  readonly status: InputMaybe<PluginStatusEnum>
 }
 
 /** Connection between the RootQuery type and the post type */
-export type RootQueryToPostConnection = {
-  readonly __typename?: "RootQueryToPostConnection"
-  /** Edges for the RootQueryToPostConnection connection */
-  readonly edges: Maybe<ReadonlyArray<Maybe<RootQueryToPostConnectionEdge>>>
-  /** The nodes of the connection, without the edges */
-  readonly nodes: Maybe<ReadonlyArray<Maybe<Post>>>
-  /** Information about pagination in a connection. */
-  readonly pageInfo: Maybe<WpPageInfo>
-}
+export type RootQueryToPostConnection = Connection &
+  PostConnection & {
+    readonly __typename?: "RootQueryToPostConnection"
+    /** Edges for the RootQueryToPostConnection connection */
+    readonly edges: ReadonlyArray<RootQueryToPostConnectionEdge>
+    /** The nodes of the connection, without the edges */
+    readonly nodes: ReadonlyArray<Post>
+    /** Information about pagination in a connection. */
+    readonly pageInfo: RootQueryToPostConnectionPageInfo
+  }
 
 /** An edge in a connection */
-export type RootQueryToPostConnectionEdge = {
-  readonly __typename?: "RootQueryToPostConnectionEdge"
-  /** A cursor for use in pagination */
-  readonly cursor: Maybe<Scalars["String"]>
-  /** The item at the end of the edge */
-  readonly node: Maybe<Post>
-}
+export type RootQueryToPostConnectionEdge = Edge &
+  PostConnectionEdge & {
+    readonly __typename?: "RootQueryToPostConnectionEdge"
+    /** A cursor for use in pagination */
+    readonly cursor: Maybe<Scalars["String"]>
+    /** The item at the end of the edge */
+    readonly node: Post
+  }
+
+/** Page Info on the &quot;RootQueryToPostConnection&quot; */
+export type RootQueryToPostConnectionPageInfo = PageInfo &
+  PostConnectionPageInfo &
+  WpPageInfo & {
+    readonly __typename?: "RootQueryToPostConnectionPageInfo"
+    /** When paginating forwards, the cursor to continue. */
+    readonly endCursor: Maybe<Scalars["String"]>
+    /** When paginating forwards, are there more items? */
+    readonly hasNextPage: Scalars["Boolean"]
+    /** When paginating backwards, are there more items? */
+    readonly hasPreviousPage: Scalars["Boolean"]
+    /** When paginating backwards, the cursor to continue. */
+    readonly startCursor: Maybe<Scalars["String"]>
+  }
 
 /** Arguments for filtering the RootQueryToPostConnection connection */
 export type RootQueryToPostConnectionWhereArgs = {
@@ -5671,7 +7355,7 @@ export type RootQueryToPostConnectionWhereArgs = {
   readonly dateQuery: InputMaybe<DateQueryInput>
   /** True for objects with passwords; False for objects without passwords; null for all objects with or without passwords */
   readonly hasPassword: InputMaybe<Scalars["Boolean"]>
-  /** Specific ID of the object */
+  /** Specific database ID of the object */
   readonly id: InputMaybe<Scalars["Int"]>
   /** Array of IDs for the objects to retrieve */
   readonly in: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
@@ -5697,7 +7381,9 @@ export type RootQueryToPostConnectionWhereArgs = {
   readonly password: InputMaybe<Scalars["String"]>
   /** Show Posts based on a keyword search */
   readonly search: InputMaybe<Scalars["String"]>
+  /** Retrieve posts where post status is in an array. */
   readonly stati: InputMaybe<ReadonlyArray<InputMaybe<PostStatusEnum>>>
+  /** Show posts with a specific status. */
   readonly status: InputMaybe<PostStatusEnum>
   /** Tag Slug */
   readonly tag: InputMaybe<Scalars["String"]>
@@ -5707,35 +7393,50 @@ export type RootQueryToPostConnectionWhereArgs = {
   readonly tagIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
   /** Array of tag IDs, used to display objects from one tag OR another */
   readonly tagNotIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** Array of tag slugs, used to display objects from one tag OR another */
+  /** Array of tag slugs, used to display objects from one tag AND another */
   readonly tagSlugAnd: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
-  /** Array of tag slugs, used to exclude objects in specified tags */
+  /** Array of tag slugs, used to include objects in ANY specified tags */
   readonly tagSlugIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
   /** Title of the object */
   readonly title: InputMaybe<Scalars["String"]>
 }
 
 /** Connection between the RootQuery type and the postFormat type */
-export type RootQueryToPostFormatConnection = {
-  readonly __typename?: "RootQueryToPostFormatConnection"
-  /** Edges for the RootQueryToPostFormatConnection connection */
-  readonly edges: Maybe<
-    ReadonlyArray<Maybe<RootQueryToPostFormatConnectionEdge>>
-  >
-  /** The nodes of the connection, without the edges */
-  readonly nodes: Maybe<ReadonlyArray<Maybe<PostFormat>>>
-  /** Information about pagination in a connection. */
-  readonly pageInfo: Maybe<WpPageInfo>
-}
+export type RootQueryToPostFormatConnection = Connection &
+  PostFormatConnection & {
+    readonly __typename?: "RootQueryToPostFormatConnection"
+    /** Edges for the RootQueryToPostFormatConnection connection */
+    readonly edges: ReadonlyArray<RootQueryToPostFormatConnectionEdge>
+    /** The nodes of the connection, without the edges */
+    readonly nodes: ReadonlyArray<PostFormat>
+    /** Information about pagination in a connection. */
+    readonly pageInfo: RootQueryToPostFormatConnectionPageInfo
+  }
 
 /** An edge in a connection */
-export type RootQueryToPostFormatConnectionEdge = {
-  readonly __typename?: "RootQueryToPostFormatConnectionEdge"
-  /** A cursor for use in pagination */
-  readonly cursor: Maybe<Scalars["String"]>
-  /** The item at the end of the edge */
-  readonly node: Maybe<PostFormat>
-}
+export type RootQueryToPostFormatConnectionEdge = Edge &
+  PostFormatConnectionEdge & {
+    readonly __typename?: "RootQueryToPostFormatConnectionEdge"
+    /** A cursor for use in pagination */
+    readonly cursor: Maybe<Scalars["String"]>
+    /** The item at the end of the edge */
+    readonly node: PostFormat
+  }
+
+/** Page Info on the &quot;RootQueryToPostFormatConnection&quot; */
+export type RootQueryToPostFormatConnectionPageInfo = PageInfo &
+  PostFormatConnectionPageInfo &
+  WpPageInfo & {
+    readonly __typename?: "RootQueryToPostFormatConnectionPageInfo"
+    /** When paginating forwards, the cursor to continue. */
+    readonly endCursor: Maybe<Scalars["String"]>
+    /** When paginating forwards, are there more items? */
+    readonly hasNextPage: Scalars["Boolean"]
+    /** When paginating backwards, are there more items? */
+    readonly hasPreviousPage: Scalars["Boolean"]
+    /** When paginating backwards, the cursor to continue. */
+    readonly startCursor: Maybe<Scalars["String"]>
+  }
 
 /** Arguments for filtering the RootQueryToPostFormatConnection connection */
 export type RootQueryToPostFormatConnectionWhereArgs = {
@@ -5763,6 +7464,8 @@ export type RootQueryToPostFormatConnectionWhereArgs = {
   readonly nameLike: InputMaybe<Scalars["String"]>
   /** Array of object IDs. Results will be limited to terms associated with these objects. */
   readonly objectIds: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
+  /** Direction the connection should be ordered in */
+  readonly order: InputMaybe<OrderEnum>
   /** Field(s) to order terms by. Defaults to 'name'. */
   readonly orderby: InputMaybe<TermObjectsConnectionOrderbyEnum>
   /** Whether to pad the quantity of a term's children in the quantity of each term's "count" object variable. Default false. */
@@ -5775,29 +7478,128 @@ export type RootQueryToPostFormatConnectionWhereArgs = {
   readonly slug: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
   /** Array of term taxonomy IDs, to match when querying terms. */
   readonly termTaxonomId: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
+  /** Array of term taxonomy IDs, to match when querying terms. */
+  readonly termTaxonomyId: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
   /** Whether to prime meta caches for matched terms. Default true. */
   readonly updateTermMetaCache: InputMaybe<Scalars["Boolean"]>
 }
 
-/** Connection between the RootQuery type and the tag type */
-export type RootQueryToTagConnection = {
-  readonly __typename?: "RootQueryToTagConnection"
-  /** Edges for the RootQueryToTagConnection connection */
-  readonly edges: Maybe<ReadonlyArray<Maybe<RootQueryToTagConnectionEdge>>>
-  /** The nodes of the connection, without the edges */
-  readonly nodes: Maybe<ReadonlyArray<Maybe<Tag>>>
-  /** Information about pagination in a connection. */
-  readonly pageInfo: Maybe<WpPageInfo>
-}
+/** Connection between the RootQuery type and the ContentNode type */
+export type RootQueryToRevisionsConnection = Connection &
+  ContentNodeConnection & {
+    readonly __typename?: "RootQueryToRevisionsConnection"
+    /** Edges for the RootQueryToRevisionsConnection connection */
+    readonly edges: ReadonlyArray<RootQueryToRevisionsConnectionEdge>
+    /** The nodes of the connection, without the edges */
+    readonly nodes: ReadonlyArray<ContentNode>
+    /** Information about pagination in a connection. */
+    readonly pageInfo: RootQueryToRevisionsConnectionPageInfo
+  }
 
 /** An edge in a connection */
-export type RootQueryToTagConnectionEdge = {
-  readonly __typename?: "RootQueryToTagConnectionEdge"
-  /** A cursor for use in pagination */
-  readonly cursor: Maybe<Scalars["String"]>
-  /** The item at the end of the edge */
-  readonly node: Maybe<Tag>
+export type RootQueryToRevisionsConnectionEdge = ContentNodeConnectionEdge &
+  Edge & {
+    readonly __typename?: "RootQueryToRevisionsConnectionEdge"
+    /** A cursor for use in pagination */
+    readonly cursor: Maybe<Scalars["String"]>
+    /** The item at the end of the edge */
+    readonly node: ContentNode
+  }
+
+/** Page Info on the &quot;RootQueryToRevisionsConnection&quot; */
+export type RootQueryToRevisionsConnectionPageInfo =
+  ContentNodeConnectionPageInfo &
+    PageInfo &
+    WpPageInfo & {
+      readonly __typename?: "RootQueryToRevisionsConnectionPageInfo"
+      /** When paginating forwards, the cursor to continue. */
+      readonly endCursor: Maybe<Scalars["String"]>
+      /** When paginating forwards, are there more items? */
+      readonly hasNextPage: Scalars["Boolean"]
+      /** When paginating backwards, are there more items? */
+      readonly hasPreviousPage: Scalars["Boolean"]
+      /** When paginating backwards, the cursor to continue. */
+      readonly startCursor: Maybe<Scalars["String"]>
+    }
+
+/** Arguments for filtering the RootQueryToRevisionsConnection connection */
+export type RootQueryToRevisionsConnectionWhereArgs = {
+  /** The Types of content to filter */
+  readonly contentTypes: InputMaybe<ReadonlyArray<InputMaybe<ContentTypeEnum>>>
+  /** Filter the connection based on dates */
+  readonly dateQuery: InputMaybe<DateQueryInput>
+  /** True for objects with passwords; False for objects without passwords; null for all objects with or without passwords */
+  readonly hasPassword: InputMaybe<Scalars["Boolean"]>
+  /** Specific database ID of the object */
+  readonly id: InputMaybe<Scalars["Int"]>
+  /** Array of IDs for the objects to retrieve */
+  readonly in: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
+  /** Get objects with a specific mimeType property */
+  readonly mimeType: InputMaybe<MimeTypeEnum>
+  /** Slug / post_name of the object */
+  readonly name: InputMaybe<Scalars["String"]>
+  /** Specify objects to retrieve. Use slugs */
+  readonly nameIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
+  /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
+  readonly notIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
+  /** What paramater to use to order the objects by. */
+  readonly orderby: InputMaybe<
+    ReadonlyArray<InputMaybe<PostObjectsConnectionOrderbyInput>>
+  >
+  /** Use ID to return only children. Use 0 to return only top-level items */
+  readonly parent: InputMaybe<Scalars["ID"]>
+  /** Specify objects whose parent is in an array */
+  readonly parentIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
+  /** Specify posts whose parent is not in an array */
+  readonly parentNotIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
+  /** Show posts with a specific password. */
+  readonly password: InputMaybe<Scalars["String"]>
+  /** Show Posts based on a keyword search */
+  readonly search: InputMaybe<Scalars["String"]>
+  /** Retrieve posts where post status is in an array. */
+  readonly stati: InputMaybe<ReadonlyArray<InputMaybe<PostStatusEnum>>>
+  /** Show posts with a specific status. */
+  readonly status: InputMaybe<PostStatusEnum>
+  /** Title of the object */
+  readonly title: InputMaybe<Scalars["String"]>
 }
+
+/** Connection between the RootQuery type and the tag type */
+export type RootQueryToTagConnection = Connection &
+  TagConnection & {
+    readonly __typename?: "RootQueryToTagConnection"
+    /** Edges for the RootQueryToTagConnection connection */
+    readonly edges: ReadonlyArray<RootQueryToTagConnectionEdge>
+    /** The nodes of the connection, without the edges */
+    readonly nodes: ReadonlyArray<Tag>
+    /** Information about pagination in a connection. */
+    readonly pageInfo: RootQueryToTagConnectionPageInfo
+  }
+
+/** An edge in a connection */
+export type RootQueryToTagConnectionEdge = Edge &
+  TagConnectionEdge & {
+    readonly __typename?: "RootQueryToTagConnectionEdge"
+    /** A cursor for use in pagination */
+    readonly cursor: Maybe<Scalars["String"]>
+    /** The item at the end of the edge */
+    readonly node: Tag
+  }
+
+/** Page Info on the &quot;RootQueryToTagConnection&quot; */
+export type RootQueryToTagConnectionPageInfo = PageInfo &
+  TagConnectionPageInfo &
+  WpPageInfo & {
+    readonly __typename?: "RootQueryToTagConnectionPageInfo"
+    /** When paginating forwards, the cursor to continue. */
+    readonly endCursor: Maybe<Scalars["String"]>
+    /** When paginating forwards, are there more items? */
+    readonly hasNextPage: Scalars["Boolean"]
+    /** When paginating backwards, are there more items? */
+    readonly hasPreviousPage: Scalars["Boolean"]
+    /** When paginating backwards, the cursor to continue. */
+    readonly startCursor: Maybe<Scalars["String"]>
+  }
 
 /** Arguments for filtering the RootQueryToTagConnection connection */
 export type RootQueryToTagConnectionWhereArgs = {
@@ -5825,6 +7627,8 @@ export type RootQueryToTagConnectionWhereArgs = {
   readonly nameLike: InputMaybe<Scalars["String"]>
   /** Array of object IDs. Results will be limited to terms associated with these objects. */
   readonly objectIds: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
+  /** Direction the connection should be ordered in */
+  readonly order: InputMaybe<OrderEnum>
   /** Field(s) to order terms by. Defaults to 'name'. */
   readonly orderby: InputMaybe<TermObjectsConnectionOrderbyEnum>
   /** Whether to pad the quantity of a term's children in the quantity of each term's "count" object variable. Default false. */
@@ -5837,49 +7641,85 @@ export type RootQueryToTagConnectionWhereArgs = {
   readonly slug: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
   /** Array of term taxonomy IDs, to match when querying terms. */
   readonly termTaxonomId: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
+  /** Array of term taxonomy IDs, to match when querying terms. */
+  readonly termTaxonomyId: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
   /** Whether to prime meta caches for matched terms. Default true. */
   readonly updateTermMetaCache: InputMaybe<Scalars["Boolean"]>
 }
 
 /** Connection between the RootQuery type and the Taxonomy type */
-export type RootQueryToTaxonomyConnection = {
-  readonly __typename?: "RootQueryToTaxonomyConnection"
-  /** Edges for the RootQueryToTaxonomyConnection connection */
-  readonly edges: Maybe<ReadonlyArray<Maybe<RootQueryToTaxonomyConnectionEdge>>>
-  /** The nodes of the connection, without the edges */
-  readonly nodes: Maybe<ReadonlyArray<Maybe<Taxonomy>>>
-  /** Information about pagination in a connection. */
-  readonly pageInfo: Maybe<WpPageInfo>
-}
+export type RootQueryToTaxonomyConnection = Connection &
+  TaxonomyConnection & {
+    readonly __typename?: "RootQueryToTaxonomyConnection"
+    /** Edges for the RootQueryToTaxonomyConnection connection */
+    readonly edges: ReadonlyArray<RootQueryToTaxonomyConnectionEdge>
+    /** The nodes of the connection, without the edges */
+    readonly nodes: ReadonlyArray<Taxonomy>
+    /** Information about pagination in a connection. */
+    readonly pageInfo: RootQueryToTaxonomyConnectionPageInfo
+  }
 
 /** An edge in a connection */
-export type RootQueryToTaxonomyConnectionEdge = {
-  readonly __typename?: "RootQueryToTaxonomyConnectionEdge"
-  /** A cursor for use in pagination */
-  readonly cursor: Maybe<Scalars["String"]>
-  /** The item at the end of the edge */
-  readonly node: Maybe<Taxonomy>
-}
+export type RootQueryToTaxonomyConnectionEdge = Edge &
+  TaxonomyConnectionEdge & {
+    readonly __typename?: "RootQueryToTaxonomyConnectionEdge"
+    /** A cursor for use in pagination */
+    readonly cursor: Maybe<Scalars["String"]>
+    /** The item at the end of the edge */
+    readonly node: Taxonomy
+  }
+
+/** Page Info on the &quot;RootQueryToTaxonomyConnection&quot; */
+export type RootQueryToTaxonomyConnectionPageInfo = PageInfo &
+  TaxonomyConnectionPageInfo &
+  WpPageInfo & {
+    readonly __typename?: "RootQueryToTaxonomyConnectionPageInfo"
+    /** When paginating forwards, the cursor to continue. */
+    readonly endCursor: Maybe<Scalars["String"]>
+    /** When paginating forwards, are there more items? */
+    readonly hasNextPage: Scalars["Boolean"]
+    /** When paginating backwards, are there more items? */
+    readonly hasPreviousPage: Scalars["Boolean"]
+    /** When paginating backwards, the cursor to continue. */
+    readonly startCursor: Maybe<Scalars["String"]>
+  }
 
 /** Connection between the RootQuery type and the TermNode type */
-export type RootQueryToTermNodeConnection = {
-  readonly __typename?: "RootQueryToTermNodeConnection"
-  /** Edges for the RootQueryToTermNodeConnection connection */
-  readonly edges: Maybe<ReadonlyArray<Maybe<RootQueryToTermNodeConnectionEdge>>>
-  /** The nodes of the connection, without the edges */
-  readonly nodes: Maybe<ReadonlyArray<Maybe<TermNode>>>
-  /** Information about pagination in a connection. */
-  readonly pageInfo: Maybe<WpPageInfo>
-}
+export type RootQueryToTermNodeConnection = Connection &
+  TermNodeConnection & {
+    readonly __typename?: "RootQueryToTermNodeConnection"
+    /** Edges for the RootQueryToTermNodeConnection connection */
+    readonly edges: ReadonlyArray<RootQueryToTermNodeConnectionEdge>
+    /** The nodes of the connection, without the edges */
+    readonly nodes: ReadonlyArray<TermNode>
+    /** Information about pagination in a connection. */
+    readonly pageInfo: RootQueryToTermNodeConnectionPageInfo
+  }
 
 /** An edge in a connection */
-export type RootQueryToTermNodeConnectionEdge = {
-  readonly __typename?: "RootQueryToTermNodeConnectionEdge"
-  /** A cursor for use in pagination */
-  readonly cursor: Maybe<Scalars["String"]>
-  /** The item at the end of the edge */
-  readonly node: Maybe<TermNode>
-}
+export type RootQueryToTermNodeConnectionEdge = Edge &
+  TermNodeConnectionEdge & {
+    readonly __typename?: "RootQueryToTermNodeConnectionEdge"
+    /** A cursor for use in pagination */
+    readonly cursor: Maybe<Scalars["String"]>
+    /** The item at the end of the edge */
+    readonly node: TermNode
+  }
+
+/** Page Info on the &quot;RootQueryToTermNodeConnection&quot; */
+export type RootQueryToTermNodeConnectionPageInfo = PageInfo &
+  TermNodeConnectionPageInfo &
+  WpPageInfo & {
+    readonly __typename?: "RootQueryToTermNodeConnectionPageInfo"
+    /** When paginating forwards, the cursor to continue. */
+    readonly endCursor: Maybe<Scalars["String"]>
+    /** When paginating forwards, are there more items? */
+    readonly hasNextPage: Scalars["Boolean"]
+    /** When paginating backwards, are there more items? */
+    readonly hasPreviousPage: Scalars["Boolean"]
+    /** When paginating backwards, the cursor to continue. */
+    readonly startCursor: Maybe<Scalars["String"]>
+  }
 
 /** Arguments for filtering the RootQueryToTermNodeConnection connection */
 export type RootQueryToTermNodeConnectionWhereArgs = {
@@ -5907,6 +7747,8 @@ export type RootQueryToTermNodeConnectionWhereArgs = {
   readonly nameLike: InputMaybe<Scalars["String"]>
   /** Array of object IDs. Results will be limited to terms associated with these objects. */
   readonly objectIds: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
+  /** Direction the connection should be ordered in */
+  readonly order: InputMaybe<OrderEnum>
   /** Field(s) to order terms by. Defaults to 'name'. */
   readonly orderby: InputMaybe<TermObjectsConnectionOrderbyEnum>
   /** Whether to pad the quantity of a term's children in the quantity of each term's "count" object variable. Default false. */
@@ -5921,49 +7763,85 @@ export type RootQueryToTermNodeConnectionWhereArgs = {
   readonly taxonomies: InputMaybe<ReadonlyArray<InputMaybe<TaxonomyEnum>>>
   /** Array of term taxonomy IDs, to match when querying terms. */
   readonly termTaxonomId: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
+  /** Array of term taxonomy IDs, to match when querying terms. */
+  readonly termTaxonomyId: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
   /** Whether to prime meta caches for matched terms. Default true. */
   readonly updateTermMetaCache: InputMaybe<Scalars["Boolean"]>
 }
 
 /** Connection between the RootQuery type and the Theme type */
-export type RootQueryToThemeConnection = {
-  readonly __typename?: "RootQueryToThemeConnection"
-  /** Edges for the RootQueryToThemeConnection connection */
-  readonly edges: Maybe<ReadonlyArray<Maybe<RootQueryToThemeConnectionEdge>>>
-  /** The nodes of the connection, without the edges */
-  readonly nodes: Maybe<ReadonlyArray<Maybe<Theme>>>
-  /** Information about pagination in a connection. */
-  readonly pageInfo: Maybe<WpPageInfo>
-}
+export type RootQueryToThemeConnection = Connection &
+  ThemeConnection & {
+    readonly __typename?: "RootQueryToThemeConnection"
+    /** Edges for the RootQueryToThemeConnection connection */
+    readonly edges: ReadonlyArray<RootQueryToThemeConnectionEdge>
+    /** The nodes of the connection, without the edges */
+    readonly nodes: ReadonlyArray<Theme>
+    /** Information about pagination in a connection. */
+    readonly pageInfo: RootQueryToThemeConnectionPageInfo
+  }
 
 /** An edge in a connection */
-export type RootQueryToThemeConnectionEdge = {
-  readonly __typename?: "RootQueryToThemeConnectionEdge"
-  /** A cursor for use in pagination */
-  readonly cursor: Maybe<Scalars["String"]>
-  /** The item at the end of the edge */
-  readonly node: Maybe<Theme>
-}
+export type RootQueryToThemeConnectionEdge = Edge &
+  ThemeConnectionEdge & {
+    readonly __typename?: "RootQueryToThemeConnectionEdge"
+    /** A cursor for use in pagination */
+    readonly cursor: Maybe<Scalars["String"]>
+    /** The item at the end of the edge */
+    readonly node: Theme
+  }
+
+/** Page Info on the &quot;RootQueryToThemeConnection&quot; */
+export type RootQueryToThemeConnectionPageInfo = PageInfo &
+  ThemeConnectionPageInfo &
+  WpPageInfo & {
+    readonly __typename?: "RootQueryToThemeConnectionPageInfo"
+    /** When paginating forwards, the cursor to continue. */
+    readonly endCursor: Maybe<Scalars["String"]>
+    /** When paginating forwards, are there more items? */
+    readonly hasNextPage: Scalars["Boolean"]
+    /** When paginating backwards, are there more items? */
+    readonly hasPreviousPage: Scalars["Boolean"]
+    /** When paginating backwards, the cursor to continue. */
+    readonly startCursor: Maybe<Scalars["String"]>
+  }
 
 /** Connection between the RootQuery type and the User type */
-export type RootQueryToUserConnection = {
-  readonly __typename?: "RootQueryToUserConnection"
-  /** Edges for the RootQueryToUserConnection connection */
-  readonly edges: Maybe<ReadonlyArray<Maybe<RootQueryToUserConnectionEdge>>>
-  /** The nodes of the connection, without the edges */
-  readonly nodes: Maybe<ReadonlyArray<Maybe<User>>>
-  /** Information about pagination in a connection. */
-  readonly pageInfo: Maybe<WpPageInfo>
-}
+export type RootQueryToUserConnection = Connection &
+  UserConnection & {
+    readonly __typename?: "RootQueryToUserConnection"
+    /** Edges for the RootQueryToUserConnection connection */
+    readonly edges: ReadonlyArray<RootQueryToUserConnectionEdge>
+    /** The nodes of the connection, without the edges */
+    readonly nodes: ReadonlyArray<User>
+    /** Information about pagination in a connection. */
+    readonly pageInfo: RootQueryToUserConnectionPageInfo
+  }
 
 /** An edge in a connection */
-export type RootQueryToUserConnectionEdge = {
-  readonly __typename?: "RootQueryToUserConnectionEdge"
-  /** A cursor for use in pagination */
-  readonly cursor: Maybe<Scalars["String"]>
-  /** The item at the end of the edge */
-  readonly node: Maybe<User>
-}
+export type RootQueryToUserConnectionEdge = Edge &
+  UserConnectionEdge & {
+    readonly __typename?: "RootQueryToUserConnectionEdge"
+    /** A cursor for use in pagination */
+    readonly cursor: Maybe<Scalars["String"]>
+    /** The item at the end of the edge */
+    readonly node: User
+  }
+
+/** Page Info on the &quot;RootQueryToUserConnection&quot; */
+export type RootQueryToUserConnectionPageInfo = PageInfo &
+  UserConnectionPageInfo &
+  WpPageInfo & {
+    readonly __typename?: "RootQueryToUserConnectionPageInfo"
+    /** When paginating forwards, the cursor to continue. */
+    readonly endCursor: Maybe<Scalars["String"]>
+    /** When paginating forwards, are there more items? */
+    readonly hasNextPage: Scalars["Boolean"]
+    /** When paginating backwards, are there more items? */
+    readonly hasPreviousPage: Scalars["Boolean"]
+    /** When paginating backwards, the cursor to continue. */
+    readonly startCursor: Maybe<Scalars["String"]>
+  }
 
 /** Arguments for filtering the RootQueryToUserConnection connection */
 export type RootQueryToUserConnectionWhereArgs = {
@@ -6008,72 +7886,96 @@ export type RootQueryToUserConnectionWhereArgs = {
 }
 
 /** Connection between the RootQuery type and the UserRole type */
-export type RootQueryToUserRoleConnection = {
-  readonly __typename?: "RootQueryToUserRoleConnection"
-  /** Edges for the RootQueryToUserRoleConnection connection */
-  readonly edges: Maybe<ReadonlyArray<Maybe<RootQueryToUserRoleConnectionEdge>>>
-  /** The nodes of the connection, without the edges */
-  readonly nodes: Maybe<ReadonlyArray<Maybe<UserRole>>>
-  /** Information about pagination in a connection. */
-  readonly pageInfo: Maybe<WpPageInfo>
-}
+export type RootQueryToUserRoleConnection = Connection &
+  UserRoleConnection & {
+    readonly __typename?: "RootQueryToUserRoleConnection"
+    /** Edges for the RootQueryToUserRoleConnection connection */
+    readonly edges: ReadonlyArray<RootQueryToUserRoleConnectionEdge>
+    /** The nodes of the connection, without the edges */
+    readonly nodes: ReadonlyArray<UserRole>
+    /** Information about pagination in a connection. */
+    readonly pageInfo: RootQueryToUserRoleConnectionPageInfo
+  }
 
 /** An edge in a connection */
-export type RootQueryToUserRoleConnectionEdge = {
-  readonly __typename?: "RootQueryToUserRoleConnectionEdge"
-  /** A cursor for use in pagination */
-  readonly cursor: Maybe<Scalars["String"]>
-  /** The item at the end of the edge */
-  readonly node: Maybe<UserRole>
-}
+export type RootQueryToUserRoleConnectionEdge = Edge &
+  UserRoleConnectionEdge & {
+    readonly __typename?: "RootQueryToUserRoleConnectionEdge"
+    /** A cursor for use in pagination */
+    readonly cursor: Maybe<Scalars["String"]>
+    /** The item at the end of the edge */
+    readonly node: UserRole
+  }
 
-/** Input for the sendPasswordResetEmail mutation */
+/** Page Info on the &quot;RootQueryToUserRoleConnection&quot; */
+export type RootQueryToUserRoleConnectionPageInfo = PageInfo &
+  UserRoleConnectionPageInfo &
+  WpPageInfo & {
+    readonly __typename?: "RootQueryToUserRoleConnectionPageInfo"
+    /** When paginating forwards, the cursor to continue. */
+    readonly endCursor: Maybe<Scalars["String"]>
+    /** When paginating forwards, are there more items? */
+    readonly hasNextPage: Scalars["Boolean"]
+    /** When paginating backwards, are there more items? */
+    readonly hasPreviousPage: Scalars["Boolean"]
+    /** When paginating backwards, the cursor to continue. */
+    readonly startCursor: Maybe<Scalars["String"]>
+  }
+
+/** Input for the sendPasswordResetEmail mutation. */
 export type SendPasswordResetEmailInput = {
+  /** This is an ID that can be passed to a mutation by the client to track the progress of mutations and catch possible duplicate mutation submissions. */
   readonly clientMutationId: InputMaybe<Scalars["String"]>
   /** A string that contains the user's username or email address. */
   readonly username: Scalars["String"]
 }
 
-/** The payload for the sendPasswordResetEmail mutation */
+/** The payload for the sendPasswordResetEmail mutation. */
 export type SendPasswordResetEmailPayload = {
   readonly __typename?: "SendPasswordResetEmailPayload"
+  /** If a &#039;clientMutationId&#039; input is provided to the mutation, it will be returned as output on the mutation. This ID can be used by the client to track the progress of mutations and catch possible duplicate mutation submissions. */
   readonly clientMutationId: Maybe<Scalars["String"]>
-  /** The user that the password reset email was sent to */
+  /** Whether the mutation completed successfully. This does NOT necessarily mean that an email was sent. */
+  readonly success: Maybe<Scalars["Boolean"]>
+  /**
+   * The user that the password reset email was sent to
+   * @deprecated This field will be removed in a future version of WPGraphQL
+   */
   readonly user: Maybe<User>
 }
 
 /** All of the registered settings */
 export type Settings = {
   readonly __typename?: "Settings"
-  /** Allow people to post comments on new articles. */
+  /** Settings of the the string Settings Group */
   readonly discussionSettingsDefaultCommentStatus: Maybe<Scalars["String"]>
-  /** Allow link notifications from other blogs (pingbacks and trackbacks) on new articles. */
+  /** Settings of the the string Settings Group */
   readonly discussionSettingsDefaultPingStatus: Maybe<Scalars["String"]>
-  /** A date format for all date strings. */
+  /** Settings of the the string Settings Group */
   readonly generalSettingsDateFormat: Maybe<Scalars["String"]>
-  /** Site tagline. */
+  /** Settings of the the string Settings Group */
   readonly generalSettingsDescription: Maybe<Scalars["String"]>
-  /** This address is used for admin purposes, like new user notification. */
+  /** Settings of the the string Settings Group */
   readonly generalSettingsEmail: Maybe<Scalars["String"]>
-  /** WordPress locale code. */
+  /** Settings of the the string Settings Group */
   readonly generalSettingsLanguage: Maybe<Scalars["String"]>
-  /** A day number of the week that the week should start on. */
+  /** Settings of the the integer Settings Group */
   readonly generalSettingsStartOfWeek: Maybe<Scalars["Int"]>
-  /** A time format for all time strings. */
+  /** Settings of the the string Settings Group */
   readonly generalSettingsTimeFormat: Maybe<Scalars["String"]>
-  /** A city in the same timezone as you. */
+  /** Settings of the the string Settings Group */
   readonly generalSettingsTimezone: Maybe<Scalars["String"]>
-  /** Site title. */
+  /** Settings of the the string Settings Group */
   readonly generalSettingsTitle: Maybe<Scalars["String"]>
-  /** Site URL. */
+  /** Settings of the the string Settings Group */
   readonly generalSettingsUrl: Maybe<Scalars["String"]>
-  /** Blog pages show at most. */
+  /** Settings of the the integer Settings Group */
   readonly readingSettingsPostsPerPage: Maybe<Scalars["Int"]>
-  /** Default post category. */
+  /** Settings of the the integer Settings Group */
   readonly writingSettingsDefaultCategory: Maybe<Scalars["Int"]>
-  /** Default post format. */
+  /** Settings of the the string Settings Group */
   readonly writingSettingsDefaultPostFormat: Maybe<Scalars["String"]>
-  /** Convert emoticons like :-) and :-P to graphics on display. */
+  /** Settings of the the boolean Settings Group */
   readonly writingSettingsUseSmilies: Maybe<Scalars["Boolean"]>
 }
 
@@ -6084,11 +7986,11 @@ export type Tag = DatabaseIdentifier &
   TermNode &
   UniformResourceIdentifiable & {
     readonly __typename?: "Tag"
-    /** Connection between the tag type and the ContentNode type */
+    /** Connection between the Tag type and the ContentNode type */
     readonly contentNodes: Maybe<TagToContentNodeConnection>
     /** The number of objects connected to the object */
     readonly count: Maybe<Scalars["Int"]>
-    /** Identifies the primary key from the database. */
+    /** The unique identifier stored in the database */
     readonly databaseId: Scalars["Int"]
     /** The description of the object */
     readonly description: Maybe<Scalars["String"]>
@@ -6096,15 +7998,19 @@ export type Tag = DatabaseIdentifier &
     readonly enqueuedScripts: Maybe<TermNodeToEnqueuedScriptConnection>
     /** Connection between the TermNode type and the EnqueuedStylesheet type */
     readonly enqueuedStylesheets: Maybe<TermNodeToEnqueuedStylesheetConnection>
-    /** The globally unique ID for the object */
+    /** The unique resource identifier path */
     readonly id: Scalars["ID"]
+    /** Whether the node is a Content Node */
+    readonly isContentNode: Scalars["Boolean"]
     /** Whether the object is restricted from the current viewer */
     readonly isRestricted: Maybe<Scalars["Boolean"]>
+    /** Whether the node is a Term */
+    readonly isTermNode: Scalars["Boolean"]
     /** The link to the term */
     readonly link: Maybe<Scalars["String"]>
     /** The human friendly name of the object. */
     readonly name: Maybe<Scalars["String"]>
-    /** Connection between the tag type and the post type */
+    /** Connection between the Tag type and the post type */
     readonly posts: Maybe<TagToPostConnection>
     /** An alphanumeric identifier for the object unique to its type. */
     readonly slug: Maybe<Scalars["String"]>
@@ -6113,14 +8019,16 @@ export type Tag = DatabaseIdentifier &
      * @deprecated Deprecated in favor of databaseId
      */
     readonly tagId: Maybe<Scalars["Int"]>
-    /** Connection between the tag type and the Taxonomy type */
+    /** Connection between the Tag type and the Taxonomy type */
     readonly taxonomy: Maybe<TagToTaxonomyConnectionEdge>
+    /** The name of the taxonomy that the object is associated with */
+    readonly taxonomyName: Maybe<Scalars["String"]>
     /** The ID of the term group that this term object belongs to */
     readonly termGroupId: Maybe<Scalars["Int"]>
     /** The taxonomy ID that the object is associated with */
     readonly termTaxonomyId: Maybe<Scalars["Int"]>
     /** The unique resource identifier path */
-    readonly uri: Scalars["String"]
+    readonly uri: Maybe<Scalars["String"]>
   }
 
 /** The tag type */
@@ -6157,6 +8065,36 @@ export type TagPostsArgs = {
   where: InputMaybe<TagToPostConnectionWhereArgs>
 }
 
+/** Connection to tag Nodes */
+export type TagConnection = {
+  /** A list of edges (relational context) between RootQuery and connected tag Nodes */
+  readonly edges: ReadonlyArray<TagConnectionEdge>
+  /** A list of connected tag Nodes */
+  readonly nodes: ReadonlyArray<Tag>
+  /** Information about pagination in a connection. */
+  readonly pageInfo: TagConnectionPageInfo
+}
+
+/** Edge between a Node and a connected tag */
+export type TagConnectionEdge = {
+  /** Opaque reference to the nodes position in the connection. Value can be used with pagination args. */
+  readonly cursor: Maybe<Scalars["String"]>
+  /** The connected tag Node */
+  readonly node: Tag
+}
+
+/** Page Info on the connected TagConnectionEdge */
+export type TagConnectionPageInfo = {
+  /** When paginating forwards, the cursor to continue. */
+  readonly endCursor: Maybe<Scalars["String"]>
+  /** When paginating forwards, are there more items? */
+  readonly hasNextPage: Scalars["Boolean"]
+  /** When paginating backwards, are there more items? */
+  readonly hasPreviousPage: Scalars["Boolean"]
+  /** When paginating backwards, the cursor to continue. */
+  readonly startCursor: Maybe<Scalars["String"]>
+}
+
 /** The Type of Identifier used to fetch a single resource. Default is ID. */
 export enum TagIdType {
   /** The Database ID for the node */
@@ -6171,33 +8109,54 @@ export enum TagIdType {
   Uri = "URI",
 }
 
-/** Connection between the tag type and the ContentNode type */
-export type TagToContentNodeConnection = {
-  readonly __typename?: "TagToContentNodeConnection"
-  /** Edges for the TagToContentNodeConnection connection */
-  readonly edges: Maybe<ReadonlyArray<Maybe<TagToContentNodeConnectionEdge>>>
-  /** The nodes of the connection, without the edges */
-  readonly nodes: Maybe<ReadonlyArray<Maybe<ContentNode>>>
-  /** Information about pagination in a connection. */
-  readonly pageInfo: Maybe<WpPageInfo>
-}
+/** Connection between the Tag type and the ContentNode type */
+export type TagToContentNodeConnection = Connection &
+  ContentNodeConnection & {
+    readonly __typename?: "TagToContentNodeConnection"
+    /** Edges for the TagToContentNodeConnection connection */
+    readonly edges: ReadonlyArray<TagToContentNodeConnectionEdge>
+    /** The nodes of the connection, without the edges */
+    readonly nodes: ReadonlyArray<ContentNode>
+    /** Information about pagination in a connection. */
+    readonly pageInfo: TagToContentNodeConnectionPageInfo
+  }
 
 /** An edge in a connection */
-export type TagToContentNodeConnectionEdge = {
-  readonly __typename?: "TagToContentNodeConnectionEdge"
-  /** A cursor for use in pagination */
-  readonly cursor: Maybe<Scalars["String"]>
-  /** The item at the end of the edge */
-  readonly node: Maybe<ContentNode>
-}
+export type TagToContentNodeConnectionEdge = ContentNodeConnectionEdge &
+  Edge & {
+    readonly __typename?: "TagToContentNodeConnectionEdge"
+    /** A cursor for use in pagination */
+    readonly cursor: Maybe<Scalars["String"]>
+    /** The item at the end of the edge */
+    readonly node: ContentNode
+  }
+
+/** Page Info on the &quot;TagToContentNodeConnection&quot; */
+export type TagToContentNodeConnectionPageInfo = ContentNodeConnectionPageInfo &
+  PageInfo &
+  WpPageInfo & {
+    readonly __typename?: "TagToContentNodeConnectionPageInfo"
+    /** When paginating forwards, the cursor to continue. */
+    readonly endCursor: Maybe<Scalars["String"]>
+    /** When paginating forwards, are there more items? */
+    readonly hasNextPage: Scalars["Boolean"]
+    /** When paginating backwards, are there more items? */
+    readonly hasPreviousPage: Scalars["Boolean"]
+    /** When paginating backwards, the cursor to continue. */
+    readonly startCursor: Maybe<Scalars["String"]>
+  }
 
 /** Arguments for filtering the TagToContentNodeConnection connection */
 export type TagToContentNodeConnectionWhereArgs = {
+  /** The Types of content to filter */
+  readonly contentTypes: InputMaybe<
+    ReadonlyArray<InputMaybe<ContentTypesOfTagEnum>>
+  >
   /** Filter the connection based on dates */
   readonly dateQuery: InputMaybe<DateQueryInput>
   /** True for objects with passwords; False for objects without passwords; null for all objects with or without passwords */
   readonly hasPassword: InputMaybe<Scalars["Boolean"]>
-  /** Specific ID of the object */
+  /** Specific database ID of the object */
   readonly id: InputMaybe<Scalars["Int"]>
   /** Array of IDs for the objects to retrieve */
   readonly in: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
@@ -6223,31 +8182,50 @@ export type TagToContentNodeConnectionWhereArgs = {
   readonly password: InputMaybe<Scalars["String"]>
   /** Show Posts based on a keyword search */
   readonly search: InputMaybe<Scalars["String"]>
+  /** Retrieve posts where post status is in an array. */
   readonly stati: InputMaybe<ReadonlyArray<InputMaybe<PostStatusEnum>>>
+  /** Show posts with a specific status. */
   readonly status: InputMaybe<PostStatusEnum>
   /** Title of the object */
   readonly title: InputMaybe<Scalars["String"]>
 }
 
-/** Connection between the tag type and the post type */
-export type TagToPostConnection = {
-  readonly __typename?: "TagToPostConnection"
-  /** Edges for the TagToPostConnection connection */
-  readonly edges: Maybe<ReadonlyArray<Maybe<TagToPostConnectionEdge>>>
-  /** The nodes of the connection, without the edges */
-  readonly nodes: Maybe<ReadonlyArray<Maybe<Post>>>
-  /** Information about pagination in a connection. */
-  readonly pageInfo: Maybe<WpPageInfo>
-}
+/** Connection between the Tag type and the post type */
+export type TagToPostConnection = Connection &
+  PostConnection & {
+    readonly __typename?: "TagToPostConnection"
+    /** Edges for the TagToPostConnection connection */
+    readonly edges: ReadonlyArray<TagToPostConnectionEdge>
+    /** The nodes of the connection, without the edges */
+    readonly nodes: ReadonlyArray<Post>
+    /** Information about pagination in a connection. */
+    readonly pageInfo: TagToPostConnectionPageInfo
+  }
 
 /** An edge in a connection */
-export type TagToPostConnectionEdge = {
-  readonly __typename?: "TagToPostConnectionEdge"
-  /** A cursor for use in pagination */
-  readonly cursor: Maybe<Scalars["String"]>
-  /** The item at the end of the edge */
-  readonly node: Maybe<Post>
-}
+export type TagToPostConnectionEdge = Edge &
+  PostConnectionEdge & {
+    readonly __typename?: "TagToPostConnectionEdge"
+    /** A cursor for use in pagination */
+    readonly cursor: Maybe<Scalars["String"]>
+    /** The item at the end of the edge */
+    readonly node: Post
+  }
+
+/** Page Info on the &quot;TagToPostConnection&quot; */
+export type TagToPostConnectionPageInfo = PageInfo &
+  PostConnectionPageInfo &
+  WpPageInfo & {
+    readonly __typename?: "TagToPostConnectionPageInfo"
+    /** When paginating forwards, the cursor to continue. */
+    readonly endCursor: Maybe<Scalars["String"]>
+    /** When paginating forwards, are there more items? */
+    readonly hasNextPage: Scalars["Boolean"]
+    /** When paginating backwards, are there more items? */
+    readonly hasPreviousPage: Scalars["Boolean"]
+    /** When paginating backwards, the cursor to continue. */
+    readonly startCursor: Maybe<Scalars["String"]>
+  }
 
 /** Arguments for filtering the TagToPostConnection connection */
 export type TagToPostConnectionWhereArgs = {
@@ -6271,7 +8249,7 @@ export type TagToPostConnectionWhereArgs = {
   readonly dateQuery: InputMaybe<DateQueryInput>
   /** True for objects with passwords; False for objects without passwords; null for all objects with or without passwords */
   readonly hasPassword: InputMaybe<Scalars["Boolean"]>
-  /** Specific ID of the object */
+  /** Specific database ID of the object */
   readonly id: InputMaybe<Scalars["Int"]>
   /** Array of IDs for the objects to retrieve */
   readonly in: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
@@ -6297,7 +8275,9 @@ export type TagToPostConnectionWhereArgs = {
   readonly password: InputMaybe<Scalars["String"]>
   /** Show Posts based on a keyword search */
   readonly search: InputMaybe<Scalars["String"]>
+  /** Retrieve posts where post status is in an array. */
   readonly stati: InputMaybe<ReadonlyArray<InputMaybe<PostStatusEnum>>>
+  /** Show posts with a specific status. */
   readonly status: InputMaybe<PostStatusEnum>
   /** Tag Slug */
   readonly tag: InputMaybe<Scalars["String"]>
@@ -6307,20 +8287,24 @@ export type TagToPostConnectionWhereArgs = {
   readonly tagIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
   /** Array of tag IDs, used to display objects from one tag OR another */
   readonly tagNotIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** Array of tag slugs, used to display objects from one tag OR another */
+  /** Array of tag slugs, used to display objects from one tag AND another */
   readonly tagSlugAnd: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
-  /** Array of tag slugs, used to exclude objects in specified tags */
+  /** Array of tag slugs, used to include objects in ANY specified tags */
   readonly tagSlugIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
   /** Title of the object */
   readonly title: InputMaybe<Scalars["String"]>
 }
 
-/** Connection between the tag type and the Taxonomy type */
-export type TagToTaxonomyConnectionEdge = {
-  readonly __typename?: "TagToTaxonomyConnectionEdge"
-  /** The nodes of the connection, without the edges */
-  readonly node: Maybe<Taxonomy>
-}
+/** Connection between the Tag type and the Taxonomy type */
+export type TagToTaxonomyConnectionEdge = Edge &
+  OneToOneConnection &
+  TaxonomyConnectionEdge & {
+    readonly __typename?: "TagToTaxonomyConnectionEdge"
+    /** Opaque reference to the nodes position in the connection. Value can be used with pagination args. */
+    readonly cursor: Maybe<Scalars["String"]>
+    /** The node of the connection, without the edges */
+    readonly node: Taxonomy
+  }
 
 /** A taxonomy object */
 export type Taxonomy = Node & {
@@ -6377,10 +8361,43 @@ export type TaxonomyConnectedContentTypesArgs = {
   last: InputMaybe<Scalars["Int"]>
 }
 
+/** Connection to Taxonomy Nodes */
+export type TaxonomyConnection = {
+  /** A list of edges (relational context) between RootQuery and connected Taxonomy Nodes */
+  readonly edges: ReadonlyArray<TaxonomyConnectionEdge>
+  /** A list of connected Taxonomy Nodes */
+  readonly nodes: ReadonlyArray<Taxonomy>
+  /** Information about pagination in a connection. */
+  readonly pageInfo: TaxonomyConnectionPageInfo
+}
+
+/** Edge between a Node and a connected Taxonomy */
+export type TaxonomyConnectionEdge = {
+  /** Opaque reference to the nodes position in the connection. Value can be used with pagination args. */
+  readonly cursor: Maybe<Scalars["String"]>
+  /** The connected Taxonomy Node */
+  readonly node: Taxonomy
+}
+
+/** Page Info on the connected TaxonomyConnectionEdge */
+export type TaxonomyConnectionPageInfo = {
+  /** When paginating forwards, the cursor to continue. */
+  readonly endCursor: Maybe<Scalars["String"]>
+  /** When paginating forwards, are there more items? */
+  readonly hasNextPage: Scalars["Boolean"]
+  /** When paginating backwards, are there more items? */
+  readonly hasPreviousPage: Scalars["Boolean"]
+  /** When paginating backwards, the cursor to continue. */
+  readonly startCursor: Maybe<Scalars["String"]>
+}
+
 /** Allowed taxonomies */
 export enum TaxonomyEnum {
+  /** Taxonomy enum category */
   Category = "CATEGORY",
+  /** Taxonomy enum post_format */
   Postformat = "POSTFORMAT",
+  /** Taxonomy enum post_tag */
   Tag = "TAG",
 }
 
@@ -6393,26 +8410,42 @@ export enum TaxonomyIdTypeEnum {
 }
 
 /** Connection between the Taxonomy type and the ContentType type */
-export type TaxonomyToContentTypeConnection = {
-  readonly __typename?: "TaxonomyToContentTypeConnection"
-  /** Edges for the TaxonomyToContentTypeConnection connection */
-  readonly edges: Maybe<
-    ReadonlyArray<Maybe<TaxonomyToContentTypeConnectionEdge>>
-  >
-  /** The nodes of the connection, without the edges */
-  readonly nodes: Maybe<ReadonlyArray<Maybe<ContentType>>>
-  /** Information about pagination in a connection. */
-  readonly pageInfo: Maybe<WpPageInfo>
-}
+export type TaxonomyToContentTypeConnection = Connection &
+  ContentTypeConnection & {
+    readonly __typename?: "TaxonomyToContentTypeConnection"
+    /** Edges for the TaxonomyToContentTypeConnection connection */
+    readonly edges: ReadonlyArray<TaxonomyToContentTypeConnectionEdge>
+    /** The nodes of the connection, without the edges */
+    readonly nodes: ReadonlyArray<ContentType>
+    /** Information about pagination in a connection. */
+    readonly pageInfo: TaxonomyToContentTypeConnectionPageInfo
+  }
 
 /** An edge in a connection */
-export type TaxonomyToContentTypeConnectionEdge = {
-  readonly __typename?: "TaxonomyToContentTypeConnectionEdge"
-  /** A cursor for use in pagination */
-  readonly cursor: Maybe<Scalars["String"]>
-  /** The item at the end of the edge */
-  readonly node: Maybe<ContentType>
-}
+export type TaxonomyToContentTypeConnectionEdge = ContentTypeConnectionEdge &
+  Edge & {
+    readonly __typename?: "TaxonomyToContentTypeConnectionEdge"
+    /** A cursor for use in pagination */
+    readonly cursor: Maybe<Scalars["String"]>
+    /** The item at the end of the edge */
+    readonly node: ContentType
+  }
+
+/** Page Info on the &quot;TaxonomyToContentTypeConnection&quot; */
+export type TaxonomyToContentTypeConnectionPageInfo =
+  ContentTypeConnectionPageInfo &
+    PageInfo &
+    WpPageInfo & {
+      readonly __typename?: "TaxonomyToContentTypeConnectionPageInfo"
+      /** When paginating forwards, the cursor to continue. */
+      readonly endCursor: Maybe<Scalars["String"]>
+      /** When paginating forwards, are there more items? */
+      readonly hasNextPage: Scalars["Boolean"]
+      /** When paginating backwards, are there more items? */
+      readonly hasPreviousPage: Scalars["Boolean"]
+      /** When paginating backwards, the cursor to continue. */
+      readonly startCursor: Maybe<Scalars["String"]>
+    }
 
 /** The template assigned to the node */
 export type Template_PageBuilder = ContentTemplate & {
@@ -6433,22 +8466,28 @@ export type TermNode = {
   readonly enqueuedScripts: Maybe<TermNodeToEnqueuedScriptConnection>
   /** Connection between the TermNode type and the EnqueuedStylesheet type */
   readonly enqueuedStylesheets: Maybe<TermNodeToEnqueuedStylesheetConnection>
-  /** Unique identifier for the term */
+  /** The unique resource identifier path */
   readonly id: Scalars["ID"]
+  /** Whether the node is a Content Node */
+  readonly isContentNode: Scalars["Boolean"]
   /** Whether the object is restricted from the current viewer */
   readonly isRestricted: Maybe<Scalars["Boolean"]>
+  /** Whether the node is a Term */
+  readonly isTermNode: Scalars["Boolean"]
   /** The link to the term */
   readonly link: Maybe<Scalars["String"]>
   /** The human friendly name of the object. */
   readonly name: Maybe<Scalars["String"]>
   /** An alphanumeric identifier for the object unique to its type. */
   readonly slug: Maybe<Scalars["String"]>
+  /** The name of the taxonomy that the object is associated with */
+  readonly taxonomyName: Maybe<Scalars["String"]>
   /** The ID of the term group that this term object belongs to */
   readonly termGroupId: Maybe<Scalars["Int"]>
   /** The taxonomy ID that the object is associated with */
   readonly termTaxonomyId: Maybe<Scalars["Int"]>
   /** The unique resource identifier path */
-  readonly uri: Scalars["String"]
+  readonly uri: Maybe<Scalars["String"]>
 }
 
 /** Terms are nodes within a Taxonomy, used to group and relate other nodes. */
@@ -6467,6 +8506,36 @@ export type TermNodeEnqueuedStylesheetsArgs = {
   last: InputMaybe<Scalars["Int"]>
 }
 
+/** Connection to TermNode Nodes */
+export type TermNodeConnection = {
+  /** A list of edges (relational context) between RootQuery and connected TermNode Nodes */
+  readonly edges: ReadonlyArray<TermNodeConnectionEdge>
+  /** A list of connected TermNode Nodes */
+  readonly nodes: ReadonlyArray<TermNode>
+  /** Information about pagination in a connection. */
+  readonly pageInfo: TermNodeConnectionPageInfo
+}
+
+/** Edge between a Node and a connected TermNode */
+export type TermNodeConnectionEdge = {
+  /** Opaque reference to the nodes position in the connection. Value can be used with pagination args. */
+  readonly cursor: Maybe<Scalars["String"]>
+  /** The connected TermNode Node */
+  readonly node: TermNode
+}
+
+/** Page Info on the connected TermNodeConnectionEdge */
+export type TermNodeConnectionPageInfo = {
+  /** When paginating forwards, the cursor to continue. */
+  readonly endCursor: Maybe<Scalars["String"]>
+  /** When paginating forwards, are there more items? */
+  readonly hasNextPage: Scalars["Boolean"]
+  /** When paginating backwards, are there more items? */
+  readonly hasPreviousPage: Scalars["Boolean"]
+  /** When paginating backwards, the cursor to continue. */
+  readonly startCursor: Maybe<Scalars["String"]>
+}
+
 /** The Type of Identifier used to fetch a single resource. Default is "ID". To be used along with the "id" field. */
 export enum TermNodeIdTypeEnum {
   /** The Database ID for the node */
@@ -6482,59 +8551,96 @@ export enum TermNodeIdTypeEnum {
 }
 
 /** Connection between the TermNode type and the EnqueuedScript type */
-export type TermNodeToEnqueuedScriptConnection = {
-  readonly __typename?: "TermNodeToEnqueuedScriptConnection"
-  /** Edges for the TermNodeToEnqueuedScriptConnection connection */
-  readonly edges: Maybe<
-    ReadonlyArray<Maybe<TermNodeToEnqueuedScriptConnectionEdge>>
-  >
-  /** The nodes of the connection, without the edges */
-  readonly nodes: Maybe<ReadonlyArray<Maybe<EnqueuedScript>>>
-  /** Information about pagination in a connection. */
-  readonly pageInfo: Maybe<WpPageInfo>
-}
+export type TermNodeToEnqueuedScriptConnection = Connection &
+  EnqueuedScriptConnection & {
+    readonly __typename?: "TermNodeToEnqueuedScriptConnection"
+    /** Edges for the TermNodeToEnqueuedScriptConnection connection */
+    readonly edges: ReadonlyArray<TermNodeToEnqueuedScriptConnectionEdge>
+    /** The nodes of the connection, without the edges */
+    readonly nodes: ReadonlyArray<EnqueuedScript>
+    /** Information about pagination in a connection. */
+    readonly pageInfo: TermNodeToEnqueuedScriptConnectionPageInfo
+  }
 
 /** An edge in a connection */
-export type TermNodeToEnqueuedScriptConnectionEdge = {
-  readonly __typename?: "TermNodeToEnqueuedScriptConnectionEdge"
-  /** A cursor for use in pagination */
-  readonly cursor: Maybe<Scalars["String"]>
-  /** The item at the end of the edge */
-  readonly node: Maybe<EnqueuedScript>
-}
+export type TermNodeToEnqueuedScriptConnectionEdge = Edge &
+  EnqueuedScriptConnectionEdge & {
+    readonly __typename?: "TermNodeToEnqueuedScriptConnectionEdge"
+    /** A cursor for use in pagination */
+    readonly cursor: Maybe<Scalars["String"]>
+    /** The item at the end of the edge */
+    readonly node: EnqueuedScript
+  }
+
+/** Page Info on the &quot;TermNodeToEnqueuedScriptConnection&quot; */
+export type TermNodeToEnqueuedScriptConnectionPageInfo =
+  EnqueuedScriptConnectionPageInfo &
+    PageInfo &
+    WpPageInfo & {
+      readonly __typename?: "TermNodeToEnqueuedScriptConnectionPageInfo"
+      /** When paginating forwards, the cursor to continue. */
+      readonly endCursor: Maybe<Scalars["String"]>
+      /** When paginating forwards, are there more items? */
+      readonly hasNextPage: Scalars["Boolean"]
+      /** When paginating backwards, are there more items? */
+      readonly hasPreviousPage: Scalars["Boolean"]
+      /** When paginating backwards, the cursor to continue. */
+      readonly startCursor: Maybe<Scalars["String"]>
+    }
 
 /** Connection between the TermNode type and the EnqueuedStylesheet type */
-export type TermNodeToEnqueuedStylesheetConnection = {
-  readonly __typename?: "TermNodeToEnqueuedStylesheetConnection"
-  /** Edges for the TermNodeToEnqueuedStylesheetConnection connection */
-  readonly edges: Maybe<
-    ReadonlyArray<Maybe<TermNodeToEnqueuedStylesheetConnectionEdge>>
-  >
-  /** The nodes of the connection, without the edges */
-  readonly nodes: Maybe<ReadonlyArray<Maybe<EnqueuedStylesheet>>>
-  /** Information about pagination in a connection. */
-  readonly pageInfo: Maybe<WpPageInfo>
-}
+export type TermNodeToEnqueuedStylesheetConnection = Connection &
+  EnqueuedStylesheetConnection & {
+    readonly __typename?: "TermNodeToEnqueuedStylesheetConnection"
+    /** Edges for the TermNodeToEnqueuedStylesheetConnection connection */
+    readonly edges: ReadonlyArray<TermNodeToEnqueuedStylesheetConnectionEdge>
+    /** The nodes of the connection, without the edges */
+    readonly nodes: ReadonlyArray<EnqueuedStylesheet>
+    /** Information about pagination in a connection. */
+    readonly pageInfo: TermNodeToEnqueuedStylesheetConnectionPageInfo
+  }
 
 /** An edge in a connection */
-export type TermNodeToEnqueuedStylesheetConnectionEdge = {
-  readonly __typename?: "TermNodeToEnqueuedStylesheetConnectionEdge"
-  /** A cursor for use in pagination */
-  readonly cursor: Maybe<Scalars["String"]>
-  /** The item at the end of the edge */
-  readonly node: Maybe<EnqueuedStylesheet>
-}
+export type TermNodeToEnqueuedStylesheetConnectionEdge = Edge &
+  EnqueuedStylesheetConnectionEdge & {
+    readonly __typename?: "TermNodeToEnqueuedStylesheetConnectionEdge"
+    /** A cursor for use in pagination */
+    readonly cursor: Maybe<Scalars["String"]>
+    /** The item at the end of the edge */
+    readonly node: EnqueuedStylesheet
+  }
 
-export type TermObjectUnion = Category | PostFormat | Tag
+/** Page Info on the &quot;TermNodeToEnqueuedStylesheetConnection&quot; */
+export type TermNodeToEnqueuedStylesheetConnectionPageInfo =
+  EnqueuedStylesheetConnectionPageInfo &
+    PageInfo &
+    WpPageInfo & {
+      readonly __typename?: "TermNodeToEnqueuedStylesheetConnectionPageInfo"
+      /** When paginating forwards, the cursor to continue. */
+      readonly endCursor: Maybe<Scalars["String"]>
+      /** When paginating forwards, are there more items? */
+      readonly hasNextPage: Scalars["Boolean"]
+      /** When paginating backwards, are there more items? */
+      readonly hasPreviousPage: Scalars["Boolean"]
+      /** When paginating backwards, the cursor to continue. */
+      readonly startCursor: Maybe<Scalars["String"]>
+    }
 
 /** Options for ordering the connection by */
 export enum TermObjectsConnectionOrderbyEnum {
+  /** Order the connection by item count. */
   Count = "COUNT",
+  /** Order the connection by description. */
   Description = "DESCRIPTION",
+  /** Order the connection by name. */
   Name = "NAME",
+  /** Order the connection by slug. */
   Slug = "SLUG",
+  /** Order the connection by term group. */
   TermGroup = "TERM_GROUP",
+  /** Order the connection by term id. */
   TermId = "TERM_ID",
+  /** Order the connection by term order. */
   TermOrder = "TERM_ORDER",
 }
 
@@ -6565,920 +8671,51 @@ export type Theme = Node & {
   readonly version: Maybe<Scalars["String"]>
 }
 
-/** Available timezones */
-export enum TimezoneEnum {
-  /** Abidjan */
-  AfricaAbidjan = "AFRICA_ABIDJAN",
-  /** Accra */
-  AfricaAccra = "AFRICA_ACCRA",
-  /** Addis Ababa */
-  AfricaAddisAbaba = "AFRICA_ADDIS_ABABA",
-  /** Algiers */
-  AfricaAlgiers = "AFRICA_ALGIERS",
-  /** Asmara */
-  AfricaAsmara = "AFRICA_ASMARA",
-  /** Bamako */
-  AfricaBamako = "AFRICA_BAMAKO",
-  /** Bangui */
-  AfricaBangui = "AFRICA_BANGUI",
-  /** Banjul */
-  AfricaBanjul = "AFRICA_BANJUL",
-  /** Bissau */
-  AfricaBissau = "AFRICA_BISSAU",
-  /** Blantyre */
-  AfricaBlantyre = "AFRICA_BLANTYRE",
-  /** Brazzaville */
-  AfricaBrazzaville = "AFRICA_BRAZZAVILLE",
-  /** Bujumbura */
-  AfricaBujumbura = "AFRICA_BUJUMBURA",
-  /** Cairo */
-  AfricaCairo = "AFRICA_CAIRO",
-  /** Casablanca */
-  AfricaCasablanca = "AFRICA_CASABLANCA",
-  /** Ceuta */
-  AfricaCeuta = "AFRICA_CEUTA",
-  /** Conakry */
-  AfricaConakry = "AFRICA_CONAKRY",
-  /** Dakar */
-  AfricaDakar = "AFRICA_DAKAR",
-  /** Dar es Salaam */
-  AfricaDarEsSalaam = "AFRICA_DAR_ES_SALAAM",
-  /** Djibouti */
-  AfricaDjibouti = "AFRICA_DJIBOUTI",
-  /** Douala */
-  AfricaDouala = "AFRICA_DOUALA",
-  /** El Aaiun */
-  AfricaElAaiun = "AFRICA_EL_AAIUN",
-  /** Freetown */
-  AfricaFreetown = "AFRICA_FREETOWN",
-  /** Gaborone */
-  AfricaGaborone = "AFRICA_GABORONE",
-  /** Harare */
-  AfricaHarare = "AFRICA_HARARE",
-  /** Johannesburg */
-  AfricaJohannesburg = "AFRICA_JOHANNESBURG",
-  /** Juba */
-  AfricaJuba = "AFRICA_JUBA",
-  /** Kampala */
-  AfricaKampala = "AFRICA_KAMPALA",
-  /** Khartoum */
-  AfricaKhartoum = "AFRICA_KHARTOUM",
-  /** Kigali */
-  AfricaKigali = "AFRICA_KIGALI",
-  /** Kinshasa */
-  AfricaKinshasa = "AFRICA_KINSHASA",
-  /** Lagos */
-  AfricaLagos = "AFRICA_LAGOS",
-  /** Libreville */
-  AfricaLibreville = "AFRICA_LIBREVILLE",
-  /** Lome */
-  AfricaLome = "AFRICA_LOME",
-  /** Luanda */
-  AfricaLuanda = "AFRICA_LUANDA",
-  /** Lubumbashi */
-  AfricaLubumbashi = "AFRICA_LUBUMBASHI",
-  /** Lusaka */
-  AfricaLusaka = "AFRICA_LUSAKA",
-  /** Malabo */
-  AfricaMalabo = "AFRICA_MALABO",
-  /** Maputo */
-  AfricaMaputo = "AFRICA_MAPUTO",
-  /** Maseru */
-  AfricaMaseru = "AFRICA_MASERU",
-  /** Mbabane */
-  AfricaMbabane = "AFRICA_MBABANE",
-  /** Mogadishu */
-  AfricaMogadishu = "AFRICA_MOGADISHU",
-  /** Monrovia */
-  AfricaMonrovia = "AFRICA_MONROVIA",
-  /** Nairobi */
-  AfricaNairobi = "AFRICA_NAIROBI",
-  /** Ndjamena */
-  AfricaNdjamena = "AFRICA_NDJAMENA",
-  /** Niamey */
-  AfricaNiamey = "AFRICA_NIAMEY",
-  /** Nouakchott */
-  AfricaNouakchott = "AFRICA_NOUAKCHOTT",
-  /** Ouagadougou */
-  AfricaOuagadougou = "AFRICA_OUAGADOUGOU",
-  /** Porto-Novo */
-  AfricaPortoNovo = "AFRICA_PORTO_NOVO",
-  /** Sao Tome */
-  AfricaSaoTome = "AFRICA_SAO_TOME",
-  /** Tripoli */
-  AfricaTripoli = "AFRICA_TRIPOLI",
-  /** Tunis */
-  AfricaTunis = "AFRICA_TUNIS",
-  /** Windhoek */
-  AfricaWindhoek = "AFRICA_WINDHOEK",
-  /** Adak */
-  AmericaAdak = "AMERICA_ADAK",
-  /** Anchorage */
-  AmericaAnchorage = "AMERICA_ANCHORAGE",
-  /** Anguilla */
-  AmericaAnguilla = "AMERICA_ANGUILLA",
-  /** Antigua */
-  AmericaAntigua = "AMERICA_ANTIGUA",
-  /** Araguaina */
-  AmericaAraguaina = "AMERICA_ARAGUAINA",
-  /** Argentina - Buenos Aires */
-  AmericaArgentinaBuenosAires = "AMERICA_ARGENTINA_BUENOS_AIRES",
-  /** Argentina - Catamarca */
-  AmericaArgentinaCatamarca = "AMERICA_ARGENTINA_CATAMARCA",
-  /** Argentina - Cordoba */
-  AmericaArgentinaCordoba = "AMERICA_ARGENTINA_CORDOBA",
-  /** Argentina - Jujuy */
-  AmericaArgentinaJujuy = "AMERICA_ARGENTINA_JUJUY",
-  /** Argentina - La Rioja */
-  AmericaArgentinaLaRioja = "AMERICA_ARGENTINA_LA_RIOJA",
-  /** Argentina - Mendoza */
-  AmericaArgentinaMendoza = "AMERICA_ARGENTINA_MENDOZA",
-  /** Argentina - Rio Gallegos */
-  AmericaArgentinaRioGallegos = "AMERICA_ARGENTINA_RIO_GALLEGOS",
-  /** Argentina - Salta */
-  AmericaArgentinaSalta = "AMERICA_ARGENTINA_SALTA",
-  /** Argentina - San Juan */
-  AmericaArgentinaSanJuan = "AMERICA_ARGENTINA_SAN_JUAN",
-  /** Argentina - San Luis */
-  AmericaArgentinaSanLuis = "AMERICA_ARGENTINA_SAN_LUIS",
-  /** Argentina - Tucuman */
-  AmericaArgentinaTucuman = "AMERICA_ARGENTINA_TUCUMAN",
-  /** Argentina - Ushuaia */
-  AmericaArgentinaUshuaia = "AMERICA_ARGENTINA_USHUAIA",
-  /** Aruba */
-  AmericaAruba = "AMERICA_ARUBA",
-  /** Asuncion */
-  AmericaAsuncion = "AMERICA_ASUNCION",
-  /** Atikokan */
-  AmericaAtikokan = "AMERICA_ATIKOKAN",
-  /** Bahia */
-  AmericaBahia = "AMERICA_BAHIA",
-  /** Bahia Banderas */
-  AmericaBahiaBanderas = "AMERICA_BAHIA_BANDERAS",
-  /** Barbados */
-  AmericaBarbados = "AMERICA_BARBADOS",
-  /** Belem */
-  AmericaBelem = "AMERICA_BELEM",
-  /** Belize */
-  AmericaBelize = "AMERICA_BELIZE",
-  /** Blanc-Sablon */
-  AmericaBlancSablon = "AMERICA_BLANC_SABLON",
-  /** Boa Vista */
-  AmericaBoaVista = "AMERICA_BOA_VISTA",
-  /** Bogota */
-  AmericaBogota = "AMERICA_BOGOTA",
-  /** Boise */
-  AmericaBoise = "AMERICA_BOISE",
-  /** Cambridge Bay */
-  AmericaCambridgeBay = "AMERICA_CAMBRIDGE_BAY",
-  /** Campo Grande */
-  AmericaCampoGrande = "AMERICA_CAMPO_GRANDE",
-  /** Cancun */
-  AmericaCancun = "AMERICA_CANCUN",
-  /** Caracas */
-  AmericaCaracas = "AMERICA_CARACAS",
-  /** Cayenne */
-  AmericaCayenne = "AMERICA_CAYENNE",
-  /** Cayman */
-  AmericaCayman = "AMERICA_CAYMAN",
-  /** Chicago */
-  AmericaChicago = "AMERICA_CHICAGO",
-  /** Chihuahua */
-  AmericaChihuahua = "AMERICA_CHIHUAHUA",
-  /** Ciudad Juarez */
-  AmericaCiudadJuarez = "AMERICA_CIUDAD_JUAREZ",
-  /** Costa Rica */
-  AmericaCostaRica = "AMERICA_COSTA_RICA",
-  /** Creston */
-  AmericaCreston = "AMERICA_CRESTON",
-  /** Cuiaba */
-  AmericaCuiaba = "AMERICA_CUIABA",
-  /** Curacao */
-  AmericaCuracao = "AMERICA_CURACAO",
-  /** Danmarkshavn */
-  AmericaDanmarkshavn = "AMERICA_DANMARKSHAVN",
-  /** Dawson */
-  AmericaDawson = "AMERICA_DAWSON",
-  /** Dawson Creek */
-  AmericaDawsonCreek = "AMERICA_DAWSON_CREEK",
-  /** Denver */
-  AmericaDenver = "AMERICA_DENVER",
-  /** Detroit */
-  AmericaDetroit = "AMERICA_DETROIT",
-  /** Dominica */
-  AmericaDominica = "AMERICA_DOMINICA",
-  /** Edmonton */
-  AmericaEdmonton = "AMERICA_EDMONTON",
-  /** Eirunepe */
-  AmericaEirunepe = "AMERICA_EIRUNEPE",
-  /** El Salvador */
-  AmericaElSalvador = "AMERICA_EL_SALVADOR",
-  /** Fortaleza */
-  AmericaFortaleza = "AMERICA_FORTALEZA",
-  /** Fort Nelson */
-  AmericaFortNelson = "AMERICA_FORT_NELSON",
-  /** Glace Bay */
-  AmericaGlaceBay = "AMERICA_GLACE_BAY",
-  /** Goose Bay */
-  AmericaGooseBay = "AMERICA_GOOSE_BAY",
-  /** Grand Turk */
-  AmericaGrandTurk = "AMERICA_GRAND_TURK",
-  /** Grenada */
-  AmericaGrenada = "AMERICA_GRENADA",
-  /** Guadeloupe */
-  AmericaGuadeloupe = "AMERICA_GUADELOUPE",
-  /** Guatemala */
-  AmericaGuatemala = "AMERICA_GUATEMALA",
-  /** Guayaquil */
-  AmericaGuayaquil = "AMERICA_GUAYAQUIL",
-  /** Guyana */
-  AmericaGuyana = "AMERICA_GUYANA",
-  /** Halifax */
-  AmericaHalifax = "AMERICA_HALIFAX",
-  /** Havana */
-  AmericaHavana = "AMERICA_HAVANA",
-  /** Hermosillo */
-  AmericaHermosillo = "AMERICA_HERMOSILLO",
-  /** Indiana - Indianapolis */
-  AmericaIndianaIndianapolis = "AMERICA_INDIANA_INDIANAPOLIS",
-  /** Indiana - Knox */
-  AmericaIndianaKnox = "AMERICA_INDIANA_KNOX",
-  /** Indiana - Marengo */
-  AmericaIndianaMarengo = "AMERICA_INDIANA_MARENGO",
-  /** Indiana - Petersburg */
-  AmericaIndianaPetersburg = "AMERICA_INDIANA_PETERSBURG",
-  /** Indiana - Tell City */
-  AmericaIndianaTellCity = "AMERICA_INDIANA_TELL_CITY",
-  /** Indiana - Vevay */
-  AmericaIndianaVevay = "AMERICA_INDIANA_VEVAY",
-  /** Indiana - Vincennes */
-  AmericaIndianaVincennes = "AMERICA_INDIANA_VINCENNES",
-  /** Indiana - Winamac */
-  AmericaIndianaWinamac = "AMERICA_INDIANA_WINAMAC",
-  /** Inuvik */
-  AmericaInuvik = "AMERICA_INUVIK",
-  /** Iqaluit */
-  AmericaIqaluit = "AMERICA_IQALUIT",
-  /** Jamaica */
-  AmericaJamaica = "AMERICA_JAMAICA",
-  /** Juneau */
-  AmericaJuneau = "AMERICA_JUNEAU",
-  /** Kentucky - Louisville */
-  AmericaKentuckyLouisville = "AMERICA_KENTUCKY_LOUISVILLE",
-  /** Kentucky - Monticello */
-  AmericaKentuckyMonticello = "AMERICA_KENTUCKY_MONTICELLO",
-  /** Kralendijk */
-  AmericaKralendijk = "AMERICA_KRALENDIJK",
-  /** La Paz */
-  AmericaLaPaz = "AMERICA_LA_PAZ",
-  /** Lima */
-  AmericaLima = "AMERICA_LIMA",
-  /** Los Angeles */
-  AmericaLosAngeles = "AMERICA_LOS_ANGELES",
-  /** Lower Princes */
-  AmericaLowerPrinces = "AMERICA_LOWER_PRINCES",
-  /** Maceio */
-  AmericaMaceio = "AMERICA_MACEIO",
-  /** Managua */
-  AmericaManagua = "AMERICA_MANAGUA",
-  /** Manaus */
-  AmericaManaus = "AMERICA_MANAUS",
-  /** Marigot */
-  AmericaMarigot = "AMERICA_MARIGOT",
-  /** Martinique */
-  AmericaMartinique = "AMERICA_MARTINIQUE",
-  /** Matamoros */
-  AmericaMatamoros = "AMERICA_MATAMOROS",
-  /** Mazatlan */
-  AmericaMazatlan = "AMERICA_MAZATLAN",
-  /** Menominee */
-  AmericaMenominee = "AMERICA_MENOMINEE",
-  /** Merida */
-  AmericaMerida = "AMERICA_MERIDA",
-  /** Metlakatla */
-  AmericaMetlakatla = "AMERICA_METLAKATLA",
-  /** Mexico City */
-  AmericaMexicoCity = "AMERICA_MEXICO_CITY",
-  /** Miquelon */
-  AmericaMiquelon = "AMERICA_MIQUELON",
-  /** Moncton */
-  AmericaMoncton = "AMERICA_MONCTON",
-  /** Monterrey */
-  AmericaMonterrey = "AMERICA_MONTERREY",
-  /** Montevideo */
-  AmericaMontevideo = "AMERICA_MONTEVIDEO",
-  /** Montserrat */
-  AmericaMontserrat = "AMERICA_MONTSERRAT",
-  /** Nassau */
-  AmericaNassau = "AMERICA_NASSAU",
-  /** New York */
-  AmericaNewYork = "AMERICA_NEW_YORK",
-  /** Nome */
-  AmericaNome = "AMERICA_NOME",
-  /** Noronha */
-  AmericaNoronha = "AMERICA_NORONHA",
-  /** North Dakota - Beulah */
-  AmericaNorthDakotaBeulah = "AMERICA_NORTH_DAKOTA_BEULAH",
-  /** North Dakota - Center */
-  AmericaNorthDakotaCenter = "AMERICA_NORTH_DAKOTA_CENTER",
-  /** North Dakota - New Salem */
-  AmericaNorthDakotaNewSalem = "AMERICA_NORTH_DAKOTA_NEW_SALEM",
-  /** Nuuk */
-  AmericaNuuk = "AMERICA_NUUK",
-  /** Ojinaga */
-  AmericaOjinaga = "AMERICA_OJINAGA",
-  /** Panama */
-  AmericaPanama = "AMERICA_PANAMA",
-  /** Paramaribo */
-  AmericaParamaribo = "AMERICA_PARAMARIBO",
-  /** Phoenix */
-  AmericaPhoenix = "AMERICA_PHOENIX",
-  /** Porto Velho */
-  AmericaPortoVelho = "AMERICA_PORTO_VELHO",
-  /** Port-au-Prince */
-  AmericaPortAuPrince = "AMERICA_PORT_AU_PRINCE",
-  /** Port of Spain */
-  AmericaPortOfSpain = "AMERICA_PORT_OF_SPAIN",
-  /** Puerto Rico */
-  AmericaPuertoRico = "AMERICA_PUERTO_RICO",
-  /** Punta Arenas */
-  AmericaPuntaArenas = "AMERICA_PUNTA_ARENAS",
-  /** Rankin Inlet */
-  AmericaRankinInlet = "AMERICA_RANKIN_INLET",
-  /** Recife */
-  AmericaRecife = "AMERICA_RECIFE",
-  /** Regina */
-  AmericaRegina = "AMERICA_REGINA",
-  /** Resolute */
-  AmericaResolute = "AMERICA_RESOLUTE",
-  /** Rio Branco */
-  AmericaRioBranco = "AMERICA_RIO_BRANCO",
-  /** Santarem */
-  AmericaSantarem = "AMERICA_SANTAREM",
-  /** Santiago */
-  AmericaSantiago = "AMERICA_SANTIAGO",
-  /** Santo Domingo */
-  AmericaSantoDomingo = "AMERICA_SANTO_DOMINGO",
-  /** Sao Paulo */
-  AmericaSaoPaulo = "AMERICA_SAO_PAULO",
-  /** Scoresbysund */
-  AmericaScoresbysund = "AMERICA_SCORESBYSUND",
-  /** Sitka */
-  AmericaSitka = "AMERICA_SITKA",
-  /** St Barthelemy */
-  AmericaStBarthelemy = "AMERICA_ST_BARTHELEMY",
-  /** St Johns */
-  AmericaStJohns = "AMERICA_ST_JOHNS",
-  /** St Kitts */
-  AmericaStKitts = "AMERICA_ST_KITTS",
-  /** St Lucia */
-  AmericaStLucia = "AMERICA_ST_LUCIA",
-  /** St Thomas */
-  AmericaStThomas = "AMERICA_ST_THOMAS",
-  /** St Vincent */
-  AmericaStVincent = "AMERICA_ST_VINCENT",
-  /** Swift Current */
-  AmericaSwiftCurrent = "AMERICA_SWIFT_CURRENT",
-  /** Tegucigalpa */
-  AmericaTegucigalpa = "AMERICA_TEGUCIGALPA",
-  /** Thule */
-  AmericaThule = "AMERICA_THULE",
-  /** Tijuana */
-  AmericaTijuana = "AMERICA_TIJUANA",
-  /** Toronto */
-  AmericaToronto = "AMERICA_TORONTO",
-  /** Tortola */
-  AmericaTortola = "AMERICA_TORTOLA",
-  /** Vancouver */
-  AmericaVancouver = "AMERICA_VANCOUVER",
-  /** Whitehorse */
-  AmericaWhitehorse = "AMERICA_WHITEHORSE",
-  /** Winnipeg */
-  AmericaWinnipeg = "AMERICA_WINNIPEG",
-  /** Yakutat */
-  AmericaYakutat = "AMERICA_YAKUTAT",
-  /** Yellowknife */
-  AmericaYellowknife = "AMERICA_YELLOWKNIFE",
-  /** Casey */
-  AntarcticaCasey = "ANTARCTICA_CASEY",
-  /** Davis */
-  AntarcticaDavis = "ANTARCTICA_DAVIS",
-  /** DumontDUrville */
-  AntarcticaDumontdurville = "ANTARCTICA_DUMONTDURVILLE",
-  /** Macquarie */
-  AntarcticaMacquarie = "ANTARCTICA_MACQUARIE",
-  /** Mawson */
-  AntarcticaMawson = "ANTARCTICA_MAWSON",
-  /** McMurdo */
-  AntarcticaMcmurdo = "ANTARCTICA_MCMURDO",
-  /** Palmer */
-  AntarcticaPalmer = "ANTARCTICA_PALMER",
-  /** Rothera */
-  AntarcticaRothera = "ANTARCTICA_ROTHERA",
-  /** Syowa */
-  AntarcticaSyowa = "ANTARCTICA_SYOWA",
-  /** Troll */
-  AntarcticaTroll = "ANTARCTICA_TROLL",
-  /** Vostok */
-  AntarcticaVostok = "ANTARCTICA_VOSTOK",
-  /** Longyearbyen */
-  ArcticLongyearbyen = "ARCTIC_LONGYEARBYEN",
-  /** Aden */
-  AsiaAden = "ASIA_ADEN",
-  /** Almaty */
-  AsiaAlmaty = "ASIA_ALMATY",
-  /** Amman */
-  AsiaAmman = "ASIA_AMMAN",
-  /** Anadyr */
-  AsiaAnadyr = "ASIA_ANADYR",
-  /** Aqtau */
-  AsiaAqtau = "ASIA_AQTAU",
-  /** Aqtobe */
-  AsiaAqtobe = "ASIA_AQTOBE",
-  /** Ashgabat */
-  AsiaAshgabat = "ASIA_ASHGABAT",
-  /** Atyrau */
-  AsiaAtyrau = "ASIA_ATYRAU",
-  /** Baghdad */
-  AsiaBaghdad = "ASIA_BAGHDAD",
-  /** Bahrain */
-  AsiaBahrain = "ASIA_BAHRAIN",
-  /** Baku */
-  AsiaBaku = "ASIA_BAKU",
-  /** Bangkok */
-  AsiaBangkok = "ASIA_BANGKOK",
-  /** Barnaul */
-  AsiaBarnaul = "ASIA_BARNAUL",
-  /** Beirut */
-  AsiaBeirut = "ASIA_BEIRUT",
-  /** Bishkek */
-  AsiaBishkek = "ASIA_BISHKEK",
-  /** Brunei */
-  AsiaBrunei = "ASIA_BRUNEI",
-  /** Chita */
-  AsiaChita = "ASIA_CHITA",
-  /** Choibalsan */
-  AsiaChoibalsan = "ASIA_CHOIBALSAN",
-  /** Colombo */
-  AsiaColombo = "ASIA_COLOMBO",
-  /** Damascus */
-  AsiaDamascus = "ASIA_DAMASCUS",
-  /** Dhaka */
-  AsiaDhaka = "ASIA_DHAKA",
-  /** Dili */
-  AsiaDili = "ASIA_DILI",
-  /** Dubai */
-  AsiaDubai = "ASIA_DUBAI",
-  /** Dushanbe */
-  AsiaDushanbe = "ASIA_DUSHANBE",
-  /** Famagusta */
-  AsiaFamagusta = "ASIA_FAMAGUSTA",
-  /** Gaza */
-  AsiaGaza = "ASIA_GAZA",
-  /** Hebron */
-  AsiaHebron = "ASIA_HEBRON",
-  /** Hong Kong */
-  AsiaHongKong = "ASIA_HONG_KONG",
-  /** Hovd */
-  AsiaHovd = "ASIA_HOVD",
-  /** Ho Chi Minh */
-  AsiaHoChiMinh = "ASIA_HO_CHI_MINH",
-  /** Irkutsk */
-  AsiaIrkutsk = "ASIA_IRKUTSK",
-  /** Jakarta */
-  AsiaJakarta = "ASIA_JAKARTA",
-  /** Jayapura */
-  AsiaJayapura = "ASIA_JAYAPURA",
-  /** Jerusalem */
-  AsiaJerusalem = "ASIA_JERUSALEM",
-  /** Kabul */
-  AsiaKabul = "ASIA_KABUL",
-  /** Kamchatka */
-  AsiaKamchatka = "ASIA_KAMCHATKA",
-  /** Karachi */
-  AsiaKarachi = "ASIA_KARACHI",
-  /** Kathmandu */
-  AsiaKathmandu = "ASIA_KATHMANDU",
-  /** Khandyga */
-  AsiaKhandyga = "ASIA_KHANDYGA",
-  /** Kolkata */
-  AsiaKolkata = "ASIA_KOLKATA",
-  /** Krasnoyarsk */
-  AsiaKrasnoyarsk = "ASIA_KRASNOYARSK",
-  /** Kuala Lumpur */
-  AsiaKualaLumpur = "ASIA_KUALA_LUMPUR",
-  /** Kuching */
-  AsiaKuching = "ASIA_KUCHING",
-  /** Kuwait */
-  AsiaKuwait = "ASIA_KUWAIT",
-  /** Macau */
-  AsiaMacau = "ASIA_MACAU",
-  /** Magadan */
-  AsiaMagadan = "ASIA_MAGADAN",
-  /** Makassar */
-  AsiaMakassar = "ASIA_MAKASSAR",
-  /** Manila */
-  AsiaManila = "ASIA_MANILA",
-  /** Muscat */
-  AsiaMuscat = "ASIA_MUSCAT",
-  /** Nicosia */
-  AsiaNicosia = "ASIA_NICOSIA",
-  /** Novokuznetsk */
-  AsiaNovokuznetsk = "ASIA_NOVOKUZNETSK",
-  /** Novosibirsk */
-  AsiaNovosibirsk = "ASIA_NOVOSIBIRSK",
-  /** Omsk */
-  AsiaOmsk = "ASIA_OMSK",
-  /** Oral */
-  AsiaOral = "ASIA_ORAL",
-  /** Phnom Penh */
-  AsiaPhnomPenh = "ASIA_PHNOM_PENH",
-  /** Pontianak */
-  AsiaPontianak = "ASIA_PONTIANAK",
-  /** Pyongyang */
-  AsiaPyongyang = "ASIA_PYONGYANG",
-  /** Qatar */
-  AsiaQatar = "ASIA_QATAR",
-  /** Qostanay */
-  AsiaQostanay = "ASIA_QOSTANAY",
-  /** Qyzylorda */
-  AsiaQyzylorda = "ASIA_QYZYLORDA",
-  /** Riyadh */
-  AsiaRiyadh = "ASIA_RIYADH",
-  /** Sakhalin */
-  AsiaSakhalin = "ASIA_SAKHALIN",
-  /** Samarkand */
-  AsiaSamarkand = "ASIA_SAMARKAND",
-  /** Seoul */
-  AsiaSeoul = "ASIA_SEOUL",
-  /** Shanghai */
-  AsiaShanghai = "ASIA_SHANGHAI",
-  /** Singapore */
-  AsiaSingapore = "ASIA_SINGAPORE",
-  /** Srednekolymsk */
-  AsiaSrednekolymsk = "ASIA_SREDNEKOLYMSK",
-  /** Taipei */
-  AsiaTaipei = "ASIA_TAIPEI",
-  /** Tashkent */
-  AsiaTashkent = "ASIA_TASHKENT",
-  /** Tbilisi */
-  AsiaTbilisi = "ASIA_TBILISI",
-  /** Tehran */
-  AsiaTehran = "ASIA_TEHRAN",
-  /** Thimphu */
-  AsiaThimphu = "ASIA_THIMPHU",
-  /** Tokyo */
-  AsiaTokyo = "ASIA_TOKYO",
-  /** Tomsk */
-  AsiaTomsk = "ASIA_TOMSK",
-  /** Ulaanbaatar */
-  AsiaUlaanbaatar = "ASIA_ULAANBAATAR",
-  /** Urumqi */
-  AsiaUrumqi = "ASIA_URUMQI",
-  /** Ust-Nera */
-  AsiaUstNera = "ASIA_UST_NERA",
-  /** Vientiane */
-  AsiaVientiane = "ASIA_VIENTIANE",
-  /** Vladivostok */
-  AsiaVladivostok = "ASIA_VLADIVOSTOK",
-  /** Yakutsk */
-  AsiaYakutsk = "ASIA_YAKUTSK",
-  /** Yangon */
-  AsiaYangon = "ASIA_YANGON",
-  /** Yekaterinburg */
-  AsiaYekaterinburg = "ASIA_YEKATERINBURG",
-  /** Yerevan */
-  AsiaYerevan = "ASIA_YEREVAN",
-  /** Azores */
-  AtlanticAzores = "ATLANTIC_AZORES",
-  /** Bermuda */
-  AtlanticBermuda = "ATLANTIC_BERMUDA",
-  /** Canary */
-  AtlanticCanary = "ATLANTIC_CANARY",
-  /** Cape Verde */
-  AtlanticCapeVerde = "ATLANTIC_CAPE_VERDE",
-  /** Faroe */
-  AtlanticFaroe = "ATLANTIC_FAROE",
-  /** Madeira */
-  AtlanticMadeira = "ATLANTIC_MADEIRA",
-  /** Reykjavik */
-  AtlanticReykjavik = "ATLANTIC_REYKJAVIK",
-  /** South Georgia */
-  AtlanticSouthGeorgia = "ATLANTIC_SOUTH_GEORGIA",
-  /** Stanley */
-  AtlanticStanley = "ATLANTIC_STANLEY",
-  /** St Helena */
-  AtlanticStHelena = "ATLANTIC_ST_HELENA",
-  /** Adelaide */
-  AustraliaAdelaide = "AUSTRALIA_ADELAIDE",
-  /** Brisbane */
-  AustraliaBrisbane = "AUSTRALIA_BRISBANE",
-  /** Broken Hill */
-  AustraliaBrokenHill = "AUSTRALIA_BROKEN_HILL",
-  /** Darwin */
-  AustraliaDarwin = "AUSTRALIA_DARWIN",
-  /** Eucla */
-  AustraliaEucla = "AUSTRALIA_EUCLA",
-  /** Hobart */
-  AustraliaHobart = "AUSTRALIA_HOBART",
-  /** Lindeman */
-  AustraliaLindeman = "AUSTRALIA_LINDEMAN",
-  /** Lord Howe */
-  AustraliaLordHowe = "AUSTRALIA_LORD_HOWE",
-  /** Melbourne */
-  AustraliaMelbourne = "AUSTRALIA_MELBOURNE",
-  /** Perth */
-  AustraliaPerth = "AUSTRALIA_PERTH",
-  /** Sydney */
-  AustraliaSydney = "AUSTRALIA_SYDNEY",
-  /** Amsterdam */
-  EuropeAmsterdam = "EUROPE_AMSTERDAM",
-  /** Andorra */
-  EuropeAndorra = "EUROPE_ANDORRA",
-  /** Astrakhan */
-  EuropeAstrakhan = "EUROPE_ASTRAKHAN",
-  /** Athens */
-  EuropeAthens = "EUROPE_ATHENS",
-  /** Belgrade */
-  EuropeBelgrade = "EUROPE_BELGRADE",
-  /** Berlin */
-  EuropeBerlin = "EUROPE_BERLIN",
-  /** Bratislava */
-  EuropeBratislava = "EUROPE_BRATISLAVA",
-  /** Brussels */
-  EuropeBrussels = "EUROPE_BRUSSELS",
-  /** Bucharest */
-  EuropeBucharest = "EUROPE_BUCHAREST",
-  /** Budapest */
-  EuropeBudapest = "EUROPE_BUDAPEST",
-  /** Busingen */
-  EuropeBusingen = "EUROPE_BUSINGEN",
-  /** Chisinau */
-  EuropeChisinau = "EUROPE_CHISINAU",
-  /** Copenhagen */
-  EuropeCopenhagen = "EUROPE_COPENHAGEN",
-  /** Dublin */
-  EuropeDublin = "EUROPE_DUBLIN",
-  /** Gibraltar */
-  EuropeGibraltar = "EUROPE_GIBRALTAR",
-  /** Guernsey */
-  EuropeGuernsey = "EUROPE_GUERNSEY",
-  /** Helsinki */
-  EuropeHelsinki = "EUROPE_HELSINKI",
-  /** Isle of Man */
-  EuropeIsleOfMan = "EUROPE_ISLE_OF_MAN",
-  /** Istanbul */
-  EuropeIstanbul = "EUROPE_ISTANBUL",
-  /** Jersey */
-  EuropeJersey = "EUROPE_JERSEY",
-  /** Kaliningrad */
-  EuropeKaliningrad = "EUROPE_KALININGRAD",
-  /** Kirov */
-  EuropeKirov = "EUROPE_KIROV",
-  /** Kyiv */
-  EuropeKyiv = "EUROPE_KYIV",
-  /** Lisbon */
-  EuropeLisbon = "EUROPE_LISBON",
-  /** Ljubljana */
-  EuropeLjubljana = "EUROPE_LJUBLJANA",
-  /** London */
-  EuropeLondon = "EUROPE_LONDON",
-  /** Luxembourg */
-  EuropeLuxembourg = "EUROPE_LUXEMBOURG",
-  /** Madrid */
-  EuropeMadrid = "EUROPE_MADRID",
-  /** Malta */
-  EuropeMalta = "EUROPE_MALTA",
-  /** Mariehamn */
-  EuropeMariehamn = "EUROPE_MARIEHAMN",
-  /** Minsk */
-  EuropeMinsk = "EUROPE_MINSK",
-  /** Monaco */
-  EuropeMonaco = "EUROPE_MONACO",
-  /** Moscow */
-  EuropeMoscow = "EUROPE_MOSCOW",
-  /** Oslo */
-  EuropeOslo = "EUROPE_OSLO",
-  /** Paris */
-  EuropeParis = "EUROPE_PARIS",
-  /** Podgorica */
-  EuropePodgorica = "EUROPE_PODGORICA",
-  /** Prague */
-  EuropePrague = "EUROPE_PRAGUE",
-  /** Riga */
-  EuropeRiga = "EUROPE_RIGA",
-  /** Rome */
-  EuropeRome = "EUROPE_ROME",
-  /** Samara */
-  EuropeSamara = "EUROPE_SAMARA",
-  /** San Marino */
-  EuropeSanMarino = "EUROPE_SAN_MARINO",
-  /** Sarajevo */
-  EuropeSarajevo = "EUROPE_SARAJEVO",
-  /** Saratov */
-  EuropeSaratov = "EUROPE_SARATOV",
-  /** Simferopol */
-  EuropeSimferopol = "EUROPE_SIMFEROPOL",
-  /** Skopje */
-  EuropeSkopje = "EUROPE_SKOPJE",
-  /** Sofia */
-  EuropeSofia = "EUROPE_SOFIA",
-  /** Stockholm */
-  EuropeStockholm = "EUROPE_STOCKHOLM",
-  /** Tallinn */
-  EuropeTallinn = "EUROPE_TALLINN",
-  /** Tirane */
-  EuropeTirane = "EUROPE_TIRANE",
-  /** Ulyanovsk */
-  EuropeUlyanovsk = "EUROPE_ULYANOVSK",
-  /** Vaduz */
-  EuropeVaduz = "EUROPE_VADUZ",
-  /** Vatican */
-  EuropeVatican = "EUROPE_VATICAN",
-  /** Vienna */
-  EuropeVienna = "EUROPE_VIENNA",
-  /** Vilnius */
-  EuropeVilnius = "EUROPE_VILNIUS",
-  /** Volgograd */
-  EuropeVolgograd = "EUROPE_VOLGOGRAD",
-  /** Warsaw */
-  EuropeWarsaw = "EUROPE_WARSAW",
-  /** Zagreb */
-  EuropeZagreb = "EUROPE_ZAGREB",
-  /** Zurich */
-  EuropeZurich = "EUROPE_ZURICH",
-  /** Antananarivo */
-  IndianAntananarivo = "INDIAN_ANTANANARIVO",
-  /** Chagos */
-  IndianChagos = "INDIAN_CHAGOS",
-  /** Christmas */
-  IndianChristmas = "INDIAN_CHRISTMAS",
-  /** Cocos */
-  IndianCocos = "INDIAN_COCOS",
-  /** Comoro */
-  IndianComoro = "INDIAN_COMORO",
-  /** Kerguelen */
-  IndianKerguelen = "INDIAN_KERGUELEN",
-  /** Mahe */
-  IndianMahe = "INDIAN_MAHE",
-  /** Maldives */
-  IndianMaldives = "INDIAN_MALDIVES",
-  /** Mauritius */
-  IndianMauritius = "INDIAN_MAURITIUS",
-  /** Mayotte */
-  IndianMayotte = "INDIAN_MAYOTTE",
-  /** Reunion */
-  IndianReunion = "INDIAN_REUNION",
-  /** Apia */
-  PacificApia = "PACIFIC_APIA",
-  /** Auckland */
-  PacificAuckland = "PACIFIC_AUCKLAND",
-  /** Bougainville */
-  PacificBougainville = "PACIFIC_BOUGAINVILLE",
-  /** Chatham */
-  PacificChatham = "PACIFIC_CHATHAM",
-  /** Chuuk */
-  PacificChuuk = "PACIFIC_CHUUK",
-  /** Easter */
-  PacificEaster = "PACIFIC_EASTER",
-  /** Efate */
-  PacificEfate = "PACIFIC_EFATE",
-  /** Fakaofo */
-  PacificFakaofo = "PACIFIC_FAKAOFO",
-  /** Fiji */
-  PacificFiji = "PACIFIC_FIJI",
-  /** Funafuti */
-  PacificFunafuti = "PACIFIC_FUNAFUTI",
-  /** Galapagos */
-  PacificGalapagos = "PACIFIC_GALAPAGOS",
-  /** Gambier */
-  PacificGambier = "PACIFIC_GAMBIER",
-  /** Guadalcanal */
-  PacificGuadalcanal = "PACIFIC_GUADALCANAL",
-  /** Guam */
-  PacificGuam = "PACIFIC_GUAM",
-  /** Honolulu */
-  PacificHonolulu = "PACIFIC_HONOLULU",
-  /** Kanton */
-  PacificKanton = "PACIFIC_KANTON",
-  /** Kiritimati */
-  PacificKiritimati = "PACIFIC_KIRITIMATI",
-  /** Kosrae */
-  PacificKosrae = "PACIFIC_KOSRAE",
-  /** Kwajalein */
-  PacificKwajalein = "PACIFIC_KWAJALEIN",
-  /** Majuro */
-  PacificMajuro = "PACIFIC_MAJURO",
-  /** Marquesas */
-  PacificMarquesas = "PACIFIC_MARQUESAS",
-  /** Midway */
-  PacificMidway = "PACIFIC_MIDWAY",
-  /** Nauru */
-  PacificNauru = "PACIFIC_NAURU",
-  /** Niue */
-  PacificNiue = "PACIFIC_NIUE",
-  /** Norfolk */
-  PacificNorfolk = "PACIFIC_NORFOLK",
-  /** Noumea */
-  PacificNoumea = "PACIFIC_NOUMEA",
-  /** Pago Pago */
-  PacificPagoPago = "PACIFIC_PAGO_PAGO",
-  /** Palau */
-  PacificPalau = "PACIFIC_PALAU",
-  /** Pitcairn */
-  PacificPitcairn = "PACIFIC_PITCAIRN",
-  /** Pohnpei */
-  PacificPohnpei = "PACIFIC_POHNPEI",
-  /** Port Moresby */
-  PacificPortMoresby = "PACIFIC_PORT_MORESBY",
-  /** Rarotonga */
-  PacificRarotonga = "PACIFIC_RAROTONGA",
-  /** Saipan */
-  PacificSaipan = "PACIFIC_SAIPAN",
-  /** Tahiti */
-  PacificTahiti = "PACIFIC_TAHITI",
-  /** Tarawa */
-  PacificTarawa = "PACIFIC_TARAWA",
-  /** Tongatapu */
-  PacificTongatapu = "PACIFIC_TONGATAPU",
-  /** Wake */
-  PacificWake = "PACIFIC_WAKE",
-  /** Wallis */
-  PacificWallis = "PACIFIC_WALLIS",
-  /** UTC offset: UTC+0 */
-  Utc_0 = "UTC_0",
-  /** UTC offset: UTC+0:30 */
-  Utc_0_30 = "UTC_0_30",
-  /** UTC offset: UTC+1 */
-  Utc_1 = "UTC_1",
-  /** UTC offset: UTC+1:30 */
-  Utc_1_30 = "UTC_1_30",
-  /** UTC offset: UTC+2 */
-  Utc_2 = "UTC_2",
-  /** UTC offset: UTC+2:30 */
-  Utc_2_30 = "UTC_2_30",
-  /** UTC offset: UTC+3 */
-  Utc_3 = "UTC_3",
-  /** UTC offset: UTC+3:30 */
-  Utc_3_30 = "UTC_3_30",
-  /** UTC offset: UTC+4 */
-  Utc_4 = "UTC_4",
-  /** UTC offset: UTC+4:30 */
-  Utc_4_30 = "UTC_4_30",
-  /** UTC offset: UTC+5 */
-  Utc_5 = "UTC_5",
-  /** UTC offset: UTC+5:30 */
-  Utc_5_30 = "UTC_5_30",
-  /** UTC offset: UTC+5:45 */
-  Utc_5_45 = "UTC_5_45",
-  /** UTC offset: UTC+6 */
-  Utc_6 = "UTC_6",
-  /** UTC offset: UTC+6:30 */
-  Utc_6_30 = "UTC_6_30",
-  /** UTC offset: UTC+7 */
-  Utc_7 = "UTC_7",
-  /** UTC offset: UTC+7:30 */
-  Utc_7_30 = "UTC_7_30",
-  /** UTC offset: UTC+8 */
-  Utc_8 = "UTC_8",
-  /** UTC offset: UTC+8:30 */
-  Utc_8_30 = "UTC_8_30",
-  /** UTC offset: UTC+8:45 */
-  Utc_8_45 = "UTC_8_45",
-  /** UTC offset: UTC+9 */
-  Utc_9 = "UTC_9",
-  /** UTC offset: UTC+9:30 */
-  Utc_9_30 = "UTC_9_30",
-  /** UTC offset: UTC+10 */
-  Utc_10 = "UTC_10",
-  /** UTC offset: UTC+10:30 */
-  Utc_10_30 = "UTC_10_30",
-  /** UTC offset: UTC+11 */
-  Utc_11 = "UTC_11",
-  /** UTC offset: UTC+11:30 */
-  Utc_11_30 = "UTC_11_30",
-  /** UTC offset: UTC+12 */
-  Utc_12 = "UTC_12",
-  /** UTC offset: UTC+12:45 */
-  Utc_12_45 = "UTC_12_45",
-  /** UTC offset: UTC+13 */
-  Utc_13 = "UTC_13",
-  /** UTC offset: UTC+13:45 */
-  Utc_13_45 = "UTC_13_45",
-  /** UTC offset: UTC+14 */
-  Utc_14 = "UTC_14",
+/** Connection to Theme Nodes */
+export type ThemeConnection = {
+  /** A list of edges (relational context) between RootQuery and connected Theme Nodes */
+  readonly edges: ReadonlyArray<ThemeConnectionEdge>
+  /** A list of connected Theme Nodes */
+  readonly nodes: ReadonlyArray<Theme>
+  /** Information about pagination in a connection. */
+  readonly pageInfo: ThemeConnectionPageInfo
+}
+
+/** Edge between a Node and a connected Theme */
+export type ThemeConnectionEdge = {
+  /** Opaque reference to the nodes position in the connection. Value can be used with pagination args. */
+  readonly cursor: Maybe<Scalars["String"]>
+  /** The connected Theme Node */
+  readonly node: Theme
+}
+
+/** Page Info on the connected ThemeConnectionEdge */
+export type ThemeConnectionPageInfo = {
+  /** When paginating forwards, the cursor to continue. */
+  readonly endCursor: Maybe<Scalars["String"]>
+  /** When paginating forwards, are there more items? */
+  readonly hasNextPage: Scalars["Boolean"]
+  /** When paginating backwards, are there more items? */
+  readonly hasPreviousPage: Scalars["Boolean"]
+  /** When paginating backwards, the cursor to continue. */
+  readonly startCursor: Maybe<Scalars["String"]>
 }
 
 /** Any node that has a URI */
 export type UniformResourceIdentifiable = {
   /** The unique resource identifier path */
   readonly id: Scalars["ID"]
+  /** Whether the node is a Content Node */
+  readonly isContentNode: Scalars["Boolean"]
+  /** Whether the node is a Term */
+  readonly isTermNode: Scalars["Boolean"]
   /** The unique resource identifier path */
   readonly uri: Maybe<Scalars["String"]>
 }
 
-/** Input for the updateActionMonitorAction mutation */
+/** Input for the updateActionMonitorAction mutation. */
 export type UpdateActionMonitorActionInput = {
+  /** This is an ID that can be passed to a mutation by the client to track the progress of mutations and catch possible duplicate mutation submissions. */
   readonly clientMutationId: InputMaybe<Scalars["String"]>
   /** The content of the object */
   readonly content: InputMaybe<Scalars["String"]>
@@ -7486,6 +8723,8 @@ export type UpdateActionMonitorActionInput = {
   readonly date: InputMaybe<Scalars["String"]>
   /** The ID of the ActionMonitorAction object */
   readonly id: Scalars["ID"]
+  /** Override the edit lock when another user is editing the post */
+  readonly ignoreEditLock: InputMaybe<Scalars["Boolean"]>
   /** A field used for ordering posts. This is typically used with nav menu items or for special ordering of hierarchical content types. */
   readonly menuOrder: InputMaybe<Scalars["Int"]>
   /** The password used to protect the content of the object */
@@ -7498,17 +8737,20 @@ export type UpdateActionMonitorActionInput = {
   readonly title: InputMaybe<Scalars["String"]>
 }
 
-/** The payload for the updateActionMonitorAction mutation */
+/** The payload for the updateActionMonitorAction mutation. */
 export type UpdateActionMonitorActionPayload = {
   readonly __typename?: "UpdateActionMonitorActionPayload"
+  /** The Post object mutation type. */
   readonly actionMonitorAction: Maybe<ActionMonitorAction>
+  /** If a &#039;clientMutationId&#039; input is provided to the mutation, it will be returned as output on the mutation. This ID can be used by the client to track the progress of mutations and catch possible duplicate mutation submissions. */
   readonly clientMutationId: Maybe<Scalars["String"]>
 }
 
-/** Input for the UpdateCategory mutation */
+/** Input for the updateCategory mutation. */
 export type UpdateCategoryInput = {
   /** The slug that the category will be an alias of */
   readonly aliasOf: InputMaybe<Scalars["String"]>
+  /** This is an ID that can be passed to a mutation by the client to track the progress of mutations and catch possible duplicate mutation submissions. */
   readonly clientMutationId: InputMaybe<Scalars["String"]>
   /** The description of the category object */
   readonly description: InputMaybe<Scalars["String"]>
@@ -7522,15 +8764,16 @@ export type UpdateCategoryInput = {
   readonly slug: InputMaybe<Scalars["String"]>
 }
 
-/** The payload for the UpdateCategory mutation */
+/** The payload for the updateCategory mutation. */
 export type UpdateCategoryPayload = {
   readonly __typename?: "UpdateCategoryPayload"
   /** The created category */
   readonly category: Maybe<Category>
+  /** If a &#039;clientMutationId&#039; input is provided to the mutation, it will be returned as output on the mutation. This ID can be used by the client to track the progress of mutations and catch possible duplicate mutation submissions. */
   readonly clientMutationId: Maybe<Scalars["String"]>
 }
 
-/** Input for the updateComment mutation */
+/** Input for the updateComment mutation. */
 export type UpdateCommentInput = {
   /** The approval status of the comment. */
   readonly approved: InputMaybe<Scalars["String"]>
@@ -7540,8 +8783,9 @@ export type UpdateCommentInput = {
   readonly authorEmail: InputMaybe<Scalars["String"]>
   /** The url of the comment's author. */
   readonly authorUrl: InputMaybe<Scalars["String"]>
+  /** This is an ID that can be passed to a mutation by the client to track the progress of mutations and catch possible duplicate mutation submissions. */
   readonly clientMutationId: InputMaybe<Scalars["String"]>
-  /** The ID of the post object the comment belongs to. */
+  /** The database ID of the post object the comment belongs to. */
   readonly commentOn: InputMaybe<Scalars["Int"]>
   /** Content of the comment. */
   readonly content: InputMaybe<Scalars["String"]>
@@ -7549,15 +8793,18 @@ export type UpdateCommentInput = {
   readonly date: InputMaybe<Scalars["String"]>
   /** The ID of the comment being updated. */
   readonly id: Scalars["ID"]
-  /** Parent comment of current comment. */
+  /** Parent comment ID of current comment. */
   readonly parent: InputMaybe<Scalars["ID"]>
+  /** The approval status of the comment */
+  readonly status: InputMaybe<CommentStatusEnum>
   /** Type of comment. */
   readonly type: InputMaybe<Scalars["String"]>
 }
 
-/** The payload for the updateComment mutation */
+/** The payload for the updateComment mutation. */
 export type UpdateCommentPayload = {
   readonly __typename?: "UpdateCommentPayload"
+  /** If a &#039;clientMutationId&#039; input is provided to the mutation, it will be returned as output on the mutation. This ID can be used by the client to track the progress of mutations and catch possible duplicate mutation submissions. */
   readonly clientMutationId: Maybe<Scalars["String"]>
   /** The comment that was created */
   readonly comment: Maybe<Comment>
@@ -7565,7 +8812,7 @@ export type UpdateCommentPayload = {
   readonly success: Maybe<Scalars["Boolean"]>
 }
 
-/** Input for the updateMediaItem mutation */
+/** Input for the updateMediaItem mutation. */
 export type UpdateMediaItemInput = {
   /** Alternative text to display when mediaItem is not displayed */
   readonly altText: InputMaybe<Scalars["String"]>
@@ -7573,6 +8820,7 @@ export type UpdateMediaItemInput = {
   readonly authorId: InputMaybe<Scalars["ID"]>
   /** The caption for the mediaItem */
   readonly caption: InputMaybe<Scalars["String"]>
+  /** This is an ID that can be passed to a mutation by the client to track the progress of mutations and catch possible duplicate mutation submissions. */
   readonly clientMutationId: InputMaybe<Scalars["String"]>
   /** The comment status for the mediaItem */
   readonly commentStatus: InputMaybe<Scalars["String"]>
@@ -7588,7 +8836,7 @@ export type UpdateMediaItemInput = {
   readonly fileType: InputMaybe<MimeTypeEnum>
   /** The ID of the mediaItem object */
   readonly id: Scalars["ID"]
-  /** The WordPress post ID or the graphQL postId of the parent object */
+  /** The ID of the parent object */
   readonly parentId: InputMaybe<Scalars["ID"]>
   /** The ping status for the mediaItem */
   readonly pingStatus: InputMaybe<Scalars["String"]>
@@ -7600,17 +8848,20 @@ export type UpdateMediaItemInput = {
   readonly title: InputMaybe<Scalars["String"]>
 }
 
-/** The payload for the updateMediaItem mutation */
+/** The payload for the updateMediaItem mutation. */
 export type UpdateMediaItemPayload = {
   readonly __typename?: "UpdateMediaItemPayload"
+  /** If a &#039;clientMutationId&#039; input is provided to the mutation, it will be returned as output on the mutation. This ID can be used by the client to track the progress of mutations and catch possible duplicate mutation submissions. */
   readonly clientMutationId: Maybe<Scalars["String"]>
+  /** The MediaItem object mutation type. */
   readonly mediaItem: Maybe<MediaItem>
 }
 
-/** Input for the updatePage mutation */
+/** Input for the updatePage mutation. */
 export type UpdatePageInput = {
   /** The userId to assign as the author of the object */
   readonly authorId: InputMaybe<Scalars["ID"]>
+  /** This is an ID that can be passed to a mutation by the client to track the progress of mutations and catch possible duplicate mutation submissions. */
   readonly clientMutationId: InputMaybe<Scalars["String"]>
   /** The comment status for the object */
   readonly commentStatus: InputMaybe<Scalars["String"]>
@@ -7620,6 +8871,8 @@ export type UpdatePageInput = {
   readonly date: InputMaybe<Scalars["String"]>
   /** The ID of the page object */
   readonly id: Scalars["ID"]
+  /** Override the edit lock when another user is editing the post */
+  readonly ignoreEditLock: InputMaybe<Scalars["Boolean"]>
   /** A field used for ordering posts. This is typically used with nav menu items or for special ordering of hierarchical content types. */
   readonly menuOrder: InputMaybe<Scalars["Int"]>
   /** The ID of the parent object */
@@ -7634,17 +8887,20 @@ export type UpdatePageInput = {
   readonly title: InputMaybe<Scalars["String"]>
 }
 
-/** The payload for the updatePage mutation */
+/** The payload for the updatePage mutation. */
 export type UpdatePagePayload = {
   readonly __typename?: "UpdatePagePayload"
+  /** If a &#039;clientMutationId&#039; input is provided to the mutation, it will be returned as output on the mutation. This ID can be used by the client to track the progress of mutations and catch possible duplicate mutation submissions. */
   readonly clientMutationId: Maybe<Scalars["String"]>
+  /** The Post object mutation type. */
   readonly page: Maybe<Page>
 }
 
-/** Input for the UpdatePostFormat mutation */
+/** Input for the updatePostFormat mutation. */
 export type UpdatePostFormatInput = {
   /** The slug that the post_format will be an alias of */
   readonly aliasOf: InputMaybe<Scalars["String"]>
+  /** This is an ID that can be passed to a mutation by the client to track the progress of mutations and catch possible duplicate mutation submissions. */
   readonly clientMutationId: InputMaybe<Scalars["String"]>
   /** The description of the post_format object */
   readonly description: InputMaybe<Scalars["String"]>
@@ -7656,20 +8912,22 @@ export type UpdatePostFormatInput = {
   readonly slug: InputMaybe<Scalars["String"]>
 }
 
-/** The payload for the UpdatePostFormat mutation */
+/** The payload for the updatePostFormat mutation. */
 export type UpdatePostFormatPayload = {
   readonly __typename?: "UpdatePostFormatPayload"
+  /** If a &#039;clientMutationId&#039; input is provided to the mutation, it will be returned as output on the mutation. This ID can be used by the client to track the progress of mutations and catch possible duplicate mutation submissions. */
   readonly clientMutationId: Maybe<Scalars["String"]>
   /** The created post_format */
   readonly postFormat: Maybe<PostFormat>
 }
 
-/** Input for the updatePost mutation */
+/** Input for the updatePost mutation. */
 export type UpdatePostInput = {
   /** The userId to assign as the author of the object */
   readonly authorId: InputMaybe<Scalars["ID"]>
   /** Set connections between the post and categories */
   readonly categories: InputMaybe<PostCategoriesInput>
+  /** This is an ID that can be passed to a mutation by the client to track the progress of mutations and catch possible duplicate mutation submissions. */
   readonly clientMutationId: InputMaybe<Scalars["String"]>
   /** The comment status for the object */
   readonly commentStatus: InputMaybe<Scalars["String"]>
@@ -7681,6 +8939,8 @@ export type UpdatePostInput = {
   readonly excerpt: InputMaybe<Scalars["String"]>
   /** The ID of the post object */
   readonly id: Scalars["ID"]
+  /** Override the edit lock when another user is editing the post */
+  readonly ignoreEditLock: InputMaybe<Scalars["Boolean"]>
   /** A field used for ordering posts. This is typically used with nav menu items or for special ordering of hierarchical content types. */
   readonly menuOrder: InputMaybe<Scalars["Int"]>
   /** The password used to protect the content of the object */
@@ -7703,17 +8963,20 @@ export type UpdatePostInput = {
   readonly toPing: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
 }
 
-/** The payload for the updatePost mutation */
+/** The payload for the updatePost mutation. */
 export type UpdatePostPayload = {
   readonly __typename?: "UpdatePostPayload"
+  /** If a &#039;clientMutationId&#039; input is provided to the mutation, it will be returned as output on the mutation. This ID can be used by the client to track the progress of mutations and catch possible duplicate mutation submissions. */
   readonly clientMutationId: Maybe<Scalars["String"]>
+  /** The Post object mutation type. */
   readonly post: Maybe<Post>
 }
 
-/** Input for the updateSettings mutation */
+/** Input for the updateSettings mutation. */
 export type UpdateSettingsInput = {
+  /** This is an ID that can be passed to a mutation by the client to track the progress of mutations and catch possible duplicate mutation submissions. */
   readonly clientMutationId: InputMaybe<Scalars["String"]>
-  /** Allow people to post comments on new articles. */
+  /** Allow people to submit comments on new posts. */
   readonly discussionSettingsDefaultCommentStatus: InputMaybe<Scalars["String"]>
   /** Allow link notifications from other blogs (pingbacks and trackbacks) on new articles. */
   readonly discussionSettingsDefaultPingStatus: InputMaybe<Scalars["String"]>
@@ -7745,21 +9008,28 @@ export type UpdateSettingsInput = {
   readonly writingSettingsUseSmilies: InputMaybe<Scalars["Boolean"]>
 }
 
-/** The payload for the updateSettings mutation */
+/** The payload for the updateSettings mutation. */
 export type UpdateSettingsPayload = {
   readonly __typename?: "UpdateSettingsPayload"
+  /** Update all settings. */
   readonly allSettings: Maybe<Settings>
+  /** If a &#039;clientMutationId&#039; input is provided to the mutation, it will be returned as output on the mutation. This ID can be used by the client to track the progress of mutations and catch possible duplicate mutation submissions. */
   readonly clientMutationId: Maybe<Scalars["String"]>
+  /** Update the DiscussionSettings setting. */
   readonly discussionSettings: Maybe<DiscussionSettings>
+  /** Update the GeneralSettings setting. */
   readonly generalSettings: Maybe<GeneralSettings>
+  /** Update the ReadingSettings setting. */
   readonly readingSettings: Maybe<ReadingSettings>
+  /** Update the WritingSettings setting. */
   readonly writingSettings: Maybe<WritingSettings>
 }
 
-/** Input for the UpdateTag mutation */
+/** Input for the updateTag mutation. */
 export type UpdateTagInput = {
   /** The slug that the post_tag will be an alias of */
   readonly aliasOf: InputMaybe<Scalars["String"]>
+  /** This is an ID that can be passed to a mutation by the client to track the progress of mutations and catch possible duplicate mutation submissions. */
   readonly clientMutationId: InputMaybe<Scalars["String"]>
   /** The description of the post_tag object */
   readonly description: InputMaybe<Scalars["String"]>
@@ -7771,18 +9041,20 @@ export type UpdateTagInput = {
   readonly slug: InputMaybe<Scalars["String"]>
 }
 
-/** The payload for the UpdateTag mutation */
+/** The payload for the updateTag mutation. */
 export type UpdateTagPayload = {
   readonly __typename?: "UpdateTagPayload"
+  /** If a &#039;clientMutationId&#039; input is provided to the mutation, it will be returned as output on the mutation. This ID can be used by the client to track the progress of mutations and catch possible duplicate mutation submissions. */
   readonly clientMutationId: Maybe<Scalars["String"]>
   /** The created post_tag */
   readonly tag: Maybe<Tag>
 }
 
-/** Input for the updateUser mutation */
+/** Input for the updateUser mutation. */
 export type UpdateUserInput = {
   /** User's AOL IM account. */
   readonly aim: InputMaybe<Scalars["String"]>
+  /** This is an ID that can be passed to a mutation by the client to track the progress of mutations and catch possible duplicate mutation submissions. */
   readonly clientMutationId: InputMaybe<Scalars["String"]>
   /** A string containing content about the user. */
   readonly description: InputMaybe<Scalars["String"]>
@@ -7818,10 +9090,12 @@ export type UpdateUserInput = {
   readonly yim: InputMaybe<Scalars["String"]>
 }
 
-/** The payload for the updateUser mutation */
+/** The payload for the updateUser mutation. */
 export type UpdateUserPayload = {
   readonly __typename?: "UpdateUserPayload"
+  /** If a &#039;clientMutationId&#039; input is provided to the mutation, it will be returned as output on the mutation. This ID can be used by the client to track the progress of mutations and catch possible duplicate mutation submissions. */
   readonly clientMutationId: Maybe<Scalars["String"]>
+  /** The User object mutation type. */
   readonly user: Maybe<User>
 }
 
@@ -7855,8 +9129,12 @@ export type User = Commenter &
     readonly firstName: Maybe<Scalars["String"]>
     /** The globally unique identifier for the user object. */
     readonly id: Scalars["ID"]
+    /** Whether the node is a Content Node */
+    readonly isContentNode: Scalars["Boolean"]
     /** Whether the object is restricted from the current viewer */
     readonly isRestricted: Maybe<Scalars["Boolean"]>
+    /** Whether the node is a Term */
+    readonly isTermNode: Scalars["Boolean"]
     /** Last name of the user. This is equivalent to the WP_User-&gt;user_last_name property. */
     readonly lastName: Maybe<Scalars["String"]>
     /** The preferred language locale set for the user. Value derived from get_user_locale(). */
@@ -7876,9 +9154,11 @@ export type User = Commenter &
     /** The date the user registered or was created. The field follows a full ISO8601 date string format. */
     readonly registeredDate: Maybe<Scalars["String"]>
     /** Connection between the User and Revisions authored by the user */
-    readonly revisions: Maybe<UserToContentRevisionUnionConnection>
+    readonly revisions: Maybe<UserToRevisionsConnection>
     /** Connection between the User type and the UserRole type */
     readonly roles: Maybe<UserToUserRoleConnection>
+    /** Whether the Toolbar should be displayed when the user is viewing the site. */
+    readonly shouldShowAdminToolbar: Maybe<Scalars["Boolean"]>
     /** The slug for the user. This field is equivalent to WP_User-&gt;user_nicename */
     readonly slug: Maybe<Scalars["String"]>
     /** The unique resource identifier path */
@@ -7959,7 +9239,7 @@ export type UserRevisionsArgs = {
   before: InputMaybe<Scalars["String"]>
   first: InputMaybe<Scalars["Int"]>
   last: InputMaybe<Scalars["Int"]>
-  where: InputMaybe<UserToContentRevisionUnionConnectionWhereArgs>
+  where: InputMaybe<UserToRevisionsConnectionWhereArgs>
 }
 
 /** A User object */
@@ -7968,6 +9248,36 @@ export type UserRolesArgs = {
   before: InputMaybe<Scalars["String"]>
   first: InputMaybe<Scalars["Int"]>
   last: InputMaybe<Scalars["Int"]>
+}
+
+/** Connection to User Nodes */
+export type UserConnection = {
+  /** A list of edges (relational context) between RootQuery and connected User Nodes */
+  readonly edges: ReadonlyArray<UserConnectionEdge>
+  /** A list of connected User Nodes */
+  readonly nodes: ReadonlyArray<User>
+  /** Information about pagination in a connection. */
+  readonly pageInfo: UserConnectionPageInfo
+}
+
+/** Edge between a Node and a connected User */
+export type UserConnectionEdge = {
+  /** Opaque reference to the nodes position in the connection. Value can be used with pagination args. */
+  readonly cursor: Maybe<Scalars["String"]>
+  /** The connected User Node */
+  readonly node: User
+}
+
+/** Page Info on the connected UserConnectionEdge */
+export type UserConnectionPageInfo = {
+  /** When paginating forwards, the cursor to continue. */
+  readonly endCursor: Maybe<Scalars["String"]>
+  /** When paginating forwards, are there more items? */
+  readonly hasNextPage: Scalars["Boolean"]
+  /** When paginating backwards, are there more items? */
+  readonly hasPreviousPage: Scalars["Boolean"]
+  /** When paginating backwards, the cursor to continue. */
+  readonly startCursor: Maybe<Scalars["String"]>
 }
 
 /** The Type of Identifier used to fetch a single User node. To be used along with the "id" field. Default is "ID". */
@@ -8001,34 +9311,86 @@ export type UserRole = Node & {
   readonly name: Maybe<Scalars["String"]>
 }
 
+/** Connection to UserRole Nodes */
+export type UserRoleConnection = {
+  /** A list of edges (relational context) between RootQuery and connected UserRole Nodes */
+  readonly edges: ReadonlyArray<UserRoleConnectionEdge>
+  /** A list of connected UserRole Nodes */
+  readonly nodes: ReadonlyArray<UserRole>
+  /** Information about pagination in a connection. */
+  readonly pageInfo: UserRoleConnectionPageInfo
+}
+
+/** Edge between a Node and a connected UserRole */
+export type UserRoleConnectionEdge = {
+  /** Opaque reference to the nodes position in the connection. Value can be used with pagination args. */
+  readonly cursor: Maybe<Scalars["String"]>
+  /** The connected UserRole Node */
+  readonly node: UserRole
+}
+
+/** Page Info on the connected UserRoleConnectionEdge */
+export type UserRoleConnectionPageInfo = {
+  /** When paginating forwards, the cursor to continue. */
+  readonly endCursor: Maybe<Scalars["String"]>
+  /** When paginating forwards, are there more items? */
+  readonly hasNextPage: Scalars["Boolean"]
+  /** When paginating backwards, are there more items? */
+  readonly hasPreviousPage: Scalars["Boolean"]
+  /** When paginating backwards, the cursor to continue. */
+  readonly startCursor: Maybe<Scalars["String"]>
+}
+
 /** Names of available user roles */
 export enum UserRoleEnum {
+  /** User role with specific capabilities */
   Administrator = "ADMINISTRATOR",
+  /** User role with specific capabilities */
   Author = "AUTHOR",
+  /** User role with specific capabilities */
   Contributor = "CONTRIBUTOR",
+  /** User role with specific capabilities */
   Editor = "EDITOR",
+  /** User role with specific capabilities */
   Subscriber = "SUBSCRIBER",
 }
 
 /** Connection between the User type and the Comment type */
-export type UserToCommentConnection = {
-  readonly __typename?: "UserToCommentConnection"
-  /** Edges for the UserToCommentConnection connection */
-  readonly edges: Maybe<ReadonlyArray<Maybe<UserToCommentConnectionEdge>>>
-  /** The nodes of the connection, without the edges */
-  readonly nodes: Maybe<ReadonlyArray<Maybe<Comment>>>
-  /** Information about pagination in a connection. */
-  readonly pageInfo: Maybe<WpPageInfo>
-}
+export type UserToCommentConnection = CommentConnection &
+  Connection & {
+    readonly __typename?: "UserToCommentConnection"
+    /** Edges for the UserToCommentConnection connection */
+    readonly edges: ReadonlyArray<UserToCommentConnectionEdge>
+    /** The nodes of the connection, without the edges */
+    readonly nodes: ReadonlyArray<Comment>
+    /** Information about pagination in a connection. */
+    readonly pageInfo: UserToCommentConnectionPageInfo
+  }
 
 /** An edge in a connection */
-export type UserToCommentConnectionEdge = {
-  readonly __typename?: "UserToCommentConnectionEdge"
-  /** A cursor for use in pagination */
-  readonly cursor: Maybe<Scalars["String"]>
-  /** The item at the end of the edge */
-  readonly node: Maybe<Comment>
-}
+export type UserToCommentConnectionEdge = CommentConnectionEdge &
+  Edge & {
+    readonly __typename?: "UserToCommentConnectionEdge"
+    /** A cursor for use in pagination */
+    readonly cursor: Maybe<Scalars["String"]>
+    /** The item at the end of the edge */
+    readonly node: Comment
+  }
+
+/** Page Info on the &quot;UserToCommentConnection&quot; */
+export type UserToCommentConnectionPageInfo = CommentConnectionPageInfo &
+  PageInfo &
+  WpPageInfo & {
+    readonly __typename?: "UserToCommentConnectionPageInfo"
+    /** When paginating forwards, the cursor to continue. */
+    readonly endCursor: Maybe<Scalars["String"]>
+    /** When paginating forwards, are there more items? */
+    readonly hasNextPage: Scalars["Boolean"]
+    /** When paginating backwards, are there more items? */
+    readonly hasPreviousPage: Scalars["Boolean"]
+    /** When paginating backwards, the cursor to continue. */
+    readonly startCursor: Maybe<Scalars["String"]>
+  }
 
 /** Arguments for filtering the UserToCommentConnection connection */
 export type UserToCommentConnectionWhereArgs = {
@@ -8066,7 +9428,7 @@ export type UserToCommentConnectionWhereArgs = {
   readonly contentIdIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
   /** Array of content object IDs to exclude affiliated comments for. */
   readonly contentIdNotIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** Content object name to retrieve affiliated comments for. */
+  /** Content object name (i.e. slug ) to retrieve affiliated comments for. */
   readonly contentName: InputMaybe<Scalars["String"]>
   /** Content Object parent ID to retrieve affiliated comments for. */
   readonly contentParent: InputMaybe<Scalars["Int"]>
@@ -8098,129 +9460,118 @@ export type UserToCommentConnectionWhereArgs = {
   readonly userId: InputMaybe<Scalars["ID"]>
 }
 
-/** Connection between the User type and the ContentRevisionUnion type */
-export type UserToContentRevisionUnionConnection = {
-  readonly __typename?: "UserToContentRevisionUnionConnection"
-  /** Edges for the UserToContentRevisionUnionConnection connection */
-  readonly edges: Maybe<
-    ReadonlyArray<Maybe<UserToContentRevisionUnionConnectionEdge>>
-  >
-  /** The nodes of the connection, without the edges */
-  readonly nodes: Maybe<ReadonlyArray<Maybe<ContentRevisionUnion>>>
-  /** Information about pagination in a connection. */
-  readonly pageInfo: Maybe<WpPageInfo>
-}
-
-/** An edge in a connection */
-export type UserToContentRevisionUnionConnectionEdge = {
-  readonly __typename?: "UserToContentRevisionUnionConnectionEdge"
-  /** A cursor for use in pagination */
-  readonly cursor: Maybe<Scalars["String"]>
-  /** The item at the end of the edge */
-  readonly node: Maybe<ContentRevisionUnion>
-}
-
-/** Arguments for filtering the UserToContentRevisionUnionConnection connection */
-export type UserToContentRevisionUnionConnectionWhereArgs = {
-  /** Filter the connection based on dates */
-  readonly dateQuery: InputMaybe<DateQueryInput>
-  /** True for objects with passwords; False for objects without passwords; null for all objects with or without passwords */
-  readonly hasPassword: InputMaybe<Scalars["Boolean"]>
-  /** Specific ID of the object */
-  readonly id: InputMaybe<Scalars["Int"]>
-  /** Array of IDs for the objects to retrieve */
-  readonly in: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** Get objects with a specific mimeType property */
-  readonly mimeType: InputMaybe<MimeTypeEnum>
-  /** Slug / post_name of the object */
-  readonly name: InputMaybe<Scalars["String"]>
-  /** Specify objects to retrieve. Use slugs */
-  readonly nameIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
-  /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
-  readonly notIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** What paramater to use to order the objects by. */
-  readonly orderby: InputMaybe<
-    ReadonlyArray<InputMaybe<PostObjectsConnectionOrderbyInput>>
-  >
-  /** Use ID to return only children. Use 0 to return only top-level items */
-  readonly parent: InputMaybe<Scalars["ID"]>
-  /** Specify objects whose parent is in an array */
-  readonly parentIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** Specify posts whose parent is not in an array */
-  readonly parentNotIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** Show posts with a specific password. */
-  readonly password: InputMaybe<Scalars["String"]>
-  /** Show Posts based on a keyword search */
-  readonly search: InputMaybe<Scalars["String"]>
-  readonly stati: InputMaybe<ReadonlyArray<InputMaybe<PostStatusEnum>>>
-  readonly status: InputMaybe<PostStatusEnum>
-  /** Title of the object */
-  readonly title: InputMaybe<Scalars["String"]>
-}
-
 /** Connection between the User type and the EnqueuedScript type */
-export type UserToEnqueuedScriptConnection = {
-  readonly __typename?: "UserToEnqueuedScriptConnection"
-  /** Edges for the UserToEnqueuedScriptConnection connection */
-  readonly edges: Maybe<
-    ReadonlyArray<Maybe<UserToEnqueuedScriptConnectionEdge>>
-  >
-  /** The nodes of the connection, without the edges */
-  readonly nodes: Maybe<ReadonlyArray<Maybe<EnqueuedScript>>>
-  /** Information about pagination in a connection. */
-  readonly pageInfo: Maybe<WpPageInfo>
-}
+export type UserToEnqueuedScriptConnection = Connection &
+  EnqueuedScriptConnection & {
+    readonly __typename?: "UserToEnqueuedScriptConnection"
+    /** Edges for the UserToEnqueuedScriptConnection connection */
+    readonly edges: ReadonlyArray<UserToEnqueuedScriptConnectionEdge>
+    /** The nodes of the connection, without the edges */
+    readonly nodes: ReadonlyArray<EnqueuedScript>
+    /** Information about pagination in a connection. */
+    readonly pageInfo: UserToEnqueuedScriptConnectionPageInfo
+  }
 
 /** An edge in a connection */
-export type UserToEnqueuedScriptConnectionEdge = {
-  readonly __typename?: "UserToEnqueuedScriptConnectionEdge"
-  /** A cursor for use in pagination */
-  readonly cursor: Maybe<Scalars["String"]>
-  /** The item at the end of the edge */
-  readonly node: Maybe<EnqueuedScript>
-}
+export type UserToEnqueuedScriptConnectionEdge = Edge &
+  EnqueuedScriptConnectionEdge & {
+    readonly __typename?: "UserToEnqueuedScriptConnectionEdge"
+    /** A cursor for use in pagination */
+    readonly cursor: Maybe<Scalars["String"]>
+    /** The item at the end of the edge */
+    readonly node: EnqueuedScript
+  }
+
+/** Page Info on the &quot;UserToEnqueuedScriptConnection&quot; */
+export type UserToEnqueuedScriptConnectionPageInfo =
+  EnqueuedScriptConnectionPageInfo &
+    PageInfo &
+    WpPageInfo & {
+      readonly __typename?: "UserToEnqueuedScriptConnectionPageInfo"
+      /** When paginating forwards, the cursor to continue. */
+      readonly endCursor: Maybe<Scalars["String"]>
+      /** When paginating forwards, are there more items? */
+      readonly hasNextPage: Scalars["Boolean"]
+      /** When paginating backwards, are there more items? */
+      readonly hasPreviousPage: Scalars["Boolean"]
+      /** When paginating backwards, the cursor to continue. */
+      readonly startCursor: Maybe<Scalars["String"]>
+    }
 
 /** Connection between the User type and the EnqueuedStylesheet type */
-export type UserToEnqueuedStylesheetConnection = {
-  readonly __typename?: "UserToEnqueuedStylesheetConnection"
-  /** Edges for the UserToEnqueuedStylesheetConnection connection */
-  readonly edges: Maybe<
-    ReadonlyArray<Maybe<UserToEnqueuedStylesheetConnectionEdge>>
-  >
-  /** The nodes of the connection, without the edges */
-  readonly nodes: Maybe<ReadonlyArray<Maybe<EnqueuedStylesheet>>>
-  /** Information about pagination in a connection. */
-  readonly pageInfo: Maybe<WpPageInfo>
-}
+export type UserToEnqueuedStylesheetConnection = Connection &
+  EnqueuedStylesheetConnection & {
+    readonly __typename?: "UserToEnqueuedStylesheetConnection"
+    /** Edges for the UserToEnqueuedStylesheetConnection connection */
+    readonly edges: ReadonlyArray<UserToEnqueuedStylesheetConnectionEdge>
+    /** The nodes of the connection, without the edges */
+    readonly nodes: ReadonlyArray<EnqueuedStylesheet>
+    /** Information about pagination in a connection. */
+    readonly pageInfo: UserToEnqueuedStylesheetConnectionPageInfo
+  }
 
 /** An edge in a connection */
-export type UserToEnqueuedStylesheetConnectionEdge = {
-  readonly __typename?: "UserToEnqueuedStylesheetConnectionEdge"
-  /** A cursor for use in pagination */
-  readonly cursor: Maybe<Scalars["String"]>
-  /** The item at the end of the edge */
-  readonly node: Maybe<EnqueuedStylesheet>
-}
+export type UserToEnqueuedStylesheetConnectionEdge = Edge &
+  EnqueuedStylesheetConnectionEdge & {
+    readonly __typename?: "UserToEnqueuedStylesheetConnectionEdge"
+    /** A cursor for use in pagination */
+    readonly cursor: Maybe<Scalars["String"]>
+    /** The item at the end of the edge */
+    readonly node: EnqueuedStylesheet
+  }
+
+/** Page Info on the &quot;UserToEnqueuedStylesheetConnection&quot; */
+export type UserToEnqueuedStylesheetConnectionPageInfo =
+  EnqueuedStylesheetConnectionPageInfo &
+    PageInfo &
+    WpPageInfo & {
+      readonly __typename?: "UserToEnqueuedStylesheetConnectionPageInfo"
+      /** When paginating forwards, the cursor to continue. */
+      readonly endCursor: Maybe<Scalars["String"]>
+      /** When paginating forwards, are there more items? */
+      readonly hasNextPage: Scalars["Boolean"]
+      /** When paginating backwards, are there more items? */
+      readonly hasPreviousPage: Scalars["Boolean"]
+      /** When paginating backwards, the cursor to continue. */
+      readonly startCursor: Maybe<Scalars["String"]>
+    }
 
 /** Connection between the User type and the mediaItem type */
-export type UserToMediaItemConnection = {
-  readonly __typename?: "UserToMediaItemConnection"
-  /** Edges for the UserToMediaItemConnection connection */
-  readonly edges: Maybe<ReadonlyArray<Maybe<UserToMediaItemConnectionEdge>>>
-  /** The nodes of the connection, without the edges */
-  readonly nodes: Maybe<ReadonlyArray<Maybe<MediaItem>>>
-  /** Information about pagination in a connection. */
-  readonly pageInfo: Maybe<WpPageInfo>
-}
+export type UserToMediaItemConnection = Connection &
+  MediaItemConnection & {
+    readonly __typename?: "UserToMediaItemConnection"
+    /** Edges for the UserToMediaItemConnection connection */
+    readonly edges: ReadonlyArray<UserToMediaItemConnectionEdge>
+    /** The nodes of the connection, without the edges */
+    readonly nodes: ReadonlyArray<MediaItem>
+    /** Information about pagination in a connection. */
+    readonly pageInfo: UserToMediaItemConnectionPageInfo
+  }
 
 /** An edge in a connection */
-export type UserToMediaItemConnectionEdge = {
-  readonly __typename?: "UserToMediaItemConnectionEdge"
-  /** A cursor for use in pagination */
-  readonly cursor: Maybe<Scalars["String"]>
-  /** The item at the end of the edge */
-  readonly node: Maybe<MediaItem>
-}
+export type UserToMediaItemConnectionEdge = Edge &
+  MediaItemConnectionEdge & {
+    readonly __typename?: "UserToMediaItemConnectionEdge"
+    /** A cursor for use in pagination */
+    readonly cursor: Maybe<Scalars["String"]>
+    /** The item at the end of the edge */
+    readonly node: MediaItem
+  }
+
+/** Page Info on the &quot;UserToMediaItemConnection&quot; */
+export type UserToMediaItemConnectionPageInfo = MediaItemConnectionPageInfo &
+  PageInfo &
+  WpPageInfo & {
+    readonly __typename?: "UserToMediaItemConnectionPageInfo"
+    /** When paginating forwards, the cursor to continue. */
+    readonly endCursor: Maybe<Scalars["String"]>
+    /** When paginating forwards, are there more items? */
+    readonly hasNextPage: Scalars["Boolean"]
+    /** When paginating backwards, are there more items? */
+    readonly hasPreviousPage: Scalars["Boolean"]
+    /** When paginating backwards, the cursor to continue. */
+    readonly startCursor: Maybe<Scalars["String"]>
+  }
 
 /** Arguments for filtering the UserToMediaItemConnection connection */
 export type UserToMediaItemConnectionWhereArgs = {
@@ -8236,7 +9587,7 @@ export type UserToMediaItemConnectionWhereArgs = {
   readonly dateQuery: InputMaybe<DateQueryInput>
   /** True for objects with passwords; False for objects without passwords; null for all objects with or without passwords */
   readonly hasPassword: InputMaybe<Scalars["Boolean"]>
-  /** Specific ID of the object */
+  /** Specific database ID of the object */
   readonly id: InputMaybe<Scalars["Int"]>
   /** Array of IDs for the objects to retrieve */
   readonly in: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
@@ -8262,31 +9613,50 @@ export type UserToMediaItemConnectionWhereArgs = {
   readonly password: InputMaybe<Scalars["String"]>
   /** Show Posts based on a keyword search */
   readonly search: InputMaybe<Scalars["String"]>
+  /** Retrieve posts where post status is in an array. */
   readonly stati: InputMaybe<ReadonlyArray<InputMaybe<PostStatusEnum>>>
+  /** Show posts with a specific status. */
   readonly status: InputMaybe<PostStatusEnum>
   /** Title of the object */
   readonly title: InputMaybe<Scalars["String"]>
 }
 
 /** Connection between the User type and the page type */
-export type UserToPageConnection = {
-  readonly __typename?: "UserToPageConnection"
-  /** Edges for the UserToPageConnection connection */
-  readonly edges: Maybe<ReadonlyArray<Maybe<UserToPageConnectionEdge>>>
-  /** The nodes of the connection, without the edges */
-  readonly nodes: Maybe<ReadonlyArray<Maybe<Page>>>
-  /** Information about pagination in a connection. */
-  readonly pageInfo: Maybe<WpPageInfo>
-}
+export type UserToPageConnection = Connection &
+  PageConnection & {
+    readonly __typename?: "UserToPageConnection"
+    /** Edges for the UserToPageConnection connection */
+    readonly edges: ReadonlyArray<UserToPageConnectionEdge>
+    /** The nodes of the connection, without the edges */
+    readonly nodes: ReadonlyArray<Page>
+    /** Information about pagination in a connection. */
+    readonly pageInfo: UserToPageConnectionPageInfo
+  }
 
 /** An edge in a connection */
-export type UserToPageConnectionEdge = {
-  readonly __typename?: "UserToPageConnectionEdge"
-  /** A cursor for use in pagination */
-  readonly cursor: Maybe<Scalars["String"]>
-  /** The item at the end of the edge */
-  readonly node: Maybe<Page>
-}
+export type UserToPageConnectionEdge = Edge &
+  PageConnectionEdge & {
+    readonly __typename?: "UserToPageConnectionEdge"
+    /** A cursor for use in pagination */
+    readonly cursor: Maybe<Scalars["String"]>
+    /** The item at the end of the edge */
+    readonly node: Page
+  }
+
+/** Page Info on the &quot;UserToPageConnection&quot; */
+export type UserToPageConnectionPageInfo = PageConnectionPageInfo &
+  PageInfo &
+  WpPageInfo & {
+    readonly __typename?: "UserToPageConnectionPageInfo"
+    /** When paginating forwards, the cursor to continue. */
+    readonly endCursor: Maybe<Scalars["String"]>
+    /** When paginating forwards, are there more items? */
+    readonly hasNextPage: Scalars["Boolean"]
+    /** When paginating backwards, are there more items? */
+    readonly hasPreviousPage: Scalars["Boolean"]
+    /** When paginating backwards, the cursor to continue. */
+    readonly startCursor: Maybe<Scalars["String"]>
+  }
 
 /** Arguments for filtering the UserToPageConnection connection */
 export type UserToPageConnectionWhereArgs = {
@@ -8302,7 +9672,7 @@ export type UserToPageConnectionWhereArgs = {
   readonly dateQuery: InputMaybe<DateQueryInput>
   /** True for objects with passwords; False for objects without passwords; null for all objects with or without passwords */
   readonly hasPassword: InputMaybe<Scalars["Boolean"]>
-  /** Specific ID of the object */
+  /** Specific database ID of the object */
   readonly id: InputMaybe<Scalars["Int"]>
   /** Array of IDs for the objects to retrieve */
   readonly in: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
@@ -8328,31 +9698,50 @@ export type UserToPageConnectionWhereArgs = {
   readonly password: InputMaybe<Scalars["String"]>
   /** Show Posts based on a keyword search */
   readonly search: InputMaybe<Scalars["String"]>
+  /** Retrieve posts where post status is in an array. */
   readonly stati: InputMaybe<ReadonlyArray<InputMaybe<PostStatusEnum>>>
+  /** Show posts with a specific status. */
   readonly status: InputMaybe<PostStatusEnum>
   /** Title of the object */
   readonly title: InputMaybe<Scalars["String"]>
 }
 
 /** Connection between the User type and the post type */
-export type UserToPostConnection = {
-  readonly __typename?: "UserToPostConnection"
-  /** Edges for the UserToPostConnection connection */
-  readonly edges: Maybe<ReadonlyArray<Maybe<UserToPostConnectionEdge>>>
-  /** The nodes of the connection, without the edges */
-  readonly nodes: Maybe<ReadonlyArray<Maybe<Post>>>
-  /** Information about pagination in a connection. */
-  readonly pageInfo: Maybe<WpPageInfo>
-}
+export type UserToPostConnection = Connection &
+  PostConnection & {
+    readonly __typename?: "UserToPostConnection"
+    /** Edges for the UserToPostConnection connection */
+    readonly edges: ReadonlyArray<UserToPostConnectionEdge>
+    /** The nodes of the connection, without the edges */
+    readonly nodes: ReadonlyArray<Post>
+    /** Information about pagination in a connection. */
+    readonly pageInfo: UserToPostConnectionPageInfo
+  }
 
 /** An edge in a connection */
-export type UserToPostConnectionEdge = {
-  readonly __typename?: "UserToPostConnectionEdge"
-  /** A cursor for use in pagination */
-  readonly cursor: Maybe<Scalars["String"]>
-  /** The item at the end of the edge */
-  readonly node: Maybe<Post>
-}
+export type UserToPostConnectionEdge = Edge &
+  PostConnectionEdge & {
+    readonly __typename?: "UserToPostConnectionEdge"
+    /** A cursor for use in pagination */
+    readonly cursor: Maybe<Scalars["String"]>
+    /** The item at the end of the edge */
+    readonly node: Post
+  }
+
+/** Page Info on the &quot;UserToPostConnection&quot; */
+export type UserToPostConnectionPageInfo = PageInfo &
+  PostConnectionPageInfo &
+  WpPageInfo & {
+    readonly __typename?: "UserToPostConnectionPageInfo"
+    /** When paginating forwards, the cursor to continue. */
+    readonly endCursor: Maybe<Scalars["String"]>
+    /** When paginating forwards, are there more items? */
+    readonly hasNextPage: Scalars["Boolean"]
+    /** When paginating backwards, are there more items? */
+    readonly hasPreviousPage: Scalars["Boolean"]
+    /** When paginating backwards, the cursor to continue. */
+    readonly startCursor: Maybe<Scalars["String"]>
+  }
 
 /** Arguments for filtering the UserToPostConnection connection */
 export type UserToPostConnectionWhereArgs = {
@@ -8376,7 +9765,7 @@ export type UserToPostConnectionWhereArgs = {
   readonly dateQuery: InputMaybe<DateQueryInput>
   /** True for objects with passwords; False for objects without passwords; null for all objects with or without passwords */
   readonly hasPassword: InputMaybe<Scalars["Boolean"]>
-  /** Specific ID of the object */
+  /** Specific database ID of the object */
   readonly id: InputMaybe<Scalars["Int"]>
   /** Array of IDs for the objects to retrieve */
   readonly in: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
@@ -8402,7 +9791,9 @@ export type UserToPostConnectionWhereArgs = {
   readonly password: InputMaybe<Scalars["String"]>
   /** Show Posts based on a keyword search */
   readonly search: InputMaybe<Scalars["String"]>
+  /** Retrieve posts where post status is in an array. */
   readonly stati: InputMaybe<ReadonlyArray<InputMaybe<PostStatusEnum>>>
+  /** Show posts with a specific status. */
   readonly status: InputMaybe<PostStatusEnum>
   /** Tag Slug */
   readonly tag: InputMaybe<Scalars["String"]>
@@ -8412,33 +9803,129 @@ export type UserToPostConnectionWhereArgs = {
   readonly tagIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
   /** Array of tag IDs, used to display objects from one tag OR another */
   readonly tagNotIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** Array of tag slugs, used to display objects from one tag OR another */
+  /** Array of tag slugs, used to display objects from one tag AND another */
   readonly tagSlugAnd: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
-  /** Array of tag slugs, used to exclude objects in specified tags */
+  /** Array of tag slugs, used to include objects in ANY specified tags */
   readonly tagSlugIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
   /** Title of the object */
   readonly title: InputMaybe<Scalars["String"]>
 }
 
-/** Connection between the User type and the UserRole type */
-export type UserToUserRoleConnection = {
-  readonly __typename?: "UserToUserRoleConnection"
-  /** Edges for the UserToUserRoleConnection connection */
-  readonly edges: Maybe<ReadonlyArray<Maybe<UserToUserRoleConnectionEdge>>>
-  /** The nodes of the connection, without the edges */
-  readonly nodes: Maybe<ReadonlyArray<Maybe<UserRole>>>
-  /** Information about pagination in a connection. */
-  readonly pageInfo: Maybe<WpPageInfo>
-}
+/** Connection between the User type and the ContentNode type */
+export type UserToRevisionsConnection = Connection &
+  ContentNodeConnection & {
+    readonly __typename?: "UserToRevisionsConnection"
+    /** Edges for the UserToRevisionsConnection connection */
+    readonly edges: ReadonlyArray<UserToRevisionsConnectionEdge>
+    /** The nodes of the connection, without the edges */
+    readonly nodes: ReadonlyArray<ContentNode>
+    /** Information about pagination in a connection. */
+    readonly pageInfo: UserToRevisionsConnectionPageInfo
+  }
 
 /** An edge in a connection */
-export type UserToUserRoleConnectionEdge = {
-  readonly __typename?: "UserToUserRoleConnectionEdge"
-  /** A cursor for use in pagination */
-  readonly cursor: Maybe<Scalars["String"]>
-  /** The item at the end of the edge */
-  readonly node: Maybe<UserRole>
+export type UserToRevisionsConnectionEdge = ContentNodeConnectionEdge &
+  Edge & {
+    readonly __typename?: "UserToRevisionsConnectionEdge"
+    /** A cursor for use in pagination */
+    readonly cursor: Maybe<Scalars["String"]>
+    /** The item at the end of the edge */
+    readonly node: ContentNode
+  }
+
+/** Page Info on the &quot;UserToRevisionsConnection&quot; */
+export type UserToRevisionsConnectionPageInfo = ContentNodeConnectionPageInfo &
+  PageInfo &
+  WpPageInfo & {
+    readonly __typename?: "UserToRevisionsConnectionPageInfo"
+    /** When paginating forwards, the cursor to continue. */
+    readonly endCursor: Maybe<Scalars["String"]>
+    /** When paginating forwards, are there more items? */
+    readonly hasNextPage: Scalars["Boolean"]
+    /** When paginating backwards, are there more items? */
+    readonly hasPreviousPage: Scalars["Boolean"]
+    /** When paginating backwards, the cursor to continue. */
+    readonly startCursor: Maybe<Scalars["String"]>
+  }
+
+/** Arguments for filtering the UserToRevisionsConnection connection */
+export type UserToRevisionsConnectionWhereArgs = {
+  /** The Types of content to filter */
+  readonly contentTypes: InputMaybe<ReadonlyArray<InputMaybe<ContentTypeEnum>>>
+  /** Filter the connection based on dates */
+  readonly dateQuery: InputMaybe<DateQueryInput>
+  /** True for objects with passwords; False for objects without passwords; null for all objects with or without passwords */
+  readonly hasPassword: InputMaybe<Scalars["Boolean"]>
+  /** Specific database ID of the object */
+  readonly id: InputMaybe<Scalars["Int"]>
+  /** Array of IDs for the objects to retrieve */
+  readonly in: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
+  /** Get objects with a specific mimeType property */
+  readonly mimeType: InputMaybe<MimeTypeEnum>
+  /** Slug / post_name of the object */
+  readonly name: InputMaybe<Scalars["String"]>
+  /** Specify objects to retrieve. Use slugs */
+  readonly nameIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
+  /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
+  readonly notIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
+  /** What paramater to use to order the objects by. */
+  readonly orderby: InputMaybe<
+    ReadonlyArray<InputMaybe<PostObjectsConnectionOrderbyInput>>
+  >
+  /** Use ID to return only children. Use 0 to return only top-level items */
+  readonly parent: InputMaybe<Scalars["ID"]>
+  /** Specify objects whose parent is in an array */
+  readonly parentIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
+  /** Specify posts whose parent is not in an array */
+  readonly parentNotIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
+  /** Show posts with a specific password. */
+  readonly password: InputMaybe<Scalars["String"]>
+  /** Show Posts based on a keyword search */
+  readonly search: InputMaybe<Scalars["String"]>
+  /** Retrieve posts where post status is in an array. */
+  readonly stati: InputMaybe<ReadonlyArray<InputMaybe<PostStatusEnum>>>
+  /** Show posts with a specific status. */
+  readonly status: InputMaybe<PostStatusEnum>
+  /** Title of the object */
+  readonly title: InputMaybe<Scalars["String"]>
 }
+
+/** Connection between the User type and the UserRole type */
+export type UserToUserRoleConnection = Connection &
+  UserRoleConnection & {
+    readonly __typename?: "UserToUserRoleConnection"
+    /** Edges for the UserToUserRoleConnection connection */
+    readonly edges: ReadonlyArray<UserToUserRoleConnectionEdge>
+    /** The nodes of the connection, without the edges */
+    readonly nodes: ReadonlyArray<UserRole>
+    /** Information about pagination in a connection. */
+    readonly pageInfo: UserToUserRoleConnectionPageInfo
+  }
+
+/** An edge in a connection */
+export type UserToUserRoleConnectionEdge = Edge &
+  UserRoleConnectionEdge & {
+    readonly __typename?: "UserToUserRoleConnectionEdge"
+    /** A cursor for use in pagination */
+    readonly cursor: Maybe<Scalars["String"]>
+    /** The item at the end of the edge */
+    readonly node: UserRole
+  }
+
+/** Page Info on the &quot;UserToUserRoleConnection&quot; */
+export type UserToUserRoleConnectionPageInfo = PageInfo &
+  UserRoleConnectionPageInfo &
+  WpPageInfo & {
+    readonly __typename?: "UserToUserRoleConnectionPageInfo"
+    /** When paginating forwards, the cursor to continue. */
+    readonly endCursor: Maybe<Scalars["String"]>
+    /** When paginating forwards, are there more items? */
+    readonly hasNextPage: Scalars["Boolean"]
+    /** When paginating backwards, are there more items? */
+    readonly hasPreviousPage: Scalars["Boolean"]
+    /** When paginating backwards, the cursor to continue. */
+    readonly startCursor: Maybe<Scalars["String"]>
+  }
 
 /** Field to order the connection by */
 export enum UsersConnectionOrderbyEnum {
@@ -8462,17 +9949,24 @@ export enum UsersConnectionOrderbyEnum {
 
 /** Options for ordering the connection */
 export type UsersConnectionOrderbyInput = {
+  /** The field name used to sort the results. */
   readonly field: UsersConnectionOrderbyEnum
+  /** The cardinality of the order of the connection */
   readonly order: InputMaybe<OrderEnum>
 }
 
-/** Names of available user roles */
+/** Column used for searching for users. */
 export enum UsersConnectionSearchColumnEnum {
-  Administrator = "ADMINISTRATOR",
-  Author = "AUTHOR",
-  Contributor = "CONTRIBUTOR",
-  Editor = "EDITOR",
-  Subscriber = "SUBSCRIBER",
+  /** The user's email address. */
+  Email = "EMAIL",
+  /** The globally unique ID. */
+  Id = "ID",
+  /** The username the User uses to login with. */
+  Login = "LOGIN",
+  /** A URL-friendly name for the user. The default is the user's username. */
+  Nicename = "NICENAME",
+  /** The URL of the user's website. */
+  Url = "URL",
 }
 
 /** Information needed by gatsby-source-wordpress. */
@@ -8480,12 +9974,46 @@ export type WpGatsby = {
   readonly __typename?: "WPGatsby"
   /** Returns wether or not pretty permalinks are enabled. */
   readonly arePrettyPermalinksEnabled: Maybe<Scalars["Boolean"]>
+  /** The current status of a Gatsby Preview. */
+  readonly gatsbyPreviewStatus: Maybe<WpGatsbyPreviewStatus>
+  /** Wether or not the Preview frontend URL is online. */
+  readonly isPreviewFrontendOnline: Maybe<Scalars["Boolean"]>
+}
+
+/** Information needed by gatsby-source-wordpress. */
+export type WpGatsbyGatsbyPreviewStatusArgs = {
+  nodeId: Scalars["Float"]
 }
 
 /** Check compatibility with a given version of gatsby-source-wordpress and the WordPress source site. */
 export type WpGatsbyCompatibility = {
   readonly __typename?: "WPGatsbyCompatibility"
   readonly satisfies: Maybe<WpGatsbySatisfies>
+}
+
+/** A previewed Gatsby page node. */
+export type WpGatsbyPageNode = {
+  readonly __typename?: "WPGatsbyPageNode"
+  readonly path: Maybe<Scalars["String"]>
+}
+
+/** Check compatibility with a given version of gatsby-source-wordpress and the WordPress source site. */
+export type WpGatsbyPreviewStatus = {
+  readonly __typename?: "WPGatsbyPreviewStatus"
+  readonly modifiedLocal: Maybe<Scalars["String"]>
+  readonly modifiedRemote: Maybe<Scalars["String"]>
+  readonly pageNode: Maybe<WpGatsbyPageNode>
+  readonly remoteStatus: Maybe<WpGatsbyRemotePreviewStatusEnum>
+  readonly statusContext: Maybe<Scalars["String"]>
+  readonly statusType: Maybe<WpGatsbyWpPreviewedNodeStatus>
+}
+
+/** The different statuses a Gatsby Preview can be in for a single node. */
+export enum WpGatsbyRemotePreviewStatusEnum {
+  GatsbyPreviewProcessError = "GATSBY_PREVIEW_PROCESS_ERROR",
+  NoPageCreatedForPreviewedNode = "NO_PAGE_CREATED_FOR_PREVIEWED_NODE",
+  PreviewSuccess = "PREVIEW_SUCCESS",
+  ReceivedPreviewDataFromWrongUrl = "RECEIVED_PREVIEW_DATA_FROM_WRONG_URL",
 }
 
 /** Check compatibility with WPGatsby and WPGraphQL. */
@@ -8497,9 +10025,18 @@ export type WpGatsbySatisfies = {
   readonly wpGatsby: Maybe<Scalars["Boolean"]>
 }
 
+/** The different statuses a Gatsby Preview can be in for a single node. */
+export enum WpGatsbyWpPreviewedNodeStatus {
+  NoNodeFound = "NO_NODE_FOUND",
+  NoPreviewPathFound = "NO_PREVIEW_PATH_FOUND",
+  PreviewPageUpdatedButNotYetDeployed = "PREVIEW_PAGE_UPDATED_BUT_NOT_YET_DEPLOYED",
+  PreviewReady = "PREVIEW_READY",
+  ReceivedPreviewDataFromWrongUrl = "RECEIVED_PREVIEW_DATA_FROM_WRONG_URL",
+  RemoteNodeNotYetUpdated = "REMOTE_NODE_NOT_YET_UPDATED",
+}
+
 /** Information about pagination in a connection. */
 export type WpPageInfo = {
-  readonly __typename?: "WPPageInfo"
   /** When paginating forwards, the cursor to continue. */
   readonly endCursor: Maybe<Scalars["String"]>
   /** When paginating forwards, are there more items? */
@@ -8508,6 +10045,31 @@ export type WpPageInfo = {
   readonly hasPreviousPage: Scalars["Boolean"]
   /** When paginating backwards, the cursor to continue. */
   readonly startCursor: Maybe<Scalars["String"]>
+}
+
+/** Input for the wpGatsbyRemotePreviewStatus mutation. */
+export type WpGatsbyRemotePreviewStatusInput = {
+  /** This is an ID that can be passed to a mutation by the client to track the progress of mutations and catch possible duplicate mutation submissions. */
+  readonly clientMutationId: InputMaybe<Scalars["String"]>
+  /** The modified date of the latest revision for this preview. */
+  readonly modified: InputMaybe<Scalars["String"]>
+  /** The Gatsby page path for this preview. */
+  readonly pagePath: InputMaybe<Scalars["String"]>
+  /** The previewed revisions post parent id */
+  readonly parentDatabaseId: InputMaybe<Scalars["Float"]>
+  /** The remote status of the previewed node */
+  readonly status: WpGatsbyRemotePreviewStatusEnum
+  /** Additional context about the preview status */
+  readonly statusContext: InputMaybe<Scalars["String"]>
+}
+
+/** The payload for the wpGatsbyRemotePreviewStatus mutation. */
+export type WpGatsbyRemotePreviewStatusPayload = {
+  readonly __typename?: "WpGatsbyRemotePreviewStatusPayload"
+  /** If a &#039;clientMutationId&#039; input is provided to the mutation, it will be returned as output on the mutation. This ID can be used by the client to track the progress of mutations and catch possible duplicate mutation submissions. */
+  readonly clientMutationId: Maybe<Scalars["String"]>
+  /** Wether or not the revision mutation was successful */
+  readonly success: Maybe<Scalars["Boolean"]>
 }
 
 /** The writing setting type */
@@ -8527,6 +10089,7 @@ export type PageQueryVariables = Exact<{
 
 export type PageQuery = { readonly __typename?: "RootQuery" } & {
   readonly page: Maybe<
+    | { readonly __typename: "ActionMonitorAction" }
     | { readonly __typename: "Category" }
     | { readonly __typename: "ContentType" }
     | { readonly __typename: "MediaItem" }
@@ -8543,14 +10106,10 @@ export type PageIndexQueryVariables = Exact<{ [key: string]: never }>
 export type PageIndexQuery = { readonly __typename?: "RootQuery" } & {
   readonly pages: Maybe<
     { readonly __typename?: "RootQueryToPageConnection" } & {
-      readonly nodes: Maybe<
-        ReadonlyArray<
-          Maybe<
-            { readonly __typename?: "Page" } & Pick<
-              Page,
-              "id" | "slug" | "link" | "status" | "uri"
-            >
-          >
+      readonly nodes: ReadonlyArray<
+        { readonly __typename?: "Page" } & Pick<
+          Page,
+          "id" | "slug" | "link" | "status" | "uri"
         >
       >
     }
@@ -8564,43 +10123,32 @@ export type MenuByIdQueryVariables = Exact<{
 export type MenuByIdQuery = { readonly __typename?: "RootQuery" } & {
   readonly menus: Maybe<
     { readonly __typename?: "RootQueryToMenuConnection" } & {
-      readonly nodes: Maybe<
-        ReadonlyArray<
-          Maybe<
-            { readonly __typename?: "Menu" } & Pick<Menu, "databaseId"> & {
-                readonly menuItems: Maybe<
-                  { readonly __typename?: "MenuToMenuItemConnection" } & {
-                    readonly nodes: Maybe<
-                      ReadonlyArray<
-                        Maybe<
-                          { readonly __typename?: "MenuItem" } & Pick<
-                            MenuItem,
-                            "label" | "path"
-                          > & {
-                              readonly childItems: Maybe<
-                                {
-                                  readonly __typename?: "MenuItemToMenuItemConnection"
-                                } & {
-                                  readonly nodes: Maybe<
-                                    ReadonlyArray<
-                                      Maybe<
-                                        {
-                                          readonly __typename?: "MenuItem"
-                                        } & Pick<MenuItem, "label" | "path">
-                                      >
-                                    >
-                                  >
-                                }
-                              >
-                            }
-                        >
+      readonly nodes: ReadonlyArray<
+        { readonly __typename?: "Menu" } & Pick<Menu, "databaseId"> & {
+            readonly menuItems: Maybe<
+              { readonly __typename?: "MenuToMenuItemConnection" } & {
+                readonly nodes: ReadonlyArray<
+                  { readonly __typename?: "MenuItem" } & Pick<
+                    MenuItem,
+                    "label" | "path"
+                  > & {
+                      readonly childItems: Maybe<
+                        {
+                          readonly __typename?: "MenuItemToMenuItemConnection"
+                        } & {
+                          readonly nodes: ReadonlyArray<
+                            { readonly __typename?: "MenuItem" } & Pick<
+                              MenuItem,
+                              "label" | "path"
+                            >
+                          >
+                        }
                       >
-                    >
-                  }
+                    }
                 >
               }
-          >
-        >
+            >
+          }
       >
     }
   >
