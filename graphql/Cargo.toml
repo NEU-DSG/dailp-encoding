@@ -1,7 +1,7 @@
 [package]
 name = "dailp-graphql"
 version = "0.2.1"
-authors = ["Taylor Snead <taylor@snead.xyz>"]
+authors = ["Shelby Snead <taylor@snead.xyz>"]
 edition = "2021"
 
 [[bin]]
@@ -37,5 +37,6 @@ pretty_env_logger = "0.4"
 async-graphql-tide = "4"
 tide = "0.16"
 async-std = { version = "1", features = ["attributes", "tokio1"] }
+jsonwebtoken = "8"
 
 dailp = {path = "../types"}

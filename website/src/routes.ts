@@ -20,3 +20,9 @@ export const sourceCitationRoute = (key: string) => `/sources#source-${key}`
 
 export const documentWordPath = (documentSlug: string, wordIndex: number) =>
   `${documentRoute(documentSlug)}#w${wordIndex}`
+
+export const collectionWordPath = (
+  collectionSlug: string,
+  chapterSlug: string,
+  wordIndex: number
+) => `${chapterRoute(collectionSlug, chapterSlug)}#w${wordIndex}`

@@ -1,7 +1,7 @@
 [package]
 name = "dailp-migration"
 version = "0.3.0"
-authors = ["Taylor Snead <taylor@snead.xyz>"]
+authors = ["Shelby Snead <taylor@snead.xyz>"]
 edition = "2021"
 
 [[bin]]
