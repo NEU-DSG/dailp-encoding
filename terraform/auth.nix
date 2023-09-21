@@ -24,12 +24,12 @@
       supported_identity_providers = [ "COGNITO" ];
     };
     # Standin user group
-    aws_cognito_user_group.main {
+    aws_cognito_user_group.main = {
       name         = "user-group";
-      user_pool_id = aws_cognito_user_pool.main.id;
+      user_pool_id = "\${aws_cognito_user_pool.main.id}";
       description  = "Managed by Terraform";
       precedence   = 42;
-      role_arn     = aws_iam_role.group_role.arn;
-    }
+      role_arn     = "\${aws_iam_role.group_role.arn}";
+    };
   };
 }

@@ -19,10 +19,27 @@
         sse_algorithm = "AES256";
       };
     };
-  };
-    
+
   aws_s3_bucket_policy.media_storage_policy = {
-    bucket = aws_s3_bucket.media_storage.id;
-    policy = data.aws_iam_policy_document.[...].json;
+    bucket = "$\{aws_s3_bucket.media_storage.id}";
+    policy = "$\{config.data.aws_iam_policy_document.media_storage_policy_document.json}";
+  };
+  };
+
+  config.data = {
+      aws_iam_policy_document.media_storage_policy_document = {
+        statement = {
+          principals = {
+            type = "";
+            identifiers = "";
+          };
+          actions = [
+            "*"
+          ];
+          resources = [
+
+          ];
+        };
+      };
   };
 }
