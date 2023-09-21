@@ -61,6 +61,7 @@ with builtins; {
             DAILP_AWS_REGION = config.provider.aws.region;
             DAILP_USER_POOL = "\${aws_cognito_user_pool.main.id}";
             DAILP_USER_POOL_CLIENT = "\${aws_cognito_user_pool_client.main.id}";
+            DAILP_IDENTITY_POOL = getEnv "DAILP_IDENTITY_POOL";
             TF_STAGE = config.setup.stage;
             VITE_DEPLOYMENT_ENV = config.setup.stage;
           };
