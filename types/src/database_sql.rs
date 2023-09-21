@@ -46,6 +46,13 @@ impl Database {
         Ok(Database { client: conn })
     }
 
+    pub async fn word_by_id(&self, word_id: &Uuid) -> Result<AnnotatedForm> {
+        Ok(query_file_as!(BasicWord, "queries/word_by_id.sql", word_id)
+            .fetch_one(&self.client)
+            .await?
+            .into())
+    }
+
     pub async fn upsert_contributor(&self, person: ContributorDetails) -> Result<()> {
         query_file!("queries/upsert_contributor.sql", person.full_name)
             .execute(&self.client)
@@ -414,6 +421,16 @@ impl Database {
         )
     }
 
+    /// Ensure that a user exists in the database
+    /// user_id should be a congnito sub claim
+    pub async fn upsert_dailp_user(&self, user_id: Uuid) -> Result<Uuid> {
+        query_file!("queries/upsert_dailp_user.sql", user_id,)
+            .execute(&self.client)
+            .await?;
+
+        Ok(user_id)
+    }
+
     pub async fn update_annotation(&self, _annote: annotation::Annotation) -> Result<()> {
         todo!("Implement image annotations")
     }
@@ -422,13 +439,12 @@ impl Database {
     /// word, so should we have a better name?
     pub async fn upload_contributor_audio(
         &self,
-        upload: ContributorAudioUpload,
-        user_id: Option<Uuid>,
+        upload: AttachAudioToWordInput,
+        contributor_id: &Uuid,
     ) -> Result<Uuid> {
         let media_slice_id = query_file_scalar!(
-            "queries/upsert_user_contributed_audio.sql",
-            user_id
-                .ok_or_else(|| anyhow::format_err!("User must be signed in to contribute audio"))?,
+            "queries/attach_audio_to_word.sql",
+            contributor_id,
             &upload.contributor_audio_url as _,
             0,
             0,

@@ -1,13 +1,12 @@
 //! This piece of the project exposes a GraphQL endpoint that allows one to access DAILP data in a federated manner with specific queries.
 
 use dailp::{
-    slugify_ltree, CollectionChapter, DeleteContributorAttribution, UpdateContributorAttribution,
-    Uuid,
+    slugify_ltree, AnnotatedForm, AttachAudioToWordInput, CollectionChapter, CurateWordAudioInput, DeleteContributorAttribution, UpdateContributorAttribution, Uuid,
 };
 use itertools::Itertools;
 
 use {
-    dailp::async_graphql::{self, dataloader::DataLoader, Context, FieldResult, Guard},
+    dailp::async_graphql::{self, dataloader::DataLoader, Context, FieldResult, Guard, Object},
     dailp::{
         AnnotatedDoc, AnnotatedFormUpdate, CherokeeOrthography, Database, EditedCollection,
         MorphemeId, MorphemeReference, MorphemeTag, ParagraphUpdate, WordsInDocument,
@@ -385,11 +384,62 @@ impl Mutation {
         &self,
         context: &Context<'_>,
         word: AnnotatedFormUpdate,
-    ) -> FieldResult<Uuid> {
+    ) -> FieldResult<AnnotatedForm> {
+        let database = context.data::<DataLoader<Database>>()?.loader();
+        Ok(database
+            .word_by_id(&database.update_word(word).await?)
+            .await?)
+    }
+
+    /// Decide if a piece audio should be included in edited collection
+    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    async fn curate_word_audio(
+        &self,
+        context: &Context<'_>,
+        input: CurateWordAudioInput,
+    ) -> FieldResult<dailp::AnnotatedForm> {
+        // TODO: should this return a typed id ie. AudioSliceId?
+        let user = context
+            .data_opt::<UserInfo>()
+            .ok_or_else(|| anyhow::format_err!("User is not signed in"))?;
+        let word_id = context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .update_audio_visibility(
+                &input.word_id,
+                &input.audio_slice_id,
+                input.include_in_edited_collection,
+                &user.id,
+            )
+            .await?;
         Ok(context
             .data::<DataLoader<Database>>()?
             .loader()
-            .update_word(word)
+            .word_by_id(&word_id.ok_or_else(|| anyhow::format_err!("Word audio not found"))?)
+            .await?)
+    }
+
+    /// Attach audio that has already been uploaded to S3 to a particular word
+    /// Assumes user requesting mutation recoreded the audio
+    #[graphql(guard = "GroupGuard::new(UserGroup::Contributors)")]
+    async fn attach_audio_to_word(
+        &self,
+        context: &Context<'_>,
+        input: AttachAudioToWordInput,
+    ) -> FieldResult<dailp::AnnotatedForm> {
+        // TODO: should this return a typed id ie. AudioSliceId?
+        let user = context
+            .data_opt::<UserInfo>()
+            .ok_or_else(|| anyhow::format_err!("User is not signed in"))?;
+        let word_id = context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .attach_audio_to_word(input, &user.id)
+            .await?;
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .word_by_id(&word_id)
             .await?)
     }
 }
@@ -401,11 +451,12 @@ struct FormsInTime {
     forms: Vec<dailp::AnnotatedForm>,
 }
 
+/// Auth metadata on the user making the current request.
 #[derive(Deserialize, Debug, async_graphql::SimpleObject)]
 pub struct UserInfo {
     /// Unique ID for the User. Should be an AWS Cognito Sub.
     #[serde(default, rename = "sub")]
-    id: Uuid,
+    pub id: Uuid,
     email: String,
     #[serde(default, rename = "cognito:groups")]
     groups: Vec<UserGroup>,
@@ -413,7 +464,7 @@ pub struct UserInfo {
 impl UserInfo {
     pub fn new_test_admin() -> Self {
         Self {
-            id: Uuid::parse_str("a0a9e9e6-a37a-4d09-bd4b-86b5e57be31a").unwrap(),
+            id: Uuid::parse_str("5f22a8bf-46c8-426c-a104-b4faf7c2d608").unwrap(),
             email: "test@dailp.northeastern.edu".to_string(),
             groups: vec![UserGroup::Editors],
         }
