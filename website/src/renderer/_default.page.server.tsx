@@ -5,7 +5,7 @@ import { Helmet } from "react-helmet"
 import prepass from "react-ssr-prepass"
 import { ssrExchange } from "urql"
 import { dangerouslySkipEscape, escapeInject } from "vite-plugin-ssr/server"
-import type { PageContextBuiltIn } from "vite-plugin-ssr"
+import type { PageContextBuiltIn } from "vite-plugin-ssr/types"
 import { customClient } from "src/graphql"
 import { PageContextServer, PageShell, rootElementId } from "./PageShell"
 
