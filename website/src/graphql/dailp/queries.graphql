@@ -68,6 +68,15 @@ query DocumentContents(
   }
 }
 
+fragment AudioSliceFields on AudioSlice {
+  sliceId
+  index # if this is used as a caching key, we will have performance issues
+  resourceUrl
+  startTime
+  endTime
+  includeInEditedCollection
+}
+
 fragment FormFields on AnnotatedForm {
   id
   index
@@ -87,16 +96,17 @@ fragment FormFields on AnnotatedForm {
   englishGloss
   commentary
   ingestedAudioTrack {
-    index
-    resourceUrl
-    startTime
-    endTime
+    ...AudioSliceFields
   }
   editedAudio {
-    index
-    resourceUrl
-    startTime
-    endTime
+    ...AudioSliceFields
+  }
+  userContributedAudio {
+    ...AudioSliceFields
+    recordedBy {
+      id
+      displayName
+    }
   }
 }
 
@@ -316,8 +326,41 @@ query CollectionChapter($collectionSlug: String!, $chapterSlug: String!) {
   }
 }
 
-mutation UpdateWord($word: AnnotatedFormUpdate!) {
-  updateWord(word: $word)
+mutation UpdateWord(
+  $word: AnnotatedFormUpdate!
+  $morphemeSystem: CherokeeOrthography!
+) {
+  updateWord(word: $word) {
+    ...FormFields
+  }
+}
+
+mutation AttachAudioToWord($input: AttachAudioToWordInput!) {
+  attachAudioToWord(input: $input) {
+    # ...FormFields
+    id
+    userContributedAudio {
+      ...AudioSliceFields
+      recordedBy {
+        id
+        displayName
+      }
+    }
+  }
+}
+
+mutation CurateWordAudio($input: CurateWordAudioInput!) {
+  curateWordAudio(input: $input) {
+    # ...FormFields
+    id
+    userContributedAudio {
+      ...AudioSliceFields
+      recordedBy {
+        id
+        displayName
+      }
+    }
+  }
 }
 
 mutation UpdateParagraph($paragraph: ParagraphUpdate!) {
