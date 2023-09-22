@@ -39,3 +39,5 @@ jobs:
           aws-region: us-east-1
       - name: Build and test back-end
         run: nix run --impure -L .#tf-plan
+      - name: Was run cancelled
+        run: terraform state pull | echo
