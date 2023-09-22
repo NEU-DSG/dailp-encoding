@@ -1,8 +1,9 @@
 //! This piece of the project exposes a GraphQL endpoint that allows one to access DAILP data in a federated manner with specific queries.
 
-use dailp::{slugify_ltree, CollectionChapter, DocumentMetadataUpdate, Uuid};
 use dailp::{
-    slugify_ltree, AnnotatedForm, AttachAudioToWordInput, CollectionChapter, CurateWordAudioInput, DeleteContributorAttribution, UpdateContributorAttribution, Uuid,
+    slugify_ltree, AnnotatedForm, AttachAudioToWordInput,
+    CurateWordAudioInput, DeleteContributorAttribution,
+    UpdateContributorAttribution, Uuid, CollectionChapter, DocumentMetadataUpdate
 };
 use itertools::Itertools;
 
@@ -441,19 +442,6 @@ impl Mutation {
             .data::<DataLoader<Database>>()?
             .loader()
             .word_by_id(&word_id)
-            .await?)
-    }
-
-    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
-    async fn update_document_metadata(
-        &self,
-        context: &Context<'_>,
-        document: DocumentMetadataUpdate,
-    ) -> FieldResult<Uuid> {
-        Ok(context
-            .data::<DataLoader<Database>>()?
-            .loader()
-            .update_document_metadata(document)
             .await?)
     }
 
