@@ -338,16 +338,16 @@ export type Date = {
   readonly year: Scalars["Int"]
 }
 
-/** Delete a contributor attribution for a document based on the two ids */
-export type DeleteContributorAttribution = {
-  readonly contributorId: Scalars["UUID"]
-  readonly documentId: Scalars["UUID"]
-}
-
 export type DateInput = {
   readonly day: Scalars["Int"]
   readonly month: Scalars["Int"]
   readonly year: Scalars["Int"]
+}
+
+/** Delete a contributor attribution for a document based on the two ids */
+export type DeleteContributorAttribution = {
+  readonly contributorId: Scalars["UUID"]
+  readonly documentId: Scalars["UUID"]
 }
 
 export type DocumentCollection = {
@@ -557,10 +557,15 @@ export type Mutation = {
    * the future.
    */
   readonly apiVersion: Scalars["String"]
+  /**
+   * Attach audio that has already been uploaded to S3 to a particular word
+   * Assumes user requesting mutation recoreded the audio
+   */
+  readonly attachAudioToWord: AnnotatedForm
+  /** Decide if a piece audio should be included in edited collection */
+  readonly curateWordAudio: AnnotatedForm
   /** Mutation for deleting contributor attributions */
   readonly deleteContributorAttribution: Scalars["UUID"]
-  readonly attachAudioToWord: AnnotatedForm
-  readonly curateWordAudio: AnnotatedForm
   readonly updateAnnotation: Scalars["Boolean"]
   /** Mutation for adding/changing contributor attributions */
   readonly updateContributorAttribution: Scalars["UUID"]
@@ -1099,14 +1104,6 @@ export type AudioSliceFieldsFragment = {
   | "endTime"
   | "includeInEditedCollection"
 >
-
-export type DocFormFieldsFragment = {
-  readonly __typename?: "AnnotatedDoc"
-} & Pick<AnnotatedDoc, "id" | "title"> & {
-    readonly date: Maybe<
-      { readonly __typename?: "Date" } & Pick<Date, "day" | "month" | "year">
-    >
-  }
 
 export type DocFormFieldsFragment = {
   readonly __typename?: "AnnotatedDoc"
@@ -1722,6 +1719,25 @@ export type DeleteContributorAttributionMutation = {
   readonly __typename?: "Mutation"
 } & Pick<Mutation, "deleteContributorAttribution">
 
+export type UpdateDocumentMetadataMutationVariables = Exact<{
+  document: DocumentMetadataUpdate
+}>
+
+export type UpdateDocumentMetadataMutation = {
+  readonly __typename?: "Mutation"
+} & Pick<Mutation, "updateDocumentMetadata">
+
+export const DocFormFieldsFragmentDoc = gql`
+  fragment DocFormFields on AnnotatedDoc {
+    id
+    title
+    date {
+      day
+      month
+      year
+    }
+  }
+`
 export const AudioSliceFieldsFragmentDoc = gql`
   fragment AudioSliceFields on AudioSlice {
     sliceId
@@ -2248,47 +2264,6 @@ export function useUpdateWordMutation() {
     UpdateWordDocument
   )
 }
-
-export const UpdateParagraphDocument = gql`
-  mutation UpdateParagraph($paragraph: ParagraphUpdate!) {
-    updateParagraph(paragraph: $paragraph)
-  }
-`
-
-export function useUpdateParagraphMutation() {
-  return Urql.useMutation<
-    UpdateParagraphMutation,
-    UpdateParagraphMutationVariables
-  >(UpdateParagraphDocument)
-}
-export const UpdateContributorAttributionDocument = gql`
-  mutation UpdateContributorAttribution(
-    $contribution: UpdateContributorAttribution!
-  ) {
-    updateContributorAttribution(contribution: $contribution)
-  }
-`
-
-export function useUpdateContributorAttributionMutation() {
-  return Urql.useMutation<
-    UpdateContributorAttributionMutation,
-    UpdateContributorAttributionMutationVariables
-  >(UpdateContributorAttributionDocument)
-}
-export const DeleteContributorAttributionDocument = gql`
-  mutation DeleteContributorAttribution(
-    $contribution: DeleteContributorAttribution!
-  ) {
-    deleteContributorAttribution(contribution: $contribution)
-  }
-`
-
-export function useDeleteContributorAttributionMutation() {
-  return Urql.useMutation<
-    DeleteContributorAttributionMutation,
-    DeleteContributorAttributionMutationVariables
-  >(DeleteContributorAttributionDocument)
-  
 export const AttachAudioToWordDocument = gql`
   mutation AttachAudioToWord($input: AttachAudioToWordInput!) {
     attachAudioToWord(input: $input) {
@@ -2332,6 +2307,46 @@ export function useCurateWordAudioMutation() {
     CurateWordAudioMutation,
     CurateWordAudioMutationVariables
   >(CurateWordAudioDocument)
+}
+export const UpdateParagraphDocument = gql`
+  mutation UpdateParagraph($paragraph: ParagraphUpdate!) {
+    updateParagraph(paragraph: $paragraph)
+  }
+`
+
+export function useUpdateParagraphMutation() {
+  return Urql.useMutation<
+    UpdateParagraphMutation,
+    UpdateParagraphMutationVariables
+  >(UpdateParagraphDocument)
+}
+export const UpdateContributorAttributionDocument = gql`
+  mutation UpdateContributorAttribution(
+    $contribution: UpdateContributorAttribution!
+  ) {
+    updateContributorAttribution(contribution: $contribution)
+  }
+`
+
+export function useUpdateContributorAttributionMutation() {
+  return Urql.useMutation<
+    UpdateContributorAttributionMutation,
+    UpdateContributorAttributionMutationVariables
+  >(UpdateContributorAttributionDocument)
+}
+export const DeleteContributorAttributionDocument = gql`
+  mutation DeleteContributorAttribution(
+    $contribution: DeleteContributorAttribution!
+  ) {
+    deleteContributorAttribution(contribution: $contribution)
+  }
+`
+
+export function useDeleteContributorAttributionMutation() {
+  return Urql.useMutation<
+    DeleteContributorAttributionMutation,
+    DeleteContributorAttributionMutationVariables
+  >(DeleteContributorAttributionDocument)
 }
 export const UpdateDocumentMetadataDocument = gql`
   mutation UpdateDocumentMetadata($document: DocumentMetadataUpdate!) {

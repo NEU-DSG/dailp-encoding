@@ -399,6 +399,7 @@ input DateInput {
 	month: Int!
 	year: Int!
 }
+
 """
 Delete a contributor attribution for a document based on the two ids
 """
@@ -685,11 +686,17 @@ type Mutation {
 	updateParagraph(paragraph: ParagraphUpdate!): UUID!
 	updatePage(data: JSON!): Boolean!
 	updateAnnotation(data: JSON!): Boolean!
-	updateWord(word: AnnotatedFormUpdate!): UUID!
-	updateDocumentMetadata(document: DocumentMetadataUpdate!): UUID!
 	updateWord(word: AnnotatedFormUpdate!): AnnotatedForm!
+	"""
+	Decide if a piece audio should be included in edited collection
+	"""
 	curateWordAudio(input: CurateWordAudioInput!): AnnotatedForm!
+	"""
+	Attach audio that has already been uploaded to S3 to a particular word
+	Assumes user requesting mutation recoreded the audio
+	"""
 	attachAudioToWord(input: AttachAudioToWordInput!): AnnotatedForm!
+	updateDocumentMetadata(document: DocumentMetadataUpdate!): UUID!
 }
 
 """
