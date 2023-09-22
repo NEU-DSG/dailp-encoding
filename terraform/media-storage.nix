@@ -31,7 +31,7 @@
 
   aws_s3_bucket_policy.media_storage_policy = {
     bucket = "$\{aws_s3_bucket.media_storage.id}";
-    policy = "$\{config.data.aws_iam_policy_document.media_storage_policy_document.json}";
+    policy = "$\{aws_iam_policy_document.media_storage_policy_document.json}";
   };
   };
 
@@ -39,8 +39,8 @@
       aws_iam_policy_document.media_storage_policy_document = {
         statement = {
           principals = {
-            type = "";
-            identifiers = "";
+            type = "AWS";
+            identifiers = ["*"];
           };
           actions = [
             "*"
