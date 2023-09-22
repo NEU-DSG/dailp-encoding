@@ -41,4 +41,4 @@ jobs:
         run: nix run --impure -L .#tf-plan
       - name: Handle state failure
         if: ${{ failure() }}
-        run: terraform state pull | echo
+        run: terraform state pull
