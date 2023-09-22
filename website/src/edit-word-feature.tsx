@@ -10,7 +10,7 @@ import { unstable_FormSubmitButton as FormSubmitButton } from "reakit"
 import { IconButton } from "./components"
 import { IconTextButton } from "./components/button"
 import * as css from "./edit-word-feature.css"
-import { useForm } from "./form-context"
+import { useForm } from "./edit-word-form-context"
 import * as Dailp from "./graphql/dailp"
 
 /** Button that allows user to enter edit mode in the word panel, and edit fields of a word. */
