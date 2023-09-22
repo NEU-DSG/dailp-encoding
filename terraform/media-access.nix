@@ -2,7 +2,7 @@
 
 config.resource = {
   aws_cloudfront_origin_access_control.media_access_control = {
-    name = "TEST-dailp-${config.setup.stage}-media-access-control";
+    name = "dailp-${config.setup.stage}-media-access-control";
     description = "test cloudfront for dailp s3 access via cognito";
     origin_access_control_origin_type = "s3";
     signing_behavior = "always";
@@ -37,6 +37,6 @@ config.resource = {
 };
 
   config.data.aws_cloudfront_cache_policy.media-cache-policy = {
-    name = "TEST-dailp-${config.setup.stage}-media-cache-policy";
+    name = "dailp-${config.setup.stage}-media-cache-policy";
   };
 }
