@@ -68,6 +68,15 @@ query DocumentContents(
   }
 }
 
+fragment AudioSliceFields on AudioSlice {
+  sliceId
+  index # if this is used as a caching key, we will have performance issues
+  resourceUrl
+  startTime
+  endTime
+  includeInEditedCollection
+}
+
 fragment DocFormFields on AnnotatedDoc {
   id
   title
@@ -96,11 +105,18 @@ fragment FormFields on AnnotatedForm {
   }
   englishGloss
   commentary
-  audioTrack {
-    index
-    resourceUrl
-    startTime
-    endTime
+  ingestedAudioTrack {
+    ...AudioSliceFields
+  }
+  editedAudio {
+    ...AudioSliceFields
+  }
+  userContributedAudio {
+    ...AudioSliceFields
+    recordedBy {
+      id
+      displayName
+    }
   }
 }
 
@@ -320,8 +336,57 @@ query CollectionChapter($collectionSlug: String!, $chapterSlug: String!) {
   }
 }
 
-mutation UpdateWord($word: AnnotatedFormUpdate!) {
-  updateWord(word: $word)
+mutation UpdateWord(
+  $word: AnnotatedFormUpdate!
+  $morphemeSystem: CherokeeOrthography!
+) {
+  updateWord(word: $word) {
+    ...FormFields
+  }
+}
+
+mutation AttachAudioToWord($input: AttachAudioToWordInput!) {
+  attachAudioToWord(input: $input) {
+    # ...FormFields
+    id
+    userContributedAudio {
+      ...AudioSliceFields
+      recordedBy {
+        id
+        displayName
+      }
+    }
+  }
+}
+
+mutation CurateWordAudio($input: CurateWordAudioInput!) {
+  curateWordAudio(input: $input) {
+    # ...FormFields
+    id
+    userContributedAudio {
+      ...AudioSliceFields
+      recordedBy {
+        id
+        displayName
+      }
+    }
+  }
+}
+
+mutation UpdateParagraph($paragraph: ParagraphUpdate!) {
+  updateParagraph(paragraph: $paragraph)
+}
+
+mutation UpdateContributorAttribution(
+  $contribution: UpdateContributorAttribution!
+) {
+  updateContributorAttribution(contribution: $contribution)
+}
+
+mutation DeleteContributorAttribution(
+  $contribution: DeleteContributorAttribution!
+) {
+  deleteContributorAttribution(contribution: $contribution)
 }
 
 mutation UpdateDocumentMetadata($document: DocumentMetadataUpdate!) {

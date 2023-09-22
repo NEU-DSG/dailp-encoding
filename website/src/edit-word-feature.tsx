@@ -9,8 +9,8 @@ import {
 import { unstable_FormSubmitButton as FormSubmitButton } from "reakit"
 import { IconButton } from "./components"
 import { IconTextButton } from "./components/button"
-import { useForm } from "./edit-word-form-context"
-import * as css from "./edit-word-panel.css"
+import * as css from "./edit-word-feature.css"
+import { useForm } from "./form-context"
 import * as Dailp from "./graphql/dailp"
 
 /** Button that allows user to enter edit mode in the word panel, and edit fields of a word. */
@@ -57,7 +57,7 @@ export const EditButton = () => {
 }
 
 /** Displays a FormInput with its corresponding feature data from the Reakit form. */
-const EditWordPanel = (props: {
+export const EditWordFeature = (props: {
   feature: keyof Dailp.FormFieldsFragment
   label?: string
   input?: React.ElementType
@@ -87,5 +87,3 @@ const EditWordPanel = (props: {
     </>
   )
 }
-
-export default EditWordPanel
