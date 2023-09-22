@@ -29,7 +29,7 @@
       user_pool_id = "\${aws_cognito_user_pool.main.id}";
       description  = "Managed by Terraform";
       precedence   = 42;
-      role_arn     = "\${aws_iam_role.group_role.arn}";
+      #role_arn     = "\${aws_iam_role.group_role.arn}";
     };
   };
 }
