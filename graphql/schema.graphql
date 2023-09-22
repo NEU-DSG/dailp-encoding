@@ -386,6 +386,14 @@ type Date {
 	formattedDate: String!
 }
 
+"""
+Delete a contributor attribution for a document based on the two ids
+"""
+input DeleteContributorAttribution {
+	documentId: UUID!
+	contributorId: UUID!
+}
+
 type DocumentCollection {
 	"""
 	Full name of this collection
@@ -641,6 +649,14 @@ type Mutation {
 	"""
 	apiVersion: String!
 	"""
+	Mutation for adding/changing contributor attributions
+	"""
+	updateContributorAttribution(contribution: UpdateContributorAttribution!): UUID!
+	"""
+	Mutation for deleting contributor attributions
+	"""
+	deleteContributorAttribution(contribution: DeleteContributorAttribution!): UUID!
+	"""
 	Mutation for paragraph and translation editing
 	"""
 	updateParagraph(paragraph: ParagraphUpdate!): UUID!
@@ -821,6 +837,15 @@ entities without requiring a central allocating authority.
 * [RFC4122: A Universally Unique IDentifier (UUID) URN Namespace](http://tools.ietf.org/html/rfc4122)
 """
 scalar UUID
+
+"""
+Update the contributor attribution for a document
+"""
+input UpdateContributorAttribution {
+	documentId: UUID!
+	contributorId: UUID!
+	contributionRole: String!
+}
 
 """
 A user record, for a contributor, editor, etc.

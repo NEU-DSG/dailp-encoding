@@ -334,6 +334,12 @@ export type Date = {
   readonly year: Scalars["Int"]
 }
 
+/** Delete a contributor attribution for a document based on the two ids */
+export type DeleteContributorAttribution = {
+  readonly contributorId: Scalars["UUID"]
+  readonly documentId: Scalars["UUID"]
+}
+
 export type DocumentCollection = {
   readonly __typename?: "DocumentCollection"
   /**
@@ -531,9 +537,13 @@ export type Mutation = {
    * the future.
    */
   readonly apiVersion: Scalars["String"]
+  /** Mutation for deleting contributor attributions */
+  readonly deleteContributorAttribution: Scalars["UUID"]
   readonly attachAudioToWord: AnnotatedForm
   readonly curateWordAudio: AnnotatedForm
   readonly updateAnnotation: Scalars["Boolean"]
+  /** Mutation for adding/changing contributor attributions */
+  readonly updateContributorAttribution: Scalars["UUID"]
   readonly updatePage: Scalars["Boolean"]
   /** Mutation for paragraph and translation editing */
   readonly updateParagraph: Scalars["UUID"]
@@ -548,8 +558,16 @@ export type MutationCurateWordAudioArgs = {
   input: CurateWordAudioInput
 }
 
+export type MutationDeleteContributorAttributionArgs = {
+  contribution: DeleteContributorAttribution
+}
+
 export type MutationUpdateAnnotationArgs = {
   data: Scalars["JSON"]
+}
+
+export type MutationUpdateContributorAttributionArgs = {
+  contribution: UpdateContributorAttribution
 }
 
 export type MutationUpdatePageArgs = {
@@ -740,6 +758,13 @@ export type SourceAttribution = {
   readonly link: Scalars["String"]
   /** Name of the source, i.e. "The Newberry Library" */
   readonly name: Scalars["String"]
+}
+
+/** Update the contributor attribution for a document */
+export type UpdateContributorAttribution = {
+  readonly contributionRole: Scalars["String"]
+  readonly contributorId: Scalars["UUID"]
+  readonly documentId: Scalars["UUID"]
 }
 
 /** A user record, for a contributor, editor, etc. */
@@ -1632,6 +1657,30 @@ export type CurateWordAudioMutation = { readonly __typename?: "Mutation" } & {
     }
 }
 
+export type UpdateParagraphMutationVariables = Exact<{
+  paragraph: ParagraphUpdate
+}>
+
+export type UpdateParagraphMutation = {
+  readonly __typename?: "Mutation"
+} & Pick<Mutation, "updateParagraph">
+
+export type UpdateContributorAttributionMutationVariables = Exact<{
+  contribution: UpdateContributorAttribution
+}>
+
+export type UpdateContributorAttributionMutation = {
+  readonly __typename?: "Mutation"
+} & Pick<Mutation, "updateContributorAttribution">
+
+export type DeleteContributorAttributionMutationVariables = Exact<{
+  contribution: DeleteContributorAttribution
+}>
+
+export type DeleteContributorAttributionMutation = {
+  readonly __typename?: "Mutation"
+} & Pick<Mutation, "deleteContributorAttribution">
+
 export const AudioSliceFieldsFragmentDoc = gql`
   fragment AudioSliceFields on AudioSlice {
     sliceId
@@ -2158,6 +2207,47 @@ export function useUpdateWordMutation() {
     UpdateWordDocument
   )
 }
+
+export const UpdateParagraphDocument = gql`
+  mutation UpdateParagraph($paragraph: ParagraphUpdate!) {
+    updateParagraph(paragraph: $paragraph)
+  }
+`
+
+export function useUpdateParagraphMutation() {
+  return Urql.useMutation<
+    UpdateParagraphMutation,
+    UpdateParagraphMutationVariables
+  >(UpdateParagraphDocument)
+}
+export const UpdateContributorAttributionDocument = gql`
+  mutation UpdateContributorAttribution(
+    $contribution: UpdateContributorAttribution!
+  ) {
+    updateContributorAttribution(contribution: $contribution)
+  }
+`
+
+export function useUpdateContributorAttributionMutation() {
+  return Urql.useMutation<
+    UpdateContributorAttributionMutation,
+    UpdateContributorAttributionMutationVariables
+  >(UpdateContributorAttributionDocument)
+}
+export const DeleteContributorAttributionDocument = gql`
+  mutation DeleteContributorAttribution(
+    $contribution: DeleteContributorAttribution!
+  ) {
+    deleteContributorAttribution(contribution: $contribution)
+  }
+`
+
+export function useDeleteContributorAttributionMutation() {
+  return Urql.useMutation<
+    DeleteContributorAttributionMutation,
+    DeleteContributorAttributionMutationVariables
+  >(DeleteContributorAttributionDocument)
+  
 export const AttachAudioToWordDocument = gql`
   mutation AttachAudioToWord($input: AttachAudioToWordInput!) {
     attachAudioToWord(input: $input) {
