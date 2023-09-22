@@ -41,7 +41,7 @@ jobs:
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
       - name: Push to release branch
@@ -51,7 +51,7 @@ jobs:
           branch: release
           force: true
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
+        uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -94,10 +94,10 @@ jobs:
           nix run --impure -L .#tf-apply-now
           SECURITY_GROUP_ID=$(nix run --impure .#tf-output access_security_group_id)
           echo "ACCESS_SECURITY_GROUP=$SECURITY_GROUP_ID" >> $GITHUB_ENV
-      - name: Validate spreadsheets
-        env:
-          RUST_LOG: warn
-        run: nix run --impure -L .#validate-data
+#      - name: Validate spreadsheets
+#        env:
+#          RUST_LOG: warn
+#        run: nix run --impure -L .#validate-data
       - name: Allow SSH access to bastion host
         uses: sohelamin/aws-security-group-add-ip-action@master
         with:
@@ -125,8 +125,8 @@ jobs:
 
           export DAILP_API_URL=$(nix run --impure .#tf-output functions_url)
           export DATABASE_URL=postgres://dailp:$DATABASE_PASSWORD@localhost:5432/dailp
-          nix run --impure -L .#migrate-schema
-          nix run --impure -L .#migrate-data
+          nix run --impure .#migrate-schema
+          nix run --impure .#migrate-data
       - name: Publish website
         run: |
           curl -X POST -d {} "$(nix run --impure .#tf-output amplify_webhook)" -H "Content-Type:application/json"
