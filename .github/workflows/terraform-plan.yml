@@ -41,4 +41,5 @@ jobs:
         run: nix run --impure -L .#tf-plan
       - name: Handle state failure
         if: ${{ failure() }}
-        run: terraform state pull
+        #run: terraform state pull
+        run: terraform force-unlock -force 802fd0a3-0469-b406-c80e-8d179b7e450d
