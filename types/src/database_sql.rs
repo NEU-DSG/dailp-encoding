@@ -496,6 +496,22 @@ impl Database {
         Ok(_word_id)
     }
 
+    pub async fn update_document_metadata(&self, document: DocumentMetadataUpdate) -> Result<Uuid> {
+        let title = document.title.into_vec();
+        let written_at: Option<Date> = document.written_at.value().map(Into::into);
+
+        query_file!(
+            "queries/update_document_metadata.sql",
+            document.id,
+            &title as _,
+            &written_at as _
+        )
+        .execute(&self.client)
+        .await?;
+
+        Ok(document.id)
+    }
+
     pub async fn update_word(&self, word: AnnotatedFormUpdate) -> Result<Uuid> {
         let source = word.source.into_vec();
         let commentary = word.commentary.into_vec();

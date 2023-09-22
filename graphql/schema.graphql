@@ -381,9 +381,23 @@ type Date {
 	"""
 	year: Int!
 	"""
+	The month of this date
+	"""
+	month: Int!
+	"""
+	The day of this date
+	"""
+	day: Int!
+	"""
 	Formatted version of the date for humans to read
 	"""
 	formattedDate: String!
+}
+
+input DateInput {
+	day: Int!
+	month: Int!
+	year: Int!
 }
 
 """
@@ -410,6 +424,16 @@ type DocumentCollection {
 	pass that to the dataloader below.
 	"""
 	documents: [DocumentReference!]!
+}
+
+"""
+Used for updating document metadata.
+All fields except id are optional.
+"""
+input DocumentMetadataUpdate {
+	id: UUID!
+	title: String
+	writtenAt: DateInput
 }
 
 type DocumentPage {
@@ -663,8 +687,16 @@ type Mutation {
 	updatePage(data: JSON!): Boolean!
 	updateAnnotation(data: JSON!): Boolean!
 	updateWord(word: AnnotatedFormUpdate!): AnnotatedForm!
+	"""
+	Decide if a piece audio should be included in edited collection
+	"""
 	curateWordAudio(input: CurateWordAudioInput!): AnnotatedForm!
+	"""
+	Attach audio that has already been uploaded to S3 to a particular word
+	Assumes user requesting mutation recoreded the audio
+	"""
 	attachAudioToWord(input: AttachAudioToWordInput!): AnnotatedForm!
+	updateDocumentMetadata(document: DocumentMetadataUpdate!): UUID!
 }
 
 """
