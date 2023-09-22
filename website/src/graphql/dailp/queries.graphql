@@ -362,3 +362,19 @@ mutation CurateWordAudio($input: CurateWordAudioInput!) {
     }
   }
 }
+
+mutation UpdateParagraph($paragraph: ParagraphUpdate!) {
+  updateParagraph(paragraph: $paragraph)
+}
+
+mutation UpdateContributorAttribution(
+  $contribution: UpdateContributorAttribution!
+) {
+  updateContributorAttribution(contribution: $contribution)
+}
+
+mutation DeleteContributorAttribution(
+  $contribution: DeleteContributorAttribution!
+) {
+  deleteContributorAttribution(contribution: $contribution)
+}
