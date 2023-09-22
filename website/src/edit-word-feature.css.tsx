@@ -31,6 +31,10 @@ export const formInputLabel = style({
   fontSize: "0.9rem",
 })
 
+export const dateInputConatiner = style({
+  width: "25%",
+})
+
 export const formInput = style([
   paddingX(vspace.medium),
   {

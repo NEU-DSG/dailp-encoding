@@ -1,7 +1,8 @@
 use crate::{
-    slugify, AnnotatedForm, AudioSlice, Contributor, Database, Date, SourceAttribution,
-    Translation, TranslationBlock,
+    date::DateInput, slugify, AnnotatedForm, AudioSlice, Contributor, Database, Date,
+    SourceAttribution, Translation, TranslationBlock,
 };
+
 use async_graphql::{dataloader::DataLoader, FieldResult, MaybeUndefined};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -266,6 +267,15 @@ pub struct UpdateContributorAttribution {
 pub struct DeleteContributorAttribution {
     pub document_id: Uuid,
     pub contributor_id: Uuid,
+}
+
+/// Used for updating document metadata.
+/// All fields except id are optional.
+#[derive(async_graphql::InputObject)]
+pub struct DocumentMetadataUpdate {
+    pub id: Uuid,
+    pub title: MaybeUndefined<String>,
+    pub written_at: MaybeUndefined<DateInput>,
 }
 
 #[async_graphql::Object]
