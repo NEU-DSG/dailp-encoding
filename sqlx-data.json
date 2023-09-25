@@ -2461,6 +2461,20 @@
     },
     "query": "select\n  paragraph.id as paragraph_id,\n  word.id,\n  word.source_text,\n  word.simple_phonetics,\n  word.phonemic,\n  word.english_gloss,\n  word.commentary,\n  word.document_id,\n  word.index_in_document,\n  word.page_number,\n  media_resource.url as \"audio_url?\",\n  media_slice.time_range as \"audio_slice?\",\n  word.audio_slice_id,\n  media_resource.recorded_at as \"audio_recorded_at?\",\n  contributor.id as \"audio_recorded_by?\",\n  contributor.display_name as \"audio_recorded_by_name?\",\n  word.include_audio_in_edited_collection,\n  editor.id as \"audio_edited_by?\",\n  editor.display_name as \"audio_edited_by_name?\"\nfrom word\n  inner join paragraph on paragraph.page_id = word.page_id\n  left join media_slice on media_slice.id = word.audio_slice_id\n  left join media_resource on media_resource.id = media_slice.resource_id\n  left join dailp_user contributor on contributor.id = media_resource.recorded_by\n  left join dailp_user editor on editor.id = media_resource.recorded_by\nwhere paragraph.id = any($1)\n  and word.character_range is not null\n  -- Include words that overlap with the paragraph range\n  and word.character_range && paragraph.character_range\n  -- Exclude words that start before the paragraph, which means that words are\n  -- always included in the paragraph that they start in. This is the same logic\n  -- as line breaks.\n  and word.character_range &> paragraph.character_range\n-- Include all joined primary keys in the GROUP BY clause.\n-- Why? ^^\ngroup by word.id,\n  paragraph.id,\n  media_slice.id,\n  media_resource.id,\n  contributor.id,\n  editor.id\norder by word.character_range\n"
   },
+  "cc4e4658101a331ab524544277099c073daf076dae5459b4bd3c7b47068a3367": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "TextArray",
+          "Date"
+        ]
+      }
+    },
+    "query": "update document set\n    title = \n        case\n            when $2::text[] != '{}' and $2[1] is not null then $2[1]\n            else title\n        end,\n    written_at =\n        case\n            when $3::date is not null then $3::date\n            else written_at\n        end\nwhere id = $1\n"
+  },
   "cc71e3a7b4c013adc4d0cb79acd702aa0daa0290013a31e9fee3bd1f5990fa4f": {
     "describe": {
       "columns": [],
@@ -2600,6 +2614,19 @@
     },
     "query": "-- Select all the chapters containing this document's id.\nselect\n    c.id,\n    c.title,\n    c.document_id,\n    c.wordpress_id,\n    c.index_in_parent,\n    c.chapter_path,\n    c.section as \"section: CollectionSection\"\nfrom collection_chapter as c\n    inner join\n        (select id from document where document.short_name = $1) as d on c.document_id = d.id;"
   },
+  "dd1ce7d0ae1bacb8aa1619f928cb32567dd8990345cec2d1dc793dc422fdef85": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Uuid"
+        ]
+      }
+    },
+    "query": "DELETE FROM contributor_attribution\nWHERE document_id = $1 AND contributor_id = $2;\n"
+  },
   "e1ebe64b2e98a03f7803c63a2e9011b0a064d7a6819dfdbc1a8c4d4e1160db90": {
     "describe": {
       "columns": [
@@ -2693,6 +2720,20 @@
       }
     },
     "query": "select\n  c.id,\n  c.title,\n  c.document_id,\n  c.wordpress_id,\n  c.index_in_parent,\n  c.chapter_path,\n  c.section as \"section: CollectionSection\"\nfrom collection_chapter as c\nwhere c.collection_slug = $1 \n  and c.slug = $2;\n"
+  },
+  "e48fa3267b00cc26ac5c6ab79fc7218fa6a6bcc25baec277fff3610e3c87d964": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Uuid",
+          "Text"
+        ]
+      }
+    },
+    "query": "INSERT INTO contributor_attribution (document_id, contributor_id, contribution_role)\nVALUES ($1, $2, $3)\nON CONFLICT (document_id, contributor_id)\nDO UPDATE SET contribution_role = $3;"
   },
   "f2be609690eadbcc793760011c18927f3a51a9b661319472bbec19b5c89c6d27": {
     "describe": {

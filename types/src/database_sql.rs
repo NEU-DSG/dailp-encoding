@@ -435,6 +435,25 @@ impl Database {
         todo!("Implement image annotations")
     }
 
+    /// TODO: does this actually upload the audio (no) -- it just dies it to a
+    /// word, so should we have a better name?
+    pub async fn upload_contributor_audio(
+        &self,
+        upload: AttachAudioToWordInput,
+        contributor_id: &Uuid,
+    ) -> Result<Uuid> {
+        let media_slice_id = query_file_scalar!(
+            "queries/attach_audio_to_word.sql",
+            contributor_id,
+            &upload.contributor_audio_url as _,
+            0,
+            0,
+            upload.word_id
+        ).fetch_one(&self.client)
+        .await?;
+        Ok(media_slice_id)
+    }
+
     pub async fn update_word(&self, word: AnnotatedFormUpdate) -> Result<Uuid> {
         let mut tx = self.client.begin().await?;
 
@@ -446,13 +465,11 @@ impl Database {
             word.id,
             &source as _,
             &commentary as _,
-        )
-        .fetch_one(&mut tx)
+        ).fetch_one(&mut tx)
         .await?
         .document_id;
-
-        // If word segmentation was not changed, then return early since SQL update queries need to be called.
-        if word.segments.is_undefined() {
+           // If word segmentation was not changed, then return early since SQL update queries need to be called.
+           if word.segments.is_undefined() {
             tx.commit().await?;
             return Ok(word.id);
         }
@@ -521,8 +538,11 @@ impl Database {
 
         tx.commit().await?;
 
+ 
         Ok(word.id)
     }
+
+    // pub async fn maybe_undefined_to_vec() -> Vec<Option<String>> {}
 
     pub async fn attach_audio_to_word(
         &self,
@@ -563,6 +583,38 @@ impl Database {
         Ok(_word_id)
     }
 
+    pub async fn update_document_metadata(&self, document: DocumentMetadataUpdate) -> Result<Uuid> {
+        let title = document.title.into_vec();
+        let written_at: Option<Date> = document.written_at.value().map(Into::into);
+
+        query_file!(
+            "queries/update_document_metadata.sql",
+            document.id,
+            &title as _,
+            &written_at as _
+        )
+        .execute(&self.client)
+        .await?;
+
+        Ok(document.id)
+    }
+
+    pub async fn update_word(&self, word: AnnotatedFormUpdate) -> Result<Uuid> {
+        let source = word.source.into_vec();
+        let commentary = word.commentary.into_vec();
+
+        query_file!(
+            "queries/update_word.sql",
+            word.id,
+            &source as _,
+            &commentary as _
+        )
+        .execute(&self.client)
+        .await?;
+
+        Ok(word.id)
+    }
+
     pub async fn update_paragraph(&self, paragraph: ParagraphUpdate) -> Result<Uuid> {
         let translation = paragraph.translation.into_vec();
 
@@ -575,6 +627,44 @@ impl Database {
         .await?;
 
         Ok(paragraph.id)
+    }
+
+    pub async fn update_contributor_attribution(
+        &self,
+        contribution: UpdateContributorAttribution,
+    ) -> Result<Uuid> {
+        let document_id = contribution.document_id;
+        let contributor_id = contribution.contributor_id;
+        let contribution_role = contribution.contribution_role;
+
+        query_file!(
+            "queries/update_contributor_attribution.sql",
+            document_id,
+            &contributor_id as _,
+            &contribution_role as _
+        )
+        .execute(&self.client)
+        .await?;
+
+        Ok(document_id)
+    }
+
+    pub async fn delete_contributor_attribution(
+        &self,
+        contribution: DeleteContributorAttribution,
+    ) -> Result<Uuid> {
+        let document_id = contribution.document_id;
+        let contributor_id = contribution.contributor_id;
+
+        query_file!(
+            "queries/delete_contributor_attribution.sql",
+            document_id,
+            &contributor_id as _
+        )
+        .execute(&self.client)
+        .await?;
+
+        Ok(document_id)
     }
 
     pub async fn all_pages(&self) -> Result<Vec<page::Page>> {

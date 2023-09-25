@@ -11,7 +11,7 @@ import * as Dailp from "src/graphql/dailp"
 import { IconButton } from "./components"
 import { IconTextButton } from "./components/button"
 import * as css from "./edit-word-feature.css"
-import { useForm } from "./form-context"
+import { useForm } from "./edit-word-form-context"
 import { usePreferences } from "./preferences-context"
 
 /** Button that allows user to enter edit mode in the word panel, and edit fields of a word. */
