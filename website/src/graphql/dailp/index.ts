@@ -177,13 +177,13 @@ export type AnnotatedFormSegmentsArgs = {
  * All fields except id are optional.
  */
 export type AnnotatedFormUpdate = {
-  /** Updated commentary */
+  /** Possible update to commentary */
   readonly commentary: InputMaybe<Scalars["String"]>
   /** Unique identifier of the form */
   readonly id: Scalars["UUID"]
   /** Updated segments */
   readonly segments: InputMaybe<ReadonlyArray<MorphemeSegmentUpdate>>
-  /** Updated source text */
+  /** Possible update to source content */
   readonly source: InputMaybe<Scalars["String"]>
 }
 
@@ -548,7 +548,12 @@ export type Mutation = {
    * the future.
    */
   readonly apiVersion: Scalars["String"]
+  /**
+   * Attach audio that has already been uploaded to S3 to a particular word
+   * Assumes user requesting mutation recoreded the audio
+   */
   readonly attachAudioToWord: AnnotatedForm
+  /** Decide if a piece audio should be included in edited collection */
   readonly curateWordAudio: AnnotatedForm
   readonly updateAnnotation: Scalars["Boolean"]
   readonly updatePage: Scalars["Boolean"]
@@ -948,9 +953,6 @@ export type DocumentContentsQuery = { readonly __typename?: "Query" } & {
                                 | "includeInEditedCollection"
                               >
                             >
-                            readonly position: {
-                              readonly __typename?: "PositionInDocument"
-                            } & Pick<PositionInDocument, "documentId">
                             readonly editedAudio: ReadonlyArray<
                               { readonly __typename?: "AudioSlice" } & Pick<
                                 AudioSlice,
@@ -980,6 +982,9 @@ export type DocumentContentsQuery = { readonly __typename?: "Query" } & {
                                   >
                                 }
                             >
+                            readonly position: {
+                              readonly __typename?: "PositionInDocument"
+                            } & Pick<PositionInDocument, "documentId">
                           })
                       | { readonly __typename: "LineBreak" }
                     >
@@ -1034,9 +1039,6 @@ export type DocumentContentsQuery = { readonly __typename?: "Query" } & {
                 | "includeInEditedCollection"
               >
             >
-            readonly position: {
-              readonly __typename?: "PositionInDocument"
-            } & Pick<PositionInDocument, "documentId">
             readonly userContributedAudio: ReadonlyArray<
               { readonly __typename?: "AudioSlice" } & Pick<
                 AudioSlice,
@@ -1055,6 +1057,9 @@ export type DocumentContentsQuery = { readonly __typename?: "Query" } & {
                   >
                 }
             >
+            readonly position: {
+              readonly __typename?: "PositionInDocument"
+            } & Pick<PositionInDocument, "documentId">
           }
       >
     }
@@ -1120,9 +1125,6 @@ export type FormFieldsFragment = {
         | "includeInEditedCollection"
       >
     >
-    readonly position: { readonly __typename?: "PositionInDocument" } & Pick<
-      PositionInDocument,
-      "documentId">
     readonly userContributedAudio: ReadonlyArray<
       { readonly __typename?: "AudioSlice" } & Pick<
         AudioSlice,
@@ -1137,6 +1139,10 @@ export type FormFieldsFragment = {
             { readonly __typename?: "User" } & Pick<User, "id" | "displayName">
           >
         }
+    >
+    readonly position: { readonly __typename?: "PositionInDocument" } & Pick<
+      PositionInDocument,
+      "documentId"
     >
   }
 
@@ -1439,9 +1445,6 @@ export type DocSliceQuery = { readonly __typename?: "Query" } & {
                   | "includeInEditedCollection"
                 >
               >
-              readonly position: {
-                readonly __typename?: "PositionInDocument"
-              } & Pick<PositionInDocument, "documentId">
               readonly userContributedAudio: ReadonlyArray<
                 { readonly __typename?: "AudioSlice" } & Pick<
                   AudioSlice,
@@ -1460,6 +1463,9 @@ export type DocSliceQuery = { readonly __typename?: "Query" } & {
                     >
                   }
               >
+              readonly position: {
+                readonly __typename?: "PositionInDocument"
+              } & Pick<PositionInDocument, "documentId">
             }
         >
       }
@@ -1597,6 +1603,10 @@ export type UpdateWordMutation = { readonly __typename?: "Mutation" } & {
               >
             >
           }
+      >
+      readonly position: { readonly __typename?: "PositionInDocument" } & Pick<
+        PositionInDocument,
+        "documentId"
       >
     }
 }
