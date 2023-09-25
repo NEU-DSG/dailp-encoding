@@ -181,6 +181,8 @@ export type AnnotatedFormUpdate = {
   readonly commentary: InputMaybe<Scalars["String"]>
   /** Unique identifier of the form */
   readonly id: Scalars["UUID"]
+  /** Updated segments */
+  readonly segments: InputMaybe<ReadonlyArray<MorphemeSegmentUpdate>>
   /** Possible update to source content */
   readonly source: InputMaybe<Scalars["String"]>
 }
@@ -516,6 +518,21 @@ export type MorphemeReference = {
   readonly forms: ReadonlyArray<AnnotatedForm>
   /** Phonemic shape of the morpheme. */
   readonly morpheme: Scalars["String"]
+}
+
+/** A single unit of meaning and its gloss which can be edited. */
+export type MorphemeSegmentUpdate = {
+  /** Target language representation of this segment. */
+  readonly gloss: Scalars["String"]
+  /** Source language representation of this segment. */
+  readonly morpheme: Scalars["String"]
+  /**
+   * This field determines what character should separate this segment from
+   * the next one when reconstituting the full segmentation string.
+   */
+  readonly role: WordSegmentRole
+  /** Which Cherokee representation system is this segment written with? */
+  readonly system: InputMaybe<CherokeeOrthography>
 }
 
 /** A concrete representation of a particular functional morpheme. */
@@ -1015,6 +1032,9 @@ export type DocumentContentsQuery = { readonly __typename?: "Query" } & {
                                   >
                                 }
                             >
+                            readonly position: {
+                              readonly __typename?: "PositionInDocument"
+                            } & Pick<PositionInDocument, "documentId">
                           })
                       | { readonly __typename: "LineBreak" }
                     >
@@ -1087,6 +1107,9 @@ export type DocumentContentsQuery = { readonly __typename?: "Query" } & {
                   >
                 }
             >
+            readonly position: {
+              readonly __typename?: "PositionInDocument"
+            } & Pick<PositionInDocument, "documentId">
           }
       >
     }
@@ -1174,6 +1197,10 @@ export type FormFieldsFragment = {
             { readonly __typename?: "User" } & Pick<User, "id" | "displayName">
           >
         }
+    >
+    readonly position: { readonly __typename?: "PositionInDocument" } & Pick<
+      PositionInDocument,
+      "documentId"
     >
   }
 
@@ -1494,6 +1521,9 @@ export type DocSliceQuery = { readonly __typename?: "Query" } & {
                     >
                   }
               >
+              readonly position: {
+                readonly __typename?: "PositionInDocument"
+              } & Pick<PositionInDocument, "documentId">
             }
         >
       }
@@ -1631,6 +1661,10 @@ export type UpdateWordMutation = { readonly __typename?: "Mutation" } & {
               >
             >
           }
+      >
+      readonly position: { readonly __typename?: "PositionInDocument" } & Pick<
+        PositionInDocument,
+        "documentId"
       >
     }
 }
@@ -1779,6 +1813,9 @@ export const FormFieldsFragmentDoc = gql`
         id
         displayName
       }
+    }
+    position {
+      documentId
     }
   }
 `
