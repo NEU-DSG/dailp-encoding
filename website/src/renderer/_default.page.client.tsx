@@ -2,24 +2,19 @@ import React from "react"
 import ReactDOM from "react-dom"
 import { Client } from "urql"
 import { getCredentials } from "src/auth"
+import { Environment, deploymentEnvironment } from "src/env"
 import { customClient, sharedSsr } from "src/graphql"
 import { PageContext, PageShell, rootElementId } from "./PageShell"
 
 async function getClient() {
   const token = await getCredentials()
-  return customClient(
-    false,
-    [
-      //sharedSsr
-    ],
-    token
-  )
+  return customClient(false, [sharedSsr], token)
 }
 let clientPromise: null | Promise<Client> = null
 
 export async function render(pageContext: PageContext) {
   const { urqlState } = pageContext
-  // sharedSsr.restoreData(urqlState)
+  sharedSsr.restoreData(urqlState)
   const client = clientPromise
     ? await clientPromise
     : await (clientPromise = getClient())

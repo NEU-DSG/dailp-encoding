@@ -46,6 +46,13 @@ impl Database {
         Ok(Database { client: conn })
     }
 
+    pub async fn word_by_id(&self, word_id: &Uuid) -> Result<AnnotatedForm> {
+        Ok(query_file_as!(BasicWord, "queries/word_by_id.sql", word_id)
+            .fetch_one(&self.client)
+            .await?
+            .into())
+    }
+
     pub async fn upsert_contributor(&self, person: ContributorDetails) -> Result<()> {
         query_file!("queries/upsert_contributor.sql", person.full_name)
             .execute(&self.client)
@@ -414,39 +421,137 @@ impl Database {
         )
     }
 
-    pub async fn update_annotation(&self, _annote: annotation::Annotation) -> Result<()> {
-        todo!("Implement image annotations")
+    /// Ensure that a user exists in the database
+    /// user_id should be a congnito sub claim
+    pub async fn upsert_dailp_user(&self, user_id: Uuid) -> Result<Uuid> {
+        query_file!("queries/upsert_dailp_user.sql", user_id,)
+            .execute(&self.client)
+            .await?;
+
+        Ok(user_id)
     }
 
-    // pub async fn maybe_undefined_to_vec() -> Vec<Option<String>> {}
-
-    pub async fn update_word(&self, word: AnnotatedFormUpdate) -> Result<Uuid> {
-        let source = word.source.into_vec();
-        let commentary = word.commentary.into_vec();
-
-        query_file!(
-            "queries/update_word.sql",
-            word.id,
-            &source as _,
-            &commentary as _
-        )
-        .execute(&self.client)
-        .await?;
-
-        Ok(word.id)
+    pub async fn update_annotation(&self, _annote: annotation::Annotation) -> Result<()> {
+        todo!("Implement image annotations")
     }
 
     /// TODO: does this actually upload the audio (no) -- it just dies it to a
     /// word, so should we have a better name?
     pub async fn upload_contributor_audio(
         &self,
-        upload: ContributorAudioUpload,
-        user_id: Option<Uuid>,
+        upload: AttachAudioToWordInput,
+        contributor_id: &Uuid,
     ) -> Result<Uuid> {
         let media_slice_id = query_file_scalar!(
-            "queries/upsert_user_contributed_audio.sql",
-            user_id
-                .ok_or_else(|| anyhow::format_err!("User must be signed in to contribute audio"))?,
+            "queries/attach_audio_to_word.sql",
+            contributor_id,
+            &upload.contributor_audio_url as _,
+            0,
+            0,
+            upload.word_id
+        ).fetch_one(&self.client)
+        .await?;
+        Ok(media_slice_id)
+    }
+
+    pub async fn update_word(&self, word: AnnotatedFormUpdate) -> Result<Uuid> {
+        let mut tx = self.client.begin().await?;
+
+        let source = word.source.into_vec();
+        let commentary = word.commentary.into_vec();
+
+        let document_id = query_file!(
+            "queries/update_word.sql",
+            word.id,
+            &source as _,
+            &commentary as _,
+        ).fetch_one(&mut tx)
+        .await?
+        .document_id;
+           // If word segmentation was not changed, then return early since SQL update queries need to be called.
+           if word.segments.is_undefined() {
+            tx.commit().await?;
+            return Ok(word.id);
+        }
+
+        let segments = word.segments.take().unwrap();
+
+        let system_name: Option<CherokeeOrthography> = *(&segments[0].system.clone());
+
+        let (doc_id, gloss, word_id, index, morpheme, role): (
+            Vec<_>,
+            Vec<_>,
+            Vec<_>,
+            Vec<_>,
+            Vec<_>,
+            Vec<_>,
+        ) = segments
+            .into_iter()
+            .enumerate()
+            .map(move |(index, segment)| {
+                (
+                    document_id,
+                    segment.gloss,
+                    word.id,
+                    index as i64, // index of the segment in the word
+                    segment.morpheme,
+                    segment.role,
+                )
+            })
+            .multiunzip();
+
+        // Convert the given glosses if they have an internal for to add to the database.
+        let internal_glosses = query_file_scalar!(
+            "queries/find_internal_glosses.sql",
+            &*gloss,
+            match system_name {
+                Some(CherokeeOrthography::Taoc) => "TAOC",
+                _ =>
+                    return Err(anyhow::anyhow!(
+                        "Other Cherokee systems are currently not supported"
+                    )),
+            }
+        )
+        .fetch_all(&mut tx)
+        .await?;
+
+        // Add any newly created local glosses into morpheme gloss table.
+        query_file!(
+            "queries/upsert_local_morpheme_glosses.sql",
+            &*doc_id,
+            &*internal_glosses as _,
+        )
+        .execute(&mut tx)
+        .await?;
+
+        query_file!(
+            "queries/upsert_many_word_segments.sql",
+            &*doc_id,
+            &*internal_glosses as _,
+            &*word_id,
+            &*index,
+            &*morpheme,
+            &*role as _
+        )
+        .execute(&mut tx)
+        .await?;
+
+        tx.commit().await?;
+
+ 
+        Ok(word.id)
+    }
+
+    // pub async fn maybe_undefined_to_vec() -> Vec<Option<String>> {}
+
+    pub async fn attach_audio_to_word(
+        &self,
+        upload: AttachAudioToWordInput,
+        contributor_id: &Uuid,
+    ) -> Result<Uuid> {
+        let media_slice_id = query_file_scalar!(
+            "queries/attach_audio_to_word.sql",
+            contributor_id,
             &upload.contributor_audio_url as _,
             0,
             0,
@@ -455,6 +560,43 @@ impl Database {
         .fetch_one(&self.client)
         .await?;
         Ok(media_slice_id)
+    }
+
+    /// Update if a piece of audio will be shown to readers
+    /// Will return None if the word and audio assocation could not be found, otherwise word id.
+    pub async fn update_audio_visibility(
+        &self,
+        word_id: &Uuid,
+        audio_slice_id: &Uuid,
+        include_in_edited_collection: bool,
+        editor_id: &Uuid,
+    ) -> Result<Option<Uuid>> {
+        let _word_id = query_file_scalar!(
+            "queries/update_audio_visibility.sql",
+            word_id,
+            audio_slice_id,
+            include_in_edited_collection,
+            editor_id
+        )
+        .fetch_one(&self.client)
+        .await?;
+        Ok(_word_id)
+    }
+
+    pub async fn update_document_metadata(&self, document: DocumentMetadataUpdate) -> Result<Uuid> {
+        let title = document.title.into_vec();
+        let written_at: Option<Date> = document.written_at.value().map(Into::into);
+
+        query_file!(
+            "queries/update_document_metadata.sql",
+            document.id,
+            &title as _,
+            &written_at as _
+        )
+        .execute(&self.client)
+        .await?;
+
+        Ok(document.id)
     }
 
     pub async fn update_paragraph(&self, paragraph: ParagraphUpdate) -> Result<Uuid> {
@@ -469,6 +611,44 @@ impl Database {
         .await?;
 
         Ok(paragraph.id)
+    }
+
+    pub async fn update_contributor_attribution(
+        &self,
+        contribution: UpdateContributorAttribution,
+    ) -> Result<Uuid> {
+        let document_id = contribution.document_id;
+        let contributor_id = contribution.contributor_id;
+        let contribution_role = contribution.contribution_role;
+
+        query_file!(
+            "queries/update_contributor_attribution.sql",
+            document_id,
+            &contributor_id as _,
+            &contribution_role as _
+        )
+        .execute(&self.client)
+        .await?;
+
+        Ok(document_id)
+    }
+
+    pub async fn delete_contributor_attribution(
+        &self,
+        contribution: DeleteContributorAttribution,
+    ) -> Result<Uuid> {
+        let document_id = contribution.document_id;
+        let contributor_id = contribution.contributor_id;
+
+        query_file!(
+            "queries/delete_contributor_attribution.sql",
+            document_id,
+            &contributor_id as _
+        )
+        .execute(&self.client)
+        .await?;
+
+        Ok(document_id)
     }
 
     pub async fn all_pages(&self) -> Result<Vec<page::Page>> {

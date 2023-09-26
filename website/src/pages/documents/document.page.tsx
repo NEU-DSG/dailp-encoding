@@ -1,6 +1,6 @@
 import { DialogContent, DialogOverlay } from "@reach/dialog"
 import "@reach/dialog/styles.css"
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useState, useRef } from "react"
 import { isMobile } from "react-device-detect"
 import { Helmet } from "react-helmet"
 import { MdSettings } from "react-icons/md/index"
@@ -8,19 +8,24 @@ import { RiArrowUpCircleFill } from "react-icons/ri/index"
 import {
   Dialog,
   DialogBackdrop,
+  unstable_Form as Form,
   Tab,
   TabList,
   TabPanel,
   useDialogState,
 } from "reakit"
 import { navigate } from "vite-plugin-ssr/client/router"
+import { useCredentials } from "src/auth"
 import { AudioPlayer, Breadcrumbs, Button, Link } from "src/components"
 import { useMediaQuery } from "src/custom-hooks"
-import { FormProvider, useForm } from "src/form-context"
+import { FormProvider as FormProviderDoc } from "src/edit-doc-data-form-context"
+import { FormProvider, useForm } from "src/edit-word-form-context"
+import { EditButton } from "src/edit-word-feature"
 import * as Dailp from "src/graphql/dailp"
 import Layout from "src/layout"
 import { drawerBg } from "src/menu.css"
 import { MorphemeDetails } from "src/morpheme"
+import { DocumentInfo } from "src/pages/documents/document-info"
 import { PanelDetails, PanelLayout, PanelSegment } from "src/panel-layout"
 import { usePreferences } from "src/preferences-context"
 import { useLocation } from "src/renderer/PageShell"
@@ -99,6 +104,25 @@ const AnnotatedDocumentPage = (props: { id: string }) => {
 export const Page = AnnotatedDocumentPage
 
 export const TabSet = ({ doc }: { doc: Document }) => {
+    const [isScrollVisible, setIsScrollVisible] = useState(1);
+    const handleScroll = () => {
+      if (document.documentElement.scrollHeight > 3000) {
+        setIsScrollVisible((window.scrollY > 2000)? 2 : 1);
+      } else {
+        setIsScrollVisible(0);
+      }
+    };
+    // Add the scroll event listener when the component is mounted.
+    // window (and document) cannot seem to be accessed on its own so we need to use this method instead.
+    useEffect(() => {
+      window.addEventListener('scroll', handleScroll);
+      // Remove the scroll event listener on component unmount
+      return () => {
+        window.removeEventListener('scroll', handleScroll);
+      };
+    }, []);
+    
+  const token = useCredentials()
   const tabs = useScrollableTabState({ selectedId: Tabs.ANNOTATION })
   const [{ data }] = Dailp.useDocumentDetailsQuery({
     variables: { slug: doc.slug! },
@@ -106,6 +130,20 @@ export const TabSet = ({ doc }: { doc: Document }) => {
   const docData = data?.document
   if (!docData) {
     return null
+  }
+  let scrollTopClass = null;
+  switch (isScrollVisible) {
+    case 0: scrollTopClass = css.noScrollTop;
+      break;
+    case 1: scrollTopClass = css.hideScrollTop;
+      break;
+    case 2: scrollTopClass = css.showScrollTop;
+      break;
+    default: scrollTopClass = css.noScrollTop;
+  }
+  let editButton = null
+  if (token) {
+    editButton = <EditButton />
   }
   return (
     <>
@@ -130,7 +168,7 @@ export const TabSet = ({ doc }: { doc: Document }) => {
 
       <Button
         id="scroll-top"
-        className={css.scrollTop}
+        className={scrollTopClass}
         onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
       >
         <RiArrowUpCircleFill size={45} />
@@ -171,32 +209,16 @@ export const TabSet = ({ doc }: { doc: Document }) => {
         id={`${Tabs.INFO}-panel`}
         tabId={Tabs.INFO}
       >
-        <Helmet>
-          <title>{docData.title} - Details</title>
-        </Helmet>
-        <section className={fullWidth}>
-          <h3 className={css.topMargin}>Contributors</h3>
-          <ul>
-            {docData.contributors.map((person) => (
-              <li key={person.name}>
-                {person.name}: {person.role}
-              </li>
-            ))}
-          </ul>
-        </section>
-        {docData.sources.length > 0 ? (
-          <section className={fullWidth}>
-            Original document provided courtesy of{" "}
-            <Link href={docData.sources[0]!.link}>
-              {docData.sources[0]!.name}
-            </Link>
-            .
-          </section>
-        ) : null}
+        {/* Document Info Component */}
+        {/* Make sure form provider is around the component */}
+        <FormProviderDoc>
+          <DocumentInfo doc={doc} />
+        </FormProviderDoc>
       </TabPanel>
     </>
   )
 }
+  
 
 export const TranslationTab = ({ doc }: { doc: Document }) => {
   const [selectedMorpheme, setMorpheme] = useState<BasicMorphemeSegment | null>(
@@ -351,6 +373,9 @@ const DocumentContents = ({
       wordPanelDetails.setCurrContents(form.values.word)
       // Query of document contents is rerun to ensure frontend and backend are in sync
       rerunQuery({ requestPolicy: "network-only" })
+    } else {
+      // If the form was not submitted, make sure to reset the current word of the form to its unmodified state.
+      form.update("word", wordPanelDetails.currContents)
     }
   }, [isEditing])
 

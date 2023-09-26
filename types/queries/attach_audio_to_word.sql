@@ -16,7 +16,8 @@ inserted_audio_slice as (
 )
 
 insert into word_user_media (word_id, media_slice_id)
-select $5, inserted_audio_slice.id
-from inserted_audio_slice
-on conflict (media_slice_id, word_id) do nothing -- word already associated
-returning media_slice_id
+  select $5, inserted_audio_slice.id
+  from inserted_audio_slice
+  join word on word.id = $5
+    on conflict (media_slice_id, word_id) do nothing -- word already associated
+  returning media_slice_id
