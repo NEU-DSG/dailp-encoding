@@ -4,7 +4,7 @@ import ReactDOMServer from "react-dom/server"
 import { Helmet } from "react-helmet"
 import prepass from "react-ssr-prepass"
 import { ssrExchange } from "urql"
-import { dangerouslySkipEscape, escapeInject } from "vite-plugin-ssr"
+import { dangerouslySkipEscape, escapeInject } from "vite-plugin-ssr/server"
 import type { PageContextBuiltIn } from "vite-plugin-ssr/types"
 import { customClient } from "src/graphql"
 import { PageContextServer, PageShell, rootElementId } from "./PageShell"
@@ -102,6 +102,7 @@ export const passToClient = [
 const clientEnv = pick(process.env, [
   "DAILP_AWS_REGION",
   "DAILP_USER_POOL",
+  "DAILP_IDENTITY_POOL",
   "DAILP_USER_POOL_CLIENT",
   "DAILP_API_URL",
   "TF_STAGE",
