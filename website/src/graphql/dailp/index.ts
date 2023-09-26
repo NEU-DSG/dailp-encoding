@@ -181,6 +181,8 @@ export type AnnotatedFormUpdate = {
   readonly commentary: InputMaybe<Scalars["String"]>
   /** Unique identifier of the form */
   readonly id: Scalars["UUID"]
+  /** Updated segments */
+  readonly segments: InputMaybe<ReadonlyArray<MorphemeSegmentUpdate>>
   /** Possible update to source content */
   readonly source: InputMaybe<Scalars["String"]>
 }
@@ -328,10 +330,26 @@ export type CurateWordAudioInput = {
 
 export type Date = {
   readonly __typename?: "Date"
+  /** The day of this date */
+  readonly day: Scalars["Int"]
   /** Formatted version of the date for humans to read */
   readonly formattedDate: Scalars["String"]
+  /** The month of this date */
+  readonly month: Scalars["Int"]
   /** The year of this date */
   readonly year: Scalars["Int"]
+}
+
+export type DateInput = {
+  readonly day: Scalars["Int"]
+  readonly month: Scalars["Int"]
+  readonly year: Scalars["Int"]
+}
+
+/** Delete a contributor attribution for a document based on the two ids */
+export type DeleteContributorAttribution = {
+  readonly contributorId: Scalars["UUID"]
+  readonly documentId: Scalars["UUID"]
 }
 
 export type DocumentCollection = {
@@ -347,6 +365,16 @@ export type DocumentCollection = {
   readonly name: Scalars["String"]
   /** URL-ready slug for this collection, generated from the name */
   readonly slug: Scalars["String"]
+}
+
+/**
+ * Used for updating document metadata.
+ * All fields except id are optional.
+ */
+export type DocumentMetadataUpdate = {
+  readonly id: Scalars["UUID"]
+  readonly title: InputMaybe<Scalars["String"]>
+  readonly writtenAt: InputMaybe<DateInput>
 }
 
 export type DocumentPage = {
@@ -492,6 +520,21 @@ export type MorphemeReference = {
   readonly morpheme: Scalars["String"]
 }
 
+/** A single unit of meaning and its gloss which can be edited. */
+export type MorphemeSegmentUpdate = {
+  /** Target language representation of this segment. */
+  readonly gloss: Scalars["String"]
+  /** Source language representation of this segment. */
+  readonly morpheme: Scalars["String"]
+  /**
+   * This field determines what character should separate this segment from
+   * the next one when reconstituting the full segmentation string.
+   */
+  readonly role: WordSegmentRole
+  /** Which Cherokee representation system is this segment written with? */
+  readonly system: InputMaybe<CherokeeOrthography>
+}
+
 /** A concrete representation of a particular functional morpheme. */
 export type MorphemeTag = {
   readonly __typename?: "MorphemeTag"
@@ -531,9 +574,19 @@ export type Mutation = {
    * the future.
    */
   readonly apiVersion: Scalars["String"]
+  /**
+   * Attach audio that has already been uploaded to S3 to a particular word
+   * Assumes user requesting mutation recoreded the audio
+   */
   readonly attachAudioToWord: AnnotatedForm
+  /** Decide if a piece audio should be included in edited collection */
   readonly curateWordAudio: AnnotatedForm
+  /** Mutation for deleting contributor attributions */
+  readonly deleteContributorAttribution: Scalars["UUID"]
   readonly updateAnnotation: Scalars["Boolean"]
+  /** Mutation for adding/changing contributor attributions */
+  readonly updateContributorAttribution: Scalars["UUID"]
+  readonly updateDocumentMetadata: Scalars["UUID"]
   readonly updatePage: Scalars["Boolean"]
   /** Mutation for paragraph and translation editing */
   readonly updateParagraph: Scalars["UUID"]
@@ -548,8 +601,20 @@ export type MutationCurateWordAudioArgs = {
   input: CurateWordAudioInput
 }
 
+export type MutationDeleteContributorAttributionArgs = {
+  contribution: DeleteContributorAttribution
+}
+
 export type MutationUpdateAnnotationArgs = {
   data: Scalars["JSON"]
+}
+
+export type MutationUpdateContributorAttributionArgs = {
+  contribution: UpdateContributorAttribution
+}
+
+export type MutationUpdateDocumentMetadataArgs = {
+  document: DocumentMetadataUpdate
 }
 
 export type MutationUpdatePageArgs = {
@@ -740,6 +805,13 @@ export type SourceAttribution = {
   readonly link: Scalars["String"]
   /** Name of the source, i.e. "The Newberry Library" */
   readonly name: Scalars["String"]
+}
+
+/** Update the contributor attribution for a document */
+export type UpdateContributorAttribution = {
+  readonly contributionRole: Scalars["String"]
+  readonly contributorId: Scalars["UUID"]
+  readonly documentId: Scalars["UUID"]
 }
 
 /** A user record, for a contributor, editor, etc. */
@@ -960,6 +1032,9 @@ export type DocumentContentsQuery = { readonly __typename?: "Query" } & {
                                   >
                                 }
                             >
+                            readonly position: {
+                              readonly __typename?: "PositionInDocument"
+                            } & Pick<PositionInDocument, "documentId">
                           })
                       | { readonly __typename: "LineBreak" }
                     >
@@ -1032,6 +1107,9 @@ export type DocumentContentsQuery = { readonly __typename?: "Query" } & {
                   >
                 }
             >
+            readonly position: {
+              readonly __typename?: "PositionInDocument"
+            } & Pick<PositionInDocument, "documentId">
           }
       >
     }
@@ -1049,6 +1127,14 @@ export type AudioSliceFieldsFragment = {
   | "endTime"
   | "includeInEditedCollection"
 >
+
+export type DocFormFieldsFragment = {
+  readonly __typename?: "AnnotatedDoc"
+} & Pick<AnnotatedDoc, "id" | "title"> & {
+    readonly date: Maybe<
+      { readonly __typename?: "Date" } & Pick<Date, "day" | "month" | "year">
+    >
+  }
 
 export type FormFieldsFragment = {
   readonly __typename?: "AnnotatedForm"
@@ -1111,6 +1197,10 @@ export type FormFieldsFragment = {
             { readonly __typename?: "User" } & Pick<User, "id" | "displayName">
           >
         }
+    >
+    readonly position: { readonly __typename?: "PositionInDocument" } & Pick<
+      PositionInDocument,
+      "documentId"
     >
   }
 
@@ -1431,6 +1521,9 @@ export type DocSliceQuery = { readonly __typename?: "Query" } & {
                     >
                   }
               >
+              readonly position: {
+                readonly __typename?: "PositionInDocument"
+              } & Pick<PositionInDocument, "documentId">
             }
         >
       }
@@ -1569,6 +1662,10 @@ export type UpdateWordMutation = { readonly __typename?: "Mutation" } & {
             >
           }
       >
+      readonly position: { readonly __typename?: "PositionInDocument" } & Pick<
+        PositionInDocument,
+        "documentId"
+      >
     }
 }
 
@@ -1632,6 +1729,49 @@ export type CurateWordAudioMutation = { readonly __typename?: "Mutation" } & {
     }
 }
 
+export type UpdateParagraphMutationVariables = Exact<{
+  paragraph: ParagraphUpdate
+}>
+
+export type UpdateParagraphMutation = {
+  readonly __typename?: "Mutation"
+} & Pick<Mutation, "updateParagraph">
+
+export type UpdateContributorAttributionMutationVariables = Exact<{
+  contribution: UpdateContributorAttribution
+}>
+
+export type UpdateContributorAttributionMutation = {
+  readonly __typename?: "Mutation"
+} & Pick<Mutation, "updateContributorAttribution">
+
+export type DeleteContributorAttributionMutationVariables = Exact<{
+  contribution: DeleteContributorAttribution
+}>
+
+export type DeleteContributorAttributionMutation = {
+  readonly __typename?: "Mutation"
+} & Pick<Mutation, "deleteContributorAttribution">
+
+export type UpdateDocumentMetadataMutationVariables = Exact<{
+  document: DocumentMetadataUpdate
+}>
+
+export type UpdateDocumentMetadataMutation = {
+  readonly __typename?: "Mutation"
+} & Pick<Mutation, "updateDocumentMetadata">
+
+export const DocFormFieldsFragmentDoc = gql`
+  fragment DocFormFields on AnnotatedDoc {
+    id
+    title
+    date {
+      day
+      month
+      year
+    }
+  }
+`
 export const AudioSliceFieldsFragmentDoc = gql`
   fragment AudioSliceFields on AudioSlice {
     sliceId
@@ -1673,6 +1813,9 @@ export const FormFieldsFragmentDoc = gql`
         id
         displayName
       }
+    }
+    position {
+      documentId
     }
   }
 `
@@ -2201,4 +2344,56 @@ export function useCurateWordAudioMutation() {
     CurateWordAudioMutation,
     CurateWordAudioMutationVariables
   >(CurateWordAudioDocument)
+}
+export const UpdateParagraphDocument = gql`
+  mutation UpdateParagraph($paragraph: ParagraphUpdate!) {
+    updateParagraph(paragraph: $paragraph)
+  }
+`
+
+export function useUpdateParagraphMutation() {
+  return Urql.useMutation<
+    UpdateParagraphMutation,
+    UpdateParagraphMutationVariables
+  >(UpdateParagraphDocument)
+}
+export const UpdateContributorAttributionDocument = gql`
+  mutation UpdateContributorAttribution(
+    $contribution: UpdateContributorAttribution!
+  ) {
+    updateContributorAttribution(contribution: $contribution)
+  }
+`
+
+export function useUpdateContributorAttributionMutation() {
+  return Urql.useMutation<
+    UpdateContributorAttributionMutation,
+    UpdateContributorAttributionMutationVariables
+  >(UpdateContributorAttributionDocument)
+}
+export const DeleteContributorAttributionDocument = gql`
+  mutation DeleteContributorAttribution(
+    $contribution: DeleteContributorAttribution!
+  ) {
+    deleteContributorAttribution(contribution: $contribution)
+  }
+`
+
+export function useDeleteContributorAttributionMutation() {
+  return Urql.useMutation<
+    DeleteContributorAttributionMutation,
+    DeleteContributorAttributionMutationVariables
+  >(DeleteContributorAttributionDocument)
+}
+export const UpdateDocumentMetadataDocument = gql`
+  mutation UpdateDocumentMetadata($document: DocumentMetadataUpdate!) {
+    updateDocumentMetadata(document: $document)
+  }
+`
+
+export function useUpdateDocumentMetadataMutation() {
+  return Urql.useMutation<
+    UpdateDocumentMetadataMutation,
+    UpdateDocumentMetadataMutationVariables
+  >(UpdateDocumentMetadataDocument)
 }
