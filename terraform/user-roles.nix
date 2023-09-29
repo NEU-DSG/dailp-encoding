@@ -26,7 +26,7 @@ in {
     contributor_user_policy = {
       # Inherit basic permissions
       source_policy_documents = [
-        "$\{aws_iam_policy_document.basic_user_policy.json}"
+        "$\{data.aws_iam_policy_document.basic_user_policy.json}"
       ];
       # Add contributor permissions
       statement = {
