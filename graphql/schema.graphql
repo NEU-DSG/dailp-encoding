@@ -340,6 +340,19 @@ type Comment {
 }
 
 """
+Type representing the object that a comment is attached to
+"""
+union CommentParent = AnnotatedForm | DocumentParagraph
+
+"""
+An enum listing the possible types that a comment could be attached to
+"""
+enum CommentParentType {
+	WORD
+	PARAGRAPH
+}
+
+"""
 A type describing the kind of comment being made
 """
 enum CommentType {
@@ -767,6 +780,10 @@ type Mutation {
 	"""
 	Mutation for adding/changing contributor attributions
 	"""
+	postComment(input: PostCommentInput!): CommentParent!
+	"""
+	Mutation for adding/changing contributor attributions
+	"""
 	updateContributorAttribution(contribution: UpdateContributorAttribution!): UUID!
 	"""
 	Mutation for deleting contributor attributions
@@ -863,6 +880,16 @@ type PositionInDocument {
 	"""
 	indexReference: String!
 	iiifUrl: String
+}
+
+"""
+Input object for posting a new comment on some object
+"""
+input PostCommentInput {
+	parentId: UUID!
+	parentType: CommentParentType!
+	textContent: String!
+	commentType: CommentType
 }
 
 type Query {

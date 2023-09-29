@@ -1,9 +1,9 @@
 //! This piece of the project exposes a GraphQL endpoint that allows one to access DAILP data in a federated manner with specific queries.
 
 use dailp::{
-    slugify_ltree, AnnotatedForm, AttachAudioToWordInput,
-    CurateWordAudioInput, DeleteContributorAttribution,
-    UpdateContributorAttribution, Uuid, CollectionChapter, DocumentMetadataUpdate
+    comment::{CommentParent, PostCommentInput},
+    slugify_ltree, AnnotatedForm, AttachAudioToWordInput, CollectionChapter, CurateWordAudioInput,
+    DeleteContributorAttribution, DocumentMetadataUpdate, UpdateContributorAttribution, Uuid,
 };
 use itertools::Itertools;
 
@@ -303,6 +303,32 @@ impl Mutation {
     /// the future.
     async fn api_version(&self) -> &str {
         "1.0"
+    }
+
+    /// Post a new comment on a given object
+    #[graphql(guard = "AuthGuard")]
+    async fn post_comment(
+        &self,
+        context: &Context<'_>,
+        input: PostCommentInput,
+    ) -> FieldResult<CommentParent> {
+        let user = context
+            .data_opt::<UserInfo>()
+            .ok_or_else(|| anyhow::format_err!("User is not signed in"))?;
+
+        let db = context.data::<DataLoader<Database>>()?.loader();
+
+        db.insert_comment(
+            &user.id,
+            input.text_content,
+            &input.parent_id,
+            &input.parent_type,
+            &input.comment_type,
+        )
+        .await?;
+
+        // We return the parent object, for GraphCache interop
+        input.parent_type.resolve(db, &input.parent_id).await
     }
 
     /// Mutation for adding/changing contributor attributions
