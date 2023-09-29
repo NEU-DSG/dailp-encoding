@@ -35,6 +35,14 @@ export type Scalars = {
   UUID: any
 }
 
+/** Adds a bookmarked document to the user's list of bookmarks */
+export type AddBookmark = {
+  /** Whether the document is already bookmarked */
+  readonly bookmarkBool: Scalars["Boolean"]
+  /** ID of the document to add bookmark */
+  readonly documentId: Scalars["UUID"]
+}
+
 export type AnnotatedDoc = {
   readonly __typename?: "AnnotatedDoc"
   /** The audio recording resource for this entire document */
@@ -525,6 +533,8 @@ export type MorphemeTag = {
 
 export type Mutation = {
   readonly __typename?: "Mutation"
+  /** Adds a bookmark to the user's list of bookmarks */
+  readonly addBookmark: Scalars["UUID"]
   /**
    * Mutation must have at least one visible field for introspection to work
    * correctly, so we just provide an API version which might be useful in
@@ -543,6 +553,10 @@ export type Mutation = {
   /** Mutation for paragraph and translation editing */
   readonly updateParagraph: Scalars["UUID"]
   readonly updateWord: AnnotatedForm
+}
+
+export type MutationAddBookmarkArgs = {
+  bookmark: AddBookmark
 }
 
 export type MutationAttachAudioToWordArgs = {
@@ -1637,6 +1651,15 @@ export type CurateWordAudioMutation = { readonly __typename?: "Mutation" } & {
     }
 }
 
+export type AddBookmarkMutationVariables = Exact<{
+  bookmark: AddBookmark
+}>
+
+export type AddBookmarkMutation = { readonly __typename?: "Mutation" } & Pick<
+  Mutation,
+  "addBookmark"
+>
+
 export const AudioSliceFieldsFragmentDoc = gql`
   fragment AudioSliceFields on AudioSlice {
     sliceId
@@ -2206,4 +2229,15 @@ export function useCurateWordAudioMutation() {
     CurateWordAudioMutation,
     CurateWordAudioMutationVariables
   >(CurateWordAudioDocument)
+}
+export const AddBookmarkDocument = gql`
+  mutation AddBookmark($bookmark: AddBookmark!) {
+    addBookmark(bookmark: $bookmark)
+  }
+`
+
+export function useAddBookmarkMutation() {
+  return Urql.useMutation<AddBookmarkMutation, AddBookmarkMutationVariables>(
+    AddBookmarkDocument
+  )
 }

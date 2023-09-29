@@ -36,12 +36,10 @@ const LayoutDashboard: React.FC = ({ children }) => {
             <div className={css.contentContainer}>
               <h1 className={css.siteTitle}>
                 <Link className={css.siteLink} href="/">
-                  DAILP Dashboard test
+                  DAILP (dashboard)
                 </Link>
               </h1>
-              <span className={css.subHeader}>
-                Layout for the Dashboard
-              </span>
+              <span className={css.subHeader}>Layout for the Dashboard</span>
             </div>
 
             {deploymentEnvironment !== Environment.Production && (

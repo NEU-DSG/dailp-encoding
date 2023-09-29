@@ -7,6 +7,7 @@ use std::str::FromStr;
 
 use crate::collection::CollectionChapter;
 use crate::collection::EditedCollection;
+use crate::user::AddBookmark;
 use crate::user::User;
 use crate::user::UserId;
 use {
@@ -428,6 +429,20 @@ impl Database {
             .execute(&self.client)
             .await?;
 
+        Ok(user_id)
+    }
+
+    /// Adds a bookmark to the user's list of bookmarks
+    /// Will return the user id.
+    pub async fn add_bookmark(&self, bookmark: AddBookmark, user_id: Uuid) -> Result<Uuid> {
+        query_file!(
+            "queries/add_bookmark.sql",
+            user_id,
+            &bookmark.document_id,
+            &bookmark.bookmark_bool
+        )
+        .execute(&self.client)
+        .await?;
         Ok(user_id)
     }
 
