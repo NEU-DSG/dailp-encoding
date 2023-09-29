@@ -38,6 +38,7 @@ mod slugs;
 mod tag;
 mod translation;
 pub mod user;
+pub mod comment;
 
 // Re-export dependencies for downstream to use.
 pub use async_graphql;

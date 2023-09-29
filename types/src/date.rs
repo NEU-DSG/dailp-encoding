@@ -73,3 +73,28 @@ impl DateInput {
         Self::new(nd.day(), nd.month(), nd.year())
     }
 }
+
+/// Internal DateTime type which wraps a reliable date library.
+/// Adds SQL and GraphQL support to the type.
+#[derive(sqlx::Type, Serialize, Deserialize, Clone, Debug, PartialOrd, Ord, PartialEq, Eq)]
+#[sqlx(transparent)]
+pub struct DateTime(pub chrono::NaiveDateTime);
+
+impl DateTime {
+    /// Make a new date from an underlying date object.
+    pub fn new(internal: chrono::NaiveDateTime) -> Self {
+        Self(internal)
+    }
+}
+
+#[async_graphql::Object]
+impl DateTime {
+    /// UNIX timestamp of the datetime, useful for sorting
+    pub async fn timestamp(&self) -> i64 {
+        self.0.timestamp()
+    }
+    /// Just the Date component of this DateTime, useful for user-facing display
+    pub async fn date(&self) -> Date {
+        Date::new(self.0.date())
+    }
+}
