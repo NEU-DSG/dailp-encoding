@@ -37,7 +37,7 @@
         user_pool_id = "\${aws_cognito_user_pool.main.id}";
         description = "Editors can edit documents and add audio. Editors can also add edited collections.";
         precedence = 1;
-        role_arn = "\${aws_iam_role.editor_user_role.arn}"
-      }
+        role_arn = "\${aws_iam_role.editor_user_role.arn}";
+      };
   };
 }
