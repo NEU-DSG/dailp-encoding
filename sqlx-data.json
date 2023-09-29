@@ -402,6 +402,26 @@
     },
     "query": "-- Delete all document pages, which will cascade to delete all associated\n-- paragraphs and words.\ndelete from document_page\nwhere document_id = $1\n"
   },
+  "2dbab3e84c02adad2c49a975de61a4ae53c4924d59f697720a7f7e5beb451617": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        }
+      ],
+      "nullable": [
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "-- delete a comment given its ID\ndelete from comment where id = $1 returning id;"
+  },
   "32052923a631af8b0a51564e9d08578fc30b5d0e58b1593e8651f53343c91156": {
     "describe": {
       "columns": [
@@ -637,6 +657,90 @@
       }
     },
     "query": "select abstract_morpheme_tag.id as \"id!\"\nfrom unnest($1::text[]) as morpheme_gloss\n  inner join\n    abstract_morpheme_tag on abstract_morpheme_tag.internal_gloss = morpheme_gloss\n"
+  },
+  "3e141b9b31a8ff81d384bc12cd860a7b9e17853c1b9a0ce0a5fd4d714d55ff07": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "posted_at",
+          "ordinal": 1,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "posted_by",
+          "ordinal": 2,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "posted_by_name",
+          "ordinal": 3,
+          "type_info": "Text"
+        },
+        {
+          "name": "text_content",
+          "ordinal": 4,
+          "type_info": "Text"
+        },
+        {
+          "name": "comment_type: _",
+          "ordinal": 5,
+          "type_info": {
+            "Custom": {
+              "kind": {
+                "Enum": [
+                  "Story",
+                  "Correction",
+                  "Concern",
+                  "LingusticAnalysis"
+                ]
+              },
+              "name": "comment_type_enum"
+            }
+          }
+        },
+        {
+          "name": "parent_id",
+          "ordinal": 6,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "parent_type: _",
+          "ordinal": 7,
+          "type_info": {
+            "Custom": {
+              "kind": {
+                "Enum": [
+                  "Word",
+                  "Paragraph"
+                ]
+              },
+              "name": "comment_parent_type"
+            }
+          }
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        true,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "select\n    comment.id,\n    posted_at,\n    posted_by,\n    u_posted_by.display_name as \"posted_by_name\",\n    text_content,\n    comment_type as \"comment_type: _\",\n    parent_id,\n    parent_type as \"parent_type: _\"\nfrom comment\njoin dailp_user u_posted_by on u_posted_by.id = posted_by\nwhere comment.id = $1"
   },
   "43e42033828a07a488a1fbe4be6a5c7cea9d5c8d471d51a9fd39f939abd060f6": {
     "describe": {

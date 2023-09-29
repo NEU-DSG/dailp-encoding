@@ -99,3 +99,10 @@ pub struct PostCommentInput {
     /// A classifcation for the comment (optional)
     pub comment_type: Option<CommentType>,
 }
+
+/// Input object for deleting an existing comment
+#[derive(async_graphql::InputObject)]
+pub struct DeleteCommentInput {
+    /// ID of the comment to delete
+    pub comment_id: Uuid,
+}

@@ -47,6 +47,17 @@ impl Database {
         Ok(Database { client: conn })
     }
 
+    /// Get a specific comment by id
+    pub async fn comment_by_id(&self, comment_id: &Uuid) -> Result<Comment> {
+        Ok(
+            query_file_as!(BasicComment, "queries/comment_by_id.sql", comment_id,)
+                .fetch_one(&self.client)
+                .await?
+                .into(),
+        )
+    }
+
+    /// Get all comments on a given object
     pub async fn comments_by_parent(
         &self,
         parent_id: &Uuid,
@@ -84,6 +95,15 @@ impl Database {
         )
         .fetch_one(&self.client)
         .await?)
+    }
+
+    /// Delete a comment from the database
+    pub async fn delete_comment(&self, comment_id: &Uuid) -> Result<Uuid> {
+        Ok(
+            query_file_scalar!("queries/delete_comment.sql", comment_id,)
+                .fetch_one(&self.client)
+                .await?,
+        )
     }
 
     pub async fn paragraph_by_id(&self, paragraph_id: &Uuid) -> Result<DocumentParagraph> {
