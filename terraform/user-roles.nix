@@ -1,6 +1,7 @@
 { config, lib, pkgs, ... }: 
 # Local variables for S3 bucket sublocations
 let
+ media-storage = "$\{aws_s3_bucket.media_storage.arn}";
  document-audio = "document-audio/*";
  word-annotations = "word-annotations-list/*";
  user-audio = "user-uploaded-audio/*";
@@ -16,9 +17,9 @@ in {
         "s3:GetObjectVersion"
         ];
       resources = [
-        "$\{bucket arn}/${document-audio}"
-        "$\{...}/${word-annotations}"
-        "$\{...}/${user-audio}"
+        "${media-storage}/${document-audio}"
+        "${media-storage}/${word-annotations}"
+        "${media-storage}/${user-audio}"
         ];
       };
 
@@ -34,7 +35,7 @@ in {
           "s3:PutObject"
         ];
         resources = [
-          "$\{bucket arn}/${user-audio}"
+          "${media-storage}/${user-audio}"
         ];
       }
     };
@@ -51,7 +52,7 @@ in {
           "s3:GetObjectVersionAttributes"
           "s3:GetObjectVersion"
           ];
-        resources = ["bucket arn"];
+        resources = ["${media-storage}/*"];
       }
     };
 
