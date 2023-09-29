@@ -65,6 +65,27 @@ impl Database {
         .collect())
     }
 
+    /// Insert a new comment into the database
+    pub async fn insert_comment(
+        &self,
+        posted_by: &Uuid,
+        text_content: String,
+        parent_id: &Uuid,
+        parent_type: &CommentParentType,
+        comment_type: &Option<CommentType>,
+    ) -> Result<Uuid> {
+        Ok(query_file_scalar!(
+            "queries/insert_comment.sql",
+            posted_by,
+            text_content,
+            parent_id,
+            parent_type.clone() as CommentParentType,
+            comment_type.clone() as Option<CommentType>
+        )
+        .fetch_one(&self.client)
+        .await?)
+    }
+
     pub async fn paragraph_by_id(&self, paragraph_id: &Uuid) -> Result<DocumentParagraph> {
         Ok(query_file_as!(
             DocumentParagraph,

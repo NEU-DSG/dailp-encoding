@@ -43,19 +43,26 @@ pub enum CommentParentType {
     Paragraph,
 }
 
+impl CommentParentType {
+    /// Get the actual object referenced by this type, given an id
+    pub async fn resolve(&self, db: &Database, parent_id: &Uuid) -> FieldResult<CommentParent> {
+        match &self {
+            CommentParentType::Word => {
+                Ok(CommentParent::WordParent(db.word_by_id(parent_id).await?))
+            }
+            CommentParentType::Paragraph => Ok(CommentParent::ParagraphParent(
+                db.paragraph_by_id(parent_id).await?,
+            )),
+        }
+    }
+}
+
 #[async_graphql::ComplexObject]
 impl Comment {
     /// The parent entity of this comment
     pub async fn parent(&self, context: &Context<'_>) -> FieldResult<CommentParent> {
         let db = context.data::<DataLoader<Database>>()?.loader();
-        match &self.parent_type {
-            CommentParentType::Word => Ok(CommentParent::WordParent(
-                db.word_by_id(&self.parent_id).await?,
-            )),
-            CommentParentType::Paragraph => Ok(CommentParent::ParagraphParent(
-                db.paragraph_by_id(&self.parent_id).await?,
-            )),
-        }
+        self.parent_type.resolve(db, &self.parent_id).await
     }
 }
 
@@ -78,4 +85,17 @@ pub enum CommentParent {
     WordParent(AnnotatedForm),
     /// The paragraph that the given comment is attached to
     ParagraphParent(DocumentParagraph),
+}
+
+/// Input object for posting a new comment on some object
+#[derive(async_graphql::InputObject)]
+pub struct PostCommentInput {
+    /// ID of the object that is being commented on
+    pub parent_id: Uuid,
+    /// Type of the object being commented on
+    pub parent_type: CommentParentType,
+    /// Content of the comment
+    pub text_content: String,
+    /// A classifcation for the comment (optional)
+    pub comment_type: Option<CommentType>,
 }

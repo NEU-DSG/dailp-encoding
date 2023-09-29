@@ -1601,6 +1601,101 @@
     },
     "query": "insert into morpheme_tag (\n  system_id, abstract_ids, gloss, title, role_override, description\n)\nvalues ($1, $2, $3, $4, $5, $6)\non conflict (system_id, abstract_ids) do update set\ngloss = excluded.gloss,\ntitle = excluded.title,\nrole_override = excluded.role_override,\ndescription = excluded.description\n"
   },
+  "848587140aaec9c68285617dab22966b1662abc6b5e8ead54cbcbed971352d0c": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "posted_at",
+          "ordinal": 1,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "posted_by",
+          "ordinal": 2,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "posted_by_name",
+          "ordinal": 3,
+          "type_info": "Text"
+        },
+        {
+          "name": "text_content",
+          "ordinal": 4,
+          "type_info": "Text"
+        },
+        {
+          "name": "comment_type: _",
+          "ordinal": 5,
+          "type_info": {
+            "Custom": {
+              "kind": {
+                "Enum": [
+                  "Story",
+                  "Correction",
+                  "Concern",
+                  "LingusticAnalysis"
+                ]
+              },
+              "name": "comment_type_enum"
+            }
+          }
+        },
+        {
+          "name": "parent_id",
+          "ordinal": 6,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "parent_type: _",
+          "ordinal": 7,
+          "type_info": {
+            "Custom": {
+              "kind": {
+                "Enum": [
+                  "Word",
+                  "Paragraph"
+                ]
+              },
+              "name": "comment_parent_type"
+            }
+          }
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        true,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          {
+            "Custom": {
+              "kind": {
+                "Enum": [
+                  "Word",
+                  "Paragraph"
+                ]
+              },
+              "name": "comment_parent_type"
+            }
+          }
+        ]
+      }
+    },
+    "query": "select\n    comment.id,\n    posted_at,\n    posted_by,\n    u_posted_by.display_name as \"posted_by_name\",\n    text_content,\n    comment_type as \"comment_type: _\",\n    parent_id,\n    parent_type as \"parent_type: _\"\nfrom comment\njoin dailp_user u_posted_by on u_posted_by.id = posted_by\nwhere parent_id = $1 and parent_type = $2\norder by posted_at asc"
+  },
   "8d3ceaae6a15910949eceeeff805e3a93231b1d234897dc2f8bd71fc6df3baaa": {
     "describe": {
       "columns": [
@@ -2092,101 +2187,6 @@
       }
     },
     "query": "insert into iiif_source (title, base_url)\nvalues ($1, $2)\non conflict (base_url) do update\nset title = excluded.title\nreturning id\n"
-  },
-  "b20e5e72757e195c243c45b3b32520424da1511a9741306f26a4e125277e86b8": {
-    "describe": {
-      "columns": [
-        {
-          "name": "id",
-          "ordinal": 0,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "posted_at",
-          "ordinal": 1,
-          "type_info": "Timestamp"
-        },
-        {
-          "name": "posted_by",
-          "ordinal": 2,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "posted_by_name",
-          "ordinal": 3,
-          "type_info": "Text"
-        },
-        {
-          "name": "text_content",
-          "ordinal": 4,
-          "type_info": "Text"
-        },
-        {
-          "name": "comment_type: _",
-          "ordinal": 5,
-          "type_info": {
-            "Custom": {
-              "kind": {
-                "Enum": [
-                  "Story",
-                  "Correction",
-                  "Concern",
-                  "LingusticAnalysis"
-                ]
-              },
-              "name": "comment_type_enum"
-            }
-          }
-        },
-        {
-          "name": "parent_id",
-          "ordinal": 6,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "parent_type: _",
-          "ordinal": 7,
-          "type_info": {
-            "Custom": {
-              "kind": {
-                "Enum": [
-                  "Word",
-                  "Paragraph"
-                ]
-              },
-              "name": "comment_parent_type"
-            }
-          }
-        }
-      ],
-      "nullable": [
-        false,
-        false,
-        false,
-        false,
-        false,
-        true,
-        false,
-        false
-      ],
-      "parameters": {
-        "Left": [
-          "Uuid",
-          {
-            "Custom": {
-              "kind": {
-                "Enum": [
-                  "Word",
-                  "Paragraph"
-                ]
-              },
-              "name": "comment_parent_type"
-            }
-          }
-        ]
-      }
-    },
-    "query": "select\n    comment.id,\n    posted_at,\n    posted_by,\n    u_posted_by.display_name as \"posted_by_name\",\n    text_content,\n    comment_type as \"comment_type: _\",\n    parent_id,\n    parent_type as \"parent_type: _\"\nfrom comment\njoin dailp_user u_posted_by on u_posted_by.id = posted_by\nwhere parent_id = $1 and parent_type = $2"
   },
   "b2cd756955024a13a5c1e385ef85461a7335fd7fe7bd4c3067f3a872516a77ce": {
     "describe": {
@@ -3051,5 +3051,51 @@
       }
     },
     "query": "select\n  word.id,\n  word.source_text,\n  word.simple_phonetics,\n  word.phonemic,\n  word.english_gloss,\n  word.commentary,\n  word.document_id,\n  word.index_in_document,\n  word.page_number,\n  media_resource.recorded_at as \"audio_recorded_at?\",\n  media_resource.url as \"audio_url?\",\n  media_slice.time_range as \"audio_slice?\",\n  media_slice.id as \"audio_slice_id?\",\n  contributor.id as \"audio_recorded_by?\",\n  contributor.display_name as \"audio_recorded_by_name?\",\n  word.include_audio_in_edited_collection,\n  editor.id as \"audio_edited_by?\",\n  editor.display_name as \"audio_edited_by_name?\"\nfrom word\n  left join media_slice on media_slice.id = word.audio_slice_id\n  left join media_resource on media_resource.id = media_slice.resource_id\n  left join dailp_user contributor on contributor.id = media_resource.recorded_by\n  left join dailp_user editor on editor.id = media_resource.recorded_by\nwhere source_text ilike $1\n  or simple_phonetics ilike $1\n  or english_gloss ilike $1\n"
+  },
+  "fcf8a8d667e1d501a534d0c9506dbdd0ed570d5045c1f9dfdbce263c7c7ff9a7": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        }
+      ],
+      "nullable": [
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Text",
+          "Uuid",
+          {
+            "Custom": {
+              "kind": {
+                "Enum": [
+                  "Word",
+                  "Paragraph"
+                ]
+              },
+              "name": "comment_parent_type"
+            }
+          },
+          {
+            "Custom": {
+              "kind": {
+                "Enum": [
+                  "Story",
+                  "Correction",
+                  "Concern",
+                  "LingusticAnalysis"
+                ]
+              },
+              "name": "comment_type_enum"
+            }
+          }
+        ]
+      }
+    },
+    "query": "-- Insert a new comment from a user\ninsert into comment (posted_at, posted_by, text_content, parent_id, parent_type, comment_type)\nvalues (now(), $1, $2, $3, $4, $5)\nreturning id"
   }
 }
