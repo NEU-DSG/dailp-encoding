@@ -7,23 +7,20 @@ let
 in {
   # Policy Definitions
   config.data.aws_iam_policy_document = {
-    basic_user_policy = {
-      statement = {
-          sid = "dailp-basic-user-policy";
-          effect = "Allow";
-          actions = [
-            "s3:GetObject"
-            "s3:GetObjectAttributes"
-            "s3:GetObjectVersion"
-            ];
-          resources = [
-            "$\{bucket arn}/${document-audio}"
-            "$\{...}/${word-annotations}"
-            "$\{...}/${user-audio}"
-            ];
-          # TODO use real arn
+    basic_user_policy.statement = {
+      sid = "dailp-basic-user-policy";
+      effect = "Allow";
+      actions = [
+        "s3:GetObject"
+        "s3:GetObjectAttributes"
+        "s3:GetObjectVersion"
+        ];
+      resources = [
+        "$\{bucket arn}/${document-audio}"
+        "$\{...}/${word-annotations}"
+        "$\{...}/${user-audio}"
+        ];
       };
-    };
 
     contributor_user_policy = {
       # Inherit basic permissions
@@ -41,7 +38,7 @@ in {
         ];
       }
     };
-    
+
     # TODO slim down this role's access
     editor_user_policy.statement = {
         sid = "dailp-editor-user-policy";
