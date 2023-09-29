@@ -1,43 +1,62 @@
 { config, lib, pkgs, ... }: 
-{
+# Local variables for S3 bucket sublocations
+let
+ document-audio = "document-audio/*";
+ word-annotations = "word-annotations-list/*";
+ user-audio = "user-uploaded-audio/*";
+in {
   # Policy Definitions
   config.data.aws_iam_policy_document = {
     basic_user_policy = {
       statement = {
-        sid = "dailp-basic-user-policy";
-        actions = ["s3:GetObject"];
-        resources = ["bucket arn"];
-        principals = {
-          type = "AWS";
-          identifiers = [ "$\{aws_iam_role.basic_user_role.arn}" ];
-        };
+          sid = "dailp-basic-user-policy";
+          effect = "Allow";
+          actions = [
+            "s3:GetObject"
+            "s3:GetObjectAttributes"
+            "s3:GetObjectVersion"
+            ];
+          resources = [
+            "$\{bucket arn}/${document-audio}"
+            "$\{...}/${word-annotations}"
+            "$\{...}/${user-audio}"
+            ];
+          # TODO use real arn
       };
     };
 
     contributor_user_policy = {
+      # Inherit basic permissions
+      source_policy_documents = [
+        "$\{aws_iam_policy_document.basic_user_policy.json}"
+      ];
+      # Add contributor permissions
       statement = {
-        sid = "dailp-contributor-user-policy";
-        actions = ["s3:GetObject" "s3:PutObject"];
-        resources = ["bucket arn"];
-        principals = {
-          type = "AWS";
-          identifiers = [ "$\{aws_iam_role.contributor_user_role.arn}" ];
-        };
-      };
+        sid = "dailp-contributor-user-upload-policy";
+        actions = [
+          "s3:PutObject"
+        ];
+        resources = [
+          "$\{bucket arn}/${user-audio}"
+        ];
+      }
     };
-
-    editor_user_policy = {
-      statement = {
+    
+    # TODO slim down this role's access
+    editor_user_policy.statement = {
         sid = "dailp-editor-user-policy";
-        actions = ["s3:GetObject"];
+        actions = [
+          "s3:PutObject"
+          "s3:GetObject"
+          "s3:DeleteObjectVersion"
+          "s3:GetObjectAttributes"
+          "s3:DeleteObject"
+          "s3:GetObjectVersionAttributes"
+          "s3:GetObjectVersion"
+          ];
         resources = ["bucket arn"];
-        principals = {
-          type = "AWS";
-          identifiers = [ "$\{aws_iam_role.editor_user_role.arn}" ];
-        };
-      };
+      }
     };
-  };
 
   # Role Definitions
   config.resource.aws_iam_role = {
