@@ -1,7 +1,7 @@
 //! This piece of the project exposes a GraphQL endpoint that allows one to access DAILP data in a federated manner with specific queries.
 
 use dailp::{
-    comment::{CommentParent, PostCommentInput},
+    comment::{CommentParent, DeleteCommentInput, PostCommentInput},
     slugify_ltree, AnnotatedForm, AttachAudioToWordInput, CollectionChapter, CurateWordAudioInput,
     DeleteContributorAttribution, DocumentMetadataUpdate, UpdateContributorAttribution, Uuid,
 };
@@ -303,6 +303,37 @@ impl Mutation {
     /// the future.
     async fn api_version(&self) -> &str {
         "1.0"
+    }
+
+    /// Delete a comment.
+    /// Will fail if the user making the request is not the poster.
+    #[graphql(guard = "AuthGuard")]
+    async fn delete_comment(
+        &self,
+        context: &Context<'_>,
+        input: DeleteCommentInput,
+    ) -> FieldResult<CommentParent> {
+        let user = context
+            .data_opt::<UserInfo>()
+            .ok_or_else(|| anyhow::format_err!("User is not signed in"))?;
+
+        // We could theoretically do this in one round trip, if we have ever
+        // have performance issues. The query would roughly be:
+        //     delete from comment where user_id and comment_id
+        //     returning parent_type, parent_id
+
+        let db = context.data::<DataLoader<Database>>()?.loader();
+
+        let comment = db.comment_by_id(&input.comment_id).await?;
+
+        if comment.posted_by.id.0 != user.id.to_string() {
+            return Err("User attempted to delete another user's comment".into());
+        }
+
+        db.delete_comment(&input.comment_id).await?;
+
+        // We return the parent object, for GraphCache interop
+        comment.parent(context).await
     }
 
     /// Post a new comment on a given object

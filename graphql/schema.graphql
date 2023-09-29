@@ -469,6 +469,16 @@ type DateTime {
 }
 
 """
+Input object for deleting an existing comment
+"""
+input DeleteCommentInput {
+	"""
+	ID of the comment to delete
+	"""
+	commentId: UUID!
+}
+
+"""
 Delete a contributor attribution for a document based on the two ids
 """
 input DeleteContributorAttribution {
@@ -778,7 +788,12 @@ type Mutation {
 	"""
 	apiVersion: String!
 	"""
-	Mutation for adding/changing contributor attributions
+	Delete a comment.
+	Will fail if the user making the request is not the poster.
+	"""
+	deleteComment(input: DeleteCommentInput!): CommentParent!
+	"""
+	Post a new comment on a given object
 	"""
 	postComment(input: PostCommentInput!): CommentParent!
 	"""
@@ -886,9 +901,21 @@ type PositionInDocument {
 Input object for posting a new comment on some object
 """
 input PostCommentInput {
+	"""
+	ID of the object that is being commented on
+	"""
 	parentId: UUID!
+	"""
+	Type of the object being commented on
+	"""
 	parentType: CommentParentType!
+	"""
+	Content of the comment
+	"""
 	textContent: String!
+	"""
+	A classifcation for the comment (optional)
+	"""
 	commentType: CommentType
 }
 
