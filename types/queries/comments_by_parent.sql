@@ -10,3 +10,4 @@ select
 from comment
 join dailp_user u_posted_by on u_posted_by.id = posted_by
 where parent_id = $1 and parent_type = $2
+order by posted_at asc
