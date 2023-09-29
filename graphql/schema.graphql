@@ -158,6 +158,10 @@ type AnnotatedForm {
 	TODO! User guard for contributors only
 	"""
 	userContributedAudio: [AudioSlice!]!
+	"""
+	Get comments on this word
+	"""
+	comments: [Comment!]!
 }
 
 """
@@ -310,6 +314,42 @@ enum CollectionSection {
 }
 
 """
+A comment a user has made on some piece of a document.
+"""
+type Comment {
+	"""
+	Unique identifier of this comment
+	"""
+	id: UUID!
+	"""
+	When the comment was posted
+	"""
+	postedAt: DateTime!
+	"""
+	Who posted the comment
+	"""
+	postedBy: User!
+	"""
+	The text of the comment
+	"""
+	textContent: String!
+	"""
+	An optional classification of the comment's content
+	"""
+	commentType: CommentType
+}
+
+"""
+A type describing the kind of comment being made
+"""
+enum CommentType {
+	STORY
+	CORRECTION
+	CONCERN
+	LINGUSTIC_ANALYSIS
+}
+
+"""
 A block of content, which may be one of several types.
 Each page contains several blocks.
 
@@ -404,6 +444,17 @@ input DateInput {
 	year: Int!
 }
 
+type DateTime {
+	"""
+	UNIX timestamp of the datetime, useful for sorting
+	"""
+	timestamp: Int!
+	"""
+	Just the Date component of this DateTime, useful for user-facing display
+	"""
+	date: Date!
+}
+
 """
 Delete a contributor attribution for a document based on the two ids
 """
@@ -455,16 +506,30 @@ type DocumentPage {
 	paragraphs: [DocumentParagraph!]!
 }
 
+"""
+One paragraph within a [`DocumentPage`]
+"""
 type DocumentParagraph {
+	"""
+	Database ID
+	"""
+	id: UUID!
+	"""
+	English translation of the whole paragraph
+	"""
+	translation: String!
+	"""
+	1-indexed position of this paragraph in a document
+	"""
+	index: Int!
 	"""
 	Source text of the paragraph broken down into words
 	"""
 	source: [AnnotatedSeg!]!
 	"""
-	English translation of the whole paragraph
+	Get comments on this paragraph
 	"""
-	translation: String!
-	index: Int!
+	comments: [Comment!]!
 }
 
 """

@@ -11,7 +11,7 @@ use sqlx::types::Uuid;
 // #[graphql(complex)]
 pub struct Comment {
     /// Unique identifier of this comment
-    pub id: Option<Uuid>,
+    pub id: Uuid,
 
     /// When the comment was posted
     pub posted_at: DateTime,
@@ -32,12 +32,15 @@ pub struct Comment {
 }
 
 /// An enum listing the possible types that a comment could be attached to
-#[derive(async_graphql::Enum, Copy, Clone, Eq, PartialEq, Debug, Serialize, Deserialize)]
+#[derive(
+    sqlx::Type, async_graphql::Enum, Copy, Clone, Eq, PartialEq, Debug, Serialize, Deserialize,
+)]
+#[sqlx(type_name = "comment_parent_type")]
 pub enum CommentParentType {
     /// A comment attached to a word
-    WordParent,
+    Word,
     /// A comment attached to a paragraph
-    ParagraphParent,
+    Paragraph,
 }
 
 #[async_graphql::ComplexObject]
@@ -46,10 +49,10 @@ impl Comment {
     pub async fn parent(&self, context: &Context<'_>) -> FieldResult<CommentParent> {
         let db = context.data::<DataLoader<Database>>()?.loader();
         match &self.parent_type {
-            CommentParentType::WordParent => Ok(CommentParent::WordParent(
+            CommentParentType::Word => Ok(CommentParent::WordParent(
                 db.word_by_id(&self.parent_id).await?,
             )),
-            CommentParentType::ParagraphParent => Ok(CommentParent::ParagraphParent(
+            CommentParentType::Paragraph => Ok(CommentParent::ParagraphParent(
                 db.paragraph_by_id(&self.parent_id).await?,
             )),
         }
@@ -57,7 +60,10 @@ impl Comment {
 }
 
 /// A type describing the kind of comment being made
-#[derive(async_graphql::Enum, Clone, Copy, Eq, PartialEq, Hash, Debug, Serialize, Deserialize)]
+#[derive(
+    sqlx::Type, async_graphql::Enum, Clone, Copy, Eq, PartialEq, Hash, Debug, Serialize, Deserialize,
+)]
+#[sqlx(type_name = "comment_type_enum")]
 pub enum CommentType {
     Story,
     Correction,

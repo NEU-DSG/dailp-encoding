@@ -2093,6 +2093,101 @@
     },
     "query": "insert into iiif_source (title, base_url)\nvalues ($1, $2)\non conflict (base_url) do update\nset title = excluded.title\nreturning id\n"
   },
+  "b20e5e72757e195c243c45b3b32520424da1511a9741306f26a4e125277e86b8": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "posted_at",
+          "ordinal": 1,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "posted_by",
+          "ordinal": 2,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "posted_by_name",
+          "ordinal": 3,
+          "type_info": "Text"
+        },
+        {
+          "name": "text_content",
+          "ordinal": 4,
+          "type_info": "Text"
+        },
+        {
+          "name": "comment_type: _",
+          "ordinal": 5,
+          "type_info": {
+            "Custom": {
+              "kind": {
+                "Enum": [
+                  "Story",
+                  "Correction",
+                  "Concern",
+                  "LingusticAnalysis"
+                ]
+              },
+              "name": "comment_type_enum"
+            }
+          }
+        },
+        {
+          "name": "parent_id",
+          "ordinal": 6,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "parent_type: _",
+          "ordinal": 7,
+          "type_info": {
+            "Custom": {
+              "kind": {
+                "Enum": [
+                  "Word",
+                  "Paragraph"
+                ]
+              },
+              "name": "comment_parent_type"
+            }
+          }
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        true,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          {
+            "Custom": {
+              "kind": {
+                "Enum": [
+                  "Word",
+                  "Paragraph"
+                ]
+              },
+              "name": "comment_parent_type"
+            }
+          }
+        ]
+      }
+    },
+    "query": "select\n    comment.id,\n    posted_at,\n    posted_by,\n    u_posted_by.display_name as \"posted_by_name\",\n    text_content,\n    comment_type as \"comment_type: _\",\n    parent_id,\n    parent_type as \"parent_type: _\"\nfrom comment\njoin dailp_user u_posted_by on u_posted_by.id = posted_by\nwhere parent_id = $1 and parent_type = $2"
+  },
   "b2cd756955024a13a5c1e385ef85461a7335fd7fe7bd4c3067f3a872516a77ce": {
     "describe": {
       "columns": [
