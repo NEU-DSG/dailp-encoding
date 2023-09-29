@@ -1587,6 +1587,20 @@
     },
     "query": "insert into collection_chapter (\n  title,\n  document_id,\n  wordpress_id,\n  index_in_parent,\n  chapter_path,\n  section)\nvalues (\n  $1,\n  ( select id\n    from document\n    where short_name = $2),\n  $3,\n  $4,\n  $5,\n  $6\n)\n"
   },
+  "82cd0aee8e432f537b1c64cb7702c6bfae9e1d663a3f50c7a70cfa2954ec16ef": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Uuid",
+          "Bool"
+        ]
+      }
+    },
+    "query": "UPDATE dailp_user\nSET bookmarked_documents = CASE\n    WHEN $3 = true THEN array_append(bookmarked_documents, $2)\n    WHEN $3 = false THEN array_remove(bookmarked_documents, $2)\n    ELSE bookmarked_documents\n  END\nWHERE id = $1;"
+  },
   "8469d3fbe5939fa87e81b7afb2bbb614596235e99472eb0db600b000a3775207": {
     "describe": {
       "columns": [],

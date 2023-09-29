@@ -1,4 +1,3 @@
-import * as css from "./dashboard.css"
 import {
   Dialog,
   DialogBackdrop,
@@ -8,8 +7,7 @@ import {
   useDialogState,
 } from "reakit"
 import { useScrollableTabState } from "src/scrollable-tabs"
-import { wideAndTop } from './dashboard.css';
-
+import * as css from "./dashboard.css"
 
 enum Tabs {
   ACTIVITY = "activity-tab",
@@ -18,8 +16,8 @@ enum Tabs {
 
 export const Dashboard = () => {
   const tabs = useScrollableTabState({ selectedId: Tabs.ACTIVITY })
-    return (
-      <>
+  return (
+    <>
       <h1 className={css.dashboardHeader}>Dashboard</h1>
       <div className={css.wideAndTop}>
         <TabList
@@ -40,69 +38,82 @@ export const Dashboard = () => {
           {...tabs}
           id={Tabs.ACTIVITY}
           className={css.dashboardTabPanel}
-          >
-          <ActivityTab/>
+        >
+          <ActivityTab />
         </TabPanel>
 
         <TabPanel
           {...tabs}
           id={Tabs.BOOKMARKS}
           className={css.dashboardTabPanel}
-          >
-          <BookmarksTab/>
+        >
+          <BookmarksTab />
         </TabPanel>
-        
       </div>
-      </>
-    )
-  }
+    </>
+  )
+}
 
-export const ActivityTab = () => { // takes in something (user?)
+export const ActivityTab = () => {
+  // takes in something (user?)
   const dialog = useDialogState({ animated: true, visible: true })
   return (
     <>
-    Unordered list should be a map function of the user's recent activity
-    <ul className={css.noBullets}>
-      <li><ActivityItem/></li>
-      <li><ActivityItem/></li>
-      <li><ActivityItem/></li>
-    </ul>
-    
+      Unordered list should be a map function of the user's recent activity
+      <ul className={css.noBullets}>
+        <li>
+          <ActivityItem />
+        </li>
+        <li>
+          <ActivityItem />
+        </li>
+        <li>
+          <ActivityItem />
+        </li>
+      </ul>
     </>
   )
 }
 
-export const BookmarksTab = () => { // takes in something (user?)
+export const BookmarksTab = () => {
+  // takes in something (user?)
   return (
     <>
-    Unordered list should be a map function of the user's bookmarked documents
-    <ul className={css.noBullets}>
-      <li><BookmarksItem/></li>
-      <li><BookmarksItem/></li>
-      <li><BookmarksItem/></li>
-    </ul>
-    
+      Unordered list should be a map function of the user's bookmarked documents
+      <ul className={css.noBullets}>
+        <li>
+          <BookmarksItem />
+        </li>
+        <li>
+          <BookmarksItem />
+        </li>
+        <li>
+          <BookmarksItem />
+        </li>
+      </ul>
     </>
   )
 }
 
-export const ActivityItem = () => { // takes in user and some id for the post?
+export const ActivityItem = () => {
+  // takes in user and some id for the post?
   return (
     <>
-    <div className={css.dashboardItem}>
-      <p>Recent activity asdfasfasfasdf</p>
-    </div>
+      <div className={css.dashboardItem}>
+        <p>Recent activity asdfasfasfasdf</p>
+      </div>
     </>
-  ) 
+  )
 }
 
-export const BookmarksItem = () => { // takes in user and document id?
+export const BookmarksItem = () => {
+  // takes in user and document id?
   return (
     <>
-    <div className={css.dashboardItem}>
-      <h2>Title</h2>
-      <p>Description</p>
-    </div>
+      <div className={css.dashboardItem}>
+        <h2>Title</h2>
+        <p>Description</p>
+      </div>
     </>
-  ) 
+  )
 }

@@ -1,8 +1,8 @@
 //! This piece of the project exposes a GraphQL endpoint that allows one to access DAILP data in a federated manner with specific queries.
 
 use dailp::{
-    slugify_ltree, AnnotatedForm, AttachAudioToWordInput, CollectionChapter, CurateWordAudioInput,
-    Uuid,
+    slugify_ltree, user::AddBookmark, AnnotatedForm, AttachAudioToWordInput, CollectionChapter,
+    CurateWordAudioInput, Uuid,
 };
 use itertools::Itertools;
 
@@ -357,6 +357,22 @@ impl Mutation {
         let database = context.data::<DataLoader<Database>>()?.loader();
         Ok(database
             .word_by_id(&database.update_word(word).await?)
+            .await?)
+    }
+
+    /// Adds a bookmark to the user's list of bookmarks
+    async fn add_bookmark(
+        &self,
+        context: &Context<'_>,
+        bookmark: AddBookmark,
+    ) -> FieldResult<Uuid> {
+        let user = context
+            .data_opt::<UserInfo>()
+            .ok_or_else(|| anyhow::format_err!("User is not signed in"))?;
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .add_bookmark(bookmark, user.id)
             .await?)
     }
 

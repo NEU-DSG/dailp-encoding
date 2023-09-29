@@ -3,6 +3,8 @@ import "@reach/dialog/styles.css"
 import React, { useEffect, useState } from "react"
 import { isMobile } from "react-device-detect"
 import { Helmet } from "react-helmet"
+import { HiPencilAlt } from "react-icons/hi"
+import { IoCheckmarkSharp } from "react-icons/io5"
 import { MdSettings } from "react-icons/md/index"
 import { RiArrowUpCircleFill } from "react-icons/ri/index"
 import {
@@ -15,6 +17,7 @@ import {
 } from "reakit"
 import { navigate } from "vite-plugin-ssr/client/router"
 import { AudioPlayer, Breadcrumbs, Button, Link } from "src/components"
+import { IconButton, IconTextButton } from "src/components/button"
 import { useMediaQuery } from "src/custom-hooks"
 import { FormProvider, useForm } from "src/form-context"
 import * as Dailp from "src/graphql/dailp"
@@ -136,6 +139,8 @@ export const TabSet = ({ doc }: { doc: Document }) => {
         <RiArrowUpCircleFill size={45} />
         {!isMobile ? <div>Scroll to Top</div> : null}
       </Button>
+
+      <BookmarkButton documentId={doc.id} />
 
       <TabPanel
         {...tabs}
@@ -458,3 +463,51 @@ export const DocumentTitleHeader = (p: {
     )}
   </header>
 )
+
+/** Button that allows users to bookmark a document */
+export const BookmarkButton = (props: { documentId: String }) => {
+  const [isBookmarked, setIsBookmarked] = useState(false)
+  const [addBookmarkMutationResult, addBookmarkMutation] =
+    Dailp.useAddBookmarkMutation()
+  const documentId = props.documentId
+
+  const handleSet = (bool: boolean) => {
+    setIsBookmarked(bool)
+    const bookmarkBool = bool
+    addBookmarkMutation({
+      bookmark: {
+        documentId,
+        bookmarkBool,
+      },
+    })
+  }
+
+  return (
+    <>
+      {isBookmarked ? (
+        // Displays a "Cancel" button and "Save" button in editing mode.
+        <>
+          <IconTextButton
+            icon={<HiPencilAlt />}
+            className={css.BookmarkButton}
+            onClick={() => {
+              handleSet(false)
+            }}
+          >
+            Un-Bookmark
+          </IconTextButton>
+        </>
+      ) : (
+        <IconTextButton
+          icon={<HiPencilAlt />}
+          className={css.BookmarkButton}
+          onClick={() => {
+            handleSet(true)
+          }}
+        >
+          Bookmark
+        </IconTextButton>
+      )}
+    </>
+  )
+}

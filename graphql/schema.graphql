@@ -1,3 +1,17 @@
+"""
+Adds a bookmarked document to the user's list of bookmarks
+"""
+input AddBookmark {
+	"""
+	ID of the document to add bookmark
+	"""
+	documentId: UUID!
+	"""
+	Whether the document is already bookmarked
+	"""
+	bookmarkBool: Boolean!
+}
+
 type AnnotatedDoc {
 	"""
 	Official short identifier for this document
@@ -647,6 +661,10 @@ type Mutation {
 	updatePage(data: JSON!): Boolean!
 	updateAnnotation(data: JSON!): Boolean!
 	updateWord(word: AnnotatedFormUpdate!): AnnotatedForm!
+	"""
+	Adds a bookmark to the user's list of bookmarks
+	"""
+	addBookmark(bookmark: AddBookmark!): UUID!
 	"""
 	Decide if a piece audio should be included in edited collection
 	"""
