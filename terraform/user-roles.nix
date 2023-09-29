@@ -37,7 +37,7 @@ in {
         resources = [
           "${media-storage}/${user-audio}"
         ];
-      }
+      };
     };
 
     # TODO slim down this role's access
@@ -53,7 +53,7 @@ in {
           "s3:GetObjectVersion"
           ];
         resources = ["${media-storage}/*"];
-      }
+      };
     };
 
   # Role Definitions
