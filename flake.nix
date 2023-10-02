@@ -111,7 +111,7 @@
         tfInit = ''
           cp -f ${terraformConfig}/config.tf.json ./
           export TF_DATA_DIR=$(pwd)/.terraform
-          ${tf} init
+          ${tf} init -upgrade
         '';
       in rec {
         # Add extra binary caches for quicker builds of the rust toolchain
