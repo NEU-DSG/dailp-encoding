@@ -30,14 +30,14 @@
         user_pool_id = "\${aws_cognito_user_pool.main.id}";
         description = "Contributors can edit document-related info and upload audio files. Contributors cannot create new collections or add image sources.";
         precedence = 2;
-        role_arn = "\${aws_iam_role.contributor_user_role.arn}";
+        role_arn = "\${aws_iam_role.dailp_user_contributor.arn}";
       };
       editors = {
         name = "Editors";
         user_pool_id = "\${aws_cognito_user_pool.main.id}";
         description = "Editors can edit documents and add audio. Editors can also add edited collections.";
         precedence = 1;
-        role_arn = "\${aws_iam_role.editor_user_role.arn}";
+        role_arn = "\${aws_iam_role.dailp_use_editor.arn}";
       };
   };
 };
