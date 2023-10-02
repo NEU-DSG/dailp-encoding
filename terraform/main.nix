@@ -24,6 +24,7 @@ in {
     ./database-sql.nix
     ./bastion-host.nix
     ./media-storage.nix
+    ./media-access.nix
     ./user-roles.nix
   ];
 
@@ -41,6 +42,7 @@ in {
   provider.aws = {
     profile = "neu-${config.setup.stage}";
     region = "us-east-1";
+    default_tags = config.setup.global_tags;
   };
 
   setup = {
