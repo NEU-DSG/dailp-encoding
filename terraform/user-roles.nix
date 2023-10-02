@@ -1,6 +1,6 @@
 { config, lib, pkgs, ... }: 
-# Local variables for S3 bucket sublocations
 let
+ # Local variables for S3 bucket sublocations
  media-storage = "$\{aws_s3_bucket.media_storage.arn}";
  document-audio = "document-audio/*";
  word-annotations = "word-annotations-list/*";
@@ -12,7 +12,9 @@ in {
       effect = "Allow";
       principals = {
         type = "Federated";
-        identifiers = ["cognito-identity.amazonaws.com"];
+        identifiers = [
+          "cognito-identity.amazonaws.com"
+          ];
       };
       actions = "sts:AssumeRoleWithWebIdentity";
       condition = {
