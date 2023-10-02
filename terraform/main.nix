@@ -42,7 +42,7 @@ in {
   provider.aws = {
     profile = "neu-${config.setup.stage}";
     region = "us-east-1";
-    default_tags = config.setup.global_tags;
+    default_tags.tags = config.setup.global_tags;
   };
 
   setup = {
