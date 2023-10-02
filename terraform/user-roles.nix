@@ -16,7 +16,7 @@ in {
           "cognito-identity.amazonaws.com"
           ];
       };
-      actions = "sts:AssumeRoleWithWebIdentity";
+      actions = [ "sts:AssumeRoleWithWebIdentity" ];
       condition = {
         test = "StringEquals";
         variable = "cognito-identity.amazonaws.com:aud";
