@@ -13,21 +13,21 @@ config.resource = {
   aws_cloudfront_distribution.media_distribution = {
     enabled = true;
     origin = {
-      domain_name = media_storage.bucket_regional_domain_name;
-      origin_id = media_storage.id;
-      origin_access_control_id = media_access_control.id;
+      domain_name = "$\{aws_s3_bucket.media_storage.bucket_regional_domain_name}";
+      origin_id = "$\{aws_s3_bucket.media_storage.id}";
+      origin_access_control_id = "$\{aws_cloudfront_origin_access_control.media_access_control.id}";
     };
     default_cache_behavior = {
       allowed_methods = ["DELETE" "GET" "HEAD" "OPTIONS" "PATCH" "POST" "PUT"];
       cached_methods = ["GET" "HEAD"];
-      target_origin_id = media_storage.id;
+      target_origin_id = "$\{aws_s3_bucket.media_storage.id}";
       viewer_protocol_policy = "redirect-to-https";
-      cache_policy_id = data.media-cache-policy.id;
+      cache_policy_id = "$\{data.aws_cloudfront_cache_policy.media-cache-policy.id}";
     };
     restrictions = {
       geo_restriction = {
         restriction_type = "none";
-        locations = []
+        locations = [];
       };
     };
     viewer_certificate = {
