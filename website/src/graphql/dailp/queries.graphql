@@ -77,6 +77,16 @@ fragment AudioSliceFields on AudioSlice {
   includeInEditedCollection
 }
 
+fragment DocFormFields on AnnotatedDoc {
+  id
+  title
+  date {
+    day
+    month
+    year
+  }
+}
+
 fragment FormFields on AnnotatedForm {
   id
   index
@@ -107,6 +117,9 @@ fragment FormFields on AnnotatedForm {
       id
       displayName
     }
+  }
+  position {
+    documentId
   }
 }
 
@@ -377,4 +390,8 @@ mutation DeleteContributorAttribution(
   $contribution: DeleteContributorAttribution!
 ) {
   deleteContributorAttribution(contribution: $contribution)
+}
+
+mutation UpdateDocumentMetadata($document: DocumentMetadataUpdate!) {
+  updateDocumentMetadata(document: $document)
 }

@@ -8,19 +8,24 @@ import { RiArrowUpCircleFill } from "react-icons/ri/index"
 import {
   Dialog,
   DialogBackdrop,
+  unstable_Form as Form,
   Tab,
   TabList,
   TabPanel,
   useDialogState,
 } from "reakit"
 import { navigate } from "vite-plugin-ssr/client/router"
+import { useCredentials } from "src/auth"
 import { AudioPlayer, Breadcrumbs, Button, Link } from "src/components"
 import { useMediaQuery } from "src/custom-hooks"
-import { FormProvider, useForm } from "src/form-context"
+import { FormProvider as FormProviderDoc } from "src/edit-doc-data-form-context"
+import { FormProvider, useForm } from "src/edit-word-form-context"
+import { EditButton } from "src/edit-word-feature"
 import * as Dailp from "src/graphql/dailp"
 import Layout from "src/layout"
 import { drawerBg } from "src/menu.css"
 import { MorphemeDetails } from "src/morpheme"
+import { DocumentInfo } from "src/pages/documents/document-info"
 import { PanelDetails, PanelLayout, PanelSegment } from "src/panel-layout"
 import { usePreferences } from "src/preferences-context"
 import { useLocation } from "src/renderer/PageShell"
@@ -117,6 +122,7 @@ export const TabSet = ({ doc }: { doc: Document }) => {
       };
     }, []);
     
+  const token = useCredentials()
   const tabs = useScrollableTabState({ selectedId: Tabs.ANNOTATION })
   const [{ data }] = Dailp.useDocumentDetailsQuery({
     variables: { slug: doc.slug! },
@@ -134,6 +140,10 @@ export const TabSet = ({ doc }: { doc: Document }) => {
     case 2: scrollTopClass = css.showScrollTop;
       break;
     default: scrollTopClass = css.noScrollTop;
+  }
+  let editButton = null
+  if (token) {
+    editButton = <EditButton />
   }
   return (
     <>
@@ -199,28 +209,11 @@ export const TabSet = ({ doc }: { doc: Document }) => {
         id={`${Tabs.INFO}-panel`}
         tabId={Tabs.INFO}
       >
-        <Helmet>
-          <title>{docData.title} - Details</title>
-        </Helmet>
-        <section className={fullWidth}>
-          <h3 className={css.topMargin}>Contributors</h3>
-          <ul>
-            {docData.contributors.map((person) => (
-              <li key={person.name}>
-                {person.name}: {person.role}
-              </li>
-            ))}
-          </ul>
-        </section>
-        {docData.sources.length > 0 ? (
-          <section className={fullWidth}>
-            Original document provided courtesy of{" "}
-            <Link href={docData.sources[0]!.link}>
-              {docData.sources[0]!.name}
-            </Link>
-            .
-          </section>
-        ) : null}
+        {/* Document Info Component */}
+        {/* Make sure form provider is around the component */}
+        <FormProviderDoc>
+          <DocumentInfo doc={doc} />
+        </FormProviderDoc>
       </TabPanel>
     </>
   )
@@ -380,6 +373,9 @@ const DocumentContents = ({
       wordPanelDetails.setCurrContents(form.values.word)
       // Query of document contents is rerun to ensure frontend and backend are in sync
       rerunQuery({ requestPolicy: "network-only" })
+    } else {
+      // If the form was not submitted, make sure to reset the current word of the form to its unmodified state.
+      form.update("word", wordPanelDetails.currContents)
     }
   }, [isEditing])
 
