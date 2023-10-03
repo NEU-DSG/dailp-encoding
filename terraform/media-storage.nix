@@ -34,20 +34,68 @@
   };
   };
 
-  config.data = {
-      aws_iam_policy_document.media_storage_policy_document = {
-        statement = {
-          principals = {
-            type = "AWS";
-            identifiers = ["*"];
-          };
-          actions = [
-            "*"
-          ];
-          resources = [
-
-          ];
-        };
+  config.data.aws_iam_policy_document = {
+    media_storage_policy_document = {
+      policy_id = "PolicyForCloudFrontPrivateContent";
+      source_policy_documents =
+        let reference_policy = name: "$\{data.aws_iam_policy_document.${name}.json}";
+        in [
+          reference_policy "allow_cloudfront_service_principal"
+          reference_policy "allow_dailp_user_principals"
+          reference_policy "allow_dailp_deploy_principal"
+        ];
+    };
+    allow_cloudfront_service_principal.statement = {
+      sid = "AllowCloudFrontServicePrincipal";
+      effect = "Allow";
+      principals = { 
+        type = "Service";
+        identifiers = [ "cloudfront.amazonaws.com" ];
       };
+      actions = [
+        "s3:GetObject"
+        "s3:PutObject"
+      ];
+      resources = [ "$\{aws_s3_bucket.media_storage.arn}/*" ];
+      condition = {
+        test = "StringEquals";
+        variable = "AWS:SourceArn";
+        values = "$\{aws_cloudfront_distribution.media_distribution.arn}";
+      };
+    };
+    allow_dailp_user_principals.statement = {
+      sid = "AllowDailpUserPrincipals";
+      effect = "Allow";
+      principals = {
+        type = "AWS";
+        identifiers = [
+          "$\{aws_iam_role.dailp_user.arn}"
+          "$\{aws_iam_role.dailp_user_editor.arn}"
+          "$\{aws_iam_role.dailp_user_contributor.arn}"
+        ];
+      };
+      actions = [
+        "s3:GetObject"
+        "S3:PutObject"
+      ];
+      resources = [ "$\{aws_s3_bucket.media_storage.arn}/user-uploaded-audio/*" ];
+    };
+    allow_dailp_deploy_principal.statement = {
+      sid = "AllowDailpDeployPrincipals";
+      effect = "Allow";
+      principals = {
+        type = "AWS";
+        identifiers = 
+          if config.setup.stage == "dev" then 
+            [ "arn:aws:iam::783177801354:user/dailp-deployment" ]
+          else
+            [""]; # TODO get prod value
+      };
+      actions = [
+        "s3:GetObject"
+        "s3:PutObject"
+      ];
+      resources = [ "$\{aws_s3_bucket.media_storage.arn}/*" ];
+    };
   };
 }
