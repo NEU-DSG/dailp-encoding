@@ -34,7 +34,7 @@ config.resource = {
     in {
       allowed_methods = ["DELETE" "GET" "HEAD" "OPTIONS" "PATCH" "POST" "PUT"];
       cached_methods = ["GET" "HEAD"];
-      target_origin_id = "$\{aws_s3_bucket.media_storage.id}";
+      target_origin_id = "$\{aws_s3_bucket.media_storage.id}.s3.$\{aws_s3_bucket.media_storage.region}.amazonaws.com";
       viewer_protocol_policy = "redirect-to-https";
       cache_policy_id = managed-cache-policy.caching-optimized;
       origin_request_policy_id = managed-origin-request-policy.cors-s3-origin;
