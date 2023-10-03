@@ -108,8 +108,10 @@
             exePath = "/bin/${name}";
           };
         tf = "${pkgs.terraform}/bin/terraform";
+        inherit (builtins) getEnv;
         tfInit = ''
           cp -f ${terraformConfig}/config.tf.json ./
+          export AWS_ACCESS_KEY_ID=${getEnv AWS_ACCESS_KEY_ID}
           export TF_DATA_DIR=$(pwd)/.terraform
           ${tf} init -upgrade
         '';

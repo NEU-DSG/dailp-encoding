@@ -42,7 +42,6 @@ in {
   provider.aws = {
     profile = "neu-${config.setup.stage}";
     region = "us-east-1";
-    shared_credentials_files = [ "/Users/tf_user/.aws/creds" ];
     default_tags.tags = config.setup.global_tags;
   };
 
