@@ -28,7 +28,7 @@ in {
     };
 
     basic_user_policy.statement = {
-      sid = "dailp-basic-user-policy";
+      sid = "DailpBasicUserPolicy";
       effect = "Allow";
       actions = [
         "s3:GetObject"
@@ -49,7 +49,7 @@ in {
       ];
       # Add contributor permissions
       statement = {
-        sid = "dailp-contributor-user-upload-policy";
+        sid = "DailpContributorUserUploadPolicy";
         actions = [
           "s3:PutObject"
         ];
@@ -59,7 +59,7 @@ in {
       };
     };
     editor_user_policy.statement = {
-        sid = "dailp-editor-user-policy";
+        sid = "DailpEditorUserPolicy";
         actions = [
           "s3:PutObject"
           "s3:GetObject"
