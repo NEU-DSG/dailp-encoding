@@ -4,7 +4,6 @@
   config.resource = {
     aws_s3_bucket.media_storage = {
       bucket = "dailp-${config.setup.stage}-media-storage";
-      tags = config.setup.global_tags;
       acl = "private";
       lifecycle.prevent_destroy = true;
       versioning.enabled = true;
