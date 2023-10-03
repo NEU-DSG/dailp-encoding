@@ -21,6 +21,7 @@ in {
         test = "StringEquals";
         variable = "cognito-identity.amazonaws.com:aud";
         values = [
+          # TODO use a reference instead of hard-coding
           "us-east-1:6d544733-83e2-4d38-baa3-195d3bfdf54b"
         ];
       };
@@ -92,19 +93,22 @@ in {
       };
     };
     # Role Resource Definitions
-    aws_iam_role = {
+    aws_iam_role = 
+    let
+      trust-policy = "$\{data.aws_iam_policy_document.trusted_assume_role_policy.json}";
+    in {
       dailp_user = {
-        assume_role_policy = "$\{data.aws_iam_policy_document.trusted_assume_role_policy.json}";
+        assume_role_policy = trust-policy;
         description = "A basic unauthenticated DAILP user";
         name = "dailp-user";
       };
       dailp_user_contributor = {
-        assume_role_policy = "$\{data.aws_iam_policy_document.trusted_assume_role_policy.json}";
+        assume_role_policy = trust-policy;
         description = "A DAILP user with basic read/update permissions.";
         name = "dailp-user-contributor";
       };
       dailp_user_editor = {
-        assume_role_policy = "$\{data.aws_iam_policy_document.trusted_assume_role_policy.json}";
+        assume_role_policy = trust-policy;
         description = "A user with editorial permissions on DAILP";
         name = "dailp-user-editor";
       };
