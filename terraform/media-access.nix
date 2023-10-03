@@ -13,7 +13,7 @@ config.resource = {
     enabled = true;
     origin = 
     let
-      bucket-location = "$\{aws_s3_bucket.media_storage.bucket_regional_domain_name}";
+      bucket-location = "$\{aws_s3_bucket.media_storage.id}.s3.$\{aws_s3_bucket.media_storage.region}.amazonaws.com";
     in {
       domain_name = bucket-location;
       origin_id = bucket-location;
