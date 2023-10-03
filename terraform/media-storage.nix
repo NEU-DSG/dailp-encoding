@@ -60,7 +60,7 @@
       condition = {
         test = "StringEquals";
         variable = "AWS:SourceArn";
-        values = "$\{aws_cloudfront_distribution.media_distribution.arn}";
+        values = [ "$\{aws_cloudfront_distribution.media_distribution.arn}" ];
       };
     };
     allow_dailp_user_principals.statement = {
