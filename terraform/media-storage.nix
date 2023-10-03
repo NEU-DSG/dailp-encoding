@@ -40,9 +40,9 @@
       source_policy_documents =
         let reference_policy = name: "$\{data.aws_iam_policy_document.${name}.json}";
         in [
-          reference_policy "allow_cloudfront_service_principal"
-          reference_policy "allow_dailp_user_principals"
-          reference_policy "allow_dailp_deploy_principal"
+          (reference_policy "allow_cloudfront_service_principal")
+          (reference_policy "allow_dailp_user_principals")
+          (reference_policy "allow_dailp_deploy_principal")
         ];
     };
     allow_cloudfront_service_principal.statement = {
