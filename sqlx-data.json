@@ -1308,20 +1308,6 @@
     },
     "query": "select\n  attr.document_id,\n  attr.contribution_role,\n  contributor.id,\n  contributor.full_name\nfrom contributor_attribution as attr\n  inner join contributor on contributor.id = attr.contributor_id\nwhere attr.document_id = any($1)\n"
   },
-  "65df9af112fc60fc834c143ae8af09ce810ba316d912c08f2ba77b6ba877331f": {
-    "describe": {
-      "columns": [],
-      "nullable": [],
-      "parameters": {
-        "Left": [
-          "Uuid",
-          "TextArray",
-          "TextArray"
-        ]
-      }
-    },
-    "query": "update word set\n    source_text =\n        case\n            when $2::text[] != '{}' and $2[1] is not null then $2[1]\n            else source_text\n        end,\n    commentary =\n        case\n            when $3::text[] != '{}' then $3[1]\n            else commentary\n        end\nwhere id = $1"
-  },
   "6858e67c5a27aa4f38366244a46c9a4a50546c164a2b91599301aad1bc8f3cd0": {
     "describe": {
       "columns": [],
@@ -1808,6 +1794,28 @@
     },
     "query": "select\n  word.id,\n  word.source_text,\n  word.simple_phonetics,\n  word.phonemic,\n  word.english_gloss,\n  word.commentary,\n  word.document_id,\n  word.index_in_document,\n  word.page_number,\n  media_resource.recorded_at as \"audio_recorded_at?\",\n  media_resource.url as \"audio_url?\",\n  media_slice.time_range as \"audio_slice?\",\n  media_slice.id as \"audio_slice_id?\",\n  contributor.id as \"audio_recorded_by?\",\n  contributor.display_name as \"audio_recorded_by_name?\",\n  word.include_audio_in_edited_collection,\n  editor.id as \"audio_edited_by?\",\n  editor.display_name as \"audio_edited_by_name?\"\nfrom word\n  left join media_slice on media_slice.id = word.audio_slice_id\n  left join media_resource on media_resource.id = media_slice.resource_id\n  left join dailp_user contributor on contributor.id = media_resource.recorded_by\n  left join dailp_user editor on editor.id = media_resource.recorded_by\nwhere\n  word.id = $1\n"
   },
+  "958ee8a09f73dbfa64ba57e184e28342627ea3593ded2a08b451bfa52a2382b6": {
+    "describe": {
+      "columns": [
+        {
+          "name": "document_id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        }
+      ],
+      "nullable": [
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "TextArray",
+          "TextArray"
+        ]
+      }
+    },
+    "query": "update word set\n    source_text =\n        case\n            when $2::text[] != '{}' and $2[1] is not null then $2[1]\n            else source_text\n        end,\n    commentary =\n        case\n            when $3::text[] != '{}' then $3[1]\n            else commentary\n        end\nwhere id = $1\nreturning word.document_id;"
+  },
   "9e02521e2e4f9bb5ee2e1c9dd33e18bb9b0ee8b7d584cf9867b889b92334f082": {
     "describe": {
       "columns": [
@@ -2163,6 +2171,27 @@
     },
     "query": "select\n    id,\n    title,\n    document_id,\n    wordpress_id,\n    index_in_parent,\n    section as \"section: CollectionSection\",\n    chapter_path,\n    ltree2text(subpath(chapter_path, 0, 1)) AS \"collection_slug!\"\nfrom collection_chapter\nwhere ltree2text(subpath(chapter_path, 0, 1)) = any($1);"
   },
+  "b48c8aaace5a866c6b39949a5b06954e8b9916c363ac4aad0d72bf006accf84b": {
+    "describe": {
+      "columns": [
+        {
+          "name": "gloss",
+          "ordinal": 0,
+          "type_info": "Text"
+        }
+      ],
+      "nullable": [
+        null
+      ],
+      "parameters": {
+        "Left": [
+          "TextArray",
+          "Text"
+        ]
+      }
+    },
+    "query": "-- Selects the internal_gloss if there is one, otherwise \n-- selects the given gloss, a custom gloss entered by the user.\nselect coalesce(internal_gloss, input_gloss) as gloss\nfrom abstract_morpheme_tag\n\n-- Limits the fields of the table to only those with one abstract id,\n-- and which have the same abstract id as the abstract_morpheme_tag table.\n  inner join morpheme_tag\n    on array_length(morpheme_tag.abstract_ids, 1) = 1 \n      and abstract_morpheme_tag.id = morpheme_tag.abstract_ids[1] \n\n-- Limits the fields of the table to only those with the matching short name\n-- as the input and those with the corresponding system id from morpheme_tag.\n  inner join abbreviation_system \n    on abbreviation_system.short_name = $2::text \n      and morpheme_tag.system_id = abbreviation_system.id\n\n-- Joins matching glosses with the morpheme_tag table,\n-- and keeps the input_gloss even if there is no matching gloss (these will\n-- be the custom gloss entered by the user.)\n  right join unnest($1::text[]) as input_gloss\n    on input_gloss = morpheme_tag.gloss"
+  },
   "bba471ad9b42019470e67093fe974374468b993c472479dfae34b60d505188c0": {
     "describe": {
       "columns": [],
@@ -2431,6 +2460,20 @@
       }
     },
     "query": "select\n  paragraph.id as paragraph_id,\n  word.id,\n  word.source_text,\n  word.simple_phonetics,\n  word.phonemic,\n  word.english_gloss,\n  word.commentary,\n  word.document_id,\n  word.index_in_document,\n  word.page_number,\n  media_resource.url as \"audio_url?\",\n  media_slice.time_range as \"audio_slice?\",\n  word.audio_slice_id,\n  media_resource.recorded_at as \"audio_recorded_at?\",\n  contributor.id as \"audio_recorded_by?\",\n  contributor.display_name as \"audio_recorded_by_name?\",\n  word.include_audio_in_edited_collection,\n  editor.id as \"audio_edited_by?\",\n  editor.display_name as \"audio_edited_by_name?\"\nfrom word\n  inner join paragraph on paragraph.page_id = word.page_id\n  left join media_slice on media_slice.id = word.audio_slice_id\n  left join media_resource on media_resource.id = media_slice.resource_id\n  left join dailp_user contributor on contributor.id = media_resource.recorded_by\n  left join dailp_user editor on editor.id = media_resource.recorded_by\nwhere paragraph.id = any($1)\n  and word.character_range is not null\n  -- Include words that overlap with the paragraph range\n  and word.character_range && paragraph.character_range\n  -- Exclude words that start before the paragraph, which means that words are\n  -- always included in the paragraph that they start in. This is the same logic\n  -- as line breaks.\n  and word.character_range &> paragraph.character_range\n-- Include all joined primary keys in the GROUP BY clause.\n-- Why? ^^\ngroup by word.id,\n  paragraph.id,\n  media_slice.id,\n  media_resource.id,\n  contributor.id,\n  editor.id\norder by word.character_range\n"
+  },
+  "cc4e4658101a331ab524544277099c073daf076dae5459b4bd3c7b47068a3367": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "TextArray",
+          "Date"
+        ]
+      }
+    },
+    "query": "update document set\n    title = \n        case\n            when $2::text[] != '{}' and $2[1] is not null then $2[1]\n            else title\n        end,\n    written_at =\n        case\n            when $3::date is not null then $3::date\n            else written_at\n        end\nwhere id = $1\n"
   },
   "cc71e3a7b4c013adc4d0cb79acd702aa0daa0290013a31e9fee3bd1f5990fa4f": {
     "describe": {
