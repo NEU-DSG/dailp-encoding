@@ -149,7 +149,6 @@
 
         apps.tf-plan = mkBashApp "plan" ''
           ${tfInit}
-          ${tf} force-unlock -force "a3336bf6-a4fc-2c2d-4a5f-95c10ec56c74"
           ${tf} plan
         '';
 
