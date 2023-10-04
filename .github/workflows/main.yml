@@ -127,7 +127,6 @@ jobs:
           export DAILP_API_URL=$(nix run --impure .#tf-output functions_url)
           export DATABASE_URL=postgres://dailp:$DATABASE_PASSWORD@localhost:5432/dailp
           nix run --impure .#migrate-schema
-          nix run --impure .#migrate-data
       - name: Publish website
         run: |
           curl -X POST -d {} "$(nix run --impure .#tf-output amplify_webhook)" -H "Content-Type:application/json"
