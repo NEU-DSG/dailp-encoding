@@ -60,7 +60,7 @@ with lib; {
     # management. This is a bit of a chicken and egg situation, where the
     # following block is manually disabled until the above resources exist.
     terraform.backend.s3 = {
-      profile = config.provider.aws.profile;
+      # access_key = config.provider.aws.profile;
       bucket = config.setup.state.bucket;
       key = "terraform.tfstate";
       region = config.provider.aws.region;
