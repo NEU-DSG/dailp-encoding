@@ -20,7 +20,6 @@ export const FormProvider = (props: { children: ReactNode }) => {
   const word: Dailp.FormFieldsFragment = {} as Dailp.FormFieldsFragment
 
   const [updateWordResult, updateWord] = Dailp.useUpdateWordMutation()
-  const { cherokeeRepresentation } = usePreferences()
 
   const { cherokeeRepresentation } = usePreferences()
 
