@@ -129,10 +129,10 @@
 
         packages.default = terraformConfig;
 
-        apps.migrate-data = inputs.utils.lib.mkApp {
-          drv = hostPackage;
-          exePath = "/bin/dailp-migration";
-        };
+        # apps.migrate-data = inputs.utils.lib.mkApp {
+        #   drv = hostPackage;
+        #   exePath = "/bin/dailp-migration";
+        # };
 
         apps.validate-data = inputs.utils.lib.mkApp {
           drv = hostPackage;
