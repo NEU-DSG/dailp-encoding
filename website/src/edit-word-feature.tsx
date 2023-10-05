@@ -6,7 +6,7 @@ import {
   unstable_FormInput as FormInput,
   unstable_FormLabel as FormLabel,
   unstable_FormSubmitButton as FormSubmitButton,
-} from "reakit/Form"
+} from "reakit"
 import * as Dailp from "src/graphql/dailp"
 import { IconButton } from "./components"
 import { IconTextButton } from "./components/button"
