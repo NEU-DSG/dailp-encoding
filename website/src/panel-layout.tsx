@@ -1,26 +1,26 @@
 import { groupBy } from "lodash"
 import React, { ReactNode } from "react"
-import { AiFillSound } from "react-icons/ai"
-import { GrDown, GrUp } from "react-icons/gr"
-import { IoEllipsisHorizontalCircle } from "react-icons/io5"
-import { MdClose, MdNotes, MdRecordVoiceOver } from "react-icons/md"
+import { AiFillSound } from "react-icons/ai/index"
+import { GrDown, GrUp } from "react-icons/gr/index"
+import { IoEllipsisHorizontalCircle } from "react-icons/io5/index"
+import { MdClose, MdNotes, MdRecordVoiceOver } from "react-icons/md/index"
 import { OnChangeValue } from "react-select"
 import {
   Disclosure,
   DisclosureContent,
   useDisclosureState,
-} from "reakit/Disclosure"
+} from "reakit"
 import {
   unstable_Form as Form,
   unstable_FormInput as FormInput,
-} from "reakit/Form"
+} from "reakit"
 import * as Dailp from "src/graphql/dailp"
 import { useCredentials } from "./auth"
 import { AudioPlayer, IconButton } from "./components"
-import { useForm } from "./edit-word-form-context"
 import { CustomCreatable } from "./components/creatable"
 import { EditWordAudio } from "./components/edit-word-audio"
 import { EditButton, EditWordFeature } from "./edit-word-feature"
+import { useForm } from "./edit-word-form-context"
 import { content } from "./footer.css"
 import * as css from "./panel-layout.css"
 import ParagraphPanel from "./paragraph-panel"
