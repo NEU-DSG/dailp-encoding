@@ -1,9 +1,8 @@
 //! This piece of the project exposes a GraphQL endpoint that allows one to access DAILP data in a federated manner with specific queries.
 
 use dailp::{
-    slugify_ltree, AnnotatedForm, AttachAudioToWordInput,
-    CurateWordAudioInput, DeleteContributorAttribution,
-    UpdateContributorAttribution, Uuid, CollectionChapter, DocumentMetadataUpdate
+    slugify_ltree, AnnotatedForm, AttachAudioToWordInput, CollectionChapter, CurateWordAudioInput,
+    DeleteContributorAttribution, DocumentMetadataUpdate, UpdateContributorAttribution, Uuid,
 };
 use itertools::Itertools;
 
