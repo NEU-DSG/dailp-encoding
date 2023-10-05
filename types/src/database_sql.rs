@@ -449,7 +449,8 @@ impl Database {
             0,
             0,
             upload.word_id
-        ).fetch_one(&self.client)
+        )
+        .fetch_one(&self.client)
         .await?;
         Ok(media_slice_id)
     }
@@ -465,11 +466,12 @@ impl Database {
             word.id,
             &source as _,
             &commentary as _,
-        ).fetch_one(&mut tx)
+        )
+        .fetch_one(&mut tx)
         .await?
         .document_id;
-           // If word segmentation was not changed, then return early since SQL update queries need to be called.
-           if word.segments.is_undefined() {
+        // If word segmentation was not changed, then return early since SQL update queries need to be called.
+        if word.segments.is_undefined() {
             tx.commit().await?;
             return Ok(word.id);
         }
@@ -538,7 +540,6 @@ impl Database {
 
         tx.commit().await?;
 
- 
         Ok(word.id)
     }
 
