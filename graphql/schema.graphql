@@ -357,9 +357,8 @@ A type describing the kind of comment being made
 """
 enum CommentType {
 	STORY
-	CORRECTION
-	CONCERN
-	LINGUSTIC_ANALYSIS
+	SUGGESTION
+	QUESTION
 }
 
 """
