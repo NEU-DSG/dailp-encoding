@@ -534,7 +534,7 @@ One paragraph within a [`DocumentPage`]
 """
 type DocumentParagraph {
 	"""
-	Database ID
+	Unique identifier for this paragraph
 	"""
 	id: UUID!
 	"""
