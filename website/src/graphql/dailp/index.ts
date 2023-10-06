@@ -661,6 +661,8 @@ export type Query = {
   /** Retrieves a full document from its unique name. */
   readonly document: Maybe<AnnotatedDoc>
   readonly editedCollection: Maybe<EditedCollection>
+  /** Gets all bookmarks for the currently authenticated user. */
+  readonly getBookmarks: Maybe<ReadonlyArray<Scalars["UUID"]>>
   /**
    * Retrieve information for the morpheme that corresponds to the given tag
    * string. For example, "3PL.B" is the standard string referring to a 3rd
@@ -1660,6 +1662,13 @@ export type AddBookmarkMutation = { readonly __typename?: "Mutation" } & Pick<
   "addBookmark"
 >
 
+export type GetBookmarksQueryVariables = Exact<{ [key: string]: never }>
+
+export type GetBookmarksQuery = { readonly __typename?: "Query" } & Pick<
+  Query,
+  "getBookmarks"
+>
+
 export const AudioSliceFieldsFragmentDoc = gql`
   fragment AudioSliceFields on AudioSlice {
     sliceId
@@ -2240,4 +2249,18 @@ export function useAddBookmarkMutation() {
   return Urql.useMutation<AddBookmarkMutation, AddBookmarkMutationVariables>(
     AddBookmarkDocument
   )
+}
+export const GetBookmarksDocument = gql`
+  query GetBookmarks {
+    getBookmarks
+  }
+`
+
+export function useGetBookmarksQuery(
+  options?: Omit<Urql.UseQueryArgs<GetBookmarksQueryVariables>, "query">
+) {
+  return Urql.useQuery<GetBookmarksQuery, GetBookmarksQueryVariables>({
+    query: GetBookmarksDocument,
+    ...options,
+  })
 }

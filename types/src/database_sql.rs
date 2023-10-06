@@ -446,6 +446,19 @@ impl Database {
         Ok(user_id)
     }
 
+    // Gets all the bookmarks for a user given their id
+    pub async fn get_bookmarks(&self, user_id: Uuid) -> Result<Option<Vec<Uuid>>> {
+        let bookmarks = query_file!("queries/get_bookmarks.sql", user_id)
+        .fetch_all(&self.client)
+        .await?;
+
+        if bookmarks.is_empty() {
+            Ok(None)
+        } else {
+            Ok(Some(bookmarks.into_iter().flat_map(|x| x.bookmarked_documents).collect()))
+        }
+    }
+
     pub async fn update_annotation(&self, _annote: annotation::Annotation) -> Result<()> {
         todo!("Implement image annotations")
     }

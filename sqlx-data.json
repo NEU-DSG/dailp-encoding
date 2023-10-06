@@ -1336,6 +1336,26 @@
     },
     "query": "insert into contributor_attribution (contributor_id, document_id, contribution_role)\nselect\n  contributor.id,\n  input_data.doc_id,\n  input_data.contribution_role\nfrom\n  unnest(\n    $1::text[], $2::uuid[], $3::text[]\n  ) as input_data(full_name, doc_id, contribution_role)\n  inner join contributor on contributor.full_name = input_data.full_name\n-- If this document already has this contributor, move on.\non conflict do nothing\n"
   },
+  "6ae89f9cdf89931e4aa92ca7f27d327c5de0826246febb934a2eec2bd4dc92cb": {
+    "describe": {
+      "columns": [
+        {
+          "name": "bookmarked_documents",
+          "ordinal": 0,
+          "type_info": "UuidArray"
+        }
+      ],
+      "nullable": [
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "SELECT bookmarked_documents\nFROM dailp_user\nWHERE id = $1;"
+  },
   "6d5a72c97ad0bb2831e0b605a340630b28f70402023f5abec5ff2043f343f0b1": {
     "describe": {
       "columns": [],
@@ -1586,20 +1606,6 @@
       }
     },
     "query": "insert into collection_chapter (\n  title,\n  document_id,\n  wordpress_id,\n  index_in_parent,\n  chapter_path,\n  section)\nvalues (\n  $1,\n  ( select id\n    from document\n    where short_name = $2),\n  $3,\n  $4,\n  $5,\n  $6\n)\n"
-  },
-  "82cd0aee8e432f537b1c64cb7702c6bfae9e1d663a3f50c7a70cfa2954ec16ef": {
-    "describe": {
-      "columns": [],
-      "nullable": [],
-      "parameters": {
-        "Left": [
-          "Uuid",
-          "Uuid",
-          "Bool"
-        ]
-      }
-    },
-    "query": "UPDATE dailp_user\nSET bookmarked_documents = CASE\n    WHEN $3 = true THEN array_append(bookmarked_documents, $2)\n    WHEN $3 = false THEN array_remove(bookmarked_documents, $2)\n    ELSE bookmarked_documents\n  END\nWHERE id = $1;"
   },
   "8469d3fbe5939fa87e81b7afb2bbb614596235e99472eb0db600b000a3775207": {
     "describe": {
@@ -2460,6 +2466,20 @@
       }
     },
     "query": "insert into morpheme_gloss_relation (left_gloss_id, right_gloss_id)\nselect\n  left_gloss.id,\n  right_gloss.id\nfrom\n  unnest(\n    $1::text[], $2::text[], $3::text[], $4::text[]\n  ) as input_relation(left_doc_name, left_gloss, right_doc_name, right_gloss)\n  inner join document as left_doc on left_doc.short_name = input_relation.left_doc_name\n  inner join\n    morpheme_gloss as left_gloss on\n      left_gloss.gloss = input_relation.left_gloss and left_gloss.document_id = left_doc.id\n  inner join\n    document as right_doc on right_doc.short_name = input_relation.right_doc_name\n  inner join\n    morpheme_gloss as right_gloss on\n      right_gloss.gloss = input_relation.right_gloss and right_gloss.document_id = right_doc.id\non conflict do nothing\n"
+  },
+  "d33e3593934917406066d9db6555cec4f92106ce8eeef6f03297751306b826d2": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Uuid",
+          "Bool"
+        ]
+      }
+    },
+    "query": "UPDATE dailp_user\nSET bookmarked_documents = CASE\n    WHEN $3 = true AND NOT $2 = ANY(bookmarked_documents) THEN array_append(bookmarked_documents, $2)\n    WHEN $3 = false THEN array_remove(bookmarked_documents, $2)\n    ELSE bookmarked_documents\n  END\nWHERE id = $1;"
   },
   "d6377d5a54a702f7df73f287390c0c45a1309f7e705c93d49842b409a947a1fd": {
     "describe": {

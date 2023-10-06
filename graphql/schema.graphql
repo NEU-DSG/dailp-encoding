@@ -816,6 +816,10 @@ type Query {
 	Basic information about the currently authenticated user, if any.
 	"""
 	userInfo: UserInfo!
+	"""
+	Gets all bookmarks for the currently authenticated user.
+	"""
+	getBookmarks: [UUID!]
 }
 
 """

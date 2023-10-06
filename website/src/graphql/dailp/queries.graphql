@@ -366,3 +366,7 @@ mutation CurateWordAudio($input: CurateWordAudioInput!) {
 mutation AddBookmark($bookmark: AddBookmark!) {
   addBookmark(bookmark: $bookmark)
 }
+
+query GetBookmarks {
+  getBookmarks
+}
