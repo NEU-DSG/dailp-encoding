@@ -600,6 +600,22 @@ impl Database {
         Ok(document.id)
     }
 
+    pub async fn update_word(&self, word: AnnotatedFormUpdate) -> Result<Uuid> {
+        let source = word.source.into_vec();
+        let commentary = word.commentary.into_vec();
+
+        query_file!(
+            "queries/update_word.sql",
+            word.id,
+            &source as _,
+            &commentary as _
+        )
+        .execute(&self.client)
+        .await?;
+
+        Ok(word.id)
+    }
+
     pub async fn update_paragraph(&self, paragraph: ParagraphUpdate) -> Result<Uuid> {
         let translation = paragraph.translation.into_vec();
 

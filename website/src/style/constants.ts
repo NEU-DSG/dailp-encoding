@@ -86,15 +86,6 @@ export const selectors = {
   currentPage: "&[aria-current='page']",
 }
 
-export const buttonSize = {
-  small: "4.5rem",
-}
-
-export const fontSize = {
-  tiny: "0.8rem",
-  small: "0.9rem",
-}
-
 export const layers = {
   top: 999,
   third: 3,

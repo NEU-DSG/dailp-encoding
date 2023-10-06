@@ -376,9 +376,6 @@ const DocumentContents = ({
       wordPanelDetails.setCurrContents(form.values.word)
       // Query of document contents is rerun to ensure frontend and backend are in sync
       rerunQuery({ requestPolicy: "network-only" })
-    } else {
-      // If the form was not submitted, make sure to reset the current word of the form to its unmodified state.
-      form.update("word", wordPanelDetails.currContents)
     }
   }, [isEditing])
 

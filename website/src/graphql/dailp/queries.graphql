@@ -118,9 +118,6 @@ fragment FormFields on AnnotatedForm {
       displayName
     }
   }
-  position {
-    documentId
-  }
 }
 
 query Collection($slug: String!) {
