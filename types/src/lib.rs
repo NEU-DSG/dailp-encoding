@@ -22,6 +22,7 @@ pub mod annotation;
 mod audio;
 mod cherokee;
 pub mod collection;
+pub mod comment;
 mod database_sql;
 mod date;
 mod document;
@@ -38,7 +39,6 @@ mod slugs;
 mod tag;
 mod translation;
 pub mod user;
-pub mod comment;
 
 // Re-export dependencies for downstream to use.
 pub use async_graphql;
