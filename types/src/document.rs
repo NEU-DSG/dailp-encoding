@@ -239,7 +239,7 @@ pub struct ParagraphsInPage(pub Uuid);
 #[derive(async_graphql::SimpleObject, Clone)]
 #[graphql(complex)]
 pub struct DocumentParagraph {
-    /// Database ID
+    /// Unique identifier for this paragraph
     pub id: Uuid,
     /// English translation of the whole paragraph
     pub translation: String,
