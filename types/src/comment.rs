@@ -1,3 +1,5 @@
+//! Types that power our features for reading / leaving comments on words and
+//! paragraphs
 use crate::{user::User, AnnotatedForm};
 use crate::{Database, DateTime, DocumentParagraph};
 use async_graphql::Context;
@@ -72,10 +74,12 @@ impl Comment {
 )]
 #[sqlx(type_name = "comment_type_enum")]
 pub enum CommentType {
+    /// A comment sharing a story or similar information related to the parent object
     Story,
-    Correction,
-    Concern,
-    LingusticAnalysis,
+    /// A comment with a suggestion to improve the information shown about the parent object
+    Suggestion,
+    /// A comment asking a question about our information regarding the parent object
+    Question,
 }
 
 /// Type representing the object that a comment is attached to

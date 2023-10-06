@@ -2,9 +2,8 @@
 
 create type comment_type_enum as enum (
   'Story',
-  'Correction',
-  'Concern',
-  'LingusticAnalysis'
+  'Suggestion',
+  'Question'
 );
 
 create type comment_parent_type as enum (

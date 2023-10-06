@@ -16,3 +16,11 @@ A single comment left by a user on some piece of DAILP content.
 
 - Because polymorphism and foreign key constraints are hard, _there is no fkey constraint on `parent_id`_.
 - Deleting a `dailp_user` deletes all comments made by that user!
+
+## `comment_type_enum`
+
+This enum type describes the _kind_ of comment being made. It is an optional column on `comment`. The possible values are:
+
+- `Story`: the comment tells a story
+- `Suggestion`: the comment recommends we make some sort of change to our data
+- `Question`: the comment asks a question
