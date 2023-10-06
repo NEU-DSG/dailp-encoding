@@ -119,6 +119,7 @@ jobs:
           DATABASE_ENDPOINT=$(nix run --impure .#tf-output database_endpoint)
           echo "Configuring SSH client..."
           mkdir -p ~/.ssh
+          echo "Still configuring SSH client..."
           ssh-keyscan -H $BASTION_IP >> ~/.ssh/known_hosts
           echo "Forwarding port 5432 to remote database $DATABASE_ENDPOINT through $BASTION_IP"
           ssh -i ./dailp-deployment-key.pem -f -N -L 5432:$DATABASE_ENDPOINT ec2-user@$BASTION_IP
@@ -126,7 +127,6 @@ jobs:
           export DAILP_API_URL=$(nix run --impure .#tf-output functions_url)
           export DATABASE_URL=postgres://dailp:$DATABASE_PASSWORD@localhost:5432/dailp
           nix run --impure .#migrate-schema
-          nix run --impure .#migrate-data
       - name: Publish website
         run: |
           curl -X POST -d {} "$(nix run --impure .#tf-output amplify_webhook)" -H "Content-Type:application/json"
