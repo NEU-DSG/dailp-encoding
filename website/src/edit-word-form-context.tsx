@@ -20,6 +20,7 @@ export const FormProvider = (props: { children: any }) => {
   const word: Dailp.FormFieldsFragment = {} as Dailp.FormFieldsFragment
 
   const [updateWordResult, updateWord] = Dailp.useUpdateWordMutation()
+  const { cherokeeRepresentation } = usePreferences()
 
   /** Calls the backend GraphQL mutation to update a word. */
   const runUpdate = async (variables: {
