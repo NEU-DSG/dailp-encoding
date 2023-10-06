@@ -30,7 +30,6 @@ with builtins; {
       in {
         lifecycle.prevent_destroy = true;
         name = "dailp";
-        tags = config.setup.global_tags;
         description = "Digital Archive of Indigenous Language Persistence";
         repository = lib.toLower (getEnv "GIT_REPOSITORY_URL");
         oauth_token = getEnv "OAUTH_TOKEN";
