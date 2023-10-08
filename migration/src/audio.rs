@@ -233,7 +233,8 @@ impl AudioRes {
         println!("Creating new Audio Resource...");
         let client = Client::new();
         
-        let s3_location = std::env::var("CF_URL")?;
+        let cf_domain = std::env::var("CF_URL")?;
+        let s3_location = format!("https://{}", cf_domain);
         let is_drs_key = |test_value: &str| -> bool {
             return test_value.contains("neu");
         };
