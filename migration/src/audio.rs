@@ -232,8 +232,8 @@ impl AudioRes {
     pub async fn new(audio_ref_key: &str, annotation_ref_key: Option<&String>) -> Result<Self, anyhow::Error> {
         println!("Creating new Audio Resource...");
         let client = Client::new();
-        // FIXME select location based on environment variable CF_URL
-        let s3_location = "https://d1q0qkah8ttfau.cloudfront.net";
+        
+        let s3_location = std::env::var("CF_URL")?;
         let is_drs_key = |test_value: &str| -> bool {
             return test_value.contains("neu");
         };
