@@ -207,8 +207,6 @@ struct AudioAnnotationRow {
 }
 
 /// Represents an audio resource and its annotations from an online source.
-///
-/// At this moment, each [AudioRes] _must_ have annotations present.
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct AudioRes {
     /// The URL associated with an audio resource.
@@ -224,55 +222,41 @@ pub struct AudioRes {
     /// ᎩᏅᏌ     6.48    6.54
     /// ᎢᏂᏬᏂᏍᎬ  6.59    7.21
     /// ```
-    annotations: String,
+    annotations: Option<String>,
 }
 
 impl AudioRes {
     /// Creates a new Audio Resource from an audio key and an annotaion key.
     ///
     /// Keys should either be a resource string from the DRS or DAILP audio S3 Bucket.
-    /// As of now, both keys must be from the same source (DRS or S3).
-
-    pub async fn new(audio_ref_key: &str, annotation_ref_key: &str) -> Result<Self, anyhow::Error> {
+    pub async fn new(audio_ref_key: &str, annotation_ref_key: Option<&String>) -> Result<Self, anyhow::Error> {
         println!("Creating new Audio Resource...");
         let client = Client::new();
+        
+        let s3_location = std::env::var("CF_URL")?;
         let is_drs_key = |test_value: &str| -> bool {
             return test_value.contains("neu");
         };
-
-        if is_drs_key(audio_ref_key) || is_drs_key(annotation_ref_key) {
-            println!("Found DRS ID");
-
-            let audio_response = DrsRes::new(&client, audio_ref_key).await?;
-            let annotation_response = DrsRes::new(&client, annotation_ref_key).await?;
-
-            Ok(Self {
-                audio_url: audio_response.get_url(),
-                annotations: Self::get_http_body(&client, annotation_response.get_url()).await?,
-            })
-        } else {
-            println!("Found S3 Location");
-            dotenv::dotenv().ok();
-            let deploy_env = std::env::var("TF_STAGE")
-                .ok()
-                .unwrap_or_else(|| String::from("dev"));
-
-            // Will this always be us-east-1? If so, modify url base below.
-            let aws_region = String::from("us-east-1");
-
-            let s3_location = "https://d1q0qkah8ttfau.cloudfront.net";
-
-            println!("{}{}", s3_location, audio_ref_key);
-
-            Ok(Self {
-                audio_url: format!("{}{}", s3_location, audio_ref_key).to_owned(),
-                annotations: Self::get_http_body(
-                    &client,
-                    format!("{}{}", s3_location, annotation_ref_key),
-                )
-                .await?,
-            })
-        }
+        // FIXME: this could be refactored, esp. for annotations
+        return Ok(Self { 
+            audio_url: 
+                if is_drs_key(audio_ref_key) {
+                    let drs_content = DrsRes::new(&client, audio_ref_key).await?;
+                    drs_content.get_url()
+                } else {
+                    format!("{}{}", s3_location, audio_ref_key)
+                },
+            annotations: 
+                if annotation_ref_key.is_none() {
+                    None
+                } else if is_drs_key(annotation_ref_key.unwrap()) {
+                    let drs_content = DrsRes::new(&client, annotation_ref_key.unwrap()).await?;
+                    Self::get_http_body(&client, drs_content.get_url()).await.ok()
+                } else {
+                    Self::get_http_body(&client, format!("{}{}", s3_location, annotation_ref_key.unwrap())).await.ok()
+                }
+            }
+        );
     }
 
     /// Tries to get the body response for a GET request to the provided url
@@ -301,8 +285,9 @@ impl AudioRes {
         AudioSlice {
             slice_id: None,
             resource_url: self.audio_url.clone(),
+            // FIXME is there a reason this isnt just None
             parent_track: Some(DocumentAudioId("".to_string())),
-            annotations: Some(self.into_audio_slices()),
+            annotations: self.into_audio_slices(),
             index: 0,
             start_time: None,
             end_time: None,
@@ -319,15 +304,18 @@ impl AudioRes {
     ///
     /// # Errors
     /// Fails if annotation field does not meet structural requirements or is empty.
-    pub fn into_audio_slices(self /*from_layer: String*/) -> Vec<AudioSlice> {
+    pub fn into_audio_slices(self) -> Option<Vec<AudioSlice>> {
+        if self.annotations.is_none() {
+            return None;
+        }
         let mut result: Vec<AudioSlice> = vec![];
         use csv::ReaderBuilder;
-
+        let parse = self.annotations.unwrap();
         // Read in the annotation info
         let mut reader = ReaderBuilder::new()
             .delimiter(b'\t')
             .has_headers(false)
-            .from_reader(self.annotations.as_bytes());
+            .from_reader(parse.as_bytes());
 
         for (annotation_line, i) in reader.deserialize::<AudioAnnotationRow>().zip(0..) {
             if annotation_line.is_err() {
@@ -369,6 +357,6 @@ impl AudioRes {
                 );
             };
         }
-        result
+        Some(result)
     }
 }
