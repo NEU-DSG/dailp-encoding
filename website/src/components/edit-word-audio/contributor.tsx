@@ -144,9 +144,8 @@ export function ContributorEditWordAudio(p: {
             className={
               currentTab === "upload" ? subtleButtonActive : subtleButton
             }
-            as={"div"}
           >
-            <span>Upload audio</span>
+            Upload audio
           </IconTextButton>
         </label>
         <div style={{ display: "inline-block" }}>
