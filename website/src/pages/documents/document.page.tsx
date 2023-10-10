@@ -95,7 +95,7 @@ const AnnotatedDocumentPage = (props: { id: string }) => {
     <Layout>
       <Helmet title={doc?.title} />
       <main className={css.annotatedDocument}>
-        <DocumentTitleHeader doc={doc} showDetails={true} />
+        <DocumentTitleHeader doc={doc}/>
         <TabSet doc={doc} />
       </main>
     </Layout>
@@ -432,7 +432,6 @@ export const DocumentTitleHeader = (p: {
       "resourceUrl"
     >
   }
-  showDetails?: boolean
 }) => (
   <header className={css.docHeader}>
     {p.breadcrumbs && (
@@ -451,11 +450,6 @@ export const DocumentTitleHeader = (p: {
     </h1>
 
     <div className={css.bottomPadded}>
-      {p.showDetails ? (
-        <Link href={documentDetailsRoute(p.doc.slug!)}>View Details</Link>
-      ) : (
-        <Link href={documentRoute(p.doc.slug!)}>View Contents</Link>
-      )}
       {!p.doc.audioRecording && !isMobile && (
         <div id="no-audio-message">
           <strong>No Audio Available</strong>
