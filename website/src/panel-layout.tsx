@@ -5,21 +5,15 @@ import { GrDown, GrUp } from "react-icons/gr/index"
 import { IoEllipsisHorizontalCircle } from "react-icons/io5/index"
 import { MdClose, MdNotes, MdRecordVoiceOver } from "react-icons/md/index"
 import { OnChangeValue } from "react-select"
-import {
-  Disclosure,
-  DisclosureContent,
-  useDisclosureState,
-} from "reakit"
-import {
-  unstable_Form as Form,
-  unstable_FormInput as FormInput,
-} from "reakit"
+import { Disclosure, DisclosureContent, useDisclosureState } from "reakit"
+import { unstable_Form as Form, unstable_FormInput as FormInput } from "reakit"
 import * as Dailp from "src/graphql/dailp"
 import { useCredentials } from "./auth"
 import { AudioPlayer, IconButton } from "./components"
 import { CustomCreatable } from "./components/creatable"
 import { EditWordAudio } from "./components/edit-word-audio"
 import { EditButton, EditWordFeature } from "./edit-word-feature"
+import { formInput } from "./edit-word-feature.css"
 import { useForm } from "./edit-word-form-context"
 import { content } from "./footer.css"
 import * as css from "./panel-layout.css"
@@ -131,7 +125,13 @@ export const PanelLayout = (p: {
             />
           </Form>
         ) : (
-          <PanelContent panel={PanelType.WordPanel} word={p.segment} />
+          <PanelContent
+            panel={PanelType.WordPanel}
+            word={p.segment}
+            // options are only required for editing
+            // FIXME: why is this a prop
+            options={[]}
+          />
         )}
       </>
     )
