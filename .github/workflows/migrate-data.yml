@@ -4,7 +4,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-20.04
-    environment: Development
+    environment: Development # TODO Do we ever want to migrate direct to staging/uat?
     env:
       DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
       GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
