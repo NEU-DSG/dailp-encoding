@@ -89,7 +89,7 @@
           if config.setup.stage == "dev" then 
             [ "arn:aws:iam::783177801354:user/dailp-deployment" ]
           else
-            [ "arn:aws:iam::363539660090:user/dialp-deployment" ]; # TODO get prod value
+            [ "arn:aws:iam::363539660090:user/dialp-deployment" ];
       };
       actions = [
         "s3:GetObject"
