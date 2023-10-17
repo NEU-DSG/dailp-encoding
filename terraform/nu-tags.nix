@@ -3,13 +3,13 @@
 {
   setup.global_tags = {
     # Placeholder values, these should be sourced from secrets.
-    "nu:index" = "000000";
+    "nu:index" = "256150";
     "nu:owner" = "dailp";
     "nu:creator" = "sysna.trevino";
     "nu:department" = "library";
     "nu:project" = "dailp";
     "nu:environment" =
-      if config.setup.stage == "dev" then "development" else "production";
+      if config.setup.stage == "dev" then "development" else if config.setup.stage == "uat" then "staging" else "production";
     "nu:application" = "dailp-app";
     "nu:notification" = "n.trevino@northeastern.edu";
     "nu:index-division" = "0000000";
@@ -28,9 +28,6 @@
   functions.tags = { "nu:function" = "application-server"; };
 }
 /*
-~ global ~ 
- nu:index 256150
- ---
  ~ Local ~
  Name <name you have given the particular resource>
  nu:function 

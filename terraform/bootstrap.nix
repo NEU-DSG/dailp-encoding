@@ -6,7 +6,7 @@ with lib; {
       table = mkOption { type = str; };
     };
     access_log_bucket = mkOption { type = str; };
-    stage = mkOption { type = enum [ "dev" "prod" ]; };
+    stage = mkOption { type = enum [ "dev" "prod" "uat"]; };
     vpc = mkOption { type = str; };
     subnets = mkOption { type = attrsOf str; };
     global_tags = mkOption {
