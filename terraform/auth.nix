@@ -1,7 +1,6 @@
 { config, lib, pkgs, ... }:
 let 
-  utils = import ./utils.nix;
-  prefixName = utils.prefixName;
+  prefixName = import ./utils.nix stage;
 in {
   config.resource = {
     aws_cognito_user_pool.main = {

@@ -3,8 +3,7 @@
 with lib;
 with builtins; 
 let 
-  utils = import ./utils.nix;
-  prefixName = utils.prefixName;
+  prefixName = import ./utils.nix stage;
 in {
   config.resource = {
     aws_iam_role.amplify_role = {
