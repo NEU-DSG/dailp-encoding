@@ -5,6 +5,8 @@ let
  document-audio = "document-audio/*";
  word-annotations = "word-annotations-list/*";
  user-audio = "user-uploaded-audio/*";
+utils = import ./utils.nix;
+prefixName = utils.prefixName;
 in {
   # Policy Documents
   config.data.aws_iam_policy_document = {

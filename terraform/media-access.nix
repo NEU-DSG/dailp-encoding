@@ -1,4 +1,7 @@
-{ config, lib, pkgs, ...} : {
+{ config, lib, pkgs, ...} : let 
+  utils = import ./utils.nix;
+  prefixName = utils.prefixName;
+in {
 config.resource = {
   aws_cloudfront_origin_access_control.media_access_control = {
     name = prefixName "media-storage.s3.${config.provider.aws.region}.amazonaws.com";

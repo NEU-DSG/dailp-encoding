@@ -1,4 +1,8 @@
-{ config, lib, pkgs, ... }: {
+{ config, lib, pkgs, ... }: 
+let 
+  utils = import ./utils.nix;
+  prefixName = utils.prefixName;
+in {
   options.servers.database = with lib;
     with types; {
       availability_zone = mkOption { type = str; };

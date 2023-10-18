@@ -1,7 +1,11 @@
 { config, lib, pkgs, ... }:
 
 with lib;
-with builtins; {
+with builtins; 
+let 
+  utils = import ./utils.nix;
+  prefixName = utils.prefixName;
+in {
   config.resource = {
     aws_iam_role.amplify_role = {
       name = prefixName "amplify-role";
