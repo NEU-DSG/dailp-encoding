@@ -16,7 +16,6 @@ let
   stage = if stage_var == "" then "dev" else stage_var;
 in {
   imports = [
-    ./utils.nix
     ./bootstrap.nix
     ./functions.nix
     ./auth.nix
@@ -63,9 +62,8 @@ in {
 
   functions = 
   let 
-  utils = import ./utils.nix;
-  prefixName = utils.prefixName;
-in {
+    prefixName = import ./utils.nix stage;
+  in {
     bucket = "dailp-${config.setup.stage}-functions-bucket";
     security_group_ids = [ "\${aws_security_group.mongodb_access.id}" ];
     functions = [{

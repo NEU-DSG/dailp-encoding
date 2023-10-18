@@ -1,6 +1,2 @@
-{ config, lib, pkgs, ... }:
-let 
-  stage = config.setup.stage ;
-in {
-  prefixName = base: "dailp-${stage}-${base}";
-}
+# For now, this module is a higher order function generating a function that creates
+stage: base: "dailp-${stage}-${base}"
