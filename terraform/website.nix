@@ -31,7 +31,7 @@ in {
     aws_amplify_app.dailp =
       let apiUrl = "\${aws_api_gateway_deployment.functions_api.invoke_url}";
       in {
-        lifecycle.prevent_destroy = true;
+        lifecycle.prevent_destroy = false;
         name = "dailp";
         description = "Digital Archive of Indigenous Language Persistence";
         repository = lib.toLower (getEnv "GIT_REPOSITORY_URL");
