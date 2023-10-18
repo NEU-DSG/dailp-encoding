@@ -1,16 +1,17 @@
 { config, lib, pkgs, ... }:
-
-{
+let 
+  prefixName = import ./utils.nix config.setup.stage;
+in {
   config.resource = {
     aws_cognito_user_pool.main = {
-      name = "dailp-user-pool";
+      name = prefixName "user-pool";
       username_attributes = [ "email" ];
       auto_verified_attributes = [ "email" ];
       admin_create_user_config.allow_admin_create_user_only = true;
     };
 
     aws_cognito_user_pool_client.main = {
-      name = "dailp-user-pool-client";
+      name = prefixName "user-pool-client";
       user_pool_id = "\${aws_cognito_user_pool.main.id}";
       allowed_oauth_flows = [ "implicit" ];
       allowed_oauth_flows_user_pool_client = true;

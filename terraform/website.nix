@@ -1,10 +1,13 @@
 { config, lib, pkgs, ... }:
 
 with lib;
-with builtins; {
+with builtins; 
+let 
+  prefixName = import ./utils.nix config.setup.stage;
+in {
   config.resource = {
     aws_iam_role.amplify_role = {
-      name = "dailp-amplify-role";
+      name = prefixName "amplify-role";
       assume_role_policy = toJSON {
         Statement = [{
           Effect = "Allow";
@@ -28,7 +31,7 @@ with builtins; {
     aws_amplify_app.dailp =
       let apiUrl = "\${aws_api_gateway_deployment.functions_api.invoke_url}";
       in {
-        lifecycle.prevent_destroy = true;
+        lifecycle.prevent_destroy = false;
         name = "dailp";
         description = "Digital Archive of Indigenous Language Persistence";
         repository = lib.toLower (getEnv "GIT_REPOSITORY_URL");

@@ -1,7 +1,9 @@
-{ config, lib, pkgs, ...} : {
+{ config, lib, pkgs, ...} : let 
+  prefixName = import ./utils.nix config.setup.stage;
+in {
 config.resource = {
   aws_cloudfront_origin_access_control.media_access_control = {
-    name = "dailp-${config.setup.stage}-media-storage.s3.${config.provider.aws.region}.amazonaws.com";
+    name = prefixName "media-storage.s3.${config.provider.aws.region}.amazonaws.com";
     description = "Cloudfront DAILP media access";
     origin_access_control_origin_type = "s3";
     signing_behavior = "always";

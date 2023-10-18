@@ -37,7 +37,7 @@ let
     mkMerge [
       {
         aws_lambda_function."${id}" = {
-          lifecycle.prevent_destroy = true;
+          lifecycle.prevent_destroy = false;
           function_name = name;
           filename = "${config.functions.package_path}/${name}.zip";
           runtime = "provided.al2";
