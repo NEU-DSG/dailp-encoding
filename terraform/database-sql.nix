@@ -40,6 +40,7 @@ in {
       availability_zone = config.servers.database.availability_zone;
       db_subnet_group_name = name;
       vpc_security_group_ids = config.servers.database.security_group_ids;
+      final_snapshot_identifier = "${name}-primary-final-snapshot";
 
       # Server times are in UTC, so this is 12am-3am PT
       maintenance_window = "Tue:08:00-Tue:11:00";
