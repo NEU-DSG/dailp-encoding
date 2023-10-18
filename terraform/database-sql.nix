@@ -7,7 +7,7 @@
       tags = mkOption { type = attrsOf str; };
     };
 
-  config.resource = let name = "dailp-database";
+  config.resource = let name = prefixName "database";
   in {
     aws_db_subnet_group.sql_database = {
       name = name;
@@ -53,14 +53,14 @@
     };
 
     aws_security_group.nixos_test = {
-      name = "dailp-nixos-test";
+      name = prefixName "nixos-test";
       vpc_id = config.setup.vpc;
       description = "MongoDB on NixOS test";
       lifecycle.create_before_destroy = true;
     };
 
     aws_security_group.mongodb_access = {
-      name = "dailp-mongodb-access";
+      name = prefixName "mongodb-access";
       vpc_id = config.setup.vpc;
       description = "Access DAILP MongoDB servers";
       ingress = [ ];
