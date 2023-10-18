@@ -1,4 +1,4 @@
-{config}:
+{ config, lib, pkgs, ... }:
 let 
   stage = config.setup.stage ;
 in {
