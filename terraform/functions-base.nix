@@ -31,7 +31,7 @@ in {
     aws_api_gateway_rest_api.functions_api = {
       name = prefixName "api";
       description = "DAILP API for GraphQL endpoints and REST endpoints";
-      lifecycle.prevent_destroy = true;
+      lifecycle.prevent_destroy = false;
     };
 
     aws_api_gateway_authorizer.functions_api = {
