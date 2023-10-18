@@ -102,6 +102,8 @@ export type AnnotatedForm = {
   readonly __typename?: "AnnotatedForm"
   /** Further details about the annotation layers, including uncertainty */
   readonly commentary: Maybe<Scalars["String"]>
+  /** Get comments on this word */
+  readonly comments: ReadonlyArray<Comment>
   /** The date and time this form was recorded */
   readonly dateRecorded: Maybe<Date>
   /** The document that contains this word. */
@@ -270,6 +272,37 @@ export enum CollectionSection {
   Intro = "INTRO",
 }
 
+/** A comment a user has made on some piece of a document. */
+export type Comment = {
+  readonly __typename?: "Comment"
+  /** An optional classification of the comment's content */
+  readonly commentType: Maybe<CommentType>
+  /** Unique identifier of this comment */
+  readonly id: Scalars["UUID"]
+  /** When the comment was posted */
+  readonly postedAt: DateTime
+  /** Who posted the comment */
+  readonly postedBy: User
+  /** The text of the comment */
+  readonly textContent: Scalars["String"]
+}
+
+/** Type representing the object that a comment is attached to */
+export type CommentParent = AnnotatedForm | DocumentParagraph
+
+/** An enum listing the possible types that a comment could be attached to */
+export enum CommentParentType {
+  Paragraph = "PARAGRAPH",
+  Word = "WORD",
+}
+
+/** A type describing the kind of comment being made */
+export enum CommentType {
+  Question = "QUESTION",
+  Story = "STORY",
+  Suggestion = "SUGGESTION",
+}
+
 /**
  * A block of content, which may be one of several types.
  * Each page contains several blocks.
@@ -346,6 +379,20 @@ export type DateInput = {
   readonly year: Scalars["Int"]
 }
 
+export type DateTime = {
+  readonly __typename?: "DateTime"
+  /** Just the Date component of this DateTime, useful for user-facing display */
+  readonly date: Date
+  /** UNIX timestamp of the datetime, useful for sorting */
+  readonly timestamp: Scalars["Int"]
+}
+
+/** Input object for deleting an existing comment */
+export type DeleteCommentInput = {
+  /** ID of the comment to delete */
+  readonly commentId: Scalars["UUID"]
+}
+
 /** Delete a contributor attribution for a document based on the two ids */
 export type DeleteContributorAttribution = {
   readonly contributorId: Scalars["UUID"]
@@ -387,8 +434,14 @@ export type DocumentPage = {
   readonly paragraphs: ReadonlyArray<DocumentParagraph>
 }
 
+/** One paragraph within a [`DocumentPage`] */
 export type DocumentParagraph = {
   readonly __typename?: "DocumentParagraph"
+  /** Get comments on this paragraph */
+  readonly comments: ReadonlyArray<Comment>
+  /** Unique identifier for this paragraph */
+  readonly id: Scalars["UUID"]
+  /** 1-indexed position of this paragraph in a document */
   readonly index: Scalars["Int"]
   /** Source text of the paragraph broken down into words */
   readonly source: ReadonlyArray<AnnotatedSeg>
@@ -581,8 +634,15 @@ export type Mutation = {
   readonly attachAudioToWord: AnnotatedForm
   /** Decide if a piece audio should be included in edited collection */
   readonly curateWordAudio: AnnotatedForm
+  /**
+   * Delete a comment.
+   * Will fail if the user making the request is not the poster.
+   */
+  readonly deleteComment: CommentParent
   /** Mutation for deleting contributor attributions */
   readonly deleteContributorAttribution: Scalars["UUID"]
+  /** Post a new comment on a given object */
+  readonly postComment: CommentParent
   readonly updateAnnotation: Scalars["Boolean"]
   /** Mutation for adding/changing contributor attributions */
   readonly updateContributorAttribution: Scalars["UUID"]
@@ -601,8 +661,16 @@ export type MutationCurateWordAudioArgs = {
   input: CurateWordAudioInput
 }
 
+export type MutationDeleteCommentArgs = {
+  input: DeleteCommentInput
+}
+
 export type MutationDeleteContributorAttributionArgs = {
   contribution: DeleteContributorAttribution
+}
+
+export type MutationPostCommentArgs = {
+  input: PostCommentInput
 }
 
 export type MutationUpdateAnnotationArgs = {
@@ -688,6 +756,18 @@ export type PositionInDocument = {
    * Generally formatted like ID:PAGE, i.e "DF2018:55"
    */
   readonly pageReference: Scalars["String"]
+}
+
+/** Input object for posting a new comment on some object */
+export type PostCommentInput = {
+  /** A classifcation for the comment (optional) */
+  readonly commentType: InputMaybe<CommentType>
+  /** ID of the object that is being commented on */
+  readonly parentId: Scalars["UUID"]
+  /** Type of the object being commented on */
+  readonly parentType: CommentParentType
+  /** Content of the comment */
+  readonly textContent: Scalars["String"]
 }
 
 export type Query = {
