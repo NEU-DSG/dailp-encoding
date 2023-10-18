@@ -4,8 +4,7 @@ let
 in {
   config.resource = {
     aws_iam_role.lambda_exec = {
-      # name = prefixName "lambda-execution";
-      name = "dailp-lambda-execution";
+      name = prefixName "lambda-execution";
       managed_policy_arns = [
         "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
       ];
