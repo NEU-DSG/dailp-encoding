@@ -1,6 +1,8 @@
 { config, lib, pkgs, ... }:
-
-{
+let 
+  utils = import ./utils.nix;
+  prefixName = utils.prefixName;
+in {
   config.resource = {
     aws_iam_role.lambda_exec = {
       name = prefixName "lambda-execution";

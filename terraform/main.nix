@@ -14,9 +14,9 @@ let
   stage_var = getEnv "TF_STAGE";
   # Default to the 'dev' environment unless specified.
   stage = if stage_var == "" then "dev" else stage_var;
-  prefixName = base: "dailp-${stage}-${base}";
 in {
   imports = [
+    ./utils.nix
     ./bootstrap.nix
     ./functions.nix
     ./auth.nix
@@ -61,7 +61,11 @@ in {
     };
   };
 
-  functions = {
+  functions = 
+  let 
+  utils = import ./utils.nix;
+  prefixName = utils.prefixName;
+in {
     bucket = "dailp-${config.setup.stage}-functions-bucket";
     security_group_ids = [ "\${aws_security_group.mongodb_access.id}" ];
     functions = [{
