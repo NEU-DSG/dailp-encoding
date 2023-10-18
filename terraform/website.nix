@@ -4,7 +4,7 @@ with lib;
 with builtins; {
   config.resource = {
     aws_iam_role.amplify_role = {
-      name = "dailp-amplify-role";
+      name = prefixName "amplify-role";
       assume_role_policy = toJSON {
         Statement = [{
           Effect = "Allow";

@@ -3,7 +3,7 @@
 {
   config.resource = {
     aws_iam_role.lambda_exec = {
-      name = "dailp-lambda-execution";
+      name = prefixName "lambda-execution";
       managed_policy_arns = [
         "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
       ];
@@ -27,7 +27,7 @@
 
     # The "REST API" is the container for all of the other API Gateway objects you will create.
     aws_api_gateway_rest_api.functions_api = {
-      name = "dailp-api";
+      name = prefixName "api";
       description = "DAILP API for GraphQL endpoints and REST endpoints";
       lifecycle.prevent_destroy = true;
     };
