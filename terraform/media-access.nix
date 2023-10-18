@@ -1,5 +1,5 @@
 { config, lib, pkgs, ...} : let 
-  prefixName = import ./utils.nix stage;
+  prefixName = import ./utils.nix config.setup.stage;
 in {
 config.resource = {
   aws_cloudfront_origin_access_control.media_access_control = {

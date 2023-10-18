@@ -48,9 +48,11 @@ in {
   setup = {
     # Setup the S3 bucket and DynamoDB table that store and manage Terraform state
     # for the current environment.
-    state = {
-      bucket = "dailp-${config.setup.stage}-terraform-state-bucket";
-      table = "dailp-${config.setup.stage}-terraform-state-locks";
+    state = let 
+      prefixName = import ./utils.nix config.setup.stage;
+    in {
+      bucket = prefixName "terraform-state-bucket";
+      table = prefixName "terraform-state-locks";
     };
     vpc = getEnv "AWS_VPC_ID";
     subnets = {
@@ -62,7 +64,7 @@ in {
 
   functions = 
   let 
-    prefixName = import ./utils.nix stage;
+    prefixName = import ./utils.nix config.setup.stage;
   in {
     bucket = "dailp-${config.setup.stage}-functions-bucket";
     security_group_ids = [ "\${aws_security_group.mongodb_access.id}" ];
