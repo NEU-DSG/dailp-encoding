@@ -14,6 +14,7 @@ let
   stage_var = getEnv "TF_STAGE";
   # Default to the 'dev' environment unless specified.
   stage = if stage_var == "" then "dev" else stage_var;
+  prefixName = base: "dailp-${stage}-${base}";
 in {
   imports = [
     ./bootstrap.nix
@@ -65,7 +66,7 @@ in {
     security_group_ids = [ "\${aws_security_group.mongodb_access.id}" ];
     functions = [{
       id = "graphql";
-      name = "dailp-graphql";
+      name = prefixName "graphql";
       env = {
         VITE_DEPLOYMENT_ENV = config.setup.stage;
         DATABASE_URL =
