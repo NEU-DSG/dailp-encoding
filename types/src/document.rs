@@ -410,6 +410,8 @@ pub struct DocumentMetadata {
     pub page_images: Option<IiifImages>,
     /// The date this document was produced (or `None` if unknown)
     pub date: Option<Date>,
+    /// When the document was last edited
+    pub last_edited: Option<Date>,
     /// Whether this document is a reference, therefore just a list of forms.
     pub is_reference: bool,
     /// Audio recording of this document, if one exists

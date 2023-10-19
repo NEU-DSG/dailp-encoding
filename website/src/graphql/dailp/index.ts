@@ -663,6 +663,8 @@ export type Query = {
   readonly editedCollection: Maybe<EditedCollection>
   /** Gets all bookmarks for the currently authenticated user. */
   readonly getBookmarks: Maybe<ReadonlyArray<Scalars["UUID"]>>
+  /** Gets the short name of a document given its id */
+  readonly getDocShortName: Scalars["String"]
   /**
    * Retrieve information for the morpheme that corresponds to the given tag
    * string. For example, "3PL.B" is the standard string referring to a 3rd
@@ -716,6 +718,10 @@ export type QueryDocumentArgs = {
 
 export type QueryEditedCollectionArgs = {
   slug: Scalars["String"]
+}
+
+export type QueryGetDocShortNameArgs = {
+  docId: Scalars["UUID"]
 }
 
 export type QueryMorphemeTagArgs = {
@@ -1669,6 +1675,15 @@ export type GetBookmarksQuery = { readonly __typename?: "Query" } & Pick<
   "getBookmarks"
 >
 
+export type GetDocShortNameQueryVariables = Exact<{
+  docId: Scalars["UUID"]
+}>
+
+export type GetDocShortNameQuery = { readonly __typename?: "Query" } & Pick<
+  Query,
+  "getDocShortName"
+>
+
 export const AudioSliceFieldsFragmentDoc = gql`
   fragment AudioSliceFields on AudioSlice {
     sliceId
@@ -2261,6 +2276,20 @@ export function useGetBookmarksQuery(
 ) {
   return Urql.useQuery<GetBookmarksQuery, GetBookmarksQueryVariables>({
     query: GetBookmarksDocument,
+    ...options,
+  })
+}
+export const GetDocShortNameDocument = gql`
+  query GetDocShortName($docId: UUID!) {
+    getDocShortName(docId: $docId)
+  }
+`
+
+export function useGetDocShortNameQuery(
+  options: Omit<Urql.UseQueryArgs<GetDocShortNameQueryVariables>, "query">
+) {
+  return Urql.useQuery<GetDocShortNameQuery, GetDocShortNameQueryVariables>({
+    query: GetDocShortNameDocument,
     ...options,
   })
 }

@@ -820,6 +820,10 @@ type Query {
 	Gets all bookmarks for the currently authenticated user.
 	"""
 	getBookmarks: [UUID!]
+	"""
+	Gets the short name of a document given its id
+	"""
+	getDocShortName(docId: UUID!): String!
 }
 
 """
