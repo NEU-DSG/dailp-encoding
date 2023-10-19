@@ -23,6 +23,13 @@ in {
       generate_secret = false;
       supported_identity_providers = [ "COGNITO" ];
     };
+    aws_cognito_user_pool_domain.main = 
+    let 
+      urn-prefix = removeSuffix "-" (prefixName ""); # dailp-{stage}
+    in {
+      domain = "https://${urn-prefix}.auth.us-east-1.amazoncognito.com";
+      user_pool_id = "\${aws_cognito_user_pool.main.id}";
+    };
     # User groups
     aws_cognito_user_group = {
       contributors = {
