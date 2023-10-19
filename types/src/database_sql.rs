@@ -227,6 +227,7 @@ impl Database {
                     page_images: None,
                     sources: Vec::new(),
                     translation: None,
+                    last_edited: item.last_edited.map(Date::new),
                 },
                 segments: None,
             })
@@ -366,6 +367,7 @@ impl Database {
                 page_images: None,
                 sources: Vec::new(),
                 translation: None,
+                last_edited: item.last_edited.map(Date::new),
             },
             segments: None,
         };
@@ -449,14 +451,27 @@ impl Database {
     // Gets all the bookmarks for a user given their id
     pub async fn get_bookmarks(&self, user_id: Uuid) -> Result<Option<Vec<Uuid>>> {
         let bookmarks = query_file!("queries/get_bookmarks.sql", user_id)
-        .fetch_all(&self.client)
-        .await?;
+            .fetch_all(&self.client)
+            .await?;
 
         if bookmarks.is_empty() {
             Ok(None)
         } else {
-            Ok(Some(bookmarks.into_iter().flat_map(|x| x.bookmarked_documents).collect()))
+            Ok(Some(
+                bookmarks
+                    .into_iter()
+                    .flat_map(|x| x.bookmarked_documents)
+                    .collect(),
+            ))
         }
+    }
+
+    // Gets the short name of a document given its id
+    pub async fn get_doc_short_name(&self, document_id: Uuid) -> Result<String> {
+        let short_name = query_file!("queries/get_doc_short_name.sql", document_id)
+            .fetch_all(&self.client)
+            .await?;
+        Ok(short_name[0].short_name.clone())
     }
 
     pub async fn update_annotation(&self, _annote: annotation::Annotation) -> Result<()> {
@@ -1280,6 +1295,7 @@ impl Loader<DocumentId> for Database {
                     title: item.title,
                     is_reference: item.is_reference,
                     date: item.written_at.map(Date::new),
+                    last_edited: item.last_edited.map(Date::new),
                     audio_recording: item.audio_url.map(|resource_url| AudioSlice {
                         slice_id: Some(AudioSliceId(item.audio_slice_id.unwrap().to_string())),
                         resource_url,
@@ -1345,6 +1361,7 @@ impl Loader<DocumentShortName> for Database {
                     title: item.title,
                     is_reference: item.is_reference,
                     date: item.written_at.map(Date::new),
+                    last_edited: item.last_edited.map(Date::new),
                     audio_recording: item.audio_url.map(|resource_url| AudioSlice {
                         slice_id: Some(AudioSliceId(item.audio_slice_id.unwrap().to_string())),
                         resource_url,

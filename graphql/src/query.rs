@@ -293,18 +293,26 @@ impl Query {
     }
 
     /// Gets all bookmarks for the currently authenticated user.
-    async fn get_bookmarks(
-        &self,
-        context: &Context<'_>,
-    ) -> FieldResult<Option<Vec<Uuid>>> {
+    async fn get_bookmarks(&self, context: &Context<'_>) -> FieldResult<Option<Vec<Uuid>>> {
         // let user = context
         //     .data_opt::<UserInfo>()
         //     .ok_or_else(|| anyhow::format_err!("User is not signed in"))?;
         Ok(context
             .data::<DataLoader<Database>>()?
             .loader()
-            .get_bookmarks(Uuid::parse_str("910a22ac-21cd-4398-b656-1039931de29f")
-            .unwrap_or_else(|_| panic!("Failed to parse UUID")))
+            .get_bookmarks(
+                Uuid::parse_str("910a22ac-21cd-4398-b656-1039931de29f")
+                    .unwrap_or_else(|_| panic!("Failed to parse UUID")),
+            )
+            .await?)
+    }
+
+    /// Gets the short name of a document given its id
+    async fn get_doc_short_name(&self, context: &Context<'_>, doc_id: Uuid) -> FieldResult<String> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .get_doc_short_name(doc_id)
             .await?)
     }
 }

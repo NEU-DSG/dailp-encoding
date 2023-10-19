@@ -22,6 +22,11 @@ query AnnotatedDocument($slug: String!) {
     date {
       year
     }
+    lastEdited {
+      year
+      month
+      day
+    }
     sources {
       name
       link
@@ -369,4 +374,8 @@ mutation AddBookmark($bookmark: AddBookmark!) {
 
 query GetBookmarks {
   getBookmarks
+}
+
+query GetDocShortName($docId: UUID!) {
+  getDocShortName(docId: $docId)
 }

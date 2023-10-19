@@ -470,7 +470,7 @@ export const BookmarkButton = (props: { documentId: String }) => {
   const [addBookmarkMutationResult, addBookmarkMutation] =
     Dailp.useAddBookmarkMutation()
   const documentId = props.documentId
-  const [{data}] = Dailp.useGetBookmarksQuery()
+  const [{ data }] = Dailp.useGetBookmarksQuery()
   if (data?.getBookmarks?.indexOf(documentId) !== -1) {
     if (!isBookmarked) {
       setIsBookmarked(true)

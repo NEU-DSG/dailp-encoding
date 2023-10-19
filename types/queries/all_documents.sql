@@ -4,6 +4,7 @@ select
   document.title,
   document.written_at,
   document.is_reference,
+  document.last_edited,
   coalesce(
     jsonb_agg(
       jsonb_build_object(

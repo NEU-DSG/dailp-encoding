@@ -6,7 +6,14 @@ import {
   TabPanel,
   useDialogState,
 } from "reakit"
+import cwkwLogo from "src/assets/cwkw-logo.png"
+import {
+  useAnnotatedDocumentQuery,
+  useGetBookmarksQuery,
+  useGetDocShortNameQuery,
+} from "src/graphql/dailp"
 import { useScrollableTabState } from "src/scrollable-tabs"
+import { BookmarkCard } from "./bookmark-card"
 import * as css from "./dashboard.css"
 
 enum Tabs {
@@ -76,21 +83,51 @@ export const ActivityTab = () => {
 }
 
 export const BookmarksTab = () => {
-  // takes in something (user?)
+  const [{ data }] = useGetBookmarksQuery()
+
   return (
     <>
       Unordered list should be a map function of the user's bookmarked documents
       <ul className={css.noBullets}>
-        <li>
-          <BookmarksItem />
-        </li>
-        <li>
-          <BookmarksItem />
-        </li>
-        <li>
-          <BookmarksItem />
-        </li>
+        {data?.getBookmarks?.map((docId) => (
+          <li>
+            <BookmarksTabItem documentId={docId} />
+          </li>
+        ))}
       </ul>
+    </>
+  )
+}
+
+export const BookmarksTabItem = (props: { documentId: string }) => {
+  const [{ data: docSlug }] = useGetDocShortNameQuery({
+    variables: { docId: props.documentId },
+  })
+  const [{ data: doc }] = useAnnotatedDocumentQuery({
+    variables: { slug: docSlug?.getDocShortName as string },
+  })
+  const docData = doc?.document
+  const thumbnailUrl = (docData?.translatedPages?.[0]?.image?.url +
+    "/pct:0,0,50,50/500,500/0/default.jpg") as unknown as string
+  return (
+    <>
+      <BookmarkCard
+        thumbnail={thumbnailUrl}
+        header={{
+          text: docData?.title as unknown as string,
+          link: `/document/${docData?.slug}`,
+        }}
+        description={docData?.date?.year as unknown as string}
+      />
+      {/* <div>
+        {docData?.id}
+      </div>
+      <div>
+        <a href="???">{docData?.title}</a>
+      </div>
+      <div>
+        {docData?.date?.year}
+      </div> */}
     </>
   )
 }
