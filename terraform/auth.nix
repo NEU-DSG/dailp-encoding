@@ -4,7 +4,7 @@ let
 in {
   config.resource = {
     aws_cognito_user_pool.main = {
-      name = prefixName "user-pool";
+      name = "dailp-user-pool";
       username_attributes = [ "email" ];
       auto_verified_attributes = [ "email" ];
       admin_create_user_config.allow_admin_create_user_only = true;
@@ -27,7 +27,7 @@ in {
     let
       toUri = { path }:
       let
-        buildUri = path: "https://${prefixName path}";
+        buildUri = path: "https://${prefixName ("." + path)}";
         cleanUri = uri: builtins.replaceStrings ["-."] ["."] uri;
       in cleanUri (buildUri path);
       cognito-uri = toUri { path = "auth.us-east-1.amazoncognito.com"; };
