@@ -27,7 +27,7 @@ in {
     let
       toUri = { path }:
       let
-        buildUri = path: "https://${prefixName path}";
+        buildUri = path: "https://${prefixName ("." + path)}";
         cleanUri = uri: builtins.replaceStrings ["-."] ["."] uri;
       in cleanUri (buildUri path);
       cognito-uri = toUri { path = "auth.us-east-1.amazoncognito.com"; };
