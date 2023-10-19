@@ -27,6 +27,7 @@ in {
       storage_encrypted = true;
       allocated_storage = 32;
       max_allocated_storage = 128;
+      lifecycle.create_before_destroy = true;
 
       engine = "postgres";
       engine_version = "14";
