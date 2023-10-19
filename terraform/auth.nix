@@ -23,16 +23,12 @@ in {
       generate_secret = false;
       supported_identity_providers = [ "COGNITO" ];
     };
-    aws_cognito_user_pool_domain.main = 
-    let
-      toUri = { path }:
+    aws_cognito_user_pool_domain.main = {
+      domain = 
       let
-        buildUri = path: "https://${prefixName ("." + path)}";
-        cleanUri = uri: builtins.replaceStrings ["-."] ["."] uri;
-      in cleanUri (buildUri path);
-      cognito-uri = toUri { path = "auth.us-east-1.amazoncognito.com"; };
-    in {
-      domain = "${cognito-uri}";
+        buildUri = prefixName "-";
+        cleanUri = uri: builtins.replaceStrings ["--"] [""] uri;
+      in cleanUri buildUri;
       user_pool_id = "\${aws_cognito_user_pool.main.id}";
     };
     # User groups
