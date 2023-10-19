@@ -45,6 +45,7 @@ in {
       final_snapshot_identifier = "${name}-primary-final-snapshot";
 
       # Server times are in UTC, so this is 12am-3am PT
+      apply_immediately = true;
       maintenance_window = "Tue:08:00-Tue:11:00";
     };
 
