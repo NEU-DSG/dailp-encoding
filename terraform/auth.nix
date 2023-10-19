@@ -24,10 +24,15 @@ in {
       supported_identity_providers = [ "COGNITO" ];
     };
     aws_cognito_user_pool_domain.main = 
-    let 
-      urn-prefix = removeSuffix "-" (prefixName ""); # dailp-{stage}
+    let
+      toUri = { path }:
+      let
+        buildUri = path: "https://${prefixName path}";
+        cleanUri = uri: builtins.replaceStrings ["-."] ["."] uri;
+      in cleanUri (buildUri path);
+      cognito-uri = toUri "auth.us-east-1.amazoncognito.com";
     in {
-      domain = "https://${urn-prefix}.auth.us-east-1.amazoncognito.com";
+      domain = "${cognito-uri}";
       user_pool_id = "\${aws_cognito_user_pool.main.id}";
     };
     # User groups
