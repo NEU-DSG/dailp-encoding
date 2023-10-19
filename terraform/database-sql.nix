@@ -16,6 +16,7 @@ in {
       name = name;
       subnet_ids = lib.attrValues config.setup.subnets;
       tags = { Name = "Subnet Group for DAILP"; };
+      lifecycle.create_before_destroy = true;
     };
 
     aws_db_instance.sql_database = {
