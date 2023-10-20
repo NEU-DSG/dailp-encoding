@@ -66,7 +66,7 @@ in {
   let 
     prefixName = import ./utils.nix config.setup.stage;
   in {
-    bucket = "dailp-${config.setup.stage}-functions-bucket";
+    bucket = prefixName "functions-bucket";
     security_group_ids = [ "\${aws_security_group.mongodb_access.id}" ];
     functions = [{
       id = "graphql";
