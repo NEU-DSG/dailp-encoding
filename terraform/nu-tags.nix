@@ -25,7 +25,7 @@
     "nu:os" = "linux";
     "nu:backups" = "no";
   };
-  functions.tags = { "nu:function" = "application-server"; "Name" = "graphql-endpoint"};
+  functions.tags = { "nu:function" = "application-server"; "Name" = "graphql-endpoint"; };
 }
 /*
  ~ Local ~
