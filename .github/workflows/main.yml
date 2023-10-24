@@ -21,7 +21,7 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-20.04
-    environment: ${{ github.event_name == 'release' && 'Production' || 'Development' }}
+    environment: ${{ github.event_name == 'release' && ( github.event.action == 'released' && 'Production' || 'Development') || 'Development' }}
     env:
       DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
       GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
