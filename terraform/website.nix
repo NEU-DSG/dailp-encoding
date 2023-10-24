@@ -32,7 +32,7 @@ in {
       let apiUrl = "\${aws_api_gateway_deployment.functions_api.invoke_url}";
       in {
         lifecycle.prevent_destroy = false;
-        name = "dailp";
+        name = "dailp-${if config.setup.stage == "prod" then "" else config.setup.stage}";
         description = "Digital Archive of Indigenous Language Persistence";
         repository = lib.toLower (getEnv "GIT_REPOSITORY_URL");
         oauth_token = getEnv "OAUTH_TOKEN";

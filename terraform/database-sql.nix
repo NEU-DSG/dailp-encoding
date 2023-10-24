@@ -20,7 +20,7 @@ in {
     };
 
     aws_db_instance.sql_database = {
-      identifier = "dailp-database-primary";
+      identifier = "${name}-primary";
       tags = config.setup.global_tags // config.servers.database.tags;
       instance_class = "db.t4g.medium";
       storage_type = "gp2";
