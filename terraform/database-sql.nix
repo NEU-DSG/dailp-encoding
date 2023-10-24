@@ -19,7 +19,7 @@ in {
       lifecycle.create_before_destroy = true;
     };
 
-    aws_db_instance.sql_database = let{
+    aws_db_instance.sql_database = {
       identifier = "${name}-primary";
       tags = config.setup.global_tags // config.servers.database.tags;
       instance_class = "db.t4g.medium";
