@@ -1,6 +1,6 @@
 { config, lib, pkgs, ... }: 
 let 
-  prefixName = import ./utils.nix config.setup.stage;
+  prefixName = import ./utils.nix { stage = config.setup.stage; };
 in {
   options.servers.database = with lib;
     with types; {

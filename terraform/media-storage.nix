@@ -3,7 +3,9 @@
   # Provision a bucket dedicated to media storage, especially audio files.
   config.resource = {
     aws_s3_bucket.media_storage = {
-      bucket = "dailp-${config.setup.stage}-media-storage";
+      bucket = let 
+        prefixName = import ./utils { stage = config.setup.stage; hideProd = false; };
+      in prefixName "media-storage";
       acl = "private";
       lifecycle.prevent_destroy = true;
       versioning.enabled = true;
