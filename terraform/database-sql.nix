@@ -19,8 +19,8 @@ in {
       lifecycle.create_before_destroy = true;
     };
 
-    aws_db_instance.sql_database = {
-      identifier = "dailp-database-primary";
+    aws_db_instance.sql_database = let{
+      identifier = "${name}-primary";
       tags = config.setup.global_tags // config.servers.database.tags;
       instance_class = "db.t4g.medium";
       storage_type = "gp2";
