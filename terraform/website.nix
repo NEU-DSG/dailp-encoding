@@ -98,7 +98,7 @@ in {
     aws_amplify_branch = let
       branchName = if config.setup.stage == "dev" then "main" else if config.setup.stage == "uat" then "uat" else "release";
       stageName =
-        if config.setup.stage == "dev" then "DEVELOPMENT" else "PRODUCTION";
+        if config.setup.stage == "prod" then "PRODUCTION" else "DEVELOPMENT";
     in {
       current_stage = {
         app_id = "\${aws_amplify_app.dailp.id}";
@@ -108,6 +108,17 @@ in {
         enable_pull_request_preview = true;
         framework = "Web";
         description = "Primary Deployment Branch";
+      };
+    };
+
+    aws_amplify_domain_association.current_stage_domain = {
+      app_id = "\${aws_amplify_app.dailp.id}";
+      domain_name = let 
+        subdomain = if config.setup.stage == "prod" then "" else (config.setup.stage + ".");
+      in "${subdomain}dailp.northeastern.edu";
+      sub_domain = {
+        branch_name = "\${aws_amplify_branch.current_stage.branch_name}";
+        prefix = "";
       };
     };
 
