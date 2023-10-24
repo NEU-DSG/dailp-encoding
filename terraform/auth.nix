@@ -69,14 +69,14 @@ in {
         {
           claim = "cognito:groups";
           match_type = "Equals";
-          role_arn = "Editors";
-          value = "\${aws_iam_role.dailp_user_editor.arn}";
+          value = "Editors";
+          role_arn = "\${aws_iam_role.dailp_user_editor.arn}";
         }
         {
           claim = "cognito:groups";
           match_type = "Equals";
-          role_arn = "Contributors";
-          value = "\${aws_iam_role.dailp_user_contributor.arn}";
+          value = "Contributors";
+          role_arn = "\${aws_iam_role.dailp_user_contributor.arn}";
         }
       ];
     };
