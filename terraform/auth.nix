@@ -3,13 +3,13 @@ let
   prefixName = import ./utils.nix { stage = config.setup.stage; };
 in {
   config.resource = {
+    # User Pool Setup
     aws_cognito_user_pool.main = {
       name = "dailp-user-pool";
       username_attributes = [ "email" ];
       auto_verified_attributes = [ "email" ];
       admin_create_user_config.allow_admin_create_user_only = true;
     };
-
     aws_cognito_user_pool_client.main = {
       name = prefixName "user-pool-client";
       user_pool_id = "\${aws_cognito_user_pool.main.id}";
@@ -31,7 +31,8 @@ in {
       in cleanUri buildUri;
       user_pool_id = "\${aws_cognito_user_pool.main.id}";
     };
-    # User groups
+
+    # User Groups within Pool
     aws_cognito_user_group = {
       contributors = {
         name = "Contributors";
@@ -47,6 +48,42 @@ in {
         precedence = 1;
         role_arn = "\${aws_iam_role.dailp_user_editor.arn}";
       };
+  };
+  # Identity Pool
+  aws_cognito_identity_pool.main = {
+    identity_pool_name = prefixName "user-identities";
+    allow_unauthenticated_identities = true; 
+    cognito_identity_providers = {
+      client_id = "\${aws_cognito_user_pool.main.id}";
+      provider_name = "\${aws_cognito_user_pool.main.endpoint}";
+      server_side_token_check = false;
+    };
+  };
+  aws_cognito_identity_pool_roles_attachment.main = {
+    identity_pool_id = "\${aws_cognito_identity_pool.main.id}";
+    role_mapping = {
+      identity_provider = "\${aws_cognito_user_pool.main.endpoint}";
+      ambiguous_role_resolution = "AuthenticatedRole";
+      type = "Rules";
+      mapping_rule = [
+        {
+          claim = "cognito:groups";
+          match_type = "Equals";
+          role_arn = "Editors";
+          value = "\${aws_iam_role.dailp_user_editor.arn}";
+        }
+        {
+          claim = "cognito:groups";
+          match_type = "Equals";
+          role_arn = "Contributors";
+          value = "\${aws_iam_role.dailp_user_contributor.arn}";
+        }
+      ];
+    };
+    roles = {
+      authenticated = "\${aws_iam_role.dailp_user_contributor.arn}";
+      unauthenticated = "\${aws_iam_role.dailp_user.arn}";
+    };
   };
 };
 }
