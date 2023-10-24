@@ -49,7 +49,7 @@ in {
     # Setup the S3 bucket and DynamoDB table that store and manage Terraform state
     # for the current environment.
     state = let 
-      prefixName = import ./utils.nix config.setup.stage;
+      prefixName = import ./utils.nix { stage = config.setup.stage; hideProd = false; };
     in {
       bucket = prefixName "terraform-state-bucket";
       table = prefixName "terraform-state-locks";
@@ -64,7 +64,7 @@ in {
 
   functions = 
   let 
-    prefixName = import ./utils.nix config.setup.stage;
+    prefixName = import ./utils.nix { stage = config.setup.stage; };
   in {
     bucket = prefixName "functions-bucket";
     security_group_ids = [ "\${aws_security_group.mongodb_access.id}" ];
@@ -106,8 +106,8 @@ in {
   };
 
   # These logging buckets are externally managed.
-  setup.access_log_bucket = if config.setup.stage == "dev" then
-    "s3-server-access-logs-783177801354"
+  setup.access_log_bucket = if config.setup.stage == "prod" then
+    "s3-server-access-logs-363539660090"
   else
-    "s3-server-access-logs-363539660090";
+    "s3-server-access-logs-783177801354";
 }

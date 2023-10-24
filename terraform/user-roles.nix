@@ -5,7 +5,7 @@ let
  document-audio = "document-audio/*";
  word-annotations = "word-annotations-list/*";
  user-audio = "user-uploaded-audio/*";
- prefixName = import ./utils.nix config.setup.stage;
+ prefixName = import ./utils.nix { stage = config.setup.stage; };
 in {
   # Policy Documents
   config.data.aws_iam_policy_document = {
