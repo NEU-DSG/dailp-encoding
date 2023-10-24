@@ -4,7 +4,7 @@
   config.resource = {
     aws_s3_bucket.media_storage = {
       bucket = let 
-        prefixName = import ./utils { stage = config.setup.stage; hideProd = false; };
+        prefixName = import ./utils.nix { stage = config.setup.stage; hideProd = false; };
       in prefixName "media-storage";
       acl = "private";
       lifecycle.prevent_destroy = true;
