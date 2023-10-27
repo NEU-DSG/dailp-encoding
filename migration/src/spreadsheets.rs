@@ -462,7 +462,7 @@ impl SheetResult {
                 Some(
                     AudioRes::new(audio_files.get(1).unwrap(), audio_files.get(2))
                         .await?
-                        .into_document_audio(),
+                        .into_document_audio()?,
                 )
             },
             order_index,
