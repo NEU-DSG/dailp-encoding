@@ -66,7 +66,6 @@ export const ActivityTab = () => {
   const dialog = useDialogState({ animated: true, visible: true })
   return (
     <>
-      Unordered list should be a map function of the user's recent activity
       <ul className={css.noBullets}>
         <li>
           <ActivityItem />
@@ -87,7 +86,6 @@ export const BookmarksTab = () => {
 
   return (
     <>
-      Unordered list should be a map function of the user's bookmarked documents
       <ul className={css.noBullets}>
         {data?.getBookmarks?.map((docId) => (
           <li>
@@ -111,23 +109,17 @@ export const BookmarksTabItem = (props: { documentId: string }) => {
     "/pct:0,0,50,50/500,500/0/default.jpg") as unknown as string
   return (
     <>
+    <div className="cardShadow">
       <BookmarkCard
         thumbnail={thumbnailUrl}
         header={{
           text: docData?.title as unknown as string,
-          link: `/document/${docData?.slug}`,
+          link: `/collections/cwkw`,
+          // link: `/document/${docData?.slug}`,
         }}
         description={docData?.date?.year as unknown as string}
       />
-      {/* <div>
-        {docData?.id}
-      </div>
-      <div>
-        <a href="???">{docData?.title}</a>
-      </div>
-      <div>
-        {docData?.date?.year}
-      </div> */}
+    </div>
     </>
   )
 }
@@ -137,19 +129,7 @@ export const ActivityItem = () => {
   return (
     <>
       <div className={css.dashboardItem}>
-        <p>Recent activity asdfasfasfasdf</p>
-      </div>
-    </>
-  )
-}
-
-export const BookmarksItem = () => {
-  // takes in user and document id?
-  return (
-    <>
-      <div className={css.dashboardItem}>
-        <h2>Title</h2>
-        <p>Description</p>
+        <p>Recent activity test</p>
       </div>
     </>
   )

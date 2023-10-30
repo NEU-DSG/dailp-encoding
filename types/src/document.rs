@@ -70,6 +70,11 @@ impl AnnotatedDoc {
         &self.meta.date
     }
 
+    /// Date that the last edit was made to this document
+    async fn last_edited(&self) -> &Option<Date> {
+        &self.meta.last_edited
+    }
+
     /// The original source(s) of this document, the most important first.
     async fn sources(&self) -> &[SourceAttribution] {
         &self.meta.sources

@@ -73,6 +73,8 @@ export type AnnotatedDoc = {
    * Otherwise, it is considered a structured document with a translation.
    */
   readonly isReference: Scalars["Boolean"]
+  /** Date that the last edit was made to this document */
+  readonly lastEdited: Maybe<Date>
   /**
    * Arbitrary number used for manually ordering documents in a collection.
    * For collections without manual ordering, use zero here.
@@ -867,6 +869,9 @@ export type AnnotatedDocumentQuery = { readonly __typename?: "Query" } & {
     > & {
         readonly date: Maybe<
           { readonly __typename?: "Date" } & Pick<Date, "year">
+        >
+        readonly lastEdited: Maybe<
+          { readonly __typename?: "Date" } & Pick<Date, "formattedDate">
         >
         readonly sources: ReadonlyArray<
           { readonly __typename?: "SourceAttribution" } & Pick<
@@ -1772,6 +1777,9 @@ export const AnnotatedDocumentDocument = gql`
       isReference
       date {
         year
+      }
+      lastEdited {
+        formattedDate
       }
       sources {
         name

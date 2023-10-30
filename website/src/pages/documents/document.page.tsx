@@ -5,7 +5,7 @@ import { isMobile } from "react-device-detect"
 import { Helmet } from "react-helmet"
 import { HiPencilAlt } from "react-icons/hi"
 import { IoCheckmarkSharp } from "react-icons/io5"
-import { MdSettings } from "react-icons/md/index"
+import { MdOutlineBookmarkAdd, MdOutlineBookmarkRemove, MdSettings } from "react-icons/md/index"
 import { RiArrowUpCircleFill } from "react-icons/ri/index"
 import {
   Dialog,
@@ -494,7 +494,7 @@ export const BookmarkButton = (props: { documentId: String }) => {
         // Displays a "Cancel" button and "Save" button in editing mode.
         <>
           <IconTextButton
-            icon={<HiPencilAlt />}
+            icon={<MdOutlineBookmarkRemove />}
             className={css.BookmarkButton}
             onClick={() => {
               handleSet(false)
@@ -505,7 +505,7 @@ export const BookmarkButton = (props: { documentId: String }) => {
         </>
       ) : (
         <IconTextButton
-          icon={<HiPencilAlt />}
+          icon={<MdOutlineBookmarkAdd />}
           className={css.BookmarkButton}
           onClick={() => {
             handleSet(true)

@@ -26,6 +26,10 @@ type AnnotatedDoc {
 	"""
 	date: Date
 	"""
+	Date that the last edit was made to this document
+	"""
+	lastEdited: Date
+	"""
 	The original source(s) of this document, the most important first.
 	"""
 	sources: [SourceAttribution!]!

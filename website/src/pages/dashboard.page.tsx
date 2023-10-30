@@ -5,7 +5,9 @@ import LayoutDashboard from "../layout-dashboard"
 const DashboardPage = () => {
   return (
     <LayoutDashboard>
+      <main>
       <Dashboard />
+      </main>
     </LayoutDashboard>
   )
 }
