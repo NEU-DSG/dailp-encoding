@@ -23,9 +23,7 @@ query AnnotatedDocument($slug: String!) {
       year
     }
     lastEdited {
-      year
-      month
-      day
+      formattedDate
     }
     sources {
       name

@@ -2,7 +2,7 @@ import React from "react"
 import { Group } from "reakit"
 import { Link } from "src/components"
 import { fullWidth } from "src/style/utils.css"
-import { card, cardHeader, cardImage, cardText } from "./bookmark-card.css"
+import { card, cardHeader, cardImage, cardText, descriptionContainer, pillButton} from "./bookmark-card.css"
 
 export const BookmarkCard = (props: {
   thumbnail: string
@@ -19,7 +19,19 @@ export const BookmarkCard = (props: {
           props.header.text
         )}
       </h2>
-      <p className={cardText}>{props.description}</p>
+
+      <div className={descriptionContainer}>
+        <span className={cardText}>
+          Written: {props.description ? props.description : "Unknown"}
+        </span>
+        <span className={cardText}>
+          999 contributions
+        </span>
+        <span className={cardText}>
+          Last Edited: Never
+        </span>
+        <a className={pillButton} href="/collections/cwkw">View</a>
+      </div>
     </Group>
   )
 }

@@ -40,6 +40,7 @@ export const dashboardTabs = style([
   }),
   {
     display: "flex",
+    position: "sticky",
     flexFlow: "row nowrap",
     height: vspace[1.75],
   },
@@ -80,12 +81,25 @@ export const wideAndTop = style({
   },
 })
 
-export const dashboardHeader = style([
-  wideAndTop,
-  {
-    marginTop: vspace.half,
+export const dashboardHeader = style({
+  left: 0,
+  display: "flex",
+  flexFlow: "column nowrap",
+  alignItems: "center",
+  top: 55,
+  width: "100%",
+  zIndex: layers.base,
+  "@media": {
+    [mediaQueries.medium]: {
+      top: 0,
+    },
+    [mediaQueries.print]: {
+      display: "none",
+      height: 0,
+    },
   },
-])
+    marginTop: vspace.half,
+})
 
 export const dashboardItem = style({
   width: "100%",
@@ -94,13 +108,14 @@ export const dashboardItem = style({
   borderColor: "black",
   borderRadius: radii.medium,
   display: "grid",
-  // gridTemplateColumns: "fit-content(20%) minmax(50px,5fr)",
-  // gridTemplateRows: "fit-content(100%) fit-content(100%)",
-  // columnGap: space.medium,
 })
 
 export const noBullets = style({
   listStyleType: "none" /* Remove bullets */,
   padding: 10,
   margin: 10,
+})
+
+export const cardShadow = style({
+  boxShadow: '2px 2px 4px rgba(0, 0, 0, 0.2)',
 })
