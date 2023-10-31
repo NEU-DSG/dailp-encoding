@@ -50,7 +50,7 @@ in {
     # for the current environment.
     # Use dev bucket for uat
     state = let 
-      prefixName = if config.setup.stage == "uat" then "dailp-dev-" else import ./utils.nix { stage = config.setup.stage; hideProd = false; };
+      prefixName = if config.setup.stage == "uat" then base: "dailp-dev-${base}" else import ./utils.nix { stage = config.setup.stage; hideProd = false; };
     in {
       bucket = prefixName "terraform-state-bucket";
       table = prefixName "terraform-state-locks";
