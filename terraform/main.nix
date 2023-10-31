@@ -48,8 +48,9 @@ in {
   setup = {
     # Setup the S3 bucket and DynamoDB table that store and manage Terraform state
     # for the current environment.
+    # Use dev bucket for uat
     state = let 
-      prefixName = import ./utils.nix { stage = config.setup.stage; hideProd = false; };
+      prefixName = if config.setup.stage == "uat" then "dailp-dev-" else import ./utils.nix { stage = config.setup.stage; hideProd = false; };
     in {
       bucket = prefixName "terraform-state-bucket";
       table = prefixName "terraform-state-locks";
