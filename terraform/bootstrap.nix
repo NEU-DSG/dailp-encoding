@@ -62,7 +62,7 @@ with lib; {
     terraform.backend.s3 = {
       # access_key = config.provider.aws.profile;
       bucket = config.setup.state.bucket;
-      key = "terraform.tfstate";
+      key = "${if config.setup.stage == "uat" then "uat-" else ""}terraform.tfstate";
       region = config.provider.aws.region;
       dynamodb_table = config.setup.state.table;
       encrypt = true;
