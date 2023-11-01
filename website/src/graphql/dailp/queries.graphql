@@ -80,6 +80,16 @@ fragment AudioSliceFields on AudioSlice {
   includeInEditedCollection
 }
 
+fragment DocFormFields on AnnotatedDoc {
+  id
+  title
+  date {
+    day
+    month
+    year
+  }
+}
+
 fragment FormFields on AnnotatedForm {
   id
   index
@@ -110,6 +120,9 @@ fragment FormFields on AnnotatedForm {
       id
       displayName
     }
+  }
+  position {
+    documentId
   }
 }
 
@@ -376,4 +389,24 @@ query GetBookmarks {
 
 query GetDocShortName($docId: UUID!) {
   getDocShortName(docId: $docId)
+}
+
+mutation UpdateParagraph($paragraph: ParagraphUpdate!) {
+  updateParagraph(paragraph: $paragraph)
+}
+
+mutation UpdateContributorAttribution(
+  $contribution: UpdateContributorAttribution!
+) {
+  updateContributorAttribution(contribution: $contribution)
+}
+
+mutation DeleteContributorAttribution(
+  $contribution: DeleteContributorAttribution!
+) {
+  deleteContributorAttribution(contribution: $contribution)
+}
+
+mutation UpdateDocumentMetadata($document: DocumentMetadataUpdate!) {
+  updateDocumentMetadata(document: $document)
 }
