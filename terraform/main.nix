@@ -24,8 +24,6 @@ in {
     ./database-sql.nix
     ./bastion-host.nix
     ./media-storage.nix
-    ./media-access.nix
-    ./user-roles.nix
   ];
 
   # Gives all modules access to which stage we're deploying to, while also
@@ -34,15 +32,14 @@ in {
 
   terraform.required_providers.aws = {
     source = "hashicorp/aws";
-    version = "~> 4.30";
+    version = "~> 3.44";
   };
 
   # Setup AWS credentials depending on whether we are in the development or
   # production account.
   provider.aws = {
-    # profile = "neu-${config.setup.stage}";
+    profile = "neu-${config.setup.stage}";
     region = "us-east-1";
-    default_tags.tags = config.setup.global_tags;
   };
 
   setup = {

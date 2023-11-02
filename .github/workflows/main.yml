@@ -41,7 +41,7 @@ jobs:
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v2
         with:
           fetch-depth: 0
       - name: Push to release branch
@@ -51,7 +51,7 @@ jobs:
           branch: release
           force: true
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2
+        uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -119,7 +119,6 @@ jobs:
           DATABASE_ENDPOINT=$(nix run --impure .#tf-output database_endpoint)
           echo "Configuring SSH client..."
           mkdir -p ~/.ssh
-          echo "Still configuring SSH client..."
           ssh-keyscan -H $BASTION_IP >> ~/.ssh/known_hosts
           echo "Forwarding port 5432 to remote database $DATABASE_ENDPOINT through $BASTION_IP"
           ssh -i ./dailp-deployment-key.pem -f -N -L 5432:$DATABASE_ENDPOINT ec2-user@$BASTION_IP
@@ -127,6 +126,7 @@ jobs:
           export DAILP_API_URL=$(nix run --impure .#tf-output functions_url)
           export DATABASE_URL=postgres://dailp:$DATABASE_PASSWORD@localhost:5432/dailp
           nix run --impure .#migrate-schema
+          nix run --impure .#migrate-data
       - name: Publish website
         run: |
           curl -X POST -d {} "$(nix run --impure .#tf-output amplify_webhook)" -H "Content-Type:application/json"

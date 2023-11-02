@@ -108,13 +108,10 @@
             exePath = "/bin/${name}";
           };
         tf = "${pkgs.terraform}/bin/terraform";
-        inherit (builtins) getEnv;
         tfInit = ''
           cp -f ${terraformConfig}/config.tf.json ./
-          export AWS_ACCESS_KEY_ID=${getEnv "AWS_ACCESS_KEY_ID"}
-          export AWS_SECRET_ACCESS_KEY=${getEnv "AWS_SECRET_ACCESS_KEY"}
           export TF_DATA_DIR=$(pwd)/.terraform
-          ${tf} init -upgrade
+          ${tf} init
         '';
       in rec {
         # Add extra binary caches for quicker builds of the rust toolchain
@@ -129,10 +126,10 @@
 
         packages.default = terraformConfig;
 
-        # apps.migrate-data = inputs.utils.lib.mkApp {
-        #   drv = hostPackage;
-        #   exePath = "/bin/dailp-migration";
-        # };
+        apps.migrate-data = inputs.utils.lib.mkApp {
+          drv = hostPackage;
+          exePath = "/bin/dailp-migration";
+        };
 
         apps.validate-data = inputs.utils.lib.mkApp {
           drv = hostPackage;

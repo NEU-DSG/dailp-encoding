@@ -1,6 +1,6 @@
 use crate::{
-    AnnotatedDoc, AudioSlice, CherokeeOrthography, Database, Date, DocumentId,
-    MorphemeSegmentUpdate, PartsOfWord, PositionInDocument, TagId, WordSegment, WordSegmentRole,
+    AnnotatedDoc, AudioSlice, CherokeeOrthography, Database, Date, DocumentId, PartsOfWord,
+    PositionInDocument, TagId, WordSegment, WordSegmentRole,
 };
 use async_graphql::{dataloader::DataLoader, FieldResult, MaybeUndefined};
 use itertools::Itertools;
@@ -288,8 +288,6 @@ pub struct AnnotatedFormUpdate {
     pub source: MaybeUndefined<String>,
     /// Possible update to commentary
     pub commentary: MaybeUndefined<String>,
-    /// Updated segments
-    pub segments: MaybeUndefined<Vec<MorphemeSegmentUpdate>>,
 }
 
 /// Trait that defines function which takes in a possibly undefined value.

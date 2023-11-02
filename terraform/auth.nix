@@ -7,6 +7,7 @@
       username_attributes = [ "email" ];
       auto_verified_attributes = [ "email" ];
       admin_create_user_config.allow_admin_create_user_only = true;
+      tags = config.setup.global_tags;
     };
 
     aws_cognito_user_pool_client.main = {
@@ -22,22 +23,5 @@
       generate_secret = false;
       supported_identity_providers = [ "COGNITO" ];
     };
-    # User groups
-    aws_cognito_user_group = {
-      contributors = {
-        name = "Contributors";
-        user_pool_id = "\${aws_cognito_user_pool.main.id}";
-        description = "Contributors can edit document-related info and upload audio files. Contributors cannot create new collections or add image sources.";
-        precedence = 2;
-        role_arn = "\${aws_iam_role.dailp_user_contributor.arn}";
-      };
-      editors = {
-        name = "Editors";
-        user_pool_id = "\${aws_cognito_user_pool.main.id}";
-        description = "Editors can edit documents and add audio. Editors can also add edited collections.";
-        precedence = 1;
-        role_arn = "\${aws_iam_role.dailp_user_editor.arn}";
-      };
   };
-};
 }

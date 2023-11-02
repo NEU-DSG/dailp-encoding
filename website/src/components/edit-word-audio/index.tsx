@@ -7,10 +7,8 @@ import { EditorEditWordAudio } from "./editor"
 export const EditWordAudio = (p: {
   word: Dailp.FormFieldsFragment
 }): ReactElement => {
-  const groups = useCognitoUserGroups()
   const userRole = useUserRole()
-
-  console.log("Branching based on", { groups, userRole })
+  // const userRole = UserRole.CONTRIBUTOR
 
   switch (userRole) {
     case UserRole.CONTRIBUTOR:

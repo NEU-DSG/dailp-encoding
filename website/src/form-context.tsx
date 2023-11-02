@@ -1,4 +1,4 @@
-import React, { ReactNode, createContext, useContext, useState } from "react"
+import React, { createContext, useContext, useState } from "react"
 import {
   unstable_FormStateReturn as FormStateReturn,
   unstable_useFormState as useFormState,
@@ -14,17 +14,13 @@ type FormContextType = {
 
 const FormContext = createContext<FormContextType>({} as FormContextType)
 
-// Instantiates a form state used to keep track of the current word and information about all its features.
-export const FormProvider = (props: { children: ReactNode }) => {
+/** Instantiates a form state used to keep track of the current word and information about all its features. */
+export const FormProvider = (props: { children: any }) => {
   const [isEditing, setIsEditing] = useState(false)
   const word: Dailp.FormFieldsFragment = {} as Dailp.FormFieldsFragment
 
   const [updateWordResult, updateWord] = Dailp.useUpdateWordMutation()
-
   const { cherokeeRepresentation } = usePreferences()
-
-  const settingsAlert =
-    "Currently, only the linguistic analysis using terms from Tone and Accent in Oklahoma Cherokee (TAOC) is supported for editing. Please update your Cherokee description style in the display settings."
 
   /** Calls the backend GraphQL mutation to update a word. */
   const runUpdate = async (variables: {
@@ -44,34 +40,16 @@ export const FormProvider = (props: { children: ReactNode }) => {
       }
     },
     onSubmit: (values) => {
-      if (cherokeeRepresentation === Dailp.CherokeeOrthography.Taoc) {
-        setIsEditing(false)
+      setIsEditing(false)
 
-        // Create an array of MorphemeSegmentUpdate type to send to the backend.
-        const updatedSegments: Array<Dailp.MorphemeSegmentUpdate> = values.word[
-          "segments"
-        ].map((segment) => ({
-          system: cherokeeRepresentation,
-          morpheme: segment.morpheme,
-          gloss: segment.gloss,
-          role: segment.role,
-        }))
-
-        runUpdate({
-          word: {
-            id: values.word["id"],
-            source: values.word["source"],
-            commentary: values.word["commentary"],
-            segments: updatedSegments,
-          },
-        }).then(({ data, error }) => {
-          if (error) {
-            alert(error)
-          }
-        })
-      } else {
-        alert(settingsAlert)
-      }
+      runUpdate({
+        word: {
+          id: values.word["id"],
+          source: values.word["source"],
+          commentary: values.word["commentary"],
+        },
+        morphemeSystem: cherokeeRepresentation,
+      })
     },
   })
 
