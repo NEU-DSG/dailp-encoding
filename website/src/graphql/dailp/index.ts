@@ -1781,6 +1781,31 @@ export type GetDocShortNameQuery = { readonly __typename?: "Query" } & Pick<
   "getDocShortName"
 >
 
+export type AddBookmarkMutationVariables = Exact<{
+  bookmark: AddBookmark
+}>
+
+export type AddBookmarkMutation = { readonly __typename?: "Mutation" } & Pick<
+  Mutation,
+  "addBookmark"
+>
+
+export type GetBookmarksQueryVariables = Exact<{ [key: string]: never }>
+
+export type GetBookmarksQuery = { readonly __typename?: "Query" } & Pick<
+  Query,
+  "getBookmarks"
+>
+
+export type GetDocShortNameQueryVariables = Exact<{
+  docId: Scalars["UUID"]
+}>
+
+export type GetDocShortNameQuery = { readonly __typename?: "Query" } & Pick<
+  Query,
+  "getDocShortName"
+>
+
 export type UpdateParagraphMutationVariables = Exact<{
   paragraph: ParagraphUpdate
 }>
@@ -2439,6 +2464,7 @@ export function useGetDocShortNameQuery(
     ...options,
   })
 }
+
 export const UpdateParagraphDocument = gql`
   mutation UpdateParagraph($paragraph: ParagraphUpdate!) {
     updateParagraph(paragraph: $paragraph)
