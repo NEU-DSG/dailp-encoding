@@ -1,6 +1,6 @@
 use crate::{
-    date::DateInput, slugify, AnnotatedForm, AudioSlice, Contributor, Database, Date,
-    SourceAttribution, Translation, TranslationBlock,
+    comment::Comment, date::DateInput, slugify, AnnotatedForm, AudioSlice, Contributor, Database,
+    Date, SourceAttribution, Translation, TranslationBlock,
 };
 
 use async_graphql::{dataloader::DataLoader, FieldResult, MaybeUndefined};
@@ -241,9 +241,10 @@ impl DocumentPage {
 pub struct ParagraphsInPage(pub Uuid);
 
 /// One paragraph within a [`DocumentPage`]
-#[derive(Clone)]
+#[derive(async_graphql::SimpleObject, Clone)]
+#[graphql(complex)]
 pub struct DocumentParagraph {
-    /// Database ID
+    /// Unique identifier for this paragraph
     pub id: Uuid,
     /// English translation of the whole paragraph
     pub translation: String,
@@ -283,7 +284,7 @@ pub struct DocumentMetadataUpdate {
     pub written_at: MaybeUndefined<DateInput>,
 }
 
-#[async_graphql::Object]
+#[async_graphql::ComplexObject]
 impl DocumentParagraph {
     /// Source text of the paragraph broken down into words
     async fn source(&self, context: &async_graphql::Context<'_>) -> FieldResult<Vec<AnnotatedSeg>> {
@@ -294,13 +295,12 @@ impl DocumentParagraph {
             .unwrap_or_default())
     }
 
-    /// English translation of the whole paragraph
-    async fn translation(&self) -> &str {
-        &self.translation
-    }
-
-    async fn index(&self) -> &i64 {
-        &self.index
+    /// Get comments on this paragraph
+    async fn comments(&self, context: &async_graphql::Context<'_>) -> FieldResult<Vec<Comment>> {
+        let db = context.data::<DataLoader<Database>>()?.loader();
+        Ok(db
+            .comments_by_parent(&self.id, &crate::comment::CommentParentType::Paragraph)
+            .await?)
     }
 }
 

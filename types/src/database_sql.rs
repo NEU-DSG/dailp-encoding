@@ -1,6 +1,6 @@
 #![allow(missing_docs)]
 
-use chrono::NaiveDate;
+use chrono::{NaiveDate, NaiveDateTime};
 use sqlx::postgres::types::PgLTree;
 use std::ops::Bound;
 use std::str::FromStr;
@@ -8,6 +8,7 @@ use std::str::FromStr;
 use crate::collection::CollectionChapter;
 use crate::collection::EditedCollection;
 use crate::user::AddBookmark;
+use crate::comment::{Comment, CommentParentType, CommentType};
 use crate::user::User;
 use crate::user::UserId;
 use {
@@ -45,6 +46,75 @@ impl Database {
             .test_before_acquire(false)
             .connect_lazy(&db_url)?;
         Ok(Database { client: conn })
+    }
+
+    /// Get a specific comment by id
+    pub async fn comment_by_id(&self, comment_id: &Uuid) -> Result<Comment> {
+        Ok(
+            query_file_as!(BasicComment, "queries/comment_by_id.sql", comment_id,)
+                .fetch_one(&self.client)
+                .await?
+                .into(),
+        )
+    }
+
+    /// Get all comments on a given object
+    pub async fn comments_by_parent(
+        &self,
+        parent_id: &Uuid,
+        parent_type: &CommentParentType,
+    ) -> Result<Vec<Comment>> {
+        Ok(query_file_as!(
+            BasicComment,
+            "queries/comments_by_parent.sql",
+            parent_id,
+            parent_type.clone() as CommentParentType
+        )
+        .fetch_all(&self.client)
+        .await?
+        .into_iter()
+        .map(|c| c.into())
+        .collect())
+    }
+
+    /// Insert a new comment into the database
+    pub async fn insert_comment(
+        &self,
+        posted_by: &Uuid,
+        text_content: String,
+        parent_id: &Uuid,
+        parent_type: &CommentParentType,
+        comment_type: &Option<CommentType>,
+    ) -> Result<Uuid> {
+        Ok(query_file_scalar!(
+            "queries/insert_comment.sql",
+            posted_by,
+            text_content,
+            parent_id,
+            parent_type.clone() as CommentParentType,
+            comment_type.clone() as Option<CommentType>
+        )
+        .fetch_one(&self.client)
+        .await?)
+    }
+
+    /// Delete a comment from the database
+    pub async fn delete_comment(&self, comment_id: &Uuid) -> Result<Uuid> {
+        Ok(
+            query_file_scalar!("queries/delete_comment.sql", comment_id,)
+                .fetch_one(&self.client)
+                .await?,
+        )
+    }
+
+    pub async fn paragraph_by_id(&self, paragraph_id: &Uuid) -> Result<DocumentParagraph> {
+        Ok(query_file_as!(
+            DocumentParagraph,
+            "queries/paragraph_by_id.sql",
+            paragraph_id
+        )
+        .fetch_one(&self.client)
+        .await?)
     }
 
     pub async fn word_by_id(&self, word_id: &Uuid) -> Result<AnnotatedForm> {
@@ -2071,6 +2141,38 @@ impl Loader<EditedCollectionDetails> for Database {
                 )
             })
             .collect())
+    }
+}
+
+/// A simplified comment type that is easier to pull out of the database
+struct BasicComment {
+    pub id: Uuid,
+    pub posted_at: NaiveDateTime,
+
+    pub posted_by: Uuid,
+    pub posted_by_name: String,
+
+    pub text_content: String,
+    pub comment_type: Option<CommentType>,
+
+    pub parent_id: Uuid,
+    pub parent_type: CommentParentType,
+}
+
+impl Into<Comment> for BasicComment {
+    fn into(self) -> Comment {
+        Comment {
+            id: self.id,
+            posted_at: DateTime::new(self.posted_at),
+            posted_by: User {
+                id: self.posted_by.into(),
+                display_name: self.posted_by_name,
+            },
+            text_content: self.text_content,
+            comment_type: self.comment_type,
+            parent_id: self.parent_id,
+            parent_type: self.parent_type,
+        }
     }
 }
 

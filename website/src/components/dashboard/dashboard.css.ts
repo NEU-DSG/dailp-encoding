@@ -13,8 +13,8 @@ import {
   thickness,
   vspace,
 } from "src/style/constants"
-import { paddingX, paddingY } from "src/style/utils"
-import { largeDialog, std } from "src/style/utils.css"
+import { paddingX } from "src/style/utils"
+import { std } from "src/style/utils.css"
 
 export const dashboardTab = style({
   borderRadius: 0,
