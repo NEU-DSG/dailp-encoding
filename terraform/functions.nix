@@ -37,10 +37,9 @@ let
     mkMerge [
       {
         aws_lambda_function."${id}" = {
-          lifecycle.prevent_destroy = false;
-          lifecycle.create_before_destroy = true;
+          lifecycle.prevent_destroy = true;
           function_name = name;
-          filename = "${config.functions.package_path}/dailp-graphql.zip";
+          filename = "${config.functions.package_path}/${name}.zip";
           runtime = "provided.al2";
           architectures = [ "x86_64" ];
           handler = name;

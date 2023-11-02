@@ -21,7 +21,7 @@ export const IconButton = ({
 // Definition for a button with an icon along with text.
 type IconTextButtonProps = ButtonProps & {
   icon: ReactNode
-  children: ReactNode
+  children: string
   as?: React.FC
 }
 

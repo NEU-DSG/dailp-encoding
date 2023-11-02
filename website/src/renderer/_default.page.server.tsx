@@ -4,7 +4,7 @@ import ReactDOMServer from "react-dom/server"
 import { Helmet } from "react-helmet"
 import prepass from "react-ssr-prepass"
 import { ssrExchange } from "urql"
-import { dangerouslySkipEscape, escapeInject } from "vite-plugin-ssr"
+import { dangerouslySkipEscape, escapeInject } from "vite-plugin-ssr/server"
 import type { PageContextBuiltIn } from "vite-plugin-ssr/types"
 import { customClient } from "src/graphql"
 import { PageContextServer, PageShell, rootElementId } from "./PageShell"
@@ -110,18 +110,14 @@ const clientEnv = pick(process.env, [
 ])
 
 const clientProcess = dangerouslySkipEscape(JSON.stringify({ env: clientEnv }))
-const skipConsoleLog = dangerouslySkipEscape((process.env["NODE_ENV"] === "development").toString())
 
 // Define `global` for some scripts that depend on it, and process.env to pass
-// along some important environment variables. Disable console.log unless on dev
+// along some important environment variables.
 const baseScript = escapeInject`
   <script>
     if (global === undefined) {
       var global = window;
     }
     var process = ${clientProcess};
-    if (${skipConsoleLog}) {
-      console.log = function(){};
-    }
   </script>
 `

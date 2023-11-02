@@ -5,10 +5,12 @@
 use crate::audio::AudioRes;
 use crate::translations::DocResult;
 use anyhow::Result;
+use dailp::collection::CollectionSection;
 use dailp::collection::CollectionSection::Body;
 use dailp::collection::CollectionSection::Credit;
 use dailp::collection::CollectionSection::Intro;
-
+use dailp::raw::CollectionChapter;
+use dailp::raw::EditedCollection;
 use dailp::{
     convert_udb, root_noun_surface_forms, root_verb_surface_forms, slugify_ltree, AnnotatedDoc,
     AnnotatedForm, AnnotatedSeg, AudioSlice, Contributor, Database, Date, DocumentId,
@@ -457,11 +459,11 @@ impl SheetResult {
                 .map(Date::new),
             last_edited: None,
             is_reference,
-            audio_recording: if audio_files.get(1).is_none() {
+            audio_recording: if audio_files.get(1).is_none() || audio_files.get(2).is_none() {
                 None
             } else {
                 Some(
-                    AudioRes::new(audio_files.get(1).unwrap(), audio_files.get(2))
+                    AudioRes::new(audio_files.get(1).unwrap(), audio_files.get(2).unwrap())
                         .await?
                         .into_document_audio(),
                 )

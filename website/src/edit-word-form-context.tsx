@@ -31,7 +31,7 @@ export const FormProvider = (props: { children: ReactNode }) => {
     word: Dailp.AnnotatedFormUpdate
     morphemeSystem: Dailp.CherokeeOrthography
   }) => {
-    return await updateWord(variables)
+    await updateWord(variables)
   }
 
   const form = useFormState({
@@ -64,10 +64,9 @@ export const FormProvider = (props: { children: ReactNode }) => {
             commentary: values.word["commentary"],
             segments: updatedSegments,
           },
-          morphemeSystem: cherokeeRepresentation,
         }).then(({ data, error }) => {
           if (error) {
-            console.log(error)
+            alert(error)
           }
         })
       } else {

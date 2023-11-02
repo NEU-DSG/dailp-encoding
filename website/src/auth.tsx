@@ -36,6 +36,7 @@ export const UserProvider = (props: { children: any }) => {
       // getSession() refreshes last authenticated user's tokens
       user.getSession(function (err: Error, result: CognitoUserSession | null) {
         if (err) rej(err)
+        console.log("[charlie] Session refreshed...")
         return res(result)
       })
     })
@@ -49,12 +50,16 @@ export const UserProvider = (props: { children: any }) => {
         if (!result) return null
         const intervalLength =
           result.getAccessToken().getExpiration() * 1000 - Date.now()
+        console.log("[charlie]", { intervalLength })
         const handle = window.setInterval(() => refreshToken(), intervalLength)
+        console.log("[charlie] set refresh interval", handle)
         return handle
       })
       return () => {
         promise.then((handle) => {
+          console.log("[charlie] cleanup running")
           if (handle) {
+            console.log("[charlie] clearing interval", handle)
             window.clearInterval(handle)
           }
         })

@@ -1,13 +1,10 @@
 { config, lib, pkgs, ... }:
 
 with lib;
-with builtins; 
-let 
-  prefixName = import ./utils.nix { stage = config.setup.stage; };
-in {
+with builtins; {
   config.resource = {
     aws_iam_role.amplify_role = {
-      name = prefixName "amplify-role";
+      name = "dailp-amplify-role";
       assume_role_policy = toJSON {
         Statement = [{
           Effect = "Allow";
@@ -31,8 +28,8 @@ in {
     aws_amplify_app.dailp =
       let apiUrl = "\${aws_api_gateway_deployment.functions_api.invoke_url}";
       in {
-        lifecycle.prevent_destroy = false;
-        name = "dailp-${if config.setup.stage == "prod" then "" else config.setup.stage}";
+        lifecycle.prevent_destroy = true;
+        name = "dailp";
         description = "Digital Archive of Indigenous Language Persistence";
         repository = lib.toLower (getEnv "GIT_REPOSITORY_URL");
         oauth_token = getEnv "OAUTH_TOKEN";
@@ -96,9 +93,9 @@ in {
       };
 
     aws_amplify_branch = let
-      branchName = if config.setup.stage == "dev" then "main" else if config.setup.stage == "uat" then "uat" else "release";
+      branchName = if config.setup.stage == "dev" then "main" else "release";
       stageName =
-        if config.setup.stage == "prod" then "PRODUCTION" else "DEVELOPMENT";
+        if config.setup.stage == "dev" then "DEVELOPMENT" else "PRODUCTION";
     in {
       current_stage = {
         app_id = "\${aws_amplify_app.dailp.id}";
@@ -108,17 +105,6 @@ in {
         enable_pull_request_preview = true;
         framework = "Web";
         description = "Primary Deployment Branch";
-      };
-    };
-
-    aws_amplify_domain_association.current_stage_domain = {
-      app_id = "\${aws_amplify_app.dailp.id}";
-      domain_name = let 
-        subdomain = if config.setup.stage == "prod" then "" else (config.setup.stage + ".");
-      in "${subdomain}dailp.northeastern.edu";
-      sub_domain = {
-        branch_name = "\${aws_amplify_branch.current_stage.branch_name}";
-        prefix = "";
       };
     };
 

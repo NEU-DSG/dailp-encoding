@@ -22,7 +22,6 @@ pub mod annotation;
 mod audio;
 mod cherokee;
 pub mod collection;
-pub mod comment;
 mod database_sql;
 mod date;
 mod document;

@@ -48,12 +48,9 @@ in {
   setup = {
     # Setup the S3 bucket and DynamoDB table that store and manage Terraform state
     # for the current environment.
-    # Use dev bucket for uat
-    state = let 
-      prefixName = if config.setup.stage == "uat" then base: "dailp-dev-${base}" else import ./utils.nix { stage = config.setup.stage; hideProd = false; };
-    in {
-      bucket = prefixName "terraform-state-bucket";
-      table = prefixName "terraform-state-locks";
+    state = {
+      bucket = "dailp-${config.setup.stage}-terraform-state-bucket";
+      table = "dailp-${config.setup.stage}-terraform-state-locks";
     };
     vpc = getEnv "AWS_VPC_ID";
     subnets = {
@@ -63,15 +60,12 @@ in {
     };
   };
 
-  functions = 
-  let 
-    prefixName = import ./utils.nix { stage = config.setup.stage; };
-  in {
-    bucket = prefixName "functions-bucket";
+  functions = {
+    bucket = "dailp-${config.setup.stage}-functions-bucket";
     security_group_ids = [ "\${aws_security_group.mongodb_access.id}" ];
     functions = [{
       id = "graphql";
-      name = prefixName "graphql";
+      name = "dailp-graphql";
       env = {
         VITE_DEPLOYMENT_ENV = config.setup.stage;
         DATABASE_URL =
@@ -107,8 +101,8 @@ in {
   };
 
   # These logging buckets are externally managed.
-  setup.access_log_bucket = if config.setup.stage == "prod" then
-    "s3-server-access-logs-363539660090"
+  setup.access_log_bucket = if config.setup.stage == "dev" then
+    "s3-server-access-logs-783177801354"
   else
-    "s3-server-access-logs-783177801354";
+    "s3-server-access-logs-363539660090";
 }

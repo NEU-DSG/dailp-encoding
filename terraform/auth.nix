@@ -1,17 +1,16 @@
 { config, lib, pkgs, ... }:
-let 
-  prefixName = import ./utils.nix { stage = config.setup.stage; };
-in {
+
+{
   config.resource = {
-    # User Pool Setup
     aws_cognito_user_pool.main = {
       name = "dailp-user-pool";
       username_attributes = [ "email" ];
       auto_verified_attributes = [ "email" ];
       admin_create_user_config.allow_admin_create_user_only = true;
     };
+
     aws_cognito_user_pool_client.main = {
-      name = prefixName "user-pool-client";
+      name = "dailp-user-pool-client";
       user_pool_id = "\${aws_cognito_user_pool.main.id}";
       allowed_oauth_flows = [ "implicit" ];
       allowed_oauth_flows_user_pool_client = true;
@@ -23,16 +22,7 @@ in {
       generate_secret = false;
       supported_identity_providers = [ "COGNITO" ];
     };
-    aws_cognito_user_pool_domain.main = {
-      domain = 
-      let
-        buildUri = prefixName "-";
-        cleanUri = uri: builtins.replaceStrings ["--"] [""] uri;
-      in cleanUri buildUri;
-      user_pool_id = "\${aws_cognito_user_pool.main.id}";
-    };
-
-    # User Groups within Pool
+    # User groups
     aws_cognito_user_group = {
       contributors = {
         name = "Contributors";
@@ -48,42 +38,6 @@ in {
         precedence = 1;
         role_arn = "\${aws_iam_role.dailp_user_editor.arn}";
       };
-  };
-  # Identity Pool
-  aws_cognito_identity_pool.main = {
-    identity_pool_name = prefixName "user-identities";
-    allow_unauthenticated_identities = true; 
-    cognito_identity_providers = {
-      client_id = "\${aws_cognito_user_pool_client.main.id}";
-      provider_name = "\${aws_cognito_user_pool.main.endpoint}";
-      server_side_token_check = false;
-    };
-  };
-  aws_cognito_identity_pool_roles_attachment.main = {
-    identity_pool_id = "\${aws_cognito_identity_pool.main.id}";
-    role_mapping = {
-      identity_provider = "\${aws_cognito_user_pool.main.endpoint}:\${aws_cognito_user_pool_client.main.id}";
-      ambiguous_role_resolution = "AuthenticatedRole";
-      type = "Rules";
-      mapping_rule = [
-        {
-          claim = "cognito:groups";
-          match_type = "Equals";
-          value = "Editors";
-          role_arn = "\${aws_iam_role.dailp_user_editor.arn}";
-        }
-        {
-          claim = "cognito:groups";
-          match_type = "Equals";
-          value = "Contributors";
-          role_arn = "\${aws_iam_role.dailp_user_contributor.arn}";
-        }
-      ];
-    };
-    roles = {
-      authenticated = "\${aws_iam_role.dailp_user_contributor.arn}";
-      unauthenticated = "\${aws_iam_role.dailp_user.arn}";
-    };
   };
 };
 }

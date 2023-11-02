@@ -19,7 +19,6 @@ jobs:
       GIT_REPOSITORY_URL: https://github.com/neu-dsg/dailp-encoding
       OAUTH_TOKEN: ${{ secrets.OAUTH_TOKEN }}
       RUST_LOG: info
-      # TODO When do we publish web content to UAT?
       TF_STAGE: ${{ github.ref == 'refs/heads/main' && 'dev' || 'prod' }}
     steps:
       - name: Checkout code

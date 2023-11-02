@@ -1,9 +1,7 @@
-{ config, lib, pkgs, ...} : let 
-  prefixName = import ./utils.nix { stage = config.setup.stage; };
-in {
+{ config, lib, pkgs, ...} : {
 config.resource = {
   aws_cloudfront_origin_access_control.media_access_control = {
-    name = prefixName "media-storage.s3.${config.provider.aws.region}.amazonaws.com";
+    name = "dailp-${config.setup.stage}-media-storage.s3.${config.provider.aws.region}.amazonaws.com";
     description = "Cloudfront DAILP media access";
     origin_access_control_origin_type = "s3";
     signing_behavior = "always";
@@ -53,8 +51,4 @@ config.resource = {
     price_class = "PriceClass_All";
   };
 };
-  # Output the distribution URL for use in backend logic
-  config.output.cloudfront_distro_url = {
-    value = "\${aws_cloudfront_distribution.media_distribution.domain_name}";
-  };
 }

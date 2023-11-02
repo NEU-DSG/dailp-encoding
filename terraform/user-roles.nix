@@ -5,7 +5,6 @@ let
  document-audio = "document-audio/*";
  word-annotations = "word-annotations-list/*";
  user-audio = "user-uploaded-audio/*";
- prefixName = import ./utils.nix { stage = config.setup.stage; };
 in {
   # Policy Documents
   config.data.aws_iam_policy_document = {
@@ -23,7 +22,7 @@ in {
         variable = "cognito-identity.amazonaws.com:aud";
         values = [
           # TODO use a reference instead of hard-coding
-          "us-east-1:6d544733-83e2-4d38-baa3-195d3bfdf54b" # FIXME this should be causing some weird behavior somewhere...
+          "us-east-1:6d544733-83e2-4d38-baa3-195d3bfdf54b"
         ];
       };
     };
@@ -79,17 +78,17 @@ in {
     aws_iam_policy = {
       dailp_basic_user_policy = {
         policy = "$\{data.aws_iam_policy_document.basic_user_policy.json}";
-        name = prefixName "basic-user-policy";
+        name = "dailp-basic-user-policy";
         description = "Allows minimal S3 read permissions for unauthenticated users.";
       };
       dailp_editor_policy = {
         policy = "$\{data.aws_iam_policy_document.editor_user_policy.json}";
-        name = prefixName "editor-policy";
+        name = "dailp-editor-policy";
         description = "A policy giving editors permission to read and write to DAILPs S3 media bucket";
       };
       dailp_user_contributor_policy = {
         policy = "$\{data.aws_iam_policy_document.contributor_user_policy.json}";
-        name = prefixName "user-contributor-policy";
+        name = "dailp-user-contributor-policy";
         description = "Permissions for DAILP users at the Contributor level.";
       };
     };
@@ -101,17 +100,17 @@ in {
       dailp_user = {
         assume_role_policy = trust-policy;
         description = "A basic unauthenticated DAILP user";
-        name = prefixName "user";
+        name = "dailp-user";
       };
       dailp_user_contributor = {
         assume_role_policy = trust-policy;
         description = "A DAILP user with basic read/update permissions.";
-        name = prefixName "user-contributor";
+        name = "dailp-user-contributor";
       };
       dailp_user_editor = {
         assume_role_policy = trust-policy;
         description = "A user with editorial permissions on DAILP";
-        name = prefixName "user-editor";
+        name = "dailp-user-editor";
       };
     };
     # Bind policies to roles

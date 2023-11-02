@@ -2,7 +2,6 @@ export enum Environment {
   Local = "local",
   Development = "dev",
   Production = "prod",
-  UAT = "uat",
 }
 
 export const deploymentEnvironment: Environment =

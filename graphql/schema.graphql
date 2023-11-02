@@ -176,10 +176,6 @@ type AnnotatedForm {
 	TODO! User guard for contributors only
 	"""
 	userContributedAudio: [AudioSlice!]!
-	"""
-	Get comments on this word
-	"""
-	comments: [Comment!]!
 }
 
 """
@@ -332,54 +328,6 @@ enum CollectionSection {
 }
 
 """
-A comment a user has made on some piece of a document.
-"""
-type Comment {
-	"""
-	Unique identifier of this comment
-	"""
-	id: UUID!
-	"""
-	When the comment was posted
-	"""
-	postedAt: DateTime!
-	"""
-	Who posted the comment
-	"""
-	postedBy: User!
-	"""
-	The text of the comment
-	"""
-	textContent: String!
-	"""
-	An optional classification of the comment's content
-	"""
-	commentType: CommentType
-}
-
-"""
-Type representing the object that a comment is attached to
-"""
-union CommentParent = AnnotatedForm | DocumentParagraph
-
-"""
-An enum listing the possible types that a comment could be attached to
-"""
-enum CommentParentType {
-	WORD
-	PARAGRAPH
-}
-
-"""
-A type describing the kind of comment being made
-"""
-enum CommentType {
-	STORY
-	SUGGESTION
-	QUESTION
-}
-
-"""
 A block of content, which may be one of several types.
 Each page contains several blocks.
 
@@ -474,27 +422,6 @@ input DateInput {
 	year: Int!
 }
 
-type DateTime {
-	"""
-	UNIX timestamp of the datetime, useful for sorting
-	"""
-	timestamp: Int!
-	"""
-	Just the Date component of this DateTime, useful for user-facing display
-	"""
-	date: Date!
-}
-
-"""
-Input object for deleting an existing comment
-"""
-input DeleteCommentInput {
-	"""
-	ID of the comment to delete
-	"""
-	commentId: UUID!
-}
-
 """
 Delete a contributor attribution for a document based on the two ids
 """
@@ -546,30 +473,16 @@ type DocumentPage {
 	paragraphs: [DocumentParagraph!]!
 }
 
-"""
-One paragraph within a [`DocumentPage`]
-"""
 type DocumentParagraph {
-	"""
-	Unique identifier for this paragraph
-	"""
-	id: UUID!
-	"""
-	English translation of the whole paragraph
-	"""
-	translation: String!
-	"""
-	1-indexed position of this paragraph in a document
-	"""
-	index: Int!
 	"""
 	Source text of the paragraph broken down into words
 	"""
 	source: [AnnotatedSeg!]!
 	"""
-	Get comments on this paragraph
+	English translation of the whole paragraph
 	"""
-	comments: [Comment!]!
+	translation: String!
+	index: Int!
 }
 
 """
@@ -805,15 +718,6 @@ type Mutation {
 	"""
 	apiVersion: String!
 	"""
-	Delete a comment.
-	Will fail if the user making the request is not the poster.
-	"""
-	deleteComment(input: DeleteCommentInput!): CommentParent!
-	"""
-	Post a new comment on a given object
-	"""
-	postComment(input: PostCommentInput!): CommentParent!
-	"""
 	Mutation for adding/changing contributor attributions
 	"""
 	updateContributorAttribution(contribution: UpdateContributorAttribution!): UUID!
@@ -916,28 +820,6 @@ type PositionInDocument {
 	"""
 	indexReference: String!
 	iiifUrl: String
-}
-
-"""
-Input object for posting a new comment on some object
-"""
-input PostCommentInput {
-	"""
-	ID of the object that is being commented on
-	"""
-	parentId: UUID!
-	"""
-	Type of the object being commented on
-	"""
-	parentType: CommentParentType!
-	"""
-	Content of the comment
-	"""
-	textContent: String!
-	"""
-	A classifcation for the comment (optional)
-	"""
-	commentType: CommentType
 }
 
 type Query {
