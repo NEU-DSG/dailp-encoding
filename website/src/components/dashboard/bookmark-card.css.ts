@@ -22,13 +22,13 @@ export const card = style([
     gridTemplateColumns: "fit-content(20%) minmax(50px,5fr)",
     gridTemplateRows: "fit-content(100%) fit-content(100%)",
     columnGap: space.medium,
-    boxShadow: '8px 8px 4px rgba(0, 0, 0, 0.2)',
+    boxShadow: "8px 8px 4px rgba(0, 0, 0, 0.2)",
   },
   onHover({
-	  scale: 1.03,
+    scale: 1.03,
     borderWidth: "4px",
-    borderColor: "maroon"
-  })
+    borderColor: "maroon",
+  }),
 ])
 
 export const cardImage = style([
@@ -81,27 +81,27 @@ export const cardText = style([
 ])
 
 export const descriptionContainer = style({
-  display: 'flex',
-  justifyContent: 'space-between',
+  display: "flex",
+  justifyContent: "space-between",
   padding: space.medium,
-});
+})
 
 export const pillButton = style({
   marginRight: space.medium,
-  width: '10%',
-  height: '40%',
-  backgroundColor: 'white',
-  color: 'red',
-  display: 'inline-block',
-  borderRadius: '999px', 
-  textDecoration: 'none', 
-  fontSize: '16px', 
-  cursor: 'pointer',
-  userSelect: 'none',
-  border: '2px solid red',
-  position: 'relative',
-  textAlign: 'center',
-  top: '50%',
-  left: '5%',
-  transform: 'translate(-50%, -50%)',
-});
+  width: "10%",
+  height: "40%",
+  backgroundColor: "white",
+  color: "red",
+  display: "inline-block",
+  borderRadius: "999px",
+  textDecoration: "none",
+  fontSize: "16px",
+  cursor: "pointer",
+  userSelect: "none",
+  border: "2px solid red",
+  position: "relative",
+  textAlign: "center",
+  top: "50%",
+  left: "5%",
+  transform: "translate(-50%, -50%)",
+})

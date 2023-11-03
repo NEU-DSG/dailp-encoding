@@ -39,8 +39,9 @@ const LayoutDashboard: React.FC = ({ children }) => {
                   DAILP
                 </Link>
               </h1>
-              <span className={css.subHeader}>Digital Archive of Indigenous Language Persistence
-</span>
+              <span className={css.subHeader}>
+                Digital Archive of Indigenous Language Persistence
+              </span>
             </div>
 
             {deploymentEnvironment !== Environment.Production && (

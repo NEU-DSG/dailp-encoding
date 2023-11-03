@@ -414,6 +414,26 @@
     },
     "query": "-- Delete all document pages, which will cascade to delete all associated\n-- paragraphs and words.\ndelete from document_page\nwhere document_id = $1\n"
   },
+  "2dbab3e84c02adad2c49a975de61a4ae53c4924d59f697720a7f7e5beb451617": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        }
+      ],
+      "nullable": [
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "-- delete a comment given its ID\ndelete from comment where id = $1 returning id;"
+  },
   "32052923a631af8b0a51564e9d08578fc30b5d0e58b1593e8651f53343c91156": {
     "describe": {
       "columns": [
@@ -649,6 +669,89 @@
       }
     },
     "query": "select abstract_morpheme_tag.id as \"id!\"\nfrom unnest($1::text[]) as morpheme_gloss\n  inner join\n    abstract_morpheme_tag on abstract_morpheme_tag.internal_gloss = morpheme_gloss\n"
+  },
+  "3e141b9b31a8ff81d384bc12cd860a7b9e17853c1b9a0ce0a5fd4d714d55ff07": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "posted_at",
+          "ordinal": 1,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "posted_by",
+          "ordinal": 2,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "posted_by_name",
+          "ordinal": 3,
+          "type_info": "Text"
+        },
+        {
+          "name": "text_content",
+          "ordinal": 4,
+          "type_info": "Text"
+        },
+        {
+          "name": "comment_type: _",
+          "ordinal": 5,
+          "type_info": {
+            "Custom": {
+              "kind": {
+                "Enum": [
+                  "Story",
+                  "Suggestion",
+                  "Question"
+                ]
+              },
+              "name": "comment_type_enum"
+            }
+          }
+        },
+        {
+          "name": "parent_id",
+          "ordinal": 6,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "parent_type: _",
+          "ordinal": 7,
+          "type_info": {
+            "Custom": {
+              "kind": {
+                "Enum": [
+                  "Word",
+                  "Paragraph"
+                ]
+              },
+              "name": "comment_parent_type"
+            }
+          }
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        true,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "select\n    comment.id,\n    posted_at,\n    posted_by,\n    u_posted_by.display_name as \"posted_by_name\",\n    text_content,\n    comment_type as \"comment_type: _\",\n    parent_id,\n    parent_type as \"parent_type: _\"\nfrom comment\njoin dailp_user u_posted_by on u_posted_by.id = posted_by\nwhere comment.id = $1"
   },
   "43e42033828a07a488a1fbe4be6a5c7cea9d5c8d471d51a9fd39f939abd060f6": {
     "describe": {
@@ -1374,20 +1477,6 @@
     },
     "query": "select\n  attr.document_id,\n  attr.contribution_role,\n  contributor.id,\n  contributor.full_name\nfrom contributor_attribution as attr\n  inner join contributor on contributor.id = attr.contributor_id\nwhere attr.document_id = any($1)\n"
   },
-  "65df9af112fc60fc834c143ae8af09ce810ba316d912c08f2ba77b6ba877331f": {
-    "describe": {
-      "columns": [],
-      "nullable": [],
-      "parameters": {
-        "Left": [
-          "Uuid",
-          "TextArray",
-          "TextArray"
-        ]
-      }
-    },
-    "query": "update word set\n    source_text =\n        case\n            when $2::text[] != '{}' and $2[1] is not null then $2[1]\n            else source_text\n        end,\n    commentary =\n        case\n            when $3::text[] != '{}' then $3[1]\n            else commentary\n        end\nwhere id = $1"
-  },
   "6858e67c5a27aa4f38366244a46c9a4a50546c164a2b91599301aad1bc8f3cd0": {
     "describe": {
       "columns": [],
@@ -1701,6 +1790,100 @@
     },
     "query": "insert into morpheme_tag (\n  system_id, abstract_ids, gloss, title, role_override, description\n)\nvalues ($1, $2, $3, $4, $5, $6)\non conflict (system_id, abstract_ids) do update set\ngloss = excluded.gloss,\ntitle = excluded.title,\nrole_override = excluded.role_override,\ndescription = excluded.description\n"
   },
+  "848587140aaec9c68285617dab22966b1662abc6b5e8ead54cbcbed971352d0c": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "posted_at",
+          "ordinal": 1,
+          "type_info": "Timestamp"
+        },
+        {
+          "name": "posted_by",
+          "ordinal": 2,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "posted_by_name",
+          "ordinal": 3,
+          "type_info": "Text"
+        },
+        {
+          "name": "text_content",
+          "ordinal": 4,
+          "type_info": "Text"
+        },
+        {
+          "name": "comment_type: _",
+          "ordinal": 5,
+          "type_info": {
+            "Custom": {
+              "kind": {
+                "Enum": [
+                  "Story",
+                  "Suggestion",
+                  "Question"
+                ]
+              },
+              "name": "comment_type_enum"
+            }
+          }
+        },
+        {
+          "name": "parent_id",
+          "ordinal": 6,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "parent_type: _",
+          "ordinal": 7,
+          "type_info": {
+            "Custom": {
+              "kind": {
+                "Enum": [
+                  "Word",
+                  "Paragraph"
+                ]
+              },
+              "name": "comment_parent_type"
+            }
+          }
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        true,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          {
+            "Custom": {
+              "kind": {
+                "Enum": [
+                  "Word",
+                  "Paragraph"
+                ]
+              },
+              "name": "comment_parent_type"
+            }
+          }
+        ]
+      }
+    },
+    "query": "select\n    comment.id,\n    posted_at,\n    posted_by,\n    u_posted_by.display_name as \"posted_by_name\",\n    text_content,\n    comment_type as \"comment_type: _\",\n    parent_id,\n    parent_type as \"parent_type: _\"\nfrom comment\njoin dailp_user u_posted_by on u_posted_by.id = posted_by\nwhere parent_id = $1 and parent_type = $2\norder by posted_at asc"
+  },
   "8d3ceaae6a15910949eceeeff805e3a93231b1d234897dc2f8bd71fc6df3baaa": {
     "describe": {
       "columns": [
@@ -1893,6 +2076,28 @@
       }
     },
     "query": "select\n  word.id,\n  word.source_text,\n  word.simple_phonetics,\n  word.phonemic,\n  word.english_gloss,\n  word.commentary,\n  word.document_id,\n  word.index_in_document,\n  word.page_number,\n  media_resource.recorded_at as \"audio_recorded_at?\",\n  media_resource.url as \"audio_url?\",\n  media_slice.time_range as \"audio_slice?\",\n  media_slice.id as \"audio_slice_id?\",\n  contributor.id as \"audio_recorded_by?\",\n  contributor.display_name as \"audio_recorded_by_name?\",\n  word.include_audio_in_edited_collection,\n  editor.id as \"audio_edited_by?\",\n  editor.display_name as \"audio_edited_by_name?\"\nfrom word\n  left join media_slice on media_slice.id = word.audio_slice_id\n  left join media_resource on media_resource.id = media_slice.resource_id\n  left join dailp_user contributor on contributor.id = media_resource.recorded_by\n  left join dailp_user editor on editor.id = media_resource.recorded_by\nwhere\n  word.id = $1\n"
+  },
+  "958ee8a09f73dbfa64ba57e184e28342627ea3593ded2a08b451bfa52a2382b6": {
+    "describe": {
+      "columns": [
+        {
+          "name": "document_id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        }
+      ],
+      "nullable": [
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "TextArray",
+          "TextArray"
+        ]
+      }
+    },
+    "query": "update word set\n    source_text =\n        case\n            when $2::text[] != '{}' and $2[1] is not null then $2[1]\n            else source_text\n        end,\n    commentary =\n        case\n            when $3::text[] != '{}' then $3[1]\n            else commentary\n        end\nwhere id = $1\nreturning word.document_id;"
   },
   "9e02521e2e4f9bb5ee2e1c9dd33e18bb9b0ee8b7d584cf9867b889b92334f082": {
     "describe": {
@@ -2249,6 +2454,27 @@
     },
     "query": "select\n    id,\n    title,\n    document_id,\n    wordpress_id,\n    index_in_parent,\n    section as \"section: CollectionSection\",\n    chapter_path,\n    ltree2text(subpath(chapter_path, 0, 1)) AS \"collection_slug!\"\nfrom collection_chapter\nwhere ltree2text(subpath(chapter_path, 0, 1)) = any($1);"
   },
+  "b48c8aaace5a866c6b39949a5b06954e8b9916c363ac4aad0d72bf006accf84b": {
+    "describe": {
+      "columns": [
+        {
+          "name": "gloss",
+          "ordinal": 0,
+          "type_info": "Text"
+        }
+      ],
+      "nullable": [
+        null
+      ],
+      "parameters": {
+        "Left": [
+          "TextArray",
+          "Text"
+        ]
+      }
+    },
+    "query": "-- Selects the internal_gloss if there is one, otherwise \n-- selects the given gloss, a custom gloss entered by the user.\nselect coalesce(internal_gloss, input_gloss) as gloss\nfrom abstract_morpheme_tag\n\n-- Limits the fields of the table to only those with one abstract id,\n-- and which have the same abstract id as the abstract_morpheme_tag table.\n  inner join morpheme_tag\n    on array_length(morpheme_tag.abstract_ids, 1) = 1 \n      and abstract_morpheme_tag.id = morpheme_tag.abstract_ids[1] \n\n-- Limits the fields of the table to only those with the matching short name\n-- as the input and those with the corresponding system id from morpheme_tag.\n  inner join abbreviation_system \n    on abbreviation_system.short_name = $2::text \n      and morpheme_tag.system_id = abbreviation_system.id\n\n-- Joins matching glosses with the morpheme_tag table,\n-- and keeps the input_gloss even if there is no matching gloss (these will\n-- be the custom gloss entered by the user.)\n  right join unnest($1::text[]) as input_gloss\n    on input_gloss = morpheme_tag.gloss"
+  },
   "bba471ad9b42019470e67093fe974374468b993c472479dfae34b60d505188c0": {
     "describe": {
       "columns": [],
@@ -2490,6 +2716,20 @@
     },
     "query": "SELECT short_name\nFROM document\nWHERE id = $1"
   },
+  "cc4e4658101a331ab524544277099c073daf076dae5459b4bd3c7b47068a3367": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "TextArray",
+          "Date"
+        ]
+      }
+    },
+    "query": "update document set\n    title = \n        case\n            when $2::text[] != '{}' and $2[1] is not null then $2[1]\n            else title\n        end,\n    written_at =\n        case\n            when $3::date is not null then $3::date\n            else written_at\n        end\nwhere id = $1\n"
+  },
   "cc71e3a7b4c013adc4d0cb79acd702aa0daa0290013a31e9fee3bd1f5990fa4f": {
     "describe": {
       "columns": [],
@@ -2643,6 +2883,19 @@
     },
     "query": "-- Select all the chapters containing this document's id.\nselect\n    c.id,\n    c.title,\n    c.document_id,\n    c.wordpress_id,\n    c.index_in_parent,\n    c.chapter_path,\n    c.section as \"section: CollectionSection\"\nfrom collection_chapter as c\n    inner join\n        (select id from document where document.short_name = $1) as d on c.document_id = d.id;"
   },
+  "dd1ce7d0ae1bacb8aa1619f928cb32567dd8990345cec2d1dc793dc422fdef85": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Uuid"
+        ]
+      }
+    },
+    "query": "DELETE FROM contributor_attribution\nWHERE document_id = $1 AND contributor_id = $2;\n"
+  },
   "e1ebe64b2e98a03f7803c63a2e9011b0a064d7a6819dfdbc1a8c4d4e1160db90": {
     "describe": {
       "columns": [
@@ -2736,6 +2989,52 @@
       }
     },
     "query": "select\n  c.id,\n  c.title,\n  c.document_id,\n  c.wordpress_id,\n  c.index_in_parent,\n  c.chapter_path,\n  c.section as \"section: CollectionSection\"\nfrom collection_chapter as c\nwhere c.collection_slug = $1 \n  and c.slug = $2;\n"
+  },
+  "e48fa3267b00cc26ac5c6ab79fc7218fa6a6bcc25baec277fff3610e3c87d964": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Uuid",
+          "Text"
+        ]
+      }
+    },
+    "query": "INSERT INTO contributor_attribution (document_id, contributor_id, contribution_role)\nVALUES ($1, $2, $3)\nON CONFLICT (document_id, contributor_id)\nDO UPDATE SET contribution_role = $3;"
+  },
+  "e5c45f7baa4a80a79be259c35cc3e54e7369970054aaad13553568d2d01c3b08": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "translation",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "index!",
+          "ordinal": 2,
+          "type_info": "Int8"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        null
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "-- get a paragraph by id\n-- since paragraphs always include an index within their parent document\n-- we have to count this paragraph's position in on the page\nwith all_paragraphs as (\n  select\n    id,\n    english_translation as translation,\n    ROW_NUMBER() OVER (order by character_range asc) as \"index\"\n  from paragraph\n  where page_id = (\n    select p_inner.page_id from paragraph p_inner where id = $1\n  )\n) \n\nselect\n  id,\n  translation,\n  COALESCE(index, 1) as \"index!\" -- unclear why we need to upcast this\nfrom all_paragraphs\nwhere id=$1"
   },
   "f2be609690eadbcc793760011c18927f3a51a9b661319472bbec19b5c89c6d27": {
     "describe": {
@@ -2926,5 +3225,50 @@
       }
     },
     "query": "select\n  word.id,\n  word.source_text,\n  word.simple_phonetics,\n  word.phonemic,\n  word.english_gloss,\n  word.commentary,\n  word.document_id,\n  word.index_in_document,\n  word.page_number,\n  media_resource.recorded_at as \"audio_recorded_at?\",\n  media_resource.url as \"audio_url?\",\n  media_slice.time_range as \"audio_slice?\",\n  media_slice.id as \"audio_slice_id?\",\n  contributor.id as \"audio_recorded_by?\",\n  contributor.display_name as \"audio_recorded_by_name?\",\n  word.include_audio_in_edited_collection,\n  editor.id as \"audio_edited_by?\",\n  editor.display_name as \"audio_edited_by_name?\"\nfrom word\n  left join media_slice on media_slice.id = word.audio_slice_id\n  left join media_resource on media_resource.id = media_slice.resource_id\n  left join dailp_user contributor on contributor.id = media_resource.recorded_by\n  left join dailp_user editor on editor.id = media_resource.recorded_by\nwhere source_text ilike $1\n  or simple_phonetics ilike $1\n  or english_gloss ilike $1\n"
+  },
+  "fcf8a8d667e1d501a534d0c9506dbdd0ed570d5045c1f9dfdbce263c7c7ff9a7": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        }
+      ],
+      "nullable": [
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Text",
+          "Uuid",
+          {
+            "Custom": {
+              "kind": {
+                "Enum": [
+                  "Word",
+                  "Paragraph"
+                ]
+              },
+              "name": "comment_parent_type"
+            }
+          },
+          {
+            "Custom": {
+              "kind": {
+                "Enum": [
+                  "Story",
+                  "Suggestion",
+                  "Question"
+                ]
+              },
+              "name": "comment_type_enum"
+            }
+          }
+        ]
+      }
+    },
+    "query": "-- Insert a new comment from a user\ninsert into comment (posted_at, posted_by, text_content, parent_id, parent_type, comment_type)\nvalues (now(), $1, $2, $3, $4, $5)\nreturning id"
   }
 }

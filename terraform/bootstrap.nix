@@ -6,7 +6,7 @@ with lib; {
       table = mkOption { type = str; };
     };
     access_log_bucket = mkOption { type = str; };
-    stage = mkOption { type = enum [ "dev" "prod" ]; };
+    stage = mkOption { type = enum [ "dev" "prod" "uat"]; };
     vpc = mkOption { type = str; };
     subnets = mkOption { type = attrsOf str; };
     global_tags = mkOption {
@@ -60,9 +60,9 @@ with lib; {
     # management. This is a bit of a chicken and egg situation, where the
     # following block is manually disabled until the above resources exist.
     terraform.backend.s3 = {
-      profile = config.provider.aws.profile;
+      # access_key = config.provider.aws.profile;
       bucket = config.setup.state.bucket;
-      key = "terraform.tfstate";
+      key = "${if config.setup.stage == "uat" then "uat-" else ""}terraform.tfstate";
       region = config.provider.aws.region;
       dynamodb_table = config.setup.state.table;
       encrypt = true;

@@ -10,3 +10,4 @@ update word set
             else commentary
         end
 where id = $1
+returning word.document_id;

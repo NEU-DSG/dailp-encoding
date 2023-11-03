@@ -75,7 +75,6 @@ const ChapterPage = (props: {
                 breadcrumbs={chapter.breadcrumbs}
                 rootPath={collectionRoute(props.collectionSlug)}
                 doc={document}
-                showDetails={true}
               />
               <TabSet doc={document} />
             </>
