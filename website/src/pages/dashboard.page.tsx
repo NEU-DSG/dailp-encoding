@@ -6,7 +6,7 @@ const DashboardPage = () => {
   return (
     <LayoutDashboard>
       <main>
-      <Dashboard />
+        <Dashboard />
       </main>
     </LayoutDashboard>
   )

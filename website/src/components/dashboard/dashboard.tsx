@@ -1,12 +1,4 @@
-import {
-  Dialog,
-  DialogBackdrop,
-  Tab,
-  TabList,
-  TabPanel,
-  useDialogState,
-} from "reakit"
-import cwkwLogo from "src/assets/cwkw-logo.png"
+import { Tab, TabList, TabPanel, useDialogState } from "reakit"
 import {
   useAnnotatedDocumentQuery,
   useGetBookmarksQuery,
@@ -109,17 +101,17 @@ export const BookmarksTabItem = (props: { documentId: string }) => {
     "/pct:0,0,50,50/500,500/0/default.jpg") as unknown as string
   return (
     <>
-    <div className="cardShadow">
-      <BookmarkCard
-        thumbnail={thumbnailUrl}
-        header={{
-          text: docData?.title as unknown as string,
-          link: `/collections/cwkw`,
-          // link: `/document/${docData?.slug}`,
-        }}
-        description={docData?.date?.year as unknown as string}
-      />
-    </div>
+      <div className="cardShadow">
+        <BookmarkCard
+          thumbnail={thumbnailUrl}
+          header={{
+            text: docData?.title as unknown as string,
+            link: `/collections/cwkw`,
+            // link: `/document/${docData?.slug}`,
+          }}
+          description={docData?.date?.year as unknown as string}
+        />
+      </div>
     </>
   )
 }

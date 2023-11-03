@@ -1,12 +1,13 @@
 #![allow(missing_docs)]
 
-use chrono::NaiveDate;
+use chrono::{NaiveDate, NaiveDateTime};
 use sqlx::postgres::types::PgLTree;
 use std::ops::Bound;
 use std::str::FromStr;
 
 use crate::collection::CollectionChapter;
 use crate::collection::EditedCollection;
+use crate::comment::{Comment, CommentParentType, CommentType};
 use crate::user::AddBookmark;
 use crate::user::User;
 use crate::user::UserId;
@@ -45,6 +46,75 @@ impl Database {
             .test_before_acquire(false)
             .connect_lazy(&db_url)?;
         Ok(Database { client: conn })
+    }
+
+    /// Get a specific comment by id
+    pub async fn comment_by_id(&self, comment_id: &Uuid) -> Result<Comment> {
+        Ok(
+            query_file_as!(BasicComment, "queries/comment_by_id.sql", comment_id,)
+                .fetch_one(&self.client)
+                .await?
+                .into(),
+        )
+    }
+
+    /// Get all comments on a given object
+    pub async fn comments_by_parent(
+        &self,
+        parent_id: &Uuid,
+        parent_type: &CommentParentType,
+    ) -> Result<Vec<Comment>> {
+        Ok(query_file_as!(
+            BasicComment,
+            "queries/comments_by_parent.sql",
+            parent_id,
+            parent_type.clone() as CommentParentType
+        )
+        .fetch_all(&self.client)
+        .await?
+        .into_iter()
+        .map(|c| c.into())
+        .collect())
+    }
+
+    /// Insert a new comment into the database
+    pub async fn insert_comment(
+        &self,
+        posted_by: &Uuid,
+        text_content: String,
+        parent_id: &Uuid,
+        parent_type: &CommentParentType,
+        comment_type: &Option<CommentType>,
+    ) -> Result<Uuid> {
+        Ok(query_file_scalar!(
+            "queries/insert_comment.sql",
+            posted_by,
+            text_content,
+            parent_id,
+            parent_type.clone() as CommentParentType,
+            comment_type.clone() as Option<CommentType>
+        )
+        .fetch_one(&self.client)
+        .await?)
+    }
+
+    /// Delete a comment from the database
+    pub async fn delete_comment(&self, comment_id: &Uuid) -> Result<Uuid> {
+        Ok(
+            query_file_scalar!("queries/delete_comment.sql", comment_id,)
+                .fetch_one(&self.client)
+                .await?,
+        )
+    }
+
+    pub async fn paragraph_by_id(&self, paragraph_id: &Uuid) -> Result<DocumentParagraph> {
+        Ok(query_file_as!(
+            DocumentParagraph,
+            "queries/paragraph_by_id.sql",
+            paragraph_id
+        )
+        .fetch_one(&self.client)
+        .await?)
     }
 
     pub async fn word_by_id(&self, word_id: &Uuid) -> Result<AnnotatedForm> {
@@ -478,23 +548,115 @@ impl Database {
         todo!("Implement image annotations")
     }
 
-    // pub async fn maybe_undefined_to_vec() -> Vec<Option<String>> {}
+    /// TODO: does this actually upload the audio (no) -- it just dies it to a
+    /// word, so should we have a better name?
+    pub async fn upload_contributor_audio(
+        &self,
+        upload: AttachAudioToWordInput,
+        contributor_id: &Uuid,
+    ) -> Result<Uuid> {
+        let media_slice_id = query_file_scalar!(
+            "queries/attach_audio_to_word.sql",
+            contributor_id,
+            &upload.contributor_audio_url as _,
+            0,
+            0,
+            upload.word_id
+        )
+        .fetch_one(&self.client)
+        .await?;
+        Ok(media_slice_id)
+    }
 
     pub async fn update_word(&self, word: AnnotatedFormUpdate) -> Result<Uuid> {
+        let mut tx = self.client.begin().await?;
+
         let source = word.source.into_vec();
         let commentary = word.commentary.into_vec();
 
-        query_file!(
+        let document_id = query_file!(
             "queries/update_word.sql",
             word.id,
             &source as _,
-            &commentary as _
+            &commentary as _,
         )
-        .execute(&self.client)
+        .fetch_one(&mut tx)
+        .await?
+        .document_id;
+        // If word segmentation was not changed, then return early since SQL update queries need to be called.
+        if word.segments.is_undefined() {
+            tx.commit().await?;
+            return Ok(word.id);
+        }
+
+        let segments = word.segments.take().unwrap();
+
+        let system_name: Option<CherokeeOrthography> = *(&segments[0].system.clone());
+
+        let (doc_id, gloss, word_id, index, morpheme, role): (
+            Vec<_>,
+            Vec<_>,
+            Vec<_>,
+            Vec<_>,
+            Vec<_>,
+            Vec<_>,
+        ) = segments
+            .into_iter()
+            .enumerate()
+            .map(move |(index, segment)| {
+                (
+                    document_id,
+                    segment.gloss,
+                    word.id,
+                    index as i64, // index of the segment in the word
+                    segment.morpheme,
+                    segment.role,
+                )
+            })
+            .multiunzip();
+
+        // Convert the given glosses if they have an internal for to add to the database.
+        let internal_glosses = query_file_scalar!(
+            "queries/find_internal_glosses.sql",
+            &*gloss,
+            match system_name {
+                Some(CherokeeOrthography::Taoc) => "TAOC",
+                _ =>
+                    return Err(anyhow::anyhow!(
+                        "Other Cherokee systems are currently not supported"
+                    )),
+            }
+        )
+        .fetch_all(&mut tx)
         .await?;
+
+        // Add any newly created local glosses into morpheme gloss table.
+        query_file!(
+            "queries/upsert_local_morpheme_glosses.sql",
+            &*doc_id,
+            &*internal_glosses as _,
+        )
+        .execute(&mut tx)
+        .await?;
+
+        query_file!(
+            "queries/upsert_many_word_segments.sql",
+            &*doc_id,
+            &*internal_glosses as _,
+            &*word_id,
+            &*index,
+            &*morpheme,
+            &*role as _
+        )
+        .execute(&mut tx)
+        .await?;
+
+        tx.commit().await?;
 
         Ok(word.id)
     }
+
+    // pub async fn maybe_undefined_to_vec() -> Vec<Option<String>> {}
 
     pub async fn attach_audio_to_word(
         &self,
@@ -535,6 +697,22 @@ impl Database {
         Ok(_word_id)
     }
 
+    pub async fn update_document_metadata(&self, document: DocumentMetadataUpdate) -> Result<Uuid> {
+        let title = document.title.into_vec();
+        let written_at: Option<Date> = document.written_at.value().map(Into::into);
+
+        query_file!(
+            "queries/update_document_metadata.sql",
+            document.id,
+            &title as _,
+            &written_at as _
+        )
+        .execute(&self.client)
+        .await?;
+
+        Ok(document.id)
+    }
+
     pub async fn update_paragraph(&self, paragraph: ParagraphUpdate) -> Result<Uuid> {
         let translation = paragraph.translation.into_vec();
 
@@ -547,6 +725,44 @@ impl Database {
         .await?;
 
         Ok(paragraph.id)
+    }
+
+    pub async fn update_contributor_attribution(
+        &self,
+        contribution: UpdateContributorAttribution,
+    ) -> Result<Uuid> {
+        let document_id = contribution.document_id;
+        let contributor_id = contribution.contributor_id;
+        let contribution_role = contribution.contribution_role;
+
+        query_file!(
+            "queries/update_contributor_attribution.sql",
+            document_id,
+            &contributor_id as _,
+            &contribution_role as _
+        )
+        .execute(&self.client)
+        .await?;
+
+        Ok(document_id)
+    }
+
+    pub async fn delete_contributor_attribution(
+        &self,
+        contribution: DeleteContributorAttribution,
+    ) -> Result<Uuid> {
+        let document_id = contribution.document_id;
+        let contributor_id = contribution.contributor_id;
+
+        query_file!(
+            "queries/delete_contributor_attribution.sql",
+            document_id,
+            &contributor_id as _
+        )
+        .execute(&self.client)
+        .await?;
+
+        Ok(document_id)
     }
 
     pub async fn all_pages(&self) -> Result<Vec<page::Page>> {
@@ -1925,6 +2141,38 @@ impl Loader<EditedCollectionDetails> for Database {
                 )
             })
             .collect())
+    }
+}
+
+/// A simplified comment type that is easier to pull out of the database
+struct BasicComment {
+    pub id: Uuid,
+    pub posted_at: NaiveDateTime,
+
+    pub posted_by: Uuid,
+    pub posted_by_name: String,
+
+    pub text_content: String,
+    pub comment_type: Option<CommentType>,
+
+    pub parent_id: Uuid,
+    pub parent_type: CommentParentType,
+}
+
+impl Into<Comment> for BasicComment {
+    fn into(self) -> Comment {
+        Comment {
+            id: self.id,
+            posted_at: DateTime::new(self.posted_at),
+            posted_by: User {
+                id: self.posted_by.into(),
+                display_name: self.posted_by_name,
+            },
+            text_content: self.text_content,
+            comment_type: self.comment_type,
+            parent_id: self.parent_id,
+            parent_type: self.parent_type,
+        }
     }
 }
 

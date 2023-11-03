@@ -1,7 +1,5 @@
 import { style } from "@vanilla-extract/css"
-import { flowRight } from "lodash-es"
 import { important, position } from "polished"
-import { rightButton } from "src/components/carousel.css"
 import {
   colors,
   fonts,
@@ -13,8 +11,8 @@ import {
   thickness,
   vspace,
 } from "src/style/constants"
-import { paddingX, paddingY } from "src/style/utils"
-import { largeDialog, std } from "src/style/utils.css"
+import { paddingX } from "src/style/utils"
+import { std } from "src/style/utils.css"
 
 export const dashboardTab = style({
   borderRadius: 0,
@@ -98,7 +96,7 @@ export const dashboardHeader = style({
       height: 0,
     },
   },
-    marginTop: vspace.half,
+  marginTop: vspace.half,
 })
 
 export const dashboardItem = style({
@@ -108,6 +106,9 @@ export const dashboardItem = style({
   borderColor: "black",
   borderRadius: radii.medium,
   display: "grid",
+  // gridTemplateColumns: "fit-content(20%) minmax(50px,5fr)",
+  // gridTemplateRows: "fit-content(100%) fit-content(100%)",
+  // columnGap: space.medium,
 })
 
 export const noBullets = style({
@@ -117,5 +118,5 @@ export const noBullets = style({
 })
 
 export const cardShadow = style({
-  boxShadow: '2px 2px 4px rgba(0, 0, 0, 0.2)',
+  boxShadow: "2px 2px 4px rgba(0, 0, 0, 0.2)",
 })

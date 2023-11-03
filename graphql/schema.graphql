@@ -176,6 +176,10 @@ type AnnotatedForm {
 	TODO! User guard for contributors only
 	"""
 	userContributedAudio: [AudioSlice!]!
+	"""
+	Get comments on this word
+	"""
+	comments: [Comment!]!
 }
 
 """
@@ -195,6 +199,10 @@ input AnnotatedFormUpdate {
 	Possible update to commentary
 	"""
 	commentary: String
+	"""
+	Updated segments
+	"""
+	segments: [MorphemeSegmentUpdate!]
 }
 
 """
@@ -324,6 +332,54 @@ enum CollectionSection {
 }
 
 """
+A comment a user has made on some piece of a document.
+"""
+type Comment {
+	"""
+	Unique identifier of this comment
+	"""
+	id: UUID!
+	"""
+	When the comment was posted
+	"""
+	postedAt: DateTime!
+	"""
+	Who posted the comment
+	"""
+	postedBy: User!
+	"""
+	The text of the comment
+	"""
+	textContent: String!
+	"""
+	An optional classification of the comment's content
+	"""
+	commentType: CommentType
+}
+
+"""
+Type representing the object that a comment is attached to
+"""
+union CommentParent = AnnotatedForm | DocumentParagraph
+
+"""
+An enum listing the possible types that a comment could be attached to
+"""
+enum CommentParentType {
+	WORD
+	PARAGRAPH
+}
+
+"""
+A type describing the kind of comment being made
+"""
+enum CommentType {
+	STORY
+	SUGGESTION
+	QUESTION
+}
+
+"""
 A block of content, which may be one of several types.
 Each page contains several blocks.
 
@@ -399,9 +455,52 @@ type Date {
 	"""
 	year: Int!
 	"""
+	The month of this date
+	"""
+	month: Int!
+	"""
+	The day of this date
+	"""
+	day: Int!
+	"""
 	Formatted version of the date for humans to read
 	"""
 	formattedDate: String!
+}
+
+input DateInput {
+	day: Int!
+	month: Int!
+	year: Int!
+}
+
+type DateTime {
+	"""
+	UNIX timestamp of the datetime, useful for sorting
+	"""
+	timestamp: Int!
+	"""
+	Just the Date component of this DateTime, useful for user-facing display
+	"""
+	date: Date!
+}
+
+"""
+Input object for deleting an existing comment
+"""
+input DeleteCommentInput {
+	"""
+	ID of the comment to delete
+	"""
+	commentId: UUID!
+}
+
+"""
+Delete a contributor attribution for a document based on the two ids
+"""
+input DeleteContributorAttribution {
+	documentId: UUID!
+	contributorId: UUID!
 }
 
 type DocumentCollection {
@@ -422,6 +521,16 @@ type DocumentCollection {
 	documents: [DocumentReference!]!
 }
 
+"""
+Used for updating document metadata.
+All fields except id are optional.
+"""
+input DocumentMetadataUpdate {
+	id: UUID!
+	title: String
+	writtenAt: DateInput
+}
+
 type DocumentPage {
 	"""
 	One-indexed page number
@@ -437,16 +546,30 @@ type DocumentPage {
 	paragraphs: [DocumentParagraph!]!
 }
 
+"""
+One paragraph within a [`DocumentPage`]
+"""
 type DocumentParagraph {
+	"""
+	Unique identifier for this paragraph
+	"""
+	id: UUID!
+	"""
+	English translation of the whole paragraph
+	"""
+	translation: String!
+	"""
+	1-indexed position of this paragraph in a document
+	"""
+	index: Int!
 	"""
 	Source text of the paragraph broken down into words
 	"""
 	source: [AnnotatedSeg!]!
 	"""
-	English translation of the whole paragraph
+	Get comments on this paragraph
 	"""
-	translation: String!
-	index: Int!
+	comments: [Comment!]!
 }
 
 """
@@ -610,6 +733,29 @@ type MorphemeReference {
 }
 
 """
+A single unit of meaning and its gloss which can be edited.
+"""
+input MorphemeSegmentUpdate {
+	"""
+	Which Cherokee representation system is this segment written with?
+	"""
+	system: CherokeeOrthography
+	"""
+	Source language representation of this segment.
+	"""
+	morpheme: String!
+	"""
+	Target language representation of this segment.
+	"""
+	gloss: String!
+	"""
+	This field determines what character should separate this segment from
+	the next one when reconstituting the full segmentation string.
+	"""
+	role: WordSegmentRole!
+}
+
+"""
 A concrete representation of a particular functional morpheme.
 """
 type MorphemeTag {
@@ -659,6 +805,23 @@ type Mutation {
 	"""
 	apiVersion: String!
 	"""
+	Delete a comment.
+	Will fail if the user making the request is not the poster.
+	"""
+	deleteComment(input: DeleteCommentInput!): CommentParent!
+	"""
+	Post a new comment on a given object
+	"""
+	postComment(input: PostCommentInput!): CommentParent!
+	"""
+	Mutation for adding/changing contributor attributions
+	"""
+	updateContributorAttribution(contribution: UpdateContributorAttribution!): UUID!
+	"""
+	Mutation for deleting contributor attributions
+	"""
+	deleteContributorAttribution(contribution: DeleteContributorAttribution!): UUID!
+	"""
 	Mutation for paragraph and translation editing
 	"""
 	updateParagraph(paragraph: ParagraphUpdate!): UUID!
@@ -678,6 +841,7 @@ type Mutation {
 	Assumes user requesting mutation recoreded the audio
 	"""
 	attachAudioToWord(input: AttachAudioToWordInput!): AnnotatedForm!
+	updateDocumentMetadata(document: DocumentMetadataUpdate!): UUID!
 }
 
 """
@@ -752,6 +916,28 @@ type PositionInDocument {
 	"""
 	indexReference: String!
 	iiifUrl: String
+}
+
+"""
+Input object for posting a new comment on some object
+"""
+input PostCommentInput {
+	"""
+	ID of the object that is being commented on
+	"""
+	parentId: UUID!
+	"""
+	Type of the object being commented on
+	"""
+	parentType: CommentParentType!
+	"""
+	Content of the comment
+	"""
+	textContent: String!
+	"""
+	A classifcation for the comment (optional)
+	"""
+	commentType: CommentType
 }
 
 type Query {
@@ -858,6 +1044,15 @@ entities without requiring a central allocating authority.
 * [RFC4122: A Universally Unique IDentifier (UUID) URN Namespace](http://tools.ietf.org/html/rfc4122)
 """
 scalar UUID
+
+"""
+Update the contributor attribution for a document
+"""
+input UpdateContributorAttribution {
+	documentId: UUID!
+	contributorId: UUID!
+	contributionRole: String!
+}
 
 """
 A user record, for a contributor, editor, etc.
