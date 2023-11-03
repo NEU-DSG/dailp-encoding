@@ -519,7 +519,7 @@ impl Database {
     }
 
     // Gets all the bookmarks for a user given their id
-    pub async fn get_bookmarks(&self, user_id: Uuid) -> Result<Option<Vec<Uuid>>> {
+    pub async fn get_bookmarks(&self, user_id: &Uuid) -> Result<Option<Vec<Uuid>>> {
         let bookmarks = query_file!("queries/get_bookmarks.sql", user_id)
             .fetch_all(&self.client)
             .await?;
