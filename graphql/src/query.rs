@@ -296,6 +296,7 @@ impl Query {
     }
 
     /// Gets all bookmarks for the currently authenticated user.
+    #[graphql(guard = "AuthGuard")]
     async fn get_bookmarks(&self, context: &Context<'_>) -> FieldResult<Option<Vec<Uuid>>> {
         let user = context
             .data_opt::<UserInfo>()
