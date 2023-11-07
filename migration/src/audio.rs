@@ -4,7 +4,7 @@ use log::{error, info};
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use std::{collections::HashMap, time::Duration};
+use std::{collections::HashMap, io::Cursor, time::Duration};
 use tokio::time::sleep;
 
 /// Represents an identifier from Northeastern's Digital Repository Service (DRS)
@@ -214,6 +214,9 @@ pub struct AudioRes {
     /// Currently, this URL will be from either the DRS or an S3 bucket.
     audio_url: String,
 
+    /// The duration of the associated audio file, for bounds (and sanity) checking.
+    audio_duration: Duration,
+
     /// Text holding start and end times for words contained within an audio file
     ///
     /// Example Contents:
@@ -229,35 +232,46 @@ impl AudioRes {
     /// Creates a new Audio Resource from an audio key and an annotaion key.
     ///
     /// Keys should either be a resource string from the DRS or DAILP audio S3 Bucket.
-    pub async fn new(audio_ref_key: &str, annotation_ref_key: Option<&String>) -> Result<Self, anyhow::Error> {
+    pub async fn new(
+        audio_ref_key: &str,
+        annotation_ref_key: Option<&String>,
+    ) -> Result<Self, anyhow::Error> {
         println!("Creating new Audio Resource...");
         let client = Client::new();
-        
+
         let cf_domain = std::env::var("CF_URL")?;
         let s3_location = format!("https://{}", cf_domain);
         let is_drs_key = |test_value: &str| -> bool {
             return test_value.contains("neu");
         };
         // FIXME: this could be refactored, esp. for annotations
-        return Ok(Self { 
-            audio_url: 
-                if is_drs_key(audio_ref_key) {
-                    let drs_content = DrsRes::new(&client, audio_ref_key).await?;
-                    drs_content.get_url()
-                } else {
-                    format!("{}{}", s3_location, audio_ref_key)
-                },
-            annotations: 
-                if annotation_ref_key.is_none() {
-                    None
-                } else if is_drs_key(annotation_ref_key.unwrap()) {
-                    let drs_content = DrsRes::new(&client, annotation_ref_key.unwrap()).await?;
-                    Self::get_http_body(&client, drs_content.get_url()).await.ok()
-                } else {
-                    Self::get_http_body(&client, format!("{}{}", s3_location, annotation_ref_key.unwrap())).await.ok()
-                }
-            }
-        );
+
+        let audio_url = if is_drs_key(audio_ref_key) {
+            let drs_content = DrsRes::new(&client, audio_ref_key).await?;
+            drs_content.get_url()
+        } else {
+            format!("{}{}", s3_location, audio_ref_key)
+        };
+
+        return Ok(Self {
+            audio_duration: duration_of_audio_file_from_url(&audio_url).await?,
+            audio_url,
+            annotations: if annotation_ref_key.is_none() {
+                None
+            } else if is_drs_key(annotation_ref_key.unwrap()) {
+                let drs_content = DrsRes::new(&client, annotation_ref_key.unwrap()).await?;
+                Self::get_http_body(&client, drs_content.get_url())
+                    .await
+                    .ok()
+            } else {
+                Self::get_http_body(
+                    &client,
+                    format!("{}{}", s3_location, annotation_ref_key.unwrap()),
+                )
+                .await
+                .ok()
+            },
+        });
     }
 
     /// Tries to get the body response for a GET request to the provided url
@@ -282,13 +296,31 @@ impl AudioRes {
     /// Converts this [AudioRes] into an [AudioSlice] representing audio for an entire document
     ///
     /// Note: Documents cannot have parent tracks at this time.
-    pub fn into_document_audio(self) -> AudioSlice {
-        AudioSlice {
+    pub fn into_document_audio(self) -> Result<AudioSlice, anyhow::Error> {
+        let resource_url = self.audio_url.clone();
+        let audio_duration = self.audio_duration.clone();
+        let annotations = self.into_audio_slices();
+
+        if let Some(slices) = &annotations {
+            let last_slice = slices
+                .last()
+                .ok_or_else(|| anyhow::format_err!("Expected there to be at least one slice"))?;
+
+            anyhow::ensure!(
+                (last_slice.end_time.ok_or_else(|| {
+                    anyhow::format_err!("Expected word-level audio slice to have start/end time")
+                })? as u128)
+                    < audio_duration.as_millis(),
+                "Audio slices must fit within their associated audio"
+            )
+        }
+
+        Ok(AudioSlice {
             slice_id: None,
-            resource_url: self.audio_url.clone(),
+            resource_url,
             // FIXME is there a reason this isnt just None
             parent_track: Some(DocumentAudioId("".to_string())),
-            annotations: self.into_audio_slices(),
+            annotations,
             index: 0,
             start_time: None,
             end_time: None,
@@ -296,7 +328,7 @@ impl AudioRes {
             recorded_by: None,
             edited_by: None,
             include_in_edited_collection: true,
-        }
+        })
     }
 
     /// Converts this [AudioRes] to [AudioSlice]s based on segmentations in [AudioRes]' annotation field
@@ -360,4 +392,14 @@ impl AudioRes {
         }
         Some(result)
     }
+}
+
+/// Get the playback duration of an audio file from its URL
+/// Creates a tempfile, which is unfortunate.
+async fn duration_of_audio_file_from_url(url: &str) -> anyhow::Result<Duration> {
+    let response = reqwest::get(url).await?;
+    let mut file = tempfile::tempfile()?;
+    let mut content = Cursor::new(response.bytes().await?);
+    std::io::copy(&mut content, &mut file)?;
+    mp3_duration::from_file(&file).map_err(|e| e.into())
 }
