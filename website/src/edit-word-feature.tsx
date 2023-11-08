@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useState } from "react"
 import { HiPencilAlt } from "react-icons/hi/index"
 import { IoCheckmarkSharp } from "react-icons/io5/index"
 import {
@@ -20,7 +20,43 @@ export const EditButton = () => {
 
   const { cherokeeRepresentation } = usePreferences()
 
+  const [ showSaveChanges, setShowSaveChanges ] = useState(false);
+
+  //const onShow = React.useCallback(() => setWillSave(true), []);
+
+  const promptIfCancel = () => {
+    return (
+      <div className={css.cancelPrompt}>
+        <p>Do you want to save your changes?</p>
+        <IconButton
+          className=""
+          round={false}
+          onClick={() => {
+            setShowSaveChanges(false);
+            setIsEditing(false);
+            // and do whatever is the saving function
+          }}
+        >
+          Yes
+        </IconButton>
+
+        <IconButton
+          round={false}
+          onClick={() => {
+            setShowSaveChanges(false);
+            // isEditing still = true. Don't save, restore
+            //setIsEditing(false)
+          }}
+        >
+          No
+        </IconButton>
+
+      </div>
+    )
+  };
+
   return (
+    
     <Form {...form} className={css.form}>
       {isEditing ? (
         // Displays a "Cancel" button and "Save" button in editing mode.
@@ -29,7 +65,8 @@ export const EditButton = () => {
             className={css.cancelButton}
             round={false}
             onClick={() => {
-              setIsEditing(false)
+              setShowSaveChanges(true);
+              //setIsEditing(false)
             }}
           >
             Cancel
@@ -43,7 +80,12 @@ export const EditButton = () => {
           >
             Save
           </IconTextButton>
+          {showSaveChanges &&
+            promptIfCancel()
+          }
         </>
+
+        
       ) : (
         <IconTextButton
           icon={<HiPencilAlt />}

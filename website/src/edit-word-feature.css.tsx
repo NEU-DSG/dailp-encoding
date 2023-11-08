@@ -51,3 +51,13 @@ export const formInput = style([
     resize: "none",
   },
 ])
+
+
+export const cancelPrompt = style({
+  fontFamily: fonts.header,
+  fontWeight: "normal",
+  backgroundColor: "green",
+  position: "absolute",
+  width: "100%",
+  alignContent: "center",
+})
