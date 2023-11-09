@@ -1,17 +1,3 @@
-"""
-Adds a bookmarked document to the user's list of bookmarks
-"""
-input AddBookmark {
-	"""
-	ID of the document to add bookmark
-	"""
-	documentId: UUID!
-	"""
-	Whether the document is already bookmarked
-	"""
-	bookmarkBool: Boolean!
-}
-
 type AnnotatedDoc {
 	"""
 	Official short identifier for this document
@@ -21,6 +7,10 @@ type AnnotatedDoc {
 	Full title of the document
 	"""
 	title: String!
+	"""
+	Short title for the document
+	"""
+	shortName: String!
 	"""
 	Date and time this document was written or created
 	"""
@@ -829,9 +819,10 @@ type Mutation {
 	updateAnnotation(data: JSON!): Boolean!
 	updateWord(word: AnnotatedFormUpdate!): AnnotatedForm!
 	"""
-	Adds a bookmark to the user's list of bookmarks
+	Adds a bookmark to the user's list of bookmarks.
+	Removes it if it already exists.
 	"""
-	addBookmark(bookmark: AddBookmark!): UUID!
+	updateBookmark(bookmark: UpdateBookmark!): UUID!
 	"""
 	Decide if a piece audio should be included in edited collection
 	"""
@@ -971,6 +962,10 @@ type Query {
 	"""
 	Retrieves a full document from its unique identifier.
 	"""
+	documentByUuid(id: UUID!): AnnotatedDoc
+	"""
+	Retrieves a full document from its unique identifier.
+	"""
 	page(id: String!): Page
 	"""
 	Lists all forms containing a morpheme with the given gloss.
@@ -1009,11 +1004,7 @@ type Query {
 	"""
 	Gets all bookmarks for the currently authenticated user.
 	"""
-	getBookmarks: [UUID!]
-	"""
-	Gets the short name of a document given its id
-	"""
-	getDocShortName(docId: UUID!): String!
+	bookmarkedDocuments: [UUID!]
 }
 
 """
@@ -1044,6 +1035,21 @@ entities without requiring a central allocating authority.
 * [RFC4122: A Universally Unique IDentifier (UUID) URN Namespace](http://tools.ietf.org/html/rfc4122)
 """
 scalar UUID
+
+"""
+Adds a bookmarked document to the user's list of bookmarks
+Removes it if it's already bookmarked
+"""
+input UpdateBookmark {
+	"""
+	ID of the document to add/remove bookmark
+	"""
+	documentId: UUID!
+	"""
+	Whether the document is already bookmarked
+	"""
+	bookmarkBool: Boolean!
+}
 
 """
 Update the contributor attribution for a document

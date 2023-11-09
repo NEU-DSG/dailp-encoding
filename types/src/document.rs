@@ -66,6 +66,11 @@ impl AnnotatedDoc {
         &self.meta.title
     }
 
+    /// Short title for the document
+    async fn short_name(&self) -> &str {
+        &self.meta.short_name
+    }
+
     /// Date and time this document was written or created
     async fn date(&self) -> &Option<Date> {
         &self.meta.date

@@ -3,7 +3,7 @@
 use dailp::{
     comment::{CommentParent, DeleteCommentInput, PostCommentInput},
     slugify_ltree,
-    user::AddBookmark,
+    user::UpdateBookmark,
     AnnotatedForm, AttachAudioToWordInput, CollectionChapter, CurateWordAudioInput,
     DeleteContributorAttribution, DocumentMetadataUpdate, UpdateContributorAttribution, Uuid,
 };
@@ -126,6 +126,18 @@ impl Query {
         Ok(context
             .data::<DataLoader<Database>>()?
             .load_one(dailp::DocumentShortName(slug.to_ascii_uppercase()))
+            .await?)
+    }
+
+    /// Retrieves a full document from its unique identifier.
+    pub async fn document_by_uuid(
+        &self,
+        context: &Context<'_>,
+        id: Uuid,
+    ) -> FieldResult<Option<AnnotatedDoc>> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .load_one(dailp::DocumentId(id))
             .await?)
     }
 
@@ -297,7 +309,7 @@ impl Query {
 
     /// Gets all bookmarks for the currently authenticated user.
     #[graphql(guard = "AuthGuard")]
-    async fn get_bookmarks(&self, context: &Context<'_>) -> FieldResult<Option<Vec<Uuid>>> {
+    async fn bookmarked_documents(&self, context: &Context<'_>) -> FieldResult<Option<Vec<Uuid>>> {
         let user = context
             .data_opt::<UserInfo>()
             .ok_or_else(|| anyhow::format_err!("User is not signed in"))?;
@@ -305,16 +317,7 @@ impl Query {
         Ok(context
             .data::<DataLoader<Database>>()?
             .loader()
-            .get_bookmarks(&user.id)
-            .await?)
-    }
-
-    /// Gets the short name of a document given its id
-    async fn get_doc_short_name(&self, context: &Context<'_>, doc_id: Uuid) -> FieldResult<String> {
-        Ok(context
-            .data::<DataLoader<Database>>()?
-            .loader()
-            .get_doc_short_name(doc_id)
+            .bookmarked_documents(&user.id)
             .await?)
     }
 }
@@ -475,11 +478,12 @@ impl Mutation {
             .await?)
     }
 
-    /// Adds a bookmark to the user's list of bookmarks
-    async fn add_bookmark(
+    /// Adds a bookmark to the user's list of bookmarks.
+    /// Removes it if it already exists.
+    async fn update_bookmark(
         &self,
         context: &Context<'_>,
-        bookmark: AddBookmark,
+        bookmark: UpdateBookmark,
     ) -> FieldResult<Uuid> {
         let user = context
             .data_opt::<UserInfo>()
@@ -487,7 +491,7 @@ impl Mutation {
         Ok(context
             .data::<DataLoader<Database>>()?
             .loader()
-            .add_bookmark(bookmark, user.id)
+            .update_bookmark(bookmark, user.id)
             .await?)
     }
 

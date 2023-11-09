@@ -23,9 +23,10 @@ pub struct User {
 }
 
 /// Adds a bookmarked document to the user's list of bookmarks
+/// Removes it if it's already bookmarked
 #[derive(async_graphql::InputObject)]
-pub struct AddBookmark {
-    /// ID of the document to add bookmark
+pub struct UpdateBookmark {
+    /// ID of the document to add/remove bookmark
     pub document_id: Uuid,
     /// Whether the document is already bookmarked
     pub bookmark_bool: bool,
