@@ -33,7 +33,7 @@ export const BookmarkCard = (props: {
         </span>
         <span className={cardText}>999 contributions</span>
         <span className={cardText}>Last Edited: Never</span>
-        <a className={pillButton} href="/collections/cwkw">
+        <a className={pillButton} href={props.header.link}>
           View
         </a>
       </div>

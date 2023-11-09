@@ -35,14 +35,6 @@ export type Scalars = {
   UUID: any
 }
 
-/** Adds a bookmarked document to the user's list of bookmarks */
-export type AddBookmark = {
-  /** Whether the document is already bookmarked */
-  readonly bookmarkBool: Scalars["Boolean"]
-  /** ID of the document to add bookmark */
-  readonly documentId: Scalars["UUID"]
-}
-
 export type AnnotatedDoc = {
   readonly __typename?: "AnnotatedDoc"
   /** The audio recording resource for this entire document */
@@ -82,6 +74,8 @@ export type AnnotatedDoc = {
   readonly orderIndex: Scalars["Int"]
   /** Images of each source document page, in order */
   readonly pageImages: Maybe<IiifImages>
+  /** Short title for the document */
+  readonly shortName: Scalars["String"]
   /** URL-ready slug for this document, generated from the title */
   readonly slug: Scalars["String"]
   /** The original source(s) of this document, the most important first. */
@@ -631,8 +625,6 @@ export type MorphemeTag = {
 
 export type Mutation = {
   readonly __typename?: "Mutation"
-  /** Adds a bookmark to the user's list of bookmarks */
-  readonly addBookmark: Scalars["UUID"]
   /**
    * Mutation must have at least one visible field for introspection to work
    * correctly, so we just provide an API version which might be useful in
@@ -656,6 +648,11 @@ export type Mutation = {
   /** Post a new comment on a given object */
   readonly postComment: CommentParent
   readonly updateAnnotation: Scalars["Boolean"]
+  /**
+   * Adds a bookmark to the user's list of bookmarks.
+   * Removes it if it already exists.
+   */
+  readonly updateBookmark: Scalars["UUID"]
   /** Mutation for adding/changing contributor attributions */
   readonly updateContributorAttribution: Scalars["UUID"]
   readonly updateDocumentMetadata: Scalars["UUID"]
@@ -663,10 +660,6 @@ export type Mutation = {
   /** Mutation for paragraph and translation editing */
   readonly updateParagraph: Scalars["UUID"]
   readonly updateWord: AnnotatedForm
-}
-
-export type MutationAddBookmarkArgs = {
-  bookmark: AddBookmark
 }
 
 export type MutationAttachAudioToWordArgs = {
@@ -691,6 +684,10 @@ export type MutationPostCommentArgs = {
 
 export type MutationUpdateAnnotationArgs = {
   data: Scalars["JSON"]
+}
+
+export type MutationUpdateBookmarkArgs = {
+  bookmark: UpdateBookmark
 }
 
 export type MutationUpdateContributorAttributionArgs = {
@@ -797,16 +794,16 @@ export type Query = {
   readonly allPages: ReadonlyArray<Page>
   /** List of all the functional morpheme tags available */
   readonly allTags: ReadonlyArray<MorphemeTag>
+  /** Gets all bookmarks for the currently authenticated user. */
+  readonly bookmarkedDocuments: Maybe<ReadonlyArray<Scalars["UUID"]>>
   /** Retrieves a chapter and its contents by its collection and chapter slug. */
   readonly chapter: Maybe<CollectionChapter>
   readonly collection: DocumentCollection
   /** Retrieves a full document from its unique name. */
   readonly document: Maybe<AnnotatedDoc>
+  /** Retrieves a full document from its unique identifier. */
+  readonly documentByUuid: Maybe<AnnotatedDoc>
   readonly editedCollection: Maybe<EditedCollection>
-  /** Gets all bookmarks for the currently authenticated user. */
-  readonly getBookmarks: Maybe<ReadonlyArray<Scalars["UUID"]>>
-  /** Gets the short name of a document given its id */
-  readonly getDocShortName: Scalars["String"]
   /**
    * Retrieve information for the morpheme that corresponds to the given tag
    * string. For example, "3PL.B" is the standard string referring to a 3rd
@@ -858,12 +855,12 @@ export type QueryDocumentArgs = {
   slug: Scalars["String"]
 }
 
-export type QueryEditedCollectionArgs = {
-  slug: Scalars["String"]
+export type QueryDocumentByUuidArgs = {
+  id: Scalars["UUID"]
 }
 
-export type QueryGetDocShortNameArgs = {
-  docId: Scalars["UUID"]
+export type QueryEditedCollectionArgs = {
+  slug: Scalars["String"]
 }
 
 export type QueryMorphemeTagArgs = {
@@ -909,6 +906,17 @@ export type SourceAttribution = {
   readonly link: Scalars["String"]
   /** Name of the source, i.e. "The Newberry Library" */
   readonly name: Scalars["String"]
+}
+
+/**
+ * Adds a bookmarked document to the user's list of bookmarks
+ * Removes it if it's already bookmarked
+ */
+export type UpdateBookmark = {
+  /** Whether the document is already bookmarked */
+  readonly bookmarkBool: Scalars["Boolean"]
+  /** ID of the document to add/remove bookmark */
+  readonly documentId: Scalars["UUID"]
 }
 
 /** Update the contributor attribution for a document */
@@ -1010,6 +1018,55 @@ export type AnnotatedDocumentQueryVariables = Exact<{
 
 export type AnnotatedDocumentQuery = { readonly __typename?: "Query" } & {
   readonly document: Maybe<
+    { readonly __typename?: "AnnotatedDoc" } & Pick<
+      AnnotatedDoc,
+      "id" | "title" | "slug" | "isReference"
+    > & {
+        readonly date: Maybe<
+          { readonly __typename?: "Date" } & Pick<Date, "year">
+        >
+        readonly lastEdited: Maybe<
+          { readonly __typename?: "Date" } & Pick<Date, "formattedDate">
+        >
+        readonly sources: ReadonlyArray<
+          { readonly __typename?: "SourceAttribution" } & Pick<
+            SourceAttribution,
+            "name" | "link"
+          >
+        >
+        readonly audioRecording: Maybe<
+          { readonly __typename?: "AudioSlice" } & Pick<
+            AudioSlice,
+            "resourceUrl" | "startTime" | "endTime"
+          >
+        >
+        readonly translatedPages: Maybe<
+          ReadonlyArray<
+            { readonly __typename?: "DocumentPage" } & {
+              readonly image: Maybe<
+                { readonly __typename?: "PageImage" } & Pick<PageImage, "url">
+              >
+            }
+          >
+        >
+        readonly chapters: Maybe<
+          ReadonlyArray<
+            { readonly __typename?: "CollectionChapter" } & Pick<
+              CollectionChapter,
+              "path"
+            >
+          >
+        >
+      }
+  >
+}
+
+export type AnnotatedDocumentByIdQueryVariables = Exact<{
+  docId: Scalars["UUID"]
+}>
+
+export type AnnotatedDocumentByIdQuery = { readonly __typename?: "Query" } & {
+  readonly documentByUuid: Maybe<
     { readonly __typename?: "AnnotatedDoc" } & Pick<
       AnnotatedDoc,
       "id" | "title" | "slug" | "isReference"
@@ -1836,29 +1893,19 @@ export type CurateWordAudioMutation = { readonly __typename?: "Mutation" } & {
     }
 }
 
-export type AddBookmarkMutationVariables = Exact<{
-  bookmark: AddBookmark
+export type UpdateBookmarkMutationVariables = Exact<{
+  bookmark: UpdateBookmark
 }>
 
-export type AddBookmarkMutation = { readonly __typename?: "Mutation" } & Pick<
-  Mutation,
-  "addBookmark"
->
+export type UpdateBookmarkMutation = {
+  readonly __typename?: "Mutation"
+} & Pick<Mutation, "updateBookmark">
 
-export type GetBookmarksQueryVariables = Exact<{ [key: string]: never }>
+export type BookmarkedDocumentsQueryVariables = Exact<{ [key: string]: never }>
 
-export type GetBookmarksQuery = { readonly __typename?: "Query" } & Pick<
+export type BookmarkedDocumentsQuery = { readonly __typename?: "Query" } & Pick<
   Query,
-  "getBookmarks"
->
-
-export type GetDocShortNameQueryVariables = Exact<{
-  docId: Scalars["UUID"]
-}>
-
-export type GetDocShortNameQuery = { readonly __typename?: "Query" } & Pick<
-  Query,
-  "getDocShortName"
+  "bookmarkedDocuments"
 >
 
 export type UpdateParagraphMutationVariables = Exact<{
@@ -2026,6 +2073,48 @@ export function useAnnotatedDocumentQuery(
   return Urql.useQuery<AnnotatedDocumentQuery, AnnotatedDocumentQueryVariables>(
     { query: AnnotatedDocumentDocument, ...options }
   )
+}
+export const AnnotatedDocumentByIdDocument = gql`
+  query AnnotatedDocumentById($docId: UUID!) {
+    documentByUuid(id: $docId) {
+      id
+      title
+      slug
+      isReference
+      date {
+        year
+      }
+      lastEdited {
+        formattedDate
+      }
+      sources {
+        name
+        link
+      }
+      audioRecording {
+        resourceUrl
+        startTime
+        endTime
+      }
+      translatedPages {
+        image {
+          url
+        }
+      }
+      chapters {
+        path
+      }
+    }
+  }
+`
+
+export function useAnnotatedDocumentByIdQuery(
+  options: Omit<Urql.UseQueryArgs<AnnotatedDocumentByIdQueryVariables>, "query">
+) {
+  return Urql.useQuery<
+    AnnotatedDocumentByIdQuery,
+    AnnotatedDocumentByIdQueryVariables
+  >({ query: AnnotatedDocumentByIdDocument, ...options })
 }
 export const DocumentContentsDocument = gql`
   query DocumentContents(
@@ -2480,44 +2569,31 @@ export function useCurateWordAudioMutation() {
     CurateWordAudioMutationVariables
   >(CurateWordAudioDocument)
 }
-export const AddBookmarkDocument = gql`
-  mutation AddBookmark($bookmark: AddBookmark!) {
-    addBookmark(bookmark: $bookmark)
+export const UpdateBookmarkDocument = gql`
+  mutation UpdateBookmark($bookmark: UpdateBookmark!) {
+    updateBookmark(bookmark: $bookmark)
   }
 `
 
-export function useAddBookmarkMutation() {
-  return Urql.useMutation<AddBookmarkMutation, AddBookmarkMutationVariables>(
-    AddBookmarkDocument
-  )
+export function useUpdateBookmarkMutation() {
+  return Urql.useMutation<
+    UpdateBookmarkMutation,
+    UpdateBookmarkMutationVariables
+  >(UpdateBookmarkDocument)
 }
-export const GetBookmarksDocument = gql`
-  query GetBookmarks {
-    getBookmarks
+export const BookmarkedDocumentsDocument = gql`
+  query BookmarkedDocuments {
+    bookmarkedDocuments
   }
 `
 
-export function useGetBookmarksQuery(
-  options?: Omit<Urql.UseQueryArgs<GetBookmarksQueryVariables>, "query">
+export function useBookmarkedDocumentsQuery(
+  options?: Omit<Urql.UseQueryArgs<BookmarkedDocumentsQueryVariables>, "query">
 ) {
-  return Urql.useQuery<GetBookmarksQuery, GetBookmarksQueryVariables>({
-    query: GetBookmarksDocument,
-    ...options,
-  })
-}
-export const GetDocShortNameDocument = gql`
-  query GetDocShortName($docId: UUID!) {
-    getDocShortName(docId: $docId)
-  }
-`
-
-export function useGetDocShortNameQuery(
-  options: Omit<Urql.UseQueryArgs<GetDocShortNameQueryVariables>, "query">
-) {
-  return Urql.useQuery<GetDocShortNameQuery, GetDocShortNameQueryVariables>({
-    query: GetDocShortNameDocument,
-    ...options,
-  })
+  return Urql.useQuery<
+    BookmarkedDocumentsQuery,
+    BookmarkedDocumentsQueryVariables
+  >({ query: BookmarkedDocumentsDocument, ...options })
 }
 export const UpdateParagraphDocument = gql`
   mutation UpdateParagraph($paragraph: ParagraphUpdate!) {

@@ -8,7 +8,7 @@ use std::str::FromStr;
 use crate::collection::CollectionChapter;
 use crate::collection::EditedCollection;
 use crate::comment::{Comment, CommentParentType, CommentType};
-use crate::user::AddBookmark;
+use crate::user::UpdateBookmark;
 use crate::user::User;
 use crate::user::UserId;
 use {
@@ -506,9 +506,9 @@ impl Database {
 
     /// Adds a bookmark to the user's list of bookmarks
     /// Will return the user id.
-    pub async fn add_bookmark(&self, bookmark: AddBookmark, user_id: Uuid) -> Result<Uuid> {
+    pub async fn update_bookmark(&self, bookmark: UpdateBookmark, user_id: Uuid) -> Result<Uuid> {
         query_file!(
-            "queries/add_bookmark.sql",
+            "queries/update_bookmark.sql",
             user_id,
             &bookmark.document_id,
             &bookmark.bookmark_bool
@@ -519,7 +519,7 @@ impl Database {
     }
 
     // Gets all the bookmarks for a user given their id
-    pub async fn get_bookmarks(&self, user_id: &Uuid) -> Result<Option<Vec<Uuid>>> {
+    pub async fn bookmarked_documents(&self, user_id: &Uuid) -> Result<Option<Vec<Uuid>>> {
         let bookmarks = query_file!("queries/get_bookmarks.sql", user_id)
             .fetch_all(&self.client)
             .await?;
@@ -534,14 +534,6 @@ impl Database {
                     .collect(),
             ))
         }
-    }
-
-    // Gets the short name of a document given its id
-    pub async fn get_doc_short_name(&self, document_id: Uuid) -> Result<String> {
-        let short_name = query_file!("queries/get_doc_short_name.sql", document_id)
-            .fetch_all(&self.client)
-            .await?;
-        Ok(short_name[0].short_name.clone())
     }
 
     pub async fn update_annotation(&self, _annote: annotation::Annotation) -> Result<()> {

@@ -45,6 +45,38 @@ query AnnotatedDocument($slug: String!) {
   }
 }
 
+query AnnotatedDocumentById($docId: UUID!) {
+  documentByUuid(id: $docId) {
+    id
+    title
+    slug
+    isReference
+    date {
+      year
+    }
+    lastEdited {
+      formattedDate
+    }
+    sources {
+      name
+      link
+    }
+    audioRecording {
+      resourceUrl
+      startTime
+      endTime
+    }
+    translatedPages {
+      image {
+        url
+      }
+    }
+    chapters {
+      path
+    }
+  }
+}
+
 query DocumentContents(
   $slug: String!
   $morphemeSystem: CherokeeOrthography!
@@ -379,16 +411,12 @@ mutation CurateWordAudio($input: CurateWordAudioInput!) {
   }
 }
 
-mutation AddBookmark($bookmark: AddBookmark!) {
-  addBookmark(bookmark: $bookmark)
+mutation UpdateBookmark($bookmark: UpdateBookmark!) {
+  updateBookmark(bookmark: $bookmark)
 }
 
-query GetBookmarks {
-  getBookmarks
-}
-
-query GetDocShortName($docId: UUID!) {
-  getDocShortName(docId: $docId)
+query BookmarkedDocuments {
+  bookmarkedDocuments
 }
 
 mutation UpdateParagraph($paragraph: ParagraphUpdate!) {

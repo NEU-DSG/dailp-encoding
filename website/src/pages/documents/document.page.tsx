@@ -186,8 +186,6 @@ export const TabSet = ({ doc }: { doc: Document }) => {
         {!isMobile ? <div>Scroll to Top</div> : null}
       </Button>
 
-      <BookmarkButton documentId={doc.id} />
-
       <TabPanel
         {...tabs}
         className={css.docTabPanel}
@@ -434,7 +432,7 @@ export const DocumentTitleHeader = (p: {
     Dailp.CollectionChapter["breadcrumbs"][0],
     "name" | "slug"
   >[]
-  doc: Pick<Dailp.AnnotatedDoc, "slug" | "title"> & {
+  doc: Pick<Dailp.AnnotatedDoc, "slug" | "title" | "id"> & {
     date: NullPick<Dailp.AnnotatedDoc["date"], "year">
     audioRecording?: NullPick<
       Dailp.AnnotatedDoc["audioRecording"],
@@ -464,6 +462,7 @@ export const DocumentTitleHeader = (p: {
           <strong>No Audio Available</strong>
         </div>
       )}
+      <BookmarkButton documentId={p.doc.id} />
       <div className={css.alignRight}>
         {!isMobile ? (
           <Button onClick={() => window.print()}>Print</Button>
@@ -494,10 +493,10 @@ export const DocumentTitleHeader = (p: {
 export const BookmarkButton = (props: { documentId: String }) => {
   const [isBookmarked, setIsBookmarked] = useState(false)
   const [addBookmarkMutationResult, addBookmarkMutation] =
-    Dailp.useAddBookmarkMutation()
+    Dailp.useUpdateBookmarkMutation()
   const documentId = props.documentId
-  const [{ data }] = Dailp.useGetBookmarksQuery()
-  if (data?.getBookmarks?.indexOf(documentId) !== -1) {
+  const [{ data }] = Dailp.useBookmarkedDocumentsQuery()
+  if (data?.bookmarkedDocuments?.indexOf(documentId) !== -1) {
     if (!isBookmarked) {
       setIsBookmarked(true)
     }

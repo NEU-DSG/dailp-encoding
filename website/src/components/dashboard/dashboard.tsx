@@ -1,8 +1,7 @@
 import { Tab, TabList, TabPanel, useDialogState } from "reakit"
 import {
-  useAnnotatedDocumentQuery,
-  useGetBookmarksQuery,
-  useGetDocShortNameQuery,
+  useAnnotatedDocumentByIdQuery,
+  useBookmarkedDocumentsQuery,
 } from "src/graphql/dailp"
 import { useScrollableTabState } from "src/scrollable-tabs"
 import { BookmarkCard } from "./bookmark-card"
@@ -74,12 +73,12 @@ export const ActivityTab = () => {
 }
 
 export const BookmarksTab = () => {
-  const [{ data }] = useGetBookmarksQuery()
+  const [{ data }] = useBookmarkedDocumentsQuery()
 
   return (
     <>
       <ul className={css.noBullets}>
-        {data?.getBookmarks?.map((docId) => (
+        {data?.bookmarkedDocuments?.map((docId) => (
           <li>
             <BookmarksTabItem documentId={docId} />
           </li>
@@ -90,13 +89,16 @@ export const BookmarksTab = () => {
 }
 
 export const BookmarksTabItem = (props: { documentId: string }) => {
-  const [{ data: docSlug }] = useGetDocShortNameQuery({
+  const [{ data: doc }] = useAnnotatedDocumentByIdQuery({
     variables: { docId: props.documentId },
   })
-  const [{ data: doc }] = useAnnotatedDocumentQuery({
-    variables: { slug: docSlug?.getDocShortName as string },
-  })
-  const docData = doc?.document
+  const docData = doc?.documentByUuid
+  const docFullPath = docData?.chapters?.[0]?.path
+  let docPath = ""
+  if (docFullPath?.length !== undefined && docFullPath?.length > 0) {
+    docPath = docFullPath[0] + "/" + docFullPath[docFullPath.length - 1]
+  }
+  console.log(docPath)
   const thumbnailUrl = (docData?.translatedPages?.[0]?.image?.url +
     "/pct:0,0,50,50/500,500/0/default.jpg") as unknown as string
   return (
@@ -106,8 +108,7 @@ export const BookmarksTabItem = (props: { documentId: string }) => {
           thumbnail={thumbnailUrl}
           header={{
             text: docData?.title as unknown as string,
-            link: `/collections/cwkw`,
-            // link: `/document/${docData?.slug}`,
+            link: `/collections/${docPath}`,
           }}
           description={docData?.date?.year as unknown as string}
         />
