@@ -1716,6 +1716,9 @@ export type CollectionChapterQuery = { readonly __typename?: "Query" } & {
             AnnotatedDoc,
             "id" | "title" | "slug" | "isReference"
           > & {
+              readonly lastEdited: Maybe<
+                { readonly __typename?: "Date" } & Pick<Date, "formattedDate">
+              >
               readonly date: Maybe<
                 { readonly __typename?: "Date" } & Pick<Date, "year">
               >
@@ -2475,6 +2478,9 @@ export const CollectionChapterDocument = gql`
         title
         slug
         isReference
+        lastEdited {
+          formattedDate
+        }
         date {
           year
         }

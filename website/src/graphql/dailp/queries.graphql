@@ -350,6 +350,9 @@ query CollectionChapter($collectionSlug: String!, $chapterSlug: String!) {
       title
       slug
       isReference
+      lastEdited {
+        formattedDate
+      }
       date {
         year
       }
