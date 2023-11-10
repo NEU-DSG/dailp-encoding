@@ -229,35 +229,42 @@ impl AudioRes {
     /// Creates a new Audio Resource from an audio key and an annotaion key.
     ///
     /// Keys should either be a resource string from the DRS or DAILP audio S3 Bucket.
-    pub async fn new(audio_ref_key: &str, annotation_ref_key: Option<&String>) -> Result<Self, anyhow::Error> {
+    pub async fn new(
+        audio_ref_key: &str,
+        annotation_ref_key: Option<&String>,
+    ) -> Result<Self, anyhow::Error> {
         println!("Creating new Audio Resource...");
         let client = Client::new();
-        
+
         let cf_domain = std::env::var("CF_URL")?;
         let s3_location = format!("https://{}", cf_domain);
         let is_drs_key = |test_value: &str| -> bool {
             return test_value.contains("neu");
         };
         // FIXME: this could be refactored, esp. for annotations
-        return Ok(Self { 
-            audio_url: 
-                if is_drs_key(audio_ref_key) {
-                    let drs_content = DrsRes::new(&client, audio_ref_key).await?;
-                    drs_content.get_url()
-                } else {
-                    format!("{}{}", s3_location, audio_ref_key)
-                },
-            annotations: 
-                if annotation_ref_key.is_none() {
-                    None
-                } else if is_drs_key(annotation_ref_key.unwrap()) {
-                    let drs_content = DrsRes::new(&client, annotation_ref_key.unwrap()).await?;
-                    Self::get_http_body(&client, drs_content.get_url()).await.ok()
-                } else {
-                    Self::get_http_body(&client, format!("{}{}", s3_location, annotation_ref_key.unwrap())).await.ok()
-                }
-            }
-        );
+        return Ok(Self {
+            audio_url: if is_drs_key(audio_ref_key) {
+                let drs_content = DrsRes::new(&client, audio_ref_key).await?;
+                drs_content.get_url()
+            } else {
+                format!("{}{}", s3_location, audio_ref_key)
+            },
+            annotations: if annotation_ref_key.is_none() {
+                None
+            } else if is_drs_key(annotation_ref_key.unwrap()) {
+                let drs_content = DrsRes::new(&client, annotation_ref_key.unwrap()).await?;
+                Self::get_http_body(&client, drs_content.get_url())
+                    .await
+                    .ok()
+            } else {
+                Self::get_http_body(
+                    &client,
+                    format!("{}{}", s3_location, annotation_ref_key.unwrap()),
+                )
+                .await
+                .ok()
+            },
+        });
     }
 
     /// Tries to get the body response for a GET request to the provided url

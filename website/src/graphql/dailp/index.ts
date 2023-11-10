@@ -621,6 +621,8 @@ export type MorphemeTag = {
 
 export type Mutation = {
   readonly __typename?: "Mutation"
+  /** Adds a bookmark to the user's list of bookmarks. */
+  readonly addBookmark: Scalars["String"]
   /**
    * Mutation must have at least one visible field for introspection to work
    * correctly, so we just provide an API version which might be useful in
@@ -643,6 +645,8 @@ export type Mutation = {
   readonly deleteContributorAttribution: Scalars["UUID"]
   /** Post a new comment on a given object */
   readonly postComment: CommentParent
+  /** Removes a bookmark from a user's list of bookmarks */
+  readonly removeBookmark: Scalars["String"]
   readonly updateAnnotation: Scalars["Boolean"]
   /** Mutation for adding/changing contributor attributions */
   readonly updateContributorAttribution: Scalars["UUID"]
@@ -651,6 +655,10 @@ export type Mutation = {
   /** Mutation for paragraph and translation editing */
   readonly updateParagraph: Scalars["UUID"]
   readonly updateWord: AnnotatedForm
+}
+
+export type MutationAddBookmarkArgs = {
+  documentId: Scalars["UUID"]
 }
 
 export type MutationAttachAudioToWordArgs = {
@@ -671,6 +679,10 @@ export type MutationDeleteContributorAttributionArgs = {
 
 export type MutationPostCommentArgs = {
   input: PostCommentInput
+}
+
+export type MutationRemoveBookmarkArgs = {
+  documentId: Scalars["UUID"]
 }
 
 export type MutationUpdateAnnotationArgs = {
@@ -1809,6 +1821,23 @@ export type CurateWordAudioMutation = { readonly __typename?: "Mutation" } & {
     }
 }
 
+export type AddBookmarkMutationVariables = Exact<{
+  documentId: Scalars["UUID"]
+}>
+
+export type AddBookmarkMutation = { readonly __typename?: "Mutation" } & Pick<
+  Mutation,
+  "addBookmark"
+>
+
+export type RemoveBookmarkMutationVariables = Exact<{
+  documentId: Scalars["UUID"]
+}>
+
+export type RemoveBookmarkMutation = {
+  readonly __typename?: "Mutation"
+} & Pick<Mutation, "removeBookmark">
+
 export type UpdateParagraphMutationVariables = Exact<{
   paragraph: ParagraphUpdate
 }>
@@ -2424,6 +2453,29 @@ export function useCurateWordAudioMutation() {
     CurateWordAudioMutation,
     CurateWordAudioMutationVariables
   >(CurateWordAudioDocument)
+}
+export const AddBookmarkDocument = gql`
+  mutation AddBookmark($documentId: UUID!) {
+    addBookmark(documentId: $documentId)
+  }
+`
+
+export function useAddBookmarkMutation() {
+  return Urql.useMutation<AddBookmarkMutation, AddBookmarkMutationVariables>(
+    AddBookmarkDocument
+  )
+}
+export const RemoveBookmarkDocument = gql`
+  mutation RemoveBookmark($documentId: UUID!) {
+    removeBookmark(documentId: $documentId)
+  }
+`
+
+export function useRemoveBookmarkMutation() {
+  return Urql.useMutation<
+    RemoveBookmarkMutation,
+    RemoveBookmarkMutationVariables
+  >(RemoveBookmarkDocument)
 }
 export const UpdateParagraphDocument = gql`
   mutation UpdateParagraph($paragraph: ParagraphUpdate!) {

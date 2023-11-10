@@ -376,6 +376,14 @@ mutation CurateWordAudio($input: CurateWordAudioInput!) {
   }
 }
 
+mutation AddBookmark($documentId: UUID!) {
+  addBookmark(documentId: $documentId)
+}
+
+mutation RemoveBookmark($documentId: UUID!) {
+  removeBookmark(documentId: $documentId)
+}
+
 mutation UpdateParagraph($paragraph: ParagraphUpdate!) {
   updateParagraph(paragraph: $paragraph)
 }

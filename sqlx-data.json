@@ -694,9 +694,8 @@
               "kind": {
                 "Enum": [
                   "Story",
-                  "Correction",
-                  "Concern",
-                  "LingusticAnalysis"
+                  "Suggestion",
+                  "Question"
                 ]
               },
               "name": "comment_type_enum"
@@ -1677,6 +1676,19 @@
     },
     "query": "insert into collection_chapter (\n  title,\n  document_id,\n  wordpress_id,\n  index_in_parent,\n  chapter_path,\n  section)\nvalues (\n  $1,\n  ( select id\n    from document\n    where short_name = $2),\n  $3,\n  $4,\n  $5,\n  $6\n)\n"
   },
+  "83485d5e45864f8200987fb4a6401eafbb81237d50de27b1420ad66663e7d7ee": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Uuid"
+        ]
+      }
+    },
+    "query": "DELETE FROM user_bookmarked_document\nWHERE document_id = $1 AND user_id = $2;"
+  },
   "8469d3fbe5939fa87e81b7afb2bbb614596235e99472eb0db600b000a3775207": {
     "describe": {
       "columns": [],
@@ -1741,9 +1753,8 @@
               "kind": {
                 "Enum": [
                   "Story",
-                  "Correction",
-                  "Concern",
-                  "LingusticAnalysis"
+                  "Suggestion",
+                  "Question"
                 ]
               },
               "name": "comment_type_enum"
@@ -1846,6 +1857,19 @@
       }
     },
     "query": "insert into document (\n  short_name, title, is_reference, written_at, audio_slice_id, group_id, index_in_group\n)\nvalues ($1, $2, $3, $4, $5, $6, $7)\non conflict (short_name) do update set\ntitle = excluded.title,\nis_reference = excluded.is_reference,\nwritten_at = excluded.written_at,\naudio_slice_id = excluded.audio_slice_id,\ngroup_id = excluded.group_id,\nindex_in_group = excluded.index_in_group\nreturning id\n"
+  },
+  "9087654cfb3bb8103bafbc7400f82960536577530e58aa6eb6bc29aca1fd2f5c": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Uuid"
+        ]
+      }
+    },
+    "query": "INSERT INTO user_bookmarked_document (document_id, user_id, bookmarked_on)\nVALUES ($1, $2, NOW());"
   },
   "93a6c0a72e2d56064fffad8eda07a6b8aa73080106ce3283a087b010bc3658dd": {
     "describe": {
@@ -3189,9 +3213,8 @@
               "kind": {
                 "Enum": [
                   "Story",
-                  "Correction",
-                  "Concern",
-                  "LingusticAnalysis"
+                  "Suggestion",
+                  "Question"
                 ]
               },
               "name": "comment_type_enum"
