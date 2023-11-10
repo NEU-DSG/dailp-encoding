@@ -11,7 +11,6 @@ import fetch from "isomorphic-unfetch"
 import { UseQueryArgs, useQuery } from "urql"
 import { Environment, deploymentEnvironment } from "./env"
 import { authLink } from "./graphql/client"
-import { DocumentPage } from "./graphql/dailp"
 
 export const GRAPHQL_URL = (token: string | null) =>
   process.env["DAILP_API_URL"] + (token ? "/graphql-edit" : "/graphql")
