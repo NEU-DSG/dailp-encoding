@@ -4,7 +4,6 @@ import {
   unstable_useFormState as useFormState,
 } from "reakit"
 import * as Dailp from "./graphql/dailp"
-import { usePreferences } from "./preferences-context"
 
 type FormContextType = {
   form: FormStateReturn<any | undefined>
