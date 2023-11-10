@@ -102,6 +102,7 @@ export const passToClient = [
 const clientEnv = pick(process.env, [
   "DAILP_AWS_REGION",
   "DAILP_USER_POOL",
+  "DAILP_IDENTITY_POOL",
   "DAILP_USER_POOL_CLIENT",
   "DAILP_API_URL",
   "TF_STAGE",
@@ -109,14 +110,20 @@ const clientEnv = pick(process.env, [
 ])
 
 const clientProcess = dangerouslySkipEscape(JSON.stringify({ env: clientEnv }))
+const skipConsoleLog = dangerouslySkipEscape(
+  (process.env["NODE_ENV"] === "development").toString()
+)
 
 // Define `global` for some scripts that depend on it, and process.env to pass
-// along some important environment variables.
+// along some important environment variables. Disable console.log unless on dev
 const baseScript = escapeInject`
   <script>
     if (global === undefined) {
       var global = window;
     }
     var process = ${clientProcess};
+    if (${skipConsoleLog}) {
+      console.log = function(){};
+    }
   </script>
 `

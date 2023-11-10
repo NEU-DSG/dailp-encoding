@@ -52,8 +52,10 @@ async fn main() -> tide::Result<()> {
 
     // add tide endpoint
     app.at("/graphql").post(async_graphql_tide::graphql(schema));
-    app.at("/graphql-edit")
-        .post(AuthedEndpoint::new(authed_schema));
+    app.at("/graphql-edit").post(AuthedEndpoint::new(
+        authed_schema,
+        dailp::Database::connect(None)?,
+    ));
 
     // enable graphql playground
     app.at("/graphql").get(|_| async move {
@@ -82,11 +84,15 @@ async fn main() -> tide::Result<()> {
 
 struct AuthedEndpoint {
     schema: Schema<query::Query, query::Mutation, EmptySubscription>,
+    database: dailp::Database,
 }
 
 impl AuthedEndpoint {
-    fn new(schema: Schema<query::Query, query::Mutation, EmptySubscription>) -> Self {
-        Self { schema }
+    fn new(
+        schema: Schema<query::Query, query::Mutation, EmptySubscription>,
+        database: dailp::Database,
+    ) -> Self {
+        Self { schema, database }
     }
 }
 
@@ -106,6 +112,10 @@ impl Endpoint<()> for AuthedEndpoint {
                     }
                 },
             );
+
+        if let Some(user_id) = user.as_ref().map(|u| u.id) {
+            self.database.upsert_dailp_user(user_id).await?;
+        }
 
         let req = async_graphql_tide::receive_request(req).await?;
         let req = if let Some(user) = user {

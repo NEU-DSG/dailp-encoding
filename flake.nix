@@ -108,10 +108,13 @@
             exePath = "/bin/${name}";
           };
         tf = "${pkgs.terraform}/bin/terraform";
+        inherit (builtins) getEnv;
         tfInit = ''
           cp -f ${terraformConfig}/config.tf.json ./
+          export AWS_ACCESS_KEY_ID=${getEnv "AWS_ACCESS_KEY_ID"}
+          export AWS_SECRET_ACCESS_KEY=${getEnv "AWS_SECRET_ACCESS_KEY"}
           export TF_DATA_DIR=$(pwd)/.terraform
-          ${tf} init
+          ${tf} init -upgrade
         '';
       in rec {
         # Add extra binary caches for quicker builds of the rust toolchain
@@ -184,7 +187,7 @@
               nasm
               terraform
               rust-toolchain
-              nodejs-14_x
+              nodejs-18_x
               yarn
               act
               postgresql_14

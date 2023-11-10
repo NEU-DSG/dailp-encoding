@@ -70,6 +70,25 @@ query DocumentContents(
   }
 }
 
+fragment AudioSliceFields on AudioSlice {
+  sliceId
+  index # if this is used as a caching key, we will have performance issues
+  resourceUrl
+  startTime
+  endTime
+  includeInEditedCollection
+}
+
+fragment DocFormFields on AnnotatedDoc {
+  id
+  title
+  date {
+    day
+    month
+    year
+  }
+}
+
 fragment FormFields on AnnotatedForm {
   id
   index
@@ -89,16 +108,20 @@ fragment FormFields on AnnotatedForm {
   englishGloss
   commentary
   ingestedAudioTrack {
-    index
-    resourceUrl
-    startTime
-    endTime
+    ...AudioSliceFields
   }
   editedAudio {
-    index
-    resourceUrl
-    startTime
-    endTime
+    ...AudioSliceFields
+  }
+  userContributedAudio {
+    ...AudioSliceFields
+    recordedBy {
+      id
+      displayName
+    }
+  }
+  position {
+    documentId
   }
 }
 
@@ -327,4 +350,52 @@ mutation UpdateWord(
   updateWord(word: $word) {
     ...FormFields
   }
+}
+
+mutation AttachAudioToWord($input: AttachAudioToWordInput!) {
+  attachAudioToWord(input: $input) {
+    # ...FormFields
+    id
+    userContributedAudio {
+      ...AudioSliceFields
+      recordedBy {
+        id
+        displayName
+      }
+    }
+  }
+}
+
+mutation CurateWordAudio($input: CurateWordAudioInput!) {
+  curateWordAudio(input: $input) {
+    # ...FormFields
+    id
+    userContributedAudio {
+      ...AudioSliceFields
+      recordedBy {
+        id
+        displayName
+      }
+    }
+  }
+}
+
+mutation UpdateParagraph($paragraph: ParagraphUpdate!) {
+  updateParagraph(paragraph: $paragraph)
+}
+
+mutation UpdateContributorAttribution(
+  $contribution: UpdateContributorAttribution!
+) {
+  updateContributorAttribution(contribution: $contribution)
+}
+
+mutation DeleteContributorAttribution(
+  $contribution: DeleteContributorAttribution!
+) {
+  deleteContributorAttribution(contribution: $contribution)
+}
+
+mutation UpdateDocumentMetadata($document: DocumentMetadataUpdate!) {
+  updateDocumentMetadata(document: $document)
 }

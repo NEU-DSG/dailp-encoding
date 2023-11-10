@@ -30,17 +30,38 @@ export const UserProvider = (props: { children: any }) => {
     userPool.getCurrentUser()
   )
 
+  function refreshToken(): Promise<CognitoUserSession | null> {
+    if (!user) return Promise.resolve(null)
+    return new Promise((res, rej) => {
+      // getSession() refreshes last authenticated user's tokens
+      user.getSession(function (err: Error, result: CognitoUserSession | null) {
+        if (err) rej(err)
+        return res(result)
+      })
+    })
+  }
+
   // Allows persistence of the current user's session between browser refreshes.
   useEffect(() => {
     // if there is an authenticated user present
     if (user != null) {
-      // getSession() refreshes last authenticated user's tokens
-      user.getSession(function (err: Error, result: CognitoUserSession | null) {
-        if (result) {
-          console.log("You are now logged in.")
-        }
+      const promise = refreshToken().then((result) => {
+        if (!result) return null
+        const intervalLength =
+          result.getAccessToken().getExpiration() * 1000 - Date.now()
+        const handle = window.setInterval(() => refreshToken(), intervalLength)
+        return handle
       })
+      return () => {
+        promise.then((handle) => {
+          if (handle) {
+            window.clearInterval(handle)
+          }
+        })
+      }
     }
+
+    return
   }, [user])
 
   function loginUser(username: string, password: string) {

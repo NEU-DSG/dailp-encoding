@@ -1,10 +1,14 @@
 //! This piece of the project exposes a GraphQL endpoint that allows one to access DAILP data in a federated manner with specific queries.
 
-use dailp::{slugify_ltree, AnnotatedForm, CollectionChapter, Uuid};
+use dailp::{
+    comment::{CommentParent, DeleteCommentInput, PostCommentInput},
+    slugify_ltree, AnnotatedForm, AttachAudioToWordInput, CollectionChapter, CurateWordAudioInput,
+    DeleteContributorAttribution, DocumentMetadataUpdate, UpdateContributorAttribution, Uuid,
+};
 use itertools::Itertools;
 
 use {
-    dailp::async_graphql::{self, dataloader::DataLoader, Context, FieldResult, Guard},
+    dailp::async_graphql::{self, dataloader::DataLoader, Context, FieldResult, Guard, Object},
     dailp::{
         AnnotatedDoc, AnnotatedFormUpdate, CherokeeOrthography, Database, EditedCollection,
         MorphemeId, MorphemeReference, MorphemeTag, ParagraphUpdate, WordsInDocument,
@@ -301,6 +305,95 @@ impl Mutation {
         "1.0"
     }
 
+    /// Delete a comment.
+    /// Will fail if the user making the request is not the poster.
+    #[graphql(guard = "AuthGuard")]
+    async fn delete_comment(
+        &self,
+        context: &Context<'_>,
+        input: DeleteCommentInput,
+    ) -> FieldResult<CommentParent> {
+        let user = context
+            .data_opt::<UserInfo>()
+            .ok_or_else(|| anyhow::format_err!("User is not signed in"))?;
+
+        // We could theoretically do this in one round trip, if we have ever
+        // have performance issues. The query would roughly be:
+        //     delete from comment where user_id and comment_id
+        //     returning parent_type, parent_id
+
+        let db = context.data::<DataLoader<Database>>()?.loader();
+
+        let comment = db.comment_by_id(&input.comment_id).await?;
+
+        if comment.posted_by.id.0 != user.id.to_string() {
+            return Err("User attempted to delete another user's comment".into());
+        }
+
+        db.delete_comment(&input.comment_id).await?;
+
+        // We return the parent object, for GraphCache interop
+        comment.parent(context).await
+    }
+
+    /// Post a new comment on a given object
+    #[graphql(guard = "AuthGuard")]
+    async fn post_comment(
+        &self,
+        context: &Context<'_>,
+        input: PostCommentInput,
+    ) -> FieldResult<CommentParent> {
+        let user = context
+            .data_opt::<UserInfo>()
+            .ok_or_else(|| anyhow::format_err!("User is not signed in"))?;
+
+        let db = context.data::<DataLoader<Database>>()?.loader();
+
+        db.insert_comment(
+            &user.id,
+            input.text_content,
+            &input.parent_id,
+            &input.parent_type,
+            &input.comment_type,
+        )
+        .await?;
+
+        // We return the parent object, for GraphCache interop
+        input.parent_type.resolve(db, &input.parent_id).await
+    }
+
+    /// Mutation for adding/changing contributor attributions
+    #[graphql(
+        guard = "GroupGuard::new(UserGroup::Editors).or(GroupGuard::new(UserGroup::Contributors))"
+    )]
+    async fn update_contributor_attribution(
+        &self,
+        context: &Context<'_>,
+        contribution: UpdateContributorAttribution,
+    ) -> FieldResult<Uuid> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .update_contributor_attribution(contribution)
+            .await?)
+    }
+
+    ///Mutation for deleting contributor attributions
+    #[graphql(
+        guard = "GroupGuard::new(UserGroup::Editors).or(GroupGuard::new(UserGroup::Contributors))"
+    )]
+    async fn delete_contributor_attribution(
+        &self,
+        context: &Context<'_>,
+        contribution: DeleteContributorAttribution,
+    ) -> FieldResult<Uuid> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .delete_contributor_attribution(contribution)
+            .await?)
+    }
+
     /// Mutation for paragraph and translation editing
     #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
     async fn update_paragraph(
@@ -351,15 +444,74 @@ impl Mutation {
         context: &Context<'_>,
         word: AnnotatedFormUpdate,
     ) -> FieldResult<AnnotatedForm> {
+        let database = context.data::<DataLoader<Database>>()?.loader();
+        Ok(database
+            .word_by_id(&database.update_word(word).await?)
+            .await?)
+    }
+
+    /// Decide if a piece audio should be included in edited collection
+    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    async fn curate_word_audio(
+        &self,
+        context: &Context<'_>,
+        input: CurateWordAudioInput,
+    ) -> FieldResult<dailp::AnnotatedForm> {
+        // TODO: should this return a typed id ie. AudioSliceId?
+        let user = context
+            .data_opt::<UserInfo>()
+            .ok_or_else(|| anyhow::format_err!("User is not signed in"))?;
         let word_id = context
             .data::<DataLoader<Database>>()?
             .loader()
-            .update_word(word)
+            .update_audio_visibility(
+                &input.word_id,
+                &input.audio_slice_id,
+                input.include_in_edited_collection,
+                &user.id,
+            )
+            .await?;
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .word_by_id(&word_id.ok_or_else(|| anyhow::format_err!("Word audio not found"))?)
+            .await?)
+    }
+
+    /// Attach audio that has already been uploaded to S3 to a particular word
+    /// Assumes user requesting mutation recoreded the audio
+    #[graphql(guard = "GroupGuard::new(UserGroup::Contributors)")]
+    async fn attach_audio_to_word(
+        &self,
+        context: &Context<'_>,
+        input: AttachAudioToWordInput,
+    ) -> FieldResult<dailp::AnnotatedForm> {
+        // TODO: should this return a typed id ie. AudioSliceId?
+        let user = context
+            .data_opt::<UserInfo>()
+            .ok_or_else(|| anyhow::format_err!("User is not signed in"))?;
+        let word_id = context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .attach_audio_to_word(input, &user.id)
             .await?;
         Ok(context
             .data::<DataLoader<Database>>()?
             .loader()
             .word_by_id(&word_id)
+            .await?)
+    }
+
+    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    async fn update_document_metadata(
+        &self,
+        context: &Context<'_>,
+        document: DocumentMetadataUpdate,
+    ) -> FieldResult<Uuid> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .update_document_metadata(document)
             .await?)
     }
 }
@@ -371,11 +523,12 @@ struct FormsInTime {
     forms: Vec<dailp::AnnotatedForm>,
 }
 
+/// Auth metadata on the user making the current request.
 #[derive(Deserialize, Debug, async_graphql::SimpleObject)]
 pub struct UserInfo {
     /// Unique ID for the User. Should be an AWS Cognito Sub.
     #[serde(default, rename = "sub")]
-    id: Uuid,
+    pub id: Uuid,
     email: String,
     #[serde(default, rename = "cognito:groups")]
     groups: Vec<UserGroup>,
@@ -383,7 +536,7 @@ pub struct UserInfo {
 impl UserInfo {
     pub fn new_test_admin() -> Self {
         Self {
-            id: Uuid::parse_str("a0a9e9e6-a37a-4d09-bd4b-86b5e57be31a").unwrap(),
+            id: Uuid::parse_str("5f22a8bf-46c8-426c-a104-b4faf7c2d608").unwrap(),
             email: "test@dailp.northeastern.edu".to_string(),
             groups: vec![UserGroup::Editors],
         }
