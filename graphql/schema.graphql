@@ -811,6 +811,14 @@ type Mutation {
 	updateAnnotation(data: JSON!): Boolean!
 	updateWord(word: AnnotatedFormUpdate!): AnnotatedForm!
 	"""
+	Adds a bookmark to the user's list of bookmarks.
+	"""
+	addBookmark(documentId: UUID!): String!
+	"""
+	Removes a bookmark from a user's list of bookmarks
+	"""
+	removeBookmark(documentId: UUID!): String!
+	"""
 	Decide if a piece audio should be included in edited collection
 	"""
 	curateWordAudio(input: CurateWordAudioInput!): AnnotatedForm!

@@ -615,6 +615,20 @@ impl Database {
 
     // pub async fn maybe_undefined_to_vec() -> Vec<Option<String>> {}
 
+    pub async fn add_bookmark(&self, document_id: Uuid, user_id: Uuid) -> Result<String> {
+        query_file!("queries/add_bookmark.sql", document_id, user_id)
+            .execute(&self.client)
+            .await?;
+        Ok(format!("document: {}, user: {}", document_id, user_id))
+    }
+
+    pub async fn remove_bookmark(&self, document_id: Uuid, user_id: Uuid) -> Result<String> {
+        query_file!("queries/remove_bookmark.sql", document_id, user_id)
+            .execute(&self.client)
+            .await?;
+        Ok(format!("document: {}, user: {}", document_id, user_id))
+    }
+
     pub async fn attach_audio_to_word(
         &self,
         upload: AttachAudioToWordInput,
