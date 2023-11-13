@@ -24,6 +24,7 @@ import {
   skinnyWidth,
 } from "./login.css"
 import { ResetLink } from "./reset-password.page"
+import { SignupLink } from "./signup.page"
 
 export const LoginPageTemplate = (props: {
   header: ReactNode
@@ -84,7 +85,7 @@ const LoginPage = () => {
           placeholder="enter password"
         />
         <ResetLink />
-
+        <SignupLink />
         <div className={positionButton}>
           <FormSubmitButton {...loginForm} as={Button} className={loginButton}>
             Log in
