@@ -10,7 +10,7 @@ import {
 } from "reakit"
 import { useCredentials, useUser } from "src/auth"
 import { Button, Link } from "src/components"
-import Layout from "../layout"
+import Layout from "../../layout"
 import {
   centeredForm,
   centeredHeader,
