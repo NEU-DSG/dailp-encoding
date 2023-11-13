@@ -8,7 +8,7 @@ import {
 import { useCredentials, useUser } from "src/auth"
 import { Button, Link } from "src/components"
 import { centeredColumn } from "src/style/utils.css"
-import { centeredForm, loginButton, positionButton } from "./login.css"
+import { centeredForm, loginButton, positionButton } from "./user-auth.css"
 import { FormFields, LoginPageTemplate } from "./login.page"
 
 const ResetPasswordPage = () => {
