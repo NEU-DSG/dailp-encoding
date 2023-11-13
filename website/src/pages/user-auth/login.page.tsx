@@ -12,7 +12,7 @@ import { Popover, PopoverDisclosure, usePopoverState } from "reakit"
 import { useCredentials, useUser } from "src/auth"
 import { Button, Link } from "src/components"
 import { cleanButton } from "src/components/button.css"
-import Layout from "../layout"
+import Layout from "../../layout"
 import {
   centeredForm,
   centeredHeader,
@@ -24,8 +24,9 @@ import {
   skinnyWidth,
 } from "./login.css"
 import { ResetLink } from "./reset-password.page"
+import { SignupLink } from "./signup.page"
 
-export const SignupPageTemplate = (props: {
+export const LoginPageTemplate = (props: {
   header: ReactNode
   children: ReactNode
 }) => {
@@ -39,10 +40,10 @@ export const SignupPageTemplate = (props: {
   )
 }
 
-const SignupPage = () => {
-  const { createUser } = useUser().operations
+const LoginPage = () => {
+  const { loginUser } = useUser().operations
 
-  const signupForm = useFormState({
+  const loginForm = useFormState({
     values: { email: "", password: "" },
     onValidate: (values) => {
       if (!values.email) {
@@ -52,48 +53,84 @@ const SignupPage = () => {
       }
     },
     onSubmit: (values) => {
-      console.log(`Submitted! email is ${values.email}`)
-      createUser(values.email, values.password)
+      loginUser(values.email, values.password)
     },
   })
 
   return (
-    <SignupPageTemplate
+    <LoginPageTemplate
       header={
         <>
-          <h1>Create your account</h1>
+          <h1>Log into your account</h1>
           <h4>
-            Create an account to contribute to the archive by transcribing
-            documents, recording pronunciations, providing cultural commentary,
-            and more.
+            Login to contribute to the archive by transcribing documents,
+            recording pronunciations, providing cultural commentary, and more.
           </h4>
         </>
       }
     >
-      <Form {...signupForm} className={centeredForm}>
+      <Form {...loginForm} className={centeredForm}>
         <FormFields
-          form={signupForm}
+          form={loginForm}
           name="email"
           label="Email *"
           placeholder="mail@website.com"
         />
 
         <FormFields
-          form={signupForm}
+          form={loginForm}
           name="password"
           label="Password *"
           type="password"
           placeholder="enter password"
         />
         <ResetLink />
-
+        <SignupLink />
         <div className={positionButton}>
-          <FormSubmitButton {...signupForm} as={Button} className={loginButton}>
-            Sign Up
+          <FormSubmitButton {...loginForm} as={Button} className={loginButton}>
+            Log in
           </FormSubmitButton>
         </div>
       </Form>
-    </SignupPageTemplate>
+    </LoginPageTemplate>
+  )
+}
+
+// the login button that appears in the header of the website
+export const LoginHeaderButton = () => {
+  // get the current user's auth token
+  const token = useCredentials()
+
+  return (
+    <div className={loginHeader}>
+      {/* if an auth token exists, that means a user is logged in */}
+      {token ? <ConfirmLogout /> : <Link href="/login">Log in</Link>}
+    </div>
+  )
+}
+
+const ConfirmLogout = () => {
+  const { user, setUser } = useUser()
+  const popover = usePopoverState({ gutter: 2 })
+
+  return (
+    <>
+      <PopoverDisclosure {...popover} className={cleanButton}>
+        {popover.visible ? "Cancel" : "Log out"}
+      </PopoverDisclosure>
+
+      <Popover {...popover} tabIndex={0}>
+        <Button
+          className={popoverButton}
+          onClick={() => {
+            user?.signOut()
+            setUser(null) // set current user to null because user has completed reset password flow and will need to relogin
+          }}
+        >
+          Log out
+        </Button>
+      </Popover>
+    </>
   )
 }
 
@@ -129,15 +166,4 @@ export const FormFields = ({
   )
 }
 
-export const SignupLink = () => {
-  // const token = useCredentials()
-  return (
-    <>
-      <label>
-        Dont have an account? <Link href="/signup">Sign Up</Link>
-      </label>
-    </>
-  )
-}
-
-export const Page = SignupPage
+export const Page = LoginPage
