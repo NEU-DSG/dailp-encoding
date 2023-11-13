@@ -22,7 +22,7 @@ import {
   popoverButton,
   positionButton,
   skinnyWidth,
-} from "./login.css"
+} from "./user-auth.css"
 import { ResetLink } from "./reset-password.page"
 
 export const SignupPageTemplate = (props: {

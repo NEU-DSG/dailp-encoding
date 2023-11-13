@@ -18,7 +18,7 @@ import {
   loginFormBox,
   positionButton,
   skinnyWidth,
-} from "./login.css"
+} from "./user-auth.css"
 
 export const VerificationPageTemplate = (props: {
   header: ReactNode
