@@ -1,6 +1,7 @@
 import {
   AuthenticationDetails,
   CognitoUser,
+  CognitoUserAttribute,
   CognitoUserPool,
   CognitoUserSession,
 } from "amazon-cognito-identity-js"
@@ -11,6 +12,9 @@ type UserContextType = {
   user: CognitoUser | null
   setUser: (user: CognitoUser | null) => void
   operations: {
+    createUser: (username: string, password: string) => void
+    resetVerificationCode: () => void
+    verifyUser: (verificationCode: string) => void
     loginUser: (username: string, password: string) => void
     resetPassword: (username: string) => void
     changePassword: (verificationCode: string, newPassword: string) => void
@@ -63,6 +67,52 @@ export const UserProvider = (props: { children: any }) => {
 
     return
   }, [user])
+
+  function createUser(username: string, password: string) {
+    console.log(`requesting adding user ${username} to Cognito User Pool`)
+    let userAttributes = [{ Name: "email", Value: username }].map((attr) => {
+      return new CognitoUserAttribute(attr)
+    })
+    userPool.signUp(
+      username,
+      password,
+      userAttributes,
+      [],
+      async (err, result) => {
+        if (err) {
+          alert(err.message || JSON.stringify(err))
+          return
+        }
+        let cognitoUser = result?.user
+        if (!cognitoUser) {
+          console.log("failed to create user and activate session")
+          return
+        }
+        setUser(cognitoUser)
+        await navigate("/confirm-signup")
+      }
+    )
+  }
+
+  function resetVerificationCode() {
+    user?.resendConfirmationCode((err, result) => {
+      if (err) {
+        alert(err.message || JSON.stringify(err))
+        return
+      }
+      console.log(result)
+    })
+  }
+
+  function verifyUser(verificationCode: string) {
+    user?.confirmRegistration(verificationCode, false, (err, result) => {
+      if (err) {
+        alert(err.message || JSON.stringify(err))
+        return
+      }
+      console.log(result)
+    })
+  }
 
   function loginUser(username: string, password: string) {
     const user = new CognitoUser({
@@ -135,7 +185,14 @@ export const UserProvider = (props: { children: any }) => {
       value={{
         user,
         setUser,
-        operations: { loginUser, resetPassword, changePassword },
+        operations: {
+          createUser,
+          resetVerificationCode,
+          verifyUser,
+          loginUser,
+          resetPassword,
+          changePassword,
+        },
       }}
     >
       {props.children}
