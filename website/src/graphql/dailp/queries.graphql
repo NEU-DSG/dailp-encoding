@@ -395,3 +395,16 @@ mutation DeleteContributorAttribution(
 mutation UpdateDocumentMetadata($document: DocumentMetadataUpdate!) {
   updateDocumentMetadata(document: $document)
 }
+
+mutation PostComment($input: PostCommentInput!) {
+  postComment(input: $input){
+    ...on AnnotatedForm {
+      __typename
+      id
+    }
+    ...on DocumentParagraph {
+      __typename
+      id
+    }
+  }
+}
