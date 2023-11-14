@@ -31,6 +31,19 @@ jobs:
           # If you chose API tokens for write access OR if you have a private cache
           authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
           pushFilter: "(-dailp$|-dailp-|-terraform-config$|-source$|\\.tar\\.gz$|-output$|-plan$|-apply-now$|-apply$)"
+      - name: Check code quality
+        run: |
+          echo "::group::Checking Rust format"
+          rustfmt = "$(cargo fmt --check)"
+          echo $rustfmt
+          echo "::endgroup"
+          if [[ -n $rustfmt ]]; then
+            echo "::error::Rust code does not meet code standards. Please run `cargo fmt` or `dev-check`."
+          fi
+          echo "::group::Checking format for frontend code"
+          cd website
+          yarn prettier -c --config package.json src
+          echo "::endgroup"
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
