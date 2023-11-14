@@ -31,5 +31,10 @@ if git-staged "website/*" && cd website && ! yarn prettier -c --config package.j
     HOOKS_FAILED=1
 fi
 
+# Require formatting for rust code
+if git-staged "*.rs" && [[ -n "$(cargo fmt --check)" ]]; then
+    printf "Rust code edited but not formatted.\nPlease run 'dev-check'."
+    HOOKS_FAILED=1
+fi
 
 exit $HOOKS_FAILED
