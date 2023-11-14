@@ -1,20 +1,20 @@
 import React, { useEffect } from "react"
 import {
   unstable_Form as Form,
-  unstable_FormSubmitButton as FormSubmitButton,
   unstable_FormStateReturn,
   unstable_useFormState as useFormState,
 } from "reakit"
-import { useCredentials, useUser } from "src/auth"
-import { Button, Link } from "src/components"
-import { centeredColumn } from "src/style/utils.css"
-import { centeredForm, loginButton, positionButton } from "./user-auth.css"
-import { FormFields, LoginPageTemplate } from "./login.page"
+import { useUser } from "src/auth"
+import {
+  FormFields,
+  FormSubmitButton,
+  UserAuthPageTemplate,
+} from "./user-auth-layout"
+import { centeredForm } from "./user-auth.css"
 
 const ResetPasswordPage = () => {
   const { user } = useUser()
   const { resetPassword, changePassword } = useUser().operations
-  const token = useCredentials()
 
   const resetForm = useFormState({
     values: { email: "" },
@@ -63,13 +63,11 @@ const ResetPasswordPage = () => {
 
 const ResetPassword = (form: unstable_FormStateReturn<{ email: string }>) => {
   return (
-    <LoginPageTemplate
-      header={
-        <>
-          <h1>Reset Password</h1>
-          <h4>Enter the email associated with your account.</h4>
-        </>
-      }
+    <UserAuthPageTemplate
+      header={{
+        prompt: "Reset Password",
+        description: `Enter the email associated with your account.`,
+      }}
     >
       <Form {...form} className={centeredForm}>
         <FormFields
@@ -79,13 +77,9 @@ const ResetPassword = (form: unstable_FormStateReturn<{ email: string }>) => {
           placeholder="mail@website.com"
         />
 
-        <div className={positionButton}>
-          <FormSubmitButton {...form} as={Button} className={loginButton}>
-            Reset
-          </FormSubmitButton>
-        </div>
+        <FormSubmitButton form={form} label="Reset" />
       </Form>
-    </LoginPageTemplate>
+    </UserAuthPageTemplate>
   )
 }
 
@@ -105,16 +99,12 @@ const ChangePassword = (
   }, [])
 
   return (
-    <LoginPageTemplate
-      header={
-        <>
-          <h1 className={centeredColumn}>Change Password</h1>
-          <h4>
-            Enter the verification code sent to your email address and your new
-            password.
-          </h4>
-        </>
-      }
+    <UserAuthPageTemplate
+      header={{
+        prompt: "Change Password",
+        description: `Enter the verification code sent to your email address and your new
+        password.`,
+      }}
     >
       <Form {...form} className={centeredForm}>
         <FormFields
@@ -140,28 +130,9 @@ const ChangePassword = (
           placeholder="confirm password"
         />
 
-        <div className={positionButton}>
-          <FormSubmitButton {...form} as={Button} className={loginButton}>
-            Confirm
-          </FormSubmitButton>
-        </div>
+        <FormSubmitButton form={form} label="Confirm" />
       </Form>
-    </LoginPageTemplate>
-  )
-}
-
-export const ResetLink = () => {
-  const token = useCredentials()
-
-  return (
-    <>
-      {!token && (
-        <label>
-          Forgot your password?{" "}
-          <Link href="/reset-password">Reset password</Link>
-        </label>
-      )}
-    </>
+    </UserAuthPageTemplate>
   )
 }
 
