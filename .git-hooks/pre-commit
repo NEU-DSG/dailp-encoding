@@ -25,4 +25,8 @@ if git-staged "website/src/graphql/**.graphql" && ! git-staged "website/src/grap
     HOOKS_FAILED=1
 fi
 
+if git-staged "website/*"; then
+    cd website
+    yarn prettier -c --config package.json src
+fi
 exit $HOOKS_FAILED
