@@ -694,9 +694,8 @@
               "kind": {
                 "Enum": [
                   "Story",
-                  "Correction",
-                  "Concern",
-                  "LingusticAnalysis"
+                  "Suggestion",
+                  "Question"
                 ]
               },
               "name": "comment_type_enum"
@@ -1741,9 +1740,8 @@
               "kind": {
                 "Enum": [
                   "Story",
-                  "Correction",
-                  "Concern",
-                  "LingusticAnalysis"
+                  "Suggestion",
+                  "Question"
                 ]
               },
               "name": "comment_type_enum"
@@ -3189,9 +3187,8 @@
               "kind": {
                 "Enum": [
                   "Story",
-                  "Correction",
-                  "Concern",
-                  "LingusticAnalysis"
+                  "Suggestion",
+                  "Question"
                 ]
               },
               "name": "comment_type_enum"

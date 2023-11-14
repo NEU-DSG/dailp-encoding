@@ -294,7 +294,7 @@ async function uploadContributorAudioToS3(user: CognitoUser, data: Blob) {
   // Get the Amazon Cognito ID token for the user. 'getToken()' below.
   const REGION = process.env["DAILP_AWS_REGION"]
   // TF Stage matches infra environment names: "dev" "prod" or "uat". If TF_STAGE not found, fall back to dev
-  const BUCKET = `dailp-${ process.env["TF_STAGE"] || "dev" }-media-storage`
+  const BUCKET = `dailp-${process.env["TF_STAGE"] || "dev"}-media-storage`
   // let accessToken = user.getSignInUserSession()?.getAccessToken() // 'COGNITO_ID' has the format 'COGNITO_USER_POOL_ID'
   // let loginData = {
   //   [COGNITO_ID]: token,
