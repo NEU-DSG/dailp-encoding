@@ -89,7 +89,7 @@ export const UserProvider = (props: { children: any }) => {
           return
         }
         setUser(cognitoUser)
-        await navigate("/confirm-signup")
+        await navigate("/auth/confirm-signup")
       }
     )
   }
@@ -111,6 +111,8 @@ export const UserProvider = (props: { children: any }) => {
         return
       }
       console.log(result)
+      setUser(user)
+      navigate("/auth/login") 
     })
   }
 
@@ -132,6 +134,7 @@ export const UserProvider = (props: { children: any }) => {
 
         console.log("Login success. Result: ", data)
         alert("Login successful")
+        navigate("/")// TODO navigate to dashboard
       },
       onFailure: (err: Error) => {
         console.log("Login failed. Result: ", err)
@@ -168,7 +171,7 @@ export const UserProvider = (props: { children: any }) => {
     user?.confirmPassword(verificationCode, newPassword, {
       async onSuccess(data: string) {
         setUser(null) // since user successfully changed password, reset current user's state
-        await navigate("/login")
+        await navigate("/auth/login")
 
         console.log("Change password successful. Result: ", data)
         alert("Password successfully changed")
