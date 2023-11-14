@@ -95,7 +95,7 @@ const AnnotatedDocumentPage = (props: { id: string }) => {
     <Layout>
       <Helmet title={doc?.title} />
       <main className={css.annotatedDocument}>
-        <DocumentTitleHeader doc={doc}/>
+        <DocumentTitleHeader doc={doc} />
         <TabSet doc={doc} />
       </main>
     </Layout>
