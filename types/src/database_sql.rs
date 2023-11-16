@@ -285,7 +285,6 @@ impl Database {
                     title: item.title,
                     is_reference: item.is_reference,
                     date: item.written_at.map(Date::new),
-                    bookmarked_on: item.bookmarked_on.map(Date::new),
                     audio_recording: None,
                     collection: None,
                     contributors: item
@@ -425,7 +424,6 @@ impl Database {
                 title: item.title,
                 is_reference: item.is_reference,
                 date: item.written_at.map(Date::new),
-                bookmarked_on: item.bookmarked_on.map(Date::new),
                 audio_recording: None,
                 collection: None,
                 contributors: item
@@ -1497,7 +1495,6 @@ impl Loader<DocumentId> for Database {
                     title: item.title,
                     is_reference: item.is_reference,
                     date: item.written_at.map(Date::new),
-                    bookmarked_on: item.bookmarked_on.map(Date::new),
                     audio_recording: item.audio_url.map(|resource_url| AudioSlice {
                         slice_id: Some(AudioSliceId(item.audio_slice_id.unwrap().to_string())),
                         resource_url,
@@ -1563,7 +1560,6 @@ impl Loader<DocumentShortName> for Database {
                     title: item.title,
                     is_reference: item.is_reference,
                     date: item.written_at.map(Date::new),
-                    bookmarked_on: item.bookmarked_on.map(Date::new),
                     audio_recording: item.audio_url.map(|resource_url| AudioSlice {
                         slice_id: Some(AudioSliceId(item.audio_slice_id.unwrap().to_string())),
                         resource_url,

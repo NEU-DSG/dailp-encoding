@@ -12,10 +12,6 @@ type AnnotatedDoc {
 	"""
 	date: Date
 	"""
-	When the document was bookmarked by the current user, if it was.
-	"""
-	bookmarkedOn: Date
-	"""
 	The original source(s) of this document, the most important first.
 	"""
 	sources: [SourceAttribution!]!

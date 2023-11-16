@@ -22,9 +22,6 @@ query AnnotatedDocument($slug: String!) {
     date {
       year
     }
-    bookmarkedOn {
-      formattedDate
-    }
     sources {
       name
       link
@@ -350,9 +347,6 @@ query BookmarkedDocuments {
     isReference
     date {
       year
-    }
-    bookmarkedOn {
-      formattedDate
     }
     sources {
       name
