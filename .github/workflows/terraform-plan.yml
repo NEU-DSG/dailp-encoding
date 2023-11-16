@@ -34,7 +34,6 @@ jobs:
       - name: Check code quality
         run: |
           echo "::group::Checking Rust format"
-          cargo install rustfmt
           cargofmt="$(cargo fmt --check)"
           if [[ -n $cargofmt ]]; then
             echo $cargofmt
