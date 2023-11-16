@@ -6,7 +6,7 @@ import { useState } from "react"
 
 export const CommentPanel = (p: {
     word: Dailp.FormFieldsFragment | null
-    segment: Dailp.DocumentParagraph | null
+    segment: TranslatedParagraph | null
 }) => {
     const [newCommentText, setNewCommentText] = useState<string>('')
     const [newCommentType, setNewCommentType] = useState('')
@@ -32,8 +32,8 @@ export const CommentPanel = (p: {
         setNewCommentText(event.target.value);
     };
 
-    const handleSelectChange = (event: React.ChangeEvent<HTMLOptionElement>) => {
-        setNewCommentType(e.target.value);
+    const handleSelectChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+        setNewCommentType(event.target.value);
     };
 
     const handleSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -41,7 +41,7 @@ export const CommentPanel = (p: {
     
         runUpdate({
             input: {
-              parentId: p.word? p.word.id : (p.segment? p.segment.id : null),
+              parentId: p.word? p.word.id : (p.segment? p.segment.index : null),
               parentType: p.word ? Dailp.CommentParentType.Word : Dailp.CommentParentType.Paragraph,
               textContent: newCommentText,
               commentType: newCommentType == 'Story' ? Dailp.CommentType.Story : 

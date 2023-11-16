@@ -18,6 +18,7 @@ import { useForm } from "./edit-word-form-context"
 import { content } from "./footer.css"
 import * as css from "./panel-layout.css"
 import ParagraphPanel from "./paragraph-panel"
+import CommentPanel from "./comment-panel"
 import { usePreferences } from "./preferences-context"
 import { TranslatedParagraph } from "./segment"
 import { VerticalMorphemicSegmentation } from "./word-panel"
@@ -140,9 +141,30 @@ export const PanelLayout = (p: {
     panel = <ParagraphPanel segment={p.segment} setContent={p.setContent} />
   }
 
+  // Logic to display comment panel if the button is pressed
+  const handleComment = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault()
+
+    if(p.segment!=null){
+      if(p.segment.__typename === "AnnotatedForm"){
+        panel = <CommentPanel
+        word={p.segment}
+        segment={null}
+        />
+      } else if (p.segment.__typename === "DocumentParagraph"){
+        panel = <CommentPanel
+        word={null}
+        segment={p.segment}
+        />
+      }
+
+    }
+  };
+
   return (
     <div className={css.wordPanelContent}>
       <>{panel}</>
+      <button type="submit" onClick={handleComment}>Comment</button>
     </div>
   )
 }
