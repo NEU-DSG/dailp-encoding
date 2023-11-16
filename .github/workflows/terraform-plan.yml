@@ -34,12 +34,9 @@ jobs:
       - name: Check code quality
         run: |
           echo "::group::Checking Rust format"
-          rustfmt = "$(cargo fmt --check)"
+          rustfmt="$(cargo fmt --check)"
           echo $rustfmt
           echo "::endgroup"
-          if [[ -n $rustfmt ]]; then
-            echo "::error::Rust code does not meet code standards. Please run `cargo fmt` or `dev-check`."
-          fi
           echo "::group::Checking format for frontend code"
           cd website
           yarn prettier -c --config package.json src
