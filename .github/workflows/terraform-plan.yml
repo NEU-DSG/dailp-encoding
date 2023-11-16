@@ -33,6 +33,7 @@ jobs:
           pushFilter: "(-dailp$|-dailp-|-terraform-config$|-source$|\\.tar\\.gz$|-output$|-plan$|-apply-now$|-apply$)"
       - name: Check code quality
         run: |
+          nix build --impure -L
           echo "::group::Checking Rust format"
           rustfmt="$(cargo fmt --check)"
           echo $rustfmt
