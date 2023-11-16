@@ -40,6 +40,7 @@ jobs:
           echo "::endgroup"
           echo "::group::Checking format for frontend code"
           cd website
+          yarn add prettier --dev
           yarn prettier -c --config package.json src
           echo "::endgroup"
       - name: Configure AWS credentials
