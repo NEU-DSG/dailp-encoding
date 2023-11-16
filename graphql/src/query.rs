@@ -127,6 +127,26 @@ impl Query {
             .await?)
     }
 
+    /// Retrieves all documents that are bookmarked by the current user.
+    pub async fn bookmarked_documents(
+        &self,
+        context: &Context<'_>,
+    ) -> FieldResult<Vec<AnnotatedDoc>> {
+        let user = context
+            .data_opt::<UserInfo>()
+            .ok_or_else(|| anyhow::format_err!("User is not signed in"))?;
+        let bookmarked_ids = context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .bookmarked_documents(&user.id)
+            .await?;
+        let annotated_docs_map = context
+            .data::<DataLoader<Database>>()?
+            .load_many(bookmarked_ids.iter().map(|&id| dailp::DocumentId(id)))
+            .await?;
+        Ok(annotated_docs_map.into_values().collect())
+    }
+
     /// Retrieves a full document from its unique identifier.
     pub async fn page(
         &self,

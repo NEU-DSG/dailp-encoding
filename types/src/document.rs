@@ -71,6 +71,11 @@ impl AnnotatedDoc {
         &self.meta.date
     }
 
+    /// When the document was bookmarked by the current user, if it was.
+    async fn bookmarked_on(&self) -> &Option<Date> {
+        &self.meta.bookmarked_on
+    }
+
     /// The original source(s) of this document, the most important first.
     async fn sources(&self) -> &[SourceAttribution] {
         &self.meta.sources
@@ -444,6 +449,9 @@ pub struct DocumentMetadata {
     /// Arbitrary number used for manually ordering documents in a collection.
     /// For collections without manual ordering, use zero here.
     pub order_index: i64,
+    /// When the document was bookmarked by the current user, if it was.
+    #[serde(default)]
+    pub bookmarked_on: Option<Date>,
 }
 
 /// Database ID for one document

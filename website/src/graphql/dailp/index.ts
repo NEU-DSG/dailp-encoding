@@ -39,6 +39,8 @@ export type AnnotatedDoc = {
   readonly __typename?: "AnnotatedDoc"
   /** The audio recording resource for this entire document */
   readonly audioRecording: Maybe<AudioSlice>
+  /** When the document was bookmarked by the current user, if it was. */
+  readonly bookmarkedOn: Maybe<Date>
   /** Collection chapters that contain this document. */
   readonly chapters: Maybe<ReadonlyArray<CollectionChapter>>
   /** Where the source document came from, maybe the name of a collection */
@@ -793,6 +795,8 @@ export type Query = {
   readonly allPages: ReadonlyArray<Page>
   /** List of all the functional morpheme tags available */
   readonly allTags: ReadonlyArray<MorphemeTag>
+  /** Retrieves all documents that are bookmarked by the current user. */
+  readonly bookmarkedDocuments: ReadonlyArray<AnnotatedDoc>
   /** Retrieves a chapter and its contents by its collection and chapter slug. */
   readonly chapter: Maybe<CollectionChapter>
   readonly collection: DocumentCollection
@@ -1004,6 +1008,9 @@ export type AnnotatedDocumentQuery = { readonly __typename?: "Query" } & {
     > & {
         readonly date: Maybe<
           { readonly __typename?: "Date" } & Pick<Date, "year">
+        >
+        readonly bookmarkedOn: Maybe<
+          { readonly __typename?: "Date" } & Pick<Date, "formattedDate">
         >
         readonly sources: ReadonlyArray<
           { readonly __typename?: "SourceAttribution" } & Pick<
@@ -1685,6 +1692,53 @@ export type CollectionChapterQuery = { readonly __typename?: "Query" } & {
   >
 }
 
+export type BookmarkedDocumentsQueryVariables = Exact<{ [key: string]: never }>
+
+export type BookmarkedDocumentsQuery = { readonly __typename?: "Query" } & {
+  readonly bookmarkedDocuments: ReadonlyArray<
+    { readonly __typename?: "AnnotatedDoc" } & Pick<
+      AnnotatedDoc,
+      "id" | "title" | "slug" | "isReference"
+    > & {
+        readonly date: Maybe<
+          { readonly __typename?: "Date" } & Pick<Date, "year">
+        >
+        readonly bookmarkedOn: Maybe<
+          { readonly __typename?: "Date" } & Pick<Date, "formattedDate">
+        >
+        readonly sources: ReadonlyArray<
+          { readonly __typename?: "SourceAttribution" } & Pick<
+            SourceAttribution,
+            "name" | "link"
+          >
+        >
+        readonly audioRecording: Maybe<
+          { readonly __typename?: "AudioSlice" } & Pick<
+            AudioSlice,
+            "resourceUrl" | "startTime" | "endTime"
+          >
+        >
+        readonly translatedPages: Maybe<
+          ReadonlyArray<
+            { readonly __typename?: "DocumentPage" } & {
+              readonly image: Maybe<
+                { readonly __typename?: "PageImage" } & Pick<PageImage, "url">
+              >
+            }
+          >
+        >
+        readonly chapters: Maybe<
+          ReadonlyArray<
+            { readonly __typename?: "CollectionChapter" } & Pick<
+              CollectionChapter,
+              "path"
+            >
+          >
+        >
+      }
+  >
+}
+
 export type UpdateWordMutationVariables = Exact<{
   word: AnnotatedFormUpdate
   morphemeSystem: CherokeeOrthography
@@ -1972,6 +2026,9 @@ export const AnnotatedDocumentDocument = gql`
       isReference
       date {
         year
+      }
+      bookmarkedOn {
+        formattedDate
       }
       sources {
         name
@@ -2391,6 +2448,48 @@ export function useCollectionChapterQuery(
   return Urql.useQuery<CollectionChapterQuery, CollectionChapterQueryVariables>(
     { query: CollectionChapterDocument, ...options }
   )
+}
+export const BookmarkedDocumentsDocument = gql`
+  query BookmarkedDocuments {
+    bookmarkedDocuments {
+      id
+      title
+      slug
+      isReference
+      date {
+        year
+      }
+      bookmarkedOn {
+        formattedDate
+      }
+      sources {
+        name
+        link
+      }
+      audioRecording {
+        resourceUrl
+        startTime
+        endTime
+      }
+      translatedPages {
+        image {
+          url
+        }
+      }
+      chapters {
+        path
+      }
+    }
+  }
+`
+
+export function useBookmarkedDocumentsQuery(
+  options?: Omit<Urql.UseQueryArgs<BookmarkedDocumentsQueryVariables>, "query">
+) {
+  return Urql.useQuery<
+    BookmarkedDocumentsQuery,
+    BookmarkedDocumentsQueryVariables
+  >({ query: BookmarkedDocumentsDocument, ...options })
 }
 export const UpdateWordDocument = gql`
   mutation UpdateWord(

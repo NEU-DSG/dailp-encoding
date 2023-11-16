@@ -285,6 +285,7 @@ impl Database {
                     title: item.title,
                     is_reference: item.is_reference,
                     date: item.written_at.map(Date::new),
+                    bookmarked_on: item.bookmarked_on.map(Date::new),
                     audio_recording: None,
                     collection: None,
                     contributors: item
@@ -424,6 +425,7 @@ impl Database {
                 title: item.title,
                 is_reference: item.is_reference,
                 date: item.written_at.map(Date::new),
+                bookmarked_on: item.bookmarked_on.map(Date::new),
                 audio_recording: None,
                 collection: None,
                 contributors: item
@@ -627,6 +629,19 @@ impl Database {
             .execute(&self.client)
             .await?;
         Ok(format!("document: {}, user: {}", document_id, user_id))
+    }
+
+    pub async fn bookmarked_documents(&self, user_id: &Uuid) -> Result<Vec<Uuid>> {
+        let bookmarks = query_file!("queries/get_bookmark_ids.sql", user_id)
+            .fetch_all(&self.client)
+            .await?;
+
+            Ok(
+                bookmarks
+                    .into_iter()
+                    .map(|x| x.id)
+                    .collect(),
+            )
     }
 
     pub async fn attach_audio_to_word(
@@ -1482,6 +1497,7 @@ impl Loader<DocumentId> for Database {
                     title: item.title,
                     is_reference: item.is_reference,
                     date: item.written_at.map(Date::new),
+                    bookmarked_on: item.bookmarked_on.map(Date::new),
                     audio_recording: item.audio_url.map(|resource_url| AudioSlice {
                         slice_id: Some(AudioSliceId(item.audio_slice_id.unwrap().to_string())),
                         resource_url,
@@ -1547,6 +1563,7 @@ impl Loader<DocumentShortName> for Database {
                     title: item.title,
                     is_reference: item.is_reference,
                     date: item.written_at.map(Date::new),
+                    bookmarked_on: item.bookmarked_on.map(Date::new),
                     audio_recording: item.audio_url.map(|resource_url| AudioSlice {
                         slice_id: Some(AudioSliceId(item.audio_slice_id.unwrap().to_string())),
                         resource_url,

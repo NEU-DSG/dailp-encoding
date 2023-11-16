@@ -22,6 +22,9 @@ query AnnotatedDocument($slug: String!) {
     date {
       year
     }
+    bookmarkedOn {
+      formattedDate
+    }
     sources {
       name
       link
@@ -335,6 +338,38 @@ query CollectionChapter($collectionSlug: String!, $chapterSlug: String!) {
       chapters {
         path
       }
+    }
+  }
+}
+
+query BookmarkedDocuments {
+  bookmarkedDocuments {
+    id
+    title
+    slug
+    isReference
+    date {
+      year
+    }
+    bookmarkedOn {
+      formattedDate
+    }
+    sources {
+      name
+      link
+    }
+    audioRecording {
+      resourceUrl
+      startTime
+      endTime
+    }
+    translatedPages {
+      image {
+        url
+      }
+    }
+    chapters {
+      path
     }
   }
 }
