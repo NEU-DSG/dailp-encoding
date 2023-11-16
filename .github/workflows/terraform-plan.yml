@@ -34,7 +34,13 @@ jobs:
       - name: Check code quality
         run: |
           echo "::group::Checking Rust format"
-          cargo fmt --check
+          cargo install cargo-fmt
+          cargofmt="$(cargo fmt --check)"
+          if [[ -n $cargofmt ]]; then
+            echo $cargofmt
+            echo "Please fix the formatting errors above by running 'cargo fmt'."
+            exit 1
+          fi
           echo "::endgroup"
           echo "::group::Checking format for frontend code"
           cd website
