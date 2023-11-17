@@ -505,26 +505,6 @@ impl Database {
         todo!("Implement image annotations")
     }
 
-    /// TODO: does this actually upload the audio (no) -- it just dies it to a
-    /// word, so should we have a better name?
-    pub async fn upload_contributor_audio(
-        &self,
-        upload: AttachAudioToWordInput,
-        contributor_id: &Uuid,
-    ) -> Result<Uuid> {
-        let media_slice_id = query_file_scalar!(
-            "queries/attach_audio_to_word.sql",
-            contributor_id,
-            &upload.contributor_audio_url as _,
-            0,
-            0,
-            upload.word_id
-        )
-        .fetch_one(&self.client)
-        .await?;
-        Ok(media_slice_id)
-    }
-
     pub async fn update_word(&self, word: AnnotatedFormUpdate) -> Result<Uuid> {
         let mut tx = self.client.begin().await?;
 
@@ -615,15 +595,21 @@ impl Database {
 
     // pub async fn maybe_undefined_to_vec() -> Vec<Option<String>> {}
 
+    /// This does two things:
+    /// 1. Create a media slice if one does not exist for the provided audio
+    /// recording.
+    /// 2. Add a join table entry attaching that media slice to the
+    /// specified word.
+    /// Returns the `id` of the upserted media slice
     pub async fn attach_audio_to_word(
         &self,
-        upload: AttachAudioToWordInput,
+        upload: &AttachAudioToWordInput,
         contributor_id: &Uuid,
     ) -> Result<Uuid> {
         let media_slice_id = query_file_scalar!(
             "queries/attach_audio_to_word.sql",
             contributor_id,
-            &upload.contributor_audio_url as _,
+            upload.contributor_audio_url as _,
             0,
             0,
             upload.word_id
