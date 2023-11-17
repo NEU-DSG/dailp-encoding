@@ -2,7 +2,15 @@ import { CognitoIdentityClient } from "@aws-sdk/client-cognito-identity"
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3"
 import { fromCognitoIdentityPool } from "@aws-sdk/credential-provider-cognito-identity"
 import { CognitoUser } from "amazon-cognito-identity-js"
-import { ChangeEvent, ReactElement, useEffect, useMemo, useState } from "react"
+import {
+  ChangeEvent,
+  Fragment,
+  ReactElement,
+  ReactNode,
+  useEffect,
+  useMemo,
+  useState,
+} from "react"
 import { MdRecordVoiceOver, MdUploadFile } from "react-icons/md/index"
 import { VisuallyHidden } from "reakit"
 import { v4 } from "uuid"
@@ -18,47 +26,72 @@ import { IconTextButton } from "../button"
 import { SubtleButton } from "../subtle-button"
 import { subtleButton, subtleButtonActive } from "../subtle-button.css"
 
-function useAudioUpload(wordId: string) {
-  const { user } = useUser()
-  const [
-    _contributeAudioResult,
-    contributeAudio,
-  ] = Dailp.useAttachAudioToWordMutation()
+type UploadAudioState = "ready" | "uploading" | "error"
 
+function useAudioUpload(wordId: string) {
+  const [uploadAudioState, setUploadAudioState] =
+    useState<UploadAudioState>("ready")
+  const { user } = useUser()
+  const [_contributeAudioResult, contributeAudio] =
+    Dailp.useAttachAudioToWordMutation()
+
+  /**
+   * Try to upload the audio.
+   *
+   * Returns success boolean and updates state to ready or error
+   */
   const uploadAudio = useMemo(
     () =>
       async function (data: Blob) {
-        const { resourceUrl } = await uploadContributorAudioToS3(user!, data)
-        await contributeAudio({
-          input: {
-            wordId,
-            contributorAudioUrl: resourceUrl,
-          },
-        })
+        setUploadAudioState("uploading")
+        try {
+          const { resourceUrl } = await uploadContributorAudioToS3(user!, data)
+          // const resourceUrl = "https://" + prompt("url?")
+          const result = await contributeAudio({
+            input: {
+              wordId,
+              contributorAudioUrl: resourceUrl,
+            },
+          })
+          if (result.error) {
+            console.log(result.error)
+            setUploadAudioState("error")
+            return false
+          }
+        } catch (error) {
+          console.log(error)
+          setUploadAudioState("error")
+          return false
+        }
+
+        setUploadAudioState("ready")
+        return true
       },
     [user, contributeAudio, wordId]
   )
 
-  return uploadAudio
+  function clearError() {
+    // only map "error" -> "ready" otherwise do nothing
+    setUploadAudioState((s) => (s === "error" ? "ready" : s))
+  }
+
+  // `as const` makes sure this gets typed as a tuple, not a list with a union type
+  return [uploadAudio, uploadAudioState, clearError] as const
 }
 
 export function ContributorEditWordAudio(p: {
   word: Dailp.FormFieldsFragment
 }) {
+  return (
+    <div style={{ position: "relative" }}>
+      <AvailableAudioSection word={p.word} />
+      <ContributeAudioSection word={p.word} />
+    </div>
+  )
+}
+
+function AvailableAudioSection(p: { word: Dailp.FormFieldsFragment }) {
   const userId = useUserId()
-  const [currentTab, setCurrentTab] = useState<"upload" | "record">()
-  const [selectedFile, setSelectedFile] = useState<File>()
-  const uploadAudio = useAudioUpload(p.word.id)
-
-  function onFileChanged(event: ChangeEvent<HTMLInputElement>) {
-    if (!event.currentTarget.files) return
-
-    const [file] = event.currentTarget.files
-    if (!file) return
-    console.log("New file selected", file)
-    setSelectedFile(file)
-    setCurrentTab("upload")
-  }
 
   const curatedAudioContent = p.word.editedAudio.length > 0 && (
     <>
@@ -121,35 +154,70 @@ export function ContributorEditWordAudio(p: {
   )
 
   return (
-    <div>
+    <>
       {[curatedAudioContent, userAudioContent, otherUserAudioContent]
         .filter((content) => content !== false)
         .map((content, idx) => (
-          <>
+          <Fragment key={idx}>
             {idx > 0 && <hr />}
             {content}
-          </>
+          </Fragment>
         ))}
+    </>
+  )
+}
+
+function ContributeAudioSection(p: {
+  word: Dailp.FormFieldsFragment
+}): ReactElement {
+  const [currentTab, setCurrentTab] = useState<"upload" | "record">()
+  const [selectedFile, setSelectedFile] = useState<File>()
+  const [uploadAudio, uploadState, clearUploadError] = useAudioUpload(p.word.id)
+
+  function onFileChanged(event: ChangeEvent<HTMLInputElement>) {
+    if (!event.currentTarget.files) return
+
+    const [file] = event.currentTarget.files
+    if (!file) return
+    console.log("New file selected", file)
+    setSelectedFile(file)
+    setCurrentTab("upload")
+  }
+
+  async function uploadAudioAndReset(data: Blob) {
+    const success = await uploadAudio(data)
+    if (success) {
+      setCurrentTab(undefined)
+      setSelectedFile(undefined)
+    }
+  }
+
+  return (
+    <>
       <VisuallyHidden>
         <input type="file" id="file-upload" onChange={onFileChanged} />
       </VisuallyHidden>
-      <div
+      <form
         style={{
           display: "flex",
           textAlign: "center",
           justifyContent: "space-between",
         }}
       >
-        <label htmlFor="file-upload" style={{ display: "inline-block" }}>
+        <div style={{ display: "inline-block" }}>
           <IconTextButton
             icon={<MdUploadFile />}
+            // @ts-ignore -- I couldn't find a way to fix how this is typed
+            // this is part of React's ugly insides
+            as="label"
+            htmlFor="file-upload"
             className={
               currentTab === "upload" ? subtleButtonActive : subtleButton
             }
           >
             Upload audio
           </IconTextButton>
-        </label>
+        </div>
         <div style={{ display: "inline-block" }}>
           <IconTextButton
             icon={<MdRecordVoiceOver />}
@@ -163,18 +231,58 @@ export function ContributorEditWordAudio(p: {
             <span>Record audio</span>
           </IconTextButton>
         </div>
-      </div>
+      </form>
 
       {currentTab === "upload" && (
         <UploadAudioSection
           selectedFile={selectedFile}
-          uploadAudio={uploadAudio}
+          uploadAudio={uploadAudioAndReset}
         />
       )}
 
       {currentTab === "record" && (
-        <RecordAudioSection uploadAudio={uploadAudio} />
+        <RecordAudioSection uploadAudio={uploadAudioAndReset} />
       )}
+
+      {uploadState === "uploading" && (
+        <StatusMessage border="grey">
+          <p>Uploading...</p>
+        </StatusMessage>
+      )}
+
+      {uploadState === "error" && (
+        <StatusMessage border="red">
+          <p>Something went wrong with the upload</p>
+          <button onClick={() => clearUploadError()}>Try again</button>
+        </StatusMessage>
+      )}
+    </>
+  )
+}
+
+function StatusMessage({
+  children,
+  border,
+}: {
+  children: ReactNode
+  border: string
+}) {
+  return (
+    <div
+      style={{
+        position: "absolute",
+        top: 0,
+        left: 0,
+        bottom: 0,
+        right: 0,
+        background: "rgba(255,255,255,0.65)",
+        color: "black",
+        padding: 40,
+        backdropFilter: "blur(2px)",
+        border: `4px solid ${border}`,
+      }}
+    >
+      {children}
     </div>
   )
 }
@@ -325,5 +433,5 @@ async function uploadContributorAudioToS3(user: CognitoUser, data: Blob) {
     })
   )
 
-  return { resourceUrl: `https://d1q0qkah8ttfau.cloudfront.net/${key}` }
+  return { resourceUrl: `https://${process.env["CF_URL"]}/${key}` }
 }
