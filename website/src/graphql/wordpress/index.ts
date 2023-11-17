@@ -6,14 +6,12 @@ export type InputMaybe<T> = Maybe<T>
 export type Exact<T extends { [key: string]: unknown }> = {
   [K in keyof T]: T[K]
 }
-export type MakeOptional<T, K extends keyof T> = Omit<T, K> &
-  {
-    [SubKey in K]?: Maybe<T[SubKey]>
-  }
-export type MakeMaybe<T, K extends keyof T> = Omit<T, K> &
-  {
-    [SubKey in K]: Maybe<T[SubKey]>
-  }
+export type MakeOptional<T, K extends keyof T> = Omit<T, K> & {
+  [SubKey in K]?: Maybe<T[SubKey]>
+}
+export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & {
+  [SubKey in K]: Maybe<T[SubKey]>
+}
 export type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
@@ -62,9 +60,7 @@ export type ActionMonitorAction = ContentNode &
     /** Connection between the ContentNode type and the EnqueuedScript type */
     readonly enqueuedScripts: Maybe<ContentNodeToEnqueuedScriptConnection>
     /** Connection between the ContentNode type and the EnqueuedStylesheet type */
-    readonly enqueuedStylesheets: Maybe<
-      ContentNodeToEnqueuedStylesheetConnection
-    >
+    readonly enqueuedStylesheets: Maybe<ContentNodeToEnqueuedStylesheetConnection>
     /** The global unique identifier for this post. This currently matches the value stored in WP_Post-&gt;guid and the guid column in the &quot;post_objects&quot; database table. */
     readonly guid: Maybe<Scalars["String"]>
     /** The globally unique identifier of the action_monitor object. */
@@ -184,15 +180,16 @@ export enum ActionMonitorActionIdType {
 }
 
 /** Connection between the ActionMonitorAction type and the ActionMonitorAction type */
-export type ActionMonitorActionToPreviewConnectionEdge = ActionMonitorActionConnectionEdge &
-  Edge &
-  OneToOneConnection & {
-    readonly __typename?: "ActionMonitorActionToPreviewConnectionEdge"
-    /** Opaque reference to the nodes position in the connection. Value can be used with pagination args. */
-    readonly cursor: Maybe<Scalars["String"]>
-    /** The node of the connection, without the edges */
-    readonly node: ActionMonitorAction
-  }
+export type ActionMonitorActionToPreviewConnectionEdge =
+  ActionMonitorActionConnectionEdge &
+    Edge &
+    OneToOneConnection & {
+      readonly __typename?: "ActionMonitorActionToPreviewConnectionEdge"
+      /** Opaque reference to the nodes position in the connection. Value can be used with pagination args. */
+      readonly cursor: Maybe<Scalars["String"]>
+      /** The node of the connection, without the edges */
+      readonly node: ActionMonitorAction
+    }
 
 /** Avatars are profile images for users. WordPress by default uses the Gravatar service to host and fetch avatars from. */
 export type Avatar = {
@@ -415,19 +412,20 @@ export type CategoryToAncestorsCategoryConnectionEdge = CategoryConnectionEdge &
   }
 
 /** Page Info on the &quot;CategoryToAncestorsCategoryConnection&quot; */
-export type CategoryToAncestorsCategoryConnectionPageInfo = CategoryConnectionPageInfo &
-  PageInfo &
-  WpPageInfo & {
-    readonly __typename?: "CategoryToAncestorsCategoryConnectionPageInfo"
-    /** When paginating forwards, the cursor to continue. */
-    readonly endCursor: Maybe<Scalars["String"]>
-    /** When paginating forwards, are there more items? */
-    readonly hasNextPage: Scalars["Boolean"]
-    /** When paginating backwards, are there more items? */
-    readonly hasPreviousPage: Scalars["Boolean"]
-    /** When paginating backwards, the cursor to continue. */
-    readonly startCursor: Maybe<Scalars["String"]>
-  }
+export type CategoryToAncestorsCategoryConnectionPageInfo =
+  CategoryConnectionPageInfo &
+    PageInfo &
+    WpPageInfo & {
+      readonly __typename?: "CategoryToAncestorsCategoryConnectionPageInfo"
+      /** When paginating forwards, the cursor to continue. */
+      readonly endCursor: Maybe<Scalars["String"]>
+      /** When paginating forwards, are there more items? */
+      readonly hasNextPage: Scalars["Boolean"]
+      /** When paginating backwards, are there more items? */
+      readonly hasPreviousPage: Scalars["Boolean"]
+      /** When paginating backwards, the cursor to continue. */
+      readonly startCursor: Maybe<Scalars["String"]>
+    }
 
 /** Connection between the Category type and the category type */
 export type CategoryToCategoryConnection = CategoryConnection &
@@ -535,19 +533,20 @@ export type CategoryToContentNodeConnectionEdge = ContentNodeConnectionEdge &
   }
 
 /** Page Info on the &quot;CategoryToContentNodeConnection&quot; */
-export type CategoryToContentNodeConnectionPageInfo = ContentNodeConnectionPageInfo &
-  PageInfo &
-  WpPageInfo & {
-    readonly __typename?: "CategoryToContentNodeConnectionPageInfo"
-    /** When paginating forwards, the cursor to continue. */
-    readonly endCursor: Maybe<Scalars["String"]>
-    /** When paginating forwards, are there more items? */
-    readonly hasNextPage: Scalars["Boolean"]
-    /** When paginating backwards, are there more items? */
-    readonly hasPreviousPage: Scalars["Boolean"]
-    /** When paginating backwards, the cursor to continue. */
-    readonly startCursor: Maybe<Scalars["String"]>
-  }
+export type CategoryToContentNodeConnectionPageInfo =
+  ContentNodeConnectionPageInfo &
+    PageInfo &
+    WpPageInfo & {
+      readonly __typename?: "CategoryToContentNodeConnectionPageInfo"
+      /** When paginating forwards, the cursor to continue. */
+      readonly endCursor: Maybe<Scalars["String"]>
+      /** When paginating forwards, are there more items? */
+      readonly hasNextPage: Scalars["Boolean"]
+      /** When paginating backwards, are there more items? */
+      readonly hasPreviousPage: Scalars["Boolean"]
+      /** When paginating backwards, the cursor to continue. */
+      readonly startCursor: Maybe<Scalars["String"]>
+    }
 
 /** Arguments for filtering the CategoryToContentNodeConnection connection */
 export type CategoryToContentNodeConnectionWhereArgs = {
@@ -571,7 +570,7 @@ export type CategoryToContentNodeConnectionWhereArgs = {
   readonly nameIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
   readonly notIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** What paramater to use to order the objects by. */
+  /** What parameter to use to order the objects by. */
   readonly orderby: InputMaybe<
     ReadonlyArray<InputMaybe<PostObjectsConnectionOrderbyInput>>
   >
@@ -675,7 +674,7 @@ export type CategoryToPostConnectionWhereArgs = {
   readonly nameIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
   readonly notIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** What paramater to use to order the objects by. */
+  /** What parameter to use to order the objects by. */
   readonly orderby: InputMaybe<
     ReadonlyArray<InputMaybe<PostObjectsConnectionOrderbyInput>>
   >
@@ -1315,19 +1314,20 @@ export type ContentNodeToEnqueuedScriptConnectionEdge = Edge &
   }
 
 /** Page Info on the &quot;ContentNodeToEnqueuedScriptConnection&quot; */
-export type ContentNodeToEnqueuedScriptConnectionPageInfo = EnqueuedScriptConnectionPageInfo &
-  PageInfo &
-  WpPageInfo & {
-    readonly __typename?: "ContentNodeToEnqueuedScriptConnectionPageInfo"
-    /** When paginating forwards, the cursor to continue. */
-    readonly endCursor: Maybe<Scalars["String"]>
-    /** When paginating forwards, are there more items? */
-    readonly hasNextPage: Scalars["Boolean"]
-    /** When paginating backwards, are there more items? */
-    readonly hasPreviousPage: Scalars["Boolean"]
-    /** When paginating backwards, the cursor to continue. */
-    readonly startCursor: Maybe<Scalars["String"]>
-  }
+export type ContentNodeToEnqueuedScriptConnectionPageInfo =
+  EnqueuedScriptConnectionPageInfo &
+    PageInfo &
+    WpPageInfo & {
+      readonly __typename?: "ContentNodeToEnqueuedScriptConnectionPageInfo"
+      /** When paginating forwards, the cursor to continue. */
+      readonly endCursor: Maybe<Scalars["String"]>
+      /** When paginating forwards, are there more items? */
+      readonly hasNextPage: Scalars["Boolean"]
+      /** When paginating backwards, are there more items? */
+      readonly hasPreviousPage: Scalars["Boolean"]
+      /** When paginating backwards, the cursor to continue. */
+      readonly startCursor: Maybe<Scalars["String"]>
+    }
 
 /** Connection between the ContentNode type and the EnqueuedStylesheet type */
 export type ContentNodeToEnqueuedStylesheetConnection = Connection &
@@ -1352,19 +1352,20 @@ export type ContentNodeToEnqueuedStylesheetConnectionEdge = Edge &
   }
 
 /** Page Info on the &quot;ContentNodeToEnqueuedStylesheetConnection&quot; */
-export type ContentNodeToEnqueuedStylesheetConnectionPageInfo = EnqueuedStylesheetConnectionPageInfo &
-  PageInfo &
-  WpPageInfo & {
-    readonly __typename?: "ContentNodeToEnqueuedStylesheetConnectionPageInfo"
-    /** When paginating forwards, the cursor to continue. */
-    readonly endCursor: Maybe<Scalars["String"]>
-    /** When paginating forwards, are there more items? */
-    readonly hasNextPage: Scalars["Boolean"]
-    /** When paginating backwards, are there more items? */
-    readonly hasPreviousPage: Scalars["Boolean"]
-    /** When paginating backwards, the cursor to continue. */
-    readonly startCursor: Maybe<Scalars["String"]>
-  }
+export type ContentNodeToEnqueuedStylesheetConnectionPageInfo =
+  EnqueuedStylesheetConnectionPageInfo &
+    PageInfo &
+    WpPageInfo & {
+      readonly __typename?: "ContentNodeToEnqueuedStylesheetConnectionPageInfo"
+      /** When paginating forwards, the cursor to continue. */
+      readonly endCursor: Maybe<Scalars["String"]>
+      /** When paginating forwards, are there more items? */
+      readonly hasNextPage: Scalars["Boolean"]
+      /** When paginating backwards, are there more items? */
+      readonly hasPreviousPage: Scalars["Boolean"]
+      /** When paginating backwards, the cursor to continue. */
+      readonly startCursor: Maybe<Scalars["String"]>
+    }
 
 /** The template assigned to a node of content */
 export type ContentTemplate = {
@@ -1534,19 +1535,20 @@ export type ContentTypeToContentNodeConnectionEdge = ContentNodeConnectionEdge &
   }
 
 /** Page Info on the &quot;ContentTypeToContentNodeConnection&quot; */
-export type ContentTypeToContentNodeConnectionPageInfo = ContentNodeConnectionPageInfo &
-  PageInfo &
-  WpPageInfo & {
-    readonly __typename?: "ContentTypeToContentNodeConnectionPageInfo"
-    /** When paginating forwards, the cursor to continue. */
-    readonly endCursor: Maybe<Scalars["String"]>
-    /** When paginating forwards, are there more items? */
-    readonly hasNextPage: Scalars["Boolean"]
-    /** When paginating backwards, are there more items? */
-    readonly hasPreviousPage: Scalars["Boolean"]
-    /** When paginating backwards, the cursor to continue. */
-    readonly startCursor: Maybe<Scalars["String"]>
-  }
+export type ContentTypeToContentNodeConnectionPageInfo =
+  ContentNodeConnectionPageInfo &
+    PageInfo &
+    WpPageInfo & {
+      readonly __typename?: "ContentTypeToContentNodeConnectionPageInfo"
+      /** When paginating forwards, the cursor to continue. */
+      readonly endCursor: Maybe<Scalars["String"]>
+      /** When paginating forwards, are there more items? */
+      readonly hasNextPage: Scalars["Boolean"]
+      /** When paginating backwards, are there more items? */
+      readonly hasPreviousPage: Scalars["Boolean"]
+      /** When paginating backwards, the cursor to continue. */
+      readonly startCursor: Maybe<Scalars["String"]>
+    }
 
 /** Arguments for filtering the ContentTypeToContentNodeConnection connection */
 export type ContentTypeToContentNodeConnectionWhereArgs = {
@@ -1568,7 +1570,7 @@ export type ContentTypeToContentNodeConnectionWhereArgs = {
   readonly nameIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
   readonly notIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** What paramater to use to order the objects by. */
+  /** What parameter to use to order the objects by. */
   readonly orderby: InputMaybe<
     ReadonlyArray<InputMaybe<PostObjectsConnectionOrderbyInput>>
   >
@@ -2043,7 +2045,7 @@ export type DeleteCategoryInput = {
 /** The payload for the deleteCategory mutation. */
 export type DeleteCategoryPayload = {
   readonly __typename?: "DeleteCategoryPayload"
-  /** The deteted term object */
+  /** The deleted term object */
   readonly category: Maybe<Category>
   /** If a &#039;clientMutationId&#039; input is provided to the mutation, it will be returned as output on the mutation. This ID can be used by the client to track the progress of mutations and catch possible duplicate mutation submissions. */
   readonly clientMutationId: Maybe<Scalars["String"]>
@@ -2131,7 +2133,7 @@ export type DeletePostFormatPayload = {
   readonly clientMutationId: Maybe<Scalars["String"]>
   /** The ID of the deleted object */
   readonly deletedId: Maybe<Scalars["ID"]>
-  /** The deteted term object */
+  /** The deleted term object */
   readonly postFormat: Maybe<PostFormat>
 }
 
@@ -2173,7 +2175,7 @@ export type DeleteTagPayload = {
   readonly clientMutationId: Maybe<Scalars["String"]>
   /** The ID of the deleted object */
   readonly deletedId: Maybe<Scalars["ID"]>
-  /** The deteted term object */
+  /** The deleted term object */
   readonly tag: Maybe<Tag>
 }
 
@@ -2382,13 +2384,9 @@ export type GeneralSettings = {
 /** Content node with hierarchical (parent/child) relationships */
 export type HierarchicalContentNode = {
   /** Returns ancestors of the node. Default ordered as lowest (closest to the child) to highest (closest to the root). */
-  readonly ancestors: Maybe<
-    HierarchicalContentNodeToContentNodeAncestorsConnection
-  >
+  readonly ancestors: Maybe<HierarchicalContentNodeToContentNodeAncestorsConnection>
   /** Connection between the HierarchicalContentNode type and the ContentNode type */
-  readonly children: Maybe<
-    HierarchicalContentNodeToContentNodeChildrenConnection
-  >
+  readonly children: Maybe<HierarchicalContentNodeToContentNodeChildrenConnection>
   /** Connection between the ContentNode type and the ContentType type */
   readonly contentType: Maybe<ContentNodeToContentTypeConnectionEdge>
   /** The name of the Content Type the node belongs to */
@@ -2430,9 +2428,7 @@ export type HierarchicalContentNode = {
   /** The GMT modified time for a post. If a post was recently updated the modified field will change to match the corresponding time in GMT. */
   readonly modifiedGmt: Maybe<Scalars["String"]>
   /** The parent of the node. The parent object can be of various types */
-  readonly parent: Maybe<
-    HierarchicalContentNodeToParentContentNodeConnectionEdge
-  >
+  readonly parent: Maybe<HierarchicalContentNodeToParentContentNodeConnectionEdge>
   /** Database id of the parent node */
   readonly parentDatabaseId: Maybe<Scalars["Int"]>
   /** The globally unique identifier of the parent node. */
@@ -2457,9 +2453,7 @@ export type HierarchicalContentNodeAncestorsArgs = {
   before: InputMaybe<Scalars["String"]>
   first: InputMaybe<Scalars["Int"]>
   last: InputMaybe<Scalars["Int"]>
-  where: InputMaybe<
-    HierarchicalContentNodeToContentNodeAncestorsConnectionWhereArgs
-  >
+  where: InputMaybe<HierarchicalContentNodeToContentNodeAncestorsConnectionWhereArgs>
 }
 
 /** Content node with hierarchical (parent/child) relationships */
@@ -2468,9 +2462,7 @@ export type HierarchicalContentNodeChildrenArgs = {
   before: InputMaybe<Scalars["String"]>
   first: InputMaybe<Scalars["Int"]>
   last: InputMaybe<Scalars["Int"]>
-  where: InputMaybe<
-    HierarchicalContentNodeToContentNodeChildrenConnectionWhereArgs
-  >
+  where: InputMaybe<HierarchicalContentNodeToContentNodeChildrenConnectionWhereArgs>
 }
 
 /** Content node with hierarchical (parent/child) relationships */
@@ -2490,43 +2482,44 @@ export type HierarchicalContentNodeEnqueuedStylesheetsArgs = {
 }
 
 /** Connection between the HierarchicalContentNode type and the ContentNode type */
-export type HierarchicalContentNodeToContentNodeAncestorsConnection = Connection &
-  ContentNodeConnection & {
-    readonly __typename?: "HierarchicalContentNodeToContentNodeAncestorsConnection"
-    /** Edges for the HierarchicalContentNodeToContentNodeAncestorsConnection connection */
-    readonly edges: ReadonlyArray<
-      HierarchicalContentNodeToContentNodeAncestorsConnectionEdge
-    >
-    /** The nodes of the connection, without the edges */
-    readonly nodes: ReadonlyArray<ContentNode>
-    /** Information about pagination in a connection. */
-    readonly pageInfo: HierarchicalContentNodeToContentNodeAncestorsConnectionPageInfo
-  }
+export type HierarchicalContentNodeToContentNodeAncestorsConnection =
+  Connection &
+    ContentNodeConnection & {
+      readonly __typename?: "HierarchicalContentNodeToContentNodeAncestorsConnection"
+      /** Edges for the HierarchicalContentNodeToContentNodeAncestorsConnection connection */
+      readonly edges: ReadonlyArray<HierarchicalContentNodeToContentNodeAncestorsConnectionEdge>
+      /** The nodes of the connection, without the edges */
+      readonly nodes: ReadonlyArray<ContentNode>
+      /** Information about pagination in a connection. */
+      readonly pageInfo: HierarchicalContentNodeToContentNodeAncestorsConnectionPageInfo
+    }
 
 /** An edge in a connection */
-export type HierarchicalContentNodeToContentNodeAncestorsConnectionEdge = ContentNodeConnectionEdge &
-  Edge & {
-    readonly __typename?: "HierarchicalContentNodeToContentNodeAncestorsConnectionEdge"
-    /** A cursor for use in pagination */
-    readonly cursor: Maybe<Scalars["String"]>
-    /** The item at the end of the edge */
-    readonly node: ContentNode
-  }
+export type HierarchicalContentNodeToContentNodeAncestorsConnectionEdge =
+  ContentNodeConnectionEdge &
+    Edge & {
+      readonly __typename?: "HierarchicalContentNodeToContentNodeAncestorsConnectionEdge"
+      /** A cursor for use in pagination */
+      readonly cursor: Maybe<Scalars["String"]>
+      /** The item at the end of the edge */
+      readonly node: ContentNode
+    }
 
 /** Page Info on the &quot;HierarchicalContentNodeToContentNodeAncestorsConnection&quot; */
-export type HierarchicalContentNodeToContentNodeAncestorsConnectionPageInfo = ContentNodeConnectionPageInfo &
-  PageInfo &
-  WpPageInfo & {
-    readonly __typename?: "HierarchicalContentNodeToContentNodeAncestorsConnectionPageInfo"
-    /** When paginating forwards, the cursor to continue. */
-    readonly endCursor: Maybe<Scalars["String"]>
-    /** When paginating forwards, are there more items? */
-    readonly hasNextPage: Scalars["Boolean"]
-    /** When paginating backwards, are there more items? */
-    readonly hasPreviousPage: Scalars["Boolean"]
-    /** When paginating backwards, the cursor to continue. */
-    readonly startCursor: Maybe<Scalars["String"]>
-  }
+export type HierarchicalContentNodeToContentNodeAncestorsConnectionPageInfo =
+  ContentNodeConnectionPageInfo &
+    PageInfo &
+    WpPageInfo & {
+      readonly __typename?: "HierarchicalContentNodeToContentNodeAncestorsConnectionPageInfo"
+      /** When paginating forwards, the cursor to continue. */
+      readonly endCursor: Maybe<Scalars["String"]>
+      /** When paginating forwards, are there more items? */
+      readonly hasNextPage: Scalars["Boolean"]
+      /** When paginating backwards, are there more items? */
+      readonly hasPreviousPage: Scalars["Boolean"]
+      /** When paginating backwards, the cursor to continue. */
+      readonly startCursor: Maybe<Scalars["String"]>
+    }
 
 /** Arguments for filtering the HierarchicalContentNodeToContentNodeAncestorsConnection connection */
 export type HierarchicalContentNodeToContentNodeAncestorsConnectionWhereArgs = {
@@ -2548,7 +2541,7 @@ export type HierarchicalContentNodeToContentNodeAncestorsConnectionWhereArgs = {
   readonly nameIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
   readonly notIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** What paramater to use to order the objects by. */
+  /** What parameter to use to order the objects by. */
   readonly orderby: InputMaybe<
     ReadonlyArray<InputMaybe<PostObjectsConnectionOrderbyInput>>
   >
@@ -2571,43 +2564,44 @@ export type HierarchicalContentNodeToContentNodeAncestorsConnectionWhereArgs = {
 }
 
 /** Connection between the HierarchicalContentNode type and the ContentNode type */
-export type HierarchicalContentNodeToContentNodeChildrenConnection = Connection &
-  ContentNodeConnection & {
-    readonly __typename?: "HierarchicalContentNodeToContentNodeChildrenConnection"
-    /** Edges for the HierarchicalContentNodeToContentNodeChildrenConnection connection */
-    readonly edges: ReadonlyArray<
-      HierarchicalContentNodeToContentNodeChildrenConnectionEdge
-    >
-    /** The nodes of the connection, without the edges */
-    readonly nodes: ReadonlyArray<ContentNode>
-    /** Information about pagination in a connection. */
-    readonly pageInfo: HierarchicalContentNodeToContentNodeChildrenConnectionPageInfo
-  }
+export type HierarchicalContentNodeToContentNodeChildrenConnection =
+  Connection &
+    ContentNodeConnection & {
+      readonly __typename?: "HierarchicalContentNodeToContentNodeChildrenConnection"
+      /** Edges for the HierarchicalContentNodeToContentNodeChildrenConnection connection */
+      readonly edges: ReadonlyArray<HierarchicalContentNodeToContentNodeChildrenConnectionEdge>
+      /** The nodes of the connection, without the edges */
+      readonly nodes: ReadonlyArray<ContentNode>
+      /** Information about pagination in a connection. */
+      readonly pageInfo: HierarchicalContentNodeToContentNodeChildrenConnectionPageInfo
+    }
 
 /** An edge in a connection */
-export type HierarchicalContentNodeToContentNodeChildrenConnectionEdge = ContentNodeConnectionEdge &
-  Edge & {
-    readonly __typename?: "HierarchicalContentNodeToContentNodeChildrenConnectionEdge"
-    /** A cursor for use in pagination */
-    readonly cursor: Maybe<Scalars["String"]>
-    /** The item at the end of the edge */
-    readonly node: ContentNode
-  }
+export type HierarchicalContentNodeToContentNodeChildrenConnectionEdge =
+  ContentNodeConnectionEdge &
+    Edge & {
+      readonly __typename?: "HierarchicalContentNodeToContentNodeChildrenConnectionEdge"
+      /** A cursor for use in pagination */
+      readonly cursor: Maybe<Scalars["String"]>
+      /** The item at the end of the edge */
+      readonly node: ContentNode
+    }
 
 /** Page Info on the &quot;HierarchicalContentNodeToContentNodeChildrenConnection&quot; */
-export type HierarchicalContentNodeToContentNodeChildrenConnectionPageInfo = ContentNodeConnectionPageInfo &
-  PageInfo &
-  WpPageInfo & {
-    readonly __typename?: "HierarchicalContentNodeToContentNodeChildrenConnectionPageInfo"
-    /** When paginating forwards, the cursor to continue. */
-    readonly endCursor: Maybe<Scalars["String"]>
-    /** When paginating forwards, are there more items? */
-    readonly hasNextPage: Scalars["Boolean"]
-    /** When paginating backwards, are there more items? */
-    readonly hasPreviousPage: Scalars["Boolean"]
-    /** When paginating backwards, the cursor to continue. */
-    readonly startCursor: Maybe<Scalars["String"]>
-  }
+export type HierarchicalContentNodeToContentNodeChildrenConnectionPageInfo =
+  ContentNodeConnectionPageInfo &
+    PageInfo &
+    WpPageInfo & {
+      readonly __typename?: "HierarchicalContentNodeToContentNodeChildrenConnectionPageInfo"
+      /** When paginating forwards, the cursor to continue. */
+      readonly endCursor: Maybe<Scalars["String"]>
+      /** When paginating forwards, are there more items? */
+      readonly hasNextPage: Scalars["Boolean"]
+      /** When paginating backwards, are there more items? */
+      readonly hasPreviousPage: Scalars["Boolean"]
+      /** When paginating backwards, the cursor to continue. */
+      readonly startCursor: Maybe<Scalars["String"]>
+    }
 
 /** Arguments for filtering the HierarchicalContentNodeToContentNodeChildrenConnection connection */
 export type HierarchicalContentNodeToContentNodeChildrenConnectionWhereArgs = {
@@ -2629,7 +2623,7 @@ export type HierarchicalContentNodeToContentNodeChildrenConnectionWhereArgs = {
   readonly nameIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
   readonly notIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** What paramater to use to order the objects by. */
+  /** What parameter to use to order the objects by. */
   readonly orderby: InputMaybe<
     ReadonlyArray<InputMaybe<PostObjectsConnectionOrderbyInput>>
   >
@@ -2652,15 +2646,16 @@ export type HierarchicalContentNodeToContentNodeChildrenConnectionWhereArgs = {
 }
 
 /** Connection between the HierarchicalContentNode type and the ContentNode type */
-export type HierarchicalContentNodeToParentContentNodeConnectionEdge = ContentNodeConnectionEdge &
-  Edge &
-  OneToOneConnection & {
-    readonly __typename?: "HierarchicalContentNodeToParentContentNodeConnectionEdge"
-    /** Opaque reference to the nodes position in the connection. Value can be used with pagination args. */
-    readonly cursor: Maybe<Scalars["String"]>
-    /** The node of the connection, without the edges */
-    readonly node: ContentNode
-  }
+export type HierarchicalContentNodeToParentContentNodeConnectionEdge =
+  ContentNodeConnectionEdge &
+    Edge &
+    OneToOneConnection & {
+      readonly __typename?: "HierarchicalContentNodeToParentContentNodeConnectionEdge"
+      /** Opaque reference to the nodes position in the connection. Value can be used with pagination args. */
+      readonly cursor: Maybe<Scalars["String"]>
+      /** The node of the connection, without the edges */
+      readonly node: ContentNode
+    }
 
 /** Node with hierarchical (parent/child) relationships */
 export type HierarchicalNode = {
@@ -2766,9 +2761,7 @@ export type MediaItem = ContentNode &
     /** Alternative text to display when resource is not displayed */
     readonly altText: Maybe<Scalars["String"]>
     /** Returns ancestors of the node. Default ordered as lowest (closest to the child) to highest (closest to the root). */
-    readonly ancestors: Maybe<
-      HierarchicalContentNodeToContentNodeAncestorsConnection
-    >
+    readonly ancestors: Maybe<HierarchicalContentNodeToContentNodeAncestorsConnection>
     /** Connection between the NodeWithAuthor type and the User type */
     readonly author: Maybe<NodeWithAuthorToUserConnectionEdge>
     /** The database identifier of the author of the node */
@@ -2778,9 +2771,7 @@ export type MediaItem = ContentNode &
     /** The caption for the resource */
     readonly caption: Maybe<Scalars["String"]>
     /** Connection between the HierarchicalContentNode type and the ContentNode type */
-    readonly children: Maybe<
-      HierarchicalContentNodeToContentNodeChildrenConnection
-    >
+    readonly children: Maybe<HierarchicalContentNodeToContentNodeChildrenConnection>
     /** The number of comments. Even though WPGraphQL denotes this field as an integer, in WordPress this field should be saved as a numeric string for compatibility. */
     readonly commentCount: Maybe<Scalars["Int"]>
     /** Whether the comments are open or closed for this particular post. */
@@ -2808,9 +2799,7 @@ export type MediaItem = ContentNode &
     /** Connection between the ContentNode type and the EnqueuedScript type */
     readonly enqueuedScripts: Maybe<ContentNodeToEnqueuedScriptConnection>
     /** Connection between the ContentNode type and the EnqueuedStylesheet type */
-    readonly enqueuedStylesheets: Maybe<
-      ContentNodeToEnqueuedStylesheetConnection
-    >
+    readonly enqueuedStylesheets: Maybe<ContentNodeToEnqueuedStylesheetConnection>
     /** The filesize in bytes of the resource */
     readonly fileSize: Maybe<Scalars["Int"]>
     /** The global unique identifier for this post. This currently matches the value stored in WP_Post-&gt;guid and the guid column in the &quot;post_objects&quot; database table. */
@@ -2847,9 +2836,7 @@ export type MediaItem = ContentNode &
     /** The GMT modified time for a post. If a post was recently updated the modified field will change to match the corresponding time in GMT. */
     readonly modifiedGmt: Maybe<Scalars["String"]>
     /** The parent of the node. The parent object can be of various types */
-    readonly parent: Maybe<
-      HierarchicalContentNodeToParentContentNodeConnectionEdge
-    >
+    readonly parent: Maybe<HierarchicalContentNodeToParentContentNodeConnectionEdge>
     /** Database id of the parent node */
     readonly parentDatabaseId: Maybe<Scalars["Int"]>
     /** The globally unique identifier of the parent node. */
@@ -2882,9 +2869,7 @@ export type MediaItemAncestorsArgs = {
   before: InputMaybe<Scalars["String"]>
   first: InputMaybe<Scalars["Int"]>
   last: InputMaybe<Scalars["Int"]>
-  where: InputMaybe<
-    HierarchicalContentNodeToContentNodeAncestorsConnectionWhereArgs
-  >
+  where: InputMaybe<HierarchicalContentNodeToContentNodeAncestorsConnectionWhereArgs>
 }
 
 /** The mediaItem type */
@@ -2898,9 +2883,7 @@ export type MediaItemChildrenArgs = {
   before: InputMaybe<Scalars["String"]>
   first: InputMaybe<Scalars["Int"]>
   last: InputMaybe<Scalars["Int"]>
-  where: InputMaybe<
-    HierarchicalContentNodeToContentNodeChildrenConnectionWhereArgs
-  >
+  where: InputMaybe<HierarchicalContentNodeToContentNodeChildrenConnectionWhereArgs>
 }
 
 /** The mediaItem type */
@@ -3812,15 +3795,16 @@ export type NodeWithRevisions = {
 }
 
 /** Connection between the NodeWithRevisions type and the ContentNode type */
-export type NodeWithRevisionsToContentNodeConnectionEdge = ContentNodeConnectionEdge &
-  Edge &
-  OneToOneConnection & {
-    readonly __typename?: "NodeWithRevisionsToContentNodeConnectionEdge"
-    /** Opaque reference to the nodes position in the connection. Value can be used with pagination args. */
-    readonly cursor: Maybe<Scalars["String"]>
-    /** The node of the connection, without the edges */
-    readonly node: ContentNode
-  }
+export type NodeWithRevisionsToContentNodeConnectionEdge =
+  ContentNodeConnectionEdge &
+    Edge &
+    OneToOneConnection & {
+      readonly __typename?: "NodeWithRevisionsToContentNodeConnectionEdge"
+      /** Opaque reference to the nodes position in the connection. Value can be used with pagination args. */
+      readonly cursor: Maybe<Scalars["String"]>
+      /** The node of the connection, without the edges */
+      readonly node: ContentNode
+    }
 
 /** A node that can have a template associated with it */
 export type NodeWithTemplate = {
@@ -3890,9 +3874,7 @@ export type Page = ContentNode &
   UniformResourceIdentifiable & {
     readonly __typename?: "Page"
     /** Returns ancestors of the node. Default ordered as lowest (closest to the child) to highest (closest to the root). */
-    readonly ancestors: Maybe<
-      HierarchicalContentNodeToContentNodeAncestorsConnection
-    >
+    readonly ancestors: Maybe<HierarchicalContentNodeToContentNodeAncestorsConnection>
     /** Connection between the NodeWithAuthor type and the User type */
     readonly author: Maybe<NodeWithAuthorToUserConnectionEdge>
     /** The database identifier of the author of the node */
@@ -3900,9 +3882,7 @@ export type Page = ContentNode &
     /** The globally unique identifier of the author of the node */
     readonly authorId: Maybe<Scalars["ID"]>
     /** Connection between the HierarchicalContentNode type and the ContentNode type */
-    readonly children: Maybe<
-      HierarchicalContentNodeToContentNodeChildrenConnection
-    >
+    readonly children: Maybe<HierarchicalContentNodeToContentNodeChildrenConnection>
     /** The number of comments. Even though WPGraphQL denotes this field as an integer, in WordPress this field should be saved as a numeric string for compatibility. */
     readonly commentCount: Maybe<Scalars["Int"]>
     /** Whether the comments are open or closed for this particular post. */
@@ -3930,13 +3910,9 @@ export type Page = ContentNode &
     /** Connection between the ContentNode type and the EnqueuedScript type */
     readonly enqueuedScripts: Maybe<ContentNodeToEnqueuedScriptConnection>
     /** Connection between the ContentNode type and the EnqueuedStylesheet type */
-    readonly enqueuedStylesheets: Maybe<
-      ContentNodeToEnqueuedStylesheetConnection
-    >
+    readonly enqueuedStylesheets: Maybe<ContentNodeToEnqueuedStylesheetConnection>
     /** Connection between the NodeWithFeaturedImage type and the MediaItem type */
-    readonly featuredImage: Maybe<
-      NodeWithFeaturedImageToMediaItemConnectionEdge
-    >
+    readonly featuredImage: Maybe<NodeWithFeaturedImageToMediaItemConnectionEdge>
     /** The database identifier for the featured image node assigned to the content node */
     readonly featuredImageDatabaseId: Maybe<Scalars["Int"]>
     /** Globally unique ID of the featured image assigned to the node */
@@ -3977,9 +3953,7 @@ export type Page = ContentNode &
      */
     readonly pageId: Scalars["Int"]
     /** The parent of the node. The parent object can be of various types */
-    readonly parent: Maybe<
-      HierarchicalContentNodeToParentContentNodeConnectionEdge
-    >
+    readonly parent: Maybe<HierarchicalContentNodeToParentContentNodeConnectionEdge>
     /** Database id of the parent node */
     readonly parentDatabaseId: Maybe<Scalars["Int"]>
     /** The globally unique identifier of the parent node. */
@@ -4012,9 +3986,7 @@ export type PageAncestorsArgs = {
   before: InputMaybe<Scalars["String"]>
   first: InputMaybe<Scalars["Int"]>
   last: InputMaybe<Scalars["Int"]>
-  where: InputMaybe<
-    HierarchicalContentNodeToContentNodeAncestorsConnectionWhereArgs
-  >
+  where: InputMaybe<HierarchicalContentNodeToContentNodeAncestorsConnectionWhereArgs>
 }
 
 /** The page type */
@@ -4023,9 +3995,7 @@ export type PageChildrenArgs = {
   before: InputMaybe<Scalars["String"]>
   first: InputMaybe<Scalars["Int"]>
   last: InputMaybe<Scalars["Int"]>
-  where: InputMaybe<
-    HierarchicalContentNodeToContentNodeChildrenConnectionWhereArgs
-  >
+  where: InputMaybe<HierarchicalContentNodeToContentNodeChildrenConnectionWhereArgs>
 }
 
 /** The page type */
@@ -4303,7 +4273,7 @@ export type PageToRevisionConnectionWhereArgs = {
   readonly nameIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
   readonly notIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** What paramater to use to order the objects by. */
+  /** What parameter to use to order the objects by. */
   readonly orderby: InputMaybe<
     ReadonlyArray<InputMaybe<PostObjectsConnectionOrderbyInput>>
   >
@@ -4448,15 +4418,11 @@ export type Post = ContentNode &
     /** Connection between the ContentNode type and the EnqueuedScript type */
     readonly enqueuedScripts: Maybe<ContentNodeToEnqueuedScriptConnection>
     /** Connection between the ContentNode type and the EnqueuedStylesheet type */
-    readonly enqueuedStylesheets: Maybe<
-      ContentNodeToEnqueuedStylesheetConnection
-    >
+    readonly enqueuedStylesheets: Maybe<ContentNodeToEnqueuedStylesheetConnection>
     /** The excerpt of the post. */
     readonly excerpt: Maybe<Scalars["String"]>
     /** Connection between the NodeWithFeaturedImage type and the MediaItem type */
-    readonly featuredImage: Maybe<
-      NodeWithFeaturedImageToMediaItemConnectionEdge
-    >
+    readonly featuredImage: Maybe<NodeWithFeaturedImageToMediaItemConnectionEdge>
     /** The database identifier for the featured image node assigned to the content node */
     readonly featuredImageDatabaseId: Maybe<Scalars["Int"]>
     /** Globally unique ID of the featured image assigned to the node */
@@ -4811,19 +4777,20 @@ export type PostFormatToContentNodeConnectionEdge = ContentNodeConnectionEdge &
   }
 
 /** Page Info on the &quot;PostFormatToContentNodeConnection&quot; */
-export type PostFormatToContentNodeConnectionPageInfo = ContentNodeConnectionPageInfo &
-  PageInfo &
-  WpPageInfo & {
-    readonly __typename?: "PostFormatToContentNodeConnectionPageInfo"
-    /** When paginating forwards, the cursor to continue. */
-    readonly endCursor: Maybe<Scalars["String"]>
-    /** When paginating forwards, are there more items? */
-    readonly hasNextPage: Scalars["Boolean"]
-    /** When paginating backwards, are there more items? */
-    readonly hasPreviousPage: Scalars["Boolean"]
-    /** When paginating backwards, the cursor to continue. */
-    readonly startCursor: Maybe<Scalars["String"]>
-  }
+export type PostFormatToContentNodeConnectionPageInfo =
+  ContentNodeConnectionPageInfo &
+    PageInfo &
+    WpPageInfo & {
+      readonly __typename?: "PostFormatToContentNodeConnectionPageInfo"
+      /** When paginating forwards, the cursor to continue. */
+      readonly endCursor: Maybe<Scalars["String"]>
+      /** When paginating forwards, are there more items? */
+      readonly hasNextPage: Scalars["Boolean"]
+      /** When paginating backwards, are there more items? */
+      readonly hasPreviousPage: Scalars["Boolean"]
+      /** When paginating backwards, the cursor to continue. */
+      readonly startCursor: Maybe<Scalars["String"]>
+    }
 
 /** Arguments for filtering the PostFormatToContentNodeConnection connection */
 export type PostFormatToContentNodeConnectionWhereArgs = {
@@ -4847,7 +4814,7 @@ export type PostFormatToContentNodeConnectionWhereArgs = {
   readonly nameIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
   readonly notIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** What paramater to use to order the objects by. */
+  /** What parameter to use to order the objects by. */
   readonly orderby: InputMaybe<
     ReadonlyArray<InputMaybe<PostObjectsConnectionOrderbyInput>>
   >
@@ -4940,7 +4907,7 @@ export type PostFormatToPostConnectionWhereArgs = {
   readonly nameIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
   readonly notIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** What paramater to use to order the objects by. */
+  /** What parameter to use to order the objects by. */
   readonly orderby: InputMaybe<
     ReadonlyArray<InputMaybe<PostObjectsConnectionOrderbyInput>>
   >
@@ -5468,7 +5435,7 @@ export type PostToRevisionConnectionWhereArgs = {
   readonly nameIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
   readonly notIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** What paramater to use to order the objects by. */
+  /** What parameter to use to order the objects by. */
   readonly orderby: InputMaybe<
     ReadonlyArray<InputMaybe<PostObjectsConnectionOrderbyInput>>
   >
@@ -5907,9 +5874,7 @@ export type RootMutation = {
   /** The updateUser mutation */
   readonly updateUser: Maybe<UpdateUserPayload>
   /** The wpGatsbyRemotePreviewStatus mutation */
-  readonly wpGatsbyRemotePreviewStatus: Maybe<
-    WpGatsbyRemotePreviewStatusPayload
-  >
+  readonly wpGatsbyRemotePreviewStatus: Maybe<WpGatsbyRemotePreviewStatusPayload>
 }
 
 /** The root mutation */
@@ -6552,41 +6517,44 @@ export type RootQueryWpGatsbyCompatibilityArgs = {
 }
 
 /** Connection between the RootQuery type and the ActionMonitorAction type */
-export type RootQueryToActionMonitorActionConnection = ActionMonitorActionConnection &
-  Connection & {
-    readonly __typename?: "RootQueryToActionMonitorActionConnection"
-    /** Edges for the RootQueryToActionMonitorActionConnection connection */
-    readonly edges: ReadonlyArray<RootQueryToActionMonitorActionConnectionEdge>
-    /** The nodes of the connection, without the edges */
-    readonly nodes: ReadonlyArray<ActionMonitorAction>
-    /** Information about pagination in a connection. */
-    readonly pageInfo: RootQueryToActionMonitorActionConnectionPageInfo
-  }
+export type RootQueryToActionMonitorActionConnection =
+  ActionMonitorActionConnection &
+    Connection & {
+      readonly __typename?: "RootQueryToActionMonitorActionConnection"
+      /** Edges for the RootQueryToActionMonitorActionConnection connection */
+      readonly edges: ReadonlyArray<RootQueryToActionMonitorActionConnectionEdge>
+      /** The nodes of the connection, without the edges */
+      readonly nodes: ReadonlyArray<ActionMonitorAction>
+      /** Information about pagination in a connection. */
+      readonly pageInfo: RootQueryToActionMonitorActionConnectionPageInfo
+    }
 
 /** An edge in a connection */
-export type RootQueryToActionMonitorActionConnectionEdge = ActionMonitorActionConnectionEdge &
-  Edge & {
-    readonly __typename?: "RootQueryToActionMonitorActionConnectionEdge"
-    /** A cursor for use in pagination */
-    readonly cursor: Maybe<Scalars["String"]>
-    /** The item at the end of the edge */
-    readonly node: ActionMonitorAction
-  }
+export type RootQueryToActionMonitorActionConnectionEdge =
+  ActionMonitorActionConnectionEdge &
+    Edge & {
+      readonly __typename?: "RootQueryToActionMonitorActionConnectionEdge"
+      /** A cursor for use in pagination */
+      readonly cursor: Maybe<Scalars["String"]>
+      /** The item at the end of the edge */
+      readonly node: ActionMonitorAction
+    }
 
 /** Page Info on the &quot;RootQueryToActionMonitorActionConnection&quot; */
-export type RootQueryToActionMonitorActionConnectionPageInfo = ActionMonitorActionConnectionPageInfo &
-  PageInfo &
-  WpPageInfo & {
-    readonly __typename?: "RootQueryToActionMonitorActionConnectionPageInfo"
-    /** When paginating forwards, the cursor to continue. */
-    readonly endCursor: Maybe<Scalars["String"]>
-    /** When paginating forwards, are there more items? */
-    readonly hasNextPage: Scalars["Boolean"]
-    /** When paginating backwards, are there more items? */
-    readonly hasPreviousPage: Scalars["Boolean"]
-    /** When paginating backwards, the cursor to continue. */
-    readonly startCursor: Maybe<Scalars["String"]>
-  }
+export type RootQueryToActionMonitorActionConnectionPageInfo =
+  ActionMonitorActionConnectionPageInfo &
+    PageInfo &
+    WpPageInfo & {
+      readonly __typename?: "RootQueryToActionMonitorActionConnectionPageInfo"
+      /** When paginating forwards, the cursor to continue. */
+      readonly endCursor: Maybe<Scalars["String"]>
+      /** When paginating forwards, are there more items? */
+      readonly hasNextPage: Scalars["Boolean"]
+      /** When paginating backwards, are there more items? */
+      readonly hasPreviousPage: Scalars["Boolean"]
+      /** When paginating backwards, the cursor to continue. */
+      readonly startCursor: Maybe<Scalars["String"]>
+    }
 
 /** Arguments for filtering the RootQueryToActionMonitorActionConnection connection */
 export type RootQueryToActionMonitorActionConnectionWhereArgs = {
@@ -6606,7 +6574,7 @@ export type RootQueryToActionMonitorActionConnectionWhereArgs = {
   readonly nameIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
   readonly notIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** What paramater to use to order the objects by. */
+  /** What parameter to use to order the objects by. */
   readonly orderby: InputMaybe<
     ReadonlyArray<InputMaybe<PostObjectsConnectionOrderbyInput>>
   >
@@ -6843,19 +6811,20 @@ export type RootQueryToContentNodeConnectionEdge = ContentNodeConnectionEdge &
   }
 
 /** Page Info on the &quot;RootQueryToContentNodeConnection&quot; */
-export type RootQueryToContentNodeConnectionPageInfo = ContentNodeConnectionPageInfo &
-  PageInfo &
-  WpPageInfo & {
-    readonly __typename?: "RootQueryToContentNodeConnectionPageInfo"
-    /** When paginating forwards, the cursor to continue. */
-    readonly endCursor: Maybe<Scalars["String"]>
-    /** When paginating forwards, are there more items? */
-    readonly hasNextPage: Scalars["Boolean"]
-    /** When paginating backwards, are there more items? */
-    readonly hasPreviousPage: Scalars["Boolean"]
-    /** When paginating backwards, the cursor to continue. */
-    readonly startCursor: Maybe<Scalars["String"]>
-  }
+export type RootQueryToContentNodeConnectionPageInfo =
+  ContentNodeConnectionPageInfo &
+    PageInfo &
+    WpPageInfo & {
+      readonly __typename?: "RootQueryToContentNodeConnectionPageInfo"
+      /** When paginating forwards, the cursor to continue. */
+      readonly endCursor: Maybe<Scalars["String"]>
+      /** When paginating forwards, are there more items? */
+      readonly hasNextPage: Scalars["Boolean"]
+      /** When paginating backwards, are there more items? */
+      readonly hasPreviousPage: Scalars["Boolean"]
+      /** When paginating backwards, the cursor to continue. */
+      readonly startCursor: Maybe<Scalars["String"]>
+    }
 
 /** Arguments for filtering the RootQueryToContentNodeConnection connection */
 export type RootQueryToContentNodeConnectionWhereArgs = {
@@ -6877,7 +6846,7 @@ export type RootQueryToContentNodeConnectionWhereArgs = {
   readonly nameIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
   readonly notIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** What paramater to use to order the objects by. */
+  /** What parameter to use to order the objects by. */
   readonly orderby: InputMaybe<
     ReadonlyArray<InputMaybe<PostObjectsConnectionOrderbyInput>>
   >
@@ -6922,19 +6891,20 @@ export type RootQueryToContentTypeConnectionEdge = ContentTypeConnectionEdge &
   }
 
 /** Page Info on the &quot;RootQueryToContentTypeConnection&quot; */
-export type RootQueryToContentTypeConnectionPageInfo = ContentTypeConnectionPageInfo &
-  PageInfo &
-  WpPageInfo & {
-    readonly __typename?: "RootQueryToContentTypeConnectionPageInfo"
-    /** When paginating forwards, the cursor to continue. */
-    readonly endCursor: Maybe<Scalars["String"]>
-    /** When paginating forwards, are there more items? */
-    readonly hasNextPage: Scalars["Boolean"]
-    /** When paginating backwards, are there more items? */
-    readonly hasPreviousPage: Scalars["Boolean"]
-    /** When paginating backwards, the cursor to continue. */
-    readonly startCursor: Maybe<Scalars["String"]>
-  }
+export type RootQueryToContentTypeConnectionPageInfo =
+  ContentTypeConnectionPageInfo &
+    PageInfo &
+    WpPageInfo & {
+      readonly __typename?: "RootQueryToContentTypeConnectionPageInfo"
+      /** When paginating forwards, the cursor to continue. */
+      readonly endCursor: Maybe<Scalars["String"]>
+      /** When paginating forwards, are there more items? */
+      readonly hasNextPage: Scalars["Boolean"]
+      /** When paginating backwards, are there more items? */
+      readonly hasPreviousPage: Scalars["Boolean"]
+      /** When paginating backwards, the cursor to continue. */
+      readonly startCursor: Maybe<Scalars["String"]>
+    }
 
 /** Connection between the RootQuery type and the EnqueuedScript type */
 export type RootQueryToEnqueuedScriptConnection = Connection &
@@ -6959,19 +6929,20 @@ export type RootQueryToEnqueuedScriptConnectionEdge = Edge &
   }
 
 /** Page Info on the &quot;RootQueryToEnqueuedScriptConnection&quot; */
-export type RootQueryToEnqueuedScriptConnectionPageInfo = EnqueuedScriptConnectionPageInfo &
-  PageInfo &
-  WpPageInfo & {
-    readonly __typename?: "RootQueryToEnqueuedScriptConnectionPageInfo"
-    /** When paginating forwards, the cursor to continue. */
-    readonly endCursor: Maybe<Scalars["String"]>
-    /** When paginating forwards, are there more items? */
-    readonly hasNextPage: Scalars["Boolean"]
-    /** When paginating backwards, are there more items? */
-    readonly hasPreviousPage: Scalars["Boolean"]
-    /** When paginating backwards, the cursor to continue. */
-    readonly startCursor: Maybe<Scalars["String"]>
-  }
+export type RootQueryToEnqueuedScriptConnectionPageInfo =
+  EnqueuedScriptConnectionPageInfo &
+    PageInfo &
+    WpPageInfo & {
+      readonly __typename?: "RootQueryToEnqueuedScriptConnectionPageInfo"
+      /** When paginating forwards, the cursor to continue. */
+      readonly endCursor: Maybe<Scalars["String"]>
+      /** When paginating forwards, are there more items? */
+      readonly hasNextPage: Scalars["Boolean"]
+      /** When paginating backwards, are there more items? */
+      readonly hasPreviousPage: Scalars["Boolean"]
+      /** When paginating backwards, the cursor to continue. */
+      readonly startCursor: Maybe<Scalars["String"]>
+    }
 
 /** Connection between the RootQuery type and the EnqueuedStylesheet type */
 export type RootQueryToEnqueuedStylesheetConnection = Connection &
@@ -6996,19 +6967,20 @@ export type RootQueryToEnqueuedStylesheetConnectionEdge = Edge &
   }
 
 /** Page Info on the &quot;RootQueryToEnqueuedStylesheetConnection&quot; */
-export type RootQueryToEnqueuedStylesheetConnectionPageInfo = EnqueuedStylesheetConnectionPageInfo &
-  PageInfo &
-  WpPageInfo & {
-    readonly __typename?: "RootQueryToEnqueuedStylesheetConnectionPageInfo"
-    /** When paginating forwards, the cursor to continue. */
-    readonly endCursor: Maybe<Scalars["String"]>
-    /** When paginating forwards, are there more items? */
-    readonly hasNextPage: Scalars["Boolean"]
-    /** When paginating backwards, are there more items? */
-    readonly hasPreviousPage: Scalars["Boolean"]
-    /** When paginating backwards, the cursor to continue. */
-    readonly startCursor: Maybe<Scalars["String"]>
-  }
+export type RootQueryToEnqueuedStylesheetConnectionPageInfo =
+  EnqueuedStylesheetConnectionPageInfo &
+    PageInfo &
+    WpPageInfo & {
+      readonly __typename?: "RootQueryToEnqueuedStylesheetConnectionPageInfo"
+      /** When paginating forwards, the cursor to continue. */
+      readonly endCursor: Maybe<Scalars["String"]>
+      /** When paginating forwards, are there more items? */
+      readonly hasNextPage: Scalars["Boolean"]
+      /** When paginating backwards, are there more items? */
+      readonly hasPreviousPage: Scalars["Boolean"]
+      /** When paginating backwards, the cursor to continue. */
+      readonly startCursor: Maybe<Scalars["String"]>
+    }
 
 /** Connection between the RootQuery type and the mediaItem type */
 export type RootQueryToMediaItemConnection = Connection &
@@ -7033,19 +7005,20 @@ export type RootQueryToMediaItemConnectionEdge = Edge &
   }
 
 /** Page Info on the &quot;RootQueryToMediaItemConnection&quot; */
-export type RootQueryToMediaItemConnectionPageInfo = MediaItemConnectionPageInfo &
-  PageInfo &
-  WpPageInfo & {
-    readonly __typename?: "RootQueryToMediaItemConnectionPageInfo"
-    /** When paginating forwards, the cursor to continue. */
-    readonly endCursor: Maybe<Scalars["String"]>
-    /** When paginating forwards, are there more items? */
-    readonly hasNextPage: Scalars["Boolean"]
-    /** When paginating backwards, are there more items? */
-    readonly hasPreviousPage: Scalars["Boolean"]
-    /** When paginating backwards, the cursor to continue. */
-    readonly startCursor: Maybe<Scalars["String"]>
-  }
+export type RootQueryToMediaItemConnectionPageInfo =
+  MediaItemConnectionPageInfo &
+    PageInfo &
+    WpPageInfo & {
+      readonly __typename?: "RootQueryToMediaItemConnectionPageInfo"
+      /** When paginating forwards, the cursor to continue. */
+      readonly endCursor: Maybe<Scalars["String"]>
+      /** When paginating forwards, are there more items? */
+      readonly hasNextPage: Scalars["Boolean"]
+      /** When paginating backwards, are there more items? */
+      readonly hasPreviousPage: Scalars["Boolean"]
+      /** When paginating backwards, the cursor to continue. */
+      readonly startCursor: Maybe<Scalars["String"]>
+    }
 
 /** Arguments for filtering the RootQueryToMediaItemConnection connection */
 export type RootQueryToMediaItemConnectionWhereArgs = {
@@ -7073,7 +7046,7 @@ export type RootQueryToMediaItemConnectionWhereArgs = {
   readonly nameIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
   readonly notIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** What paramater to use to order the objects by. */
+  /** What parameter to use to order the objects by. */
   readonly orderby: InputMaybe<
     ReadonlyArray<InputMaybe<PostObjectsConnectionOrderbyInput>>
   >
@@ -7254,7 +7227,7 @@ export type RootQueryToPageConnectionWhereArgs = {
   readonly nameIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
   readonly notIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** What paramater to use to order the objects by. */
+  /** What parameter to use to order the objects by. */
   readonly orderby: InputMaybe<
     ReadonlyArray<InputMaybe<PostObjectsConnectionOrderbyInput>>
   >
@@ -7394,7 +7367,7 @@ export type RootQueryToPostConnectionWhereArgs = {
   readonly nameIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
   readonly notIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** What paramater to use to order the objects by. */
+  /** What parameter to use to order the objects by. */
   readonly orderby: InputMaybe<
     ReadonlyArray<InputMaybe<PostObjectsConnectionOrderbyInput>>
   >
@@ -7534,19 +7507,20 @@ export type RootQueryToRevisionsConnectionEdge = ContentNodeConnectionEdge &
   }
 
 /** Page Info on the &quot;RootQueryToRevisionsConnection&quot; */
-export type RootQueryToRevisionsConnectionPageInfo = ContentNodeConnectionPageInfo &
-  PageInfo &
-  WpPageInfo & {
-    readonly __typename?: "RootQueryToRevisionsConnectionPageInfo"
-    /** When paginating forwards, the cursor to continue. */
-    readonly endCursor: Maybe<Scalars["String"]>
-    /** When paginating forwards, are there more items? */
-    readonly hasNextPage: Scalars["Boolean"]
-    /** When paginating backwards, are there more items? */
-    readonly hasPreviousPage: Scalars["Boolean"]
-    /** When paginating backwards, the cursor to continue. */
-    readonly startCursor: Maybe<Scalars["String"]>
-  }
+export type RootQueryToRevisionsConnectionPageInfo =
+  ContentNodeConnectionPageInfo &
+    PageInfo &
+    WpPageInfo & {
+      readonly __typename?: "RootQueryToRevisionsConnectionPageInfo"
+      /** When paginating forwards, the cursor to continue. */
+      readonly endCursor: Maybe<Scalars["String"]>
+      /** When paginating forwards, are there more items? */
+      readonly hasNextPage: Scalars["Boolean"]
+      /** When paginating backwards, are there more items? */
+      readonly hasPreviousPage: Scalars["Boolean"]
+      /** When paginating backwards, the cursor to continue. */
+      readonly startCursor: Maybe<Scalars["String"]>
+    }
 
 /** Arguments for filtering the RootQueryToRevisionsConnection connection */
 export type RootQueryToRevisionsConnectionWhereArgs = {
@@ -7568,7 +7542,7 @@ export type RootQueryToRevisionsConnectionWhereArgs = {
   readonly nameIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
   readonly notIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** What paramater to use to order the objects by. */
+  /** What parameter to use to order the objects by. */
   readonly orderby: InputMaybe<
     ReadonlyArray<InputMaybe<PostObjectsConnectionOrderbyInput>>
   >
@@ -7893,7 +7867,7 @@ export type RootQueryToUserConnectionWhereArgs = {
   readonly nicenameNotIn: InputMaybe<
     ReadonlyArray<InputMaybe<Scalars["String"]>>
   >
-  /** What paramater to use to order the objects by. */
+  /** What parameter to use to order the objects by. */
   readonly orderby: InputMaybe<
     ReadonlyArray<InputMaybe<UsersConnectionOrderbyInput>>
   >
@@ -8194,7 +8168,7 @@ export type TagToContentNodeConnectionWhereArgs = {
   readonly nameIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
   readonly notIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** What paramater to use to order the objects by. */
+  /** What parameter to use to order the objects by. */
   readonly orderby: InputMaybe<
     ReadonlyArray<InputMaybe<PostObjectsConnectionOrderbyInput>>
   >
@@ -8287,7 +8261,7 @@ export type TagToPostConnectionWhereArgs = {
   readonly nameIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
   readonly notIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** What paramater to use to order the objects by. */
+  /** What parameter to use to order the objects by. */
   readonly orderby: InputMaybe<
     ReadonlyArray<InputMaybe<PostObjectsConnectionOrderbyInput>>
   >
@@ -8339,6 +8313,8 @@ export type Taxonomy = Node & {
   readonly archivePath: Maybe<Scalars["String"]>
   /** List of Content Types associated with the Taxonomy */
   readonly connectedContentTypes: Maybe<TaxonomyToContentTypeConnection>
+  /** List of Term Nodes associated with the Taxonomy */
+  readonly connectedTerms: Maybe<TaxonomyToTermNodeConnection>
   /** Description of the taxonomy. This field is equivalent to WP_Taxonomy-&gt;description */
   readonly description: Maybe<Scalars["String"]>
   /** The plural name of the post type within the GraphQL Schema. */
@@ -8357,7 +8333,7 @@ export type Taxonomy = Node & {
   readonly name: Maybe<Scalars["String"]>
   /** Whether the taxonomy is publicly queryable */
   readonly public: Maybe<Scalars["Boolean"]>
-  /** Name of content type to diplay in REST API &quot;wp/v2&quot; namespace. */
+  /** Name of content type to display in REST API &quot;wp/v2&quot; namespace. */
   readonly restBase: Maybe<Scalars["String"]>
   /** The REST Controller class assigned to handling this content type. */
   readonly restControllerClass: Maybe<Scalars["String"]>
@@ -8381,6 +8357,14 @@ export type Taxonomy = Node & {
 
 /** A taxonomy object */
 export type TaxonomyConnectedContentTypesArgs = {
+  after: InputMaybe<Scalars["String"]>
+  before: InputMaybe<Scalars["String"]>
+  first: InputMaybe<Scalars["Int"]>
+  last: InputMaybe<Scalars["Int"]>
+}
+
+/** A taxonomy object */
+export type TaxonomyConnectedTermsArgs = {
   after: InputMaybe<Scalars["String"]>
   before: InputMaybe<Scalars["String"]>
   first: InputMaybe<Scalars["Int"]>
@@ -8458,10 +8442,48 @@ export type TaxonomyToContentTypeConnectionEdge = ContentTypeConnectionEdge &
   }
 
 /** Page Info on the &quot;TaxonomyToContentTypeConnection&quot; */
-export type TaxonomyToContentTypeConnectionPageInfo = ContentTypeConnectionPageInfo &
-  PageInfo &
+export type TaxonomyToContentTypeConnectionPageInfo =
+  ContentTypeConnectionPageInfo &
+    PageInfo &
+    WpPageInfo & {
+      readonly __typename?: "TaxonomyToContentTypeConnectionPageInfo"
+      /** When paginating forwards, the cursor to continue. */
+      readonly endCursor: Maybe<Scalars["String"]>
+      /** When paginating forwards, are there more items? */
+      readonly hasNextPage: Scalars["Boolean"]
+      /** When paginating backwards, are there more items? */
+      readonly hasPreviousPage: Scalars["Boolean"]
+      /** When paginating backwards, the cursor to continue. */
+      readonly startCursor: Maybe<Scalars["String"]>
+    }
+
+/** Connection between the Taxonomy type and the TermNode type */
+export type TaxonomyToTermNodeConnection = Connection &
+  TermNodeConnection & {
+    readonly __typename?: "TaxonomyToTermNodeConnection"
+    /** Edges for the TaxonomyToTermNodeConnection connection */
+    readonly edges: ReadonlyArray<TaxonomyToTermNodeConnectionEdge>
+    /** The nodes of the connection, without the edges */
+    readonly nodes: ReadonlyArray<TermNode>
+    /** Information about pagination in a connection. */
+    readonly pageInfo: TaxonomyToTermNodeConnectionPageInfo
+  }
+
+/** An edge in a connection */
+export type TaxonomyToTermNodeConnectionEdge = Edge &
+  TermNodeConnectionEdge & {
+    readonly __typename?: "TaxonomyToTermNodeConnectionEdge"
+    /** A cursor for use in pagination */
+    readonly cursor: Maybe<Scalars["String"]>
+    /** The item at the end of the edge */
+    readonly node: TermNode
+  }
+
+/** Page Info on the &quot;TaxonomyToTermNodeConnection&quot; */
+export type TaxonomyToTermNodeConnectionPageInfo = PageInfo &
+  TermNodeConnectionPageInfo &
   WpPageInfo & {
-    readonly __typename?: "TaxonomyToContentTypeConnectionPageInfo"
+    readonly __typename?: "TaxonomyToTermNodeConnectionPageInfo"
     /** When paginating forwards, the cursor to continue. */
     readonly endCursor: Maybe<Scalars["String"]>
     /** When paginating forwards, are there more items? */
@@ -8598,19 +8620,20 @@ export type TermNodeToEnqueuedScriptConnectionEdge = Edge &
   }
 
 /** Page Info on the &quot;TermNodeToEnqueuedScriptConnection&quot; */
-export type TermNodeToEnqueuedScriptConnectionPageInfo = EnqueuedScriptConnectionPageInfo &
-  PageInfo &
-  WpPageInfo & {
-    readonly __typename?: "TermNodeToEnqueuedScriptConnectionPageInfo"
-    /** When paginating forwards, the cursor to continue. */
-    readonly endCursor: Maybe<Scalars["String"]>
-    /** When paginating forwards, are there more items? */
-    readonly hasNextPage: Scalars["Boolean"]
-    /** When paginating backwards, are there more items? */
-    readonly hasPreviousPage: Scalars["Boolean"]
-    /** When paginating backwards, the cursor to continue. */
-    readonly startCursor: Maybe<Scalars["String"]>
-  }
+export type TermNodeToEnqueuedScriptConnectionPageInfo =
+  EnqueuedScriptConnectionPageInfo &
+    PageInfo &
+    WpPageInfo & {
+      readonly __typename?: "TermNodeToEnqueuedScriptConnectionPageInfo"
+      /** When paginating forwards, the cursor to continue. */
+      readonly endCursor: Maybe<Scalars["String"]>
+      /** When paginating forwards, are there more items? */
+      readonly hasNextPage: Scalars["Boolean"]
+      /** When paginating backwards, are there more items? */
+      readonly hasPreviousPage: Scalars["Boolean"]
+      /** When paginating backwards, the cursor to continue. */
+      readonly startCursor: Maybe<Scalars["String"]>
+    }
 
 /** Connection between the TermNode type and the EnqueuedStylesheet type */
 export type TermNodeToEnqueuedStylesheetConnection = Connection &
@@ -8635,19 +8658,20 @@ export type TermNodeToEnqueuedStylesheetConnectionEdge = Edge &
   }
 
 /** Page Info on the &quot;TermNodeToEnqueuedStylesheetConnection&quot; */
-export type TermNodeToEnqueuedStylesheetConnectionPageInfo = EnqueuedStylesheetConnectionPageInfo &
-  PageInfo &
-  WpPageInfo & {
-    readonly __typename?: "TermNodeToEnqueuedStylesheetConnectionPageInfo"
-    /** When paginating forwards, the cursor to continue. */
-    readonly endCursor: Maybe<Scalars["String"]>
-    /** When paginating forwards, are there more items? */
-    readonly hasNextPage: Scalars["Boolean"]
-    /** When paginating backwards, are there more items? */
-    readonly hasPreviousPage: Scalars["Boolean"]
-    /** When paginating backwards, the cursor to continue. */
-    readonly startCursor: Maybe<Scalars["String"]>
-  }
+export type TermNodeToEnqueuedStylesheetConnectionPageInfo =
+  EnqueuedStylesheetConnectionPageInfo &
+    PageInfo &
+    WpPageInfo & {
+      readonly __typename?: "TermNodeToEnqueuedStylesheetConnectionPageInfo"
+      /** When paginating forwards, the cursor to continue. */
+      readonly endCursor: Maybe<Scalars["String"]>
+      /** When paginating forwards, are there more items? */
+      readonly hasNextPage: Scalars["Boolean"]
+      /** When paginating backwards, are there more items? */
+      readonly hasPreviousPage: Scalars["Boolean"]
+      /** When paginating backwards, the cursor to continue. */
+      readonly startCursor: Maybe<Scalars["String"]>
+    }
 
 /** Options for ordering the connection by */
 export enum TermObjectsConnectionOrderbyEnum {
@@ -9164,7 +9188,7 @@ export type User = Commenter &
     readonly locale: Maybe<Scalars["String"]>
     /** Connection between the User type and the mediaItem type */
     readonly mediaItems: Maybe<UserToMediaItemConnection>
-    /** Display name of the user. This is equivalent to the WP_User-&gt;dispaly_name property. */
+    /** Display name of the user. This is equivalent to the WP_User-&gt;display_name property. */
     readonly name: Maybe<Scalars["String"]>
     /** The nicename for the user. This field is equivalent to WP_User-&gt;user_nicename */
     readonly nicename: Maybe<Scalars["String"]>
@@ -9506,19 +9530,20 @@ export type UserToEnqueuedScriptConnectionEdge = Edge &
   }
 
 /** Page Info on the &quot;UserToEnqueuedScriptConnection&quot; */
-export type UserToEnqueuedScriptConnectionPageInfo = EnqueuedScriptConnectionPageInfo &
-  PageInfo &
-  WpPageInfo & {
-    readonly __typename?: "UserToEnqueuedScriptConnectionPageInfo"
-    /** When paginating forwards, the cursor to continue. */
-    readonly endCursor: Maybe<Scalars["String"]>
-    /** When paginating forwards, are there more items? */
-    readonly hasNextPage: Scalars["Boolean"]
-    /** When paginating backwards, are there more items? */
-    readonly hasPreviousPage: Scalars["Boolean"]
-    /** When paginating backwards, the cursor to continue. */
-    readonly startCursor: Maybe<Scalars["String"]>
-  }
+export type UserToEnqueuedScriptConnectionPageInfo =
+  EnqueuedScriptConnectionPageInfo &
+    PageInfo &
+    WpPageInfo & {
+      readonly __typename?: "UserToEnqueuedScriptConnectionPageInfo"
+      /** When paginating forwards, the cursor to continue. */
+      readonly endCursor: Maybe<Scalars["String"]>
+      /** When paginating forwards, are there more items? */
+      readonly hasNextPage: Scalars["Boolean"]
+      /** When paginating backwards, are there more items? */
+      readonly hasPreviousPage: Scalars["Boolean"]
+      /** When paginating backwards, the cursor to continue. */
+      readonly startCursor: Maybe<Scalars["String"]>
+    }
 
 /** Connection between the User type and the EnqueuedStylesheet type */
 export type UserToEnqueuedStylesheetConnection = Connection &
@@ -9543,19 +9568,20 @@ export type UserToEnqueuedStylesheetConnectionEdge = Edge &
   }
 
 /** Page Info on the &quot;UserToEnqueuedStylesheetConnection&quot; */
-export type UserToEnqueuedStylesheetConnectionPageInfo = EnqueuedStylesheetConnectionPageInfo &
-  PageInfo &
-  WpPageInfo & {
-    readonly __typename?: "UserToEnqueuedStylesheetConnectionPageInfo"
-    /** When paginating forwards, the cursor to continue. */
-    readonly endCursor: Maybe<Scalars["String"]>
-    /** When paginating forwards, are there more items? */
-    readonly hasNextPage: Scalars["Boolean"]
-    /** When paginating backwards, are there more items? */
-    readonly hasPreviousPage: Scalars["Boolean"]
-    /** When paginating backwards, the cursor to continue. */
-    readonly startCursor: Maybe<Scalars["String"]>
-  }
+export type UserToEnqueuedStylesheetConnectionPageInfo =
+  EnqueuedStylesheetConnectionPageInfo &
+    PageInfo &
+    WpPageInfo & {
+      readonly __typename?: "UserToEnqueuedStylesheetConnectionPageInfo"
+      /** When paginating forwards, the cursor to continue. */
+      readonly endCursor: Maybe<Scalars["String"]>
+      /** When paginating forwards, are there more items? */
+      readonly hasNextPage: Scalars["Boolean"]
+      /** When paginating backwards, are there more items? */
+      readonly hasPreviousPage: Scalars["Boolean"]
+      /** When paginating backwards, the cursor to continue. */
+      readonly startCursor: Maybe<Scalars["String"]>
+    }
 
 /** Connection between the User type and the mediaItem type */
 export type UserToMediaItemConnection = Connection &
@@ -9620,7 +9646,7 @@ export type UserToMediaItemConnectionWhereArgs = {
   readonly nameIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
   readonly notIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** What paramater to use to order the objects by. */
+  /** What parameter to use to order the objects by. */
   readonly orderby: InputMaybe<
     ReadonlyArray<InputMaybe<PostObjectsConnectionOrderbyInput>>
   >
@@ -9705,7 +9731,7 @@ export type UserToPageConnectionWhereArgs = {
   readonly nameIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
   readonly notIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** What paramater to use to order the objects by. */
+  /** What parameter to use to order the objects by. */
   readonly orderby: InputMaybe<
     ReadonlyArray<InputMaybe<PostObjectsConnectionOrderbyInput>>
   >
@@ -9798,7 +9824,7 @@ export type UserToPostConnectionWhereArgs = {
   readonly nameIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
   readonly notIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** What paramater to use to order the objects by. */
+  /** What parameter to use to order the objects by. */
   readonly orderby: InputMaybe<
     ReadonlyArray<InputMaybe<PostObjectsConnectionOrderbyInput>>
   >
@@ -9889,7 +9915,7 @@ export type UserToRevisionsConnectionWhereArgs = {
   readonly nameIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
   readonly notIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** What paramater to use to order the objects by. */
+  /** What parameter to use to order the objects by. */
   readonly orderby: InputMaybe<
     ReadonlyArray<InputMaybe<PostObjectsConnectionOrderbyInput>>
   >
