@@ -39,6 +39,8 @@ export type AnnotatedDoc = {
   readonly __typename?: "AnnotatedDoc"
   /** The audio recording resource for this entire document */
   readonly audioRecording: Maybe<AudioSlice>
+  /** When the document was bookmarked by the current user, if it was. */
+  readonly bookmarkedOn: Maybe<Date>
   /** Collection chapters that contain this document. */
   readonly chapters: Maybe<ReadonlyArray<CollectionChapter>>
   /** Where the source document came from, maybe the name of a collection */
@@ -1007,6 +1009,9 @@ export type AnnotatedDocumentQuery = { readonly __typename?: "Query" } & {
         readonly date: Maybe<
           { readonly __typename?: "Date" } & Pick<Date, "year">
         >
+        readonly bookmarkedOn: Maybe<
+          { readonly __typename?: "Date" } & Pick<Date, "formattedDate">
+        >
         readonly sources: ReadonlyArray<
           { readonly __typename?: "SourceAttribution" } & Pick<
             SourceAttribution,
@@ -1649,6 +1654,9 @@ export type CollectionChapterQuery = { readonly __typename?: "Query" } & {
               readonly date: Maybe<
                 { readonly __typename?: "Date" } & Pick<Date, "year">
               >
+              readonly bookmarkedOn: Maybe<
+                { readonly __typename?: "Date" } & Pick<Date, "formattedDate">
+              >
               readonly sources: ReadonlyArray<
                 { readonly __typename?: "SourceAttribution" } & Pick<
                   SourceAttribution,
@@ -1697,6 +1705,9 @@ export type BookmarkedDocumentsQuery = { readonly __typename?: "Query" } & {
     > & {
         readonly date: Maybe<
           { readonly __typename?: "Date" } & Pick<Date, "year">
+        >
+        readonly bookmarkedOn: Maybe<
+          { readonly __typename?: "Date" } & Pick<Date, "formattedDate">
         >
         readonly sources: ReadonlyArray<
           { readonly __typename?: "SourceAttribution" } & Pick<
@@ -2018,6 +2029,9 @@ export const AnnotatedDocumentDocument = gql`
       isReference
       date {
         year
+      }
+      bookmarkedOn {
+        formattedDate
       }
       sources {
         name
@@ -2409,6 +2423,9 @@ export const CollectionChapterDocument = gql`
         date {
           year
         }
+        bookmarkedOn {
+          formattedDate
+        }
         sources {
           name
           link
@@ -2447,6 +2464,9 @@ export const BookmarkedDocumentsDocument = gql`
       isReference
       date {
         year
+      }
+      bookmarkedOn {
+        formattedDate
       }
       sources {
         name
