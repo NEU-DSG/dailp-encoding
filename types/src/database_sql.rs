@@ -634,12 +634,7 @@ impl Database {
             .fetch_all(&self.client)
             .await?;
 
-            Ok(
-                bookmarks
-                    .into_iter()
-                    .map(|x| x.id)
-                    .collect(),
-            )
+        Ok(bookmarks.into_iter().map(|x| x.id).collect())
     }
 
     pub async fn attach_audio_to_word(
@@ -1905,6 +1900,32 @@ impl Loader<ContributorsForDocument> for Database {
 }
 
 #[async_trait]
+impl Loader<BookmarkedOn> for Database {
+    type Value = Date;
+    type Error = Arc<sqlx::Error>;
+
+    async fn load(
+        &self,
+        keys: &[BookmarkedOn],
+    ) -> Result<HashMap<BookmarkedOn, Self::Value>, Self::Error> {
+        let document_id: Vec<_> = keys.iter().map(|k| k.0).collect();
+        let user_id: Vec<_> = keys.iter().map(|k| k.1).collect();
+        let items = query_file!("queries/get_bookmarked_on.sql", document_id[0], user_id[0])
+            .fetch_all(&self.client)
+            .await?;
+
+        let mut result_map = HashMap::new();
+        for item in items {
+            let key = BookmarkedOn(item.document_id, item.user_id); // Adjust field names based on your actual record structure
+            let value = date::Date(item.bookmarked_on); // Convert NaiveDate to date::Date
+            result_map.insert(key, value);
+        }
+
+        Ok(result_map)
+    }
+}
+
+#[async_trait]
 impl Loader<PersonFullName> for Database {
     type Value = ContributorDetails;
     type Error = Arc<sqlx::Error>;
@@ -2169,6 +2190,9 @@ pub struct PersonFullName(pub String);
 
 #[derive(Clone, Eq, PartialEq, Hash)]
 pub struct ContributorsForDocument(pub Uuid);
+
+#[derive(Clone, Eq, PartialEq, Hash)]
+pub struct BookmarkedOn(pub Uuid, pub Uuid);
 
 #[derive(Clone, Eq, PartialEq, Hash)]
 pub struct DocumentShortName(pub String);

@@ -2,7 +2,10 @@
 
 use dailp::{
     comment::{CommentParent, DeleteCommentInput, PostCommentInput},
-    slugify_ltree, AnnotatedForm, AttachAudioToWordInput, CollectionChapter, CurateWordAudioInput,
+    slugify_ltree,
+    user::UserGroup,
+    user::UserInfo,
+    AnnotatedForm, AttachAudioToWordInput, CollectionChapter, CurateWordAudioInput,
     DeleteContributorAttribution, DocumentMetadataUpdate, UpdateContributorAttribution, Uuid,
 };
 use itertools::Itertools;
@@ -571,37 +574,6 @@ struct FormsInTime {
     forms: Vec<dailp::AnnotatedForm>,
 }
 
-/// Auth metadata on the user making the current request.
-#[derive(Deserialize, Debug, async_graphql::SimpleObject)]
-pub struct UserInfo {
-    /// Unique ID for the User. Should be an AWS Cognito Sub.
-    #[serde(default, rename = "sub")]
-    pub id: Uuid,
-    email: String,
-    #[serde(default, rename = "cognito:groups")]
-    groups: Vec<UserGroup>,
-}
-impl UserInfo {
-    pub fn new_test_admin() -> Self {
-        Self {
-            id: Uuid::parse_str("5f22a8bf-46c8-426c-a104-b4faf7c2d608").unwrap(),
-            email: "test@dailp.northeastern.edu".to_string(),
-            groups: vec![UserGroup::Editors],
-        }
-    }
-}
-
-#[derive(Eq, PartialEq, Copy, Clone, Serialize, Deserialize, Debug, async_graphql::Enum)]
-pub enum UserGroup {
-    Contributors,
-    Editors,
-}
-// Impl FromStr and Display automatically for UserGroup, using serde.
-// This allows us to (de)serialize lists of groups via a comma-separated string
-// like this: "Editor,Contributor,Translator"
-serde_plain::forward_from_str_to_serde!(UserGroup);
-serde_plain::forward_display_to_serde!(UserGroup);
-
 /// Requires that the user is authenticated and a member of the given user group.
 struct GroupGuard {
     group: UserGroup,
@@ -627,7 +599,7 @@ impl Guard for GroupGuard {
         if has_group == Some(true) {
             Ok(())
         } else {
-            Err(format!("Forbidden, user not in group '{}'", self.group).into())
+            Err(format!("Forbidden, user not in group '{:?}'", self.group).into())
         }
     }
 }
