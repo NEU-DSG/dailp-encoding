@@ -22,6 +22,7 @@ import CommentPanel from "./comment-panel"
 import { usePreferences } from "./preferences-context"
 import { TranslatedParagraph } from "./segment"
 import { VerticalMorphemicSegmentation } from "./word-panel"
+import { useState } from "react"
 
 enum PanelType {
   WordPanel,
@@ -53,6 +54,8 @@ export const PanelLayout = (p: {
     variables: { system: cherokeeRepresentation },
   })
 
+  const [commentsPanel, setCommentsPanel] = useState(false)
+
   if (!data) {
     return <p>Loading...</p>
   }
@@ -79,8 +82,30 @@ export const PanelLayout = (p: {
 
   let panel = null
 
+    // Logic to display comment panel if the button is pressed
+    const handleComment = (e: React.MouseEvent<HTMLButtonElement>) => {
+      e.preventDefault()
+
+      setCommentsPanel(true)
+    };
+
   // Display the paragraph panel if the segment type is a word (AnnotatedForm).
-  if (p.segment.__typename === "AnnotatedForm") {
+  if (commentsPanel === true) {
+    if(p.segment!=null){
+      if(p.segment.__typename === "AnnotatedForm"){
+        panel = <CommentPanel
+        word={p.segment}
+        segment={null}
+        />
+      } else if (p.segment.__typename === "DocumentParagraph"){
+        panel = <CommentPanel
+        word={null}
+        segment={p.segment}
+        />
+      }
+
+    }
+  } else if (p.segment.__typename === "AnnotatedForm") {
     panel = (
       <>
         {/* If the user is logged in, then display an edit button on the word
@@ -139,27 +164,7 @@ export const PanelLayout = (p: {
   } else if (p.segment.__typename === "DocumentParagraph") {
     // Display the paragraph panel if the segment type is a paragraph.
     panel = <ParagraphPanel segment={p.segment} setContent={p.setContent} />
-  }
-
-  // Logic to display comment panel if the button is pressed
-  const handleComment = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault()
-
-    if(p.segment!=null){
-      if(p.segment.__typename === "AnnotatedForm"){
-        panel = <CommentPanel
-        word={p.segment}
-        segment={null}
-        />
-      } else if (p.segment.__typename === "DocumentParagraph"){
-        panel = <CommentPanel
-        word={null}
-        segment={p.segment}
-        />
-      }
-
-    }
-  };
+  } 
 
   return (
     <div className={css.wordPanelContent}>
