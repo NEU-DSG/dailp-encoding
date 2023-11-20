@@ -54,10 +54,18 @@ export const formInput = style([
 
 
 export const cancelPrompt = style({
-  fontFamily: fonts.header,
+  fontFamily: fonts.body,
   fontWeight: "normal",
-  backgroundColor: "green",
+  backgroundColor: "white",
+  border: "solid #a9a9a9 1px",
   position: "absolute",
-  width: "100%",
-  alignContent: "center",
+  width: "90%",
+  textAlign: "center",
+  left: "0",
+  right: "0",
+  top: "11rem",
+  zIndex: "100",
+  marginLeft: "auto",
+  marginRight: "auto"
+  
 })

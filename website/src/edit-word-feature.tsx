@@ -31,11 +31,13 @@ export const EditButton = () => {
         <IconButton
           className=""
           round={false}
+          /*
           onClick={() => {
             setShowSaveChanges(false);
-            setIsEditing(false);
+            //setIsEditing(false);
             // and do whatever is the saving function
           }}
+          */
         >
           Yes
         </IconButton>

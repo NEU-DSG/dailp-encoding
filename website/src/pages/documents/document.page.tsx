@@ -373,6 +373,7 @@ const DocumentContents = ({
     // If the form has been submitted, update the panel's current contents to be the currently selected word
     if (form.submitting) {
       // Update the form's current word
+      
       wordPanelDetails.setCurrContents(form.values.word)
       // Query of document contents is rerun to ensure frontend and backend are in sync
       rerunQuery({ requestPolicy: "network-only" })
