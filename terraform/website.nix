@@ -120,6 +120,7 @@ in {
         branch_name = "\${aws_amplify_branch.current_stage.branch_name}";
         prefix = "";
       };
+      wait_for_verification = false;
     };
 
     aws_amplify_webhook.current_stage = {
