@@ -1044,7 +1044,7 @@ export type DocumentContentsQuery = { readonly __typename?: "Query" } & {
               readonly paragraphs: ReadonlyArray<
                 { readonly __typename?: "DocumentParagraph" } & Pick<
                   DocumentParagraph,
-                  "translation" | "index"
+                  "id" | "translation" | "index"
                 > & {
                     readonly source: ReadonlyArray<
                       | ({ readonly __typename: "AnnotatedForm" } & Pick<
@@ -2001,6 +2001,7 @@ export const DocumentContentsDocument = gql`
               ...FormFields
             }
           }
+          id
           translation
           index
         }

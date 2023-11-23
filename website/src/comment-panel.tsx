@@ -1,8 +1,9 @@
 import React, { ReactNode } from "react"
 import * as Dailp from "src/graphql/dailp"
-import * as css from "./panel-layout.css"
 import { TranslatedParagraph } from "./segment"
 import { useState } from "react"
+import { Button } from "./components"
+import * as css from "./comment-panel.css"
 
 export const CommentPanel = (p: {
     word: Dailp.FormFieldsFragment | null
@@ -41,7 +42,7 @@ export const CommentPanel = (p: {
     
         runUpdate({
             input: {
-              parentId: p.word? p.word.id : (p.segment? p.segment.index : null),
+              parentId: p.word? p.word.id : (p.segment? p.segment.id : null),
               parentType: p.word ? Dailp.CommentParentType.Word : Dailp.CommentParentType.Paragraph,
               textContent: newCommentText,
               commentType: newCommentType == 'Story' ? Dailp.CommentType.Story : 
@@ -71,7 +72,7 @@ export const CommentPanel = (p: {
         ))}
       </select>
     </div>
-        <button type="submit" onClick={handleSubmit}>Post</button>
+        <Button type="button" className={css.commentButton} onClick={handleSubmit}>Save</Button>
       </div>)
 }
 

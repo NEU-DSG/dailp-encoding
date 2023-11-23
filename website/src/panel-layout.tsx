@@ -9,7 +9,7 @@ import { Disclosure, DisclosureContent, useDisclosureState } from "reakit"
 import { unstable_Form as Form, unstable_FormInput as FormInput } from "reakit"
 import * as Dailp from "src/graphql/dailp"
 import { useCredentials } from "./auth"
-import { AudioPlayer, IconButton } from "./components"
+import { AudioPlayer, IconButton, Button } from "./components"
 import { CustomCreatable } from "./components/creatable"
 import { EditWordAudio } from "./components/edit-word-audio"
 import { EditButton, EditWordFeature } from "./edit-word-feature"
@@ -169,7 +169,7 @@ export const PanelLayout = (p: {
   return (
     <div className={css.wordPanelContent}>
       <>{panel}</>
-      <button type="submit" onClick={handleComment}>Comment</button>
+      {commentsPanel === false && <Button type="button" onClick={handleComment}>Comment</Button> }
     </div>
   )
 }
