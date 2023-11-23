@@ -57,6 +57,7 @@ query DocumentContents(
             ...FormFields
           }
         }
+        id
         translation
         index
       }

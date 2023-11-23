@@ -2219,11 +2219,23 @@ export type Edge = {
 
 /** Asset enqueued by the CMS */
 export type EnqueuedAsset = {
-  /** @todo */
+  /** The inline code to be run after the asset is loaded. */
+  readonly after: Maybe<ReadonlyArray<Maybe<Scalars["String"]>>>
+  /**
+   * Deprecated
+   * @deprecated Use `EnqueuedAsset.media` instead.
+   */
   readonly args: Maybe<Scalars["Boolean"]>
+  /** The inline code to be run before the asset is loaded. */
+  readonly before: Maybe<ReadonlyArray<Maybe<Scalars["String"]>>>
+  /** The HTML conditional comment for the enqueued asset. E.g. IE 6, lte IE 7, etc */
+  readonly conditional: Maybe<Scalars["String"]>
   /** Dependencies needed to use this asset */
-  readonly dependencies: Maybe<ReadonlyArray<Maybe<EnqueuedScript>>>
-  /** Extra information needed for the script */
+  readonly dependencies: Maybe<ReadonlyArray<Maybe<EnqueuedAsset>>>
+  /**
+   * Extra information needed for the script
+   * @deprecated Use `EnqueuedScript.extraData` instead.
+   */
   readonly extra: Maybe<Scalars["String"]>
   /** The handle of the enqueued asset */
   readonly handle: Maybe<Scalars["String"]>
@@ -2239,19 +2251,35 @@ export type EnqueuedAsset = {
 export type EnqueuedScript = EnqueuedAsset &
   Node & {
     readonly __typename?: "EnqueuedScript"
-    /** @todo */
+    /** The inline code to be run after the asset is loaded. */
+    readonly after: Maybe<ReadonlyArray<Maybe<Scalars["String"]>>>
+    /**
+     * Deprecated
+     * @deprecated Use `EnqueuedAsset.media` instead.
+     */
     readonly args: Maybe<Scalars["Boolean"]>
+    /** The inline code to be run before the asset is loaded. */
+    readonly before: Maybe<ReadonlyArray<Maybe<Scalars["String"]>>>
+    /** The HTML conditional comment for the enqueued asset. E.g. IE 6, lte IE 7, etc */
+    readonly conditional: Maybe<Scalars["String"]>
     /** Dependencies needed to use this asset */
     readonly dependencies: Maybe<ReadonlyArray<Maybe<EnqueuedScript>>>
-    /** Extra information needed for the script */
+    /**
+     * Extra information needed for the script
+     * @deprecated Use `EnqueuedScript.extraData` instead.
+     */
     readonly extra: Maybe<Scalars["String"]>
+    /** Extra data supplied to the enqueued script */
+    readonly extraData: Maybe<Scalars["String"]>
     /** The handle of the enqueued asset */
     readonly handle: Maybe<Scalars["String"]>
-    /** The ID of the enqueued asset */
+    /** The global ID of the enqueued script */
     readonly id: Scalars["ID"]
     /** The source of the asset */
     readonly src: Maybe<Scalars["String"]>
-    /** The version of the enqueued asset */
+    /** The loading strategy to use on the script tag */
+    readonly strategy: Maybe<ScriptLoadingStrategyEnum>
+    /** The version of the enqueued script */
     readonly version: Maybe<Scalars["String"]>
   }
 
@@ -2289,19 +2317,43 @@ export type EnqueuedScriptConnectionPageInfo = {
 export type EnqueuedStylesheet = EnqueuedAsset &
   Node & {
     readonly __typename?: "EnqueuedStylesheet"
-    /** @todo */
+    /** The inline code to be run after the asset is loaded. */
+    readonly after: Maybe<ReadonlyArray<Maybe<Scalars["String"]>>>
+    /**
+     * Deprecated
+     * @deprecated Use `EnqueuedAsset.media` instead.
+     */
     readonly args: Maybe<Scalars["Boolean"]>
+    /** The inline code to be run before the asset is loaded. */
+    readonly before: Maybe<ReadonlyArray<Maybe<Scalars["String"]>>>
+    /** The HTML conditional comment for the enqueued asset. E.g. IE 6, lte IE 7, etc */
+    readonly conditional: Maybe<Scalars["String"]>
     /** Dependencies needed to use this asset */
-    readonly dependencies: Maybe<ReadonlyArray<Maybe<EnqueuedScript>>>
-    /** Extra information needed for the script */
+    readonly dependencies: Maybe<ReadonlyArray<Maybe<EnqueuedStylesheet>>>
+    /**
+     * Extra information needed for the script
+     * @deprecated Use `EnqueuedScript.extraData` instead.
+     */
     readonly extra: Maybe<Scalars["String"]>
     /** The handle of the enqueued asset */
     readonly handle: Maybe<Scalars["String"]>
-    /** The ID of the enqueued asset */
+    /** The global ID of the enqueued stylesheet */
     readonly id: Scalars["ID"]
+    /** Whether the enqueued style is RTL or not */
+    readonly isRtl: Maybe<Scalars["Boolean"]>
+    /** The media attribute to use for the link */
+    readonly media: Maybe<Scalars["String"]>
+    /** The absolute path to the enqueued style. Set when the stylesheet is meant to load inline. */
+    readonly path: Maybe<Scalars["String"]>
+    /** The `rel` attribute to use for the link */
+    readonly rel: Maybe<Scalars["String"]>
     /** The source of the asset */
     readonly src: Maybe<Scalars["String"]>
-    /** The version of the enqueued asset */
+    /** Optional suffix, used in combination with RTL */
+    readonly suffix: Maybe<Scalars["String"]>
+    /** The title of the enqueued style. Used for preferred/alternate stylesheets. */
+    readonly title: Maybe<Scalars["String"]>
+    /** The version of the enqueued style */
     readonly version: Maybe<Scalars["String"]>
   }
 
@@ -7921,6 +7973,14 @@ export type RootQueryToUserRoleConnectionPageInfo = PageInfo &
     /** When paginating backwards, the cursor to continue. */
     readonly startCursor: Maybe<Scalars["String"]>
   }
+
+/** The strategy to use when loading the script */
+export enum ScriptLoadingStrategyEnum {
+  /** Use the script `async` attribute */
+  Async = "ASYNC",
+  /** Use the script `defer` attribute */
+  Defer = "DEFER",
+}
 
 /** Input for the sendPasswordResetEmail mutation. */
 export type SendPasswordResetEmailInput = {
