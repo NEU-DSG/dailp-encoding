@@ -55,15 +55,17 @@ export const CommentPanel = (p: {
     };
     
     return(<div>
+      <h2 className={css.editCherHeader}>{p.segment ? p.segment.source : p.word?.source}</h2>
         <input
           type="text"
           placeholder="Add a comment"
           value={newCommentText}
           onChange={handleInputChange}
+          className={css.spacing}
         />
         <div>
-      <label htmlFor="dropdown">Select an option:</label>
-      <select id="dropdown" value={newCommentType} onChange={handleSelectChange}>
+      <label htmlFor="dropdown" className={css.spacing}>Tag:</label>
+      <select id="dropdown" value={newCommentType} onChange={handleSelectChange} className={css.spacing}>
         <option value="">Select...</option>
         {options.map((option, index) => (
           <option key={index} value={option}>

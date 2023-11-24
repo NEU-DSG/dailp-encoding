@@ -23,6 +23,8 @@ import { usePreferences } from "./preferences-context"
 import { TranslatedParagraph } from "./segment"
 import { VerticalMorphemicSegmentation } from "./word-panel"
 import { useState } from "react"
+import { SubtleButton } from "./components/subtle-button"
+import { subtleButton, subtleButtonActive } from "./components/subtle-button.css"
 
 enum PanelType {
   WordPanel,
@@ -86,7 +88,11 @@ export const PanelLayout = (p: {
     const handleComment = (e: React.MouseEvent<HTMLButtonElement>) => {
       e.preventDefault()
 
-      setCommentsPanel(true)
+      if (commentsPanel === true) {
+        setCommentsPanel(false)
+      } else {
+        setCommentsPanel(true)
+      }
     };
 
   // Display the paragraph panel if the segment type is a word (AnnotatedForm).
@@ -170,6 +176,7 @@ export const PanelLayout = (p: {
     <div className={css.wordPanelContent}>
       <>{panel}</>
       {commentsPanel === false && <Button type="button" onClick={handleComment}>Comment</Button> }
+      {commentsPanel === true && <SubtleButton type="button" onClick={handleComment}>Discard</SubtleButton>}
     </div>
   )
 }
