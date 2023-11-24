@@ -176,3 +176,7 @@ export const globalGlossTag = style([
     borderRadius: radii.medium,
   },
 ])
+
+export const buttonSpacing = style([
+  marginX(hspace.small)
+])

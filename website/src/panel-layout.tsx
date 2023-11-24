@@ -176,7 +176,7 @@ export const PanelLayout = (p: {
     <div className={css.wordPanelContent}>
       <>{panel}</>
       {commentsPanel === false && <Button type="button" onClick={handleComment}>Comment</Button> }
-      {commentsPanel === true && <SubtleButton type="button" onClick={handleComment}>Discard</SubtleButton>}
+      {commentsPanel === true && <SubtleButton type="button" onClick={handleComment} className={css.buttonSpacing}>Discard</SubtleButton>}
     </div>
   )
 }

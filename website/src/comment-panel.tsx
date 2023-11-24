@@ -29,7 +29,7 @@ export const CommentPanel = (p: {
         return await postComment(variables)
     }
 
-    const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const handleInputChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
         setNewCommentText(event.target.value);
     };
 
@@ -50,18 +50,18 @@ export const CommentPanel = (p: {
               : Dailp.CommentType.Question),
             },
           })
-    
+        
+        alert('Your comment has been posted!')
         console.log('Submitted!');
     };
     
     return(<div>
-      <h2 className={css.editCherHeader}>{p.segment ? p.segment.source : p.word?.source}</h2>
-        <input
-          type="text"
-          placeholder="Add a comment"
+      <h2 className={css.editCherHeader}>{p.word ? p.word.source : "Paragraph " + p.segment?.index}</h2>
+        <textarea
+          placeholder="Add a comment..."
           value={newCommentText}
           onChange={handleInputChange}
-          className={css.spacing}
+          className={css.inputStyling}
         />
         <div>
       <label htmlFor="dropdown" className={css.spacing}>Tag:</label>
