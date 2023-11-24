@@ -1,12 +1,8 @@
-import { style, styleVariants } from "@vanilla-extract/css"
-import { marginX, marginY, paddingX, paddingY } from "./style/utils"
+import { style } from "@vanilla-extract/css"
+import { marginX, marginY } from "./style/utils"
 import {
-    fontSize,
     fonts,
     hspace,
-    mediaQueries,
-    radii,
-    rootFontSize,
     vspace,
   } from "src/style/constants"
 
@@ -24,5 +20,13 @@ export const editCherHeader = style([
   ])
 
 export const spacing = style([
-    marginY(vspace.large)
+    marginY(vspace.large),
+    marginX(hspace.small)
+])
+
+export const inputStyling = style([
+    marginY(vspace.large),
+    marginX(hspace.small),
+    {height: "100px",
+    width: "95%"}
 ])
