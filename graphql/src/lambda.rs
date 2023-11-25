@@ -2,6 +2,7 @@ mod query;
 
 use {
     dailp::async_graphql::{self, dataloader::DataLoader, EmptySubscription, Schema},
+    dailp::user::UserInfo,
     lambda_http::{http::header, IntoResponse, Request, RequestExt, Response},
     log::info,
     query::*,

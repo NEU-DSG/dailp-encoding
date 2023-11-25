@@ -12,6 +12,9 @@ interface Props {
 
 export const AudioPlayer = (props: Props) => {
   if (typeof window !== "undefined") {
+    console.log(
+      "[Naomi] start: " + props.slices?.start + "; end: " + props.slices?.end
+    )
     return <AudioPlayerImpl {...props} />
   } else {
     return null
@@ -25,9 +28,17 @@ const AudioPlayerImpl = (props: Props) => {
   const [loadStatus, setLoadStatus] = useState(false)
   const [isPlaying, setIsPlaying] = useState(false)
 
+  //　FIXME Issue: Word audio drifts forward and backward for no apparent reason
+  // Steps (Todo)
+  // - verify [start, end] match incoming data from GQL
+  // -
+  // Steps (complete)
+  //
   const [start, end] = props.slices
-    ? [props.slices.start / 1000, props.slices.end / 1000]
-    : [0, audio.duration]
+    ? [props.slices.start / 1000, props.slices.end / 1000] // this does not
+    : [0, audio.duration] // this works fine
+
+  console.log("[Naomi] calculated start: " + start + "; end: " + end)
 
   const reset = () => {
     audio.currentTime = start

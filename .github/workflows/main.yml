@@ -4,7 +4,7 @@ name: Infrastructure Deployment
 # events but only for the main branch
 on:
   release:
-    types: [released]
+    types: [released, prereleased]
   push:
     branches: [main]
     paths-ignore:
@@ -21,7 +21,7 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-20.04
-    environment: ${{ github.event_name == 'release' && 'Production' || 'Development' }}
+    environment: ${{ github.event_name == 'release' && ( github.event.action == 'released' && 'Production' || 'Development') || 'Development' }}
     env:
       DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
       GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
@@ -36,7 +36,8 @@ jobs:
       GIT_REPOSITORY_URL: https://github.com/neu-dsg/dailp-encoding
       OAUTH_TOKEN: ${{ secrets.OAUTH_TOKEN }}
       RUST_LOG: info
-      TF_STAGE: ${{ github.event_name == 'release' && 'prod' || 'dev' }}
+      # Stage is Development if not based on a release event, is Staging/UAT if event action is prereleased, is Production if event action is released
+      TF_STAGE: ${{ github.event_name == 'release' && ( github.event.action == 'prereleased' && 'uat' || 'prod') || 'dev' }}
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -48,7 +49,7 @@ jobs:
         if: ${{ github.event_name == 'release' }}
         uses: ad-m/github-push-action@master
         with:
-          branch: release
+          branch: ${{ github.event.action == 'prereleased' && 'uat' || 'release' }}
           force: true
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
