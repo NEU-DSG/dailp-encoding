@@ -1,5 +1,6 @@
 import { groupBy } from "lodash"
 import React, { ReactNode } from "react"
+import { useState } from "react"
 import { AiFillSound } from "react-icons/ai/index"
 import { GrDown, GrUp } from "react-icons/gr/index"
 import { IoEllipsisHorizontalCircle } from "react-icons/io5/index"
@@ -9,22 +10,24 @@ import { Disclosure, DisclosureContent, useDisclosureState } from "reakit"
 import { unstable_Form as Form, unstable_FormInput as FormInput } from "reakit"
 import * as Dailp from "src/graphql/dailp"
 import { useCredentials } from "./auth"
-import { AudioPlayer, IconButton, Button } from "./components"
+import CommentPanel from "./comment-panel"
+import { AudioPlayer, Button, IconButton } from "./components"
 import { CustomCreatable } from "./components/creatable"
 import { EditWordAudio } from "./components/edit-word-audio"
+import { SubtleButton } from "./components/subtle-button"
+import {
+  subtleButton,
+  subtleButtonActive,
+} from "./components/subtle-button.css"
 import { EditButton, EditWordFeature } from "./edit-word-feature"
 import { formInput } from "./edit-word-feature.css"
 import { useForm } from "./edit-word-form-context"
 import { content } from "./footer.css"
 import * as css from "./panel-layout.css"
 import ParagraphPanel from "./paragraph-panel"
-import CommentPanel from "./comment-panel"
 import { usePreferences } from "./preferences-context"
 import { TranslatedParagraph } from "./segment"
 import { VerticalMorphemicSegmentation } from "./word-panel"
-import { useState } from "react"
-import { SubtleButton } from "./components/subtle-button"
-import { subtleButton, subtleButtonActive } from "./components/subtle-button.css"
 
 enum PanelType {
   WordPanel,
@@ -84,34 +87,37 @@ export const PanelLayout = (p: {
 
   let panel = null
 
-    // Logic to display comment panel if the button is pressed
-    const handleComment = (e: React.MouseEvent<HTMLButtonElement>) => {
-      e.preventDefault()
+  // Logic to display comment panel if the button is pressed
+  const handleComment = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault()
 
-      if (commentsPanel === true) {
-        setCommentsPanel(false)
-      } else {
-        setCommentsPanel(true)
-      }
-    };
+    if (commentsPanel === true) {
+      setCommentsPanel(false)
+    } else {
+      setCommentsPanel(true)
+    }
+  }
 
   // Display the paragraph panel if the segment type is a word (AnnotatedForm).
   if (commentsPanel === true) {
-    if(p.segment!=null){
-      if(p.segment.__typename === "AnnotatedForm"){
-        panel = <CommentPanel
-        word={p.segment}
-        segment={null}
-        setCommentsPanel={setCommentsPanel}
-        />
-      } else if (p.segment.__typename === "DocumentParagraph"){
-        panel = <CommentPanel
-        word={null}
-        segment={p.segment}
-        setCommentsPanel={setCommentsPanel}
-        />
+    if (p.segment != null) {
+      if (p.segment.__typename === "AnnotatedForm") {
+        panel = (
+          <CommentPanel
+            word={p.segment}
+            segment={null}
+            setCommentsPanel={setCommentsPanel}
+          />
+        )
+      } else if (p.segment.__typename === "DocumentParagraph") {
+        panel = (
+          <CommentPanel
+            word={null}
+            segment={p.segment}
+            setCommentsPanel={setCommentsPanel}
+          />
+        )
       }
-
     }
   } else if (p.segment.__typename === "AnnotatedForm") {
     panel = (
@@ -172,13 +178,25 @@ export const PanelLayout = (p: {
   } else if (p.segment.__typename === "DocumentParagraph") {
     // Display the paragraph panel if the segment type is a paragraph.
     panel = <ParagraphPanel segment={p.segment} setContent={p.setContent} />
-  } 
+  }
 
   return (
     <div className={css.wordPanelContent}>
       <>{panel}</>
-      {commentsPanel === false && <Button type="button" onClick={handleComment}>Comment</Button> }
-      {commentsPanel === true && <SubtleButton type="button" onClick={handleComment} className={css.buttonSpacing}>Discard</SubtleButton>}
+      {commentsPanel === false && (
+        <Button type="button" onClick={handleComment}>
+          Comment
+        </Button>
+      )}
+      {commentsPanel === true && (
+        <SubtleButton
+          type="button"
+          onClick={handleComment}
+          className={css.buttonSpacing}
+        >
+          Discard
+        </SubtleButton>
+      )}
     </div>
   )
 }
