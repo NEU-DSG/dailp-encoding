@@ -1,4 +1,4 @@
-import React, { ReactNode } from "react"
+import React, {SetStateAction, ReactNode } from "react"
 import * as Dailp from "src/graphql/dailp"
 import { TranslatedParagraph } from "./segment"
 import { useState } from "react"
@@ -8,6 +8,7 @@ import * as css from "./comment-panel.css"
 export const CommentPanel = (p: {
     word: Dailp.FormFieldsFragment | null
     segment: TranslatedParagraph | null
+    setCommentsPanel: React.Dispatch<SetStateAction<boolean>>
 }) => {
     const [newCommentText, setNewCommentText] = useState<string>('')
     const [newCommentType, setNewCommentType] = useState('')
@@ -53,6 +54,7 @@ export const CommentPanel = (p: {
         
         alert('Your comment has been posted!')
         console.log('Submitted!');
+        p.setCommentsPanel(false)
     };
     
     return(<div>
