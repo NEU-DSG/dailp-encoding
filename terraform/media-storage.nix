@@ -3,7 +3,9 @@
   # Provision a bucket dedicated to media storage, especially audio files.
   config.resource = {
     aws_s3_bucket.media_storage = {
-      bucket = "dailp-${config.setup.stage}-media-storage";
+      bucket = let 
+        prefixName = import ./utils.nix { stage = config.setup.stage; hideProd = false; };
+      in prefixName "media-storage";
       acl = "private";
       lifecycle.prevent_destroy = true;
       versioning.enabled = true;
@@ -89,7 +91,7 @@
           if config.setup.stage == "dev" then 
             [ "arn:aws:iam::783177801354:user/dailp-deployment" ]
           else
-            [ "arn:aws:iam::363539660090:user/dialp-deployment" ]; # TODO get prod value
+            [ "arn:aws:iam::363539660090:user/dialp-deployment" ];
       };
       actions = [
         "s3:GetObject"

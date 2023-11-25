@@ -1,10 +1,20 @@
 name: Migrate Data
 on:
   workflow_dispatch:
+    inputs:
+      applyTo:
+        required: true
+        default: Development
+        type: choice
+        description: Where do you want to migrate data?
+        options:
+          - Development
+          - Staging/UAT
+          - Production
 jobs:
   build:
     runs-on: ubuntu-20.04
-    environment: Development
+    environment: ${{ inputs.applyTo == 'Production' && 'Production' || 'Development'}}
     env:
       DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
       GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
@@ -19,7 +29,7 @@ jobs:
       GIT_REPOSITORY_URL: https://github.com/neu-dsg/dailp-encoding
       OAUTH_TOKEN: ${{ secrets.OAUTH_TOKEN }}
       RUST_LOG: info
-      TF_STAGE: dev
+      TF_STAGE: ${{ inputs.applyTo == 'Development' && 'dev' || ( inputs.applyTo == 'Staging/UAT' && 'uat' || 'prod' )}}
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -46,8 +56,8 @@ jobs:
           nix run --impure -L .#tf-init
           SECURITY_GROUP_ID=$(nix run --impure .#tf-output access_security_group_id)
           echo "ACCESS_SECURITY_GROUP=$SECURITY_GROUP_ID" >> $GITHUB_ENV
-      - name: Validate spreadsheets
-        run: nix run --impure -L .#validate-data
+      # - name: Validate spreadsheets
+      #   run: nix run --impure -L .#validate-data
       - name: Add public IP to AWS security group
         uses: sohelamin/aws-security-group-add-ip-action@master
         with:

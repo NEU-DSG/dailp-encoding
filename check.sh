@@ -24,7 +24,7 @@ cargo run --bin dailp-graphql-schema &>/dev/null ||
 echo "--- WEBSITE ---"
 cd website
 echo "Formatting TypeScript code..."
-yarn prettier --write src &>/dev/null
+yarn prettier --write --config package.json src &>/dev/null
 echo "Generating Typescript types for GraphQL queries..."
 yarn generate
 echo "Checking website for errors..."
