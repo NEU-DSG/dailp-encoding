@@ -177,6 +177,4 @@ export const globalGlossTag = style([
   },
 ])
 
-export const buttonSpacing = style([
-  marginX(hspace.small)
-])
+export const buttonSpacing = style([marginX(hspace.small)])
