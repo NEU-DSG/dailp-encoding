@@ -102,11 +102,13 @@ export const PanelLayout = (p: {
         panel = <CommentPanel
         word={p.segment}
         segment={null}
+        setCommentsPanel={setCommentsPanel}
         />
       } else if (p.segment.__typename === "DocumentParagraph"){
         panel = <CommentPanel
         word={null}
         segment={p.segment}
+        setCommentsPanel={setCommentsPanel}
         />
       }
 
