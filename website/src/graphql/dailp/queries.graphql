@@ -500,12 +500,12 @@ mutation UpdateDocumentMetadata($document: DocumentMetadataUpdate!) {
 }
 
 mutation PostComment($input: PostCommentInput!) {
-  postComment(input: $input){
-    ...on AnnotatedForm {
+  postComment(input: $input) {
+    ... on AnnotatedForm {
       __typename
       id
     }
-    ...on DocumentParagraph {
+    ... on DocumentParagraph {
       __typename
       id
     }
