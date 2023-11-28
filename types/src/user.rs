@@ -1,4 +1,3 @@
-use async_graphql::MaybeUndefined;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -20,14 +19,4 @@ pub struct User {
     pub id: UserId,
     /// User-facing name for this contributor/curator
     pub display_name: String,
-}
-
-/// Adds a bookmarked document to the user's list of bookmarks
-/// Removes it if it's already bookmarked
-#[derive(async_graphql::InputObject)]
-pub struct UpdateBookmark {
-    /// ID of the document to add/remove bookmark
-    pub document_id: Uuid,
-    /// Whether the document is already bookmarked
-    pub bookmark_bool: bool,
 }

@@ -11,4 +11,3 @@ from Google Sheets.
 | `id`           | `uuid` | Primary key, AWS Cognito `sub` claim               |
 | `display_name` | `text` | How the user's name should be presented in the app |
 | `created_at`   | `date` | When the user record was created                   |
-| `bookmarked_documents` | `uuid[]` | An array of the user's bookmarked documents|

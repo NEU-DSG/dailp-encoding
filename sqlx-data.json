@@ -96,38 +96,33 @@
           "type_info": "Uuid"
         },
         {
-          "name": "last_edited",
-          "ordinal": 8,
-          "type_info": "Date"
-        },
-        {
           "name": "audio_url?",
-          "ordinal": 9,
+          "ordinal": 8,
           "type_info": "Text"
         },
         {
           "name": "recorded_at?",
-          "ordinal": 10,
+          "ordinal": 9,
           "type_info": "Date"
         },
         {
           "name": "recorded_by?",
-          "ordinal": 11,
+          "ordinal": 10,
           "type_info": "Uuid"
         },
         {
           "name": "recorded_by_name?",
-          "ordinal": 12,
+          "ordinal": 11,
           "type_info": "Text"
         },
         {
           "name": "audio_slice?",
-          "ordinal": 13,
+          "ordinal": 12,
           "type_info": "Int8Range"
         },
         {
           "name": "contributors",
-          "ordinal": 14,
+          "ordinal": 13,
           "type_info": "Jsonb"
         }
       ],
@@ -138,7 +133,6 @@
         false,
         false,
         false,
-        true,
         true,
         true,
         false,
@@ -261,38 +255,33 @@
           "type_info": "Uuid"
         },
         {
-          "name": "last_edited",
-          "ordinal": 8,
-          "type_info": "Date"
-        },
-        {
           "name": "audio_url?",
-          "ordinal": 9,
+          "ordinal": 8,
           "type_info": "Text"
         },
         {
           "name": "recorded_at?",
-          "ordinal": 10,
+          "ordinal": 9,
           "type_info": "Date"
         },
         {
           "name": "recorded_by?",
-          "ordinal": 11,
+          "ordinal": 10,
           "type_info": "Uuid"
         },
         {
           "name": "recorded_by_name?",
-          "ordinal": 12,
+          "ordinal": 11,
           "type_info": "Text"
         },
         {
           "name": "audio_slice?",
-          "ordinal": 13,
+          "ordinal": 12,
           "type_info": "Int8Range"
         },
         {
           "name": "contributors",
-          "ordinal": 14,
+          "ordinal": 13,
           "type_info": "Jsonb"
         }
       ],
@@ -303,7 +292,6 @@
         false,
         false,
         false,
-        true,
         true,
         true,
         false,
@@ -1018,60 +1006,6 @@
     },
     "query": "select\n  morpheme_gloss.id as gloss_id,\n  morpheme_gloss.example_shape,\n  abbreviation_system.short_name as system_name,\n  morpheme_tag.gloss,\n  morpheme_tag.title,\n  morpheme_tag.description,\n  morpheme_tag.role_override as \"role_override: WordSegmentRole\",\n  abstract_morpheme_tag.linguistic_type\nfrom morpheme_gloss\n  inner join abstract_morpheme_tag on abstract_morpheme_tag.id = morpheme_gloss.tag_id\n  left join abbreviation_system on abbreviation_system.short_name = any($2)\n  inner join morpheme_tag on morpheme_tag.abstract_ids[1] = abstract_morpheme_tag.id\nwhere morpheme_gloss.id = any($1)\n  and morpheme_tag.system_id = abbreviation_system.id\n"
   },
-  "4e079635b03bc9dc6858eb004a127cb4c234ee8fa29e72990991850a6981c9a7": {
-    "describe": {
-      "columns": [
-        {
-          "name": "id",
-          "ordinal": 0,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "short_name",
-          "ordinal": 1,
-          "type_info": "Text"
-        },
-        {
-          "name": "title",
-          "ordinal": 2,
-          "type_info": "Text"
-        },
-        {
-          "name": "written_at",
-          "ordinal": 3,
-          "type_info": "Date"
-        },
-        {
-          "name": "is_reference",
-          "ordinal": 4,
-          "type_info": "Bool"
-        },
-        {
-          "name": "last_edited",
-          "ordinal": 5,
-          "type_info": "Date"
-        },
-        {
-          "name": "contributors",
-          "ordinal": 6,
-          "type_info": "Jsonb"
-        }
-      ],
-      "nullable": [
-        false,
-        false,
-        false,
-        true,
-        false,
-        true,
-        null
-      ],
-      "parameters": {
-        "Left": []
-      }
-    },
-    "query": "select\n  document.id,\n  document.short_name,\n  document.title,\n  document.written_at,\n  document.is_reference,\n  document.last_edited,\n  coalesce(\n    jsonb_agg(\n      jsonb_build_object(\n        'name',\n        contributor.full_name,\n        'role',\n        contributor_attribution.contribution_role\n      )\n    ) filter (where contributor is not null),\n    '[]'\n  )\n  as contributors\nfrom document\n  left join\n    contributor_attribution on contributor_attribution.document_id = document.id\n  left join contributor on contributor.id = contributor_attribution.contributor_id\ngroup by document.id\n"
-  },
   "5549c7f2ae3991f56bf51c9aa562c2a4672277cd741b6ca303b5a24ccc508065": {
     "describe": {
       "columns": [
@@ -1490,26 +1424,6 @@
       }
     },
     "query": "insert into contributor_attribution (contributor_id, document_id, contribution_role)\nselect\n  contributor.id,\n  input_data.doc_id,\n  input_data.contribution_role\nfrom\n  unnest(\n    $1::text[], $2::uuid[], $3::text[]\n  ) as input_data(full_name, doc_id, contribution_role)\n  inner join contributor on contributor.full_name = input_data.full_name\n-- If this document already has this contributor, move on.\non conflict do nothing\n"
-  },
-  "6ae89f9cdf89931e4aa92ca7f27d327c5de0826246febb934a2eec2bd4dc92cb": {
-    "describe": {
-      "columns": [
-        {
-          "name": "bookmarked_documents",
-          "ordinal": 0,
-          "type_info": "UuidArray"
-        }
-      ],
-      "nullable": [
-        false
-      ],
-      "parameters": {
-        "Left": [
-          "Uuid"
-        ]
-      }
-    },
-    "query": "SELECT bookmarked_documents\nFROM dailp_user\nWHERE id = $1;"
   },
   "6d5a72c97ad0bb2831e0b605a340630b28f70402023f5abec5ff2043f343f0b1": {
     "describe": {
@@ -2568,6 +2482,54 @@
     },
     "query": "with t as (\n  select distinct on (morpheme_tag.gloss)\n    abbreviation_system.short_name as system_name,\n    morpheme_tag.abstract_ids,\n    morpheme_tag.gloss,\n    morpheme_tag.title,\n    morpheme_tag.description,\n    morpheme_tag.role_override as \"role_override: WordSegmentRole\",\n    abstract_morpheme_tag.linguistic_type\n  from abbreviation_system\n    inner join\n      morpheme_tag on abbreviation_system.id = morpheme_tag.system_id\n    inner join\n      abstract_morpheme_tag on\n        abstract_morpheme_tag.id = any(morpheme_tag.abstract_ids)\n  where abbreviation_system.short_name = $1\n)\n\nselect *\nfrom t\norder by linguistic_type asc, gloss asc;\n"
   },
+  "c2a9ae80ba251654b5fa8c88656a01674d81a466c615070b033378798c0d382a": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "short_name",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "title",
+          "ordinal": 2,
+          "type_info": "Text"
+        },
+        {
+          "name": "written_at",
+          "ordinal": 3,
+          "type_info": "Date"
+        },
+        {
+          "name": "is_reference",
+          "ordinal": 4,
+          "type_info": "Bool"
+        },
+        {
+          "name": "contributors",
+          "ordinal": 5,
+          "type_info": "Jsonb"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        true,
+        false,
+        null
+      ],
+      "parameters": {
+        "Left": []
+      }
+    },
+    "query": "select\n  document.id,\n  document.short_name,\n  document.title,\n  document.written_at,\n  document.is_reference,\n  coalesce(\n    jsonb_agg(\n      jsonb_build_object(\n        'name',\n        contributor.full_name,\n        'role',\n        contributor_attribution.contribution_role\n      )\n    ) filter (where contributor is not null),\n    '[]'\n  )\n  as contributors\nfrom document\n  left join\n    contributor_attribution on contributor_attribution.document_id = document.id\n  left join contributor on contributor.id = contributor_attribution.contributor_id\ngroup by document.id\n"
+  },
   "c956fa4511edb5e5a27aef94a615510d10b541d6a5fb33705489ebd28bb89407": {
     "describe": {
       "columns": [
@@ -2724,20 +2686,6 @@
       }
     },
     "query": "insert into morpheme_gloss_relation (left_gloss_id, right_gloss_id)\nselect\n  left_gloss.id,\n  right_gloss.id\nfrom\n  unnest(\n    $1::text[], $2::text[], $3::text[], $4::text[]\n  ) as input_relation(left_doc_name, left_gloss, right_doc_name, right_gloss)\n  inner join document as left_doc on left_doc.short_name = input_relation.left_doc_name\n  inner join\n    morpheme_gloss as left_gloss on\n      left_gloss.gloss = input_relation.left_gloss and left_gloss.document_id = left_doc.id\n  inner join\n    document as right_doc on right_doc.short_name = input_relation.right_doc_name\n  inner join\n    morpheme_gloss as right_gloss on\n      right_gloss.gloss = input_relation.right_gloss and right_gloss.document_id = right_doc.id\non conflict do nothing\n"
-  },
-  "d33e3593934917406066d9db6555cec4f92106ce8eeef6f03297751306b826d2": {
-    "describe": {
-      "columns": [],
-      "nullable": [],
-      "parameters": {
-        "Left": [
-          "Uuid",
-          "Uuid",
-          "Bool"
-        ]
-      }
-    },
-    "query": "UPDATE dailp_user\nSET bookmarked_documents = CASE\n    WHEN $3 = true AND NOT $2 = ANY(bookmarked_documents) THEN array_append(bookmarked_documents, $2)\n    WHEN $3 = false THEN array_remove(bookmarked_documents, $2)\n    ELSE bookmarked_documents\n  END\nWHERE id = $1;"
   },
   "d6377d5a54a702f7df73f287390c0c45a1309f7e705c93d49842b409a947a1fd": {
     "describe": {

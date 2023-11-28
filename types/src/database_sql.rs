@@ -8,7 +8,6 @@ use std::str::FromStr;
 use crate::collection::CollectionChapter;
 use crate::collection::EditedCollection;
 use crate::comment::{Comment, CommentParentType, CommentType};
-use crate::user::UpdateBookmark;
 use crate::user::User;
 use crate::user::UserId;
 use {
@@ -297,7 +296,6 @@ impl Database {
                     page_images: None,
                     sources: Vec::new(),
                     translation: None,
-                    last_edited: item.last_edited.map(Date::new),
                 },
                 segments: None,
             })
@@ -437,7 +435,6 @@ impl Database {
                 page_images: None,
                 sources: Vec::new(),
                 translation: None,
-                last_edited: item.last_edited.map(Date::new),
             },
             segments: None,
         };
@@ -502,38 +499,6 @@ impl Database {
             .await?;
 
         Ok(user_id)
-    }
-
-    /// Adds a bookmark to the user's list of bookmarks
-    /// Will return the user id.
-    pub async fn update_bookmark(&self, bookmark: UpdateBookmark, user_id: Uuid) -> Result<Uuid> {
-        query_file!(
-            "queries/update_bookmark.sql",
-            user_id,
-            &bookmark.document_id,
-            &bookmark.bookmark_bool
-        )
-        .execute(&self.client)
-        .await?;
-        Ok(user_id)
-    }
-
-    // Gets all the bookmarks for a user given their id
-    pub async fn bookmarked_documents(&self, user_id: &Uuid) -> Result<Option<Vec<Uuid>>> {
-        let bookmarks = query_file!("queries/get_bookmarks.sql", user_id)
-            .fetch_all(&self.client)
-            .await?;
-
-        if bookmarks.is_empty() {
-            Ok(None)
-        } else {
-            Ok(Some(
-                bookmarks
-                    .into_iter()
-                    .flat_map(|x| x.bookmarked_documents)
-                    .collect(),
-            ))
-        }
     }
 
     pub async fn update_annotation(&self, _annote: annotation::Annotation) -> Result<()> {
@@ -1503,7 +1468,6 @@ impl Loader<DocumentId> for Database {
                     title: item.title,
                     is_reference: item.is_reference,
                     date: item.written_at.map(Date::new),
-                    last_edited: item.last_edited.map(Date::new),
                     audio_recording: item.audio_url.map(|resource_url| AudioSlice {
                         slice_id: Some(AudioSliceId(item.audio_slice_id.unwrap().to_string())),
                         resource_url,
@@ -1569,7 +1533,6 @@ impl Loader<DocumentShortName> for Database {
                     title: item.title,
                     is_reference: item.is_reference,
                     date: item.written_at.map(Date::new),
-                    last_edited: item.last_edited.map(Date::new),
                     audio_recording: item.audio_url.map(|resource_url| AudioSlice {
                         slice_id: Some(AudioSliceId(item.audio_slice_id.unwrap().to_string())),
                         resource_url,

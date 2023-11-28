@@ -7,13 +7,9 @@ export type Exact<T extends { [key: string]: unknown }> = {
   [K in keyof T]: T[K]
 }
 export type MakeOptional<T, K extends keyof T> = Omit<T, K> &
-  {
-    [SubKey in K]?: Maybe<T[SubKey]>
-  }
+  { [SubKey in K]?: Maybe<T[SubKey]> }
 export type MakeMaybe<T, K extends keyof T> = Omit<T, K> &
-  {
-    [SubKey in K]: Maybe<T[SubKey]>
-  }
+  { [SubKey in K]: Maybe<T[SubKey]> }
 export type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
@@ -67,8 +63,6 @@ export type AnnotatedDoc = {
    * Otherwise, it is considered a structured document with a translation.
    */
   readonly isReference: Scalars["Boolean"]
-  /** Date that the last edit was made to this document */
-  readonly lastEdited: Maybe<Date>
   /**
    * Arbitrary number used for manually ordering documents in a collection.
    * For collections without manual ordering, use zero here.
@@ -76,8 +70,6 @@ export type AnnotatedDoc = {
   readonly orderIndex: Scalars["Int"]
   /** Images of each source document page, in order */
   readonly pageImages: Maybe<IiifImages>
-  /** Short title for the document */
-  readonly shortName: Scalars["String"]
   /** URL-ready slug for this document, generated from the title */
   readonly slug: Scalars["String"]
   /** The original source(s) of this document, the most important first. */
@@ -650,11 +642,6 @@ export type Mutation = {
   /** Post a new comment on a given object */
   readonly postComment: CommentParent
   readonly updateAnnotation: Scalars["Boolean"]
-  /**
-   * Adds a bookmark to the user's list of bookmarks.
-   * Removes it if it already exists.
-   */
-  readonly updateBookmark: Scalars["UUID"]
   /** Mutation for adding/changing contributor attributions */
   readonly updateContributorAttribution: Scalars["UUID"]
   readonly updateDocumentMetadata: Scalars["UUID"]
@@ -686,10 +673,6 @@ export type MutationPostCommentArgs = {
 
 export type MutationUpdateAnnotationArgs = {
   data: Scalars["JSON"]
-}
-
-export type MutationUpdateBookmarkArgs = {
-  bookmark: UpdateBookmark
 }
 
 export type MutationUpdateContributorAttributionArgs = {
@@ -796,15 +779,11 @@ export type Query = {
   readonly allPages: ReadonlyArray<Page>
   /** List of all the functional morpheme tags available */
   readonly allTags: ReadonlyArray<MorphemeTag>
-  /** Gets all bookmarks for the currently authenticated user. */
-  readonly bookmarkedDocuments: Maybe<ReadonlyArray<Scalars["UUID"]>>
   /** Retrieves a chapter and its contents by its collection and chapter slug. */
   readonly chapter: Maybe<CollectionChapter>
   readonly collection: DocumentCollection
   /** Retrieves a full document from its unique name. */
   readonly document: Maybe<AnnotatedDoc>
-  /** Retrieves a full document from its unique identifier. */
-  readonly documentByUuid: Maybe<AnnotatedDoc>
   readonly editedCollection: Maybe<EditedCollection>
   /**
    * Retrieve information for the morpheme that corresponds to the given tag
@@ -857,10 +836,6 @@ export type QueryDocumentArgs = {
   slug: Scalars["String"]
 }
 
-export type QueryDocumentByUuidArgs = {
-  id: Scalars["UUID"]
-}
-
 export type QueryEditedCollectionArgs = {
   slug: Scalars["String"]
 }
@@ -908,17 +883,6 @@ export type SourceAttribution = {
   readonly link: Scalars["String"]
   /** Name of the source, i.e. "The Newberry Library" */
   readonly name: Scalars["String"]
-}
-
-/**
- * Adds a bookmarked document to the user's list of bookmarks
- * Removes it if it's already bookmarked
- */
-export type UpdateBookmark = {
-  /** Whether the document is already bookmarked */
-  readonly bookmarkBool: Scalars["Boolean"]
-  /** ID of the document to add/remove bookmark */
-  readonly documentId: Scalars["UUID"]
 }
 
 /** Update the contributor attribution for a document */
@@ -1026,58 +990,6 @@ export type AnnotatedDocumentQuery = { readonly __typename?: "Query" } & {
     > & {
         readonly date: Maybe<
           { readonly __typename?: "Date" } & Pick<Date, "year">
-        >
-        readonly lastEdited: Maybe<
-          { readonly __typename?: "Date" } & Pick<Date, "formattedDate">
-        >
-        readonly sources: ReadonlyArray<
-          { readonly __typename?: "SourceAttribution" } & Pick<
-            SourceAttribution,
-            "name" | "link"
-          >
-        >
-        readonly audioRecording: Maybe<
-          { readonly __typename?: "AudioSlice" } & Pick<
-            AudioSlice,
-            "resourceUrl" | "startTime" | "endTime"
-          >
-        >
-        readonly translatedPages: Maybe<
-          ReadonlyArray<
-            { readonly __typename?: "DocumentPage" } & {
-              readonly image: Maybe<
-                { readonly __typename?: "PageImage" } & Pick<PageImage, "url">
-              >
-            }
-          >
-        >
-        readonly chapters: Maybe<
-          ReadonlyArray<
-            { readonly __typename?: "CollectionChapter" } & Pick<
-              CollectionChapter,
-              "path"
-            >
-          >
-        >
-      }
-  >
-}
-
-export type AnnotatedDocumentByIdQueryVariables = Exact<{
-  docId: Scalars["UUID"]
-}>
-
-export type AnnotatedDocumentByIdQuery = { readonly __typename?: "Query" } & {
-  readonly documentByUuid: Maybe<
-    { readonly __typename?: "AnnotatedDoc" } & Pick<
-      AnnotatedDoc,
-      "id" | "title" | "slug" | "isReference"
-    > & {
-        readonly date: Maybe<
-          { readonly __typename?: "Date" } & Pick<Date, "year">
-        >
-        readonly lastEdited: Maybe<
-          { readonly __typename?: "Date" } & Pick<Date, "formattedDate">
         >
         readonly sources: ReadonlyArray<
           { readonly __typename?: "SourceAttribution" } & Pick<
@@ -1718,9 +1630,6 @@ export type CollectionChapterQuery = { readonly __typename?: "Query" } & {
             AnnotatedDoc,
             "id" | "title" | "slug" | "isReference"
           > & {
-              readonly lastEdited: Maybe<
-                { readonly __typename?: "Date" } & Pick<Date, "formattedDate">
-              >
               readonly date: Maybe<
                 { readonly __typename?: "Date" } & Pick<Date, "year">
               >
@@ -1898,21 +1807,6 @@ export type CurateWordAudioMutation = { readonly __typename?: "Mutation" } & {
     }
 }
 
-export type UpdateBookmarkMutationVariables = Exact<{
-  bookmark: UpdateBookmark
-}>
-
-export type UpdateBookmarkMutation = {
-  readonly __typename?: "Mutation"
-} & Pick<Mutation, "updateBookmark">
-
-export type BookmarkedDocumentsQueryVariables = Exact<{ [key: string]: never }>
-
-export type BookmarkedDocumentsQuery = { readonly __typename?: "Query" } & Pick<
-  Query,
-  "bookmarkedDocuments"
->
-
 export type UpdateParagraphMutationVariables = Exact<{
   paragraph: ParagraphUpdate
 }>
@@ -2048,9 +1942,6 @@ export const AnnotatedDocumentDocument = gql`
       date {
         year
       }
-      lastEdited {
-        formattedDate
-      }
       sources {
         name
         link
@@ -2078,48 +1969,6 @@ export function useAnnotatedDocumentQuery(
   return Urql.useQuery<AnnotatedDocumentQuery, AnnotatedDocumentQueryVariables>(
     { query: AnnotatedDocumentDocument, ...options }
   )
-}
-export const AnnotatedDocumentByIdDocument = gql`
-  query AnnotatedDocumentById($docId: UUID!) {
-    documentByUuid(id: $docId) {
-      id
-      title
-      slug
-      isReference
-      date {
-        year
-      }
-      lastEdited {
-        formattedDate
-      }
-      sources {
-        name
-        link
-      }
-      audioRecording {
-        resourceUrl
-        startTime
-        endTime
-      }
-      translatedPages {
-        image {
-          url
-        }
-      }
-      chapters {
-        path
-      }
-    }
-  }
-`
-
-export function useAnnotatedDocumentByIdQuery(
-  options: Omit<Urql.UseQueryArgs<AnnotatedDocumentByIdQueryVariables>, "query">
-) {
-  return Urql.useQuery<
-    AnnotatedDocumentByIdQuery,
-    AnnotatedDocumentByIdQueryVariables
-  >({ query: AnnotatedDocumentByIdDocument, ...options })
 }
 export const DocumentContentsDocument = gql`
   query DocumentContents(
@@ -2480,9 +2329,6 @@ export const CollectionChapterDocument = gql`
         title
         slug
         isReference
-        lastEdited {
-          formattedDate
-        }
         date {
           year
         }
@@ -2576,32 +2422,6 @@ export function useCurateWordAudioMutation() {
     CurateWordAudioMutation,
     CurateWordAudioMutationVariables
   >(CurateWordAudioDocument)
-}
-export const UpdateBookmarkDocument = gql`
-  mutation UpdateBookmark($bookmark: UpdateBookmark!) {
-    updateBookmark(bookmark: $bookmark)
-  }
-`
-
-export function useUpdateBookmarkMutation() {
-  return Urql.useMutation<
-    UpdateBookmarkMutation,
-    UpdateBookmarkMutationVariables
-  >(UpdateBookmarkDocument)
-}
-export const BookmarkedDocumentsDocument = gql`
-  query BookmarkedDocuments {
-    bookmarkedDocuments
-  }
-`
-
-export function useBookmarkedDocumentsQuery(
-  options?: Omit<Urql.UseQueryArgs<BookmarkedDocumentsQueryVariables>, "query">
-) {
-  return Urql.useQuery<
-    BookmarkedDocumentsQuery,
-    BookmarkedDocumentsQueryVariables
-  >({ query: BookmarkedDocumentsDocument, ...options })
 }
 export const UpdateParagraphDocument = gql`
   mutation UpdateParagraph($paragraph: ParagraphUpdate!) {

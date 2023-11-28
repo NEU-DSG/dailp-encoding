@@ -116,7 +116,6 @@ async fn migrate_glossary_metadata(db: &Database, sheet_id: &str) -> Result<()> 
                 1,
                 1,
             )),
-            last_edited: None,
             contributors: values
                 .next()?
                 .into_iter()
