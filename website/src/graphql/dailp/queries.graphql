@@ -415,11 +415,67 @@ mutation CurateWordAudio($input: CurateWordAudioInput!) {
 }
 
 mutation AddBookmark($documentId: UUID!) {
-  addBookmark(documentId: $documentId)
+  addBookmark(documentId: $documentId) {
+    id
+    title
+    slug
+    isReference
+    date {
+      year
+    }
+    bookmarkedOn {
+      formattedDate
+    }
+    sources {
+      name
+      link
+    }
+    audioRecording {
+      resourceUrl
+      startTime
+      endTime
+    }
+    translatedPages {
+      image {
+        url
+      }
+    }
+    chapters {
+      path
+    }
+  }
 }
 
 mutation RemoveBookmark($documentId: UUID!) {
-  removeBookmark(documentId: $documentId)
+  removeBookmark(documentId: $documentId) {
+    id
+    title
+    slug
+    isReference
+    date {
+      year
+    }
+    bookmarkedOn {
+      formattedDate
+    }
+    sources {
+      name
+      link
+    }
+    audioRecording {
+      resourceUrl
+      startTime
+      endTime
+    }
+    translatedPages {
+      image {
+        url
+      }
+    }
+    chapters {
+      path
+    }
+  }
 }
 
 mutation UpdateParagraph($paragraph: ParagraphUpdate!) {

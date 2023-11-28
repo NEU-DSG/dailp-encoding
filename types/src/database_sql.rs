@@ -1910,14 +1910,18 @@ impl Loader<BookmarkedOn> for Database {
     ) -> Result<HashMap<BookmarkedOn, Self::Value>, Self::Error> {
         let document_id: Vec<_> = keys.iter().map(|k| k.0).collect();
         let user_id: Vec<_> = keys.iter().map(|k| k.1).collect();
-        let items = query_file!("queries/get_bookmarked_on.sql", document_id[0], user_id[0])
-            .fetch_all(&self.client)
-            .await?;
+        let items = query_file!(
+            "queries/get_document_bookmarked_on.sql",
+            document_id[0],
+            user_id[0]
+        )
+        .fetch_all(&self.client)
+        .await?;
 
         let mut result_map = HashMap::new();
         for item in items {
-            let key = BookmarkedOn(item.document_id, item.user_id); // Adjust field names based on your actual record structure
-            let value = date::Date(item.bookmarked_on); // Convert NaiveDate to date::Date
+            let key = BookmarkedOn(item.document_id, item.user_id);
+            let value = date::Date(item.bookmarked_on);
             result_map.insert(key, value);
         }
 

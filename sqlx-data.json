@@ -40,60 +40,6 @@
     },
     "query": "select id\nfrom document\nwhere short_name = $1\n"
   },
-  "05ee7b3db39b837428beaf795a2f9690e5a3e3f102d01dc13b6ddd727000eaf7": {
-    "describe": {
-      "columns": [
-        {
-          "name": "id",
-          "ordinal": 0,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "short_name",
-          "ordinal": 1,
-          "type_info": "Text"
-        },
-        {
-          "name": "title",
-          "ordinal": 2,
-          "type_info": "Text"
-        },
-        {
-          "name": "written_at",
-          "ordinal": 3,
-          "type_info": "Date"
-        },
-        {
-          "name": "is_reference",
-          "ordinal": 4,
-          "type_info": "Bool"
-        },
-        {
-          "name": "bookmarked_on?",
-          "ordinal": 5,
-          "type_info": "Date"
-        },
-        {
-          "name": "contributors",
-          "ordinal": 6,
-          "type_info": "Jsonb"
-        }
-      ],
-      "nullable": [
-        false,
-        false,
-        false,
-        true,
-        false,
-        false,
-        null
-      ],
-      "parameters": {
-        "Left": []
-      }
-    },
-    "query": "select\n  document.id,\n  document.short_name,\n  document.title,\n  document.written_at,\n  document.is_reference,\n  ubd.bookmarked_on as \"bookmarked_on?\",\n  coalesce(\n    jsonb_agg(\n      jsonb_build_object(\n        'name',\n        contributor.full_name,\n        'role',\n        contributor_attribution.contribution_role\n      )\n    ) filter (where contributor is not null),\n    '[]'\n  )\n  as contributors\nfrom document\n  left join\n    contributor_attribution on contributor_attribution.document_id = document.id\n  left join contributor on contributor.id = contributor_attribution.contributor_id\n  left join user_bookmarked_document as ubd on ubd.document_id = document.id\ngroup by\n  document.id, \n  ubd.bookmarked_on\n"
-  },
   "06b8461f89e4dc227c28b2fa754688c67ec2cdb8dfc3f82d34002bf24b886d3d": {
     "describe": {
       "columns": [],
@@ -1840,19 +1786,6 @@
     },
     "query": "insert into document (\n  short_name, title, is_reference, written_at, audio_slice_id, group_id, index_in_group\n)\nvalues ($1, $2, $3, $4, $5, $6, $7)\non conflict (short_name) do update set\ntitle = excluded.title,\nis_reference = excluded.is_reference,\nwritten_at = excluded.written_at,\naudio_slice_id = excluded.audio_slice_id,\ngroup_id = excluded.group_id,\nindex_in_group = excluded.index_in_group\nreturning id\n"
   },
-  "9087654cfb3bb8103bafbc7400f82960536577530e58aa6eb6bc29aca1fd2f5c": {
-    "describe": {
-      "columns": [],
-      "nullable": [],
-      "parameters": {
-        "Left": [
-          "Uuid",
-          "Uuid"
-        ]
-      }
-    },
-    "query": "INSERT INTO user_bookmarked_document (document_id, user_id, bookmarked_on)\nVALUES ($1, $2, NOW());"
-  },
   "93a6c0a72e2d56064fffad8eda07a6b8aa73080106ce3283a087b010bc3658dd": {
     "describe": {
       "columns": [
@@ -2186,6 +2119,54 @@
       }
     },
     "query": "-- Binds: user_id, resource_url, start, end, word_id\n\nwith upserted_audio_resource as (\n  insert into media_resource (url, recorded_at, recorded_by)\n  select $2::text, now(), $1\n  -- we do this no-op update to ensure an id is returned\n  on conflict (url) do update set url=excluded.url\n  returning id\n),\n\ninserted_audio_slice as (\n  insert into media_slice (resource_id, time_range)\n  select upserted_audio_resource.id, int8range($3, $4)\n  from upserted_audio_resource\n  returning id\n)\n\ninsert into word_user_media (word_id, media_slice_id)\n  select $5, inserted_audio_slice.id\n  from inserted_audio_slice\n  join word on word.id = $5\n    on conflict (media_slice_id, word_id) do nothing -- word already associated\n  returning media_slice_id"
+  },
+  "a4d2e1e84878d6a249ca0a9dd9486828a139f5993c75bc350fef3612650e038f": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "short_name",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "title",
+          "ordinal": 2,
+          "type_info": "Text"
+        },
+        {
+          "name": "written_at",
+          "ordinal": 3,
+          "type_info": "Date"
+        },
+        {
+          "name": "is_reference",
+          "ordinal": 4,
+          "type_info": "Bool"
+        },
+        {
+          "name": "contributors",
+          "ordinal": 5,
+          "type_info": "Jsonb"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        true,
+        false,
+        null
+      ],
+      "parameters": {
+        "Left": []
+      }
+    },
+    "query": "select\n  document.id,\n  document.short_name,\n  document.title,\n  document.written_at,\n  document.is_reference,\n  coalesce(\n    jsonb_agg(\n      jsonb_build_object(\n        'name',\n        contributor.full_name,\n        'role',\n        contributor_attribution.contribution_role\n      )\n    ) filter (where contributor is not null),\n    '[]'\n  )\n  as contributors\nfrom document\n  left join\n    contributor_attribution on contributor_attribution.document_id = document.id\n  left join contributor on contributor.id = contributor_attribution.contributor_id\ngroup by\n  document.id\n"
   },
   "a5799421963397f074375ebf431af110f81ae2ec4038f272c82112c3eda5a742": {
     "describe": {
@@ -2941,6 +2922,19 @@
       }
     },
     "query": "with resource as (\n  insert into media_resource (url)\n  values ($1)\n  on conflict (url) do update set\n     url = excluded.url\n  returning id\n)\n\ninsert into media_slice (resource_id, time_range)\nselect\n  id,\n  $2\nfrom resource\nreturning id\n"
+  },
+  "e36c26a49c102b82a8b1bf3ef32621d1a8345b64c55a42cb813c1de5c3c159ad": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Uuid"
+        ]
+      }
+    },
+    "query": "INSERT INTO user_bookmarked_document (document_id, user_id)\nVALUES ($1, $2)\nON CONFLICT (document_id, user_id) DO NOTHING;"
   },
   "e482b08ffa95a64085847ed112c22f364d725df7c552a230cd3d17782c48168d": {
     "describe": {
