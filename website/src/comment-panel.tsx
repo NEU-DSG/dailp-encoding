@@ -7,7 +7,7 @@ import { TranslatedParagraph } from "./segment"
 
 export const CommentPanel = (p: {
   segment: Dailp.FormFieldsFragment | TranslatedParagraph
-  setCommentsPanel: React.Dispatch<SetStateAction<boolean>>
+  setIsCommenting: React.Dispatch<SetStateAction<boolean>>
 }) => {
   const [newCommentText, setNewCommentText] = useState<string>("")
   const [newCommentType, setNewCommentType] = useState<string>("STORY")
@@ -52,7 +52,7 @@ export const CommentPanel = (p: {
       })
       alert("Your comment has been posted!")
       console.log("Submitted!")
-      p.setCommentsPanel(false)
+      p.setIsCommenting(false)
     } else {
       alert("Please add a comment before submitting.")
     }
