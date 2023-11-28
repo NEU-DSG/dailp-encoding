@@ -131,6 +131,7 @@ impl Query {
     }
 
     /// Retrieves all documents that are bookmarked by the current user.
+    #[graphql(guard = "AuthGuard")]
     pub async fn bookmarked_documents(
         &self,
         context: &Context<'_>,
@@ -474,31 +475,47 @@ impl Mutation {
     }
 
     /// Adds a bookmark to the user's list of bookmarks.
-    async fn add_bookmark(&self, context: &Context<'_>, document_id: Uuid) -> FieldResult<String> {
+    #[graphql(guard = "AuthGuard")]
+    async fn add_bookmark(
+        &self,
+        context: &Context<'_>,
+        document_id: Uuid,
+    ) -> FieldResult<Option<AnnotatedDoc>> {
         let user = context
             .data_opt::<UserInfo>()
             .ok_or_else(|| anyhow::format_err!("User is not signed in"))?;
-        Ok(context
+        let document = context
+            .data::<DataLoader<Database>>()?
+            .load_one(dailp::DocumentId(document_id))
+            .await?;
+        context
             .data::<DataLoader<Database>>()?
             .loader()
             .add_bookmark(document_id, user.id)
-            .await?)
+            .await?;
+        Ok(document)
     }
 
     /// Removes a bookmark from a user's list of bookmarks
+    #[graphql(guard = "AuthGuard")]
     async fn remove_bookmark(
         &self,
         context: &Context<'_>,
         document_id: Uuid,
-    ) -> FieldResult<String> {
+    ) -> FieldResult<Option<AnnotatedDoc>> {
         let user = context
             .data_opt::<UserInfo>()
             .ok_or_else(|| anyhow::format_err!("User is not signed in"))?;
-        Ok(context
+        let document = context
+            .data::<DataLoader<Database>>()?
+            .load_one(dailp::DocumentId(document_id))
+            .await?;
+        context
             .data::<DataLoader<Database>>()?
             .loader()
             .remove_bookmark(document_id, user.id)
-            .await?)
+            .await?;
+        Ok(document)
     }
 
     /// Decide if a piece audio should be included in edited collection

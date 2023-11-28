@@ -817,11 +817,11 @@ type Mutation {
 	"""
 	Adds a bookmark to the user's list of bookmarks.
 	"""
-	addBookmark(documentId: UUID!): String!
+	addBookmark(documentId: UUID!): AnnotatedDoc
 	"""
 	Removes a bookmark from a user's list of bookmarks
 	"""
-	removeBookmark(documentId: UUID!): String!
+	removeBookmark(documentId: UUID!): AnnotatedDoc
 	"""
 	Decide if a piece audio should be included in edited collection
 	"""

@@ -6,14 +6,12 @@ export type InputMaybe<T> = Maybe<T>
 export type Exact<T extends { [key: string]: unknown }> = {
   [K in keyof T]: T[K]
 }
-export type MakeOptional<T, K extends keyof T> = Omit<T, K> &
-  {
-    [SubKey in K]?: Maybe<T[SubKey]>
-  }
-export type MakeMaybe<T, K extends keyof T> = Omit<T, K> &
-  {
-    [SubKey in K]: Maybe<T[SubKey]>
-  }
+export type MakeOptional<T, K extends keyof T> = Omit<T, K> & {
+  [SubKey in K]?: Maybe<T[SubKey]>
+}
+export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & {
+  [SubKey in K]: Maybe<T[SubKey]>
+}
 export type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
@@ -626,7 +624,7 @@ export type MorphemeTag = {
 export type Mutation = {
   readonly __typename?: "Mutation"
   /** Adds a bookmark to the user's list of bookmarks. */
-  readonly addBookmark: Scalars["String"]
+  readonly addBookmark: Maybe<AnnotatedDoc>
   /**
    * Mutation must have at least one visible field for introspection to work
    * correctly, so we just provide an API version which might be useful in
@@ -650,7 +648,7 @@ export type Mutation = {
   /** Post a new comment on a given object */
   readonly postComment: CommentParent
   /** Removes a bookmark from a user's list of bookmarks */
-  readonly removeBookmark: Scalars["String"]
+  readonly removeBookmark: Maybe<AnnotatedDoc>
   readonly updateAnnotation: Scalars["Boolean"]
   /** Mutation for adding/changing contributor attributions */
   readonly updateContributorAttribution: Scalars["UUID"]
@@ -1884,18 +1882,99 @@ export type AddBookmarkMutationVariables = Exact<{
   documentId: Scalars["UUID"]
 }>
 
-export type AddBookmarkMutation = { readonly __typename?: "Mutation" } & Pick<
-  Mutation,
-  "addBookmark"
->
+export type AddBookmarkMutation = { readonly __typename?: "Mutation" } & {
+  readonly addBookmark: Maybe<
+    { readonly __typename?: "AnnotatedDoc" } & Pick<
+      AnnotatedDoc,
+      "id" | "title" | "slug" | "isReference"
+    > & {
+        readonly date: Maybe<
+          { readonly __typename?: "Date" } & Pick<Date, "year">
+        >
+        readonly bookmarkedOn: Maybe<
+          { readonly __typename?: "Date" } & Pick<Date, "formattedDate">
+        >
+        readonly sources: ReadonlyArray<
+          { readonly __typename?: "SourceAttribution" } & Pick<
+            SourceAttribution,
+            "name" | "link"
+          >
+        >
+        readonly audioRecording: Maybe<
+          { readonly __typename?: "AudioSlice" } & Pick<
+            AudioSlice,
+            "resourceUrl" | "startTime" | "endTime"
+          >
+        >
+        readonly translatedPages: Maybe<
+          ReadonlyArray<
+            { readonly __typename?: "DocumentPage" } & {
+              readonly image: Maybe<
+                { readonly __typename?: "PageImage" } & Pick<PageImage, "url">
+              >
+            }
+          >
+        >
+        readonly chapters: Maybe<
+          ReadonlyArray<
+            { readonly __typename?: "CollectionChapter" } & Pick<
+              CollectionChapter,
+              "path"
+            >
+          >
+        >
+      }
+  >
+}
 
 export type RemoveBookmarkMutationVariables = Exact<{
   documentId: Scalars["UUID"]
 }>
 
-export type RemoveBookmarkMutation = {
-  readonly __typename?: "Mutation"
-} & Pick<Mutation, "removeBookmark">
+export type RemoveBookmarkMutation = { readonly __typename?: "Mutation" } & {
+  readonly removeBookmark: Maybe<
+    { readonly __typename?: "AnnotatedDoc" } & Pick<
+      AnnotatedDoc,
+      "id" | "title" | "slug" | "isReference"
+    > & {
+        readonly date: Maybe<
+          { readonly __typename?: "Date" } & Pick<Date, "year">
+        >
+        readonly bookmarkedOn: Maybe<
+          { readonly __typename?: "Date" } & Pick<Date, "formattedDate">
+        >
+        readonly sources: ReadonlyArray<
+          { readonly __typename?: "SourceAttribution" } & Pick<
+            SourceAttribution,
+            "name" | "link"
+          >
+        >
+        readonly audioRecording: Maybe<
+          { readonly __typename?: "AudioSlice" } & Pick<
+            AudioSlice,
+            "resourceUrl" | "startTime" | "endTime"
+          >
+        >
+        readonly translatedPages: Maybe<
+          ReadonlyArray<
+            { readonly __typename?: "DocumentPage" } & {
+              readonly image: Maybe<
+                { readonly __typename?: "PageImage" } & Pick<PageImage, "url">
+              >
+            }
+          >
+        >
+        readonly chapters: Maybe<
+          ReadonlyArray<
+            { readonly __typename?: "CollectionChapter" } & Pick<
+              CollectionChapter,
+              "path"
+            >
+          >
+        >
+      }
+  >
+}
 
 export type UpdateParagraphMutationVariables = Exact<{
   paragraph: ParagraphUpdate
@@ -2563,7 +2642,35 @@ export function useCurateWordAudioMutation() {
 }
 export const AddBookmarkDocument = gql`
   mutation AddBookmark($documentId: UUID!) {
-    addBookmark(documentId: $documentId)
+    addBookmark(documentId: $documentId) {
+      id
+      title
+      slug
+      isReference
+      date {
+        year
+      }
+      bookmarkedOn {
+        formattedDate
+      }
+      sources {
+        name
+        link
+      }
+      audioRecording {
+        resourceUrl
+        startTime
+        endTime
+      }
+      translatedPages {
+        image {
+          url
+        }
+      }
+      chapters {
+        path
+      }
+    }
   }
 `
 
@@ -2574,7 +2681,35 @@ export function useAddBookmarkMutation() {
 }
 export const RemoveBookmarkDocument = gql`
   mutation RemoveBookmark($documentId: UUID!) {
-    removeBookmark(documentId: $documentId)
+    removeBookmark(documentId: $documentId) {
+      id
+      title
+      slug
+      isReference
+      date {
+        year
+      }
+      bookmarkedOn {
+        formattedDate
+      }
+      sources {
+        name
+        link
+      }
+      audioRecording {
+        resourceUrl
+        startTime
+        endTime
+      }
+      translatedPages {
+        image {
+          url
+        }
+      }
+      chapters {
+        path
+      }
+    }
   }
 `
 
