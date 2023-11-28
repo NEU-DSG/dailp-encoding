@@ -87,18 +87,11 @@ export const PanelLayout = (p: {
 
   let panel = null
 
-  // Logic to display comment panel if the button is pressed
-  const handleComment = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault()
-
-    setIsCommenting(!isCommenting)
-  }
-
   // Display the paragraph panel if the segment type is a word (AnnotatedForm).
   if (isCommenting === true) {
     if (p.segment != null) {
       panel = (
-        <CommentPanel segment={p.segment} setCommentsPanel={setIsCommenting} />
+        <CommentPanel segment={p.segment} setIsCommenting={setIsCommenting} />
       )
     }
   } else if (p.segment.__typename === "AnnotatedForm") {
@@ -168,13 +161,13 @@ export const PanelLayout = (p: {
       {isCommenting ? (
         <SubtleButton
           type="button"
-          onClick={handleComment}
+          onClick={() => setIsCommenting(!isCommenting)}
           className={css.buttonSpacing}
         >
           Discard
         </SubtleButton>
       ) : (
-        <Button type="button" onClick={handleComment}>
+        <Button type="button" onClick={() => setIsCommenting(!isCommenting)}>
           Comment
         </Button>
       )}
