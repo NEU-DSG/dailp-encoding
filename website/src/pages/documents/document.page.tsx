@@ -492,25 +492,27 @@ export const DocumentTitleHeader = (p: {
 /** Button that allows users to bookmark a document */
 export const BookmarkButton = (props: { documentId: String }) => {
   const [isBookmarked, setIsBookmarked] = useState(false)
-  const [addBookmarkMutationResult, addBookmarkMutation] =
-    Dailp.useUpdateBookmarkMutation()
+  // const [
+  //   addBookmarkMutationResult,
+  //   addBookmarkMutation,
+  // ] = Dailp.useUpdateBookmarkMutation()
   const documentId = props.documentId
-  const [{ data }] = Dailp.useBookmarkedDocumentsQuery()
-  if (data?.bookmarkedDocuments?.indexOf(documentId) !== -1) {
-    if (!isBookmarked) {
-      setIsBookmarked(true)
-    }
-  }
+  // const [{ data }] = Dailp.useBookmarkedDocumentsQuery()
+  // if (data?.bookmarkedDocuments?.indexOf(documentId) !== -1) {
+  //   if (!isBookmarked) {
+  //     setIsBookmarked(true)
+  //   }
+  // }
 
   const handleSet = (bool: boolean) => {
     setIsBookmarked(bool)
     const bookmarkBool = bool
-    addBookmarkMutation({
-      bookmark: {
-        documentId,
-        bookmarkBool,
-      },
-    })
+    // addBookmarkMutation({
+    //   bookmark: {
+    //     documentId,
+    //     bookmarkBool,
+    //   },
+    // })
   }
 
   return (

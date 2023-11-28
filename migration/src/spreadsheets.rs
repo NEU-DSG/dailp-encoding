@@ -455,7 +455,6 @@ impl SheetResult {
                 .get(1)
                 .and_then(|s| dailp::chrono::NaiveDate::parse_from_str(s, "%Y-%m-%d").ok())
                 .map(Date::new),
-            last_edited: None,
             is_reference,
             audio_recording: if audio_files.get(1).is_none() {
                 None

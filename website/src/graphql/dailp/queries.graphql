@@ -22,41 +22,6 @@ query AnnotatedDocument($slug: String!) {
     date {
       year
     }
-    lastEdited {
-      formattedDate
-    }
-    sources {
-      name
-      link
-    }
-    audioRecording {
-      resourceUrl
-      startTime
-      endTime
-    }
-    translatedPages {
-      image {
-        url
-      }
-    }
-    chapters {
-      path
-    }
-  }
-}
-
-query AnnotatedDocumentById($docId: UUID!) {
-  documentByUuid(id: $docId) {
-    id
-    title
-    slug
-    isReference
-    date {
-      year
-    }
-    lastEdited {
-      formattedDate
-    }
     sources {
       name
       link
@@ -350,9 +315,6 @@ query CollectionChapter($collectionSlug: String!, $chapterSlug: String!) {
       title
       slug
       isReference
-      lastEdited {
-        formattedDate
-      }
       date {
         year
       }
@@ -412,14 +374,6 @@ mutation CurateWordAudio($input: CurateWordAudioInput!) {
       }
     }
   }
-}
-
-mutation UpdateBookmark($bookmark: UpdateBookmark!) {
-  updateBookmark(bookmark: $bookmark)
-}
-
-query BookmarkedDocuments {
-  bookmarkedDocuments
 }
 
 mutation UpdateParagraph($paragraph: ParagraphUpdate!) {

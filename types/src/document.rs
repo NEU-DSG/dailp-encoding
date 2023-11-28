@@ -66,19 +66,9 @@ impl AnnotatedDoc {
         &self.meta.title
     }
 
-    /// Short title for the document
-    async fn short_name(&self) -> &str {
-        &self.meta.short_name
-    }
-
     /// Date and time this document was written or created
     async fn date(&self) -> &Option<Date> {
         &self.meta.date
-    }
-
-    /// Date that the last edit was made to this document
-    async fn last_edited(&self) -> &Option<Date> {
-        &self.meta.last_edited
     }
 
     /// The original source(s) of this document, the most important first.
@@ -445,8 +435,6 @@ pub struct DocumentMetadata {
     pub page_images: Option<IiifImages>,
     /// The date this document was produced (or `None` if unknown)
     pub date: Option<Date>,
-    /// When the document was last edited
-    pub last_edited: Option<Date>,
     /// Whether this document is a reference, therefore just a list of forms.
     pub is_reference: bool,
     /// Audio recording of this document, if one exists

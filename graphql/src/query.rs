@@ -2,15 +2,13 @@
 
 use dailp::{
     comment::{CommentParent, DeleteCommentInput, PostCommentInput},
-    slugify_ltree,
-    user::UpdateBookmark,
-    AnnotatedForm, AttachAudioToWordInput, CollectionChapter, CurateWordAudioInput,
+    slugify_ltree, AnnotatedForm, AttachAudioToWordInput, CollectionChapter, CurateWordAudioInput,
     DeleteContributorAttribution, DocumentMetadataUpdate, UpdateContributorAttribution, Uuid,
 };
 use itertools::Itertools;
 
 use {
-    dailp::async_graphql::{self, dataloader::DataLoader, Context, FieldResult, Guard},
+    dailp::async_graphql::{self, dataloader::DataLoader, Context, FieldResult, Guard, Object},
     dailp::{
         AnnotatedDoc, AnnotatedFormUpdate, CherokeeOrthography, Database, EditedCollection,
         MorphemeId, MorphemeReference, MorphemeTag, ParagraphUpdate, WordsInDocument,
@@ -126,18 +124,6 @@ impl Query {
         Ok(context
             .data::<DataLoader<Database>>()?
             .load_one(dailp::DocumentShortName(slug.to_ascii_uppercase()))
-            .await?)
-    }
-
-    /// Retrieves a full document from its unique identifier.
-    pub async fn document_by_uuid(
-        &self,
-        context: &Context<'_>,
-        id: Uuid,
-    ) -> FieldResult<Option<AnnotatedDoc>> {
-        Ok(context
-            .data::<DataLoader<Database>>()?
-            .load_one(dailp::DocumentId(id))
             .await?)
     }
 
@@ -306,20 +292,6 @@ impl Query {
     async fn user_info<'a>(&self, context: &'a Context<'_>) -> &'a UserInfo {
         context.data_unchecked()
     }
-
-    /// Gets all bookmarks for the currently authenticated user.
-    #[graphql(guard = "AuthGuard")]
-    async fn bookmarked_documents(&self, context: &Context<'_>) -> FieldResult<Option<Vec<Uuid>>> {
-        let user = context
-            .data_opt::<UserInfo>()
-            .ok_or_else(|| anyhow::format_err!("User is not signed in"))?;
-
-        Ok(context
-            .data::<DataLoader<Database>>()?
-            .loader()
-            .bookmarked_documents(&user.id)
-            .await?)
-    }
 }
 
 pub struct Mutation;
@@ -475,23 +447,6 @@ impl Mutation {
         let database = context.data::<DataLoader<Database>>()?.loader();
         Ok(database
             .word_by_id(&database.update_word(word).await?)
-            .await?)
-    }
-
-    /// Adds a bookmark to the user's list of bookmarks.
-    /// Removes it if it already exists.
-    async fn update_bookmark(
-        &self,
-        context: &Context<'_>,
-        bookmark: UpdateBookmark,
-    ) -> FieldResult<Uuid> {
-        let user = context
-            .data_opt::<UserInfo>()
-            .ok_or_else(|| anyhow::format_err!("User is not signed in"))?;
-        Ok(context
-            .data::<DataLoader<Database>>()?
-            .loader()
-            .update_bookmark(bookmark, user.id)
             .await?)
     }
 

@@ -90,7 +90,6 @@ async fn parse_early_vocab(
         short_name: doc_id,
         title,
         date: date_recorded,
-        last_edited: None,
         sources: Vec::new(),
         collection: Some(COLLECTION_NAME.to_owned()),
         genre: None,

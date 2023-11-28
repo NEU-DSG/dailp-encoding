@@ -22,7 +22,6 @@
 | `is_reference`   | `boolean`                | Is this a lexical source, like a dictionary? |
 | `written_at`     | `date?`                  | When this was written or published           |
 | `audio_slice_id` | `uuid? -> media_slice`   | Audio recording of the whole document        |
-| `last_edited`    | `date?`                  | When the document was last edited            |
 
 - Deleting a `document` auto-deletes all `document_page` rows within it.
 
