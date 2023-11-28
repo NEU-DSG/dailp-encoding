@@ -1,10 +1,17 @@
-import { style } from "@vanilla-extract/css"
+import { style, styleVariants } from "@vanilla-extract/css"
 import { fonts, hspace, vspace } from "src/style/constants"
 import { marginX, marginY } from "./style/utils"
 
-export const commentButton = style({
-  position: "relative",
-  float: "right",
+const wordPanelPadding = "8px"
+
+export const commentButton = style([
+  marginY(vspace.large),
+  { position: "relative", float: "right" },
+])
+
+export const wordPanelHeader = style({
+  padding: wordPanelPadding,
+  fontFamily: fonts.body,
 })
 
 export const editCherHeader = style([
