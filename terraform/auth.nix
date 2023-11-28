@@ -8,7 +8,7 @@ in {
       name = "dailp-user-pool";
       username_attributes = [ "email" ];
       auto_verified_attributes = [ "email" ];
-      admin_create_user_config.allow_admin_create_user_only = true;
+      admin_create_user_config.allow_admin_create_user_only = false;
     };
     aws_cognito_user_pool_client.main = {
       name = prefixName "user-pool-client";
