@@ -81,3 +81,4 @@ This bridge table allows a many to many relationship between `document` and `doc
 | ------------- | ------ | ------------------- |
 | `document_id` | `uuid` | Document referenced |
 | `source_id`   | `uuid` | Source to cite      |
+
