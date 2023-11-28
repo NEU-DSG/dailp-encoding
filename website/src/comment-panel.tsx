@@ -11,17 +11,17 @@ export const CommentPanel = (p: {
   setCommentsPanel: React.Dispatch<SetStateAction<boolean>>
 }) => {
   const [newCommentText, setNewCommentText] = useState<string>("")
-  const [newCommentType, setNewCommentType] = useState("")
+  const [newCommentType, setNewCommentType] = useState<string>("STORY")
 
   // Prob messing up smth here
   const [postCommentResult, postComment] = Dailp.usePostCommentMutation()
 
-  const options = [
-    // There is def a better way to do this..
-    "Story",
-    "Suggestion",
-    "Question",
-  ]
+  const commentTypeNames: Record<string, Dailp.CommentType> = {
+    // ... TS will then make sure you have an entry for everything on the "CommentTag" type that you import from the codegen
+    Story: Dailp.CommentType.Story,
+    Suggestion: Dailp.CommentType.Suggestion,
+    Question: Dailp.CommentType.Question,
+  }
 
   /** Call the backend GraphQL mutation. */
   const runUpdate = async (variables: { input: Dailp.PostCommentInput }) => {
@@ -39,21 +39,18 @@ export const CommentPanel = (p: {
   const handleSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault()
 
-    runUpdate({
-      input: {
-        parentId: p.word ? p.word.id : p.segment ? p.segment.id : null,
-        parentType: p.word
-          ? Dailp.CommentParentType.Word
-          : Dailp.CommentParentType.Paragraph,
-        textContent: newCommentText,
-        commentType:
-          newCommentType == "Story"
-            ? Dailp.CommentType.Story
-            : newCommentType == "Suggestion"
-            ? Dailp.CommentType.Suggestion
-            : Dailp.CommentType.Question,
-      },
-    })
+    if (newCommentText && newCommentType) {
+      runUpdate({
+        input: {
+          parentId: p.word ? p.word.id : p.segment ? p.segment.id : null,
+          parentType: p.word
+            ? Dailp.CommentParentType.Word
+            : Dailp.CommentParentType.Paragraph,
+          textContent: newCommentText,
+          commentType: newCommentType as Dailp.CommentType,
+        },
+      })
+    }
 
     alert("Your comment has been posted!")
     console.log("Submitted!")
@@ -81,12 +78,13 @@ export const CommentPanel = (p: {
           onChange={handleSelectChange}
           className={css.spacing}
         >
-          <option value="">Select...</option>
-          {options.map((option, index) => (
-            <option key={index} value={option}>
-              {option}
-            </option>
-          ))}
+          {Object.entries<Dailp.CommentType>(commentTypeNames).map(
+            ([label, option]) => (
+              <option key={option} value={option}>
+                {label}
+              </option>
+            )
+          )}
         </select>
       </div>
       <Button
