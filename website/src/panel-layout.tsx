@@ -97,23 +97,9 @@ export const PanelLayout = (p: {
   // Display the paragraph panel if the segment type is a word (AnnotatedForm).
   if (isCommenting === true) {
     if (p.segment != null) {
-      if (p.segment.__typename === "AnnotatedForm") {
-        panel = (
-          <CommentPanel
-            word={p.segment}
-            segment={null}
-            setCommentsPanel={setIsCommenting}
-          />
-        )
-      } else if (p.segment.__typename === "DocumentParagraph") {
-        panel = (
-          <CommentPanel
-            word={null}
-            segment={p.segment}
-            setCommentsPanel={setIsCommenting}
-          />
-        )
-      }
+      panel = (
+        <CommentPanel segment={p.segment} setCommentsPanel={setIsCommenting} />
+      )
     }
   } else if (p.segment.__typename === "AnnotatedForm") {
     panel = (

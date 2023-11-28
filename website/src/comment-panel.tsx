@@ -6,8 +6,7 @@ import { Button } from "./components"
 import { TranslatedParagraph } from "./segment"
 
 export const CommentPanel = (p: {
-  word: Dailp.FormFieldsFragment | null
-  segment: TranslatedParagraph | null
+  segment: Dailp.FormFieldsFragment | TranslatedParagraph
   setCommentsPanel: React.Dispatch<SetStateAction<boolean>>
 }) => {
   const [newCommentText, setNewCommentText] = useState<string>("")
@@ -42,58 +41,66 @@ export const CommentPanel = (p: {
     if (newCommentText && newCommentType) {
       runUpdate({
         input: {
-          parentId: p.word ? p.word.id : p.segment ? p.segment.id : null,
-          parentType: p.word
-            ? Dailp.CommentParentType.Word
-            : Dailp.CommentParentType.Paragraph,
+          parentId: p.segment.id,
+          parentType:
+            p.segment.__typename === "DocumentParagraph"
+              ? Dailp.CommentParentType.Paragraph
+              : Dailp.CommentParentType.Word,
           textContent: newCommentText,
           commentType: newCommentType as Dailp.CommentType,
         },
       })
+      alert("Your comment has been posted!")
+      console.log("Submitted!")
+      p.setCommentsPanel(false)
+    } else {
+      alert("Please add a comment before submitting.")
     }
-
-    alert("Your comment has been posted!")
-    console.log("Submitted!")
-    p.setCommentsPanel(false)
   }
 
   return (
     <div>
-      <h2 className={css.editCherHeader}>
-        {p.word ? p.word.source : "Paragraph " + p.segment?.index}
-      </h2>
-      <textarea
-        placeholder="Add a comment..."
-        value={newCommentText}
-        onChange={handleInputChange}
-        className={css.inputStyling}
-      />
-      <div>
-        <label htmlFor="dropdown" className={css.spacing}>
-          Tag:
-        </label>
-        <select
-          id="dropdown"
-          value={newCommentType}
-          onChange={handleSelectChange}
-          className={css.spacing}
+      <header className={css.wordPanelHeader}>
+        <h2 className={css.editCherHeader}>
+          {p.segment.__typename === "DocumentParagraph"
+            ? "Paragraph " + p.segment?.index
+            : p.segment.source}
+        </h2>
+      </header>
+      <form>
+        <textarea
+          placeholder="Add a comment..."
+          value={newCommentText}
+          onChange={handleInputChange}
+          className={css.inputStyling}
+        />
+        <div>
+          <label htmlFor="dropdown" className={css.spacing}>
+            Tag:
+          </label>
+          <select
+            id="dropdown"
+            value={newCommentType}
+            onChange={handleSelectChange}
+            className={css.spacing}
+          >
+            {Object.entries<Dailp.CommentType>(commentTypeNames).map(
+              ([label, option]) => (
+                <option key={option} value={option}>
+                  {label}
+                </option>
+              )
+            )}
+          </select>
+        </div>
+        <Button
+          type="button"
+          className={css.commentButton}
+          onClick={handleSubmit}
         >
-          {Object.entries<Dailp.CommentType>(commentTypeNames).map(
-            ([label, option]) => (
-              <option key={option} value={option}>
-                {label}
-              </option>
-            )
-          )}
-        </select>
-      </div>
-      <Button
-        type="button"
-        className={css.commentButton}
-        onClick={handleSubmit}
-      >
-        Save
-      </Button>
+          Save
+        </Button>
+      </form>
     </div>
   )
 }
