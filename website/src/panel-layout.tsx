@@ -59,7 +59,7 @@ export const PanelLayout = (p: {
     variables: { system: cherokeeRepresentation },
   })
 
-  const [commentsPanel, setCommentsPanel] = useState(false)
+  const [isCommenting, setIsCommenting] = useState(false)
 
   if (!data) {
     return <p>Loading...</p>
@@ -91,22 +91,18 @@ export const PanelLayout = (p: {
   const handleComment = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault()
 
-    if (commentsPanel === true) {
-      setCommentsPanel(false)
-    } else {
-      setCommentsPanel(true)
-    }
+    setIsCommenting(!isCommenting)
   }
 
   // Display the paragraph panel if the segment type is a word (AnnotatedForm).
-  if (commentsPanel === true) {
+  if (isCommenting === true) {
     if (p.segment != null) {
       if (p.segment.__typename === "AnnotatedForm") {
         panel = (
           <CommentPanel
             word={p.segment}
             segment={null}
-            setCommentsPanel={setCommentsPanel}
+            setCommentsPanel={setIsCommenting}
           />
         )
       } else if (p.segment.__typename === "DocumentParagraph") {
@@ -114,7 +110,7 @@ export const PanelLayout = (p: {
           <CommentPanel
             word={null}
             segment={p.segment}
-            setCommentsPanel={setCommentsPanel}
+            setCommentsPanel={setIsCommenting}
           />
         )
       }
@@ -183,12 +179,7 @@ export const PanelLayout = (p: {
   return (
     <div className={css.wordPanelContent}>
       <>{panel}</>
-      {commentsPanel === false && (
-        <Button type="button" onClick={handleComment}>
-          Comment
-        </Button>
-      )}
-      {commentsPanel === true && (
+      {isCommenting ? (
         <SubtleButton
           type="button"
           onClick={handleComment}
@@ -196,6 +187,10 @@ export const PanelLayout = (p: {
         >
           Discard
         </SubtleButton>
+      ) : (
+        <Button type="button" onClick={handleComment}>
+          Comment
+        </Button>
       )}
     </div>
   )
