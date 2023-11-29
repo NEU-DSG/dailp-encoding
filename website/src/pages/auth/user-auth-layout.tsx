@@ -131,10 +131,10 @@ export const ResetLink = () => {
   return (
     <>
       {!token && (
-        <label>
+        <span>
           Forgot your password?{" "}
           <Link href="/auth/reset-password">Reset password</Link>
-        </label>
+        </span>
       )}
     </>
   )
@@ -143,9 +143,9 @@ export const ResetLink = () => {
 export const SignupLink = () => {
   return (
     <>
-      <label>
+      <span>
         Dont have an account? <Link href="/auth/signup">Sign Up</Link>
-      </label>
+      </span>
     </>
   )
 }
@@ -153,9 +153,9 @@ export const SignupLink = () => {
 export const LoginLink = () => {
   return (
     <>
-      <label>
+      <span>
         Already have an account? <Link href="/auth/login">Log in</Link>
-      </label>
+      </span>
     </>
   )
 }
