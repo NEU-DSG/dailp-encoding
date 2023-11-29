@@ -1,8 +1,6 @@
-import { style, styleVariants } from "@vanilla-extract/css"
+import { style } from "@vanilla-extract/css"
 import { fonts, hspace, vspace } from "src/style/constants"
 import { marginX, marginY } from "./style/utils"
-
-const wordPanelPadding = "8px"
 
 export const commentButton = style([
   marginY(vspace.large),
@@ -10,7 +8,7 @@ export const commentButton = style([
 ])
 
 export const wordPanelHeader = style({
-  padding: wordPanelPadding,
+  padding: "8px",
   fontFamily: fonts.body,
 })
 
