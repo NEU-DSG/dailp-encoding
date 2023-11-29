@@ -8515,7 +8515,7 @@ export type TaxonomyToContentTypeConnectionPageInfo =
       readonly hasPreviousPage: Scalars["Boolean"]
       /** When paginating backwards, the cursor to continue. */
       readonly startCursor: Maybe<Scalars["String"]>
-}
+    }
 
 /** Connection between the Taxonomy type and the TermNode type */
 export type TaxonomyToTermNodeConnection = Connection &
