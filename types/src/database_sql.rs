@@ -1908,12 +1908,12 @@ impl Loader<BookmarkedOn> for Database {
         &self,
         keys: &[BookmarkedOn],
     ) -> Result<HashMap<BookmarkedOn, Self::Value>, Self::Error> {
-        let document_id: Vec<_> = keys.iter().map(|k| k.0).collect();
-        let user_id: Vec<_> = keys.iter().map(|k| k.1).collect();
+        let document_id: Vec<_> = keys.iter().map(|k| k.0.clone()).collect();
+        let user_id: Vec<_> = keys.iter().map(|k| k.1.clone()).collect();
         let items = query_file!(
             "queries/get_document_bookmarked_on.sql",
-            document_id[0],
-            user_id[0]
+            &document_id,
+            &user_id
         )
         .fetch_all(&self.client)
         .await?;

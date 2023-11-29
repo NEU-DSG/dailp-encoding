@@ -624,7 +624,7 @@ export type MorphemeTag = {
 export type Mutation = {
   readonly __typename?: "Mutation"
   /** Adds a bookmark to the user's list of bookmarks. */
-  readonly addBookmark: Maybe<AnnotatedDoc>
+  readonly addBookmark: AnnotatedDoc
   /**
    * Mutation must have at least one visible field for introspection to work
    * correctly, so we just provide an API version which might be useful in
@@ -648,7 +648,7 @@ export type Mutation = {
   /** Post a new comment on a given object */
   readonly postComment: CommentParent
   /** Removes a bookmark from a user's list of bookmarks */
-  readonly removeBookmark: Maybe<AnnotatedDoc>
+  readonly removeBookmark: AnnotatedDoc
   readonly updateAnnotation: Scalars["Boolean"]
   /** Mutation for adding/changing contributor attributions */
   readonly updateContributorAttribution: Scalars["UUID"]
@@ -1883,48 +1883,46 @@ export type AddBookmarkMutationVariables = Exact<{
 }>
 
 export type AddBookmarkMutation = { readonly __typename?: "Mutation" } & {
-  readonly addBookmark: Maybe<
-    { readonly __typename?: "AnnotatedDoc" } & Pick<
-      AnnotatedDoc,
-      "id" | "title" | "slug" | "isReference"
-    > & {
-        readonly date: Maybe<
-          { readonly __typename?: "Date" } & Pick<Date, "year">
+  readonly addBookmark: { readonly __typename?: "AnnotatedDoc" } & Pick<
+    AnnotatedDoc,
+    "id" | "title" | "slug" | "isReference"
+  > & {
+      readonly date: Maybe<
+        { readonly __typename?: "Date" } & Pick<Date, "year">
+      >
+      readonly bookmarkedOn: Maybe<
+        { readonly __typename?: "Date" } & Pick<Date, "formattedDate">
+      >
+      readonly sources: ReadonlyArray<
+        { readonly __typename?: "SourceAttribution" } & Pick<
+          SourceAttribution,
+          "name" | "link"
         >
-        readonly bookmarkedOn: Maybe<
-          { readonly __typename?: "Date" } & Pick<Date, "formattedDate">
+      >
+      readonly audioRecording: Maybe<
+        { readonly __typename?: "AudioSlice" } & Pick<
+          AudioSlice,
+          "resourceUrl" | "startTime" | "endTime"
         >
-        readonly sources: ReadonlyArray<
-          { readonly __typename?: "SourceAttribution" } & Pick<
-            SourceAttribution,
-            "name" | "link"
-          >
-        >
-        readonly audioRecording: Maybe<
-          { readonly __typename?: "AudioSlice" } & Pick<
-            AudioSlice,
-            "resourceUrl" | "startTime" | "endTime"
-          >
-        >
-        readonly translatedPages: Maybe<
-          ReadonlyArray<
-            { readonly __typename?: "DocumentPage" } & {
-              readonly image: Maybe<
-                { readonly __typename?: "PageImage" } & Pick<PageImage, "url">
-              >
-            }
-          >
-        >
-        readonly chapters: Maybe<
-          ReadonlyArray<
-            { readonly __typename?: "CollectionChapter" } & Pick<
-              CollectionChapter,
-              "path"
+      >
+      readonly translatedPages: Maybe<
+        ReadonlyArray<
+          { readonly __typename?: "DocumentPage" } & {
+            readonly image: Maybe<
+              { readonly __typename?: "PageImage" } & Pick<PageImage, "url">
             >
+          }
+        >
+      >
+      readonly chapters: Maybe<
+        ReadonlyArray<
+          { readonly __typename?: "CollectionChapter" } & Pick<
+            CollectionChapter,
+            "path"
           >
         >
-      }
-  >
+      >
+    }
 }
 
 export type RemoveBookmarkMutationVariables = Exact<{
@@ -1932,48 +1930,46 @@ export type RemoveBookmarkMutationVariables = Exact<{
 }>
 
 export type RemoveBookmarkMutation = { readonly __typename?: "Mutation" } & {
-  readonly removeBookmark: Maybe<
-    { readonly __typename?: "AnnotatedDoc" } & Pick<
-      AnnotatedDoc,
-      "id" | "title" | "slug" | "isReference"
-    > & {
-        readonly date: Maybe<
-          { readonly __typename?: "Date" } & Pick<Date, "year">
+  readonly removeBookmark: { readonly __typename?: "AnnotatedDoc" } & Pick<
+    AnnotatedDoc,
+    "id" | "title" | "slug" | "isReference"
+  > & {
+      readonly date: Maybe<
+        { readonly __typename?: "Date" } & Pick<Date, "year">
+      >
+      readonly bookmarkedOn: Maybe<
+        { readonly __typename?: "Date" } & Pick<Date, "formattedDate">
+      >
+      readonly sources: ReadonlyArray<
+        { readonly __typename?: "SourceAttribution" } & Pick<
+          SourceAttribution,
+          "name" | "link"
         >
-        readonly bookmarkedOn: Maybe<
-          { readonly __typename?: "Date" } & Pick<Date, "formattedDate">
+      >
+      readonly audioRecording: Maybe<
+        { readonly __typename?: "AudioSlice" } & Pick<
+          AudioSlice,
+          "resourceUrl" | "startTime" | "endTime"
         >
-        readonly sources: ReadonlyArray<
-          { readonly __typename?: "SourceAttribution" } & Pick<
-            SourceAttribution,
-            "name" | "link"
-          >
-        >
-        readonly audioRecording: Maybe<
-          { readonly __typename?: "AudioSlice" } & Pick<
-            AudioSlice,
-            "resourceUrl" | "startTime" | "endTime"
-          >
-        >
-        readonly translatedPages: Maybe<
-          ReadonlyArray<
-            { readonly __typename?: "DocumentPage" } & {
-              readonly image: Maybe<
-                { readonly __typename?: "PageImage" } & Pick<PageImage, "url">
-              >
-            }
-          >
-        >
-        readonly chapters: Maybe<
-          ReadonlyArray<
-            { readonly __typename?: "CollectionChapter" } & Pick<
-              CollectionChapter,
-              "path"
+      >
+      readonly translatedPages: Maybe<
+        ReadonlyArray<
+          { readonly __typename?: "DocumentPage" } & {
+            readonly image: Maybe<
+              { readonly __typename?: "PageImage" } & Pick<PageImage, "url">
             >
+          }
+        >
+      >
+      readonly chapters: Maybe<
+        ReadonlyArray<
+          { readonly __typename?: "CollectionChapter" } & Pick<
+            CollectionChapter,
+            "path"
           >
         >
-      }
-  >
+      >
+    }
 }
 
 export type UpdateParagraphMutationVariables = Exact<{
