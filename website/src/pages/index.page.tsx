@@ -45,14 +45,11 @@ export const Page = IndexPage
 
 const carouselImages = [
   {
-    src:
-      "https://wp.dailp.northeastern.edu/wp-content/uploads/2020/01/Screen-Shot-2020-01-07-at-7.53.23-PM-300x253.png",
+    src: "https://wp.dailp.northeastern.edu/wp-content/uploads/2020/01/Screen-Shot-2020-01-07-at-7.53.23-PM-300x253.png",
     alt: "Example of handwritten Cherokee syllabary in notebook",
   },
   {
-    src:
-      "https://wp.dailp.northeastern.edu/wp-content/uploads/2020/01/Screen-Shot-2020-01-07-at-9.30.13-PM-184x300.png",
-    alt:
-      "'Our Banner' notebook with triangle flag and decorative swirls on cover",
+    src: "https://wp.dailp.northeastern.edu/wp-content/uploads/2020/01/Screen-Shot-2020-01-07-at-9.30.13-PM-184x300.png",
+    alt: "'Our Banner' notebook with triangle flag and decorative swirls on cover",
   },
 ]
