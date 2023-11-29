@@ -81,8 +81,7 @@ const parseOptions: HTMLReactParserOptions = {
   replace(node) {
     if ("data" in node) {
       const referenceEmbedStyle = /\[(\w*)\]/ // [search | glossary]
-      const wordEmbedStyle =
-        /\[(\w*):([0-9]*)-?([0-9]*)?:?(audio)?(join)?(#)?(\w*)?\]/ // [DocName:Start(-OptionalEnd):?(audio?)(join?)#?OptionalChapterSlug?]
+      const wordEmbedStyle = /\[(\w*):([0-9]*)-?([0-9]*)?:?(audio)?(join)?(#)?(\w*)?\]/ // [DocName:Start(-OptionalEnd):?(audio?)(join?)#?OptionalChapterSlug?]
 
       const wordSegments = node.data.match(wordEmbedStyle)?.filter((x) => !!x)
       const referenceSegments = node.data
