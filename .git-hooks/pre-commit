@@ -25,4 +25,16 @@ if git-staged "website/src/graphql/**.graphql" && ! git-staged "website/src/grap
     HOOKS_FAILED=1
 fi
 
+# Reqire frontend formatting
+if git-staged "website/*" && cd website && ! yarn prettier -c --config package.json src; then
+    printf "Frontend code edited but not formatted.\nPlease run 'dev-check' \nor\n'cd website; prettier -w --config package.json src'.\n"
+    HOOKS_FAILED=1
+fi
+
+# Require formatting for rust code
+if git-staged "*.rs" && [[ -n "$(cargo fmt --check)" ]]; then
+    printf "Rust code edited but not formatted.\nPlease run 'dev-check'.\n"
+    HOOKS_FAILED=1
+fi
+
 exit $HOOKS_FAILED
