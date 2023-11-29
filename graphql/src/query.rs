@@ -297,6 +297,32 @@ impl Query {
             .await?)
     }
 
+    /// Get a single word given the word ID
+    async fn word_by_id(
+        &self,
+        context: &Context<'_>,
+        id: &Uuid,
+    ) -> FieldResult<dailp::AnnotatedForm> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .word_by_id(id)
+            .await?)
+    }
+
+    /// Get a single paragraph given the paragraph ID
+    async fn paragraph_by_id(
+        &self,
+        context: &Context<'_>,
+        id: &Uuid,
+    ) -> FieldResult<dailp::DocumentParagraph> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .paragraph_by_id(id)
+            .await?)
+    }
+
     /// Search for words with the exact same syllabary string, or with very
     /// similar looking characters.
     async fn syllabary_search(
