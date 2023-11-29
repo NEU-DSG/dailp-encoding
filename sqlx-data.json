@@ -830,6 +830,39 @@
     },
     "query": "select\n  morpheme_gloss.id as gloss_id,\n  morpheme_gloss.example_shape,\n  abbreviation_system.short_name as system_name,\n  morpheme_tag.gloss,\n  morpheme_tag.title,\n  morpheme_tag.description,\n  morpheme_tag.role_override as \"role_override: WordSegmentRole\",\n  abstract_morpheme_tag.linguistic_type\nfrom morpheme_gloss\n  inner join abstract_morpheme_tag on abstract_morpheme_tag.id = morpheme_gloss.tag_id\n  left join abbreviation_system on abbreviation_system.short_name = any($2)\n  inner join morpheme_tag on morpheme_tag.abstract_ids[1] = abstract_morpheme_tag.id\nwhere morpheme_gloss.id = any($1)\n  and morpheme_tag.system_id = abbreviation_system.id\n"
   },
+  "50bb6131a8ca2cfcc7b1819764f2b6a250afb90ab3b1b579db4c0626c7c02857": {
+    "describe": {
+      "columns": [
+        {
+          "name": "bookmarked_on",
+          "ordinal": 0,
+          "type_info": "Date"
+        },
+        {
+          "name": "document_id",
+          "ordinal": 1,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "user_id",
+          "ordinal": 2,
+          "type_info": "Uuid"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "UuidArray",
+          "UuidArray"
+        ]
+      }
+    },
+    "query": "SELECT bookmarked_on, document_id, user_id\nFROM user_bookmarked_document AS ubd\nWHERE ubd.document_id = any($1) AND ubd.user_id = any($2)"
+  },
   "5549c7f2ae3991f56bf51c9aa562c2a4672277cd741b6ca303b5a24ccc508065": {
     "describe": {
       "columns": [
@@ -1953,39 +1986,6 @@
       }
     },
     "query": "update word set\n    source_text =\n        case\n            when $2::text[] != '{}' and $2[1] is not null then $2[1]\n            else source_text\n        end,\n    commentary =\n        case\n            when $3::text[] != '{}' then $3[1]\n            else commentary\n        end\nwhere id = $1\nreturning word.document_id;"
-  },
-  "9807f91fe5c7584f2bc24087ef32a4c429cb7583eef12b3103405dae89f4602f": {
-    "describe": {
-      "columns": [
-        {
-          "name": "bookmarked_on",
-          "ordinal": 0,
-          "type_info": "Date"
-        },
-        {
-          "name": "document_id",
-          "ordinal": 1,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "user_id",
-          "ordinal": 2,
-          "type_info": "Uuid"
-        }
-      ],
-      "nullable": [
-        false,
-        false,
-        false
-      ],
-      "parameters": {
-        "Left": [
-          "Uuid",
-          "Uuid"
-        ]
-      }
-    },
-    "query": "SELECT bookmarked_on, document_id, user_id\nFROM user_bookmarked_document AS ubd\nWHERE ubd.document_id = $1 AND ubd.user_id = $2"
   },
   "9e02521e2e4f9bb5ee2e1c9dd33e18bb9b0ee8b7d584cf9867b889b92334f082": {
     "describe": {

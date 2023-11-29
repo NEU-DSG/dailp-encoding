@@ -480,20 +480,20 @@ impl Mutation {
         &self,
         context: &Context<'_>,
         document_id: Uuid,
-    ) -> FieldResult<Option<AnnotatedDoc>> {
+    ) -> FieldResult<AnnotatedDoc> {
         let user = context
             .data_opt::<UserInfo>()
             .ok_or_else(|| anyhow::format_err!("User is not signed in"))?;
-        let document = context
-            .data::<DataLoader<Database>>()?
-            .load_one(dailp::DocumentId(document_id))
-            .await?;
         context
             .data::<DataLoader<Database>>()?
             .loader()
             .add_bookmark(document_id, user.id)
             .await?;
-        Ok(document)
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .load_one(dailp::DocumentId(document_id))
+            .await?
+            .ok_or_else(|| anyhow::format_err!("Failed to load document"))?)
     }
 
     /// Removes a bookmark from a user's list of bookmarks
@@ -502,20 +502,20 @@ impl Mutation {
         &self,
         context: &Context<'_>,
         document_id: Uuid,
-    ) -> FieldResult<Option<AnnotatedDoc>> {
+    ) -> FieldResult<AnnotatedDoc> {
         let user = context
             .data_opt::<UserInfo>()
             .ok_or_else(|| anyhow::format_err!("User is not signed in"))?;
-        let document = context
-            .data::<DataLoader<Database>>()?
-            .load_one(dailp::DocumentId(document_id))
-            .await?;
         context
             .data::<DataLoader<Database>>()?
             .loader()
             .remove_bookmark(document_id, user.id)
             .await?;
-        Ok(document)
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .load_one(dailp::DocumentId(document_id))
+            .await?
+            .ok_or_else(|| anyhow::format_err!("Failed to load document"))?)
     }
 
     /// Decide if a piece audio should be included in edited collection
