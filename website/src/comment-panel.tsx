@@ -12,14 +12,13 @@ export const CommentPanel = (p: {
   const [newCommentText, setNewCommentText] = useState<string>("")
   const [newCommentType, setNewCommentType] = useState<string>("STORY")
 
-  // Prob messing up smth here
   const [postCommentResult, postComment] = Dailp.usePostCommentMutation()
 
-  const commentTypeNames: Record<string, Dailp.CommentType> = {
+  const commentTypeNames: Record<Dailp.CommentType, string> = {
     // ... TS will then make sure you have an entry for everything on the "CommentTag" type that you import from the codegen
-    Story: Dailp.CommentType.Story,
-    Suggestion: Dailp.CommentType.Suggestion,
-    Question: Dailp.CommentType.Question,
+    [Dailp.CommentType.Story]: "Story",
+    [Dailp.CommentType.Suggestion]: "Suggestion",
+    [Dailp.CommentType.Question]: "Question",
   }
 
   /** Call the backend GraphQL mutation. */
@@ -84,13 +83,11 @@ export const CommentPanel = (p: {
             onChange={handleSelectChange}
             className={css.spacing}
           >
-            {Object.entries<Dailp.CommentType>(commentTypeNames).map(
-              ([label, option]) => (
-                <option key={option} value={option}>
-                  {label}
-                </option>
-              )
-            )}
+            {Object.entries<string>(commentTypeNames).map(([option, label]) => (
+              <option key={option} value={option}>
+                {label}
+              </option>
+            ))}
           </select>
         </div>
         <Button
