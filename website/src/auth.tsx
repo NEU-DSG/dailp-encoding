@@ -112,7 +112,7 @@ export const UserProvider = (props: { children: any }) => {
       }
       console.log(result)
       setUser(user)
-      navigate("/auth/login") 
+      navigate("/auth/login")
     })
   }
 
@@ -134,7 +134,7 @@ export const UserProvider = (props: { children: any }) => {
 
         console.log("Login success. Result: ", data)
         alert("Login successful")
-        navigate("/")// TODO navigate to dashboard
+        navigate("/") // TODO navigate to dashboard
       },
       onFailure: (err: Error) => {
         console.log("Login failed. Result: ", err)

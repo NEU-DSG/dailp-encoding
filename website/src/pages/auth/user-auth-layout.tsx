@@ -153,9 +153,9 @@ export const SignupLink = () => {
 export const LoginLink = () => {
   return (
     <>
-    <label>
-      Already have an account? <Link href="/auth/login">Log in</Link>
-    </label>
+      <label>
+        Already have an account? <Link href="/auth/login">Log in</Link>
+      </label>
     </>
   )
 }
