@@ -637,6 +637,25 @@ impl Database {
         Ok(bookmarks.into_iter().map(|x| x.id).collect())
     }
 
+    pub async fn get_document_bookmarked_on(
+        &self,
+        document_id: &Uuid,
+        user_id: &Uuid,
+    ) -> Result<Option<Date>> {
+        if let Some(bookmark) = query_file!(
+            "queries/get_document_bookmarked_on.sql",
+            document_id,
+            user_id
+        )
+        .fetch_optional(&self.client)
+        .await?
+        {
+            Ok(Some(date::Date(bookmark.bookmarked_on)))
+        } else {
+            Ok(None)
+        }
+    }
+
     pub async fn attach_audio_to_word(
         &self,
         upload: AttachAudioToWordInput,
@@ -1896,36 +1915,6 @@ impl Loader<ContributorsForDocument> for Database {
                 )
             })
             .into_group_map())
-    }
-}
-
-#[async_trait]
-impl Loader<BookmarkedOn> for Database {
-    type Value = Date;
-    type Error = Arc<sqlx::Error>;
-
-    async fn load(
-        &self,
-        keys: &[BookmarkedOn],
-    ) -> Result<HashMap<BookmarkedOn, Self::Value>, Self::Error> {
-        let document_id: Vec<_> = keys.iter().map(|k| k.0.clone()).collect();
-        let user_id: Vec<_> = keys.iter().map(|k| k.1.clone()).collect();
-        let items = query_file!(
-            "queries/get_document_bookmarked_on.sql",
-            &document_id,
-            &user_id
-        )
-        .fetch_all(&self.client)
-        .await?;
-
-        let mut result_map = HashMap::new();
-        for item in items {
-            let key = BookmarkedOn(item.document_id, item.user_id);
-            let value = date::Date(item.bookmarked_on);
-            result_map.insert(key, value);
-        }
-
-        Ok(result_map)
     }
 }
 
