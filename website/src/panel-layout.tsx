@@ -161,13 +161,13 @@ export const PanelLayout = (p: {
       {isCommenting ? (
         <SubtleButton
           type="button"
-          onClick={() => setIsCommenting(!isCommenting)}
+          onClick={() => setIsCommenting(false)}
           className={css.buttonSpacing}
         >
           Discard
         </SubtleButton>
       ) : (
-        <Button type="button" onClick={() => setIsCommenting(!isCommenting)}>
+        <Button type="button" onClick={() => setIsCommenting(true)}>
           Comment
         </Button>
       )}
