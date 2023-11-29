@@ -301,12 +301,12 @@ impl Query {
     async fn word_by_id(
         &self,
         context: &Context<'_>,
-        id: &Uuid,
+        id: Uuid,
     ) -> FieldResult<dailp::AnnotatedForm> {
         Ok(context
             .data::<DataLoader<Database>>()?
             .loader()
-            .word_by_id(id)
+            .word_by_id(&id)
             .await?)
     }
 
@@ -314,12 +314,12 @@ impl Query {
     async fn paragraph_by_id(
         &self,
         context: &Context<'_>,
-        id: &Uuid,
+        id: Uuid,
     ) -> FieldResult<dailp::DocumentParagraph> {
         Ok(context
             .data::<DataLoader<Database>>()?
             .loader()
-            .paragraph_by_id(id)
+            .paragraph_by_id(&id)
             .await?)
     }
 
