@@ -20,10 +20,8 @@ import { subtleButton, subtleButtonActive } from "../subtle-button.css"
 
 function useAudioUpload(wordId: string) {
   const { user } = useUser()
-  const [
-    _contributeAudioResult,
-    contributeAudio,
-  ] = Dailp.useAttachAudioToWordMutation()
+  const [_contributeAudioResult, contributeAudio] =
+    Dailp.useAttachAudioToWordMutation()
 
   const uploadAudio = useMemo(
     () =>

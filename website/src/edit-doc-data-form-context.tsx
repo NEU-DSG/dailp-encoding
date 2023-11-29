@@ -16,7 +16,8 @@ const FormContext = createContext<FormContextType>({} as FormContextType)
 /** Instantiates a form state used to keep track of the current document and information about all its features. */
 export const FormProvider = (props: { children: any }) => {
   const [isEditing, setIsEditing] = useState(false)
-  const document: Dailp.DocFormFieldsFragment = {} as Dailp.DocFormFieldsFragment
+  const document: Dailp.DocFormFieldsFragment =
+    {} as Dailp.DocFormFieldsFragment
 
   const [updateDocResult, updateDoc] = Dailp.useUpdateDocumentMetadataMutation()
 
@@ -48,8 +49,8 @@ export const FormProvider = (props: { children: any }) => {
           id: values.document["id"][0][0],
           title: values.document["title"],
           writtenAt: values.document["date"]
-            ? ((values.document["date"] as unknown) as Array<any>)[
-                ((values.document["date"] as unknown) as Array<any>).length - 1
+            ? (values.document["date"] as unknown as Array<any>)[
+                (values.document["date"] as unknown as Array<any>).length - 1
               ][0]
             : {},
         },
