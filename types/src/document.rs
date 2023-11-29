@@ -81,7 +81,8 @@ impl AnnotatedDoc {
             .ok_or_else(|| anyhow::format_err!("User is not signed in"))?;
         Ok(context
             .data::<DataLoader<Database>>()?
-            .load_one(crate::BookmarkedOn(self.meta.id.0, user.id))
+            .loader()
+            .get_document_bookmarked_on(&self.meta.id.0, &user.id)
             .await?)
     }
 

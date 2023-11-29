@@ -1,3 +1,3 @@
-SELECT bookmarked_on, document_id, user_id
+SELECT ubd.bookmarked_on
 FROM user_bookmarked_document AS ubd
-WHERE ubd.document_id = any($1) AND ubd.user_id = any($2)
+WHERE ubd.document_id = $1 AND ubd.user_id = $2
