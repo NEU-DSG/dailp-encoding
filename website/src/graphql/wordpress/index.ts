@@ -570,7 +570,7 @@ export type CategoryToContentNodeConnectionWhereArgs = {
   readonly nameIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
   readonly notIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** What paramater to use to order the objects by. */
+  /** What parameter to use to order the objects by. */
   readonly orderby: InputMaybe<
     ReadonlyArray<InputMaybe<PostObjectsConnectionOrderbyInput>>
   >
@@ -674,7 +674,7 @@ export type CategoryToPostConnectionWhereArgs = {
   readonly nameIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
   readonly notIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** What paramater to use to order the objects by. */
+  /** What parameter to use to order the objects by. */
   readonly orderby: InputMaybe<
     ReadonlyArray<InputMaybe<PostObjectsConnectionOrderbyInput>>
   >
@@ -1570,7 +1570,7 @@ export type ContentTypeToContentNodeConnectionWhereArgs = {
   readonly nameIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
   readonly notIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** What paramater to use to order the objects by. */
+  /** What parameter to use to order the objects by. */
   readonly orderby: InputMaybe<
     ReadonlyArray<InputMaybe<PostObjectsConnectionOrderbyInput>>
   >
@@ -2045,7 +2045,7 @@ export type DeleteCategoryInput = {
 /** The payload for the deleteCategory mutation. */
 export type DeleteCategoryPayload = {
   readonly __typename?: "DeleteCategoryPayload"
-  /** The deteted term object */
+  /** The deleted term object */
   readonly category: Maybe<Category>
   /** If a &#039;clientMutationId&#039; input is provided to the mutation, it will be returned as output on the mutation. This ID can be used by the client to track the progress of mutations and catch possible duplicate mutation submissions. */
   readonly clientMutationId: Maybe<Scalars["String"]>
@@ -2133,7 +2133,7 @@ export type DeletePostFormatPayload = {
   readonly clientMutationId: Maybe<Scalars["String"]>
   /** The ID of the deleted object */
   readonly deletedId: Maybe<Scalars["ID"]>
-  /** The deteted term object */
+  /** The deleted term object */
   readonly postFormat: Maybe<PostFormat>
 }
 
@@ -2175,7 +2175,7 @@ export type DeleteTagPayload = {
   readonly clientMutationId: Maybe<Scalars["String"]>
   /** The ID of the deleted object */
   readonly deletedId: Maybe<Scalars["ID"]>
-  /** The deteted term object */
+  /** The deleted term object */
   readonly tag: Maybe<Tag>
 }
 
@@ -2219,11 +2219,23 @@ export type Edge = {
 
 /** Asset enqueued by the CMS */
 export type EnqueuedAsset = {
-  /** @todo */
+  /** The inline code to be run after the asset is loaded. */
+  readonly after: Maybe<ReadonlyArray<Maybe<Scalars["String"]>>>
+  /**
+   * Deprecated
+   * @deprecated Use `EnqueuedAsset.media` instead.
+   */
   readonly args: Maybe<Scalars["Boolean"]>
+  /** The inline code to be run before the asset is loaded. */
+  readonly before: Maybe<ReadonlyArray<Maybe<Scalars["String"]>>>
+  /** The HTML conditional comment for the enqueued asset. E.g. IE 6, lte IE 7, etc */
+  readonly conditional: Maybe<Scalars["String"]>
   /** Dependencies needed to use this asset */
-  readonly dependencies: Maybe<ReadonlyArray<Maybe<EnqueuedScript>>>
-  /** Extra information needed for the script */
+  readonly dependencies: Maybe<ReadonlyArray<Maybe<EnqueuedAsset>>>
+  /**
+   * Extra information needed for the script
+   * @deprecated Use `EnqueuedScript.extraData` instead.
+   */
   readonly extra: Maybe<Scalars["String"]>
   /** The handle of the enqueued asset */
   readonly handle: Maybe<Scalars["String"]>
@@ -2239,19 +2251,35 @@ export type EnqueuedAsset = {
 export type EnqueuedScript = EnqueuedAsset &
   Node & {
     readonly __typename?: "EnqueuedScript"
-    /** @todo */
+    /** The inline code to be run after the asset is loaded. */
+    readonly after: Maybe<ReadonlyArray<Maybe<Scalars["String"]>>>
+    /**
+     * Deprecated
+     * @deprecated Use `EnqueuedAsset.media` instead.
+     */
     readonly args: Maybe<Scalars["Boolean"]>
+    /** The inline code to be run before the asset is loaded. */
+    readonly before: Maybe<ReadonlyArray<Maybe<Scalars["String"]>>>
+    /** The HTML conditional comment for the enqueued asset. E.g. IE 6, lte IE 7, etc */
+    readonly conditional: Maybe<Scalars["String"]>
     /** Dependencies needed to use this asset */
     readonly dependencies: Maybe<ReadonlyArray<Maybe<EnqueuedScript>>>
-    /** Extra information needed for the script */
+    /**
+     * Extra information needed for the script
+     * @deprecated Use `EnqueuedScript.extraData` instead.
+     */
     readonly extra: Maybe<Scalars["String"]>
+    /** Extra data supplied to the enqueued script */
+    readonly extraData: Maybe<Scalars["String"]>
     /** The handle of the enqueued asset */
     readonly handle: Maybe<Scalars["String"]>
-    /** The ID of the enqueued asset */
+    /** The global ID of the enqueued script */
     readonly id: Scalars["ID"]
     /** The source of the asset */
     readonly src: Maybe<Scalars["String"]>
-    /** The version of the enqueued asset */
+    /** The loading strategy to use on the script tag */
+    readonly strategy: Maybe<ScriptLoadingStrategyEnum>
+    /** The version of the enqueued script */
     readonly version: Maybe<Scalars["String"]>
   }
 
@@ -2289,19 +2317,43 @@ export type EnqueuedScriptConnectionPageInfo = {
 export type EnqueuedStylesheet = EnqueuedAsset &
   Node & {
     readonly __typename?: "EnqueuedStylesheet"
-    /** @todo */
+    /** The inline code to be run after the asset is loaded. */
+    readonly after: Maybe<ReadonlyArray<Maybe<Scalars["String"]>>>
+    /**
+     * Deprecated
+     * @deprecated Use `EnqueuedAsset.media` instead.
+     */
     readonly args: Maybe<Scalars["Boolean"]>
+    /** The inline code to be run before the asset is loaded. */
+    readonly before: Maybe<ReadonlyArray<Maybe<Scalars["String"]>>>
+    /** The HTML conditional comment for the enqueued asset. E.g. IE 6, lte IE 7, etc */
+    readonly conditional: Maybe<Scalars["String"]>
     /** Dependencies needed to use this asset */
-    readonly dependencies: Maybe<ReadonlyArray<Maybe<EnqueuedScript>>>
-    /** Extra information needed for the script */
+    readonly dependencies: Maybe<ReadonlyArray<Maybe<EnqueuedStylesheet>>>
+    /**
+     * Extra information needed for the script
+     * @deprecated Use `EnqueuedScript.extraData` instead.
+     */
     readonly extra: Maybe<Scalars["String"]>
     /** The handle of the enqueued asset */
     readonly handle: Maybe<Scalars["String"]>
-    /** The ID of the enqueued asset */
+    /** The global ID of the enqueued stylesheet */
     readonly id: Scalars["ID"]
+    /** Whether the enqueued style is RTL or not */
+    readonly isRtl: Maybe<Scalars["Boolean"]>
+    /** The media attribute to use for the link */
+    readonly media: Maybe<Scalars["String"]>
+    /** The absolute path to the enqueued style. Set when the stylesheet is meant to load inline. */
+    readonly path: Maybe<Scalars["String"]>
+    /** The `rel` attribute to use for the link */
+    readonly rel: Maybe<Scalars["String"]>
     /** The source of the asset */
     readonly src: Maybe<Scalars["String"]>
-    /** The version of the enqueued asset */
+    /** Optional suffix, used in combination with RTL */
+    readonly suffix: Maybe<Scalars["String"]>
+    /** The title of the enqueued style. Used for preferred/alternate stylesheets. */
+    readonly title: Maybe<Scalars["String"]>
+    /** The version of the enqueued style */
     readonly version: Maybe<Scalars["String"]>
   }
 
@@ -2541,7 +2593,7 @@ export type HierarchicalContentNodeToContentNodeAncestorsConnectionWhereArgs = {
   readonly nameIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
   readonly notIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** What paramater to use to order the objects by. */
+  /** What parameter to use to order the objects by. */
   readonly orderby: InputMaybe<
     ReadonlyArray<InputMaybe<PostObjectsConnectionOrderbyInput>>
   >
@@ -2623,7 +2675,7 @@ export type HierarchicalContentNodeToContentNodeChildrenConnectionWhereArgs = {
   readonly nameIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
   readonly notIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** What paramater to use to order the objects by. */
+  /** What parameter to use to order the objects by. */
   readonly orderby: InputMaybe<
     ReadonlyArray<InputMaybe<PostObjectsConnectionOrderbyInput>>
   >
@@ -4273,7 +4325,7 @@ export type PageToRevisionConnectionWhereArgs = {
   readonly nameIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
   readonly notIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** What paramater to use to order the objects by. */
+  /** What parameter to use to order the objects by. */
   readonly orderby: InputMaybe<
     ReadonlyArray<InputMaybe<PostObjectsConnectionOrderbyInput>>
   >
@@ -4814,7 +4866,7 @@ export type PostFormatToContentNodeConnectionWhereArgs = {
   readonly nameIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
   readonly notIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** What paramater to use to order the objects by. */
+  /** What parameter to use to order the objects by. */
   readonly orderby: InputMaybe<
     ReadonlyArray<InputMaybe<PostObjectsConnectionOrderbyInput>>
   >
@@ -4907,7 +4959,7 @@ export type PostFormatToPostConnectionWhereArgs = {
   readonly nameIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
   readonly notIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** What paramater to use to order the objects by. */
+  /** What parameter to use to order the objects by. */
   readonly orderby: InputMaybe<
     ReadonlyArray<InputMaybe<PostObjectsConnectionOrderbyInput>>
   >
@@ -5435,7 +5487,7 @@ export type PostToRevisionConnectionWhereArgs = {
   readonly nameIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
   readonly notIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** What paramater to use to order the objects by. */
+  /** What parameter to use to order the objects by. */
   readonly orderby: InputMaybe<
     ReadonlyArray<InputMaybe<PostObjectsConnectionOrderbyInput>>
   >
@@ -6574,7 +6626,7 @@ export type RootQueryToActionMonitorActionConnectionWhereArgs = {
   readonly nameIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
   readonly notIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** What paramater to use to order the objects by. */
+  /** What parameter to use to order the objects by. */
   readonly orderby: InputMaybe<
     ReadonlyArray<InputMaybe<PostObjectsConnectionOrderbyInput>>
   >
@@ -6846,7 +6898,7 @@ export type RootQueryToContentNodeConnectionWhereArgs = {
   readonly nameIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
   readonly notIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** What paramater to use to order the objects by. */
+  /** What parameter to use to order the objects by. */
   readonly orderby: InputMaybe<
     ReadonlyArray<InputMaybe<PostObjectsConnectionOrderbyInput>>
   >
@@ -7046,7 +7098,7 @@ export type RootQueryToMediaItemConnectionWhereArgs = {
   readonly nameIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
   readonly notIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** What paramater to use to order the objects by. */
+  /** What parameter to use to order the objects by. */
   readonly orderby: InputMaybe<
     ReadonlyArray<InputMaybe<PostObjectsConnectionOrderbyInput>>
   >
@@ -7227,7 +7279,7 @@ export type RootQueryToPageConnectionWhereArgs = {
   readonly nameIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
   readonly notIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** What paramater to use to order the objects by. */
+  /** What parameter to use to order the objects by. */
   readonly orderby: InputMaybe<
     ReadonlyArray<InputMaybe<PostObjectsConnectionOrderbyInput>>
   >
@@ -7367,7 +7419,7 @@ export type RootQueryToPostConnectionWhereArgs = {
   readonly nameIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
   readonly notIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** What paramater to use to order the objects by. */
+  /** What parameter to use to order the objects by. */
   readonly orderby: InputMaybe<
     ReadonlyArray<InputMaybe<PostObjectsConnectionOrderbyInput>>
   >
@@ -7542,7 +7594,7 @@ export type RootQueryToRevisionsConnectionWhereArgs = {
   readonly nameIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
   readonly notIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** What paramater to use to order the objects by. */
+  /** What parameter to use to order the objects by. */
   readonly orderby: InputMaybe<
     ReadonlyArray<InputMaybe<PostObjectsConnectionOrderbyInput>>
   >
@@ -7867,7 +7919,7 @@ export type RootQueryToUserConnectionWhereArgs = {
   readonly nicenameNotIn: InputMaybe<
     ReadonlyArray<InputMaybe<Scalars["String"]>>
   >
-  /** What paramater to use to order the objects by. */
+  /** What parameter to use to order the objects by. */
   readonly orderby: InputMaybe<
     ReadonlyArray<InputMaybe<UsersConnectionOrderbyInput>>
   >
@@ -7921,6 +7973,14 @@ export type RootQueryToUserRoleConnectionPageInfo = PageInfo &
     /** When paginating backwards, the cursor to continue. */
     readonly startCursor: Maybe<Scalars["String"]>
   }
+
+/** The strategy to use when loading the script */
+export enum ScriptLoadingStrategyEnum {
+  /** Use the script `async` attribute */
+  Async = "ASYNC",
+  /** Use the script `defer` attribute */
+  Defer = "DEFER",
+}
 
 /** Input for the sendPasswordResetEmail mutation. */
 export type SendPasswordResetEmailInput = {
@@ -8168,7 +8228,7 @@ export type TagToContentNodeConnectionWhereArgs = {
   readonly nameIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
   readonly notIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** What paramater to use to order the objects by. */
+  /** What parameter to use to order the objects by. */
   readonly orderby: InputMaybe<
     ReadonlyArray<InputMaybe<PostObjectsConnectionOrderbyInput>>
   >
@@ -8261,7 +8321,7 @@ export type TagToPostConnectionWhereArgs = {
   readonly nameIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
   readonly notIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** What paramater to use to order the objects by. */
+  /** What parameter to use to order the objects by. */
   readonly orderby: InputMaybe<
     ReadonlyArray<InputMaybe<PostObjectsConnectionOrderbyInput>>
   >
@@ -8313,6 +8373,8 @@ export type Taxonomy = Node & {
   readonly archivePath: Maybe<Scalars["String"]>
   /** List of Content Types associated with the Taxonomy */
   readonly connectedContentTypes: Maybe<TaxonomyToContentTypeConnection>
+  /** List of Term Nodes associated with the Taxonomy */
+  readonly connectedTerms: Maybe<TaxonomyToTermNodeConnection>
   /** Description of the taxonomy. This field is equivalent to WP_Taxonomy-&gt;description */
   readonly description: Maybe<Scalars["String"]>
   /** The plural name of the post type within the GraphQL Schema. */
@@ -8331,7 +8393,7 @@ export type Taxonomy = Node & {
   readonly name: Maybe<Scalars["String"]>
   /** Whether the taxonomy is publicly queryable */
   readonly public: Maybe<Scalars["Boolean"]>
-  /** Name of content type to diplay in REST API &quot;wp/v2&quot; namespace. */
+  /** Name of content type to display in REST API &quot;wp/v2&quot; namespace. */
   readonly restBase: Maybe<Scalars["String"]>
   /** The REST Controller class assigned to handling this content type. */
   readonly restControllerClass: Maybe<Scalars["String"]>
@@ -8355,6 +8417,14 @@ export type Taxonomy = Node & {
 
 /** A taxonomy object */
 export type TaxonomyConnectedContentTypesArgs = {
+  after: InputMaybe<Scalars["String"]>
+  before: InputMaybe<Scalars["String"]>
+  first: InputMaybe<Scalars["Int"]>
+  last: InputMaybe<Scalars["Int"]>
+}
+
+/** A taxonomy object */
+export type TaxonomyConnectedTermsArgs = {
   after: InputMaybe<Scalars["String"]>
   before: InputMaybe<Scalars["String"]>
   first: InputMaybe<Scalars["Int"]>
@@ -8446,6 +8516,43 @@ export type TaxonomyToContentTypeConnectionPageInfo =
       /** When paginating backwards, the cursor to continue. */
       readonly startCursor: Maybe<Scalars["String"]>
     }
+
+/** Connection between the Taxonomy type and the TermNode type */
+export type TaxonomyToTermNodeConnection = Connection &
+  TermNodeConnection & {
+    readonly __typename?: "TaxonomyToTermNodeConnection"
+    /** Edges for the TaxonomyToTermNodeConnection connection */
+    readonly edges: ReadonlyArray<TaxonomyToTermNodeConnectionEdge>
+    /** The nodes of the connection, without the edges */
+    readonly nodes: ReadonlyArray<TermNode>
+    /** Information about pagination in a connection. */
+    readonly pageInfo: TaxonomyToTermNodeConnectionPageInfo
+  }
+
+/** An edge in a connection */
+export type TaxonomyToTermNodeConnectionEdge = Edge &
+  TermNodeConnectionEdge & {
+    readonly __typename?: "TaxonomyToTermNodeConnectionEdge"
+    /** A cursor for use in pagination */
+    readonly cursor: Maybe<Scalars["String"]>
+    /** The item at the end of the edge */
+    readonly node: TermNode
+  }
+
+/** Page Info on the &quot;TaxonomyToTermNodeConnection&quot; */
+export type TaxonomyToTermNodeConnectionPageInfo = PageInfo &
+  TermNodeConnectionPageInfo &
+  WpPageInfo & {
+    readonly __typename?: "TaxonomyToTermNodeConnectionPageInfo"
+    /** When paginating forwards, the cursor to continue. */
+    readonly endCursor: Maybe<Scalars["String"]>
+    /** When paginating forwards, are there more items? */
+    readonly hasNextPage: Scalars["Boolean"]
+    /** When paginating backwards, are there more items? */
+    readonly hasPreviousPage: Scalars["Boolean"]
+    /** When paginating backwards, the cursor to continue. */
+    readonly startCursor: Maybe<Scalars["String"]>
+  }
 
 /** The template assigned to the node */
 export type Template_PageBuilder = ContentTemplate & {
@@ -9141,7 +9248,7 @@ export type User = Commenter &
     readonly locale: Maybe<Scalars["String"]>
     /** Connection between the User type and the mediaItem type */
     readonly mediaItems: Maybe<UserToMediaItemConnection>
-    /** Display name of the user. This is equivalent to the WP_User-&gt;dispaly_name property. */
+    /** Display name of the user. This is equivalent to the WP_User-&gt;display_name property. */
     readonly name: Maybe<Scalars["String"]>
     /** The nicename for the user. This field is equivalent to WP_User-&gt;user_nicename */
     readonly nicename: Maybe<Scalars["String"]>
@@ -9599,7 +9706,7 @@ export type UserToMediaItemConnectionWhereArgs = {
   readonly nameIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
   readonly notIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** What paramater to use to order the objects by. */
+  /** What parameter to use to order the objects by. */
   readonly orderby: InputMaybe<
     ReadonlyArray<InputMaybe<PostObjectsConnectionOrderbyInput>>
   >
@@ -9684,7 +9791,7 @@ export type UserToPageConnectionWhereArgs = {
   readonly nameIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
   readonly notIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** What paramater to use to order the objects by. */
+  /** What parameter to use to order the objects by. */
   readonly orderby: InputMaybe<
     ReadonlyArray<InputMaybe<PostObjectsConnectionOrderbyInput>>
   >
@@ -9777,7 +9884,7 @@ export type UserToPostConnectionWhereArgs = {
   readonly nameIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
   readonly notIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** What paramater to use to order the objects by. */
+  /** What parameter to use to order the objects by. */
   readonly orderby: InputMaybe<
     ReadonlyArray<InputMaybe<PostObjectsConnectionOrderbyInput>>
   >
@@ -9868,7 +9975,7 @@ export type UserToRevisionsConnectionWhereArgs = {
   readonly nameIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
   readonly notIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** What paramater to use to order the objects by. */
+  /** What parameter to use to order the objects by. */
   readonly orderby: InputMaybe<
     ReadonlyArray<InputMaybe<PostObjectsConnectionOrderbyInput>>
   >
