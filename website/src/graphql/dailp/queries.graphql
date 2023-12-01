@@ -22,6 +22,9 @@ query AnnotatedDocument($slug: String!) {
     date {
       year
     }
+    bookmarkedOn {
+      formattedDate
+    }
     sources {
       name
       link
@@ -347,6 +350,9 @@ query CollectionChapter($collectionSlug: String!, $chapterSlug: String!) {
       date {
         year
       }
+      bookmarkedOn {
+        formattedDate
+      }
       sources {
         name
         link
@@ -364,6 +370,38 @@ query CollectionChapter($collectionSlug: String!, $chapterSlug: String!) {
       chapters {
         path
       }
+    }
+  }
+}
+
+query BookmarkedDocuments {
+  bookmarkedDocuments {
+    id
+    title
+    slug
+    isReference
+    date {
+      year
+    }
+    bookmarkedOn {
+      formattedDate
+    }
+    sources {
+      name
+      link
+    }
+    audioRecording {
+      resourceUrl
+      startTime
+      endTime
+    }
+    translatedPages {
+      image {
+        url
+      }
+    }
+    chapters {
+      path
     }
   }
 }
@@ -401,6 +439,70 @@ mutation CurateWordAudio($input: CurateWordAudioInput!) {
         id
         displayName
       }
+    }
+  }
+}
+
+mutation AddBookmark($documentId: UUID!) {
+  addBookmark(documentId: $documentId) {
+    id
+    title
+    slug
+    isReference
+    date {
+      year
+    }
+    bookmarkedOn {
+      formattedDate
+    }
+    sources {
+      name
+      link
+    }
+    audioRecording {
+      resourceUrl
+      startTime
+      endTime
+    }
+    translatedPages {
+      image {
+        url
+      }
+    }
+    chapters {
+      path
+    }
+  }
+}
+
+mutation RemoveBookmark($documentId: UUID!) {
+  removeBookmark(documentId: $documentId) {
+    id
+    title
+    slug
+    isReference
+    date {
+      year
+    }
+    bookmarkedOn {
+      formattedDate
+    }
+    sources {
+      name
+      link
+    }
+    audioRecording {
+      resourceUrl
+      startTime
+      endTime
+    }
+    translatedPages {
+      image {
+        url
+      }
+    }
+    chapters {
+      path
     }
   }
 }

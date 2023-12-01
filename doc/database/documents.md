@@ -82,3 +82,17 @@ This bridge table allows a many to many relationship between `document` and `doc
 | `document_id` | `uuid` | Document referenced |
 | `source_id`   | `uuid` | Source to cite      |
 
+<<<<<<< HEAD
+=======
+
+## `user_bookmarked_document`
+
+This join table stores bookmarked documents. It stores them as the document id, user id, and
+the bookmarked date
+
+| column           | type   | description         |
+| ---------------- | ------ | ------------------- |
+| `document_id`    | `uuid` | Document referenced |
+| `user_id`        | `uuid` | User referenced     |
+| `bookmarked_on`  | `date` | Date bookmarked     |
+>>>>>>> main

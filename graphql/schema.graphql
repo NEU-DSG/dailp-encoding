@@ -12,6 +12,10 @@ type AnnotatedDoc {
 	"""
 	date: Date
 	"""
+	When the document was bookmarked by the current user, if it was.
+	"""
+	bookmarkedOn: Date
+	"""
 	The original source(s) of this document, the most important first.
 	"""
 	sources: [SourceAttribution!]!
@@ -811,6 +815,14 @@ type Mutation {
 	updateAnnotation(data: JSON!): Boolean!
 	updateWord(word: AnnotatedFormUpdate!): AnnotatedForm!
 	"""
+	Adds a bookmark to the user's list of bookmarks.
+	"""
+	addBookmark(documentId: UUID!): AnnotatedDoc!
+	"""
+	Removes a bookmark from a user's list of bookmarks
+	"""
+	removeBookmark(documentId: UUID!): AnnotatedDoc!
+	"""
 	Decide if a piece audio should be included in edited collection
 	"""
 	curateWordAudio(input: CurateWordAudioInput!): AnnotatedForm!
@@ -946,6 +958,10 @@ type Query {
 	Retrieves a full document from its unique name.
 	"""
 	document(slug: String!): AnnotatedDoc
+	"""
+	Retrieves all documents that are bookmarked by the current user.
+	"""
+	bookmarkedDocuments: [AnnotatedDoc!]!
 	"""
 	Retrieves a full document from its unique identifier.
 	"""
