@@ -6,10 +6,12 @@ export type InputMaybe<T> = Maybe<T>
 export type Exact<T extends { [key: string]: unknown }> = {
   [K in keyof T]: T[K]
 }
-export type MakeOptional<T, K extends keyof T> = Omit<T, K> &
-  { [SubKey in K]?: Maybe<T[SubKey]> }
-export type MakeMaybe<T, K extends keyof T> = Omit<T, K> &
-  { [SubKey in K]: Maybe<T[SubKey]> }
+export type MakeOptional<T, K extends keyof T> = Omit<T, K> & {
+  [SubKey in K]?: Maybe<T[SubKey]>
+}
+export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & {
+  [SubKey in K]: Maybe<T[SubKey]>
+}
 export type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
@@ -784,6 +786,8 @@ export type Query = {
   readonly collection: DocumentCollection
   /** Retrieves a full document from its unique name. */
   readonly document: Maybe<AnnotatedDoc>
+  /** Retrieves a full document from its unique identifier. */
+  readonly documentByUuid: Maybe<AnnotatedDoc>
   readonly editedCollection: Maybe<EditedCollection>
   /**
    * Retrieve information for the morpheme that corresponds to the given tag
@@ -834,6 +838,10 @@ export type QueryCollectionArgs = {
 
 export type QueryDocumentArgs = {
   slug: Scalars["String"]
+}
+
+export type QueryDocumentByUuidArgs = {
+  id: Scalars["UUID"]
 }
 
 export type QueryEditedCollectionArgs = {
@@ -984,6 +992,52 @@ export type AnnotatedDocumentQueryVariables = Exact<{
 
 export type AnnotatedDocumentQuery = { readonly __typename?: "Query" } & {
   readonly document: Maybe<
+    { readonly __typename?: "AnnotatedDoc" } & Pick<
+      AnnotatedDoc,
+      "id" | "title" | "slug" | "isReference"
+    > & {
+        readonly date: Maybe<
+          { readonly __typename?: "Date" } & Pick<Date, "year">
+        >
+        readonly sources: ReadonlyArray<
+          { readonly __typename?: "SourceAttribution" } & Pick<
+            SourceAttribution,
+            "name" | "link"
+          >
+        >
+        readonly audioRecording: Maybe<
+          { readonly __typename?: "AudioSlice" } & Pick<
+            AudioSlice,
+            "resourceUrl" | "startTime" | "endTime"
+          >
+        >
+        readonly translatedPages: Maybe<
+          ReadonlyArray<
+            { readonly __typename?: "DocumentPage" } & {
+              readonly image: Maybe<
+                { readonly __typename?: "PageImage" } & Pick<PageImage, "url">
+              >
+            }
+          >
+        >
+        readonly chapters: Maybe<
+          ReadonlyArray<
+            { readonly __typename?: "CollectionChapter" } & Pick<
+              CollectionChapter,
+              "path"
+            >
+          >
+        >
+      }
+  >
+}
+
+export type AnnotatedDocumentByIdQueryVariables = Exact<{
+  id: Scalars["UUID"]
+}>
+
+export type AnnotatedDocumentByIdQuery = { readonly __typename?: "Query" } & {
+  readonly documentByUuid: Maybe<
     { readonly __typename?: "AnnotatedDoc" } & Pick<
       AnnotatedDoc,
       "id" | "title" | "slug" | "isReference"
@@ -1969,6 +2023,45 @@ export function useAnnotatedDocumentQuery(
   return Urql.useQuery<AnnotatedDocumentQuery, AnnotatedDocumentQueryVariables>(
     { query: AnnotatedDocumentDocument, ...options }
   )
+}
+export const AnnotatedDocumentByIdDocument = gql`
+  query AnnotatedDocumentById($id: UUID!) {
+    documentByUuid(id: $id) {
+      id
+      title
+      slug
+      isReference
+      date {
+        year
+      }
+      sources {
+        name
+        link
+      }
+      audioRecording {
+        resourceUrl
+        startTime
+        endTime
+      }
+      translatedPages {
+        image {
+          url
+        }
+      }
+      chapters {
+        path
+      }
+    }
+  }
+`
+
+export function useAnnotatedDocumentByIdQuery(
+  options: Omit<Urql.UseQueryArgs<AnnotatedDocumentByIdQueryVariables>, "query">
+) {
+  return Urql.useQuery<
+    AnnotatedDocumentByIdQuery,
+    AnnotatedDocumentByIdQueryVariables
+  >({ query: AnnotatedDocumentByIdDocument, ...options })
 }
 export const DocumentContentsDocument = gql`
   query DocumentContents(

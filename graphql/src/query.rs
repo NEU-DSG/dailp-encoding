@@ -128,6 +128,18 @@ impl Query {
     }
 
     /// Retrieves a full document from its unique identifier.
+    pub async fn document_by_uuid(
+        &self,
+        context: &Context<'_>,
+        id: Uuid,
+    ) -> FieldResult<Option<AnnotatedDoc>> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .load_one(dailp::DocumentId(id))
+            .await?)
+    }
+
+    /// Retrieves a full document from its unique identifier.
     pub async fn page(
         &self,
         context: &Context<'_>,

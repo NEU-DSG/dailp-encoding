@@ -495,25 +495,14 @@ export const BookmarkButton = (props: { documentId: String }) => {
   // const [
   //   addBookmarkMutationResult,
   //   addBookmarkMutation,
-  // ] = Dailp.useUpdateBookmarkMutation()
+  // ] = Dailp.useUpdateBookmarkMutation() Not Needed I think
   const documentId = props.documentId
   // const [{ data }] = Dailp.useBookmarkedDocumentsQuery()
-  // if (data?.bookmarkedDocuments?.indexOf(documentId) !== -1) {
+  // if (data?.some((obj: { id: String }) => obj?.id === documentId)) {
   //   if (!isBookmarked) {
   //     setIsBookmarked(true)
   //   }
   // }
-
-  const handleSet = (bool: boolean) => {
-    setIsBookmarked(bool)
-    const bookmarkBool = bool
-    // addBookmarkMutation({
-    //   bookmark: {
-    //     documentId,
-    //     bookmarkBool,
-    //   },
-    // })
-  }
 
   return (
     <>
@@ -524,7 +513,7 @@ export const BookmarkButton = (props: { documentId: String }) => {
             icon={<MdOutlineBookmarkRemove />}
             className={css.BookmarkButton}
             onClick={() => {
-              handleSet(false)
+              // removeBookmarkMutation({ documentId: documentId })
             }}
           >
             Un-Bookmark
@@ -535,7 +524,7 @@ export const BookmarkButton = (props: { documentId: String }) => {
           icon={<MdOutlineBookmarkAdd />}
           className={css.BookmarkButton}
           onClick={() => {
-            handleSet(true)
+            // addBookmarkMutation({ documentId: documentId })
           }}
         >
           Bookmark

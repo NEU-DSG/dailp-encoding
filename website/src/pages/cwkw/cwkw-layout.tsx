@@ -90,8 +90,7 @@ const CWKWLayout: React.FC = ({ children }) => {
                 },
                 {
                   name: "Rachel Jackson",
-                  link:
-                    "https://www.ou.edu/cas/english/about/faculty/rachel-jackson",
+                  link: "https://www.ou.edu/cas/english/about/faculty/rachel-jackson",
                 },
                 { name: "Ernestine Berry" },
                 { name: "Clara Proctor" },
