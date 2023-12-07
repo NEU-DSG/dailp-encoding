@@ -12,7 +12,7 @@ import {
 import { centeredForm } from "./user-auth.css"
 
 const VerificationPage = () => {
-  const { verifyUser, resetVerificationCode } = useUser().operations
+  const { confirmUser, resetVerificationCode } = useUser().operations
 
   const verificationForm = useFormState({
     values: { code: "" },
@@ -23,7 +23,7 @@ const VerificationPage = () => {
     },
     onSubmit: (values) => {
       console.log(`Submitted! verification code is ${values.code}`)
-      verifyUser(values.code)
+      confirmUser(values.code)
     },
   })
 
