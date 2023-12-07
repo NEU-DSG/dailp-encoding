@@ -13,8 +13,8 @@ type UserContextType = {
   setUser: (user: CognitoUser | null) => void
   operations: {
     createUser: (username: string, password: string) => void
-    resetVerificationCode: () => void
-    verifyUser: (verificationCode: string) => void
+    resetConfirmationCode: () => void
+    confirmUser: (confirmationCode: string) => void
     loginUser: (username: string, password: string) => void
     resetPassword: (username: string) => void
     changePassword: (verificationCode: string, newPassword: string) => void
@@ -94,7 +94,7 @@ export const UserProvider = (props: { children: any }) => {
     )
   }
 
-  function resetVerificationCode() {
+  function resetConfirmationCode() {
     user?.resendConfirmationCode((err, result) => {
       if (err) {
         alert(err.message || JSON.stringify(err))
@@ -104,8 +104,8 @@ export const UserProvider = (props: { children: any }) => {
     })
   }
 
-  function verifyUser(verificationCode: string) {
-    user?.confirmRegistration(verificationCode, false, (err, result) => {
+  function confirmUser(confirmationCode: string) {
+    user?.confirmRegistration(confirmationCode, false, (err, result) => {
       if (err) {
         alert(err.message || JSON.stringify(err))
         return
@@ -190,8 +190,8 @@ export const UserProvider = (props: { children: any }) => {
         setUser,
         operations: {
           createUser,
-          resetVerificationCode,
-          verifyUser,
+          resetConfirmationCode: resetConfirmationCode,
+          confirmUser: confirmUser,
           loginUser,
           resetPassword,
           changePassword,
