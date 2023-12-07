@@ -90,13 +90,6 @@ const ChangePassword = (
     confirmPassword: string
   }>
 ) => {
-  const { setUser } = useUser()
-
-  useEffect(() => {
-    return () => {
-      setUser(null) // prevents user state from being preserved between component refreshes, in case user does not complete change password flow
-    }
-  }, [])
 
   return (
     <UserAuthPageTemplate
