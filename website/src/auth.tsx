@@ -68,12 +68,15 @@ export const UserProvider = (props: { children: any }) => {
   }, [user])
 
   function createUser(email: string, password: string) {
-    console.log(`requesting adding user ${email} to Cognito User Pool`)
-    let userAttributes = [{ Name: "email", Value: email }].map((attr) => {
-      return new CognitoUserAttribute(attr)
-    })
+    let emailLowercase = email.toLowerCase()
+    console.log(`requesting adding user ${emailLowercase} to Cognito User Pool`)
+    let userAttributes = [{ Name: "email", Value: emailLowercase }].map(
+      (attr) => {
+        return new CognitoUserAttribute(attr)
+      }
+    )
     userPool.signUp(
-      email,
+      emailLowercase,
       password,
       userAttributes,
       [],
