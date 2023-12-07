@@ -79,16 +79,10 @@ export const UserProvider = (props: { children: any }) => {
       [],
       async (err, result) => {
         if (err) {
-          alert(err.message || JSON.stringify(err))
-          return
+          resolveCognitoException(err)
+        } else {
+          await navigate("/auth/confirmation")
         }
-        let cognitoUser = result?.user
-        if (!cognitoUser) {
-          console.log("failed to create user and activate session")
-          return
-        }
-        setUser(cognitoUser)
-        await navigate("/auth/confirm-signup")
       }
     )
   }
@@ -96,21 +90,20 @@ export const UserProvider = (props: { children: any }) => {
   function resetConfirmationCode() {
     user?.resendConfirmationCode((err, result) => {
       if (err) {
-        alert(err.message || JSON.stringify(err))
-        return
+        resolveCognitoException(err)
+      } else {
+        console.log(result)
+        alert(`A new confirmation code was sent to ${user.getUsername()}`)
       }
-      console.log(result)
     })
   }
 
   function confirmUser(confirmationCode: string) {
     user?.confirmRegistration(confirmationCode, false, (err, result) => {
       if (err) {
-        alert(err.message || JSON.stringify(err))
-        return
+        resolveCognitoException(err)
       }
-      console.log(result)
-      setUser(user)
+      console.log("confirmation details: ", result)
       navigate("/auth/login")
     })
   }
@@ -130,18 +123,18 @@ export const UserProvider = (props: { children: any }) => {
     user.authenticateUser(authDetails, {
       onSuccess: (data: CognitoUserSession) => {
         setUser(user)
-
         console.log("Login success. Result: ", data)
         alert("Login successful")
-        navigate("/") // TODO navigate to dashboard
+        navigate("/")
       },
       onFailure: (err: Error) => {
         console.log("Login failed. Result: ", err)
-        alert(err.message)
+        resolveCognitoException(err)
       },
       newPasswordRequired: (data: CognitoUserSession) => {
         console.log("New password required. Result: ", data)
         alert("New password is required")
+        navigate("auth/reset-password")
       },
     })
   }
@@ -161,7 +154,7 @@ export const UserProvider = (props: { children: any }) => {
       },
       onFailure: (err: Error) => {
         console.log("Reset password unsuccessful. Result: ", err)
-        alert(err.message)
+        resolveCognitoException(err)
       },
     })
   }
