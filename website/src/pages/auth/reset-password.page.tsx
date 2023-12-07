@@ -90,7 +90,6 @@ const ChangePassword = (
     confirmPassword: string
   }>
 ) => {
-
   return (
     <UserAuthPageTemplate
       header={{

@@ -12,7 +12,7 @@ import {
 import { centeredForm } from "./user-auth.css"
 
 const VerificationPage = () => {
-  const { confirmUser, resetVerificationCode } = useUser().operations
+  const { confirmUser, resetConfirmationCode } = useUser().operations
 
   const verificationForm = useFormState({
     values: { code: "" },
@@ -46,7 +46,7 @@ const VerificationPage = () => {
         />
 
         <label>
-          <a onClick={resetVerificationCode}>Request a new code</a>
+          <a onClick={resetConfirmationCode}>Request a new code</a>
         </label>
 
         <FormSubmitButton form={verificationForm} label="Verify Me" />
