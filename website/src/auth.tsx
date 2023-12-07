@@ -268,3 +268,30 @@ export async function getCredentials() {
   const token = sess?.getIdToken().getJwtToken()
   return token ?? null
 }
+
+/**
+ * Errors that can be returned by the Cognito API
+ */
+enum CognitoErrorName {
+  /** User tries to log in but hasnt confirmed */
+  UserNotConfirmed = "UserNotConfirmedException",
+  /** User has requested password reset but not completed */
+  PasswordResetRequired = "PasswordResetRequiredException",
+  /** User isnt authorized */
+  NotAuthorized = "NotAuthorizedException",
+  /** User does not exist */
+  UserNotFound = "UserNotFoundException",
+  /** Code sent but has since expired */
+  CodeExpired = "ExpiredCodeException",
+  /** Code failed to send */
+  CodeDeliveryFailure = "CodeDeliveryFailureException",
+  /** Input code does not match sent code */
+  CodeMismatch = "CodeMismatchException",
+  /** Email is in use by another account in this pool */
+  AliasExists = "AliasExistsException",
+  /** Like `AliasExists` but specifically used for AWS Cognito `SignUp` action */
+  UsernameExists = "UsernameExistsException",
+  /** Password does not meet requirements for this user pool */
+  InvalidPassword = "InvalidPasswordException",
+}
+
