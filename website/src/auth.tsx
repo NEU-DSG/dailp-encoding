@@ -10,7 +10,6 @@ import { navigate } from "vite-plugin-ssr/client/router"
 
 type UserContextType = {
   user: CognitoUser | null
-  setUser: (user: CognitoUser | null) => void
   operations: {
     createUser: (username: string, password: string) => void
     resetConfirmationCode: () => void
@@ -187,7 +186,6 @@ export const UserProvider = (props: { children: any }) => {
     <UserContext.Provider
       value={{
         user,
-        setUser,
         operations: {
           createUser,
           resetConfirmationCode: resetConfirmationCode,
