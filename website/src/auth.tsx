@@ -44,15 +44,15 @@ export const UserProvider = (props: { children: any }) => {
     })
   }
 
-  function resolveCognitoException(err: Error) {
+  function resolveCognitoException(err: Error, userProvidedEmail?: string) {
     switch (err.name) {
       case CognitoErrorName.AliasExists:
         alert(
-          `An account with the email ${user?.getUsername()} already exists. Please use a different email.`
+          `An account with the email ${userProvidedEmail} already exists. Please use a different email.`
         )
         break
       case CognitoErrorName.CodeDeliveryFailure:
-        alert(`We could not send a confirmation code to ${user?.getUsername()}. 
+        alert(`We could not send a confirmation code to ${user?.getUsername() || userProvidedEmail}. 
           Please make sure you have typed the correct email. 
           If this issue persists, wait and try again later.`)
         break
@@ -92,13 +92,13 @@ export const UserProvider = (props: { children: any }) => {
         }
         break
       case CognitoErrorName.UsernameExists:
-        alert(`An account with the email ${user?.getUsername()} already exists.
+        alert(`An account with the email ${userProvidedEmail} already exists.
           Please sign up with a different email or try signing in with this email.`)
         break
       case CognitoErrorName.UserNotFound:
         if (
           confirm(
-            `Account with email ${user?.getUsername()} not found. Would you like to create an account now?`
+            `Account with email ${userProvidedEmail} not found. Would you like to create an account now?`
           )
         ) {
           navigate("/auth/signup")
@@ -150,7 +150,7 @@ export const UserProvider = (props: { children: any }) => {
       [],
       async (err, result) => {
         if (err) {
-          resolveCognitoException(err)
+          resolveCognitoException(err, email)
         } else {
           await navigate("/auth/confirmation")
         }
@@ -200,7 +200,7 @@ export const UserProvider = (props: { children: any }) => {
       },
       onFailure: (err: Error) => {
         console.log("Login failed. Result: ", err)
-        resolveCognitoException(err)
+        resolveCognitoException(err, username)
       },
       newPasswordRequired: (data: CognitoUserSession) => {
         console.log("New password required. Result: ", data)
@@ -225,7 +225,7 @@ export const UserProvider = (props: { children: any }) => {
       },
       onFailure: (err: Error) => {
         console.log("Reset password unsuccessful. Result: ", err)
-        resolveCognitoException(err)
+        resolveCognitoException(err, username)
       },
     })
   }
