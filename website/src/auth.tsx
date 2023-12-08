@@ -183,12 +183,12 @@ export const UserProvider = (props: { children: any }) => {
 
   function loginUser(username: string, password: string) {
     const user = new CognitoUser({
-      Username: username,
+      Username: username.toLowerCase(),
       Pool: userPool,
     })
 
     const authDetails = new AuthenticationDetails({
-      Username: username,
+      Username: username.toLowerCase(),
       Password: password,
     })
 
@@ -202,7 +202,7 @@ export const UserProvider = (props: { children: any }) => {
       },
       onFailure: (err: Error) => {
         console.log("Login failed. Result: ", err)
-        resolveCognitoException(err, username)
+        resolveCognitoException(err, username.toLowerCase())
       },
       newPasswordRequired: (data: CognitoUserSession) => {
         console.log("New password required. Result: ", data)
@@ -215,7 +215,7 @@ export const UserProvider = (props: { children: any }) => {
   function resetPassword(username: string) {
     // instantiate a new user with the given credentials to access Cognito API methods
     const user = new CognitoUser({
-      Username: username,
+      Username: username.toLowerCase(),
       Pool: userPool,
     })
 
@@ -227,7 +227,7 @@ export const UserProvider = (props: { children: any }) => {
       },
       onFailure: (err: Error) => {
         console.log("Reset password unsuccessful. Result: ", err)
-        resolveCognitoException(err, username)
+        resolveCognitoException(err, username.toLowerCase())
       },
     })
   }
