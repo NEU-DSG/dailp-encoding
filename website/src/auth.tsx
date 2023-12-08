@@ -44,6 +44,73 @@ export const UserProvider = (props: { children: any }) => {
     })
   }
 
+  function resolveCognitoException(err: Error) {
+    switch (err.name) {
+      case CognitoErrorName.AliasExists:
+        alert(
+          `An account with the email ${user?.getUsername()} already exists. Please use a different email.`
+        )
+        break
+      case CognitoErrorName.CodeDeliveryFailure:
+        alert(`We could not send a confirmation code to ${user?.getUsername()}. 
+          Please make sure you have typed the correct email. 
+          If this issue persists, wait and try again later.`)
+        break
+      case CognitoErrorName.CodeExpired:
+        if (
+          confirm(`This confirmation code has expired. Request a new code?`)
+        ) {
+          resetConfirmationCode()
+        }
+        break
+      case CognitoErrorName.CodeMismatch:
+        alert(
+          `The code you entered does not match the code we sent you. Please double check your email or request a new code.`
+        )
+        break
+      case CognitoErrorName.InvalidPassword:
+        alert(err.message || JSON.stringify(err))
+        break
+      case CognitoErrorName.NotAuthorized:
+        alert("You are not authorized to perform this action.")
+        break
+      case CognitoErrorName.PasswordResetRequired:
+        if (
+          confirm(
+            `You must reset your password. Would you like to reset your password now?`
+          )
+        ) {
+          navigate("/auth/reset-password")
+        }
+        break
+      case CognitoErrorName.UserNotConfirmed:
+        if (
+          confirm(`Your account must be confirmed before you can log in.
+          Would you like to confirm now?`)
+        ) {
+          navigate("/auth/confirmation")
+        }
+        break
+      case CognitoErrorName.UsernameExists:
+        alert(`An account with the email ${user?.getUsername()} already exists.
+          Please sign up with a different email or try signing in with this email.`)
+        break
+      case CognitoErrorName.UserNotFound:
+        if (
+          confirm(
+            `Account with email ${user?.getUsername()} not found. Would you like to create an account now?`
+          )
+        ) {
+          navigate("/auth/signup")
+        } // TODO We should tell a user how to create a new account later
+      default:
+        alert(
+          "An unexpected error occured. Please try again or contact a site administrator."
+        )
+        break
+    }
+  }
+
   // Allows persistence of the current user's session between browser refreshes.
   useEffect(() => {
     // if there is an authenticated user present
@@ -289,70 +356,4 @@ enum CognitoErrorName {
   UsernameExists = "UsernameExistsException",
   /** Password does not meet requirements for this user pool */
   InvalidPassword = "InvalidPasswordException",
-}
-
-function resolveCognitoException(err: Error) {
-  let { user, operations } = useUser()
-  switch (err.name) {
-    case CognitoErrorName.AliasExists:
-      alert(
-        `An account with the email ${user?.getUsername()} already exists. Please use a different email.`
-      )
-      break
-    case CognitoErrorName.CodeDeliveryFailure:
-      alert(`We could not send a confirmation code to ${user?.getUsername()}. 
-        Please make sure you have typed the correct email. 
-        If this issue persists, wait and try again later.`)
-      break
-    case CognitoErrorName.CodeExpired:
-      if (confirm(`This confirmation code has expired. Request a new code?`)) {
-        operations.resetConfirmationCode()
-      }
-      break
-    case CognitoErrorName.CodeMismatch:
-      alert(
-        `The code you entered does not match the code we sent you. Please double check your email or request a new code.`
-      )
-      break
-    case CognitoErrorName.InvalidPassword:
-      alert(err.message || JSON.stringify(err))
-      break
-    case CognitoErrorName.NotAuthorized:
-      alert("You are not authorized to perform this action.")
-      break
-    case CognitoErrorName.PasswordResetRequired:
-      if (
-        confirm(
-          `You must reset your password. Would you like to reset your password now?`
-        )
-      ) {
-        navigate("/auth/reset-password")
-      }
-      break
-    case CognitoErrorName.UserNotConfirmed:
-      if (
-        confirm(`Your account must be confirmed before you can log in.
-        Would you like to confirm now?`)
-      ) {
-        navigate("/auth/confirmation")
-      }
-      break
-    case CognitoErrorName.UsernameExists:
-      alert(`An account with the email ${user?.getUsername()} already exists.
-        Please sign up with a different email or try signing in with this email.`)
-      break
-    case CognitoErrorName.UserNotFound:
-      if (
-        confirm(
-          `Account with email ${user?.getUsername()} not found. Would you like to create an account now?`
-        )
-      ) {
-        navigate("/auth/signup")
-      } // TODO We should tell a user how to create a new account later
-    default:
-      alert(
-        "An unexpected error occured. Please try again or contact a site administrator."
-      )
-      break
-  }
 }
