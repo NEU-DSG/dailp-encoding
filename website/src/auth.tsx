@@ -52,7 +52,9 @@ export const UserProvider = (props: { children: any }) => {
         )
         break
       case CognitoErrorName.CodeDeliveryFailure:
-        alert(`We could not send a confirmation code to ${user?.getUsername() || userProvidedEmail}. 
+        alert(`We could not send a confirmation code to ${
+          user?.getUsername() || userProvidedEmail
+        }. 
           Please make sure you have typed the correct email. 
           If this issue persists, wait and try again later.`)
         break
