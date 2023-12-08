@@ -11,18 +11,18 @@ import {
 } from "./user-auth-layout"
 import { centeredForm } from "./user-auth.css"
 
-const VerificationPage = () => {
+const ConfirmationPage = () => {
   const { confirmUser, resetConfirmationCode } = useUser().operations
 
-  const verificationForm = useFormState({
+  const confirmationForm = useFormState({
     values: { code: "" },
     onValidate: (values) => {
       if (!values.code) {
-        throw { code: "A verification code is required" }
+        throw { code: "A confirmation code is required" }
       }
     },
     onSubmit: (values) => {
-      console.log(`Submitted! verification code is ${values.code}`)
+      console.log(`Submitted! confirmation code is ${values.code}`)
       confirmUser(values.code)
     },
   })
@@ -30,18 +30,18 @@ const VerificationPage = () => {
   return (
     <UserAuthPageTemplate
       header={{
-        prompt: "Verify your account to continue.",
+        prompt: "Confirm your account to continue.",
         description: `
           Please enter the 6-digit confirmation code we just sent to your
           email. It may take a few minutes for you to recieve the email. Be
           sure to check your spam folder if you cannot find the email.`,
       }}
     >
-      <Form {...verificationForm} className={centeredForm}>
+      <Form {...confirmationForm} className={centeredForm}>
         <FormFields
-          form={verificationForm}
+          form={confirmationForm}
           name="code"
-          label="Verification Code *"
+          label="Confirmation Code *"
           placeholder="123456"
         />
 
@@ -49,10 +49,10 @@ const VerificationPage = () => {
           <a onClick={resetConfirmationCode}>Request a new code</a>
         </label>
 
-        <FormSubmitButton form={verificationForm} label="Verify Me" />
+        <FormSubmitButton form={confirmationForm} label="Confirm Me" />
       </Form>
     </UserAuthPageTemplate>
   )
 }
 
-export const Page = VerificationPage
+export const Page = ConfirmationPage
