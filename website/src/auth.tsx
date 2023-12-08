@@ -102,7 +102,8 @@ export const UserProvider = (props: { children: any }) => {
           )
         ) {
           navigate("/auth/signup")
-        } // TODO We should tell a user how to create a new account later
+        }
+        break // TODO We should tell a user how to create a new account later
       default:
         alert(
           "An unexpected error occured. Please try again or contact a site administrator."
