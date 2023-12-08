@@ -4,6 +4,7 @@ import {
   unstable_useFormState as useFormState,
 } from "reakit"
 import { useUser } from "src/auth"
+import { Link } from "src/components"
 import {
   FormFields,
   FormSubmitButton,
@@ -45,9 +46,10 @@ const ConfirmationPage = () => {
           placeholder="123456"
         />
 
-        <label>
-          <a onClick={resetConfirmationCode}>Request a new code</a>
-        </label>
+        <span>
+          Having trouble finding your confirmation code?{" "}
+          <Link onClick={resetConfirmationCode}>Request a new code.</Link>
+        </span>
 
         <FormSubmitButton form={confirmationForm} label="Confirm Me" />
       </Form>
