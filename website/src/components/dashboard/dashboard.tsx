@@ -1,8 +1,8 @@
 import { Tab, TabList, TabPanel, useDialogState } from "reakit"
-// import {
-//   useAnnotatedDocumentByIdQuery,
-//   useBookmarkedDocumentsQuery,
-// } from "src/graphql/dailp"
+import {
+  useAnnotatedDocumentByIdQuery,
+  useBookmarkedDocumentsQuery,
+} from "src/graphql/dailp"
 import { useScrollableTabState } from "src/scrollable-tabs"
 import { BookmarkCard } from "./bookmark-card"
 import * as css from "./dashboard.css"
@@ -73,47 +73,43 @@ export const ActivityTab = () => {
 }
 
 export const BookmarksTab = () => {
-  // const [{ data }] = useBookmarkedDocumentsQuery()
+  const [{ data }] = useBookmarkedDocumentsQuery()
   return (
     <>
-      {/* <ul className={css.noBullets}>
+      <ul className={css.noBullets}>
         {data?.bookmarkedDocuments?.map((doc: any) => (
           <li key={doc.id}>
             <BookmarksTabItem documentId={doc.id} />
           </li>
         ))}
-      </ul> */}
+      </ul>
     </>
   )
 }
 
 export const BookmarksTabItem = (props: { documentId: string }) => {
-  // const [{ data: doc }] = useAnnotatedDocumentByIdQuery({
-  //   variables: { docId: props.documentId },
-  // })
-  // const docData = doc?.documentByUuid
-  // const docFullPath = docData?.chapters?.[0]?.path
-  // let docPath = ""
-  // if (docFullPath?.length !== undefined && docFullPath?.length > 0) {
-  //   docPath = docFullPath[0] + "/" + docFullPath[docFullPath.length - 1]
-  // }
-  // console.log(docPath)
-  // const thumbnailUrl = ((docData?.translatedPages?.[0]?.image?.url +
-  //   "/pct:0,0,50,50/500,500/0/default.jpg") as unknown) as string
+  const [{ data: doc }] = useAnnotatedDocumentByIdQuery({
+    variables: { id: props.documentId },
+  })
+  const docData = doc?.documentByUuid
+  const docFullPath = docData?.chapters?.[0]?.path
+  let docPath = ""
+  if (docFullPath?.length !== undefined && docFullPath?.length > 0) {
+    docPath = docFullPath[0] + "/" + docFullPath[docFullPath.length - 1]
+  }
+  console.log(docPath)
+  const thumbnailUrl = (docData?.translatedPages?.[0]?.image?.url +
+    "/pct:0,0,50,50/500,500/0/default.jpg") as unknown as string
   return (
     <>
       <div className="cardShadow">
         <BookmarkCard
-          // thumbnail={thumbnailUrl}
-          thumbnail=""
+          thumbnail={thumbnailUrl}
           header={{
-            // text: (docData?.title as unknown) as string,
-            text: "",
-            // link: `/collections/${docPath}`,
-            link: "",
+            text: docData?.title as unknown as string,
+            link: `/collections/${docPath}`,
           }}
-          // description={(docData?.date?.year as unknown) as string}
-          description=""
+          description={docData?.date?.year as unknown as string}
         />
       </div>
     </>
