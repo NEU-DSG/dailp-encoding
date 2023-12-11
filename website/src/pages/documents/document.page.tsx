@@ -152,10 +152,6 @@ export const TabSet = ({ doc }: { doc: Document }) => {
     default:
       scrollTopClass = css.noScrollTop
   }
-  let editButton = null
-  if (token) {
-    editButton = <EditButton />
-  }
   return (
     <>
       <div className={css.wideAndTop}>
@@ -439,70 +435,76 @@ export const DocumentTitleHeader = (p: {
       "resourceUrl"
     >
   }
-}) => (
-  <header className={css.docHeader}>
-    {p.breadcrumbs && (
-      <Breadcrumbs aria-label="Breadcrumbs">
-        {p.breadcrumbs.map((crumb) => (
-          <Link href={`${p.rootPath}/${crumb.slug}`} key={crumb.slug}>
-            {crumb.name}
-          </Link>
-        ))}
-      </Breadcrumbs>
-    )}
-
-    <h1 className={css.docTitle}>
-      {p.doc.title}
-      {p.doc.date && ` (${p.doc.date.year})`}{" "}
-    </h1>
-
-    <div className={css.bottomPadded}>
-      {!p.doc.audioRecording && !isMobile && (
-        <div id="no-audio-message">
-          <strong>No Audio Available</strong>
-        </div>
+}) => {
+  const token = useCredentials()
+  return (
+    <header className={css.docHeader}>
+      {p.breadcrumbs && (
+        <Breadcrumbs aria-label="Breadcrumbs">
+          {p.breadcrumbs.map((crumb) => (
+            <Link href={`${p.rootPath}/${crumb.slug}`} key={crumb.slug}>
+              {crumb.name}
+            </Link>
+          ))}
+        </Breadcrumbs>
       )}
-      <BookmarkButton documentId={p.doc.id} />
-      <div className={css.alignRight}>
-        {!isMobile ? (
-          <Button onClick={() => window.print()}>Print</Button>
-        ) : null}
-      </div>
-    </div>
-    {p.doc.audioRecording && ( // TODO Implement sticky audio bar
-      <div id="document-audio-player" className={css.audioContainer}>
-        <span>Document Audio:</span>
-        <AudioPlayer
-          style={{ flex: 1 }}
-          audioUrl={p.doc.audioRecording.resourceUrl}
-          showProgress
-        />
-        {p.doc.audioRecording && !isMobile && (
-          <div>
-            <a href={p.doc.audioRecording?.resourceUrl}>
-              <Button>Download Audio</Button>
-            </a>
+
+      <h1 className={css.docTitle}>
+        {p.doc.title}
+        {p.doc.date && ` (${p.doc.date.year})`}{" "}
+      </h1>
+
+      <div className={css.bottomPadded}>
+        {token ? <BookmarkButton documentId={p.doc.id} /> : <></>}
+        {!p.doc.audioRecording && !isMobile && (
+          <div id="no-audio-message">
+            <strong>No Audio Available</strong>
           </div>
         )}
+        <div className={css.alignRight}>
+          {!isMobile ? (
+            <Button onClick={() => window.print()}>Print</Button>
+          ) : null}
+        </div>
       </div>
-    )}
-  </header>
-)
+      {p.doc.audioRecording && ( // TODO Implement sticky audio bar
+        <div id="document-audio-player" className={css.audioContainer}>
+          <span>Document Audio:</span>
+          <AudioPlayer
+            style={{ flex: 1 }}
+            audioUrl={p.doc.audioRecording.resourceUrl}
+            showProgress
+          />
+          {p.doc.audioRecording && !isMobile && (
+            <div>
+              <a href={p.doc.audioRecording?.resourceUrl}>
+                <Button>Download Audio</Button>
+              </a>
+            </div>
+          )}
+        </div>
+      )}
+    </header>
+  )
+}
 
 /** Button that allows users to bookmark a document */
-export const BookmarkButton = (props: { documentId: String }) => {
+export const BookmarkButton = ({ documentId }: { documentId: String }) => {
   const [isBookmarked, setIsBookmarked] = useState(false)
-  // const [
-  //   addBookmarkMutationResult,
-  //   addBookmarkMutation,
-  // ] = Dailp.useUpdateBookmarkMutation() Not Needed I think
-  const documentId = props.documentId
-  // const [{ data }] = Dailp.useBookmarkedDocumentsQuery()
-  // if (data?.some((obj: { id: String }) => obj?.id === documentId)) {
-  //   if (!isBookmarked) {
-  //     setIsBookmarked(true)
-  //   }
-  // }
+  const [addBookmarkMutationResult, addBookmarkMutation] =
+    Dailp.useAddBookmarkMutation()
+  const [removeBookmarkMutationResult, removeBookmarkMutation] =
+    Dailp.useRemoveBookmarkMutation()
+  const [{ data }] = Dailp.useBookmarkedDocumentsQuery()
+  if (
+    data?.bookmarkedDocuments.some(
+      (obj: { id: String }) => obj?.id === documentId
+    )
+  ) {
+    if (!isBookmarked) {
+      setIsBookmarked(true)
+    }
+  }
 
   return (
     <>
@@ -513,7 +515,8 @@ export const BookmarkButton = (props: { documentId: String }) => {
             icon={<MdOutlineBookmarkRemove />}
             className={css.BookmarkButton}
             onClick={() => {
-              // removeBookmarkMutation({ documentId: documentId })
+              removeBookmarkMutation({ documentId: documentId })
+              setIsBookmarked(false)
             }}
           >
             Un-Bookmark
@@ -524,7 +527,8 @@ export const BookmarkButton = (props: { documentId: String }) => {
           icon={<MdOutlineBookmarkAdd />}
           className={css.BookmarkButton}
           onClick={() => {
-            // addBookmarkMutation({ documentId: documentId })
+            addBookmarkMutation({ documentId: documentId })
+            setIsBookmarked(true)
           }}
         >
           Bookmark
