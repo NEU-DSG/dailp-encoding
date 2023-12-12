@@ -54,6 +54,9 @@ query AnnotatedDocumentById($id: UUID!) {
     date {
       year
     }
+    bookmarkedOn {
+      formattedDate
+    }
     sources {
       name
       link
