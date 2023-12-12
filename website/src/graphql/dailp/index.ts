@@ -1064,6 +1064,9 @@ export type AnnotatedDocumentByIdQuery = { readonly __typename?: "Query" } & {
         readonly date: Maybe<
           { readonly __typename?: "Date" } & Pick<Date, "year">
         >
+        readonly bookmarkedOn: Maybe<
+          { readonly __typename?: "Date" } & Pick<Date, "formattedDate">
+        >
         readonly sources: ReadonlyArray<
           { readonly __typename?: "SourceAttribution" } & Pick<
             SourceAttribution,
@@ -2199,6 +2202,9 @@ export const AnnotatedDocumentByIdDocument = gql`
       isReference
       date {
         year
+      }
+      bookmarkedOn {
+        formattedDate
       }
       sources {
         name

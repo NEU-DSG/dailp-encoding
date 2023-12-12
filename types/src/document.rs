@@ -76,14 +76,15 @@ impl AnnotatedDoc {
         &self,
         context: &async_graphql::Context<'_>,
     ) -> FieldResult<Option<Date>> {
-        let user = context
-            .data_opt::<UserInfo>()
-            .ok_or_else(|| anyhow::format_err!("User is not signed in"))?;
-        Ok(context
-            .data::<DataLoader<Database>>()?
-            .loader()
-            .get_document_bookmarked_on(&self.meta.id.0, &user.id)
-            .await?)
+        if let Some(user) = context.data_opt::<UserInfo>() {
+            Ok(context
+                .data::<DataLoader<Database>>()?
+                .loader()
+                .get_document_bookmarked_on(&self.meta.id.0, &user.id)
+                .await?)
+        } else {
+            Ok(None)
+        }
     }
 
     /// The original source(s) of this document, the most important first.
