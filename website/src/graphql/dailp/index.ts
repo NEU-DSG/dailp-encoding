@@ -1063,7 +1063,7 @@ export type DocumentContentsQuery = { readonly __typename?: "Query" } & {
               readonly paragraphs: ReadonlyArray<
                 { readonly __typename?: "DocumentParagraph" } & Pick<
                   DocumentParagraph,
-                  "translation" | "index"
+                  "id" | "translation" | "index"
                 > & {
                     readonly source: ReadonlyArray<
                       | ({ readonly __typename: "AnnotatedForm" } & Pick<
@@ -2004,6 +2004,19 @@ export type UpdateDocumentMetadataMutation = {
   readonly __typename?: "Mutation"
 } & Pick<Mutation, "updateDocumentMetadata">
 
+export type PostCommentMutationVariables = Exact<{
+  input: PostCommentInput
+}>
+
+export type PostCommentMutation = { readonly __typename?: "Mutation" } & {
+  readonly postComment:
+    | ({ readonly __typename: "AnnotatedForm" } & Pick<AnnotatedForm, "id">)
+    | ({ readonly __typename: "DocumentParagraph" } & Pick<
+        DocumentParagraph,
+        "id"
+      >)
+}
+
 export const DocFormFieldsFragmentDoc = gql`
   fragment DocFormFields on AnnotatedDoc {
     id
@@ -2154,6 +2167,7 @@ export const DocumentContentsDocument = gql`
               ...FormFields
             }
           }
+          id
           translation
           index
         }
@@ -2766,4 +2780,24 @@ export function useUpdateDocumentMetadataMutation() {
     UpdateDocumentMetadataMutation,
     UpdateDocumentMetadataMutationVariables
   >(UpdateDocumentMetadataDocument)
+}
+export const PostCommentDocument = gql`
+  mutation PostComment($input: PostCommentInput!) {
+    postComment(input: $input) {
+      ... on AnnotatedForm {
+        __typename
+        id
+      }
+      ... on DocumentParagraph {
+        __typename
+        id
+      }
+    }
+  }
+`
+
+export function usePostCommentMutation() {
+  return Urql.useMutation<PostCommentMutation, PostCommentMutationVariables>(
+    PostCommentDocument
+  )
 }
