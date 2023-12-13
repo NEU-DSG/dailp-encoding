@@ -1146,6 +1146,12 @@ export type DocumentContentsQuery = { readonly __typename?: "Query" } & {
                             readonly position: {
                               readonly __typename?: "PositionInDocument"
                             } & Pick<PositionInDocument, "documentId">
+                            readonly comments: ReadonlyArray<
+                              { readonly __typename?: "Comment" } & Pick<
+                                Comment,
+                                "id"
+                              >
+                            >
                           })
                       | { readonly __typename: "LineBreak" }
                     >
@@ -1221,6 +1227,9 @@ export type DocumentContentsQuery = { readonly __typename?: "Query" } & {
             readonly position: {
               readonly __typename?: "PositionInDocument"
             } & Pick<PositionInDocument, "documentId">
+            readonly comments: ReadonlyArray<
+              { readonly __typename?: "Comment" } & Pick<Comment, "id">
+            >
           }
       >
     }
@@ -1312,6 +1321,9 @@ export type FormFieldsFragment = {
     readonly position: { readonly __typename?: "PositionInDocument" } & Pick<
       PositionInDocument,
       "documentId"
+    >
+    readonly comments: ReadonlyArray<
+      { readonly __typename?: "Comment" } & Pick<Comment, "id">
     >
   }
 
@@ -1635,6 +1647,9 @@ export type DocSliceQuery = { readonly __typename?: "Query" } & {
               readonly position: {
                 readonly __typename?: "PositionInDocument"
               } & Pick<PositionInDocument, "documentId">
+              readonly comments: ReadonlyArray<
+                { readonly __typename?: "Comment" } & Pick<Comment, "id">
+              >
             }
         >
       }
@@ -1763,7 +1778,7 @@ export type WordCommentsQuery = { readonly __typename?: "Query" } & {
     readonly comments: ReadonlyArray<
       { readonly __typename?: "Comment" } & Pick<
         Comment,
-        "textContent" | "commentType"
+        "id" | "textContent" | "commentType"
       > & {
           readonly postedAt: { readonly __typename?: "DateTime" } & Pick<
             DateTime,
@@ -1771,12 +1786,12 @@ export type WordCommentsQuery = { readonly __typename?: "Query" } & {
           > & {
               readonly date: { readonly __typename?: "Date" } & Pick<
                 Date,
-                "year" | "month" | "day"
+                "year" | "month" | "day" | "formattedDate"
               >
             }
           readonly postedBy: { readonly __typename?: "User" } & Pick<
             User,
-            "displayName"
+            "id" | "displayName"
           >
         }
     >
@@ -1792,7 +1807,7 @@ export type ParagraphCommentsQuery = { readonly __typename?: "Query" } & {
     readonly comments: ReadonlyArray<
       { readonly __typename?: "Comment" } & Pick<
         Comment,
-        "textContent" | "commentType"
+        "id" | "textContent" | "commentType"
       > & {
           readonly postedAt: { readonly __typename?: "DateTime" } & Pick<
             DateTime,
@@ -1800,12 +1815,12 @@ export type ParagraphCommentsQuery = { readonly __typename?: "Query" } & {
           > & {
               readonly date: { readonly __typename?: "Date" } & Pick<
                 Date,
-                "year" | "month" | "day"
+                "year" | "month" | "day" | "formattedDate"
               >
             }
           readonly postedBy: { readonly __typename?: "User" } & Pick<
             User,
-            "displayName"
+            "id" | "displayName"
           >
         }
     >
@@ -1884,6 +1899,9 @@ export type UpdateWordMutation = { readonly __typename?: "Mutation" } & {
       readonly position: { readonly __typename?: "PositionInDocument" } & Pick<
         PositionInDocument,
         "documentId"
+      >
+      readonly comments: ReadonlyArray<
+        { readonly __typename?: "Comment" } & Pick<Comment, "id">
       >
     }
 }
@@ -2142,6 +2160,9 @@ export const FormFieldsFragmentDoc = gql`
     }
     position {
       documentId
+    }
+    comments {
+      id
     }
   }
 `
@@ -2662,15 +2683,18 @@ export const WordCommentsDocument = gql`
   query WordComments($wordId: UUID!) {
     wordById(id: $wordId) {
       comments {
+        id
         postedAt {
           timestamp
           date {
             year
             month
             day
+            formattedDate
           }
         }
         postedBy {
+          id
           displayName
         }
         textContent
@@ -2692,15 +2716,18 @@ export const ParagraphCommentsDocument = gql`
   query ParagraphComments($paragraphId: UUID!) {
     paragraphById(id: $paragraphId) {
       comments {
+        id
         postedAt {
           timestamp
           date {
             year
             month
             day
+            formattedDate
           }
         }
         postedBy {
+          id
           displayName
         }
         textContent

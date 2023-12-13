@@ -9,11 +9,7 @@ export const CommentSection = (p: {
   return (
     <div>
       {p.parent.__typename === "DocumentParagraph" ? (
-        <ParagraphCommentSection
-          // Actually call the specific query and map here
-          // to each individual comment
-          paragraph={p.parent}
-        />
+        <ParagraphCommentSection paragraph={p.parent} />
       ) : p.parent.__typename === "AnnotatedForm" ? (
         <WordCommentSection word={p.parent} />
       ) : (
@@ -24,17 +20,54 @@ export const CommentSection = (p: {
 }
 
 export const WordCommentSection = (p: { word: Dailp.FormFieldsFragment }) => {
-  // Use GraphQL query, iterate through returned comments,
-  // rendering a CommentHeader and CommentBody for each
-  return <div></div>
+  const [{ data }] = Dailp.useWordCommentsQuery({
+    variables: { wordId: p.word.id },
+  })
+
+  const wordComments = data?.wordById
+
+  return (
+    <div>
+      {wordComments?.comments.map((comment) => (
+        <div>
+          <CommentHeader comment={comment} />
+          <CommentBody comment={comment} />
+        </div>
+      ))}
+    </div>
+  )
 }
 
 export const ParagraphCommentSection = (p: {
   paragraph: TranslatedParagraph
 }) => {
-  return <div></div>
+  const [{ data }] = Dailp.useParagraphCommentsQuery({
+    variables: { paragraphId: p.paragraph.id },
+  })
+
+  const paragraphComments = data?.paragraphById
+
+  return (
+    <div>
+      {paragraphComments?.comments.map((comment) => (
+        <div>
+          <CommentHeader comment={comment} />
+          <CommentBody comment={comment} />
+        </div>
+      ))}
+    </div>
+  )
 }
 
-export const CommentBody = (p: {}) => {}
+export const CommentBody = (p: { comment: Dailp.Comment }) => {
+  return <div>{p.comment.textContent}</div>
+}
 
-export const CommentHeader = (p: {}) => {}
+export const CommentHeader = (p: { comment: Dailp.Comment }) => {
+  return (
+    <div>
+      {p.comment.postedBy.displayName} contributed on{" "}
+      {p.comment.postedAt.date.formattedDate}
+    </div>
+  )
+}

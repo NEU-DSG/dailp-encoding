@@ -12,6 +12,7 @@ import * as Dailp from "src/graphql/dailp"
 import { useCredentials } from "./auth"
 import CommentPanel from "./comment-panel"
 import { AudioPlayer, Button, IconButton } from "./components"
+import { CommentSection } from "./components/comment-section"
 import { CustomCreatable } from "./components/creatable"
 import { EditWordAudio } from "./components/edit-word-audio"
 import { SubtleButton } from "./components/subtle-button"
@@ -319,6 +320,8 @@ export const PanelContent = (p: {
           icon={<MdNotes size={24} className={css.wordPanelButton.colpleft} />}
         />
       )}
+
+      {p.word.comments.length > 0 && <CommentSection parent={p.word} />}
     </>
   )
 }

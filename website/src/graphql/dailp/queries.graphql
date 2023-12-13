@@ -125,6 +125,9 @@ fragment FormFields on AnnotatedForm {
   position {
     documentId
   }
+  comments {
+    id
+  }
 }
 
 query Collection($slug: String!) {
@@ -381,15 +384,18 @@ query BookmarkedDocuments {
 query WordComments($wordId: UUID!) {
   wordById(id: $wordId) {
     comments {
+      id
       postedAt {
         timestamp
         date {
           year
           month
           day
+          formattedDate
         }
       }
       postedBy {
+        id
         displayName
       }
       textContent
@@ -401,15 +407,18 @@ query WordComments($wordId: UUID!) {
 query ParagraphComments($paragraphId: UUID!) {
   paragraphById(id: $paragraphId) {
     comments {
+      id
       postedAt {
         timestamp
         date {
           year
           month
           day
+          formattedDate
         }
       }
       postedBy {
+        id
         displayName
       }
       textContent
