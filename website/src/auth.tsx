@@ -12,8 +12,8 @@ type UserContextType = {
   user: CognitoUser | null
   operations: {
     createUser: (username: string, password: string) => void
-    resetConfirmationCode: () => void
-    confirmUser: (confirmationCode: string) => void
+    resetConfirmationCode: (email: string) => void
+    confirmUser: (email: string, confirmationCode: string) => void
     loginUser: (username: string, password: string) => void
     resetPassword: (username: string) => void
     changePassword: (verificationCode: string, newPassword: string) => void
@@ -59,22 +59,26 @@ export const UserProvider = (props: { children: any }) => {
           If this issue persists, wait and try again later.`)
         break
       case CognitoErrorName.CodeExpired:
-        if (
-          confirm(`This confirmation code has expired. Request a new code?`)
-        ) {
-          resetConfirmationCode()
+        let userResponse = confirm(
+          `This confirmation code has expired. Request a new code?`
+        )
+        if (userResponse && userProvidedEmail) {
+          resetConfirmationCode(userProvidedEmail)
+        } else if (userResponse) {
+          alert("We are unable to send a new code at this time.")
         }
         break
       case CognitoErrorName.CodeMismatch:
         alert(
           `The code you entered does not match the code we sent you. Please double check your email or request a new code.`
         )
+        console.log("confirmation failed")
         break
       case CognitoErrorName.InvalidPassword:
         alert(err.message || JSON.stringify(err))
         break
       case CognitoErrorName.NotAuthorized:
-        alert("You are not authorized to perform this action.")
+        alert(err.message || JSON.stringify(err))
         break
       case CognitoErrorName.PasswordResetRequired:
         if (
@@ -152,7 +156,7 @@ export const UserProvider = (props: { children: any }) => {
       [],
       async (err, result) => {
         if (err) {
-          resolveCognitoException(err, email)
+          resolveCognitoException(err, emailLowercase)
         } else {
           await navigate("/auth/confirmation")
         }
@@ -160,10 +164,15 @@ export const UserProvider = (props: { children: any }) => {
     )
   }
 
-  function resetConfirmationCode() {
-    user?.resendConfirmationCode((err, result) => {
+  function resetConfirmationCode(email: string) {
+    let user = new CognitoUser({
+      Username: email.toLowerCase(),
+      Pool: userPool,
+    })
+
+    user.resendConfirmationCode((err, result) => {
       if (err) {
-        resolveCognitoException(err)
+        resolveCognitoException(err, email)
       } else {
         console.log(result)
         alert(`A new confirmation code was sent to ${user.getUsername()}`)
@@ -171,10 +180,16 @@ export const UserProvider = (props: { children: any }) => {
     })
   }
 
-  function confirmUser(confirmationCode: string) {
-    user?.confirmRegistration(confirmationCode, false, (err, result) => {
+  function confirmUser(email: string, confirmationCode: string) {
+    let user = new CognitoUser({
+      Username: email.toLowerCase(),
+      Pool: userPool,
+    })
+
+    user.confirmRegistration(confirmationCode, false, (err, result) => {
       if (err) {
-        resolveCognitoException(err)
+        console.log("confirmation failed. determining error")
+        resolveCognitoException(err, user.getUsername())
       }
       console.log("confirmation details: ", result)
       navigate("/auth/login")
@@ -202,7 +217,7 @@ export const UserProvider = (props: { children: any }) => {
       },
       onFailure: (err: Error) => {
         console.log("Login failed. Result: ", err)
-        resolveCognitoException(err, username.toLowerCase())
+        resolveCognitoException(err, user.getUsername())
       },
       newPasswordRequired: (data: CognitoUserSession) => {
         console.log("New password required. Result: ", data)
@@ -227,7 +242,7 @@ export const UserProvider = (props: { children: any }) => {
       },
       onFailure: (err: Error) => {
         console.log("Reset password unsuccessful. Result: ", err)
-        resolveCognitoException(err, username.toLowerCase())
+        resolveCognitoException(err, user.getUsername())
       },
     })
   }
