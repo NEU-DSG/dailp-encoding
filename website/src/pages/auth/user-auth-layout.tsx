@@ -53,7 +53,7 @@ export const LoginHeaderButton = () => {
 }
 
 const ConfirmLogout = () => {
-  const { user, setUser } = useUser()
+  const { user } = useUser()
   const popover = usePopoverState({ gutter: 2 })
 
   return (
@@ -67,7 +67,6 @@ const ConfirmLogout = () => {
           className={popoverButton}
           onClick={() => {
             user?.signOut()
-            setUser(null) // set current user to null because user has completed reset password flow and will need to relogin
           }}
         >
           Log out
