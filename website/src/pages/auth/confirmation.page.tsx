@@ -16,7 +16,7 @@ const ConfirmationPage = () => {
   const { confirmUser, resetConfirmationCode } = useUser().operations
 
   const confirmationForm = useFormState({
-    values: { code: "" },
+    values: { email: "", code: "" },
     onValidate: (values) => {
       if (!values.code) {
         throw { code: "A confirmation code is required" }
@@ -24,7 +24,7 @@ const ConfirmationPage = () => {
     },
     onSubmit: (values) => {
       console.log(`Submitted! confirmation code is ${values.code}`)
-      confirmUser(values.code)
+      confirmUser(values.email, values.code)
     },
   })
 
@@ -39,6 +39,12 @@ const ConfirmationPage = () => {
       }}
     >
       <Form {...confirmationForm} className={centeredForm}>
+        <FormFields
+          form={confirmationForm}
+          name="email"
+          label="Email *"
+          placeholder="someone@email.com"
+        />
         <FormFields
           form={confirmationForm}
           name="code"
