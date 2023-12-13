@@ -1754,6 +1754,64 @@ export type BookmarkedDocumentsQuery = { readonly __typename?: "Query" } & {
   >
 }
 
+export type WordCommentsQueryVariables = Exact<{
+  wordId: Scalars["UUID"]
+}>
+
+export type WordCommentsQuery = { readonly __typename?: "Query" } & {
+  readonly wordById: { readonly __typename?: "AnnotatedForm" } & {
+    readonly comments: ReadonlyArray<
+      { readonly __typename?: "Comment" } & Pick<
+        Comment,
+        "textContent" | "commentType"
+      > & {
+          readonly postedAt: { readonly __typename?: "DateTime" } & Pick<
+            DateTime,
+            "timestamp"
+          > & {
+              readonly date: { readonly __typename?: "Date" } & Pick<
+                Date,
+                "year" | "month" | "day"
+              >
+            }
+          readonly postedBy: { readonly __typename?: "User" } & Pick<
+            User,
+            "displayName"
+          >
+        }
+    >
+  }
+}
+
+export type ParagraphCommentsQueryVariables = Exact<{
+  paragraphId: Scalars["UUID"]
+}>
+
+export type ParagraphCommentsQuery = { readonly __typename?: "Query" } & {
+  readonly paragraphById: { readonly __typename?: "DocumentParagraph" } & {
+    readonly comments: ReadonlyArray<
+      { readonly __typename?: "Comment" } & Pick<
+        Comment,
+        "textContent" | "commentType"
+      > & {
+          readonly postedAt: { readonly __typename?: "DateTime" } & Pick<
+            DateTime,
+            "timestamp"
+          > & {
+              readonly date: { readonly __typename?: "Date" } & Pick<
+                Date,
+                "year" | "month" | "day"
+              >
+            }
+          readonly postedBy: { readonly __typename?: "User" } & Pick<
+            User,
+            "displayName"
+          >
+        }
+    >
+  }
+}
+
 export type UpdateWordMutationVariables = Exact<{
   word: AnnotatedFormUpdate
   morphemeSystem: CherokeeOrthography
@@ -2599,6 +2657,65 @@ export function useBookmarkedDocumentsQuery(
     BookmarkedDocumentsQuery,
     BookmarkedDocumentsQueryVariables
   >({ query: BookmarkedDocumentsDocument, ...options })
+}
+export const WordCommentsDocument = gql`
+  query WordComments($wordId: UUID!) {
+    wordById(id: $wordId) {
+      comments {
+        postedAt {
+          timestamp
+          date {
+            year
+            month
+            day
+          }
+        }
+        postedBy {
+          displayName
+        }
+        textContent
+        commentType
+      }
+    }
+  }
+`
+
+export function useWordCommentsQuery(
+  options: Omit<Urql.UseQueryArgs<WordCommentsQueryVariables>, "query">
+) {
+  return Urql.useQuery<WordCommentsQuery, WordCommentsQueryVariables>({
+    query: WordCommentsDocument,
+    ...options,
+  })
+}
+export const ParagraphCommentsDocument = gql`
+  query ParagraphComments($paragraphId: UUID!) {
+    paragraphById(id: $paragraphId) {
+      comments {
+        postedAt {
+          timestamp
+          date {
+            year
+            month
+            day
+          }
+        }
+        postedBy {
+          displayName
+        }
+        textContent
+        commentType
+      }
+    }
+  }
+`
+
+export function useParagraphCommentsQuery(
+  options: Omit<Urql.UseQueryArgs<ParagraphCommentsQueryVariables>, "query">
+) {
+  return Urql.useQuery<ParagraphCommentsQuery, ParagraphCommentsQueryVariables>(
+    { query: ParagraphCommentsDocument, ...options }
+  )
 }
 export const UpdateWordDocument = gql`
   mutation UpdateWord(

@@ -378,6 +378,46 @@ query BookmarkedDocuments {
   }
 }
 
+query WordComments($wordId: UUID!) {
+  wordById(id: $wordId) {
+    comments {
+      postedAt {
+        timestamp
+        date {
+          year
+          month
+          day
+        }
+      }
+      postedBy {
+        displayName
+      }
+      textContent
+      commentType
+    }
+  }
+}
+
+query ParagraphComments($paragraphId: UUID!) {
+  paragraphById(id: $paragraphId) {
+    comments {
+      postedAt {
+        timestamp
+        date {
+          year
+          month
+          day
+        }
+      }
+      postedBy {
+        displayName
+      }
+      textContent
+      commentType
+    }
+  }
+}
+
 mutation UpdateWord(
   $word: AnnotatedFormUpdate!
   $morphemeSystem: CherokeeOrthography!
