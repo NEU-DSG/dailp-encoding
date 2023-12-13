@@ -1,10 +1,10 @@
 import React from "react"
 import {
+  Button,
   unstable_Form as Form,
   unstable_useFormState as useFormState,
 } from "reakit"
 import { useUser } from "src/auth"
-import { Link } from "src/components"
 import {
   FormFields,
   FormSubmitButton,
@@ -28,6 +28,15 @@ const ConfirmationPage = () => {
     },
   })
 
+  const startCodeReset = () => {
+    let email = confirmationForm.values.email
+    if (email) {
+      resetConfirmationCode(email)
+    } else {
+      confirmationForm.reset()
+      alert("Please enter the email associated with your account.")
+    }
+  }
   return (
     <UserAuthPageTemplate
       header={{
@@ -48,13 +57,13 @@ const ConfirmationPage = () => {
         <FormFields
           form={confirmationForm}
           name="code"
-          label="Confirmation Code *"
+          label="Confirmation Code"
           placeholder="123456"
         />
 
         <span>
-          Having trouble finding your confirmation code?{" "}
-          <Link onClick={resetConfirmationCode}>Request a new code.</Link>
+          Having trouble finding your confirmation code?
+          <Button onClick={startCodeReset}>Reset Confirmation Code</Button>
         </span>
 
         <FormSubmitButton form={confirmationForm} label="Confirm Me" />
