@@ -1,3 +1,4 @@
+import cx from "classnames"
 import React from "react"
 import {
   Button,
@@ -5,12 +6,19 @@ import {
   unstable_useFormState as useFormState,
 } from "reakit"
 import { useUser } from "src/auth"
+import { button, cleanButton, iconButton } from "src/components/button.css"
+import { fonts } from "src/style/theme-contract.css"
 import {
   FormFields,
   FormSubmitButton,
   UserAuthPageTemplate,
 } from "./user-auth-layout"
-import { centeredForm } from "./user-auth.css"
+import {
+  centeredForm,
+  loginButton,
+  positionButton,
+  secondaryButton,
+} from "./user-auth.css"
 
 const ConfirmationPage = () => {
   const { confirmUser, resetConfirmationCode } = useUser().operations
@@ -61,9 +69,11 @@ const ConfirmationPage = () => {
           placeholder="123456"
         />
 
-        <span>
+        <span className={fonts.body}>
           Having trouble finding your confirmation code?
-          <Button onClick={startCodeReset}>Reset Confirmation Code</Button>
+          <Button onClick={startCodeReset} className={secondaryButton}>
+            Reset Confirmation Code
+          </Button>
         </span>
 
         <FormSubmitButton form={confirmationForm} label="Confirm Me" />
