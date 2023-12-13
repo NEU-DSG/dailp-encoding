@@ -21,7 +21,7 @@ import {
   useDialogState,
 } from "reakit"
 import { navigate } from "vite-plugin-ssr/client/router"
-import { useCredentials } from "src/auth"
+import { useCredentials, useUser } from "src/auth"
 import { AudioPlayer, Breadcrumbs, Button, Link } from "src/components"
 import { IconButton, IconTextButton } from "src/components/button"
 import { useMediaQuery } from "src/custom-hooks"
@@ -430,13 +430,14 @@ export const DocumentTitleHeader = (p: {
   >[]
   doc: Pick<Dailp.AnnotatedDoc, "slug" | "title" | "id"> & {
     date: NullPick<Dailp.AnnotatedDoc["date"], "year">
+    bookmarkedOn: NullPick<Dailp.AnnotatedDoc["bookmarkedOn"], "formattedDate">
     audioRecording?: NullPick<
       Dailp.AnnotatedDoc["audioRecording"],
       "resourceUrl"
     >
   }
 }) => {
-  const token = useCredentials()
+  const { user } = useUser()
   return (
     <header className={css.docHeader}>
       {p.breadcrumbs && (
@@ -455,7 +456,14 @@ export const DocumentTitleHeader = (p: {
       </h1>
 
       <div className={css.bottomPadded}>
-        {token ? <BookmarkButton documentId={p.doc.id} /> : <></>}
+        {user ? (
+          <BookmarkButton
+            documentId={p.doc.id}
+            bookmarkedBool={p.doc.bookmarkedOn !== null}
+          />
+        ) : (
+          <></>
+        )}
         {!p.doc.audioRecording && !isMobile && (
           <div id="no-audio-message">
             <strong>No Audio Available</strong>
@@ -489,22 +497,15 @@ export const DocumentTitleHeader = (p: {
 }
 
 /** Button that allows users to bookmark a document */
-export const BookmarkButton = ({ documentId }: { documentId: String }) => {
-  const [isBookmarked, setIsBookmarked] = useState(false)
+export const BookmarkButton = (props: {
+  documentId: String
+  bookmarkedBool: boolean
+}) => {
+  const [isBookmarked, setIsBookmarked] = useState(props.bookmarkedBool)
   const [addBookmarkMutationResult, addBookmarkMutation] =
     Dailp.useAddBookmarkMutation()
   const [removeBookmarkMutationResult, removeBookmarkMutation] =
     Dailp.useRemoveBookmarkMutation()
-  const [{ data }] = Dailp.useBookmarkedDocumentsQuery()
-  if (
-    data?.bookmarkedDocuments.some(
-      (obj: { id: String }) => obj?.id === documentId
-    )
-  ) {
-    if (!isBookmarked) {
-      setIsBookmarked(true)
-    }
-  }
 
   return (
     <>
@@ -515,7 +516,7 @@ export const BookmarkButton = ({ documentId }: { documentId: String }) => {
             icon={<MdOutlineBookmarkRemove />}
             className={css.BookmarkButton}
             onClick={() => {
-              removeBookmarkMutation({ documentId: documentId })
+              removeBookmarkMutation({ documentId: props.documentId })
               setIsBookmarked(false)
             }}
           >
@@ -527,7 +528,7 @@ export const BookmarkButton = ({ documentId }: { documentId: String }) => {
           icon={<MdOutlineBookmarkAdd />}
           className={css.BookmarkButton}
           onClick={() => {
-            addBookmarkMutation({ documentId: documentId })
+            addBookmarkMutation({ documentId: props.documentId })
             setIsBookmarked(true)
           }}
         >

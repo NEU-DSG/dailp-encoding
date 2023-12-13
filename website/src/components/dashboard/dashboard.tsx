@@ -98,6 +98,7 @@ export const BookmarksTabItem = (props: { documentId: string }) => {
     docPath = docFullPath[0] + "/" + docFullPath[docFullPath.length - 1]
   }
   console.log(docPath)
+  // Crops the thumbnail to 50% of the original size and then scales it to 500x500
   const thumbnailUrl = (docData?.translatedPages?.[0]?.image?.url +
     "/pct:0,0,50,50/500,500/0/default.jpg") as unknown as string
   return (
