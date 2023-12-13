@@ -823,6 +823,8 @@ export type Query = {
   readonly morphemesByShape: ReadonlyArray<MorphemeReference>
   /** Retrieves a full document from its unique identifier. */
   readonly page: Maybe<Page>
+  /** Get a single paragraph given the paragraph ID */
+  readonly paragraphById: DocumentParagraph
   /**
    * Search for words with the exact same syllabary string, or with very
    * similar looking characters.
@@ -830,6 +832,8 @@ export type Query = {
   readonly syllabarySearch: ReadonlyArray<AnnotatedForm>
   /** Basic information about the currently authenticated user, if any. */
   readonly userInfo: UserInfo
+  /** Get a single word given the word ID */
+  readonly wordById: AnnotatedForm
   /**
    * Search for words that match any one of the given queries.
    * Each query may match against multiple fields of a word.
@@ -882,8 +886,16 @@ export type QueryPageArgs = {
   id: Scalars["String"]
 }
 
+export type QueryParagraphByIdArgs = {
+  id: Scalars["UUID"]
+}
+
 export type QuerySyllabarySearchArgs = {
   query: Scalars["String"]
+}
+
+export type QueryWordByIdArgs = {
+  id: Scalars["UUID"]
 }
 
 export type QueryWordSearchArgs = {
