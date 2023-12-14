@@ -328,18 +328,16 @@ export const PanelContent = (p: {
         />
       )}
 
-      {p.word.comments && p.word.comments.length > 0 && (
-        <CollapsiblePanel
-          title={"Discussion"}
-          content={discussionContent}
-          icon={
-            <MdOutlineComment
-              size={24}
-              className={css.wordPanelButton.colpleft}
-            />
-          }
-        />
-      )}
+      <CollapsiblePanel
+        title={"Discussion"}
+        content={discussionContent}
+        icon={
+          <MdOutlineComment
+            size={24}
+            className={css.wordPanelButton.colpleft}
+          />
+        }
+      />
     </>
   )
 }

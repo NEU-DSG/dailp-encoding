@@ -50,18 +50,16 @@ const ParagraphPanel = (p: {
         icon={<MdNotes size={24} className={css.wordPanelButton.colpleft} />}
       />
 
-      {p.segment.comments && p.segment.comments.length > 0 && (
-        <CollapsiblePanel
-          title={"Discussion"}
-          content={discussionContent}
-          icon={
-            <MdOutlineComment
-              size={24}
-              className={css.wordPanelButton.colpleft}
-            />
-          }
-        />
-      )}
+      <CollapsiblePanel
+        title={"Discussion"}
+        content={discussionContent}
+        icon={
+          <MdOutlineComment
+            size={24}
+            className={css.wordPanelButton.colpleft}
+          />
+        }
+      />
     </>
   )
 }
