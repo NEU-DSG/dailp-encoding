@@ -21,7 +21,7 @@ import {
   useDialogState,
 } from "reakit"
 import { navigate } from "vite-plugin-ssr/client/router"
-import { useCredentials, useUser } from "src/auth"
+import { useUser } from "src/auth"
 import { AudioPlayer, Breadcrumbs, Button, Link } from "src/components"
 import { IconButton, IconTextButton } from "src/components/button"
 import { useMediaQuery } from "src/custom-hooks"
@@ -129,7 +129,6 @@ export const TabSet = ({ doc }: { doc: Document }) => {
     }
   }, [])
 
-  const token = useCredentials()
   const tabs = useScrollableTabState({ selectedId: Tabs.ANNOTATION })
   const [{ data }] = Dailp.useDocumentDetailsQuery({
     variables: { slug: doc.slug! },
