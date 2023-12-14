@@ -16,7 +16,7 @@ in {
         email_message = ''
           Hello, thank you for signing up for a DAILP account!
           
-          Your confirmation code is {######}. Please enter this code on the confirmation page.
+          Your confirmation code is {####}. Please enter this code on the confirmation page.
           
           You can access the confirmation page at https://${subdomain}dailp.northeastern.edu/auth/confirmation
         '';
