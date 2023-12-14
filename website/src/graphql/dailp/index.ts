@@ -823,6 +823,8 @@ export type Query = {
   readonly morphemesByShape: ReadonlyArray<MorphemeReference>
   /** Retrieves a full document from its unique identifier. */
   readonly page: Maybe<Page>
+  /** Get a single paragraph given the paragraph ID */
+  readonly paragraphById: DocumentParagraph
   /**
    * Search for words with the exact same syllabary string, or with very
    * similar looking characters.
@@ -830,6 +832,8 @@ export type Query = {
   readonly syllabarySearch: ReadonlyArray<AnnotatedForm>
   /** Basic information about the currently authenticated user, if any. */
   readonly userInfo: UserInfo
+  /** Get a single word given the word ID */
+  readonly wordById: AnnotatedForm
   /**
    * Search for words that match any one of the given queries.
    * Each query may match against multiple fields of a word.
@@ -882,8 +886,16 @@ export type QueryPageArgs = {
   id: Scalars["String"]
 }
 
+export type QueryParagraphByIdArgs = {
+  id: Scalars["UUID"]
+}
+
 export type QuerySyllabarySearchArgs = {
   query: Scalars["String"]
+}
+
+export type QueryWordByIdArgs = {
+  id: Scalars["UUID"]
 }
 
 export type QueryWordSearchArgs = {
@@ -1063,7 +1075,7 @@ export type DocumentContentsQuery = { readonly __typename?: "Query" } & {
               readonly paragraphs: ReadonlyArray<
                 { readonly __typename?: "DocumentParagraph" } & Pick<
                   DocumentParagraph,
-                  "translation" | "index"
+                  "id" | "translation" | "index"
                 > & {
                     readonly source: ReadonlyArray<
                       | ({ readonly __typename: "AnnotatedForm" } & Pick<
@@ -2006,6 +2018,19 @@ export type UpdateDocumentMetadataMutation = {
   readonly __typename?: "Mutation"
 } & Pick<Mutation, "updateDocumentMetadata">
 
+export type PostCommentMutationVariables = Exact<{
+  input: PostCommentInput
+}>
+
+export type PostCommentMutation = { readonly __typename?: "Mutation" } & {
+  readonly postComment:
+    | ({ readonly __typename: "AnnotatedForm" } & Pick<AnnotatedForm, "id">)
+    | ({ readonly __typename: "DocumentParagraph" } & Pick<
+        DocumentParagraph,
+        "id"
+      >)
+}
+
 export const DocFormFieldsFragmentDoc = gql`
   fragment DocFormFields on AnnotatedDoc {
     id
@@ -2156,6 +2181,7 @@ export const DocumentContentsDocument = gql`
               ...FormFields
             }
           }
+          id
           translation
           index
         }
@@ -2772,4 +2798,24 @@ export function useUpdateDocumentMetadataMutation() {
     UpdateDocumentMetadataMutation,
     UpdateDocumentMetadataMutationVariables
   >(UpdateDocumentMetadataDocument)
+}
+export const PostCommentDocument = gql`
+  mutation PostComment($input: PostCommentInput!) {
+    postComment(input: $input) {
+      ... on AnnotatedForm {
+        __typename
+        id
+      }
+      ... on DocumentParagraph {
+        __typename
+        id
+      }
+    }
+  }
+`
+
+export function usePostCommentMutation() {
+  return Urql.useMutation<PostCommentMutation, PostCommentMutationVariables>(
+    PostCommentDocument
+  )
 }
