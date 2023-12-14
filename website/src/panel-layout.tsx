@@ -4,7 +4,12 @@ import { useState } from "react"
 import { AiFillSound } from "react-icons/ai/index"
 import { GrDown, GrUp } from "react-icons/gr/index"
 import { IoEllipsisHorizontalCircle } from "react-icons/io5/index"
-import { MdClose, MdNotes, MdRecordVoiceOver } from "react-icons/md/index"
+import {
+  MdClose,
+  MdNotes,
+  MdOutlineComment,
+  MdRecordVoiceOver,
+} from "react-icons/md/index"
 import { OnChangeValue } from "react-select"
 import { Disclosure, DisclosureContent, useDisclosureState } from "reakit"
 import { unstable_Form as Form, unstable_FormInput as FormInput } from "reakit"
@@ -276,6 +281,8 @@ export const PanelContent = (p: {
     />
   )
 
+  const discussionContent = <CommentSection parent={p.word} />
+
   return (
     <>
       {(p.word.editedAudio.length || p.panel === PanelType.EditWordPanel) && (
@@ -321,7 +328,18 @@ export const PanelContent = (p: {
         />
       )}
 
-      {p.word.comments.length > 0 && <CommentSection parent={p.word} />}
+      {p.word.comments && p.word.comments.length > 0 && (
+        <CollapsiblePanel
+          title={"Discussion"}
+          content={discussionContent}
+          icon={
+            <MdOutlineComment
+              size={24}
+              className={css.wordPanelButton.colpleft}
+            />
+          }
+        />
+      )}
     </>
   )
 }

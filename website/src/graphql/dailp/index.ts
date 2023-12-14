@@ -1155,6 +1155,9 @@ export type DocumentContentsQuery = { readonly __typename?: "Query" } & {
                           })
                       | { readonly __typename: "LineBreak" }
                     >
+                    readonly comments: ReadonlyArray<
+                      { readonly __typename?: "Comment" } & Pick<Comment, "id">
+                    >
                   }
               >
             }
@@ -2261,6 +2264,9 @@ export const DocumentContentsDocument = gql`
           id
           translation
           index
+          comments {
+            id
+          }
         }
       }
       forms @include(if: $isReference) {

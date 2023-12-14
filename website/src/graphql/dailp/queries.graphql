@@ -63,6 +63,9 @@ query DocumentContents(
         id
         translation
         index
+        comments {
+          id
+        }
       }
     }
     forms @include(if: $isReference) {

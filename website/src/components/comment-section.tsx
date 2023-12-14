@@ -2,6 +2,7 @@ import React, { ReactNode, SetStateAction } from "react"
 import { useState } from "react"
 import * as Dailp from "src/graphql/dailp"
 import { TranslatedParagraph } from "src/segment"
+import * as css from "./comment-section.css"
 
 export const CommentSection = (p: {
   parent: Dailp.FormFieldsFragment | TranslatedParagraph
@@ -51,7 +52,9 @@ export const ParagraphCommentSection = (p: {
     <div>
       {paragraphComments?.comments.map((comment) => (
         <div>
-          <CommentHeader comment={comment} />
+          <div>
+            <CommentHeader comment={comment} />
+          </div>
           <CommentBody comment={comment} />
         </div>
       ))}
@@ -60,12 +63,38 @@ export const ParagraphCommentSection = (p: {
 }
 
 export const CommentBody = (p: { comment: Dailp.Comment }) => {
-  return <div>{p.comment.textContent}</div>
+  const commentTypeNames: Record<Dailp.CommentType, string> = {
+    // ... TS will then make sure you have an entry for everything on the "CommentTag" type that you import from the codegen
+    [Dailp.CommentType.Story]: "Story",
+    [Dailp.CommentType.Suggestion]: "Suggestion",
+    [Dailp.CommentType.Question]: "Question",
+  }
+
+  return (
+    <div className={css.commentWrapper}>
+      {p.comment.textContent}
+      <div className={css.tagPadding}>
+        <div
+          className={
+            p.comment.commentType === Dailp.CommentType.Story
+              ? css.tagColorStory
+              : p.comment.commentType === Dailp.CommentType.Suggestion
+              ? css.tagColorSuggestion
+              : css.tagColorQuestion
+          }
+        >
+          {p.comment.commentType
+            ? commentTypeNames[p.comment.commentType as Dailp.CommentType]
+            : ""}
+        </div>
+      </div>
+    </div>
+  )
 }
 
 export const CommentHeader = (p: { comment: Dailp.Comment }) => {
   return (
-    <div>
+    <div className={css.headerStyle}>
       {p.comment.postedBy.displayName} contributed on{" "}
       {p.comment.postedAt.date.formattedDate}
     </div>
