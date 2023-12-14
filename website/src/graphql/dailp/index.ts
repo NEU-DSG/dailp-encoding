@@ -655,7 +655,7 @@ export type Mutation = {
   readonly updateDocumentMetadata: Scalars["UUID"]
   readonly updatePage: Scalars["Boolean"]
   /** Mutation for paragraph and translation editing */
-  readonly updateParagraph: Scalars["UUID"]
+  readonly updateParagraph: DocumentParagraph
   readonly updateWord: AnnotatedForm
 }
 
@@ -1988,9 +1988,11 @@ export type UpdateParagraphMutationVariables = Exact<{
   paragraph: ParagraphUpdate
 }>
 
-export type UpdateParagraphMutation = {
-  readonly __typename?: "Mutation"
-} & Pick<Mutation, "updateParagraph">
+export type UpdateParagraphMutation = { readonly __typename?: "Mutation" } & {
+  readonly updateParagraph: {
+    readonly __typename?: "DocumentParagraph"
+  } & Pick<DocumentParagraph, "id" | "translation" | "index">
+}
 
 export type UpdateContributorAttributionMutationVariables = Exact<{
   contribution: UpdateContributorAttribution
@@ -2743,7 +2745,11 @@ export function useRemoveBookmarkMutation() {
 }
 export const UpdateParagraphDocument = gql`
   mutation UpdateParagraph($paragraph: ParagraphUpdate!) {
-    updateParagraph(paragraph: $paragraph)
+    updateParagraph(paragraph: $paragraph) {
+      id
+      translation
+      index
+    }
   }
 `
 

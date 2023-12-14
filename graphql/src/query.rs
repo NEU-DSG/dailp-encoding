@@ -6,7 +6,8 @@ use dailp::{
     user::UserGroup,
     user::UserInfo,
     AnnotatedForm, AttachAudioToWordInput, CollectionChapter, CurateWordAudioInput,
-    DeleteContributorAttribution, DocumentMetadataUpdate, UpdateContributorAttribution, Uuid,
+    DeleteContributorAttribution, DocumentMetadataUpdate, DocumentParagraph,
+    UpdateContributorAttribution, Uuid,
 };
 use itertools::Itertools;
 
@@ -450,7 +451,7 @@ impl Mutation {
         &self,
         context: &Context<'_>,
         paragraph: ParagraphUpdate,
-    ) -> FieldResult<Uuid> {
+    ) -> FieldResult<DocumentParagraph> {
         Ok(context
             .data::<DataLoader<Database>>()?
             .loader()
