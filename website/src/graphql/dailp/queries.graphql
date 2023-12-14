@@ -480,7 +480,11 @@ mutation RemoveBookmark($documentId: UUID!) {
 }
 
 mutation UpdateParagraph($paragraph: ParagraphUpdate!) {
-  updateParagraph(paragraph: $paragraph)
+  updateParagraph(paragraph: $paragraph) {
+    id
+    translation
+    index
+  }
 }
 
 mutation UpdateContributorAttribution(
