@@ -992,6 +992,14 @@ type Query {
 	"""
 	wordSearch(query: String!): [AnnotatedForm!]!
 	"""
+	Get a single word given the word ID
+	"""
+	wordById(id: UUID!): AnnotatedForm!
+	"""
+	Get a single paragraph given the paragraph ID
+	"""
+	paragraphById(id: UUID!): DocumentParagraph!
+	"""
 	Search for words with the exact same syllabary string, or with very
 	similar looking characters.
 	"""
