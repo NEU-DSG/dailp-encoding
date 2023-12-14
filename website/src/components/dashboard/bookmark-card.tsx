@@ -31,8 +31,8 @@ export const BookmarkCard = (props: {
         <span className={cardText}>
           Written: {props.description ? props.description : "Unknown"}
         </span>
-        <span className={cardText}>999 contributions</span>
-        <span className={cardText}>Last Edited: Never</span>
+        <span className={cardText}> {/*TODO: contributions*/} </span>
+        <span className={cardText}>Last Edited: {/*TODO: lastEdited*/}</span>
         <a className={pillButton} href={props.header.link}>
           View
         </a>
