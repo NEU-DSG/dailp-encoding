@@ -810,7 +810,7 @@ type Mutation {
 	"""
 	Mutation for paragraph and translation editing
 	"""
-	updateParagraph(paragraph: ParagraphUpdate!): UUID!
+	updateParagraph(paragraph: ParagraphUpdate!): DocumentParagraph!
 	updatePage(data: JSON!): Boolean!
 	updateAnnotation(data: JSON!): Boolean!
 	updateWord(word: AnnotatedFormUpdate!): AnnotatedForm!
@@ -995,6 +995,14 @@ type Query {
 	Each query may match against multiple fields of a word.
 	"""
 	wordSearch(query: String!): [AnnotatedForm!]!
+	"""
+	Get a single word given the word ID
+	"""
+	wordById(id: UUID!): AnnotatedForm!
+	"""
+	Get a single paragraph given the paragraph ID
+	"""
+	paragraphById(id: UUID!): DocumentParagraph!
 	"""
 	Search for words with the exact same syllabary string, or with very
 	similar looking characters.
