@@ -1,9 +1,7 @@
-import { style } from "@vanilla-extract/css"
-import { withSSRContext } from "aws-amplify"
-import { borderWidth, margin } from "polished"
+import { style, styleVariants } from "@vanilla-extract/css"
+import { margin } from "polished"
 import {
   colors,
-  fonts,
   hspace,
   mediaQueries,
   radii,

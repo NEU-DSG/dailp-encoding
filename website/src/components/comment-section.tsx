@@ -1,5 +1,4 @@
-import React, { ReactNode, SetStateAction } from "react"
-import { useState } from "react"
+import React from "react"
 import * as Dailp from "src/graphql/dailp"
 import { TranslatedParagraph } from "src/segment"
 import * as css from "./comment-section.css"
@@ -25,11 +24,11 @@ export const WordCommentSection = (p: { word: Dailp.FormFieldsFragment }) => {
     variables: { wordId: p.word.id },
   })
 
-  const wordComments = data?.wordById
+  const wordComments = data?.wordById.comments
 
   return (
     <div>
-      {wordComments?.comments.map((comment) => (
+      {wordComments?.map((comment) => (
         <div>
           <CommentHeader comment={comment} />
           <CommentBody comment={comment} />
@@ -46,11 +45,11 @@ export const ParagraphCommentSection = (p: {
     variables: { paragraphId: p.paragraph.id },
   })
 
-  const paragraphComments = data?.paragraphById
+  const paragraphComments = data?.paragraphById.comments
 
   return (
     <div>
-      {paragraphComments?.comments.map((comment) => (
+      {paragraphComments?.map((comment) => (
         <div>
           <div>
             <CommentHeader comment={comment} />
