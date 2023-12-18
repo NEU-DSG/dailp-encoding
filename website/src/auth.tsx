@@ -62,10 +62,13 @@ export const UserProvider = (props: { children: any }) => {
         let userResponse = confirm(
           `This confirmation code has expired. Request a new code?`
         )
-        if (userResponse && userProvidedEmail) {
-          resetConfirmationCode(userProvidedEmail)
+        let messageEmail =
+          userProvidedEmail ||
+          prompt("Please enter the email associated with your account.")
+        if (userResponse && messageEmail) {
+          resetConfirmationCode(messageEmail)
         } else if (userResponse) {
-          alert("We are unable to send a new code at this time.")
+          alert("Please try again and enter your email.")
         }
         break
       case CognitoErrorName.CodeMismatch:
