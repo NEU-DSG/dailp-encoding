@@ -4,7 +4,12 @@ import { useState } from "react"
 import { AiFillSound } from "react-icons/ai/index"
 import { GrDown, GrUp } from "react-icons/gr/index"
 import { IoEllipsisHorizontalCircle } from "react-icons/io5/index"
-import { MdClose, MdNotes, MdRecordVoiceOver } from "react-icons/md/index"
+import {
+  MdClose,
+  MdNotes,
+  MdOutlineComment,
+  MdRecordVoiceOver,
+} from "react-icons/md/index"
 import { OnChangeValue } from "react-select"
 import { Disclosure, DisclosureContent, useDisclosureState } from "reakit"
 import { unstable_Form as Form, unstable_FormInput as FormInput } from "reakit"
@@ -12,6 +17,7 @@ import * as Dailp from "src/graphql/dailp"
 import { useCredentials } from "./auth"
 import CommentPanel from "./comment-panel"
 import { AudioPlayer, Button, IconButton } from "./components"
+import { CommentSection } from "./components/comment-section"
 import { CustomCreatable } from "./components/creatable"
 import { EditWordAudio } from "./components/edit-word-audio"
 import { SubtleButton } from "./components/subtle-button"
@@ -275,6 +281,8 @@ export const PanelContent = (p: {
     />
   )
 
+  const discussionContent = <CommentSection parent={p.word} />
+
   return (
     <>
       {(p.word.editedAudio.length || p.panel === PanelType.EditWordPanel) && (
@@ -319,6 +327,17 @@ export const PanelContent = (p: {
           icon={<MdNotes size={24} className={css.wordPanelButton.colpleft} />}
         />
       )}
+
+      <CollapsiblePanel
+        title={"Discussion"}
+        content={discussionContent}
+        icon={
+          <MdOutlineComment
+            size={24}
+            className={css.wordPanelButton.colpleft}
+          />
+        }
+      />
     </>
   )
 }

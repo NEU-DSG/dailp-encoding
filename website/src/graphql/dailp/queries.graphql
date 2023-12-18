@@ -95,6 +95,9 @@ query DocumentContents(
         id
         translation
         index
+        comments {
+          id
+        }
       }
     }
     forms @include(if: $isReference) {
@@ -156,6 +159,9 @@ fragment FormFields on AnnotatedForm {
   }
   position {
     documentId
+  }
+  comments {
+    id
   }
 }
 
@@ -406,6 +412,52 @@ query BookmarkedDocuments {
     }
     chapters {
       path
+    }
+  }
+}
+
+query WordComments($wordId: UUID!) {
+  wordById(id: $wordId) {
+    comments {
+      id
+      postedAt {
+        timestamp
+        date {
+          year
+          month
+          day
+          formattedDate
+        }
+      }
+      postedBy {
+        id
+        displayName
+      }
+      textContent
+      commentType
+    }
+  }
+}
+
+query ParagraphComments($paragraphId: UUID!) {
+  paragraphById(id: $paragraphId) {
+    comments {
+      id
+      postedAt {
+        timestamp
+        date {
+          year
+          month
+          day
+          formattedDate
+        }
+      }
+      postedBy {
+        id
+        displayName
+      }
+      textContent
+      commentType
     }
   }
 }
