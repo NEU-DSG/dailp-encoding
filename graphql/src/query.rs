@@ -6,7 +6,8 @@ use dailp::{
     user::UserGroup,
     user::UserInfo,
     AnnotatedForm, AttachAudioToWordInput, CollectionChapter, CurateWordAudioInput,
-    DeleteContributorAttribution, DocumentMetadataUpdate, UpdateContributorAttribution, Uuid,
+    DeleteContributorAttribution, DocumentMetadataUpdate, DocumentParagraph,
+    UpdateContributorAttribution, Uuid,
 };
 use itertools::Itertools;
 
@@ -149,6 +150,18 @@ impl Query {
             .load_many(bookmarked_ids.iter().map(|&id| dailp::DocumentId(id)))
             .await?;
         Ok(annotated_docs_map.into_values().collect())
+    }
+
+    /// Retrieves a full document from its unique identifier.
+    pub async fn document_by_uuid(
+        &self,
+        context: &Context<'_>,
+        id: Uuid,
+    ) -> FieldResult<Option<AnnotatedDoc>> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .load_one(dailp::DocumentId(id))
+            .await?)
     }
 
     /// Retrieves a full document from its unique identifier.
@@ -450,7 +463,7 @@ impl Mutation {
         &self,
         context: &Context<'_>,
         paragraph: ParagraphUpdate,
-    ) -> FieldResult<Uuid> {
+    ) -> FieldResult<DocumentParagraph> {
         Ok(context
             .data::<DataLoader<Database>>()?
             .loader()

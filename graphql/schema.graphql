@@ -810,7 +810,7 @@ type Mutation {
 	"""
 	Mutation for paragraph and translation editing
 	"""
-	updateParagraph(paragraph: ParagraphUpdate!): UUID!
+	updateParagraph(paragraph: ParagraphUpdate!): DocumentParagraph!
 	updatePage(data: JSON!): Boolean!
 	updateAnnotation(data: JSON!): Boolean!
 	updateWord(word: AnnotatedFormUpdate!): AnnotatedForm!
@@ -962,6 +962,10 @@ type Query {
 	Retrieves all documents that are bookmarked by the current user.
 	"""
 	bookmarkedDocuments: [AnnotatedDoc!]!
+	"""
+	Retrieves a full document from its unique identifier.
+	"""
+	documentByUuid(id: UUID!): AnnotatedDoc
 	"""
 	Retrieves a full document from its unique identifier.
 	"""

@@ -711,7 +711,7 @@ impl Database {
         Ok(document.id)
     }
 
-    pub async fn update_paragraph(&self, paragraph: ParagraphUpdate) -> Result<Uuid> {
+    pub async fn update_paragraph(&self, paragraph: ParagraphUpdate) -> Result<DocumentParagraph> {
         let translation = paragraph.translation.into_vec();
 
         query_file!(
@@ -722,7 +722,7 @@ impl Database {
         .execute(&self.client)
         .await?;
 
-        Ok(paragraph.id)
+        Ok(self.paragraph_by_id(&paragraph.id).await?)
     }
 
     pub async fn update_contributor_attribution(
