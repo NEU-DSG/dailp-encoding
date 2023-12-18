@@ -3,7 +3,13 @@ import "@reach/dialog/styles.css"
 import React, { useEffect, useRef, useState } from "react"
 import { isMobile } from "react-device-detect"
 import { Helmet } from "react-helmet"
-import { MdSettings } from "react-icons/md/index"
+import { HiPencilAlt } from "react-icons/hi"
+import { IoCheckmarkSharp } from "react-icons/io5"
+import {
+  MdOutlineBookmarkAdd,
+  MdOutlineBookmarkRemove,
+  MdSettings,
+} from "react-icons/md/index"
 import { RiArrowUpCircleFill } from "react-icons/ri/index"
 import {
   Dialog,
@@ -15,8 +21,9 @@ import {
   useDialogState,
 } from "reakit"
 import { navigate } from "vite-plugin-ssr/client/router"
-import { useCredentials } from "src/auth"
+import { useUser } from "src/auth"
 import { AudioPlayer, Breadcrumbs, Button, Link } from "src/components"
+import { IconButton, IconTextButton } from "src/components/button"
 import { useMediaQuery } from "src/custom-hooks"
 import { FormProvider as FormProviderDoc } from "src/edit-doc-data-form-context"
 import { EditButton } from "src/edit-word-feature"
@@ -122,7 +129,6 @@ export const TabSet = ({ doc }: { doc: Document }) => {
     }
   }, [])
 
-  const token = useCredentials()
   const tabs = useScrollableTabState({ selectedId: Tabs.ANNOTATION })
   const [{ data }] = Dailp.useDocumentDetailsQuery({
     variables: { slug: doc.slug! },
@@ -144,10 +150,6 @@ export const TabSet = ({ doc }: { doc: Document }) => {
       break
     default:
       scrollTopClass = css.noScrollTop
-  }
-  let editButton = null
-  if (token) {
-    editButton = <EditButton />
   }
   return (
     <>
@@ -426,58 +428,113 @@ export const DocumentTitleHeader = (p: {
     Dailp.CollectionChapter["breadcrumbs"][0],
     "name" | "slug"
   >[]
-  doc: Pick<Dailp.AnnotatedDoc, "slug" | "title"> & {
+  doc: Pick<Dailp.AnnotatedDoc, "slug" | "title" | "id"> & {
     date: NullPick<Dailp.AnnotatedDoc["date"], "year">
+    bookmarkedOn: NullPick<Dailp.AnnotatedDoc["bookmarkedOn"], "formattedDate">
     audioRecording?: NullPick<
       Dailp.AnnotatedDoc["audioRecording"],
       "resourceUrl"
     >
   }
-}) => (
-  <header className={css.docHeader}>
-    {p.breadcrumbs && (
-      <Breadcrumbs aria-label="Breadcrumbs">
-        {p.breadcrumbs.map((crumb) => (
-          <Link href={`${p.rootPath}/${crumb.slug}`} key={crumb.slug}>
-            {crumb.name}
-          </Link>
-        ))}
-      </Breadcrumbs>
-    )}
-
-    <h1 className={css.docTitle}>
-      {p.doc.title}
-      {p.doc.date && ` (${p.doc.date.year})`}{" "}
-    </h1>
-
-    <div className={css.bottomPadded}>
-      {!p.doc.audioRecording && !isMobile && (
-        <div id="no-audio-message">
-          <strong>No Audio Available</strong>
-        </div>
+}) => {
+  const { user } = useUser()
+  return (
+    <header className={css.docHeader}>
+      {p.breadcrumbs && (
+        <Breadcrumbs aria-label="Breadcrumbs">
+          {p.breadcrumbs.map((crumb) => (
+            <Link href={`${p.rootPath}/${crumb.slug}`} key={crumb.slug}>
+              {crumb.name}
+            </Link>
+          ))}
+        </Breadcrumbs>
       )}
-      <div className={css.alignRight}>
-        {!isMobile ? (
-          <Button onClick={() => window.print()}>Print</Button>
-        ) : null}
-      </div>
-    </div>
-    {p.doc.audioRecording && ( // TODO Implement sticky audio bar
-      <div id="document-audio-player" className={css.audioContainer}>
-        <span>Document Audio:</span>
-        <AudioPlayer
-          style={{ flex: 1 }}
-          audioUrl={p.doc.audioRecording.resourceUrl}
-          showProgress
-        />
-        {p.doc.audioRecording && !isMobile && (
-          <div>
-            <a href={p.doc.audioRecording?.resourceUrl}>
-              <Button>Download Audio</Button>
-            </a>
+
+      <h1 className={css.docTitle}>
+        {p.doc.title}
+        {p.doc.date && ` (${p.doc.date.year})`}{" "}
+      </h1>
+
+      <div className={css.bottomPadded}>
+        {user ? (
+          <BookmarkButton
+            documentId={p.doc.id}
+            bookmarkedBool={p.doc.bookmarkedOn !== null}
+          />
+        ) : (
+          <></>
+        )}
+        {!p.doc.audioRecording && !isMobile && (
+          <div id="no-audio-message">
+            <strong>No Audio Available</strong>
           </div>
         )}
+        <div className={css.alignRight}>
+          {!isMobile ? (
+            <Button onClick={() => window.print()}>Print</Button>
+          ) : null}
+        </div>
       </div>
-    )}
-  </header>
-)
+      {p.doc.audioRecording && ( // TODO Implement sticky audio bar
+        <div id="document-audio-player" className={css.audioContainer}>
+          <span>Document Audio:</span>
+          <AudioPlayer
+            style={{ flex: 1 }}
+            audioUrl={p.doc.audioRecording.resourceUrl}
+            showProgress
+          />
+          {p.doc.audioRecording && !isMobile && (
+            <div>
+              <a href={p.doc.audioRecording?.resourceUrl}>
+                <Button>Download Audio</Button>
+              </a>
+            </div>
+          )}
+        </div>
+      )}
+    </header>
+  )
+}
+
+/** Button that allows users to bookmark a document */
+export const BookmarkButton = (props: {
+  documentId: String
+  bookmarkedBool: boolean
+}) => {
+  const [isBookmarked, setIsBookmarked] = useState(props.bookmarkedBool)
+  const [addBookmarkMutationResult, addBookmarkMutation] =
+    Dailp.useAddBookmarkMutation()
+  const [removeBookmarkMutationResult, removeBookmarkMutation] =
+    Dailp.useRemoveBookmarkMutation()
+
+  return (
+    <>
+      {isBookmarked ? (
+        // Displays a "Cancel" button and "Save" button in editing mode.
+        <>
+          <IconTextButton
+            icon={<MdOutlineBookmarkRemove />}
+            className={css.BookmarkButton}
+            onClick={() => {
+              removeBookmarkMutation({ documentId: props.documentId })
+              setIsBookmarked(false)
+            }}
+          >
+            Un-Bookmark
+          </IconTextButton>
+        </>
+      ) : (
+        <IconTextButton
+          icon={<MdOutlineBookmarkAdd />}
+          className={css.BookmarkButton}
+          onClick={() => {
+            addBookmarkMutation({ documentId: props.documentId })
+            setIsBookmarked(true)
+          }}
+        >
+          Bookmark
+        </IconTextButton>
+      )}
+    </>
+  )
+}

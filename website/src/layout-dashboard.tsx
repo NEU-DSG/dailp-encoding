@@ -20,7 +20,7 @@ import "./wordpress.css"
 /* const ClientSignIn = lazy(() => import("./client/signin")) */
 
 /** Wrapper for most site pages, providing them with a navigation header and footer. */
-const Layout: React.FC = ({ children }) => {
+const LayoutDashboard: React.FC = ({ children }) => {
   return (
     <PreferencesProvider>
       <Helmet titleTemplate="%s - DAILP" defaultTitle="DAILP">
@@ -59,4 +59,4 @@ const Layout: React.FC = ({ children }) => {
   )
 }
 
-export default Layout
+export default LayoutDashboard

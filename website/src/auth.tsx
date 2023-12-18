@@ -1,6 +1,7 @@
 import {
   AuthenticationDetails,
   CognitoUser,
+  CognitoUserAttribute,
   CognitoUserPool,
   CognitoUserSession,
 } from "amazon-cognito-identity-js"
@@ -9,8 +10,10 @@ import { navigate } from "vite-plugin-ssr/client/router"
 
 type UserContextType = {
   user: CognitoUser | null
-  setUser: (user: CognitoUser | null) => void
   operations: {
+    createUser: (username: string, password: string) => void
+    resetConfirmationCode: (email: string) => void
+    confirmUser: (email: string, confirmationCode: string) => void
     loginUser: (username: string, password: string) => void
     resetPassword: (username: string) => void
     changePassword: (verificationCode: string, newPassword: string) => void
@@ -41,6 +44,83 @@ export const UserProvider = (props: { children: any }) => {
     })
   }
 
+  function resolveCognitoException(err: Error, userProvidedEmail?: string) {
+    switch (err.name) {
+      case CognitoErrorName.AliasExists:
+        alert(
+          `An account with the email ${userProvidedEmail} already exists. Please use a different email.`
+        )
+        break
+      case CognitoErrorName.CodeDeliveryFailure:
+        alert(`We could not send a confirmation code to ${
+          user?.getUsername() || userProvidedEmail
+        }. 
+          Please make sure you have typed the correct email. 
+          If this issue persists, wait and try again later.`)
+        break
+      case CognitoErrorName.CodeExpired:
+        let userResponse = confirm(
+          `This confirmation code has expired. Request a new code?`
+        )
+        let messageEmail =
+          userProvidedEmail ||
+          prompt("Please enter the email associated with your account.")
+        if (userResponse && messageEmail) {
+          resetConfirmationCode(messageEmail)
+        } else if (userResponse) {
+          alert("Please try again and enter your email.")
+        }
+        break
+      case CognitoErrorName.CodeMismatch:
+        alert(
+          `The code you entered does not match the code we sent you. Please double check your email or request a new code.`
+        )
+        console.log("confirmation failed")
+        break
+      case CognitoErrorName.InvalidPassword:
+        alert(err.message || JSON.stringify(err))
+        break
+      case CognitoErrorName.NotAuthorized:
+        alert(err.message || JSON.stringify(err))
+        break
+      case CognitoErrorName.PasswordResetRequired:
+        if (
+          confirm(
+            `You must reset your password. Would you like to reset your password now?`
+          )
+        ) {
+          navigate("/auth/reset-password")
+        }
+        break
+      case CognitoErrorName.UserNotConfirmed:
+        if (
+          confirm(`Your account must be confirmed before you can log in.
+          Would you like to confirm now?`)
+        ) {
+          navigate("/auth/confirmation")
+        }
+        break
+      case CognitoErrorName.UsernameExists:
+        alert(`An account with the email ${userProvidedEmail} already exists.
+          Please sign up with a different email or try signing in with this email.`)
+        break
+      case CognitoErrorName.UserNotFound:
+        if (
+          confirm(
+            `Account with email ${userProvidedEmail} not found. Would you like to create an account now?`
+          )
+        ) {
+          navigate("/auth/signup")
+        }
+        break // TODO We should tell a user how to create a new account later
+      default:
+        alert(
+          "An unexpected error occured. Please try again or contact a site administrator."
+        )
+        break
+    }
+  }
+
   // Allows persistence of the current user's session between browser refreshes.
   useEffect(() => {
     // if there is an authenticated user present
@@ -64,14 +144,69 @@ export const UserProvider = (props: { children: any }) => {
     return
   }, [user])
 
+  function createUser(email: string, password: string) {
+    let emailLowercase = email.toLowerCase()
+    console.log(`requesting adding user ${emailLowercase} to Cognito User Pool`)
+    let userAttributes = [{ Name: "email", Value: emailLowercase }].map(
+      (attr) => {
+        return new CognitoUserAttribute(attr)
+      }
+    )
+    userPool.signUp(
+      emailLowercase,
+      password,
+      userAttributes,
+      [],
+      async (err, result) => {
+        if (err) {
+          resolveCognitoException(err, emailLowercase)
+        } else {
+          await navigate("/auth/confirmation")
+        }
+      }
+    )
+  }
+
+  function resetConfirmationCode(email: string) {
+    let user = new CognitoUser({
+      Username: email.toLowerCase(),
+      Pool: userPool,
+    })
+
+    user.resendConfirmationCode((err, result) => {
+      if (err) {
+        resolveCognitoException(err, email)
+      } else {
+        console.log(result)
+        alert(`A new confirmation code was sent to ${user.getUsername()}`)
+      }
+    })
+  }
+
+  function confirmUser(email: string, confirmationCode: string) {
+    let user = new CognitoUser({
+      Username: email.toLowerCase(),
+      Pool: userPool,
+    })
+
+    user.confirmRegistration(confirmationCode, false, (err, result) => {
+      if (err) {
+        console.log("confirmation failed. determining error")
+        resolveCognitoException(err, user.getUsername())
+      }
+      console.log("confirmation details: ", result)
+      navigate("/auth/login")
+    })
+  }
+
   function loginUser(username: string, password: string) {
     const user = new CognitoUser({
-      Username: username,
+      Username: username.toLowerCase(),
       Pool: userPool,
     })
 
     const authDetails = new AuthenticationDetails({
-      Username: username,
+      Username: username.toLowerCase(),
       Password: password,
     })
 
@@ -79,17 +214,16 @@ export const UserProvider = (props: { children: any }) => {
     user.authenticateUser(authDetails, {
       onSuccess: (data: CognitoUserSession) => {
         setUser(user)
-
-        console.log("Login success. Result: ", data)
-        alert("Login successful")
+        navigate("/dashboard")
       },
       onFailure: (err: Error) => {
         console.log("Login failed. Result: ", err)
-        alert(err.message)
+        resolveCognitoException(err, user.getUsername())
       },
       newPasswordRequired: (data: CognitoUserSession) => {
         console.log("New password required. Result: ", data)
         alert("New password is required")
+        navigate("auth/reset-password")
       },
     })
   }
@@ -97,7 +231,7 @@ export const UserProvider = (props: { children: any }) => {
   function resetPassword(username: string) {
     // instantiate a new user with the given credentials to access Cognito API methods
     const user = new CognitoUser({
-      Username: username,
+      Username: username.toLowerCase(),
       Pool: userPool,
     })
 
@@ -109,7 +243,7 @@ export const UserProvider = (props: { children: any }) => {
       },
       onFailure: (err: Error) => {
         console.log("Reset password unsuccessful. Result: ", err)
-        alert(err.message)
+        resolveCognitoException(err, user.getUsername())
       },
     })
   }
@@ -118,7 +252,7 @@ export const UserProvider = (props: { children: any }) => {
     user?.confirmPassword(verificationCode, newPassword, {
       async onSuccess(data: string) {
         setUser(null) // since user successfully changed password, reset current user's state
-        await navigate("/login")
+        await navigate("/auth/login")
 
         console.log("Change password successful. Result: ", data)
         alert("Password successfully changed")
@@ -134,8 +268,14 @@ export const UserProvider = (props: { children: any }) => {
     <UserContext.Provider
       value={{
         user,
-        setUser,
-        operations: { loginUser, resetPassword, changePassword },
+        operations: {
+          createUser,
+          resetConfirmationCode: resetConfirmationCode,
+          confirmUser: confirmUser,
+          loginUser,
+          resetPassword,
+          changePassword,
+        },
       }}
     >
       {props.children}
@@ -209,4 +349,30 @@ export async function getCredentials() {
   const sess = await getUserSessionAsync(user)
   const token = sess?.getIdToken().getJwtToken()
   return token ?? null
+}
+
+/**
+ * Errors that can be returned by the Cognito API
+ */
+enum CognitoErrorName {
+  /** User tries to log in but hasnt confirmed */
+  UserNotConfirmed = "UserNotConfirmedException",
+  /** User has requested password reset but not completed */
+  PasswordResetRequired = "PasswordResetRequiredException",
+  /** User isnt authorized */
+  NotAuthorized = "NotAuthorizedException",
+  /** User does not exist */
+  UserNotFound = "UserNotFoundException",
+  /** Code sent but has since expired */
+  CodeExpired = "ExpiredCodeException",
+  /** Code failed to send */
+  CodeDeliveryFailure = "CodeDeliveryFailureException",
+  /** Input code does not match sent code */
+  CodeMismatch = "CodeMismatchException",
+  /** Email is in use by another account in this pool */
+  AliasExists = "AliasExistsException",
+  /** Like `AliasExists` but specifically used for AWS Cognito `SignUp` action */
+  UsernameExists = "UsernameExistsException",
+  /** Password does not meet requirements for this user pool */
+  InvalidPassword = "InvalidPasswordException",
 }

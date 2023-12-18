@@ -1,4 +1,4 @@
-use crate::query::UserInfo;
+use dailp::user::UserInfo;
 use jsonwebtoken::{jwk::JwkSet, Validation};
 
 /// Load the set of keys that can be used to validate Cognito identity tokens

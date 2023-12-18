@@ -22,9 +22,8 @@ in {
         test = "StringEquals";
         variable = "cognito-identity.amazonaws.com:aud";
         values = [
-          # TODO use a reference instead of hard-coding
-          "us-east-1:6d544733-83e2-4d38-baa3-195d3bfdf54b" # FIXME this should be causing some weird behavior somewhere...
-        ];
+          "$\{aws_cognito_identity_pool.main.id}"
+          ];
       };
     };
 

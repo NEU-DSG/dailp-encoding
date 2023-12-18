@@ -4,12 +4,12 @@ mod cognito;
 mod query;
 
 use {
-    crate::query::UserInfo,
     dailp::async_graphql::{
         dataloader::DataLoader,
         http::{playground_source, GraphQLPlaygroundConfig},
         EmptySubscription, Schema,
     },
+    dailp::user::UserInfo,
     tide::{
         http::headers::HeaderValue,
         http::mime,
