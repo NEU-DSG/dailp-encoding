@@ -965,6 +965,10 @@ type Query {
 	"""
 	Retrieves a full document from its unique identifier.
 	"""
+	documentByUuid(id: UUID!): AnnotatedDoc
+	"""
+	Retrieves a full document from its unique identifier.
+	"""
 	page(id: String!): Page
 	"""
 	Lists all forms containing a morpheme with the given gloss.

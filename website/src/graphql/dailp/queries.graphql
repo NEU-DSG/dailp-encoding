@@ -45,6 +45,38 @@ query AnnotatedDocument($slug: String!) {
   }
 }
 
+query AnnotatedDocumentById($id: UUID!) {
+  documentByUuid(id: $id) {
+    id
+    title
+    slug
+    isReference
+    date {
+      year
+    }
+    bookmarkedOn {
+      formattedDate
+    }
+    sources {
+      name
+      link
+    }
+    audioRecording {
+      resourceUrl
+      startTime
+      endTime
+    }
+    translatedPages {
+      image {
+        url
+      }
+    }
+    chapters {
+      path
+    }
+  }
+}
+
 query DocumentContents(
   $slug: String!
   $morphemeSystem: CherokeeOrthography!
