@@ -22,6 +22,41 @@ query AnnotatedDocument($slug: String!) {
     date {
       year
     }
+    bookmarkedOn {
+      formattedDate
+    }
+    sources {
+      name
+      link
+    }
+    audioRecording {
+      resourceUrl
+      startTime
+      endTime
+    }
+    translatedPages {
+      image {
+        url
+      }
+    }
+    chapters {
+      path
+    }
+  }
+}
+
+query AnnotatedDocumentById($id: UUID!) {
+  documentByUuid(id: $id) {
+    id
+    title
+    slug
+    isReference
+    date {
+      year
+    }
+    bookmarkedOn {
+      formattedDate
+    }
     sources {
       name
       link
@@ -57,8 +92,12 @@ query DocumentContents(
             ...FormFields
           }
         }
+        id
         translation
         index
+        comments {
+          id
+        }
       }
     }
     forms @include(if: $isReference) {
@@ -120,6 +159,9 @@ fragment FormFields on AnnotatedForm {
   }
   position {
     documentId
+  }
+  comments {
+    id
   }
 }
 
@@ -318,6 +360,9 @@ query CollectionChapter($collectionSlug: String!, $chapterSlug: String!) {
       date {
         year
       }
+      bookmarkedOn {
+        formattedDate
+      }
       sources {
         name
         link
@@ -335,6 +380,84 @@ query CollectionChapter($collectionSlug: String!, $chapterSlug: String!) {
       chapters {
         path
       }
+    }
+  }
+}
+
+query BookmarkedDocuments {
+  bookmarkedDocuments {
+    id
+    title
+    slug
+    isReference
+    date {
+      year
+    }
+    bookmarkedOn {
+      formattedDate
+    }
+    sources {
+      name
+      link
+    }
+    audioRecording {
+      resourceUrl
+      startTime
+      endTime
+    }
+    translatedPages {
+      image {
+        url
+      }
+    }
+    chapters {
+      path
+    }
+  }
+}
+
+query WordComments($wordId: UUID!) {
+  wordById(id: $wordId) {
+    comments {
+      id
+      postedAt {
+        timestamp
+        date {
+          year
+          month
+          day
+          formattedDate
+        }
+      }
+      postedBy {
+        id
+        displayName
+      }
+      textContent
+      commentType
+    }
+  }
+}
+
+query ParagraphComments($paragraphId: UUID!) {
+  paragraphById(id: $paragraphId) {
+    comments {
+      id
+      postedAt {
+        timestamp
+        date {
+          year
+          month
+          day
+          formattedDate
+        }
+      }
+      postedBy {
+        id
+        displayName
+      }
+      textContent
+      commentType
     }
   }
 }
@@ -376,8 +499,76 @@ mutation CurateWordAudio($input: CurateWordAudioInput!) {
   }
 }
 
+mutation AddBookmark($documentId: UUID!) {
+  addBookmark(documentId: $documentId) {
+    id
+    title
+    slug
+    isReference
+    date {
+      year
+    }
+    bookmarkedOn {
+      formattedDate
+    }
+    sources {
+      name
+      link
+    }
+    audioRecording {
+      resourceUrl
+      startTime
+      endTime
+    }
+    translatedPages {
+      image {
+        url
+      }
+    }
+    chapters {
+      path
+    }
+  }
+}
+
+mutation RemoveBookmark($documentId: UUID!) {
+  removeBookmark(documentId: $documentId) {
+    id
+    title
+    slug
+    isReference
+    date {
+      year
+    }
+    bookmarkedOn {
+      formattedDate
+    }
+    sources {
+      name
+      link
+    }
+    audioRecording {
+      resourceUrl
+      startTime
+      endTime
+    }
+    translatedPages {
+      image {
+        url
+      }
+    }
+    chapters {
+      path
+    }
+  }
+}
+
 mutation UpdateParagraph($paragraph: ParagraphUpdate!) {
-  updateParagraph(paragraph: $paragraph)
+  updateParagraph(paragraph: $paragraph) {
+    id
+    translation
+    index
+  }
 }
 
 mutation UpdateContributorAttribution(
@@ -394,4 +585,17 @@ mutation DeleteContributorAttribution(
 
 mutation UpdateDocumentMetadata($document: DocumentMetadataUpdate!) {
   updateDocumentMetadata(document: $document)
+}
+
+mutation PostComment($input: PostCommentInput!) {
+  postComment(input: $input) {
+    ... on AnnotatedForm {
+      __typename
+      id
+    }
+    ... on DocumentParagraph {
+      __typename
+      id
+    }
+  }
 }

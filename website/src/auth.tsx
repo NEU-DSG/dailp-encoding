@@ -214,9 +214,7 @@ export const UserProvider = (props: { children: any }) => {
     user.authenticateUser(authDetails, {
       onSuccess: (data: CognitoUserSession) => {
         setUser(user)
-        console.log("Login success. Result: ", data)
-        alert("Login successful")
-        navigate("/")
+        navigate("/dashboard")
       },
       onFailure: (err: Error) => {
         console.log("Login failed. Result: ", err)
