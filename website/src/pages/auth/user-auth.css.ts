@@ -1,6 +1,17 @@
 import { style } from "@vanilla-extract/css"
-import { hspace, mediaQueries, radii, vspace } from "src/style/constants"
-import { paddingX, paddingY } from "src/style/utils"
+import { button } from "src/components/button.css"
+import {
+  buttonSize,
+  colors,
+  fonts,
+  hspace,
+  mediaQueries,
+  radii,
+  space,
+  thickness,
+  vspace,
+} from "src/style/constants"
+import { onFocus, onHover, paddingX, paddingY } from "src/style/utils"
 import { centeredColumn, edgePadded, fullWidth } from "src/style/utils.css"
 
 export const loginHeader = style({
@@ -50,5 +61,26 @@ export const positionButton = style({
   justifyContent: "flex-end",
   marginTop: vspace.large,
 })
+
+export const secondaryButton = style([
+  {
+    borderWidth: thickness.thin,
+    borderStyle: "solid",
+    margin: vspace.small,
+    borderRadius: radii.medium,
+    background: "none",
+  },
+  onHover({
+    background: "lightgrey",
+  }),
+  onFocus(
+    {
+      borderColor: colors.focus,
+    },
+    {
+      borderColor: colors.primaryDark,
+    }
+  ),
+])
 
 export const loginButton = style([{ margin: 0, borderRadius: radii.medium }])

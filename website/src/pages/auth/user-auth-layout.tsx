@@ -1,20 +1,18 @@
 import React, { ReactNode } from "react"
 import {
-  unstable_Form as Form,
   unstable_FormInput as FormInput,
   unstable_FormLabel as FormLabel,
   unstable_FormMessage as FormMessage,
-  unstable_FormSubmitButton as FormSubmitButton,
+  unstable_FormSubmitButton as FormSubmit,
   unstable_FormStateReturn,
-  unstable_useFormState as useFormState,
 } from "reakit"
 import { Popover, PopoverDisclosure, usePopoverState } from "reakit"
 import { useCredentials, useUser } from "src/auth"
 import { Button, Link } from "src/components"
 import { cleanButton } from "src/components/button.css"
-import Layout from "../layout"
+import { centeredColumn } from "src/style/utils.css"
+import Layout from "../../layout"
 import {
-  centeredForm,
   centeredHeader,
   loginButton,
   loginFormBox,
@@ -22,76 +20,22 @@ import {
   popoverButton,
   positionButton,
   skinnyWidth,
-} from "./login.css"
-import { ResetLink } from "./reset-password.page"
+} from "./user-auth.css"
 
-export const LoginPageTemplate = (props: {
-  header: ReactNode
+export const UserAuthPageTemplate = (props: {
+  header: { prompt: string; description: string }
   children: ReactNode
 }) => {
   return (
     <Layout>
       <main className={skinnyWidth}>
-        <header className={centeredHeader}>{props.header}</header>
+        <header className={centeredHeader}>
+          <h1 className={centeredColumn}>{props.header.prompt}</h1>
+          <p>{props.header.description}</p>
+        </header>
         {props.children}
       </main>
     </Layout>
-  )
-}
-
-const LoginPage = () => {
-  const { loginUser } = useUser().operations
-
-  const loginForm = useFormState({
-    values: { email: "", password: "" },
-    onValidate: (values) => {
-      if (!values.email) {
-        throw { email: "An email is required" }
-      } else if (!values.password) {
-        throw { password: "A password is required" }
-      }
-    },
-    onSubmit: (values) => {
-      loginUser(values.email, values.password)
-    },
-  })
-
-  return (
-    <LoginPageTemplate
-      header={
-        <>
-          <h1>Log into your account</h1>
-          <h4>
-            Login to contribute to the archive by transcribing documents,
-            recording pronunciations, providing cultural commentary, and more.
-          </h4>
-        </>
-      }
-    >
-      <Form {...loginForm} className={centeredForm}>
-        <FormFields
-          form={loginForm}
-          name="email"
-          label="Email *"
-          placeholder="mail@website.com"
-        />
-
-        <FormFields
-          form={loginForm}
-          name="password"
-          label="Password *"
-          type="password"
-          placeholder="enter password"
-        />
-        <ResetLink />
-
-        <div className={positionButton}>
-          <FormSubmitButton {...loginForm} as={Button} className={loginButton}>
-            Log in
-          </FormSubmitButton>
-        </div>
-      </Form>
-    </LoginPageTemplate>
   )
 }
 
@@ -103,13 +47,13 @@ export const LoginHeaderButton = () => {
   return (
     <div className={loginHeader}>
       {/* if an auth token exists, that means a user is logged in */}
-      {token ? <ConfirmLogout /> : <Link href="/login">Log in</Link>}
+      {token ? <ConfirmLogout /> : <Link href="/auth/login">Log in</Link>}
     </div>
   )
 }
 
 const ConfirmLogout = () => {
-  const { user, setUser } = useUser()
+  const { user } = useUser()
   const popover = usePopoverState({ gutter: 2 })
 
   return (
@@ -123,7 +67,6 @@ const ConfirmLogout = () => {
           className={popoverButton}
           onClick={() => {
             user?.signOut()
-            setUser(null) // set current user to null because user has completed reset password flow and will need to relogin
           }}
         >
           Log out
@@ -133,6 +76,7 @@ const ConfirmLogout = () => {
   )
 }
 
+/// User Auth page form components
 interface FormFieldsType {
   form: unstable_FormStateReturn<any | undefined>
   name: any
@@ -165,4 +109,52 @@ export const FormFields = ({
   )
 }
 
-export const Page = LoginPage
+interface FormSubmitButtonType {
+  form: unstable_FormStateReturn<any | undefined>
+  label: string
+}
+
+export const FormSubmitButton = ({ form, label }: FormSubmitButtonType) => {
+  return (
+    <div className={positionButton}>
+      <FormSubmit {...form} as={Button} className={loginButton}>
+        {label}
+      </FormSubmit>
+    </div>
+  )
+}
+
+export const ResetLink = () => {
+  const token = useCredentials()
+
+  return (
+    <>
+      {!token && (
+        <span>
+          Forgot your password?{" "}
+          <Link href="/auth/reset-password">Reset password</Link>
+        </span>
+      )}
+    </>
+  )
+}
+
+export const SignupLink = () => {
+  return (
+    <>
+      <span>
+        Dont have an account? <Link href="/auth/signup">Sign Up</Link>
+      </span>
+    </>
+  )
+}
+
+export const LoginLink = () => {
+  return (
+    <>
+      <span>
+        Already have an account? <Link href="/auth/login">Log in</Link>
+      </span>
+    </>
+  )
+}
