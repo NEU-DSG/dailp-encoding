@@ -8554,43 +8554,6 @@ export type TaxonomyToTermNodeConnectionPageInfo = PageInfo &
     readonly startCursor: Maybe<Scalars["String"]>
   }
 
-/** Connection between the Taxonomy type and the TermNode type */
-export type TaxonomyToTermNodeConnection = Connection &
-  TermNodeConnection & {
-    readonly __typename?: "TaxonomyToTermNodeConnection"
-    /** Edges for the TaxonomyToTermNodeConnection connection */
-    readonly edges: ReadonlyArray<TaxonomyToTermNodeConnectionEdge>
-    /** The nodes of the connection, without the edges */
-    readonly nodes: ReadonlyArray<TermNode>
-    /** Information about pagination in a connection. */
-    readonly pageInfo: TaxonomyToTermNodeConnectionPageInfo
-  }
-
-/** An edge in a connection */
-export type TaxonomyToTermNodeConnectionEdge = Edge &
-  TermNodeConnectionEdge & {
-    readonly __typename?: "TaxonomyToTermNodeConnectionEdge"
-    /** A cursor for use in pagination */
-    readonly cursor: Maybe<Scalars["String"]>
-    /** The item at the end of the edge */
-    readonly node: TermNode
-  }
-
-/** Page Info on the &quot;TaxonomyToTermNodeConnection&quot; */
-export type TaxonomyToTermNodeConnectionPageInfo = PageInfo &
-  TermNodeConnectionPageInfo &
-  WpPageInfo & {
-    readonly __typename?: "TaxonomyToTermNodeConnectionPageInfo"
-    /** When paginating forwards, the cursor to continue. */
-    readonly endCursor: Maybe<Scalars["String"]>
-    /** When paginating forwards, are there more items? */
-    readonly hasNextPage: Scalars["Boolean"]
-    /** When paginating backwards, are there more items? */
-    readonly hasPreviousPage: Scalars["Boolean"]
-    /** When paginating backwards, the cursor to continue. */
-    readonly startCursor: Maybe<Scalars["String"]>
-  }
-
 /** The template assigned to the node */
 export type Template_PageBuilder = ContentTemplate & {
   readonly __typename?: "Template_PageBuilder"
