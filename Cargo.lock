@@ -903,6 +903,8 @@ dependencies = [
  "reqwest",
  "serde",
  "serde_json",
+ "serde_plain",
+ "serde_with",
  "slug",
  "sqlx",
  "tokio-stream",
