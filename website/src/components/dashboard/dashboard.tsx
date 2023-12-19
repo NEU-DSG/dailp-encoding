@@ -57,7 +57,7 @@ export const ActivityTab = () => {
   const dialog = useDialogState({ animated: true, visible: true })
   return (
     <>
-      <ul className={css.noBullets}>
+      {/* <ul className={css.noBullets}>
         <li>
           <ActivityItem />
         </li>
@@ -67,7 +67,7 @@ export const ActivityTab = () => {
         <li>
           <ActivityItem />
         </li>
-      </ul>
+      </ul> */}
     </>
   )
 }
