@@ -28,7 +28,9 @@ pub struct UserInfo {
     /// Unique ID for the User. Should be an AWS Cognito Sub.
     #[serde(default, rename = "sub")]
     pub id: Uuid,
-    email: String,
+    pub email: String,
+    // AWS ApiGateway will always encode the groups as a comma-separated
+    // string, even if the client sends a JWT with an array.
     #[serde(
         default,
         rename = "cognito:groups",
