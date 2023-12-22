@@ -75,7 +75,7 @@ mod tests {
 
     #[test]
     fn decoding_single_group_works() {
-        let res: Result<UserInfo, _> = serde_json::from_str(
+        let res: Result<ApiGatewayUserInfo, _> = serde_json::from_str(
             r#"
             {
                 "cognito:groups": "Editors",
@@ -87,7 +87,7 @@ mod tests {
         );
 
         assert_eq!(
-            res.unwrap(),
+            res.unwrap().into(),
             UserInfo {
                 id: Uuid::parse_str("7c455493-8e7e-47b9-abed-5f1492eb7a9b").unwrap(),
                 email: String::from("charliemcvicker@protonmail.com"),
@@ -98,7 +98,7 @@ mod tests {
 
     #[test]
     fn decoding_many_groups_works() {
-        let res: Result<UserInfo, _> = serde_json::from_str(
+        let res: Result<ApiGatewayUserInfo, _> = serde_json::from_str(
             r#"
             {
                 "cognito:groups": "Editors,Contributors",
@@ -110,7 +110,7 @@ mod tests {
         );
 
         assert_eq!(
-            res.unwrap(),
+            res.unwrap().into(),
             UserInfo {
                 id: Uuid::parse_str("7c455493-8e7e-47b9-abed-5f1492eb7a9b").unwrap(),
                 email: String::from("charliemcvicker@protonmail.com"),
@@ -121,7 +121,7 @@ mod tests {
 
     #[test]
     fn decoding_no_groups_works() {
-        let res: Result<UserInfo, _> = serde_json::from_str(
+        let res: Result<ApiGatewayUserInfo, _> = serde_json::from_str(
             r#"
             {
                 "cognito:username": "7c455493-8e7e-47b9-abed-5f1492eb7a9b",
@@ -132,7 +132,7 @@ mod tests {
         );
 
         assert_eq!(
-            res.unwrap(),
+            res.unwrap().into(),
             UserInfo {
                 id: Uuid::parse_str("7c455493-8e7e-47b9-abed-5f1492eb7a9b").unwrap(),
                 email: String::from("charliemcvicker@protonmail.com"),
