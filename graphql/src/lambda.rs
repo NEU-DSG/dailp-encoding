@@ -2,7 +2,7 @@ mod query;
 
 use {
     dailp::async_graphql::{self, dataloader::DataLoader, EmptySubscription, Schema},
-    dailp::user::UserInfo,
+    dailp::user::{ApiGatewayUserInfo, UserInfo},
     lambda_http::{http::header, IntoResponse, Request, RequestExt, Response},
     log::info,
     query::*,
@@ -48,7 +48,8 @@ async fn handler(
         lambda_http::request::RequestContext::ApiGatewayV1(ctx) => ctx
             .authorizer
             .get("claims")
-            .and_then(|claims| serde_json::from_value(claims.clone()).ok()),
+            .and_then(|claims| serde_json::from_value::<ApiGatewayUserInfo>(claims.clone()).ok())
+            .map(Into::into),
         _ => None,
     };
 

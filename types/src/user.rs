@@ -28,26 +28,36 @@ pub struct UserInfo {
     /// Unique ID for the User. Should be an AWS Cognito Sub.
     #[serde(default, rename = "sub")]
     pub id: Uuid,
-    pub email: String,
-    // AWS ApiGateway will always encode the groups as a comma-separated
-    // string, even if the client sends a JWT with an array.
+    email: String,
+    #[serde(default, rename = "cognito:groups")]
+    pub groups: Vec<UserGroup>,
+}
+
+// AWS ApiGateway will always encode the groups as a comma-separated
+// string, even if the client sends a JWT with an array.
+#[derive(PartialEq, Deserialize, Debug)]
+#[serde(remote = "UserInfo")]
+pub struct ApiGatewayUserInfoDef {
+    #[serde(default, rename = "sub")]
+    id: Uuid,
+    email: String,
     #[serde(
         default,
         rename = "cognito:groups",
         with = "StringWithSeparator::<CommaSeparator>"
     )]
-    pub groups: Vec<UserGroup>,
+    groups: Vec<UserGroup>,
 }
 
-impl UserInfo {
-    pub fn new_test_admin() -> Self {
-        Self {
-            id: Uuid::parse_str("5f22a8bf-46c8-426c-a104-b4faf7c2d608").unwrap(),
-            email: "test@dailp.northeastern.edu".to_string(),
-            groups: vec![UserGroup::Editors],
-        }
+#[derive(Deserialize)]
+pub struct ApiGatewayUserInfo(#[serde(with = "ApiGatewayUserInfoDef")] UserInfo);
+
+impl Into<UserInfo> for ApiGatewayUserInfo {
+    fn into(self) -> UserInfo {
+        self.0
     }
 }
+
 #[derive(Eq, PartialEq, Copy, Clone, Serialize, Deserialize, Debug, async_graphql::Enum)]
 pub enum UserGroup {
     Contributors,
