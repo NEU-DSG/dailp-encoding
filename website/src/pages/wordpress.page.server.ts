@@ -9,7 +9,7 @@ export async function prerender() {
     )
     .toPromise()
 
-  return data!.pages!.nodes!.map((page) => ({
+  return (data?.pages?.nodes ?? []).map((page) => ({
     url: page!.uri,
   }))
 }
