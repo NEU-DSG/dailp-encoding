@@ -6,10 +6,10 @@
   "scripts": {
     "dev:server": "vite --port 3001",
     "dev:generate": "graphql-codegen --watch",
-    "dev": "npm-run-all --parallel dev:generate dev:server",
+    "dev": "NODE_EXTRA_CA_CERTS=wp-dailp-northeastern-edu-chain.pem npm-run-all --parallel dev:generate dev:server",
     "build:rustdoc": "cd .. && cargo doc --no-deps --workspace",
     "build:vite": "vite build && cp -rfT dist/client/ public/",
-    "build": "graphql-codegen && npm-run-all --parallel build:vite build:rustdoc && cp -rfT ../target/doc/ public/rustdoc/",
+    "build": "NODE_EXTRA_CA_CERTS=wp-dailp-northeastern-edu-chain.pem graphql-codegen && npm-run-all --parallel build:vite build:rustdoc && cp -rfT ../target/doc/ public/rustdoc/",
     "serve": "NODE_ENV=production http-server public -p 3001",
     "generate": "graphql-codegen"
   },
