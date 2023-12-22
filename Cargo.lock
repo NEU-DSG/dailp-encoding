@@ -897,6 +897,7 @@ dependencies = [
  "futures",
  "itertools",
  "lazy_static",
+ "log",
  "maplit",
  "nom 6.1.2",
  "regex",

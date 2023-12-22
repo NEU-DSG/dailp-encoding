@@ -9,7 +9,7 @@ use {
         http::{playground_source, GraphQLPlaygroundConfig},
         EmptySubscription, Schema,
     },
-    dailp::user::UserInfo,
+    dailp::auth::UserInfo,
     tide::{
         http::headers::HeaderValue,
         http::mime,
