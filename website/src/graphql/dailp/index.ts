@@ -12,16 +12,25 @@ export type MakeOptional<T, K extends keyof T> = Omit<T, K> & {
 export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & {
   [SubKey in K]: Maybe<T[SubKey]>
 }
+export type MakeEmpty<
+  T extends { [key: string]: unknown },
+  K extends keyof T
+> = { [_ in K]?: never }
+export type Incremental<T> =
+  | T
+  | {
+      [P in keyof T]?: P extends " $fragmentName" | "__typename" ? T[P] : never
+    }
 export type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
-  ID: string
-  String: string
-  Boolean: boolean
-  Int: number
-  Float: number
+  ID: { input: string; output: string }
+  String: { input: string; output: string }
+  Boolean: { input: boolean; output: boolean }
+  Int: { input: number; output: number }
+  Float: { input: number; output: number }
   /** A scalar that can represent any JSON value. */
-  JSON: any
+  JSON: { input: any; output: any }
   /**
    * A UUID is a unique 128-bit number, stored as 16 octets. UUIDs are parsed as
    * Strings within GraphQL. UUIDs are used to assign unique identifiers to
@@ -32,7 +41,7 @@ export type Scalars = {
    * * [Wikipedia: Universally Unique Identifier](http://en.wikipedia.org/wiki/Universally_unique_identifier)
    * * [RFC4122: A Universally Unique IDentifier (UUID) URN Namespace](http://tools.ietf.org/html/rfc4122)
    */
-  UUID: any
+  UUID: { input: any; output: any }
 }
 
 export type AnnotatedDoc = {
@@ -52,34 +61,34 @@ export type AnnotatedDoc = {
   readonly contributors: ReadonlyArray<Contributor>
   /** Date and time this document was written or created */
   readonly date: Maybe<Date>
-  readonly formCount: Scalars["Int"]
+  readonly formCount: Scalars["Int"]["output"]
   /**
    * All the words contained in this document, dropping structural formatting
    * like line and page breaks.
    */
   readonly forms: ReadonlyArray<AnnotatedForm>
   /** The genre of the document, used to group similar ones */
-  readonly genre: Maybe<Scalars["String"]>
+  readonly genre: Maybe<Scalars["String"]["output"]>
   /** Official short identifier for this document */
-  readonly id: Scalars["UUID"]
+  readonly id: Scalars["UUID"]["output"]
   /**
    * Is this document a reference source (unstructured list of words)?
    * Otherwise, it is considered a structured document with a translation.
    */
-  readonly isReference: Scalars["Boolean"]
+  readonly isReference: Scalars["Boolean"]["output"]
   /**
    * Arbitrary number used for manually ordering documents in a collection.
    * For collections without manual ordering, use zero here.
    */
-  readonly orderIndex: Scalars["Int"]
+  readonly orderIndex: Scalars["Int"]["output"]
   /** Images of each source document page, in order */
   readonly pageImages: Maybe<IiifImages>
   /** URL-ready slug for this document, generated from the title */
-  readonly slug: Scalars["String"]
+  readonly slug: Scalars["String"]["output"]
   /** The original source(s) of this document, the most important first. */
   readonly sources: ReadonlyArray<SourceAttribution>
   /** Full title of the document */
-  readonly title: Scalars["String"]
+  readonly title: Scalars["String"]["output"]
   /** Segments of the document paired with their respective rough translations */
   readonly translatedPages: Maybe<ReadonlyArray<DocumentPage>>
   /**
@@ -90,8 +99,8 @@ export type AnnotatedDoc = {
 }
 
 export type AnnotatedDocFormsArgs = {
-  end: InputMaybe<Scalars["Int"]>
-  start: InputMaybe<Scalars["Int"]>
+  end: InputMaybe<Scalars["Int"]["input"]>
+  start: InputMaybe<Scalars["Int"]["input"]>
 }
 
 /**
@@ -103,7 +112,7 @@ export type AnnotatedDocFormsArgs = {
 export type AnnotatedForm = {
   readonly __typename?: "AnnotatedForm"
   /** Further details about the annotation layers, including uncertainty */
-  readonly commentary: Maybe<Scalars["String"]>
+  readonly commentary: Maybe<Scalars["String"]["output"]>
   /** Get comments on this word */
   readonly comments: ReadonlyArray<Comment>
   /** The date and time this form was recorded */
@@ -111,7 +120,7 @@ export type AnnotatedForm = {
   /** The document that contains this word. */
   readonly document: Maybe<AnnotatedDoc>
   /** Unique identifier of the containing document */
-  readonly documentId: Scalars["UUID"]
+  readonly documentId: Scalars["UUID"]["output"]
   /**
    * A slices of audio associated with this word in the context of a document.
    * This audio has been selected by an editor from contributions, or is the
@@ -119,24 +128,24 @@ export type AnnotatedForm = {
    */
   readonly editedAudio: ReadonlyArray<AudioSlice>
   /** English gloss for the whole word */
-  readonly englishGloss: ReadonlyArray<Scalars["String"]>
+  readonly englishGloss: ReadonlyArray<Scalars["String"]["output"]>
   /** Unique identifier of this form */
-  readonly id: Scalars["UUID"]
+  readonly id: Scalars["UUID"]["output"]
   /** Number of words preceding this one in the containing document */
-  readonly index: Scalars["Int"]
+  readonly index: Scalars["Int"]["output"]
   /** The audio for this word that was ingested from GoogleSheets, if there is any. */
   readonly ingestedAudioTrack: Maybe<AudioSlice>
   /** The character index of a mid-word line break, if there is one */
-  readonly lineBreak: Maybe<Scalars["Int"]>
+  readonly lineBreak: Maybe<Scalars["Int"]["output"]>
   /** A normalized version of the word */
-  readonly normalizedSource: Maybe<Scalars["String"]>
+  readonly normalizedSource: Maybe<Scalars["String"]["output"]>
   /** The character index of a mid-word page break, if there is one */
-  readonly pageBreak: Maybe<Scalars["Int"]>
+  readonly pageBreak: Maybe<Scalars["Int"]["output"]>
   /** Underlying phonemic representation of this word */
-  readonly phonemic: Maybe<Scalars["String"]>
+  readonly phonemic: Maybe<Scalars["String"]["output"]>
   /** Position of the form within the context of its parent document */
   readonly position: PositionInDocument
-  readonly romanizedSource: Maybe<Scalars["String"]>
+  readonly romanizedSource: Maybe<Scalars["String"]["output"]>
   /**
    * The root morpheme of the word.
    * For example, a verb form glossed as "he catches" might have a root morpheme
@@ -147,7 +156,7 @@ export type AnnotatedForm = {
   /** All other observed words with the same root morpheme as this word. */
   readonly similarForms: ReadonlyArray<AnnotatedForm>
   /** Original source text */
-  readonly source: Scalars["String"]
+  readonly source: Scalars["String"]["output"]
   /**
    * Audio for this word that has been recorded by community members. Will be
    * empty if user does not have access to uncurated contributions.
@@ -182,13 +191,13 @@ export type AnnotatedFormSegmentsArgs = {
  */
 export type AnnotatedFormUpdate = {
   /** Possible update to commentary */
-  readonly commentary: InputMaybe<Scalars["String"]>
+  readonly commentary: InputMaybe<Scalars["String"]["input"]>
   /** Unique identifier of the form */
-  readonly id: Scalars["UUID"]
+  readonly id: Scalars["UUID"]["input"]
   /** Updated segments */
   readonly segments: InputMaybe<ReadonlyArray<MorphemeSegmentUpdate>>
   /** Possible update to source content */
-  readonly source: InputMaybe<Scalars["String"]>
+  readonly source: InputMaybe<Scalars["String"]["input"]>
 }
 
 /** Element within a spreadsheet before being transformed into a full document. */
@@ -200,9 +209,9 @@ export type AttachAudioToWordInput = {
    * A URL to a Cloudfront-proxied user-recorded pronunciation of a word.
    * A new resource will be created to represent the recording if one does not exist already
    */
-  readonly contributorAudioUrl: Scalars["String"]
+  readonly contributorAudioUrl: Scalars["String"]["input"]
   /** Word to bind audio to */
-  readonly wordId: Scalars["UUID"]
+  readonly wordId: Scalars["UUID"]["input"]
 }
 
 /**
@@ -214,23 +223,23 @@ export type AudioSlice = {
   /** Last Editor to decide if audio should be included in edited collection. */
   readonly editedBy: Maybe<User>
   /** The time (in seconds) in the parent track where this slice ends. */
-  readonly endTime: Maybe<Scalars["Int"]>
+  readonly endTime: Maybe<Scalars["Int"]["output"]>
   /** True if audio should be shown to Readers. */
-  readonly includeInEditedCollection: Scalars["Boolean"]
+  readonly includeInEditedCollection: Scalars["Boolean"]["output"]
   /** This slice's relative position to other slices within an audio resource */
-  readonly index: Scalars["Int"]
+  readonly index: Scalars["Int"]["output"]
   /** An audio slice this slice is a subunit of, if there is one */
-  readonly parentTrack: Maybe<Scalars["String"]>
+  readonly parentTrack: Maybe<Scalars["String"]["output"]>
   /** When the track was recorded, if available */
   readonly recordedAt: Maybe<Date>
   /** Which user recorded the tracked, if uploaded by a user */
   readonly recordedBy: Maybe<User>
   /** The audio resource this audio slice is taken from, generally pulled from the DRS API */
-  readonly resourceUrl: Scalars["String"]
+  readonly resourceUrl: Scalars["String"]["output"]
   /** The unique id for this audio slice. Will not be present if audio has not been inserted */
-  readonly sliceId: Maybe<Scalars["String"]>
+  readonly sliceId: Maybe<Scalars["String"]["output"]>
   /** The time (in seconds) in the parent track where this slice begins. */
-  readonly startTime: Maybe<Scalars["Int"]>
+  readonly startTime: Maybe<Scalars["Int"]["output"]>
 }
 
 /**
@@ -253,18 +262,18 @@ export type CollectionChapter = {
   readonly breadcrumbs: ReadonlyArray<DocumentCollection>
   readonly document: Maybe<AnnotatedDoc>
   /** UUID for the chapter */
-  readonly id: Scalars["UUID"]
+  readonly id: Scalars["UUID"]["output"]
   /** Order within the parent chapter or collection */
-  readonly indexInParent: Scalars["Int"]
+  readonly indexInParent: Scalars["Int"]["output"]
   /** Full path of the chapter */
-  readonly path: ReadonlyArray<Scalars["String"]>
+  readonly path: ReadonlyArray<Scalars["String"]["output"]>
   /** Whether the chapter is an "Intro" or "Body" chapter */
   readonly section: CollectionSection
-  readonly slug: Scalars["String"]
+  readonly slug: Scalars["String"]["output"]
   /** Full title of the chapter */
-  readonly title: Scalars["String"]
+  readonly title: Scalars["String"]["output"]
   /** ID of WordPress page with text of the chapter */
-  readonly wordpressId: Maybe<Scalars["Int"]>
+  readonly wordpressId: Maybe<Scalars["Int"]["output"]>
 }
 
 /** Enum to represent the sections in an edited collection */
@@ -280,13 +289,13 @@ export type Comment = {
   /** An optional classification of the comment's content */
   readonly commentType: Maybe<CommentType>
   /** Unique identifier of this comment */
-  readonly id: Scalars["UUID"]
+  readonly id: Scalars["UUID"]["output"]
   /** When the comment was posted */
   readonly postedAt: DateTime
   /** Who posted the comment */
   readonly postedBy: User
   /** The text of the comment */
-  readonly textContent: Scalars["String"]
+  readonly textContent: Scalars["String"]["output"]
 }
 
 /** Type representing the object that a comment is attached to */
@@ -323,9 +332,9 @@ export type Contributor = {
   readonly __typename?: "Contributor"
   readonly details: Maybe<ContributorDetails>
   /** Full name of the contributor */
-  readonly name: Scalars["String"]
+  readonly name: Scalars["String"]["output"]
   /** The role that defines most of their contributions to the associated item */
-  readonly role: Scalars["String"]
+  readonly role: Scalars["String"]["output"]
 }
 
 /**
@@ -343,42 +352,42 @@ export type ContributorDetails = {
    * Alternate name of this person, may be in a different language or writing
    * system. Used only for descriptive purposes.
    */
-  readonly alternateName: Maybe<Scalars["String"]>
+  readonly alternateName: Maybe<Scalars["String"]["output"]>
   /** The optional date that this contributor was born on. */
   readonly birthDate: Maybe<Date>
   /**
    * Full name of this person, this exact string must be used to identify
    * them elsewhere, like in the attribution for a particular document.
    */
-  readonly fullName: Scalars["String"]
+  readonly fullName: Scalars["String"]["output"]
 }
 
 /** Request to update if a piece of audio should be included in an edited collection */
 export type CurateWordAudioInput = {
   /** Audio to include/exclude */
-  readonly audioSliceId: Scalars["UUID"]
+  readonly audioSliceId: Scalars["UUID"]["input"]
   /** New value */
-  readonly includeInEditedCollection: Scalars["Boolean"]
+  readonly includeInEditedCollection: Scalars["Boolean"]["input"]
   /** Word audio is attached to */
-  readonly wordId: Scalars["UUID"]
+  readonly wordId: Scalars["UUID"]["input"]
 }
 
 export type Date = {
   readonly __typename?: "Date"
   /** The day of this date */
-  readonly day: Scalars["Int"]
+  readonly day: Scalars["Int"]["output"]
   /** Formatted version of the date for humans to read */
-  readonly formattedDate: Scalars["String"]
+  readonly formattedDate: Scalars["String"]["output"]
   /** The month of this date */
-  readonly month: Scalars["Int"]
+  readonly month: Scalars["Int"]["output"]
   /** The year of this date */
-  readonly year: Scalars["Int"]
+  readonly year: Scalars["Int"]["output"]
 }
 
 export type DateInput = {
-  readonly day: Scalars["Int"]
-  readonly month: Scalars["Int"]
-  readonly year: Scalars["Int"]
+  readonly day: Scalars["Int"]["input"]
+  readonly month: Scalars["Int"]["input"]
+  readonly year: Scalars["Int"]["input"]
 }
 
 export type DateTime = {
@@ -386,19 +395,19 @@ export type DateTime = {
   /** Just the Date component of this DateTime, useful for user-facing display */
   readonly date: Date
   /** UNIX timestamp of the datetime, useful for sorting */
-  readonly timestamp: Scalars["Int"]
+  readonly timestamp: Scalars["Int"]["output"]
 }
 
 /** Input object for deleting an existing comment */
 export type DeleteCommentInput = {
   /** ID of the comment to delete */
-  readonly commentId: Scalars["UUID"]
+  readonly commentId: Scalars["UUID"]["input"]
 }
 
 /** Delete a contributor attribution for a document based on the two ids */
 export type DeleteContributorAttribution = {
-  readonly contributorId: Scalars["UUID"]
-  readonly documentId: Scalars["UUID"]
+  readonly contributorId: Scalars["UUID"]["input"]
+  readonly documentId: Scalars["UUID"]["input"]
 }
 
 export type DocumentCollection = {
@@ -411,9 +420,9 @@ export type DocumentCollection = {
    */
   readonly documents: ReadonlyArray<DocumentReference>
   /** Full name of this collection */
-  readonly name: Scalars["String"]
+  readonly name: Scalars["String"]["output"]
   /** URL-ready slug for this collection, generated from the name */
-  readonly slug: Scalars["String"]
+  readonly slug: Scalars["String"]["output"]
 }
 
 /**
@@ -421,8 +430,8 @@ export type DocumentCollection = {
  * All fields except id are optional.
  */
 export type DocumentMetadataUpdate = {
-  readonly id: Scalars["UUID"]
-  readonly title: InputMaybe<Scalars["String"]>
+  readonly id: Scalars["UUID"]["input"]
+  readonly title: InputMaybe<Scalars["String"]["input"]>
   readonly writtenAt: InputMaybe<DateInput>
 }
 
@@ -431,7 +440,7 @@ export type DocumentPage = {
   /** Scan of this page as a IIIF resource, if there is one */
   readonly image: Maybe<PageImage>
   /** One-indexed page number */
-  readonly pageNumber: Scalars["String"]
+  readonly pageNumber: Scalars["String"]["output"]
   /** Contents of this page as a list of paragraphs */
   readonly paragraphs: ReadonlyArray<DocumentParagraph>
 }
@@ -442,13 +451,13 @@ export type DocumentParagraph = {
   /** Get comments on this paragraph */
   readonly comments: ReadonlyArray<Comment>
   /** Unique identifier for this paragraph */
-  readonly id: Scalars["UUID"]
+  readonly id: Scalars["UUID"]["output"]
   /** 1-indexed position of this paragraph in a document */
-  readonly index: Scalars["Int"]
+  readonly index: Scalars["Int"]["output"]
   /** Source text of the paragraph broken down into words */
   readonly source: ReadonlyArray<AnnotatedSeg>
   /** English translation of the whole paragraph */
-  readonly translation: Scalars["String"]
+  readonly translation: Scalars["String"]["output"]
 }
 
 /**
@@ -460,15 +469,15 @@ export type DocumentReference = {
   /** Date the document was produced (or `None` if unknown) */
   readonly date: Maybe<Date>
   /** Database ID for the document */
-  readonly id: Scalars["UUID"]
+  readonly id: Scalars["UUID"]["output"]
   /** Index of the document within its group, used purely for ordering */
-  readonly orderIndex: Scalars["Int"]
+  readonly orderIndex: Scalars["Int"]["output"]
   /** Unique short name */
-  readonly shortName: Scalars["String"]
+  readonly shortName: Scalars["String"]["output"]
   /** URL slug for this document */
-  readonly slug: Scalars["String"]
+  readonly slug: Scalars["String"]["output"]
   /** Long title of the document */
-  readonly title: Scalars["String"]
+  readonly title: Scalars["String"]["output"]
 }
 
 /**
@@ -489,13 +498,13 @@ export type EditedCollection = {
   readonly __typename?: "EditedCollection"
   readonly chapters: Maybe<ReadonlyArray<CollectionChapter>>
   /** UUID for the collection */
-  readonly id: Scalars["UUID"]
+  readonly id: Scalars["UUID"]["output"]
   /** URL slug for the collection, like "cwkw" */
-  readonly slug: Scalars["String"]
+  readonly slug: Scalars["String"]["output"]
   /** Full title of the collection */
-  readonly title: Scalars["String"]
+  readonly title: Scalars["String"]["output"]
   /** ID of WordPress menu for navigating the collection */
-  readonly wordpressMenuId: Maybe<Scalars["Int"]>
+  readonly wordpressMenuId: Maybe<Scalars["Int"]["output"]>
 }
 
 export type FormsInTime = {
@@ -508,7 +517,7 @@ export type FormsInTime = {
 /** A gallery of images, which may be rendered as a slideshow or lightbox. */
 export type Gallery = {
   readonly __typename?: "Gallery"
-  readonly mediaUrls: ReadonlyArray<Scalars["String"]>
+  readonly mediaUrls: ReadonlyArray<Scalars["String"]["output"]>
 }
 
 /**
@@ -530,10 +539,10 @@ export type Gallery = {
  */
 export type Geometry = {
   readonly __typename?: "Geometry"
-  readonly xMax: Scalars["Float"]
-  readonly xMin: Scalars["Float"]
-  readonly yMax: Scalars["Float"]
-  readonly yMin: Scalars["Float"]
+  readonly xMax: Scalars["Float"]["output"]
+  readonly xMin: Scalars["Float"]["output"]
+  readonly yMax: Scalars["Float"]["output"]
+  readonly yMin: Scalars["Float"]["output"]
 }
 
 export type IiifImages = {
@@ -541,13 +550,13 @@ export type IiifImages = {
   /** Information about the data source for this set of images */
   readonly source: ImageSource
   /** List of urls for all the images in this collection */
-  readonly urls: ReadonlyArray<Scalars["String"]>
+  readonly urls: ReadonlyArray<Scalars["String"]["output"]>
 }
 
 export type ImageSource = {
   readonly __typename?: "ImageSource"
   /** Base URL for the IIIF server */
-  readonly url: Scalars["String"]
+  readonly url: Scalars["String"]["output"]
 }
 
 /** Start of a new line */
@@ -557,13 +566,13 @@ export type LineBreak = {
    * Index of this line break within the document. i.e. Indicates the start
    * of line X.
    */
-  readonly index: Scalars["Int"]
+  readonly index: Scalars["Int"]["output"]
 }
 
 /** A block of prose content, formatted with [Markdown](https://commonmark.org/). */
 export type Markdown = {
   readonly __typename?: "Markdown"
-  readonly content: Scalars["String"]
+  readonly content: Scalars["String"]["output"]
 }
 
 /** One particular morpheme and all the known words that contain that exact morpheme. */
@@ -572,15 +581,15 @@ export type MorphemeReference = {
   /** List of words that contain this morpheme. */
   readonly forms: ReadonlyArray<AnnotatedForm>
   /** Phonemic shape of the morpheme. */
-  readonly morpheme: Scalars["String"]
+  readonly morpheme: Scalars["String"]["output"]
 }
 
 /** A single unit of meaning and its gloss which can be edited. */
 export type MorphemeSegmentUpdate = {
   /** Target language representation of this segment. */
-  readonly gloss: Scalars["String"]
+  readonly gloss: Scalars["String"]["input"]
   /** Source language representation of this segment. */
-  readonly morpheme: Scalars["String"]
+  readonly morpheme: Scalars["String"]["input"]
   /**
    * This field determines what character should separate this segment from
    * the next one when reconstituting the full segmentation string.
@@ -597,28 +606,28 @@ export type MorphemeTag = {
    * A prose description of what this morpheme means and how it works in
    * context.
    */
-  readonly definition: Scalars["String"]
+  readonly definition: Scalars["String"]["output"]
   /** URL to an external page with more details about this morpheme. */
-  readonly detailsUrl: Maybe<Scalars["String"]>
+  readonly detailsUrl: Maybe<Scalars["String"]["output"]>
   /**
    * Internal representation of this functional item, which may be one or
    * more word parts in the raw annotation. For example, ["X", "Y"] could map
    * to "Z" in a particular display format.
    */
-  readonly internalTags: ReadonlyArray<Scalars["String"]>
+  readonly internalTags: ReadonlyArray<Scalars["String"]["output"]>
   /**
    * What kind of morpheme is this? Examples are "Prepronominal Prefix" or
    * "Aspectual Suffix"
    */
-  readonly morphemeType: Scalars["String"]
+  readonly morphemeType: Scalars["String"]["output"]
   /** Overrides the segment type of instances of this tag. */
   readonly roleOverride: Maybe<WordSegmentRole>
   /** How this morpheme looks in original language data */
-  readonly shape: Maybe<Scalars["String"]>
+  readonly shape: Maybe<Scalars["String"]["output"]>
   /** How this morpheme is represented in a gloss */
-  readonly tag: Scalars["String"]
+  readonly tag: Scalars["String"]["output"]
   /** Plain English title of the morpheme tag */
-  readonly title: Scalars["String"]
+  readonly title: Scalars["String"]["output"]
 }
 
 export type Mutation = {
@@ -630,7 +639,7 @@ export type Mutation = {
    * correctly, so we just provide an API version which might be useful in
    * the future.
    */
-  readonly apiVersion: Scalars["String"]
+  readonly apiVersion: Scalars["String"]["output"]
   /**
    * Attach audio that has already been uploaded to S3 to a particular word
    * Assumes user requesting mutation recoreded the audio
@@ -644,23 +653,23 @@ export type Mutation = {
    */
   readonly deleteComment: CommentParent
   /** Mutation for deleting contributor attributions */
-  readonly deleteContributorAttribution: Scalars["UUID"]
+  readonly deleteContributorAttribution: Scalars["UUID"]["output"]
   /** Post a new comment on a given object */
   readonly postComment: CommentParent
   /** Removes a bookmark from a user's list of bookmarks */
   readonly removeBookmark: AnnotatedDoc
-  readonly updateAnnotation: Scalars["Boolean"]
+  readonly updateAnnotation: Scalars["Boolean"]["output"]
   /** Mutation for adding/changing contributor attributions */
-  readonly updateContributorAttribution: Scalars["UUID"]
-  readonly updateDocumentMetadata: Scalars["UUID"]
-  readonly updatePage: Scalars["Boolean"]
+  readonly updateContributorAttribution: Scalars["UUID"]["output"]
+  readonly updateDocumentMetadata: Scalars["UUID"]["output"]
+  readonly updatePage: Scalars["Boolean"]["output"]
   /** Mutation for paragraph and translation editing */
   readonly updateParagraph: DocumentParagraph
   readonly updateWord: AnnotatedForm
 }
 
 export type MutationAddBookmarkArgs = {
-  documentId: Scalars["UUID"]
+  documentId: Scalars["UUID"]["input"]
 }
 
 export type MutationAttachAudioToWordArgs = {
@@ -684,11 +693,11 @@ export type MutationPostCommentArgs = {
 }
 
 export type MutationRemoveBookmarkArgs = {
-  documentId: Scalars["UUID"]
+  documentId: Scalars["UUID"]["input"]
 }
 
 export type MutationUpdateAnnotationArgs = {
-  data: Scalars["JSON"]
+  data: Scalars["JSON"]["input"]
 }
 
 export type MutationUpdateContributorAttributionArgs = {
@@ -700,7 +709,7 @@ export type MutationUpdateDocumentMetadataArgs = {
 }
 
 export type MutationUpdatePageArgs = {
-  data: Scalars["JSON"]
+  data: Scalars["JSON"]["input"]
 }
 
 export type MutationUpdateParagraphArgs = {
@@ -722,8 +731,8 @@ export type Page = {
    * The path that this page lives at, which also uniquely identifies it.
    * For example, "/our-team"
    */
-  readonly id: Scalars["String"]
-  readonly title: Scalars["String"]
+  readonly id: Scalars["String"]["output"]
+  readonly title: Scalars["String"]["output"]
 }
 
 export type PageImage = {
@@ -731,24 +740,24 @@ export type PageImage = {
   /** The IIIF source this page image comes from */
   readonly source: ImageSource
   /** The full IIIF url for this image resource */
-  readonly url: Scalars["String"]
+  readonly url: Scalars["String"]["output"]
 }
 
 /** A paragraph in an annotated document that can be edited. */
 export type ParagraphUpdate = {
   /** Unique identifier of the form */
-  readonly id: Scalars["UUID"]
-  readonly translation: InputMaybe<Scalars["String"]>
+  readonly id: Scalars["UUID"]["input"]
+  readonly translation: InputMaybe<Scalars["String"]["input"]>
 }
 
 /** The reference position within a document of one specific form */
 export type PositionInDocument = {
   readonly __typename?: "PositionInDocument"
   /** What document is this item within? */
-  readonly documentId: Scalars["UUID"]
+  readonly documentId: Scalars["UUID"]["output"]
   /** What section of the document image corresponds to this item? */
   readonly geometry: Maybe<Geometry>
-  readonly iiifUrl: Maybe<Scalars["String"]>
+  readonly iiifUrl: Maybe<Scalars["String"]["output"]>
   /**
    * How many items come before this one in the whole document?
    *
@@ -756,20 +765,20 @@ export type PositionInDocument = {
    * forms in the document. Used for relative ordering of forms from the
    * same document.
    */
-  readonly index: Scalars["Int"]
+  readonly index: Scalars["Int"]["output"]
   /**
    * Index reference for this position, more specific than `page_reference`.
    * Generally used in corpus documents where there are few pages containing
    * many forms each. Example: "WJ23:#21"
    */
-  readonly indexReference: Scalars["String"]
+  readonly indexReference: Scalars["String"]["output"]
   /** What page is it on (starting from 1)? May be a single page or range of pages. */
-  readonly pageNumber: Scalars["String"]
+  readonly pageNumber: Scalars["String"]["output"]
   /**
    * Standard page reference for this position, which can be used in citation.
    * Generally formatted like ID:PAGE, i.e "DF2018:55"
    */
-  readonly pageReference: Scalars["String"]
+  readonly pageReference: Scalars["String"]["output"]
 }
 
 /** Input object for posting a new comment on some object */
@@ -777,11 +786,11 @@ export type PostCommentInput = {
   /** A classifcation for the comment (optional) */
   readonly commentType: InputMaybe<CommentType>
   /** ID of the object that is being commented on */
-  readonly parentId: Scalars["UUID"]
+  readonly parentId: Scalars["UUID"]["input"]
   /** Type of the object being commented on */
   readonly parentType: CommentParentType
   /** Content of the comment */
-  readonly textContent: Scalars["String"]
+  readonly textContent: Scalars["String"]["input"]
 }
 
 export type Query = {
@@ -848,64 +857,64 @@ export type QueryAllTagsArgs = {
 }
 
 export type QueryChapterArgs = {
-  chapterSlug: Scalars["String"]
-  collectionSlug: Scalars["String"]
+  chapterSlug: Scalars["String"]["input"]
+  collectionSlug: Scalars["String"]["input"]
 }
 
 export type QueryCollectionArgs = {
-  slug: Scalars["String"]
+  slug: Scalars["String"]["input"]
 }
 
 export type QueryDocumentArgs = {
-  slug: Scalars["String"]
+  slug: Scalars["String"]["input"]
 }
 
 export type QueryDocumentByUuidArgs = {
-  id: Scalars["UUID"]
+  id: Scalars["UUID"]["input"]
 }
 
 export type QueryEditedCollectionArgs = {
-  slug: Scalars["String"]
+  slug: Scalars["String"]["input"]
 }
 
 export type QueryMorphemeTagArgs = {
-  id: Scalars["String"]
+  id: Scalars["String"]["input"]
   system: CherokeeOrthography
 }
 
 export type QueryMorphemeTimeClustersArgs = {
-  clusterYears?: Scalars["Int"]
-  gloss: Scalars["String"]
+  clusterYears?: Scalars["Int"]["input"]
+  gloss: Scalars["String"]["input"]
 }
 
 export type QueryMorphemesByDocumentArgs = {
-  documentId: InputMaybe<Scalars["UUID"]>
-  morphemeGloss: Scalars["String"]
+  documentId: InputMaybe<Scalars["UUID"]["input"]>
+  morphemeGloss: Scalars["String"]["input"]
 }
 
 export type QueryMorphemesByShapeArgs = {
   compareBy: InputMaybe<CherokeeOrthography>
-  gloss: Scalars["String"]
+  gloss: Scalars["String"]["input"]
 }
 
 export type QueryPageArgs = {
-  id: Scalars["String"]
+  id: Scalars["String"]["input"]
 }
 
 export type QueryParagraphByIdArgs = {
-  id: Scalars["UUID"]
+  id: Scalars["UUID"]["input"]
 }
 
 export type QuerySyllabarySearchArgs = {
-  query: Scalars["String"]
+  query: Scalars["String"]["input"]
 }
 
 export type QueryWordByIdArgs = {
-  id: Scalars["UUID"]
+  id: Scalars["UUID"]["input"]
 }
 
 export type QueryWordSearchArgs = {
-  query: Scalars["String"]
+  query: Scalars["String"]["input"]
 }
 
 /**
@@ -916,25 +925,25 @@ export type QueryWordSearchArgs = {
 export type SourceAttribution = {
   readonly __typename?: "SourceAttribution"
   /** URL of this source's homepage, i.e. "https://www.newberry.org/" */
-  readonly link: Scalars["String"]
+  readonly link: Scalars["String"]["output"]
   /** Name of the source, i.e. "The Newberry Library" */
-  readonly name: Scalars["String"]
+  readonly name: Scalars["String"]["output"]
 }
 
 /** Update the contributor attribution for a document */
 export type UpdateContributorAttribution = {
-  readonly contributionRole: Scalars["String"]
-  readonly contributorId: Scalars["UUID"]
-  readonly documentId: Scalars["UUID"]
+  readonly contributionRole: Scalars["String"]["input"]
+  readonly contributorId: Scalars["UUID"]["input"]
+  readonly documentId: Scalars["UUID"]["input"]
 }
 
 /** A user record, for a contributor, editor, etc. */
 export type User = {
   readonly __typename?: "User"
   /** User-facing name for this contributor/curator */
-  readonly displayName: Scalars["String"]
+  readonly displayName: Scalars["String"]["output"]
   /** Id of the user, which must be a AWS Cognito `sub` claim */
-  readonly id: Scalars["String"]
+  readonly id: Scalars["String"]["output"]
 }
 
 export enum UserGroup {
@@ -945,28 +954,28 @@ export enum UserGroup {
 /** Auth metadata on the user making the current request. */
 export type UserInfo = {
   readonly __typename?: "UserInfo"
-  readonly email: Scalars["String"]
+  readonly email: Scalars["String"]["output"]
   readonly groups: ReadonlyArray<UserGroup>
   /** Unique ID for the User. Should be an AWS Cognito Sub. */
-  readonly id: Scalars["UUID"]
+  readonly id: Scalars["UUID"]["output"]
 }
 
 export type WordSegment = {
   readonly __typename?: "WordSegment"
   /** English gloss in standard DAILP format that refers to a lexical item */
-  readonly gloss: Scalars["String"]
+  readonly gloss: Scalars["String"]["output"]
   /**
    * If this morpheme represents a functional tag that we have further
    * information on, this is the corresponding database entry.
    */
   readonly matchingTag: Maybe<MorphemeTag>
   /** Phonemic representation of the morpheme */
-  readonly morpheme: Scalars["String"]
+  readonly morpheme: Scalars["String"]["output"]
   /**
    * This field determines what character should separate this segment from
    * the previous one when reconstituting the full segmentation string.
    */
-  readonly previousSeparator: Scalars["String"]
+  readonly previousSeparator: Scalars["String"]["output"]
   /** What kind of thing is this segment? */
   readonly role: WordSegmentRole
 }
@@ -985,7 +994,7 @@ export enum WordSegmentRole {
 export type WordsInDocument = {
   readonly __typename?: "WordsInDocument"
   /** Unique identifier of the containing document */
-  readonly documentId: Maybe<Scalars["UUID"]>
+  readonly documentId: Maybe<Scalars["UUID"]["output"]>
   /** What kind of document contains these words (e.g. manuscript vs dictionary) */
   readonly documentType: Maybe<DocumentType>
   /** List of annotated and potentially segmented forms */
@@ -1015,7 +1024,7 @@ export type DocumentsPagesQuery = { readonly __typename?: "Query" } & {
 }
 
 export type AnnotatedDocumentQueryVariables = Exact<{
-  slug: Scalars["String"]
+  slug: Scalars["String"]["input"]
 }>
 
 export type AnnotatedDocumentQuery = { readonly __typename?: "Query" } & {
@@ -1064,7 +1073,7 @@ export type AnnotatedDocumentQuery = { readonly __typename?: "Query" } & {
 }
 
 export type AnnotatedDocumentByIdQueryVariables = Exact<{
-  id: Scalars["UUID"]
+  id: Scalars["UUID"]["input"]
 }>
 
 export type AnnotatedDocumentByIdQuery = { readonly __typename?: "Query" } & {
@@ -1113,9 +1122,9 @@ export type AnnotatedDocumentByIdQuery = { readonly __typename?: "Query" } & {
 }
 
 export type DocumentContentsQueryVariables = Exact<{
-  slug: Scalars["String"]
+  slug: Scalars["String"]["input"]
   morphemeSystem: CherokeeOrthography
-  isReference: Scalars["Boolean"]
+  isReference: Scalars["Boolean"]["input"]
 }>
 
 export type DocumentContentsQuery = { readonly __typename?: "Query" } & {
@@ -1386,7 +1395,7 @@ export type FormFieldsFragment = {
   }
 
 export type CollectionQueryVariables = Exact<{
-  slug: Scalars["String"]
+  slug: Scalars["String"]["input"]
 }>
 
 export type CollectionQuery = { readonly __typename?: "Query" } & {
@@ -1428,7 +1437,7 @@ export type EditedCollectionsQuery = { readonly __typename?: "Query" } & {
 }
 
 export type EditedCollectionQueryVariables = Exact<{
-  slug: Scalars["String"]
+  slug: Scalars["String"]["input"]
 }>
 
 export type EditedCollectionQuery = { readonly __typename?: "Query" } & {
@@ -1447,7 +1456,7 @@ export type EditedCollectionQuery = { readonly __typename?: "Query" } & {
 }
 
 export type WordSearchQueryVariables = Exact<{
-  query: Scalars["String"]
+  query: Scalars["String"]["input"]
 }>
 
 export type WordSearchQuery = { readonly __typename?: "Query" } & {
@@ -1502,7 +1511,7 @@ export type GlossaryQuery = { readonly __typename?: "Query" } & {
 }
 
 export type TimelineQueryVariables = Exact<{
-  gloss: Scalars["String"]
+  gloss: Scalars["String"]["input"]
 }>
 
 export type TimelineQuery = { readonly __typename?: "Query" } & {
@@ -1528,7 +1537,7 @@ export type TimelineQuery = { readonly __typename?: "Query" } & {
 }
 
 export type DocumentDetailsQueryVariables = Exact<{
-  slug: Scalars["String"]
+  slug: Scalars["String"]["input"]
 }>
 
 export type DocumentDetailsQuery = { readonly __typename?: "Query" } & {
@@ -1557,7 +1566,7 @@ export type DocumentDetailsQuery = { readonly __typename?: "Query" } & {
 }
 
 export type EditablePageQueryVariables = Exact<{
-  id: Scalars["String"]
+  id: Scalars["String"]["input"]
 }>
 
 export type EditablePageQuery = { readonly __typename?: "Query" } & {
@@ -1572,7 +1581,7 @@ export type EditablePageQuery = { readonly __typename?: "Query" } & {
 }
 
 export type TagQueryVariables = Exact<{
-  gloss: Scalars["String"]
+  gloss: Scalars["String"]["input"]
   system: CherokeeOrthography
 }>
 
@@ -1586,8 +1595,8 @@ export type TagQuery = { readonly __typename?: "Query" } & {
 }
 
 export type MorphemeQueryVariables = Exact<{
-  documentId: InputMaybe<Scalars["UUID"]>
-  morphemeGloss: Scalars["String"]
+  documentId: InputMaybe<Scalars["UUID"]["input"]>
+  morphemeGloss: Scalars["String"]["input"]
 }>
 
 export type MorphemeQuery = { readonly __typename?: "Query" } & {
@@ -1614,7 +1623,7 @@ export type MorphemeQuery = { readonly __typename?: "Query" } & {
 }
 
 export type NewPageMutationVariables = Exact<{
-  data: Scalars["JSON"]
+  data: Scalars["JSON"]["input"]
 }>
 
 export type NewPageMutation = { readonly __typename?: "Mutation" } & Pick<
@@ -1623,9 +1632,9 @@ export type NewPageMutation = { readonly __typename?: "Mutation" } & Pick<
 >
 
 export type DocSliceQueryVariables = Exact<{
-  slug: Scalars["String"]
-  start: Scalars["Int"]
-  end: InputMaybe<Scalars["Int"]>
+  slug: Scalars["String"]["input"]
+  start: Scalars["Int"]["input"]
+  end: InputMaybe<Scalars["Int"]["input"]>
   morphemeSystem: CherokeeOrthography
 }>
 
@@ -1715,8 +1724,8 @@ export type DocSliceQuery = { readonly __typename?: "Query" } & {
 }
 
 export type CollectionChapterQueryVariables = Exact<{
-  collectionSlug: Scalars["String"]
-  chapterSlug: Scalars["String"]
+  collectionSlug: Scalars["String"]["input"]
+  chapterSlug: Scalars["String"]["input"]
 }>
 
 export type CollectionChapterQuery = { readonly __typename?: "Query" } & {
@@ -1828,7 +1837,7 @@ export type BookmarkedDocumentsQuery = { readonly __typename?: "Query" } & {
 }
 
 export type WordCommentsQueryVariables = Exact<{
-  wordId: Scalars["UUID"]
+  wordId: Scalars["UUID"]["input"]
 }>
 
 export type WordCommentsQuery = { readonly __typename?: "Query" } & {
@@ -1857,7 +1866,7 @@ export type WordCommentsQuery = { readonly __typename?: "Query" } & {
 }
 
 export type ParagraphCommentsQueryVariables = Exact<{
-  paragraphId: Scalars["UUID"]
+  paragraphId: Scalars["UUID"]["input"]
 }>
 
 export type ParagraphCommentsQuery = { readonly __typename?: "Query" } & {
@@ -2025,7 +2034,7 @@ export type CurateWordAudioMutation = { readonly __typename?: "Mutation" } & {
 }
 
 export type AddBookmarkMutationVariables = Exact<{
-  documentId: Scalars["UUID"]
+  documentId: Scalars["UUID"]["input"]
 }>
 
 export type AddBookmarkMutation = { readonly __typename?: "Mutation" } & {
@@ -2072,7 +2081,7 @@ export type AddBookmarkMutation = { readonly __typename?: "Mutation" } & {
 }
 
 export type RemoveBookmarkMutationVariables = Exact<{
-  documentId: Scalars["UUID"]
+  documentId: Scalars["UUID"]["input"]
 }>
 
 export type RemoveBookmarkMutation = { readonly __typename?: "Mutation" } & {
