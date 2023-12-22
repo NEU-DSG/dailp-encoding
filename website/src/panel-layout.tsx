@@ -322,7 +322,7 @@ export const PanelContent = (p: {
       {/* If there is no commentary, does not display Commentary panel */}
       {p.word.commentary && p.word.commentary.length > 0 && (
         <CollapsiblePanel
-          title={"Commentary"}
+          title={"Lingustic commentary"}
           content={commentaryContent}
           icon={<MdNotes size={24} className={css.wordPanelButton.colpleft} />}
         />
