@@ -164,19 +164,20 @@ export const PanelLayout = (p: {
   return (
     <div className={css.wordPanelContent}>
       <>{panel}</>
-      {isCommenting ? (
-        <SubtleButton
-          type="button"
-          onClick={() => setIsCommenting(false)}
-          className={css.buttonSpacing}
-        >
-          Discard
-        </SubtleButton>
-      ) : (
-        <Button type="button" onClick={() => setIsCommenting(true)}>
-          Comment
-        </Button>
-      )}
+      {token && // only show the option to leave a comment if the user is signed in
+        (isCommenting ? (
+          <SubtleButton
+            type="button"
+            onClick={() => setIsCommenting(false)}
+            className={css.buttonSpacing}
+          >
+            Discard
+          </SubtleButton>
+        ) : (
+          <Button type="button" onClick={() => setIsCommenting(true)}>
+            Comment
+          </Button>
+        ))}
     </div>
   )
 }
