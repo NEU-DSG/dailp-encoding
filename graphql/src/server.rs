@@ -18,6 +18,8 @@ use {
     },
 };
 
+use dailp::async_graphql::extensions::ApolloTracing;
+
 #[tokio::main]
 async fn main() -> tide::Result<()> {
     dotenv::dotenv().ok();
@@ -26,6 +28,7 @@ async fn main() -> tide::Result<()> {
 
     // create schema
     let schema = Schema::build(query::Query, query::Mutation, EmptySubscription)
+        .extension(ApolloTracing)
         .data(DataLoader::new(
             dailp::Database::connect(None)?,
             tokio::spawn,
@@ -33,6 +36,7 @@ async fn main() -> tide::Result<()> {
         .finish();
 
     let authed_schema = Schema::build(query::Query, query::Mutation, EmptySubscription)
+        .extension(ApolloTracing)
         .data(DataLoader::new(
             dailp::Database::connect(None)?,
             tokio::spawn,

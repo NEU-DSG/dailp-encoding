@@ -1241,38 +1241,43 @@
           "type_info": "Uuid"
         },
         {
-          "name": "audio_url?",
+          "name": "last_edited",
           "ordinal": 8,
+          "type_info": "Date"
+        },
+        {
+          "name": "audio_url?",
+          "ordinal": 9,
           "type_info": "Text"
         },
         {
           "name": "recorded_at?",
-          "ordinal": 9,
+          "ordinal": 10,
           "type_info": "Date"
         },
         {
           "name": "recorded_by?",
-          "ordinal": 10,
+          "ordinal": 11,
           "type_info": "Uuid"
         },
         {
           "name": "recorded_by_name?",
-          "ordinal": 11,
+          "ordinal": 12,
           "type_info": "Text"
         },
         {
           "name": "audio_slice?",
-          "ordinal": 12,
+          "ordinal": 13,
           "type_info": "Int8Range"
         },
         {
           "name": "bookmarked_on?",
-          "ordinal": 13,
+          "ordinal": 14,
           "type_info": "Date"
         },
         {
           "name": "contributors",
-          "ordinal": 14,
+          "ordinal": 15,
           "type_info": "Jsonb"
         }
       ],
@@ -1283,6 +1288,7 @@
         false,
         false,
         false,
+        true,
         true,
         true,
         false,
@@ -2457,38 +2463,43 @@
           "type_info": "Uuid"
         },
         {
-          "name": "audio_url?",
+          "name": "last_edited",
           "ordinal": 8,
+          "type_info": "Date"
+        },
+        {
+          "name": "audio_url?",
+          "ordinal": 9,
           "type_info": "Text"
         },
         {
           "name": "recorded_at?",
-          "ordinal": 9,
+          "ordinal": 10,
           "type_info": "Date"
         },
         {
           "name": "recorded_by?",
-          "ordinal": 10,
+          "ordinal": 11,
           "type_info": "Uuid"
         },
         {
           "name": "recorded_by_name?",
-          "ordinal": 11,
+          "ordinal": 12,
           "type_info": "Text"
         },
         {
           "name": "audio_slice?",
-          "ordinal": 12,
+          "ordinal": 13,
           "type_info": "Int8Range"
         },
         {
           "name": "bookmarked_on?",
-          "ordinal": 13,
+          "ordinal": 14,
           "type_info": "Date"
         },
         {
           "name": "contributors",
-          "ordinal": 14,
+          "ordinal": 15,
           "type_info": "Jsonb"
         }
       ],
@@ -2499,6 +2510,7 @@
         false,
         false,
         false,
+        true,
         true,
         true,
         false,

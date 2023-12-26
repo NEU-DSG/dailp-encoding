@@ -375,9 +375,10 @@ const DocumentContents = ({
     // If the form has been submitted, update the panel's current contents to be the currently selected word
     if (form.submitting) {
       // Update the form's current word
-      wordPanelDetails.setCurrContents(form.values.word)
+      // wordPanelDetails.setCurrContents(form.values.word)
+      console.log("[charlie] Not rerunning query :)")
       // Query of document contents is rerun to ensure frontend and backend are in sync
-      rerunQuery({ requestPolicy: "network-only" })
+      // rerunQuery({ requestPolicy: "network-only" })
     } else {
       // If the form was not submitted, make sure to reset the current word of the form to its unmodified state.
       form.update("word", wordPanelDetails.currContents)
