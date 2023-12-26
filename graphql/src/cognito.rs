@@ -1,4 +1,4 @@
-use dailp::user::UserInfo;
+use dailp::auth::{JWTUserInfo, UserInfo};
 use jsonwebtoken::{jwk::JwkSet, Validation};
 
 /// Load the set of keys that can be used to validate Cognito identity tokens
@@ -29,12 +29,12 @@ pub fn user_info_from_authorization(auth: &str) -> Result<UserInfo, anyhow::Erro
 
     match header.kid.and_then(|token_kid| key_set.find(&token_kid)) {
         Some(key) => {
-            let decoded = jsonwebtoken::decode::<UserInfo>(
+            let decoded = jsonwebtoken::decode::<JWTUserInfo>(
                 token,
                 &jsonwebtoken::DecodingKey::from_jwk(key)?,
                 &cognito_validation()?,
             )?;
-            Ok(decoded.claims)
+            Ok(decoded.claims.0)
         }
         _ => Err(anyhow::format_err!(
             "No matching validation key found for JWT"

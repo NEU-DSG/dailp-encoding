@@ -937,6 +937,7 @@ export type User = {
   readonly id: Scalars["String"]
 }
 
+/** A user belongs to any number of user groups, which give them various permissions. */
 export enum UserGroup {
   Contributors = "CONTRIBUTORS",
   Editors = "EDITORS",

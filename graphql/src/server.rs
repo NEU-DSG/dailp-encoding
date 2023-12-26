@@ -9,7 +9,7 @@ use {
         http::{playground_source, GraphQLPlaygroundConfig},
         EmptySubscription, Schema,
     },
-    dailp::user::UserInfo,
+    dailp::auth::UserInfo,
     tide::{
         http::headers::HeaderValue,
         http::mime,
@@ -105,7 +105,7 @@ impl Endpoint<()> for AuthedEndpoint {
             .and_then(|values| values.iter().next())
             .and_then(
                 |value| match cognito::user_info_from_authorization(value.as_str()) {
-                    Ok(value) => Some(value),
+                    Ok(value) => Some(value.into()),
                     Err(err) => {
                         error!("{:?}", err);
                         None
