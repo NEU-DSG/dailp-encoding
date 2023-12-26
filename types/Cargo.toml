@@ -17,7 +17,11 @@ serde_json = "1"
 tokio-stream = "0.1"
 anyhow = "1.0"
 itertools = "0.10"
-async-graphql = { version = "4", features = ["dataloader", "uuid"] }
+async-graphql = { version = "4", features = [
+    "dataloader",
+    "uuid",
+    "apollo_tracing",
+] }
 futures = "0.3"
 uuid = { version = "1", default-features = false, features = ["std", "serde"] }
 sqlx = { version = "0.6", features = [
