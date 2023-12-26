@@ -1,11 +1,9 @@
 //! This piece of the project exposes a GraphQL endpoint that allows one to access DAILP data in a federated manner with specific queries.
 
 use dailp::{
+    auth::{AuthGuard, GroupGuard, UserGroup, UserInfo},
     comment::{CommentParent, DeleteCommentInput, PostCommentInput},
-    slugify_ltree,
-    user::UserGroup,
-    user::UserInfo,
-    AnnotatedForm, AttachAudioToWordInput, CollectionChapter, CurateWordAudioInput,
+    slugify_ltree, AnnotatedForm, AttachAudioToWordInput, CollectionChapter, CurateWordAudioInput,
     DeleteContributorAttribution, DocumentMetadataUpdate, DocumentParagraph,
     UpdateContributorAttribution, Uuid,
 };
@@ -628,49 +626,4 @@ struct FormsInTime {
     start: Option<dailp::Date>,
     end: Option<dailp::Date>,
     forms: Vec<dailp::AnnotatedForm>,
-}
-
-/// Requires that the user is authenticated and a member of the given user group.
-struct GroupGuard {
-    group: UserGroup,
-}
-
-impl GroupGuard {
-    fn new(group: UserGroup) -> Self {
-        Self { group }
-    }
-}
-
-#[async_trait::async_trait]
-impl Guard for GroupGuard {
-    async fn check(&self, ctx: &async_graphql::Context<'_>) -> async_graphql::Result<()> {
-        let user = ctx.data_opt::<UserInfo>();
-        let has_group = user.map(|user| user.groups.iter().any(|group| group == &self.group));
-
-        match user {
-            Some(user) => log::info!("Debug user info groups={:?}", user.clone()),
-            None => log::info!("No user"),
-        };
-
-        if has_group == Some(true) {
-            Ok(())
-        } else {
-            Err(format!("Forbidden, user not in group '{:?}'", self.group).into())
-        }
-    }
-}
-
-/// Requires that the user is authenticated.
-struct AuthGuard;
-
-#[async_trait::async_trait]
-impl Guard for AuthGuard {
-    async fn check(&self, ctx: &async_graphql::Context<'_>) -> async_graphql::Result<()> {
-        let user = ctx.data_opt::<UserInfo>();
-        if user.is_some() {
-            Ok(())
-        } else {
-            Err("Forbidden, user not authenticated".into())
-        }
-    }
 }
