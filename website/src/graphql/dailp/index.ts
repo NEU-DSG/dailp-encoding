@@ -1420,13 +1420,13 @@ export type EditedCollectionsQuery = { readonly __typename?: "Query" } & {
   readonly allEditedCollections: ReadonlyArray<
     { readonly __typename?: "EditedCollection" } & Pick<
       EditedCollection,
-      "title" | "slug"
+      "id" | "title" | "slug"
     > & {
         readonly chapters: Maybe<
           ReadonlyArray<
             { readonly __typename?: "CollectionChapter" } & Pick<
               CollectionChapter,
-              "path"
+              "id" | "path"
             >
           >
         >
@@ -1440,16 +1440,19 @@ export type EditedCollectionQueryVariables = Exact<{
 
 export type EditedCollectionQuery = { readonly __typename?: "Query" } & {
   readonly editedCollection: Maybe<
-    { readonly __typename?: "EditedCollection" } & {
-      readonly chapters: Maybe<
-        ReadonlyArray<
-          { readonly __typename?: "CollectionChapter" } & Pick<
-            CollectionChapter,
-            "title" | "indexInParent" | "section" | "path" | "slug"
+    { readonly __typename?: "EditedCollection" } & Pick<
+      EditedCollection,
+      "id"
+    > & {
+        readonly chapters: Maybe<
+          ReadonlyArray<
+            { readonly __typename?: "CollectionChapter" } & Pick<
+              CollectionChapter,
+              "id" | "title" | "indexInParent" | "section" | "path" | "slug"
+            >
           >
         >
-      >
-    }
+      }
   >
 }
 
@@ -1730,7 +1733,7 @@ export type CollectionChapterQuery = { readonly __typename?: "Query" } & {
   readonly chapter: Maybe<
     { readonly __typename?: "CollectionChapter" } & Pick<
       CollectionChapter,
-      "title" | "wordpressId" | "slug"
+      "id" | "title" | "wordpressId" | "slug"
     > & {
         readonly breadcrumbs: ReadonlyArray<
           { readonly __typename?: "DocumentCollection" } & Pick<
@@ -1777,7 +1780,7 @@ export type CollectionChapterQuery = { readonly __typename?: "Query" } & {
                 ReadonlyArray<
                   { readonly __typename?: "CollectionChapter" } & Pick<
                     CollectionChapter,
-                    "path"
+                    "id" | "path"
                   >
                 >
               >
@@ -1826,7 +1829,7 @@ export type BookmarkedDocumentsQuery = { readonly __typename?: "Query" } & {
           ReadonlyArray<
             { readonly __typename?: "CollectionChapter" } & Pick<
               CollectionChapter,
-              "path"
+              "id" | "path"
             >
           >
         >
@@ -2423,9 +2426,11 @@ export function useCollectionQuery(
 export const EditedCollectionsDocument = gql`
   query EditedCollections {
     allEditedCollections {
+      id
       title
       slug
       chapters {
+        id
         path
       }
     }
@@ -2442,7 +2447,9 @@ export function useEditedCollectionsQuery(
 export const EditedCollectionDocument = gql`
   query EditedCollection($slug: String!) {
     editedCollection(slug: $slug) {
+      id
       chapters {
+        id
         title
         indexInParent
         section
@@ -2706,6 +2713,7 @@ export function useDocSliceQuery(
 export const CollectionChapterDocument = gql`
   query CollectionChapter($collectionSlug: String!, $chapterSlug: String!) {
     chapter(collectionSlug: $collectionSlug, chapterSlug: $chapterSlug) {
+      id
       title
       wordpressId
       slug
@@ -2739,6 +2747,7 @@ export const CollectionChapterDocument = gql`
           }
         }
         chapters {
+          id
           path
         }
       }
@@ -2781,6 +2790,7 @@ export const BookmarkedDocumentsDocument = gql`
         }
       }
       chapters {
+        id
         path
       }
     }

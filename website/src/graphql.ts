@@ -40,12 +40,6 @@ export const sharedCache = cacheExchange({
   resolvers: {
     Query: {
       document: (_, args, cache) => {
-        console.log(
-          cache.inspectFields({
-            __typename: "AnnotatedDoc",
-            slug: args["slug"]!,
-          })
-        )
         return cache.keyOfEntity({
           __typename: "AnnotatedDoc",
           slug: args["slug"]!,
@@ -53,13 +47,19 @@ export const sharedCache = cacheExchange({
       },
     },
   },
+  // This defines how data should be keyed
+  // Using "null" as a key means the data should be cached on its parent
   keys: {
-    WordSegment: () => null,
+    Contributor: () => null,
+    Date: () => null,
     MorphemeTag: () => null,
-    Contibutor: () => null,
+    PageImage: () => null,
+    PositionInDocument: () => null,
+    WordSegment: () => null,
+    DocumentPage: () => null,
     AnnotatedDoc: (data) => data["slug"] as string,
     AudioSlice: (data) => data["sliceId"] as string,
-    DocumentPage: () => null,
+    DocumentCollection: (data) => data["slug"] as string,
   },
 })
 export const sharedSsr = ssrExchange({
@@ -84,7 +84,6 @@ export const serverSideClients = {
 const maybeDevExchange =
   deploymentEnvironment === Environment.Production ? [] : [devtoolsExchange]
 
-console.log("[charlie]", { maybeDevExchange })
 export const customClient = (
   suspense: boolean,
   exchanges: Exchange[],

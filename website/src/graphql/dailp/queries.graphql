@@ -184,9 +184,11 @@ query Collection($slug: String!) {
 
 query EditedCollections {
   allEditedCollections {
+    id
     title
     slug
     chapters {
+      id
       path
     }
   }
@@ -194,7 +196,9 @@ query EditedCollections {
 
 query EditedCollection($slug: String!) {
   editedCollection(slug: $slug) {
+    id
     chapters {
+      id
       title
       indexInParent
       section
@@ -349,6 +353,7 @@ query DocSlice(
 
 query CollectionChapter($collectionSlug: String!, $chapterSlug: String!) {
   chapter(collectionSlug: $collectionSlug, chapterSlug: $chapterSlug) {
+    id
     title
     wordpressId
     slug
@@ -382,6 +387,7 @@ query CollectionChapter($collectionSlug: String!, $chapterSlug: String!) {
         }
       }
       chapters {
+        id
         path
       }
     }
@@ -415,6 +421,7 @@ query BookmarkedDocuments {
       }
     }
     chapters {
+      id
       path
     }
   }
