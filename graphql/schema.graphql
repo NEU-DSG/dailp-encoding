@@ -1066,6 +1066,9 @@ type User {
 	displayName: String!
 }
 
+"""
+A user belongs to any number of user groups, which give them various permissions.
+"""
 enum UserGroup {
 	CONTRIBUTORS
 	EDITORS
