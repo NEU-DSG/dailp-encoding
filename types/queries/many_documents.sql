@@ -1,5 +1,10 @@
 select
-  d.*,
+  d.id,
+  d.short_name,
+  d.title,
+  d.is_reference,
+  d.written_at,
+  d.audio_slice_id,
   media_resource.url as "audio_url?",
   media_resource.recorded_at as "recorded_at?",
   dailp_user.id as "recorded_by?",

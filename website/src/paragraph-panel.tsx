@@ -45,12 +45,6 @@ const ParagraphPanel = (p: {
       />
 
       <CollapsiblePanel
-        title={"Notes"}
-        content={<div>Example notes</div>}
-        icon={<MdNotes size={24} className={css.wordPanelButton.colpleft} />}
-      />
-
-      <CollapsiblePanel
         title={"Discussion"}
         content={discussionContent}
         icon={
