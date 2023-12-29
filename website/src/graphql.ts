@@ -1,15 +1,15 @@
-import fetch from "isomorphic-unfetch"
 import {
   AnyVariables,
   Exchange,
-  UseQueryArgs,
-  cacheExchange,
   createClient,
-  dedupExchange,
   fetchExchange,
   ssrExchange,
-  useQuery,
-} from "urql"
+} from "@urql/core"
+import { devtoolsExchange } from "@urql/devtools"
+import { cacheExchange } from "@urql/exchange-graphcache"
+import fetch from "isomorphic-unfetch"
+import { UseQueryArgs, useQuery } from "urql"
+import { Environment, deploymentEnvironment } from "./env"
 import { authLink } from "./graphql/client"
 
 export const GRAPHQL_URL = (token: string | null) =>
@@ -29,7 +29,39 @@ export function useWpQuery<Data, Variables extends AnyVariables>(
   })
 }
 
-export const sharedCache = cacheExchange
+export const sharedCache = cacheExchange({
+  schema: {
+    __schema: {
+      queryType: { name: "Query" },
+      mutationType: { name: "Mutation" },
+      subscriptionType: null,
+    },
+  },
+  resolvers: {
+    Query: {
+      document: (_, args, cache) => {
+        return cache.keyOfEntity({
+          __typename: "AnnotatedDoc",
+          slug: args["slug"]!,
+        })
+      },
+    },
+  },
+  // This defines how data should be keyed
+  // Using "null" as a key means the data should be cached on its parent
+  keys: {
+    Contributor: () => null,
+    Date: () => null,
+    MorphemeTag: () => null,
+    PageImage: () => null,
+    PositionInDocument: () => null,
+    WordSegment: () => null,
+    DocumentPage: () => null,
+    AnnotatedDoc: (data) => data["slug"] as string,
+    AudioSlice: (data) => data["sliceId"] as string,
+    DocumentCollection: (data) => data["slug"] as string,
+  },
+})
 export const sharedSsr = ssrExchange({
   isClient: true,
   initialState: {},
@@ -41,13 +73,16 @@ export const sharedSsr = ssrExchange({
 export const serverSideClients = {
   dailp: createClient({
     url: GRAPHQL_URL(null),
-    exchanges: [dedupExchange, sharedCache, fetchExchange],
+    exchanges: [sharedCache, fetchExchange],
   }),
   wordpress: createClient({
     url: WP_GRAPHQL_URL,
-    exchanges: [dedupExchange, sharedCache, fetchExchange],
+    exchanges: [sharedCache, fetchExchange],
   }),
 }
+
+const maybeDevExchange =
+  deploymentEnvironment === Environment.Production ? [] : [devtoolsExchange]
 
 export const customClient = (
   suspense: boolean,
@@ -57,7 +92,7 @@ export const customClient = (
   createClient({
     url: GRAPHQL_URL(token),
     exchanges: [
-      dedupExchange,
+      ...maybeDevExchange,
       sharedCache,
       ...exchanges,
       ...(token ? [authLink(token)] : []),

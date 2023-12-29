@@ -1121,177 +1121,183 @@ export type DocumentContentsQueryVariables = Exact<{
 
 export type DocumentContentsQuery = { readonly __typename?: "Query" } & {
   readonly document: Maybe<
-    { readonly __typename?: "AnnotatedDoc" } & {
-      readonly translatedPages?: Maybe<
-        ReadonlyArray<
-          { readonly __typename?: "DocumentPage" } & Pick<
-            DocumentPage,
-            "pageNumber"
-          > & {
-              readonly paragraphs: ReadonlyArray<
-                { readonly __typename?: "DocumentParagraph" } & Pick<
-                  DocumentParagraph,
-                  "id" | "translation" | "index"
-                > & {
-                    readonly source: ReadonlyArray<
-                      | ({ readonly __typename: "AnnotatedForm" } & Pick<
-                          AnnotatedForm,
-                          | "id"
-                          | "index"
-                          | "source"
-                          | "romanizedSource"
-                          | "phonemic"
-                          | "englishGloss"
-                          | "commentary"
-                        > & {
-                            readonly segments: ReadonlyArray<
-                              { readonly __typename?: "WordSegment" } & Pick<
-                                WordSegment,
-                                | "morpheme"
-                                | "gloss"
-                                | "role"
-                                | "previousSeparator"
-                              > & {
-                                  readonly matchingTag: Maybe<
-                                    {
-                                      readonly __typename?: "MorphemeTag"
-                                    } & Pick<MorphemeTag, "tag" | "title">
-                                  >
-                                }
-                            >
-                            readonly ingestedAudioTrack: Maybe<
-                              { readonly __typename?: "AudioSlice" } & Pick<
-                                AudioSlice,
-                                | "sliceId"
-                                | "index"
-                                | "resourceUrl"
-                                | "startTime"
-                                | "endTime"
-                                | "includeInEditedCollection"
-                              >
-                            >
-                            readonly editedAudio: ReadonlyArray<
-                              { readonly __typename?: "AudioSlice" } & Pick<
-                                AudioSlice,
-                                | "sliceId"
-                                | "index"
-                                | "resourceUrl"
-                                | "startTime"
-                                | "endTime"
-                                | "includeInEditedCollection"
-                              >
-                            >
-                            readonly userContributedAudio: ReadonlyArray<
-                              { readonly __typename?: "AudioSlice" } & Pick<
-                                AudioSlice,
-                                | "sliceId"
-                                | "index"
-                                | "resourceUrl"
-                                | "startTime"
-                                | "endTime"
-                                | "includeInEditedCollection"
-                              > & {
-                                  readonly recordedBy: Maybe<
-                                    { readonly __typename?: "User" } & Pick<
-                                      User,
-                                      "id" | "displayName"
+    { readonly __typename?: "AnnotatedDoc" } & Pick<
+      AnnotatedDoc,
+      "id" | "slug"
+    > & {
+        readonly translatedPages?: Maybe<
+          ReadonlyArray<
+            { readonly __typename?: "DocumentPage" } & Pick<
+              DocumentPage,
+              "pageNumber"
+            > & {
+                readonly paragraphs: ReadonlyArray<
+                  { readonly __typename?: "DocumentParagraph" } & Pick<
+                    DocumentParagraph,
+                    "id" | "translation" | "index"
+                  > & {
+                      readonly source: ReadonlyArray<
+                        | ({ readonly __typename: "AnnotatedForm" } & Pick<
+                            AnnotatedForm,
+                            | "id"
+                            | "index"
+                            | "source"
+                            | "romanizedSource"
+                            | "phonemic"
+                            | "englishGloss"
+                            | "commentary"
+                          > & {
+                              readonly segments: ReadonlyArray<
+                                { readonly __typename?: "WordSegment" } & Pick<
+                                  WordSegment,
+                                  | "morpheme"
+                                  | "gloss"
+                                  | "role"
+                                  | "previousSeparator"
+                                > & {
+                                    readonly matchingTag: Maybe<
+                                      {
+                                        readonly __typename?: "MorphemeTag"
+                                      } & Pick<MorphemeTag, "tag" | "title">
                                     >
-                                  >
-                                }
-                            >
-                            readonly position: {
-                              readonly __typename?: "PositionInDocument"
-                            } & Pick<PositionInDocument, "documentId">
-                            readonly comments: ReadonlyArray<
-                              { readonly __typename?: "Comment" } & Pick<
-                                Comment,
-                                "id"
+                                  }
                               >
-                            >
-                          })
-                      | { readonly __typename: "LineBreak" }
-                    >
-                    readonly comments: ReadonlyArray<
-                      { readonly __typename?: "Comment" } & Pick<Comment, "id">
+                              readonly ingestedAudioTrack: Maybe<
+                                { readonly __typename?: "AudioSlice" } & Pick<
+                                  AudioSlice,
+                                  | "sliceId"
+                                  | "index"
+                                  | "resourceUrl"
+                                  | "startTime"
+                                  | "endTime"
+                                  | "includeInEditedCollection"
+                                >
+                              >
+                              readonly editedAudio: ReadonlyArray<
+                                { readonly __typename?: "AudioSlice" } & Pick<
+                                  AudioSlice,
+                                  | "sliceId"
+                                  | "index"
+                                  | "resourceUrl"
+                                  | "startTime"
+                                  | "endTime"
+                                  | "includeInEditedCollection"
+                                >
+                              >
+                              readonly userContributedAudio: ReadonlyArray<
+                                { readonly __typename?: "AudioSlice" } & Pick<
+                                  AudioSlice,
+                                  | "sliceId"
+                                  | "index"
+                                  | "resourceUrl"
+                                  | "startTime"
+                                  | "endTime"
+                                  | "includeInEditedCollection"
+                                > & {
+                                    readonly recordedBy: Maybe<
+                                      { readonly __typename?: "User" } & Pick<
+                                        User,
+                                        "id" | "displayName"
+                                      >
+                                    >
+                                  }
+                              >
+                              readonly position: {
+                                readonly __typename?: "PositionInDocument"
+                              } & Pick<PositionInDocument, "documentId">
+                              readonly comments: ReadonlyArray<
+                                { readonly __typename?: "Comment" } & Pick<
+                                  Comment,
+                                  "id"
+                                >
+                              >
+                            })
+                        | { readonly __typename: "LineBreak" }
+                      >
+                      readonly comments: ReadonlyArray<
+                        { readonly __typename?: "Comment" } & Pick<
+                          Comment,
+                          "id"
+                        >
+                      >
+                    }
+                >
+              }
+          >
+        >
+        readonly forms?: ReadonlyArray<
+          { readonly __typename: "AnnotatedForm" } & Pick<
+            AnnotatedForm,
+            | "id"
+            | "index"
+            | "source"
+            | "romanizedSource"
+            | "phonemic"
+            | "englishGloss"
+            | "commentary"
+          > & {
+              readonly segments: ReadonlyArray<
+                { readonly __typename?: "WordSegment" } & Pick<
+                  WordSegment,
+                  "morpheme" | "gloss" | "role" | "previousSeparator"
+                > & {
+                    readonly matchingTag: Maybe<
+                      { readonly __typename?: "MorphemeTag" } & Pick<
+                        MorphemeTag,
+                        "tag" | "title"
+                      >
                     >
                   }
               >
+              readonly ingestedAudioTrack: Maybe<
+                { readonly __typename?: "AudioSlice" } & Pick<
+                  AudioSlice,
+                  | "sliceId"
+                  | "index"
+                  | "resourceUrl"
+                  | "startTime"
+                  | "endTime"
+                  | "includeInEditedCollection"
+                >
+              >
+              readonly editedAudio: ReadonlyArray<
+                { readonly __typename?: "AudioSlice" } & Pick<
+                  AudioSlice,
+                  | "sliceId"
+                  | "index"
+                  | "resourceUrl"
+                  | "startTime"
+                  | "endTime"
+                  | "includeInEditedCollection"
+                >
+              >
+              readonly userContributedAudio: ReadonlyArray<
+                { readonly __typename?: "AudioSlice" } & Pick<
+                  AudioSlice,
+                  | "sliceId"
+                  | "index"
+                  | "resourceUrl"
+                  | "startTime"
+                  | "endTime"
+                  | "includeInEditedCollection"
+                > & {
+                    readonly recordedBy: Maybe<
+                      { readonly __typename?: "User" } & Pick<
+                        User,
+                        "id" | "displayName"
+                      >
+                    >
+                  }
+              >
+              readonly position: {
+                readonly __typename?: "PositionInDocument"
+              } & Pick<PositionInDocument, "documentId">
+              readonly comments: ReadonlyArray<
+                { readonly __typename?: "Comment" } & Pick<Comment, "id">
+              >
             }
         >
-      >
-      readonly forms?: ReadonlyArray<
-        { readonly __typename: "AnnotatedForm" } & Pick<
-          AnnotatedForm,
-          | "id"
-          | "index"
-          | "source"
-          | "romanizedSource"
-          | "phonemic"
-          | "englishGloss"
-          | "commentary"
-        > & {
-            readonly segments: ReadonlyArray<
-              { readonly __typename?: "WordSegment" } & Pick<
-                WordSegment,
-                "morpheme" | "gloss" | "role" | "previousSeparator"
-              > & {
-                  readonly matchingTag: Maybe<
-                    { readonly __typename?: "MorphemeTag" } & Pick<
-                      MorphemeTag,
-                      "tag" | "title"
-                    >
-                  >
-                }
-            >
-            readonly ingestedAudioTrack: Maybe<
-              { readonly __typename?: "AudioSlice" } & Pick<
-                AudioSlice,
-                | "sliceId"
-                | "index"
-                | "resourceUrl"
-                | "startTime"
-                | "endTime"
-                | "includeInEditedCollection"
-              >
-            >
-            readonly editedAudio: ReadonlyArray<
-              { readonly __typename?: "AudioSlice" } & Pick<
-                AudioSlice,
-                | "sliceId"
-                | "index"
-                | "resourceUrl"
-                | "startTime"
-                | "endTime"
-                | "includeInEditedCollection"
-              >
-            >
-            readonly userContributedAudio: ReadonlyArray<
-              { readonly __typename?: "AudioSlice" } & Pick<
-                AudioSlice,
-                | "sliceId"
-                | "index"
-                | "resourceUrl"
-                | "startTime"
-                | "endTime"
-                | "includeInEditedCollection"
-              > & {
-                  readonly recordedBy: Maybe<
-                    { readonly __typename?: "User" } & Pick<
-                      User,
-                      "id" | "displayName"
-                    >
-                  >
-                }
-            >
-            readonly position: {
-              readonly __typename?: "PositionInDocument"
-            } & Pick<PositionInDocument, "documentId">
-            readonly comments: ReadonlyArray<
-              { readonly __typename?: "Comment" } & Pick<Comment, "id">
-            >
-          }
-      >
-    }
+      }
   >
 }
 
@@ -1414,13 +1420,13 @@ export type EditedCollectionsQuery = { readonly __typename?: "Query" } & {
   readonly allEditedCollections: ReadonlyArray<
     { readonly __typename?: "EditedCollection" } & Pick<
       EditedCollection,
-      "title" | "slug"
+      "id" | "title" | "slug"
     > & {
         readonly chapters: Maybe<
           ReadonlyArray<
             { readonly __typename?: "CollectionChapter" } & Pick<
               CollectionChapter,
-              "path"
+              "id" | "path"
             >
           >
         >
@@ -1434,16 +1440,19 @@ export type EditedCollectionQueryVariables = Exact<{
 
 export type EditedCollectionQuery = { readonly __typename?: "Query" } & {
   readonly editedCollection: Maybe<
-    { readonly __typename?: "EditedCollection" } & {
-      readonly chapters: Maybe<
-        ReadonlyArray<
-          { readonly __typename?: "CollectionChapter" } & Pick<
-            CollectionChapter,
-            "title" | "indexInParent" | "section" | "path" | "slug"
+    { readonly __typename?: "EditedCollection" } & Pick<
+      EditedCollection,
+      "id"
+    > & {
+        readonly chapters: Maybe<
+          ReadonlyArray<
+            { readonly __typename?: "CollectionChapter" } & Pick<
+              CollectionChapter,
+              "id" | "title" | "indexInParent" | "section" | "path" | "slug"
+            >
           >
         >
-      >
-    }
+      }
   >
 }
 
@@ -1464,7 +1473,7 @@ export type WordSearchQuery = { readonly __typename?: "Query" } & {
         readonly document: Maybe<
           { readonly __typename?: "AnnotatedDoc" } & Pick<
             AnnotatedDoc,
-            "slug" | "isReference"
+            "id" | "slug" | "isReference"
           >
         >
       }
@@ -1605,7 +1614,7 @@ export type MorphemeQuery = { readonly __typename?: "Query" } & {
               readonly document: Maybe<
                 { readonly __typename?: "AnnotatedDoc" } & Pick<
                   AnnotatedDoc,
-                  "slug"
+                  "id" | "slug"
                 >
               >
             }
@@ -1724,7 +1733,7 @@ export type CollectionChapterQuery = { readonly __typename?: "Query" } & {
   readonly chapter: Maybe<
     { readonly __typename?: "CollectionChapter" } & Pick<
       CollectionChapter,
-      "title" | "wordpressId" | "slug"
+      "id" | "title" | "wordpressId" | "slug"
     > & {
         readonly breadcrumbs: ReadonlyArray<
           { readonly __typename?: "DocumentCollection" } & Pick<
@@ -1771,7 +1780,7 @@ export type CollectionChapterQuery = { readonly __typename?: "Query" } & {
                 ReadonlyArray<
                   { readonly __typename?: "CollectionChapter" } & Pick<
                     CollectionChapter,
-                    "path"
+                    "id" | "path"
                   >
                 >
               >
@@ -1820,7 +1829,7 @@ export type BookmarkedDocumentsQuery = { readonly __typename?: "Query" } & {
           ReadonlyArray<
             { readonly __typename?: "CollectionChapter" } & Pick<
               CollectionChapter,
-              "path"
+              "id" | "path"
             >
           >
         >
@@ -2352,6 +2361,8 @@ export const DocumentContentsDocument = gql`
     $isReference: Boolean!
   ) {
     document(slug: $slug) {
+      id
+      slug
       translatedPages @skip(if: $isReference) {
         pageNumber
         paragraphs {
@@ -2415,9 +2426,11 @@ export function useCollectionQuery(
 export const EditedCollectionsDocument = gql`
   query EditedCollections {
     allEditedCollections {
+      id
       title
       slug
       chapters {
+        id
         path
       }
     }
@@ -2434,7 +2447,9 @@ export function useEditedCollectionsQuery(
 export const EditedCollectionDocument = gql`
   query EditedCollection($slug: String!) {
     editedCollection(slug: $slug) {
+      id
       chapters {
+        id
         title
         indexInParent
         section
@@ -2462,6 +2477,7 @@ export const WordSearchDocument = gql`
       englishGloss
       index
       document {
+        id
         slug
         isReference
       }
@@ -2635,6 +2651,7 @@ export const MorphemeDocument = gql`
         normalizedSource
         englishGloss
         document {
+          id
           slug
         }
       }
@@ -2696,6 +2713,7 @@ export function useDocSliceQuery(
 export const CollectionChapterDocument = gql`
   query CollectionChapter($collectionSlug: String!, $chapterSlug: String!) {
     chapter(collectionSlug: $collectionSlug, chapterSlug: $chapterSlug) {
+      id
       title
       wordpressId
       slug
@@ -2729,6 +2747,7 @@ export const CollectionChapterDocument = gql`
           }
         }
         chapters {
+          id
           path
         }
       }
@@ -2771,6 +2790,7 @@ export const BookmarkedDocumentsDocument = gql`
         }
       }
       chapters {
+        id
         path
       }
     }

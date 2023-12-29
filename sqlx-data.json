@@ -52,44 +52,6 @@
     },
     "query": "delete from collection_chapter\nwhere collection_slug = $1;\n"
   },
-  "0a7e8a0aaa1382daa8686211d2e0469e86cf302d41a282643266908e93179718": {
-    "describe": {
-      "columns": [
-        {
-          "name": "id",
-          "ordinal": 0,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "page_id",
-          "ordinal": 1,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "character_range",
-          "ordinal": 2,
-          "type_info": "Int8Range"
-        },
-        {
-          "name": "english_translation",
-          "ordinal": 3,
-          "type_info": "Text"
-        }
-      ],
-      "nullable": [
-        false,
-        false,
-        false,
-        false
-      ],
-      "parameters": {
-        "Left": [
-          "UuidArray"
-        ]
-      }
-    },
-    "query": "select *\nfrom paragraph\nwhere page_id = any($1)\norder by character_range asc\n"
-  },
   "0c697fa7d3e8459a4577e54b76a3b17bf1c872d3aa5cecb7a585d1b664261350": {
     "describe": {
       "columns": [
@@ -1197,110 +1159,6 @@
     },
     "query": "select\n  slug,\n  title\nfrom document_group\nwhere slug = $1\n"
   },
-  "5ded205a75d86aa6e5710741ce36d735b43fc0d756aac969929c4cf2d53927a4": {
-    "describe": {
-      "columns": [
-        {
-          "name": "id",
-          "ordinal": 0,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "short_name",
-          "ordinal": 1,
-          "type_info": "Text"
-        },
-        {
-          "name": "title",
-          "ordinal": 2,
-          "type_info": "Text"
-        },
-        {
-          "name": "group_id",
-          "ordinal": 3,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "index_in_group",
-          "ordinal": 4,
-          "type_info": "Int8"
-        },
-        {
-          "name": "is_reference",
-          "ordinal": 5,
-          "type_info": "Bool"
-        },
-        {
-          "name": "written_at",
-          "ordinal": 6,
-          "type_info": "Date"
-        },
-        {
-          "name": "audio_slice_id",
-          "ordinal": 7,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "audio_url?",
-          "ordinal": 8,
-          "type_info": "Text"
-        },
-        {
-          "name": "recorded_at?",
-          "ordinal": 9,
-          "type_info": "Date"
-        },
-        {
-          "name": "recorded_by?",
-          "ordinal": 10,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "recorded_by_name?",
-          "ordinal": 11,
-          "type_info": "Text"
-        },
-        {
-          "name": "audio_slice?",
-          "ordinal": 12,
-          "type_info": "Int8Range"
-        },
-        {
-          "name": "bookmarked_on?",
-          "ordinal": 13,
-          "type_info": "Date"
-        },
-        {
-          "name": "contributors",
-          "ordinal": 14,
-          "type_info": "Jsonb"
-        }
-      ],
-      "nullable": [
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        true,
-        true,
-        false,
-        true,
-        false,
-        false,
-        true,
-        false,
-        null
-      ],
-      "parameters": {
-        "Left": [
-          "TextArray"
-        ]
-      }
-    },
-    "query": "select\n  d.*,\n  media_resource.url as \"audio_url?\",\n  media_resource.recorded_at as \"recorded_at?\",\n  dailp_user.id as \"recorded_by?\",\n  dailp_user.display_name as \"recorded_by_name?\",\n  media_slice.time_range as \"audio_slice?\",\n  ubd.bookmarked_on as \"bookmarked_on?\",\n  coalesce(\n    jsonb_agg(\n      jsonb_build_object(\n        'name', contributor.full_name, 'role', attr.contribution_role\n      )\n    ) filter (where contributor is not null),\n    '[]'\n  )\n  as contributors\nfrom document as d\n  left join contributor_attribution as attr on attr.document_id = d.id\n  left join contributor on contributor.id = attr.contributor_id\n  left join media_slice on media_slice.id = d.audio_slice_id\n  left join media_resource on media_resource.id = media_slice.resource_id\n  left join dailp_user on dailp_user.id = media_resource.recorded_by\n  left join user_bookmarked_document as ubd on ubd.document_id = d.id\nwhere d.short_name = any($1)\ngroup by d.id,\n  media_slice.id,\n  media_resource.id,\n  dailp_user.id,\n  ubd.bookmarked_on\n"
-  },
   "5e289d51c54b8f14432482d05e86ec9b6ffddd5b83acee04fcd76bdab6dd27a5": {
     "describe": {
       "columns": [
@@ -1537,6 +1395,98 @@
       }
     },
     "query": "insert into character_transcription (\n  page_id, index_in_page, possible_transcriptions\n)\nselect\n  $1,\n  index,\n  array[transcription]\nfrom unnest($2::bigint[], $3::text[]) as t(index, transcription)\n"
+  },
+  "7b0a1c5472b2715a217b9f60b7ede5f7f2184ea8b0355f69b86d31028011ab16": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "short_name",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "title",
+          "ordinal": 2,
+          "type_info": "Text"
+        },
+        {
+          "name": "is_reference",
+          "ordinal": 3,
+          "type_info": "Bool"
+        },
+        {
+          "name": "written_at",
+          "ordinal": 4,
+          "type_info": "Date"
+        },
+        {
+          "name": "audio_slice_id",
+          "ordinal": 5,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "audio_url?",
+          "ordinal": 6,
+          "type_info": "Text"
+        },
+        {
+          "name": "recorded_at?",
+          "ordinal": 7,
+          "type_info": "Date"
+        },
+        {
+          "name": "recorded_by?",
+          "ordinal": 8,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "recorded_by_name?",
+          "ordinal": 9,
+          "type_info": "Text"
+        },
+        {
+          "name": "audio_slice?",
+          "ordinal": 10,
+          "type_info": "Int8Range"
+        },
+        {
+          "name": "bookmarked_on?",
+          "ordinal": 11,
+          "type_info": "Date"
+        },
+        {
+          "name": "contributors",
+          "ordinal": 12,
+          "type_info": "Jsonb"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        true,
+        true,
+        false,
+        true,
+        false,
+        false,
+        true,
+        false,
+        null
+      ],
+      "parameters": {
+        "Left": [
+          "UuidArray"
+        ]
+      }
+    },
+    "query": "select\n  d.id,\n  d.short_name,\n  d.title,\n  d.is_reference,\n  d.written_at,\n  d.audio_slice_id,\n  media_resource.url as \"audio_url?\",\n  media_resource.recorded_at as \"recorded_at?\",\n  dailp_user.id as \"recorded_by?\",\n  dailp_user.display_name as \"recorded_by_name?\",\n  media_slice.time_range as \"audio_slice?\",\n  ubd.bookmarked_on as \"bookmarked_on?\",\n  coalesce(\n    jsonb_agg(\n      jsonb_build_object(\n        'name', contributor.full_name, 'role', attr.contribution_role\n      )\n    ) filter (where contributor is not null),\n    '[]'\n  )\n  as contributors\nfrom document as d\n  left join contributor_attribution as attr on attr.document_id = d.id\n  left join contributor on contributor.id = attr.contributor_id\n  left join media_slice on media_slice.id = d.audio_slice_id\n  left join media_resource on media_resource.id = media_slice.resource_id\n  left join dailp_user on dailp_user.id = media_resource.recorded_by\n  left join user_bookmarked_document as ubd on ubd.document_id = d.id\nwhere d.id = any($1)\ngroup by d.id,\n  media_slice.id,\n  media_resource.id,\n  dailp_user.id,\n  ubd.bookmarked_on\n"
   },
   "7dd3742e8e678aa19890a52f0843ed635cf126dd6f9b50b57918184dab2485c1": {
     "describe": {
@@ -2413,7 +2363,7 @@
     },
     "query": "insert into edited_collection (slug, title, wordpress_menu_id)\nvalues ($1, $2, $3)\non conflict (slug) do update\nset title = excluded.title,\nwordpress_menu_id = excluded.wordpress_menu_id\n"
   },
-  "bd5586e95b4aa6def98b1816dd2ff960a78ee82dab544538e572ebb187b48dc0": {
+  "bd01d061f04d7e8e1087d2c68e31bb3a08bb3e1da52b4b094608d3ebb45c88ff": {
     "describe": {
       "columns": [
         {
@@ -2422,92 +2372,20 @@
           "type_info": "Uuid"
         },
         {
-          "name": "short_name",
+          "name": "page_id",
           "ordinal": 1,
-          "type_info": "Text"
+          "type_info": "Uuid"
         },
         {
-          "name": "title",
+          "name": "english_translation",
           "ordinal": 2,
           "type_info": "Text"
-        },
-        {
-          "name": "group_id",
-          "ordinal": 3,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "index_in_group",
-          "ordinal": 4,
-          "type_info": "Int8"
-        },
-        {
-          "name": "is_reference",
-          "ordinal": 5,
-          "type_info": "Bool"
-        },
-        {
-          "name": "written_at",
-          "ordinal": 6,
-          "type_info": "Date"
-        },
-        {
-          "name": "audio_slice_id",
-          "ordinal": 7,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "audio_url?",
-          "ordinal": 8,
-          "type_info": "Text"
-        },
-        {
-          "name": "recorded_at?",
-          "ordinal": 9,
-          "type_info": "Date"
-        },
-        {
-          "name": "recorded_by?",
-          "ordinal": 10,
-          "type_info": "Uuid"
-        },
-        {
-          "name": "recorded_by_name?",
-          "ordinal": 11,
-          "type_info": "Text"
-        },
-        {
-          "name": "audio_slice?",
-          "ordinal": 12,
-          "type_info": "Int8Range"
-        },
-        {
-          "name": "bookmarked_on?",
-          "ordinal": 13,
-          "type_info": "Date"
-        },
-        {
-          "name": "contributors",
-          "ordinal": 14,
-          "type_info": "Jsonb"
         }
       ],
       "nullable": [
         false,
         false,
-        false,
-        false,
-        false,
-        false,
-        true,
-        true,
-        false,
-        true,
-        false,
-        false,
-        true,
-        false,
-        null
+        false
       ],
       "parameters": {
         "Left": [
@@ -2515,7 +2393,7 @@
         ]
       }
     },
-    "query": "select\n  d.*,\n  media_resource.url as \"audio_url?\",\n  media_resource.recorded_at as \"recorded_at?\",\n  dailp_user.id as \"recorded_by?\",\n  dailp_user.display_name as \"recorded_by_name?\",\n  media_slice.time_range as \"audio_slice?\",\n  ubd.bookmarked_on as \"bookmarked_on?\",\n  coalesce(\n    jsonb_agg(\n      jsonb_build_object(\n        'name', contributor.full_name, 'role', attr.contribution_role\n      )\n    ) filter (where contributor is not null),\n    '[]'\n  )\n  as contributors\nfrom document as d\n  left join contributor_attribution as attr on attr.document_id = d.id\n  left join contributor on contributor.id = attr.contributor_id\n  left join media_slice on media_slice.id = d.audio_slice_id\n  left join media_resource on media_resource.id = media_slice.resource_id\n  left join dailp_user on dailp_user.id = media_resource.recorded_by\n  left join user_bookmarked_document as ubd on ubd.document_id = d.id\nwhere d.id = any($1)\ngroup by d.id,\n  media_slice.id,\n  media_resource.id,\n  dailp_user.id,\n  ubd.bookmarked_on\n"
+    "query": "select id, page_id, english_translation\nfrom paragraph\nwhere page_id = any($1)\norder by character_range asc\n"
   },
   "bde80529393c1595fe31c0bdbaa7e840c68ea7c74896d512c60f6f3b2431fba5": {
     "describe": {
@@ -2723,6 +2601,98 @@
       }
     },
     "query": "select\n  paragraph.id as paragraph_id,\n  word.id,\n  word.source_text,\n  word.simple_phonetics,\n  word.phonemic,\n  word.english_gloss,\n  word.commentary,\n  word.document_id,\n  word.index_in_document,\n  word.page_number,\n  media_resource.url as \"audio_url?\",\n  media_slice.time_range as \"audio_slice?\",\n  word.audio_slice_id,\n  media_resource.recorded_at as \"audio_recorded_at?\",\n  contributor.id as \"audio_recorded_by?\",\n  contributor.display_name as \"audio_recorded_by_name?\",\n  word.include_audio_in_edited_collection,\n  editor.id as \"audio_edited_by?\",\n  editor.display_name as \"audio_edited_by_name?\"\nfrom word\n  inner join paragraph on paragraph.page_id = word.page_id\n  left join media_slice on media_slice.id = word.audio_slice_id\n  left join media_resource on media_resource.id = media_slice.resource_id\n  left join dailp_user contributor on contributor.id = media_resource.recorded_by\n  left join dailp_user editor on editor.id = media_resource.recorded_by\nwhere paragraph.id = any($1)\n  and word.character_range is not null\n  -- Include words that overlap with the paragraph range\n  and word.character_range && paragraph.character_range\n  -- Exclude words that start before the paragraph, which means that words are\n  -- always included in the paragraph that they start in. This is the same logic\n  -- as line breaks.\n  and word.character_range &> paragraph.character_range\n-- Include all joined primary keys in the GROUP BY clause.\n-- Why? ^^\ngroup by word.id,\n  paragraph.id,\n  media_slice.id,\n  media_resource.id,\n  contributor.id,\n  editor.id\norder by word.character_range\n"
+  },
+  "c9c0c39118f06319b1617f8ae8020985ed41a9eeafddbd84887555305ca49cb3": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "short_name",
+          "ordinal": 1,
+          "type_info": "Text"
+        },
+        {
+          "name": "title",
+          "ordinal": 2,
+          "type_info": "Text"
+        },
+        {
+          "name": "is_reference",
+          "ordinal": 3,
+          "type_info": "Bool"
+        },
+        {
+          "name": "written_at",
+          "ordinal": 4,
+          "type_info": "Date"
+        },
+        {
+          "name": "audio_slice_id",
+          "ordinal": 5,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "audio_url?",
+          "ordinal": 6,
+          "type_info": "Text"
+        },
+        {
+          "name": "recorded_at?",
+          "ordinal": 7,
+          "type_info": "Date"
+        },
+        {
+          "name": "recorded_by?",
+          "ordinal": 8,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "recorded_by_name?",
+          "ordinal": 9,
+          "type_info": "Text"
+        },
+        {
+          "name": "audio_slice?",
+          "ordinal": 10,
+          "type_info": "Int8Range"
+        },
+        {
+          "name": "bookmarked_on?",
+          "ordinal": 11,
+          "type_info": "Date"
+        },
+        {
+          "name": "contributors",
+          "ordinal": 12,
+          "type_info": "Jsonb"
+        }
+      ],
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        true,
+        true,
+        false,
+        true,
+        false,
+        false,
+        true,
+        false,
+        null
+      ],
+      "parameters": {
+        "Left": [
+          "TextArray"
+        ]
+      }
+    },
+    "query": "select\n  d.id,\n  d.short_name,\n  d.title,\n  d.is_reference,\n  d.written_at,\n  d.audio_slice_id,\n  media_resource.url as \"audio_url?\",\n  media_resource.recorded_at as \"recorded_at?\",\n  dailp_user.id as \"recorded_by?\",\n  dailp_user.display_name as \"recorded_by_name?\",\n  media_slice.time_range as \"audio_slice?\",\n  ubd.bookmarked_on as \"bookmarked_on?\",\n  coalesce(\n    jsonb_agg(\n      jsonb_build_object(\n        'name', contributor.full_name, 'role', attr.contribution_role\n      )\n    ) filter (where contributor is not null),\n    '[]'\n  )\n  as contributors\nfrom document as d\n  left join contributor_attribution as attr on attr.document_id = d.id\n  left join contributor on contributor.id = attr.contributor_id\n  left join media_slice on media_slice.id = d.audio_slice_id\n  left join media_resource on media_resource.id = media_slice.resource_id\n  left join dailp_user on dailp_user.id = media_resource.recorded_by\n  left join user_bookmarked_document as ubd on ubd.document_id = d.id\nwhere d.short_name = any($1)\ngroup by d.id,\n  media_slice.id,\n  media_resource.id,\n  dailp_user.id,\n  ubd.bookmarked_on\n"
   },
   "cc4e4658101a331ab524544277099c073daf076dae5459b4bd3c7b47068a3367": {
     "describe": {
