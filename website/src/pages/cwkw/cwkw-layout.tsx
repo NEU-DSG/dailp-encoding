@@ -11,6 +11,7 @@ import { useRouteParams } from "src/renderer/PageShell"
 import { collectionRoute } from "src/routes"
 import { colors, mediaQueries } from "src/style/constants"
 import "src/style/global.css"
+import { LoginHeaderButton } from "../auth/user-auth-layout"
 import { useDialog } from "../edited-collections/edited-collection-context"
 import CWKWBanner from "./assets/cwkw-banner.svg"
 import MobileCWKWBanner from "./assets/mobile-cwkw-banner.svg"
@@ -60,6 +61,7 @@ const CWKWLayout: React.FC = ({ children }) => {
               </Link>
             </h1>
           </div>
+          <LoginHeaderButton className={css.loginHeader} />
           <HeaderPrefDrawer color={colors.body} />
         </div>
       </header>
