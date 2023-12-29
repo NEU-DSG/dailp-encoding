@@ -93,7 +93,7 @@ in {
       ];
     };
     roles = {
-      authenticated = "\${aws_iam_role.dailp_user_contributor.arn}";
+      authenticated = "\${aws_iam_role.dailp_user.arn}";
       unauthenticated = "\${aws_iam_role.dailp_user.arn}";
     };
   };
