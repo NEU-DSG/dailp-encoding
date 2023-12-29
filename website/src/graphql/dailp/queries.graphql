@@ -427,48 +427,39 @@ query BookmarkedDocuments {
   }
 }
 
+fragment CommentFields on Comment {
+  id
+  postedAt {
+    timestamp
+    date {
+      year
+      month
+      day
+      formattedDate
+    }
+  }
+  postedBy {
+    id
+    displayName
+  }
+  textContent
+  commentType
+}
+
 query WordComments($wordId: UUID!) {
   wordById(id: $wordId) {
+    id
     comments {
-      id
-      postedAt {
-        timestamp
-        date {
-          year
-          month
-          day
-          formattedDate
-        }
-      }
-      postedBy {
-        id
-        displayName
-      }
-      textContent
-      commentType
+      ...CommentFields
     }
   }
 }
 
 query ParagraphComments($paragraphId: UUID!) {
   paragraphById(id: $paragraphId) {
+    id
     comments {
-      id
-      postedAt {
-        timestamp
-        date {
-          year
-          month
-          day
-          formattedDate
-        }
-      }
-      postedBy {
-        id
-        displayName
-      }
-      textContent
-      commentType
+      ...CommentFields
     }
   }
 }
@@ -603,10 +594,16 @@ mutation PostComment($input: PostCommentInput!) {
     ... on AnnotatedForm {
       __typename
       id
+      comments {
+        ...CommentFields
+      }
     }
     ... on DocumentParagraph {
       __typename
       id
+      comments {
+        ...CommentFields
+      }
     }
   }
 }
