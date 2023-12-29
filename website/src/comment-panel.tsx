@@ -21,11 +21,6 @@ export const CommentPanel = (p: {
     [Dailp.CommentType.Question]: "Question",
   }
 
-  /** Call the backend GraphQL mutation. */
-  const runUpdate = async (variables: { input: Dailp.PostCommentInput }) => {
-    return await postComment(variables)
-  }
-
   const handleInputChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     setNewCommentText(event.target.value)
   }
@@ -34,11 +29,11 @@ export const CommentPanel = (p: {
     setNewCommentType(event.target.value)
   }
 
-  const handleSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
+  const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault()
 
     if (newCommentText && newCommentType) {
-      runUpdate({
+      const { error } = await postComment({
         input: {
           parentId: p.segment.id,
           parentType:
@@ -49,9 +44,14 @@ export const CommentPanel = (p: {
           commentType: newCommentType as Dailp.CommentType,
         },
       })
-      alert("Your comment has been posted!")
-      console.log("Submitted!")
-      p.setIsCommenting(false)
+      if (error) {
+        console.error(error)
+        alert("Something went wrong posting your comment")
+      } else {
+        console.log("Submitted!")
+        alert("Your comment has been posted!")
+        p.setIsCommenting(false)
+      }
     } else {
       alert("Please add a comment before submitting.")
     }

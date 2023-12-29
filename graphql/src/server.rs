@@ -9,7 +9,7 @@ use {
         http::{playground_source, GraphQLPlaygroundConfig},
         EmptySubscription, Schema,
     },
-    dailp::user::UserInfo,
+    dailp::auth::UserInfo,
     tide::{
         http::headers::HeaderValue,
         http::mime,
@@ -17,6 +17,8 @@ use {
         Body, Endpoint, Response, StatusCode,
     },
 };
+
+use dailp::async_graphql::extensions::ApolloTracing;
 
 #[tokio::main]
 async fn main() -> tide::Result<()> {
@@ -26,6 +28,7 @@ async fn main() -> tide::Result<()> {
 
     // create schema
     let schema = Schema::build(query::Query, query::Mutation, EmptySubscription)
+        .extension(ApolloTracing)
         .data(DataLoader::new(
             dailp::Database::connect(None)?,
             tokio::spawn,
@@ -33,6 +36,7 @@ async fn main() -> tide::Result<()> {
         .finish();
 
     let authed_schema = Schema::build(query::Query, query::Mutation, EmptySubscription)
+        .extension(ApolloTracing)
         .data(DataLoader::new(
             dailp::Database::connect(None)?,
             tokio::spawn,
@@ -101,7 +105,7 @@ impl Endpoint<()> for AuthedEndpoint {
             .and_then(|values| values.iter().next())
             .and_then(
                 |value| match cognito::user_info_from_authorization(value.as_str()) {
-                    Ok(value) => Some(value),
+                    Ok(value) => Some(value.into()),
                     Err(err) => {
                         error!("{:?}", err);
                         None

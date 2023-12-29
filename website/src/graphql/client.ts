@@ -1,12 +1,11 @@
 import { authExchange } from "@urql/exchange-auth"
-import { createClient, dedupExchange, fetchExchange, makeOperation } from "urql"
+import { createClient, fetchExchange, makeOperation } from "urql"
 import { GRAPHQL_URL, sharedCache, sharedSsr } from "../graphql"
 
 export const graphqlClient = (token: string | null) =>
   createClient({
     url: GRAPHQL_URL(token),
     exchanges: [
-      dedupExchange,
       sharedCache,
       sharedSsr,
       ...(token ? [authLink(token)] : []),
