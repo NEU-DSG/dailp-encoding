@@ -1837,33 +1837,55 @@ export type BookmarkedDocumentsQuery = { readonly __typename?: "Query" } & {
   >
 }
 
+export type CommentFieldsFragment = { readonly __typename?: "Comment" } & Pick<
+  Comment,
+  "id" | "textContent" | "commentType"
+> & {
+    readonly postedAt: { readonly __typename?: "DateTime" } & Pick<
+      DateTime,
+      "timestamp"
+    > & {
+        readonly date: { readonly __typename?: "Date" } & Pick<
+          Date,
+          "year" | "month" | "day" | "formattedDate"
+        >
+      }
+    readonly postedBy: { readonly __typename?: "User" } & Pick<
+      User,
+      "id" | "displayName"
+    >
+  }
+
 export type WordCommentsQueryVariables = Exact<{
   wordId: Scalars["UUID"]
 }>
 
 export type WordCommentsQuery = { readonly __typename?: "Query" } & {
-  readonly wordById: { readonly __typename?: "AnnotatedForm" } & {
-    readonly comments: ReadonlyArray<
-      { readonly __typename?: "Comment" } & Pick<
-        Comment,
-        "id" | "textContent" | "commentType"
-      > & {
-          readonly postedAt: { readonly __typename?: "DateTime" } & Pick<
-            DateTime,
-            "timestamp"
-          > & {
-              readonly date: { readonly __typename?: "Date" } & Pick<
-                Date,
-                "year" | "month" | "day" | "formattedDate"
-              >
-            }
-          readonly postedBy: { readonly __typename?: "User" } & Pick<
-            User,
-            "id" | "displayName"
-          >
-        }
-    >
-  }
+  readonly wordById: { readonly __typename?: "AnnotatedForm" } & Pick<
+    AnnotatedForm,
+    "id"
+  > & {
+      readonly comments: ReadonlyArray<
+        { readonly __typename?: "Comment" } & Pick<
+          Comment,
+          "id" | "textContent" | "commentType"
+        > & {
+            readonly postedAt: { readonly __typename?: "DateTime" } & Pick<
+              DateTime,
+              "timestamp"
+            > & {
+                readonly date: { readonly __typename?: "Date" } & Pick<
+                  Date,
+                  "year" | "month" | "day" | "formattedDate"
+                >
+              }
+            readonly postedBy: { readonly __typename?: "User" } & Pick<
+              User,
+              "id" | "displayName"
+            >
+          }
+      >
+    }
 }
 
 export type ParagraphCommentsQueryVariables = Exact<{
@@ -1871,28 +1893,31 @@ export type ParagraphCommentsQueryVariables = Exact<{
 }>
 
 export type ParagraphCommentsQuery = { readonly __typename?: "Query" } & {
-  readonly paragraphById: { readonly __typename?: "DocumentParagraph" } & {
-    readonly comments: ReadonlyArray<
-      { readonly __typename?: "Comment" } & Pick<
-        Comment,
-        "id" | "textContent" | "commentType"
-      > & {
-          readonly postedAt: { readonly __typename?: "DateTime" } & Pick<
-            DateTime,
-            "timestamp"
-          > & {
-              readonly date: { readonly __typename?: "Date" } & Pick<
-                Date,
-                "year" | "month" | "day" | "formattedDate"
-              >
-            }
-          readonly postedBy: { readonly __typename?: "User" } & Pick<
-            User,
-            "id" | "displayName"
-          >
-        }
-    >
-  }
+  readonly paragraphById: { readonly __typename?: "DocumentParagraph" } & Pick<
+    DocumentParagraph,
+    "id"
+  > & {
+      readonly comments: ReadonlyArray<
+        { readonly __typename?: "Comment" } & Pick<
+          Comment,
+          "id" | "textContent" | "commentType"
+        > & {
+            readonly postedAt: { readonly __typename?: "DateTime" } & Pick<
+              DateTime,
+              "timestamp"
+            > & {
+                readonly date: { readonly __typename?: "Date" } & Pick<
+                  Date,
+                  "year" | "month" | "day" | "formattedDate"
+                >
+              }
+            readonly postedBy: { readonly __typename?: "User" } & Pick<
+              User,
+              "id" | "displayName"
+            >
+          }
+      >
+    }
 }
 
 export type UpdateWordMutationVariables = Exact<{
@@ -2168,11 +2193,53 @@ export type PostCommentMutationVariables = Exact<{
 
 export type PostCommentMutation = { readonly __typename?: "Mutation" } & {
   readonly postComment:
-    | ({ readonly __typename: "AnnotatedForm" } & Pick<AnnotatedForm, "id">)
+    | ({ readonly __typename: "AnnotatedForm" } & Pick<AnnotatedForm, "id"> & {
+          readonly comments: ReadonlyArray<
+            { readonly __typename?: "Comment" } & Pick<
+              Comment,
+              "id" | "textContent" | "commentType"
+            > & {
+                readonly postedAt: { readonly __typename?: "DateTime" } & Pick<
+                  DateTime,
+                  "timestamp"
+                > & {
+                    readonly date: { readonly __typename?: "Date" } & Pick<
+                      Date,
+                      "year" | "month" | "day" | "formattedDate"
+                    >
+                  }
+                readonly postedBy: { readonly __typename?: "User" } & Pick<
+                  User,
+                  "id" | "displayName"
+                >
+              }
+          >
+        })
     | ({ readonly __typename: "DocumentParagraph" } & Pick<
         DocumentParagraph,
         "id"
-      >)
+      > & {
+          readonly comments: ReadonlyArray<
+            { readonly __typename?: "Comment" } & Pick<
+              Comment,
+              "id" | "textContent" | "commentType"
+            > & {
+                readonly postedAt: { readonly __typename?: "DateTime" } & Pick<
+                  DateTime,
+                  "timestamp"
+                > & {
+                    readonly date: { readonly __typename?: "Date" } & Pick<
+                      Date,
+                      "year" | "month" | "day" | "formattedDate"
+                    >
+                  }
+                readonly postedBy: { readonly __typename?: "User" } & Pick<
+                  User,
+                  "id" | "displayName"
+                >
+              }
+          >
+        })
 }
 
 export const DocFormFieldsFragmentDoc = gql`
@@ -2234,6 +2301,26 @@ export const FormFieldsFragmentDoc = gql`
     comments {
       id
     }
+  }
+`
+export const CommentFieldsFragmentDoc = gql`
+  fragment CommentFields on Comment {
+    id
+    postedAt {
+      timestamp
+      date {
+        year
+        month
+        day
+        formattedDate
+      }
+    }
+    postedBy {
+      id
+      displayName
+    }
+    textContent
+    commentType
   }
 `
 export const CollectionsListingDocument = gql`
@@ -2808,26 +2895,13 @@ export function useBookmarkedDocumentsQuery(
 export const WordCommentsDocument = gql`
   query WordComments($wordId: UUID!) {
     wordById(id: $wordId) {
+      id
       comments {
-        id
-        postedAt {
-          timestamp
-          date {
-            year
-            month
-            day
-            formattedDate
-          }
-        }
-        postedBy {
-          id
-          displayName
-        }
-        textContent
-        commentType
+        ...CommentFields
       }
     }
   }
+  ${CommentFieldsFragmentDoc}
 `
 
 export function useWordCommentsQuery(
@@ -2841,26 +2915,13 @@ export function useWordCommentsQuery(
 export const ParagraphCommentsDocument = gql`
   query ParagraphComments($paragraphId: UUID!) {
     paragraphById(id: $paragraphId) {
+      id
       comments {
-        id
-        postedAt {
-          timestamp
-          date {
-            year
-            month
-            day
-            formattedDate
-          }
-        }
-        postedBy {
-          id
-          displayName
-        }
-        textContent
-        commentType
+        ...CommentFields
       }
     }
   }
+  ${CommentFieldsFragmentDoc}
 `
 
 export function useParagraphCommentsQuery(
@@ -3073,13 +3134,20 @@ export const PostCommentDocument = gql`
       ... on AnnotatedForm {
         __typename
         id
+        comments {
+          ...CommentFields
+        }
       }
       ... on DocumentParagraph {
         __typename
         id
+        comments {
+          ...CommentFields
+        }
       }
     }
   }
+  ${CommentFieldsFragmentDoc}
 `
 
 export function usePostCommentMutation() {
