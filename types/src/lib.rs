@@ -20,6 +20,14 @@
 
 pub mod annotation;
 mod audio;
+
+/// This module contains types related to authentication
+///
+/// Eg. our `UserInfo` (what we know about the user making the request) and its
+/// various deserialization routines. Also GraphQL Guards for restricting access
+/// based on the user making the request.
+pub mod auth;
+
 mod cherokee;
 pub mod collection;
 pub mod comment;

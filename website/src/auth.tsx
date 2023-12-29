@@ -114,8 +114,12 @@ export const UserProvider = (props: { children: any }) => {
         }
         break // TODO We should tell a user how to create a new account later
       default:
+        console.log(err)
         alert(
-          "An unexpected error occured. Please try again or contact a site administrator."
+          `An unexpected error occured. Please try again or contact a site administrator.
+          Error details: ${err.name}
+          ${err.message}
+          `
         )
         break
     }
