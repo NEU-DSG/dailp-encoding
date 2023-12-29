@@ -1,5 +1,5 @@
 use crate::{
-    comment::Comment, date::DateInput, slugify, user::UserInfo, AnnotatedForm, AudioSlice,
+    auth::UserInfo, comment::Comment, date::DateInput, slugify, AnnotatedForm, AudioSlice,
     Contributor, Database, Date, SourceAttribution, Translation, TranslationBlock,
 };
 
