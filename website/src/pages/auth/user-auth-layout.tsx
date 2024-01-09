@@ -1,3 +1,4 @@
+import cx from "classnames"
 import React, { ReactNode } from "react"
 import {
   unstable_FormInput as FormInput,
@@ -40,31 +41,40 @@ export const UserAuthPageTemplate = (props: {
 }
 
 // the login button that appears in the header of the website
-export const LoginHeaderButton = () => {
+export const LoginHeaderButton = (props?: { className?: string }) => {
   // get the current user's auth token
   const token = useCredentials()
 
   return (
     <div className={loginHeader}>
       {/* if an auth token exists, that means a user is logged in */}
-      {token ? <ConfirmLogout /> : <Link href="/auth/login">Log in</Link>}
+      {token ? (
+        <ConfirmLogout className={props?.className} />
+      ) : (
+        <Link href="/auth/login" className={props?.className}>
+          Log in
+        </Link>
+      )}
     </div>
   )
 }
 
-const ConfirmLogout = () => {
+const ConfirmLogout = (props?: { className?: string }) => {
   const { user } = useUser()
   const popover = usePopoverState({ gutter: 2 })
 
   return (
     <>
-      <PopoverDisclosure {...popover} className={cleanButton}>
+      <PopoverDisclosure
+        {...popover}
+        className={cx(props?.className, cleanButton)}
+      >
         {popover.visible ? "Cancel" : "Log out"}
       </PopoverDisclosure>
 
       <Popover {...popover} tabIndex={0}>
         <Button
-          className={popoverButton}
+          className={cx(props?.className, popoverButton)}
           onClick={() => {
             user?.signOut()
           }}
