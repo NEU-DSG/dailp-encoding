@@ -1,9 +1,5 @@
 import { authExchange } from "@urql/exchange-auth"
 import { makeOperation } from "urql"
-import { clientSsrExchange, customClient } from "../graphql"
-
-export const graphqlClient = (token: string | null) =>
-  customClient(false, [clientSsrExchange], token)
 
 export const authLink = (token: string) =>
   authExchange<{ token: string }>({
