@@ -11,7 +11,7 @@ import {
 const secondsSinceEpoch = () => Date.now() / 1000
 
 const isExpired = (token: CognitoIdToken) =>
-  token.getExpiration() >= secondsSinceEpoch()
+  token.getExpiration() <= secondsSinceEpoch()
 
 export const cognitoAuthExchange = () =>
   authExchange<{ token: CognitoIdToken }>({
