@@ -1,17 +1,9 @@
 import { authExchange } from "@urql/exchange-auth"
-import { createClient, fetchExchange, makeOperation } from "urql"
-import { GRAPHQL_URL, sharedCache, sharedSsr } from "../graphql"
+import { makeOperation } from "urql"
+import { clientSsrExchange, customClient } from "../graphql"
 
 export const graphqlClient = (token: string | null) =>
-  createClient({
-    url: GRAPHQL_URL(token),
-    exchanges: [
-      sharedCache,
-      sharedSsr,
-      ...(token ? [authLink(token)] : []),
-      fetchExchange,
-    ],
-  })
+  customClient(false, [clientSsrExchange], token)
 
 export const authLink = (token: string) =>
   authExchange<{ token: string }>({
