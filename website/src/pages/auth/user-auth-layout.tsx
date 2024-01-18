@@ -1,4 +1,3 @@
-import cx from "classnames"
 import React, { ReactNode } from "react"
 import {
   unstable_FormInput as FormInput,
@@ -7,10 +6,9 @@ import {
   unstable_FormSubmitButton as FormSubmit,
   unstable_FormStateReturn,
 } from "reakit"
-import { Popover, PopoverDisclosure, usePopoverState } from "reakit"
 import { useCredentials, useUser } from "src/auth"
-import { Button, Link } from "src/components"
-import { cleanButton } from "src/components/button.css"
+import { Button, CleanButton, Link } from "src/components"
+import { AccountMenu } from "src/components/authenticated-users/account-menu"
 import { centeredColumn } from "src/style/utils.css"
 import Layout from "../../layout"
 import {
@@ -18,7 +16,6 @@ import {
   loginButton,
   loginFormBox,
   loginHeader,
-  popoverButton,
   positionButton,
   skinnyWidth,
 } from "./user-auth.css"
@@ -49,7 +46,7 @@ export const LoginHeaderButton = (props?: { className?: string }) => {
     <div className={loginHeader}>
       {/* if an auth token exists, that means a user is logged in */}
       {token ? (
-        <ConfirmLogout className={props?.className} />
+        <AccountMenu />
       ) : (
         <Link href="/auth/login" className={props?.className}>
           Log in
@@ -59,30 +56,19 @@ export const LoginHeaderButton = (props?: { className?: string }) => {
   )
 }
 
-const ConfirmLogout = (props?: { className?: string }) => {
+export const ConfirmLogout = (props?: { className?: string }) => {
   const { user } = useUser()
-  const popover = usePopoverState({ gutter: 2 })
 
   return (
-    <>
-      <PopoverDisclosure
-        {...popover}
-        className={cx(props?.className, cleanButton)}
-      >
-        {popover.visible ? "Cancel" : "Log out"}
-      </PopoverDisclosure>
-
-      <Popover {...popover} tabIndex={0}>
-        <Button
-          className={cx(props?.className, popoverButton)}
-          onClick={() => {
-            user?.signOut()
-          }}
-        >
-          Log out
-        </Button>
-      </Popover>
-    </>
+    <CleanButton
+      className={props?.className}
+      onClick={() => {
+        let confirmation = confirm("Are you sure you want to sign out?")
+        if (confirmation) user?.signOut()
+      }}
+    >
+      Log out
+    </CleanButton>
   )
 }
 
