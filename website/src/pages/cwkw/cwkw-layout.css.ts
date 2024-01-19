@@ -10,7 +10,7 @@ import {
   mediaQueries,
   vspace,
 } from "src/style/constants"
-import { paddingX, paddingY } from "src/style/utils"
+import { marginY, media, paddingX, paddingY } from "src/style/utils"
 import { hideOnPrint, row } from "src/style/utils.css"
 import * as baseLayout from "../../layout.css"
 
@@ -39,11 +39,27 @@ export const subHeader = style([baseLayout.subHeader, { fontSize: "larger" }])
 
 export const siteTitle = style([baseLayout.siteTitle, { flex: 1 }])
 
+export const siteSubtitle = style([
+  media(mediaQueries.medium, marginY(vspace.half)),
+  marginY(vspace.eighth),
+  {
+    flex: 1,
+    color: colors.primaryText,
+    vars: {
+      [linkColor]: "white",
+      [colors.focus]: "white",
+    },
+  },
+])
+
 export const siteLink = style([baseLayout.siteLink, { display: "flex" }])
 
 export const contentContainer = style([
   baseLayout.contentContainer,
-  { flex: 1 },
+  {
+    display: "block",
+    flex: 1,
+  },
 ])
 
 export const leftMargin = style({
