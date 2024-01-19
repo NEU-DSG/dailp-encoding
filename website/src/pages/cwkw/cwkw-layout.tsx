@@ -47,7 +47,7 @@ const CWKWLayout: React.FC = ({ children }) => {
           }
         >
           {isDesktop ? <Sidebar /> : <MobileSidebar />}
-          <div className={css.contentContainer}>
+          <span className={css.contentContainer}>
             <h1 className={css.siteTitle}>
               <Link
                 className={css.siteLink}
@@ -60,7 +60,10 @@ const CWKWLayout: React.FC = ({ children }) => {
                 />
               </Link>
             </h1>
-          </div>
+            <p className={css.siteSubtitle}>
+              A part of <Link href="/">DAILP</Link>
+            </p>
+          </span>
           <LoginHeaderButton className={css.loginHeader} />
           <HeaderPrefDrawer color={colors.body} />
         </div>
