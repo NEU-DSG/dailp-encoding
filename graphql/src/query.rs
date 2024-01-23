@@ -350,8 +350,8 @@ impl Query {
 
     /// Basic information about the currently authenticated user, if any.
     #[graphql(guard = "AuthGuard")]
-    async fn user_info<'a>(&self, context: &'a Context<'_>) -> &'a UserInfo {
-        context.data_unchecked()
+    async fn user_info<'a>(&self, context: &'a Context<'_>) -> Option<&'a UserInfo> {
+        context.data_opt()
     }
 }
 

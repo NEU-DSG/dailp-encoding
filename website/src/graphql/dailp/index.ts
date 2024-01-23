@@ -833,7 +833,7 @@ export type Query = {
    */
   readonly syllabarySearch: ReadonlyArray<AnnotatedForm>
   /** Basic information about the currently authenticated user, if any. */
-  readonly userInfo: UserInfo
+  readonly userInfo: Maybe<UserInfo>
   /** Get a single word given the word ID */
   readonly wordById: AnnotatedForm
   /**
