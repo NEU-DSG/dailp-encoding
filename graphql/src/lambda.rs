@@ -44,17 +44,27 @@ async fn handler(
 ) -> Result<impl IntoResponse, Error> {
     info!("API Gateway Request: {:?}", req);
 
-    let user: Option<UserInfo> = match req.request_context() {
-        lambda_http::request::RequestContext::ApiGatewayV1(ctx) => ctx
-            .authorizer
-            .get("claims")
-            .and_then(|claims| serde_json::from_value::<ApiGatewayUserInfo>(claims.clone()).ok())
-            .map(|ApiGatewayUserInfo(user)| user),
+    // We have this nasty optional result type because we have three options
+    // 1. The authorizer has no claims (None)
+    // 2. The authorizer has valid claims (Some(Ok(UserInfo)))
+    // 2. The authorizer has invalid claims (Some(Err(_)))
+    let user: Option<Result<UserInfo, _>> = match req.request_context() {
+        lambda_http::request::RequestContext::ApiGatewayV1(ctx) => {
+            ctx.authorizer.get("claims").map(|claims| {
+                serde_json::from_value::<ApiGatewayUserInfo>(claims.clone())
+                    .map(|ApiGatewayUserInfo(user)| user)
+            })
+        }
         _ => None,
     };
 
-    if let Some(user_id) = user.as_ref().map(|u| u.id) {
-        database.upsert_dailp_user(user_id).await?;
+    if let Some(Ok(user)) = user.as_ref() {
+        database.upsert_dailp_user(user.id).await?;
+    }
+
+    if let Some(Err(err)) = user {
+        info!("Failed to decode UserInfo from authorizer: {:?}", err);
+        return Err(Box::new(err));
     }
 
     // TODO Hook up warp or tide instead of using a manual conditional.
@@ -76,7 +86,7 @@ async fn handler(
             let req: async_graphql::Request = serde_json::from_str(&req)?;
             // If the request was made by an authenticated user, add their
             // information to the request data.
-            let req = if let Some(user) = user {
+            let req = if let Some(Ok(user)) = user {
                 req.data(user)
             } else {
                 req
