@@ -52,13 +52,17 @@ export const siteSubtitle = style([
   },
 ])
 
-export const siteLink = style([baseLayout.siteLink, { display: "flex" }])
+export const siteLink = style([
+  baseLayout.siteLink,
+  {
+    display: "flex",
+  },
+])
 
 export const contentContainer = style([
   baseLayout.contentContainer,
   {
     display: "block",
-    flex: 1,
   },
 ])
 
