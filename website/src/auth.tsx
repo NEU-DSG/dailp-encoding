@@ -270,8 +270,9 @@ export const UserProvider = (props: { children: any }) => {
   }
 
   function signOutUser() {
-    setUser(null)
-    user?.signOut()
+    user?.signOut(() => {
+      setUser(null)
+    })
   }
 
   return (
