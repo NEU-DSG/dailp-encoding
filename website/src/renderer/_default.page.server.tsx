@@ -3,10 +3,9 @@ import React from "react"
 import ReactDOMServer from "react-dom/server"
 import { Helmet } from "react-helmet"
 import prepass from "react-ssr-prepass"
-import { ssrExchange } from "urql"
 import { dangerouslySkipEscape, escapeInject } from "vite-plugin-ssr"
 import type { PageContextBuiltIn } from "vite-plugin-ssr/types"
-import { customClient } from "src/graphql"
+import { ssrClientAndExchange } from "src/graphql"
 import { PageContextServer, PageShell, rootElementId } from "./PageShell"
 
 /**
@@ -50,9 +49,7 @@ export async function onBeforeRender(
   if (process.env["NODE_ENV"] === "development") {
     return { pageContext: baseContext }
   } else {
-    const ssr = ssrExchange({ initialState: undefined, isClient: false })
-    const client = customClient(true, [ssr], null)
-
+    const [ssr, client] = ssrClientAndExchange()
     const context = {
       isBackwardNavigation: false,
       isHydration: true as true,
