@@ -329,6 +329,14 @@ query Morpheme($documentId: UUID, $morphemeGloss: String!) {
   }
 }
 
+query UserInfo {
+  userInfo {
+    id
+    email
+    groups
+  }
+}
+
 mutation NewPage($data: JSON!) {
   updatePage(data: $data)
 }
