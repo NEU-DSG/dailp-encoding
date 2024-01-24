@@ -833,7 +833,7 @@ export type Query = {
    */
   readonly syllabarySearch: ReadonlyArray<AnnotatedForm>
   /** Basic information about the currently authenticated user, if any. */
-  readonly userInfo: UserInfo
+  readonly userInfo: Maybe<UserInfo>
   /** Get a single word given the word ID */
   readonly wordById: AnnotatedForm
   /**
@@ -1132,7 +1132,7 @@ export type DocumentContentsQuery = { readonly __typename?: "Query" } & {
               "pageNumber"
             > & {
                 readonly paragraphs: ReadonlyArray<
-                  { readonly __typename?: "DocumentParagraph" } & Pick<
+                  { readonly __typename: "DocumentParagraph" } & Pick<
                     DocumentParagraph,
                     "id" | "translation" | "index"
                   > & {
@@ -1322,7 +1322,7 @@ export type DocFormFieldsFragment = {
   }
 
 export type FormFieldsFragment = {
-  readonly __typename?: "AnnotatedForm"
+  readonly __typename: "AnnotatedForm"
 } & Pick<
   AnnotatedForm,
   | "id"
@@ -1935,7 +1935,7 @@ export type UpdateWordMutationVariables = Exact<{
 }>
 
 export type UpdateWordMutation = { readonly __typename?: "Mutation" } & {
-  readonly updateWord: { readonly __typename?: "AnnotatedForm" } & Pick<
+  readonly updateWord: { readonly __typename: "AnnotatedForm" } & Pick<
     AnnotatedForm,
     | "id"
     | "index"
@@ -2274,6 +2274,7 @@ export const AudioSliceFieldsFragmentDoc = gql`
 `
 export const FormFieldsFragmentDoc = gql`
   fragment FormFields on AnnotatedForm {
+    __typename
     id
     index
     source
@@ -2462,6 +2463,7 @@ export const DocumentContentsDocument = gql`
       translatedPages @skip(if: $isReference) {
         pageNumber
         paragraphs {
+          __typename
           source {
             __typename
             ... on AnnotatedForm {

@@ -1011,7 +1011,7 @@ type Query {
 	"""
 	Basic information about the currently authenticated user, if any.
 	"""
-	userInfo: UserInfo!
+	userInfo: UserInfo
 }
 
 """

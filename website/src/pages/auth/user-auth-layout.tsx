@@ -57,14 +57,14 @@ export const LoginHeaderButton = (props?: { className?: string }) => {
 }
 
 export const ConfirmLogout = (props?: { className?: string }) => {
-  const { user } = useUser()
+  const { operations } = useUser()
 
   return (
     <CleanButton
       className={props?.className}
       onClick={() => {
         let confirmation = confirm("Are you sure you want to sign out?")
-        if (confirmation) user?.signOut()
+        if (confirmation) operations.signOutUser()
       }}
     >
       Log out
