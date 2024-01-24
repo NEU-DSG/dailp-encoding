@@ -10,6 +10,7 @@ import {
   unstable_FormLabel as FormLabel,
 } from "reakit"
 import { unstable_FormSubmitButton as FormSubmitButton } from "reakit"
+import { UserRole, useUserRole } from "./auth"
 import { IconButton } from "./components"
 import { IconTextButton } from "./components/button"
 import { useForm } from "./edit-doc-data-form-context"
@@ -29,7 +30,6 @@ export const EditButton = () => {
             className={css.cancelButton}
             round={false}
             onClick={() => {
-              // console.log("ASDASDASDASD")
               setIsEditing(false)
             }}
           >
@@ -50,7 +50,6 @@ export const EditButton = () => {
           icon={<HiPencilAlt />}
           className={css.editPanelButton}
           onClick={() => {
-            // console.log("QWEQWEQWEQWE")
             setIsEditing(true)
           }}
         >
@@ -64,7 +63,6 @@ export const EditButton = () => {
 /** Displays a FormInput with its corresponding feature data from the Reakit form. */
 export const EditDocPanel = (props: { document?: Dailp.AnnotatedDoc }) => {
   let docData = props.document as unknown as Dailp.AnnotatedDoc
-  // console.log("document id = " + docData.id)
   const { form } = useForm()
 
   if (!form || !form.values.document) {
@@ -106,6 +104,14 @@ export const EditDocPanel = (props: { document?: Dailp.AnnotatedDoc }) => {
     }
   }, [day, month, year])
 
+  /* TODO (NOTE): While we could disable the edit button for "Document Info" to non-editors,
+  in the near future we will want users with the Contributor and Editor roles
+  to be able to add people to the "Contributors" list in the document info.
+  We want the above functionality in order to support in-person work teams who prefer working
+  on paper or through discussion, then putting everything in the computer at once 
+  via one DAILP user account. */
+  let userRole = useUserRole()
+
   return (
     <>
       {/* Display a label for the form input if it exists. */}
@@ -119,6 +125,7 @@ export const EditDocPanel = (props: { document?: Dailp.AnnotatedDoc }) => {
         {...form}
         className={css.formInput}
         name={["document", "title"]}
+        disabled={!(userRole == UserRole.EDITOR)}
       />
       <p />
 
@@ -133,6 +140,7 @@ export const EditDocPanel = (props: { document?: Dailp.AnnotatedDoc }) => {
           onChange={(date: any) => handleDateChange(date)}
           value={selectedDate}
           format="dd-MM-y"
+          disabled={!(userRole == UserRole.EDITOR)}
         />
       </div>
     </>
