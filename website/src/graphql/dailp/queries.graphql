@@ -88,6 +88,7 @@ query DocumentContents(
     translatedPages @skip(if: $isReference) {
       pageNumber
       paragraphs {
+        __typename
         source {
           __typename
           ... on AnnotatedForm {
@@ -129,6 +130,7 @@ fragment DocFormFields on AnnotatedDoc {
 }
 
 fragment FormFields on AnnotatedForm {
+  __typename
   id
   index
   source

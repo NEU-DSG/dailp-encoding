@@ -1,5 +1,6 @@
 import {
   AuthenticationDetails,
+  CognitoIdToken,
   CognitoUser,
   CognitoUserAttribute,
   CognitoUserPool,
@@ -17,6 +18,7 @@ type UserContextType = {
     loginUser: (username: string, password: string) => void
     resetPassword: (username: string) => void
     changePassword: (verificationCode: string, newPassword: string) => void
+    signOutUser: () => void
   }
 }
 
@@ -27,10 +29,15 @@ const userPool = new CognitoUserPool({
   ClientId: process.env["DAILP_USER_POOL_CLIENT"] ?? "",
 })
 
+/** Get the currently signed in user, if there is one. */
+export function getCurrentUser(): CognitoUser | null {
+  return userPool.getCurrentUser()
+}
+
 export const UserProvider = (props: { children: any }) => {
   const [user, setUser] = useState<CognitoUser | null>(
     // gets the last user that logged in via this user pool
-    userPool.getCurrentUser()
+    getCurrentUser()
   )
 
   function refreshToken(): Promise<CognitoUserSession | null> {
@@ -268,6 +275,12 @@ export const UserProvider = (props: { children: any }) => {
     })
   }
 
+  function signOutUser() {
+    user?.signOut(() => {
+      setUser(null)
+    })
+  }
+
   return (
     <UserContext.Provider
       value={{
@@ -279,6 +292,7 @@ export const UserProvider = (props: { children: any }) => {
           loginUser,
           resetPassword,
           changePassword,
+          signOutUser,
         },
       }}
     >
@@ -337,22 +351,23 @@ function getUserSessionAsync(
   user: CognitoUser
 ): Promise<CognitoUserSession | null> {
   return new Promise((res, _rej) => {
-    user.getSession(function (err: Error, result: CognitoUserSession | null) {
+    user.getSession(function (_err: Error, result: CognitoUserSession | null) {
       res(result)
     })
   })
 }
 
 /**
- * Plain old function to get credentials. If at all possible, use a hook for this.
+ * Get the user's id token, if they are signed in.
+ *
+ * Note: You should use the `useCredentials` hook if you are writing a component.
  */
-export async function getCredentials() {
-  const user = userPool.getCurrentUser()
+export async function getIdToken(): Promise<CognitoIdToken | null> {
+  const user = getCurrentUser()
   if (!user) return null
 
   const sess = await getUserSessionAsync(user)
-  const token = sess?.getIdToken().getJwtToken()
-  return token ?? null
+  return sess?.getIdToken() ?? null
 }
 
 /**

@@ -8,6 +8,7 @@ import {
   unstable_FormSubmitButton as FormSubmitButton,
 } from "reakit"
 import * as Dailp from "src/graphql/dailp"
+import { UserRole, useUserRole } from "./auth"
 import { IconButton } from "./components"
 import { IconTextButton } from "./components/button"
 import * as css from "./edit-word-feature.css"
@@ -77,6 +78,7 @@ export const EditWordFeature = (props: {
     return null
   }
 
+  let userRole = useUserRole()
   return (
     <>
       {/* Display a label for the form input if it exists. */}
@@ -92,6 +94,7 @@ export const EditWordFeature = (props: {
         as={props.input ? props.input : "input"}
         className={css.formInput}
         name={["word", props.feature]}
+        disabled={userRole == UserRole.READER}
       />
     </>
   )
