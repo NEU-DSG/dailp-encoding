@@ -57,7 +57,9 @@ export const PanelLayout = (p: {
   }
 
   const { form, isEditing } = useForm()
+
   const token = useCredentials()
+  const userGroups = useCognitoUserGroups()
 
   // Get all global glosses / matching tags to display.
   const { cherokeeRepresentation } = usePreferences()
@@ -103,10 +105,10 @@ export const PanelLayout = (p: {
   } else if (p.segment.__typename === "AnnotatedForm") {
     panel = (
       <>
-        {/* If the user is logged in, then display an edit button on the word
+        {/* If the user belongs to any groups, then display an edit button on the word
         panel along with its corresponding formatted header. Otherwise, display
         the normal word panel. */}
-        {token ? (
+        {userGroups.length > 0 ? (
           <header className={css.wordPanelHeader}>
             <div className={css.headerButtons}>
               {!isEditing && (
