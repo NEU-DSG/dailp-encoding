@@ -60,7 +60,7 @@ export const LoginHeaderButton = (props?: { className?: string }) => {
 }
 
 const ConfirmLogout = (props?: { className?: string }) => {
-  const { user } = useUser()
+  const { operations } = useUser()
   const popover = usePopoverState({ gutter: 2 })
 
   return (
@@ -76,7 +76,7 @@ const ConfirmLogout = (props?: { className?: string }) => {
         <Button
           className={cx(props?.className, popoverButton)}
           onClick={() => {
-            user?.signOut()
+            operations.signOutUser()
           }}
         >
           Log out
