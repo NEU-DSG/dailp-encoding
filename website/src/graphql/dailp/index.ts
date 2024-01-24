@@ -1623,6 +1623,15 @@ export type MorphemeQuery = { readonly __typename?: "Query" } & {
   >
 }
 
+export type UserInfoQueryVariables = Exact<{ [key: string]: never }>
+
+export type UserInfoQuery = { readonly __typename?: "Query" } & {
+  readonly userInfo: { readonly __typename?: "UserInfo" } & Pick<
+    UserInfo,
+    "id" | "email" | "groups"
+  >
+}
+
 export type NewPageMutationVariables = Exact<{
   data: Scalars["JSON"]
 }>
@@ -2753,6 +2762,24 @@ export function useMorphemeQuery(
 ) {
   return Urql.useQuery<MorphemeQuery, MorphemeQueryVariables>({
     query: MorphemeDocument,
+    ...options,
+  })
+}
+export const UserInfoDocument = gql`
+  query UserInfo {
+    userInfo {
+      id
+      email
+      groups
+    }
+  }
+`
+
+export function useUserInfoQuery(
+  options?: Omit<Urql.UseQueryArgs<UserInfoQueryVariables>, "query">
+) {
+  return Urql.useQuery<UserInfoQuery, UserInfoQueryVariables>({
+    query: UserInfoDocument,
     ...options,
   })
 }

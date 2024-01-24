@@ -20,12 +20,6 @@ export const loginHeader = style({
   flex: 6,
 })
 
-export const popoverButton = style([
-  paddingX(hspace.large),
-  paddingY(vspace.medium),
-  { margin: 0 },
-])
-
 export const skinnyWidth = style([
   fullWidth,
   edgePadded,
