@@ -76,13 +76,9 @@ export const EditDocPanel = (props: { document?: Dailp.AnnotatedDoc }) => {
 
   const handleDateChange = (e: any) => {
     const selectedDateValue = e as Date
-    // console.log("selected date = " + selectedDateValue)
 
     if (selectedDateValue) {
       setSelectedDate(selectedDateValue)
-      // console.log(selectedDate?.getDate());
-      // console.log(selectedDate?.getMonth());
-      // console.log(selectedDate?.getFullYear());
 
       const selectedDay = selectedDateValue.getDate()
       const selectedMonth = selectedDateValue.getMonth() + 1
@@ -104,12 +100,6 @@ export const EditDocPanel = (props: { document?: Dailp.AnnotatedDoc }) => {
     }
   }, [day, month, year])
 
-  /* TODO (NOTE): While we could disable the edit button for "Document Info" to non-editors,
-  in the near future we will want users with the Contributor and Editor roles
-  to be able to add people to the "Contributors" list in the document info.
-  We want the above functionality in order to support in-person work teams who prefer working
-  on paper or through discussion, then putting everything in the computer at once 
-  via one DAILP user account. */
   let userRole = useUserRole()
 
   return (

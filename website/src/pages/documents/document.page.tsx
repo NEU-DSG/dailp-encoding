@@ -1,10 +1,8 @@
 import { DialogContent, DialogOverlay } from "@reach/dialog"
 import "@reach/dialog/styles.css"
-import React, { useEffect, useRef, useState } from "react"
+import React, { useEffect, useState } from "react"
 import { isMobile } from "react-device-detect"
 import { Helmet } from "react-helmet"
-import { HiPencilAlt } from "react-icons/hi"
-import { IoCheckmarkSharp } from "react-icons/io5"
 import {
   MdOutlineBookmarkAdd,
   MdOutlineBookmarkRemove,
@@ -14,7 +12,6 @@ import { RiArrowUpCircleFill } from "react-icons/ri/index"
 import {
   Dialog,
   DialogBackdrop,
-  unstable_Form as Form,
   Tab,
   TabList,
   TabPanel,
@@ -23,10 +20,9 @@ import {
 import { navigate } from "vite-plugin-ssr/client/router"
 import { useUser } from "src/auth"
 import { AudioPlayer, Breadcrumbs, Button, Link } from "src/components"
-import { IconButton, IconTextButton } from "src/components/button"
+import { IconTextButton } from "src/components/button"
 import { useMediaQuery } from "src/custom-hooks"
 import { FormProvider as FormProviderDoc } from "src/edit-doc-data-form-context"
-import { EditButton } from "src/edit-word-feature"
 import { FormProvider, useForm } from "src/edit-word-form-context"
 import * as Dailp from "src/graphql/dailp"
 import Layout from "src/layout"
@@ -36,16 +32,10 @@ import { DocumentInfo } from "src/pages/documents/document-info"
 import { PanelDetails, PanelLayout, PanelSegment } from "src/panel-layout"
 import { usePreferences } from "src/preferences-context"
 import { useLocation } from "src/renderer/PageShell"
-import {
-  chapterRoute,
-  collectionWordPath,
-  documentDetailsRoute,
-  documentRoute,
-} from "src/routes"
+import { chapterRoute, collectionWordPath } from "src/routes"
 import { useScrollableTabState } from "src/scrollable-tabs"
 import { AnnotatedForm, DocumentPage } from "src/segment"
 import { mediaQueries } from "src/style/constants"
-import { fullWidth } from "src/style/utils.css"
 import { BasicMorphemeSegment, LevelOfDetail } from "src/types"
 import PageImages from "../../page-image"
 import * as css from "./document.css"

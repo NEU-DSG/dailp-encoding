@@ -14,17 +14,13 @@ import { OnChangeValue } from "react-select"
 import { Disclosure, DisclosureContent, useDisclosureState } from "reakit"
 import { unstable_Form as Form, unstable_FormInput as FormInput } from "reakit"
 import * as Dailp from "src/graphql/dailp"
-import { useCredentials } from "./auth"
+import { useCognitoUserGroups, useCredentials } from "./auth"
 import CommentPanel from "./comment-panel"
 import { AudioPlayer, Button, IconButton } from "./components"
 import { CommentSection } from "./components/comment-section"
 import { CustomCreatable } from "./components/creatable"
 import { EditWordAudio } from "./components/edit-word-audio"
 import { SubtleButton } from "./components/subtle-button"
-import {
-  subtleButton,
-  subtleButtonActive,
-} from "./components/subtle-button.css"
 import { EditButton, EditWordFeature } from "./edit-word-feature"
 import { formInput } from "./edit-word-feature.css"
 import { useForm } from "./edit-word-form-context"
