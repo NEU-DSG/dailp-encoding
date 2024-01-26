@@ -25,21 +25,13 @@ export const Dashboard = () => {
           className={css.dashboardTabs}
           aria-label="Document View Types"
         >
-          <Tab {...tabs} id={Tabs.ACTIVITY} className={css.dashboardTab}>
-            Recent Activity
-          </Tab>
           <Tab {...tabs} id={Tabs.BOOKMARKS} className={css.dashboardTab}>
             Bookmarked Documents
           </Tab>
+          <Tab {...tabs} id={Tabs.ACTIVITY} className={css.dashboardTab}>
+            Recent Activity
+          </Tab>
         </TabList>
-
-        <TabPanel
-          {...tabs}
-          id={Tabs.ACTIVITY}
-          className={css.dashboardTabPanel}
-        >
-          <ActivityTab />
-        </TabPanel>
 
         <TabPanel
           {...tabs}
@@ -47,6 +39,14 @@ export const Dashboard = () => {
           className={css.dashboardTabPanel}
         >
           <BookmarksTab />
+        </TabPanel>
+
+        <TabPanel
+          {...tabs}
+          id={Tabs.ACTIVITY}
+          className={css.dashboardTabPanel}
+        >
+          <ActivityTab />
         </TabPanel>
       </div>
     </>
