@@ -4,6 +4,7 @@ import {
   useBookmarkedDocumentsQuery,
 } from "src/graphql/dailp"
 import { useScrollableTabState } from "src/scrollable-tabs"
+import Link from "../link"
 import { BookmarkCard } from "./bookmark-card"
 import * as css from "./dashboard.css"
 
@@ -76,13 +77,35 @@ export const BookmarksTab = () => {
   const [{ data }] = useBookmarkedDocumentsQuery()
   return (
     <>
-      <ul className={css.noBullets}>
-        {data?.bookmarkedDocuments?.map((doc: any) => (
-          <li key={doc.id}>
-            <BookmarksTabItem documentId={doc.id} />
-          </li>
-        ))}
-      </ul>
+      {data && data.bookmarkedDocuments.length > 0 ? (
+        <ul className={css.noBullets}>
+          {data.bookmarkedDocuments?.map((doc: any) => (
+            <li key={doc.id}>
+              <BookmarksTabItem documentId={doc.id} />
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p>
+          Documents you bookmark will show up here. To bookmark a document,
+          follow the steps below:
+          <ol>
+            <li>
+              Go to an <Link href="/cwkw">edited collection</Link>.
+            </li>
+            <li>
+              Open the table of contents menu by pressing the arrow (on desktop)
+              or three lines (on phones) on the top left of the screen.
+            </li>
+            <li>
+              Click one of the numbered body chapters, then choose a subchapter.
+              Most subchapters are documents, but some are lists of documents,
+              so you may have to click on one deeper subchapter.
+            </li>
+            <li>Press the bookmark button on the top left of the screen.</li>
+          </ol>
+        </p>
+      )}
     </>
   )
 }
