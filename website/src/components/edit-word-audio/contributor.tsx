@@ -2,6 +2,7 @@ import { CognitoIdentityClient } from "@aws-sdk/client-cognito-identity"
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3"
 import { fromCognitoIdentityPool } from "@aws-sdk/credential-provider-cognito-identity"
 import { CognitoUser } from "amazon-cognito-identity-js"
+import cx from "classnames"
 import {
   ChangeEvent,
   Fragment,
@@ -25,6 +26,7 @@ import {
 import { IconTextButton } from "../button"
 import { SubtleButton } from "../subtle-button"
 import { subtleButton, subtleButtonActive } from "../subtle-button.css"
+import { statusMessage, statusMessageError } from "./contributor.css"
 
 type UploadAudioState = "ready" | "uploading" | "error"
 
@@ -197,7 +199,7 @@ function ContributeAudioSection(p: {
       <VisuallyHidden>
         <input type="file" id="file-upload" onChange={onFileChanged} />
       </VisuallyHidden>
-      <form
+      <div
         style={{
           display: "flex",
           textAlign: "center",
@@ -231,7 +233,7 @@ function ContributeAudioSection(p: {
             <span>Record audio</span>
           </IconTextButton>
         </div>
-      </form>
+      </div>
 
       {currentTab === "upload" && (
         <UploadAudioSection
@@ -245,13 +247,13 @@ function ContributeAudioSection(p: {
       )}
 
       {uploadState === "uploading" && (
-        <StatusMessage border="grey">
+        <StatusMessage>
           <p>Uploading...</p>
         </StatusMessage>
       )}
 
       {uploadState === "error" && (
-        <StatusMessage border="red">
+        <StatusMessage error>
           <p>Something went wrong with the upload</p>
           <button onClick={() => clearUploadError()}>Try again</button>
         </StatusMessage>
@@ -262,25 +264,14 @@ function ContributeAudioSection(p: {
 
 function StatusMessage({
   children,
-  border,
+  error = false,
 }: {
   children: ReactNode
-  border: string
+  error?: boolean
 }) {
   return (
     <div
-      style={{
-        position: "absolute",
-        top: 0,
-        left: 0,
-        bottom: 0,
-        right: 0,
-        background: "rgba(255,255,255,0.65)",
-        color: "black",
-        padding: 40,
-        backdropFilter: "blur(2px)",
-        border: `4px solid ${border}`,
-      }}
+      className={error ? cx(statusMessage, statusMessageError) : statusMessage}
     >
       {children}
     </div>
