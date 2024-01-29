@@ -18,6 +18,7 @@ type UserContextType = {
     loginUser: (username: string, password: string) => void
     resetPassword: (username: string) => void
     changePassword: (verificationCode: string, newPassword: string) => void
+    signOutUser: () => void
   }
 }
 
@@ -274,6 +275,12 @@ export const UserProvider = (props: { children: any }) => {
     })
   }
 
+  function signOutUser() {
+    user?.signOut(() => {
+      setUser(null)
+    })
+  }
+
   return (
     <UserContext.Provider
       value={{
@@ -285,6 +292,7 @@ export const UserProvider = (props: { children: any }) => {
           loginUser,
           resetPassword,
           changePassword,
+          signOutUser,
         },
       }}
     >

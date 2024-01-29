@@ -1132,7 +1132,7 @@ export type DocumentContentsQuery = { readonly __typename?: "Query" } & {
               "pageNumber"
             > & {
                 readonly paragraphs: ReadonlyArray<
-                  { readonly __typename?: "DocumentParagraph" } & Pick<
+                  { readonly __typename: "DocumentParagraph" } & Pick<
                     DocumentParagraph,
                     "id" | "translation" | "index"
                   > & {
@@ -1322,7 +1322,7 @@ export type DocFormFieldsFragment = {
   }
 
 export type FormFieldsFragment = {
-  readonly __typename?: "AnnotatedForm"
+  readonly __typename: "AnnotatedForm"
 } & Pick<
   AnnotatedForm,
   | "id"
@@ -1620,6 +1620,15 @@ export type MorphemeQuery = { readonly __typename?: "Query" } & {
             }
         >
       }
+  >
+}
+
+export type UserInfoQueryVariables = Exact<{ [key: string]: never }>
+
+export type UserInfoQuery = { readonly __typename?: "Query" } & {
+  readonly userInfo: { readonly __typename?: "UserInfo" } & Pick<
+    UserInfo,
+    "id" | "email" | "groups"
   >
 }
 
@@ -1926,7 +1935,7 @@ export type UpdateWordMutationVariables = Exact<{
 }>
 
 export type UpdateWordMutation = { readonly __typename?: "Mutation" } & {
-  readonly updateWord: { readonly __typename?: "AnnotatedForm" } & Pick<
+  readonly updateWord: { readonly __typename: "AnnotatedForm" } & Pick<
     AnnotatedForm,
     | "id"
     | "index"
@@ -2265,6 +2274,7 @@ export const AudioSliceFieldsFragmentDoc = gql`
 `
 export const FormFieldsFragmentDoc = gql`
   fragment FormFields on AnnotatedForm {
+    __typename
     id
     index
     source
@@ -2453,6 +2463,7 @@ export const DocumentContentsDocument = gql`
       translatedPages @skip(if: $isReference) {
         pageNumber
         paragraphs {
+          __typename
           source {
             __typename
             ... on AnnotatedForm {
@@ -2751,6 +2762,24 @@ export function useMorphemeQuery(
 ) {
   return Urql.useQuery<MorphemeQuery, MorphemeQueryVariables>({
     query: MorphemeDocument,
+    ...options,
+  })
+}
+export const UserInfoDocument = gql`
+  query UserInfo {
+    userInfo {
+      id
+      email
+      groups
+    }
+  }
+`
+
+export function useUserInfoQuery(
+  options?: Omit<Urql.UseQueryArgs<UserInfoQueryVariables>, "query">
+) {
+  return Urql.useQuery<UserInfoQuery, UserInfoQueryVariables>({
+    query: UserInfoDocument,
     ...options,
   })
 }
