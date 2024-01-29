@@ -1,12 +1,10 @@
+import { Tab, TabList, TabPanel, useDialogState } from "reakit"
 import {
-  Dialog,
-  DialogBackdrop,
-  Tab,
-  TabList,
-  TabPanel,
-  useDialogState,
-} from "reakit"
+  useAnnotatedDocumentByIdQuery,
+  useBookmarkedDocumentsQuery,
+} from "src/graphql/dailp"
 import { useScrollableTabState } from "src/scrollable-tabs"
+import { BookmarkCard } from "./bookmark-card"
 import * as css from "./dashboard.css"
 
 enum Tabs {
@@ -59,8 +57,7 @@ export const ActivityTab = () => {
   const dialog = useDialogState({ animated: true, visible: true })
   return (
     <>
-      Unordered list should be a map function of the user's recent activity
-      <ul className={css.noBullets}>
+      {/* <ul className={css.noBullets}>
         <li>
           <ActivityItem />
         </li>
@@ -70,27 +67,52 @@ export const ActivityTab = () => {
         <li>
           <ActivityItem />
         </li>
-      </ul>
+      </ul> */}
     </>
   )
 }
 
 export const BookmarksTab = () => {
-  // takes in something (user?)
+  const [{ data }] = useBookmarkedDocumentsQuery()
   return (
     <>
-      Unordered list should be a map function of the user's bookmarked documents
       <ul className={css.noBullets}>
-        <li>
-          <BookmarksItem />
-        </li>
-        <li>
-          <BookmarksItem />
-        </li>
-        <li>
-          <BookmarksItem />
-        </li>
+        {data?.bookmarkedDocuments?.map((doc: any) => (
+          <li key={doc.id}>
+            <BookmarksTabItem documentId={doc.id} />
+          </li>
+        ))}
       </ul>
+    </>
+  )
+}
+
+export const BookmarksTabItem = (props: { documentId: string }) => {
+  const [{ data: doc }] = useAnnotatedDocumentByIdQuery({
+    variables: { id: props.documentId },
+  })
+  const docData = doc?.documentByUuid
+  const docFullPath = docData?.chapters?.[0]?.path
+  let docPath = ""
+  if (docFullPath?.length !== undefined && docFullPath?.length > 0) {
+    docPath = docFullPath[0] + "/" + docFullPath[docFullPath.length - 1]
+  }
+  console.log(docPath)
+  // Crops the thumbnail to 50% of the original size and then scales it to 500x500
+  const thumbnailUrl = (docData?.translatedPages?.[0]?.image?.url +
+    "/pct:0,0,50,50/500,500/0/default.jpg") as unknown as string
+  return (
+    <>
+      <div className="cardShadow">
+        <BookmarkCard
+          thumbnail={thumbnailUrl}
+          header={{
+            text: docData?.title as unknown as string,
+            link: `/collections/${docPath}`,
+          }}
+          description={docData?.date?.year as unknown as string}
+        />
+      </div>
     </>
   )
 }
@@ -100,19 +122,7 @@ export const ActivityItem = () => {
   return (
     <>
       <div className={css.dashboardItem}>
-        <p>Recent activity example box</p>
-      </div>
-    </>
-  )
-}
-
-export const BookmarksItem = () => {
-  // takes in user and document id?
-  return (
-    <>
-      <div className={css.dashboardItem}>
-        <h2>Title</h2>
-        <p>Description</p>
+        <p>Recent activity test</p>
       </div>
     </>
   )

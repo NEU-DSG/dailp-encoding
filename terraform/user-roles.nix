@@ -9,7 +9,7 @@ let
 in {
   # Policy Documents
   config.data.aws_iam_policy_document = {
-    trusted_assume_role_policy.statement = {
+    assume_role_policy.statement = {
       effect = "Allow";
       principals = {
         type = "Federated";
@@ -22,10 +22,36 @@ in {
         test = "StringEquals";
         variable = "cognito-identity.amazonaws.com:aud";
         values = [
-          # TODO use a reference instead of hard-coding
-          "us-east-1:6d544733-83e2-4d38-baa3-195d3bfdf54b" # FIXME this should be causing some weird behavior somewhere...
+          "$\{aws_cognito_identity_pool.main.id}"
         ];
       };
+    };
+
+    trusted_assume_role_policy.statement = {
+      effect = "Allow";
+      principals = {
+        type = "Federated";
+        identifiers = [
+          "cognito-identity.amazonaws.com"
+          ];
+      };
+      actions = [ "sts:AssumeRoleWithWebIdentity" ];
+      condition = [
+        {
+        test = "StringEquals";
+        variable = "cognito-identity.amazonaws.com:aud";
+        values = [
+          "$\{aws_cognito_identity_pool.main.id}"
+          ];
+      }
+      {
+        test = "ForAnyValue:StringLike";
+        variable = "cognito-identity.amazonaws.com:amr";
+        values = [
+          "authenticated"
+          ];
+      }
+      ];
     };
 
     basic_user_policy.statement = {
@@ -96,7 +122,8 @@ in {
     # Role Resource Definitions
     aws_iam_role = 
     let
-      trust-policy = "$\{data.aws_iam_policy_document.trusted_assume_role_policy.json}";
+      trust-policy = "$\{data.aws_iam_policy_document.assume_role_policy.json}";
+      authed-trust-policy = "$\{data.aws_iam_policy_document.trusted_assume_role_policy.json}";
     in {
       dailp_user = {
         assume_role_policy = trust-policy;
@@ -104,17 +131,17 @@ in {
         name = prefixName "user";
       };
       dailp_user_contributor = {
-        assume_role_policy = trust-policy;
+        assume_role_policy = authed-trust-policy;
         description = "A DAILP user with basic read/update permissions.";
         name = prefixName "user-contributor";
       };
       dailp_user_editor = {
-        assume_role_policy = trust-policy;
+        assume_role_policy = authed-trust-policy;
         description = "A user with editorial permissions on DAILP";
         name = prefixName "user-editor";
       };
     };
-    # Bind policies to roles
+    # Bind permissions policies to roles
     aws_iam_role_policy_attachment = {
       basic_user = {
         role = "$\{aws_iam_role.dailp_user.name}";

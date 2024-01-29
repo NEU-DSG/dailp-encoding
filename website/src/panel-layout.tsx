@@ -1,17 +1,30 @@
 import { groupBy } from "lodash"
 import React, { ReactNode } from "react"
+import { useState } from "react"
 import { AiFillSound } from "react-icons/ai/index"
 import { GrDown, GrUp } from "react-icons/gr/index"
 import { IoEllipsisHorizontalCircle } from "react-icons/io5/index"
-import { MdClose, MdNotes, MdRecordVoiceOver } from "react-icons/md/index"
+import {
+  MdClose,
+  MdNotes,
+  MdOutlineComment,
+  MdRecordVoiceOver,
+} from "react-icons/md/index"
 import { OnChangeValue } from "react-select"
 import { Disclosure, DisclosureContent, useDisclosureState } from "reakit"
 import { unstable_Form as Form, unstable_FormInput as FormInput } from "reakit"
 import * as Dailp from "src/graphql/dailp"
 import { useCredentials } from "./auth"
-import { AudioPlayer, IconButton } from "./components"
+import CommentPanel from "./comment-panel"
+import { AudioPlayer, Button, IconButton } from "./components"
+import { CommentSection } from "./components/comment-section"
 import { CustomCreatable } from "./components/creatable"
 import { EditWordAudio } from "./components/edit-word-audio"
+import { SubtleButton } from "./components/subtle-button"
+import {
+  subtleButton,
+  subtleButtonActive,
+} from "./components/subtle-button.css"
 import { EditButton, EditWordFeature } from "./edit-word-feature"
 import { formInput } from "./edit-word-feature.css"
 import { useForm } from "./edit-word-form-context"
@@ -52,6 +65,8 @@ export const PanelLayout = (p: {
     variables: { system: cherokeeRepresentation },
   })
 
+  const [isCommenting, setIsCommenting] = useState(false)
+
   if (!data) {
     return <p>Loading...</p>
   }
@@ -79,7 +94,13 @@ export const PanelLayout = (p: {
   let panel = null
 
   // Display the paragraph panel if the segment type is a word (AnnotatedForm).
-  if (p.segment.__typename === "AnnotatedForm") {
+  if (isCommenting === true) {
+    if (p.segment != null) {
+      panel = (
+        <CommentPanel segment={p.segment} setIsCommenting={setIsCommenting} />
+      )
+    }
+  } else if (p.segment.__typename === "AnnotatedForm") {
     panel = (
       <>
         {/* If the user is logged in, then display an edit button on the word
@@ -143,6 +164,20 @@ export const PanelLayout = (p: {
   return (
     <div className={css.wordPanelContent}>
       <>{panel}</>
+      {token && // only show the option to leave a comment if the user is signed in
+        (isCommenting ? (
+          <SubtleButton
+            type="button"
+            onClick={() => setIsCommenting(false)}
+            className={css.buttonSpacing}
+          >
+            Discard
+          </SubtleButton>
+        ) : (
+          <Button type="button" onClick={() => setIsCommenting(true)}>
+            Comment
+          </Button>
+        ))}
     </div>
   )
 }
@@ -247,6 +282,8 @@ export const PanelContent = (p: {
     />
   )
 
+  const discussionContent = <CommentSection parent={p.word} />
+
   return (
     <>
       {(p.word.editedAudio.length || p.panel === PanelType.EditWordPanel) && (
@@ -286,11 +323,22 @@ export const PanelContent = (p: {
       {/* If there is no commentary, does not display Commentary panel */}
       {p.word.commentary && p.word.commentary.length > 0 && (
         <CollapsiblePanel
-          title={"Commentary"}
+          title={"Lingustic commentary"}
           content={commentaryContent}
           icon={<MdNotes size={24} className={css.wordPanelButton.colpleft} />}
         />
       )}
+
+      <CollapsiblePanel
+        title={"Discussion"}
+        content={discussionContent}
+        icon={
+          <MdOutlineComment
+            size={24}
+            className={css.wordPanelButton.colpleft}
+          />
+        }
+      />
     </>
   )
 }
