@@ -260,7 +260,7 @@ export type Category = DatabaseIdentifier &
     readonly enqueuedScripts: Maybe<TermNodeToEnqueuedScriptConnection>
     /** Connection between the TermNode type and the EnqueuedStylesheet type */
     readonly enqueuedStylesheets: Maybe<TermNodeToEnqueuedStylesheetConnection>
-    /** The unique resource identifier path */
+    /** The globally unique ID for the object */
     readonly id: Scalars["ID"]
     /** Whether the node is a Content Node */
     readonly isContentNode: Scalars["Boolean"]
@@ -1168,7 +1168,7 @@ export type ContentNode = {
   readonly enqueuedStylesheets: Maybe<ContentNodeToEnqueuedStylesheetConnection>
   /** The global unique identifier for this post. This currently matches the value stored in WP_Post-&gt;guid and the guid column in the &quot;post_objects&quot; database table. */
   readonly guid: Maybe<Scalars["String"]>
-  /** The unique resource identifier path */
+  /** The globally unique ID for the object */
   readonly id: Scalars["ID"]
   /** Whether the node is a Content Node */
   readonly isContentNode: Scalars["Boolean"]
@@ -3385,7 +3385,7 @@ export type MenuItemConnectionPageInfo = {
 export type MenuItemLinkable = {
   /** The unique identifier stored in the database */
   readonly databaseId: Scalars["Int"]
-  /** The unique resource identifier path */
+  /** The globally unique ID for the object */
   readonly id: Scalars["ID"]
   /** Whether the node is a Content Node */
   readonly isContentNode: Scalars["Boolean"]
@@ -4695,7 +4695,7 @@ export type PostFormat = DatabaseIdentifier &
     readonly enqueuedScripts: Maybe<TermNodeToEnqueuedScriptConnection>
     /** Connection between the TermNode type and the EnqueuedStylesheet type */
     readonly enqueuedStylesheets: Maybe<TermNodeToEnqueuedStylesheetConnection>
-    /** The unique resource identifier path */
+    /** The globally unique ID for the object */
     readonly id: Scalars["ID"]
     /** Whether the node is a Content Node */
     readonly isContentNode: Scalars["Boolean"]
@@ -8058,7 +8058,7 @@ export type Tag = DatabaseIdentifier &
     readonly enqueuedScripts: Maybe<TermNodeToEnqueuedScriptConnection>
     /** Connection between the TermNode type and the EnqueuedStylesheet type */
     readonly enqueuedStylesheets: Maybe<TermNodeToEnqueuedStylesheetConnection>
-    /** The unique resource identifier path */
+    /** The globally unique ID for the object */
     readonly id: Scalars["ID"]
     /** Whether the node is a Content Node */
     readonly isContentNode: Scalars["Boolean"]
@@ -8573,7 +8573,7 @@ export type TermNode = {
   readonly enqueuedScripts: Maybe<TermNodeToEnqueuedScriptConnection>
   /** Connection between the TermNode type and the EnqueuedStylesheet type */
   readonly enqueuedStylesheets: Maybe<TermNodeToEnqueuedStylesheetConnection>
-  /** The unique resource identifier path */
+  /** The globally unique ID for the object */
   readonly id: Scalars["ID"]
   /** Whether the node is a Content Node */
   readonly isContentNode: Scalars["Boolean"]
@@ -8810,7 +8810,7 @@ export type ThemeConnectionPageInfo = {
 
 /** Any node that has a URI */
 export type UniformResourceIdentifiable = {
-  /** The unique resource identifier path */
+  /** The globally unique ID for the object */
   readonly id: Scalars["ID"]
   /** Whether the node is a Content Node */
   readonly isContentNode: Scalars["Boolean"]
