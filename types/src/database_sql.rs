@@ -595,6 +595,47 @@ impl Database {
 
     // pub async fn maybe_undefined_to_vec() -> Vec<Option<String>> {}
 
+    pub async fn add_bookmark(&self, document_id: Uuid, user_id: Uuid) -> Result<String> {
+        query_file!("queries/add_bookmark.sql", document_id, user_id)
+            .execute(&self.client)
+            .await?;
+        Ok(format!("document: {}, user: {}", document_id, user_id))
+    }
+
+    pub async fn remove_bookmark(&self, document_id: Uuid, user_id: Uuid) -> Result<String> {
+        query_file!("queries/remove_bookmark.sql", document_id, user_id)
+            .execute(&self.client)
+            .await?;
+        Ok(format!("document: {}, user: {}", document_id, user_id))
+    }
+
+    pub async fn bookmarked_documents(&self, user_id: &Uuid) -> Result<Vec<Uuid>> {
+        let bookmarks = query_file!("queries/get_bookmark_ids.sql", user_id)
+            .fetch_all(&self.client)
+            .await?;
+
+        Ok(bookmarks.into_iter().map(|x| x.id).collect())
+    }
+
+    pub async fn get_document_bookmarked_on(
+        &self,
+        document_id: &Uuid,
+        user_id: &Uuid,
+    ) -> Result<Option<Date>> {
+        if let Some(bookmark) = query_file!(
+            "queries/get_document_bookmarked_on.sql",
+            document_id,
+            user_id
+        )
+        .fetch_optional(&self.client)
+        .await?
+        {
+            Ok(Some(date::Date(bookmark.bookmarked_on)))
+        } else {
+            Ok(None)
+        }
+    }
+
     /// This does two things:
     /// 1. Create a media slice if one does not exist for the provided audio
     /// recording.
@@ -656,7 +697,7 @@ impl Database {
         Ok(document.id)
     }
 
-    pub async fn update_paragraph(&self, paragraph: ParagraphUpdate) -> Result<Uuid> {
+    pub async fn update_paragraph(&self, paragraph: ParagraphUpdate) -> Result<DocumentParagraph> {
         let translation = paragraph.translation.into_vec();
 
         query_file!(
@@ -667,7 +708,7 @@ impl Database {
         .execute(&self.client)
         .await?;
 
-        Ok(paragraph.id)
+        Ok(self.paragraph_by_id(&paragraph.id).await?)
     }
 
     pub async fn update_contributor_attribution(
@@ -2128,6 +2169,9 @@ pub struct PersonFullName(pub String);
 
 #[derive(Clone, Eq, PartialEq, Hash)]
 pub struct ContributorsForDocument(pub Uuid);
+
+#[derive(Clone, Eq, PartialEq, Hash)]
+pub struct BookmarkedOn(pub Uuid, pub Uuid);
 
 #[derive(Clone, Eq, PartialEq, Hash)]
 pub struct DocumentShortName(pub String);

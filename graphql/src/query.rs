@@ -1,9 +1,11 @@
 //! This piece of the project exposes a GraphQL endpoint that allows one to access DAILP data in a federated manner with specific queries.
 
 use dailp::{
+    auth::{AuthGuard, GroupGuard, UserGroup, UserInfo},
     comment::{CommentParent, DeleteCommentInput, PostCommentInput},
     slugify_ltree, AnnotatedForm, AttachAudioToWordInput, CollectionChapter, CurateWordAudioInput,
-    DeleteContributorAttribution, DocumentMetadataUpdate, UpdateContributorAttribution, Uuid,
+    DeleteContributorAttribution, DocumentMetadataUpdate, DocumentParagraph,
+    UpdateContributorAttribution, Uuid,
 };
 use itertools::Itertools;
 
@@ -124,6 +126,39 @@ impl Query {
         Ok(context
             .data::<DataLoader<Database>>()?
             .load_one(dailp::DocumentShortName(slug.to_ascii_uppercase()))
+            .await?)
+    }
+
+    /// Retrieves all documents that are bookmarked by the current user.
+    #[graphql(guard = "AuthGuard")]
+    pub async fn bookmarked_documents(
+        &self,
+        context: &Context<'_>,
+    ) -> FieldResult<Vec<AnnotatedDoc>> {
+        let user = context
+            .data_opt::<UserInfo>()
+            .ok_or_else(|| anyhow::format_err!("User is not signed in"))?;
+        let bookmarked_ids = context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .bookmarked_documents(&user.id)
+            .await?;
+        let annotated_docs_map = context
+            .data::<DataLoader<Database>>()?
+            .load_many(bookmarked_ids.iter().map(|&id| dailp::DocumentId(id)))
+            .await?;
+        Ok(annotated_docs_map.into_values().collect())
+    }
+
+    /// Retrieves a full document from its unique identifier.
+    pub async fn document_by_uuid(
+        &self,
+        context: &Context<'_>,
+        id: Uuid,
+    ) -> FieldResult<Option<AnnotatedDoc>> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .load_one(dailp::DocumentId(id))
             .await?)
     }
 
@@ -273,6 +308,32 @@ impl Query {
             .await?)
     }
 
+    /// Get a single word given the word ID
+    async fn word_by_id(
+        &self,
+        context: &Context<'_>,
+        id: Uuid,
+    ) -> FieldResult<dailp::AnnotatedForm> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .word_by_id(&id)
+            .await?)
+    }
+
+    /// Get a single paragraph given the paragraph ID
+    async fn paragraph_by_id(
+        &self,
+        context: &Context<'_>,
+        id: Uuid,
+    ) -> FieldResult<dailp::DocumentParagraph> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .paragraph_by_id(&id)
+            .await?)
+    }
+
     /// Search for words with the exact same syllabary string, or with very
     /// similar looking characters.
     async fn syllabary_search(
@@ -289,8 +350,8 @@ impl Query {
 
     /// Basic information about the currently authenticated user, if any.
     #[graphql(guard = "AuthGuard")]
-    async fn user_info<'a>(&self, context: &'a Context<'_>) -> &'a UserInfo {
-        context.data_unchecked()
+    async fn user_info<'a>(&self, context: &'a Context<'_>) -> Option<&'a UserInfo> {
+        context.data_opt()
     }
 }
 
@@ -400,7 +461,7 @@ impl Mutation {
         &self,
         context: &Context<'_>,
         paragraph: ParagraphUpdate,
-    ) -> FieldResult<Uuid> {
+    ) -> FieldResult<DocumentParagraph> {
         Ok(context
             .data::<DataLoader<Database>>()?
             .loader()
@@ -448,6 +509,50 @@ impl Mutation {
         Ok(database
             .word_by_id(&database.update_word(word).await?)
             .await?)
+    }
+
+    /// Adds a bookmark to the user's list of bookmarks.
+    #[graphql(guard = "AuthGuard")]
+    async fn add_bookmark(
+        &self,
+        context: &Context<'_>,
+        document_id: Uuid,
+    ) -> FieldResult<AnnotatedDoc> {
+        let user = context
+            .data_opt::<UserInfo>()
+            .ok_or_else(|| anyhow::format_err!("User is not signed in"))?;
+        context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .add_bookmark(document_id, user.id)
+            .await?;
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .load_one(dailp::DocumentId(document_id))
+            .await?
+            .ok_or_else(|| anyhow::format_err!("Failed to load document"))?)
+    }
+
+    /// Removes a bookmark from a user's list of bookmarks
+    #[graphql(guard = "AuthGuard")]
+    async fn remove_bookmark(
+        &self,
+        context: &Context<'_>,
+        document_id: Uuid,
+    ) -> FieldResult<AnnotatedDoc> {
+        let user = context
+            .data_opt::<UserInfo>()
+            .ok_or_else(|| anyhow::format_err!("User is not signed in"))?;
+        context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .remove_bookmark(document_id, user.id)
+            .await?;
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .load_one(dailp::DocumentId(document_id))
+            .await?
+            .ok_or_else(|| anyhow::format_err!("Failed to load document"))?)
     }
 
     /// Decide if a piece audio should be included in edited collection
@@ -521,80 +626,4 @@ struct FormsInTime {
     start: Option<dailp::Date>,
     end: Option<dailp::Date>,
     forms: Vec<dailp::AnnotatedForm>,
-}
-
-/// Auth metadata on the user making the current request.
-#[derive(Deserialize, Debug, async_graphql::SimpleObject)]
-pub struct UserInfo {
-    /// Unique ID for the User. Should be an AWS Cognito Sub.
-    #[serde(default, rename = "sub")]
-    pub id: Uuid,
-    email: String,
-    #[serde(default, rename = "cognito:groups")]
-    groups: Vec<UserGroup>,
-}
-impl UserInfo {
-    pub fn new_test_admin() -> Self {
-        Self {
-            id: Uuid::parse_str("5f22a8bf-46c8-426c-a104-b4faf7c2d608").unwrap(),
-            email: "test@dailp.northeastern.edu".to_string(),
-            groups: vec![UserGroup::Editors],
-        }
-    }
-}
-
-#[derive(Eq, PartialEq, Copy, Clone, Serialize, Deserialize, Debug, async_graphql::Enum)]
-pub enum UserGroup {
-    Contributors,
-    Editors,
-}
-// Impl FromStr and Display automatically for UserGroup, using serde.
-// This allows us to (de)serialize lists of groups via a comma-separated string
-// like this: "Editor,Contributor,Translator"
-serde_plain::forward_from_str_to_serde!(UserGroup);
-serde_plain::forward_display_to_serde!(UserGroup);
-
-/// Requires that the user is authenticated and a member of the given user group.
-struct GroupGuard {
-    group: UserGroup,
-}
-
-impl GroupGuard {
-    fn new(group: UserGroup) -> Self {
-        Self { group }
-    }
-}
-
-#[async_trait::async_trait]
-impl Guard for GroupGuard {
-    async fn check(&self, ctx: &async_graphql::Context<'_>) -> async_graphql::Result<()> {
-        let user = ctx.data_opt::<UserInfo>();
-        let has_group = user.map(|user| user.groups.iter().any(|group| group == &self.group));
-
-        match user {
-            Some(user) => log::info!("Debug user info groups={:?}", user.clone()),
-            None => log::info!("No user"),
-        };
-
-        if has_group == Some(true) {
-            Ok(())
-        } else {
-            Err(format!("Forbidden, user not in group '{}'", self.group).into())
-        }
-    }
-}
-
-/// Requires that the user is authenticated.
-struct AuthGuard;
-
-#[async_trait::async_trait]
-impl Guard for AuthGuard {
-    async fn check(&self, ctx: &async_graphql::Context<'_>) -> async_graphql::Result<()> {
-        let user = ctx.data_opt::<UserInfo>();
-        if user.is_some() {
-            Ok(())
-        } else {
-            Err("Forbidden, user not authenticated".into())
-        }
-    }
 }

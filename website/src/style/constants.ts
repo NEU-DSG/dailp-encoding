@@ -14,11 +14,18 @@ export const typography = new Typography({
 
 export const rhythm = typography.rhythm
 
+export const tagColors = {
+  story: "#C3E0EE",
+  suggestion: "#F0D6C1",
+  question: "#C3EEDE",
+}
+
 export const radii = {
   none: 0,
   small: "1px",
   medium: "2px",
   large: "4px",
+  round: "15px",
 }
 
 export const thickness = {
@@ -30,6 +37,7 @@ export const thickness = {
 export const space = {
   [0]: 0,
   none: 0,
+  xsmall: "2px",
   small: "4px",
   medium: "8px",
   large: "16px",

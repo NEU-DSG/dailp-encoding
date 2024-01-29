@@ -1,6 +1,7 @@
 import React from "react"
-import { MdClose, MdNotes } from "react-icons/md/index"
+import { MdClose, MdNotes, MdOutlineComment } from "react-icons/md/index"
 import { IconButton } from "./components"
+import { CommentSection } from "./components/comment-section"
 import { CollapsiblePanel, PanelSegment } from "./panel-layout"
 import * as css from "./panel-layout.css"
 import { TranslatedParagraph } from "./segment"
@@ -14,6 +15,8 @@ const ParagraphPanel = (p: {
       `${paragraph} ${word.__typename === "AnnotatedForm" && word.source}`,
     ""
   )
+
+  const discussionContent = <CommentSection parent={p.segment} />
 
   return (
     <>
@@ -42,9 +45,14 @@ const ParagraphPanel = (p: {
       />
 
       <CollapsiblePanel
-        title={"Notes"}
-        content={<div>Example notes</div>}
-        icon={<MdNotes size={24} className={css.wordPanelButton.colpleft} />}
+        title={"Discussion"}
+        content={discussionContent}
+        icon={
+          <MdOutlineComment
+            size={24}
+            className={css.wordPanelButton.colpleft}
+          />
+        }
       />
     </>
   )

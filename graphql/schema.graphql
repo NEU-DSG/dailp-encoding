@@ -12,6 +12,10 @@ type AnnotatedDoc {
 	"""
 	date: Date
 	"""
+	When the document was bookmarked by the current user, if it was.
+	"""
+	bookmarkedOn: Date
+	"""
 	The original source(s) of this document, the most important first.
 	"""
 	sources: [SourceAttribution!]!
@@ -806,10 +810,18 @@ type Mutation {
 	"""
 	Mutation for paragraph and translation editing
 	"""
-	updateParagraph(paragraph: ParagraphUpdate!): UUID!
+	updateParagraph(paragraph: ParagraphUpdate!): DocumentParagraph!
 	updatePage(data: JSON!): Boolean!
 	updateAnnotation(data: JSON!): Boolean!
 	updateWord(word: AnnotatedFormUpdate!): AnnotatedForm!
+	"""
+	Adds a bookmark to the user's list of bookmarks.
+	"""
+	addBookmark(documentId: UUID!): AnnotatedDoc!
+	"""
+	Removes a bookmark from a user's list of bookmarks
+	"""
+	removeBookmark(documentId: UUID!): AnnotatedDoc!
 	"""
 	Decide if a piece audio should be included in edited collection
 	"""
@@ -947,6 +959,14 @@ type Query {
 	"""
 	document(slug: String!): AnnotatedDoc
 	"""
+	Retrieves all documents that are bookmarked by the current user.
+	"""
+	bookmarkedDocuments: [AnnotatedDoc!]!
+	"""
+	Retrieves a full document from its unique identifier.
+	"""
+	documentByUuid(id: UUID!): AnnotatedDoc
+	"""
 	Retrieves a full document from its unique identifier.
 	"""
 	page(id: String!): Page
@@ -976,6 +996,14 @@ type Query {
 	"""
 	wordSearch(query: String!): [AnnotatedForm!]!
 	"""
+	Get a single word given the word ID
+	"""
+	wordById(id: UUID!): AnnotatedForm!
+	"""
+	Get a single paragraph given the paragraph ID
+	"""
+	paragraphById(id: UUID!): DocumentParagraph!
+	"""
 	Search for words with the exact same syllabary string, or with very
 	similar looking characters.
 	"""
@@ -983,7 +1011,7 @@ type Query {
 	"""
 	Basic information about the currently authenticated user, if any.
 	"""
-	userInfo: UserInfo!
+	userInfo: UserInfo
 }
 
 """
@@ -1038,6 +1066,9 @@ type User {
 	displayName: String!
 }
 
+"""
+A user belongs to any number of user groups, which give them various permissions.
+"""
 enum UserGroup {
 	CONTRIBUTORS
 	EDITORS
