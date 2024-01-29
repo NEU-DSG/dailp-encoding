@@ -26,7 +26,13 @@ import {
 import { IconTextButton } from "../button"
 import { SubtleButton } from "../subtle-button"
 import { subtleButton, subtleButtonActive } from "../subtle-button.css"
-import { statusMessage, statusMessageError } from "./contributor.css"
+import {
+  contributeAudioContainer,
+  contributeAudioOptions,
+  contributeAudioOptionsItem,
+  statusMessage,
+  statusMessageError,
+} from "./contributor.css"
 
 type UploadAudioState = "ready" | "uploading" | "error"
 
@@ -85,10 +91,10 @@ export function ContributorEditWordAudio(p: {
   word: Dailp.FormFieldsFragment
 }) {
   return (
-    <div style={{ position: "relative" }}>
+    <>
       <AvailableAudioSection word={p.word} />
       <ContributeAudioSection word={p.word} />
-    </div>
+    </>
   )
 }
 
@@ -195,18 +201,12 @@ function ContributeAudioSection(p: {
   }
 
   return (
-    <>
+    <div className={contributeAudioContainer}>
       <VisuallyHidden>
         <input type="file" id="file-upload" onChange={onFileChanged} />
       </VisuallyHidden>
-      <div
-        style={{
-          display: "flex",
-          textAlign: "center",
-          justifyContent: "space-between",
-        }}
-      >
-        <div style={{ display: "inline-block" }}>
+      <div className={contributeAudioOptions}>
+        <div className={contributeAudioOptionsItem}>
           <IconTextButton
             icon={<MdUploadFile />}
             // @ts-ignore -- I couldn't find a way to fix how this is typed
@@ -220,7 +220,7 @@ function ContributeAudioSection(p: {
             Upload audio
           </IconTextButton>
         </div>
-        <div style={{ display: "inline-block" }}>
+        <div className={contributeAudioOptionsItem}>
           <IconTextButton
             icon={<MdRecordVoiceOver />}
             className={
@@ -258,7 +258,7 @@ function ContributeAudioSection(p: {
           <button onClick={() => clearUploadError()}>Try again</button>
         </StatusMessage>
       )}
-    </>
+    </div>
   )
 }
 
@@ -363,13 +363,7 @@ function RecordAudioSection({
             audioUrl={recordingStatus.lastRecording.url}
             showProgress
           />
-          <div
-            style={{
-              display: "flex",
-              textAlign: "center",
-              justifyContent: "space-between",
-            }}
-          >
+          <div className={contributeAudioOptions}>
             <SubtleButton
               onClick={() => {
                 uploadAudio(recordingStatus.lastRecording!.data)
