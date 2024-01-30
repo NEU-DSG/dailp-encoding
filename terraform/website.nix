@@ -66,6 +66,7 @@ in {
             DAILP_IDENTITY_POOL = "$\{aws_cognito_identity_pool.main.id}";
             TF_STAGE = config.setup.stage;
             VITE_DEPLOYMENT_ENV = config.setup.stage;
+            CF_URL = "\${aws_cloudfront_distribution.media_distribution.domain_name}";
           };
           frontend = {
             artifacts = {
