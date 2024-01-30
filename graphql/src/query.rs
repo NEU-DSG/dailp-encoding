@@ -595,15 +595,15 @@ impl Mutation {
         let user = context
             .data_opt::<UserInfo>()
             .ok_or_else(|| anyhow::format_err!("User is not signed in"))?;
-        let word_id = context
+        let _media_slice_id = context
             .data::<DataLoader<Database>>()?
             .loader()
-            .attach_audio_to_word(input, &user.id)
+            .attach_audio_to_word(&input, &user.id)
             .await?;
         Ok(context
             .data::<DataLoader<Database>>()?
             .loader()
-            .word_by_id(&word_id)
+            .word_by_id(&input.word_id)
             .await?)
     }
 
