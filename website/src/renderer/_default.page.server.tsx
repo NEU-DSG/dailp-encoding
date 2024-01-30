@@ -104,6 +104,7 @@ const clientEnv = pick(process.env, [
   "DAILP_API_URL",
   "TF_STAGE",
   "AWS_REGION",
+  "CF_URL",
 ])
 
 const clientProcess = dangerouslySkipEscape(JSON.stringify({ env: clientEnv }))
