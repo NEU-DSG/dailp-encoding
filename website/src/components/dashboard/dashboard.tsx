@@ -14,7 +14,7 @@ enum Tabs {
 }
 
 export const Dashboard = () => {
-  const tabs = useScrollableTabState({ selectedId: Tabs.ACTIVITY })
+  const tabs = useScrollableTabState({ selectedId: Tabs.BOOKMARKS })
   return (
     <>
       <h1 className={css.dashboardHeader}>Dashboard</h1>
@@ -56,21 +56,7 @@ export const Dashboard = () => {
 export const ActivityTab = () => {
   // takes in something (user?)
   const dialog = useDialogState({ animated: true, visible: true })
-  return (
-    <>
-      {/* <ul className={css.noBullets}>
-        <li>
-          <ActivityItem />
-        </li>
-        <li>
-          <ActivityItem />
-        </li>
-        <li>
-          <ActivityItem />
-        </li>
-      </ul> */}
-    </>
-  )
+  return <></>
 }
 
 export const BookmarksTab = () => {
@@ -91,18 +77,16 @@ export const BookmarksTab = () => {
           follow the steps below:
           <ol>
             <li>
-              Go to an <Link href="/cwkw">edited collection</Link>.
+              Go to an <Link href="/collections/cwkw">edited collection</Link>.
             </li>
             <li>
-              Open the table of contents menu by pressing the arrow (on desktop)
-              or three lines (on phones) on the top left of the screen.
+              Open the table of contents menu. Press the arrow (desktop) or
+              three lines at the top left of the screen (phones).
             </li>
             <li>
-              Click one of the numbered body chapters, then choose a subchapter.
-              Most subchapters are documents, but some are lists of documents,
-              so you may have to click on one deeper subchapter.
+              Click on a chapter, then select a sub-chapter to view a document.
             </li>
-            <li>Press the bookmark button on the top left of the screen.</li>
+            <li>Press the bookmark button under the document title.</li>
           </ol>
         </p>
       )}
