@@ -1626,9 +1626,11 @@ export type MorphemeQuery = { readonly __typename?: "Query" } & {
 export type UserInfoQueryVariables = Exact<{ [key: string]: never }>
 
 export type UserInfoQuery = { readonly __typename?: "Query" } & {
-  readonly userInfo: { readonly __typename?: "UserInfo" } & Pick<
-    UserInfo,
-    "id" | "email" | "groups"
+  readonly userInfo: Maybe<
+    { readonly __typename?: "UserInfo" } & Pick<
+      UserInfo,
+      "id" | "email" | "groups"
+    >
   >
 }
 
