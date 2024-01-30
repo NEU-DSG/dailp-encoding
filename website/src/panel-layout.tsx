@@ -14,17 +14,13 @@ import { OnChangeValue } from "react-select"
 import { Disclosure, DisclosureContent, useDisclosureState } from "reakit"
 import { unstable_Form as Form, unstable_FormInput as FormInput } from "reakit"
 import * as Dailp from "src/graphql/dailp"
-import { useCredentials } from "./auth"
+import { useCognitoUserGroups, useCredentials } from "./auth"
 import CommentPanel from "./comment-panel"
 import { AudioPlayer, Button, IconButton } from "./components"
 import { CommentSection } from "./components/comment-section"
 import { CustomCreatable } from "./components/creatable"
 import { EditWordAudio } from "./components/edit-word-audio"
 import { SubtleButton } from "./components/subtle-button"
-import {
-  subtleButton,
-  subtleButtonActive,
-} from "./components/subtle-button.css"
 import { EditButton, EditWordFeature } from "./edit-word-feature"
 import { formInput } from "./edit-word-feature.css"
 import { useForm } from "./edit-word-form-context"
@@ -57,7 +53,9 @@ export const PanelLayout = (p: {
   }
 
   const { form, isEditing } = useForm()
+
   const token = useCredentials()
+  const userGroups = useCognitoUserGroups()
 
   // Get all global glosses / matching tags to display.
   const { cherokeeRepresentation } = usePreferences()
@@ -103,10 +101,10 @@ export const PanelLayout = (p: {
   } else if (p.segment.__typename === "AnnotatedForm") {
     panel = (
       <>
-        {/* If the user is logged in, then display an edit button on the word
+        {/* If the user belongs to any groups, then display an edit button on the word
         panel along with its corresponding formatted header. Otherwise, display
         the normal word panel. */}
-        {token ? (
+        {userGroups.length > 0 ? (
           <header className={css.wordPanelHeader}>
             <div className={css.headerButtons}>
               {!isEditing && (
