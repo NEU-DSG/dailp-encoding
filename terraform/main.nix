@@ -19,6 +19,7 @@ in {
     ./bootstrap.nix
     ./functions.nix
     ./auth.nix
+    ./auth-functions.nix
     ./website.nix
     ./nu-tags.nix
     ./database-sql.nix
