@@ -8,6 +8,22 @@ in {
       managed_policy_arns = [
         "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
       ];
+      inline_policy = {
+        name = "AllowCognitoAddUserToGroup";
+        policy = ''
+          {
+            "Version": "2012-10-17",
+            "Statement": [
+              {
+                "Sid": "AllowCognitoAddUserToGroup",
+                "Effect": "Allow",
+                "Action": "cognito:AdminAddUserToGroup",
+                "Resource": $\{aws_cognito_user_pool.main.arn}
+              }
+            ]
+          }
+        '';
+      };
       assume_role_policy = ''
         {
           "Version": "2012-10-17",
