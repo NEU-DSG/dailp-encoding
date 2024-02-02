@@ -62,8 +62,11 @@ async fn function_handler(
         .region(region_provider)
         .load()
         .await;
-
-    let cognito_action = CognitoClient::new(&config)
+    let pool_id_or_err = std::env::var("DAILP_USER_POOL");
+    if pool_id_or_err.is_err() {
+        return Err("Unable to access environment variable DAILP_USER_POOL.".into());
+    }
+    let cognito_action = CognitoClient::new(&config, pool_id_or_err?)
         .await?
         .add_user_to_group(user_permission.email, user_permission.role)
         .await;
