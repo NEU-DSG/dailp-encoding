@@ -9,7 +9,7 @@ use aws_lambda_events::cognito::{
     CognitoEventUserPoolsPostConfirmationResponse as CognitoPostConfirmationResponse,
 };
 use cognito_idp_operations::CognitoClient;
-use google_sheets_operations::SheetResult;
+use google_sheets_operations::SheetInterpretation;
 use itertools::Itertools;
 use lambda_runtime::{service_fn, Error, LambdaEvent};
 
@@ -39,12 +39,14 @@ async fn function_handler(
         return Err("Email attribute does not exist or is empty.".into());
     }
     let user_email = user_email_or_none.unwrap().clone();
-    let user_permission_or_none = SheetResult::from_sheet()
-        .await?
-        .into_permission_list()?
-        .into_iter()
-        .filter(move |a| a.email == user_email)
-        .at_most_one()?;
+    let user_permission_or_none = SheetInterpretation {
+        sheet: dailp::SheetResult::from_sheet("1ATTekY411Jz63k6VMDn3ISFu8_f75LYFErCGY-pxVkQ", None)
+            .await?,
+    }
+    .into_permission_list()?
+    .into_iter()
+    .filter(move |a| a.email == user_email)
+    .at_most_one()?;
     if user_permission_or_none.is_none() {
         // We don't want to error each time a user invoking this function is not in the list.
         // Instead, we log that the user is not in the list, then exit successfully.
