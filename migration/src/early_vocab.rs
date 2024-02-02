@@ -74,8 +74,7 @@ async fn parse_early_vocab(
     has_segmentation: bool,
     num_links: usize,
 ) -> Result<Vec<dailp::LexicalConnection>> {
-    use crate::spreadsheets::SheetResult;
-    use dailp::{Date, DocumentMetadata, WordSegment};
+    use dailp::{Date, DocumentMetadata, SheetResult, WordSegment};
 
     let sheet = SheetResult::from_sheet(sheet_id, None).await?;
     let meta = SheetResult::from_sheet(sheet_id, Some(crate::METADATA_SHEET_NAME)).await?;
