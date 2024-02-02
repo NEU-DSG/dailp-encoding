@@ -10,10 +10,10 @@ pub struct CognitoClient {
 
 impl CognitoClient {
     /// Create a new Cognito IDP Client with the provided configuration.
-    pub async fn new(config: &SdkConfig) -> Result<Self, anyhow::Error> {
+    pub async fn new(config: &SdkConfig, pool_id: String) -> Result<Self, anyhow::Error> {
         Ok(Self {
             client: Client::new(config),
-            pool_id: std::env::var("DAILP_USER_POOL"),
+            pool_id,
         })
     }
     /// Attempts to add a user to a group.
@@ -31,6 +31,6 @@ impl CognitoClient {
             .send()
             .await
             .map_err(|e| anyhow::Error::new(e))
-            .map(|x| ())
+            .map(|_x| ())
     }
 }
