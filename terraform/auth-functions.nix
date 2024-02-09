@@ -12,9 +12,9 @@ in {
         Adds a user to a group if their email is in a predefined list.
       '';
       environment.variables = {
-        DAILP_AWS_REGION = getEnv "DAILP_AWS_REGION";
-        GOOGLE_API_KEY = getEnv "GOOGLE_API_KEY";
-        DAILP_USER_POOL = getEnv "DAILP_USER_POOL";
+        DAILP_AWS_REGION = builtins.getEnv "DAILP_AWS_REGION";
+        GOOGLE_API_KEY = builtins.getEnv "GOOGLE_API_KEY";
+        DAILP_USER_POOL = builtins.getEnv "DAILP_USER_POOL";
       };
       filename = "${config.functions.package_path}/dailp-auth-post-confirmation.zip";
       handler="function_handler";
