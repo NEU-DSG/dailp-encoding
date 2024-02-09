@@ -16,7 +16,7 @@ in {
         GOOGLE_API_KEY = builtins.getEnv "GOOGLE_API_KEY";
         DAILP_USER_POOL = builtins.getEnv "DAILP_USER_POOL";
       };
-      filename = "${config.functions.package_path}/dailp-auth-post-confirmation.zip";
+      filename = "${config.functions.package_path}/auth-post-confirmation.zip";
       handler="function_handler";
       runtime="provided.al2";
       timeout=60;
