@@ -4,7 +4,7 @@ let
 in {
   config.resource = {
     aws_lambda_function.post_confirmation_event = {
-      function_name = "dailp_post_user_confirmation";
+      function_name = prefixName "post_user_confirmation";
       role = "$\{aws_iam_role.lambda_exec.arn}";
       architectures = [ "x86_64" ];
       description = ''
