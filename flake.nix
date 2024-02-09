@@ -40,6 +40,7 @@
             (filter.inDirectory "types")
             (filter.inDirectory "graphql")
             (filter.inDirectory "migration")
+            (filter.inDirectory "admin-event-handlers")
             ./Cargo.toml
             ./Cargo.lock
             ./rust-toolchain.toml
