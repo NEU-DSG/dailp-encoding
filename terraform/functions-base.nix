@@ -18,7 +18,7 @@ in {
                 "Sid": "AllowCognitoAddUserToGroup",
                 "Effect": "Allow",
                 "Action": "cognito:AdminAddUserToGroup",
-                "Resource": $\{aws_cognito_user_pool.main.arn}
+                "Resource": ${"$\{aws_cognito_user_pool.main.arn}"}
               }
             ]
           }
