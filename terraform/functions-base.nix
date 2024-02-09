@@ -8,6 +8,7 @@ in {
       managed_policy_arns = [
         "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
       ];
+      
       assume_role_policy = ''
         {
           "Version": "2012-10-17",
