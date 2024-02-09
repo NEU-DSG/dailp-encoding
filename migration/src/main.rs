@@ -11,9 +11,11 @@ mod tags;
 mod translations;
 
 use anyhow::Result;
-use dailp::{Database, Uuid};
+use dailp::{Database, SheetResult, Uuid};
 use log::error;
 use std::time::Duration;
+
+use crate::spreadsheets::SheetInterpretation;
 
 pub const METADATA_SHEET_NAME: &str = "Metadata";
 pub const REFERENCES_SHEET_NAME: &str = "References";
@@ -67,10 +69,11 @@ async fn migrate_image_sources(db: &Database) -> Result<()> {
 /// database and writing them into TEI XML files.
 async fn migrate_data(db: &Database) -> Result<()> {
     // Pull the list of annotated documents from our index sheet.
-    let index =
-        spreadsheets::SheetResult::from_sheet("1sDTRFoJylUqsZlxU57k1Uj8oHhbM3MAzU8sDgTfO7Mk", None)
-            .await?
-            .into_index()?;
+    let index = spreadsheets::SheetInterpretation {
+        sheet: SheetResult::from_sheet("1sDTRFoJylUqsZlxU57k1Uj8oHhbM3MAzU8sDgTfO7Mk", None)
+            .await?,
+    }
+    .into_index()?;
 
     println!("Migrating documents to database...");
 
@@ -121,18 +124,22 @@ async fn fetch_sheet(
 
     // Parse the metadata on the second page of each sheet.
     // This includes publication information and a link to the translation.
-    let meta = spreadsheets::SheetResult::from_sheet(sheet_id, Some(METADATA_SHEET_NAME)).await;
+    let meta = SheetResult::from_sheet(sheet_id, Some(METADATA_SHEET_NAME)).await;
+
     if let Ok(meta_sheet) = meta {
-        let meta = meta_sheet.into_metadata(db, false, order_index).await?;
+        let meta = SheetInterpretation { sheet: meta_sheet }
+            .into_metadata(db, false, order_index)
+            .await?;
 
         println!("---Processing document: {}---", meta.short_name);
 
         // Parse references for this particular document.
         println!("parsing references...");
-        let refs =
-            spreadsheets::SheetResult::from_sheet(sheet_id, Some(REFERENCES_SHEET_NAME)).await;
+        let refs = SheetResult::from_sheet(sheet_id, Some(REFERENCES_SHEET_NAME)).await;
         let refs = if let Ok(refs) = refs {
-            refs.into_references(&meta.short_name).await
+            SheetInterpretation { sheet: refs }
+                .into_references(&meta.short_name)
+                .await
         } else {
             Vec::new()
         };
@@ -166,9 +173,10 @@ async fn fetch_sheet(
 
             // Split the contents of each main sheet into semantic lines with
             // several layers.
-            let mut lines = spreadsheets::SheetResult::from_sheet(sheet_id, tab_name.as_deref())
-                .await?
-                .split_into_lines();
+            let mut lines = SheetInterpretation {
+                sheet: SheetResult::from_sheet(sheet_id, tab_name.as_deref()).await?,
+            }
+            .split_into_lines();
             // TODO Consider page breaks embedded in the last word of a page.
             lines.last_mut().unwrap().ends_page = true;
 
