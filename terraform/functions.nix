@@ -53,7 +53,7 @@ let
             security_group_ids = config.functions.security_group_ids;
           };
           environment.variables = env;
-          tags = config.setup.global_tags // config.functions.tags.graphql;
+          tags = config.setup.global_tags // config.functions.tags;
         };
         aws_lambda_permission."${id}" = {
           statement_id = "AllowAPIGatewayInvoke";

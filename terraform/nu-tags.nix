@@ -25,14 +25,7 @@
     "nu:os" = "linux";
     "nu:backups" = "no";
   };
-  functions.tags.graphql = {
-      "nu:function" = "application-server";
-      "Name" = "graphql-endpoint";
-  };
-  functions.tags.post_confirmation = {
-      "nu:function" = "management/administration";
-      "Name" = "post-auth-event-handler";
-  };
+  functions.tags = { "nu:function" = "application-server"; "Name" = "graphql-endpoint"; };
 }
 /*
  ~ Local ~
