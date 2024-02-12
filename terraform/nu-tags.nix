@@ -25,15 +25,13 @@
     "nu:os" = "linux";
     "nu:backups" = "no";
   };
-  functions.tags = {
-    graphql = {
+  functions.tags.graphql = {
       "nu:function" = "application-server";
       "Name" = "graphql-endpoint";
-    };
-    post_confirmation = {
+  };
+  functions.tags.post_confirmation = {
       "nu:function" = "management/administration";
       "Name" = "post-auth-event-handler";
-    };
   };
 }
 /*
