@@ -26,8 +26,14 @@
     "nu:backups" = "no";
   };
   functions.tags = {
-    graphql = { "nu:function" = "application-server"; "Name" = "graphql-endpoint"; };
-    post_confirmation = {"nu:function" = "management/administration"; "Name"="post-auth-event-handler"; };
+    graphql = {
+      "nu:function" = "application-server";
+      "Name" = "graphql-endpoint";
+    };
+    post_confirmation = {
+      "nu:function" = "management/administration";
+      "Name" = "post-auth-event-handler";
+    };
   };
 }
 /*
