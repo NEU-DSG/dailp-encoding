@@ -20,6 +20,7 @@ in {
       handler="function_handler";
       runtime="provided.al2";
       timeout=60;
+      tags = config.setup.global_tags // config.functions.tags.post_confirmation;
     };
 
     aws_lambda_permission.allow_cognito_invocation = {
