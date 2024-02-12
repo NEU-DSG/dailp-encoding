@@ -20,7 +20,7 @@ in {
       handler="function_handler";
       runtime="provided.al2";
       timeout=60;
-      tags = config.setup.global_tags;
+      tags = config.setup.global_tags // { "Name" = "post-confirmation-handler"; "nu:function" = "management/administration"; };
     };
 
     aws_lambda_permission.allow_cognito_invocation = {
