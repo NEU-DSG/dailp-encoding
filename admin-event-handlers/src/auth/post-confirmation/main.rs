@@ -5,7 +5,8 @@ mod google_sheets_operations;
 
 use aws_config::{meta::region::RegionProviderChain, BehaviorVersion, Region};
 use aws_lambda_events::cognito::{
-    CognitoEventUserPoolsPostConfirmation, CognitoEventUserPoolsPostConfirmationResponse as CognitoPostConfirmationResponse
+    CognitoEventUserPoolsPostConfirmation,
+    CognitoEventUserPoolsPostConfirmationResponse as CognitoPostConfirmationResponse,
 };
 use cognito_idp_operations::CognitoClient;
 use google_sheets_operations::SheetInterpretation;
