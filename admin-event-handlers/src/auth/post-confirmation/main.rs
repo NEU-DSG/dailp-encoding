@@ -31,7 +31,7 @@ use log::info;
 async fn function_handler(
     event: LambdaEvent<CognitoPostConfirmationRequest>,
 ) -> Result<CognitoPostConfirmationResponse, Error> {
-    info!("{:?}", event);
+    println!("{:?}", event);
 
     let user_attributes = event.payload.user_attributes;
     if user_attributes.is_empty() {
