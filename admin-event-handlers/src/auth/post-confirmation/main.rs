@@ -5,14 +5,13 @@ mod google_sheets_operations;
 
 use aws_config::{meta::region::RegionProviderChain, BehaviorVersion, Region};
 use aws_lambda_events::cognito::{
-    CognitoEventUserPoolsPostConfirmationRequest as CognitoPostConfirmationRequest,
+    CognitoEventUserPoolsPostConfirmation,
     CognitoEventUserPoolsPostConfirmationResponse as CognitoPostConfirmationResponse,
 };
 use cognito_idp_operations::CognitoClient;
 use google_sheets_operations::SheetInterpretation;
 use itertools::Itertools;
 use lambda_runtime::{service_fn, Error, LambdaEvent};
-use log::info;
 
 /// This is the main body for the lambda function.
 /// First gets the email user attribute of the user who caused this function's invocation.
@@ -29,11 +28,11 @@ use log::info;
 /// 5. This program is unable to access environment variables.
 /// 6. AddUserToGroup fails.
 async fn function_handler(
-    event: LambdaEvent<CognitoPostConfirmationRequest>,
+    event: LambdaEvent<CognitoEventUserPoolsPostConfirmation>,
 ) -> Result<CognitoPostConfirmationResponse, Error> {
     println!("{:?}", event);
 
-    let user_attributes = event.payload.user_attributes;
+    let user_attributes = event.payload.request.user_attributes;
     if user_attributes.is_empty() {
         return Err("No email attribute found in event body.".into());
     }
