@@ -12,6 +12,7 @@ use cognito_idp_operations::CognitoClient;
 use google_sheets_operations::SheetInterpretation;
 use itertools::Itertools;
 use lambda_runtime::{service_fn, Error, LambdaEvent};
+use log::info;
 
 /// This is the main body for the lambda function.
 /// First gets the email user attribute of the user who caused this function's invocation.
@@ -30,6 +31,8 @@ use lambda_runtime::{service_fn, Error, LambdaEvent};
 async fn function_handler(
     event: LambdaEvent<CognitoPostConfirmationRequest>,
 ) -> Result<CognitoPostConfirmationResponse, Error> {
+    info!("{:?}", event);
+
     let user_attributes = event.payload.user_attributes;
     if user_attributes.is_empty() {
         return Err("No email attribute found in event body.".into());
