@@ -69,9 +69,15 @@ async fn migrate_image_sources(db: &Database) -> Result<()> {
 /// database and writing them into TEI XML files.
 async fn migrate_data(db: &Database) -> Result<()> {
     // Pull the list of annotated documents from our index sheet.
+    let stage = std::env::var("TF_STAGE").unwrap_or("".to_owned()); // "" | "dev" | "uat" | "prod"
+                                                                    // If env is prod, use stable prod collection. Otherwise, use development collection.
+    let index_sheet = if stage == "prod" {
+        "1sDTRFoJylUqsZlxU57k1Uj8oHhbM3MAzU8sDgTfO7Mk"
+    } else {
+        "1cjGMIPLQkOpE1f2eB11GDIODCEj2uQB9e9w2LHh-wiI"
+    };
     let index = spreadsheets::SheetInterpretation {
-        sheet: SheetResult::from_sheet("1sDTRFoJylUqsZlxU57k1Uj8oHhbM3MAzU8sDgTfO7Mk", None)
-            .await?,
+        sheet: SheetResult::from_sheet(index_sheet, None).await?,
     }
     .into_index()?;
 
