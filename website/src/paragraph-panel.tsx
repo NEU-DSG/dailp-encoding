@@ -16,6 +16,10 @@ const ParagraphPanel = (p: {
     ""
   )
 
+  const translatedSource = p.segment.translation
+    ? p.segment.translation
+    : "This paragraph has no translation"
+
   const discussionContent = <CommentSection parent={p.segment} />
 
   return (
@@ -37,8 +41,16 @@ const ParagraphPanel = (p: {
         content={
           <>
             <div>{concatSource}</div>
-            <br />
-            <div>&lsquo;{p.segment.translation}&rsquo;</div>
+          </>
+        }
+        icon={<MdNotes size={24} className={css.wordPanelButton.colpleft} />}
+      />
+
+      <CollapsiblePanel
+        title={"Translation"}
+        content={
+          <>
+            <div>{translatedSource}</div>
           </>
         }
         icon={<MdNotes size={24} className={css.wordPanelButton.colpleft} />}
