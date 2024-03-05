@@ -22,7 +22,7 @@ export const AccountMenu = () => {
   return (
     <>
       <PopoverDisclosure {...menuState} className={subtleButton}>
-        {data?.userInfo.email}
+        {data?.userInfo?.email}
       </PopoverDisclosure>
       <Popover {...menuState}>
         <AccountActionsMenu {...data?.userInfo} />
