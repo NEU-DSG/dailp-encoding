@@ -520,13 +520,19 @@ impl Database {
         .fetch_one(&mut tx)
         .await?
         .document_id;
+
         // If word segmentation was not changed, then return early since SQL update queries need to be called.
-        if word.segments.is_undefined() {
+        if !word.segments.is_value() {
             tx.commit().await?;
             return Ok(word.id);
         }
 
         let segments = word.segments.take().unwrap();
+        // If word segmentation not present, return early.
+        if segments.is_empty() {
+            tx.commit().await?;
+            return Ok(word.id);
+        }
 
         let system_name: Option<CherokeeOrthography> = *(&segments[0].system.clone());
 
