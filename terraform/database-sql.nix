@@ -43,15 +43,12 @@ in {
       db_subnet_group_name = name;
       vpc_security_group_ids = config.servers.database.security_group_ids;
       final_snapshot_identifier = "${name}-primary-final-snapshot";
+      backup_retention_period = 14;
+      backup_window = "7:00-7:59";
 
       # Server times are in UTC, so this is 12am-3am PT
       apply_immediately = true;
       maintenance_window = "Tue:08:00-Tue:11:00";
-    };
-
-    aws_db_instance_automated_backups_replication.default = {
-      source_db_instance_arn = "\${aws_db_instance.sql_database.arn}";
-      retention_period       = 14;
     };
 
     aws_security_group_rule.sql_database_external = {
