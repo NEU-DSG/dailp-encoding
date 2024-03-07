@@ -49,6 +49,11 @@ in {
       maintenance_window = "Tue:08:00-Tue:11:00";
     };
 
+    aws_db_instance_automated_backups_replication.default = {
+      source_db_instance_arn = "\${aws_db_instance.sql_database.arn}";
+      retention_period       = 14;
+    };
+
     aws_security_group_rule.sql_database_external = {
       type = "ingress";
       security_group_id = "\${aws_security_group.nixos_test.id}";
