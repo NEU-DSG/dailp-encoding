@@ -44,7 +44,7 @@ in {
       vpc_security_group_ids = config.servers.database.security_group_ids;
       final_snapshot_identifier = "${name}-primary-final-snapshot";
       backup_retention_period = 14;
-      backup_window = "7:00-7:59";
+      backup_window = "07:00-07:59";
 
       # Server times are in UTC, so this is 12am-3am PT
       apply_immediately = true;
