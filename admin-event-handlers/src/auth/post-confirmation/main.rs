@@ -70,14 +70,14 @@ async fn function_handler(
     if pool_id_or_err.is_err() {
         return Err("Unable to access environment variable DAILP_USER_POOL.".into());
     }
-    let cognito_action = CognitoClient::new(&config, pool_id_or_err?)
-        .await?
-        .add_user_to_group(user_permission.email, user_permission.role)
-        .await;
+    // let cognito_action = CognitoClient::new(&config, pool_id_or_err?)
+    //     .await?
+    //     .add_user_to_group(user_permission.email, user_permission.role)
+    //     .await;
 
-    if cognito_action.is_err() {
-        return Err("Failed to add user to group".into());
-    }
+    // if cognito_action.is_err() {
+    //     return Err("Failed to add user to group".into());
+    // }
 
     Ok(CognitoPostConfirmationResponse {})
 }
