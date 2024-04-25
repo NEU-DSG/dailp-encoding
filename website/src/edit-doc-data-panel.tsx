@@ -115,7 +115,7 @@ export const EditDocPanel = (props: { document?: Dailp.AnnotatedDoc }) => {
         {...form}
         className={css.formInput}
         name={["document", "title"]}
-        disabled={!(userRole == UserRole.EDITOR)}
+        disabled={!(userRole == UserRole.Editor)}
       />
       <p />
 
@@ -130,7 +130,7 @@ export const EditDocPanel = (props: { document?: Dailp.AnnotatedDoc }) => {
           onChange={(date: any) => handleDateChange(date)}
           value={selectedDate}
           format="dd-MM-y"
-          disabled={!(userRole == UserRole.EDITOR)}
+          disabled={!(userRole == UserRole.Editor)}
         />
       </div>
     </>
