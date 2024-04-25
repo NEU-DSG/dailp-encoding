@@ -20,6 +20,7 @@ import { AudioPlayer, Button, IconButton } from "./components"
 import { CommentSection } from "./components/comment-section"
 import { CustomCreatable } from "./components/creatable"
 import { EditWordAudio } from "./components/edit-word-audio"
+import { ContributorAudioPanels } from "./components/edit-word-audio/contributor-audio-panels"
 import { SubtleButton } from "./components/subtle-button"
 import { EditButton, EditWordFeature } from "./edit-word-feature"
 import { formInput } from "./edit-word-feature.css"
@@ -203,6 +204,8 @@ export const PanelContent = (p: {
   word: Dailp.FormFieldsFragment
   options: GroupedOption[]
 }) => {
+  const userGroups = useCognitoUserGroups()
+
   // what should be used to render word features? eg, syllabary, commentary, etc.
   const PanelFeatureComponent =
     p.panel === PanelType.EditWordPanel ? EditWordFeature : WordFeature
@@ -293,6 +296,10 @@ export const PanelContent = (p: {
           }
         />
       )}
+      {p.panel === PanelType.EditWordPanel &&
+        userGroups.includes(Dailp.UserGroup.Contributors) && (
+          <ContributorAudioPanels word={p.word} />
+        )}
       <CollapsiblePanel
         title={"Phonetics"}
         content={phoneticsContent}
