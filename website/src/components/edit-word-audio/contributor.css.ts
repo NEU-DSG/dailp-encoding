@@ -23,7 +23,7 @@ export const statusMessage = style({
   bottom: 0,
   backgroundColor: "rgba(255,255,255,0.65)",
   color: "black",
-  padding: 40,
+  padding: 10,
   backdropFilter: "blur(2px)",
   border: "4px solid grey",
 })
