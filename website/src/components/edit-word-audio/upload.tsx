@@ -19,6 +19,8 @@ export function UploadAudioPanel(p: { word: Dailp.FormFieldsFragment }) {
   )
 }
 
+const ALLOWED_EXTENSIONS = ["mp3"]
+
 export function UploadAudioContent({
   uploadAudio,
 }: {
@@ -30,7 +32,20 @@ export function UploadAudioContent({
     if (!event.currentTarget.files) return
 
     const [file] = event.currentTarget.files
+
     if (!file) return
+
+    const fileExtension = file.name.split(".").pop()
+    if (!fileExtension) return
+
+    if (!ALLOWED_EXTENSIONS.includes(fileExtension)) {
+      window.alert(
+        `The file you've selected does not have a supported extension (${fileExtension}). The following formats are supported:\n\t${ALLOWED_EXTENSIONS.join(
+          "\n\t"
+        )}`
+      )
+      return
+    }
 
     setSelectedFile(file)
   }
@@ -51,7 +66,12 @@ export function UploadAudioContent({
     return (
       <>
         <VisuallyHidden>
-          <input type="file" id="file-upload" onChange={onFileChanged} />
+          <input
+            type="file"
+            id="file-upload"
+            onChange={onFileChanged}
+            accept={ALLOWED_EXTENSIONS.map((s) => "." + s).join(",")}
+          />
         </VisuallyHidden>
         <IconTextButton
           icon={<MdUploadFile />}
