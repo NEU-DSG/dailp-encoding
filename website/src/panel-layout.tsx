@@ -20,7 +20,8 @@ import { AudioPlayer, Button, IconButton } from "./components"
 import { CommentSection } from "./components/comment-section"
 import { CustomCreatable } from "./components/creatable"
 import { EditWordAudio } from "./components/edit-word-audio"
-import { ContributorAudioPanels } from "./components/edit-word-audio/contributor-audio-panels"
+import { RecordAudioPanel } from "./components/edit-word-audio/record"
+import { UploadAudioPanel } from "./components/edit-word-audio/upload"
 import { SubtleButton } from "./components/subtle-button"
 import { EditButton, EditWordFeature } from "./edit-word-feature"
 import { formInput } from "./edit-word-feature.css"
@@ -298,7 +299,11 @@ export const PanelContent = (p: {
       )}
       {p.panel === PanelType.EditWordPanel &&
         userGroups.includes(Dailp.UserGroup.Contributors) && (
-          <ContributorAudioPanels word={p.word} />
+          <RecordAudioPanel word={p.word} />
+        )}
+      {p.panel === PanelType.EditWordPanel &&
+        userGroups.includes(Dailp.UserGroup.Editors) && (
+          <UploadAudioPanel word={p.word} />
         )}
       <CollapsiblePanel
         title={"Phonetics"}
