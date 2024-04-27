@@ -1,12 +1,25 @@
 import { ChangeEvent, ReactElement, useMemo, useState } from "react"
 import { MdUploadFile } from "react-icons/md"
 import { VisuallyHidden } from "reakit"
+import * as Dailp from "src/graphql/dailp"
 import { AudioPlayer } from "../audio-player"
 import { CleanButton, IconTextButton } from "../button"
 import { subtleButton } from "../subtle-button.css"
+import { ContributeAudioPanel } from "./contributor-audio-panel"
 import { contributeAudioOptions } from "./contributor.css"
 
-export function UploadAudioSection({
+export function UploadAudioPanel(p: { word: Dailp.FormFieldsFragment }) {
+  return (
+    <ContributeAudioPanel
+      panelTitle="Upload Audio"
+      Icon={MdUploadFile}
+      Component={UploadAudioContent}
+      word={p.word}
+    />
+  )
+}
+
+export function UploadAudioContent({
   uploadAudio,
 }: {
   uploadAudio: (data: Blob) => Promise<boolean>
