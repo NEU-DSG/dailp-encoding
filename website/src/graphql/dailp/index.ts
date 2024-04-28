@@ -1321,6 +1321,10 @@ export type DocFormFieldsFragment = {
     >
   }
 
+export type ParagraphFormFieldsFragment = {
+  readonly __typename?: "DocumentParagraph"
+} & Pick<DocumentParagraph, "id" | "translation">
+
 export type FormFieldsFragment = {
   readonly __typename: "AnnotatedForm"
 } & Pick<
@@ -2171,7 +2175,7 @@ export type UpdateParagraphMutationVariables = Exact<{
 export type UpdateParagraphMutation = { readonly __typename?: "Mutation" } & {
   readonly updateParagraph: {
     readonly __typename?: "DocumentParagraph"
-  } & Pick<DocumentParagraph, "id" | "translation" | "index">
+  } & Pick<DocumentParagraph, "id" | "translation">
 }
 
 export type UpdateContributorAttributionMutationVariables = Exact<{
@@ -2262,6 +2266,12 @@ export const DocFormFieldsFragmentDoc = gql`
       month
       year
     }
+  }
+`
+export const ParagraphFormFieldsFragmentDoc = gql`
+  fragment ParagraphFormFields on DocumentParagraph {
+    id
+    translation
   }
 `
 export const AudioSliceFieldsFragmentDoc = gql`
@@ -3106,11 +3116,10 @@ export function useRemoveBookmarkMutation() {
 export const UpdateParagraphDocument = gql`
   mutation UpdateParagraph($paragraph: ParagraphUpdate!) {
     updateParagraph(paragraph: $paragraph) {
-      id
-      translation
-      index
+      ...ParagraphFormFields
     }
   }
+  ${ParagraphFormFieldsFragmentDoc}
 `
 
 export function useUpdateParagraphMutation() {
