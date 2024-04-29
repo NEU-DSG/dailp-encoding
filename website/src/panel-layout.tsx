@@ -290,7 +290,9 @@ export const PanelContent = (p: {
     <>
       {(p.word.editedAudio.length || p.panel === PanelType.EditWordPanel) && (
         <CollapsiblePanel
-          title={"Audio"}
+          title={
+            p.panel === PanelType.EditWordPanel ? "Contributed Audio" : "Audio"
+          }
           content={<PanelAudioComponent word={p.word} />}
           icon={
             <AiFillSound size={24} className={css.wordPanelButton.colpleft} />
