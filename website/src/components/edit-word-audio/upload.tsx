@@ -1,5 +1,5 @@
 import { ChangeEvent, ReactElement, useMemo, useState } from "react"
-import { MdUploadFile } from "react-icons/md"
+import { MdUploadFile } from "react-icons/md/index"
 import { VisuallyHidden } from "reakit"
 import * as Dailp from "src/graphql/dailp"
 import { AudioPlayer } from "../audio-player"

@@ -1,7 +1,6 @@
 import { ReactElement, useEffect } from "react"
-import { FaRegStopCircle } from "react-icons/fa"
-import { FaMicrophone } from "react-icons/fa"
-import { RiRecordCircleFill } from "react-icons/ri"
+import { FaMicrophone, FaRegStopCircle } from "react-icons/fa/index"
+import { RiRecordCircleFill } from "react-icons/ri/index"
 import { AudioPlayer } from ".."
 import * as Dailp from "../../graphql/dailp"
 import {
