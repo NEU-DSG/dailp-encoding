@@ -63,6 +63,8 @@ export type ActionMonitorAction = ContentNode &
     readonly enqueuedStylesheets: Maybe<ContentNodeToEnqueuedStylesheetConnection>
     /** The global unique identifier for this post. This currently matches the value stored in WP_Post-&gt;guid and the guid column in the &quot;post_objects&quot; database table. */
     readonly guid: Maybe<Scalars["String"]>
+    /** Whether the action_monitor object is password protected. */
+    readonly hasPassword: Maybe<Scalars["Boolean"]>
     /** The globally unique identifier of the action_monitor object. */
     readonly id: Scalars["ID"]
     /** Whether the node is a Comment */
@@ -87,6 +89,8 @@ export type ActionMonitorAction = ContentNode &
     readonly modified: Maybe<Scalars["String"]>
     /** The GMT modified time for a post. If a post was recently updated the modified field will change to match the corresponding time in GMT. */
     readonly modifiedGmt: Maybe<Scalars["String"]>
+    /** The password for the action_monitor object. */
+    readonly password: Maybe<Scalars["String"]>
     /** Connection between the ActionMonitorAction type and the ActionMonitorAction type */
     readonly preview: Maybe<ActionMonitorActionToPreviewConnectionEdge>
     /** The preview data of the post that triggered this action. */
@@ -2903,6 +2907,8 @@ export type MediaItem = ContentNode &
     readonly fileSize: Maybe<Scalars["Int"]>
     /** The global unique identifier for this post. This currently matches the value stored in WP_Post-&gt;guid and the guid column in the &quot;post_objects&quot; database table. */
     readonly guid: Maybe<Scalars["String"]>
+    /** Whether the attachment object is password protected. */
+    readonly hasPassword: Maybe<Scalars["Boolean"]>
     /** The globally unique identifier of the attachment object. */
     readonly id: Scalars["ID"]
     /** Whether the node is a Comment */
@@ -2946,6 +2952,8 @@ export type MediaItem = ContentNode &
     readonly parentDatabaseId: Maybe<Scalars["Int"]>
     /** The globally unique identifier of the parent node. */
     readonly parentId: Maybe<Scalars["ID"]>
+    /** The password for the attachment object. */
+    readonly password: Maybe<Scalars["String"]>
     /** The database id of the preview node */
     readonly previewRevisionDatabaseId: Maybe<Scalars["Int"]>
     /** Whether the object is a node in the preview state */
@@ -4030,6 +4038,8 @@ export type Page = ContentNode &
     readonly featuredImageId: Maybe<Scalars["ID"]>
     /** The global unique identifier for this post. This currently matches the value stored in WP_Post-&gt;guid and the guid column in the &quot;post_objects&quot; database table. */
     readonly guid: Maybe<Scalars["String"]>
+    /** Whether the page object is password protected. */
+    readonly hasPassword: Maybe<Scalars["Boolean"]>
     /** The globally unique identifier of the page object. */
     readonly id: Scalars["ID"]
     /** Whether the node is a Comment */
@@ -4071,6 +4081,8 @@ export type Page = ContentNode &
     readonly parentDatabaseId: Maybe<Scalars["Int"]>
     /** The globally unique identifier of the parent node. */
     readonly parentId: Maybe<Scalars["ID"]>
+    /** The password for the page object. */
+    readonly password: Maybe<Scalars["String"]>
     /** Connection between the Page type and the page type */
     readonly preview: Maybe<PageToPreviewConnectionEdge>
     /** The database id of the preview node */
@@ -4542,6 +4554,8 @@ export type Post = ContentNode &
     readonly featuredImageId: Maybe<Scalars["ID"]>
     /** The global unique identifier for this post. This currently matches the value stored in WP_Post-&gt;guid and the guid column in the &quot;post_objects&quot; database table. */
     readonly guid: Maybe<Scalars["String"]>
+    /** Whether the post object is password protected. */
+    readonly hasPassword: Maybe<Scalars["Boolean"]>
     /** The globally unique identifier of the post object. */
     readonly id: Scalars["ID"]
     /** Whether the node is a Comment */
@@ -4570,6 +4584,8 @@ export type Post = ContentNode &
     readonly modified: Maybe<Scalars["String"]>
     /** The GMT modified time for a post. If a post was recently updated the modified field will change to match the corresponding time in GMT. */
     readonly modifiedGmt: Maybe<Scalars["String"]>
+    /** The password for the post object. */
+    readonly password: Maybe<Scalars["String"]>
     /** Whether the pings are open or closed for this particular post. */
     readonly pingStatus: Maybe<Scalars["String"]>
     /** URLs that have been pinged. */

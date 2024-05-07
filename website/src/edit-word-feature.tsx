@@ -94,7 +94,7 @@ export const EditWordFeature = (props: {
         as={props.input ? props.input : "input"}
         className={css.formInput}
         name={["word", props.feature]}
-        disabled={userRole == UserRole.READER}
+        disabled={userRole == UserRole.Reader}
       />
     </>
   )

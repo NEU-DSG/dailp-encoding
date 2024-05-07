@@ -8,6 +8,7 @@ import {
 } from "amazon-cognito-identity-js"
 import React, { createContext, useContext, useEffect, useState } from "react"
 import { navigate } from "vite-plugin-ssr/client/router"
+import { UserGroup } from "./graphql/dailp"
 
 type UserContextType = {
   user: CognitoUser | null
@@ -320,24 +321,32 @@ export const useCredentials = () => {
   return creds ?? null
 }
 
-export const useCognitoUserGroups = () => {
+export const useCognitoUserGroups = (): UserGroup[] => {
   const { user } = useContext(UserContext)
   const groups: string[] =
     user?.getSignInUserSession()?.getIdToken().payload["cognito:groups"] ?? []
   return groups
+    .map((g) => g.toUpperCase())
+    .filter((g): g is UserGroup =>
+      Object.values(UserGroup).includes(g as UserGroup)
+    )
 }
 
+/**
+ * A user has one and only one `role`. A role is typically a users most
+ * permissive `group`, or `READER` if they have no `groups`.
+ */
 export enum UserRole {
-  READER = "READER",
-  CONTRIBUTOR = "CONTRIBUTOR",
-  EDITOR = "EDITOR",
+  Reader = "READER",
+  Contributor = "CONTRIBUTOR",
+  Editor = "EDITOR",
 }
 
 export function useUserRole(): UserRole {
   const groups = useCognitoUserGroups()
-  if (groups.includes("Editors")) return UserRole.EDITOR
-  else if (groups.includes("Contributors")) return UserRole.CONTRIBUTOR
-  else return UserRole.READER
+  if (groups.includes(UserGroup.Editors)) return UserRole.Editor
+  else if (groups.includes(UserGroup.Contributors)) return UserRole.Contributor
+  else return UserRole.Reader
 }
 
 export const useUserId = () => {
