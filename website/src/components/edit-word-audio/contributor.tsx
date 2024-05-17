@@ -18,7 +18,7 @@ import { v4 } from "uuid"
 import { AudioPlayer, CleanButton } from ".."
 import { useUser, useUserId } from "../../auth"
 import * as Dailp from "../../graphql/dailp"
-import { WordAudio } from "../../panel-layout"
+import { WordAudio } from "../../word-panel"
 import {
   MediaPermissionStatus,
   useMediaRecorder,

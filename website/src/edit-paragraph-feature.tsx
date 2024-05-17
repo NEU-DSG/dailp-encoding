@@ -61,30 +61,15 @@ export const EditButton = () => {
 
 /** Displays a FormInput with its corresponding feature data from the Reakit form. */
 export const EditParagraphFeature = (props: {
-  paragraph?: keyof Dailp.ParagraphFormFieldsFragment
+  id?: string
+  translation?: string
 }) => {
-  let paragraphData =
-    props.paragraph as unknown as Dailp.ParagraphFormFieldsFragment
   const { form } = useForm()
 
   if (!form || !form.values.paragraph) {
     return null
   }
-
-  form.values.paragraph["id"] = paragraphData.id
-  const [translation, setTranslation] = useState<string>(
-    paragraphData.translation
-  )
-  const handleTranslationChange = (e: any) => {
-    const translationValue = e as string
-    if (translationValue) {
-      setTranslation(translationValue)
-    }
-  }
-
-  useEffect(() => {
-    form.push(["paragraph", "translation"], translation)
-  }, [translation])
+  form.values.paragraph["id"] = props.id
 
   let userRole = useUserRole()
   return (
@@ -93,7 +78,6 @@ export const EditParagraphFeature = (props: {
       <FormLabel
         {...form}
         className={css.formInputLabel}
-        onChange={(translation: any) => handleTranslationChange(translation)}
         name={"translation"}
         label={"Translation"}
       />

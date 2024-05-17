@@ -37,10 +37,12 @@ export const FormProvider = (props: { children: ReactNode }) => {
     },
     onSubmit: (values) => {
       setIsEditing(false)
+      // console.log(values.paragraph["id"])
+      // console.log(values.paragraph["translation"])
 
       runUpdate({
         paragraph: {
-          id: values.paragraph["id"][0][0],
+          id: values.paragraph["id"],
           translation: values.paragraph["translation"],
         },
       })

@@ -21,7 +21,8 @@ import { CommentSection } from "./components/comment-section"
 import { CustomCreatable } from "./components/creatable"
 import { EditWordAudio } from "./components/edit-word-audio"
 import { SubtleButton } from "./components/subtle-button"
-import { EditButton, EditWordFeature } from "./edit-word-feature"
+import { EditButton as WordEditButton, EditWordFeature } from "./edit-word-feature"
+import { EditButton as ParagraphEditButton, EditParagraphFeature } from "./edit-paragraph-feature"
 import { formInput } from "./edit-word-feature.css"
 import { useForm } from "./edit-word-form-context"
 import { content } from "./footer.css"
@@ -29,11 +30,21 @@ import * as css from "./panel-layout.css"
 import ParagraphPanel from "./paragraph-panel"
 import { usePreferences } from "./preferences-context"
 import { TranslatedParagraph } from "./segment"
-import { VerticalMorphemicSegmentation } from "./word-panel"
+import {VerticalMorphemicSegmentation, WordPanel } from "./word-panel"
+import { FormProvider } from "./edit-paragraph-form-context"
 
 enum PanelType {
   WordPanel,
   EditWordPanel,
+}
+
+// A label associated with a list of options.
+type GroupedOption = {
+  label: string
+  options: {
+    value: string
+    label: string
+  }[]
 }
 
 export type PanelSegment = Dailp.FormFieldsFragment | TranslatedParagraph
@@ -115,7 +126,7 @@ export const PanelLayout = (p: {
                   <MdClose size={32} />
                 </IconButton>
               )}
-              <EditButton />
+              <WordEditButton />
             </div>
             <h2 className={css.editCherHeader}>{p.segment.source}</h2>
           </header>
@@ -137,14 +148,14 @@ export const PanelLayout = (p: {
         {/* Renders audio recording. */}
         {isEditing ? (
           <Form {...form}>
-            <PanelContent
+            <WordPanel
               panel={PanelType.EditWordPanel}
               word={p.segment}
               options={options}
             />
           </Form>
         ) : (
-          <PanelContent
+          <WordPanel
             panel={PanelType.WordPanel}
             word={p.segment}
             // options are only required for editing
@@ -156,7 +167,11 @@ export const PanelLayout = (p: {
     )
   } else if (p.segment.__typename === "DocumentParagraph") {
     // Display the paragraph panel if the segment type is a paragraph.
-    panel = <ParagraphPanel segment={p.segment} setContent={p.setContent} />
+    // console.log(p.segment)
+    panel = 
+    <FormProvider>
+      <ParagraphPanel segment={p.segment} setContent={p.setContent} />
+    </FormProvider>
   }
 
   return (
@@ -180,240 +195,8 @@ export const PanelLayout = (p: {
   )
 }
 
-function WordFeature(p: {
-  word: Dailp.FormFieldsFragment
-  feature: keyof Dailp.FormFieldsFragment
-  label?: string
-}) {
-  return <div>{p.word[p.feature]}</div>
-}
 
-// A label associated with a list of options.
-type GroupedOption = {
-  label: string
-  options: {
-    value: string
-    label: string
-  }[]
-}
 
-/** Dispatches to the corresponding panel type to render a normal word panel or an editable word panel. */
-export const PanelContent = (p: {
-  panel: PanelType
-  word: Dailp.FormFieldsFragment
-  options: GroupedOption[]
-}) => {
-  // what should be used to render word features? eg, syllabary, commentary, etc.
-  const PanelFeatureComponent =
-    p.panel === PanelType.EditWordPanel ? EditWordFeature : WordFeature
-
-  // what should be used to render word audio, if present?
-  const PanelAudioComponent =
-    p.panel === PanelType.EditWordPanel ? EditWordAudio : WordAudio
-
-  // Contains components rendering data of a word's phonetics.
-  const phoneticsContent = (
-    <>
-      {p.word.source && (
-        <PanelFeatureComponent
-          word={p.word}
-          feature={"source"}
-          label="Syllabary Characters"
-        />
-      )}
-
-      {p.word.romanizedSource && (
-        <PanelFeatureComponent
-          word={p.word}
-          feature={"romanizedSource"}
-          label="Simple Phonetics"
-        />
-      )}
-    </>
-  )
-
-  const translation = (
-    <>
-      {/* If the english gloss string is not empty, then display it. */}
-      {p.word.englishGloss[0] !== "" && (
-        <PanelFeatureComponent
-          word={p.word}
-          feature={"englishGloss"}
-          label="English Translation"
-        />
-      )}
-    </>
-  )
-
-  const { cherokeeRepresentation } = usePreferences()
-
-  // Contains components rendering a word's segments and its english translation.
-  const wordPartsContent = (
-    <>
-      {p.panel === PanelType.WordPanel ? (
-        <VerticalMorphemicSegmentation
-          cherokeeRepresentation={cherokeeRepresentation}
-          segments={p.word.segments}
-        />
-      ) : (
-        <EditSegmentation segments={p.word.segments} options={p.options} />
-      )}
-
-      {/* Since editing translations is not yet supported, just display the translation for now. */}
-      <div style={{ display: "flex" }}>‘{p.word.englishGloss}’</div>
-
-      {/* {p.panel === PanelType.WordPanel ? (
-        <div style={{ display: "flex" }}>‘{translation}’</div>
-      ) : (
-        // should this be a call to the parameterized component as well?
-        <>{translation}</>
-      )} */}
-    </>
-  )
-
-  // Contains a component rendering a word's commentary.
-  const commentaryContent = (
-    <PanelFeatureComponent
-      word={p.word}
-      feature={"commentary"}
-      input="textarea"
-    />
-  )
-
-  const discussionContent = <CommentSection parent={p.word} />
-
-  return (
-    <>
-      {(p.word.editedAudio.length || p.panel === PanelType.EditWordPanel) && (
-        <CollapsiblePanel
-          title={"Audio"}
-          content={<PanelAudioComponent word={p.word} />}
-          icon={
-            <AiFillSound size={24} className={css.wordPanelButton.colpleft} />
-          }
-        />
-      )}
-      <CollapsiblePanel
-        title={"Phonetics"}
-        content={phoneticsContent}
-        icon={
-          <MdRecordVoiceOver
-            size={24}
-            className={css.wordPanelButton.colpleft}
-          />
-        }
-      />
-
-      {/* If there are no segments, does not display Word Parts panel */}
-      {p.word.segments.length > 0 && (
-        <CollapsiblePanel
-          title={"Word Parts"}
-          content={wordPartsContent}
-          icon={
-            <IoEllipsisHorizontalCircle
-              size={24}
-              className={css.wordPanelButton.colpleft}
-            />
-          }
-        />
-      )}
-
-      {/* If there is no commentary, does not display Commentary panel */}
-      {p.word.commentary && p.word.commentary.length > 0 && (
-        <CollapsiblePanel
-          title={"Linguistic commentary"}
-          content={commentaryContent}
-          icon={<MdNotes size={24} className={css.wordPanelButton.colpleft} />}
-        />
-      )}
-
-      <CollapsiblePanel
-        title={"Discussion"}
-        content={discussionContent}
-        icon={
-          <MdOutlineComment
-            size={24}
-            className={css.wordPanelButton.colpleft}
-          />
-        }
-      />
-    </>
-  )
-}
-
-// An editable view of a word's parts / segments.
-const EditSegmentation = (p: {
-  segments: Dailp.FormFieldsFragment["segments"]
-  options: GroupedOption[]
-}) => {
-  const { form } = useForm()
-
-  return (
-    <table className={css.tableContainer}>
-      <tbody>
-        {p.segments.map((segment, index) => (
-          <tr style={{ display: "flex" }}>
-            <td className={css.editMorphemeCells}>
-              {/* This is disabled at the moment to be fully implemented later. */}
-              <FormInput
-                {...form}
-                disabled
-                className={formInput}
-                name={["word", "segments", index.toString(), "morpheme"]}
-              />
-            </td>
-            <td className={css.editGlossCells}>
-              {/* Displays global glosses and allows user to create custom glosses on keyboard input. */}
-              <EditGloss
-                // TODO: this key will need to be changed later since a morpheme can be changed
-                key={segment.morpheme}
-                morpheme={segment}
-                index={index}
-                options={p.options}
-              />
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  )
-}
-
-// Component that allows editing of a morpheme's gloss. Users can enter a custom gloss or select from global glosses / functional tags.
-const EditGloss = (props: {
-  morpheme: Dailp.FormFieldsFragment["segments"][0]
-  index: number
-  options: GroupedOption[]
-}) => {
-  const { form } = useForm()
-
-  // Handles gloss selection and creation of new glosses.
-  const handleChange = (
-    newValue: OnChangeValue<{ value: string; label: string }, false>
-  ) => {
-    if (newValue?.value) {
-      const newMorpheme: Dailp.FormFieldsFragment["segments"][0] = {
-        ...props.morpheme,
-        gloss: newValue.value,
-      }
-
-      // Updates current list of morphemes to include one with a matching tag,
-      // or one with a custom gloss.
-      form.update(["word", "segments", props.index], newMorpheme)
-    }
-  }
-
-  return (
-    <CustomCreatable
-      onChange={handleChange}
-      options={props.options}
-      defaultValue={{
-        value: props.morpheme.gloss,
-        label: props.morpheme.matchingTag?.title ?? props.morpheme.gloss,
-      }}
-    />
-  )
-}
 
 export const CollapsiblePanel = (p: {
   title: string
@@ -443,27 +226,3 @@ export const CollapsiblePanel = (p: {
   )
 }
 
-export const WordAudio = (p: { word: Dailp.FormFieldsFragment }) => {
-  if (p.word.editedAudio.length === 0) return null
-  return (
-    <>
-      {p.word.editedAudio.map((audioTrack) => (
-        <AudioPlayer
-          audioUrl={audioTrack.resourceUrl}
-          slices={
-            audioTrack.startTime !== undefined &&
-            audioTrack.startTime !== null &&
-            audioTrack.endTime !== undefined &&
-            audioTrack.endTime !== null
-              ? {
-                  start: audioTrack.startTime,
-                  end: audioTrack.endTime,
-                }
-              : undefined
-          }
-          showProgress
-        />
-      ))}
-    </>
-  )
-}

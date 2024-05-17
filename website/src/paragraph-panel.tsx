@@ -4,10 +4,24 @@ import { unstable_Form as Form, unstable_FormInput as FormInput } from "reakit"
 import { IconButton } from "./components"
 import { CommentSection } from "./components/comment-section"
 import EditParagraphFeature, { EditButton } from "./edit-paragraph-feature"
-import { useForm } from "./edit-paragraph-form-context"
+import { FormProvider, useForm } from "./edit-paragraph-form-context"
 import { CollapsiblePanel, PanelSegment } from "./panel-layout"
 import * as css from "./panel-layout.css"
 import { TranslatedParagraph } from "./segment"
+import * as Dailp from "src/graphql/dailp"
+
+// enum PanelType {
+//   ParagraphPanel,
+//   EditParagraphPanel,
+// }
+
+// function ParagraphFeature(p: {
+//   paragraph: Dailp.ParagraphFormFieldsFragment
+//   feature: keyof Dailp.ParagraphFormFieldsFragment
+//   label?: string
+// }) {
+//   return <div>{p.paragraph[p.feature]}</div>
+// }
 
 const ParagraphPanel = (p: {
   segment: TranslatedParagraph
@@ -30,7 +44,7 @@ const ParagraphPanel = (p: {
     <>
       {isEditing ? (
         <Form {...form}>
-          {/* <EditParagraphFeature paragraph={p.segment.translation} /> */}
+            <EditParagraphFeature id={p.segment.id} translation={p.segment.translation} />
         </Form>
       ) : (
         <CollapsiblePanel
