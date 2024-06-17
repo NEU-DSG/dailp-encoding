@@ -18,11 +18,11 @@ import { v4 } from "uuid"
 import { AudioPlayer, CleanButton } from ".."
 import { useUser, useUserId } from "../../auth"
 import * as Dailp from "../../graphql/dailp"
-import { WordAudio } from "../../word-panel"
 import {
   MediaPermissionStatus,
   useMediaRecorder,
 } from "../../use-media-recorder"
+import { WordAudio } from "../../word-panel"
 import { IconTextButton } from "../button"
 import { SubtleButton } from "../subtle-button"
 import { subtleButton, subtleButtonActive } from "../subtle-button.css"

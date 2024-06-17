@@ -65,6 +65,11 @@ export const EditParagraphFeature = (props: {
   translation?: string
 }) => {
   const { form } = useForm()
+  const [translation, setTranslation] = 
+    useState<string>(props.translation ? props.translation : "Enter translation here...")
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setTranslation(e.target.value)
+  }
 
   if (!form || !form.values.paragraph) {
     return null
@@ -84,6 +89,8 @@ export const EditParagraphFeature = (props: {
 
       <FormInput
         {...form}
+        value={translation}
+        onChange={handleChange}
         className={css.formInput}
         name={["paragraph", "translation"]}
         disabled={userRole == UserRole.READER}

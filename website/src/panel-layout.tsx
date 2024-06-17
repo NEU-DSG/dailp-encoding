@@ -21,8 +21,15 @@ import { CommentSection } from "./components/comment-section"
 import { CustomCreatable } from "./components/creatable"
 import { EditWordAudio } from "./components/edit-word-audio"
 import { SubtleButton } from "./components/subtle-button"
-import { EditButton as WordEditButton, EditWordFeature } from "./edit-word-feature"
-import { EditButton as ParagraphEditButton, EditParagraphFeature } from "./edit-paragraph-feature"
+import {
+  EditParagraphFeature,
+  EditButton as ParagraphEditButton,
+} from "./edit-paragraph-feature"
+import { FormProvider } from "./edit-paragraph-form-context"
+import {
+  EditWordFeature,
+  EditButton as WordEditButton,
+} from "./edit-word-feature"
 import { formInput } from "./edit-word-feature.css"
 import { useForm } from "./edit-word-form-context"
 import { content } from "./footer.css"
@@ -30,8 +37,7 @@ import * as css from "./panel-layout.css"
 import ParagraphPanel from "./paragraph-panel"
 import { usePreferences } from "./preferences-context"
 import { TranslatedParagraph } from "./segment"
-import {VerticalMorphemicSegmentation, WordPanel } from "./word-panel"
-import { FormProvider } from "./edit-paragraph-form-context"
+import { VerticalMorphemicSegmentation, WordPanel } from "./word-panel"
 
 enum PanelType {
   WordPanel,
@@ -168,10 +174,11 @@ export const PanelLayout = (p: {
   } else if (p.segment.__typename === "DocumentParagraph") {
     // Display the paragraph panel if the segment type is a paragraph.
     // console.log(p.segment)
-    panel = 
-    <FormProvider>
-      <ParagraphPanel segment={p.segment} setContent={p.setContent} />
-    </FormProvider>
+    panel = (
+      <FormProvider>
+        <ParagraphPanel segment={p.segment} setContent={p.setContent} />
+      </FormProvider>
+    )
   }
 
   return (
@@ -194,9 +201,6 @@ export const PanelLayout = (p: {
     </div>
   )
 }
-
-
-
 
 export const CollapsiblePanel = (p: {
   title: string
@@ -225,4 +229,3 @@ export const CollapsiblePanel = (p: {
     </div>
   )
 }
-

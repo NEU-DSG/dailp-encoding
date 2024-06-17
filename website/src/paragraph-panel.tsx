@@ -1,6 +1,7 @@
 import React from "react"
 import { MdClose, MdNotes, MdOutlineComment } from "react-icons/md/index"
 import { unstable_Form as Form, unstable_FormInput as FormInput } from "reakit"
+import * as Dailp from "src/graphql/dailp"
 import { IconButton } from "./components"
 import { CommentSection } from "./components/comment-section"
 import EditParagraphFeature, { EditButton } from "./edit-paragraph-feature"
@@ -8,7 +9,6 @@ import { FormProvider, useForm } from "./edit-paragraph-form-context"
 import { CollapsiblePanel, PanelSegment } from "./panel-layout"
 import * as css from "./panel-layout.css"
 import { TranslatedParagraph } from "./segment"
-import * as Dailp from "src/graphql/dailp"
 
 // enum PanelType {
 //   ParagraphPanel,
@@ -28,15 +28,13 @@ const ParagraphPanel = (p: {
   setContent: (content: PanelSegment | null) => void
 }) => {
   const { form, isEditing } = useForm()
+  const [translatedSource, setTranslatedSource] = React.useState(
+    p.segment.translation ? p.segment.translation : "This paragraph has no translation")
   const concatSource = p.segment.source.reduce(
     (paragraph, word) =>
       `${paragraph} ${word.__typename === "AnnotatedForm" && word.source}`,
     ""
   )
-
-  const translatedSource = p.segment.translation
-    ? p.segment.translation
-    : "This paragraph has no translation"
 
   const discussionContent = <CommentSection parent={p.segment} />
   let translationPanel = null
@@ -44,7 +42,10 @@ const ParagraphPanel = (p: {
     <>
       {isEditing ? (
         <Form {...form}>
-            <EditParagraphFeature id={p.segment.id} translation={p.segment.translation} />
+          <EditParagraphFeature
+            id={p.segment.id}
+            translation={p.segment.translation}
+          />
         </Form>
       ) : (
         <CollapsiblePanel
@@ -62,19 +63,23 @@ const ParagraphPanel = (p: {
 
   return (
     <>
-      <IconButton
-        className={css.wordPanelButton.basic}
-        onClick={() => p.setContent(null)}
-        aria-label="Dismiss selected paragraph information"
-      >
-        <MdClose size={32} />
-      </IconButton>
 
       <header className={css.wordPanelHeader}>
+        <div className={css.headerButtons}>
+            {!isEditing && (
+              <IconButton
+                onClick={() => p.setContent(null)}
+                aria-label="Dismiss selected paragraph information"
+              >
+                <MdClose size={32} />
+              </IconButton>
+            )}
+            <EditButton />
+          </div>
         <h1 className={css.noSpaceBelow}>{`Paragraph ${p.segment.index}`}</h1>
       </header>
 
-      <EditButton />
+      
 
       <CollapsiblePanel
         title={"Source"}

@@ -1,20 +1,28 @@
 import React, { ReactNode } from "react"
-import { AiFillCaretDown, AiFillCaretUp, AiFillSound } from "react-icons/ai/index"
+import {
+  AiFillCaretDown,
+  AiFillCaretUp,
+  AiFillSound,
+} from "react-icons/ai/index"
 import { IoEllipsisHorizontalCircle } from "react-icons/io5/index"
-import { MdNotes, MdOutlineComment, MdRecordVoiceOver } from "react-icons/md/index"
+import {
+  MdNotes,
+  MdOutlineComment,
+  MdRecordVoiceOver,
+} from "react-icons/md/index"
+import { OnChangeValue } from "react-select"
 import { Disclosure, DisclosureContent, useDisclosureState } from "reakit"
+import { unstable_Form as Form, unstable_FormInput as FormInput } from "reakit"
 import * as Dailp from "src/graphql/dailp"
+import { AudioPlayer } from "./components"
+import { CommentSection } from "./components/comment-section"
+import { CustomCreatable } from "./components/creatable"
+import { EditWordAudio } from "./components/edit-word-audio"
+import { EditButton, EditWordFeature } from "./edit-word-feature"
+import { formInput } from "./edit-word-feature.css"
+import { useForm } from "./edit-word-form-context"
 import * as css from "./panel-layout.css"
 import { usePreferences } from "./preferences-context"
-import { AudioPlayer } from "./components"
-import { CustomCreatable } from "./components/creatable"
-import { OnChangeValue } from "react-select"
-import { useForm } from "./edit-word-form-context"
-import { CommentSection } from "./components/comment-section"
-import { unstable_Form as Form, unstable_FormInput as FormInput } from "reakit"
-import { formInput } from "./edit-word-feature.css"
-import { EditButton, EditWordFeature } from "./edit-word-feature"
-import { EditWordAudio } from "./components/edit-word-audio"
 
 enum PanelType {
   WordPanel,
