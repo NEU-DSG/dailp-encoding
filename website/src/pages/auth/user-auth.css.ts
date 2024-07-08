@@ -1,17 +1,13 @@
 import { style } from "@vanilla-extract/css"
-import { button } from "src/components/button.css"
+import { borderWidth } from "polished"
 import {
-  buttonSize,
   colors,
-  fonts,
-  hspace,
   mediaQueries,
   radii,
-  space,
   thickness,
   vspace,
 } from "src/style/constants"
-import { onFocus, onHover, paddingX, paddingY } from "src/style/utils"
+import { onFocus, onHover } from "src/style/utils"
 import { centeredColumn, edgePadded, fullWidth } from "src/style/utils.css"
 
 export const loginHeader = style({
@@ -78,3 +74,16 @@ export const secondaryButton = style([
 ])
 
 export const loginButton = style([{ margin: 0, borderRadius: radii.medium }])
+
+export const passwordInput = style({
+  width: "90%",
+})
+
+export const passwordVisibilityToggle = style([
+  {
+    margin: vspace.medium,
+  },
+  onHover({
+    cursor: "pointer",
+  }),
+])
