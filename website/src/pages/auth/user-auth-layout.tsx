@@ -135,7 +135,7 @@ const PasswordInput = ({ form, name, placeholder }: FormFieldsType) => {
     }
   }
   return (
-    <span className="">
+    <span>
       <FormInput
         {...form}
         name={name}
