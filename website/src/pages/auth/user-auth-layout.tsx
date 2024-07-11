@@ -1,4 +1,6 @@
-import React, { ReactNode } from "react"
+import cx from "classnames"
+import React, { ReactNode, useState } from "react"
+import { MdVisibility, MdVisibilityOff } from "react-icons/md/index"
 import {
   unstable_FormInput as FormInput,
   unstable_FormLabel as FormLabel,
@@ -16,6 +18,8 @@ import {
   loginButton,
   loginFormBox,
   loginHeader,
+  passwordInput,
+  passwordVisibilityToggle,
   positionButton,
   skinnyWidth,
 } from "./user-auth.css"
@@ -76,7 +80,7 @@ export const ConfirmLogout = (props?: { className?: string }) => {
 interface FormFieldsType {
   form: unstable_FormStateReturn<any | undefined>
   name: any
-  label: string
+  label?: string
   type?: string | undefined
   placeholder: string
 }
@@ -92,16 +96,61 @@ export const FormFields = ({
     <>
       <FormLabel {...form} name={name} label={label} />
 
-      <FormInput
-        {...form}
-        name={name}
-        className={loginFormBox}
-        type={type}
-        placeholder={placeholder}
-      />
+      {type === "password" ? (
+        <PasswordInput form={form} name={name} placeholder={placeholder} />
+      ) : (
+        <FormInput
+          {...form}
+          name={name}
+          className={loginFormBox}
+          type={type}
+          placeholder={placeholder}
+        />
+      )}
 
       <FormMessage {...form} name={name} />
     </>
+  )
+}
+
+/*
+A field for entering password with the ability to show or hide the password. 
+Visibility toggle follows Microsoft's password reveal pattern– 
+when the password is hidden the user can click the eye button to show the password and
+when the password is shown the user can click the slashed eye button to hide the password.
+*/
+const PasswordInput = ({ form, name, placeholder }: FormFieldsType) => {
+  let visibleIcon = <MdVisibility size={20} />
+  let visibleOffIcon = <MdVisibilityOff size={20} />
+  const [password, setPassword] = useState("")
+  const [type, setType] = useState("password")
+  const [icon, setIcon] = useState(visibleIcon)
+  const handleToggle = () => {
+    if (type === "password") {
+      setIcon(visibleOffIcon)
+      setType("text")
+    } else {
+      setIcon(visibleIcon)
+      setType("password")
+    }
+  }
+  return (
+    <span>
+      <FormInput
+        {...form}
+        name={name}
+        className={cx(loginFormBox, passwordInput)}
+        type={type}
+        placeholder={placeholder}
+        value={password}
+        onChange={(e: { target: { value: React.SetStateAction<string> } }) => {
+          setPassword(e.target.value)
+        }}
+      />
+      <span onClick={handleToggle} className={passwordVisibilityToggle}>
+        {icon}
+      </span>
+    </span>
   )
 }
 
