@@ -1,14 +1,14 @@
 import React from "react"
 import { Dashboard } from "src/components/dashboard/dashboard"
-import Layout from "../layout"
+import LayoutDashboard from "../layout-dashboard"
 
 const DashboardPage = () => {
   return (
-    <Layout>
+    <LayoutDashboard>
       <main>
         <Dashboard />
       </main>
-    </Layout>
+    </LayoutDashboard>
   )
 }
 export const Page = DashboardPage
