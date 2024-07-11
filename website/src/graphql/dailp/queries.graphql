@@ -131,7 +131,14 @@ fragment DocFormFields on AnnotatedDoc {
 
 fragment ParagraphFormFields on DocumentParagraph {
   id
+  index
   translation
+  source {
+    ...FormFields
+  }
+  comments {
+    id
+  }
 }
 
 fragment FormFields on AnnotatedForm {
@@ -582,7 +589,8 @@ mutation RemoveBookmark($documentId: UUID!) {
 
 mutation UpdateParagraph($paragraph: ParagraphUpdate!) {
   updateParagraph(paragraph: $paragraph) {
-    ...ParagraphFormFields
+    id
+    translation
   }
 }
 

@@ -6,16 +6,16 @@ import {
 import * as Dailp from "./graphql/dailp"
 
 type FormContextType = {
-  form: FormStateReturn<any | undefined>
-  isEditing: boolean
-  setIsEditing: (bool: boolean) => void
+  paragraphForm: FormStateReturn<any | undefined>
+  isEditingParagraph: boolean
+  setIsEditingParagraph: (bool: boolean) => void
 }
 
 const FormContext = createContext<FormContextType>({} as FormContextType)
 
 // Instantiates a form state used to keep track of the current word and information about all its features.
 export const FormProvider = (props: { children: ReactNode }) => {
-  const [isEditing, setIsEditing] = useState(false)
+  const [isEditingParagraph, setIsEditingParagraph] = useState(false)
   const paragraph: Dailp.ParagraphFormFieldsFragment =
     {} as Dailp.ParagraphFormFieldsFragment
 
@@ -26,7 +26,7 @@ export const FormProvider = (props: { children: ReactNode }) => {
     return await updateParagraph(variables)
   }
 
-  const form = useFormState({
+  const paragraphForm = useFormState({
     values: {
       paragraph,
     },
@@ -36,7 +36,7 @@ export const FormProvider = (props: { children: ReactNode }) => {
       }
     },
     onSubmit: (values) => {
-      setIsEditing(false)
+      setIsEditingParagraph(false)
       // console.log(values.paragraph["id"])
       // console.log(values.paragraph["translation"])
 
@@ -50,7 +50,7 @@ export const FormProvider = (props: { children: ReactNode }) => {
   })
 
   return (
-    <FormContext.Provider value={{ form, isEditing, setIsEditing }}>
+    <FormContext.Provider value={{ paragraphForm, isEditingParagraph, setIsEditingParagraph }}>
       {props.children}
     </FormContext.Provider>
   )
@@ -58,6 +58,8 @@ export const FormProvider = (props: { children: ReactNode }) => {
 
 export const useForm = () => {
   const context = useContext(FormContext)
-
+  if (!context) {
+    console.log("useForm must be used within a FormProvider");
+  }
   return context
 }

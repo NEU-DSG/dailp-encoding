@@ -18,25 +18,26 @@ import { paragraph } from "./style/utils.css"
 
 /** Button that allows user to enter edit mode in the word panel, and edit fields of a word. */
 export const EditButton = () => {
-  const { form, isEditing, setIsEditing } = useForm()
+  const { paragraphForm, isEditingParagraph, setIsEditingParagraph } = useForm()
 
   return (
-    <Form {...form} className={css.form}>
-      {isEditing ? (
+    <Form {...paragraphForm} className={css.form}>
+      {isEditingParagraph ? (
         // Displays a "Cancel" button and "Save" button in editing mode.
         <>
           <IconButton
             className={css.cancelButton}
             round={false}
             onClick={() => {
-              setIsEditing(false)
+              setIsEditingParagraph(false)
+              console.log(isEditingParagraph)
             }}
           >
             Cancel
           </IconButton>
 
           <IconTextButton
-            {...form}
+            {...paragraphForm}
             icon={<IoCheckmarkSharp />}
             className={css.editPanelButton}
             as={FormSubmitButton}
@@ -49,7 +50,8 @@ export const EditButton = () => {
           icon={<HiPencilAlt />}
           className={css.editPanelButton}
           onClick={() => {
-            setIsEditing(true)
+            setIsEditingParagraph(true)
+            console.log(isEditingParagraph)
           }}
         >
           Edit
@@ -61,36 +63,39 @@ export const EditButton = () => {
 
 /** Displays a FormInput with its corresponding feature data from the Reakit form. */
 export const EditParagraphFeature = (props: {
-  id?: string
-  translation?: string
+  paragraph: Dailp.ParagraphFormFieldsFragment
+  feature: keyof Dailp.ParagraphFormFieldsFragment
+  label?: string
+  input?: React.ElementType
 }) => {
-  const { form } = useForm()
+  const { paragraphForm } = useForm()
   const [translation, setTranslation] = 
-    useState<string>(props.translation ? props.translation : "Enter translation here...")
+    useState<string>(props.paragraph.translation ? props.paragraph.translation : "Enter translation here...")
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setTranslation(e.target.value)
   }
 
-  if (!form || !form.values.paragraph) {
+  if (!paragraphForm || !paragraphForm.values.paragraph) {
     return null
   }
-  form.values.paragraph["id"] = props.id
+  paragraphForm.values.paragraph["id"] = props.paragraph.id
 
   let userRole = useUserRole()
   return (
     <>
       {/* Display a label for the form input if it exists. */}
       <FormLabel
-        {...form}
+        {...paragraphForm}
         className={css.formInputLabel}
         name={"translation"}
         label={"Translation"}
       />
 
       <FormInput
-        {...form}
+        {...paragraphForm}
         value={translation}
         onChange={handleChange}
+        as={props.input ? props.input : "input"}
         className={css.formInput}
         name={["paragraph", "translation"]}
         disabled={userRole == UserRole.READER}

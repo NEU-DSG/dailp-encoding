@@ -25,13 +25,14 @@ import {
   EditParagraphFeature,
   EditButton as ParagraphEditButton,
 } from "./edit-paragraph-feature"
-import { FormProvider } from "./edit-paragraph-form-context"
+import { FormProvider as FormProviderParagraph } from "./edit-paragraph-form-context"
 import {
   EditWordFeature,
   EditButton as WordEditButton,
 } from "./edit-word-feature"
 import { formInput } from "./edit-word-feature.css"
 import { useForm } from "./edit-word-form-context"
+import { useForm as useParagraphForm } from "./edit-paragraph-form-context"
 import { content } from "./footer.css"
 import * as css from "./panel-layout.css"
 import ParagraphPanel from "./paragraph-panel"
@@ -42,6 +43,11 @@ import { VerticalMorphemicSegmentation, WordPanel } from "./word-panel"
 enum PanelType {
   WordPanel,
   EditWordPanel,
+}
+
+enum ParagraphPanelType {
+  ParagraphPanel,
+  EditParagraphPanel,
 }
 
 // A label associated with a list of options.
@@ -70,6 +76,7 @@ export const PanelLayout = (p: {
   }
 
   const { form, isEditing } = useForm()
+  const { paragraphForm, isEditingParagraph } = useParagraphForm()
 
   const token = useCredentials()
   const userGroups = useCognitoUserGroups()
@@ -175,9 +182,57 @@ export const PanelLayout = (p: {
     // Display the paragraph panel if the segment type is a paragraph.
     // console.log(p.segment)
     panel = (
-      <FormProvider>
-        <ParagraphPanel segment={p.segment} setContent={p.setContent} />
-      </FormProvider>
+      <FormProviderParagraph>
+      <>
+      {userGroups.length > 0 ? (
+        <header className={css.wordPanelHeader}>
+        <div className={css.headerButtons}>
+            {!isEditingParagraph && (
+              <IconButton
+                onClick={() => p.setContent(null)}
+                aria-label="Dismiss selected paragraph information"
+              >
+                <MdClose size={32} />
+              </IconButton>
+            )}
+            <ParagraphEditButton />
+          </div>
+        <h1 className={css.noSpaceBelow}>{`Paragraph ${p.segment.index}`}</h1>
+      </header>
+      ) : (
+        <>
+          <IconButton
+            className={css.wordPanelButton.basic}
+            onClick={() => p.setContent(null)}
+            aria-label="Dismiss selected paragraph information"
+          >
+            <MdClose size={32} />
+          </IconButton>
+          <header className={css.wordPanelHeader}>
+            <h1 className={css.noSpaceBelow}>{`Paragraph ${p.segment.index}`}</h1>
+            <h2 className={css.cherHeader}>{p.segment.source}</h2>
+          </header>
+        </>
+      )}
+        {isEditingParagraph ? (
+            <Form {...paragraphForm}>
+              <ParagraphPanel
+                panel={ParagraphPanelType.EditParagraphPanel}
+                paragraph={p.segment}
+              />
+            <>IS EDITING</>
+            </Form>
+          ) : (
+            <>
+            <ParagraphPanel
+              panel={ParagraphPanelType.ParagraphPanel}
+              paragraph={p.segment}
+            />
+            IS NOT EDITING
+            </>
+          )}
+      </>
+      </FormProviderParagraph>
     )
   }
 
