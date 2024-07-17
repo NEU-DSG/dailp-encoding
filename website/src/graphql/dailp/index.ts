@@ -738,6 +738,7 @@ export type PageImage = {
 export type ParagraphUpdate = {
   /** Unique identifier of the form */
   readonly id: Scalars["UUID"]
+  /** English translation of the paragraph */
   readonly translation: InputMaybe<Scalars["String"]>
 }
 

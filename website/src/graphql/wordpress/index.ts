@@ -39,6 +39,11 @@ export type ActionMonitorAction = ContentNode &
     readonly actionMonitorActionId: Scalars["Int"]
     /** The type of action (CREATE, UPDATE, DELETE) */
     readonly actionType: Maybe<Scalars["String"]>
+    /**
+     * The ancestors of the content node.
+     * @deprecated This content type is not hierarchical and typically will not have ancestors
+     */
+    readonly ancestors: Maybe<ActionMonitorActionToActionMonitorActionConnection>
     /** The content of the post. */
     readonly content: Maybe<Scalars["String"]>
     /** Connection between the ContentNode type and the ContentType type */
@@ -89,6 +94,11 @@ export type ActionMonitorAction = ContentNode &
     readonly modified: Maybe<Scalars["String"]>
     /** The GMT modified time for a post. If a post was recently updated the modified field will change to match the corresponding time in GMT. */
     readonly modifiedGmt: Maybe<Scalars["String"]>
+    /**
+     * The parent of the content node.
+     * @deprecated This content type is not hierarchical and typically will not have a parent
+     */
+    readonly parent: Maybe<ActionMonitorActionToParentConnectionEdge>
     /** The password for the action_monitor object. */
     readonly password: Maybe<Scalars["String"]>
     /** Connection between the ActionMonitorAction type and the ActionMonitorAction type */
@@ -120,6 +130,14 @@ export type ActionMonitorAction = ContentNode &
     /** The unique resource identifier path */
     readonly uri: Maybe<Scalars["String"]>
   }
+
+/** The ActionMonitorAction type */
+export type ActionMonitorActionAncestorsArgs = {
+  after: InputMaybe<Scalars["String"]>
+  before: InputMaybe<Scalars["String"]>
+  first: InputMaybe<Scalars["Int"]>
+  last: InputMaybe<Scalars["Int"]>
+}
 
 /** The ActionMonitorAction type */
 export type ActionMonitorActionContentArgs = {
@@ -188,6 +206,67 @@ export enum ActionMonitorActionIdType {
   /** Identify a resource by the URI. */
   Uri = "URI",
 }
+
+/** Connection between the ActionMonitorAction type and the ActionMonitorAction type */
+export type ActionMonitorActionToActionMonitorActionConnection =
+  ActionMonitorActionConnection &
+    Connection & {
+      readonly __typename?: "ActionMonitorActionToActionMonitorActionConnection"
+      /** Edges for the ActionMonitorActionToActionMonitorActionConnection connection */
+      readonly edges: ReadonlyArray<ActionMonitorActionToActionMonitorActionConnectionEdge>
+      /** The nodes of the connection, without the edges */
+      readonly nodes: ReadonlyArray<ActionMonitorAction>
+      /** Information about pagination in a connection. */
+      readonly pageInfo: ActionMonitorActionToActionMonitorActionConnectionPageInfo
+    }
+
+/** An edge in a connection */
+export type ActionMonitorActionToActionMonitorActionConnectionEdge =
+  ActionMonitorActionConnectionEdge &
+    Edge & {
+      readonly __typename?: "ActionMonitorActionToActionMonitorActionConnectionEdge"
+      /**
+       * A cursor for use in pagination
+       * @deprecated This content type is not hierarchical and typically will not have ancestors
+       */
+      readonly cursor: Maybe<Scalars["String"]>
+      /**
+       * The item at the end of the edge
+       * @deprecated This content type is not hierarchical and typically will not have ancestors
+       */
+      readonly node: ActionMonitorAction
+    }
+
+/** Page Info on the &quot;ActionMonitorActionToActionMonitorActionConnection&quot; */
+export type ActionMonitorActionToActionMonitorActionConnectionPageInfo =
+  ActionMonitorActionConnectionPageInfo &
+    PageInfo &
+    WpPageInfo & {
+      readonly __typename?: "ActionMonitorActionToActionMonitorActionConnectionPageInfo"
+      /** When paginating forwards, the cursor to continue. */
+      readonly endCursor: Maybe<Scalars["String"]>
+      /** When paginating forwards, are there more items? */
+      readonly hasNextPage: Scalars["Boolean"]
+      /** When paginating backwards, are there more items? */
+      readonly hasPreviousPage: Scalars["Boolean"]
+      /** When paginating backwards, the cursor to continue. */
+      readonly startCursor: Maybe<Scalars["String"]>
+    }
+
+/** Connection between the ActionMonitorAction type and the ActionMonitorAction type */
+export type ActionMonitorActionToParentConnectionEdge =
+  ActionMonitorActionConnectionEdge &
+    Edge &
+    OneToOneConnection & {
+      readonly __typename?: "ActionMonitorActionToParentConnectionEdge"
+      /** Opaque reference to the nodes position in the connection. Value can be used with pagination args. */
+      readonly cursor: Maybe<Scalars["String"]>
+      /**
+       * The node of the connection, without the edges
+       * @deprecated This content type is not hierarchical and typically will not have a parent
+       */
+      readonly node: ActionMonitorAction
+    }
 
 /** Connection between the ActionMonitorAction type and the ActionMonitorAction type */
 export type ActionMonitorActionToPreviewConnectionEdge =
@@ -4508,6 +4587,11 @@ export type Post = ContentNode &
   Previewable &
   UniformResourceIdentifiable & {
     readonly __typename?: "Post"
+    /**
+     * The ancestors of the content node.
+     * @deprecated This content type is not hierarchical and typically will not have ancestors
+     */
+    readonly ancestors: Maybe<PostToPostConnection>
     /** Connection between the NodeWithAuthor type and the User type */
     readonly author: Maybe<NodeWithAuthorToUserConnectionEdge>
     /** The database identifier of the author of the node */
@@ -4584,6 +4668,11 @@ export type Post = ContentNode &
     readonly modified: Maybe<Scalars["String"]>
     /** The GMT modified time for a post. If a post was recently updated the modified field will change to match the corresponding time in GMT. */
     readonly modifiedGmt: Maybe<Scalars["String"]>
+    /**
+     * The parent of the content node.
+     * @deprecated This content type is not hierarchical and typically will not have a parent
+     */
+    readonly parent: Maybe<PostToParentConnectionEdge>
     /** The password for the post object. */
     readonly password: Maybe<Scalars["String"]>
     /** Whether the pings are open or closed for this particular post. */
@@ -4624,6 +4713,14 @@ export type Post = ContentNode &
     /** The unique resource identifier path */
     readonly uri: Maybe<Scalars["String"]>
   }
+
+/** The post type */
+export type PostAncestorsArgs = {
+  after: InputMaybe<Scalars["String"]>
+  before: InputMaybe<Scalars["String"]>
+  first: InputMaybe<Scalars["Int"]>
+  last: InputMaybe<Scalars["Int"]>
+}
 
 /** The post type */
 export type PostCategoriesArgs = {
@@ -5410,6 +5507,63 @@ export type PostToCommentConnectionWhereArgs = {
   /** Include comments for a specific user ID. */
   readonly userId: InputMaybe<Scalars["ID"]>
 }
+
+/** Connection between the Post type and the post type */
+export type PostToParentConnectionEdge = Edge &
+  OneToOneConnection &
+  PostConnectionEdge & {
+    readonly __typename?: "PostToParentConnectionEdge"
+    /** Opaque reference to the nodes position in the connection. Value can be used with pagination args. */
+    readonly cursor: Maybe<Scalars["String"]>
+    /**
+     * The node of the connection, without the edges
+     * @deprecated This content type is not hierarchical and typically will not have a parent
+     */
+    readonly node: Post
+  }
+
+/** Connection between the Post type and the post type */
+export type PostToPostConnection = Connection &
+  PostConnection & {
+    readonly __typename?: "PostToPostConnection"
+    /** Edges for the PostToPostConnection connection */
+    readonly edges: ReadonlyArray<PostToPostConnectionEdge>
+    /** The nodes of the connection, without the edges */
+    readonly nodes: ReadonlyArray<Post>
+    /** Information about pagination in a connection. */
+    readonly pageInfo: PostToPostConnectionPageInfo
+  }
+
+/** An edge in a connection */
+export type PostToPostConnectionEdge = Edge &
+  PostConnectionEdge & {
+    readonly __typename?: "PostToPostConnectionEdge"
+    /**
+     * A cursor for use in pagination
+     * @deprecated This content type is not hierarchical and typically will not have ancestors
+     */
+    readonly cursor: Maybe<Scalars["String"]>
+    /**
+     * The item at the end of the edge
+     * @deprecated This content type is not hierarchical and typically will not have ancestors
+     */
+    readonly node: Post
+  }
+
+/** Page Info on the &quot;PostToPostConnection&quot; */
+export type PostToPostConnectionPageInfo = PageInfo &
+  PostConnectionPageInfo &
+  WpPageInfo & {
+    readonly __typename?: "PostToPostConnectionPageInfo"
+    /** When paginating forwards, the cursor to continue. */
+    readonly endCursor: Maybe<Scalars["String"]>
+    /** When paginating forwards, are there more items? */
+    readonly hasNextPage: Scalars["Boolean"]
+    /** When paginating backwards, are there more items? */
+    readonly hasPreviousPage: Scalars["Boolean"]
+    /** When paginating backwards, the cursor to continue. */
+    readonly startCursor: Maybe<Scalars["String"]>
+  }
 
 /** Connection between the Post type and the postFormat type */
 export type PostToPostFormatConnection = Connection &

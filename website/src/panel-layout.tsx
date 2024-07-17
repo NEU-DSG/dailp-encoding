@@ -182,7 +182,6 @@ export const PanelLayout = (p: {
     // Display the paragraph panel if the segment type is a paragraph.
     // console.log(p.segment)
     panel = (
-      <FormProviderParagraph>
       <>
       {userGroups.length > 0 ? (
         <header className={css.wordPanelHeader}>
@@ -220,7 +219,6 @@ export const PanelLayout = (p: {
                 panel={ParagraphPanelType.EditParagraphPanel}
                 paragraph={p.segment}
               />
-            <>IS EDITING</>
             </Form>
           ) : (
             <>
@@ -228,11 +226,9 @@ export const PanelLayout = (p: {
               panel={ParagraphPanelType.ParagraphPanel}
               paragraph={p.segment}
             />
-            IS NOT EDITING
             </>
           )}
       </>
-      </FormProviderParagraph>
     )
   }
 
