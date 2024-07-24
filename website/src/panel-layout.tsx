@@ -1,44 +1,30 @@
 import { groupBy } from "lodash"
 import React, { ReactNode } from "react"
 import { useState } from "react"
-import { AiFillSound } from "react-icons/ai/index"
 import { GrDown, GrUp } from "react-icons/gr/index"
-import { IoEllipsisHorizontalCircle } from "react-icons/io5/index"
 import {
   MdClose,
-  MdNotes,
-  MdOutlineComment,
-  MdRecordVoiceOver,
 } from "react-icons/md/index"
-import { OnChangeValue } from "react-select"
 import { Disclosure, DisclosureContent, useDisclosureState } from "reakit"
 import { unstable_Form as Form, unstable_FormInput as FormInput } from "reakit"
 import * as Dailp from "src/graphql/dailp"
 import { useCognitoUserGroups, useCredentials } from "./auth"
 import CommentPanel from "./comment-panel"
-import { AudioPlayer, Button, IconButton } from "./components"
-import { CommentSection } from "./components/comment-section"
-import { CustomCreatable } from "./components/creatable"
-import { EditWordAudio } from "./components/edit-word-audio"
+import { Button, IconButton } from "./components"
 import { SubtleButton } from "./components/subtle-button"
 import {
-  EditParagraphFeature,
   EditButton as ParagraphEditButton,
 } from "./edit-paragraph-feature"
-import { FormProvider as FormProviderParagraph } from "./edit-paragraph-form-context"
 import {
-  EditWordFeature,
   EditButton as WordEditButton,
 } from "./edit-word-feature"
-import { formInput } from "./edit-word-feature.css"
 import { useForm } from "./edit-word-form-context"
 import { useForm as useParagraphForm } from "./edit-paragraph-form-context"
-import { content } from "./footer.css"
 import * as css from "./panel-layout.css"
 import ParagraphPanel from "./paragraph-panel"
 import { usePreferences } from "./preferences-context"
 import { TranslatedParagraph } from "./segment"
-import { VerticalMorphemicSegmentation, WordPanel } from "./word-panel"
+import { WordPanel } from "./word-panel"
 
 enum PanelType {
   WordPanel,

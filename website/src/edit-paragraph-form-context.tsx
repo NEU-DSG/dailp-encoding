@@ -37,8 +37,6 @@ export const FormProvider = (props: { children: ReactNode }) => {
     },
     onSubmit: (values) => {
       setIsEditingParagraph(false)
-      // console.log(values.paragraph["id"])
-      // console.log(values.paragraph["translation"])
 
       runUpdate({
         paragraph: {

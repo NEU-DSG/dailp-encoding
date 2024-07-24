@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react"
+import React from "react"
 import { HiPencilAlt } from "react-icons/hi/index"
 import { IoCheckmarkSharp } from "react-icons/io5/index"
 import {
@@ -13,8 +13,6 @@ import { IconButton } from "./components"
 import { IconTextButton } from "./components/button"
 import { useForm } from "./edit-paragraph-form-context"
 import * as css from "./edit-word-feature.css"
-import { usePreferences } from "./preferences-context"
-import { paragraph } from "./style/utils.css"
 
 /** Button that allows user to enter edit mode in the word panel, and edit fields of a word. */
 export const EditButton = () => {
