@@ -5,6 +5,7 @@ import { Helmet } from "react-helmet"
 import prepass from "react-ssr-prepass"
 import { dangerouslySkipEscape, escapeInject } from "vite-plugin-ssr"
 import type { PageContextBuiltIn } from "vite-plugin-ssr/types"
+import { Environment, deploymentEnvironment } from "src/env"
 import { ssrClientAndExchange } from "src/graphql"
 import { PageContextServer, PageShell, rootElementId } from "./PageShell"
 
@@ -12,11 +13,19 @@ import { PageContextServer, PageShell, rootElementId } from "./PageShell"
  * In production, render every page on the server then hydrate it on the client.
  */
 export function render(pageContext: PageContextServer) {
-  if (process.env["NODE_ENV"] === "development") {
+  // Prevent search engines from indexing non-production pages
+  const noindex =
+    deploymentEnvironment !== Environment.Production
+      ? escapeInject`<meta name="robots" content="noindex"/>`
+      : ""
+  if (deploymentEnvironment === Environment.Development) {
     // In development, don't do SSR, just let the client render.
     return escapeInject`<!DOCTYPE html>
     <html>
-      <head>${baseScript}</head>
+      <head>
+        ${baseScript}
+        ${noindex}
+      </head>
       <body><div id="${rootElementId}"/></body>
     </html>`
   } else {
@@ -25,6 +34,7 @@ export function render(pageContext: PageContextServer) {
     <html ${dangerouslySkipEscape(pageHead.htmlAttributes.toString())}>
       <head>
         ${baseScript}
+        ${noindex}
         ${dangerouslySkipEscape(pageHead.title.toString())}
         ${dangerouslySkipEscape(pageHead.meta.toString())}
         ${dangerouslySkipEscape(pageHead.link.toString())}
