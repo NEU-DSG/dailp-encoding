@@ -9,6 +9,7 @@ import "src/style/global.css"
 import { themeClass } from "src/theme.css"
 import { LayoutClient } from "./client/layout"
 import { Environment, deploymentEnvironment } from "./env"
+import { EnvMarkerBar } from "./env-marker-bar"
 import Footer from "./footer"
 import * as css from "./layout.css"
 import { MobileNav, NavMenu } from "./menu"
@@ -54,6 +55,7 @@ const Layout: React.FC = ({ children }) => {
         </header>
         {children}
         <Footer />
+        <EnvMarkerBar />
       </LayoutClient>
     </PreferencesProvider>
   )
