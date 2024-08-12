@@ -1,10 +1,10 @@
 {
   inputs = {
-    pkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    pkgs.url = "github:nixos/nixpkgs/nixos-23.11";
     utils.url = "github:numtide/flake-utils";
     # Provides cargo dependencies.
     fenix = {
-      url = "github:nix-community/fenix";
+      url = "github:nix-community/fenix/monthly";
       inputs.nixpkgs.follows = "pkgs";
     };
     # Builds rust projects.
@@ -25,7 +25,7 @@
         fenix = inputs.fenix.packages.${system};
         toolchainFile = {
           file = ./rust-toolchain.toml;
-          sha256 = "4IUZZWXHBBxcwRuQm9ekOwzc0oNqH/9NkI1ejW7KajU=";
+          sha256 = "sha256-Q9UgzzvxLi4x9aWUJTn+/5EXekC98ODRU1TwhUs9RnY=";
         };
         rust-toolchain = fenix.fromToolchainFile toolchainFile;
         naersk = inputs.naersk.lib.${system}.override {
@@ -40,6 +40,7 @@
             (filter.inDirectory "types")
             (filter.inDirectory "graphql")
             (filter.inDirectory "migration")
+            (filter.inDirectory "admin-event-handlers")
             ./Cargo.toml
             ./Cargo.lock
             ./rust-toolchain.toml
@@ -85,6 +86,8 @@
               mkdir -p $out
               cp -f ${targetPackage}/bin/dailp-graphql $out/bootstrap
               zip -j $out/dailp-graphql.zip $out/bootstrap
+              cp -f ${targetPackage}/bin/auth-post-confirmation $out/bootstrap
+              zip -j $out/auth-post-confirmation.zip $out/bootstrap
             '';
           };
         terraformConfig = pkgs.writeTextFile {
