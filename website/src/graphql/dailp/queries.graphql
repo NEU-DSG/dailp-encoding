@@ -129,6 +129,18 @@ fragment DocFormFields on AnnotatedDoc {
   }
 }
 
+fragment ParagraphFormFields on DocumentParagraph {
+  id
+  index
+  translation
+  source {
+    ...FormFields
+  }
+  comments {
+    id
+  }
+}
+
 fragment FormFields on AnnotatedForm {
   __typename
   id
@@ -579,7 +591,6 @@ mutation UpdateParagraph($paragraph: ParagraphUpdate!) {
   updateParagraph(paragraph: $paragraph) {
     id
     translation
-    index
   }
 }
 

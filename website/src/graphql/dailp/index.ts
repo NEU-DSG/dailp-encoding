@@ -738,6 +738,7 @@ export type PageImage = {
 export type ParagraphUpdate = {
   /** Unique identifier of the form */
   readonly id: Scalars["UUID"]
+  /** English translation of the paragraph */
   readonly translation: InputMaybe<Scalars["String"]>
 }
 
@@ -1318,6 +1319,87 @@ export type DocFormFieldsFragment = {
 } & Pick<AnnotatedDoc, "id" | "title"> & {
     readonly date: Maybe<
       { readonly __typename?: "Date" } & Pick<Date, "day" | "month" | "year">
+    >
+  }
+
+export type ParagraphFormFieldsFragment = {
+  readonly __typename?: "DocumentParagraph"
+} & Pick<DocumentParagraph, "id" | "index" | "translation"> & {
+    readonly source: ReadonlyArray<
+      | ({ readonly __typename: "AnnotatedForm" } & Pick<
+          AnnotatedForm,
+          | "id"
+          | "index"
+          | "source"
+          | "romanizedSource"
+          | "phonemic"
+          | "englishGloss"
+          | "commentary"
+        > & {
+            readonly segments: ReadonlyArray<
+              { readonly __typename?: "WordSegment" } & Pick<
+                WordSegment,
+                "morpheme" | "gloss" | "role" | "previousSeparator"
+              > & {
+                  readonly matchingTag: Maybe<
+                    { readonly __typename?: "MorphemeTag" } & Pick<
+                      MorphemeTag,
+                      "tag" | "title"
+                    >
+                  >
+                }
+            >
+            readonly ingestedAudioTrack: Maybe<
+              { readonly __typename?: "AudioSlice" } & Pick<
+                AudioSlice,
+                | "sliceId"
+                | "index"
+                | "resourceUrl"
+                | "startTime"
+                | "endTime"
+                | "includeInEditedCollection"
+              >
+            >
+            readonly editedAudio: ReadonlyArray<
+              { readonly __typename?: "AudioSlice" } & Pick<
+                AudioSlice,
+                | "sliceId"
+                | "index"
+                | "resourceUrl"
+                | "startTime"
+                | "endTime"
+                | "includeInEditedCollection"
+              >
+            >
+            readonly userContributedAudio: ReadonlyArray<
+              { readonly __typename?: "AudioSlice" } & Pick<
+                AudioSlice,
+                | "sliceId"
+                | "index"
+                | "resourceUrl"
+                | "startTime"
+                | "endTime"
+                | "includeInEditedCollection"
+              > & {
+                  readonly recordedBy: Maybe<
+                    { readonly __typename?: "User" } & Pick<
+                      User,
+                      "id" | "displayName"
+                    >
+                  >
+                }
+            >
+            readonly position: {
+              readonly __typename?: "PositionInDocument"
+            } & Pick<PositionInDocument, "documentId">
+            readonly comments: ReadonlyArray<
+              { readonly __typename?: "Comment" } & Pick<Comment, "id">
+            >
+          })
+      | { readonly __typename?: "LineBreak" }
+    >
+    readonly comments: ReadonlyArray<
+      { readonly __typename?: "Comment" } & Pick<Comment, "id">
     >
   }
 
@@ -2171,7 +2253,7 @@ export type UpdateParagraphMutationVariables = Exact<{
 export type UpdateParagraphMutation = { readonly __typename?: "Mutation" } & {
   readonly updateParagraph: {
     readonly __typename?: "DocumentParagraph"
-  } & Pick<DocumentParagraph, "id" | "translation" | "index">
+  } & Pick<DocumentParagraph, "id" | "translation">
 }
 
 export type UpdateContributorAttributionMutationVariables = Exact<{
@@ -2309,6 +2391,19 @@ export const FormFieldsFragmentDoc = gql`
     }
     position {
       documentId
+    }
+    comments {
+      id
+    }
+  }
+`
+export const ParagraphFormFieldsFragmentDoc = gql`
+  fragment ParagraphFormFields on DocumentParagraph {
+    id
+    index
+    translation
+    source {
+      ...FormFields
     }
     comments {
       id
@@ -3108,7 +3203,6 @@ export const UpdateParagraphDocument = gql`
     updateParagraph(paragraph: $paragraph) {
       id
       translation
-      index
     }
   }
 `

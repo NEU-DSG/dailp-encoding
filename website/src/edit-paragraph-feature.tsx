@@ -67,8 +67,10 @@ export const EditParagraphFeature = (props: {
   input?: React.ElementType
 }) => {
   const { paragraphForm } = useForm()
-  const translation = props.paragraph.translation ? props.paragraph.translation : "Enter translation here..."
-  // const [translation, setTranslation] = 
+  const translation = props.paragraph.translation
+    ? props.paragraph.translation
+    : "Enter translation here..."
+  // const [translation, setTranslation] =
   //   useState<string>(props.paragraph.translation ? props.paragraph.translation : "Enter translation here...")
   // const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
   //   setTranslation(e.target.value)

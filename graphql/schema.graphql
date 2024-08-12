@@ -867,6 +867,9 @@ input ParagraphUpdate {
 	Unique identifier of the form
 	"""
 	id: UUID!
+	"""
+	English translation of the paragraph
+	"""
 	translation: String
 }
 

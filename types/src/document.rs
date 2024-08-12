@@ -268,6 +268,7 @@ pub struct DocumentParagraph {
 pub struct ParagraphUpdate {
     /// Unique identifier of the form
     pub id: Uuid,
+    /// English translation of the paragraph
     pub translation: MaybeUndefined<String>,
 }
 

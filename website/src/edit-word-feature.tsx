@@ -50,13 +50,7 @@ export const EditButton = () => {
           icon={<HiPencilAlt />}
           className={css.editPanelButton}
           onClick={() => {
-            if (cherokeeRepresentation === Dailp.CherokeeOrthography.Taoc) {
-              setIsEditing(true)
-            } else {
-              alert(
-                "Currently, only the linguistic analysis using terms from Tone and Accent in Oklahoma Cherokee (TAOC) is supported for editing. Please update your Cherokee description style in the display settings."
-              )
-            }
+            setIsEditing(true)
           }}
         >
           Edit
