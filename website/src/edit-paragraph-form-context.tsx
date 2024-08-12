@@ -48,7 +48,9 @@ export const FormProvider = (props: { children: ReactNode }) => {
   })
 
   return (
-    <FormContext.Provider value={{ paragraphForm, isEditingParagraph, setIsEditingParagraph }}>
+    <FormContext.Provider
+      value={{ paragraphForm, isEditingParagraph, setIsEditingParagraph }}
+    >
       {props.children}
     </FormContext.Provider>
   )
@@ -57,7 +59,7 @@ export const FormProvider = (props: { children: ReactNode }) => {
 export const useForm = () => {
   const context = useContext(FormContext)
   if (!context) {
-    console.log("useForm must be used within a FormProvider");
+    console.log("useForm must be used within a FormProvider")
   }
   return context
 }

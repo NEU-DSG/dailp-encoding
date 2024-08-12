@@ -23,6 +23,10 @@ import { AudioPlayer, Breadcrumbs, Button, Link } from "src/components"
 import { IconTextButton } from "src/components/button"
 import { useMediaQuery } from "src/custom-hooks"
 import { FormProvider as FormProviderDoc } from "src/edit-doc-data-form-context"
+import {
+  FormProvider as FormProviderParagraph,
+  useForm as useParagraphForm,
+} from "src/edit-paragraph-form-context"
 import { FormProvider, useForm } from "src/edit-word-form-context"
 import * as Dailp from "src/graphql/dailp"
 import Layout from "src/layout"
@@ -266,73 +270,75 @@ export const TranslationTab = ({ doc }: { doc: Document }) => {
 
   return (
     <FormProvider>
-      <DialogOverlay
-        className={css.morphemeDialogBackdrop}
-        isOpen={dialogOpen}
-        onDismiss={closeDialog}
-      >
-        <DialogContent
-          className={css.unpaddedMorphemeDialog}
-          aria-label="Segment Details"
+      <FormProviderParagraph>
+        <DialogOverlay
+          className={css.morphemeDialogBackdrop}
+          isOpen={dialogOpen}
+          onDismiss={closeDialog}
         >
-          {selectedMorpheme ? (
-            <MorphemeDetails
-              documentId={doc.id}
-              segment={selectedMorpheme}
-              hideDialog={closeDialog}
-              cherokeeRepresentation={cherokeeRepresentation}
-            />
-          ) : null}
-        </DialogContent>
-      </DialogOverlay>
-
-      {!isDesktop && (
-        <DialogBackdrop {...dialog} className={drawerBg}>
-          <Dialog
-            {...dialog}
-            as="nav"
-            className={css.mobileWordPanel}
-            aria-label="Word Panel Drawer"
-            preventBodyScroll={true}
+          <DialogContent
+            className={css.unpaddedMorphemeDialog}
+            aria-label="Segment Details"
           >
-            <PanelLayout
-              segment={panelInfo.currContents}
-              setContent={panelInfo.setCurrContents}
-            />
-          </Dialog>
-        </DialogBackdrop>
-      )}
+            {selectedMorpheme ? (
+              <MorphemeDetails
+                documentId={doc.id}
+                segment={selectedMorpheme}
+                hideDialog={closeDialog}
+                cherokeeRepresentation={cherokeeRepresentation}
+              />
+            ) : null}
+          </DialogContent>
+        </DialogOverlay>
 
-      <div className={css.contentContainer}>
-        <article className={css.annotationContents}>
-          <p className={css.topMargin}>
-            Use the{" "}
-            <span>
-              <MdSettings size={32} style={{ verticalAlign: "middle" }} />{" "}
-              Settings
-            </span>{" "}
-            button at the top of the page to change how documents are
-            translated.
-          </p>
-          <DocumentContents
-            {...{
-              levelOfDetail,
-              doc,
-              openDetails,
-              cherokeeRepresentation,
-              wordPanelDetails: panelInfo,
-            }}
-          />
-        </article>
-        {selectedSegment && (
-          <div className={css.contentSection2}>
-            <PanelLayout
-              segment={panelInfo.currContents}
-              setContent={panelInfo.setCurrContents}
-            />
-          </div>
+        {!isDesktop && (
+          <DialogBackdrop {...dialog} className={drawerBg}>
+            <Dialog
+              {...dialog}
+              as="nav"
+              className={css.mobileWordPanel}
+              aria-label="Word Panel Drawer"
+              preventBodyScroll={true}
+            >
+              <PanelLayout
+                segment={panelInfo.currContents}
+                setContent={panelInfo.setCurrContents}
+              />
+            </Dialog>
+          </DialogBackdrop>
         )}
-      </div>
+
+        <div className={css.contentContainer}>
+          <article className={css.annotationContents}>
+            <p className={css.topMargin}>
+              Use the{" "}
+              <span>
+                <MdSettings size={32} style={{ verticalAlign: "middle" }} />{" "}
+                Settings
+              </span>{" "}
+              button at the top of the page to change how documents are
+              translated.
+            </p>
+            <DocumentContents
+              {...{
+                levelOfDetail,
+                doc,
+                openDetails,
+                cherokeeRepresentation,
+                wordPanelDetails: panelInfo,
+              }}
+            />
+          </article>
+          {selectedSegment && (
+            <div className={css.contentSection2}>
+              <PanelLayout
+                segment={panelInfo.currContents}
+                setContent={panelInfo.setCurrContents}
+              />
+            </div>
+          )}
+        </div>
+      </FormProviderParagraph>
     </FormProvider>
   )
 }
@@ -360,6 +366,7 @@ const DocumentContents = ({
 
   const docContents = result.data?.document
   const { form, isEditing } = useForm()
+  const { paragraphForm, isEditingParagraph } = useParagraphForm()
 
   useEffect(() => {
     // If the form has been submitted, update the panel's current contents to be the currently selected word
@@ -373,7 +380,15 @@ const DocumentContents = ({
       // If the form was not submitted, make sure to reset the current word of the form to its unmodified state.
       form.update("word", wordPanelDetails.currContents)
     }
-  }, [isEditing])
+    if (paragraphForm.submitting) {
+      wordPanelDetails.setCurrContents(paragraphForm.values.paragraph)
+      console.log("[charlie] Not rerunning query :)")
+      // Query of document contents is rerun to ensure frontend and backend are in sync
+      rerunQuery({ requestPolicy: "network-only" })
+    } else {
+      paragraphForm.update("paragraph", wordPanelDetails.currContents)
+    }
+  }, [isEditing, isEditingParagraph])
 
   if (!docContents) {
     return <>Loading...</>

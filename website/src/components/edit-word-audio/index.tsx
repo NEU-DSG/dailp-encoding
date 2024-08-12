@@ -1,5 +1,5 @@
 import { ReactElement } from "react"
-import { WordAudio } from "src/panel-layout"
+import { WordAudio } from "src/word-panel"
 import { UserRole, useCognitoUserGroups, useUserRole } from "../../auth"
 import * as Dailp from "../../graphql/dailp"
 import { ContributorEditWordAudio } from "./contributor"
