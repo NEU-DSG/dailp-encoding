@@ -456,7 +456,7 @@ impl Mutation {
     }
 
     /// Mutation for paragraph and translation editing
-    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    #[graphql(guard = "GroupGuard::new(UserGroup::Contributors)")]
     async fn update_paragraph(
         &self,
         context: &Context<'_>,
