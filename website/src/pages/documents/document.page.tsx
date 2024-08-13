@@ -464,7 +464,7 @@ export const DocumentTitleHeader = (p: {
         {user ? (
           <BookmarkButton
             documentId={p.doc.id}
-            bookmarkedBool={p.doc.bookmarkedOn !== null}
+            isBookmarked={p.doc.bookmarkedOn !== null}
           />
         ) : (
           <></>
@@ -504,9 +504,8 @@ export const DocumentTitleHeader = (p: {
 /** Button that allows users to bookmark a document */
 export const BookmarkButton = (props: {
   documentId: String
-  bookmarkedBool: boolean
+  isBookmarked: boolean
 }) => {
-  const [isBookmarked, setIsBookmarked] = useState(props.bookmarkedBool)
   const [addBookmarkMutationResult, addBookmarkMutation] =
     Dailp.useAddBookmarkMutation()
   const [removeBookmarkMutationResult, removeBookmarkMutation] =
@@ -514,7 +513,7 @@ export const BookmarkButton = (props: {
 
   return (
     <>
-      {isBookmarked ? (
+      {props.isBookmarked ? (
         // Displays a "Cancel" button and "Save" button in editing mode.
         <>
           <IconTextButton
@@ -522,7 +521,6 @@ export const BookmarkButton = (props: {
             className={css.BookmarkButton}
             onClick={() => {
               removeBookmarkMutation({ documentId: props.documentId })
-              setIsBookmarked(false)
             }}
           >
             Un-Bookmark
@@ -534,7 +532,6 @@ export const BookmarkButton = (props: {
           className={css.BookmarkButton}
           onClick={() => {
             addBookmarkMutation({ documentId: props.documentId })
-            setIsBookmarked(true)
           }}
         >
           Bookmark
