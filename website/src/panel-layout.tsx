@@ -1,5 +1,5 @@
 import { groupBy } from "lodash"
-import React, { ReactNode } from "react"
+import React, { ReactNode, useEffect } from "react"
 import { useState } from "react"
 import { GrDown, GrUp } from "react-icons/gr/index"
 import { MdClose } from "react-icons/md/index"
@@ -51,12 +51,23 @@ export const PanelLayout = (p: {
   segment: PanelSegment | null
   setContent: (content: PanelSegment | null) => void
 }) => {
+  const { form, isEditing, setIsEditing } = useForm();
+  const { paragraphForm, isEditingParagraph, setIsEditingParagraph } = useParagraphForm();
+
+  const [prevSegment, setPrevSegment] = useState<PanelSegment | null>(p.segment);
+
+  useEffect(() => {
+    // If the segment has changed, reset the editing states
+    if (p.segment && p.segment !== prevSegment) {
+      setIsEditing(false); // Reset word editing state
+      setIsEditingParagraph(false); // Reset paragraph editing state (if applicable)
+      setPrevSegment(p.segment); // Update the previous segment to the new one
+    }
+  }, [p.segment, prevSegment, setIsEditing, setIsEditingParagraph]);
+
   if (!p.segment) {
     return null
   }
-
-  const { form, isEditing } = useForm()
-  const { paragraphForm, isEditingParagraph } = useParagraphForm()
 
   const token = useCredentials()
   const userGroups = useCognitoUserGroups()
