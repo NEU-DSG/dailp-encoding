@@ -43,11 +43,7 @@ const Layout: React.FC = ({ children }) => {
                 Digital Archive of Indigenous Language Persistence
               </span>
             </div>
-
-            {deploymentEnvironment !== Environment.Production && (
-              <LoginHeaderButton />
-            )}
-
+            <LoginHeaderButton />
             <HeaderPrefDrawer />
           </div>
           <NavMenu menuID={2} />
