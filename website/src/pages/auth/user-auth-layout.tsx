@@ -11,6 +11,7 @@ import {
 import { useCredentials, useUser } from "src/auth"
 import { Button, CleanButton, Link } from "src/components"
 import { AccountMenu } from "src/components/authenticated-users/account-menu"
+import { Environment, deploymentEnvironment } from "src/env"
 import { centeredColumn } from "src/style/utils.css"
 import Layout from "../../layout"
 import {
@@ -43,6 +44,12 @@ export const UserAuthPageTemplate = (props: {
 
 // the login button that appears in the header of the website
 export const LoginHeaderButton = (props?: { className?: string }) => {
+  // hide the login button on production while development of DAILP TI is ongoing
+  // FIXME remove this flag when DAILP TI launches in a stable form
+  if (deploymentEnvironment === Environment.Production) {
+    return null
+  }
+
   // get the current user's auth token
   const token = useCredentials()
 
