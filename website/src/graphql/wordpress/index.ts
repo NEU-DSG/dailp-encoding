@@ -3824,6 +3824,8 @@ export enum MimeTypeEnum {
   AudioXMsWma = "AUDIO_X_MS_WMA",
   /** audio/x-realaudio mime type. */
   AudioXRealaudio = "AUDIO_X_REALAUDIO",
+  /** image/avif mime type. */
+  ImageAvif = "IMAGE_AVIF",
   /** image/bmp mime type. */
   ImageBmp = "IMAGE_BMP",
   /** image/gif mime type. */
@@ -6000,8 +6002,14 @@ export type Previewable = {
 /** The reading setting type */
 export type ReadingSettings = {
   readonly __typename?: "ReadingSettings"
+  /** The ID of the page that should display the latest posts */
+  readonly pageForPosts: Maybe<Scalars["Int"]>
+  /** The ID of the page that should be displayed on the front page */
+  readonly pageOnFront: Maybe<Scalars["Int"]>
   /** Blog pages show at most. */
   readonly postsPerPage: Maybe<Scalars["Int"]>
+  /** What to show on the front page */
+  readonly showOnFront: Maybe<Scalars["String"]>
 }
 
 /** Input for the registerUser mutation. */
@@ -8273,7 +8281,13 @@ export type Settings = {
   /** Settings of the the string Settings Group */
   readonly generalSettingsUrl: Maybe<Scalars["String"]>
   /** Settings of the the integer Settings Group */
+  readonly readingSettingsPageForPosts: Maybe<Scalars["Int"]>
+  /** Settings of the the integer Settings Group */
+  readonly readingSettingsPageOnFront: Maybe<Scalars["Int"]>
+  /** Settings of the the integer Settings Group */
   readonly readingSettingsPostsPerPage: Maybe<Scalars["Int"]>
+  /** Settings of the the string Settings Group */
+  readonly readingSettingsShowOnFront: Maybe<Scalars["String"]>
   /** Settings of the the integer Settings Group */
   readonly writingSettingsDefaultCategory: Maybe<Scalars["Int"]>
   /** Settings of the the string Settings Group */
@@ -9366,8 +9380,14 @@ export type UpdateSettingsInput = {
   readonly generalSettingsTitle: InputMaybe<Scalars["String"]>
   /** Site URL. */
   readonly generalSettingsUrl: InputMaybe<Scalars["String"]>
+  /** The ID of the page that should display the latest posts */
+  readonly readingSettingsPageForPosts: InputMaybe<Scalars["Int"]>
+  /** The ID of the page that should be displayed on the front page */
+  readonly readingSettingsPageOnFront: InputMaybe<Scalars["Int"]>
   /** Blog pages show at most. */
   readonly readingSettingsPostsPerPage: InputMaybe<Scalars["Int"]>
+  /** What to show on the front page */
+  readonly readingSettingsShowOnFront: InputMaybe<Scalars["String"]>
   /** Default post category. */
   readonly writingSettingsDefaultCategory: InputMaybe<Scalars["Int"]>
   /** Default post format. */
