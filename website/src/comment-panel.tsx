@@ -27,7 +27,7 @@ export const CommentPanel = (p: {
       ...prev,
       id: p.commentObject?.id.toString() ?? "",
       textContent: p.commentObject?.textContent ?? "",
-      commentType: p.commentObject?.commentType ?? "",
+      commentType: p.commentObject?.commentType ?? "STORY",
     }))
   }, [p.commentObject?.id])
 
@@ -56,6 +56,7 @@ export const CommentPanel = (p: {
   }
 
   const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    console.log(commentValues)
     e.preventDefault()
 
     const handleError = (error: any, action: string) => {
