@@ -1,5 +1,6 @@
 import { style, styleVariants } from "@vanilla-extract/css"
 import { margin } from "polished"
+import { BsFileX } from "react-icons/bs"
 import {
   colors,
   hspace,
@@ -78,4 +79,18 @@ export const tagColorQuestion = style([
     backgroundColor: tagColors.question,
     fontSize: "0.7rem",
   },
+])
+
+export const commentFooters = style([
+  {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: "0.5rem 1rem",
+  },
+])
+
+export const editButtonMargin = style([
+  marginY(vspace.one),
+  marginX(hspace.large),
 ])

@@ -12,7 +12,7 @@ type FormContextType = {
   setIsEditing: (bool: boolean) => void
 }
 
-const FormContext = createContext<FormContextType>({} as FormContextType)
+const WordFormContext = createContext<FormContextType>({} as FormContextType)
 
 // Instantiates a form state used to keep track of the current word and information about all its features.
 export const FormProvider = (props: { children: ReactNode }) => {
@@ -77,14 +77,14 @@ export const FormProvider = (props: { children: ReactNode }) => {
   })
 
   return (
-    <FormContext.Provider value={{ form, isEditing, setIsEditing }}>
+    <WordFormContext.Provider value={{ form, isEditing, setIsEditing }}>
       {props.children}
-    </FormContext.Provider>
+    </WordFormContext.Provider>
   )
 }
 
 export const useForm = () => {
-  const context = useContext(FormContext)
+  const context = useContext(WordFormContext)
 
   return context
 }

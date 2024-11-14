@@ -279,6 +279,8 @@ export type Comment = {
   readonly __typename?: "Comment"
   /** An optional classification of the comment's content */
   readonly commentType: Maybe<CommentType>
+  /** Whether the comment has been edited since it was posted */
+  readonly edited: Scalars["Boolean"]
   /** Unique identifier of this comment */
   readonly id: Scalars["UUID"]
   /** When the comment was posted */
@@ -303,6 +305,18 @@ export enum CommentType {
   Question = "QUESTION",
   Story = "STORY",
   Suggestion = "SUGGESTION",
+}
+
+/**
+ * Used for updating comments.
+ * All fields except id are optional.
+ */
+export type CommentUpdate = {
+  readonly commentType: InputMaybe<CommentType>
+  readonly edited: Scalars["Boolean"]
+  readonly id: Scalars["UUID"]
+  /** The text of the comment */
+  readonly textContent: InputMaybe<Scalars["String"]>
 }
 
 /**
@@ -650,6 +664,8 @@ export type Mutation = {
   /** Removes a bookmark from a user's list of bookmarks */
   readonly removeBookmark: AnnotatedDoc
   readonly updateAnnotation: Scalars["Boolean"]
+  /** Update a comment */
+  readonly updateComment: CommentParent
   /** Mutation for adding/changing contributor attributions */
   readonly updateContributorAttribution: Scalars["UUID"]
   readonly updateDocumentMetadata: Scalars["UUID"]
@@ -689,6 +705,10 @@ export type MutationRemoveBookmarkArgs = {
 
 export type MutationUpdateAnnotationArgs = {
   data: Scalars["JSON"]
+}
+
+export type MutationUpdateCommentArgs = {
+  comment: CommentUpdate
 }
 
 export type MutationUpdateContributorAttributionArgs = {
@@ -1403,6 +1423,10 @@ export type ParagraphFormFieldsFragment = {
     >
   }
 
+export type CommentFormFieldsFragment = {
+  readonly __typename?: "Comment"
+} & Pick<Comment, "id" | "textContent" | "commentType" | "edited">
+
 export type FormFieldsFragment = {
   readonly __typename: "AnnotatedForm"
 } & Pick<
@@ -1932,7 +1956,7 @@ export type BookmarkedDocumentsQuery = { readonly __typename?: "Query" } & {
 
 export type CommentFieldsFragment = { readonly __typename?: "Comment" } & Pick<
   Comment,
-  "id" | "textContent" | "commentType"
+  "id" | "textContent" | "edited" | "commentType"
 > & {
     readonly postedAt: { readonly __typename?: "DateTime" } & Pick<
       DateTime,
@@ -1961,7 +1985,7 @@ export type WordCommentsQuery = { readonly __typename?: "Query" } & {
       readonly comments: ReadonlyArray<
         { readonly __typename?: "Comment" } & Pick<
           Comment,
-          "id" | "textContent" | "commentType"
+          "id" | "textContent" | "edited" | "commentType"
         > & {
             readonly postedAt: { readonly __typename?: "DateTime" } & Pick<
               DateTime,
@@ -1993,7 +2017,7 @@ export type ParagraphCommentsQuery = { readonly __typename?: "Query" } & {
       readonly comments: ReadonlyArray<
         { readonly __typename?: "Comment" } & Pick<
           Comment,
-          "id" | "textContent" | "commentType"
+          "id" | "textContent" | "edited" | "commentType"
         > & {
             readonly postedAt: { readonly __typename?: "DateTime" } & Pick<
               DateTime,
@@ -2280,17 +2304,17 @@ export type UpdateDocumentMetadataMutation = {
   readonly __typename?: "Mutation"
 } & Pick<Mutation, "updateDocumentMetadata">
 
-export type PostCommentMutationVariables = Exact<{
-  input: PostCommentInput
+export type UpdateCommentMutationVariables = Exact<{
+  comment: CommentUpdate
 }>
 
-export type PostCommentMutation = { readonly __typename?: "Mutation" } & {
-  readonly postComment:
+export type UpdateCommentMutation = { readonly __typename?: "Mutation" } & {
+  readonly updateComment:
     | ({ readonly __typename: "AnnotatedForm" } & Pick<AnnotatedForm, "id"> & {
           readonly comments: ReadonlyArray<
             { readonly __typename?: "Comment" } & Pick<
               Comment,
-              "id" | "textContent" | "commentType"
+              "id" | "textContent" | "edited" | "commentType"
             > & {
                 readonly postedAt: { readonly __typename?: "DateTime" } & Pick<
                   DateTime,
@@ -2315,7 +2339,62 @@ export type PostCommentMutation = { readonly __typename?: "Mutation" } & {
           readonly comments: ReadonlyArray<
             { readonly __typename?: "Comment" } & Pick<
               Comment,
-              "id" | "textContent" | "commentType"
+              "id" | "textContent" | "edited" | "commentType"
+            > & {
+                readonly postedAt: { readonly __typename?: "DateTime" } & Pick<
+                  DateTime,
+                  "timestamp"
+                > & {
+                    readonly date: { readonly __typename?: "Date" } & Pick<
+                      Date,
+                      "year" | "month" | "day" | "formattedDate"
+                    >
+                  }
+                readonly postedBy: { readonly __typename?: "User" } & Pick<
+                  User,
+                  "id" | "displayName"
+                >
+              }
+          >
+        })
+}
+
+export type PostCommentMutationVariables = Exact<{
+  input: PostCommentInput
+}>
+
+export type PostCommentMutation = { readonly __typename?: "Mutation" } & {
+  readonly postComment:
+    | ({ readonly __typename: "AnnotatedForm" } & Pick<AnnotatedForm, "id"> & {
+          readonly comments: ReadonlyArray<
+            { readonly __typename?: "Comment" } & Pick<
+              Comment,
+              "id" | "textContent" | "edited" | "commentType"
+            > & {
+                readonly postedAt: { readonly __typename?: "DateTime" } & Pick<
+                  DateTime,
+                  "timestamp"
+                > & {
+                    readonly date: { readonly __typename?: "Date" } & Pick<
+                      Date,
+                      "year" | "month" | "day" | "formattedDate"
+                    >
+                  }
+                readonly postedBy: { readonly __typename?: "User" } & Pick<
+                  User,
+                  "id" | "displayName"
+                >
+              }
+          >
+        })
+    | ({ readonly __typename: "DocumentParagraph" } & Pick<
+        DocumentParagraph,
+        "id"
+      > & {
+          readonly comments: ReadonlyArray<
+            { readonly __typename?: "Comment" } & Pick<
+              Comment,
+              "id" | "textContent" | "edited" | "commentType"
             > & {
                 readonly postedAt: { readonly __typename?: "DateTime" } & Pick<
                   DateTime,
@@ -2410,6 +2489,14 @@ export const ParagraphFormFieldsFragmentDoc = gql`
     }
   }
 `
+export const CommentFormFieldsFragmentDoc = gql`
+  fragment CommentFormFields on Comment {
+    id
+    textContent
+    commentType
+    edited
+  }
+`
 export const CommentFieldsFragmentDoc = gql`
   fragment CommentFields on Comment {
     id
@@ -2427,6 +2514,7 @@ export const CommentFieldsFragmentDoc = gql`
       displayName
     }
     textContent
+    edited
     commentType
   }
 `
@@ -3252,6 +3340,34 @@ export function useUpdateDocumentMetadataMutation() {
     UpdateDocumentMetadataMutation,
     UpdateDocumentMetadataMutationVariables
   >(UpdateDocumentMetadataDocument)
+}
+export const UpdateCommentDocument = gql`
+  mutation UpdateComment($comment: CommentUpdate!) {
+    updateComment(comment: $comment) {
+      ... on AnnotatedForm {
+        __typename
+        id
+        comments {
+          ...CommentFields
+        }
+      }
+      ... on DocumentParagraph {
+        __typename
+        id
+        comments {
+          ...CommentFields
+        }
+      }
+    }
+  }
+  ${CommentFieldsFragmentDoc}
+`
+
+export function useUpdateCommentMutation() {
+  return Urql.useMutation<
+    UpdateCommentMutation,
+    UpdateCommentMutationVariables
+  >(UpdateCommentDocument)
 }
 export const PostCommentDocument = gql`
   mutation PostComment($input: PostCommentInput!) {
