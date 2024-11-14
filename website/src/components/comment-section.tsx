@@ -148,7 +148,9 @@ export const CommentBody = (p: { comment: Dailp.Comment }) => {
             ? commentTypeNames[p.comment.commentType as Dailp.CommentType]
             : ""}
         </div>
-        {token ? <CommentEditButton commentId={p.comment.id as string} /> : ""}
+        <div>
+          {token ? <CommentEditButton commentId={p.comment.id as string} /> : ""}
+        </div>
       </div>
     </div>
   )
@@ -159,6 +161,7 @@ export const CommentHeader = (p: { comment: Dailp.Comment }) => {
     <div className={css.headerStyle}>
       {p.comment.postedBy.displayName} contributed on{" "}
       {p.comment.postedAt.date.formattedDate}
+      {p.comment.edited ? " (edited)" : ""}
     </div>
   )
 }
