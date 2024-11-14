@@ -1,18 +1,38 @@
-import React, { ReactNode, SetStateAction } from "react"
+import { set } from "lodash"
+import React, { ReactNode, SetStateAction, useEffect } from "react"
 import { useState } from "react"
 import * as Dailp from "src/graphql/dailp"
 import * as css from "./comment-panel.css"
 import { Button } from "./components"
+import { useCommentValueContext } from "./components/edit-comment-feature"
 import { TranslatedParagraph } from "./segment"
 
+// The type of comment panel that is displayed.
+export enum CommentAction {
+  PostComment = "PostComment",
+  EditComment = "EditComment",
+}
+
+// Displays the comment panel for a selected segment.
 export const CommentPanel = (p: {
   segment: Dailp.FormFieldsFragment | TranslatedParagraph
   setIsCommenting: React.Dispatch<SetStateAction<boolean>>
+  commentAction: CommentAction
+  commentObject?: Dailp.CommentFieldsFragment
 }) => {
-  const [newCommentText, setNewCommentText] = useState<string>("")
-  const [newCommentType, setNewCommentType] = useState<string>("STORY")
+  const { commentValues, setCommentValues } = useCommentValueContext()
+  // console.log("commentPanel created with id: " + p.commentObject?.id)
+  useEffect(() => {
+    setCommentValues((prev) => ({
+      ...prev,
+      id: p.commentObject?.id.toString() ?? "",
+      textContent: p.commentObject?.textContent ?? "",
+      commentType: p.commentObject?.commentType ?? "",
+    }))
+  }, [p.commentObject?.id])
 
   const [postCommentResult, postComment] = Dailp.usePostCommentMutation()
+  const [editCommentResult, editComment] = Dailp.useUpdateCommentMutation()
 
   const commentTypeNames: Record<Dailp.CommentType, string> = {
     // ... TS will then make sure you have an entry for everything on the "CommentTag" type that you import from the codegen
@@ -22,35 +42,47 @@ export const CommentPanel = (p: {
   }
 
   const handleInputChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setNewCommentText(event.target.value)
+    setCommentValues({
+      ...commentValues,
+      textContent: event.target.value,
+    })
   }
 
   const handleSelectChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setNewCommentType(event.target.value)
+    setCommentValues({
+      ...commentValues,
+      commentType: event.target.value,
+    })
   }
 
   const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault()
 
-    if (newCommentText && newCommentType) {
-      const { error } = await postComment({
-        input: {
-          parentId: p.segment.id,
-          parentType:
-            p.segment.__typename === "DocumentParagraph"
-              ? Dailp.CommentParentType.Paragraph
-              : Dailp.CommentParentType.Word,
-          textContent: newCommentText,
-          commentType: newCommentType as Dailp.CommentType,
-        },
-      })
+    const handleError = (error: any, action: string) => {
       if (error) {
         console.error(error)
-        alert("Something went wrong posting your comment")
+        alert(`Something went wrong ${action}`)
       } else {
         console.log("Submitted!")
-        alert("Your comment has been posted!")
+        alert(`Your comment has been ${action}`)
         p.setIsCommenting(false)
+      }
+    }
+
+    if (commentValues.textContent && commentValues.commentType) {
+      if (p.commentAction === CommentAction.PostComment) {
+        const { error: postError } = await postComment({
+          input: {
+            parentId: p.segment.id,
+            parentType:
+              p.segment.__typename === "DocumentParagraph"
+                ? Dailp.CommentParentType.Paragraph
+                : Dailp.CommentParentType.Word,
+            textContent: commentValues.textContent,
+            commentType: commentValues.commentType as Dailp.CommentType,
+          },
+        })
+        handleError(postError, "posted")
       }
     } else {
       alert("Please add a comment before submitting.")
@@ -59,17 +91,22 @@ export const CommentPanel = (p: {
 
   return (
     <div>
-      <header className={css.wordPanelHeader}>
-        <h2 className={css.editCherHeader}>
-          {p.segment.__typename === "DocumentParagraph"
-            ? "Paragraph " + p.segment?.index
-            : p.segment.source}
-        </h2>
-      </header>
+      {!(p.commentAction === CommentAction.EditComment) ? (
+        <header className={css.wordPanelHeader}>
+          <h2 className={css.editCherHeader}>
+            {p.segment.__typename === "DocumentParagraph"
+              ? "Paragraph " + p.segment?.index
+              : p.segment.source}
+          </h2>
+        </header>
+      ) : (
+        <></>
+      )}
+
       <form>
         <textarea
           placeholder="Add a comment..."
-          value={newCommentText}
+          value={commentValues.textContent}
           onChange={handleInputChange}
           className={css.inputStyling}
         />
@@ -79,7 +116,7 @@ export const CommentPanel = (p: {
           </label>
           <select
             id="dropdown"
-            value={newCommentType}
+            value={commentValues.commentType}
             onChange={handleSelectChange}
             className={css.spacing}
           >
@@ -90,13 +127,17 @@ export const CommentPanel = (p: {
             ))}
           </select>
         </div>
-        <Button
-          type="button"
-          className={css.commentButton}
-          onClick={handleSubmit}
-        >
-          Save
-        </Button>
+        {!(p.commentAction === CommentAction.EditComment) ? (
+          <Button
+            type="button"
+            className={css.commentButton}
+            onClick={handleSubmit}
+          >
+            Save
+          </Button>
+        ) : (
+          <></>
+        )}
       </form>
     </div>
   )

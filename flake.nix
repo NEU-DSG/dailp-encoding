@@ -222,7 +222,7 @@
               '')
               (writers.writeBashBin "dev-generate-types" ''
                 cd $PROJECT_ROOT
-                cargo sqlx prepare -- -p dailp
+                cargo sqlx prepare --workspace -p dailp
               '')
             ] ++ lib.optionals stdenv.isDarwin [
               darwin.apple_sdk.frameworks.Security
