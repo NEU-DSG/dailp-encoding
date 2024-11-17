@@ -228,6 +228,21 @@ input AttachAudioToWordInput {
 }
 
 """
+Request to attach user-recorded audio to a document
+"""
+input AttachAudioToDocumentInput {
+	"""
+	Document to bind audio to
+	"""
+	documentId: UUID!
+	"""
+	A URL to a Cloudfront-proxied user-recorded reading of a document.
+	A new resource will be created to represent the recording if one does not exist already
+	"""
+	contributorAudioUrl: String!
+}
+
+"""
 A segment of audio representing a document, word, phrase,
 or other audio unit
 """
@@ -506,13 +521,31 @@ input CreateEditedCollectionInput {
 }
 
 """
-Request to update if a piece of audio should be included in an edited collection
+Request to update if a piece of word audio should be included in an edited collection
 """
 input CurateWordAudioInput {
 	"""
 	Word audio is attached to
 	"""
 	wordId: UUID!
+	"""
+	Audio to include/exclude
+	"""
+	audioSliceId: UUID!
+	"""
+	New value
+	"""
+	includeInEditedCollection: Boolean!
+}
+
+"""
+Request to update if a piece of document audio should be included in an edited collection
+"""
+input CurateDocumentAudioInput {
+	"""
+	Document audio is attached to
+	"""
+	documentId: UUID!
 	"""
 	Audio to include/exclude
 	"""
@@ -1025,12 +1058,16 @@ type Mutation {
 	"""
 	removeBookmark(documentId: UUID!): AnnotatedDoc!
 	"""
-	Decide if a piece audio should be included in edited collection
+	Decide if a piece word audio should be included in edited collection
 	"""
 	curateWordAudio(input: CurateWordAudioInput!): AnnotatedForm!
 	"""
+	Decide if a piece document audio should be included in edited collection
+	"""
+	curateDocumentAudio(input: CurateDocumentAudioInput!): AnnotatedDoc!
+	"""
 	Attach audio that has already been uploaded to S3 to a particular word
-	Assumes user requesting mutation recoreded the audio
+	Assumes user requesting mutation recorded the audio
 	"""
 	attachAudioToWord(input: AttachAudioToWordInput!): AnnotatedForm!
 	updateDocumentMetadata(document: DocumentMetadataUpdate!): UUID!
@@ -1060,6 +1097,12 @@ input NewPageInput {
 	path of new page
 	"""
 	path: String!
+	"""
+	Attach audio that has already been uploaded to S3 to a particular document
+	Assumes user requesting mutation recorded the audio
+	"""
+	attachAudioToDocument(input: AttachAudioToDocumentInput!): AnnotatedDoc!
+	updateDocumentMetadata(document: DocumentMetadataUpdate!): UUID!
 }
 
 """
