@@ -3,7 +3,8 @@
 use dailp::{
     auth::{AuthGuard, GroupGuard, UserGroup, UserInfo},
     comment::{CommentParent, CommentUpdate, DeleteCommentInput, PostCommentInput},
-    slugify_ltree, AnnotatedForm, AttachAudioToWordInput, CollectionChapter, CurateWordAudioInput,
+    slugify_ltree, AnnotatedForm, AttachAudioToDocumentInput, AttachAudioToWordInput,
+    CollectionChapter, CurateDocumentAudioInput, CurateWordAudioInput,
     DeleteContributorAttribution, DocumentMetadataUpdate, DocumentParagraph,
     UpdateContributorAttribution, Uuid,
 };
@@ -580,7 +581,7 @@ impl Mutation {
             .ok_or_else(|| anyhow::format_err!("Failed to load document"))?)
     }
 
-    /// Decide if a piece audio should be included in edited collection
+    /// Decide if a piece of word audio should be included in edited collection
     #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
     async fn curate_word_audio(
         &self,
@@ -608,6 +609,33 @@ impl Mutation {
             .await?)
     }
 
+    /// Decide if a piece of document audio should be included in edited collection
+    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    async fn curate_document_audio(
+        &self,
+        context: &Context<'_>,
+        input: CurateDocumentAudioInput,
+    ) -> FieldResult<dailp::AnnotatedDoc> {
+        let user = context
+            .data_opt::<UserInfo>()
+            .ok_or_else(|| anyhow::format_err!("User is not signed in"))?;
+        let document_id = context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .update_document_audio_visibility(
+                &input.document_id,
+                &input.audio_slice_id,
+                input.include_in_edited_collection,
+                &user.id,
+            )
+            .await?;
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .load_one(&document_id.ok_or_else(|| anyhow::format_err!("Document audio not found"))?)
+            .await?)
+    }
+
     /// Attach audio that has already been uploaded to S3 to a particular word
     /// Assumes user requesting mutation recoreded the audio
     #[graphql(guard = "GroupGuard::new(UserGroup::Contributors)")]
@@ -629,6 +657,29 @@ impl Mutation {
             .data::<DataLoader<Database>>()?
             .loader()
             .word_by_id(&input.word_id)
+            .await?)
+    }
+
+    /// Attach audio that has already been uploaded to S3 to a particular document
+    /// Assumes user requesting mutation recorded the audio
+    #[graphql(guard = "GroupGuard::new(UserGroup::Contributors)")]
+    async fn attach_audio_to_document(
+        &self,
+        context: &Context<'_>,
+        input: AttachAudioToDocumentInput,
+    ) -> FieldResult<dailp::AnnotatedDoc> {
+        let user = context
+            .data_opt::<UserInfo>()
+            .ok_or_else(|| anyhow::format_err!("User is not signed in"))?;
+        let _media_slice_id = context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .attach_audio_to_document(&input, &user.id)
+            .await?;
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .load_one(&input.document_id)
             .await?)
     }
 
