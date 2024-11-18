@@ -213,21 +213,6 @@ Element within a spreadsheet before being transformed into a full document.
 union AnnotatedSeg = AnnotatedForm | LineBreak
 
 """
-Request to attach user-recorded audio to a word
-"""
-input AttachAudioToWordInput {
-	"""
-	Word to bind audio to
-	"""
-	wordId: UUID!
-	"""
-	A URL to a Cloudfront-proxied user-recorded pronunciation of a word.
-	A new resource will be created to represent the recording if one does not exist already
-	"""
-	contributorAudioUrl: String!
-}
-
-"""
 Request to attach user-recorded audio to a document
 """
 input AttachAudioToDocumentInput {
@@ -237,6 +222,21 @@ input AttachAudioToDocumentInput {
 	documentId: UUID!
 	"""
 	A URL to a Cloudfront-proxied user-recorded reading of a document.
+	A new resource will be created to represent the recording if one does not exist already
+	"""
+	contributorAudioUrl: String!
+}
+
+"""
+Request to attach user-recorded audio to a word
+"""
+input AttachAudioToWordInput {
+	"""
+	Word to bind audio to
+	"""
+	wordId: UUID!
+	"""
+	A URL to a Cloudfront-proxied user-recorded pronunciation of a word.
 	A new resource will be created to represent the recording if one does not exist already
 	"""
 	contributorAudioUrl: String!
@@ -521,13 +521,13 @@ input CreateEditedCollectionInput {
 }
 
 """
-Request to update if a piece of word audio should be included in an edited collection
+Request to update if a piece of document audio should be included in an edited collection
 """
-input CurateWordAudioInput {
+input CurateDocumentAudioInput {
 	"""
-	Word audio is attached to
+	Document audio is attached to
 	"""
-	wordId: UUID!
+	documentId: UUID!
 	"""
 	Audio to include/exclude
 	"""
@@ -539,13 +539,13 @@ input CurateWordAudioInput {
 }
 
 """
-Request to update if a piece of document audio should be included in an edited collection
+Request to update if a piece of word audio should be included in an edited collection
 """
-input CurateDocumentAudioInput {
+input CurateWordAudioInput {
 	"""
-	Document audio is attached to
+	Word audio is attached to
 	"""
-	documentId: UUID!
+	wordId: UUID!
 	"""
 	Audio to include/exclude
 	"""
@@ -1058,19 +1058,18 @@ type Mutation {
 	"""
 	removeBookmark(documentId: UUID!): AnnotatedDoc!
 	"""
-	Decide if a piece word audio should be included in edited collection
+	Decide if a piece of word audio should be included in edited collection
 	"""
 	curateWordAudio(input: CurateWordAudioInput!): AnnotatedForm!
 	"""
-	Decide if a piece document audio should be included in edited collection
+	Decide if a piece of document audio should be included in edited collection
 	"""
 	curateDocumentAudio(input: CurateDocumentAudioInput!): AnnotatedDoc!
 	"""
 	Attach audio that has already been uploaded to S3 to a particular word
-	Assumes user requesting mutation recorded the audio
+	Assumes user requesting mutation recoreded the audio
 	"""
 	attachAudioToWord(input: AttachAudioToWordInput!): AnnotatedForm!
-	updateDocumentMetadata(document: DocumentMetadataUpdate!): UUID!
 	"""
 	Minimal mutation to add a document with only essential fields
 	"""
