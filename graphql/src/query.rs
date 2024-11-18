@@ -595,7 +595,7 @@ impl Mutation {
         let word_id = context
             .data::<DataLoader<Database>>()?
             .loader()
-            .update_audio_visibility(
+            .update_word_audio_visibility(
                 &input.word_id,
                 &input.audio_slice_id,
                 input.include_in_edited_collection,
@@ -631,9 +631,10 @@ impl Mutation {
             .await?;
         Ok(context
             .data::<DataLoader<Database>>()?
-            .loader()
-            .load_one(&document_id.ok_or_else(|| anyhow::format_err!("Document audio not found"))?)
-            .await?)
+            .load_one(dailp::DocumentId(
+                document_id.ok_or_else(|| anyhow::format_err!("Document not found"))?
+            ))
+            .await?.ok_or_else(|| anyhow::format_err!("Document not found"))?)
     }
 
     /// Attach audio that has already been uploaded to S3 to a particular word
@@ -678,9 +679,8 @@ impl Mutation {
             .await?;
         Ok(context
             .data::<DataLoader<Database>>()?
-            .loader()
-            .load_one(&input.document_id)
-            .await?)
+            .load_one(dailp::DocumentId(input.document_id))
+            .await?.ok_or_else(|| anyhow::format_err!("Document not found"))?)
     }
 
     #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
