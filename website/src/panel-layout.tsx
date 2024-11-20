@@ -72,7 +72,6 @@ export const PanelLayout = (p: {
     variables: { system: cherokeeRepresentation },
   })
 
-  // const [isCommenting, setIsCommenting] = useState(false)
   const { isCommenting, setIsCommenting } = useCommentStateContext()
 
   if (!data) {

@@ -2414,6 +2414,61 @@ export type PostCommentMutation = { readonly __typename?: "Mutation" } & {
         })
 }
 
+export type DeleteCommentMutationVariables = Exact<{
+  commentId: DeleteCommentInput
+}>
+
+export type DeleteCommentMutation = { readonly __typename?: "Mutation" } & {
+  readonly deleteComment:
+    | ({ readonly __typename: "AnnotatedForm" } & Pick<AnnotatedForm, "id"> & {
+          readonly comments: ReadonlyArray<
+            { readonly __typename?: "Comment" } & Pick<
+              Comment,
+              "id" | "textContent" | "edited" | "commentType"
+            > & {
+                readonly postedAt: { readonly __typename?: "DateTime" } & Pick<
+                  DateTime,
+                  "timestamp"
+                > & {
+                    readonly date: { readonly __typename?: "Date" } & Pick<
+                      Date,
+                      "year" | "month" | "day" | "formattedDate"
+                    >
+                  }
+                readonly postedBy: { readonly __typename?: "User" } & Pick<
+                  User,
+                  "id" | "displayName"
+                >
+              }
+          >
+        })
+    | ({ readonly __typename: "DocumentParagraph" } & Pick<
+        DocumentParagraph,
+        "id"
+      > & {
+          readonly comments: ReadonlyArray<
+            { readonly __typename?: "Comment" } & Pick<
+              Comment,
+              "id" | "textContent" | "edited" | "commentType"
+            > & {
+                readonly postedAt: { readonly __typename?: "DateTime" } & Pick<
+                  DateTime,
+                  "timestamp"
+                > & {
+                    readonly date: { readonly __typename?: "Date" } & Pick<
+                      Date,
+                      "year" | "month" | "day" | "formattedDate"
+                    >
+                  }
+                readonly postedBy: { readonly __typename?: "User" } & Pick<
+                  User,
+                  "id" | "displayName"
+                >
+              }
+          >
+        })
+}
+
 export const DocFormFieldsFragmentDoc = gql`
   fragment DocFormFields on AnnotatedDoc {
     id
@@ -3395,4 +3450,32 @@ export function usePostCommentMutation() {
   return Urql.useMutation<PostCommentMutation, PostCommentMutationVariables>(
     PostCommentDocument
   )
+}
+export const DeleteCommentDocument = gql`
+  mutation DeleteComment($commentId: DeleteCommentInput!) {
+    deleteComment(input: $commentId) {
+      ... on AnnotatedForm {
+        __typename
+        id
+        comments {
+          ...CommentFields
+        }
+      }
+      ... on DocumentParagraph {
+        __typename
+        id
+        comments {
+          ...CommentFields
+        }
+      }
+    }
+  }
+  ${CommentFieldsFragmentDoc}
+`
+
+export function useDeleteCommentMutation() {
+  return Urql.useMutation<
+    DeleteCommentMutation,
+    DeleteCommentMutationVariables
+  >(DeleteCommentDocument)
 }
