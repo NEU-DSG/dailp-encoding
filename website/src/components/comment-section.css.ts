@@ -1,6 +1,7 @@
 import { style, styleVariants } from "@vanilla-extract/css"
 import { margin } from "polished"
 import { BsFileX } from "react-icons/bs"
+import { button } from "src/components/button.css"
 import {
   colors,
   hspace,
@@ -93,4 +94,18 @@ export const commentFooters = style([
 export const editButtonMargin = style([
   marginY(vspace.one),
   marginX(hspace.large),
+])
+
+export const deleteButton = style([
+  button,
+  paddingX(hspace.medium),
+  paddingY(vspace.small),
+  {
+    display: "flex",
+    justifyContent: "space-around",
+    marginLeft: hspace.small,
+    fontSize: "0.8em",
+    height: "auto",
+    width: "auto",
+  },
 ])

@@ -655,3 +655,24 @@ mutation PostComment($input: PostCommentInput!) {
     }
   }
 }
+
+mutation DeleteComment(
+  $commentId: DeleteCommentInput!
+) {
+  deleteComment(input: $commentId)  {
+    ... on AnnotatedForm {
+      __typename
+      id
+      comments {
+        ...CommentFields
+      }
+    }
+    ... on DocumentParagraph {
+      __typename
+      id
+      comments {
+        ...CommentFields
+      }
+    }
+  }
+}

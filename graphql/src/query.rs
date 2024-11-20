@@ -444,12 +444,6 @@ impl Mutation {
 
         // We return the parent object, for GraphCache interop
         return comment_object.parent(context).await;
-
-        // Ok(context
-        //     .data::<DataLoader<Database>>()?
-        //     .loader()
-        //     .update_comment(comment)
-        //     .await?)
     }
 
     /// Mutation for adding/changing contributor attributions

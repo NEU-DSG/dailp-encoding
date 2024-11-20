@@ -56,7 +56,7 @@ export const CommentPanel = (p: {
   }
 
   const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
-    console.log(commentValues)
+    // console.log(commentValues)
     e.preventDefault()
 
     const handleError = (error: any, action: string) => {

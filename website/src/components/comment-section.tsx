@@ -4,6 +4,7 @@ import * as Dailp from "src/graphql/dailp"
 import { TranslatedParagraph } from "src/segment"
 import { useCognitoUserGroups, useCredentials } from "../auth"
 import { CommentAction, CommentPanel } from "../comment-panel"
+import { Button } from "../components"
 import * as css from "./comment-section.css"
 import {
   EditButton as CommentEditButton,
@@ -42,7 +43,6 @@ export const WordCommentSection = (p: { word: Dailp.FormFieldsFragment }) => {
   const { isCommenting, setIsCommenting } = useCommentStateContext()
 
   const wordComments = data?.wordById.comments
-
   // Only show the edit button if user is in a group that can edit comments.
   return (
     <div>
@@ -61,10 +61,11 @@ export const WordCommentSection = (p: { word: Dailp.FormFieldsFragment }) => {
                 commentAction={CommentAction.EditComment}
                 commentObject={comment}
               />
-              {token ? (
+              {token ? (<>
                 <div className={css.editButtonMargin}>
                   <CommentEditButton commentId={comment.id as string} />
                 </div>
+              </>
               ) : (
                 ""
               )}
@@ -130,6 +131,30 @@ export const CommentBody = (p: { comment: Dailp.Comment }) => {
   }
   const token = useCredentials()
   const { commentForm, isEditingComment } = useForm()
+  const [deleteCommentResult, deleteComment] = Dailp.useDeleteCommentMutation()
+  
+  const handleDelete = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    const handleError = async (error: any) => {
+      if (error) {
+        console.error(error)
+      }
+    }
+    e.preventDefault()
+    const commentId = p.comment.id
+    if (commentId) {
+      try {
+      const { error: deleteCommentError } = await deleteComment({
+        commentId: {
+          commentId: commentId,
+        },
+      });
+      handleError(deleteCommentError);
+      } catch (err) {
+      console.error("An unexpected error occurred:", err);
+      }
+    }
+  }
+
 
   return (
     <div className={css.commentWrapper}>
@@ -149,8 +174,14 @@ export const CommentBody = (p: { comment: Dailp.Comment }) => {
             : ""}
         </div>
         <div>
+        {token ? <Button type="button" className={css.deleteButton} onClick={handleDelete}>
+          Delete
+          </Button> : ""}
+        </div>
+        <div>
           {token ? <CommentEditButton commentId={p.comment.id as string} /> : ""}
         </div>
+        
       </div>
     </div>
   )
