@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react"
 import { useCommentStateContext } from "src/comment-state-context"
 import * as Dailp from "src/graphql/dailp"
 import { TranslatedParagraph } from "src/segment"
-import { useCognitoUserGroups, useCredentials } from "../auth"
+import { useCognitoUserGroups, useCredentials, useUserId } from "../auth"
 import { CommentAction, CommentPanel } from "../comment-panel"
 import { Button } from "../components"
 import * as css from "./comment-section.css"
@@ -39,6 +39,7 @@ export const WordCommentSection = (p: { word: Dailp.FormFieldsFragment }) => {
   })
   const token = useCredentials()
   const userGroups = useCognitoUserGroups()
+  const userName = useUserId()
   const { commentForm, isEditingComment } = useForm()
   const { isCommenting, setIsCommenting } = useCommentStateContext()
 
@@ -61,7 +62,7 @@ export const WordCommentSection = (p: { word: Dailp.FormFieldsFragment }) => {
                 commentAction={CommentAction.EditComment}
                 commentObject={comment}
               />
-              {token ? (<>
+              {(userName === comment.postedBy.id) ? (<>
                 <div className={css.editButtonMargin}>
                   <CommentEditButton commentId={comment.id as string} />
                 </div>
@@ -85,6 +86,7 @@ export const ParagraphCommentSection = (p: {
   })
   const token = useCredentials()
   const userGroups = useCognitoUserGroups()
+  const userName = useUserId()
   const { commentForm, isEditingComment } = useForm()
   const { isCommenting, setIsCommenting } = useCommentStateContext()
 
@@ -107,7 +109,7 @@ export const ParagraphCommentSection = (p: {
                 commentAction={CommentAction.EditComment}
                 commentObject={comment}
               />
-              {token ? (
+              {(userName === comment.postedBy.id) ? (
                 <div className={css.editButtonMargin}>
                   <CommentEditButton commentId={comment.id as string} />
                 </div>
@@ -130,6 +132,7 @@ export const CommentBody = (p: { comment: Dailp.Comment }) => {
     [Dailp.CommentType.Question]: "Question",
   }
   const token = useCredentials()
+  const userName = useUserId()
   const { commentForm, isEditingComment } = useForm()
   const [deleteCommentResult, deleteComment] = Dailp.useDeleteCommentMutation()
   
@@ -174,12 +177,12 @@ export const CommentBody = (p: { comment: Dailp.Comment }) => {
             : ""}
         </div>
         <div>
-        {token ? <Button type="button" className={css.deleteButton} onClick={handleDelete}>
+        {(userName === p.comment.postedBy.id) ? <Button type="button" className={css.deleteButton} onClick={handleDelete}>
           Delete
           </Button> : ""}
         </div>
         <div>
-          {token ? <CommentEditButton commentId={p.comment.id as string} /> : ""}
+          {(userName === p.comment.postedBy.id) ? <CommentEditButton commentId={p.comment.id as string} /> : ""}
         </div>
         
       </div>
