@@ -3,12 +3,8 @@ import { HiPencilAlt } from "react-icons/hi/index"
 import { IoCheckmarkSharp } from "react-icons/io5/index"
 import {
   unstable_Form as Form,
-  unstable_FormInput as FormInput,
-  unstable_FormLabel as FormLabel,
   unstable_FormSubmitButton as FormSubmitButton,
 } from "reakit"
-import * as Dailp from "src/graphql/dailp"
-import { UserRole, useUserRole } from "../auth"
 import { IconButton } from "../components"
 import { IconTextButton } from "../components/button"
 import * as css from "../edit-word-feature.css"
@@ -28,7 +24,6 @@ export const EditButton = (props: { commentId: string }) => {
             round={false}
             onClick={() => {
               setIsEditingComment("")
-              // console.log(isEditingComment)
             }}
           >
             Cancel
@@ -49,7 +44,6 @@ export const EditButton = (props: { commentId: string }) => {
           className={css.editPanelButtonSmall}
           onClick={() => {
             setIsEditingComment(props.commentId)
-            // console.log(isEditingComment)
           }}
         >
           Edit
