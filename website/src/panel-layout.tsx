@@ -1,6 +1,5 @@
 import { groupBy } from "lodash"
 import React, { ReactNode } from "react"
-import { useState } from "react"
 import { GrDown, GrUp } from "react-icons/gr/index"
 import { MdClose } from "react-icons/md/index"
 import { Disclosure, DisclosureContent, useDisclosureState } from "reakit"
@@ -9,11 +8,9 @@ import * as Dailp from "src/graphql/dailp"
 import { useCognitoUserGroups, useCredentials } from "./auth"
 import { CommentAction, CommentPanel } from "./comment-panel"
 import {
-  CommentStateProvider,
   useCommentStateContext,
 } from "./comment-state-context"
 import { Button, IconButton } from "./components"
-import { CommentValueProvider } from "./components/edit-comment-feature"
 import { SubtleButton } from "./components/subtle-button"
 import { EditButton as ParagraphEditButton } from "./edit-paragraph-feature"
 import { useForm as useParagraphForm } from "./edit-paragraph-form-context"

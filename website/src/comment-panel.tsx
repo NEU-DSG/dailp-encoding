@@ -1,6 +1,4 @@
-import { set } from "lodash"
-import React, { ReactNode, SetStateAction, useEffect } from "react"
-import { useState } from "react"
+import React, { SetStateAction, useEffect } from "react"
 import * as Dailp from "src/graphql/dailp"
 import * as css from "./comment-panel.css"
 import { Button } from "./components"
@@ -21,7 +19,6 @@ export const CommentPanel = (p: {
   commentObject?: Dailp.CommentFieldsFragment
 }) => {
   const { commentValues, setCommentValues } = useCommentValueContext()
-  // console.log("commentPanel created with id: " + p.commentObject?.id)
   useEffect(() => {
     setCommentValues((prev) => ({
       ...prev,
@@ -56,7 +53,6 @@ export const CommentPanel = (p: {
   }
 
   const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
-    // console.log(commentValues)
     e.preventDefault()
 
     const handleError = (error: any, action: string) => {

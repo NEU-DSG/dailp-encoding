@@ -28,7 +28,6 @@ export const FormProvider = (props: { children: ReactNode }) => {
     commentValues as Dailp.CommentFormFieldsFragment
   )
   useEffect(() => {
-    // console.log("comment fields updated")
     const newComment = commentValues as Dailp.CommentFormFieldsFragment
     setComment(newComment)
     commentForm.values.comment = newComment
@@ -51,13 +50,6 @@ export const FormProvider = (props: { children: ReactNode }) => {
     },
     onSubmit: (values) => {
       setIsEditingComment("")
-      // console.log("Save edited comment clicked")
-      // console.log(values.comment)
-      // console.log(comment)
-      // console.log("id: " + values.comment["id"])
-      // console.log("textContent: " + values.comment["textContent"])
-      // console.log("commentType: " + values.comment["commentType"])
-      // console.log("edited: " + values.comment["edited"])
 
       runUpdate({
         comment: {

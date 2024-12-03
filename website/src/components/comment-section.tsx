@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react"
+import React from "react"
 import { useCommentStateContext } from "src/comment-state-context"
 import * as Dailp from "src/graphql/dailp"
 import { TranslatedParagraph } from "src/segment"
@@ -8,7 +8,6 @@ import { Button } from "../components"
 import * as css from "./comment-section.css"
 import {
   EditButton as CommentEditButton,
-  CommentValueProvider,
 } from "./edit-comment-feature"
 import {
   FormProvider as FormProviderComment,
@@ -37,11 +36,9 @@ export const WordCommentSection = (p: { word: Dailp.FormFieldsFragment }) => {
   const [{ data }] = Dailp.useWordCommentsQuery({
     variables: { wordId: p.word.id },
   })
-  const token = useCredentials()
-  const userGroups = useCognitoUserGroups()
   const userName = useUserId()
-  const { commentForm, isEditingComment } = useForm()
-  const { isCommenting, setIsCommenting } = useCommentStateContext()
+  const { isEditingComment } = useForm()
+  const { setIsCommenting } = useCommentStateContext()
 
   const wordComments = data?.wordById.comments
   // Only show the edit button if user is in a group that can edit comments.
@@ -49,12 +46,7 @@ export const WordCommentSection = (p: { word: Dailp.FormFieldsFragment }) => {
     <div>
       {wordComments?.map((comment) => (
         <div>
-          {!(isEditingComment === comment.id) ? (
-            <>
-              <CommentHeader comment={comment} />
-              <CommentBody comment={comment} />
-            </>
-          ) : (
+          {(isEditingComment === comment.id) ? (
             <>
               <CommentPanel
                 segment={p.word}
@@ -71,6 +63,12 @@ export const WordCommentSection = (p: { word: Dailp.FormFieldsFragment }) => {
                 ""
               )}
             </>
+          ) : (
+            <>
+              <CommentHeader comment={comment} />
+              <CommentBody comment={comment} />
+            </>
+            
           )}
         </div>
       ))}
@@ -84,11 +82,9 @@ export const ParagraphCommentSection = (p: {
   const [{ data }] = Dailp.useParagraphCommentsQuery({
     variables: { paragraphId: p.paragraph.id },
   })
-  const token = useCredentials()
-  const userGroups = useCognitoUserGroups()
   const userName = useUserId()
-  const { commentForm, isEditingComment } = useForm()
-  const { isCommenting, setIsCommenting } = useCommentStateContext()
+  const { isEditingComment } = useForm()
+  const { setIsCommenting } = useCommentStateContext()
 
   const paragraphComments = data?.paragraphById.comments
 
@@ -96,12 +92,7 @@ export const ParagraphCommentSection = (p: {
     <div>
       {paragraphComments?.map((comment) => (
         <div>
-          {!(isEditingComment === comment.id) ? (
-            <>
-              <CommentHeader comment={comment} />
-              <CommentBody comment={comment} />
-            </>
-          ) : (
+          {(isEditingComment === comment.id) ? (
             <>
               <CommentPanel
                 segment={p.paragraph}
@@ -117,6 +108,12 @@ export const ParagraphCommentSection = (p: {
                 ""
               )}
             </>
+          ) : (
+            <>
+              <CommentHeader comment={comment} />
+              <CommentBody comment={comment} />
+            </>
+            
           )}
         </div>
       ))}
@@ -131,9 +128,7 @@ export const CommentBody = (p: { comment: Dailp.Comment }) => {
     [Dailp.CommentType.Suggestion]: "Suggestion",
     [Dailp.CommentType.Question]: "Question",
   }
-  const token = useCredentials()
   const userName = useUserId()
-  const { commentForm, isEditingComment } = useForm()
   const [deleteCommentResult, deleteComment] = Dailp.useDeleteCommentMutation()
   
   const handleDelete = async (e: React.MouseEvent<HTMLButtonElement>) => {
