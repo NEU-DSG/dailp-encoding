@@ -3,7 +3,6 @@
 *.log
 tmp/
 .postgres/
-.sqlx/
 
 node_modules/
 npm-debug.log*
