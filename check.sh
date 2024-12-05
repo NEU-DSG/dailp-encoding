@@ -3,10 +3,17 @@
 cd $PROJECT_ROOT
 
 echo "--- DATABASE ---"
+echo "Checking if SQL queries are prepared..."
+if  [ ! -d "types/.sqlx" ] || [ ! -n "$(ls -A "types/.sqlx")" ]; then
+    echo "Prepared queries not present. run 'dev-generate-types'." 
+    exit 1
+fi
 echo "Checking if SQL types are up to date..."
 if $(cd types && cargo sqlx prepare --check -- -p dailp &>/dev/null); then
     echo "Generating SQL types..."
-    cargo sqlx prepare -- -p dailp || exit 1
+    cd types
+    cargo sqlx prepare -- -p dailp &>/dev/null || exit 1
+    cd $PROJECT_ROOT
 fi
 
 echo "--- SERVER ---"
@@ -32,6 +39,7 @@ yarn tsc || exit 1
 
 echo "--- FINAL CHECKS ---"
 cd $PROJECT_ROOT
+echo "Checking documentation and formatting..."
 ./.git-hooks/pre-commit || exit 1
 
 echo
