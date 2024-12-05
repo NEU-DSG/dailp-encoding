@@ -25,7 +25,7 @@
         fenix = inputs.fenix.packages.${system};
         toolchainFile = {
           file = ./rust-toolchain.toml;
-          sha256 = "sha256-Q9UgzzvxLi4x9aWUJTn+/5EXekC98ODRU1TwhUs9RnY=";
+          sha256 = "sha256-s1RPtyvDGJaX/BisLT+ifVfuhDT1nZkZ1NcK8sbwELM=";
         };
         rust-toolchain = fenix.fromToolchainFile toolchainFile;
         naersk = inputs.naersk.lib.${system}.override {
@@ -221,8 +221,8 @@
                 cargo run --bin dailp-migration
               '')
               (writers.writeBashBin "dev-generate-types" ''
-                cd $PROJECT_ROOT
-                cargo sqlx prepare --workspace -p dailp
+                cd $PROJECT_ROOT/types
+                cargo sqlx prepare -- -p dailp
               '')
             ] ++ lib.optionals stdenv.isDarwin [
               darwin.apple_sdk.frameworks.Security
