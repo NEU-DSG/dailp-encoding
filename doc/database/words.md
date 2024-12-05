@@ -24,7 +24,7 @@
 
 ## `word_user_media`
 
-A join table linking user audio contributions to words in documents. This is a many-to-many relationship, so should be indexed on both keys, with a compound unique constraint. Ie. you cannot link the same audio to the same word multiple times. Additions should be written as upserts.
+A join table linking user audio contributions to words in documents. This is a many-to-many relationship, so should be indexed on both keys, with a compound unique constraint. Ie. you cannot link the same audio to the same word multiple times. Additions should be written as upserts. Compare to `document_user_media`, described in `documents.md`.
 
 | column                         | type                  | description                                                             |
 | ------------------------------ | --------------------- | ----------------------------------------------------------------------- |
