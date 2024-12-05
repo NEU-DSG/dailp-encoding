@@ -18,6 +18,7 @@ import { AudioPlayer } from "./components"
 import { CommentSection } from "./components/comment-section"
 import { CustomCreatable } from "./components/creatable"
 import { EditWordAudio } from "./components/edit-word-audio"
+import { RecordAudioPanel } from "./components/edit-word-audio/record"
 import { EditWordFeature } from "./edit-word-feature"
 import { formInput } from "./edit-word-feature.css"
 import { useForm } from "./edit-word-form-context"
@@ -134,13 +135,16 @@ export const WordPanel = (p: {
   return (
     <>
       {(p.word.editedAudio.length || p.panel === PanelType.EditWordPanel) && (
-        <CollapsiblePanel
-          title={"Audio"}
-          content={<PanelAudioComponent word={p.word} />}
-          icon={
-            <AiFillSound size={24} className={css.wordPanelButton.colpleft} />
-          }
-        />
+        <>
+          <CollapsiblePanel
+            title={"Audio"}
+            content={<PanelAudioComponent word={p.word} />}
+            icon={
+              <AiFillSound size={24} className={css.wordPanelButton.colpleft} />
+            }
+          />
+          <RecordAudioPanel word={p.word} />
+        </>
       )}
       <CollapsiblePanel
         title={"Phonetics"}
@@ -327,7 +331,7 @@ export const VerticalMorphemicSegmentation = (p: {
   }
   return null
 }
-const CollapsiblePanel = (p: {
+export const CollapsiblePanel = (p: {
   title: string
   content: ReactNode
   icon: ReactNode // Note : this is supposed to be an IconType
