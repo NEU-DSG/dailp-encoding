@@ -6,9 +6,7 @@ import { useCognitoUserGroups, useCredentials, useUserId } from "../auth"
 import { CommentAction, CommentPanel } from "../comment-panel"
 import { Button } from "../components"
 import * as css from "./comment-section.css"
-import {
-  EditButton as CommentEditButton,
-} from "./edit-comment-feature"
+import { EditButton as CommentEditButton } from "./edit-comment-feature"
 import {
   FormProvider as FormProviderComment,
   useForm,
@@ -46,7 +44,7 @@ export const WordCommentSection = (p: { word: Dailp.FormFieldsFragment }) => {
     <div>
       {wordComments?.map((comment) => (
         <div>
-          {(isEditingComment === comment.id) ? (
+          {isEditingComment === comment.id ? (
             <>
               <CommentPanel
                 segment={p.word}
@@ -54,11 +52,12 @@ export const WordCommentSection = (p: { word: Dailp.FormFieldsFragment }) => {
                 commentAction={CommentAction.EditComment}
                 commentObject={comment}
               />
-              {(userName === comment.postedBy.id) ? (<>
-                <div className={css.editButtonMargin}>
-                  <CommentEditButton commentId={comment.id as string} />
-                </div>
-              </>
+              {userName === comment.postedBy.id ? (
+                <>
+                  <div className={css.editButtonMargin}>
+                    <CommentEditButton commentId={comment.id as string} />
+                  </div>
+                </>
               ) : (
                 ""
               )}
@@ -68,7 +67,6 @@ export const WordCommentSection = (p: { word: Dailp.FormFieldsFragment }) => {
               <CommentHeader comment={comment} />
               <CommentBody comment={comment} />
             </>
-            
           )}
         </div>
       ))}
@@ -92,7 +90,7 @@ export const ParagraphCommentSection = (p: {
     <div>
       {paragraphComments?.map((comment) => (
         <div>
-          {(isEditingComment === comment.id) ? (
+          {isEditingComment === comment.id ? (
             <>
               <CommentPanel
                 segment={p.paragraph}
@@ -100,7 +98,7 @@ export const ParagraphCommentSection = (p: {
                 commentAction={CommentAction.EditComment}
                 commentObject={comment}
               />
-              {(userName === comment.postedBy.id) ? (
+              {userName === comment.postedBy.id ? (
                 <div className={css.editButtonMargin}>
                   <CommentEditButton commentId={comment.id as string} />
                 </div>
@@ -113,7 +111,6 @@ export const ParagraphCommentSection = (p: {
               <CommentHeader comment={comment} />
               <CommentBody comment={comment} />
             </>
-            
           )}
         </div>
       ))}
@@ -130,7 +127,7 @@ export const CommentBody = (p: { comment: Dailp.Comment }) => {
   }
   const userName = useUserId()
   const [deleteCommentResult, deleteComment] = Dailp.useDeleteCommentMutation()
-  
+
   const handleDelete = async (e: React.MouseEvent<HTMLButtonElement>) => {
     const handleError = async (error: any) => {
       if (error) {
@@ -141,18 +138,17 @@ export const CommentBody = (p: { comment: Dailp.Comment }) => {
     const commentId = p.comment.id
     if (commentId) {
       try {
-      const { error: deleteCommentError } = await deleteComment({
-        commentId: {
-          commentId: commentId,
-        },
-      });
-      handleError(deleteCommentError);
+        const { error: deleteCommentError } = await deleteComment({
+          commentId: {
+            commentId: commentId,
+          },
+        })
+        handleError(deleteCommentError)
       } catch (err) {
-      console.error("An unexpected error occurred:", err);
+        console.error("An unexpected error occurred:", err)
       }
     }
   }
-
 
   return (
     <div className={css.commentWrapper}>
@@ -172,14 +168,25 @@ export const CommentBody = (p: { comment: Dailp.Comment }) => {
             : ""}
         </div>
         <div>
-        {(userName === p.comment.postedBy.id) ? <Button type="button" className={css.deleteButton} onClick={handleDelete}>
-          Delete
-          </Button> : ""}
+          {userName === p.comment.postedBy.id ? (
+            <Button
+              type="button"
+              className={css.deleteButton}
+              onClick={handleDelete}
+            >
+              Delete
+            </Button>
+          ) : (
+            ""
+          )}
         </div>
         <div>
-          {(userName === p.comment.postedBy.id) ? <CommentEditButton commentId={p.comment.id as string} /> : ""}
+          {userName === p.comment.postedBy.id ? (
+            <CommentEditButton commentId={p.comment.id as string} />
+          ) : (
+            ""
+          )}
         </div>
-        
       </div>
     </div>
   )

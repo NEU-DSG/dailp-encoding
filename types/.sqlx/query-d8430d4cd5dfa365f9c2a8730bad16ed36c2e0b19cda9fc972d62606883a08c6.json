@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "select\n    comment.id,\n    posted_at,\n    posted_by,\n    u_posted_by.display_name as \"posted_by_name\",\n    text_content,\n    comment_type as \"comment_type: _\",\n    parent_id,\n    parent_type as \"parent_type: _\"\nfrom comment\njoin dailp_user u_posted_by on u_posted_by.id = posted_by\nwhere parent_id = $1 and parent_type = $2\norder by posted_at asc",
+  "query": "select\n    comment.id,\n    posted_at,\n    posted_by,\n    u_posted_by.display_name as \"posted_by_name\",\n    text_content,\n    edited,\n    comment_type as \"comment_type: _\",\n    parent_id,\n    parent_type as \"parent_type: _\"\nfrom comment\njoin dailp_user u_posted_by on u_posted_by.id = posted_by\nwhere comment.id = $1",
   "describe": {
     "columns": [
       {
@@ -30,6 +30,11 @@
       },
       {
         "ordinal": 5,
+        "name": "edited",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 6,
         "name": "comment_type: _",
         "type_info": {
           "Custom": {
@@ -45,12 +50,12 @@
         }
       },
       {
-        "ordinal": 6,
+        "ordinal": 7,
         "name": "parent_id",
         "type_info": "Uuid"
       },
       {
-        "ordinal": 7,
+        "ordinal": 8,
         "name": "parent_type: _",
         "type_info": {
           "Custom": {
@@ -67,21 +72,11 @@
     ],
     "parameters": {
       "Left": [
-        "Uuid",
-        {
-          "Custom": {
-            "name": "comment_parent_type",
-            "kind": {
-              "Enum": [
-                "Word",
-                "Paragraph"
-              ]
-            }
-          }
-        }
+        "Uuid"
       ]
     },
     "nullable": [
+      false,
       false,
       false,
       false,
@@ -92,5 +87,5 @@
       false
     ]
   },
-  "hash": "848587140aaec9c68285617dab22966b1662abc6b5e8ead54cbcbed971352d0c"
+  "hash": "d8430d4cd5dfa365f9c2a8730bad16ed36c2e0b19cda9fc972d62606883a08c6"
 }
