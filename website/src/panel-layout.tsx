@@ -7,9 +7,7 @@ import { unstable_Form as Form, unstable_FormInput as FormInput } from "reakit"
 import * as Dailp from "src/graphql/dailp"
 import { useCognitoUserGroups, useCredentials } from "./auth"
 import { CommentAction, CommentPanel } from "./comment-panel"
-import {
-  useCommentStateContext,
-} from "./comment-state-context"
+import { useCommentStateContext } from "./comment-state-context"
 import { Button, IconButton } from "./components"
 import { SubtleButton } from "./components/subtle-button"
 import { EditButton as ParagraphEditButton } from "./edit-paragraph-feature"
