@@ -154,8 +154,6 @@ export type AnnotatedForm = {
    * TODO! User guard for contributors only
    */
   readonly userContributedAudio: ReadonlyArray<AudioSlice>
-
-  readonly translation: Maybe<Scalars["String"]>
 }
 
 /**
@@ -191,7 +189,7 @@ export type AnnotatedFormUpdate = {
   readonly segments: InputMaybe<ReadonlyArray<MorphemeSegmentUpdate>>
   /** Possible update to source content */
   readonly source: InputMaybe<Scalars["String"]>
-  readonly translation: InputMaybe<Scalars["String"]>
+  readonly englishGloss: InputMaybe<Scalars["String"]>
 }
 
 /** Element within a spreadsheet before being transformed into a full document. */
@@ -1417,7 +1415,6 @@ export type FormFieldsFragment = {
   | "phonemic"
   | "englishGloss"
   | "commentary"
-  | "translation"
 > & {
     readonly segments: ReadonlyArray<
       { readonly __typename?: "WordSegment" } & Pick<

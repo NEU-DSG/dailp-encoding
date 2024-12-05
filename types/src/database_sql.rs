@@ -237,7 +237,6 @@ impl Database {
         .await?;
         Ok(words
             .into_iter()
-            .group_by(|w| (w.document_id, w.is_reference))
             .into_iter()
             .map(|((document_id, is_reference), forms)| WordsInDocument {
                 document_id: Some(DocumentId(document_id)),
@@ -510,14 +509,14 @@ impl Database {
 
         let source = word.source.into_vec();
         let commentary = word.commentary.into_vec();
-        let translation = word.translation.into_vec();
+        let english_gloss = word.english_gloss.into_vec();
 
         let document_id = query_file!(
             "queries/update_word.sql",
             word.id,
             &source as _,
             &commentary as _,
-            &translation as _,
+            &english_gloss as _,
         )
         .fetch_one(&mut tx)
         .await?
