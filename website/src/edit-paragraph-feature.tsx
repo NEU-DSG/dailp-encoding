@@ -28,7 +28,6 @@ export const EditButton = () => {
             round={false}
             onClick={() => {
               setIsEditingParagraph(false)
-              console.log(isEditingParagraph)
             }}
           >
             Cancel
@@ -49,7 +48,6 @@ export const EditButton = () => {
           className={css.editPanelButton}
           onClick={() => {
             setIsEditingParagraph(true)
-            console.log(isEditingParagraph)
           }}
         >
           Edit

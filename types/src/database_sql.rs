@@ -7,7 +7,7 @@ use std::str::FromStr;
 
 use crate::collection::CollectionChapter;
 use crate::collection::EditedCollection;
-use crate::comment::{Comment, CommentParentType, CommentType};
+use crate::comment::{Comment, CommentParentType, CommentType, CommentUpdate};
 use crate::user::User;
 use crate::user::UserId;
 use {
@@ -715,6 +715,23 @@ impl Database {
         .await?;
 
         Ok(self.paragraph_by_id(&paragraph.id).await?)
+    }
+
+    pub async fn update_comment(&self, comment: CommentUpdate) -> Result<Uuid> {
+        let text_content = comment.text_content.into_vec();
+        let comment_type = comment.comment_type.into_vec();
+
+        query_file!(
+            "queries/update_comment.sql",
+            comment.id,
+            &text_content as _,
+            &comment_type as _,
+            comment.edited
+        )
+        .execute(&self.client)
+        .await?;
+
+        Ok(comment.id)
     }
 
     pub async fn update_contributor_attribution(
@@ -2143,6 +2160,8 @@ struct BasicComment {
     pub text_content: String,
     pub comment_type: Option<CommentType>,
 
+    pub edited: bool,
+
     pub parent_id: Uuid,
     pub parent_type: CommentParentType,
 }
@@ -2158,6 +2177,7 @@ impl Into<Comment> for BasicComment {
             },
             text_content: self.text_content,
             comment_type: self.comment_type,
+            edited: self.edited,
             parent_id: self.parent_id,
             parent_type: self.parent_type,
         }
