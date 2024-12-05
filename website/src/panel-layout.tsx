@@ -1,13 +1,13 @@
 import { groupBy } from "lodash"
 import React, { ReactNode } from "react"
-import { useState } from "react"
 import { GrDown, GrUp } from "react-icons/gr/index"
 import { MdClose } from "react-icons/md/index"
 import { Disclosure, DisclosureContent, useDisclosureState } from "reakit"
 import { unstable_Form as Form, unstable_FormInput as FormInput } from "reakit"
 import * as Dailp from "src/graphql/dailp"
 import { useCognitoUserGroups, useCredentials } from "./auth"
-import CommentPanel from "./comment-panel"
+import { CommentAction, CommentPanel } from "./comment-panel"
+import { useCommentStateContext } from "./comment-state-context"
 import { Button, IconButton } from "./components"
 import { SubtleButton } from "./components/subtle-button"
 import { EditButton as ParagraphEditButton } from "./edit-paragraph-feature"
@@ -67,7 +67,7 @@ export const PanelLayout = (p: {
     variables: { system: cherokeeRepresentation },
   })
 
-  const [isCommenting, setIsCommenting] = useState(false)
+  const { isCommenting, setIsCommenting } = useCommentStateContext()
 
   if (!data) {
     return <p>Loading...</p>
@@ -99,7 +99,11 @@ export const PanelLayout = (p: {
   if (isCommenting === true) {
     if (p.segment != null) {
       panel = (
-        <CommentPanel segment={p.segment} setIsCommenting={setIsCommenting} />
+        <CommentPanel
+          segment={p.segment}
+          setIsCommenting={setIsCommenting}
+          commentAction={CommentAction.PostComment}
+        />
       )
     }
   } else if (p.segment.__typename === "AnnotatedForm") {
