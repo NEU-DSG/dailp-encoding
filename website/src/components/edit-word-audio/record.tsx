@@ -7,7 +7,7 @@ import {
   MediaPermissionStatus,
   useMediaRecorder,
 } from "../../use-media-recorder"
-import { IconTextButton } from "../button"
+import { Button, IconTextButton } from "../button"
 import { SubtleButton } from "../subtle-button"
 import { subtleButton } from "../subtle-button.css"
 import { ContributeAudioPanel } from "./contributor-audio-panel"
