@@ -129,7 +129,7 @@ jobs:
           export DATABASE_URL=postgres://dailp:$DATABASE_PASSWORD@localhost:5432/dailp
           nix run --impure .#migrate-schema
           export CF_URL=$(nix run --impure .#tf-output cloudfront_distro_url)
-          nix run --impure .#migrate-data
+          # nix run --impure .#migrate-data
       - name: Publish website
         run: |
           curl -X POST -d {} "$(nix run --impure .#tf-output amplify_webhook)" -H "Content-Type:application/json"
