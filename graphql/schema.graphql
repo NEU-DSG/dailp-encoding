@@ -341,6 +341,10 @@ type Comment {
 	An optional classification of the comment's content
 	"""
 	commentType: CommentType
+	"""
+	Whether the comment has been edited since it was posted
+	"""
+	edited: Boolean!
 }
 
 """
@@ -363,6 +367,20 @@ enum CommentType {
 	STORY
 	SUGGESTION
 	QUESTION
+}
+
+"""
+Used for updating comments.
+All fields except id are optional.
+"""
+input CommentUpdate {
+	id: UUID!
+	"""
+	The text of the comment
+	"""
+	textContent: String
+	commentType: CommentType
+	edited: Boolean!
 }
 
 """
@@ -799,6 +817,10 @@ type Mutation {
 	Post a new comment on a given object
 	"""
 	postComment(input: PostCommentInput!): CommentParent!
+	"""
+	Update a comment
+	"""
+	updateComment(comment: CommentUpdate!): CommentParent!
 	"""
 	Mutation for adding/changing contributor attributions
 	"""
