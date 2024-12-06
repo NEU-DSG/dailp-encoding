@@ -688,9 +688,10 @@ impl Mutation {
         Ok(context
             .data::<DataLoader<Database>>()?
             .load_one(dailp::DocumentId(
-                document_id.ok_or_else(|| anyhow::format_err!("Document not found"))?
+                document_id.ok_or_else(|| anyhow::format_err!("Document not found"))?,
             ))
-            .await?.ok_or_else(|| anyhow::format_err!("Document not found"))?)
+            .await?
+            .ok_or_else(|| anyhow::format_err!("Document not found"))?)
     }
 
     /// Attach audio that has already been uploaded to S3 to a particular word
