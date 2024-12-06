@@ -67,10 +67,6 @@ export const PanelLayout = (p: {
     }
   }, [p.segment, prevSegment, setIsEditing, setIsEditingParagraph])
 
-  if (!p.segment) {
-    return null
-  }
-
   const token = useCredentials()
   const userGroups = useCognitoUserGroups()
 
@@ -105,6 +101,10 @@ export const PanelLayout = (p: {
       }
     }
   )
+
+  if (!p.segment) {
+    return null
+  }
 
   let panel = null
 
