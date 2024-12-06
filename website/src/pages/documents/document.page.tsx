@@ -53,15 +53,9 @@ enum Tabs {
   INFO = "info-tab",
 }
 
-export type Document = NonNullable<Dailp.AnnotatedDocumentQuery["document"]>
 export type DocumentContents = NonNullable<
   Dailp.DocumentContentsQuery["document"]
 >
-
-type NullPick<T, F extends keyof NonNullable<T>> = Pick<
-  NonNullable<T>,
-  F
-> | null
 
 /** A full annotated document, including all metadata and the translation(s) */
 const AnnotatedDocumentPage = (props: { id: string }) => {
@@ -107,7 +101,7 @@ const AnnotatedDocumentPage = (props: { id: string }) => {
 }
 export const Page = AnnotatedDocumentPage
 
-export const TabSet = ({ doc }: { doc: Document }) => {
+export const TabSet = ({ doc }: { doc: Dailp.DocumentFieldsFragment }) => {
   const [isScrollVisible, setIsScrollVisible] = useState(1)
   const handleScroll = () => {
     if (document.documentElement.scrollHeight > 3000) {
@@ -224,7 +218,11 @@ export const TabSet = ({ doc }: { doc: Document }) => {
   )
 }
 
-export const TranslationTab = ({ doc }: { doc: Document }) => {
+export const TranslationTab = ({
+  doc,
+}: {
+  doc: Dailp.DocumentFieldsFragment
+}) => {
   const [selectedMorpheme, setMorpheme] = useState<BasicMorphemeSegment | null>(
     null
   )
@@ -363,7 +361,7 @@ const DocumentContents = ({
   cherokeeRepresentation,
   wordPanelDetails,
 }: {
-  doc: Document
+  doc: Dailp.DocumentFieldsFragment
   levelOfDetail: LevelOfDetail
   cherokeeRepresentation: Dailp.CherokeeOrthography
   openDetails: (morpheme: any) => void
@@ -446,14 +444,7 @@ export const DocumentTitleHeader = (p: {
     Dailp.CollectionChapter["breadcrumbs"][0],
     "name" | "slug"
   >[]
-  doc: Pick<Dailp.AnnotatedDoc, "slug" | "title" | "id"> & {
-    date: NullPick<Dailp.AnnotatedDoc["date"], "year">
-    bookmarkedOn: NullPick<Dailp.AnnotatedDoc["bookmarkedOn"], "formattedDate">
-    audioRecording?: NullPick<
-      Dailp.AnnotatedDoc["audioRecording"],
-      "resourceUrl"
-    >
-  }
+  doc: Dailp.DocumentFieldsFragment
 }) => {
   const { user } = useUser()
   return (
@@ -482,7 +473,7 @@ export const DocumentTitleHeader = (p: {
         ) : (
           <></>
         )}
-        {!p.doc.audioRecording && !isMobile && (
+        {p.doc.editedAudio.length === 0 && !isMobile && (
           <div id="no-audio-message">
             <strong>No Audio Available</strong>
           </div>
@@ -493,23 +484,28 @@ export const DocumentTitleHeader = (p: {
           ) : null}
         </div>
       </div>
-      {p.doc.audioRecording && ( // TODO Implement sticky audio bar
-        <div id="document-audio-player" className={css.audioContainer}>
-          <span>Document Audio:</span>
-          <AudioPlayer
-            style={{ flex: 1 }}
-            audioUrl={p.doc.audioRecording.resourceUrl}
-            showProgress
-          />
-          {p.doc.audioRecording && !isMobile && (
-            <div>
-              <a href={p.doc.audioRecording?.resourceUrl}>
-                <Button>Download Audio</Button>
-              </a>
-            </div>
-          )}
-        </div>
-      )}
+      {p.doc.editedAudio.length > 0 && // TODO Implement sticky audio bar
+        p.doc.editedAudio.map((audio, index) => (
+          <div
+            id="document-audio-player"
+            className={css.audioContainer}
+            key={index}
+          >
+            <span>Document Audio:</span>
+            <AudioPlayer
+              style={{ flex: 1 }}
+              audioUrl={audio.resourceUrl}
+              showProgress
+            />
+            {!isMobile && (
+              <div>
+                <a href={audio.resourceUrl}>
+                  <Button>Download Audio</Button>
+                </a>
+              </div>
+            )}
+          </div>
+        ))}
     </header>
   )
 }
