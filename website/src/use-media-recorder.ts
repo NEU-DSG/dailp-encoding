@@ -126,10 +126,15 @@ export function useMediaRecorder() {
 
         // Error callback
         .catch((err) => {
+          console.log("couldn't get permission:", err)
           setState({
             permissionStatus: MediaPermissionStatus.DENIED,
           })
         })
+    } else {
+      console.error(
+        "Device or connection does not support user media (no access to user microphone)"
+      )
     }
   }
 
