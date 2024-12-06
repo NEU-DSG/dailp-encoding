@@ -210,7 +210,6 @@ export const PanelLayout = (p: {
               <h1
                 className={css.noSpaceBelow}
               >{`Paragraph ${p.segment.index}`}</h1>
-              <h2 className={css.cherHeader}>{p.segment.source}</h2>
             </header>
           </>
         )}
