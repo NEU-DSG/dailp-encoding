@@ -216,6 +216,12 @@ impl AnnotatedDoc {
             .chapters_by_document(self.meta.short_name.clone())
             .await?)
     }
+
+    /// The audio for this document that was ingested from GoogleSheets, if there is any.
+    async fn ingested_audio_track(&self) -> FieldResult<Option<AudioSlice>> {
+        Ok(self.meta.audio_recording.to_owned())
+    }
+
     /// A slices of audio associated with this word in the context of a document.
     /// This audio has been selected by an editor from contributions, or is the
     /// same as the ingested audio track, if one is available.

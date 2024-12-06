@@ -78,6 +78,10 @@ type AnnotatedDoc {
 	"""
 	chapters: [CollectionChapter!]
 	"""
+	The audio for this document that was ingested from GoogleSheets, if there is any.
+	"""
+	ingestedAudioTrack: AudioSlice
+	"""
 	A slices of audio associated with this word in the context of a document.
 	This audio has been selected by an editor from contributions, or is the
 	same as the ingested audio track, if one is available.
