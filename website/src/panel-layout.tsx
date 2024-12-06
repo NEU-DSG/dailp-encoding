@@ -67,10 +67,6 @@ export const PanelLayout = (p: {
     }
   }, [p.segment, prevSegment, setIsEditing, setIsEditingParagraph])
 
-  if (!p.segment) {
-    return null
-  }
-
   const token = useCredentials()
   const userGroups = useCognitoUserGroups()
 
@@ -105,6 +101,10 @@ export const PanelLayout = (p: {
       }
     }
   )
+
+  if (!p.segment) {
+    return null
+  }
 
   let panel = null
 
@@ -210,7 +210,6 @@ export const PanelLayout = (p: {
               <h1
                 className={css.noSpaceBelow}
               >{`Paragraph ${p.segment.index}`}</h1>
-              <h2 className={css.cherHeader}>{p.segment.source}</h2>
             </header>
           </>
         )}
