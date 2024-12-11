@@ -83,7 +83,7 @@ impl Guard for GroupGuard {
         let has_group = user.map(|user| user.groups.iter().any(|group| group == &self.group));
 
         match user {
-            Some(user) => log::info!("Debug user info groups={:?}", user.clone()),
+            Some(user) => log::info!("Debug user info groups={:?}", user),
             None => log::info!("No user"),
         };
 
