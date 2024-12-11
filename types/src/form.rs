@@ -301,8 +301,8 @@ pub struct AnnotatedFormUpdate {
     pub commentary: MaybeUndefined<String>,
     /// Updated segments
     pub segments: MaybeUndefined<Vec<MorphemeSegmentUpdate>>,
-    /// Possible update to translation
-    pub english_gloss: MaybeUndefined<String>,
+    /// Possible update to translation, not sure why this is a vector?
+    pub english_gloss: MaybeUndefined<Vec<String>>,
 }
 
 /// Trait that defines function which takes in a possibly undefined value.
