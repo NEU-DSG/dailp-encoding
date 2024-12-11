@@ -9,18 +9,16 @@ use dailp::collection::CollectionSection::Body;
 use dailp::collection::CollectionSection::Credit;
 use dailp::collection::CollectionSection::Intro;
 
-use dailp::SheetResult;
 use dailp::{
     convert_udb, root_noun_surface_forms, root_verb_surface_forms, slugify_ltree, AnnotatedDoc,
-    AnnotatedForm, AnnotatedSeg, AudioSlice, Contributor, Database, Date, DocumentId,
-    DocumentMetadata, LexicalConnection, LineBreak, MorphemeId, PageBreak, Uuid, WordSegment,
+    AnnotatedForm, AnnotatedSeg, Contributor, Date, DocumentId, DocumentMetadata, LineBreak,
+    MorphemeId, WordSegment,
 };
 use dailp::{PositionInDocument, SourceAttribution};
 use itertools::Itertools;
-use log::{error, info, warn};
+use log::info;
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, fs::File, io::Write, time::Duration};
-use tokio::time::sleep;
+use std::{collections::HashMap, fs::File, io::Write};
 
 // Define the delimiters used in spreadsheets for marking phrases, blocks,
 // lines, and pages.
@@ -670,7 +668,7 @@ impl<'a> AnnotatedLine {
         let mut line_num = 0;
         let mut page_num = 0;
         let mut word_idx = 1;
-        let mut seg_idx = 1;
+        let seg_idx = 1;
         let mut block_idx = 1;
         let mut pages = vec![vec![vec![]]];
 
@@ -731,7 +729,7 @@ impl<'a> AnnotatedLine {
                     source = &source[..source.len() - 1];
                     blocks_to_pop += 1;
                 }
-                let mut count_to_pop = 0;
+                let count_to_pop = 0;
                 // while source.ends_with(PHRASE_END) {
                 //     source = &source[..source.len() - 1];
                 //     count_to_pop += 1;
