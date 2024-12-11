@@ -11,7 +11,9 @@ type FormContextType = {
   setIsEditingParagraph: (bool: boolean) => void
 }
 
-const FormContext = createContext<FormContextType>({} as FormContextType)
+const ParagraphFormContext = createContext<FormContextType>(
+  {} as FormContextType
+)
 
 // Instantiates a form state used to keep track of the current word and information about all its features.
 export const FormProvider = (props: { children: ReactNode }) => {
@@ -48,16 +50,16 @@ export const FormProvider = (props: { children: ReactNode }) => {
   })
 
   return (
-    <FormContext.Provider
+    <ParagraphFormContext.Provider
       value={{ paragraphForm, isEditingParagraph, setIsEditingParagraph }}
     >
       {props.children}
-    </FormContext.Provider>
+    </ParagraphFormContext.Provider>
   )
 }
 
 export const useForm = () => {
-  const context = useContext(FormContext)
+  const context = useContext(ParagraphFormContext)
   if (!context) {
     console.log("useForm must be used within a FormProvider")
   }

@@ -1,0 +1,35 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "-- Insert audio resource if there is one for this word.\nwith inserted_audio_resource as (\n  insert into media_resource (url)\n  select $12::text\n  where $12 is not null\n  on conflict (url) do nothing\n),\n\ninserted_audio_slice as (\n  insert into media_slice (resource_id, time_range)\n  select media_resource.id, int8range($13, $14)\n  from media_resource\n  where media_resource.url = $12\n  returning id\n)\n\ninsert into word (\n  source_text, simple_phonetics, phonemic, english_gloss, recorded_at, commentary,\n  document_id, page_number, index_in_document, page_id, character_range, audio_slice_id)\nselect $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, inserted_audio_slice.id\nfrom (values (1)) as t\n  left join inserted_audio_slice on true\nreturning id\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Date",
+        "Text",
+        "Uuid",
+        "Text",
+        "Int8",
+        "Uuid",
+        "Int8Range",
+        "Text",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "7dd3742e8e678aa19890a52f0843ed635cf126dd6f9b50b57918184dab2485c1"
+}

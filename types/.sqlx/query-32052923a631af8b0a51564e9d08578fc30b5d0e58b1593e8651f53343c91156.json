@@ -1,0 +1,77 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select\n  word_segment.morpheme,\n  word.id as word_id,\n  word.source_text,\n  word.simple_phonetics,\n  word.phonemic,\n  word.english_gloss,\n  word.commentary,\n  word.document_id,\n  word.index_in_document,\n  word.page_number\nfrom morpheme_gloss\n  inner join document on document.id = morpheme_gloss.document_id\n  left join word_segment on word_segment.gloss_id = morpheme_gloss.id\n  left join word on word.id = word_segment.word_id\nwhere morpheme_gloss.gloss = $1\n  and document.short_name = $2\norder by word_segment.morpheme\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "morpheme",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "word_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "source_text",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "simple_phonetics",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "phonemic",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "english_gloss",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "commentary",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "document_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 8,
+        "name": "index_in_document",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 9,
+        "name": "page_number",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "32052923a631af8b0a51564e9d08578fc30b5d0e58b1593e8651f53343c91156"
+}

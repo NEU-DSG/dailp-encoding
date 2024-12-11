@@ -1,5 +1,5 @@
 import { groupBy } from "lodash"
-import React, { ReactNode } from "react"
+import React, { ReactNode, useEffect } from "react"
 import { useState } from "react"
 import { GrDown, GrUp } from "react-icons/gr/index"
 import { MdClose } from "react-icons/md/index"
@@ -7,7 +7,8 @@ import { Disclosure, DisclosureContent, useDisclosureState } from "reakit"
 import { unstable_Form as Form, unstable_FormInput as FormInput } from "reakit"
 import * as Dailp from "src/graphql/dailp"
 import { useCognitoUserGroups, useCredentials } from "./auth"
-import CommentPanel from "./comment-panel"
+import { CommentAction, CommentPanel } from "./comment-panel"
+import { useCommentStateContext } from "./comment-state-context"
 import { Button, IconButton } from "./components"
 import { SubtleButton } from "./components/subtle-button"
 import { EditButton as ParagraphEditButton } from "./edit-paragraph-feature"
@@ -51,12 +52,20 @@ export const PanelLayout = (p: {
   segment: PanelSegment | null
   setContent: (content: PanelSegment | null) => void
 }) => {
-  if (!p.segment) {
-    return null
-  }
+  const { form, isEditing, setIsEditing } = useForm()
+  const { paragraphForm, isEditingParagraph, setIsEditingParagraph } =
+    useParagraphForm()
 
-  const { form, isEditing } = useForm()
-  const { paragraphForm, isEditingParagraph } = useParagraphForm()
+  const [prevSegment, setPrevSegment] = useState<PanelSegment | null>(p.segment)
+
+  useEffect(() => {
+    // If the segment has changed, reset the editing states
+    if (p.segment && p.segment !== prevSegment) {
+      setIsEditing(false) // Reset word editing state
+      setIsEditingParagraph(false) // Reset paragraph editing state (if applicable)
+      setPrevSegment(p.segment) // Update the previous segment to the new one
+    }
+  }, [p.segment, prevSegment, setIsEditing, setIsEditingParagraph])
 
   const token = useCredentials()
   const userGroups = useCognitoUserGroups()
@@ -67,7 +76,7 @@ export const PanelLayout = (p: {
     variables: { system: cherokeeRepresentation },
   })
 
-  const [isCommenting, setIsCommenting] = useState(false)
+  const { isCommenting, setIsCommenting } = useCommentStateContext()
 
   if (!data) {
     return <p>Loading...</p>
@@ -93,13 +102,21 @@ export const PanelLayout = (p: {
     }
   )
 
+  if (!p.segment) {
+    return null
+  }
+
   let panel = null
 
   // Display the paragraph panel if the segment type is a word (AnnotatedForm).
   if (isCommenting === true) {
     if (p.segment != null) {
       panel = (
-        <CommentPanel segment={p.segment} setIsCommenting={setIsCommenting} />
+        <CommentPanel
+          segment={p.segment}
+          setIsCommenting={setIsCommenting}
+          commentAction={CommentAction.PostComment}
+        />
       )
     }
   } else if (p.segment.__typename === "AnnotatedForm") {
@@ -193,7 +210,6 @@ export const PanelLayout = (p: {
               <h1
                 className={css.noSpaceBelow}
               >{`Paragraph ${p.segment.index}`}</h1>
-              <h2 className={css.cherHeader}>{p.segment.source}</h2>
             </header>
           </>
         )}

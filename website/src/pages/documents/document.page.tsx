@@ -19,8 +19,10 @@ import {
 } from "reakit"
 import { navigate } from "vite-plugin-ssr/client/router"
 import { useUser } from "src/auth"
+import { CommentStateProvider } from "src/comment-state-context"
 import { AudioPlayer, Breadcrumbs, Button, Link } from "src/components"
 import { IconTextButton } from "src/components/button"
+import { CommentValueProvider } from "src/components/edit-comment-feature"
 import { useMediaQuery } from "src/custom-hooks"
 import { FormProvider as FormProviderDoc } from "src/edit-doc-data-form-context"
 import {
@@ -300,10 +302,14 @@ export const TranslationTab = ({ doc }: { doc: Document }) => {
               aria-label="Word Panel Drawer"
               preventBodyScroll={true}
             >
-              <PanelLayout
-                segment={panelInfo.currContents}
-                setContent={panelInfo.setCurrContents}
-              />
+              <CommentStateProvider>
+                <CommentValueProvider>
+                  <PanelLayout
+                    segment={panelInfo.currContents}
+                    setContent={panelInfo.setCurrContents}
+                  />
+                </CommentValueProvider>
+              </CommentStateProvider>
             </Dialog>
           </DialogBackdrop>
         )}
@@ -331,10 +337,14 @@ export const TranslationTab = ({ doc }: { doc: Document }) => {
           </article>
           {selectedSegment && (
             <div className={css.contentSection2}>
-              <PanelLayout
-                segment={panelInfo.currContents}
-                setContent={panelInfo.setCurrContents}
-              />
+              <CommentStateProvider>
+                <CommentValueProvider>
+                  <PanelLayout
+                    segment={panelInfo.currContents}
+                    setContent={panelInfo.setCurrContents}
+                  />
+                </CommentValueProvider>
+              </CommentStateProvider>
             </div>
           )}
         </div>
