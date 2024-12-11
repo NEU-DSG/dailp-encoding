@@ -1,3 +1,4 @@
+//! Provides types for defining and structuring edited collections.
 use uuid::Uuid;
 
 use crate::AnnotatedDoc;
