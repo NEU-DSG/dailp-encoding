@@ -27,6 +27,7 @@ interface Props {
   showProgress?: boolean
   slices?: { start: number; end: number }
   style?: any
+  contributorName?: string
 }
 
 export const AudioPlayer = (props: Props) => {
@@ -112,6 +113,9 @@ const AudioPlayerImpl = (props: Props) => {
         )
       ) : (
         <FiLoader size={buttonSize} />
+      )}
+      {props.contributorName && (
+        <span className="audio-contributor-name">{props.contributorName}</span>
       )}
       {props.showProgress ? (
         <ProgressBar progress={progress} bounds={{ start, end }} />

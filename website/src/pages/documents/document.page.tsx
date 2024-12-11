@@ -484,28 +484,37 @@ export const DocumentTitleHeader = (p: {
           ) : null}
         </div>
       </div>
-      {p.doc.editedAudio.length > 0 && // TODO Implement sticky audio bar
-        p.doc.editedAudio.map((audio, index) => (
-          <div
-            id="document-audio-player"
-            className={css.audioContainer}
-            key={index}
-          >
-            <span>Document Audio:</span>
-            <AudioPlayer
-              style={{ flex: 1 }}
-              audioUrl={audio.resourceUrl}
-              showProgress
-            />
-            {!isMobile && (
-              <div>
-                <a href={audio.resourceUrl}>
-                  <Button>Download Audio</Button>
-                </a>
+      <div id="audio-and-recording-container">
+        <div id="audio-container">
+          {p.doc.editedAudio.length > 0 && <h3>Document Audio:</h3>}
+          {p.doc.editedAudio.length > 0 && // TODO Implement sticky audio bar
+            p.doc.editedAudio.map((audio, index) => (
+              <div
+                id={`document-audio-player-${index}`}
+                className={css.audioContainer}
+                key={index}
+              >
+                <AudioPlayer
+                  style={{ flex: 1 }}
+                  audioUrl={audio.resourceUrl}
+                  showProgress
+                  contributorName={audio.recordedBy?.displayName}
+                />
+                {!isMobile && (
+                  <div>
+                    <a href={audio.resourceUrl}>
+                      <Button>Download Audio</Button>
+                    </a>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-        ))}
+            ))}
+        </div>
+        <div id="recording-container">
+          <Button>Record Audio</Button>
+          <p>Recording Not Yet Implemented</p>
+        </div>
+      </div>
     </header>
   )
 }
