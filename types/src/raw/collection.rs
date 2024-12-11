@@ -1,3 +1,4 @@
+//! Provides a stripped-down version of `dailp::collection`
 use std::option::Option;
 use uuid::Uuid;
 
@@ -19,13 +20,13 @@ pub struct EditedCollection {
 pub struct CollectionChapter {
     /// UUID for the chapter
     pub id: Option<Uuid>,
-
+    /// URL slug for the chapter, like "story-switch-striker" or "syllabary-study"
     pub url_slug: String,
     /// Order within the parent chapter or collection
     pub index_in_parent: i64,
-
+    /// The name of this chapter
     pub chapter_name: String,
-
+    /// The DAILP shortname identifier for this chapter, like "EFN2"
     pub document_short_name: Option<String>,
     /// ID of WordPress page with text of the chapter
     pub wordpress_id: Option<i64>,

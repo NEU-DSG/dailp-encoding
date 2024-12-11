@@ -9,18 +9,16 @@ use dailp::collection::CollectionSection::Body;
 use dailp::collection::CollectionSection::Credit;
 use dailp::collection::CollectionSection::Intro;
 
-use dailp::SheetResult;
 use dailp::{
     convert_udb, root_noun_surface_forms, root_verb_surface_forms, slugify_ltree, AnnotatedDoc,
-    AnnotatedForm, AnnotatedSeg, AudioSlice, Contributor, Database, Date, DocumentId,
-    DocumentMetadata, LexicalConnection, LineBreak, MorphemeId, PageBreak, Uuid, WordSegment,
+    AnnotatedForm, AnnotatedSeg, Contributor, Date, DocumentId, DocumentMetadata, LineBreak,
+    MorphemeId, WordSegment,
 };
 use dailp::{PositionInDocument, SourceAttribution};
 use itertools::Itertools;
-use log::{error, info, warn};
+use log::info;
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, fs::File, io::Write, time::Duration};
-use tokio::time::sleep;
+use std::{collections::HashMap, fs::File, io::Write};
 
 // Define the delimiters used in spreadsheets for marking phrases, blocks,
 // lines, and pages.
@@ -71,7 +69,7 @@ impl SheetInterpretation {
             // This is, in fact, a file path.
             let start = start + 3;
             let (_, rest) = input.split_at(start);
-            let end = rest.find('/').unwrap_or_else(|| rest.len());
+            let end = rest.find('/').unwrap_or(rest.len());
             rest.split_at(end).0
         } else {
             // This is probably already a bare ID. Anyway, we couldn't parse it.
@@ -118,7 +116,7 @@ impl SheetInterpretation {
         let mut chapter_type = 0;
         for cur_row in row {
             if cur_row[0].is_empty() {
-                chapter_type = chapter_type + 1;
+                chapter_type += 1;
             } else {
                 let mut row_values = cur_row.into_iter().peekable();
 
@@ -200,7 +198,7 @@ impl SheetInterpretation {
                 let page_number = root_values.next()?;
                 let mut form_values = root_values;
                 let date = Date::from_ymd(year, 1, 1);
-                let position = PositionInDocument::new(doc_id.clone(), page_number, key);
+                let position = PositionInDocument::new(doc_id, page_number, key);
                 Some(LexicalEntryWithForms {
                     forms: root_verb_surface_forms(
                         &position,
@@ -251,13 +249,13 @@ impl SheetInterpretation {
             // First two rows are simply headers.
             .skip(2)
             .filter(|cols| cols.len() > 4 && !cols[2].is_empty())
-            .group_by(|cols| cols.get(0).and_then(|s| s.parse::<i64>().ok()))
+            .group_by(|cols| cols.first().and_then(|s| s.parse::<i64>().ok()))
             .into_iter()
             .enumerate()
             // The rest are relevant to the noun itself.
             .filter_map(|(index, (key, rows))| {
                 let rows: Vec<_> = rows.collect();
-                let columns = rows.get(0)?.clone();
+                let columns = rows.first()?.clone();
                 // The columns are as follows: key, root, root gloss, page ref,
                 // category, tags, surface forms.
 
@@ -277,7 +275,7 @@ impl SheetInterpretation {
                     .into_iter()
                     .flat_map(|row| row.into_iter().skip(4 + after_root));
                 let date = Date::from_ymd(year, 1, 1);
-                let position = PositionInDocument::new(doc_id.clone(), page_number?, index);
+                let position = PositionInDocument::new(doc_id, page_number?, index);
                 Some(LexicalEntryWithForms {
                     forms: root_noun_surface_forms(&position, &date, &mut form_values, has_comment),
                     entry: AnnotatedForm {
@@ -361,8 +359,7 @@ impl SheetInterpretation {
             .next()
             .ok_or_else(|| anyhow::format_err!("Missing image source row"))?
             .into_iter()
-            .skip(1)
-            .next()
+            .nth(1)
             .map(|src| src.to_ascii_lowercase());
         let image_ids = values
             .next()
@@ -561,32 +558,32 @@ impl<'a> AnnotatedLine {
                 let line_num = line_idx + 1;
                 let source_row = line
                     .rows
-                    .get(0)
-                    .expect(&format!("No source row for line {}", line_num));
+                    .first()
+                    .unwrap_or_else(|| panic!("No source row for line {}", line_num));
                 let simple_phonetics_row = line
                     .rows
                     .get(2)
-                    .expect(&format!("No simple phonetics for line {}", line_num));
+                    .unwrap_or_else(|| panic!("No simple phonetics for line {}", line_num));
                 let phonemic_row = line
                     .rows
                     .get(3)
-                    .expect(&format!("No phonemic representation for line {}", line_num));
+                    .unwrap_or_else(|| panic!("No phonemic representation for line {}", line_num));
                 let morpheme_row = line
                     .rows
                     .get(4)
-                    .expect(&format!("No morphemic segmentation for line {}", line_num));
+                    .unwrap_or_else(|| panic!("No morphemic segmentation for line {}", line_num));
                 let gloss_row = line
                     .rows
                     .get(5)
-                    .expect(&format!("No morphemic gloss for line {}", line_num));
+                    .unwrap_or_else(|| panic!("No morphemic gloss for line {}", line_num));
                 let translation_row = line
                     .rows
                     .get(6)
-                    .expect(&format!("No translation for line {}", line_num));
+                    .unwrap_or_else(|| panic!("No translation for line {}", line_num));
                 let commentary_row = line
                     .rows
                     .get(7)
-                    .expect(&format!("No commentary for line {}", line_num));
+                    .unwrap_or_else(|| panic!("No commentary for line {}", line_num));
                 // For each word, extract the necessary data from every row.
                 let words: Result<Vec<_>> = (0..num_words)
                     // Only use words with a syllabary source entry.
@@ -601,11 +598,7 @@ impl<'a> AnnotatedLine {
                             // TODO Extract into public function!
                             // id: format!("{}.{}", meta.id.0, word_index),
                             id: None,
-                            position: PositionInDocument::new(
-                                meta.id.clone(),
-                                "1".to_owned(),
-                                word_index,
-                            ),
+                            position: PositionInDocument::new(meta.id, "1".to_owned(), word_index),
                             source: source_text.trim().replace(LINE_BREAK, ""),
                             normalized_source: None,
                             simple_phonetics: simple_phonetics_row
@@ -618,10 +611,7 @@ impl<'a> AnnotatedLine {
                             } else {
                                 None
                             },
-                            english_gloss: vec![translation]
-                                .into_iter()
-                                .filter_map(|x| x)
-                                .collect(),
+                            english_gloss: vec![translation].into_iter().flatten().collect(),
                             commentary: commentary_row.items.get(i).map(|x| x.to_owned()),
                             page_break: pb.map(|i| i as i32),
                             line_break: pb
@@ -670,7 +660,7 @@ impl<'a> AnnotatedLine {
         let mut line_num = 0;
         let mut page_num = 0;
         let mut word_idx = 1;
-        let mut seg_idx = 1;
+        let seg_idx = 1;
         let mut block_idx = 1;
         let mut pages = vec![vec![vec![]]];
 
@@ -693,7 +683,7 @@ impl<'a> AnnotatedLine {
                 // Give the word an index within the whole document.
                 let word = AnnotatedForm {
                     position: PositionInDocument::new(
-                        document_id.clone(),
+                        *document_id,
                         (page_num + 1).to_string(),
                         word_idx,
                     ),
@@ -708,7 +698,7 @@ impl<'a> AnnotatedLine {
                     line_num += 1;
                 }
 
-                let mut source = &word.source.trim()[..];
+                let mut source = word.source.trim();
                 // Check for the start of a block.
                 while source.starts_with(BLOCK_START) {
                     source = &source[1..];
@@ -731,7 +721,7 @@ impl<'a> AnnotatedLine {
                     source = &source[..source.len() - 1];
                     blocks_to_pop += 1;
                 }
-                let mut count_to_pop = 0;
+                let count_to_pop = 0;
                 // while source.ends_with(PHRASE_END) {
                 //     source = &source[..source.len() - 1];
                 //     count_to_pop += 1;
@@ -740,7 +730,7 @@ impl<'a> AnnotatedLine {
                 let finished_word = AnnotatedSeg::Word(AnnotatedForm {
                     source: source.to_owned(),
                     line_break: word.line_break.map(|_| line_num as i32),
-                    page_break: word.page_break.map(|_| page_num as i32),
+                    page_break: word.page_break.map(|_| page_num),
                     date_recorded: date.clone(),
                     ..word
                 });
