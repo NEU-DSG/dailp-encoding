@@ -82,14 +82,14 @@ impl CollectionChapter {
     }
 
     async fn slug(&self) -> String {
-        slugify((&self.path.last()).unwrap())
+        slugify(self.path.last().unwrap())
     }
 
     async fn document(&self, context: &Context<'_>) -> FieldResult<Option<AnnotatedDoc>> {
         if let Some(doc_id) = &self.document_id {
             Ok(context
                 .data::<DataLoader<Database>>()?
-                .load_one(doc_id.clone())
+                .load_one(*doc_id)
                 .await?)
         } else {
             Ok(None)
