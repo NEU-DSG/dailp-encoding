@@ -1101,7 +1101,11 @@ export type DocumentFieldsFragment = {
       { readonly __typename?: "AudioSlice" } & Pick<
         AudioSlice,
         "resourceUrl" | "startTime" | "endTime"
-      >
+      > & {
+          readonly recordedBy: Maybe<
+            { readonly __typename?: "User" } & Pick<User, "displayName">
+          >
+        }
     >
     readonly translatedPages: Maybe<
       ReadonlyArray<
@@ -1148,7 +1152,11 @@ export type AnnotatedDocumentQuery = { readonly __typename?: "Query" } & {
           { readonly __typename?: "AudioSlice" } & Pick<
             AudioSlice,
             "resourceUrl" | "startTime" | "endTime"
-          >
+          > & {
+              readonly recordedBy: Maybe<
+                { readonly __typename?: "User" } & Pick<User, "displayName">
+              >
+            }
         >
         readonly translatedPages: Maybe<
           ReadonlyArray<
@@ -1916,7 +1924,14 @@ export type CollectionChapterQuery = { readonly __typename?: "Query" } & {
                 { readonly __typename?: "AudioSlice" } & Pick<
                   AudioSlice,
                   "resourceUrl" | "startTime" | "endTime"
-                >
+                > & {
+                    readonly recordedBy: Maybe<
+                      { readonly __typename?: "User" } & Pick<
+                        User,
+                        "displayName"
+                      >
+                    >
+                  }
               >
               readonly translatedPages: Maybe<
                 ReadonlyArray<
@@ -1968,7 +1983,11 @@ export type BookmarkedDocumentsQuery = { readonly __typename?: "Query" } & {
           { readonly __typename?: "AudioSlice" } & Pick<
             AudioSlice,
             "resourceUrl" | "startTime" | "endTime"
-          >
+          > & {
+              readonly recordedBy: Maybe<
+                { readonly __typename?: "User" } & Pick<User, "displayName">
+              >
+            }
         >
         readonly translatedPages: Maybe<
           ReadonlyArray<
@@ -2470,6 +2489,9 @@ export const DocumentFieldsFragmentDoc = gql`
       resourceUrl
       startTime
       endTime
+      recordedBy {
+        displayName
+      }
     }
     translatedPages {
       image {

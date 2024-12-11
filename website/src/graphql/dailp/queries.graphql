@@ -34,6 +34,9 @@ fragment DocumentFields on AnnotatedDoc {
     resourceUrl
     startTime
     endTime
+    recordedBy {
+      displayName
+    }
   }
   translatedPages {
     image {
