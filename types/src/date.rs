@@ -54,9 +54,9 @@ pub struct DateInput {
     year: i32,
 }
 
-impl Into<Date> for &DateInput {
-    fn into(self) -> Date {
-        Date::from_ymd(self.year, self.month, self.day)
+impl From<&DateInput> for Date {
+    fn from(val: &DateInput) -> Self {
+        Date::from_ymd(val.year, val.month, val.day)
     }
 }
 

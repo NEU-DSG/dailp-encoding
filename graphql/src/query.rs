@@ -255,8 +255,8 @@ impl Query {
             .into_group_map();
 
         Ok(clusters
-            .into_iter()
-            .map(|(_, forms)| {
+            .into_values()
+            .map(|forms| {
                 let dates = forms.iter().filter_map(|f| f.date_recorded.as_ref());
                 let start = dates.clone().min();
                 let end = dates.max();
