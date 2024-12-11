@@ -55,7 +55,9 @@ pub struct ApiGatewayUserInfo(#[serde(with = "ApiGatewayUserInfoDef")] pub UserI
 /// A user belongs to any number of user groups, which give them various permissions.
 #[derive(Eq, PartialEq, Copy, Clone, Serialize, Deserialize, Debug, async_graphql::Enum)]
 pub enum UserGroup {
+    /// A user that can add audio, comments, and some language data.
     Contributors,
+    /// A user that can add and publicly display language data, audio, and comments.
     Editors,
 }
 
@@ -71,6 +73,8 @@ pub struct GroupGuard {
 }
 
 impl GroupGuard {
+    /// Creates a new group guard from existing user groups.
+    ///     See dailp::auth::UserGoup.
     pub fn new(group: UserGroup) -> Self {
         Self { group }
     }

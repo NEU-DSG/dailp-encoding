@@ -643,9 +643,10 @@ impl Database {
 
     /// This does two things:
     /// 1. Create a media slice if one does not exist for the provided audio
-    /// recording.
+    ///     recording.
     /// 2. Add a join table entry attaching that media slice to the
-    /// specified word.
+    ///     specified word.
+    ///
     /// Returns the `id` of the upserted media slice
     pub async fn attach_audio_to_word(
         &self,
@@ -1588,7 +1589,7 @@ impl Loader<DocumentShortName> for Database {
                         parent_track: None,
                         annotations: None,
                         index: 0,
-                        /// TODO: is this a bad default?
+                        // TODO: is this a bad default?
                         include_in_edited_collection: true,
                         edited_by: None,
                         recorded_at: item.recorded_at.map(Date::new),
