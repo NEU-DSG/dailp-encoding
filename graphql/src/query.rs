@@ -438,8 +438,8 @@ impl Mutation {
         if comment_object.posted_by.id.0 != user.id.to_string() {
             return Err("User attempted to edit another user's comment".into());
         }
-
-        db.update_comment(comment).await;
+        // Note: We should probably handle an error here more gracefully.
+        let _ = db.update_comment(comment).await;
 
         // We return the parent object, for GraphCache interop
         return comment_object.parent(context).await;
