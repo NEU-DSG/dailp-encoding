@@ -122,10 +122,12 @@ fragment DocFormFields on AnnotatedDoc {
 }
 
 fragment ParagraphFormFields on DocumentParagraph {
+  __typename
   id
   index
   translation
   source {
+    __typename
     ...FormFields
   }
   comments {

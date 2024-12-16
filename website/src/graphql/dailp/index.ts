@@ -1420,7 +1420,7 @@ export type DocFormFieldsFragment = {
   }
 
 export type ParagraphFormFieldsFragment = {
-  readonly __typename?: "DocumentParagraph"
+  readonly __typename: "DocumentParagraph"
 } & Pick<DocumentParagraph, "id" | "index" | "translation"> & {
     readonly source: ReadonlyArray<
       | ({ readonly __typename: "AnnotatedForm" } & Pick<
@@ -1493,7 +1493,7 @@ export type ParagraphFormFieldsFragment = {
               { readonly __typename?: "Comment" } & Pick<Comment, "id">
             >
           })
-      | { readonly __typename?: "LineBreak" }
+      | { readonly __typename: "LineBreak" }
     >
     readonly comments: ReadonlyArray<
       { readonly __typename?: "Comment" } & Pick<Comment, "id">
@@ -2688,10 +2688,12 @@ export const FormFieldsFragmentDoc = gql`
 `
 export const ParagraphFormFieldsFragmentDoc = gql`
   fragment ParagraphFormFields on DocumentParagraph {
+    __typename
     id
     index
     translation
     source {
+      __typename
       ...FormFields
     }
     comments {
