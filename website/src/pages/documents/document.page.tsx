@@ -18,11 +18,12 @@ import {
   useDialogState,
 } from "reakit"
 import { navigate } from "vite-plugin-ssr/client/router"
-import { useUser } from "src/auth"
+import { UserRole, useUser, useUserRole } from "src/auth"
 import { CommentStateProvider } from "src/comment-state-context"
 import { AudioPlayer, Breadcrumbs, Button, Link } from "src/components"
 import { IconTextButton } from "src/components/button"
 import { CommentValueProvider } from "src/components/edit-comment-feature"
+import { RecordDocumentAudioPanel } from "src/components/record-document-audio-panel"
 import { useMediaQuery } from "src/custom-hooks"
 import { FormProvider as FormProviderDoc } from "src/edit-doc-data-form-context"
 import {
@@ -447,6 +448,7 @@ export const DocumentTitleHeader = (p: {
   doc: Dailp.DocumentFieldsFragment
 }) => {
   const { user } = useUser()
+  const role = useUserRole()
   return (
     <header className={css.docHeader}>
       {p.breadcrumbs && (
@@ -485,34 +487,62 @@ export const DocumentTitleHeader = (p: {
         </div>
       </div>
       <div id="audio-and-recording-container">
-        <div id="audio-container">
-          {p.doc.editedAudio.length > 0 && <h3>Document Audio:</h3>}
-          {p.doc.editedAudio.length > 0 && // TODO Implement sticky audio bar
-            p.doc.editedAudio.map((audio, index) => (
-              <div
-                id={`document-audio-player-${index}`}
-                className={css.audioContainer}
-                key={index}
-              >
-                <AudioPlayer
-                  style={{ flex: 1 }}
-                  audioUrl={audio.resourceUrl}
-                  showProgress
-                  contributorName={audio.recordedBy?.displayName}
-                />
-                {!isMobile && (
-                  <div>
-                    <a href={audio.resourceUrl}>
-                      <Button>Download Audio</Button>
-                    </a>
-                  </div>
-                )}
-              </div>
-            ))}
-        </div>
-        <div id="recording-container">
-          <Button>Record Audio</Button>
-          <p>Recording Not Yet Implemented</p>
+        <div>
+          {p.doc.editedAudio.length > 0 && (
+            <>
+              <h3>Document Audio:</h3>
+              {p.doc.editedAudio.map((audio, index) => (
+                <div
+                  id={`document-audio-player-${index}`}
+                  className={css.audioContainer}
+                  key={index}
+                >
+                  <AudioPlayer
+                    style={{ flex: 1 }}
+                    audioUrl={audio.resourceUrl}
+                    showProgress
+                  />
+                  {!isMobile && (
+                    <div>
+                      <a href={audio.resourceUrl}>
+                        <Button>Download Audio</Button>
+                      </a>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </>
+          )}
+          {/* 
+            TODO: Should we be checking for a specific set of user roles? 
+            How do we do this elsewhere? 
+          */}
+          {role !== UserRole.Reader && (
+            <>
+              <h3>User-contributed Audio:</h3>
+              {p.doc.userContributedAudio.map((audio, index) => (
+                <div
+                  id={`user-contributed-document-audio-player-${index}`}
+                  className={css.audioContainer}
+                  key={index}
+                >
+                  <AudioPlayer
+                    style={{ flex: 1 }}
+                    audioUrl={audio.resourceUrl}
+                    showProgress
+                  />
+                  {!isMobile && (
+                    <div>
+                      <a href={audio.resourceUrl}>
+                        <Button>Download Audio</Button>
+                      </a>
+                    </div>
+                  )}
+                </div>
+              ))}
+              <RecordDocumentAudioPanel document={p.doc} />
+            </>
+          )}
         </div>
       </div>
     </header>
