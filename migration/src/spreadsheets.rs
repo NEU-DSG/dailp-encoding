@@ -9,54 +9,25 @@ use dailp::collection::CollectionSection::Body;
 use dailp::collection::CollectionSection::Credit;
 use dailp::collection::CollectionSection::Intro;
 
-use dailp::SheetResult;
 use dailp::{
-    convert_udb, root_noun_surface_forms, root_verb_surface_forms, slugify_ltree, AnnotatedDoc,
-    AnnotatedForm, AnnotatedSeg, AudioSlice, Contributor, Database, Date, DocumentId,
-    DocumentMetadata, LexicalConnection, LineBreak, MorphemeId, PageBreak, Uuid, WordSegment,
+    convert_udb, root_noun_surface_forms, root_verb_surface_forms, slugify_ltree, AnnotatedForm,
+    AnnotatedSeg, Contributor, Date, DocumentId, DocumentMetadata, LineBreak, MorphemeId,
+    WordSegment,
 };
 use dailp::{PositionInDocument, SourceAttribution};
 use itertools::Itertools;
-use log::{error, info, warn};
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, fs::File, io::Write, time::Duration};
-use tokio::time::sleep;
 
 // Define the delimiters used in spreadsheets for marking phrases, blocks,
 // lines, and pages.
-const PHRASE_START: &str = "[";
-const PHRASE_END: &str = "]";
 const LINE_BREAK: &str = "\\";
 const PAGE_BREAK: &str = "\\\\";
 const BLOCK_START: &str = "{";
 const BLOCK_END: &str = "}";
-const OUTPUT_DIR: &str = "../xml";
 
 pub struct LexicalEntryWithForms {
     pub entry: AnnotatedForm,
     pub forms: Vec<AnnotatedForm>,
-}
-
-/// Takes an unprocessed document with metadata, passing it through our TEI
-/// template to produce an xml document named like the given title.
-pub fn write_to_file(doc: &AnnotatedDoc) -> Result<()> {
-    let contents = render_template(doc)?;
-    // Make sure the output folder exists.
-    std::fs::create_dir_all(OUTPUT_DIR)?;
-    let file_name = format!("{}/{}.xml", OUTPUT_DIR, doc.meta.short_name);
-    info!("writing to {}", file_name);
-    let mut f = File::create(file_name)?;
-    f.write_all(contents.as_bytes())?;
-    Ok(())
-}
-
-fn render_template(doc: &AnnotatedDoc) -> Result<String> {
-    let mut tera = tera::Tera::default();
-    tera.add_raw_template("macros.tera.xml", include_str!("../macros.tera.xml"))?;
-    tera.add_raw_template("template.tera.xml", include_str!("../template.tera.xml"))?;
-    tera.register_filter("convert_breaks", convert_breaks);
-    let contents = tera.render("template.tera.xml", &tera::Context::from_serialize(doc)?)?;
-    Ok(contents)
 }
 
 /// Provides functions interpreting Google Sheets data into more
@@ -71,7 +42,7 @@ impl SheetInterpretation {
             // This is, in fact, a file path.
             let start = start + 3;
             let (_, rest) = input.split_at(start);
-            let end = rest.find('/').unwrap_or_else(|| rest.len());
+            let end = rest.find('/').unwrap_or(rest.len());
             rest.split_at(end).0
         } else {
             // This is probably already a bare ID. Anyway, we couldn't parse it.
@@ -104,21 +75,21 @@ impl SheetInterpretation {
         self,
         self_title: &String,
         self_wordpress_menu_id: &i64,
-        self_slug: &String,
+        self_slug: &str,
     ) -> Result<dailp::raw::EditedCollection> {
         let mut collection_chapters = Vec::new();
         let mut row = self.sheet.values.into_iter();
-        let first_value = row
+        let _first_value = row
             .next()
             .ok_or_else(|| anyhow::format_err!("Missing first value"))?;
-        let second_value = row
+        let _second_value = row
             .next()
             .ok_or_else(|| anyhow::format_err!("Missing second value"))?;
         // 0 for Intro, 1 for Body, 2 for Credit
         let mut chapter_type = 0;
         for cur_row in row {
             if cur_row[0].is_empty() {
-                chapter_type = chapter_type + 1;
+                chapter_type += 1;
             } else {
                 let mut row_values = cur_row.into_iter().peekable();
 
@@ -200,7 +171,7 @@ impl SheetInterpretation {
                 let page_number = root_values.next()?;
                 let mut form_values = root_values;
                 let date = Date::from_ymd(year, 1, 1);
-                let position = PositionInDocument::new(doc_id.clone(), page_number, key);
+                let position = PositionInDocument::new(doc_id, page_number, key);
                 Some(LexicalEntryWithForms {
                     forms: root_verb_surface_forms(
                         &position,
@@ -243,7 +214,6 @@ impl SheetInterpretation {
         after_root: usize,
         has_comment: bool,
     ) -> Result<Vec<LexicalEntryWithForms>> {
-        use rayon::prelude::*;
         Ok(self
             .sheet
             .values
@@ -251,13 +221,13 @@ impl SheetInterpretation {
             // First two rows are simply headers.
             .skip(2)
             .filter(|cols| cols.len() > 4 && !cols[2].is_empty())
-            .group_by(|cols| cols.get(0).and_then(|s| s.parse::<i64>().ok()))
+            .group_by(|cols| cols.first().and_then(|s| s.parse::<i64>().ok()))
             .into_iter()
             .enumerate()
             // The rest are relevant to the noun itself.
-            .filter_map(|(index, (key, rows))| {
+            .filter_map(|(index, (_key, rows))| {
                 let rows: Vec<_> = rows.collect();
-                let columns = rows.get(0)?.clone();
+                let columns = rows.first()?.clone();
                 // The columns are as follows: key, root, root gloss, page ref,
                 // category, tags, surface forms.
 
@@ -277,7 +247,7 @@ impl SheetInterpretation {
                     .into_iter()
                     .flat_map(|row| row.into_iter().skip(4 + after_root));
                 let date = Date::from_ymd(year, 1, 1);
-                let position = PositionInDocument::new(doc_id.clone(), page_number?, index);
+                let position = PositionInDocument::new(doc_id, page_number?, index);
                 Some(LexicalEntryWithForms {
                     forms: root_noun_surface_forms(&position, &date, &mut form_values, has_comment),
                     entry: AnnotatedForm {
@@ -361,8 +331,7 @@ impl SheetInterpretation {
             .next()
             .ok_or_else(|| anyhow::format_err!("Missing image source row"))?
             .into_iter()
-            .skip(1)
-            .next()
+            .nth(1)
             .map(|src| src.to_ascii_lowercase());
         let image_ids = values
             .next()
@@ -546,7 +515,7 @@ pub struct AnnotatedLine {
     ends_page: bool,
 }
 
-impl<'a> AnnotatedLine {
+impl AnnotatedLine {
     pub fn many_from_semantic(
         lines: &[SemanticLine],
         meta: &DocumentMetadata,
@@ -561,32 +530,32 @@ impl<'a> AnnotatedLine {
                 let line_num = line_idx + 1;
                 let source_row = line
                     .rows
-                    .get(0)
-                    .expect(&format!("No source row for line {}", line_num));
+                    .first()
+                    .unwrap_or_else(|| panic!("No source row for line {}", line_num));
                 let simple_phonetics_row = line
                     .rows
                     .get(2)
-                    .expect(&format!("No simple phonetics for line {}", line_num));
+                    .unwrap_or_else(|| panic!("No simple phonetics for line {}", line_num));
                 let phonemic_row = line
                     .rows
                     .get(3)
-                    .expect(&format!("No phonemic representation for line {}", line_num));
+                    .unwrap_or_else(|| panic!("No phonemic representation for line {}", line_num));
                 let morpheme_row = line
                     .rows
                     .get(4)
-                    .expect(&format!("No morphemic segmentation for line {}", line_num));
+                    .unwrap_or_else(|| panic!("No morphemic segmentation for line {}", line_num));
                 let gloss_row = line
                     .rows
                     .get(5)
-                    .expect(&format!("No morphemic gloss for line {}", line_num));
+                    .unwrap_or_else(|| panic!("No morphemic gloss for line {}", line_num));
                 let translation_row = line
                     .rows
                     .get(6)
-                    .expect(&format!("No translation for line {}", line_num));
+                    .unwrap_or_else(|| panic!("No translation for line {}", line_num));
                 let commentary_row = line
                     .rows
                     .get(7)
-                    .expect(&format!("No commentary for line {}", line_num));
+                    .unwrap_or_else(|| panic!("No commentary for line {}", line_num));
                 // For each word, extract the necessary data from every row.
                 let words: Result<Vec<_>> = (0..num_words)
                     // Only use words with a syllabary source entry.
@@ -601,11 +570,7 @@ impl<'a> AnnotatedLine {
                             // TODO Extract into public function!
                             // id: format!("{}.{}", meta.id.0, word_index),
                             id: None,
-                            position: PositionInDocument::new(
-                                meta.id.clone(),
-                                "1".to_owned(),
-                                word_index,
-                            ),
+                            position: PositionInDocument::new(meta.id, "1".to_owned(), word_index),
                             source: source_text.trim().replace(LINE_BREAK, ""),
                             normalized_source: None,
                             simple_phonetics: simple_phonetics_row
@@ -618,10 +583,7 @@ impl<'a> AnnotatedLine {
                             } else {
                                 None
                             },
-                            english_gloss: vec![translation]
-                                .into_iter()
-                                .filter_map(|x| x)
-                                .collect(),
+                            english_gloss: vec![translation].into_iter().flatten().collect(),
                             commentary: commentary_row.items.get(i).map(|x| x.to_owned()),
                             page_break: pb.map(|i| i as i32),
                             line_break: pb
@@ -670,8 +632,6 @@ impl<'a> AnnotatedLine {
         let mut line_num = 0;
         let mut page_num = 0;
         let mut word_idx = 1;
-        let mut seg_idx = 1;
-        let mut block_idx = 1;
         let mut pages = vec![vec![vec![]]];
 
         // Process each line into a series of segments.
@@ -693,7 +653,7 @@ impl<'a> AnnotatedLine {
                 // Give the word an index within the whole document.
                 let word = AnnotatedForm {
                     position: PositionInDocument::new(
-                        document_id.clone(),
+                        *document_id,
                         (page_num + 1).to_string(),
                         word_idx,
                     ),
@@ -708,39 +668,21 @@ impl<'a> AnnotatedLine {
                     line_num += 1;
                 }
 
-                let mut source = &word.source.trim()[..];
+                let mut source = word.source.trim();
                 // Check for the start of a block.
                 while source.starts_with(BLOCK_START) {
                     source = &source[1..];
                     pages.last_mut().unwrap().push(Vec::new());
-                    block_idx += 1;
                 }
-                // Check for the start of a phrase.
-                // while source.starts_with(PHRASE_START) {
-                //     source = &source[1..];
-                //     stack.push(AnnotatedPhrase {
-                //         ty: BlockType::Phrase,
-                //         index: seg_idx,
-                //         parts: Vec::new(),
-                //     });
-                //     seg_idx += 1;
-                // }
                 // Remove all ending brackets from the source.
-                let mut blocks_to_pop = 0;
                 while source.ends_with(BLOCK_END) {
                     source = &source[..source.len() - 1];
-                    blocks_to_pop += 1;
                 }
-                let mut count_to_pop = 0;
-                // while source.ends_with(PHRASE_END) {
-                //     source = &source[..source.len() - 1];
-                //     count_to_pop += 1;
-                // }
                 // Construct the final word.
                 let finished_word = AnnotatedSeg::Word(AnnotatedForm {
                     source: source.to_owned(),
                     line_break: word.line_break.map(|_| line_num as i32),
-                    page_break: word.page_break.map(|_| page_num as i32),
+                    page_break: word.page_break.map(|_| page_num),
                     date_recorded: date.clone(),
                     ..word
                 });
@@ -750,28 +692,6 @@ impl<'a> AnnotatedLine {
                         p.push(finished_word);
                     }
                 }
-                // Check for the end of phrases.
-                // for _ in 0..count_to_pop {
-                //     if let Some(p) = stack.pop() {
-                //         let finished_p = AnnotatedSeg::Block(p);
-                //         if let Some(top) = stack.last_mut() {
-                //             top.parts.push(finished_p);
-                //         } else {
-                //             paragraphs.push(finished_p);
-                //         }
-                //     }
-                // }
-                // Check for the end of blocks.
-                // for _ in 0..blocks_to_pop {
-                //     if let Some(p) = stack.pop() {
-                //         let finished_p = AnnotatedSeg::Block(p);
-                //         if let Some(top) = stack.last_mut() {
-                //             top.parts.push(finished_p);
-                //         } else {
-                //             paragraphs.push(finished_p);
-                //         }
-                //     }
-                // }
             }
             if line.ends_page {
                 page_num += 1;
@@ -786,42 +706,6 @@ impl<'a> AnnotatedLine {
         }
 
         pages
-    }
-}
-
-/// Encode all mid-word line breaks as `lb` tags and page breaks as `pb` tags.
-pub fn convert_breaks(
-    value: &tera::Value,
-    context: &HashMap<String, tera::Value>,
-) -> tera::Result<tera::Value> {
-    if let tera::Value::String(s) = value {
-        let pb_tag = context.get("pb").and_then(|page_num| {
-            if let tera::Value::Number(num) = page_num {
-                Some(format!("<pb n=\"{}\" />", num))
-            } else {
-                None
-            }
-        });
-        let lb_tag = context.get("lb").and_then(|line_num| {
-            if let tera::Value::Number(num) = line_num {
-                Some(format!("<lb n=\"{}\" />", num))
-            } else {
-                None
-            }
-        });
-        let mut replaced = if let Some(pb_tag) = pb_tag {
-            s.replace("\\\\", &pb_tag)
-        } else {
-            s.to_owned()
-        };
-        replaced = if let Some(lb_tag) = lb_tag {
-            replaced.replace("\\", &lb_tag)
-        } else {
-            replaced
-        };
-        Ok(tera::Value::String(replaced))
-    } else {
-        Ok(value.clone())
     }
 }
 

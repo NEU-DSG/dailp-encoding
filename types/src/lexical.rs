@@ -878,13 +878,7 @@ fn dt_to_tth(input: &str, keep_glottal_stops: bool, replace_colons: Option<&str>
                 "'"
             }
         }
-        ":" => {
-            if let Some(r) = replace_colons {
-                r
-            } else {
-                ":"
-            }
-        }
+        ":" => replace_colons.unwrap_or(":"),
         // Any other matches we should leave as-is, retaining for example "ts"
         // and "ks" in the t/th representation.
         "ts" => "ts",
@@ -986,13 +980,7 @@ fn tth_to_dt(
                 "'"
             }
         }
-        ":" => {
-            if let Some(r) = replace_colons {
-                r
-            } else {
-                ":"
-            }
-        }
+        ":" => replace_colons.unwrap_or(":"),
         // Any other matches we should leave as-is, retaining for example "ts"
         // and "ks" in the d/t representation.
         "ts" => {
