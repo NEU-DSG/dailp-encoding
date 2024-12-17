@@ -16,7 +16,7 @@ pub async fn migrate_edited_collection(db: &Database) -> anyhow::Result<()> {
     .into_collection_index(
         &"Cherokees Writing the Keetoowah Way".to_string(),
         &4579,
-        &"cwkw".to_string(),
+        "cwkw",
     )?;
     let collection = res;
 
