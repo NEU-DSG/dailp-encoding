@@ -193,8 +193,3 @@ async fn parse_early_vocab(
 
     Ok(links.into_iter().flatten().collect())
 }
-
-struct ConnectedForm {
-    form: dailp::AnnotatedForm,
-    links: Vec<dailp::LexicalConnection>,
-}

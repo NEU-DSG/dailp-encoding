@@ -10,51 +10,24 @@ use dailp::collection::CollectionSection::Credit;
 use dailp::collection::CollectionSection::Intro;
 
 use dailp::{
-    convert_udb, root_noun_surface_forms, root_verb_surface_forms, slugify_ltree, AnnotatedDoc,
-    AnnotatedForm, AnnotatedSeg, Contributor, Date, DocumentId, DocumentMetadata, LineBreak,
-    MorphemeId, WordSegment,
+    convert_udb, root_noun_surface_forms, root_verb_surface_forms, slugify_ltree, AnnotatedForm,
+    AnnotatedSeg, Contributor, Date, DocumentId, DocumentMetadata, LineBreak, MorphemeId,
+    WordSegment,
 };
 use dailp::{PositionInDocument, SourceAttribution};
 use itertools::Itertools;
-use log::info;
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, fs::File, io::Write};
 
 // Define the delimiters used in spreadsheets for marking phrases, blocks,
 // lines, and pages.
-const PHRASE_START: &str = "[";
-const PHRASE_END: &str = "]";
 const LINE_BREAK: &str = "\\";
 const PAGE_BREAK: &str = "\\\\";
 const BLOCK_START: &str = "{";
 const BLOCK_END: &str = "}";
-const OUTPUT_DIR: &str = "../xml";
 
 pub struct LexicalEntryWithForms {
     pub entry: AnnotatedForm,
     pub forms: Vec<AnnotatedForm>,
-}
-
-/// Takes an unprocessed document with metadata, passing it through our TEI
-/// template to produce an xml document named like the given title.
-pub fn write_to_file(doc: &AnnotatedDoc) -> Result<()> {
-    let contents = render_template(doc)?;
-    // Make sure the output folder exists.
-    std::fs::create_dir_all(OUTPUT_DIR)?;
-    let file_name = format!("{}/{}.xml", OUTPUT_DIR, doc.meta.short_name);
-    info!("writing to {}", file_name);
-    let mut f = File::create(file_name)?;
-    f.write_all(contents.as_bytes())?;
-    Ok(())
-}
-
-fn render_template(doc: &AnnotatedDoc) -> Result<String> {
-    let mut tera = tera::Tera::default();
-    tera.add_raw_template("macros.tera.xml", include_str!("../macros.tera.xml"))?;
-    tera.add_raw_template("template.tera.xml", include_str!("../template.tera.xml"))?;
-    tera.register_filter("convert_breaks", convert_breaks);
-    let contents = tera.render("template.tera.xml", &tera::Context::from_serialize(doc)?)?;
-    Ok(contents)
 }
 
 /// Provides functions interpreting Google Sheets data into more
@@ -106,10 +79,10 @@ impl SheetInterpretation {
     ) -> Result<dailp::raw::EditedCollection> {
         let mut collection_chapters = Vec::new();
         let mut row = self.sheet.values.into_iter();
-        let first_value = row
+        let _first_value = row
             .next()
             .ok_or_else(|| anyhow::format_err!("Missing first value"))?;
-        let second_value = row
+        let _second_value = row
             .next()
             .ok_or_else(|| anyhow::format_err!("Missing second value"))?;
         // 0 for Intro, 1 for Body, 2 for Credit
@@ -241,7 +214,6 @@ impl SheetInterpretation {
         after_root: usize,
         has_comment: bool,
     ) -> Result<Vec<LexicalEntryWithForms>> {
-        use rayon::prelude::*;
         Ok(self
             .sheet
             .values
@@ -253,7 +225,7 @@ impl SheetInterpretation {
             .into_iter()
             .enumerate()
             // The rest are relevant to the noun itself.
-            .filter_map(|(index, (key, rows))| {
+            .filter_map(|(index, (_key, rows))| {
                 let rows: Vec<_> = rows.collect();
                 let columns = rows.first()?.clone();
                 // The columns are as follows: key, root, root gloss, page ref,
@@ -660,8 +632,6 @@ impl<'a> AnnotatedLine {
         let mut line_num = 0;
         let mut page_num = 0;
         let mut word_idx = 1;
-        let seg_idx = 1;
-        let mut block_idx = 1;
         let mut pages = vec![vec![vec![]]];
 
         // Process each line into a series of segments.
@@ -703,29 +673,11 @@ impl<'a> AnnotatedLine {
                 while source.starts_with(BLOCK_START) {
                     source = &source[1..];
                     pages.last_mut().unwrap().push(Vec::new());
-                    block_idx += 1;
                 }
-                // Check for the start of a phrase.
-                // while source.starts_with(PHRASE_START) {
-                //     source = &source[1..];
-                //     stack.push(AnnotatedPhrase {
-                //         ty: BlockType::Phrase,
-                //         index: seg_idx,
-                //         parts: Vec::new(),
-                //     });
-                //     seg_idx += 1;
-                // }
                 // Remove all ending brackets from the source.
-                let mut blocks_to_pop = 0;
                 while source.ends_with(BLOCK_END) {
                     source = &source[..source.len() - 1];
-                    blocks_to_pop += 1;
                 }
-                let count_to_pop = 0;
-                // while source.ends_with(PHRASE_END) {
-                //     source = &source[..source.len() - 1];
-                //     count_to_pop += 1;
-                // }
                 // Construct the final word.
                 let finished_word = AnnotatedSeg::Word(AnnotatedForm {
                     source: source.to_owned(),
@@ -740,28 +692,6 @@ impl<'a> AnnotatedLine {
                         p.push(finished_word);
                     }
                 }
-                // Check for the end of phrases.
-                // for _ in 0..count_to_pop {
-                //     if let Some(p) = stack.pop() {
-                //         let finished_p = AnnotatedSeg::Block(p);
-                //         if let Some(top) = stack.last_mut() {
-                //             top.parts.push(finished_p);
-                //         } else {
-                //             paragraphs.push(finished_p);
-                //         }
-                //     }
-                // }
-                // Check for the end of blocks.
-                // for _ in 0..blocks_to_pop {
-                //     if let Some(p) = stack.pop() {
-                //         let finished_p = AnnotatedSeg::Block(p);
-                //         if let Some(top) = stack.last_mut() {
-                //             top.parts.push(finished_p);
-                //         } else {
-                //             paragraphs.push(finished_p);
-                //         }
-                //     }
-                // }
             }
             if line.ends_page {
                 page_num += 1;
@@ -776,42 +706,6 @@ impl<'a> AnnotatedLine {
         }
 
         pages
-    }
-}
-
-/// Encode all mid-word line breaks as `lb` tags and page breaks as `pb` tags.
-pub fn convert_breaks(
-    value: &tera::Value,
-    context: &HashMap<String, tera::Value>,
-) -> tera::Result<tera::Value> {
-    if let tera::Value::String(s) = value {
-        let pb_tag = context.get("pb").and_then(|page_num| {
-            if let tera::Value::Number(num) = page_num {
-                Some(format!("<pb n=\"{}\" />", num))
-            } else {
-                None
-            }
-        });
-        let lb_tag = context.get("lb").and_then(|line_num| {
-            if let tera::Value::Number(num) = line_num {
-                Some(format!("<lb n=\"{}\" />", num))
-            } else {
-                None
-            }
-        });
-        let mut replaced = if let Some(pb_tag) = pb_tag {
-            s.replace("\\\\", &pb_tag)
-        } else {
-            s.to_owned()
-        };
-        replaced = if let Some(lb_tag) = lb_tag {
-            replaced.replace("\\", &lb_tag)
-        } else {
-            replaced
-        };
-        Ok(tera::Value::String(replaced))
-    } else {
-        Ok(value.clone())
     }
 }
 
