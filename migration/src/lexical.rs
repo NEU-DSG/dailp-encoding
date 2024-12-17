@@ -45,15 +45,17 @@ pub async fn migrate_dictionaries(db: &Database) -> Result<()> {
         })
         .await?;
 
-    let df1975 = parse_new_df1975(
+    let df1975 = parse_new_df(
         SheetResult::from_sheet("11ssqdimOQc_hp3Zk8Y55m6DFfKR96OOpclUg5wcGSVE", None).await?,
         df1975_id,
-        1975,
-        3,
-        true,
-        false,
-        3,
-        3,
+        DFSheetMetadata {
+            year: 1975,
+            translation_count: 3,
+            has_numeric: true,
+            has_comment: false,
+            after_root: 3,
+            translations: 3,
+        },
     );
     let root_nouns = SheetInterpretation {
         sheet: SheetResult::from_sheet("1XuQIKzhGf_mGCH4-bHNBAaQqTAJDNtPbNHjQDhszVRo", None)
@@ -85,15 +87,17 @@ pub async fn migrate_dictionaries(db: &Database) -> Result<()> {
             .await?,
     }
     .into_adjs(df1975_id, 1975)?;
-    let df2003 = parse_new_df1975(
+    let df2003 = parse_new_df(
         SheetResult::from_sheet("18cKXgsfmVhRZ2ud8Cd7YDSHexs1ODHo6fkTPrmnwI1g", None).await?,
         df2003_id,
-        2003,
-        1,
-        false,
-        false,
-        3,
-        3,
+        DFSheetMetadata {
+            year: 2003,
+            translation_count: 1,
+            has_numeric: false,
+            has_comment: false,
+            after_root: 3,
+            translations: 3,
+        },
     );
 
     {
@@ -295,16 +299,18 @@ async fn parse_appendix(db: &Database, sheet_id: &str, to_skip: usize) -> Result
 
     Ok(())
 }
-
-fn parse_new_df1975(
-    sheet: SheetResult,
-    doc_id: DocumentId,
+struct DFSheetMetadata {
     year: i32,
     translation_count: usize,
     has_numeric: bool,
     has_comment: bool,
     after_root: usize,
     translations: usize,
+}
+fn parse_new_df(
+    sheet: SheetResult,
+    doc_id: DocumentId,
+    meta: DFSheetMetadata,
 ) -> Vec<LexicalEntryWithForms> {
     sheet
         .values
@@ -333,23 +339,24 @@ fn parse_new_df1975(
             let root = root_values.next().filter(|s| !s.is_empty())?;
             let root_gloss = root_values.next().filter(|s| !s.is_empty())?;
             let glosses = root_values
-                .take(translations)
+                .take(meta.translations)
                 .map(|s| s.trim().to_owned())
                 .filter(|s| !s.is_empty())
                 .collect();
-            let date = Date::from_ymd(year, 1, 1);
+            let date = Date::from_ymd(meta.year, 1, 1);
             let pos = PositionInDocument::new(doc_id, page_number, key);
-            let mut form_cells = rows
-                .into_iter()
-                .flat_map(|row| row.into_iter().skip(4 + translations + after_root));
+            let mut form_cells = rows.into_iter().flat_map(|row| {
+                row.into_iter()
+                    .skip(4 + meta.translations + meta.after_root)
+            });
             Some(LexicalEntryWithForms {
                 forms: seg_verb_surface_forms(
                     &pos,
                     &date,
                     &mut form_cells,
-                    translation_count,
-                    has_numeric,
-                    has_comment,
+                    meta.translation_count,
+                    meta.has_numeric,
+                    meta.has_comment,
                 ),
                 entry: AnnotatedForm {
                     id: None,
