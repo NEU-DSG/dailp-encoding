@@ -75,7 +75,7 @@ impl SheetInterpretation {
         self,
         self_title: &String,
         self_wordpress_menu_id: &i64,
-        self_slug: &String,
+        self_slug: &str,
     ) -> Result<dailp::raw::EditedCollection> {
         let mut collection_chapters = Vec::new();
         let mut row = self.sheet.values.into_iter();
@@ -515,7 +515,7 @@ pub struct AnnotatedLine {
     ends_page: bool,
 }
 
-impl<'a> AnnotatedLine {
+impl AnnotatedLine {
     pub fn many_from_semantic(
         lines: &[SemanticLine],
         meta: &DocumentMetadata,
