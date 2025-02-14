@@ -67,7 +67,6 @@ export const FormProvider = (props: { children: ReactNode }) => {
           },
           morphemeSystem: cherokeeRepresentation,
         }).then(({ data, error }) => {
-
           if (error) {
             console.log(error)
           }
