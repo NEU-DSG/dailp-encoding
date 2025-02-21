@@ -297,6 +297,8 @@ pub struct AnnotatedFormUpdate {
     pub id: Uuid,
     /// Possible update to source content
     pub source: MaybeUndefined<String>,
+    /// Possible update to normalized source content
+    pub romanized_source: MaybeUndefined<String>,
     /// Possible update to commentary
     pub commentary: MaybeUndefined<String>,
     /// Updated segments
