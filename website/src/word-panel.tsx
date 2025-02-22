@@ -210,7 +210,6 @@ const EditSegmentation = (p: {
               {/* This is disabled at the moment to be fully implemented later. */}
               <FormInput
                 {...form}
-                disabled
                 className={formInput}
                 name={["word", "segments", index.toString(), "morpheme"]}
               />
