@@ -200,11 +200,32 @@ const EditSegmentation = (p: {
   options: GroupedOption[]
 }) => {
   const { form } = useForm()
+  const currentWord = form.values.word as Dailp.FormFieldsFragment
+  const currentSegments = currentWord.segments
+
+  const addNewSegment = (e: React.MouseEvent) => {
+    e.preventDefault()
+    const newSegment = {
+      morpheme: "",
+      gloss: "",
+      role: Dailp.WordSegmentRole.Morpheme,
+      previousSeparator: "-",
+      matchingTag: null,
+      word_id: currentWord.id
+    }
+
+    const updatedSegments = [...currentSegments, newSegment]
+
+    form.update("word", {
+      ...currentWord,
+      segments: updatedSegments
+    })
+  }
 
   return (
     <table className={css.tableContainer}>
       <tbody>
-        {p.segments.map((segment, index) => (
+        {currentSegments.map((segment, index) => (
           <tr style={{ display: "flex" }}>
             <td className={css.editMorphemeCells}>
               {/* This is disabled at the moment to be fully implemented later. */}
@@ -226,6 +247,22 @@ const EditSegmentation = (p: {
             </td>
           </tr>
         ))}
+        <tr>
+          <td colSpan={2} style={{ textAlign: 'center', padding: '10px' }}>
+            <button
+              onClick={addNewSegment}
+              style={{
+                padding: '5px 10px',
+                borderRadius: '4px',
+                border: '1px solid #ccc',
+                background: '#f0f0f0',
+                cursor: 'pointer'
+              }}
+            >
+              Add Segment
+            </button>
+          </td>
+        </tr>
       </tbody>
     </table>
   )
@@ -286,9 +323,8 @@ export const VerticalMorphemicSegmentation = (p: {
             ...lastSegment,
             matchingTag: null,
             morpheme: lastSegment.morpheme + segment.morpheme,
-            gloss: `${lastSegment.matchingTag?.title ?? lastSegment.gloss}, ${
-              segment.matchingTag?.title ?? segment.gloss
-            }`,
+            gloss: `${lastSegment.matchingTag?.title ?? lastSegment.gloss}, ${segment.matchingTag?.title ?? segment.gloss
+              }`,
           }
         } else {
           result.push(segment)
@@ -366,13 +402,13 @@ export const WordAudio = (p: { word: Dailp.FormFieldsFragment }) => {
           audioUrl={audioTrack.resourceUrl}
           slices={
             audioTrack.startTime !== undefined &&
-            audioTrack.startTime !== null &&
-            audioTrack.endTime !== undefined &&
-            audioTrack.endTime !== null
+              audioTrack.startTime !== null &&
+              audioTrack.endTime !== undefined &&
+              audioTrack.endTime !== null
               ? {
-                  start: audioTrack.startTime,
-                  end: audioTrack.endTime,
-                }
+                start: audioTrack.startTime,
+                end: audioTrack.endTime,
+              }
               : undefined
           }
           showProgress
