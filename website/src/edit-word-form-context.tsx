@@ -47,27 +47,30 @@ export const FormProvider = (props: { children: ReactNode }) => {
       if (cherokeeRepresentation === Dailp.CherokeeOrthography.Taoc) {
         setIsEditing(false)
 
-        // Create an array of MorphemeSegmentUpdate type to send to the backend.
-        const updatedSegments: Array<Dailp.MorphemeSegmentUpdate> = values.word[
-          "segments"
-        ].map((segment) => ({
-          system: cherokeeRepresentation,
-          morpheme: segment.morpheme,
-          gloss: segment.gloss,
-          role: segment.role,
-        }))
+        // Create a completely new word state
+        const wordUpdate: Dailp.AnnotatedFormUpdate = {
+          id: values.word["id"],
+          source: values.word["source"],
+          commentary: values.word["commentary"],
+          segments: values.word["segments"].map((segment) => ({
+            system: cherokeeRepresentation,
+            morpheme: segment.morpheme,
+            gloss: segment.gloss,
+            role: segment.role,
+          }))
+        }
+
+        console.log('Sending complete word update:', wordUpdate)
 
         runUpdate({
-          word: {
-            id: values.word["id"],
-            source: values.word["source"],
-            commentary: values.word["commentary"],
-            segments: updatedSegments,
-          },
+          word: wordUpdate,
           morphemeSystem: cherokeeRepresentation,
         }).then(({ data, error }) => {
           if (error) {
-            console.log(error)
+            console.log('Update error:', error)
+          } else if (data) {
+            console.log('Server response:', data.updateWord)
+            form.update("word", data.updateWord)
           }
         })
       } else {
