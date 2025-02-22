@@ -213,9 +213,17 @@ const EditSegmentation = (p: {
       matchingTag: null,
       word_id: currentWord.id
     }
-
+    
     const updatedSegments = [...currentSegments, newSegment]
+    form.update("word", {
+      ...currentWord,
+      segments: updatedSegments
+    })
+  }
 
+  const deleteSegment = (index: number) => {
+    const updatedSegments = [...currentSegments]
+    updatedSegments.splice(index, 1)
     form.update("word", {
       ...currentWord,
       segments: updatedSegments
@@ -245,10 +253,25 @@ const EditSegmentation = (p: {
                 options={p.options}
               />
             </td>
+            <td style={{ padding: '0 10px' }}>
+              <button
+                onClick={() => deleteSegment(index)}
+                style={{
+                  padding: '5px 10px',
+                  borderRadius: '4px',
+                  border: '1px solid #ccc',
+                  background: '#f0f0f0',
+                  cursor: 'pointer',
+                  color: '#d32f2f'
+                }}
+              >
+                ✕
+              </button>
+            </td>
           </tr>
         ))}
         <tr>
-          <td colSpan={2} style={{ textAlign: 'center', padding: '10px' }}>
+          <td colSpan={3} style={{ textAlign: 'center', padding: '10px' }}>
             <button
               onClick={addNewSegment}
               style={{
