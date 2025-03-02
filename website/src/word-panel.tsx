@@ -157,7 +157,8 @@ export const WordPanel = (p: {
         }
       />
 
-      {/* If there are no segments, does not display Word Parts panel */}
+      {/* If there are no segments, does not display Word Parts panel 
+      NOTE: should we remove this? once you delete all the segments we can never get this panel back again*/}
       {p.word.segments.length > 0 && (
         <CollapsiblePanel
           title={"Word Parts"}
