@@ -1,9 +1,11 @@
 #![allow(missing_docs)]
 
+use auth::UserGroup;
 use chrono::{NaiveDate, NaiveDateTime};
 use sqlx::postgres::types::PgLTree;
 use std::ops::Bound;
 use std::str::FromStr;
+use user::UserUpdate;
 
 use crate::collection::CollectionChapter;
 use crate::collection::EditedCollection;
@@ -499,6 +501,63 @@ impl Database {
             .await?;
 
         Ok(user_id)
+    }
+
+    // Updates fields in the user dailp_user table
+    pub async fn update_dailp_user(&self, user: UserUpdate) -> Result<Uuid> {
+        let user_id = Uuid::from(user.id);
+        let display_name = user.display_name.into_vec();
+        let avatar_url = user.avatar_url.into_vec();
+        let bio = user.bio.into_vec();
+        let organization = user.organization.into_vec();
+        let location = user.location.into_vec();
+        // Role needs to come in from graphql as all caps ("EDITORS" rather than "Editors")
+        let role = if user.role.is_value() {
+            let role_str = match user.role.value().unwrap() {
+                UserGroup::Readers => "Readers",
+                UserGroup::Editors => "Editors",
+                UserGroup::Contributors => "Contributors",
+            };
+            vec![role_str.to_string()]
+        } else {
+            vec![]
+        };
+
+        query_file!(
+            "queries/update_dailp_user.sql",
+            &user_id,
+            &display_name as _,
+            &avatar_url as _,
+            &bio as _,
+            &organization as _,
+            &location as _,
+            &role as _
+        )
+        .execute(&self.client)
+        .await?;
+
+        Ok(user_id)
+    }
+
+    // Gets a user from the dailp_user table by their id
+    pub async fn dailp_user_by_id(&self, user_id: &Uuid) -> Result<User> {
+        let row = query_file!("queries/get_dailp_user_by_id.sql", user_id)
+            .fetch_one(&self.client)
+            .await?;
+
+        let created_at = Date::from(row.created_at);
+        let role = UserGroup::from(row.role);
+
+        Ok(User {
+            id: UserId(row.id.to_string()),
+            display_name: row.display_name,
+            created_at: Some(created_at),
+            avatar_url: row.avatar_url,
+            bio: row.bio,
+            organization: row.organization,
+            location: row.location,
+            role: Some(role),
+        })
     }
 
     pub async fn update_annotation(&self, _annote: annotation::Annotation) -> Result<()> {
@@ -1531,6 +1590,12 @@ impl Loader<DocumentId> for Database {
                             item.recorded_by_name.map(|display_name| User {
                                 id: UserId(user_id.to_string()),
                                 display_name,
+                                created_at: None,
+                                avatar_url: None,
+                                bio: None,
+                                organization: None,
+                                location: None,
+                                role: None,
                             })
                         }),
                         start_time: item.audio_slice.as_ref().and_then(|r| match r.start {
@@ -1597,6 +1662,12 @@ impl Loader<DocumentShortName> for Database {
                             item.recorded_by_name.map(|display_name| User {
                                 id: UserId(user_id.to_string()),
                                 display_name,
+                                created_at: None,
+                                avatar_url: None,
+                                bio: None,
+                                organization: None,
+                                location: None,
+                                role: None,
                             })
                         }),
                         start_time: item.audio_slice.as_ref().and_then(|r| match r.start {
@@ -1990,6 +2061,12 @@ impl From<BasicAudioSlice> for AudioSlice {
                 b.edited_by_name.map(|display_name| User {
                     id: UserId::from(user_id),
                     display_name,
+                    created_at: None,
+                    avatar_url: None,
+                    bio: None,
+                    organization: None,
+                    location: None,
+                    role: None,
                 })
             }),
             recorded_at: b.recorded_at.map(Date::new),
@@ -1997,6 +2074,12 @@ impl From<BasicAudioSlice> for AudioSlice {
                 b.recorded_by_name.map(|display_name| User {
                     id: UserId::from(user_id),
                     display_name,
+                    created_at: None,
+                    avatar_url: None,
+                    bio: None,
+                    organization: None,
+                    location: None,
+                    role: None,
                 })
             }),
             annotations: None,
@@ -2174,6 +2257,12 @@ impl Into<Comment> for BasicComment {
             posted_by: User {
                 id: self.posted_by.into(),
                 display_name: self.posted_by_name,
+                created_at: None,
+                avatar_url: None,
+                bio: None,
+                organization: None,
+                location: None,
+                role: None,
             },
             text_content: self.text_content,
             comment_type: self.comment_type,
