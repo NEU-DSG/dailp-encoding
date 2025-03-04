@@ -548,7 +548,7 @@ impl Mutation {
     }
 
     /// Updates a dailp_user's information
-    // #[graphql(guard = "AuthGuard")]
+    #[graphql(guard = "AuthGuard")]
     async fn update_user(&self, context: &Context<'_>, user: UserUpdate) -> FieldResult<User> {
         let user_id = Uuid::from(&user.id);
         let db = context.data::<DataLoader<Database>>()?.loader();
