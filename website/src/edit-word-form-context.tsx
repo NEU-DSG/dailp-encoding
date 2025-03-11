@@ -57,19 +57,19 @@ export const FormProvider = (props: { children: ReactNode }) => {
             morpheme: segment.morpheme,
             gloss: segment.gloss,
             role: segment.role,
-          }))
+          })),
         }
 
-        console.log('Sending complete word update:', wordUpdate)
+        console.log("Sending complete word update:", wordUpdate)
 
         runUpdate({
           word: wordUpdate,
           morphemeSystem: cherokeeRepresentation,
         }).then(({ data, error }) => {
           if (error) {
-            console.log('Update error:', error)
+            console.log("Update error:", error)
           } else if (data) {
-            console.log('Server response:', data.updateWord)
+            console.log("Server response:", data.updateWord)
             form.update("word", data.updateWord)
           }
         })
