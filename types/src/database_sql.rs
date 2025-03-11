@@ -510,12 +510,18 @@ impl Database {
 
         let source = word.source.into_vec();
         let commentary = word.commentary.into_vec();
+        let english_gloss_owned: Vec<String> = match word.english_gloss.into_vec().pop().flatten() {
+            Some(glosses) => glosses,
+            None => Vec::new(),
+        };
+        let english_gloss: Vec<&str> = english_gloss_owned.iter().map(|s| s.as_str()).collect();
 
         let document_id = query_file!(
             "queries/update_word.sql",
             word.id,
             &source as _,
             &commentary as _,
+            &english_gloss as _
         )
         .fetch_one(&mut *tx)
         .await?
@@ -1985,6 +1991,8 @@ impl From<BasicAudioSlice> for AudioSlice {
             slice_id: Some(AudioSliceId(b.id.to_string())),
             resource_url: b.resource_url,
             parent_track: None,
+            annotations: None,
+            index: 0,
             include_in_edited_collection: b.include_in_edited_collection,
             edited_by: b.edited_by.and_then(|user_id| {
                 b.edited_by_name.map(|display_name| User {
@@ -1999,8 +2007,6 @@ impl From<BasicAudioSlice> for AudioSlice {
                     display_name,
                 })
             }),
-            annotations: None,
-            index: 0,
             start_time: b.range.as_ref().and_then(|r| match r.start {
                 Bound::Unbounded => None,
                 Bound::Included(t) | Bound::Excluded(t) => Some(t as i32),

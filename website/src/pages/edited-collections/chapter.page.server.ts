@@ -3,10 +3,10 @@ import * as Dailp from "src/graphql/dailp"
 
 export async function prerender() {
   const { data, error } = await serverSideClients.dailp
-    .query<Dailp.EditedCollectionsQuery, Dailp.EditedCollectionsQueryVariables>(
-      Dailp.EditedCollectionsDocument,
-      {}
-    )
+    .query<
+      Dailp.EditedCollectionsQuery,
+      Dailp.EditedCollectionsQueryVariables
+    >(Dailp.EditedCollectionsDocument, {})
     .toPromise()
 
   if (!data || error) {
