@@ -13,67 +13,59 @@ query DocumentsPages {
   }
 }
 
-query AnnotatedDocument($slug: String!) {
-  document(slug: $slug) {
-    id
-    title
-    slug
-    isReference
-    date {
-      year
+# Data about a document needed to render various high level components, such as
+# a DocumentHeader. Contrast with the fields resolved on DocumentContents query.
+fragment DocumentFields on AnnotatedDoc {
+  id
+  title
+  slug
+  isReference
+  date {
+    year
+  }
+  bookmarkedOn {
+    formattedDate
+  }
+  sources {
+    name
+    link
+  }
+  # TODO: Should we put these fields on the AudioSliceFields fragment?
+  editedAudio {
+    resourceUrl
+    startTime
+    endTime
+    recordedBy {
+      displayName
     }
-    bookmarkedOn {
+    recordedAt {
       formattedDate
     }
-    sources {
-      name
-      link
+  }
+  userContributedAudio {
+    resourceUrl
+    startTime
+    endTime
+    recordedBy {
+      displayName
     }
-    audioRecording {
-      resourceUrl
-      startTime
-      endTime
+    recordedAt {
+      formattedDate
     }
-    translatedPages {
-      image {
-        url
-      }
+  }
+  translatedPages {
+    image {
+      url
     }
-    chapters {
-      path
-    }
+  }
+  chapters {
+    path
   }
 }
 
-query AnnotatedDocumentById($id: UUID!) {
-  documentByUuid(id: $id) {
-    id
-    title
-    slug
-    isReference
-    date {
-      year
-    }
-    bookmarkedOn {
-      formattedDate
-    }
-    sources {
-      name
-      link
-    }
-    audioRecording {
-      resourceUrl
-      startTime
-      endTime
-    }
-    translatedPages {
-      image {
-        url
-      }
-    }
-    chapters {
-      path
-    }
+query AnnotatedDocument($slug: String!) {
+  document(slug: $slug) {
+    ...DocumentFields
   }
 }
 
@@ -370,7 +362,7 @@ query DocSlice(
 ) {
   document(slug: $slug) {
     title
-    audioRecording {
+    ingestedAudioTrack {
       resourceUrl
       startTime
       endTime
@@ -393,68 +385,14 @@ query CollectionChapter($collectionSlug: String!, $chapterSlug: String!) {
       slug
     }
     document {
-      id
-      title
-      slug
-      isReference
-      date {
-        year
-      }
-      bookmarkedOn {
-        formattedDate
-      }
-      sources {
-        name
-        link
-      }
-      audioRecording {
-        resourceUrl
-        startTime
-        endTime
-      }
-      translatedPages {
-        image {
-          url
-        }
-      }
-      chapters {
-        id
-        path
-      }
+      ...DocumentFields
     }
   }
 }
 
 query BookmarkedDocuments {
   bookmarkedDocuments {
-    id
-    title
-    slug
-    isReference
-    date {
-      year
-    }
-    bookmarkedOn {
-      formattedDate
-    }
-    sources {
-      name
-      link
-    }
-    audioRecording {
-      resourceUrl
-      startTime
-      endTime
-    }
-    translatedPages {
-      image {
-        url
-      }
-    }
-    chapters {
-      id
-      path
-    }
+    ...DocumentFields
   }
 }
 
@@ -533,67 +471,42 @@ mutation CurateWordAudio($input: CurateWordAudioInput!) {
   }
 }
 
-mutation AddBookmark($documentId: UUID!) {
-  addBookmark(documentId: $documentId) {
+mutation AttachAudioToDocument($input: AttachAudioToDocumentInput!) {
+  attachAudioToDocument(input: $input) {
     id
     title
     slug
-    isReference
-    date {
-      year
-    }
-    bookmarkedOn {
-      formattedDate
-    }
-    sources {
-      name
-      link
-    }
-    audioRecording {
-      resourceUrl
-      startTime
-      endTime
-    }
-    translatedPages {
-      image {
-        url
+    userContributedAudio {
+      ...AudioSliceFields
+      recordedAt {
+        formattedDate
+      }
+      recordedBy {
+        id
+        displayName
       }
     }
-    chapters {
-      path
-    }
+  }
+}
+
+fragment BookmarkedDocument on AnnotatedDoc {
+  id
+  title
+  slug
+  bookmarkedOn {
+    formattedDate
+  }
+}
+
+mutation AddBookmark($documentId: UUID!) {
+  addBookmark(documentId: $documentId) {
+    ...BookmarkedDocument
   }
 }
 
 mutation RemoveBookmark($documentId: UUID!) {
   removeBookmark(documentId: $documentId) {
-    id
-    title
-    slug
-    isReference
-    date {
-      year
-    }
-    bookmarkedOn {
-      formattedDate
-    }
-    sources {
-      name
-      link
-    }
-    audioRecording {
-      resourceUrl
-      startTime
-      endTime
-    }
-    translatedPages {
-      image {
-        url
-      }
-    }
-    chapters {
-      path
-    }
+    ...BookmarkedDocument
   }
 }
 
