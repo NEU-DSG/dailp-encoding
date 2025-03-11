@@ -1,3 +1,4 @@
+import { set } from "lodash"
 import React, { ReactNode } from "react"
 import {
   AiFillCaretDown,
@@ -19,6 +20,7 @@ import { CommentSection } from "./components/comment-section"
 import { CustomCreatable } from "./components/creatable"
 import { EditWordAudio } from "./components/edit-word-audio"
 import { RecordAudioPanel } from "./components/edit-word-audio/record"
+import { useEditWordCheckContext } from "./edit-word-check-context"
 import { EditWordFeature } from "./edit-word-feature"
 import { formInput } from "./edit-word-feature.css"
 import { useForm } from "./edit-word-form-context"
@@ -53,6 +55,12 @@ export const WordPanel = (p: {
   word: Dailp.FormFieldsFragment
   options: GroupedOption[]
 }) => {
+  const { setRomanizedSource } = useEditWordCheckContext()
+  if (p.word.romanizedSource) {
+    setRomanizedSource(p.word.romanizedSource)
+  } else {
+    setRomanizedSource("")
+  }
   // what should be used to render word features? eg, syllabary, commentary, etc.
   const PanelFeatureComponent =
     p.panel === PanelType.EditWordPanel ? EditWordFeature : WordFeature
@@ -64,21 +72,25 @@ export const WordPanel = (p: {
   // Contains components rendering data of a word's phonetics.
   const phoneticsContent = (
     <>
-      {p.word.source && (
-        <PanelFeatureComponent
-          word={p.word}
-          feature={"source"}
-          label="Syllabary Characters"
-        />
-      )}
+      {
+        /*p.word.source*/ true && (
+          <PanelFeatureComponent
+            word={p.word}
+            feature={"source"}
+            label="Syllabary Characters"
+          />
+        )
+      }
 
-      {p.word.romanizedSource && (
-        <PanelFeatureComponent
-          word={p.word}
-          feature={"romanizedSource"}
-          label="Simple Phonetics"
-        />
-      )}
+      {
+        /*p.word.romanizedSource*/ true && (
+          <PanelFeatureComponent
+            word={p.word}
+            feature={"romanizedSource"}
+            label="Simple Phonetics"
+          />
+        )
+      }
     </>
   )
 

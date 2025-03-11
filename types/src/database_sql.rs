@@ -509,12 +509,14 @@ impl Database {
         let mut tx = self.client.begin().await?;
 
         let source = word.source.into_vec();
+        let simple_phonetics = word.romanized_source.into_vec();
         let commentary = word.commentary.into_vec();
 
         let document_id = query_file!(
             "queries/update_word.sql",
             word.id,
             &source as _,
+            &simple_phonetics as _,
             &commentary as _,
         )
         .fetch_one(&mut *tx)
