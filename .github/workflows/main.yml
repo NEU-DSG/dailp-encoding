@@ -36,6 +36,8 @@ jobs:
       GIT_REPOSITORY_URL: https://github.com/neu-dsg/dailp-encoding
       OAUTH_TOKEN: ${{ secrets.OAUTH_TOKEN }}
       RUST_LOG: info
+      BASTION_IP: $$ {{ secrets.TEST_BASTION_IP }}
+
       # Stage is Development if not based on a release event, is Staging/UAT if event action is prereleased, is Production if event action is released
       TF_STAGE: ${{ github.event_name == 'release' && ( github.event.action == 'prereleased' && 'uat' || 'prod') || 'dev' }}
 
@@ -116,7 +118,6 @@ jobs:
           echo "${{secrets.AWS_BASTION_SSH_KEY}}" > dailp-deployment-key.pem
           chmod 400 ./dailp-deployment-key.pem
           echo "Retrieving terraform outputs..."
-          BASTION_IP=$(nix run --impure .#tf-output bastion_ip)
           DATABASE_ENDPOINT=$(nix run --impure .#tf-output database_endpoint)
           echo "Configuring SSH client..."
           mkdir -p ~/.ssh
