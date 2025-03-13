@@ -20,11 +20,7 @@
     "nu:backups" = "no";
     "Name" = "DAILP-db";
   };
-  servers.bastion.instance_tags = {
-    "nu:function" = "bastion";
-    "nu:os" = "linux";
-    "nu:backups" = "no";
-  };
+
   functions.tags = { "nu:function" = "application-server"; "Name" = "graphql-endpoint"; };
 }
 /*

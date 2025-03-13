@@ -23,7 +23,6 @@ in {
     ./website.nix
     ./nu-tags.nix
     ./database-sql.nix
-    ./bastion-host.nix
     ./media-storage.nix
     ./media-access.nix
     ./user-roles.nix
