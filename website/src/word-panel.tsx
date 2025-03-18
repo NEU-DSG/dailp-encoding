@@ -216,15 +216,18 @@ const EditSegmentation = (p: {
     }
 
     const updatedSegments = [...currentSegments, newSegment]
-    form.update("word", {
-      ...currentWord,
-      segments: updatedSegments,
-    })
+    // Add shouldValidate: false to prevent auto-submission
+    form.update(
+      "word",
+      {
+        ...currentWord,
+        segments: updatedSegments,
+      },
+    )
   }
 
   const deleteSegment = (index: number) => {
-    const updatedSegments = [...currentSegments]
-    updatedSegments.splice(index, 1)
+    const updatedSegments = currentSegments.filter((_, i) => i !== index)
     form.update("word", {
       ...currentWord,
       segments: updatedSegments,
@@ -235,7 +238,7 @@ const EditSegmentation = (p: {
     <table className={css.tableContainer}>
       <tbody>
         {currentSegments.map((segment, index) => (
-          <tr style={{ display: "flex" }}>
+          <tr key={index} style={{ display: "flex" }}>
             <td className={css.editMorphemeCells}>
               {/* This is disabled at the moment to be fully implemented later. */}
               <FormInput

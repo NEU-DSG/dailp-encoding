@@ -10,6 +10,8 @@ type FormContextType = {
   form: FormStateReturn<any | undefined>
   isEditing: boolean
   setIsEditing: (bool: boolean) => void
+  originalSegmentCount: number
+  setOriginalSegmentCount: (count: number) => void
 }
 
 const WordFormContext = createContext<FormContextType>({} as FormContextType)
@@ -17,6 +19,7 @@ const WordFormContext = createContext<FormContextType>({} as FormContextType)
 // Instantiates a form state used to keep track of the current word and information about all its features.
 export const FormProvider = (props: { children: ReactNode }) => {
   const [isEditing, setIsEditing] = useState(false)
+  const [originalSegmentCount, setOriginalSegmentCount] = useState(0)
   const word: Dailp.FormFieldsFragment = {} as Dailp.FormFieldsFragment
 
   const [updateWordResult, updateWord] = Dailp.useUpdateWordMutation()
@@ -39,11 +42,29 @@ export const FormProvider = (props: { children: ReactNode }) => {
       word,
     },
     onValidate: (values) => {
-      if (!values || !values.word) {
-        throw { values: "No word found" }
+      // Only validate on submit attempt, not on field updates
+      if (form.submitFailed) {
+        if (!values || !values.word) {
+          throw { values: "No word found" }
+        }
       }
     },
     onSubmit: (values) => {
+      // Add validation check here before proceeding with submit
+      if (!values || !values.word) {
+        throw { values: "No word found" }
+      }
+
+      // Check if segments were deleted
+      if (values.word.segments.length < originalSegmentCount) {
+        const confirmDelete = window.confirm(
+          "You have deleted word parts. This change will be permanent. Are you sure you want to save?"
+        )
+        if (!confirmDelete) {
+          return
+        }
+      }
+      
       if (cherokeeRepresentation === Dailp.CherokeeOrthography.Taoc) {
         setIsEditing(false)
 
@@ -80,7 +101,15 @@ export const FormProvider = (props: { children: ReactNode }) => {
   })
 
   return (
-    <WordFormContext.Provider value={{ form, isEditing, setIsEditing }}>
+    <WordFormContext.Provider 
+      value={{ 
+        form, 
+        isEditing, 
+        setIsEditing,
+        originalSegmentCount,
+        setOriginalSegmentCount 
+      }}
+    >
       {props.children}
     </WordFormContext.Provider>
   )
