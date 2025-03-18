@@ -111,17 +111,9 @@ export const WordPanel = (p: {
 
       {/* Since editing translations is not yet supported, just display the translation for now. */}
       <div style={{ display: "flex" }}>‘{p.word.englishGloss}’</div>
-
-      {/* {p.panel === PanelType.WordPanel ? (
-        <div style={{ display: "flex" }}>‘{translation}’</div>
-      ) : (
-        // should this be a call to the parameterized component as well?
-        <>{translation}</>
-      )} */}
     </>
   )
 
-  // Contains a component rendering a word's commentary.
   const commentaryContent = (
     <PanelFeatureComponent
       word={p.word}
@@ -157,9 +149,8 @@ export const WordPanel = (p: {
         }
       />
 
-      {/* If there are no segments, does not display Word Parts panel 
-      NOTE: should we remove this? once you delete all the segments we can never get this panel back again*/}
-      {p.word.segments.length > 0 && (
+      {/* Always show Word Parts panel in edit mode, otherwise only if there are segments */}
+      {(p.word.segments.length > 0 || p.panel === PanelType.EditWordPanel) && (
         <CollapsiblePanel
           title={"Word Parts"}
           content={wordPartsContent}
