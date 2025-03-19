@@ -11,5 +11,5 @@ in {
       to = "aws_iam_role_policy.main";
       id = "${prefixName "bastion"}:${prefixName "bastion"}";
     }
-  ]
+  ];
 }
