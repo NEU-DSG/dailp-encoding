@@ -32,7 +32,7 @@
             }
         )'';
         inline_policy = {
-          name   = ${bastionName};
+          name   = bastionName;
           policy = ''jsonencode(
                 {
                   Statement = [
