@@ -13,7 +13,7 @@ let
   inherit (builtins) getEnv;
   stage_var = getEnv "TF_STAGE";
   # Default to the 'dev' environment unless specified.
-  stage = if stage_var == "" then "dev" else stage_var;
+  stage = if stage_var == "" || stage_var == "local" then "dev" else stage_var;
 in {
   imports = [
     ./bootstrap.nix
@@ -26,6 +26,8 @@ in {
     ./media-storage.nix
     ./media-access.nix
     ./user-roles.nix
+    ./bastion-host.nix
+    ./import.nix
   ];
 
   # Gives all modules access to which stage we're deploying to, while also
