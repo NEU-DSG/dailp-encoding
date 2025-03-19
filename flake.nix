@@ -1,6 +1,5 @@
 {
   inputs = {
-    terranix.url = "github:terranix/terranix";
     pkgs.url = "github:nixos/nixpkgs/nixos-23.11";
     utils.url = "github:numtide/flake-utils";
     # Provides cargo dependencies.
@@ -14,6 +13,8 @@
       inputs.nixpkgs.follows = "pkgs";
     };
     nix-filter.url = "github:numtide/nix-filter";
+    terranix.url = "github:terranix/terranix";
+
   };
 
   outputs = inputs:
@@ -94,7 +95,7 @@
         terraformConfig = pkgs.writeTextFile {
           name = "terraform-config";
           text = let
-            tf = import "${terranix.url}/core/default.nix" {
+            tf = import "${input.terranix.url}/core/default.nix" {
               inherit pkgs;
               terranix_config = {
                 imports = [ ./terraform/main.nix ];
