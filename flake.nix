@@ -1,5 +1,6 @@
 {
   inputs = {
+    terranix.url = "github:terranix/terranix";
     pkgs.url = "github:nixos/nixpkgs/nixos-23.11";
     utils.url = "github:numtide/flake-utils";
     # Provides cargo dependencies.
@@ -93,7 +94,7 @@
         terraformConfig = pkgs.writeTextFile {
           name = "terraform-config";
           text = let
-            tf = import "${pkgs.terranix}/core/default.nix" {
+            tf = import "${terranix.url}/core/default.nix" {
               inherit pkgs;
               terranix_config = {
                 imports = [ ./terraform/main.nix ];
