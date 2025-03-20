@@ -24,7 +24,7 @@
           inherit system;
           config.allowUnfree = true;
         };
-        terranix = inputs.terranix.packages.${system};
+        terranix = inputs.terranix.packages.;
         fenix = inputs.fenix.packages.${system};
         toolchainFile = {
           file = ./rust-toolchain.toml;
@@ -96,8 +96,8 @@
         terraformConfig = pkgs.writeTextFile {
           name = "terraform-config";
           text = let
-            tf = import "${terranix}/core/default.nix" {
-              inherit pkgs;
+            tf = terranix.lib.terranixConfiguration {
+              inherit system;
               terranix_config = {
                 imports = [ ./terraform/main.nix ];
                 functions.package_path = "${dailpFunctions}";
