@@ -24,6 +24,7 @@ import { formInput } from "./edit-word-feature.css"
 import { useForm } from "./edit-word-form-context"
 import * as css from "./panel-layout.css"
 import { usePreferences } from "./preferences-context"
+import { IoIosBookmarks } from "react-icons/io";
 
 enum PanelType {
   WordPanel,
@@ -121,6 +122,21 @@ export const WordPanel = (p: {
       input="textarea"
     />
   )
+  const englishGlossContent= (
+    <>
+      {p.panel === PanelType.WordPanel ? (
+        <VerticalMorphemicSegmentation
+          cherokeeRepresentation={cherokeeRepresentation}
+          segments={p.word.segments}
+        />
+      ) : (
+        <EditSegmentation segments={p.word.segments} options={p.options} />
+      )}
+
+      {/* Since editing translations is not yet supported, just display the translation for now. */}
+      <div style={{ display: "flex" }}>‘{p.word.englishGloss}’</div>
+    </>
+  )
 
   const discussionContent = <CommentSection parent={p.word} />
 
@@ -148,6 +164,19 @@ export const WordPanel = (p: {
           />
         }
       />
+      {/* Always show Word Parts panel in edit mode, otherwise only if there are segments */}
+      {(p.word.englishGloss.length > 0 || p.panel === PanelType.EditWordPanel) && (
+        <CollapsiblePanel
+          title={"English Gloss"}
+          content={wordPartsContent}
+          icon={
+            <IoIosBookmarks
+              size={24}
+              className={css.wordPanelButton.colpleft}
+            />
+          }
+        />
+      )}
 
       {/* Always show Word Parts panel in edit mode, otherwise only if there are segments */}
       {(p.word.segments.length > 0 || p.panel === PanelType.EditWordPanel) && (
