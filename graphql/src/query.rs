@@ -1,13 +1,7 @@
 //! This piece of the project exposes a GraphQL endpoint that allows one to access DAILP data in a federated manner with specific queries.
 
 use dailp::{
-    auth::{AuthGuard, GroupGuard, UserGroup, UserInfo},
-    comment::{CommentParent, CommentUpdate, DeleteCommentInput, PostCommentInput},
-    slugify_ltree,
-    user::{User, UserUpdate},
-    AnnotatedForm, AttachAudioToWordInput, CollectionChapter, CurateWordAudioInput,
-    DeleteContributorAttribution, DocumentMetadataUpdate, DocumentParagraph,
-    UpdateContributorAttribution, Uuid,
+    async_graphql::InputType, auth::{AuthGuard, GroupGuard, NotGroupGuard, UserGroup, UserInfo}, collection, comment::{CommentParent, CommentUpdate, DeleteCommentInput, PostCommentInput}, slugify_ltree, user::{User, UserUpdate}, AnnotatedForm, AttachAudioToWordInput, CollectionChapter, CurateWordAudioInput, DeleteContributorAttribution, DocumentMetadata, DocumentMetadataInput, DocumentMetadataUpdate, DocumentParagraph, EditedCollectionInput, UpdateContributorAttribution, Uuid
 };
 use itertools::Itertools;
 
@@ -459,7 +453,7 @@ impl Mutation {
 
     /// Mutation for adding/changing contributor attributions
     #[graphql(
-        guard = "GroupGuard::new(UserGroup::Editors).or(GroupGuard::new(UserGroup::Contributors))"
+        guard = "NotGroupGuard::new(UserGroup::Readers)"
     )]
     async fn update_contributor_attribution(
         &self,
@@ -475,7 +469,7 @@ impl Mutation {
 
     ///Mutation for deleting contributor attributions
     #[graphql(
-        guard = "GroupGuard::new(UserGroup::Editors).or(GroupGuard::new(UserGroup::Contributors))"
+        guard = "NotGroupGuard::new(UserGroup::Readers)"
     )]
     async fn delete_contributor_attribution(
         &self,
@@ -490,7 +484,7 @@ impl Mutation {
     }
 
     /// Mutation for paragraph and translation editing
-    #[graphql(guard = "GroupGuard::new(UserGroup::Contributors)")]
+    #[graphql(guard = "NotGroupGuard::new(UserGroup::Readers)")]
     async fn update_paragraph(
         &self,
         context: &Context<'_>,
@@ -503,7 +497,7 @@ impl Mutation {
             .await?)
     }
 
-    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    #[graphql(guard = "NotGroupGuard::new(UserGroup::Readers)")]
     async fn update_page(
         &self,
         context: &Context<'_>,
@@ -518,7 +512,7 @@ impl Mutation {
         Ok(true)
     }
 
-    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    #[graphql(guard = "NotGroupGuard::new(UserGroup::Readers)")]
     async fn update_annotation(
         &self,
         context: &Context<'_>,
@@ -534,7 +528,7 @@ impl Mutation {
     }
 
     #[graphql(
-        guard = "GroupGuard::new(UserGroup::Editors).or(GroupGuard::new(UserGroup::Contributors))"
+        guard = "NotGroupGuard::new(UserGroup::Readers)"
     )]
     async fn update_word(
         &self,
@@ -606,7 +600,7 @@ impl Mutation {
     }
 
     /// Decide if a piece audio should be included in edited collection
-    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    #[graphql(guard = "NotGroupGuard::new(UserGroup::Readers)")]
     async fn curate_word_audio(
         &self,
         context: &Context<'_>,
@@ -657,7 +651,7 @@ impl Mutation {
             .await?)
     }
 
-    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    #[graphql(guard = "NotGroupGuard::new(UserGroup::Readers)")]
     async fn update_document_metadata(
         &self,
         context: &Context<'_>,
@@ -668,6 +662,36 @@ impl Mutation {
             .loader()
             .update_document_metadata(document)
             .await?)
+    }
+
+    /// Create a new document
+    // #[graphql(guard = "GroupGuard::new(UserGroup::Administrators).or(GroupGuard::new(UserGroup::Editors))")]
+    async fn insert_document(
+        &self,
+        context: &Context<'_>,
+        meta: DocumentMetadataInput,
+        collection_id: Option<Uuid>,
+        index_in_collection: Option<i64>,
+    ) -> FieldResult<Uuid> {
+        let db = context.data::<DataLoader<Database>>()?.loader();
+        let result = db.insert_document_new(
+            &meta,
+            collection_id,
+            index_in_collection
+        ).await?;
+        Ok(result.0)
+    }
+
+    /// Create a new edited collection
+    // #[graphql(guard = "GroupGuard::new(UserGroup::Administrators)")]
+    async fn insert_edited_collection(
+        &self,
+        context: &Context<'_>,
+        collection: EditedCollectionInput,
+    ) -> FieldResult<Uuid> {
+        let db = context.data::<DataLoader<Database>>()?.loader();
+        let result = db.insert_edited_collection(collection).await?;
+        Ok(result)
     }
 }
 

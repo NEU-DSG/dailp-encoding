@@ -705,3 +705,11 @@ query UserById($id: UUID!) {
     role
   }
 }
+
+mutation InsertEditedCollection($collection: EditedCollectionInput!) {
+  insertEditedCollection(collection: $collection)
+}
+
+mutation InsertDocument ($document: DocumentMetadataInput!, $id: UUID!, $index: Int!) {
+  insertDocument(meta: $document, collectionId: $id, indexInCollection: $index)
+}

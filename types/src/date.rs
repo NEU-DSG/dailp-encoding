@@ -47,7 +47,8 @@ impl Date {
     }
 }
 
-#[derive(async_graphql::InputObject)]
+/// InputType for Date
+#[derive(async_graphql::InputObject, Serialize, Deserialize, Clone, Copy, Debug, PartialOrd, Ord, PartialEq, Eq)]
 pub struct DateInput {
     day: u32,
     month: u32,
@@ -57,6 +58,12 @@ pub struct DateInput {
 impl Into<Date> for &DateInput {
     fn into(self) -> Date {
         Date::from_ymd(self.year, self.month, self.day)
+    }
+}
+
+impl From<DateInput> for Date {
+    fn from(di: DateInput) -> Self {
+        Date::from_ymd(di.year, di.month, di.day)
     }
 }
 

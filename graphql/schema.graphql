@@ -436,6 +436,20 @@ type ContributorDetails {
 }
 
 """
+Input Object for Contributor
+"""
+input ContributorInput {
+	"""
+	Full name of the contributor
+	"""
+	name: String!
+	"""
+	The role that defines most of their contributions to the associated item
+	"""
+	role: String!
+}
+
+"""
 Request to update if a piece of audio should be included in an edited collection
 """
 input CurateWordAudioInput {
@@ -472,6 +486,9 @@ type Date {
 	formattedDate: String!
 }
 
+"""
+InputType for Date
+"""
 input DateInput {
 	day: Int!
 	month: Int!
@@ -523,6 +540,54 @@ type DocumentCollection {
 	pass that to the dataloader below.
 	"""
 	documents: [DocumentReference!]!
+}
+
+"""
+Input type for creating a new document
+"""
+input DocumentMetadataInput {
+	"""
+	Official short identifier. Required.
+	"""
+	shortName: String!
+	"""
+	Full title of the document. Required.
+	"""
+	title: String!
+	"""
+	Further details about this particular document. Required.
+	The original source(s) of this document, the most important first. Can be empty.
+	"""
+	sources: [SourceAttributionInput!]
+	"""
+	Where the source document came from, maybe the name of a collection. Optional.
+	"""
+	collection: String
+	"""
+	The genre this document is. Optional.
+	"""
+	genre: String
+	"""
+	The people involved in collecting, translating, annotating. Can be empty.
+	"""
+	contributors: [ContributorInput!]
+	"""
+	URL for an image of the original physical document. Optional.
+	"""
+	pageImages: IiifImagesInput
+	"""
+	The date this document was produced (or `None` if unknown). Optional.
+	"""
+	date: DateInput
+	"""
+	Whether this document is a reference, therefore just a list of forms. Required.
+	"""
+	isReference: Boolean!
+	"""
+	Arbitrary number used for manually ordering documents in a collection.
+	For collections without manual ordering, use zero here. Required.
+	"""
+	orderIndex: Int!
 }
 
 """
@@ -641,6 +706,24 @@ type EditedCollection {
 	chapters: [CollectionChapter!]
 }
 
+"""
+Input object for creating a new collection
+"""
+input EditedCollectionInput {
+	"""
+	Full title of the collection
+	"""
+	title: String!
+	"""
+	URL slug for the collection, like "cwkw"
+	"""
+	slug: String!
+	"""
+	ID of WordPress menu for navigating the collection
+	"""
+	wordpressMenuId: Int
+}
+
 
 type FormsInTime {
 	start: Date
@@ -691,11 +774,32 @@ type IiifImages {
 	urls: [String!]!
 }
 
+"""
+Input object for IiifImages
+"""
+input IiifImagesInput {
+	"""
+	Database ID for the image source
+	"""
+	source: ImageSourceIdInput!
+	"""
+	Remote IIIF OIDs for the images
+	"""
+	ids: [String!]!
+}
+
 type ImageSource {
 	"""
 	Base URL for the IIIF server
 	"""
 	url: String!
+}
+
+"""
+InputObject for ImageSourceId
+"""
+input ImageSourceIdInput {
+	id: UUID!
 }
 
 
@@ -858,6 +962,14 @@ type Mutation {
 	"""
 	attachAudioToWord(input: AttachAudioToWordInput!): AnnotatedForm!
 	updateDocumentMetadata(document: DocumentMetadataUpdate!): UUID!
+	"""
+	Create a new document
+	"""
+	insertDocument(meta: DocumentMetadataInput!, collectionId: UUID!, indexInCollection: Int!): UUID!
+	"""
+	Create a new edited collection
+	"""
+	insertEditedCollection(collection: EditedCollectionInput!): UUID!
 }
 
 """
@@ -1063,6 +1175,20 @@ type SourceAttribution {
 	link: String!
 }
 
+"""
+Input Object for SourceAttribution
+"""
+input SourceAttributionInput {
+	"""
+	Name of the source, i.e. "The Newberry Library"
+	"""
+	name: String!
+	"""
+	URL of this source's homepage, i.e. "https://www.newberry.org/"
+	"""
+	link: String!
+}
+
 
 """
 A UUID is a unique 128-bit number, stored as 16 octets. UUIDs are parsed as
@@ -1130,6 +1256,7 @@ enum UserGroup {
 	CONTRIBUTORS
 	EDITORS
 	READERS
+	ADMINISTRATORS
 }
 
 """
