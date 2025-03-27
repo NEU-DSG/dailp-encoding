@@ -665,7 +665,7 @@ impl Mutation {
     }
 
     /// Create a new document
-    // #[graphql(guard = "GroupGuard::new(UserGroup::Administrators).or(GroupGuard::new(UserGroup::Editors))")]
+    #[graphql(guard = "GroupGuard::new(UserGroup::Administrators).or(GroupGuard::new(UserGroup::Editors))")]
     async fn insert_document(
         &self,
         context: &Context<'_>,
@@ -683,7 +683,7 @@ impl Mutation {
     }
 
     /// Create a new edited collection
-    // #[graphql(guard = "GroupGuard::new(UserGroup::Administrators)")]
+    #[graphql(guard = "GroupGuard::new(UserGroup::Administrators)")]
     async fn insert_edited_collection(
         &self,
         context: &Context<'_>,
