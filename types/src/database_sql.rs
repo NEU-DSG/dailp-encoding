@@ -899,7 +899,10 @@ impl Database {
         .await?)
     }
 
-    pub async fn insert_edited_collection(&self, collection: EditedCollectionInput) -> Result<Uuid> {
+    pub async fn insert_edited_collection(
+        &self,
+        collection: EditedCollectionInput,
+    ) -> Result<Uuid> {
         Ok(query_file_scalar!(
             "queries/insert_edited_collection.sql",
             &collection.title as _,
@@ -1002,7 +1005,6 @@ impl Database {
         collection_id: Option<Uuid>,
         index_in_collection: Option<i64>,
     ) -> Result<DocumentId> {
-
         let document_id = &meta.short_name;
         let written_at: Option<Date> = meta.date.map(Date::from);
         let audio_slice_id: Option<Uuid> = None;

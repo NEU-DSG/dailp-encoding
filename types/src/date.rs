@@ -48,7 +48,18 @@ impl Date {
 }
 
 /// InputType for Date
-#[derive(async_graphql::InputObject, Serialize, Deserialize, Clone, Copy, Debug, PartialOrd, Ord, PartialEq, Eq)]
+#[derive(
+    async_graphql::InputObject,
+    Serialize,
+    Deserialize,
+    Clone,
+    Copy,
+    Debug,
+    PartialOrd,
+    Ord,
+    PartialEq,
+    Eq,
+)]
 pub struct DateInput {
     day: u32,
     month: u32,

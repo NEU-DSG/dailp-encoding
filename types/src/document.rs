@@ -1,5 +1,7 @@
 use crate::{
-    auth::UserInfo, comment::Comment, date::DateInput, slugify, AnnotatedForm, AudioSlice, AudioSliceInput, Contributor, ContributorInput, Database, Date, SourceAttribution, SourceAttributionInput, Translation, TranslationBlock
+    auth::UserInfo, comment::Comment, date::DateInput, slugify, AnnotatedForm, AudioSlice,
+    AudioSliceInput, Contributor, ContributorInput, Database, Date, SourceAttribution,
+    SourceAttributionInput, Translation, TranslationBlock,
 };
 
 use async_graphql::{dataloader::DataLoader, FieldResult, MaybeUndefined};
@@ -479,7 +481,7 @@ pub struct DocumentMetadataInput {
     /// The genre this document is. Optional.
     pub genre: Option<String>,
     #[serde(default)]
-    /// The people involved in collecting, translating, annotating. Can be empty. 
+    /// The people involved in collecting, translating, annotating. Can be empty.
     pub contributors: Option<Vec<ContributorInput>>,
     /// URL for an image of the original physical document. Optional.
     #[serde(default)]

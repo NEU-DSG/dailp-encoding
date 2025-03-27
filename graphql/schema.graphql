@@ -965,7 +965,7 @@ type Mutation {
 	"""
 	Create a new document
 	"""
-	insertDocument(meta: DocumentMetadataInput!, collectionId: UUID!, indexInCollection: Int!): UUID!
+	insertDocument(meta: DocumentMetadataInput!, collectionId: UUID, indexInCollection: Int): UUID!
 	"""
 	Create a new edited collection
 	"""

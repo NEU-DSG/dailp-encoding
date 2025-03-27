@@ -148,9 +148,8 @@ impl NotGroupGuard {
 impl Guard for NotGroupGuard {
     async fn check(&self, ctx: &async_graphql::Context<'_>) -> async_graphql::Result<()> {
         let user = ctx.data_opt::<UserInfo>();
-        let is_in_forbidden_group = user.map(|user| 
-            user.groups.iter().any(|group| group == &self.group)
-        );
+        let is_in_forbidden_group =
+            user.map(|user| user.groups.iter().any(|group| group == &self.group));
 
         // Deny access if the user is in the forbidden group
         if is_in_forbidden_group == Some(true) {
