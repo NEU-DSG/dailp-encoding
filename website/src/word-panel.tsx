@@ -73,23 +73,19 @@ export const WordPanel = (p: {
   const phoneticsContent = (
     <>
       {
-        /*p.word.source*/ true && (
           <PanelFeatureComponent
             word={p.word}
             feature={"source"}
             label="Syllabary Characters"
           />
-        )
       }
 
       {
-        /*p.word.romanizedSource*/ true && (
           <PanelFeatureComponent
             word={p.word}
             feature={"romanizedSource"}
             label="Simple Phonetics"
           />
-        )
       }
     </>
   )
