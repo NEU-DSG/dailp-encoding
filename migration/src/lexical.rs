@@ -181,7 +181,7 @@ async fn parse_numerals(
             let _numeric = values.next()?;
             let simple_phonetics = values.next()?;
             let syllabary = values.next()?;
-            let position = PositionInDocument::new(doc_id.clone(), page_num, key);
+            let position = PositionInDocument::new(doc_id, page_num, key);
             let segments = vec![WordSegment::new(root_dailp, gloss.clone(), None)];
             Some(AnnotatedForm {
                 id: None,
@@ -314,7 +314,7 @@ fn parse_new_df1975(
         .filter(|cols| cols.len() > 4 && !cols[2].is_empty())
         .group_by(|columns| {
             columns
-                .get(0)
+                .first()
                 .and_then(|s| s.split(",").next().unwrap().parse::<i64>().ok())
         })
         .into_iter()
@@ -322,7 +322,7 @@ fn parse_new_df1975(
         // The rest are relevant to the verb itself.
         .filter_map(move |(index, (key, rows))| {
             let rows: Vec<_> = rows.collect();
-            let columns = rows.get(0)?.clone();
+            let columns = rows.first()?.clone();
 
             // The columns are as follows: key, page number, root, root gloss,
             // translations 1, 2, 3, transitivity, UDB class, blank, surface forms.
@@ -338,7 +338,7 @@ fn parse_new_df1975(
                 .filter(|s| !s.is_empty())
                 .collect();
             let date = Date::from_ymd(year, 1, 1);
-            let pos = PositionInDocument::new(doc_id.clone(), page_number, key);
+            let pos = PositionInDocument::new(doc_id, page_number, key);
             let mut form_cells = rows
                 .into_iter()
                 .flat_map(|row| row.into_iter().skip(4 + translations + after_root));
@@ -429,7 +429,7 @@ async fn ingest_ac1995(db: &Database, sheet_id: &str) -> Result<()> {
         let _romanized = row.next()?;
         let normalized = row.next()?;
         let translation = row.next()?;
-        let pos = PositionInDocument::new(meta.id.clone(), "1".to_owned(), index);
+        let pos = PositionInDocument::new(meta.id, "1".to_owned(), index);
         Some(AnnotatedForm {
             id: None,
             simple_phonetics: Some(normalized),

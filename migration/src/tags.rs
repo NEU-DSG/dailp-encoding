@@ -1,6 +1,5 @@
 use anyhow::Result;
 use dailp::{AbstractMorphemeTag, Database, MorphemeTag, SheetResult, Uuid, WordSegmentRole};
-use log::info;
 
 /// Cherokee has many functional morphemes that are documented.
 /// Pulls all the details we have about each morpheme from our spreadsheets,

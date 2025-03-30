@@ -190,7 +190,7 @@ impl DrsRes {
         if val.is_none() {
             return String::from("");
         }
-        return val.unwrap().clone();
+        val.unwrap().clone()
     }
 }
 
@@ -238,9 +238,7 @@ impl AudioRes {
 
         let cf_domain = std::env::var("CF_URL")?;
         let s3_location = format!("https://{}", cf_domain);
-        let is_drs_key = |test_value: &str| -> bool {
-            return test_value.contains("neu");
-        };
+        let is_drs_key = |test_value: &str| -> bool { test_value.contains("neu") };
         // FIXME: this could be refactored, esp. for annotations
         return Ok(Self {
             audio_url: if is_drs_key(audio_ref_key) {
@@ -313,9 +311,7 @@ impl AudioRes {
     /// # Errors
     /// Fails if annotation field does not meet structural requirements or is empty.
     pub fn into_audio_slices(self) -> Option<Vec<AudioSlice>> {
-        if self.annotations.is_none() {
-            return None;
-        }
+        self.annotations.as_ref()?;
         let mut result: Vec<AudioSlice> = vec![];
         use csv::ReaderBuilder;
         let parse = self.annotations.unwrap();
