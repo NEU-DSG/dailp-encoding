@@ -159,8 +159,8 @@ export const CommentBody = (p: { comment: Dailp.Comment }) => {
             p.comment.commentType === Dailp.CommentType.Story
               ? css.tagColorStory
               : p.comment.commentType === Dailp.CommentType.Suggestion
-              ? css.tagColorSuggestion
-              : css.tagColorQuestion
+                ? css.tagColorSuggestion
+                : css.tagColorQuestion
           }
         >
           {p.comment.commentType
