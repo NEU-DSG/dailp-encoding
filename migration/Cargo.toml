@@ -8,10 +8,6 @@ edition = "2021"
 name = "dailp-migration"
 path = "src/main.rs"
 
-[[bin]]
-name = "dailp-validate"
-path = "src/validate.rs"
-
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]

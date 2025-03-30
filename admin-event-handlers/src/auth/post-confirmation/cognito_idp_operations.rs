@@ -30,7 +30,7 @@ impl CognitoClient {
             .group_name(group.to_string())
             .send()
             .await
-            .map_err(|e| anyhow::Error::new(e))
+            .map_err(anyhow::Error::new)
             .map(|_x| ())
     }
 }
