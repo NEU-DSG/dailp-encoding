@@ -13,7 +13,10 @@
       inputs.nixpkgs.follows = "pkgs";
     };
     nix-filter.url = "github:numtide/nix-filter";
-    terranix.url = "github:terranix/terranix";
+    terranix = {
+      url = "github:terranix/terranix";
+      inputs.nixpkgs.follows = "pkgs";
+    }
 
   };
 
@@ -24,7 +27,6 @@
           inherit system;
           config.allowUnfree = true;
         };
-        terranix = inputs.terranix;
         fenix = inputs.fenix.packages.${system};
         toolchainFile = {
           file = ./rust-toolchain.toml;
