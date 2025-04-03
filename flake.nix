@@ -16,7 +16,7 @@
     terranix = {
       url = "github:terranix/terranix";
       inputs.nixpkgs.follows = "pkgs";
-    }
+    };
 
   };
 
