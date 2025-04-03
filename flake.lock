@@ -110,21 +110,6 @@
         "type": "github"
       }
     },
-    "nixpkgs": {
-      "locked": {
-        "lastModified": 1728956102,
-        "narHash": "sha256-J8zo+UYNjHATsxn2/ROl8iaji2RgLm+sG7b3VcD36YM=",
-        "owner": "nixos",
-        "repo": "nixpkgs",
-        "rev": "3d85bae2431f20ab1ac5cf14d03d314dffe629af",
-        "type": "github"
-      },
-      "original": {
-        "owner": "nixos",
-        "repo": "nixpkgs",
-        "type": "github"
-      }
-    },
     "pkgs": {
       "locked": {
         "lastModified": 1707091808,
@@ -188,7 +173,9 @@
         "bats-assert": "bats-assert",
         "bats-support": "bats-support",
         "flake-parts": "flake-parts",
-        "nixpkgs": "nixpkgs",
+        "nixpkgs": [
+          "pkgs"
+        ],
         "systems": "systems",
         "terranix-examples": "terranix-examples"
       },

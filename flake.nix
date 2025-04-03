@@ -98,7 +98,7 @@
         terraformConfig = pkgs.writeTextFile {
           name = "terraform-config";
           text = let
-            tf = terranix.lib.terranixConfiguration {
+            tf = inputs.terranix.lib.terranixConfiguration {
               inherit system;
               terranix_config = {
                 imports = [ ./terraform/main.nix ];
