@@ -100,13 +100,13 @@
           text = let
             tf = inputs.terranix.lib.terranixConfiguration {
               inherit system;
-              terranix_config = {
+              extraArgs = {
                 imports = [ ./terraform/main.nix ];
                 functions.package_path = "${dailpFunctions}";
               };
               strip_nulls = true;
             };
-          in builtins.toJSON (tf.config);
+          in builtins.toJSON (tf);
           executable = false;
           destination = "/config.tf.json";
         };
