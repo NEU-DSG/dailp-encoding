@@ -24,7 +24,7 @@
           inherit system;
           config.allowUnfree = true;
         };
-        terranix = inputs.terranix.packages;
+        terranix = inputs.terranix;
         fenix = inputs.fenix.packages.${system};
         toolchainFile = {
           file = ./rust-toolchain.toml;
