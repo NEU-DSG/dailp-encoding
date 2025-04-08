@@ -189,6 +189,7 @@ input AnnotatedFormUpdate {
 	Updated segments
 	"""
 	segments: [MorphemeSegmentUpdate!]
+	englishGloss: String
 }
 
 """

@@ -510,12 +510,14 @@ impl Database {
 
         let source = word.source.into_vec();
         let commentary = word.commentary.into_vec();
+        let english_gloss = word.english_gloss.into_vec();
 
         let document_id = query_file!(
             "queries/update_word.sql",
             word.id,
             &source as _,
             &commentary as _,
+            &english_gloss as _,
         )
         .fetch_one(&mut *tx)
         .await?

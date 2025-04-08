@@ -79,6 +79,7 @@ export const FormProvider = (props: { children: ReactNode }) => {
             gloss: segment.gloss,
             role: segment.role,
           })),
+          englishGloss: values.word["englishGloss"],
         }
 
         console.log("Sending complete word update:", wordUpdate)
