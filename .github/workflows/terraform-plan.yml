@@ -4,7 +4,7 @@ on:
     branches: [main]
 jobs:
   plan:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     env:
       DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
       GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
