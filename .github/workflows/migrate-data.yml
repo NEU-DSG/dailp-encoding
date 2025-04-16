@@ -13,7 +13,7 @@ on:
           - Production
 jobs:
   build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     environment: ${{ inputs.applyTo == 'Production' && 'Production' || 'Development'}}
     env:
       DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
