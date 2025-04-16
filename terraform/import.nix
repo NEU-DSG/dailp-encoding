@@ -12,7 +12,7 @@ in {
       id = "${prefixName "bastion"}:${prefixName "bastion"}";
     }
     {
-      to = "module.bastion_host.aws_instance.default";
+      to = "module.bastion_host.aws_instance.default[0]";
       id = "i-0e4166c8cb6363bb3"; # TODO update value later. 
     }
   ];
