@@ -97,7 +97,7 @@
           };
         terraformConfig = inputs.terranix.lib.terranixConfiguration {
           inherit system;
-          modules = [{imports = [./terraform/main.nix]; functions.package_path = "/";}];
+          modules = [{imports = [./terraform/main.nix]; functions.package_path = "${dailpFunctions}";}];
           strip_nulls = true;
         };
         # terraformConfig = pkgs.writeTextFile {
