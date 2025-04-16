@@ -63,7 +63,7 @@ in {
       secondary = getEnv "AWS_SUBNET_SECONDARY0";
       tertiary = getEnv "AWS_SUBNET_SECONDARY1";
     };
-    bastionSubnet = getEnv "AWS_SUBNET_BASTION";
+    bastion_subnet = getEnv "AWS_SUBNET_BASTION";
   };
 
   functions = 
