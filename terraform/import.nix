@@ -5,11 +5,11 @@ in {
   config.import = [
     {
       to = "aws_iam_role.default";
-      id = prefixName "bastion";
+      id = "module.bastion_host.aws_iam_role.default[0].${prefixName "bastion"}";
     }
     {
       to = "aws_iam_role_policy.main";
-      id = "module.bastion_host.aws_iam_role.default[0].${prefixName "bastion"}:${prefixName "bastion"}";
+      id = "module.bastion_host.aws_iam_role_policy.main[0].${prefixName "bastion"}:${prefixName "bastion"}";
     }
   ];
 }
