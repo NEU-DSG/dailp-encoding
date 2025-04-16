@@ -22,7 +22,7 @@
     associate_public_ip_address = false;
     vpc_id = config.setup.vpc;
     subnets = [
-      getEnv "AWS_SUBNET_BASTION"
+      config.setup.bastionSubnet
       # config.setup.subnets.primary
       # config.setup.subnets.secondary
       # config.setup.subnets.tertiary
