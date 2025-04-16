@@ -4,11 +4,11 @@ let
 in {
   config.import = [
     {
-      to = "module.bastion_host.aws_iam_role.default[0].aws_iam_role.default";
+      to = "module.bastion_host.aws_iam_role.default[0]";
       id = "${prefixName "bastion"}";
     }
     {
-      to = "module.bastion_host.aws_iam_role_policy.main[0].aws_iam_role_policy.main";
+      to = "module.bastion_host.aws_iam_role_policy.main[0]";
       id = "${prefixName "bastion"}:${prefixName "bastion"}";
     }
   ];
