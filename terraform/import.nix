@@ -13,7 +13,7 @@ in {
     }
     {
       to = "module.bastion_host.aws_instance.default[0]";
-      id = "i-06f3c9d3de857be53"; # TODO update value later. 
+      id = "i-0d69f63d821f36a12"; # TODO update value later. 
     }
   ];
 }
