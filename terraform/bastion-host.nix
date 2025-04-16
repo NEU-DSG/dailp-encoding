@@ -22,7 +22,7 @@
     associate_public_ip_address = false;
     vpc_id = config.setup.vpc;
     subnets = [
-      config.setup.bastionSubnet
+      config.setup.bastion_subnet
       # config.setup.subnets.primary
       # config.setup.subnets.secondary
       # config.setup.subnets.tertiary
