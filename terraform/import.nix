@@ -9,7 +9,7 @@ in {
     }
     {
       to = "aws_iam_role_policy.main";
-      id = "module.bastion_host.${prefixName "bastion"}:${prefixName "bastion"}";
+      id = "module.bastion_host.aws_iam_role.default[0].${prefixName "bastion"}:${prefixName "bastion"}";
     }
   ];
 }
