@@ -4,161 +4,39 @@
       instance_tags = mkOption { type = attrsOf str; };
     };
 
-  config.module.bastion_host.resource = let 
-      bastionName = (import ./utils.nix { stage = config.setup.stage; }) "bastion";
-    in {
-    aws_iam_role.default = {
-      name = bastionName;
-      id = bastionName;
-      force_detach_policies = false;
-      managed_policy_arns = [];
-      max_session_duration = 3600;
-      path = "/";
-      unique_id = "AROA3MWII32FEWIDB2EY3";
+  config.module.bastion_host = {
+    source =
+      "github.com/cloudposse/terraform-aws-ec2-bastion-server?ref=7f8fc52095ef466fedd1c06876e281a1ac6bb75b";
+    enabled = true;
+    instance_type = "t4g.micro";
+    ami = "ami-03190fe20ef6b1419";
 
-      assume_role_policy    = ''jsonencode(
-            {
-              Statement = [
-                  {
-                      Action    = "sts:AssumeRole"
-                      Effect    = "Allow"
-                      Principal = {
-                          Service = "ec2.amazonaws.com"
-                        }
-                      Sid       = ""
-                    },
-                ]
-              Version   = "2012-10-17"
-            }
-        )'';
-        inline_policy = {
-          name   = bastionName;
-          policy = ''jsonencode(
-                {
-                  Statement = [
-                      {
-                          Action   = [
-                              "ssm:UpdateInstanceInformation",
-                              "ssm:UpdateInstanceAssociationStatus",
-                              "ssm:UpdateAssociationStatus",
-                              "ssm:PutInventory",
-                              "ssm:PutConfigurePackageResult",
-                              "ssm:PutComplianceItems",
-                              "ssm:ListInstanceAssociations",
-                              "ssm:ListAssociations",
-                              "ssm:GetParameters",
-                              "ssm:GetParameter",
-                              "ssm:GetManifest",
-                              "ssm:GetDocument",
-                              "ssm:GetDeployablePatchSnapshotForInstance",
-                              "ssm:DescribeDocument",
-                              "ssm:DescribeAssociation",
-                            ]
-                          Effect   = "Allow"
-                          Resource = "*"
-                          Sid      = ""
-                      },
-                      {
-                          Action   = [
-                              "ssmmessages:OpenDataChannel",
-                              "ssmmessages:OpenControlChannel",
-                              "ssmmessages:CreateDataChannel",
-                              "ssmmessages:CreateControlChannel",
-                            ]
-                          Effect   = "Allow"
-                          Resource = "*"
-                          Sid      = ""
-                        },
-                      {
-                          Action   = [
-                              "ec2messages:SendReply",
-                              "ec2messages:GetMessages",
-                              "ec2messages:GetEndpoint",
-                              "ec2messages:FailMessage",
-                              "ec2messages:DeleteMessage",
-                              "ec2messages:AcknowledgeMessage",
-                            ]
-                          Effect   = "Allow"
-                          Resource = "*"
-                          Sid      = ""
-                        },
-                      {
-                          Action   = "s3:GetEncryptionConfiguration"
-                          Effect   = "Allow"
-                          Resource = "*"
-                          Sid      = ""
-                        },
-                    ]
-                  Version   = "2012-10-17"
-                }
-            )'';
-        };
-    };
-    aws_iam_role_policy.main = {
-      id = "${bastionName}:${bastionName}";
-      name = bastionName;
-      role = bastionName;
-      policy = ''
-        jsonencode(
-          {
-              Statement = [
-                  {
-                      Action   = [
-                          "ssm:UpdateInstanceInformation",
-                          "ssm:UpdateInstanceAssociationStatus",
-                          "ssm:UpdateAssociationStatus",
-                          "ssm:PutInventory",
-                          "ssm:PutConfigurePackageResult",
-                          "ssm:PutComplianceItems",
-                          "ssm:ListInstanceAssociations",
-                          "ssm:ListAssociations",
-                          "ssm:GetParameters",
-                          "ssm:GetParameter",
-                          "ssm:GetManifest",
-                          "ssm:GetDocument",
-                          "ssm:GetDeployablePatchSnapshotForInstance",
-                          "ssm:DescribeDocument",
-                          "ssm:DescribeAssociation",
-                        ]
-                      Effect   = "Allow"
-                      Resource = "*"
-                      Sid      = ""
-                    },
-                  {
-                      Action   = [
-                          "ssmmessages:OpenDataChannel",
-                          "ssmmessages:OpenControlChannel",
-                          "ssmmessages:CreateDataChannel",
-                          "ssmmessages:CreateControlChannel",
-                        ]
-                      Effect   = "Allow"
-                      Resource = "*"
-                      Sid      = ""
-                    },
-                  {
-                      Action   = [
-                          "ec2messages:SendReply",
-                          "ec2messages:GetMessages",
-                          "ec2messages:GetEndpoint",
-                          "ec2messages:FailMessage",
-                          "ec2messages:DeleteMessage",
-                          "ec2messages:AcknowledgeMessage",
-                        ]
-                      Effect   = "Allow"
-                      Resource = "*"
-                      Sid      = ""
-                    },
-                  {
-                      Action   = "s3:GetEncryptionConfiguration"
-                      Effect   = "Allow"
-                      Resource = "*"
-                      Sid      = ""
-                    },
-                ]
-              Version   = "2012-10-17"
-            }
-        )
-      '';
-    };
+    # ID will be constructed from these namespace, stage, and name for some reason.
+    namespace = "dailp";
+    stage = config.setup.stage;
+    name = "bastion";
+
+    key_name = "dailp-deployment-april-2022";
+
+    assign_eip_address = true;
+    associate_public_ip_address = true;
+    vpc_id = config.setup.vpc;
+    subnets = [
+      config.setup.subnets.primary
+      config.setup.subnets.secondary
+      config.setup.subnets.tertiary
+    ];
+
+    # Don't create a new security group for this server.
+    security_group_enabled = false;
+    # Use the existing one setup for database access.
+    security_groups = [
+      "\${aws_security_group.mongodb_access.id}"
+      "\${aws_security_group.nixos_test.id}"
+    ];
+
+    tags = config.setup.global_tags // config.servers.bastion.instance_tags;
   };
+
+  config.output.bastion_ip = { value = "\${module.bastion_host.public_ip}"; };
 }
