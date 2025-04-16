@@ -22,11 +22,12 @@
     associate_public_ip_address = false;
     vpc_id = config.setup.vpc;
     subnets = [
-      config.setup.subnets.primary
-      config.setup.subnets.secondary
-      config.setup.subnets.tertiary
+      getEnv "AWS_SUBNET_BASTION"
+      # config.setup.subnets.primary
+      # config.setup.subnets.secondary
+      # config.setup.subnets.tertiary
     ];
-
+    
     # Don't create a new security group for this server.
     security_group_enabled = false;
     # Use the existing one setup for database access.
