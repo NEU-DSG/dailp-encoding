@@ -4,6 +4,7 @@ import {
   AiFillCaretUp,
   AiFillSound,
 } from "react-icons/ai/index"
+import { IoIosBookmarks } from "react-icons/io"
 import { IoEllipsisHorizontalCircle } from "react-icons/io5/index"
 import {
   MdNotes,
@@ -24,7 +25,6 @@ import { formInput } from "./edit-word-feature.css"
 import { useForm } from "./edit-word-form-context"
 import * as css from "./panel-layout.css"
 import { usePreferences } from "./preferences-context"
-import { IoIosBookmarks } from "react-icons/io";
 
 enum PanelType {
   WordPanel,
@@ -119,10 +119,10 @@ export const WordPanel = (p: {
       input="textarea"
     />
   )
-  const englishGlossContent= (
+  const englishGlossContent = (
     <>
       {p.panel === PanelType.WordPanel ? (
-      <div style={{ display: "flex" }}>‘{p.word.englishGloss}’</div>
+        <div style={{ display: "flex" }}>‘{p.word.englishGloss}’</div>
       ) : (
         <EditEnglishGloss />
       )}
@@ -158,7 +158,8 @@ export const WordPanel = (p: {
         }
       />
       {/* Always show Word Parts panel in edit mode, otherwise only if there are segments */}
-      {(p.word.englishGloss.length > 0 || p.panel === PanelType.EditWordPanel) && (
+      {(p.word.englishGloss.length > 0 ||
+        p.panel === PanelType.EditWordPanel) && (
         <CollapsiblePanel
           title={"English Gloss"}
           content={englishGlossContent}
@@ -230,13 +231,10 @@ const EditSegmentation = (p: {
 
     const updatedSegments = [...currentSegments, newSegment]
     // Add shouldValidate: false to prevent auto-submission
-    form.update(
-      "word",
-      {
-        ...currentWord,
-        segments: updatedSegments,
-      },
-    )
+    form.update("word", {
+      ...currentWord,
+      segments: updatedSegments,
+    })
   }
 
   const deleteSegment = (index: number) => {
@@ -346,14 +344,8 @@ const EditWordPartGloss = (props: {
 
 // Component that allows editing of a morpheme's gloss. Users can enter a custom gloss or select from global glosses / functional tags.
 const EditEnglishGloss = () => {
-  return (
-    <EditWordFeature
-          feature={"englishGloss"}
-          label="English Glossary"
-    />
-  )
+  return <EditWordFeature feature={"englishGloss"} label="English Glossary" />
 }
-
 
 type Writeable<T> = { -readonly [P in keyof T]: T[P] }
 
