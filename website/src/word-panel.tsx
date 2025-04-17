@@ -319,24 +319,19 @@ const EditWordPartGloss = (props: {
     newValue: OnChangeValue<{ value: string; label: string }, false>
   ) => {
     if (newValue?.value) {
-      const newMorpheme: Dailp.FormFieldsFragment["segments"][0] = {
-        ...props.morpheme,
-        gloss: newValue.value,
-      }
-
+      const newGloss: Dailp.FormFieldsFragment["englishGloss"][0] = newValue.value
       // Updates current list of morphemes to include one with a matching tag,
       // or one with a custom gloss.
-      form.update(["word", "segments", props.index], newMorpheme)
+      form.update(["word", "englishGloss"], newGloss)
     }
   }
 
   return (
-    <CustomCreatable
+    <input
       onChange={handleChange}
-      options={props.options}
+      //options={props.options}
       defaultValue={{
-        value: props.morpheme.gloss,
-        label: props.morpheme.matchingTag?.title ?? props.morpheme.gloss,
+        value: props.gloss,
       }}
     />
   )
