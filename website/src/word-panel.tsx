@@ -4,6 +4,7 @@ import {
   AiFillCaretUp,
   AiFillSound,
 } from "react-icons/ai/index"
+import { IoIosBookmarks } from "react-icons/io"
 import { IoEllipsisHorizontalCircle } from "react-icons/io5/index"
 import {
   MdNotes,
@@ -108,26 +109,26 @@ export const WordPanel = (p: {
       ) : (
         <EditSegmentation segments={p.word.segments} options={p.options} />
       )}
-
-      {/* Since editing translations is not yet supported, just display the translation for now. */}
-      <div style={{ display: "flex" }}>‘{p.word.englishGloss}’</div>
-
-      {/* {p.panel === PanelType.WordPanel ? (
-        <div style={{ display: "flex" }}>‘{translation}’</div>
-      ) : (
-        // should this be a call to the parameterized component as well?
-        <>{translation}</>
-      )} */}
     </>
   )
 
-  // Contains a component rendering a word's commentary.
   const commentaryContent = (
     <PanelFeatureComponent
       word={p.word}
       feature={"commentary"}
       input="textarea"
     />
+  )
+  const englishGlossContent = (
+    <>
+      {p.panel === PanelType.WordPanel ? (
+        <div style={{ display: "flex" }}>‘{p.word.englishGloss}’</div>
+      ) : (
+        <EditEnglishGloss />
+      )}
+
+      {/* Since editing translations is not yet supported, just display the translation for now. */}
+    </>
   )
 
   const discussionContent = <CommentSection parent={p.word} />
@@ -156,9 +157,23 @@ export const WordPanel = (p: {
           />
         }
       />
+      {/* Always show Word Parts panel in edit mode, otherwise only if there are segments */}
+      {(p.word.englishGloss.length > 0 ||
+        p.panel === PanelType.EditWordPanel) && (
+        <CollapsiblePanel
+          title={"English Gloss"}
+          content={englishGlossContent}
+          icon={
+            <IoIosBookmarks
+              size={24}
+              className={css.wordPanelButton.colpleft}
+            />
+          }
+        />
+      )}
 
-      {/* If there are no segments, does not display Word Parts panel */}
-      {p.word.segments.length > 0 && (
+      {/* Always show Word Parts panel in edit mode, otherwise only if there are segments */}
+      {(p.word.segments.length > 0 || p.panel === PanelType.EditWordPanel) && (
         <CollapsiblePanel
           title={"Word Parts"}
           content={wordPartsContent}
@@ -200,24 +215,52 @@ const EditSegmentation = (p: {
   options: GroupedOption[]
 }) => {
   const { form } = useForm()
+  const currentWord = form.values.word as Dailp.FormFieldsFragment
+  const currentSegments = currentWord.segments
+
+  const addNewSegment = (e: React.MouseEvent) => {
+    e.preventDefault()
+    const newSegment = {
+      morpheme: "",
+      gloss: "",
+      role: Dailp.WordSegmentRole.Morpheme,
+      previousSeparator: "-",
+      matchingTag: null,
+      word_id: currentWord.id,
+    }
+
+    const updatedSegments = [...currentSegments, newSegment]
+    // Add shouldValidate: false to prevent auto-submission
+    form.update("word", {
+      ...currentWord,
+      segments: updatedSegments,
+    })
+  }
+
+  const deleteSegment = (index: number) => {
+    const updatedSegments = currentSegments.filter((_, i) => i !== index)
+    form.update("word", {
+      ...currentWord,
+      segments: updatedSegments,
+    })
+  }
 
   return (
     <table className={css.tableContainer}>
       <tbody>
-        {p.segments.map((segment, index) => (
-          <tr style={{ display: "flex" }}>
+        {currentSegments.map((segment, index) => (
+          <tr key={index} style={{ display: "flex" }}>
             <td className={css.editMorphemeCells}>
               {/* This is disabled at the moment to be fully implemented later. */}
               <FormInput
                 {...form}
-                disabled
                 className={formInput}
                 name={["word", "segments", index.toString(), "morpheme"]}
               />
             </td>
             <td className={css.editGlossCells}>
               {/* Displays global glosses and allows user to create custom glosses on keyboard input. */}
-              <EditGloss
+              <EditWordPartGloss
                 // TODO: this key will need to be changed later since a morpheme can be changed
                 key={segment.morpheme}
                 morpheme={segment}
@@ -225,15 +268,46 @@ const EditSegmentation = (p: {
                 options={p.options}
               />
             </td>
+            <td style={{ padding: "0 10px" }}>
+              <button
+                onClick={() => deleteSegment(index)}
+                style={{
+                  padding: "5px 10px",
+                  borderRadius: "4px",
+                  border: "1px solid #ccc",
+                  background: "#f0f0f0",
+                  cursor: "pointer",
+                  color: "#d32f2f",
+                }}
+              >
+                ✕
+              </button>
+            </td>
           </tr>
         ))}
+        <tr>
+          <td colSpan={3} style={{ textAlign: "center", padding: "10px" }}>
+            <button
+              onClick={addNewSegment}
+              style={{
+                padding: "5px 10px",
+                borderRadius: "4px",
+                border: "1px solid #ccc",
+                background: "#f0f0f0",
+                cursor: "pointer",
+              }}
+            >
+              Add Segment
+            </button>
+          </td>
+        </tr>
       </tbody>
     </table>
   )
 }
 
 // Component that allows editing of a morpheme's gloss. Users can enter a custom gloss or select from global glosses / functional tags.
-const EditGloss = (props: {
+const EditWordPartGloss = (props: {
   morpheme: Dailp.FormFieldsFragment["segments"][0]
   index: number
   options: GroupedOption[]
@@ -266,6 +340,11 @@ const EditGloss = (props: {
       }}
     />
   )
+}
+
+// Component that allows editing of a morpheme's gloss. Users can enter a custom gloss or select from global glosses / functional tags.
+const EditEnglishGloss = () => {
+  return <EditWordFeature feature={"englishGloss"} label="English Glossary" />
 }
 
 type Writeable<T> = { -readonly [P in keyof T]: T[P] }

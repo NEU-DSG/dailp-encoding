@@ -8,6 +8,12 @@ update word set
         case
             when $3::text[] != '{}' then $3[1]
             else commentary
+        end,
+    english_gloss = 
+        case
+            when $4::text[] != '{}' and $4[1] is not null then $4[1]
+            else english_gloss
         end
+
 where id = $1
 returning word.document_id;
