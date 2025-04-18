@@ -6,7 +6,7 @@ use dailp::{
     collection,
     comment::{CommentParent, CommentUpdate, DeleteCommentInput, PostCommentInput},
     slugify_ltree,
-    user::{User, UserUpdate},
+    user::{User, UserCreate, UserUpdate},
     AnnotatedForm, AttachAudioToWordInput, CollectionChapter, CurateWordAudioInput,
     DeleteContributorAttribution, DocumentMetadata, DocumentMetadataInput, DocumentMetadataUpdate,
     DocumentParagraph, EditedCollectionInput, UpdateContributorAttribution, Uuid,
@@ -693,6 +693,18 @@ impl Mutation {
     ) -> FieldResult<Uuid> {
         let db = context.data::<DataLoader<Database>>()?.loader();
         let result = db.insert_edited_collection(collection).await?;
+        Ok(result)
+    }
+
+    /// Insert user into dailp_user
+    #[graphql(guard = "GroupGuard::new(UserGroup::Administrators)")]
+    async fn insert_dailp_user(
+        &self,
+        context: &Context<'_>,
+        user: UserCreate,
+    ) -> FieldResult<Uuid> {
+        let db = context.data::<DataLoader<Database>>()?.loader();
+        let result = db.insert_dailp_user(user).await?;
         Ok(result)
     }
 }

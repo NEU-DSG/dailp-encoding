@@ -49,10 +49,28 @@ pub struct User {
     pub role: Option<UserGroup>,
 }
 
+/// Input Object used to edit a user
 #[derive(async_graphql::InputObject)]
 pub struct UserUpdate {
     /// Id of the user, which must be a AWS Cognito `sub` claim
     pub id: UserId,
+    /// User-facing name for this contributor/curator
+    pub display_name: MaybeUndefined<String>,
+    /// URL to the avatar of the user (optional)
+    pub avatar_url: MaybeUndefined<String>,
+    /// Biography of the user (optional)
+    pub bio: MaybeUndefined<String>,
+    /// Organization of the user (optional)
+    pub organization: MaybeUndefined<String>,
+    /// Location of the user (optional)
+    pub location: MaybeUndefined<String>,
+    /// Role of the user (optional)
+    pub role: MaybeUndefined<UserGroup>,
+}
+
+#[derive(async_graphql::InputObject)]
+
+pub struct UserCreate {
     /// User-facing name for this contributor/curator
     pub display_name: MaybeUndefined<String>,
     /// URL to the avatar of the user (optional)

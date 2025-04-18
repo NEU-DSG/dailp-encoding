@@ -970,6 +970,10 @@ type Mutation {
 	Create a new edited collection
 	"""
 	insertEditedCollection(collection: EditedCollectionInput!): UUID!
+	"""
+	Insert user into dailp_user
+	"""
+	insertDailpUser(user: UserCreate!): UUID!
 }
 
 """
@@ -1249,6 +1253,33 @@ type User {
 	role: UserGroup
 }
 
+input UserCreate {
+	"""
+	User-facing name for this contributor/curator
+	"""
+	displayName: String
+	"""
+	URL to the avatar of the user (optional)
+	"""
+	avatarUrl: String
+	"""
+	Biography of the user (optional)
+	"""
+	bio: String
+	"""
+	Organization of the user (optional)
+	"""
+	organization: String
+	"""
+	Location of the user (optional)
+	"""
+	location: String
+	"""
+	Role of the user (optional)
+	"""
+	role: UserGroup
+}
+
 """
 A user belongs to any number of user groups, which give them various permissions.
 """
@@ -1271,6 +1302,9 @@ type UserInfo {
 	groups: [UserGroup!]!
 }
 
+"""
+Input Object used to edit a user
+"""
 input UserUpdate {
 	"""
 	Id of the user, which must be a AWS Cognito `sub` claim

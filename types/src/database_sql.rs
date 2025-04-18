@@ -6,6 +6,7 @@ use sqlx::postgres::types::PgLTree;
 use std::ops::Bound;
 use std::ptr::null;
 use std::str::FromStr;
+use user::UserCreate;
 use user::UserUpdate;
 
 use crate::collection::CollectionChapter;
@@ -908,6 +909,38 @@ impl Database {
             &collection.title as _,
             &collection.wordpress_menu_id as _,
             &collection.slug as _
+        )
+        .fetch_one(&self.client)
+        .await?)
+    }
+
+    pub async fn insert_dailp_user(&self, user: UserCreate) -> Result<Uuid> {
+        let display_name = user.display_name.into_vec();
+        let current_date = chrono::Local::now().date_naive();
+        let avatar_url = user.avatar_url.into_vec();
+        let bio = user.bio.into_vec();
+        let organization = user.organization.into_vec();
+        let location = user.location.into_vec();
+        let role = if user.role.is_value() {
+            let role_str = match user.role.value().unwrap() {
+                UserGroup::Readers => "Readers",
+                UserGroup::Editors => "Editors",
+                UserGroup::Contributors => "Contributors",
+                UserGroup::Administrators => "Administrators",
+            };
+            vec![role_str.to_string()]
+        } else {
+            vec![]
+        };
+        Ok(query_file_scalar!(
+            "queries/insert_dailp_user.sql",
+            &display_name as _,
+            current_date,
+            &avatar_url as _,
+            &bio as _,
+            &organization as _,
+            &location as _,
+            &role as _,
         )
         .fetch_one(&self.client)
         .await?)

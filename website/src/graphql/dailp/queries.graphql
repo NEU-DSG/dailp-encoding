@@ -150,6 +150,15 @@ fragment CommentFormFields on Comment {
   edited
 }
 
+fragment UserCreateFormFields on User {
+  displayName
+  avatarUrl
+  bio
+  organization
+  location
+  role
+}
+
 fragment FormFields on AnnotatedForm {
   __typename
   id
@@ -716,4 +725,8 @@ mutation InsertDocument(
   $index: Int!
 ) {
   insertDocument(meta: $document, collectionId: $id, indexInCollection: $index)
+}
+
+mutation InsertDailpUser($user: UserCreate!) {
+  insertDailpUser(user: $user)
 }
