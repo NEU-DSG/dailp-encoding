@@ -150,6 +150,15 @@ fragment CommentFormFields on Comment {
   edited
 }
 
+fragment UserCreateFormFields on User {
+  displayName
+  avatarUrl
+  bio
+  organization
+  location
+  role
+}
+
 fragment FormFields on AnnotatedForm {
   __typename
   id
@@ -675,4 +684,49 @@ mutation DeleteComment($commentId: DeleteCommentInput!) {
       }
     }
   }
+}
+
+mutation updateUser($user: UserUpdate!) {
+  updateUser(user: $user) {
+    id
+    displayName
+    avatarUrl
+    bio
+    organization
+    location
+    role
+  }
+}
+
+query UserById($id: UUID!) {
+  dailpUserById(id: $id) {
+    id
+    displayName
+    createdAt {
+      day
+      month
+      year
+    }
+    avatarUrl
+    bio
+    organization
+    location
+    role
+  }
+}
+
+mutation InsertEditedCollection($collection: EditedCollectionInput!) {
+  insertEditedCollection(collection: $collection)
+}
+
+mutation InsertDocument(
+  $document: DocumentMetadataInput!
+  $id: UUID!
+  $index: Int!
+) {
+  insertDocument(meta: $document, collectionId: $id, indexInCollection: $index)
+}
+
+mutation InsertDailpUser($user: UserCreate!) {
+  insertDailpUser(user: $user)
 }

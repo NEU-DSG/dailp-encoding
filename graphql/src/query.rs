@@ -1,11 +1,15 @@
 //! This piece of the project exposes a GraphQL endpoint that allows one to access DAILP data in a federated manner with specific queries.
 
 use dailp::{
-    auth::{AuthGuard, GroupGuard, UserGroup, UserInfo},
+    async_graphql::InputType,
+    auth::{AuthGuard, GroupGuard, NotGroupGuard, UserGroup, UserInfo},
+    collection,
     comment::{CommentParent, CommentUpdate, DeleteCommentInput, PostCommentInput},
-    slugify_ltree, AnnotatedForm, AttachAudioToWordInput, CollectionChapter, CurateWordAudioInput,
-    DeleteContributorAttribution, DocumentMetadataUpdate, DocumentParagraph,
-    UpdateContributorAttribution, Uuid,
+    slugify_ltree,
+    user::{User, UserCreate, UserUpdate},
+    AnnotatedForm, AttachAudioToWordInput, CollectionChapter, CurateWordAudioInput,
+    DeleteContributorAttribution, DocumentMetadata, DocumentMetadataInput, DocumentMetadataUpdate,
+    DocumentParagraph, EditedCollectionInput, UpdateContributorAttribution, Uuid,
 };
 use itertools::Itertools;
 
@@ -353,6 +357,15 @@ impl Query {
     async fn user_info<'a>(&self, context: &'a Context<'_>) -> Option<&'a UserInfo> {
         context.data_opt()
     }
+
+    /// Gets a dailp_user by their id
+    async fn dailp_user_by_id(&self, context: &Context<'_>, id: Uuid) -> FieldResult<User> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .dailp_user_by_id(&id)
+            .await?)
+    }
 }
 
 pub struct Mutation;
@@ -447,9 +460,7 @@ impl Mutation {
     }
 
     /// Mutation for adding/changing contributor attributions
-    #[graphql(
-        guard = "GroupGuard::new(UserGroup::Editors).or(GroupGuard::new(UserGroup::Contributors))"
-    )]
+    #[graphql(guard = "NotGroupGuard::new(UserGroup::Readers)")]
     async fn update_contributor_attribution(
         &self,
         context: &Context<'_>,
@@ -463,9 +474,7 @@ impl Mutation {
     }
 
     ///Mutation for deleting contributor attributions
-    #[graphql(
-        guard = "GroupGuard::new(UserGroup::Editors).or(GroupGuard::new(UserGroup::Contributors))"
-    )]
+    #[graphql(guard = "NotGroupGuard::new(UserGroup::Readers)")]
     async fn delete_contributor_attribution(
         &self,
         context: &Context<'_>,
@@ -479,7 +488,7 @@ impl Mutation {
     }
 
     /// Mutation for paragraph and translation editing
-    #[graphql(guard = "GroupGuard::new(UserGroup::Contributors)")]
+    #[graphql(guard = "NotGroupGuard::new(UserGroup::Readers)")]
     async fn update_paragraph(
         &self,
         context: &Context<'_>,
@@ -492,7 +501,7 @@ impl Mutation {
             .await?)
     }
 
-    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    #[graphql(guard = "NotGroupGuard::new(UserGroup::Readers)")]
     async fn update_page(
         &self,
         context: &Context<'_>,
@@ -507,7 +516,7 @@ impl Mutation {
         Ok(true)
     }
 
-    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    #[graphql(guard = "NotGroupGuard::new(UserGroup::Readers)")]
     async fn update_annotation(
         &self,
         context: &Context<'_>,
@@ -522,9 +531,7 @@ impl Mutation {
         Ok(true)
     }
 
-    #[graphql(
-        guard = "GroupGuard::new(UserGroup::Editors).or(GroupGuard::new(UserGroup::Contributors))"
-    )]
+    #[graphql(guard = "NotGroupGuard::new(UserGroup::Readers)")]
     async fn update_word(
         &self,
         context: &Context<'_>,
@@ -534,6 +541,20 @@ impl Mutation {
         Ok(database
             .word_by_id(&database.update_word(word).await?)
             .await?)
+    }
+
+    /// Updates a dailp_user's information
+    #[graphql(guard = "AuthGuard")]
+    async fn update_user(&self, context: &Context<'_>, user: UserUpdate) -> FieldResult<User> {
+        let user_id = Uuid::from(&user.id);
+        let db = context.data::<DataLoader<Database>>()?.loader();
+
+        db.update_dailp_user(user).await?;
+
+        let user_object = db.dailp_user_by_id(&user_id).await?;
+
+        // We return the user object, for GraphCache interop
+        return Ok(user_object);
     }
 
     /// Adds a bookmark to the user's list of bookmarks.
@@ -581,7 +602,7 @@ impl Mutation {
     }
 
     /// Decide if a piece audio should be included in edited collection
-    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    #[graphql(guard = "NotGroupGuard::new(UserGroup::Readers)")]
     async fn curate_word_audio(
         &self,
         context: &Context<'_>,
@@ -632,7 +653,7 @@ impl Mutation {
             .await?)
     }
 
-    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    #[graphql(guard = "NotGroupGuard::new(UserGroup::Readers)")]
     async fn update_document_metadata(
         &self,
         context: &Context<'_>,
@@ -643,6 +664,48 @@ impl Mutation {
             .loader()
             .update_document_metadata(document)
             .await?)
+    }
+
+    /// Create a new document
+    #[graphql(
+        guard = "GroupGuard::new(UserGroup::Administrators).or(GroupGuard::new(UserGroup::Editors))"
+    )]
+    async fn insert_document(
+        &self,
+        context: &Context<'_>,
+        meta: DocumentMetadataInput,
+        collection_id: Option<Uuid>,
+        index_in_collection: Option<i64>,
+    ) -> FieldResult<Uuid> {
+        let db = context.data::<DataLoader<Database>>()?.loader();
+        let result = db
+            .insert_document_new(&meta, collection_id, index_in_collection)
+            .await?;
+        Ok(result.0)
+    }
+
+    /// Create a new edited collection
+    #[graphql(guard = "GroupGuard::new(UserGroup::Administrators)")]
+    async fn insert_edited_collection(
+        &self,
+        context: &Context<'_>,
+        collection: EditedCollectionInput,
+    ) -> FieldResult<Uuid> {
+        let db = context.data::<DataLoader<Database>>()?.loader();
+        let result = db.insert_edited_collection(collection).await?;
+        Ok(result)
+    }
+
+    /// Insert user into dailp_user
+    #[graphql(guard = "GroupGuard::new(UserGroup::Administrators)")]
+    async fn insert_dailp_user(
+        &self,
+        context: &Context<'_>,
+        user: UserCreate,
+    ) -> FieldResult<Uuid> {
+        let db = context.data::<DataLoader<Database>>()?.loader();
+        let result = db.insert_dailp_user(user).await?;
+        Ok(result)
     }
 }
 
