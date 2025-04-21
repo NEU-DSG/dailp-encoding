@@ -11,6 +11,7 @@ import * as css from "./dashboard.css"
 enum Tabs {
   ACTIVITY = "activity-tab",
   BOOKMARKS = "bookmarks-tab",
+  ADMIN_TOOLS = "admin-tab",
 }
 
 export const Dashboard = () => {
@@ -31,6 +32,9 @@ export const Dashboard = () => {
           <Tab {...tabs} id={Tabs.ACTIVITY} className={css.dashboardTab}>
             Recent Activity
           </Tab>
+          <Tab {...tabs} id={Tabs.ADMIN_TOOLS} className={css.dashboardTab}>
+            Admin tools
+          </Tab>
         </TabList>
 
         <TabPanel
@@ -48,6 +52,13 @@ export const Dashboard = () => {
         >
           <ActivityTab />
         </TabPanel>
+        <TabPanel
+          {...tabs}
+          id={Tabs.ADMIN_TOOLS}
+          className={css.dashboardTabPanel}
+        >
+          <AdminToolsTab />
+        </TabPanel>
       </div>
     </>
   )
@@ -57,6 +68,33 @@ export const ActivityTab = () => {
   // takes in something (user?)
   const dialog = useDialogState({ animated: true, visible: true })
   return <></>
+}
+
+
+export const AdminToolsTab = () => {
+  return (
+    <>
+      <div>
+        <h2>Manage Edited Collections</h2>
+        <Link href="#">Create New Collection</Link>
+        <br />
+        <Link href="#">Edit Existing Collection</Link>
+      </div>
+      <div>
+
+        <h2>Manage Documents</h2>
+        <Link href="#">Create New Document(s)</Link>
+      </div>
+      <div>
+        <h2>Manage Users</h2>
+        <Link href="#">Update Permissions for Existing User</Link>
+        <br />
+        <Link href="#">Manage Teams</Link>
+      </div>
+    </>
+  )
+
+
 }
 
 export const BookmarksTab = () => {
