@@ -35,6 +35,7 @@
       "\${aws_security_group.mongodb_access.id}"
       "\${aws_security_group.nixos_test.id}"
     ];
+    disable_api_termination = true;
 
     tags = config.setup.global_tags // config.servers.bastion.instance_tags;
   };
