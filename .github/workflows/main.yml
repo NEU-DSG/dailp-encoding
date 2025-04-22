@@ -115,7 +115,7 @@ jobs:
         # Sets up port forwarding to remote database on port 5432
         run: |
           echo "Creating SSH key file..."
-          echo "${{secrets.AWS_BASTION_SSH_KEY}}" > dailp-deployment-key.pem
+          echo "${{secrets.AWS_SSH_KEY}}" > dailp-deployment-key.pem
           chmod 400 ./dailp-deployment-key.pem
           echo "Retrieving terraform outputs..."
           DATABASE_ENDPOINT=$(nix run --impure .#tf-output database_endpoint)
