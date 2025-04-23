@@ -14,9 +14,9 @@ in {
     {
       to = "module.bastion_host.aws_instance.default[0]";
       id = let 
-        key = "${lib.strings.toUpper config.setup.stage}_EC2_INSTANCE"
-        builtins.trace key;
+        key = "${lib.strings.toUpper config.setup.stage}_EC2_INSTANCE";
         value = builtins.getEnv key;
+        abort value
       in
        value;
     }
