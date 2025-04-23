@@ -13,7 +13,7 @@ in {
     }
     {
       to = "module.bastion_host.aws_instance.default[0]";
-      id = "i-0d69f63d821f36a12"; # TODO update value later. 
+      id = builtins.getEnv "${lib.strings.toUpper config.setup.stage}_EC2_INSTANCE";
     }
   ];
 }
