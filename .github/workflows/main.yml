@@ -38,7 +38,8 @@ jobs:
       RUST_LOG: info
       # Stage is Development if not based on a release event, is Staging/UAT if event action is prereleased, is Production if event action is released
       TF_STAGE: ${{ github.event_name == 'release' && ( github.event.action == 'prereleased' && 'uat' || 'prod') || 'dev' }}
-      # BASTION_IP: ${{ secrets.TEST_BASTION_IP }}
+      BASTION_ID: ${{ (env.TF_STAGE == 'prod' && secrets.EC2_INSTANCE ) || (env.TF_STAGE == 'uat' && secrets.UAT_EC2_INSTANCE) || secrets.DEV_EC2_INSTANCE }}
+# BASTION_IP: ${{ secrets.TEST_BASTION_IP }}
 
 
     # Steps represent a sequence of tasks that will be executed as part of the job
