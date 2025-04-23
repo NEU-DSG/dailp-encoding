@@ -36,10 +36,10 @@ jobs:
       GIT_REPOSITORY_URL: https://github.com/neu-dsg/dailp-encoding
       OAUTH_TOKEN: ${{ secrets.OAUTH_TOKEN }}
       RUST_LOG: info
-      BASTION_IP: ${{ secrets.TEST_BASTION_IP }}
-
       # Stage is Development if not based on a release event, is Staging/UAT if event action is prereleased, is Production if event action is released
       TF_STAGE: ${{ github.event_name == 'release' && ( github.event.action == 'prereleased' && 'uat' || 'prod') || 'dev' }}
+      # BASTION_IP: ${{ secrets.TEST_BASTION_IP }}
+
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -112,6 +112,8 @@ jobs:
           to-port: 22
           protocol: tcp
       - name: Encode documents as TEI and database entries
+        env: 
+          BASTION_IP: ${{ (env.TF_STAGE == 'prod' && secrets.PROD_BASTION_IP ) || (env.TF_STAGE == 'uat' && secrets.UAT_BASTION_IP) || secrets.DEV_BASTION_IP }}
         # Sets up port forwarding to remote database on port 5432
         run: |
           echo "Creating SSH key file..."
