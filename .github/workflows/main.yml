@@ -38,7 +38,6 @@ jobs:
       RUST_LOG: info
       # Stage is Development if not based on a release event, is Staging/UAT if event action is prereleased, is Production if event action is released
       TF_STAGE: ${{ github.event_name == 'release' && ( github.event.action == 'prereleased' && 'uat' || 'prod') || 'dev' }}
-      BASTION_ID: ${{ (TF_STAGE == 'prod' && secrets.EC2_INSTANCE ) || (TF_STAGE == 'uat' && secrets.UAT_EC2_INSTANCE) || secrets.DEV_EC2_INSTANCE }}
 # BASTION_IP: ${{ secrets.TEST_BASTION_IP }}
 
 
@@ -91,9 +90,13 @@ jobs:
           pushFilter: "(-dailp$|-dailp-|-terraform-config$|-source$|\\.tar\\.gz$|-output$|-plan$|-apply-now$|-apply$)"
       - name: Build and test project
         # nix -L argument shows the full build log and --impure allows it to access environment variables.
+        env: 
+          BASTION_ID: ${{ (env.TF_STAGE == 'prod' && secrets.EC2_INSTANCE ) || (env.TF_STAGE == 'uat' && secrets.UAT_EC2_INSTANCE) || secrets.DEV_EC2_INSTANCE }}
         run: |
           nix build --impure -L
       - name: Deploy back-end to AWS via terraform
+        env:
+          BASTION_ID: ${{ (env.TF_STAGE == 'prod' && secrets.EC2_INSTANCE ) || (env.TF_STAGE == 'uat' && secrets.UAT_EC2_INSTANCE) || secrets.DEV_EC2_INSTANCE }}
         run: |
           nix run --impure -L .#tf-apply-now
           SECURITY_GROUP_ID=$(nix run --impure .#tf-output access_security_group_id)
@@ -115,6 +118,8 @@ jobs:
       - name: Encode documents as TEI and database entries
         env: 
           BASTION_IP: ${{ (env.TF_STAGE == 'prod' && secrets.PROD_BASTION_IP ) || (env.TF_STAGE == 'uat' && secrets.UAT_BASTION_IP) || secrets.DEV_BASTION_IP }}
+          BASTION_ID: ${{ (env.TF_STAGE == 'prod' && secrets.EC2_INSTANCE ) || (env.TF_STAGE == 'uat' && secrets.UAT_EC2_INSTANCE) || secrets.DEV_EC2_INSTANCE }}
+
         # Sets up port forwarding to remote database on port 5432
         run: |
           echo "Creating SSH key file..."
