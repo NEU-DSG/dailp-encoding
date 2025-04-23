@@ -13,7 +13,12 @@ in {
     }
     {
       to = "module.bastion_host.aws_instance.default[0]";
-      id = builtins.getEnv "${lib.strings.toUpper config.setup.stage}_EC2_INSTANCE";
+      id = let 
+        key = "${lib.strings.toUpper config.setup.stage}_EC2_INSTANCE"
+        builtins.trace key;
+        value = builtins.getEnv key;
+      in
+       value;
     }
   ];
 }
