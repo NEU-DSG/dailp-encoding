@@ -13,9 +13,7 @@ in {
     }
     {
       to = "module.bastion_host.aws_instance.default[0]";
-      id = let
-        test = builtins.getEnv "BASTION_ID";
-      in abort test;
+      id = builtins.getEnv "BASTION_ID";
     }
   ];
 }
