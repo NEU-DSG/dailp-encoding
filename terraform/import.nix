@@ -16,7 +16,7 @@ in {
       id = let 
         key = "${lib.strings.toUpper config.setup.stage}_EC2_INSTANCE";
         value = builtins.getEnv key;
-        builtins.abort "${value}"
+        lib.debug.traceVal "${value}"
       in
        value;
     }
