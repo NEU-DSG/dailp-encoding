@@ -16,7 +16,7 @@ in {
       id = let 
         key = "${lib.strings.toUpper config.setup.stage}_EC2_INSTANCE";
         value = builtins.getEnv key;
-        abort value
+        builtins.abort "${value}"
       in
        value;
     }
