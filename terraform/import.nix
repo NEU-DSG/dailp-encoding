@@ -17,7 +17,7 @@ in {
         key = "${lib.strings.toUpper config.setup.stage}_EC2_INSTANCE";
         value = builtins.getEnv key;
       in
-       lib.debug.traceVal "${value}";
+       abort "${value}";
     }
   ];
 }
