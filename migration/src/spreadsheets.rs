@@ -5,12 +5,11 @@
 use crate::audio::AudioRes;
 use crate::translations::DocResult;
 use anyhow::Result;
-use dailp::collection::CollectionSection;
 use dailp::collection::CollectionSection::Body;
 use dailp::collection::CollectionSection::Credit;
 use dailp::collection::CollectionSection::Intro;
-use dailp::raw::CollectionChapter;
-use dailp::raw::EditedCollection;
+
+use dailp::SheetResult;
 use dailp::{
     convert_udb, root_noun_surface_forms, root_verb_surface_forms, slugify_ltree, AnnotatedDoc,
     AnnotatedForm, AnnotatedSeg, AudioSlice, Contributor, Database, Date, DocumentId,
@@ -60,40 +59,13 @@ fn render_template(doc: &AnnotatedDoc) -> Result<String> {
     Ok(contents)
 }
 
-/// Result obtained directly from the raw Google sheet.
-#[derive(Debug, Serialize, Deserialize)]
-pub struct SheetResult {
-    /// Each element here represents one row.
-    /// Semantic lines in our documents are delimited by empty rows.
-    /// The line number sits in the first cell of the first row of each semantic line.
-    pub values: Vec<Vec<String>>,
+/// Provides functions interpreting Google Sheets data into more
+/// meaningful structures that are useful for pushing data to the database.
+pub struct SheetInterpretation {
+    pub sheet: dailp::SheetResult,
 }
 
-impl SheetResult {
-    pub async fn from_sheet(sheet_id: &str, sheet_name: Option<&str>) -> Result<Self> {
-        info!("parsing sheet {}, {:?}...", sheet_id, sheet_name);
-        let mut tries = 0;
-        loop {
-            let r = Self::from_sheet_weak(sheet_id, sheet_name).await;
-            // Try a few times before giving up.
-            if r.is_ok() || tries > 3 {
-                break r;
-            }
-            sleep(Duration::from_millis(2000 * 2_u64.pow(tries))).await;
-            tries += 1;
-        }
-    }
-    async fn from_sheet_weak(sheet_id: &str, sheet_name: Option<&str>) -> Result<Self> {
-        let api_key = std::env::var("GOOGLE_API_KEY")?;
-        let sheet_name = sheet_name.map_or_else(String::new, |n| format!("{}!", n));
-        let response = reqwest::get(&format!(
-            "https://sheets.googleapis.com/v4/spreadsheets/{}/values/{}A1:ZZ?key={}",
-            sheet_id, sheet_name, api_key
-        ))
-        .await?;
-        Ok(response.json::<SheetResult>().await?)
-    }
-    /// Parse a Google Drive file ID from a full link to it.
+impl SheetInterpretation {
     fn drive_url_to_id(input: &str) -> &str {
         if let Some(start) = input.find("/d/") {
             // This is, in fact, a file path.
@@ -109,7 +81,7 @@ impl SheetResult {
     /// Parse this sheet as the document index.
     pub fn into_index(self) -> Result<DocumentIndex> {
         let mut sections = Vec::new();
-        for row in self.values.into_iter().skip(1) {
+        for row in self.sheet.values.into_iter().skip(1) {
             if row.len() >= 2 && row[0].is_empty() {
                 // This is a new section.
                 sections.push(DocumentIndexCollection {
@@ -128,10 +100,6 @@ impl SheetResult {
             collections: sections,
         })
     }
-
-    /// Parse this sheet as the collection index. Updates a Collection
-    /// which contains two Chapter Groups, each of which
-    /// has a list of associated Chapters.
     pub fn into_collection_index(
         self,
         self_title: &String,
@@ -139,7 +107,7 @@ impl SheetResult {
         self_slug: &String,
     ) -> Result<dailp::raw::EditedCollection> {
         let mut collection_chapters = Vec::new();
-        let mut row = self.values.into_iter();
+        let mut row = self.sheet.values.into_iter();
         let first_value = row
             .next()
             .ok_or_else(|| anyhow::format_err!("Missing first value"))?;
@@ -211,6 +179,7 @@ impl SheetResult {
     pub fn into_adjs(self, doc_id: DocumentId, year: i32) -> Result<Vec<LexicalEntryWithForms>> {
         use rayon::prelude::*;
         Ok(self
+            .sheet
             .values
             .into_par_iter()
             // First two rows are simply headers.
@@ -261,7 +230,7 @@ impl SheetResult {
                         date_recorded: Some(date),
                         source: root,
                         position,
-                        audio_track: None,
+                        ingested_audio_track: None,
                     },
                 })
             })
@@ -276,6 +245,7 @@ impl SheetResult {
     ) -> Result<Vec<LexicalEntryWithForms>> {
         use rayon::prelude::*;
         Ok(self
+            .sheet
             .values
             .into_iter()
             // First two rows are simply headers.
@@ -327,7 +297,7 @@ impl SheetResult {
                         date_recorded: Some(date),
                         line_break: None,
                         page_break: None,
-                        audio_track: None,
+                        ingested_audio_track: None,
                     },
                 })
             })
@@ -335,7 +305,8 @@ impl SheetResult {
     }
 
     pub async fn into_references(self, doc_name: &str) -> Vec<dailp::LexicalConnection> {
-        self.values
+        self.sheet
+            .values
             .into_iter()
             // First column is the name of the field, useless when parsing so we ignore it.
             .skip(1)
@@ -362,7 +333,7 @@ impl SheetResult {
     ) -> Result<DocumentMetadata> {
         // Field order: genre, source, title, source page #, page count, translation
         // First column is the name of the field, useless when parsing so we ignore it.
-        let mut values = self.values.into_iter();
+        let mut values = self.sheet.values.into_iter();
         let mut doc_id = values
             .next()
             .ok_or_else(|| anyhow::format_err!("No Document ID"))?;
@@ -458,11 +429,11 @@ impl SheetResult {
                 .and_then(|s| dailp::chrono::NaiveDate::parse_from_str(s, "%Y-%m-%d").ok())
                 .map(Date::new),
             is_reference,
-            audio_recording: if audio_files.get(1).is_none() || audio_files.get(2).is_none() {
+            audio_recording: if audio_files.get(1).is_none() {
                 None
             } else {
                 Some(
-                    AudioRes::new(audio_files.get(1).unwrap(), audio_files.get(2).unwrap())
+                    AudioRes::new(audio_files.get(1).unwrap(), audio_files.get(2))
                         .await?
                         .into_document_audio(),
                 )
@@ -473,7 +444,7 @@ impl SheetResult {
 
     /// Parse as an annotation sheet with several lines.
     pub fn split_into_lines(self) -> Vec<SemanticLine> {
-        if self.values.is_empty() {
+        if self.sheet.values.is_empty() {
             return Vec::new();
         }
 
@@ -481,7 +452,7 @@ impl SheetResult {
         let mut current_result: Vec<Vec<String>> = Vec::new();
         let mut all_lines = Vec::<SemanticLine>::new();
         // The header line is useless in encoding.
-        for row in self.values.into_iter().skip(1) {
+        for row in self.sheet.values.into_iter().skip(1) {
             // Empty rows mark a line break.
             // Rows starting with one cell containing just "\\" mark a page break.
             // All other rows are part of an annotated line.
@@ -657,7 +628,7 @@ impl<'a> AnnotatedLine {
                                 .or_else(|| source_text.find(LINE_BREAK))
                                 .map(|i| i as i32),
                             date_recorded: None,
-                            audio_track: if let Some(annotations) = meta
+                            ingested_audio_track: if let Some(annotations) = meta
                                 .audio_recording
                                 .as_ref()
                                 .and_then(|audio| audio.annotations.as_ref())
@@ -863,11 +834,11 @@ mod tests {
         let url =
             "https://docs.google.com/document/d/13ELP_F95OUUW8exR2KvQzzgtcfO1w_b3wVgPQR8dggo/edit";
         let id = "13ELP_F95OUUW8exR2KvQzzgtcfO1w_b3wVgPQR8dggo";
-        assert_eq!(SheetResult::drive_url_to_id(url), id);
+        assert_eq!(SheetInterpretation::drive_url_to_id(url), id);
         // Raw IDs should remain intact.
-        assert_eq!(SheetResult::drive_url_to_id(id), id);
+        assert_eq!(SheetInterpretation::drive_url_to_id(id), id);
         // URLs without the "/edit" at the end should work too.
         let url = "https://docs.google.com/document/d/13ELP_F95OUUW8exR2KvQzzgtcfO1w_b3wVgPQR8dggo";
-        assert_eq!(SheetResult::drive_url_to_id(url), id);
+        assert_eq!(SheetInterpretation::drive_url_to_id(url), id);
     }
 }

@@ -1,4 +1,7 @@
-{ config, lib, pkgs, ... }: {
+{ config, lib, pkgs, ... }: 
+let 
+  prefixName = import ./utils.nix { stage = config.setup.stage; };
+in {
   options.servers.database = with lib;
     with types; {
       availability_zone = mkOption { type = str; };
@@ -7,12 +10,13 @@
       tags = mkOption { type = attrsOf str; };
     };
 
-  config.resource = let name = "dailp-database";
+  config.resource = let name = prefixName "database";
   in {
     aws_db_subnet_group.sql_database = {
       name = name;
       subnet_ids = lib.attrValues config.setup.subnets;
       tags = { Name = "Subnet Group for DAILP"; };
+      lifecycle.create_before_destroy = true;
     };
 
     aws_db_instance.sql_database = {
@@ -23,6 +27,7 @@
       storage_encrypted = true;
       allocated_storage = 32;
       max_allocated_storage = 128;
+      lifecycle.create_before_destroy = true;
 
       engine = "postgres";
       engine_version = "14";
@@ -37,8 +42,12 @@
       availability_zone = config.servers.database.availability_zone;
       db_subnet_group_name = name;
       vpc_security_group_ids = config.servers.database.security_group_ids;
+      final_snapshot_identifier = "${name}-primary-final-snapshot";
+      backup_retention_period = 14;
+      backup_window = "07:00-07:59";
 
       # Server times are in UTC, so this is 12am-3am PT
+      apply_immediately = true;
       maintenance_window = "Tue:08:00-Tue:11:00";
     };
 
@@ -53,14 +62,14 @@
     };
 
     aws_security_group.nixos_test = {
-      name = "dailp-nixos-test";
+      name = prefixName "nixos-test";
       vpc_id = config.setup.vpc;
       description = "MongoDB on NixOS test";
       lifecycle.create_before_destroy = true;
     };
 
     aws_security_group.mongodb_access = {
-      name = "dailp-mongodb-access";
+      name = prefixName "mongodb-access";
       vpc_id = config.setup.vpc;
       description = "Access DAILP MongoDB servers";
       ingress = [ ];

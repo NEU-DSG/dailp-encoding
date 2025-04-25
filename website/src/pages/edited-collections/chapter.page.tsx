@@ -6,8 +6,8 @@ import { chapterRoute, collectionRoute } from "src/routes"
 import * as util from "src/style/utils.css"
 import CWKWLayout from "../cwkw/cwkw-layout"
 import * as css from "../cwkw/cwkw-layout.css"
-import * as chapterStyle from "./chapter.css"
 import { DocumentTitleHeader, TabSet } from "../documents/document.page"
+import * as chapterStyle from "./chapter.css"
 import { useDialog, useSubchapters } from "./edited-collection-context"
 
 const ChapterPage = (props: {
@@ -23,6 +23,8 @@ const ChapterPage = (props: {
 
   const dialog = useDialog()
 
+  const subchapters = useSubchapters(props.chapterSlug)
+
   const chapter = data?.chapter
 
   if (!chapter) {
@@ -30,8 +32,6 @@ const ChapterPage = (props: {
   }
 
   const { document, wordpressId } = chapter
-
-  const subchapters = useSubchapters(props.chapterSlug)
 
   return (
     <CWKWLayout>
@@ -41,19 +41,30 @@ const ChapterPage = (props: {
           {/* If this chapter contains or is a Wordpress page, display the WP page contents. */}
           {wordpressId && chapter.slug ? (
             <>
-            <header className={chapterStyle.docHeader}>
-            <Breadcrumbs aria-label="Breadcrumbs">
-            {chapter.breadcrumbs.map((crumb) => (
-              <Link href={`${collectionRoute(props.collectionSlug)}/${crumb.slug}`} key={crumb.slug}>
-                {crumb.name}
-              </Link>
-            )).concat(
-            <Link href={`${collectionRoute}/${chapter.slug}`} key={chapter.slug}>
-            {chapter.title}
-            </Link>)}
-            </Breadcrumbs>
-            </header>
-            <WordpressPage slug={`/${chapter.slug.replace(/_/g, "-")}`} />
+              <header className={chapterStyle.docHeader}>
+                <Breadcrumbs aria-label="Breadcrumbs">
+                  {chapter.breadcrumbs
+                    .map((crumb) => (
+                      <Link
+                        href={`${collectionRoute(props.collectionSlug)}/${
+                          crumb.slug
+                        }`}
+                        key={crumb.slug}
+                      >
+                        {crumb.name}
+                      </Link>
+                    ))
+                    .concat(
+                      <Link
+                        href={`${collectionRoute}/${chapter.slug}`}
+                        key={chapter.slug}
+                      >
+                        {chapter.title}
+                      </Link>
+                    )}
+                </Breadcrumbs>
+              </header>
+              <WordpressPage slug={`/${chapter.slug.replace(/_/g, "-")}`} />
             </>
           ) : null}
 
@@ -64,7 +75,6 @@ const ChapterPage = (props: {
                 breadcrumbs={chapter.breadcrumbs}
                 rootPath={collectionRoute(props.collectionSlug)}
                 doc={document}
-                showDetails={true}
               />
               <TabSet doc={document} />
             </>

@@ -39,6 +39,11 @@ export type ActionMonitorAction = ContentNode &
     readonly actionMonitorActionId: Scalars["Int"]
     /** The type of action (CREATE, UPDATE, DELETE) */
     readonly actionType: Maybe<Scalars["String"]>
+    /**
+     * The ancestors of the content node.
+     * @deprecated This content type is not hierarchical and typically will not have ancestors
+     */
+    readonly ancestors: Maybe<ActionMonitorActionToActionMonitorActionConnection>
     /** The content of the post. */
     readonly content: Maybe<Scalars["String"]>
     /** Connection between the ContentNode type and the ContentType type */
@@ -63,10 +68,18 @@ export type ActionMonitorAction = ContentNode &
     readonly enqueuedStylesheets: Maybe<ContentNodeToEnqueuedStylesheetConnection>
     /** The global unique identifier for this post. This currently matches the value stored in WP_Post-&gt;guid and the guid column in the &quot;post_objects&quot; database table. */
     readonly guid: Maybe<Scalars["String"]>
+    /** Whether the action_monitor object is password protected. */
+    readonly hasPassword: Maybe<Scalars["Boolean"]>
     /** The globally unique identifier of the action_monitor object. */
     readonly id: Scalars["ID"]
+    /** Whether the node is a Comment */
+    readonly isComment: Scalars["Boolean"]
     /** Whether the node is a Content Node */
     readonly isContentNode: Scalars["Boolean"]
+    /** Whether the node represents the front page. */
+    readonly isFrontPage: Scalars["Boolean"]
+    /** Whether  the node represents the blog page. */
+    readonly isPostsPage: Scalars["Boolean"]
     /** Whether the object is a node in the preview state */
     readonly isPreview: Maybe<Scalars["Boolean"]>
     /** Whether the object is restricted from the current viewer */
@@ -81,6 +94,13 @@ export type ActionMonitorAction = ContentNode &
     readonly modified: Maybe<Scalars["String"]>
     /** The GMT modified time for a post. If a post was recently updated the modified field will change to match the corresponding time in GMT. */
     readonly modifiedGmt: Maybe<Scalars["String"]>
+    /**
+     * The parent of the content node.
+     * @deprecated This content type is not hierarchical and typically will not have a parent
+     */
+    readonly parent: Maybe<ActionMonitorActionToParentConnectionEdge>
+    /** The password for the action_monitor object. */
+    readonly password: Maybe<Scalars["String"]>
     /** Connection between the ActionMonitorAction type and the ActionMonitorAction type */
     readonly preview: Maybe<ActionMonitorActionToPreviewConnectionEdge>
     /** The preview data of the post that triggered this action. */
@@ -110,6 +130,14 @@ export type ActionMonitorAction = ContentNode &
     /** The unique resource identifier path */
     readonly uri: Maybe<Scalars["String"]>
   }
+
+/** The ActionMonitorAction type */
+export type ActionMonitorActionAncestorsArgs = {
+  after: InputMaybe<Scalars["String"]>
+  before: InputMaybe<Scalars["String"]>
+  first: InputMaybe<Scalars["Int"]>
+  last: InputMaybe<Scalars["Int"]>
+}
 
 /** The ActionMonitorAction type */
 export type ActionMonitorActionContentArgs = {
@@ -178,6 +206,67 @@ export enum ActionMonitorActionIdType {
   /** Identify a resource by the URI. */
   Uri = "URI",
 }
+
+/** Connection between the ActionMonitorAction type and the ActionMonitorAction type */
+export type ActionMonitorActionToActionMonitorActionConnection =
+  ActionMonitorActionConnection &
+    Connection & {
+      readonly __typename?: "ActionMonitorActionToActionMonitorActionConnection"
+      /** Edges for the ActionMonitorActionToActionMonitorActionConnection connection */
+      readonly edges: ReadonlyArray<ActionMonitorActionToActionMonitorActionConnectionEdge>
+      /** The nodes of the connection, without the edges */
+      readonly nodes: ReadonlyArray<ActionMonitorAction>
+      /** Information about pagination in a connection. */
+      readonly pageInfo: ActionMonitorActionToActionMonitorActionConnectionPageInfo
+    }
+
+/** An edge in a connection */
+export type ActionMonitorActionToActionMonitorActionConnectionEdge =
+  ActionMonitorActionConnectionEdge &
+    Edge & {
+      readonly __typename?: "ActionMonitorActionToActionMonitorActionConnectionEdge"
+      /**
+       * A cursor for use in pagination
+       * @deprecated This content type is not hierarchical and typically will not have ancestors
+       */
+      readonly cursor: Maybe<Scalars["String"]>
+      /**
+       * The item at the end of the edge
+       * @deprecated This content type is not hierarchical and typically will not have ancestors
+       */
+      readonly node: ActionMonitorAction
+    }
+
+/** Page Info on the &quot;ActionMonitorActionToActionMonitorActionConnection&quot; */
+export type ActionMonitorActionToActionMonitorActionConnectionPageInfo =
+  ActionMonitorActionConnectionPageInfo &
+    PageInfo &
+    WpPageInfo & {
+      readonly __typename?: "ActionMonitorActionToActionMonitorActionConnectionPageInfo"
+      /** When paginating forwards, the cursor to continue. */
+      readonly endCursor: Maybe<Scalars["String"]>
+      /** When paginating forwards, are there more items? */
+      readonly hasNextPage: Scalars["Boolean"]
+      /** When paginating backwards, are there more items? */
+      readonly hasPreviousPage: Scalars["Boolean"]
+      /** When paginating backwards, the cursor to continue. */
+      readonly startCursor: Maybe<Scalars["String"]>
+    }
+
+/** Connection between the ActionMonitorAction type and the ActionMonitorAction type */
+export type ActionMonitorActionToParentConnectionEdge =
+  ActionMonitorActionConnectionEdge &
+    Edge &
+    OneToOneConnection & {
+      readonly __typename?: "ActionMonitorActionToParentConnectionEdge"
+      /** Opaque reference to the nodes position in the connection. Value can be used with pagination args. */
+      readonly cursor: Maybe<Scalars["String"]>
+      /**
+       * The node of the connection, without the edges
+       * @deprecated This content type is not hierarchical and typically will not have a parent
+       */
+      readonly node: ActionMonitorAction
+    }
 
 /** Connection between the ActionMonitorAction type and the ActionMonitorAction type */
 export type ActionMonitorActionToPreviewConnectionEdge =
@@ -260,10 +349,16 @@ export type Category = DatabaseIdentifier &
     readonly enqueuedScripts: Maybe<TermNodeToEnqueuedScriptConnection>
     /** Connection between the TermNode type and the EnqueuedStylesheet type */
     readonly enqueuedStylesheets: Maybe<TermNodeToEnqueuedStylesheetConnection>
-    /** The unique resource identifier path */
+    /** The globally unique ID for the object */
     readonly id: Scalars["ID"]
+    /** Whether the node is a Comment */
+    readonly isComment: Scalars["Boolean"]
     /** Whether the node is a Content Node */
     readonly isContentNode: Scalars["Boolean"]
+    /** Whether the node represents the front page. */
+    readonly isFrontPage: Scalars["Boolean"]
+    /** Whether  the node represents the blog page. */
+    readonly isPostsPage: Scalars["Boolean"]
     /** Whether the object is restricted from the current viewer */
     readonly isRestricted: Maybe<Scalars["Boolean"]>
     /** Whether the node is a Term */
@@ -570,7 +665,7 @@ export type CategoryToContentNodeConnectionWhereArgs = {
   readonly nameIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
   readonly notIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** What paramater to use to order the objects by. */
+  /** What parameter to use to order the objects by. */
   readonly orderby: InputMaybe<
     ReadonlyArray<InputMaybe<PostObjectsConnectionOrderbyInput>>
   >
@@ -674,7 +769,7 @@ export type CategoryToPostConnectionWhereArgs = {
   readonly nameIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
   readonly notIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** What paramater to use to order the objects by. */
+  /** What parameter to use to order the objects by. */
   readonly orderby: InputMaybe<
     ReadonlyArray<InputMaybe<PostObjectsConnectionOrderbyInput>>
   >
@@ -721,7 +816,8 @@ export type CategoryToTaxonomyConnectionEdge = Edge &
 
 /** A Comment object */
 export type Comment = DatabaseIdentifier &
-  Node & {
+  Node &
+  UniformResourceIdentifiable & {
     readonly __typename?: "Comment"
     /** User agent used to post the comment. This field is equivalent to WP_Comment-&gt;comment_agent and the value matching the &quot;comment_agent&quot; column in SQL. */
     readonly agent: Maybe<Scalars["String"]>
@@ -751,10 +847,22 @@ export type Comment = DatabaseIdentifier &
     readonly dateGmt: Maybe<Scalars["String"]>
     /** The globally unique identifier for the comment object */
     readonly id: Scalars["ID"]
+    /** Whether the node is a Comment */
+    readonly isComment: Scalars["Boolean"]
+    /** Whether the node is a Content Node */
+    readonly isContentNode: Scalars["Boolean"]
+    /** Whether the node represents the front page. */
+    readonly isFrontPage: Scalars["Boolean"]
+    /** Whether  the node represents the blog page. */
+    readonly isPostsPage: Scalars["Boolean"]
     /** Whether the object is restricted from the current viewer */
     readonly isRestricted: Maybe<Scalars["Boolean"]>
+    /** Whether the node is a Term */
+    readonly isTermNode: Scalars["Boolean"]
     /** Karma value for the comment. This field is equivalent to WP_Comment-&gt;comment_karma and the value matching the &quot;comment_karma&quot; column in SQL. */
     readonly karma: Maybe<Scalars["Int"]>
+    /** The permalink of the comment */
+    readonly link: Maybe<Scalars["String"]>
     /** Connection between the Comment type and the Comment type */
     readonly parent: Maybe<CommentToParentCommentConnectionEdge>
     /** The database id of the parent comment node or null if it is the root comment */
@@ -767,6 +875,8 @@ export type Comment = DatabaseIdentifier &
     readonly status: Maybe<CommentStatusEnum>
     /** Type of comment. This field is equivalent to WP_Comment-&gt;comment_type and the value matching the &quot;comment_type&quot; column in SQL. */
     readonly type: Maybe<Scalars["String"]>
+    /** The unique resource identifier path */
+    readonly uri: Maybe<Scalars["String"]>
   }
 
 /** A Comment object */
@@ -1168,10 +1278,16 @@ export type ContentNode = {
   readonly enqueuedStylesheets: Maybe<ContentNodeToEnqueuedStylesheetConnection>
   /** The global unique identifier for this post. This currently matches the value stored in WP_Post-&gt;guid and the guid column in the &quot;post_objects&quot; database table. */
   readonly guid: Maybe<Scalars["String"]>
-  /** The unique resource identifier path */
+  /** The globally unique ID for the object */
   readonly id: Scalars["ID"]
+  /** Whether the node is a Comment */
+  readonly isComment: Scalars["Boolean"]
   /** Whether the node is a Content Node */
   readonly isContentNode: Scalars["Boolean"]
+  /** Whether the node represents the front page. */
+  readonly isFrontPage: Scalars["Boolean"]
+  /** Whether  the node represents the blog page. */
+  readonly isPostsPage: Scalars["Boolean"]
   /** Whether the object is a node in the preview state */
   readonly isPreview: Maybe<Scalars["Boolean"]>
   /** Whether the object is restricted from the current viewer */
@@ -1401,6 +1517,8 @@ export type ContentType = Node &
     readonly hierarchical: Maybe<Scalars["Boolean"]>
     /** The globally unique identifier of the post-type object. */
     readonly id: Scalars["ID"]
+    /** Whether the node is a Comment */
+    readonly isComment: Scalars["Boolean"]
     /** Whether the node is a Content Node */
     readonly isContentNode: Scalars["Boolean"]
     /** Whether this page is set to the static front page. */
@@ -1570,7 +1688,7 @@ export type ContentTypeToContentNodeConnectionWhereArgs = {
   readonly nameIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
   readonly notIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** What paramater to use to order the objects by. */
+  /** What parameter to use to order the objects by. */
   readonly orderby: InputMaybe<
     ReadonlyArray<InputMaybe<PostObjectsConnectionOrderbyInput>>
   >
@@ -2045,7 +2163,7 @@ export type DeleteCategoryInput = {
 /** The payload for the deleteCategory mutation. */
 export type DeleteCategoryPayload = {
   readonly __typename?: "DeleteCategoryPayload"
-  /** The deteted term object */
+  /** The deleted term object */
   readonly category: Maybe<Category>
   /** If a &#039;clientMutationId&#039; input is provided to the mutation, it will be returned as output on the mutation. This ID can be used by the client to track the progress of mutations and catch possible duplicate mutation submissions. */
   readonly clientMutationId: Maybe<Scalars["String"]>
@@ -2133,7 +2251,7 @@ export type DeletePostFormatPayload = {
   readonly clientMutationId: Maybe<Scalars["String"]>
   /** The ID of the deleted object */
   readonly deletedId: Maybe<Scalars["ID"]>
-  /** The deteted term object */
+  /** The deleted term object */
   readonly postFormat: Maybe<PostFormat>
 }
 
@@ -2175,7 +2293,7 @@ export type DeleteTagPayload = {
   readonly clientMutationId: Maybe<Scalars["String"]>
   /** The ID of the deleted object */
   readonly deletedId: Maybe<Scalars["ID"]>
-  /** The deteted term object */
+  /** The deleted term object */
   readonly tag: Maybe<Tag>
 }
 
@@ -2219,11 +2337,23 @@ export type Edge = {
 
 /** Asset enqueued by the CMS */
 export type EnqueuedAsset = {
-  /** @todo */
+  /** The inline code to be run after the asset is loaded. */
+  readonly after: Maybe<ReadonlyArray<Maybe<Scalars["String"]>>>
+  /**
+   * Deprecated
+   * @deprecated Use `EnqueuedAsset.media` instead.
+   */
   readonly args: Maybe<Scalars["Boolean"]>
+  /** The inline code to be run before the asset is loaded. */
+  readonly before: Maybe<ReadonlyArray<Maybe<Scalars["String"]>>>
+  /** The HTML conditional comment for the enqueued asset. E.g. IE 6, lte IE 7, etc */
+  readonly conditional: Maybe<Scalars["String"]>
   /** Dependencies needed to use this asset */
-  readonly dependencies: Maybe<ReadonlyArray<Maybe<EnqueuedScript>>>
-  /** Extra information needed for the script */
+  readonly dependencies: Maybe<ReadonlyArray<Maybe<EnqueuedAsset>>>
+  /**
+   * Extra information needed for the script
+   * @deprecated Use `EnqueuedScript.extraData` instead.
+   */
   readonly extra: Maybe<Scalars["String"]>
   /** The handle of the enqueued asset */
   readonly handle: Maybe<Scalars["String"]>
@@ -2239,19 +2369,35 @@ export type EnqueuedAsset = {
 export type EnqueuedScript = EnqueuedAsset &
   Node & {
     readonly __typename?: "EnqueuedScript"
-    /** @todo */
+    /** The inline code to be run after the asset is loaded. */
+    readonly after: Maybe<ReadonlyArray<Maybe<Scalars["String"]>>>
+    /**
+     * Deprecated
+     * @deprecated Use `EnqueuedAsset.media` instead.
+     */
     readonly args: Maybe<Scalars["Boolean"]>
+    /** The inline code to be run before the asset is loaded. */
+    readonly before: Maybe<ReadonlyArray<Maybe<Scalars["String"]>>>
+    /** The HTML conditional comment for the enqueued asset. E.g. IE 6, lte IE 7, etc */
+    readonly conditional: Maybe<Scalars["String"]>
     /** Dependencies needed to use this asset */
     readonly dependencies: Maybe<ReadonlyArray<Maybe<EnqueuedScript>>>
-    /** Extra information needed for the script */
+    /**
+     * Extra information needed for the script
+     * @deprecated Use `EnqueuedScript.extraData` instead.
+     */
     readonly extra: Maybe<Scalars["String"]>
+    /** Extra data supplied to the enqueued script */
+    readonly extraData: Maybe<Scalars["String"]>
     /** The handle of the enqueued asset */
     readonly handle: Maybe<Scalars["String"]>
-    /** The ID of the enqueued asset */
+    /** The global ID of the enqueued script */
     readonly id: Scalars["ID"]
     /** The source of the asset */
     readonly src: Maybe<Scalars["String"]>
-    /** The version of the enqueued asset */
+    /** The loading strategy to use on the script tag */
+    readonly strategy: Maybe<ScriptLoadingStrategyEnum>
+    /** The version of the enqueued script */
     readonly version: Maybe<Scalars["String"]>
   }
 
@@ -2289,19 +2435,43 @@ export type EnqueuedScriptConnectionPageInfo = {
 export type EnqueuedStylesheet = EnqueuedAsset &
   Node & {
     readonly __typename?: "EnqueuedStylesheet"
-    /** @todo */
+    /** The inline code to be run after the asset is loaded. */
+    readonly after: Maybe<ReadonlyArray<Maybe<Scalars["String"]>>>
+    /**
+     * Deprecated
+     * @deprecated Use `EnqueuedAsset.media` instead.
+     */
     readonly args: Maybe<Scalars["Boolean"]>
+    /** The inline code to be run before the asset is loaded. */
+    readonly before: Maybe<ReadonlyArray<Maybe<Scalars["String"]>>>
+    /** The HTML conditional comment for the enqueued asset. E.g. IE 6, lte IE 7, etc */
+    readonly conditional: Maybe<Scalars["String"]>
     /** Dependencies needed to use this asset */
-    readonly dependencies: Maybe<ReadonlyArray<Maybe<EnqueuedScript>>>
-    /** Extra information needed for the script */
+    readonly dependencies: Maybe<ReadonlyArray<Maybe<EnqueuedStylesheet>>>
+    /**
+     * Extra information needed for the script
+     * @deprecated Use `EnqueuedScript.extraData` instead.
+     */
     readonly extra: Maybe<Scalars["String"]>
     /** The handle of the enqueued asset */
     readonly handle: Maybe<Scalars["String"]>
-    /** The ID of the enqueued asset */
+    /** The global ID of the enqueued stylesheet */
     readonly id: Scalars["ID"]
+    /** Whether the enqueued style is RTL or not */
+    readonly isRtl: Maybe<Scalars["Boolean"]>
+    /** The media attribute to use for the link */
+    readonly media: Maybe<Scalars["String"]>
+    /** The absolute path to the enqueued style. Set when the stylesheet is meant to load inline. */
+    readonly path: Maybe<Scalars["String"]>
+    /** The `rel` attribute to use for the link */
+    readonly rel: Maybe<Scalars["String"]>
     /** The source of the asset */
     readonly src: Maybe<Scalars["String"]>
-    /** The version of the enqueued asset */
+    /** Optional suffix, used in combination with RTL */
+    readonly suffix: Maybe<Scalars["String"]>
+    /** The title of the enqueued style. Used for preferred/alternate stylesheets. */
+    readonly title: Maybe<Scalars["String"]>
+    /** The version of the enqueued style */
     readonly version: Maybe<Scalars["String"]>
   }
 
@@ -2411,8 +2581,14 @@ export type HierarchicalContentNode = {
   readonly guid: Maybe<Scalars["String"]>
   /** The globally unique ID for the object */
   readonly id: Scalars["ID"]
+  /** Whether the node is a Comment */
+  readonly isComment: Scalars["Boolean"]
   /** Whether the node is a Content Node */
   readonly isContentNode: Scalars["Boolean"]
+  /** Whether the node represents the front page. */
+  readonly isFrontPage: Scalars["Boolean"]
+  /** Whether  the node represents the blog page. */
+  readonly isPostsPage: Scalars["Boolean"]
   /** Whether the object is a node in the preview state */
   readonly isPreview: Maybe<Scalars["Boolean"]>
   /** Whether the object is restricted from the current viewer */
@@ -2541,7 +2717,7 @@ export type HierarchicalContentNodeToContentNodeAncestorsConnectionWhereArgs = {
   readonly nameIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
   readonly notIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** What paramater to use to order the objects by. */
+  /** What parameter to use to order the objects by. */
   readonly orderby: InputMaybe<
     ReadonlyArray<InputMaybe<PostObjectsConnectionOrderbyInput>>
   >
@@ -2623,7 +2799,7 @@ export type HierarchicalContentNodeToContentNodeChildrenConnectionWhereArgs = {
   readonly nameIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
   readonly notIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** What paramater to use to order the objects by. */
+  /** What parameter to use to order the objects by. */
   readonly orderby: InputMaybe<
     ReadonlyArray<InputMaybe<PostObjectsConnectionOrderbyInput>>
   >
@@ -2683,8 +2859,14 @@ export type HierarchicalTermNode = {
   readonly enqueuedStylesheets: Maybe<TermNodeToEnqueuedStylesheetConnection>
   /** The globally unique ID for the object */
   readonly id: Scalars["ID"]
+  /** Whether the node is a Comment */
+  readonly isComment: Scalars["Boolean"]
   /** Whether the node is a Content Node */
   readonly isContentNode: Scalars["Boolean"]
+  /** Whether the node represents the front page. */
+  readonly isFrontPage: Scalars["Boolean"]
+  /** Whether  the node represents the blog page. */
+  readonly isPostsPage: Scalars["Boolean"]
   /** Whether the object is restricted from the current viewer */
   readonly isRestricted: Maybe<Scalars["Boolean"]>
   /** Whether the node is a Term */
@@ -2804,10 +2986,18 @@ export type MediaItem = ContentNode &
     readonly fileSize: Maybe<Scalars["Int"]>
     /** The global unique identifier for this post. This currently matches the value stored in WP_Post-&gt;guid and the guid column in the &quot;post_objects&quot; database table. */
     readonly guid: Maybe<Scalars["String"]>
+    /** Whether the attachment object is password protected. */
+    readonly hasPassword: Maybe<Scalars["Boolean"]>
     /** The globally unique identifier of the attachment object. */
     readonly id: Scalars["ID"]
+    /** Whether the node is a Comment */
+    readonly isComment: Scalars["Boolean"]
     /** Whether the node is a Content Node */
     readonly isContentNode: Scalars["Boolean"]
+    /** Whether the node represents the front page. */
+    readonly isFrontPage: Scalars["Boolean"]
+    /** Whether  the node represents the blog page. */
+    readonly isPostsPage: Scalars["Boolean"]
     /** Whether the object is a node in the preview state */
     readonly isPreview: Maybe<Scalars["Boolean"]>
     /** Whether the object is restricted from the current viewer */
@@ -2841,6 +3031,8 @@ export type MediaItem = ContentNode &
     readonly parentDatabaseId: Maybe<Scalars["Int"]>
     /** The globally unique identifier of the parent node. */
     readonly parentId: Maybe<Scalars["ID"]>
+    /** The password for the attachment object. */
+    readonly password: Maybe<Scalars["String"]>
     /** The database id of the preview node */
     readonly previewRevisionDatabaseId: Maybe<Scalars["Int"]>
     /** Whether the object is a node in the preview state */
@@ -3333,10 +3525,16 @@ export type MenuItemConnectionPageInfo = {
 export type MenuItemLinkable = {
   /** The unique identifier stored in the database */
   readonly databaseId: Scalars["Int"]
-  /** The unique resource identifier path */
+  /** The globally unique ID for the object */
   readonly id: Scalars["ID"]
+  /** Whether the node is a Comment */
+  readonly isComment: Scalars["Boolean"]
   /** Whether the node is a Content Node */
   readonly isContentNode: Scalars["Boolean"]
+  /** Whether the node represents the front page. */
+  readonly isFrontPage: Scalars["Boolean"]
+  /** Whether  the node represents the blog page. */
+  readonly isPostsPage: Scalars["Boolean"]
   /** Whether the node is a Term */
   readonly isTermNode: Scalars["Boolean"]
   /** The unique resource identifier path */
@@ -3508,183 +3706,185 @@ export type MenuToMenuItemConnectionWhereArgs = {
 
 /** The MimeType of the object */
 export enum MimeTypeEnum {
-  /** MimeType application/java */
+  /** application/java mime type. */
   ApplicationJava = "APPLICATION_JAVA",
-  /** MimeType application/msword */
+  /** application/msword mime type. */
   ApplicationMsword = "APPLICATION_MSWORD",
-  /** MimeType application/octet-stream */
+  /** application/octet-stream mime type. */
   ApplicationOctetStream = "APPLICATION_OCTET_STREAM",
-  /** MimeType application/onenote */
+  /** application/onenote mime type. */
   ApplicationOnenote = "APPLICATION_ONENOTE",
-  /** MimeType application/oxps */
+  /** application/oxps mime type. */
   ApplicationOxps = "APPLICATION_OXPS",
-  /** MimeType application/pdf */
+  /** application/pdf mime type. */
   ApplicationPdf = "APPLICATION_PDF",
-  /** MimeType application/rar */
+  /** application/rar mime type. */
   ApplicationRar = "APPLICATION_RAR",
-  /** MimeType application/rtf */
+  /** application/rtf mime type. */
   ApplicationRtf = "APPLICATION_RTF",
-  /** MimeType application/ttaf+xml */
+  /** application/ttaf+xml mime type. */
   ApplicationTtafXml = "APPLICATION_TTAF_XML",
-  /** MimeType application/vnd.apple.keynote */
+  /** application/vnd.apple.keynote mime type. */
   ApplicationVndAppleKeynote = "APPLICATION_VND_APPLE_KEYNOTE",
-  /** MimeType application/vnd.apple.numbers */
+  /** application/vnd.apple.numbers mime type. */
   ApplicationVndAppleNumbers = "APPLICATION_VND_APPLE_NUMBERS",
-  /** MimeType application/vnd.apple.pages */
+  /** application/vnd.apple.pages mime type. */
   ApplicationVndApplePages = "APPLICATION_VND_APPLE_PAGES",
-  /** MimeType application/vnd.ms-access */
+  /** application/vnd.ms-access mime type. */
   ApplicationVndMsAccess = "APPLICATION_VND_MS_ACCESS",
-  /** MimeType application/vnd.ms-excel */
+  /** application/vnd.ms-excel mime type. */
   ApplicationVndMsExcel = "APPLICATION_VND_MS_EXCEL",
-  /** MimeType application/vnd.ms-excel.addin.macroEnabled.12 */
+  /** application/vnd.ms-excel.addin.macroEnabled.12 mime type. */
   ApplicationVndMsExcelAddinMacroenabled_12 = "APPLICATION_VND_MS_EXCEL_ADDIN_MACROENABLED_12",
-  /** MimeType application/vnd.ms-excel.sheet.binary.macroEnabled.12 */
+  /** application/vnd.ms-excel.sheet.binary.macroEnabled.12 mime type. */
   ApplicationVndMsExcelSheetBinaryMacroenabled_12 = "APPLICATION_VND_MS_EXCEL_SHEET_BINARY_MACROENABLED_12",
-  /** MimeType application/vnd.ms-excel.sheet.macroEnabled.12 */
+  /** application/vnd.ms-excel.sheet.macroEnabled.12 mime type. */
   ApplicationVndMsExcelSheetMacroenabled_12 = "APPLICATION_VND_MS_EXCEL_SHEET_MACROENABLED_12",
-  /** MimeType application/vnd.ms-excel.template.macroEnabled.12 */
+  /** application/vnd.ms-excel.template.macroEnabled.12 mime type. */
   ApplicationVndMsExcelTemplateMacroenabled_12 = "APPLICATION_VND_MS_EXCEL_TEMPLATE_MACROENABLED_12",
-  /** MimeType application/vnd.ms-powerpoint */
+  /** application/vnd.ms-powerpoint mime type. */
   ApplicationVndMsPowerpoint = "APPLICATION_VND_MS_POWERPOINT",
-  /** MimeType application/vnd.ms-powerpoint.addin.macroEnabled.12 */
+  /** application/vnd.ms-powerpoint.addin.macroEnabled.12 mime type. */
   ApplicationVndMsPowerpointAddinMacroenabled_12 = "APPLICATION_VND_MS_POWERPOINT_ADDIN_MACROENABLED_12",
-  /** MimeType application/vnd.ms-powerpoint.presentation.macroEnabled.12 */
+  /** application/vnd.ms-powerpoint.presentation.macroEnabled.12 mime type. */
   ApplicationVndMsPowerpointPresentationMacroenabled_12 = "APPLICATION_VND_MS_POWERPOINT_PRESENTATION_MACROENABLED_12",
-  /** MimeType application/vnd.ms-powerpoint.slideshow.macroEnabled.12 */
+  /** application/vnd.ms-powerpoint.slideshow.macroEnabled.12 mime type. */
   ApplicationVndMsPowerpointSlideshowMacroenabled_12 = "APPLICATION_VND_MS_POWERPOINT_SLIDESHOW_MACROENABLED_12",
-  /** MimeType application/vnd.ms-powerpoint.slide.macroEnabled.12 */
+  /** application/vnd.ms-powerpoint.slide.macroEnabled.12 mime type. */
   ApplicationVndMsPowerpointSlideMacroenabled_12 = "APPLICATION_VND_MS_POWERPOINT_SLIDE_MACROENABLED_12",
-  /** MimeType application/vnd.ms-powerpoint.template.macroEnabled.12 */
+  /** application/vnd.ms-powerpoint.template.macroEnabled.12 mime type. */
   ApplicationVndMsPowerpointTemplateMacroenabled_12 = "APPLICATION_VND_MS_POWERPOINT_TEMPLATE_MACROENABLED_12",
-  /** MimeType application/vnd.ms-project */
+  /** application/vnd.ms-project mime type. */
   ApplicationVndMsProject = "APPLICATION_VND_MS_PROJECT",
-  /** MimeType application/vnd.ms-word.document.macroEnabled.12 */
+  /** application/vnd.ms-word.document.macroEnabled.12 mime type. */
   ApplicationVndMsWordDocumentMacroenabled_12 = "APPLICATION_VND_MS_WORD_DOCUMENT_MACROENABLED_12",
-  /** MimeType application/vnd.ms-word.template.macroEnabled.12 */
+  /** application/vnd.ms-word.template.macroEnabled.12 mime type. */
   ApplicationVndMsWordTemplateMacroenabled_12 = "APPLICATION_VND_MS_WORD_TEMPLATE_MACROENABLED_12",
-  /** MimeType application/vnd.ms-write */
+  /** application/vnd.ms-write mime type. */
   ApplicationVndMsWrite = "APPLICATION_VND_MS_WRITE",
-  /** MimeType application/vnd.ms-xpsdocument */
+  /** application/vnd.ms-xpsdocument mime type. */
   ApplicationVndMsXpsdocument = "APPLICATION_VND_MS_XPSDOCUMENT",
-  /** MimeType application/vnd.oasis.opendocument.chart */
+  /** application/vnd.oasis.opendocument.chart mime type. */
   ApplicationVndOasisOpendocumentChart = "APPLICATION_VND_OASIS_OPENDOCUMENT_CHART",
-  /** MimeType application/vnd.oasis.opendocument.database */
+  /** application/vnd.oasis.opendocument.database mime type. */
   ApplicationVndOasisOpendocumentDatabase = "APPLICATION_VND_OASIS_OPENDOCUMENT_DATABASE",
-  /** MimeType application/vnd.oasis.opendocument.formula */
+  /** application/vnd.oasis.opendocument.formula mime type. */
   ApplicationVndOasisOpendocumentFormula = "APPLICATION_VND_OASIS_OPENDOCUMENT_FORMULA",
-  /** MimeType application/vnd.oasis.opendocument.graphics */
+  /** application/vnd.oasis.opendocument.graphics mime type. */
   ApplicationVndOasisOpendocumentGraphics = "APPLICATION_VND_OASIS_OPENDOCUMENT_GRAPHICS",
-  /** MimeType application/vnd.oasis.opendocument.presentation */
+  /** application/vnd.oasis.opendocument.presentation mime type. */
   ApplicationVndOasisOpendocumentPresentation = "APPLICATION_VND_OASIS_OPENDOCUMENT_PRESENTATION",
-  /** MimeType application/vnd.oasis.opendocument.spreadsheet */
+  /** application/vnd.oasis.opendocument.spreadsheet mime type. */
   ApplicationVndOasisOpendocumentSpreadsheet = "APPLICATION_VND_OASIS_OPENDOCUMENT_SPREADSHEET",
-  /** MimeType application/vnd.oasis.opendocument.text */
+  /** application/vnd.oasis.opendocument.text mime type. */
   ApplicationVndOasisOpendocumentText = "APPLICATION_VND_OASIS_OPENDOCUMENT_TEXT",
-  /** MimeType application/vnd.openxmlformats-officedocument.presentationml.presentation */
+  /** application/vnd.openxmlformats-officedocument.presentationml.presentation mime type. */
   ApplicationVndOpenxmlformatsOfficedocumentPresentationmlPresentation = "APPLICATION_VND_OPENXMLFORMATS_OFFICEDOCUMENT_PRESENTATIONML_PRESENTATION",
-  /** MimeType application/vnd.openxmlformats-officedocument.presentationml.slide */
+  /** application/vnd.openxmlformats-officedocument.presentationml.slide mime type. */
   ApplicationVndOpenxmlformatsOfficedocumentPresentationmlSlide = "APPLICATION_VND_OPENXMLFORMATS_OFFICEDOCUMENT_PRESENTATIONML_SLIDE",
-  /** MimeType application/vnd.openxmlformats-officedocument.presentationml.slideshow */
+  /** application/vnd.openxmlformats-officedocument.presentationml.slideshow mime type. */
   ApplicationVndOpenxmlformatsOfficedocumentPresentationmlSlideshow = "APPLICATION_VND_OPENXMLFORMATS_OFFICEDOCUMENT_PRESENTATIONML_SLIDESHOW",
-  /** MimeType application/vnd.openxmlformats-officedocument.presentationml.template */
+  /** application/vnd.openxmlformats-officedocument.presentationml.template mime type. */
   ApplicationVndOpenxmlformatsOfficedocumentPresentationmlTemplate = "APPLICATION_VND_OPENXMLFORMATS_OFFICEDOCUMENT_PRESENTATIONML_TEMPLATE",
-  /** MimeType application/vnd.openxmlformats-officedocument.spreadsheetml.sheet */
+  /** application/vnd.openxmlformats-officedocument.spreadsheetml.sheet mime type. */
   ApplicationVndOpenxmlformatsOfficedocumentSpreadsheetmlSheet = "APPLICATION_VND_OPENXMLFORMATS_OFFICEDOCUMENT_SPREADSHEETML_SHEET",
-  /** MimeType application/vnd.openxmlformats-officedocument.spreadsheetml.template */
+  /** application/vnd.openxmlformats-officedocument.spreadsheetml.template mime type. */
   ApplicationVndOpenxmlformatsOfficedocumentSpreadsheetmlTemplate = "APPLICATION_VND_OPENXMLFORMATS_OFFICEDOCUMENT_SPREADSHEETML_TEMPLATE",
-  /** MimeType application/vnd.openxmlformats-officedocument.wordprocessingml.document */
+  /** application/vnd.openxmlformats-officedocument.wordprocessingml.document mime type. */
   ApplicationVndOpenxmlformatsOfficedocumentWordprocessingmlDocument = "APPLICATION_VND_OPENXMLFORMATS_OFFICEDOCUMENT_WORDPROCESSINGML_DOCUMENT",
-  /** MimeType application/vnd.openxmlformats-officedocument.wordprocessingml.template */
+  /** application/vnd.openxmlformats-officedocument.wordprocessingml.template mime type. */
   ApplicationVndOpenxmlformatsOfficedocumentWordprocessingmlTemplate = "APPLICATION_VND_OPENXMLFORMATS_OFFICEDOCUMENT_WORDPROCESSINGML_TEMPLATE",
-  /** MimeType application/wordperfect */
+  /** application/wordperfect mime type. */
   ApplicationWordperfect = "APPLICATION_WORDPERFECT",
-  /** MimeType application/x-7z-compressed */
+  /** application/x-7z-compressed mime type. */
   ApplicationX_7ZCompressed = "APPLICATION_X_7Z_COMPRESSED",
-  /** MimeType application/x-gzip */
+  /** application/x-gzip mime type. */
   ApplicationXGzip = "APPLICATION_X_GZIP",
-  /** MimeType application/x-tar */
+  /** application/x-tar mime type. */
   ApplicationXTar = "APPLICATION_X_TAR",
-  /** MimeType application/zip */
+  /** application/zip mime type. */
   ApplicationZip = "APPLICATION_ZIP",
-  /** MimeType audio/aac */
+  /** audio/aac mime type. */
   AudioAac = "AUDIO_AAC",
-  /** MimeType audio/flac */
+  /** audio/flac mime type. */
   AudioFlac = "AUDIO_FLAC",
-  /** MimeType audio/midi */
+  /** audio/midi mime type. */
   AudioMidi = "AUDIO_MIDI",
-  /** MimeType audio/mpeg */
+  /** audio/mpeg mime type. */
   AudioMpeg = "AUDIO_MPEG",
-  /** MimeType audio/ogg */
+  /** audio/ogg mime type. */
   AudioOgg = "AUDIO_OGG",
-  /** MimeType audio/wav */
+  /** audio/wav mime type. */
   AudioWav = "AUDIO_WAV",
-  /** MimeType audio/x-matroska */
+  /** audio/x-matroska mime type. */
   AudioXMatroska = "AUDIO_X_MATROSKA",
-  /** MimeType audio/x-ms-wax */
+  /** audio/x-ms-wax mime type. */
   AudioXMsWax = "AUDIO_X_MS_WAX",
-  /** MimeType audio/x-ms-wma */
+  /** audio/x-ms-wma mime type. */
   AudioXMsWma = "AUDIO_X_MS_WMA",
-  /** MimeType audio/x-realaudio */
+  /** audio/x-realaudio mime type. */
   AudioXRealaudio = "AUDIO_X_REALAUDIO",
-  /** MimeType image/bmp */
+  /** image/avif mime type. */
+  ImageAvif = "IMAGE_AVIF",
+  /** image/bmp mime type. */
   ImageBmp = "IMAGE_BMP",
-  /** MimeType image/gif */
+  /** image/gif mime type. */
   ImageGif = "IMAGE_GIF",
-  /** MimeType image/heic */
+  /** image/heic mime type. */
   ImageHeic = "IMAGE_HEIC",
-  /** MimeType image/jpeg */
+  /** image/jpeg mime type. */
   ImageJpeg = "IMAGE_JPEG",
-  /** MimeType image/png */
+  /** image/png mime type. */
   ImagePng = "IMAGE_PNG",
-  /** MimeType image/tiff */
+  /** image/tiff mime type. */
   ImageTiff = "IMAGE_TIFF",
-  /** MimeType image/webp */
+  /** image/webp mime type. */
   ImageWebp = "IMAGE_WEBP",
-  /** MimeType image/x-icon */
+  /** image/x-icon mime type. */
   ImageXIcon = "IMAGE_X_ICON",
-  /** MimeType text/calendar */
+  /** text/calendar mime type. */
   TextCalendar = "TEXT_CALENDAR",
-  /** MimeType text/css */
+  /** text/css mime type. */
   TextCss = "TEXT_CSS",
-  /** MimeType text/csv */
+  /** text/csv mime type. */
   TextCsv = "TEXT_CSV",
-  /** MimeType text/plain */
+  /** text/plain mime type. */
   TextPlain = "TEXT_PLAIN",
-  /** MimeType text/richtext */
+  /** text/richtext mime type. */
   TextRichtext = "TEXT_RICHTEXT",
-  /** MimeType text/tab-separated-values */
+  /** text/tab-separated-values mime type. */
   TextTabSeparatedValues = "TEXT_TAB_SEPARATED_VALUES",
-  /** MimeType text/vtt */
+  /** text/vtt mime type. */
   TextVtt = "TEXT_VTT",
-  /** MimeType video/3gpp */
+  /** video/3gpp mime type. */
   Video_3Gpp = "VIDEO_3GPP",
-  /** MimeType video/3gpp2 */
+  /** video/3gpp2 mime type. */
   Video_3Gpp2 = "VIDEO_3GPP2",
-  /** MimeType video/avi */
+  /** video/avi mime type. */
   VideoAvi = "VIDEO_AVI",
-  /** MimeType video/divx */
+  /** video/divx mime type. */
   VideoDivx = "VIDEO_DIVX",
-  /** MimeType video/mp4 */
+  /** video/mp4 mime type. */
   VideoMp4 = "VIDEO_MP4",
-  /** MimeType video/mpeg */
+  /** video/mpeg mime type. */
   VideoMpeg = "VIDEO_MPEG",
-  /** MimeType video/ogg */
+  /** video/ogg mime type. */
   VideoOgg = "VIDEO_OGG",
-  /** MimeType video/quicktime */
+  /** video/quicktime mime type. */
   VideoQuicktime = "VIDEO_QUICKTIME",
-  /** MimeType video/webm */
+  /** video/webm mime type. */
   VideoWebm = "VIDEO_WEBM",
-  /** MimeType video/x-flv */
+  /** video/x-flv mime type. */
   VideoXFlv = "VIDEO_X_FLV",
-  /** MimeType video/x-matroska */
+  /** video/x-matroska mime type. */
   VideoXMatroska = "VIDEO_X_MATROSKA",
-  /** MimeType video/x-ms-asf */
+  /** video/x-ms-asf mime type. */
   VideoXMsAsf = "VIDEO_X_MS_ASF",
-  /** MimeType video/x-ms-wm */
+  /** video/x-ms-wm mime type. */
   VideoXMsWm = "VIDEO_X_MS_WM",
-  /** MimeType video/x-ms-wmv */
+  /** video/x-ms-wmv mime type. */
   VideoXMsWmv = "VIDEO_X_MS_WMV",
-  /** MimeType video/x-ms-wmx */
+  /** video/x-ms-wmx mime type. */
   VideoXMsWmx = "VIDEO_X_MS_WMX",
 }
 
@@ -3919,8 +4119,12 @@ export type Page = ContentNode &
     readonly featuredImageId: Maybe<Scalars["ID"]>
     /** The global unique identifier for this post. This currently matches the value stored in WP_Post-&gt;guid and the guid column in the &quot;post_objects&quot; database table. */
     readonly guid: Maybe<Scalars["String"]>
+    /** Whether the page object is password protected. */
+    readonly hasPassword: Maybe<Scalars["Boolean"]>
     /** The globally unique identifier of the page object. */
     readonly id: Scalars["ID"]
+    /** Whether the node is a Comment */
+    readonly isComment: Scalars["Boolean"]
     /** Whether the node is a Content Node */
     readonly isContentNode: Scalars["Boolean"]
     /** Whether this page is set to the static front page. */
@@ -3958,6 +4162,8 @@ export type Page = ContentNode &
     readonly parentDatabaseId: Maybe<Scalars["Int"]>
     /** The globally unique identifier of the parent node. */
     readonly parentId: Maybe<Scalars["ID"]>
+    /** The password for the page object. */
+    readonly password: Maybe<Scalars["String"]>
     /** Connection between the Page type and the page type */
     readonly preview: Maybe<PageToPreviewConnectionEdge>
     /** The database id of the preview node */
@@ -4273,7 +4479,7 @@ export type PageToRevisionConnectionWhereArgs = {
   readonly nameIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
   readonly notIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** What paramater to use to order the objects by. */
+  /** What parameter to use to order the objects by. */
   readonly orderby: InputMaybe<
     ReadonlyArray<InputMaybe<PostObjectsConnectionOrderbyInput>>
   >
@@ -4383,6 +4589,11 @@ export type Post = ContentNode &
   Previewable &
   UniformResourceIdentifiable & {
     readonly __typename?: "Post"
+    /**
+     * The ancestors of the content node.
+     * @deprecated This content type is not hierarchical and typically will not have ancestors
+     */
+    readonly ancestors: Maybe<PostToPostConnection>
     /** Connection between the NodeWithAuthor type and the User type */
     readonly author: Maybe<NodeWithAuthorToUserConnectionEdge>
     /** The database identifier of the author of the node */
@@ -4429,10 +4640,18 @@ export type Post = ContentNode &
     readonly featuredImageId: Maybe<Scalars["ID"]>
     /** The global unique identifier for this post. This currently matches the value stored in WP_Post-&gt;guid and the guid column in the &quot;post_objects&quot; database table. */
     readonly guid: Maybe<Scalars["String"]>
+    /** Whether the post object is password protected. */
+    readonly hasPassword: Maybe<Scalars["Boolean"]>
     /** The globally unique identifier of the post object. */
     readonly id: Scalars["ID"]
+    /** Whether the node is a Comment */
+    readonly isComment: Scalars["Boolean"]
     /** Whether the node is a Content Node */
     readonly isContentNode: Scalars["Boolean"]
+    /** Whether the node represents the front page. */
+    readonly isFrontPage: Scalars["Boolean"]
+    /** Whether  the node represents the blog page. */
+    readonly isPostsPage: Scalars["Boolean"]
     /** Whether the object is a node in the preview state */
     readonly isPreview: Maybe<Scalars["Boolean"]>
     /** Whether the object is restricted from the current viewer */
@@ -4451,6 +4670,13 @@ export type Post = ContentNode &
     readonly modified: Maybe<Scalars["String"]>
     /** The GMT modified time for a post. If a post was recently updated the modified field will change to match the corresponding time in GMT. */
     readonly modifiedGmt: Maybe<Scalars["String"]>
+    /**
+     * The parent of the content node.
+     * @deprecated This content type is not hierarchical and typically will not have a parent
+     */
+    readonly parent: Maybe<PostToParentConnectionEdge>
+    /** The password for the post object. */
+    readonly password: Maybe<Scalars["String"]>
     /** Whether the pings are open or closed for this particular post. */
     readonly pingStatus: Maybe<Scalars["String"]>
     /** URLs that have been pinged. */
@@ -4489,6 +4715,14 @@ export type Post = ContentNode &
     /** The unique resource identifier path */
     readonly uri: Maybe<Scalars["String"]>
   }
+
+/** The post type */
+export type PostAncestorsArgs = {
+  after: InputMaybe<Scalars["String"]>
+  before: InputMaybe<Scalars["String"]>
+  first: InputMaybe<Scalars["Int"]>
+  last: InputMaybe<Scalars["Int"]>
+}
 
 /** The post type */
 export type PostCategoriesArgs = {
@@ -4643,10 +4877,16 @@ export type PostFormat = DatabaseIdentifier &
     readonly enqueuedScripts: Maybe<TermNodeToEnqueuedScriptConnection>
     /** Connection between the TermNode type and the EnqueuedStylesheet type */
     readonly enqueuedStylesheets: Maybe<TermNodeToEnqueuedStylesheetConnection>
-    /** The unique resource identifier path */
+    /** The globally unique ID for the object */
     readonly id: Scalars["ID"]
+    /** Whether the node is a Comment */
+    readonly isComment: Scalars["Boolean"]
     /** Whether the node is a Content Node */
     readonly isContentNode: Scalars["Boolean"]
+    /** Whether the node represents the front page. */
+    readonly isFrontPage: Scalars["Boolean"]
+    /** Whether  the node represents the blog page. */
+    readonly isPostsPage: Scalars["Boolean"]
     /** Whether the object is restricted from the current viewer */
     readonly isRestricted: Maybe<Scalars["Boolean"]>
     /** Whether the node is a Term */
@@ -4814,7 +5054,7 @@ export type PostFormatToContentNodeConnectionWhereArgs = {
   readonly nameIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
   readonly notIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** What paramater to use to order the objects by. */
+  /** What parameter to use to order the objects by. */
   readonly orderby: InputMaybe<
     ReadonlyArray<InputMaybe<PostObjectsConnectionOrderbyInput>>
   >
@@ -4907,7 +5147,7 @@ export type PostFormatToPostConnectionWhereArgs = {
   readonly nameIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
   readonly notIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** What paramater to use to order the objects by. */
+  /** What parameter to use to order the objects by. */
   readonly orderby: InputMaybe<
     ReadonlyArray<InputMaybe<PostObjectsConnectionOrderbyInput>>
   >
@@ -5270,6 +5510,63 @@ export type PostToCommentConnectionWhereArgs = {
   readonly userId: InputMaybe<Scalars["ID"]>
 }
 
+/** Connection between the Post type and the post type */
+export type PostToParentConnectionEdge = Edge &
+  OneToOneConnection &
+  PostConnectionEdge & {
+    readonly __typename?: "PostToParentConnectionEdge"
+    /** Opaque reference to the nodes position in the connection. Value can be used with pagination args. */
+    readonly cursor: Maybe<Scalars["String"]>
+    /**
+     * The node of the connection, without the edges
+     * @deprecated This content type is not hierarchical and typically will not have a parent
+     */
+    readonly node: Post
+  }
+
+/** Connection between the Post type and the post type */
+export type PostToPostConnection = Connection &
+  PostConnection & {
+    readonly __typename?: "PostToPostConnection"
+    /** Edges for the PostToPostConnection connection */
+    readonly edges: ReadonlyArray<PostToPostConnectionEdge>
+    /** The nodes of the connection, without the edges */
+    readonly nodes: ReadonlyArray<Post>
+    /** Information about pagination in a connection. */
+    readonly pageInfo: PostToPostConnectionPageInfo
+  }
+
+/** An edge in a connection */
+export type PostToPostConnectionEdge = Edge &
+  PostConnectionEdge & {
+    readonly __typename?: "PostToPostConnectionEdge"
+    /**
+     * A cursor for use in pagination
+     * @deprecated This content type is not hierarchical and typically will not have ancestors
+     */
+    readonly cursor: Maybe<Scalars["String"]>
+    /**
+     * The item at the end of the edge
+     * @deprecated This content type is not hierarchical and typically will not have ancestors
+     */
+    readonly node: Post
+  }
+
+/** Page Info on the &quot;PostToPostConnection&quot; */
+export type PostToPostConnectionPageInfo = PageInfo &
+  PostConnectionPageInfo &
+  WpPageInfo & {
+    readonly __typename?: "PostToPostConnectionPageInfo"
+    /** When paginating forwards, the cursor to continue. */
+    readonly endCursor: Maybe<Scalars["String"]>
+    /** When paginating forwards, are there more items? */
+    readonly hasNextPage: Scalars["Boolean"]
+    /** When paginating backwards, are there more items? */
+    readonly hasPreviousPage: Scalars["Boolean"]
+    /** When paginating backwards, the cursor to continue. */
+    readonly startCursor: Maybe<Scalars["String"]>
+  }
+
 /** Connection between the Post type and the postFormat type */
 export type PostToPostFormatConnection = Connection &
   PostFormatConnection & {
@@ -5435,7 +5732,7 @@ export type PostToRevisionConnectionWhereArgs = {
   readonly nameIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
   readonly notIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** What paramater to use to order the objects by. */
+  /** What parameter to use to order the objects by. */
   readonly orderby: InputMaybe<
     ReadonlyArray<InputMaybe<PostObjectsConnectionOrderbyInput>>
   >
@@ -5705,8 +6002,14 @@ export type Previewable = {
 /** The reading setting type */
 export type ReadingSettings = {
   readonly __typename?: "ReadingSettings"
+  /** The ID of the page that should display the latest posts */
+  readonly pageForPosts: Maybe<Scalars["Int"]>
+  /** The ID of the page that should be displayed on the front page */
+  readonly pageOnFront: Maybe<Scalars["Int"]>
   /** Blog pages show at most. */
   readonly postsPerPage: Maybe<Scalars["Int"]>
+  /** What to show on the front page */
+  readonly showOnFront: Maybe<Scalars["String"]>
 }
 
 /** Input for the registerUser mutation. */
@@ -6574,7 +6877,7 @@ export type RootQueryToActionMonitorActionConnectionWhereArgs = {
   readonly nameIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
   readonly notIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** What paramater to use to order the objects by. */
+  /** What parameter to use to order the objects by. */
   readonly orderby: InputMaybe<
     ReadonlyArray<InputMaybe<PostObjectsConnectionOrderbyInput>>
   >
@@ -6846,7 +7149,7 @@ export type RootQueryToContentNodeConnectionWhereArgs = {
   readonly nameIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
   readonly notIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** What paramater to use to order the objects by. */
+  /** What parameter to use to order the objects by. */
   readonly orderby: InputMaybe<
     ReadonlyArray<InputMaybe<PostObjectsConnectionOrderbyInput>>
   >
@@ -7046,7 +7349,7 @@ export type RootQueryToMediaItemConnectionWhereArgs = {
   readonly nameIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
   readonly notIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** What paramater to use to order the objects by. */
+  /** What parameter to use to order the objects by. */
   readonly orderby: InputMaybe<
     ReadonlyArray<InputMaybe<PostObjectsConnectionOrderbyInput>>
   >
@@ -7227,7 +7530,7 @@ export type RootQueryToPageConnectionWhereArgs = {
   readonly nameIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
   readonly notIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** What paramater to use to order the objects by. */
+  /** What parameter to use to order the objects by. */
   readonly orderby: InputMaybe<
     ReadonlyArray<InputMaybe<PostObjectsConnectionOrderbyInput>>
   >
@@ -7367,7 +7670,7 @@ export type RootQueryToPostConnectionWhereArgs = {
   readonly nameIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
   readonly notIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** What paramater to use to order the objects by. */
+  /** What parameter to use to order the objects by. */
   readonly orderby: InputMaybe<
     ReadonlyArray<InputMaybe<PostObjectsConnectionOrderbyInput>>
   >
@@ -7542,7 +7845,7 @@ export type RootQueryToRevisionsConnectionWhereArgs = {
   readonly nameIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
   readonly notIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** What paramater to use to order the objects by. */
+  /** What parameter to use to order the objects by. */
   readonly orderby: InputMaybe<
     ReadonlyArray<InputMaybe<PostObjectsConnectionOrderbyInput>>
   >
@@ -7867,7 +8170,7 @@ export type RootQueryToUserConnectionWhereArgs = {
   readonly nicenameNotIn: InputMaybe<
     ReadonlyArray<InputMaybe<Scalars["String"]>>
   >
-  /** What paramater to use to order the objects by. */
+  /** What parameter to use to order the objects by. */
   readonly orderby: InputMaybe<
     ReadonlyArray<InputMaybe<UsersConnectionOrderbyInput>>
   >
@@ -7922,6 +8225,14 @@ export type RootQueryToUserRoleConnectionPageInfo = PageInfo &
     readonly startCursor: Maybe<Scalars["String"]>
   }
 
+/** The strategy to use when loading the script */
+export enum ScriptLoadingStrategyEnum {
+  /** Use the script `async` attribute */
+  Async = "ASYNC",
+  /** Use the script `defer` attribute */
+  Defer = "DEFER",
+}
+
 /** Input for the sendPasswordResetEmail mutation. */
 export type SendPasswordResetEmailInput = {
   /** This is an ID that can be passed to a mutation by the client to track the progress of mutations and catch possible duplicate mutation submissions. */
@@ -7970,7 +8281,13 @@ export type Settings = {
   /** Settings of the the string Settings Group */
   readonly generalSettingsUrl: Maybe<Scalars["String"]>
   /** Settings of the the integer Settings Group */
+  readonly readingSettingsPageForPosts: Maybe<Scalars["Int"]>
+  /** Settings of the the integer Settings Group */
+  readonly readingSettingsPageOnFront: Maybe<Scalars["Int"]>
+  /** Settings of the the integer Settings Group */
   readonly readingSettingsPostsPerPage: Maybe<Scalars["Int"]>
+  /** Settings of the the string Settings Group */
+  readonly readingSettingsShowOnFront: Maybe<Scalars["String"]>
   /** Settings of the the integer Settings Group */
   readonly writingSettingsDefaultCategory: Maybe<Scalars["Int"]>
   /** Settings of the the string Settings Group */
@@ -7998,10 +8315,16 @@ export type Tag = DatabaseIdentifier &
     readonly enqueuedScripts: Maybe<TermNodeToEnqueuedScriptConnection>
     /** Connection between the TermNode type and the EnqueuedStylesheet type */
     readonly enqueuedStylesheets: Maybe<TermNodeToEnqueuedStylesheetConnection>
-    /** The unique resource identifier path */
+    /** The globally unique ID for the object */
     readonly id: Scalars["ID"]
+    /** Whether the node is a Comment */
+    readonly isComment: Scalars["Boolean"]
     /** Whether the node is a Content Node */
     readonly isContentNode: Scalars["Boolean"]
+    /** Whether the node represents the front page. */
+    readonly isFrontPage: Scalars["Boolean"]
+    /** Whether  the node represents the blog page. */
+    readonly isPostsPage: Scalars["Boolean"]
     /** Whether the object is restricted from the current viewer */
     readonly isRestricted: Maybe<Scalars["Boolean"]>
     /** Whether the node is a Term */
@@ -8168,7 +8491,7 @@ export type TagToContentNodeConnectionWhereArgs = {
   readonly nameIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
   readonly notIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** What paramater to use to order the objects by. */
+  /** What parameter to use to order the objects by. */
   readonly orderby: InputMaybe<
     ReadonlyArray<InputMaybe<PostObjectsConnectionOrderbyInput>>
   >
@@ -8261,7 +8584,7 @@ export type TagToPostConnectionWhereArgs = {
   readonly nameIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
   readonly notIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** What paramater to use to order the objects by. */
+  /** What parameter to use to order the objects by. */
   readonly orderby: InputMaybe<
     ReadonlyArray<InputMaybe<PostObjectsConnectionOrderbyInput>>
   >
@@ -8313,6 +8636,8 @@ export type Taxonomy = Node & {
   readonly archivePath: Maybe<Scalars["String"]>
   /** List of Content Types associated with the Taxonomy */
   readonly connectedContentTypes: Maybe<TaxonomyToContentTypeConnection>
+  /** List of Term Nodes associated with the Taxonomy */
+  readonly connectedTerms: Maybe<TaxonomyToTermNodeConnection>
   /** Description of the taxonomy. This field is equivalent to WP_Taxonomy-&gt;description */
   readonly description: Maybe<Scalars["String"]>
   /** The plural name of the post type within the GraphQL Schema. */
@@ -8331,7 +8656,7 @@ export type Taxonomy = Node & {
   readonly name: Maybe<Scalars["String"]>
   /** Whether the taxonomy is publicly queryable */
   readonly public: Maybe<Scalars["Boolean"]>
-  /** Name of content type to diplay in REST API &quot;wp/v2&quot; namespace. */
+  /** Name of content type to display in REST API &quot;wp/v2&quot; namespace. */
   readonly restBase: Maybe<Scalars["String"]>
   /** The REST Controller class assigned to handling this content type. */
   readonly restControllerClass: Maybe<Scalars["String"]>
@@ -8355,6 +8680,14 @@ export type Taxonomy = Node & {
 
 /** A taxonomy object */
 export type TaxonomyConnectedContentTypesArgs = {
+  after: InputMaybe<Scalars["String"]>
+  before: InputMaybe<Scalars["String"]>
+  first: InputMaybe<Scalars["Int"]>
+  last: InputMaybe<Scalars["Int"]>
+}
+
+/** A taxonomy object */
+export type TaxonomyConnectedTermsArgs = {
   after: InputMaybe<Scalars["String"]>
   before: InputMaybe<Scalars["String"]>
   first: InputMaybe<Scalars["Int"]>
@@ -8447,6 +8780,43 @@ export type TaxonomyToContentTypeConnectionPageInfo =
       readonly startCursor: Maybe<Scalars["String"]>
     }
 
+/** Connection between the Taxonomy type and the TermNode type */
+export type TaxonomyToTermNodeConnection = Connection &
+  TermNodeConnection & {
+    readonly __typename?: "TaxonomyToTermNodeConnection"
+    /** Edges for the TaxonomyToTermNodeConnection connection */
+    readonly edges: ReadonlyArray<TaxonomyToTermNodeConnectionEdge>
+    /** The nodes of the connection, without the edges */
+    readonly nodes: ReadonlyArray<TermNode>
+    /** Information about pagination in a connection. */
+    readonly pageInfo: TaxonomyToTermNodeConnectionPageInfo
+  }
+
+/** An edge in a connection */
+export type TaxonomyToTermNodeConnectionEdge = Edge &
+  TermNodeConnectionEdge & {
+    readonly __typename?: "TaxonomyToTermNodeConnectionEdge"
+    /** A cursor for use in pagination */
+    readonly cursor: Maybe<Scalars["String"]>
+    /** The item at the end of the edge */
+    readonly node: TermNode
+  }
+
+/** Page Info on the &quot;TaxonomyToTermNodeConnection&quot; */
+export type TaxonomyToTermNodeConnectionPageInfo = PageInfo &
+  TermNodeConnectionPageInfo &
+  WpPageInfo & {
+    readonly __typename?: "TaxonomyToTermNodeConnectionPageInfo"
+    /** When paginating forwards, the cursor to continue. */
+    readonly endCursor: Maybe<Scalars["String"]>
+    /** When paginating forwards, are there more items? */
+    readonly hasNextPage: Scalars["Boolean"]
+    /** When paginating backwards, are there more items? */
+    readonly hasPreviousPage: Scalars["Boolean"]
+    /** When paginating backwards, the cursor to continue. */
+    readonly startCursor: Maybe<Scalars["String"]>
+  }
+
 /** The template assigned to the node */
 export type Template_PageBuilder = ContentTemplate & {
   readonly __typename?: "Template_PageBuilder"
@@ -8466,10 +8836,16 @@ export type TermNode = {
   readonly enqueuedScripts: Maybe<TermNodeToEnqueuedScriptConnection>
   /** Connection between the TermNode type and the EnqueuedStylesheet type */
   readonly enqueuedStylesheets: Maybe<TermNodeToEnqueuedStylesheetConnection>
-  /** The unique resource identifier path */
+  /** The globally unique ID for the object */
   readonly id: Scalars["ID"]
+  /** Whether the node is a Comment */
+  readonly isComment: Scalars["Boolean"]
   /** Whether the node is a Content Node */
   readonly isContentNode: Scalars["Boolean"]
+  /** Whether the node represents the front page. */
+  readonly isFrontPage: Scalars["Boolean"]
+  /** Whether  the node represents the blog page. */
+  readonly isPostsPage: Scalars["Boolean"]
   /** Whether the object is restricted from the current viewer */
   readonly isRestricted: Maybe<Scalars["Boolean"]>
   /** Whether the node is a Term */
@@ -8703,10 +9079,16 @@ export type ThemeConnectionPageInfo = {
 
 /** Any node that has a URI */
 export type UniformResourceIdentifiable = {
-  /** The unique resource identifier path */
+  /** The globally unique ID for the object */
   readonly id: Scalars["ID"]
+  /** Whether the node is a Comment */
+  readonly isComment: Scalars["Boolean"]
   /** Whether the node is a Content Node */
   readonly isContentNode: Scalars["Boolean"]
+  /** Whether the node represents the front page. */
+  readonly isFrontPage: Scalars["Boolean"]
+  /** Whether  the node represents the blog page. */
+  readonly isPostsPage: Scalars["Boolean"]
   /** Whether the node is a Term */
   readonly isTermNode: Scalars["Boolean"]
   /** The unique resource identifier path */
@@ -8998,8 +9380,14 @@ export type UpdateSettingsInput = {
   readonly generalSettingsTitle: InputMaybe<Scalars["String"]>
   /** Site URL. */
   readonly generalSettingsUrl: InputMaybe<Scalars["String"]>
+  /** The ID of the page that should display the latest posts */
+  readonly readingSettingsPageForPosts: InputMaybe<Scalars["Int"]>
+  /** The ID of the page that should be displayed on the front page */
+  readonly readingSettingsPageOnFront: InputMaybe<Scalars["Int"]>
   /** Blog pages show at most. */
   readonly readingSettingsPostsPerPage: InputMaybe<Scalars["Int"]>
+  /** What to show on the front page */
+  readonly readingSettingsShowOnFront: InputMaybe<Scalars["String"]>
   /** Default post category. */
   readonly writingSettingsDefaultCategory: InputMaybe<Scalars["Int"]>
   /** Default post format. */
@@ -9129,8 +9517,14 @@ export type User = Commenter &
     readonly firstName: Maybe<Scalars["String"]>
     /** The globally unique identifier for the user object. */
     readonly id: Scalars["ID"]
+    /** Whether the node is a Comment */
+    readonly isComment: Scalars["Boolean"]
     /** Whether the node is a Content Node */
     readonly isContentNode: Scalars["Boolean"]
+    /** Whether the node represents the front page. */
+    readonly isFrontPage: Scalars["Boolean"]
+    /** Whether  the node represents the blog page. */
+    readonly isPostsPage: Scalars["Boolean"]
     /** Whether the object is restricted from the current viewer */
     readonly isRestricted: Maybe<Scalars["Boolean"]>
     /** Whether the node is a Term */
@@ -9141,7 +9535,7 @@ export type User = Commenter &
     readonly locale: Maybe<Scalars["String"]>
     /** Connection between the User type and the mediaItem type */
     readonly mediaItems: Maybe<UserToMediaItemConnection>
-    /** Display name of the user. This is equivalent to the WP_User-&gt;dispaly_name property. */
+    /** Display name of the user. This is equivalent to the WP_User-&gt;display_name property. */
     readonly name: Maybe<Scalars["String"]>
     /** The nicename for the user. This field is equivalent to WP_User-&gt;user_nicename */
     readonly nicename: Maybe<Scalars["String"]>
@@ -9599,7 +9993,7 @@ export type UserToMediaItemConnectionWhereArgs = {
   readonly nameIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
   readonly notIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** What paramater to use to order the objects by. */
+  /** What parameter to use to order the objects by. */
   readonly orderby: InputMaybe<
     ReadonlyArray<InputMaybe<PostObjectsConnectionOrderbyInput>>
   >
@@ -9684,7 +10078,7 @@ export type UserToPageConnectionWhereArgs = {
   readonly nameIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
   readonly notIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** What paramater to use to order the objects by. */
+  /** What parameter to use to order the objects by. */
   readonly orderby: InputMaybe<
     ReadonlyArray<InputMaybe<PostObjectsConnectionOrderbyInput>>
   >
@@ -9777,7 +10171,7 @@ export type UserToPostConnectionWhereArgs = {
   readonly nameIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
   readonly notIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** What paramater to use to order the objects by. */
+  /** What parameter to use to order the objects by. */
   readonly orderby: InputMaybe<
     ReadonlyArray<InputMaybe<PostObjectsConnectionOrderbyInput>>
   >
@@ -9868,7 +10262,7 @@ export type UserToRevisionsConnectionWhereArgs = {
   readonly nameIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["String"]>>>
   /** Specify IDs NOT to retrieve. If this is used in the same query as "in", it will be ignored */
   readonly notIn: InputMaybe<ReadonlyArray<InputMaybe<Scalars["ID"]>>>
-  /** What paramater to use to order the objects by. */
+  /** What parameter to use to order the objects by. */
   readonly orderby: InputMaybe<
     ReadonlyArray<InputMaybe<PostObjectsConnectionOrderbyInput>>
   >
@@ -10091,6 +10485,7 @@ export type PageQuery = { readonly __typename?: "RootQuery" } & {
   readonly page: Maybe<
     | { readonly __typename: "ActionMonitorAction" }
     | { readonly __typename: "Category" }
+    | { readonly __typename: "Comment" }
     | { readonly __typename: "ContentType" }
     | { readonly __typename: "MediaItem" }
     | ({ readonly __typename: "Page" } & Pick<Page, "title" | "content">)

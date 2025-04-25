@@ -20,8 +20,17 @@
 
 pub mod annotation;
 mod audio;
+
+/// This module contains types related to authentication
+///
+/// Eg. our `UserInfo` (what we know about the user making the request) and its
+/// various deserialization routines. Also GraphQL Guards for restricting access
+/// based on the user making the request.
+pub mod auth;
+
 mod cherokee;
 pub mod collection;
+pub mod comment;
 mod database_sql;
 mod date;
 mod document;
@@ -34,9 +43,11 @@ mod morpheme;
 pub mod page;
 mod person;
 pub mod raw;
+pub mod sheet_result;
 mod slugs;
 mod tag;
 mod translation;
+pub mod user;
 
 // Re-export dependencies for downstream to use.
 pub use async_graphql;
@@ -55,6 +66,7 @@ pub use gloss::*;
 pub use lexical::*;
 pub use morpheme::*;
 pub use person::*;
+pub use sheet_result::*;
 pub use slugs::*;
 pub use tag::*;
 pub use translation::*;

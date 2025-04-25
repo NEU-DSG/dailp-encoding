@@ -8,7 +8,7 @@ import parse, {
   htmlToDOM,
 } from "html-react-parser"
 import React from "react"
-import { Tab, TabList, TabPanel } from "reakit"
+import { Tab, TabList, TabPanel, useTabState } from "reakit"
 import { AudioPlayer, Button, Link } from "src/components"
 import * as Dailp from "src/graphql/dailp"
 import * as Wordpress from "src/graphql/wordpress"
@@ -24,6 +24,7 @@ import * as css from "../pages/documents/document.css"
 import { Glossary } from "./glossary"
 import * as lessonCSS from "./lesson.css"
 import { LexicalSearch } from "./lexical-search"
+import * as printLessonCSS from "./print-lesson.css"
 
 interface Props {
   slug: string
@@ -143,7 +144,7 @@ const PullAudio = (props: {
   // Gets the audio recording of this document slice.
   const docAudio = doc?.audioRecording
   // Gets the individual recordings of each word of this document slice.
-  const audioTracks = doc?.forms.map((form) => form.audioTrack)
+  const audioTracks = doc?.forms.map((form) => form.ingestedAudioTrack)
 
   if (!docAudio || !audioTracks) {
     return null

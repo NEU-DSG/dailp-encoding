@@ -3,21 +3,29 @@ import React from "react"
 import ReactDOMServer from "react-dom/server"
 import { Helmet } from "react-helmet"
 import prepass from "react-ssr-prepass"
-import { ssrExchange } from "urql"
 import { dangerouslySkipEscape, escapeInject } from "vite-plugin-ssr"
 import type { PageContextBuiltIn } from "vite-plugin-ssr/types"
-import { customClient } from "src/graphql"
+import { Environment, deploymentEnvironment } from "src/env"
+import { ssrClientAndExchange } from "src/graphql"
 import { PageContextServer, PageShell, rootElementId } from "./PageShell"
 
 /**
  * In production, render every page on the server then hydrate it on the client.
  */
 export function render(pageContext: PageContextServer) {
-  if (process.env["NODE_ENV"] === "development") {
+  // Prevent search engines from indexing non-production pages
+  const noindex =
+    deploymentEnvironment !== Environment.Production
+      ? escapeInject`<meta name="robots" content="noindex"/>`
+      : ""
+  if (deploymentEnvironment === Environment.Development) {
     // In development, don't do SSR, just let the client render.
     return escapeInject`<!DOCTYPE html>
     <html>
-      <head>${baseScript}</head>
+      <head>
+        ${baseScript}
+        ${noindex}
+      </head>
       <body><div id="${rootElementId}"/></body>
     </html>`
   } else {
@@ -26,6 +34,7 @@ export function render(pageContext: PageContextServer) {
     <html ${dangerouslySkipEscape(pageHead.htmlAttributes.toString())}>
       <head>
         ${baseScript}
+        ${noindex}
         ${dangerouslySkipEscape(pageHead.title.toString())}
         ${dangerouslySkipEscape(pageHead.meta.toString())}
         ${dangerouslySkipEscape(pageHead.link.toString())}
@@ -50,9 +59,7 @@ export async function onBeforeRender(
   if (process.env["NODE_ENV"] === "development") {
     return { pageContext: baseContext }
   } else {
-    const ssr = ssrExchange({ initialState: undefined, isClient: false })
-    const client = customClient(true, [ssr])
-
+    const [ssr, client] = ssrClientAndExchange()
     const context = {
       isBackwardNavigation: false,
       isHydration: true as true,
@@ -102,21 +109,29 @@ export const passToClient = [
 const clientEnv = pick(process.env, [
   "DAILP_AWS_REGION",
   "DAILP_USER_POOL",
+  "DAILP_IDENTITY_POOL",
   "DAILP_USER_POOL_CLIENT",
   "DAILP_API_URL",
   "TF_STAGE",
   "AWS_REGION",
+  "CF_URL",
 ])
 
 const clientProcess = dangerouslySkipEscape(JSON.stringify({ env: clientEnv }))
+const skipConsoleLog = dangerouslySkipEscape(
+  (process.env["NODE_ENV"] === "development").toString()
+)
 
 // Define `global` for some scripts that depend on it, and process.env to pass
-// along some important environment variables.
+// along some important environment variables. Disable console.log unless on dev
 const baseScript = escapeInject`
   <script>
     if (global === undefined) {
       var global = window;
     }
     var process = ${clientProcess};
+    if (${skipConsoleLog}) {
+      console.log = function(){};
+    }
   </script>
 `

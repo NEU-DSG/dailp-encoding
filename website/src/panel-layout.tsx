@@ -1,25 +1,43 @@
+import { groupBy } from "lodash"
 import React, { ReactNode, useEffect } from "react"
-import { AiFillSound } from "react-icons/ai/index"
+import { useState } from "react"
 import { GrDown, GrUp } from "react-icons/gr/index"
-import { IoEllipsisHorizontalCircle } from "react-icons/io5/index"
-import { MdClose, MdNotes, MdRecordVoiceOver } from "react-icons/md/index"
+import { MdClose } from "react-icons/md/index"
 import { Disclosure, DisclosureContent, useDisclosureState } from "reakit"
-import { unstable_Form as Form } from "reakit"
-import { useCredentials } from "./auth"
-import { AudioPlayer, IconButton } from "./components"
-import EditWordPanel, { EditButton } from "./edit-word-panel"
-import { content } from "./footer.css"
-import { useForm } from "./form-context"
-import * as Dailp from "./graphql/dailp"
+import { unstable_Form as Form, unstable_FormInput as FormInput } from "reakit"
+import * as Dailp from "src/graphql/dailp"
+import { useCognitoUserGroups, useCredentials } from "./auth"
+import { CommentAction, CommentPanel } from "./comment-panel"
+import { useCommentStateContext } from "./comment-state-context"
+import { Button, IconButton } from "./components"
+import { SubtleButton } from "./components/subtle-button"
+import { EditButton as ParagraphEditButton } from "./edit-paragraph-feature"
+import { useForm as useParagraphForm } from "./edit-paragraph-form-context"
+import { EditButton as WordEditButton } from "./edit-word-feature"
+import { useForm } from "./edit-word-form-context"
 import * as css from "./panel-layout.css"
 import ParagraphPanel from "./paragraph-panel"
 import { usePreferences } from "./preferences-context"
 import { TranslatedParagraph } from "./segment"
-import { VerticalMorphemicSegmentation, WordPanel } from "./word-panel"
+import { WordPanel } from "./word-panel"
 
 enum PanelType {
-  EditWordPanel,
   WordPanel,
+  EditWordPanel,
+}
+
+enum ParagraphPanelType {
+  ParagraphPanel,
+  EditParagraphPanel,
+}
+
+// A label associated with a list of options.
+type GroupedOption = {
+  label: string
+  options: {
+    value: string
+    label: string
+  }[]
 }
 
 export type PanelSegment = Dailp.FormFieldsFragment | TranslatedParagraph
@@ -29,27 +47,85 @@ export interface PanelDetails {
   setCurrContents: (currContents: PanelSegment | null) => void
 }
 
-/** Displays the right-side panel information of the currently selected word. */
+// Displays the right-side panel information of the currently selected segment.
 export const PanelLayout = (p: {
   segment: PanelSegment | null
   setContent: (content: PanelSegment | null) => void
 }) => {
+  const { form, isEditing, setIsEditing } = useForm()
+  const { paragraphForm, isEditingParagraph, setIsEditingParagraph } =
+    useParagraphForm()
+
+  const [prevSegment, setPrevSegment] = useState<PanelSegment | null>(p.segment)
+
+  useEffect(() => {
+    // If the segment has changed, reset the editing states
+    if (p.segment && p.segment !== prevSegment) {
+      setIsEditing(false) // Reset word editing state
+      setIsEditingParagraph(false) // Reset paragraph editing state (if applicable)
+      setPrevSegment(p.segment) // Update the previous segment to the new one
+    }
+  }, [p.segment, prevSegment, setIsEditing, setIsEditingParagraph])
+
+  const token = useCredentials()
+  const userGroups = useCognitoUserGroups()
+
+  // Get all global glosses / matching tags to display.
+  const { cherokeeRepresentation } = usePreferences()
+  const [{ data }] = Dailp.useGlossaryQuery({
+    variables: { system: cherokeeRepresentation },
+  })
+
+  const { isCommenting, setIsCommenting } = useCommentStateContext()
+
+  if (!data) {
+    return <p>Loading...</p>
+  }
+
+  // Get all the tags except for those which are empty/undefined.
+  const allTags = data.allTags.filter((tag) => tag.tag !== "")
+  const groupedTags = groupBy(allTags, (t) => t.morphemeType)
+
+  // Creates a selectable option out of each functional tag, and groups them together by morpheme type.
+  const options: GroupedOption[] = Object.entries(groupedTags).map(
+    ([group, tags]) => {
+      return {
+        label: group,
+        options: tags.map((tag) => {
+          return {
+            // Value is a custom type to track data of a morpheme's gloss in its string form and its matching tag, if there is one.
+            value: tag.tag,
+            label: tag.title,
+          }
+        }),
+      }
+    }
+  )
+
   if (!p.segment) {
     return null
   }
 
-  const { form, isEditing } = useForm()
-  const token = useCredentials()
-
   let panel = null
 
-  if (p.segment.__typename === "AnnotatedForm") {
+  // Display the paragraph panel if the segment type is a word (AnnotatedForm).
+  if (isCommenting === true) {
+    if (p.segment != null) {
+      panel = (
+        <CommentPanel
+          segment={p.segment}
+          setIsCommenting={setIsCommenting}
+          commentAction={CommentAction.PostComment}
+        />
+      )
+    }
+  } else if (p.segment.__typename === "AnnotatedForm") {
     panel = (
       <>
-        {/* If the user is logged in, then display an edit button on the word
+        {/* If the user belongs to any groups, then display an edit button on the word
         panel along with its corresponding formatted header. Otherwise, display
         the normal word panel. */}
-        {token ? (
+        {userGroups.length > 0 ? (
           <header className={css.wordPanelHeader}>
             <div className={css.headerButtons}>
               {!isEditing && (
@@ -60,7 +136,7 @@ export const PanelLayout = (p: {
                   <MdClose size={32} />
                 </IconButton>
               )}
-              <EditButton />
+              <WordEditButton />
             </div>
             <h2 className={css.editCherHeader}>{p.segment.source}</h2>
           </header>
@@ -80,127 +156,100 @@ export const PanelLayout = (p: {
           </>
         )}
         {/* Renders audio recording. */}
-        <AudioPanel segment={p.segment} />
         {isEditing ? (
           <Form {...form}>
-            <PanelContent panel={PanelType.EditWordPanel} word={p.segment} />
+            <WordPanel
+              panel={PanelType.EditWordPanel}
+              word={p.segment}
+              options={options}
+            />
           </Form>
         ) : (
-          <WordPanel word={p.segment} setContent={p.setContent} />
+          <WordPanel
+            panel={PanelType.WordPanel}
+            word={p.segment}
+            // options are only required for editing
+            // FIXME: why is this a prop
+            options={[]}
+          />
         )}
       </>
     )
   } else if (p.segment.__typename === "DocumentParagraph") {
-    panel = <ParagraphPanel segment={p.segment} setContent={p.setContent} />
+    // Display the paragraph panel if the segment type is a paragraph.
+    // console.log(p.segment)
+    panel = (
+      <>
+        {userGroups.length > 0 ? (
+          <header className={css.wordPanelHeader}>
+            <div className={css.headerButtons}>
+              {!isEditingParagraph && (
+                <IconButton
+                  onClick={() => p.setContent(null)}
+                  aria-label="Dismiss selected paragraph information"
+                >
+                  <MdClose size={32} />
+                </IconButton>
+              )}
+              <ParagraphEditButton />
+            </div>
+            <h1
+              className={css.noSpaceBelow}
+            >{`Paragraph ${p.segment.index}`}</h1>
+          </header>
+        ) : (
+          <>
+            <IconButton
+              className={css.wordPanelButton.basic}
+              onClick={() => p.setContent(null)}
+              aria-label="Dismiss selected paragraph information"
+            >
+              <MdClose size={32} />
+            </IconButton>
+            <header className={css.wordPanelHeader}>
+              <h1
+                className={css.noSpaceBelow}
+              >{`Paragraph ${p.segment.index}`}</h1>
+            </header>
+          </>
+        )}
+        {isEditingParagraph ? (
+          <Form {...paragraphForm}>
+            <ParagraphPanel
+              panel={ParagraphPanelType.EditParagraphPanel}
+              paragraph={p.segment}
+            />
+          </Form>
+        ) : (
+          <>
+            <ParagraphPanel
+              panel={ParagraphPanelType.ParagraphPanel}
+              paragraph={p.segment}
+            />
+          </>
+        )}
+      </>
+    )
   }
 
   return (
     <div className={css.wordPanelContent}>
       <>{panel}</>
+      {token && // only show the option to leave a comment if the user is signed in
+        (isCommenting ? (
+          <SubtleButton
+            type="button"
+            onClick={() => setIsCommenting(false)}
+            className={css.buttonSpacing}
+          >
+            Discard
+          </SubtleButton>
+        ) : (
+          <Button type="button" onClick={() => setIsCommenting(true)}>
+            Comment
+          </Button>
+        ))}
     </div>
-  )
-}
-
-/** Dispatches to the corresponding panel type to render a normal word panel or an editable word panel. */
-export const PanelContent = (p: {
-  panel: PanelType
-  word: Dailp.FormFieldsFragment
-}) => {
-  const PanelComponent =
-    p.panel === PanelType.EditWordPanel ? EditWordPanel : WordPanel
-
-  // Contains components rendering data of a word's phonetics.
-  const phoneticsContent = (
-    <>
-      {p.word.source && (
-        <PanelComponent
-          word={p.word}
-          feature={"source"}
-          label="Syllabary Characters"
-        />
-      )}
-
-      {p.word.romanizedSource && (
-        <PanelComponent
-          word={p.word}
-          feature={"romanizedSource"}
-          label="Romanized Source"
-        />
-      )}
-    </>
-  )
-
-  const translation = (
-    <>
-      {p.word.englishGloss[0] !== "" && (
-        <PanelComponent
-          word={p.word}
-          feature={"englishGloss"}
-          label="English Translation"
-        />
-      )}
-    </>
-  )
-
-  const { cherokeeRepresentation } = usePreferences()
-
-  // Contains components rendering a word's segments and its english translation.
-  const wordPartsContent = (
-    <>
-      <VerticalMorphemicSegmentation
-        cherokeeRepresentation={cherokeeRepresentation}
-        segments={p.word.segments}
-      />
-
-      {p.panel === PanelType.WordPanel ? (
-        <div style={{ display: "flex" }}>‘{translation}’</div>
-      ) : (
-        <>{translation}</>
-      )}
-    </>
-  )
-
-  // Contains a component rendering a word's commentary.
-  const commentaryContent = (
-    <PanelComponent word={p.word} feature={"commentary"} input="textarea" />
-  )
-
-  return (
-    <>
-      <CollapsiblePanel
-        title={"Phonetics"}
-        content={phoneticsContent}
-        icon={
-          <MdRecordVoiceOver
-            size={24}
-            className={css.wordPanelButton.colpleft}
-          />
-        }
-      />
-
-      {/* If there are no segments, does not display Word Parts panel */}
-      {p.word.segments.length > 0 && (
-        <CollapsiblePanel
-          title={"Word Parts"}
-          content={wordPartsContent}
-          icon={
-            <IoEllipsisHorizontalCircle
-              size={24}
-              className={css.wordPanelButton.colpleft}
-            />
-          }
-        />
-      )}
-
-      {/* If there is no commentary, does not display Commentary panel */}
-      {p.word.commentary && p.word.commentary.length > 0 && (
-        <CollapsiblePanel
-          title={"Commentary"}
-          content={commentaryContent}
-          icon={<MdNotes size={24} className={css.wordPanelButton.colpleft} />}
-        />
-      )}
-    </>
   )
 }
 
@@ -229,34 +278,5 @@ export const CollapsiblePanel = (p: {
         {p.content}
       </DisclosureContent>
     </div>
-  )
-}
-
-export const AudioPanel = (p: { segment: Dailp.FormFieldsFragment }) => {
-  return (
-    <>
-      {p.segment.audioTrack && (
-        <CollapsiblePanel
-          title={"Audio"}
-          content={
-            <div>
-              {
-                <AudioPlayer
-                  audioUrl={p.segment.audioTrack.resourceUrl}
-                  slices={{
-                    start: p.segment.audioTrack.startTime!,
-                    end: p.segment.audioTrack.endTime!,
-                  }}
-                  showProgress
-                />
-              }
-            </div>
-          }
-          icon={
-            <AiFillSound size={24} className={css.wordPanelButton.colpleft} />
-          }
-        />
-      )}
-    </>
   )
 }

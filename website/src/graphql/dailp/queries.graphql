@@ -22,6 +22,41 @@ query AnnotatedDocument($slug: String!) {
     date {
       year
     }
+    bookmarkedOn {
+      formattedDate
+    }
+    sources {
+      name
+      link
+    }
+    audioRecording {
+      resourceUrl
+      startTime
+      endTime
+    }
+    translatedPages {
+      image {
+        url
+      }
+    }
+    chapters {
+      path
+    }
+  }
+}
+
+query AnnotatedDocumentById($id: UUID!) {
+  documentByUuid(id: $id) {
+    id
+    title
+    slug
+    isReference
+    date {
+      year
+    }
+    bookmarkedOn {
+      formattedDate
+    }
     sources {
       name
       link
@@ -48,17 +83,24 @@ query DocumentContents(
   $isReference: Boolean!
 ) {
   document(slug: $slug) {
+    id
+    slug
     translatedPages @skip(if: $isReference) {
       pageNumber
       paragraphs {
+        __typename
         source {
           __typename
           ... on AnnotatedForm {
             ...FormFields
           }
         }
+        id
         translation
         index
+        comments {
+          id
+        }
       }
     }
     forms @include(if: $isReference) {
@@ -68,7 +110,48 @@ query DocumentContents(
   }
 }
 
+fragment AudioSliceFields on AudioSlice {
+  sliceId
+  index # if this is used as a caching key, we will have performance issues
+  resourceUrl
+  startTime
+  endTime
+  includeInEditedCollection
+}
+
+fragment DocFormFields on AnnotatedDoc {
+  id
+  title
+  date {
+    day
+    month
+    year
+  }
+}
+
+fragment ParagraphFormFields on DocumentParagraph {
+  __typename
+  id
+  index
+  translation
+  source {
+    __typename
+    ...FormFields
+  }
+  comments {
+    id
+  }
+}
+
+fragment CommentFormFields on Comment {
+  id
+  textContent
+  commentType
+  edited
+}
+
 fragment FormFields on AnnotatedForm {
+  __typename
   id
   index
   source
@@ -86,11 +169,24 @@ fragment FormFields on AnnotatedForm {
   }
   englishGloss
   commentary
-  audioTrack {
-    index
-    resourceUrl
-    startTime
-    endTime
+  ingestedAudioTrack {
+    ...AudioSliceFields
+  }
+  editedAudio {
+    ...AudioSliceFields
+  }
+  userContributedAudio {
+    ...AudioSliceFields
+    recordedBy {
+      id
+      displayName
+    }
+  }
+  position {
+    documentId
+  }
+  comments {
+    id
   }
 }
 
@@ -111,9 +207,11 @@ query Collection($slug: String!) {
 
 query EditedCollections {
   allEditedCollections {
+    id
     title
     slug
     chapters {
+      id
       path
     }
   }
@@ -121,7 +219,9 @@ query EditedCollections {
 
 query EditedCollection($slug: String!) {
   editedCollection(slug: $slug) {
+    id
     chapters {
+      id
       title
       indexInParent
       section
@@ -139,6 +239,7 @@ query WordSearch($query: String!) {
     englishGloss
     index
     document {
+      id
       slug
       isReference
     }
@@ -242,9 +343,18 @@ query Morpheme($documentId: UUID, $morphemeGloss: String!) {
       normalizedSource
       englishGloss
       document {
+        id
         slug
       }
     }
+  }
+}
+
+query UserInfo {
+  userInfo {
+    id
+    email
+    groups
   }
 }
 
@@ -274,6 +384,7 @@ query DocSlice(
 
 query CollectionChapter($collectionSlug: String!, $chapterSlug: String!) {
   chapter(collectionSlug: $collectionSlug, chapterSlug: $chapterSlug) {
+    id
     title
     wordpressId
     slug
@@ -288,6 +399,9 @@ query CollectionChapter($collectionSlug: String!, $chapterSlug: String!) {
       isReference
       date {
         year
+      }
+      bookmarkedOn {
+        formattedDate
       }
       sources {
         name
@@ -304,12 +418,261 @@ query CollectionChapter($collectionSlug: String!, $chapterSlug: String!) {
         }
       }
       chapters {
+        id
         path
       }
     }
   }
 }
 
-mutation UpdateWord($word: AnnotatedFormUpdate!) {
-  updateWord(word: $word)
+query BookmarkedDocuments {
+  bookmarkedDocuments {
+    id
+    title
+    slug
+    isReference
+    date {
+      year
+    }
+    bookmarkedOn {
+      formattedDate
+    }
+    sources {
+      name
+      link
+    }
+    audioRecording {
+      resourceUrl
+      startTime
+      endTime
+    }
+    translatedPages {
+      image {
+        url
+      }
+    }
+    chapters {
+      id
+      path
+    }
+  }
+}
+
+fragment CommentFields on Comment {
+  id
+  postedAt {
+    timestamp
+    date {
+      year
+      month
+      day
+      formattedDate
+    }
+  }
+  postedBy {
+    id
+    displayName
+  }
+  textContent
+  edited
+  commentType
+}
+
+query WordComments($wordId: UUID!) {
+  wordById(id: $wordId) {
+    id
+    comments {
+      ...CommentFields
+    }
+  }
+}
+
+query ParagraphComments($paragraphId: UUID!) {
+  paragraphById(id: $paragraphId) {
+    id
+    comments {
+      ...CommentFields
+    }
+  }
+}
+
+mutation UpdateWord(
+  $word: AnnotatedFormUpdate!
+  $morphemeSystem: CherokeeOrthography!
+) {
+  updateWord(word: $word) {
+    ...FormFields
+  }
+}
+
+mutation AttachAudioToWord($input: AttachAudioToWordInput!) {
+  attachAudioToWord(input: $input) {
+    # ...FormFields
+    id
+    userContributedAudio {
+      ...AudioSliceFields
+      recordedBy {
+        id
+        displayName
+      }
+    }
+  }
+}
+
+mutation CurateWordAudio($input: CurateWordAudioInput!) {
+  curateWordAudio(input: $input) {
+    # ...FormFields
+    id
+    userContributedAudio {
+      ...AudioSliceFields
+      recordedBy {
+        id
+        displayName
+      }
+    }
+  }
+}
+
+mutation AddBookmark($documentId: UUID!) {
+  addBookmark(documentId: $documentId) {
+    id
+    title
+    slug
+    isReference
+    date {
+      year
+    }
+    bookmarkedOn {
+      formattedDate
+    }
+    sources {
+      name
+      link
+    }
+    audioRecording {
+      resourceUrl
+      startTime
+      endTime
+    }
+    translatedPages {
+      image {
+        url
+      }
+    }
+    chapters {
+      path
+    }
+  }
+}
+
+mutation RemoveBookmark($documentId: UUID!) {
+  removeBookmark(documentId: $documentId) {
+    id
+    title
+    slug
+    isReference
+    date {
+      year
+    }
+    bookmarkedOn {
+      formattedDate
+    }
+    sources {
+      name
+      link
+    }
+    audioRecording {
+      resourceUrl
+      startTime
+      endTime
+    }
+    translatedPages {
+      image {
+        url
+      }
+    }
+    chapters {
+      path
+    }
+  }
+}
+
+mutation UpdateParagraph($paragraph: ParagraphUpdate!) {
+  updateParagraph(paragraph: $paragraph) {
+    id
+    translation
+  }
+}
+
+mutation UpdateContributorAttribution(
+  $contribution: UpdateContributorAttribution!
+) {
+  updateContributorAttribution(contribution: $contribution)
+}
+
+mutation DeleteContributorAttribution(
+  $contribution: DeleteContributorAttribution!
+) {
+  deleteContributorAttribution(contribution: $contribution)
+}
+
+mutation UpdateDocumentMetadata($document: DocumentMetadataUpdate!) {
+  updateDocumentMetadata(document: $document)
+}
+
+mutation UpdateComment($comment: CommentUpdate!) {
+  updateComment(comment: $comment) {
+    ... on AnnotatedForm {
+      __typename
+      id
+      comments {
+        ...CommentFields
+      }
+    }
+    ... on DocumentParagraph {
+      __typename
+      id
+      comments {
+        ...CommentFields
+      }
+    }
+  }
+}
+
+mutation PostComment($input: PostCommentInput!) {
+  postComment(input: $input) {
+    ... on AnnotatedForm {
+      __typename
+      id
+      comments {
+        ...CommentFields
+      }
+    }
+    ... on DocumentParagraph {
+      __typename
+      id
+      comments {
+        ...CommentFields
+      }
+    }
+  }
+}
+
+mutation DeleteComment($commentId: DeleteCommentInput!) {
+  deleteComment(input: $commentId) {
+    ... on AnnotatedForm {
+      __typename
+      id
+      comments {
+        ...CommentFields
+      }
+    }
+    ... on DocumentParagraph {
+      __typename
+      id
+      comments {
+        ...CommentFields
+      }
+    }
+  }
 }

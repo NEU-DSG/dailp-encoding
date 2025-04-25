@@ -1,7 +1,7 @@
 [package]
 name = "dailp"
 version = "0.5.0"
-authors = ["Taylor Snead <taylor@snead.xyz>"]
+authors = ["Shelby Snead <taylor@snead.xyz>"]
 edition = "2021"
 
 [lib]
@@ -9,21 +9,40 @@ name = "dailp"
 path = "src/lib.rs"
 
 [dependencies]
-serde = {version = "1.0", features = ["derive"]}
+serde = { version = "1.0", features = ["derive"] }
+serde_with = "1.9"
+serde_plain = "0.3"
+log = "0.4"
 serde_json = "1"
 tokio-stream = "0.1"
 anyhow = "1.0"
 itertools = "0.10"
-async-graphql = { version = "4", features = ["dataloader", "uuid"] }
+async-graphql = { version = "4", features = [
+    "dataloader",
+    "uuid",
+    "apollo_tracing",
+] }
 futures = "0.3"
 uuid = { version = "1", default-features = false, features = ["std", "serde"] }
-sqlx = { version = "0.6", features = ["runtime-tokio-rustls", "postgres", "migrate", "macros", "chrono", "json", "uuid", "offline"] }
+sqlx = { version = "0.7", features = [
+    "runtime-tokio-rustls",
+    "postgres",
+    "migrate",
+    "macros",
+    "chrono",
+    "json",
+    "uuid",
+] }
 lazy_static = "1.4"
+tokio = { version = "1.20", features = ["full", "time"] }
 regex = "1.5"
 unicode-normalization = "0.1"
-chrono = {version = "0.4", features = ["serde"]}
-nom = {version = "6", default-features = false, features = ["std", "bitvec"]}
+chrono = { version = "~0.4", features = ["serde"] }
+nom = { version = "6", default-features = false, features = ["std", "bitvec"] }
 slug = "0.1"
 maplit = "1"
 async-trait = "0.1.42"
-reqwest = { version = "0.11", features = ["json", "rustls-tls"], default-features = false }
+reqwest = { version = "0.11", features = [
+    "json",
+    "rustls-tls",
+], default-features = false }
