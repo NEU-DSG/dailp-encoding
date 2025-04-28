@@ -7,6 +7,7 @@ import { useScrollableTabState } from "src/scrollable-tabs"
 import Link from "../link"
 import { BookmarkCard } from "./bookmark-card"
 import * as css from "./dashboard.css"
+import { UserRole, useUserRole } from "src/auth"
 
 enum Tabs {
   ACTIVITY = "activity-tab",
@@ -16,6 +17,7 @@ enum Tabs {
 
 export const Dashboard = () => {
   const tabs = useScrollableTabState({ selectedId: Tabs.BOOKMARKS })
+  const curRole = useUserRole()
   return (
     <>
       <h1 className={css.dashboardHeader}>Dashboard</h1>
@@ -32,9 +34,11 @@ export const Dashboard = () => {
           <Tab {...tabs} id={Tabs.ACTIVITY} className={css.dashboardTab}>
             Recent Activity
           </Tab>
-          <Tab {...tabs} id={Tabs.ADMIN_TOOLS} className={css.dashboardTab}>
-            Admin tools
-          </Tab>
+          {curRole == UserRole.Admin && (
+            <Tab {...tabs} id={Tabs.ADMIN_TOOLS} className={css.dashboardTab}>
+              Admin tools
+            </Tab>
+          )}
         </TabList>
 
         <TabPanel
