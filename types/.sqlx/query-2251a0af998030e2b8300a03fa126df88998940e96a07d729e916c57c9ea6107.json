@@ -1,0 +1,25 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update word set\r\n    source_text =\r\n        case\r\n            when $2::text[] != '{}' and $2[1] is not null then $2[1]\r\n            else source_text\r\n        end,\r\n    commentary =\r\n        case\r\n            when $3::text[] != '{}' then $3[1]\r\n            else commentary\r\n        end,\r\n    english_gloss =\r\n        case\r\n            when $4::text[] != '{}' then $4[1]\r\n            else english_gloss\r\n        end\r\n\r\nwhere id = $1\r\nreturning word.document_id;",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "document_id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "TextArray",
+        "TextArray",
+        "TextArray"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "2251a0af998030e2b8300a03fa126df88998940e96a07d729e916c57c9ea6107"
+}
