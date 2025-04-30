@@ -18,7 +18,7 @@ function AvailableAudioSection(p: { word: Dailp.FormFieldsFragment }) {
   const [audioByUser, audioByOthers] = p.word.userContributedAudio.reduce<
     [
       Dailp.FormFieldsFragment["userContributedAudio"],
-      Dailp.FormFieldsFragment["userContributedAudio"],
+      Dailp.FormFieldsFragment["userContributedAudio"]
     ]
   >(
     ([self, other], audio) =>
