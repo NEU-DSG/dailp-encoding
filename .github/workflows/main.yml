@@ -20,10 +20,10 @@ concurrency:
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     environment: ${{ github.event_name == 'release' && ( github.event.action == 'released' && 'Production' || 'Development') || 'Development' }}
     env:
-      DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
+      DATABASE_PASSWORD: ${{ github.event.action == 'prereleased' && secrets.UAT_DATABASE_PASSWORD || secrets.DATABASE_PASSWORD }}
       GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
       AWS_VPC_ID: ${{ secrets.AWS_VPC_ID }}
       AWS_SUBNET_PRIMARY: ${{ secrets.AWS_SUBNET_PRIMARY }}
@@ -38,6 +38,8 @@ jobs:
       RUST_LOG: info
       # Stage is Development if not based on a release event, is Staging/UAT if event action is prereleased, is Production if event action is released
       TF_STAGE: ${{ github.event_name == 'release' && ( github.event.action == 'prereleased' && 'uat' || 'prod') || 'dev' }}
+# BASTION_IP: ${{ secrets.TEST_BASTION_IP }}
+
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -88,9 +90,13 @@ jobs:
           pushFilter: "(-dailp$|-dailp-|-terraform-config$|-source$|\\.tar\\.gz$|-output$|-plan$|-apply-now$|-apply$)"
       - name: Build and test project
         # nix -L argument shows the full build log and --impure allows it to access environment variables.
+        env: 
+          BASTION_ID: ${{ (env.TF_STAGE == 'prod' && secrets.EC2_INSTANCE ) || (env.TF_STAGE == 'uat' && secrets.UAT_EC2_INSTANCE) || secrets.DEV_EC2_INSTANCE }}
         run: |
           nix build --impure -L
       - name: Deploy back-end to AWS via terraform
+        env:
+          BASTION_ID: ${{ (env.TF_STAGE == 'prod' && secrets.EC2_INSTANCE ) || (env.TF_STAGE == 'uat' && secrets.UAT_EC2_INSTANCE) || secrets.DEV_EC2_INSTANCE }}
         run: |
           nix run --impure -L .#tf-apply-now
           SECURITY_GROUP_ID=$(nix run --impure .#tf-output access_security_group_id)
@@ -110,20 +116,23 @@ jobs:
           to-port: 22
           protocol: tcp
       - name: Encode documents as TEI and database entries
+        env: 
+          BASTION_IP: ${{ (env.TF_STAGE == 'prod' && secrets.PROD_BASTION_IP ) || (env.TF_STAGE == 'uat' && secrets.UAT_BASTION_IP) || secrets.DEV_BASTION_IP }}
+          BASTION_ID: ${{ (env.TF_STAGE == 'prod' && secrets.EC2_INSTANCE ) || (env.TF_STAGE == 'uat' && secrets.UAT_EC2_INSTANCE) || secrets.DEV_EC2_INSTANCE }}
+
         # Sets up port forwarding to remote database on port 5432
         run: |
           echo "Creating SSH key file..."
-          echo "${{secrets.AWS_BASTION_SSH_KEY}}" > dailp-deployment-key.pem
+          echo "${{secrets.AWS_SSH_KEY}}" > dailp-deployment-key.pem
           chmod 400 ./dailp-deployment-key.pem
           echo "Retrieving terraform outputs..."
-          BASTION_IP=$(nix run --impure .#tf-output bastion_ip)
           DATABASE_ENDPOINT=$(nix run --impure .#tf-output database_endpoint)
           echo "Configuring SSH client..."
           mkdir -p ~/.ssh
           echo "Still configuring SSH client..."
           ssh-keyscan -H $BASTION_IP >> ~/.ssh/known_hosts
           echo "Forwarding port 5432 to remote database $DATABASE_ENDPOINT through $BASTION_IP"
-          ssh -i ./dailp-deployment-key.pem -f -N -L 5432:$DATABASE_ENDPOINT ec2-user@$BASTION_IP
+          ssh -i ./dailp-deployment-key.pem -f -N -o ServerAliveInterval=60 -o ServerAliveCountMax=10 -L 5432:$DATABASE_ENDPOINT ec2-user@$BASTION_IP
 
           export DAILP_API_URL=$(nix run --impure .#tf-output functions_url)
           export DATABASE_URL=postgres://dailp:$DATABASE_PASSWORD@localhost:5432/dailp
