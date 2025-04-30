@@ -45,7 +45,6 @@ jobs:
         # nix -L argument shows the full build log and --impure allows it to access environment variables.
         run: |
           nix build --impure -L
-          cp -f ./result/config.tf.json ./config.tf.json
       - name: Publish website
         run: |
           nix run --impure -L .#tf-plan
