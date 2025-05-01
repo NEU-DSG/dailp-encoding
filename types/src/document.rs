@@ -1,6 +1,7 @@
 use crate::{
     auth::UserInfo, comment::Comment, date::DateInput, slugify, AnnotatedForm, AudioSlice,
-    Contributor, Database, Date, SourceAttribution, Translation, TranslationBlock,
+    AudioSliceInput, Contributor, ContributorInput, Database, Date, SourceAttribution,
+    SourceAttributionInput, Translation, TranslationBlock,
 };
 
 use async_graphql::{dataloader::DataLoader, FieldResult, MaybeUndefined};
@@ -463,6 +464,38 @@ pub struct DocumentMetadata {
     pub order_index: i64,
 }
 
+/// Input type for creating a new document
+#[derive(async_graphql::InputObject, Clone, Debug, Serialize, Deserialize)]
+pub struct DocumentMetadataInput {
+    /// Official short identifier. Required.
+    pub short_name: String,
+    /// Full title of the document. Required.
+    pub title: String,
+    /// Further details about this particular document. Required.
+    // pub details: String,
+    #[serde(default)]
+    /// The original source(s) of this document, the most important first. Can be empty.
+    pub sources: Option<Vec<SourceAttributionInput>>,
+    /// Where the source document came from, maybe the name of a collection. Optional.
+    pub collection: Option<String>,
+    /// The genre this document is. Optional.
+    pub genre: Option<String>,
+    #[serde(default)]
+    /// The people involved in collecting, translating, annotating. Can be empty.
+    pub contributors: Option<Vec<ContributorInput>>,
+    /// URL for an image of the original physical document. Optional.
+    #[serde(default)]
+    pub page_images: Option<IiifImagesInput>,
+    /// The date this document was produced (or `None` if unknown). Optional.
+    pub date: Option<DateInput>,
+    /// Whether this document is a reference, therefore just a list of forms. Required.
+    pub is_reference: bool,
+    #[serde(default)]
+    /// Arbitrary number used for manually ordering documents in a collection.
+    /// For collections without manual ordering, use zero here. Required.
+    pub order_index: i64,
+}
+
 /// Database ID for one document
 #[derive(
     Clone, Copy, Eq, PartialEq, Hash, Serialize, Deserialize, Debug, async_graphql::NewType, Default,
@@ -472,6 +505,12 @@ pub struct DocumentId(pub Uuid);
 /// Database ID for an image source
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct ImageSourceId(pub Uuid);
+
+/// InputObject for ImageSourceId
+#[derive(async_graphql::InputObject, Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub struct ImageSourceIdInput {
+    pub id: Uuid,
+}
 
 /// A IIIF server we use as an image source
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -504,6 +543,16 @@ impl IiifImages {
         self.ids.len()
     }
 }
+
+/// Input object for IiifImages
+#[derive(async_graphql::InputObject, Clone, Debug, Serialize, Deserialize)]
+pub struct IiifImagesInput {
+    /// Database ID for the image source
+    pub source: ImageSourceIdInput,
+    /// Remote IIIF OIDs for the images
+    pub ids: Vec<String>,
+}
+
 #[async_graphql::Object]
 impl IiifImages {
     /// Information about the data source for this set of images

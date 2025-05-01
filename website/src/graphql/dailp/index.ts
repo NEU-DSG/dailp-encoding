@@ -367,6 +367,14 @@ export type ContributorDetails = {
   readonly fullName: Scalars["String"]
 }
 
+/** Input Object for Contributor */
+export type ContributorInput = {
+  /** Full name of the contributor */
+  readonly name: Scalars["String"]
+  /** The role that defines most of their contributions to the associated item */
+  readonly role: Scalars["String"]
+}
+
 /** Request to update if a piece of audio should be included in an edited collection */
 export type CurateWordAudioInput = {
   /** Audio to include/exclude */
@@ -389,6 +397,7 @@ export type Date = {
   readonly year: Scalars["Int"]
 }
 
+/** InputType for Date */
 export type DateInput = {
   readonly day: Scalars["Int"]
   readonly month: Scalars["Int"]
@@ -428,6 +437,36 @@ export type DocumentCollection = {
   readonly name: Scalars["String"]
   /** URL-ready slug for this collection, generated from the name */
   readonly slug: Scalars["String"]
+}
+
+/** Input type for creating a new document */
+export type DocumentMetadataInput = {
+  /** Where the source document came from, maybe the name of a collection. Optional. */
+  readonly collection: InputMaybe<Scalars["String"]>
+  /** The people involved in collecting, translating, annotating. Can be empty. */
+  readonly contributors: InputMaybe<ReadonlyArray<ContributorInput>>
+  /** The date this document was produced (or `None` if unknown). Optional. */
+  readonly date: InputMaybe<DateInput>
+  /** The genre this document is. Optional. */
+  readonly genre: InputMaybe<Scalars["String"]>
+  /** Whether this document is a reference, therefore just a list of forms. Required. */
+  readonly isReference: Scalars["Boolean"]
+  /**
+   * Arbitrary number used for manually ordering documents in a collection.
+   * For collections without manual ordering, use zero here. Required.
+   */
+  readonly orderIndex: Scalars["Int"]
+  /** URL for an image of the original physical document. Optional. */
+  readonly pageImages: InputMaybe<IiifImagesInput>
+  /** Official short identifier. Required. */
+  readonly shortName: Scalars["String"]
+  /**
+   * Further details about this particular document. Required.
+   * The original source(s) of this document, the most important first. Can be empty.
+   */
+  readonly sources: InputMaybe<ReadonlyArray<SourceAttributionInput>>
+  /** Full title of the document. Required. */
+  readonly title: Scalars["String"]
 }
 
 /**
@@ -512,6 +551,16 @@ export type EditedCollection = {
   readonly wordpressMenuId: Maybe<Scalars["Int"]>
 }
 
+/** Input object for creating a new collection */
+export type EditedCollectionInput = {
+  /** URL slug for the collection, like "cwkw" */
+  readonly slug: Scalars["String"]
+  /** Full title of the collection */
+  readonly title: Scalars["String"]
+  /** ID of WordPress menu for navigating the collection */
+  readonly wordpressMenuId: InputMaybe<Scalars["Int"]>
+}
+
 export type FormsInTime = {
   readonly __typename?: "FormsInTime"
   readonly end: Maybe<Date>
@@ -558,10 +607,23 @@ export type IiifImages = {
   readonly urls: ReadonlyArray<Scalars["String"]>
 }
 
+/** Input object for IiifImages */
+export type IiifImagesInput = {
+  /** Remote IIIF OIDs for the images */
+  readonly ids: ReadonlyArray<Scalars["String"]>
+  /** Database ID for the image source */
+  readonly source: ImageSourceIdInput
+}
+
 export type ImageSource = {
   readonly __typename?: "ImageSource"
   /** Base URL for the IIIF server */
   readonly url: Scalars["String"]
+}
+
+/** InputObject for ImageSourceId */
+export type ImageSourceIdInput = {
+  readonly id: Scalars["UUID"]
 }
 
 /** Start of a new line */
@@ -659,6 +721,12 @@ export type Mutation = {
   readonly deleteComment: CommentParent
   /** Mutation for deleting contributor attributions */
   readonly deleteContributorAttribution: Scalars["UUID"]
+  /** Insert user into dailp_user */
+  readonly insertDailpUser: Scalars["UUID"]
+  /** Create a new document */
+  readonly insertDocument: Scalars["UUID"]
+  /** Create a new edited collection */
+  readonly insertEditedCollection: Scalars["UUID"]
   /** Post a new comment on a given object */
   readonly postComment: CommentParent
   /** Removes a bookmark from a user's list of bookmarks */
@@ -672,6 +740,8 @@ export type Mutation = {
   readonly updatePage: Scalars["Boolean"]
   /** Mutation for paragraph and translation editing */
   readonly updateParagraph: DocumentParagraph
+  /** Updates a dailp_user's information */
+  readonly updateUser: User
   readonly updateWord: AnnotatedForm
 }
 
@@ -693,6 +763,20 @@ export type MutationDeleteCommentArgs = {
 
 export type MutationDeleteContributorAttributionArgs = {
   contribution: DeleteContributorAttribution
+}
+
+export type MutationInsertDailpUserArgs = {
+  user: UserCreate
+}
+
+export type MutationInsertDocumentArgs = {
+  collectionId: InputMaybe<Scalars["UUID"]>
+  indexInCollection: InputMaybe<Scalars["Int"]>
+  meta: DocumentMetadataInput
+}
+
+export type MutationInsertEditedCollectionArgs = {
+  collection: EditedCollectionInput
 }
 
 export type MutationPostCommentArgs = {
@@ -725,6 +809,10 @@ export type MutationUpdatePageArgs = {
 
 export type MutationUpdateParagraphArgs = {
   paragraph: ParagraphUpdate
+}
+
+export type MutationUpdateUserArgs = {
+  user: UserUpdate
 }
 
 export type MutationUpdateWordArgs = {
@@ -821,6 +909,8 @@ export type Query = {
   /** Retrieves a chapter and its contents by its collection and chapter slug. */
   readonly chapter: Maybe<CollectionChapter>
   readonly collection: DocumentCollection
+  /** Gets a dailp_user by their id */
+  readonly dailpUserById: User
   /** Retrieves a full document from its unique name. */
   readonly document: Maybe<AnnotatedDoc>
   /** Retrieves a full document from its unique identifier. */
@@ -875,6 +965,10 @@ export type QueryChapterArgs = {
 
 export type QueryCollectionArgs = {
   slug: Scalars["String"]
+}
+
+export type QueryDailpUserByIdArgs = {
+  id: Scalars["UUID"]
 }
 
 export type QueryDocumentArgs = {
@@ -942,6 +1036,14 @@ export type SourceAttribution = {
   readonly name: Scalars["String"]
 }
 
+/** Input Object for SourceAttribution */
+export type SourceAttributionInput = {
+  /** URL of this source's homepage, i.e. "https://www.newberry.org/" */
+  readonly link: Scalars["String"]
+  /** Name of the source, i.e. "The Newberry Library" */
+  readonly name: Scalars["String"]
+}
+
 /** Update the contributor attribution for a document */
 export type UpdateContributorAttribution = {
   readonly contributionRole: Scalars["String"]
@@ -952,16 +1054,45 @@ export type UpdateContributorAttribution = {
 /** A user record, for a contributor, editor, etc. */
 export type User = {
   readonly __typename?: "User"
+  /** URL to the avatar of the user (optional) */
+  readonly avatarUrl: Maybe<Scalars["String"]>
+  /** Biography of the user (optional) */
+  readonly bio: Maybe<Scalars["String"]>
+  /** The date this user was created (optional) */
+  readonly createdAt: Maybe<Date>
   /** User-facing name for this contributor/curator */
   readonly displayName: Scalars["String"]
   /** Id of the user, which must be a AWS Cognito `sub` claim */
   readonly id: Scalars["String"]
+  /** Location of the user (optional) */
+  readonly location: Maybe<Scalars["String"]>
+  /** Organization of the user (optional) */
+  readonly organization: Maybe<Scalars["String"]>
+  /** Role of the user (optional) */
+  readonly role: Maybe<UserGroup>
+}
+
+export type UserCreate = {
+  /** URL to the avatar of the user (optional) */
+  readonly avatarUrl: InputMaybe<Scalars["String"]>
+  /** Biography of the user (optional) */
+  readonly bio: InputMaybe<Scalars["String"]>
+  /** User-facing name for this contributor/curator */
+  readonly displayName: InputMaybe<Scalars["String"]>
+  /** Location of the user (optional) */
+  readonly location: InputMaybe<Scalars["String"]>
+  /** Organization of the user (optional) */
+  readonly organization: InputMaybe<Scalars["String"]>
+  /** Role of the user (optional) */
+  readonly role: InputMaybe<UserGroup>
 }
 
 /** A user belongs to any number of user groups, which give them various permissions. */
 export enum UserGroup {
+  Administrators = "ADMINISTRATORS",
   Contributors = "CONTRIBUTORS",
   Editors = "EDITORS",
+  Readers = "READERS",
 }
 
 /** Auth metadata on the user making the current request. */
@@ -971,6 +1102,24 @@ export type UserInfo = {
   readonly groups: ReadonlyArray<UserGroup>
   /** Unique ID for the User. Should be an AWS Cognito Sub. */
   readonly id: Scalars["UUID"]
+}
+
+/** Input Object used to edit a user */
+export type UserUpdate = {
+  /** URL to the avatar of the user (optional) */
+  readonly avatarUrl: InputMaybe<Scalars["String"]>
+  /** Biography of the user (optional) */
+  readonly bio: InputMaybe<Scalars["String"]>
+  /** User-facing name for this contributor/curator */
+  readonly displayName: InputMaybe<Scalars["String"]>
+  /** Id of the user, which must be a AWS Cognito `sub` claim */
+  readonly id: Scalars["String"]
+  /** Location of the user (optional) */
+  readonly location: InputMaybe<Scalars["String"]>
+  /** Organization of the user (optional) */
+  readonly organization: InputMaybe<Scalars["String"]>
+  /** Role of the user (optional) */
+  readonly role: InputMaybe<UserGroup>
 }
 
 export type WordSegment = {
@@ -1426,6 +1575,13 @@ export type ParagraphFormFieldsFragment = {
 export type CommentFormFieldsFragment = {
   readonly __typename?: "Comment"
 } & Pick<Comment, "id" | "textContent" | "commentType" | "edited">
+
+export type UserCreateFormFieldsFragment = {
+  readonly __typename?: "User"
+} & Pick<
+  User,
+  "displayName" | "avatarUrl" | "bio" | "organization" | "location" | "role"
+>
 
 export type FormFieldsFragment = {
   readonly __typename: "AnnotatedForm"
@@ -2469,6 +2625,70 @@ export type DeleteCommentMutation = { readonly __typename?: "Mutation" } & {
         })
 }
 
+export type UpdateUserMutationVariables = Exact<{
+  user: UserUpdate
+}>
+
+export type UpdateUserMutation = { readonly __typename?: "Mutation" } & {
+  readonly updateUser: { readonly __typename?: "User" } & Pick<
+    User,
+    | "id"
+    | "displayName"
+    | "avatarUrl"
+    | "bio"
+    | "organization"
+    | "location"
+    | "role"
+  >
+}
+
+export type UserByIdQueryVariables = Exact<{
+  id: Scalars["UUID"]
+}>
+
+export type UserByIdQuery = { readonly __typename?: "Query" } & {
+  readonly dailpUserById: { readonly __typename?: "User" } & Pick<
+    User,
+    | "id"
+    | "displayName"
+    | "avatarUrl"
+    | "bio"
+    | "organization"
+    | "location"
+    | "role"
+  > & {
+      readonly createdAt: Maybe<
+        { readonly __typename?: "Date" } & Pick<Date, "day" | "month" | "year">
+      >
+    }
+}
+
+export type InsertEditedCollectionMutationVariables = Exact<{
+  collection: EditedCollectionInput
+}>
+
+export type InsertEditedCollectionMutation = {
+  readonly __typename?: "Mutation"
+} & Pick<Mutation, "insertEditedCollection">
+
+export type InsertDocumentMutationVariables = Exact<{
+  document: DocumentMetadataInput
+  id: Scalars["UUID"]
+  index: Scalars["Int"]
+}>
+
+export type InsertDocumentMutation = {
+  readonly __typename?: "Mutation"
+} & Pick<Mutation, "insertDocument">
+
+export type InsertDailpUserMutationVariables = Exact<{
+  user: UserCreate
+}>
+
+export type InsertDailpUserMutation = {
+  readonly __typename?: "Mutation"
+} & Pick<Mutation, "insertDailpUser">
+
 export const DocFormFieldsFragmentDoc = gql`
   fragment DocFormFields on AnnotatedDoc {
     id
@@ -2552,6 +2772,16 @@ export const CommentFormFieldsFragmentDoc = gql`
     textContent
     commentType
     edited
+  }
+`
+export const UserCreateFormFieldsFragmentDoc = gql`
+  fragment UserCreateFormFields on User {
+    displayName
+    avatarUrl
+    bio
+    organization
+    location
+    role
   }
 `
 export const CommentFieldsFragmentDoc = gql`
@@ -3480,4 +3710,94 @@ export function useDeleteCommentMutation() {
     DeleteCommentMutation,
     DeleteCommentMutationVariables
   >(DeleteCommentDocument)
+}
+export const UpdateUserDocument = gql`
+  mutation updateUser($user: UserUpdate!) {
+    updateUser(user: $user) {
+      id
+      displayName
+      avatarUrl
+      bio
+      organization
+      location
+      role
+    }
+  }
+`
+
+export function useUpdateUserMutation() {
+  return Urql.useMutation<UpdateUserMutation, UpdateUserMutationVariables>(
+    UpdateUserDocument
+  )
+}
+export const UserByIdDocument = gql`
+  query UserById($id: UUID!) {
+    dailpUserById(id: $id) {
+      id
+      displayName
+      createdAt {
+        day
+        month
+        year
+      }
+      avatarUrl
+      bio
+      organization
+      location
+      role
+    }
+  }
+`
+
+export function useUserByIdQuery(
+  options: Omit<Urql.UseQueryArgs<UserByIdQueryVariables>, "query">
+) {
+  return Urql.useQuery<UserByIdQuery, UserByIdQueryVariables>({
+    query: UserByIdDocument,
+    ...options,
+  })
+}
+export const InsertEditedCollectionDocument = gql`
+  mutation InsertEditedCollection($collection: EditedCollectionInput!) {
+    insertEditedCollection(collection: $collection)
+  }
+`
+
+export function useInsertEditedCollectionMutation() {
+  return Urql.useMutation<
+    InsertEditedCollectionMutation,
+    InsertEditedCollectionMutationVariables
+  >(InsertEditedCollectionDocument)
+}
+export const InsertDocumentDocument = gql`
+  mutation InsertDocument(
+    $document: DocumentMetadataInput!
+    $id: UUID!
+    $index: Int!
+  ) {
+    insertDocument(
+      meta: $document
+      collectionId: $id
+      indexInCollection: $index
+    )
+  }
+`
+
+export function useInsertDocumentMutation() {
+  return Urql.useMutation<
+    InsertDocumentMutation,
+    InsertDocumentMutationVariables
+  >(InsertDocumentDocument)
+}
+export const InsertDailpUserDocument = gql`
+  mutation InsertDailpUser($user: UserCreate!) {
+    insertDailpUser(user: $user)
+  }
+`
+
+export function useInsertDailpUserMutation() {
+  return Urql.useMutation<
+    InsertDailpUserMutation,
+    InsertDailpUserMutationVariables
+  >(InsertDailpUserDocument)
 }

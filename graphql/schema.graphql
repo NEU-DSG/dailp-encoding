@@ -436,6 +436,20 @@ type ContributorDetails {
 }
 
 """
+Input Object for Contributor
+"""
+input ContributorInput {
+	"""
+	Full name of the contributor
+	"""
+	name: String!
+	"""
+	The role that defines most of their contributions to the associated item
+	"""
+	role: String!
+}
+
+"""
 Request to update if a piece of audio should be included in an edited collection
 """
 input CurateWordAudioInput {
@@ -472,6 +486,9 @@ type Date {
 	formattedDate: String!
 }
 
+"""
+InputType for Date
+"""
 input DateInput {
 	day: Int!
 	month: Int!
@@ -523,6 +540,54 @@ type DocumentCollection {
 	pass that to the dataloader below.
 	"""
 	documents: [DocumentReference!]!
+}
+
+"""
+Input type for creating a new document
+"""
+input DocumentMetadataInput {
+	"""
+	Official short identifier. Required.
+	"""
+	shortName: String!
+	"""
+	Full title of the document. Required.
+	"""
+	title: String!
+	"""
+	Further details about this particular document. Required.
+	The original source(s) of this document, the most important first. Can be empty.
+	"""
+	sources: [SourceAttributionInput!]
+	"""
+	Where the source document came from, maybe the name of a collection. Optional.
+	"""
+	collection: String
+	"""
+	The genre this document is. Optional.
+	"""
+	genre: String
+	"""
+	The people involved in collecting, translating, annotating. Can be empty.
+	"""
+	contributors: [ContributorInput!]
+	"""
+	URL for an image of the original physical document. Optional.
+	"""
+	pageImages: IiifImagesInput
+	"""
+	The date this document was produced (or `None` if unknown). Optional.
+	"""
+	date: DateInput
+	"""
+	Whether this document is a reference, therefore just a list of forms. Required.
+	"""
+	isReference: Boolean!
+	"""
+	Arbitrary number used for manually ordering documents in a collection.
+	For collections without manual ordering, use zero here. Required.
+	"""
+	orderIndex: Int!
 }
 
 """
@@ -641,6 +706,24 @@ type EditedCollection {
 	chapters: [CollectionChapter!]
 }
 
+"""
+Input object for creating a new collection
+"""
+input EditedCollectionInput {
+	"""
+	Full title of the collection
+	"""
+	title: String!
+	"""
+	URL slug for the collection, like "cwkw"
+	"""
+	slug: String!
+	"""
+	ID of WordPress menu for navigating the collection
+	"""
+	wordpressMenuId: Int
+}
+
 
 type FormsInTime {
 	start: Date
@@ -691,11 +774,32 @@ type IiifImages {
 	urls: [String!]!
 }
 
+"""
+Input object for IiifImages
+"""
+input IiifImagesInput {
+	"""
+	Database ID for the image source
+	"""
+	source: ImageSourceIdInput!
+	"""
+	Remote IIIF OIDs for the images
+	"""
+	ids: [String!]!
+}
+
 type ImageSource {
 	"""
 	Base URL for the IIIF server
 	"""
 	url: String!
+}
+
+"""
+InputObject for ImageSourceId
+"""
+input ImageSourceIdInput {
+	id: UUID!
 }
 
 
@@ -837,6 +941,10 @@ type Mutation {
 	updateAnnotation(data: JSON!): Boolean!
 	updateWord(word: AnnotatedFormUpdate!): AnnotatedForm!
 	"""
+	Updates a dailp_user's information
+	"""
+	updateUser(user: UserUpdate!): User!
+	"""
 	Adds a bookmark to the user's list of bookmarks.
 	"""
 	addBookmark(documentId: UUID!): AnnotatedDoc!
@@ -854,6 +962,18 @@ type Mutation {
 	"""
 	attachAudioToWord(input: AttachAudioToWordInput!): AnnotatedForm!
 	updateDocumentMetadata(document: DocumentMetadataUpdate!): UUID!
+	"""
+	Create a new document
+	"""
+	insertDocument(meta: DocumentMetadataInput!, collectionId: UUID, indexInCollection: Int): UUID!
+	"""
+	Create a new edited collection
+	"""
+	insertEditedCollection(collection: EditedCollectionInput!): UUID!
+	"""
+	Insert user into dailp_user
+	"""
+	insertDailpUser(user: UserCreate!): UUID!
 }
 
 """
@@ -1037,6 +1157,10 @@ type Query {
 	Basic information about the currently authenticated user, if any.
 	"""
 	userInfo: UserInfo
+	"""
+	Gets a dailp_user by their id
+	"""
+	dailpUserById(id: UUID!): User!
 }
 
 """
@@ -1045,6 +1169,20 @@ Most commonly, this will represent the details of a library or archive that
 houses documents used elsewhere.
 """
 type SourceAttribution {
+	"""
+	Name of the source, i.e. "The Newberry Library"
+	"""
+	name: String!
+	"""
+	URL of this source's homepage, i.e. "https://www.newberry.org/"
+	"""
+	link: String!
+}
+
+"""
+Input Object for SourceAttribution
+"""
+input SourceAttributionInput {
 	"""
 	Name of the source, i.e. "The Newberry Library"
 	"""
@@ -1089,6 +1227,57 @@ type User {
 	User-facing name for this contributor/curator
 	"""
 	displayName: String!
+	"""
+	The date this user was created (optional)
+	"""
+	createdAt: Date
+	"""
+	URL to the avatar of the user (optional)
+	"""
+	avatarUrl: String
+	"""
+	Biography of the user (optional)
+	"""
+	bio: String
+	"""
+	Organization of the user (optional)
+	"""
+	organization: String
+	"""
+	Location of the user (optional)
+	"""
+	location: String
+	"""
+	Role of the user (optional)
+	"""
+	role: UserGroup
+}
+
+input UserCreate {
+	"""
+	User-facing name for this contributor/curator
+	"""
+	displayName: String
+	"""
+	URL to the avatar of the user (optional)
+	"""
+	avatarUrl: String
+	"""
+	Biography of the user (optional)
+	"""
+	bio: String
+	"""
+	Organization of the user (optional)
+	"""
+	organization: String
+	"""
+	Location of the user (optional)
+	"""
+	location: String
+	"""
+	Role of the user (optional)
+	"""
+	role: UserGroup
 }
 
 """
@@ -1097,6 +1286,8 @@ A user belongs to any number of user groups, which give them various permissions
 enum UserGroup {
 	CONTRIBUTORS
 	EDITORS
+	READERS
+	ADMINISTRATORS
 }
 
 """
@@ -1109,6 +1300,40 @@ type UserInfo {
 	id: UUID!
 	email: String!
 	groups: [UserGroup!]!
+}
+
+"""
+Input Object used to edit a user
+"""
+input UserUpdate {
+	"""
+	Id of the user, which must be a AWS Cognito `sub` claim
+	"""
+	id: String!
+	"""
+	User-facing name for this contributor/curator
+	"""
+	displayName: String
+	"""
+	URL to the avatar of the user (optional)
+	"""
+	avatarUrl: String
+	"""
+	Biography of the user (optional)
+	"""
+	bio: String
+	"""
+	Organization of the user (optional)
+	"""
+	organization: String
+	"""
+	Location of the user (optional)
+	"""
+	location: String
+	"""
+	Role of the user (optional)
+	"""
+	role: UserGroup
 }
 
 type WordSegment {

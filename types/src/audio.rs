@@ -40,6 +40,14 @@ pub struct AudioSlice {
     pub end_time: Option<i32>,
 }
 
+/// InputType for AudioSlice for creating new documents
+#[derive(async_graphql::InputObject)]
+pub struct AudioSliceInput {
+    pub start_time: Option<i32>,
+    pub end_time: Option<i32>,
+    pub resource_url: String,
+}
+
 /// Request to attach user-recorded audio to a word
 #[derive(async_graphql::InputObject)]
 pub struct AttachAudioToWordInput {

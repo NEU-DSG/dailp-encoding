@@ -22,6 +22,15 @@ impl Contributor {
     }
 }
 
+/// Input Object for Contributor
+#[derive(async_graphql::InputObject, Clone, Debug, Serialize, Deserialize)]
+pub struct ContributorInput {
+    /// Full name of the contributor
+    pub name: String,
+    /// The role that defines most of their contributions to the associated item
+    pub role: String,
+}
+
 #[async_graphql::ComplexObject]
 impl Contributor {
     async fn details(
@@ -61,6 +70,15 @@ pub struct ContributorDetails {
 /// houses documents used elsewhere.
 #[derive(async_graphql::SimpleObject, Clone, Debug, Serialize, Deserialize)]
 pub struct SourceAttribution {
+    /// Name of the source, i.e. "The Newberry Library"
+    pub name: String,
+    /// URL of this source's homepage, i.e. "https://www.newberry.org/"
+    pub link: String,
+}
+
+/// Input Object for SourceAttribution
+#[derive(async_graphql::InputObject, Clone, Debug, Serialize, Deserialize)]
+pub struct SourceAttributionInput {
     /// Name of the source, i.e. "The Newberry Library"
     pub name: String,
     /// URL of this source's homepage, i.e. "https://www.newberry.org/"

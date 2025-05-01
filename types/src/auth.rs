@@ -1,4 +1,4 @@
-use async_graphql::Guard;
+use async_graphql::{Guard, MaybeUndefined};
 use serde::{Deserialize, Serialize};
 use serde_with::{rust::StringWithSeparator, CommaSeparator};
 use uuid::Uuid;
@@ -57,6 +57,44 @@ pub struct ApiGatewayUserInfo(#[serde(with = "ApiGatewayUserInfoDef")] pub UserI
 pub enum UserGroup {
     Contributors,
     Editors,
+    Readers,
+    Administrators,
+}
+
+impl From<String> for UserGroup {
+    fn from(s: String) -> Self {
+        match s.as_str() {
+            "Contributors" => UserGroup::Contributors,
+            "Editors" => UserGroup::Editors,
+            "Readers" => UserGroup::Readers,
+            "Administrators" => UserGroup::Administrators,
+            "CONTRIBUTOR" => UserGroup::Contributors,
+            "EDITOR" => UserGroup::Editors,
+            "READER" => UserGroup::Readers,
+            "ADMINISTRATOR" => UserGroup::Administrators,
+            _ => panic!("Unknown user group: {}", s),
+        }
+    }
+}
+
+impl From<Option<String>> for UserGroup {
+    fn from(opt_s: Option<String>) -> Self {
+        match opt_s {
+            Some(s) => UserGroup::from(s),
+            None => UserGroup::Readers,
+        }
+    }
+}
+
+impl UserGroup {
+    pub fn to_string(&self) -> String {
+        match self {
+            UserGroup::Contributors => "Contributors".to_string(),
+            UserGroup::Editors => "Editors".to_string(),
+            UserGroup::Readers => "Readers".to_string(),
+            UserGroup::Administrators => "Administrators".to_string(),
+        }
+    }
 }
 
 // // Impl FromStr and Display automatically for UserGroup, using serde.
@@ -91,6 +129,33 @@ impl Guard for GroupGuard {
             Ok(())
         } else {
             Err(format!("Forbidden, user not in group '{:?}'", self.group).into())
+        }
+    }
+}
+
+/// Blocks access if the user is in the specified group.
+pub struct NotGroupGuard {
+    group: UserGroup,
+}
+
+impl NotGroupGuard {
+    pub fn new(group: UserGroup) -> Self {
+        Self { group }
+    }
+}
+
+#[async_trait::async_trait]
+impl Guard for NotGroupGuard {
+    async fn check(&self, ctx: &async_graphql::Context<'_>) -> async_graphql::Result<()> {
+        let user = ctx.data_opt::<UserInfo>();
+        let is_in_forbidden_group =
+            user.map(|user| user.groups.iter().any(|group| group == &self.group));
+
+        // Deny access if the user is in the forbidden group
+        if is_in_forbidden_group == Some(true) {
+            Err(format!("Forbidden: User is in blocked group '{:?}'", self.group).into())
+        } else {
+            Ok(())
         }
     }
 }

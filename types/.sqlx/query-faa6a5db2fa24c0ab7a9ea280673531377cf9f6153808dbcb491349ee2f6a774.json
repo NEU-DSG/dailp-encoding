@@ -1,0 +1,24 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "insert into edited_collection (title, wordpress_menu_id, slug)\nvalues ($1, $2, $3)\nreturning id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Int8",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "faa6a5db2fa24c0ab7a9ea280673531377cf9f6153808dbcb491349ee2f6a774"
+}
