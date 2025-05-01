@@ -1,4 +1,3 @@
-import { set } from "lodash"
 import React, { ReactNode } from "react"
 import {
   AiFillCaretDown,
@@ -73,19 +72,19 @@ export const WordPanel = (p: {
   const phoneticsContent = (
     <>
       {
-          <PanelFeatureComponent
-            word={p.word}
-            feature={"source"}
-            label="Syllabary Characters"
-          />
+        <PanelFeatureComponent
+          word={p.word}
+          feature={"source"}
+          label="Syllabary Characters"
+        />
       }
 
       {
-          <PanelFeatureComponent
-            word={p.word}
-            feature={"romanizedSource"}
-            label="Simple Phonetics"
-          />
+        <PanelFeatureComponent
+          word={p.word}
+          feature={"romanizedSource"}
+          label="Simple Phonetics"
+        />
       }
     </>
   )
