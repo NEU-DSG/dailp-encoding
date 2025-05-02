@@ -52,7 +52,7 @@ export const FormProvider = (props: { children: ReactNode }) => {
       if (
         !values.word.romanizedSource &&
         romanizedSource !== "" &&
-        confirmRomanizedSourceDelete === false
+        !confirmRomanizedSourceDelete
       ) {
         const errors = {
           romanizedSource: "romanizedSource Deleted Error Thrown",
