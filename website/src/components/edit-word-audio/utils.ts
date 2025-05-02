@@ -1,11 +1,12 @@
 import { CognitoIdentityClient } from "@aws-sdk/client-cognito-identity"
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3"
 import { fromCognitoIdentityPool } from "@aws-sdk/credential-provider-cognito-identity"
-import { CognitoUser } from "amazon-cognito-identity-js"
+//import { CognitoUser } from "amazon-cognito-identity-js"
 import { useMemo, useState } from "react"
 import { v4 } from "uuid"
 import { useUser } from "src/auth"
 import * as Dailp from "../../graphql/dailp"
+import { Auth } from "aws-amplify"
 
 type UploadAudioState = "ready" | "uploading" | "error"
 
@@ -26,8 +27,7 @@ export function useAudioUpload(wordId: string) {
       async function (data: Blob) {
         setUploadAudioState("uploading")
         try {
-          const { resourceUrl } = await uploadContributorAudioToS3(user!, data)
-          // const resourceUrl = "https://" + prompt("url?")
+          const { resourceUrl } = await uploadContributorAudioToS3(data)
           const result = await contributeAudio({
             input: {
               wordId,
@@ -48,7 +48,7 @@ export function useAudioUpload(wordId: string) {
         setUploadAudioState("ready")
         return true
       },
-    [user, contributeAudio, wordId]
+    [contributeAudio, wordId]
   )
 
   function clearError() {
@@ -61,7 +61,6 @@ export function useAudioUpload(wordId: string) {
 }
 
 export async function uploadContributorAudioToS3(
-  user: CognitoUser,
   data: Blob
 ) {
   // Get the Amazon Cognito ID token for the user. 'getToken()' below.
@@ -72,6 +71,9 @@ export async function uploadContributorAudioToS3(
   // let loginData = {
   //   [COGNITO_ID]: token,
   // }
+  try{
+  const session = await Auth.currentSession()
+  const jwtToken = session.getIdToken().getJwtToken()
 
   const s3Client = new S3Client({
     region: REGION,
@@ -82,19 +84,23 @@ export async function uploadContributorAudioToS3(
       }),
       logins: {
         [`cognito-idp.${REGION}.amazonaws.com/${process.env["DAILP_USER_POOL"]}`]:
-          user.getSignInUserSession()?.getIdToken().getJwtToken() ?? "",
+          jwtToken,
       },
     }),
   })
 
-  const key = `user-uploaded-audio/${v4()}`
-  await s3Client.send(
-    new PutObjectCommand({
-      Body: data,
-      Bucket: BUCKET,
-      Key: key,
-    })
-  )
+    const key = `user-uploaded-audio/${v4()}`
+    await s3Client.send(
+      new PutObjectCommand({
+        Body: data,
+        Bucket: BUCKET,
+        Key: key,
+      })
+    )
 
-  return { resourceUrl: `https://${process.env["CF_URL"]}/${key}` }
+    return { resourceUrl: `https://${process.env["CF_URL"]}/${key}` }
+  } catch (error) {
+    console.error("Error uploading to S3:", error)
+    throw error
+  }
 }
