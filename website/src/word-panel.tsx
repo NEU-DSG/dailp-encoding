@@ -18,7 +18,7 @@ import { AudioPlayer } from "./components"
 import { CommentSection } from "./components/comment-section"
 import { CustomCreatable } from "./components/creatable"
 import { EditWordAudio } from "./components/edit-word-audio"
-import { RecordAudioPanel } from "./components/edit-word-audio/record"
+import { RecordWordAudioPanel } from "./components/edit-word-audio/record"
 import { EditWordFeature } from "./edit-word-feature"
 import { formInput } from "./edit-word-feature.css"
 import { useForm } from "./edit-word-form-context"
@@ -143,7 +143,7 @@ export const WordPanel = (p: {
               <AiFillSound size={24} className={css.wordPanelButton.colpleft} />
             }
           />
-          <RecordAudioPanel word={p.word} />
+          <RecordWordAudioPanel word={p.word} />
         </>
       )}
       <CollapsiblePanel

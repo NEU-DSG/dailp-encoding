@@ -18,11 +18,12 @@ import {
   useDialogState,
 } from "reakit"
 import { navigate } from "vite-plugin-ssr/client/router"
-import { useUser } from "src/auth"
+import { UserRole, useUser, useUserRole } from "src/auth"
 import { CommentStateProvider } from "src/comment-state-context"
 import { AudioPlayer, Breadcrumbs, Button, Link } from "src/components"
 import { IconTextButton } from "src/components/button"
 import { CommentValueProvider } from "src/components/edit-comment-feature"
+import { RecordDocumentAudioPanel } from "src/components/record-document-audio-panel"
 import { useMediaQuery } from "src/custom-hooks"
 import { FormProvider as FormProviderDoc } from "src/edit-doc-data-form-context"
 import {
@@ -52,15 +53,9 @@ enum Tabs {
   INFO = "info-tab",
 }
 
-export type Document = NonNullable<Dailp.AnnotatedDocumentQuery["document"]>
 export type DocumentContents = NonNullable<
   Dailp.DocumentContentsQuery["document"]
 >
-
-type NullPick<T, F extends keyof NonNullable<T>> = Pick<
-  NonNullable<T>,
-  F
-> | null
 
 /** A full annotated document, including all metadata and the translation(s) */
 const AnnotatedDocumentPage = (props: { id: string }) => {
@@ -106,7 +101,7 @@ const AnnotatedDocumentPage = (props: { id: string }) => {
 }
 export const Page = AnnotatedDocumentPage
 
-export const TabSet = ({ doc }: { doc: Document }) => {
+export const TabSet = ({ doc }: { doc: Dailp.DocumentFieldsFragment }) => {
   const [isScrollVisible, setIsScrollVisible] = useState(1)
   const handleScroll = () => {
     if (document.documentElement.scrollHeight > 3000) {
@@ -221,7 +216,11 @@ export const TabSet = ({ doc }: { doc: Document }) => {
   )
 }
 
-export const TranslationTab = ({ doc }: { doc: Document }) => {
+export const TranslationTab = ({
+  doc,
+}: {
+  doc: Dailp.DocumentFieldsFragment
+}) => {
   const [selectedMorpheme, setMorpheme] = useState<BasicMorphemeSegment | null>(
     null
   )
@@ -360,7 +359,7 @@ const DocumentContents = ({
   cherokeeRepresentation,
   wordPanelDetails,
 }: {
-  doc: Document
+  doc: Dailp.DocumentFieldsFragment
   levelOfDetail: LevelOfDetail
   cherokeeRepresentation: Dailp.CherokeeOrthography
   openDetails: (morpheme: any) => void
@@ -443,16 +442,10 @@ export const DocumentTitleHeader = (p: {
     Dailp.CollectionChapter["breadcrumbs"][0],
     "name" | "slug"
   >[]
-  doc: Pick<Dailp.AnnotatedDoc, "slug" | "title" | "id"> & {
-    date: NullPick<Dailp.AnnotatedDoc["date"], "year">
-    bookmarkedOn: NullPick<Dailp.AnnotatedDoc["bookmarkedOn"], "formattedDate">
-    audioRecording?: NullPick<
-      Dailp.AnnotatedDoc["audioRecording"],
-      "resourceUrl"
-    >
-  }
+  doc: Dailp.DocumentFieldsFragment
 }) => {
   const { user } = useUser()
+  const role = useUserRole()
   return (
     <header className={css.docHeader}>
       {p.breadcrumbs && (
@@ -479,7 +472,7 @@ export const DocumentTitleHeader = (p: {
         ) : (
           <></>
         )}
-        {!p.doc.audioRecording && !isMobile && (
+        {p.doc.editedAudio.length === 0 && !isMobile && (
           <div id="no-audio-message">
             <strong>No Audio Available</strong>
           </div>
@@ -490,23 +483,65 @@ export const DocumentTitleHeader = (p: {
           ) : null}
         </div>
       </div>
-      {p.doc.audioRecording && ( // TODO Implement sticky audio bar
-        <div id="document-audio-player" className={css.audioContainer}>
-          <span>Document Audio:</span>
-          <AudioPlayer
-            style={{ flex: 1 }}
-            audioUrl={p.doc.audioRecording.resourceUrl}
-            showProgress
-          />
-          {p.doc.audioRecording && !isMobile && (
-            <div>
-              <a href={p.doc.audioRecording?.resourceUrl}>
-                <Button>Download Audio</Button>
-              </a>
-            </div>
+      <div id="audio-and-recording-container">
+        <div>
+          {p.doc.editedAudio.length > 0 && (
+            <>
+              <h3>Document Audio:</h3>
+              {p.doc.editedAudio.map((audio, index) => (
+                <div
+                  id={`document-audio-player-${index}`}
+                  className={css.audioContainer}
+                  key={index}
+                >
+                  <AudioPlayer
+                    style={{ flex: 1 }}
+                    audioUrl={audio.resourceUrl}
+                    showProgress
+                  />
+                  {!isMobile && (
+                    <div>
+                      <a href={audio.resourceUrl}>
+                        <Button>Download Audio</Button>
+                      </a>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </>
+          )}
+          {/* 
+            TODO: Should we be checking for a specific set of user roles? 
+            How do we do this elsewhere? 
+          */}
+          {role !== UserRole.Reader && (
+            <>
+              <h3>User-contributed Audio:</h3>
+              {p.doc.userContributedAudio.map((audio, index) => (
+                <div
+                  id={`user-contributed-document-audio-player-${index}`}
+                  className={css.audioContainer}
+                  key={index}
+                >
+                  <AudioPlayer
+                    style={{ flex: 1 }}
+                    audioUrl={audio.resourceUrl}
+                    showProgress
+                  />
+                  {!isMobile && (
+                    <div>
+                      <a href={audio.resourceUrl}>
+                        <Button>Download Audio</Button>
+                      </a>
+                    </div>
+                  )}
+                </div>
+              ))}
+              <RecordDocumentAudioPanel document={p.doc} />
+            </>
           )}
         </div>
-      )}
+      </div>
     </header>
   )
 }
