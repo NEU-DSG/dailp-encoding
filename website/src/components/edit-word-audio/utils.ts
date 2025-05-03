@@ -1,7 +1,4 @@
-import { CognitoIdentityClient } from "@aws-sdk/client-cognito-identity"
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3"
-import { fromCognitoIdentityPool } from "@aws-sdk/credential-provider-cognito-identity"
-//import { CognitoUser } from "amazon-cognito-identity-js"
 import { useMemo, useState } from "react"
 import { v4 } from "uuid"
 import { useUser } from "src/auth"
@@ -72,21 +69,11 @@ export async function uploadContributorAudioToS3(
   //   [COGNITO_ID]: token,
   // }
   try{
-  const session = await Auth.currentSession()
-  const jwtToken = session.getIdToken().getJwtToken()
+  const credentials = await Auth.currentCredentials()
 
   const s3Client = new S3Client({
     region: REGION,
-    credentials: fromCognitoIdentityPool({
-      identityPoolId: process.env["DAILP_IDENTITY_POOL"]!,
-      client: new CognitoIdentityClient({
-        region: REGION,
-      }),
-      logins: {
-        [`cognito-idp.${REGION}.amazonaws.com/${process.env["DAILP_USER_POOL"]}`]:
-          jwtToken,
-      },
-    }),
+    credentials: Auth.essentialCredentials(credentials)
   })
 
     const key = `user-uploaded-audio/${v4()}`
