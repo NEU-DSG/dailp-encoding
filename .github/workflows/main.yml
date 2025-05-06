@@ -110,7 +110,7 @@ jobs:
           aws ssm start-session \
           --target ${{ env.BASTION_ID }} \
           --document-name AWS-StartPortForwardingSessionToRemoteHost \
-          --parameters '{"host":[ ${DATABASE_ADDRESS} ],"portNumber":["5432"], "localPortNumber":["5432"]}'
+          --parameters '{"host":[ "${DATABASE_ADDRESS}"" ],"portNumber":["5432"], "localPortNumber":["5432"]}'
           echo "Updating shell variables..."
           export DAILP_API_URL=$(nix run --impure .#tf-output functions_url)
           export DATABASE_URL=postgres://dailp:$DATABASE_PASSWORD@localhost:5432/dailp
