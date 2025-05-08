@@ -3,7 +3,9 @@
 use dailp::{
     auth::{AuthGuard, GroupGuard, UserGroup, UserInfo},
     comment::{CommentParent, CommentUpdate, DeleteCommentInput, PostCommentInput},
-    slugify_ltree, AnnotatedForm, AttachAudioToWordInput, CollectionChapter, CurateWordAudioInput,
+    slugify_ltree,
+    user::{User, UserUpdate},
+    AnnotatedForm, AttachAudioToWordInput, CollectionChapter, CurateWordAudioInput,
     DeleteContributorAttribution, DocumentMetadataUpdate, DocumentParagraph,
     UpdateContributorAttribution, Uuid,
 };
@@ -352,6 +354,15 @@ impl Query {
     async fn user_info<'a>(&self, context: &'a Context<'_>) -> Option<&'a UserInfo> {
         context.data_opt()
     }
+
+    /// Gets a dailp_user by their id
+    async fn dailp_user_by_id(&self, context: &Context<'_>, id: Uuid) -> FieldResult<User> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .dailp_user_by_id(&id)
+            .await?)
+    }
 }
 
 pub struct Mutation;
@@ -533,6 +544,20 @@ impl Mutation {
         Ok(database
             .word_by_id(&database.update_word(word).await?)
             .await?)
+    }
+
+    /// Updates a dailp_user's information
+    #[graphql(guard = "AuthGuard")]
+    async fn update_user(&self, context: &Context<'_>, user: UserUpdate) -> FieldResult<User> {
+        let user_id = Uuid::from(&user.id);
+        let db = context.data::<DataLoader<Database>>()?.loader();
+
+        db.update_dailp_user(user).await?;
+
+        let user_object = db.dailp_user_by_id(&user_id).await?;
+
+        // We return the user object, for GraphCache interop
+        return Ok(user_object);
     }
 
     /// Adds a bookmark to the user's list of bookmarks.
