@@ -137,7 +137,7 @@ async fn parse_early_vocab(
                 // Convert the normalized source to simple phonetics.
                 normalized_source
                     .as_ref()
-                    .map(|s| dailp::PhonemicString::parse_crg(&s).into_learner())
+                    .map(|s| dailp::PhonemicString::parse_crg(s).into_learner())
             });
 
             let commentary = if has_notes {
@@ -177,11 +177,7 @@ async fn parse_early_vocab(
                     english_gloss: vec![gloss],
                     line_break: None,
                     page_break: None,
-                    position: dailp::PositionInDocument::new(
-                        doc_id.clone(),
-                        page_number,
-                        index as i64 + 1,
-                    ),
+                    position: dailp::PositionInDocument::new(doc_id, page_number, index as i64 + 1),
                     date_recorded: meta.date.clone(),
                     id: None,
                     ingested_audio_track: None,
