@@ -1,5 +1,5 @@
 import { style } from "@vanilla-extract/css"
-import { important } from "polished"
+import { important, position } from "polished"
 import {
   colors,
   fonts,
@@ -7,6 +7,8 @@ import {
   layers,
   mediaQueries,
   radii,
+  space,
+  thickness,
   vspace,
 } from "src/style/constants"
 import { paddingX } from "src/style/utils"
@@ -36,6 +38,7 @@ export const dashboardTabs = style([
   }),
   {
     display: "flex",
+    position: "sticky",
     flexFlow: "row nowrap",
     height: vspace[1.75],
   },
@@ -76,12 +79,25 @@ export const wideAndTop = style({
   },
 })
 
-export const dashboardHeader = style([
-  wideAndTop,
-  {
-    marginTop: vspace.half,
+export const dashboardHeader = style({
+  left: 0,
+  display: "flex",
+  flexFlow: "column nowrap",
+  alignItems: "center",
+  top: 55,
+  width: "100%",
+  zIndex: layers.base,
+  "@media": {
+    [mediaQueries.medium]: {
+      top: 0,
+    },
+    [mediaQueries.print]: {
+      display: "none",
+      height: 0,
+    },
   },
-])
+  marginTop: vspace.half,
+})
 
 export const dashboardItem = style({
   width: "100%",
@@ -99,4 +115,8 @@ export const noBullets = style({
   listStyleType: "none" /* Remove bullets */,
   padding: 10,
   margin: 10,
+})
+
+export const cardShadow = style({
+  boxShadow: "2px 2px 4px rgba(0, 0, 0, 0.2)",
 })

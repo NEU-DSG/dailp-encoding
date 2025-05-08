@@ -28,8 +28,33 @@ export const editPanelButton = style([
   },
 ])
 
+export const editPanelButtonSmall = style([
+  button,
+  paddingX(hspace.medium),
+  paddingY(vspace.small),
+  {
+    display: "flex",
+    justifyContent: "space-around",
+    marginLeft: hspace.small,
+    fontSize: "0.8em",
+    height: "auto",
+    width: "auto",
+  },
+])
+
 export const cancelButton = style([
-  { fontFamily: fonts.header, width: buttonSize.small },
+  {
+    fontFamily: fonts.header,
+    width: buttonSize.small,
+  },
+])
+
+export const cancelButtonSmall = style([
+  {
+    fontFamily: fonts.header,
+    width: buttonSize.small,
+    fontSize: "0.8em",
+  },
 ])
 
 export const formInputLabel = style({

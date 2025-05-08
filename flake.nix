@@ -1,10 +1,10 @@
 {
   inputs = {
-    pkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    pkgs.url = "github:nixos/nixpkgs/nixos-23.11";
     utils.url = "github:numtide/flake-utils";
     # Provides cargo dependencies.
     fenix = {
-      url = "github:nix-community/fenix";
+      url = "github:nix-community/fenix/monthly";
       inputs.nixpkgs.follows = "pkgs";
     };
     # Builds rust projects.
@@ -13,6 +13,11 @@
       inputs.nixpkgs.follows = "pkgs";
     };
     nix-filter.url = "github:numtide/nix-filter";
+    terranix = {
+      url = "github:terranix/terranix";
+      inputs.nixpkgs.follows = "pkgs";
+    };
+
   };
 
   outputs = inputs:
@@ -25,7 +30,7 @@
         fenix = inputs.fenix.packages.${system};
         toolchainFile = {
           file = ./rust-toolchain.toml;
-          sha256 = "4IUZZWXHBBxcwRuQm9ekOwzc0oNqH/9NkI1ejW7KajU=";
+          sha256 = "sha256-s1RPtyvDGJaX/BisLT+ifVfuhDT1nZkZ1NcK8sbwELM=";
         };
         rust-toolchain = fenix.fromToolchainFile toolchainFile;
         naersk = inputs.naersk.lib.${system}.override {
@@ -40,6 +45,7 @@
             (filter.inDirectory "types")
             (filter.inDirectory "graphql")
             (filter.inDirectory "migration")
+            (filter.inDirectory "admin-event-handlers")
             ./Cargo.toml
             ./Cargo.lock
             ./rust-toolchain.toml
@@ -85,23 +91,27 @@
               mkdir -p $out
               cp -f ${targetPackage}/bin/dailp-graphql $out/bootstrap
               zip -j $out/dailp-graphql.zip $out/bootstrap
+              cp -f ${targetPackage}/bin/auth-post-confirmation $out/bootstrap
+              zip -j $out/auth-post-confirmation.zip $out/bootstrap
             '';
           };
-        terraformConfig = pkgs.writeTextFile {
-          name = "terraform-config";
-          text = let
-            tf = import "${pkgs.terranix}/core/default.nix" {
-              inherit pkgs;
-              terranix_config = {
-                imports = [ ./terraform/main.nix ];
-                functions.package_path = "${dailpFunctions}";
-              };
-              strip_nulls = true;
-            };
-          in builtins.toJSON (tf.config);
-          executable = false;
-          destination = "/config.tf.json";
+        terraformConfig = inputs.terranix.lib.terranixConfiguration {
+          inherit system;
+          modules = [{imports = [./terraform/main.nix]; functions.package_path = "${dailpFunctions}";}];
+          strip_nulls = true;
         };
+        # terraformConfig = pkgs.writeTextFile {
+        #   name = "terraform-config";
+        #   text = let
+        #     tf = inputs.terranix.lib.terranixConfiguration {
+        #       inherit system;
+        #       modules = [{imports = [./terraform/main.nix]; functions.package_path = "/";}];
+        #       strip_nulls = true;
+        #     };
+        #   in builtins.toJSON (tf);
+        #   executable = false;
+        #   destination = "/config.tf.json";
+        # };
         mkBashApp = name: script:
           inputs.utils.lib.mkApp {
             drv = pkgs.writers.writeBashBin name script;
@@ -110,7 +120,7 @@
         tf = "${pkgs.terraform}/bin/terraform";
         inherit (builtins) getEnv;
         tfInit = ''
-          cp -f ${terraformConfig}/config.tf.json ./
+          cp -f ${terraformConfig} ./config.tf.json
           export AWS_ACCESS_KEY_ID=${getEnv "AWS_ACCESS_KEY_ID"}
           export AWS_SECRET_ACCESS_KEY=${getEnv "AWS_SECRET_ACCESS_KEY"}
           export TF_DATA_DIR=$(pwd)/.terraform
@@ -218,7 +228,7 @@
                 cargo run --bin dailp-migration
               '')
               (writers.writeBashBin "dev-generate-types" ''
-                cd $PROJECT_ROOT
+                cd $PROJECT_ROOT/types
                 cargo sqlx prepare -- -p dailp
               '')
             ] ++ lib.optionals stdenv.isDarwin [

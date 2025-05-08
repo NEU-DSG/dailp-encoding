@@ -8,6 +8,7 @@ in {
       managed_policy_arns = [
         "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
       ];
+      
       assume_role_policy = ''
         {
           "Version": "2012-10-17",
@@ -43,12 +44,13 @@ in {
     aws_api_gateway_deployment.functions_api = {
       # Redeploy the API if this file changes, or any functions config changes.
       triggers = let
-        inherit (builtins) toJSON hashString;
+        inherit (builtins) toJSON hashString removeAttrs mapAttrs;
+        removeFunctorFromMembers = set: mapAttrs (memberName: memberValue: removeAttrs memberValue [ "__functor" ]) set;
         hashJSON = x: hashString "sha1" (toJSON x);
       in {
-        functions = hashJSON config.resource.aws_lambda_function;
+        functions = hashJSON (removeFunctorFromMembers config.resource.aws_lambda_function);
         gateway_integrations =
-          hashJSON config.resource.aws_api_gateway_integration;
+          hashJSON (removeFunctorFromMembers config.resource.aws_api_gateway_integration);
         config = hashJSON config.functions;
       };
       # These triggers make deployment wait until the main API and CORS
