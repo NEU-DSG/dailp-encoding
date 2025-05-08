@@ -1,50 +1,14 @@
-import { DialogContent, DialogOverlay } from "@reach/dialog"
 import "@reach/dialog/styles.css"
-import React, { Fragment, useEffect, useState } from "react"
-import { isMobile } from "react-device-detect"
+import React, { Fragment } from "react"
 import { Helmet } from "react-helmet"
-import { MdSettings } from "react-icons/md/index"
-import { RiArrowUpCircleFill } from "react-icons/ri/index"
-import {
-  Dialog,
-  DialogBackdrop,
-  unstable_Form as Form,
-  Tab,
-  TabList,
-  TabPanel,
-  useDialogState,
-} from "reakit"
-import { navigate } from "vite-plugin-ssr/client/router"
+import { unstable_Form as Form } from "reakit"
 import { useCredentials } from "src/auth"
-import { AudioPlayer, Breadcrumbs, Button, Link } from "src/components"
-import { useMediaQuery } from "src/custom-hooks"
-import { FormProvider, useForm } from "src/edit-doc-data-form-context"
+import { Link } from "src/components"
+import { useForm } from "src/edit-doc-data-form-context"
 import EditDocPanel, { EditButton } from "src/edit-doc-data-panel"
 import * as Dailp from "src/graphql/dailp"
-import Layout from "src/layout"
-import { drawerBg } from "src/menu.css"
-import { MorphemeDetails } from "src/morpheme"
-import { PanelDetails, PanelLayout, PanelSegment } from "src/panel-layout"
-import { usePreferences } from "src/preferences-context"
-import { useLocation } from "src/renderer/PageShell"
-import {
-  chapterRoute,
-  collectionWordPath,
-  documentDetailsRoute,
-  documentRoute,
-} from "src/routes"
-import { useScrollableTabState } from "src/scrollable-tabs"
-import { AnnotatedForm, DocumentPage } from "src/segment"
-import { mediaQueries } from "src/style/constants"
 import { fullWidth } from "src/style/utils.css"
-import { BasicMorphemeSegment, LevelOfDetail } from "src/types"
-import PageImages from "../../page-image"
 import * as css from "./document.css"
-
-enum TabType {
-  InfoTab,
-  EditInfoTab,
-}
 
 export type TabSegment = Dailp.DocumentMetadataUpdate | Document
 
@@ -60,12 +24,6 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
   }
   const token = useCredentials()
   const { form, isEditing } = useForm()
-  // const [showEditDialog, setShowEditDialog] = useState(false)
-  // const handleButtonClick = () => setShowEditDialog(!showEditDialog)
-  // let editButton = null
-  // if (token) {
-  //   editButton = <EditButton />
-  // }
 
   const contributorsList = (
     <>
@@ -107,7 +65,6 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
       )}
     </>
   )
-  // console.log(docData.id)
   return (
     <Fragment>
       <>{panel}</>
@@ -128,15 +85,3 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
 const EditDocPanel2: React.FC = () => {
   return <div>Component Content</div>
 }
-
-// export const TabContent = (t: {
-//   tab: TabType
-//   doc: Dailp.DocumentMetadataUpdate
-// }) => {
-//   const TabComponent =
-//     t.tab === TabType.EditInfoTab ? EditDocPanel : DocumentInfo
-
-//     return(
-//       TabComponent
-//     )
-// }

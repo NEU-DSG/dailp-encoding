@@ -1,8 +1,8 @@
-use crate::spreadsheets::{LexicalEntryWithForms, SheetResult};
+use crate::spreadsheets::{LexicalEntryWithForms, SheetInterpretation};
 use anyhow::Result;
 use dailp::{
     convert_udb, seg_verb_surface_forms, AnnotatedForm, Contributor, Database, Date, DocumentId,
-    DocumentMetadata, LexicalConnection, MorphemeId, PositionInDocument, WordSegment,
+    DocumentMetadata, LexicalConnection, MorphemeId, PositionInDocument, SheetResult, WordSegment,
 };
 use itertools::Itertools;
 
@@ -55,24 +55,36 @@ pub async fn migrate_dictionaries(db: &Database) -> Result<()> {
         3,
         3,
     );
-    let root_nouns = SheetResult::from_sheet("1XuQIKzhGf_mGCH4-bHNBAaQqTAJDNtPbNHjQDhszVRo", None)
-        .await?
-        .into_nouns(df1975_id, 1975, 1, false)?;
-    let irreg_nouns = SheetResult::from_sheet("1urfgtarnSypCgb5lSOhQGhhDcg1ozQ1r4jtCJ8Bu-vw", None)
-        .await?
-        .into_nouns(df1975_id, 1975, 1, false)?;
-    let ptcp_nouns = SheetResult::from_sheet("1JRmOx5_LlnoLQhzhyb3NmA4FAfMM2XRoT9ntyWtPEnk", None)
-        .await?
-        .into_nouns(df1975_id, 1975, 0, false)?;
-    let inf_nouns = SheetResult::from_sheet("1feuNOuzm0-TpotKyjebKwuXV4MYv-jnU5zLamczqu5U", None)
-        .await?
-        .into_nouns(df1975_id, 1975, 0, true)?;
-    let body_parts = SheetResult::from_sheet("1xdnJuTsLBwxbCz9ffJmQNeX-xNYSmntoiRTu9Uwgu5I", None)
-        .await?
-        .into_nouns(df1975_id, 1975, 1, false)?;
-    let root_adjs = SheetResult::from_sheet("1R5EhHRq-hlMcYKLzwY2bLAvC-LEeVklHJEHgL6dt5L4", None)
-        .await?
-        .into_adjs(df1975_id, 1975)?;
+    let root_nouns = SheetInterpretation {
+        sheet: SheetResult::from_sheet("1XuQIKzhGf_mGCH4-bHNBAaQqTAJDNtPbNHjQDhszVRo", None)
+            .await?,
+    }
+    .into_nouns(df1975_id, 1975, 1, false)?;
+    let irreg_nouns = SheetInterpretation {
+        sheet: SheetResult::from_sheet("1urfgtarnSypCgb5lSOhQGhhDcg1ozQ1r4jtCJ8Bu-vw", None)
+            .await?,
+    }
+    .into_nouns(df1975_id, 1975, 1, false)?;
+    let ptcp_nouns = SheetInterpretation {
+        sheet: SheetResult::from_sheet("1JRmOx5_LlnoLQhzhyb3NmA4FAfMM2XRoT9ntyWtPEnk", None)
+            .await?,
+    }
+    .into_nouns(df1975_id, 1975, 0, false)?;
+    let inf_nouns = SheetInterpretation {
+        sheet: SheetResult::from_sheet("1feuNOuzm0-TpotKyjebKwuXV4MYv-jnU5zLamczqu5U", None)
+            .await?,
+    }
+    .into_nouns(df1975_id, 1975, 0, true)?;
+    let body_parts = SheetInterpretation {
+        sheet: SheetResult::from_sheet("1xdnJuTsLBwxbCz9ffJmQNeX-xNYSmntoiRTu9Uwgu5I", None)
+            .await?,
+    }
+    .into_nouns(df1975_id, 1975, 1, false)?;
+    let root_adjs = SheetInterpretation {
+        sheet: SheetResult::from_sheet("1R5EhHRq-hlMcYKLzwY2bLAvC-LEeVklHJEHgL6dt5L4", None)
+            .await?,
+    }
+    .into_adjs(df1975_id, 1975)?;
     let df2003 = parse_new_df1975(
         SheetResult::from_sheet("18cKXgsfmVhRZ2ud8Cd7YDSHexs1ODHo6fkTPrmnwI1g", None).await?,
         df2003_id,

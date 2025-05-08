@@ -1,26 +1,36 @@
 import { DialogContent, DialogOverlay } from "@reach/dialog"
 import "@reach/dialog/styles.css"
-import React, { useEffect, useState, useRef } from "react"
+import React, { useEffect, useState } from "react"
 import { isMobile } from "react-device-detect"
 import { Helmet } from "react-helmet"
-import { MdSettings } from "react-icons/md/index"
+import {
+  MdOutlineBookmarkAdd,
+  MdOutlineBookmarkRemove,
+  MdSettings,
+} from "react-icons/md/index"
 import { RiArrowUpCircleFill } from "react-icons/ri/index"
 import {
   Dialog,
   DialogBackdrop,
-  unstable_Form as Form,
   Tab,
   TabList,
   TabPanel,
   useDialogState,
 } from "reakit"
 import { navigate } from "vite-plugin-ssr/client/router"
-import { useCredentials } from "src/auth"
+import { useUser } from "src/auth"
+import { CommentStateProvider } from "src/comment-state-context"
 import { AudioPlayer, Breadcrumbs, Button, Link } from "src/components"
+import { IconTextButton } from "src/components/button"
+import { CommentValueProvider } from "src/components/edit-comment-feature"
 import { useMediaQuery } from "src/custom-hooks"
 import { FormProvider as FormProviderDoc } from "src/edit-doc-data-form-context"
+import {
+  FormProvider as FormProviderParagraph,
+  useForm as useParagraphForm,
+} from "src/edit-paragraph-form-context"
+import { EditWordCheckProvider } from "src/edit-word-check-context"
 import { FormProvider, useForm } from "src/edit-word-form-context"
-import { EditButton } from "src/edit-word-feature"
 import * as Dailp from "src/graphql/dailp"
 import Layout from "src/layout"
 import { drawerBg } from "src/menu.css"
@@ -29,16 +39,10 @@ import { DocumentInfo } from "src/pages/documents/document-info"
 import { PanelDetails, PanelLayout, PanelSegment } from "src/panel-layout"
 import { usePreferences } from "src/preferences-context"
 import { useLocation } from "src/renderer/PageShell"
-import {
-  chapterRoute,
-  collectionWordPath,
-  documentDetailsRoute,
-  documentRoute,
-} from "src/routes"
+import { chapterRoute, collectionWordPath } from "src/routes"
 import { useScrollableTabState } from "src/scrollable-tabs"
 import { AnnotatedForm, DocumentPage } from "src/segment"
 import { mediaQueries } from "src/style/constants"
-import { fullWidth } from "src/style/utils.css"
 import { BasicMorphemeSegment, LevelOfDetail } from "src/types"
 import PageImages from "../../page-image"
 import * as css from "./document.css"
@@ -95,7 +99,7 @@ const AnnotatedDocumentPage = (props: { id: string }) => {
     <Layout>
       <Helmet title={doc?.title} />
       <main className={css.annotatedDocument}>
-        <DocumentTitleHeader doc={doc} showDetails={true} />
+        <DocumentTitleHeader doc={doc} />
         <TabSet doc={doc} />
       </main>
     </Layout>
@@ -104,25 +108,24 @@ const AnnotatedDocumentPage = (props: { id: string }) => {
 export const Page = AnnotatedDocumentPage
 
 export const TabSet = ({ doc }: { doc: Document }) => {
-    const [isScrollVisible, setIsScrollVisible] = useState(1);
-    const handleScroll = () => {
-      if (document.documentElement.scrollHeight > 3000) {
-        setIsScrollVisible((window.scrollY > 2000)? 2 : 1);
-      } else {
-        setIsScrollVisible(0);
-      }
-    };
-    // Add the scroll event listener when the component is mounted.
-    // window (and document) cannot seem to be accessed on its own so we need to use this method instead.
-    useEffect(() => {
-      window.addEventListener('scroll', handleScroll);
-      // Remove the scroll event listener on component unmount
-      return () => {
-        window.removeEventListener('scroll', handleScroll);
-      };
-    }, []);
-    
-  const token = useCredentials()
+  const [isScrollVisible, setIsScrollVisible] = useState(1)
+  const handleScroll = () => {
+    if (document.documentElement.scrollHeight > 3000) {
+      setIsScrollVisible(window.scrollY > 2000 ? 2 : 1)
+    } else {
+      setIsScrollVisible(0)
+    }
+  }
+  // Add the scroll event listener when the component is mounted.
+  // window (and document) cannot seem to be accessed on its own so we need to use this method instead.
+  useEffect(() => {
+    window.addEventListener("scroll", handleScroll)
+    // Remove the scroll event listener on component unmount
+    return () => {
+      window.removeEventListener("scroll", handleScroll)
+    }
+  }, [])
+
   const tabs = useScrollableTabState({ selectedId: Tabs.ANNOTATION })
   const [{ data }] = Dailp.useDocumentDetailsQuery({
     variables: { slug: doc.slug! },
@@ -131,19 +134,19 @@ export const TabSet = ({ doc }: { doc: Document }) => {
   if (!docData) {
     return null
   }
-  let scrollTopClass = null;
+  let scrollTopClass = null
   switch (isScrollVisible) {
-    case 0: scrollTopClass = css.noScrollTop;
-      break;
-    case 1: scrollTopClass = css.hideScrollTop;
-      break;
-    case 2: scrollTopClass = css.showScrollTop;
-      break;
-    default: scrollTopClass = css.noScrollTop;
-  }
-  let editButton = null
-  if (token) {
-    editButton = <EditButton />
+    case 0:
+      scrollTopClass = css.noScrollTop
+      break
+    case 1:
+      scrollTopClass = css.hideScrollTop
+      break
+    case 2:
+      scrollTopClass = css.showScrollTop
+      break
+    default:
+      scrollTopClass = css.noScrollTop
   }
   return (
     <>
@@ -181,7 +184,9 @@ export const TabSet = ({ doc }: { doc: Document }) => {
         id={`${Tabs.ANNOTATION}-panel`}
         tabId={Tabs.ANNOTATION}
       >
-        <TranslationTab doc={doc} />
+        <EditWordCheckProvider>
+          <TranslationTab doc={doc} />
+        </EditWordCheckProvider>
       </TabPanel>
 
       <TabPanel
@@ -218,7 +223,6 @@ export const TabSet = ({ doc }: { doc: Document }) => {
     </>
   )
 }
-  
 
 export const TranslationTab = ({ doc }: { doc: Document }) => {
   const [selectedMorpheme, setMorpheme] = useState<BasicMorphemeSegment | null>(
@@ -271,73 +275,83 @@ export const TranslationTab = ({ doc }: { doc: Document }) => {
 
   return (
     <FormProvider>
-      <DialogOverlay
-        className={css.morphemeDialogBackdrop}
-        isOpen={dialogOpen}
-        onDismiss={closeDialog}
-      >
-        <DialogContent
-          className={css.unpaddedMorphemeDialog}
-          aria-label="Segment Details"
+      <FormProviderParagraph>
+        <DialogOverlay
+          className={css.morphemeDialogBackdrop}
+          isOpen={dialogOpen}
+          onDismiss={closeDialog}
         >
-          {selectedMorpheme ? (
-            <MorphemeDetails
-              documentId={doc.id}
-              segment={selectedMorpheme}
-              hideDialog={closeDialog}
-              cherokeeRepresentation={cherokeeRepresentation}
-            />
-          ) : null}
-        </DialogContent>
-      </DialogOverlay>
-
-      {!isDesktop && (
-        <DialogBackdrop {...dialog} className={drawerBg}>
-          <Dialog
-            {...dialog}
-            as="nav"
-            className={css.mobileWordPanel}
-            aria-label="Word Panel Drawer"
-            preventBodyScroll={true}
+          <DialogContent
+            className={css.unpaddedMorphemeDialog}
+            aria-label="Segment Details"
           >
-            <PanelLayout
-              segment={panelInfo.currContents}
-              setContent={panelInfo.setCurrContents}
-            />
-          </Dialog>
-        </DialogBackdrop>
-      )}
+            {selectedMorpheme ? (
+              <MorphemeDetails
+                documentId={doc.id}
+                segment={selectedMorpheme}
+                hideDialog={closeDialog}
+                cherokeeRepresentation={cherokeeRepresentation}
+              />
+            ) : null}
+          </DialogContent>
+        </DialogOverlay>
 
-      <div className={css.contentContainer}>
-        <article className={css.annotationContents}>
-          <p className={css.topMargin}>
-            Use the{" "}
-            <span>
-              <MdSettings size={32} style={{ verticalAlign: "middle" }} />{" "}
-              Settings
-            </span>{" "}
-            button at the top of the page to change how documents are
-            translated.
-          </p>
-          <DocumentContents
-            {...{
-              levelOfDetail,
-              doc,
-              openDetails,
-              cherokeeRepresentation,
-              wordPanelDetails: panelInfo,
-            }}
-          />
-        </article>
-        {selectedSegment && (
-          <div className={css.contentSection2}>
-            <PanelLayout
-              segment={panelInfo.currContents}
-              setContent={panelInfo.setCurrContents}
-            />
-          </div>
+        {!isDesktop && (
+          <DialogBackdrop {...dialog} className={drawerBg}>
+            <Dialog
+              {...dialog}
+              as="nav"
+              className={css.mobileWordPanel}
+              aria-label="Word Panel Drawer"
+              preventBodyScroll={true}
+            >
+              <CommentStateProvider>
+                <CommentValueProvider>
+                  <PanelLayout
+                    segment={panelInfo.currContents}
+                    setContent={panelInfo.setCurrContents}
+                  />
+                </CommentValueProvider>
+              </CommentStateProvider>
+            </Dialog>
+          </DialogBackdrop>
         )}
-      </div>
+
+        <div className={css.contentContainer}>
+          <article className={css.annotationContents}>
+            <p className={css.topMargin}>
+              Use the{" "}
+              <span>
+                <MdSettings size={32} style={{ verticalAlign: "middle" }} />{" "}
+                Settings
+              </span>{" "}
+              button at the top of the page to change how documents are
+              translated.
+            </p>
+            <DocumentContents
+              {...{
+                levelOfDetail,
+                doc,
+                openDetails,
+                cherokeeRepresentation,
+                wordPanelDetails: panelInfo,
+              }}
+            />
+          </article>
+          {selectedSegment && (
+            <div className={css.contentSection2}>
+              <CommentStateProvider>
+                <CommentValueProvider>
+                  <PanelLayout
+                    segment={panelInfo.currContents}
+                    setContent={panelInfo.setCurrContents}
+                  />
+                </CommentValueProvider>
+              </CommentStateProvider>
+            </div>
+          )}
+        </div>
+      </FormProviderParagraph>
     </FormProvider>
   )
 }
@@ -365,19 +379,29 @@ const DocumentContents = ({
 
   const docContents = result.data?.document
   const { form, isEditing } = useForm()
+  const { paragraphForm, isEditingParagraph } = useParagraphForm()
 
   useEffect(() => {
     // If the form has been submitted, update the panel's current contents to be the currently selected word
     if (form.submitting) {
       // Update the form's current word
-      wordPanelDetails.setCurrContents(form.values.word)
+      // wordPanelDetails.setCurrContents(form.values.word)
+      console.log("[charlie] Not rerunning query :)")
       // Query of document contents is rerun to ensure frontend and backend are in sync
-      rerunQuery({ requestPolicy: "network-only" })
+      // rerunQuery({ requestPolicy: "network-only" })
     } else {
       // If the form was not submitted, make sure to reset the current word of the form to its unmodified state.
       form.update("word", wordPanelDetails.currContents)
     }
-  }, [isEditing])
+    if (paragraphForm.submitting) {
+      wordPanelDetails.setCurrContents(paragraphForm.values.paragraph)
+      console.log("[charlie] Not rerunning query :)")
+      // Query of document contents is rerun to ensure frontend and backend are in sync
+      rerunQuery({ requestPolicy: "network-only" })
+    } else {
+      paragraphForm.update("paragraph", wordPanelDetails.currContents)
+    }
+  }, [isEditing, isEditingParagraph])
 
   if (!docContents) {
     return <>Loading...</>
@@ -422,64 +446,110 @@ export const DocumentTitleHeader = (p: {
     Dailp.CollectionChapter["breadcrumbs"][0],
     "name" | "slug"
   >[]
-  doc: Pick<Dailp.AnnotatedDoc, "slug" | "title"> & {
+  doc: Pick<Dailp.AnnotatedDoc, "slug" | "title" | "id"> & {
     date: NullPick<Dailp.AnnotatedDoc["date"], "year">
+    bookmarkedOn: NullPick<Dailp.AnnotatedDoc["bookmarkedOn"], "formattedDate">
     audioRecording?: NullPick<
       Dailp.AnnotatedDoc["audioRecording"],
       "resourceUrl"
     >
   }
-  showDetails?: boolean
-}) => (
-  <header className={css.docHeader}>
-    {p.breadcrumbs && (
-      <Breadcrumbs aria-label="Breadcrumbs">
-        {p.breadcrumbs.map((crumb) => (
-          <Link href={`${p.rootPath}/${crumb.slug}`} key={crumb.slug}>
-            {crumb.name}
-          </Link>
-        ))}
-      </Breadcrumbs>
-    )}
-
-    <h1 className={css.docTitle}>
-      {p.doc.title}
-      {p.doc.date && ` (${p.doc.date.year})`}{" "}
-    </h1>
-
-    <div className={css.bottomPadded}>
-      {p.showDetails ? (
-        <Link href={documentDetailsRoute(p.doc.slug!)}>View Details</Link>
-      ) : (
-        <Link href={documentRoute(p.doc.slug!)}>View Contents</Link>
+}) => {
+  const { user } = useUser()
+  return (
+    <header className={css.docHeader}>
+      {p.breadcrumbs && (
+        <Breadcrumbs aria-label="Breadcrumbs">
+          {p.breadcrumbs.map((crumb) => (
+            <Link href={`${p.rootPath}/${crumb.slug}`} key={crumb.slug}>
+              {crumb.name}
+            </Link>
+          ))}
+        </Breadcrumbs>
       )}
-      {!p.doc.audioRecording && !isMobile && (
-        <div id="no-audio-message">
-          <strong>No Audio Available</strong>
-        </div>
-      )}
-      <div className={css.alignRight}>
-        {!isMobile ? (
-          <Button onClick={() => window.print()}>Print</Button>
-        ) : null}
-      </div>
-    </div>
-    {p.doc.audioRecording && ( // TODO Implement sticky audio bar
-      <div id="document-audio-player" className={css.audioContainer}>
-        <span>Document Audio:</span>
-        <AudioPlayer
-          style={{ flex: 1 }}
-          audioUrl={p.doc.audioRecording.resourceUrl}
-          showProgress
-        />
-        {p.doc.audioRecording && !isMobile && (
-          <div>
-            <a href={p.doc.audioRecording?.resourceUrl}>
-              <Button>Download Audio</Button>
-            </a>
+
+      <h1 className={css.docTitle}>
+        {p.doc.title}
+        {p.doc.date && ` (${p.doc.date.year})`}{" "}
+      </h1>
+
+      <div className={css.bottomPadded}>
+        {user ? (
+          <BookmarkButton
+            documentId={p.doc.id}
+            isBookmarked={p.doc.bookmarkedOn !== null}
+          />
+        ) : (
+          <></>
+        )}
+        {!p.doc.audioRecording && !isMobile && (
+          <div id="no-audio-message">
+            <strong>No Audio Available</strong>
           </div>
         )}
+        <div className={css.alignRight}>
+          {!isMobile ? (
+            <Button onClick={() => window.print()}>Print</Button>
+          ) : null}
+        </div>
       </div>
-    )}
-  </header>
-)
+      {p.doc.audioRecording && ( // TODO Implement sticky audio bar
+        <div id="document-audio-player" className={css.audioContainer}>
+          <span>Document Audio:</span>
+          <AudioPlayer
+            style={{ flex: 1 }}
+            audioUrl={p.doc.audioRecording.resourceUrl}
+            showProgress
+          />
+          {p.doc.audioRecording && !isMobile && (
+            <div>
+              <a href={p.doc.audioRecording?.resourceUrl}>
+                <Button>Download Audio</Button>
+              </a>
+            </div>
+          )}
+        </div>
+      )}
+    </header>
+  )
+}
+
+/** Button that allows users to bookmark a document */
+export const BookmarkButton = (props: {
+  documentId: String
+  isBookmarked: boolean
+}) => {
+  const [addBookmarkMutationResult, addBookmarkMutation] =
+    Dailp.useAddBookmarkMutation()
+  const [removeBookmarkMutationResult, removeBookmarkMutation] =
+    Dailp.useRemoveBookmarkMutation()
+
+  return (
+    <>
+      {props.isBookmarked ? (
+        // Displays a "Cancel" button and "Save" button in editing mode.
+        <>
+          <IconTextButton
+            icon={<MdOutlineBookmarkRemove />}
+            className={css.BookmarkButton}
+            onClick={() => {
+              removeBookmarkMutation({ documentId: props.documentId })
+            }}
+          >
+            Un-Bookmark
+          </IconTextButton>
+        </>
+      ) : (
+        <IconTextButton
+          icon={<MdOutlineBookmarkAdd />}
+          className={css.BookmarkButton}
+          onClick={() => {
+            addBookmarkMutation({ documentId: props.documentId })
+          }}
+        >
+          Bookmark
+        </IconTextButton>
+      )}
+    </>
+  )
+}
