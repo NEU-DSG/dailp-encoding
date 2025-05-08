@@ -828,7 +828,10 @@ export type Comment = DatabaseIdentifier &
     readonly approved: Maybe<Scalars["Boolean"]>
     /** The author of the comment */
     readonly author: Maybe<CommentToCommenterConnectionEdge>
-    /** IP address for the author. This field is equivalent to WP_Comment-&gt;comment_author_IP and the value matching the &quot;comment_author_IP&quot; column in SQL. */
+    /**
+     * IP address for the author at the time of commenting. This field is equivalent to WP_Comment-&gt;comment_author_IP and the value matching the &quot;comment_author_IP&quot; column in SQL.
+     * @deprecated Use the ipAddress field on the edge between the comment and author
+     */
     readonly authorIp: Maybe<Scalars["String"]>
     /**
      * ID for the comment, unique among comments.
@@ -1088,8 +1091,16 @@ export type CommentToCommenterConnectionEdge = CommenterConnectionEdge &
     readonly __typename?: "CommentToCommenterConnectionEdge"
     /** Opaque reference to the nodes position in the connection. Value can be used with pagination args. */
     readonly cursor: Maybe<Scalars["String"]>
+    /** The email address representing the author for this particular comment */
+    readonly email: Maybe<Scalars["String"]>
+    /** IP address of the author at the time of making this comment. This field is equivalent to WP_Comment-&gt;comment_author_IP and the value matching the &quot;comment_author_IP&quot; column in SQL. */
+    readonly ipAddress: Maybe<Scalars["String"]>
+    /** The display name of the comment author for this particular comment */
+    readonly name: Maybe<Scalars["String"]>
     /** The node of the connection, without the edges */
     readonly node: Commenter
+    /** The url entered for the comment author on this particular comment */
+    readonly url: Maybe<Scalars["String"]>
   }
 
 /** Connection between the Comment type and the ContentNode type */

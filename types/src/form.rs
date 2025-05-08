@@ -297,10 +297,14 @@ pub struct AnnotatedFormUpdate {
     pub id: Uuid,
     /// Possible update to source content
     pub source: MaybeUndefined<String>,
+    /// Possible update to normalized source content
+    pub romanized_source: MaybeUndefined<String>,
     /// Possible update to commentary
     pub commentary: MaybeUndefined<String>,
     /// Updated segments
     pub segments: MaybeUndefined<Vec<MorphemeSegmentUpdate>>,
+    /// Possible update to English gloss
+    pub english_gloss: MaybeUndefined<Vec<String>>,
 }
 
 /// Trait that defines function which takes in a possibly undefined value.
@@ -314,7 +318,7 @@ impl<T> MaybeUndefinedExt<T> for MaybeUndefined<T> {
         if self.is_undefined() {
             Vec::new()
         } else {
-            vec![self.take()]
+            return vec![self.take()];
         }
     }
 }
