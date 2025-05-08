@@ -39,6 +39,11 @@ export type ActionMonitorAction = ContentNode &
     readonly actionMonitorActionId: Scalars["Int"]
     /** The type of action (CREATE, UPDATE, DELETE) */
     readonly actionType: Maybe<Scalars["String"]>
+    /**
+     * The ancestors of the content node.
+     * @deprecated This content type is not hierarchical and typically will not have ancestors
+     */
+    readonly ancestors: Maybe<ActionMonitorActionToActionMonitorActionConnection>
     /** The content of the post. */
     readonly content: Maybe<Scalars["String"]>
     /** Connection between the ContentNode type and the ContentType type */
@@ -63,10 +68,18 @@ export type ActionMonitorAction = ContentNode &
     readonly enqueuedStylesheets: Maybe<ContentNodeToEnqueuedStylesheetConnection>
     /** The global unique identifier for this post. This currently matches the value stored in WP_Post-&gt;guid and the guid column in the &quot;post_objects&quot; database table. */
     readonly guid: Maybe<Scalars["String"]>
+    /** Whether the action_monitor object is password protected. */
+    readonly hasPassword: Maybe<Scalars["Boolean"]>
     /** The globally unique identifier of the action_monitor object. */
     readonly id: Scalars["ID"]
+    /** Whether the node is a Comment */
+    readonly isComment: Scalars["Boolean"]
     /** Whether the node is a Content Node */
     readonly isContentNode: Scalars["Boolean"]
+    /** Whether the node represents the front page. */
+    readonly isFrontPage: Scalars["Boolean"]
+    /** Whether  the node represents the blog page. */
+    readonly isPostsPage: Scalars["Boolean"]
     /** Whether the object is a node in the preview state */
     readonly isPreview: Maybe<Scalars["Boolean"]>
     /** Whether the object is restricted from the current viewer */
@@ -81,6 +94,13 @@ export type ActionMonitorAction = ContentNode &
     readonly modified: Maybe<Scalars["String"]>
     /** The GMT modified time for a post. If a post was recently updated the modified field will change to match the corresponding time in GMT. */
     readonly modifiedGmt: Maybe<Scalars["String"]>
+    /**
+     * The parent of the content node.
+     * @deprecated This content type is not hierarchical and typically will not have a parent
+     */
+    readonly parent: Maybe<ActionMonitorActionToParentConnectionEdge>
+    /** The password for the action_monitor object. */
+    readonly password: Maybe<Scalars["String"]>
     /** Connection between the ActionMonitorAction type and the ActionMonitorAction type */
     readonly preview: Maybe<ActionMonitorActionToPreviewConnectionEdge>
     /** The preview data of the post that triggered this action. */
@@ -110,6 +130,14 @@ export type ActionMonitorAction = ContentNode &
     /** The unique resource identifier path */
     readonly uri: Maybe<Scalars["String"]>
   }
+
+/** The ActionMonitorAction type */
+export type ActionMonitorActionAncestorsArgs = {
+  after: InputMaybe<Scalars["String"]>
+  before: InputMaybe<Scalars["String"]>
+  first: InputMaybe<Scalars["Int"]>
+  last: InputMaybe<Scalars["Int"]>
+}
 
 /** The ActionMonitorAction type */
 export type ActionMonitorActionContentArgs = {
@@ -178,6 +206,67 @@ export enum ActionMonitorActionIdType {
   /** Identify a resource by the URI. */
   Uri = "URI",
 }
+
+/** Connection between the ActionMonitorAction type and the ActionMonitorAction type */
+export type ActionMonitorActionToActionMonitorActionConnection =
+  ActionMonitorActionConnection &
+    Connection & {
+      readonly __typename?: "ActionMonitorActionToActionMonitorActionConnection"
+      /** Edges for the ActionMonitorActionToActionMonitorActionConnection connection */
+      readonly edges: ReadonlyArray<ActionMonitorActionToActionMonitorActionConnectionEdge>
+      /** The nodes of the connection, without the edges */
+      readonly nodes: ReadonlyArray<ActionMonitorAction>
+      /** Information about pagination in a connection. */
+      readonly pageInfo: ActionMonitorActionToActionMonitorActionConnectionPageInfo
+    }
+
+/** An edge in a connection */
+export type ActionMonitorActionToActionMonitorActionConnectionEdge =
+  ActionMonitorActionConnectionEdge &
+    Edge & {
+      readonly __typename?: "ActionMonitorActionToActionMonitorActionConnectionEdge"
+      /**
+       * A cursor for use in pagination
+       * @deprecated This content type is not hierarchical and typically will not have ancestors
+       */
+      readonly cursor: Maybe<Scalars["String"]>
+      /**
+       * The item at the end of the edge
+       * @deprecated This content type is not hierarchical and typically will not have ancestors
+       */
+      readonly node: ActionMonitorAction
+    }
+
+/** Page Info on the &quot;ActionMonitorActionToActionMonitorActionConnection&quot; */
+export type ActionMonitorActionToActionMonitorActionConnectionPageInfo =
+  ActionMonitorActionConnectionPageInfo &
+    PageInfo &
+    WpPageInfo & {
+      readonly __typename?: "ActionMonitorActionToActionMonitorActionConnectionPageInfo"
+      /** When paginating forwards, the cursor to continue. */
+      readonly endCursor: Maybe<Scalars["String"]>
+      /** When paginating forwards, are there more items? */
+      readonly hasNextPage: Scalars["Boolean"]
+      /** When paginating backwards, are there more items? */
+      readonly hasPreviousPage: Scalars["Boolean"]
+      /** When paginating backwards, the cursor to continue. */
+      readonly startCursor: Maybe<Scalars["String"]>
+    }
+
+/** Connection between the ActionMonitorAction type and the ActionMonitorAction type */
+export type ActionMonitorActionToParentConnectionEdge =
+  ActionMonitorActionConnectionEdge &
+    Edge &
+    OneToOneConnection & {
+      readonly __typename?: "ActionMonitorActionToParentConnectionEdge"
+      /** Opaque reference to the nodes position in the connection. Value can be used with pagination args. */
+      readonly cursor: Maybe<Scalars["String"]>
+      /**
+       * The node of the connection, without the edges
+       * @deprecated This content type is not hierarchical and typically will not have a parent
+       */
+      readonly node: ActionMonitorAction
+    }
 
 /** Connection between the ActionMonitorAction type and the ActionMonitorAction type */
 export type ActionMonitorActionToPreviewConnectionEdge =
@@ -260,10 +349,16 @@ export type Category = DatabaseIdentifier &
     readonly enqueuedScripts: Maybe<TermNodeToEnqueuedScriptConnection>
     /** Connection between the TermNode type and the EnqueuedStylesheet type */
     readonly enqueuedStylesheets: Maybe<TermNodeToEnqueuedStylesheetConnection>
-    /** The unique resource identifier path */
+    /** The globally unique ID for the object */
     readonly id: Scalars["ID"]
+    /** Whether the node is a Comment */
+    readonly isComment: Scalars["Boolean"]
     /** Whether the node is a Content Node */
     readonly isContentNode: Scalars["Boolean"]
+    /** Whether the node represents the front page. */
+    readonly isFrontPage: Scalars["Boolean"]
+    /** Whether  the node represents the blog page. */
+    readonly isPostsPage: Scalars["Boolean"]
     /** Whether the object is restricted from the current viewer */
     readonly isRestricted: Maybe<Scalars["Boolean"]>
     /** Whether the node is a Term */
@@ -721,7 +816,8 @@ export type CategoryToTaxonomyConnectionEdge = Edge &
 
 /** A Comment object */
 export type Comment = DatabaseIdentifier &
-  Node & {
+  Node &
+  UniformResourceIdentifiable & {
     readonly __typename?: "Comment"
     /** User agent used to post the comment. This field is equivalent to WP_Comment-&gt;comment_agent and the value matching the &quot;comment_agent&quot; column in SQL. */
     readonly agent: Maybe<Scalars["String"]>
@@ -732,7 +828,10 @@ export type Comment = DatabaseIdentifier &
     readonly approved: Maybe<Scalars["Boolean"]>
     /** The author of the comment */
     readonly author: Maybe<CommentToCommenterConnectionEdge>
-    /** IP address for the author. This field is equivalent to WP_Comment-&gt;comment_author_IP and the value matching the &quot;comment_author_IP&quot; column in SQL. */
+    /**
+     * IP address for the author at the time of commenting. This field is equivalent to WP_Comment-&gt;comment_author_IP and the value matching the &quot;comment_author_IP&quot; column in SQL.
+     * @deprecated Use the ipAddress field on the edge between the comment and author
+     */
     readonly authorIp: Maybe<Scalars["String"]>
     /**
      * ID for the comment, unique among comments.
@@ -751,10 +850,22 @@ export type Comment = DatabaseIdentifier &
     readonly dateGmt: Maybe<Scalars["String"]>
     /** The globally unique identifier for the comment object */
     readonly id: Scalars["ID"]
+    /** Whether the node is a Comment */
+    readonly isComment: Scalars["Boolean"]
+    /** Whether the node is a Content Node */
+    readonly isContentNode: Scalars["Boolean"]
+    /** Whether the node represents the front page. */
+    readonly isFrontPage: Scalars["Boolean"]
+    /** Whether  the node represents the blog page. */
+    readonly isPostsPage: Scalars["Boolean"]
     /** Whether the object is restricted from the current viewer */
     readonly isRestricted: Maybe<Scalars["Boolean"]>
+    /** Whether the node is a Term */
+    readonly isTermNode: Scalars["Boolean"]
     /** Karma value for the comment. This field is equivalent to WP_Comment-&gt;comment_karma and the value matching the &quot;comment_karma&quot; column in SQL. */
     readonly karma: Maybe<Scalars["Int"]>
+    /** The permalink of the comment */
+    readonly link: Maybe<Scalars["String"]>
     /** Connection between the Comment type and the Comment type */
     readonly parent: Maybe<CommentToParentCommentConnectionEdge>
     /** The database id of the parent comment node or null if it is the root comment */
@@ -767,6 +878,8 @@ export type Comment = DatabaseIdentifier &
     readonly status: Maybe<CommentStatusEnum>
     /** Type of comment. This field is equivalent to WP_Comment-&gt;comment_type and the value matching the &quot;comment_type&quot; column in SQL. */
     readonly type: Maybe<Scalars["String"]>
+    /** The unique resource identifier path */
+    readonly uri: Maybe<Scalars["String"]>
   }
 
 /** A Comment object */
@@ -978,8 +1091,16 @@ export type CommentToCommenterConnectionEdge = CommenterConnectionEdge &
     readonly __typename?: "CommentToCommenterConnectionEdge"
     /** Opaque reference to the nodes position in the connection. Value can be used with pagination args. */
     readonly cursor: Maybe<Scalars["String"]>
+    /** The email address representing the author for this particular comment */
+    readonly email: Maybe<Scalars["String"]>
+    /** IP address of the author at the time of making this comment. This field is equivalent to WP_Comment-&gt;comment_author_IP and the value matching the &quot;comment_author_IP&quot; column in SQL. */
+    readonly ipAddress: Maybe<Scalars["String"]>
+    /** The display name of the comment author for this particular comment */
+    readonly name: Maybe<Scalars["String"]>
     /** The node of the connection, without the edges */
     readonly node: Commenter
+    /** The url entered for the comment author on this particular comment */
+    readonly url: Maybe<Scalars["String"]>
   }
 
 /** Connection between the Comment type and the ContentNode type */
@@ -1168,10 +1289,16 @@ export type ContentNode = {
   readonly enqueuedStylesheets: Maybe<ContentNodeToEnqueuedStylesheetConnection>
   /** The global unique identifier for this post. This currently matches the value stored in WP_Post-&gt;guid and the guid column in the &quot;post_objects&quot; database table. */
   readonly guid: Maybe<Scalars["String"]>
-  /** The unique resource identifier path */
+  /** The globally unique ID for the object */
   readonly id: Scalars["ID"]
+  /** Whether the node is a Comment */
+  readonly isComment: Scalars["Boolean"]
   /** Whether the node is a Content Node */
   readonly isContentNode: Scalars["Boolean"]
+  /** Whether the node represents the front page. */
+  readonly isFrontPage: Scalars["Boolean"]
+  /** Whether  the node represents the blog page. */
+  readonly isPostsPage: Scalars["Boolean"]
   /** Whether the object is a node in the preview state */
   readonly isPreview: Maybe<Scalars["Boolean"]>
   /** Whether the object is restricted from the current viewer */
@@ -1401,6 +1528,8 @@ export type ContentType = Node &
     readonly hierarchical: Maybe<Scalars["Boolean"]>
     /** The globally unique identifier of the post-type object. */
     readonly id: Scalars["ID"]
+    /** Whether the node is a Comment */
+    readonly isComment: Scalars["Boolean"]
     /** Whether the node is a Content Node */
     readonly isContentNode: Scalars["Boolean"]
     /** Whether this page is set to the static front page. */
@@ -2463,8 +2592,14 @@ export type HierarchicalContentNode = {
   readonly guid: Maybe<Scalars["String"]>
   /** The globally unique ID for the object */
   readonly id: Scalars["ID"]
+  /** Whether the node is a Comment */
+  readonly isComment: Scalars["Boolean"]
   /** Whether the node is a Content Node */
   readonly isContentNode: Scalars["Boolean"]
+  /** Whether the node represents the front page. */
+  readonly isFrontPage: Scalars["Boolean"]
+  /** Whether  the node represents the blog page. */
+  readonly isPostsPage: Scalars["Boolean"]
   /** Whether the object is a node in the preview state */
   readonly isPreview: Maybe<Scalars["Boolean"]>
   /** Whether the object is restricted from the current viewer */
@@ -2735,8 +2870,14 @@ export type HierarchicalTermNode = {
   readonly enqueuedStylesheets: Maybe<TermNodeToEnqueuedStylesheetConnection>
   /** The globally unique ID for the object */
   readonly id: Scalars["ID"]
+  /** Whether the node is a Comment */
+  readonly isComment: Scalars["Boolean"]
   /** Whether the node is a Content Node */
   readonly isContentNode: Scalars["Boolean"]
+  /** Whether the node represents the front page. */
+  readonly isFrontPage: Scalars["Boolean"]
+  /** Whether  the node represents the blog page. */
+  readonly isPostsPage: Scalars["Boolean"]
   /** Whether the object is restricted from the current viewer */
   readonly isRestricted: Maybe<Scalars["Boolean"]>
   /** Whether the node is a Term */
@@ -2856,10 +2997,18 @@ export type MediaItem = ContentNode &
     readonly fileSize: Maybe<Scalars["Int"]>
     /** The global unique identifier for this post. This currently matches the value stored in WP_Post-&gt;guid and the guid column in the &quot;post_objects&quot; database table. */
     readonly guid: Maybe<Scalars["String"]>
+    /** Whether the attachment object is password protected. */
+    readonly hasPassword: Maybe<Scalars["Boolean"]>
     /** The globally unique identifier of the attachment object. */
     readonly id: Scalars["ID"]
+    /** Whether the node is a Comment */
+    readonly isComment: Scalars["Boolean"]
     /** Whether the node is a Content Node */
     readonly isContentNode: Scalars["Boolean"]
+    /** Whether the node represents the front page. */
+    readonly isFrontPage: Scalars["Boolean"]
+    /** Whether  the node represents the blog page. */
+    readonly isPostsPage: Scalars["Boolean"]
     /** Whether the object is a node in the preview state */
     readonly isPreview: Maybe<Scalars["Boolean"]>
     /** Whether the object is restricted from the current viewer */
@@ -2893,6 +3042,8 @@ export type MediaItem = ContentNode &
     readonly parentDatabaseId: Maybe<Scalars["Int"]>
     /** The globally unique identifier of the parent node. */
     readonly parentId: Maybe<Scalars["ID"]>
+    /** The password for the attachment object. */
+    readonly password: Maybe<Scalars["String"]>
     /** The database id of the preview node */
     readonly previewRevisionDatabaseId: Maybe<Scalars["Int"]>
     /** Whether the object is a node in the preview state */
@@ -3385,10 +3536,16 @@ export type MenuItemConnectionPageInfo = {
 export type MenuItemLinkable = {
   /** The unique identifier stored in the database */
   readonly databaseId: Scalars["Int"]
-  /** The unique resource identifier path */
+  /** The globally unique ID for the object */
   readonly id: Scalars["ID"]
+  /** Whether the node is a Comment */
+  readonly isComment: Scalars["Boolean"]
   /** Whether the node is a Content Node */
   readonly isContentNode: Scalars["Boolean"]
+  /** Whether the node represents the front page. */
+  readonly isFrontPage: Scalars["Boolean"]
+  /** Whether  the node represents the blog page. */
+  readonly isPostsPage: Scalars["Boolean"]
   /** Whether the node is a Term */
   readonly isTermNode: Scalars["Boolean"]
   /** The unique resource identifier path */
@@ -3678,6 +3835,8 @@ export enum MimeTypeEnum {
   AudioXMsWma = "AUDIO_X_MS_WMA",
   /** audio/x-realaudio mime type. */
   AudioXRealaudio = "AUDIO_X_REALAUDIO",
+  /** image/avif mime type. */
+  ImageAvif = "IMAGE_AVIF",
   /** image/bmp mime type. */
   ImageBmp = "IMAGE_BMP",
   /** image/gif mime type. */
@@ -3971,8 +4130,12 @@ export type Page = ContentNode &
     readonly featuredImageId: Maybe<Scalars["ID"]>
     /** The global unique identifier for this post. This currently matches the value stored in WP_Post-&gt;guid and the guid column in the &quot;post_objects&quot; database table. */
     readonly guid: Maybe<Scalars["String"]>
+    /** Whether the page object is password protected. */
+    readonly hasPassword: Maybe<Scalars["Boolean"]>
     /** The globally unique identifier of the page object. */
     readonly id: Scalars["ID"]
+    /** Whether the node is a Comment */
+    readonly isComment: Scalars["Boolean"]
     /** Whether the node is a Content Node */
     readonly isContentNode: Scalars["Boolean"]
     /** Whether this page is set to the static front page. */
@@ -4010,6 +4173,8 @@ export type Page = ContentNode &
     readonly parentDatabaseId: Maybe<Scalars["Int"]>
     /** The globally unique identifier of the parent node. */
     readonly parentId: Maybe<Scalars["ID"]>
+    /** The password for the page object. */
+    readonly password: Maybe<Scalars["String"]>
     /** Connection between the Page type and the page type */
     readonly preview: Maybe<PageToPreviewConnectionEdge>
     /** The database id of the preview node */
@@ -4435,6 +4600,11 @@ export type Post = ContentNode &
   Previewable &
   UniformResourceIdentifiable & {
     readonly __typename?: "Post"
+    /**
+     * The ancestors of the content node.
+     * @deprecated This content type is not hierarchical and typically will not have ancestors
+     */
+    readonly ancestors: Maybe<PostToPostConnection>
     /** Connection between the NodeWithAuthor type and the User type */
     readonly author: Maybe<NodeWithAuthorToUserConnectionEdge>
     /** The database identifier of the author of the node */
@@ -4481,10 +4651,18 @@ export type Post = ContentNode &
     readonly featuredImageId: Maybe<Scalars["ID"]>
     /** The global unique identifier for this post. This currently matches the value stored in WP_Post-&gt;guid and the guid column in the &quot;post_objects&quot; database table. */
     readonly guid: Maybe<Scalars["String"]>
+    /** Whether the post object is password protected. */
+    readonly hasPassword: Maybe<Scalars["Boolean"]>
     /** The globally unique identifier of the post object. */
     readonly id: Scalars["ID"]
+    /** Whether the node is a Comment */
+    readonly isComment: Scalars["Boolean"]
     /** Whether the node is a Content Node */
     readonly isContentNode: Scalars["Boolean"]
+    /** Whether the node represents the front page. */
+    readonly isFrontPage: Scalars["Boolean"]
+    /** Whether  the node represents the blog page. */
+    readonly isPostsPage: Scalars["Boolean"]
     /** Whether the object is a node in the preview state */
     readonly isPreview: Maybe<Scalars["Boolean"]>
     /** Whether the object is restricted from the current viewer */
@@ -4503,6 +4681,13 @@ export type Post = ContentNode &
     readonly modified: Maybe<Scalars["String"]>
     /** The GMT modified time for a post. If a post was recently updated the modified field will change to match the corresponding time in GMT. */
     readonly modifiedGmt: Maybe<Scalars["String"]>
+    /**
+     * The parent of the content node.
+     * @deprecated This content type is not hierarchical and typically will not have a parent
+     */
+    readonly parent: Maybe<PostToParentConnectionEdge>
+    /** The password for the post object. */
+    readonly password: Maybe<Scalars["String"]>
     /** Whether the pings are open or closed for this particular post. */
     readonly pingStatus: Maybe<Scalars["String"]>
     /** URLs that have been pinged. */
@@ -4541,6 +4726,14 @@ export type Post = ContentNode &
     /** The unique resource identifier path */
     readonly uri: Maybe<Scalars["String"]>
   }
+
+/** The post type */
+export type PostAncestorsArgs = {
+  after: InputMaybe<Scalars["String"]>
+  before: InputMaybe<Scalars["String"]>
+  first: InputMaybe<Scalars["Int"]>
+  last: InputMaybe<Scalars["Int"]>
+}
 
 /** The post type */
 export type PostCategoriesArgs = {
@@ -4695,10 +4888,16 @@ export type PostFormat = DatabaseIdentifier &
     readonly enqueuedScripts: Maybe<TermNodeToEnqueuedScriptConnection>
     /** Connection between the TermNode type and the EnqueuedStylesheet type */
     readonly enqueuedStylesheets: Maybe<TermNodeToEnqueuedStylesheetConnection>
-    /** The unique resource identifier path */
+    /** The globally unique ID for the object */
     readonly id: Scalars["ID"]
+    /** Whether the node is a Comment */
+    readonly isComment: Scalars["Boolean"]
     /** Whether the node is a Content Node */
     readonly isContentNode: Scalars["Boolean"]
+    /** Whether the node represents the front page. */
+    readonly isFrontPage: Scalars["Boolean"]
+    /** Whether  the node represents the blog page. */
+    readonly isPostsPage: Scalars["Boolean"]
     /** Whether the object is restricted from the current viewer */
     readonly isRestricted: Maybe<Scalars["Boolean"]>
     /** Whether the node is a Term */
@@ -5322,6 +5521,63 @@ export type PostToCommentConnectionWhereArgs = {
   readonly userId: InputMaybe<Scalars["ID"]>
 }
 
+/** Connection between the Post type and the post type */
+export type PostToParentConnectionEdge = Edge &
+  OneToOneConnection &
+  PostConnectionEdge & {
+    readonly __typename?: "PostToParentConnectionEdge"
+    /** Opaque reference to the nodes position in the connection. Value can be used with pagination args. */
+    readonly cursor: Maybe<Scalars["String"]>
+    /**
+     * The node of the connection, without the edges
+     * @deprecated This content type is not hierarchical and typically will not have a parent
+     */
+    readonly node: Post
+  }
+
+/** Connection between the Post type and the post type */
+export type PostToPostConnection = Connection &
+  PostConnection & {
+    readonly __typename?: "PostToPostConnection"
+    /** Edges for the PostToPostConnection connection */
+    readonly edges: ReadonlyArray<PostToPostConnectionEdge>
+    /** The nodes of the connection, without the edges */
+    readonly nodes: ReadonlyArray<Post>
+    /** Information about pagination in a connection. */
+    readonly pageInfo: PostToPostConnectionPageInfo
+  }
+
+/** An edge in a connection */
+export type PostToPostConnectionEdge = Edge &
+  PostConnectionEdge & {
+    readonly __typename?: "PostToPostConnectionEdge"
+    /**
+     * A cursor for use in pagination
+     * @deprecated This content type is not hierarchical and typically will not have ancestors
+     */
+    readonly cursor: Maybe<Scalars["String"]>
+    /**
+     * The item at the end of the edge
+     * @deprecated This content type is not hierarchical and typically will not have ancestors
+     */
+    readonly node: Post
+  }
+
+/** Page Info on the &quot;PostToPostConnection&quot; */
+export type PostToPostConnectionPageInfo = PageInfo &
+  PostConnectionPageInfo &
+  WpPageInfo & {
+    readonly __typename?: "PostToPostConnectionPageInfo"
+    /** When paginating forwards, the cursor to continue. */
+    readonly endCursor: Maybe<Scalars["String"]>
+    /** When paginating forwards, are there more items? */
+    readonly hasNextPage: Scalars["Boolean"]
+    /** When paginating backwards, are there more items? */
+    readonly hasPreviousPage: Scalars["Boolean"]
+    /** When paginating backwards, the cursor to continue. */
+    readonly startCursor: Maybe<Scalars["String"]>
+  }
+
 /** Connection between the Post type and the postFormat type */
 export type PostToPostFormatConnection = Connection &
   PostFormatConnection & {
@@ -5757,8 +6013,14 @@ export type Previewable = {
 /** The reading setting type */
 export type ReadingSettings = {
   readonly __typename?: "ReadingSettings"
+  /** The ID of the page that should display the latest posts */
+  readonly pageForPosts: Maybe<Scalars["Int"]>
+  /** The ID of the page that should be displayed on the front page */
+  readonly pageOnFront: Maybe<Scalars["Int"]>
   /** Blog pages show at most. */
   readonly postsPerPage: Maybe<Scalars["Int"]>
+  /** What to show on the front page */
+  readonly showOnFront: Maybe<Scalars["String"]>
 }
 
 /** Input for the registerUser mutation. */
@@ -8030,7 +8292,13 @@ export type Settings = {
   /** Settings of the the string Settings Group */
   readonly generalSettingsUrl: Maybe<Scalars["String"]>
   /** Settings of the the integer Settings Group */
+  readonly readingSettingsPageForPosts: Maybe<Scalars["Int"]>
+  /** Settings of the the integer Settings Group */
+  readonly readingSettingsPageOnFront: Maybe<Scalars["Int"]>
+  /** Settings of the the integer Settings Group */
   readonly readingSettingsPostsPerPage: Maybe<Scalars["Int"]>
+  /** Settings of the the string Settings Group */
+  readonly readingSettingsShowOnFront: Maybe<Scalars["String"]>
   /** Settings of the the integer Settings Group */
   readonly writingSettingsDefaultCategory: Maybe<Scalars["Int"]>
   /** Settings of the the string Settings Group */
@@ -8058,10 +8326,16 @@ export type Tag = DatabaseIdentifier &
     readonly enqueuedScripts: Maybe<TermNodeToEnqueuedScriptConnection>
     /** Connection between the TermNode type and the EnqueuedStylesheet type */
     readonly enqueuedStylesheets: Maybe<TermNodeToEnqueuedStylesheetConnection>
-    /** The unique resource identifier path */
+    /** The globally unique ID for the object */
     readonly id: Scalars["ID"]
+    /** Whether the node is a Comment */
+    readonly isComment: Scalars["Boolean"]
     /** Whether the node is a Content Node */
     readonly isContentNode: Scalars["Boolean"]
+    /** Whether the node represents the front page. */
+    readonly isFrontPage: Scalars["Boolean"]
+    /** Whether  the node represents the blog page. */
+    readonly isPostsPage: Scalars["Boolean"]
     /** Whether the object is restricted from the current viewer */
     readonly isRestricted: Maybe<Scalars["Boolean"]>
     /** Whether the node is a Term */
@@ -8573,10 +8847,16 @@ export type TermNode = {
   readonly enqueuedScripts: Maybe<TermNodeToEnqueuedScriptConnection>
   /** Connection between the TermNode type and the EnqueuedStylesheet type */
   readonly enqueuedStylesheets: Maybe<TermNodeToEnqueuedStylesheetConnection>
-  /** The unique resource identifier path */
+  /** The globally unique ID for the object */
   readonly id: Scalars["ID"]
+  /** Whether the node is a Comment */
+  readonly isComment: Scalars["Boolean"]
   /** Whether the node is a Content Node */
   readonly isContentNode: Scalars["Boolean"]
+  /** Whether the node represents the front page. */
+  readonly isFrontPage: Scalars["Boolean"]
+  /** Whether  the node represents the blog page. */
+  readonly isPostsPage: Scalars["Boolean"]
   /** Whether the object is restricted from the current viewer */
   readonly isRestricted: Maybe<Scalars["Boolean"]>
   /** Whether the node is a Term */
@@ -8810,10 +9090,16 @@ export type ThemeConnectionPageInfo = {
 
 /** Any node that has a URI */
 export type UniformResourceIdentifiable = {
-  /** The unique resource identifier path */
+  /** The globally unique ID for the object */
   readonly id: Scalars["ID"]
+  /** Whether the node is a Comment */
+  readonly isComment: Scalars["Boolean"]
   /** Whether the node is a Content Node */
   readonly isContentNode: Scalars["Boolean"]
+  /** Whether the node represents the front page. */
+  readonly isFrontPage: Scalars["Boolean"]
+  /** Whether  the node represents the blog page. */
+  readonly isPostsPage: Scalars["Boolean"]
   /** Whether the node is a Term */
   readonly isTermNode: Scalars["Boolean"]
   /** The unique resource identifier path */
@@ -9105,8 +9391,14 @@ export type UpdateSettingsInput = {
   readonly generalSettingsTitle: InputMaybe<Scalars["String"]>
   /** Site URL. */
   readonly generalSettingsUrl: InputMaybe<Scalars["String"]>
+  /** The ID of the page that should display the latest posts */
+  readonly readingSettingsPageForPosts: InputMaybe<Scalars["Int"]>
+  /** The ID of the page that should be displayed on the front page */
+  readonly readingSettingsPageOnFront: InputMaybe<Scalars["Int"]>
   /** Blog pages show at most. */
   readonly readingSettingsPostsPerPage: InputMaybe<Scalars["Int"]>
+  /** What to show on the front page */
+  readonly readingSettingsShowOnFront: InputMaybe<Scalars["String"]>
   /** Default post category. */
   readonly writingSettingsDefaultCategory: InputMaybe<Scalars["Int"]>
   /** Default post format. */
@@ -9236,8 +9528,14 @@ export type User = Commenter &
     readonly firstName: Maybe<Scalars["String"]>
     /** The globally unique identifier for the user object. */
     readonly id: Scalars["ID"]
+    /** Whether the node is a Comment */
+    readonly isComment: Scalars["Boolean"]
     /** Whether the node is a Content Node */
     readonly isContentNode: Scalars["Boolean"]
+    /** Whether the node represents the front page. */
+    readonly isFrontPage: Scalars["Boolean"]
+    /** Whether  the node represents the blog page. */
+    readonly isPostsPage: Scalars["Boolean"]
     /** Whether the object is restricted from the current viewer */
     readonly isRestricted: Maybe<Scalars["Boolean"]>
     /** Whether the node is a Term */
@@ -10198,6 +10496,7 @@ export type PageQuery = { readonly __typename?: "RootQuery" } & {
   readonly page: Maybe<
     | { readonly __typename: "ActionMonitorAction" }
     | { readonly __typename: "Category" }
+    | { readonly __typename: "Comment" }
     | { readonly __typename: "ContentType" }
     | { readonly __typename: "MediaItem" }
     | ({ readonly __typename: "Page" } & Pick<Page, "title" | "content">)

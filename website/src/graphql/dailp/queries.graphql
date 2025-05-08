@@ -88,6 +88,7 @@ query DocumentContents(
     translatedPages @skip(if: $isReference) {
       pageNumber
       paragraphs {
+        __typename
         source {
           __typename
           ... on AnnotatedForm {
@@ -128,7 +129,29 @@ fragment DocFormFields on AnnotatedDoc {
   }
 }
 
+fragment ParagraphFormFields on DocumentParagraph {
+  __typename
+  id
+  index
+  translation
+  source {
+    __typename
+    ...FormFields
+  }
+  comments {
+    id
+  }
+}
+
+fragment CommentFormFields on Comment {
+  id
+  textContent
+  commentType
+  edited
+}
+
 fragment FormFields on AnnotatedForm {
+  __typename
   id
   index
   source
@@ -327,6 +350,14 @@ query Morpheme($documentId: UUID, $morphemeGloss: String!) {
   }
 }
 
+query UserInfo {
+  userInfo {
+    id
+    email
+    groups
+  }
+}
+
 mutation NewPage($data: JSON!) {
   updatePage(data: $data)
 }
@@ -443,6 +474,7 @@ fragment CommentFields on Comment {
     displayName
   }
   textContent
+  edited
   commentType
 }
 
@@ -569,7 +601,6 @@ mutation UpdateParagraph($paragraph: ParagraphUpdate!) {
   updateParagraph(paragraph: $paragraph) {
     id
     translation
-    index
   }
 }
 
@@ -589,8 +620,46 @@ mutation UpdateDocumentMetadata($document: DocumentMetadataUpdate!) {
   updateDocumentMetadata(document: $document)
 }
 
+mutation UpdateComment($comment: CommentUpdate!) {
+  updateComment(comment: $comment) {
+    ... on AnnotatedForm {
+      __typename
+      id
+      comments {
+        ...CommentFields
+      }
+    }
+    ... on DocumentParagraph {
+      __typename
+      id
+      comments {
+        ...CommentFields
+      }
+    }
+  }
+}
+
 mutation PostComment($input: PostCommentInput!) {
   postComment(input: $input) {
+    ... on AnnotatedForm {
+      __typename
+      id
+      comments {
+        ...CommentFields
+      }
+    }
+    ... on DocumentParagraph {
+      __typename
+      id
+      comments {
+        ...CommentFields
+      }
+    }
+  }
+}
+
+mutation DeleteComment($commentId: DeleteCommentInput!) {
+  deleteComment(input: $commentId) {
     ... on AnnotatedForm {
       __typename
       id

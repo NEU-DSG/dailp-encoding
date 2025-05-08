@@ -1,43 +1,43 @@
 import { groupBy } from "lodash"
-import React, { ReactNode } from "react"
+import React, { ReactNode, useEffect } from "react"
 import { useState } from "react"
-import { AiFillSound } from "react-icons/ai/index"
 import { GrDown, GrUp } from "react-icons/gr/index"
-import { IoEllipsisHorizontalCircle } from "react-icons/io5/index"
-import {
-  MdClose,
-  MdNotes,
-  MdOutlineComment,
-  MdRecordVoiceOver,
-} from "react-icons/md/index"
-import { OnChangeValue } from "react-select"
+import { MdClose } from "react-icons/md/index"
 import { Disclosure, DisclosureContent, useDisclosureState } from "reakit"
 import { unstable_Form as Form, unstable_FormInput as FormInput } from "reakit"
 import * as Dailp from "src/graphql/dailp"
-import { useCredentials } from "./auth"
-import CommentPanel from "./comment-panel"
-import { AudioPlayer, Button, IconButton } from "./components"
-import { CommentSection } from "./components/comment-section"
-import { CustomCreatable } from "./components/creatable"
-import { EditWordAudio } from "./components/edit-word-audio"
+import { useCognitoUserGroups, useCredentials } from "./auth"
+import { CommentAction, CommentPanel } from "./comment-panel"
+import { useCommentStateContext } from "./comment-state-context"
+import { Button, IconButton } from "./components"
 import { SubtleButton } from "./components/subtle-button"
-import {
-  subtleButton,
-  subtleButtonActive,
-} from "./components/subtle-button.css"
-import { EditButton, EditWordFeature } from "./edit-word-feature"
-import { formInput } from "./edit-word-feature.css"
+import { EditButton as ParagraphEditButton } from "./edit-paragraph-feature"
+import { useForm as useParagraphForm } from "./edit-paragraph-form-context"
+import { EditButton as WordEditButton } from "./edit-word-feature"
 import { useForm } from "./edit-word-form-context"
-import { content } from "./footer.css"
 import * as css from "./panel-layout.css"
 import ParagraphPanel from "./paragraph-panel"
 import { usePreferences } from "./preferences-context"
 import { TranslatedParagraph } from "./segment"
-import { VerticalMorphemicSegmentation } from "./word-panel"
+import { WordPanel } from "./word-panel"
 
 enum PanelType {
   WordPanel,
   EditWordPanel,
+}
+
+enum ParagraphPanelType {
+  ParagraphPanel,
+  EditParagraphPanel,
+}
+
+// A label associated with a list of options.
+type GroupedOption = {
+  label: string
+  options: {
+    value: string
+    label: string
+  }[]
 }
 
 export type PanelSegment = Dailp.FormFieldsFragment | TranslatedParagraph
@@ -52,12 +52,23 @@ export const PanelLayout = (p: {
   segment: PanelSegment | null
   setContent: (content: PanelSegment | null) => void
 }) => {
-  if (!p.segment) {
-    return null
-  }
+  const { form, isEditing, setIsEditing } = useForm()
+  const { paragraphForm, isEditingParagraph, setIsEditingParagraph } =
+    useParagraphForm()
 
-  const { form, isEditing } = useForm()
+  const [prevSegment, setPrevSegment] = useState<PanelSegment | null>(p.segment)
+
+  useEffect(() => {
+    // If the segment has changed, reset the editing states
+    if (p.segment && p.segment !== prevSegment) {
+      setIsEditing(false) // Reset word editing state
+      setIsEditingParagraph(false) // Reset paragraph editing state (if applicable)
+      setPrevSegment(p.segment) // Update the previous segment to the new one
+    }
+  }, [p.segment, prevSegment, setIsEditing, setIsEditingParagraph])
+
   const token = useCredentials()
+  const userGroups = useCognitoUserGroups()
 
   // Get all global glosses / matching tags to display.
   const { cherokeeRepresentation } = usePreferences()
@@ -65,7 +76,7 @@ export const PanelLayout = (p: {
     variables: { system: cherokeeRepresentation },
   })
 
-  const [isCommenting, setIsCommenting] = useState(false)
+  const { isCommenting, setIsCommenting } = useCommentStateContext()
 
   if (!data) {
     return <p>Loading...</p>
@@ -91,22 +102,30 @@ export const PanelLayout = (p: {
     }
   )
 
+  if (!p.segment) {
+    return null
+  }
+
   let panel = null
 
   // Display the paragraph panel if the segment type is a word (AnnotatedForm).
   if (isCommenting === true) {
     if (p.segment != null) {
       panel = (
-        <CommentPanel segment={p.segment} setIsCommenting={setIsCommenting} />
+        <CommentPanel
+          segment={p.segment}
+          setIsCommenting={setIsCommenting}
+          commentAction={CommentAction.PostComment}
+        />
       )
     }
   } else if (p.segment.__typename === "AnnotatedForm") {
     panel = (
       <>
-        {/* If the user is logged in, then display an edit button on the word
+        {/* If the user belongs to any groups, then display an edit button on the word
         panel along with its corresponding formatted header. Otherwise, display
         the normal word panel. */}
-        {token ? (
+        {userGroups.length > 0 ? (
           <header className={css.wordPanelHeader}>
             <div className={css.headerButtons}>
               {!isEditing && (
@@ -117,7 +136,7 @@ export const PanelLayout = (p: {
                   <MdClose size={32} />
                 </IconButton>
               )}
-              <EditButton />
+              <WordEditButton />
             </div>
             <h2 className={css.editCherHeader}>{p.segment.source}</h2>
           </header>
@@ -139,14 +158,14 @@ export const PanelLayout = (p: {
         {/* Renders audio recording. */}
         {isEditing ? (
           <Form {...form}>
-            <PanelContent
+            <WordPanel
               panel={PanelType.EditWordPanel}
               word={p.segment}
               options={options}
             />
           </Form>
         ) : (
-          <PanelContent
+          <WordPanel
             panel={PanelType.WordPanel}
             word={p.segment}
             // options are only required for editing
@@ -158,7 +177,59 @@ export const PanelLayout = (p: {
     )
   } else if (p.segment.__typename === "DocumentParagraph") {
     // Display the paragraph panel if the segment type is a paragraph.
-    panel = <ParagraphPanel segment={p.segment} setContent={p.setContent} />
+    // console.log(p.segment)
+    panel = (
+      <>
+        {userGroups.length > 0 ? (
+          <header className={css.wordPanelHeader}>
+            <div className={css.headerButtons}>
+              {!isEditingParagraph && (
+                <IconButton
+                  onClick={() => p.setContent(null)}
+                  aria-label="Dismiss selected paragraph information"
+                >
+                  <MdClose size={32} />
+                </IconButton>
+              )}
+              <ParagraphEditButton />
+            </div>
+            <h1
+              className={css.noSpaceBelow}
+            >{`Paragraph ${p.segment.index}`}</h1>
+          </header>
+        ) : (
+          <>
+            <IconButton
+              className={css.wordPanelButton.basic}
+              onClick={() => p.setContent(null)}
+              aria-label="Dismiss selected paragraph information"
+            >
+              <MdClose size={32} />
+            </IconButton>
+            <header className={css.wordPanelHeader}>
+              <h1
+                className={css.noSpaceBelow}
+              >{`Paragraph ${p.segment.index}`}</h1>
+            </header>
+          </>
+        )}
+        {isEditingParagraph ? (
+          <Form {...paragraphForm}>
+            <ParagraphPanel
+              panel={ParagraphPanelType.EditParagraphPanel}
+              paragraph={p.segment}
+            />
+          </Form>
+        ) : (
+          <>
+            <ParagraphPanel
+              panel={ParagraphPanelType.ParagraphPanel}
+              paragraph={p.segment}
+            />
+          </>
+        )}
+      </>
+    )
   }
 
   return (
@@ -179,241 +250,6 @@ export const PanelLayout = (p: {
           </Button>
         ))}
     </div>
-  )
-}
-
-function WordFeature(p: {
-  word: Dailp.FormFieldsFragment
-  feature: keyof Dailp.FormFieldsFragment
-  label?: string
-}) {
-  return <div>{p.word[p.feature]}</div>
-}
-
-// A label associated with a list of options.
-type GroupedOption = {
-  label: string
-  options: {
-    value: string
-    label: string
-  }[]
-}
-
-/** Dispatches to the corresponding panel type to render a normal word panel or an editable word panel. */
-export const PanelContent = (p: {
-  panel: PanelType
-  word: Dailp.FormFieldsFragment
-  options: GroupedOption[]
-}) => {
-  // what should be used to render word features? eg, syllabary, commentary, etc.
-  const PanelFeatureComponent =
-    p.panel === PanelType.EditWordPanel ? EditWordFeature : WordFeature
-
-  // what should be used to render word audio, if present?
-  const PanelAudioComponent =
-    p.panel === PanelType.EditWordPanel ? EditWordAudio : WordAudio
-
-  // Contains components rendering data of a word's phonetics.
-  const phoneticsContent = (
-    <>
-      {p.word.source && (
-        <PanelFeatureComponent
-          word={p.word}
-          feature={"source"}
-          label="Syllabary Characters"
-        />
-      )}
-
-      {p.word.romanizedSource && (
-        <PanelFeatureComponent
-          word={p.word}
-          feature={"romanizedSource"}
-          label="Simple Phonetics"
-        />
-      )}
-    </>
-  )
-
-  const translation = (
-    <>
-      {/* If the english gloss string is not empty, then display it. */}
-      {p.word.englishGloss[0] !== "" && (
-        <PanelFeatureComponent
-          word={p.word}
-          feature={"englishGloss"}
-          label="English Translation"
-        />
-      )}
-    </>
-  )
-
-  const { cherokeeRepresentation } = usePreferences()
-
-  // Contains components rendering a word's segments and its english translation.
-  const wordPartsContent = (
-    <>
-      {p.panel === PanelType.WordPanel ? (
-        <VerticalMorphemicSegmentation
-          cherokeeRepresentation={cherokeeRepresentation}
-          segments={p.word.segments}
-        />
-      ) : (
-        <EditSegmentation segments={p.word.segments} options={p.options} />
-      )}
-
-      {/* Since editing translations is not yet supported, just display the translation for now. */}
-      <div style={{ display: "flex" }}>‘{p.word.englishGloss}’</div>
-
-      {/* {p.panel === PanelType.WordPanel ? (
-        <div style={{ display: "flex" }}>‘{translation}’</div>
-      ) : (
-        // should this be a call to the parameterized component as well?
-        <>{translation}</>
-      )} */}
-    </>
-  )
-
-  // Contains a component rendering a word's commentary.
-  const commentaryContent = (
-    <PanelFeatureComponent
-      word={p.word}
-      feature={"commentary"}
-      input="textarea"
-    />
-  )
-
-  const discussionContent = <CommentSection parent={p.word} />
-
-  return (
-    <>
-      {(p.word.editedAudio.length || p.panel === PanelType.EditWordPanel) && (
-        <CollapsiblePanel
-          title={"Audio"}
-          content={<PanelAudioComponent word={p.word} />}
-          icon={
-            <AiFillSound size={24} className={css.wordPanelButton.colpleft} />
-          }
-        />
-      )}
-      <CollapsiblePanel
-        title={"Phonetics"}
-        content={phoneticsContent}
-        icon={
-          <MdRecordVoiceOver
-            size={24}
-            className={css.wordPanelButton.colpleft}
-          />
-        }
-      />
-
-      {/* If there are no segments, does not display Word Parts panel */}
-      {p.word.segments.length > 0 && (
-        <CollapsiblePanel
-          title={"Word Parts"}
-          content={wordPartsContent}
-          icon={
-            <IoEllipsisHorizontalCircle
-              size={24}
-              className={css.wordPanelButton.colpleft}
-            />
-          }
-        />
-      )}
-
-      {/* If there is no commentary, does not display Commentary panel */}
-      {p.word.commentary && p.word.commentary.length > 0 && (
-        <CollapsiblePanel
-          title={"Lingustic commentary"}
-          content={commentaryContent}
-          icon={<MdNotes size={24} className={css.wordPanelButton.colpleft} />}
-        />
-      )}
-
-      <CollapsiblePanel
-        title={"Discussion"}
-        content={discussionContent}
-        icon={
-          <MdOutlineComment
-            size={24}
-            className={css.wordPanelButton.colpleft}
-          />
-        }
-      />
-    </>
-  )
-}
-
-// An editable view of a word's parts / segments.
-const EditSegmentation = (p: {
-  segments: Dailp.FormFieldsFragment["segments"]
-  options: GroupedOption[]
-}) => {
-  const { form } = useForm()
-
-  return (
-    <table className={css.tableContainer}>
-      <tbody>
-        {p.segments.map((segment, index) => (
-          <tr style={{ display: "flex" }}>
-            <td className={css.editMorphemeCells}>
-              {/* This is disabled at the moment to be fully implemented later. */}
-              <FormInput
-                {...form}
-                disabled
-                className={formInput}
-                name={["word", "segments", index.toString(), "morpheme"]}
-              />
-            </td>
-            <td className={css.editGlossCells}>
-              {/* Displays global glosses and allows user to create custom glosses on keyboard input. */}
-              <EditGloss
-                // TODO: this key will need to be changed later since a morpheme can be changed
-                key={segment.morpheme}
-                morpheme={segment}
-                index={index}
-                options={p.options}
-              />
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  )
-}
-
-// Component that allows editing of a morpheme's gloss. Users can enter a custom gloss or select from global glosses / functional tags.
-const EditGloss = (props: {
-  morpheme: Dailp.FormFieldsFragment["segments"][0]
-  index: number
-  options: GroupedOption[]
-}) => {
-  const { form } = useForm()
-
-  // Handles gloss selection and creation of new glosses.
-  const handleChange = (
-    newValue: OnChangeValue<{ value: string; label: string }, false>
-  ) => {
-    if (newValue?.value) {
-      const newMorpheme: Dailp.FormFieldsFragment["segments"][0] = {
-        ...props.morpheme,
-        gloss: newValue.value,
-      }
-
-      // Updates current list of morphemes to include one with a matching tag,
-      // or one with a custom gloss.
-      form.update(["word", "segments", props.index], newMorpheme)
-    }
-  }
-
-  return (
-    <CustomCreatable
-      onChange={handleChange}
-      options={props.options}
-      defaultValue={{
-        value: props.morpheme.gloss,
-        label: props.morpheme.matchingTag?.title ?? props.morpheme.gloss,
-      }}
-    />
   )
 }
 
@@ -442,30 +278,5 @@ export const CollapsiblePanel = (p: {
         {p.content}
       </DisclosureContent>
     </div>
-  )
-}
-
-export const WordAudio = (p: { word: Dailp.FormFieldsFragment }) => {
-  if (p.word.editedAudio.length === 0) return null
-  return (
-    <>
-      {p.word.editedAudio.map((audioTrack) => (
-        <AudioPlayer
-          audioUrl={audioTrack.resourceUrl}
-          slices={
-            audioTrack.startTime !== undefined &&
-            audioTrack.startTime !== null &&
-            audioTrack.endTime !== undefined &&
-            audioTrack.endTime !== null
-              ? {
-                  start: audioTrack.startTime,
-                  end: audioTrack.endTime,
-                }
-              : undefined
-          }
-          showProgress
-        />
-      ))}
-    </>
   )
 }

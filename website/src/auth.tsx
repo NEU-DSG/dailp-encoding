@@ -1,5 +1,6 @@
 import {
   AuthenticationDetails,
+  CognitoIdToken,
   CognitoUser,
   CognitoUserAttribute,
   CognitoUserPool,
@@ -7,6 +8,7 @@ import {
 } from "amazon-cognito-identity-js"
 import React, { createContext, useContext, useEffect, useState } from "react"
 import { navigate } from "vite-plugin-ssr/client/router"
+import { UserGroup } from "./graphql/dailp"
 
 type UserContextType = {
   user: CognitoUser | null
@@ -17,6 +19,7 @@ type UserContextType = {
     loginUser: (username: string, password: string) => void
     resetPassword: (username: string) => void
     changePassword: (verificationCode: string, newPassword: string) => void
+    signOutUser: () => void
   }
 }
 
@@ -27,10 +30,15 @@ const userPool = new CognitoUserPool({
   ClientId: process.env["DAILP_USER_POOL_CLIENT"] ?? "",
 })
 
+/** Get the currently signed in user, if there is one. */
+export function getCurrentUser(): CognitoUser | null {
+  return userPool.getCurrentUser()
+}
+
 export const UserProvider = (props: { children: any }) => {
   const [user, setUser] = useState<CognitoUser | null>(
     // gets the last user that logged in via this user pool
-    userPool.getCurrentUser()
+    getCurrentUser()
   )
 
   function refreshToken(): Promise<CognitoUserSession | null> {
@@ -268,6 +276,12 @@ export const UserProvider = (props: { children: any }) => {
     })
   }
 
+  function signOutUser() {
+    user?.signOut(() => {
+      setUser(null)
+    })
+  }
+
   return (
     <UserContext.Provider
       value={{
@@ -279,6 +293,7 @@ export const UserProvider = (props: { children: any }) => {
           loginUser,
           resetPassword,
           changePassword,
+          signOutUser,
         },
       }}
     >
@@ -306,24 +321,32 @@ export const useCredentials = () => {
   return creds ?? null
 }
 
-export const useCognitoUserGroups = () => {
+export const useCognitoUserGroups = (): UserGroup[] => {
   const { user } = useContext(UserContext)
   const groups: string[] =
     user?.getSignInUserSession()?.getIdToken().payload["cognito:groups"] ?? []
   return groups
+    .map((g) => g.toUpperCase())
+    .filter((g): g is UserGroup =>
+      Object.values(UserGroup).includes(g as UserGroup)
+    )
 }
 
+/**
+ * A user has one and only one `role`. A role is typically a users most
+ * permissive `group`, or `READER` if they have no `groups`.
+ */
 export enum UserRole {
-  READER = "READER",
-  CONTRIBUTOR = "CONTRIBUTOR",
-  EDITOR = "EDITOR",
+  Reader = "READER",
+  Contributor = "CONTRIBUTOR",
+  Editor = "EDITOR",
 }
 
 export function useUserRole(): UserRole {
   const groups = useCognitoUserGroups()
-  if (groups.includes("Editors")) return UserRole.EDITOR
-  else if (groups.includes("Contributors")) return UserRole.CONTRIBUTOR
-  else return UserRole.READER
+  if (groups.includes(UserGroup.Editors)) return UserRole.Editor
+  else if (groups.includes(UserGroup.Contributors)) return UserRole.Contributor
+  else return UserRole.Reader
 }
 
 export const useUserId = () => {
@@ -337,22 +360,23 @@ function getUserSessionAsync(
   user: CognitoUser
 ): Promise<CognitoUserSession | null> {
   return new Promise((res, _rej) => {
-    user.getSession(function (err: Error, result: CognitoUserSession | null) {
+    user.getSession(function (_err: Error, result: CognitoUserSession | null) {
       res(result)
     })
   })
 }
 
 /**
- * Plain old function to get credentials. If at all possible, use a hook for this.
+ * Get the user's id token, if they are signed in.
+ *
+ * Note: You should use the `useCredentials` hook if you are writing a component.
  */
-export async function getCredentials() {
-  const user = userPool.getCurrentUser()
+export async function getIdToken(): Promise<CognitoIdToken | null> {
+  const user = getCurrentUser()
   if (!user) return null
 
   const sess = await getUserSessionAsync(user)
-  const token = sess?.getIdToken().getJwtToken()
-  return token ?? null
+  return sess?.getIdToken() ?? null
 }
 
 /**

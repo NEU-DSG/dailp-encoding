@@ -32,7 +32,7 @@ in {
       let apiUrl = "\${aws_api_gateway_deployment.functions_api.invoke_url}";
       in {
         lifecycle.prevent_destroy = false;
-        name = "dailp-${if config.setup.stage == "prod" then "" else config.setup.stage}";
+        name = "dailp${if config.setup.stage == "prod" then "" else "-${config.setup.stage}"}";
         description = "Digital Archive of Indigenous Language Persistence";
         repository = lib.toLower (getEnv "GIT_REPOSITORY_URL");
         oauth_token = getEnv "OAUTH_TOKEN";
@@ -66,6 +66,7 @@ in {
             DAILP_IDENTITY_POOL = "$\{aws_cognito_identity_pool.main.id}";
             TF_STAGE = config.setup.stage;
             VITE_DEPLOYMENT_ENV = config.setup.stage;
+            CF_URL = "\${aws_cloudfront_distribution.media_distribution.domain_name}";
           };
           frontend = {
             artifacts = {
@@ -74,7 +75,6 @@ in {
             };
             phases = {
               build.commands = [
-                "yum install -y curl"
                 "curl https://sh.rustup.rs -sSf | sh -s -- -y"
                 "source $HOME/.cargo/env"
                 "cd website"

@@ -10,6 +10,7 @@ import {
   unstable_FormLabel as FormLabel,
 } from "reakit"
 import { unstable_FormSubmitButton as FormSubmitButton } from "reakit"
+import { UserRole, useUserRole } from "./auth"
 import { IconButton } from "./components"
 import { IconTextButton } from "./components/button"
 import { useForm } from "./edit-doc-data-form-context"
@@ -29,7 +30,6 @@ export const EditButton = () => {
             className={css.cancelButton}
             round={false}
             onClick={() => {
-              // console.log("ASDASDASDASD")
               setIsEditing(false)
             }}
           >
@@ -50,7 +50,6 @@ export const EditButton = () => {
           icon={<HiPencilAlt />}
           className={css.editPanelButton}
           onClick={() => {
-            // console.log("QWEQWEQWEQWE")
             setIsEditing(true)
           }}
         >
@@ -64,7 +63,6 @@ export const EditButton = () => {
 /** Displays a FormInput with its corresponding feature data from the Reakit form. */
 export const EditDocPanel = (props: { document?: Dailp.AnnotatedDoc }) => {
   let docData = props.document as unknown as Dailp.AnnotatedDoc
-  // console.log("document id = " + docData.id)
   const { form } = useForm()
 
   if (!form || !form.values.document) {
@@ -78,13 +76,9 @@ export const EditDocPanel = (props: { document?: Dailp.AnnotatedDoc }) => {
 
   const handleDateChange = (e: any) => {
     const selectedDateValue = e as Date
-    // console.log("selected date = " + selectedDateValue)
 
     if (selectedDateValue) {
       setSelectedDate(selectedDateValue)
-      // console.log(selectedDate?.getDate());
-      // console.log(selectedDate?.getMonth());
-      // console.log(selectedDate?.getFullYear());
 
       const selectedDay = selectedDateValue.getDate()
       const selectedMonth = selectedDateValue.getMonth() + 1
@@ -106,6 +100,8 @@ export const EditDocPanel = (props: { document?: Dailp.AnnotatedDoc }) => {
     }
   }, [day, month, year])
 
+  let userRole = useUserRole()
+
   return (
     <>
       {/* Display a label for the form input if it exists. */}
@@ -119,6 +115,7 @@ export const EditDocPanel = (props: { document?: Dailp.AnnotatedDoc }) => {
         {...form}
         className={css.formInput}
         name={["document", "title"]}
+        disabled={!(userRole == UserRole.Editor)}
       />
       <p />
 
@@ -133,6 +130,7 @@ export const EditDocPanel = (props: { document?: Dailp.AnnotatedDoc }) => {
           onChange={(date: any) => handleDateChange(date)}
           value={selectedDate}
           format="dd-MM-y"
+          disabled={!(userRole == UserRole.Editor)}
         />
       </div>
     </>

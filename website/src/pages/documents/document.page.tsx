@@ -1,10 +1,8 @@
 import { DialogContent, DialogOverlay } from "@reach/dialog"
 import "@reach/dialog/styles.css"
-import React, { useEffect, useRef, useState } from "react"
+import React, { useEffect, useState } from "react"
 import { isMobile } from "react-device-detect"
 import { Helmet } from "react-helmet"
-import { HiPencilAlt } from "react-icons/hi"
-import { IoCheckmarkSharp } from "react-icons/io5"
 import {
   MdOutlineBookmarkAdd,
   MdOutlineBookmarkRemove,
@@ -14,7 +12,6 @@ import { RiArrowUpCircleFill } from "react-icons/ri/index"
 import {
   Dialog,
   DialogBackdrop,
-  unstable_Form as Form,
   Tab,
   TabList,
   TabPanel,
@@ -22,11 +19,17 @@ import {
 } from "reakit"
 import { navigate } from "vite-plugin-ssr/client/router"
 import { useUser } from "src/auth"
+import { CommentStateProvider } from "src/comment-state-context"
 import { AudioPlayer, Breadcrumbs, Button, Link } from "src/components"
-import { IconButton, IconTextButton } from "src/components/button"
+import { IconTextButton } from "src/components/button"
+import { CommentValueProvider } from "src/components/edit-comment-feature"
 import { useMediaQuery } from "src/custom-hooks"
 import { FormProvider as FormProviderDoc } from "src/edit-doc-data-form-context"
-import { EditButton } from "src/edit-word-feature"
+import {
+  FormProvider as FormProviderParagraph,
+  useForm as useParagraphForm,
+} from "src/edit-paragraph-form-context"
+import { EditWordCheckProvider } from "src/edit-word-check-context"
 import { FormProvider, useForm } from "src/edit-word-form-context"
 import * as Dailp from "src/graphql/dailp"
 import Layout from "src/layout"
@@ -36,16 +39,10 @@ import { DocumentInfo } from "src/pages/documents/document-info"
 import { PanelDetails, PanelLayout, PanelSegment } from "src/panel-layout"
 import { usePreferences } from "src/preferences-context"
 import { useLocation } from "src/renderer/PageShell"
-import {
-  chapterRoute,
-  collectionWordPath,
-  documentDetailsRoute,
-  documentRoute,
-} from "src/routes"
+import { chapterRoute, collectionWordPath } from "src/routes"
 import { useScrollableTabState } from "src/scrollable-tabs"
 import { AnnotatedForm, DocumentPage } from "src/segment"
 import { mediaQueries } from "src/style/constants"
-import { fullWidth } from "src/style/utils.css"
 import { BasicMorphemeSegment, LevelOfDetail } from "src/types"
 import PageImages from "../../page-image"
 import * as css from "./document.css"
@@ -187,7 +184,9 @@ export const TabSet = ({ doc }: { doc: Document }) => {
         id={`${Tabs.ANNOTATION}-panel`}
         tabId={Tabs.ANNOTATION}
       >
-        <TranslationTab doc={doc} />
+        <EditWordCheckProvider>
+          <TranslationTab doc={doc} />
+        </EditWordCheckProvider>
       </TabPanel>
 
       <TabPanel
@@ -276,73 +275,83 @@ export const TranslationTab = ({ doc }: { doc: Document }) => {
 
   return (
     <FormProvider>
-      <DialogOverlay
-        className={css.morphemeDialogBackdrop}
-        isOpen={dialogOpen}
-        onDismiss={closeDialog}
-      >
-        <DialogContent
-          className={css.unpaddedMorphemeDialog}
-          aria-label="Segment Details"
+      <FormProviderParagraph>
+        <DialogOverlay
+          className={css.morphemeDialogBackdrop}
+          isOpen={dialogOpen}
+          onDismiss={closeDialog}
         >
-          {selectedMorpheme ? (
-            <MorphemeDetails
-              documentId={doc.id}
-              segment={selectedMorpheme}
-              hideDialog={closeDialog}
-              cherokeeRepresentation={cherokeeRepresentation}
-            />
-          ) : null}
-        </DialogContent>
-      </DialogOverlay>
-
-      {!isDesktop && (
-        <DialogBackdrop {...dialog} className={drawerBg}>
-          <Dialog
-            {...dialog}
-            as="nav"
-            className={css.mobileWordPanel}
-            aria-label="Word Panel Drawer"
-            preventBodyScroll={true}
+          <DialogContent
+            className={css.unpaddedMorphemeDialog}
+            aria-label="Segment Details"
           >
-            <PanelLayout
-              segment={panelInfo.currContents}
-              setContent={panelInfo.setCurrContents}
-            />
-          </Dialog>
-        </DialogBackdrop>
-      )}
+            {selectedMorpheme ? (
+              <MorphemeDetails
+                documentId={doc.id}
+                segment={selectedMorpheme}
+                hideDialog={closeDialog}
+                cherokeeRepresentation={cherokeeRepresentation}
+              />
+            ) : null}
+          </DialogContent>
+        </DialogOverlay>
 
-      <div className={css.contentContainer}>
-        <article className={css.annotationContents}>
-          <p className={css.topMargin}>
-            Use the{" "}
-            <span>
-              <MdSettings size={32} style={{ verticalAlign: "middle" }} />{" "}
-              Settings
-            </span>{" "}
-            button at the top of the page to change how documents are
-            translated.
-          </p>
-          <DocumentContents
-            {...{
-              levelOfDetail,
-              doc,
-              openDetails,
-              cherokeeRepresentation,
-              wordPanelDetails: panelInfo,
-            }}
-          />
-        </article>
-        {selectedSegment && (
-          <div className={css.contentSection2}>
-            <PanelLayout
-              segment={panelInfo.currContents}
-              setContent={panelInfo.setCurrContents}
-            />
-          </div>
+        {!isDesktop && (
+          <DialogBackdrop {...dialog} className={drawerBg}>
+            <Dialog
+              {...dialog}
+              as="nav"
+              className={css.mobileWordPanel}
+              aria-label="Word Panel Drawer"
+              preventBodyScroll={true}
+            >
+              <CommentStateProvider>
+                <CommentValueProvider>
+                  <PanelLayout
+                    segment={panelInfo.currContents}
+                    setContent={panelInfo.setCurrContents}
+                  />
+                </CommentValueProvider>
+              </CommentStateProvider>
+            </Dialog>
+          </DialogBackdrop>
         )}
-      </div>
+
+        <div className={css.contentContainer}>
+          <article className={css.annotationContents}>
+            <p className={css.topMargin}>
+              Use the{" "}
+              <span>
+                <MdSettings size={32} style={{ verticalAlign: "middle" }} />{" "}
+                Settings
+              </span>{" "}
+              button at the top of the page to change how documents are
+              translated.
+            </p>
+            <DocumentContents
+              {...{
+                levelOfDetail,
+                doc,
+                openDetails,
+                cherokeeRepresentation,
+                wordPanelDetails: panelInfo,
+              }}
+            />
+          </article>
+          {selectedSegment && (
+            <div className={css.contentSection2}>
+              <CommentStateProvider>
+                <CommentValueProvider>
+                  <PanelLayout
+                    segment={panelInfo.currContents}
+                    setContent={panelInfo.setCurrContents}
+                  />
+                </CommentValueProvider>
+              </CommentStateProvider>
+            </div>
+          )}
+        </div>
+      </FormProviderParagraph>
     </FormProvider>
   )
 }
@@ -370,6 +379,7 @@ const DocumentContents = ({
 
   const docContents = result.data?.document
   const { form, isEditing } = useForm()
+  const { paragraphForm, isEditingParagraph } = useParagraphForm()
 
   useEffect(() => {
     // If the form has been submitted, update the panel's current contents to be the currently selected word
@@ -383,7 +393,15 @@ const DocumentContents = ({
       // If the form was not submitted, make sure to reset the current word of the form to its unmodified state.
       form.update("word", wordPanelDetails.currContents)
     }
-  }, [isEditing])
+    if (paragraphForm.submitting) {
+      wordPanelDetails.setCurrContents(paragraphForm.values.paragraph)
+      console.log("[charlie] Not rerunning query :)")
+      // Query of document contents is rerun to ensure frontend and backend are in sync
+      rerunQuery({ requestPolicy: "network-only" })
+    } else {
+      paragraphForm.update("paragraph", wordPanelDetails.currContents)
+    }
+  }, [isEditing, isEditingParagraph])
 
   if (!docContents) {
     return <>Loading...</>
@@ -459,7 +477,7 @@ export const DocumentTitleHeader = (p: {
         {user ? (
           <BookmarkButton
             documentId={p.doc.id}
-            bookmarkedBool={p.doc.bookmarkedOn !== null}
+            isBookmarked={p.doc.bookmarkedOn !== null}
           />
         ) : (
           <></>
@@ -499,9 +517,8 @@ export const DocumentTitleHeader = (p: {
 /** Button that allows users to bookmark a document */
 export const BookmarkButton = (props: {
   documentId: String
-  bookmarkedBool: boolean
+  isBookmarked: boolean
 }) => {
-  const [isBookmarked, setIsBookmarked] = useState(props.bookmarkedBool)
   const [addBookmarkMutationResult, addBookmarkMutation] =
     Dailp.useAddBookmarkMutation()
   const [removeBookmarkMutationResult, removeBookmarkMutation] =
@@ -509,7 +526,7 @@ export const BookmarkButton = (props: {
 
   return (
     <>
-      {isBookmarked ? (
+      {props.isBookmarked ? (
         // Displays a "Cancel" button and "Save" button in editing mode.
         <>
           <IconTextButton
@@ -517,7 +534,6 @@ export const BookmarkButton = (props: {
             className={css.BookmarkButton}
             onClick={() => {
               removeBookmarkMutation({ documentId: props.documentId })
-              setIsBookmarked(false)
             }}
           >
             Un-Bookmark
@@ -529,7 +545,6 @@ export const BookmarkButton = (props: {
           className={css.BookmarkButton}
           onClick={() => {
             addBookmarkMutation({ documentId: props.documentId })
-            setIsBookmarked(true)
           }}
         >
           Bookmark

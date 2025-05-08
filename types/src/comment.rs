@@ -3,7 +3,7 @@
 use crate::{user::User, AnnotatedForm};
 use crate::{Database, DateTime, DocumentParagraph};
 use async_graphql::Context;
-use async_graphql::{dataloader::DataLoader, FieldResult};
+use async_graphql::{dataloader::DataLoader, FieldResult, MaybeUndefined};
 use serde::{Deserialize, Serialize};
 use sqlx::types::Uuid;
 
@@ -24,6 +24,9 @@ pub struct Comment {
     pub text_content: String,
     /// An optional classification of the comment's content
     pub comment_type: Option<CommentType>,
+
+    /// Whether the comment has been edited since it was posted
+    pub edited: bool,
 
     /// The id of the word or paragraph this comment is attached to
     #[graphql(skip = true)]
@@ -82,6 +85,14 @@ pub enum CommentType {
     Question,
 }
 
+/// PgHasArrayType for CommentType
+impl sqlx::postgres::PgHasArrayType for CommentType {
+    fn array_type_info() -> sqlx::postgres::PgTypeInfo {
+        // The array type name in PostgreSQL is prefixed with an underscore
+        sqlx::postgres::PgTypeInfo::with_name("_comment_type_enum")
+    }
+}
+
 /// Type representing the object that a comment is attached to
 #[derive(async_graphql::Union)]
 pub enum CommentParent {
@@ -109,4 +120,15 @@ pub struct PostCommentInput {
 pub struct DeleteCommentInput {
     /// ID of the comment to delete
     pub comment_id: Uuid,
+}
+
+/// Used for updating comments.
+/// All fields except id are optional.
+#[derive(async_graphql::InputObject)]
+pub struct CommentUpdate {
+    pub id: Uuid,
+    /// The text of the comment
+    pub text_content: MaybeUndefined<String>,
+    pub comment_type: MaybeUndefined<Option<CommentType>>,
+    pub edited: bool,
 }
