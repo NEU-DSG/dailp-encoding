@@ -1,7 +1,8 @@
 use crate::{
-    slugify, AnnotatedForm, AudioSlice, Contributor, Database, Date, SourceAttribution,
-    Translation, TranslationBlock,
+    auth::UserInfo, comment::Comment, date::DateInput, slugify, AnnotatedForm, AudioSlice,
+    Contributor, Database, Date, SourceAttribution, Translation, TranslationBlock,
 };
+
 use async_graphql::{dataloader::DataLoader, FieldResult, MaybeUndefined};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -68,6 +69,22 @@ impl AnnotatedDoc {
     /// Date and time this document was written or created
     async fn date(&self) -> &Option<Date> {
         &self.meta.date
+    }
+
+    /// When the document was bookmarked by the current user, if it was.
+    async fn bookmarked_on(
+        &self,
+        context: &async_graphql::Context<'_>,
+    ) -> FieldResult<Option<Date>> {
+        if let Some(user) = context.data_opt::<UserInfo>() {
+            Ok(context
+                .data::<DataLoader<Database>>()?
+                .loader()
+                .get_document_bookmarked_on(&self.meta.id.0, &user.id)
+                .await?)
+        } else {
+            Ok(None)
+        }
     }
 
     /// The original source(s) of this document, the most important first.
@@ -235,9 +252,10 @@ impl DocumentPage {
 pub struct ParagraphsInPage(pub Uuid);
 
 /// One paragraph within a [`DocumentPage`]
-#[derive(Clone)]
+#[derive(async_graphql::SimpleObject, Clone)]
+#[graphql(complex)]
 pub struct DocumentParagraph {
-    /// Database ID
+    /// Unique identifier for this paragraph
     pub id: Uuid,
     /// English translation of the whole paragraph
     pub translation: String,
@@ -250,10 +268,35 @@ pub struct DocumentParagraph {
 pub struct ParagraphUpdate {
     /// Unique identifier of the form
     pub id: Uuid,
+    /// English translation of the paragraph
     pub translation: MaybeUndefined<String>,
 }
 
-#[async_graphql::Object]
+/// Update the contributor attribution for a document
+#[derive(async_graphql::InputObject)]
+pub struct UpdateContributorAttribution {
+    pub document_id: Uuid,
+    pub contributor_id: Uuid,
+    pub contribution_role: String,
+}
+
+/// Delete a contributor attribution for a document based on the two ids
+#[derive(async_graphql::InputObject)]
+pub struct DeleteContributorAttribution {
+    pub document_id: Uuid,
+    pub contributor_id: Uuid,
+}
+
+/// Used for updating document metadata.
+/// All fields except id are optional.
+#[derive(async_graphql::InputObject)]
+pub struct DocumentMetadataUpdate {
+    pub id: Uuid,
+    pub title: MaybeUndefined<String>,
+    pub written_at: MaybeUndefined<DateInput>,
+}
+
+#[async_graphql::ComplexObject]
 impl DocumentParagraph {
     /// Source text of the paragraph broken down into words
     async fn source(&self, context: &async_graphql::Context<'_>) -> FieldResult<Vec<AnnotatedSeg>> {
@@ -264,13 +307,12 @@ impl DocumentParagraph {
             .unwrap_or_default())
     }
 
-    /// English translation of the whole paragraph
-    async fn translation(&self) -> &str {
-        &self.translation
-    }
-
-    async fn index(&self) -> &i64 {
-        &self.index
+    /// Get comments on this paragraph
+    async fn comments(&self, context: &async_graphql::Context<'_>) -> FieldResult<Vec<Comment>> {
+        let db = context.data::<DataLoader<Database>>()?.loader();
+        Ok(db
+            .comments_by_parent(&self.id, &crate::comment::CommentParentType::Paragraph)
+            .await?)
     }
 }
 

@@ -13,7 +13,7 @@ import Footer from "./footer"
 import * as css from "./layout.css"
 import { MobileNav, NavMenu } from "./menu"
 import { HeaderPrefDrawer } from "./mode"
-import { LoginHeaderButton } from "./pages/login.page"
+import { LoginHeaderButton } from "./pages/auth/user-auth-layout"
 import { PreferencesProvider } from "./preferences-context"
 import "./wordpress.css"
 
@@ -43,11 +43,7 @@ const Layout: React.FC = ({ children }) => {
                 Digital Archive of Indigenous Language Persistence
               </span>
             </div>
-
-            {deploymentEnvironment !== Environment.Production && (
-              <LoginHeaderButton />
-            )}
-
+            <LoginHeaderButton />
             <HeaderPrefDrawer />
           </div>
           <NavMenu menuID={2} />
