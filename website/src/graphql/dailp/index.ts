@@ -185,10 +185,14 @@ export type AnnotatedFormUpdate = {
   readonly commentary: InputMaybe<Scalars["String"]>
   /** Unique identifier of the form */
   readonly id: Scalars["UUID"]
+  /** Possible update to normalized source content */
+  readonly romanizedSource: InputMaybe<Scalars["String"]>
   /** Updated segments */
   readonly segments: InputMaybe<ReadonlyArray<MorphemeSegmentUpdate>>
   /** Possible update to source content */
   readonly source: InputMaybe<Scalars["String"]>
+  /** Possible update to English gloss */
+  readonly englishGloss: InputMaybe<ReadonlyArray<Scalars["String"]>>
 }
 
 /** Element within a spreadsheet before being transformed into a full document. */
@@ -1343,7 +1347,7 @@ export type DocFormFieldsFragment = {
   }
 
 export type ParagraphFormFieldsFragment = {
-  readonly __typename?: "DocumentParagraph"
+  readonly __typename: "DocumentParagraph"
 } & Pick<DocumentParagraph, "id" | "index" | "translation"> & {
     readonly source: ReadonlyArray<
       | ({ readonly __typename: "AnnotatedForm" } & Pick<
@@ -1416,7 +1420,7 @@ export type ParagraphFormFieldsFragment = {
               { readonly __typename?: "Comment" } & Pick<Comment, "id">
             >
           })
-      | { readonly __typename?: "LineBreak" }
+      | { readonly __typename: "LineBreak" }
     >
     readonly comments: ReadonlyArray<
       { readonly __typename?: "Comment" } & Pick<Comment, "id">
@@ -2533,10 +2537,12 @@ export const FormFieldsFragmentDoc = gql`
 `
 export const ParagraphFormFieldsFragmentDoc = gql`
   fragment ParagraphFormFields on DocumentParagraph {
+    __typename
     id
     index
     translation
     source {
+      __typename
       ...FormFields
     }
     comments {

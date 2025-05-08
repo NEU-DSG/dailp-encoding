@@ -64,9 +64,7 @@ const ParagraphPanel = (p: {
       />
     </Form>
   )
-  const discussionContent = (
-    <CommentSection parent={p.paragraph as TranslatedParagraph} />
-  )
+  const discussionContent = <CommentSection parent={p.paragraph} />
 
   return (
     <>
