@@ -510,12 +510,14 @@ impl Database {
 
         let source = word.source.into_vec();
         let commentary = word.commentary.into_vec();
+        let english_gloss = word.english_gloss.into_vec();
 
         let document_id = query_file!(
             "queries/update_word.sql",
             word.id,
             &source as _,
             &commentary as _,
+            &english_gloss as _,
         )
         .fetch_one(&mut *tx)
         .await?
@@ -528,11 +530,20 @@ impl Database {
         }
 
         let segments = word.segments.take().unwrap();
-        // If word segmentation not present, return early.
+        // if word segmentation not present, return early.
         if segments.is_empty() {
+            // Delete all existing segments since the new segments array is empty
+            query_file!("queries/delete_word_segments.sql", word.id)
+                .execute(&mut *tx)
+                .await?;
             tx.commit().await?;
             return Ok(word.id);
         }
+
+        // Delete existing segments before upserting new ones
+        query_file!("queries/delete_word_segments.sql", word.id)
+            .execute(&mut *tx)
+            .await?;
 
         let system_name: Option<CherokeeOrthography> = *(&segments[0].system.clone());
 

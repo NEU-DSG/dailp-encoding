@@ -189,6 +189,8 @@ export type AnnotatedFormUpdate = {
   readonly segments: InputMaybe<ReadonlyArray<MorphemeSegmentUpdate>>
   /** Possible update to source content */
   readonly source: InputMaybe<Scalars["String"]>
+  /** POssible update to english gloss  */
+  readonly englishGloss: InputMaybe<ReadonlyArray<string>>
 }
 
 /** Element within a spreadsheet before being transformed into a full document. */
