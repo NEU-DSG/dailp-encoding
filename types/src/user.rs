@@ -1,3 +1,4 @@
+//! Provides a type representing a user.
 use crate::Date;
 use async_graphql::MaybeUndefined;
 use serde::{Deserialize, Serialize};

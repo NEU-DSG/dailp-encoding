@@ -12,12 +12,11 @@ use dailp::{
 use itertools::Itertools;
 
 use {
-    dailp::async_graphql::{self, dataloader::DataLoader, Context, FieldResult, Guard, Object},
+    dailp::async_graphql::{self, dataloader::DataLoader, Context, FieldResult},
     dailp::{
         AnnotatedDoc, AnnotatedFormUpdate, CherokeeOrthography, Database, EditedCollection,
         MorphemeId, MorphemeReference, MorphemeTag, ParagraphUpdate, WordsInDocument,
     },
-    serde::{Deserialize, Serialize},
 };
 
 /// Home for all read-only queries
@@ -258,8 +257,8 @@ impl Query {
             .into_group_map();
 
         Ok(clusters
-            .into_iter()
-            .map(|(_, forms)| {
+            .into_values()
+            .map(|forms| {
                 let dates = forms.iter().filter_map(|f| f.date_recorded.as_ref());
                 let start = dates.clone().min();
                 let end = dates.max();
@@ -450,8 +449,8 @@ impl Mutation {
         if comment_object.posted_by.id.0 != user.id.to_string() {
             return Err("User attempted to edit another user's comment".into());
         }
-
-        db.update_comment(comment).await;
+        // Note: We should probably handle an error here more gracefully.
+        let _ = db.update_comment(comment).await;
 
         // We return the parent object, for GraphCache interop
         return comment_object.parent(context).await;
