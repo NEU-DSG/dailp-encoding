@@ -1,6 +1,7 @@
 import { style } from "@vanilla-extract/css"
 import { flowRight } from "lodash-es"
 import { important, position } from "polished"
+import { button } from "src/components/button.css"
 import { rightButton } from "src/components/carousel.css"
 import {
   colors,
@@ -250,7 +251,7 @@ export const mobileWordPanel = style([
 //   outlineColor: colors.secondaryContrast,
 //   backgroundColor: colors.secondary,
 //   visibility: "visible",
-//   opacity: 1, 
+//   opacity: 1,
 //   transition: "top 0.8s",
 // })
 
@@ -292,24 +293,34 @@ export const scrollTop = style({
   backgroundColor: colors.secondary,
 })
 
+export const BookmarkButton = style([
+  button,
+  paddingX(hspace.large),
+  paddingY(vspace.medium),
+  {
+    display: "flex",
+    justifyContent: "space-around",
+    marginLeft: hspace.small,
+  },
+])
 export const hideScrollTop = style([
   scrollTop,
   {
-  top: `calc(100vh + 100px)`,
-  visibility: "visible",
-  opacity: 1, 
-  transition: "top 0.8s",
-  }
+    top: `calc(100vh + 100px)`,
+    visibility: "visible",
+    opacity: 1,
+    transition: "top 0.8s",
+  },
 ])
 
 export const showScrollTop = style([
   scrollTop,
   {
-  top: `calc(100vh - 100px)`,
-  visibility: "visible",
-  opacity: 1, 
-  transition: "top 0.5s",
-  }
+    top: `calc(100vh - 100px)`,
+    visibility: "visible",
+    opacity: 1,
+    transition: "top 0.5s",
+  },
 ])
 
 export const noScrollTop = style({

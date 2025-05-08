@@ -1,12 +1,14 @@
 { config, lib, pkgs, ... }:
-
-{
+let 
+  prefixName = import ./utils.nix { stage = config.setup.stage; };
+in {
   config.resource = {
     aws_iam_role.lambda_exec = {
-      name = "dailp-lambda-execution";
+      name = prefixName "lambda-execution";
       managed_policy_arns = [
         "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
       ];
+      
       assume_role_policy = ''
         {
           "Version": "2012-10-17",
@@ -22,14 +24,14 @@
           ]
         }
       '';
-      lifecycle.prevent_destroy = true;
+      lifecycle.prevent_destroy = false;
     };
 
     # The "REST API" is the container for all of the other API Gateway objects you will create.
     aws_api_gateway_rest_api.functions_api = {
-      name = "dailp-api";
+      name = prefixName "api";
       description = "DAILP API for GraphQL endpoints and REST endpoints";
-      lifecycle.prevent_destroy = true;
+      lifecycle.prevent_destroy = false;
     };
 
     aws_api_gateway_authorizer.functions_api = {
@@ -42,12 +44,13 @@
     aws_api_gateway_deployment.functions_api = {
       # Redeploy the API if this file changes, or any functions config changes.
       triggers = let
-        inherit (builtins) toJSON hashString;
+        inherit (builtins) toJSON hashString removeAttrs mapAttrs;
+        removeFunctorFromMembers = set: mapAttrs (memberName: memberValue: removeAttrs memberValue [ "__functor" ]) set;
         hashJSON = x: hashString "sha1" (toJSON x);
       in {
-        functions = hashJSON config.resource.aws_lambda_function;
+        functions = hashJSON (removeFunctorFromMembers config.resource.aws_lambda_function);
         gateway_integrations =
-          hashJSON config.resource.aws_api_gateway_integration;
+          hashJSON (removeFunctorFromMembers config.resource.aws_api_gateway_integration);
         config = hashJSON config.functions;
       };
       # These triggers make deployment wait until the main API and CORS
