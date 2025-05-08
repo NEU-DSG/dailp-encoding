@@ -13,17 +13,21 @@ let
   inherit (builtins) getEnv;
   stage_var = getEnv "TF_STAGE";
   # Default to the 'dev' environment unless specified.
-  stage = if stage_var == "" then "dev" else stage_var;
+  stage = if stage_var == "" || stage_var == "local" then "dev" else stage_var;
 in {
   imports = [
     ./bootstrap.nix
     ./functions.nix
     ./auth.nix
+    ./auth-functions.nix
     ./website.nix
     ./nu-tags.nix
     ./database-sql.nix
-    ./bastion-host.nix
     ./media-storage.nix
+    ./media-access.nix
+    ./user-roles.nix
+    ./bastion-host.nix
+    ./import.nix
   ];
 
   # Gives all modules access to which stage we're deploying to, while also
@@ -32,22 +36,26 @@ in {
 
   terraform.required_providers.aws = {
     source = "hashicorp/aws";
-    version = "~> 3.44";
+    version = "~> 4.30";
   };
 
   # Setup AWS credentials depending on whether we are in the development or
   # production account.
   provider.aws = {
-    profile = "neu-${config.setup.stage}";
+    # profile = "neu-${config.setup.stage}";
     region = "us-east-1";
+    default_tags.tags = config.setup.global_tags;
   };
 
   setup = {
     # Setup the S3 bucket and DynamoDB table that store and manage Terraform state
     # for the current environment.
-    state = {
-      bucket = "dailp-${config.setup.stage}-terraform-state-bucket";
-      table = "dailp-${config.setup.stage}-terraform-state-locks";
+    # Use dev bucket for uat
+    state = let 
+      prefixName = if config.setup.stage == "uat" then base: "dailp-dev-${base}" else import ./utils.nix { stage = config.setup.stage; hideProd = false; };
+    in {
+      bucket = prefixName "terraform-state-bucket";
+      table = prefixName "terraform-state-locks";
     };
     vpc = getEnv "AWS_VPC_ID";
     subnets = {
@@ -55,14 +63,18 @@ in {
       secondary = getEnv "AWS_SUBNET_SECONDARY0";
       tertiary = getEnv "AWS_SUBNET_SECONDARY1";
     };
+    bastion_subnet = getEnv "AWS_SUBNET_BASTION";
   };
 
-  functions = {
-    bucket = "dailp-${config.setup.stage}-functions-bucket";
+  functions = 
+  let 
+    prefixName = import ./utils.nix { stage = config.setup.stage; };
+  in {
+    bucket = prefixName "functions-bucket";
     security_group_ids = [ "\${aws_security_group.mongodb_access.id}" ];
     functions = [{
       id = "graphql";
-      name = "dailp-graphql";
+      name = prefixName "graphql";
       env = {
         VITE_DEPLOYMENT_ENV = config.setup.stage;
         DATABASE_URL =
@@ -98,8 +110,8 @@ in {
   };
 
   # These logging buckets are externally managed.
-  setup.access_log_bucket = if config.setup.stage == "dev" then
-    "s3-server-access-logs-783177801354"
+  setup.access_log_bucket = if config.setup.stage == "prod" then
+    "s3-server-access-logs-363539660090"
   else
-    "s3-server-access-logs-363539660090";
+    "s3-server-access-logs-783177801354";
 }

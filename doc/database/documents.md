@@ -12,16 +12,18 @@
 
 ## `document`
 
-| column           | type                     | description                                  |
-| ---------------- | ------------------------ | -------------------------------------------- |
-| `id`             | `uuid`                   | Primary key                                  |
-| `short_name`     | `text`                   | URL slug, natural key                        |
-| `title`          | `text`                   | Full title of the document                   |
-| `group_id`       | `uuid -> document_group` | ID of the `document_group` it belongs to     |
-| `index_in_group` | `bigint`                 | Index of this document in its group          |
-| `is_reference`   | `boolean`                | Is this a lexical source, like a dictionary? |
-| `written_at`     | `date?`                  | When this was written or published           |
-| `audio_slice_id` | `uuid? -> media_slice`   | Audio recording of the whole document        |
+| column                               | type                     | description                                                            |
+| ------------------------------------ | ------------------------ | ---------------------------------------------------------------------- |
+| `id`                                 | `uuid`                   | Primary key                                                            |
+| `short_name`                         | `text`                   | URL slug, natural key                                                  |
+| `title`                              | `text`                   | Full title of the document                                             |
+| `group_id`                           | `uuid -> document_group` | ID of the `document_group` it belongs to                               |
+| `index_in_group`                     | `bigint`                 | Index of this document in its group                                    |
+| `is_reference`                       | `boolean`                | Is this a lexical source, like a dictionary?                           |
+| `written_at`                         | `date?`                  | When this was written or published                                     |
+| `audio_slice_id`                     | `uuid? -> media_slice`   | Audio recording of the whole document, as ingested from GoogleSheets.  |
+| `include_audio_in_edited_collection` | `boolean`                | True if ingested audio should be shown to readers. Defaults to `true`. |
+| `audio_edited_by`                    | `uuid? -> User`          | Last Editor to decide if ingested audio should be shown to readers.    |
 
 - Deleting a `document` auto-deletes all `document_page` rows within it.
 
@@ -81,3 +83,25 @@ This bridge table allows a many to many relationship between `document` and `doc
 | ------------- | ------ | ------------------- |
 | `document_id` | `uuid` | Document referenced |
 | `source_id`   | `uuid` | Source to cite      |
+
+## `user_bookmarked_document`
+
+This join table stores bookmarked documents. It stores them as the document id, user id, and
+the bookmarked date
+
+| column          | type   | description         |
+| --------------- | ------ | ------------------- |
+| `document_id`   | `uuid` | Document referenced |
+| `user_id`       | `uuid` | User referenced     |
+| `bookmarked_on` | `date` | Date bookmarked     |
+
+## `document_user_media`
+
+A join table linking user audio contributions to documents. This is technically implemented as a many-to-many relationship, and is indexed on both keys, with a compound unique constraint. Additions should be written as upserts. Compare to `word_user_media`, described in `words.md`.
+
+| column                         | type                  | description                                                                                                |
+| ------------------------------ | --------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `document_id`                  | `uuid -> document`    | Document that is assocated with media slice. Ie. which document is read aloud in the recording.            |
+| `media_slice_id`               | `uuid -> media_slice` | Media slice that is assocated with the document.                                                           |
+| `include_in_edited_collection` | `boolean`             | Should audio be revealed to readers? Defaults to `false`.                                                  |
+| `edited_by`                    | `uuid? -> dailp_user` | Last Editor to decide if audio should be included in edited collection, ie. revealed to un-authed Readers. |
