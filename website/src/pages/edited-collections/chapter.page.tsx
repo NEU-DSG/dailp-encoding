@@ -23,6 +23,8 @@ const ChapterPage = (props: {
 
   const dialog = useDialog()
 
+  const subchapters = useSubchapters(props.chapterSlug)
+
   const chapter = data?.chapter
 
   if (!chapter) {
@@ -30,8 +32,6 @@ const ChapterPage = (props: {
   }
 
   const { document, wordpressId } = chapter
-
-  const subchapters = useSubchapters(props.chapterSlug)
 
   return (
     <CWKWLayout>
@@ -75,7 +75,6 @@ const ChapterPage = (props: {
                 breadcrumbs={chapter.breadcrumbs}
                 rootPath={collectionRoute(props.collectionSlug)}
                 doc={document}
-                showDetails={true}
               />
               <TabSet doc={document} />
             </>
