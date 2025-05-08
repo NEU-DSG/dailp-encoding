@@ -11,6 +11,7 @@ import * as Dailp from "src/graphql/dailp"
 import { UserRole, useUserRole } from "./auth"
 import { IconButton } from "./components"
 import { IconTextButton } from "./components/button"
+import { useEditWordCheckContext } from "./edit-word-check-context"
 import * as css from "./edit-word-feature.css"
 import { useForm } from "./edit-word-form-context"
 import { usePreferences } from "./preferences-context"
@@ -67,6 +68,8 @@ export const EditWordFeature = (props: {
   input?: React.ElementType
 }) => {
   const { form } = useForm()
+  const { confirmRomanizedSourceDelete, setConfirmRomanizedSourceDelete } =
+    useEditWordCheckContext()
 
   if (!form || !form.values.word) {
     return null
@@ -90,6 +93,24 @@ export const EditWordFeature = (props: {
         name={["word", props.feature]}
         disabled={userRole == UserRole.Reader}
       />
+
+      {form.errors["romanizedSource"] && props.feature === "romanizedSource" ? (
+        <>
+          <label>
+            Confirm deleting phonetics?
+            <input
+              type="checkbox"
+              checked={confirmRomanizedSourceDelete}
+              style={{ marginLeft: "8px" }}
+              onChange={(e) =>
+                setConfirmRomanizedSourceDelete(e.target.checked)
+              }
+            />
+          </label>
+        </>
+      ) : (
+        <></>
+      )}
     </>
   )
 }
