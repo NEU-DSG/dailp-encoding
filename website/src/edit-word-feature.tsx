@@ -6,10 +6,12 @@ import {
   unstable_FormInput as FormInput,
   unstable_FormLabel as FormLabel,
   unstable_FormSubmitButton as FormSubmitButton,
-} from "reakit/Form"
+} from "reakit"
 import * as Dailp from "src/graphql/dailp"
+import { UserRole, useUserRole } from "./auth"
 import { IconButton } from "./components"
 import { IconTextButton } from "./components/button"
+import { useEditWordCheckContext } from "./edit-word-check-context"
 import * as css from "./edit-word-feature.css"
 import { useForm } from "./edit-word-form-context"
 import { usePreferences } from "./preferences-context"
@@ -49,13 +51,7 @@ export const EditButton = () => {
           icon={<HiPencilAlt />}
           className={css.editPanelButton}
           onClick={() => {
-            if (cherokeeRepresentation === Dailp.CherokeeOrthography.Taoc) {
-              setIsEditing(true)
-            } else {
-              alert(
-                "Currently, only the linguistic analysis using terms from Tone and Accent in Oklahoma Cherokee (TAOC) is supported for editing. Please update your Cherokee description style in the display settings."
-              )
-            }
+            setIsEditing(true)
           }}
         >
           Edit
@@ -72,11 +68,14 @@ export const EditWordFeature = (props: {
   input?: React.ElementType
 }) => {
   const { form } = useForm()
+  const { confirmRomanizedSourceDelete, setConfirmRomanizedSourceDelete } =
+    useEditWordCheckContext()
 
   if (!form || !form.values.word) {
     return null
   }
 
+  let userRole = useUserRole()
   return (
     <>
       {/* Display a label for the form input if it exists. */}
@@ -92,7 +91,26 @@ export const EditWordFeature = (props: {
         as={props.input ? props.input : "input"}
         className={css.formInput}
         name={["word", props.feature]}
+        disabled={userRole == UserRole.Reader}
       />
+
+      {form.errors["romanizedSource"] && props.feature === "romanizedSource" ? (
+        <>
+          <label>
+            Confirm deleting phonetics?
+            <input
+              type="checkbox"
+              checked={confirmRomanizedSourceDelete}
+              style={{ marginLeft: "8px" }}
+              onChange={(e) =>
+                setConfirmRomanizedSourceDelete(e.target.checked)
+              }
+            />
+          </label>
+        </>
+      ) : (
+        <></>
+      )}
     </>
   )
 }

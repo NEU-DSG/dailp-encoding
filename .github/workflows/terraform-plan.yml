@@ -4,9 +4,9 @@ on:
     branches: [main]
 jobs:
   plan:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     env:
-      DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
+      DATABASE_PASSWORD: ${{ github.event.action == 'prereleased' && secrets.UAT_DATABASE_PASSWORD || secrets.DATABASE_PASSWORD }}
       GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
       AWS_VPC_ID: ${{ secrets.AWS_VPC_ID }}
       AWS_SUBNET_PRIMARY: ${{ secrets.AWS_SUBNET_PRIMARY }}
@@ -31,6 +31,21 @@ jobs:
           # If you chose API tokens for write access OR if you have a private cache
           authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
           pushFilter: "(-dailp$|-dailp-|-terraform-config$|-source$|\\.tar\\.gz$|-output$|-plan$|-apply-now$|-apply$)"
+      - name: Check code quality
+        run: |
+          echo "::group::Checking Rust format"
+          cargofmt="$(cargo fmt --check)"
+          if [[ -n $cargofmt ]]; then
+            echo $cargofmt
+            echo "Please fix the formatting errors above by running 'cargo fmt'."
+            exit 1
+          fi
+          echo "::endgroup"
+          echo "::group::Checking format for frontend code"
+          cd website
+          yarn add prettier@^2.6.2 --dev
+          yarn prettier -c --config package.json src
+          echo "::endgroup"
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
