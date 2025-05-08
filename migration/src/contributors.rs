@@ -1,6 +1,5 @@
-use crate::spreadsheets::SheetResult;
 use anyhow::Result;
-use dailp::{ContributorDetails, Database};
+use dailp::{ContributorDetails, Database, SheetResult};
 
 pub async fn migrate_all(db: &Database) -> Result<()> {
     let sheet =

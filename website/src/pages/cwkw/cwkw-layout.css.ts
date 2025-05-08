@@ -94,3 +94,14 @@ export const noticeText = style([
     },
   },
 ])
+
+export const loginHeader = style([
+  {
+    color: colors.body,
+    vars: {
+      [linkColor]: "white",
+      [colors.focus]: "white",
+      [colors.primary]: "#333",
+    },
+  },
+])

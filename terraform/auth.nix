@@ -8,7 +8,22 @@ in {
       name = "dailp-user-pool";
       username_attributes = [ "email" ];
       auto_verified_attributes = [ "email" ];
-      admin_create_user_config.allow_admin_create_user_only = true;
+      admin_create_user_config.allow_admin_create_user_only = false;  
+      verification_message_template = let 
+        subdomain = if config.setup.stage == "prod" then "" else (config.setup.stage + ".");
+      in {
+        email_subject = "Your DAILP account confirmation code";
+        email_message = ''
+          Hello, thank you for signing up for a DAILP account!
+          
+          Your confirmation code is {####}. Please enter this code on the confirmation page.
+          
+          You can access the confirmation page at https://${subdomain}dailp.northeastern.edu/auth/confirmation
+        '';
+      };
+      # lambda_config = {
+      #   post_confirmation = "\${aws_lambda_function.post_confirmation_event.arn}";
+      # };
     };
     aws_cognito_user_pool_client.main = {
       name = prefixName "user-pool-client";
@@ -81,7 +96,7 @@ in {
       ];
     };
     roles = {
-      authenticated = "\${aws_iam_role.dailp_user_contributor.arn}";
+      authenticated = "\${aws_iam_role.dailp_user.arn}";
       unauthenticated = "\${aws_iam_role.dailp_user.arn}";
     };
   };

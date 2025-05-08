@@ -7,7 +7,7 @@ use std::str::FromStr;
 
 use crate::collection::CollectionChapter;
 use crate::collection::EditedCollection;
-use crate::comment::{Comment, CommentParentType, CommentType};
+use crate::comment::{Comment, CommentParentType, CommentType, CommentUpdate};
 use crate::user::User;
 use crate::user::UserId;
 use {
@@ -350,7 +350,7 @@ impl Database {
 
         // Delete previous chapter data stored for a particular collection before re-inserting
         query_file!("queries/delete_chapters_in_collection.sql", &*slug)
-            .execute(&mut tx)
+            .execute(&mut *tx)
             .await?;
 
         let mut chapter_stack = Vec::new();
@@ -400,7 +400,7 @@ impl Database {
                 url_slug,
                 current_chapter.section as _
             )
-            .execute(&mut tx)
+            .execute(&mut *tx)
             .await?;
         }
         tx.commit().await?;
@@ -505,48 +505,42 @@ impl Database {
         todo!("Implement image annotations")
     }
 
-    /// TODO: does this actually upload the audio (no) -- it just dies it to a
-    /// word, so should we have a better name?
-    pub async fn upload_contributor_audio(
-        &self,
-        upload: AttachAudioToWordInput,
-        contributor_id: &Uuid,
-    ) -> Result<Uuid> {
-        let media_slice_id = query_file_scalar!(
-            "queries/attach_audio_to_word.sql",
-            contributor_id,
-            &upload.contributor_audio_url as _,
-            0,
-            0,
-            upload.word_id
-        )
-        .fetch_one(&self.client)
-        .await?;
-        Ok(media_slice_id)
-    }
-
     pub async fn update_word(&self, word: AnnotatedFormUpdate) -> Result<Uuid> {
         let mut tx = self.client.begin().await?;
 
         let source = word.source.into_vec();
+        let simple_phonetics = word.romanized_source.into_vec();
         let commentary = word.commentary.into_vec();
+        let english_gloss_owned: Vec<String> = match word.english_gloss.into_vec().pop().flatten() {
+            Some(glosses) => glosses,
+            None => Vec::new(),
+        };
+        let english_gloss: Vec<&str> = english_gloss_owned.iter().map(|s| s.as_str()).collect();
 
         let document_id = query_file!(
             "queries/update_word.sql",
             word.id,
             &source as _,
+            &simple_phonetics as _,
             &commentary as _,
+            &english_gloss as _
         )
-        .fetch_one(&mut tx)
+        .fetch_one(&mut *tx)
         .await?
         .document_id;
+
         // If word segmentation was not changed, then return early since SQL update queries need to be called.
-        if word.segments.is_undefined() {
+        if !word.segments.is_value() {
             tx.commit().await?;
             return Ok(word.id);
         }
 
         let segments = word.segments.take().unwrap();
+        // If word segmentation not present, return early.
+        if segments.is_empty() {
+            tx.commit().await?;
+            return Ok(word.id);
+        }
 
         let system_name: Option<CherokeeOrthography> = *(&segments[0].system.clone());
 
@@ -584,7 +578,7 @@ impl Database {
                     )),
             }
         )
-        .fetch_all(&mut tx)
+        .fetch_all(&mut *tx)
         .await?;
 
         // Add any newly created local glosses into morpheme gloss table.
@@ -593,7 +587,7 @@ impl Database {
             &*doc_id,
             &*internal_glosses as _,
         )
-        .execute(&mut tx)
+        .execute(&mut *tx)
         .await?;
 
         query_file!(
@@ -605,7 +599,7 @@ impl Database {
             &*morpheme,
             &*role as _
         )
-        .execute(&mut tx)
+        .execute(&mut *tx)
         .await?;
 
         tx.commit().await?;
@@ -615,15 +609,62 @@ impl Database {
 
     // pub async fn maybe_undefined_to_vec() -> Vec<Option<String>> {}
 
+    pub async fn add_bookmark(&self, document_id: Uuid, user_id: Uuid) -> Result<String> {
+        query_file!("queries/add_bookmark.sql", document_id, user_id)
+            .execute(&self.client)
+            .await?;
+        Ok(format!("document: {}, user: {}", document_id, user_id))
+    }
+
+    pub async fn remove_bookmark(&self, document_id: Uuid, user_id: Uuid) -> Result<String> {
+        query_file!("queries/remove_bookmark.sql", document_id, user_id)
+            .execute(&self.client)
+            .await?;
+        Ok(format!("document: {}, user: {}", document_id, user_id))
+    }
+
+    pub async fn bookmarked_documents(&self, user_id: &Uuid) -> Result<Vec<Uuid>> {
+        let bookmarks = query_file!("queries/get_bookmark_ids.sql", user_id)
+            .fetch_all(&self.client)
+            .await?;
+
+        Ok(bookmarks.into_iter().map(|x| x.id).collect())
+    }
+
+    pub async fn get_document_bookmarked_on(
+        &self,
+        document_id: &Uuid,
+        user_id: &Uuid,
+    ) -> Result<Option<Date>> {
+        if let Some(bookmark) = query_file!(
+            "queries/get_document_bookmarked_on.sql",
+            document_id,
+            user_id
+        )
+        .fetch_optional(&self.client)
+        .await?
+        {
+            Ok(Some(date::Date(bookmark.bookmarked_on)))
+        } else {
+            Ok(None)
+        }
+    }
+
+    /// This does two things:
+    /// 1. Create a media slice if one does not exist for the provided audio
+    /// recording.
+    /// 2. Add a join table entry attaching that media slice to the
+    /// specified word.
+    /// Returns the `id` of the upserted media slice
     pub async fn attach_audio_to_word(
         &self,
-        upload: AttachAudioToWordInput,
+        upload: &AttachAudioToWordInput,
         contributor_id: &Uuid,
     ) -> Result<Uuid> {
         let media_slice_id = query_file_scalar!(
             "queries/attach_audio_to_word.sql",
             contributor_id,
-            &upload.contributor_audio_url as _,
+            upload.contributor_audio_url as _,
             0,
             0,
             upload.word_id
@@ -670,7 +711,7 @@ impl Database {
         Ok(document.id)
     }
 
-    pub async fn update_paragraph(&self, paragraph: ParagraphUpdate) -> Result<Uuid> {
+    pub async fn update_paragraph(&self, paragraph: ParagraphUpdate) -> Result<DocumentParagraph> {
         let translation = paragraph.translation.into_vec();
 
         query_file!(
@@ -681,7 +722,24 @@ impl Database {
         .execute(&self.client)
         .await?;
 
-        Ok(paragraph.id)
+        Ok(self.paragraph_by_id(&paragraph.id).await?)
+    }
+
+    pub async fn update_comment(&self, comment: CommentUpdate) -> Result<Uuid> {
+        let text_content = comment.text_content.into_vec();
+        let comment_type = comment.comment_type.into_vec();
+
+        query_file!(
+            "queries/update_comment.sql",
+            comment.id,
+            &text_content as _,
+            &comment_type as _,
+            comment.edited
+        )
+        .execute(&self.client)
+        .await?;
+
+        Ok(comment.id)
     }
 
     pub async fn update_contributor_attribution(
@@ -821,7 +879,7 @@ impl Database {
 
         // Clear the document audio before re-inserting it.
         query_file!("queries/delete_document_audio.sql", &document_id)
-            .execute(&mut tx)
+            .execute(&mut *tx)
             .await?;
 
         let slice_id = if let Some(audio) = &meta.audio_recording {
@@ -833,7 +891,7 @@ impl Database {
             };
             let slice_id =
                 query_file_scalar!("queries/insert_audio.sql", audio.resource_url, time_range)
-                    .fetch_one(&mut tx)
+                    .fetch_one(&mut *tx)
                     .await?;
             Some(slice_id)
         } else {
@@ -850,7 +908,7 @@ impl Database {
             collection_id,
             index_in_collection
         )
-        .fetch_one(&mut tx)
+        .fetch_one(&mut *tx)
         .await?;
 
         {
@@ -865,7 +923,7 @@ impl Database {
                 &*doc,
                 &*role as _
             )
-            .execute(&mut tx)
+            .execute(&mut *tx)
             .await?;
         }
 
@@ -881,7 +939,7 @@ impl Database {
         // is difficult. Since all of these queries are within a transaction,
         // any failure will rollback to the previous state.
         query_file!("queries/delete_document_pages.sql", document_id.0)
-            .execute(&mut tx)
+            .execute(&mut *tx)
             .await?;
 
         if let Some(pages) = document.segments {
@@ -898,7 +956,7 @@ impl Database {
                         .as_ref()
                         .and_then(|imgs| imgs.ids.get(page_index))
                 )
-                .fetch_one(&mut tx)
+                .fetch_one(&mut *tx)
                 .await?;
 
                 for paragraph in page.paragraphs {
@@ -921,7 +979,7 @@ impl Database {
                         char_range,
                         paragraph.translation.unwrap_or_default()
                     )
-                    .execute(&mut tx)
+                    .execute(&mut *tx)
                     .await?;
 
                     for element in paragraph.source {
@@ -942,7 +1000,7 @@ impl Database {
                                     &*char_index,
                                     &*character
                                 )
-                                .execute(&mut tx)
+                                .execute(&mut *tx)
                                 .await?;
 
                                 let char_range: PgRange<_> =
@@ -1014,7 +1072,7 @@ impl Database {
 
         // Clear all contents before inserting more.
         query_file!("queries/clear_dictionary_document.sql", document_id.0)
-            .execute(&mut tx)
+            .execute(&mut *tx)
             .await?;
 
         // Convert the list of stems into a list for each field to prepare for a
@@ -1042,7 +1100,7 @@ impl Database {
             &*glosses,
             &*shapes
         )
-        .execute(&mut tx)
+        .execute(&mut *tx)
         .await?;
 
         // TODO When we end up referring to morpheme glosses by ID, pass that in.
@@ -1060,7 +1118,7 @@ impl Database {
         let mut tx = self.client.begin().await?;
         // Clear all contents before inserting more.
         query_file!("queries/clear_dictionary_document.sql", document_id.0)
-            .execute(&mut tx)
+            .execute(&mut *tx)
             .await?;
 
         self.insert_lexical_words(&mut tx, forms).await?;
@@ -1124,7 +1182,7 @@ impl Database {
             &*page_number as _,
             &*index_in_document
         )
-        .fetch_all(&mut tx)
+        .fetch_all(&mut *tx)
         .await?;
 
         let (doc_id, gloss, word_id, index, morpheme, role): (
@@ -1168,7 +1226,7 @@ impl Database {
             &*doc_id,
             &*gloss
         )
-        .execute(&mut tx)
+        .execute(&mut *tx)
         .await?;
 
         query_file!(
@@ -1180,7 +1238,7 @@ impl Database {
             &*morpheme,
             &*role as _
         )
-        .execute(&mut tx)
+        .execute(&mut *tx)
         .await?;
 
         tx.commit().await?;
@@ -1226,7 +1284,7 @@ impl Database {
             audio_start,
             audio_end
         )
-        .fetch_one(&mut tx)
+        .fetch_one(&mut *tx)
         .await?;
 
         if let Some(segments) = form.segments {
@@ -1264,7 +1322,7 @@ impl Database {
                 &*document_id,
                 &*gloss
             )
-            .execute(&mut tx)
+            .execute(&mut *tx)
             .await?;
 
             query_file!(
@@ -1276,7 +1334,7 @@ impl Database {
                 &*morpheme,
                 &*role as _
             )
-            .execute(&mut tx)
+            .execute(&mut *tx)
             .await?;
         }
 
@@ -1935,6 +1993,8 @@ impl From<BasicAudioSlice> for AudioSlice {
             slice_id: Some(AudioSliceId(b.id.to_string())),
             resource_url: b.resource_url,
             parent_track: None,
+            annotations: None,
+            index: 0,
             include_in_edited_collection: b.include_in_edited_collection,
             edited_by: b.edited_by.and_then(|user_id| {
                 b.edited_by_name.map(|display_name| User {
@@ -1949,8 +2009,6 @@ impl From<BasicAudioSlice> for AudioSlice {
                     display_name,
                 })
             }),
-            annotations: None,
-            index: 0,
             start_time: b.range.as_ref().and_then(|r| match r.start {
                 Bound::Unbounded => None,
                 Bound::Included(t) | Bound::Excluded(t) => Some(t as i32),
@@ -2110,6 +2168,8 @@ struct BasicComment {
     pub text_content: String,
     pub comment_type: Option<CommentType>,
 
+    pub edited: bool,
+
     pub parent_id: Uuid,
     pub parent_type: CommentParentType,
 }
@@ -2125,6 +2185,7 @@ impl Into<Comment> for BasicComment {
             },
             text_content: self.text_content,
             comment_type: self.comment_type,
+            edited: self.edited,
             parent_id: self.parent_id,
             parent_type: self.parent_type,
         }
@@ -2142,6 +2203,9 @@ pub struct PersonFullName(pub String);
 
 #[derive(Clone, Eq, PartialEq, Hash)]
 pub struct ContributorsForDocument(pub Uuid);
+
+#[derive(Clone, Eq, PartialEq, Hash)]
+pub struct BookmarkedOn(pub Uuid, pub Uuid);
 
 #[derive(Clone, Eq, PartialEq, Hash)]
 pub struct DocumentShortName(pub String);
