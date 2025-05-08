@@ -45,15 +45,17 @@ pub async fn migrate_dictionaries(db: &Database) -> Result<()> {
         })
         .await?;
 
-    let df1975 = parse_new_df1975(
+    let df1975 = parse_new_df(
         SheetResult::from_sheet("11ssqdimOQc_hp3Zk8Y55m6DFfKR96OOpclUg5wcGSVE", None).await?,
         df1975_id,
-        1975,
-        3,
-        true,
-        false,
-        3,
-        3,
+        DFSheetMetadata {
+            year: 1975,
+            translation_count: 3,
+            has_numeric: true,
+            has_comment: false,
+            after_root: 3,
+            translations: 3,
+        },
     );
     let root_nouns = SheetInterpretation {
         sheet: SheetResult::from_sheet("1XuQIKzhGf_mGCH4-bHNBAaQqTAJDNtPbNHjQDhszVRo", None)
@@ -85,15 +87,17 @@ pub async fn migrate_dictionaries(db: &Database) -> Result<()> {
             .await?,
     }
     .into_adjs(df1975_id, 1975)?;
-    let df2003 = parse_new_df1975(
+    let df2003 = parse_new_df(
         SheetResult::from_sheet("18cKXgsfmVhRZ2ud8Cd7YDSHexs1ODHo6fkTPrmnwI1g", None).await?,
         df2003_id,
-        2003,
-        1,
-        false,
-        false,
-        3,
-        3,
+        DFSheetMetadata {
+            year: 2003,
+            translation_count: 1,
+            has_numeric: false,
+            has_comment: false,
+            after_root: 3,
+            translations: 3,
+        },
     );
 
     {
@@ -295,16 +299,18 @@ async fn parse_appendix(db: &Database, sheet_id: &str, to_skip: usize) -> Result
 
     Ok(())
 }
-
-fn parse_new_df1975(
-    sheet: SheetResult,
-    doc_id: DocumentId,
+struct DFSheetMetadata {
     year: i32,
     translation_count: usize,
     has_numeric: bool,
     has_comment: bool,
     after_root: usize,
     translations: usize,
+}
+fn parse_new_df(
+    sheet: SheetResult,
+    doc_id: DocumentId,
+    meta: DFSheetMetadata,
 ) -> Vec<LexicalEntryWithForms> {
     sheet
         .values
@@ -333,23 +339,24 @@ fn parse_new_df1975(
             let root = root_values.next().filter(|s| !s.is_empty())?;
             let root_gloss = root_values.next().filter(|s| !s.is_empty())?;
             let glosses = root_values
-                .take(translations)
+                .take(meta.translations)
                 .map(|s| s.trim().to_owned())
                 .filter(|s| !s.is_empty())
                 .collect();
-            let date = Date::from_ymd(year, 1, 1);
+            let date = Date::from_ymd(meta.year, 1, 1);
             let pos = PositionInDocument::new(doc_id, page_number, key);
-            let mut form_cells = rows
-                .into_iter()
-                .flat_map(|row| row.into_iter().skip(4 + translations + after_root));
+            let mut form_cells = rows.into_iter().flat_map(|row| {
+                row.into_iter()
+                    .skip(4 + meta.translations + meta.after_root)
+            });
             Some(LexicalEntryWithForms {
                 forms: seg_verb_surface_forms(
                     &pos,
                     &date,
                     &mut form_cells,
-                    translation_count,
-                    has_numeric,
-                    has_comment,
+                    meta.translation_count,
+                    meta.has_numeric,
+                    meta.has_comment,
                 ),
                 entry: AnnotatedForm {
                     id: None,
@@ -375,48 +382,6 @@ fn parse_new_df1975(
         .collect()
 }
 
-async fn ingest_particle_index(db: &Database, document_id: &str) -> Result<()> {
-    let sheet = SheetResult::from_sheet(document_id, None).await?;
-    let forms = sheet
-        .values
-        .into_iter()
-        .enumerate()
-        .filter_map(|(index, row)| {
-            let mut row = row.into_iter();
-            let syllabary = row.next()?;
-            let simple_phonetics = row.next()?;
-            let translation = row.next()?;
-            let source_str = row.next()?;
-            let source = MorphemeId::parse(&source_str)?;
-            // let doc_id = db.document_id_from_name(source.document_name).await?;
-            let pos = PositionInDocument::new(
-                todo!("Get the actual document ID from the short name provided."),
-                source.gloss,
-                index as i64,
-            );
-            Some(AnnotatedForm {
-                id: None,
-                simple_phonetics: Some(simple_phonetics),
-                normalized_source: None,
-                phonemic: None,
-                commentary: None,
-                line_break: None,
-                page_break: None,
-                english_gloss: vec![translation],
-                segments: None,
-                date_recorded: None,
-                source: syllabary,
-                position: pos,
-                ingested_audio_track: None,
-            })
-        });
-
-    // Push the forms to the database.
-    // db.only_insert_words(forms).await?;
-
-    Ok(())
-}
-
 async fn ingest_ac1995(db: &Database, sheet_id: &str) -> Result<()> {
     let sheet = SheetResult::from_sheet(sheet_id, None).await?;
     let meta = insert_document_from_sheet(db, sheet_id, "Vocabularies").await?;
@@ -424,7 +389,7 @@ async fn ingest_ac1995(db: &Database, sheet_id: &str) -> Result<()> {
     let forms = sheet.values.into_iter().filter_map(|row| {
         let mut row = row.into_iter();
         let index: i64 = row.next()?.parse().ok()?;
-        let form_id = row.next()?;
+        let _form_id = row.next()?;
         let syllabary = row.next()?;
         let _romanized = row.next()?;
         let normalized = row.next()?;
