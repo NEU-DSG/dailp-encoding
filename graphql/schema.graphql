@@ -12,6 +12,10 @@ type AnnotatedDoc {
 	"""
 	date: Date
 	"""
+	When the document was bookmarked by the current user, if it was.
+	"""
+	bookmarkedOn: Date
+	"""
 	The original source(s) of this document, the most important first.
 	"""
 	sources: [SourceAttribution!]!
@@ -158,6 +162,10 @@ type AnnotatedForm {
 	TODO! User guard for contributors only
 	"""
 	userContributedAudio: [AudioSlice!]!
+	"""
+	Get comments on this word
+	"""
+	comments: [Comment!]!
 }
 
 """
@@ -174,6 +182,10 @@ input AnnotatedFormUpdate {
 	"""
 	source: String
 	"""
+	Possible update to normalized source content
+	"""
+	romanizedSource: String
+	"""
 	Possible update to commentary
 	"""
 	commentary: String
@@ -181,6 +193,10 @@ input AnnotatedFormUpdate {
 	Updated segments
 	"""
 	segments: [MorphemeSegmentUpdate!]
+	"""
+	Possible update to English gloss
+	"""
+	englishGloss: [String!]
 }
 
 """
@@ -310,6 +326,72 @@ enum CollectionSection {
 }
 
 """
+A comment a user has made on some piece of a document.
+"""
+type Comment {
+	"""
+	Unique identifier of this comment
+	"""
+	id: UUID!
+	"""
+	When the comment was posted
+	"""
+	postedAt: DateTime!
+	"""
+	Who posted the comment
+	"""
+	postedBy: User!
+	"""
+	The text of the comment
+	"""
+	textContent: String!
+	"""
+	An optional classification of the comment's content
+	"""
+	commentType: CommentType
+	"""
+	Whether the comment has been edited since it was posted
+	"""
+	edited: Boolean!
+}
+
+"""
+Type representing the object that a comment is attached to
+"""
+union CommentParent = AnnotatedForm | DocumentParagraph
+
+"""
+An enum listing the possible types that a comment could be attached to
+"""
+enum CommentParentType {
+	WORD
+	PARAGRAPH
+}
+
+"""
+A type describing the kind of comment being made
+"""
+enum CommentType {
+	STORY
+	SUGGESTION
+	QUESTION
+}
+
+"""
+Used for updating comments.
+All fields except id are optional.
+"""
+input CommentUpdate {
+	id: UUID!
+	"""
+	The text of the comment
+	"""
+	textContent: String
+	commentType: CommentType
+	edited: Boolean!
+}
+
+"""
 A block of content, which may be one of several types.
 Each page contains several blocks.
 
@@ -404,6 +486,27 @@ input DateInput {
 	year: Int!
 }
 
+type DateTime {
+	"""
+	UNIX timestamp of the datetime, useful for sorting
+	"""
+	timestamp: Int!
+	"""
+	Just the Date component of this DateTime, useful for user-facing display
+	"""
+	date: Date!
+}
+
+"""
+Input object for deleting an existing comment
+"""
+input DeleteCommentInput {
+	"""
+	ID of the comment to delete
+	"""
+	commentId: UUID!
+}
+
 """
 Delete a contributor attribution for a document based on the two ids
 """
@@ -455,16 +558,30 @@ type DocumentPage {
 	paragraphs: [DocumentParagraph!]!
 }
 
+"""
+One paragraph within a [`DocumentPage`]
+"""
 type DocumentParagraph {
+	"""
+	Unique identifier for this paragraph
+	"""
+	id: UUID!
+	"""
+	English translation of the whole paragraph
+	"""
+	translation: String!
+	"""
+	1-indexed position of this paragraph in a document
+	"""
+	index: Int!
 	"""
 	Source text of the paragraph broken down into words
 	"""
 	source: [AnnotatedSeg!]!
 	"""
-	English translation of the whole paragraph
+	Get comments on this paragraph
 	"""
-	translation: String!
-	index: Int!
+	comments: [Comment!]!
 }
 
 """
@@ -700,6 +817,19 @@ type Mutation {
 	"""
 	apiVersion: String!
 	"""
+	Delete a comment.
+	Will fail if the user making the request is not the poster.
+	"""
+	deleteComment(input: DeleteCommentInput!): CommentParent!
+	"""
+	Post a new comment on a given object
+	"""
+	postComment(input: PostCommentInput!): CommentParent!
+	"""
+	Update a comment
+	"""
+	updateComment(comment: CommentUpdate!): CommentParent!
+	"""
 	Mutation for adding/changing contributor attributions
 	"""
 	updateContributorAttribution(contribution: UpdateContributorAttribution!): UUID!
@@ -710,10 +840,18 @@ type Mutation {
 	"""
 	Mutation for paragraph and translation editing
 	"""
-	updateParagraph(paragraph: ParagraphUpdate!): UUID!
+	updateParagraph(paragraph: ParagraphUpdate!): DocumentParagraph!
 	updatePage(data: JSON!): Boolean!
 	updateAnnotation(data: JSON!): Boolean!
 	updateWord(word: AnnotatedFormUpdate!): AnnotatedForm!
+	"""
+	Adds a bookmark to the user's list of bookmarks.
+	"""
+	addBookmark(documentId: UUID!): AnnotatedDoc!
+	"""
+	Removes a bookmark from a user's list of bookmarks
+	"""
+	removeBookmark(documentId: UUID!): AnnotatedDoc!
 	"""
 	Decide if a piece audio should be included in edited collection
 	"""
@@ -759,6 +897,9 @@ input ParagraphUpdate {
 	Unique identifier of the form
 	"""
 	id: UUID!
+	"""
+	English translation of the paragraph
+	"""
 	translation: String
 }
 
@@ -800,6 +941,28 @@ type PositionInDocument {
 	iiifUrl: String
 }
 
+"""
+Input object for posting a new comment on some object
+"""
+input PostCommentInput {
+	"""
+	ID of the object that is being commented on
+	"""
+	parentId: UUID!
+	"""
+	Type of the object being commented on
+	"""
+	parentType: CommentParentType!
+	"""
+	Content of the comment
+	"""
+	textContent: String!
+	"""
+	A classifcation for the comment (optional)
+	"""
+	commentType: CommentType
+}
+
 type Query {
 	allEditedCollections: [EditedCollection!]!
 	editedCollection(slug: String!): EditedCollection
@@ -828,6 +991,14 @@ type Query {
 	Retrieves a full document from its unique name.
 	"""
 	document(slug: String!): AnnotatedDoc
+	"""
+	Retrieves all documents that are bookmarked by the current user.
+	"""
+	bookmarkedDocuments: [AnnotatedDoc!]!
+	"""
+	Retrieves a full document from its unique identifier.
+	"""
+	documentByUuid(id: UUID!): AnnotatedDoc
 	"""
 	Retrieves a full document from its unique identifier.
 	"""
@@ -858,6 +1029,14 @@ type Query {
 	"""
 	wordSearch(query: String!): [AnnotatedForm!]!
 	"""
+	Get a single word given the word ID
+	"""
+	wordById(id: UUID!): AnnotatedForm!
+	"""
+	Get a single paragraph given the paragraph ID
+	"""
+	paragraphById(id: UUID!): DocumentParagraph!
+	"""
 	Search for words with the exact same syllabary string, or with very
 	similar looking characters.
 	"""
@@ -865,7 +1044,7 @@ type Query {
 	"""
 	Basic information about the currently authenticated user, if any.
 	"""
-	userInfo: UserInfo!
+	userInfo: UserInfo
 }
 
 """
@@ -920,6 +1099,9 @@ type User {
 	displayName: String!
 }
 
+"""
+A user belongs to any number of user groups, which give them various permissions.
+"""
 enum UserGroup {
 	CONTRIBUTORS
 	EDITORS

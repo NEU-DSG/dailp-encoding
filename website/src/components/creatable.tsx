@@ -1,5 +1,5 @@
 import React from "react"
-import CreatableSelect from "react-select/creatable"
+import CreatableSelect from "react-select"
 import * as css from "../panel-layout.css"
 
 const customStyles = {

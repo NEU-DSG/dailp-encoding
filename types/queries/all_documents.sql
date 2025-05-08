@@ -20,4 +20,5 @@ from document
   left join
     contributor_attribution on contributor_attribution.document_id = document.id
   left join contributor on contributor.id = contributor_attribution.contributor_id
-group by document.id
+group by
+  document.id
