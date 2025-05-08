@@ -2,7 +2,7 @@
 
 use dailp::{
     auth::{AuthGuard, GroupGuard, UserGroup, UserInfo},
-    comment::{CommentParent, DeleteCommentInput, PostCommentInput},
+    comment::{CommentParent, CommentUpdate, DeleteCommentInput, PostCommentInput},
     slugify_ltree, AnnotatedForm, AttachAudioToWordInput, CollectionChapter, CurateWordAudioInput,
     DeleteContributorAttribution, DocumentMetadataUpdate, DocumentParagraph,
     UpdateContributorAttribution, Uuid,
@@ -350,8 +350,8 @@ impl Query {
 
     /// Basic information about the currently authenticated user, if any.
     #[graphql(guard = "AuthGuard")]
-    async fn user_info<'a>(&self, context: &'a Context<'_>) -> &'a UserInfo {
-        context.data_unchecked()
+    async fn user_info<'a>(&self, context: &'a Context<'_>) -> Option<&'a UserInfo> {
+        context.data_opt()
     }
 }
 
@@ -423,6 +423,29 @@ impl Mutation {
         input.parent_type.resolve(db, &input.parent_id).await
     }
 
+    /// Update a comment
+    #[graphql(guard = "AuthGuard")]
+    async fn update_comment(
+        &self,
+        context: &Context<'_>,
+        comment: CommentUpdate,
+    ) -> FieldResult<CommentParent> {
+        let user = context
+            .data_opt::<UserInfo>()
+            .ok_or_else(|| anyhow::format_err!("User is not signed in"))?;
+        let db = context.data::<DataLoader<Database>>()?.loader();
+        let comment_object = db.comment_by_id(&comment.id).await?;
+
+        if comment_object.posted_by.id.0 != user.id.to_string() {
+            return Err("User attempted to edit another user's comment".into());
+        }
+
+        db.update_comment(comment).await;
+
+        // We return the parent object, for GraphCache interop
+        return comment_object.parent(context).await;
+    }
+
     /// Mutation for adding/changing contributor attributions
     #[graphql(
         guard = "GroupGuard::new(UserGroup::Editors).or(GroupGuard::new(UserGroup::Contributors))"
@@ -456,7 +479,7 @@ impl Mutation {
     }
 
     /// Mutation for paragraph and translation editing
-    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    #[graphql(guard = "GroupGuard::new(UserGroup::Contributors)")]
     async fn update_paragraph(
         &self,
         context: &Context<'_>,
@@ -499,7 +522,9 @@ impl Mutation {
         Ok(true)
     }
 
-    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    #[graphql(
+        guard = "GroupGuard::new(UserGroup::Editors).or(GroupGuard::new(UserGroup::Contributors))"
+    )]
     async fn update_word(
         &self,
         context: &Context<'_>,
@@ -595,15 +620,15 @@ impl Mutation {
         let user = context
             .data_opt::<UserInfo>()
             .ok_or_else(|| anyhow::format_err!("User is not signed in"))?;
-        let word_id = context
+        let _media_slice_id = context
             .data::<DataLoader<Database>>()?
             .loader()
-            .attach_audio_to_word(input, &user.id)
+            .attach_audio_to_word(&input, &user.id)
             .await?;
         Ok(context
             .data::<DataLoader<Database>>()?
             .loader()
-            .word_by_id(&word_id)
+            .word_by_id(&input.word_id)
             .await?)
     }
 

@@ -1,46 +1,82 @@
 import React from "react"
-import { MdClose, MdNotes, MdOutlineComment } from "react-icons/md/index"
-import { IconButton } from "./components"
+import { MdNotes, MdOutlineComment } from "react-icons/md/index"
+import { unstable_Form as Form, unstable_FormInput as FormInput } from "reakit"
+import * as Dailp from "src/graphql/dailp"
 import { CommentSection } from "./components/comment-section"
-import { CollapsiblePanel, PanelSegment } from "./panel-layout"
+import { EditButton, EditParagraphFeature } from "./edit-paragraph-feature"
+import { useForm as useParagraphForm } from "./edit-paragraph-form-context"
+import { CollapsiblePanel } from "./panel-layout"
 import * as css from "./panel-layout.css"
 import { TranslatedParagraph } from "./segment"
 
-const ParagraphPanel = (p: {
-  segment: TranslatedParagraph
-  setContent: (content: PanelSegment | null) => void
-}) => {
-  const concatSource = p.segment.source.reduce(
-    (paragraph, word) =>
-      `${paragraph} ${word.__typename === "AnnotatedForm" && word.source}`,
-    ""
-  )
+enum ParagraphPanelType {
+  ParagraphPanel,
+  EditParagraphPanel,
+}
 
-  const discussionContent = <CommentSection parent={p.segment} />
+function ParagraphFeature(p: {
+  paragraph: Dailp.ParagraphFormFieldsFragment
+  feature: keyof Dailp.ParagraphFormFieldsFragment
+  label?: string
+}) {
+  let returnFeature
+  if (p.feature === "source") {
+    returnFeature = p.paragraph.source.reduce(
+      (paragraph, word) =>
+        `${paragraph} ${word.__typename === "AnnotatedForm" && word.source}`,
+      ""
+    )
+  } else if (p.feature === "translation") {
+    returnFeature = p.paragraph.translation
+      ? p.paragraph.translation
+      : "This paragraph has no translation"
+  }
+  return <div>{returnFeature}</div>
+}
+
+const ParagraphPanel = (p: {
+  panel: ParagraphPanelType
+  paragraph: Dailp.ParagraphFormFieldsFragment
+}) => {
+  // Overloads the PanelFeatureComponent to display the
+  // EditParagraphFeature component when the panel is in edit mode.
+  const PanelFeatureComponent =
+    p.panel === ParagraphPanelType.EditParagraphPanel
+      ? EditParagraphFeature
+      : ParagraphFeature
+
+  const { paragraphForm } = useParagraphForm()
+  const sourceContent = (
+    // Source cannot be edited, so we only display the source as non-editable feature.
+    <ParagraphFeature
+      paragraph={p.paragraph}
+      feature={"source"}
+      label="Source"
+    />
+  )
+  const translationContent = (
+    // Translation can be edited, so we display the EditParagraphFeature component.
+    <Form {...paragraphForm}>
+      <PanelFeatureComponent
+        paragraph={p.paragraph}
+        feature="translation"
+        label="Translation"
+      />
+    </Form>
+  )
+  const discussionContent = <CommentSection parent={p.paragraph} />
 
   return (
     <>
-      <IconButton
-        className={css.wordPanelButton.basic}
-        onClick={() => p.setContent(null)}
-        aria-label="Dismiss selected paragraph information"
-      >
-        <MdClose size={32} />
-      </IconButton>
-
-      <header className={css.wordPanelHeader}>
-        <h1 className={css.noSpaceBelow}>{`Paragraph ${p.segment.index}`}</h1>
-      </header>
-
       <CollapsiblePanel
         title={"Source"}
-        content={
-          <>
-            <div>{concatSource}</div>
-            <br />
-            <div>&lsquo;{p.segment.translation}&rsquo;</div>
-          </>
-        }
+        content={sourceContent}
+        icon={<MdNotes size={24} className={css.wordPanelButton.colpleft} />}
+      />
+
+      <CollapsiblePanel
+        title={"Translation"}
+        content={translationContent}
         icon={<MdNotes size={24} className={css.wordPanelButton.colpleft} />}
       />
 

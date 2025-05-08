@@ -182,6 +182,10 @@ input AnnotatedFormUpdate {
 	"""
 	source: String
 	"""
+	Possible update to normalized source content
+	"""
+	romanizedSource: String
+	"""
 	Possible update to commentary
 	"""
 	commentary: String
@@ -189,6 +193,10 @@ input AnnotatedFormUpdate {
 	Updated segments
 	"""
 	segments: [MorphemeSegmentUpdate!]
+	"""
+	Possible update to English gloss
+	"""
+	englishGloss: [String!]
 }
 
 """
@@ -341,6 +349,10 @@ type Comment {
 	An optional classification of the comment's content
 	"""
 	commentType: CommentType
+	"""
+	Whether the comment has been edited since it was posted
+	"""
+	edited: Boolean!
 }
 
 """
@@ -363,6 +375,20 @@ enum CommentType {
 	STORY
 	SUGGESTION
 	QUESTION
+}
+
+"""
+Used for updating comments.
+All fields except id are optional.
+"""
+input CommentUpdate {
+	id: UUID!
+	"""
+	The text of the comment
+	"""
+	textContent: String
+	commentType: CommentType
+	edited: Boolean!
 }
 
 """
@@ -800,6 +826,10 @@ type Mutation {
 	"""
 	postComment(input: PostCommentInput!): CommentParent!
 	"""
+	Update a comment
+	"""
+	updateComment(comment: CommentUpdate!): CommentParent!
+	"""
 	Mutation for adding/changing contributor attributions
 	"""
 	updateContributorAttribution(contribution: UpdateContributorAttribution!): UUID!
@@ -867,6 +897,9 @@ input ParagraphUpdate {
 	Unique identifier of the form
 	"""
 	id: UUID!
+	"""
+	English translation of the paragraph
+	"""
 	translation: String
 }
 
@@ -1011,7 +1044,7 @@ type Query {
 	"""
 	Basic information about the currently authenticated user, if any.
 	"""
-	userInfo: UserInfo!
+	userInfo: UserInfo
 }
 
 """

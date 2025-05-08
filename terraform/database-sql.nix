@@ -43,6 +43,8 @@ in {
       db_subnet_group_name = name;
       vpc_security_group_ids = config.servers.database.security_group_ids;
       final_snapshot_identifier = "${name}-primary-final-snapshot";
+      backup_retention_period = 14;
+      backup_window = "07:00-07:59";
 
       # Server times are in UTC, so this is 12am-3am PT
       apply_immediately = true;
@@ -86,8 +88,8 @@ in {
     };
   };
 
-  config.output.database_endpoint = {
-    value = "\${aws_db_instance.sql_database.endpoint}";
+  config.output.database_address = {
+    value = "\${aws_db_instance.sql_database.address}";
   };
   config.output.access_security_group_id = {
     value = "\${aws_security_group.nixos_test.id}";
