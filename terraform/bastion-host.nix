@@ -16,17 +16,18 @@
     stage = config.setup.stage;
     name = "bastion";
 
-    key_name = "dailp-deployment-april-2022";
+    key_name = "dailp-dev-2024";
 
     assign_eip_address = true;
-    associate_public_ip_address = true;
+    associate_public_ip_address = false;
     vpc_id = config.setup.vpc;
     subnets = [
-      config.setup.subnets.primary
-      config.setup.subnets.secondary
-      config.setup.subnets.tertiary
+      config.setup.bastion_subnet
+      # config.setup.subnets.primary
+      # config.setup.subnets.secondary
+      # config.setup.subnets.tertiary
     ];
-
+    
     # Don't create a new security group for this server.
     security_group_enabled = false;
     # Use the existing one setup for database access.
@@ -34,6 +35,7 @@
       "\${aws_security_group.mongodb_access.id}"
       "\${aws_security_group.nixos_test.id}"
     ];
+    disable_api_termination = true;
 
     tags = config.setup.global_tags // config.servers.bastion.instance_tags;
   };

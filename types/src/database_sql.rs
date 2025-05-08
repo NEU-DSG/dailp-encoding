@@ -200,7 +200,7 @@ impl Database {
                             position: PositionInDocument::new(
                                 DocumentId(w.document_id),
                                 w.page_number.unwrap_or_default(),
-                                w.index_in_document as i64,
+                                w.index_in_document,
                             ),
                         })
                         .collect(),
@@ -264,7 +264,7 @@ impl Database {
                         position: PositionInDocument::new(
                             DocumentId(w.document_id),
                             w.page_number.unwrap_or_default(),
-                            w.index_in_document as i64,
+                            w.index_in_document,
                         ),
                     })
                     .collect(),
@@ -383,8 +383,7 @@ impl Database {
             );
             chapter_stack.push(final_path);
 
-            while !(chapter_stack_cur.is_empty()) {
-                let temp_chapter = chapter_stack_cur.pop().unwrap();
+            while let Some(temp_chapter) = chapter_stack_cur.pop() {
                 let cur_slug = temp_chapter.1;
                 url_slug_cur = format!("{}.{}", cur_slug, url_slug_cur);
             }
@@ -509,13 +508,21 @@ impl Database {
         let mut tx = self.client.begin().await?;
 
         let source = word.source.into_vec();
+        let simple_phonetics = word.romanized_source.into_vec();
         let commentary = word.commentary.into_vec();
+        let english_gloss_owned: Vec<String> = match word.english_gloss.into_vec().pop().flatten() {
+            Some(glosses) => glosses,
+            None => Vec::new(),
+        };
+        let english_gloss: Vec<&str> = english_gloss_owned.iter().map(|s| s.as_str()).collect();
 
         let document_id = query_file!(
             "queries/update_word.sql",
             word.id,
             &source as _,
+            &simple_phonetics as _,
             &commentary as _,
+            &english_gloss as _
         )
         .fetch_one(&mut *tx)
         .await?
@@ -534,7 +541,7 @@ impl Database {
             return Ok(word.id);
         }
 
-        let system_name: Option<CherokeeOrthography> = *(&segments[0].system.clone());
+        let system_name: Option<CherokeeOrthography> = segments[0].system;
 
         let (doc_id, gloss, word_id, index, morpheme, role): (
             Vec<_>,
@@ -644,9 +651,10 @@ impl Database {
 
     /// This does two things:
     /// 1. Create a media slice if one does not exist for the provided audio
-    /// recording.
+    ///     recording.
     /// 2. Add a join table entry attaching that media slice to the
-    /// specified word.
+    ///     specified word.
+    ///
     /// Returns the `id` of the upserted media slice
     pub async fn attach_audio_to_word(
         &self,
@@ -714,7 +722,7 @@ impl Database {
         .execute(&self.client)
         .await?;
 
-        Ok(self.paragraph_by_id(&paragraph.id).await?)
+        self.paragraph_by_id(&paragraph.id).await
     }
 
     pub async fn update_comment(&self, comment: CommentUpdate) -> Result<Uuid> {
@@ -1153,11 +1161,11 @@ impl Database {
                     &*form.source,
                     form.simple_phonetics.as_deref(),
                     form.phonemic.as_deref(),
-                    form.english_gloss.get(0).map(|s| &**s),
+                    form.english_gloss.first().map(|s| &**s),
                     form.date_recorded.as_ref().map(|d| d.0),
                     form.commentary.as_deref(),
                     &*form.position.page_number,
-                    form.position.index as i64,
+                    form.position.index,
                 )
             })
             .multiunzip();
@@ -1455,7 +1463,7 @@ impl Database {
                 .collect(),
             index_in_parent: chapter.index_in_parent,
             title: chapter.title,
-            document_id: chapter.document_id.map(|id| DocumentId(id)),
+            document_id: chapter.document_id.map(DocumentId),
             wordpress_id: chapter.wordpress_id,
             section: chapter.section,
         }))
@@ -1485,7 +1493,7 @@ impl Database {
                             .collect(),
                         index_in_parent: chapter.index_in_parent,
                         title: chapter.title,
-                        document_id: chapter.document_id.map(|id| DocumentId(id)),
+                        document_id: chapter.document_id.map(DocumentId),
                         wordpress_id: chapter.wordpress_id,
                         section: chapter.section,
                     })
@@ -1526,7 +1534,7 @@ impl Loader<DocumentId> for Database {
                         index: 0,
                         include_in_edited_collection: true,
                         edited_by: None,
-                        recorded_at: item.recorded_at.map(|recorded_at| Date::new(recorded_at)),
+                        recorded_at: item.recorded_at.map(Date::new),
                         recorded_by: item.recorded_by.and_then(|user_id| {
                             item.recorded_by_name.map(|display_name| User {
                                 id: UserId(user_id.to_string()),
@@ -1589,10 +1597,10 @@ impl Loader<DocumentShortName> for Database {
                         parent_track: None,
                         annotations: None,
                         index: 0,
-                        /// TODO: is this a bad default?
+                        // TODO: is this a bad default?
                         include_in_edited_collection: true,
                         edited_by: None,
-                        recorded_at: item.recorded_at.map(|recorded_at| Date::new(recorded_at)),
+                        recorded_at: item.recorded_at.map(Date::new),
                         recorded_by: item.recorded_by.and_then(|user_id| {
                             item.recorded_by_name.map(|display_name| User {
                                 id: UserId(user_id.to_string()),
@@ -1985,6 +1993,8 @@ impl From<BasicAudioSlice> for AudioSlice {
             slice_id: Some(AudioSliceId(b.id.to_string())),
             resource_url: b.resource_url,
             parent_track: None,
+            annotations: None,
+            index: 0,
             include_in_edited_collection: b.include_in_edited_collection,
             edited_by: b.edited_by.and_then(|user_id| {
                 b.edited_by_name.map(|display_name| User {
@@ -1999,8 +2009,6 @@ impl From<BasicAudioSlice> for AudioSlice {
                     display_name,
                 })
             }),
-            annotations: None,
-            index: 0,
             start_time: b.range.as_ref().and_then(|r| match r.start {
                 Bound::Unbounded => None,
                 Bound::Included(t) | Bound::Excluded(t) => Some(t as i32),
@@ -2073,7 +2081,7 @@ impl From<BasicWord> for AnnotatedForm {
             position: PositionInDocument::new(
                 DocumentId(w.document_id),
                 w.page_number.unwrap_or_default(),
-                w.index_in_document as i64,
+                w.index_in_document,
             ),
         }
     }
@@ -2103,7 +2111,7 @@ impl Loader<ChaptersInCollection> for Database {
                     CollectionChapter {
                         id: chapter.id,
                         title: chapter.title,
-                        document_id: chapter.document_id.map(|id| DocumentId(id)),
+                        document_id: chapter.document_id.map(DocumentId),
                         wordpress_id: chapter.wordpress_id,
                         index_in_parent: chapter.index_in_parent,
                         section: chapter.section,
@@ -2166,20 +2174,20 @@ struct BasicComment {
     pub parent_type: CommentParentType,
 }
 
-impl Into<Comment> for BasicComment {
-    fn into(self) -> Comment {
+impl From<BasicComment> for Comment {
+    fn from(val: BasicComment) -> Self {
         Comment {
-            id: self.id,
-            posted_at: DateTime::new(self.posted_at),
+            id: val.id,
+            posted_at: DateTime::new(val.posted_at),
             posted_by: User {
-                id: self.posted_by.into(),
-                display_name: self.posted_by_name,
+                id: val.posted_by.into(),
+                display_name: val.posted_by_name,
             },
-            text_content: self.text_content,
-            comment_type: self.comment_type,
-            edited: self.edited,
-            parent_id: self.parent_id,
-            parent_type: self.parent_type,
+            text_content: val.text_content,
+            comment_type: val.comment_type,
+            edited: val.edited,
+            parent_id: val.parent_id,
+            parent_type: val.parent_type,
         }
     }
 }
