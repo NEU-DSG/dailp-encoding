@@ -110,7 +110,7 @@ impl Endpoint<()> for AuthedEndpoint {
             .and_then(|values| values.iter().next())
             .and_then(
                 |value| match cognito::user_info_from_authorization(value.as_str()) {
-                    Ok(value) => Some(value.into()),
+                    Ok(value) => Some(value),
                     Err(err) => {
                         error!("{:?}", err);
                         None

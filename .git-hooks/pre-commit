@@ -26,7 +26,7 @@ if git-staged "website/src/graphql/**.graphql" && ! git-staged "website/src/grap
 fi
 
 # Reqire frontend formatting
-if git-staged "website/*" && cd website && yarn prettier -c --config package.json src; then
+if git-staged "website/*" && cd website && ! yarn prettier -c --config package.json src; then
     printf "Frontend code edited but not formatted.\nPlease run 'dev-check' \nor\n'cd website; prettier -w --config package.json src'.\n"
     HOOKS_FAILED=1
 fi
