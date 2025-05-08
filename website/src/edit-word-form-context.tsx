@@ -79,6 +79,7 @@ export const FormProvider = (props: { children: ReactNode }) => {
             romanizedSource: values.word["romanizedSource"],
             commentary: values.word["commentary"],
             segments: updatedSegments,
+            englishGloss: values.word["englishGloss"],
           },
           morphemeSystem: cherokeeRepresentation,
         }).then(({ data, error }) => {
