@@ -1,6 +1,6 @@
 use crate::{
-    AnnotatedDoc, AudioSlice, CherokeeOrthography, Database, Date, DocumentId, PartsOfWord,
-    PositionInDocument, TagId, WordSegment, WordSegmentRole,
+    comment::Comment, AnnotatedDoc, AudioSlice, CherokeeOrthography, Database, Date, DocumentId,
+    MorphemeSegmentUpdate, PartsOfWord, PositionInDocument, TagId, WordSegment, WordSegmentRole,
 };
 use async_graphql::{dataloader::DataLoader, FieldResult, MaybeUndefined};
 use itertools::Itertools;
@@ -240,6 +240,17 @@ impl AnnotatedForm {
         let db = context.data::<DataLoader<Database>>()?.loader();
         Ok(db.word_contributor_audio(self.id.as_ref().unwrap()).await?)
     }
+
+    /// Get comments on this word
+    async fn comments(&self, context: &async_graphql::Context<'_>) -> FieldResult<Vec<Comment>> {
+        let db = context.data::<DataLoader<Database>>()?.loader();
+        Ok(db
+            .comments_by_parent(
+                self.id.as_ref().unwrap(),
+                &crate::comment::CommentParentType::Word,
+            )
+            .await?)
+    }
 }
 
 impl AnnotatedForm {
@@ -286,8 +297,14 @@ pub struct AnnotatedFormUpdate {
     pub id: Uuid,
     /// Possible update to source content
     pub source: MaybeUndefined<String>,
+    /// Possible update to normalized source content
+    pub romanized_source: MaybeUndefined<String>,
     /// Possible update to commentary
     pub commentary: MaybeUndefined<String>,
+    /// Updated segments
+    pub segments: MaybeUndefined<Vec<MorphemeSegmentUpdate>>,
+    /// Possible update to English gloss
+    pub english_gloss: MaybeUndefined<Vec<String>>,
 }
 
 /// Trait that defines function which takes in a possibly undefined value.
@@ -302,6 +319,6 @@ impl<T> MaybeUndefinedExt<T> for MaybeUndefined<T> {
             return Vec::new();
         } else {
             return vec![self.take()];
-        };
+        }
     }
 }
