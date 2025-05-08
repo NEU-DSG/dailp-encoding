@@ -1,6 +1,13 @@
 import { style } from "@vanilla-extract/css"
 import { button } from "src/components/button.css"
-import { fonts, hspace, radii, vspace } from "src/style/constants"
+import {
+  buttonSize,
+  fontSize,
+  fonts,
+  hspace,
+  radii,
+  vspace,
+} from "src/style/constants"
 import { paddingX, paddingY } from "src/style/utils"
 
 export const form = style({
@@ -21,14 +28,43 @@ export const editPanelButton = style([
   },
 ])
 
+export const editPanelButtonSmall = style([
+  button,
+  paddingX(hspace.medium),
+  paddingY(vspace.small),
+  {
+    display: "flex",
+    justifyContent: "space-around",
+    marginLeft: hspace.small,
+    fontSize: "0.8em",
+    height: "auto",
+    width: "auto",
+  },
+])
+
 export const cancelButton = style([
-  { fontFamily: fonts.header, width: "4.5rem" },
+  {
+    fontFamily: fonts.header,
+    width: buttonSize.small,
+  },
+])
+
+export const cancelButtonSmall = style([
+  {
+    fontFamily: fonts.header,
+    width: buttonSize.small,
+    fontSize: "0.8em",
+  },
 ])
 
 export const formInputLabel = style({
   fontFamily: fonts.header,
   fontWeight: "normal",
-  fontSize: "0.9rem",
+  fontSize: fontSize.small,
+})
+
+export const dateInputConatiner = style({
+  width: "25%",
 })
 
 export const formInput = style([
