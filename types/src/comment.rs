@@ -126,9 +126,12 @@ pub struct DeleteCommentInput {
 /// All fields except id are optional.
 #[derive(async_graphql::InputObject)]
 pub struct CommentUpdate {
+    /// The UUID of the comment to perform this operation on.
     pub id: Uuid,
-    /// The text of the comment
+    /// The text of the comment.
     pub text_content: MaybeUndefined<String>,
+    /// The type of content in this comment. See dailp::comment::CommentType.
     pub comment_type: MaybeUndefined<Option<CommentType>>,
+    /// Whether this comment has been edited in the past
     pub edited: bool,
 }

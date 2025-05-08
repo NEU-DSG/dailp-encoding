@@ -1,3 +1,4 @@
+//! Provides a type representing a user.
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
