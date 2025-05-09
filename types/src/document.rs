@@ -606,14 +606,9 @@ impl DocumentReference {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{
-        auth::UserInfo, comment::Comment, date::DateInput, slugify, AnnotatedForm, AudioSlice, Contributor, Database, Date, DocumentId, DocumentShortName, SourceAttribution, Translation, TranslationBlock
-    };
-    
-    use async_graphql::{dataloader::{DataLoader, Loader}, FieldResult, MaybeUndefined};
-    use serde::{Deserialize, Serialize};
-    use sqlx::{PgPool, Row, Pool, Transaction, Postgres};
-    use uuid::Uuid;
+    use crate::{date::DateInput, Database, Date, DocumentId, DocumentShortName};
+    use async_graphql::{dataloader::Loader, MaybeUndefined};
+    use sqlx::PgPool;
 
     #[sqlx::test(migrations = "./migrations")]
     async fn test_get_document_by_name(pool: PgPool) -> Result<(), Box<dyn std::error::Error>> {
@@ -640,12 +635,12 @@ mod tests {
         .fetch_one(&pool)
         .await?;
         let doc_id = insert_data.id;
-        
+
         let db = Database::with_pool(pool);
         let keys = vec![DocumentShortName("YBL12".to_string())];
         let doc_key = DocumentShortName("YBL12".to_string());
         let result = db.load(&keys).await?;
-    
+
         if let Some(doc) = result.get(&doc_key) {
             assert_eq!(doc.meta.short_name, "YBL12");
             assert_eq!(doc.meta.title, "Love Letter #1");
@@ -653,33 +648,39 @@ mod tests {
         } else {
             panic!("Document YBL12 not found in results");
         }
-    
+
         Ok(())
     }
 
     #[sqlx::test(migrations = "./migrations")]
-    async fn test_get_document_by_name_empty_name(pool: PgPool) -> Result<(), Box<dyn std::error::Error>> {
+    async fn test_get_document_by_name_empty_name(
+        pool: PgPool,
+    ) -> Result<(), Box<dyn std::error::Error>> {
         let db = Database::with_pool(pool);
         let keys: Vec<DocumentShortName> = vec![];
         let result = db.load(&keys).await?;
-        
+
         assert!(result.is_empty());
         Ok(())
     }
 
     #[sqlx::test(migrations = "./migrations")]
-    async fn test_get_document_by_name_nonexistent_document(pool: PgPool) -> Result<(), Box<dyn std::error::Error>> {
+    async fn test_get_document_by_name_nonexistent_document(
+        pool: PgPool,
+    ) -> Result<(), Box<dyn std::error::Error>> {
         let db = Database::with_pool(pool);
-        
+
         let keys = vec![DocumentShortName("asdfasdfasdf".to_string())];
         let result = db.load(&keys).await?;
-        
+
         assert!(result.is_empty());
         Ok(())
     }
 
     #[sqlx::test(migrations = "./migrations")]
-    async fn test_get_document_by_name_case_sensitivity(pool: PgPool) -> Result<(), Box<dyn std::error::Error>> {
+    async fn test_get_document_by_name_case_sensitivity(
+        pool: PgPool,
+    ) -> Result<(), Box<dyn std::error::Error>> {
         // Create dummy document_group
         let group_id = sqlx::query!(
             "INSERT INTO document_group (slug, title) VALUES ($1, $2) RETURNING id",
@@ -702,20 +703,21 @@ mod tests {
         )
         .fetch_one(&pool)
         .await?;
-        
+
         let db = Database::with_pool(pool);
         let keys = vec![DocumentShortName("ybl12".to_string())];
         let doc_key = DocumentShortName("ybl12".to_string());
         let result = db.load(&keys).await?;
-    
+
         assert!(!result.contains_key(&doc_key));
 
-    
         Ok(())
     }
 
     #[sqlx::test(migrations = "./migrations")]
-    async fn test_get_document_by_name_multiple_documents(pool: PgPool) -> Result<(), Box<dyn std::error::Error>> {
+    async fn test_get_document_by_name_multiple_documents(
+        pool: PgPool,
+    ) -> Result<(), Box<dyn std::error::Error>> {
         // Create a document group
         let group_id = sqlx::query!(
             "INSERT INTO document_group (slug, title) VALUES ($1, $2) RETURNING id",
@@ -724,7 +726,7 @@ mod tests {
         )
         .fetch_one(&pool)
         .await?;
-        
+
         // Insert multiple documents
         for i in 1..=5 {
             sqlx::query!(
@@ -740,23 +742,23 @@ mod tests {
             .execute(&pool)
             .await?;
         }
-        
+
         let db = Database::with_pool(pool);
-        
+
         // Load multiple documents in one query
         let keys = vec![
             DocumentShortName("DOC1".to_string()),
             DocumentShortName("DOC3".to_string()),
-            DocumentShortName("DOC5".to_string())
+            DocumentShortName("DOC5".to_string()),
         ];
         let result = db.load(&keys).await?;
-        
+
         // Verify all requested documents were loaded
         assert_eq!(result.len(), 3);
         assert!(result.contains_key(&DocumentShortName("DOC1".to_string())));
         assert!(result.contains_key(&DocumentShortName("DOC3".to_string())));
         assert!(result.contains_key(&DocumentShortName("DOC5".to_string())));
-        
+
         Ok(())
     }
 
@@ -785,12 +787,12 @@ mod tests {
         .fetch_one(&pool)
         .await?;
         let doc_id = insert_data.id;
-        
+
         let db = Database::with_pool(pool);
         let keys = vec![DocumentId(doc_id)];
         let doc_key = DocumentId(doc_id);
         let result = db.load(&keys).await?;
-    
+
         if let Some(doc) = result.get(&doc_key) {
             assert_eq!(doc.meta.short_name, "YBL12");
             assert_eq!(doc.meta.title, "Love Letter #1");
@@ -798,35 +800,41 @@ mod tests {
         } else {
             panic!("Document YBL12 not found in results");
         }
-    
+
         Ok(())
     }
 
     #[sqlx::test(migrations = "./migrations")]
-    async fn test_get_document_by_id_with_empty_keys(pool: PgPool) -> Result<(), Box<dyn std::error::Error>> {
+    async fn test_get_document_by_id_with_empty_keys(
+        pool: PgPool,
+    ) -> Result<(), Box<dyn std::error::Error>> {
         let db = Database::with_pool(pool);
         let keys: Vec<DocumentId> = vec![];
         let result = db.load(&keys).await?;
-        
+
         assert!(result.is_empty());
         Ok(())
     }
 
     #[sqlx::test(migrations = "./migrations")]
-    async fn test_get_document_by_id_nonexistent_document(pool: PgPool) -> Result<(), Box<dyn std::error::Error>> {
+    async fn test_get_document_by_id_nonexistent_document(
+        pool: PgPool,
+    ) -> Result<(), Box<dyn std::error::Error>> {
         // Create a random UUID that doesn't exist in the database
         let nonexistent_id = uuid::Uuid::new_v4();
-        
+
         let db = Database::with_pool(pool);
         let keys = vec![DocumentId(nonexistent_id)];
         let result = db.load(&keys).await?;
-        
+
         assert!(result.is_empty());
         Ok(())
     }
 
     #[sqlx::test(migrations = "./migrations")]
-    async fn test_get_document_by_id_multiple_documents(pool: PgPool) -> Result<(), Box<dyn std::error::Error>> {
+    async fn test_get_document_by_id_multiple_documents(
+        pool: PgPool,
+    ) -> Result<(), Box<dyn std::error::Error>> {
         // Create a document group
         let group_id = sqlx::query!(
             "INSERT INTO document_group (slug, title) VALUES ($1, $2) RETURNING id",
@@ -835,10 +843,10 @@ mod tests {
         )
         .fetch_one(&pool)
         .await?;
-        
+
         // Insert multiple documents and collect their IDs
         let mut doc_ids = Vec::new();
-        
+
         for i in 1..=5 {
             let insert_data = sqlx::query!(
                 "INSERT INTO document (short_name, title, group_id, index_in_group, is_reference, include_audio_in_edited_collection) 
@@ -852,45 +860,47 @@ mod tests {
             )
             .fetch_one(&pool)
             .await?;
-            
+
             doc_ids.push(insert_data.id);
         }
-        
+
         let db = Database::with_pool(pool);
-        
+
         // Load multiple documents in one query (every other document)
         let keys = vec![
-            DocumentId(doc_ids[0]), 
-            DocumentId(doc_ids[2]), 
-            DocumentId(doc_ids[4])
+            DocumentId(doc_ids[0]),
+            DocumentId(doc_ids[2]),
+            DocumentId(doc_ids[4]),
         ];
-        
+
         let result = db.load(&keys).await?;
-        
+
         // Verify all requested documents were loaded
         assert_eq!(result.len(), 3);
         assert!(result.contains_key(&DocumentId(doc_ids[0])));
         assert!(result.contains_key(&DocumentId(doc_ids[2])));
         assert!(result.contains_key(&DocumentId(doc_ids[4])));
-        
+
         // Verify the documents have the correct data
         let doc1 = result.get(&DocumentId(doc_ids[0])).unwrap();
         assert_eq!(doc1.meta.short_name, "DOC1");
         assert_eq!(doc1.meta.title, "Document 1");
-        
+
         let doc3 = result.get(&DocumentId(doc_ids[2])).unwrap();
         assert_eq!(doc3.meta.short_name, "DOC3");
         assert_eq!(doc3.meta.title, "Document 3");
-        
+
         let doc5 = result.get(&DocumentId(doc_ids[4])).unwrap();
         assert_eq!(doc5.meta.short_name, "DOC5");
         assert_eq!(doc5.meta.title, "Document 5");
-        
+
         Ok(())
     }
 
     #[sqlx::test(migrations = "./migrations")]
-    async fn test_get_document_by_id_duplicate_keys(pool: PgPool) -> Result<(), Box<dyn std::error::Error>> {
+    async fn test_get_document_by_id_duplicate_keys(
+        pool: PgPool,
+    ) -> Result<(), Box<dyn std::error::Error>> {
         // Create a document group
         let group_id = sqlx::query!(
             "INSERT INTO document_group (slug, title) VALUES ($1, $2) RETURNING id",
@@ -914,17 +924,17 @@ mod tests {
         .fetch_one(&pool)
         .await?;
         let doc_id = insert_data.id;
-        
+
         let db = Database::with_pool(pool);
-        
+
         // Include the same ID multiple times in the keys
         let keys = vec![DocumentId(doc_id), DocumentId(doc_id), DocumentId(doc_id)];
         let result = db.load(&keys).await?;
-        
+
         // Should only return one document despite the duplicate keys
         assert_eq!(result.len(), 1);
         assert!(result.contains_key(&DocumentId(doc_id)));
-        
+
         Ok(())
     }
 
@@ -958,7 +968,7 @@ mod tests {
         let keys = vec![DocumentId(doc_id)];
         let doc_key = DocumentId(doc_id);
         let result = db.load(&keys).await?;
-    
+
         if let Some(doc) = result.get(&doc_key) {
             assert_eq!(doc.meta.short_name, "YBL12");
             assert_eq!(doc.meta.title, "Love Letter #1");
@@ -991,18 +1001,20 @@ mod tests {
     }
 
     #[sqlx::test(migrations = "./migrations")]
-   async fn test_update_document_metadata_undefined_values(pool: PgPool) -> Result<(), Box<dyn std::error::Error>> {
-       // Create document group
-       let group_id = sqlx::query!(
-           "INSERT INTO document_group (slug, title) VALUES ($1, $2) RETURNING id",
-           "Test Group Slug",
-           "Test Group Title"
-       )
-       .fetch_one(&pool)
-       .await?;
+    async fn test_update_document_metadata_undefined_values(
+        pool: PgPool,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        // Create document group
+        let group_id = sqlx::query!(
+            "INSERT INTO document_group (slug, title) VALUES ($1, $2) RETURNING id",
+            "Test Group Slug",
+            "Test Group Title"
+        )
+        .fetch_one(&pool)
+        .await?;
 
-       // Insert initial document
-       let insert_data = sqlx::query!(
+        // Insert initial document
+        let insert_data = sqlx::query!(
            "INSERT INTO document (short_name, title, group_id, index_in_group, is_reference, include_audio_in_edited_collection) 
                VALUES ($1, $2, $3, $4, $5, $6) RETURNING id",
            "DOC1",
@@ -1014,43 +1026,45 @@ mod tests {
        )
        .fetch_one(&pool)
        .await?;
-       let doc_id = insert_data.id;
+        let doc_id = insert_data.id;
 
-       let db = Database::with_pool(pool);
-       
-       // Update with Undefined values (should not change anything)
-       let update_data = DocumentMetadataUpdate {
-           id: doc_id,
-           title: MaybeUndefined::Undefined,
-           written_at: MaybeUndefined::Undefined,
-       };
+        let db = Database::with_pool(pool);
 
-       db.update_document_metadata(update_data).await?;
+        // Update with Undefined values (should not change anything)
+        let update_data = DocumentMetadataUpdate {
+            id: doc_id,
+            title: MaybeUndefined::Undefined,
+            written_at: MaybeUndefined::Undefined,
+        };
 
-       // Verify no changes were made
-       let keys = vec![DocumentId(doc_id)];
-       let result = db.load(&keys).await?;
-       let doc = result.get(&DocumentId(doc_id)).expect("Document not found");
-       
-       assert_eq!(doc.meta.title, "Original Title");
-       assert_eq!(doc.meta.date, None); // Should still be None
-       
-       Ok(())
-   }
+        db.update_document_metadata(update_data).await?;
 
-   #[sqlx::test(migrations = "./migrations")]
-   async fn test_update_document_metadata_extreme_values(pool: PgPool) -> Result<(), Box<dyn std::error::Error>> {
-       // Create document group
-       let group_id = sqlx::query!(
-           "INSERT INTO document_group (slug, title) VALUES ($1, $2) RETURNING id",
-           "Test Group Slug",
-           "Test Group Title"
-       )
-       .fetch_one(&pool)
-       .await?;
+        // Verify no changes were made
+        let keys = vec![DocumentId(doc_id)];
+        let result = db.load(&keys).await?;
+        let doc = result.get(&DocumentId(doc_id)).expect("Document not found");
 
-       // Insert initial document
-       let insert_data = sqlx::query!(
+        assert_eq!(doc.meta.title, "Original Title");
+        assert_eq!(doc.meta.date, None); // Should still be None
+
+        Ok(())
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn test_update_document_metadata_extreme_values(
+        pool: PgPool,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        // Create document group
+        let group_id = sqlx::query!(
+            "INSERT INTO document_group (slug, title) VALUES ($1, $2) RETURNING id",
+            "Test Group Slug",
+            "Test Group Title"
+        )
+        .fetch_one(&pool)
+        .await?;
+
+        // Insert initial document
+        let insert_data = sqlx::query!(
            "INSERT INTO document (short_name, title, group_id, index_in_group, is_reference, include_audio_in_edited_collection) 
                VALUES ($1, $2, $3, $4, $5, $6) RETURNING id",
            "DOC3",
@@ -1062,50 +1076,50 @@ mod tests {
        )
        .fetch_one(&pool)
        .await?;
-       let doc_id = insert_data.id;
+        let doc_id = insert_data.id;
 
-       let db = Database::with_pool(pool);
-       
-       // Update with extreme values
-       // 1. Very long title (test VARCHAR limits)
-       let very_long_title = "a".repeat(1000); // Adjust length based on your DB schema limits
-       
-       // 2. Very old or future date
-       let extreme_date = DateInput::new(31, 12, 9999); // Far future date
-       
-       let update_data = DocumentMetadataUpdate {
-           id: doc_id,
-           title: MaybeUndefined::Value(very_long_title.clone()),
-           written_at: MaybeUndefined::Value(extreme_date),
-       };
+        let db = Database::with_pool(pool);
 
-       db.update_document_metadata(update_data).await?;
+        // Update with extreme values
+        // 1. Very long title (test VARCHAR limits)
+        let very_long_title = "a".repeat(1000); // Adjust length based on your DB schema limits
 
-       // Verify changes were made
-       let keys = vec![DocumentId(doc_id)];
-       let result = db.load(&keys).await?;
-       let doc = result.get(&DocumentId(doc_id)).expect("Document not found");
-       
-       assert_eq!(doc.meta.title, very_long_title);
-       assert_eq!(doc.meta.date, Some(Date::from_ymd(9999, 12, 31)));
-       
-       Ok(())
-   }
+        // 2. Very old or future date
+        let extreme_date = DateInput::new(31, 12, 9999); // Far future date
 
-   #[sqlx::test(migrations = "./migrations")]
-   async fn test_update_only_title(pool: PgPool) -> Result<(), Box<dyn std::error::Error>> {
-       // Create document group
-       let group_id = sqlx::query!(
-           "INSERT INTO document_group (slug, title) VALUES ($1, $2) RETURNING id",
-           "Test Group Slug",
-           "Test Group Title"
-       )
-       .fetch_one(&pool)
-       .await?;
+        let update_data = DocumentMetadataUpdate {
+            id: doc_id,
+            title: MaybeUndefined::Value(very_long_title.clone()),
+            written_at: MaybeUndefined::Value(extreme_date),
+        };
 
-       // Insert document with initial date
-       let initial_date = chrono::NaiveDate::from_ymd_opt(2023, 5, 15).unwrap();
-       let insert_data = sqlx::query!(
+        db.update_document_metadata(update_data).await?;
+
+        // Verify changes were made
+        let keys = vec![DocumentId(doc_id)];
+        let result = db.load(&keys).await?;
+        let doc = result.get(&DocumentId(doc_id)).expect("Document not found");
+
+        assert_eq!(doc.meta.title, very_long_title);
+        assert_eq!(doc.meta.date, Some(Date::from_ymd(9999, 12, 31)));
+
+        Ok(())
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn test_update_only_title(pool: PgPool) -> Result<(), Box<dyn std::error::Error>> {
+        // Create document group
+        let group_id = sqlx::query!(
+            "INSERT INTO document_group (slug, title) VALUES ($1, $2) RETURNING id",
+            "Test Group Slug",
+            "Test Group Title"
+        )
+        .fetch_one(&pool)
+        .await?;
+
+        // Insert document with initial date
+        let initial_date = chrono::NaiveDate::from_ymd_opt(2023, 5, 15).unwrap();
+        let insert_data = sqlx::query!(
            "INSERT INTO document (short_name, title, group_id, index_in_group, is_reference, include_audio_in_edited_collection, written_at) 
                VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id",
            "DOC6",
@@ -1118,43 +1132,43 @@ mod tests {
        )
        .fetch_one(&pool)
        .await?;
-       let doc_id = insert_data.id;
+        let doc_id = insert_data.id;
 
-       let db = Database::with_pool(pool);
-       
-       // Update only the title, leave date undefined
-       let update_data = DocumentMetadataUpdate {
-           id: doc_id,
-           title: MaybeUndefined::Value("Updated Title Only".to_string()),
-           written_at: MaybeUndefined::Undefined,
-       };
+        let db = Database::with_pool(pool);
 
-       db.update_document_metadata(update_data).await?;
+        // Update only the title, leave date undefined
+        let update_data = DocumentMetadataUpdate {
+            id: doc_id,
+            title: MaybeUndefined::Value("Updated Title Only".to_string()),
+            written_at: MaybeUndefined::Undefined,
+        };
 
-       // Verify only title was updated
-       let keys = vec![DocumentId(doc_id)];
-       let result = db.load(&keys).await?;
-       let doc = result.get(&DocumentId(doc_id)).expect("Document not found");
-       
-       assert_eq!(doc.meta.title, "Updated Title Only");
-       assert_eq!(doc.meta.date, Some(Date::from_ymd(2023, 5, 15))); // Date should be unchanged
-       
-       Ok(())
-   }
+        db.update_document_metadata(update_data).await?;
 
-   #[sqlx::test(migrations = "./migrations")]
-   async fn test_update_only_date(pool: PgPool) -> Result<(), Box<dyn std::error::Error>> {
-       // Create document group
-       let group_id = sqlx::query!(
-           "INSERT INTO document_group (slug, title) VALUES ($1, $2) RETURNING id",
-           "Test Group Slug",
-           "Test Group Title"
-       )
-       .fetch_one(&pool)
-       .await?;
+        // Verify only title was updated
+        let keys = vec![DocumentId(doc_id)];
+        let result = db.load(&keys).await?;
+        let doc = result.get(&DocumentId(doc_id)).expect("Document not found");
 
-       // Insert document
-       let insert_data = sqlx::query!(
+        assert_eq!(doc.meta.title, "Updated Title Only");
+        assert_eq!(doc.meta.date, Some(Date::from_ymd(2023, 5, 15))); // Date should be unchanged
+
+        Ok(())
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn test_update_only_date(pool: PgPool) -> Result<(), Box<dyn std::error::Error>> {
+        // Create document group
+        let group_id = sqlx::query!(
+            "INSERT INTO document_group (slug, title) VALUES ($1, $2) RETURNING id",
+            "Test Group Slug",
+            "Test Group Title"
+        )
+        .fetch_one(&pool)
+        .await?;
+
+        // Insert document
+        let insert_data = sqlx::query!(
            "INSERT INTO document (short_name, title, group_id, index_in_group, is_reference, include_audio_in_edited_collection) 
                VALUES ($1, $2, $3, $4, $5, $6) RETURNING id",
            "DOC7",
@@ -1166,28 +1180,27 @@ mod tests {
        )
        .fetch_one(&pool)
        .await?;
-       let doc_id = insert_data.id;
+        let doc_id = insert_data.id;
 
-       let db = Database::with_pool(pool);
-       
-       // Update only the date, leave title undefined
-       let update_data = DocumentMetadataUpdate {
-           id: doc_id,
-           title: MaybeUndefined::Undefined,
-           written_at: MaybeUndefined::Value(DateInput::new(25, 12, 2025)),
-       };
+        let db = Database::with_pool(pool);
 
-       db.update_document_metadata(update_data).await?;
+        // Update only the date, leave title undefined
+        let update_data = DocumentMetadataUpdate {
+            id: doc_id,
+            title: MaybeUndefined::Undefined,
+            written_at: MaybeUndefined::Value(DateInput::new(25, 12, 2025)),
+        };
 
-       // Verify only date was updated
-       let keys = vec![DocumentId(doc_id)];
-       let result = db.load(&keys).await?;
-       let doc = result.get(&DocumentId(doc_id)).expect("Document not found");
-       
-       assert_eq!(doc.meta.title, "Original Title"); // Title should be unchanged
-       assert_eq!(doc.meta.date, Some(Date::from_ymd(2025, 12, 25))); 
-       
-       Ok(())
-   }
-    
+        db.update_document_metadata(update_data).await?;
+
+        // Verify only date was updated
+        let keys = vec![DocumentId(doc_id)];
+        let result = db.load(&keys).await?;
+        let doc = result.get(&DocumentId(doc_id)).expect("Document not found");
+
+        assert_eq!(doc.meta.title, "Original Title"); // Title should be unchanged
+        assert_eq!(doc.meta.date, Some(Date::from_ymd(2025, 12, 25)));
+
+        Ok(())
+    }
 }

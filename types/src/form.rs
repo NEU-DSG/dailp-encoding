@@ -321,12 +321,12 @@ impl<T> MaybeUndefinedExt<T> for MaybeUndefined<T> {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use chrono::NaiveDate;
     use sqlx::PgPool;
-    use super::*;
 
     #[tokio::test]
-    async fn test_get_word_by_id () -> Result<(), Box<dyn std::error::Error>> {
+    async fn test_get_word_by_id() -> Result<(), Box<dyn std::error::Error>> {
         let db = Database::connect(None)?;
         let word_id = Uuid::parse_str("d083ec97-43e4-4123-bc30-cc884885259d").unwrap();
         let result = db.word_by_id(&word_id).await?;
@@ -337,22 +337,24 @@ mod tests {
         assert_eq!(result.english_gloss, vec!["it's bouncing"]);
         // assert_eq!(result.date_recorded, Some(Date::from_ymd(1975, 1, 1)));
         // word_by_id.sql does not get the date recorded
-        
+
         Ok(())
     }
 
     #[tokio::test]
-    async fn test_get_word_by_id_nonexistent_id () -> Result<(), Box<dyn std::error::Error>> {
+    async fn test_get_word_by_id_nonexistent_id() -> Result<(), Box<dyn std::error::Error>> {
         let db = Database::connect(None)?;
         let word_id = Uuid::new_v4();
         let result = db.word_by_id(&word_id).await;
         assert!(result.is_err());
-        
+
         Ok(())
     }
 
     #[sqlx::test(migrations = "./migrations")]
-    async fn test_get_word_by_id_null_fields(pool: PgPool) -> Result<(), Box<dyn std::error::Error>> {
+    async fn test_get_word_by_id_null_fields(
+        pool: PgPool,
+    ) -> Result<(), Box<dyn std::error::Error>> {
         // Create dummy document_group
         let group_id = sqlx::query!(
             "INSERT INTO document_group (slug, title) VALUES ($1, $2) RETURNING id",
@@ -395,7 +397,6 @@ mod tests {
         .await?;
         let word_id = insert_word.id;
 
-
         let db = Database::with_pool(pool);
         let result = db.word_by_id(&word_id).await?;
         assert_eq!(result.id, Some(word_id));
@@ -408,18 +409,20 @@ mod tests {
     }
 
     #[sqlx::test(migrations = "./migrations")]
-   async fn test_get_word_with_malformed_uuid(pool: PgPool) -> Result<(), Box<dyn std::error::Error>> {       
-       // Create an invalid UUID string
-       let invalid_uuid_str = "not-a-uuid";
-       
-       // Parse this string to UUID (should fail)
-       let result = Uuid::parse_str(invalid_uuid_str);
-       assert!(result.is_err(), "Expected UUID parsing to fail");
-       
-       Ok(())
-   }
+    async fn test_get_word_with_malformed_uuid(
+        pool: PgPool,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        // Create an invalid UUID string
+        let invalid_uuid_str = "not-a-uuid";
 
-   #[sqlx::test(migrations = "./migrations")]
+        // Parse this string to UUID (should fail)
+        let result = Uuid::parse_str(invalid_uuid_str);
+        assert!(result.is_err(), "Expected UUID parsing to fail");
+
+        Ok(())
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
     async fn test_update_word(pool: PgPool) -> Result<(), Box<dyn std::error::Error>> {
         // Create dummy document_group
         let group_id = sqlx::query!(
@@ -463,7 +466,6 @@ mod tests {
         .await?;
         let word_id = insert_word.id;
 
-
         let db = Database::with_pool(pool);
         let result = db.word_by_id(&word_id).await?;
         assert_eq!(result.id, Some(word_id));
@@ -486,26 +488,34 @@ mod tests {
         let updated_result = db.word_by_id(&word_id).await?;
         assert_eq!(updated_result.id, Some(word_id));
         assert_eq!(updated_result.source, "Updated Source".to_string());
-        assert_eq!(updated_result.commentary, Some("Updated Commentary".to_string()));
-        assert_eq!(updated_result.simple_phonetics, Some("gadadega".to_string()));
+        assert_eq!(
+            updated_result.commentary,
+            Some("Updated Commentary".to_string())
+        );
+        assert_eq!(
+            updated_result.simple_phonetics,
+            Some("gadadega".to_string())
+        );
         assert_eq!(updated_result.phonemic, Some("gadadééga".to_string()));
         assert_eq!(updated_result.english_gloss, vec!["it's bouncing"]);
 
         Ok(())
     }
 
-   #[sqlx::test(migrations = "./migrations")]
-   async fn test_update_word_with_undefined_values(pool: PgPool) -> Result<(), Box<dyn std::error::Error>> {
-       // Setup: Create document group and test data
-       let group_id = sqlx::query!(
-           "INSERT INTO document_group (slug, title) VALUES ($1, $2) RETURNING id",
-           "Test Group Slug",
-           "Test Group Title"
-       )
-       .fetch_one(&pool)
-       .await?;
+    #[sqlx::test(migrations = "./migrations")]
+    async fn test_update_word_with_undefined_values(
+        pool: PgPool,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        // Setup: Create document group and test data
+        let group_id = sqlx::query!(
+            "INSERT INTO document_group (slug, title) VALUES ($1, $2) RETURNING id",
+            "Test Group Slug",
+            "Test Group Title"
+        )
+        .fetch_one(&pool)
+        .await?;
 
-       let insert_doc = sqlx::query!(
+        let insert_doc = sqlx::query!(
            "INSERT INTO document (short_name, title, group_id, index_in_group, is_reference, include_audio_in_edited_collection) 
                VALUES ($1, $2, $3, $4, $5, $6) RETURNING id",
            "DOC1",
@@ -517,10 +527,10 @@ mod tests {
        )
        .fetch_one(&pool)
        .await?;
-       let doc_id = insert_doc.id;
+        let doc_id = insert_doc.id;
 
-       // Insert test word
-       let insert_word = sqlx::query!(
+        // Insert test word
+        let insert_word = sqlx::query!(
            "INSERT INTO word (source_text, simple_phonetics, phonemic, english_gloss, recorded_at, document_id, page_number, index_in_document, include_audio_in_edited_collection)
                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id",
            "ᎦᏓᏕᎦ",
@@ -535,46 +545,51 @@ mod tests {
        )
        .fetch_one(&pool)
        .await?;
-       let word_id = insert_word.id;
+        let word_id = insert_word.id;
 
-       let db = Database::with_pool(pool);
+        let db = Database::with_pool(pool);
 
-       // Check initial state
-       let initial_word = db.word_by_id(&word_id).await?;
-       
-       // Update with Undefined values (should not change anything)
-       let update_data = AnnotatedFormUpdate {
-           id: word_id,
-           source: MaybeUndefined::Undefined,
-           commentary: MaybeUndefined::Undefined,
-           segments: MaybeUndefined::Undefined,
-       };
+        // Check initial state
+        let initial_word = db.word_by_id(&word_id).await?;
 
-       db.update_word(update_data).await?;
+        // Update with Undefined values (should not change anything)
+        let update_data = AnnotatedFormUpdate {
+            id: word_id,
+            source: MaybeUndefined::Undefined,
+            commentary: MaybeUndefined::Undefined,
+            segments: MaybeUndefined::Undefined,
+        };
 
-       // Verify nothing changed
-       let updated_result = db.word_by_id(&word_id).await?;
-       assert_eq!(updated_result.id, Some(word_id));
-       assert_eq!(updated_result.source, "ᎦᏓᏕᎦ".to_string());
-       assert_eq!(updated_result.simple_phonetics, Some("gadadega".to_string()));
-       assert_eq!(updated_result.phonemic, Some("gadadééga".to_string()));
-       assert_eq!(updated_result.english_gloss, vec!["it's bouncing"]);
-       
-       Ok(())
-   }
+        db.update_word(update_data).await?;
 
-   #[sqlx::test(migrations = "./migrations")]
-   async fn test_update_word_with_null_values(pool: PgPool) -> Result<(), Box<dyn std::error::Error>> {
-       // Setup: Create document group and test data
-       let group_id = sqlx::query!(
-           "INSERT INTO document_group (slug, title) VALUES ($1, $2) RETURNING id",
-           "Test Group Slug",
-           "Test Group Title"
-       )
-       .fetch_one(&pool)
-       .await?;
+        // Verify nothing changed
+        let updated_result = db.word_by_id(&word_id).await?;
+        assert_eq!(updated_result.id, Some(word_id));
+        assert_eq!(updated_result.source, "ᎦᏓᏕᎦ".to_string());
+        assert_eq!(
+            updated_result.simple_phonetics,
+            Some("gadadega".to_string())
+        );
+        assert_eq!(updated_result.phonemic, Some("gadadééga".to_string()));
+        assert_eq!(updated_result.english_gloss, vec!["it's bouncing"]);
 
-       let insert_doc = sqlx::query!(
+        Ok(())
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn test_update_word_with_null_values(
+        pool: PgPool,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        // Setup: Create document group and test data
+        let group_id = sqlx::query!(
+            "INSERT INTO document_group (slug, title) VALUES ($1, $2) RETURNING id",
+            "Test Group Slug",
+            "Test Group Title"
+        )
+        .fetch_one(&pool)
+        .await?;
+
+        let insert_doc = sqlx::query!(
            "INSERT INTO document (short_name, title, group_id, index_in_group, is_reference, include_audio_in_edited_collection) 
                VALUES ($1, $2, $3, $4, $5, $6) RETURNING id",
            "DOC2",
@@ -586,10 +601,10 @@ mod tests {
        )
        .fetch_one(&pool)
        .await?;
-       let doc_id = insert_doc.id;
+        let doc_id = insert_doc.id;
 
-       // Insert test word with non-null commentary
-       let insert_word = sqlx::query!(
+        // Insert test word with non-null commentary
+        let insert_word = sqlx::query!(
            "INSERT INTO word (source_text, simple_phonetics, phonemic, english_gloss, recorded_at, document_id, page_number, index_in_document, include_audio_in_edited_collection, commentary)
                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id",
            "ᎦᏓᏕᎦ",
@@ -605,66 +620,74 @@ mod tests {
        )
        .fetch_one(&pool)
        .await?;
-       let word_id = insert_word.id;
+        let word_id = insert_word.id;
 
-       let db = Database::with_pool(pool);
+        let db = Database::with_pool(pool);
 
-       // Check initial state
-       let initial_word = db.word_by_id(&word_id).await?;
-       assert_eq!(initial_word.commentary, Some("Initial commentary".to_string()));
-       
-       // Update setting commentary to null
-       let update_data = AnnotatedFormUpdate {
-           id: word_id,
-           source: MaybeUndefined::Undefined,
-           commentary: MaybeUndefined::Null, // Set to NULL
-           segments: MaybeUndefined::Undefined,
-       };
+        // Check initial state
+        let initial_word = db.word_by_id(&word_id).await?;
+        assert_eq!(
+            initial_word.commentary,
+            Some("Initial commentary".to_string())
+        );
 
-       db.update_word(update_data).await?;
+        // Update setting commentary to null
+        let update_data = AnnotatedFormUpdate {
+            id: word_id,
+            source: MaybeUndefined::Undefined,
+            commentary: MaybeUndefined::Null, // Set to NULL
+            segments: MaybeUndefined::Undefined,
+        };
 
-       // Verify commentary is now null
-       let updated_word = db.word_by_id(&word_id).await?;
-       assert_eq!(updated_word.commentary, None);
-       assert_eq!(updated_word.source, initial_word.source); // Other fields unchanged
-       
-       Ok(())
-   }
+        db.update_word(update_data).await?;
 
-   #[sqlx::test(migrations = "./migrations")]
-   async fn test_update_nonexistent_word(pool: PgPool) -> Result<(), Box<dyn std::error::Error>> {
-       let db = Database::with_pool(pool);
-       
-       // Generate a random UUID that shouldn't exist
-       let nonexistent_id = Uuid::new_v4();
-       
-       // Try to update a non-existent word
-       let update_data = AnnotatedFormUpdate {
-           id: nonexistent_id,
-           source: MaybeUndefined::Value("Updated Source".to_string()),
-           commentary: MaybeUndefined::Value("Updated Commentary".to_string()),
-           segments: MaybeUndefined::Null,
-       };
+        // Verify commentary is now null
+        let updated_word = db.word_by_id(&word_id).await?;
+        assert_eq!(updated_word.commentary, None);
+        assert_eq!(updated_word.source, initial_word.source); // Other fields unchanged
 
-       // Try the update without using ? to catch the error
-       let result = db.update_word(update_data).await;
-       assert!(result.is_err(), "Expected an error when updating non-existent word");
-       
-       Ok(())
-   }
+        Ok(())
+    }
 
-   #[sqlx::test(migrations = "./migrations")]
-   async fn test_update_word_with_long_text(pool: PgPool) -> Result<(), Box<dyn std::error::Error>> {
-       // Setup: Create document group and test data
-       let group_id = sqlx::query!(
-           "INSERT INTO document_group (slug, title) VALUES ($1, $2) RETURNING id",
-           "Test Group Slug",
-           "Test Group Title"
-       )
-       .fetch_one(&pool)
-       .await?;
+    #[sqlx::test(migrations = "./migrations")]
+    async fn test_update_nonexistent_word(pool: PgPool) -> Result<(), Box<dyn std::error::Error>> {
+        let db = Database::with_pool(pool);
 
-       let insert_doc = sqlx::query!(
+        // Generate a random UUID that shouldn't exist
+        let nonexistent_id = Uuid::new_v4();
+
+        // Try to update a non-existent word
+        let update_data = AnnotatedFormUpdate {
+            id: nonexistent_id,
+            source: MaybeUndefined::Value("Updated Source".to_string()),
+            commentary: MaybeUndefined::Value("Updated Commentary".to_string()),
+            segments: MaybeUndefined::Null,
+        };
+
+        // Try the update without using ? to catch the error
+        let result = db.update_word(update_data).await;
+        assert!(
+            result.is_err(),
+            "Expected an error when updating non-existent word"
+        );
+
+        Ok(())
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn test_update_word_with_long_text(
+        pool: PgPool,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        // Setup: Create document group and test data
+        let group_id = sqlx::query!(
+            "INSERT INTO document_group (slug, title) VALUES ($1, $2) RETURNING id",
+            "Test Group Slug",
+            "Test Group Title"
+        )
+        .fetch_one(&pool)
+        .await?;
+
+        let insert_doc = sqlx::query!(
            "INSERT INTO document (short_name, title, group_id, index_in_group, is_reference, include_audio_in_edited_collection) 
                VALUES ($1, $2, $3, $4, $5, $6) RETURNING id",
            "DOC3",
@@ -676,10 +699,10 @@ mod tests {
        )
        .fetch_one(&pool)
        .await?;
-       let doc_id = insert_doc.id;
+        let doc_id = insert_doc.id;
 
-       // Insert test word
-       let insert_word = sqlx::query!(
+        // Insert test word
+        let insert_word = sqlx::query!(
            "INSERT INTO word (source_text, simple_phonetics, phonemic, english_gloss, recorded_at, document_id, page_number, index_in_document, include_audio_in_edited_collection)
                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id",
            "ᎦᏓᏕᎦ",
@@ -694,50 +717,55 @@ mod tests {
        )
        .fetch_one(&pool)
        .await?;
-       let word_id = insert_word.id;
+        let word_id = insert_word.id;
 
-       let db = Database::with_pool(pool);
-       
-       // Create very long strings for testing
-       let long_source = "Ꭰ".repeat(500);
-       let long_commentary = "This is a very ".repeat(100) + "long commentary";
-       
-       // Update with very long text values
-       let update_data = AnnotatedFormUpdate {
-           id: word_id,
-           source: MaybeUndefined::Value(long_source.clone()),
-           commentary: MaybeUndefined::Value(long_commentary.clone()),
-           segments: MaybeUndefined::Undefined,
-       };
+        let db = Database::with_pool(pool);
 
-       // This might fail if the values exceed database column limits
-       let result = db.update_word(update_data).await;
-       
-       if result.is_ok() {
-           // If it succeeded, verify the long values were stored correctly
-           let updated_word = db.word_by_id(&word_id).await?;
-           assert_eq!(updated_word.source, long_source);
-           assert_eq!(updated_word.commentary, Some(long_commentary));
-       } else {
-           // If it failed due to text being too long, that's expected
-           println!("Update with very long text failed as expected: {}", result.unwrap_err());
-       }
-       
-       Ok(())
-   }
+        // Create very long strings for testing
+        let long_source = "Ꭰ".repeat(500);
+        let long_commentary = "This is a very ".repeat(100) + "long commentary";
 
-   #[sqlx::test(migrations = "./migrations")]
-   async fn test_update_word_partial_fields(pool: PgPool) -> Result<(), Box<dyn std::error::Error>> {
-       // Setup: Create document group and test data
-       let group_id = sqlx::query!(
-           "INSERT INTO document_group (slug, title) VALUES ($1, $2) RETURNING id",
-           "Test Group Slug",
-           "Test Group Title"
-       )
-       .fetch_one(&pool)
-       .await?;
+        // Update with very long text values
+        let update_data = AnnotatedFormUpdate {
+            id: word_id,
+            source: MaybeUndefined::Value(long_source.clone()),
+            commentary: MaybeUndefined::Value(long_commentary.clone()),
+            segments: MaybeUndefined::Undefined,
+        };
 
-       let insert_doc = sqlx::query!(
+        // This might fail if the values exceed database column limits
+        let result = db.update_word(update_data).await;
+
+        if result.is_ok() {
+            // If it succeeded, verify the long values were stored correctly
+            let updated_word = db.word_by_id(&word_id).await?;
+            assert_eq!(updated_word.source, long_source);
+            assert_eq!(updated_word.commentary, Some(long_commentary));
+        } else {
+            // If it failed due to text being too long, that's expected
+            println!(
+                "Update with very long text failed as expected: {}",
+                result.unwrap_err()
+            );
+        }
+
+        Ok(())
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn test_update_word_partial_fields(
+        pool: PgPool,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        // Setup: Create document group and test data
+        let group_id = sqlx::query!(
+            "INSERT INTO document_group (slug, title) VALUES ($1, $2) RETURNING id",
+            "Test Group Slug",
+            "Test Group Title"
+        )
+        .fetch_one(&pool)
+        .await?;
+
+        let insert_doc = sqlx::query!(
            "INSERT INTO document (short_name, title, group_id, index_in_group, is_reference, include_audio_in_edited_collection) 
                VALUES ($1, $2, $3, $4, $5, $6) RETURNING id",
            "DOC4",
@@ -749,10 +777,10 @@ mod tests {
        )
        .fetch_one(&pool)
        .await?;
-       let doc_id = insert_doc.id;
+        let doc_id = insert_doc.id;
 
-       // Insert test word with commentary
-       let insert_word = sqlx::query!(
+        // Insert test word with commentary
+        let insert_word = sqlx::query!(
            "INSERT INTO word (source_text, simple_phonetics, phonemic, english_gloss, recorded_at, document_id, page_number, index_in_document, include_audio_in_edited_collection, commentary)
                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id",
            "ᎦᏓᏕᎦ",
@@ -768,40 +796,45 @@ mod tests {
        )
        .fetch_one(&pool)
        .await?;
-       let word_id = insert_word.id;
+        let word_id = insert_word.id;
 
-       let db = Database::with_pool(pool);
-       
-       // Update only the source, leaving commentary unchanged
-       let update_data = AnnotatedFormUpdate {
-           id: word_id,
-           source: MaybeUndefined::Value("Updated Source".to_string()),
-           commentary: MaybeUndefined::Undefined, // Not changing this
-           segments: MaybeUndefined::Undefined,   // Not changing this
-       };
+        let db = Database::with_pool(pool);
 
-       db.update_word(update_data).await?;
+        // Update only the source, leaving commentary unchanged
+        let update_data = AnnotatedFormUpdate {
+            id: word_id,
+            source: MaybeUndefined::Value("Updated Source".to_string()),
+            commentary: MaybeUndefined::Undefined, // Not changing this
+            segments: MaybeUndefined::Undefined,   // Not changing this
+        };
 
-       // Verify only source was updated, commentary remained the same
-       let updated_word = db.word_by_id(&word_id).await?;
-       assert_eq!(updated_word.source, "Updated Source");
-       assert_eq!(updated_word.commentary, Some("Original commentary".to_string()));
-       
-       Ok(())
-   }
+        db.update_word(update_data).await?;
 
-   #[sqlx::test(migrations = "./migrations")]
-   async fn test_update_word_with_special_chars(pool: PgPool) -> Result<(), Box<dyn std::error::Error>> {
-       // Setup: Create document group and test data
-       let group_id = sqlx::query!(
-           "INSERT INTO document_group (slug, title) VALUES ($1, $2) RETURNING id",
-           "Test Group Slug",
-           "Test Group Title"
-       )
-       .fetch_one(&pool)
-       .await?;
+        // Verify only source was updated, commentary remained the same
+        let updated_word = db.word_by_id(&word_id).await?;
+        assert_eq!(updated_word.source, "Updated Source");
+        assert_eq!(
+            updated_word.commentary,
+            Some("Original commentary".to_string())
+        );
 
-       let insert_doc = sqlx::query!(
+        Ok(())
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn test_update_word_with_special_chars(
+        pool: PgPool,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        // Setup: Create document group and test data
+        let group_id = sqlx::query!(
+            "INSERT INTO document_group (slug, title) VALUES ($1, $2) RETURNING id",
+            "Test Group Slug",
+            "Test Group Title"
+        )
+        .fetch_one(&pool)
+        .await?;
+
+        let insert_doc = sqlx::query!(
            "INSERT INTO document (short_name, title, group_id, index_in_group, is_reference, include_audio_in_edited_collection) 
                VALUES ($1, $2, $3, $4, $5, $6) RETURNING id",
            "DOC5",
@@ -813,10 +846,10 @@ mod tests {
        )
        .fetch_one(&pool)
        .await?;
-       let doc_id = insert_doc.id;
+        let doc_id = insert_doc.id;
 
-       // Insert test word
-       let insert_word = sqlx::query!(
+        // Insert test word
+        let insert_word = sqlx::query!(
            "INSERT INTO word (source_text, simple_phonetics, phonemic, english_gloss, recorded_at, document_id, page_number, index_in_document, include_audio_in_edited_collection)
                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id",
            "ᎦᏓᏕᎦ",
@@ -831,44 +864,48 @@ mod tests {
        )
        .fetch_one(&pool)
        .await?;
-       let word_id = insert_word.id;
+        let word_id = insert_word.id;
 
-       let db = Database::with_pool(pool);
-       
-       // Special characters for testing
-       let special_source = "ᎠᎴ<script>alert('xss')</script>"; // SQL injection test
-       let special_commentary = "Commentary with 'quotes', \"double quotes\", and -- dashes; DROP TABLE word;";
-       
-       // Update with special characters
-       let update_data = AnnotatedFormUpdate {
-           id: word_id,
-           source: MaybeUndefined::Value(special_source.to_string()),
-           commentary: MaybeUndefined::Value(special_commentary.to_string()),
-           segments: MaybeUndefined::Undefined,
-       };
+        let db = Database::with_pool(pool);
 
-       db.update_word(update_data).await?;
+        // Special characters for testing
+        let special_source = "ᎠᎴ<script>alert('xss')</script>"; // SQL injection test
+        let special_commentary =
+            "Commentary with 'quotes', \"double quotes\", and -- dashes; DROP TABLE word;";
 
-       // Verify special characters were handled correctly
-       let updated_word = db.word_by_id(&word_id).await?;
-       assert_eq!(updated_word.source, special_source);
-       assert_eq!(updated_word.commentary, Some(special_commentary.to_string()));
-       
-       Ok(())
-   }
+        // Update with special characters
+        let update_data = AnnotatedFormUpdate {
+            id: word_id,
+            source: MaybeUndefined::Value(special_source.to_string()),
+            commentary: MaybeUndefined::Value(special_commentary.to_string()),
+            segments: MaybeUndefined::Undefined,
+        };
 
-   #[sqlx::test(migrations = "./migrations")]
-   async fn test_concurrent_word_updates(pool: PgPool) -> Result<(), Box<dyn std::error::Error>> {
-       // Setup: Create document group and test data
-       let group_id = sqlx::query!(
-           "INSERT INTO document_group (slug, title) VALUES ($1, $2) RETURNING id",
-           "Test Group Slug",
-           "Test Group Title"
-       )
-       .fetch_one(&pool)
-       .await?;
+        db.update_word(update_data).await?;
 
-       let insert_doc = sqlx::query!(
+        // Verify special characters were handled correctly
+        let updated_word = db.word_by_id(&word_id).await?;
+        assert_eq!(updated_word.source, special_source);
+        assert_eq!(
+            updated_word.commentary,
+            Some(special_commentary.to_string())
+        );
+
+        Ok(())
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn test_concurrent_word_updates(pool: PgPool) -> Result<(), Box<dyn std::error::Error>> {
+        // Setup: Create document group and test data
+        let group_id = sqlx::query!(
+            "INSERT INTO document_group (slug, title) VALUES ($1, $2) RETURNING id",
+            "Test Group Slug",
+            "Test Group Title"
+        )
+        .fetch_one(&pool)
+        .await?;
+
+        let insert_doc = sqlx::query!(
            "INSERT INTO document (short_name, title, group_id, index_in_group, is_reference, include_audio_in_edited_collection) 
                VALUES ($1, $2, $3, $4, $5, $6) RETURNING id",
            "DOC6",
@@ -880,10 +917,10 @@ mod tests {
        )
        .fetch_one(&pool)
        .await?;
-       let doc_id = insert_doc.id;
+        let doc_id = insert_doc.id;
 
-       // Insert test word
-       let insert_word = sqlx::query!(
+        // Insert test word
+        let insert_word = sqlx::query!(
            "INSERT INTO word (source_text, simple_phonetics, phonemic, english_gloss, recorded_at, document_id, page_number, index_in_document, include_audio_in_edited_collection)
                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id",
            "ᎦᏓᏕᎦ",
@@ -898,59 +935,65 @@ mod tests {
        )
        .fetch_one(&pool)
        .await?;
-       let word_id = insert_word.id;
+        let word_id = insert_word.id;
 
-       // Create multiple concurrent update tasks
-       let mut update_tasks = Vec::new();
-       let pool_ref = &pool;
-       
-       for i in 1..=5 {
-           let pool_clone = pool_ref.clone();
-           let word_id_clone = word_id;
-           
-           let task = tokio::spawn(async move {
-               let db = Database::with_pool(pool_clone);
-               let update_data = AnnotatedFormUpdate {
-                   id: word_id_clone,
-                   source: MaybeUndefined::Value(format!("Concurrent Update {}", i)),
-                   commentary: MaybeUndefined::Value(format!("Concurrent Commentary {}", i)),
-                   segments: MaybeUndefined::Undefined,
-               };
-               
-               db.update_word(update_data).await
-           });
-           
-           update_tasks.push(task);
-       }
-       
-       // Wait for all updates to complete
-       for task in update_tasks {
-           let _ = task.await?;
-       }
-       
-       // Verify the word was updated (one of the updates should have succeeded last)
-       let db = Database::with_pool(pool);
-       let final_word = db.word_by_id(&word_id).await?;
-       
-       // The final state should match one of the updates
-       assert!(final_word.source.starts_with("Concurrent Update "));
-       assert!(final_word.commentary.clone().unwrap().starts_with("Concurrent Commentary "));
-       
-       Ok(())
-   }
+        // Create multiple concurrent update tasks
+        let mut update_tasks = Vec::new();
+        let pool_ref = &pool;
 
-   #[sqlx::test(migrations = "./migrations")]
-   async fn test_update_word_with_empty_strings(pool: PgPool) -> Result<(), Box<dyn std::error::Error>> {
-       // Setup: Create document group and test data
-       let group_id = sqlx::query!(
-           "INSERT INTO document_group (slug, title) VALUES ($1, $2) RETURNING id",
-           "Test Group Slug",
-           "Test Group Title"
-       )
-       .fetch_one(&pool)
-       .await?;
+        for i in 1..=5 {
+            let pool_clone = pool_ref.clone();
+            let word_id_clone = word_id;
 
-       let insert_doc = sqlx::query!(
+            let task = tokio::spawn(async move {
+                let db = Database::with_pool(pool_clone);
+                let update_data = AnnotatedFormUpdate {
+                    id: word_id_clone,
+                    source: MaybeUndefined::Value(format!("Concurrent Update {}", i)),
+                    commentary: MaybeUndefined::Value(format!("Concurrent Commentary {}", i)),
+                    segments: MaybeUndefined::Undefined,
+                };
+
+                db.update_word(update_data).await
+            });
+
+            update_tasks.push(task);
+        }
+
+        // Wait for all updates to complete
+        for task in update_tasks {
+            let _ = task.await?;
+        }
+
+        // Verify the word was updated (one of the updates should have succeeded last)
+        let db = Database::with_pool(pool);
+        let final_word = db.word_by_id(&word_id).await?;
+
+        // The final state should match one of the updates
+        assert!(final_word.source.starts_with("Concurrent Update "));
+        assert!(final_word
+            .commentary
+            .clone()
+            .unwrap()
+            .starts_with("Concurrent Commentary "));
+
+        Ok(())
+    }
+
+    #[sqlx::test(migrations = "./migrations")]
+    async fn test_update_word_with_empty_strings(
+        pool: PgPool,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        // Setup: Create document group and test data
+        let group_id = sqlx::query!(
+            "INSERT INTO document_group (slug, title) VALUES ($1, $2) RETURNING id",
+            "Test Group Slug",
+            "Test Group Title"
+        )
+        .fetch_one(&pool)
+        .await?;
+
+        let insert_doc = sqlx::query!(
            "INSERT INTO document (short_name, title, group_id, index_in_group, is_reference, include_audio_in_edited_collection) 
                VALUES ($1, $2, $3, $4, $5, $6) RETURNING id",
            "DOC7",
@@ -962,10 +1005,10 @@ mod tests {
        )
        .fetch_one(&pool)
        .await?;
-       let doc_id = insert_doc.id;
+        let doc_id = insert_doc.id;
 
-       // Insert test word
-       let insert_word = sqlx::query!(
+        // Insert test word
+        let insert_word = sqlx::query!(
            "INSERT INTO word (source_text, simple_phonetics, phonemic, english_gloss, recorded_at, document_id, page_number, index_in_document, include_audio_in_edited_collection)
                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id",
            "ᎦᏓᏕᎦ",
@@ -980,32 +1023,28 @@ mod tests {
        )
        .fetch_one(&pool)
        .await?;
-       let word_id = insert_word.id;
+        let word_id = insert_word.id;
 
-       let db = Database::with_pool(pool);
-       
-       // Update with empty strings
-       let update_data = AnnotatedFormUpdate {
-           id: word_id,
-           source: MaybeUndefined::Value("".to_string()),
-           commentary: MaybeUndefined::Value("".to_string()),
-           segments: MaybeUndefined::Undefined,
-       };
+        let db = Database::with_pool(pool);
 
-       // This might fail if your database enforces NOT NULL or validates non-empty strings
-       let result = db.update_word(update_data).await;
-       
-       if result.is_ok() {
-           // If it succeeded, check that empty strings were stored
-           let updated_word = db.word_by_id(&word_id).await?;
-           assert_eq!(updated_word.source, "");
-           assert_eq!(updated_word.commentary, Some("".to_string()));
-       } else {
-           // If it failed due to validation, that's also expected behavior
-           println!("Update with empty strings failed as expected: {}", result.unwrap_err());
-       }
-       
-       Ok(())
-   }
+        // Update with empty strings
+        let update_data = AnnotatedFormUpdate {
+            id: word_id,
+            source: MaybeUndefined::Value("".to_string()),
+            commentary: MaybeUndefined::Value("".to_string()),
+            segments: MaybeUndefined::Undefined,
+        };
 
+        // This might fail if your database enforces NOT NULL or validates non-empty strings
+        let result = db.update_word(update_data).await;
+
+        if result.is_ok() {
+            // If it succeeded, check that empty strings were stored
+            let updated_word = db.word_by_id(&word_id).await?;
+            assert_eq!(updated_word.source, "");
+            assert_eq!(updated_word.commentary, Some("".to_string()));
+        }
+
+        Ok(())
+    }
 }
