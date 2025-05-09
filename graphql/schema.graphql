@@ -473,9 +473,9 @@ type Date {
 }
 
 input DateInput {
-	day: Int!
-	month: Int!
 	year: Int!
+	month: Int!
+	day: Int!
 }
 
 type DateTime {
