@@ -22,6 +22,7 @@ import { devUrl, prodUrl, wordpressUrl } from "src/theme.css"
 import { LevelOfDetail } from "src/types"
 import * as css from "../pages/documents/document.css"
 import { Glossary } from "./glossary"
+import * as lessonCSS from "./lesson.css"
 import { LexicalSearch } from "./lexical-search"
 import * as printLessonCSS from "./print-lesson.css"
 
@@ -63,14 +64,11 @@ export const WordpressPageContents = ({
     // If the slug includes "lessons/", include a parent element that styles its children's elements for printed media.
     if (slug?.includes("lessons/")) {
       parsed = (
-        <div className={printLessonCSS.lesson}>
-          {parse(content, parseOptions)}
-        </div>
+        <div className={lessonCSS.lesson}>{parse(content, parseOptions)}</div>
       )
     } else {
       parsed = parse(content, parseOptions)
     }
-
     return <>{parsed}</>
   } else {
     return null
