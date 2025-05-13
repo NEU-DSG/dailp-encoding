@@ -676,3 +676,32 @@ mutation DeleteComment($commentId: DeleteCommentInput!) {
     }
   }
 }
+
+mutation updateUser($user: UserUpdate!) {
+  updateUser(user: $user) {
+    id
+    displayName
+    avatarUrl
+    bio
+    organization
+    location
+    role
+  }
+}
+
+query UserById($id: UUID!) {
+  dailpUserById(id: $id) {
+    id
+    displayName
+    createdAt {
+      day
+      month
+      year
+    }
+    avatarUrl
+    bio
+    organization
+    location
+    role
+  }
+}

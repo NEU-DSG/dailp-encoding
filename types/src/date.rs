@@ -62,7 +62,13 @@ impl From<&DateInput> for Date {
     }
 }
 
-use chrono::Datelike;
+impl From<NaiveDate> for Date {
+    fn from(nd: NaiveDate) -> Self {
+        Date::new(nd)
+    }
+}
+
+use chrono::{Datelike, NaiveDate};
 impl DateInput {
     /// Creates a new DateInput from a day, month, and year.
     pub fn new(day: u32, month: u32, year: i32) -> Self {
