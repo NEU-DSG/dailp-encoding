@@ -84,9 +84,7 @@ const Timeline = (p: { gloss: string }) => {
             {!!form.document ? (
               <Link
                 href={
-                  form.document.isReference
-                    ? sourceCitationRoute(form.document.slug)
-                    : documentWordPath(form.document.slug, form.index)
+                  documentWordPath(form.document.slug, form.index)
                 }
               >
                 {form.document.slug.toUpperCase()}
