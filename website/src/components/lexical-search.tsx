@@ -8,7 +8,7 @@ import * as Dailp from "src/graphql/dailp"
 import { useLocation } from "src/renderer/PageShell"
 import { closeBlock, fullWidth } from "src/style/utils.css"
 import { boldWordRow, wordRow } from "../pages/timeline.css"
-import { documentWordPath, sourceCitationRoute } from "../routes"
+import { documentWordPath } from "../routes"
 import Link from "./link"
 
 export const LexicalSearch = () => {
