@@ -296,6 +296,14 @@ pub struct DocumentMetadataUpdate {
     pub written_at: MaybeUndefined<DateInput>,
 }
 
+
+#[serive(async_graphql::InputObject)]
+pub struct CreateDocumentInput {
+    pub document_name: String, 
+    pub raw_text_lines: Vec<Vec<String>>,
+    pub english_translation_lines: Vec<Vec<String>>,
+}
+
 #[async_graphql::ComplexObject]
 impl DocumentParagraph {
     /// Source text of the paragraph broken down into words

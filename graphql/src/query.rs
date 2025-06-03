@@ -13,7 +13,7 @@ use {
     dailp::async_graphql::{self, dataloader::DataLoader, Context, FieldResult, Guard, Object},
     dailp::{
         AnnotatedDoc, AnnotatedFormUpdate, CherokeeOrthography, Database, EditedCollection,
-        MorphemeId, MorphemeReference, MorphemeTag, ParagraphUpdate, WordsInDocument,
+        MorphemeId, MorphemeReference, MorphemeTag, ParagraphUpdate, WordsInDocument, CreateDocumentInput
     },
     serde::{Deserialize, Serialize},
 };
@@ -644,6 +644,26 @@ impl Mutation {
             .update_document_metadata(document)
             .await?)
     }
+
+    /// Adds a bookmark to the user's list of bookmarks.
+    #[graphql(
+        guard = "GroupGuard::new(UserGroup::Editors).or(GroupGuard::new(UserGroup::Contributors))"
+    )]
+    async fn create_annotated_doc(
+        &self,
+        context: &Context<'_>,
+        input: CreateDocumentInput
+    ) -> FieldResult<AnnotatedDoc> {
+        let user = context
+            .data_opt::<UserInfo>()
+            .ok_or_else(|| anyhow::format_err!("User is not signed in"))?;
+        context
+            .data::<dataloader<database>>()?
+            .loader()
+            .createDocument
+            .await?;
+    }
+
 }
 
 #[derive(async_graphql::SimpleObject)]
