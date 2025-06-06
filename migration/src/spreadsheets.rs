@@ -602,7 +602,7 @@ impl AnnotatedLine {
                                         .ok_or_else(|| {
                                             anyhow::anyhow!(
                                                 "Missing audio for word {} in {}",
-                                                word_index,
+                                                word_index - 1,
                                                 meta.short_name
                                             )
                                         })?,
