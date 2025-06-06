@@ -75,8 +75,8 @@
     "@types/uuid": "^9.0.1",
     "@vanilla-extract/css": "^1.9",
     "@vanilla-extract/recipes": "^0.2.4",
-    "@vanilla-extract/vite-plugin": "^3.7",
-    "@vitejs/plugin-react": "^2",
+    "@vanilla-extract/vite-plugin": "^3.9",
+    "@vitejs/plugin-react": "^4",
     "eslint": "^8.13.0",
     "http-server": "^14.1.1",
     "npm-run-all": "^4.1.5",
@@ -87,7 +87,7 @@
     "ts-node": "^10.7.0",
     "typescript": "^4.6.3",
     "typography": "^0.16.19",
-    "vite": "^3",
+    "vite": "^6",
     "vite-plugin-checker": "^0.5"
   },
   "browserslist": [
