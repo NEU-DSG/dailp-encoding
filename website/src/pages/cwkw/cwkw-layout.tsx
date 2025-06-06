@@ -60,6 +60,9 @@ const CWKWLayout: React.FC = ({ children }) => {
                 />
               </Link>
             </h1>
+            <p className={css.siteSubtitle}>
+              A part of <Link href="/">DAILP</Link>
+            </p>
           </div>
           <LoginHeaderButton className={css.loginHeader} />
           <HeaderPrefDrawer color={colors.body} />
