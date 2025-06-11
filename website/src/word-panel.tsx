@@ -208,13 +208,10 @@ const EditSegmentation = (p: {
 
     const updatedSegments = [...currentSegments, newSegment]
     // Add shouldValidate: false to prevent auto-submission
-    form.update(
-      "word",
-      {
-        ...currentWord,
-        segments: updatedSegments,
-      },
-    )
+    form.update("word", {
+      ...currentWord,
+      segments: updatedSegments,
+    })
   }
 
   const deleteSegment = (index: number) => {
