@@ -64,7 +64,7 @@ export const FormProvider = (props: { children: ReactNode }) => {
           return
         }
       }
-      
+
       if (cherokeeRepresentation === Dailp.CherokeeOrthography.Taoc) {
         setIsEditing(false)
 
@@ -101,13 +101,13 @@ export const FormProvider = (props: { children: ReactNode }) => {
   })
 
   return (
-    <WordFormContext.Provider 
-      value={{ 
-        form, 
-        isEditing, 
+    <WordFormContext.Provider
+      value={{
+        form,
+        isEditing,
         setIsEditing,
         originalSegmentCount,
-        setOriginalSegmentCount 
+        setOriginalSegmentCount,
       }}
     >
       {props.children}

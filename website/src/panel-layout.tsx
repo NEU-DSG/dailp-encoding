@@ -236,15 +236,15 @@ export const PanelLayout = (p: {
     if (p.segment && p.segment.__typename === "AnnotatedForm") {
       // Store original segment count when entering edit mode
       form.update("word", p.segment)
-      
+
       // Enter edit mode first to ensure form is initialized
       setIsEditing(true)
-      
+
       // Add a small delay to ensure the form is fully initialized before adding segment
       setTimeout(() => {
         const currentWord = form.values.word as Dailp.FormFieldsFragment
         const currentSegments = currentWord.segments || []
-        
+
         // Create blank segment with required fields
         const newSegment = {
           morpheme: "",
@@ -253,14 +253,14 @@ export const PanelLayout = (p: {
           previousSeparator: "-",
           matchingTag: null,
         }
-        
-        console.log('Adding new segment:', newSegment)
-        console.log('Current segments:', currentSegments)
-        
+
+        console.log("Adding new segment:", newSegment)
+        console.log("Current segments:", currentSegments)
+
         // Update form with new segment
         form.update("word", {
           ...currentWord,
-          segments: [...currentSegments, newSegment]
+          segments: [...currentSegments, newSegment],
         })
       }, 100)
     }
