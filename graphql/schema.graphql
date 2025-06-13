@@ -382,12 +382,21 @@ Used for updating comments.
 All fields except id are optional.
 """
 input CommentUpdate {
+	"""
+	The UUID of the comment to perform this operation on.
+	"""
 	id: UUID!
 	"""
-	The text of the comment
+	The text of the comment.
 	"""
 	textContent: String
+	"""
+	The type of content in this comment. See dailp::comment::CommentType.
+	"""
 	commentType: CommentType
+	"""
+	Whether this comment has been edited in the past
+	"""
 	edited: Boolean!
 }
 
@@ -480,6 +489,9 @@ type Date {
 	formattedDate: String!
 }
 
+"""
+GraphQL input type for dates
+"""
 input DateInput {
 	day: Int!
 	month: Int!
@@ -511,7 +523,13 @@ input DeleteCommentInput {
 Delete a contributor attribution for a document based on the two ids
 """
 input DeleteContributorAttribution {
+	"""
+	The document to perform this operation on
+	"""
 	documentId: UUID!
+	"""
+	The UUID of the contributor to remove from this document's attributions
+	"""
 	contributorId: UUID!
 }
 
@@ -538,8 +556,17 @@ Used for updating document metadata.
 All fields except id are optional.
 """
 input DocumentMetadataUpdate {
+	"""
+	The ID of the document to update
+	"""
 	id: UUID!
+	"""
+	An updated title for this document, or nothing (if title is unchanged)
+	"""
 	title: String
+	"""
+	The date this document was written, or nothing (if unchanged or not applicable)
+	"""
 	writtenAt: DateInput
 }
 
@@ -1088,8 +1115,17 @@ scalar UUID
 Update the contributor attribution for a document
 """
 input UpdateContributorAttribution {
+	"""
+	The document to perfom this operation on
+	"""
 	documentId: UUID!
+	"""
+	The UUID associated with the contributor being added or changed
+	"""
 	contributorId: UUID!
+	"""
+	A description of what the contributor did, like "translation" or "voice"
+	"""
 	contributionRole: String!
 }
 

@@ -183,6 +183,8 @@ export type AnnotatedFormSegmentsArgs = {
 export type AnnotatedFormUpdate = {
   /** Possible update to commentary */
   readonly commentary: InputMaybe<Scalars["String"]>
+  /** Possible update to English gloss */
+  readonly englishGloss: InputMaybe<ReadonlyArray<Scalars["String"]>>
   /** Unique identifier of the form */
   readonly id: Scalars["UUID"]
   /** Possible update to normalized source content */
@@ -191,8 +193,6 @@ export type AnnotatedFormUpdate = {
   readonly segments: InputMaybe<ReadonlyArray<MorphemeSegmentUpdate>>
   /** Possible update to source content */
   readonly source: InputMaybe<Scalars["String"]>
-  /** Possible update to English gloss */
-  readonly englishGloss: InputMaybe<ReadonlyArray<Scalars["String"]>>
 }
 
 /** Element within a spreadsheet before being transformed into a full document. */
@@ -316,10 +316,13 @@ export enum CommentType {
  * All fields except id are optional.
  */
 export type CommentUpdate = {
+  /** The type of content in this comment. See dailp::comment::CommentType. */
   readonly commentType: InputMaybe<CommentType>
+  /** Whether this comment has been edited in the past */
   readonly edited: Scalars["Boolean"]
+  /** The UUID of the comment to perform this operation on. */
   readonly id: Scalars["UUID"]
-  /** The text of the comment */
+  /** The text of the comment. */
   readonly textContent: InputMaybe<Scalars["String"]>
 }
 
@@ -393,6 +396,7 @@ export type Date = {
   readonly year: Scalars["Int"]
 }
 
+/** GraphQL input type for dates */
 export type DateInput = {
   readonly day: Scalars["Int"]
   readonly month: Scalars["Int"]
@@ -415,7 +419,9 @@ export type DeleteCommentInput = {
 
 /** Delete a contributor attribution for a document based on the two ids */
 export type DeleteContributorAttribution = {
+  /** The UUID of the contributor to remove from this document's attributions */
   readonly contributorId: Scalars["UUID"]
+  /** The document to perform this operation on */
   readonly documentId: Scalars["UUID"]
 }
 
@@ -439,8 +445,11 @@ export type DocumentCollection = {
  * All fields except id are optional.
  */
 export type DocumentMetadataUpdate = {
+  /** The ID of the document to update */
   readonly id: Scalars["UUID"]
+  /** An updated title for this document, or nothing (if title is unchanged) */
   readonly title: InputMaybe<Scalars["String"]>
+  /** The date this document was written, or nothing (if unchanged or not applicable) */
   readonly writtenAt: InputMaybe<DateInput>
 }
 
@@ -676,6 +685,8 @@ export type Mutation = {
   readonly updatePage: Scalars["Boolean"]
   /** Mutation for paragraph and translation editing */
   readonly updateParagraph: DocumentParagraph
+  /** Updates a dailp_user's information */
+  readonly updateUser: User
   readonly updateWord: AnnotatedForm
 }
 
@@ -729,6 +740,10 @@ export type MutationUpdatePageArgs = {
 
 export type MutationUpdateParagraphArgs = {
   paragraph: ParagraphUpdate
+}
+
+export type MutationUpdateUserArgs = {
+  user: UserUpdate
 }
 
 export type MutationUpdateWordArgs = {
@@ -825,6 +840,8 @@ export type Query = {
   /** Retrieves a chapter and its contents by its collection and chapter slug. */
   readonly chapter: Maybe<CollectionChapter>
   readonly collection: DocumentCollection
+  /** Gets a dailp_user by their id */
+  readonly dailpUserById: User
   /** Retrieves a full document from its unique name. */
   readonly document: Maybe<AnnotatedDoc>
   /** Retrieves a full document from its unique identifier. */
@@ -879,6 +896,10 @@ export type QueryChapterArgs = {
 
 export type QueryCollectionArgs = {
   slug: Scalars["String"]
+}
+
+export type QueryDailpUserByIdArgs = {
+  id: Scalars["UUID"]
 }
 
 export type QueryDocumentArgs = {
@@ -948,24 +969,40 @@ export type SourceAttribution = {
 
 /** Update the contributor attribution for a document */
 export type UpdateContributorAttribution = {
+  /** A description of what the contributor did, like "translation" or "voice" */
   readonly contributionRole: Scalars["String"]
+  /** The UUID associated with the contributor being added or changed */
   readonly contributorId: Scalars["UUID"]
+  /** The document to perfom this operation on */
   readonly documentId: Scalars["UUID"]
 }
 
 /** A user record, for a contributor, editor, etc. */
 export type User = {
   readonly __typename?: "User"
+  /** URL to the avatar of the user (optional) */
+  readonly avatarUrl: Maybe<Scalars["String"]>
+  /** Biography of the user (optional) */
+  readonly bio: Maybe<Scalars["String"]>
+  /** The date this user was created (optional) */
+  readonly createdAt: Maybe<Date>
   /** User-facing name for this contributor/curator */
   readonly displayName: Scalars["String"]
   /** Id of the user, which must be a AWS Cognito `sub` claim */
   readonly id: Scalars["String"]
+  /** Location of the user (optional) */
+  readonly location: Maybe<Scalars["String"]>
+  /** Organization of the user (optional) */
+  readonly organization: Maybe<Scalars["String"]>
+  /** Role of the user (optional) */
+  readonly role: Maybe<UserGroup>
 }
 
 /** A user belongs to any number of user groups, which give them various permissions. */
 export enum UserGroup {
   Contributors = "CONTRIBUTORS",
   Editors = "EDITORS",
+  Readers = "READERS",
 }
 
 /** Auth metadata on the user making the current request. */
@@ -975,6 +1012,23 @@ export type UserInfo = {
   readonly groups: ReadonlyArray<UserGroup>
   /** Unique ID for the User. Should be an AWS Cognito Sub. */
   readonly id: Scalars["UUID"]
+}
+
+export type UserUpdate = {
+  /** URL to the avatar of the user (optional) */
+  readonly avatarUrl: InputMaybe<Scalars["String"]>
+  /** Biography of the user (optional) */
+  readonly bio: InputMaybe<Scalars["String"]>
+  /** User-facing name for this contributor/curator */
+  readonly displayName: InputMaybe<Scalars["String"]>
+  /** Id of the user, which must be a AWS Cognito `sub` claim */
+  readonly id: Scalars["String"]
+  /** Location of the user (optional) */
+  readonly location: InputMaybe<Scalars["String"]>
+  /** Organization of the user (optional) */
+  readonly organization: InputMaybe<Scalars["String"]>
+  /** Role of the user (optional) */
+  readonly role: InputMaybe<UserGroup>
 }
 
 export type WordSegment = {
@@ -2473,6 +2527,44 @@ export type DeleteCommentMutation = { readonly __typename?: "Mutation" } & {
         })
 }
 
+export type UpdateUserMutationVariables = Exact<{
+  user: UserUpdate
+}>
+
+export type UpdateUserMutation = { readonly __typename?: "Mutation" } & {
+  readonly updateUser: { readonly __typename?: "User" } & Pick<
+    User,
+    | "id"
+    | "displayName"
+    | "avatarUrl"
+    | "bio"
+    | "organization"
+    | "location"
+    | "role"
+  >
+}
+
+export type UserByIdQueryVariables = Exact<{
+  id: Scalars["UUID"]
+}>
+
+export type UserByIdQuery = { readonly __typename?: "Query" } & {
+  readonly dailpUserById: { readonly __typename?: "User" } & Pick<
+    User,
+    | "id"
+    | "displayName"
+    | "avatarUrl"
+    | "bio"
+    | "organization"
+    | "location"
+    | "role"
+  > & {
+      readonly createdAt: Maybe<
+        { readonly __typename?: "Date" } & Pick<Date, "day" | "month" | "year">
+      >
+    }
+}
+
 export const DocFormFieldsFragmentDoc = gql`
   fragment DocFormFields on AnnotatedDoc {
     id
@@ -3484,4 +3576,50 @@ export function useDeleteCommentMutation() {
     DeleteCommentMutation,
     DeleteCommentMutationVariables
   >(DeleteCommentDocument)
+}
+export const UpdateUserDocument = gql`
+  mutation updateUser($user: UserUpdate!) {
+    updateUser(user: $user) {
+      id
+      displayName
+      avatarUrl
+      bio
+      organization
+      location
+      role
+    }
+  }
+`
+
+export function useUpdateUserMutation() {
+  return Urql.useMutation<UpdateUserMutation, UpdateUserMutationVariables>(
+    UpdateUserDocument
+  )
+}
+export const UserByIdDocument = gql`
+  query UserById($id: UUID!) {
+    dailpUserById(id: $id) {
+      id
+      displayName
+      createdAt {
+        day
+        month
+        year
+      }
+      avatarUrl
+      bio
+      organization
+      location
+      role
+    }
+  }
+`
+
+export function useUserByIdQuery(
+  options: Omit<Urql.UseQueryArgs<UserByIdQueryVariables>, "query">
+) {
+  return Urql.useQuery<UserByIdQuery, UserByIdQueryVariables>({
+    query: UserByIdDocument,
+    ...options,
+  })
 }
