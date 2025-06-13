@@ -118,7 +118,7 @@ export const ParagraphCommentSection = (p: {
   )
 }
 
-export const CommentBody = (p: { comment: Dailp.Comment }) => {
+export const CommentBody = (p: { comment: Dailp.CommentFieldsFragment }) => {
   const commentTypeNames: Record<Dailp.CommentType, string> = {
     // ... TS will then make sure you have an entry for everything on the "CommentTag" type that you import from the codegen
     [Dailp.CommentType.Story]: "Story",
@@ -192,7 +192,7 @@ export const CommentBody = (p: { comment: Dailp.Comment }) => {
   )
 }
 
-export const CommentHeader = (p: { comment: Dailp.Comment }) => {
+export const CommentHeader = (p: { comment: Dailp.CommentFieldsFragment }) => {
   return (
     <div className={css.headerStyle}>
       {p.comment.postedBy.displayName} contributed on{" "}
