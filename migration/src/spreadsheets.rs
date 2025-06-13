@@ -380,7 +380,7 @@ impl SheetInterpretation {
             translation: Some(
                 DocResult::new(Self::drive_url_to_id(&translations[1]))
                     .await?
-                    .into_translation(),
+                    .into_translation()?,
             ),
             page_images: if let (Some(db), Some(ids), Some(source)) = (db, image_ids, image_source)
             {
