@@ -3,6 +3,25 @@ import { FiLoader } from "react-icons/fi/index"
 import { MdPauseCircleOutline, MdPlayCircleOutline } from "react-icons/md/index"
 import * as css from "./audio-player.css"
 
+/**
+ * Get our default load status for the audio player.
+ * On some user agents, we need to default to "loaded" because audio can never be loaded in the background.
+ */
+function getDefaultLoadStatus() {
+  // TODO: is there a place to store this instead of doing this check everytime?
+  // happens at this level because vite will run this server-side and crash sometimes
+  // @ts-ignore
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream
+  const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent)
+
+  if (isIOS && isSafari) {
+    console.log("User is on iOS Safari - audio player with behave differently")
+    return true
+  } else {
+    return false
+  }
+}
+
 interface Props {
   audioUrl: string
   showProgress?: boolean
@@ -25,7 +44,7 @@ const AudioPlayerImpl = (props: Props) => {
   const audio = useMemo(() => new Audio(props.audioUrl), [props.audioUrl])
 
   const [progress, setProgress] = useState(0)
-  const [loadStatus, setLoadStatus] = useState(false)
+  const [loadStatus, setLoadStatus] = useState(getDefaultLoadStatus())
   const [isPlaying, setIsPlaying] = useState(false)
 
   //　FIXME Issue: Word audio drifts forward and backward for no apparent reason
