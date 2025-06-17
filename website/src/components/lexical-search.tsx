@@ -82,11 +82,7 @@ const Timeline = (p: { gloss: string }) => {
         {timeline.data.wordSearch.map((form, i) => (
           <div key={i} className={wordRow}>
             {!!form.document ? (
-              <Link
-                href={
-                  documentWordPath(form.document.slug, form.index)
-                }
-              >
+              <Link href={documentWordPath(form.document.slug, form.index)}>
                 {form.document.slug.toUpperCase()}
               </Link>
             ) : null}
