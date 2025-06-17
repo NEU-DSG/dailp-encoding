@@ -182,6 +182,10 @@ input AnnotatedFormUpdate {
 	"""
 	source: String
 	"""
+	Possible update to normalized source content
+	"""
+	romanizedSource: String
+	"""
 	Possible update to commentary
 	"""
 	commentary: String
@@ -189,6 +193,10 @@ input AnnotatedFormUpdate {
 	Updated segments
 	"""
 	segments: [MorphemeSegmentUpdate!]
+	"""
+	Possible update to English gloss
+	"""
+	englishGloss: [String!]
 }
 
 """
@@ -374,12 +382,21 @@ Used for updating comments.
 All fields except id are optional.
 """
 input CommentUpdate {
+	"""
+	The UUID of the comment to perform this operation on.
+	"""
 	id: UUID!
 	"""
-	The text of the comment
+	The text of the comment.
 	"""
 	textContent: String
+	"""
+	The type of content in this comment. See dailp::comment::CommentType.
+	"""
 	commentType: CommentType
+	"""
+	Whether this comment has been edited in the past
+	"""
 	edited: Boolean!
 }
 
@@ -472,6 +489,9 @@ type Date {
 	formattedDate: String!
 }
 
+"""
+GraphQL input type for dates
+"""
 input DateInput {
 	day: Int!
 	month: Int!
@@ -503,7 +523,13 @@ input DeleteCommentInput {
 Delete a contributor attribution for a document based on the two ids
 """
 input DeleteContributorAttribution {
+	"""
+	The document to perform this operation on
+	"""
 	documentId: UUID!
+	"""
+	The UUID of the contributor to remove from this document's attributions
+	"""
 	contributorId: UUID!
 }
 
@@ -530,8 +556,17 @@ Used for updating document metadata.
 All fields except id are optional.
 """
 input DocumentMetadataUpdate {
+	"""
+	The ID of the document to update
+	"""
 	id: UUID!
+	"""
+	An updated title for this document, or nothing (if title is unchanged)
+	"""
 	title: String
+	"""
+	The date this document was written, or nothing (if unchanged or not applicable)
+	"""
 	writtenAt: DateInput
 }
 
@@ -837,6 +872,10 @@ type Mutation {
 	updateAnnotation(data: JSON!): Boolean!
 	updateWord(word: AnnotatedFormUpdate!): AnnotatedForm!
 	"""
+	Updates a dailp_user's information
+	"""
+	updateUser(user: UserUpdate!): User!
+	"""
 	Adds a bookmark to the user's list of bookmarks.
 	"""
 	addBookmark(documentId: UUID!): AnnotatedDoc!
@@ -1037,6 +1076,10 @@ type Query {
 	Basic information about the currently authenticated user, if any.
 	"""
 	userInfo: UserInfo
+	"""
+	Gets a dailp_user by their id
+	"""
+	dailpUserById(id: UUID!): User!
 }
 
 """
@@ -1072,8 +1115,17 @@ scalar UUID
 Update the contributor attribution for a document
 """
 input UpdateContributorAttribution {
+	"""
+	The document to perfom this operation on
+	"""
 	documentId: UUID!
+	"""
+	The UUID associated with the contributor being added or changed
+	"""
 	contributorId: UUID!
+	"""
+	A description of what the contributor did, like "translation" or "voice"
+	"""
 	contributionRole: String!
 }
 
@@ -1089,6 +1141,30 @@ type User {
 	User-facing name for this contributor/curator
 	"""
 	displayName: String!
+	"""
+	The date this user was created (optional)
+	"""
+	createdAt: Date
+	"""
+	URL to the avatar of the user (optional)
+	"""
+	avatarUrl: String
+	"""
+	Biography of the user (optional)
+	"""
+	bio: String
+	"""
+	Organization of the user (optional)
+	"""
+	organization: String
+	"""
+	Location of the user (optional)
+	"""
+	location: String
+	"""
+	Role of the user (optional)
+	"""
+	role: UserGroup
 }
 
 """
@@ -1097,6 +1173,7 @@ A user belongs to any number of user groups, which give them various permissions
 enum UserGroup {
 	CONTRIBUTORS
 	EDITORS
+	READERS
 }
 
 """
@@ -1109,6 +1186,37 @@ type UserInfo {
 	id: UUID!
 	email: String!
 	groups: [UserGroup!]!
+}
+
+input UserUpdate {
+	"""
+	Id of the user, which must be a AWS Cognito `sub` claim
+	"""
+	id: String!
+	"""
+	User-facing name for this contributor/curator
+	"""
+	displayName: String
+	"""
+	URL to the avatar of the user (optional)
+	"""
+	avatarUrl: String
+	"""
+	Biography of the user (optional)
+	"""
+	bio: String
+	"""
+	Organization of the user (optional)
+	"""
+	organization: String
+	"""
+	Location of the user (optional)
+	"""
+	location: String
+	"""
+	Role of the user (optional)
+	"""
+	role: UserGroup
 }
 
 type WordSegment {
