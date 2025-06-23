@@ -371,10 +371,10 @@ mod tests {
         .await?;
 
         let db = Database::with_pool(pool);
-        
+
         // Test the actual functionality
         let result = db.word_by_id(&word_id.id).await?;
-        
+
         assert_eq!(result.id, Some(word_id.id));
         assert_eq!(result.source, "ᎦᏓᏕᎦ");
         assert_eq!(result.simple_phonetics, Some("gadadega".to_string()));
@@ -692,7 +692,10 @@ mod tests {
 
         // Verify commentary is now null
         let updated_word = db.word_by_id(&word_id).await?;
-        assert_eq!(updated_word.commentary, Some("Initial commentary".to_string()));
+        assert_eq!(
+            updated_word.commentary,
+            Some("Initial commentary".to_string())
+        );
         assert_eq!(updated_word.source, initial_word.source); // Other fields unchanged
 
         Ok(())
