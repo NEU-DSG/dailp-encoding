@@ -35,7 +35,12 @@ impl AnnotatedDoc {
         for page in segments {
             let mut paragraphs = Vec::new();
             for paragraph in page {
-                if paragraph_index > 0 {
+if blocks.is_empty() {
+                    paragraphs.push(TranslatedSection { 
+                        translation: None,
+                        source: paragraph 
+                    });
+                } else if paragraph_index > 0 {
                     let trans = blocks.get(paragraph_index);
                     paragraphs.push(TranslatedSection {
                         translation: trans.map(TranslationBlock::get_text),
