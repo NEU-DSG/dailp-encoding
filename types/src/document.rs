@@ -24,18 +24,23 @@ impl AnnotatedDoc {
     pub fn new(meta: DocumentMetadata, segments: Vec<Vec<Vec<AnnotatedSeg>>>) -> Self {
         // Skip the first block of the translation, since this usually contains
         // the header and information for translators and editors.
-        let blocks = &meta
+        println!("Translation {}present", if meta.translation.is_some() {""} else {"not "});
+        let blocks = if meta.translation.is_some() { 
+            &meta
             .translation
             .as_ref()
-            .unwrap_or_else(|| panic!("Missing translation for {}", meta.short_name))
-            .paragraphs;
+            .unwrap()
+            .paragraphs
+        } else {
+            &Vec::<TranslationBlock>::new()
+        };
 
         let mut pages = Vec::new();
         let mut paragraph_index = 0;
         for page in segments {
             let mut paragraphs = Vec::new();
             for paragraph in page {
-if blocks.is_empty() {
+                if blocks.is_empty() {
                     paragraphs.push(TranslatedSection { 
                         translation: None,
                         source: paragraph 
