@@ -377,13 +377,14 @@ impl SheetInterpretation {
             collection: source.pop().filter(|s| !s.is_empty()),
             contributors: people,
             genre: genre.pop(),
-            translation: if translations.len() < 2 { // if only the header is present, ignore translations
+            translation: if translations.len() < 2 {
+                // if only the header is present, ignore translations
                 None
             } else {
                 Some(
-                DocResult::new(Self::drive_url_to_id(&translations[1]))
-                    .await?
-                    .into_translation()?,
+                    DocResult::new(Self::drive_url_to_id(&translations[1]))
+                        .await?
+                        .into_translation()?,
                 )
             },
             page_images: if let (Some(db), Some(ids), Some(source)) = (db, image_ids, image_source)
