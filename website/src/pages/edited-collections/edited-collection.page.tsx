@@ -2,8 +2,8 @@ import React, { useEffect } from "react"
 import { Helmet } from "react-helmet"
 import { navigate } from "vite-plugin-ssr/client/router"
 import { Link, WordpressPage } from "src/components"
-import { useRouteParams } from "src/renderer/PageShell"
 import * as Dailp from "src/graphql/dailp"
+import { useRouteParams } from "src/renderer/PageShell"
 import { chapterRoute } from "src/routes"
 import * as util from "src/style/utils.css"
 import CWKWLayout from "../cwkw/cwkw-layout"
@@ -19,7 +19,9 @@ const EditedCollectionPage = () => {
   const firstChapter = chapters ? chapters[0] : null
 
   const [{ data: dailp }] = Dailp.useEditedCollectionsQuery()
-  let collection = dailp?.allEditedCollections.find(({slug})=>slug===collectionSlug)
+  let collection = dailp?.allEditedCollections.find(
+    ({ slug }) => slug === collectionSlug
+  )
 
   if (!collection) {
     return null
