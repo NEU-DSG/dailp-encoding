@@ -33,7 +33,7 @@ const EditedCollectionPage = () => {
       <main className={util.paddedCenterColumn}>
         <article className={dialog.visible ? css.leftMargin : util.fullWidth}>
           <header>
-            <h1>Cherokees Writing the Keetoowah Way</h1>
+            <h1>{collection.title}</h1>
           </header>
 
           <h3>
