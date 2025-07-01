@@ -18,10 +18,10 @@ const EditedCollectionPage = () => {
   const chapters = useChapters()
   const firstChapter = chapters ? chapters[0] : null
 
-  const [{ data: dailp }] = Dailp.useEditedCollectionsQuery()
-  let collection = dailp?.allEditedCollections.find(
-    ({ slug }) => slug === collectionSlug
-  )
+  // const [{ data: dailp }] = Dailp.useEditedCollectionsQuery()
+  // let collection = dailp?.allEditedCollections.find(
+  //   ({ slug }) => slug === collectionSlug
+  // )
 
   if (collectionSlug != "cwkw") {
     return null
