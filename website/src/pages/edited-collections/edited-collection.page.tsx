@@ -23,7 +23,7 @@ const EditedCollectionPage = () => {
     ({ slug }) => slug === collectionSlug
   )
 
-  if (!collection) {
+  if (collectionSlug != "cwkw") {
     return null
   }
 
@@ -35,7 +35,7 @@ const EditedCollectionPage = () => {
       <main className={util.paddedCenterColumn}>
         <article className={dialog.visible ? css.leftMargin : util.fullWidth}>
           <header>
-            <h1>{collection.title}</h1>
+            <h1>Placeholder</h1>
           </header>
 
           <h3>
