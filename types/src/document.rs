@@ -317,14 +317,6 @@ pub struct DocumentMetadataUpdate {
     pub written_at: MaybeUndefined<DateInput>,
 }
 
-
-#[serive(async_graphql::InputObject)]
-pub struct CreateDocumentInput {
-    pub document_name: String, 
-    pub raw_text_lines: Vec<Vec<String>>,
-    pub english_translation_lines: Vec<Vec<String>>,
-}
-
 #[async_graphql::ComplexObject]
 impl DocumentParagraph {
     /// Source text of the paragraph broken down into words
@@ -568,7 +560,10 @@ pub struct DocumentCollection {
     pub title: String,
     /// Unique slug used to generate URL paths
     pub slug: String,
+    /// Optional database ID for the collection
+    pub id: Option<Uuid>,
 }
+
 impl DocumentCollection {
     /// Create a collection reference using the given title and generating a
     /// slug from it.
@@ -576,6 +571,7 @@ impl DocumentCollection {
         Self {
             slug: slug::slugify(&name),
             title: name,
+            id: None,
         }
     }
 }
@@ -584,6 +580,11 @@ impl DocumentCollection {
     /// Full name of this collection
     async fn name(&self) -> &str {
         &self.title
+    }
+
+    /// Database ID for this collection
+    async fn id(&self) -> Option<Uuid> {
+        self.id
     }
 
     /// URL-ready slug for this collection, generated from the name

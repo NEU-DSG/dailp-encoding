@@ -677,31 +677,32 @@ mutation DeleteComment($commentId: DeleteCommentInput!) {
   }
 }
 
-mutation updateUser($user: UserUpdate!) {
-  updateUser(user: $user) {
+mutation AddDocument($input: CreateDocumentFromFormInput!) {
+  addDocument(input: $input) {
     id
-    displayName
-    avatarUrl
-    bio
-    organization
-    location
-    role
+    title
+    slug
+    isReference
+    date {
+      year
+      month
+      day
+    }
+    sources {
+      name
+      link
+    }
+    contributors {
+      name
+      role
+    }
   }
 }
 
-query UserById($id: UUID!) {
-  dailpUserById(id: $id) {
+query AllCollections {
+  allCollections {
+    name
+    slug
     id
-    displayName
-    createdAt {
-      day
-      month
-      year
-    }
-    avatarUrl
-    bio
-    organization
-    location
-    role
   }
 }

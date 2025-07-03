@@ -2,7 +2,7 @@ import { kebabCase } from "lodash-es"
 
 export const documentRoute = (slug: string) => `/documents/${slug}`
 
-export const documentNewRoute =  `/documents/new`
+export const documentNewRoute = `/documents/new`
 export const documentDetailsRoute = (slug: string) =>
   `/documents/${slug}/details`
 

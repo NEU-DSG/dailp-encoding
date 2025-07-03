@@ -452,6 +452,16 @@ type ContributorDetails {
 	birthDate: Date
 }
 
+input CreateDocumentFromFormInput {
+	documentName: String!
+	rawTextLines: [[String!]!]!
+	englishTranslationLines: [[String!]!]!
+	unresolvedWords: [String!]!
+	sourceName: String!
+	sourceUrl: String!
+	collectionId: UUID!
+}
+
 """
 Request to update if a piece of audio should be included in an edited collection
 """
@@ -538,6 +548,10 @@ type DocumentCollection {
 	Full name of this collection
 	"""
 	name: String!
+	"""
+	Database ID for this collection
+	"""
+	id: UUID
 	"""
 	URL-ready slug for this collection, generated from the name
 	"""
@@ -893,6 +907,10 @@ type Mutation {
 	"""
 	attachAudioToWord(input: AttachAudioToWordInput!): AnnotatedForm!
 	updateDocumentMetadata(document: DocumentMetadataUpdate!): UUID!
+	"""
+	Minimal mutation to add a document with only essential fields
+	"""
+	addDocument(input: CreateDocumentFromFormInput!): AnnotatedDoc!
 }
 
 """

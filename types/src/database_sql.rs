@@ -991,6 +991,153 @@ impl Database {
         Ok(DocumentId(document_uuid))
     }
 
+    pub async fn insert_document_with_contents_at_end_of_collection(
+        &self,
+        document: AnnotatedDoc,
+        collection_id: Uuid,
+    ) -> Result<DocumentId> {
+        let mut tx = self.client.begin().await?;
+        let meta = &document.meta;
+
+        let next_index = -1;
+
+        let document_uuid = query_file_scalar!(
+            "queries/insert_document_at_end_of_collection.sql",
+            meta.short_name,
+            meta.title,
+            meta.is_reference,
+            &meta.date as &Option<Date>,
+            collection_id,
+            next_index
+        )
+        .fetch_one(&mut *tx)
+        .await?;
+
+        {
+            let (name, doc, role): (Vec<_>, Vec<_>, Vec<_>) = meta
+                .contributors
+                .iter()
+                .map(|contributor| {
+                    (
+                        contributor.name.clone(),
+                        document_uuid,
+                        contributor.role.clone(),
+                    )
+                })
+                .multiunzip();
+            if !name.is_empty() {
+                query_file!(
+                    "queries/upsert_document_contributors.sql",
+                    &*name,
+                    &*doc,
+                    &*role
+                )
+                .execute(&mut *tx)
+                .await?;
+            }
+        }
+
+        let document_id = DocumentId(document_uuid);
+        let document_with_updated_id = AnnotatedDoc {
+            meta: DocumentMetadata {
+                id: document_id,
+                ..document.meta.clone()
+            },
+            segments: document.segments.clone(),
+        };
+
+        query_file!("queries/delete_document_pages.sql", document_uuid)
+            .execute(&mut *tx)
+            .await?;
+
+        if let Some(pages) = document_with_updated_id.segments {
+            let mut starting_char_index = 0;
+            for (page_index, page) in pages.into_iter().enumerate() {
+                let page_id = query_file_scalar!(
+                    "queries/upsert_document_page.sql",
+                    document_uuid,
+                    page_index as i64,
+                    document_with_updated_id
+                        .meta
+                        .page_images
+                        .as_ref()
+                        .map(|imgs| imgs.source.0),
+                    document_with_updated_id
+                        .meta
+                        .page_images
+                        .as_ref()
+                        .and_then(|imgs| imgs.ids.get(page_index))
+                )
+                .fetch_one(&mut *tx)
+                .await?;
+
+                for paragraph in page.paragraphs {
+                    let total_chars: usize = paragraph
+                        .source
+                        .iter()
+                        .map(|e| {
+                            if let AnnotatedSeg::Word(word) = e {
+                                word.source.chars().count()
+                            } else {
+                                0
+                            }
+                        })
+                        .sum();
+                    let char_range: PgRange<_> =
+                        (starting_char_index..starting_char_index + total_chars as i64).into();
+                    query_file!(
+                        "queries/insert_paragraph.sql",
+                        page_id,
+                        char_range,
+                        paragraph.translation.unwrap_or_default()
+                    )
+                    .execute(&mut *tx)
+                    .await?;
+
+                    for element in paragraph.source {
+                        match element {
+                            AnnotatedSeg::Word(word) => {
+                                let len = word.source.chars().count() as i64;
+                                let (char_index, character): (Vec<_>, Vec<_>) = word
+                                    .source
+                                    .chars()
+                                    .enumerate()
+                                    .map(|(idx, c)| {
+                                        (starting_char_index + idx as i64, c.to_string())
+                                    })
+                                    .unzip();
+                                query_file!(
+                                    "queries/insert_character_transcription.sql",
+                                    page_id,
+                                    &*char_index,
+                                    &*character
+                                )
+                                .execute(&mut *tx)
+                                .await?;
+
+                                let char_range: PgRange<_> =
+                                    (starting_char_index..starting_char_index + len).into();
+                                self.insert_word(
+                                    &mut tx,
+                                    word,
+                                    document_uuid,
+                                    Some(page_id),
+                                    Some(char_range),
+                                )
+                                .await?;
+                                starting_char_index += len;
+                            }
+                            AnnotatedSeg::LineBreak(_) => {}
+                        }
+                    }
+                }
+            }
+        }
+
+        tx.commit().await?;
+        Ok(document_id)
+    }
+
     pub async fn insert_document_contents(&self, document: AnnotatedDoc) -> Result<()> {
         let mut tx = self.client.begin().await?;
         let document_id = document.meta.id;
@@ -1097,6 +1244,7 @@ impl Database {
         Ok(vec![DocumentCollection {
             slug: item.slug,
             title: item.title,
+            id: None,
         }])
     }
 
@@ -1110,6 +1258,7 @@ impl Database {
             .map(|chapter| DocumentCollection {
                 slug: chapter.slug,
                 title: chapter.title,
+                id: None,
             })
             .collect())
     }
@@ -1497,6 +1646,7 @@ impl Database {
         Ok(DocumentCollection {
             slug: collection.slug,
             title: collection.title,
+            id: Some(collection.id),
         })
     }
 
