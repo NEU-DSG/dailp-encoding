@@ -24,18 +24,31 @@ impl AnnotatedDoc {
     pub fn new(meta: DocumentMetadata, segments: Vec<Vec<Vec<AnnotatedSeg>>>) -> Self {
         // Skip the first block of the translation, since this usually contains
         // the header and information for translators and editors.
-        let blocks = &meta
-            .translation
-            .as_ref()
-            .unwrap_or_else(|| panic!("Missing translation for {}", meta.short_name))
-            .paragraphs;
+        println!(
+            "Translation {}present",
+            if meta.translation.is_some() {
+                ""
+            } else {
+                "not "
+            }
+        );
+        let blocks = if meta.translation.is_some() {
+            &meta.translation.as_ref().unwrap().paragraphs
+        } else {
+            &Vec::<TranslationBlock>::new()
+        };
 
         let mut pages = Vec::new();
         let mut paragraph_index = 0;
         for page in segments {
             let mut paragraphs = Vec::new();
             for paragraph in page {
-                if paragraph_index > 0 {
+                if blocks.is_empty() {
+                    paragraphs.push(TranslatedSection {
+                        translation: None,
+                        source: paragraph,
+                    });
+                } else if paragraph_index > 0 {
                     let trans = blocks.get(paragraph_index);
                     paragraphs.push(TranslatedSection {
                         translation: trans.map(TranslationBlock::get_text),
@@ -275,15 +288,20 @@ pub struct ParagraphUpdate {
 /// Update the contributor attribution for a document
 #[derive(async_graphql::InputObject)]
 pub struct UpdateContributorAttribution {
+    /// The document to perfom this operation on
     pub document_id: Uuid,
+    /// The UUID associated with the contributor being added or changed
     pub contributor_id: Uuid,
+    /// A description of what the contributor did, like "translation" or "voice"
     pub contribution_role: String,
 }
 
 /// Delete a contributor attribution for a document based on the two ids
 #[derive(async_graphql::InputObject)]
 pub struct DeleteContributorAttribution {
+    /// The document to perform this operation on
     pub document_id: Uuid,
+    /// The UUID of the contributor to remove from this document's attributions
     pub contributor_id: Uuid,
 }
 
@@ -291,8 +309,11 @@ pub struct DeleteContributorAttribution {
 /// All fields except id are optional.
 #[derive(async_graphql::InputObject)]
 pub struct DocumentMetadataUpdate {
+    /// The ID of the document to update
     pub id: Uuid,
+    /// An updated title for this document, or nothing (if title is unchanged)
     pub title: MaybeUndefined<String>,
+    /// The date this document was written, or nothing (if unchanged or not applicable)
     pub written_at: MaybeUndefined<DateInput>,
 }
 
