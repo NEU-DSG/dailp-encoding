@@ -7,14 +7,17 @@ import { useScrollableTabState } from "src/scrollable-tabs"
 import Link from "../link"
 import { BookmarkCard } from "./bookmark-card"
 import * as css from "./dashboard.css"
+import { UserRole, useUserRole } from "src/auth"
 
 enum Tabs {
   ACTIVITY = "activity-tab",
   BOOKMARKS = "bookmarks-tab",
+  ADMIN_TOOLS = "admin-tab",
 }
 
 export const Dashboard = () => {
   const tabs = useScrollableTabState({ selectedId: Tabs.BOOKMARKS })
+  const curRole = useUserRole()
   return (
     <>
       <h1 className={css.dashboardHeader}>Dashboard</h1>
@@ -31,6 +34,11 @@ export const Dashboard = () => {
           <Tab {...tabs} id={Tabs.ACTIVITY} className={css.dashboardTab}>
             Recent Activity
           </Tab>
+          {curRole == UserRole.Admin && (
+            <Tab {...tabs} id={Tabs.ADMIN_TOOLS} className={css.dashboardTab}>
+              Admin tools
+            </Tab>
+          )}
         </TabList>
 
         <TabPanel
@@ -48,6 +56,13 @@ export const Dashboard = () => {
         >
           <ActivityTab />
         </TabPanel>
+        <TabPanel
+          {...tabs}
+          id={Tabs.ADMIN_TOOLS}
+          className={css.dashboardTabPanel}
+        >
+          <AdminToolsTab />
+        </TabPanel>
       </div>
     </>
   )
@@ -57,6 +72,33 @@ export const ActivityTab = () => {
   // takes in something (user?)
   const dialog = useDialogState({ animated: true, visible: true })
   return <></>
+}
+
+
+export const AdminToolsTab = () => {
+  return (
+    <>
+      <div>
+        <h2>Manage Edited Collections</h2>
+        <Link href="#">Create New Collection</Link>
+        <br />
+        <Link href="#">Edit Existing Collection</Link>
+      </div>
+      <div>
+
+        <h2>Manage Documents</h2>
+        <Link href="#">Create New Document(s)</Link>
+      </div>
+      <div>
+        <h2>Manage Users</h2>
+        <Link href="#">Update Permissions for Existing User</Link>
+        <br />
+        <Link href="#">Manage Teams</Link>
+      </div>
+    </>
+  )
+
+
 }
 
 export const BookmarksTab = () => {
