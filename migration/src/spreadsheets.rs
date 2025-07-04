@@ -50,93 +50,302 @@ impl SheetInterpretation {
         }
     }
     /// Parse this sheet as the document index.
-    pub fn into_index(self) -> Result<DocumentIndex> {
+    pub fn into_index(self) -> Result<DocumentIndex, anyhow::Error> {
+        if self.sheet.values.is_empty() {
+            return Err(anyhow::anyhow!("Cannot parse document index from empty sheet"));
+        }
+        
         let mut sections = Vec::new();
-        for row in self.sheet.values.into_iter().skip(1) {
+        
+        // Skip header row (row 0)
+        for (row_index, row) in self.sheet.values.into_iter().skip(1).enumerate() {
+            let spreadsheet_row_number = row_index + 2; // +2 because we skip header and are 0-indexed
+            
+            // Check if this is a new section (empty first column, non-empty second column)
             if row.len() >= 2 && row[0].is_empty() {
-                // This is a new section.
+                let section_title = row.get(1)
+                    .ok_or_else(|| anyhow::anyhow!(
+                        "Row {} appears to start a new section but has no title in column B", 
+                        spreadsheet_row_number
+                    ))?;
+                
+                if section_title.trim().is_empty() {
+                    return Err(anyhow::anyhow!(
+                        "Row {} has empty section title in column B", 
+                        spreadsheet_row_number
+                    ));
+                }
+                
                 sections.push(DocumentIndexCollection {
-                    title: row[1].clone(),
+                    title: section_title.clone(),
                     sheet_ids: Vec::new(),
                 });
-            } else if row.len() > 11 && !row[11].is_empty() {
-                sections
-                    .last_mut()
-                    .unwrap()
-                    .sheet_ids
-                    .push(Self::drive_url_to_id(&row[11]).to_owned());
+                
+            } else if row.len() > 11 {
+                let sheet_url_cell = &row[11];
+                
+                if !sheet_url_cell.trim().is_empty() {
+                    // Make sure a section has already been defined so we can add to it.
+                    if sections.is_empty() {
+                        return Err(anyhow::anyhow!(
+                            "Row {} contains a sheet ID '{}' but no section has been defined yet. Expected a section header first.", 
+                            spreadsheet_row_number, sheet_url_cell
+                        ));
+                    }
+                    
+                    // Extract the sheet ID from the URL/ID
+                    let sheet_id = Self::drive_url_to_id(sheet_url_cell);
+                                            
+                    // Add to the most recent section
+                    sections
+                        .last_mut()
+                        .expect("We already checked sections is not empty")
+                        .sheet_ids
+                        .push(sheet_id.to_string());
+                }
             }
         }
+        
+        // Validate the result
+        if sections.is_empty() {
+            return Err(anyhow::anyhow!(
+                "No document index sections found in sheet. Expected rows with empty column A and non-empty column B for section headers."
+            ));
+        }
+        
+        let total_sheets: usize = sections.iter().map(|s| s.sheet_ids.len()).sum();
+        
         Ok(DocumentIndex {
             collections: sections,
         })
     }
+
+    // pub fn into_collection_index(
+    //     self,
+    //     self_title: &String,
+    //     self_wordpress_menu_id: &i64,
+    //     self_slug: &str,
+    // ) -> Result<dailp::raw::EditedCollection> {
+    //     let mut collection_chapters = Vec::new();
+    //     let mut row = self.sheet.values.into_iter();
+    //     let _first_value = row
+    //         .next()
+    //         .ok_or_else(|| anyhow::format_err!("Missing first value"))?;
+    //     let _second_value = row
+    //         .next()
+    //         .ok_or_else(|| anyhow::format_err!("Missing second value"))?;
+    //     // 0 for Intro, 1 for Body, 2 for Credit
+    //     let mut chapter_type = 0;
+    //     for cur_row in row {
+    //         if cur_row[0].is_empty() {
+    //             chapter_type += 1;
+    //         } else {
+    //             let mut row_values = cur_row.into_iter().peekable();
+
+    //             // Chapter Depth, URL Slug, and Chapter Name are all required
+    //             let index_i64 = row_values.next().unwrap().parse()?;
+    //             let chapter_url_slug = row_values.next().unwrap();
+    //             let cur_chapter_name = row_values.next().unwrap();
+
+    //             // Next field is author, which is optional, and not stored
+    //             if row_values.peek().is_some() {
+    //                 row_values.next().unwrap();
+    //             }
+
+    //             // Both of these fields are optional, and will panic if out of bounds
+
+    //             let wp_id = if row_values.peek().is_some() {
+    //                 row_values.next().unwrap().parse::<i64>().ok()
+    //             } else {
+    //                 None
+    //             };
+
+    //             let doc_string = if row_values.peek().is_some() {
+    //                 row_values.next()
+    //             } else {
+    //                 None
+    //             };
+
+    //             let chapter_type_name = if chapter_type == 0 {
+    //                 Intro
+    //             } else if chapter_type == 1 {
+    //                 Body
+    //             } else {
+    //                 Credit
+    //             };
+
+    //             let new_chapter = dailp::raw::CollectionChapter {
+    //                 index_in_parent: index_i64,
+    //                 url_slug: slugify_ltree(chapter_url_slug),
+    //                 chapter_name: cur_chapter_name,
+    //                 document_short_name: doc_string,
+    //                 id: None,
+    //                 wordpress_id: wp_id,
+    //                 section: chapter_type_name,
+    //             };
+
+    //             collection_chapters.push(new_chapter);
+    //         }
+    //     }
+
+    //     Ok(dailp::raw::EditedCollection {
+    //         title: self_title.to_string(),
+    //         wordpress_menu_id: Some(*self_wordpress_menu_id),
+    //         slug: self_slug.to_ascii_lowercase(),
+    //         chapters: collection_chapters,
+    //     })
+    // }
     pub fn into_collection_index(
         self,
         self_title: &String,
         self_wordpress_menu_id: &i64,
         self_slug: &str,
-    ) -> Result<dailp::raw::EditedCollection> {
+    ) -> Result<dailp::raw::EditedCollection, anyhow::Error> {
+        // Validate inputs
+        if self_title.trim().is_empty() {
+            return Err(anyhow::anyhow!("Collection title cannot be empty"));
+        }
+        if self_slug.trim().is_empty() {
+            return Err(anyhow::anyhow!("Collection slug cannot be empty"));
+        }
+        if self.sheet.values.len() < 3 {
+            return Err(anyhow::anyhow!(
+                "Sheet must have at least 3 rows (2 headers + data), got {}", 
+                self.sheet.values.len()
+            ));
+        }
+
         let mut collection_chapters = Vec::new();
-        let mut row = self.sheet.values.into_iter();
-        let _first_value = row
-            .next()
-            .ok_or_else(|| anyhow::format_err!("Missing first value"))?;
-        let _second_value = row
-            .next()
-            .ok_or_else(|| anyhow::format_err!("Missing second value"))?;
-        // 0 for Intro, 1 for Body, 2 for Credit
+        let mut row_iter = self.sheet.values.into_iter();
+        
+        // Skip first two rows (headers/metadata)
+        let _first_value = row_iter.next()
+            .ok_or_else(|| anyhow::anyhow!("Missing first header row"))?;
+        let _second_value = row_iter.next()
+            .ok_or_else(|| anyhow::anyhow!("Missing second header row"))?;
+        
+        // Track chapter sections: 0 = Intro, 1 = Body, 2+ = Credit
         let mut chapter_type = 0;
-        for cur_row in row {
-            if cur_row[0].is_empty() {
+        const MAX_CHAPTER_TYPE: i32 = 2;
+        
+        for (row_index, cur_row) in row_iter.enumerate() {
+            let spreadsheet_row_number = row_index + 3; // +3 because we skipped 2 header rows and are 0-indexed
+            
+            // Check if row is empty or first column is empty (section separator)
+            if cur_row.is_empty() || cur_row.get(0).map_or(true, |cell| cell.is_empty()) {
                 chapter_type += 1;
-            } else {
-                let mut row_values = cur_row.into_iter().peekable();
-
-                // Chapter Depth, URL Slug, and Chapter Name are all required
-                let index_i64 = row_values.next().unwrap().parse()?;
-                let chapter_url_slug = row_values.next().unwrap();
-                let cur_chapter_name = row_values.next().unwrap();
-
-                // Next field is author, which is optional, and not stored
-                if row_values.peek().is_some() {
-                    row_values.next().unwrap();
+                if chapter_type > MAX_CHAPTER_TYPE {
+                    eprintln!("Warning: More than 3 sections found at row {}. Additional sections will be treated as Credit.", 
+                        spreadsheet_row_number);
+                    chapter_type = MAX_CHAPTER_TYPE; // Cap at Credit section
                 }
-
-                // Both of these fields are optional, and will panic if out of bounds
-
-                let wp_id = if row_values.peek().is_some() {
-                    row_values.next().unwrap().parse::<i64>().ok()
-                } else {
-                    None
-                };
-
-                let doc_string = if row_values.peek().is_some() {
-                    row_values.next()
-                } else {
-                    None
-                };
-
-                let chapter_type_name = if chapter_type == 0 {
-                    Intro
-                } else if chapter_type == 1 {
-                    Body
-                } else {
-                    Credit
-                };
-
-                let new_chapter = dailp::raw::CollectionChapter {
-                    index_in_parent: index_i64,
-                    url_slug: slugify_ltree(chapter_url_slug),
-                    chapter_name: cur_chapter_name,
-                    document_short_name: doc_string,
-                    id: None,
-                    wordpress_id: wp_id,
-                    section: chapter_type_name,
-                };
-
-                collection_chapters.push(new_chapter);
+                continue;
             }
+
+            // Validate minimum required columns (Chapter Depth, URL slug, Chapter Name)
+            if cur_row.len() < 3 {
+                return Err(anyhow::anyhow!(
+                    "Row {} has insufficient columns (expected at least 3 for depth, slug, name, got {})", 
+                    spreadsheet_row_number, cur_row.len()
+                ));
+            }
+
+            let mut row_values = cur_row.into_iter().peekable();
+
+            // Parse Chapter Depth (Column 0)
+            let depth_str = row_values.next()
+                .ok_or_else(|| anyhow::anyhow!("Row {} missing chapter depth", spreadsheet_row_number))?;
+            let index_i64 = depth_str.parse::<f64>()
+                .map_err(|e| anyhow::anyhow!(
+                    "Row {} has invalid chapter depth '{}': {}", 
+                    spreadsheet_row_number, depth_str, e
+                ))?
+                .round() as i64;
+
+            // Parse URL slug (Column 1)
+            let chapter_url_slug = row_values.next()
+                .ok_or_else(|| anyhow::anyhow!("Row {} missing URL slug", spreadsheet_row_number))?;
+            if chapter_url_slug.trim().is_empty() {
+                return Err(anyhow::anyhow!(
+                    "Row {} has empty URL slug", 
+                    spreadsheet_row_number
+                ));
+            }
+
+            // Parse Chapter Name (Column 2)
+            let cur_chapter_name = row_values.next()
+                .ok_or_else(|| anyhow::anyhow!("Row {} missing chapter name", spreadsheet_row_number))?;
+            if cur_chapter_name.trim().is_empty() {
+                return Err(anyhow::anyhow!(
+                    "Row {} has empty chapter name", 
+                    spreadsheet_row_number
+                ));
+            }
+
+            // Skip Author field (Column 3) - not stored but advance iterator
+            if row_values.peek().is_some() {
+                row_values.next(); // Skip author, don't need to validate
+            }
+
+            // Parse optional WordPress Page ID (Column 4)
+            let wp_id = if row_values.peek().is_some() {
+                let wp_id_str = row_values.next().unwrap();
+                if wp_id_str.trim().is_empty() {
+                    None
+                } else {
+                    match wp_id_str.parse::<f64>() {
+                        Ok(float_id) => Some(float_id.round() as i64),
+                        Err(_) => {
+                            eprintln!("Warning: Row {} has invalid WordPress ID '{}', ignoring", 
+                                spreadsheet_row_number, wp_id_str);
+                            None
+                        }
+                    }
+                }
+            } else {
+                None
+            };
+
+            // Parse optional MSID (Column 5)
+            let doc_string = if row_values.peek().is_some() {
+                let msid_str = row_values.next().unwrap();
+                if msid_str.trim().is_empty() {
+                    None
+                } else {
+                    Some(msid_str)
+                }
+            } else {
+                None
+            };
+
+            // Column 6 (Audio Punchlist) is ignored - no need to process
+
+            // Determine chapter section type
+            let chapter_type_name = match chapter_type {
+                0 => Intro,
+                1 => Body,
+                2 => Credit,
+                _ => unreachable!("chapter_type should never exceed 2 due to capping logic"),
+            };
+
+            let new_chapter = dailp::raw::CollectionChapter {
+                index_in_parent: index_i64,
+                url_slug: slugify_ltree(chapter_url_slug),
+                chapter_name: cur_chapter_name,
+                document_short_name: doc_string,
+                id: None,
+                wordpress_id: wp_id,
+                section: chapter_type_name,
+            };
+
+            collection_chapters.push(new_chapter);
+        }
+
+        // Validate result
+        if collection_chapters.is_empty() {
+            return Err(anyhow::anyhow!(
+                "No chapters found in collection. Expected at least one non-empty row with chapter data."
+            ));
         }
 
         Ok(dailp::raw::EditedCollection {
@@ -147,131 +356,452 @@ impl SheetInterpretation {
         })
     }
 
-    pub fn into_adjs(self, doc_id: DocumentId, year: i32) -> Result<Vec<LexicalEntryWithForms>> {
-        use rayon::prelude::*;
-        Ok(self
-            .sheet
-            .values
-            .into_par_iter()
-            // First two rows are simply headers.
-            .skip(1)
-            .enumerate()
-            .filter(|(_idx, cols)| cols.len() > 4 && !cols[1].is_empty())
-            // The rest are relevant to the noun itself.
-            .filter_map(|(idx, columns)| {
-                // The columns are as follows: key, root, root gloss, page ref,
-                // category, tags, surface forms.
+    // pub fn into_adjs(self, doc_id: DocumentId, year: i32) -> Result<Vec<LexicalEntryWithForms>> {
+    //     use rayon::prelude::*;
+    //     Ok(self
+    //         .sheet
+    //         .values
+    //         .into_par_iter()
+    //         // First two rows are simply headers.
+    //         .skip(1)
+    //         .enumerate()
+    //         .filter(|(_idx, cols)| cols.len() > 4 && !cols[1].is_empty())
+    //         // The rest are relevant to the noun itself.
+    //         .filter_map(|(idx, columns)| {
+    //             // The columns are as follows: key, root, root gloss, page ref,
+    //             // category, tags, surface forms.
 
-                // Skip reference numbers for now.
+    //             // Skip reference numbers for now.
+    //             let mut root_values = columns.into_iter();
+    //             let key = root_values.next()?.parse().unwrap_or(idx as i64 + 1);
+    //             let root = root_values.next()?;
+    //             let root_gloss = root_values.next()?;
+    //             // Skip page ref.
+    //             let page_number = root_values.next()?;
+    //             let mut form_values = root_values;
+    //             let date = Date::from_ymd(year, 1, 1);
+    //             let position = PositionInDocument::new(doc_id, page_number, key);
+    //             Some(LexicalEntryWithForms {
+    //                 forms: root_verb_surface_forms(
+    //                     &position,
+    //                     &date,
+    //                     &root,
+    //                     &root_gloss,
+    //                     &mut form_values,
+    //                     3,
+    //                     true,
+    //                     true,
+    //                     false,
+    //                 ),
+    //                 entry: AnnotatedForm {
+    //                     id: None,
+    //                     normalized_source: None,
+    //                     simple_phonetics: None,
+    //                     phonemic: None,
+    //                     commentary: None,
+    //                     line_break: None,
+    //                     page_break: None,
+    //                     segments: Some(vec![WordSegment::new(
+    //                         convert_udb(&root).into_dailp(),
+    //                         root_gloss.clone(),
+    //                         None,
+    //                     )]),
+    //                     english_gloss: vec![root_gloss],
+    //                     date_recorded: Some(date),
+    //                     source: root,
+    //                     position,
+    //                     ingested_audio_track: None,
+    //                 },
+    //             })
+    //         })
+    //         .collect())
+    // }
+
+    pub fn into_adjs(self, doc_id: DocumentId, year: i32) -> Result<Vec<LexicalEntryWithForms>, anyhow::Error> {
+        // Validate inputs
+        if self.sheet.values.is_empty() {
+            return Err(anyhow::anyhow!("Cannot parse adjectives from empty sheet"));
+        }
+        if self.sheet.values.len() < 2 {
+            return Err(anyhow::anyhow!(
+                "Adjectives sheet must have at least 2 rows (header + data), got {}", 
+                self.sheet.values.len()
+            ));
+        }
+
+        let mut results = Vec::new();
+        let mut errors = Vec::new();
+
+        let total_rows = self.sheet.values.len();
+
+        // Skip first row (header)
+        for (row_index, columns) in self.sheet.values.into_iter().skip(1).enumerate() {
+            let spreadsheet_row_number = row_index + 2; // +2 because we skip header and are 0-indexed
+            
+            // Skip rows that don't meet minimum criteria
+            if columns.len() <= 4 {
+                eprintln!("Warning: Row {} has insufficient columns (expected > 4 for adjectives format, got {}), skipping", 
+                    spreadsheet_row_number, columns.len());
+                continue;
+            }
+            
+            // Check if root column (index 1) is empty - this indicates a non-data row
+            if columns.get(1).map_or(true, |col| col.is_empty()) {
+                continue;
+            }
+
+            let entry_result: Result<LexicalEntryWithForms, anyhow::Error> = {
                 let mut root_values = columns.into_iter();
-                let key = root_values.next()?.parse().unwrap_or(idx as i64 + 1);
-                let root = root_values.next()?;
-                let root_gloss = root_values.next()?;
-                // Skip page ref.
-                let page_number = root_values.next()?;
+
+                // Parse key (Column 0: "All Entries Key")
+                let key_str = root_values.next()
+                    .ok_or_else(|| anyhow::anyhow!("Missing entry key column expected at row {} in the spreadsheet", spreadsheet_row_number))?;
+                
+                let key = if key_str.trim().is_empty() {
+                    return Err(anyhow::anyhow!("Empty entry key - Double check row {} in the spreadsheet", spreadsheet_row_number));
+                } else {
+                    key_str.parse::<i64>()
+                        .map_err(|e| anyhow::anyhow!("Invalid entry key '{}': {}", key_str, e))
+                        .unwrap_or_else(|_| {
+                            eprintln!("Warning: Invalid key '{}' at row {}, using row index {}", 
+                                key_str, spreadsheet_row_number, row_index + 1);
+                            (row_index as i64) + 1
+                        })
+                };
+
+                // Parse root (Column 1: "Root")
+                let root = root_values.next()
+                    .ok_or_else(|| anyhow::anyhow!("Missing root column"))?;
+                
+                if root.trim().is_empty() {
+                    return Err(anyhow::anyhow!("Empty root text"));
+                }
+
+                // Parse root gloss (Column 2: "morpheme.Gloss") 
+                let root_gloss = root_values.next()
+                    .ok_or_else(|| anyhow::anyhow!("Missing morpheme gloss column"))?;
+                
+                if root_gloss.trim().is_empty() {
+                    return Err(anyhow::anyhow!("Empty morpheme gloss"));
+                }
+
+                // Parse page reference (Column 3: "DF1975 page ref")
+                let page_number = root_values.next()
+                    .ok_or_else(|| anyhow::anyhow!("Missing page reference column"))?;
+                
+                if page_number.trim().is_empty() {
+                    return Err(anyhow::anyhow!("Empty page reference"));
+                }
+
+                // Remaining columns are surface form data
                 let mut form_values = root_values;
+                
+                // Create date and position
                 let date = Date::from_ymd(year, 1, 1);
                 let position = PositionInDocument::new(doc_id, page_number, key);
-                Some(LexicalEntryWithForms {
-                    forms: root_verb_surface_forms(
-                        &position,
-                        &date,
-                        &root,
-                        &root_gloss,
-                        &mut form_values,
-                        3,
-                        true,
-                        true,
-                        false,
-                    ),
-                    entry: AnnotatedForm {
-                        id: None,
-                        normalized_source: None,
-                        simple_phonetics: None,
-                        phonemic: None,
-                        commentary: None,
-                        line_break: None,
-                        page_break: None,
-                        segments: Some(vec![WordSegment::new(
-                            convert_udb(&root).into_dailp(),
-                            root_gloss.clone(),
-                            None,
-                        )]),
-                        english_gloss: vec![root_gloss],
-                        date_recorded: Some(date),
-                        source: root,
-                        position,
-                        ingested_audio_track: None,
-                    },
+                
+                // Generate surface forms for adjectives (SG, PL AN, PL INAN)
+                let forms = root_verb_surface_forms(
+                    &position,
+                    &date,
+                    &root,
+                    &root_gloss,
+                    &mut form_values,
+                    3,
+                    true,
+                    true,
+                    false,
+                );
+                if forms.is_empty() {
+                    return Err(anyhow::anyhow!(
+                        "No surface forms generated for adjective entry {} with root '{}'", 
+                        key, root
+                    ));
+                }
+
+                // Create word segment
+                let segment = WordSegment::new(
+                    convert_udb(&root).into_dailp(),
+                    root_gloss.clone(),
+                    None,
+                );
+
+                let entry = AnnotatedForm {
+                    id: None,
+                    normalized_source: None,
+                    simple_phonetics: None,
+                    phonemic: None,
+                    commentary: None,
+                    line_break: None,
+                    page_break: None,
+                    segments: Some(vec![segment]),
+                    english_gloss: vec![root_gloss.clone()],
+                    date_recorded: Some(date),
+                    source: root,
+                    position,
+                    ingested_audio_track: None,
+                };
+
+                Ok(LexicalEntryWithForms {
+                    forms,
+                    entry,
                 })
-            })
-            .collect())
+            };
+            match entry_result {
+                Ok(entry) => results.push(entry),
+                Err(e) => {
+                    errors.push(format!("Row {}: {}", spreadsheet_row_number, e));
+                }
+            }
+        }
+
+        // Report up to 5 errors in case too many errors occurred
+        if !errors.is_empty() {
+            eprintln!("Warnings: {} rows had errors during adjective processing:", errors.len());
+            for error in errors.iter().take(5) { // Show first 5 errors
+                eprintln!("  {}", error);
+            }
+            if errors.len() > 5 {
+                eprintln!("  ... and {} more errors", errors.len() - 5);
+            }
+        }
+
+        if results.is_empty() {
+            return Err(anyhow::anyhow!(
+                "No valid adjective entries found in sheet. Processed {} rows, {} had errors.",
+                total_rows - 1, // -1 for header
+                errors.len()
+            ));
+        }
+
+        Ok(results)
     }
+
+    // pub fn into_nouns(
+    //     self,
+    //     doc_id: DocumentId,
+    //     year: i32,
+    //     after_root: usize,
+    //     has_comment: bool,
+    // ) -> Result<Vec<LexicalEntryWithForms>> {
+    //     Ok(self
+    //         .sheet
+    //         .values
+    //         .into_iter()
+    //         // First two rows are simply headers.
+    //         .skip(2)
+    //         .filter(|cols| cols.len() > 4 && !cols[2].is_empty())
+    //         .group_by(|cols| cols.first().and_then(|s| s.parse::<i64>().ok()))
+    //         .into_iter()
+    //         .enumerate()
+    //         // The rest are relevant to the noun itself.
+    //         .filter_map(|(index, (_key, rows))| {
+    //             let rows: Vec<_> = rows.collect();
+    //             let columns = rows.first()?.clone();
+    //             // The columns are as follows: key, root, root gloss, page ref,
+    //             // category, tags, surface forms.
+
+    //             // Skip reference numbers for now.
+    //             let mut root_values = columns.into_iter();
+    //             let index = root_values
+    //                 .next()?
+    //                 .split(",")
+    //                 .next()?
+    //                 .parse()
+    //                 .unwrap_or(index as i64 + 1);
+    //             let page_number = root_values.next();
+    //             let root = root_values.next()?;
+    //             let root_gloss = root_values.next()?;
+    //             // Skip page ref and category.
+    //             let mut form_values = rows
+    //                 .into_iter()
+    //                 .flat_map(|row| row.into_iter().skip(4 + after_root));
+    //             let date = Date::from_ymd(year, 1, 1);
+    //             let position = PositionInDocument::new(doc_id, page_number?, index);
+    //             Some(LexicalEntryWithForms {
+    //                 forms: root_noun_surface_forms(&position, &date, &mut form_values, has_comment),
+    //                 entry: AnnotatedForm {
+    //                     id: None,
+    //                     position,
+    //                     normalized_source: None,
+    //                     simple_phonetics: None,
+    //                     phonemic: None,
+    //                     segments: Some(vec![WordSegment::new(
+    //                         convert_udb(&root).into_dailp(),
+    //                         root_gloss.clone(),
+    //                         None,
+    //                     )]),
+    //                     english_gloss: vec![root_gloss],
+    //                     source: root,
+    //                     commentary: None,
+    //                     date_recorded: Some(date),
+    //                     line_break: None,
+    //                     page_break: None,
+    //                     ingested_audio_track: None,
+    //                 },
+    //             })
+    //         })
+    //         .collect())
+    // }
+
     pub fn into_nouns(
         self,
         doc_id: DocumentId,
         year: i32,
         after_root: usize,
         has_comment: bool,
-    ) -> Result<Vec<LexicalEntryWithForms>> {
-        Ok(self
-            .sheet
-            .values
-            .into_iter()
-            // First two rows are simply headers.
-            .skip(2)
-            .filter(|cols| cols.len() > 4 && !cols[2].is_empty())
-            .group_by(|cols| cols.first().and_then(|s| s.parse::<i64>().ok()))
-            .into_iter()
-            .enumerate()
-            // The rest are relevant to the noun itself.
-            .filter_map(|(index, (_key, rows))| {
-                let rows: Vec<_> = rows.collect();
-                let columns = rows.first()?.clone();
-                // The columns are as follows: key, root, root gloss, page ref,
-                // category, tags, surface forms.
+    ) -> Result<Vec<LexicalEntryWithForms>, anyhow::Error> {
+        // Validate inputs
+        if self.sheet.values.is_empty() {
+            return Err(anyhow::anyhow!("Cannot parse nouns from empty sheet"));
+        }
+        if self.sheet.values.len() < 3 {
+            return Err(anyhow::anyhow!(
+                "Nouns sheet must have at least 3 rows (2 headers + data), got {}", 
+                self.sheet.values.len()
+            ));
+        }
 
-                // Skip reference numbers for now.
+        let mut results = Vec::new();
+        let mut errors = Vec::new();
+
+        // Skip first two rows (headers) and group by key
+        let grouped_rows = self.sheet.values
+            .into_iter()
+            .skip(2)
+            .enumerate()
+            .filter(|(row_idx, cols)| {
+                let actual_row_number = row_idx + 3; // +3 for 2 skipped headers + 0-based indexing
+                
+                if cols.len() <= 4 {
+                    eprintln!("Warning: Row {} has insufficient columns (expected > 4 for nouns format, got {}), skipping", 
+                        actual_row_number, cols.len());
+                    return false;
+                }
+                if cols.get(2).map_or(true, |col| col.is_empty()) {
+                    return false;
+                }
+                
+                true
+            })
+            .map(|(_, cols)| cols)
+            .group_by(|cols| cols.first().and_then(|s| s.parse::<i64>().ok()));
+
+        // Process each group of rows (multiple rows can have the same key)
+        for (group_index, (parsed_key, rows)) in grouped_rows.into_iter().enumerate() {
+            let rows: Vec<_> = rows.collect();
+            
+            if rows.is_empty() {
+                continue;
+            }
+
+            let entry_result: Result<LexicalEntryWithForms, anyhow::Error> = {
+                let columns = rows.first()
+                    .ok_or_else(|| anyhow::anyhow!("Empty row group for noun entry"))?
+                    .clone();
+
+                // Parse the noun data inline
                 let mut root_values = columns.into_iter();
-                let index = root_values
-                    .next()?
-                    .split(",")
-                    .next()?
-                    .parse()
-                    .unwrap_or(index as i64 + 1);
-                let page_number = root_values.next();
-                let root = root_values.next()?;
-                let root_gloss = root_values.next()?;
-                // Skip page ref and category.
+                
+                // Parse key (Column 0: "ALL ENTRIES KEY")
+                let key_str = root_values.next()
+                    .ok_or_else(|| anyhow::anyhow!("Missing entry key column"))?;
+                
+                let index = key_str
+                    .split(',')
+                    .next()
+                    .ok_or_else(|| anyhow::anyhow!("Empty key"))?
+                    .parse::<i64>()
+                    .unwrap_or_else(|_| {
+                        eprintln!("Warning: Invalid key '{}', using group index {}", 
+                            key_str, group_index + 1);
+                        (group_index as i64) + 1
+                    });
+
+                // Parse page reference (Column 1: "DF1975 page ref")
+                let page_number = root_values.next()
+                    .ok_or_else(|| anyhow::anyhow!("Missing page reference column"))?;
+                if page_number.trim().is_empty() {
+                    return Err(anyhow::anyhow!("Empty page reference"));
+                }
+
+                // Parse root (Column 2: "ROOT") 
+                let root = root_values.next()
+                    .ok_or_else(|| anyhow::anyhow!("Missing root column"))?;
+                if root.trim().is_empty() {
+                    return Err(anyhow::anyhow!("Empty root text"));
+                }
+
+                // Parse root gloss (Column 3: "morphemeGloss")
+                let root_gloss = root_values.next()
+                    .ok_or_else(|| anyhow::anyhow!("Missing morpheme gloss column"))?;
+                if root_gloss.trim().is_empty() {
+                    return Err(anyhow::anyhow!("Empty morpheme gloss"));
+                }
+
+                // Create surface form values from all rows in the group
                 let mut form_values = rows
                     .into_iter()
                     .flat_map(|row| row.into_iter().skip(4 + after_root));
+                
                 let date = Date::from_ymd(year, 1, 1);
-                let position = PositionInDocument::new(doc_id, page_number?, index);
-                Some(LexicalEntryWithForms {
-                    forms: root_noun_surface_forms(&position, &date, &mut form_values, has_comment),
-                    entry: AnnotatedForm {
-                        id: None,
-                        position,
-                        normalized_source: None,
-                        simple_phonetics: None,
-                        phonemic: None,
-                        segments: Some(vec![WordSegment::new(
-                            convert_udb(&root).into_dailp(),
-                            root_gloss.clone(),
-                            None,
-                        )]),
-                        english_gloss: vec![root_gloss],
-                        source: root,
-                        commentary: None,
-                        date_recorded: Some(date),
-                        line_break: None,
-                        page_break: None,
-                        ingested_audio_track: None,
-                    },
-                })
-            })
-            .collect())
+                let position = PositionInDocument::new(doc_id, page_number, index);
+                let forms = root_noun_surface_forms(&position, &date, &mut form_values, has_comment);
+                
+                let segment = WordSegment::new(
+                    convert_udb(&root).into_dailp(),
+                    root_gloss.clone(),
+                    None,
+                );
+
+                let entry = AnnotatedForm {
+                    id: None,
+                    position,
+                    normalized_source: None,
+                    simple_phonetics: None,
+                    phonemic: None,
+                    segments: Some(vec![segment]),
+                    english_gloss: vec![root_gloss.clone()],
+                    source: root,
+                    commentary: None,
+                    date_recorded: Some(date),
+                    line_break: None,
+                    page_break: None,
+                    ingested_audio_track: None,
+                };
+
+                Ok(LexicalEntryWithForms { forms, entry })
+            };
+
+            match entry_result {
+                Ok(entry) => results.push(entry),
+                Err(e) => {
+                    errors.push(format!("Noun group {} (key: {:?}): {}", 
+                        group_index + 1, parsed_key, e));
+                }
+            }
+        }
+
+        // Report any errors that occurred
+        if !errors.is_empty() {
+            eprintln!("Warnings: {} noun groups had errors during processing:", errors.len());
+            for error in errors.iter().take(5) {
+                eprintln!("  {}", error);
+            }
+            if errors.len() > 5 {
+                eprintln!("  ... and {} more errors", errors.len() - 5);
+            }
+        }
+
+        if results.is_empty() {
+            return Err(anyhow::anyhow!(
+                "No valid noun entries found in sheet. Processed {} row groups, {} had errors.",
+                grouped_rows.into_iter().count(),
+                errors.len()
+            ));
+        }
+
+        Ok(results)
     }
 
     pub async fn into_references(self, doc_name: &str) -> Vec<dailp::LexicalConnection> {
@@ -294,186 +824,530 @@ impl SheetInterpretation {
             .collect()
     }
 
+    // /// Parse this sheet as a document metadata listing.
+    // pub async fn into_metadata(
+    //     self,
+    //     db: Option<&dailp::Database>,
+    //     is_reference: bool,
+    //     order_index: i64,
+    // ) -> Result<DocumentMetadata> {
+    //     // Field order: genre, source, title, source page #, page count, translation
+    //     // First column is the name of the field, useless when parsing so we ignore it.
+    //     let mut values = self.sheet.values.into_iter();
+    //     let mut doc_id = values
+    //         .next()
+    //         .ok_or_else(|| anyhow::format_err!("No Document ID"))?;
+    //     let mut genre = values
+    //         .next()
+    //         .ok_or_else(|| anyhow::format_err!("No genre"))?;
+    //     genre.remove(0);
+    //     let mut source = values
+    //         .next()
+    //         .ok_or_else(|| anyhow::format_err!("No source"))?;
+    //     source.remove(0);
+    //     let mut title = values
+    //         .next()
+    //         .ok_or_else(|| anyhow::format_err!("No title"))?;
+    //     let _page_num = values
+    //         .next()
+    //         .ok_or_else(|| anyhow::format_err!("No Page number"))?;
+    //     let _page_count = values
+    //         .next()
+    //         .ok_or_else(|| anyhow::format_err!("No Page Count"))?;
+    //     let translations = values
+    //         .next()
+    //         .ok_or_else(|| anyhow::format_err!("No Translations"))?;
+    //     let image_source = values
+    //         .next()
+    //         .ok_or_else(|| anyhow::format_err!("Missing image source row"))?
+    //         .into_iter()
+    //         .nth(1)
+    //         .map(|src| src.to_ascii_lowercase());
+    //     let image_ids = values
+    //         .next()
+    //         // Remove the row title.
+    //         .map(|mut x| {
+    //             x.remove(0);
+    //             x
+    //         });
+    //     let date = values
+    //         .next()
+    //         .ok_or_else(|| anyhow::format_err!("No Date"))?;
+    //     let names = values
+    //         .next()
+    //         .ok_or_else(|| anyhow::format_err!("No contributor names"))?;
+    //     let roles = values
+    //         .next()
+    //         .ok_or_else(|| anyhow::format_err!("No contributor roles"))?;
+    //     let people = names
+    //         .into_iter()
+    //         .skip(1)
+    //         .zip(roles.into_iter().skip(1))
+    //         .map(|(name, role)| Contributor { name, role })
+    //         .collect();
+    //     let sources = if let (Some(names), Some(links)) = (values.next(), values.next()) {
+    //         names
+    //             .into_iter()
+    //             .skip(1)
+    //             .zip(links.into_iter().skip(1))
+    //             .map(|(name, link)| SourceAttribution { name, link })
+    //             .collect()
+    //     } else {
+    //         Vec::new()
+    //     };
+    //     let audio_files = values
+    //         .next()
+    //         .ok_or_else(|| anyhow::format_err!("No audio resources"))?;
+
+    //     Ok(DocumentMetadata {
+    //         id: Default::default(),
+    //         short_name: doc_id.remove(1),
+    //         title: title.remove(1),
+    //         sources,
+    //         collection: source.pop().filter(|s| !s.is_empty()),
+    //         contributors: people,
+    //         genre: genre.pop(),
+    //         translation: Some(
+    //             DocResult::new(Self::drive_url_to_id(&translations[1]))
+    //                 .await?
+    //                 .into_translation()?,
+    //         ),
+    //         page_images: if let (Some(db), Some(ids), Some(source)) = (db, image_ids, image_source)
+    //         {
+    //             db.image_source_by_title(&source)
+    //                 .await?
+    //                 .map(|source| dailp::IiifImages {
+    //                     source: source.id,
+    //                     ids,
+    //                 })
+    //         } else {
+    //             None
+    //         },
+    //         date: date
+    //             .get(1)
+    //             .and_then(|s| dailp::chrono::NaiveDate::parse_from_str(s, "%Y-%m-%d").ok())
+    //             .map(Date::new),
+    //         is_reference,
+    //         audio_recording: if audio_files.get(1).is_none() {
+    //             None
+    //         } else {
+    //             Some(
+    //                 AudioRes::new(audio_files.get(1).unwrap(), audio_files.get(2))
+    //                     .await?
+    //                     .into_document_audio(),
+    //             )
+    //         },
+    //         order_index,
+    //     })
+    // }
+
     /// Parse this sheet as a document metadata listing.
     pub async fn into_metadata(
         self,
         db: Option<&dailp::Database>,
         is_reference: bool,
         order_index: i64,
-    ) -> Result<DocumentMetadata> {
-        // Field order: genre, source, title, source page #, page count, translation
-        // First column is the name of the field, useless when parsing so we ignore it.
+    ) -> Result<DocumentMetadata, anyhow::Error> {
+        // Validate minimum sheet structure
+        if self.sheet.values.len() < 12 {
+            return Err(anyhow::anyhow!(
+                "Metadata sheet must have at least 12 rows for required fields, got {}", 
+                self.sheet.values.len()
+            ));
+        }
+
         let mut values = self.sheet.values.into_iter();
-        let mut doc_id = values
+
+        // Row 0: Document ID
+        let doc_id = values
             .next()
-            .ok_or_else(|| anyhow::format_err!("No Document ID"))?;
+            .ok_or_else(|| anyhow::anyhow!("Missing document ID row"))?;
+        
+        if doc_id.len() < 2 {
+            return Err(anyhow::anyhow!("Document ID row must have at least 2 columns, got {}", doc_id.len()));
+        }
+
+        // Row 1: Genre
         let mut genre = values
             .next()
-            .ok_or_else(|| anyhow::format_err!("No genre"))?;
-        genre.remove(0);
+            .ok_or_else(|| anyhow::anyhow!("Missing genre row"))?;
+        
+        if genre.is_empty() {
+            return Err(anyhow::anyhow!("Genre row is empty"));
+        }
+        genre.remove(0); // Remove field name
+
+        // Row 2: Source
         let mut source = values
             .next()
-            .ok_or_else(|| anyhow::format_err!("No source"))?;
-        source.remove(0);
-        let mut title = values
+            .ok_or_else(|| anyhow::anyhow!("Missing source row"))?;
+        
+        if source.is_empty() {
+            return Err(anyhow::anyhow!("Source row is empty"));
+        }
+        source.remove(0); // Remove field name
+
+        // Row 3: Title
+        let title = values
             .next()
-            .ok_or_else(|| anyhow::format_err!("No title"))?;
+            .ok_or_else(|| anyhow::anyhow!("Missing title row"))?;
+        
+        if title.len() < 2 {
+            return Err(anyhow::anyhow!("Title row must have at least 2 columns, got {}", title.len()));
+        }
+
+        // Row 4: Page number (skip but validate exists)
         let _page_num = values
             .next()
-            .ok_or_else(|| anyhow::format_err!("No Page number"))?;
+            .ok_or_else(|| anyhow::anyhow!("Missing page number row"))?;
+
+        // Row 5: Page count (skip but validate exists)  
         let _page_count = values
             .next()
-            .ok_or_else(|| anyhow::format_err!("No Page Count"))?;
+            .ok_or_else(|| anyhow::anyhow!("Missing page count row"))?;
+
+        // Row 6: Translations
         let translations = values
             .next()
-            .ok_or_else(|| anyhow::format_err!("No Translations"))?;
+            .ok_or_else(|| anyhow::anyhow!("Missing translations row"))?;
+        
+        if translations.len() < 2 {
+            return Err(anyhow::anyhow!("Translations row must have at least 2 columns, got {}", translations.len()));
+        }
+
+        // Row 7: Image source
         let image_source = values
             .next()
-            .ok_or_else(|| anyhow::format_err!("Missing image source row"))?
-            .into_iter()
-            .nth(1)
+            .ok_or_else(|| anyhow::anyhow!("Missing image source row"))?
+            .get(1)
             .map(|src| src.to_ascii_lowercase());
-        let image_ids = values
-            .next()
-            // Remove the row title.
-            .map(|mut x| {
-                x.remove(0);
-                x
-            });
+
+        // Row 8: Image IDs (optional)
+        let image_ids = values.next().and_then(|mut x| {
+            if x.is_empty() {
+                None
+            } else {
+                x.remove(0); // Remove field name
+                Some(x)
+            }
+        });
+
+        // Row 9: Date
         let date = values
             .next()
-            .ok_or_else(|| anyhow::format_err!("No Date"))?;
+            .ok_or_else(|| anyhow::anyhow!("Missing date row"))?;
+
+        // Row 10: Contributor names
         let names = values
             .next()
-            .ok_or_else(|| anyhow::format_err!("No contributor names"))?;
+            .ok_or_else(|| anyhow::anyhow!("Missing contributor names row"))?;
+
+        // Row 11: Contributor roles
         let roles = values
             .next()
-            .ok_or_else(|| anyhow::format_err!("No contributor roles"))?;
+            .ok_or_else(|| anyhow::anyhow!("Missing contributor roles row"))?;
+
+        // Process contributors with validation
         let people = names
             .into_iter()
             .skip(1)
             .zip(roles.into_iter().skip(1))
+            .filter(|(name, role)| !name.trim().is_empty() || !role.trim().is_empty())
             .map(|(name, role)| Contributor { name, role })
             .collect();
-        let sources = if let (Some(names), Some(links)) = (values.next(), values.next()) {
-            names
+
+        // Row 12-13: Source attributions with validation
+        let sources = if let (Some(source_names), Some(source_links)) = (values.next(), values.next()) {
+            source_names
                 .into_iter()
                 .skip(1)
-                .zip(links.into_iter().skip(1))
+                .zip(source_links.into_iter().skip(1))
+                .filter(|(name, link)| !name.trim().is_empty() || !link.trim().is_empty())
                 .map(|(name, link)| SourceAttribution { name, link })
                 .collect()
         } else {
             Vec::new()
         };
+
+        // Row 14: Audio files
         let audio_files = values
             .next()
-            .ok_or_else(|| anyhow::format_err!("No audio resources"))?;
+            .ok_or_else(|| anyhow::anyhow!("Missing audio resources row"))?;
 
-        Ok(DocumentMetadata {
-            id: Default::default(),
-            short_name: doc_id.remove(1),
-            title: title.remove(1),
-            sources,
-            collection: source.pop().filter(|s| !s.is_empty()),
-            contributors: people,
-            genre: genre.pop(),
-            translation: Some(
-                DocResult::new(Self::drive_url_to_id(&translations[1]))
-                    .await?
-                    .into_translation()?,
-            ),
-            page_images: if let (Some(db), Some(ids), Some(source)) = (db, image_ids, image_source)
-            {
+        // Process translation with better error context
+        let translation = if translations.get(1).map_or(true, |t| t.trim().is_empty()) {
+            None
+        } else {
+            let translation_url = &translations[1];
+            let doc_result = DocResult::new(Self::drive_url_to_id(translation_url))
+                .await
+                .map_err(|e| anyhow::anyhow!("Failed to fetch translation document '{}': {}", translation_url, e))?;
+            
+            Some(doc_result.into_translation()
+                .map_err(|e| anyhow::anyhow!("Failed to parse translation from '{}': {}", translation_url, e))?)
+        };
+
+        // Process page images with validation
+        let page_images = if let (Some(db), Some(ids), Some(source)) = (db, image_ids, image_source) {
+            if !source.trim().is_empty() {
                 db.image_source_by_title(&source)
-                    .await?
+                    .await
+                    .map_err(|e| anyhow::anyhow!("Failed to find image source '{}': {}", source, e))?
                     .map(|source| dailp::IiifImages {
                         source: source.id,
                         ids,
                     })
             } else {
                 None
-            },
-            date: date
-                .get(1)
-                .and_then(|s| dailp::chrono::NaiveDate::parse_from_str(s, "%Y-%m-%d").ok())
-                .map(Date::new),
+            }
+        } else {
+            None
+        };
+
+        // Parse date with better error handling
+        let parsed_date = date.get(1)
+            .and_then(|s| {
+                if s.trim().is_empty() {
+                    None
+                } else {
+                    dailp::chrono::NaiveDate::parse_from_str(s, "%Y-%m-%d")
+                        .map_err(|e| {
+                            eprintln!("Warning: Failed to parse date '{}': {}", s, e);
+                            e
+                        })
+                        .ok()
+                }
+            })
+            .map(Date::new);
+
+        // Process audio recording with validation
+        let audio_recording = if audio_files.get(1).map_or(true, |f| f.trim().is_empty()) {
+            None
+        } else {
+            let audio_result = AudioRes::new(
+                audio_files.get(1).unwrap(),
+                audio_files.get(2)
+            ).await
+            .map_err(|e| anyhow::anyhow!("Failed to create audio resource: {}", e))?;
+
+            Some(audio_result.into_document_audio())
+        };
+
+        // Extract required fields safely
+        let short_name = doc_id.get(1)
+            .ok_or_else(|| anyhow::anyhow!("Document ID missing value in column 2"))?
+            .clone();
+        
+        let document_title = title.get(1)
+            .ok_or_else(|| anyhow::anyhow!("Title missing value in column 2"))?
+            .clone();
+
+        Ok(DocumentMetadata {
+            id: Default::default(),
+            short_name,
+            title: document_title,
+            sources,
+            collection: source.pop().filter(|s| !s.trim().is_empty()),
+            contributors: people,
+            genre: genre.pop().filter(|s| !s.trim().is_empty()),
+            translation,
+            page_images,
+            date: parsed_date,
             is_reference,
-            audio_recording: if audio_files.get(1).is_none() {
-                None
-            } else {
-                Some(
-                    AudioRes::new(audio_files.get(1).unwrap(), audio_files.get(2))
-                        .await?
-                        .into_document_audio(),
-                )
-            },
+            audio_recording,
             order_index,
         })
     }
 
+    // /// Parse as an annotation sheet with several lines.
+    // pub fn split_into_lines(self) -> Vec<SemanticLine> {
+    //     if self.sheet.values.is_empty() {
+    //         return Vec::new();
+    //     }
+
+    //     // Firstly, split up groups of rows delimited by an empty row.
+    //     let mut current_result: Vec<Vec<String>> = Vec::new();
+    //     let mut all_lines = Vec::<SemanticLine>::new();
+    //     // The header line is useless in encoding.
+    //     for row in self.sheet.values.into_iter().skip(1) {
+    //         // Empty rows mark a line break.
+    //         // Rows starting with one cell containing just "\\" mark a page break.
+    //         // All other rows are part of an annotated line.
+    //         let is_blank = row.is_empty() || row.iter().all(|x| x.trim().is_empty());
+    //         if is_blank {
+    //             if !current_result.is_empty() {
+    //                 all_lines.push(SemanticLine {
+    //                     number: current_result[0][0].clone(),
+    //                     rows: current_result
+    //                         .into_iter()
+    //                         .map(|mut row| {
+    //                             if row.len() > 1 {
+    //                                 row.remove(0);
+    //                             }
+    //                             AnnotationRow {
+    //                                 title: row.remove(0),
+    //                                 items: row,
+    //                             }
+    //                         })
+    //                         .collect(),
+    //                     ends_page: false,
+    //                 });
+    //             }
+    //             current_result = Vec::new();
+    //         } else {
+    //             current_result.push(row);
+    //         }
+    //     }
+
+    //     // Add the last line to the output.
+    //     if !current_result.is_empty() {
+    //         all_lines.push(SemanticLine {
+    //             number: current_result[0][0].clone(),
+    //             rows: current_result
+    //                 .into_iter()
+    //                 .map(|mut row| {
+    //                     if row.len() > 1 {
+    //                         row.remove(0);
+    //                     }
+    //                     AnnotationRow {
+    //                         title: row.remove(0),
+    //                         items: row,
+    //                     }
+    //                 })
+    //                 .collect(),
+    //             ends_page: false,
+    //         });
+    //     }
+    //     // Remove trailing empty lines.
+    //     let last_best = all_lines.iter().rposition(|l| !l.is_empty()).unwrap_or(0);
+    //     all_lines.truncate(last_best + 1);
+    //     all_lines
+    // }
+
     /// Parse as an annotation sheet with several lines.
-    pub fn split_into_lines(self) -> Vec<SemanticLine> {
+    pub fn split_into_lines(self) -> Result<Vec<SemanticLine>, anyhow::Error> {
         if self.sheet.values.is_empty() {
-            return Vec::new();
+            return Ok(Vec::new());
         }
 
-        // Firstly, split up groups of rows delimited by an empty row.
         let mut current_result: Vec<Vec<String>> = Vec::new();
         let mut all_lines = Vec::<SemanticLine>::new();
-        // The header line is useless in encoding.
-        for row in self.sheet.values.into_iter().skip(1) {
-            // Empty rows mark a line break.
-            // Rows starting with one cell containing just "\\" mark a page break.
-            // All other rows are part of an annotated line.
+        let mut errors = Vec::new();
+
+        // Skip header line
+        for (row_index, row) in self.sheet.values.into_iter().skip(1).enumerate() {
+            let actual_row_number = row_index + 2;
+            
+            // Check for blank rows (line separators)
             let is_blank = row.is_empty() || row.iter().all(|x| x.trim().is_empty());
+            
             if is_blank {
                 if !current_result.is_empty() {
-                    all_lines.push(SemanticLine {
-                        number: current_result[0][0].clone(),
-                        rows: current_result
-                            .into_iter()
-                            .map(|mut row| {
-                                if row.len() > 1 {
+                    let process_result = {
+                        if current_result[0].is_empty() {
+                            Err(anyhow::anyhow!("First row in semantic line is empty"))
+                        } else {
+                            let line_number = current_result[0][0].clone();
+                            let annotation_rows: Result<Vec<_>, _> = current_result
+                                .into_iter()
+                                .enumerate()
+                                .map(|(idx, mut row)| {
+                                    if row.len() < 2 {
+                                        return Err(anyhow::anyhow!(
+                                            "Row {} has insufficient columns (expected ≥ 2, got {})", 
+                                            idx + 1, row.len()
+                                        ));
+                                    }
+                                    
                                     row.remove(0);
-                                }
-                                AnnotationRow {
-                                    title: row.remove(0),
-                                    items: row,
-                                }
+                                    let title = row.remove(0);
+                                    
+                                    Ok(AnnotationRow {
+                                        title,
+                                        items: row,
+                                    })
+                                })
+                                .collect();
+                            
+                            annotation_rows.map(|rows| SemanticLine {
+                                number: line_number,
+                                rows,
+                                ends_page: false,
                             })
-                            .collect(),
-                        ends_page: false,
-                    });
+                        }
+                    };
+
+                    match process_result {
+                        Ok(semantic_line) => all_lines.push(semantic_line),
+                        Err(e) => errors.push(format!("Line ending at row {}: {}", actual_row_number, e)),
+                    }
+                    
+                    current_result = Vec::new();
                 }
-                current_result = Vec::new();
             } else {
+                if row.len() < 2 {
+                    errors.push(format!("Row {} has insufficient columns, skipping", actual_row_number));
+                    continue;
+                }
                 current_result.push(row);
             }
         }
 
-        // Add the last line to the output.
         if !current_result.is_empty() {
-            all_lines.push(SemanticLine {
-                number: current_result[0][0].clone(),
-                rows: current_result
-                    .into_iter()
-                    .map(|mut row| {
-                        if row.len() > 1 {
+            let process_result = {
+                if current_result[0].is_empty() {
+                    Err(anyhow::anyhow!("Final semantic line has empty first row"))
+                } else {
+                    let line_number = current_result[0][0].clone();
+                    let annotation_rows: Result<Vec<_>, _> = current_result
+                        .into_iter()
+                        .enumerate()
+                        .map(|(idx, mut row)| {
+                            if row.len() < 2 {
+                                return Err(anyhow::anyhow!(
+                                    "Row {} has insufficient columns", idx + 1
+                                ));
+                            }
                             row.remove(0);
-                        }
-                        AnnotationRow {
-                            title: row.remove(0),
-                            items: row,
-                        }
+                            let title = row.remove(0);
+                            Ok(AnnotationRow { title, items: row })
+                        })
+                        .collect();
+                    
+                    annotation_rows.map(|rows| SemanticLine {
+                        number: line_number,
+                        rows,
+                        ends_page: false,
                     })
-                    .collect(),
-                ends_page: false,
-            });
+                }
+            };
+
+            match process_result {
+                Ok(semantic_line) => all_lines.push(semantic_line),
+                Err(e) => errors.push(format!("Final line: {}", e)),
+            }
         }
-        // Remove trailing empty lines.
+
+        // Report up to 3 errors in case too many errors occurred
+        if !errors.is_empty() {
+            eprintln!("Warnings during annotation processing:");
+            for error in errors.iter().take(3) {
+                eprintln!("  {}", error);
+            }
+            if errors.len() > 3 {
+                eprintln!("  ... and {} more errors", errors.len() - 3);
+            }
+        }
+
+        if all_lines.is_empty() {
+            return Err(anyhow::anyhow!("No valid semantic lines found in annotation sheet"));
+        }
+
+        // Remove trailing empty lines
         let last_best = all_lines.iter().rposition(|l| !l.is_empty()).unwrap_or(0);
         all_lines.truncate(last_best + 1);
-        all_lines
+
+        Ok(all_lines)
     }
 }
 

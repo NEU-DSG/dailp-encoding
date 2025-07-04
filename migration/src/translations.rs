@@ -14,25 +14,27 @@ impl DocResult {
         if doc_id.trim().is_empty() {
             return Err(anyhow::anyhow!("Empty Google Doc ID provided"));
         }
-        
+
         let api_key = std::env::var("GOOGLE_API_KEY")
             .map_err(|_| anyhow::anyhow!("GOOGLE_API_KEY environment variable not set"))?;
-            
+
         if api_key.trim().is_empty() {
-            return Err(anyhow::anyhow!("GOOGLE_API_KEY environment variable is empty"));
+            return Err(anyhow::anyhow!(
+                "GOOGLE_API_KEY environment variable is empty"
+            ));
         }
-        
+
         let url = format!(
             "https://www.googleapis.com/drive/v3/files/{}/export?mimeType=text/plain&key={}",
             doc_id, api_key
         );
-        
+
         let mut tries = 0;
         let max_tries = 9;
-        
+
         let response = loop {
             let request_result = reqwest::get(&url).await;
-            
+
             let response = match request_result {
                 Ok(resp) => resp,
                 Err(e) => {
@@ -42,25 +44,32 @@ impl DocResult {
                             max_tries + 1, doc_id, e
                         ));
                     }
-                    
-                    println!("Network error fetching Google Doc '{}': {}. Retrying (attempt {}/{})", 
-                        doc_id, e, tries + 1, max_tries + 1);
-                    
+
+                    println!(
+                        "Network error fetching Google Doc '{}': {}. Retrying (attempt {}/{})",
+                        doc_id,
+                        e,
+                        tries + 1,
+                        max_tries + 1
+                    );
+
                     let delay = Duration::from_millis(1000 * 2_u64.pow(tries));
                     sleep(delay).await;
                     tries += 1;
                     continue;
                 }
             };
-            
+
             let status = response.status();
             if status.is_success() {
                 break response;
             }
-            
-            let error_body = response.text().await
+
+            let error_body = response
+                .text()
+                .await
                 .unwrap_or_else(|_| String::from("[Failed to read error response]"));
-            
+
             if status.as_u16() >= 400 && status.as_u16() < 500 {
                 return match status.as_u16() {
                     401 => Err(anyhow::anyhow!(
@@ -81,40 +90,52 @@ impl DocResult {
                     ))
                 };
             }
-            
+
             if tries > max_tries {
                 return Err(anyhow::anyhow!(
                     "Google Drive API failed with status {} after {} attempts for doc ID '{}'. Response: {}", 
                     status, max_tries + 1, doc_id, error_body
                 ));
             }
-            
-            println!("Server error {} fetching Google Doc '{}'. Retrying (attempt {}/{})", 
-                status, doc_id, tries + 1, max_tries + 1);
-            
+
+            println!(
+                "Server error {} fetching Google Doc '{}'. Retrying (attempt {}/{})",
+                status,
+                doc_id,
+                tries + 1,
+                max_tries + 1
+            );
+
             let delay = Duration::from_millis(1000 * 2_u64.pow(tries));
             sleep(delay).await;
             tries += 1;
         };
-        
-        let body = response.text().await
-            .map_err(|e| anyhow::anyhow!("Failed to read response body for Google Doc '{}': {}", doc_id, e))?;
-        
+
+        let body = response.text().await.map_err(|e| {
+            anyhow::anyhow!(
+                "Failed to read response body for Google Doc '{}': {}",
+                doc_id,
+                e
+            )
+        })?;
+
         if body.trim().is_empty() {
             println!("Warning: Google Doc '{}' appears to be empty", doc_id);
         }
-        
+
         Ok(Self { body })
     }
 
     pub fn into_translation(self) -> Result<Translation, anyhow::Error> {
         if self.body.trim().is_empty() {
-            return Err(anyhow::anyhow!("Cannot create translation from empty document body"));
+            return Err(anyhow::anyhow!(
+                "Cannot create translation from empty document body"
+            ));
         }
-        
+
         let ends_with_footnote = regex::Regex::new(r"\[\d+\]")
             .map_err(|e| anyhow::anyhow!("Failed to compile footnote regex: {}", e))?;
-        
+
         let text_runs = self
             .body
             // Split the translation text by lines.
@@ -122,7 +143,7 @@ impl DocResult {
             .map(|s| s.trim())
             // Group consecutive non-empty lines together.
             .group_by(|s| s.is_empty());
-            
+
         let blocks = text_runs
             .into_iter()
             // Only keep non-empty runs of text.
@@ -139,13 +160,11 @@ impl DocResult {
                 }
             })
             // Ignore text past the first horizontal line.
-            .take_while(|text| {
-                match text.first() {
-                    Some(first_line) => !first_line.starts_with("________"),
-                    none => {
-                        eprintln!("Warning: Found empty text block during translation processing");
-                        false
-                    }
+            .take_while(|text| match text.first() {
+                Some(first_line) => !first_line.starts_with("________"),
+                none => {
+                    eprintln!("Warning: Found empty text block during translation processing");
+                    false
                 }
             })
             // Split sentences into separate segments.
@@ -161,7 +180,7 @@ impl DocResult {
                     .into_iter()
                     .filter(|s| !s.trim().is_empty())
                     .collect();
-                
+
                 TranslationBlock {
                     index: index as i32 + 1,
                     segments,
@@ -169,14 +188,16 @@ impl DocResult {
             });
 
         let paragraphs: Vec<TranslationBlock> = blocks.collect();
-        
+
         if paragraphs.is_empty() {
             return Err(anyhow::anyhow!("No translation content found in document. Document may be empty or contain only horizontal lines."));
         }
-        
+
         let total_segments: usize = paragraphs.iter().map(|p| p.segments.len()).sum();
         if total_segments == 0 {
-            return Err(anyhow::anyhow!("Translation contains no text segments after processing"));
+            return Err(anyhow::anyhow!(
+                "Translation contains no text segments after processing"
+            ));
         }
 
         Ok(Translation { paragraphs })
