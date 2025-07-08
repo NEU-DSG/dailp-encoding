@@ -95,7 +95,7 @@ export const FormProvider = (props: { children: ReactNode }) => {
             role: segment.role,
           })),
           romanizedSource: values.word["romanizedSource"],
-          englishGloss: values.word["englishGloss"]
+          englishGloss: values.word["englishGloss"],
         }
 
         console.log("Sending complete word update:", wordUpdate)
