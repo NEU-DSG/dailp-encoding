@@ -1,4 +1,4 @@
-use async_graphql::Guard;
+use async_graphql::{Guard, MaybeUndefined};
 use serde::{Deserialize, Serialize};
 use serde_with::{rust::StringWithSeparator, CommaSeparator};
 use uuid::Uuid;
@@ -55,8 +55,44 @@ pub struct ApiGatewayUserInfo(#[serde(with = "ApiGatewayUserInfoDef")] pub UserI
 /// A user belongs to any number of user groups, which give them various permissions.
 #[derive(Eq, PartialEq, Copy, Clone, Serialize, Deserialize, Debug, async_graphql::Enum)]
 pub enum UserGroup {
+    /// A user that can add audio, comments, and some language data.
     Contributors,
+    /// A user that can add and publicly display language data, audio, and comments.
     Editors,
+    Readers,
+}
+
+impl From<String> for UserGroup {
+    fn from(s: String) -> Self {
+        match s.as_str() {
+            "Contributors" => UserGroup::Contributors,
+            "Editors" => UserGroup::Editors,
+            "Readers" => UserGroup::Readers,
+            "CONTRIBUTOR" => UserGroup::Contributors,
+            "EDITOR" => UserGroup::Editors,
+            "READER" => UserGroup::Readers,
+            _ => panic!("Unknown user group: {}", s),
+        }
+    }
+}
+
+impl From<Option<String>> for UserGroup {
+    fn from(opt_s: Option<String>) -> Self {
+        match opt_s {
+            Some(s) => UserGroup::from(s),
+            None => UserGroup::Readers,
+        }
+    }
+}
+
+impl UserGroup {
+    pub fn to_string(&self) -> String {
+        match self {
+            UserGroup::Contributors => "Contributors".to_string(),
+            UserGroup::Editors => "Editors".to_string(),
+            UserGroup::Readers => "Readers".to_string(),
+        }
+    }
 }
 
 // // Impl FromStr and Display automatically for UserGroup, using serde.
@@ -71,6 +107,8 @@ pub struct GroupGuard {
 }
 
 impl GroupGuard {
+    /// Creates a new group guard from existing user groups.
+    ///     See dailp::auth::UserGoup.
     pub fn new(group: UserGroup) -> Self {
         Self { group }
     }
@@ -83,7 +121,7 @@ impl Guard for GroupGuard {
         let has_group = user.map(|user| user.groups.iter().any(|group| group == &self.group));
 
         match user {
-            Some(user) => log::info!("Debug user info groups={:?}", user.clone()),
+            Some(user) => log::info!("Debug user info groups={:?}", user),
             None => log::info!("No user"),
         };
 

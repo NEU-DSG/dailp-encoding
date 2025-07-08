@@ -29,6 +29,7 @@ import {
   FormProvider as FormProviderParagraph,
   useForm as useParagraphForm,
 } from "src/edit-paragraph-form-context"
+import { EditWordCheckProvider } from "src/edit-word-check-context"
 import { FormProvider, useForm } from "src/edit-word-form-context"
 import * as Dailp from "src/graphql/dailp"
 import Layout from "src/layout"
@@ -183,7 +184,9 @@ export const TabSet = ({ doc }: { doc: Document }) => {
         id={`${Tabs.ANNOTATION}-panel`}
         tabId={Tabs.ANNOTATION}
       >
-        <TranslationTab doc={doc} />
+        <EditWordCheckProvider>
+          <TranslationTab doc={doc} />
+        </EditWordCheckProvider>
       </TabPanel>
 
       <TabPanel
