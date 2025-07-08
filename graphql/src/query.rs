@@ -3,19 +3,20 @@
 use dailp::{
     auth::{AuthGuard, GroupGuard, UserGroup, UserInfo},
     comment::{CommentParent, CommentUpdate, DeleteCommentInput, PostCommentInput},
-    slugify_ltree, AnnotatedForm, AttachAudioToWordInput, CollectionChapter, CurateWordAudioInput,
+    slugify_ltree,
+    user::{User, UserUpdate},
+    AnnotatedForm, AttachAudioToWordInput, CollectionChapter, CurateWordAudioInput,
     DeleteContributorAttribution, DocumentMetadataUpdate, DocumentParagraph,
     UpdateContributorAttribution, Uuid,
 };
 use itertools::Itertools;
 
 use {
-    dailp::async_graphql::{self, dataloader::DataLoader, Context, FieldResult, Guard, Object},
+    dailp::async_graphql::{self, dataloader::DataLoader, Context, FieldResult},
     dailp::{
         AnnotatedDoc, AnnotatedFormUpdate, CherokeeOrthography, Database, EditedCollection,
         MorphemeId, MorphemeReference, MorphemeTag, ParagraphUpdate, WordsInDocument,
     },
-    serde::{Deserialize, Serialize},
 };
 
 /// Home for all read-only queries
@@ -256,8 +257,8 @@ impl Query {
             .into_group_map();
 
         Ok(clusters
-            .into_iter()
-            .map(|(_, forms)| {
+            .into_values()
+            .map(|forms| {
                 let dates = forms.iter().filter_map(|f| f.date_recorded.as_ref());
                 let start = dates.clone().min();
                 let end = dates.max();
@@ -353,6 +354,15 @@ impl Query {
     async fn user_info<'a>(&self, context: &'a Context<'_>) -> Option<&'a UserInfo> {
         context.data_opt()
     }
+
+    /// Gets a dailp_user by their id
+    async fn dailp_user_by_id(&self, context: &Context<'_>, id: Uuid) -> FieldResult<User> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .dailp_user_by_id(&id)
+            .await?)
+    }
 }
 
 pub struct Mutation;
@@ -439,8 +449,8 @@ impl Mutation {
         if comment_object.posted_by.id.0 != user.id.to_string() {
             return Err("User attempted to edit another user's comment".into());
         }
-
-        db.update_comment(comment).await;
+        // Note: We should probably handle an error here more gracefully.
+        let _ = db.update_comment(comment).await;
 
         // We return the parent object, for GraphCache interop
         return comment_object.parent(context).await;
@@ -534,6 +544,20 @@ impl Mutation {
         Ok(database
             .word_by_id(&database.update_word(word).await?)
             .await?)
+    }
+
+    /// Updates a dailp_user's information
+    #[graphql(guard = "AuthGuard")]
+    async fn update_user(&self, context: &Context<'_>, user: UserUpdate) -> FieldResult<User> {
+        let user_id = Uuid::from(&user.id);
+        let db = context.data::<DataLoader<Database>>()?.loader();
+
+        db.update_dailp_user(user).await?;
+
+        let user_object = db.dailp_user_by_id(&user_id).await?;
+
+        // We return the user object, for GraphCache interop
+        return Ok(user_object);
     }
 
     /// Adds a bookmark to the user's list of bookmarks.

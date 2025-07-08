@@ -3,6 +3,7 @@ import {
   unstable_FormStateReturn as FormStateReturn,
   unstable_useFormState as useFormState,
 } from "reakit"
+import { useEditWordCheckContext } from "./edit-word-check-context"
 import * as Dailp from "./graphql/dailp"
 import { usePreferences } from "./preferences-context"
 
@@ -25,6 +26,10 @@ export const FormProvider = (props: { children: ReactNode }) => {
   const [updateWordResult, updateWord] = Dailp.useUpdateWordMutation()
 
   const { cherokeeRepresentation } = usePreferences()
+
+  const { romanizedSource } = useEditWordCheckContext()
+  const { confirmRomanizedSourceDelete, setConfirmRomanizedSourceDelete } =
+    useEditWordCheckContext()
 
   const settingsAlert =
     "Currently, only the linguistic analysis using terms from Tone and Accent in Oklahoma Cherokee (TAOC) is supported for editing. Please update your Cherokee description style in the display settings."
@@ -50,6 +55,16 @@ export const FormProvider = (props: { children: ReactNode }) => {
       }
     },
     onSubmit: (values) => {
+      if (
+        !values.word.romanizedSource &&
+        romanizedSource !== "" &&
+        !confirmRomanizedSourceDelete
+      ) {
+        const errors = {
+          romanizedSource: "romanizedSource Deleted Error Thrown",
+        }
+        throw errors
+      }
       // Add validation check here before proceeding with submit
       if (!values || !values.word) {
         throw { values: "No word found" }
@@ -79,6 +94,7 @@ export const FormProvider = (props: { children: ReactNode }) => {
             gloss: segment.gloss,
             role: segment.role,
           })),
+          romanizedSource: values.word["romanizedSource"],
           englishGloss: values.word["englishGloss"],
         }
 
@@ -94,6 +110,7 @@ export const FormProvider = (props: { children: ReactNode }) => {
             console.log("Server response:", data.updateWord)
             form.update("word", data.updateWord)
           }
+          setConfirmRomanizedSourceDelete(false)
         })
       } else {
         alert(settingsAlert)

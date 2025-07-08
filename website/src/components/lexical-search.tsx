@@ -8,7 +8,7 @@ import * as Dailp from "src/graphql/dailp"
 import { useLocation } from "src/renderer/PageShell"
 import { closeBlock, fullWidth } from "src/style/utils.css"
 import { boldWordRow, wordRow } from "../pages/timeline.css"
-import { documentWordPath, sourceCitationRoute } from "../routes"
+import { documentWordPath } from "../routes"
 import Link from "./link"
 
 export const LexicalSearch = () => {
@@ -82,13 +82,7 @@ const Timeline = (p: { gloss: string }) => {
         {timeline.data.wordSearch.map((form, i) => (
           <div key={i} className={wordRow}>
             {!!form.document ? (
-              <Link
-                href={
-                  form.document.isReference
-                    ? sourceCitationRoute(form.document.slug)
-                    : documentWordPath(form.document.slug, form.index)
-                }
-              >
+              <Link href={documentWordPath(form.document.slug, form.index)}>
                 {form.document.slug.toUpperCase()}
               </Link>
             ) : null}
