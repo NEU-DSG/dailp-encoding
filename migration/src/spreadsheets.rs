@@ -4,6 +4,7 @@
 
 use crate::audio::AudioRes;
 use crate::translations::DocResult;
+use std::result::Result::Ok;
 use anyhow::Result;
 use dailp::collection::CollectionSection::Body;
 use dailp::collection::CollectionSection::Credit;
@@ -112,8 +113,6 @@ impl SheetInterpretation {
                 "No document index sections found in sheet. Expected rows with empty column A and non-empty column B for section headers."
             ));
         }
-        
-        let total_sheets: usize = sections.iter().map(|s| s.sheet_ids.len()).sum();
         
         Ok(DocumentIndex {
             collections: sections,
@@ -430,147 +429,160 @@ impl SheetInterpretation {
         }
 
         let mut results = Vec::new();
-        let mut errors = Vec::new();
+        let mut warnings = Vec::new();
+        let mut skipped_rows = 0;
 
         let total_rows = self.sheet.values.len();
 
         // Skip first row (header)
         for (row_index, columns) in self.sheet.values.into_iter().skip(1).enumerate() {
-            let spreadsheet_row_number = row_index + 2; // +2 because we skip header and are 0-indexed
+            let spreadsheet_row_number = row_index + 2; // +2 because we skip header and are 0-based
             
             // Skip rows that don't meet minimum criteria
             if columns.len() <= 4 {
-                eprintln!("Warning: Row {} has insufficient columns (expected > 4 for adjectives format, got {}), skipping", 
-                    spreadsheet_row_number, columns.len());
+                    warnings.push(format!("Row {} has insufficient columns (expected > 4 for adjectives format, got {}), skipping", 
+                        spreadsheet_row_number, columns.len()));
+                skipped_rows += 1;
                 continue;
             }
             
             // Check if root column (index 1) is empty - this indicates a non-data row
             if columns.get(1).map_or(true, |col| col.is_empty()) {
+                skipped_rows += 1;
                 continue;
             }
 
-            let entry_result: Result<LexicalEntryWithForms, anyhow::Error> = {
-                let mut root_values = columns.into_iter();
+            let mut root_values = columns.into_iter();
 
-                // Parse key (Column 0: "All Entries Key")
-                let key_str = root_values.next()
-                    .ok_or_else(|| anyhow::anyhow!("Missing entry key column expected at row {} in the spreadsheet", spreadsheet_row_number))?;
-                
-                let key = if key_str.trim().is_empty() {
-                    return Err(anyhow::anyhow!("Empty entry key - Double check row {} in the spreadsheet", spreadsheet_row_number));
-                } else {
-                    key_str.parse::<i64>()
-                        .map_err(|e| anyhow::anyhow!("Invalid entry key '{}': {}", key_str, e))
-                        .unwrap_or_else(|_| {
-                            eprintln!("Warning: Invalid key '{}' at row {}, using row index {}", 
-                                key_str, spreadsheet_row_number, row_index + 1);
-                            (row_index as i64) + 1
-                        })
-                };
-
-                // Parse root (Column 1: "Root")
-                let root = root_values.next()
-                    .ok_or_else(|| anyhow::anyhow!("Missing root column"))?;
-                
-                if root.trim().is_empty() {
-                    return Err(anyhow::anyhow!("Empty root text"));
+            // Parse key (Column 0: "All Entries Key")
+            let key_str = match root_values.next() {
+                Some(key) => key,
+                None => {
+                    warnings.push(format!("Row {} missing entry key column, skipping", spreadsheet_row_number));
+                    skipped_rows += 1;
+                    continue;
                 }
-
-                // Parse root gloss (Column 2: "morpheme.Gloss") 
-                let root_gloss = root_values.next()
-                    .ok_or_else(|| anyhow::anyhow!("Missing morpheme gloss column"))?;
-                
-                if root_gloss.trim().is_empty() {
-                    return Err(anyhow::anyhow!("Empty morpheme gloss"));
-                }
-
-                // Parse page reference (Column 3: "DF1975 page ref")
-                let page_number = root_values.next()
-                    .ok_or_else(|| anyhow::anyhow!("Missing page reference column"))?;
-                
-                if page_number.trim().is_empty() {
-                    return Err(anyhow::anyhow!("Empty page reference"));
-                }
-
-                // Remaining columns are surface form data
-                let mut form_values = root_values;
-                
-                // Create date and position
-                let date = Date::from_ymd(year, 1, 1);
-                let position = PositionInDocument::new(doc_id, page_number, key);
-                
-                // Generate surface forms for adjectives (SG, PL AN, PL INAN)
-                let forms = root_verb_surface_forms(
-                    &position,
-                    &date,
-                    &root,
-                    &root_gloss,
-                    &mut form_values,
-                    3,
-                    true,
-                    true,
-                    false,
-                );
-                if forms.is_empty() {
-                    return Err(anyhow::anyhow!(
-                        "No surface forms generated for adjective entry {} with root '{}'", 
-                        key, root
-                    ));
-                }
-
-                // Create word segment
-                let segment = WordSegment::new(
-                    convert_udb(&root).into_dailp(),
-                    root_gloss.clone(),
-                    None,
-                );
-
-                let entry = AnnotatedForm {
-                    id: None,
-                    normalized_source: None,
-                    simple_phonetics: None,
-                    phonemic: None,
-                    commentary: None,
-                    line_break: None,
-                    page_break: None,
-                    segments: Some(vec![segment]),
-                    english_gloss: vec![root_gloss.clone()],
-                    date_recorded: Some(date),
-                    source: root,
-                    position,
-                    ingested_audio_track: None,
-                };
-
-                Ok(LexicalEntryWithForms {
-                    forms,
-                    entry,
-                })
             };
-            match entry_result {
-                Ok(entry) => results.push(entry),
-                Err(e) => {
-                    errors.push(format!("Row {}: {}", spreadsheet_row_number, e));
+            
+            let key = if key_str.trim().is_empty() {
+                warnings.push(format!("Row {} has empty entry key, skipping", spreadsheet_row_number));
+                skipped_rows += 1;
+                continue;
+            } else {
+                match key_str.parse::<i64>() {
+                    Ok(parsed) => parsed,
+                    Err(_) => {
+                        warnings.push(format!("Row {} has invalid entry key '{}', skipping", 
+                            spreadsheet_row_number, key_str));
+                        skipped_rows += 1;
+                        continue;
+                    }
                 }
+            };
+
+            // Parse root (Column 1: "Root")
+            let root = match root_values.next() {
+                Some(root) if !root.trim().is_empty() => root,
+                _ => {
+                    warnings.push(format!("Row {} missing or empty root, skipping", spreadsheet_row_number));
+                    skipped_rows += 1;
+                    continue;
+                }
+            };
+
+            // Parse root gloss (Column 2: "morpheme.Gloss") 
+            let root_gloss = match root_values.next() {
+                Some(gloss) if !gloss.trim().is_empty() => gloss,
+                _ => {
+                    warnings.push(format!("Row {} missing or empty morpheme gloss, skipping", spreadsheet_row_number));
+                    skipped_rows += 1;
+                    continue;
+                }
+            };
+
+            // Parse page reference (Column 3: "DF1975 page ref")
+            let page_number = match root_values.next() {
+                Some(page) if !page.trim().is_empty() => page,
+                _ => {
+                    warnings.push(format!("Row {} missing or empty page reference, skipping", spreadsheet_row_number));
+                    skipped_rows += 1;
+                    continue;
+                }
+            };
+
+            // If we get here, all required data is valid - create the entry
+            let mut form_values = root_values;
+            
+            // Create date and position
+            let date = Date::from_ymd(year, 1, 1);
+            let position = PositionInDocument::new(doc_id, page_number, key);
+            
+            // Generate surface forms for adjectives (SG, PL AN, PL INAN)
+            let forms = root_verb_surface_forms(
+                &position,
+                &date,
+                &root,
+                &root_gloss,
+                &mut form_values,
+                3,
+                true,
+                true,
+                false,
+            );
+            
+            if forms.is_empty() {
+                warnings.push(format!("Row {} generated no surface forms for adjective entry {} with root '{}', skipping", 
+                    spreadsheet_row_number, key, root));
+                skipped_rows += 1;
+                continue;
             }
+
+            // Create word segment
+            let segment = WordSegment::new(
+                convert_udb(&root).into_dailp(),
+                root_gloss.clone(),
+                None,
+            );
+
+            let entry = AnnotatedForm {
+                id: None,
+                normalized_source: None,
+                simple_phonetics: None,
+                phonemic: None,
+                commentary: None,
+                line_break: None,
+                page_break: None,
+                segments: Some(vec![segment]),
+                english_gloss: vec![root_gloss.clone()],
+                date_recorded: Some(date),
+                source: root,
+                position,
+                ingested_audio_track: None,
+            };
+
+            // Successfully created entry
+            results.push(LexicalEntryWithForms {
+                forms,
+                entry,
+            });
         }
 
-        // Report up to 5 errors in case too many errors occurred
-        if !errors.is_empty() {
-            eprintln!("Warnings: {} rows had errors during adjective processing:", errors.len());
-            for error in errors.iter().take(5) { // Show first 5 errors
-                eprintln!("  {}", error);
+        // Report warnings about skipped data
+        if !warnings.is_empty() {
+            eprintln!("Processing warnings for adjectives sheet:");
+            for warning in warnings.iter().take(10) {
+                eprintln!("  {}", warning);
             }
-            if errors.len() > 5 {
-                eprintln!("  ... and {} more errors", errors.len() - 5);
+            if warnings.len() > 10 {
+                eprintln!("  ... and {} more warnings", warnings.len() - 10);
             }
+            eprintln!("Total rows skipped: {}", skipped_rows);
         }
 
         if results.is_empty() {
             return Err(anyhow::anyhow!(
-                "No valid adjective entries found in sheet. Processed {} rows, {} had errors.",
-                total_rows - 1, // -1 for header
-                errors.len()
+                "No valid adjective entries found in sheet. All {} processed rows had invalid data.",
+                total_rows - 1 // -1 for header
             ));
         }
 
@@ -663,83 +675,124 @@ impl SheetInterpretation {
         }
 
         let mut results = Vec::new();
-        let mut errors = Vec::new();
+        let mut skipped_rows = 0;
+        let mut warnings = Vec::new();
 
-        // Skip first two rows (headers) and group by key
-        let grouped_rows = self.sheet.values
+        // Skip first two rows (headers) and track row numbers through grouping
+        let rows_with_numbers: Vec<_> = self.sheet.values
             .into_iter()
             .skip(2)
             .enumerate()
-            .filter(|(row_idx, cols)| {
+            .filter_map(|(row_idx, cols)| {
                 let actual_row_number = row_idx + 3; // +3 for 2 skipped headers + 0-based indexing
                 
                 if cols.len() <= 4 {
                     eprintln!("Warning: Row {} has insufficient columns (expected > 4 for nouns format, got {}), skipping", 
                         actual_row_number, cols.len());
-                    return false;
-                }
-                if cols.get(2).map_or(true, |col| col.is_empty()) {
-                    return false;
+                    return None;
                 }
                 
-                true
+                if cols.get(2).map_or(true, |col| col.is_empty()) {
+                    eprintln!("Warning: Row {} has empty root column, skipping", actual_row_number);
+                    return None;
+                }
+                
+                Some((actual_row_number, cols))
             })
-            .map(|(_, cols)| cols)
-            .group_by(|cols| cols.first().and_then(|s| s.parse::<i64>().ok()));
+            .collect();
 
-        // Process each group of rows (multiple rows can have the same key)
-        for (group_index, (parsed_key, rows)) in grouped_rows.into_iter().enumerate() {
-            let rows: Vec<_> = rows.collect();
+        // Group by key while preserving row numbers
+        let grouped_rows = rows_with_numbers
+            .into_iter()
+            .group_by(|(_, cols)| cols.first().and_then(|s| s.parse::<i64>().ok()));
+
+        // Process each group of rows
+        for (group_index, (_parsed_key, rows_with_numbers)) in grouped_rows.into_iter().enumerate() {
+            let rows_data: Vec<_> = rows_with_numbers.collect();
             
-            if rows.is_empty() {
+            if rows_data.is_empty() {
                 continue;
             }
 
+            // Extract row numbers and columns separately
+            let spreadsheet_row_numbers: Vec<_> = rows_data.iter().map(|(row_num, _)| *row_num).collect();
+            let rows: Vec<_> = rows_data.into_iter().map(|(_, cols)| cols).collect();
+
             let entry_result: Result<LexicalEntryWithForms, anyhow::Error> = {
-                let columns = rows.first()
-                    .ok_or_else(|| anyhow::anyhow!("Empty row group for noun entry"))?
-                    .clone();
+                let columns = match rows.first() {
+                    Some(cols) => cols.clone(),
+                    None => {
+                        warnings.push(format!("Empty row group {}, skipping", group_index + 1));
+                        continue;
+                    }
+                };
 
                 // Parse the noun data inline
                 let mut root_values = columns.into_iter();
                 
-                // Parse key (Column 0: "ALL ENTRIES KEY")
-                let key_str = root_values.next()
-                    .ok_or_else(|| anyhow::anyhow!("Missing entry key column"))?;
+                // Parse key (Column 0: "ALL ENTRIES KEY") - skip if invalid
+                let key_str = match root_values.next() {
+                    Some(key) => key,
+                    None => {
+                        warnings.push(format!("Row {} missing entry key column, skipping group", spreadsheet_row_numbers[0]));
+                        continue;
+                    }
+                };
                 
-                let index = key_str
-                    .split(',')
-                    .next()
-                    .ok_or_else(|| anyhow::anyhow!("Empty key"))?
-                    .parse::<i64>()
-                    .unwrap_or_else(|_| {
-                        eprintln!("Warning: Invalid key '{}', using group index {}", 
-                            key_str, group_index + 1);
-                        (group_index as i64) + 1
-                    });
+                let index = if key_str.trim().is_empty() {
+                    warnings.push(format!("Row {} has empty key, skipping group", spreadsheet_row_numbers[0]));
+                    continue;
+                } else {
+                    let clean_key = match key_str.split(',').next() {
+                        Some(key) => key.trim(),
+                        None => {
+                            warnings.push(format!("Row {} has malformed key '{}', skipping group", spreadsheet_row_numbers[0], key_str));
+                            continue;
+                        }
+                    };
+                    
+                    if clean_key.is_empty() {
+                        warnings.push(format!("Row {} key contains only commas '{}', skipping group", spreadsheet_row_numbers[0], key_str));
+                        continue;
+                    }
+                    
+                    match clean_key.parse::<i64>() {
+                        Ok(parsed) => parsed,
+                        Err(_) => {
+                            warnings.push(format!("Row {} cannot parse key '{}' as number, skipping group", spreadsheet_row_numbers[0], key_str));
+                            continue;
+                        }
+                    }
+                };
 
-                // Parse page reference (Column 1: "DF1975 page ref")
-                let page_number = root_values.next()
-                    .ok_or_else(|| anyhow::anyhow!("Missing page reference column"))?;
-                if page_number.trim().is_empty() {
-                    return Err(anyhow::anyhow!("Empty page reference"));
-                }
+                // Parse page reference (Column 1) - skip if invalid
+                let page_number = match root_values.next() {
+                    Some(page) if !page.trim().is_empty() => page,
+                    _ => {
+                        warnings.push(format!("Row {} missing or empty page reference, skipping group", spreadsheet_row_numbers[0]));
+                        continue;
+                    }
+                };
 
-                // Parse root (Column 2: "ROOT") 
-                let root = root_values.next()
-                    .ok_or_else(|| anyhow::anyhow!("Missing root column"))?;
-                if root.trim().is_empty() {
-                    return Err(anyhow::anyhow!("Empty root text"));
-                }
+                // Parse root (Column 2) - skip if invalid
+                let root = match root_values.next() {
+                    Some(root) if !root.trim().is_empty() => root,
+                    _ => {
+                        warnings.push(format!("Row {} missing or empty root, skipping group", spreadsheet_row_numbers[0]));
+                        continue;
+                    }
+                };
 
-                // Parse root gloss (Column 3: "morphemeGloss")
-                let root_gloss = root_values.next()
-                    .ok_or_else(|| anyhow::anyhow!("Missing morpheme gloss column"))?;
-                if root_gloss.trim().is_empty() {
-                    return Err(anyhow::anyhow!("Empty morpheme gloss"));
-                }
+                // Parse root gloss (Column 3) - skip if invalid
+                let root_gloss = match root_values.next() {
+                    Some(gloss) if !gloss.trim().is_empty() => gloss,
+                    _ => {
+                        warnings.push(format!("Row {} missing or empty morpheme gloss, skipping group", spreadsheet_row_numbers[0]));
+                        continue;
+                    }
+                };
 
-                // Create surface form values from all rows in the group
+                // If we get here, all required data is valid - create the entry
                 let mut form_values = rows
                     .into_iter()
                     .flat_map(|row| row.into_iter().skip(4 + after_root));
@@ -773,31 +826,31 @@ impl SheetInterpretation {
                 Ok(LexicalEntryWithForms { forms, entry })
             };
 
+            // Add successful entries to results
             match entry_result {
                 Ok(entry) => results.push(entry),
-                Err(e) => {
-                    errors.push(format!("Noun group {} (key: {:?}): {}", 
-                        group_index + 1, parsed_key, e));
+                Err(_) => {
+                    skipped_rows += spreadsheet_row_numbers.len();
                 }
             }
         }
 
-        // Report any errors that occurred
-        if !errors.is_empty() {
-            eprintln!("Warnings: {} noun groups had errors during processing:", errors.len());
-            for error in errors.iter().take(5) {
-                eprintln!("  {}", error);
+        // Report warnings about skipped data
+        if !warnings.is_empty() {
+            eprintln!("Processing warnings for noun sheet:");
+            for warning in warnings.iter().take(10) {
+                eprintln!("  {}", warning);
             }
-            if errors.len() > 5 {
-                eprintln!("  ... and {} more errors", errors.len() - 5);
+            if warnings.len() > 10 {
+                eprintln!("  ... and {} more warnings", warnings.len() - 10);
             }
+            eprintln!("Total rows skipped: {}", skipped_rows);
         }
 
         if results.is_empty() {
             return Err(anyhow::anyhow!(
-                "No valid noun entries found in sheet. Processed {} row groups, {} had errors.",
-                grouped_rows.into_iter().count(),
-                errors.len()
+                "No valid noun entries found in sheet. All {} processed rows had invalid data.",
+                skipped_rows
             ));
         }
 
@@ -962,10 +1015,6 @@ impl SheetInterpretation {
         let doc_id = values
             .next()
             .ok_or_else(|| anyhow::anyhow!("Missing document ID row"))?;
-        
-        if doc_id.len() < 2 {
-            return Err(anyhow::anyhow!("Document ID row must have at least 2 columns, got {}", doc_id.len()));
-        }
 
         // Row 1: Genre
         let mut genre = values
@@ -991,10 +1040,6 @@ impl SheetInterpretation {
         let title = values
             .next()
             .ok_or_else(|| anyhow::anyhow!("Missing title row"))?;
-        
-        if title.len() < 2 {
-            return Err(anyhow::anyhow!("Title row must have at least 2 columns, got {}", title.len()));
-        }
 
         // Row 4: Page number (skip but validate exists)
         let _page_num = values
@@ -1010,10 +1055,6 @@ impl SheetInterpretation {
         let translations = values
             .next()
             .ok_or_else(|| anyhow::anyhow!("Missing translations row"))?;
-        
-        if translations.len() < 2 {
-            return Err(anyhow::anyhow!("Translations row must have at least 2 columns, got {}", translations.len()));
-        }
 
         // Row 7: Image source
         let image_source = values
@@ -1293,6 +1334,7 @@ impl SheetInterpretation {
             }
         }
 
+        // Add last line because no more blank row follows
         if !current_result.is_empty() {
             let process_result = {
                 if current_result[0].is_empty() {
