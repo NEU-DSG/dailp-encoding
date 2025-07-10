@@ -207,17 +207,24 @@ async fn fetch_sheet(
             sheet: SheetResult::from_sheet(sheet_id, tab_name.as_deref()).await?,
         };
 
-        let mut lines = match sheet_interpretation.split_into_lines()
-        .map_err(|e| anyhow::anyhow!("Failed in split_into_lines for sheet {} (tab: {:?}): {}", sheet_id, tab_name, e))
-        {
+        let mut lines = match sheet_interpretation.split_into_lines().map_err(|e| {
+            anyhow::anyhow!(
+                "Failed in split_into_lines for sheet {} (tab: {:?}): {}",
+                sheet_id,
+                tab_name,
+                e
+            )
+        }) {
             Ok(lines) => lines,
             Err(e) => {
-                eprintln!("Warning: Failed to process sheet {} (tab: {:?}): {}", 
-                    sheet_id, tab_name, e);
+                eprintln!(
+                    "Warning: Failed to process sheet {} (tab: {:?}): {}",
+                    sheet_id, tab_name, e
+                );
                 continue;
             }
         };
-            // TODO Consider page breaks embedded in the last word of a page.
+        // TODO Consider page breaks embedded in the last word of a page.
         lines.last_mut().unwrap().ends_page = true;
 
         all_lines.append(&mut lines);

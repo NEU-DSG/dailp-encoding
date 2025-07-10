@@ -62,7 +62,12 @@ pub async fn migrate_dictionaries(db: &Database) -> Result<()> {
             .await?,
     }
     .into_nouns(df1975_id, 1975, 1, false)
-    .map_err(|e| anyhow::anyhow!("Failed to process root nouns sheet (1XuQIKzhGf_mGCH4-bHNBAaQqTAJDNtPbNHjQDhszVRo): {}", e))?;
+    .map_err(|e| {
+        anyhow::anyhow!(
+            "Failed to process root nouns sheet (1XuQIKzhGf_mGCH4-bHNBAaQqTAJDNtPbNHjQDhszVRo): {}",
+            e
+        )
+    })?;
 
     let irreg_nouns = SheetInterpretation {
         sheet: SheetResult::from_sheet("1urfgtarnSypCgb5lSOhQGhhDcg1ozQ1r4jtCJ8Bu-vw", None)
@@ -76,14 +81,24 @@ pub async fn migrate_dictionaries(db: &Database) -> Result<()> {
             .await?,
     }
     .into_nouns(df1975_id, 1975, 0, false)
-    .map_err(|e| anyhow::anyhow!("Failed to process ptcp nouns sheet (1JRmOx5_LlnoLQhzhyb3NmA4FAfMM2XRoT9ntyWtPEnk): {}", e))?;
+    .map_err(|e| {
+        anyhow::anyhow!(
+            "Failed to process ptcp nouns sheet (1JRmOx5_LlnoLQhzhyb3NmA4FAfMM2XRoT9ntyWtPEnk): {}",
+            e
+        )
+    })?;
 
     let inf_nouns = SheetInterpretation {
         sheet: SheetResult::from_sheet("1feuNOuzm0-TpotKyjebKwuXV4MYv-jnU5zLamczqu5U", None)
             .await?,
     }
     .into_nouns(df1975_id, 1975, 0, true)
-    .map_err(|e| anyhow::anyhow!("Failed to process inf nouns sheet (1feuNOuzm0-TpotKyjebKwuXV4MYv-jnU5zLamczqu5U): {}", e))?;
+    .map_err(|e| {
+        anyhow::anyhow!(
+            "Failed to process inf nouns sheet (1feuNOuzm0-TpotKyjebKwuXV4MYv-jnU5zLamczqu5U): {}",
+            e
+        )
+    })?;
 
     let body_parts = SheetInterpretation {
         sheet: SheetResult::from_sheet("1xdnJuTsLBwxbCz9ffJmQNeX-xNYSmntoiRTu9Uwgu5I", None)

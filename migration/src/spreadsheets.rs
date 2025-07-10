@@ -4,11 +4,11 @@
 
 use crate::audio::AudioRes;
 use crate::translations::DocResult;
-use std::result::Result::Ok;
 use anyhow::Result;
 use dailp::collection::CollectionSection::Body;
 use dailp::collection::CollectionSection::Credit;
 use dailp::collection::CollectionSection::Intro;
+use std::result::Result::Ok;
 
 use dailp::{
     convert_udb, root_noun_surface_forms, root_verb_surface_forms, slugify_ltree, AnnotatedForm,
@@ -53,38 +53,40 @@ impl SheetInterpretation {
     /// Parse this sheet as the document index.
     pub fn into_index(self) -> Result<DocumentIndex, anyhow::Error> {
         if self.sheet.values.is_empty() {
-            return Err(anyhow::anyhow!("Cannot parse document index from empty sheet"));
+            return Err(anyhow::anyhow!(
+                "Cannot parse document index from empty sheet"
+            ));
         }
-        
+
         let mut sections = Vec::new();
-        
+
         // Skip header row (row 0)
         for (row_index, row) in self.sheet.values.into_iter().skip(1).enumerate() {
             let spreadsheet_row_number = row_index + 2; // +2 because we skip header and are 0-indexed
-            
+
             // Check if this is a new section (empty first column, non-empty second column)
             if row.len() >= 2 && row[0].is_empty() {
-                let section_title = row.get(1)
-                    .ok_or_else(|| anyhow::anyhow!(
-                        "Row {} appears to start a new section but has no title in column B", 
+                let section_title = row.get(1).ok_or_else(|| {
+                    anyhow::anyhow!(
+                        "Row {} appears to start a new section but has no title in column B",
                         spreadsheet_row_number
-                    ))?;
-                
+                    )
+                })?;
+
                 if section_title.trim().is_empty() {
                     return Err(anyhow::anyhow!(
-                        "Row {} has empty section title in column B", 
+                        "Row {} has empty section title in column B",
                         spreadsheet_row_number
                     ));
                 }
-                
+
                 sections.push(DocumentIndexCollection {
                     title: section_title.clone(),
                     sheet_ids: Vec::new(),
                 });
-                
             } else if row.len() > 11 {
                 let sheet_url_cell = &row[11];
-                
+
                 if !sheet_url_cell.trim().is_empty() {
                     // Make sure a section has already been defined so we can add to it.
                     if sections.is_empty() {
@@ -93,10 +95,10 @@ impl SheetInterpretation {
                             spreadsheet_row_number, sheet_url_cell
                         ));
                     }
-                    
+
                     // Extract the sheet ID from the URL/ID
                     let sheet_id = Self::drive_url_to_id(sheet_url_cell);
-                                            
+
                     // Add to the most recent section
                     sections
                         .last_mut()
@@ -106,19 +108,19 @@ impl SheetInterpretation {
                 }
             }
         }
-        
+
         // Validate the result
         if sections.is_empty() {
             return Err(anyhow::anyhow!(
                 "No document index sections found in sheet. Expected rows with empty column A and non-empty column B for section headers."
             ));
         }
-        
+
         Ok(DocumentIndex {
             collections: sections,
         })
     }
-    
+
     pub fn into_collection_index(
         self,
         self_title: &String,
@@ -134,27 +136,29 @@ impl SheetInterpretation {
         }
         if self.sheet.values.len() < 3 {
             return Err(anyhow::anyhow!(
-                "Sheet must have at least 3 rows (2 headers + data), got {}", 
+                "Sheet must have at least 3 rows (2 headers + data), got {}",
                 self.sheet.values.len()
             ));
         }
 
         let mut collection_chapters = Vec::new();
         let mut row_iter = self.sheet.values.into_iter();
-        
+
         // Skip first two rows (headers/metadata)
-        let _first_value = row_iter.next()
+        let _first_value = row_iter
+            .next()
             .ok_or_else(|| anyhow::anyhow!("Missing first header row"))?;
-        let _second_value = row_iter.next()
+        let _second_value = row_iter
+            .next()
             .ok_or_else(|| anyhow::anyhow!("Missing second header row"))?;
-        
+
         // Track chapter sections: 0 = Intro, 1 = Body, 2+ = Credit
         let mut chapter_type = 0;
         const MAX_CHAPTER_TYPE: i32 = 2;
-        
+
         for (row_index, cur_row) in row_iter.enumerate() {
             let spreadsheet_row_number = row_index + 3; // +3 because we skipped 2 header rows and are 0-indexed
-            
+
             // Check if row is empty or first column is empty (section separator)
             if cur_row.is_empty() || cur_row.get(0).map_or(true, |cell| cell.is_empty()) {
                 chapter_type += 1;
@@ -177,31 +181,39 @@ impl SheetInterpretation {
             let mut row_values = cur_row.into_iter().peekable();
 
             // Parse Chapter Depth (Column 0)
-            let depth_str = row_values.next()
-                .ok_or_else(|| anyhow::anyhow!("Row {} missing chapter depth", spreadsheet_row_number))?;
-            let index_i64 = depth_str.parse::<f64>()
-                .map_err(|e| anyhow::anyhow!(
-                    "Row {} has invalid chapter depth '{}': {}", 
-                    spreadsheet_row_number, depth_str, e
-                ))?
+            let depth_str = row_values.next().ok_or_else(|| {
+                anyhow::anyhow!("Row {} missing chapter depth", spreadsheet_row_number)
+            })?;
+            let index_i64 = depth_str
+                .parse::<f64>()
+                .map_err(|e| {
+                    anyhow::anyhow!(
+                        "Row {} has invalid chapter depth '{}': {}",
+                        spreadsheet_row_number,
+                        depth_str,
+                        e
+                    )
+                })?
                 .round() as i64;
 
             // Parse URL slug (Column 1)
-            let chapter_url_slug = row_values.next()
-                .ok_or_else(|| anyhow::anyhow!("Row {} missing URL slug", spreadsheet_row_number))?;
+            let chapter_url_slug = row_values.next().ok_or_else(|| {
+                anyhow::anyhow!("Row {} missing URL slug", spreadsheet_row_number)
+            })?;
             if chapter_url_slug.trim().is_empty() {
                 return Err(anyhow::anyhow!(
-                    "Row {} has empty URL slug", 
+                    "Row {} has empty URL slug",
                     spreadsheet_row_number
                 ));
             }
 
             // Parse Chapter Name (Column 2)
-            let cur_chapter_name = row_values.next()
-                .ok_or_else(|| anyhow::anyhow!("Row {} missing chapter name", spreadsheet_row_number))?;
+            let cur_chapter_name = row_values.next().ok_or_else(|| {
+                anyhow::anyhow!("Row {} missing chapter name", spreadsheet_row_number)
+            })?;
             if cur_chapter_name.trim().is_empty() {
                 return Err(anyhow::anyhow!(
-                    "Row {} has empty chapter name", 
+                    "Row {} has empty chapter name",
                     spreadsheet_row_number
                 ));
             }
@@ -220,8 +232,10 @@ impl SheetInterpretation {
                     match wp_id_str.parse::<f64>() {
                         Ok(float_id) => Some(float_id.round() as i64),
                         Err(_) => {
-                            eprintln!("Warning: Row {} has invalid WordPress ID '{}', ignoring", 
-                                spreadsheet_row_number, wp_id_str);
+                            eprintln!(
+                                "Warning: Row {} has invalid WordPress ID '{}', ignoring",
+                                spreadsheet_row_number, wp_id_str
+                            );
                             None
                         }
                     }
@@ -280,14 +294,18 @@ impl SheetInterpretation {
         })
     }
 
-    pub fn into_adjs(self, doc_id: DocumentId, year: i32) -> Result<Vec<LexicalEntryWithForms>, anyhow::Error> {
+    pub fn into_adjs(
+        self,
+        doc_id: DocumentId,
+        year: i32,
+    ) -> Result<Vec<LexicalEntryWithForms>, anyhow::Error> {
         // Validate inputs
         if self.sheet.values.is_empty() {
             return Err(anyhow::anyhow!("Cannot parse adjectives from empty sheet"));
         }
         if self.sheet.values.len() < 2 {
             return Err(anyhow::anyhow!(
-                "Adjectives sheet must have at least 2 rows (header + data), got {}", 
+                "Adjectives sheet must have at least 2 rows (header + data), got {}",
                 self.sheet.values.len()
             ));
         }
@@ -301,15 +319,15 @@ impl SheetInterpretation {
         // Skip first row (header)
         for (row_index, columns) in self.sheet.values.into_iter().skip(1).enumerate() {
             let spreadsheet_row_number = row_index + 2; // +2 because we skip header and are 0-based
-            
+
             // Skip rows that don't meet minimum criteria
             if columns.len() <= 4 {
-                    warnings.push(format!("Row {} has insufficient columns (expected > 4 for adjectives format, got {}), skipping", 
+                warnings.push(format!("Row {} has insufficient columns (expected > 4 for adjectives format, got {}), skipping", 
                         spreadsheet_row_number, columns.len()));
                 skipped_rows += 1;
                 continue;
             }
-            
+
             // Check if root column (index 1) is empty - this indicates a non-data row
             if columns.get(1).map_or(true, |col| col.is_empty()) {
                 skipped_rows += 1;
@@ -322,22 +340,30 @@ impl SheetInterpretation {
             let key_str = match root_values.next() {
                 Some(key) => key,
                 None => {
-                    warnings.push(format!("Row {} missing entry key column, skipping", spreadsheet_row_number));
+                    warnings.push(format!(
+                        "Row {} missing entry key column, skipping",
+                        spreadsheet_row_number
+                    ));
                     skipped_rows += 1;
                     continue;
                 }
             };
-            
+
             let key = if key_str.trim().is_empty() {
-                warnings.push(format!("Row {} has empty entry key, skipping", spreadsheet_row_number));
+                warnings.push(format!(
+                    "Row {} has empty entry key, skipping",
+                    spreadsheet_row_number
+                ));
                 skipped_rows += 1;
                 continue;
             } else {
                 match key_str.parse::<i64>() {
                     Ok(parsed) => parsed,
                     Err(_) => {
-                        warnings.push(format!("Row {} has invalid entry key '{}', skipping", 
-                            spreadsheet_row_number, key_str));
+                        warnings.push(format!(
+                            "Row {} has invalid entry key '{}', skipping",
+                            spreadsheet_row_number, key_str
+                        ));
                         skipped_rows += 1;
                         continue;
                     }
@@ -348,17 +374,23 @@ impl SheetInterpretation {
             let root = match root_values.next() {
                 Some(root) if !root.trim().is_empty() => root,
                 _ => {
-                    warnings.push(format!("Row {} missing or empty root, skipping", spreadsheet_row_number));
+                    warnings.push(format!(
+                        "Row {} missing or empty root, skipping",
+                        spreadsheet_row_number
+                    ));
                     skipped_rows += 1;
                     continue;
                 }
             };
 
-            // Parse root gloss (Column 2: "morpheme.Gloss") 
+            // Parse root gloss (Column 2: "morpheme.Gloss")
             let root_gloss = match root_values.next() {
                 Some(gloss) if !gloss.trim().is_empty() => gloss,
                 _ => {
-                    warnings.push(format!("Row {} missing or empty morpheme gloss, skipping", spreadsheet_row_number));
+                    warnings.push(format!(
+                        "Row {} missing or empty morpheme gloss, skipping",
+                        spreadsheet_row_number
+                    ));
                     skipped_rows += 1;
                     continue;
                 }
@@ -368,7 +400,10 @@ impl SheetInterpretation {
             let page_number = match root_values.next() {
                 Some(page) if !page.trim().is_empty() => page,
                 _ => {
-                    warnings.push(format!("Row {} missing or empty page reference, skipping", spreadsheet_row_number));
+                    warnings.push(format!(
+                        "Row {} missing or empty page reference, skipping",
+                        spreadsheet_row_number
+                    ));
                     skipped_rows += 1;
                     continue;
                 }
@@ -376,11 +411,11 @@ impl SheetInterpretation {
 
             // If we get here, all required data is valid - create the entry
             let mut form_values = root_values;
-            
+
             // Create date and position
             let date = Date::from_ymd(year, 1, 1);
             let position = PositionInDocument::new(doc_id, page_number, key);
-            
+
             // Generate surface forms for adjectives (SG, PL AN, PL INAN)
             let forms = root_verb_surface_forms(
                 &position,
@@ -393,7 +428,7 @@ impl SheetInterpretation {
                 true,
                 false,
             );
-            
+
             if forms.is_empty() {
                 warnings.push(format!("Row {} generated no surface forms for adjective entry {} with root '{}', skipping", 
                     spreadsheet_row_number, key, root));
@@ -402,11 +437,8 @@ impl SheetInterpretation {
             }
 
             // Create word segment
-            let segment = WordSegment::new(
-                convert_udb(&root).into_dailp(),
-                root_gloss.clone(),
-                None,
-            );
+            let segment =
+                WordSegment::new(convert_udb(&root).into_dailp(), root_gloss.clone(), None);
 
             let entry = AnnotatedForm {
                 id: None,
@@ -425,10 +457,7 @@ impl SheetInterpretation {
             };
 
             // Successfully created entry
-            results.push(LexicalEntryWithForms {
-                forms,
-                entry,
-            });
+            results.push(LexicalEntryWithForms { forms, entry });
         }
 
         // Report warnings about skipped data
@@ -466,7 +495,7 @@ impl SheetInterpretation {
         }
         if self.sheet.values.len() < 3 {
             return Err(anyhow::anyhow!(
-                "Nouns sheet must have at least 3 rows (2 headers + data), got {}", 
+                "Nouns sheet must have at least 3 rows (2 headers + data), got {}",
                 self.sheet.values.len()
             ));
         }
@@ -504,15 +533,17 @@ impl SheetInterpretation {
             .group_by(|(_, cols)| cols.first().and_then(|s| s.parse::<i64>().ok()));
 
         // Process each group of rows
-        for (group_index, (_parsed_key, rows_with_numbers)) in grouped_rows.into_iter().enumerate() {
+        for (group_index, (_parsed_key, rows_with_numbers)) in grouped_rows.into_iter().enumerate()
+        {
             let rows_data: Vec<_> = rows_with_numbers.collect();
-            
+
             if rows_data.is_empty() {
                 continue;
             }
 
             // Extract row numbers and columns separately
-            let spreadsheet_row_numbers: Vec<_> = rows_data.iter().map(|(row_num, _)| *row_num).collect();
+            let spreadsheet_row_numbers: Vec<_> =
+                rows_data.iter().map(|(row_num, _)| *row_num).collect();
             let rows: Vec<_> = rows_data.into_iter().map(|(_, cols)| cols).collect();
 
             let entry_result: Result<LexicalEntryWithForms, anyhow::Error> = {
@@ -526,37 +557,52 @@ impl SheetInterpretation {
 
                 // Parse the noun data inline
                 let mut root_values = columns.into_iter();
-                
+
                 // Parse key (Column 0: "ALL ENTRIES KEY") - skip if invalid
                 let key_str = match root_values.next() {
                     Some(key) => key,
                     None => {
-                        warnings.push(format!("Row {} missing entry key column, skipping group", spreadsheet_row_numbers[0]));
+                        warnings.push(format!(
+                            "Row {} missing entry key column, skipping group",
+                            spreadsheet_row_numbers[0]
+                        ));
                         continue;
                     }
                 };
-                
+
                 let index = if key_str.trim().is_empty() {
-                    warnings.push(format!("Row {} has empty key, skipping group", spreadsheet_row_numbers[0]));
+                    warnings.push(format!(
+                        "Row {} has empty key, skipping group",
+                        spreadsheet_row_numbers[0]
+                    ));
                     continue;
                 } else {
                     let clean_key = match key_str.split(',').next() {
                         Some(key) => key.trim(),
                         None => {
-                            warnings.push(format!("Row {} has malformed key '{}', skipping group", spreadsheet_row_numbers[0], key_str));
+                            warnings.push(format!(
+                                "Row {} has malformed key '{}', skipping group",
+                                spreadsheet_row_numbers[0], key_str
+                            ));
                             continue;
                         }
                     };
-                    
+
                     if clean_key.is_empty() {
-                        warnings.push(format!("Row {} key contains only commas '{}', skipping group", spreadsheet_row_numbers[0], key_str));
+                        warnings.push(format!(
+                            "Row {} key contains only commas '{}', skipping group",
+                            spreadsheet_row_numbers[0], key_str
+                        ));
                         continue;
                     }
-                    
+
                     match clean_key.parse::<i64>() {
                         Ok(parsed) => parsed,
                         Err(_) => {
-                            warnings.push(format!("Row {} cannot parse key '{}' as number, skipping group", spreadsheet_row_numbers[0], key_str));
+                            warnings.push(format!(
+                                "Row {} cannot parse key '{}' as number, skipping group",
+                                spreadsheet_row_numbers[0], key_str
+                            ));
                             continue;
                         }
                     }
@@ -566,7 +612,10 @@ impl SheetInterpretation {
                 let page_number = match root_values.next() {
                     Some(page) if !page.trim().is_empty() => page,
                     _ => {
-                        warnings.push(format!("Row {} missing or empty page reference, skipping group", spreadsheet_row_numbers[0]));
+                        warnings.push(format!(
+                            "Row {} missing or empty page reference, skipping group",
+                            spreadsheet_row_numbers[0]
+                        ));
                         continue;
                     }
                 };
@@ -575,7 +624,10 @@ impl SheetInterpretation {
                 let root = match root_values.next() {
                     Some(root) if !root.trim().is_empty() => root,
                     _ => {
-                        warnings.push(format!("Row {} missing or empty root, skipping group", spreadsheet_row_numbers[0]));
+                        warnings.push(format!(
+                            "Row {} missing or empty root, skipping group",
+                            spreadsheet_row_numbers[0]
+                        ));
                         continue;
                     }
                 };
@@ -584,7 +636,10 @@ impl SheetInterpretation {
                 let root_gloss = match root_values.next() {
                     Some(gloss) if !gloss.trim().is_empty() => gloss,
                     _ => {
-                        warnings.push(format!("Row {} missing or empty morpheme gloss, skipping group", spreadsheet_row_numbers[0]));
+                        warnings.push(format!(
+                            "Row {} missing or empty morpheme gloss, skipping group",
+                            spreadsheet_row_numbers[0]
+                        ));
                         continue;
                     }
                 };
@@ -593,16 +648,14 @@ impl SheetInterpretation {
                 let mut form_values = rows
                     .into_iter()
                     .flat_map(|row| row.into_iter().skip(4 + after_root));
-                
+
                 let date = Date::from_ymd(year, 1, 1);
                 let position = PositionInDocument::new(doc_id, page_number, index);
-                let forms = root_noun_surface_forms(&position, &date, &mut form_values, has_comment);
-                
-                let segment = WordSegment::new(
-                    convert_udb(&root).into_dailp(),
-                    root_gloss.clone(),
-                    None,
-                );
+                let forms =
+                    root_noun_surface_forms(&position, &date, &mut form_values, has_comment);
+
+                let segment =
+                    WordSegment::new(convert_udb(&root).into_dailp(), root_gloss.clone(), None);
 
                 let entry = AnnotatedForm {
                     id: None,
@@ -684,7 +737,7 @@ impl SheetInterpretation {
         // Validate minimum sheet structure
         if self.sheet.values.len() < 12 {
             return Err(anyhow::anyhow!(
-                "Metadata sheet must have at least 12 rows for required fields, got {}", 
+                "Metadata sheet must have at least 12 rows for required fields, got {}",
                 self.sheet.values.len()
             ));
         }
@@ -700,7 +753,7 @@ impl SheetInterpretation {
         let mut genre = values
             .next()
             .ok_or_else(|| anyhow::anyhow!("Missing genre row"))?;
-        
+
         if genre.is_empty() {
             return Err(anyhow::anyhow!("Genre row is empty"));
         }
@@ -710,7 +763,7 @@ impl SheetInterpretation {
         let mut source = values
             .next()
             .ok_or_else(|| anyhow::anyhow!("Missing source row"))?;
-        
+
         if source.is_empty() {
             return Err(anyhow::anyhow!("Source row is empty"));
         }
@@ -726,7 +779,7 @@ impl SheetInterpretation {
             .next()
             .ok_or_else(|| anyhow::anyhow!("Missing page number row"))?;
 
-        // Row 5: Page count (skip but validate exists)  
+        // Row 5: Page count (skip but validate exists)
         let _page_count = values
             .next()
             .ok_or_else(|| anyhow::anyhow!("Missing page count row"))?;
@@ -778,17 +831,18 @@ impl SheetInterpretation {
             .collect();
 
         // Row 12-13: Source attributions with validation
-        let sources = if let (Some(source_names), Some(source_links)) = (values.next(), values.next()) {
-            source_names
-                .into_iter()
-                .skip(1)
-                .zip(source_links.into_iter().skip(1))
-                .filter(|(name, link)| !name.trim().is_empty() || !link.trim().is_empty())
-                .map(|(name, link)| SourceAttribution { name, link })
-                .collect()
-        } else {
-            Vec::new()
-        };
+        let sources =
+            if let (Some(source_names), Some(source_links)) = (values.next(), values.next()) {
+                source_names
+                    .into_iter()
+                    .skip(1)
+                    .zip(source_links.into_iter().skip(1))
+                    .filter(|(name, link)| !name.trim().is_empty() || !link.trim().is_empty())
+                    .map(|(name, link)| SourceAttribution { name, link })
+                    .collect()
+            } else {
+                Vec::new()
+            };
 
         // Row 14: Audio files
         let audio_files = values
@@ -802,18 +856,32 @@ impl SheetInterpretation {
             let translation_url = &translations[1];
             let doc_result = DocResult::new(Self::drive_url_to_id(translation_url))
                 .await
-                .map_err(|e| anyhow::anyhow!("Failed to fetch translation document '{}': {}", translation_url, e))?;
-            
-            Some(doc_result.into_translation()
-                .map_err(|e| anyhow::anyhow!("Failed to parse translation from '{}': {}", translation_url, e))?)
+                .map_err(|e| {
+                    anyhow::anyhow!(
+                        "Failed to fetch translation document '{}': {}",
+                        translation_url,
+                        e
+                    )
+                })?;
+
+            Some(doc_result.into_translation().map_err(|e| {
+                anyhow::anyhow!(
+                    "Failed to parse translation from '{}': {}",
+                    translation_url,
+                    e
+                )
+            })?)
         };
 
         // Process page images with validation
-        let page_images = if let (Some(db), Some(ids), Some(source)) = (db, image_ids, image_source) {
+        let page_images = if let (Some(db), Some(ids), Some(source)) = (db, image_ids, image_source)
+        {
             if !source.trim().is_empty() {
                 db.image_source_by_title(&source)
                     .await
-                    .map_err(|e| anyhow::anyhow!("Failed to find image source '{}': {}", source, e))?
+                    .map_err(|e| {
+                        anyhow::anyhow!("Failed to find image source '{}': {}", source, e)
+                    })?
                     .map(|source| dailp::IiifImages {
                         source: source.id,
                         ids,
@@ -826,7 +894,8 @@ impl SheetInterpretation {
         };
 
         // Parse date with better error handling
-        let parsed_date = date.get(1)
+        let parsed_date = date
+            .get(1)
             .and_then(|s| {
                 if s.trim().is_empty() {
                     None
@@ -845,21 +914,21 @@ impl SheetInterpretation {
         let audio_recording = if audio_files.get(1).map_or(true, |f| f.trim().is_empty()) {
             None
         } else {
-            let audio_result = AudioRes::new(
-                audio_files.get(1).unwrap(),
-                audio_files.get(2)
-            ).await
-            .map_err(|e| anyhow::anyhow!("Failed to create audio resource: {}", e))?;
+            let audio_result = AudioRes::new(audio_files.get(1).unwrap(), audio_files.get(2))
+                .await
+                .map_err(|e| anyhow::anyhow!("Failed to create audio resource: {}", e))?;
 
             Some(audio_result.into_document_audio())
         };
 
         // Extract required fields safely
-        let short_name = doc_id.get(1)
+        let short_name = doc_id
+            .get(1)
             .ok_or_else(|| anyhow::anyhow!("Document ID missing value in column 2"))?
             .clone();
-        
-        let document_title = title.get(1)
+
+        let document_title = title
+            .get(1)
             .ok_or_else(|| anyhow::anyhow!("Title missing value in column 2"))?
             .clone();
 
@@ -893,10 +962,10 @@ impl SheetInterpretation {
         // Skip header line
         for (row_index, row) in self.sheet.values.into_iter().skip(1).enumerate() {
             let actual_row_number = row_index + 2;
-            
+
             // Check for blank rows (line separators)
             let is_blank = row.is_empty() || row.iter().all(|x| x.trim().is_empty());
-            
+
             if is_blank {
                 if !current_result.is_empty() {
                     let process_result = {
@@ -924,7 +993,7 @@ impl SheetInterpretation {
                                     })
                                 })
                                 .collect();
-                            
+
                             annotation_rows.map(|rows| SemanticLine {
                                 number: line_number,
                                 rows,
@@ -935,14 +1004,19 @@ impl SheetInterpretation {
 
                     match process_result {
                         Ok(semantic_line) => all_lines.push(semantic_line),
-                        Err(e) => errors.push(format!("Line ending at row {}: {}", actual_row_number, e)),
+                        Err(e) => {
+                            errors.push(format!("Line ending at row {}: {}", actual_row_number, e))
+                        }
                     }
-                    
+
                     current_result = Vec::new();
                 }
             } else {
                 if row.len() < 2 {
-                    errors.push(format!("Row {} has insufficient columns, skipping", actual_row_number));
+                    errors.push(format!(
+                        "Row {} has insufficient columns, skipping",
+                        actual_row_number
+                    ));
                     continue;
                 }
                 current_result.push(row);
@@ -962,7 +1036,8 @@ impl SheetInterpretation {
                         .map(|(idx, mut row)| {
                             if row.len() < 2 {
                                 return Err(anyhow::anyhow!(
-                                    "Row {} has insufficient columns", idx + 1
+                                    "Row {} has insufficient columns",
+                                    idx + 1
                                 ));
                             }
                             row.remove(0);
@@ -970,7 +1045,7 @@ impl SheetInterpretation {
                             Ok(AnnotationRow { title, items: row })
                         })
                         .collect();
-                    
+
                     annotation_rows.map(|rows| SemanticLine {
                         number: line_number,
                         rows,
@@ -997,7 +1072,9 @@ impl SheetInterpretation {
         }
 
         if all_lines.is_empty() {
-            return Err(anyhow::anyhow!("No valid semantic lines found in annotation sheet"));
+            return Err(anyhow::anyhow!(
+                "No valid semantic lines found in annotation sheet"
+            ));
         }
 
         // Remove trailing empty lines

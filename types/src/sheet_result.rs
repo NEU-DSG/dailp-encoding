@@ -17,20 +17,25 @@ pub struct SheetResult {
 impl SheetResult {
     /// Calls the Google Sheets API a number of times.
     /// Deserializes the first successful result, then stops attempting.
-    pub async fn from_sheet(sheet_id: &str, sheet_name: Option<&str>) -> Result<Self, anyhow::Error> {
-        
+    pub async fn from_sheet(
+        sheet_id: &str,
+        sheet_name: Option<&str>,
+    ) -> Result<Self, anyhow::Error> {
         info!("Parsing sheet {}, {:?}...", sheet_id, sheet_name);
-        
+
         let mut tries = 0;
         let max_tries = 3;
-        
+
         loop {
             let result = Self::from_sheet_weak(sheet_id, sheet_name).await;
-            
+
             match result {
                 Ok(sheet_result) => {
-                    info!("Successfully fetched sheet {} ({} rows)", 
-                        sheet_id, sheet_result.values.len());
+                    info!(
+                        "Successfully fetched sheet {} ({} rows)",
+                        sheet_id,
+                        sheet_result.values.len()
+                    );
                     return Ok(sheet_result);
                 }
                 Err(e) => {
@@ -40,11 +45,17 @@ impl SheetResult {
                             sheet_id, sheet_name, max_tries + 1, e
                         ));
                     }
-                    
+
                     let delay = Duration::from_millis(2000 * 2_u64.pow(tries));
-                    println!("Error fetching sheet '{}': {}. Retrying in {:?} (attempt {}/{})", 
-                        sheet_id, e, delay, tries + 1, max_tries + 1);
-                    
+                    println!(
+                        "Error fetching sheet '{}': {}. Retrying in {:?} (attempt {}/{})",
+                        sheet_id,
+                        e,
+                        delay,
+                        tries + 1,
+                        max_tries + 1
+                    );
+
                     sleep(delay).await;
                     tries += 1;
                 }
@@ -56,9 +67,11 @@ impl SheetResult {
         // Get and validate API key
         let api_key = std::env::var("GOOGLE_API_KEY")
             .map_err(|_| anyhow::anyhow!("GOOGLE_API_KEY environment variable not set"))?;
-            
+
         if api_key.trim().is_empty() {
-            return Err(anyhow::anyhow!("GOOGLE_API_KEY environment variable is empty"));
+            return Err(anyhow::anyhow!(
+                "GOOGLE_API_KEY environment variable is empty"
+            ));
         }
         let sheet_name_param = sheet_name.map_or_else(String::new, |n| format!("{}!", n));
         let url = format!(
@@ -66,17 +79,21 @@ impl SheetResult {
             sheet_id, sheet_name_param, api_key
         );
 
-        let response = reqwest::get(&url).await
-            .map_err(|e| anyhow::anyhow!(
-                "Failed to send request to Google Sheets API for sheet '{}': {}", 
-                sheet_id, e
-            ))?;
+        let response = reqwest::get(&url).await.map_err(|e| {
+            anyhow::anyhow!(
+                "Failed to send request to Google Sheets API for sheet '{}': {}",
+                sheet_id,
+                e
+            )
+        })?;
 
         let status = response.status();
         if !status.is_success() {
-            let error_body = response.text().await
+            let error_body = response
+                .text()
+                .await
                 .unwrap_or_else(|_| String::from("[Failed to read error response]"));
-            
+
             return match status.as_u16() {
                 400 => Err(anyhow::anyhow!(
                     "Bad request for Google Sheet '{}' (sheet: {:?}). Check sheet ID and sheet name. Response: {}", 
@@ -101,14 +118,19 @@ impl SheetResult {
             };
         }
 
-        let sheet_result: SheetResult = response.json().await
-            .map_err(|e| anyhow::anyhow!(
-                "Failed to parse Google Sheets API response for sheet '{}' (sheet: {:?}): {}", 
-                sheet_id, sheet_name, e
-            ))?;
+        let sheet_result: SheetResult = response.json().await.map_err(|e| {
+            anyhow::anyhow!(
+                "Failed to parse Google Sheets API response for sheet '{}' (sheet: {:?}): {}",
+                sheet_id,
+                sheet_name,
+                e
+            )
+        })?;
         if sheet_result.values.is_empty() {
-            println!("Warning: Google Sheet '{}' (sheet: {:?}) appears to be empty", 
-                sheet_id, sheet_name);
+            println!(
+                "Warning: Google Sheet '{}' (sheet: {:?}) appears to be empty",
+                sheet_id, sheet_name
+            );
         }
 
         Ok(sheet_result)
