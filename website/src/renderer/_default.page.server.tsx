@@ -18,7 +18,10 @@ export function render(pageContext: PageContextServer) {
     deploymentEnvironment !== Environment.Production
       ? escapeInject`<meta name="robots" content="noindex"/>`
       : ""
-  if (deploymentEnvironment === Environment.Development) {
+  if (
+    deploymentEnvironment === Environment.Development ||
+    deploymentEnvironment === Environment.Local
+  ) {
     // In development, don't do SSR, just let the client render.
     return escapeInject`<!DOCTYPE html>
     <html>

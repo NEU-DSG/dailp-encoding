@@ -36,7 +36,7 @@ export const NavMenu = (p: { menuID: number }) => {
   if (!menuItems) {
     return null
   }
-  const isTopLevel = (a: (typeof menuItems)[0]) =>
+  const isTopLevel = (a: typeof menuItems[0]) =>
     !menuItems?.some((b) =>
       b?.childItems?.nodes?.some((b) => b?.path === a?.path)
     )
@@ -121,7 +121,7 @@ export const MobileNav = (p: { menuID: number }) => {
   if (!menuItems) {
     return null
   }
-  const isTopLevel = (a: (typeof menuItems)[0]) =>
+  const isTopLevel = (a: typeof menuItems[0]) =>
     !menuItems?.some((b) =>
       b?.childItems!.nodes!.some((b) => b?.path === a?.path)
     )
