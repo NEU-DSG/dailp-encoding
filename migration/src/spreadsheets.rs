@@ -511,18 +511,18 @@ impl SheetInterpretation {
             .enumerate()
             .filter_map(|(row_idx, cols)| {
                 let actual_row_number = row_idx + 3; // +3 for 2 skipped headers + 0-based indexing
-                
+
                 if cols.len() <= 4 {
                     eprintln!("Warning: Row {} has insufficient columns (expected > 4 for nouns format, got {}), skipping", 
                         actual_row_number, cols.len());
                     return None;
                 }
-                
+
                 if cols.get(2).map_or(true, |col| col.is_empty()) {
                     eprintln!("Warning: Row {} has empty root column, skipping", actual_row_number);
                     return None;
                 }
-                
+
                 Some((actual_row_number, cols))
             })
             .collect();
@@ -983,10 +983,9 @@ impl SheetInterpretation {
                                             idx + 1, row.len()
                                         ));
                                     }
-                                    
+
                                     row.remove(0);
                                     let title = row.remove(0);
-                                    
                                     Ok(AnnotationRow {
                                         title,
                                         items: row,
