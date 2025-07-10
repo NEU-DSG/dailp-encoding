@@ -1,0 +1,30 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO word (source_text, simple_phonetics, phonemic, english_gloss, recorded_at, document_id, page_number, index_in_document, include_audio_in_edited_collection)\n                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Date",
+        "Uuid",
+        "Text",
+        "Int8",
+        "Bool"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "1b687a030efa88900af411a376751723e4c5d25865200d85a54a16266b227ee7"
+}

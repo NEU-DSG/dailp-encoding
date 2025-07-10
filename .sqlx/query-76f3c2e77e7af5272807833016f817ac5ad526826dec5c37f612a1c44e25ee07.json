@@ -1,0 +1,27 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO document (short_name, title, group_id, index_in_group, is_reference, include_audio_in_edited_collection) \n            VALUES ($1, $2, $3, $4, $5, $6) RETURNING id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Uuid",
+        "Int8",
+        "Bool",
+        "Bool"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "76f3c2e77e7af5272807833016f817ac5ad526826dec5c37f612a1c44e25ee07"
+}

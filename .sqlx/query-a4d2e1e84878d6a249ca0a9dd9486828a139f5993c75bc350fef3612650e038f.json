@@ -1,0 +1,50 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select\n  document.id,\n  document.short_name,\n  document.title,\n  document.written_at,\n  document.is_reference,\n  coalesce(\n    jsonb_agg(\n      jsonb_build_object(\n        'name',\n        contributor.full_name,\n        'role',\n        contributor_attribution.contribution_role\n      )\n    ) filter (where contributor is not null),\n    '[]'\n  )\n  as contributors\nfrom document\n  left join\n    contributor_attribution on contributor_attribution.document_id = document.id\n  left join contributor on contributor.id = contributor_attribution.contributor_id\ngroup by\n  document.id\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "short_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "title",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "written_at",
+        "type_info": "Date"
+      },
+      {
+        "ordinal": 4,
+        "name": "is_reference",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 5,
+        "name": "contributors",
+        "type_info": "Jsonb"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      false,
+      null
+    ]
+  },
+  "hash": "a4d2e1e84878d6a249ca0a9dd9486828a139f5993c75bc350fef3612650e038f"
+}
