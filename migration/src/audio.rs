@@ -1,6 +1,6 @@
 use anyhow::Ok;
-use dailp::{annotation, AudioSlice, DocumentAudioId};
-use log::{error, info};
+use dailp::{AudioSlice, DocumentAudioId};
+use log::info;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;

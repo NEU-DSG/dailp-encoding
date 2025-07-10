@@ -162,7 +162,7 @@ impl DocResult {
             // Ignore text past the first horizontal line.
             .take_while(|text| match text.first() {
                 Some(first_line) => !first_line.starts_with("________"),
-                none => {
+                None => {
                     eprintln!("Warning: Found empty text block during translation processing");
                     false
                 }
