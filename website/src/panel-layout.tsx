@@ -283,9 +283,6 @@ export const PanelLayout = (p: {
             <Button type="button" onClick={() => setIsCommenting(true)}>
               Comment
             </Button>
-            <Button type="button" onClick={handleAddWordPart}>
-              Add word part
-            </Button>
           </>
         ))}
     </div>

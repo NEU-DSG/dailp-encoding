@@ -281,7 +281,7 @@ const EditSegmentation = (p: {
                 cursor: "pointer",
               }}
             >
-              Add Segment
+              Add Word Part
             </button>
           </td>
         </tr>
