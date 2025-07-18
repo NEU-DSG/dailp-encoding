@@ -35,6 +35,15 @@ export type Scalars = {
   UUID: any
 }
 
+export type AddDocumentPayload = {
+  readonly __typename?: "AddDocumentPayload"
+  readonly chapterSlug: Scalars["String"]
+  readonly collectionSlug: Scalars["String"]
+  readonly id: Scalars["UUID"]
+  readonly slug: Scalars["String"]
+  readonly title: Scalars["String"]
+}
+
 export type AnnotatedDoc = {
   readonly __typename?: "AnnotatedDoc"
   /** The audio recording resource for this entire document */
@@ -667,7 +676,7 @@ export type Mutation = {
   /** Adds a bookmark to the user's list of bookmarks. */
   readonly addBookmark: AnnotatedDoc
   /** Minimal mutation to add a document with only essential fields */
-  readonly addDocument: AnnotatedDoc
+  readonly addDocument: AddDocumentPayload
   /**
    * Mutation must have at least one visible field for introspection to work
    * correctly, so we just provide an API version which might be useful in
@@ -2552,26 +2561,10 @@ export type AddDocumentMutationVariables = Exact<{
 }>
 
 export type AddDocumentMutation = { readonly __typename?: "Mutation" } & {
-  readonly addDocument: { readonly __typename?: "AnnotatedDoc" } & Pick<
-    AnnotatedDoc,
-    "id" | "title" | "slug" | "isReference"
-  > & {
-      readonly date: Maybe<
-        { readonly __typename?: "Date" } & Pick<Date, "year" | "month" | "day">
-      >
-      readonly sources: ReadonlyArray<
-        { readonly __typename?: "SourceAttribution" } & Pick<
-          SourceAttribution,
-          "name" | "link"
-        >
-      >
-      readonly contributors: ReadonlyArray<
-        { readonly __typename?: "Contributor" } & Pick<
-          Contributor,
-          "name" | "role"
-        >
-      >
-    }
+  readonly addDocument: { readonly __typename?: "AddDocumentPayload" } & Pick<
+    AddDocumentPayload,
+    "id" | "title" | "slug" | "collectionSlug" | "chapterSlug"
+  >
 }
 
 export type AllCollectionsQueryVariables = Exact<{ [key: string]: never }>
@@ -3603,20 +3596,8 @@ export const AddDocumentDocument = gql`
       id
       title
       slug
-      isReference
-      date {
-        year
-        month
-        day
-      }
-      sources {
-        name
-        link
-      }
-      contributors {
-        name
-        role
-      }
+      collectionSlug
+      chapterSlug
     }
   }
 `

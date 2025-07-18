@@ -5,13 +5,10 @@ use dailp::{
     comment::{CommentParent, CommentUpdate, DeleteCommentInput, PostCommentInput},
     slugify_ltree,
     user::{User, UserUpdate},
-    AnnotatedForm, AttachAudioToWordInput, CollectionChapter, CurateWordAudioInput,
-    DeleteContributorAttribution, DocumentMetadataUpdate, DocumentParagraph,
-    UpdateContributorAttribution, Uuid,
-    AnnotatedSeg
-    Contributor,  Date,  DocumentMetadata,
-    PositionInDocument, SourceAttribution,
-    TranslatedPage, TranslatedSection, 
+    AnnotatedForm, AnnotatedSeg, AttachAudioToWordInput, CollectionChapter, Contributor,
+    CurateWordAudioInput, Date, DeleteContributorAttribution, DocumentMetadata,
+    DocumentMetadataUpdate, DocumentParagraph, PositionInDocument, SourceAttribution,
+    TranslatedPage, TranslatedSection, UpdateContributorAttribution, Uuid,
 };
 use itertools::{Itertools, Position};
 
@@ -681,13 +678,12 @@ impl Mutation {
         &self,
         context: &Context<'_>,
         input: CreateDocumentFromFormInput,
-    ) -> FieldResult<AnnotatedDoc> {
+    ) -> FieldResult<AddDocumentPayload> {
         let title = input.document_name;
         let user = context
             .data_opt::<UserInfo>()
             .ok_or_else(|| anyhow::format_err!("User is not signed in"))?;
         let contributor = Contributor {
-            //we dont have actual name so we just put id for now :(
             name: user.id.to_string(),
             role: "CONTRIBUTOR".to_string(),
         };
@@ -699,8 +695,6 @@ impl Mutation {
             name: input.source_name,
             link: input.source_url,
         };
-
-        // Build segments: Vec<TranslatedPage>
         let mut sections = Vec::new();
         for (i, eng_words) in input.english_translation_lines.iter().enumerate() {
             let translation = Some(eng_words.join(" "));
@@ -757,13 +751,20 @@ impl Mutation {
             segments: Some(vec![page]),
         };
         let database = context.data::<DataLoader<Database>>()?.loader();
-        database
-            .insert_document_with_contents_at_end_of_collection(
+        let (document_id, _chapter_id) = database
+            .insert_document_into_edited_collection(
                 annotated_doc.clone(),
                 input.collection_id,
             )
             .await?;
-        Ok(annotated_doc)
+        
+        Ok(AddDocumentPayload {
+            id: document_id.0,
+            title,
+            slug: short_name.clone(),
+            collection_slug: "user_documents".to_string(), // Since we're creating in user_documents collection
+            chapter_slug: dailp::slugify_ltree(&short_name), // Chapter slug must be ltree-compatible
+        })
     }
 }
 
@@ -783,4 +784,13 @@ pub struct CreateDocumentFromFormInput {
     pub source_name: String,
     pub source_url: String,
     pub collection_id: Uuid,
+}
+
+#[derive(async_graphql::SimpleObject)]
+pub struct AddDocumentPayload {
+    pub id: Uuid,
+    pub title: String,
+    pub slug: String,
+    pub collection_slug: String,
+    pub chapter_slug: String,
 }

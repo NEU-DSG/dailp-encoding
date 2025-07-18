@@ -682,20 +682,8 @@ mutation AddDocument($input: CreateDocumentFromFormInput!) {
     id
     title
     slug
-    isReference
-    date {
-      year
-      month
-      day
-    }
-    sources {
-      name
-      link
-    }
-    contributors {
-      name
-      role
-    }
+    collectionSlug
+    chapterSlug
   }
 }
 

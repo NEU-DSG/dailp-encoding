@@ -2,7 +2,7 @@
 
 use auth::UserGroup;
 use chrono::{NaiveDate, NaiveDateTime};
-use sqlx::postgres::types::PgLTree;
+use sqlx::postgres::types::{PgLTree, PgRange};
 use std::ops::Bound;
 use std::str::FromStr;
 use user::UserUpdate;
@@ -20,7 +20,7 @@ use {
     async_trait::async_trait,
     itertools::Itertools,
     sqlx::{
-        postgres::{types::PgRange, PgPoolOptions},
+        postgres::{ PgPoolOptions},
         query_file, query_file_as, query_file_scalar, Acquire,
     },
     std::collections::HashMap,
@@ -1007,9 +1007,9 @@ impl Database {
     ) -> Result<DocumentId> {
         let mut tx = self.client.begin().await?;
         let meta = &document.meta;
-
         let next_index = -1;
 
+        // Insert the document
         let document_uuid = query_file_scalar!(
             "queries/insert_document_at_end_of_collection.sql",
             meta.short_name,
@@ -1022,17 +1022,16 @@ impl Database {
         .fetch_one(&mut *tx)
         .await?;
 
+        // Attribute contributors to the document
         {
             let (name, doc, role): (Vec<_>, Vec<_>, Vec<_>) = meta
                 .contributors
                 .iter()
-                .map(|contributor| {
-                    (
-                        contributor.name.clone(),
-                        document_uuid,
-                        contributor.role.clone(),
-                    )
-                })
+                .map(|contributor| (
+                    contributor.name.clone(),
+                    document_uuid,
+                    contributor.role.clone(),
+                ))
                 .multiunzip();
             if !name.is_empty() {
                 query_file!(
@@ -1046,6 +1045,29 @@ impl Database {
             }
         }
 
+        // Attribute contributors to the hardcoded user documents chapter
+        let chapter_id = uuid::Uuid::parse_str(USER_DOCUMENTS_CHAPTER_ID)?;
+        for contributor in &meta.contributors {
+            query_file!(
+                "queries/upsert_contributor.sql",
+                &contributor.name
+            )
+            .execute(&mut *tx)
+            .await?;
+            let contributor_row = query_file!(
+                "queries/contributors_by_name.sql",
+                &[contributor.name.clone()]
+            )
+            .fetch_one(&mut *tx)
+            .await?;
+            self.insert_chapter_contributor_attribution(
+                &chapter_id,
+                &contributor_row.id,
+                &contributor.role
+            ).await?;
+        }
+
+        // Insert document contents (pages, paragraphs, words)
         let document_id = DocumentId(document_uuid);
         let document_with_updated_id = AnnotatedDoc {
             meta: DocumentMetadata {
@@ -1092,15 +1114,15 @@ impl Database {
                             }
                         })
                         .sum();
-                    let char_range: PgRange<_> =
+                    let char_range: sqlx::postgres::types::PgRange<_> =
                         (starting_char_index..starting_char_index + total_chars as i64).into();
-                    query_file!(
+                    let _paragraph_id = query_file_scalar!(
                         "queries/insert_paragraph.sql",
                         page_id,
                         char_range,
                         paragraph.translation.unwrap_or_default()
                     )
-                    .execute(&mut *tx)
+                    .fetch_one(&mut *tx)
                     .await?;
 
                     for element in paragraph.source {
@@ -1188,13 +1210,13 @@ impl Database {
                         .sum();
                     let char_range: PgRange<_> =
                         (starting_char_index..starting_char_index + total_chars as i64).into();
-                    query_file!(
+                    let _paragraph_id = query_file_scalar!(
                         "queries/insert_paragraph.sql",
                         page_id,
                         char_range,
                         paragraph.translation.unwrap_or_default()
                     )
-                    .execute(&mut *tx)
+                    .fetch_one(&mut *tx)
                     .await?;
 
                     for element in paragraph.source {
@@ -1659,6 +1681,14 @@ impl Database {
         })
     }
 
+    pub async fn document_group_id_by_slug(&self, slug: &str) -> Result<Option<Uuid>> {
+        Ok(query_file_scalar!("queries/document_group_id_by_slug.sql", slug)
+            .fetch_optional(&self.client)
+            .await?)
+    }
+
+
+
     pub async fn chapter(
         &self,
         collection_slug: String,
@@ -1718,6 +1748,180 @@ impl Database {
                     .collect(),
             ))
         }
+    }
+
+    /// Insert a contributor attribution for a chapter
+    pub async fn insert_chapter_contributor_attribution(
+        &self,
+        chapter_id: &uuid::Uuid,
+        contributor_id: &uuid::Uuid,
+        contribution_role: &str,
+    ) -> Result<()> {
+        query_file!(
+            "queries/insert_chapter_contributor_attribution.sql",
+            chapter_id,
+            contributor_id,
+            contribution_role
+        )
+        .execute(&self.client)
+        .await?;
+        Ok(())
+    }
+
+    /// Insert a document into an edited collection and create a new chapter for it
+    /// Returns (document_id, chapter_id)
+    pub async fn insert_document_into_edited_collection(
+        &self,
+        document: AnnotatedDoc,
+        _collection_id: Uuid,
+    ) -> Result<(DocumentId, Uuid)> {
+        let mut tx = self.client.begin().await?;
+        let meta = &document.meta;
+        let next_index = -1;
+
+        // Look up the user_documents document group ID
+        let user_documents_group_id = self
+            .document_group_id_by_slug("user_documents")
+            .await?
+            .ok_or_else(|| anyhow::format_err!("user_documents document group not found"))?;
+
+        // Insert the document using the document group ID, not the collection ID
+        let document_uuid = query_file_scalar!(
+            "queries/insert_document_at_end_of_collection.sql",
+            meta.short_name,
+            meta.title,
+            meta.is_reference,
+            &meta.date as &Option<Date>,
+            user_documents_group_id,
+            next_index
+        )
+        .fetch_one(&mut *tx)
+        .await?;
+
+        // Attribute contributors to the document
+        {
+            let (name, doc, role): (Vec<_>, Vec<_>, Vec<_>) = meta
+                .contributors
+                .iter()
+                .map(|contributor| (
+                    contributor.name.clone(),
+                    document_uuid,
+                    contributor.role.clone(),
+                ))
+                .multiunzip();
+            if !name.is_empty() {
+                query_file!(
+                    "queries/upsert_document_contributors.sql",
+                    &*name,
+                    &*doc,
+                    &*role
+                )
+                .execute(&mut *tx)
+                .await?;
+            }
+        }
+
+        // Create a new chapter for this document in the user_documents collection
+        let chapter_slug = crate::slugs::slugify_ltree(&meta.short_name);
+        let chapter_path = PgLTree::from_str(&format!("user_documents.{}", chapter_slug))?;
+        
+        let chapter_id = query_file_scalar!(
+            "queries/insert_chapter_with_document_id.sql",
+            meta.title, // Use document title as chapter title
+            document_uuid,
+            None::<i64>, // wordpress_id
+            0i64, // index_in_parent (we can increment this later if needed)
+            chapter_path,
+            crate::CollectionSection::Body as crate::CollectionSection
+        )
+        .fetch_one(&mut *tx)
+        .await?;
+
+        // Attribute contributors to the new chapter
+        for contributor in &meta.contributors {
+            query_file!(
+                "queries/upsert_contributor.sql",
+                &contributor.name
+            )
+            .execute(&mut *tx)
+            .await?;
+            let contributor_id = query_file_scalar!(
+                "queries/contributor_id_by_name.sql",
+                &contributor.name
+            )
+            .fetch_one(&mut *tx)
+            .await?;
+            query_file!(
+                "queries/insert_chapter_contributor_attribution.sql",
+                &chapter_id,
+                &contributor_id,
+                &contributor.role
+            )
+            .execute(&mut *tx)
+            .await?;
+        }
+
+        // Insert document contents (pages, paragraphs, words)
+        let document_id = DocumentId(document_uuid);
+        let document_with_updated_id = AnnotatedDoc {
+            meta: DocumentMetadata {
+                id: document_id,
+                ..document.meta.clone()
+            },
+            segments: document.segments.clone(),
+        };
+
+        query_file!("queries/delete_document_pages.sql", document_uuid)
+            .execute(&mut *tx)
+            .await?;
+
+        if let Some(pages) = document_with_updated_id.segments {
+            let mut starting_char_index = 0;
+            for (page_index, page) in pages.into_iter().enumerate() {
+                let page_id = query_file_scalar!(
+                    "queries/upsert_document_page.sql",
+                    document_uuid,
+                    page_index as i64,
+                    document_with_updated_id
+                        .meta
+                        .page_images
+                        .as_ref()
+                        .map(|imgs| imgs.source.0),
+                    document_with_updated_id
+                        .meta
+                        .page_images
+                        .as_ref()
+                        .and_then(|imgs| imgs.ids.get(page_index))
+                )
+                .fetch_one(&mut *tx)
+                .await?;
+
+                for section in page.paragraphs {
+                    let _paragraph_id = query_file_scalar!(
+                        "queries/insert_paragraph.sql",
+                        page_id,
+                        PgRange::from(starting_char_index..starting_char_index + 1000i64),
+                        section.translation.unwrap_or_default()
+                    )
+                    .fetch_one(&mut *tx)
+                    .await?;
+
+                                            for word_seg in section.source {
+                            match word_seg {
+                                AnnotatedSeg::Word(word) => {
+                                    self.insert_word(&mut tx, word, document_uuid, None, None)
+                                        .await?;
+                                }
+                                _ => {}
+                            }
+                        }
+                    starting_char_index += 1000;
+                }
+            }
+        }
+
+        tx.commit().await?;
+        Ok((document_id, chapter_id))
     }
 }
 
@@ -2489,3 +2693,6 @@ pub struct WordsInDocument {
     /// List of annotated and potentially segmented forms
     pub forms: Vec<AnnotatedForm>,
 }
+
+/// Hardcoded chapter ID for user-created documents (replace with actual UUID after migration)
+const USER_DOCUMENTS_CHAPTER_ID: &str = "<FILL_IN_UUID_FROM_PSQL>";

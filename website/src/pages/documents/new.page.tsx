@@ -92,7 +92,7 @@ const NewDocPage = () => {
         setError(result.error.message)
       } else if (result.data?.addDocument) {
         // Navigate to the newly created document
-        navigate(`/documents/${result.data.addDocument.slug}`)
+        navigate(`/collections/${result.data.addDocument.collectionSlug}/${result.data.addDocument.chapterSlug}`)
       }
     } catch (err) {
       setError(
@@ -110,8 +110,8 @@ const NewDocPage = () => {
     }))
   }
 
-  //const [{ data: dailp }] = Dailp.useEditedCollectionsQuery()
-  const [{ data: collectionsData }] = Dailp.useAllCollectionsQuery()
+  const [{ data: dailp }] = Dailp.useEditedCollectionsQuery()
+  console.log(dailp?.allEditedCollections)
 
   return (
     <Layout>
@@ -132,13 +132,20 @@ const NewDocPage = () => {
         >
           <h3>Debug Info:</h3>
           <p>
-            <strong>Regular Collections:</strong>{" "}
-            {collectionsData?.allCollections?.length || 0} found
+            <strong>Edited Collections:</strong>{" "}
+            {dailp?.allEditedCollections?.length || 0} found
           </p>
-          <ul>
-            {collectionsData?.allCollections?.map((col) => (
-              <li key={col.slug}>
-                Name: {col.name}, Slug: {col.slug}, ID: {col.id}
+          <p>
+            <strong>Selected Collection ID:</strong>{" "}
+            {formData.collectionId || "None"}
+          </p>
+          <p>
+            <strong>Available Collections:</strong>
+          </p>
+          <ul style={{ marginLeft: "20px", fontSize: "10px" }}>
+            {dailp?.allEditedCollections?.map((col) => (
+              <li key={col.id}>
+                {col.title} (ID: {col.id}, Slug: {col.slug})
               </li>
             ))}
           </ul>
@@ -203,9 +210,9 @@ const NewDocPage = () => {
             <option value="" disabled>
               Select a collection
             </option>
-            {collectionsData?.allCollections?.map((col) => (
+            {dailp?.allEditedCollections?.map((col) => (
               <option key={col.slug} value={col.id}>
-                {col.name}
+                {col.title}
               </option>
             ))}
           </select>

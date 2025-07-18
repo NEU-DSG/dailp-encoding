@@ -555,6 +555,7 @@ impl IiifImages {
 
 /// Reference to a document collection
 #[derive(Clone, Serialize, Deserialize)]
+#[derive(Debug)]
 pub struct DocumentCollection {
     /// General title of the collection
     pub title: String,

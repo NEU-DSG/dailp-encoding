@@ -10499,7 +10499,7 @@ export type PageQuery = { readonly __typename?: "RootQuery" } & {
     | { readonly __typename: "Comment" }
     | { readonly __typename: "ContentType" }
     | { readonly __typename: "MediaItem" }
-    | ({ readonly __typename: "Page" } & Pick<Page, "title" | "content">)
+    | ({ readonly __typename: "Page" } & Pick<Page, "id" | "title" | "content">)
     | { readonly __typename: "Post" }
     | { readonly __typename: "PostFormat" }
     | { readonly __typename: "Tag" }
@@ -10530,13 +10530,13 @@ export type MenuByIdQuery = { readonly __typename?: "RootQuery" } & {
   readonly menus: Maybe<
     { readonly __typename?: "RootQueryToMenuConnection" } & {
       readonly nodes: ReadonlyArray<
-        { readonly __typename?: "Menu" } & Pick<Menu, "databaseId"> & {
+        { readonly __typename?: "Menu" } & Pick<Menu, "id" | "databaseId"> & {
             readonly menuItems: Maybe<
               { readonly __typename?: "MenuToMenuItemConnection" } & {
                 readonly nodes: ReadonlyArray<
                   { readonly __typename?: "MenuItem" } & Pick<
                     MenuItem,
-                    "label" | "path"
+                    "id" | "label" | "path"
                   > & {
                       readonly childItems: Maybe<
                         {
@@ -10545,7 +10545,7 @@ export type MenuByIdQuery = { readonly __typename?: "RootQuery" } & {
                           readonly nodes: ReadonlyArray<
                             { readonly __typename?: "MenuItem" } & Pick<
                               MenuItem,
-                              "label" | "path"
+                              "id" | "label" | "path"
                             >
                           >
                         }
@@ -10565,6 +10565,7 @@ export const PageDocument = gql`
     page: nodeByUri(uri: $slug) {
       __typename
       ... on Page {
+        id
         title
         content
       }
@@ -10606,13 +10607,16 @@ export const MenuByIdDocument = gql`
   query MenuByID($id: Int!) {
     menus(where: { id: $id }) {
       nodes {
+        id
         databaseId
         menuItems(where: { parentDatabaseId: 0 }) {
           nodes {
+            id
             label
             path
             childItems {
               nodes {
+                id
                 label
                 path
               }

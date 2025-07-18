@@ -1,3 +1,11 @@
+type AddDocumentPayload {
+	id: UUID!
+	title: String!
+	slug: String!
+	collectionSlug: String!
+	chapterSlug: String!
+}
+
 type AnnotatedDoc {
 	"""
 	Official short identifier for this document
@@ -910,7 +918,7 @@ type Mutation {
 	"""
 	Minimal mutation to add a document with only essential fields
 	"""
-	addDocument(input: CreateDocumentFromFormInput!): AnnotatedDoc!
+	addDocument(input: CreateDocumentFromFormInput!): AddDocumentPayload!
 }
 
 """

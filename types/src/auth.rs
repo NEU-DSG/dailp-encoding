@@ -1,4 +1,4 @@
-use async_graphql::{Guard, MaybeUndefined};
+use async_graphql::Guard;
 use serde::{Deserialize, Serialize};
 use serde_with::{rust::StringWithSeparator, CommaSeparator};
 use uuid::Uuid;
