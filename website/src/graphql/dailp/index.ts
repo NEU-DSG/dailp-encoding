@@ -52,6 +52,8 @@ export type AnnotatedDoc = {
   readonly contributors: ReadonlyArray<Contributor>
   /** Date and time this document was written or created */
   readonly date: Maybe<Date>
+  /** The physical or digital format of this document (ex. book, website) */
+  readonly format: Maybe<Scalars["String"]>
   readonly formCount: Scalars["Int"]
   /**
    * All the words contained in this document, dropping structural formatting
