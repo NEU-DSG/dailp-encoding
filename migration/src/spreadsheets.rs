@@ -1135,7 +1135,7 @@ impl AnnotatedLine {
                 // Number of words = length of the longest row in this line.
                 let num_words = line.rows.iter().map(|row| row.items.len()).max().unwrap();
                 let line_num = line_idx + 1;
-                
+
                 // Helper macro for logging a more detailed error message into the console before panicking
                 macro_rules! log_and_panic {
                     ($fmt:literal, $($args:expr),*) => {{
@@ -1149,35 +1149,35 @@ impl AnnotatedLine {
                         panic!("{}", msg);
                     }};
                 }
-                
+
                 let source_row = line.rows.first().unwrap_or_else(|| {
                     log_and_panic!("No source row for line {}", line_num);
                 });
-                
+
                 let simple_phonetics_row = line.rows.get(2).unwrap_or_else(|| {
                     log_and_panic!("No simple phonetics for line {}", line_num);
                 });
-                
+
                 let phonemic_row = line.rows.get(3).unwrap_or_else(|| {
                     log_and_panic!("No phonemic representation for line {}", line_num);
                 });
-                
+
                 let morpheme_row = line.rows.get(4).unwrap_or_else(|| {
                     log_and_panic!("No morphemic segmentation for line {}", line_num);
                 });
-                
+
                 let gloss_row = line.rows.get(5).unwrap_or_else(|| {
                     log_and_panic!("No morphemic gloss for line {}", line_num);
                 });
-                
+
                 let translation_row = line.rows.get(6).unwrap_or_else(|| {
                     log_and_panic!("No translation for line {}", line_num);
                 });
-                
+
                 let commentary_row = line.rows.get(7).unwrap_or_else(|| {
                     log_and_panic!("No commentary for line {}", line_num);
                 });
-                
+
                 // For each word, extract the necessary data from every row.
                 let words: Result<Vec<_>> = (0..num_words)
                     // Only use words with a syllabary source entry.
@@ -1188,7 +1188,7 @@ impl AnnotatedLine {
                         let morphemes = morpheme_row.items.get(i);
                         let glosses = gloss_row.items.get(i);
                         let translation = translation_row.items.get(i).map(|x| x.trim().to_owned());
-                        
+
                         let ingested_audio_track = if let Some(annotations) = meta
                             .audio_recording
                             .as_ref()
@@ -1212,7 +1212,7 @@ impl AnnotatedLine {
                         } else {
                             None
                         };
-                        
+
                         let w = AnnotatedForm {
                             // TODO Extract into public function!
                             // id: format!("{}.{}", meta.id.0, word_index),
@@ -1243,7 +1243,7 @@ impl AnnotatedLine {
                         Ok(w)
                     })
                     .collect();
-                    
+
                 match words {
                     Ok(words) => Ok(Self {
                         words,
@@ -1282,7 +1282,7 @@ impl AnnotatedLine {
                 let lb = AnnotatedSeg::LineBreak(LineBreak {
                     index: line_num as i32,
                 });
-                
+
                 match pages.last_mut() {
                     Some(current_page) => {
                         match current_page.last_mut() {
@@ -1326,7 +1326,7 @@ impl AnnotatedLine {
 
                 let mut source = word.source.trim();
                 let original_source = source.to_string(); // Keep for logging
-                
+
                 // Check for the start of a block - this creates new paragraphs
                 let mut created_new_paragraph = false;
                 while source.starts_with(BLOCK_START) {
@@ -1343,12 +1343,12 @@ impl AnnotatedLine {
                         }
                     }
                 }
-                
+
                 // Remove all ending brackets from the source (text cleanup).
                 while source.ends_with(BLOCK_END) {
                     source = &source[..source.len() - 1];
                 }
-                
+
                 // Construct the final word.
                 let finished_word = AnnotatedSeg::Word(AnnotatedForm {
                     source: source.to_owned(),
@@ -1357,7 +1357,7 @@ impl AnnotatedLine {
                     date_recorded: date.clone(),
                     ..word
                 });
-                
+
                 // Add the current word to the current phrase or the root document.
                 match pages.last_mut() {
                     Some(current_page) => {
@@ -1371,8 +1371,11 @@ impl AnnotatedLine {
                                 if created_new_paragraph {
                                     eprintln!("WARNING in document '{}' at line {}, word '{}': Created new paragraph but couldn't access it", 
                                             document_id.0, line_num, original_source);
-                                    eprintln!("  Current page has {} paragraphs, {} total pages", 
-                                            current_page.len(), page_length);
+                                    eprintln!(
+                                        "  Current page has {} paragraphs, {} total pages",
+                                        current_page.len(),
+                                        page_length
+                                    );
                                 } else {
                                     // This is expected behavior - content outside blocks gets skipped
                                     skipped_words += 1;
@@ -1387,7 +1390,7 @@ impl AnnotatedLine {
                     }
                 }
             }
-            
+
             if line.ends_page {
                 page_num += 1;
                 // Creates new page with no paragraphs so that any content unmarked by curly braces is skipped.
