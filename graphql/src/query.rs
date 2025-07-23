@@ -762,7 +762,7 @@ impl Mutation {
             id: document_id.0,
             title,
             slug: short_name.clone(),
-            collection_slug: "user_documents".to_string(), // Since we're creating in user_documents collection
+            collection_slug: "user_documents".to_string(), // All user-created documents go to user_documents collection
             chapter_slug: dailp::slugify_ltree(&short_name), // Chapter slug must be ltree-compatible
         })
     }

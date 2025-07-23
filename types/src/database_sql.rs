@@ -1687,16 +1687,55 @@ impl Database {
             .await?)
     }
 
-
+    /// Get collection slug by collection ID
+    pub async fn collection_slug_by_id(&self, collection_id: Uuid) -> Result<Option<String>> {
+        let result = query_file!("queries/edited_collection_by_id.sql", collection_id)
+            .fetch_optional(&self.client)
+            .await?;
+        Ok(result.map(|r| r.slug))
+    }
 
     pub async fn chapter(
         &self,
         collection_slug: String,
         chapter_slug: String,
     ) -> Result<Option<CollectionChapter>> {
+        // Try the original slugs first
         let chapter = query_file!(
             "queries/chapter_contents.sql",
             collection_slug,
+            chapter_slug
+        )
+        .fetch_optional(&self.client)
+        .await?;
+
+        // If found, return it
+        if let Some(chapter_data) = chapter {
+            return Ok(Some(CollectionChapter {
+                id: chapter_data.id,
+                path: chapter_data
+                    .chapter_path
+                    .into_iter()
+                    .map(|s| (*s).into())
+                    .collect(),
+                index_in_parent: chapter_data.index_in_parent,
+                title: chapter_data.title,
+                document_id: chapter_data.document_id.map(DocumentId),
+                wordpress_id: chapter_data.wordpress_id,
+                section: chapter_data.section,
+            }));
+        }
+
+        // If not found, try with underscore/hyphen conversion for collection_slug
+        let alternative_collection_slug = if collection_slug.contains('-') {
+            collection_slug.replace("-", "_")
+        } else {
+            collection_slug.replace("_", "-")
+        };
+        
+        let chapter = query_file!(
+            "queries/chapter_contents.sql",
+            alternative_collection_slug,
             chapter_slug
         )
         .fetch_optional(&self.client)
@@ -1779,13 +1818,24 @@ impl Database {
         let meta = &document.meta;
         let next_index = -1;
 
-        // Look up the user_documents document group ID
-        let user_documents_group_id = self
-            .document_group_id_by_slug("user_documents")
-            .await?
-            .ok_or_else(|| anyhow::format_err!("user_documents document group not found"))?;
 
-        // Insert the document using the document group ID, not the collection ID
+
+        // All user-created documents go to the user_documents document group
+        let user_documents_group_id = match self.document_group_id_by_slug("user_documents").await? {
+            Some(id) => id,
+            None => {
+                // Create the user_documents document_group if it doesn't exist
+                query_file_scalar!(
+                    "queries/insert_document_group.sql",
+                    "user_documents",
+                    "User-Created Documents"
+                )
+                .fetch_one(&mut *tx)
+                .await?
+            }
+        };
+
+        // Insert the document using the user_documents document group ID
         let document_uuid = query_file_scalar!(
             "queries/insert_document_at_end_of_collection.sql",
             meta.short_name,
@@ -1897,25 +1947,52 @@ impl Database {
                 .await?;
 
                 for section in page.paragraphs {
+                    // Calculate the actual character range for this paragraph
+                    let total_chars: usize = section
+                        .source
+                        .iter()
+                        .map(|e| {
+                            if let AnnotatedSeg::Word(word) = e {
+                                word.source.chars().count()
+                            } else {
+                                0
+                            }
+                        })
+                        .sum();
+                    
+                    let char_range: PgRange<i64> = (starting_char_index..starting_char_index + total_chars as i64).into();
+                    
                     let _paragraph_id = query_file_scalar!(
                         "queries/insert_paragraph.sql",
                         page_id,
-                        PgRange::from(starting_char_index..starting_char_index + 1000i64),
+                        char_range,
                         section.translation.unwrap_or_default()
                     )
                     .fetch_one(&mut *tx)
                     .await?;
 
-                                            for word_seg in section.source {
-                            match word_seg {
-                                AnnotatedSeg::Word(word) => {
-                                    self.insert_word(&mut tx, word, document_uuid, None, None)
-                                        .await?;
-                                }
-                                _ => {}
+                    // Insert words with proper page_id and character ranges
+                    let mut word_char_index = starting_char_index;
+                    for word_seg in section.source {
+                        match word_seg {
+                            AnnotatedSeg::Word(word) => {
+                                let word_len = word.source.chars().count() as i64;
+                                let word_char_range: PgRange<i64> = (word_char_index..word_char_index + word_len).into();
+                                
+                                self.insert_word(
+                                    &mut tx, 
+                                    word, 
+                                    document_uuid, 
+                                    Some(page_id), 
+                                    Some(word_char_range)
+                                ).await?;
+                                
+                                word_char_index += word_len;
                             }
+                            _ => {}
                         }
-                    starting_char_index += 1000;
+                    }
+                    starting_char_index += total_chars as i64;
                 }
             }
         }
