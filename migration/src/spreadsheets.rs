@@ -1390,7 +1390,8 @@ impl AnnotatedLine {
             
             if line.ends_page {
                 page_num += 1;
-                pages.push(Vec::new());  // Original behavior - correct!
+                // Creates new page with no paragraphs so that any content unmarked by curly braces is skipped.
+                pages.push(Vec::new());
             }
         }
 
