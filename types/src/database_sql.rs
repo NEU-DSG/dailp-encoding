@@ -1017,7 +1017,8 @@ impl Database {
                 )
                 .fetch_one(&mut *tx)
                 .await?;
-
+    
+    
                 for paragraph in page.paragraphs {
                     let total_chars: usize = paragraph
                         .source

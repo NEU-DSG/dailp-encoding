@@ -1135,34 +1135,49 @@ impl AnnotatedLine {
                 // Number of words = length of the longest row in this line.
                 let num_words = line.rows.iter().map(|row| row.items.len()).max().unwrap();
                 let line_num = line_idx + 1;
-                let source_row = line
-                    .rows
-                    .first()
-                    .unwrap_or_else(|| panic!("No source row for line {}", line_num));
-                let simple_phonetics_row = line
-                    .rows
-                    .get(2)
-                    .unwrap_or_else(|| panic!("No simple phonetics for line {}", line_num));
-                let phonemic_row = line
-                    .rows
-                    .get(3)
-                    .unwrap_or_else(|| panic!("No phonemic representation for line {}", line_num));
-                let morpheme_row = line
-                    .rows
-                    .get(4)
-                    .unwrap_or_else(|| panic!("No morphemic segmentation for line {}", line_num));
-                let gloss_row = line
-                    .rows
-                    .get(5)
-                    .unwrap_or_else(|| panic!("No morphemic gloss for line {}", line_num));
-                let translation_row = line
-                    .rows
-                    .get(6)
-                    .unwrap_or_else(|| panic!("No translation for line {}", line_num));
-                let commentary_row = line
-                    .rows
-                    .get(7)
-                    .unwrap_or_else(|| panic!("No commentary for line {}", line_num));
+                
+                // Helper macro for logging a more detailed error message into the console before panicking
+                macro_rules! log_and_panic {
+                    ($fmt:literal, $($args:expr),*) => {{
+                        let msg = format!($fmt, $($args),*);
+                        eprintln!("ERROR in document '{}' ({}), line {}: {}", 
+                                meta.short_name, meta.id.0, line_num, msg);
+                        eprintln!("  Available rows: {}", line.rows.len());
+                        for (i, row) in line.rows.iter().enumerate() {
+                            eprintln!("    Row {}: {} items", i, row.items.len());
+                        }
+                        panic!("{}", msg);
+                    }};
+                }
+                
+                let source_row = line.rows.first().unwrap_or_else(|| {
+                    log_and_panic!("No source row for line {}", line_num);
+                });
+                
+                let simple_phonetics_row = line.rows.get(2).unwrap_or_else(|| {
+                    log_and_panic!("No simple phonetics for line {}", line_num);
+                });
+                
+                let phonemic_row = line.rows.get(3).unwrap_or_else(|| {
+                    log_and_panic!("No phonemic representation for line {}", line_num);
+                });
+                
+                let morpheme_row = line.rows.get(4).unwrap_or_else(|| {
+                    log_and_panic!("No morphemic segmentation for line {}", line_num);
+                });
+                
+                let gloss_row = line.rows.get(5).unwrap_or_else(|| {
+                    log_and_panic!("No morphemic gloss for line {}", line_num);
+                });
+                
+                let translation_row = line.rows.get(6).unwrap_or_else(|| {
+                    log_and_panic!("No translation for line {}", line_num);
+                });
+                
+                let commentary_row = line.rows.get(7).unwrap_or_else(|| {
+                    log_and_panic!("No commentary for line {}", line_num);
+                });
+                
                 // For each word, extract the necessary data from every row.
                 let words: Result<Vec<_>> = (0..num_words)
                     // Only use words with a syllabary source entry.
@@ -1173,6 +1188,31 @@ impl AnnotatedLine {
                         let morphemes = morpheme_row.items.get(i);
                         let glosses = gloss_row.items.get(i);
                         let translation = translation_row.items.get(i).map(|x| x.trim().to_owned());
+                        
+                        let ingested_audio_track = if let Some(annotations) = meta
+                            .audio_recording
+                            .as_ref()
+                            .and_then(|audio| audio.annotations.as_ref())
+                        {
+                            match annotations.get((word_index - 1) as usize) {
+                                Some(audio) => Some(audio.clone()),
+                                None => {
+                                    eprintln!("ERROR in document '{}' ({}), line {}, word {}: Missing audio annotation", 
+                                            meta.short_name, meta.id.0, line_num, word_index);
+                                    eprintln!("  Available audio annotations: {}", annotations.len());
+                                    eprintln!("  Requested index: {}", word_index - 1);
+                                    return Err(anyhow::anyhow!(
+                                        "Missing audio for word {} in document '{}' (line {})",
+                                        word_index - 1,
+                                        meta.short_name,
+                                        line_num
+                                    ));
+                                }
+                            }
+                        } else {
+                            None
+                        };
+                        
                         let w = AnnotatedForm {
                             // TODO Extract into public function!
                             // id: format!("{}.{}", meta.id.0, word_index),
@@ -1197,35 +1237,24 @@ impl AnnotatedLine {
                                 .or_else(|| source_text.find(LINE_BREAK))
                                 .map(|i| i as i32),
                             date_recorded: None,
-                            ingested_audio_track: if let Some(annotations) = meta
-                                .audio_recording
-                                .as_ref()
-                                .and_then(|audio| audio.annotations.as_ref())
-                            {
-                                Some(
-                                    annotations
-                                        .get((word_index - 1) as usize)
-                                        .cloned()
-                                        .ok_or_else(|| {
-                                            anyhow::anyhow!(
-                                                "Missing audio for word {} in {}",
-                                                word_index - 1,
-                                                meta.short_name
-                                            )
-                                        })?,
-                                )
-                            } else {
-                                None
-                            },
+                            ingested_audio_track,
                         };
                         word_index += 1;
                         Ok(w)
                     })
                     .collect();
-                Ok(Self {
-                    words: words?,
-                    ends_page: line.ends_page,
-                })
+                    
+                match words {
+                    Ok(words) => Ok(Self {
+                        words,
+                        ends_page: line.ends_page,
+                    }),
+                    Err(e) => {
+                        eprintln!("ERROR processing words in document '{}' ({}), line {}: {}", 
+                                meta.short_name, meta.id.0, line_num, e);
+                        Err(e)
+                    }
+                }
             })
             .collect()
     }
@@ -1240,6 +1269,11 @@ impl AnnotatedLine {
         let mut page_num = 0;
         let mut word_idx = 1;
         let mut pages = vec![vec![vec![]]];
+        let page_length = pages.len();
+
+        // Track content that gets skipped (intended behavior for content outside curly brace marked blocks)
+        let mut skipped_line_breaks = 0;
+        let mut skipped_words = 0;
 
         // Process each line into a series of segments.
         for (line_idx, line) in lines.into_iter().enumerate() {
@@ -1248,15 +1282,30 @@ impl AnnotatedLine {
                 let lb = AnnotatedSeg::LineBreak(LineBreak {
                     index: line_num as i32,
                 });
-                if let Some(p) = pages.last_mut() {
-                    if let Some(p) = p.last_mut() {
-                        p.push(lb);
+                
+                match pages.last_mut() {
+                    Some(current_page) => {
+                        match current_page.last_mut() {
+                            Some(current_paragraph) => {
+                                current_paragraph.push(lb);
+                            }
+                            None => {
+                                // No paragraph exists - this is expected if no blocks have been created yet
+                                // Line break will be skipped intentionally
+                                skipped_line_breaks += 1;
+                            }
+                        }
+                    }
+                    None => {
+                        eprintln!("CRITICAL ERROR in document '{}' at line {}: Pages structure is completely empty", 
+                                document_id.0, line_num);
+                        panic!("Pages structure is empty - this should never happen");
                     }
                 }
                 line_num += 1;
             }
 
-            for word in line.words {
+            for (_word_in_line_idx, word) in line.words.into_iter().enumerate() {
                 // Give the word an index within the whole document.
                 let word = AnnotatedForm {
                     position: PositionInDocument::new(
@@ -1276,15 +1325,30 @@ impl AnnotatedLine {
                 }
 
                 let mut source = word.source.trim();
-                // Check for the start of a block.
+                let original_source = source.to_string(); // Keep for logging
+                
+                // Check for the start of a block - this creates new paragraphs
+                let mut created_new_paragraph = false;
                 while source.starts_with(BLOCK_START) {
                     source = &source[1..];
-                    pages.last_mut().unwrap().push(Vec::new());
+                    match pages.last_mut() {
+                        Some(current_page) => {
+                            current_page.push(Vec::new());
+                            created_new_paragraph = true;
+                        }
+                        None => {
+                            eprintln!("CRITICAL ERROR in document '{}' at line {}, word '{}': No current page when processing BLOCK_START", 
+                                    document_id.0, line_num, original_source);
+                            panic!("Pages structure is empty when processing BLOCK_START");
+                        }
+                    }
                 }
-                // Remove all ending brackets from the source.
+                
+                // Remove all ending brackets from the source (text cleanup).
                 while source.ends_with(BLOCK_END) {
                     source = &source[..source.len() - 1];
                 }
+                
                 // Construct the final word.
                 let finished_word = AnnotatedSeg::Word(AnnotatedForm {
                     source: source.to_owned(),
@@ -1293,23 +1357,54 @@ impl AnnotatedLine {
                     date_recorded: date.clone(),
                     ..word
                 });
+                
                 // Add the current word to the current phrase or the root document.
-                if let Some(paragraphs) = pages.last_mut() {
-                    if let Some(p) = paragraphs.last_mut() {
-                        p.push(finished_word);
+                match pages.last_mut() {
+                    Some(current_page) => {
+                        match current_page.last_mut() {
+                            Some(current_paragraph) => {
+                                current_paragraph.push(finished_word);
+                            }
+                            None => {
+                                // No paragraph exists - this is expected for content outside curly brace marked blocks.
+                                // Word will be skipped intentionally unless it created a new paragraph
+                                if created_new_paragraph {
+                                    eprintln!("WARNING in document '{}' at line {}, word '{}': Created new paragraph but couldn't access it", 
+                                            document_id.0, line_num, original_source);
+                                    eprintln!("  Current page has {} paragraphs, {} total pages", 
+                                            current_page.len(), page_length);
+                                } else {
+                                    // This is expected behavior - content outside blocks gets skipped
+                                    skipped_words += 1;
+                                }
+                            }
+                        }
+                    }
+                    None => {
+                        eprintln!("CRITICAL ERROR in document '{}' at line {}, word '{}': No current page exists", 
+                                document_id.0, line_num, original_source);
+                        panic!("Pages structure is empty when trying to add word");
                     }
                 }
             }
+            
             if line.ends_page {
                 page_num += 1;
-                pages.push(Vec::new());
+                pages.push(Vec::new());  // Original behavior - correct!
             }
         }
 
-        // If the document ends in a page break, remove it.
-        // This prevents having an extra page break at the end of each document.
-        if pages.last().map_or(false, |s| s.is_empty()) {
+        // Remove trailing pages that have no content
+        while pages.last().map_or(false, |page| {
+            page.is_empty() || page.iter().all(|paragraph| paragraph.is_empty())
+        }) {
             pages.pop();
+        }
+
+        // Log summary of content processing
+        if skipped_line_breaks > 0 || skipped_words > 0 {
+            println!("Document '{}': Intentionally skipped {} line breaks and {} words (content unmarked by surrounding curly braces)", 
+                    document_id.0, skipped_line_breaks, skipped_words);
         }
 
         pages
