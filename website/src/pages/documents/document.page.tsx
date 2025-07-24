@@ -45,6 +45,7 @@ import { AnnotatedForm, DocumentPage } from "src/segment"
 import { mediaQueries } from "src/style/constants"
 import { BasicMorphemeSegment, LevelOfDetail } from "src/types"
 import PageImages from "../../page-image"
+import { DocumentTitleHeader } from "./document-title-header"
 import * as css from "./document.css"
 
 enum Tabs {
@@ -439,80 +440,80 @@ const DocumentContents = ({
   )
 }
 
-export const DocumentTitleHeader = (p: {
-  rootTitle?: string
-  rootPath?: string
-  breadcrumbs?: readonly Pick<
-    Dailp.CollectionChapter["breadcrumbs"][0],
-    "name" | "slug"
-  >[]
-  doc: Pick<Dailp.AnnotatedDoc, "slug" | "title" | "id"> & {
-    date: NullPick<Dailp.AnnotatedDoc["date"], "year">
-    bookmarkedOn: NullPick<Dailp.AnnotatedDoc["bookmarkedOn"], "formattedDate">
-    audioRecording?: NullPick<
-      Dailp.AnnotatedDoc["audioRecording"],
-      "resourceUrl"
-    >
-  }
-}) => {
-  const { user } = useUser()
-  return (
-    <header className={css.docHeader}>
-      {p.breadcrumbs && (
-        <Breadcrumbs aria-label="Breadcrumbs">
-          {p.breadcrumbs.map((crumb) => (
-            <Link href={`${p.rootPath}/${crumb.slug}`} key={crumb.slug}>
-              {crumb.name}
-            </Link>
-          ))}
-        </Breadcrumbs>
-      )}
-
-      <h1 className={css.docTitle}>
-        {p.doc.title}
-        {p.doc.date && ` (${p.doc.date.year})`}{" "}
-      </h1>
-
-      <div className={css.bottomPadded}>
-        {user ? (
-          <BookmarkButton
-            documentId={p.doc.id}
-            isBookmarked={p.doc.bookmarkedOn !== null}
-          />
-        ) : (
-          <></>
-        )}
-        {!p.doc.audioRecording && !isMobile && (
-          <div id="no-audio-message">
-            <strong>No Audio Available</strong>
-          </div>
-        )}
-        <div className={css.alignRight}>
-          {!isMobile ? (
-            <Button onClick={() => window.print()}>Print</Button>
-          ) : null}
-        </div>
-      </div>
-      {p.doc.audioRecording && ( // TODO Implement sticky audio bar
-        <div id="document-audio-player" className={css.audioContainer}>
-          <span>Document Audio:</span>
-          <AudioPlayer
-            style={{ flex: 1 }}
-            audioUrl={p.doc.audioRecording.resourceUrl}
-            showProgress
-          />
-          {p.doc.audioRecording && !isMobile && (
-            <div>
-              <a href={p.doc.audioRecording?.resourceUrl}>
-                <Button>Download Audio</Button>
-              </a>
-            </div>
-          )}
-        </div>
-      )}
-    </header>
-  )
-}
+//export const DocumentTitleHeader = (p: {
+//  rootTitle?: string
+//  rootPath?: string
+//  breadcrumbs?: readonly Pick<
+//    Dailp.CollectionChapter["breadcrumbs"][0],
+//    "name" | "slug"
+//  >[]
+//  doc: Pick<Dailp.AnnotatedDoc, "slug" | "title" | "id"> & {
+//    date: NullPick<Dailp.AnnotatedDoc["date"], "year">
+//    bookmarkedOn: NullPick<Dailp.AnnotatedDoc["bookmarkedOn"], "formattedDate">
+//    audioRecording?: NullPick<
+//      Dailp.AnnotatedDoc["audioRecording"],
+//      "resourceUrl"
+//    >
+//  }
+//}) => {
+//  const { user } = useUser()
+//  return (
+//    <header className={css.docHeader}>
+//      {p.breadcrumbs && (
+//        <Breadcrumbs aria-label="Breadcrumbs">
+//          {p.breadcrumbs.map((crumb) => (
+//            <Link href={`${p.rootPath}/${crumb.slug}`} key={crumb.slug}>
+//              {crumb.name}
+//            </Link>
+//          ))}
+//        </Breadcrumbs>
+//      )}
+//
+//      <h1 className={css.docTitle}>
+//        {p.doc.title}
+//        {p.doc.date && ` (${p.doc.date.year})`}{" "}
+//      </h1>
+//
+//      <div className={css.bottomPadded}>
+//        {user ? (
+//          <BookmarkButton
+//            documentId={p.doc.id}
+//            isBookmarked={p.doc.bookmarkedOn !== null}
+//          />
+//        ) : (
+//          <></>
+//        )}
+//        {!p.doc.audioRecording && !isMobile && (
+//          <div id="no-audio-message">
+//            <strong>No Audio Available</strong>
+//          </div>
+//        )}
+//        <div className={css.alignRight}>
+//          {!isMobile ? (
+//            <Button onClick={() => window.print()}>Print</Button>
+//          ) : null}
+//        </div>
+//      </div>
+//      {p.doc.audioRecording && ( // TODO Implement sticky audio bar
+//        <div id="document-audio-player" className={css.audioContainer}>
+//          <span>Document Audio:</span>
+//          <AudioPlayer
+//            style={{ flex: 1 }}
+//            audioUrl={p.doc.audioRecording.resourceUrl}
+//            showProgress
+//          />
+//          {p.doc.audioRecording && !isMobile && (
+//            <div>
+//              <a href={p.doc.audioRecording?.resourceUrl}>
+//                <Button>Download Audio</Button>
+//              </a>
+//            </div>
+//          )}
+//        </div>
+//      )}
+//    </header>
+//  )
+//}
 
 /** Button that allows users to bookmark a document */
 export const BookmarkButton = (props: {
