@@ -327,3 +327,91 @@ export const noScrollTop = style({
   visibility: "hidden",
   opacity: 0,
 })
+
+// New styles for revised document header design
+export const docMeta = style({
+  color: "#6e6e6e",
+  fontWeight: 500,
+  marginBottom: vspace.quarter,
+  textTransform: "uppercase",
+  letterSpacing: "0.05em",
+})
+
+export const docDescription = style({
+  fontSize: "1.1rem",
+  marginBottom: vspace.half,
+  maxWidth: "60ch",
+})
+
+export const actionButtons = style({
+  display: "flex",
+  flexWrap: "wrap",
+  gap: "1rem",
+  marginBottom: vspace.half,
+})
+
+export const headerButton = style({
+  backgroundColor: "#405372",
+  color: "white",
+  boxShadow: "2px 2px 5px rgba(0, 0, 0, 0.2)",
+  padding: "0.6rem 1.2rem",
+  fontSize: "1rem",
+  fontWeight: 600,
+  fontFamily: fonts.header,
+  border: "none",
+  borderRadius: "4px",
+  cursor: "pointer",
+  selectors: {
+    "&:hover": {
+      backgroundColor: "#6F85A9",
+      boxShadow: "none",
+    },
+  },
+})
+
+export const breadcrumbLink = style({
+  color: colors.link,
+  fontWeight: 500,
+  textDecoration: "none",
+  selectors: {
+    "&:hover": {
+      textDecoration: "underline",
+    },
+  },
+})
+
+export const audioLabel = style({
+  fontWeight: 600,
+  marginRight: "0.5rem",
+})
+
+export const headerLayout = style({
+  display: "flex",
+  gap: "2rem",
+  flexDirection: "row",
+  alignItems: "flex-start",
+  flexWrap: "wrap",
+})
+
+export const thumbnail = style({
+  width: "200px",
+  maxWidth: "100%",
+  height: "auto",
+  borderRadius: "4px",
+  boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+  flexShrink: 0,
+})
+
+export const headerText = style({
+  flex: 1,
+  minWidth: 0,
+})
+
+export const breadcrumbWrapper = style({
+  display: "flex",
+  alignItems: "center",
+  gap: "0.5rem",
+  fontSize: "0.875rem",
+  color: "#555",
+  marginBottom: "0.5rem",
+})

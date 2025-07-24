@@ -11,11 +11,10 @@
 import React, { useState } from "react"
 import { isMobile } from "react-device-detect"
 import { Helmet } from "react-helmet"
-import { Button } from "src/components"
 import { useUser } from "src/auth"
 import { BookmarkButton } from "./document.page"
-import { AudioPlayer } from "src/components/audio-player"
-import { Link } from "src/components"
+import { AudioPlayer, Breadcrumbs, Button, Link } from "src/components"
+import type { NullPick } from "./document.page"
 import * as css from "./document.css"
 import * as Dailp from "src/graphql/dailp"
 
@@ -26,9 +25,8 @@ export const DocumentTitleHeader = (p: {
     Dailp.CollectionChapter["breadcrumbs"][0],
     "name" | "slug"
   >[]
-  doc: Pick<Dailp.AnnotatedDoc, "id" | "slug" | "title" | "genre"> & {
+  doc: Pick<Dailp.AnnotatedDoc, "id" | "slug" | "title"> & {
     date: NullPick<Dailp.AnnotatedDoc["date"], "year">
-    bookmarkedOn: { formattedDate?: string | null }
     bookmarkedOn: NullPick<Dailp.AnnotatedDoc["bookmarkedOn"], "formattedDate">
     audioRecording?: NullPick<
       Dailp.AnnotatedDoc["audioRecording"],
@@ -78,8 +76,8 @@ export const DocumentTitleHeader = (p: {
           </h1>
 
           <div className={css.docMeta}>
-            {/* TODO: Replace placeholder once format is added to AnnotatedDoc schema */}
-            {p.doc.genre && <span>{p.doc.genre}</span>}
+            {/* TODO: Replace placeholder once genre and format are added to AnnotatedDoc schema */}
+            <span>Genre not yet available.</span>
             <span> • <i>Format not yet available</i></span>
           </div>
 

@@ -59,7 +59,7 @@ export type DocumentContents = NonNullable<
   Dailp.DocumentContentsQuery["document"]
 >
 
-type NullPick<T, F extends keyof NonNullable<T>> = Pick<
+export type NullPick<T, F extends keyof NonNullable<T>> = Pick<
   NonNullable<T>,
   F
 > | null
