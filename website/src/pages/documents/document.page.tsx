@@ -196,7 +196,17 @@ export const TabSet = ({ doc }: { doc: Document }) => {
         id={`${Tabs.IMAGES}-panel`}
         tabId={Tabs.IMAGES}
       >
-        {/* Removed PageImages from here as requested */}
+        {doc.translatedPages ? (
+          <PageImages
+            pageImages={{
+              urls:
+                docContents.translatedPages && docContents.translatedPages.length > 0
+                  ? docContents.translatedPages.map(() => "/images/placeholder.png")
+                  : ["/images/placeholder.png"],
+            }}
+            document={doc}
+          />
+        ) : null}
       </TabPanel>
 
       <TabPanel
@@ -408,7 +418,7 @@ const DocumentContents = ({
           levelOfDetail={levelOfDetail}
           cherokeeRepresentation={cherokeeRepresentation}
           pageImages={
-            docContents.translatedPages
+            doc.translatedPages
               ?.filter((p) => !!p.image)
               .map((p) => p.image!.url) ?? []
           }
@@ -426,18 +436,6 @@ const DocumentContents = ({
           wordPanelDetails={wordPanelDetails}
         />
       ))}
-      {/* Moved PageImages into DocumentContents here as requested */}
-      {docContents.translatedPages && docContents.translatedPages.length > 0 ? (
-        <PageImages
-          pageImages={{
-            urls:
-              docContents.translatedPages
-                .filter((p) => !!p.image)
-                .map((p) => p.image!.url) ?? [],
-          }}
-          document={doc}
-        />
-      ) : null}
     </>
   )
 }
@@ -556,3 +554,4 @@ export const BookmarkButton = (props: {
     </>
   )
 }
+
