@@ -196,17 +196,7 @@ export const TabSet = ({ doc }: { doc: Document }) => {
         id={`${Tabs.IMAGES}-panel`}
         tabId={Tabs.IMAGES}
       >
-        {doc.translatedPages ? (
-          <PageImages
-            pageImages={{
-              urls:
-                doc.translatedPages
-                  ?.filter((p) => !!p.image)
-                  .map((p) => p.image!.url) ?? [],
-            }}
-            document={doc}
-          />
-        ) : null}
+        {/* Removed PageImages from here as requested */}
       </TabPanel>
 
       <TabPanel
@@ -418,7 +408,7 @@ const DocumentContents = ({
           levelOfDetail={levelOfDetail}
           cherokeeRepresentation={cherokeeRepresentation}
           pageImages={
-            doc.translatedPages
+            docContents.translatedPages
               ?.filter((p) => !!p.image)
               .map((p) => p.image!.url) ?? []
           }
@@ -436,6 +426,18 @@ const DocumentContents = ({
           wordPanelDetails={wordPanelDetails}
         />
       ))}
+      {/* Moved PageImages into DocumentContents here as requested */}
+      {docContents.translatedPages && docContents.translatedPages.length > 0 ? (
+        <PageImages
+          pageImages={{
+            urls:
+              docContents.translatedPages
+                .filter((p) => !!p.image)
+                .map((p) => p.image!.url) ?? [],
+          }}
+          document={doc}
+        />
+      ) : null}
     </>
   )
 }
