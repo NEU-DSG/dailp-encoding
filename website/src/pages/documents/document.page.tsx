@@ -198,15 +198,14 @@ export const TabSet = ({ doc }: { doc: Document }) => {
       >
         {doc.translatedPages ? (
           <PageImages
-  pageImages={{
-    urls:
-      doc.translatedPages && doc.translatedPages.length > 0
-        ? doc.translatedPages.map(() => "https://picsum.photos/175/250")
-        : ["https://picsum.photos/175/250"],
-  }}
-  document={doc}
-/>
-
+					  pageImages={{
+              urls:
+                doc.translatedPages
+                  ?.filter((p) => !!p.image)
+                  .map((p) => p.image!.url) ?? [],
+            }}
+					  document={doc}
+					/>
         ) : null}
       </TabPanel>
 
