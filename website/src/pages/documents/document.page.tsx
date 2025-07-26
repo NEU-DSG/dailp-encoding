@@ -59,7 +59,7 @@ export type DocumentContents = NonNullable<
   Dailp.DocumentContentsQuery["document"]
 >
 
-export type NullPick<T, F extends keyof NonNullable<T>> = Pick<
+type NullPick<T, F extends keyof NonNullable<T>> = Pick<
   NonNullable<T>,
   F
 > | null
@@ -198,14 +198,14 @@ export const TabSet = ({ doc }: { doc: Document }) => {
       >
         {doc.translatedPages ? (
           <PageImages
-					  pageImages={{
+            pageImages={{
               urls:
                 doc.translatedPages
                   ?.filter((p) => !!p.image)
                   .map((p) => p.image!.url) ?? [],
             }}
-					  document={doc}
-					/>
+            document={doc}
+          />
         ) : null}
       </TabPanel>
 
