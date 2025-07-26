@@ -353,7 +353,8 @@ export const TranslationTab = ({ doc }: { doc: Document }) => {
             </div>
           )}
         </div>
-      </FormProviderParagraph>abovider>
+      </FormProviderParagraph>
+    </FormProvider>
   )
 }
 
