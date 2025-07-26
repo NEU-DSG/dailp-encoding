@@ -198,14 +198,15 @@ export const TabSet = ({ doc }: { doc: Document }) => {
       >
         {doc.translatedPages ? (
           <PageImages
-            pageImages={{
-              urls:
-                docContents.translatedPages && docContents.translatedPages.length > 0
-                  ? docContents.translatedPages.map(() => "/images/placeholder.png")
-                  : ["/images/placeholder.png"],
-            }}
-            document={doc}
-          />
+  pageImages={{
+    urls:
+      doc.translatedPages && doc.translatedPages.length > 0
+        ? doc.translatedPages.map(() => "https://picsum.photos/175/250")
+        : ["https://picsum.photos/175/250"],
+  }}
+  document={doc}
+/>
+
         ) : null}
       </TabPanel>
 
@@ -352,8 +353,7 @@ export const TranslationTab = ({ doc }: { doc: Document }) => {
             </div>
           )}
         </div>
-      </FormProviderParagraph>
-    </FormProvider>
+      </FormProviderParagraph>abovider>
   )
 }
 
@@ -554,4 +554,3 @@ export const BookmarkButton = (props: {
     </>
   )
 }
-
