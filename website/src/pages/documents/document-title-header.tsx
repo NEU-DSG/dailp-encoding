@@ -18,7 +18,12 @@ import type { NullPick } from "./document.page"
 import * as css from "./document.css"
 import * as Dailp from "src/graphql/dailp"
 
-export const DocumentTitleHeader = (p: {
+export const DocumentTitleHeader = ({
+  rootTitle,
+  rootPath,
+  breadcrumbs,
+  doc,
+}: {
   rootTitle?: string
   rootPath?: string
   breadcrumbs?: readonly Pick<
@@ -138,3 +143,4 @@ export const DocumentTitleHeader = (p: {
     </header>
   )
 }
+
