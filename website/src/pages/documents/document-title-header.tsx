@@ -46,14 +46,14 @@ export const DocumentTitleHeader = ({
   return (
     <header className={css.docHeader}>
       <Helmet>
-        <title>{p.doc.title} - DAILP</title>
+        <title>{doc.title} - DAILP</title>
       </Helmet>
 
       <div className={css.headerLayout}>
-        {p.doc.thumbnailUrl && (
+        {doc.thumbnailUrl && (
           <img
-            src={p.doc.thumbnailUrl ?? "https://www.wavonline.com/a/img/no_image_available.jpeg"}
-            alt={`Thumbnail for ${p.doc.title}`}
+            src={doc.thumbnailUrl ?? "https://www.wavonline.com/a/img/no_image_available.jpeg"}
+            alt={`Thumbnail for ${doc.title}`}
             className={css.thumbnail}
           />
         )}
@@ -76,8 +76,8 @@ export const DocumentTitleHeader = ({
           ) : null}
 
           <h1 className={css.docTitle}>
-            {p.doc.title}
-            {p.doc.date?.year && ` ${p.doc.date.year}`}
+            {doc.title}
+            {doc.date?.year && ` ${doc.date.year}`}
           </h1>
 
           <div className={css.docMeta}>
@@ -92,7 +92,7 @@ export const DocumentTitleHeader = ({
           </p>
 
           <div className={css.actionButtons}>
-            {p.doc.audioRecording?.resourceUrl && (
+            {doc.audioRecording?.resourceUrl && (
               <Button
                 className={css.headerButton}
                 onClick={() => setShowAudio((prev) => !prev)}
@@ -110,12 +110,12 @@ export const DocumentTitleHeader = ({
             )}
             {user && (
               <BookmarkButton
-                documentId={p.doc.id}
-                isBookmarked={!!p.doc.bookmarkedOn?.formattedDate}
+                documentId={doc.id}
+                isBookmarked={!!doc.bookmarkedOn?.formattedDate}
               />
             )}
         </div>
-          {!p.doc.audioRecording && !isMobile && (
+          {!doc.audioRecording && !isMobile && (
             <div id="no-audio-message">
               <strong>No Audio Available</strong>
             </div>
@@ -123,17 +123,17 @@ export const DocumentTitleHeader = ({
         </div>
       </div>
 
-      {showAudio && p.doc.audioRecording?.resourceUrl && (
+      {showAudio && doc.audioRecording?.resourceUrl && (
         <div className={css.audioContainer}>
           <span className={css.audioLabel}>Document Audio:</span>
           <AudioPlayer
-            audioUrl={p.doc.audioRecording.resourceUrl}
+            audioUrl={doc.audioRecording.resourceUrl}
             showProgress
             style={{ flex: 1 }}
           />
           {!isMobile && (
             <div>
-              <a href={p.doc.audioRecording.resourceUrl} download>
+              <a href={doc.audioRecording.resourceUrl} download>
                 <Button className={css.headerButton}>Download Audio</Button>
               </a>
             </div>
