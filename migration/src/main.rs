@@ -12,7 +12,7 @@ mod translations;
 mod user_documents;
 
 use anyhow::Result;
-use dailp::{Database, SheetResult, Uuid};
+use dailp::{Database, LexicalConnection, SheetResult, Uuid};
 use log::error;
 use std::time::Duration;
 
@@ -146,7 +146,8 @@ async fn fetch_sheet(
     let meta_sheet = meta.unwrap();
     let meta = SheetInterpretation { sheet: meta_sheet }
         .into_metadata(db, false, order_index)
-        .await?;
+        .await
+        .map_err(|e| anyhow::anyhow!("Failed to parse metadata for sheet {}: {}", sheet_id, e))?;
 
     if db.is_none() {
         return Ok(None);
@@ -168,15 +169,16 @@ async fn fetch_sheet(
     println!("---Processing document: {}---", meta.short_name);
 
     // Parse references for this particular document.
-    println!("parsing references...");
-    let refs = SheetResult::from_sheet(sheet_id, Some(REFERENCES_SHEET_NAME)).await;
-    let refs = if let Ok(refs) = refs {
-        SheetInterpretation { sheet: refs }
-            .into_references(&meta.short_name)
-            .await
-    } else {
-        Vec::new()
-    };
+    println!("parsing references (skipping because broken currently)...");
+    let refs: Vec<LexicalConnection> = Vec::new();
+    // let refs = SheetResult::from_sheet(sheet_id, Some(REFERENCES_SHEET_NAME)).await;
+    // let refs = if let Ok(refs) = refs {
+    //     SheetInterpretation { sheet: refs }
+    //         .into_references(&meta.short_name)
+    //         .await
+    // } else {
+    //     Vec::new()
+    // };
 
     let document_id = db
         .insert_document(&meta, collection_id, order_index)
@@ -205,10 +207,27 @@ async fn fetch_sheet(
 
         // Split the contents of each main sheet into semantic lines with
         // several layers.
-        let mut lines = SheetInterpretation {
+        let sheet_interpretation = SheetInterpretation {
             sheet: SheetResult::from_sheet(sheet_id, tab_name.as_deref()).await?,
-        }
-        .split_into_lines();
+        };
+
+        let mut lines = match sheet_interpretation.split_into_lines().map_err(|e| {
+            anyhow::anyhow!(
+                "Failed in split_into_lines for sheet {} (tab: {:?}): {}",
+                sheet_id,
+                tab_name,
+                e
+            )
+        }) {
+            Ok(lines) => lines,
+            Err(e) => {
+                eprintln!(
+                    "Warning: Failed to process sheet {} (tab: {:?}): {}",
+                    sheet_id, tab_name, e
+                );
+                continue;
+            }
+        };
         // TODO Consider page breaks embedded in the last word of a page.
         lines.last_mut().unwrap().ends_page = true;
 
