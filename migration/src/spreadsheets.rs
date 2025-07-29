@@ -184,17 +184,14 @@ impl SheetInterpretation {
             let depth_str = row_values.next().ok_or_else(|| {
                 anyhow::anyhow!("Row {} missing chapter depth", spreadsheet_row_number)
             })?;
-            let index_i64 = depth_str
-                .parse::<f64>()
-                .map_err(|e| {
-                    anyhow::anyhow!(
-                        "Row {} has invalid chapter depth '{}': {}",
-                        spreadsheet_row_number,
-                        depth_str,
-                        e
-                    )
-                })?
-                .round() as i64;
+            let index_i64 = depth_str.parse::<i64>().map_err(|e| {
+                anyhow::anyhow!(
+                    "Row {} has invalid chapter depth '{}': {}",
+                    spreadsheet_row_number,
+                    depth_str,
+                    e
+                )
+            })?;
 
             // Parse URL slug (Column 1)
             let chapter_url_slug = row_values.next().ok_or_else(|| {
@@ -229,8 +226,8 @@ impl SheetInterpretation {
                 if wp_id_str.trim().is_empty() {
                     None
                 } else {
-                    match wp_id_str.parse::<f64>() {
-                        Ok(float_id) => Some(float_id.round() as i64),
+                    match wp_id_str.parse::<i64>() {
+                        Ok(integer_id) => Some(integer_id),
                         Err(_) => {
                             eprintln!(
                                 "Warning: Row {} has invalid WordPress ID '{}', ignoring",
@@ -313,6 +310,7 @@ impl SheetInterpretation {
         let mut results = Vec::new();
         let mut warnings = Vec::new();
         let mut skipped_rows = 0;
+        let max_warnings = 10;
 
         let total_rows = self.sheet.values.len();
 
@@ -373,9 +371,18 @@ impl SheetInterpretation {
             // Parse root (Column 1: "Root")
             let root = match root_values.next() {
                 Some(root) if !root.trim().is_empty() => root,
-                _ => {
+                None => {
                     warnings.push(format!(
-                        "Row {} missing or empty root, skipping",
+                        "Row {} missing root, skipping",
+                        spreadsheet_row_number
+                    ));
+                    skipped_rows += 1;
+                    continue;
+                }
+                Some(_) => {
+                    // Handles empty/whitespace strings, different from None case
+                    warnings.push(format!(
+                        "Row {} empty root, skipping",
                         spreadsheet_row_number
                     ));
                     skipped_rows += 1;
@@ -386,9 +393,17 @@ impl SheetInterpretation {
             // Parse root gloss (Column 2: "morpheme.Gloss")
             let root_gloss = match root_values.next() {
                 Some(gloss) if !gloss.trim().is_empty() => gloss,
-                _ => {
+                None => {
                     warnings.push(format!(
-                        "Row {} missing or empty morpheme gloss, skipping",
+                        "Row {} missing morpheme gloss, skipping",
+                        spreadsheet_row_number
+                    ));
+                    skipped_rows += 1;
+                    continue;
+                }
+                Some(_) => {
+                    warnings.push(format!(
+                        "Row {} empty morpheme gloss, skipping",
                         spreadsheet_row_number
                     ));
                     skipped_rows += 1;
@@ -399,9 +414,17 @@ impl SheetInterpretation {
             // Parse page reference (Column 3: "DF1975 page ref")
             let page_number = match root_values.next() {
                 Some(page) if !page.trim().is_empty() => page,
-                _ => {
+                None => {
                     warnings.push(format!(
-                        "Row {} missing or empty page reference, skipping",
+                        "Row {} missing page reference, skipping",
+                        spreadsheet_row_number
+                    ));
+                    skipped_rows += 1;
+                    continue;
+                }
+                Some(_) => {
+                    warnings.push(format!(
+                        "Row {} empty page reference, skipping",
                         spreadsheet_row_number
                     ));
                     skipped_rows += 1;
@@ -463,11 +486,11 @@ impl SheetInterpretation {
         // Report warnings about skipped data
         if !warnings.is_empty() {
             eprintln!("Processing warnings for adjectives sheet:");
-            for warning in warnings.iter().take(10) {
+            for warning in warnings.iter().take(max_warnings) {
                 eprintln!("  {}", warning);
             }
-            if warnings.len() > 10 {
-                eprintln!("  ... and {} more warnings", warnings.len() - 10);
+            if warnings.len() > max_warnings {
+                eprintln!("  ... and {} more warnings", warnings.len() - max_warnings);
             }
             eprintln!("Total rows skipped: {}", skipped_rows);
         }
@@ -503,6 +526,7 @@ impl SheetInterpretation {
         let mut results = Vec::new();
         let mut skipped_rows = 0;
         let mut warnings = Vec::new();
+        let max_warnings = 10;
 
         // Skip first two rows (headers) and track row numbers through grouping
         let rows_with_numbers: Vec<_> = self.sheet.values
@@ -611,9 +635,16 @@ impl SheetInterpretation {
                 // Parse page reference (Column 1) - skip if invalid
                 let page_number = match root_values.next() {
                     Some(page) if !page.trim().is_empty() => page,
-                    _ => {
+                    None => {
                         warnings.push(format!(
-                            "Row {} missing or empty page reference, skipping group",
+                            "Row {} missing page reference, skipping group",
+                            spreadsheet_row_numbers[0]
+                        ));
+                        continue;
+                    }
+                    Some(_) => {
+                        warnings.push(format!(
+                            "Row {} empty page reference, skipping group",
                             spreadsheet_row_numbers[0]
                         ));
                         continue;
@@ -623,9 +654,16 @@ impl SheetInterpretation {
                 // Parse root (Column 2) - skip if invalid
                 let root = match root_values.next() {
                     Some(root) if !root.trim().is_empty() => root,
-                    _ => {
+                    None => {
                         warnings.push(format!(
-                            "Row {} missing or empty root, skipping group",
+                            "Row {} missing root, skipping group",
+                            spreadsheet_row_numbers[0]
+                        ));
+                        continue;
+                    }
+                    Some(_) => {
+                        warnings.push(format!(
+                            "Row {} empty root, skipping group",
                             spreadsheet_row_numbers[0]
                         ));
                         continue;
@@ -635,9 +673,16 @@ impl SheetInterpretation {
                 // Parse root gloss (Column 3) - skip if invalid
                 let root_gloss = match root_values.next() {
                     Some(gloss) if !gloss.trim().is_empty() => gloss,
-                    _ => {
+                    None => {
                         warnings.push(format!(
-                            "Row {} missing or empty morpheme gloss, skipping group",
+                            "Row {} missing morpheme gloss, skipping group",
+                            spreadsheet_row_numbers[0]
+                        ));
+                        continue;
+                    }
+                    Some(_) => {
+                        warnings.push(format!(
+                            "Row {} empty morpheme gloss, skipping group",
                             spreadsheet_row_numbers[0]
                         ));
                         continue;
@@ -688,11 +733,11 @@ impl SheetInterpretation {
         // Report warnings about skipped data
         if !warnings.is_empty() {
             eprintln!("Processing warnings for noun sheet:");
-            for warning in warnings.iter().take(10) {
+            for warning in warnings.iter().take(max_warnings) {
                 eprintln!("  {}", warning);
             }
-            if warnings.len() > 10 {
-                eprintln!("  ... and {} more warnings", warnings.len() - 10);
+            if warnings.len() > max_warnings {
+                eprintln!("  ... and {} more warnings", warnings.len() - max_warnings);
             }
             eprintln!("Total rows skipped: {}", skipped_rows);
         }
