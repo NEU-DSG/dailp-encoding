@@ -18,7 +18,7 @@ import { usePreferences } from "./preferences-context"
 
 /** Button that allows user to enter edit mode in the word panel, and edit fields of a word. */
 export const EditButton = () => {
-  const { form, isEditing, setIsEditing } = useForm()
+  const { form, isEditing, setIsEditing, setOriginalSegmentCount } = useForm()
 
   const { cherokeeRepresentation } = usePreferences()
 
@@ -52,6 +52,8 @@ export const EditButton = () => {
           className={css.editPanelButton}
           onClick={() => {
             setIsEditing(true)
+            // Store original segment count when entering edit mode
+            setOriginalSegmentCount(form.values.word?.segments?.length || 0)
           }}
         >
           Edit

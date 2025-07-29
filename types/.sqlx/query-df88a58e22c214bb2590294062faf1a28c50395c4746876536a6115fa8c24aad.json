@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "delete from word\nwhere document_id = $1\n",
+  "query": "delete from word_segment\nwhere word_id = $1; ",
   "describe": {
     "columns": [],
     "parameters": {
@@ -10,5 +10,5 @@
     },
     "nullable": []
   },
-  "hash": "bde80529393c1595fe31c0bdbaa7e840c68ea7c74896d512c60f6f3b2431fba5"
+  "hash": "df88a58e22c214bb2590294062faf1a28c50395c4746876536a6115fa8c24aad"
 }
