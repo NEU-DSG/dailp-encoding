@@ -690,7 +690,7 @@ impl Mutation {
         let today = dailp::chrono::Utc::now().date_naive();
         let document_date = dailp::Date::new(today);
         let document_id = Uuid::new_v4();
-        let short_name = dailp::slugify(&title);
+        let short_name = dailp::slugify(&title).to_ascii_uppercase();
         let source = SourceAttribution {
             name: input.source_name,
             link: input.source_url,
@@ -757,6 +757,14 @@ impl Mutation {
                 input.collection_id,
             )
             .await?;
+        
+        // Update the annotated_doc with the correct document_id from the database
+        let mut updated_annotated_doc = annotated_doc.clone();
+        updated_annotated_doc.meta.id = document_id;
+        
+        
+        // Insert the document contents (words and paragraphs) into the database
+        database.insert_document_contents(updated_annotated_doc).await?;
         
         Ok(AddDocumentPayload {
             id: document_id.0,
