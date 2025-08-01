@@ -368,10 +368,14 @@ export type ContentBlock = Gallery | Markdown
 export type Contributor = {
   readonly __typename?: "Contributor"
   readonly details: Maybe<ContributorDetails>
-  /** Full name of the contributor */
+  /** 
+   * Name or preferred indentifier (ex. initials) of the contributor 
+   * Use "Anonymous" if no name or identifier provided or if contributor
+   * does not wish to be identified.
+   */
   readonly name: Scalars["String"]
   /** The role that defines most of their contributions to the associated item */
-  readonly role: Scalars["String"]
+  readonly role: ReadonlyArray<ContributorRole>
 }
 
 /**
@@ -397,6 +401,8 @@ export type ContributorDetails = {
    * them elsewhere, like in the attribution for a particular document.
    */
   readonly fullName: Scalars["String"]
+  /** Whether or not the contributor's profile is linked to their contributions */ 
+  readonly isPublic: Scalars["Boolean"] 
 }
 
 /**
@@ -492,6 +498,8 @@ export enum DocCitationFormat =
 
 export type DocumentCollection = {
   readonly __typename?: "DocumentCollection"
+  /** Description of the collection's contents, significance, etc. */
+  readonly description: Maybe<Scalars["String"]>
   /**
    * All documents that are part of this collection
    * TODO Try to unify this return type into AnnotatedDoc
