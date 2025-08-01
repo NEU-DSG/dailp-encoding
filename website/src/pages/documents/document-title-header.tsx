@@ -59,13 +59,13 @@ export const DocumentTitleHeader = ({
         )}
 
         <div className={css.headerText}>
-          {p.breadcrumbs?.length ? (
+          {breadcrumbs?.length ? (
             <Breadcrumbs aria-label="Breadcrumbs" className={css.breadcrumbWrapper}>
-              {p.breadcrumbs.map((crumb) =>
+              {breadcrumbs.map((crumb) =>
                 crumb.slug ? (
                   <Link
                     key={crumb.slug}
-                    href={`${p.rootPath}/${crumb.slug}`}
+                    href={`${rootPath}/${crumb.slug}`}
                     className={css.breadcrumbLink}
                   >
                     {crumb.name}
