@@ -259,6 +259,31 @@ export enum CherokeeOrthography {
   Taoc = "TAOC",
 }
 
+/** Record to store citation information for a document */
+export type Citation = {
+  readonly __typename?: "Citation"
+  /** Creators of the document */
+  readonly creators: ReadonlyArray<Creator>
+  /** Format of the document being cited */
+  readonly docFormat: DocCitationFormat
+  /** DOI of the document */
+  readonly doi Scalars["String"]
+  /** Ending page of the document (inclusive) */
+  readonly endPage Scalars["Int"]
+  /** Year the document was published */
+  readonly publicationYear Scalars["Int"]
+  /** Publisher of the document */
+  readonly publisher Scalars["String"]
+  /** Starting page of the document */
+  readonly startPage Scalars["Int"]
+  /** Title of the document being cited */
+  readonly title: Scalars["String"]
+  /** URL of the document, if document can be accessed online */
+  readonly url Scalars["String"]
+  // add more fields to cover more formats
+}
+
+
 /** Structure to represent a single chapter. Used to send data to the front end. */
 export type CollectionChapter = {
   readonly __typename?: "CollectionChapter"
@@ -383,16 +408,32 @@ export type ContributorDetails = {
   readonly fullName: Scalars["String"]
 }
 
-export type CreateDocumentFromFormInput = {
-  readonly collectionId: Scalars["UUID"]
-  readonly documentName: Scalars["String"]
-  readonly englishTranslationLines: ReadonlyArray<
-    ReadonlyArray<Scalars["String"]>
-  >
-  readonly rawTextLines: ReadonlyArray<ReadonlyArray<Scalars["String"]>>
-  readonly sourceName: Scalars["String"]
-  readonly sourceUrl: Scalars["String"]
-  readonly unresolvedWords: ReadonlyArray<Scalars["String"]>
+/**
+ * A contributor can have to any number of roles, which define most of their
+ * contributions to the associated item
+ */
+export enum ContributorRole {
+  Transcriber = "TRANSCRIBER", // Typed or transcribed handwritten materials
+  Translator = "TRANSLATOR", // Translated text into another language
+  Editor = "EDITOR", // Edited the text or translation for clarity or structure
+  Annotator = "ANNOTATOR", // Added linguistic or cultural annotations
+  CulturalAdvisor = "CULTURAL_ADVISOR", // Provided cultural context for a document
+  // add or revise as needed
+}
+
+/** Record to represent a creator of a document */
+export type Creator = {
+  readonly __typename?: "Creator" 
+  /** Documents created by the creator */
+  readonly documents: ReadonlyArray<AnnotatedDoc>
+  /** UUID for the creator */
+  readonly id: Scalars["UUID"]
+  /**
+   * Name of the creator or how they want to be identified (ex. by
+   * their initials. Some creators may be unknown or not want to be
+   * identified. Use ‘Unknown’ if no name or identifier provided.
+   */
+  readonly name: Scalars["String"]
 }
 
 /** Request to update if a piece of audio should be included in an edited collection */
@@ -445,6 +486,18 @@ export type DeleteContributorAttribution = {
   /** The document to perform this operation on */
   readonly documentId: Scalars["UUID"]
 }
+
+/** 
+ *  Represents the format of a citation. 
+ *  Used to map specific format to their more general citation format.
+ */
+export enum DocCitationFormat =
+  Website = "Website" // Website, BlogPost, Database
+  Book = "Book" // Book, EBook
+  Journal = "Journal" // JournalArticle, Newsletter
+  Audio = "Audio" // Podcast, RadioClip, OralHistory
+  Video = "Video" // YouTubeVideo, Film
+  // add more
 
 export type DocumentCollection = {
   readonly __typename?: "DocumentCollection"
@@ -548,6 +601,19 @@ export type EditedCollection = {
   readonly wordpressMenuId: Maybe<Scalars["Int"]>
 }
 
+/** Record to store the physical or digital medium associated with a document */
+export type Format = {
+  readonly __typename?: "Format"
+  /** Documents associated with the format */
+  readonly documents: ReadonlyArray<AnnotatedDoc> // need to reference in AnnotatedDoc
+  /** UUID for the format */
+  readonly id: Scalars["UUID"]
+  /** Name of the format */
+  readonly name: Scalars["String"]
+  /** Represents the status (pending, approved, rejected) of a suggested format */
+  readonly status: Status
+}
+
 export type FormsInTime = {
   readonly __typename?: "FormsInTime"
   readonly end: Maybe<Date>
@@ -598,6 +664,38 @@ export type ImageSource = {
   readonly __typename?: "ImageSource"
   /** Base URL for the IIIF server */
   readonly url: Scalars["String"]
+}
+
+/** Record to store a key term associated with a document */
+export type Keyword = {
+  readonly __typename?: "Keyword"
+  /** Documents associated with the keyword */
+  readonly documents: ReadonlyArray<AnnotatedDoc> // need to reference in AnnotatedDoc
+  /** UUID for the keyword */
+  readonly id: Scalars["UUID"]
+  /** The name of the keyword */
+  readonly name: Scalars["String"]
+  /** Represents the status (pending, approved, rejected) of a suggested keyword */
+  readonly status: Status
+}
+
+/** Record to store a language associated with a document */
+export type Language = {
+  readonly __typename?: "Language"
+  /** 
+   *  Tag for the language within the DAILP system 
+   *  Could be useful for managing similar language names or extending this to
+   *  add tags for language, dialect, and script combinations later on
+   */
+  readonly dailpTag: Scalars["String"]
+  /** Documents associated with the language */
+  readonly documents: ReadonlyArray<AnnotatedDoc> // need to reference in AnnotatedDoc
+  /** UUID for the language */
+  readonly id: Scalars["UUID"]
+  /** The name of the language */
+  readonly name: Scalars["String"]
+  /** Represents the status (pending, approved, rejected) of a suggested language */
+  readonly status: Status
 }
 
 /** Start of a new line */
@@ -994,6 +1092,44 @@ export type SourceAttribution = {
   readonly link: Scalars["String"]
   /** Name of the source, i.e. "The Newberry Library" */
   readonly name: Scalars["String"]
+}
+
+/** Record to store a spatial coverage associated with a document */
+export type SpatialCoverage = {
+  readonly __typename?: "SpatialCoverage"
+  /** 
+   *  Tag for the spatial coverage within the DAILP system 
+   *  Could be useful for managing places with similar names or places
+   *  with multiple names
+   */
+   readonly dailpTag: Scalars["String"]
+   /** UUID for the place */
+   readonly id: Scalars["UUID"]
+   /** The name of the place */
+   readonly name: Scalars["String"]
+}
+
+/** Represents the status of a suggestion made by a contributor */
+export enum Status {
+  Pending = "PENDING",
+  Approved = "APPROVED",
+  Rejected = "REJECTED"
+}
+
+/**
+ * Record to store a subject heading that reflects Indigenous knowledge 
+ * practices associated with a document
+ */
+export type SubjectHeading = {
+  readonly __typename?: "SubjectHeading"
+  /** Documents associated with the subject heading */
+  readonly documents: ReadonlyArray<AnnotatedDoc> // need to reference in AnnotatedDoc
+  /** UUID for the subject heading */
+  readonly id: Scalars["UUID"]
+  /** The name of the subject heading */
+  readonly name: Scalars["String"]
+  /** Represents the status (pending, approved, rejected) of a suggested subject heading */
+  readonly status: Status
 }
 
 /** Update the contributor attribution for a document */
