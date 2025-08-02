@@ -496,6 +496,38 @@ export enum DocCitationFormat =
   Video = "Video" // YouTubeVideo, Film
   // add more
 
+/** 
+ *  Draft of citation format mappings that can be relocated to a more 
+ *  appropriate file in the future.
+ */
+
+/** 
+ *  Maps broader citation format to corresponding formats. 
+ *  Many different formats may share the same citation format, so mapping 
+ *  broader citation formats to their specific formats may allow us
+ *  to automatically display specific citation input fields when a
+ *  contributor is entering the citation details for a document.
+ */
+export const CitationFormatToFormats: Record<DocCitationFormat, string[]> = {
+  [DocCitationFormat.Book]: ["Book", "EBook"],
+  [DocCitationFormat.Journal]: ["JournalArticle", "Newsletter"],
+  [DocCitationFormat.Website]: ["Website", "BlogPost", "Database"],
+  [DocCitationFormat.Audio]: ["Podcast", "RadioClip", "OralHistory"],
+  [DocCitationFormat.Video]: ["YouTubeVideo", "Film"],
+  // add more as needed
+}
+
+/** 
+ *  Maps specific formats to their broader citation format.
+ *  May be helpful to automatically display specific citation input fields 
+ *  when a contributor is entering the citation details for a document.  
+ */
+export const FormatToCitationFormat: Record<string, DocCitationFormat> = Object.fromEntries(
+  Object.entries(CitationFormatToFormats).flatMap(([citationFormat, formats]) =>
+    formats.map((format) => [format, citationFormat as DocCitationFormat])
+  )
+)
+
 export type DocumentCollection = {
   readonly __typename?: "DocumentCollection"
   /** Description of the collection's contents, significance, etc. */
