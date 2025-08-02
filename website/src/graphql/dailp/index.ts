@@ -271,7 +271,7 @@ export type Citation = {
   readonly title: Scalars["String"]
   /** URL of the document, if document can be accessed online */
   readonly url Scalars["String"]
-  // add more fields to cover more formats
+  // TODO: add more fields to cover more formats
 }
 
 
@@ -415,7 +415,7 @@ export enum ContributorRole {
   Editor = "EDITOR", // Edited the text or translation for clarity or structure
   Annotator = "ANNOTATOR", // Added linguistic or cultural annotations
   CulturalAdvisor = "CULTURAL_ADVISOR", // Provided cultural context for a document
-  // add or revise as needed
+  // TODO: add or revise roles as needed
 }
 
 /** Record to represent a creator of a document */
@@ -494,7 +494,7 @@ export enum DocCitationFormat =
   Journal = "Journal" // JournalArticle, Newsletter
   Audio = "Audio" // Podcast, RadioClip, OralHistory
   Video = "Video" // YouTubeVideo, Film
-  // add more
+  // TODO: add more citation formats as needed
 
 /** 
  *  Draft of citation format mappings that can be relocated to a more 
@@ -514,7 +514,8 @@ export const CitationFormatToFormats: Record<DocCitationFormat, string[]> = {
   [DocCitationFormat.Website]: ["Website", "BlogPost", "Database"],
   [DocCitationFormat.Audio]: ["Podcast", "RadioClip", "OralHistory"],
   [DocCitationFormat.Video]: ["YouTubeVideo", "Film"],
-  // add more as needed
+  // TODO: add more as needed and revise (citation format varies 
+  // depending on specifc cases)
 }
 
 /** 
