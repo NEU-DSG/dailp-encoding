@@ -489,11 +489,11 @@ export type DeleteContributorAttribution = {
  *  Used to map specific format to their more general citation format.
  */
 export enum DocCitationFormat =
-  Website = "Website" // Website, BlogPost, Database
-  Book = "Book" // Book, EBook
-  Journal = "Journal" // JournalArticle, Newsletter
-  Audio = "Audio" // Podcast, RadioClip, OralHistory
-  Video = "Video" // YouTubeVideo, Film
+  Website = "WEBSITE" // Website, BlogPost, Database
+  Book = "BOOK" // Book, EBook
+  Journal = "JOURNAL" // JournalArticle, Newsletter
+  Audio = "AUDIO" // Podcast, RadioClip, OralHistory
+  Video = "VIDEO" // YouTubeVideo, Film
   // TODO: add more citation formats as needed
 
 /** 
