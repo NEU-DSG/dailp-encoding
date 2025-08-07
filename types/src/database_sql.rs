@@ -2601,6 +2601,3 @@ pub struct WordsInDocument {
     /// List of annotated and potentially segmented forms
     pub forms: Vec<AnnotatedForm>,
 }
-
-/// Hardcoded chapter ID for user-created documents (replace with actual UUID after migration)
-const USER_DOCUMENTS_CHAPTER_ID: &str = "<FILL_IN_UUID_FROM_PSQL>";
