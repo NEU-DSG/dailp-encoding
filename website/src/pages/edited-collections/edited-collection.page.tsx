@@ -17,14 +17,15 @@ const EditedCollectionPage = () => {
 
   const chapters = useChapters()
   const [{ data: dailp }] = Dailp.useEditedCollectionsQuery()
-  
+
   let collection = dailp?.allEditedCollections.find(
     ({ slug }) => slug === collectionSlug
   )
-  
+
   // Backup: Try to find collection with underscore/hyphen conversion
   if (!collection && dailp?.allEditedCollections) {
-    const alternativeSlug = collectionSlug?.replace('-', '_') || collectionSlug?.replace('_', '-')
+    const alternativeSlug =
+      collectionSlug?.replace("-", "_") || collectionSlug?.replace("_", "-")
     collection = dailp.allEditedCollections.find(
       ({ slug }) => slug === alternativeSlug
     )
@@ -32,12 +33,19 @@ const EditedCollectionPage = () => {
 
   // Use fallback chapters from EditedCollectionsQuery if EditedCollectionQuery fails
   const fallbackChapters = collection?.chapters
-  const effectiveChapters = (chapters && chapters.length > 0) ? chapters : fallbackChapters
-  
+  const effectiveChapters =
+    chapters && chapters.length > 0 ? chapters : fallbackChapters
+
   // Generate slug for fallback chapters that don't have it
-  const firstChapter = (effectiveChapters && effectiveChapters.length > 0) ? effectiveChapters[0] : null
-  const firstChapterSlug = firstChapter ? 
-    ('slug' in firstChapter ? firstChapter.slug : firstChapter.path[firstChapter.path.length - 1]) : null
+  const firstChapter =
+    effectiveChapters && effectiveChapters.length > 0
+      ? effectiveChapters[0]
+      : null
+  const firstChapterSlug = firstChapter
+    ? "slug" in firstChapter
+      ? firstChapter.slug
+      : firstChapter.path[firstChapter.path.length - 1]
+    : null
 
   if (!collection) {
     return null
@@ -50,7 +58,6 @@ const EditedCollectionPage = () => {
       </Helmet>
       <main className={util.paddedCenterColumn}>
         <article className={dialog.visible ? css.leftMargin : util.fullWidth}>
-          
           <header>
             <h1>{collection.title}</h1>
           </header>
@@ -73,7 +80,6 @@ const EditedCollectionPage = () => {
               <span>No chapters found</span>
             )}
           </h3>
-
         </article>
       </main>
     </CWKWLayout>

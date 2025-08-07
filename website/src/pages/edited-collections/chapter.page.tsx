@@ -36,7 +36,12 @@ const ChapterPage = (props: {
   }
 
   if (!chapter) {
-    return <>Chapter not found for collection: {props.collectionSlug}, chapter: {props.chapterSlug}</>
+    return (
+      <>
+        Chapter not found for collection: {props.collectionSlug}, chapter:{" "}
+        {props.chapterSlug}
+      </>
+    )
   }
 
   const { document, wordpressId } = chapter

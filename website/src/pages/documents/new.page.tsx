@@ -92,7 +92,9 @@ const NewDocPage = () => {
         setError(result.error.message)
       } else if (result.data?.addDocument) {
         // Navigate to the newly created document
-        navigate(`/collections/${result.data.addDocument.collectionSlug}/${result.data.addDocument.chapterSlug}`)
+        navigate(
+          `/collections/${result.data.addDocument.collectionSlug}/${result.data.addDocument.chapterSlug}`
+        )
       }
     } catch (err) {
       setError(
