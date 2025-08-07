@@ -1,1 +1,0 @@
-select slug from document_group where id = $1; 

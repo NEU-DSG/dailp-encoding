@@ -1,1 +1,0 @@
-UPDATE collection_chapter SET document_id = $1 WHERE id = $2; 
