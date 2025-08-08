@@ -258,22 +258,21 @@ export type Citation = {
   /** Format of the document being cited */
   readonly docFormat: DocCitationFormat
   /** DOI of the document */
-  readonly doi Scalars["String"]
+  readonly doi: Scalars["String"]
   /** Ending page of the document (inclusive) */
-  readonly endPage Scalars["Int"]
+  readonly endPage: Scalars["Int"]
   /** Year the document was published */
-  readonly publicationYear Scalars["Int"]
+  readonly publicationYear: Scalars["Int"]
   /** Publisher of the document */
-  readonly publisher Scalars["String"]
+  readonly publisher: Scalars["String"]
   /** Starting page of the document */
-  readonly startPage Scalars["Int"]
+  readonly startPage: Scalars["Int"]
   /** Title of the document being cited */
   readonly title: Scalars["String"]
   /** URL of the document, if document can be accessed online */
-  readonly url Scalars["String"]
+  readonly url: Scalars["String"]
   // TODO: add more fields to cover more formats
 }
-
 
 /** Structure to represent a single chapter. Used to send data to the front end. */
 export type CollectionChapter = {
@@ -368,8 +367,8 @@ export type ContentBlock = Gallery | Markdown
 export type Contributor = {
   readonly __typename?: "Contributor"
   readonly details: Maybe<ContributorDetails>
-  /** 
-   * Name or preferred indentifier (ex. initials) of the contributor 
+  /**
+   * Name or preferred indentifier (ex. initials) of the contributor
    * Use "Anonymous" if no name or identifier provided or if contributor
    * does not wish to be identified.
    */
@@ -401,8 +400,8 @@ export type ContributorDetails = {
    * them elsewhere, like in the attribution for a particular document.
    */
   readonly fullName: Scalars["String"]
-  /** Whether or not the contributor's profile is linked to their contributions */ 
-  readonly isPublic: Scalars["Boolean"] 
+  /** Whether or not the contributor's profile is linked to their contributions */
+  readonly isPublic: Scalars["Boolean"]
 }
 
 /**
@@ -420,7 +419,7 @@ export enum ContributorRole {
 
 /** Record to represent a creator of a document */
 export type Creator = {
-  readonly __typename?: "Creator" 
+  readonly __typename?: "Creator"
   /** Documents created by the creator */
   readonly documents: ReadonlyArray<AnnotatedDoc>
   /** UUID for the creator */
@@ -484,26 +483,27 @@ export type DeleteContributorAttribution = {
   readonly documentId: Scalars["UUID"]
 }
 
-/** 
- *  Represents the format of a citation. 
+/**
+ *  Represents the format of a citation.
  *  Used to map specific format to their more general citation format.
  */
-export enum DocCitationFormat =
-  Website = "WEBSITE" // Website, BlogPost, Database
-  Book = "BOOK" // Book, EBook
-  Journal = "JOURNAL" // JournalArticle, Newsletter
-  Audio = "AUDIO" // Podcast, RadioClip, OralHistory
-  Video = "VIDEO" // YouTubeVideo, Film
+export enum DocCitationFormat {
+  Website = "WEBSITE", // Website, BlogPost, Database
+  Book = "BOOK", // Book, EBook
+  Journal = "JOURNAL", // JournalArticle, Newsletter
+  Audio = "AUDIO", // Podcast, RadioClip, OralHistory
+  Video = "VIDEO", // YouTubeVideo, Film
   // TODO: add more citation formats as needed
+}
 
-/** 
- *  Draft of citation format mappings that can be relocated to a more 
+/**
+ *  Draft of citation format mappings that can be relocated to a more
  *  appropriate file in the future.
  */
 
-/** 
- *  Maps broader citation format to corresponding formats. 
- *  Many different formats may share the same citation format, so mapping 
+/**
+ *  Maps broader citation format to corresponding formats.
+ *  Many different formats may share the same citation format, so mapping
  *  broader citation formats to their specific formats may allow us
  *  to automatically display specific citation input fields when a
  *  contributor is entering the citation details for a document.
@@ -514,20 +514,22 @@ export const CitationFormatToFormats: Record<DocCitationFormat, string[]> = {
   [DocCitationFormat.Website]: ["Website", "BlogPost", "Database"],
   [DocCitationFormat.Audio]: ["Podcast", "RadioClip", "OralHistory"],
   [DocCitationFormat.Video]: ["YouTubeVideo", "Film"],
-  // TODO: add more as needed and revise (citation format varies 
+  // TODO: add more as needed and revise (citation format varies
   // depending on specifc cases)
 }
 
-/** 
+/**
  *  Maps specific formats to their broader citation format.
- *  May be helpful to automatically display specific citation input fields 
- *  when a contributor is entering the citation details for a document.  
+ *  May be helpful to automatically display specific citation input fields
+ *  when a contributor is entering the citation details for a document.
  */
-export const FormatToCitationFormat: Record<string, DocCitationFormat> = Object.fromEntries(
-  Object.entries(CitationFormatToFormats).flatMap(([citationFormat, formats]) =>
-    formats.map((format) => [format, citationFormat as DocCitationFormat])
+export const FormatToCitationFormat: Record<string, DocCitationFormat> =
+  Object.fromEntries(
+    Object.entries(CitationFormatToFormats).flatMap(
+      ([citationFormat, formats]) =>
+        formats.map((format) => [format, citationFormat as DocCitationFormat])
+    )
   )
-)
 
 export type DocumentCollection = {
   readonly __typename?: "DocumentCollection"
@@ -712,8 +714,8 @@ export type Keyword = {
 /** Record to store a language associated with a document */
 export type Language = {
   readonly __typename?: "Language"
-  /** 
-   *  Tag for the language within the DAILP system 
+  /**
+   *  Tag for the language within the DAILP system
    *  Could be useful for managing similar language names or extending this to
    *  add tags for language, dialect, and script combinations later on
    */
@@ -1121,27 +1123,27 @@ export type SourceAttribution = {
 /** Record to store a spatial coverage associated with a document */
 export type SpatialCoverage = {
   readonly __typename?: "SpatialCoverage"
-  /** 
-   *  Tag for the spatial coverage within the DAILP system 
+  /**
+   *  Tag for the spatial coverage within the DAILP system
    *  Could be useful for managing places with similar names or places
    *  with multiple names
    */
-   readonly dailpTag: Scalars["String"]
-   /** UUID for the place */
-   readonly id: Scalars["UUID"]
-   /** The name of the place */
-   readonly name: Scalars["String"]
+  readonly dailpTag: Scalars["String"]
+  /** UUID for the place */
+  readonly id: Scalars["UUID"]
+  /** The name of the place */
+  readonly name: Scalars["String"]
 }
 
 /** Represents the status of a suggestion made by a contributor */
 export enum Status {
   Pending = "PENDING",
   Approved = "APPROVED",
-  Rejected = "REJECTED"
+  Rejected = "REJECTED",
 }
 
 /**
- * Record to store a subject heading that reflects Indigenous knowledge 
+ * Record to store a subject heading that reflects Indigenous knowledge
  * practices associated with a document
  */
 export type SubjectHeading = {
