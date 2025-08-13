@@ -752,20 +752,18 @@ impl Mutation {
         };
         let database = context.data::<DataLoader<Database>>()?.loader();
         let (document_id, _chapter_id) = database
-            .insert_document_into_edited_collection(
-                annotated_doc.clone(),
-                input.collection_id,
-            )
+            .insert_document_into_edited_collection(annotated_doc.clone(), input.collection_id)
             .await?;
-        
+
         // Update the annotated_doc with the correct document_id from the database
         let mut updated_annotated_doc = annotated_doc.clone();
         updated_annotated_doc.meta.id = document_id;
-        
-        
+
         // Insert the document contents (words and paragraphs) into the database
-        database.insert_document_contents(updated_annotated_doc).await?;
-        
+        database
+            .insert_document_contents(updated_annotated_doc)
+            .await?;
+
         Ok(AddDocumentPayload {
             id: document_id.0,
             title,

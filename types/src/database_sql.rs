@@ -19,10 +19,7 @@ use {
     async_graphql::InputType,
     async_trait::async_trait,
     itertools::Itertools,
-    sqlx::{
-        postgres::{ PgPoolOptions},
-        query_file, query_file_as, query_file_scalar, Acquire,
-    },
+    sqlx::{postgres::PgPoolOptions, query_file, query_file_as, query_file_scalar, Acquire},
     std::collections::HashMap,
     std::sync::Arc,
     std::time::Duration,
@@ -1513,9 +1510,11 @@ impl Database {
     }
 
     pub async fn document_group_id_by_slug(&self, slug: &str) -> Result<Option<Uuid>> {
-        Ok(query_file_scalar!("queries/document_group_id_by_slug.sql", slug)
-            .fetch_optional(&self.client)
-            .await?)
+        Ok(
+            query_file_scalar!("queries/document_group_id_by_slug.sql", slug)
+                .fetch_optional(&self.client)
+                .await?,
+        )
     }
 
     /// Get collection slug by collection ID
@@ -1563,7 +1562,7 @@ impl Database {
         } else {
             collection_slug.replace("_", "-")
         };
-        
+
         let chapter = query_file!(
             "queries/chapter_contents.sql",
             alternative_collection_slug,
@@ -1649,10 +1648,9 @@ impl Database {
         let meta = &document.meta;
         let next_index = -1;
 
-
-
         // All user-created documents go to the user_documents document group
-        let user_documents_group_id = match self.document_group_id_by_slug("user_documents").await? {
+        let user_documents_group_id = match self.document_group_id_by_slug("user_documents").await?
+        {
             Some(id) => id,
             None => {
                 // Create the user_documents document_group if it doesn't exist
@@ -1684,11 +1682,13 @@ impl Database {
             let (name, doc, role): (Vec<_>, Vec<_>, Vec<_>) = meta
                 .contributors
                 .iter()
-                .map(|contributor| (
-                    contributor.name.clone(),
-                    document_uuid,
-                    contributor.role.clone(),
-                ))
+                .map(|contributor| {
+                    (
+                        contributor.name.clone(),
+                        document_uuid,
+                        contributor.role.clone(),
+                    )
+                })
                 .multiunzip();
             if !name.is_empty() {
                 query_file!(
@@ -1705,13 +1705,13 @@ impl Database {
         // Create a new chapter for this document in the user_documents collection
         let chapter_slug = crate::slugs::slugify_ltree(&meta.short_name);
         let chapter_path = PgLTree::from_str(&format!("user_documents.{}", chapter_slug))?;
-        
+
         let chapter_id = query_file_scalar!(
             "queries/insert_chapter_with_document_id.sql",
             meta.title, // Use document title as chapter title
             document_uuid,
             None::<i64>, // wordpress_id
-            0i64, // index_in_parent (we can increment this later if needed)
+            0i64,        // index_in_parent (we can increment this later if needed)
             chapter_path,
             crate::CollectionSection::Body as crate::CollectionSection
         )
@@ -1720,18 +1720,13 @@ impl Database {
 
         // Attribute contributors to the new chapter
         for contributor in &meta.contributors {
-            query_file!(
-                "queries/upsert_contributor.sql",
-                &contributor.name
-            )
-            .execute(&mut *tx)
-            .await?;
-            let contributor_id = query_file_scalar!(
-                "queries/contributor_id_by_name.sql",
-                &contributor.name
-            )
-            .fetch_one(&mut *tx)
-            .await?;
+            query_file!("queries/upsert_contributor.sql", &contributor.name)
+                .execute(&mut *tx)
+                .await?;
+            let contributor_id =
+                query_file_scalar!("queries/contributor_id_by_name.sql", &contributor.name)
+                    .fetch_one(&mut *tx)
+                    .await?;
             query_file!(
                 "queries/insert_chapter_contributor_attribution.sql",
                 &chapter_id,
@@ -1790,9 +1785,10 @@ impl Database {
                             }
                         })
                         .sum();
-                    
-                    let char_range: PgRange<i64> = (starting_char_index..starting_char_index + total_chars as i64).into();
-                    
+
+                    let char_range: PgRange<i64> =
+                        (starting_char_index..starting_char_index + total_chars as i64).into();
+
                     let _paragraph_id = query_file_scalar!(
                         "queries/insert_paragraph.sql",
                         page_id,
@@ -1808,16 +1804,18 @@ impl Database {
                         match word_seg {
                             AnnotatedSeg::Word(word) => {
                                 let word_len = word.source.chars().count() as i64;
-                                let word_char_range: PgRange<i64> = (word_char_index..word_char_index + word_len).into();
-                                
+                                let word_char_range: PgRange<i64> =
+                                    (word_char_index..word_char_index + word_len).into();
+
                                 self.insert_word(
-                                    &mut tx, 
-                                    word, 
-                                    document_uuid, 
-                                    Some(page_id), 
-                                    Some(word_char_range)
-                                ).await?;
-                                
+                                    &mut tx,
+                                    word,
+                                    document_uuid,
+                                    Some(page_id),
+                                    Some(word_char_range),
+                                )
+                                .await?;
+
                                 word_char_index += word_len;
                             }
                             _ => {}

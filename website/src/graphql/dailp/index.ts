@@ -2567,6 +2567,27 @@ export type AddDocumentMutation = { readonly __typename?: "Mutation" } & {
   >
 }
 
+export type UserByIdQueryVariables = Exact<{
+  id: Scalars["UUID"]
+}>
+
+export type UserByIdQuery = { readonly __typename?: "Query" } & {
+  readonly dailpUserById: { readonly __typename?: "User" } & Pick<
+    User,
+    | "id"
+    | "displayName"
+    | "avatarUrl"
+    | "bio"
+    | "organization"
+    | "location"
+    | "role"
+  > & {
+      readonly createdAt: Maybe<
+        { readonly __typename?: "Date" } & Pick<Date, "day" | "month" | "year">
+      >
+    }
+}
+
 export type AllCollectionsQueryVariables = Exact<{ [key: string]: never }>
 
 export type AllCollectionsQuery = { readonly __typename?: "Query" } & {
@@ -3606,6 +3627,33 @@ export function useAddDocumentMutation() {
   return Urql.useMutation<AddDocumentMutation, AddDocumentMutationVariables>(
     AddDocumentDocument
   )
+}
+export const UserByIdDocument = gql`
+  query UserById($id: UUID!) {
+    dailpUserById(id: $id) {
+      id
+      displayName
+      createdAt {
+        day
+        month
+        year
+      }
+      avatarUrl
+      bio
+      organization
+      location
+      role
+    }
+  }
+`
+
+export function useUserByIdQuery(
+  options: Omit<Urql.UseQueryArgs<UserByIdQueryVariables>, "query">
+) {
+  return Urql.useQuery<UserByIdQuery, UserByIdQueryVariables>({
+    query: UserByIdDocument,
+    ...options,
+  })
 }
 export const AllCollectionsDocument = gql`
   query AllCollections {

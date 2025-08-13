@@ -233,37 +233,36 @@ const NewDocPage = () => {
 export const Page = NewDocPage
 
 //const DebugInfo = ({dailp, formData}: {dailp: Dailp.EditedCollectionsQuery, formData: NewDocumentForm}) => {
-  //return (
-        //<div
-          //style={{
-            //background: "#f0f0f0",
-            //padding: "10px",
-            //border: "1px solid #ccc",
-            //borderRadius: "4px",
-            //marginBottom: "20px",
-            //fontSize: "12px",
-          //}}
-        //>
-          //<h3>Debug Info:</h3>
-          //<p>
-            //<strong>Edited Collections:</strong>{" "}
-            //{dailp?.allEditedCollections?.length || 0} found
-          //</p>
-          //<p>
-            //<strong>Selected Collection ID:</strong>{" "}
-            //{formData.collectionId || "None"}
-          //</p>
-          //<p>
-            //<strong>Available Collections:</strong>
-          //</p>
-          //<ul style={{ marginLeft: "20px", fontSize: "10px" }}>
-            //{dailp?.allEditedCollections?.map((col) => (
-              //<li key={col.id}>
-                //{col.title} (ID: {col.id}, Slug: {col.slug})
-              //</li>
-            //))}
-          //</ul>
-        //</div>
-  //)
+//return (
+//<div
+//style={{
+//background: "#f0f0f0",
+//padding: "10px",
+//border: "1px solid #ccc",
+//borderRadius: "4px",
+//marginBottom: "20px",
+//fontSize: "12px",
+//}}
+//>
+//<h3>Debug Info:</h3>
+//<p>
+//<strong>Edited Collections:</strong>{" "}
+//{dailp?.allEditedCollections?.length || 0} found
+//</p>
+//<p>
+//<strong>Selected Collection ID:</strong>{" "}
+//{formData.collectionId || "None"}
+//</p>
+//<p>
+//<strong>Available Collections:</strong>
+//</p>
+//<ul style={{ marginLeft: "20px", fontSize: "10px" }}>
+//{dailp?.allEditedCollections?.map((col) => (
+//<li key={col.id}>
+//{col.title} (ID: {col.id}, Slug: {col.slug})
+//</li>
+//))}
+//</ul>
+//</div>
+//)
 //}
-
