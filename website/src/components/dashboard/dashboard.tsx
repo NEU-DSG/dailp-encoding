@@ -1,4 +1,5 @@
 import { Tab, TabList, TabPanel, useDialogState } from "reakit"
+import { UserRole, useUserRole } from "src/auth"
 import {
   useAnnotatedDocumentByIdQuery,
   useBookmarkedDocumentsQuery,
@@ -7,7 +8,6 @@ import { useScrollableTabState } from "src/scrollable-tabs"
 import Link from "../link"
 import { BookmarkCard } from "./bookmark-card"
 import * as css from "./dashboard.css"
-import { UserRole, useUserRole } from "src/auth"
 
 enum Tabs {
   ACTIVITY = "activity-tab",
@@ -74,7 +74,6 @@ export const ActivityTab = () => {
   return <></>
 }
 
-
 export const AdminToolsTab = () => {
   return (
     <>
@@ -85,7 +84,6 @@ export const AdminToolsTab = () => {
         <Link href="#">Edit Existing Collection</Link>
       </div>
       <div>
-
         <h2>Manage Documents</h2>
         <Link href="#">Create New Document(s)</Link>
       </div>
@@ -97,8 +95,6 @@ export const AdminToolsTab = () => {
       </div>
     </>
   )
-
-
 }
 
 export const BookmarksTab = () => {
