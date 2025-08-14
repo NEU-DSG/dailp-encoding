@@ -11,13 +11,14 @@ import * as Dailp from "src/graphql/dailp"
 import { UserRole, useUserRole } from "./auth"
 import { IconButton } from "./components"
 import { IconTextButton } from "./components/button"
+import { useEditWordCheckContext } from "./edit-word-check-context"
 import * as css from "./edit-word-feature.css"
 import { useForm } from "./edit-word-form-context"
 import { usePreferences } from "./preferences-context"
 
 /** Button that allows user to enter edit mode in the word panel, and edit fields of a word. */
 export const EditButton = () => {
-  const { form, isEditing, setIsEditing } = useForm()
+  const { form, isEditing, setIsEditing, setOriginalSegmentCount } = useForm()
 
   const { cherokeeRepresentation } = usePreferences()
 
@@ -51,6 +52,8 @@ export const EditButton = () => {
           className={css.editPanelButton}
           onClick={() => {
             setIsEditing(true)
+            // Store original segment count when entering edit mode
+            setOriginalSegmentCount(form.values.word?.segments?.length || 0)
           }}
         >
           Edit
@@ -67,6 +70,8 @@ export const EditWordFeature = (props: {
   input?: React.ElementType
 }) => {
   const { form } = useForm()
+  const { confirmRomanizedSourceDelete, setConfirmRomanizedSourceDelete } =
+    useEditWordCheckContext()
 
   if (!form || !form.values.word) {
     return null
@@ -90,6 +95,24 @@ export const EditWordFeature = (props: {
         name={["word", props.feature]}
         disabled={userRole == UserRole.Reader}
       />
+
+      {form.errors["romanizedSource"] && props.feature === "romanizedSource" ? (
+        <>
+          <label>
+            Confirm deleting phonetics?
+            <input
+              type="checkbox"
+              checked={confirmRomanizedSourceDelete}
+              style={{ marginLeft: "8px" }}
+              onChange={(e) =>
+                setConfirmRomanizedSourceDelete(e.target.checked)
+              }
+            />
+          </label>
+        </>
+      ) : (
+        <></>
+      )}
     </>
   )
 }

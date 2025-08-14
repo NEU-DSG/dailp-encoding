@@ -45,55 +45,86 @@ pub async fn migrate_dictionaries(db: &Database) -> Result<()> {
         })
         .await?;
 
-    let df1975 = parse_new_df1975(
+    let df1975 = parse_new_df(
         SheetResult::from_sheet("11ssqdimOQc_hp3Zk8Y55m6DFfKR96OOpclUg5wcGSVE", None).await?,
         df1975_id,
-        1975,
-        3,
-        true,
-        false,
-        3,
-        3,
+        DFSheetMetadata {
+            year: 1975,
+            translation_count: 3,
+            has_numeric: true,
+            has_comment: false,
+            after_root: 3,
+            translations: 3,
+        },
     );
     let root_nouns = SheetInterpretation {
         sheet: SheetResult::from_sheet("1XuQIKzhGf_mGCH4-bHNBAaQqTAJDNtPbNHjQDhszVRo", None)
             .await?,
     }
-    .into_nouns(df1975_id, 1975, 1, false)?;
+    .into_nouns(df1975_id, 1975, 1, false)
+    .map_err(|e| {
+        anyhow::anyhow!(
+            "Failed to process root nouns sheet (1XuQIKzhGf_mGCH4-bHNBAaQqTAJDNtPbNHjQDhszVRo): {}",
+            e
+        )
+    })?;
+
     let irreg_nouns = SheetInterpretation {
         sheet: SheetResult::from_sheet("1urfgtarnSypCgb5lSOhQGhhDcg1ozQ1r4jtCJ8Bu-vw", None)
             .await?,
     }
-    .into_nouns(df1975_id, 1975, 1, false)?;
+    .into_nouns(df1975_id, 1975, 1, false)
+    .map_err(|e| anyhow::anyhow!("Failed to process irregular nouns sheet (1urfgtarnSypCgb5lSOhQGhhDcg1ozQ1r4jtCJ8Bu-vw): {}", e))?;
+
     let ptcp_nouns = SheetInterpretation {
         sheet: SheetResult::from_sheet("1JRmOx5_LlnoLQhzhyb3NmA4FAfMM2XRoT9ntyWtPEnk", None)
             .await?,
     }
-    .into_nouns(df1975_id, 1975, 0, false)?;
+    .into_nouns(df1975_id, 1975, 0, false)
+    .map_err(|e| {
+        anyhow::anyhow!(
+            "Failed to process ptcp nouns sheet (1JRmOx5_LlnoLQhzhyb3NmA4FAfMM2XRoT9ntyWtPEnk): {}",
+            e
+        )
+    })?;
+
     let inf_nouns = SheetInterpretation {
         sheet: SheetResult::from_sheet("1feuNOuzm0-TpotKyjebKwuXV4MYv-jnU5zLamczqu5U", None)
             .await?,
     }
-    .into_nouns(df1975_id, 1975, 0, true)?;
+    .into_nouns(df1975_id, 1975, 0, true)
+    .map_err(|e| {
+        anyhow::anyhow!(
+            "Failed to process inf nouns sheet (1feuNOuzm0-TpotKyjebKwuXV4MYv-jnU5zLamczqu5U): {}",
+            e
+        )
+    })?;
+
     let body_parts = SheetInterpretation {
         sheet: SheetResult::from_sheet("1xdnJuTsLBwxbCz9ffJmQNeX-xNYSmntoiRTu9Uwgu5I", None)
             .await?,
     }
-    .into_nouns(df1975_id, 1975, 1, false)?;
+    .into_nouns(df1975_id, 1975, 1, false)
+    .map_err(|e| anyhow::anyhow!("Failed to process body parts nouns sheet (1xdnJuTsLBwxbCz9ffJmQNeX-xNYSmntoiRTu9Uwgu5I): {}", e))?;
+
     let root_adjs = SheetInterpretation {
         sheet: SheetResult::from_sheet("1R5EhHRq-hlMcYKLzwY2bLAvC-LEeVklHJEHgL6dt5L4", None)
             .await?,
     }
-    .into_adjs(df1975_id, 1975)?;
-    let df2003 = parse_new_df1975(
+    .into_adjs(df1975_id, 1975)
+    .map_err(|e| anyhow::anyhow!("Failed to process root adjectives sheet (1R5EhHRq-hlMcYKLzwY2bLAvC-LEeVklHJEHgL6dt5L4): {}", e))?;
+
+    let df2003 = parse_new_df(
         SheetResult::from_sheet("18cKXgsfmVhRZ2ud8Cd7YDSHexs1ODHo6fkTPrmnwI1g", None).await?,
         df2003_id,
-        2003,
-        1,
-        false,
-        false,
-        3,
-        3,
+        DFSheetMetadata {
+            year: 2003,
+            translation_count: 1,
+            has_numeric: false,
+            has_comment: false,
+            after_root: 3,
+            translations: 3,
+        },
     );
 
     {
@@ -181,7 +212,7 @@ async fn parse_numerals(
             let _numeric = values.next()?;
             let simple_phonetics = values.next()?;
             let syllabary = values.next()?;
-            let position = PositionInDocument::new(doc_id.clone(), page_num, key);
+            let position = PositionInDocument::new(doc_id, page_num, key);
             let segments = vec![WordSegment::new(root_dailp, gloss.clone(), None)];
             Some(AnnotatedForm {
                 id: None,
@@ -295,16 +326,18 @@ async fn parse_appendix(db: &Database, sheet_id: &str, to_skip: usize) -> Result
 
     Ok(())
 }
-
-fn parse_new_df1975(
-    sheet: SheetResult,
-    doc_id: DocumentId,
+struct DFSheetMetadata {
     year: i32,
     translation_count: usize,
     has_numeric: bool,
     has_comment: bool,
     after_root: usize,
     translations: usize,
+}
+fn parse_new_df(
+    sheet: SheetResult,
+    doc_id: DocumentId,
+    meta: DFSheetMetadata,
 ) -> Vec<LexicalEntryWithForms> {
     sheet
         .values
@@ -314,7 +347,7 @@ fn parse_new_df1975(
         .filter(|cols| cols.len() > 4 && !cols[2].is_empty())
         .group_by(|columns| {
             columns
-                .get(0)
+                .first()
                 .and_then(|s| s.split(",").next().unwrap().parse::<i64>().ok())
         })
         .into_iter()
@@ -322,7 +355,7 @@ fn parse_new_df1975(
         // The rest are relevant to the verb itself.
         .filter_map(move |(index, (key, rows))| {
             let rows: Vec<_> = rows.collect();
-            let columns = rows.get(0)?.clone();
+            let columns = rows.first()?.clone();
 
             // The columns are as follows: key, page number, root, root gloss,
             // translations 1, 2, 3, transitivity, UDB class, blank, surface forms.
@@ -333,23 +366,24 @@ fn parse_new_df1975(
             let root = root_values.next().filter(|s| !s.is_empty())?;
             let root_gloss = root_values.next().filter(|s| !s.is_empty())?;
             let glosses = root_values
-                .take(translations)
+                .take(meta.translations)
                 .map(|s| s.trim().to_owned())
                 .filter(|s| !s.is_empty())
                 .collect();
-            let date = Date::from_ymd(year, 1, 1);
-            let pos = PositionInDocument::new(doc_id.clone(), page_number, key);
-            let mut form_cells = rows
-                .into_iter()
-                .flat_map(|row| row.into_iter().skip(4 + translations + after_root));
+            let date = Date::from_ymd(meta.year, 1, 1);
+            let pos = PositionInDocument::new(doc_id, page_number, key);
+            let mut form_cells = rows.into_iter().flat_map(|row| {
+                row.into_iter()
+                    .skip(4 + meta.translations + meta.after_root)
+            });
             Some(LexicalEntryWithForms {
                 forms: seg_verb_surface_forms(
                     &pos,
                     &date,
                     &mut form_cells,
-                    translation_count,
-                    has_numeric,
-                    has_comment,
+                    meta.translation_count,
+                    meta.has_numeric,
+                    meta.has_comment,
                 ),
                 entry: AnnotatedForm {
                     id: None,
@@ -375,48 +409,6 @@ fn parse_new_df1975(
         .collect()
 }
 
-async fn ingest_particle_index(db: &Database, document_id: &str) -> Result<()> {
-    let sheet = SheetResult::from_sheet(document_id, None).await?;
-    let forms = sheet
-        .values
-        .into_iter()
-        .enumerate()
-        .filter_map(|(index, row)| {
-            let mut row = row.into_iter();
-            let syllabary = row.next()?;
-            let simple_phonetics = row.next()?;
-            let translation = row.next()?;
-            let source_str = row.next()?;
-            let source = MorphemeId::parse(&source_str)?;
-            // let doc_id = db.document_id_from_name(source.document_name).await?;
-            let pos = PositionInDocument::new(
-                todo!("Get the actual document ID from the short name provided."),
-                source.gloss,
-                index as i64,
-            );
-            Some(AnnotatedForm {
-                id: None,
-                simple_phonetics: Some(simple_phonetics),
-                normalized_source: None,
-                phonemic: None,
-                commentary: None,
-                line_break: None,
-                page_break: None,
-                english_gloss: vec![translation],
-                segments: None,
-                date_recorded: None,
-                source: syllabary,
-                position: pos,
-                ingested_audio_track: None,
-            })
-        });
-
-    // Push the forms to the database.
-    // db.only_insert_words(forms).await?;
-
-    Ok(())
-}
-
 async fn ingest_ac1995(db: &Database, sheet_id: &str) -> Result<()> {
     let sheet = SheetResult::from_sheet(sheet_id, None).await?;
     let meta = insert_document_from_sheet(db, sheet_id, "Vocabularies").await?;
@@ -424,12 +416,12 @@ async fn ingest_ac1995(db: &Database, sheet_id: &str) -> Result<()> {
     let forms = sheet.values.into_iter().filter_map(|row| {
         let mut row = row.into_iter();
         let index: i64 = row.next()?.parse().ok()?;
-        let form_id = row.next()?;
+        let _form_id = row.next()?;
         let syllabary = row.next()?;
         let _romanized = row.next()?;
         let normalized = row.next()?;
         let translation = row.next()?;
-        let pos = PositionInDocument::new(meta.id.clone(), "1".to_owned(), index);
+        let pos = PositionInDocument::new(meta.id, "1".to_owned(), index);
         Some(AnnotatedForm {
             id: None,
             simple_phonetics: Some(normalized),

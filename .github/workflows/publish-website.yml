@@ -3,10 +3,10 @@ on:
   workflow_dispatch:
 jobs:
   publish_website:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     environment: ${{ github.ref == 'refs/heads/main' && 'Development' || 'Production' }}
     env:
-      DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
+      DATABASE_PASSWORD: ${{ github.event.action == 'prereleased' && secrets.UAT_DATABASE_PASSWORD || secrets.DATABASE_PASSWORD }}
       GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
       AWS_VPC_ID: ${{ secrets.AWS_VPC_ID }}
       AWS_SUBNET_PRIMARY: ${{ secrets.AWS_SUBNET_PRIMARY }}
@@ -36,7 +36,7 @@ jobs:
           authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
           pushFilter: "(-dailp$|-dailp-|-terraform-config$|-source$|\\.tar\\.gz$|-output$|-plan$|-apply-now$|-apply$)"
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -45,7 +45,6 @@ jobs:
         # nix -L argument shows the full build log and --impure allows it to access environment variables.
         run: |
           nix build --impure -L
-          cp -f ./result/config.tf.json ./config.tf.json
       - name: Publish website
         run: |
           nix run --impure -L .#tf-plan
