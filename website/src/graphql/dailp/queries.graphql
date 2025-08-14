@@ -687,6 +687,23 @@ mutation AddDocument($input: CreateDocumentFromFormInput!) {
   }
 }
 
+query UserById($id: UUID!) {
+  dailpUserById(id: $id) {
+    id
+    displayName
+    createdAt {
+      day
+      month
+      year
+    }
+    avatarUrl
+    bio
+    organization
+    location
+    role
+  }
+}
+
 query AllCollections {
   allCollections {
     name
