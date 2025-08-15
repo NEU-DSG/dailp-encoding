@@ -10,7 +10,7 @@ pub struct Contributor {
     /// Full name of the contributor
     pub name: String,
     /// The role that defines most of their contributions to the associated item
-    pub role: String,
+    pub role: ContributorRole,
 }
 impl Contributor {
     /// Create new contributor with the role "Author"
@@ -54,6 +54,25 @@ pub struct ContributorDetails {
     pub alternate_name: Option<String>,
     /// The optional date that this contributor was born on.
     pub birth_date: Option<crate::Date>,
+    /// Whether or not the contributor's profile is linked to their contributions
+    pub isVisible: bool,
+}
+
+/// A contributor can have to any number of roles, which define most of their
+/// contributions to the associated item
+#[derive(async_graphql::Enum, Clone, Copy, PartialEq, Eq)]
+pub enum ContributorRole {
+    /// Typed or transcribed handwritten materials
+    Transcriber, 
+    /// Translated text into another language
+    Translator,
+    /// Edited the text or translation for clarity or structure
+    Editor,
+    /// Added linguistic, cultural, etc. annotations 
+    Annotator, 
+    /// Provided cultural context for a document
+    CulturalAdvisor 
+    /// Add or revise as needed
 }
 
 /// Attribution for a particular source, whether an institution or an individual.
