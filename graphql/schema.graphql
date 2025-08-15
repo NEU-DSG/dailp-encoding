@@ -453,6 +453,20 @@ type ContributorDetails {
 }
 
 """
+Input for creating an edited collection
+"""
+input CreateEditedCollectionInput {
+	"""
+	The ID of the document to update
+	"""
+	title: String!
+	"""
+	An updated title for this document, or nothing (if title is unchanged)
+	"""
+	description: String!
+}
+
+"""
 Request to update if a piece of audio should be included in an edited collection
 """
 input CurateWordAudioInput {
@@ -665,6 +679,10 @@ type EditedCollection {
 	Full title of the collection
 	"""
 	title: String!
+	"""
+	Description of the collection (optional)
+	"""
+	description: String
 	"""
 	ID of WordPress menu for navigating the collection
 	"""
@@ -893,6 +911,7 @@ type Mutation {
 	"""
 	attachAudioToWord(input: AttachAudioToWordInput!): AnnotatedForm!
 	updateDocumentMetadata(document: DocumentMetadataUpdate!): UUID!
+	createEditedCollection(input: CreateEditedCollectionInput!): String!
 }
 
 """

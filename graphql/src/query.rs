@@ -7,7 +7,7 @@ use dailp::{
     user::{User, UserUpdate},
     AnnotatedForm, AttachAudioToWordInput, CollectionChapter, CurateWordAudioInput,
     DeleteContributorAttribution, DocumentMetadataUpdate, DocumentParagraph,
-    UpdateContributorAttribution, Uuid,
+    UpdateContributorAttribution, Uuid, CreateEditedCollectionInput,
 };
 use itertools::Itertools;
 
@@ -667,6 +667,22 @@ impl Mutation {
             .loader()
             .update_document_metadata(document)
             .await?)
+    }
+
+    #[graphql(
+        guard = "GroupGuard::new(UserGroup::Editors).or(GroupGuard::new(UserGroup::Contributors))"
+    )]
+    async fn create_edited_collection(
+        &self,
+        context: &Context<'_>,
+        input: CreateEditedCollectionInput,
+    ) -> FieldResult<String> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .insert_edited_collection(input)
+            .await?
+            .to_string())
     }
 }
 

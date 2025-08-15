@@ -9,11 +9,13 @@ import * as util from "src/style/utils.css"
 import CWKWLayout from "../cwkw/cwkw-layout"
 import * as css from "../cwkw/cwkw-layout.css"
 import { useChapters, useDialog } from "./edited-collection-context"
+import { useUserRole, UserRole } from "src/auth"
 
 // Renders an edited collection page based on the route parameters.
 const EditedCollectionPage = () => {
   const { collectionSlug } = useRouteParams()
   const dialog = useDialog()
+  const userRole = useUserRole()
 
   const chapters = useChapters()
   const firstChapter = chapters ? chapters[0] : null
@@ -27,6 +29,24 @@ const EditedCollectionPage = () => {
     return null
   }
 
+  // Show loading state while determining user role
+  if (userRole === undefined) {
+    return (
+      <CWKWLayout>
+        <Helmet>
+          <meta name="robots" content="noindex,nofollow" />
+        </Helmet>
+        <main className={util.paddedCenterColumn}>
+          <article className={dialog.visible ? css.leftMargin : util.fullWidth}>
+            <div style={{ textAlign: 'center', padding: '40px 20px' }}>
+              <p>Loading...</p>
+            </div>
+          </article>
+        </main>
+      </CWKWLayout>
+    )
+  }
+
   return (
     <CWKWLayout>
       <Helmet>
@@ -35,7 +55,29 @@ const EditedCollectionPage = () => {
       <main className={util.paddedCenterColumn}>
         <article className={dialog.visible ? css.leftMargin : util.fullWidth}>
           <header>
-            <h1>{collection.title}</h1>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h1>{collection.title}</h1>
+              {userRole === UserRole.Editor && (
+                <button
+                  onClick={() => navigate('/collections/new')}
+                  style={{
+                    padding: '8px 16px',
+                    fontSize: '14px',
+                    cursor: 'pointer',
+                    backgroundColor: '#007bff',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px'
+                  }}
+                >
+                  <span>+</span>
+                  New Collection
+                </button>
+              )}
+            </div>
           </header>
 
           <h3>

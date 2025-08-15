@@ -374,6 +374,14 @@ export type ContributorDetails = {
   readonly fullName: Scalars["String"]
 }
 
+/** Input for creating an edited collection */
+export type CreateEditedCollectionInput = {
+  /** An updated title for this document, or nothing (if title is unchanged) */
+  readonly description: Scalars["String"]
+  /** The ID of the document to update */
+  readonly title: Scalars["String"]
+}
+
 /** Request to update if a piece of audio should be included in an edited collection */
 export type CurateWordAudioInput = {
   /** Audio to include/exclude */
@@ -515,6 +523,8 @@ export enum DocumentType {
 export type EditedCollection = {
   readonly __typename?: "EditedCollection"
   readonly chapters: Maybe<ReadonlyArray<CollectionChapter>>
+  /** Description of the collection (optional) */
+  readonly description: Maybe<Scalars["String"]>
   /** UUID for the collection */
   readonly id: Scalars["UUID"]
   /** URL slug for the collection, like "cwkw" */
@@ -663,6 +673,7 @@ export type Mutation = {
    * Assumes user requesting mutation recoreded the audio
    */
   readonly attachAudioToWord: AnnotatedForm
+  readonly createEditedCollection: Scalars["String"]
   /** Decide if a piece audio should be included in edited collection */
   readonly curateWordAudio: AnnotatedForm
   /**
@@ -696,6 +707,10 @@ export type MutationAddBookmarkArgs = {
 
 export type MutationAttachAudioToWordArgs = {
   input: AttachAudioToWordInput
+}
+
+export type MutationCreateEditedCollectionArgs = {
+  input: CreateEditedCollectionInput
 }
 
 export type MutationCurateWordAudioArgs = {
@@ -1584,7 +1599,7 @@ export type EditedCollectionsQuery = { readonly __typename?: "Query" } & {
   readonly allEditedCollections: ReadonlyArray<
     { readonly __typename?: "EditedCollection" } & Pick<
       EditedCollection,
-      "id" | "title" | "slug"
+      "id" | "title" | "slug" | "description"
     > & {
         readonly chapters: Maybe<
           ReadonlyArray<
@@ -1606,7 +1621,7 @@ export type EditedCollectionQuery = { readonly __typename?: "Query" } & {
   readonly editedCollection: Maybe<
     { readonly __typename?: "EditedCollection" } & Pick<
       EditedCollection,
-      "id"
+      "id" | "title" | "slug"
     > & {
         readonly chapters: Maybe<
           ReadonlyArray<
@@ -2527,6 +2542,14 @@ export type DeleteCommentMutation = { readonly __typename?: "Mutation" } & {
         })
 }
 
+export type AddEditedCollectionMutationVariables = Exact<{
+  input: CreateEditedCollectionInput
+}>
+
+export type AddEditedCollectionMutation = {
+  readonly __typename?: "Mutation"
+} & Pick<Mutation, "createEditedCollection">
+
 export type UpdateUserMutationVariables = Exact<{
   user: UserUpdate
 }>
@@ -2865,6 +2888,7 @@ export const EditedCollectionsDocument = gql`
       id
       title
       slug
+      description
       chapters {
         id
         path
@@ -2884,6 +2908,8 @@ export const EditedCollectionDocument = gql`
   query EditedCollection($slug: String!) {
     editedCollection(slug: $slug) {
       id
+      title
+      slug
       chapters {
         id
         title
@@ -3576,6 +3602,18 @@ export function useDeleteCommentMutation() {
     DeleteCommentMutation,
     DeleteCommentMutationVariables
   >(DeleteCommentDocument)
+}
+export const AddEditedCollectionDocument = gql`
+  mutation AddEditedCollection($input: CreateEditedCollectionInput!) {
+    createEditedCollection(input: $input)
+  }
+`
+
+export function useAddEditedCollectionMutation() {
+  return Urql.useMutation<
+    AddEditedCollectionMutation,
+    AddEditedCollectionMutationVariables
+  >(AddEditedCollectionDocument)
 }
 export const UpdateUserDocument = gql`
   mutation updateUser($user: UserUpdate!) {

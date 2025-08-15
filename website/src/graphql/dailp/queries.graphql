@@ -210,6 +210,7 @@ query EditedCollections {
     id
     title
     slug
+    description
     chapters {
       id
       path
@@ -220,6 +221,8 @@ query EditedCollections {
 query EditedCollection($slug: String!) {
   editedCollection(slug: $slug) {
     id
+    title
+    slug
     chapters {
       id
       title
@@ -677,6 +680,10 @@ mutation DeleteComment($commentId: DeleteCommentInput!) {
   }
 }
 
+mutation AddEditedCollection($input: CreateEditedCollectionInput!) {
+  createEditedCollection(input: $input)
+}
+
 mutation updateUser($user: UserUpdate!) {
   updateUser(user: $user) {
     id
@@ -691,25 +698,6 @@ mutation updateUser($user: UserUpdate!) {
 
 query UserById($id: UUID!) {
   dailpUserById(id: $id) {
-    id
-    displayName
-    createdAt {
-      day
-      month
-      year
-    }
-    avatarUrl
-    bio
-    organization
-    location
-    role
-  }
-}
-
-query AllCollections {
-  allCollections {
-    name
-    slug
     id
     displayName
     createdAt {
