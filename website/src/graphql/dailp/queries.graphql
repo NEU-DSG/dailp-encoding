@@ -712,22 +712,3 @@ query UserById($id: UUID!) {
     role
   }
 }
-
-query AllCollections {
-  allCollections {
-    name
-    slug
-    id
-    displayName
-    createdAt {
-      day
-      month
-      year
-    }
-    avatarUrl
-    bio
-    organization
-    location
-    role
-  }
-}
