@@ -19,6 +19,8 @@ pub struct EditedCollection {
     pub id: Uuid,
     /// Full title of the collection
     pub title: String,
+    /// Description of the collection (optional)
+    pub description: Option<String>,
     /// ID of WordPress menu for navigating the collection
     pub wordpress_menu_id: Option<i64>,
     #[graphql(skip)]
@@ -107,4 +109,13 @@ impl CollectionChapter {
             .chapter_breadcrumbs(self.path.clone())
             .await?)
     }
+}
+
+/// Input for creating an edited collection
+#[derive(async_graphql::InputObject)]
+pub struct CreateEditedCollectionInput {
+    /// The ID of the document to update
+    pub title: String,
+    /// An updated title for this document, or nothing (if title is unchanged)
+    pub description: String,
 }

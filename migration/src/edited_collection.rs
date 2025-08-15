@@ -6,6 +6,7 @@ use dailp::SheetResult;
 struct EditedCollectionInfo {
     pub sheet_id: String,
     pub title: String,
+    pub description: String,
     pub wp_menu_id: i64,
     pub slug: String,
 }
@@ -21,6 +22,7 @@ pub async fn migrate_edited_collection(db: &Database) -> anyhow::Result<()> {
             "1moxVGRJsNQlfQ7MWDzxRfx4_xyo-QZOUHi8wISoTw_Y".to_owned()
         },
         title: "Cherokees Writing the Keetoowah Way".to_owned(),
+        description: Some("A collection of Cherokee texts and stories from the Keetoowah tradition.".to_owned()),
         wp_menu_id: 4579,
         slug: "cwkw".to_owned(),
     };
@@ -28,6 +30,7 @@ pub async fn migrate_edited_collection(db: &Database) -> anyhow::Result<()> {
     let wjs = EditedCollectionInfo {
         sheet_id: "1fDYTFrIvU-mCBPyQfRZcwG8sGM4td9kGECxnuJe2StA".to_owned(), // TODO add prod TOC
         title: "Willie Jumper Manuscripts".to_owned(),
+        description: Some("A collection of manuscripts and stories from Willie Jumper.".to_owned()),
         wp_menu_id: 4579, // TODO create unique landing page
         slug: "willie_jumper_stories".to_owned(),
     };
@@ -40,6 +43,7 @@ pub async fn migrate_edited_collection(db: &Database) -> anyhow::Result<()> {
         }
         .into_collection_index(
             &collection_info.title,
+            &collection_info.description,
             &collection_info.wp_menu_id,
             &collection_info.slug,
         )?;

@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "select \n    e.id,\n    e.title,\n    e.wordpress_menu_id,\n    e.slug\nfrom edited_collection as e;",
+  "query": "select id, title, description, wordpress_menu_id, slug\nfrom edited_collection\nwhere slug = any($1)",
   "describe": {
     "columns": [
       {
@@ -15,24 +15,32 @@
       },
       {
         "ordinal": 2,
+        "name": "description",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
         "name": "wordpress_menu_id",
         "type_info": "Int8"
       },
       {
-        "ordinal": 3,
+        "ordinal": 4,
         "name": "slug",
         "type_info": "Text"
       }
     ],
     "parameters": {
-      "Left": []
+      "Left": [
+        "TextArray"
+      ]
     },
     "nullable": [
       false,
       false,
       true,
+      true,
       false
     ]
   },
-  "hash": "f2be609690eadbcc793760011c18927f3a51a9b661319472bbec19b5c89c6d27"
+  "hash": "6fb6de6a94ccc5dc15d2426efc15cb60de11274f35db86452e612463562757a0"
 }

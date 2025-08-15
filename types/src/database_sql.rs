@@ -1094,6 +1094,20 @@ impl Database {
         Ok(())
     }
 
+    pub async fn insert_edited_collection(&self, collection: CreateEditedCollectionInput) -> Result<String> {
+        let mut tx = self.client.begin().await?;
+        let _ = query_file_scalar!(
+            "queries/insert_edited_collection.sql",
+            collection.title,
+            slug::slugify(&collection.title),
+            collection.description,
+        )
+        .fetch_one(&mut *tx)
+        .await?;
+        tx.commit().await?;
+        Ok(slug::slugify(&collection.title))
+    }
+
     pub async fn document_breadcrumbs(
         &self,
         document_id: DocumentId,
@@ -2241,6 +2255,7 @@ impl Loader<EditedCollectionDetails> for Database {
                         id: collection.id,
                         title: collection.title,
                         wordpress_menu_id: collection.wordpress_menu_id,
+                        description: collection.description,
                         slug: collection.slug,
                     },
                 )
