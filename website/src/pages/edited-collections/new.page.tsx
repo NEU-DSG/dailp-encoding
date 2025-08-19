@@ -4,11 +4,13 @@ import { Helmet } from "react-helmet"
 import { navigate } from "vite-plugin-ssr/client/router"
 import * as Dailp from "src/graphql/dailp"
 import Layout from "src/layout"
-import { useUserRole, UserRole } from "src/auth"
+import { useUserRole, UserRole, useUser } from "src/auth"
+import { uploadCollectionCoverToS3 } from "./utils"
 
 interface NewEditedCollectionForm {
   title: string
   description: string
+  thumbnail: File | null
 }
 
 const NewEditedCollectionPage = () => {
@@ -71,11 +73,13 @@ const NewEditedCollectionPage = () => {
   const [formData, setFormData] = useState<NewEditedCollectionForm>({
     title: "",
     description: "",
+    thumbnail: null,
   })
+
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
-
   const [, addEditedCollection] = Dailp.useAddEditedCollectionMutation()
+  const { user } = useUser()
 
   const handleEditedCollectionSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -83,15 +87,22 @@ const NewEditedCollectionPage = () => {
     setError(null)
 
     try {
+      if (!formData.thumbnail) {
+        setError("Please select a cover image to upload.")
+        return
+      }
       console.log("Submitting mutation with input:", {
         title: formData.title,
         description: formData.description,
       })
 
+      const uploadResult = await uploadCollectionCoverToS3(user!, formData.thumbnail)
+
       const result = await addEditedCollection({
         input: {
           title: formData.title,
           description: formData.description,
+          thumbnailUrl: uploadResult.resourceURL,
         },
       })
 
@@ -108,7 +119,7 @@ const NewEditedCollectionPage = () => {
       if (result.data?.createEditedCollection) {
         console.log("Successfully created collection with ID:", result.data.createEditedCollection)
         // Navigate to the new collection or show success message
-        navigate(`/edited-collections/${result.data.createEditedCollection}`)
+        navigate(`/collections/${result.data.createEditedCollection}`)
       } else {
         console.log("No data returned from mutation")
         setError("No data returned from mutation")
@@ -124,7 +135,10 @@ const NewEditedCollectionPage = () => {
     }
   }
 
-  const handleInputChange = (field: keyof NewEditedCollectionForm, value: string) => {
+  const handleTextInputChange = (
+    field: "title" | "description",
+    value: string
+  ) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
@@ -164,7 +178,7 @@ const NewEditedCollectionPage = () => {
             id="title"
             placeholder="Edited Collection Name"
             value={formData.title}
-            onChange={(e) => handleInputChange("title", e.target.value)}
+            onChange={(e) => handleTextInputChange("title", e.target.value)}
             required
           />
           <br />
@@ -176,13 +190,26 @@ const NewEditedCollectionPage = () => {
               id="description"
               placeholder="Enter description"
               value={formData.description}
-              onChange={(e) => handleInputChange("description", e.target.value)}
+              onChange={(e) => handleTextInputChange("description", e.target.value)}
               rows={6}
               cols={50}
               required
               disabled={isSubmitting}
             />
           </div>
+          <br />
+          <label htmlFor="thumbnail">Collection Cover:</label>
+          <br />
+          <input
+            id="thumbnail"
+            type="file"
+            accept="image/*"
+            required
+            onChange={(e) => {
+              const file = (e.target as HTMLInputElement).files?.[0] ?? null
+              setFormData((prev) => ({ ...prev, thumbnail: file }))
+            }}
+          />
           <br />
           <button type="submit" disabled={isSubmitting}>
             {isSubmitting ? "Creating Document..." : "Create Document"}

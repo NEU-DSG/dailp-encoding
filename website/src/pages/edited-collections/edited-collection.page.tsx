@@ -57,26 +57,6 @@ const EditedCollectionPage = () => {
           <header>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
               <h1>{collection.title}</h1>
-              {userRole === UserRole.Editor && (
-                <button
-                  onClick={() => navigate('/collections/new')}
-                  style={{
-                    padding: '8px 16px',
-                    fontSize: '14px',
-                    cursor: 'pointer',
-                    backgroundColor: '#007bff',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '6px'
-                  }}
-                >
-                  <span>+</span>
-                  New Collection
-                </button>
-              )}
             </div>
           </header>
 

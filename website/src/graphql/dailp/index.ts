@@ -378,6 +378,8 @@ export type ContributorDetails = {
 export type CreateEditedCollectionInput = {
   /** An updated title for this document, or nothing (if title is unchanged) */
   readonly description: Scalars["String"]
+  /** URL of the cover image for the collection */
+  readonly thumbnailUrl: Scalars["String"]
   /** The ID of the document to update */
   readonly title: Scalars["String"]
 }
@@ -529,6 +531,8 @@ export type EditedCollection = {
   readonly id: Scalars["UUID"]
   /** URL slug for the collection, like "cwkw" */
   readonly slug: Scalars["String"]
+  /** Cover image URL */
+  readonly thumbnailUrl: Maybe<Scalars["String"]>
   /** Full title of the collection */
   readonly title: Scalars["String"]
   /** ID of WordPress menu for navigating the collection */
@@ -1599,7 +1603,7 @@ export type EditedCollectionsQuery = { readonly __typename?: "Query" } & {
   readonly allEditedCollections: ReadonlyArray<
     { readonly __typename?: "EditedCollection" } & Pick<
       EditedCollection,
-      "id" | "title" | "slug" | "description"
+      "id" | "title" | "slug" | "description" | "thumbnailUrl"
     > & {
         readonly chapters: Maybe<
           ReadonlyArray<
@@ -2893,6 +2897,7 @@ export const EditedCollectionsDocument = gql`
         id
         path
       }
+      thumbnailUrl
     }
   }
 `

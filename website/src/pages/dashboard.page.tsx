@@ -23,36 +23,6 @@ const DashboardPage = () => {
   return (
     <Layout>
       <main>
-        {userRole === UserRole.Editor && (
-          <div style={{ 
-            padding: '20px', 
-            backgroundColor: '#f8f9fa', 
-            borderBottom: '1px solid #dee2e6',
-            marginBottom: '20px'
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h2 style={{ margin: 0 }}>Collection Management</h2>
-              <button
-                onClick={() => navigate('/collections/new')}
-                style={{
-                  padding: '10px 20px',
-                  fontSize: '16px',
-                  cursor: 'pointer',
-                  backgroundColor: '#007bff',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '8px'
-                }}
-              >
-                <span>+</span>
-                Create New Collection
-              </button>
-            </div>
-          </div>
-        )}
         <Dashboard />
       </main>
     </Layout>
