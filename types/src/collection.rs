@@ -26,6 +26,8 @@ pub struct EditedCollection {
     #[graphql(skip)]
     /// URL slug for the collection, like "cwkw"
     pub slug: String,
+    /// Cover image URL
+    pub thumbnail_url: Option<String>,
 }
 
 /// Structure to represent a single chapter. Used to send data to the front end.
@@ -118,4 +120,6 @@ pub struct CreateEditedCollectionInput {
     pub title: String,
     /// An updated title for this document, or nothing (if title is unchanged)
     pub description: String,
+    /// URL of the cover image for the collection
+    pub thumbnail_url: String,
 }
