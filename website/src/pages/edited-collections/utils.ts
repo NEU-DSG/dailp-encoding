@@ -4,18 +4,16 @@ import { fromCognitoIdentityPool } from "@aws-sdk/credential-provider-cognito-id
 import { CognitoUser } from "amazon-cognito-identity-js"
 import { v4 } from "uuid"
 
-export async function uploadCollectionCoverToS3(
-  user: CognitoUser,
-  data: File
-) {
+export async function uploadCollectionCoverToS3(user: CognitoUser, data: File) {
   const REGION = process.env["DAILP_AWS_REGION"]
   const BUCKET = `dailp-dev-media-storage`
   const fileName = data.name || "upload"
-  const inferredExt = fileName.includes(".") ? fileName.substring(fileName.lastIndexOf(".") + 1) : ""
+  const inferredExt = fileName.includes(".")
+    ? fileName.substring(fileName.lastIndexOf(".") + 1)
+    : ""
   const sanitizedExt = inferredExt.toLowerCase().replace(/[^a-z0-9]/g, "")
   const extension = sanitizedExt ? `.${sanitizedExt}` : ""
   const key = `user-uploaded-images/collection-thumbnails/${v4()}${extension}`
-  
 
   const s3Client = new S3Client({
     region: REGION,
@@ -40,5 +38,5 @@ export async function uploadCollectionCoverToS3(
     })
   )
 
-  return {resourceURL: `${process.env["CF_URL"]}/${key}`}
+  return { resourceURL: `${process.env["CF_URL"]}/${key}` }
 }

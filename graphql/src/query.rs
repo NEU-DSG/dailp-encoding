@@ -5,9 +5,9 @@ use dailp::{
     comment::{CommentParent, CommentUpdate, DeleteCommentInput, PostCommentInput},
     slugify_ltree,
     user::{User, UserUpdate},
-    AnnotatedForm, AttachAudioToWordInput, CollectionChapter, CurateWordAudioInput,
-    DeleteContributorAttribution, DocumentMetadataUpdate, DocumentParagraph,
-    UpdateContributorAttribution, Uuid, CreateEditedCollectionInput,
+    AnnotatedForm, AttachAudioToWordInput, CollectionChapter, CreateEditedCollectionInput,
+    CurateWordAudioInput, DeleteContributorAttribution, DocumentMetadataUpdate, DocumentParagraph,
+    UpdateContributorAttribution, Uuid,
 };
 use itertools::Itertools;
 

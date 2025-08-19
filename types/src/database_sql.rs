@@ -1094,7 +1094,10 @@ impl Database {
         Ok(())
     }
 
-    pub async fn insert_edited_collection(&self, collection: CreateEditedCollectionInput) -> Result<String> {
+    pub async fn insert_edited_collection(
+        &self,
+        collection: CreateEditedCollectionInput,
+    ) -> Result<String> {
         let mut tx = self.client.begin().await?;
         let _ = query_file_scalar!(
             "queries/insert_edited_collection.sql",
