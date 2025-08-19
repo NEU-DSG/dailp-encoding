@@ -1,1 +1,1 @@
-export default "/collections/new";
+export default "/collections/new"
