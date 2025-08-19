@@ -96,6 +96,6 @@ export async function uploadContributorAudioToS3(
     })
   )
 
-  //note: removed the https:// from the url bc the env variable already has it 
+  //note: removed the https:// from the url bc the env variable already has it
   return { resourceUrl: `${process.env["CF_URL"]}/${key}` }
 }

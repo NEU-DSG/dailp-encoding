@@ -23,7 +23,8 @@ pub async fn migrate_edited_collection(db: &Database) -> anyhow::Result<()> {
             "1moxVGRJsNQlfQ7MWDzxRfx4_xyo-QZOUHi8wISoTw_Y".to_owned()
         },
         title: "Cherokees Writing the Keetoowah Way".to_owned(),
-        description: "A collection of Cherokee texts and stories from the Keetoowah tradition.".to_owned(),
+        description: "A collection of Cherokee texts and stories from the Keetoowah tradition."
+            .to_owned(),
         wp_menu_id: 4579,
         slug: "cwkw".to_owned(),
         thumbnail_url: "".to_owned(),
