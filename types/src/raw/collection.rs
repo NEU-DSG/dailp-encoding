@@ -15,6 +15,8 @@ pub struct EditedCollection {
     pub wordpress_menu_id: Option<i64>,
     /// Chapters in the collection
     pub chapters: Vec<CollectionChapter>,
+    /// URL of the cover image for the collection
+    pub thumbnail_url: Option<String>,
 }
 
 /// Structure to represent a Chapter in an Edited Collection

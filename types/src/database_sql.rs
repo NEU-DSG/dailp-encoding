@@ -1101,6 +1101,7 @@ impl Database {
             collection.title,
             slug::slugify(&collection.title),
             collection.description,
+            collection.thumbnail_url,
         )
         .fetch_one(&mut *tx)
         .await?;
@@ -2258,6 +2259,7 @@ impl Loader<EditedCollectionDetails> for Database {
                         wordpress_menu_id: collection.wordpress_menu_id,
                         description: collection.description,
                         slug: collection.slug,
+                        thumbnail_url: collection.thumbnail_url,
                     },
                 )
             })

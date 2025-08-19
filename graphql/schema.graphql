@@ -464,6 +464,10 @@ input CreateEditedCollectionInput {
 	An updated title for this document, or nothing (if title is unchanged)
 	"""
 	description: String!
+	"""
+	URL of the cover image for the collection
+	"""
+	thumbnailUrl: String!
 }
 
 """
@@ -687,6 +691,10 @@ type EditedCollection {
 	ID of WordPress menu for navigating the collection
 	"""
 	wordpressMenuId: Int
+	"""
+	Cover image URL
+	"""
+	thumbnailUrl: String
 	"""
 	URL slug for the collection, like "cwkw"
 	"""

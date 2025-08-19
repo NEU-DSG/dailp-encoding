@@ -9,6 +9,7 @@ struct EditedCollectionInfo {
     pub description: String,
     pub wp_menu_id: i64,
     pub slug: String,
+    pub thumbnail_url: String,
 }
 
 pub async fn migrate_edited_collection(db: &Database) -> anyhow::Result<()> {
@@ -22,17 +23,19 @@ pub async fn migrate_edited_collection(db: &Database) -> anyhow::Result<()> {
             "1moxVGRJsNQlfQ7MWDzxRfx4_xyo-QZOUHi8wISoTw_Y".to_owned()
         },
         title: "Cherokees Writing the Keetoowah Way".to_owned(),
-        description: Some("A collection of Cherokee texts and stories from the Keetoowah tradition.".to_owned()),
+        description: "A collection of Cherokee texts and stories from the Keetoowah tradition.".to_owned(),
         wp_menu_id: 4579,
         slug: "cwkw".to_owned(),
+        thumbnail_url: "".to_owned(),
     };
 
     let wjs = EditedCollectionInfo {
         sheet_id: "1fDYTFrIvU-mCBPyQfRZcwG8sGM4td9kGECxnuJe2StA".to_owned(), // TODO add prod TOC
         title: "Willie Jumper Manuscripts".to_owned(),
-        description: Some("A collection of manuscripts and stories from Willie Jumper.".to_owned()),
+        description: "A collection of manuscripts and stories from Willie Jumper.".to_owned(),
         wp_menu_id: 4579, // TODO create unique landing page
         slug: "willie_jumper_stories".to_owned(),
+        thumbnail_url: "".to_owned(),
     };
 
     let collections: Vec<EditedCollectionInfo> = vec![cwkw, wjs];

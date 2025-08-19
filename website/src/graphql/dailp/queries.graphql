@@ -215,6 +215,7 @@ query EditedCollections {
       id
       path
     }
+    thumbnailUrl
   }
 }
 
