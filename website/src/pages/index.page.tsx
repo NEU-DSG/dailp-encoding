@@ -67,7 +67,7 @@ const IndexPage = () => {
           <ul>
             {dailp?.allEditedCollections.map((collection) => (
               <Card
-                thumbnail={collection.thumbnailUrl ?? cwkwLogo}
+                thumbnail={cwkwLogo}
                 header={{
                   text: collection.title,
                   link: collectionRoute(collection.slug),
