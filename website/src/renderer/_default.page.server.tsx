@@ -18,7 +18,10 @@ export function render(pageContext: PageContextServer) {
     deploymentEnvironment !== Environment.Production
       ? escapeInject`<meta name="robots" content="noindex"/>`
       : ""
-  if (deploymentEnvironment === Environment.Development) {
+  if (
+    deploymentEnvironment === Environment.Development ||
+    deploymentEnvironment === Environment.Local
+  ) {
     // In development, don't do SSR, just let the client render.
     return escapeInject`<!DOCTYPE html>
     <html>
@@ -29,9 +32,7 @@ export function render(pageContext: PageContextServer) {
       <body><div id="${rootElementId}"/></body>
     </html>`
   } else {
-    // Fallbacks so dev/local SSR doesn't crash if onBeforeRender didn't provide these
-    const pageHtml = pageContext.pageHtml ?? ""
-    const pageHead = pageContext.pageHead ?? Helmet.renderStatic()
+    const { pageHtml, pageHead } = pageContext
     return escapeInject`<!DOCTYPE html>
     <html ${dangerouslySkipEscape(pageHead.htmlAttributes.toString())}>
       <head>
@@ -58,10 +59,7 @@ export async function onBeforeRender(
   const baseContext = { urqlState: {}, buildDate }
   // Don't prerender in development mode, let the client do all the rendering.
   // This keeps pages loading quickly as they change.
-  const ssrInLocalDev =
-    deploymentEnvironment === Environment.Local &&
-    process.env["NODE_ENV"] === "development"
-  if (process.env["NODE_ENV"] === "development" && !ssrInLocalDev) {
+  if (process.env["NODE_ENV"] === "development") {
     return { pageContext: baseContext }
   } else {
     const [ssr, client] = ssrClientAndExchange()
