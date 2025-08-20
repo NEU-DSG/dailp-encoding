@@ -35,7 +35,7 @@ const NewEditedCollectionPage = () => {
   }
 
   // Check if user has permission to create edited collections
-  if (userRole !== UserRole.Editor && userRole !== UserRole.Admin) {
+  if (userRole !== UserRole.Editor && userRole !== UserRole.Contributor) {
     return (
       <Layout>
         <Helmet title="Access Denied" />
