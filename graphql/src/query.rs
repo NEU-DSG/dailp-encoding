@@ -671,7 +671,7 @@ impl Mutation {
 
     #[graphql(
         //TODO ADD ADMIN ROLES WHEN IT IS READY
-        guard = "GroupGuard::new(UserGroup::Editors)"
+        guard = "GroupGuard::new(UserGroup::Editors).or(GroupGuard::new(UserGroup::Admins))"
     )]
     async fn create_edited_collection(
         &self,
