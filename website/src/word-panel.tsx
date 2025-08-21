@@ -19,6 +19,7 @@ import { CommentSection } from "./components/comment-section"
 import { CustomCreatable } from "./components/creatable"
 import { EditWordAudio } from "./components/edit-word-audio"
 import { RecordAudioPanel } from "./components/edit-word-audio/record"
+import { useEditWordCheckContext } from "./edit-word-check-context"
 import { EditWordFeature } from "./edit-word-feature"
 import { formInput } from "./edit-word-feature.css"
 import { useForm } from "./edit-word-form-context"
@@ -53,6 +54,12 @@ export const WordPanel = (p: {
   word: Dailp.FormFieldsFragment
   options: GroupedOption[]
 }) => {
+  const { setRomanizedSource } = useEditWordCheckContext()
+  if (p.word.romanizedSource) {
+    setRomanizedSource(p.word.romanizedSource)
+  } else {
+    setRomanizedSource("")
+  }
   // what should be used to render word features? eg, syllabary, commentary, etc.
   const PanelFeatureComponent =
     p.panel === PanelType.EditWordPanel ? EditWordFeature : WordFeature
@@ -64,21 +71,21 @@ export const WordPanel = (p: {
   // Contains components rendering data of a word's phonetics.
   const phoneticsContent = (
     <>
-      {p.word.source && (
+      {
         <PanelFeatureComponent
           word={p.word}
           feature={"source"}
           label="Syllabary Characters"
         />
-      )}
+      }
 
-      {p.word.romanizedSource && (
+      {
         <PanelFeatureComponent
           word={p.word}
           feature={"romanizedSource"}
           label="Simple Phonetics"
         />
-      )}
+      }
     </>
   )
 
@@ -111,17 +118,9 @@ export const WordPanel = (p: {
 
       {/* Since editing translations is not yet supported, just display the translation for now. */}
       <div style={{ display: "flex" }}>‘{p.word.englishGloss}’</div>
-
-      {/* {p.panel === PanelType.WordPanel ? (
-        <div style={{ display: "flex" }}>‘{translation}’</div>
-      ) : (
-        // should this be a call to the parameterized component as well?
-        <>{translation}</>
-      )} */}
     </>
   )
 
-  // Contains a component rendering a word's commentary.
   const commentaryContent = (
     <PanelFeatureComponent
       word={p.word}
@@ -157,8 +156,8 @@ export const WordPanel = (p: {
         }
       />
 
-      {/* If there are no segments, does not display Word Parts panel */}
-      {p.word.segments.length > 0 && (
+      {/* Always show Word Parts panel in edit mode, otherwise only if there are segments */}
+      {(p.word.segments.length > 0 || p.panel === PanelType.EditWordPanel) && (
         <CollapsiblePanel
           title={"Word Parts"}
           content={wordPartsContent}
@@ -200,17 +199,45 @@ const EditSegmentation = (p: {
   options: GroupedOption[]
 }) => {
   const { form } = useForm()
+  const currentWord = form.values.word as Dailp.FormFieldsFragment
+  const currentSegments = currentWord.segments
+
+  const addNewSegment = (e: React.MouseEvent) => {
+    e.preventDefault()
+    const newSegment = {
+      morpheme: "",
+      gloss: "",
+      role: Dailp.WordSegmentRole.Morpheme,
+      previousSeparator: "-",
+      matchingTag: null,
+      word_id: currentWord.id,
+    }
+
+    const updatedSegments = [...currentSegments, newSegment]
+    // Add shouldValidate: false to prevent auto-submission
+    form.update("word", {
+      ...currentWord,
+      segments: updatedSegments,
+    })
+  }
+
+  const deleteSegment = (index: number) => {
+    const updatedSegments = currentSegments.filter((_, i) => i !== index)
+    form.update("word", {
+      ...currentWord,
+      segments: updatedSegments,
+    })
+  }
 
   return (
     <table className={css.tableContainer}>
       <tbody>
-        {p.segments.map((segment, index) => (
-          <tr style={{ display: "flex" }}>
+        {currentSegments.map((segment, index) => (
+          <tr key={index} style={{ display: "flex" }}>
             <td className={css.editMorphemeCells}>
               {/* This is disabled at the moment to be fully implemented later. */}
               <FormInput
                 {...form}
-                disabled
                 className={formInput}
                 name={["word", "segments", index.toString(), "morpheme"]}
               />
@@ -225,8 +252,39 @@ const EditSegmentation = (p: {
                 options={p.options}
               />
             </td>
+            <td style={{ padding: "0 10px" }}>
+              <button
+                onClick={() => deleteSegment(index)}
+                style={{
+                  padding: "5px 10px",
+                  borderRadius: "4px",
+                  border: "1px solid #ccc",
+                  background: "#f0f0f0",
+                  cursor: "pointer",
+                  color: "#d32f2f",
+                }}
+              >
+                ✕
+              </button>
+            </td>
           </tr>
         ))}
+        <tr>
+          <td colSpan={3} style={{ textAlign: "center", padding: "10px" }}>
+            <button
+              onClick={addNewSegment}
+              style={{
+                padding: "5px 10px",
+                borderRadius: "4px",
+                border: "1px solid #ccc",
+                background: "#f0f0f0",
+                cursor: "pointer",
+              }}
+            >
+              Add Segment
+            </button>
+          </td>
+        </tr>
       </tbody>
     </table>
   )

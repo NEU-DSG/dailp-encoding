@@ -364,6 +364,7 @@ export enum UserRole {
   Reader = "READER",
   Contributor = "CONTRIBUTOR",
   Editor = "EDITOR",
+  Admin = "ADMIN",
 }
 
 export function useUserRole(): UserRole {

@@ -1,3 +1,4 @@
+//! Provides types for structuring text-based pages.
 use async_graphql::{SimpleObject, Union};
 use serde::{Deserialize, Serialize};
 
