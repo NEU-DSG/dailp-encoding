@@ -14,7 +14,7 @@ const ChapterPage = (props: {
   collectionSlug: string
   chapterSlug: string
 }) => {
-  const [{ data, error, fetching }] = Dailp.useCollectionChapterQuery({
+  const [{ data }] = Dailp.useCollectionChapterQuery({
     variables: {
       collectionSlug: props.collectionSlug,
       chapterSlug: props.chapterSlug,
@@ -27,21 +27,8 @@ const ChapterPage = (props: {
 
   const chapter = data?.chapter
 
-  if (fetching) {
-    return <>Loading...</>
-  }
-
-  if (error) {
-    return <>Error: {error.message}</>
-  }
-
   if (!chapter) {
-    return (
-      <>
-        Chapter not found for collection: {props.collectionSlug}, chapter:{" "}
-        {props.chapterSlug}
-      </>
-    )
+    return <>Loading...</>
   }
 
   const { document, wordpressId } = chapter
