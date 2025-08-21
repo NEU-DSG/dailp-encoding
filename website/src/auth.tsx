@@ -1,17 +1,11 @@
-import {
-  AuthenticationDetails,
-  CognitoIdToken,
-  CognitoUser,
-  CognitoUserAttribute,
-  CognitoUserPool,
-  CognitoUserSession,
-} from "amazon-cognito-identity-js"
+import { Amplify, Auth } from "aws-amplify"
 import React, { createContext, useContext, useEffect, useState } from "react"
 import { navigate } from "vite-plugin-ssr/client/router"
 import { UserGroup } from "./graphql/dailp"
 
 type UserContextType = {
-  user: CognitoUser | null
+  // a little dissapointed aws amplify doesnt have a type for this :(
+  user: any
   operations: {
     createUser: (username: string, password: string) => void
     resetConfirmationCode: (email: string) => void
@@ -25,48 +19,59 @@ type UserContextType = {
 
 const UserContext = createContext<UserContextType>({} as UserContextType)
 
-const userPool = new CognitoUserPool({
-  UserPoolId: process.env["DAILP_USER_POOL"] ?? "",
-  ClientId: process.env["DAILP_USER_POOL_CLIENT"] ?? "",
+//setting up amplify auth with env variables
+Amplify.configure({
+  Auth: {
+    region: process.env["DAILP_AWS_REGION"] ?? "",
+    userPoolId: process.env["DAILP_USER_POOL"] ?? "",
+    userPoolWebClientId: process.env["DAILP_USER_POOL_CLIENT"] ?? "",
+    identityPoolId: process.env["DAILP_IDENTITY_POOL"] ?? "",
+  },
 })
 
-/** Get the currently signed in user, if there is one. */
-export function getCurrentUser(): CognitoUser | null {
-  return userPool.getCurrentUser()
+//get currently signed in user
+export async function getCurrentUser() {
+  try {
+    return await Auth.currentAuthenticatedUser()
+  } catch {
+    return null
+  }
 }
 
+//user functions
 export const UserProvider = (props: { children: any }) => {
-  const [user, setUser] = useState<CognitoUser | null>(
-    // gets the last user that logged in via this user pool
-    getCurrentUser()
-  )
+  const [user, setUser] = useState<any>(null)
 
-  function refreshToken(): Promise<CognitoUserSession | null> {
-    if (!user) return Promise.resolve(null)
-    return new Promise((res, rej) => {
-      // getSession() refreshes last authenticated user's tokens
-      user.getSession(function (err: Error, result: CognitoUserSession | null) {
-        if (err) rej(err)
-        return res(result)
-      })
-    })
-  }
+  // Initialize user state from any existing session
+  useEffect(() => {
+    const initUser = async () => {
+      try {
+        const currentUser = await Auth.currentAuthenticatedUser()
+        setUser(currentUser)
+      } catch (err) {
+        setUser(null)
+      }
+    }
+    initUser()
+  }, [])
 
+  //cases for cognito exceptions
   function resolveCognitoException(err: Error, userProvidedEmail?: string) {
-    switch (err.name) {
-      case CognitoErrorName.AliasExists:
+    const errorName = err.name
+    switch (errorName) {
+      case "AliasExistsException":
         alert(
           `An account with the email ${userProvidedEmail} already exists. Please use a different email.`
         )
         break
-      case CognitoErrorName.CodeDeliveryFailure:
+      case "CodeDeliveryFailureException":
         alert(`We could not send a confirmation code to ${
           user?.getUsername() || userProvidedEmail
         }. 
           Please make sure you have typed the correct email. 
           If this issue persists, wait and try again later.`)
         break
-      case CognitoErrorName.CodeExpired:
+      case "CodeExpiredException":
         let userResponse = confirm(
           `This confirmation code has expired. Request a new code?`
         )
@@ -79,19 +84,19 @@ export const UserProvider = (props: { children: any }) => {
           alert("Please try again and enter your email.")
         }
         break
-      case CognitoErrorName.CodeMismatch:
+      case "CodeMismatchException":
         alert(
           `The code you entered does not match the code we sent you. Please double check your email or request a new code.`
         )
         console.log("confirmation failed")
         break
-      case CognitoErrorName.InvalidPassword:
+      case "InvalidPasswordException":
         alert(err.message || JSON.stringify(err))
         break
-      case CognitoErrorName.NotAuthorized:
+      case "NotAuthorizedException":
         alert(err.message || JSON.stringify(err))
         break
-      case CognitoErrorName.PasswordResetRequired:
+      case "PasswordResetRequiredException":
         if (
           confirm(
             `You must reset your password. Would you like to reset your password now?`
@@ -100,7 +105,7 @@ export const UserProvider = (props: { children: any }) => {
           navigate("/auth/reset-password")
         }
         break
-      case CognitoErrorName.UserNotConfirmed:
+      case "UserNotConfirmedException":
         if (
           confirm(`Your account must be confirmed before you can log in.
           Would you like to confirm now?`)
@@ -108,11 +113,11 @@ export const UserProvider = (props: { children: any }) => {
           navigate("/auth/confirmation")
         }
         break
-      case CognitoErrorName.UsernameExists:
+      case "UsernameExistsException":
         alert(`An account with the email ${userProvidedEmail} already exists.
           Please sign up with a different email or try signing in with this email.`)
         break
-      case CognitoErrorName.UserNotFound:
+      case "UserNotFoundException":
         if (
           confirm(
             `Account with email ${userProvidedEmail} not found. Would you like to create an account now?`
@@ -133,153 +138,137 @@ export const UserProvider = (props: { children: any }) => {
     }
   }
 
-  // Allows persistence of the current user's session between browser refreshes.
+  // Refresh token if user exists
   useEffect(() => {
-    // if there is an authenticated user present
-    if (user != null) {
-      const promise = refreshToken().then((result) => {
-        if (!result) return null
-        const intervalLength =
-          result.getAccessToken().getExpiration() * 1000 - Date.now()
-        const handle = window.setInterval(() => refreshToken(), intervalLength)
-        return handle
-      })
-      return () => {
-        promise.then((handle) => {
-          if (handle) {
-            window.clearInterval(handle)
-          }
-        })
-      }
-    }
-
-    return
-  }, [user])
-
-  function createUser(email: string, password: string) {
-    let emailLowercase = email.toLowerCase()
-    console.log(`requesting adding user ${emailLowercase} to Cognito User Pool`)
-    let userAttributes = [{ Name: "email", Value: emailLowercase }].map(
-      (attr) => {
-        return new CognitoUserAttribute(attr)
-      }
-    )
-    userPool.signUp(
-      emailLowercase,
-      password,
-      userAttributes,
-      [],
-      async (err, result) => {
-        if (err) {
-          resolveCognitoException(err, emailLowercase)
-        } else {
-          await navigate("/auth/confirmation")
+    if (user) {
+      const checkSession = async () => {
+        try {
+          await Auth.currentSession()
+        } catch (err) {
+          console.error("Error refreshing session:", err)
         }
       }
-    )
+
+      // Check session immediately
+      checkSession()
+
+      // Set up periodic refresh
+      const REFRESH_INTERVAL = 15 * 60 * 1000 // 15 minutes
+      const intervalId = setInterval(checkSession, REFRESH_INTERVAL)
+
+      return () => clearInterval(intervalId)
+    } else {
+      console.log("no user")
+      return undefined
+    }
+  }, [user])
+
+  //function to create user
+  async function createUser(email: string, password: string) {
+    let emailLowercase = email.toLowerCase()
+    console.log(`requesting adding user ${emailLowercase} to Cognito User Pool`)
+
+    try {
+      const result = await Auth.signUp({
+        username: emailLowercase,
+        password,
+        attributes: {
+          email: emailLowercase,
+        },
+      })
+
+      console.log("Sign up success, result:", result)
+      await navigate("/auth/confirmation")
+    } catch (err: any) {
+      resolveCognitoException(err, emailLowercase)
+    }
   }
 
-  function resetConfirmationCode(email: string) {
-    let user = new CognitoUser({
-      Username: email.toLowerCase(),
-      Pool: userPool,
-    })
-
-    user.resendConfirmationCode((err, result) => {
-      if (err) {
-        resolveCognitoException(err, email)
-      } else {
-        console.log(result)
-        alert(`A new confirmation code was sent to ${user.getUsername()}`)
-      }
-    })
+  //function to reset confirmation code
+  async function resetConfirmationCode(email: string) {
+    try {
+      const result = await Auth.resendSignUp(email.toLowerCase())
+      console.log(result)
+      alert(`A new confirmation code was sent to ${email.toLowerCase()}`)
+    } catch (err: any) {
+      resolveCognitoException(err, email)
+    }
   }
 
-  function confirmUser(email: string, confirmationCode: string) {
-    let user = new CognitoUser({
-      Username: email.toLowerCase(),
-      Pool: userPool,
-    })
-
-    user.confirmRegistration(confirmationCode, false, (err, result) => {
-      if (err) {
-        console.log("confirmation failed. determining error")
-        resolveCognitoException(err, user.getUsername())
-      }
+  //function to confirm user with confirmation code
+  async function confirmUser(email: string, confirmationCode: string) {
+    try {
+      const result = await Auth.confirmSignUp(
+        email.toLowerCase(),
+        confirmationCode
+      )
       console.log("confirmation details: ", result)
       navigate("/auth/login")
-    })
+    } catch (err: any) {
+      console.log("confirmation failed. determining error")
+      resolveCognitoException(err, email.toLowerCase())
+    }
   }
 
-  function loginUser(username: string, password: string) {
-    const user = new CognitoUser({
-      Username: username.toLowerCase(),
-      Pool: userPool,
-    })
-
-    const authDetails = new AuthenticationDetails({
-      Username: username.toLowerCase(),
-      Password: password,
-    })
-
-    // logs in the user with the authentication details
-    user.authenticateUser(authDetails, {
-      onSuccess: (data: CognitoUserSession) => {
-        setUser(user)
-        navigate("/dashboard")
-      },
-      onFailure: (err: Error) => {
-        console.log("Login failed. Result: ", err)
-        resolveCognitoException(err, user.getUsername())
-      },
-      newPasswordRequired: (data: CognitoUserSession) => {
-        console.log("New password required. Result: ", data)
-        alert("New password is required")
-        navigate("auth/reset-password")
-      },
-    })
+  //login function
+  async function loginUser(username: string, password: string) {
+    try {
+      const user = await Auth.signIn(username.toLowerCase(), password)
+      console.log("DENNIS LOGGED IN YAY   ", user)
+      setUser(user)
+      navigate("/dashboard")
+    } catch (err: any) {
+      console.log("Login failed. Result: ", err)
+      resolveCognitoException(err, username.toLowerCase())
+    }
   }
 
-  function resetPassword(username: string) {
-    // instantiate a new user with the given credentials to access Cognito API methods
-    const user = new CognitoUser({
-      Username: username.toLowerCase(),
-      Pool: userPool,
-    })
-
-    user.forgotPassword({
-      onSuccess: (data: CognitoUserSession) => {
-        setUser(user) // set current user, since a reset password flow was initialized
-        console.log("Reset password successful. Result: ", data)
-        alert("Reset email successfully sent")
-      },
-      onFailure: (err: Error) => {
-        console.log("Reset password unsuccessful. Result: ", err)
-        resolveCognitoException(err, user.getUsername())
-      },
-    })
+  //reset password function
+  async function resetPassword(username: string) {
+    try {
+      const result = await Auth.forgotPassword(username.toLowerCase())
+      setUser(await getCurrentUser()) // set current user, since a reset password flow was initialized
+      console.log("Reset password successful. Result: ", result)
+      alert("Reset email successfully sent")
+    } catch (err: any) {
+      console.log("Reset password unsuccessful. Result: ", err)
+      resolveCognitoException(err, username.toLowerCase())
+    }
   }
 
-  function changePassword(verificationCode: string, newPassword: string) {
-    user?.confirmPassword(verificationCode, newPassword, {
-      async onSuccess(data: string) {
-        setUser(null) // since user successfully changed password, reset current user's state
-        await navigate("/auth/login")
+  //function to change password
+  async function changePassword(verificationCode: string, newPassword: string) {
+    if (!user) {
+      console.error("No user is currently signed in")
+      return
+    }
 
-        console.log("Change password successful. Result: ", data)
-        alert("Password successfully changed")
-      },
-      onFailure(err: Error) {
-        console.log("Change password unsuccessful. Result: ", err)
-        alert(err.message)
-      },
-    })
+    try {
+      await Auth.forgotPasswordSubmit(
+        user.username || user.getUsername(),
+        verificationCode,
+        newPassword
+      )
+
+      setUser(null) // since user successfully changed password, reset current user's state
+      await navigate("/auth/login")
+
+      console.log("Change password successful.")
+      alert("Password successfully changed")
+    } catch (err: any) {
+      console.log("Change password unsuccessful. Result: ", err)
+      alert(err.message)
+    }
   }
 
-  function signOutUser() {
-    user?.signOut(() => {
+  //sign out
+  async function signOutUser() {
+    try {
+      await Auth.signOut()
       setUser(null)
-    })
+    } catch (err) {
+      console.error("Error signing out:", err)
+    }
   }
 
   return (
@@ -288,8 +277,8 @@ export const UserProvider = (props: { children: any }) => {
         user,
         operations: {
           createUser,
-          resetConfirmationCode: resetConfirmationCode,
-          confirmUser: confirmUser,
+          resetConfirmationCode,
+          confirmUser,
           loginUser,
           resetPassword,
           changePassword,
@@ -315,16 +304,54 @@ export const useCredentials = () => {
     throw new Error("`useUser` must be within a `UserProvider`")
   }
 
-  // gets the jwt token of the currently signed in user
-  const creds = context.user?.getSignInUserSession()?.getIdToken().getJwtToken()
+  const [token, setToken] = useState<string | null>(null)
 
-  return creds ?? null
+  useEffect(() => {
+    const getToken = async () => {
+      if (context.user) {
+        try {
+          //sing out
+          const session = await Auth.currentSession()
+          setToken(session.getIdToken().getJwtToken())
+        } catch (err) {
+          console.error("Error getting token:", err)
+          setToken(null)
+        }
+      } else {
+        setToken(null)
+      }
+    }
+
+    getToken()
+  }, [context.user])
+
+  return token
 }
 
 export const useCognitoUserGroups = (): UserGroup[] => {
   const { user } = useContext(UserContext)
-  const groups: string[] =
-    user?.getSignInUserSession()?.getIdToken().payload["cognito:groups"] ?? []
+  const [groups, setGroups] = useState<string[]>([])
+
+  useEffect(() => {
+    const getGroups = async () => {
+      if (user) {
+        try {
+          const session = await Auth.currentSession()
+          const cognitoGroups =
+            session.getIdToken().payload["cognito:groups"] || []
+          setGroups(cognitoGroups)
+        } catch (err) {
+          console.error("Error getting user groups:", err)
+          setGroups([])
+        }
+      } else {
+        setGroups([])
+      }
+    }
+
+    getGroups()
+  }, [user])
+
   return groups
     .map((g) => g.toUpperCase())
     .filter((g): g is UserGroup =>
@@ -352,19 +379,27 @@ export function useUserRole(): UserRole {
 
 export const useUserId = () => {
   const { user } = useContext(UserContext)
-  const sub: string | null =
-    user?.getSignInUserSession()?.getIdToken().payload["sub"] ?? null
-  return sub
-}
+  const [userId, setUserId] = useState<string | null>(null)
 
-function getUserSessionAsync(
-  user: CognitoUser
-): Promise<CognitoUserSession | null> {
-  return new Promise((res, _rej) => {
-    user.getSession(function (_err: Error, result: CognitoUserSession | null) {
-      res(result)
-    })
-  })
+  useEffect(() => {
+    const getUserId = async () => {
+      if (user) {
+        try {
+          const session = await Auth.currentSession()
+          setUserId(session.getIdToken().payload["sub"] || null)
+        } catch (err) {
+          console.error("Error getting user ID:", err)
+          setUserId(null)
+        }
+      } else {
+        setUserId(null)
+      }
+    }
+
+    getUserId()
+  }, [user])
+
+  return userId
 }
 
 /**
@@ -372,12 +407,14 @@ function getUserSessionAsync(
  *
  * Note: You should use the `useCredentials` hook if you are writing a component.
  */
-export async function getIdToken(): Promise<CognitoIdToken | null> {
-  const user = getCurrentUser()
-  if (!user) return null
-
-  const sess = await getUserSessionAsync(user)
-  return sess?.getIdToken() ?? null
+export async function getIdToken() {
+  try {
+    const session = await Auth.currentSession()
+    return session.getIdToken()
+  } catch (err) {
+    console.error("Error getting ID token:", err)
+    return null
+  }
 }
 
 /**

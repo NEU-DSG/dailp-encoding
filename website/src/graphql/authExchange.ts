@@ -1,69 +1,89 @@
-import { authExchange } from "@urql/exchange-auth"
-import { CognitoIdToken } from "amazon-cognito-identity-js"
+import { authExchange as urqlAuthExchange } from "@urql/exchange-auth"
+import { Auth } from "aws-amplify"
 import { makeOperation } from "urql"
-import { getCurrentUser, getIdToken } from "src/auth"
-import {
-  GRAPHQL_URL_READ,
-  GRAPHQL_URL_WRITE,
-  WP_GRAPHQL_URL,
-} from "src/graphql"
 
-const secondsSinceEpoch = () => Date.now() / 1000
+// Explicitly define these constants here to avoid import issues
+export const GRAPHQL_URL_READ = `${process.env["DAILP_API_URL"] ?? ""}/graphql`
+export const GRAPHQL_URL_WRITE = `${
+  process.env["DAILP_API_URL"] ?? ""
+}/graphql-edit`
+export const WP_GRAPHQL_URL = "https://wp.dailp.northeastern.edu/graphql"
 
-const isExpired = (token: CognitoIdToken) =>
-  token.getExpiration() <= secondsSinceEpoch()
+const secondsSinceEpoch = () => Math.floor(Date.now() / 1000)
 
-export const cognitoAuthExchange = () =>
-  authExchange<{ token: CognitoIdToken }>({
-    async getAuth({ authState }) {
-      if (!authState || isExpired(authState.token)) {
-        const token = await getIdToken()
-        if (token) return { token }
+const isExpired = (token: string) => {
+  const parts = token.split(".")
+  if (parts.length !== 3) return false
+
+  const payload = parts[1]
+  if (!payload) return false
+
+  try {
+    const decoded = JSON.parse(atob(payload))
+    return secondsSinceEpoch() > (decoded.exp || 0)
+  } catch {
+    return false
+  }
+}
+
+export const authExchange = urqlAuthExchange<{ token: string }>({
+  async getAuth() {
+    try {
+      const session = await Auth.currentSession()
+      const jwtToken = session.getIdToken().getJwtToken()
+      if (typeof jwtToken === "string") {
+        return { token: jwtToken }
       }
-
       return null
-    },
+    } catch {
+      return null
+    }
+  },
+  addAuthToOperation({ authState, operation }) {
+    // Don't send tokens if we don't have them or if we are talking to Wordpress
+    if (
+      !authState ||
+      !authState.token ||
+      operation.context.url === WP_GRAPHQL_URL
+    ) {
+      return operation
+    }
 
-    willAuthError({ authState }) {
-      if (getCurrentUser()) {
-        // if we are signed in, we must have a valid token
-        return !authState || isExpired(authState.token)
-      } else if (authState) {
-        // we aren't signed in but we have a token, we need to get rid of it
-        return true
-      } else {
-        return false
-      }
-    },
-    addAuthToOperation({ authState, operation }) {
-      // We don't send tokens if we don't have them or if we are talking to Wordpress
-      if (!authState || operation.context.url === WP_GRAPHQL_URL) {
-        return operation
-      }
+    const fetchOptions =
+      typeof operation.context.fetchOptions === "function"
+        ? operation.context.fetchOptions()
+        : operation.context.fetchOptions || {}
 
-      const fetchOptions =
-        typeof operation.context.fetchOptions === "function"
-          ? operation.context.fetchOptions()
-          : operation.context.fetchOptions || {}
+    // we need to send requests with JWTs to the /graphql-edit endpoint, which
+    // has the appropriate authorizer to accept them
+    const url =
+      operation.context.url === GRAPHQL_URL_READ
+        ? GRAPHQL_URL_WRITE
+        : operation.context.url
 
-      // we need to send requests with JWTs to the /graphql-edit endpoint, which
-      // has the appropriate authorizer to accept them
-      const url =
-        operation.context.url === GRAPHQL_URL_READ
-          ? GRAPHQL_URL_WRITE
-          : operation.context.url
-
-      // get the authentication token to the headers
-      return makeOperation(operation.kind, operation, {
-        ...operation.context,
-        url,
-        fetchOptions: {
-          ...fetchOptions,
-          headers: {
-            ...fetchOptions.headers,
-            Authorization: `Bearer ${authState.token.getJwtToken()}`,
-          },
+    return makeOperation(operation.kind, operation, {
+      ...operation.context,
+      url,
+      fetchOptions: {
+        ...fetchOptions,
+        headers: {
+          ...fetchOptions.headers,
+          Authorization: `Bearer ${authState.token}`,
         },
-      })
-    },
-  })
+      },
+    })
+  },
+  willAuthError({ authState }) {
+    if (!authState || !authState.token) {
+      return true
+    }
+
+    // Try to refresh the session when checking for auth errors
+    // This doesn't block, but helps keep the token fresh
+    Auth.currentSession().catch((e) => {
+      console.error("Failed to refresh authentication", e)
+    })
+
+    return false
+  },
+})

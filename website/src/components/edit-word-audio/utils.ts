@@ -1,7 +1,5 @@
-import { CognitoIdentityClient } from "@aws-sdk/client-cognito-identity"
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3"
-import { fromCognitoIdentityPool } from "@aws-sdk/credential-provider-cognito-identity"
-import { CognitoUser } from "amazon-cognito-identity-js"
+import { Auth } from "aws-amplify"
 import { useMemo, useState } from "react"
 import { v4 } from "uuid"
 import { useUser } from "src/auth"
@@ -26,8 +24,7 @@ export function useAudioUpload(wordId: string) {
       async function (data: Blob) {
         setUploadAudioState("uploading")
         try {
-          const { resourceUrl } = await uploadContributorAudioToS3(user!, data)
-          // const resourceUrl = "https://" + prompt("url?")
+          const { resourceUrl } = await uploadContributorAudioToS3(data)
           const result = await contributeAudio({
             input: {
               wordId,
@@ -48,7 +45,7 @@ export function useAudioUpload(wordId: string) {
         setUploadAudioState("ready")
         return true
       },
-    [user, contributeAudio, wordId]
+    [contributeAudio, wordId]
   )
 
   function clearError() {
@@ -60,10 +57,7 @@ export function useAudioUpload(wordId: string) {
   return [uploadAudio, uploadAudioState, clearError] as const
 }
 
-export async function uploadContributorAudioToS3(
-  user: CognitoUser,
-  data: Blob
-) {
+export async function uploadContributorAudioToS3(data: Blob) {
   // Get the Amazon Cognito ID token for the user. 'getToken()' below.
   const REGION = process.env["DAILP_AWS_REGION"]
   // TF Stage matches infra environment names: "dev" "prod" or "uat". If TF_STAGE not found, fall back to dev
@@ -72,29 +66,26 @@ export async function uploadContributorAudioToS3(
   // let loginData = {
   //   [COGNITO_ID]: token,
   // }
+  try {
+    const credentials = await Auth.currentCredentials()
 
-  const s3Client = new S3Client({
-    region: REGION,
-    credentials: fromCognitoIdentityPool({
-      identityPoolId: process.env["DAILP_IDENTITY_POOL"]!,
-      client: new CognitoIdentityClient({
-        region: REGION,
-      }),
-      logins: {
-        [`cognito-idp.${REGION}.amazonaws.com/${process.env["DAILP_USER_POOL"]}`]:
-          user.getSignInUserSession()?.getIdToken().getJwtToken() ?? "",
-      },
-    }),
-  })
-
-  const key = `user-uploaded-audio/${v4()}`
-  await s3Client.send(
-    new PutObjectCommand({
-      Body: data,
-      Bucket: BUCKET,
-      Key: key,
+    const s3Client = new S3Client({
+      region: REGION,
+      credentials: Auth.essentialCredentials(credentials),
     })
-  )
 
-  return { resourceUrl: `https://${process.env["CF_URL"]}/${key}` }
+    const key = `user-uploaded-audio/${v4()}`
+    await s3Client.send(
+      new PutObjectCommand({
+        Body: data,
+        Bucket: BUCKET,
+        Key: key,
+      })
+    )
+
+    return { resourceUrl: `https://${process.env["CF_URL"]}/${key}` }
+  } catch (error) {
+    console.error("Error uploading to S3:", error)
+    throw error
+  }
 }
