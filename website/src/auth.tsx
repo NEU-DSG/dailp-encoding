@@ -1,13 +1,10 @@
-import {
-  Amplify,
-  Auth,
-} from "aws-amplify"
+import { Amplify, Auth } from "aws-amplify"
 import React, { createContext, useContext, useEffect, useState } from "react"
 import { navigate } from "vite-plugin-ssr/client/router"
 import { UserGroup } from "./graphql/dailp"
 
 type UserContextType = {
-  // a little dissapointed aws amplify doesnt have a type for this :(  
+  // a little dissapointed aws amplify doesnt have a type for this :(
   user: any
   operations: {
     createUser: (username: string, password: string) => void
@@ -29,7 +26,7 @@ Amplify.configure({
     userPoolId: process.env["DAILP_USER_POOL"] ?? "",
     userPoolWebClientId: process.env["DAILP_USER_POOL_CLIENT"] ?? "",
     identityPoolId: process.env["DAILP_IDENTITY_POOL"] ?? "",
-  }
+  },
 })
 
 //get currently signed in user
@@ -41,7 +38,7 @@ export async function getCurrentUser() {
   }
 }
 
-//user functions 
+//user functions
 export const UserProvider = (props: { children: any }) => {
   const [user, setUser] = useState<any>(null)
 
@@ -68,8 +65,9 @@ export const UserProvider = (props: { children: any }) => {
         )
         break
       case "CodeDeliveryFailureException":
-        alert(`We could not send a confirmation code to ${user?.getUsername() || userProvidedEmail
-          }. 
+        alert(`We could not send a confirmation code to ${
+          user?.getUsername() || userProvidedEmail
+        }. 
           Please make sure you have typed the correct email. 
           If this issue persists, wait and try again later.`)
         break
@@ -161,6 +159,7 @@ export const UserProvider = (props: { children: any }) => {
       return () => clearInterval(intervalId)
     } else {
       console.log("no user")
+      return undefined
     }
   }, [user])
 
@@ -199,7 +198,10 @@ export const UserProvider = (props: { children: any }) => {
   //function to confirm user with confirmation code
   async function confirmUser(email: string, confirmationCode: string) {
     try {
-      const result = await Auth.confirmSignUp(email.toLowerCase(), confirmationCode)
+      const result = await Auth.confirmSignUp(
+        email.toLowerCase(),
+        confirmationCode
+      )
       console.log("confirmation details: ", result)
       navigate("/auth/login")
     } catch (err: any) {
@@ -221,7 +223,7 @@ export const UserProvider = (props: { children: any }) => {
     }
   }
 
-  //reset password function 
+  //reset password function
   async function resetPassword(username: string) {
     try {
       const result = await Auth.forgotPassword(username.toLowerCase())
@@ -335,7 +337,8 @@ export const useCognitoUserGroups = (): UserGroup[] => {
       if (user) {
         try {
           const session = await Auth.currentSession()
-          const cognitoGroups = session.getIdToken().payload["cognito:groups"] || []
+          const cognitoGroups =
+            session.getIdToken().payload["cognito:groups"] || []
           setGroups(cognitoGroups)
         } catch (err) {
           console.error("Error getting user groups:", err)

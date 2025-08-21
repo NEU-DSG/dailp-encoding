@@ -1,9 +1,9 @@
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3"
+import { Auth } from "aws-amplify"
 import { useMemo, useState } from "react"
 import { v4 } from "uuid"
 import { useUser } from "src/auth"
 import * as Dailp from "../../graphql/dailp"
-import { Auth } from "aws-amplify"
 
 type UploadAudioState = "ready" | "uploading" | "error"
 
@@ -57,9 +57,7 @@ export function useAudioUpload(wordId: string) {
   return [uploadAudio, uploadAudioState, clearError] as const
 }
 
-export async function uploadContributorAudioToS3(
-  data: Blob
-) {
+export async function uploadContributorAudioToS3(data: Blob) {
   // Get the Amazon Cognito ID token for the user. 'getToken()' below.
   const REGION = process.env["DAILP_AWS_REGION"]
   // TF Stage matches infra environment names: "dev" "prod" or "uat". If TF_STAGE not found, fall back to dev
@@ -68,13 +66,13 @@ export async function uploadContributorAudioToS3(
   // let loginData = {
   //   [COGNITO_ID]: token,
   // }
-  try{
-  const credentials = await Auth.currentCredentials()
+  try {
+    const credentials = await Auth.currentCredentials()
 
-  const s3Client = new S3Client({
-    region: REGION,
-    credentials: Auth.essentialCredentials(credentials)
-  })
+    const s3Client = new S3Client({
+      region: REGION,
+      credentials: Auth.essentialCredentials(credentials),
+    })
 
     const key = `user-uploaded-audio/${v4()}`
     await s3Client.send(

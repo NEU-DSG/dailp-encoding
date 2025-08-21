@@ -4,7 +4,9 @@ import { makeOperation } from "urql"
 
 // Explicitly define these constants here to avoid import issues
 export const GRAPHQL_URL_READ = `${process.env["DAILP_API_URL"] ?? ""}/graphql`
-export const GRAPHQL_URL_WRITE = `${process.env["DAILP_API_URL"] ?? ""}/graphql-edit`
+export const GRAPHQL_URL_WRITE = `${
+  process.env["DAILP_API_URL"] ?? ""
+}/graphql-edit`
 export const WP_GRAPHQL_URL = "https://wp.dailp.northeastern.edu/graphql"
 
 const secondsSinceEpoch = () => Math.floor(Date.now() / 1000)
@@ -12,10 +14,10 @@ const secondsSinceEpoch = () => Math.floor(Date.now() / 1000)
 const isExpired = (token: string) => {
   const parts = token.split(".")
   if (parts.length !== 3) return false
-  
+
   const payload = parts[1]
   if (!payload) return false
-  
+
   try {
     const decoded = JSON.parse(atob(payload))
     return secondsSinceEpoch() > (decoded.exp || 0)
@@ -29,7 +31,7 @@ export const authExchange = urqlAuthExchange<{ token: string }>({
     try {
       const session = await Auth.currentSession()
       const jwtToken = session.getIdToken().getJwtToken()
-      if (typeof jwtToken === 'string') {
+      if (typeof jwtToken === "string") {
         return { token: jwtToken }
       }
       return null
@@ -39,7 +41,11 @@ export const authExchange = urqlAuthExchange<{ token: string }>({
   },
   addAuthToOperation({ authState, operation }) {
     // Don't send tokens if we don't have them or if we are talking to Wordpress
-    if (!authState || !authState.token || operation.context.url === WP_GRAPHQL_URL) {
+    if (
+      !authState ||
+      !authState.token ||
+      operation.context.url === WP_GRAPHQL_URL
+    ) {
       return operation
     }
 
@@ -71,13 +77,13 @@ export const authExchange = urqlAuthExchange<{ token: string }>({
     if (!authState || !authState.token) {
       return true
     }
-    
+
     // Try to refresh the session when checking for auth errors
     // This doesn't block, but helps keep the token fresh
-    Auth.currentSession().catch(e => {
+    Auth.currentSession().catch((e) => {
       console.error("Failed to refresh authentication", e)
     })
-    
+
     return false
   },
 })
