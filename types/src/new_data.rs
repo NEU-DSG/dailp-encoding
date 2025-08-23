@@ -17,10 +17,10 @@ pub struct Admin {
 /// Represents a creator of a document
 #[derive(Clone, Debug, Serialize, Deserialize, async_graphql::SimpleObject)]
 pub struct Creator {
-    /// Documents created by the creator
-    pub documents: Vec<DocumentReference>,
     // UUID for the creator
     pub id: Uuid,
+    /// Documents created by the creator
+    pub documents: Vec<DocumentReference>,
     /// Name of the creator, if known
     pub name: Option<String>,
 }
@@ -36,10 +36,10 @@ pub enum Status {
 /// Record to store a key term associated with a document
 #[derive(Clone, Debug, Serialize, Deserialize, async_graphql::SimpleObject)]
 pub struct Keyword {
-    /// Documents associated with the keyword
-    pub documents: Vec<DocumentReference>,
     /// UUID for the keyword
     pub id: Uuid,
+    /// Documents associated with the keyword
+    pub documents: Vec<DocumentReference>,
     /// Name of the keyword
     pub name: String,
     /// Status (pending, approved, rejected) of a keyword
@@ -50,10 +50,10 @@ pub struct Keyword {
 /// practices associated with a document
 #[derive(Clone, Debug, Serialize, Deserialize, async_graphql::SimpleObject)]
 pub struct SubjectHeading {
-    /// Documents associated with the subject heading
-    pub documents: Vec<DocumentReference>,
     /// UUID for the subject heading
     pub id: Uuid,
+    /// Documents associated with the subject heading
+    pub documents: Vec<DocumentReference>,
     /// Name of the subject heading
     pub name: String,
     /// Status (pending, approved, rejected) of a subject heading
@@ -63,10 +63,10 @@ pub struct SubjectHeading {
 /// Stores the physical or digital medium associated with a document
 #[derive(Clone, Debug, Serialize, Deserialize, async_graphql::SimpleObject)]
 pub struct Format {
-    /// Documents associated with the format
-    pub documents: Vec<DocumentReference>,
     /// UUID for the format
     pub id: Uuid,
+    /// Documents associated with the format
+    pub documents: Vec<DocumentReference>,
     /// Name of the format, pulling from controlled vocabulary for formats
     pub name: String,
 }
@@ -74,6 +74,8 @@ pub struct Format {
 /// Stores a language associated with a document
 #[derive(Clone, Debug, Serialize, Deserialize, async_graphql::SimpleObject)]
 pub struct Language {
+    /// UUID for the language
+    pub id: Uuid,
     /*
     Tag for the language within the DAILP system
     Could be useful for managing similar language names or extending this to
@@ -91,6 +93,8 @@ pub struct Language {
 /// Stores a spatial coverage associated with a document
 #[derive(Clone, Debug, Serialize, Deserialize, async_graphql::SimpleObject)]
 pub struct SpatialCoverage {
+    /// UUID for the place
+    pub id: Uuid,
     /*
     Tag for the spatial coverage within the DAILP system
     Could be useful for managing places with similar names or places
@@ -99,8 +103,6 @@ pub struct SpatialCoverage {
     pub dailpTag: String,
     /// Documents associated with the spatial coverage
     pub documents: Vec<DocumentReference>,
-    /// UUID for the place
-    pub id: Uuid,
     /// Name of the place
     pub name: String,
 }
@@ -109,6 +111,8 @@ pub struct SpatialCoverage {
 /// TODO: Add more fields to cover a variety of format types
 #[derive(Clone, Debug, Serialize, Deserialize, async_graphql::SimpleObject)]
 pub struct Citation {
+    /// UUID for the citation
+    pub id: Uuid,
     /// Creators of the document
     pub creators: Vec<Creator>,
     /// Format of the document being cited
