@@ -71,7 +71,9 @@ pub enum ContributorRole {
     /// Added linguistic, cultural, etc. annotations 
     Annotator, 
     /// Provided cultural context for a document
-    CulturalAdvisor 
+    CulturalAdvisor
+    /// Creator of a document (ex. an author)
+    Creator 
     /// Add or revise as needed
 }
 

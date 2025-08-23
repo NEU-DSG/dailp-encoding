@@ -14,17 +14,6 @@ pub struct Admin {
     pub user: User,
 }
 
-/// Represents a creator of a document
-#[derive(Clone, Debug, Serialize, Deserialize, async_graphql::SimpleObject)]
-pub struct Creator {
-    // UUID for the creator
-    pub id: Uuid,
-    /// Documents created by the creator
-    pub documents: Vec<DocumentReference>,
-    /// Name of the creator, if known
-    pub name: Option<String>,
-}
-
 /// Represents the status of a suggestion made by a contributor
 #[derive(async_graphql::Enum, Clone, Copy, PartialEq, Eq)]
 pub enum Status {
