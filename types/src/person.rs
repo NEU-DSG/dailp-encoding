@@ -10,7 +10,7 @@ pub struct Contributor {
     /// Full name of the contributor
     pub name: String,
     /// The role that defines most of their contributions to the associated item
-    pub role: ContributorRole,
+    pub role: Option<ContributorRole>,
 }
 impl Contributor {
     /// Create new contributor with the role "Author"
@@ -72,8 +72,8 @@ pub enum ContributorRole {
     Annotator, 
     /// Provided cultural context for a document
     CulturalAdvisor
-    /// Creator of a document (ex. an author)
-    Creator 
+    /// Creator of a document
+    Author 
     /// Add or revise as needed
 }
 
@@ -83,7 +83,7 @@ impl std::str::FromStr for ContributorRole {
     
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
-            "author" => Ok(ContributorRole::Creator),
+            "author" => Ok(ContributorRole::Author),
             "editor" => Ok(ContributorRole::Editor),
             "translator" => Ok(ContributorRole::Translator)
             other => Err(format!("Unknown contributor role: {}", other)),
@@ -95,13 +95,29 @@ impl std::str::FromStr for ContributorRole {
 impl ToString for ContributorRole {
     fn to_string(&self) -> String {
         match self {
-            // Could also keep value as "AUTHOR"
-            ContributorRole::Creator => "CREATOR".into(),
+            ContributorRole::Author => "AUTHOR".into(),
             ContributorRole::Editor => "EDITOR".into(),
             ContributorRole::Translator => "TRANSLATOR".into(),
         }
     }
 }
+
+/// Handle if parsing string into a ContibutorRole fails
+impl ContributorRole {
+    pub fn from_option_str(s: &str) -> Option<Self> {
+        s.parse::<ContributorRole>().ok()
+    }
+}
+
+// Handle if contributor has no role (ex. role hasn't been assigned yet)
+impl Option(ContributorRole> {
+    pub fn to_option_string(&self) -> Option<String> {
+        self.as_ref().map(|role| role.to_string())
+    }
+}
+
+/// Handle conversion from string if ContributorRole is None
+
 
 /// Attribution for a particular source, whether an institution or an individual.
 /// Most commonly, this will represent the details of a library or archive that
