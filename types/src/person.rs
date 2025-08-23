@@ -77,6 +77,32 @@ pub enum ContributorRole {
     /// Add or revise as needed
 }
 
+/// Draft of function for converting a string to a ContributorRole
+impl std::str::FromStr for ContributorRole {
+    type Err = String;
+    
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_lowercase().as_str() {
+            "author" => Ok(ContributorRole::Creator),
+            "editor" => Ok(ContributorRole::Editor),
+            "translator" => Ok(ContributorRole::Translator)
+            other => Err(format!("Unknown contributor role: {}", other)),
+        }
+    }
+}
+
+/// Draft of function for converting a ContributorRole to a string
+impl ToString for ContributorRole {
+    fn to_string(&self) -> String {
+        match self {
+            // Could also keep value as "AUTHOR"
+            ContributorRole::Creator => "CREATOR".into(),
+            ContributorRole::Editor => "EDITOR".into(),
+            ContributorRole::Translator => "TRANSLATOR".into(),
+        }
+    }
+}
+
 /// Attribution for a particular source, whether an institution or an individual.
 /// Most commonly, this will represent the details of a library or archive that
 /// houses documents used elsewhere.
