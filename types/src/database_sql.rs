@@ -2003,11 +2003,15 @@ impl Loader<ContributorsForDocument> for Database {
         Ok(items
             .into_iter()
             .map(|x| {
-                (
+                (  
                     ContributorsForDocument(x.document_id),
                     Contributor {
                         name: x.full_name,
-                        role: x.contribution_role,
+                        role: x
+                            .contribution_role
+                            .to_lowercase()
+                            .parse::<ContributorRole>()
+                            .ok(),
                     },
                 )
             })
