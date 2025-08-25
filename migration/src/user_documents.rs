@@ -14,6 +14,5 @@ pub async fn create_user_documents_collection(db: &Database) -> anyhow::Result<(
 
     db.upsert_collection(&user_documents_collection).await?;
 
-    println!("User documents collection created successfully!");
     Ok(())
 }
