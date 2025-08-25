@@ -183,8 +183,7 @@ export type AnnotatedFormSegmentsArgs = {
 export type AnnotatedFormUpdate = {
   /** Possible update to commentary */
   readonly commentary: InputMaybe<Scalars["String"]>
-  /** Possible update to English gloss */
-  readonly englishGloss: InputMaybe<ReadonlyArray<Scalars["String"]>>
+  readonly englishGloss: InputMaybe<Scalars["String"]>
   /** Unique identifier of the form */
   readonly id: Scalars["UUID"]
   /** Possible update to normalized source content */
@@ -193,8 +192,6 @@ export type AnnotatedFormUpdate = {
   readonly segments: InputMaybe<ReadonlyArray<MorphemeSegmentUpdate>>
   /** Possible update to source content */
   readonly source: InputMaybe<Scalars["String"]>
-  /** POssible update to english gloss  */
-  readonly englishGloss: InputMaybe<ReadonlyArray<string>>
 }
 
 /** Element within a spreadsheet before being transformed into a full document. */
