@@ -572,7 +572,6 @@ impl Database {
         //note, we are only expecting one english_gloss, turning into vec bc legacy type for english_gloss is vec
         let english_gloss = word.english_gloss.into_vec();
 
-
         let document_id = query_file!(
             "queries/update_word.sql",
             word.id,
