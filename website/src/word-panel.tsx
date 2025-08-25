@@ -4,8 +4,7 @@ import {
   AiFillCaretUp,
   AiFillSound,
 } from "react-icons/ai/index"
-import { IoIosBookmarks } from "react-icons/io"
-import { IoEllipsisHorizontalCircle } from "react-icons/io5/index"
+import { IoEllipsisHorizontalCircle, IoBookmarks } from "react-icons/io5/index"
 import {
   MdNotes,
   MdOutlineComment,
@@ -171,7 +170,7 @@ export const WordPanel = (p: {
           title={"English Gloss"}
           content={englishGlossContent}
           icon={
-            <IoIosBookmarks
+            <IoBookmarks
               size={24}
               className={css.wordPanelButton.colpleft}
             />
