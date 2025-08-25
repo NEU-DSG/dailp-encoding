@@ -35,6 +35,15 @@ export type Scalars = {
   UUID: any
 }
 
+export type AddDocumentPayload = {
+  readonly __typename?: "AddDocumentPayload"
+  readonly chapterSlug: Scalars["String"]
+  readonly collectionSlug: Scalars["String"]
+  readonly id: Scalars["UUID"]
+  readonly slug: Scalars["String"]
+  readonly title: Scalars["String"]
+}
+
 export type AnnotatedDoc = {
   readonly __typename?: "AnnotatedDoc"
   /** The audio recording resource for this entire document */
@@ -374,6 +383,18 @@ export type ContributorDetails = {
   readonly fullName: Scalars["String"]
 }
 
+export type CreateDocumentFromFormInput = {
+  readonly collectionId: Scalars["UUID"]
+  readonly documentName: Scalars["String"]
+  readonly englishTranslationLines: ReadonlyArray<
+    ReadonlyArray<Scalars["String"]>
+  >
+  readonly rawTextLines: ReadonlyArray<ReadonlyArray<Scalars["String"]>>
+  readonly sourceName: Scalars["String"]
+  readonly sourceUrl: Scalars["String"]
+  readonly unresolvedWords: ReadonlyArray<Scalars["String"]>
+}
+
 /** Request to update if a piece of audio should be included in an edited collection */
 export type CurateWordAudioInput = {
   /** Audio to include/exclude */
@@ -434,6 +455,8 @@ export type DocumentCollection = {
    * pass that to the dataloader below.
    */
   readonly documents: ReadonlyArray<DocumentReference>
+  /** Database ID for this collection */
+  readonly id: Maybe<Scalars["UUID"]>
   /** Full name of this collection */
   readonly name: Scalars["String"]
   /** URL-ready slug for this collection, generated from the name */
@@ -652,6 +675,8 @@ export type Mutation = {
   readonly __typename?: "Mutation"
   /** Adds a bookmark to the user's list of bookmarks. */
   readonly addBookmark: AnnotatedDoc
+  /** Minimal mutation to add a document with only essential fields */
+  readonly addDocument: AddDocumentPayload
   /**
    * Mutation must have at least one visible field for introspection to work
    * correctly, so we just provide an API version which might be useful in
@@ -692,6 +717,10 @@ export type Mutation = {
 
 export type MutationAddBookmarkArgs = {
   documentId: Scalars["UUID"]
+}
+
+export type MutationAddDocumentArgs = {
+  input: CreateDocumentFromFormInput
 }
 
 export type MutationAttachAudioToWordArgs = {
@@ -2527,20 +2556,14 @@ export type DeleteCommentMutation = { readonly __typename?: "Mutation" } & {
         })
 }
 
-export type UpdateUserMutationVariables = Exact<{
-  user: UserUpdate
+export type AddDocumentMutationVariables = Exact<{
+  input: CreateDocumentFromFormInput
 }>
 
-export type UpdateUserMutation = { readonly __typename?: "Mutation" } & {
-  readonly updateUser: { readonly __typename?: "User" } & Pick<
-    User,
-    | "id"
-    | "displayName"
-    | "avatarUrl"
-    | "bio"
-    | "organization"
-    | "location"
-    | "role"
+export type AddDocumentMutation = { readonly __typename?: "Mutation" } & {
+  readonly addDocument: { readonly __typename?: "AddDocumentPayload" } & Pick<
+    AddDocumentPayload,
+    "id" | "title" | "slug" | "collectionSlug" | "chapterSlug"
   >
 }
 
@@ -2563,6 +2586,17 @@ export type UserByIdQuery = { readonly __typename?: "Query" } & {
         { readonly __typename?: "Date" } & Pick<Date, "day" | "month" | "year">
       >
     }
+}
+
+export type AllCollectionsQueryVariables = Exact<{ [key: string]: never }>
+
+export type AllCollectionsQuery = { readonly __typename?: "Query" } & {
+  readonly allCollections: ReadonlyArray<
+    { readonly __typename?: "DocumentCollection" } & Pick<
+      DocumentCollection,
+      "name" | "slug" | "id"
+    >
+  >
 }
 
 export const DocFormFieldsFragmentDoc = gql`
@@ -3577,23 +3611,21 @@ export function useDeleteCommentMutation() {
     DeleteCommentMutationVariables
   >(DeleteCommentDocument)
 }
-export const UpdateUserDocument = gql`
-  mutation updateUser($user: UserUpdate!) {
-    updateUser(user: $user) {
+export const AddDocumentDocument = gql`
+  mutation AddDocument($input: CreateDocumentFromFormInput!) {
+    addDocument(input: $input) {
       id
-      displayName
-      avatarUrl
-      bio
-      organization
-      location
-      role
+      title
+      slug
+      collectionSlug
+      chapterSlug
     }
   }
 `
 
-export function useUpdateUserMutation() {
-  return Urql.useMutation<UpdateUserMutation, UpdateUserMutationVariables>(
-    UpdateUserDocument
+export function useAddDocumentMutation() {
+  return Urql.useMutation<AddDocumentMutation, AddDocumentMutationVariables>(
+    AddDocumentDocument
   )
 }
 export const UserByIdDocument = gql`
@@ -3620,6 +3652,24 @@ export function useUserByIdQuery(
 ) {
   return Urql.useQuery<UserByIdQuery, UserByIdQueryVariables>({
     query: UserByIdDocument,
+    ...options,
+  })
+}
+export const AllCollectionsDocument = gql`
+  query AllCollections {
+    allCollections {
+      name
+      slug
+      id
+    }
+  }
+`
+
+export function useAllCollectionsQuery(
+  options?: Omit<Urql.UseQueryArgs<AllCollectionsQueryVariables>, "query">
+) {
+  return Urql.useQuery<AllCollectionsQuery, AllCollectionsQueryVariables>({
+    query: AllCollectionsDocument,
     ...options,
   })
 }

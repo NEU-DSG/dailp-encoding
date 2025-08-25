@@ -2,7 +2,7 @@
 
 use auth::UserGroup;
 use chrono::{NaiveDate, NaiveDateTime};
-use sqlx::postgres::types::PgLTree;
+use sqlx::postgres::types::{PgLTree, PgRange};
 use std::ops::Bound;
 use std::str::FromStr;
 use user::UserUpdate;
@@ -19,10 +19,7 @@ use {
     async_graphql::InputType,
     async_trait::async_trait,
     itertools::Itertools,
-    sqlx::{
-        postgres::{types::PgRange, PgPoolOptions},
-        query_file, query_file_as, query_file_scalar, Acquire,
-    },
+    sqlx::{postgres::PgPoolOptions, query_file, query_file_as, query_file_scalar, Acquire},
     std::collections::HashMap,
     std::sync::Arc,
     std::time::Duration,
@@ -1041,13 +1038,13 @@ impl Database {
                         .sum();
                     let char_range: PgRange<_> =
                         (starting_char_index..starting_char_index + total_chars as i64).into();
-                    query_file!(
+                    let _paragraph_id = query_file_scalar!(
                         "queries/insert_paragraph.sql",
                         page_id,
                         char_range,
                         paragraph.translation.unwrap_or_default()
                     )
-                    .execute(&mut *tx)
+                    .fetch_one(&mut *tx)
                     .await?;
 
                     for element in paragraph.source {
@@ -1106,6 +1103,7 @@ impl Database {
         Ok(vec![DocumentCollection {
             slug: item.slug,
             title: item.title,
+            id: None,
         }])
     }
 
@@ -1119,6 +1117,7 @@ impl Database {
             .map(|chapter| DocumentCollection {
                 slug: chapter.slug,
                 title: chapter.title,
+                id: None,
             })
             .collect())
     }
@@ -1506,7 +1505,24 @@ impl Database {
         Ok(DocumentCollection {
             slug: collection.slug,
             title: collection.title,
+            id: Some(collection.id),
         })
+    }
+
+    pub async fn document_group_id_by_slug(&self, slug: &str) -> Result<Option<Uuid>> {
+        Ok(
+            query_file_scalar!("queries/document_group_id_by_slug.sql", slug)
+                .fetch_optional(&self.client)
+                .await?,
+        )
+    }
+
+    /// Get collection slug by collection ID
+    pub async fn collection_slug_by_id(&self, collection_id: Uuid) -> Result<Option<String>> {
+        let result = query_file!("queries/edited_collection_by_id.sql", collection_id)
+            .fetch_optional(&self.client)
+            .await?;
+        Ok(result.map(|r| r.slug))
     }
 
     pub async fn chapter(
@@ -1514,9 +1530,42 @@ impl Database {
         collection_slug: String,
         chapter_slug: String,
     ) -> Result<Option<CollectionChapter>> {
+        // Try the original slugs first
         let chapter = query_file!(
             "queries/chapter_contents.sql",
             collection_slug,
+            chapter_slug
+        )
+        .fetch_optional(&self.client)
+        .await?;
+
+        // If found, return it
+        if let Some(chapter_data) = chapter {
+            return Ok(Some(CollectionChapter {
+                id: chapter_data.id,
+                path: chapter_data
+                    .chapter_path
+                    .into_iter()
+                    .map(|s| (*s).into())
+                    .collect(),
+                index_in_parent: chapter_data.index_in_parent,
+                title: chapter_data.title,
+                document_id: chapter_data.document_id.map(DocumentId),
+                wordpress_id: chapter_data.wordpress_id,
+                section: chapter_data.section,
+            }));
+        }
+
+        // If not found, try with underscore/hyphen conversion for collection_slug
+        let alternative_collection_slug = if collection_slug.contains('-') {
+            collection_slug.replace("-", "_")
+        } else {
+            collection_slug.replace("_", "-")
+        };
+
+        let chapter = query_file!(
+            "queries/chapter_contents.sql",
+            alternative_collection_slug,
             chapter_slug
         )
         .fetch_optional(&self.client)
@@ -1568,6 +1617,217 @@ impl Database {
                     .collect(),
             ))
         }
+    }
+
+    /// Insert a contributor attribution for a chapter
+    pub async fn insert_chapter_contributor_attribution(
+        &self,
+        chapter_id: &uuid::Uuid,
+        contributor_id: &uuid::Uuid,
+        contribution_role: &str,
+    ) -> Result<()> {
+        query_file!(
+            "queries/insert_chapter_contributor_attribution.sql",
+            chapter_id,
+            contributor_id,
+            contribution_role
+        )
+        .execute(&self.client)
+        .await?;
+        Ok(())
+    }
+
+    /// Insert a document into an edited collection and create a new chapter for it
+    /// Returns (document_id, chapter_id)
+    pub async fn insert_document_into_edited_collection(
+        &self,
+        document: AnnotatedDoc,
+        _collection_id: Uuid,
+    ) -> Result<(DocumentId, Uuid)> {
+        let mut tx = self.client.begin().await?;
+        let meta = &document.meta;
+        let next_index = -1;
+
+        // All user-created documents go to the user_documents document group
+        let user_documents_group_id = match self.document_group_id_by_slug("user_documents").await?
+        {
+            Some(id) => id,
+            None => {
+                // Create the user_documents document_group if it doesn't exist
+                query_file_scalar!(
+                    "queries/insert_document_group.sql",
+                    "user_documents",
+                    "User-Created Documents"
+                )
+                .fetch_one(&mut *tx)
+                .await?
+            }
+        };
+
+        // Insert the document using the user_documents document group ID
+        let document_uuid = query_file_scalar!(
+            "queries/insert_document_at_end_of_collection.sql",
+            meta.short_name,
+            meta.title,
+            meta.is_reference,
+            &meta.date as &Option<Date>,
+            user_documents_group_id,
+            next_index
+        )
+        .fetch_one(&mut *tx)
+        .await?;
+
+        // Attribute contributors to the document
+        {
+            let (name, doc, role): (Vec<_>, Vec<_>, Vec<_>) = meta
+                .contributors
+                .iter()
+                .map(|contributor| {
+                    (
+                        contributor.name.clone(),
+                        document_uuid,
+                        contributor.role.clone(),
+                    )
+                })
+                .multiunzip();
+            if !name.is_empty() {
+                query_file!(
+                    "queries/upsert_document_contributors.sql",
+                    &*name,
+                    &*doc,
+                    &*role
+                )
+                .execute(&mut *tx)
+                .await?;
+            }
+        }
+
+        // Create a new chapter for this document in the user_documents collection
+        let chapter_slug = crate::slugs::slugify_ltree(&meta.short_name);
+        let chapter_path = PgLTree::from_str(&format!("user_documents.{}", chapter_slug))?;
+
+        let chapter_id = query_file_scalar!(
+            "queries/insert_chapter_with_document_id.sql",
+            meta.title, // Use document title as chapter title
+            document_uuid,
+            None::<i64>, // wordpress_id
+            0i64,        // index_in_parent (we can increment this later if needed)
+            chapter_path,
+            crate::CollectionSection::Body as crate::CollectionSection
+        )
+        .fetch_one(&mut *tx)
+        .await?;
+
+        // Attribute contributors to the new chapter
+        for contributor in &meta.contributors {
+            query_file!("queries/upsert_contributor.sql", &contributor.name)
+                .execute(&mut *tx)
+                .await?;
+            let contributor_id =
+                query_file_scalar!("queries/contributor_id_by_name.sql", &contributor.name)
+                    .fetch_one(&mut *tx)
+                    .await?;
+            query_file!(
+                "queries/insert_chapter_contributor_attribution.sql",
+                &chapter_id,
+                &contributor_id,
+                &contributor.role
+            )
+            .execute(&mut *tx)
+            .await?;
+        }
+
+        // Insert document contents (pages, paragraphs, words)
+        let document_id = DocumentId(document_uuid);
+        let document_with_updated_id = AnnotatedDoc {
+            meta: DocumentMetadata {
+                id: document_id,
+                ..document.meta.clone()
+            },
+            segments: document.segments.clone(),
+        };
+
+        query_file!("queries/delete_document_pages.sql", document_uuid)
+            .execute(&mut *tx)
+            .await?;
+
+        if let Some(pages) = document_with_updated_id.segments {
+            let mut starting_char_index = 0;
+            for (page_index, page) in pages.into_iter().enumerate() {
+                let page_id = query_file_scalar!(
+                    "queries/upsert_document_page.sql",
+                    document_uuid,
+                    page_index as i64,
+                    document_with_updated_id
+                        .meta
+                        .page_images
+                        .as_ref()
+                        .map(|imgs| imgs.source.0),
+                    document_with_updated_id
+                        .meta
+                        .page_images
+                        .as_ref()
+                        .and_then(|imgs| imgs.ids.get(page_index))
+                )
+                .fetch_one(&mut *tx)
+                .await?;
+
+                for section in page.paragraphs {
+                    // Calculate the actual character range for this paragraph
+                    let total_chars: usize = section
+                        .source
+                        .iter()
+                        .map(|e| {
+                            if let AnnotatedSeg::Word(word) = e {
+                                word.source.chars().count()
+                            } else {
+                                0
+                            }
+                        })
+                        .sum();
+
+                    let char_range: PgRange<i64> =
+                        (starting_char_index..starting_char_index + total_chars as i64).into();
+
+                    let _paragraph_id = query_file_scalar!(
+                        "queries/insert_paragraph.sql",
+                        page_id,
+                        char_range,
+                        section.translation.unwrap_or_default()
+                    )
+                    .fetch_one(&mut *tx)
+                    .await?;
+
+                    // Insert words with proper page_id and character ranges
+                    let mut word_char_index = starting_char_index;
+                    for word_seg in section.source {
+                        match word_seg {
+                            AnnotatedSeg::Word(word) => {
+                                let word_len = word.source.chars().count() as i64;
+                                let word_char_range: PgRange<i64> =
+                                    (word_char_index..word_char_index + word_len).into();
+
+                                self.insert_word(
+                                    &mut tx,
+                                    word,
+                                    document_uuid,
+                                    Some(page_id),
+                                    Some(word_char_range),
+                                )
+                                .await?;
+
+                                word_char_index += word_len;
+                            }
+                            _ => {}
+                        }
+                    }
+                    starting_char_index += total_chars as i64;
+                }
+            }
+        }
+
+        tx.commit().await?;
+        Ok((document_id, chapter_id))
     }
 }
 
@@ -1882,14 +2142,14 @@ impl Loader<WordsInParagraph> for Database {
                     WordsInParagraph(w.paragraph_id),
                     AnnotatedSeg::Word(
                         (BasicWord {
-                            id: w.id,
-                            source_text: w.source_text,
+                            id: Some(w.id),
+                            source_text: Some(w.source_text),
                             simple_phonetics: w.simple_phonetics,
                             phonemic: w.phonemic,
                             english_gloss: w.english_gloss,
                             commentary: w.commentary,
-                            document_id: w.document_id,
-                            index_in_document: w.index_in_document,
+                            document_id: Some(w.document_id),
+                            index_in_document: Some(w.index_in_document),
                             page_number: w.page_number,
                             audio_url: w.audio_url,
                             audio_slice_id: w.audio_slice_id,
@@ -1897,8 +2157,9 @@ impl Loader<WordsInParagraph> for Database {
                             audio_recorded_at: w.audio_recorded_at,
                             audio_recorded_by: w.audio_recorded_by,
                             audio_recorded_by_name: w.audio_recorded_by_name,
-                            include_audio_in_edited_collection: w
-                                .include_audio_in_edited_collection,
+                            include_audio_in_edited_collection: Some(
+                                w.include_audio_in_edited_collection,
+                            ),
                             audio_edited_by: w.audio_edited_by,
                             audio_edited_by_name: w.audio_edited_by_name,
                         })
@@ -2116,14 +2377,14 @@ impl From<BasicAudioSlice> for AudioSlice {
 /// A struct representing a Word/AnnotatedForm that can be easily pulled from
 /// the database
 struct BasicWord {
-    id: Uuid,
-    source_text: String,
+    id: Option<Uuid>,
+    source_text: Option<String>,
     simple_phonetics: Option<String>,
     phonemic: Option<String>,
     english_gloss: Option<String>,
     commentary: Option<String>,
-    document_id: Uuid,
-    index_in_document: i64,
+    document_id: Option<Uuid>,
+    index_in_document: Option<i64>,
     page_number: Option<String>,
     audio_url: Option<String>,
     audio_slice_id: Option<Uuid>,
@@ -2131,7 +2392,7 @@ struct BasicWord {
     audio_recorded_at: Option<NaiveDate>,
     audio_recorded_by: Option<Uuid>,
     audio_recorded_by_name: Option<String>,
-    include_audio_in_edited_collection: bool,
+    include_audio_in_edited_collection: Option<bool>,
     audio_edited_by: Option<Uuid>,
     audio_edited_by_name: Option<String>,
 }
@@ -2145,7 +2406,7 @@ impl BasicWord {
             recorded_at: self.audio_recorded_at,
             recorded_by: self.audio_recorded_by,
             recorded_by_name: self.audio_recorded_by_name.to_owned(),
-            include_in_edited_collection: self.include_audio_in_edited_collection,
+            include_in_edited_collection: self.include_audio_in_edited_collection.unwrap_or(false),
             edited_by: self.audio_edited_by,
             edited_by_name: self.audio_edited_by_name.to_owned(),
         })
@@ -2157,8 +2418,8 @@ impl From<BasicWord> for AnnotatedForm {
         // up here because we need to borrow the basic type before we start moving things
         let ingested_audio_track = w.audio_slice().map(AudioSlice::from);
         Self {
-            id: Some(w.id),
-            source: w.source_text,
+            id: w.id,
+            source: w.source_text.unwrap_or_default(),
             normalized_source: None,
             simple_phonetics: w.simple_phonetics,
             phonemic: w.phonemic,
@@ -2171,9 +2432,9 @@ impl From<BasicWord> for AnnotatedForm {
             line_break: None,
             page_break: None,
             position: PositionInDocument::new(
-                DocumentId(w.document_id),
+                DocumentId(w.document_id.unwrap_or_default()),
                 w.page_number.unwrap_or_default(),
-                w.index_in_document,
+                w.index_in_document.unwrap_or_default(),
             ),
         }
     }

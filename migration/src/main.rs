@@ -9,6 +9,7 @@ mod lexical;
 mod spreadsheets;
 mod tags;
 mod translations;
+mod user_documents;
 
 use anyhow::Result;
 use dailp::{Database, LexicalConnection, SheetResult, Uuid};
@@ -45,11 +46,14 @@ async fn main() -> Result<()> {
 
     migrate_data(&db).await?;
 
-    // println!("Migrating connections...");
-    // connections::migrate_connections(&db).await?;
+    //println!("Migrating connections...");
+    //connections::migrate_connections(&db).await?;
 
     println!("Migrating collections...");
     edited_collection::migrate_edited_collection(&db).await?;
+
+    println!("Creating user documents collection...");
+    user_documents::create_user_documents_collection(&db).await?;
 
     Ok(())
 }
