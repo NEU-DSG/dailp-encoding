@@ -96,8 +96,9 @@ impl ToString for ContributorRole {
     fn to_string(&self) -> String {
         match self {
             ContributorRole::Author => "AUTHOR".into(),
-            ContributorRole::Editor => "EDITOR".into(),
+            CoontributorRole::Editor => "EDITOR".into(),
             ContributorRole::Translator => "TRANSLATOR".into(),
+            // Add more as needed
         }
     }
 }
@@ -115,9 +116,6 @@ impl Option(ContributorRole> {
         self.as_ref().map(|role| role.to_string())
     }
 }
-
-/// Handle conversion from string if ContributorRole is None
-
 
 /// Attribution for a particular source, whether an institution or an individual.
 /// Most commonly, this will represent the details of a library or archive that
