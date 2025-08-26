@@ -677,6 +677,18 @@ mutation DeleteComment($commentId: DeleteCommentInput!) {
   }
 }
 
+mutation UpdateUser($user: UserUpdate!) {
+  updateUser(user: $user) {
+    id
+    displayName
+    avatarUrl
+    bio
+    organization
+    location
+    role
+  }
+}
+
 mutation AddDocument($input: CreateDocumentFromFormInput!) {
   addDocument(input: $input) {
     id

@@ -2556,6 +2556,23 @@ export type DeleteCommentMutation = { readonly __typename?: "Mutation" } & {
         })
 }
 
+export type UpdateUserMutationVariables = Exact<{
+  user: UserUpdate
+}>
+
+export type UpdateUserMutation = { readonly __typename?: "Mutation" } & {
+  readonly updateUser: { readonly __typename?: "User" } & Pick<
+    User,
+    | "id"
+    | "displayName"
+    | "avatarUrl"
+    | "bio"
+    | "organization"
+    | "location"
+    | "role"
+  >
+}
+
 export type AddDocumentMutationVariables = Exact<{
   input: CreateDocumentFromFormInput
 }>
@@ -3610,6 +3627,25 @@ export function useDeleteCommentMutation() {
     DeleteCommentMutation,
     DeleteCommentMutationVariables
   >(DeleteCommentDocument)
+}
+export const UpdateUserDocument = gql`
+  mutation UpdateUser($user: UserUpdate!) {
+    updateUser(user: $user) {
+      id
+      displayName
+      avatarUrl
+      bio
+      organization
+      location
+      role
+    }
+  }
+`
+
+export function useUpdateUserMutation() {
+  return Urql.useMutation<UpdateUserMutation, UpdateUserMutationVariables>(
+    UpdateUserDocument
+  )
 }
 export const AddDocumentDocument = gql`
   mutation AddDocument($input: CreateDocumentFromFormInput!) {

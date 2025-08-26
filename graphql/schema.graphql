@@ -553,13 +553,13 @@ input DeleteContributorAttribution {
 
 type DocumentCollection {
 	"""
-	Full name of this collection
-	"""
-	name: String!
-	"""
 	Database ID for this collection
 	"""
 	id: UUID
+	"""
+	Full name of this collection
+	"""
+	name: String!
 	"""
 	URL-ready slug for this collection, generated from the name
 	"""
