@@ -127,17 +127,17 @@ impl AvatarUploader {
 
         Ok(s3_key) // Return the S3 key (not the full URL)
     }
+}
 
-    /// Convert S3 key to CloudFront URL, same formatting as in audio.rs AudioRes::new
-    pub fn key_to_url(s3_key: &str) -> Result<String, anyhow::Error> {
-        let cf_domain = std::env::var("CF_URL")?;
-        let url = if s3_key.starts_with('/') {
-            format!("https://{}{}", cf_domain, s3_key)
-        } else {
-            format!("https://{}/{}", cf_domain, s3_key)
-        };
-        Ok(url)
-    }
+/// Convert S3 key to CloudFront URL, same formatting as in audio.rs AudioRes::new
+pub fn key_to_url(s3_key: &str) -> Result<String, anyhow::Error> {
+    let cf_domain = std::env::var("CF_URL")?;
+    let url = if s3_key.starts_with('/') {
+        format!("https://{}{}", cf_domain, s3_key)
+    } else {
+        format!("https://{}/{}", cf_domain, s3_key)
+    };
+    Ok(url)
 }
 
 /// Input object for uploading avatar

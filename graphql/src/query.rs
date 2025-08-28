@@ -4,7 +4,7 @@ use dailp::{
     auth::{AuthGuard, GroupGuard, UserGroup, UserInfo},
     comment::{CommentParent, CommentUpdate, DeleteCommentInput, PostCommentInput},
     slugify_ltree,
-    user::{User, UserUpdate},
+    user::{key_to_url, User, UserUpdate},
     AnnotatedForm, AttachAudioToWordInput, CollectionChapter, CurateWordAudioInput,
     DeleteContributorAttribution, DocumentMetadataUpdate, DocumentParagraph,
     UpdateContributorAttribution, Uuid,
@@ -721,11 +721,7 @@ impl Mutation {
         let cf_domain = std::env::var("CF_URL")
             .map_err(|_| anyhow::format_err!("CF_URL environment variable not set"))?;
 
-        let avatar_url = if s3_key.starts_with('/') {
-            format!("https://{}{}", cf_domain, s3_key)
-        } else {
-            format!("https://{}/{}", cf_domain, s3_key)
-        };
+        let avatar_url = key_to_url(&s3_key);
 
         Ok(avatar_url) // Return the CloudFront URL
     }
