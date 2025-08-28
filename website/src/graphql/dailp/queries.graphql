@@ -705,3 +705,7 @@ query UserById($id: UUID!) {
     role
   }
 }
+
+mutation uploadAvatar($input: UploadAvatarInput!) {
+  uploadAvatar(input: $input)
+}

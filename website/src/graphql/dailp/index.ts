@@ -688,6 +688,8 @@ export type Mutation = {
   /** Updates a dailp_user's information */
   readonly updateUser: User
   readonly updateWord: AnnotatedForm
+  /** GraphQL mutation for avatar upload */
+  readonly uploadAvatar: Scalars["String"]
 }
 
 export type MutationAddBookmarkArgs = {
@@ -748,6 +750,10 @@ export type MutationUpdateUserArgs = {
 
 export type MutationUpdateWordArgs = {
   word: AnnotatedFormUpdate
+}
+
+export type MutationUploadAvatarArgs = {
+  input: UploadAvatarInput
 }
 
 /**
@@ -975,6 +981,14 @@ export type UpdateContributorAttribution = {
   readonly contributorId: Scalars["UUID"]
   /** The document to perfom this operation on */
   readonly documentId: Scalars["UUID"]
+}
+
+/** Input object for uploading avatar */
+export type UploadAvatarInput = {
+  /** Original filename to extract extension */
+  readonly filename: Scalars["String"]
+  /** Base64-encoded image data */
+  readonly imageData: Scalars["String"]
 }
 
 /** A user record, for a contributor, editor, etc. */
@@ -2565,6 +2579,15 @@ export type UserByIdQuery = { readonly __typename?: "Query" } & {
     }
 }
 
+export type UploadAvatarMutationVariables = Exact<{
+  input: UploadAvatarInput
+}>
+
+export type UploadAvatarMutation = { readonly __typename?: "Mutation" } & Pick<
+  Mutation,
+  "uploadAvatar"
+>
+
 export const DocFormFieldsFragmentDoc = gql`
   fragment DocFormFields on AnnotatedDoc {
     id
@@ -3622,4 +3645,15 @@ export function useUserByIdQuery(
     query: UserByIdDocument,
     ...options,
   })
+}
+export const UploadAvatarDocument = gql`
+  mutation uploadAvatar($input: UploadAvatarInput!) {
+    uploadAvatar(input: $input)
+  }
+`
+
+export function useUploadAvatarMutation() {
+  return Urql.useMutation<UploadAvatarMutation, UploadAvatarMutationVariables>(
+    UploadAvatarDocument
+  )
 }
