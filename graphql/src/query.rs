@@ -4,13 +4,15 @@ use dailp::{
     auth::{AuthGuard, GroupGuard, UserGroup, UserInfo},
     comment::{CommentParent, CommentUpdate, DeleteCommentInput, PostCommentInput},
     slugify_ltree,
-    user::{User, UserUpdate},
+    user::{key_to_url, User, UserUpdate},
     AnnotatedForm, AttachAudioToWordInput, CollectionChapter, CurateWordAudioInput,
     DeleteContributorAttribution, DocumentMetadataUpdate, DocumentParagraph,
     UpdateContributorAttribution, Uuid,
 };
 use itertools::Itertools;
 
+use dailp::user::{AvatarUploader, UploadAvatarInput};
+use std::path::Path;
 use {
     dailp::async_graphql::{self, dataloader::DataLoader, Context, FieldResult},
     dailp::{
@@ -18,7 +20,6 @@ use {
         MorphemeId, MorphemeReference, MorphemeTag, ParagraphUpdate, WordsInDocument,
     },
 };
-
 /// Home for all read-only queries
 pub struct Query;
 
@@ -667,6 +668,62 @@ impl Mutation {
             .loader()
             .update_document_metadata(document)
             .await?)
+    }
+
+    /// GraphQL mutation for avatar upload
+    #[graphql(guard = "AuthGuard")]
+    async fn upload_avatar(
+        &self,
+        context: &Context<'_>,
+        input: UploadAvatarInput,
+    ) -> FieldResult<String> {
+        let current_user = context
+            .data_opt::<UserInfo>()
+            .ok_or_else(|| anyhow::format_err!("User is not signed in"))?;
+
+        // Decode base64 image data
+        let file_data = base64::decode(&input.image_data)
+            .map_err(|_| anyhow::format_err!("Invalid base64 data"))?;
+
+        // Validate file size (5MB limit)
+        if file_data.len() > 5 * 1024 * 1024 {
+            return Err(anyhow::format_err!("File too large (max 5MB)").into());
+        }
+
+        // Extract and validate file extension
+        let extension = Path::new(&input.filename)
+            .extension()
+            .and_then(|ext| ext.to_str())
+            .unwrap_or("jpg")
+            .to_lowercase();
+        match extension.as_str() {
+            "jpg" | "jpeg" | "png" | "gif" | "webp" => {}
+            _ => {
+                return Err(anyhow::format_err!(
+                    "Invalid file type. Supported: jpg, png, gif, webp"
+                )
+                .into())
+            }
+        }
+
+        // Create AvatarUploader
+        let uploader = AvatarUploader::new()
+            .await
+            .map_err(|e| anyhow::format_err!("Failed to initialize uploader: {}", e))?;
+
+        // Upload file to S3 and store the key
+        let s3_key = uploader
+            .upload_avatar(file_data, &extension, &current_user.id.to_string())
+            .await
+            .map_err(|e| anyhow::format_err!("Upload failed: {}", e))?;
+
+        // Convert S3 key to CloudFront URL
+        let cf_domain = std::env::var("CF_URL")
+            .map_err(|_| anyhow::format_err!("CF_URL environment variable not set"))?;
+
+        let avatar_url = key_to_url(&s3_key);
+
+        Ok(avatar_url) // Return the CloudFront URL
     }
 }
 

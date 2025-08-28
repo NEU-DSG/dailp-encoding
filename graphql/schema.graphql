@@ -893,6 +893,10 @@ type Mutation {
 	"""
 	attachAudioToWord(input: AttachAudioToWordInput!): AnnotatedForm!
 	updateDocumentMetadata(document: DocumentMetadataUpdate!): UUID!
+	"""
+	GraphQL mutation for avatar upload
+	"""
+	uploadAvatar(input: UploadAvatarInput!): String!
 }
 
 """
@@ -1127,6 +1131,20 @@ input UpdateContributorAttribution {
 	A description of what the contributor did, like "translation" or "voice"
 	"""
 	contributionRole: String!
+}
+
+"""
+Input object for uploading avatar
+"""
+input UploadAvatarInput {
+	"""
+	Base64-encoded image data
+	"""
+	imageData: String!
+	"""
+	Original filename to extract extension
+	"""
+	filename: String!
 }
 
 """
