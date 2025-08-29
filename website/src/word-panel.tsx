@@ -322,6 +322,15 @@ const EditGloss = (props: {
         value: props.morpheme.gloss,
         label: props.morpheme.matchingTag?.title ?? props.morpheme.gloss,
       }}
+    // Show a "create new" option at the end of the menu
+    createOptionPosition="last"
+    // Label for the create option row
+    formatCreateLabel={(inputValue: string) => `Create "${inputValue}"`}
+    // Only allow non-empty unique values
+    isValidNewOption={(inputValue: string, _value: any, options: any[]) =>
+      inputValue.trim().length > 0 &&
+      !options.some((o: any) => (o?.value ?? "") === inputValue)
+    }
     />
   )
 }
