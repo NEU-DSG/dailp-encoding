@@ -15,7 +15,7 @@ use {
     dailp::async_graphql::{self, dataloader::DataLoader, Context, FieldResult},
     dailp::{
         AnnotatedDoc, AnnotatedFormUpdate, CherokeeOrthography, Database, EditedCollection,
-        MorphemeId, MorphemeReference, MorphemeTag, ParagraphUpdate, WordsInDocument,
+        MorphemeId, MorphemeReference, MorphemeTag, ParagraphUpdate, WordsInDocument, AbstractMorphemeTag,
     },
 };
 
@@ -363,6 +363,18 @@ impl Query {
             .dailp_user_by_id(&id)
             .await?)
     }
+
+    async fn abbreviation_id_from_slug(
+        &self,
+        context: &Context<'_>,
+        slug: String,
+    ) -> FieldResult<Uuid> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .abbreviation_id_from_slug(&slug)
+            .await?)
+    }
 }
 
 pub struct Mutation;
@@ -667,6 +679,52 @@ impl Mutation {
             .loader()
             .update_document_metadata(document)
             .await?)
+    }
+    #[graphql(
+        guard = "GroupGuard::new(UserGroup::Contributors).or(GroupGuard::new(UserGroup::Editors))"
+    )]
+    async fn insert_custom_morpheme_tag(
+        &self,
+        context: &Context<'_>,
+        gloss: String,
+        example_shape: String,
+    ) -> FieldResult<bool> {
+        //first get id of custom morpheme tag
+        let abstract_id = context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .insert_custom_abstract_tag(AbstractMorphemeTag {
+                id: "CUS ".to_string() + &gloss.clone(),
+                morpheme_type: "custom".to_string(),
+            })
+            .await?;
+
+        //construct the morpheme tag
+        //todo: need to figure out why tag and title are the same thing :(
+        //its a frontend issue
+        let tag = MorphemeTag {
+            internal_tags: vec![abstract_id.to_string()],
+            tag: gloss.clone(),
+            title: example_shape,
+            shape: None,
+            details_url: None,
+            definition: gloss,
+            morpheme_type: String::new(),
+            role_override: None,
+        };
+
+        let system_id = context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .abbreviation_id_from_slug("CRG")
+            .await?;
+
+        context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .insert_custom_morpheme_tag(tag, system_id)
+            .await?;
+        Ok(true)
     }
 }
 
