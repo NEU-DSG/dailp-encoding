@@ -1094,6 +1094,23 @@ impl Database {
         Ok(())
     }
 
+    pub async fn insert_edited_collection(
+        &self,
+        collection: CreateEditedCollectionInput,
+    ) -> Result<Uuid> {
+        // let mut tx = self.client.begin().await?;
+        let collection_id = query_file_scalar!(
+            "queries/insert_edited_collection.sql",
+            collection.title,
+            slug::slugify(&collection.title),
+            collection.description,
+            collection.thumbnail_url,
+        )
+        .fetch_one(&self.client)
+        .await?;
+        Ok(collection_id)
+    }
+
     pub async fn document_breadcrumbs(
         &self,
         document_id: DocumentId,
@@ -1882,14 +1899,14 @@ impl Loader<WordsInParagraph> for Database {
                     WordsInParagraph(w.paragraph_id),
                     AnnotatedSeg::Word(
                         (BasicWord {
-                            id: w.id,
-                            source_text: w.source_text,
+                            id: Some(w.id),
+                            source_text: Some(w.source_text),
                             simple_phonetics: w.simple_phonetics,
                             phonemic: w.phonemic,
                             english_gloss: w.english_gloss,
                             commentary: w.commentary,
-                            document_id: w.document_id,
-                            index_in_document: w.index_in_document,
+                            document_id: Some(w.document_id),
+                            index_in_document: Some(w.index_in_document),
                             page_number: w.page_number,
                             audio_url: w.audio_url,
                             audio_slice_id: w.audio_slice_id,
@@ -1897,8 +1914,9 @@ impl Loader<WordsInParagraph> for Database {
                             audio_recorded_at: w.audio_recorded_at,
                             audio_recorded_by: w.audio_recorded_by,
                             audio_recorded_by_name: w.audio_recorded_by_name,
-                            include_audio_in_edited_collection: w
-                                .include_audio_in_edited_collection,
+                            include_audio_in_edited_collection: Some(
+                                w.include_audio_in_edited_collection,
+                            ),
                             audio_edited_by: w.audio_edited_by,
                             audio_edited_by_name: w.audio_edited_by_name,
                         })
@@ -2116,14 +2134,14 @@ impl From<BasicAudioSlice> for AudioSlice {
 /// A struct representing a Word/AnnotatedForm that can be easily pulled from
 /// the database
 struct BasicWord {
-    id: Uuid,
-    source_text: String,
+    id: Option<Uuid>,
+    source_text: Option<String>,
     simple_phonetics: Option<String>,
     phonemic: Option<String>,
     english_gloss: Option<String>,
     commentary: Option<String>,
-    document_id: Uuid,
-    index_in_document: i64,
+    document_id: Option<Uuid>,
+    index_in_document: Option<i64>,
     page_number: Option<String>,
     audio_url: Option<String>,
     audio_slice_id: Option<Uuid>,
@@ -2131,7 +2149,7 @@ struct BasicWord {
     audio_recorded_at: Option<NaiveDate>,
     audio_recorded_by: Option<Uuid>,
     audio_recorded_by_name: Option<String>,
-    include_audio_in_edited_collection: bool,
+    include_audio_in_edited_collection: Option<bool>,
     audio_edited_by: Option<Uuid>,
     audio_edited_by_name: Option<String>,
 }
@@ -2145,7 +2163,7 @@ impl BasicWord {
             recorded_at: self.audio_recorded_at,
             recorded_by: self.audio_recorded_by,
             recorded_by_name: self.audio_recorded_by_name.to_owned(),
-            include_in_edited_collection: self.include_audio_in_edited_collection,
+            include_in_edited_collection: self.include_audio_in_edited_collection.unwrap_or(false),
             edited_by: self.audio_edited_by,
             edited_by_name: self.audio_edited_by_name.to_owned(),
         })
@@ -2157,8 +2175,8 @@ impl From<BasicWord> for AnnotatedForm {
         // up here because we need to borrow the basic type before we start moving things
         let ingested_audio_track = w.audio_slice().map(AudioSlice::from);
         Self {
-            id: Some(w.id),
-            source: w.source_text,
+            id: w.id,
+            source: w.source_text.unwrap_or_default(),
             normalized_source: None,
             simple_phonetics: w.simple_phonetics,
             phonemic: w.phonemic,
@@ -2171,9 +2189,9 @@ impl From<BasicWord> for AnnotatedForm {
             line_break: None,
             page_break: None,
             position: PositionInDocument::new(
-                DocumentId(w.document_id),
+                DocumentId(w.document_id.unwrap_or_default()),
                 w.page_number.unwrap_or_default(),
-                w.index_in_document,
+                w.index_in_document.unwrap_or_default(),
             ),
         }
     }
@@ -2241,7 +2259,9 @@ impl Loader<EditedCollectionDetails> for Database {
                         id: collection.id,
                         title: collection.title,
                         wordpress_menu_id: collection.wordpress_menu_id,
+                        description: collection.description,
                         slug: collection.slug,
+                        thumbnail_url: collection.thumbnail_url,
                     },
                 )
             })
