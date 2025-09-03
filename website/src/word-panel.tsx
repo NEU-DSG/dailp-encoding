@@ -13,6 +13,7 @@ import {
 import { OnChangeValue } from "react-select"
 import { Disclosure, DisclosureContent, useDisclosureState } from "reakit"
 import { unstable_Form as Form, unstable_FormInput as FormInput } from "reakit"
+import { useMutation } from "urql"
 import * as Dailp from "src/graphql/dailp"
 import { AudioPlayer } from "./components"
 import { CommentSection } from "./components/comment-section"
@@ -297,9 +298,10 @@ const EditGloss = (props: {
   options: GroupedOption[]
 }) => {
   const { form } = useForm()
+  const [, insertCustomMorphemeTag] = useMutation(Dailp.InsertCustomMorphemeTagDocument)
 
   // Handles gloss selection and creation of new glosses.
-  const handleChange = (
+  const handleChange = async (
     newValue: OnChangeValue<{ value: string; label: string }, false>
   ) => {
     if (newValue?.value) {
@@ -311,6 +313,7 @@ const EditGloss = (props: {
       // Updates current list of morphemes to include one with a matching tag,
       // or one with a custom gloss.
       form.update(["word", "segments", props.index], newMorpheme)
+      insertCustomMorphemeTag({ gloss: newValue.value, exampleShape: newValue.label })
     }
   }
 
@@ -322,15 +325,15 @@ const EditGloss = (props: {
         value: props.morpheme.gloss,
         label: props.morpheme.matchingTag?.title ?? props.morpheme.gloss,
       }}
-    // Show a "create new" option at the end of the menu
-    createOptionPosition="last"
-    // Label for the create option row
-    formatCreateLabel={(inputValue: string) => `Create "${inputValue}"`}
-    // Only allow non-empty unique values
-    isValidNewOption={(inputValue: string, _value: any, options: any[]) =>
-      inputValue.trim().length > 0 &&
-      !options.some((o: any) => (o?.value ?? "") === inputValue)
-    }
+      // Show a "create new" option at the end of the menu
+      createOptionPosition="last"
+      // Label for the create option row
+      formatCreateLabel={(inputValue: string) => `Create "${inputValue}"`}
+      // Only allow non-empty unique values
+      isValidNewOption={(inputValue: string, _value: any, options: any[]) =>
+        inputValue.trim().length > 0 &&
+        !options.some((o: any) => (o?.value ?? "") === inputValue)
+      }
     />
   )
 }

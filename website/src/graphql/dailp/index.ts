@@ -672,6 +672,7 @@ export type Mutation = {
   readonly deleteComment: CommentParent
   /** Mutation for deleting contributor attributions */
   readonly deleteContributorAttribution: Scalars["UUID"]
+  readonly insertCustomMorphemeTag: Scalars["Boolean"]
   /** Post a new comment on a given object */
   readonly postComment: CommentParent
   /** Removes a bookmark from a user's list of bookmarks */
@@ -708,6 +709,11 @@ export type MutationDeleteCommentArgs = {
 
 export type MutationDeleteContributorAttributionArgs = {
   contribution: DeleteContributorAttribution
+}
+
+export type MutationInsertCustomMorphemeTagArgs = {
+  exampleShape: Scalars["String"]
+  gloss: Scalars["String"]
 }
 
 export type MutationPostCommentArgs = {
@@ -826,6 +832,7 @@ export type PostCommentInput = {
 
 export type Query = {
   readonly __typename?: "Query"
+  readonly abbreviationIdFromSlug: Scalars["UUID"]
   /** List of all the document collections available. */
   readonly allCollections: ReadonlyArray<DocumentCollection>
   /** Listing of all documents excluding their contents by default */
@@ -883,6 +890,10 @@ export type Query = {
    * Each query may match against multiple fields of a word.
    */
   readonly wordSearch: ReadonlyArray<AnnotatedForm>
+}
+
+export type QueryAbbreviationIdFromSlugArgs = {
+  slug: Scalars["String"]
 }
 
 export type QueryAllTagsArgs = {
@@ -2565,6 +2576,15 @@ export type UserByIdQuery = { readonly __typename?: "Query" } & {
     }
 }
 
+export type InsertCustomMorphemeTagMutationVariables = Exact<{
+  gloss: Scalars["String"]
+  exampleShape: Scalars["String"]
+}>
+
+export type InsertCustomMorphemeTagMutation = {
+  readonly __typename?: "Mutation"
+} & Pick<Mutation, "insertCustomMorphemeTag">
+
 export const DocFormFieldsFragmentDoc = gql`
   fragment DocFormFields on AnnotatedDoc {
     id
@@ -3622,4 +3642,16 @@ export function useUserByIdQuery(
     query: UserByIdDocument,
     ...options,
   })
+}
+export const InsertCustomMorphemeTagDocument = gql`
+  mutation InsertCustomMorphemeTag($gloss: String!, $exampleShape: String!) {
+    insertCustomMorphemeTag(gloss: $gloss, exampleShape: $exampleShape)
+  }
+`
+
+export function useInsertCustomMorphemeTagMutation() {
+  return Urql.useMutation<
+    InsertCustomMorphemeTagMutation,
+    InsertCustomMorphemeTagMutationVariables
+  >(InsertCustomMorphemeTagDocument)
 }

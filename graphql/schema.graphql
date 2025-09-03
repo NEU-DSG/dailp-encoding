@@ -893,6 +893,7 @@ type Mutation {
 	"""
 	attachAudioToWord(input: AttachAudioToWordInput!): AnnotatedForm!
 	updateDocumentMetadata(document: DocumentMetadataUpdate!): UUID!
+	insertCustomMorphemeTag(gloss: String!, exampleShape: String!): Boolean!
 }
 
 """
@@ -1080,6 +1081,7 @@ type Query {
 	Gets a dailp_user by their id
 	"""
 	dailpUserById(id: UUID!): User!
+	abbreviationIdFromSlug(slug: String!): UUID!
 }
 
 """
