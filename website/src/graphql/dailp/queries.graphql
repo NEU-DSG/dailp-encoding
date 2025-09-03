@@ -706,6 +706,6 @@ query UserById($id: UUID!) {
   }
 }
 
-mutation InsertCustomMorphemeTag($gloss: String!, $exampleShape: String!) {
-  insertCustomMorphemeTag(gloss: $gloss, exampleShape: $exampleShape)
+mutation InsertCustomMorphemeTag($gloss: String!, $exampleShape: String!, $system: String!) {
+  insertCustomMorphemeTag(gloss: $gloss, exampleShape: $exampleShape, system: $system)
 }
