@@ -1,4 +1,4 @@
-import React, { ReactNode } from "react"
+import React, { ReactNode, useState } from "react"
 import {
   AiFillCaretDown,
   AiFillCaretUp,
@@ -297,6 +297,7 @@ const EditGloss = (props: {
   index: number
   options: GroupedOption[]
 }) => {
+  const preferences = usePreferences()
   const { form } = useForm()
   const [, insertCustomMorphemeTag] = useMutation(Dailp.InsertCustomMorphemeTagDocument)
 
@@ -313,7 +314,13 @@ const EditGloss = (props: {
       // Updates current list of morphemes to include one with a matching tag,
       // or one with a custom gloss.
       form.update(["word", "segments", props.index], newMorpheme)
-      insertCustomMorphemeTag({ gloss: newValue.value, exampleShape: newValue.label })
+      
+      // Insert the new tag and invalidate the cache to refresh allTags
+      await insertCustomMorphemeTag({ 
+        gloss: newValue.value, 
+        exampleShape: newValue.label, 
+        system: preferences.cherokeeRepresentation 
+      })
     }
   }
 

@@ -688,6 +688,7 @@ impl Mutation {
         context: &Context<'_>,
         gloss: String,
         example_shape: String,
+        system: String,
     ) -> FieldResult<bool> {
         //first get id of custom morpheme tag
         let abstract_id = context
@@ -716,7 +717,7 @@ impl Mutation {
         let system_id = context
             .data::<DataLoader<Database>>()?
             .loader()
-            .abbreviation_id_from_slug("CRG")
+            .abbreviation_id_from_slug(&system)
             .await?;
 
         context

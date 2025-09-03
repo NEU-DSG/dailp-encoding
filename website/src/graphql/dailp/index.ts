@@ -714,6 +714,7 @@ export type MutationDeleteContributorAttributionArgs = {
 export type MutationInsertCustomMorphemeTagArgs = {
   exampleShape: Scalars["String"]
   gloss: Scalars["String"]
+  system: Scalars["String"]
 }
 
 export type MutationPostCommentArgs = {
@@ -2579,6 +2580,7 @@ export type UserByIdQuery = { readonly __typename?: "Query" } & {
 export type InsertCustomMorphemeTagMutationVariables = Exact<{
   gloss: Scalars["String"]
   exampleShape: Scalars["String"]
+  system: Scalars["String"]
 }>
 
 export type InsertCustomMorphemeTagMutation = {
@@ -3644,8 +3646,16 @@ export function useUserByIdQuery(
   })
 }
 export const InsertCustomMorphemeTagDocument = gql`
-  mutation InsertCustomMorphemeTag($gloss: String!, $exampleShape: String!) {
-    insertCustomMorphemeTag(gloss: $gloss, exampleShape: $exampleShape)
+  mutation InsertCustomMorphemeTag(
+    $gloss: String!
+    $exampleShape: String!
+    $system: String!
+  ) {
+    insertCustomMorphemeTag(
+      gloss: $gloss
+      exampleShape: $exampleShape
+      system: $system
+    )
   }
 `
 
