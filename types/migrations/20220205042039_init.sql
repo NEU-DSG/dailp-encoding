@@ -139,8 +139,6 @@ create table morpheme_tag (
   abstract_ids uuid[] not null,
   gloss text not null,
   title text not null,
-  -- TODO Remove this unique constraint once we aren't reliant on spreadsheets
-  constraint morpheme_tag_unique unique (system_id, abstract_ids)
 );
 
 create type segment_type as enum (
