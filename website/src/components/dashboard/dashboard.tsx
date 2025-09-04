@@ -5,6 +5,7 @@ import {
   TabPanel,
   useDialogState,
 } from "reakit"
+import { UserRole, useUserRole } from "src/auth"
 import {
   useAnnotatedDocumentByIdQuery,
   useBookmarkedDocumentsQuery,
@@ -19,51 +20,83 @@ import { ProfileSidebarLayout } from "./profile-sidebar-layout"
 enum Tabs {
   ACTIVITY = "activity-tab",
   BOOKMARKS = "bookmarks-tab",
+  ADMIN_TOOLS = "admin-tab",
 }
 
 export const Dashboard = () => {
   const tabs = useScrollableTabState({ selectedId: Tabs.BOOKMARKS })
+  const curRole = useUserRole()
   return (
     <>
-      {/* Container for the ProfileSidebar and main dashboard content*/}
-      <div className={css.dashboardLayout}>
-        {/* Profile sidebar - 1/4 width */}
-        <FormProvider>
-          <ProfileSidebarLayout />
-        </FormProvider>
-
-        {/* Main dashboard content - 3/4 width */}
-        <div className={css.mainContent}>
-          <h1 className={css.dashboardHeader}>Dashboard</h1>
-          <TabList
-            {...tabs}
-            id="document-tabs-header"
-            className={css.dashboardTabs}
-            aria-label="Document View Types"
-          >
-            <Tab {...tabs} id={Tabs.BOOKMARKS} className={css.dashboardTab}>
-              Bookmarked Documents
+      <h1 className={css.dashboardHeader}>Dashboard</h1>
+      <div className={css.wideAndTop}>
+        <TabList
+          {...tabs}
+          id="document-tabs-header"
+          className={css.dashboardTabs}
+          aria-label="Document View Types"
+        >
+          <Tab {...tabs} id={Tabs.BOOKMARKS} className={css.dashboardTab}>
+            Bookmarked Documents
+          </Tab>
+          <Tab {...tabs} id={Tabs.ACTIVITY} className={css.dashboardTab}>
+            Recent Activity
+          </Tab>
+          {curRole == UserRole.Admin && (
+            <Tab {...tabs} id={Tabs.ADMIN_TOOLS} className={css.dashboardTab}>
+              Admin tools
             </Tab>
-            <Tab {...tabs} id={Tabs.ACTIVITY} className={css.dashboardTab}>
-              Recent Activity
-            </Tab>
-          </TabList>
+          )}
+        </TabList>
 
-          <TabPanel
-            {...tabs}
-            id={Tabs.BOOKMARKS}
-            className={css.dashboardTabPanel}
-          >
-            <BookmarksTab />
-          </TabPanel>
+        {/* Container for the ProfileSidebar and main dashboard content*/}
+        <div className={css.dashboardLayout}>
+          {/* Profile sidebar - 1/4 width */}
+          <FormProvider>
+            <ProfileSidebarLayout />
+          </FormProvider>
 
-          <TabPanel
-            {...tabs}
-            id={Tabs.ACTIVITY}
-            className={css.dashboardTabPanel}
-          >
-            <ActivityTab />
-          </TabPanel>
+          {/* Main dashboard content - 3/4 width */}
+          <div className={css.mainContent}>
+            <h1 className={css.dashboardHeader}>Dashboard</h1>
+            <TabList
+              {...tabs}
+              id="document-tabs-header"
+              className={css.dashboardTabs}
+              aria-label="Document View Types"
+            >
+              <Tab {...tabs} id={Tabs.BOOKMARKS} className={css.dashboardTab}>
+                Bookmarked Documents
+              </Tab>
+              <Tab {...tabs} id={Tabs.ACTIVITY} className={css.dashboardTab}>
+                Recent Activity
+              </Tab>
+            </TabList>
+
+            <TabPanel
+              {...tabs}
+              id={Tabs.BOOKMARKS}
+              className={css.dashboardTabPanel}
+            >
+              <BookmarksTab />
+            </TabPanel>
+
+            <TabPanel
+              {...tabs}
+              id={Tabs.ACTIVITY}
+              className={css.dashboardTabPanel}
+            >
+              <ActivityTab />
+            </TabPanel>
+            
+            <TabPanel
+              {...tabs}
+              id={Tabs.ADMIN_TOOLS}
+              className={css.dashboardTabPanel}
+            >
+              <AdminToolsTab />
+            </TabPanel>
+          </div>
         </div>
       </div>
     </>
@@ -74,6 +107,29 @@ export const ActivityTab = () => {
   // takes in something (user?)
   const dialog = useDialogState({ animated: true, visible: true })
   return <></>
+}
+
+export const AdminToolsTab = () => {
+  return (
+    <>
+      <div>
+        <h2>Manage Edited Collections</h2>
+        <Link href="#">Create New Collection</Link>
+        <br />
+        <Link href="#">Edit Existing Collection</Link>
+      </div>
+      <div>
+        <h2>Manage Documents</h2>
+        <Link href="#">Create New Document(s)</Link>
+      </div>
+      <div>
+        <h2>Manage Users</h2>
+        <Link href="#">Update Permissions for Existing User</Link>
+        <br />
+        <Link href="#">Manage Teams</Link>
+      </div>
+    </>
+  )
 }
 
 export const BookmarksTab = () => {
