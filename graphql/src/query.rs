@@ -4,7 +4,7 @@ use dailp::{
     auth::{AuthGuard, GroupGuard, UserGroup, UserInfo},
     comment::{CommentParent, CommentUpdate, DeleteCommentInput, PostCommentInput},
     slugify_ltree,
-    user::{User, UserUpdate},
+    user::{CurrentUserUpdate, User, UserId, UserUpdate},
     AnnotatedForm, AttachAudioToWordInput, CollectionChapter, CurateWordAudioInput,
     DeleteContributorAttribution, DocumentMetadataUpdate, DocumentParagraph,
     UpdateContributorAttribution, Uuid,
@@ -363,6 +363,19 @@ impl Query {
             .dailp_user_by_id(&id)
             .await?)
     }
+
+    /// Gets the current dailp_user, if authenticated
+    #[graphql(guard = "AuthGuard")]
+    async fn current_user(&self, context: &Context<'_>) -> FieldResult<User> {
+        let user = context
+            .data_opt::<UserInfo>()
+            .ok_or_else(|| anyhow::format_err!("User is not signed in"))?;
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .dailp_user_by_id(&user.id)
+            .await?)
+    }
 }
 
 pub struct Mutation;
@@ -555,6 +568,28 @@ impl Mutation {
         db.update_dailp_user(user).await?;
 
         let user_object = db.dailp_user_by_id(&user_id).await?;
+
+        // We return the user object, for GraphCache interop
+        return Ok(user_object);
+    }
+
+    /// Updates the current logged in user's information
+    #[graphql(guard = "AuthGuard")]
+    async fn update_current_user(
+        &self,
+        context: &Context<'_>,
+        user: CurrentUserUpdate,
+    ) -> FieldResult<User> {
+        let current_user = context
+            .data_opt::<UserInfo>()
+            .ok_or_else(|| anyhow::format_err!("User is not signed in"))?;
+        let current_user_id = UserId::from(current_user.id);
+        let db = context.data::<DataLoader<Database>>()?.loader();
+
+        let user_update = UserUpdate::from_current_user_update(current_user_id, user);
+        db.update_dailp_user(user_update).await?;
+
+        let user_object = db.dailp_user_by_id(&current_user.id).await?;
 
         // We return the user object, for GraphCache interop
         return Ok(user_object);

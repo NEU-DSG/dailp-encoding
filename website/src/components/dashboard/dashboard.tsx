@@ -1,4 +1,10 @@
-import { Tab, TabList, TabPanel, useDialogState } from "reakit"
+import {
+  unstable_Form as Form,
+  Tab,
+  TabList,
+  TabPanel,
+  useDialogState,
+} from "reakit"
 import {
   useAnnotatedDocumentByIdQuery,
   useBookmarkedDocumentsQuery,
@@ -7,6 +13,8 @@ import { useScrollableTabState } from "src/scrollable-tabs"
 import Link from "../link"
 import { BookmarkCard } from "./bookmark-card"
 import * as css from "./dashboard.css"
+import { FormProvider } from "./edit-profile-sidebar-form-context"
+import { ProfileSidebarLayout } from "./profile-sidebar-layout"
 
 enum Tabs {
   ACTIVITY = "activity-tab",
@@ -17,37 +25,46 @@ export const Dashboard = () => {
   const tabs = useScrollableTabState({ selectedId: Tabs.BOOKMARKS })
   return (
     <>
-      <h1 className={css.dashboardHeader}>Dashboard</h1>
-      <div className={css.wideAndTop}>
-        <TabList
-          {...tabs}
-          id="document-tabs-header"
-          className={css.dashboardTabs}
-          aria-label="Document View Types"
-        >
-          <Tab {...tabs} id={Tabs.BOOKMARKS} className={css.dashboardTab}>
-            Bookmarked Documents
-          </Tab>
-          <Tab {...tabs} id={Tabs.ACTIVITY} className={css.dashboardTab}>
-            Recent Activity
-          </Tab>
-        </TabList>
+      {/* Container for the ProfileSidebar and main dashboard content*/}
+      <div className={css.dashboardLayout}>
+        {/* Profile sidebar - 1/4 width */}
+        <FormProvider>
+          <ProfileSidebarLayout />
+        </FormProvider>
 
-        <TabPanel
-          {...tabs}
-          id={Tabs.BOOKMARKS}
-          className={css.dashboardTabPanel}
-        >
-          <BookmarksTab />
-        </TabPanel>
+        {/* Main dashboard content - 3/4 width */}
+        <div className={css.mainContent}>
+          <h1 className={css.dashboardHeader}>Dashboard</h1>
+          <TabList
+            {...tabs}
+            id="document-tabs-header"
+            className={css.dashboardTabs}
+            aria-label="Document View Types"
+          >
+            <Tab {...tabs} id={Tabs.BOOKMARKS} className={css.dashboardTab}>
+              Bookmarked Documents
+            </Tab>
+            <Tab {...tabs} id={Tabs.ACTIVITY} className={css.dashboardTab}>
+              Recent Activity
+            </Tab>
+          </TabList>
 
-        <TabPanel
-          {...tabs}
-          id={Tabs.ACTIVITY}
-          className={css.dashboardTabPanel}
-        >
-          <ActivityTab />
-        </TabPanel>
+          <TabPanel
+            {...tabs}
+            id={Tabs.BOOKMARKS}
+            className={css.dashboardTabPanel}
+          >
+            <BookmarksTab />
+          </TabPanel>
+
+          <TabPanel
+            {...tabs}
+            id={Tabs.ACTIVITY}
+            className={css.dashboardTabPanel}
+          >
+            <ActivityTab />
+          </TabPanel>
+        </div>
       </div>
     </>
   )

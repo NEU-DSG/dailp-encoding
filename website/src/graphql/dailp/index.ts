@@ -384,6 +384,19 @@ export type CurateWordAudioInput = {
   readonly wordId: Scalars["UUID"]
 }
 
+export type CurrentUserUpdate = {
+  /** URL to the avatar of the user (optional) */
+  readonly avatarUrl: InputMaybe<Scalars["String"]>
+  /** Biography of the user (optional) */
+  readonly bio: InputMaybe<Scalars["String"]>
+  /** User-facing name for this contributor/curator */
+  readonly displayName: InputMaybe<Scalars["String"]>
+  /** Location of the user (optional) */
+  readonly location: InputMaybe<Scalars["String"]>
+  /** Organization of the user (optional) */
+  readonly organization: InputMaybe<Scalars["String"]>
+}
+
 export type Date = {
   readonly __typename?: "Date"
   /** The day of this date */
@@ -681,6 +694,8 @@ export type Mutation = {
   readonly updateComment: CommentParent
   /** Mutation for adding/changing contributor attributions */
   readonly updateContributorAttribution: Scalars["UUID"]
+  /** Updates the current logged in user's information */
+  readonly updateCurrentUser: User
   readonly updateDocumentMetadata: Scalars["UUID"]
   readonly updatePage: Scalars["Boolean"]
   /** Mutation for paragraph and translation editing */
@@ -728,6 +743,10 @@ export type MutationUpdateCommentArgs = {
 
 export type MutationUpdateContributorAttributionArgs = {
   contribution: UpdateContributorAttribution
+}
+
+export type MutationUpdateCurrentUserArgs = {
+  user: CurrentUserUpdate
 }
 
 export type MutationUpdateDocumentMetadataArgs = {
@@ -840,6 +859,8 @@ export type Query = {
   /** Retrieves a chapter and its contents by its collection and chapter slug. */
   readonly chapter: Maybe<CollectionChapter>
   readonly collection: DocumentCollection
+  /** Gets the current dailp_user, if authenticated */
+  readonly currentUser: User
   /** Gets a dailp_user by their id */
   readonly dailpUserById: User
   /** Retrieves a full document from its unique name. */
@@ -2544,12 +2565,48 @@ export type UpdateUserMutation = { readonly __typename?: "Mutation" } & {
   >
 }
 
+export type UpdateCurrentUserMutationVariables = Exact<{
+  user: CurrentUserUpdate
+}>
+
+export type UpdateCurrentUserMutation = { readonly __typename?: "Mutation" } & {
+  readonly updateCurrentUser: { readonly __typename?: "User" } & Pick<
+    User,
+    | "id"
+    | "displayName"
+    | "avatarUrl"
+    | "bio"
+    | "organization"
+    | "location"
+    | "role"
+  >
+}
+
 export type UserByIdQueryVariables = Exact<{
   id: Scalars["UUID"]
 }>
 
 export type UserByIdQuery = { readonly __typename?: "Query" } & {
   readonly dailpUserById: { readonly __typename?: "User" } & Pick<
+    User,
+    | "id"
+    | "displayName"
+    | "avatarUrl"
+    | "bio"
+    | "organization"
+    | "location"
+    | "role"
+  > & {
+      readonly createdAt: Maybe<
+        { readonly __typename?: "Date" } & Pick<Date, "day" | "month" | "year">
+      >
+    }
+}
+
+export type CurrentUserQueryVariables = Exact<{ [key: string]: never }>
+
+export type CurrentUserQuery = { readonly __typename?: "Query" } & {
+  readonly currentUser: { readonly __typename?: "User" } & Pick<
     User,
     | "id"
     | "displayName"
@@ -3596,6 +3653,26 @@ export function useUpdateUserMutation() {
     UpdateUserDocument
   )
 }
+export const UpdateCurrentUserDocument = gql`
+  mutation updateCurrentUser($user: CurrentUserUpdate!) {
+    updateCurrentUser(user: $user) {
+      id
+      displayName
+      avatarUrl
+      bio
+      organization
+      location
+      role
+    }
+  }
+`
+
+export function useUpdateCurrentUserMutation() {
+  return Urql.useMutation<
+    UpdateCurrentUserMutation,
+    UpdateCurrentUserMutationVariables
+  >(UpdateCurrentUserDocument)
+}
 export const UserByIdDocument = gql`
   query UserById($id: UUID!) {
     dailpUserById(id: $id) {
@@ -3620,6 +3697,33 @@ export function useUserByIdQuery(
 ) {
   return Urql.useQuery<UserByIdQuery, UserByIdQueryVariables>({
     query: UserByIdDocument,
+    ...options,
+  })
+}
+export const CurrentUserDocument = gql`
+  query CurrentUser {
+    currentUser {
+      id
+      displayName
+      createdAt {
+        day
+        month
+        year
+      }
+      avatarUrl
+      bio
+      organization
+      location
+      role
+    }
+  }
+`
+
+export function useCurrentUserQuery(
+  options?: Omit<Urql.UseQueryArgs<CurrentUserQueryVariables>, "query">
+) {
+  return Urql.useQuery<CurrentUserQuery, CurrentUserQueryVariables>({
+    query: CurrentUserDocument,
     ...options,
   })
 }
