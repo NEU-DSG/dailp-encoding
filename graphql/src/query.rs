@@ -5,8 +5,8 @@ use dailp::{
     comment::{CommentParent, CommentUpdate, DeleteCommentInput, PostCommentInput},
     slugify_ltree,
     user::{CurrentUserUpdate, User, UserId, UserUpdate},
-    AnnotatedForm, AttachAudioToWordInput, CollectionChapter, CurateWordAudioInput,
-    DeleteContributorAttribution, DocumentMetadataUpdate, DocumentParagraph,
+    AnnotatedForm, AttachAudioToWordInput, CollectionChapter, CreateEditedCollectionInput,
+    CurateWordAudioInput, DeleteContributorAttribution, DocumentMetadataUpdate, DocumentParagraph,
     UpdateContributorAttribution, Uuid,
 };
 use itertools::Itertools;
@@ -702,6 +702,23 @@ impl Mutation {
             .loader()
             .update_document_metadata(document)
             .await?)
+    }
+
+    #[graphql(
+        //TODO ADD ADMIN ROLES WHEN IT IS READY
+        guard = "GroupGuard::new(UserGroup::Editors)"
+    )]
+    async fn create_edited_collection(
+        &self,
+        context: &Context<'_>,
+        input: CreateEditedCollectionInput,
+    ) -> FieldResult<String> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .insert_edited_collection(input)
+            .await?
+            .to_string())
     }
 }
 
