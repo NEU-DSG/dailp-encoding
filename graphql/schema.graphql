@@ -1081,7 +1081,7 @@ type Query {
 	Gets a dailp_user by their id
 	"""
 	dailpUserById(id: UUID!): User!
-	abbreviationIdFromSlug(slug: String!): UUID!
+	abbreviationIdFromShortName(shortName: String!): UUID!
 }
 
 """

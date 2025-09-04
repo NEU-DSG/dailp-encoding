@@ -14,8 +14,9 @@ use itertools::Itertools;
 use {
     dailp::async_graphql::{self, dataloader::DataLoader, Context, FieldResult},
     dailp::{
-        AnnotatedDoc, AnnotatedFormUpdate, CherokeeOrthography, Database, EditedCollection,
-        MorphemeId, MorphemeReference, MorphemeTag, ParagraphUpdate, WordsInDocument, AbstractMorphemeTag,
+        AbstractMorphemeTag, AnnotatedDoc, AnnotatedFormUpdate, CherokeeOrthography, Database,
+        EditedCollection, MorphemeId, MorphemeReference, MorphemeTag, ParagraphUpdate,
+        WordsInDocument,
     },
 };
 
@@ -364,15 +365,15 @@ impl Query {
             .await?)
     }
 
-    async fn abbreviation_id_from_slug(
+    async fn abbreviation_id_from_short_name(
         &self,
         context: &Context<'_>,
-        slug: String,
+        short_name: String,
     ) -> FieldResult<Uuid> {
         Ok(context
             .data::<DataLoader<Database>>()?
             .loader()
-            .abbreviation_id_from_slug(&slug)
+            .abbreviation_id_from_short_name(&short_name)
             .await?)
     }
 }
@@ -717,7 +718,7 @@ impl Mutation {
         let system_id = context
             .data::<DataLoader<Database>>()?
             .loader()
-            .abbreviation_id_from_slug(&system)
+            .abbreviation_id_from_short_name("CUS")
             .await?;
 
         context

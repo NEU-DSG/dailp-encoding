@@ -1456,7 +1456,11 @@ impl Database {
         query_file!(
             "queries/insert_custom_morpheme_tag.sql",
             system_id,
-            &form.internal_tags.iter().map(|id| Uuid::parse_str(id).unwrap()).collect::<Vec<Uuid>>(),
+            &form
+                .internal_tags
+                .iter()
+                .map(|id| Uuid::parse_str(id).unwrap())
+                .collect::<Vec<Uuid>>(),
             form.tag,
             form.title,
             form.role_override as Option<WordSegmentRole>,
@@ -1598,9 +1602,9 @@ impl Database {
         }
     }
 
-    pub async fn abbreviation_id_from_slug(&self, slug: &str) -> Result<Uuid> {
+    pub async fn abbreviation_id_from_short_name(&self, short_name: &str) -> Result<Uuid> {
         Ok(
-            query_file_scalar!("queries/abbreviation_id_from_slug.sql", slug)
+            query_file_scalar!("queries/abbreviation_id_from_short_name.sql", short_name)
                 .fetch_one(&self.client)
                 .await?,
         )

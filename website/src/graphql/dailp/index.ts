@@ -833,7 +833,7 @@ export type PostCommentInput = {
 
 export type Query = {
   readonly __typename?: "Query"
-  readonly abbreviationIdFromSlug: Scalars["UUID"]
+  readonly abbreviationIdFromShortName: Scalars["UUID"]
   /** List of all the document collections available. */
   readonly allCollections: ReadonlyArray<DocumentCollection>
   /** Listing of all documents excluding their contents by default */
@@ -893,8 +893,8 @@ export type Query = {
   readonly wordSearch: ReadonlyArray<AnnotatedForm>
 }
 
-export type QueryAbbreviationIdFromSlugArgs = {
-  slug: Scalars["String"]
+export type QueryAbbreviationIdFromShortNameArgs = {
+  shortName: Scalars["String"]
 }
 
 export type QueryAllTagsArgs = {
