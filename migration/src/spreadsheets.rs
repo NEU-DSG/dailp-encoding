@@ -124,6 +124,7 @@ impl SheetInterpretation {
     pub fn into_collection_index(
         self,
         self_title: &String,
+        self_description: &String,
         self_wordpress_menu_id: &i64,
         self_slug: &str,
     ) -> Result<dailp::raw::EditedCollection, anyhow::Error> {
@@ -288,6 +289,8 @@ impl SheetInterpretation {
             wordpress_menu_id: Some(*self_wordpress_menu_id),
             slug: self_slug.to_ascii_lowercase(),
             chapters: collection_chapters,
+            description: Some(self_description.to_string()),
+            thumbnail_url: Some("".to_owned()),
         })
     }
 
