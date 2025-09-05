@@ -327,20 +327,14 @@ const EditGloss = (props: {
       }
     }
   )
-  //const allTags = allTagsData?.allTags
 
   // Handles gloss selection and creation of new glosses.
   const handleNewTag = async (
     newValue: OnChangeValue<{ value: string; label: string }, false>
   ) => {
-    if (newValue?.value) {
+    if (newValue ) {
       const parenthesesContent = extractParenthesesContent(newValue.label)
       const title = newValue.label.substring(0, newValue.label.indexOf("("))
-      console.log("DENNIS", newValue)
-      const newMorpheme: Dailp.FormFieldsFragment["segments"][0] = {
-        ...props.morpheme,
-        gloss: title ? title : newValue.value,
-      }
       if (parenthesesContent) {
         //db update
         // Insert the new tag and refresh the query
@@ -354,7 +348,21 @@ const EditGloss = (props: {
       }else{
         //just do frontend update
       }
-      console.log("DENNIS2", newMorpheme)
+
+      let matchingTag = newValue.value === newValue.label ?
+      (parenthesesContent ? {
+          tag: parenthesesContent,
+          title: newValue.label,
+      } : null) : {
+        tag: newValue.value,
+        title: newValue.label,
+      }
+
+      const newMorpheme: Dailp.FormFieldsFragment["segments"][0] = {
+        ...props.morpheme,
+        gloss: parenthesesContent ? parenthesesContent : newValue.value,
+        matchingTag: matchingTag,
+      }
       form.update(["word", "segments", props.index], newMorpheme)
     }
   }
