@@ -687,8 +687,8 @@ impl Mutation {
     async fn insert_custom_morpheme_tag(
         &self,
         context: &Context<'_>,
-        gloss: String,
-        example_shape: String,
+        tag: String,
+        title: String,
         system: String,
     ) -> FieldResult<bool> {
         //first get id of custom morpheme tag
@@ -696,7 +696,8 @@ impl Mutation {
             .data::<DataLoader<Database>>()?
             .loader()
             .insert_custom_abstract_tag(AbstractMorphemeTag {
-                id: "CUS ".to_string() + &gloss.clone(),
+                //TODO: can just make it CUS once we remove the unique constraint
+                id: "CUS:".to_string() + &title,
                 morpheme_type: "custom".to_string(),
             })
             .await?;
@@ -706,11 +707,11 @@ impl Mutation {
         //its a frontend issue
         let tag = MorphemeTag {
             internal_tags: vec![abstract_id.to_string()],
-            tag: gloss.clone(),
-            title: example_shape,
+            tag: tag,
+            title: title.clone(),
             shape: None,
             details_url: None,
-            definition: gloss,
+            definition: title,
             morpheme_type: String::new(),
             role_override: None,
         };
