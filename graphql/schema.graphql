@@ -893,7 +893,7 @@ type Mutation {
 	"""
 	attachAudioToWord(input: AttachAudioToWordInput!): AnnotatedForm!
 	updateDocumentMetadata(document: DocumentMetadataUpdate!): UUID!
-	insertCustomMorphemeTag(gloss: String!, exampleShape: String!, system: String!): Boolean!
+	insertCustomMorphemeTag(tag: String!, title: String!, system: String!): Boolean!
 }
 
 """
