@@ -28,75 +28,58 @@ export const Dashboard = () => {
   const curRole = useUserRole()
   return (
     <>
-      <h1 className={css.dashboardHeader}>Dashboard</h1>
-      <div className={css.wideAndTop}>
-        <TabList
-          {...tabs}
-          id="document-tabs-header"
-          className={css.dashboardTabs}
-          aria-label="Document View Types"
-        >
-          <Tab {...tabs} id={Tabs.BOOKMARKS} className={css.dashboardTab}>
-            Bookmarked Documents
-          </Tab>
-          <Tab {...tabs} id={Tabs.ACTIVITY} className={css.dashboardTab}>
-            Recent Activity
-          </Tab>
-          {curRole == UserRole.Admin && (
-            <Tab {...tabs} id={Tabs.ADMIN_TOOLS} className={css.dashboardTab}>
-              Admin tools
+      {/* Container for the ProfileSidebar and main dashboard content*/}
+      <div className={css.dashboardLayout}>
+        {/* Profile sidebar - 1/4 width */}
+        <FormProvider>
+          <ProfileSidebarLayout />
+        </FormProvider>
+
+        {/* Main dashboard content - 3/4 width */}
+        <div className={css.mainContent}>
+          <h1 className={css.dashboardHeader}>Dashboard</h1>
+          <TabList
+            {...tabs}
+            id="document-tabs-header"
+            className={css.dashboardTabs}
+            aria-label="Document View Types"
+          >
+            <Tab {...tabs} id={Tabs.BOOKMARKS} className={css.dashboardTab}>
+              Bookmarked Documents
             </Tab>
-          )}
-        </TabList>
-
-        {/* Container for the ProfileSidebar and main dashboard content*/}
-        <div className={css.dashboardLayout}>
-          {/* Profile sidebar - 1/4 width */}
-          <FormProvider>
-            <ProfileSidebarLayout />
-          </FormProvider>
-
-          {/* Main dashboard content - 3/4 width */}
-          <div className={css.mainContent}>
-            <h1 className={css.dashboardHeader}>Dashboard</h1>
-            <TabList
-              {...tabs}
-              id="document-tabs-header"
-              className={css.dashboardTabs}
-              aria-label="Document View Types"
-            >
-              <Tab {...tabs} id={Tabs.BOOKMARKS} className={css.dashboardTab}>
-                Bookmarked Documents
+            <Tab {...tabs} id={Tabs.ACTIVITY} className={css.dashboardTab}>
+              Recent Activity
+            </Tab>
+            {curRole == UserRole.Admin && (
+              <Tab {...tabs} id={Tabs.ADMIN_TOOLS} className={css.dashboardTab}>
+                Admin tools
               </Tab>
-              <Tab {...tabs} id={Tabs.ACTIVITY} className={css.dashboardTab}>
-                Recent Activity
-              </Tab>
-            </TabList>
+            )}
+          </TabList>
 
-            <TabPanel
-              {...tabs}
-              id={Tabs.BOOKMARKS}
-              className={css.dashboardTabPanel}
-            >
-              <BookmarksTab />
-            </TabPanel>
+          <TabPanel
+            {...tabs}
+            id={Tabs.BOOKMARKS}
+            className={css.dashboardTabPanel}
+          >
+            <BookmarksTab />
+          </TabPanel>
 
-            <TabPanel
-              {...tabs}
-              id={Tabs.ACTIVITY}
-              className={css.dashboardTabPanel}
-            >
-              <ActivityTab />
-            </TabPanel>
-            
-            <TabPanel
-              {...tabs}
-              id={Tabs.ADMIN_TOOLS}
-              className={css.dashboardTabPanel}
-            >
-              <AdminToolsTab />
-            </TabPanel>
-          </div>
+          <TabPanel
+            {...tabs}
+            id={Tabs.ACTIVITY}
+            className={css.dashboardTabPanel}
+          >
+            <ActivityTab />
+          </TabPanel>
+          
+          <TabPanel
+            {...tabs}
+            id={Tabs.ADMIN_TOOLS}
+            className={css.dashboardTabPanel}
+          >
+            <AdminToolsTab />
+          </TabPanel>
         </div>
       </div>
     </>

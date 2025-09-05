@@ -3,7 +3,7 @@ import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3"
 import { fromCognitoIdentityPool } from "@aws-sdk/credential-provider-cognito-identity"
 import { CognitoUser } from "amazon-cognito-identity-js"
 import { useMemo, useState } from "react"
-import { v4 } from "uuid"
+import { S3Uploader } from "src/utils/s3"
 import { useUser } from "src/auth"
 import * as Dailp from "../../graphql/dailp"
 
@@ -13,22 +13,43 @@ export function useAvatarUpload() {
   const [uploadAvatarState, setUploadAvatarState] =
     useState<UploadAvatarState>("ready")
   const { user } = useUser()
-  const [_updateUserResult, updateUser] = Dailp.useUpdateCurrentUserMutation()
+  const [{data: currentUserData}] = Dailp.useCurrentUserQuery()
+  const [_updateCurrentUserResult, updateCurrentUser] =
+    Dailp.useUpdateCurrentUserMutation()
 
   /**
-   * Try to upload the avatar.
+   * Try to upload the avatar and delete old one.
    *
    * Returns success boolean and updates state to ready or error
    */
   const uploadAvatar = useMemo(
     () =>
-      async function (data: Blob, filename: string) {
+      async function (data: File) {
         setUploadAvatarState("uploading")
         try {
-          const { resourceUrl } = await uploadAvatarToS3(user!, data, filename)
+          const uploader = new S3Uploader(user!)
+          const bucket = `dailp-${process.env["TF_STAGE"] || "dev"}-media-storage`
+          const userId = user!.getUsername()
+          
+          // Upload new avatar
+          const { resourceUrl } = await uploader.uploadFile(data, {
+            bucket,
+            keyPrefix: `user-uploaded-images/profile-images/${userId}`,
+            contentType: data.type,
+          })
 
+          // Delete old avatar if it exists and is from our S3 bucket.
+          // If delete fails, the operation is blocked.
+          const currentAvatarUrl = currentUserData?.currentUser?.avatarUrl
+          if (currentAvatarUrl && currentAvatarUrl.includes(process.env["CF_URL"]!)) {
+            const oldKey = extractS3KeyFromUrl(currentAvatarUrl)
+            if (oldKey) {
+              await uploader.deleteFile(bucket, oldKey)
+            }
+          }
+          
           // Update user profile with new avatar URL
-          const result = await updateUser({
+          const result = await updateCurrentUser({
             user: {
               displayName: "",
               avatarUrl: resourceUrl,
@@ -37,7 +58,7 @@ export function useAvatarUpload() {
               location: "",
             },
           })
-
+          
           if (result.error) {
             console.log(result.error)
             setUploadAvatarState("error")
@@ -52,7 +73,7 @@ export function useAvatarUpload() {
         setUploadAvatarState("ready")
         return true
       },
-    [user, updateUser]
+    [user, updateCurrentUser, currentUserData]
   )
 
   function clearError() {
@@ -62,6 +83,17 @@ export function useAvatarUpload() {
 
   // `as const` makes sure this gets typed as a tuple, not a list with a union type
   return [uploadAvatar, uploadAvatarState, clearError] as const
+}
+
+/**
+ * Extract S3 key from CloudFront URL
+ * Example: https://cloudfront-domain.com/path/to/file.jpg -> path/to/file.jpg
+ */
+function extractS3KeyFromUrl(url: string): string | null {
+  const cfUrl = process.env["CF_URL"]
+  if (!cfUrl || !url.includes(cfUrl)) return null
+  
+  return url.replace(`https://${cfUrl}/`, '')
 }
 
 export async function uploadAvatarToS3(

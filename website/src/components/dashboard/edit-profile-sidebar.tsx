@@ -1,6 +1,5 @@
 import React, { ChangeEvent, useEffect, useState } from "react"
 import "react-calendar/dist/Calendar.css"
-import DatePicker from "react-date-picker"
 import "react-date-picker/dist/DatePicker.css"
 import { HiPencilAlt } from "react-icons/hi/index"
 import { IoCheckmarkSharp } from "react-icons/io5/index"
@@ -11,7 +10,6 @@ import {
   unstable_FormLabel as FormLabel,
 } from "reakit"
 import { unstable_FormSubmitButton as FormSubmitButton } from "reakit"
-import { UserRole, useUserRole } from "../../auth"
 import { IconButton } from "../../components"
 import { Button, IconTextButton } from "../../components/button"
 import * as Dailp from "../../graphql/dailp"
@@ -103,7 +101,7 @@ export const EditProfileSidebar = () => {
   const handleAvatarUpload = async () => {
     if (!selectedFile) return
 
-    const success = await uploadAvatar(selectedFile, selectedFile.name)
+    const success = await uploadAvatar(selectedFile)
     if (success) {
       // Upload successful - the hook already updated the user profile
       setSelectedFile(null)

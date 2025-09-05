@@ -1,5 +1,4 @@
 import { style } from "@vanilla-extract/css"
-import { important, position } from "polished"
 import { button } from "src/components/button.css"
 import {
   buttonSize,
@@ -167,45 +166,6 @@ export const errorState = style({
   fontSize: "1rem",
 })
 
-// Media Queries
-export const responsiveAvatar = style({
-  "@media": {
-    [mediaQueries.medium]: {
-      width: "80px",
-      height: "80px",
-    },
-  },
-})
-
-export const responsiveAvatarPlaceholder = style([
-  responsiveAvatar,
-  {
-    "@media": {
-      [mediaQueries.medium]: {
-        fontSize: "3rem",
-      },
-    },
-  },
-])
-
-export const responsiveDisplayName = style({
-  "@media": {
-    [mediaQueries.medium]: {
-      fontSize: "2rem",
-    },
-  },
-})
-
-export const responsiveSidebar = style({
-  "@media": {
-    [mediaQueries.medium]: {
-      position: "relative",
-      top: 0,
-      marginBottom: vspace.large,
-    },
-  },
-})
-
 export const editPanelButton = style([
   button,
   paddingX(hspace.large),
@@ -228,10 +188,6 @@ export const formInputLabel = style({
   fontFamily: fonts.header,
   fontWeight: "normal",
   fontSize: fontSize.small,
-})
-
-export const dateInputConatiner = style({
-  width: "25%",
 })
 
 export const formInput = style([
@@ -326,13 +282,3 @@ export const chooseFileButton = style([
     width: "10rem",
   },
 ])
-
-// Responsive adjustments for edit mode
-export const responsiveButtonGroup = style({
-  "@media": {
-    [mediaQueries.medium]: {
-      flexDirection: "row",
-      gap: hspace.small,
-    },
-  },
-})
