@@ -8,6 +8,7 @@ use anyhow::Result;
 use dailp::collection::CollectionSection::Body;
 use dailp::collection::CollectionSection::Credit;
 use dailp::collection::CollectionSection::Intro;
+use dailp::ContributorRole;
 use std::result::Result::Ok;
 
 use dailp::{

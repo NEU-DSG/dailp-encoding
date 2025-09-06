@@ -28,6 +28,8 @@ use {
     std::time::Duration,
     uuid::Uuid,
 };
+// Explicitly import types from person.rs
+use crate::person::{Contributor, ContributorRole, ContributorDetails};
 
 /// Connects to our backing database instance, providing high level functions
 /// for accessing the data therein.
@@ -983,13 +985,18 @@ impl Database {
             let (name, doc, role): (Vec<_>, Vec<_>, Vec<_>) = meta
                 .contributors
                 .iter()
-                .map(|contributor| (&*contributor.name, document_uuid, &*contributor.role))
+                .map(|contributor| (&*contributor.name, document_uuid, contributor.role.as_ref()))
                 .multiunzip();
+            // Convert roles to Option<String> for SQL
+            let role_strings: Vec<Option<String>> = role
+                .iter()
+                .map(|r| r.map(|r| r.to_string()))
+                .collect();
             query_file!(
                 "queries/upsert_document_contributors.sql",
                 &*name as _,
                 &*doc,
-                &*role as _
+                &role_strings as _
             )
             .execute(&mut *tx)
             .await?;
@@ -2059,6 +2066,7 @@ impl Loader<PersonFullName> for Database {
                         full_name: x.full_name,
                         alternate_name: None,
                         birth_date: None,
+                        is_visible: false,
                     },
                 )
             })

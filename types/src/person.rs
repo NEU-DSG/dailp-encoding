@@ -17,7 +17,7 @@ impl Contributor {
     pub fn new_author(name: String) -> Self {
         Self {
             name,
-            role: "Author".to_owned(),
+            role: Some(ContributorRole::Author),
         }
     }
 }
@@ -55,12 +55,12 @@ pub struct ContributorDetails {
     /// The optional date that this contributor was born on.
     pub birth_date: Option<crate::Date>,
     /// Whether or not the contributor's profile is linked to their contributions
-    pub isVisible: bool,
+    pub is_visible: bool,
 }
 
 /// A contributor can have to any number of roles, which define most of their
-/// contributions to the associated item
-#[derive(async_graphql::Enum, Clone, Copy, PartialEq, Eq)]
+/// contributions to the associated item (add or revise as needed)
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize, Deserialize, async_graphql::Enum)]
 pub enum ContributorRole {
     /// Typed or transcribed handwritten materials
     Transcriber, 
@@ -71,10 +71,9 @@ pub enum ContributorRole {
     /// Added linguistic, cultural, etc. annotations 
     Annotator, 
     /// Provided cultural context for a document
-    CulturalAdvisor
+    CulturalAdvisor,
     /// Creator of a document
-    Author 
-    /// Add or revise as needed
+    Author, 
 }
 
 /// Draft of function for converting a string to a ContributorRole
@@ -85,23 +84,28 @@ impl std::str::FromStr for ContributorRole {
         match s.to_lowercase().as_str() {
             "author" => Ok(ContributorRole::Author),
             "editor" => Ok(ContributorRole::Editor),
-            "translator" => Ok(ContributorRole::Translator)
+            "translator" => Ok(ContributorRole::Translator),
             other => Err(format!("Unknown contributor role: {}", other)),
         }
     }
 }
 
-/// Draft of function for converting a ContributorRole to a string
-impl ToString for ContributorRole {
-    fn to_string(&self) -> String {
-        match self {
-            ContributorRole::Author => "AUTHOR".into(),
-            CoontributorRole::Editor => "EDITOR".into(),
-            ContributorRole::Translator => "TRANSLATOR".into(),
-            // Add more as needed
-        }
+// Display for ContributorRole
+impl std::fmt::Display for ContributorRole {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let s = match self {
+            ContributorRole::Translator => "Translator",
+            ContributorRole::Transcriber => "Transcriber",
+            ContributorRole::Annotator => "Annotator",
+            ContributorRole::CulturalAdvisor => "CulturalAdvisor",
+            ContributorRole::Author => "Author",
+            ContributorRole::Editor => "Editor",
+            _ => todo!(), // Wildcard for any new variants
+        };
+        write!(f, "{}", s)
     }
 }
+
 
 /// Handle if parsing string into a ContibutorRole fails
 impl ContributorRole {
@@ -111,9 +115,9 @@ impl ContributorRole {
 }
 
 // Handle if contributor has no role (ex. role hasn't been assigned yet)
-impl Option<ContributorRole> {
-    pub fn to_option_string(&self) -> Option<String> {
-        self.as_ref().map(|role| role.to_string())
+impl ContributorRole {
+    pub fn to_option_string(role: &Option<ContributorRole>) -> Option<String> {
+        role.as_ref().map(|r| r.to_string())
     }
 }
 
