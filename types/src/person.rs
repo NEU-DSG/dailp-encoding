@@ -111,7 +111,7 @@ impl ContributorRole {
 }
 
 // Handle if contributor has no role (ex. role hasn't been assigned yet)
-impl Option(ContributorRole> {
+impl Option<ContributorRole> {
     pub fn to_option_string(&self) -> Option<String> {
         self.as_ref().map(|role| role.to_string())
     }
