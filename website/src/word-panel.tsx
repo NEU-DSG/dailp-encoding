@@ -1,3 +1,4 @@
+import { groupBy } from "lodash"
 import React, { ReactNode, useState } from "react"
 import {
   AiFillCaretDown,
@@ -26,7 +27,6 @@ import { formInput } from "./edit-word-feature.css"
 import { useForm } from "./edit-word-form-context"
 import * as css from "./panel-layout.css"
 import { usePreferences } from "./preferences-context"
-import { groupBy } from "lodash"
 
 // Extracts the inner contents of the first pair of parentheses from a string.
 function extractParenthesesContent(str: string): string | null {
@@ -303,13 +303,17 @@ const EditGloss = (props: {
 }) => {
   const preferences = usePreferences()
   const { form } = useForm()
-  const [, insertCustomMorphemeTag] = useMutation(Dailp.InsertCustomMorphemeTagDocument)
+  const [, insertCustomMorphemeTag] = useMutation(
+    Dailp.InsertCustomMorphemeTagDocument
+  )
   const [{ data: allTagsData }, executeQuery] = useQuery({
     query: Dailp.GlossaryDocument,
-    variables: { system: preferences.cherokeeRepresentation }
+    variables: { system: preferences.cherokeeRepresentation },
   })
 
-  let allNewTags = allTagsData?.allTags.filter((tag: Dailp.MorphemeTag) => tag.tag !== "")
+  let allNewTags = allTagsData?.allTags.filter(
+    (tag: Dailp.MorphemeTag) => tag.tag !== ""
+  )
   const groupedTags = groupBy(allNewTags, (t) => t.morphemeType)
 
   // Creates a selectable option out of each functional tag, and groups them together by morpheme type.
@@ -332,31 +336,36 @@ const EditGloss = (props: {
   const handleNewTag = async (
     newValue: OnChangeValue<{ value: string; label: string }, false>
   ) => {
-    if (newValue ) {
+    // if newvalue value == newvalue label, its a new gloss
+    if (newValue) {
       const parenthesesContent = extractParenthesesContent(newValue.label)
       const title = newValue.label.substring(0, newValue.label.indexOf("("))
       if (parenthesesContent) {
         //db update
         // Insert the new tag and refresh the query
-        await insertCustomMorphemeTag({ 
-          tag: parenthesesContent, 
-          title: title, 
-          system: preferences.cherokeeRepresentation 
+        await insertCustomMorphemeTag({
+          tag: parenthesesContent,
+          title: title,
+          system: preferences.cherokeeRepresentation,
         })
         // Refresh the query to get the new tag
-        await executeQuery({ requestPolicy: 'network-only' })
-      }else{
+        await executeQuery({ requestPolicy: "network-only" })
+      } else {
         //just do frontend update
       }
 
-      let matchingTag = newValue.value === newValue.label ?
-      (parenthesesContent ? {
-          tag: parenthesesContent,
-          title: newValue.label,
-      } : null) : {
-        tag: newValue.value,
-        title: newValue.label,
-      }
+      let matchingTag =
+        newValue.value === newValue.label
+          ? parenthesesContent
+            ? {
+                tag: parenthesesContent,
+                title: newValue.label,
+              }
+            : null
+          : {
+              tag: newValue.value,
+              title: newValue.label,
+            }
 
       const newMorpheme: Dailp.FormFieldsFragment["segments"][0] = {
         ...props.morpheme,
