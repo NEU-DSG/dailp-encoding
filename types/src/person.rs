@@ -82,8 +82,11 @@ impl std::str::FromStr for ContributorRole {
     
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
+            "annotator" => Ok(ContributorRole::Annotator),
             "author" => Ok(ContributorRole::Author),
+            "culturalAdvisior" => Ok(ContributorRole::CulturalAdvisor),
             "editor" => Ok(ContributorRole::Editor),
+            "transcriber" => Ok(ContributorRole::Transcriber),
             "translator" => Ok(ContributorRole::Translator),
             other => Err(format!("Unknown contributor role: {}", other)),
         }
@@ -94,13 +97,12 @@ impl std::str::FromStr for ContributorRole {
 impl std::fmt::Display for ContributorRole {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let s = match self {
+            ContributorRole::Annotator => "Annotator",
+            ContributorRole::Author => "Author",
+            ContributorRole::CulturalAdvisor => "CulturalAdvisor",
+            ContributorRole::Editor => "Editor",
             ContributorRole::Translator => "Translator",
             ContributorRole::Transcriber => "Transcriber",
-            ContributorRole::Annotator => "Annotator",
-            ContributorRole::CulturalAdvisor => "CulturalAdvisor",
-            ContributorRole::Author => "Author",
-            ContributorRole::Editor => "Editor",
-            _ => todo!(), // Wildcard for any new variants
         };
         write!(f, "{}", s)
     }

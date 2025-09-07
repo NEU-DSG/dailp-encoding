@@ -3,7 +3,7 @@ use crate::{
     Database, Date, Translation, TranslationBlock,
 };
 
-use crate::person::{Contributor, ContributorRole, ContributorDetails, SourceAttribution};
+use crate::person::{Contributor, SourceAttribution};
 
 use async_graphql::{dataloader::DataLoader, FieldResult, MaybeUndefined};
 use serde::{Deserialize, Serialize};
