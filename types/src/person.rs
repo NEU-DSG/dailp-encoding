@@ -109,15 +109,17 @@ impl std::fmt::Display for ContributorRole {
 }
 
 
-/// Handle if parsing string into a ContibutorRole fails
+/// Provides helper method for parsing and formatting a ContributorRole
 impl ContributorRole {
+    /// Attempts to parse a string into a ContributorRole, returning 'None' if parsing fails
     pub fn from_option_str(s: &str) -> Option<Self> {
         s.parse::<ContributorRole>().ok()
     }
 }
 
-// Handle if contributor has no role (ex. role hasn't been assigned yet)
+/// Provides helper method for working with optional ContributorRole values.
 impl ContributorRole {
+    /// Converts a ContributorRole into its string representation
     pub fn to_option_string(role: &Option<ContributorRole>) -> Option<String> {
         role.as_ref().map(|r| r.to_string())
     }
