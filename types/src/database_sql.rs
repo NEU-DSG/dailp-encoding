@@ -569,11 +569,8 @@ impl Database {
         let source = word.source.into_vec();
         let simple_phonetics = word.romanized_source.into_vec();
         let commentary = word.commentary.into_vec();
-        let english_gloss_owned: Vec<String> = match word.english_gloss.into_vec().pop().flatten() {
-            Some(glosses) => glosses,
-            None => Vec::new(),
-        };
-        let english_gloss: Vec<&str> = english_gloss_owned.iter().map(|s| s.as_str()).collect();
+        //note, we are only expecting one english_gloss, turning into vec bc legacy type for english_gloss is vec
+        let english_gloss = word.english_gloss.into_vec();
 
         let document_id = query_file!(
             "queries/update_word.sql",
@@ -581,7 +578,7 @@ impl Database {
             &source as _,
             &simple_phonetics as _,
             &commentary as _,
-            &english_gloss as _
+            &english_gloss as _,
         )
         .fetch_one(&mut *tx)
         .await?
