@@ -210,16 +210,20 @@ query EditedCollections {
     id
     title
     slug
+    description
     chapters {
       id
       path
     }
+    thumbnailUrl
   }
 }
 
 query EditedCollection($slug: String!) {
   editedCollection(slug: $slug) {
     id
+    title
+    slug
     chapters {
       id
       title
@@ -682,8 +686,22 @@ mutation AddDocument($input: CreateDocumentFromFormInput!) {
     id
     title
     slug
-    collectionSlug
-    chapterSlug
+  }
+}
+
+mutation AddEditedCollection($input: CreateEditedCollectionInput!) {
+  createEditedCollection(input: $input)
+}
+
+mutation updateUser($user: UserUpdate!) {
+  updateUser(user: $user) {
+    id
+    displayName
+    avatarUrl
+    bio
+    organization
+    location
+    role
   }
 }
 

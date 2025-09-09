@@ -6,9 +6,9 @@ use dailp::{
     slugify_ltree,
     user::{User, UserUpdate},
     AnnotatedForm, AnnotatedSeg, AttachAudioToWordInput, CollectionChapter, Contributor,
-    CurateWordAudioInput, Date, DeleteContributorAttribution, DocumentMetadata,
-    DocumentMetadataUpdate, DocumentParagraph, PositionInDocument, SourceAttribution,
-    TranslatedPage, TranslatedSection, UpdateContributorAttribution, Uuid,
+    CreateEditedCollectionInput, CurateWordAudioInput, Date, DeleteContributorAttribution,
+    DocumentMetadata, DocumentMetadataUpdate, DocumentParagraph, PositionInDocument,
+    SourceAttribution, TranslatedPage, TranslatedSection, UpdateContributorAttribution, Uuid,
 };
 use itertools::{Itertools, Position};
 
@@ -771,6 +771,23 @@ impl Mutation {
             collection_slug: "user_documents".to_string(), // All user-created documents go to user_documents collection
             chapter_slug: dailp::slugify_ltree(&short_name), // Chapter slug must be ltree-compatible
         })
+    }
+
+    #[graphql(
+        //TODO ADD ADMIN ROLES WHEN IT IS READY
+        guard = "GroupGuard::new(UserGroup::Editors)"
+    )]
+    async fn create_edited_collection(
+        &self,
+        context: &Context<'_>,
+        input: CreateEditedCollectionInput,
+    ) -> FieldResult<String> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .insert_edited_collection(input)
+            .await?
+            .to_string())
     }
 }
 
