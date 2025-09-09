@@ -29,7 +29,7 @@ use {
     uuid::Uuid,
 };
 // Explicitly import types from person.rs
-use crate::person::{Contributor, ContributorRole, ContributorDetails};
+use crate::person::{Contributor, ContributorDetails, ContributorRole};
 
 /// Connects to our backing database instance, providing high level functions
 /// for accessing the data therein.
@@ -988,10 +988,8 @@ impl Database {
                 .map(|contributor| (&*contributor.name, document_uuid, contributor.role.as_ref()))
                 .multiunzip();
             // Convert roles to Option<String> for SQL
-            let role_strings: Vec<Option<String>> = role
-                .iter()
-                .map(|r| r.map(|r| r.to_string()))
-                .collect();
+            let role_strings: Vec<Option<String>> =
+                role.iter().map(|r| r.map(|r| r.to_string())).collect();
             query_file!(
                 "queries/upsert_document_contributors.sql",
                 &*name as _,
@@ -2028,7 +2026,7 @@ impl Loader<ContributorsForDocument> for Database {
         Ok(items
             .into_iter()
             .map(|x| {
-                (  
+                (
                     ContributorsForDocument(x.document_id),
                     Contributor {
                         name: x.full_name,
