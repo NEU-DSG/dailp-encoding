@@ -10499,7 +10499,7 @@ export type PageQuery = { readonly __typename?: "RootQuery" } & {
     | { readonly __typename: "Comment" }
     | { readonly __typename: "ContentType" }
     | { readonly __typename: "MediaItem" }
-    | ({ readonly __typename: "Page" } & Pick<Page, "title" | "content">)
+    | ({ readonly __typename: "Page" } & Pick<Page, "id" | "title" | "content">)
     | { readonly __typename: "Post" }
     | { readonly __typename: "PostFormat" }
     | { readonly __typename: "Tag" }
@@ -10565,6 +10565,7 @@ export const PageDocument = gql`
     page: nodeByUri(uri: $slug) {
       __typename
       ... on Page {
+        id
         title
         content
       }
