@@ -63,23 +63,23 @@ pub struct ContributorDetails {
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize, Deserialize, async_graphql::Enum)]
 pub enum ContributorRole {
     /// Typed or transcribed handwritten materials
-    Transcriber, 
+    Transcriber,
     /// Translated text into another language
     Translator,
     /// Edited the text or translation for clarity or structure
     Editor,
-    /// Added linguistic, cultural, etc. annotations 
-    Annotator, 
+    /// Added linguistic, cultural, etc. annotations
+    Annotator,
     /// Provided cultural context for a document
     CulturalAdvisor,
     /// Creator of a document
-    Author, 
+    Author,
 }
 
 /// Draft of function for converting a string to a ContributorRole
 impl std::str::FromStr for ContributorRole {
     type Err = String;
-    
+
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
             "annotator" => Ok(ContributorRole::Annotator),
@@ -107,7 +107,6 @@ impl std::fmt::Display for ContributorRole {
         write!(f, "{}", s)
     }
 }
-
 
 /// Provides helper method for parsing and formatting a ContributorRole
 impl ContributorRole {

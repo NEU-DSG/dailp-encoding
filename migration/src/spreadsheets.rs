@@ -889,7 +889,7 @@ impl SheetInterpretation {
                 Contributor {
                     name,
                     role: parsed_role, // Some(role) if parsed, None if invalid/empty
-                }   
+                }
             })
             .collect();
 
