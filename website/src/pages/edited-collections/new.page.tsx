@@ -35,7 +35,7 @@ const NewEditedCollectionPage = () => {
   }
 
   // Check if user has permission to create edited collections
-  if (userRole !== UserRole.Editor && userRole !== UserRole.Contributor) {
+  if (userRole !== UserRole.Editor) {
     return (
       <Layout>
         <Helmet title="Access Denied" />
@@ -96,10 +96,6 @@ const NewEditedCollectionPage = () => {
         setError("Please select a cover image to upload.")
         return
       }
-      console.log("Submitting mutation with input:", {
-        title: formData.title,
-        description: formData.description,
-      })
 
       const uploadResult = await uploadCollectionCoverToS3(
         user!,
@@ -110,14 +106,9 @@ const NewEditedCollectionPage = () => {
         input: {
           title: formData.title,
           description: formData.description,
-          thumbnailUrl: uploadResult.resourceURL,
+          thumbnailUrl: uploadResult.resourceUrl,
         },
       })
-
-      console.log("Mutation result:", result)
-      console.log("Result data:", result.data)
-      console.log("Result error:", result.error)
-      console.log("Result extensions:", result.extensions)
 
       if (result.error) {
         setError(`GraphQL Error: ${result.error.message}`)
@@ -156,7 +147,6 @@ const NewEditedCollectionPage = () => {
   }
 
   const [{ data: dailp }] = Dailp.useEditedCollectionsQuery()
-  console.log(dailp?.allEditedCollections)
 
   return (
     <Layout>
