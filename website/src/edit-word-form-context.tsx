@@ -95,8 +95,8 @@ export const FormProvider = (props: { children: ReactNode }) => {
             role: segment.role,
           })),
           romanizedSource: values.word["romanizedSource"],
-          englishGloss: Array.isArray(values.word["englishGloss"]) 
-            ? values.word["englishGloss"].join(" ") 
+          englishGloss: Array.isArray(values.word["englishGloss"])
+            ? values.word["englishGloss"].join(" ")
             : String(values.word["englishGloss"]),
         }
 
