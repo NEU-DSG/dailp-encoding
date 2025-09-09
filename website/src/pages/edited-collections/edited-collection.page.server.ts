@@ -14,6 +14,6 @@ export async function prerender() {
   }
 
   return data.allEditedCollections.flatMap((collection) => {
-    return { url: `/collections/${collection.slug}` }
+    return { url: `/collections/${collection.slug}`, pageContext: {} }
   })
 }
