@@ -303,7 +303,7 @@ pub struct AnnotatedFormUpdate {
     pub commentary: MaybeUndefined<String>,
     /// Updated segments
     pub segments: MaybeUndefined<Vec<MorphemeSegmentUpdate>>,
-    // Possible updated english gloss
+    /// Possible updated english gloss
     pub english_gloss: MaybeUndefined<String>,
 }
 
