@@ -376,11 +376,11 @@ export type ContributorDetails = {
 
 /** Input for creating an edited collection */
 export type CreateEditedCollectionInput = {
-  /** An updated title for this document, or nothing (if title is unchanged) */
+  /** Description of the collection */
   readonly description: Scalars["String"]
-  /** URL of the cover image for the collection */
+  /** URL of the thumbnail image for the collection */
   readonly thumbnailUrl: Scalars["String"]
-  /** The ID of the document to update */
+  /** The title of the collection */
   readonly title: Scalars["String"]
 }
 

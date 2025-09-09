@@ -116,10 +116,10 @@ impl CollectionChapter {
 /// Input for creating an edited collection
 #[derive(async_graphql::InputObject)]
 pub struct CreateEditedCollectionInput {
-    /// The ID of the document to update
+    /// The title of the collection
     pub title: String,
-    /// An updated title for this document, or nothing (if title is unchanged)
+    /// Description of the collection
     pub description: String,
-    /// URL of the cover image for the collection
+    /// URL of the thumbnail image for the collection
     pub thumbnail_url: String,
 }
