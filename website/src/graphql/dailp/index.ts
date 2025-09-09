@@ -384,16 +384,6 @@ export type CreateEditedCollectionInput = {
   readonly title: Scalars["String"]
 }
 
-/** Input for creating an edited collection */
-export type CreateEditedCollectionInput = {
-  /** Description of the collection */
-  readonly description: Scalars["String"]
-  /** URL of the thumbnail image for the collection */
-  readonly thumbnailUrl: Scalars["String"]
-  /** The title of the collection */
-  readonly title: Scalars["String"]
-}
-
 /** Request to update if a piece of audio should be included in an edited collection */
 export type CurateWordAudioInput = {
   /** Audio to include/exclude */
