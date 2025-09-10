@@ -15,7 +15,9 @@ import Link from "../link"
 import { BookmarkCard } from "./bookmark-card"
 import * as css from "./dashboard.css"
 import { FormProvider } from "./edit-profile-sidebar-form-context"
-import { ProfileSidebarLayout } from "./profile-sidebar-layout"
+import { ProfileSidebarLayout, LayoutVariant } from "./profile-sidebar-layout"
+import { useMediaQuery } from "src/custom-hooks"
+import { mediaQueries } from "src/style/constants"
 
 enum Tabs {
   ACTIVITY = "activity-tab",
@@ -26,14 +28,19 @@ enum Tabs {
 export const Dashboard = () => {
   const tabs = useScrollableTabState({ selectedId: Tabs.BOOKMARKS })
   const curRole = useUserRole()
+  const isDesktop = useMediaQuery(mediaQueries.medium)
+  
   return (
     <>
       {/* Container for the ProfileSidebar and main dashboard content*/}
       <div className={css.dashboardLayout}>
         {/* Profile sidebar - 1/4 width */}
+
+      {isDesktop &&
         <FormProvider>
-          <ProfileSidebarLayout />
+          <ProfileSidebarLayout layout={LayoutVariant.Sidebar}/>
         </FormProvider>
+      }
 
         {/* Main dashboard content - 3/4 width */}
         <div className={css.mainContent}>

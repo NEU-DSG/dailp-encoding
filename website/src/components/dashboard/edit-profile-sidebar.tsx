@@ -116,23 +116,19 @@ export const EditProfileSidebar = () => {
   // Loading state
   if (fetching) {
     return (
-      <aside className={css.profileSidebar}>
-        <div className={css.loadingState}>
-          <div className={css.avatarSkeleton}></div>
-          <div className={css.textSkeleton}></div>
-        </div>
-      </aside>
+      <div className={css.loadingState}>
+        <div className={css.avatarSkeleton}></div>
+        <div className={css.textSkeleton}></div>
+      </div>
     )
   }
 
   // Error state
   if (error || !user) {
     return (
-      <aside className={css.profileSidebar}>
-        <div className={css.errorState}>
-          <p>Unable to load profile</p>
-        </div>
-      </aside>
+      <div className={css.errorState}>
+        <p>Unable to load profile</p>
+      </div>
     )
   }
 
@@ -142,7 +138,7 @@ export const EditProfileSidebar = () => {
     : null
 
   return (
-    <aside className={css.profileSidebar}>
+    <>
       {/* Avatar Section */}
       <div className={css.avatarContainer}>
         {/* Show current avatar */}
@@ -300,6 +296,6 @@ export const EditProfileSidebar = () => {
         {/* Edit Profile Button */}
         <EditButton />
       </div>
-    </aside>
+    </>
   )
 }

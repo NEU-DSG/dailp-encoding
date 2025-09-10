@@ -40,6 +40,18 @@ export const profileSidebar = style({
   overflowWrap: "anywhere", // modern browsers
 })
 
+export const profilePage = style({
+  maxWidth: "30%",
+  margin: "0 auto",
+  marginTop: space.large,
+  marginBottom: space.large,
+})
+
+export const profileMobilePage = style({
+  width: "90%",
+  margin: space.large,
+})
+
 // Avatar Styles
 export const avatarContainer = style({
   display: "flex",
