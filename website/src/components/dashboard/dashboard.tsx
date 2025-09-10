@@ -6,18 +6,18 @@ import {
   useDialogState,
 } from "reakit"
 import { UserRole, useUserRole } from "src/auth"
+import { useMediaQuery } from "src/custom-hooks"
 import {
   useAnnotatedDocumentByIdQuery,
   useBookmarkedDocumentsQuery,
 } from "src/graphql/dailp"
 import { useScrollableTabState } from "src/scrollable-tabs"
+import { mediaQueries } from "src/style/constants"
 import Link from "../link"
 import { BookmarkCard } from "./bookmark-card"
 import * as css from "./dashboard.css"
 import { FormProvider } from "./edit-profile-sidebar-form-context"
-import { ProfileSidebarLayout, LayoutVariant } from "./profile-sidebar-layout"
-import { useMediaQuery } from "src/custom-hooks"
-import { mediaQueries } from "src/style/constants"
+import { LayoutVariant, ProfileSidebarLayout } from "./profile-sidebar-layout"
 
 enum Tabs {
   ACTIVITY = "activity-tab",
@@ -29,18 +29,18 @@ export const Dashboard = () => {
   const tabs = useScrollableTabState({ selectedId: Tabs.BOOKMARKS })
   const curRole = useUserRole()
   const isDesktop = useMediaQuery(mediaQueries.medium)
-  
+
   return (
     <>
       {/* Container for the ProfileSidebar and main dashboard content*/}
       <div className={css.dashboardLayout}>
         {/* Profile sidebar - 1/4 width */}
 
-      {isDesktop &&
-        <FormProvider>
-          <ProfileSidebarLayout layout={LayoutVariant.Sidebar}/>
-        </FormProvider>
-      }
+        {isDesktop && (
+          <FormProvider>
+            <ProfileSidebarLayout layout={LayoutVariant.Sidebar} />
+          </FormProvider>
+        )}
 
         {/* Main dashboard content - 3/4 width */}
         <div className={css.mainContent}>
@@ -79,7 +79,7 @@ export const Dashboard = () => {
           >
             <ActivityTab />
           </TabPanel>
-          
+
           <TabPanel
             {...tabs}
             id={Tabs.ADMIN_TOOLS}

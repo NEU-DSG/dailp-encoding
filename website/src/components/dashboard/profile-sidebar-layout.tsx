@@ -30,9 +30,5 @@ export const ProfileSidebarLayout = ({ layout }: { layout: LayoutVariant }) => {
     }
   })()
 
-  return (
-    <div className={containerClass}>
-      {sidebar}
-    </div>
-  )
+  return <div className={containerClass}>{sidebar}</div>
 }

@@ -1,5 +1,9 @@
 import { CognitoIdentityClient } from "@aws-sdk/client-cognito-identity"
-import { DeleteObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3"
+import {
+  DeleteObjectCommand,
+  PutObjectCommand,
+  S3Client,
+} from "@aws-sdk/client-s3"
 import { fromCognitoIdentityPool } from "@aws-sdk/credential-provider-cognito-identity"
 import { CognitoUser } from "amazon-cognito-identity-js"
 import { v4 } from "uuid"

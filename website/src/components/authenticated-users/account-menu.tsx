@@ -35,7 +35,7 @@ const AccountActionsMenu = (p: { groups?: readonly Dailp.UserGroup[] }) => {
   let actions = [
     <Link href="/profile">My Profile</Link>,
     <Link href="/dashboard">Dashboard</Link>,
-    <ConfirmLogout />
+    <ConfirmLogout />,
   ]
   let groups: string[] =
     p.groups && p.groups.length > 0
