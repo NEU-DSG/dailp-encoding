@@ -1,5 +1,12 @@
-use crate::{Database, PersonFullName};
+use crate::{Database, PersonFullName, user::User};
 use serde::{Deserialize, Serialize};
+
+/// Record for a DAILP admin
+#[derive(Clone, Debug, Serialize, Deserialize, async_graphql::SimpleObject)]
+pub struct Admin {
+    /// Inherits from User
+    pub user: User,
+}
 
 /// An individual or organization that contributed to the creation or analysis
 /// of a particular document or source. Each contributor has a name and a role
@@ -133,4 +140,14 @@ pub struct SourceAttribution {
     pub name: String,
     /// URL of this source's homepage, i.e. "https://www.newberry.org/"
     pub link: String,
+}
+
+/// May not need this
+/// A user belongs to any number of user groups, which give them various permissions.
+#[derive(async_graphql::Enum, Clone, Copy, PartialEq, Eq)]
+pub enum UserGroup {
+    Admin,
+    Contributors,
+    Editors,
+    Readers,
 }

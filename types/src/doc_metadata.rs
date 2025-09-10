@@ -1,18 +1,9 @@
-/// New document metadata
-/// TODO: Move types to the appropirate files
-/// TODO: Fix derive attribute macro for each type
-use crate::{document::DocumentReference, person::ContributorDetails, user::User};
+/// Document metadata
+use crate::{document::DocumentReference};
 
-use async_graphql::{dataloader::DataLoader, FieldResult, MaybeUndefined};
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use uuid::Uuid;
-
-/// Record for a DAILP admin
-#[derive(Clone, Debug, Serialize, Deserialize, async_graphql::SimpleObject)]
-pub struct Admin {
-    /// Inherits from User
-    pub user: User,
-}
 
 /// Represents the status of a suggestion made by a contributor
 #[derive(async_graphql::Enum, Clone, Copy, PartialEq, Eq)]
@@ -22,22 +13,9 @@ pub enum Status {
     Rejected,
 }
 
-/// Record to store a key term associated with a document
-#[derive(Clone, Debug, Serialize, Deserialize, async_graphql::SimpleObject)]
-pub struct Keyword {
-    /// UUID for the keyword
-    pub id: Uuid,
-    /// Documents associated with the keyword
-    pub documents: Vec<DocumentReference>,
-    /// Name of the keyword
-    pub name: String,
-    /// Status (pending, approved, rejected) of a keyword
-    pub status: Status,
-}
-
 /// Record to store a subject heading that reflects Indigenous knowledge
 /// practices associated with a document
-#[derive(Clone, Debug, Serialize, Deserialize, async_graphql::SimpleObject)]
+#[derive(Clone, Serialize, Deserialize, async_graphql::SimpleObject)]
 pub struct SubjectHeading {
     /// UUID for the subject heading
     pub id: Uuid,
@@ -50,18 +28,29 @@ pub struct SubjectHeading {
 }
 
 /// Stores the physical or digital medium associated with a document
-#[derive(Clone, Debug, Serialize, Deserialize, async_graphql::SimpleObject)]
+#[derive(Clone, Serialize, Deserialize, async_graphql::SimpleObject)]
 pub struct Format {
     /// UUID for the format
     pub id: Uuid,
     /// Documents associated with the format
     pub documents: Vec<DocumentReference>,
-    /// Name of the format, pulling from controlled vocabulary for formats
+    /// Name of the format
+    pub name: String,
+}
+
+/// Stores the genre associated with a document
+#[derive(Clone, Serialize, Deserialize, async_graphql::SimpleObject)]
+pub struct Genre {
+    /// UUID for the genre
+    pub id: Uuid,
+    /// Documents associated with the genre
+    pub documents: Vec<DocumentReference>,
+    /// Name of the genre
     pub name: String,
 }
 
 /// Stores a language associated with a document
-#[derive(Clone, Debug, Serialize, Deserialize, async_graphql::SimpleObject)]
+#[derive(Clone, Serialize, Deserialize, async_graphql::SimpleObject)]
 pub struct Language {
     /// UUID for the language
     pub id: Uuid,
@@ -73,14 +62,12 @@ pub struct Language {
     pub dailpTag: String,
     /// Documents associated with the language
     pub documents: Vec<DocumentReference>,
-    /// UUID for the language
-    pub id: Uuid,
     /// Name of the language
     pub name: String,
 }
 
 /// Stores a spatial coverage associated with a document
-#[derive(Clone, Debug, Serialize, Deserialize, async_graphql::SimpleObject)]
+#[derive(Clone, Serialize, Deserialize, async_graphql::SimpleObject)]
 pub struct SpatialCoverage {
     /// UUID for the place
     pub id: Uuid,
@@ -98,7 +85,7 @@ pub struct SpatialCoverage {
 
 /// Stores citation information for a document
 /// TODO: Add more fields to cover a variety of format types
-#[derive(Clone, Debug, Serialize, Deserialize, async_graphql::SimpleObject)]
+#[derive(Clone, Serialize, Deserialize, async_graphql::SimpleObject)]
 pub struct Citation {
     /// UUID for the citation
     pub id: Uuid,
@@ -159,13 +146,4 @@ pub fn format_to_citation_format() -> HashMap<&'static str, DocCitationFormat> {
     map.insert("Film", Video);
 
     map
-}
-
-/// A user belongs to any number of user groups, which give them various permissions.
-#[derive(async_graphql::Enum, Clone, Copy, PartialEq, Eq)]
-pub enum UserGroup {
-    Admin,
-    Contributors,
-    Editors,
-    Readers,
 }
