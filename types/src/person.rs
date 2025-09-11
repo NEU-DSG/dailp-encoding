@@ -1,5 +1,6 @@
 use crate::{Database, PersonFullName, user::User};
 use serde::{Deserialize, Serialize};
+use async_graphql::{SimpleObject, Union};
 
 /// Record for a DAILP admin
 #[derive(Clone, Debug, Serialize, Deserialize, async_graphql::SimpleObject)]
@@ -11,7 +12,7 @@ pub struct Admin {
 /// An individual or organization that contributed to the creation or analysis
 /// of a particular document or source. Each contributor has a name and a role
 /// that specifies the type of their contributions.
-#[derive(Clone, Debug, Serialize, Deserialize, async_graphql::SimpleObject)]
+#[derive(Clone, Debug, Serialize, Deserialize, async_graphql::SimpleObject, PartialEq, Eq)]
 #[graphql(complex)]
 pub struct Contributor {
     /// Full name of the contributor
@@ -63,6 +64,35 @@ pub struct ContributorDetails {
     pub birth_date: Option<crate::Date>,
     /// Whether or not the contributor's profile is linked to their contributions
     pub is_visible: bool,
+}
+
+/// A Contributor registered in the DAILP database
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize, SimpleObject)]
+pub struct RegisteredContributor {
+    /// UUID of the contributor
+    pub id: uuid::Uuid,
+    /// Name or identifier of the contributor
+    pub name: String,
+    /// Roles of the contributor
+    pub roles: Vec<ContributorRole>,
+}
+
+/// A Contributor not registered in the DAILP database
+#[derive(Clone, Debug, Serialize, Deserialize, SimpleObject)]
+pub struct UnregisteredContributor {
+    /// Name or identifier of the contributor
+    pub name: String,
+    /// Roles of the contributor
+    pub roles: Vec<ContributorRole>,
+}
+
+/// Used to reference a Contributor that may or may not be registered in the DAILP database
+#[derive(Clone, Debug, Serialize, Deserialize, Union)]
+pub enum ContributorReference {
+    /// A linked contributor in the database
+    Registered(RegisteredContributor),
+    /// Unregistered or historical person
+    Unregistered(UnregisteredContributor),
 }
 
 /// A contributor can have to any number of roles, which define most of their
