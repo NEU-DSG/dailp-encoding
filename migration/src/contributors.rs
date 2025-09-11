@@ -17,6 +17,7 @@ pub async fn migrate_all(db: &Database) -> Result<()> {
                 full_name,
                 alternate_name,
                 birth_date: birth_date.and_then(|d| dailp::Date::parse(&d).ok()),
+                is_visible: false,
             })
         })
         .collect();

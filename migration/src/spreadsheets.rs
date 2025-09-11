@@ -8,6 +8,7 @@ use anyhow::Result;
 use dailp::collection::CollectionSection::Body;
 use dailp::collection::CollectionSection::Credit;
 use dailp::collection::CollectionSection::Intro;
+use dailp::ContributorRole;
 use std::result::Result::Ok;
 
 use dailp::{
@@ -870,12 +871,26 @@ impl SheetInterpretation {
             .ok_or_else(|| anyhow::anyhow!("Missing contributor roles row"))?;
 
         // Process contributors with validation
-        let people = names
+        let people: Vec<Contributor> = names
             .into_iter()
             .skip(1)
             .zip(roles.into_iter().skip(1))
             .filter(|(name, role)| !name.trim().is_empty() || !role.trim().is_empty())
-            .map(|(name, role)| Contributor { name, role })
+            .map(|(name, role)| {
+                let parsed_role = match role.to_lowercase().parse::<ContributorRole>() {
+                    // Convert string to ContributorRole if parsing succeeds
+                    Ok(r) => Some(r),
+                    // Print error and assign None if parsing fails
+                    Err(_) => {
+                        println!("'{}' is not a valid role", role);
+                        None
+                    }
+                };
+                Contributor {
+                    name,
+                    role: parsed_role, // Some(role) if parsed, None if invalid/empty
+                }
+            })
             .collect();
 
         // Row 12-13: Source attributions with validation
