@@ -1,6 +1,6 @@
 import { DialogContent, DialogOverlay } from "@reach/dialog"
 import "@reach/dialog/styles.css"
-import React, { useEffect, useState } from "react"
+import React, { Fragment, useEffect, useState } from "react"
 import { isMobile } from "react-device-detect"
 import { Helmet } from "react-helmet"
 import {
@@ -456,60 +456,128 @@ export const DocumentTitleHeader = (p: {
   }
 }) => {
   const { user } = useUser()
+  const year = p.doc.date?.year ? `${p.doc.date.year}` : ""
+
   return (
     <header className={css.docHeader}>
-      {p.breadcrumbs && (
-        <Breadcrumbs aria-label="Breadcrumbs">
-          {p.breadcrumbs.map((crumb) => (
-            <Link href={`${p.rootPath}/${crumb.slug}`} key={crumb.slug}>
-              {crumb.name}
-            </Link>
-          ))}
-        </Breadcrumbs>
-      )}
-
-      <h1 className={css.docTitle}>
-        {p.doc.title}
-        {p.doc.date && ` (${p.doc.date.year})`}{" "}
-      </h1>
-
-      <div className={css.bottomPadded}>
-        {user ? (
-          <BookmarkButton
-            documentId={p.doc.id}
-            isBookmarked={p.doc.bookmarkedOn !== null}
-          />
-        ) : (
-          <></>
-        )}
-        {!p.doc.audioRecording && !isMobile && (
-          <div id="no-audio-message">
-            <strong>No Audio Available</strong>
+      <div className={css.container}>
+        <div className={`${css.documentLayout} lg:flex-row flex-col`}>
+          {/* Document image (thumbnail or placeholder if not available) */}
+          <div className={css.documentImageContainer}>
+            <img
+              src="https://teva.contentdm.oclc.org/iiif/2/tfd:328/full/730,/0/default.jpg?page=1"
+              alt={p.doc.title}
+              className={`${css.documentImage} lg:w-80 lg:h-96 w-full h-72`}
+            />
           </div>
-        )}
-        <div className={css.alignRight}>
-          {!isMobile ? (
-            <Button onClick={() => window.print()}>Print</Button>
-          ) : null}
+
+          <div className={css.contentSection}>
+            {/* Breadcrumbs */}
+            {p.breadcrumbs && (
+			        <Breadcrumbs aria-label="Breadcrumbs">
+			          {p.breadcrumbs.map((crumb) => (
+			            <Link href={`${p.rootPath}/${crumb.slug}`} key={crumb.slug}>
+			              {crumb.name}
+			            </Link>
+			          ))}
+			        </Breadcrumbs>
+			      )}
+
+            {/* Title and year created */}
+            <div className={css.titleContainer}>
+              <h1 className={`${css.title} lg:text-5xl text-3xl`}>
+                {p.doc.title}
+                {year && (
+                  <span
+                    className={`${css.year} lg:text-2xl text-xl lg:ml-4 ml-2`}
+                  >
+                    {year}
+                  </span>
+                )}
+              </h1>
+            </div>
+
+            {/* Document types (placeholders until backend provides these fields) */}
+            <div className={`${css.documentTypes} lg:flex-row flex-col`}>
+              <div className={css.documentType}>
+                <div className={`${css.documentIcon} lg:w-8 lg:h-8 w-6 h-6`}>
+                  📄
+                </div>
+                <span
+                  className={`${css.documentTypeText} lg:text-lg text-base`}
+                >
+                  Legal Document
+                </span>
+              </div>
+              <div className={css.documentType}>
+                <div className={`${css.documentIcon} lg:w-8 lg:h-8 w-6 h-6`}>
+                  📋
+                </div>
+                <span
+                  className={`${css.documentTypeText} lg:text-lg text-base`}
+                >
+                  Manuscript
+                </span>
+              </div>
+            </div>
+
+            {/* Description (replace with actual data from backend later) */}
+            <p className={`${css.description} lg:text-base text-sm`}>
+              {"A product of a convention held in early July 1827 at New Echota, Georgia, the constitution appears to be a version of the American Constitution adapted to suit Cherokee needs. The constitution does not represent a position of assimilation to white society but, rather, a conscious strategy to resist removal and maintain autonomy. However, traditionalists saw it as one more concession to white, Christian authority."}
+            </p>
+
+            {/* Action buttons (bookmark, print, audio) */}
+            <div className={`${css.actionButtons} lg:flex-row flex-col`}>
+              {/* Audio Button */}
+              {p.doc.audioRecording ? ( // TODO Implement sticky audio bar
+                <button
+                  className={`${css.actionButton} lg:px-6 lg:py-3 px-5 py-2`}
+                >
+                  <span
+                    className={`${css.buttonIcon} lg:w-5 lg:h-5 w-4 h-4`}
+                  >
+                    🔊
+                  </span>
+                  <AudioPlayer
+                    style={{ flex: 1 }}
+                    audioUrl={p.doc.audioRecording.resourceUrl}
+                    showProgress
+                  />
+                </button>
+              ) : (
+                !isMobile && (
+						      <div id="no-audio-message">
+						        <strong>Audio Not Yet Available</strong>
+						      </div>
+						    )
+              )}
+
+              {/* Print button */}
+							<div className={css.alignRight}>
+							  {!isMobile ? (
+							    <Button
+							      onClick={() => window.print()}
+							      className={`${css.actionButton} lg:px-6 lg:py-3 px-5 py-2 hover:bg-slate-700`}
+							    >
+							      <span className={`${css.buttonIcon} lg:w-5 lg:h-5 w-4 h-4`}>
+							        🖨️
+							      </span>
+							      Print
+							    </Button>
+							  ) : null}
+							</div>
+							
+							{/* Bookmark button */}
+							{user && (
+							  <BookmarkButton
+							    documentId={p.doc.id}
+							    isBookmarked={p.doc.bookmarkedOn !== null}
+							  />
+							)}
+            </div>
+          </div>
         </div>
       </div>
-      {p.doc.audioRecording && ( // TODO Implement sticky audio bar
-        <div id="document-audio-player" className={css.audioContainer}>
-          <span>Document Audio:</span>
-          <AudioPlayer
-            style={{ flex: 1 }}
-            audioUrl={p.doc.audioRecording.resourceUrl}
-            showProgress
-          />
-          {p.doc.audioRecording && !isMobile && (
-            <div>
-              <a href={p.doc.audioRecording?.resourceUrl}>
-                <Button>Download Audio</Button>
-              </a>
-            </div>
-          )}
-        </div>
-      )}
     </header>
   )
 }
@@ -528,17 +596,15 @@ export const BookmarkButton = (props: {
     <>
       {props.isBookmarked ? (
         // Displays a "Cancel" button and "Save" button in editing mode.
-        <>
-          <IconTextButton
-            icon={<MdOutlineBookmarkRemove />}
-            className={css.BookmarkButton}
-            onClick={() => {
-              removeBookmarkMutation({ documentId: props.documentId })
-            }}
-          >
-            Un-Bookmark
-          </IconTextButton>
-        </>
+        <IconTextButton
+          icon={<MdOutlineBookmarkRemove />}
+          className={css.BookmarkButton}
+          onClick={() => {
+            removeBookmarkMutation({ documentId: props.documentId })
+          }}
+        >
+          Un-Bookmark
+        </IconTextButton>
       ) : (
         <IconTextButton
           icon={<MdOutlineBookmarkAdd />}

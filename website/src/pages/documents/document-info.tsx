@@ -31,18 +31,110 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
         <title>{docData.title} - Details</title>
       </Helmet>
       <section className={fullWidth}>
-        <h3 className={css.topMargin}>Contributors</h3>
-        <ul>
-          {docData.contributors.map((person) => (
-            <li key={person.name}>
-              {person.name}: {person.role}
-            </li>
-          ))}
-        </ul>
+        <div className={css.infoHeader}>
+          <h2 className={css.infoTitle}>Document Information</h2>
+          <p className={css.uploadedEditedTimes}>Uploaded 7/04/2025 • Last Edited 7/06/2025</p>
+        </div>
+
+        <div className={css.infoSection}>
+          <div className={css.field}>
+            <div className={css.label}>TITLE</div>
+            <div className={css.value}>{docData.title}</div>
+          </div>
+
+          <div className={css.field}>
+            <div className={css.label}>DATE CREATED</div>
+            <div className={css.value}>July 24, 1827</div>
+          </div>
+
+          <div className={css.field}>
+            <div className={css.label}>GENRE</div>
+            <div className={css.value}>Legal Document</div>
+          </div>
+
+          <div className={css.field}>
+            <div className={css.label}>FORMAT</div>
+            <div className={css.value}>PDF</div>
+          </div>
+
+          <div className={css.field}>
+            <div className={css.label}>PAGES</div>
+            <div className={css.value}>1-24</div>
+          </div>
+
+          <div className={css.field}>
+            <div className={css.label}>CREATOR</div>
+            <div className={css.value}>Sam Houston</div>
+          </div>
+
+          <div className={css.field}>
+            <div className={css.label}>CONTRIBUTORS</div>
+            <div className={css.value}>
+              <ul>
+                {docData.contributors.map((person) => (
+                  <li key={person.name}>
+                    {person.name} ({person.role})
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
+          <div className={css.field}>
+            <div className={css.label}>SOURCE</div>
+            <div className={css.value}>
+              <a href="https://teva.contentdm.oclc.org/digital/collection/fd/id/328/" className={css.link}>
+                https://teva.contentdm.oclc.org/digital/collection/fd/id/328/
+              </a>
+            </div>
+          </div>
+
+          <div className={css.field}>
+            <div className={css.label}>DOI</div>
+            <div className={css.value}>
+              <a href="https://doi.org/10.1000/182" className={css.link}>
+                https://doi.org/10.1000/182
+              </a>
+            </div>
+          </div>
+
+          <div className={css.field}>
+            <div className={css.label}>KEYWORDS</div>
+            <div className={css.value}>Cherokee, Sovereignty, Traditionalism, Resistance, Native American Removal</div>
+          </div>
+
+          <div className={css.field}>
+            <div className={css.label}>SUBJECT HEADINGS</div>
+            <div className={css.value}>
+              Cherokee Political Structure, Resistance to Removal, Sacred Relationships to Land, Indigenous
+              Self-Determination
+            </div>
+          </div>
+
+          <div className={css.field}>
+            <div className={css.label}>LANGUAGES</div>
+            <div className={css.value}>English</div>
+          </div>
+
+          <div className={css.field}>
+            <div className={css.label}>SPATIAL COVERAGE</div>
+            <div className={css.value}>New Echota, GA (written), Tennessee, USA (found)</div>
+          </div>
+
+          <div className={css.field}>
+            <div className={css.label}>CITATION</div>
+            <div className={css.value}>
+              Houston, S. (n.d.). Constitution of Cherokee Nation, 1827. Tennessee Virtual Archive (TeVA).
+              <a href="https://teva.contentdm.oclc.org/digital/collection/fd/id/304" className={css.link}>
+                https://teva.contentdm.oclc.org/digital/collection/fd/id/304
+              </a>
+            </div>
+          </div>
+        </div>
       </section>
     </>
   )
-
+  
   const panel = (
     <>
       {/* If the user is logged in, then display an edit button on the word
