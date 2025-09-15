@@ -3,6 +3,7 @@ import {
   unstable_Form as Form,
   unstable_useFormState as useFormState,
 } from "reakit"
+import { navigate } from "vite-plugin-ssr/client/router"
 import { UserRole, useUser, useUserRole } from "src/auth"
 import {
   FormFields,
@@ -12,10 +13,12 @@ import {
   UserAuthPageTemplate,
 } from "./user-auth-layout"
 import { centeredForm } from "./user-auth.css"
-import { navigate } from "vite-plugin-ssr/client/router"
 
 const LoginPage = () => {
-  const { user, operations: { loginUser } } = useUser()
+  const {
+    user,
+    operations: { loginUser },
+  } = useUser()
 
   // If already authenticated, redirect away from the login page
   useEffect(() => {

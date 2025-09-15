@@ -86,8 +86,6 @@ const NewEditedCollectionPage = () => {
     }))
   }
 
-  
-
   return (
     <AuthGuard requiredRole={UserRole.Editor}>
       <Layout>
