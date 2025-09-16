@@ -569,11 +569,8 @@ impl Database {
         let source = word.source.into_vec();
         let simple_phonetics = word.romanized_source.into_vec();
         let commentary = word.commentary.into_vec();
-        let english_gloss_owned: Vec<String> = match word.english_gloss.into_vec().pop().flatten() {
-            Some(glosses) => glosses,
-            None => Vec::new(),
-        };
-        let english_gloss: Vec<&str> = english_gloss_owned.iter().map(|s| s.as_str()).collect();
+        //note, we are only expecting one english_gloss, turning into vec bc legacy type for english_gloss is vec
+        let english_gloss = word.english_gloss.into_vec();
 
         let document_id = query_file!(
             "queries/update_word.sql",
@@ -581,7 +578,7 @@ impl Database {
             &source as _,
             &simple_phonetics as _,
             &commentary as _,
-            &english_gloss as _
+            &english_gloss as _,
         )
         .fetch_one(&mut *tx)
         .await?
@@ -1092,6 +1089,23 @@ impl Database {
 
         tx.commit().await?;
         Ok(())
+    }
+
+    pub async fn insert_edited_collection(
+        &self,
+        collection: CreateEditedCollectionInput,
+    ) -> Result<Uuid> {
+        // let mut tx = self.client.begin().await?;
+        let collection_id = query_file_scalar!(
+            "queries/insert_edited_collection.sql",
+            collection.title,
+            slug::slugify(&collection.title),
+            collection.description,
+            collection.thumbnail_url,
+        )
+        .fetch_one(&self.client)
+        .await?;
+        Ok(collection_id)
     }
 
     pub async fn document_breadcrumbs(
@@ -2282,7 +2296,9 @@ impl Loader<EditedCollectionDetails> for Database {
                         id: collection.id,
                         title: collection.title,
                         wordpress_menu_id: collection.wordpress_menu_id,
+                        description: collection.description,
                         slug: collection.slug,
+                        thumbnail_url: collection.thumbnail_url,
                     },
                 )
             })

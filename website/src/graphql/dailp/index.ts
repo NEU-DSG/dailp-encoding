@@ -183,8 +183,8 @@ export type AnnotatedFormSegmentsArgs = {
 export type AnnotatedFormUpdate = {
   /** Possible update to commentary */
   readonly commentary: InputMaybe<Scalars["String"]>
-  /** Possible update to English gloss */
-  readonly englishGloss: InputMaybe<ReadonlyArray<Scalars["String"]>>
+  /** Possible updated english gloss */
+  readonly englishGloss: InputMaybe<Scalars["String"]>
   /** Unique identifier of the form */
   readonly id: Scalars["UUID"]
   /** Possible update to normalized source content */
@@ -374,6 +374,16 @@ export type ContributorDetails = {
   readonly fullName: Scalars["String"]
 }
 
+/** Input for creating an edited collection */
+export type CreateEditedCollectionInput = {
+  /** Description of the collection */
+  readonly description: Scalars["String"]
+  /** URL of the thumbnail image for the collection */
+  readonly thumbnailUrl: Scalars["String"]
+  /** The title of the collection */
+  readonly title: Scalars["String"]
+}
+
 /** Request to update if a piece of audio should be included in an edited collection */
 export type CurateWordAudioInput = {
   /** Audio to include/exclude */
@@ -515,10 +525,14 @@ export enum DocumentType {
 export type EditedCollection = {
   readonly __typename?: "EditedCollection"
   readonly chapters: Maybe<ReadonlyArray<CollectionChapter>>
+  /** Description of the collection (optional) */
+  readonly description: Maybe<Scalars["String"]>
   /** UUID for the collection */
   readonly id: Scalars["UUID"]
   /** URL slug for the collection, like "cwkw" */
   readonly slug: Scalars["String"]
+  /** Cover image URL */
+  readonly thumbnailUrl: Maybe<Scalars["String"]>
   /** Full title of the collection */
   readonly title: Scalars["String"]
   /** ID of WordPress menu for navigating the collection */
@@ -663,6 +677,7 @@ export type Mutation = {
    * Assumes user requesting mutation recoreded the audio
    */
   readonly attachAudioToWord: AnnotatedForm
+  readonly createEditedCollection: Scalars["String"]
   /** Decide if a piece audio should be included in edited collection */
   readonly curateWordAudio: AnnotatedForm
   /**
@@ -697,6 +712,10 @@ export type MutationAddBookmarkArgs = {
 
 export type MutationAttachAudioToWordArgs = {
   input: AttachAudioToWordInput
+}
+
+export type MutationCreateEditedCollectionArgs = {
+  input: CreateEditedCollectionInput
 }
 
 export type MutationCurateWordAudioArgs = {
@@ -1596,7 +1615,7 @@ export type EditedCollectionsQuery = { readonly __typename?: "Query" } & {
   readonly allEditedCollections: ReadonlyArray<
     { readonly __typename?: "EditedCollection" } & Pick<
       EditedCollection,
-      "id" | "title" | "slug"
+      "id" | "title" | "slug" | "description" | "thumbnailUrl"
     > & {
         readonly chapters: Maybe<
           ReadonlyArray<
@@ -1618,7 +1637,7 @@ export type EditedCollectionQuery = { readonly __typename?: "Query" } & {
   readonly editedCollection: Maybe<
     { readonly __typename?: "EditedCollection" } & Pick<
       EditedCollection,
-      "id"
+      "id" | "title" | "slug"
     > & {
         readonly chapters: Maybe<
           ReadonlyArray<
@@ -2539,6 +2558,14 @@ export type DeleteCommentMutation = { readonly __typename?: "Mutation" } & {
         })
 }
 
+export type AddEditedCollectionMutationVariables = Exact<{
+  input: CreateEditedCollectionInput
+}>
+
+export type AddEditedCollectionMutation = {
+  readonly __typename?: "Mutation"
+} & Pick<Mutation, "createEditedCollection">
+
 export type UpdateUserMutationVariables = Exact<{
   user: UserUpdate
 }>
@@ -2887,10 +2914,12 @@ export const EditedCollectionsDocument = gql`
       id
       title
       slug
+      description
       chapters {
         id
         path
       }
+      thumbnailUrl
     }
   }
 `
@@ -2906,6 +2935,8 @@ export const EditedCollectionDocument = gql`
   query EditedCollection($slug: String!) {
     editedCollection(slug: $slug) {
       id
+      title
+      slug
       chapters {
         id
         title
@@ -3598,6 +3629,18 @@ export function useDeleteCommentMutation() {
     DeleteCommentMutation,
     DeleteCommentMutationVariables
   >(DeleteCommentDocument)
+}
+export const AddEditedCollectionDocument = gql`
+  mutation AddEditedCollection($input: CreateEditedCollectionInput!) {
+    createEditedCollection(input: $input)
+  }
+`
+
+export function useAddEditedCollectionMutation() {
+  return Urql.useMutation<
+    AddEditedCollectionMutation,
+    AddEditedCollectionMutationVariables
+  >(AddEditedCollectionDocument)
 }
 export const UpdateUserDocument = gql`
   mutation updateUser($user: UserUpdate!) {
