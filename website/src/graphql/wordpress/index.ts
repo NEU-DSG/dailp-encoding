@@ -10530,13 +10530,13 @@ export type MenuByIdQuery = { readonly __typename?: "RootQuery" } & {
   readonly menus: Maybe<
     { readonly __typename?: "RootQueryToMenuConnection" } & {
       readonly nodes: ReadonlyArray<
-        { readonly __typename?: "Menu" } & Pick<Menu, "databaseId"> & {
+        { readonly __typename?: "Menu" } & Pick<Menu, "id" | "databaseId"> & {
             readonly menuItems: Maybe<
               { readonly __typename?: "MenuToMenuItemConnection" } & {
                 readonly nodes: ReadonlyArray<
                   { readonly __typename?: "MenuItem" } & Pick<
                     MenuItem,
-                    "label" | "path"
+                    "id" | "label" | "path"
                   > & {
                       readonly childItems: Maybe<
                         {
@@ -10545,7 +10545,7 @@ export type MenuByIdQuery = { readonly __typename?: "RootQuery" } & {
                           readonly nodes: ReadonlyArray<
                             { readonly __typename?: "MenuItem" } & Pick<
                               MenuItem,
-                              "label" | "path"
+                              "id" | "label" | "path"
                             >
                           >
                         }
@@ -10607,13 +10607,16 @@ export const MenuByIdDocument = gql`
   query MenuByID($id: Int!) {
     menus(where: { id: $id }) {
       nodes {
+        id
         databaseId
         menuItems(where: { parentDatabaseId: 0 }) {
           nodes {
+            id
             label
             path
             childItems {
               nodes {
+                id
                 label
                 path
               }

@@ -1,4 +1,5 @@
-import React, { ReactNode } from "react"
+import { groupBy } from "lodash"
+import React, { ReactNode, useState } from "react"
 import {
   AiFillCaretDown,
   AiFillCaretUp,
@@ -13,6 +14,7 @@ import {
 import { OnChangeValue } from "react-select"
 import { Disclosure, DisclosureContent, useDisclosureState } from "reakit"
 import { unstable_Form as Form, unstable_FormInput as FormInput } from "reakit"
+import { useMutation, useQuery } from "urql"
 import * as Dailp from "src/graphql/dailp"
 import { AudioPlayer } from "./components"
 import { CommentSection } from "./components/comment-section"
@@ -25,6 +27,12 @@ import { formInput } from "./edit-word-feature.css"
 import { useForm } from "./edit-word-form-context"
 import * as css from "./panel-layout.css"
 import { usePreferences } from "./preferences-context"
+
+// Extracts the inner contents of the first pair of parentheses from a string.
+function extractParenthesesContent(str: string): string | null {
+  const match = str.match(/\(([^)]+)\)/)
+  return match?.[1] ?? null
+}
 
 enum PanelType {
   WordPanel,
@@ -254,7 +262,6 @@ const EditSegmentation = (p: {
         {currentSegments.map((segment, index) => (
           <tr key={index} style={{ display: "flex" }}>
             <td className={css.editMorphemeCells}>
-              {/* This is disabled at the moment to be fully implemented later. */}
               <FormInput
                 {...form}
                 className={formInput}
@@ -315,32 +322,98 @@ const EditWordPartGloss = (props: {
   index: number
   options: GroupedOption[]
 }) => {
+  const preferences = usePreferences()
   const { form } = useForm()
+  const [, insertCustomMorphemeTag] = useMutation(
+    Dailp.InsertCustomMorphemeTagDocument
+  )
+  const [{ data: allTagsData }, executeQuery] = useQuery({
+    query: Dailp.GlossaryDocument,
+    variables: { system: preferences.cherokeeRepresentation },
+  })
+
+  let allNewTags = allTagsData?.allTags.filter(
+    (tag: Dailp.MorphemeTag) => tag.tag !== ""
+  )
+  const groupedTags = groupBy(allNewTags, (t) => t.morphemeType)
+
+  // Creates a selectable option out of each functional tag, and groups them together by morpheme type.
+  const allNewOptions: GroupedOption[] = Object.entries(groupedTags).map(
+    ([group, tags]) => {
+      return {
+        label: group,
+        options: tags.map((tag) => {
+          return {
+            // Value is a custom type to track data of a morpheme's gloss in its string form and its matching tag, if there is one.
+            value: tag.tag,
+            label: tag.title,
+          }
+        }),
+      }
+    }
+  )
 
   // Handles gloss selection and creation of new glosses.
-  const handleChange = (
+  const handleNewTag = async (
     newValue: OnChangeValue<{ value: string; label: string }, false>
   ) => {
-    if (newValue?.value) {
-      const newMorpheme: Dailp.FormFieldsFragment["segments"][0] = {
-        ...props.morpheme,
-        gloss: newValue.value,
+    // if newvalue value == newvalue label, its a new gloss
+    if (newValue) {
+      const parenthesesContent = extractParenthesesContent(newValue.label)
+      const title = newValue.label.substring(0, newValue.label.indexOf("("))
+      if (parenthesesContent) {
+        //db update
+        // Insert the new tag and refresh the query
+        await insertCustomMorphemeTag({
+          tag: parenthesesContent,
+          title: title,
+          system: preferences.cherokeeRepresentation,
+        })
+        // Refresh the query to get the new tag
+        await executeQuery({ requestPolicy: "network-only" })
+      } else {
+        //just do frontend update
       }
 
-      // Updates current list of morphemes to include one with a matching tag,
-      // or one with a custom gloss.
+      let matchingTag =
+        newValue.value === newValue.label
+          ? parenthesesContent
+            ? {
+                tag: parenthesesContent,
+                title: newValue.label,
+              }
+            : null
+          : {
+              tag: newValue.value,
+              title: newValue.label,
+            }
+
+      const newMorpheme: Dailp.FormFieldsFragment["segments"][0] = {
+        ...props.morpheme,
+        gloss: parenthesesContent ? parenthesesContent : newValue.value,
+        matchingTag: matchingTag,
+      }
       form.update(["word", "segments", props.index], newMorpheme)
     }
   }
 
   return (
     <CustomCreatable
-      onChange={handleChange}
-      options={props.options}
+      onChange={handleNewTag}
+      options={allNewOptions ?? props.options}
       defaultValue={{
         value: props.morpheme.gloss,
         label: props.morpheme.matchingTag?.title ?? props.morpheme.gloss,
       }}
+      // Show a "create new" option at the end of the menu
+      createOptionPosition="last"
+      // Label for the create option row
+      formatCreateLabel={(inputValue: string) => `Create "${inputValue}"`}
+      // Only allow non-empty unique values
+      isValidNewOption={(inputValue: string, _value: any, options: any[]) =>
+        inputValue.trim().length > 0 &&
+        !options.some((o: any) => (o?.value ?? "") === inputValue)
+      }
     />
   )
 }
