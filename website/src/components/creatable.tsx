@@ -1,5 +1,5 @@
 import React from "react"
-import CreatableSelect from "react-select"
+import CreatableSelect from "react-select/creatable"
 import * as css from "../panel-layout.css"
 
 const customStyles = {
@@ -49,5 +49,8 @@ export const CustomCreatable = (props: any) => (
     {...props}
     styles={customStyles}
     formatOptionLabel={formatCreatableOptions}
+    createOptionPosition="last"
+    formatCreateLabel={(input) => `Create "${input}"`}
+    noOptionsMessage={() => "Type to create a new option"}
   />
 )
