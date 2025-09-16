@@ -5,7 +5,7 @@ import {
   AiFillCaretUp,
   AiFillSound,
 } from "react-icons/ai/index"
-import { IoEllipsisHorizontalCircle } from "react-icons/io5/index"
+import { IoBookmarks, IoEllipsisHorizontalCircle } from "react-icons/io5/index"
 import {
   MdNotes,
   MdOutlineComment,
@@ -123,9 +123,6 @@ export const WordPanel = (p: {
       ) : (
         <EditSegmentation segments={p.word.segments} options={p.options} />
       )}
-
-      {/* Since editing translations is not yet supported, just display the translation for now. */}
-      <div style={{ display: "flex" }}>‘{p.word.englishGloss}’</div>
     </>
   )
 
@@ -135,6 +132,17 @@ export const WordPanel = (p: {
       feature={"commentary"}
       input="textarea"
     />
+  )
+  const englishGlossContent = (
+    <>
+      {p.panel === PanelType.WordPanel ? (
+        <div style={{ display: "flex" }}>‘{p.word.englishGloss}’</div>
+      ) : (
+        <EditEnglishGloss />
+      )}
+
+      {/* Since editing translations is not yet supported, just display the translation for now. */}
+    </>
   )
 
   const discussionContent = <CommentSection parent={p.word} />
@@ -163,6 +171,17 @@ export const WordPanel = (p: {
           />
         }
       />
+      {/* Always show Word Parts panel in edit mode, otherwise only if there are segments */}
+      {(p.word.englishGloss.length > 0 ||
+        p.panel === PanelType.EditWordPanel) && (
+        <CollapsiblePanel
+          title={"English Gloss"}
+          content={englishGlossContent}
+          icon={
+            <IoBookmarks size={24} className={css.wordPanelButton.colpleft} />
+          }
+        />
+      )}
 
       {/* Always show Word Parts panel in edit mode, otherwise only if there are segments */}
       {(p.word.segments.length > 0 || p.panel === PanelType.EditWordPanel) && (
@@ -250,7 +269,9 @@ const EditSegmentation = (p: {
               />
             </td>
             <td className={css.editGlossCells}>
-              <EditGloss
+              {/* Displays global glosses and allows user to create custom glosses on keyboard input. */}
+              <EditWordPartGloss
+                // TODO: this key will need to be changed later since a morpheme can be changed
                 key={segment.morpheme}
                 morpheme={segment}
                 index={index}
@@ -296,7 +317,7 @@ const EditSegmentation = (p: {
 }
 
 // Component that allows editing of a morpheme's gloss. Users can enter a custom gloss or select from global glosses / functional tags.
-const EditGloss = (props: {
+const EditWordPartGloss = (props: {
   morpheme: Dailp.FormFieldsFragment["segments"][0]
   index: number
   options: GroupedOption[]
@@ -395,6 +416,11 @@ const EditGloss = (props: {
       }
     />
   )
+}
+
+// Component that allows editing of a morpheme's gloss. Users can enter a custom gloss or select from global glosses / functional tags.
+const EditEnglishGloss = () => {
+  return <EditWordFeature feature={"englishGloss"} label="English Glossary" />
 }
 
 type Writeable<T> = { -readonly [P in keyof T]: T[P] }
