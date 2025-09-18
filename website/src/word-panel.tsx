@@ -1,12 +1,19 @@
 import { groupBy } from "lodash"
 import React, { ReactNode, useState } from "react"
 import {
+  DragDropContext,
+  Draggable,
+  DropResult,
+  Droppable,
+} from "react-beautiful-dnd"
+import {
   AiFillCaretDown,
   AiFillCaretUp,
   AiFillSound,
 } from "react-icons/ai/index"
 import { IoBookmarks, IoEllipsisHorizontalCircle } from "react-icons/io5/index"
 import {
+  MdDragIndicator,
   MdNotes,
   MdOutlineComment,
   MdRecordVoiceOver,
@@ -229,6 +236,22 @@ const EditSegmentation = (p: {
   const currentWord = form.values.word as Dailp.FormFieldsFragment
   const currentSegments = currentWord.segments
 
+  const onDragEnd = (result: DropResult) => {
+    // dropped outside the list
+    if (!result.destination) {
+      return
+    }
+
+    const items = Array.from(currentSegments)
+    const [reorderedItem] = items.splice(result.source.index, 1)
+    items.splice(result.destination.index, 0, reorderedItem!)
+
+    form.update("word", {
+      ...currentWord,
+      segments: items,
+    })
+  }
+
   const addNewSegment = (e: React.MouseEvent) => {
     e.preventDefault()
     const newSegment = {
@@ -257,62 +280,100 @@ const EditSegmentation = (p: {
   }
 
   return (
-    <table className={css.tableContainer}>
-      <tbody>
-        {currentSegments.map((segment, index) => (
-          <tr key={index} style={{ display: "flex" }}>
-            <td className={css.editMorphemeCells}>
-              <FormInput
-                {...form}
-                className={formInput}
-                name={["word", "segments", index.toString(), "morpheme"]}
-              />
-            </td>
-            <td className={css.editGlossCells}>
-              {/* Displays global glosses and allows user to create custom glosses on keyboard input. */}
-              <EditWordPartGloss
-                // TODO: this key will need to be changed later since a morpheme can be changed
-                key={segment.morpheme}
-                morpheme={segment}
-                index={index}
-                options={p.options}
-              />
-            </td>
-            <td style={{ padding: "0 10px" }}>
-              <button
-                onClick={() => deleteSegment(index)}
-                style={{
-                  padding: "5px 10px",
-                  borderRadius: "4px",
-                  border: "1px solid #ccc",
-                  background: "#f0f0f0",
-                  cursor: "pointer",
-                  color: "#d32f2f",
-                }}
-              >
-                ✕
-              </button>
-            </td>
-          </tr>
-        ))}
-        <tr>
-          <td colSpan={3} style={{ textAlign: "center", padding: "10px" }}>
-            <button
-              onClick={addNewSegment}
-              style={{
-                padding: "5px 10px",
-                borderRadius: "4px",
-                border: "1px solid #ccc",
-                background: "#f0f0f0",
-                cursor: "pointer",
-              }}
-            >
-              Add Segment
-            </button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+    <DragDropContext onDragEnd={onDragEnd}>
+      <Droppable droppableId="droppable">
+        {(provided, snapshot) => (
+          <table
+            {...provided.droppableProps}
+            ref={provided.innerRef}
+            className={css.tableContainer}
+          >
+            <tbody>
+              {currentSegments.map((segment, index) => (
+                <Draggable
+                  key={index}
+                  draggableId={index.toString()}
+                  index={index}
+                >
+                  {(provided, snapshot) => (
+                    <tr
+                      ref={provided.innerRef}
+                      {...provided.draggableProps}
+                      {...provided.dragHandleProps}
+                      key={index}
+                      style={{
+                        display: "flex",
+                        ...provided.draggableProps.style,
+                      }}
+                    >
+                      <MdDragIndicator fontSize={"1.5rem"} />
+                      <td className={css.editMorphemeCells}>
+                        {/* This is disabled at the moment to be fully implemented later. */}
+                        <FormInput
+                          {...form}
+                          className={formInput}
+                          name={[
+                            "word",
+                            "segments",
+                            index.toString(),
+                            "morpheme",
+                          ]}
+                        />
+                      </td>
+                      <td className={css.editGlossCells}>
+                        {/* Displays global glosses and allows user to create custom glosses on keyboard input. */}
+                        <EditWordPartGloss
+                          // TODO: this key will need to be changed later since a morpheme can be changed
+                          key={segment.morpheme}
+                          morpheme={segment}
+                          index={index}
+                          options={p.options}
+                        />
+                      </td>
+                      <td style={{ padding: "0 10px" }}>
+                        <button
+                          onClick={() => deleteSegment(index)}
+                          style={{
+                            padding: "5px 10px",
+                            borderRadius: "4px",
+                            border: "1px solid #ccc",
+                            background: "#f0f0f0",
+                            cursor: "pointer",
+                            color: "#d32f2f",
+                          }}
+                        >
+                          ✕
+                        </button>
+                      </td>
+                    </tr>
+                  )}
+                </Draggable>
+              ))}
+              {provided.placeholder}
+              <tr>
+                <td
+                  colSpan={3}
+                  style={{ textAlign: "center", padding: "10px" }}
+                >
+                  <button
+                    onClick={addNewSegment}
+                    style={{
+                      padding: "5px 10px",
+                      borderRadius: "4px",
+                      border: "1px solid #ccc",
+                      background: "#f0f0f0",
+                      cursor: "pointer",
+                    }}
+                  >
+                    Add Segment
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        )}
+      </Droppable>
+    </DragDropContext>
   )
 }
 
