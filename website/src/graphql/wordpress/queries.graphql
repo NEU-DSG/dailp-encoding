@@ -24,13 +24,16 @@ query PageIndex {
 query MenuByID($id: Int!) {
   menus(where: { id: $id }) {
     nodes {
+      id
       databaseId
       menuItems(where: { parentDatabaseId: 0 }) {
         nodes {
+          id
           label
           path
           childItems {
             nodes {
+              id
               label
               path
             }
