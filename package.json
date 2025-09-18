@@ -1,0 +1,7 @@
+{
+  "dependencies": {
+    "@citation-js/core": "^0.7.18",
+    "@citation-js/plugin-csl": "^0.7.18",
+    "react-textarea-autosize": "^8.5.9"
+  }
+}

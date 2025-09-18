@@ -70,22 +70,19 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
           <div className={css.field}>
             <div className={css.label}>CONTRIBUTORS</div>
             <div className={css.value}>
-              <ul>
-                {docData.contributors.map((person) => (
-                  <li key={person.name}>
-                    {person.name} ({person.role})
-                  </li>
-                ))}
-              </ul>
+            {docData.contributors.map((person, i) => (
+              <span key={person.name}>
+                {person.name} ({person.role})
+                {i < docData.contributors.length - 1 && ", "}
+              </span>
+            ))}
             </div>
           </div>
 
           <div className={css.field}>
             <div className={css.label}>SOURCE</div>
             <div className={css.value}>
-              <a href="https://teva.contentdm.oclc.org/digital/collection/fd/id/328/" className={css.link}>
-                https://teva.contentdm.oclc.org/digital/collection/fd/id/328/
-              </a>
+              {docData.sources[0] || "No source available."}
             </div>
           </div>
 
