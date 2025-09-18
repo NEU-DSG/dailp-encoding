@@ -1,5 +1,11 @@
 import React, { ReactNode } from "react"
 import {
+  DragDropContext,
+  Draggable,
+  DropResult,
+  Droppable,
+} from "react-beautiful-dnd"
+import {
   AiFillCaretDown,
   AiFillCaretUp,
   AiFillSound,
@@ -10,12 +16,6 @@ import {
   MdOutlineComment,
   MdRecordVoiceOver,
 } from "react-icons/md/index"
-import {
-  DragDropContext,
-  Draggable,
-  Droppable,
-  DropResult,
-} from "react-beautiful-dnd"
 import { OnChangeValue } from "react-select"
 import { Disclosure, DisclosureContent, useDisclosureState } from "reakit"
 import { unstable_Form as Form, unstable_FormInput as FormInput } from "reakit"
