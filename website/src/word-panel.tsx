@@ -10,8 +10,8 @@ import {
   AiFillCaretUp,
   AiFillSound,
 } from "react-icons/ai/index"
-import { MdDragIndicator } from "react-icons/md";
 import { IoBookmarks, IoEllipsisHorizontalCircle } from "react-icons/io5/index"
+import { MdDragIndicator } from "react-icons/md"
 import {
   MdNotes,
   MdOutlineComment,
@@ -298,7 +298,7 @@ const EditSegmentation = (p: {
                         ...provided.draggableProps.style,
                       }}
                     >
-                      <MdDragIndicator fontSize={"1.5rem"}/>
+                      <MdDragIndicator fontSize={"1.5rem"} />
                       <td className={css.editMorphemeCells}>
                         {/* This is disabled at the moment to be fully implemented later. */}
                         <FormInput
