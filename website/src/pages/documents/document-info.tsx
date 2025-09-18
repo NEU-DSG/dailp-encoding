@@ -9,12 +9,15 @@ import EditDocPanel, { EditButton } from "src/edit-doc-data-panel"
 import * as Dailp from "src/graphql/dailp"
 import { fullWidth } from "src/style/utils.css"
 import * as css from "./document.css"
+import { useDialogState, Dialog, DialogBackdrop } from "reakit/Dialog"
 
 export type TabSegment = Dailp.DocumentMetadataUpdate | Document
 
 export type Document = NonNullable<Dailp.AnnotatedDocumentQuery["document"]>
 
 export const DocumentInfo = ({ doc }: { doc: Document }) => {
+  const dialog = useDialogState()
+
   const [{ data }] = Dailp.useDocumentDetailsQuery({
     variables: { slug: doc.slug! },
   })

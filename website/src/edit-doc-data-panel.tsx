@@ -69,7 +69,7 @@ export const EditButton = () => {
 }
 
 /** Displays a FormInput with its corresponding feature data from the Reakit form. */
-export const EditDocPanel = (props: { document?: Dailp.AnnotatedDoc }) => {
+export const EditDocPanel = (props: { document: Dailp.AnnotatedDoc }) => {
   let docData = props.document as unknown as Dailp.AnnotatedDoc
   const { form } = useForm()
 
