@@ -299,8 +299,24 @@ export const BookmarkButton = style([
   paddingY(vspace.medium),
   {
     display: "flex",
-    justifyContent: "space-around",
-    marginLeft: hspace.small,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "8px",
+    padding: "12px 35px",
+    backgroundColor: "#405372",
+    color: "white",
+    fontFamily: "'Inter', sans-serif",
+    fontWeight: "600",
+    fontSize: "16px",
+    borderRadius: "4px",
+    border: "none",
+    cursor: "pointer",
+    transition: "background-color 0.2s ease",
+    minWidth: "140px",
+    ":hover": {
+      backgroundColor: "#6F85A9",
+      boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
+    },
   },
 ])
 export const hideScrollTop = style([
@@ -475,27 +491,32 @@ export const actionButtonsMobile = style({
   gap: "12px",
 });
 
-export const actionButton = style({
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  gap: "8px",
-  padding: "12px 35px",
-  backgroundColor: "#405372",
-  color: "white",
-  fontFamily: "'Inter', sans-serif",
-  fontWeight: "600",
-  fontSize: "16px",
-  borderRadius: "4px",
-  border: "none",
-  cursor: "pointer",
-  transition: "background-color 0.2s ease",
-  minWidth: "140px",
-  ":hover": {
-    backgroundColor: "#6F85A9",
-    boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
+export const actionButton = style([
+  button,
+  paddingX(hspace.large),
+  paddingY(vspace.medium),
+  {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "8px",
+    padding: "12px 35px",
+    backgroundColor: "#405372",
+    color: "white",
+    fontFamily: "'Inter', sans-serif",
+    fontWeight: "600",
+    fontSize: "16px",
+    borderRadius: "4px",
+    border: "none",
+    cursor: "pointer",
+    transition: "background-color 0.2s ease",
+    minWidth: "140px",
+    ":hover": {
+      backgroundColor: "#6F85A9",
+      boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
+    },
   },
-});
+]);
 
 export const actionButtonMobile = style({
   padding: "10px 20px",

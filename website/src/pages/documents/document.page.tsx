@@ -557,9 +557,9 @@ export const DocumentTitleHeader = (p: {
 							  {!isMobile ? (
 							    <Button
 							      onClick={() => window.print()}
-							      className={`${css.actionButton} lg:px-6 lg:py-3 px-5 py-2 hover:bg-slate-700`}
+							      className={css.actionButton}
 							    >
-							      <span className={`${css.buttonIcon} lg:w-5 lg:h-5 w-4 h-4`}>
+							      <span className={css.buttonIcon}>
 							        🖨️
 							      </span>
 							      Print

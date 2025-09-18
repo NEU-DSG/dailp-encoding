@@ -16,6 +16,14 @@ import { IconTextButton } from "./components/button"
 import { useForm } from "./edit-doc-data-form-context"
 import * as css from "./edit-word-feature.css"
 import * as Dailp from "./graphql/dailp"
+import TextareaAutosize from "react-textarea-autosize";
+
+type EditDocPanelProps = {
+  document: Dailp.AnnotatedDoc
+  isOpen: boolean
+  onClose: () => void
+  onSubmit: (data: any) => void
+}
 
 /** Button that allows user to enter edit mode in the word panel, and edit fields of a word. */
 export const EditButton = () => {
@@ -69,6 +77,17 @@ export const EditDocPanel = (props: { document?: Dailp.AnnotatedDoc }) => {
     return null
   }
   form.values.document["id "] = docData.id
+
+  // New placeholder fields
+  const [description, setDescription] = useState<string>("A product of a convention held in early July 1827 at New Echota, Georgia, the constitution appears to be a version of the American Constitution adapted to suit Cherokee needs. The constitution does not represent a position of assimilation to white society but, rather, a conscious strategy to resist removal and maintain autonomy. However, traditionalists saw it as one more concession to white, Christian authority.")
+  const [genre, setGenre] = useState<string>("Legal Document")
+  const [format, setFormat] = useState<string>("Manuscript")
+	const [pages, setPages] = useState<string>("1-24")
+	const [creator, setCreator] = useState<string>("Sam Houston")
+	const [doi, setDOI] = useState<string>("https://doi.org/10.1000/182")
+	
+	// Do contributors, keywords, subject headings, languages, spatial coverage, citation later on
+
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined)
   const [day, setDay] = useState<Number>()
   const [month, setMonth] = useState<Number>()
@@ -104,35 +123,80 @@ export const EditDocPanel = (props: { document?: Dailp.AnnotatedDoc }) => {
 
   return (
     <>
-      {/* Display a label for the form input if it exists. */}
+	    {/* Display a label for the form input if it exists. */}
+	    
+      {/* Title */}
       <FormLabel
         {...form}
         className={css.formInputLabel}
-        name={"title"}
-        label={"Title"}
+        name="title"
+        label="Title"
       />
       <FormInput
         {...form}
         className={css.formInput}
         name={["document", "title"]}
-        disabled={!(userRole == UserRole.Editor)}
+        disabled={!(userRole === UserRole.Editor)}
+      />
+      <p />
+      
+      {/* Description */}
+      <FormLabel 
+        className={css.formInputLabel} 
+        label="Description"
+      />
+      <TextareaAutosize
+        className={css.formInput}
+        minRows={1}
+        maxRows={10}
+        value={description}
+        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDescription(e.target.value)}
+        disabled={!(userRole === UserRole.Editor)}
       />
       <p />
 
+      {/* Date created */}
       <FormLabel
         {...form}
         className={css.formInputLabel}
-        name={"written_at"}
-        label={"Written At"}
+        name="written_at"
+        label="Written At"
       />
       <div className={css.dateInputConatiner}>
         <DatePicker
-          onChange={(date: any) => handleDateChange(date)}
+          onChange={handleDateChange}
           value={selectedDate}
           format="dd-MM-y"
-          disabled={!(userRole == UserRole.Editor)}
+          disabled={!(userRole === UserRole.Editor)}
         />
       </div>
+      <p />
+
+      {/* Genre */}
+      <FormLabel 
+        className={css.formInputLabel} 
+        label="Genre" 
+      />
+      <FormInput
+        className={css.formInput}
+        value={genre}
+        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setGenre(e.target.value)}
+        disabled={!(userRole === UserRole.Editor)}
+      />
+      <p />
+
+      {/* Format */}
+      <FormLabel 
+        className={css.formInputLabel} 
+        label="Format" 
+      />
+      <FormInput
+        className={css.formInput}
+        value={format}
+        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormat(e.target.value)}
+        disabled={!(userRole === UserRole.Editor)}
+      />
+      <p />
     </>
   )
 }
