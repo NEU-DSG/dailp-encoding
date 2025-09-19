@@ -2,6 +2,8 @@
   "dependencies": {
     "@citation-js/core": "^0.7.18",
     "@citation-js/plugin-csl": "^0.7.18",
-    "react-textarea-autosize": "^8.5.9"
+    "react-hook-form": "^7.62.0",
+    "react-textarea-autosize": "^8.5.9",
+    "react-use-form": "^0.1.0"
   }
 }

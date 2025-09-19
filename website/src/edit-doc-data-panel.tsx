@@ -129,7 +129,7 @@ export const EditDocPanel = (props: { document: Dailp.AnnotatedDoc }) => {
   return (
     <>
 	    {/* Display a label for the form input if it exists. */}
-	    {/* ADD PAGES, CREATOR, SOURCE (already in db), AND DOI */}
+
       {/* Title */}
       <FormLabel
         {...form}
@@ -141,21 +141,6 @@ export const EditDocPanel = (props: { document: Dailp.AnnotatedDoc }) => {
         {...form}
         className={css.formInput}
         name={["document", "title"]}
-        disabled={!(userRole === UserRole.Editor)}
-      />
-      <p />
-      
-      {/* Description */}
-      <FormLabel 
-        className={css.formInputLabel} 
-        label="Description"
-      />
-      <TextareaAutosize
-        className={css.formInput}
-        minRows={1}
-        maxRows={10}
-        value={description}
-        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDescription(e.target.value)}
         disabled={!(userRole === UserRole.Editor)}
       />
       <p />
@@ -175,6 +160,21 @@ export const EditDocPanel = (props: { document: Dailp.AnnotatedDoc }) => {
           disabled={!(userRole === UserRole.Editor)}
         />
       </div>
+      <p />
+      
+      {/* Description */}
+      <FormLabel 
+        className={css.formInputLabel} 
+        label="Description"
+      />
+      <TextareaAutosize
+        className={css.formInput}
+        minRows={1}
+        maxRows={10}
+        value={description}
+        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDescription(e.target.value)}
+        disabled={!(userRole === UserRole.Editor)}
+      />
       <p />
 
       {/* Genre */}
@@ -206,12 +206,54 @@ export const EditDocPanel = (props: { document: Dailp.AnnotatedDoc }) => {
       {/* Pages */}
       <FormLabel 
         className={css.formInputLabel} 
-        label="Pages" 
+        label="Pages (start, end)" 
       />
       <FormInput
         className={css.formInput}
         value={pages}
         onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPages(e.target.value)}
+        disabled={!(userRole === UserRole.Editor)}
+      />
+      <p />
+
+      {/* Creator */}
+      <FormLabel 
+        className={css.formInputLabel} 
+        label="Creator (separate by ‘,’ if multiple)" 
+      />
+      <FormInput
+        className={css.formInput}
+        value={creator}
+        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCreator(e.target.value)}
+        disabled={!(userRole === UserRole.Editor)}
+      />
+      <p />
+
+      {/* Source */}
+      <FormLabel 
+        {...form}
+        className={css.formInputLabel} 
+        name="source"
+        label="Source" 
+      />
+      <FormInput
+        {...form}
+        className={css.formInput}
+        value={creator}
+        name={["document", "source"]}
+        disabled={!(userRole === UserRole.Editor)}
+      />
+      <p />
+
+       {/* DOI */}
+       <FormLabel 
+        className={css.formInputLabel} 
+        label="DOI" 
+      />
+      <FormInput
+        className={css.formInput}
+        value={doi}
+        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDOI(e.target.value)}
         disabled={!(userRole === UserRole.Editor)}
       />
       <p />

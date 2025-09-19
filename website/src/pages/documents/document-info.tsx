@@ -28,7 +28,6 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
   const token = useCredentials()
   const { form, isEditing, setIsEditing } = useForm()
 
-
   const contributorsList = (
     <>
       <Helmet>
@@ -158,7 +157,7 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
                   className={css.actionButton}
                   onClick={() => {
                     dialog.hide()
-                    form.setIsEditing?.(false)
+                    setIsEditing(false)
                   }}
                 >
                   Close
