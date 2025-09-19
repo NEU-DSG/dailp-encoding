@@ -72,7 +72,6 @@
         type = "AWS";
         identifiers = [
           "$\{aws_iam_role.dailp_user.arn}"
-          "$\{aws_iam_role.dailp_user_administrator.arn}"
           "$\{aws_iam_role.dailp_user_editor.arn}"
           "$\{aws_iam_role.dailp_user_contributor.arn}"
         ];

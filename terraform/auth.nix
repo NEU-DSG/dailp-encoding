@@ -53,22 +53,15 @@ in {
         name = "Contributors";
         user_pool_id = "\${aws_cognito_user_pool.main.id}";
         description = "Contributors can edit document-related info and upload audio files. Contributors cannot create new collections or add image sources.";
-        precedence = 3;
+        precedence = 2;
         role_arn = "\${aws_iam_role.dailp_user_contributor.arn}";
       };
       editors = {
         name = "Editors";
         user_pool_id = "\${aws_cognito_user_pool.main.id}";
         description = "Editors can edit documents and add audio. Editors can also add edited collections.";
-        precedence = 2;
-        role_arn = "\${aws_iam_role.dailp_user_editor.arn}";
-      };
-      admin = {
-        name = "Administrators";
-        user_pool_id = "\${aws_cognito_user_pool.main.id}";
-        description = "Administrators can create new collections and manage users.";
         precedence = 1;
-        role_arn = "\${aws_iam_role.dailp_user_administrator.arn}";
+        role_arn = "\${aws_iam_role.dailp_user_editor.arn}";
       };
   };
   # Identity Pool
@@ -100,16 +93,9 @@ in {
           value = "Contributors";
           role_arn = "\${aws_iam_role.dailp_user_contributor.arn}";
         }
-        {
-          claim = "cognito:groups";
-          match_type = "Equals";
-          value = "Contributors";
-          role_arn = "\${aws_iam_role.dailp_user_administrator.arn}";
-        }
       ];
     };
     roles = {
-      # TODO this seems incorrect
       authenticated = "\${aws_iam_role.dailp_user.arn}";
       unauthenticated = "\${aws_iam_role.dailp_user.arn}";
     };
