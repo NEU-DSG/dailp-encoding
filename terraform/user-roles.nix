@@ -98,19 +98,6 @@ in {
           ];
         resources = ["${media-storage}/*"];
       };
-      administrator_user_policy.statement = {
-        sid = "DailpAdministratorUserPolicy";
-        actions = [
-          "s3:PutObject"
-          "s3:GetObject"
-          "s3:DeleteObjectVersion"
-          "s3:GetObjectAttributes"
-          "s3:DeleteObject"
-          "s3:GetObjectVersionAttributes"
-          "s3:GetObjectVersion"
-          ];
-        resources = ["${media-storage}/*"];
-      };
     };
 
   config.resource = {
@@ -130,11 +117,6 @@ in {
         policy = "$\{data.aws_iam_policy_document.contributor_user_policy.json}";
         name = prefixName "user-contributor-policy";
         description = "Permissions for DAILP users at the Contributor level.";
-      };
-      dailp_administrator_policy = {
-        policy = "$\{data.aws_iam_policy_document.administrator_user_policy.json}";
-        name = prefixName "administrator-policy";
-        description = "Permissions for DAILP users at the Admin level.";
       };
     };
     # Role Resource Definitions
@@ -158,11 +140,6 @@ in {
         description = "A user with editorial permissions on DAILP";
         name = prefixName "user-editor";
       };
-      dailp_user_administrator = {
-        assume_role_policy = authed-trust-policy;
-        description = "A user with admin permissions on DAILP";
-        name = prefixName "user-administrator";
-      };
     };
     # Bind permissions policies to roles
     aws_iam_role_policy_attachment = {
@@ -177,10 +154,6 @@ in {
       contributor = {
         role = "$\{aws_iam_role.dailp_user_contributor.name}";
         policy_arn = "$\{aws_iam_policy.dailp_user_contributor_policy.arn}";
-      };
-      administrator = {
-        role = "$\{aws_iam_role.dailp_user_administrator.name}";
-        policy_arn = "$\{aws_iam_policy.dailp_administrator_policy.arn}";
       };
     };
   };
