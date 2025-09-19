@@ -129,7 +129,7 @@ export const EditDocPanel = (props: { document: Dailp.AnnotatedDoc }) => {
   return (
     <>
 	    {/* Display a label for the form input if it exists. */}
-	    
+	    {/* ADD PAGES, CREATOR, SOURCE (already in db), AND DOI */}
       {/* Title */}
       <FormLabel
         {...form}
@@ -199,6 +199,19 @@ export const EditDocPanel = (props: { document: Dailp.AnnotatedDoc }) => {
         className={css.formInput}
         value={format}
         onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormat(e.target.value)}
+        disabled={!(userRole === UserRole.Editor)}
+      />
+      <p />
+      
+      {/* Pages */}
+      <FormLabel 
+        className={css.formInputLabel} 
+        label="Pages" 
+      />
+      <FormInput
+        className={css.formInput}
+        value={pages}
+        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPages(e.target.value)}
         disabled={!(userRole === UserRole.Editor)}
       />
       <p />
