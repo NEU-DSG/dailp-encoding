@@ -4,6 +4,28 @@ import {
   unstable_useFormState as useFormState,
 } from "reakit"
 import * as Dailp from "./graphql/dailp"
+import type { UseFormReturn, FieldValues } from "react-hook-form"
+
+export type EditDocFormValues = {
+  title: string;
+  date?: string;
+  description?: string;
+  genre?: string;
+  format?: string;
+  pages?: string;
+  creator?: string;
+  source?: string;
+  doi?: string;
+};
+
+export const useForm = () => {
+  const context = useContext(FormContext)
+
+  return context
+}
+
+const { form } = useForm()
+const typedForm = form as unknown as UseFormReturn<EditDocFormValues>
 
 type FormContextType = {
   form: FormStateReturn<any | undefined>
@@ -65,8 +87,3 @@ export const FormProvider = (props: { children: any }) => {
   )
 }
 
-export const useForm = () => {
-  const context = useContext(FormContext)
-
-  return context
-}
