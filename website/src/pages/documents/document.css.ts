@@ -585,3 +585,23 @@ export const link = style({
   color: "#4A90E2",
   textDecoration: "underline",
 })
+
+export const modalBackdrop = style({
+  position: "fixed",
+  inset: 0,
+  background: "rgba(0, 0, 0, 0.5)",
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+  zIndex: 1000,
+})
+
+export const modal = style({
+  background: "white",
+  borderRadius: 8,
+  padding: "2rem",
+  maxWidth: 600,
+  width: "90%",
+  maxHeight: "90vh",
+  overflowY: "auto",
+})

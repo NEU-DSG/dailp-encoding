@@ -3,7 +3,7 @@ import React, { Fragment } from "react"
 import { Helmet } from "react-helmet"
 import { unstable_Form as Form } from "reakit"
 import { useCredentials } from "src/auth"
-import { Link } from "src/components"
+import { IconButton, Link } from "src/components"
 import { useForm } from "src/edit-doc-data-form-context"
 import EditDocPanel, { EditButton } from "src/edit-doc-data-panel"
 import * as Dailp from "src/graphql/dailp"
@@ -26,7 +26,8 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
     return null
   }
   const token = useCredentials()
-  const { form, isEditing } = useForm()
+  const { form, isEditing, setIsEditing } = useForm()
+
 
   const contributorsList = (
     <>
@@ -140,20 +141,32 @@ export const DocumentInfo = ({ doc }: { doc: Document }) => {
       {/* If the user is logged in, then display an edit button on the word
   panel along with its corresponding formatted header. Otherwise, display
   the normal word panel. */}
-      {token ? (
+      {token && (
         <>
           {!isEditing && <>{contributorsList}</>}
-          <EditButton />
+          <EditButton
+            onEditClick={() => {
+              dialog.show()
+            }}
+          />
+
+          <DialogBackdrop {...dialog} className={css.modalBackdrop}>
+            <Dialog {...dialog} className={css.modal}>
+              <Form {...form}>
+                <EditDocPanel document={docData} />
+                <IconButton
+                  className={css.actionButton}
+                  onClick={() => {
+                    dialog.hide()
+                    form.setIsEditing?.(false)
+                  }}
+                >
+                  Close
+                </IconButton>
+              </Form>
+            </Dialog>
+          </DialogBackdrop>
         </>
-      ) : (
-        <>{contributorsList}</>
-      )}
-      {isEditing ? (
-        <Form {...form}>
-          <EditDocPanel document={docData} />
-        </Form>
-      ) : (
-        <></>
       )}
     </>
   )

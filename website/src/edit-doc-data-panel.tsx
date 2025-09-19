@@ -25,8 +25,12 @@ type EditDocPanelProps = {
   onSubmit: (data: any) => void
 }
 
+type EditButtonProps = {
+  onEditClick?: () => void
+}
+
 /** Button that allows user to enter edit mode in the word panel, and edit fields of a word. */
-export const EditButton = () => {
+export const EditButton = ({ onEditClick }: EditButtonProps) => {
   const { form, isEditing, setIsEditing } = useForm()
 
   return (
@@ -59,6 +63,7 @@ export const EditButton = () => {
           className={css.editPanelButton}
           onClick={() => {
             setIsEditing(true)
+            onEditClick?.()
           }}
         >
           Edit
