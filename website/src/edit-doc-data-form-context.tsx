@@ -4,7 +4,6 @@ import {
   unstable_useFormState as useFormState,
 } from "reakit"
 import * as Dailp from "./graphql/dailp"
-import type { UseFormReturn, FieldValues } from "react-hook-form"
 
 export type EditDocFormValues = {
   title: string;
@@ -18,15 +17,6 @@ export type EditDocFormValues = {
   doi?: string;
 };
 
-export const useForm = () => {
-  const context = useContext(FormContext)
-
-  return context
-}
-
-const { form } = useForm()
-const typedForm = form as unknown as UseFormReturn<EditDocFormValues>
-
 type FormContextType = {
   form: FormStateReturn<any | undefined>
   isEditing: boolean
@@ -38,9 +28,19 @@ const FormContext = createContext<FormContextType>({} as FormContextType)
 /** Instantiates a form state used to keep track of the current document and information about all its features. */
 export const FormProvider = (props: { children: any }) => {
   const [isEditing, setIsEditing] = useState(false)
-  const document: Dailp.DocFormFieldsFragment =
-    {} as Dailp.DocFormFieldsFragment
-
+  const document: Dailp.DocFormFieldsFragment = {
+    id: "",
+    title: "",
+    date: "",
+    description: "",
+    genre: "",
+    format: "",
+    pages: "",
+    creator: "",
+    source: "",
+    doi: ""
+  } as unknown as Dailp.DocFormFieldsFragment
+  
   const [updateDocResult, updateDoc] = Dailp.useUpdateDocumentMetadataMutation()
 
   /** Calls the backend GraphQL mutation to update a document's metadata. */
@@ -85,5 +85,11 @@ export const FormProvider = (props: { children: any }) => {
       {props.children}
     </FormContext.Provider>
   )
+}
+
+export const useForm = () => {
+  const context = useContext(FormContext)
+
+  return context
 }
 
