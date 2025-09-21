@@ -5,18 +5,6 @@ import {
 } from "reakit"
 import * as Dailp from "./graphql/dailp"
 
-export type EditDocFormValues = {
-  title: string;
-  date?: string;
-  description?: string;
-  genre?: string;
-  format?: string;
-  pages?: string;
-  creator?: string;
-  source?: string;
-  doi?: string;
-};
-
 type FormContextType = {
   form: FormStateReturn<any | undefined>
   isEditing: boolean
@@ -28,19 +16,9 @@ const FormContext = createContext<FormContextType>({} as FormContextType)
 /** Instantiates a form state used to keep track of the current document and information about all its features. */
 export const FormProvider = (props: { children: any }) => {
   const [isEditing, setIsEditing] = useState(false)
-  const document: Dailp.DocFormFieldsFragment = {
-    id: "",
-    title: "",
-    date: "",
-    description: "",
-    genre: "",
-    format: "",
-    pages: "",
-    creator: "",
-    source: "",
-    doi: ""
-  } as unknown as Dailp.DocFormFieldsFragment
-  
+  const document: Dailp.DocFormFieldsFragment =
+    {} as Dailp.DocFormFieldsFragment
+
   const [updateDocResult, updateDoc] = Dailp.useUpdateDocumentMetadataMutation()
 
   /** Calls the backend GraphQL mutation to update a document's metadata. */
@@ -92,4 +70,3 @@ export const useForm = () => {
 
   return context
 }
-

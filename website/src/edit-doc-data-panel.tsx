@@ -89,6 +89,7 @@ export const EditDocPanel = (props: { document: Dailp.AnnotatedDoc }) => {
   const [format, setFormat] = useState<string>("Manuscript")
 	const [pages, setPages] = useState<string>("1-24")
 	const [creator, setCreator] = useState<string>("Sam Houston")
+  //const [source, setSource] = useState<string>("https://doi.org/10.1000/182")
 	const [doi, setDOI] = useState<string>("https://doi.org/10.1000/182")
 	
 	// Do contributors, keywords, subject headings, languages, spatial coverage, citation later on
@@ -239,8 +240,7 @@ export const EditDocPanel = (props: { document: Dailp.AnnotatedDoc }) => {
       <FormInput
         {...form}
         className={css.formInput}
-        value={creator}
-        name={["document", "source"]}
+        name={["document", "sources"]}
         disabled={!(userRole === UserRole.Editor)}
       />
       <p />
