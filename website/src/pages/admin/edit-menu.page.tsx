@@ -5,8 +5,8 @@ import Layout from "src/layout"
 import {EditableNavMenu }from "src/components/editable/EditNavMenu"
 
 const EditMenuPage = () => {
-  // todo : change required role to admin
-  // todo: fetch current menu id from db or whatever so we can edit that version
+  // dennis todo : change required role to admin
+  // dennis todo: fetch current menu id from db or whatever so we can edit that version
 
   return (
     <>

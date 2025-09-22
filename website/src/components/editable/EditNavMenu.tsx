@@ -10,6 +10,7 @@ import {
 import { Menu, MenuButton, MenuItem, useMenuState } from "reakit"
 import Link from "src/components/link"
 import * as Wordpress from "src/graphql/wordpress"
+import * as Dailp from "src/graphql/dailp"
 import { Location, useLocation, usePageContext } from "src/renderer/PageShell"
 import {
   desktopNav,
@@ -24,11 +25,49 @@ import {
 } from "../../menu.css"
 
 export const EditableNavMenu = (p: { menuID: number }) => {
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+
+  const handleDelete = (item: any) => {
+    const label = item?.label || item?.path || "this item"
+    const ok = typeof window !== "undefined" && window.confirm(`Delete "${label}"?`)
+    if (!ok) return
+    setItems(items.filter((i) => i.id !== item.id))
+  }
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    const formData = new FormData(e.target as HTMLFormElement)
+    const item = formData.get("add item")
+    const itemPath = formData.get("add item path")
+    // Reject duplicates: we use path as the id, so block if it already exists
+    if (
+      items.some(
+        (i) => i && (i.id === (itemPath as string) || i.path === (itemPath as string))
+      )
+    ) {
+      setErrorMessage("An item with this path already exists.")
+      return
+    }
+    setErrorMessage(null)
+    setItems([...items, {
+      id: itemPath as string,
+      label: item as string,
+      path: itemPath as string,
+      childItems: { nodes: [] }
+    }])
+    // clear form data
+    formData.set("add item", "")
+    formData.set("add item path", "")
+    ;(e.target as HTMLFormElement).reset()
+  }
+
   const location = useLocation()
+  // dennis todo move off of wordpress query and use db query
   const [{ data }] = Wordpress.useMenuByIdQuery({
     variables: { id: p.menuID },
   })
   const menus = data?.menus?.nodes
+
   if (!menus) {
     return null
   }
@@ -37,6 +76,7 @@ export const EditableNavMenu = (p: { menuID: number }) => {
   if (!menuItems) {
     return null
   }
+
   const isTopLevel = (a: typeof menuItems[0]) =>
     !menuItems?.some((b) =>
       b?.childItems?.nodes?.some((b) => b?.path === a?.path)
@@ -59,6 +99,7 @@ export const EditableNavMenu = (p: { menuID: number }) => {
   }
 
   return (
+    <>
     <nav className={desktopNav}>
       <DragDropContext onDragEnd={handleDragEnd}>
         <Droppable droppableId="nav-items" direction="horizontal">
@@ -86,6 +127,7 @@ export const EditableNavMenu = (p: { menuID: number }) => {
                             cursor: "grab",
                           }}
                         >
+                      <p onClick={() => handleDelete(item)}>x</p>
                           <div
                             {...provided.dragHandleProps}
                             style={{
@@ -120,6 +162,7 @@ export const EditableNavMenu = (p: { menuID: number }) => {
                             cursor: "grab",
                           }}
                         >
+                      <p onClick={() => handleDelete(item)}>x</p>
                           <div
                             {...provided.dragHandleProps}
                             style={{
@@ -151,6 +194,19 @@ export const EditableNavMenu = (p: { menuID: number }) => {
         </Droppable>
       </DragDropContext>
     </nav>
+    <form onSubmit={handleSubmit}>
+      {errorMessage && (
+        <p style={{ color: "#b00020", margin: "0 0 8px" }}>{errorMessage}</p>
+      )}
+      <input type="text" name="add item" placeholder="Item Label" />
+      <input type="text" name="add item path" placeholder="Item Path" />
+      <button type="submit">Add Item</button>
+    </form>
+    <form>
+      <button type="submit">Save</button>
+      <button type="button">Cancel</button>
+    </form>
+</>
   )
 }
 
