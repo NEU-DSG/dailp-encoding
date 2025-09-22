@@ -1,5 +1,6 @@
-import React from "react"
-import { MdArrowDropDown, MdMenu } from "react-icons/md/index"
+import React, { useState } from "react"
+import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd"
+import { MdArrowDropDown, MdMenu, MdDragIndicator } from "react-icons/md/index"
 import {
   Dialog,
   DialogBackdrop,
@@ -22,7 +23,7 @@ import {
   subMenuItems,
 } from "../../menu.css"
 
-export const NavMenu = (p: { menuID: number }) => {
+export const EditableNavMenu = (p: { menuID: number }) => {
   const location = useLocation()
   const [{ data }] = Wordpress.useMenuByIdQuery({
     variables: { id: p.menuID },
@@ -41,32 +42,114 @@ export const NavMenu = (p: { menuID: number }) => {
       b?.childItems?.nodes?.some((b) => b?.path === a?.path)
     )
 
+  const topLevelItems = menuItems?.filter(isTopLevel) || []
+  const [items, setItems] = useState(topLevelItems)
+
+  const handleDragEnd = (result: any) => {
+    if (!result.destination) {
+      return
+    }
+
+    const newItems = Array.from(items)
+    const [reorderedItem] = newItems.splice(result.source.index, 1)
+    if (reorderedItem) {
+      newItems.splice(result.destination.index, 0, reorderedItem)
+      setItems(newItems)
+    }
+  }
+
   return (
     <nav className={desktopNav}>
-      {menuItems?.filter(isTopLevel).map((item) => {
-        if (!item) {
-          return null
-        } else if (item.childItems?.nodes?.length) {
-          return <SubMenu key={item.label} item={item} location={location} />
-        } else {
-          let url = { pathname: item.path }
-          if (item.path && item.path.startsWith("http")) {
-            url = new URL(item.path)
-          }
-          return (
-            <Link
-              key={item.path}
-              href={url.pathname?.valueOf()}
-              className={navLink}
-              aria-current={
-                location.pathname === url.pathname ? "page" : undefined
-              }
+      <DragDropContext onDragEnd={handleDragEnd}>
+        <Droppable droppableId="nav-items" direction="horizontal">
+          {(provided) => (
+            <div
+              {...provided.droppableProps}
+              ref={provided.innerRef}
+              style={{ display: "flex" }}
             >
-              {item.label}
-            </Link>
-          )
-        }
-      })}
+              {items.map((item, index) => {
+                if (!item) {
+                  return null
+                } else if (item.childItems?.nodes?.length) {
+                  return (
+                    <Draggable key={item.label || `submenu-${index}`} draggableId={item.label || `submenu-${index}`} index={index}>
+                      {(provided, snapshot) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.draggableProps}
+                          style={{
+                            ...provided.draggableProps.style,
+                            opacity: snapshot.isDragging ? 0.8 : 1,
+                            display: "flex",
+                            alignItems: "center",
+                            cursor: "grab",
+                          }}
+                        >
+                          <div
+                            {...provided.dragHandleProps}
+                            style={{
+                              marginRight: "4px",
+                              color: "#666",
+                              cursor: "grab",
+                            }}
+                          >
+                            <MdDragIndicator size={16} />
+                          </div>
+                          <SubMenu item={item} location={location} />
+                        </div>
+                      )}
+                    </Draggable>
+                  )
+                } else {
+                  let url = { pathname: item.path }
+                  if (item.path && item.path.startsWith("http")) {
+                    url = new URL(item.path)
+                  }
+                  return (
+                    <Draggable key={item.path || `link-${index}`} draggableId={item.path || `link-${index}`} index={index}>
+                      {(provided, snapshot) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.draggableProps}
+                          style={{
+                            ...provided.draggableProps.style,
+                            opacity: snapshot.isDragging ? 0.8 : 1,
+                            display: "flex",
+                            alignItems: "center",
+                            cursor: "grab",
+                          }}
+                        >
+                          <div
+                            {...provided.dragHandleProps}
+                            style={{
+                              marginRight: "4px",
+                              color: "#666",
+                              cursor: "grab",
+                            }}
+                          >
+                            <MdDragIndicator size={16} />
+                          </div>
+                          <Link
+                            href={url.pathname?.valueOf()}
+                            className={navLink}
+                            aria-current={
+                              location.pathname === url.pathname ? "page" : undefined
+                            }
+                          >
+                            {item.label}
+                          </Link>
+                        </div>
+                      )}
+                    </Draggable>
+                  )
+                }
+              })}
+              {provided.placeholder}
+            </div>
+          )}
+        </Droppable>
+      </DragDropContext>
     </nav>
   )
 }
