@@ -9,14 +9,16 @@ use dailp::{
     CreateEditedCollectionInput, CurateWordAudioInput, Date, DeleteContributorAttribution,
     DocumentMetadata, DocumentMetadataUpdate, DocumentParagraph, PositionInDocument,
     SourceAttribution, TranslatedPage, TranslatedSection, UpdateContributorAttribution, Uuid,
+
 };
 use itertools::{Itertools, Position};
 
 use {
     dailp::async_graphql::{self, dataloader::DataLoader, Context, FieldResult},
     dailp::{
-        AnnotatedDoc, AnnotatedFormUpdate, CherokeeOrthography, Database, EditedCollection,
-        MorphemeId, MorphemeReference, MorphemeTag, ParagraphUpdate, WordsInDocument,
+        AbstractMorphemeTag, AnnotatedDoc, AnnotatedFormUpdate, CherokeeOrthography, Database,
+        EditedCollection, MorphemeId, MorphemeReference, MorphemeTag, ParagraphUpdate,
+        WordsInDocument,
     },
 };
 
@@ -362,6 +364,18 @@ impl Query {
             .data::<DataLoader<Database>>()?
             .loader()
             .dailp_user_by_id(&id)
+            .await?)
+    }
+
+    async fn abbreviation_id_from_short_name(
+        &self,
+        context: &Context<'_>,
+        short_name: String,
+    ) -> FieldResult<Uuid> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .abbreviation_id_from_short_name(&short_name)
             .await?)
     }
 }
@@ -771,6 +785,54 @@ impl Mutation {
             collection_slug: "user_documents".to_string(), // All user-created documents go to user_documents collection
             chapter_slug: dailp::slugify_ltree(&short_name), // Chapter slug must be ltree-compatible
         })
+
+    #[graphql(
+        guard = "GroupGuard::new(UserGroup::Contributors).or(GroupGuard::new(UserGroup::Editors))"
+    )]
+    async fn insert_custom_morpheme_tag(
+        &self,
+        context: &Context<'_>,
+        tag: String,
+        title: String,
+        system: String,
+    ) -> FieldResult<bool> {
+        //first get id of custom morpheme tag
+        let abstract_id = context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .insert_custom_abstract_tag(AbstractMorphemeTag {
+                //TODO: can just make it CUS once we remove the unique constraint
+                id: "CUS:".to_string() + &title,
+                morpheme_type: "custom".to_string(),
+            })
+            .await?;
+
+        //construct the morpheme tag
+        //todo: need to figure out why tag and title are the same thing :(
+        //its a frontend issue
+        let tag = MorphemeTag {
+            internal_tags: vec![abstract_id.to_string()],
+            tag: tag,
+            title: title.clone(),
+            shape: None,
+            details_url: None,
+            definition: title,
+            morpheme_type: String::new(),
+            role_override: None,
+        };
+
+        let system_id = context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .abbreviation_id_from_short_name("CUS")
+            .await?;
+
+        context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .insert_custom_morpheme_tag(tag, system_id)
+            .await?;
+        Ok(true)
     }
 
     #[graphql(

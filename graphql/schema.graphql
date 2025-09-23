@@ -202,9 +202,9 @@ input AnnotatedFormUpdate {
 	"""
 	segments: [MorphemeSegmentUpdate!]
 	"""
-	Possible update to English gloss
+	Possible updated english gloss
 	"""
-	englishGloss: [String!]
+	englishGloss: String
 }
 
 """
@@ -468,6 +468,24 @@ input CreateDocumentFromFormInput {
 	sourceName: String!
 	sourceUrl: String!
 	collectionId: UUID!
+}
+
+"""
+Input for creating an edited collection
+"""
+input CreateEditedCollectionInput {
+	"""
+	The title of the collection
+	"""
+	title: String!
+	"""
+	Description of the collection
+	"""
+	description: String!
+	"""
+	URL of the thumbnail image for the collection
+	"""
+	thumbnailUrl: String!
 }
 
 """
@@ -945,6 +963,7 @@ type Mutation {
 	Minimal mutation to add a document with only essential fields
 	"""
 	addDocument(input: CreateDocumentFromFormInput!): AddDocumentPayload!
+	insertCustomMorphemeTag(tag: String!, title: String!, system: String!): Boolean!
 	createEditedCollection(input: CreateEditedCollectionInput!): String!
 }
 
@@ -1133,6 +1152,7 @@ type Query {
 	Gets a dailp_user by their id
 	"""
 	dailpUserById(id: UUID!): User!
+	abbreviationIdFromShortName(shortName: String!): UUID!
 }
 
 """

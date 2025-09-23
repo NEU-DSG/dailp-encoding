@@ -566,11 +566,8 @@ impl Database {
         let source = word.source.into_vec();
         let simple_phonetics = word.romanized_source.into_vec();
         let commentary = word.commentary.into_vec();
-        let english_gloss_owned: Vec<String> = match word.english_gloss.into_vec().pop().flatten() {
-            Some(glosses) => glosses,
-            None => Vec::new(),
-        };
-        let english_gloss: Vec<&str> = english_gloss_owned.iter().map(|s| s.as_str()).collect();
+        //note, we are only expecting one english_gloss, turning into vec bc legacy type for english_gloss is vec
+        let english_gloss = word.english_gloss.into_vec();
 
         let document_id = query_file!(
             "queries/update_word.sql",
@@ -578,7 +575,7 @@ impl Database {
             &source as _,
             &simple_phonetics as _,
             &commentary as _,
-            &english_gloss as _
+            &english_gloss as _,
         )
         .fetch_one(&mut *tx)
         .await?
@@ -1456,6 +1453,38 @@ impl Database {
         Ok(())
     }
 
+    pub async fn insert_custom_abstract_tag(&self, tag: AbstractMorphemeTag) -> Result<Uuid> {
+        let abstract_id =
+            query_file_scalar!("queries/insert_custom_abstract_tag.sql", tag.id, "custom")
+                .fetch_one(&self.client)
+                .await?;
+        Ok(abstract_id)
+    }
+
+    pub async fn insert_custom_morpheme_tag(
+        &self,
+        form: MorphemeTag,
+        system_id: Uuid,
+    ) -> Result<()> {
+        query_file!(
+            "queries/insert_custom_morpheme_tag.sql",
+            system_id,
+            &form
+                .internal_tags
+                .iter()
+                .map(|id| Uuid::parse_str(id).unwrap())
+                .collect::<Vec<Uuid>>(),
+            form.tag,
+            form.title,
+            form.role_override as Option<WordSegmentRole>,
+            form.definition
+        )
+        .fetch_all(&self.client)
+        .await?;
+
+        Ok(())
+    }
+
     pub async fn insert_morpheme_tag(&self, form: MorphemeTag, system_id: Uuid) -> Result<()> {
         let abstract_ids = query_file_scalar!(
             "queries/abstract_tag_ids_from_glosses.sql",
@@ -1845,6 +1874,14 @@ impl Database {
 
         tx.commit().await?;
         Ok((document_id, chapter_id))
+  }
+
+      pub async fn abbreviation_id_from_short_name(&self, short_name: &str) -> Result<Uuid> {
+        Ok(
+            query_file_scalar!("queries/abbreviation_id_from_short_name.sql", short_name)
+                .fetch_one(&self.client)
+                .await?,
+        )
     }
 }
 

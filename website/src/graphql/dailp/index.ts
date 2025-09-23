@@ -192,8 +192,8 @@ export type AnnotatedFormSegmentsArgs = {
 export type AnnotatedFormUpdate = {
   /** Possible update to commentary */
   readonly commentary: InputMaybe<Scalars["String"]>
-  /** Possible update to English gloss */
-  readonly englishGloss: InputMaybe<ReadonlyArray<Scalars["String"]>>
+  /** Possible updated english gloss */
+  readonly englishGloss: InputMaybe<Scalars["String"]>
   /** Unique identifier of the form */
   readonly id: Scalars["UUID"]
   /** Possible update to normalized source content */
@@ -394,6 +394,7 @@ export type CreateDocumentFromFormInput = {
   readonly sourceUrl: Scalars["String"]
   readonly unresolvedWords: ReadonlyArray<Scalars["String"]>
 }
+
 
 /** Input for creating an edited collection */
 export type CreateEditedCollectionInput = {
@@ -712,6 +713,7 @@ export type Mutation = {
   readonly deleteComment: CommentParent
   /** Mutation for deleting contributor attributions */
   readonly deleteContributorAttribution: Scalars["UUID"]
+  readonly insertCustomMorphemeTag: Scalars["Boolean"]
   /** Post a new comment on a given object */
   readonly postComment: CommentParent
   /** Removes a bookmark from a user's list of bookmarks */
@@ -756,6 +758,12 @@ export type MutationDeleteCommentArgs = {
 
 export type MutationDeleteContributorAttributionArgs = {
   contribution: DeleteContributorAttribution
+}
+
+export type MutationInsertCustomMorphemeTagArgs = {
+  system: Scalars["String"]
+  tag: Scalars["String"]
+  title: Scalars["String"]
 }
 
 export type MutationPostCommentArgs = {
@@ -874,6 +882,7 @@ export type PostCommentInput = {
 
 export type Query = {
   readonly __typename?: "Query"
+  readonly abbreviationIdFromShortName: Scalars["UUID"]
   /** List of all the document collections available. */
   readonly allCollections: ReadonlyArray<DocumentCollection>
   /** Listing of all documents excluding their contents by default */
@@ -931,6 +940,10 @@ export type Query = {
    * Each query may match against multiple fields of a word.
    */
   readonly wordSearch: ReadonlyArray<AnnotatedForm>
+}
+
+export type QueryAbbreviationIdFromShortNameArgs = {
+  shortName: Scalars["String"]
 }
 
 export type QueryAllTagsArgs = {
@@ -2642,6 +2655,15 @@ export type AllCollectionsQuery = { readonly __typename?: "Query" } & {
     >
   >
 }
+export type InsertCustomMorphemeTagMutationVariables = Exact<{
+  tag: Scalars["String"]
+  title: Scalars["String"]
+  system: Scalars["String"]
+}>
+
+export type InsertCustomMorphemeTagMutation = {
+  readonly __typename?: "Mutation"
+} & Pick<Mutation, "insertCustomMorphemeTag">
 
 export const DocFormFieldsFragmentDoc = gql`
   fragment DocFormFields on AnnotatedDoc {
@@ -3674,6 +3696,7 @@ export function useAddDocumentMutation() {
     AddDocumentDocument
   )
 }
+
 export const AddEditedCollectionDocument = gql`
   mutation AddEditedCollection($input: CreateEditedCollectionInput!) {
     createEditedCollection(input: $input)
@@ -3749,4 +3772,19 @@ export function useAllCollectionsQuery(
     query: AllCollectionsDocument,
     ...options,
   })
+export const InsertCustomMorphemeTagDocument = gql`
+  mutation InsertCustomMorphemeTag(
+    $tag: String!
+    $title: String!
+    $system: String!
+  ) {
+    insertCustomMorphemeTag(tag: $tag, title: $title, system: $system)
+  }
+`
+
+export function useInsertCustomMorphemeTagMutation() {
+  return Urql.useMutation<
+    InsertCustomMorphemeTagMutation,
+    InsertCustomMorphemeTagMutationVariables
+  >(InsertCustomMorphemeTagDocument)
 }

@@ -32,8 +32,8 @@ async fn main() -> Result<()> {
     println!("Migrating Image Sources...");
     migrate_image_sources(&db).await?;
 
-    println!("Migrating contributors...");
-    contributors::migrate_all(&db).await?;
+    //println!("Migrating contributors...");
+    //contributors::migrate_all(&db).await?;
 
     println!("Migrating tags to database...");
     tags::migrate_tags(&db).await?;
