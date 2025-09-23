@@ -1874,9 +1874,9 @@ impl Database {
 
         tx.commit().await?;
         Ok((document_id, chapter_id))
-  }
+    }
 
-      pub async fn abbreviation_id_from_short_name(&self, short_name: &str) -> Result<Uuid> {
+    pub async fn abbreviation_id_from_short_name(&self, short_name: &str) -> Result<Uuid> {
         Ok(
             query_file_scalar!("queries/abbreviation_id_from_short_name.sql", short_name)
                 .fetch_one(&self.client)

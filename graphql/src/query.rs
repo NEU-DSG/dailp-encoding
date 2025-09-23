@@ -9,7 +9,6 @@ use dailp::{
     CreateEditedCollectionInput, CurateWordAudioInput, Date, DeleteContributorAttribution,
     DocumentMetadata, DocumentMetadataUpdate, DocumentParagraph, PositionInDocument,
     SourceAttribution, TranslatedPage, TranslatedSection, UpdateContributorAttribution, Uuid,
-
 };
 use itertools::{Itertools, Position};
 
@@ -785,6 +784,7 @@ impl Mutation {
             collection_slug: "user_documents".to_string(), // All user-created documents go to user_documents collection
             chapter_slug: dailp::slugify_ltree(&short_name), // Chapter slug must be ltree-compatible
         })
+    }
 
     #[graphql(
         guard = "GroupGuard::new(UserGroup::Contributors).or(GroupGuard::new(UserGroup::Editors))"
