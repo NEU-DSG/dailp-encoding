@@ -481,7 +481,7 @@ const EditWordPartGloss = (props: {
 
 // Component that allows editing of a morpheme's gloss. Users can enter a custom gloss or select from global glosses / functional tags.
 const EditEnglishGloss = () => {
-  return <EditWordFeature feature={"englishGloss"} label="English Glossary" />
+  return <EditWordFeature feature={"englishGloss"} label="English Gloss" />
 }
 
 type Writeable<T> = { -readonly [P in keyof T]: T[P] }
