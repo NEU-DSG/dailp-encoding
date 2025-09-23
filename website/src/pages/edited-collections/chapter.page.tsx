@@ -9,6 +9,8 @@ import * as css from "../cwkw/cwkw-layout.css"
 import { DocumentTitleHeader, TabSet } from "../documents/document.page"
 import * as chapterStyle from "./chapter.css"
 import { useDialog, useSubchapters } from "./edited-collection-context"
+import { useMediaQuery } from "src/custom-hooks"
+import { mediaQueries } from "src/style/constants"
 
 const ChapterPage = (props: {
   collectionSlug: string
@@ -20,6 +22,8 @@ const ChapterPage = (props: {
       chapterSlug: props.chapterSlug,
     },
   })
+
+  const isDesktop = useMediaQuery(mediaQueries.medium)
 
   const dialog = useDialog()
 
@@ -64,7 +68,13 @@ const ChapterPage = (props: {
                     )}
                 </Breadcrumbs>
               </header>
-              <WordpressPage slug={`/${chapter.slug.replace(/_/g, "-")}`} />
+              {!isDesktop ? 
+                <div className={chapterStyle.wordpressContentFix}>
+                  <WordpressPage slug={`/${chapter.slug.replace(/_/g, "-")}`} />
+                </div>
+                :
+                <WordpressPage slug={`/${chapter.slug.replace(/_/g, "-")}`} />
+              }
             </>
           ) : null}
 

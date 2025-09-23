@@ -1,4 +1,4 @@
-import { style } from "@vanilla-extract/css"
+import { style, globalStyle } from "@vanilla-extract/css"
 import { hspace, mediaQueries } from "src/style/constants"
 import { paddingX, paddingY } from "src/style/utils"
 import { std } from "src/style/utils.css"
@@ -13,3 +13,78 @@ export const docHeader = style([
     },
   },
 ])
+
+export const wordpressContentFix = style({
+  width: "100%",
+  maxWidth: "100%",
+  overflow: "hidden",
+  overflowX: "auto",
+  WebkitOverflowScrolling: "touch",
+})
+
+// Use globalStyle for child element targeting:
+globalStyle(`${wordpressContentFix} h1, ${wordpressContentFix} h2, ${wordpressContentFix} h3, ${wordpressContentFix} h4, ${wordpressContentFix} h5, ${wordpressContentFix} h6`, {
+  clear: "both",
+  width: "100%",
+  float: "none",
+  display: "block",
+  marginBottom: "1rem"
+})
+
+globalStyle(`${wordpressContentFix} p, ${wordpressContentFix} div`, {
+  clear: "both",
+  width: "100%", 
+  float: "none",
+  maxWidth: "100%"
+})
+
+globalStyle(`${wordpressContentFix} img`, {
+  maxWidth: "100%",
+  height: "auto",
+  float: "none",
+  display: "block",
+  margin: "0 auto 1rem auto"
+})
+
+globalStyle(`${wordpressContentFix} table`, {
+  width: "100%",
+  maxWidth: "100%",
+  tableLayout: "auto",
+  wordWrap: "break-word",
+  fontSize: "0.85rem"
+})
+
+globalStyle(`${wordpressContentFix} table td, ${wordpressContentFix} table th`, {
+  padding: "0.4rem 0.2rem",
+  wordWrap: "break-word",
+  overflow: "hidden",
+  verticalAlign: "top",
+  width: "auto",
+  minWidth: "0px",
+  maxWidth: "200px"
+})
+
+globalStyle(`${wordpressContentFix} table th`, {
+  fontSize: "0.8rem",
+  fontWeight: "bold"
+})
+
+globalStyle(`${wordpressContentFix} table td`, {
+  fontSize: "0.85rem",
+  lineHeight: "1.2"
+})
+
+globalStyle(`${wordpressContentFix} table td img`, {
+  width: "auto !important",   // Override inline width="300"
+  height: "auto !important",  // Override inline height="300"
+  minWidth: "120px !important",
+  display: "inline-block !important",
+  verticalAlign: "top !important"
+})
+
+// Specific rules for tables with many columns (eg. 5 or more) making them scrollable
+// Compromise between readability and usability
+globalStyle(`${wordpressContentFix} table:has(tr td:nth-child(5))`, {
+  minWidth: "max-content", // Wide tables can go as wide as needed
+  whiteSpace: "nowrap"
+})
