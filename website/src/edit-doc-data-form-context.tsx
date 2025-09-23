@@ -5,6 +5,19 @@ import {
 } from "reakit"
 import * as Dailp from "./graphql/dailp"
 
+export type EditDocFormValues = {
+  id: string
+  title: string
+  date?: string
+  description?: string
+  genre?: string
+  format?: string
+  pages?: string
+  creator?: string
+  source?: string
+  doi?: string
+}
+
 type FormContextType = {
   form: FormStateReturn<any | undefined>
   isEditing: boolean

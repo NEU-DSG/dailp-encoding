@@ -81,7 +81,6 @@ export const EditDocPanel = (props: { document: Dailp.AnnotatedDoc }) => {
   if (!form || !form.values.document) {
     return null
   }
-  form.values.document["id "] = docData.id
 
   // New placeholder fields
   const [description, setDescription] = useState<string>("A product of a convention held in early July 1827 at New Echota, Georgia, the constitution appears to be a version of the American Constitution adapted to suit Cherokee needs. The constitution does not represent a position of assimilation to white society but, rather, a conscious strategy to resist removal and maintain autonomy. However, traditionalists saw it as one more concession to white, Christian authority.")
@@ -89,7 +88,7 @@ export const EditDocPanel = (props: { document: Dailp.AnnotatedDoc }) => {
   const [format, setFormat] = useState<string>("Manuscript")
 	const [pages, setPages] = useState<string>("1-24")
 	const [creator, setCreator] = useState<string>("Sam Houston")
-  //const [source, setSource] = useState<string>("https://doi.org/10.1000/182")
+  const [source, setSource] = useState<string>("https://teva.contentdm.oclc.org/digital/collection/tfd/id/304")
 	const [doi, setDOI] = useState<string>("https://doi.org/10.1000/182")
 	
 	// Do contributors, keywords, subject headings, languages, spatial coverage, citation later on
@@ -115,6 +114,38 @@ export const EditDocPanel = (props: { document: Dailp.AnnotatedDoc }) => {
     }
   }
 
+  useEffect(() => {
+    if (!docData) return
+  
+    form.values({
+      document: {
+        id: docData.id,
+        title: docData.title || "",
+        date: selectedDate ? [{ day, month, year }] : [],
+        description,
+        genre,
+        format,
+        pages,
+        creator,
+        source,
+        doi,
+      },
+    })
+  }, [
+    docData,
+    selectedDate,
+    day,
+    month,
+    year,
+    description,
+    genre,
+    format,
+    pages,
+    creator,
+    source,
+    doi,
+  ])
+  
   // Use form.push to update the form state manually
   useEffect(() => {
     form.push(["document", "id"], [docData.id.toString()]) // push manually
@@ -232,15 +263,13 @@ export const EditDocPanel = (props: { document: Dailp.AnnotatedDoc }) => {
 
       {/* Source */}
       <FormLabel 
-        {...form}
         className={css.formInputLabel} 
-        name="source"
         label="Source" 
       />
       <FormInput
-        {...form}
         className={css.formInput}
-        name={["document", "sources"]}
+        value={source}
+        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSource(e.target.value)}
         disabled={!(userRole === UserRole.Editor)}
       />
       <p />
