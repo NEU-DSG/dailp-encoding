@@ -109,48 +109,49 @@ const parseOptions: HTMLReactParserOptions = {
       } else if (node.name === "img") {
         const props = attributesToProps(node.attribs)
         return (
-          <img 
+          <img
             {...props}
             style={{
-              maxWidth: '100%',
-              height: 'auto',
-              imageRendering: '-webkit-optimize-contrast',
-              cursor: 'pointer',
-              // Allow larger size on desktop
-              width: 'auto',
-              minWidth: '300px',
+              maxWidth: "100%",
+              height: "auto",
+              imageRendering: "-webkit-optimize-contrast",
+              cursor: "pointer",
+              width: "auto",
             }}
             onClick={(e) => {
               // Open image in new tab for full view
-              window.open(e.currentTarget.src, '_blank')
+              window.open(e.currentTarget.src, "_blank")
             }}
           />
         )
       } else if (node.name === "video") {
         const props = attributesToProps(node.attribs)
         return (
-          <video 
+          <video
             {...props}
             style={{
-              width: '100%',
-              maxWidth: '100%',
-              height: 'auto'
+              width: "100%",
+              maxWidth: "100%",
+              height: "auto",
             }}
             controls
           >
             {domToReact(node.children, parseOptions)}
           </video>
         )
-      } else if (node.name === "div" && node.attribs["class"]?.includes("video")) {
+      } else if (
+        node.name === "div" &&
+        node.attribs["class"]?.includes("video")
+      ) {
         const props = attributesToProps(node.attribs)
         return (
-          <div 
+          <div
             {...props}
             style={{
-              position: 'relative',
-              width: '100%',
-              maxWidth: '100%',
-              overflow: 'hidden'
+              position: "relative",
+              width: "100%",
+              maxWidth: "100%",
+              overflow: "hidden",
             }}
           >
             {domToReact(node.children, parseOptions)}

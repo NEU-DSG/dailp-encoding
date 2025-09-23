@@ -1,16 +1,16 @@
 import React from "react"
 import { Helmet } from "react-helmet"
 import { Breadcrumbs, Link, WordpressPage } from "src/components"
+import { useMediaQuery } from "src/custom-hooks"
 import * as Dailp from "src/graphql/dailp"
 import { chapterRoute, collectionRoute } from "src/routes"
+import { mediaQueries } from "src/style/constants"
 import * as util from "src/style/utils.css"
 import CWKWLayout from "../cwkw/cwkw-layout"
 import * as css from "../cwkw/cwkw-layout.css"
 import { DocumentTitleHeader, TabSet } from "../documents/document.page"
 import * as chapterStyle from "./chapter.css"
 import { useDialog, useSubchapters } from "./edited-collection-context"
-import { useMediaQuery } from "src/custom-hooks"
-import { mediaQueries } from "src/style/constants"
 
 const ChapterPage = (props: {
   collectionSlug: string
@@ -68,13 +68,13 @@ const ChapterPage = (props: {
                     )}
                 </Breadcrumbs>
               </header>
-              {!isDesktop ? 
+              {!isDesktop ? (
                 <div className={chapterStyle.wordpressContentFix}>
                   <WordpressPage slug={`/${chapter.slug.replace(/_/g, "-")}`} />
                 </div>
-                :
+              ) : (
                 <WordpressPage slug={`/${chapter.slug.replace(/_/g, "-")}`} />
-              }
+              )}
             </>
           ) : null}
 
