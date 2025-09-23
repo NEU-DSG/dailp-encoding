@@ -194,9 +194,9 @@ input AnnotatedFormUpdate {
 	"""
 	segments: [MorphemeSegmentUpdate!]
 	"""
-	Possible update to English gloss
+	Possible updated english gloss
 	"""
-	englishGloss: [String!]
+	englishGloss: String
 }
 
 """
@@ -422,7 +422,7 @@ type Contributor {
 	"""
 	The role that defines most of their contributions to the associated item
 	"""
-	role: String!
+	role: ContributorRole
 	details: ContributorDetails
 }
 
@@ -450,6 +450,23 @@ type ContributorDetails {
 	The optional date that this contributor was born on.
 	"""
 	birthDate: Date
+	"""
+	Whether or not the contributor's profile is linked to their contributions
+	"""
+	isVisible: Boolean!
+}
+
+"""
+A contributor can have to any number of roles, which define most of their
+contributions to the associated item (add or revise as needed)
+"""
+enum ContributorRole {
+	TRANSCRIBER
+	TRANSLATOR
+	EDITOR
+	ANNOTATOR
+	CULTURAL_ADVISOR
+	AUTHOR
 }
 
 """
@@ -919,6 +936,7 @@ type Mutation {
 	"""
 	attachAudioToWord(input: AttachAudioToWordInput!): AnnotatedForm!
 	updateDocumentMetadata(document: DocumentMetadataUpdate!): UUID!
+	insertCustomMorphemeTag(tag: String!, title: String!, system: String!): Boolean!
 	createEditedCollection(input: CreateEditedCollectionInput!): String!
 }
 
@@ -1107,6 +1125,7 @@ type Query {
 	Gets a dailp_user by their id
 	"""
 	dailpUserById(id: UUID!): User!
+	abbreviationIdFromShortName(shortName: String!): UUID!
 }
 
 """

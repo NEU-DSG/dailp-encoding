@@ -83,6 +83,9 @@ export const EditDocPanel = (props: { document: Dailp.AnnotatedDoc }) => {
   }
 
   // New placeholder fields
+  // in schema, can remove
+  // call to useFormInput (something undefined that shouldn't be)
+  // check that everything is getting set + checks for everything getting set
   const [description, setDescription] = useState<string>("A product of a convention held in early July 1827 at New Echota, Georgia, the constitution appears to be a version of the American Constitution adapted to suit Cherokee needs. The constitution does not represent a position of assimilation to white society but, rather, a conscious strategy to resist removal and maintain autonomy. However, traditionalists saw it as one more concession to white, Christian authority.")
   const [genre, setGenre] = useState<string>("Legal Document")
   const [format, setFormat] = useState<string>("Manuscript")
