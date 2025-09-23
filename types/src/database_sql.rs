@@ -1462,6 +1462,38 @@ impl Database {
         Ok(())
     }
 
+    pub async fn insert_custom_abstract_tag(&self, tag: AbstractMorphemeTag) -> Result<Uuid> {
+        let abstract_id =
+            query_file_scalar!("queries/insert_custom_abstract_tag.sql", tag.id, "custom")
+                .fetch_one(&self.client)
+                .await?;
+        Ok(abstract_id)
+    }
+
+    pub async fn insert_custom_morpheme_tag(
+        &self,
+        form: MorphemeTag,
+        system_id: Uuid,
+    ) -> Result<()> {
+        query_file!(
+            "queries/insert_custom_morpheme_tag.sql",
+            system_id,
+            &form
+                .internal_tags
+                .iter()
+                .map(|id| Uuid::parse_str(id).unwrap())
+                .collect::<Vec<Uuid>>(),
+            form.tag,
+            form.title,
+            form.role_override as Option<WordSegmentRole>,
+            form.definition
+        )
+        .fetch_all(&self.client)
+        .await?;
+
+        Ok(())
+    }
+
     pub async fn insert_morpheme_tag(&self, form: MorphemeTag, system_id: Uuid) -> Result<()> {
         let abstract_ids = query_file_scalar!(
             "queries/abstract_tag_ids_from_glosses.sql",
@@ -1590,6 +1622,14 @@ impl Database {
                     .collect(),
             ))
         }
+    }
+
+    pub async fn abbreviation_id_from_short_name(&self, short_name: &str) -> Result<Uuid> {
+        Ok(
+            query_file_scalar!("queries/abbreviation_id_from_short_name.sql", short_name)
+                .fetch_one(&self.client)
+                .await?,
+        )
     }
 }
 

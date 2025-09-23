@@ -305,16 +305,6 @@ export const PanelLayout = (p: {
             <Button type="button" onClick={() => setIsCommenting(true)}>
               Comment
             </Button>
-            <Button type="button" onClick={handleAddWordPart}>
-              Add word part
-            </Button>
-
-            {p.segment.__typename === "AnnotatedForm" &&
-              p.segment.englishGloss.length == 0 && (
-                <Button type="button" onClick={handleAddEnglishGloss}>
-                  Add English Gloss
-                </Button>
-              )}
           </>
         ))}
     </div>
