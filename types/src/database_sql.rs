@@ -28,6 +28,8 @@ use {
     std::time::Duration,
     uuid::Uuid,
 };
+// Explicitly import types from person.rs
+use crate::person::{Contributor, ContributorDetails, ContributorRole};
 
 /// Connects to our backing database instance, providing high level functions
 /// for accessing the data therein.
@@ -569,8 +571,11 @@ impl Database {
         let source = word.source.into_vec();
         let simple_phonetics = word.romanized_source.into_vec();
         let commentary = word.commentary.into_vec();
-        //note, we are only expecting one english_gloss, turning into vec bc legacy type for english_gloss is vec
-        let english_gloss = word.english_gloss.into_vec();
+        let english_gloss_owned: Vec<String> = match word.english_gloss.into_vec().pop().flatten() {
+            Some(glosses) => glosses.split(',').map(|s| s.trim().to_string()).collect(),
+            None => Vec::new(),
+        };
+        let english_gloss: Vec<&str> = english_gloss_owned.iter().map(|s| s.as_str()).collect();
 
         let document_id = query_file!(
             "queries/update_word.sql",
@@ -578,7 +583,7 @@ impl Database {
             &source as _,
             &simple_phonetics as _,
             &commentary as _,
-            &english_gloss as _,
+            &english_gloss as _
         )
         .fetch_one(&mut *tx)
         .await?
@@ -980,13 +985,16 @@ impl Database {
             let (name, doc, role): (Vec<_>, Vec<_>, Vec<_>) = meta
                 .contributors
                 .iter()
-                .map(|contributor| (&*contributor.name, document_uuid, &*contributor.role))
+                .map(|contributor| (&*contributor.name, document_uuid, contributor.role.as_ref()))
                 .multiunzip();
+            // Convert roles to Option<String> for SQL
+            let role_strings: Vec<Option<String>> =
+                role.iter().map(|r| r.map(|r| r.to_string())).collect();
             query_file!(
                 "queries/upsert_document_contributors.sql",
                 &*name as _,
                 &*doc,
-                &*role as _
+                &role_strings as _
             )
             .execute(&mut *tx)
             .await?;
@@ -1454,6 +1462,38 @@ impl Database {
         Ok(())
     }
 
+    pub async fn insert_custom_abstract_tag(&self, tag: AbstractMorphemeTag) -> Result<Uuid> {
+        let abstract_id =
+            query_file_scalar!("queries/insert_custom_abstract_tag.sql", tag.id, "custom")
+                .fetch_one(&self.client)
+                .await?;
+        Ok(abstract_id)
+    }
+
+    pub async fn insert_custom_morpheme_tag(
+        &self,
+        form: MorphemeTag,
+        system_id: Uuid,
+    ) -> Result<()> {
+        query_file!(
+            "queries/insert_custom_morpheme_tag.sql",
+            system_id,
+            &form
+                .internal_tags
+                .iter()
+                .map(|id| Uuid::parse_str(id).unwrap())
+                .collect::<Vec<Uuid>>(),
+            form.tag,
+            form.title,
+            form.role_override as Option<WordSegmentRole>,
+            form.definition
+        )
+        .fetch_all(&self.client)
+        .await?;
+
+        Ok(())
+    }
+
     pub async fn insert_morpheme_tag(&self, form: MorphemeTag, system_id: Uuid) -> Result<()> {
         let abstract_ids = query_file_scalar!(
             "queries/abstract_tag_ids_from_glosses.sql",
@@ -1582,6 +1622,14 @@ impl Database {
                     .collect(),
             ))
         }
+    }
+
+    pub async fn abbreviation_id_from_short_name(&self, short_name: &str) -> Result<Uuid> {
+        Ok(
+            query_file_scalar!("queries/abbreviation_id_from_short_name.sql", short_name)
+                .fetch_one(&self.client)
+                .await?,
+        )
     }
 }
 
@@ -2022,7 +2070,11 @@ impl Loader<ContributorsForDocument> for Database {
                     ContributorsForDocument(x.document_id),
                     Contributor {
                         name: x.full_name,
-                        role: x.contribution_role,
+                        role: x
+                            .contribution_role
+                            .to_lowercase()
+                            .parse::<ContributorRole>()
+                            .ok(),
                     },
                 )
             })
@@ -2052,6 +2104,7 @@ impl Loader<PersonFullName> for Database {
                         full_name: x.full_name,
                         alternate_name: None,
                         birth_date: None,
+                        is_visible: false,
                     },
                 )
             })
