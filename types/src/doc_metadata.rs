@@ -31,6 +31,19 @@ pub struct SubjectHeading {
     pub status: Status,
 }
 
+/// Record to store a keyword associated with a document
+#[derive(Clone, SimpleObject)]
+pub struct Keyword {
+    /// UUID for the keyword
+    pub id: Uuid,
+    /// Documents associated with the keywords
+    pub documents: Vec<DocumentReference>,
+    /// Name of the keyword
+    pub name: String,
+    /// Status (pending, approved, rejected) of a keyword
+    pub status: Status,
+}
+
 /// Stores the physical or digital medium associated with a document
 #[derive(Clone, SimpleObject)]
 pub struct Format {
