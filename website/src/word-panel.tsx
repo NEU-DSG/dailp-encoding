@@ -1,4 +1,11 @@
-import React, { ReactNode } from "react"
+import { groupBy } from "lodash"
+import React, { ReactNode, useState } from "react"
+import {
+  DragDropContext,
+  Draggable,
+  DropResult,
+  Droppable,
+} from "react-beautiful-dnd"
 import {
   AiFillCaretDown,
   AiFillCaretUp,
@@ -6,6 +13,7 @@ import {
 } from "react-icons/ai/index"
 import { IoBookmarks, IoEllipsisHorizontalCircle } from "react-icons/io5/index"
 import {
+  MdDragIndicator,
   MdNotes,
   MdOutlineComment,
   MdRecordVoiceOver,
@@ -13,6 +21,7 @@ import {
 import { OnChangeValue } from "react-select"
 import { Disclosure, DisclosureContent, useDisclosureState } from "reakit"
 import { unstable_Form as Form, unstable_FormInput as FormInput } from "reakit"
+import { useMutation, useQuery } from "urql"
 import * as Dailp from "src/graphql/dailp"
 import { AudioPlayer } from "./components"
 import { CommentSection } from "./components/comment-section"
@@ -25,6 +34,12 @@ import { formInput } from "./edit-word-feature.css"
 import { useForm } from "./edit-word-form-context"
 import * as css from "./panel-layout.css"
 import { usePreferences } from "./preferences-context"
+
+// Extracts the inner contents of the first pair of parentheses from a string.
+function extractParenthesesContent(str: string): string | null {
+  const match = str.match(/\(([^)]+)\)/)
+  return match?.[1] ?? null
+}
 
 enum PanelType {
   WordPanel,
@@ -221,6 +236,22 @@ const EditSegmentation = (p: {
   const currentWord = form.values.word as Dailp.FormFieldsFragment
   const currentSegments = currentWord.segments
 
+  const onDragEnd = (result: DropResult) => {
+    // dropped outside the list
+    if (!result.destination) {
+      return
+    }
+
+    const items = Array.from(currentSegments)
+    const [reorderedItem] = items.splice(result.source.index, 1)
+    items.splice(result.destination.index, 0, reorderedItem!)
+
+    form.update("word", {
+      ...currentWord,
+      segments: items,
+    })
+  }
+
   const addNewSegment = (e: React.MouseEvent) => {
     e.preventDefault()
     const newSegment = {
@@ -249,63 +280,100 @@ const EditSegmentation = (p: {
   }
 
   return (
-    <table className={css.tableContainer}>
-      <tbody>
-        {currentSegments.map((segment, index) => (
-          <tr key={index} style={{ display: "flex" }}>
-            <td className={css.editMorphemeCells}>
-              {/* This is disabled at the moment to be fully implemented later. */}
-              <FormInput
-                {...form}
-                className={formInput}
-                name={["word", "segments", index.toString(), "morpheme"]}
-              />
-            </td>
-            <td className={css.editGlossCells}>
-              {/* Displays global glosses and allows user to create custom glosses on keyboard input. */}
-              <EditWordPartGloss
-                // TODO: this key will need to be changed later since a morpheme can be changed
-                key={segment.morpheme}
-                morpheme={segment}
-                index={index}
-                options={p.options}
-              />
-            </td>
-            <td style={{ padding: "0 10px" }}>
-              <button
-                onClick={() => deleteSegment(index)}
-                style={{
-                  padding: "5px 10px",
-                  borderRadius: "4px",
-                  border: "1px solid #ccc",
-                  background: "#f0f0f0",
-                  cursor: "pointer",
-                  color: "#d32f2f",
-                }}
-              >
-                ✕
-              </button>
-            </td>
-          </tr>
-        ))}
-        <tr>
-          <td colSpan={3} style={{ textAlign: "center", padding: "10px" }}>
-            <button
-              onClick={addNewSegment}
-              style={{
-                padding: "5px 10px",
-                borderRadius: "4px",
-                border: "1px solid #ccc",
-                background: "#f0f0f0",
-                cursor: "pointer",
-              }}
-            >
-              Add Segment
-            </button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+    <DragDropContext onDragEnd={onDragEnd}>
+      <Droppable droppableId="droppable">
+        {(provided, snapshot) => (
+          <table
+            {...provided.droppableProps}
+            ref={provided.innerRef}
+            className={css.tableContainer}
+          >
+            <tbody>
+              {currentSegments.map((segment, index) => (
+                <Draggable
+                  key={index}
+                  draggableId={index.toString()}
+                  index={index}
+                >
+                  {(provided, snapshot) => (
+                    <tr
+                      ref={provided.innerRef}
+                      {...provided.draggableProps}
+                      {...provided.dragHandleProps}
+                      key={index}
+                      style={{
+                        display: "flex",
+                        ...provided.draggableProps.style,
+                      }}
+                    >
+                      <MdDragIndicator fontSize={"1.5rem"} />
+                      <td className={css.editMorphemeCells}>
+                        {/* This is disabled at the moment to be fully implemented later. */}
+                        <FormInput
+                          {...form}
+                          className={formInput}
+                          name={[
+                            "word",
+                            "segments",
+                            index.toString(),
+                            "morpheme",
+                          ]}
+                        />
+                      </td>
+                      <td className={css.editGlossCells}>
+                        {/* Displays global glosses and allows user to create custom glosses on keyboard input. */}
+                        <EditWordPartGloss
+                          // TODO: this key will need to be changed later since a morpheme can be changed
+                          key={segment.morpheme}
+                          morpheme={segment}
+                          index={index}
+                          options={p.options}
+                        />
+                      </td>
+                      <td style={{ padding: "0 10px" }}>
+                        <button
+                          onClick={() => deleteSegment(index)}
+                          style={{
+                            padding: "5px 10px",
+                            borderRadius: "4px",
+                            border: "1px solid #ccc",
+                            background: "#f0f0f0",
+                            cursor: "pointer",
+                            color: "#d32f2f",
+                          }}
+                        >
+                          ✕
+                        </button>
+                      </td>
+                    </tr>
+                  )}
+                </Draggable>
+              ))}
+              {provided.placeholder}
+              <tr>
+                <td
+                  colSpan={3}
+                  style={{ textAlign: "center", padding: "10px" }}
+                >
+                  <button
+                    onClick={addNewSegment}
+                    style={{
+                      padding: "5px 10px",
+                      borderRadius: "4px",
+                      border: "1px solid #ccc",
+                      background: "#f0f0f0",
+                      cursor: "pointer",
+                    }}
+                  >
+                    Add Segment
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        )}
+      </Droppable>
+    </DragDropContext>
   )
 }
 
@@ -315,39 +383,105 @@ const EditWordPartGloss = (props: {
   index: number
   options: GroupedOption[]
 }) => {
+  const preferences = usePreferences()
   const { form } = useForm()
+  const [, insertCustomMorphemeTag] = useMutation(
+    Dailp.InsertCustomMorphemeTagDocument
+  )
+  const [{ data: allTagsData }, executeQuery] = useQuery({
+    query: Dailp.GlossaryDocument,
+    variables: { system: preferences.cherokeeRepresentation },
+  })
+
+  let allNewTags = allTagsData?.allTags.filter(
+    (tag: Dailp.MorphemeTag) => tag.tag !== ""
+  )
+  const groupedTags = groupBy(allNewTags, (t) => t.morphemeType)
+
+  // Creates a selectable option out of each functional tag, and groups them together by morpheme type.
+  const allNewOptions: GroupedOption[] = Object.entries(groupedTags).map(
+    ([group, tags]) => {
+      return {
+        label: group,
+        options: tags.map((tag) => {
+          return {
+            // Value is a custom type to track data of a morpheme's gloss in its string form and its matching tag, if there is one.
+            value: tag.tag,
+            label: tag.title,
+          }
+        }),
+      }
+    }
+  )
 
   // Handles gloss selection and creation of new glosses.
-  const handleChange = (
+  const handleNewTag = async (
     newValue: OnChangeValue<{ value: string; label: string }, false>
   ) => {
-    if (newValue?.value) {
-      const newMorpheme: Dailp.FormFieldsFragment["segments"][0] = {
-        ...props.morpheme,
-        gloss: newValue.value,
+    // if newvalue value == newvalue label, its a new gloss
+    if (newValue) {
+      const parenthesesContent = extractParenthesesContent(newValue.label)
+      const title = newValue.label.substring(0, newValue.label.indexOf("("))
+      if (parenthesesContent) {
+        //db update
+        // Insert the new tag and refresh the query
+        await insertCustomMorphemeTag({
+          tag: parenthesesContent,
+          title: title,
+          system: preferences.cherokeeRepresentation,
+        })
+        // Refresh the query to get the new tag
+        await executeQuery({ requestPolicy: "network-only" })
+      } else {
+        //just do frontend update
       }
 
-      // Updates current list of morphemes to include one with a matching tag,
-      // or one with a custom gloss.
+      let matchingTag =
+        newValue.value === newValue.label
+          ? parenthesesContent
+            ? {
+                tag: parenthesesContent,
+                title: newValue.label,
+              }
+            : null
+          : {
+              tag: newValue.value,
+              title: newValue.label,
+            }
+
+      const newMorpheme: Dailp.FormFieldsFragment["segments"][0] = {
+        ...props.morpheme,
+        gloss: parenthesesContent ? parenthesesContent : newValue.value,
+        matchingTag: matchingTag,
+      }
       form.update(["word", "segments", props.index], newMorpheme)
     }
   }
 
   return (
     <CustomCreatable
-      onChange={handleChange}
-      options={props.options}
+      onChange={handleNewTag}
+      options={allNewOptions ?? props.options}
       defaultValue={{
         value: props.morpheme.gloss,
         label: props.morpheme.matchingTag?.title ?? props.morpheme.gloss,
       }}
+      // Show a "create new" option at the end of the menu
+      createOptionPosition="last"
+      // Label for the create option row
+      formatCreateLabel={(inputValue: string) => `Create "${inputValue}"`}
+      // Only allow non-empty unique values
+      isValidNewOption={(inputValue: string, _value: any, options: any[]) =>
+        inputValue.trim().length > 0 &&
+        !options.some((o: any) => (o?.value ?? "") === inputValue)
+      }
     />
   )
 }
 
 // Component that allows editing of a morpheme's gloss. Users can enter a custom gloss or select from global glosses / functional tags.
 const EditEnglishGloss = () => {
-  return <EditWordFeature feature={"englishGloss"} label="English Glossary" />
+  return <EditWordFeature feature={"englishGloss"} label="English Gloss" />
 }
 
 type Writeable<T> = { -readonly [P in keyof T]: T[P] }

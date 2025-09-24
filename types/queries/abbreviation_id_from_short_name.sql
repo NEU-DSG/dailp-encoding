@@ -1,0 +1,1 @@
+SELECT id FROM abbreviation_system WHERE short_name = $1;

@@ -1,9 +1,10 @@
-import React from "react"
+import React, { useEffect } from "react"
 import {
   unstable_Form as Form,
   unstable_useFormState as useFormState,
 } from "reakit"
-import { useUser } from "src/auth"
+import { navigate } from "vite-plugin-ssr/client/router"
+import { UserRole, useUser, useUserRole } from "src/auth"
 import {
   FormFields,
   FormSubmitButton,
@@ -14,7 +15,17 @@ import {
 import { centeredForm } from "./user-auth.css"
 
 const LoginPage = () => {
-  const { loginUser } = useUser().operations
+  const {
+    user,
+    operations: { loginUser },
+  } = useUser()
+
+  // If already authenticated, redirect away from the login page
+  useEffect(() => {
+    if (user) {
+      navigate("/dashboard")
+    }
+  }, [user])
 
   const loginForm = useFormState({
     values: { email: "", password: "" },
@@ -29,6 +40,9 @@ const LoginPage = () => {
       loginUser(values.email, values.password)
     },
   })
+  // Avoid flashing the login form if we're redirecting
+  if (user) return null
+
   return (
     <UserAuthPageTemplate
       header={{

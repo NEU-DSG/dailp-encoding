@@ -1,7 +1,8 @@
 import React, { useState } from "react"
 import { Helmet } from "react-helmet"
 import { navigate } from "vite-plugin-ssr/client/router"
-import { UserRole, useUser, useUserRole } from "src/auth"
+import { UserRole, useUser } from "src/auth"
+import { AuthGuard } from "src/components/auth-guard"
 import * as Dailp from "src/graphql/dailp"
 import Layout from "src/layout"
 import { uploadCollectionCoverToS3 } from "./utils"
@@ -13,76 +14,15 @@ interface NewEditedCollectionForm {
 }
 
 const NewEditedCollectionPage = () => {
-  const userRole = useUserRole()
-
-  // Show loading state while determining user role
-  if (userRole === undefined) {
-    return (
-      <Layout>
-        <Helmet title="Loading..." />
-        <main>
-          <div
-            style={{
-              textAlign: "center",
-              padding: "40px 20px",
-            }}
-          >
-            <p>Loading...</p>
-          </div>
-        </main>
-      </Layout>
-    )
-  }
-
-  // Check if user has permission to create edited collections
-  if (userRole !== UserRole.Editor) {
-    return (
-      <Layout>
-        <Helmet title="Access Denied" />
-        <main>
-          <div
-            style={{
-              textAlign: "center",
-              padding: "40px 20px",
-              maxWidth: "600px",
-              margin: "0 auto",
-            }}
-          >
-            <h1>Access Denied</h1>
-            <p>
-              You need Editor permissions to create edited collections. Please
-              contact an administrator if you believe you should have access.
-            </p>
-            <button
-              onClick={() => navigate("/")}
-              style={{
-                padding: "10px 20px",
-                fontSize: "16px",
-                cursor: "pointer",
-                backgroundColor: "#007bff",
-                color: "white",
-                border: "none",
-                borderRadius: "4px",
-              }}
-            >
-              Return to Home
-            </button>
-          </div>
-        </main>
-      </Layout>
-    )
-  }
-
+  const { user } = useUser()
   const [formData, setFormData] = useState<NewEditedCollectionForm>({
     title: "",
     description: "",
     thumbnail: null,
   })
-
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [, addEditedCollection] = Dailp.useAddEditedCollectionMutation()
-  const { user } = useUser()
 
   const handleEditedCollectionSubmit = async (
     e: React.FormEvent<HTMLFormElement>
@@ -146,79 +86,79 @@ const NewEditedCollectionPage = () => {
     }))
   }
 
-  const [{ data: dailp }] = Dailp.useEditedCollectionsQuery()
-
   return (
-    <Layout>
-      <Helmet title="New edited collection" />
-      <main>
-        <h1>Create new edited collection</h1>
+    <AuthGuard requiredRole={UserRole.Editor}>
+      <Layout>
+        <Helmet title="New edited collection" />
+        <main>
+          <h1>Create new edited collection</h1>
 
-        {/* Debug information */}
+          {/* Debug information */}
 
-        {error && (
-          <div
-            style={{
-              color: "red",
-              background: "#ffe6e6",
-              padding: "10px",
-              border: "1px solid #ff9999",
-              borderRadius: "4px",
-              marginBottom: "20px",
-            }}
-          >
-            Error: {error}
-          </div>
-        )}
+          {error && (
+            <div
+              style={{
+                color: "red",
+                background: "#ffe6e6",
+                padding: "10px",
+                border: "1px solid #ff9999",
+                borderRadius: "4px",
+                marginBottom: "20px",
+              }}
+            >
+              Error: {error}
+            </div>
+          )}
 
-        <form onSubmit={handleEditedCollectionSubmit}>
-          <label htmlFor="title">Edited Collection Title:</label>
-          <br />
-          <input
-            id="title"
-            placeholder="Edited Collection Name"
-            value={formData.title}
-            onChange={(e) => handleTextInputChange("title", e.target.value)}
-            required
-          />
-          <br />
-
-          <div>
-            <label htmlFor="description">Description:</label>
+          <form onSubmit={handleEditedCollectionSubmit}>
+            <label htmlFor="title">Edited Collection Title:</label>
             <br />
-            <textarea
-              id="description"
-              placeholder="Enter description"
-              value={formData.description}
-              onChange={(e) =>
-                handleTextInputChange("description", e.target.value)
-              }
-              rows={6}
-              cols={50}
+            <input
+              id="title"
+              placeholder="Edited Collection Name"
+              value={formData.title}
+              onChange={(e) => handleTextInputChange("title", e.target.value)}
               required
-              disabled={isSubmitting}
             />
-          </div>
-          <br />
-          <label htmlFor="thumbnail">Collection Cover:</label>
-          <br />
-          <input
-            id="thumbnail"
-            type="file"
-            accept="image/*"
-            required
-            onChange={(e) => {
-              const file = (e.target as HTMLInputElement).files?.[0] ?? null
-              setFormData((prev) => ({ ...prev, thumbnail: file }))
-            }}
-          />
-          <br />
-          <button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Creating Document..." : "Create Document"}
-          </button>
-        </form>
-      </main>
-    </Layout>
+            <br />
+
+            <div>
+              <label htmlFor="description">Description:</label>
+              <br />
+              <textarea
+                id="description"
+                placeholder="Enter description"
+                value={formData.description}
+                onChange={(e) =>
+                  handleTextInputChange("description", e.target.value)
+                }
+                rows={6}
+                cols={50}
+                required
+                disabled={isSubmitting}
+              />
+            </div>
+            <br />
+            <label htmlFor="thumbnail">Collection Cover:</label>
+            <br />
+            <input
+              id="thumbnail"
+              type="file"
+              accept="image/*"
+              required
+              onChange={(e) => {
+                const file = (e.target as HTMLInputElement).files?.[0] ?? null
+                setFormData((prev) => ({ ...prev, thumbnail: file }))
+              }}
+            />
+            <br />
+            <button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "Creating Document..." : "Create Document"}
+            </button>
+          </form>
+        </main>
+      </Layout>
+    </AuthGuard>
   )
 }
 

@@ -713,3 +713,11 @@ query UserById($id: UUID!) {
     role
   }
 }
+
+mutation InsertCustomMorphemeTag(
+  $tag: String!
+  $title: String!
+  $system: String!
+) {
+  insertCustomMorphemeTag(tag: $tag, title: $title, system: $system)
+}
