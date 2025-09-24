@@ -3,6 +3,7 @@
 use auth::UserGroup;
 use chrono::{NaiveDate, NaiveDateTime};
 use sqlx::postgres::types::PgLTree;
+use sqlx::PgPool;
 use std::ops::Bound;
 use std::str::FromStr;
 use user::UserUpdate;
@@ -34,7 +35,7 @@ use crate::person::{Contributor, ContributorDetails, ContributorRole};
 /// Connects to our backing database instance, providing high level functions
 /// for accessing the data therein.
 pub struct Database {
-    client: sqlx::Pool<sqlx::Postgres>,
+    pub client: sqlx::Pool<sqlx::Postgres>,
 }
 impl Database {
     pub fn connect(num_connections: Option<u32>) -> Result<Self> {
@@ -49,6 +50,11 @@ impl Database {
             .test_before_acquire(false)
             .connect_lazy(&db_url)?;
         Ok(Database { client: conn })
+    }
+
+    /// Add this new constructor for testing
+    pub fn with_pool(pool: PgPool) -> Self {
+        Database { client: pool }
     }
 
     /// Get a specific comment by id
