@@ -9,6 +9,7 @@ import {
 import { Menu, MenuButton, MenuItem, useMenuState } from "reakit"
 import Link from "src/components/link"
 import * as Wordpress from "src/graphql/wordpress"
+import * as Dailp from "src/graphql/dailp"
 import { Location, useLocation, usePageContext } from "src/renderer/PageShell"
 import {
   desktopNav,
@@ -22,31 +23,39 @@ import {
   subMenuItems,
 } from "./menu.css"
 
+type MenuItemNode = Dailp.MenuBySlugQuery["menuBySlug"]["items"][number]
+type ChildMenuItemNode = NonNullable<MenuItemNode["items"]>[number]
+
 export const NavMenu = (p: { menuID: number }) => {
   const location = useLocation()
-  const [{ data }] = Wordpress.useMenuByIdQuery({
-    variables: { id: p.menuID },
+  const [{ data }] = Dailp.useMenuBySlugQuery({
+    variables: { slug: "default-nav" },
   })
-  const menus = data?.menus?.nodes
-  if (!menus) {
+  const menu = data?.menuBySlug
+
+  //const [{ data }] = Wordpress.useMenuByIdQuery({
+    //variables: { id: p.menuID },
+  //})
+  //const menus = data?.menus?.nodes
+  if (!menu) {
     return null
   }
-  const menu = menus[0]
-  const menuItems = menu?.menuItems?.nodes
+  //const menu = menus[0]
+  const menuItems = menu?.items
   if (!menuItems) {
     return null
   }
   const isTopLevel = (a: typeof menuItems[0]) =>
     !menuItems?.some((b) =>
-      b?.childItems?.nodes?.some((b) => b?.path === a?.path)
+      b?.items?.some((b) => b?.path === a?.path)
     )
 
   return (
     <nav className={desktopNav}>
-      {menuItems?.filter(isTopLevel).map((item) => {
+      {menuItems?.filter(isTopLevel).map((item: MenuItemNode) => {
         if (!item) {
           return null
-        } else if (item.childItems?.nodes?.length) {
+        } else if (item.items?.length) {
           return <SubMenu key={item.label} item={item} location={location} />
         } else {
           let url = { pathname: item.path }
@@ -71,7 +80,7 @@ export const NavMenu = (p: { menuID: number }) => {
   )
 }
 
-const SubMenu = ({ item, location }: { location: Location; item: any }) => {
+const SubMenu = ({ item, location }: { location: Location; item: MenuItemNode }) => {
   const menu = useMenuState()
   return (
     <>
@@ -80,7 +89,7 @@ const SubMenu = ({ item, location }: { location: Location; item: any }) => {
         <MdArrowDropDown aria-label="Menu" />
       </MenuButton>
       <Menu {...menu} aria-label={item.label} className={navMenu}>
-        {item.childItems.nodes.map((item: any) => {
+        {item.items?.map((item: ChildMenuItemNode) => {
           let url = { pathname: item.path }
           if (item.path.startsWith("http")) {
             url = new URL(item.path)
