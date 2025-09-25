@@ -2707,7 +2707,19 @@ export type UpdateMenuMutation = { readonly __typename?: "Mutation" } & {
     "id" | "name" | "slug"
   > & {
       readonly items: ReadonlyArray<
-        { readonly __typename?: "MenuItem" } & Pick<MenuItem, "label" | "path">
+        { readonly __typename?: "MenuItem" } & Pick<
+          MenuItem,
+          "label" | "path"
+        > & {
+            readonly items: Maybe<
+              ReadonlyArray<
+                { readonly __typename?: "MenuItem" } & Pick<
+                  MenuItem,
+                  "label" | "path"
+                >
+              >
+            >
+          }
       >
     }
 }
@@ -3837,6 +3849,10 @@ export const UpdateMenuDocument = gql`
       items {
         label
         path
+        items {
+          label
+          path
+        }
       }
     }
   }

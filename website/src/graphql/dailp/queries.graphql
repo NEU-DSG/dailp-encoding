@@ -746,6 +746,10 @@ mutation UpdateMenu($menu: MenuUpdate!) {
     items {
       label
       path
+      items{
+        label
+        path
+      }
     }
   }
 }
