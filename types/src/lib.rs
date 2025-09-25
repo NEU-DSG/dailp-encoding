@@ -39,6 +39,7 @@ mod geometry;
 mod gloss;
 pub mod iiif;
 mod lexical;
+pub mod menu;
 mod morpheme;
 pub mod page;
 mod person;
@@ -48,7 +49,6 @@ mod slugs;
 mod tag;
 mod translation;
 pub mod user;
-pub mod menu;
 
 // Re-export dependencies for downstream to use.
 pub use async_graphql;
@@ -65,10 +65,10 @@ pub use form::*;
 pub use geometry::*;
 pub use gloss::*;
 pub use lexical::*;
+pub use menu::*;
 pub use morpheme::*;
 pub use person::*;
 pub use sheet_result::*;
 pub use slugs::*;
 pub use tag::*;
 pub use translation::*;
-pub use menu::*;

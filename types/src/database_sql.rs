@@ -1651,7 +1651,8 @@ impl Database {
             menu.id,
             menu.name,
             menu.slug,
-            menu.items.map(|items| serde_json::to_value(items).unwrap_or_default())
+            menu.items
+                .map(|items| serde_json::to_value(items).unwrap_or_default())
         )
         .fetch_one(&self.client)
         .await?;

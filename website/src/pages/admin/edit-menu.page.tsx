@@ -1,8 +1,8 @@
 import React from "react"
 import { UserRole } from "src/auth"
 import { AuthGuard } from "src/components/auth-guard"
+import { EditableNavMenu } from "src/components/editable/EditNavMenu"
 import Layout from "src/layout"
-import {EditableNavMenu }from "src/components/editable/EditNavMenu"
 
 const EditMenuPage = () => {
   // dennis todo : change required role to admin
@@ -10,18 +10,14 @@ const EditMenuPage = () => {
 
   return (
     <>
-        <AuthGuard requiredRole={UserRole.Editor}>
-      <Layout>
-        <main>
-
-<h1> Edit menu page</h1>
-<EditableNavMenu menuID={2}/>
-
-
-
-        </main>
-      </Layout>
-        </AuthGuard>
+      <AuthGuard requiredRole={UserRole.Editor}>
+        <Layout>
+          <main>
+            <h1> Edit menu page</h1>
+            <EditableNavMenu navMenuSlug="default-nav" />
+          </main>
+        </Layout>
+      </AuthGuard>
     </>
   )
 }

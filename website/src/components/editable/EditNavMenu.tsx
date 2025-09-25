@@ -1,19 +1,19 @@
 import React, { useEffect, useRef, useState } from "react"
-import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd"
-import { MdArrowDropDown, MdMenu, MdDragIndicator } from "react-icons/md/index"
+import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd"
+import { MdArrowDropDown, MdDragIndicator, MdMenu } from "react-icons/md/index"
 import {
-  Menu,
-  MenuButton,
-  MenuItem,
-  useMenuState,
   Dialog,
   DialogBackdrop,
   DialogDisclosure,
+  Menu,
+  MenuButton,
+  MenuItem,
   useDialogState,
+  useMenuState,
 } from "reakit"
 import Link from "src/components/link"
-import * as Wordpress from "src/graphql/wordpress"
 import * as Dailp from "src/graphql/dailp"
+import * as Wordpress from "src/graphql/wordpress"
 import { Location, useLocation, usePageContext } from "src/renderer/PageShell"
 import {
   drawerBg,
@@ -26,12 +26,12 @@ import {
   subMenuItems,
 } from "../../menu.css"
 
-export const EditableNavMenu = (p: { menuID: number }) => {
+export const EditableNavMenu = ({navMenuSlug}: {navMenuSlug: string}) => {
   const [{ data }] = Dailp.useMenuBySlugQuery({
-    variables: { slug: "default-nav" },
+    variables: { slug: navMenuSlug },
   })
   const menu = data?.menuBySlug
-  const [updateMenuResult, updateMenu] = Dailp.useUpdateMenuMutation();
+  const [updateMenuResult, updateMenu] = Dailp.useUpdateMenuMutation()
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   //const location = useLocation()
   const [items, setItems] = useState<Dailp.MenuItem[]>([])
@@ -51,7 +51,7 @@ export const EditableNavMenu = (p: { menuID: number }) => {
           items: n?.items ? attach(n.items) : n.items,
         }
       })
-    return attach([...(nodes as any[] ?? [])])
+    return attach([...((nodes as any[]) ?? [])])
   }
 
   // Sync editable items when menu loads/changes
@@ -67,22 +67,28 @@ export const EditableNavMenu = (p: { menuID: number }) => {
 
   const updateNode = (arr: any[], id: string, update: Partial<any>): any[] =>
     arr.map((n) =>
-      (String(n?._cid) === id)
+      String(n?._cid) === id
         ? { ...n, ...update }
         : { ...n, items: n?.items ? updateNode(n.items, id, update) : n.items }
     )
 
   const addChild = (arr: any[], parentId: string, child: any): any[] =>
     arr.map((n) =>
-      (String(n?._cid) === parentId)
+      String(n?._cid) === parentId
         ? { ...n, items: [...(n.items ?? []), { ...child, _cid: newCid() }] }
-        : { ...n, items: n?.items ? addChild(n.items, parentId, child) : n.items }
+        : {
+            ...n,
+            items: n?.items ? addChild(n.items, parentId, child) : n.items,
+          }
     )
 
   const removeNode = (arr: any[], id: string): any[] =>
     arr
       .filter((n) => String(n?._cid) !== id)
-      .map((n) => ({ ...n, items: n?.items ? removeNode(n.items, id) : n.items }))
+      .map((n) => ({
+        ...n,
+        items: n?.items ? removeNode(n.items, id) : n.items,
+      }))
 
   const reorder = (list: any[], startIndex: number, endIndex: number) => {
     const result = Array.from(list)
@@ -119,20 +125,24 @@ export const EditableNavMenu = (p: { menuID: number }) => {
 
   const handleSave = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    console.log("save", items, menuName,)
+    console.log("save", items, menuName)
     const toMenuItemInput = (
       nodes: any[] | undefined
     ): ReadonlyArray<Dailp.MenuItemInput> | null => {
       if (!nodes || !nodes.length) return null
-      return nodes
-        .map((n) => ({
-          label: n?.label,
-          path: n?.path,
-          items: toMenuItemInput(n?.items ?? []),
-        })) as ReadonlyArray<Dailp.MenuItemInput>
+      return nodes.map((n) => ({
+        label: n?.label,
+        path: n?.path,
+        items: toMenuItemInput(n?.items ?? []),
+      })) as ReadonlyArray<Dailp.MenuItemInput>
     }
     const itemsInput = toMenuItemInput(items)
-    const menuInput: Dailp.MenuUpdate = { id: menu?.id!, name: menuName, slug: menu?.slug!, items: itemsInput }
+    const menuInput: Dailp.MenuUpdate = {
+      id: menu?.id!,
+      name: menuName,
+      slug: menu?.slug!,
+      items: itemsInput,
+    }
     console.log("menuInput", menuInput)
     updateMenu({ menu: menuInput })
   }
@@ -146,41 +156,44 @@ export const EditableNavMenu = (p: { menuID: number }) => {
     if (
       items.some((i) => {
         const p = (itemPath as string)?.toString().trim().toLowerCase()
-        return i && (i.path?.toString().trim().toLowerCase() === p)
+        return i && i.path?.toString().trim().toLowerCase() === p
       })
     ) {
       setErrorMessage("An item with this path already exists.")
       return
     }
     setErrorMessage(null)
-    setItems((prev) => [...prev, {
-      id: undefined,
-      label: item as string,
-      path: itemPath as string,
-      items: []
-    }])
+    setItems((prev) => [
+      ...prev,
+      {
+        id: undefined,
+        label: item as string,
+        path: itemPath as string,
+        items: [],
+      },
+    ])
     // clear form data
     formData.set("add item", "")
-    formData.set("add item path", "");
-    (e.target as HTMLFormElement).reset()
+    formData.set("add item path", "")
+    ;(e.target as HTMLFormElement).reset()
   }
 
   // dennis todo move off of wordpress query and use db query
   //const [{ data }] = Wordpress.useMenuByIdQuery({
-    //variables: { id: p.menuID },
+  //variables: { id: p.menuID },
   //})
   //const menus = data?.menus?.nodes
 
   //const menu = menus[0]
   //const menuItems = menu?.menuItems?.nodes
   //if (!menuItems) {
-    //return null
+  //return null
   //}
 
   //const isTopLevel = (a: typeof menuItems[0]) =>
-    //!menuItems?.some((b) =>
-      //b?.childItems?.nodes?.some((b) => b?.path === a?.path)
-    //)
+  //!menuItems?.some((b) =>
+  //b?.childItems?.nodes?.some((b) => b?.path === a?.path)
+  //)
 
   //const topLevelItems = menuItems?.filter(isTopLevel) || []
   //const [items, setItems] = useState(topLevelItems)
@@ -189,28 +202,46 @@ export const EditableNavMenu = (p: { menuID: number }) => {
 
   return (
     <>
-      <input type="text" name="menu name" placeholder="Menu Name" value={menuName} onChange={(e) => setMenuName(e.target.value)} />
-      <br/><br/>
+      <input
+        type="text"
+        name="menu name"
+        placeholder="Menu Name"
+        value={menuName}
+        onChange={(e) => setMenuName(e.target.value)}
+      />
+      <br />
+      <br />
       <div style={{ border: "1px solid #ddd", padding: 12, borderRadius: 8 }}>
         <h4 style={{ marginTop: 0, marginBottom: 8 }}>Menu Editor</h4>
         <DragDropContext onDragEnd={handleDragEnd}>
           <Droppable droppableId="top" direction="vertical">
             {(provided) => (
-              <div ref={provided.innerRef} {...provided.droppableProps} style={{ minHeight: 12 }}>
+              <div
+                ref={provided.innerRef}
+                {...provided.droppableProps}
+                style={{ minHeight: 12 }}
+              >
                 <TreeEditor
                   nodes={items}
                   setNodes={setItems}
-          onAddChild={(parentId) =>
-            setItems((prev) =>
-              addChild(prev, parentId, { id: undefined, label: "New Item", path: "", items: [] })
-            )
-          }
+                  onAddChild={(parentId) =>
+                    setItems((prev) =>
+                      addChild(prev, parentId, {
+                        id: undefined,
+                        label: "New Item",
+                        path: "",
+                        items: [],
+                      })
+                    )
+                  }
                   onRemove={(id, label) => {
                     const ok = confirm(`Delete ${label}?`)
                     if (!ok) return
                     setItems((prev) => removeNode(prev, id))
                   }}
-                  onChange={(id, update) => setItems((prev) => updateNode(prev, id, update))}
+                  onChange={(id, update) =>
+                    setItems((prev) => updateNode(prev, id, update))
+                  }
                   depth={0}
                 />
                 {provided.placeholder}
@@ -219,21 +250,23 @@ export const EditableNavMenu = (p: { menuID: number }) => {
           </Droppable>
         </DragDropContext>
       </div>
-    <form onSubmit={handleAddNewItem}>
-      {errorMessage && (
-        <p style={{ color: "#b00020", margin: "0 0 8px" }}>{errorMessage}</p>
-      )}
-      <input type="text" name="add item" placeholder="Item Label" />
-      <input type="text" name="add item path" placeholder="Item Path" />
-      <button type="submit">Add Item</button>
-    </form>
-    <form onSubmit={handleSave}>
-      <button type="submit">Save</button>
-      <button onClick={() => setItems(withClientIds(menu?.items) as any[])}>Reset</button>
-    </form>
+      <form onSubmit={handleAddNewItem}>
+        {errorMessage && (
+          <p style={{ color: "#b00020", margin: "0 0 8px" }}>{errorMessage}</p>
+        )}
+        <input type="text" name="add item" placeholder="Item Label" />
+        <input type="text" name="add item path" placeholder="Item Path" />
+        <button type="submit">Add Item</button>
+      </form>
+      <form onSubmit={handleSave}>
+        <button type="submit">Save</button>
+        <button onClick={() => setItems(withClientIds(menu?.items) as any[])}>
+          Reset
+        </button>
+      </form>
 
-    {/* Inline editor replaces modal */}
-</>
+      {/* Inline editor replaces modal */}
+    </>
   )
 }
 
@@ -369,71 +402,97 @@ const TreeEditor = ({
           dragId = String(index)
         }
         return (
-        <Draggable key={dragId} draggableId={dragId} index={index}>
-          {(provided, snapshot) => (
-            <li
-              ref={provided.innerRef}
-              {...provided.draggableProps}
-              style={{
-                ...provided.draggableProps.style,
-                margin: "6px 0",
-                background: snapshot.isDragging ? "#fafafa" : undefined,
-                borderRadius: 6,
-                padding: 6,
-                touchAction: "manipulation",
-                boxSizing: "border-box",
-                width: "100%",
-                minHeight: 40,
-              }}
-            >
-              <div style={{ display: "flex", gap: 6, alignItems: "center" }} {...provided.dragHandleProps}>
-                <span style={{ color: "#666", cursor: "grab" }}>
-                  <MdDragIndicator size={16} />
-                </span>
-                <input
-                  type="text"
-                  placeholder="Label"
-                  value={n.label ?? ""}
-                  onChange={(e) => onChange(dragId, { label: e.target.value })}
-                  style={{ width: 180, height: 28, lineHeight: "28px" }}
-                />
-                <input
-                  type="text"
-                  placeholder="Path"
-                  value={n.path ?? ""}
-                  onChange={(e) => onChange(dragId, { path: e.target.value })}
-                  style={{ width: 220, height: 28, lineHeight: "28px" }}
-                />
-                {isTopLevel && (
-                  <button type="button" onClick={() => onAddChild(dragId)}>+ Subitem</button>
-                )}
-                <button type="button" onClick={() => onRemove(dragId, n.label)}>Delete</button>
-              </div>
-              {n.items && n.items.length ? (
-                <Droppable droppableId={`child-${dragId}`} direction="vertical" renderClone={undefined}>
-                  {(dropProvided) => (
-                    <div ref={dropProvided.innerRef} {...dropProvided.droppableProps} style={{ marginLeft: 16, minHeight: 12 }}>
-                      <TreeEditor
-                        nodes={n.items}
-                        setNodes={(childs) =>
-                          setNodes(
-                            nodes.map((m, i) => (String(m?.id ?? m?.path ?? m?.label) === dragId || String(i) === dragId ? { ...m, items: childs } : m))
-                          )
-                        }
-                        onAddChild={onAddChild}
-                        onRemove={onRemove}
-                        onChange={onChange}
-                        depth={depth + 1}
-                      />
-                      {dropProvided.placeholder}
-                    </div>
+          <Draggable key={dragId} draggableId={dragId} index={index}>
+            {(provided, snapshot) => (
+              <li
+                ref={provided.innerRef}
+                {...provided.draggableProps}
+                style={{
+                  ...provided.draggableProps.style,
+                  margin: "6px 0",
+                  background: snapshot.isDragging ? "#fafafa" : undefined,
+                  borderRadius: 6,
+                  padding: 6,
+                  touchAction: "manipulation",
+                  boxSizing: "border-box",
+                  width: "100%",
+                  minHeight: 40,
+                }}
+              >
+                <div
+                  style={{ display: "flex", gap: 6, alignItems: "center" }}
+                  {...provided.dragHandleProps}
+                >
+                  <span style={{ color: "#666", cursor: "grab" }}>
+                    <MdDragIndicator size={16} />
+                  </span>
+                  <input
+                    type="text"
+                    placeholder="Label"
+                    value={n.label ?? ""}
+                    onChange={(e) =>
+                      onChange(dragId, { label: e.target.value })
+                    }
+                    style={{ width: 180, height: 28, lineHeight: "28px" }}
+                  />
+                  <input
+                    type="text"
+                    placeholder="Path"
+                    value={n.path ?? ""}
+                    onChange={(e) => onChange(dragId, { path: e.target.value })}
+                    style={{ width: 220, height: 28, lineHeight: "28px" }}
+                  />
+                  {isTopLevel && (
+                    <button type="button" onClick={() => onAddChild(dragId)}>
+                      + Subitem
+                    </button>
                   )}
-                </Droppable>
-              ) : null}
-            </li>
-          )}
-        </Draggable>
-      )})}
+                  <button
+                    type="button"
+                    onClick={() => onRemove(dragId, n.label)}
+                  >
+                    Delete
+                  </button>
+                </div>
+                {n.items && n.items.length ? (
+                  <Droppable
+                    droppableId={`child-${dragId}`}
+                    direction="vertical"
+                    renderClone={undefined}
+                  >
+                    {(dropProvided) => (
+                      <div
+                        ref={dropProvided.innerRef}
+                        {...dropProvided.droppableProps}
+                        style={{ marginLeft: 16, minHeight: 12 }}
+                      >
+                        <TreeEditor
+                          nodes={n.items}
+                          setNodes={(childs) =>
+                            setNodes(
+                              nodes.map((m, i) =>
+                                String(m?.id ?? m?.path ?? m?.label) ===
+                                  dragId || String(i) === dragId
+                                  ? { ...m, items: childs }
+                                  : m
+                              )
+                            )
+                          }
+                          onAddChild={onAddChild}
+                          onRemove={onRemove}
+                          onChange={onChange}
+                          depth={depth + 1}
+                        />
+                        {dropProvided.placeholder}
+                      </div>
+                    )}
+                  </Droppable>
+                ) : null}
+              </li>
+            )}
+          </Draggable>
+        )
+      })}
     </ul>
   )
 }

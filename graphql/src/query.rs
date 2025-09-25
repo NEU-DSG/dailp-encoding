@@ -15,8 +15,8 @@ use {
     dailp::async_graphql::{self, dataloader::DataLoader, Context, FieldResult},
     dailp::{
         AbstractMorphemeTag, AnnotatedDoc, AnnotatedFormUpdate, CherokeeOrthography, Database,
-        EditedCollection, MorphemeId, MorphemeReference, MorphemeTag, ParagraphUpdate,
-        WordsInDocument, Menu, MenuUpdate,
+        EditedCollection, Menu, MenuUpdate, MorphemeId, MorphemeReference, MorphemeTag,
+        ParagraphUpdate, WordsInDocument,
     },
 };
 
@@ -755,9 +755,7 @@ impl Mutation {
             .to_string())
     }
 
-    #[graphql(
-        guard = "GroupGuard::new(UserGroup::Editors)"
-    )]
+    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
     async fn update_menu(&self, context: &Context<'_>, menu: MenuUpdate) -> FieldResult<Menu> {
         Ok(context
             .data::<DataLoader<Database>>()?

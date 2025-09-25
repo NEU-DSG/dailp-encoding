@@ -8,8 +8,8 @@ import {
 } from "reakit"
 import { Menu, MenuButton, MenuItem, useMenuState } from "reakit"
 import Link from "src/components/link"
-import * as Wordpress from "src/graphql/wordpress"
 import * as Dailp from "src/graphql/dailp"
+import * as Wordpress from "src/graphql/wordpress"
 import { Location, useLocation, usePageContext } from "src/renderer/PageShell"
 import {
   desktopNav,
@@ -34,7 +34,7 @@ export const NavMenu = (p: { menuID: number }) => {
   const menu = data?.menuBySlug
 
   //const [{ data }] = Wordpress.useMenuByIdQuery({
-    //variables: { id: p.menuID },
+  //variables: { id: p.menuID },
   //})
   //const menus = data?.menus?.nodes
   if (!menu) {
@@ -46,9 +46,7 @@ export const NavMenu = (p: { menuID: number }) => {
     return null
   }
   const isTopLevel = (a: typeof menuItems[0]) =>
-    !menuItems?.some((b) =>
-      b?.items?.some((b) => b?.path === a?.path)
-    )
+    !menuItems?.some((b) => b?.items?.some((b) => b?.path === a?.path))
 
   return (
     <nav className={desktopNav}>
@@ -80,7 +78,13 @@ export const NavMenu = (p: { menuID: number }) => {
   )
 }
 
-const SubMenu = ({ item, location }: { location: Location; item: MenuItemNode }) => {
+const SubMenu = ({
+  item,
+  location,
+}: {
+  location: Location
+  item: MenuItemNode
+}) => {
   const menu = useMenuState()
   return (
     <>
