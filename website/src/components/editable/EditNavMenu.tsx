@@ -98,29 +98,27 @@ export const EditableNavMenu = ({navMenuSlug}: {navMenuSlug: string}) => {
   }
 
   const handleDragEnd = (result: any) => {
-    const { source, destination } = result
+    const { source, destination, type } = result
     if (!destination) return
 
     // Disallow cross-droppable moves for simplicity
     if (source.droppableId !== destination.droppableId) return
 
-    if (source.droppableId === "top") {
+    if (type === "MENU_ITEMS") {
       setItems((prev) => reorder(prev, source.index, destination.index))
       return
     }
 
-    // child lists: droppableId = `child-${parentId}`
-    if (source.droppableId.startsWith("child-")) {
-      const parentId = source.droppableId.slice("child-".length)
-      setItems((prev) =>
-        prev.map((p: any) => {
-          if (String(p?._cid) !== parentId) return p
-          const children = p.items ?? []
-          const next = reorder(children, source.index, destination.index)
-          return { ...p, items: next }
-        })
-      )
-    }
+    // Handle nested items - type is the parent's dragId
+    const parentId = type
+    setItems((prev) =>
+      prev.map((p: any) => {
+        if (String(p?._cid) !== parentId) return p
+        const children = p.items ?? []
+        const next = reorder(children, source.index, destination.index)
+        return { ...p, items: next }
+      })
+    )
   }
 
   const handleSave = (e: React.FormEvent<HTMLFormElement>) => {
@@ -214,7 +212,7 @@ export const EditableNavMenu = ({navMenuSlug}: {navMenuSlug: string}) => {
       <div style={{ border: "1px solid #ddd", padding: 12, borderRadius: 8 }}>
         <h4 style={{ marginTop: 0, marginBottom: 8 }}>Menu Editor</h4>
         <DragDropContext onDragEnd={handleDragEnd}>
-          <Droppable droppableId="top" direction="vertical">
+          <Droppable droppableId="top" type="MENU_ITEMS" direction="vertical">
             {(provided) => (
               <div
                 ref={provided.innerRef}
@@ -457,6 +455,7 @@ const TreeEditor = ({
                 {n.items && n.items.length ? (
                   <Droppable
                     droppableId={`child-${dragId}`}
+                    type={`${dragId}`}
                     direction="vertical"
                     renderClone={undefined}
                   >
