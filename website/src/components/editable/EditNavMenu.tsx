@@ -205,7 +205,11 @@ export const EditableNavMenu = (p: { menuID: number }) => {
               addChild(prev, parentId, { id: undefined, label: "New Item", path: "", items: [] })
             )
           }
-                  onRemove={(id) => setItems((prev) => removeNode(prev, id))}
+                  onRemove={(id, label) => {
+                    const ok = confirm(`Delete ${label}?`)
+                    if (!ok) return
+                    setItems((prev) => removeNode(prev, id))
+                  }}
                   onChange={(id, update) => setItems((prev) => updateNode(prev, id, update))}
                   depth={0}
                 />
@@ -225,7 +229,7 @@ export const EditableNavMenu = (p: { menuID: number }) => {
     </form>
     <form onSubmit={handleSave}>
       <button type="submit">Save</button>
-      <button type="button">Cancel</button>
+      <button onClick={() => setItems(withClientIds(menu?.items) as any[])}>Reset</button>
     </form>
 
     {/* Inline editor replaces modal */}
@@ -352,7 +356,7 @@ const TreeEditor = ({
   nodes: any[]
   setNodes: (nodes: any[]) => void
   onAddChild: (parentId: string) => void
-  onRemove: (id: string) => void
+  onRemove: (id: string, label: string) => void
   onChange: (id: string, update: Partial<any>) => void
   depth?: number
 }) => {
@@ -403,7 +407,7 @@ const TreeEditor = ({
                 {isTopLevel && (
                   <button type="button" onClick={() => onAddChild(dragId)}>+ Subitem</button>
                 )}
-                <button type="button" onClick={() => onRemove(dragId)}>Delete</button>
+                <button type="button" onClick={() => onRemove(dragId, n.label)}>Delete</button>
               </div>
               {n.items && n.items.length ? (
                 <Droppable droppableId={`child-${dragId}`} direction="vertical" renderClone={undefined}>
