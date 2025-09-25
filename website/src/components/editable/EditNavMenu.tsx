@@ -138,7 +138,6 @@ export const EditableNavMenu = ({navMenuSlug}: {navMenuSlug: string}) => {
     const menuInput: Dailp.MenuUpdate = {
       id: menu?.id!,
       name: menuName,
-      slug: menu?.slug!,
       items: itemsInput,
     }
     console.log("menuInput", menuInput)

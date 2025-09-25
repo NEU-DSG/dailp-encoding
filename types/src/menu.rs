@@ -27,8 +27,6 @@ pub struct MenuUpdate {
     pub id: Uuid,
     /// New name (optional).
     pub name: Option<String>,
-    /// New slug (optional).
-    pub slug: Option<String>,
     /// New menu items (optional).
     pub items: Option<Vec<MenuItemInput>>,
 }

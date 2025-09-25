@@ -649,8 +649,6 @@ export type MenuUpdate = {
   readonly items: InputMaybe<ReadonlyArray<MenuItemInput>>
   /** New name (optional). */
   readonly name: InputMaybe<Scalars["String"]>
-  /** New slug (optional). */
-  readonly slug: InputMaybe<Scalars["String"]>
 }
 
 /** One particular morpheme and all the known words that contain that exact morpheme. */

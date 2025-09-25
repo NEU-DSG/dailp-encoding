@@ -854,10 +854,6 @@ input MenuUpdate {
 	"""
 	name: String
 	"""
-	New slug (optional).
-	"""
-	slug: String
-	"""
 	New menu items (optional).
 	"""
 	items: [MenuItemInput!]

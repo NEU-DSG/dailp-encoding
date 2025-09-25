@@ -1646,11 +1646,16 @@ impl Database {
     }
 
     pub async fn update_menu(&self, menu: MenuUpdate) -> Result<Menu> {
+        let slug_value = menu
+            .name
+            .clone()
+            .unwrap_or_else(|| slug::slugify(menu.name.as_deref().unwrap_or_default()));
+
         let menu = query_file!(
             "queries/update_menu.sql",
             menu.id,
             menu.name,
-            menu.slug,
+            slug_value,
             menu.items
                 .map(|items| serde_json::to_value(items).unwrap_or_default())
         )
