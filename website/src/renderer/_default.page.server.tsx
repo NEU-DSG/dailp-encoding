@@ -135,8 +135,5 @@ const baseScript = escapeInject`
       var global = window;
     }
     var process = ${clientProcess};
-    if (${skipConsoleLog}) {
-      console.log = function(){};
-    }
   </script>
 `

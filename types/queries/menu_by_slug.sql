@@ -1,0 +1,1 @@
+select id, name, slug from menu where slug = $1

@@ -1623,6 +1623,46 @@ impl Database {
                 .await?,
         )
     }
+
+    pub async fn get_menu_by_slug(&self, slug: String) -> Result<Menu> {
+        use sqlx::Row as _;
+        let row = sqlx::query("select id, name, slug, items from menu where slug = $1")
+            .bind(&slug)
+            .fetch_one(&self.client)
+            .await?;
+
+        let m_id: Uuid = row.get("id");
+        let m_name: String = row.get("name");
+        let m_slug: String = row.get("slug");
+        let items_json: serde_json::Value = row.get("items");
+        let items: Vec<MenuItem> = serde_json::from_value(items_json).unwrap_or_default();
+
+        Ok(Menu {
+            id: m_id,
+            name: m_name,
+            slug: m_slug,
+            items,
+        })
+    }
+
+    pub async fn update_menu(&self, menu: MenuUpdate) -> Result<Menu> {
+        let menu = query_file!(
+            "queries/update_menu.sql",
+            menu.id,
+            menu.name,
+            menu.slug,
+            menu.items.map(|items| serde_json::to_value(items).unwrap_or_default())
+        )
+        .fetch_one(&self.client)
+        .await?;
+        let items: Vec<MenuItem> = serde_json::from_value(menu.items).unwrap_or_default();
+        Ok(Menu {
+            id: menu.id,
+            name: menu.name,
+            slug: menu.slug,
+            items,
+        })
+    }
 }
 
 #[async_trait]

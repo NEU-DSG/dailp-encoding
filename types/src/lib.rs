@@ -48,6 +48,7 @@ mod slugs;
 mod tag;
 mod translation;
 pub mod user;
+pub mod menu;
 
 // Re-export dependencies for downstream to use.
 pub use async_graphql;
@@ -70,3 +71,4 @@ pub use sheet_result::*;
 pub use slugs::*;
 pub use tag::*;
 pub use translation::*;
+pub use menu::*;
