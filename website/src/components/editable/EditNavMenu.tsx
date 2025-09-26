@@ -11,7 +11,8 @@ const idOf = (n: any): string => {
   return persistedId || clientId
 }
 
-const generateId = (): string =>`${Date.now()}-${Math.random().toString(36).slice(2)}`
+const generateId = (): string =>
+  `${Date.now()}-${Math.random().toString(36).slice(2)}`
 
 const withClientIds = (nodes: readonly any[] | undefined): any[] =>
   (nodes ?? []).map((n) => ({
@@ -23,7 +24,10 @@ const withClientIds = (nodes: readonly any[] | undefined): any[] =>
 const normalizePath = (p: unknown): string =>
   (p ?? "").toString().trim().toLowerCase()
 
-const collectPaths = (nodes: readonly any[] | undefined, acc: string[] = []): string[] => {
+const collectPaths = (
+  nodes: readonly any[] | undefined,
+  acc: string[] = []
+): string[] => {
   if (!nodes) return acc
   for (const n of nodes) {
     const np = normalizePath(n?.path)
@@ -44,7 +48,7 @@ const findDuplicatePaths = (nodes: readonly any[] | undefined): string[] => {
   return Array.from(dups)
 }
 
-export const EditableNavMenu = ({navMenuSlug}: {navMenuSlug: string}) => {
+export const EditableNavMenu = ({ navMenuSlug }: { navMenuSlug: string }) => {
   const [{ data }] = Dailp.useMenuBySlugQuery({
     variables: { slug: navMenuSlug },
   })
@@ -55,8 +59,6 @@ export const EditableNavMenu = ({navMenuSlug}: {navMenuSlug: string}) => {
   const [items, setItems] = useState<Dailp.MenuItem[]>([])
   const [menuName, setMenuName] = useState(menu?.name ?? "no name")
   // inline editor, no modal
-
-  
 
   // Sync editable items when menu loads/changes
   useEffect(() => {
@@ -343,11 +345,11 @@ const TreeEditor = ({
                         <TreeEditor
                           nodes={n.items}
                           setNodes={(childs) =>
-                          setNodes(
-                            nodes.map((m, i) =>
-                              idOf(m) === dragId ? { ...m, items: childs } : m
+                            setNodes(
+                              nodes.map((m, i) =>
+                                idOf(m) === dragId ? { ...m, items: childs } : m
+                              )
                             )
-                          )
                           }
                           onAddChild={onAddChild}
                           onRemove={onRemove}

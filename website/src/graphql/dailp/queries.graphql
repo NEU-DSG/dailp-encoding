@@ -746,7 +746,7 @@ mutation UpdateMenu($menu: MenuUpdate!) {
     items {
       label
       path
-      items{
+      items {
         label
         path
       }
