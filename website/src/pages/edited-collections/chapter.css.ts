@@ -54,20 +54,18 @@ globalStyle(`${wordpressContentFix} table`, {
   maxWidth: "100%",
   tableLayout: "auto",
   wordWrap: "break-word",
-  fontSize: "0.85rem",
+  fontSize: "0.8rem",
 })
 
 globalStyle(
   `${wordpressContentFix} table td, ${wordpressContentFix} table th`,
   {
     padding: "0.4rem 0.2rem",
-    wordWrap: "break-word",
     overflow: "hidden",
     verticalAlign: "top",
     width: "auto",
     minWidth: "0px",
     maxWidth: "calc(50vw - 2rem)",
-    fontSize: "0.8rem",
   }
 )
 
