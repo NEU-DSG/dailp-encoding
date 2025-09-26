@@ -42,7 +42,6 @@ export const navLink = style([
     display: "flex",
     flexFlow: "row",
     alignItems: "center",
-    transition: "all 0.2s ease",
     "@media": {
       [mediaQueries.large]: paddingX(hspace.edge),
     },
@@ -79,9 +78,6 @@ export const desktopNav = style([
     "@media": {
       [mediaQueries.medium]: {
         display: "flex",
-        flexDirection: "row",
-        alignItems: "center",
-        gap: "0",
       },
     },
   },

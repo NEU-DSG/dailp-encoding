@@ -31,16 +31,17 @@ export const NavMenu = (p: { menuID: number }) => {
   const [{ data }] = Dailp.useMenuBySlugQuery({
     variables: { slug: "default-nav" },
   })
-  const menu = data?.menuBySlug
-
+  //OLD: Wordpress menu
   //const [{ data }] = Wordpress.useMenuByIdQuery({
   //variables: { id: p.menuID },
   //})
   //const menus = data?.menus?.nodes
+  //const menu = menus[0]
+
+  const menu = data?.menuBySlug
   if (!menu) {
     return null
   }
-  //const menu = menus[0]
   const menuItems = menu?.items
   if (!menuItems) {
     return null

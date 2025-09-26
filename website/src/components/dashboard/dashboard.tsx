@@ -34,12 +34,11 @@ export const Dashboard = () => {
           <Tab {...tabs} id={Tabs.ACTIVITY} className={css.dashboardTab}>
             Recent Activity
           </Tab>
-          {curRole == UserRole.Admin ||
-            (curRole == UserRole.Editor && (
+          {curRole == UserRole.Admin  && (
               <Tab {...tabs} id={Tabs.ADMIN_TOOLS} className={css.dashboardTab}>
                 Admin tools
               </Tab>
-            ))}
+            )}
         </TabList>
 
         <TabPanel
