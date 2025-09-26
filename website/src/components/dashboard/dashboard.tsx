@@ -83,25 +83,15 @@ export const AdminToolsTab = () => {
         <br />
         <Link href="#">Edit Existing Collection</Link>
       </div>
-      <br />
-
       <div>
         <h2>Manage Documents</h2>
         <Link href="#">Create New Document(s)</Link>
       </div>
-
-      <br />
       <div>
         <h2>Manage Users</h2>
         <Link href="#">Update Permissions for Existing User</Link>
         <br />
         <Link href="#">Manage Teams</Link>
-      </div>
-      <br />
-
-      <div>
-        <h2>Create / Edit Main Menu</h2>
-        <Link href="#">Edit Main Menu</Link>
       </div>
     </>
   )
