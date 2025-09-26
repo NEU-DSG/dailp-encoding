@@ -1625,16 +1625,14 @@ impl Database {
     }
 
     pub async fn get_menu_by_slug(&self, slug: String) -> Result<Menu> {
-        use sqlx::Row as _;
-        let row = sqlx::query("select id, name, slug, items from menu where slug = $1")
-            .bind(&slug)
+        let menu = query_file!("queries/menu_by_slug.sql", slug)
             .fetch_one(&self.client)
             .await?;
 
-        let m_id: Uuid = row.get("id");
-        let m_name: String = row.get("name");
-        let m_slug: String = row.get("slug");
-        let items_json: serde_json::Value = row.get("items");
+        let m_id: Uuid = menu.id;
+        let m_name: String = menu.name;
+        let m_slug: String = menu.slug;
+        let items_json: serde_json::Value = menu.items;
         let items: Vec<MenuItem> = serde_json::from_value(items_json).unwrap_or_default();
 
         Ok(Menu {

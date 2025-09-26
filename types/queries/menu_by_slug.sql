@@ -1,1 +1,1 @@
-select id, name, slug from menu where slug = $1
+select id, name, slug, items from menu where slug = $1
