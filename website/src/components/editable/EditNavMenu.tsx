@@ -3,11 +3,45 @@ import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd"
 import { MdDragIndicator } from "react-icons/md/index"
 import * as Dailp from "src/graphql/dailp"
 
-// Build a key from path + label (case-insensitive, trimmed)
-const keyOf = (n: any): string => {
-  const path = (n?.path ?? "").toString().trim().toLowerCase()
-  const label = (n?.label ?? "").toString().trim().toLowerCase()
-  return `${path}::${label}`
+// Stable identifiers for items: prefer backend id, then clientId
+const idOf = (n: any): string => {
+  if (!n) return ""
+  const persistedId = n?.id != null ? String(n.id) : ""
+  const clientId = n?.clientId != null ? String(n.clientId) : ""
+  return persistedId || clientId
+}
+
+const generateId = (): string =>`${Date.now()}-${Math.random().toString(36).slice(2)}`
+
+const withClientIds = (nodes: readonly any[] | undefined): any[] =>
+  (nodes ?? []).map((n) => ({
+    ...n,
+    clientId: idOf(n) || generateId(),
+    items: n?.items ? withClientIds(n.items) : n.items,
+  }))
+
+const normalizePath = (p: unknown): string =>
+  (p ?? "").toString().trim().toLowerCase()
+
+const collectPaths = (nodes: readonly any[] | undefined, acc: string[] = []): string[] => {
+  if (!nodes) return acc
+  for (const n of nodes) {
+    const np = normalizePath(n?.path)
+    if (np) acc.push(np)
+    if (n?.items?.length) collectPaths(n.items, acc)
+  }
+  return acc
+}
+
+const findDuplicatePaths = (nodes: readonly any[] | undefined): string[] => {
+  const paths = collectPaths(nodes)
+  const seen = new Set<string>()
+  const dups = new Set<string>()
+  for (const p of paths) {
+    if (seen.has(p)) dups.add(p)
+    else seen.add(p)
+  }
+  return Array.from(dups)
 }
 
 export const EditableNavMenu = ({navMenuSlug}: {navMenuSlug: string}) => {
@@ -26,7 +60,7 @@ export const EditableNavMenu = ({navMenuSlug}: {navMenuSlug: string}) => {
 
   // Sync editable items when menu loads/changes
   useEffect(() => {
-    setItems([...(menu?.items ?? [])] as any[])
+    setItems(withClientIds(menu?.items))
     setMenuName(menu?.name ?? "no name")
   }, [menu])
 
@@ -36,14 +70,14 @@ export const EditableNavMenu = ({navMenuSlug}: {navMenuSlug: string}) => {
 
   const updateNode = (arr: any[], id: string, update: Partial<any>): any[] =>
     arr.map((n) =>
-      keyOf(n) === id
+      idOf(n) === id
         ? { ...n, ...update }
         : { ...n, items: n?.items ? updateNode(n.items, id, update) : n.items }
     )
 
   const addChild = (arr: any[], parentId: string, child: any): any[] =>
     arr.map((n) =>
-      keyOf(n) === parentId
+      idOf(n) === parentId
         ? { ...n, items: [...(n.items ?? []), { ...child }] }
         : {
             ...n,
@@ -53,7 +87,7 @@ export const EditableNavMenu = ({navMenuSlug}: {navMenuSlug: string}) => {
 
   const removeNode = (arr: any[], id: string): any[] =>
     arr
-      .filter((n) => keyOf(n) !== id)
+      .filter((n) => idOf(n) !== id)
       .map((n) => ({
         ...n,
         items: n?.items ? removeNode(n.items, id) : n.items,
@@ -82,7 +116,7 @@ export const EditableNavMenu = ({navMenuSlug}: {navMenuSlug: string}) => {
     const parentId = type
     setItems((prev) =>
       prev.map((p: any) => {
-        if (keyOf(p) !== parentId) return p
+        if (idOf(p) !== parentId) return p
         const children = p.items ?? []
         const next = reorder(children, source.index, destination.index)
         return { ...p, items: next }
@@ -92,7 +126,15 @@ export const EditableNavMenu = ({navMenuSlug}: {navMenuSlug: string}) => {
 
   const handleSave = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    console.log("save", items, menuName)
+    const dupPaths = findDuplicatePaths(items)
+    if (dupPaths.length) {
+      setErrorMessage(
+        `Duplicate path(s) found: ${dupPaths.join(", ")}. Paths must be unique.`
+      )
+      return
+    }
+    setErrorMessage(null)
+    //console.log("save", items, menuName)
     const toMenuItemInput = (
       nodes: any[] | undefined
     ): ReadonlyArray<Dailp.MenuItemInput> | null => {
@@ -109,7 +151,7 @@ export const EditableNavMenu = ({navMenuSlug}: {navMenuSlug: string}) => {
       name: menuName,
       items: itemsInput,
     }
-    console.log("menuInput", menuInput)
+    //console.log("menuInput", menuInput)
     updateMenu({ menu: menuInput })
   }
 
@@ -118,13 +160,9 @@ export const EditableNavMenu = ({navMenuSlug}: {navMenuSlug: string}) => {
     const formData = new FormData(e.target as HTMLFormElement)
     const item = formData.get("add item")
     const itemPath = formData.get("add item path")
-    // Reject duplicates: we use path as the id, so block if it already exists
-    if (
-      items.some((i) => {
-        const p = (itemPath as string)?.toString().trim().toLowerCase()
-        return i && i.path?.toString().trim().toLowerCase() === p
-      })
-    ) {
+    // Reject duplicates across entire tree
+    const np = normalizePath(itemPath as string)
+    if (np && findDuplicatePaths([...items, { path: np }]).includes(np)) {
       setErrorMessage("An item with this path already exists.")
       return
     }
@@ -133,6 +171,7 @@ export const EditableNavMenu = ({navMenuSlug}: {navMenuSlug: string}) => {
       ...prev,
       {
         id: undefined,
+        clientId: generateId(),
         label: item as string,
         path: itemPath as string,
         items: [],
@@ -172,6 +211,7 @@ export const EditableNavMenu = ({navMenuSlug}: {navMenuSlug: string}) => {
                     setItems((prev) =>
                       addChild(prev, parentId, {
                         id: undefined,
+                        clientId: generateId(),
                         label: "New Item",
                         path: "",
                         items: [],
@@ -204,7 +244,7 @@ export const EditableNavMenu = ({navMenuSlug}: {navMenuSlug: string}) => {
       </form>
       <form onSubmit={handleSave}>
         <button type="submit">Save</button>
-        <button onClick={() => setItems([...(menu?.items ?? [])] as any[])}>
+        <button onClick={() => setItems(withClientIds(menu?.items))}>
           Reset
         </button>
       </form>
@@ -233,10 +273,7 @@ const TreeEditor = ({
   return (
     <ul style={{ listStyle: "none", paddingLeft: isTopLevel ? 12 : 20 }}>
       {nodes.map((n, index) => {
-        let dragId = keyOf(n)
-        if (!dragId) {
-          dragId = String(index)
-        }
+        const dragId = idOf(n)
         return (
           <Draggable key={dragId} draggableId={dragId} index={index}>
             {(provided, snapshot) => (
@@ -308,9 +345,7 @@ const TreeEditor = ({
                           setNodes={(childs) =>
                           setNodes(
                             nodes.map((m, i) =>
-                              keyOf(m) === dragId || String(i) === dragId
-                                ? { ...m, items: childs }
-                                : m
+                              idOf(m) === dragId ? { ...m, items: childs } : m
                             )
                           )
                           }
