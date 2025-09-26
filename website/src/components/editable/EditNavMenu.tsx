@@ -1,30 +1,7 @@
 import React, { useEffect, useState } from "react"
 import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd"
-import { MdArrowDropDown, MdDragIndicator, MdMenu } from "react-icons/md/index"
-import {
-  Dialog,
-  DialogBackdrop,
-  DialogDisclosure,
-  Menu,
-  MenuButton,
-  MenuItem,
-  useDialogState,
-  useMenuState,
-} from "reakit"
-import Link from "src/components/link"
+import { MdDragIndicator } from "react-icons/md/index"
 import * as Dailp from "src/graphql/dailp"
-import * as Wordpress from "src/graphql/wordpress"
-import { Location, useLocation, usePageContext } from "src/renderer/PageShell"
-import {
-  drawerBg,
-  drawerItem,
-  drawerList,
-  navButton,
-  navDrawer,
-  navLink,
-  navMenu,
-  subMenuItems,
-} from "../../menu.css"
 
 // Build a key from path + label (case-insensitive, trimmed)
 const keyOf = (n: any): string => {
@@ -167,28 +144,6 @@ export const EditableNavMenu = ({navMenuSlug}: {navMenuSlug: string}) => {
     ;(e.target as HTMLFormElement).reset()
   }
 
-  // dennis todo move off of wordpress query and use db query
-  //const [{ data }] = Wordpress.useMenuByIdQuery({
-  //variables: { id: p.menuID },
-  //})
-  //const menus = data?.menus?.nodes
-
-  //const menu = menus[0]
-  //const menuItems = menu?.menuItems?.nodes
-  //if (!menuItems) {
-  //return null
-  //}
-
-  //const isTopLevel = (a: typeof menuItems[0]) =>
-  //!menuItems?.some((b) =>
-  //b?.childItems?.nodes?.some((b) => b?.path === a?.path)
-  //)
-
-  //const topLevelItems = menuItems?.filter(isTopLevel) || []
-  //const [items, setItems] = useState(topLevelItems)
-
-  // old horizontal DnD removed in favor of tree editor DnD
-
   return (
     <>
       <input
@@ -255,42 +210,6 @@ export const EditableNavMenu = ({navMenuSlug}: {navMenuSlug: string}) => {
       </form>
 
       {/* Inline editor replaces modal */}
-    </>
-  )
-}
-
-const SubMenu = ({ item, location }: { location: Location; item: any }) => {
-  const menu = useMenuState()
-  return (
-    <>
-      <MenuButton {...menu} className={navLink}>
-        {item.label}
-        <MdArrowDropDown aria-label="Menu" />
-      </MenuButton>
-      <Menu {...menu} aria-label={item.label} className={navMenu}>
-        {(item.items ?? []).map((child: any) => {
-          if (!child) return null
-          let url = { pathname: child.path }
-          if (child.path && child.path.startsWith("http")) {
-            url = new URL(child.path)
-          }
-          return (
-            <MenuItem
-              {...menu}
-              as="a"
-              key={child.path || child.id}
-              href={url.pathname}
-              aria-current={
-                location.pathname === url.pathname ? "page" : undefined
-              }
-              className={subMenuItems}
-              onClick={() => menu.hide()}
-            >
-              {child.label}
-            </MenuItem>
-          )
-        })}
-      </Menu>
     </>
   )
 }
