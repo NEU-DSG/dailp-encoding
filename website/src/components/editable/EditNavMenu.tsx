@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react"
+import React, { useEffect, useState } from "react"
 import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd"
 import { MdArrowDropDown, MdDragIndicator, MdMenu } from "react-icons/md/index"
 import {
@@ -26,6 +26,13 @@ import {
   subMenuItems,
 } from "../../menu.css"
 
+// Build a key from path + label (case-insensitive, trimmed)
+const keyOf = (n: any): string => {
+  const path = (n?.path ?? "").toString().trim().toLowerCase()
+  const label = (n?.label ?? "").toString().trim().toLowerCase()
+  return `${path}::${label}`
+}
+
 export const EditableNavMenu = ({navMenuSlug}: {navMenuSlug: string}) => {
   const [{ data }] = Dailp.useMenuBySlugQuery({
     variables: { slug: navMenuSlug },
@@ -38,26 +45,11 @@ export const EditableNavMenu = ({navMenuSlug}: {navMenuSlug: string}) => {
   const [menuName, setMenuName] = useState(menu?.name ?? "no name")
   // inline editor, no modal
 
-  // Stable client ids to prevent DnD jumpiness when fields change
-  const cidCounter = useRef(0)
-  const newCid = () => `cid-${Date.now()}-${cidCounter.current++}`
-  const withClientIds = (nodes: any[] | readonly any[] | undefined): any[] => {
-    const attach = (arr: any[]): any[] =>
-      arr.map((n) => {
-        const _cid = n?._cid ?? newCid()
-        return {
-          ...n,
-          _cid,
-          items: n?.items ? attach(n.items) : n.items,
-        }
-      })
-    return attach([...((nodes as any[]) ?? [])])
-  }
+  
 
   // Sync editable items when menu loads/changes
   useEffect(() => {
-    // Clone and attach stable client ids
-    setItems(withClientIds(menu?.items) as any[])
+    setItems([...(menu?.items ?? [])] as any[])
     setMenuName(menu?.name ?? "no name")
   }, [menu])
 
@@ -67,15 +59,15 @@ export const EditableNavMenu = ({navMenuSlug}: {navMenuSlug: string}) => {
 
   const updateNode = (arr: any[], id: string, update: Partial<any>): any[] =>
     arr.map((n) =>
-      String(n?._cid) === id
+      keyOf(n) === id
         ? { ...n, ...update }
         : { ...n, items: n?.items ? updateNode(n.items, id, update) : n.items }
     )
 
   const addChild = (arr: any[], parentId: string, child: any): any[] =>
     arr.map((n) =>
-      String(n?._cid) === parentId
-        ? { ...n, items: [...(n.items ?? []), { ...child, _cid: newCid() }] }
+      keyOf(n) === parentId
+        ? { ...n, items: [...(n.items ?? []), { ...child }] }
         : {
             ...n,
             items: n?.items ? addChild(n.items, parentId, child) : n.items,
@@ -84,7 +76,7 @@ export const EditableNavMenu = ({navMenuSlug}: {navMenuSlug: string}) => {
 
   const removeNode = (arr: any[], id: string): any[] =>
     arr
-      .filter((n) => String(n?._cid) !== id)
+      .filter((n) => keyOf(n) !== id)
       .map((n) => ({
         ...n,
         items: n?.items ? removeNode(n.items, id) : n.items,
@@ -113,7 +105,7 @@ export const EditableNavMenu = ({navMenuSlug}: {navMenuSlug: string}) => {
     const parentId = type
     setItems((prev) =>
       prev.map((p: any) => {
-        if (String(p?._cid) !== parentId) return p
+        if (keyOf(p) !== parentId) return p
         const children = p.items ?? []
         const next = reorder(children, source.index, destination.index)
         return { ...p, items: next }
@@ -257,7 +249,7 @@ export const EditableNavMenu = ({navMenuSlug}: {navMenuSlug: string}) => {
       </form>
       <form onSubmit={handleSave}>
         <button type="submit">Save</button>
-        <button onClick={() => setItems(withClientIds(menu?.items) as any[])}>
+        <button onClick={() => setItems([...(menu?.items ?? [])] as any[])}>
           Reset
         </button>
       </form>
@@ -303,78 +295,6 @@ const SubMenu = ({ item, location }: { location: Location; item: any }) => {
   )
 }
 
-export const MobileNav = (p: { menuID: number }) => {
-  const router = usePageContext()
-  const dialog = useDialogState({ animated: true })
-  const [{ data }] = Wordpress.useMenuByIdQuery({
-    variables: { id: p.menuID },
-  })
-  const menus = data?.menus?.nodes
-  if (!menus) {
-    return null
-  }
-  const menu = menus[0]
-  const menuItems = menu?.menuItems?.nodes
-  if (!menuItems) {
-    return null
-  }
-  const isTopLevel = (a: typeof menuItems[0]) =>
-    !menuItems?.some((b) =>
-      b?.childItems!.nodes!.some((b) => b?.path === a?.path)
-    )
-
-  return (
-    <>
-      <DialogDisclosure
-        {...dialog}
-        className={navButton}
-        aria-label="Open Mobile Navigation Drawer"
-      >
-        <MdMenu size={32} />
-      </DialogDisclosure>
-      <DialogBackdrop {...dialog} className={drawerBg}>
-        <Dialog
-          {...dialog}
-          as="nav"
-          className={navDrawer}
-          aria-label="Navigation Drawer"
-        >
-          <ul className={drawerList}>
-            {menuItems?.filter(isTopLevel).map((item) => {
-              let items = item?.childItems?.nodes
-              if (items && !items.length) {
-                items = [item]
-              }
-              return items?.map((item) => {
-                if (!item) {
-                  return null
-                }
-                let url = { pathname: item.path }
-                if (item.path && item.path.startsWith("http")) {
-                  url = new URL(item.path)
-                }
-                return (
-                  <li key={item.path}>
-                    <Link
-                      className={drawerItem}
-                      href={url.pathname?.valueOf()}
-                      aria-current={
-                        router.urlPathname === url.pathname ? "page" : undefined
-                      }
-                    >
-                      {item.label}
-                    </Link>
-                  </li>
-                )
-              })
-            })}
-          </ul>
-        </Dialog>
-      </DialogBackdrop>
-    </>
-  )
-}
-
 const TreeEditor = ({
   nodes,
   setNodes,
@@ -394,7 +314,7 @@ const TreeEditor = ({
   return (
     <ul style={{ listStyle: "none", paddingLeft: isTopLevel ? 12 : 20 }}>
       {nodes.map((n, index) => {
-        let dragId = String(n?._cid ?? n?.id ?? n?.path ?? n?.label)
+        let dragId = keyOf(n)
         if (!dragId) {
           dragId = String(index)
         }
@@ -467,14 +387,13 @@ const TreeEditor = ({
                         <TreeEditor
                           nodes={n.items}
                           setNodes={(childs) =>
-                            setNodes(
-                              nodes.map((m, i) =>
-                                String(m?.id ?? m?.path ?? m?.label) ===
-                                  dragId || String(i) === dragId
-                                  ? { ...m, items: childs }
-                                  : m
-                              )
+                          setNodes(
+                            nodes.map((m, i) =>
+                              keyOf(m) === dragId || String(i) === dragId
+                                ? { ...m, items: childs }
+                                : m
                             )
+                          )
                           }
                           onAddChild={onAddChild}
                           onRemove={onRemove}
