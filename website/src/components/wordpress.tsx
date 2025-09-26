@@ -111,13 +111,8 @@ const parseOptions: HTMLReactParserOptions = {
         return (
           <img
             {...props}
-            style={{
-              maxWidth: "100%",
-              height: "auto",
-              imageRendering: "-webkit-optimize-contrast",
-              cursor: "pointer",
-              width: "auto",
-            }}
+            title="Click to view full size"
+            className={css.wordpressImage}
             onClick={(e) => {
               // Open image in new tab for full view
               window.open(e.currentTarget.src, "_blank")
@@ -127,15 +122,7 @@ const parseOptions: HTMLReactParserOptions = {
       } else if (node.name === "video") {
         const props = attributesToProps(node.attribs)
         return (
-          <video
-            {...props}
-            style={{
-              width: "100%",
-              maxWidth: "100%",
-              height: "auto",
-            }}
-            controls
-          >
+          <video {...props} className={css.wordpressVideo} controls>
             {domToReact(node.children, parseOptions)}
           </video>
         )

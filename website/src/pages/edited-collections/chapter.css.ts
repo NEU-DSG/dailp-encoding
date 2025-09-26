@@ -66,24 +66,23 @@ globalStyle(
     verticalAlign: "top",
     width: "auto",
     minWidth: "0px",
-    maxWidth: "200px",
+    maxWidth: "calc(50vw - 2rem)",
+    fontSize: "0.8rem",
   }
 )
 
 globalStyle(`${wordpressContentFix} table th`, {
-  fontSize: "0.8rem",
   fontWeight: "bold",
 })
 
 globalStyle(`${wordpressContentFix} table td`, {
-  fontSize: "0.85rem",
   lineHeight: "1.2",
 })
 
 globalStyle(`${wordpressContentFix} table td img`, {
   width: "auto !important", // Override inline width="300"
   height: "auto !important", // Override inline height="300"
-  minWidth: "120px !important",
+  minWidth: "calc(25vw) !important",
   display: "inline-block !important",
   verticalAlign: "top !important",
 })

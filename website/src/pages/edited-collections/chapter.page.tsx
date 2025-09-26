@@ -68,12 +68,12 @@ const ChapterPage = (props: {
                     )}
                 </Breadcrumbs>
               </header>
-              {!isDesktop ? (
+              {isDesktop ? (
+                <WordpressPage slug={`/${chapter.slug.replace(/_/g, "-")}`} />
+              ) : (
                 <div className={chapterStyle.wordpressContentFix}>
                   <WordpressPage slug={`/${chapter.slug.replace(/_/g, "-")}`} />
                 </div>
-              ) : (
-                <WordpressPage slug={`/${chapter.slug.replace(/_/g, "-")}`} />
               )}
             </>
           ) : null}
