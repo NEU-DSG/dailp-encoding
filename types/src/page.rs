@@ -1,5 +1,5 @@
 //! Provides types for structuring text-based pages.
-use async_graphql::{SimpleObject, Union};
+use async_graphql::{InputObject, SimpleObject, Union};
 use serde::{Deserialize, Serialize};
 
 /// A website page which lives at a specific URL and has a list of blocks that
@@ -11,6 +11,32 @@ pub struct Page {
     pub id: String,
     title: String,
     body: Vec<ContentBlock>,
+}
+
+impl Page{
+    pub fn new() -> Self {
+        Self{
+            id: String::from(""),
+            title: String::from(""),
+            body: Vec::new(),
+        }
+    }
+    pub fn build(title:String, slug:String, body: Vec<ContentBlock>) -> Self{
+        Self{
+            id: format!("/{}", slug),
+            title,
+            body,
+        }
+    }
+}
+
+/// Input struct for a page.
+#[derive(Clone, Serialize, Deserialize, SimpleObject, InputObject)]
+pub struct NewPageInput{
+    /// title of new page
+    pub title: String,
+    /// content for page, needs to be sanitized
+    pub body: Vec<String>,
 }
 
 /// A block of content, which may be one of several types.
@@ -30,7 +56,7 @@ pub enum ContentBlock {
 /// A block of prose content, formatted with [Markdown](https://commonmark.org/).
 #[derive(Clone, Serialize, Deserialize, SimpleObject)]
 pub struct Markdown {
-    content: String,
+    pub content: String,
 }
 
 /// A gallery of images, which may be rendered as a slideshow or lightbox.

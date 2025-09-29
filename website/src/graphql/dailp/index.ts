@@ -703,6 +703,7 @@ export type Mutation = {
   /** Mutation for deleting contributor attributions */
   readonly deleteContributorAttribution: Scalars["UUID"]
   readonly insertCustomMorphemeTag: Scalars["Boolean"]
+  readonly insertPage: Scalars["String"]
   /** Post a new comment on a given object */
   readonly postComment: CommentParent
   /** Removes a bookmark from a user's list of bookmarks */
@@ -751,6 +752,10 @@ export type MutationInsertCustomMorphemeTagArgs = {
   title: Scalars["String"]
 }
 
+export type MutationInsertPageArgs = {
+  page: NewPageInput
+}
+
 export type MutationPostCommentArgs = {
   input: PostCommentInput
 }
@@ -789,6 +794,14 @@ export type MutationUpdateUserArgs = {
 
 export type MutationUpdateWordArgs = {
   word: AnnotatedFormUpdate
+}
+
+/** Input struct for a page. */
+export type NewPageInput = {
+  /** content for page, needs to be sanitized */
+  readonly body: ReadonlyArray<Scalars["String"]>
+  /** title of new page */
+  readonly title: Scalars["String"]
 }
 
 /**
@@ -909,6 +922,7 @@ export type Query = {
   readonly morphemesByShape: ReadonlyArray<MorphemeReference>
   /** Retrieves a full document from its unique identifier. */
   readonly page: Maybe<Page>
+  readonly pageBySlug: Maybe<Page>
   /** Get a single paragraph given the paragraph ID */
   readonly paragraphById: DocumentParagraph
   /**
@@ -982,6 +996,10 @@ export type QueryMorphemesByShapeArgs = {
 
 export type QueryPageArgs = {
   id: Scalars["String"]
+}
+
+export type QueryPageBySlugArgs = {
+  slug: Scalars["String"]
 }
 
 export type QueryParagraphByIdArgs = {
@@ -2629,6 +2647,30 @@ export type InsertCustomMorphemeTagMutation = {
   readonly __typename?: "Mutation"
 } & Pick<Mutation, "insertCustomMorphemeTag">
 
+export type InsertPageMutationVariables = Exact<{
+  pageInput: NewPageInput
+}>
+
+export type InsertPageMutation = { readonly __typename?: "Mutation" } & Pick<
+  Mutation,
+  "insertPage"
+>
+
+export type PageBySlugQueryVariables = Exact<{
+  slug: Scalars["String"]
+}>
+
+export type PageBySlugQuery = { readonly __typename?: "Query" } & {
+  readonly pageBySlug: Maybe<
+    { readonly __typename?: "Page" } & Pick<Page, "title"> & {
+        readonly body: ReadonlyArray<
+          | ({ readonly __typename: "Gallery" } & Pick<Gallery, "mediaUrls">)
+          | ({ readonly __typename: "Markdown" } & Pick<Markdown, "content">)
+        >
+      }
+  >
+}
+
 export const DocFormFieldsFragmentDoc = gql`
   fragment DocFormFields on AnnotatedDoc {
     id
@@ -3718,4 +3760,40 @@ export function useInsertCustomMorphemeTagMutation() {
     InsertCustomMorphemeTagMutation,
     InsertCustomMorphemeTagMutationVariables
   >(InsertCustomMorphemeTagDocument)
+}
+export const InsertPageDocument = gql`
+  mutation InsertPage($pageInput: NewPageInput!) {
+    insertPage(page: $pageInput)
+  }
+`
+
+export function useInsertPageMutation() {
+  return Urql.useMutation<InsertPageMutation, InsertPageMutationVariables>(
+    InsertPageDocument
+  )
+}
+export const PageBySlugDocument = gql`
+  query pageBySlug($slug: String!) {
+    pageBySlug(slug: $slug) {
+      title
+      body {
+        __typename
+        ... on Markdown {
+          content
+        }
+        ... on Gallery {
+          mediaUrls
+        }
+      }
+    }
+  }
+`
+
+export function usePageBySlugQuery(
+  options: Omit<Urql.UseQueryArgs<PageBySlugQueryVariables>, "query">
+) {
+  return Urql.useQuery<PageBySlugQuery, PageBySlugQueryVariables>({
+    query: PageBySlugDocument,
+    ...options,
+  })
 }

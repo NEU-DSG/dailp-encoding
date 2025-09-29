@@ -721,3 +721,22 @@ mutation InsertCustomMorphemeTag(
 ) {
   insertCustomMorphemeTag(tag: $tag, title: $title, system: $system)
 }
+
+mutation InsertPage($pageInput: NewPageInput!){
+  insertPage(page: $pageInput)
+}
+
+query pageBySlug($slug: String!) {
+  pageBySlug(slug: $slug) {
+    title,
+    body{
+      __typename
+      ... on Markdown {
+        content
+      }
+      ... on Gallery {
+        mediaUrls
+      }
+    }
+  }
+}

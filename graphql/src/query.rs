@@ -3,6 +3,7 @@
 use dailp::{
     auth::{AuthGuard, GroupGuard, UserGroup, UserInfo},
     comment::{CommentParent, CommentUpdate, DeleteCommentInput, PostCommentInput},
+    page::{NewPageInput, Page},
     slugify_ltree,
     user::{User, UserUpdate},
     AnnotatedForm, AttachAudioToWordInput, CollectionChapter, CreateEditedCollectionInput,
@@ -34,6 +35,14 @@ impl Query {
             .data::<DataLoader<Database>>()?
             .loader()
             .all_edited_collections()
+            .await?)
+    }
+
+    async fn page_by_slug(&self, context: &Context<'_>, slug: String) -> FieldResult<Option<Page>> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .page_by_slug(&slug)
             .await?)
     }
 
@@ -745,6 +754,15 @@ impl Mutation {
             .insert_edited_collection(input)
             .await?
             .to_string())
+    }
+
+    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    async fn insert_page(&self, context: &Context<'_>, page: NewPageInput) -> FieldResult<String> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .insert_page(page)
+            .await?)
     }
 }
 

@@ -10,6 +10,10 @@ use user::UserUpdate;
 use crate::collection::CollectionChapter;
 use crate::collection::EditedCollection;
 use crate::comment::{Comment, CommentParentType, CommentType, CommentUpdate};
+use crate::page::ContentBlock;
+use crate::page::Markdown;
+use crate::page::NewPageInput;
+use crate::page::Page;
 use crate::user::User;
 use crate::user::UserId;
 use {
@@ -1630,6 +1634,41 @@ impl Database {
                 .fetch_one(&self.client)
                 .await?,
         )
+    }
+
+    pub async fn insert_page(&self, input: NewPageInput) -> Result<String> {
+        // sanitize input
+        let title = input.title.trim();
+        // generate slug
+        let slug = slug::slugify(title);
+        // generate markdown blocks
+        let body: String = input.body
+                            .into_iter()
+                            .map(|s| format!("|%|${s}"))
+                            .collect();
+        query_file!("queries/insert_page.sql",title,slug,body)
+        .execute(&self.client)
+        .await?;
+        Ok(slug)
+    }
+
+    pub async fn page_by_slug(&self, slug: &str) -> Result<Option<Page>> {
+        let record = query_file!("queries/page_by_slug.sql", slug)
+            .fetch_optional(&self.client)
+            .await?;
+        if let Some(row) = record {
+            let blocks : Vec<ContentBlock> = row
+            .body
+            .split("|%|")
+            .map(|s| s.trim())
+            .filter(|s| !s.is_empty())
+            .map(|s| ContentBlock::Markdown(Markdown {content: s.to_string()}))
+            .collect();
+            Ok(Some(Page::build(row.title, row.slug, blocks)))
+        }else{
+            Ok(None)
+        }
+        //Ok(page)
     }
 }
 
