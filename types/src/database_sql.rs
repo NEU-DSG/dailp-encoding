@@ -1642,11 +1642,11 @@ impl Database {
         // generate slug
         let slug = slug::slugify(title);
         // generate markdown blocks
-        let body: String = input.body
-                            .into_iter()
-                            .map(|s| format!("|%|${s}"))
-                            .collect();
-        query_file!("queries/insert_page.sql",title,slug,body)
+        //let body: String = input.body
+                            //.into_iter()
+                            //.map(|s| format!("|%|{s}"))
+                            //.collect();
+        query_file!("queries/insert_page.sql",slug,title,input.body[0])
         .execute(&self.client)
         .await?;
         Ok(slug)
@@ -1657,13 +1657,7 @@ impl Database {
             .fetch_optional(&self.client)
             .await?;
         if let Some(row) = record {
-            let blocks : Vec<ContentBlock> = row
-            .body
-            .split("|%|")
-            .map(|s| s.trim())
-            .filter(|s| !s.is_empty())
-            .map(|s| ContentBlock::Markdown(Markdown {content: s.to_string()}))
-            .collect();
+            let blocks : Vec<ContentBlock> = vec![ContentBlock::Markdown(Markdown {content: row.body})];
             Ok(Some(Page::build(row.title, row.slug, blocks)))
         }else{
             Ok(None)
