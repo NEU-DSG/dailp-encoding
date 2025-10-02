@@ -37,6 +37,8 @@ pub struct NewPageInput{
     pub title: String,
     /// content for page, needs to be sanitized
     pub body: Vec<String>,
+    /// path of new page
+    pub path: String,
 }
 
 /// A block of content, which may be one of several types.

@@ -953,6 +953,10 @@ input NewPageInput {
 	content for page, needs to be sanitized
 	"""
 	body: [String!]!
+	"""
+	path of new page
+	"""
+	path: String!
 }
 
 """
@@ -1056,7 +1060,7 @@ input PostCommentInput {
 
 type Query {
 	allEditedCollections: [EditedCollection!]!
-	pageBySlug(slug: String!): Page
+	pageByPath(path: String!): Page
 	editedCollection(slug: String!): EditedCollection
 	"""
 	Retrieves a chapter and its contents by its collection and chapter slug.

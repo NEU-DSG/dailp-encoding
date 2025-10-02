@@ -38,11 +38,11 @@ impl Query {
             .await?)
     }
 
-    async fn page_by_slug(&self, context: &Context<'_>, slug: String) -> FieldResult<Option<Page>> {
+    async fn page_by_path(&self, context: &Context<'_>, path: String) -> FieldResult<Option<Page>> {
         Ok(context
             .data::<DataLoader<Database>>()?
             .loader()
-            .page_by_slug(&slug)
+            .page_by_path(&path)
             .await?)
     }
 
