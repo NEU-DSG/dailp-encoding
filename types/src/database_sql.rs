@@ -1646,14 +1646,14 @@ impl Database {
                             //.into_iter()
                             //.map(|s| format!("|%|{s}"))
                             //.collect();
-        query_file!("queries/insert_page.sql",slug,title,input.body[0])
+        query_file!("queries/insert_page.sql",slug,input.path,title,input.body[0])
         .execute(&self.client)
         .await?;
-        Ok(slug)
+        Ok(input.path)
     }
 
-    pub async fn page_by_slug(&self, slug: &str) -> Result<Option<Page>> {
-        let record = query_file!("queries/page_by_slug.sql", slug)
+    pub async fn page_by_path(&self, path: &str) -> Result<Option<Page>> {
+        let record = query_file!("queries/page_by_path.sql", path)
             .fetch_optional(&self.client)
             .await?;
         if let Some(row) = record {

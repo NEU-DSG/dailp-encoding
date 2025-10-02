@@ -800,6 +800,8 @@ export type MutationUpdateWordArgs = {
 export type NewPageInput = {
   /** content for page, needs to be sanitized */
   readonly body: ReadonlyArray<Scalars["String"]>
+  /** path of new page */
+  readonly path: Scalars["String"]
   /** title of new page */
   readonly title: Scalars["String"]
 }
@@ -922,7 +924,7 @@ export type Query = {
   readonly morphemesByShape: ReadonlyArray<MorphemeReference>
   /** Retrieves a full document from its unique identifier. */
   readonly page: Maybe<Page>
-  readonly pageBySlug: Maybe<Page>
+  readonly pageByPath: Maybe<Page>
   /** Get a single paragraph given the paragraph ID */
   readonly paragraphById: DocumentParagraph
   /**
@@ -998,8 +1000,8 @@ export type QueryPageArgs = {
   id: Scalars["String"]
 }
 
-export type QueryPageBySlugArgs = {
-  slug: Scalars["String"]
+export type QueryPageByPathArgs = {
+  path: Scalars["String"]
 }
 
 export type QueryParagraphByIdArgs = {
@@ -2656,12 +2658,12 @@ export type InsertPageMutation = { readonly __typename?: "Mutation" } & Pick<
   "insertPage"
 >
 
-export type PageBySlugQueryVariables = Exact<{
-  slug: Scalars["String"]
+export type PageByPathQueryVariables = Exact<{
+  path: Scalars["String"]
 }>
 
-export type PageBySlugQuery = { readonly __typename?: "Query" } & {
-  readonly pageBySlug: Maybe<
+export type PageByPathQuery = { readonly __typename?: "Query" } & {
+  readonly pageByPath: Maybe<
     { readonly __typename?: "Page" } & Pick<Page, "title"> & {
         readonly body: ReadonlyArray<
           | ({ readonly __typename: "Gallery" } & Pick<Gallery, "mediaUrls">)
@@ -3772,9 +3774,9 @@ export function useInsertPageMutation() {
     InsertPageDocument
   )
 }
-export const PageBySlugDocument = gql`
-  query pageBySlug($slug: String!) {
-    pageBySlug(slug: $slug) {
+export const PageByPathDocument = gql`
+  query pageByPath($path: String!) {
+    pageByPath(path: $path) {
       title
       body {
         __typename
@@ -3789,11 +3791,11 @@ export const PageBySlugDocument = gql`
   }
 `
 
-export function usePageBySlugQuery(
-  options: Omit<Urql.UseQueryArgs<PageBySlugQueryVariables>, "query">
+export function usePageByPathQuery(
+  options: Omit<Urql.UseQueryArgs<PageByPathQueryVariables>, "query">
 ) {
-  return Urql.useQuery<PageBySlugQuery, PageBySlugQueryVariables>({
-    query: PageBySlugDocument,
+  return Urql.useQuery<PageByPathQuery, PageByPathQueryVariables>({
+    query: PageByPathDocument,
     ...options,
   })
 }

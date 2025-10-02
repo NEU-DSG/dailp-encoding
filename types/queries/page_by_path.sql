@@ -1,6 +1,7 @@
 select
   title,
+  path,
   slug,
   content as body
 from page
-where slug = $1;
+where path = $1;

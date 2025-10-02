@@ -726,8 +726,8 @@ mutation InsertPage($pageInput: NewPageInput!){
   insertPage(page: $pageInput)
 }
 
-query pageBySlug($slug: String!) {
-  pageBySlug(slug: $slug) {
+query pageByPath($path: String!) {
+  pageByPath(path: $path) {
     title,
     body{
       __typename
