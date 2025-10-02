@@ -6,6 +6,7 @@ mod contributors;
 mod early_vocab;
 mod edited_collection;
 mod lexical;
+mod pages;
 mod spreadsheets;
 mod tags;
 mod translations;
@@ -44,6 +45,10 @@ async fn main() -> Result<()> {
     early_vocab::migrate_all(&db).await?;
 
     migrate_data(&db).await?;
+    println!("Migrating pages...");
+    pages::migrate_pages(&db).await?;
+
+    //migrate_data(&db).await?;
 
     // println!("Migrating connections...");
     // connections::migrate_connections(&db).await?;
