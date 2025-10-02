@@ -88,12 +88,6 @@ pub struct Language {
 pub struct SpatialCoverage {
     /// UUID for the place
     pub id: Uuid,
-    /*
-    Tag for the spatial coverage within the DAILP system
-    Could be useful for managing places with similar names or places
-    with multiple names
-    */
-    pub dailpTag: String,
     /// Documents associated with the spatial coverage
     pub documents: Vec<DocumentReference>,
     /// Name of the place
@@ -106,8 +100,8 @@ pub struct SpatialCoverage {
 pub struct Citation {
     /// UUID for the citation
     pub id: Uuid,
-    /// Creators of the document
-    pub creators: Vec<ContributorReference>,
+    /// Creator(s) of the document
+    pub creator: Vec<ContributorReference>,
     /// Format of the document being cited
     pub doc_format: DocCitationFormat,
     /// DOI of the document

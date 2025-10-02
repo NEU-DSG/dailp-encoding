@@ -103,14 +103,12 @@ pub enum ContributorRole {
     Transcriber,
     /// Translated text into another language
     Translator,
-    /// Edited the text or translation for clarity or structure
-    Editor,
     /// Added linguistic, cultural, etc. annotations
     Annotator,
     /// Provided cultural context for a document
     CulturalAdvisor,
     /// Creator of a document
-    Author,
+    Creator,
 }
 
 /// Draft of function for converting a string to a ContributorRole
@@ -137,7 +135,6 @@ impl std::fmt::Display for ContributorRole {
             ContributorRole::Annotator => "Annotator",
             ContributorRole::Author => "Author",
             ContributorRole::CulturalAdvisor => "CulturalAdvisor",
-            ContributorRole::Editor => "Editor",
             ContributorRole::Translator => "Translator",
             ContributorRole::Transcriber => "Transcriber",
         };
