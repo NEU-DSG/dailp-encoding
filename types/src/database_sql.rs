@@ -1636,7 +1636,7 @@ impl Database {
         )
     }
 
-    pub async fn insert_page(&self, input: NewPageInput) -> Result<String> {
+    pub async fn upsert_page(&self, input: NewPageInput) -> Result<String> {
         // sanitize input
         let title = input.title.trim();
         // generate slug
@@ -1646,7 +1646,7 @@ impl Database {
                             //.into_iter()
                             //.map(|s| format!("|%|{s}"))
                             //.collect();
-        query_file!("queries/insert_page.sql",slug,input.path,title,input.body[0])
+        query_file!("queries/upsert_page.sql",slug,input.path,title,input.body[0])
         .execute(&self.client)
         .await?;
         Ok(input.path)

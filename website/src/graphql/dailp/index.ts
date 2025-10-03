@@ -703,7 +703,6 @@ export type Mutation = {
   /** Mutation for deleting contributor attributions */
   readonly deleteContributorAttribution: Scalars["UUID"]
   readonly insertCustomMorphemeTag: Scalars["Boolean"]
-  readonly insertPage: Scalars["String"]
   /** Post a new comment on a given object */
   readonly postComment: CommentParent
   /** Removes a bookmark from a user's list of bookmarks */
@@ -720,6 +719,7 @@ export type Mutation = {
   /** Updates a dailp_user's information */
   readonly updateUser: User
   readonly updateWord: AnnotatedForm
+  readonly upsertPage: Scalars["String"]
 }
 
 export type MutationAddBookmarkArgs = {
@@ -750,10 +750,6 @@ export type MutationInsertCustomMorphemeTagArgs = {
   system: Scalars["String"]
   tag: Scalars["String"]
   title: Scalars["String"]
-}
-
-export type MutationInsertPageArgs = {
-  page: NewPageInput
 }
 
 export type MutationPostCommentArgs = {
@@ -794,6 +790,10 @@ export type MutationUpdateUserArgs = {
 
 export type MutationUpdateWordArgs = {
   word: AnnotatedFormUpdate
+}
+
+export type MutationUpsertPageArgs = {
+  page: NewPageInput
 }
 
 /** Input struct for a page. */
@@ -2649,13 +2649,13 @@ export type InsertCustomMorphemeTagMutation = {
   readonly __typename?: "Mutation"
 } & Pick<Mutation, "insertCustomMorphemeTag">
 
-export type InsertPageMutationVariables = Exact<{
+export type UpsertPageMutationVariables = Exact<{
   pageInput: NewPageInput
 }>
 
-export type InsertPageMutation = { readonly __typename?: "Mutation" } & Pick<
+export type UpsertPageMutation = { readonly __typename?: "Mutation" } & Pick<
   Mutation,
-  "insertPage"
+  "upsertPage"
 >
 
 export type PageByPathQueryVariables = Exact<{
@@ -3763,15 +3763,15 @@ export function useInsertCustomMorphemeTagMutation() {
     InsertCustomMorphemeTagMutationVariables
   >(InsertCustomMorphemeTagDocument)
 }
-export const InsertPageDocument = gql`
-  mutation InsertPage($pageInput: NewPageInput!) {
-    insertPage(page: $pageInput)
+export const UpsertPageDocument = gql`
+  mutation UpsertPage($pageInput: NewPageInput!) {
+    upsertPage(page: $pageInput)
   }
 `
 
-export function useInsertPageMutation() {
-  return Urql.useMutation<InsertPageMutation, InsertPageMutationVariables>(
-    InsertPageDocument
+export function useUpsertPageMutation() {
+  return Urql.useMutation<UpsertPageMutation, UpsertPageMutationVariables>(
+    UpsertPageDocument
   )
 }
 export const PageByPathDocument = gql`

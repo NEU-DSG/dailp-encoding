@@ -722,8 +722,8 @@ mutation InsertCustomMorphemeTag(
   insertCustomMorphemeTag(tag: $tag, title: $title, system: $system)
 }
 
-mutation InsertPage($pageInput: NewPageInput!){
-  insertPage(page: $pageInput)
+mutation UpsertPage($pageInput: NewPageInput!){
+  upsertPage(page: $pageInput)
 }
 
 query pageByPath($path: String!) {

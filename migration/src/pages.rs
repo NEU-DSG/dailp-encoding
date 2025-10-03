@@ -48,7 +48,7 @@ pub async fn migrate_pages(db: &Database) -> anyhow::Result<()> {
     //db.insert_page(NewPageInput::from(page.clone())).await?;
   //}
   for page in pages {
-    db.insert_page(NewPageInput::from(page.clone())).await?;
+    db.upsert_page(NewPageInput::from(page.clone())).await?;
   }
   Ok(())
 }
