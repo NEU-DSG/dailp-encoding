@@ -938,7 +938,7 @@ type Mutation {
 	updateDocumentMetadata(document: DocumentMetadataUpdate!): UUID!
 	insertCustomMorphemeTag(tag: String!, title: String!, system: String!): Boolean!
 	createEditedCollection(input: CreateEditedCollectionInput!): String!
-	insertPage(page: NewPageInput!): String!
+	upsertPage(page: NewPageInput!): String!
 }
 
 """

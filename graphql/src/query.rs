@@ -757,11 +757,11 @@ impl Mutation {
     }
 
     #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
-    async fn insert_page(&self, context: &Context<'_>, page: NewPageInput) -> FieldResult<String> {
+    async fn upsert_page(&self, context: &Context<'_>, page: NewPageInput) -> FieldResult<String> {
         Ok(context
             .data::<DataLoader<Database>>()?
             .loader()
-            .insert_page(page)
+            .upsert_page(page)
             .await?)
     }
 }
