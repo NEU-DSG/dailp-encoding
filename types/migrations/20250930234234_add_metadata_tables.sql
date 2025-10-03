@@ -98,10 +98,29 @@ create table citation (
 
 );
 
--- Join table between contributors and document instead?
+-- Creator
+create table creator (
+  id autouuid primary key,
+  name text not null
+);
+
+-- Join table between creator and document to map which creators are 
+-- associated with which documents
+create table document_creator (
+  document_id uuid not null references document(id) on delete cascade,
+  creator_id uuid not null references creator(id) on delete cascade,
+  primary key (document_id, creator_id)
+);
+
+-- Join table between contributor and document to map which contributors are 
+-- associated with which documents
+create table document_contributor (
+  document_id uuid not null references document(id) on delete cascade,
+  contributor_id uuid not null references contributor(id) on delete cascade,
+  primary key (document_id, contributor_id)
+);
+
 -- Add other metadata to document
 alter table document
-  add column creator_id uuid[] references contributor(id),
-  add column contributors_id uuid[] references contributor(id),
   add column url text,
   add column doi text;

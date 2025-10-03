@@ -107,8 +107,6 @@ pub enum ContributorRole {
     Annotator,
     /// Provided cultural context for a document
     CulturalAdvisor,
-    /// Creator of a document
-    Creator,
 }
 
 /// Draft of function for converting a string to a ContributorRole
@@ -156,6 +154,14 @@ impl ContributorRole {
     pub fn to_option_string(role: &Option<ContributorRole>) -> Option<String> {
         role.as_ref().map(|r| r.to_string())
     }
+}
+
+/// The creator of a document
+#[derive(Clone, Debug, Serialize, Deserialize, async_graphql::SimpleObject, PartialEq, Eq)]
+#[graphql(complex)]
+pub struct Creator {
+    /// Name of the creator
+    pub name: String,
 }
 
 /// Attribution for a particular source, whether an institution or an individual.

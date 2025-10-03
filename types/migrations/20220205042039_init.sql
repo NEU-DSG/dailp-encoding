@@ -68,7 +68,6 @@ create type contributor_role as enum (
   'Translator',
   'Annotator',
   'CulturalAdvisor',
-  'Creator'
 );
 
 -- Used both for known static contributors and active users.

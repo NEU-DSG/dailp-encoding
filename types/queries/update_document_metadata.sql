@@ -24,44 +24,19 @@ update document set
             when $6::text is not null then $6
             else pages
         end,
-    creator =
-        case
-            when $7::text[] != '{}' then $7
-            else creator
-        end
     sources = 
         case
-            when $8::uuid[] != '{}' then $8
+            when $7::uuid[] != '{}' then $7
             else sources
         end
     doi =
         case
-            when $9::uuid is not null then $9
+            when $8::uuid is not null then $8
             else doi
         end,
-    keywords = 
-        case
-            when $10::uuid[] != '{}' then $10
-            else keywords
-        end
-    subject_headings = 
-        case
-            when $11::uuid[] != '{}' then $11
-            else subject_headings
-        end
-    languages = 
-        case
-            when $12::uuid[] != '{}' then $12
-            else languages
-        end
-    spatial_coverage = 
-        case
-            when $13::uuid[] != '{}' then $13
-            else spatial_coverage
-        end
     citation =
         case
-            when $14::uuid is not null then $14
+            when $9::uuid is not null then $9
             else citation
         end,
 where id = $1

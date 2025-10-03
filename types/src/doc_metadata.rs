@@ -71,12 +71,6 @@ pub struct Genre {
 pub struct Language {
     /// UUID for the language
     pub id: Uuid,
-    /*
-    Tag for the language within the DAILP system
-    Could be useful for managing similar language names or extending this to
-    adding tags for language, dialect, and script combinations later on
-    */
-    pub dailp_tag: String,
     /// Documents associated with the language
     pub documents: Vec<DocumentReference>,
     /// Name of the language
@@ -101,7 +95,7 @@ pub struct Citation {
     /// UUID for the citation
     pub id: Uuid,
     /// Creator(s) of the document
-    pub creator: Vec<ContributorReference>,
+    pub creator: Vec<Creator>,
     /// Format of the document being cited
     pub doc_format: DocCitationFormat,
     /// DOI of the document
