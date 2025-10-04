@@ -1,7 +1,11 @@
 -- New document metadata
 
 -- Shared enum for approval status of contributor suggestions
-create type approval_status as enum ('pending', 'approved', 'rejected');
+create type approval_status as enum (
+    'pending', 
+    'approved', 
+    'rejected'
+);
 
 -- Genres
 create table genre (

@@ -17,101 +17,99 @@ pub enum Status {
     Rejected,
 }
 
-/// Record to store a subject heading that reflects Indigenous knowledge
-/// practices associated with a document
-#[derive(Clone, SimpleObject)]
-pub struct SubjectHeading {
-    /// UUID for the subject heading
+/// Stores the genre associated with a document
+#[derive(Clone, Debug, Serialize, Deserialize, SimpleObject)]
+pub struct Genre {
+    /// UUID for the genre
     pub id: Uuid,
-    /// Documents associated with the subject heading
-    pub documents: Vec<DocumentReference>,
-    /// Name of the subject heading
+    /// Name of the genre
     pub name: String,
-    /// Status (pending, approved, rejected) of a subject heading
+    /// Status (pending, approved, rejected) of a genre
+    pub status: Status,
+}
+
+/// Stores the physical or digital medium associated with a document
+#[derive(Clone, Debug, Serialize, Deserialize, SimpleObject)]
+pub struct Format {
+    /// UUID for the format
+    pub id: Uuid,
+    /// Name of the format
+    pub name: String,
+    /// Status (pending, approved, rejected) of a format
     pub status: Status,
 }
 
 /// Record to store a keyword associated with a document
-#[derive(Clone, SimpleObject)]
+#[derive(Clone, Debug, Serialize, Deserialize, SimpleObject)]
 pub struct Keyword {
     /// UUID for the keyword
     pub id: Uuid,
-    /// Documents associated with the keywords
-    pub documents: Vec<DocumentReference>,
     /// Name of the keyword
     pub name: String,
     /// Status (pending, approved, rejected) of a keyword
     pub status: Status,
 }
 
-/// Stores the physical or digital medium associated with a document
-#[derive(Clone, SimpleObject)]
-pub struct Format {
-    /// UUID for the format
+/// Record to store a subject heading that reflects Indigenous knowledge
+/// practices associated with a document
+#[derive(Clone, Debug, Serialize, Deserialize, SimpleObject)]
+pub struct SubjectHeading {
+    /// UUID for the subject heading
     pub id: Uuid,
-    /// Documents associated with the format
-    pub documents: Vec<DocumentReference>,
-    /// Name of the format
+    /// Name of the subject heading
     pub name: String,
-}
-
-/// Stores the genre associated with a document
-#[derive(Clone, SimpleObject)]
-pub struct Genre {
-    /// UUID for the genre
-    pub id: Uuid,
-    /// Documents associated with the genre
-    pub documents: Vec<DocumentReference>,
-    /// Name of the genre
-    pub name: String,
+    /// Status (pending, approved, rejected) of a subject heading
+    pub status: Status,
 }
 
 /// Stores a language associated with a document
-#[derive(Clone, SimpleObject)]
+#[derive(Clone, Debug, Serialize, Deserialize, SimpleObject)]
 pub struct Language {
     /// UUID for the language
     pub id: Uuid,
-    /// Documents associated with the language
-    pub documents: Vec<DocumentReference>,
     /// Name of the language
     pub name: String,
+    // Name a language uses for itself
+    pub autonym Option<String>,
+    /// Status (pending, approved, rejected) of a language
+    pub status: Status,
 }
 
 /// Stores a spatial coverage associated with a document
-#[derive(Clone, SimpleObject)]
+#[derive(Clone, Debug, Serialize, Deserialize, SimpleObject)]
 pub struct SpatialCoverage {
     /// UUID for the place
     pub id: Uuid,
-    /// Documents associated with the spatial coverage
-    pub documents: Vec<DocumentReference>,
     /// Name of the place
     pub name: String,
+    /// Status (pending, approved, rejected) of a spatial coverage
+    pub status: Status,
 }
 
 /// Stores citation information for a document
 /// TODO: Add more fields to cover a variety of format types
-#[derive(Clone, Serialize, Deserialize, SimpleObject)]
+#[derive(Clone, Debug, Serialize, Deserialize, SimpleObject)]
 pub struct Citation {
     /// UUID for the citation
     pub id: Uuid,
     /// Creator(s) of the document
-    pub creator: Vec<Creator>,
+    pub creator: Option<Vec<Creator>>,
     /// Format of the document being cited
     pub doc_format: DocCitationFormat,
     /// DOI of the document
-    pub doi: String,
+    pub doi: Option<String>,
     /// Ending page of the document (inclusive)
-    pub end_page: u16,
+    pub end_page: Option<u16>,
     /// Year the document was published
-    pub publication_year: u16,
+    pub publication_year: Option<u16>,
     /// Publisher of the document
-    pub publisher: String,
+    pub publisher: Option<String>,
     /// Starting page of the document
-    pub start_page: u16,
+    pub start_page: Option<u16>,
     /// Title of the document being cited
     pub title: String,
     /// URL of the document, if document can be accessed online
-    pub url: String,
+    pub url: Option<String>,
 }
 
 /// Represents the format of a citation

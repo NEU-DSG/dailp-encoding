@@ -317,6 +317,30 @@ pub struct DocumentMetadataUpdate {
     pub title: MaybeUndefined<String>,
     /// The date this document was written, or nothing (if unchanged or not applicable)
     pub written_at: MaybeUndefined<DateInput>,
+    /// Term that contextualizes the social practice surrounding the document
+    pub genre: Option<Genre>,
+    /// Term that allows us to trace what the original artifact was
+    pub doc_format: Option<Format>,
+    /// The pages present in the document, start to end (inclusive)
+    pub pages: Option<String>,
+    /// The creators of the document
+    pub creators: Vec<Creator>,
+    /// The editors, translators, etc. of the document
+    pub contributors: Vec<Contributor>,
+    /// The key terms associated with the document
+    pub keywords: Vec<Keyword>,
+    /// Terms that reflect Indigenous knowledge practices associated with the document
+    pub subject_headings: Vec<SubjectHeading>,
+    /// The languages present in the document
+    pub languages: Vec<Language>,
+    /// The physical locations associated with a document (e.g. where it was written, found)
+    pub spatial_coverages: Vec<SpatialCoverage>,
+    /// Used to cite a document (APA by default)
+    pub citation: Option<Citation>,
+    /// The DOI of the document, if applicable
+    pub doi: Option<String>,
+    /// The source of the document
+    pub source: String,
 }
 
 #[async_graphql::ComplexObject]
