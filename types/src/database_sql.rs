@@ -1643,10 +1643,16 @@ impl Database {
         let slug = slug::slugify(title);
         // generate markdown blocks
         //let body: String = input.body
-                            //.into_iter()
-                            //.map(|s| format!("|%|{s}"))
-                            //.collect();
-        query_file!("queries/upsert_page.sql",slug,input.path,title,input.body[0])
+        //.into_iter()
+        //.map(|s| format!("|%|{s}"))
+        //.collect();
+        query_file!(
+            "queries/upsert_page.sql",
+            slug,
+            input.path,
+            title,
+            input.body[0]
+        )
         .execute(&self.client)
         .await?;
         Ok(input.path)
@@ -1657,9 +1663,10 @@ impl Database {
             .fetch_optional(&self.client)
             .await?;
         if let Some(row) = record {
-            let blocks : Vec<ContentBlock> = vec![ContentBlock::Markdown(Markdown {content: row.body})];
+            let blocks: Vec<ContentBlock> =
+                vec![ContentBlock::Markdown(Markdown { content: row.body })];
             Ok(Some(Page::build(row.title, row.slug, blocks)))
-        }else{
+        } else {
             Ok(None)
         }
         //Ok(page)
