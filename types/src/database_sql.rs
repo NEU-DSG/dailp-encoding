@@ -1629,16 +1629,13 @@ impl Database {
             .fetch_one(&self.client)
             .await?;
 
-        let m_id: Uuid = menu.id;
-        let m_name: String = menu.name;
-        let m_slug: String = menu.slug;
         let items_json: serde_json::Value = menu.items;
         let items: Vec<MenuItem> = serde_json::from_value(items_json).unwrap_or_default();
 
         Ok(Menu {
-            id: m_id,
-            name: m_name,
-            slug: m_slug,
+            id: menu.id,
+            name: menu.name,
+            slug: menu.slug,
             items,
         })
     }
@@ -1661,6 +1658,13 @@ impl Database {
             slug: menu.slug,
             items,
         })
+    }
+
+    pub async fn insert_menu(&self, menu: Menu) -> Result<()> {
+        query_file!("queries/insert_menu.sql", menu.name, menu.slug, serde_json::to_value(menu.items).unwrap_or_default())
+            .execute(&self.client)
+            .await?;
+        Ok(())
     }
 }
 
