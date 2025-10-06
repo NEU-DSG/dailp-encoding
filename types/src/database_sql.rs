@@ -1661,9 +1661,14 @@ impl Database {
     }
 
     pub async fn insert_menu(&self, menu: Menu) -> Result<()> {
-        query_file!("queries/insert_menu.sql", menu.name, menu.slug, serde_json::to_value(menu.items).unwrap_or_default())
-            .execute(&self.client)
-            .await?;
+        query_file!(
+            "queries/insert_menu.sql",
+            menu.name,
+            menu.slug,
+            serde_json::to_value(menu.items).unwrap_or_default()
+        )
+        .execute(&self.client)
+        .await?;
         Ok(())
     }
 }

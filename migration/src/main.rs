@@ -6,10 +6,10 @@ mod contributors;
 mod early_vocab;
 mod edited_collection;
 mod lexical;
+mod menu;
 mod spreadsheets;
 mod tags;
 mod translations;
-mod menu;
 
 use anyhow::Result;
 use dailp::{Database, LexicalConnection, SheetResult, Uuid};

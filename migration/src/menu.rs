@@ -1,9 +1,9 @@
 use dailp::Uuid;
-use dailp::{Menu, Database};
+use dailp::{Database, Menu};
 
 // todo: remove trailing slashes from paths
 pub async fn migrate_menu(db: &Database) -> anyhow::Result<()> {
-  let menu = Menu {
+    let menu = Menu {
     id: Uuid::new_v4(),
     name: "Default Nav".to_string(),
     slug: "default-nav".to_string(),
@@ -40,6 +40,6 @@ pub async fn migrate_menu(db: &Database) -> anyhow::Result<()> {
   ]}
 ]").unwrap()};
 
-  db.insert_menu(menu).await?;
-  Ok(())
+    db.insert_menu(menu).await?;
+    Ok(())
 }
