@@ -15,6 +15,8 @@ pub struct Admin {
 #[derive(Clone, Debug, Serialize, Deserialize, async_graphql::SimpleObject, PartialEq, Eq)]
 #[graphql(complex)]
 pub struct Contributor {
+    /// UUID of the contributor
+    pub id: uuid::Uuid,
     /// Full name of the contributor
     pub name: String,
     /// The role that defines most of their contributions to the associated item
@@ -160,6 +162,8 @@ impl ContributorRole {
 #[derive(Clone, Debug, Serialize, Deserialize, async_graphql::SimpleObject, PartialEq, Eq)]
 #[graphql(complex)]
 pub struct Creator {
+    /// UUID of the creator
+    pub id: uuid::Uuid,
     /// Name of the creator
     pub name: String,
 }

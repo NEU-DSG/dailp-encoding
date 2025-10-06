@@ -773,10 +773,65 @@ impl Database {
             "queries/update_document_metadata.sql",
             document.id,
             &title as _,
-            &written_at as _
+            &written_at as _,
+            document.genre_id,
+            document.format_id,
+            document.pages,
+            document.doi,
+            document.citation,
+            document.source
         )
         .execute(&self.client)
         .await?;
+
+        // Handle join-table metadata (keywords, subject headings, languages, etc.)
+        if let Some(keyword_ids) = &document.keyword_ids {
+            query_file!("queries/update_document_keywords.sql", document.id, keyword_ids)
+                .execute(&self.client)
+                .await?;
+        }
+
+        if let Some(subject_heading_ids) = &document.subject_heading_ids {
+            query_file!(
+                "queries/update_document_subject_headings.sql",
+                document.id,
+                subject_heading_ids
+            )
+            .execute(&self.client)
+            .await?;
+        }
+
+        if let Some(language_ids) = &document.language_ids {
+            query_file!("queries/update_document_languages.sql", document.id, language_ids)
+                .execute(&self.client)
+                .await?;
+        }
+
+        if let Some(spatial_coverage_ids) = &document.spatial_coverage_ids {
+            query_file!(
+                "queries/update_document_spatial_coverage.sql",
+                document.id,
+                spatial_coverage_ids
+            )
+            .execute(&self.client)
+            .await?;
+        }
+
+        if let Some(creator_ids) = &document.creator_ids {
+            query_file!("queries/update_document_creators.sql", document.id, creator_ids)
+                .execute(&self.client)
+                .await?;
+        }
+
+        if let Some(contributor_ids) = &document.contributor_ids {
+            query_file!(
+                "queries/update_document_contributors.sql",
+                document.id,
+                contributor_ids
+            )
+            .execute(&self.client)
+            .await?;
+        }
 
         Ok(document.id)
     }

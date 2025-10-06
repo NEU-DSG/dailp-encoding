@@ -14,10 +14,10 @@ update document set
             when $4::uuid is not null then $4
             else genre
         end,
-    "format" =
+    doc_format =
         case
             when $5::uuid is not null then $5
-            else "format"
+            else doc_format
         end,
     pages =
         case
@@ -28,7 +28,7 @@ update document set
         case
             when $7::uuid[] != '{}' then $7
             else sources
-        end
+        end,
     doi =
         case
             when $8::uuid is not null then $8
@@ -38,5 +38,5 @@ update document set
         case
             when $9::uuid is not null then $9
             else citation
-        end,
+        end
 where id = $1

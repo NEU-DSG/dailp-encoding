@@ -18,7 +18,8 @@ pub enum Status {
 }
 
 /// Stores the genre associated with a document
-#[derive(Clone, Debug, Serialize, Deserialize, SimpleObject)]
+#[derive(Clone, Debug, Serialize, Deserialize, FromRow, SimpleObject)]
+#[graphql(complex)]
 pub struct Genre {
     /// UUID for the genre
     pub id: Uuid,
@@ -28,8 +29,17 @@ pub struct Genre {
     pub status: Status,
 }
 
+/// Get all approved genres
+#[ComplexObject]
+impl Genre {
+    async fn approved(&self) -> bool {
+        matches!(self.status, Some(Status::Approved))
+    }
+}
+
 /// Stores the physical or digital medium associated with a document
-#[derive(Clone, Debug, Serialize, Deserialize, SimpleObject)]
+#[derive(Clone, Debug, Serialize, Deserialize, FromRow, SimpleObject)]
+#[graphql(complex)]
 pub struct Format {
     /// UUID for the format
     pub id: Uuid,
@@ -39,8 +49,17 @@ pub struct Format {
     pub status: Status,
 }
 
+/// Get all approved formats
+#[ComplexObject]
+impl Format {
+    async fn approved(&self) -> bool {
+        matches!(self.status, Some(Status::Approved))
+    }
+}
+
 /// Record to store a keyword associated with a document
-#[derive(Clone, Debug, Serialize, Deserialize, SimpleObject)]
+#[derive(Clone, Debug, Serialize, Deserialize, FromRow, SimpleObject)]
+#[graphql(complex)]
 pub struct Keyword {
     /// UUID for the keyword
     pub id: Uuid,
@@ -50,9 +69,32 @@ pub struct Keyword {
     pub status: Status,
 }
 
+/// Get all approved keywords
+#[ComplexObject]
+impl Keyword {
+    async fn approved(&self) -> bool {
+        matches!(self.status, Some(Status::Approved))
+    }
+}
+
+/// Converts Keyword struct to corresponding Uuid
+impl From<&Keyword> for Uuid {
+    fn from(k: &Keyword) -> Self {
+        k.id
+    }
+}
+
+/// Converts Uuid to empty Keyword struct
+impl From<Uuid> for Keyword {
+    fn from(id: Uuid) -> Self {
+        Keyword { id, name: String::new(), status: None }
+    }
+}
+
 /// Record to store a subject heading that reflects Indigenous knowledge
 /// practices associated with a document
-#[derive(Clone, Debug, Serialize, Deserialize, SimpleObject)]
+#[derive(Clone, Debug, Serialize, Deserialize, FromRow, SimpleObject)]
+#[graphql(complex)]
 pub struct SubjectHeading {
     /// UUID for the subject heading
     pub id: Uuid,
@@ -62,8 +104,31 @@ pub struct SubjectHeading {
     pub status: Status,
 }
 
+/// Get all approved subject headings
+#[ComplexObject]
+impl SubjectHeading {
+    async fn approved(&self) -> bool {
+        matches!(self.status, Some(Status::Approved))
+    }
+}
+
+/// Converts SubjectHeading struct to corresponding Uuid
+impl From<&SubjectHeading> for Uuid {
+    fn from(s: &SubjectHeading) -> Self {
+        s.id
+    }
+}
+
+/// Converts Uuid to empty SubjectHeading struct
+impl From<Uuid> for SubjectHeading {
+    fn from(id: Uuid) -> Self {
+        SubjectHeading { id, name: String::new(), status: None }
+    }
+}
+
 /// Stores a language associated with a document
-#[derive(Clone, Debug, Serialize, Deserialize, SimpleObject)]
+#[derive(Clone, Debug, Serialize, Deserialize, FromRow, SimpleObject)]
+#[graphql(complex)]
 pub struct Language {
     /// UUID for the language
     pub id: Uuid,
@@ -75,8 +140,32 @@ pub struct Language {
     pub status: Status,
 }
 
+/// Get all approved languages
+#[ComplexObject]
+impl Language {
+    async fn approved(&self) -> bool {
+        matches!(self.status, Some(Status::Approved))
+    }
+}
+
+/// Converts Language struct to corresponding Uuid
+impl From<&Language> for Uuid {
+    fn from(l: &Language) -> Self {
+        l.id
+    }
+}
+
+/// Converts Uuid to empty Language struct
+impl From<Uuid> for Language {
+    fn from(id: Uuid) -> Self {
+        Language { id, name: String::new(), status: None }
+    }
+}
+
+
 /// Stores a spatial coverage associated with a document
-#[derive(Clone, Debug, Serialize, Deserialize, SimpleObject)]
+#[derive(Clone, Debug, Serialize, Deserialize, FromRow, SimpleObject)]
+#[graphql(complex)]
 pub struct SpatialCoverage {
     /// UUID for the place
     pub id: Uuid,
@@ -86,9 +175,32 @@ pub struct SpatialCoverage {
     pub status: Status,
 }
 
+/// Get all approved spatial coverages
+#[ComplexObject]
+impl SpatialCoverage {
+    async fn approved(&self) -> bool {
+        matches!(self.status, Some(Status::Approved))
+    }
+}
+
+/// Converts SpatialCoverage struct to corresponding Uuid
+impl From<&SpatialCoverage> for Uuid {
+    fn from(s: &SpatialCoverage) -> Self {
+        s.id
+    }
+}
+
+/// Converts Uuid to empty SpatialCoverage struct
+impl From<Uuid> for SpatialCoverage {
+    fn from(id: Uuid) -> Self {
+        SpatialCoverage { id, name: String::new(), status: None }
+    }
+}
+
 /// Stores citation information for a document
 /// TODO: Add more fields to cover a variety of format types
-#[derive(Clone, Debug, Serialize, Deserialize, SimpleObject)]
+/// Could inherit fields from DocumentMetadata
+#[derive(Clone, Debug, Serialize, Deserialize, FromRow, SimpleObject)]
 pub struct Citation {
     /// UUID for the citation
     pub id: Uuid,
@@ -110,6 +222,20 @@ pub struct Citation {
     pub title: String,
     /// URL of the document, if document can be accessed online
     pub url: Option<String>,
+}
+
+/// Converts Citation struct to corresponding Uuid
+impl From<&Citation> for Uuid {
+    fn from(c: &Citation) -> Self {
+        c.id
+    }
+}
+
+/// Converts Uuid to Citation struct
+impl From<Uuid> for Citation {
+    fn from(id: Uuid) -> Self {
+        Citation { id, doc_format: DocCitationFormat::Website, title: "" }
+    }
 }
 
 /// Represents the format of a citation

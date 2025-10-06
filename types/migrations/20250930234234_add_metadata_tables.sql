@@ -11,30 +11,30 @@ create type approval_status as enum (
 create table genre (
   id autouuid primary key,
   name text not null,
-  status approval_status not null default 'pending'
+  status approval_status default 'pending'
 );
 
 -- Add FK from document to genre
 alter table document
-  add column genre_id uuid references genre(id);
+  add column genre_id uuid NULL references genre(id);
 
 -- Formats
 create table doc_format (
   id autouuid primary key,
   name text not null,
-  status approval_status not null default 'pending'
+  status approval_status default 'pending'
 );
 
 -- Add FK from document to format
 alter table document
-  add column format_id uuid references doc_format(id);
+  add column format_id uuid NULL references doc_format(id);
 
 -- Keywords
 create table keyword (
   id autouuid primary key,
   name text not null unique,
   -- Approval status of contributor-suggested keywords ('pending' by default)
-  status approval_status not null default 'pending'
+  status approval_status default 'pending'
 );
 
 -- Join table between document and keyword to map which keywords are 
@@ -49,7 +49,7 @@ create table document_keyword (
 create table subject_heading (
   id autouuid primary key,
   name text not null unique,
-  status approval_status not null default 'pending'
+  status approval_status default 'pending'
 );
 
 -- Join table between document and subject heading to map which subject headings are 
@@ -64,8 +64,8 @@ create table document_subject_heading (
 create table language (
   id autouuid primary key,
   name text not null,
-  autonym text,
-  status approval_status not null default 'pending'
+  autonym text NULL,
+  status approval_status default 'pending'
 );
 
 -- Join table between document and language to map which languages are 
@@ -80,7 +80,7 @@ create table document_language (
 create table spatial_coverage (
   id autouuid primary key,
   name text not null,
-  status approval_status not null default 'pending'
+  status approval_status default 'pending'
 );
 
 -- Join table between document and spatial coverage to map which spatial coverages are 
@@ -97,7 +97,6 @@ create table citation (
   -- Get fields (ex. title, date written from document table)
   document_id uuid not null references document(id) on delete cascade,
   -- Add to or revise (find a better way to do this)
-  -- check against document format field instead of list?
   doc_format text not null check (doc_format in ('book', 'webpage', 'journal', 'document')) default 'document'
 
 );
@@ -126,5 +125,5 @@ create table document_contributor (
 
 -- Add other metadata to document
 alter table document
-  add column url text,
-  add column doi text;
+  add column url text NULL,
+  add column doi text NULL;
