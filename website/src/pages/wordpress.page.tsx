@@ -1,7 +1,7 @@
 import React from "react"
 import { Helmet } from "react-helmet"
-import { WordpressPageContents } from "src/components"
-import * as Wordpress from "src/graphql/wordpress"
+import { PageContents } from "src/components/wordpress"
+import { usePageByPathQuery } from "src/graphql/dailp"
 import { edgePadded, fullWidth } from "src/style/utils.css"
 import Layout from "../layout"
 import { wordpressUrl } from "../theme.css"
@@ -28,22 +28,27 @@ const WordpressPage = (props: { "*": string }) => (
 export const Page = WordpressPage
 
 const Contents = (props: { slug: string }) => {
-  const [{ data, fetching }] = Wordpress.usePageQuery({
-    variables: { slug: props.slug },
+  const [{ data, fetching }] = usePageByPathQuery({
+    variables: { path: "/" + props.slug },
   })
-  const page = data?.page?.__typename === "Page" && data?.page
-  if (page) {
+  const page = data?.pageByPath && data?.pageByPath
+  const firstBlock = page?.body?.[0]
+  const content =
+    firstBlock && firstBlock.__typename === "Markdown"
+      ? firstBlock.content
+      : null
+  if (content && page) {
     return (
       <>
         <header>
           <h1>{page.title}</h1>
         </header>
-        <WordpressPageContents content={page.content} />
+        <PageContents content={content} />
       </>
     )
   } else if (fetching) {
     return <p>Loading...</p>
   } else {
-    return <p>Wordpress page not found.</p>
+    return <p>Page content not found.</p>
   }
 }

@@ -1,6 +1,6 @@
 import React, { ReactNode, useMemo } from "react"
 import Markdown from "react-markdown"
-import { usePageBySlugQuery } from "src/graphql/dailp"
+import { usePageByPathQuery } from "src/graphql/dailp"
 import Layout from "src/layout"
 
 export const DELIM = "^"
@@ -9,10 +9,8 @@ export const splitMarkdown = (content: string) : ReactNode =>  {
 }
 
 const PageByName = ({ pageName }: { pageName: string }) => {
-  const [{ data }] = usePageBySlugQuery({ variables: { slug: pageName } })
-  // Use routeParams to get the pageName from pageContext
-  //const {data} = usePageBySlugQuery({variables: {slug: pageName}})
-  const content = data?.pageBySlug?.body?.map((body: any) => {
+  const [{ data }] = usePageByPathQuery({ variables: { path: pageName } })
+  const content = data?.pageByPath?.body?.map((body: any) => {
     if (body.__typename === "Markdown") {
       return body.content
     }
@@ -40,10 +38,6 @@ const PageByName = ({ pageName }: { pageName: string }) => {
   return (
     <Layout>
       <main>
-        <p>
-          {" "}
-          page name: {pageName} 
-        </p>
         {splitMarkdown(contentString)}
       </main>
     </Layout>
