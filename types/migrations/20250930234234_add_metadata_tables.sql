@@ -127,3 +127,4 @@ create table document_contributor (
 alter table document
   add column url text NULL,
   add column doi text NULL;
+add column citation_id uuid NULL references citation(id) on delete set NULL;

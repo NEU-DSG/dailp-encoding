@@ -162,7 +162,6 @@ impl From<Uuid> for Language {
     }
 }
 
-
 /// Stores a spatial coverage associated with a document
 #[derive(Clone, Debug, Serialize, Deserialize, FromRow, SimpleObject)]
 #[graphql(complex)]
@@ -200,7 +199,7 @@ impl From<Uuid> for SpatialCoverage {
 /// Stores citation information for a document
 /// TODO: Add more fields to cover a variety of format types
 /// Could inherit fields from DocumentMetadata
-#[derive(Clone, Debug, Serialize, Deserialize, FromRow, SimpleObject)]
+#[derive(Clone, Debug, Serialize, Deserialize, FromRow, SimpleObject, InputObject)]
 pub struct Citation {
     /// UUID for the citation
     pub id: Uuid,

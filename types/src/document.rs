@@ -376,6 +376,8 @@ pub struct DocumentMetadataUpdate {
     pub doi: MaybeUndefined<String>,
     /// The source of the document
     pub source: MaybeUndefined<SourceAttribution>,
+    /// Contains the information need to generate a citation for this document
+    pub citation: Option<Uuid>,
 }
 
 #[async_graphql::ComplexObject]
