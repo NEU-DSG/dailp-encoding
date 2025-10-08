@@ -5,9 +5,13 @@ import {
   unstable_Form as Form,
   unstable_useFormState as useFormState,
 } from "reakit"
-import { useUser } from "src/auth"
-import { button, cleanButton, iconButton } from 'src/components/primitives/button/button.css'
+import {
+  button,
+  cleanButton,
+  iconButton,
+} from "src/components/primitives/button/button.css"
 import { fonts } from "src/style/theme-contract.css"
+import { useUser } from "../../features/auth"
 import {
   FormFields,
   FormSubmitButton,

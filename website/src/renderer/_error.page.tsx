@@ -2,7 +2,7 @@ import React from "react"
 import { useHasMounted } from "src/cms/routes"
 import { Link } from 'src/components'
 import * as Dailp from "src/graphql/dailp"
-import Layout from "src/layout"
+import Layout from "../components/layout/layout"
 import { useLocation } from "src/renderer/PageShell"
 
 /* import { EditablePageContents } from "../templates/editable-page" */

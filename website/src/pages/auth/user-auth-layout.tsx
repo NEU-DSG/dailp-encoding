@@ -8,12 +8,12 @@ import {
   unstable_FormSubmitButton as FormSubmit,
   unstable_FormStateReturn,
 } from "reakit"
-import { useCredentials, useUser } from "src/auth"
 import { Button, CleanButton, Link } from "src/components"
 import { AccountMenu } from "src/components/authenticated-users/account-menu"
 import { Environment, deploymentEnvironment } from "src/env"
 import { centeredColumn } from "src/style/utils.css"
-import Layout from "../../layout"
+import Layout from "../../components/layout/layout"
+import { useCredentials, useUser } from "../../features/auth"
 import {
   centeredHeader,
   loginButton,

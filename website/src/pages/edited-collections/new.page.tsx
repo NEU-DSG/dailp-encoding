@@ -1,10 +1,10 @@
 import React, { useState } from "react"
 import { Helmet } from "react-helmet"
 import { navigate } from "vite-plugin-ssr/client/router"
-import { UserRole, useUser } from "src/auth"
 import { AuthGuard } from "src/components/auth-guard"
 import * as Dailp from "src/graphql/dailp"
-import Layout from "src/layout"
+import { Layout } from "../../components/layout"
+import { UserRole, useUser } from "../../features/auth"
 import { uploadCollectionCoverToS3 } from "./utils"
 
 interface NewEditedCollectionForm {

@@ -1,11 +1,11 @@
 import { Tab, TabList, TabPanel, useDialogState } from "reakit"
-import { UserRole, useUserRole } from "src/auth"
+import { Link } from "src/components"
 import {
   useAnnotatedDocumentByIdQuery,
   useBookmarkedDocumentsQuery,
 } from "src/graphql/dailp"
 import { useScrollableTabState } from "src/scrollable-tabs"
-import { Link } from 'src/components'
+import { UserRole, useUserRole } from "../../features/auth"
 import { BookmarkCard } from "./bookmark-card"
 import * as css from "./dashboard.css"
 

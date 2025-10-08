@@ -1,6 +1,6 @@
 import { globalStyle, style } from "@vanilla-extract/css"
 import { morphemeDialog } from "src/pages/documents/document.css"
-import { collPanelButton, wordPanelButton } from "src/panel-layout.css"
+import { collPanelButton, wordPanelButton } from "../layout/panel-layout.css"
 import {
   colors,
   hspace,

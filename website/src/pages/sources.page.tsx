@@ -3,7 +3,7 @@ import React from "react"
 import { Helmet } from "react-helmet"
 import { Link } from "src/components"
 import * as Dailp from "src/graphql/dailp"
-import Layout from "../layout"
+import Layout from "../components/layout/layout"
 import { sourceCitationId } from "../routes"
 import { apaCitation, wideChild, wideList } from "./sources.css"
 

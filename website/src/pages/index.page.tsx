@@ -2,11 +2,11 @@ import React from "react"
 import { Helmet } from "react-helmet"
 import { navigate } from "vite-plugin-ssr/client/router"
 import cwkwLogo from "src/assets/cwkw-logo.png"
-import { UserRole, useUserRole } from "src/auth"
+import { UserRole, useUserRole } from "../features/auth/components/auth"
 import { Card, Carousel, WordpressPage } from "src/components"
 import { fullWidth, paddedCenterColumn } from "src/style/utils.css"
+import Layout from "../components/layout/layout"
 import * as Dailp from "../graphql/dailp"
-import Layout from "../layout"
 import { collectionRoute } from "../routes"
 
 /** Lists all documents in our database */

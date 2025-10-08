@@ -12,7 +12,7 @@ import {
 } from "src/style/constants"
 import { paddingX, paddingY } from "src/style/utils"
 import { hideOnPrint, row } from "src/style/utils.css"
-import * as baseLayout from "../../layout.css"
+import * as baseLayout from "../../components/layout/layout.css"
 
 export const header = style([baseLayout.header])
 

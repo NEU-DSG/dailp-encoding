@@ -1,8 +1,8 @@
 import React from "react"
 import { navigate } from "vite-plugin-ssr/client/router"
-import { UserRole, useUserRole } from "src/auth"
 import { Dashboard } from "src/components/dashboard/dashboard"
-import Layout from "../layout"
+import Layout from "../components/layout/layout"
+import { UserRole, useUserRole } from "../features/auth"
 
 const DashboardPage = () => {
   const userRole = useUserRole()

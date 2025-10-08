@@ -4,7 +4,7 @@ import { Provider as ReakitProvider } from "reakit"
 import { Client as GraphQLClient, Provider as GraphQLProvider } from "urql"
 import type { PageContextBuiltInClient } from "vite-plugin-ssr/client"
 import type { PageContextBuiltIn } from "vite-plugin-ssr/types"
-import { UserProvider } from "src/auth"
+import { UserProvider } from "../features/auth/components/auth"
 import { CollectionProvider } from "src/pages/edited-collections/edited-collection-context"
 
 export const rootElementId = "app-root"

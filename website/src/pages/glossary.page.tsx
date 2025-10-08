@@ -1,6 +1,6 @@
 import React from "react"
-import { Glossary } from "src/components/glossary"
-import Layout from "../layout"
+import { Glossary } from "src/features/glossary-search"
+import Layout from "../components/layout/layout"
 
 const GlossaryPage = () => {
   return (
