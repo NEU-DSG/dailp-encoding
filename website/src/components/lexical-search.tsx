@@ -9,7 +9,7 @@ import { useLocation } from "src/renderer/PageShell"
 import { closeBlock, fullWidth } from "src/style/utils.css"
 import { boldWordRow, wordRow } from "../pages/timeline.css"
 import { documentWordPath } from "../routes"
-import Link from "./link"
+import { Link } from 'src/components'
 
 export const LexicalSearch = () => {
   const location = useLocation()

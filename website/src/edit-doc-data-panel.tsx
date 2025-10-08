@@ -12,7 +12,7 @@ import {
 import { unstable_FormSubmitButton as FormSubmitButton } from "reakit"
 import { UserRole, useUserRole } from "./auth"
 import { IconButton } from "./components"
-import { IconTextButton } from "./components/button"
+import { IconTextButton } from 'src/components'
 import { useForm } from "./edit-doc-data-form-context"
 import * as css from "./edit-word-feature.css"
 import * as Dailp from "./graphql/dailp"

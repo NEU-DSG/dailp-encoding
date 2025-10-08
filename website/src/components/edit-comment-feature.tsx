@@ -6,7 +6,7 @@ import {
   unstable_FormSubmitButton as FormSubmitButton,
 } from "reakit"
 import { IconButton } from "../components"
-import { IconTextButton } from "../components/button"
+import { IconTextButton } from 'src/components'
 import * as css from "../edit-word-feature.css"
 import { useForm } from "./edit-comment-form-context"
 

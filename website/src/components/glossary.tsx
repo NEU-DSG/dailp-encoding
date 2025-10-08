@@ -3,7 +3,7 @@ import { groupBy } from "lodash-es"
 import pluralize from "pluralize"
 import React from "react"
 import { Helmet } from "react-helmet"
-import Link from "src/components/link"
+import { Link } from 'src/components'
 import { usePreferences } from "src/contexts/preferences-context"
 import * as Dailp from "src/graphql/dailp"
 import {

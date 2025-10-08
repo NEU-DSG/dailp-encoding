@@ -1,5 +1,5 @@
 import { style } from "@vanilla-extract/css"
-import { button } from "src/components/button.css"
+import { button } from 'src/components/primitives/button/button.css'
 import {
   buttonSize,
   fontSize,

@@ -7,9 +7,9 @@ import {
 } from "src/hooks/use-media-recorder"
 import { AudioPlayer } from ".."
 import * as Dailp from "../../graphql/dailp"
-import { CleanButton, IconTextButton } from "../button"
-import { SubtleButton } from "../subtle-button"
-import { subtleButton } from "../subtle-button.css"
+import { CleanButton, IconTextButton } from 'src/components'
+import { SubtleButton } from 'src/components'
+import { subtleButton } from 'src/components/primitives/subtle-button/subtle-button.css'
 import { ContributeAudioPanel } from "./contributor-audio-panel"
 import { contributeAudioOptions } from "./contributor.css"
 

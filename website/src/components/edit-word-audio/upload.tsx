@@ -2,9 +2,9 @@ import { ChangeEvent, ReactElement, useMemo, useState } from "react"
 import { MdUploadFile } from "react-icons/md/index"
 import { VisuallyHidden } from "reakit"
 import * as Dailp from "src/graphql/dailp"
-import { AudioPlayer } from "../audio-player"
-import { CleanButton, IconTextButton } from "../button"
-import { subtleButton } from "../subtle-button.css"
+import { AudioPlayer } from 'src/components'
+import { CleanButton, IconTextButton } from 'src/components'
+import { subtleButton } from 'src/components/primitives/subtle-button/subtle-button.css'
 import { ContributeAudioPanel } from "./contributor-audio-panel"
 import { contributeAudioOptions } from "./contributor.css"
 

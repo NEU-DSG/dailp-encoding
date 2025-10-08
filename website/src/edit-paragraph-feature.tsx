@@ -10,7 +10,7 @@ import {
 import * as Dailp from "src/graphql/dailp"
 import { UserRole, useUserRole } from "./auth"
 import { IconButton } from "./components"
-import { IconTextButton } from "./components/button"
+import { IconTextButton } from 'src/components'
 import { useForm } from "./edit-paragraph-form-context"
 import * as css from "./edit-word-feature.css"
 

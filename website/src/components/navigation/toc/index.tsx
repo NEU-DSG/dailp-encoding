@@ -7,7 +7,7 @@ import {
 } from "src/pages/edited-collections/edited-collection-context"
 import { useRouteParams } from "src/renderer/PageShell"
 import { chapterRoute } from "src/routes"
-import Link from "./link"
+import { Link } from 'src/components'
 import * as css from "./toc.css"
 
 type TOCProps = {

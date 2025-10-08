@@ -5,9 +5,9 @@ import "normalize.css"
 import React from "react"
 import { Helmet } from "react-helmet"
 import Footer from "src/components/layout/footer"
-import Link from "src/components/link"
-import { MobileNav, NavMenu } from "src/components/navigation/menu"
-import { HeaderPrefDrawer } from "src/components/navigation/mode"
+import { Link } from 'src/components'
+import { MobileNav, NavMenu } from 'src/components/navigation/menu'
+import { HeaderPrefDrawer } from 'src/components/navigation/mode'
 import { PreferencesProvider } from "src/contexts/preferences-context"
 import "src/style/global.css"
 import { themeClass } from "src/theme.css"

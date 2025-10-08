@@ -11,7 +11,7 @@ import { usePreferences } from "src/contexts/preferences-context"
 import * as Dailp from "src/graphql/dailp"
 import { UserRole, useUserRole } from "./auth"
 import { IconButton } from "./components"
-import { IconTextButton } from "./components/button"
+import { IconTextButton } from 'src/components'
 import { useEditWordCheckContext } from "./edit-word-check-context"
 import * as css from "./edit-word-feature.css"
 import { useForm } from "./edit-word-form-context"

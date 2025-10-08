@@ -1,7 +1,7 @@
 import { style } from "@vanilla-extract/css"
 import { margin } from "polished"
-import { linkColor } from "src/components/link.css"
-import { drawerWidth } from "src/components/sidebar.css"
+import { linkColor } from 'src/components/navigation/link/link.css'
+import { drawerWidth } from 'src/components/navigation/sidebar/sidebar.css'
 import {
   colors,
   fonts,

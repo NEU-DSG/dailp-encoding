@@ -11,7 +11,7 @@ import { useCognitoUserGroups, useCredentials } from "./auth"
 import { CommentAction, CommentPanel } from "./comment-panel"
 import { useCommentStateContext } from "./comment-state-context"
 import { Button, IconButton } from "./components"
-import { SubtleButton } from "./components/subtle-button"
+import { SubtleButton } from 'src/components'
 import { EditButton as ParagraphEditButton } from "./edit-paragraph-feature"
 import { useForm as useParagraphForm } from "./edit-paragraph-form-context"
 import { EditButton as WordEditButton } from "./edit-word-feature"

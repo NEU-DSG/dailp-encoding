@@ -5,7 +5,7 @@ import {
   useBookmarkedDocumentsQuery,
 } from "src/graphql/dailp"
 import { useScrollableTabState } from "src/scrollable-tabs"
-import Link from "../link"
+import { Link } from 'src/components'
 import { BookmarkCard } from "./bookmark-card"
 import * as css from "./dashboard.css"
 

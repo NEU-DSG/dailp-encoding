@@ -5,7 +5,7 @@ import { BsArrowBarLeft, BsArrowBarRight } from "react-icons/bs/index"
 import { MdMenu } from "react-icons/md/index"
 import { Dialog, DialogBackdrop, DialogDisclosure } from "reakit"
 import { drawerBg, navButton } from "src/components/navigation/menu.css"
-import CollectionTOC from "src/components/toc"
+import { Toc as CollectionTOC } from 'src/components'
 import { useDialog } from "src/pages/edited-collections/edited-collection-context"
 import "src/style/global.css"
 import { colors } from "src/style/theme-contract.css"

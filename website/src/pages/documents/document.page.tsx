@@ -21,7 +21,7 @@ import { navigate } from "vite-plugin-ssr/client/router"
 import { useUser } from "src/auth"
 import { CommentStateProvider } from "src/comment-state-context"
 import { AudioPlayer, Breadcrumbs, Button, Link } from "src/components"
-import { IconTextButton } from "src/components/button"
+import { IconTextButton } from 'src/components'
 import { CommentValueProvider } from "src/components/edit-comment-feature"
 import { drawerBg } from "src/components/navigation/menu.css"
 import { usePreferences } from "src/contexts/preferences-context"

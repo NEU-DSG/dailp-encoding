@@ -2,8 +2,8 @@ import React from "react"
 import { Popover, PopoverDisclosure, usePopoverState } from "reakit"
 import * as Dailp from "src/graphql/dailp"
 import { ConfirmLogout } from "src/pages/auth/user-auth-layout"
-import Link from "../link"
-import { subtleButton } from "../subtle-button.css"
+import { Link } from 'src/components'
+import { subtleButton } from 'src/components/primitives/subtle-button/subtle-button.css'
 import * as css from "./account-menu.css"
 
 /**
