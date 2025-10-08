@@ -39,6 +39,8 @@ globalStyle(`${wordpressContentFix} p, ${wordpressContentFix} div`, {
   width: "100%",
   float: "none",
   maxWidth: "100%",
+  paddingLeft: "min(var(--padding-left, 0px), 2rem) !important",
+  paddingRight: "min(var(--padding-right, 0px), 2rem) !important",
 })
 
 globalStyle(`${wordpressContentFix} img`, {
@@ -90,4 +92,14 @@ globalStyle(`${wordpressContentFix} table td img`, {
 globalStyle(`${wordpressContentFix} table:has(tr td:nth-child(5))`, {
   minWidth: "max-content", // Wide tables can go as wide as needed
   whiteSpace: "nowrap",
+})
+
+globalStyle(`${wordpressContentFix} pre`, {
+  whiteSpace: "pre-wrap",
+  wordWrap: "break-word",
+  overflowX: "auto",
+  maxWidth: "100%",
+  margin: "0 0 1rem 0",
+  padding: "0.5rem",
+  fontSize: "0.85rem"
 })
