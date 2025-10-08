@@ -7,6 +7,7 @@ import {
   unstable_FormLabel as FormLabel,
   unstable_FormSubmitButton as FormSubmitButton,
 } from "reakit"
+import { usePreferences } from "src/contexts/preferences-context"
 import * as Dailp from "src/graphql/dailp"
 import { UserRole, useUserRole } from "./auth"
 import { IconButton } from "./components"
@@ -14,7 +15,6 @@ import { IconTextButton } from "./components/button"
 import { useEditWordCheckContext } from "./edit-word-check-context"
 import * as css from "./edit-word-feature.css"
 import { useForm } from "./edit-word-form-context"
-import { usePreferences } from "./preferences-context"
 
 /** Button that allows user to enter edit mode in the word panel, and edit fields of a word. */
 export const EditButton = () => {

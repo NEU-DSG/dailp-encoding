@@ -22,6 +22,7 @@ import { OnChangeValue } from "react-select"
 import { Disclosure, DisclosureContent, useDisclosureState } from "reakit"
 import { unstable_Form as Form, unstable_FormInput as FormInput } from "reakit"
 import { useMutation, useQuery } from "urql"
+import { usePreferences } from "src/contexts/preferences-context"
 import * as Dailp from "src/graphql/dailp"
 import { AudioPlayer } from "./components"
 import { CommentSection } from "./components/comment-section"
@@ -33,7 +34,6 @@ import { EditWordFeature } from "./edit-word-feature"
 import { formInput } from "./edit-word-feature.css"
 import { useForm } from "./edit-word-form-context"
 import * as css from "./panel-layout.css"
-import { usePreferences } from "./preferences-context"
 
 // Extracts the inner contents of the first pair of parentheses from a string.
 function extractParenthesesContent(str: string): string | null {

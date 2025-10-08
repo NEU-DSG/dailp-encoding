@@ -13,12 +13,12 @@ import {
 } from "reakit"
 import { Radio, RadioGroup, RadioStateReturn, useRadioState } from "reakit"
 import { IconButton, Label, Select } from "src/components"
+import { usePreferences } from "src/contexts/preferences-context"
 import * as Dailp from "src/graphql/dailp"
+import { useRouteParams } from "src/renderer/PageShell"
+import { colors } from "src/style/constants"
+import { LevelOfDetail } from "src/types"
 import * as css from "./mode.css"
-import { usePreferences } from "./preferences-context"
-import { useRouteParams } from "./renderer/PageShell"
-import { colors } from "./style/theme-contract.css"
-import { LevelOfDetail } from "./types"
 
 type PreferenceDetails = { label: string; details: string }
 
@@ -98,7 +98,7 @@ export const PrefPanel = () => {
         mapping={levelNameMapping}
       />
       <p id="level-of-detail-desc">
-        {levelNameMapping[preferences.levelOfDetail].details}
+        {levelNameMapping[preferences.levelOfDetail as LevelOfDetail].details}
       </p>
 
       <Label htmlFor="cherokee-representation">
@@ -115,8 +115,9 @@ export const PrefPanel = () => {
       />
       <p id="cherokee-representation-desc">
         {
-          cherokeeRepresentationMapping[preferences.cherokeeRepresentation]
-            .details
+          cherokeeRepresentationMapping[
+            preferences.cherokeeRepresentation as Dailp.CherokeeOrthography
+          ].details
         }
       </p>
     </div>

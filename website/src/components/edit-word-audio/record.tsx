@@ -1,12 +1,12 @@
 import { ReactElement, useEffect } from "react"
 import { FaMicrophone, FaRegStopCircle } from "react-icons/fa/index"
 import { RiRecordCircleFill } from "react-icons/ri/index"
-import { AudioPlayer } from ".."
-import * as Dailp from "../../graphql/dailp"
 import {
   MediaPermissionStatus,
   useMediaRecorder,
-} from "../../use-media-recorder"
+} from "src/hooks/use-media-recorder"
+import { AudioPlayer } from ".."
+import * as Dailp from "../../graphql/dailp"
 import { CleanButton, IconTextButton } from "../button"
 import { SubtleButton } from "../subtle-button"
 import { subtleButton } from "../subtle-button.css"

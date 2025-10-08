@@ -4,8 +4,8 @@ import pluralize from "pluralize"
 import React from "react"
 import { Helmet } from "react-helmet"
 import Link from "src/components/link"
+import { usePreferences } from "src/contexts/preferences-context"
 import * as Dailp from "src/graphql/dailp"
-import { usePreferences } from "src/preferences-context"
 import {
   closeBlock,
   edgePadded,

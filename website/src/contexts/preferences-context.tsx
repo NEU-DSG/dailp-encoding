@@ -1,7 +1,7 @@
 import Cookies from "js-cookie"
 import React, { useContext, useEffect, useState } from "react"
 import * as Dailp from "src/graphql/dailp"
-import { LevelOfDetail } from "./types"
+import { LevelOfDetail } from "src/types"
 
 // Set up context for preferences
 const PreferencesContext = React.createContext({
