@@ -327,3 +327,17 @@ export const noScrollTop = style({
   visibility: "hidden",
   opacity: 0,
 })
+
+export const wordpressImage = style({
+  maxWidth: "100%",
+  height: "auto",
+  imageRendering: "-webkit-optimize-contrast",
+  cursor: "pointer",
+  width: "auto",
+})
+
+export const wordpressVideo = style({
+  maxWidth: "100%",
+  height: "auto",
+  width: "100%",
+})

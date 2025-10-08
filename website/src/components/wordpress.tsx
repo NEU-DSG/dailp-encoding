@@ -106,6 +106,44 @@ const parseOptions: HTMLReactParserOptions = {
             {domToReact(node.children, parseOptions)}
           </Button>
         )
+      } else if (node.name === "img") {
+        const props = attributesToProps(node.attribs)
+        return (
+          <img
+            {...props}
+            title="Click to view full size"
+            className={css.wordpressImage}
+            onClick={(e) => {
+              // Open image in new tab for full view
+              window.open(e.currentTarget.src, "_blank")
+            }}
+          />
+        )
+      } else if (node.name === "video") {
+        const props = attributesToProps(node.attribs)
+        return (
+          <video {...props} className={css.wordpressVideo} controls>
+            {domToReact(node.children, parseOptions)}
+          </video>
+        )
+      } else if (
+        node.name === "div" &&
+        node.attribs["class"]?.includes("video")
+      ) {
+        const props = attributesToProps(node.attribs)
+        return (
+          <div
+            {...props}
+            style={{
+              position: "relative",
+              width: "100%",
+              maxWidth: "100%",
+              overflow: "hidden",
+            }}
+          >
+            {domToReact(node.children, parseOptions)}
+          </div>
+        )
       } else if (
         node.name === "div" &&
         node.attribs["class"]?.includes("wpTabs")

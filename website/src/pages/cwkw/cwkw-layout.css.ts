@@ -47,6 +47,9 @@ export const contentContainer = style([
 ])
 
 export const leftMargin = style({
+  width: "100%",
+  maxWidth: "100%",
+  marginLeft: 0, // No margin on mobile.
   "@media": {
     [mediaQueries.medium]: {
       marginLeft: drawerWidth,
