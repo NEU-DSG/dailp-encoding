@@ -29,11 +29,11 @@ import { useForm } from "src/edit-word-form-context"
 import * as css from "src/features/documents/components/panel-layout/panel-layout.css"
 import * as Dailp from "src/graphql/dailp"
 import { usePreferences } from "src/preferences-context"
-import { CommentSection } from "./comment-section"
-import { CustomCreatable } from "./creatable"
-import { EditWordAudio } from "./edit-word-audio"
-import { RecordAudioPanel } from "./edit-word-audio/record"
-import { AudioPlayer } from "./index"
+import { CommentSection } from "../comment-section"
+import { CustomCreatable } from "../creatable"
+import { EditWordAudio } from "../edit-word-audio"
+import { RecordAudioPanel } from "../edit-word-audio/record"
+import { AudioPlayer } from "../index"
 
 // Extracts the inner contents of the first pair of parentheses from a string.
 function extractParenthesesContent(str: string): string | null {

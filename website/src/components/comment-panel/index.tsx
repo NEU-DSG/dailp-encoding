@@ -1,9 +1,9 @@
 import React, { SetStateAction, useEffect } from "react"
 import * as Dailp from "src/graphql/dailp"
+import { useCommentValueContext } from "../edit-comment-feature"
+import { Button } from "../index"
+import { TranslatedParagraph } from "../segment"
 import * as css from "./comment-panel.css"
-import { useCommentValueContext } from "./edit-comment-feature"
-import { Button } from "./index"
-import { TranslatedParagraph } from "./segment"
 
 // The type of comment panel that is displayed.
 export enum CommentAction {
@@ -20,7 +20,7 @@ export const CommentPanel = (p: {
 }) => {
   const { commentValues, setCommentValues } = useCommentValueContext()
   useEffect(() => {
-    setCommentValues((prev) => ({
+    setCommentValues((prev: any) => ({
       ...prev,
       id: p.commentObject?.id.toString() ?? "",
       textContent: p.commentObject?.textContent ?? "",

@@ -10,7 +10,7 @@ import * as Dailp from "src/graphql/dailp"
 import { DocumentContents } from "src/pages/documents/document.page"
 import { std } from "src/style/utils.css"
 import { BasicMorphemeSegment, LevelOfDetail } from "src/types"
-import { CleanButton } from "./index"
+import { CleanButton } from "../index"
 import * as css from "./segment.css"
 
 type TranslatedPage = NonNullable<DocumentContents["translatedPages"]>[0]

@@ -6,8 +6,8 @@ import { useForm as useParagraphForm } from "src/edit-paragraph-form-context"
 import { CollapsiblePanel } from "src/features/documents/components/panel-layout/panel-layout"
 import * as css from "src/features/documents/components/panel-layout/panel-layout.css"
 import * as Dailp from "src/graphql/dailp"
-import { CommentSection } from "./comment-section"
-import { TranslatedParagraph } from "./segment"
+import { CommentSection } from "../comment-section"
+import { TranslatedParagraph } from "../segment"
 
 enum ParagraphPanelType {
   ParagraphPanel,
