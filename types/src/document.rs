@@ -250,11 +250,6 @@ impl AnnotatedDoc {
     async fn spatial_coverages(&self) -> &Option<Vec<SpatialCoverage>> {
         &self.meta.spatial_coverages
     }
-    
-    /// The information used to cite this document
-    async fn citation(&self) -> &Option<Citation> {
-        &self.meta.citation
-    }
 }
 
 /// Key to retrieve the pages of a document given a document ID
@@ -355,7 +350,7 @@ pub struct DocumentMetadataUpdate {
     /// Term that contextualizes the social practice surrounding the document
     pub genre_id: MaybeUndefined<Uuid>,
     /// Term that allows us to trace what the original artifact was
-    pub format_id: MaybeUndefinedn<Uuid>,
+    pub format_id: MaybeUndefined<Uuid>,
     /// The pages present in the document, start to end (inclusive)
     pub pages: MaybeUndefined<String>,
     /// The creators of the document
@@ -370,14 +365,10 @@ pub struct DocumentMetadataUpdate {
     pub languages_ids: MaybeUndefined<Vec<Uuid>>,
     /// The physical locations associated with a document (e.g. where it was written, found)
     pub spatial_coverage_ids: MaybeUndefined<Vec<Uuid>>,
-    /// Used to cite a document (APA by default)
-    pub citation: MaybeUndefined<Uuid>,
     /// The DOI of the document, if applicable
     pub doi: MaybeUndefined<String>,
     /// The source of the document
     pub source: MaybeUndefined<SourceAttribution>,
-    /// Contains the information need to generate a citation for this document
-    pub citation: Option<Uuid>,
 }
 
 #[async_graphql::ComplexObject]
@@ -518,32 +509,34 @@ pub struct DocumentMetadata {
     pub title: String,
     /// Further details about this particular document.
     // pub details: String,
+    /// The DOI of the document, if applicable
+    pub doi: MaybeUndefined<String>,
     #[serde(default)]
     /// The original source(s) of this document, the most important first.
     pub sources: Vec<SourceAttribution>,
     /// Where the source document came from, maybe the name of a collection.
     pub collection: Option<String>,
-    /// The genre this document is. TODO Evaluate whether we need this.
-    pub genre: Option<Genre>,
+    /// Term that contextualizes the social practice surrounding the document
+    pub genre_id: MaybeUndefined<Uuid>,
     /// The format of the original artifact
-    pub format: Option<Format>,
+    pub format_id: MaybeUndefined<Uuid>,
     #[serde(default)]
-    pub creators: Option<Vec<Creator>>,
+    pub creators_ids: MaybeUndefined<Vec<Uuid>>,
     #[serde(default)]
     /// The people involved in collecting, translating, annotating.
-    pub contributors: Vec<Contributor>,
+    pub contributors_ids: MaybeUndefined<Vec<Uuid>>,
     #[serde(default)]
     /// The key terms associated with this document
-    pub keywords: Option<Vec<Keyword>>,
+    pub keywords_ids: MaybeUndefined<Vec<Uuid>>,
     #[serde(default)]
     /// Terms that reflect Indigenous knowledge practices related to this document
-    pub subject_headings: Option<Vec<SubjectHeading>>,
+    pub subject_headings_ids: MaybeUndefined<Vec<Uuid>>,
     #[serde(default)]
     /// The languages present in this document
-    pub languages: Option<Vec<Language>>,
+    pub languages_ids: MaybeUndefined<Vec<Uuid>>,
     #[serde(default)]
     /// The physical locations associated with this document
-    pub spatial_coverage: Option<Vec<SpatialCoverage>>,
+    pub spatial_coverage_ids: MaybeUndefined<Vec<Uuid>>,
     /// Rough translation of the document, broken down by paragraph.
     #[serde(skip)]
     pub translation: Option<Translation>,
@@ -562,8 +555,6 @@ pub struct DocumentMetadata {
     /// For collections without manual ordering, use zero here.
     pub order_index: i64,
     #[serde(default)]
-    /// Contains the information need to generate a citation for this document
-    pub citation: Option<Citation>,
 }
 
 /// Database ID for one document

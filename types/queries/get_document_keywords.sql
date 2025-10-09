@@ -1,3 +1,4 @@
+-- Returns all keywords for a document as a JSON array
 select
     d.id,
     coalesce(

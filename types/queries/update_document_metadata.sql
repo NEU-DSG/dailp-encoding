@@ -33,10 +33,5 @@ update document set
         case
             when $8::uuid is not null then $8
             else doi
-        end,
-    citation =
-        case
-            when $9::uuid is not null then $9
-            else citation
         end
 where id = $1

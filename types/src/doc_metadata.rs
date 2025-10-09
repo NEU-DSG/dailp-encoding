@@ -1,13 +1,14 @@
 /// Document metadata
-use crate::{document::DocumentReference, ContributorReference};
-
-use async_graphql::{SimpleObject, Enum};
+use async_graphql::{Enum as GqlEnum, SimpleObject};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use sqlx::FromRow;
+use sqlx::Type;
 use uuid::Uuid;
 
 /// Represents the status of a suggestion made by a contributor
-#[derive(Deserialize, Serialize, Enum, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Type, GqlEnum)]
+#[sqlx(type_name = "approval_status")]
+#[sqlx(rename_all = "lowercase")]
 pub enum Status {
     /// Suggestion is still waiting for or undergoing review
     Pending, 
@@ -70,7 +71,7 @@ pub struct Keyword {
 }
 
 /// Get all approved keywords
-#[ComplexObject]
+#[async_graphql::ComplexObject]
 impl Keyword {
     async fn approved(&self) -> bool {
         matches!(self.status, Some(Status::Approved))
@@ -81,13 +82,6 @@ impl Keyword {
 impl From<&Keyword> for Uuid {
     fn from(k: &Keyword) -> Self {
         k.id
-    }
-}
-
-/// Converts Uuid to empty Keyword struct
-impl From<Uuid> for Keyword {
-    fn from(id: Uuid) -> Self {
-        Keyword { id, name: String::new(), status: None }
     }
 }
 
@@ -105,7 +99,7 @@ pub struct SubjectHeading {
 }
 
 /// Get all approved subject headings
-#[ComplexObject]
+#[async_graphql::ComplexObject]
 impl SubjectHeading {
     async fn approved(&self) -> bool {
         matches!(self.status, Some(Status::Approved))
@@ -141,7 +135,7 @@ pub struct Language {
 }
 
 /// Get all approved languages
-#[ComplexObject]
+#[async_graphql::ComplexObject]
 impl Language {
     async fn approved(&self) -> bool {
         matches!(self.status, Some(Status::Approved))
@@ -152,13 +146,6 @@ impl Language {
 impl From<&Language> for Uuid {
     fn from(l: &Language) -> Self {
         l.id
-    }
-}
-
-/// Converts Uuid to empty Language struct
-impl From<Uuid> for Language {
-    fn from(id: Uuid) -> Self {
-        Language { id, name: String::new(), status: None }
     }
 }
 
@@ -175,7 +162,7 @@ pub struct SpatialCoverage {
 }
 
 /// Get all approved spatial coverages
-#[ComplexObject]
+#[async_graphql::ComplexObject]
 impl SpatialCoverage {
     async fn approved(&self) -> bool {
         matches!(self.status, Some(Status::Approved))
@@ -187,91 +174,4 @@ impl From<&SpatialCoverage> for Uuid {
     fn from(s: &SpatialCoverage) -> Self {
         s.id
     }
-}
-
-/// Converts Uuid to empty SpatialCoverage struct
-impl From<Uuid> for SpatialCoverage {
-    fn from(id: Uuid) -> Self {
-        SpatialCoverage { id, name: String::new(), status: None }
-    }
-}
-
-/// Stores citation information for a document
-/// TODO: Add more fields to cover a variety of format types
-/// Could inherit fields from DocumentMetadata
-#[derive(Clone, Debug, Serialize, Deserialize, FromRow, SimpleObject, InputObject)]
-pub struct Citation {
-    /// UUID for the citation
-    pub id: Uuid,
-    /// Creator(s) of the document
-    pub creator: Option<Vec<Creator>>,
-    /// Format of the document being cited
-    pub doc_format: DocCitationFormat,
-    /// DOI of the document
-    pub doi: Option<String>,
-    /// Ending page of the document (inclusive)
-    pub end_page: Option<u16>,
-    /// Year the document was published
-    pub publication_year: Option<u16>,
-    /// Publisher of the document
-    pub publisher: Option<String>,
-    /// Starting page of the document
-    pub start_page: Option<u16>,
-    /// Title of the document being cited
-    pub title: String,
-    /// URL of the document, if document can be accessed online
-    pub url: Option<String>,
-}
-
-/// Converts Citation struct to corresponding Uuid
-impl From<&Citation> for Uuid {
-    fn from(c: &Citation) -> Self {
-        c.id
-    }
-}
-
-/// Converts Uuid to Citation struct
-impl From<Uuid> for Citation {
-    fn from(id: Uuid) -> Self {
-        Citation { id, doc_format: DocCitationFormat::Website, title: "" }
-    }
-}
-
-/// Represents the format of a citation
-/// TODO: Add more formats
-#[derive(Serialize, Deserialize, Enum, Clone, Copy, PartialEq, Eq)]
-pub enum DocCitationFormat {
-    /// Website, BlogPost, Database
-    Website,
-    /// Book, EBook
-    Book,
-    /// JournalArticle, Newsletter
-    Journal,
-    /// Podcast, RadioClip, OralHistory
-    Audio,
-    /// YouTubeVideo, Film
-    Video,
-}
-
-/// Used to automatically assign broader citation format to a document
-/// from its more specific format
-/// TODO: Add more format mappings to cover a variety of format types
-pub fn format_to_citation_format() -> HashMap<&'static str, DocCitationFormat> {
-    use DocCitationFormat::*;
-
-    let mut map = HashMap::new();
-    map.insert("Book", Book);
-    map.insert("EBook", Book);
-    map.insert("JournalArticle", Journal);
-    map.insert("Newsletter", Journal);
-    map.insert("Website", Website);
-    map.insert("BlogPost", Website);
-    map.insert("Database", Website);
-    map.insert("Podcast", Audio);
-    map.insert("RadioClip", Audio);
-    map.insert("OralHistory", Audio);
-    map.insert("YouTubeVideo", Video);
-    map.insert("Film", Video);
-
-    map
 }

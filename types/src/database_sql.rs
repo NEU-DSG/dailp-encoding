@@ -778,7 +778,6 @@ impl Database {
             document.format_id,
             document.pages,
             document.doi,
-            document.citation,
             document.source
         )
         .execute(&self.client)
