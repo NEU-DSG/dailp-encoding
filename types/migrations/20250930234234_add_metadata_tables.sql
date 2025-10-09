@@ -91,16 +91,6 @@ create table document_spatial_coverage (
   primary key (document_id, spatial_coverage_id)
 );
 
--- Citation
-create table citation (
-  id autouuid primary key,
-  -- Get fields (ex. title, date written from document table)
-  document_id uuid not null references document(id) on delete cascade,
-  -- Add to or revise (find a better way to do this)
-  doc_format text not null check (doc_format in ('book', 'webpage', 'journal', 'document')) default 'document'
-
-);
-
 -- Creator
 create table creator (
   id autouuid primary key,
@@ -127,4 +117,3 @@ create table document_contributor (
 alter table document
   add column url text NULL,
   add column doi text NULL;
-add column citation_id uuid NULL references citation(id) on delete set NULL;

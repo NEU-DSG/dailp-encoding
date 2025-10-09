@@ -1,1 +1,3 @@
-SELECT * FROM genre WHERE id = $1;
+SELECT * 
+FROM genre 
+WHERE id = $1;
