@@ -10,7 +10,7 @@ import {
   unstable_FormLabel as FormLabel,
 } from "reakit"
 import { unstable_FormSubmitButton as FormSubmitButton } from "reakit"
-import { UserRole, useUserRole } from "./auth"
+import { UserRole, useUserRole } from "src/components/auth"
 import { IconButton } from "./components"
 import { IconTextButton } from "./components/button"
 import { useForm } from "./edit-doc-data-form-context"

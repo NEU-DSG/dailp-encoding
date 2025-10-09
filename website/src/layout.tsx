@@ -14,7 +14,7 @@ import { LayoutClient } from "./client/layout"
 import { Environment, deploymentEnvironment } from "./env"
 import * as css from "./layout.css"
 import { LoginHeaderButton } from "./pages/auth/user-auth-layout"
-import { PreferencesProvider } from "./preferences-context"
+import { PreferencesProvider } from "src/components/preferences"
 import "./wordpress.css"
 
 /* const ClientSignIn = lazy(() => import("./client/signin")) */

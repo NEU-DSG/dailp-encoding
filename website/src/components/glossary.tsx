@@ -5,7 +5,7 @@ import React from "react"
 import { Helmet } from "react-helmet"
 import Link from "src/components/link"
 import * as Dailp from "src/graphql/dailp"
-import { usePreferences } from "src/preferences-context"
+import { usePreferences } from "src/components/preferences"
 import {
   closeBlock,
   edgePadded,

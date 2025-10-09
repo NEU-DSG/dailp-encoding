@@ -1,6 +1,6 @@
 import { ReactElement } from "react"
 import { WordAudio } from "src/components/word-panel"
-import { UserRole, useCognitoUserGroups, useUserRole } from "../../auth"
+import { UserRole, useCognitoUserGroups, useUserRole } from "src/components/auth"
 import * as Dailp from "../../graphql/dailp"
 import { ContributorEditWordAudio } from "./contributor"
 import { EditorEditWordAudio } from "./editor"
@@ -20,6 +20,8 @@ export const EditWordAudio = (p: {
     case UserRole.Contributor:
       return <ContributorEditWordAudio word={p.word} />
     case UserRole.Reader:
+      return <WordAudio word={p.word} />
+    default:
       return <WordAudio word={p.word} />
   }
 }

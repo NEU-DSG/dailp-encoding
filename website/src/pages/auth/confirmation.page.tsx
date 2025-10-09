@@ -5,7 +5,7 @@ import {
   unstable_Form as Form,
   unstable_useFormState as useFormState,
 } from "reakit"
-import { useUser } from "src/auth"
+import { useUser } from "src/components/auth"
 import { button, cleanButton, iconButton } from "src/components/button.css"
 import { fonts } from "src/style/theme-contract.css"
 import {

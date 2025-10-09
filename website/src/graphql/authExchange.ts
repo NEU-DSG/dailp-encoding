@@ -1,7 +1,7 @@
 import { authExchange } from "@urql/exchange-auth"
 import { CognitoIdToken } from "amazon-cognito-identity-js"
 import { makeOperation } from "urql"
-import { getCurrentUser, getIdToken } from "src/auth"
+import { getCurrentUser, getIdToken } from "src/components/auth"
 import {
   GRAPHQL_URL_READ,
   GRAPHQL_URL_WRITE,

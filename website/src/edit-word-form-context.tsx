@@ -5,7 +5,7 @@ import {
 } from "reakit"
 import { useEditWordCheckContext } from "./edit-word-check-context"
 import * as Dailp from "./graphql/dailp"
-import { usePreferences } from "./preferences-context"
+import { usePreferences } from "src/components/preferences"
 
 type FormContextType = {
   form: FormStateReturn<any | undefined>

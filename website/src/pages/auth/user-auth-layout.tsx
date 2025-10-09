@@ -8,7 +8,7 @@ import {
   unstable_FormSubmitButton as FormSubmit,
   unstable_FormStateReturn,
 } from "reakit"
-import { useCredentials, useUser } from "src/auth"
+import { useCredentials, useUser } from "src/components/auth"
 import { Button, CleanButton, Link } from "src/components"
 import { AccountMenu } from "src/components/authenticated-users/account-menu"
 import { Environment, deploymentEnvironment } from "src/env"

@@ -8,7 +8,7 @@ import {
   unstable_FormSubmitButton as FormSubmitButton,
 } from "reakit"
 import * as Dailp from "src/graphql/dailp"
-import { UserRole, useUserRole } from "./auth"
+import { UserRole, useUserRole } from "src/components/auth"
 import { IconButton } from "./components"
 import { IconTextButton } from "./components/button"
 import { useForm } from "./edit-paragraph-form-context"

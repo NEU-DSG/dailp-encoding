@@ -1,5 +1,5 @@
 import React from "react"
-import { UserRole, useAuthLoading, useUser, useUserRole } from "src/auth"
+import { UserRole, useAuthLoading, useUser, useUserRole } from "src/components/auth"
 import Layout from "src/layout"
 
 interface AuthGuardProps {

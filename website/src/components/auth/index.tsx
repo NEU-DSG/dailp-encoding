@@ -8,7 +8,7 @@ import {
 } from "amazon-cognito-identity-js"
 import React, { createContext, useContext, useEffect, useState } from "react"
 import { navigate } from "vite-plugin-ssr/client/router"
-import { UserGroup } from "./graphql/dailp"
+import { UserGroup } from "src/graphql/dailp"
 
 type UserContextType = {
   user: CognitoUser | null

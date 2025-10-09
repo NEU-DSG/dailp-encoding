@@ -1,5 +1,5 @@
 import { Tab, TabList, TabPanel, useDialogState } from "reakit"
-import { UserRole, useUserRole } from "src/auth"
+import { UserRole, useUserRole } from "src/components/auth"
 import {
   useAnnotatedDocumentByIdQuery,
   useBookmarkedDocumentsQuery,

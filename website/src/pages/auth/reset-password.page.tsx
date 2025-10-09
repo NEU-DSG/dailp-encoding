@@ -4,7 +4,7 @@ import {
   unstable_FormStateReturn,
   unstable_useFormState as useFormState,
 } from "reakit"
-import { useUser } from "src/auth"
+import { useUser } from "src/components/auth"
 import {
   FormFields,
   FormSubmitButton,

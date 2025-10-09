@@ -1,5 +1,5 @@
 import { Fragment } from "react"
-import { useUserId } from "src/auth"
+import { useUserId } from "src/components/auth"
 import { WordAudio } from "src/components/word-panel"
 import { AudioPlayer } from "../"
 import * as Dailp from "../../graphql/dailp"

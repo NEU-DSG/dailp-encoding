@@ -14,7 +14,7 @@ import {
 import { Radio, RadioGroup, RadioStateReturn, useRadioState } from "reakit"
 import { IconButton, Label, Select } from "src/components"
 import * as Dailp from "src/graphql/dailp"
-import { usePreferences } from "src/preferences-context"
+import { usePreferences } from "src/components/preferences"
 import { useRouteParams } from "src/renderer/PageShell"
 import { colors } from "src/style/theme-contract.css"
 import { LevelOfDetail } from "src/types"

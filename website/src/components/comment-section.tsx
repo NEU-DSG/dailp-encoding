@@ -1,6 +1,6 @@
 import React from "react"
-import { useCognitoUserGroups, useCredentials, useUserId } from "src/auth"
-import { useCommentStateContext } from "src/comment-state-context"
+import { useCognitoUserGroups, useCredentials, useUserId } from "src/components/auth"
+import { useCommentStateContext } from "src/components/comment-state"
 import { TranslatedParagraph } from "src/components/segment"
 import * as Dailp from "src/graphql/dailp"
 import { CommentAction, CommentPanel } from "./comment-panel"
