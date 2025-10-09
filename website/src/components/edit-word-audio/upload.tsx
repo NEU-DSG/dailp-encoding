@@ -4,7 +4,7 @@ import { VisuallyHidden } from "reakit"
 import * as Dailp from "src/graphql/dailp"
 import { AudioPlayer } from "../audio-player"
 import { CleanButton, IconTextButton } from "../button"
-import { subtleButton } from "../subtle-button.css"
+import { subtleButton } from "../subtle-button/subtle-button.css"
 import { ContributeAudioPanel } from "./contributor-audio-panel"
 import { contributeAudioOptions } from "./contributor.css"
 

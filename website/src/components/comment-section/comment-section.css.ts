@@ -1,7 +1,7 @@
 import { style, styleVariants } from "@vanilla-extract/css"
 import { margin } from "polished"
 import { BsFileX } from "react-icons/bs"
-import { button } from "src/components/button.css"
+import { button } from "src/components/button/button.css"
 import {
   colors,
   hspace,

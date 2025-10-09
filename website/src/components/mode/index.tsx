@@ -72,7 +72,9 @@ function PreferenceSelect<T extends string | number>(p: {
       id={p.id}
       name={p.id}
       value={p.value}
-      onChange={(e) => p.onChange(e.target.value)}
+      onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+        p.onChange(e.target.value)
+      }
       aria-describedby={p["aria-describedby"]}
     >
       {Object.entries<PreferenceDetails>(p.mapping).map(([value, details]) => (

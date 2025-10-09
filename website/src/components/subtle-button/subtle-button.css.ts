@@ -1,7 +1,7 @@
 import { style } from "@vanilla-extract/css"
 import { radii } from "src/style/constants"
 import { colors } from "src/style/theme-contract.css"
-import { cleanButton } from "./button.css"
+import { cleanButton } from "../button/button.css"
 
 export const subtleButton = style([
   cleanButton,

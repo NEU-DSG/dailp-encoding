@@ -303,7 +303,7 @@ export const PanelLayout = (p: {
           </SubtleButton>
         ) : (
           <>
-            <Button type="button" onClick={() => setIsCommenting(true)}>
+            <Button onClick={() => setIsCommenting(true)}>
               Comment
             </Button>
           </>

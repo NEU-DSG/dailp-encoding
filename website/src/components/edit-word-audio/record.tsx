@@ -9,7 +9,7 @@ import {
 } from "../../use-media-recorder"
 import { CleanButton, IconTextButton } from "../button"
 import { SubtleButton } from "../subtle-button"
-import { subtleButton } from "../subtle-button.css"
+import { subtleButton } from "../subtle-button/subtle-button.css"
 import { ContributeAudioPanel } from "./contributor-audio-panel"
 import { contributeAudioOptions } from "./contributor.css"
 
