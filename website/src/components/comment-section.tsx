@@ -1,16 +1,16 @@
 import React from "react"
+import { useCognitoUserGroups, useCredentials, useUserId } from "src/auth"
 import { useCommentStateContext } from "src/comment-state-context"
+import { TranslatedParagraph } from "src/components/segment"
 import * as Dailp from "src/graphql/dailp"
-import { TranslatedParagraph } from "src/segment"
-import { useCognitoUserGroups, useCredentials, useUserId } from "../auth"
-import { CommentAction, CommentPanel } from "../comment-panel"
-import { Button } from "../components"
+import { CommentAction, CommentPanel } from "./comment-panel"
 import * as css from "./comment-section.css"
 import { EditButton as CommentEditButton } from "./edit-comment-feature"
 import {
   FormProvider as FormProviderComment,
   useForm,
 } from "./edit-comment-form-context"
+import { Button } from "./index"
 
 export const CommentSection = (p: {
   parent: Dailp.FormFieldsFragment | TranslatedParagraph

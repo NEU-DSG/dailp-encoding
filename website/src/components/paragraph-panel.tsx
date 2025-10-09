@@ -1,12 +1,12 @@
 import React from "react"
 import { MdNotes, MdOutlineComment } from "react-icons/md/index"
 import { unstable_Form as Form, unstable_FormInput as FormInput } from "reakit"
+import { EditButton, EditParagraphFeature } from "src/edit-paragraph-feature"
+import { useForm as useParagraphForm } from "src/edit-paragraph-form-context"
+import { CollapsiblePanel } from "src/features/documents/components/panel-layout/panel-layout"
+import * as css from "src/features/documents/components/panel-layout/panel-layout.css"
 import * as Dailp from "src/graphql/dailp"
-import { CommentSection } from "./components/comment-section"
-import { EditButton, EditParagraphFeature } from "./edit-paragraph-feature"
-import { useForm as useParagraphForm } from "./edit-paragraph-form-context"
-import { CollapsiblePanel } from "./panel-layout"
-import * as css from "./panel-layout.css"
+import { CommentSection } from "./comment-section"
 import { TranslatedParagraph } from "./segment"
 
 enum ParagraphPanelType {

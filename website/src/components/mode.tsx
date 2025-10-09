@@ -14,11 +14,11 @@ import {
 import { Radio, RadioGroup, RadioStateReturn, useRadioState } from "reakit"
 import { IconButton, Label, Select } from "src/components"
 import * as Dailp from "src/graphql/dailp"
+import { usePreferences } from "src/preferences-context"
+import { useRouteParams } from "src/renderer/PageShell"
+import { colors } from "src/style/theme-contract.css"
+import { LevelOfDetail } from "src/types"
 import * as css from "./mode.css"
-import { usePreferences } from "./preferences-context"
-import { useRouteParams } from "./renderer/PageShell"
-import { colors } from "./style/theme-contract.css"
-import { LevelOfDetail } from "./types"
 
 type PreferenceDetails = { label: string; details: string }
 

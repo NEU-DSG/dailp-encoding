@@ -23,6 +23,10 @@ import { CommentStateProvider } from "src/comment-state-context"
 import { AudioPlayer, Breadcrumbs, Button, Link } from "src/components"
 import { IconTextButton } from "src/components/button"
 import { CommentValueProvider } from "src/components/edit-comment-feature"
+import { drawerBg } from "src/components/menu.css"
+import { MorphemeDetails } from "src/components/morpheme"
+import PageImages from "src/components/page-image"
+import { AnnotatedForm, DocumentPage } from "src/components/segment"
 import { useMediaQuery } from "src/custom-hooks"
 import { FormProvider as FormProviderDoc } from "src/edit-doc-data-form-context"
 import {
@@ -31,20 +35,20 @@ import {
 } from "src/edit-paragraph-form-context"
 import { EditWordCheckProvider } from "src/edit-word-check-context"
 import { FormProvider, useForm } from "src/edit-word-form-context"
+import {
+  PanelDetails,
+  PanelLayout,
+  PanelSegment,
+} from "src/features/documents/components/panel-layout/panel-layout"
 import * as Dailp from "src/graphql/dailp"
 import Layout from "src/layout"
-import { drawerBg } from "src/menu.css"
-import { MorphemeDetails } from "src/morpheme"
 import { DocumentInfo } from "src/pages/documents/document-info"
-import { PanelDetails, PanelLayout, PanelSegment } from "src/panel-layout"
 import { usePreferences } from "src/preferences-context"
 import { useLocation } from "src/renderer/PageShell"
 import { chapterRoute, collectionWordPath } from "src/routes"
 import { useScrollableTabState } from "src/scrollable-tabs"
-import { AnnotatedForm, DocumentPage } from "src/segment"
 import { mediaQueries } from "src/style/constants"
 import { BasicMorphemeSegment, LevelOfDetail } from "src/types"
-import PageImages from "../../page-image"
 import * as css from "./document.css"
 
 enum Tabs {

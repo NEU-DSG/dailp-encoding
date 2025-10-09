@@ -9,10 +9,19 @@ import {
   rootFontSize,
   vspace,
 } from "src/style/constants"
-import { closeButton } from "./morpheme.css"
-import { marginX, paddingX, paddingY } from "./style/utils"
+import { marginX, paddingX, paddingY } from "src/style/utils"
 
 const wordPanelPadding = "8px"
+
+// Avoid a circular dependency with `src/components/mode.css` by defining
+// a local base close button style here instead of importing it.
+export const closeButton = style({
+  background: "none",
+  border: "none",
+  color: "inherit",
+  padding: 0,
+  cursor: "pointer",
+})
 
 export const cherHeader = style({
   fontFamily: fonts.cherokee,

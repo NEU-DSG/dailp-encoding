@@ -1,9 +1,9 @@
 import cx from "classnames"
 import { ReactElement, ReactNode } from "react"
 import { IconType } from "react-icons"
+import { CollapsiblePanel } from "src/components/word-panel"
+import * as css from "src/features/documents/components/panel-layout/panel-layout.css"
 import * as Dailp from "src/graphql/dailp"
-import { CollapsiblePanel } from "src/word-panel"
-import * as css from "../../panel-layout.css"
 import {
   contributeAudioContainer,
   statusMessage,
