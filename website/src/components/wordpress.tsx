@@ -21,7 +21,7 @@ import { devUrl, prodUrl, wordpressUrl } from "src/theme.css"
 import { LevelOfDetail } from "src/types"
 import { AudioPlayer, Button, Link } from "src/ui"
 import * as css from "../pages/documents/document.css"
-import { Glossary } from "./glossary"
+import { Glossary } from "src/features/glossary/components/glossary"
 import { LexicalSearch } from "./lexical-search"
 import * as printLessonCSS from "./print-lesson.css"
 

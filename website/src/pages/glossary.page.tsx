@@ -1,5 +1,5 @@
 import React from "react"
-import { Glossary } from "src/components/glossary"
+import { Glossary } from "src/features/glossary/components/glossary"
 import Layout from "../layout"
 
 const GlossaryPage = () => {

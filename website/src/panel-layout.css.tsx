@@ -9,7 +9,7 @@ import {
   rootFontSize,
   vspace,
 } from "src/style/constants"
-import { closeButton } from "./morpheme.css"
+import { closeButton } from "src/features/documents/components/morpheme.css"
 import { marginX, paddingX, paddingY } from "./style/utils"
 
 const wordPanelPadding = "8px"

@@ -5,9 +5,9 @@ import {
   unstable_Form as Form,
   unstable_FormSubmitButton as FormSubmitButton,
 } from "reakit"
-import { IconTextButton } from "src/ui"
 import { IconButton } from "src/components"
-import * as css from "src/edit-word-feature.css"
+import * as css from "src/features/editor/components/edit-word-feature.css"
+import { IconTextButton } from "src/ui"
 import { useForm } from "../context/edit-comment-form-context"
 
 /** Button that allows user to enter edit mode in the word panel, and edit fields of a word. */

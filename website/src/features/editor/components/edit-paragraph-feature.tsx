@@ -7,10 +7,10 @@ import {
   unstable_FormLabel as FormLabel,
   unstable_FormSubmitButton as FormSubmitButton,
 } from "reakit"
-import * as Dailp from "src/graphql/dailp"
-import { IconTextButton } from "src/ui"
 import { UserRole, useUserRole } from "src/auth"
 import { IconButton } from "src/components"
+import * as Dailp from "src/graphql/dailp"
+import { IconTextButton } from "src/ui"
 import { useForm } from "../context/edit-paragraph-form-context"
 import * as css from "./edit-word-feature.css"
 

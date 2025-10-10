@@ -1,9 +1,9 @@
 import React, { SetStateAction, useEffect } from "react"
 import * as Dailp from "src/graphql/dailp"
-import { Button } from "src/ui"
-import { useCommentValueContext } from "./edit-comment-feature"
 import { TranslatedParagraph } from "src/segment"
+import { Button } from "src/ui"
 import * as css from "./comment-panel.css"
+import { useCommentValueContext } from "./edit-comment-feature"
 
 // The type of comment panel that is displayed.
 export enum CommentAction {

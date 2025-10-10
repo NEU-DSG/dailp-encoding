@@ -1,6 +1,6 @@
 import { ReactElement } from "react"
-import { WordAudio } from "src/features/documents/components/word-panel"
 import { UserRole, useCognitoUserGroups, useUserRole } from "src/auth"
+import { WordAudio } from "src/features/documents/components/word-panel"
 import * as Dailp from "src/graphql/dailp"
 import { ContributorEditWordAudio } from "./contributor"
 import { EditorEditWordAudio } from "./editor"

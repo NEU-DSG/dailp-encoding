@@ -3,9 +3,9 @@ import React from "react"
 import { ReactNode } from "react"
 import { MdClose } from "react-icons/md/index"
 import * as Dailp from "src/graphql/dailp"
+import { documentWordPath, glossaryRoute } from "src/routes"
 import { IconButton, Link } from "src/ui"
 import * as css from "./morpheme.css"
-import { documentWordPath, glossaryRoute } from "src/routes"
 
 type BasicMorphemeSegment = NonNullable<Dailp.FormFieldsFragment["segments"]>[0]
 

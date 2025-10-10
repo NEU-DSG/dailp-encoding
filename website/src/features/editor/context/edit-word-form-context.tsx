@@ -3,9 +3,9 @@ import {
   unstable_FormStateReturn as FormStateReturn,
   unstable_useFormState as useFormState,
 } from "reakit"
-import { useEditWordCheckContext } from "./edit-word-check-context"
 import * as Dailp from "src/graphql/dailp"
 import { usePreferences } from "src/preferences-context"
+import { useEditWordCheckContext } from "./edit-word-check-context"
 
 type FormContextType = {
   form: FormStateReturn<any | undefined>

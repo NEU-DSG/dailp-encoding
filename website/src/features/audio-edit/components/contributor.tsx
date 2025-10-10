@@ -1,8 +1,8 @@
 import { Fragment } from "react"
 import { useUserId } from "src/auth"
 import { WordAudio } from "src/features/documents/components/word-panel"
-import { AudioPlayer } from "src/ui"
 import * as Dailp from "src/graphql/dailp"
+import { AudioPlayer } from "src/ui"
 import { RecordAudioPanel } from "./record"
 
 function AvailableAudioSection(p: { word: Dailp.FormFieldsFragment }) {

@@ -1,10 +1,10 @@
 import { ChangeEvent, ReactElement, useMemo, useState } from "react"
 import { MdUploadFile } from "react-icons/md/index"
 import { VisuallyHidden } from "reakit"
+import { subtleButton } from "src/components/subtle-button.css"
 import * as Dailp from "src/graphql/dailp"
 import { AudioPlayer } from "src/ui"
 import { CleanButton, IconTextButton } from "src/ui"
-import { subtleButton } from "src/components/subtle-button.css"
 import { ContributeAudioPanel } from "./contributor-audio-panel"
 import { contributeAudioOptions } from "./contributor.css"
 

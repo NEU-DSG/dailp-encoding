@@ -1,6 +1,6 @@
 import { FormEvent } from "react"
-import { AudioPlayer } from "src/ui"
 import * as Dailp from "src/graphql/dailp"
+import { AudioPlayer } from "src/ui"
 
 export function EditorEditWordAudio(p: { word: Dailp.FormFieldsFragment }) {
   const allAudio = [

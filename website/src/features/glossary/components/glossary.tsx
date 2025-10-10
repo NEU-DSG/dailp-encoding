@@ -5,6 +5,7 @@ import React from "react"
 import { Helmet } from "react-helmet"
 import * as Dailp from "src/graphql/dailp"
 import { usePreferences } from "src/preferences-context"
+import { glossarySectionId, morphemeTagId } from "src/routes"
 import {
   closeBlock,
   edgePadded,
@@ -13,7 +14,6 @@ import {
   std,
 } from "src/style/utils.css"
 import Link from "src/ui/atoms/link/link"
-import { glossarySectionId, morphemeTagId } from "src/routes"
 
 export const Glossary = () => {
   const { cherokeeRepresentation } = usePreferences()
