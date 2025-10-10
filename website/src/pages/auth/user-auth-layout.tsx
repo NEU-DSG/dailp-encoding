@@ -9,10 +9,10 @@ import {
   unstable_FormStateReturn,
 } from "reakit"
 import { useCredentials, useUser } from "src/auth"
-import { Button, CleanButton, Link } from "src/components"
 import { AccountMenu } from "src/components/authenticated-users/account-menu"
 import { Environment, deploymentEnvironment } from "src/env"
 import { centeredColumn } from "src/style/utils.css"
+import { Button, CleanButton, Link } from "src/ui"
 import Layout from "../../layout"
 import {
   centeredHeader,

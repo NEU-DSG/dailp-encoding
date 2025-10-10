@@ -1,6 +1,6 @@
 import { style } from "@vanilla-extract/css"
 import { margin } from "polished"
-import { linkColor } from "src/components/link.css"
+import { linkColor } from "src/ui/atoms/link/link.css"
 import { drawerWidth } from "src/components/sidebar.css"
 import {
   colors,

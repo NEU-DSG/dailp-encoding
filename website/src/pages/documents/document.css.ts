@@ -1,8 +1,8 @@
 import { style } from "@vanilla-extract/css"
 import { flowRight } from "lodash-es"
 import { important, position } from "polished"
-import { button } from "src/components/button.css"
-import { rightButton } from "src/components/carousel.css"
+import { button } from "src/ui/atoms/button/button.css"
+import { rightButton } from "src/ui/molecules/carousel/carousel.css"
 import {
   colors,
   fonts,

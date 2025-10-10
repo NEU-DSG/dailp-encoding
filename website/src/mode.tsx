@@ -12,8 +12,8 @@ import {
   useDialogState,
 } from "reakit"
 import { Radio, RadioGroup, RadioStateReturn, useRadioState } from "reakit"
-import { IconButton, Label, Select } from "src/components"
 import * as Dailp from "src/graphql/dailp"
+import { IconButton, Label, Select } from "src/ui"
 import * as css from "./mode.css"
 import { usePreferences } from "./preferences-context"
 import { useRouteParams } from "./renderer/PageShell"
