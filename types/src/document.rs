@@ -3,10 +3,13 @@ use crate::{
     Database, Date, Translation, TranslationBlock,
 };
 
-use crate::person::{Contributor, SourceAttribution};
+use crate::doc_metadata::{Genre, Format, Keyword, SubjectHeading, Language, SpatialCoverage};
+use crate::person::{Contributor, Creator, SourceAttribution};
+use crate::types::MaybeUndefined;
 
-use async_graphql::{dataloader::DataLoader, FieldResult, MaybeUndefined};
+use async_graphql::{Context, dataloader::DataLoader, FieldResult, MaybeUndefined, Result};
 use serde::{Deserialize, Serialize};
+use sqlx::{query_file_as, PgPool};
 use uuid::Uuid;
 
 /// A document with associated metadata and content broken down into pages and further into
@@ -516,25 +519,27 @@ pub struct DocumentMetadata {
     pub sources: Vec<SourceAttribution>,
     /// Where the source document came from, maybe the name of a collection.
     pub collection: Option<String>,
+    #[graphql(skip)]
     /// Term that contextualizes the social practice surrounding the document
     pub genre_id: MaybeUndefined<Uuid>,
+    #[graphql(skip)]
     /// The format of the original artifact
     pub format_id: MaybeUndefined<Uuid>,
-    #[serde(default)]
+    #[graphql(skip)]
     pub creators_ids: MaybeUndefined<Vec<Uuid>>,
-    #[serde(default)]
+    #[graphql(skip)]
     /// The people involved in collecting, translating, annotating.
     pub contributors_ids: MaybeUndefined<Vec<Uuid>>,
-    #[serde(default)]
+    #[graphql(skip)]
     /// The key terms associated with this document
     pub keywords_ids: MaybeUndefined<Vec<Uuid>>,
-    #[serde(default)]
+    #[graphql(skip)]
     /// Terms that reflect Indigenous knowledge practices related to this document
     pub subject_headings_ids: MaybeUndefined<Vec<Uuid>>,
-    #[serde(default)]
+    #[graphql(skip)]
     /// The languages present in this document
     pub languages_ids: MaybeUndefined<Vec<Uuid>>,
-    #[serde(default)]
+    #[graphql(skip)]
     /// The physical locations associated with this document
     pub spatial_coverage_ids: MaybeUndefined<Vec<Uuid>>,
     /// Rough translation of the document, broken down by paragraph.
@@ -556,6 +561,90 @@ pub struct DocumentMetadata {
     pub order_index: i64,
     #[serde(default)]
 }
+
+#[async_graphql::Object]
+impl DocumentMetadata {
+    /// Fetch the genre associated with this document
+    async fn genre(&self, ctx: &Context<'_>) -> Result<Option<Genre>> {
+        let genre_id = match self.genre_id {
+            MaybeUndefined::Some(id) => id,
+            _ => return Ok(None),
+        };
+        let pool = ctx.data::<PgPool>()?;
+        let row = query_file_as!(Genre, "types/queries/get_genre_by_id.sql", genre_id)
+            .fetch_optional(pool)
+            .await?;
+        Ok(row)
+    }
+
+    /// Fetch the format associated with this document
+    async fn format(&self, ctx: &Context<'_>) -> Result<Option<Format>> {
+        let format_id = match self.format_id {
+            MaybeUndefined::Some(id) => id,
+            _ => return Ok(None),
+        };
+        let pool = ctx.data::<PgPool>()?;
+        let row = query_file_as!(Format, "types/queries/get_format_by_id.sql", format_id)
+            .fetch_optional(pool)
+            .await?;
+        Ok(row)
+    }
+    
+    /// Fetch all keywords linked to this document
+    async fn keywords(&self, ctx: &Context<'_>) -> Result<Vec<Keyword>> {
+        let pool = ctx.data::<PgPool>()?;
+        let rows = query_file_as!(Keyword, "types/queries/get_keywords_by_document_id.sql", self.id.0)
+            .fetch_all(pool)
+            .await?;
+        Ok(rows)
+    }
+    
+    /// Fetch all subject headings linked to this document
+    async fn subject_headings(&self, ctx: &Context<'_>) -> Result<Vec<SubjectHeading>> {
+        let pool = ctx.data::<PgPool>()?;
+        let rows = query_file_as!(SubjectHeading, "types/queries/get_subject_headings_by_document_id.sql", self.id.0)
+            .fetch_all(pool)
+            .await?;
+        Ok(rows)
+    }
+    
+     /// Fetch all languages linked to this document
+    async fn languages(&self, ctx: &Context<'_>) -> Result<Vec<Language>> {
+        let pool = ctx.data::<PgPool>()?;
+        let rows = query_file_as!(Language, "types/queries/get_languages_by_document_id.sql", self.id.0)
+            .fetch_all(pool)
+            .await?;
+        Ok(rows)
+    }
+    
+    /// Fetch all spatial coverages linked to this document
+    async fn spatial_coverages(&self, ctx: &Context<'_>) -> Result<Vec<SpatialCoverage>> {
+        let pool = ctx.data::<PgPool>()?;
+        let rows = query_file_as!(SpatialCoverage, "types/queries/get_spatial_coverages_by_document_id.sql", self.id.0)
+            .fetch_all(pool)
+            .await?;
+        Ok(rows)
+    }
+    
+    /// Fetch all creators linked to this document
+    async fn creators(&self, ctx: &Context<'_>) -> Result<Vec<Creator>> {
+        let pool = ctx.data::<PgPool>()?;
+        let rows = query_file_as!(Creator, "types/queries/get_creators_by_document_id.sql", self.id.0)
+            .fetch_all(pool)
+            .await?;
+        Ok(rows)
+    }
+    
+    /// Fetch all contributors linked to this document
+    async fn contributors(&self, ctx: &Context<'_>) -> Result<Vec<Contributor>> {
+        let pool = ctx.data::<PgPool>()?;
+        let rows = query_file_as!(Contributor, "types/queries/get_contributors_by_document_id.sql", self.id.0)
+            .fetch_all(pool)
+            .await?;
+        Ok(rows)
+    }
+}
+
 
 /// Database ID for one document
 #[derive(
