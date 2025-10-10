@@ -6,11 +6,12 @@ import { MdClose } from "react-icons/md/index"
 import { Disclosure, DisclosureContent, useDisclosureState } from "reakit"
 import { unstable_Form as Form, unstable_FormInput as FormInput } from "reakit"
 import { useCognitoUserGroups, useCredentials } from "src/components/auth"
-import { useCommentStateContext } from "src/components/comment-state"
 import { Button } from "src/components/button"
 import { IconButton } from "src/components/button"
 import { CommentAction, CommentPanel } from "src/components/comment-panel"
+import { useCommentStateContext } from "src/components/comment-state"
 import ParagraphPanel from "src/components/paragraph-panel"
+import { usePreferences } from "src/components/preferences"
 import { TranslatedParagraph } from "src/components/segment"
 import { SubtleButton } from "src/components/subtle-button"
 import { WordPanel } from "src/components/word-panel"
@@ -19,7 +20,6 @@ import { useForm as useParagraphForm } from "src/edit-paragraph-form-context"
 import { EditButton as WordEditButton } from "src/edit-word-feature"
 import { useForm } from "src/edit-word-form-context"
 import * as Dailp from "src/graphql/dailp"
-import { usePreferences } from "src/components/preferences"
 import * as css from "./panel-layout.css"
 
 enum PanelType {
@@ -303,9 +303,7 @@ export const PanelLayout = (p: {
           </SubtleButton>
         ) : (
           <>
-            <Button onClick={() => setIsCommenting(true)}>
-              Comment
-            </Button>
+            <Button onClick={() => setIsCommenting(true)}>Comment</Button>
           </>
         ))}
     </div>
