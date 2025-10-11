@@ -31,7 +31,7 @@ pub struct Genre {
 }
 
 /// Get all approved genres
-#[ComplexObject]
+#[async_graphql::ComplexObject]
 impl Genre {
     async fn approved(&self) -> bool {
         matches!(self.status, Some(Status::Approved))
@@ -51,7 +51,7 @@ pub struct Format {
 }
 
 /// Get all approved formats
-#[ComplexObject]
+#[async_graphql::ComplexObject]
 impl Format {
     async fn approved(&self) -> bool {
         matches!(self.status, Some(Status::Approved))
@@ -110,13 +110,6 @@ impl SubjectHeading {
 impl From<&SubjectHeading> for Uuid {
     fn from(s: &SubjectHeading) -> Self {
         s.id
-    }
-}
-
-/// Converts Uuid to empty SubjectHeading struct
-impl From<Uuid> for SubjectHeading {
-    fn from(id: Uuid) -> Self {
-        SubjectHeading { id, name: String::new(), status: None }
     }
 }
 
