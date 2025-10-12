@@ -559,7 +559,6 @@ pub struct DocumentMetadata {
     /// Arbitrary number used for manually ordering documents in a collection.
     /// For collections without manual ordering, use zero here.
     pub order_index: i64,
-    #[serde(default)]
 }
 
 #[async_graphql::Object]

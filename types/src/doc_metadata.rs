@@ -122,7 +122,7 @@ pub struct Language {
     /// Name of the language
     pub name: String,
     // Name a language uses for itself
-    pub autonym Option<String>,
+    pub autonym: Option<String>,
     /// Status (pending, approved, rejected) of a language
     pub status: Status,
 }

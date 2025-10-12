@@ -9,15 +9,15 @@ update document set
             when $3::date is not null then $3::date
             else written_at
         end
-    genre =
+    genre_id =
         case
             when $4::uuid is not null then $4
-            else genre
+            else genre_id
         end,
-    doc_format =
+    format_id =
         case
             when $5::uuid is not null then $5
-            else doc_format
+            else format_id
         end,
     pages =
         case
@@ -31,7 +31,7 @@ update document set
         end,
     doi =
         case
-            when $8::uuid is not null then $8
+            when $8::string is not null then $8
             else doi
         end
 where id = $1
