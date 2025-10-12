@@ -566,7 +566,7 @@ impl DocumentMetadata {
     /// Fetch the genre associated with this document
     async fn genre(&self, ctx: &Context<'_>) -> Result<Option<Genre>> {
         let genre_id = match self.genre_id {
-            MaybeUndefined::Some(id) => id,
+            MaybeUndefined::Value(id) => id,
             _ => return Ok(None),
         };
         let pool = ctx.data::<PgPool>()?;
@@ -579,7 +579,7 @@ impl DocumentMetadata {
     /// Fetch the format associated with this document
     async fn format(&self, ctx: &Context<'_>) -> Result<Option<Format>> {
         let format_id = match self.format_id {
-            MaybeUndefined::Some(id) => id,
+            MaybeUndefined::Value(id) => id,
             _ => return Ok(None),
         };
         let pool = ctx.data::<PgPool>()?;
