@@ -773,7 +773,7 @@ impl Database {
         // Begin transaction
         let mut tx = self.client.begin().await?;
     
-        // Update core document metadata fields
+        // Update document metadata fields
         query_file!(
             "queries/update_document_metadata.sql",
             document.id,
@@ -789,6 +789,8 @@ impl Database {
         .await?;
     
         // Handle join-table metadata (keywords, subject headings, languages, etc.)
+
+        // Update keywords
         if let Some(keyword_ids) = &document.keyword_ids {
             query_file!("types/queries/delete_document_keywords.sql", document.id)
                 .execute(&mut *tx)
@@ -799,6 +801,7 @@ impl Database {
                 .await?;
         }
     
+        // Update subject headings
         if let Some(subject_heading_ids) = &document.subject_heading_ids {
             query_file!("types/queries/delete_document_subject_headings.sql", document.id)
                 .execute(&mut *tx)
@@ -813,6 +816,7 @@ impl Database {
             .await?;
         }
     
+        // Update languages
         if let Some(language_ids) = &document.language_ids {
             query_file!("types/queries/delete_document_languages.sql", document.id)
                 .execute(&mut *tx)
@@ -823,6 +827,7 @@ impl Database {
                 .await?;
         }
     
+        // Update spatial coverages
         if let Some(spatial_coverage_ids) = &document.spatial_coverage_ids {
             query_file!("types/queries/delete_document_spatial_coverage.sql", document.id)
                 .execute(&mut *tx)
@@ -837,6 +842,7 @@ impl Database {
             .await?;
         }
     
+        // Update creators
         if let Some(creator_ids) = &document.creator_ids {
             query_file!("types/queries/delete_document_creator.sql", document.id)
                 .execute(&mut *tx)
@@ -847,6 +853,7 @@ impl Database {
                 .await?;
         }
     
+        // Update contributors
         if let Some(contributor_ids) = &document.contributor_ids {
             query_file!("types/queries/delete_document_contributors.sql", document.id)
                 .execute(&mut *tx)
@@ -861,7 +868,7 @@ impl Database {
             .await?;
         }
     
-        // Commit all updates as one atomic transaction
+        // Commit updates
         tx.commit().await?;
     
         Ok(document.id)
