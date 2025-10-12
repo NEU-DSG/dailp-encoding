@@ -3,6 +3,7 @@
 use auth::UserGroup;
 use chrono::{NaiveDate, NaiveDateTime};
 use sqlx::postgres::types::PgLTree;
+use sqlx::query_file;
 use std::ops::Bound;
 use std::str::FromStr;
 use user::UserUpdate;
@@ -768,7 +769,11 @@ impl Database {
     pub async fn update_document_metadata(&self, document: DocumentMetadataUpdate) -> Result<Uuid> {
         let title = document.title.into_vec();
         let written_at: Option<Date> = document.written_at.value().map(Into::into);
-
+    
+        // Begin transaction
+        let mut tx = self.client.begin().await?;
+    
+        // Update core document metadata fields
         query_file!(
             "queries/update_document_metadata.sql",
             document.id,
@@ -780,60 +785,87 @@ impl Database {
             document.doi,
             document.source
         )
-        .execute(&self.client)
+        .execute(&mut *tx)
         .await?;
-
+    
         // Handle join-table metadata (keywords, subject headings, languages, etc.)
         if let Some(keyword_ids) = &document.keyword_ids {
-            query_file!("queries/update_document_keywords.sql", document.id, keyword_ids)
-                .execute(&self.client)
+            query_file!("types/queries/delete_document_keywords.sql", document.id)
+                .execute(&mut *tx)
+                .await?;
+    
+            query_file!("types/queries/insert_document_keywords.sql", document.id, keyword_ids)
+                .execute(&mut *tx)
                 .await?;
         }
-
+    
         if let Some(subject_heading_ids) = &document.subject_heading_ids {
+            query_file!("types/queries/delete_document_subject_headings.sql", document.id)
+                .execute(&mut *tx)
+                .await?;
+    
             query_file!(
-                "queries/update_document_subject_headings.sql",
+                "types/queries/insert_document_subject_headings.sql",
                 document.id,
                 subject_heading_ids
             )
-            .execute(&self.client)
+            .execute(&mut *tx)
             .await?;
         }
-
+    
         if let Some(language_ids) = &document.language_ids {
-            query_file!("queries/update_document_languages.sql", document.id, language_ids)
-                .execute(&self.client)
+            query_file!("types/queries/delete_document_languages.sql", document.id)
+                .execute(&mut *tx)
+                .await?;
+    
+            query_file!("types/queries/insert_document_languages.sql", document.id, language_ids)
+                .execute(&mut *tx)
                 .await?;
         }
-
+    
         if let Some(spatial_coverage_ids) = &document.spatial_coverage_ids {
+            query_file!("types/queries/delete_document_spatial_coverage.sql", document.id)
+                .execute(&mut *tx)
+                .await?;
+    
             query_file!(
-                "queries/update_document_spatial_coverage.sql",
+                "types/queries/insert_document_spatial_coverage.sql",
                 document.id,
                 spatial_coverage_ids
             )
-            .execute(&self.client)
+            .execute(&mut *tx)
             .await?;
         }
-
+    
         if let Some(creator_ids) = &document.creator_ids {
-            query_file!("queries/update_document_creators.sql", document.id, creator_ids)
-                .execute(&self.client)
+            query_file!("types/queries/delete_document_creator.sql", document.id)
+                .execute(&mut *tx)
+                .await?;
+    
+            query_file!("types/queries/insert_document_creator.sql", document.id, creator_ids)
+                .execute(&mut *tx)
                 .await?;
         }
-
+    
         if let Some(contributor_ids) = &document.contributor_ids {
+            query_file!("types/queries/delete_document_contributors.sql", document.id)
+                .execute(&mut *tx)
+                .await?;
+    
             query_file!(
-                "queries/update_document_contributors.sql",
+                "types/queries/insert_document_contributors.sql",
                 document.id,
                 contributor_ids
             )
-            .execute(&self.client)
+            .execute(&mut *tx)
             .await?;
         }
-
+    
+        // Commit all updates as one atomic transaction
+        tx.commit().await?;
+    
         Ok(document.id)
-    }
+    }    
 
     pub async fn update_paragraph(&self, paragraph: ParagraphUpdate) -> Result<DocumentParagraph> {
         let translation = paragraph.translation.into_vec();
