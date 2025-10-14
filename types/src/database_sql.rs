@@ -22,7 +22,7 @@ use {
     itertools::Itertools,
     sqlx::{
         postgres::{types::PgRange, PgPoolOptions},
-        query_file, query_file_as, query_file_scalar, Acquire,
+        query_file_as, query_file_scalar, Acquire,
     },
     std::collections::HashMap,
     std::sync::Arc,
@@ -292,7 +292,7 @@ impl Database {
                     date: item.written_at.map(Date::new),
                     audio_recording: None,
                     collection: None,
-                    contributors: item
+                    contributors_ids: item
                         .contributors
                         .and_then(|x| serde_json::from_value(x).ok())
                         .unwrap_or_default(),
@@ -430,7 +430,7 @@ impl Database {
                 date: item.written_at.map(Date::new),
                 audio_recording: None,
                 collection: None,
-                contributors: item
+                contributors_ids: item
                     .contributors
                     .and_then(|x| serde_json::from_value(x).ok())
                     .unwrap_or_default(),
@@ -791,18 +791,18 @@ impl Database {
         // Handle join-table metadata (keywords, subject headings, languages, etc.)
 
         // Update keywords
-        if let Some(keyword_ids) = &document.keyword_ids {
+        if let Some(keywords_ids) = &document.keywords_ids {
             query_file!("types/queries/delete_document_keywords.sql", document.id)
                 .execute(&mut *tx)
                 .await?;
     
-            query_file!("types/queries/insert_document_keywords.sql", document.id, keyword_ids)
+            query_file!("types/queries/insert_document_keywords.sql", document.id, keywords_ids)
                 .execute(&mut *tx)
                 .await?;
         }
     
         // Update subject headings
-        if let Some(subject_heading_ids) = &document.subject_heading_ids {
+        if let Some(subject_headings_ids) = &document.subject_headings_ids {
             query_file!("types/queries/delete_document_subject_headings.sql", document.id)
                 .execute(&mut *tx)
                 .await?;
@@ -810,25 +810,25 @@ impl Database {
             query_file!(
                 "types/queries/insert_document_subject_headings.sql",
                 document.id,
-                subject_heading_ids
+                subject_headings_ids
             )
             .execute(&mut *tx)
             .await?;
         }
     
         // Update languages
-        if let Some(language_ids) = &document.language_ids {
+        if let Some(languages_ids) = &document.languages_ids {
             query_file!("types/queries/delete_document_languages.sql", document.id)
                 .execute(&mut *tx)
                 .await?;
     
-            query_file!("types/queries/insert_document_languages.sql", document.id, language_ids)
+            query_file!("types/queries/insert_document_languages.sql", document.id, languages_ids)
                 .execute(&mut *tx)
                 .await?;
         }
     
         // Update spatial coverages
-        if let Some(spatial_coverage_ids) = &document.spatial_coverage_ids {
+        if let MaybeUndefined::Value(spatial_coverage_ids) = &document.spatial_coverage_ids {
             query_file!("types/queries/delete_document_spatial_coverage.sql", document.id)
                 .execute(&mut *tx)
                 .await?;
@@ -843,7 +843,7 @@ impl Database {
         }
     
         // Update creators
-        if let Some(creator_ids) = &document.creator_ids {
+        if let Some(creator_ids) = &document.creators_ids {
             query_file!("types/queries/delete_document_creator.sql", document.id)
                 .execute(&mut *tx)
                 .await?;
@@ -854,7 +854,7 @@ impl Database {
         }
     
         // Update contributors
-        if let Some(contributor_ids) = &document.contributor_ids {
+        if let Some(contributor_ids) = &document.contributors_ids {
             query_file!("types/queries/delete_document_contributors.sql", document.id)
                 .execute(&mut *tx)
                 .await?;
@@ -1076,13 +1076,13 @@ impl Database {
 
         {
             let (name, doc, role): (Vec<_>, Vec<_>, Vec<_>) = meta
-                .contributors
+                .contributors_ids
                 .iter()
                 .map(|contributor| (&*contributor.name, document_uuid, contributor.role.as_ref()))
                 .multiunzip();
             // Convert roles to Option<String> for SQL
             let role_strings: Vec<Option<String>> =
-                role.iter().map(|r| r.map(|r| r.to_string())).collect();
+                role.iter().map(|r: &Option<ContributorRole>| r.map(|r| r.to_string())).collect();
             query_file!(
                 "queries/upsert_document_contributors.sql",
                 &*name as _,
@@ -1740,7 +1740,7 @@ impl Loader<DocumentId> for Database {
                         }),
                     }),
                     collection: None,
-                    contributors: item
+                    contributors_ids: item
                         .contributors
                         .and_then(|x| serde_json::from_value(x).ok())
                         .unwrap_or_default(),
@@ -1812,7 +1812,7 @@ impl Loader<DocumentShortName> for Database {
                         }),
                     }),
                     collection: None,
-                    contributors: item
+                    contributors_ids: item
                         .contributors
                         .and_then(|x| serde_json::from_value(x).ok())
                         .unwrap_or_default(),

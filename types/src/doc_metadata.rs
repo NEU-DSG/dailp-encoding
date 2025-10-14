@@ -34,7 +34,7 @@ pub struct Genre {
 #[async_graphql::ComplexObject]
 impl Genre {
     async fn approved(&self) -> bool {
-        matches!(self.status, Some(Status::Approved))
+        matches!(self.status, Status::Approved)
     }
 }
 
@@ -54,7 +54,7 @@ pub struct Format {
 #[async_graphql::ComplexObject]
 impl Format {
     async fn approved(&self) -> bool {
-        matches!(self.status, Some(Status::Approved))
+        matches!(self.status, Status::Approved)
     }
 }
 
@@ -74,7 +74,7 @@ pub struct Keyword {
 #[async_graphql::ComplexObject]
 impl Keyword {
     async fn approved(&self) -> bool {
-        matches!(self.status, Some(Status::Approved))
+        matches!(self.status, Status::Approved)
     }
 }
 
@@ -102,7 +102,7 @@ pub struct SubjectHeading {
 #[async_graphql::ComplexObject]
 impl SubjectHeading {
     async fn approved(&self) -> bool {
-        matches!(self.status, Some(Status::Approved))
+        matches!(self.status, Status::Approved)
     }
 }
 
@@ -131,7 +131,7 @@ pub struct Language {
 #[async_graphql::ComplexObject]
 impl Language {
     async fn approved(&self) -> bool {
-        matches!(self.status, Some(Status::Approved))
+        matches!(self.status, Status::Approved)
     }
 }
 
@@ -158,7 +158,7 @@ pub struct SpatialCoverage {
 #[async_graphql::ComplexObject]
 impl SpatialCoverage {
     async fn approved(&self) -> bool {
-        matches!(self.status, Some(Status::Approved))
+        matches!(self.status, Status::Approved)
     }
 }
 
