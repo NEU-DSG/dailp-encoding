@@ -5,7 +5,7 @@ use crate::{
 
 use crate::doc_metadata::{Genre, Format, Keyword, SubjectHeading, Language, SpatialCoverage};
 use crate::person::{Contributor, Creator, SourceAttribution};
-use crate::types::MaybeUndefined;
+use async_graphql::types::MaybeUndefined;
 
 use async_graphql::{Context, dataloader::DataLoader, FieldResult, MaybeUndefined, Result};
 use serde::{Deserialize, Serialize};
@@ -240,7 +240,7 @@ impl AnnotatedDoc {
     }
     
     /// Terms that reflect Indigenous knowledge practices related to this document
-    async fn subject_headings(&self) -> &Option<Vec<SubjectHeadings>> {
+    async fn subject_headings(&self) -> &Option<Vec<SubjectHeading>> {
         &self.meta.subject_headings_ids
     }
     
@@ -570,7 +570,7 @@ impl DocumentMetadata {
             _ => return Ok(None),
         };
         let pool = ctx.data::<PgPool>()?;
-        let row = query_file_as!(Genre, "../queries/get_genre_by_id.sql", genre_id)
+        let row = query_file_as!(Genre, "queries/get_genre_by_id.sql", genre_id)
             .fetch_optional(pool)
             .await?;
         Ok(row)
@@ -583,7 +583,7 @@ impl DocumentMetadata {
             _ => return Ok(None),
         };
         let pool = ctx.data::<PgPool>()?;
-        let row = query_file_as!(Format, "../queries/get_format_by_id.sql", format_id)
+        let row = query_file_as!(Format, "queries/get_format_by_id.sql", format_id)
             .fetch_optional(pool)
             .await?;
         Ok(row)
@@ -592,7 +592,7 @@ impl DocumentMetadata {
     /// Fetch all keywords linked to this document
     async fn keywords(&self, ctx: &Context<'_>) -> Result<Vec<Keyword>> {
         let pool = ctx.data::<PgPool>()?;
-        let rows = query_file_as!(Keyword, "../queries/get_keywords_by_document_id.sql", self.id.0)
+        let rows = query_file_as!(Keyword, "queries/get_keywords_by_document_id.sql", self.id.0)
             .fetch_all(pool)
             .await?;
         Ok(rows)
@@ -601,7 +601,7 @@ impl DocumentMetadata {
     /// Fetch all subject headings linked to this document
     async fn subject_headings(&self, ctx: &Context<'_>) -> Result<Vec<SubjectHeading>> {
         let pool = ctx.data::<PgPool>()?;
-        let rows = query_file_as!(SubjectHeading, "../queries/get_subject_headings_by_document_id.sql", self.id.0)
+        let rows = query_file_as!(SubjectHeading, "queries/get_subject_headings_by_document_id.sql", self.id.0)
             .fetch_all(pool)
             .await?;
         Ok(rows)
@@ -610,7 +610,7 @@ impl DocumentMetadata {
      /// Fetch all languages linked to this document
     async fn languages(&self, ctx: &Context<'_>) -> Result<Vec<Language>> {
         let pool = ctx.data::<PgPool>()?;
-        let rows = query_file_as!(Language, "../queries/get_languages_by_document_id.sql", self.id.0)
+        let rows = query_file_as!(Language, "queries/get_languages_by_document_id.sql", self.id.0)
             .fetch_all(pool)
             .await?;
         Ok(rows)
@@ -619,7 +619,7 @@ impl DocumentMetadata {
     /// Fetch all spatial coverages linked to this document
     async fn spatial_coverages(&self, ctx: &Context<'_>) -> Result<Vec<SpatialCoverage>> {
         let pool = ctx.data::<PgPool>()?;
-        let rows = query_file_as!(SpatialCoverage, "../queries/get_spatial_coverages_by_document_id.sql", self.id.0)
+        let rows = query_file_as!(SpatialCoverage, "queries/get_spatial_coverages_by_document_id.sql", self.id.0)
             .fetch_all(pool)
             .await?;
         Ok(rows)
@@ -628,7 +628,7 @@ impl DocumentMetadata {
     /// Fetch all creators linked to this document
     async fn creators(&self, ctx: &Context<'_>) -> Result<Vec<Creator>> {
         let pool = ctx.data::<PgPool>()?;
-        let rows = query_file_as!(Creator, "../queries/get_creators_by_document_id.sql", self.id.0)
+        let rows = query_file_as!(Creator, "queries/get_creators_by_document_id.sql", self.id.0)
             .fetch_all(pool)
             .await?;
         Ok(rows)
@@ -637,7 +637,7 @@ impl DocumentMetadata {
     /// Fetch all contributors linked to this document
     async fn contributors(&self, ctx: &Context<'_>) -> Result<Vec<Contributor>> {
         let pool = ctx.data::<PgPool>()?;
-        let rows = query_file_as!(Contributor, "../queries/get_contributors_by_document_id.sql", self.id.0)
+        let rows = query_file_as!(Contributor, "queries/get_contributors_by_document_id.sql", self.id.0)
             .fetch_all(pool)
             .await?;
         Ok(rows)
