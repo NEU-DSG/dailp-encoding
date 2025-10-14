@@ -10,7 +10,7 @@ import {
   rootFontSize,
   vspace,
 } from "src/style/constants"
-import { marginX, paddingX, paddingY } from "./style/utils"
+import { marginX, paddingX, paddingY } from "src/style/utils"
 
 const wordPanelPadding = "8px"
 

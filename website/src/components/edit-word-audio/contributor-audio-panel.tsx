@@ -3,7 +3,7 @@ import { ReactElement, ReactNode } from "react"
 import { IconType } from "react-icons"
 import * as Dailp from "src/graphql/dailp"
 import { CollapsiblePanel } from "src/word-panel"
-import * as css from "../../panel-layout.css"
+import * as css from "src/ui/organisms/panel-layout/panel-layout.css"
 import {
   contributeAudioContainer,
   statusMessage,

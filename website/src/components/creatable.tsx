@@ -1,6 +1,6 @@
 import React from "react"
 import CreatableSelect from "react-select/creatable"
-import * as css from "../panel-layout.css"
+import * as css from "src/ui/organisms/panel-layout/panel-layout.css"
 
 const customStyles = {
   container: (provided: any, state: any) => ({

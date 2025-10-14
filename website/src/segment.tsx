@@ -9,7 +9,7 @@ import { DocumentContents } from "src/pages/documents/document.page"
 import { std } from "src/style/utils.css"
 import { CleanButton } from "./components"
 import { Environment, deploymentEnvironment } from "./env"
-import { PanelDetails } from "./panel-layout"
+import { PanelDetails } from "src/ui/organisms/panel-layout/panel-layout"
 import * as css from "./segment.css"
 import { BasicMorphemeSegment, LevelOfDetail } from "./types"
 

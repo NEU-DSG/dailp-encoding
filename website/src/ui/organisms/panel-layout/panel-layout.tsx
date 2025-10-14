@@ -16,13 +16,13 @@ import { useForm as useParagraphForm } from "src/features/editor/context/edit-pa
 import { useForm } from "src/features/editor/context/edit-word-form-context"
 import * as Dailp from "src/graphql/dailp"
 import { SubtleButton } from "src/ui"
-import { useCognitoUserGroups, useCredentials } from "./auth"
-import { Button, IconButton } from "./components"
+import { useCognitoUserGroups, useCredentials } from "src/auth"
+import { Button, IconButton } from "src/components"
 import * as css from "./panel-layout.css"
-import ParagraphPanel from "./paragraph-panel"
-import { usePreferences } from "./preferences-context"
-import { TranslatedParagraph } from "./segment"
-import { WordPanel } from "./word-panel"
+import ParagraphPanel from "src/paragraph-panel"
+import { usePreferences } from "src/preferences-context"
+import { TranslatedParagraph } from "src/segment"
+import { WordPanel } from "src/word-panel"
 
 enum PanelType {
   WordPanel,
