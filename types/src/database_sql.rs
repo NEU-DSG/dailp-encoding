@@ -1631,6 +1631,54 @@ impl Database {
                 .await?,
         )
     }
+
+    pub async fn get_menu_by_slug(&self, slug: String) -> Result<Menu> {
+        let menu = query_file!("queries/menu_by_slug.sql", slug)
+            .fetch_one(&self.client)
+            .await?;
+
+        let items_json: serde_json::Value = menu.items;
+        let items: Vec<MenuItem> = serde_json::from_value(items_json).unwrap_or_default();
+
+        Ok(Menu {
+            id: menu.id,
+            name: menu.name,
+            slug: menu.slug,
+            items,
+        })
+    }
+
+    pub async fn update_menu(&self, menu: MenuUpdate) -> Result<Menu> {
+        let menu = query_file!(
+            "queries/update_menu.sql",
+            menu.id,
+            menu.name.clone().unwrap_or_default(),
+            slug::slugify(menu.name.unwrap_or_default()),
+            menu.items
+                .map(|items| serde_json::to_value(items).unwrap_or_default())
+        )
+        .fetch_one(&self.client)
+        .await?;
+        let items: Vec<MenuItem> = serde_json::from_value(menu.items).unwrap_or_default();
+        Ok(Menu {
+            id: menu.id,
+            name: menu.name,
+            slug: menu.slug,
+            items,
+        })
+    }
+
+    pub async fn insert_menu(&self, menu: Menu) -> Result<()> {
+        query_file!(
+            "queries/insert_menu.sql",
+            menu.name,
+            menu.slug,
+            serde_json::to_value(menu.items).unwrap_or_default()
+        )
+        .execute(&self.client)
+        .await?;
+        Ok(())
+    }
 }
 
 #[async_trait]
