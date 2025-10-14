@@ -740,3 +740,34 @@ query pageByPath($path: String!) {
     }
   }
 }
+query MenuBySlug($slug: String!) {
+  menuBySlug(slug: $slug) {
+    id
+    name
+    slug
+    items {
+      label
+      path
+      items {
+        label
+        path
+      }
+    }
+  }
+}
+
+mutation UpdateMenu($menu: MenuUpdate!) {
+  updateMenu(menu: $menu) {
+    id
+    name
+    slug
+    items {
+      label
+      path
+      items {
+        label
+        path
+      }
+    }
+  }
+}

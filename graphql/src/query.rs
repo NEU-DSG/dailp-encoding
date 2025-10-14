@@ -16,8 +16,8 @@ use {
     dailp::async_graphql::{self, dataloader::DataLoader, Context, FieldResult},
     dailp::{
         AbstractMorphemeTag, AnnotatedDoc, AnnotatedFormUpdate, CherokeeOrthography, Database,
-        EditedCollection, MorphemeId, MorphemeReference, MorphemeTag, ParagraphUpdate,
-        WordsInDocument,
+        EditedCollection, Menu, MenuUpdate, MorphemeId, MorphemeReference, MorphemeTag,
+        ParagraphUpdate, WordsInDocument,
     },
 };
 
@@ -383,6 +383,14 @@ impl Query {
             .data::<DataLoader<Database>>()?
             .loader()
             .abbreviation_id_from_short_name(&short_name)
+            .await?)
+    }
+
+    async fn menu_by_slug(&self, context: &Context<'_>, slug: String) -> FieldResult<Menu> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .get_menu_by_slug(slug)
             .await?)
     }
 }
@@ -762,6 +770,13 @@ impl Mutation {
             .data::<DataLoader<Database>>()?
             .loader()
             .upsert_page(page)
+        )}
+
+    async fn update_menu(&self, context: &Context<'_>, menu: MenuUpdate) -> FieldResult<Menu> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .update_menu(menu)
             .await?)
     }
 }
