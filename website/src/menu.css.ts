@@ -116,9 +116,9 @@ export const navDrawer = style([
 ])
 
 export const drawerList = style({
-  overflow:"scroll",
-  height:"100vh",
-  paddingBottom:"3rem",
+  overflow: "scroll",
+  height: "100vh",
+  paddingBottom: "3rem",
   listStyle: "none",
   paddingInlineStart: 0,
 })
