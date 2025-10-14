@@ -120,7 +120,7 @@ impl AnnotatedDoc {
 
     /// The genre of the document, used to group similar ones
     async fn genre(&self) -> &Option<Genre> {
-        &self.meta.genre
+        &self.meta.genre_id
     }
 
     /// Images of each source document page, in order
@@ -226,32 +226,32 @@ impl AnnotatedDoc {
 
     /// The format of the original artifact
     async fn format(&self) -> &Option<Format> {
-        &self.meta.format
+        &self.meta.format_id
     }
     
     /// The creators of this document
     async fn creators(&self) -> &Option<Vec<Creator>> {
-        &self.meta.creators
+        &self.meta.creators_ids
     }
     
     /// The key terms associated with this document
     async fn keywords(&self) -> &Option<Vec<Keyword>> {
-        &self.meta.keywords
+        &self.meta.keywords_ids
     }
     
     /// Terms that reflect Indigenous knowledge practices related to this document
     async fn subject_headings(&self) -> &Option<Vec<SubjectHeadings>> {
-        &self.meta.subject_headings
+        &self.meta.subject_headings_ids
     }
     
     /// The languages present in this document
     async fn languages(&self) -> &Option<Vec<Language>> {
-        &self.meta.languages
+        &self.meta.languages_ids
     }
     
     /// The places mentioned in or associated with this document
     async fn spatial_coverages(&self) -> &Option<Vec<SpatialCoverage>> {
-        &self.meta.spatial_coverages
+        &self.meta.spatial_coverages_ids
     }
 }
 
