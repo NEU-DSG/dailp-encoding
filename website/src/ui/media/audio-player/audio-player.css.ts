@@ -38,5 +38,3 @@ globalStyle(`${audioElement} svg`, {
   fill: colors.primary,
   cursor: "pointer",
 })
-
-

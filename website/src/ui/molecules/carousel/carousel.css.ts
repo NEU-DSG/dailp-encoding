@@ -18,5 +18,3 @@ export const leftButton = style([slideButton, { left: 0 }])
 export const rightButton = style([slideButton, { right: 0 }])
 
 export const centerText = style({ textAlign: "center" })
-
-

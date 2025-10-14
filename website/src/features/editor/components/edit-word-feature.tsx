@@ -9,10 +9,10 @@ import {
 } from "reakit"
 import { UserRole, useUserRole } from "src/auth"
 import { IconButton } from "src/components"
-import { useEditWordCheckContext } from "../context/edit-word-check-context"
 import * as Dailp from "src/graphql/dailp"
 import { usePreferences } from "src/preferences-context"
 import { IconTextButton } from "src/ui"
+import { useEditWordCheckContext } from "../context/edit-word-check-context"
 import { useForm } from "../context/edit-word-form-context"
 import * as css from "./edit-word-feature.css"
 

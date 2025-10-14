@@ -1,8 +1,8 @@
 import { style } from "@vanilla-extract/css"
 import { padding } from "polished"
-import { linkColor } from "src/ui/atoms/link/link.css"
 import { colors, fonts, hspace, vspace } from "src/style/constants"
 import { hideOnPrint, std } from "src/style/utils.css"
+import { linkColor } from "src/ui/atoms/link/link.css"
 
 export const footer = style([hideOnPrint])
 

@@ -1,7 +1,22 @@
 export * from "./components/edit-word-feature"
-export { EditButton as EditParagraphButton, EditParagraphFeature } from "./components/edit-paragraph-feature"
-export { EditButton as EditDocButton, EditDocPanel } from "./components/edit-doc-data-panel"
-export { FormProvider as WordFormProvider, useForm as useWordForm } from "./context/edit-word-form-context"
-export { FormProvider as ParagraphFormProvider, useForm as useParagraphForm } from "./context/edit-paragraph-form-context"
-export { FormProvider as DocFormProvider, useForm as useDocForm } from "./context/edit-doc-data-form-context"
+export {
+  EditButton as EditParagraphButton,
+  EditParagraphFeature,
+} from "./components/edit-paragraph-feature"
+export {
+  EditButton as EditDocButton,
+  EditDocPanel,
+} from "./components/edit-doc-data-panel"
+export {
+  FormProvider as WordFormProvider,
+  useForm as useWordForm,
+} from "./context/edit-word-form-context"
+export {
+  FormProvider as ParagraphFormProvider,
+  useForm as useParagraphForm,
+} from "./context/edit-paragraph-form-context"
+export {
+  FormProvider as DocFormProvider,
+  useForm as useDocForm,
+} from "./context/edit-doc-data-form-context"
 export * from "./context/edit-word-check-context"

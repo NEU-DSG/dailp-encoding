@@ -24,5 +24,3 @@ export const subtleButtonActive = style([
     background: colors.bodyDark,
   },
 ])
-
-

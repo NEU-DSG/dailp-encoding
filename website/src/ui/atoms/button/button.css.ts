@@ -72,5 +72,3 @@ export const cleanButton = style({
   cursor: "pointer",
   margin: 0,
 })
-
-

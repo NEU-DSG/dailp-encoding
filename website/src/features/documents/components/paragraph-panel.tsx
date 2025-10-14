@@ -2,7 +2,10 @@ import React from "react"
 import { MdNotes, MdOutlineComment } from "react-icons/md/index"
 import { unstable_Form as Form, unstable_FormInput as FormInput } from "reakit"
 import { CommentSection } from "src/components/comment-section"
-import { EditButton, EditParagraphFeature } from "src/features/editor/components/edit-paragraph-feature"
+import {
+  EditButton,
+  EditParagraphFeature,
+} from "src/features/editor/components/edit-paragraph-feature"
 import { useForm as useParagraphForm } from "src/features/editor/context/edit-paragraph-form-context"
 import * as Dailp from "src/graphql/dailp"
 import { CollapsiblePanel } from "src/panel-layout"

@@ -1,5 +1,6 @@
 import { style, styleVariants } from "@vanilla-extract/css"
 import { rgba } from "polished"
+import { closeButton } from "src/features/documents/components/morpheme.css"
 import {
   fontSize,
   fonts,
@@ -9,7 +10,6 @@ import {
   rootFontSize,
   vspace,
 } from "src/style/constants"
-import { closeButton } from "src/features/documents/components/morpheme.css"
 import { marginX, paddingX, paddingY } from "./style/utils"
 
 const wordPanelPadding = "8px"

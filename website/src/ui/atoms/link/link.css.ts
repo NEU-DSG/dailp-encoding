@@ -26,5 +26,3 @@ export const link = style([
     textDecoration: "none",
   }),
 ])
-
-
