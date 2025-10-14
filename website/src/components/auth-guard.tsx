@@ -1,6 +1,6 @@
 import React from "react"
 import { UserRole, useAuthLoading, useUser, useUserRole } from "src/auth"
-import Layout from "src/layout"
+import Layout from "src/layouts/default"
 
 interface AuthGuardProps {
   children: React.ReactNode

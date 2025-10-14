@@ -35,8 +35,8 @@ import {
   useForm,
 } from "src/features/editor/context/edit-word-form-context"
 import * as Dailp from "src/graphql/dailp"
-import Layout from "src/layout"
-import { drawerBg } from "src/menu.css"
+import Layout from "src/layouts/default"
+import { drawerBg } from "src/ui/organisms/menu/menu.css"
 import { DocumentInfo } from "src/pages/documents/document-info"
 import { PanelDetails, PanelLayout, PanelSegment } from "src/panel-layout"
 import { usePreferences } from "src/preferences-context"

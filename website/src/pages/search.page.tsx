@@ -3,7 +3,7 @@ import QueryString from "query-string"
 import React, { useEffect } from "react"
 import { LexicalSearch } from "src/components/lexical-search"
 import { useLocation } from "src/renderer/PageShell"
-import Layout from "../layout"
+import Layout from "src/layouts/default"
 
 const SearchPage = () => {
   const location = useLocation()

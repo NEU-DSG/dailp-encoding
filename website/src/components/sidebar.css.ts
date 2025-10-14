@@ -1,6 +1,6 @@
 import { style } from "@vanilla-extract/css"
 import { padding } from "polished"
-import { navButton, navDrawer } from "src/menu.css"
+import { navButton, navDrawer } from "src/ui/organisms/menu/menu.css"
 import {
   colors,
   hspace,

@@ -7,7 +7,7 @@ import { WordpressPage } from "src/components"
 import { fullWidth, paddedCenterColumn } from "src/style/utils.css"
 import { Card, Carousel } from "src/ui"
 import * as Dailp from "../graphql/dailp"
-import Layout from "../layout"
+import Layout from "src/layouts/default"
 import { collectionRoute } from "../routes"
 
 /** Lists all documents in our database */

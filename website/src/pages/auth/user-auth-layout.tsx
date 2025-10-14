@@ -13,7 +13,7 @@ import { AccountMenu } from "src/components/authenticated-users/account-menu"
 import { Environment, deploymentEnvironment } from "src/env"
 import { centeredColumn } from "src/style/utils.css"
 import { Button, CleanButton, Link } from "src/ui"
-import Layout from "../../layout"
+import Layout from "src/layouts/default"
 import {
   centeredHeader,
   loginButton,

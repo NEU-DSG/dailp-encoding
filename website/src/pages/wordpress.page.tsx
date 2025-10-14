@@ -3,7 +3,7 @@ import { Helmet } from "react-helmet"
 import { WordpressPageContents } from "src/components"
 import * as Wordpress from "src/graphql/wordpress"
 import { edgePadded, fullWidth } from "src/style/utils.css"
-import Layout from "../layout"
+import Layout from "src/layouts/default"
 import { wordpressUrl } from "../theme.css"
 
 const WordpressPage = (props: { "*": string }) => (
