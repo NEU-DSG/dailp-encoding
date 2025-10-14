@@ -28,6 +28,8 @@ use {
     std::time::Duration,
     uuid::Uuid,
 };
+// Explicitly import types from person.rs
+use crate::person::{Contributor, ContributorDetails, ContributorRole};
 
 /// Connects to our backing database instance, providing high level functions
 /// for accessing the data therein.
@@ -569,8 +571,11 @@ impl Database {
         let source = word.source.into_vec();
         let simple_phonetics = word.romanized_source.into_vec();
         let commentary = word.commentary.into_vec();
-        //note, we are only expecting one english_gloss, turning into vec bc legacy type for english_gloss is vec
-        let english_gloss = word.english_gloss.into_vec();
+        let english_gloss_owned: Vec<String> = match word.english_gloss.into_vec().pop().flatten() {
+            Some(glosses) => glosses.split(',').map(|s| s.trim().to_string()).collect(),
+            None => Vec::new(),
+        };
+        let english_gloss: Vec<&str> = english_gloss_owned.iter().map(|s| s.as_str()).collect();
 
         let document_id = query_file!(
             "queries/update_word.sql",
@@ -578,7 +583,7 @@ impl Database {
             &source as _,
             &simple_phonetics as _,
             &commentary as _,
-            &english_gloss as _,
+            &english_gloss as _
         )
         .fetch_one(&mut *tx)
         .await?
@@ -980,13 +985,16 @@ impl Database {
             let (name, doc, role): (Vec<_>, Vec<_>, Vec<_>) = meta
                 .contributors
                 .iter()
-                .map(|contributor| (&*contributor.name, document_uuid, &*contributor.role))
+                .map(|contributor| (&*contributor.name, document_uuid, contributor.role.as_ref()))
                 .multiunzip();
+            // Convert roles to Option<String> for SQL
+            let role_strings: Vec<Option<String>> =
+                role.iter().map(|r| r.map(|r| r.to_string())).collect();
             query_file!(
                 "queries/upsert_document_contributors.sql",
                 &*name as _,
                 &*doc,
-                &*role as _
+                &role_strings as _
             )
             .execute(&mut *tx)
             .await?;
@@ -1629,16 +1637,13 @@ impl Database {
             .fetch_one(&self.client)
             .await?;
 
-        let m_id: Uuid = menu.id;
-        let m_name: String = menu.name;
-        let m_slug: String = menu.slug;
         let items_json: serde_json::Value = menu.items;
         let items: Vec<MenuItem> = serde_json::from_value(items_json).unwrap_or_default();
 
         Ok(Menu {
-            id: m_id,
-            name: m_name,
-            slug: m_slug,
+            id: menu.id,
+            name: menu.name,
+            slug: menu.slug,
             items,
         })
     }
@@ -1661,6 +1666,18 @@ impl Database {
             slug: menu.slug,
             items,
         })
+    }
+
+    pub async fn insert_menu(&self, menu: Menu) -> Result<()> {
+        query_file!(
+            "queries/insert_menu.sql",
+            menu.name,
+            menu.slug,
+            serde_json::to_value(menu.items).unwrap_or_default()
+        )
+        .execute(&self.client)
+        .await?;
+        Ok(())
     }
 }
 
@@ -2101,7 +2118,11 @@ impl Loader<ContributorsForDocument> for Database {
                     ContributorsForDocument(x.document_id),
                     Contributor {
                         name: x.full_name,
-                        role: x.contribution_role,
+                        role: x
+                            .contribution_role
+                            .to_lowercase()
+                            .parse::<ContributorRole>()
+                            .ok(),
                     },
                 )
             })
@@ -2131,6 +2152,7 @@ impl Loader<PersonFullName> for Database {
                         full_name: x.full_name,
                         alternate_name: None,
                         birth_date: None,
+                        is_visible: false,
                     },
                 )
             })

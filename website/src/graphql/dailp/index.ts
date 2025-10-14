@@ -346,7 +346,7 @@ export type Contributor = {
   /** Full name of the contributor */
   readonly name: Scalars["String"]
   /** The role that defines most of their contributions to the associated item */
-  readonly role: Scalars["String"]
+  readonly role: Maybe<ContributorRole>
 }
 
 /**
@@ -372,6 +372,21 @@ export type ContributorDetails = {
    * them elsewhere, like in the attribution for a particular document.
    */
   readonly fullName: Scalars["String"]
+  /** Whether or not the contributor's profile is linked to their contributions */
+  readonly isVisible: Scalars["Boolean"]
+}
+
+/**
+ * A contributor can have to any number of roles, which define most of their
+ * contributions to the associated item (add or revise as needed)
+ */
+export enum ContributorRole {
+  Annotator = "ANNOTATOR",
+  Author = "AUTHOR",
+  CulturalAdvisor = "CULTURAL_ADVISOR",
+  Editor = "EDITOR",
+  Transcriber = "TRANSCRIBER",
+  Translator = "TRANSLATOR",
 }
 
 /** Input for creating an edited collection */
