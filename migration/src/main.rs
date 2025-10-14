@@ -7,7 +7,10 @@ mod early_vocab;
 mod edited_collection;
 mod lexical;
 mod menu;
+<<<<<<< HEAD
 mod pages;
+=======
+>>>>>>> 171dbbaa (Admin menu editing backend (#501))
 mod spreadsheets;
 mod tags;
 mod translations;
@@ -50,7 +53,15 @@ async fn main() -> Result<()> {
     println!("Migrating pages...");
     pages::migrate_pages(&db).await?;
 
+<<<<<<< HEAD
     //migrate_data(&db).await?;
+=======
+    println!("Migrating connections...");
+    connections::migrate_connections(&db).await?;
+
+    println!("Migrating menu...");
+    menu::migrate_menu(&db).await?;
+>>>>>>> 171dbbaa (Admin menu editing backend (#501))
 
     println!("Migrating connections...");
     connections::migrate_connections(&db).await?;

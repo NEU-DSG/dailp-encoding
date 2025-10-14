@@ -2779,6 +2779,7 @@ export type InsertCustomMorphemeTagMutation = {
   readonly __typename?: "Mutation"
 } & Pick<Mutation, "insertCustomMorphemeTag">
 
+<<<<<<< HEAD
 export type UpsertPageMutationVariables = Exact<{
   pageInput: NewPageInput
 }>
@@ -2803,6 +2804,8 @@ export type PageByPathQuery = { readonly __typename?: "Query" } & {
   >
 }
 
+=======
+>>>>>>> 171dbbaa (Admin menu editing backend (#501))
 export type MenuBySlugQueryVariables = Exact<{
   slug: Scalars["String"]
 }>
@@ -3981,6 +3984,7 @@ export function useInsertCustomMorphemeTagMutation() {
     InsertCustomMorphemeTagMutationVariables
   >(InsertCustomMorphemeTagDocument)
 }
+<<<<<<< HEAD
 export const UpsertPageDocument = gql`
   mutation UpsertPage($pageInput: NewPageInput!) {
     upsertPage(page: $pageInput)
@@ -4017,6 +4021,8 @@ export function usePageByPathQuery(
     ...options,
   })
 }
+=======
+>>>>>>> 171dbbaa (Admin menu editing backend (#501))
 export const MenuBySlugDocument = gql`
   query MenuBySlug($slug: String!) {
     menuBySlug(slug: $slug) {
