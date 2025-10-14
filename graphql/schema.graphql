@@ -801,6 +801,82 @@ type Markdown {
 }
 
 """
+Menu object representing the navbar menu that can be edited.
+"""
+type Menu {
+	"""
+	Id for menu.
+	"""
+	id: UUID!
+	"""
+	Name for the menu.
+	"""
+	name: String!
+	"""
+	Slug for the menu.
+	"""
+	slug: String!
+	"""
+	Menu items.
+	"""
+	items: [MenuItem!]!
+}
+
+"""
+A single item in the menu.
+"""
+type MenuItem {
+	"""
+	Display label.
+	"""
+	label: String!
+	"""
+	Destination path.
+	"""
+	path: String!
+	"""
+	Child items (dropdown), optional.
+	"""
+	items: [MenuItem!]
+}
+
+"""
+Input for a single menu item.
+"""
+input MenuItemInput {
+	"""
+	Display label.
+	"""
+	label: String!
+	"""
+	Destination path.
+	"""
+	path: String!
+	"""
+	Child items (dropdown), optional.
+	"""
+	items: [MenuItemInput!]
+}
+
+"""
+Input for updating a menu.
+"""
+input MenuUpdate {
+	"""
+	Menu id.
+	"""
+	id: UUID!
+	"""
+	New name (optional).
+	"""
+	name: String
+	"""
+	New menu items (optional).
+	"""
+	items: [MenuItemInput!]
+}
+
+"""
 One particular morpheme and all the known words that contain that exact morpheme.
 """
 type MorphemeReference {
@@ -938,6 +1014,7 @@ type Mutation {
 	updateDocumentMetadata(document: DocumentMetadataUpdate!): UUID!
 	insertCustomMorphemeTag(tag: String!, title: String!, system: String!): Boolean!
 	createEditedCollection(input: CreateEditedCollectionInput!): String!
+	updateMenu(menu: MenuUpdate!): Menu!
 }
 
 """
@@ -1126,6 +1203,7 @@ type Query {
 	"""
 	dailpUserById(id: UUID!): User!
 	abbreviationIdFromShortName(shortName: String!): UUID!
+	menuBySlug(slug: String!): Menu!
 }
 
 """
