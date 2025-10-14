@@ -19,24 +19,24 @@ import {
 } from "reakit"
 import { navigate } from "vite-plugin-ssr/client/router"
 import { useUser } from "src/auth"
-import { CommentStateProvider } from "src/comment-state-context"
-import { AudioPlayer, Breadcrumbs, Button, Link } from "src/components"
-import { IconTextButton } from "src/components/button"
-import { CommentValueProvider } from "src/components/edit-comment-feature"
 import { useMediaQuery } from "src/custom-hooks"
-import { FormProvider as FormProviderDoc } from "src/edit-doc-data-form-context"
+import { CommentValueProvider } from "src/features/comments/components/edit-comment-feature"
+import { CommentStateProvider } from "src/features/comments/context/comment-state-context"
+import { MorphemeDetails } from "src/features/documents/components/morpheme"
+import PageImages from "src/features/documents/components/page-image"
+import { FormProvider as FormProviderDoc } from "src/features/editor/context/edit-doc-data-form-context"
 import {
   FormProvider as FormProviderParagraph,
   useForm as useParagraphForm,
-} from "src/edit-paragraph-form-context"
-import { EditWordCheckProvider } from "src/edit-word-check-context"
-import { FormProvider, useForm } from "src/edit-word-form-context"
+} from "src/features/editor/context/edit-paragraph-form-context"
+import { EditWordCheckProvider } from "src/features/editor/context/edit-word-check-context"
+import {
+  FormProvider,
+  useForm,
+} from "src/features/editor/context/edit-word-form-context"
 import * as Dailp from "src/graphql/dailp"
-import Layout from "src/layout"
-import { drawerBg } from "src/menu.css"
-import { MorphemeDetails } from "src/morpheme"
+import Layout from "src/layouts/default"
 import { DocumentInfo } from "src/pages/documents/document-info"
-import { PanelDetails, PanelLayout, PanelSegment } from "src/panel-layout"
 import { usePreferences } from "src/preferences-context"
 import { useLocation } from "src/renderer/PageShell"
 import { chapterRoute, collectionWordPath } from "src/routes"
@@ -44,7 +44,14 @@ import { useScrollableTabState } from "src/scrollable-tabs"
 import { AnnotatedForm, DocumentPage } from "src/segment"
 import { mediaQueries } from "src/style/constants"
 import { BasicMorphemeSegment, LevelOfDetail } from "src/types"
-import PageImages from "../../page-image"
+import { IconTextButton } from "src/ui"
+import { AudioPlayer, Breadcrumbs, Button, Link } from "src/ui"
+import { drawerBg } from "src/ui/organisms/menu/menu.css"
+import {
+  PanelDetails,
+  PanelLayout,
+  PanelSegment,
+} from "src/ui/organisms/panel-layout/panel-layout"
 import * as css from "./document.css"
 
 enum Tabs {

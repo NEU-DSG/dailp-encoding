@@ -1,7 +1,7 @@
 import { style } from "@vanilla-extract/css"
 import { margin } from "polished"
-import { linkColor } from "src/components/link.css"
 import { drawerWidth } from "src/components/sidebar.css"
+import * as baseLayout from "src/layouts/layout.css"
 import {
   colors,
   fonts,
@@ -12,7 +12,7 @@ import {
 } from "src/style/constants"
 import { paddingX, paddingY } from "src/style/utils"
 import { hideOnPrint, row } from "src/style/utils.css"
-import * as baseLayout from "../../layout.css"
+import { linkColor } from "src/ui/atoms/link/link.css"
 
 export const header = style([baseLayout.header])
 

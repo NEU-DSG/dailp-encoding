@@ -7,9 +7,9 @@ import { Input } from "reakit"
 import * as Dailp from "src/graphql/dailp"
 import { useLocation } from "src/renderer/PageShell"
 import { closeBlock, fullWidth } from "src/style/utils.css"
+import Link from "src/ui/atoms/link/link"
 import { boldWordRow, wordRow } from "../pages/timeline.css"
 import { documentWordPath } from "../routes"
-import Link from "./link"
 
 export const LexicalSearch = () => {
   const location = useLocation()
