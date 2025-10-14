@@ -26,6 +26,8 @@ const DailpPage = (props: { "*": string }) => (
 export const Page = DailpPage
 
 const Contents = (props: { slug: string }) => {
+  // dennis todo: check that path exists in menu as well,
+  // should be a separate query though, or should it be in the same query?
   const [{ data, fetching }] = usePageByPathQuery({
     variables: { path: "/" + props.slug },
   })
@@ -49,4 +51,5 @@ const Contents = (props: { slug: string }) => {
   } else {
     return <p>Page content not found.</p>
   }
+  // else if not in menu, show button to menu-edit page to add it to menu
 }

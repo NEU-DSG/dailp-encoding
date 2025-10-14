@@ -1015,6 +1015,7 @@ type Mutation {
 	insertCustomMorphemeTag(tag: String!, title: String!, system: String!): Boolean!
 	createEditedCollection(input: CreateEditedCollectionInput!): String!
 	upsertPage(page: NewPageInput!): String!
+	updateMenu(menu: MenuUpdate!): Menu!
 }
 
 """
@@ -1033,7 +1034,6 @@ input NewPageInput {
 	path of new page
 	"""
 	path: String!
-	updateMenu(menu: MenuUpdate!): Menu!
 }
 
 """

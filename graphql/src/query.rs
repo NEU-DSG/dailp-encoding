@@ -770,7 +770,8 @@ impl Mutation {
             .data::<DataLoader<Database>>()?
             .loader()
             .upsert_page(page)
-        )}
+            .await?)
+    }
 
     async fn update_menu(&self, context: &Context<'_>, menu: MenuUpdate) -> FieldResult<Menu> {
         Ok(context

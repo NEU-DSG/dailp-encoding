@@ -13,16 +13,16 @@ pub struct Page {
     body: Vec<ContentBlock>,
 }
 
-impl Page{
+impl Page {
     pub fn new() -> Self {
-        Self{
+        Self {
             id: String::from(""),
             title: String::from(""),
             body: Vec::new(),
         }
     }
-    pub fn build(title:String, slug:String, body: Vec<ContentBlock>) -> Self{
-        Self{
+    pub fn build(title: String, slug: String, body: Vec<ContentBlock>) -> Self {
+        Self {
             id: format!("/{}", slug),
             title,
             body,
@@ -32,7 +32,7 @@ impl Page{
 
 /// Input struct for a page.
 #[derive(Clone, Serialize, Deserialize, SimpleObject, InputObject)]
-pub struct NewPageInput{
+pub struct NewPageInput {
     /// title of new page
     pub title: String,
     /// content for page, needs to be sanitized

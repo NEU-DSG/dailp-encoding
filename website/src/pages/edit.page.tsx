@@ -3,11 +3,11 @@ import Markdown from "react-markdown"
 import { navigate } from "vite-plugin-ssr/client/router"
 import { UserRole } from "src/auth"
 import { AuthGuard } from "src/components/auth-guard"
-import { useUpsertPageMutation, usePageByPathQuery } from "src/graphql/dailp"
+import { PageContents } from "src/components/wordpress"
+import { usePageByPathQuery, useUpsertPageMutation } from "src/graphql/dailp"
 import Layout from "src/layout"
 import { useRouteParams } from "src/renderer/PageShell"
 import { DELIM, splitMarkdown } from "./page-by-name.page"
-import { PageContents } from "src/components/wordpress"
 
 const NewPage = () => {
   const [title, setTitle] = useState("")
@@ -47,14 +47,16 @@ const NewPage = () => {
 
     reexec({ variables: { path } })
     if (data?.pageByPath) {
-      const confirm = window.confirm("Page already exists. Would you like to overwrite it?")
+      const confirm = window.confirm(
+        "Page already exists. Would you like to overwrite it?"
+      )
       if (!confirm) {
         return
       }
     }
     e.preventDefault()
 
-    if(error!==null) {
+    if (error !== null) {
       alert("error: " + error)
       return
     }
@@ -78,8 +80,14 @@ const NewPage = () => {
         <AuthGuard requiredRole={UserRole.Editor}>
           <p>New content page</p>
           {error && <p>{error}</p>}
-          <form onSubmit={handleSubmit}
-          style={{ display: "flex", flexDirection: "column", gap: "5px", alignItems: "center"}}
+          <form
+            onSubmit={handleSubmit}
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "5px",
+              alignItems: "center",
+            }}
           >
             <input
               style={{ width: "50%" }}
@@ -101,7 +109,7 @@ const NewPage = () => {
               }}
             />
             <br />
-            <div style={{ display: "flex", flexDirection: "row", gap: "10px"}}>
+            <div style={{ display: "flex", flexDirection: "row", gap: "10px" }}>
               <textarea
                 style={{ width: "50%" }}
                 placeholder="content"
@@ -110,11 +118,23 @@ const NewPage = () => {
                   setContent(e.target.value)
                 }}
               />
-              <div style={{ border: "1px solid black", padding: "10px" ,width: "50%"}}>
-                {isHtml ? <div dangerouslySetInnerHTML={{ __html: content }} /> : <Markdown>{content}</Markdown>}
+              <div
+                style={{
+                  border: "1px solid black",
+                  padding: "10px",
+                  width: "50%",
+                }}
+              >
+                {isHtml ? (
+                  <div dangerouslySetInnerHTML={{ __html: content }} />
+                ) : (
+                  <Markdown>{content}</Markdown>
+                )}
               </div>
             </div>
-            <button type="submit" style={{ width: "50%" }}>Save</button>
+            <button type="submit" style={{ width: "50%" }}>
+              Save
+            </button>
           </form>
         </AuthGuard>
       </main>

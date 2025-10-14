@@ -4,8 +4,11 @@ import { usePageByPathQuery } from "src/graphql/dailp"
 import Layout from "src/layout"
 
 export const DELIM = "^"
-export const splitMarkdown = (content: string) : ReactNode =>  {
-  return content.split(DELIM).map((s) => s.trim()).map((s) => <Markdown>{s}</Markdown>)
+export const splitMarkdown = (content: string): ReactNode => {
+  return content
+    .split(DELIM)
+    .map((s) => s.trim())
+    .map((s) => <Markdown>{s}</Markdown>)
 }
 
 const PageByName = ({ pageName }: { pageName: string }) => {
@@ -18,28 +21,24 @@ const PageByName = ({ pageName }: { pageName: string }) => {
   })
   // if content but not in menu, redirect to menu edit page and let them add it to the menu!
   //if(content && isInMenu(path)) {
-    //navigate(`/admin/edit-menu?path=${pageName}`)
+  //navigate(`/admin/edit-menu?path=${pageName}`)
   //}
 
-  if(!content) {
+  if (!content) {
     return (
-    <Layout>
-      <main>
-        <p>
-          No page content found
-        </p>
-      </main>
-    </Layout>)
+      <Layout>
+        <main>
+          <p>No page content found</p>
+        </main>
+      </Layout>
+    )
   }
 
   const contentString = content.join(" ")
 
-
   return (
     <Layout>
-      <main>
-        {splitMarkdown(contentString)}
-      </main>
+      <main>{splitMarkdown(contentString)}</main>
     </Layout>
   )
 }
