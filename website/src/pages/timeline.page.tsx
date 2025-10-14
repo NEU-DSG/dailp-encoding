@@ -4,8 +4,8 @@ import { Helmet } from "react-helmet"
 import { Button } from "reakit"
 import { Input } from "reakit"
 import * as Dailp from "src/graphql/dailp"
-import { fullWidth } from "src/style/utils.css"
 import Layout from "src/layouts/default"
+import { fullWidth } from "src/style/utils.css"
 import { boldWordRow, margined, underlined, wordRow } from "./timeline.css"
 
 const TimelinePage = () => {

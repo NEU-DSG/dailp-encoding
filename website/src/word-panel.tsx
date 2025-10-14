@@ -28,11 +28,11 @@ import { formInput } from "src/features/editor/components/edit-word-feature.css"
 import { useEditWordCheckContext } from "src/features/editor/context/edit-word-check-context"
 import { useForm } from "src/features/editor/context/edit-word-form-context"
 import * as Dailp from "src/graphql/dailp"
+import * as css from "src/ui/organisms/panel-layout/panel-layout.css"
 import { AudioPlayer } from "./components"
 import { CommentSection } from "./components/comment-section"
 import { CustomCreatable } from "./components/creatable"
 import { RecordAudioPanel } from "./components/edit-word-audio/record"
-import * as css from "src/ui/organisms/panel-layout/panel-layout.css"
 import { usePreferences } from "./preferences-context"
 
 // Extracts the inner contents of the first pair of parentheses from a string.

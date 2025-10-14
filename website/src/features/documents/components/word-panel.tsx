@@ -32,8 +32,8 @@ import { formInput } from "src/features/editor/components/edit-word-feature.css"
 import { useEditWordCheckContext } from "src/features/editor/context/edit-word-check-context"
 import { useForm } from "src/features/editor/context/edit-word-form-context"
 import * as Dailp from "src/graphql/dailp"
-import * as css from "src/ui/organisms/panel-layout/panel-layout.css"
 import { usePreferences } from "src/preferences-context"
+import * as css from "src/ui/organisms/panel-layout/panel-layout.css"
 
 // Extracts the inner contents of the first pair of parentheses from a string.
 function extractParenthesesContent(str: string): string | null {

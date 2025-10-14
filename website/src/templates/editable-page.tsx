@@ -1,7 +1,7 @@
 import React from "react"
 import { Helmet } from "react-helmet"
-import { fullWidth, paddedWidth } from "src/style/utils.css"
 import Layout from "src/layouts/default"
+import { fullWidth, paddedWidth } from "src/style/utils.css"
 
 interface Props {
   pageContext?: {

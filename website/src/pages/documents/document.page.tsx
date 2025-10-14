@@ -37,7 +37,6 @@ import {
 import * as Dailp from "src/graphql/dailp"
 import Layout from "src/layouts/default"
 import { DocumentInfo } from "src/pages/documents/document-info"
-import { PanelDetails, PanelLayout, PanelSegment } from "src/ui/organisms/panel-layout/panel-layout"
 import { usePreferences } from "src/preferences-context"
 import { useLocation } from "src/renderer/PageShell"
 import { chapterRoute, collectionWordPath } from "src/routes"
@@ -48,6 +47,11 @@ import { BasicMorphemeSegment, LevelOfDetail } from "src/types"
 import { IconTextButton } from "src/ui"
 import { AudioPlayer, Breadcrumbs, Button, Link } from "src/ui"
 import { drawerBg } from "src/ui/organisms/menu/menu.css"
+import {
+  PanelDetails,
+  PanelLayout,
+  PanelSegment,
+} from "src/ui/organisms/panel-layout/panel-layout"
 import * as css from "./document.css"
 
 enum Tabs {

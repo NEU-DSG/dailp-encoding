@@ -1,4 +1,5 @@
 import { globalStyle, style } from "@vanilla-extract/css"
+import { morphemeDialog } from "src/pages/documents/document.css"
 import {
   colors,
   hspace,
@@ -9,8 +10,10 @@ import {
 import { marginY, paddingX } from "src/style/utils"
 import { fullWidth, hideOnPrint, paddingAround } from "src/style/utils.css"
 import { drawerBg } from "src/ui/organisms/menu/menu.css"
-import { morphemeDialog } from "src/pages/documents/document.css"
-import { collPanelButton, wordPanelButton } from "src/ui/organisms/panel-layout/panel-layout.css"
+import {
+  collPanelButton,
+  wordPanelButton,
+} from "src/ui/organisms/panel-layout/panel-layout.css"
 
 export const highlightedLabel = style({
   outlineStyle: "dashed",

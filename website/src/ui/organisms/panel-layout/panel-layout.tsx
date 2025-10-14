@@ -5,6 +5,8 @@ import { GrDown, GrUp } from "react-icons/gr/index"
 import { MdClose } from "react-icons/md/index"
 import { Disclosure, DisclosureContent, useDisclosureState } from "reakit"
 import { unstable_Form as Form, unstable_FormInput as FormInput } from "reakit"
+import { useCognitoUserGroups, useCredentials } from "src/auth"
+import { Button, IconButton } from "src/components"
 import {
   CommentAction,
   CommentPanel,
@@ -15,14 +17,12 @@ import { EditButton as WordEditButton } from "src/features/editor/components/edi
 import { useForm as useParagraphForm } from "src/features/editor/context/edit-paragraph-form-context"
 import { useForm } from "src/features/editor/context/edit-word-form-context"
 import * as Dailp from "src/graphql/dailp"
-import { SubtleButton } from "src/ui"
-import { useCognitoUserGroups, useCredentials } from "src/auth"
-import { Button, IconButton } from "src/components"
-import * as css from "./panel-layout.css"
 import ParagraphPanel from "src/paragraph-panel"
 import { usePreferences } from "src/preferences-context"
 import { TranslatedParagraph } from "src/segment"
+import { SubtleButton } from "src/ui"
 import { WordPanel } from "src/word-panel"
+import * as css from "./panel-layout.css"
 
 enum PanelType {
   WordPanel,

@@ -11,9 +11,9 @@ import {
 import { useCredentials, useUser } from "src/auth"
 import { AccountMenu } from "src/components/authenticated-users/account-menu"
 import { Environment, deploymentEnvironment } from "src/env"
+import Layout from "src/layouts/default"
 import { centeredColumn } from "src/style/utils.css"
 import { Button, CleanButton, Link } from "src/ui"
-import Layout from "src/layouts/default"
 import {
   centeredHeader,
   loginButton,
