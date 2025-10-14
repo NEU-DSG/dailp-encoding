@@ -1,23 +1,18 @@
 import React from "react"
-import { Helmet } from "react-helmet"
 import { PageContents } from "src/components/wordpress"
-import { usePageByPathQuery } from "src/graphql/dailp"
+import { useMenuBySlugQuery, usePageByPathQuery } from "src/graphql/dailp"
 import { edgePadded, fullWidth } from "src/style/utils.css"
 import Layout from "../layout"
 
-const DailpPage = (props: { "*": string }) => (
+interface DailpPageProps {
+  "*": string
+}
+
+const DailpPage = (props: DailpPageProps) => (
   <Layout>
-    <Helmet>
-      <link
-        rel="stylesheet"
-        id="wpforms-full-css"
-        type="text/css"
-        media="all"
-      />
-    </Helmet>
     <main className={edgePadded}>
       <article className={fullWidth}>
-        <Contents slug={props["*"]} />
+        <Contents path={"/" + props["*"]} />
       </article>
     </main>
   </Layout>
@@ -25,31 +20,44 @@ const DailpPage = (props: { "*": string }) => (
 
 export const Page = DailpPage
 
-const Contents = (props: { slug: string }) => {
-  // dennis todo: check that path exists in menu as well,
-  // should be a separate query though, or should it be in the same query?
+const Contents = (props: { path: string }) => {
   const [{ data, fetching }] = usePageByPathQuery({
-    variables: { path: "/" + props.slug },
+    variables: { path: props.path },
   })
-  const page = data?.pageByPath && data?.pageByPath
+
+  const [{ data: menuData }] = useMenuBySlugQuery({
+    variables: { slug: "default-nav" },
+    pause: fetching, // Don't fetch menu until page query is complete
+  })
+
+  const page = data?.pageByPath
+  const menu = menuData?.menuBySlug
   const firstBlock = page?.body?.[0]
   const content =
-    firstBlock && firstBlock.__typename === "Markdown"
-      ? firstBlock.content
-      : null
-  if (content && page) {
-    return (
-      <>
-        <header>
-          <h1>{page.title}</h1>
-        </header>
-        <PageContents content={content} />
-      </>
-    )
-  } else if (fetching) {
+    firstBlock?.__typename === "Markdown" ? firstBlock.content : null
+
+  const isInMenu = (slug: string) => {
+    return menu?.items.some((item) => item.path === slug) ?? false
+  }
+
+  if (fetching) {
     return <p>Loading...</p>
-  } else {
+  }
+
+  if (!page || !content) {
     return <p>Page content not found.</p>
   }
-  // else if not in menu, show button to menu-edit page to add it to menu
+
+  if (!isInMenu(props.path)) {
+    return <p>Page content found. Add it to the menu to view it.</p>
+  }
+
+  return (
+    <>
+      <header>
+        <h1>{page.title}</h1>
+      </header>
+      <PageContents content={content} />
+    </>
+  )
 }
