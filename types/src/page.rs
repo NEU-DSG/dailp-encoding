@@ -14,13 +14,6 @@ pub struct Page {
 }
 
 impl Page {
-    pub fn new() -> Self {
-        Self {
-            id: String::from(""),
-            title: String::from(""),
-            body: Vec::new(),
-        }
-    }
     pub fn build(title: String, slug: String, body: Vec<ContentBlock>) -> Self {
         Self {
             id: format!("/{}", slug),

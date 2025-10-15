@@ -23,17 +23,21 @@ pub fn load_pages(file_path: &str) -> Result<Vec<NewPageInput>, anyhow::Error> {
     let mut reader = ReaderBuilder::new().from_reader(file);
 
     let mut pages = Vec::new();
-    for result in reader.deserialize() {
-        let row: CsvRow = result?;
-        //println!("row: {:?}", row);
-        let page: NewPageInput = NewPageInput {
-            title: row.title,
-            body: vec![row.content],
-            path: row.path,
-        };
-        //println!("result: {:?}", page);
-        pages.push(page);
-    }
+    for result in reader.deserialize::<CsvRow>() {
+        match result {
+            Ok(row) => {
+                let page: NewPageInput = NewPageInput {
+                    title: row.title,
+                    body: vec![row.content],
+                    path: row.path,
+                };
+                pages.push(page);
+            },
+            Err(e) => {
+                println!("Error migrating pages: {:?}", e);
+            }
+        }
+    } 
     Ok(pages)
 }
 
