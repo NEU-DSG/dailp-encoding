@@ -9,8 +9,7 @@ import {
 import { Menu, MenuButton, MenuItem, useMenuState } from "reakit"
 import Link from "src/components/link"
 import * as Dailp from "src/graphql/dailp"
-import { MenuItem as MenuItemType } from "src/graphql/dailp"
-//import * as Wordpress from "src/graphql/wordpress"
+import * as Wordpress from "src/graphql/wordpress"
 import { Location, useLocation, usePageContext } from "src/renderer/PageShell"
 import {
   desktopNav,
@@ -26,9 +25,6 @@ import {
 
 type MenuItemNode = Dailp.MenuBySlugQuery["menuBySlug"]["items"][number]
 type ChildMenuItemNode = NonNullable<MenuItemNode["items"]>[number]
-
-const isTopLevel = (a: MenuItemType, menuItems: MenuItemType[]) =>
-  !menuItems?.some((b) => b?.items?.some((b) => b?.path === a?.path))
 
 export const NavMenu = (p: { menuID: number }) => {
   const location = useLocation()
@@ -46,41 +42,39 @@ export const NavMenu = (p: { menuID: number }) => {
   if (!menu) {
     return null
   }
-  const menuItems = menu.items
+  const menuItems = menu?.items
   if (!menuItems) {
     return null
   }
+  const isTopLevel = (a: typeof menuItems[0]) =>
+    !menuItems?.some((b) => b?.items?.some((b) => b?.path === a?.path))
 
   return (
     <nav className={desktopNav}>
-      {menuItems
-        .filter((item) =>
-          isTopLevel(item as MenuItemType, menuItems as MenuItemType[])
-        )
-        .map((item: MenuItemNode) => {
-          if (!item) {
-            return null
-          } else if (item.items?.length) {
-            return <SubMenu key={item.label} item={item} location={location} />
-          } else {
-            let url = { pathname: item.path }
-            if (item.path && item.path.startsWith("http")) {
-              url = new URL(item.path)
-            }
-            return (
-              <Link
-                key={item.path}
-                href={url.pathname?.valueOf()}
-                className={navLink}
-                aria-current={
-                  location.pathname === url.pathname ? "page" : undefined
-                }
-              >
-                {item.label}
-              </Link>
-            )
+      {menuItems?.filter(isTopLevel).map((item: MenuItemNode) => {
+        if (!item) {
+          return null
+        } else if (item.items?.length) {
+          return <SubMenu key={item.label} item={item} location={location} />
+        } else {
+          let url = { pathname: item.path }
+          if (item.path && item.path.startsWith("http")) {
+            url = new URL(item.path)
           }
-        })}
+          return (
+            <Link
+              key={item.path}
+              href={url.pathname?.valueOf()}
+              className={navLink}
+              aria-current={
+                location.pathname === url.pathname ? "page" : undefined
+              }
+            >
+              {item.label}
+            </Link>
+          )
+        }
+      })}
     </nav>
   )
 }
@@ -129,37 +123,22 @@ const SubMenu = ({
 export const MobileNav = (p: { menuID: number }) => {
   const router = usePageContext()
   const dialog = useDialogState({ animated: true })
-  //old WP implementation
-  //const [{ data }] = Wordpress.useMenuByIdQuery({
-  //variables: { id: p.menuID },
-  //})
-  //const menus = data?.menus?.nodes
-  //if (!menus) {
-  //return null
-  //}
-  //const menu = menus[0]
-  //const menuItems = menu?.menuItems?.nodes
-  //if (!menuItems) {
-  //return null
-  //}
-  //const isTopLevel = (a: typeof menuItems[0]) =>
-  //!menuItems?.some((b) =>
-  //b?.childItems!.nodes!.some((b) => b?.path === a?.path)
-  //)
-  const [{ data }] = Dailp.useMenuBySlugQuery({
-    variables: { slug: "default-nav" },
+  const [{ data }] = Wordpress.useMenuByIdQuery({
+    variables: { id: p.menuID },
   })
-
-  const menu = data?.menuBySlug
-  if (!menu) {
+  const menus = data?.menus?.nodes
+  if (!menus) {
     return null
   }
-  const menuItems = menu?.items
+  const menu = menus[0]
+  const menuItems = menu?.menuItems?.nodes
   if (!menuItems) {
     return null
   }
   const isTopLevel = (a: typeof menuItems[0]) =>
-    !menuItems?.some((b) => b?.items?.some((b) => b?.path === a?.path))
+    !menuItems?.some((b) =>
+      b?.childItems!.nodes!.some((b) => b?.path === a?.path)
+    )
 
   return (
     <>
@@ -179,7 +158,7 @@ export const MobileNav = (p: { menuID: number }) => {
         >
           <ul className={drawerList}>
             {menuItems?.filter(isTopLevel).map((item) => {
-              let items = item?.items
+              let items = item?.childItems?.nodes
               if (items && !items.length) {
                 items = [item]
               }
