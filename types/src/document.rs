@@ -519,27 +519,27 @@ pub struct DocumentMetadata {
     pub sources: Vec<SourceAttribution>,
     /// Where the source document came from, maybe the name of a collection.
     pub collection: Option<String>,
-    #[graphql(skip)]
+    #[async_graphql::graphql(skip)]
     /// Term that contextualizes the social practice surrounding the document
     pub genre_id: MaybeUndefined<Uuid>,
-    #[graphql(skip)]
+    #[async_graphql::graphql(skip)]
     /// The format of the original artifact
     pub format_id: MaybeUndefined<Uuid>,
-    #[graphql(skip)]
+    #[async_graphql::graphql(skip)]
     pub creators_ids: MaybeUndefined<Vec<Uuid>>,
-    #[graphql(skip)]
+    #[async_graphql::graphql(skip)]
     /// The people involved in collecting, translating, annotating.
     pub contributors_ids: MaybeUndefined<Vec<Uuid>>,
-    #[graphql(skip)]
+    #[async_graphql::graphql(skip)]
     /// The key terms associated with this document
     pub keywords_ids: MaybeUndefined<Vec<Uuid>>,
-    #[graphql(skip)]
+    #[async_graphql::graphql(skip)]
     /// Terms that reflect Indigenous knowledge practices related to this document
     pub subject_headings_ids: MaybeUndefined<Vec<Uuid>>,
-    #[graphql(skip)]
+    #[async_graphql::graphql(skip)]
     /// The languages present in this document
     pub languages_ids: MaybeUndefined<Vec<Uuid>>,
-    #[graphql(skip)]
+    #[async_graphql::graphql(skip)]
     /// The physical locations associated with this document
     pub spatial_coverage_ids: MaybeUndefined<Vec<Uuid>>,
     /// Rough translation of the document, broken down by paragraph.
