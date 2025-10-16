@@ -99,6 +99,46 @@ export const EditableNavMenu = ({ navMenuSlug }: { navMenuSlug: string }) => {
         items: n?.items ? removeNode(n.items, id) : n.items,
       }))
 
+  // Remove a node from anywhere in the tree and return it along with the new tree
+  const extractNode = (
+    arr: any[] | undefined,
+    id: string
+  ): { node: any | null; rest: any[] } => {
+    if (!arr || !arr.length) return { node: null, rest: [] }
+    let extracted: any | null = null
+    const rest = arr
+      .map((n) => {
+        if (idOf(n) === id) {
+          extracted = { ...n }
+          return null
+        }
+        if (n?.items?.length) {
+          const { node, rest: childRest } = extractNode(n.items, id)
+          if (node) extracted = node
+          return { ...n, items: childRest }
+        }
+        return n
+      })
+      .filter(Boolean) as any[]
+    return { node: extracted, rest }
+  }
+
+  // Find the path from top-level to the node with given id.
+  // Returns an array of { node, index } representing each level, or null if not found.
+  const findNodePath = (
+    arr: any[] | undefined,
+    id: string
+  ): Array<{ node: any; index: number }> | null => {
+    if (!arr || !arr.length) return null
+    for (let i = 0; i < arr.length; i++) {
+      const n = arr[i]
+      if (idOf(n) === id) return [{ node: n, index: i }]
+      const childPath = findNodePath(n?.items, id)
+      if (childPath) return [{ node: n, index: i }, ...childPath]
+    }
+    return null
+  }
+
   const reorder = (list: any[], startIndex: number, endIndex: number) => {
     const result = Array.from(list)
     const [removed] = result.splice(startIndex, 1)
@@ -224,6 +264,23 @@ export const EditableNavMenu = ({ navMenuSlug }: { navMenuSlug: string }) => {
                       })
                     )
                   }
+                  onPromote={(id) =>
+                    setItems((prev) => {
+                      const path = findNodePath(prev, id)
+                      const { node, rest } = extractNode(prev, id)
+                      if (!node || !path || path.length < 2 || !path[0])
+                        return prev
+                      // Insert near the top-level ancestor: just after its index
+                      const topLevelIndex = path[0].index
+                      const insertionIndex = Math.min(
+                        topLevelIndex + 1,
+                        rest.length
+                      )
+                      const next = Array.from(rest)
+                      next.splice(insertionIndex, 0, node)
+                      return next
+                    })
+                  }
                   onRemove={(id, label) => {
                     const ok = confirm(`Delete ${label}?`)
                     if (!ok) return
@@ -264,6 +321,7 @@ const TreeEditor = ({
   nodes,
   setNodes,
   onAddChild,
+  onPromote,
   onRemove,
   onChange,
   depth = 0,
@@ -271,6 +329,7 @@ const TreeEditor = ({
   nodes: any[]
   setNodes: (nodes: any[]) => void
   onAddChild: (parentId: string) => void
+  onPromote: (id: string) => void
   onRemove: (id: string, label: string) => void
   onChange: (id: string, update: Partial<any>) => void
   depth?: number
@@ -333,6 +392,15 @@ const TreeEditor = ({
                       + Subitem
                     </button>
                   )}
+                  {!isTopLevel && (
+                    <button
+                      type="button"
+                      onClick={() => onPromote(dragId)}
+                      title="Promote to top level"
+                    >
+                      &larr;
+                    </button>
+                  )}
                   <div style={{ display: "flex", flexDirection: "column" }}>
                     <button
                       type="button"
@@ -385,6 +453,7 @@ const TreeEditor = ({
                             )
                           }
                           onAddChild={onAddChild}
+                          onPromote={onPromote}
                           onRemove={onRemove}
                           onChange={onChange}
                           depth={depth + 1}
