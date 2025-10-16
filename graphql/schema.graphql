@@ -1,3 +1,11 @@
+type AddDocumentPayload {
+	id: UUID!
+	title: String!
+	slug: String!
+	collectionSlug: String!
+	chapterSlug: String!
+}
+
 type AnnotatedDoc {
 	"""
 	Official short identifier for this document
@@ -469,6 +477,16 @@ enum ContributorRole {
 	AUTHOR
 }
 
+input CreateDocumentFromFormInput {
+	documentName: String!
+	rawTextLines: [[String!]!]!
+	englishTranslationLines: [[String!]!]!
+	unresolvedWords: [String!]!
+	sourceName: String!
+	sourceUrl: String!
+	collectionId: UUID!
+}
+
 """
 Input for creating an edited collection
 """
@@ -573,6 +591,10 @@ type DocumentCollection {
 	Full name of this collection
 	"""
 	name: String!
+	"""
+	Database ID for this collection
+	"""
+	id: UUID
 	"""
 	URL-ready slug for this collection, generated from the name
 	"""
@@ -1012,6 +1034,10 @@ type Mutation {
 	"""
 	attachAudioToWord(input: AttachAudioToWordInput!): AnnotatedForm!
 	updateDocumentMetadata(document: DocumentMetadataUpdate!): UUID!
+	"""
+	Minimal mutation to add a document with only essential fields
+	"""
+	addDocument(input: CreateDocumentFromFormInput!): AddDocumentPayload!
 	insertCustomMorphemeTag(tag: String!, title: String!, system: String!): Boolean!
 	createEditedCollection(input: CreateEditedCollectionInput!): String!
 	updateMenu(menu: MenuUpdate!): Menu!

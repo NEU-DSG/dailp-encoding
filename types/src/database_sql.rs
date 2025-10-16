@@ -2,7 +2,7 @@
 
 use auth::UserGroup;
 use chrono::{NaiveDate, NaiveDateTime};
-use sqlx::postgres::types::PgLTree;
+use sqlx::postgres::types::{PgLTree, PgRange};
 use std::ops::Bound;
 use std::str::FromStr;
 use user::UserUpdate;
@@ -19,10 +19,7 @@ use {
     async_graphql::InputType,
     async_trait::async_trait,
     itertools::Itertools,
-    sqlx::{
-        postgres::{types::PgRange, PgPoolOptions},
-        query_file, query_file_as, query_file_scalar, Acquire,
-    },
+    sqlx::{postgres::PgPoolOptions, query_file, query_file_as, query_file_scalar, Acquire},
     std::collections::HashMap,
     std::sync::Arc,
     std::time::Duration,
@@ -1046,13 +1043,13 @@ impl Database {
                         .sum();
                     let char_range: PgRange<_> =
                         (starting_char_index..starting_char_index + total_chars as i64).into();
-                    query_file!(
+                    let _paragraph_id = query_file_scalar!(
                         "queries/insert_paragraph.sql",
                         page_id,
                         char_range,
                         paragraph.translation.unwrap_or_default()
                     )
-                    .execute(&mut *tx)
+                    .fetch_one(&mut *tx)
                     .await?;
 
                     for element in paragraph.source {
@@ -1128,6 +1125,7 @@ impl Database {
         Ok(vec![DocumentCollection {
             slug: item.slug,
             title: item.title,
+            id: None,
         }])
     }
 
@@ -1141,6 +1139,7 @@ impl Database {
             .map(|chapter| DocumentCollection {
                 slug: chapter.slug,
                 title: chapter.title,
+                id: None,
             })
             .collect())
     }
@@ -1560,7 +1559,24 @@ impl Database {
         Ok(DocumentCollection {
             slug: collection.slug,
             title: collection.title,
+            id: Some(collection.id),
         })
+    }
+
+    pub async fn document_group_id_by_slug(&self, slug: &str) -> Result<Option<Uuid>> {
+        Ok(
+            query_file_scalar!("queries/document_group_id_by_slug.sql", slug)
+                .fetch_optional(&self.client)
+                .await?,
+        )
+    }
+
+    /// Get collection slug by collection ID
+    pub async fn collection_slug_by_id(&self, collection_id: Uuid) -> Result<Option<String>> {
+        let result = query_file!("queries/edited_collection_by_id.sql", collection_id)
+            .fetch_optional(&self.client)
+            .await?;
+        Ok(result.map(|r| r.slug))
     }
 
     pub async fn chapter(
@@ -1568,9 +1584,42 @@ impl Database {
         collection_slug: String,
         chapter_slug: String,
     ) -> Result<Option<CollectionChapter>> {
+        // Try the original slugs first
         let chapter = query_file!(
             "queries/chapter_contents.sql",
             collection_slug,
+            chapter_slug
+        )
+        .fetch_optional(&self.client)
+        .await?;
+
+        // If found, return it
+        if let Some(chapter_data) = chapter {
+            return Ok(Some(CollectionChapter {
+                id: chapter_data.id,
+                path: chapter_data
+                    .chapter_path
+                    .into_iter()
+                    .map(|s| (*s).into())
+                    .collect(),
+                index_in_parent: chapter_data.index_in_parent,
+                title: chapter_data.title,
+                document_id: chapter_data.document_id.map(DocumentId),
+                wordpress_id: chapter_data.wordpress_id,
+                section: chapter_data.section,
+            }));
+        }
+
+        // If not found, try with underscore/hyphen conversion for collection_slug
+        let alternative_collection_slug = if collection_slug.contains('-') {
+            collection_slug.replace("-", "_")
+        } else {
+            collection_slug.replace("_", "-")
+        };
+
+        let chapter = query_file!(
+            "queries/chapter_contents.sql",
+            alternative_collection_slug,
             chapter_slug
         )
         .fetch_optional(&self.client)
@@ -1622,6 +1671,223 @@ impl Database {
                     .collect(),
             ))
         }
+    }
+
+    /// Insert a contributor attribution for a chapter
+    pub async fn insert_chapter_contributor_attribution(
+        &self,
+        chapter_id: &uuid::Uuid,
+        contributor_id: &uuid::Uuid,
+        contribution_role: &str,
+    ) -> Result<()> {
+        query_file!(
+            "queries/insert_chapter_contributor_attribution.sql",
+            chapter_id,
+            contributor_id,
+            contribution_role
+        )
+        .execute(&self.client)
+        .await?;
+        Ok(())
+    }
+
+    /// Insert a document into an edited collection and create a new chapter for it
+    /// Returns (document_id, chapter_id)
+    pub async fn insert_document_into_edited_collection(
+        &self,
+        document: AnnotatedDoc,
+        _collection_id: Uuid,
+    ) -> Result<(DocumentId, Uuid)> {
+        let mut tx = self.client.begin().await?;
+        let meta = &document.meta;
+        let next_index = -1;
+
+        // All user-created documents go to the user_documents document group
+        let user_documents_group_id = match self.document_group_id_by_slug("user_documents").await?
+        {
+            Some(id) => id,
+            None => {
+                // Create the user_documents document_group if it doesn't exist
+                query_file_scalar!(
+                    "queries/insert_document_group.sql",
+                    "user_documents",
+                    "User-Created Documents"
+                )
+                .fetch_one(&mut *tx)
+                .await?
+            }
+        };
+
+        // Insert the document using the user_documents document group ID
+        let document_uuid = query_file_scalar!(
+            "queries/insert_document_at_end_of_collection.sql",
+            meta.short_name,
+            meta.title,
+            meta.is_reference,
+            &meta.date as &Option<Date>,
+            user_documents_group_id,
+            next_index
+        )
+        .fetch_one(&mut *tx)
+        .await?;
+
+        // Attribute contributors to the document
+        {
+            let name: Vec<String> = meta.contributors.iter().map(|c| c.clone().name).collect();
+            let doc_id: Vec<Uuid> = vec![meta.id.0];
+            let roles: Vec<String> = meta
+                .contributors
+                .iter()
+                .map(|c| match c.role {
+                    Some(r) => r.to_string(),
+                    // not sure what to default to, also not sure why contributor role is an
+                    // option
+                    None => ContributorRole::Author.to_string(),
+                })
+                .collect();
+
+            if !name.is_empty() {
+                query_file!(
+                    "queries/upsert_document_contributors.sql",
+                    &name,
+                    &doc_id,
+                    &roles
+                )
+                .execute(&mut *tx)
+                .await?;
+            }
+        }
+
+        // Create a new chapter for this document in the user_documents collection
+        let chapter_slug = crate::slugs::slugify_ltree(&meta.short_name);
+        let chapter_path = PgLTree::from_str(&format!("user_documents.{}", chapter_slug))?;
+
+        let chapter_id = query_file_scalar!(
+            "queries/insert_chapter_with_document_id.sql",
+            meta.title, // Use document title as chapter title
+            document_uuid,
+            None::<i64>, // wordpress_id
+            0i64,        // index_in_parent (we can increment this later if needed)
+            chapter_path,
+            crate::CollectionSection::Body as crate::CollectionSection
+        )
+        .fetch_one(&mut *tx)
+        .await?;
+
+        // Attribute contributors to the new chapter
+        for contributor in &meta.contributors {
+            query_file!("queries/upsert_contributor.sql", &contributor.name)
+                .execute(&mut *tx)
+                .await?;
+            let contributor_id =
+                query_file_scalar!("queries/contributor_id_by_name.sql", &contributor.name)
+                    .fetch_one(&mut *tx)
+                    .await?;
+            let role = contributor
+                .role
+                .unwrap_or(ContributorRole::Author)
+                .to_string();
+            query_file!(
+                "queries/insert_chapter_contributor_attribution.sql",
+                &chapter_id,
+                &contributor_id,
+                &role
+            )
+            .execute(&mut *tx)
+            .await?;
+        }
+
+        // Insert document contents (pages, paragraphs, words)
+        let document_id = DocumentId(document_uuid);
+        let document_with_updated_id = AnnotatedDoc {
+            meta: DocumentMetadata {
+                id: document_id,
+                ..document.meta.clone()
+            },
+            segments: document.segments.clone(),
+        };
+
+        query_file!("queries/delete_document_pages.sql", document_uuid)
+            .execute(&mut *tx)
+            .await?;
+
+        if let Some(pages) = document_with_updated_id.segments {
+            let mut starting_char_index = 0;
+            for (page_index, page) in pages.into_iter().enumerate() {
+                let page_id = query_file_scalar!(
+                    "queries/upsert_document_page.sql",
+                    document_uuid,
+                    page_index as i64,
+                    document_with_updated_id
+                        .meta
+                        .page_images
+                        .as_ref()
+                        .map(|imgs| imgs.source.0),
+                    document_with_updated_id
+                        .meta
+                        .page_images
+                        .as_ref()
+                        .and_then(|imgs| imgs.ids.get(page_index))
+                )
+                .fetch_one(&mut *tx)
+                .await?;
+
+                for section in page.paragraphs {
+                    // Calculate the actual character range for this paragraph
+                    let total_chars: usize = section
+                        .source
+                        .iter()
+                        .map(|e| {
+                            if let AnnotatedSeg::Word(word) = e {
+                                word.source.chars().count()
+                            } else {
+                                0
+                            }
+                        })
+                        .sum();
+
+                    let char_range: PgRange<i64> =
+                        (starting_char_index..starting_char_index + total_chars as i64).into();
+
+                    let _paragraph_id = query_file_scalar!(
+                        "queries/insert_paragraph.sql",
+                        page_id,
+                        char_range,
+                        section.translation.unwrap_or_default()
+                    )
+                    .fetch_one(&mut *tx)
+                    .await?;
+
+                    // Insert words with proper page_id and character ranges
+                    let mut word_char_index = starting_char_index;
+                    for word_seg in section.source {
+                        match word_seg {
+                            AnnotatedSeg::Word(word) => {
+                                let word_len = word.source.chars().count() as i64;
+                                let word_char_range: PgRange<i64> =
+                                    (word_char_index..word_char_index + word_len).into();
+
+                                self.insert_word(
+                                    &mut tx,
+                                    word,
+                                    document_uuid,
+                                    Some(page_id),
+                                    Some(word_char_range),
+                                )
+                                .await?;
+
+                                word_char_index += word_len;
+                            }
+                            _ => {}
+                        }
+                    }
+                    starting_char_index += total_chars as i64;
+                }
+            }
+        }
+
+        tx.commit().await?;
+        Ok((document_id, chapter_id))
     }
 
     pub async fn abbreviation_id_from_short_name(&self, short_name: &str) -> Result<Uuid> {

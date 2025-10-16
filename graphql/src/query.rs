@@ -5,11 +5,13 @@ use dailp::{
     comment::{CommentParent, CommentUpdate, DeleteCommentInput, PostCommentInput},
     slugify_ltree,
     user::{User, UserUpdate},
-    AnnotatedForm, AttachAudioToWordInput, CollectionChapter, CreateEditedCollectionInput,
-    CurateWordAudioInput, DeleteContributorAttribution, DocumentMetadataUpdate, DocumentParagraph,
+    AnnotatedForm, AnnotatedSeg, AttachAudioToWordInput, CollectionChapter, Contributor,
+    ContributorRole, CreateEditedCollectionInput, CurateWordAudioInput, Date,
+    DeleteContributorAttribution, DocumentMetadata, DocumentMetadataUpdate, DocumentParagraph,
+    PositionInDocument, SourceAttribution, TranslatedPage, TranslatedSection,
     UpdateContributorAttribution, Uuid,
 };
-use itertools::Itertools;
+use itertools::{Itertools, Position};
 
 use {
     dailp::async_graphql::{self, dataloader::DataLoader, Context, FieldResult},
@@ -689,6 +691,111 @@ impl Mutation {
             .update_document_metadata(document)
             .await?)
     }
+
+    /// Minimal mutation to add a document with only essential fields
+    #[graphql(
+        guard = "GroupGuard::new(UserGroup::Editors).or(GroupGuard::new(UserGroup::Contributors))"
+    )]
+    async fn add_document(
+        &self,
+        context: &Context<'_>,
+        input: CreateDocumentFromFormInput,
+    ) -> FieldResult<AddDocumentPayload> {
+        let title = input.document_name;
+        let user = context
+            .data_opt::<UserInfo>()
+            .ok_or_else(|| anyhow::format_err!("User is not signed in"))?;
+        let contributor = Contributor {
+            name: user.id.to_string(),
+            // defaulting to editor
+            role: Some(ContributorRole::Editor),
+        };
+        let today = dailp::chrono::Utc::now().date_naive();
+        let document_date = dailp::Date::new(today);
+        let document_id = Uuid::new_v4();
+        let short_name = dailp::slugify(&title).to_ascii_uppercase();
+        let source = SourceAttribution {
+            name: input.source_name,
+            link: input.source_url,
+        };
+        let mut sections = Vec::new();
+        for (i, eng_words) in input.english_translation_lines.iter().enumerate() {
+            let translation = Some(eng_words.join(" "));
+            let mut segs = Vec::new();
+            for (j, src_word) in input.raw_text_lines[i].iter().enumerate() {
+                let form = AnnotatedForm {
+                    id: None,
+                    source: src_word.clone(),
+                    normalized_source: None,
+                    simple_phonetics: None,
+                    phonemic: None,
+                    segments: None,
+                    english_gloss: vec![eng_words.get(j).cloned().unwrap_or_default()],
+                    commentary: None,
+                    line_break: None,
+                    page_break: None,
+                    position: PositionInDocument {
+                        document_id: dailp::DocumentId(document_id),
+                        page_number: "1".to_string(),
+                        index: j as i64,
+                        geometry: None,
+                    },
+                    date_recorded: None,
+                    ingested_audio_track: None,
+                };
+                segs.push(AnnotatedSeg::Word(form));
+            }
+            let section = TranslatedSection {
+                translation,
+                source: segs,
+            };
+            sections.push(section);
+        }
+        let page = TranslatedPage {
+            paragraphs: sections,
+        };
+        let meta = DocumentMetadata {
+            id: dailp::DocumentId(document_id),
+            short_name: short_name.clone(),
+            title: title.clone(),
+            sources: vec![source],
+            collection: None,
+            genre: None,
+            contributors: vec![contributor],
+            translation: None,
+            page_images: None,
+            date: Some(document_date),
+            is_reference: false,
+            audio_recording: None,
+            order_index: 0,
+        };
+        let annotated_doc = AnnotatedDoc {
+            meta: meta.clone(),
+            segments: Some(vec![page]),
+        };
+        let database = context.data::<DataLoader<Database>>()?.loader();
+        let (document_id, _chapter_id) = database
+            .insert_document_into_edited_collection(annotated_doc.clone(), input.collection_id)
+            .await?;
+
+        // Update the annotated_doc with the correct document_id from the database
+        let mut updated_annotated_doc = annotated_doc.clone();
+        updated_annotated_doc.meta.id = document_id;
+
+        // Insert the document contents (words and paragraphs) into the database
+        database
+            .insert_document_contents(updated_annotated_doc)
+            .await?;
+
+        Ok(AddDocumentPayload {
+            id: document_id.0,
+            title,
+            slug: short_name.clone(),
+            collection_slug: "user_documents".to_string(), // All user-created documents go to user_documents collection
+            chapter_slug: dailp::slugify_ltree(&short_name), // Chapter slug must be ltree-compatible
+        })
+    }
+
     #[graphql(
         guard = "GroupGuard::new(UserGroup::Contributors).or(GroupGuard::new(UserGroup::Editors))"
     )]
@@ -770,4 +877,24 @@ struct FormsInTime {
     start: Option<dailp::Date>,
     end: Option<dailp::Date>,
     forms: Vec<dailp::AnnotatedForm>,
+}
+
+#[derive(async_graphql::InputObject, Debug, Clone)]
+pub struct CreateDocumentFromFormInput {
+    pub document_name: String,
+    pub raw_text_lines: Vec<Vec<String>>,
+    pub english_translation_lines: Vec<Vec<String>>,
+    pub unresolved_words: Vec<String>,
+    pub source_name: String,
+    pub source_url: String,
+    pub collection_id: Uuid,
+}
+
+#[derive(async_graphql::SimpleObject)]
+pub struct AddDocumentPayload {
+    pub id: Uuid,
+    pub title: String,
+    pub slug: String,
+    pub collection_slug: String,
+    pub chapter_slug: String,
 }
