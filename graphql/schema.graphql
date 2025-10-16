@@ -506,24 +506,6 @@ input CreateEditedCollectionInput {
 }
 
 """
-Input for creating an edited collection
-"""
-input CreateEditedCollectionInput {
-	"""
-	The title of the collection
-	"""
-	title: String!
-	"""
-	Description of the collection
-	"""
-	description: String!
-	"""
-	URL of the thumbnail image for the collection
-	"""
-	thumbnailUrl: String!
-}
-
-"""
 Request to update if a piece of audio should be included in an edited collection
 """
 input CurateWordAudioInput {

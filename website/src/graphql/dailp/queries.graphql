@@ -728,6 +728,8 @@ query AllCollections {
     slug
     id
   }
+}
+
 mutation InsertCustomMorphemeTag(
   $tag: String!
   $title: String!

@@ -6,9 +6,10 @@ use dailp::{
     slugify_ltree,
     user::{User, UserUpdate},
     AnnotatedForm, AnnotatedSeg, AttachAudioToWordInput, CollectionChapter, Contributor,
-    CreateEditedCollectionInput, CurateWordAudioInput, Date, DeleteContributorAttribution,
-    DocumentMetadata, DocumentMetadataUpdate, DocumentParagraph, PositionInDocument,
-    SourceAttribution, TranslatedPage, TranslatedSection, UpdateContributorAttribution, Uuid,
+    ContributorRole, CreateEditedCollectionInput, CurateWordAudioInput, Date,
+    DeleteContributorAttribution, DocumentMetadata, DocumentMetadataUpdate, DocumentParagraph,
+    PositionInDocument, SourceAttribution, TranslatedPage, TranslatedSection,
+    UpdateContributorAttribution, Uuid,
 };
 use itertools::{Itertools, Position};
 
@@ -706,7 +707,8 @@ impl Mutation {
             .ok_or_else(|| anyhow::format_err!("User is not signed in"))?;
         let contributor = Contributor {
             name: user.id.to_string(),
-            role: "CONTRIBUTOR".to_string(),
+            // defaulting to editor
+            role: Some(ContributorRole::Editor),
         };
         let today = dailp::chrono::Utc::now().date_naive();
         let document_date = dailp::Date::new(today);

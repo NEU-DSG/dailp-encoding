@@ -1733,23 +1733,25 @@ impl Database {
 
         // Attribute contributors to the document
         {
-            let (name, doc, role): (Vec<_>, Vec<_>, Vec<_>) = meta
+            let name: Vec<String> = meta.contributors.iter().map(|c| c.clone().name).collect();
+            let doc_id: Vec<Uuid> = vec![meta.id.0];
+            let roles: Vec<String> = meta
                 .contributors
                 .iter()
-                .map(|contributor| {
-                    (
-                        contributor.name.clone(),
-                        document_uuid,
-                        contributor.role.clone(),
-                    )
+                .map(|c| match c.role {
+                    Some(r) => r.to_string(),
+                    // not sure what to default to, also not sure why contributor role is an
+                    // option
+                    None => ContributorRole::Author.to_string(),
                 })
-                .multiunzip();
+                .collect();
+
             if !name.is_empty() {
                 query_file!(
                     "queries/upsert_document_contributors.sql",
-                    &*name,
-                    &*doc,
-                    &*role
+                    &name,
+                    &doc_id,
+                    &roles
                 )
                 .execute(&mut *tx)
                 .await?;
@@ -1781,11 +1783,15 @@ impl Database {
                 query_file_scalar!("queries/contributor_id_by_name.sql", &contributor.name)
                     .fetch_one(&mut *tx)
                     .await?;
+            let role = contributor
+                .role
+                .unwrap_or(ContributorRole::Author)
+                .to_string();
             query_file!(
                 "queries/insert_chapter_contributor_attribution.sql",
                 &chapter_id,
                 &contributor_id,
-                &contributor.role
+                &role
             )
             .execute(&mut *tx)
             .await?;

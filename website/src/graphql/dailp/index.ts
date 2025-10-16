@@ -410,7 +410,6 @@ export type CreateDocumentFromFormInput = {
   readonly unresolvedWords: ReadonlyArray<Scalars["String"]>
 }
 
-
 /** Input for creating an edited collection */
 export type CreateEditedCollectionInput = {
   /** Description of the collection */
@@ -2724,6 +2723,7 @@ export type AllCollectionsQuery = { readonly __typename?: "Query" } & {
     >
   >
 }
+
 export type InsertCustomMorphemeTagMutationVariables = Exact<{
   tag: Scalars["String"]
   title: Scalars["String"]
@@ -3819,7 +3819,6 @@ export function useAddDocumentMutation() {
     AddDocumentDocument
   )
 }
-
 export const AddEditedCollectionDocument = gql`
   mutation AddEditedCollection($input: CreateEditedCollectionInput!) {
     createEditedCollection(input: $input)
@@ -3895,6 +3894,7 @@ export function useAllCollectionsQuery(
     query: AllCollectionsDocument,
     ...options,
   })
+}
 export const InsertCustomMorphemeTagDocument = gql`
   mutation InsertCustomMorphemeTag(
     $tag: String!
