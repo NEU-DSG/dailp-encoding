@@ -119,9 +119,22 @@ impl AnnotatedDoc {
     }
 
     /// The genre of the document, used to group similar ones
-    async fn genre(&self) -> &Option<Genre> {
-        &self.meta.genre_id
-    }
+    async fn genre(&self, context: &async_graphql::Context<'_>) -> FieldResult<Option<Genre>> {
+        // Convert MaybeUndefined<Uuid> into Option<Uuid>
+        let genre_id_opt = match &self.meta.genre_id {
+            MaybeUndefined::Value(id) => Some(id),
+            _ => None,
+        };
+    
+        // Only query if we have an ID
+        if let Some(id) = genre_id_opt {
+            let db = context.data::<DataLoader<Database>>()?;
+            let genre = db.load_one(GenreById(**id)).await?;
+            Ok(genre)
+        } else {
+            Ok(None)
+        }
+    }    
 
     /// Images of each source document page, in order
     async fn page_images(&self) -> &Option<IiifImages> {
@@ -225,18 +238,44 @@ impl AnnotatedDoc {
     }
 
     /// The format of the original artifact
-    async fn format(&self) -> &Option<Format> {
-        &self.meta.format_id
+    async fn format(&self, context: &async_graphql::Context<'_>) -> FieldResult<Option<Format>> {
+        let format_id_opt = match &self.meta.format_id {
+            MaybeUndefined::Value(id) => Some(id),
+            _ => None,
+        };
+
+        if let Some(id) = format_id_opt {
+            let db = context.data::<DataLoader<Database>>()?;
+            let format = db.load_one(crate::FormatById(**id)).await?;
+            Ok(format)
+        } else {
+            Ok(None)
+        }
     }
     
     /// The creators of this document
-    async fn creators(&self) -> &Option<Vec<Creator>> {
-        &self.meta.creators_ids
+    async fn creators(&self, context: &async_graphql::Context<'_>) -> FieldResult<Option<Creator>> {
+        match &self.meta.creators_ids {
+            MaybeUndefined::Value(id) => {
+                let db = context.data::<DataLoader<Database>>()?;
+                let creator = db.load_one(CreatorById(**id)).await?;
+                Ok(creator)
+            }
+            _ => Ok(None),
+        }
     }
     
     /// The key terms associated with this document
     async fn keywords(&self) -> &Option<Vec<Keyword>> {
         &self.meta.keywords_ids
+    }
+
+    async fn keywords(&self, context: &async_graphql::Context<'_>) -> FieldResult<Vec<Keyword>> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .load_one(crate::KeywordsForDocument(self.meta.id.0))
+            .await?
+            .unwrap_or_default())
     }
     
     /// Terms that reflect Indigenous knowledge practices related to this document
@@ -244,14 +283,44 @@ impl AnnotatedDoc {
         &self.meta.subject_headings_ids
     }
     
+    async fn subject_headings(
+        &self,
+        context: &async_graphql::Context<'_>,
+    ) -> FieldResult<Vec<SubjectHeading>> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .load_one(crate::SubjectHeadingsForDocument(self.meta.id.0))
+            .await?
+            .unwrap_or_default())
+    }
+
     /// The languages present in this document
     async fn languages(&self) -> &Option<Vec<Language>> {
         &self.meta.languages_ids
     }
     
+    async fn languages(&self, context: &async_graphql::Context<'_>) -> FieldResult<Vec<Language>> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .load_one(crate::LanguagesForDocument(self.meta.id.0))
+            .await?
+            .unwrap_or_default())
+    }
+
     /// The places mentioned in or associated with this document
     async fn spatial_coverages(&self) -> &Option<Vec<SpatialCoverage>> {
         &self.meta.spatial_coverages_ids
+    }
+
+    async fn spatial_coverages(
+        &self,
+        context: &async_graphql::Context<'_>,
+    ) -> FieldResult<Vec<SpatialCoverage>> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .load_one(crate::SpatialCoveragesForDocument(self.meta.id.0))
+            .await?
+            .unwrap_or_default())
     }
 }
 
@@ -519,27 +588,19 @@ pub struct DocumentMetadata {
     pub sources: Vec<SourceAttribution>,
     /// Where the source document came from, maybe the name of a collection.
     pub collection: Option<String>,
-    #[async_graphql::graphql(skip)]
     /// Term that contextualizes the social practice surrounding the document
     pub genre_id: MaybeUndefined<Uuid>,
-    #[async_graphql::graphql(skip)]
     /// The format of the original artifact
     pub format_id: MaybeUndefined<Uuid>,
-    #[async_graphql::graphql(skip)]
     pub creators_ids: MaybeUndefined<Vec<Uuid>>,
-    #[async_graphql::graphql(skip)]
     /// The people involved in collecting, translating, annotating.
     pub contributors_ids: MaybeUndefined<Vec<Uuid>>,
-    #[async_graphql::graphql(skip)]
     /// The key terms associated with this document
     pub keywords_ids: MaybeUndefined<Vec<Uuid>>,
-    #[async_graphql::graphql(skip)]
     /// Terms that reflect Indigenous knowledge practices related to this document
     pub subject_headings_ids: MaybeUndefined<Vec<Uuid>>,
-    #[async_graphql::graphql(skip)]
     /// The languages present in this document
     pub languages_ids: MaybeUndefined<Vec<Uuid>>,
-    #[async_graphql::graphql(skip)]
     /// The physical locations associated with this document
     pub spatial_coverage_ids: MaybeUndefined<Vec<Uuid>>,
     /// Rough translation of the document, broken down by paragraph.

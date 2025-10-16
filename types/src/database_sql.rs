@@ -11,6 +11,7 @@ use user::UserUpdate;
 use crate::collection::CollectionChapter;
 use crate::collection::EditedCollection;
 use crate::comment::{Comment, CommentParentType, CommentType, CommentUpdate};
+use crate::doc_metadata{Genre, Format, Keyword, SubjectHeading, Language, SpatialCoverage};
 use crate::user::User;
 use crate::user::UserId;
 use {
@@ -18,6 +19,7 @@ use {
     anyhow::Result,
     async_graphql::dataloader::*,
     async_graphql::InputType,
+    async_graphql::MaybeUndefined,
     async_trait::async_trait,
     itertools::Itertools,
     sqlx::{
@@ -30,7 +32,7 @@ use {
     uuid::Uuid,
 };
 // Explicitly import types from person.rs
-use crate::person::{Contributor, ContributorDetails, ContributorRole};
+use crate::person::{Contributor, ContributorDetails, ContributorRole, Creator};
 
 /// Connects to our backing database instance, providing high level functions
 /// for accessing the data therein.
@@ -296,7 +298,7 @@ impl Database {
                         .contributors
                         .and_then(|x| serde_json::from_value(x).ok())
                         .unwrap_or_default(),
-                    genre: None,
+                    genre_id: None,
                     order_index: 0,
                     page_images: None,
                     sources: Vec::new(),
@@ -434,7 +436,7 @@ impl Database {
                     .contributors
                     .and_then(|x| serde_json::from_value(x).ok())
                     .unwrap_or_default(),
-                genre: None,
+                genre_id: None,
                 order_index: 0,
                 page_images: None,
                 sources: Vec::new(),
@@ -791,7 +793,7 @@ impl Database {
         // Handle join-table metadata (keywords, subject headings, languages, etc.)
 
         // Update keywords
-        if let Some(keywords_ids) = &document.keywords_ids {
+        if let MaybeUndefined::Value(keywords_ids) = &document.keywords_ids {
             query_file!("types/queries/delete_document_keywords.sql", document.id)
                 .execute(&mut *tx)
                 .await?;
@@ -800,9 +802,9 @@ impl Database {
                 .execute(&mut *tx)
                 .await?;
         }
-    
+     
         // Update subject headings
-        if let Some(subject_headings_ids) = &document.subject_headings_ids {
+        if let MaybeUndefined::Value(subject_headings_ids) = &document.subject_headings_ids {
             query_file!("types/queries/delete_document_subject_headings.sql", document.id)
                 .execute(&mut *tx)
                 .await?;
@@ -817,7 +819,7 @@ impl Database {
         }
     
         // Update languages
-        if let Some(languages_ids) = &document.languages_ids {
+        if let MaybeUndefined::Value(languages_ids) = &document.languages_ids {
             query_file!("types/queries/delete_document_languages.sql", document.id)
                 .execute(&mut *tx)
                 .await?;
@@ -843,7 +845,7 @@ impl Database {
         }
     
         // Update creators
-        if let Some(creator_ids) = &document.creators_ids {
+        if let MaybeUndefined::Value(creator_ids) = &document.creators_ids {
             query_file!("types/queries/delete_document_creator.sql", document.id)
                 .execute(&mut *tx)
                 .await?;
@@ -1744,7 +1746,7 @@ impl Loader<DocumentId> for Database {
                         .contributors
                         .and_then(|x| serde_json::from_value(x).ok())
                         .unwrap_or_default(),
-                    genre: None,
+                    genre_id: None,
                     order_index: 0,
                     page_images: None,
                     sources: Vec::new(),
@@ -1816,7 +1818,7 @@ impl Loader<DocumentShortName> for Database {
                         .contributors
                         .and_then(|x| serde_json::from_value(x).ok())
                         .unwrap_or_default(),
-                    genre: None,
+                    genre_id: None,
                     order_index: 0,
                     page_images: None,
                     sources: Vec::new(),
@@ -2163,6 +2165,175 @@ impl Loader<PersonFullName> for Database {
                 )
             })
             .collect())
+    }
+}
+
+// Genre
+#[derive(Eq, PartialEq, Hash, Clone, Copy, Debug)]
+pub struct GenreById(pub Uuid);
+
+#[async_trait]
+impl Loader<GenreById> for Database {
+    type Value = Genre;
+    type Error = Arc<sqlx::Error>;
+
+    async fn load(
+        &self,
+        keys: &[GenreById],
+    ) -> Result<HashMap<GenreById, Self::Value>, Self::Error> {
+        let ids: Vec<_> = keys.iter().map(|k| k.0).collect();
+        let items = query_file!("queries/get_genre_by_id.sql", &ids)
+            .fetch_all(&self.client)
+            .await?;
+        Ok(items
+            .into_iter()
+            .map(|x| (GenreById(x.id), Genre { id: x.id, name: x.name }))
+            .collect())
+    }
+}
+
+// Format
+#[derive(Eq, PartialEq, Hash, Clone, Copy, Debug)]
+pub struct FormatById(pub Uuid);
+
+#[async_trait]
+impl Loader<FormatById> for Database {
+    type Value = Format;
+    type Error = Arc<sqlx::Error>;
+
+    async fn load(
+        &self,
+        keys: &[FormatById],
+    ) -> Result<HashMap<FormatById, Self::Value>, Self::Error> {
+        let ids: Vec<_> = keys.iter().map(|k| k.0).collect();
+        let items = query_file!("queries/get_format_by_id.sql", &ids)
+            .fetch_all(&self.client)
+            .await?;
+        Ok(items
+            .into_iter()
+            .map(|x| (FormatById(x.id), Format { id: x.id, name: x.name }))
+            .collect())
+    }
+}
+
+// Keywords
+#[derive(Eq, PartialEq, Hash, Clone, Copy, Debug)]
+pub struct KeywordsForDocument(pub Uuid);
+
+#[async_trait]
+impl Loader<KeywordsForDocument> for Database {
+    type Value = Vec<Keyword>;
+    type Error = Arc<sqlx::Error>;
+
+    async fn load(
+        &self,
+        keys: &[KeywordsForDocument],
+    ) -> Result<HashMap<KeywordsForDocument, Self::Value>, Self::Error> {
+        let keys: Vec<_> = keys.iter().map(|k| k.0).collect();
+        let items = query_file!("queries/get_keywords_by_document_id.sql", &keys)
+            .fetch_all(&self.client)
+            .await?;
+        Ok(items
+            .into_iter()
+            .map(|x| (KeywordsForDocument(x.document_id), Keyword { id: x.id, name: x.name }))
+            .into_group_map())
+    }
+}
+
+// Subject Headings
+#[derive(Eq, PartialEq, Hash, Clone, Copy, Debug)]
+pub struct SubjectHeadingsForDocument(pub Uuid);
+
+#[async_trait]
+impl Loader<SubjectHeadingsForDocument> for Database {
+    type Value = Vec<SubjectHeading>;
+    type Error = Arc<sqlx::Error>;
+
+    async fn load(
+        &self,
+        keys: &[SubjectHeadingsForDocument],
+    ) -> Result<HashMap<SubjectHeadingsForDocument, Self::Value>, Self::Error> {
+        let keys: Vec<_> = keys.iter().map(|k| k.0).collect();
+        let items =
+            query_file!("queries/get_subject_headings_by_document_id.sql", &keys)
+                .fetch_all(&self.client)
+                .await?;
+        Ok(items
+            .into_iter()
+            .map(|x| (SubjectHeadingsForDocument(x.document_id), SubjectHeading { id: x.id, label: x.label }))
+            .into_group_map())
+    }
+}
+
+// Languages
+#[derive(Eq, PartialEq, Hash, Clone, Copy, Debug)]
+pub struct LanguagesForDocument(pub Uuid);
+
+#[async_trait]
+impl Loader<LanguagesForDocument> for Database {
+    type Value = Vec<Language>;
+    type Error = Arc<sqlx::Error>;
+
+    async fn load(
+        &self,
+        keys: &[LanguagesForDocument],
+    ) -> Result<HashMap<LanguagesForDocument, Self::Value>, Self::Error> {
+        let keys: Vec<_> = keys.iter().map(|k| k.0).collect();
+        let items = query_file!("queries/get_languages_by_document_id.sql", &keys)
+            .fetch_all(&self.client)
+            .await?;
+        Ok(items
+            .into_iter()
+            .map(|x| (LanguagesForDocument(x.document_id), Language { id: x.id, name: x.name }))
+            .into_group_map())
+    }
+}
+
+// Spatial Coverages
+#[derive(Eq, PartialEq, Hash, Clone, Copy, Debug)]
+pub struct SpatialCoveragesForDocument(pub Uuid);
+
+#[async_trait]
+impl Loader<SpatialCoveragesForDocument> for Database {
+    type Value = Vec<SpatialCoverage>;
+    type Error = Arc<sqlx::Error>;
+
+    async fn load(
+        &self,
+        keys: &[SpatialCoveragesForDocument],
+    ) -> Result<HashMap<SpatialCoveragesForDocument, Self::Value>, Self::Error> {
+        let keys: Vec<_> = keys.iter().map(|k| k.0).collect();
+        let items = query_file!("queries/get_spatial_coverages_by_document_id.sql", &keys)
+            .fetch_all(&self.client)
+            .await?;
+        Ok(items
+            .into_iter()
+            .map(|x| (SpatialCoveragesForDocument(x.document_id), SpatialCoverage { id: x.id, name: x.name }))
+            .into_group_map())
+    }
+}
+
+// Creators
+#[derive(Eq, PartialEq, Hash, Clone, Copy, Debug)]
+pub struct CreatorsForDocument(pub Uuid);
+
+#[async_trait]
+impl Loader<CreatorsForDocument> for Database {
+    type Value = Vec<Creator>;
+    type Error = Arc<sqlx::Error>;
+
+    async fn load(
+        &self,
+        keys: &[CreatorsForDocument],
+    ) -> Result<HashMap<CreatorsForDocument, Self::Value>, Self::Error> {
+        let keys: Vec<_> = keys.iter().map(|k| k.0).collect();
+        let items = query_file!("queries/document_creators.sql", &keys)
+            .fetch_all(&self.client)
+            .await?;
+        Ok(items
+            .into_iter()
+            .map(|x| (CreatorsForDocument(x.document_id), Creator { id: x.id, name: x.name }))
+            .into_group_map())
     }
 }
 

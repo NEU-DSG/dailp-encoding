@@ -147,13 +147,21 @@ impl ContributorRole {
 }
 
 /// The creator of a document
-#[derive(Clone, Debug, Serialize, Deserialize, async_graphql::ComplexObject, PartialEq, Eq)]
-#[graphql(complex)]
+#[derive(async_graphql::SimpleObject, Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Creator {
     /// UUID of the creator
     pub id: uuid::Uuid,
     /// Name of the creator
     pub name: String,
+}
+
+/// Creators of this document
+async fn creators(&self, context: &async_graphql::Context<'_>) -> FieldResult<Vec<Creator>> {
+    Ok(context
+        .data::<DataLoader<Database>>()?
+        .load_one(crate::CreatorsForDocument(self.meta.id.0))
+        .await?
+        .unwrap_or_default())
 }
 
 /// Attribution for a particular source, whether an institution or an individual.
