@@ -705,18 +705,6 @@ mutation AddEditedCollection($input: CreateEditedCollectionInput!) {
   createEditedCollection(input: $input)
 }
 
-mutation updateUser($user: UserUpdate!) {
-  updateUser(user: $user) {
-    id
-    displayName
-    avatarUrl
-    bio
-    organization
-    location
-    role
-  }
-}
-
 query UserById($id: UUID!) {
   dailpUserById(id: $id) {
     id

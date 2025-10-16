@@ -2692,23 +2692,6 @@ export type AddEditedCollectionMutation = {
   readonly __typename?: "Mutation"
 } & Pick<Mutation, "createEditedCollection">
 
-export type UpdateUserMutationVariables = Exact<{
-  user: UserUpdate
-}>
-
-export type UpdateUserMutation = { readonly __typename?: "Mutation" } & {
-  readonly updateUser: { readonly __typename?: "User" } & Pick<
-    User,
-    | "id"
-    | "displayName"
-    | "avatarUrl"
-    | "bio"
-    | "organization"
-    | "location"
-    | "role"
-  >
-}
-
 export type UserByIdQueryVariables = Exact<{
   id: Scalars["UUID"]
 }>
@@ -3866,25 +3849,6 @@ export function useAddEditedCollectionMutation() {
     AddEditedCollectionMutation,
     AddEditedCollectionMutationVariables
   >(AddEditedCollectionDocument)
-}
-export const UpdateUserDocument = gql`
-  mutation updateUser($user: UserUpdate!) {
-    updateUser(user: $user) {
-      id
-      displayName
-      avatarUrl
-      bio
-      organization
-      location
-      role
-    }
-  }
-`
-
-export function useUpdateUserMutation() {
-  return Urql.useMutation<UpdateUserMutation, UpdateUserMutationVariables>(
-    UpdateUserDocument
-  )
 }
 export const UserByIdDocument = gql`
   query UserById($id: UUID!) {
