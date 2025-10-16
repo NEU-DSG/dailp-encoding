@@ -6,17 +6,19 @@ use dailp::{
     slugify_ltree,
     user::{User, UserUpdate},
     AnnotatedForm, AnnotatedSeg, AttachAudioToWordInput, CollectionChapter, Contributor,
-    CurateWordAudioInput, Date, DeleteContributorAttribution, DocumentMetadata,
-    DocumentMetadataUpdate, DocumentParagraph, PositionInDocument, SourceAttribution,
-    TranslatedPage, TranslatedSection, UpdateContributorAttribution, Uuid,
+    ContributorRole, CreateEditedCollectionInput, CurateWordAudioInput, Date,
+    DeleteContributorAttribution, DocumentMetadata, DocumentMetadataUpdate, DocumentParagraph,
+    PositionInDocument, SourceAttribution, TranslatedPage, TranslatedSection,
+    UpdateContributorAttribution, Uuid,
 };
 use itertools::{Itertools, Position};
 
 use {
     dailp::async_graphql::{self, dataloader::DataLoader, Context, FieldResult},
     dailp::{
-        AnnotatedDoc, AnnotatedFormUpdate, CherokeeOrthography, Database, EditedCollection,
-        MorphemeId, MorphemeReference, MorphemeTag, ParagraphUpdate, WordsInDocument,
+        AbstractMorphemeTag, AnnotatedDoc, AnnotatedFormUpdate, CherokeeOrthography, Database,
+        EditedCollection, Menu, MenuUpdate, MorphemeId, MorphemeReference, MorphemeTag,
+        ParagraphUpdate, WordsInDocument,
     },
 };
 
@@ -364,6 +366,26 @@ impl Query {
             .dailp_user_by_id(&id)
             .await?)
     }
+
+    async fn abbreviation_id_from_short_name(
+        &self,
+        context: &Context<'_>,
+        short_name: String,
+    ) -> FieldResult<Uuid> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .abbreviation_id_from_short_name(&short_name)
+            .await?)
+    }
+
+    async fn menu_by_slug(&self, context: &Context<'_>, slug: String) -> FieldResult<Menu> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .get_menu_by_slug(slug)
+            .await?)
+    }
 }
 
 pub struct Mutation;
@@ -685,7 +707,8 @@ impl Mutation {
             .ok_or_else(|| anyhow::format_err!("User is not signed in"))?;
         let contributor = Contributor {
             name: user.id.to_string(),
-            role: "CONTRIBUTOR".to_string(),
+            // defaulting to editor
+            role: Some(ContributorRole::Editor),
         };
         let today = dailp::chrono::Utc::now().date_naive();
         let document_date = dailp::Date::new(today);
@@ -771,6 +794,81 @@ impl Mutation {
             collection_slug: "user_documents".to_string(), // All user-created documents go to user_documents collection
             chapter_slug: dailp::slugify_ltree(&short_name), // Chapter slug must be ltree-compatible
         })
+    }
+
+    #[graphql(
+        guard = "GroupGuard::new(UserGroup::Contributors).or(GroupGuard::new(UserGroup::Editors))"
+    )]
+    async fn insert_custom_morpheme_tag(
+        &self,
+        context: &Context<'_>,
+        tag: String,
+        title: String,
+        system: String,
+    ) -> FieldResult<bool> {
+        //first get id of custom morpheme tag
+        let abstract_id = context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .insert_custom_abstract_tag(AbstractMorphemeTag {
+                //TODO: can just make it CUS once we remove the unique constraint
+                id: "CUS:".to_string() + &title,
+                morpheme_type: "custom".to_string(),
+            })
+            .await?;
+
+        //construct the morpheme tag
+        //todo: need to figure out why tag and title are the same thing :(
+        //its a frontend issue
+        let tag = MorphemeTag {
+            internal_tags: vec![abstract_id.to_string()],
+            tag: tag,
+            title: title.clone(),
+            shape: None,
+            details_url: None,
+            definition: title,
+            morpheme_type: String::new(),
+            role_override: None,
+        };
+
+        let system_id = context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .abbreviation_id_from_short_name("CUS")
+            .await?;
+
+        context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .insert_custom_morpheme_tag(tag, system_id)
+            .await?;
+        Ok(true)
+    }
+
+    #[graphql(
+        //TODO ADD ADMIN ROLES WHEN IT IS READY
+        guard = "GroupGuard::new(UserGroup::Editors)"
+    )]
+    async fn create_edited_collection(
+        &self,
+        context: &Context<'_>,
+        input: CreateEditedCollectionInput,
+    ) -> FieldResult<String> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .insert_edited_collection(input)
+            .await?
+            .to_string())
+    }
+
+    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    async fn update_menu(&self, context: &Context<'_>, menu: MenuUpdate) -> FieldResult<Menu> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .update_menu(menu)
+            .await?)
     }
 }
 

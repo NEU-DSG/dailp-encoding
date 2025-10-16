@@ -1,7 +1,9 @@
 use crate::{
     auth::UserInfo, comment::Comment, date::DateInput, slugify, AnnotatedForm, AudioSlice,
-    Contributor, Database, Date, SourceAttribution, Translation, TranslationBlock,
+    Database, Date, Translation, TranslationBlock,
 };
+
+use crate::person::{Contributor, SourceAttribution};
 
 use async_graphql::{dataloader::DataLoader, FieldResult, MaybeUndefined};
 use serde::{Deserialize, Serialize};

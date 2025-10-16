@@ -210,16 +210,20 @@ query EditedCollections {
     id
     title
     slug
+    description
     chapters {
       id
       path
     }
+    thumbnailUrl
   }
 }
 
 query EditedCollection($slug: String!) {
   editedCollection(slug: $slug) {
     id
+    title
+    slug
     chapters {
       id
       title
@@ -694,8 +698,22 @@ mutation AddDocument($input: CreateDocumentFromFormInput!) {
     id
     title
     slug
-    collectionSlug
-    chapterSlug
+  }
+}
+
+mutation AddEditedCollection($input: CreateEditedCollectionInput!) {
+  createEditedCollection(input: $input)
+}
+
+mutation updateUser($user: UserUpdate!) {
+  updateUser(user: $user) {
+    id
+    displayName
+    avatarUrl
+    bio
+    organization
+    location
+    role
   }
 }
 
@@ -721,5 +739,45 @@ query AllCollections {
     name
     slug
     id
+  }
+}
+
+mutation InsertCustomMorphemeTag(
+  $tag: String!
+  $title: String!
+  $system: String!
+) {
+  insertCustomMorphemeTag(tag: $tag, title: $title, system: $system)
+}
+
+query MenuBySlug($slug: String!) {
+  menuBySlug(slug: $slug) {
+    id
+    name
+    slug
+    items {
+      label
+      path
+      items {
+        label
+        path
+      }
+    }
+  }
+}
+
+mutation UpdateMenu($menu: MenuUpdate!) {
+  updateMenu(menu: $menu) {
+    id
+    name
+    slug
+    items {
+      label
+      path
+      items {
+        label
+        path
+      }
+    }
   }
 }

@@ -9,6 +9,8 @@ pub async fn create_user_documents_collection(db: &Database) -> anyhow::Result<(
         slug: "user_documents".to_string(),
         title: "User-Created Documents".to_string(),
         wordpress_menu_id: None,
+        description: None,
+        thumbnail_url: None,
         chapters: Vec::new(), // No chapters initially - we'll create them per document
     };
 

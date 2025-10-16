@@ -192,8 +192,8 @@ export type AnnotatedFormSegmentsArgs = {
 export type AnnotatedFormUpdate = {
   /** Possible update to commentary */
   readonly commentary: InputMaybe<Scalars["String"]>
-  /** Possible update to English gloss */
-  readonly englishGloss: InputMaybe<ReadonlyArray<Scalars["String"]>>
+  /** Possible updated english gloss */
+  readonly englishGloss: InputMaybe<Scalars["String"]>
   /** Unique identifier of the form */
   readonly id: Scalars["UUID"]
   /** Possible update to normalized source content */
@@ -355,7 +355,7 @@ export type Contributor = {
   /** Full name of the contributor */
   readonly name: Scalars["String"]
   /** The role that defines most of their contributions to the associated item */
-  readonly role: Scalars["String"]
+  readonly role: Maybe<ContributorRole>
 }
 
 /**
@@ -381,6 +381,21 @@ export type ContributorDetails = {
    * them elsewhere, like in the attribution for a particular document.
    */
   readonly fullName: Scalars["String"]
+  /** Whether or not the contributor's profile is linked to their contributions */
+  readonly isVisible: Scalars["Boolean"]
+}
+
+/**
+ * A contributor can have to any number of roles, which define most of their
+ * contributions to the associated item (add or revise as needed)
+ */
+export enum ContributorRole {
+  Annotator = "ANNOTATOR",
+  Author = "AUTHOR",
+  CulturalAdvisor = "CULTURAL_ADVISOR",
+  Editor = "EDITOR",
+  Transcriber = "TRANSCRIBER",
+  Translator = "TRANSLATOR",
 }
 
 export type CreateDocumentFromFormInput = {
@@ -393,6 +408,16 @@ export type CreateDocumentFromFormInput = {
   readonly sourceName: Scalars["String"]
   readonly sourceUrl: Scalars["String"]
   readonly unresolvedWords: ReadonlyArray<Scalars["String"]>
+}
+
+/** Input for creating an edited collection */
+export type CreateEditedCollectionInput = {
+  /** Description of the collection */
+  readonly description: Scalars["String"]
+  /** URL of the thumbnail image for the collection */
+  readonly thumbnailUrl: Scalars["String"]
+  /** The title of the collection */
+  readonly title: Scalars["String"]
 }
 
 /** Request to update if a piece of audio should be included in an edited collection */
@@ -538,10 +563,14 @@ export enum DocumentType {
 export type EditedCollection = {
   readonly __typename?: "EditedCollection"
   readonly chapters: Maybe<ReadonlyArray<CollectionChapter>>
+  /** Description of the collection (optional) */
+  readonly description: Maybe<Scalars["String"]>
   /** UUID for the collection */
   readonly id: Scalars["UUID"]
   /** URL slug for the collection, like "cwkw" */
   readonly slug: Scalars["String"]
+  /** Cover image URL */
+  readonly thumbnailUrl: Maybe<Scalars["String"]>
   /** Full title of the collection */
   readonly title: Scalars["String"]
   /** ID of WordPress menu for navigating the collection */
@@ -616,6 +645,50 @@ export type Markdown = {
   readonly content: Scalars["String"]
 }
 
+/** Menu object representing the navbar menu that can be edited. */
+export type Menu = {
+  readonly __typename?: "Menu"
+  /** Id for menu. */
+  readonly id: Scalars["UUID"]
+  /** Menu items. */
+  readonly items: ReadonlyArray<MenuItem>
+  /** Name for the menu. */
+  readonly name: Scalars["String"]
+  /** Slug for the menu. */
+  readonly slug: Scalars["String"]
+}
+
+/** A single item in the menu. */
+export type MenuItem = {
+  readonly __typename?: "MenuItem"
+  /** Child items (dropdown), optional. */
+  readonly items: Maybe<ReadonlyArray<MenuItem>>
+  /** Display label. */
+  readonly label: Scalars["String"]
+  /** Destination path. */
+  readonly path: Scalars["String"]
+}
+
+/** Input for a single menu item. */
+export type MenuItemInput = {
+  /** Child items (dropdown), optional. */
+  readonly items: InputMaybe<ReadonlyArray<MenuItemInput>>
+  /** Display label. */
+  readonly label: Scalars["String"]
+  /** Destination path. */
+  readonly path: Scalars["String"]
+}
+
+/** Input for updating a menu. */
+export type MenuUpdate = {
+  /** Menu id. */
+  readonly id: Scalars["UUID"]
+  /** New menu items (optional). */
+  readonly items: InputMaybe<ReadonlyArray<MenuItemInput>>
+  /** New name (optional). */
+  readonly name: InputMaybe<Scalars["String"]>
+}
+
 /** One particular morpheme and all the known words that contain that exact morpheme. */
 export type MorphemeReference = {
   readonly __typename?: "MorphemeReference"
@@ -688,6 +761,7 @@ export type Mutation = {
    * Assumes user requesting mutation recoreded the audio
    */
   readonly attachAudioToWord: AnnotatedForm
+  readonly createEditedCollection: Scalars["String"]
   /** Decide if a piece audio should be included in edited collection */
   readonly curateWordAudio: AnnotatedForm
   /**
@@ -697,6 +771,7 @@ export type Mutation = {
   readonly deleteComment: CommentParent
   /** Mutation for deleting contributor attributions */
   readonly deleteContributorAttribution: Scalars["UUID"]
+  readonly insertCustomMorphemeTag: Scalars["Boolean"]
   /** Post a new comment on a given object */
   readonly postComment: CommentParent
   /** Removes a bookmark from a user's list of bookmarks */
@@ -707,6 +782,7 @@ export type Mutation = {
   /** Mutation for adding/changing contributor attributions */
   readonly updateContributorAttribution: Scalars["UUID"]
   readonly updateDocumentMetadata: Scalars["UUID"]
+  readonly updateMenu: Menu
   readonly updatePage: Scalars["Boolean"]
   /** Mutation for paragraph and translation editing */
   readonly updateParagraph: DocumentParagraph
@@ -727,6 +803,10 @@ export type MutationAttachAudioToWordArgs = {
   input: AttachAudioToWordInput
 }
 
+export type MutationCreateEditedCollectionArgs = {
+  input: CreateEditedCollectionInput
+}
+
 export type MutationCurateWordAudioArgs = {
   input: CurateWordAudioInput
 }
@@ -737,6 +817,12 @@ export type MutationDeleteCommentArgs = {
 
 export type MutationDeleteContributorAttributionArgs = {
   contribution: DeleteContributorAttribution
+}
+
+export type MutationInsertCustomMorphemeTagArgs = {
+  system: Scalars["String"]
+  tag: Scalars["String"]
+  title: Scalars["String"]
 }
 
 export type MutationPostCommentArgs = {
@@ -761,6 +847,10 @@ export type MutationUpdateContributorAttributionArgs = {
 
 export type MutationUpdateDocumentMetadataArgs = {
   document: DocumentMetadataUpdate
+}
+
+export type MutationUpdateMenuArgs = {
+  menu: MenuUpdate
 }
 
 export type MutationUpdatePageArgs = {
@@ -855,6 +945,7 @@ export type PostCommentInput = {
 
 export type Query = {
   readonly __typename?: "Query"
+  readonly abbreviationIdFromShortName: Scalars["UUID"]
   /** List of all the document collections available. */
   readonly allCollections: ReadonlyArray<DocumentCollection>
   /** Listing of all documents excluding their contents by default */
@@ -876,6 +967,7 @@ export type Query = {
   /** Retrieves a full document from its unique identifier. */
   readonly documentByUuid: Maybe<AnnotatedDoc>
   readonly editedCollection: Maybe<EditedCollection>
+  readonly menuBySlug: Menu
   /**
    * Retrieve information for the morpheme that corresponds to the given tag
    * string. For example, "3PL.B" is the standard string referring to a 3rd
@@ -914,6 +1006,10 @@ export type Query = {
   readonly wordSearch: ReadonlyArray<AnnotatedForm>
 }
 
+export type QueryAbbreviationIdFromShortNameArgs = {
+  shortName: Scalars["String"]
+}
+
 export type QueryAllTagsArgs = {
   system: CherokeeOrthography
 }
@@ -940,6 +1036,10 @@ export type QueryDocumentByUuidArgs = {
 }
 
 export type QueryEditedCollectionArgs = {
+  slug: Scalars["String"]
+}
+
+export type QueryMenuBySlugArgs = {
   slug: Scalars["String"]
 }
 
@@ -1613,7 +1713,7 @@ export type EditedCollectionsQuery = { readonly __typename?: "Query" } & {
   readonly allEditedCollections: ReadonlyArray<
     { readonly __typename?: "EditedCollection" } & Pick<
       EditedCollection,
-      "id" | "title" | "slug"
+      "id" | "title" | "slug" | "description" | "thumbnailUrl"
     > & {
         readonly chapters: Maybe<
           ReadonlyArray<
@@ -1635,7 +1735,7 @@ export type EditedCollectionQuery = { readonly __typename?: "Query" } & {
   readonly editedCollection: Maybe<
     { readonly __typename?: "EditedCollection" } & Pick<
       EditedCollection,
-      "id"
+      "id" | "title" | "slug"
     > & {
         readonly chapters: Maybe<
           ReadonlyArray<
@@ -2580,7 +2680,32 @@ export type AddDocumentMutationVariables = Exact<{
 export type AddDocumentMutation = { readonly __typename?: "Mutation" } & {
   readonly addDocument: { readonly __typename?: "AddDocumentPayload" } & Pick<
     AddDocumentPayload,
-    "id" | "title" | "slug" | "collectionSlug" | "chapterSlug"
+    "id" | "title" | "slug"
+  >
+}
+
+export type AddEditedCollectionMutationVariables = Exact<{
+  input: CreateEditedCollectionInput
+}>
+
+export type AddEditedCollectionMutation = {
+  readonly __typename?: "Mutation"
+} & Pick<Mutation, "createEditedCollection">
+
+export type UpdateUserMutationVariables = Exact<{
+  user: UserUpdate
+}>
+
+export type UpdateUserMutation = { readonly __typename?: "Mutation" } & {
+  readonly updateUser: { readonly __typename?: "User" } & Pick<
+    User,
+    | "id"
+    | "displayName"
+    | "avatarUrl"
+    | "bio"
+    | "organization"
+    | "location"
+    | "role"
   >
 }
 
@@ -2614,6 +2739,70 @@ export type AllCollectionsQuery = { readonly __typename?: "Query" } & {
       "name" | "slug" | "id"
     >
   >
+}
+
+export type InsertCustomMorphemeTagMutationVariables = Exact<{
+  tag: Scalars["String"]
+  title: Scalars["String"]
+  system: Scalars["String"]
+}>
+
+export type InsertCustomMorphemeTagMutation = {
+  readonly __typename?: "Mutation"
+} & Pick<Mutation, "insertCustomMorphemeTag">
+
+export type MenuBySlugQueryVariables = Exact<{
+  slug: Scalars["String"]
+}>
+
+export type MenuBySlugQuery = { readonly __typename?: "Query" } & {
+  readonly menuBySlug: { readonly __typename?: "Menu" } & Pick<
+    Menu,
+    "id" | "name" | "slug"
+  > & {
+      readonly items: ReadonlyArray<
+        { readonly __typename?: "MenuItem" } & Pick<
+          MenuItem,
+          "label" | "path"
+        > & {
+            readonly items: Maybe<
+              ReadonlyArray<
+                { readonly __typename?: "MenuItem" } & Pick<
+                  MenuItem,
+                  "label" | "path"
+                >
+              >
+            >
+          }
+      >
+    }
+}
+
+export type UpdateMenuMutationVariables = Exact<{
+  menu: MenuUpdate
+}>
+
+export type UpdateMenuMutation = { readonly __typename?: "Mutation" } & {
+  readonly updateMenu: { readonly __typename?: "Menu" } & Pick<
+    Menu,
+    "id" | "name" | "slug"
+  > & {
+      readonly items: ReadonlyArray<
+        { readonly __typename?: "MenuItem" } & Pick<
+          MenuItem,
+          "label" | "path"
+        > & {
+            readonly items: Maybe<
+              ReadonlyArray<
+                { readonly __typename?: "MenuItem" } & Pick<
+                  MenuItem,
+                  "label" | "path"
+                >
+              >
+            >
+          }
+      >
+    }
 }
 
 export const DocFormFieldsFragmentDoc = gql`
@@ -2916,10 +3105,12 @@ export const EditedCollectionsDocument = gql`
       id
       title
       slug
+      description
       chapters {
         id
         path
       }
+      thumbnailUrl
     }
   }
 `
@@ -2935,6 +3126,8 @@ export const EditedCollectionDocument = gql`
   query EditedCollection($slug: String!) {
     editedCollection(slug: $slug) {
       id
+      title
+      slug
       chapters {
         id
         title
@@ -3653,8 +3846,6 @@ export const AddDocumentDocument = gql`
       id
       title
       slug
-      collectionSlug
-      chapterSlug
     }
   }
 `
@@ -3662,6 +3853,37 @@ export const AddDocumentDocument = gql`
 export function useAddDocumentMutation() {
   return Urql.useMutation<AddDocumentMutation, AddDocumentMutationVariables>(
     AddDocumentDocument
+  )
+}
+export const AddEditedCollectionDocument = gql`
+  mutation AddEditedCollection($input: CreateEditedCollectionInput!) {
+    createEditedCollection(input: $input)
+  }
+`
+
+export function useAddEditedCollectionMutation() {
+  return Urql.useMutation<
+    AddEditedCollectionMutation,
+    AddEditedCollectionMutationVariables
+  >(AddEditedCollectionDocument)
+}
+export const UpdateUserDocument = gql`
+  mutation updateUser($user: UserUpdate!) {
+    updateUser(user: $user) {
+      id
+      displayName
+      avatarUrl
+      bio
+      organization
+      location
+      role
+    }
+  }
+`
+
+export function useUpdateUserMutation() {
+  return Urql.useMutation<UpdateUserMutation, UpdateUserMutationVariables>(
+    UpdateUserDocument
   )
 }
 export const UserByIdDocument = gql`
@@ -3708,4 +3930,69 @@ export function useAllCollectionsQuery(
     query: AllCollectionsDocument,
     ...options,
   })
+}
+export const InsertCustomMorphemeTagDocument = gql`
+  mutation InsertCustomMorphemeTag(
+    $tag: String!
+    $title: String!
+    $system: String!
+  ) {
+    insertCustomMorphemeTag(tag: $tag, title: $title, system: $system)
+  }
+`
+
+export function useInsertCustomMorphemeTagMutation() {
+  return Urql.useMutation<
+    InsertCustomMorphemeTagMutation,
+    InsertCustomMorphemeTagMutationVariables
+  >(InsertCustomMorphemeTagDocument)
+}
+export const MenuBySlugDocument = gql`
+  query MenuBySlug($slug: String!) {
+    menuBySlug(slug: $slug) {
+      id
+      name
+      slug
+      items {
+        label
+        path
+        items {
+          label
+          path
+        }
+      }
+    }
+  }
+`
+
+export function useMenuBySlugQuery(
+  options: Omit<Urql.UseQueryArgs<MenuBySlugQueryVariables>, "query">
+) {
+  return Urql.useQuery<MenuBySlugQuery, MenuBySlugQueryVariables>({
+    query: MenuBySlugDocument,
+    ...options,
+  })
+}
+export const UpdateMenuDocument = gql`
+  mutation UpdateMenu($menu: MenuUpdate!) {
+    updateMenu(menu: $menu) {
+      id
+      name
+      slug
+      items {
+        label
+        path
+        items {
+          label
+          path
+        }
+      }
+    }
+  }
+`
+
+export function useUpdateMenuMutation() {
+  return Urql.useMutation<UpdateMenuMutation, UpdateMenuMutationVariables>(
+    UpdateMenuDocument
+  )
 }
