@@ -175,6 +175,13 @@ pub struct SourceAttribution {
     pub link: String,
 }
 
+/// Source attribution used as input
+#[derive(async_graphql::InputObject, Clone, Debug, Serialize, Deserialize)]
+pub struct SourceAttributionInput {
+    pub name: String,
+    pub link: String,
+}
+
 /// May not need this
 /// A user belongs to any number of user groups, which give them various permissions.
 #[derive(async_graphql::Enum, Clone, Copy, PartialEq, Eq)]

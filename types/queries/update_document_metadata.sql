@@ -8,7 +8,7 @@ update document set
         case
             when $3::date is not null then $3::date
             else written_at
-        end
+        end,
     genre_id =
         case
             when $4::uuid is not null then $4

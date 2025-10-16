@@ -4,7 +4,7 @@ use crate::{
 };
 
 use crate::doc_metadata::{Genre, Format, Keyword, SubjectHeading, Language, SpatialCoverage};
-use crate::person::{Contributor, Creator, SourceAttribution};
+use crate::person::{Contributor, Creator, SourceAttribution, SourceAttributionInput};
 use async_graphql::types::MaybeUndefined;
 
 use async_graphql::{Context, dataloader::DataLoader, FieldResult, MaybeUndefined, Result};
@@ -440,7 +440,7 @@ pub struct DocumentMetadataUpdate {
     /// The DOI of the document, if applicable
     pub doi: MaybeUndefined<String>,
     /// The source of the document
-    pub source: MaybeUndefined<SourceAttribution>,
+    pub source: MaybeUndefined<SourceAttributionInput>,
 }
 
 #[async_graphql::ComplexObject]
