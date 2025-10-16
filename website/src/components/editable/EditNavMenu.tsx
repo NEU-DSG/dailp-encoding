@@ -1,6 +1,10 @@
 import React, { useEffect, useState } from "react"
 import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd"
-import { MdDragIndicator } from "react-icons/md/index"
+import {
+  MdDragIndicator,
+  MdKeyboardArrowDown,
+  MdKeyboardArrowUp,
+} from "react-icons/md/index"
 import * as Dailp from "src/graphql/dailp"
 
 // Stable identifiers for items: prefer backend id, then clientId
@@ -272,6 +276,13 @@ const TreeEditor = ({
   depth?: number
 }) => {
   const isTopLevel = depth === 0
+  const moveNode = (fromIndex: number, toIndex: number) => {
+    if (toIndex < 0 || toIndex >= nodes.length) return
+    const next = Array.from(nodes)
+    const [removed] = next.splice(fromIndex, 1)
+    next.splice(toIndex, 0, removed)
+    setNodes(next)
+  }
   return (
     <ul style={{ listStyle: "none", paddingLeft: isTopLevel ? 12 : 20 }}>
       {nodes.map((n, index) => {
@@ -322,6 +333,28 @@ const TreeEditor = ({
                       + Subitem
                     </button>
                   )}
+                  <div style={{ display: "flex", flexDirection: "column" }}>
+                    <button
+                      type="button"
+                      disabled={index === 0}
+                      onClick={() => moveNode(index, index - 1)}
+                      aria-label="Move up"
+                      title="Move up"
+                      style={{ padding: 2, height: 22, width: 28 }}
+                    >
+                      <MdKeyboardArrowUp size={18} />
+                    </button>
+                    <button
+                      type="button"
+                      disabled={index === nodes.length - 1}
+                      onClick={() => moveNode(index, index + 1)}
+                      aria-label="Move down"
+                      title="Move down"
+                      style={{ padding: 2, height: 22, width: 28 }}
+                    >
+                      <MdKeyboardArrowDown size={18} />
+                    </button>
+                  </div>
                   <button
                     type="button"
                     onClick={() => onRemove(dragId, n.label)}
