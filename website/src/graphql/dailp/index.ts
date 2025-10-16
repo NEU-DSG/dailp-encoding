@@ -646,6 +646,50 @@ export type Markdown = {
   readonly content: Scalars["String"]
 }
 
+/** Menu object representing the navbar menu that can be edited. */
+export type Menu = {
+  readonly __typename?: "Menu"
+  /** Id for menu. */
+  readonly id: Scalars["UUID"]
+  /** Menu items. */
+  readonly items: ReadonlyArray<MenuItem>
+  /** Name for the menu. */
+  readonly name: Scalars["String"]
+  /** Slug for the menu. */
+  readonly slug: Scalars["String"]
+}
+
+/** A single item in the menu. */
+export type MenuItem = {
+  readonly __typename?: "MenuItem"
+  /** Child items (dropdown), optional. */
+  readonly items: Maybe<ReadonlyArray<MenuItem>>
+  /** Display label. */
+  readonly label: Scalars["String"]
+  /** Destination path. */
+  readonly path: Scalars["String"]
+}
+
+/** Input for a single menu item. */
+export type MenuItemInput = {
+  /** Child items (dropdown), optional. */
+  readonly items: InputMaybe<ReadonlyArray<MenuItemInput>>
+  /** Display label. */
+  readonly label: Scalars["String"]
+  /** Destination path. */
+  readonly path: Scalars["String"]
+}
+
+/** Input for updating a menu. */
+export type MenuUpdate = {
+  /** Menu id. */
+  readonly id: Scalars["UUID"]
+  /** New menu items (optional). */
+  readonly items: InputMaybe<ReadonlyArray<MenuItemInput>>
+  /** New name (optional). */
+  readonly name: InputMaybe<Scalars["String"]>
+}
+
 /** One particular morpheme and all the known words that contain that exact morpheme. */
 export type MorphemeReference = {
   readonly __typename?: "MorphemeReference"
@@ -739,6 +783,7 @@ export type Mutation = {
   /** Mutation for adding/changing contributor attributions */
   readonly updateContributorAttribution: Scalars["UUID"]
   readonly updateDocumentMetadata: Scalars["UUID"]
+  readonly updateMenu: Menu
   readonly updatePage: Scalars["Boolean"]
   /** Mutation for paragraph and translation editing */
   readonly updateParagraph: DocumentParagraph
@@ -803,6 +848,10 @@ export type MutationUpdateContributorAttributionArgs = {
 
 export type MutationUpdateDocumentMetadataArgs = {
   document: DocumentMetadataUpdate
+}
+
+export type MutationUpdateMenuArgs = {
+  menu: MenuUpdate
 }
 
 export type MutationUpdatePageArgs = {
@@ -919,6 +968,7 @@ export type Query = {
   /** Retrieves a full document from its unique identifier. */
   readonly documentByUuid: Maybe<AnnotatedDoc>
   readonly editedCollection: Maybe<EditedCollection>
+  readonly menuBySlug: Menu
   /**
    * Retrieve information for the morpheme that corresponds to the given tag
    * string. For example, "3PL.B" is the standard string referring to a 3rd
@@ -987,6 +1037,10 @@ export type QueryDocumentByUuidArgs = {
 }
 
 export type QueryEditedCollectionArgs = {
+  slug: Scalars["String"]
+}
+
+export type QueryMenuBySlugArgs = {
   slug: Scalars["String"]
 }
 
@@ -2680,6 +2734,60 @@ export type InsertCustomMorphemeTagMutation = {
   readonly __typename?: "Mutation"
 } & Pick<Mutation, "insertCustomMorphemeTag">
 
+export type MenuBySlugQueryVariables = Exact<{
+  slug: Scalars["String"]
+}>
+
+export type MenuBySlugQuery = { readonly __typename?: "Query" } & {
+  readonly menuBySlug: { readonly __typename?: "Menu" } & Pick<
+    Menu,
+    "id" | "name" | "slug"
+  > & {
+      readonly items: ReadonlyArray<
+        { readonly __typename?: "MenuItem" } & Pick<
+          MenuItem,
+          "label" | "path"
+        > & {
+            readonly items: Maybe<
+              ReadonlyArray<
+                { readonly __typename?: "MenuItem" } & Pick<
+                  MenuItem,
+                  "label" | "path"
+                >
+              >
+            >
+          }
+      >
+    }
+}
+
+export type UpdateMenuMutationVariables = Exact<{
+  menu: MenuUpdate
+}>
+
+export type UpdateMenuMutation = { readonly __typename?: "Mutation" } & {
+  readonly updateMenu: { readonly __typename?: "Menu" } & Pick<
+    Menu,
+    "id" | "name" | "slug"
+  > & {
+      readonly items: ReadonlyArray<
+        { readonly __typename?: "MenuItem" } & Pick<
+          MenuItem,
+          "label" | "path"
+        > & {
+            readonly items: Maybe<
+              ReadonlyArray<
+                { readonly __typename?: "MenuItem" } & Pick<
+                  MenuItem,
+                  "label" | "path"
+                >
+              >
+            >
+          }
+      >
+    }
+}
+
 export const DocFormFieldsFragmentDoc = gql`
   fragment DocFormFields on AnnotatedDoc {
     id
@@ -3802,4 +3910,53 @@ export function useInsertCustomMorphemeTagMutation() {
     InsertCustomMorphemeTagMutation,
     InsertCustomMorphemeTagMutationVariables
   >(InsertCustomMorphemeTagDocument)
+}
+export const MenuBySlugDocument = gql`
+  query MenuBySlug($slug: String!) {
+    menuBySlug(slug: $slug) {
+      id
+      name
+      slug
+      items {
+        label
+        path
+        items {
+          label
+          path
+        }
+      }
+    }
+  }
+`
+
+export function useMenuBySlugQuery(
+  options: Omit<Urql.UseQueryArgs<MenuBySlugQueryVariables>, "query">
+) {
+  return Urql.useQuery<MenuBySlugQuery, MenuBySlugQueryVariables>({
+    query: MenuBySlugDocument,
+    ...options,
+  })
+}
+export const UpdateMenuDocument = gql`
+  mutation UpdateMenu($menu: MenuUpdate!) {
+    updateMenu(menu: $menu) {
+      id
+      name
+      slug
+      items {
+        label
+        path
+        items {
+          label
+          path
+        }
+      }
+    }
+  }
+`
+
+export function useUpdateMenuMutation() {
+  return Urql.useMutation<UpdateMenuMutation, UpdateMenuMutationVariables>(
+    UpdateMenuDocument
+  )
 }
