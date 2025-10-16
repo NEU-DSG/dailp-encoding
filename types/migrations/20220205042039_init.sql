@@ -90,6 +90,14 @@ create table contributor_attribution (
   primary key (document_id, contributor_id)
 );
 
+-- Join table between contributor and document to map which contributors are 
+-- associated with which documents
+create table document_contributor (
+  document_id uuid not null references document(id) on delete cascade,
+  contributor_id uuid not null references contributor(id) on delete cascade,
+  primary key (document_id, contributor_id)
+);
+
 create table document_source (
   id autouuid primary key,
   name text not null,

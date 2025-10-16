@@ -105,14 +105,6 @@ create table document_creator (
   primary key (document_id, creator_id)
 );
 
--- Join table between contributor and document to map which contributors are 
--- associated with which documents
-create table document_contributor (
-  document_id uuid not null references document(id) on delete cascade,
-  contributor_id uuid not null references contributor(id) on delete cascade,
-  primary key (document_id, contributor_id)
-);
-
 -- Add other metadata to document
 alter table document
   add column url text NULL,
