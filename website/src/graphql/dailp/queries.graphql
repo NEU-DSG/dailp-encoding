@@ -681,11 +681,7 @@ mutation DeleteComment($commentId: DeleteCommentInput!) {
   }
 }
 
-mutation AddEditedCollection($input: CreateEditedCollectionInput!) {
-  createEditedCollection(input: $input)
-}
-
-mutation updateUser($user: UserUpdate!) {
+mutation UpdateUser($user: UserUpdate!) {
   updateUser(user: $user) {
     id
     displayName
@@ -695,6 +691,18 @@ mutation updateUser($user: UserUpdate!) {
     location
     role
   }
+}
+
+mutation AddDocument($input: CreateDocumentFromFormInput!) {
+  addDocument(input: $input) {
+    id
+    title
+    slug
+  }
+}
+
+mutation AddEditedCollection($input: CreateEditedCollectionInput!) {
+  createEditedCollection(input: $input)
 }
 
 query UserById($id: UUID!) {
@@ -711,6 +719,14 @@ query UserById($id: UUID!) {
     organization
     location
     role
+  }
+}
+
+query AllCollections {
+  allCollections {
+    name
+    slug
+    id
   }
 }
 

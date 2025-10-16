@@ -556,13 +556,16 @@ impl IiifImages {
 }
 
 /// Reference to a document collection
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct DocumentCollection {
+    /// Optional database ID for the collection
+    pub id: Option<Uuid>,
     /// General title of the collection
     pub title: String,
     /// Unique slug used to generate URL paths
     pub slug: String,
 }
+
 impl DocumentCollection {
     /// Create a collection reference using the given title and generating a
     /// slug from it.
@@ -570,11 +573,17 @@ impl DocumentCollection {
         Self {
             slug: slug::slugify(&name),
             title: name,
+            id: None,
         }
     }
 }
 #[async_graphql::Object]
 impl DocumentCollection {
+    /// Database ID for this collection
+    async fn id(&self) -> Option<Uuid> {
+        self.id
+    }
+
     /// Full name of this collection
     async fn name(&self) -> &str {
         &self.title
