@@ -7,9 +7,11 @@ mod early_vocab;
 mod edited_collection;
 mod lexical;
 mod pages;
+mod menu;
 mod spreadsheets;
 mod tags;
 mod translations;
+mod user_documents;
 
 use anyhow::Result;
 use dailp::{Database, LexicalConnection, SheetResult, Uuid};
@@ -32,8 +34,8 @@ async fn main() -> Result<()> {
     //println!("Migrating Image Sources...");
     //migrate_image_sources(&db).await?;
 
-    //println!("Migrating contributors...");
-    //contributors::migrate_all(&db).await?;
+    println!("Migrating contributors...");
+    contributors::migrate_all(&db).await?;
 
     //println!("Migrating tags to database...");
     //tags::migrate_tags(&db).await?;
@@ -50,11 +52,17 @@ async fn main() -> Result<()> {
 
     //migrate_data(&db).await?;
 
-    // println!("Migrating connections...");
-    // connections::migrate_connections(&db).await?;
+    println!("Migrating connections...");
+    connections::migrate_connections(&db).await?;
+
+    println!("Migrating menu...");
+    menu::migrate_menu(&db).await?;
 
     //println!("Migrating collections...");
     //edited_collection::migrate_edited_collection(&db).await?;
+
+    println!("Creating user documents collection...");
+    user_documents::create_user_documents_collection(&db).await?;
 
     Ok(())
 }
