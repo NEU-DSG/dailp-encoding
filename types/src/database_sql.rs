@@ -1,5 +1,6 @@
 #![allow(missing_docs)]
 
+use anyhow::Error;
 use auth::UserGroup;
 use chrono::{NaiveDate, NaiveDateTime};
 use sqlx::postgres::types::PgLTree;
@@ -1641,20 +1642,15 @@ impl Database {
         let title = input.title.trim();
         // generate slug
         let slug = slug::slugify(title);
-        // generate markdown blocks
-        //let body: String = input.body
-        //.into_iter()
-        //.map(|s| format!("|%|{s}"))
-        //.collect();
-        query_file!(
-            "queries/upsert_page.sql",
-            slug,
-            input.path,
-            title,
-            input.body[0]
-        )
-        .execute(&self.client)
-        .await?;
+        // Ensure there is at least one body block and it is non-empty
+        let body = match input.body.first() {
+            Some(content) if !content.trim().is_empty() => content.clone(),
+            _ => return Err(anyhow::anyhow!("input body is empty")),
+        };
+
+        query_file!("queries/upsert_page.sql", slug, input.path, title, body)
+            .execute(&self.client)
+            .await?;
         Ok(input.path)
     }
 
