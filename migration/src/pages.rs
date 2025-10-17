@@ -36,7 +36,7 @@ pub fn load_pages(file_path: &str) -> Result<Vec<NewPageInput>, anyhow::Error> {
     let mut reader = ReaderBuilder::new().from_reader(file);
 
     let mut pages = Vec::new();
-    for (idx,result) in reader.deserialize::<CsvRow>() .enumerate(){
+    for (idx, result) in reader.deserialize::<CsvRow>().enumerate() {
         match result {
             Ok(row) => {
                 if let Err(e) = validate_row(&row) {
@@ -49,12 +49,12 @@ pub fn load_pages(file_path: &str) -> Result<Vec<NewPageInput>, anyhow::Error> {
                     path: row.path,
                 };
                 pages.push(page);
-            },
+            }
             Err(e) => {
                 println!("Error migrating pages: {:?}, row: {:?}", e, idx);
             }
         }
-    } 
+    }
     Ok(pages)
 }
 

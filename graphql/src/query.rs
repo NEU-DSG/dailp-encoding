@@ -877,7 +877,8 @@ impl Mutation {
             .data::<DataLoader<Database>>()?
             .loader()
             .upsert_page(page)
-        )}
+            .await?)
+    }
 
     // dennis todo: should be admin, but admin accs not implemented yet
     #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
