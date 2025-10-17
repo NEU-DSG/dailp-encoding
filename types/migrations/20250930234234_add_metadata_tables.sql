@@ -109,3 +109,26 @@ create table document_creator (
 alter table document
   add column url text NULL,
   add column doi text NULL;
+
+-- Defines a contributor's contributions to the associated item
+create type contributor_role as enum (
+  'Transcriber',
+  'Translator',
+  'Annotator',
+  'CulturalAdvisor'
+);
+
+-- Join table between contributors and roles
+create table contributor_role_map (
+  contributor_id uuid references contributor(id) on delete cascade,
+  role contributor_role not null,
+  primary key (contributor_id, role)
+);
+
+-- Join table between contributor and document to map which contributors are 
+-- associated with which documents
+create table document_contributor (
+  document_id uuid not null references document(id) on delete cascade,
+  contributor_id uuid not null references contributor(id) on delete cascade,
+  primary key (document_id, contributor_id)
+);
