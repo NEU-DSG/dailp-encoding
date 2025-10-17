@@ -62,39 +62,16 @@ create table character_transcription (
   image_area box
 );
 
--- Defines a contributor's contributions to the associated item
-create type contributor_role as enum (
-  'Transcriber',
-  'Translator',
-  'Annotator',
-  'CulturalAdvisor'
-);
-
 -- Used both for known static contributors and active users.
 create table contributor (
   id autouuid primary key,
-  full_name text not null unique,
-);
-
--- Join table between contributors and roles
-create table contributor_role_map (
-  contributor_id uuid references contributor(id) on delete cascade,
-  role contributor_role not null,
-  primary key (contributor_id, role)
+  full_name text not null unique
 );
 
 create table contributor_attribution (
   document_id uuid not null references document (id) on delete cascade,
   contributor_id uuid not null references contributor (id) on delete cascade,
   contribution_role text not null,
-  primary key (document_id, contributor_id)
-);
-
--- Join table between contributor and document to map which contributors are 
--- associated with which documents
-create table document_contributor (
-  document_id uuid not null references document(id) on delete cascade,
-  contributor_id uuid not null references contributor(id) on delete cascade,
   primary key (document_id, contributor_id)
 );
 
