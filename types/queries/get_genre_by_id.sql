@@ -1,3 +1,6 @@
-SELECT * 
-FROM genre 
-WHERE id = $1;
+select 
+    id, 
+    name, 
+    status::text as status
+from genre
+where id = $1;

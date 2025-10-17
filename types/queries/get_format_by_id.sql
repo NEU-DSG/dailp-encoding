@@ -1,3 +1,6 @@
-SELECT *
-FROM format
-WHERE id = $1;
+select 
+    id, 
+    name, 
+    status::text as status
+from doc_format
+where id = $1;

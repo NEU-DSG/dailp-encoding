@@ -1,6 +1,7 @@
 use crate::{Database, PersonFullName, user::User};
 use serde::{Deserialize, Serialize};
-use async_graphql::{SimpleObject, Union};
+use async_graphql::{SimpleObject, Union, Context, FieldResult}};
+use async_graphql::dataloader::DataLoader;
 
 /// Record for a DAILP admin
 #[derive(Clone, Debug, Serialize, Deserialize, async_graphql::SimpleObject)]
@@ -155,13 +156,16 @@ pub struct Creator {
     pub name: String,
 }
 
-/// Creators of this document
-async fn creators(&self, context: &async_graphql::Context<'_>) -> FieldResult<Vec<Creator>> {
-    Ok(context
-        .data::<DataLoader<Database>>()?
-        .load_one(crate::CreatorsForDocument(self.meta.id.0))
-        .await?
-        .unwrap_or_default())
+#[async_graphql::Object]
+impl Creator {
+    /// Creators of this document
+    async fn creators(&self, context: &async_graphql::Context<'_>) -> FieldResult<Vec<Creator>> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .load_one(crate::CreatorsForDocument(self.meta.id.0))
+            .await?
+            .unwrap_or_default())
+    }
 }
 
 /// Attribution for a particular source, whether an institution or an individual.

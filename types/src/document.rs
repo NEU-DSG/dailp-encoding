@@ -5,7 +5,6 @@ use crate::{
 
 use crate::doc_metadata::{Genre, Format, Keyword, SubjectHeading, Language, SpatialCoverage};
 use crate::person::{Contributor, Creator, SourceAttribution, SourceAttributionInput};
-use async_graphql::types::MaybeUndefined;
 
 use async_graphql::{Context, dataloader::DataLoader, FieldResult, MaybeUndefined, Result};
 use serde::{Deserialize, Serialize};
@@ -129,7 +128,7 @@ impl AnnotatedDoc {
         // Only query if we have an ID
         if let Some(id) = genre_id_opt {
             let db = context.data::<DataLoader<Database>>()?;
-            let genre = db.load_one(GenreById(**id)).await?;
+            let genre = db.load_one(GenreById(id)).await?;
             Ok(genre)
         } else {
             Ok(None)
@@ -265,11 +264,12 @@ impl AnnotatedDoc {
         }
     }
     
-    /// The key terms associated with this document
-    async fn keywords(&self) -> &Option<Vec<Keyword>> {
+    /// Internal field accessor for keywords
+    fn keywords_ids(&self) -> &Option<Vec<Keyword>> {
         &self.meta.keywords_ids
     }
 
+    // GraphQL resolver for keywords
     async fn keywords(&self, context: &async_graphql::Context<'_>) -> FieldResult<Vec<Keyword>> {
         Ok(context
             .data::<DataLoader<Database>>()?
@@ -279,7 +279,7 @@ impl AnnotatedDoc {
     }
     
     /// Terms that reflect Indigenous knowledge practices related to this document
-    async fn subject_headings(&self) -> &Option<Vec<SubjectHeading>> {
+    fn subject_headings_ids(&self) -> &Option<Vec<SubjectHeading>> {
         &self.meta.subject_headings_ids
     }
     
@@ -295,7 +295,7 @@ impl AnnotatedDoc {
     }
 
     /// The languages present in this document
-    async fn languages(&self) -> &Option<Vec<Language>> {
+    fn languages_ids(&self) -> &Option<Vec<Language>> {
         &self.meta.languages_ids
     }
     
@@ -308,8 +308,8 @@ impl AnnotatedDoc {
     }
 
     /// The places mentioned in or associated with this document
-    async fn spatial_coverages(&self) -> &Option<Vec<SpatialCoverage>> {
-        &self.meta.spatial_coverages_ids
+   fn spatial_coverages_ds(&self) -> &Option<Vec<SpatialCoverage>> {
+        &self.meta.spatial_coverage_ids
     }
 
     async fn spatial_coverages(
@@ -648,7 +648,7 @@ impl DocumentMetadata {
             .fetch_optional(pool)
             .await?;
         Ok(row)
-    }
+    }    
     
     /// Fetch all keywords linked to this document
     async fn keywords(&self, ctx: &Context<'_>) -> Result<Vec<Keyword>> {

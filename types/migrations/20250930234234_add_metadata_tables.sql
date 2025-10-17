@@ -1,11 +1,12 @@
 -- New document metadata
 
 -- Shared enum for approval status of contributor suggestions
-create type approval_status as enum (
-    'pending', 
-    'approved', 
-    'rejected'
-);
+do $$
+begin
+    if not exists (select 1 from pg_type where typname = 'approval_status') then
+        create type approval_status as enum ('pending', 'approved', 'rejected');
+    end if;
+end$$;
 
 -- Genres
 create table genre (

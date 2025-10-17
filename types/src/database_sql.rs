@@ -11,7 +11,8 @@ use user::UserUpdate;
 use crate::collection::CollectionChapter;
 use crate::collection::EditedCollection;
 use crate::comment::{Comment, CommentParentType, CommentType, CommentUpdate};
-use crate::doc_metadata{Genre, Format, Keyword, SubjectHeading, Language, SpatialCoverage};
+use crate::doc_metadata::{Genre, Format, Keyword, SubjectHeading, Language, SpatialCoverage};
+
 use crate::user::User;
 use crate::user::UserId;
 use {
@@ -2182,7 +2183,7 @@ impl Loader<GenreById> for Database {
         keys: &[GenreById],
     ) -> Result<HashMap<GenreById, Self::Value>, Self::Error> {
         let ids: Vec<_> = keys.iter().map(|k| k.0).collect();
-        let items = query_file!("queries/get_genre_by_id.sql", &ids)
+        let items = sqlx::query_file_as!(Genre, "queries/get_genre_by_id.sql", &ids)
             .fetch_all(&self.client)
             .await?;
         Ok(items
@@ -2206,7 +2207,7 @@ impl Loader<FormatById> for Database {
         keys: &[FormatById],
     ) -> Result<HashMap<FormatById, Self::Value>, Self::Error> {
         let ids: Vec<_> = keys.iter().map(|k| k.0).collect();
-        let items = query_file!("queries/get_format_by_id.sql", &ids)
+        let items = sqlx::query_file_as!(Format, "queries/get_format_by_id.sql", &ids)
             .fetch_all(&self.client)
             .await?;
         Ok(items
