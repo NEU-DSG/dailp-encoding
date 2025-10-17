@@ -170,6 +170,17 @@ export const EditableNavMenu = ({ navMenuSlug }: { navMenuSlug: string }) => {
     )
   }
 
+  const handleDemote = (nodeId: string, targetParentId: string) => {
+    setItems((prev) => {
+      const { node, rest } = extractNode(prev, nodeId)
+      if (!node) return prev
+
+      // Add the demoted node as a child of the target parent
+      const updated = addChild(rest, targetParentId, node)
+      return updated
+    })
+  }
+
   const handleSave = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const dupPaths = findDuplicatePaths(items)
@@ -281,6 +292,7 @@ export const EditableNavMenu = ({ navMenuSlug }: { navMenuSlug: string }) => {
                       return next
                     })
                   }
+                  onDemote={handleDemote}
                   onRemove={(id, label) => {
                     const ok = confirm(`Delete ${label}?`)
                     if (!ok) return
@@ -322,6 +334,7 @@ const TreeEditor = ({
   setNodes,
   onAddChild,
   onPromote,
+  onDemote,
   onRemove,
   onChange,
   depth = 0,
@@ -330,6 +343,7 @@ const TreeEditor = ({
   setNodes: (nodes: any[]) => void
   onAddChild: (parentId: string) => void
   onPromote: (id: string) => void
+  onDemote?: (nodeId: string, targetParentId: string) => void
   onRemove: (id: string, label: string) => void
   onChange: (id: string, update: Partial<any>) => void
   depth?: number
@@ -401,6 +415,28 @@ const TreeEditor = ({
                       &larr;
                     </button>
                   )}
+                  {isTopLevel && !n.items?.length && onDemote && (
+                    <select
+                      onChange={(e) => {
+                        if (e.target.value && e.target.value !== dragId) {
+                          onDemote(dragId, e.target.value)
+                          e.target.value = ""
+                        }
+                      }}
+                      defaultValue=""
+                      title="Demote..."
+                      style={{ height: 28, fontSize: 12 }}
+                    >
+                      <option value="">Demote to...</option>
+                      {nodes
+                        .filter((other) => idOf(other) !== dragId)
+                        .map((other) => (
+                          <option key={idOf(other)} value={idOf(other)}>
+                            {other.label || "Unnamed"}
+                          </option>
+                        ))}
+                    </select>
+                  )}
                   <div style={{ display: "flex", flexDirection: "column" }}>
                     <button
                       type="button"
@@ -454,6 +490,7 @@ const TreeEditor = ({
                           }
                           onAddChild={onAddChild}
                           onPromote={onPromote}
+                          onDemote={onDemote}
                           onRemove={onRemove}
                           onChange={onChange}
                           depth={depth + 1}
