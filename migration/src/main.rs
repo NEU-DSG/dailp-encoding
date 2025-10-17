@@ -8,9 +8,13 @@ mod edited_collection;
 mod lexical;
 mod menu;
 <<<<<<< HEAD
+<<<<<<< HEAD
 mod pages;
 =======
 >>>>>>> 171dbbaa (Admin menu editing backend (#501))
+=======
+mod pages;
+>>>>>>> 978a066d (Page editing backend (#502))
 mod spreadsheets;
 mod tags;
 mod translations;
@@ -54,6 +58,7 @@ async fn main() -> Result<()> {
     pages::migrate_pages(&db).await?;
 
 <<<<<<< HEAD
+<<<<<<< HEAD
     //migrate_data(&db).await?;
 =======
     println!("Migrating connections...");
@@ -62,6 +67,9 @@ async fn main() -> Result<()> {
     println!("Migrating menu...");
     menu::migrate_menu(&db).await?;
 >>>>>>> 171dbbaa (Admin menu editing backend (#501))
+=======
+    //migrate_data(&db).await?;
+>>>>>>> 978a066d (Page editing backend (#502))
 
     println!("Migrating connections...");
     connections::migrate_connections(&db).await?;
@@ -71,9 +79,12 @@ async fn main() -> Result<()> {
 
     //println!("Migrating collections...");
     //edited_collection::migrate_edited_collection(&db).await?;
+<<<<<<< HEAD
 
     println!("Creating user documents collection...");
     user_documents::create_user_documents_collection(&db).await?;
+=======
+>>>>>>> 978a066d (Page editing backend (#502))
 
     println!("Creating user documents collection...");
     user_documents::create_user_documents_collection(&db).await?;
