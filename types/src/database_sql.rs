@@ -1,5 +1,6 @@
 #![allow(missing_docs)]
 
+use anyhow::Error;
 use auth::UserGroup;
 use chrono::{NaiveDate, NaiveDateTime};
 use sqlx::postgres::types::{PgLTree, PgRange};
@@ -10,6 +11,10 @@ use user::UserUpdate;
 use crate::collection::CollectionChapter;
 use crate::collection::EditedCollection;
 use crate::comment::{Comment, CommentParentType, CommentType, CommentUpdate};
+use crate::page::ContentBlock;
+use crate::page::Markdown;
+use crate::page::NewPageInput;
+use crate::page::Page;
 use crate::user::User;
 use crate::user::UserId;
 use {
@@ -1898,6 +1903,36 @@ impl Database {
         )
     }
 
+    pub async fn upsert_page(&self, input: NewPageInput) -> Result<String> {
+        // sanitize input
+        let title = input.title.trim();
+        // generate slug
+        let slug = slug::slugify(title);
+        // Ensure there is at least one body block and it is non-empty
+        let body = match input.body.first() {
+            Some(content) if !content.trim().is_empty() => content.clone(),
+            _ => return Err(anyhow::anyhow!("input body is empty")),
+        };
+
+        query_file!("queries/upsert_page.sql", slug, input.path, title, body)
+            .execute(&self.client)
+            .await?;
+        Ok(input.path)
+    }
+
+    pub async fn page_by_path(&self, path: &str) -> Result<Option<Page>> {
+        let record = query_file!("queries/page_by_path.sql", path)
+            .fetch_optional(&self.client)
+            .await?;
+        if let Some(row) = record {
+            let blocks: Vec<ContentBlock> =
+                vec![ContentBlock::Markdown(Markdown { content: row.body })];
+            Ok(Some(Page::build(row.title, row.slug, blocks)))
+        } else {
+            Ok(None)
+        }
+    }
+    //Ok(page)
     pub async fn get_menu_by_slug(&self, slug: String) -> Result<Menu> {
         let menu = query_file!("queries/menu_by_slug.sql", slug)
             .fetch_one(&self.client)

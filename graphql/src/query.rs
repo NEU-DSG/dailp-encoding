@@ -3,6 +3,7 @@
 use dailp::{
     auth::{AuthGuard, GroupGuard, UserGroup, UserInfo},
     comment::{CommentParent, CommentUpdate, DeleteCommentInput, PostCommentInput},
+    page::{NewPageInput, Page},
     slugify_ltree,
     user::{User, UserUpdate},
     AnnotatedForm, AnnotatedSeg, AttachAudioToWordInput, CollectionChapter, Contributor,
@@ -36,6 +37,14 @@ impl Query {
             .data::<DataLoader<Database>>()?
             .loader()
             .all_edited_collections()
+            .await?)
+    }
+
+    async fn page_by_path(&self, context: &Context<'_>, path: String) -> FieldResult<Option<Page>> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .page_by_path(&path)
             .await?)
     }
 
@@ -862,6 +871,16 @@ impl Mutation {
             .to_string())
     }
 
+    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    async fn upsert_page(&self, context: &Context<'_>, page: NewPageInput) -> FieldResult<String> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .upsert_page(page)
+            .await?)
+    }
+
+    // dennis todo: should be admin, but admin accs not implemented yet
     #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
     async fn update_menu(&self, context: &Context<'_>, menu: MenuUpdate) -> FieldResult<Menu> {
         Ok(context

@@ -738,6 +738,24 @@ mutation InsertCustomMorphemeTag(
   insertCustomMorphemeTag(tag: $tag, title: $title, system: $system)
 }
 
+mutation UpsertPage($pageInput: NewPageInput!) {
+  upsertPage(page: $pageInput)
+}
+
+query pageByPath($path: String!) {
+  pageByPath(path: $path) {
+    title
+    body {
+      __typename
+      ... on Markdown {
+        content
+      }
+      ... on Gallery {
+        mediaUrls
+      }
+    }
+  }
+}
 query MenuBySlug($slug: String!) {
   menuBySlug(slug: $slug) {
     id

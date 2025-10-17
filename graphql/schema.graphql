@@ -1040,7 +1040,26 @@ type Mutation {
 	addDocument(input: CreateDocumentFromFormInput!): AddDocumentPayload!
 	insertCustomMorphemeTag(tag: String!, title: String!, system: String!): Boolean!
 	createEditedCollection(input: CreateEditedCollectionInput!): String!
+	upsertPage(page: NewPageInput!): String!
 	updateMenu(menu: MenuUpdate!): Menu!
+}
+
+"""
+Input struct for a page.
+"""
+input NewPageInput {
+	"""
+	title of new page
+	"""
+	title: String!
+	"""
+	content for page, needs to be sanitized
+	"""
+	body: [String!]!
+	"""
+	path of new page
+	"""
+	path: String!
 }
 
 """
@@ -1144,6 +1163,7 @@ input PostCommentInput {
 
 type Query {
 	allEditedCollections: [EditedCollection!]!
+	pageByPath(path: String!): Page
 	editedCollection(slug: String!): EditedCollection
 	"""
 	Retrieves a chapter and its contents by its collection and chapter slug.
