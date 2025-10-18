@@ -109,7 +109,8 @@ create table document_creator (
 -- Add other metadata to document
 alter table document
   add column url text NULL,
-  add column doi text NULL;
+  add column doi text NULL,
+  add column pages text NULL;
 
 -- Defines a contributor's contributions to the associated item
 create type contributor_role as enum (

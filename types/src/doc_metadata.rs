@@ -8,8 +8,8 @@ use uuid::Uuid;
 /// Represents the status of a suggestion made by a contributor
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Type, GqlEnum)]
 #[sqlx(type_name = "approval_status")]
-#[sqlx(rename_all = "lowercase")]
-pub enum Status {
+#[sqlx(rename_all = "snake_case")]
+pub enum ApprovalStatus {
     /// Suggestion is still waiting for or undergoing review
     Pending, 
     /// Suggestion has been approved
