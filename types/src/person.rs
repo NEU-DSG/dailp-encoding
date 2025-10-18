@@ -149,6 +149,7 @@ impl ContributorRole {
 
 /// The creator of a document
 #[derive(async_graphql::SimpleObject, Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[graphql(complex)]
 pub struct Creator {
     /// UUID of the creator
     pub id: uuid::Uuid,
@@ -156,7 +157,7 @@ pub struct Creator {
     pub name: String,
 }
 
-#[async_graphql::Object]
+#[async_graphql::ComplexObject]
 impl Creator {
     /// Creators of this document
     async fn creators(&self, context: &async_graphql::Context<'_>) -> FieldResult<Vec<Creator>> {

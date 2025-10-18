@@ -784,7 +784,6 @@ impl Database {
             &written_at as _,
             document.genre_id,
             document.format_id,
-            document.pages,
             document.doi,
             document.source
         )

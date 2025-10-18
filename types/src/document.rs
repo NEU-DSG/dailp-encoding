@@ -265,7 +265,7 @@ impl AnnotatedDoc {
     }
     
     /// Internal field accessor for keywords
-    fn keywords_ids(&self) -> &Option<Vec<Keyword>> {
+    async fn keywords_ids(&self) -> &Option<Vec<Keyword>> {
         &self.meta.keywords_ids
     }
 
