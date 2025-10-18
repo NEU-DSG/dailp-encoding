@@ -299,10 +299,16 @@ impl Database {
                         .contributors
                         .and_then(|x| serde_json::from_value(x).ok())
                         .unwrap_or_default(),
-                    genre_id: None,
+                    creators_ids: Vec::new().into(),
+                    format_id: None.into(),
+                    genre_id: None.into(),
+                    keywords_ids: Vec::new().into(),
+                    languages_ids: Vec::new().into(),
                     order_index: 0,
                     page_images: None,
                     sources: Vec::new(),
+                    spatial_coverages_ids: Vec::new().into(),
+                    subject_headings_ids: Vec::new().into(),
                     translation: None,
                 },
                 segments: None,
@@ -437,10 +443,16 @@ impl Database {
                     .contributors
                     .and_then(|x| serde_json::from_value(x).ok())
                     .unwrap_or_default(),
-                genre_id: None,
+                creators_ids: Vec::new().into(),
+                format_id: None.into(),
+                genre_id: None.into(),
+                keywords_ids: Vec::new().into(),
+                languages_ids: Vec::new().into(),
                 order_index: 0,
                 page_images: None,
                 sources: Vec::new(),
+                spatial_coverages_ids: Vec::new().into(),
+                subject_headings_ids: Vec::new().into(),
                 translation: None,
             },
             segments: None,
@@ -1746,10 +1758,16 @@ impl Loader<DocumentId> for Database {
                         .contributors
                         .and_then(|x| serde_json::from_value(x).ok())
                         .unwrap_or_default(),
-                    genre_id: None,
+                    creators_ids: Vec::new().into(),
+                    format_id: None.into(),
+                    genre_id: None.into(),
+                    keywords_ids: Vec::new().into(),
+                    languages_ids: Vec::new().into(),
                     order_index: 0,
                     page_images: None,
                     sources: Vec::new(),
+                    spatial_coverages_ids: Vec::new().into(),
+                    subject_headings_ids: Vec::new().into(),
                     translation: None,
                 },
                 segments: None,
@@ -1818,10 +1836,16 @@ impl Loader<DocumentShortName> for Database {
                         .contributors
                         .and_then(|x| serde_json::from_value(x).ok())
                         .unwrap_or_default(),
-                    genre_id: None,
+                    creators_ids: Vec::new().into(),
+                    format_id: None.into(),
+                    genre_id: None.into(),
+                    keywords_ids: Vec::new().into(),
+                    languages_ids: Vec::new().into(),
                     order_index: 0,
                     page_images: None,
                     sources: Vec::new(),
+                    spatial_coverages_ids: Vec::new().into(),
+                    subject_headings_ids: Vec::new().into(),
                     translation: None,
                 },
                 segments: None,
@@ -2182,12 +2206,12 @@ impl Loader<GenreById> for Database {
         keys: &[GenreById],
     ) -> Result<HashMap<GenreById, Self::Value>, Self::Error> {
         let ids: Vec<_> = keys.iter().map(|k| k.0).collect();
-        let items = sqlx::query_file_as!(Genre, "queries/get_genre_by_id.sql", &ids)
+        let items = sqlx::query_file_as!(Genre, "queries/get_genre_by_id.sql", id)
             .fetch_all(&self.client)
             .await?;
         Ok(items
             .into_iter()
-            .map(|x| (GenreById(x.id), Genre { id: x.id, name: x.name }))
+            .map(|x| (GenreById(x.id), Genre { id: x.id, name: x.name, status: x.status }))
             .collect())
     }
 }
@@ -2206,12 +2230,12 @@ impl Loader<FormatById> for Database {
         keys: &[FormatById],
     ) -> Result<HashMap<FormatById, Self::Value>, Self::Error> {
         let ids: Vec<_> = keys.iter().map(|k| k.0).collect();
-        let items = sqlx::query_file_as!(Format, "queries/get_format_by_id.sql", &ids)
+        let items = sqlx::query_file_as!(Format, "queries/get_format_by_id.sql", id)
             .fetch_all(&self.client)
             .await?;
         Ok(items
             .into_iter()
-            .map(|x| (FormatById(x.id), Format { id: x.id, name: x.name }))
+            .map(|x| (FormatById(x.id), Format { id: x.id, name: x.name, status: x.status }))
             .collect())
     }
 }
@@ -2235,7 +2259,7 @@ impl Loader<KeywordsForDocument> for Database {
             .await?;
         Ok(items
             .into_iter()
-            .map(|x| (KeywordsForDocument(x.document_id), Keyword { id: x.id, name: x.name }))
+            .map(|x| (KeywordsForDocument(x.document_id), Keyword { id: x.id, name: x.name, status: x.status }))
             .into_group_map())
     }
 }

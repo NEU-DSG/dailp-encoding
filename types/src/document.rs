@@ -592,6 +592,7 @@ pub struct DocumentMetadata {
     pub genre_id: MaybeUndefined<Uuid>,
     /// The format of the original artifact
     pub format_id: MaybeUndefined<Uuid>,
+    /// The creator(s) of the document
     pub creators_ids: MaybeUndefined<Vec<Uuid>>,
     /// The people involved in collecting, translating, annotating.
     pub contributors_ids: MaybeUndefined<Vec<Uuid>>,
