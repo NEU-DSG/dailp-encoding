@@ -794,23 +794,23 @@ impl Database {
 
         // Update keywords
         if let MaybeUndefined::Value(keywords_ids) = &document.keywords_ids {
-            query_file!("types/queries/delete_document_keywords.sql", document.id)
+            query_file!("queries/delete_document_keywords.sql", document.id)
                 .execute(&mut *tx)
                 .await?;
     
-            query_file!("types/queries/insert_document_keywords.sql", document.id, keywords_ids)
+            query_file!("queries/insert_document_keywords.sql", document.id, keywords_ids)
                 .execute(&mut *tx)
                 .await?;
         }
      
         // Update subject headings
         if let MaybeUndefined::Value(subject_headings_ids) = &document.subject_headings_ids {
-            query_file!("types/queries/delete_document_subject_headings.sql", document.id)
+            query_file!("queries/delete_document_subject_headings.sql", document.id)
                 .execute(&mut *tx)
                 .await?;
     
             query_file!(
-                "types/queries/insert_document_subject_headings.sql",
+                "queries/insert_document_subject_headings.sql",
                 document.id,
                 subject_headings_ids
             )
@@ -820,23 +820,23 @@ impl Database {
     
         // Update languages
         if let MaybeUndefined::Value(languages_ids) = &document.languages_ids {
-            query_file!("types/queries/delete_document_languages.sql", document.id)
+            query_file!("queries/delete_document_languages.sql", document.id)
                 .execute(&mut *tx)
                 .await?;
     
-            query_file!("types/queries/insert_document_languages.sql", document.id, languages_ids)
+            query_file!("queries/insert_document_languages.sql", document.id, languages_ids)
                 .execute(&mut *tx)
                 .await?;
         }
     
         // Update spatial coverages
         if let MaybeUndefined::Value(spatial_coverage_ids) = &document.spatial_coverage_ids {
-            query_file!("types/queries/delete_document_spatial_coverage.sql", document.id)
+            query_file!("queries/delete_document_spatial_coverage.sql", document.id)
                 .execute(&mut *tx)
                 .await?;
     
             query_file!(
-                "types/queries/insert_document_spatial_coverage.sql",
+                "queries/insert_document_spatial_coverage.sql",
                 document.id,
                 spatial_coverage_ids
             )
@@ -846,23 +846,23 @@ impl Database {
     
         // Update creators
         if let MaybeUndefined::Value(creator_ids) = &document.creators_ids {
-            query_file!("types/queries/delete_document_creator.sql", document.id)
+            query_file!("queries/delete_document_creator.sql", document.id)
                 .execute(&mut *tx)
                 .await?;
     
-            query_file!("types/queries/insert_document_creator.sql", document.id, creator_ids)
+            query_file!("queries/insert_document_creator.sql", document.id, creator_ids)
                 .execute(&mut *tx)
                 .await?;
         }
     
         // Update contributors
         if let Some(contributor_ids) = &document.contributors_ids {
-            query_file!("types/queries/delete_document_contributors.sql", document.id)
+            query_file!("queries/delete_document_contributors.sql", document.id)
                 .execute(&mut *tx)
                 .await?;
     
             query_file!(
-                "types/queries/insert_document_contributors.sql",
+                "queries/insert_document_contributors.sql",
                 document.id,
                 contributor_ids
             )
