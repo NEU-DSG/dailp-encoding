@@ -2205,7 +2205,7 @@ impl Loader<GenreById> for Database {
         &self,
         keys: &[GenreById],
     ) -> Result<HashMap<GenreById, Self::Value>, Self::Error> {
-        let ids: Vec<_> = keys.iter().map(|k| k.0).collect();
+        let id = keys[0].0;
         let items = sqlx::query_file_as!(Genre, "queries/get_genre_by_id.sql", id)
             .fetch_all(&self.client)
             .await?;
@@ -2229,7 +2229,7 @@ impl Loader<FormatById> for Database {
         &self,
         keys: &[FormatById],
     ) -> Result<HashMap<FormatById, Self::Value>, Self::Error> {
-        let ids: Vec<_> = keys.iter().map(|k| k.0).collect();
+        let id = keys[0].0;
         let items = sqlx::query_file_as!(Format, "queries/get_format_by_id.sql", id)
             .fetch_all(&self.client)
             .await?;
