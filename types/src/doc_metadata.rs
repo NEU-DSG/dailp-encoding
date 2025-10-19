@@ -34,7 +34,7 @@ pub struct Genre {
 #[async_graphql::ComplexObject]
 impl Genre {
     async fn approved(&self) -> bool {
-        matches!(self.status, Status::Approved)
+        matches!(self.status, ApprovalStatus::Approved)
     }
 }
 

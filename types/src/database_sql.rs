@@ -2284,7 +2284,7 @@ impl Loader<SubjectHeadingsForDocument> for Database {
                 .await?;
         Ok(items
             .into_iter()
-            .map(|x| (SubjectHeadingsForDocument(x.document_id), SubjectHeading { id: x.id, label: x.label }))
+            .map(|x| (SubjectHeadingsForDocument(x.document_id), SubjectHeading { id: x.id, name: x.name, status: x.status }))
             .into_group_map())
     }
 }
@@ -2308,7 +2308,7 @@ impl Loader<LanguagesForDocument> for Database {
             .await?;
         Ok(items
             .into_iter()
-            .map(|x| (LanguagesForDocument(x.document_id), Language { id: x.id, name: x.name }))
+            .map(|x| (LanguagesForDocument(x.document_id), Language { id: x.id, name: x.name, autonym: x.autonym, status: x.status }))
             .into_group_map())
     }
 }
@@ -2332,7 +2332,7 @@ impl Loader<SpatialCoveragesForDocument> for Database {
             .await?;
         Ok(items
             .into_iter()
-            .map(|x| (SpatialCoveragesForDocument(x.document_id), SpatialCoverage { id: x.id, name: x.name }))
+            .map(|x| (SpatialCoveragesForDocument(x.document_id), SpatialCoverage { id: x.id, name: x.name, status: x.status }))
             .into_group_map())
     }
 }

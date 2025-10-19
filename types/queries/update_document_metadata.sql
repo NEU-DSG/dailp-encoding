@@ -19,19 +19,14 @@ update document set
             when $5::uuid is not null then $5
             else format_id
         end,
-    pages =
-        case
-            when $6::text is not null then $6
-            else pages
-        end,
     sources = 
         case
-            when $7::uuid[] != '{}' then $7
+            when $6::uuid[] != '{}' then $6
             else sources
         end,
     doi =
         case
-            when $8::string is not null then $8
+            when $7::string is not null then $7
             else doi
         end
 where id = $1
