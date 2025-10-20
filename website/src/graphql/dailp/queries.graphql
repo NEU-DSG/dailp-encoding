@@ -681,6 +681,14 @@ mutation DeleteComment($commentId: DeleteCommentInput!) {
   }
 }
 
+mutation AddDocument($input: CreateDocumentFromFormInput!) {
+  addDocument(input: $input) {
+    id
+    title
+    slug
+  }
+}
+
 mutation AddEditedCollection($input: CreateEditedCollectionInput!) {
   createEditedCollection(input: $input)
 }
@@ -714,6 +722,14 @@ query UserById($id: UUID!) {
   }
 }
 
+query AllCollections {
+  allCollections {
+    name
+    slug
+    id
+  }
+}
+
 mutation InsertCustomMorphemeTag(
   $tag: String!
   $title: String!
@@ -722,6 +738,24 @@ mutation InsertCustomMorphemeTag(
   insertCustomMorphemeTag(tag: $tag, title: $title, system: $system)
 }
 
+mutation UpsertPage($pageInput: NewPageInput!) {
+  upsertPage(page: $pageInput)
+}
+
+query pageByPath($path: String!) {
+  pageByPath(path: $path) {
+    title
+    body {
+      __typename
+      ... on Markdown {
+        content
+      }
+      ... on Gallery {
+        mediaUrls
+      }
+    }
+  }
+}
 query MenuBySlug($slug: String!) {
   menuBySlug(slug: $slug) {
     id
