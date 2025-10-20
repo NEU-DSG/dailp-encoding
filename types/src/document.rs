@@ -14,7 +14,7 @@ use uuid::Uuid;
 /// A document with associated metadata and content broken down into pages and further into
 /// paragraphs with an English translation. Also supports each word being broken down into
 /// component parts and having associated notes.
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, )]
 pub struct AnnotatedDoc {
     /// All non-content metadata about this document
     #[serde(flatten)]
@@ -279,7 +279,7 @@ impl AnnotatedDoc {
     }
     
     /// Terms that reflect Indigenous knowledge practices related to this document
-    fn subject_headings_ids(&self) -> &Option<Vec<SubjectHeading>> {
+    async fn subject_headings_ids(&self) -> &Option<Vec<SubjectHeading>> {
         &self.meta.subject_headings_ids
     }
     
@@ -663,7 +663,7 @@ impl DocumentMetadata {
     /// Fetch all subject headings linked to this document
     async fn subject_headings(&self, ctx: &Context<'_>) -> Result<Vec<SubjectHeading>> {
         let pool = ctx.data::<PgPool>()?;
-        let rows = query_file_as!(SubjectHeading, "queries/get_subject_headings_by_document_id.sql", self.id.0)
+        let rows = query_file_as!(SubjectHeading, "queries/get_subject_headings_by_document_id.sql", &[self.id.0])
             .fetch_all(pool)
             .await?;
         Ok(rows)

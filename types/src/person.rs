@@ -18,8 +18,10 @@ pub struct Admin {
 pub struct Contributor {
     /// UUID of the contributor
     pub id: uuid::Uuid,
-    /// Full name of the contributor
+    /// Name of the contributor (or alias if preferred)
     pub name: String,
+    /// Full name of the contributor (optional)
+    pub full_name: Option<String>,
     /// The role that defines most of their contributions to the associated item
     pub role: Option<ContributorRole>,
 }
@@ -163,7 +165,7 @@ impl Creator {
     async fn creators(&self, context: &async_graphql::Context<'_>) -> FieldResult<Vec<Creator>> {
         Ok(context
             .data::<DataLoader<Database>>()?
-            .load_one(crate::CreatorsForDocument(self.meta.id.0))
+            .load_one(crate::CreatorsForDocument(self.id))
             .await?
             .unwrap_or_default())
     }

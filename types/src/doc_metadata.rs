@@ -3,12 +3,15 @@ use async_graphql::{Enum as GqlEnum, SimpleObject};
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 use sqlx::Type;
+use sqlx::postgres::PgTypeInfo;
+use sqlx::decode::Decode;
+use sqlx::Postgres;
+use sqlx::postgres::PgValueRef;
 use uuid::Uuid;
 
 /// Represents the status of a suggestion made by a contributor
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Type, GqlEnum)]
-#[sqlx(type_name = "approval_status")]
-#[sqlx(rename_all = "snake_case")]
+#[derive(sqlx::Type, Debug, Clone, Copy, PartialEq, Eq)]
+#[sqlx(type_name = "approval_status", rename_all = "snake_case")]
 pub enum ApprovalStatus {
     /// Suggestion is still waiting for or undergoing review
     Pending, 
@@ -16,6 +19,18 @@ pub enum ApprovalStatus {
     Approved,
     /// Suggestion has been rejected
     Rejected,
+}
+
+impl<'r> Decode<'r, Postgres> for ApprovalStatus {
+    fn decode(value: PgValueRef<'r>) -> Result<Self, Box<dyn std::error::Error + Send + Sync>> {
+        let s: &str = <&str as Decode<'r, Postgres>>::decode(value)?;
+        match s {
+            "pending" => Ok(Self::Pending),
+            "approved" => Ok(Self::Approved),
+            "rejected" => Ok(Self::Rejected),
+            _ => Err(format!("invalid approval status: {}", s).into()),
+        }
+    }
 }
 
 /// Stores the genre associated with a document
