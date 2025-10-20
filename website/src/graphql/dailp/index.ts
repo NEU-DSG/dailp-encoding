@@ -35,6 +35,15 @@ export type Scalars = {
   UUID: any
 }
 
+export type AddDocumentPayload = {
+  readonly __typename?: "AddDocumentPayload"
+  readonly chapterSlug: Scalars["String"]
+  readonly collectionSlug: Scalars["String"]
+  readonly id: Scalars["UUID"]
+  readonly slug: Scalars["String"]
+  readonly title: Scalars["String"]
+}
+
 export type AnnotatedDoc = {
   readonly __typename?: "AnnotatedDoc"
   /** The audio recording resource for this entire document */
@@ -346,7 +355,7 @@ export type Contributor = {
   /** Full name of the contributor */
   readonly name: Scalars["String"]
   /** The role that defines most of their contributions to the associated item */
-  readonly role: Scalars["String"]
+  readonly role: Maybe<ContributorRole>
 }
 
 /**
@@ -372,6 +381,33 @@ export type ContributorDetails = {
    * them elsewhere, like in the attribution for a particular document.
    */
   readonly fullName: Scalars["String"]
+  /** Whether or not the contributor's profile is linked to their contributions */
+  readonly isVisible: Scalars["Boolean"]
+}
+
+/**
+ * A contributor can have to any number of roles, which define most of their
+ * contributions to the associated item (add or revise as needed)
+ */
+export enum ContributorRole {
+  Annotator = "ANNOTATOR",
+  Author = "AUTHOR",
+  CulturalAdvisor = "CULTURAL_ADVISOR",
+  Editor = "EDITOR",
+  Transcriber = "TRANSCRIBER",
+  Translator = "TRANSLATOR",
+}
+
+export type CreateDocumentFromFormInput = {
+  readonly collectionId: Scalars["UUID"]
+  readonly documentName: Scalars["String"]
+  readonly englishTranslationLines: ReadonlyArray<
+    ReadonlyArray<Scalars["String"]>
+  >
+  readonly rawTextLines: ReadonlyArray<ReadonlyArray<Scalars["String"]>>
+  readonly sourceName: Scalars["String"]
+  readonly sourceUrl: Scalars["String"]
+  readonly unresolvedWords: ReadonlyArray<Scalars["String"]>
 }
 
 /** Input for creating an edited collection */
@@ -444,6 +480,8 @@ export type DocumentCollection = {
    * pass that to the dataloader below.
    */
   readonly documents: ReadonlyArray<DocumentReference>
+  /** Database ID for this collection */
+  readonly id: Maybe<Scalars["UUID"]>
   /** Full name of this collection */
   readonly name: Scalars["String"]
   /** URL-ready slug for this collection, generated from the name */
@@ -607,6 +645,50 @@ export type Markdown = {
   readonly content: Scalars["String"]
 }
 
+/** Menu object representing the navbar menu that can be edited. */
+export type Menu = {
+  readonly __typename?: "Menu"
+  /** Id for menu. */
+  readonly id: Scalars["UUID"]
+  /** Menu items. */
+  readonly items: ReadonlyArray<MenuItem>
+  /** Name for the menu. */
+  readonly name: Scalars["String"]
+  /** Slug for the menu. */
+  readonly slug: Scalars["String"]
+}
+
+/** A single item in the menu. */
+export type MenuItem = {
+  readonly __typename?: "MenuItem"
+  /** Child items (dropdown), optional. */
+  readonly items: Maybe<ReadonlyArray<MenuItem>>
+  /** Display label. */
+  readonly label: Scalars["String"]
+  /** Destination path. */
+  readonly path: Scalars["String"]
+}
+
+/** Input for a single menu item. */
+export type MenuItemInput = {
+  /** Child items (dropdown), optional. */
+  readonly items: InputMaybe<ReadonlyArray<MenuItemInput>>
+  /** Display label. */
+  readonly label: Scalars["String"]
+  /** Destination path. */
+  readonly path: Scalars["String"]
+}
+
+/** Input for updating a menu. */
+export type MenuUpdate = {
+  /** Menu id. */
+  readonly id: Scalars["UUID"]
+  /** New menu items (optional). */
+  readonly items: InputMaybe<ReadonlyArray<MenuItemInput>>
+  /** New name (optional). */
+  readonly name: InputMaybe<Scalars["String"]>
+}
+
 /** One particular morpheme and all the known words that contain that exact morpheme. */
 export type MorphemeReference = {
   readonly __typename?: "MorphemeReference"
@@ -666,6 +748,8 @@ export type Mutation = {
   readonly __typename?: "Mutation"
   /** Adds a bookmark to the user's list of bookmarks. */
   readonly addBookmark: AnnotatedDoc
+  /** Minimal mutation to add a document with only essential fields */
+  readonly addDocument: AddDocumentPayload
   /**
    * Mutation must have at least one visible field for introspection to work
    * correctly, so we just provide an API version which might be useful in
@@ -687,6 +771,7 @@ export type Mutation = {
   readonly deleteComment: CommentParent
   /** Mutation for deleting contributor attributions */
   readonly deleteContributorAttribution: Scalars["UUID"]
+  readonly insertCustomMorphemeTag: Scalars["Boolean"]
   /** Post a new comment on a given object */
   readonly postComment: CommentParent
   /** Removes a bookmark from a user's list of bookmarks */
@@ -697,16 +782,22 @@ export type Mutation = {
   /** Mutation for adding/changing contributor attributions */
   readonly updateContributorAttribution: Scalars["UUID"]
   readonly updateDocumentMetadata: Scalars["UUID"]
+  readonly updateMenu: Menu
   readonly updatePage: Scalars["Boolean"]
   /** Mutation for paragraph and translation editing */
   readonly updateParagraph: DocumentParagraph
   /** Updates a dailp_user's information */
   readonly updateUser: User
   readonly updateWord: AnnotatedForm
+  readonly upsertPage: Scalars["String"]
 }
 
 export type MutationAddBookmarkArgs = {
   documentId: Scalars["UUID"]
+}
+
+export type MutationAddDocumentArgs = {
+  input: CreateDocumentFromFormInput
 }
 
 export type MutationAttachAudioToWordArgs = {
@@ -727,6 +818,12 @@ export type MutationDeleteCommentArgs = {
 
 export type MutationDeleteContributorAttributionArgs = {
   contribution: DeleteContributorAttribution
+}
+
+export type MutationInsertCustomMorphemeTagArgs = {
+  system: Scalars["String"]
+  tag: Scalars["String"]
+  title: Scalars["String"]
 }
 
 export type MutationPostCommentArgs = {
@@ -753,6 +850,10 @@ export type MutationUpdateDocumentMetadataArgs = {
   document: DocumentMetadataUpdate
 }
 
+export type MutationUpdateMenuArgs = {
+  menu: MenuUpdate
+}
+
 export type MutationUpdatePageArgs = {
   data: Scalars["JSON"]
 }
@@ -767,6 +868,20 @@ export type MutationUpdateUserArgs = {
 
 export type MutationUpdateWordArgs = {
   word: AnnotatedFormUpdate
+}
+
+export type MutationUpsertPageArgs = {
+  page: NewPageInput
+}
+
+/** Input struct for a page. */
+export type NewPageInput = {
+  /** content for page, needs to be sanitized */
+  readonly body: ReadonlyArray<Scalars["String"]>
+  /** path of new page */
+  readonly path: Scalars["String"]
+  /** title of new page */
+  readonly title: Scalars["String"]
 }
 
 /**
@@ -845,6 +960,7 @@ export type PostCommentInput = {
 
 export type Query = {
   readonly __typename?: "Query"
+  readonly abbreviationIdFromShortName: Scalars["UUID"]
   /** List of all the document collections available. */
   readonly allCollections: ReadonlyArray<DocumentCollection>
   /** Listing of all documents excluding their contents by default */
@@ -866,6 +982,7 @@ export type Query = {
   /** Retrieves a full document from its unique identifier. */
   readonly documentByUuid: Maybe<AnnotatedDoc>
   readonly editedCollection: Maybe<EditedCollection>
+  readonly menuBySlug: Menu
   /**
    * Retrieve information for the morpheme that corresponds to the given tag
    * string. For example, "3PL.B" is the standard string referring to a 3rd
@@ -886,6 +1003,7 @@ export type Query = {
   readonly morphemesByShape: ReadonlyArray<MorphemeReference>
   /** Retrieves a full document from its unique identifier. */
   readonly page: Maybe<Page>
+  readonly pageByPath: Maybe<Page>
   /** Get a single paragraph given the paragraph ID */
   readonly paragraphById: DocumentParagraph
   /**
@@ -902,6 +1020,10 @@ export type Query = {
    * Each query may match against multiple fields of a word.
    */
   readonly wordSearch: ReadonlyArray<AnnotatedForm>
+}
+
+export type QueryAbbreviationIdFromShortNameArgs = {
+  shortName: Scalars["String"]
 }
 
 export type QueryAllTagsArgs = {
@@ -933,6 +1055,10 @@ export type QueryEditedCollectionArgs = {
   slug: Scalars["String"]
 }
 
+export type QueryMenuBySlugArgs = {
+  slug: Scalars["String"]
+}
+
 export type QueryMorphemeTagArgs = {
   id: Scalars["String"]
   system: CherokeeOrthography
@@ -955,6 +1081,10 @@ export type QueryMorphemesByShapeArgs = {
 
 export type QueryPageArgs = {
   id: Scalars["String"]
+}
+
+export type QueryPageByPathArgs = {
+  path: Scalars["String"]
 }
 
 export type QueryParagraphByIdArgs = {
@@ -2546,6 +2676,17 @@ export type DeleteCommentMutation = { readonly __typename?: "Mutation" } & {
         })
 }
 
+export type AddDocumentMutationVariables = Exact<{
+  input: CreateDocumentFromFormInput
+}>
+
+export type AddDocumentMutation = { readonly __typename?: "Mutation" } & {
+  readonly addDocument: { readonly __typename?: "AddDocumentPayload" } & Pick<
+    AddDocumentPayload,
+    "id" | "title" | "slug"
+  >
+}
+
 export type AddEditedCollectionMutationVariables = Exact<{
   input: CreateEditedCollectionInput
 }>
@@ -2588,6 +2729,105 @@ export type UserByIdQuery = { readonly __typename?: "Query" } & {
   > & {
       readonly createdAt: Maybe<
         { readonly __typename?: "Date" } & Pick<Date, "day" | "month" | "year">
+      >
+    }
+}
+
+export type AllCollectionsQueryVariables = Exact<{ [key: string]: never }>
+
+export type AllCollectionsQuery = { readonly __typename?: "Query" } & {
+  readonly allCollections: ReadonlyArray<
+    { readonly __typename?: "DocumentCollection" } & Pick<
+      DocumentCollection,
+      "name" | "slug" | "id"
+    >
+  >
+}
+
+export type InsertCustomMorphemeTagMutationVariables = Exact<{
+  tag: Scalars["String"]
+  title: Scalars["String"]
+  system: Scalars["String"]
+}>
+
+export type InsertCustomMorphemeTagMutation = {
+  readonly __typename?: "Mutation"
+} & Pick<Mutation, "insertCustomMorphemeTag">
+
+export type UpsertPageMutationVariables = Exact<{
+  pageInput: NewPageInput
+}>
+
+export type UpsertPageMutation = { readonly __typename?: "Mutation" } & Pick<
+  Mutation,
+  "upsertPage"
+>
+
+export type PageByPathQueryVariables = Exact<{
+  path: Scalars["String"]
+}>
+
+export type PageByPathQuery = { readonly __typename?: "Query" } & {
+  readonly pageByPath: Maybe<
+    { readonly __typename?: "Page" } & Pick<Page, "title"> & {
+        readonly body: ReadonlyArray<
+          | ({ readonly __typename: "Gallery" } & Pick<Gallery, "mediaUrls">)
+          | ({ readonly __typename: "Markdown" } & Pick<Markdown, "content">)
+        >
+      }
+  >
+}
+
+export type MenuBySlugQueryVariables = Exact<{
+  slug: Scalars["String"]
+}>
+
+export type MenuBySlugQuery = { readonly __typename?: "Query" } & {
+  readonly menuBySlug: { readonly __typename?: "Menu" } & Pick<
+    Menu,
+    "id" | "name" | "slug"
+  > & {
+      readonly items: ReadonlyArray<
+        { readonly __typename?: "MenuItem" } & Pick<
+          MenuItem,
+          "label" | "path"
+        > & {
+            readonly items: Maybe<
+              ReadonlyArray<
+                { readonly __typename?: "MenuItem" } & Pick<
+                  MenuItem,
+                  "label" | "path"
+                >
+              >
+            >
+          }
+      >
+    }
+}
+
+export type UpdateMenuMutationVariables = Exact<{
+  menu: MenuUpdate
+}>
+
+export type UpdateMenuMutation = { readonly __typename?: "Mutation" } & {
+  readonly updateMenu: { readonly __typename?: "Menu" } & Pick<
+    Menu,
+    "id" | "name" | "slug"
+  > & {
+      readonly items: ReadonlyArray<
+        { readonly __typename?: "MenuItem" } & Pick<
+          MenuItem,
+          "label" | "path"
+        > & {
+            readonly items: Maybe<
+              ReadonlyArray<
+                { readonly __typename?: "MenuItem" } & Pick<
+                  MenuItem,
+                  "label" | "path"
+                >
+              >
+            >
+          }
       >
     }
 }
@@ -3608,6 +3848,21 @@ export function useDeleteCommentMutation() {
     DeleteCommentMutationVariables
   >(DeleteCommentDocument)
 }
+export const AddDocumentDocument = gql`
+  mutation AddDocument($input: CreateDocumentFromFormInput!) {
+    addDocument(input: $input) {
+      id
+      title
+      slug
+    }
+  }
+`
+
+export function useAddDocumentMutation() {
+  return Urql.useMutation<AddDocumentMutation, AddDocumentMutationVariables>(
+    AddDocumentDocument
+  )
+}
 export const AddEditedCollectionDocument = gql`
   mutation AddEditedCollection($input: CreateEditedCollectionInput!) {
     createEditedCollection(input: $input)
@@ -3665,4 +3920,123 @@ export function useUserByIdQuery(
     query: UserByIdDocument,
     ...options,
   })
+}
+export const AllCollectionsDocument = gql`
+  query AllCollections {
+    allCollections {
+      name
+      slug
+      id
+    }
+  }
+`
+
+export function useAllCollectionsQuery(
+  options?: Omit<Urql.UseQueryArgs<AllCollectionsQueryVariables>, "query">
+) {
+  return Urql.useQuery<AllCollectionsQuery, AllCollectionsQueryVariables>({
+    query: AllCollectionsDocument,
+    ...options,
+  })
+}
+export const InsertCustomMorphemeTagDocument = gql`
+  mutation InsertCustomMorphemeTag(
+    $tag: String!
+    $title: String!
+    $system: String!
+  ) {
+    insertCustomMorphemeTag(tag: $tag, title: $title, system: $system)
+  }
+`
+
+export function useInsertCustomMorphemeTagMutation() {
+  return Urql.useMutation<
+    InsertCustomMorphemeTagMutation,
+    InsertCustomMorphemeTagMutationVariables
+  >(InsertCustomMorphemeTagDocument)
+}
+export const UpsertPageDocument = gql`
+  mutation UpsertPage($pageInput: NewPageInput!) {
+    upsertPage(page: $pageInput)
+  }
+`
+
+export function useUpsertPageMutation() {
+  return Urql.useMutation<UpsertPageMutation, UpsertPageMutationVariables>(
+    UpsertPageDocument
+  )
+}
+export const PageByPathDocument = gql`
+  query pageByPath($path: String!) {
+    pageByPath(path: $path) {
+      title
+      body {
+        __typename
+        ... on Markdown {
+          content
+        }
+        ... on Gallery {
+          mediaUrls
+        }
+      }
+    }
+  }
+`
+
+export function usePageByPathQuery(
+  options: Omit<Urql.UseQueryArgs<PageByPathQueryVariables>, "query">
+) {
+  return Urql.useQuery<PageByPathQuery, PageByPathQueryVariables>({
+    query: PageByPathDocument,
+    ...options,
+  })
+}
+export const MenuBySlugDocument = gql`
+  query MenuBySlug($slug: String!) {
+    menuBySlug(slug: $slug) {
+      id
+      name
+      slug
+      items {
+        label
+        path
+        items {
+          label
+          path
+        }
+      }
+    }
+  }
+`
+
+export function useMenuBySlugQuery(
+  options: Omit<Urql.UseQueryArgs<MenuBySlugQueryVariables>, "query">
+) {
+  return Urql.useQuery<MenuBySlugQuery, MenuBySlugQueryVariables>({
+    query: MenuBySlugDocument,
+    ...options,
+  })
+}
+export const UpdateMenuDocument = gql`
+  mutation UpdateMenu($menu: MenuUpdate!) {
+    updateMenu(menu: $menu) {
+      id
+      name
+      slug
+      items {
+        label
+        path
+        items {
+          label
+          path
+        }
+      }
+    }
+  }
+`
+
+export function useUpdateMenuMutation() {
+  return Urql.useMutation<UpdateMenuMutation, UpdateMenuMutationVariables>(
+    UpdateMenuDocument
+  )
 }
