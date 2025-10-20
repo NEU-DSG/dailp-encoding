@@ -1,7 +1,6 @@
 import { style, styleVariants } from "@vanilla-extract/css"
 import { margin } from "polished"
 import { BsFileX } from "react-icons/bs"
-import { button } from "src/components/button.css"
 import {
   colors,
   hspace,
@@ -12,6 +11,7 @@ import {
   vspace,
 } from "src/style/constants"
 import { marginX, marginY, paddingX, paddingY } from "src/style/utils"
+import { button } from "src/ui/atoms/button/button.css"
 
 const wordShared = style([
   paddingY(vspace.quarter),

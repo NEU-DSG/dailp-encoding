@@ -1,9 +1,9 @@
 import { join, sortBy } from "lodash-es"
 import React from "react"
 import { Helmet } from "react-helmet"
-import { Link } from "src/components"
 import * as Dailp from "src/graphql/dailp"
-import Layout from "../layout"
+import Layout from "src/layouts/default"
+import { Link } from "src/ui"
 import { sourceCitationId } from "../routes"
 import { apaCitation, wideChild, wideList } from "./sources.css"
 

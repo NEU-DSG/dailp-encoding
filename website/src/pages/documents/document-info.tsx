@@ -3,11 +3,13 @@ import React, { Fragment } from "react"
 import { Helmet } from "react-helmet"
 import { unstable_Form as Form } from "reakit"
 import { useCredentials } from "src/auth"
-import { Link } from "src/components"
-import { useForm } from "src/edit-doc-data-form-context"
-import EditDocPanel, { EditButton } from "src/edit-doc-data-panel"
+import EditDocPanel, {
+  EditButton,
+} from "src/features/editor/components/edit-doc-data-panel"
+import { useForm } from "src/features/editor/context/edit-doc-data-form-context"
 import * as Dailp from "src/graphql/dailp"
 import { fullWidth } from "src/style/utils.css"
+import { Link } from "src/ui"
 import * as css from "./document.css"
 
 export type TabSegment = Dailp.DocumentMetadataUpdate | Document

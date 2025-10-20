@@ -3,10 +3,11 @@ import { Helmet } from "react-helmet"
 import { navigate } from "vite-plugin-ssr/client/router"
 import cwkwLogo from "src/assets/cwkw-logo.png"
 import { UserRole, useUserRole } from "src/auth"
-import { Card, Carousel, WordpressPage } from "src/components"
+import { WordpressPage } from "src/components"
+import Layout from "src/layouts/default"
 import { fullWidth, paddedCenterColumn } from "src/style/utils.css"
+import { Card, Carousel } from "src/ui"
 import * as Dailp from "../graphql/dailp"
-import Layout from "../layout"
 import { collectionRoute } from "../routes"
 
 /** Lists all documents in our database */

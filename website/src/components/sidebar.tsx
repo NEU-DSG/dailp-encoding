@@ -5,10 +5,10 @@ import { BsArrowBarLeft, BsArrowBarRight } from "react-icons/bs/index"
 import { MdMenu } from "react-icons/md/index"
 import { Dialog, DialogBackdrop, DialogDisclosure } from "reakit"
 import CollectionTOC from "src/components/toc"
-import { drawerBg, navButton } from "src/menu.css"
 import { useDialog } from "src/pages/edited-collections/edited-collection-context"
 import "src/style/global.css"
 import { colors } from "src/style/theme-contract.css"
+import { drawerBg, navButton } from "src/ui/organisms/menu/menu.css"
 import * as css from "./sidebar.css"
 
 // Renders a sidebar on the left side of the screen containing a drawer.

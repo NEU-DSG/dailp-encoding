@@ -2,8 +2,8 @@ import { useDebounce } from "@react-hook/debounce"
 import QueryString from "query-string"
 import React, { useEffect } from "react"
 import { LexicalSearch } from "src/components/lexical-search"
+import Layout from "src/layouts/default"
 import { useLocation } from "src/renderer/PageShell"
-import Layout from "../layout"
 
 const SearchPage = () => {
   const location = useLocation()

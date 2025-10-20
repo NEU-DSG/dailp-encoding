@@ -1,5 +1,5 @@
 import React from "react"
-import Link from "../link"
+import Link from "src/ui/atoms/link/link"
 import * as css from "./creative-commons.css"
 
 interface Props {

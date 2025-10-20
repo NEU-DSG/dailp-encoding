@@ -1,6 +1,5 @@
 import { style } from "@vanilla-extract/css"
 import { padding } from "polished"
-import { navButton, navDrawer } from "src/menu.css"
 import {
   colors,
   hspace,
@@ -9,6 +8,7 @@ import {
   radii,
   vspace,
 } from "src/style/constants"
+import { navButton, navDrawer } from "src/ui/organisms/menu/menu.css"
 
 export const drawerWidth = "20rem"
 export const bgColor = style({ backgroundColor: "#585858" })
