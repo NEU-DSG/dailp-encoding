@@ -4,7 +4,7 @@ select
         jsonb_agg(
             jsonb_build_object(
                 'id', cr.id,
-                'name', cr.name,
+                'name', cr.name
             )
         ) filter (where cr.id is not null),
         '[]'

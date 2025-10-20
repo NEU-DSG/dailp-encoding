@@ -21,6 +21,7 @@ pub enum ApprovalStatus {
     Rejected,
 }
 
+/// Allows SQLx to convert Postgres "approval_status" enum values into the corresponding Rust "ApprovalStatus"
 impl<'r> Decode<'r, Postgres> for ApprovalStatus {
     fn decode(value: PgValueRef<'r>) -> Result<Self, Box<dyn std::error::Error + Send + Sync>> {
         let s: &str = <&str as Decode<'r, Postgres>>::decode(value)?;
