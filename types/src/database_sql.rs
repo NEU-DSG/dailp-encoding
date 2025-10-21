@@ -229,6 +229,20 @@ impl Database {
             .collect())
     }
 
+    pub async fn document_contributor_audio(&self, document_id: &Uuid) -> Result<Vec<AudioSlice>> {
+        let contributor_audio = query_file_as!(
+            BasicAudioSlice,
+            "queries/document_contributor_audio.sql",
+            document_id
+        )
+        .fetch_all(&self.client)
+        .await?;
+        Ok(contributor_audio
+            .into_iter()
+            .map(AudioSlice::from)
+            .collect())
+    }
+
     pub async fn words_by_doc(
         &self,
         document_id: Option<DocumentId>,
@@ -746,9 +760,31 @@ impl Database {
         Ok(media_slice_id)
     }
 
-    /// Update if a piece of audio will be shown to readers
+    /// As above in `attach_audio_to_word`:
+    /// Creates media slice if doesn't yet exist for provided audio recording.
+    /// Adds join table entry attaching media slice to document.
+    /// Returns `id` of upserted media slice.
+    pub async fn attach_audio_to_document(
+        &self,
+        upload: &AttachAudioToDocumentInput,
+        contributor_id: &Uuid,
+    ) -> Result<Uuid> {
+        let media_slice_id = query_file_scalar!(
+            "queries/attach_audio_to_document.sql",
+            contributor_id,
+            upload.contributor_audio_url as _,
+            0,
+            0,
+            upload.document_id
+        )
+        .fetch_one(&self.client)
+        .await?;
+        Ok(media_slice_id)
+    }
+
+    /// Update if a piece of word audio will be shown to readers
     /// Will return None if the word and audio assocation could not be found, otherwise word id.
-    pub async fn update_audio_visibility(
+    pub async fn update_word_audio_visibility(
         &self,
         word_id: &Uuid,
         audio_slice_id: &Uuid,
@@ -756,7 +792,7 @@ impl Database {
         editor_id: &Uuid,
     ) -> Result<Option<Uuid>> {
         let _word_id = query_file_scalar!(
-            "queries/update_audio_visibility.sql",
+            "queries/update_word_audio_visibility.sql",
             word_id,
             audio_slice_id,
             include_in_edited_collection,
@@ -765,6 +801,27 @@ impl Database {
         .fetch_one(&self.client)
         .await?;
         Ok(_word_id)
+    }
+
+    /// Update if a piece of document audio will be shown to readers
+    /// Will return None if the document and audio assocation could not be found, otherwise document id.
+    pub async fn update_document_audio_visibility(
+        &self,
+        document_id: &Uuid,
+        audio_slice_id: &Uuid,
+        include_in_edited_collection: bool,
+        editor_id: &Uuid,
+    ) -> Result<Option<Uuid>> {
+        let _document_id = query_file_scalar!(
+            "queries/update_document_audio_visibility.sql",
+            document_id,
+            audio_slice_id,
+            include_in_edited_collection,
+            editor_id
+        )
+        .fetch_one(&self.client)
+        .await?;
+        Ok(_document_id)
     }
 
     pub async fn update_document_metadata(&self, document: DocumentMetadataUpdate) -> Result<Uuid> {

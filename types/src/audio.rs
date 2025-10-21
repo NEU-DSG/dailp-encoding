@@ -50,11 +50,32 @@ pub struct AttachAudioToWordInput {
     pub contributor_audio_url: String,
 }
 
-/// Request to update if a piece of audio should be included in an edited collection
+/// Request to attach user-recorded audio to a document
+#[derive(async_graphql::InputObject)]
+pub struct AttachAudioToDocumentInput {
+    /// Document to bind audio to
+    pub document_id: Uuid,
+    /// A URL to a Cloudfront-proxied user-recorded reading of a document.
+    /// A new resource will be created to represent the recording if one does not exist already
+    pub contributor_audio_url: String,
+}
+
+/// Request to update if a piece of word audio should be included in an edited collection
 #[derive(async_graphql::InputObject)]
 pub struct CurateWordAudioInput {
     /// Word audio is attached to
     pub word_id: Uuid,
+    /// Audio to include/exclude
+    pub audio_slice_id: Uuid,
+    /// New value
+    pub include_in_edited_collection: bool,
+}
+
+/// Request to update if a piece of document audio should be included in an edited collection
+#[derive(async_graphql::InputObject)]
+pub struct CurateDocumentAudioInput {
+    /// Document audio is attached to
+    pub document_id: Uuid,
     /// Audio to include/exclude
     pub audio_slice_id: Uuid,
     /// New value
