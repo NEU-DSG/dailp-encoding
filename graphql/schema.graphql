@@ -1083,6 +1083,12 @@ type Mutation {
 	"""
 	attachAudioToWord(input: AttachAudioToWordInput!): AnnotatedForm!
 	"""
+	Attach audio that has already been uploaded to S3 to a particular document
+	Assumes user requesting mutation recorded the audio
+	"""
+	attachAudioToDocument(input: AttachAudioToDocumentInput!): AnnotatedDoc!
+	updateDocumentMetadata(document: DocumentMetadataUpdate!): UUID!
+	"""
 	Minimal mutation to add a document with only essential fields
 	"""
 	addDocument(input: CreateDocumentFromFormInput!): AddDocumentPayload!
@@ -1108,12 +1114,6 @@ input NewPageInput {
 	path of new page
 	"""
 	path: String!
-	"""
-	Attach audio that has already been uploaded to S3 to a particular document
-	Assumes user requesting mutation recorded the audio
-	"""
-	attachAudioToDocument(input: AttachAudioToDocumentInput!): AnnotatedDoc!
-	updateDocumentMetadata(document: DocumentMetadataUpdate!): UUID!
 }
 
 """
