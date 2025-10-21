@@ -828,7 +828,10 @@ export type Comment = DatabaseIdentifier &
     readonly approved: Maybe<Scalars["Boolean"]>
     /** The author of the comment */
     readonly author: Maybe<CommentToCommenterConnectionEdge>
-    /** IP address for the author. This field is equivalent to WP_Comment-&gt;comment_author_IP and the value matching the &quot;comment_author_IP&quot; column in SQL. */
+    /**
+     * IP address for the author at the time of commenting. This field is equivalent to WP_Comment-&gt;comment_author_IP and the value matching the &quot;comment_author_IP&quot; column in SQL.
+     * @deprecated Use the ipAddress field on the edge between the comment and author
+     */
     readonly authorIp: Maybe<Scalars["String"]>
     /**
      * ID for the comment, unique among comments.
@@ -1088,8 +1091,16 @@ export type CommentToCommenterConnectionEdge = CommenterConnectionEdge &
     readonly __typename?: "CommentToCommenterConnectionEdge"
     /** Opaque reference to the nodes position in the connection. Value can be used with pagination args. */
     readonly cursor: Maybe<Scalars["String"]>
+    /** The email address representing the author for this particular comment */
+    readonly email: Maybe<Scalars["String"]>
+    /** IP address of the author at the time of making this comment. This field is equivalent to WP_Comment-&gt;comment_author_IP and the value matching the &quot;comment_author_IP&quot; column in SQL. */
+    readonly ipAddress: Maybe<Scalars["String"]>
+    /** The display name of the comment author for this particular comment */
+    readonly name: Maybe<Scalars["String"]>
     /** The node of the connection, without the edges */
     readonly node: Commenter
+    /** The url entered for the comment author on this particular comment */
+    readonly url: Maybe<Scalars["String"]>
   }
 
 /** Connection between the Comment type and the ContentNode type */
@@ -10488,7 +10499,7 @@ export type PageQuery = { readonly __typename?: "RootQuery" } & {
     | { readonly __typename: "Comment" }
     | { readonly __typename: "ContentType" }
     | { readonly __typename: "MediaItem" }
-    | ({ readonly __typename: "Page" } & Pick<Page, "title" | "content">)
+    | ({ readonly __typename: "Page" } & Pick<Page, "id" | "title" | "content">)
     | { readonly __typename: "Post" }
     | { readonly __typename: "PostFormat" }
     | { readonly __typename: "Tag" }
@@ -10519,13 +10530,13 @@ export type MenuByIdQuery = { readonly __typename?: "RootQuery" } & {
   readonly menus: Maybe<
     { readonly __typename?: "RootQueryToMenuConnection" } & {
       readonly nodes: ReadonlyArray<
-        { readonly __typename?: "Menu" } & Pick<Menu, "databaseId"> & {
+        { readonly __typename?: "Menu" } & Pick<Menu, "id" | "databaseId"> & {
             readonly menuItems: Maybe<
               { readonly __typename?: "MenuToMenuItemConnection" } & {
                 readonly nodes: ReadonlyArray<
                   { readonly __typename?: "MenuItem" } & Pick<
                     MenuItem,
-                    "label" | "path"
+                    "id" | "label" | "path"
                   > & {
                       readonly childItems: Maybe<
                         {
@@ -10534,7 +10545,7 @@ export type MenuByIdQuery = { readonly __typename?: "RootQuery" } & {
                           readonly nodes: ReadonlyArray<
                             { readonly __typename?: "MenuItem" } & Pick<
                               MenuItem,
-                              "label" | "path"
+                              "id" | "label" | "path"
                             >
                           >
                         }
@@ -10554,6 +10565,7 @@ export const PageDocument = gql`
     page: nodeByUri(uri: $slug) {
       __typename
       ... on Page {
+        id
         title
         content
       }
@@ -10595,13 +10607,16 @@ export const MenuByIdDocument = gql`
   query MenuByID($id: Int!) {
     menus(where: { id: $id }) {
       nodes {
+        id
         databaseId
         menuItems(where: { parentDatabaseId: 0 }) {
           nodes {
+            id
             label
             path
             childItems {
               nodes {
+                id
                 label
                 path
               }

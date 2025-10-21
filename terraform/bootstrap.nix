@@ -9,6 +9,7 @@ with lib; {
     stage = mkOption { type = enum [ "dev" "prod" "uat"]; };
     vpc = mkOption { type = str; };
     subnets = mkOption { type = attrsOf str; };
+    bastion_subnet = mkOption { type = str; };
     global_tags = mkOption {
       type = attrsOf str;
       default = { };

@@ -13,7 +13,7 @@ let
   inherit (builtins) getEnv;
   stage_var = getEnv "TF_STAGE";
   # Default to the 'dev' environment unless specified.
-  stage = if stage_var == "" then "dev" else stage_var;
+  stage = if stage_var == "" || stage_var == "local" then "dev" else stage_var;
 in {
   imports = [
     ./bootstrap.nix
@@ -23,10 +23,11 @@ in {
     ./website.nix
     ./nu-tags.nix
     ./database-sql.nix
-    ./bastion-host.nix
     ./media-storage.nix
     ./media-access.nix
     ./user-roles.nix
+    ./bastion-host.nix
+    ./import.nix
   ];
 
   # Gives all modules access to which stage we're deploying to, while also
@@ -62,6 +63,7 @@ in {
       secondary = getEnv "AWS_SUBNET_SECONDARY0";
       tertiary = getEnv "AWS_SUBNET_SECONDARY1";
     };
+    bastion_subnet = getEnv "AWS_SUBNET_BASTION";
   };
 
   functions = 

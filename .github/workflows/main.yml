@@ -20,10 +20,10 @@ concurrency:
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     environment: ${{ github.event_name == 'release' && ( github.event.action == 'released' && 'Production' || 'Development') || 'Development' }}
     env:
-      DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
+      DATABASE_PASSWORD: ${{ github.event.action == 'prereleased' && secrets.UAT_DATABASE_PASSWORD || secrets.DATABASE_PASSWORD }}
       GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
       AWS_VPC_ID: ${{ secrets.AWS_VPC_ID }}
       AWS_SUBNET_PRIMARY: ${{ secrets.AWS_SUBNET_PRIMARY }}
@@ -52,7 +52,7 @@ jobs:
           branch: ${{ github.event.action == 'prereleased' && 'uat' || 'release' }}
           force: true
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -88,48 +88,34 @@ jobs:
           pushFilter: "(-dailp$|-dailp-|-terraform-config$|-source$|\\.tar\\.gz$|-output$|-plan$|-apply-now$|-apply$)"
       - name: Build and test project
         # nix -L argument shows the full build log and --impure allows it to access environment variables.
+        env: 
+          BASTION_ID: ${{ (env.TF_STAGE == 'prod' && secrets.EC2_INSTANCE ) || (env.TF_STAGE == 'uat' && secrets.UAT_EC2_INSTANCE) || secrets.DEV_EC2_INSTANCE }}
         run: |
           nix build --impure -L
       - name: Deploy back-end to AWS via terraform
+        env:
+          BASTION_ID: ${{ (env.TF_STAGE == 'prod' && secrets.EC2_INSTANCE ) || (env.TF_STAGE == 'uat' && secrets.UAT_EC2_INSTANCE) || secrets.DEV_EC2_INSTANCE }}
         run: |
           nix run --impure -L .#tf-apply-now
           SECURITY_GROUP_ID=$(nix run --impure .#tf-output access_security_group_id)
           echo "ACCESS_SECURITY_GROUP=$SECURITY_GROUP_ID" >> $GITHUB_ENV
-#      - name: Validate spreadsheets
-#        env:
-#          RUST_LOG: warn
-#        run: nix run --impure -L .#validate-data
-      - name: Allow SSH access to bastion host
-        uses: sohelamin/aws-security-group-add-ip-action@master
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
-          aws-security-group-id: ${{ env.ACCESS_SECURITY_GROUP }}
-          port: 22
-          to-port: 22
-          protocol: tcp
-      - name: Encode documents as TEI and database entries
-        # Sets up port forwarding to remote database on port 5432
+      - name: Update database schema
+        env: 
+          BASTION_IP: ${{ (env.TF_STAGE == 'prod' && secrets.PROD_BASTION_IP ) || (env.TF_STAGE == 'uat' && secrets.UAT_BASTION_IP) || secrets.DEV_BASTION_IP }}
+          BASTION_ID: ${{ (env.TF_STAGE == 'prod' && secrets.EC2_INSTANCE ) || (env.TF_STAGE == 'uat' && secrets.UAT_EC2_INSTANCE) || secrets.DEV_EC2_INSTANCE }}
         run: |
-          echo "Creating SSH key file..."
-          echo "${{secrets.AWS_BASTION_SSH_KEY}}" > dailp-deployment-key.pem
-          chmod 400 ./dailp-deployment-key.pem
           echo "Retrieving terraform outputs..."
-          BASTION_IP=$(nix run --impure .#tf-output bastion_ip)
-          DATABASE_ENDPOINT=$(nix run --impure .#tf-output database_endpoint)
-          echo "Configuring SSH client..."
-          mkdir -p ~/.ssh
-          echo "Still configuring SSH client..."
-          ssh-keyscan -H $BASTION_IP >> ~/.ssh/known_hosts
-          echo "Forwarding port 5432 to remote database $DATABASE_ENDPOINT through $BASTION_IP"
-          ssh -i ./dailp-deployment-key.pem -f -N -L 5432:$DATABASE_ENDPOINT ec2-user@$BASTION_IP
-
+          DATABASE_ADDRESS=$(nix run --impure .#tf-output database_address)
+          echo "Connecting to bastion via SSM..."
+          aws ssm start-session \
+          --target ${{ env.BASTION_ID }} \
+          --document-name AWS-StartPortForwardingSessionToRemoteHost \
+          --parameters '{"host":[ '"\"$DATABASE_ADDRESS\""' ],"portNumber":["5432"], "localPortNumber":["5432"]}' &
+          echo "Updating shell variables..."
           export DAILP_API_URL=$(nix run --impure .#tf-output functions_url)
           export DATABASE_URL=postgres://dailp:$DATABASE_PASSWORD@localhost:5432/dailp
+          echo "Migrating schema..."
           nix run --impure .#migrate-schema
-          export CF_URL=$(nix run --impure .#tf-output cloudfront_distro_url)
-          # nix run --impure .#migrate-data
       - name: Publish website
         run: |
           curl -X POST -d {} "$(nix run --impure .#tf-output amplify_webhook)" -H "Content-Type:application/json"

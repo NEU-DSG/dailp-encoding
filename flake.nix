@@ -13,6 +13,11 @@
       inputs.nixpkgs.follows = "pkgs";
     };
     nix-filter.url = "github:numtide/nix-filter";
+    terranix = {
+      url = "github:terranix/terranix";
+      inputs.nixpkgs.follows = "pkgs";
+    };
+
   };
 
   outputs = inputs:
@@ -90,21 +95,23 @@
               zip -j $out/auth-post-confirmation.zip $out/bootstrap
             '';
           };
-        terraformConfig = pkgs.writeTextFile {
-          name = "terraform-config";
-          text = let
-            tf = import "${pkgs.terranix}/core/default.nix" {
-              inherit pkgs;
-              terranix_config = {
-                imports = [ ./terraform/main.nix ];
-                functions.package_path = "${dailpFunctions}";
-              };
-              strip_nulls = true;
-            };
-          in builtins.toJSON (tf.config);
-          executable = false;
-          destination = "/config.tf.json";
+        terraformConfig = inputs.terranix.lib.terranixConfiguration {
+          inherit system;
+          modules = [{imports = [./terraform/main.nix]; functions.package_path = "${dailpFunctions}";}];
+          strip_nulls = true;
         };
+        # terraformConfig = pkgs.writeTextFile {
+        #   name = "terraform-config";
+        #   text = let
+        #     tf = inputs.terranix.lib.terranixConfiguration {
+        #       inherit system;
+        #       modules = [{imports = [./terraform/main.nix]; functions.package_path = "/";}];
+        #       strip_nulls = true;
+        #     };
+        #   in builtins.toJSON (tf);
+        #   executable = false;
+        #   destination = "/config.tf.json";
+        # };
         mkBashApp = name: script:
           inputs.utils.lib.mkApp {
             drv = pkgs.writers.writeBashBin name script;
@@ -113,7 +120,7 @@
         tf = "${pkgs.terraform}/bin/terraform";
         inherit (builtins) getEnv;
         tfInit = ''
-          cp -f ${terraformConfig}/config.tf.json ./
+          cp -f ${terraformConfig} ./config.tf.json
           export AWS_ACCESS_KEY_ID=${getEnv "AWS_ACCESS_KEY_ID"}
           export AWS_SECRET_ACCESS_KEY=${getEnv "AWS_SECRET_ACCESS_KEY"}
           export TF_DATA_DIR=$(pwd)/.terraform
@@ -135,11 +142,6 @@
         apps.migrate-data = inputs.utils.lib.mkApp {
           drv = hostPackage;
           exePath = "/bin/dailp-migration";
-        };
-
-        apps.validate-data = inputs.utils.lib.mkApp {
-          drv = hostPackage;
-          exePath = "/bin/dailp-validate";
         };
 
         apps.migrate-schema = mkBashApp "migrate-schema" ''

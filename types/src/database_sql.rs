@@ -1,13 +1,20 @@
 #![allow(missing_docs)]
 
+use anyhow::Error;
+use auth::UserGroup;
 use chrono::{NaiveDate, NaiveDateTime};
-use sqlx::postgres::types::PgLTree;
+use sqlx::postgres::types::{PgLTree, PgRange};
 use std::ops::Bound;
 use std::str::FromStr;
+use user::UserUpdate;
 
 use crate::collection::CollectionChapter;
 use crate::collection::EditedCollection;
 use crate::comment::{Comment, CommentParentType, CommentType, CommentUpdate};
+use crate::page::ContentBlock;
+use crate::page::Markdown;
+use crate::page::NewPageInput;
+use crate::page::Page;
 use crate::user::User;
 use crate::user::UserId;
 use {
@@ -17,15 +24,14 @@ use {
     async_graphql::InputType,
     async_trait::async_trait,
     itertools::Itertools,
-    sqlx::{
-        postgres::{types::PgRange, PgPoolOptions},
-        query_file, query_file_as, query_file_scalar, Acquire,
-    },
+    sqlx::{postgres::PgPoolOptions, query_file, query_file_as, query_file_scalar, Acquire},
     std::collections::HashMap,
     std::sync::Arc,
     std::time::Duration,
     uuid::Uuid,
 };
+// Explicitly import types from person.rs
+use crate::person::{Contributor, ContributorDetails, ContributorRole};
 
 /// Connects to our backing database instance, providing high level functions
 /// for accessing the data therein.
@@ -200,7 +206,7 @@ impl Database {
                             position: PositionInDocument::new(
                                 DocumentId(w.document_id),
                                 w.page_number.unwrap_or_default(),
-                                w.index_in_document as i64,
+                                w.index_in_document,
                             ),
                         })
                         .collect(),
@@ -278,7 +284,7 @@ impl Database {
                         position: PositionInDocument::new(
                             DocumentId(w.document_id),
                             w.page_number.unwrap_or_default(),
-                            w.index_in_document as i64,
+                            w.index_in_document,
                         ),
                     })
                     .collect(),
@@ -397,8 +403,7 @@ impl Database {
             );
             chapter_stack.push(final_path);
 
-            while !(chapter_stack_cur.is_empty()) {
-                let temp_chapter = chapter_stack_cur.pop().unwrap();
+            while let Some(temp_chapter) = chapter_stack_cur.pop() {
                 let cur_slug = temp_chapter.1;
                 url_slug_cur = format!("{}.{}", cur_slug, url_slug_cur);
             }
@@ -515,6 +520,63 @@ impl Database {
         Ok(user_id)
     }
 
+    // Updates fields in the user dailp_user table
+    pub async fn update_dailp_user(&self, user: UserUpdate) -> Result<Uuid> {
+        let user_id = Uuid::from(user.id);
+        let display_name = user.display_name.into_vec();
+        let avatar_url = user.avatar_url.into_vec();
+        let bio = user.bio.into_vec();
+        let organization = user.organization.into_vec();
+        let location = user.location.into_vec();
+        // Role needs to come in from graphql as all caps ("EDITORS" rather than "Editors")
+        let role = if user.role.is_value() {
+            let role_str = match user.role.value().unwrap() {
+                UserGroup::Readers => "Readers",
+                UserGroup::Editors => "Editors",
+                UserGroup::Contributors => "Contributors",
+            };
+            vec![role_str.to_string()]
+        } else {
+            vec![]
+        };
+
+        query_file!(
+            "queries/update_dailp_user.sql",
+            &user_id,
+            &display_name as _,
+            &avatar_url as _,
+            &bio as _,
+            &organization as _,
+            &location as _,
+            &role as _
+        )
+        .execute(&self.client)
+        .await?;
+
+        Ok(user_id)
+    }
+
+    // Gets a user from the dailp_user table by their id
+    pub async fn dailp_user_by_id(&self, user_id: &Uuid) -> Result<User> {
+        let row = query_file!("queries/get_dailp_user_by_id.sql", user_id)
+            .fetch_one(&self.client)
+            .await?;
+
+        let created_at = Date::from(row.created_at);
+        let role = UserGroup::from(row.role);
+
+        Ok(User {
+            id: UserId(row.id.to_string()),
+            display_name: row.display_name,
+            created_at: Some(created_at),
+            avatar_url: row.avatar_url,
+            bio: row.bio,
+            organization: row.organization,
+            location: row.location,
+            role: Some(role),
+        })
+    }
+
     pub async fn update_annotation(&self, _annote: annotation::Annotation) -> Result<()> {
         todo!("Implement image annotations")
     }
@@ -523,13 +585,21 @@ impl Database {
         let mut tx = self.client.begin().await?;
 
         let source = word.source.into_vec();
+        let simple_phonetics = word.romanized_source.into_vec();
         let commentary = word.commentary.into_vec();
+        let english_gloss_owned: Vec<String> = match word.english_gloss.into_vec().pop().flatten() {
+            Some(glosses) => glosses.split(',').map(|s| s.trim().to_string()).collect(),
+            None => Vec::new(),
+        };
+        let english_gloss: Vec<&str> = english_gloss_owned.iter().map(|s| s.as_str()).collect();
 
         let document_id = query_file!(
             "queries/update_word.sql",
             word.id,
             &source as _,
+            &simple_phonetics as _,
             &commentary as _,
+            &english_gloss as _
         )
         .fetch_one(&mut *tx)
         .await?
@@ -542,13 +612,22 @@ impl Database {
         }
 
         let segments = word.segments.take().unwrap();
-        // If word segmentation not present, return early.
+        // if word segmentation not present, return early.
         if segments.is_empty() {
+            // Delete all existing segments since the new segments array is empty
+            query_file!("queries/delete_word_segments.sql", word.id)
+                .execute(&mut *tx)
+                .await?;
             tx.commit().await?;
             return Ok(word.id);
         }
 
-        let system_name: Option<CherokeeOrthography> = *(&segments[0].system.clone());
+        // Delete existing segments before upserting new ones
+        query_file!("queries/delete_word_segments.sql", word.id)
+            .execute(&mut *tx)
+            .await?;
+
+        let system_name: Option<CherokeeOrthography> = segments[0].system;
 
         let (doc_id, gloss, word_id, index, morpheme, role): (
             Vec<_>,
@@ -658,9 +737,10 @@ impl Database {
 
     /// This does two things:
     /// 1. Create a media slice if one does not exist for the provided audio
-    /// recording.
+    ///     recording.
     /// 2. Add a join table entry attaching that media slice to the
-    /// specified word.
+    ///     specified word.
+    ///
     /// Returns the `id` of the upserted media slice
     pub async fn attach_audio_to_word(
         &self,
@@ -771,7 +851,7 @@ impl Database {
         .execute(&self.client)
         .await?;
 
-        Ok(self.paragraph_by_id(&paragraph.id).await?)
+        self.paragraph_by_id(&paragraph.id).await
     }
 
     pub async fn update_comment(&self, comment: CommentUpdate) -> Result<Uuid> {
@@ -964,13 +1044,16 @@ impl Database {
             let (name, doc, role): (Vec<_>, Vec<_>, Vec<_>) = meta
                 .contributors
                 .iter()
-                .map(|contributor| (&*contributor.name, document_uuid, &*contributor.role))
+                .map(|contributor| (&*contributor.name, document_uuid, contributor.role.as_ref()))
                 .multiunzip();
+            // Convert roles to Option<String> for SQL
+            let role_strings: Vec<Option<String>> =
+                role.iter().map(|r| r.map(|r| r.to_string())).collect();
             query_file!(
                 "queries/upsert_document_contributors.sql",
                 &*name as _,
                 &*doc,
-                &*role as _
+                &role_strings as _
             )
             .execute(&mut *tx)
             .await?;
@@ -1022,13 +1105,13 @@ impl Database {
                         .sum();
                     let char_range: PgRange<_> =
                         (starting_char_index..starting_char_index + total_chars as i64).into();
-                    query_file!(
+                    let _paragraph_id = query_file_scalar!(
                         "queries/insert_paragraph.sql",
                         page_id,
                         char_range,
                         paragraph.translation.unwrap_or_default()
                     )
-                    .execute(&mut *tx)
+                    .fetch_one(&mut *tx)
                     .await?;
 
                     for element in paragraph.source {
@@ -1075,6 +1158,23 @@ impl Database {
         Ok(())
     }
 
+    pub async fn insert_edited_collection(
+        &self,
+        collection: CreateEditedCollectionInput,
+    ) -> Result<Uuid> {
+        // let mut tx = self.client.begin().await?;
+        let collection_id = query_file_scalar!(
+            "queries/insert_edited_collection.sql",
+            collection.title,
+            slug::slugify(&collection.title),
+            collection.description,
+            collection.thumbnail_url,
+        )
+        .fetch_one(&self.client)
+        .await?;
+        Ok(collection_id)
+    }
+
     pub async fn document_breadcrumbs(
         &self,
         document_id: DocumentId,
@@ -1087,6 +1187,7 @@ impl Database {
         Ok(vec![DocumentCollection {
             slug: item.slug,
             title: item.title,
+            id: None,
         }])
     }
 
@@ -1100,6 +1201,7 @@ impl Database {
             .map(|chapter| DocumentCollection {
                 slug: chapter.slug,
                 title: chapter.title,
+                id: None,
             })
             .collect())
     }
@@ -1210,11 +1312,11 @@ impl Database {
                     &*form.source,
                     form.simple_phonetics.as_deref(),
                     form.phonemic.as_deref(),
-                    form.english_gloss.get(0).map(|s| &**s),
+                    form.english_gloss.first().map(|s| &**s),
                     form.date_recorded.as_ref().map(|d| d.0),
                     form.commentary.as_deref(),
                     &*form.position.page_number,
-                    form.position.index as i64,
+                    form.position.index,
                 )
             })
             .multiunzip();
@@ -1421,6 +1523,38 @@ impl Database {
         Ok(())
     }
 
+    pub async fn insert_custom_abstract_tag(&self, tag: AbstractMorphemeTag) -> Result<Uuid> {
+        let abstract_id =
+            query_file_scalar!("queries/insert_custom_abstract_tag.sql", tag.id, "custom")
+                .fetch_one(&self.client)
+                .await?;
+        Ok(abstract_id)
+    }
+
+    pub async fn insert_custom_morpheme_tag(
+        &self,
+        form: MorphemeTag,
+        system_id: Uuid,
+    ) -> Result<()> {
+        query_file!(
+            "queries/insert_custom_morpheme_tag.sql",
+            system_id,
+            &form
+                .internal_tags
+                .iter()
+                .map(|id| Uuid::parse_str(id).unwrap())
+                .collect::<Vec<Uuid>>(),
+            form.tag,
+            form.title,
+            form.role_override as Option<WordSegmentRole>,
+            form.definition
+        )
+        .fetch_all(&self.client)
+        .await?;
+
+        Ok(())
+    }
+
     pub async fn insert_morpheme_tag(&self, form: MorphemeTag, system_id: Uuid) -> Result<()> {
         let abstract_ids = query_file_scalar!(
             "queries/abstract_tag_ids_from_glosses.sql",
@@ -1487,7 +1621,24 @@ impl Database {
         Ok(DocumentCollection {
             slug: collection.slug,
             title: collection.title,
+            id: Some(collection.id),
         })
+    }
+
+    pub async fn document_group_id_by_slug(&self, slug: &str) -> Result<Option<Uuid>> {
+        Ok(
+            query_file_scalar!("queries/document_group_id_by_slug.sql", slug)
+                .fetch_optional(&self.client)
+                .await?,
+        )
+    }
+
+    /// Get collection slug by collection ID
+    pub async fn collection_slug_by_id(&self, collection_id: Uuid) -> Result<Option<String>> {
+        let result = query_file!("queries/edited_collection_by_id.sql", collection_id)
+            .fetch_optional(&self.client)
+            .await?;
+        Ok(result.map(|r| r.slug))
     }
 
     pub async fn chapter(
@@ -1495,9 +1646,42 @@ impl Database {
         collection_slug: String,
         chapter_slug: String,
     ) -> Result<Option<CollectionChapter>> {
+        // Try the original slugs first
         let chapter = query_file!(
             "queries/chapter_contents.sql",
             collection_slug,
+            chapter_slug
+        )
+        .fetch_optional(&self.client)
+        .await?;
+
+        // If found, return it
+        if let Some(chapter_data) = chapter {
+            return Ok(Some(CollectionChapter {
+                id: chapter_data.id,
+                path: chapter_data
+                    .chapter_path
+                    .into_iter()
+                    .map(|s| (*s).into())
+                    .collect(),
+                index_in_parent: chapter_data.index_in_parent,
+                title: chapter_data.title,
+                document_id: chapter_data.document_id.map(DocumentId),
+                wordpress_id: chapter_data.wordpress_id,
+                section: chapter_data.section,
+            }));
+        }
+
+        // If not found, try with underscore/hyphen conversion for collection_slug
+        let alternative_collection_slug = if collection_slug.contains('-') {
+            collection_slug.replace("-", "_")
+        } else {
+            collection_slug.replace("_", "-")
+        };
+
+        let chapter = query_file!(
+            "queries/chapter_contents.sql",
+            alternative_collection_slug,
             chapter_slug
         )
         .fetch_optional(&self.client)
@@ -1512,7 +1696,7 @@ impl Database {
                 .collect(),
             index_in_parent: chapter.index_in_parent,
             title: chapter.title,
-            document_id: chapter.document_id.map(|id| DocumentId(id)),
+            document_id: chapter.document_id.map(DocumentId),
             wordpress_id: chapter.wordpress_id,
             section: chapter.section,
         }))
@@ -1542,13 +1726,316 @@ impl Database {
                             .collect(),
                         index_in_parent: chapter.index_in_parent,
                         title: chapter.title,
-                        document_id: chapter.document_id.map(|id| DocumentId(id)),
+                        document_id: chapter.document_id.map(DocumentId),
                         wordpress_id: chapter.wordpress_id,
                         section: chapter.section,
                     })
                     .collect(),
             ))
         }
+    }
+
+    /// Insert a contributor attribution for a chapter
+    pub async fn insert_chapter_contributor_attribution(
+        &self,
+        chapter_id: &uuid::Uuid,
+        contributor_id: &uuid::Uuid,
+        contribution_role: &str,
+    ) -> Result<()> {
+        query_file!(
+            "queries/insert_chapter_contributor_attribution.sql",
+            chapter_id,
+            contributor_id,
+            contribution_role
+        )
+        .execute(&self.client)
+        .await?;
+        Ok(())
+    }
+
+    /// Insert a document into an edited collection and create a new chapter for it
+    /// Returns (document_id, chapter_id)
+    pub async fn insert_document_into_edited_collection(
+        &self,
+        document: AnnotatedDoc,
+        _collection_id: Uuid,
+    ) -> Result<(DocumentId, Uuid)> {
+        let mut tx = self.client.begin().await?;
+        let meta = &document.meta;
+        let next_index = -1;
+
+        // All user-created documents go to the user_documents document group
+        let user_documents_group_id = match self.document_group_id_by_slug("user_documents").await?
+        {
+            Some(id) => id,
+            None => {
+                // Create the user_documents document_group if it doesn't exist
+                query_file_scalar!(
+                    "queries/insert_document_group.sql",
+                    "user_documents",
+                    "User-Created Documents"
+                )
+                .fetch_one(&mut *tx)
+                .await?
+            }
+        };
+
+        // Insert the document using the user_documents document group ID
+        let document_uuid = query_file_scalar!(
+            "queries/insert_document_at_end_of_collection.sql",
+            meta.short_name,
+            meta.title,
+            meta.is_reference,
+            &meta.date as &Option<Date>,
+            user_documents_group_id,
+            next_index
+        )
+        .fetch_one(&mut *tx)
+        .await?;
+
+        // Attribute contributors to the document
+        {
+            let name: Vec<String> = meta.contributors.iter().map(|c| c.clone().name).collect();
+            let doc_id: Vec<Uuid> = vec![meta.id.0];
+            let roles: Vec<String> = meta
+                .contributors
+                .iter()
+                .map(|c| match c.role {
+                    Some(r) => r.to_string(),
+                    // not sure what to default to, also not sure why contributor role is an
+                    // option
+                    None => ContributorRole::Author.to_string(),
+                })
+                .collect();
+
+            if !name.is_empty() {
+                query_file!(
+                    "queries/upsert_document_contributors.sql",
+                    &name,
+                    &doc_id,
+                    &roles
+                )
+                .execute(&mut *tx)
+                .await?;
+            }
+        }
+
+        // Create a new chapter for this document in the user_documents collection
+        let chapter_slug = crate::slugs::slugify_ltree(&meta.short_name);
+        let chapter_path = PgLTree::from_str(&format!("user_documents.{}", chapter_slug))?;
+
+        let chapter_id = query_file_scalar!(
+            "queries/insert_chapter_with_document_id.sql",
+            meta.title, // Use document title as chapter title
+            document_uuid,
+            None::<i64>, // wordpress_id
+            0i64,        // index_in_parent (we can increment this later if needed)
+            chapter_path,
+            crate::CollectionSection::Body as crate::CollectionSection
+        )
+        .fetch_one(&mut *tx)
+        .await?;
+
+        // Attribute contributors to the new chapter
+        for contributor in &meta.contributors {
+            query_file!("queries/upsert_contributor.sql", &contributor.name)
+                .execute(&mut *tx)
+                .await?;
+            let contributor_id =
+                query_file_scalar!("queries/contributor_id_by_name.sql", &contributor.name)
+                    .fetch_one(&mut *tx)
+                    .await?;
+            let role = contributor
+                .role
+                .unwrap_or(ContributorRole::Author)
+                .to_string();
+            query_file!(
+                "queries/insert_chapter_contributor_attribution.sql",
+                &chapter_id,
+                &contributor_id,
+                &role
+            )
+            .execute(&mut *tx)
+            .await?;
+        }
+
+        // Insert document contents (pages, paragraphs, words)
+        let document_id = DocumentId(document_uuid);
+        let document_with_updated_id = AnnotatedDoc {
+            meta: DocumentMetadata {
+                id: document_id,
+                ..document.meta.clone()
+            },
+            segments: document.segments.clone(),
+        };
+
+        query_file!("queries/delete_document_pages.sql", document_uuid)
+            .execute(&mut *tx)
+            .await?;
+
+        if let Some(pages) = document_with_updated_id.segments {
+            let mut starting_char_index = 0;
+            for (page_index, page) in pages.into_iter().enumerate() {
+                let page_id = query_file_scalar!(
+                    "queries/upsert_document_page.sql",
+                    document_uuid,
+                    page_index as i64,
+                    document_with_updated_id
+                        .meta
+                        .page_images
+                        .as_ref()
+                        .map(|imgs| imgs.source.0),
+                    document_with_updated_id
+                        .meta
+                        .page_images
+                        .as_ref()
+                        .and_then(|imgs| imgs.ids.get(page_index))
+                )
+                .fetch_one(&mut *tx)
+                .await?;
+
+                for section in page.paragraphs {
+                    // Calculate the actual character range for this paragraph
+                    let total_chars: usize = section
+                        .source
+                        .iter()
+                        .map(|e| {
+                            if let AnnotatedSeg::Word(word) = e {
+                                word.source.chars().count()
+                            } else {
+                                0
+                            }
+                        })
+                        .sum();
+
+                    let char_range: PgRange<i64> =
+                        (starting_char_index..starting_char_index + total_chars as i64).into();
+
+                    let _paragraph_id = query_file_scalar!(
+                        "queries/insert_paragraph.sql",
+                        page_id,
+                        char_range,
+                        section.translation.unwrap_or_default()
+                    )
+                    .fetch_one(&mut *tx)
+                    .await?;
+
+                    // Insert words with proper page_id and character ranges
+                    let mut word_char_index = starting_char_index;
+                    for word_seg in section.source {
+                        match word_seg {
+                            AnnotatedSeg::Word(word) => {
+                                let word_len = word.source.chars().count() as i64;
+                                let word_char_range: PgRange<i64> =
+                                    (word_char_index..word_char_index + word_len).into();
+
+                                self.insert_word(
+                                    &mut tx,
+                                    word,
+                                    document_uuid,
+                                    Some(page_id),
+                                    Some(word_char_range),
+                                )
+                                .await?;
+
+                                word_char_index += word_len;
+                            }
+                            _ => {}
+                        }
+                    }
+                    starting_char_index += total_chars as i64;
+                }
+            }
+        }
+
+        tx.commit().await?;
+        Ok((document_id, chapter_id))
+    }
+
+    pub async fn abbreviation_id_from_short_name(&self, short_name: &str) -> Result<Uuid> {
+        Ok(
+            query_file_scalar!("queries/abbreviation_id_from_short_name.sql", short_name)
+                .fetch_one(&self.client)
+                .await?,
+        )
+    }
+
+    pub async fn upsert_page(&self, input: NewPageInput) -> Result<String> {
+        // sanitize input
+        let title = input.title.trim();
+        // generate slug
+        let slug = slug::slugify(title);
+        // Ensure there is at least one body block and it is non-empty
+        let body = match input.body.first() {
+            Some(content) if !content.trim().is_empty() => content.clone(),
+            _ => return Err(anyhow::anyhow!("input body is empty")),
+        };
+
+        query_file!("queries/upsert_page.sql", slug, input.path, title, body)
+            .execute(&self.client)
+            .await?;
+        Ok(input.path)
+    }
+
+    pub async fn page_by_path(&self, path: &str) -> Result<Option<Page>> {
+        let record = query_file!("queries/page_by_path.sql", path)
+            .fetch_optional(&self.client)
+            .await?;
+        if let Some(row) = record {
+            let blocks: Vec<ContentBlock> =
+                vec![ContentBlock::Markdown(Markdown { content: row.body })];
+            Ok(Some(Page::build(row.title, row.slug, blocks)))
+        } else {
+            Ok(None)
+        }
+    }
+    //Ok(page)
+    pub async fn get_menu_by_slug(&self, slug: String) -> Result<Menu> {
+        let menu = query_file!("queries/menu_by_slug.sql", slug)
+            .fetch_one(&self.client)
+            .await?;
+
+        let items_json: serde_json::Value = menu.items;
+        let items: Vec<MenuItem> = serde_json::from_value(items_json).unwrap_or_default();
+
+        Ok(Menu {
+            id: menu.id,
+            name: menu.name,
+            slug: menu.slug,
+            items,
+        })
+    }
+
+    pub async fn update_menu(&self, menu: MenuUpdate) -> Result<Menu> {
+        let menu = query_file!(
+            "queries/update_menu.sql",
+            menu.id,
+            menu.name.clone().unwrap_or_default(),
+            slug::slugify(menu.name.unwrap_or_default()),
+            menu.items
+                .map(|items| serde_json::to_value(items).unwrap_or_default())
+        )
+        .fetch_one(&self.client)
+        .await?;
+        let items: Vec<MenuItem> = serde_json::from_value(menu.items).unwrap_or_default();
+        Ok(Menu {
+            id: menu.id,
+            name: menu.name,
+            slug: menu.slug,
+            items,
+        })
+    }
+
+    pub async fn insert_menu(&self, menu: Menu) -> Result<()> {
+        query_file!(
+            "queries/insert_menu.sql",
+            menu.name,
+            menu.slug,
+            serde_json::to_value(menu.items).unwrap_or_default()
+        )
+        .execute(&self.client)
+        .await?;
+        Ok(())
     }
 }
 
@@ -1583,11 +2070,17 @@ impl Loader<DocumentId> for Database {
                         index: 0,
                         include_in_edited_collection: true,
                         edited_by: None,
-                        recorded_at: item.recorded_at.map(|recorded_at| Date::new(recorded_at)),
+                        recorded_at: item.recorded_at.map(Date::new),
                         recorded_by: item.recorded_by.and_then(|user_id| {
                             item.recorded_by_name.map(|display_name| User {
                                 id: UserId(user_id.to_string()),
                                 display_name,
+                                created_at: None,
+                                avatar_url: None,
+                                bio: None,
+                                organization: None,
+                                location: None,
+                                role: None,
                             })
                         }),
                         start_time: item.audio_slice.as_ref().and_then(|r| match r.start {
@@ -1646,14 +2139,20 @@ impl Loader<DocumentShortName> for Database {
                         parent_track: None,
                         annotations: None,
                         index: 0,
-                        /// TODO: is this a bad default?
+                        // TODO: is this a bad default?
                         include_in_edited_collection: true,
                         edited_by: None,
-                        recorded_at: item.recorded_at.map(|recorded_at| Date::new(recorded_at)),
+                        recorded_at: item.recorded_at.map(Date::new),
                         recorded_by: item.recorded_by.and_then(|user_id| {
                             item.recorded_by_name.map(|display_name| User {
                                 id: UserId(user_id.to_string()),
                                 display_name,
+                                created_at: None,
+                                avatar_url: None,
+                                bio: None,
+                                organization: None,
+                                location: None,
+                                role: None,
                             })
                         }),
                         start_time: item.audio_slice.as_ref().and_then(|r| match r.start {
@@ -1851,14 +2350,14 @@ impl Loader<WordsInParagraph> for Database {
                     WordsInParagraph(w.paragraph_id),
                     AnnotatedSeg::Word(
                         (BasicWord {
-                            id: w.id,
-                            source_text: w.source_text,
+                            id: Some(w.id),
+                            source_text: Some(w.source_text),
                             simple_phonetics: w.simple_phonetics,
                             phonemic: w.phonemic,
                             english_gloss: w.english_gloss,
                             commentary: w.commentary,
-                            document_id: w.document_id,
-                            index_in_document: w.index_in_document,
+                            document_id: Some(w.document_id),
+                            index_in_document: Some(w.index_in_document),
                             page_number: w.page_number,
                             audio_url: w.audio_url,
                             audio_slice_id: w.audio_slice_id,
@@ -1866,8 +2365,9 @@ impl Loader<WordsInParagraph> for Database {
                             audio_recorded_at: w.audio_recorded_at,
                             audio_recorded_by: w.audio_recorded_by,
                             audio_recorded_by_name: w.audio_recorded_by_name,
-                            include_audio_in_edited_collection: w
-                                .include_audio_in_edited_collection,
+                            include_audio_in_edited_collection: Some(
+                                w.include_audio_in_edited_collection,
+                            ),
                             audio_edited_by: w.audio_edited_by,
                             audio_edited_by_name: w.audio_edited_by_name,
                         })
@@ -1976,7 +2476,11 @@ impl Loader<ContributorsForDocument> for Database {
                     ContributorsForDocument(x.document_id),
                     Contributor {
                         name: x.full_name,
-                        role: x.contribution_role,
+                        role: x
+                            .contribution_role
+                            .to_lowercase()
+                            .parse::<ContributorRole>()
+                            .ok(),
                     },
                 )
             })
@@ -2006,6 +2510,7 @@ impl Loader<PersonFullName> for Database {
                         full_name: x.full_name,
                         alternate_name: None,
                         birth_date: None,
+                        is_visible: false,
                     },
                 )
             })
@@ -2042,11 +2547,19 @@ impl From<BasicAudioSlice> for AudioSlice {
             slice_id: Some(AudioSliceId(b.id.to_string())),
             resource_url: b.resource_url,
             parent_track: None,
+            annotations: None,
+            index: 0,
             include_in_edited_collection: b.include_in_edited_collection,
             edited_by: b.edited_by.and_then(|user_id| {
                 b.edited_by_name.map(|display_name| User {
                     id: UserId::from(user_id),
                     display_name,
+                    created_at: None,
+                    avatar_url: None,
+                    bio: None,
+                    organization: None,
+                    location: None,
+                    role: None,
                 })
             }),
             recorded_at: b.recorded_at.map(Date::new),
@@ -2054,10 +2567,14 @@ impl From<BasicAudioSlice> for AudioSlice {
                 b.recorded_by_name.map(|display_name| User {
                     id: UserId::from(user_id),
                     display_name,
+                    created_at: None,
+                    avatar_url: None,
+                    bio: None,
+                    organization: None,
+                    location: None,
+                    role: None,
                 })
             }),
-            annotations: None,
-            index: 0,
             start_time: b.range.as_ref().and_then(|r| match r.start {
                 Bound::Unbounded => None,
                 Bound::Included(t) | Bound::Excluded(t) => Some(t as i32),
@@ -2073,14 +2590,14 @@ impl From<BasicAudioSlice> for AudioSlice {
 /// A struct representing a Word/AnnotatedForm that can be easily pulled from
 /// the database
 struct BasicWord {
-    id: Uuid,
-    source_text: String,
+    id: Option<Uuid>,
+    source_text: Option<String>,
     simple_phonetics: Option<String>,
     phonemic: Option<String>,
     english_gloss: Option<String>,
     commentary: Option<String>,
-    document_id: Uuid,
-    index_in_document: i64,
+    document_id: Option<Uuid>,
+    index_in_document: Option<i64>,
     page_number: Option<String>,
     audio_url: Option<String>,
     audio_slice_id: Option<Uuid>,
@@ -2088,7 +2605,7 @@ struct BasicWord {
     audio_recorded_at: Option<NaiveDate>,
     audio_recorded_by: Option<Uuid>,
     audio_recorded_by_name: Option<String>,
-    include_audio_in_edited_collection: bool,
+    include_audio_in_edited_collection: Option<bool>,
     audio_edited_by: Option<Uuid>,
     audio_edited_by_name: Option<String>,
 }
@@ -2102,7 +2619,7 @@ impl BasicWord {
             recorded_at: self.audio_recorded_at,
             recorded_by: self.audio_recorded_by,
             recorded_by_name: self.audio_recorded_by_name.to_owned(),
-            include_in_edited_collection: self.include_audio_in_edited_collection,
+            include_in_edited_collection: self.include_audio_in_edited_collection.unwrap_or(false),
             edited_by: self.audio_edited_by,
             edited_by_name: self.audio_edited_by_name.to_owned(),
         })
@@ -2114,8 +2631,8 @@ impl From<BasicWord> for AnnotatedForm {
         // up here because we need to borrow the basic type before we start moving things
         let ingested_audio_track = w.audio_slice().map(AudioSlice::from);
         Self {
-            id: Some(w.id),
-            source: w.source_text,
+            id: w.id,
+            source: w.source_text.unwrap_or_default(),
             normalized_source: None,
             simple_phonetics: w.simple_phonetics,
             phonemic: w.phonemic,
@@ -2128,9 +2645,9 @@ impl From<BasicWord> for AnnotatedForm {
             line_break: None,
             page_break: None,
             position: PositionInDocument::new(
-                DocumentId(w.document_id),
+                DocumentId(w.document_id.unwrap_or_default()),
                 w.page_number.unwrap_or_default(),
-                w.index_in_document as i64,
+                w.index_in_document.unwrap_or_default(),
             ),
         }
     }
@@ -2160,7 +2677,7 @@ impl Loader<ChaptersInCollection> for Database {
                     CollectionChapter {
                         id: chapter.id,
                         title: chapter.title,
-                        document_id: chapter.document_id.map(|id| DocumentId(id)),
+                        document_id: chapter.document_id.map(DocumentId),
                         wordpress_id: chapter.wordpress_id,
                         index_in_parent: chapter.index_in_parent,
                         section: chapter.section,
@@ -2198,7 +2715,9 @@ impl Loader<EditedCollectionDetails> for Database {
                         id: collection.id,
                         title: collection.title,
                         wordpress_menu_id: collection.wordpress_menu_id,
+                        description: collection.description,
                         slug: collection.slug,
+                        thumbnail_url: collection.thumbnail_url,
                     },
                 )
             })
@@ -2223,20 +2742,26 @@ struct BasicComment {
     pub parent_type: CommentParentType,
 }
 
-impl Into<Comment> for BasicComment {
-    fn into(self) -> Comment {
+impl From<BasicComment> for Comment {
+    fn from(val: BasicComment) -> Self {
         Comment {
-            id: self.id,
-            posted_at: DateTime::new(self.posted_at),
+            id: val.id,
+            posted_at: DateTime::new(val.posted_at),
             posted_by: User {
-                id: self.posted_by.into(),
-                display_name: self.posted_by_name,
+                id: val.posted_by.into(),
+                display_name: val.posted_by_name,
+                created_at: None,
+                avatar_url: None,
+                bio: None,
+                organization: None,
+                location: None,
+                role: None,
             },
-            text_content: self.text_content,
-            comment_type: self.comment_type,
-            edited: self.edited,
-            parent_id: self.parent_id,
-            parent_type: self.parent_type,
+            text_content: val.text_content,
+            comment_type: val.comment_type,
+            edited: val.edited,
+            parent_id: val.parent_id,
+            parent_type: val.parent_type,
         }
     }
 }

@@ -202,16 +202,20 @@ query EditedCollections {
     id
     title
     slug
+    description
     chapters {
       id
       path
     }
+    thumbnailUrl
   }
 }
 
 query EditedCollection($slug: String!) {
   editedCollection(slug: $slug) {
     id
+    title
+    slug
     chapters {
       id
       title
@@ -585,6 +589,113 @@ mutation DeleteComment($commentId: DeleteCommentInput!) {
       id
       comments {
         ...CommentFields
+      }
+    }
+  }
+}
+
+mutation AddDocument($input: CreateDocumentFromFormInput!) {
+  addDocument(input: $input) {
+    id
+    title
+    slug
+  }
+}
+
+mutation AddEditedCollection($input: CreateEditedCollectionInput!) {
+  createEditedCollection(input: $input)
+}
+
+mutation updateUser($user: UserUpdate!) {
+  updateUser(user: $user) {
+    id
+    displayName
+    avatarUrl
+    bio
+    organization
+    location
+    role
+  }
+}
+
+query UserById($id: UUID!) {
+  dailpUserById(id: $id) {
+    id
+    displayName
+    createdAt {
+      day
+      month
+      year
+    }
+    avatarUrl
+    bio
+    organization
+    location
+    role
+  }
+}
+
+query AllCollections {
+  allCollections {
+    name
+    slug
+    id
+  }
+}
+
+mutation InsertCustomMorphemeTag(
+  $tag: String!
+  $title: String!
+  $system: String!
+) {
+  insertCustomMorphemeTag(tag: $tag, title: $title, system: $system)
+}
+
+mutation UpsertPage($pageInput: NewPageInput!) {
+  upsertPage(page: $pageInput)
+}
+
+query pageByPath($path: String!) {
+  pageByPath(path: $path) {
+    title
+    body {
+      __typename
+      ... on Markdown {
+        content
+      }
+      ... on Gallery {
+        mediaUrls
+      }
+    }
+  }
+}
+query MenuBySlug($slug: String!) {
+  menuBySlug(slug: $slug) {
+    id
+    name
+    slug
+    items {
+      label
+      path
+      items {
+        label
+        path
+      }
+    }
+  }
+}
+
+mutation UpdateMenu($menu: MenuUpdate!) {
+  updateMenu(menu: $menu) {
+    id
+    name
+    slug
+    items {
+      label
+      path
+      items {
+        label
+        path
       }
     }
   }

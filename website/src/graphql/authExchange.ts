@@ -35,7 +35,6 @@ export const cognitoAuthExchange = () =>
         return false
       }
     },
-
     addAuthToOperation({ authState, operation }) {
       // We don't send tokens if we don't have them or if we are talking to Wordpress
       if (!authState || operation.context.url === WP_GRAPHQL_URL) {

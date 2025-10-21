@@ -1,3 +1,11 @@
+type AddDocumentPayload {
+	id: UUID!
+	title: String!
+	slug: String!
+	collectionSlug: String!
+	chapterSlug: String!
+}
+
 type AnnotatedDoc {
 	"""
 	Official short identifier for this document
@@ -194,6 +202,10 @@ input AnnotatedFormUpdate {
 	"""
 	source: String
 	"""
+	Possible update to normalized source content
+	"""
+	romanizedSource: String
+	"""
 	Possible update to commentary
 	"""
 	commentary: String
@@ -201,6 +213,10 @@ input AnnotatedFormUpdate {
 	Updated segments
 	"""
 	segments: [MorphemeSegmentUpdate!]
+	"""
+	Possible updated english gloss
+	"""
+	englishGloss: String
 }
 
 """
@@ -401,12 +417,21 @@ Used for updating comments.
 All fields except id are optional.
 """
 input CommentUpdate {
+	"""
+	The UUID of the comment to perform this operation on.
+	"""
 	id: UUID!
 	"""
-	The text of the comment
+	The text of the comment.
 	"""
 	textContent: String
+	"""
+	The type of content in this comment. See dailp::comment::CommentType.
+	"""
 	commentType: CommentType
+	"""
+	Whether this comment has been edited in the past
+	"""
 	edited: Boolean!
 }
 
@@ -432,7 +457,7 @@ type Contributor {
 	"""
 	The role that defines most of their contributions to the associated item
 	"""
-	role: String!
+	role: ContributorRole
 	details: ContributorDetails
 }
 
@@ -460,6 +485,51 @@ type ContributorDetails {
 	The optional date that this contributor was born on.
 	"""
 	birthDate: Date
+	"""
+	Whether or not the contributor's profile is linked to their contributions
+	"""
+	isVisible: Boolean!
+}
+
+"""
+A contributor can have to any number of roles, which define most of their
+contributions to the associated item (add or revise as needed)
+"""
+enum ContributorRole {
+	TRANSCRIBER
+	TRANSLATOR
+	EDITOR
+	ANNOTATOR
+	CULTURAL_ADVISOR
+	AUTHOR
+}
+
+input CreateDocumentFromFormInput {
+	documentName: String!
+	rawTextLines: [[String!]!]!
+	englishTranslationLines: [[String!]!]!
+	unresolvedWords: [String!]!
+	sourceName: String!
+	sourceUrl: String!
+	collectionId: UUID!
+}
+
+"""
+Input for creating an edited collection
+"""
+input CreateEditedCollectionInput {
+	"""
+	The title of the collection
+	"""
+	title: String!
+	"""
+	Description of the collection
+	"""
+	description: String!
+	"""
+	URL of the thumbnail image for the collection
+	"""
+	thumbnailUrl: String!
 }
 
 """
@@ -517,6 +587,9 @@ type Date {
 	formattedDate: String!
 }
 
+"""
+GraphQL input type for dates
+"""
 input DateInput {
 	day: Int!
 	month: Int!
@@ -548,7 +621,13 @@ input DeleteCommentInput {
 Delete a contributor attribution for a document based on the two ids
 """
 input DeleteContributorAttribution {
+	"""
+	The document to perform this operation on
+	"""
 	documentId: UUID!
+	"""
+	The UUID of the contributor to remove from this document's attributions
+	"""
 	contributorId: UUID!
 }
 
@@ -557,6 +636,10 @@ type DocumentCollection {
 	Full name of this collection
 	"""
 	name: String!
+	"""
+	Database ID for this collection
+	"""
+	id: UUID
 	"""
 	URL-ready slug for this collection, generated from the name
 	"""
@@ -575,8 +658,17 @@ Used for updating document metadata.
 All fields except id are optional.
 """
 input DocumentMetadataUpdate {
+	"""
+	The ID of the document to update
+	"""
 	id: UUID!
+	"""
+	An updated title for this document, or nothing (if title is unchanged)
+	"""
 	title: String
+	"""
+	The date this document was written, or nothing (if unchanged or not applicable)
+	"""
 	writtenAt: DateInput
 }
 
@@ -676,9 +768,17 @@ type EditedCollection {
 	"""
 	title: String!
 	"""
+	Description of the collection (optional)
+	"""
+	description: String
+	"""
 	ID of WordPress menu for navigating the collection
 	"""
 	wordpressMenuId: Int
+	"""
+	Cover image URL
+	"""
+	thumbnailUrl: String
 	"""
 	URL slug for the collection, like "cwkw"
 	"""
@@ -765,6 +865,82 @@ A block of prose content, formatted with [Markdown](https://commonmark.org/).
 """
 type Markdown {
 	content: String!
+}
+
+"""
+Menu object representing the navbar menu that can be edited.
+"""
+type Menu {
+	"""
+	Id for menu.
+	"""
+	id: UUID!
+	"""
+	Name for the menu.
+	"""
+	name: String!
+	"""
+	Slug for the menu.
+	"""
+	slug: String!
+	"""
+	Menu items.
+	"""
+	items: [MenuItem!]!
+}
+
+"""
+A single item in the menu.
+"""
+type MenuItem {
+	"""
+	Display label.
+	"""
+	label: String!
+	"""
+	Destination path.
+	"""
+	path: String!
+	"""
+	Child items (dropdown), optional.
+	"""
+	items: [MenuItem!]
+}
+
+"""
+Input for a single menu item.
+"""
+input MenuItemInput {
+	"""
+	Display label.
+	"""
+	label: String!
+	"""
+	Destination path.
+	"""
+	path: String!
+	"""
+	Child items (dropdown), optional.
+	"""
+	items: [MenuItemInput!]
+}
+
+"""
+Input for updating a menu.
+"""
+input MenuUpdate {
+	"""
+	Menu id.
+	"""
+	id: UUID!
+	"""
+	New name (optional).
+	"""
+	name: String
+	"""
+	New menu items (optional).
+	"""
+	items: [MenuItemInput!]
 }
 
 """
@@ -882,6 +1058,10 @@ type Mutation {
 	updateAnnotation(data: JSON!): Boolean!
 	updateWord(word: AnnotatedFormUpdate!): AnnotatedForm!
 	"""
+	Updates a dailp_user's information
+	"""
+	updateUser(user: UserUpdate!): User!
+	"""
 	Adds a bookmark to the user's list of bookmarks.
 	"""
 	addBookmark(documentId: UUID!): AnnotatedDoc!
@@ -908,6 +1088,32 @@ type Mutation {
 	"""
 	attachAudioToDocument(input: AttachAudioToDocumentInput!): AnnotatedDoc!
 	updateDocumentMetadata(document: DocumentMetadataUpdate!): UUID!
+	"""
+	Minimal mutation to add a document with only essential fields
+	"""
+	addDocument(input: CreateDocumentFromFormInput!): AddDocumentPayload!
+	insertCustomMorphemeTag(tag: String!, title: String!, system: String!): Boolean!
+	createEditedCollection(input: CreateEditedCollectionInput!): String!
+	upsertPage(page: NewPageInput!): String!
+	updateMenu(menu: MenuUpdate!): Menu!
+}
+
+"""
+Input struct for a page.
+"""
+input NewPageInput {
+	"""
+	title of new page
+	"""
+	title: String!
+	"""
+	content for page, needs to be sanitized
+	"""
+	body: [String!]!
+	"""
+	path of new page
+	"""
+	path: String!
 }
 
 """
@@ -1011,6 +1217,7 @@ input PostCommentInput {
 
 type Query {
 	allEditedCollections: [EditedCollection!]!
+	pageByPath(path: String!): Page
 	editedCollection(slug: String!): EditedCollection
 	"""
 	Retrieves a chapter and its contents by its collection and chapter slug.
@@ -1091,6 +1298,12 @@ type Query {
 	Basic information about the currently authenticated user, if any.
 	"""
 	userInfo: UserInfo
+	"""
+	Gets a dailp_user by their id
+	"""
+	dailpUserById(id: UUID!): User!
+	abbreviationIdFromShortName(shortName: String!): UUID!
+	menuBySlug(slug: String!): Menu!
 }
 
 """
@@ -1126,8 +1339,17 @@ scalar UUID
 Update the contributor attribution for a document
 """
 input UpdateContributorAttribution {
+	"""
+	The document to perfom this operation on
+	"""
 	documentId: UUID!
+	"""
+	The UUID associated with the contributor being added or changed
+	"""
 	contributorId: UUID!
+	"""
+	A description of what the contributor did, like "translation" or "voice"
+	"""
 	contributionRole: String!
 }
 
@@ -1143,6 +1365,30 @@ type User {
 	User-facing name for this contributor/curator
 	"""
 	displayName: String!
+	"""
+	The date this user was created (optional)
+	"""
+	createdAt: Date
+	"""
+	URL to the avatar of the user (optional)
+	"""
+	avatarUrl: String
+	"""
+	Biography of the user (optional)
+	"""
+	bio: String
+	"""
+	Organization of the user (optional)
+	"""
+	organization: String
+	"""
+	Location of the user (optional)
+	"""
+	location: String
+	"""
+	Role of the user (optional)
+	"""
+	role: UserGroup
 }
 
 """
@@ -1151,6 +1397,7 @@ A user belongs to any number of user groups, which give them various permissions
 enum UserGroup {
 	CONTRIBUTORS
 	EDITORS
+	READERS
 }
 
 """
@@ -1163,6 +1410,37 @@ type UserInfo {
 	id: UUID!
 	email: String!
 	groups: [UserGroup!]!
+}
+
+input UserUpdate {
+	"""
+	Id of the user, which must be a AWS Cognito `sub` claim
+	"""
+	id: String!
+	"""
+	User-facing name for this contributor/curator
+	"""
+	displayName: String
+	"""
+	URL to the avatar of the user (optional)
+	"""
+	avatarUrl: String
+	"""
+	Biography of the user (optional)
+	"""
+	bio: String
+	"""
+	Organization of the user (optional)
+	"""
+	organization: String
+	"""
+	Location of the user (optional)
+	"""
+	location: String
+	"""
+	Role of the user (optional)
+	"""
+	role: UserGroup
 }
 
 type WordSegment {

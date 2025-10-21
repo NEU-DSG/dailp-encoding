@@ -29,7 +29,9 @@ export function render(pageContext: PageContextServer) {
       <body><div id="${rootElementId}"/></body>
     </html>`
   } else {
-    const { pageHtml, pageHead } = pageContext
+    // Fallbacks so dev/local SSR doesn't crash if onBeforeRender didn't provide these
+    const pageHtml = pageContext.pageHtml ?? ""
+    const pageHead = pageContext.pageHead ?? Helmet.renderStatic()
     return escapeInject`<!DOCTYPE html>
     <html ${dangerouslySkipEscape(pageHead.htmlAttributes.toString())}>
       <head>
@@ -56,7 +58,10 @@ export async function onBeforeRender(
   const baseContext = { urqlState: {}, buildDate }
   // Don't prerender in development mode, let the client do all the rendering.
   // This keeps pages loading quickly as they change.
-  if (process.env["NODE_ENV"] === "development") {
+  const ssrInLocalDev =
+    deploymentEnvironment === Environment.Local &&
+    process.env["NODE_ENV"] === "development"
+  if (process.env["NODE_ENV"] === "development" && !ssrInLocalDev) {
     return { pageContext: baseContext }
   } else {
     const [ssr, client] = ssrClientAndExchange()

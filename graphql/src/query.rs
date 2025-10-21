@@ -3,20 +3,24 @@
 use dailp::{
     auth::{AuthGuard, GroupGuard, UserGroup, UserInfo},
     comment::{CommentParent, CommentUpdate, DeleteCommentInput, PostCommentInput},
-    slugify_ltree, AnnotatedForm, AttachAudioToDocumentInput, AttachAudioToWordInput,
-    CollectionChapter, CurateDocumentAudioInput, CurateWordAudioInput,
-    DeleteContributorAttribution, DocumentMetadataUpdate, DocumentParagraph,
+    page::{NewPageInput, Page},
+    slugify_ltree,
+    user::{User, UserUpdate},
+    AnnotatedForm, AnnotatedSeg, AttachAudioToWordInput, CollectionChapter, Contributor,
+    ContributorRole, CreateEditedCollectionInput, CurateWordAudioInput, Date,
+    DeleteContributorAttribution, DocumentMetadata, DocumentMetadataUpdate, DocumentParagraph,
+    PositionInDocument, SourceAttribution, TranslatedPage, TranslatedSection,
     UpdateContributorAttribution, Uuid,
 };
-use itertools::Itertools;
+use itertools::{Itertools, Position};
 
 use {
-    dailp::async_graphql::{self, dataloader::DataLoader, Context, FieldResult, Guard, Object},
+    dailp::async_graphql::{self, dataloader::DataLoader, Context, FieldResult},
     dailp::{
-        AnnotatedDoc, AnnotatedFormUpdate, CherokeeOrthography, Database, EditedCollection,
-        MorphemeId, MorphemeReference, MorphemeTag, ParagraphUpdate, WordsInDocument,
+        AbstractMorphemeTag, AnnotatedDoc, AnnotatedFormUpdate, CherokeeOrthography, Database,
+        EditedCollection, Menu, MenuUpdate, MorphemeId, MorphemeReference, MorphemeTag,
+        ParagraphUpdate, WordsInDocument,
     },
-    serde::{Deserialize, Serialize},
 };
 
 /// Home for all read-only queries
@@ -33,6 +37,14 @@ impl Query {
             .data::<DataLoader<Database>>()?
             .loader()
             .all_edited_collections()
+            .await?)
+    }
+
+    async fn page_by_path(&self, context: &Context<'_>, path: String) -> FieldResult<Option<Page>> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .page_by_path(&path)
             .await?)
     }
 
@@ -257,8 +269,8 @@ impl Query {
             .into_group_map();
 
         Ok(clusters
-            .into_iter()
-            .map(|(_, forms)| {
+            .into_values()
+            .map(|forms| {
                 let dates = forms.iter().filter_map(|f| f.date_recorded.as_ref());
                 let start = dates.clone().min();
                 let end = dates.max();
@@ -354,6 +366,35 @@ impl Query {
     async fn user_info<'a>(&self, context: &'a Context<'_>) -> Option<&'a UserInfo> {
         context.data_opt()
     }
+
+    /// Gets a dailp_user by their id
+    async fn dailp_user_by_id(&self, context: &Context<'_>, id: Uuid) -> FieldResult<User> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .dailp_user_by_id(&id)
+            .await?)
+    }
+
+    async fn abbreviation_id_from_short_name(
+        &self,
+        context: &Context<'_>,
+        short_name: String,
+    ) -> FieldResult<Uuid> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .abbreviation_id_from_short_name(&short_name)
+            .await?)
+    }
+
+    async fn menu_by_slug(&self, context: &Context<'_>, slug: String) -> FieldResult<Menu> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .get_menu_by_slug(slug)
+            .await?)
+    }
 }
 
 pub struct Mutation;
@@ -440,8 +481,8 @@ impl Mutation {
         if comment_object.posted_by.id.0 != user.id.to_string() {
             return Err("User attempted to edit another user's comment".into());
         }
-
-        db.update_comment(comment).await;
+        // Note: We should probably handle an error here more gracefully.
+        let _ = db.update_comment(comment).await;
 
         // We return the parent object, for GraphCache interop
         return comment_object.parent(context).await;
@@ -535,6 +576,20 @@ impl Mutation {
         Ok(database
             .word_by_id(&database.update_word(word).await?)
             .await?)
+    }
+
+    /// Updates a dailp_user's information
+    #[graphql(guard = "AuthGuard")]
+    async fn update_user(&self, context: &Context<'_>, user: UserUpdate) -> FieldResult<User> {
+        let user_id = Uuid::from(&user.id);
+        let db = context.data::<DataLoader<Database>>()?.loader();
+
+        db.update_dailp_user(user).await?;
+
+        let user_object = db.dailp_user_by_id(&user_id).await?;
+
+        // We return the user object, for GraphCache interop
+        return Ok(user_object);
     }
 
     /// Adds a bookmark to the user's list of bookmarks.
@@ -697,6 +752,195 @@ impl Mutation {
             .update_document_metadata(document)
             .await?)
     }
+
+    /// Minimal mutation to add a document with only essential fields
+    #[graphql(
+        guard = "GroupGuard::new(UserGroup::Editors).or(GroupGuard::new(UserGroup::Contributors))"
+    )]
+    async fn add_document(
+        &self,
+        context: &Context<'_>,
+        input: CreateDocumentFromFormInput,
+    ) -> FieldResult<AddDocumentPayload> {
+        let title = input.document_name;
+        let user = context
+            .data_opt::<UserInfo>()
+            .ok_or_else(|| anyhow::format_err!("User is not signed in"))?;
+        let contributor = Contributor {
+            name: user.id.to_string(),
+            // defaulting to editor
+            role: Some(ContributorRole::Editor),
+        };
+        let today = dailp::chrono::Utc::now().date_naive();
+        let document_date = dailp::Date::new(today);
+        let document_id = Uuid::new_v4();
+        let short_name = dailp::slugify(&title).to_ascii_uppercase();
+        let source = SourceAttribution {
+            name: input.source_name,
+            link: input.source_url,
+        };
+        let mut sections = Vec::new();
+        for (i, eng_words) in input.english_translation_lines.iter().enumerate() {
+            let translation = Some(eng_words.join(" "));
+            let mut segs = Vec::new();
+            for (j, src_word) in input.raw_text_lines[i].iter().enumerate() {
+                let form = AnnotatedForm {
+                    id: None,
+                    source: src_word.clone(),
+                    normalized_source: None,
+                    simple_phonetics: None,
+                    phonemic: None,
+                    segments: None,
+                    english_gloss: vec![eng_words.get(j).cloned().unwrap_or_default()],
+                    commentary: None,
+                    line_break: None,
+                    page_break: None,
+                    position: PositionInDocument {
+                        document_id: dailp::DocumentId(document_id),
+                        page_number: "1".to_string(),
+                        index: j as i64,
+                        geometry: None,
+                    },
+                    date_recorded: None,
+                    ingested_audio_track: None,
+                };
+                segs.push(AnnotatedSeg::Word(form));
+            }
+            let section = TranslatedSection {
+                translation,
+                source: segs,
+            };
+            sections.push(section);
+        }
+        let page = TranslatedPage {
+            paragraphs: sections,
+        };
+        let meta = DocumentMetadata {
+            id: dailp::DocumentId(document_id),
+            short_name: short_name.clone(),
+            title: title.clone(),
+            sources: vec![source],
+            collection: None,
+            genre: None,
+            contributors: vec![contributor],
+            translation: None,
+            page_images: None,
+            date: Some(document_date),
+            is_reference: false,
+            audio_recording: None,
+            order_index: 0,
+        };
+        let annotated_doc = AnnotatedDoc {
+            meta: meta.clone(),
+            segments: Some(vec![page]),
+        };
+        let database = context.data::<DataLoader<Database>>()?.loader();
+        let (document_id, _chapter_id) = database
+            .insert_document_into_edited_collection(annotated_doc.clone(), input.collection_id)
+            .await?;
+
+        // Update the annotated_doc with the correct document_id from the database
+        let mut updated_annotated_doc = annotated_doc.clone();
+        updated_annotated_doc.meta.id = document_id;
+
+        // Insert the document contents (words and paragraphs) into the database
+        database
+            .insert_document_contents(updated_annotated_doc)
+            .await?;
+
+        Ok(AddDocumentPayload {
+            id: document_id.0,
+            title,
+            slug: short_name.clone(),
+            collection_slug: "user_documents".to_string(), // All user-created documents go to user_documents collection
+            chapter_slug: dailp::slugify_ltree(&short_name), // Chapter slug must be ltree-compatible
+        })
+    }
+
+    #[graphql(
+        guard = "GroupGuard::new(UserGroup::Contributors).or(GroupGuard::new(UserGroup::Editors))"
+    )]
+    async fn insert_custom_morpheme_tag(
+        &self,
+        context: &Context<'_>,
+        tag: String,
+        title: String,
+        system: String,
+    ) -> FieldResult<bool> {
+        //first get id of custom morpheme tag
+        let abstract_id = context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .insert_custom_abstract_tag(AbstractMorphemeTag {
+                //TODO: can just make it CUS once we remove the unique constraint
+                id: "CUS:".to_string() + &title,
+                morpheme_type: "custom".to_string(),
+            })
+            .await?;
+
+        //construct the morpheme tag
+        //todo: need to figure out why tag and title are the same thing :(
+        //its a frontend issue
+        let tag = MorphemeTag {
+            internal_tags: vec![abstract_id.to_string()],
+            tag: tag,
+            title: title.clone(),
+            shape: None,
+            details_url: None,
+            definition: title,
+            morpheme_type: String::new(),
+            role_override: None,
+        };
+
+        let system_id = context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .abbreviation_id_from_short_name("CUS")
+            .await?;
+
+        context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .insert_custom_morpheme_tag(tag, system_id)
+            .await?;
+        Ok(true)
+    }
+
+    #[graphql(
+        //TODO ADD ADMIN ROLES WHEN IT IS READY
+        guard = "GroupGuard::new(UserGroup::Editors)"
+    )]
+    async fn create_edited_collection(
+        &self,
+        context: &Context<'_>,
+        input: CreateEditedCollectionInput,
+    ) -> FieldResult<String> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .insert_edited_collection(input)
+            .await?
+            .to_string())
+    }
+
+    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    async fn upsert_page(&self, context: &Context<'_>, page: NewPageInput) -> FieldResult<String> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .upsert_page(page)
+            .await?)
+    }
+
+    // dennis todo: should be admin, but admin accs not implemented yet
+    #[graphql(guard = "GroupGuard::new(UserGroup::Editors)")]
+    async fn update_menu(&self, context: &Context<'_>, menu: MenuUpdate) -> FieldResult<Menu> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .update_menu(menu)
+            .await?)
+    }
 }
 
 #[derive(async_graphql::SimpleObject)]
@@ -704,4 +948,24 @@ struct FormsInTime {
     start: Option<dailp::Date>,
     end: Option<dailp::Date>,
     forms: Vec<dailp::AnnotatedForm>,
+}
+
+#[derive(async_graphql::InputObject, Debug, Clone)]
+pub struct CreateDocumentFromFormInput {
+    pub document_name: String,
+    pub raw_text_lines: Vec<Vec<String>>,
+    pub english_translation_lines: Vec<Vec<String>>,
+    pub unresolved_words: Vec<String>,
+    pub source_name: String,
+    pub source_url: String,
+    pub collection_id: Uuid,
+}
+
+#[derive(async_graphql::SimpleObject)]
+pub struct AddDocumentPayload {
+    pub id: Uuid,
+    pub title: String,
+    pub slug: String,
+    pub collection_slug: String,
+    pub chapter_slug: String,
 }

@@ -1,7 +1,9 @@
 import React, { useEffect } from "react"
 import { Helmet } from "react-helmet"
 import { navigate } from "vite-plugin-ssr/client/router"
+import { UserRole, useUserRole } from "src/auth"
 import { Link, WordpressPage } from "src/components"
+import * as Dailp from "src/graphql/dailp"
 import { useRouteParams } from "src/renderer/PageShell"
 import { chapterRoute } from "src/routes"
 import * as util from "src/style/utils.css"
@@ -9,40 +11,40 @@ import CWKWLayout from "../cwkw/cwkw-layout"
 import * as css from "../cwkw/cwkw-layout.css"
 import { useChapters, useDialog } from "./edited-collection-context"
 
-function redirectUrl(collectionSlug: string) {
-  if (collectionSlug != "cwkw") {
-    // Put here in case someone has one of these old collections bookmarked, but can remove if necessary
-    switch (collectionSlug) {
-      case "dollie-duncan-letters":
-        navigate("/collections/cwkw/dollie_duncan")
-        break
-      case "echota-funeral-notices":
-        navigate("/collections/cwkw/funeral_notices")
-        break
-      case "government documents":
-        navigate("/collections/cwkw/governance_documents")
-        break
-      default:
-        // TODO Don't go to a 404 page!!!!! first rule of 404s... jesus.
-        navigate("/404")
-    }
-  }
-}
-
 // Renders an edited collection page based on the route parameters.
 const EditedCollectionPage = () => {
   const { collectionSlug } = useRouteParams()
   const dialog = useDialog()
+  const userRole = useUserRole()
 
   const chapters = useChapters()
   const firstChapter = chapters ? chapters[0] : null
 
-  useEffect(() => {
-    redirectUrl(collectionSlug!)
-  }, [collectionSlug])
+  const [{ data: dailp }] = Dailp.useEditedCollectionsQuery()
+  let collection = dailp?.allEditedCollections.find(
+    ({ slug }) => slug === collectionSlug
+  )
 
-  if (collectionSlug != "cwkw") {
+  if (!collection) {
     return null
+  }
+
+  // Show loading state while determining user role
+  if (userRole === undefined) {
+    return (
+      <CWKWLayout>
+        <Helmet>
+          <meta name="robots" content="noindex,nofollow" />
+        </Helmet>
+        <main className={util.paddedCenterColumn}>
+          <article className={dialog.visible ? css.leftMargin : util.fullWidth}>
+            <div style={{ textAlign: "center", padding: "40px 20px" }}>
+              <p>Loading...</p>
+            </div>
+          </article>
+        </main>
+      </CWKWLayout>
+    )
   }
 
   return (
@@ -53,7 +55,16 @@ const EditedCollectionPage = () => {
       <main className={util.paddedCenterColumn}>
         <article className={dialog.visible ? css.leftMargin : util.fullWidth}>
           <header>
-            <h1>Cherokees Writing the Keetoowah Way</h1>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: "20px",
+              }}
+            >
+              <h1>{collection.title}</h1>
+            </div>
           </header>
 
           <h3>

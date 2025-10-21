@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "select id, title, wordpress_menu_id, slug\nfrom edited_collection\nwhere slug = any($1)",
+  "query": "update  menu\nset name = $2,\n    slug = $3,\n    items = $4\nwhere id = $1\nreturning *;\n",
   "describe": {
     "columns": [
       {
@@ -10,31 +10,34 @@
       },
       {
         "ordinal": 1,
-        "name": "title",
+        "name": "name",
         "type_info": "Text"
       },
       {
         "ordinal": 2,
-        "name": "wordpress_menu_id",
-        "type_info": "Int8"
+        "name": "slug",
+        "type_info": "Text"
       },
       {
         "ordinal": 3,
-        "name": "slug",
-        "type_info": "Text"
+        "name": "items",
+        "type_info": "Jsonb"
       }
     ],
     "parameters": {
       "Left": [
-        "TextArray"
+        "Uuid",
+        "Text",
+        "Text",
+        "Jsonb"
       ]
     },
     "nullable": [
       false,
       false,
-      true,
+      false,
       false
     ]
   },
-  "hash": "47b487e7f70a9c10dbf1bc17d2a975c2e6a7edf9f6c11f6e295b4adc25b9a351"
+  "hash": "ebd7ea3704612943925067787da8278820b2e69cfba662e56752a9da59cb449a"
 }

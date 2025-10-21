@@ -7,7 +7,7 @@ use sqlx::types::Uuid;
 #[derive(Clone, Eq, PartialEq, Hash, Serialize, Deserialize, Debug, async_graphql::NewType)]
 pub struct DocumentAudioId(pub String);
 
-// An ID for an audio slice
+/// An ID for an audio slice
 #[derive(Clone, Eq, PartialEq, Hash, Serialize, Deserialize, Debug, async_graphql::NewType)]
 pub struct AudioSliceId(pub String);
 

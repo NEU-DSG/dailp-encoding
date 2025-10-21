@@ -232,6 +232,62 @@ export const PanelLayout = (p: {
     )
   }
 
+  const handleAddEnglishGloss = () => {
+    if (p.segment && p.segment.__typename === "AnnotatedForm") {
+      // Store original segment count when entering edit mode
+      form.update("word", p.segment)
+
+      // Enter edit mode first to ensure form is initialized
+      setIsEditing(true)
+
+      // Add a small delay to ensure the form is fully initialized before adding segment
+      setTimeout(() => {
+        const currentWord = form.values.word as Dailp.FormFieldsFragment
+        const currentGloss = ""
+
+        // Update form with new segment
+        form.update("word", {
+          ...currentWord,
+          currentGloss,
+        })
+      }, 100)
+    }
+  }
+
+  const handleAddWordPart = () => {
+    if (p.segment && p.segment.__typename === "AnnotatedForm") {
+      // Store original segment count when entering edit mode
+      form.update("word", p.segment)
+
+      // Enter edit mode first to ensure form is initialized
+      setIsEditing(true)
+
+      // Add a small delay to ensure the form is fully initialized before adding segment
+      setTimeout(() => {
+        const currentWord = form.values.word as Dailp.FormFieldsFragment
+        const currentSegments = currentWord.segments || []
+
+        // Create blank segment with required fields
+        const newSegment = {
+          morpheme: "",
+          gloss: "?", // Standard for unanalyzed segments
+          role: Dailp.WordSegmentRole.Morpheme,
+          previousSeparator: "-",
+          matchingTag: null,
+        }
+
+        console.log("Adding new segment:", newSegment)
+        console.log("Current segments:", currentSegments)
+
+        // Update form with new segment
+        form.update("word", {
+          ...currentWord,
+          segments: [...currentSegments, newSegment],
+        })
+      }, 100)
+    }
+  }
+
   return (
     <div className={css.wordPanelContent}>
       <>{panel}</>
@@ -245,9 +301,11 @@ export const PanelLayout = (p: {
             Discard
           </SubtleButton>
         ) : (
-          <Button type="button" onClick={() => setIsCommenting(true)}>
-            Comment
-          </Button>
+          <>
+            <Button type="button" onClick={() => setIsCommenting(true)}>
+              Comment
+            </Button>
+          </>
         ))}
     </div>
   )
