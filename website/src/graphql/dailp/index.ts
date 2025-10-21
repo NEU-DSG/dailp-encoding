@@ -800,7 +800,6 @@ export type Mutation = {
    */
   readonly attachAudioToWord: AnnotatedForm
   readonly createEditedCollection: Scalars["String"]
-  /** Decide if a piece audio should be included in edited collection */
   /** Decide if a piece of document audio should be included in edited collection */
   readonly curateDocumentAudio: AnnotatedDoc
   /** Decide if a piece of word audio should be included in edited collection */
@@ -852,6 +851,7 @@ export type MutationAttachAudioToWordArgs = {
 export type MutationCreateEditedCollectionArgs = {
   input: CreateEditedCollectionInput
 }
+
 export type MutationCurateDocumentAudioArgs = {
   input: CurateDocumentAudioInput
 }
