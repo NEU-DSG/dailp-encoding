@@ -6,11 +6,11 @@ use dailp::{
     page::{NewPageInput, Page},
     slugify_ltree,
     user::{User, UserUpdate},
-    AnnotatedForm, AnnotatedSeg, AttachAudioToWordInput, CollectionChapter, Contributor,
-    ContributorRole, CreateEditedCollectionInput, CurateWordAudioInput, Date,
-    DeleteContributorAttribution, DocumentMetadata, DocumentMetadataUpdate, DocumentParagraph,
-    PositionInDocument, SourceAttribution, TranslatedPage, TranslatedSection,
-    UpdateContributorAttribution, Uuid,
+    AnnotatedForm, AnnotatedSeg, AttachAudioToDocumentInput, AttachAudioToWordInput,
+    CollectionChapter, Contributor, ContributorRole, CreateEditedCollectionInput,
+    CurateDocumentAudioInput, CurateWordAudioInput, Date, DeleteContributorAttribution,
+    DocumentMetadata, DocumentMetadataUpdate, DocumentParagraph, PositionInDocument,
+    SourceAttribution, TranslatedPage, TranslatedSection, UpdateContributorAttribution, Uuid,
 };
 use itertools::{Itertools, Position};
 
