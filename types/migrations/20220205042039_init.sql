@@ -3,13 +3,7 @@
 
 create extension if not exists "uuid-ossp";
 
--- Prevent error if migration is reapplied on database that already has autouuid
-do $$
-begin
-  if not exists (select 1 from pg_type where typname = 'autouuid') then
-    create domain autouuid as uuid default uuid_generate_v4 ();
-  end if;
-end$$;
+create domain autouuid uuid default uuid_generate_v4 ();
 
 -- Base website: Language > Group > Document
 -- CWKW: Collection > Chapter > Sub-chapter > Page + Document
