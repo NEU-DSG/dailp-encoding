@@ -10,7 +10,7 @@ use sqlx::postgres::PgValueRef;
 use uuid::Uuid;
 
 /// Represents the status of a suggestion made by a contributor
-#[derive(sqlx::Type, Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(sqlx::Type, Serialize, Deserialize, async_graphql::Enum, Debug, Clone, Copy, PartialEq, Eq)]
 #[sqlx(type_name = "approval_status", rename_all = "snake_case")]
 pub enum ApprovalStatus {
     /// Suggestion is still waiting for or undergoing review
