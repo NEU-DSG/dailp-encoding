@@ -23,6 +23,7 @@ import { CommentStateProvider } from "src/comment-state-context"
 import { AudioPlayer, Breadcrumbs, Button, Link } from "src/components"
 import { IconTextButton } from "src/components/button"
 import { CommentValueProvider } from "src/components/edit-comment-feature"
+import { DocumentAudioWithCurate } from "src/components/edit-word-audio/editor"
 import { RecordDocumentAudioPanel } from "src/components/record-document-audio-panel"
 import { useMediaQuery } from "src/custom-hooks"
 import { FormProvider as FormProviderDoc } from "src/edit-doc-data-form-context"
@@ -523,13 +524,14 @@ export const DocumentTitleHeader = (p: {
               {p.doc.userContributedAudio.map((audio, index) => (
                 <div
                   id={`user-contributed-document-audio-player-${index}`}
-                  className={css.audioContainer}
+                  className={css.documentAudioContainer}
                   key={index}
                 >
-                  <AudioPlayer
-                    style={{ flex: 1 }}
-                    audioUrl={audio.resourceUrl}
-                    showProgress
+                  {role === UserRole.Editor && (
+                    <>
+                  <DocumentAudioWithCurate
+                    documentId={p.doc.id}
+                    audio={audio}
                   />
                   {!isMobile && (
                     <div>
@@ -537,6 +539,23 @@ export const DocumentTitleHeader = (p: {
                         <Button>Download Audio</Button>
                       </a>
                     </div>
+                  )}
+                  </>
+                  )}
+                  {role === UserRole.Contributor && audio.includeInEditedCollection && (
+                    <>
+                    <AudioPlayer
+                      audioUrl={audio.resourceUrl}
+                      showProgress
+                    />
+                  {!isMobile && (
+                    <div>
+                      <a href={audio.resourceUrl}>
+                        <Button>Download Audio</Button>
+                      </a>
+                    </div>
+                  )}
+</>
                   )}
                 </div>
               ))}

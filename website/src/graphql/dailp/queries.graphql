@@ -30,11 +30,8 @@ fragment DocumentFields on AnnotatedDoc {
     name
     link
   }
-  # TODO: Should we put these fields on the AudioSliceFields fragment?
   editedAudio {
-    resourceUrl
-    startTime
-    endTime
+    ...AudioSliceFields
     recordedBy {
       displayName
     }
@@ -43,9 +40,7 @@ fragment DocumentFields on AnnotatedDoc {
     }
   }
   userContributedAudio {
-    resourceUrl
-    startTime
-    endTime
+    ...AudioSliceFields
     recordedBy {
       displayName
     }
@@ -457,6 +452,15 @@ mutation AttachAudioToWord($input: AttachAudioToWordInput!) {
         id
         displayName
       }
+    }
+  }
+}
+
+mutation CurateDocumentAudio($input: CurateDocumentAudioInput!) {
+  curateDocumentAudio(input: $input) {
+    id
+    editedAudio {
+      ...AudioSliceFields
     }
   }
 }

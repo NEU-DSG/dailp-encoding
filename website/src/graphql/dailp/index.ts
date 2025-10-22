@@ -1307,7 +1307,12 @@ export type DocumentFieldsFragment = {
     readonly editedAudio: ReadonlyArray<
       { readonly __typename?: "AudioSlice" } & Pick<
         AudioSlice,
-        "resourceUrl" | "startTime" | "endTime"
+        | "sliceId"
+        | "index"
+        | "resourceUrl"
+        | "startTime"
+        | "endTime"
+        | "includeInEditedCollection"
       > & {
           readonly recordedBy: Maybe<
             { readonly __typename?: "User" } & Pick<User, "displayName">
@@ -1320,7 +1325,12 @@ export type DocumentFieldsFragment = {
     readonly userContributedAudio: ReadonlyArray<
       { readonly __typename?: "AudioSlice" } & Pick<
         AudioSlice,
-        "resourceUrl" | "startTime" | "endTime"
+        | "sliceId"
+        | "index"
+        | "resourceUrl"
+        | "startTime"
+        | "endTime"
+        | "includeInEditedCollection"
       > & {
           readonly recordedBy: Maybe<
             { readonly __typename?: "User" } & Pick<User, "displayName">
@@ -1374,7 +1384,12 @@ export type AnnotatedDocumentQuery = { readonly __typename?: "Query" } & {
         readonly editedAudio: ReadonlyArray<
           { readonly __typename?: "AudioSlice" } & Pick<
             AudioSlice,
-            "resourceUrl" | "startTime" | "endTime"
+            | "sliceId"
+            | "index"
+            | "resourceUrl"
+            | "startTime"
+            | "endTime"
+            | "includeInEditedCollection"
           > & {
               readonly recordedBy: Maybe<
                 { readonly __typename?: "User" } & Pick<User, "displayName">
@@ -1387,7 +1402,12 @@ export type AnnotatedDocumentQuery = { readonly __typename?: "Query" } & {
         readonly userContributedAudio: ReadonlyArray<
           { readonly __typename?: "AudioSlice" } & Pick<
             AudioSlice,
-            "resourceUrl" | "startTime" | "endTime"
+            | "sliceId"
+            | "index"
+            | "resourceUrl"
+            | "startTime"
+            | "endTime"
+            | "includeInEditedCollection"
           > & {
               readonly recordedBy: Maybe<
                 { readonly __typename?: "User" } & Pick<User, "displayName">
@@ -2162,7 +2182,12 @@ export type CollectionChapterQuery = { readonly __typename?: "Query" } & {
               readonly editedAudio: ReadonlyArray<
                 { readonly __typename?: "AudioSlice" } & Pick<
                   AudioSlice,
-                  "resourceUrl" | "startTime" | "endTime"
+                  | "sliceId"
+                  | "index"
+                  | "resourceUrl"
+                  | "startTime"
+                  | "endTime"
+                  | "includeInEditedCollection"
                 > & {
                     readonly recordedBy: Maybe<
                       { readonly __typename?: "User" } & Pick<
@@ -2181,7 +2206,12 @@ export type CollectionChapterQuery = { readonly __typename?: "Query" } & {
               readonly userContributedAudio: ReadonlyArray<
                 { readonly __typename?: "AudioSlice" } & Pick<
                   AudioSlice,
-                  "resourceUrl" | "startTime" | "endTime"
+                  | "sliceId"
+                  | "index"
+                  | "resourceUrl"
+                  | "startTime"
+                  | "endTime"
+                  | "includeInEditedCollection"
                 > & {
                     readonly recordedBy: Maybe<
                       { readonly __typename?: "User" } & Pick<
@@ -2246,7 +2276,12 @@ export type BookmarkedDocumentsQuery = { readonly __typename?: "Query" } & {
         readonly editedAudio: ReadonlyArray<
           { readonly __typename?: "AudioSlice" } & Pick<
             AudioSlice,
-            "resourceUrl" | "startTime" | "endTime"
+            | "sliceId"
+            | "index"
+            | "resourceUrl"
+            | "startTime"
+            | "endTime"
+            | "includeInEditedCollection"
           > & {
               readonly recordedBy: Maybe<
                 { readonly __typename?: "User" } & Pick<User, "displayName">
@@ -2259,7 +2294,12 @@ export type BookmarkedDocumentsQuery = { readonly __typename?: "Query" } & {
         readonly userContributedAudio: ReadonlyArray<
           { readonly __typename?: "AudioSlice" } & Pick<
             AudioSlice,
-            "resourceUrl" | "startTime" | "endTime"
+            | "sliceId"
+            | "index"
+            | "resourceUrl"
+            | "startTime"
+            | "endTime"
+            | "includeInEditedCollection"
           > & {
               readonly recordedBy: Maybe<
                 { readonly __typename?: "User" } & Pick<User, "displayName">
@@ -2478,6 +2518,31 @@ export type AttachAudioToWordMutation = { readonly __typename?: "Mutation" } & {
               >
             >
           }
+      >
+    }
+}
+
+export type CurateDocumentAudioMutationVariables = Exact<{
+  input: CurateDocumentAudioInput
+}>
+
+export type CurateDocumentAudioMutation = {
+  readonly __typename?: "Mutation"
+} & {
+  readonly curateDocumentAudio: { readonly __typename?: "AnnotatedDoc" } & Pick<
+    AnnotatedDoc,
+    "id"
+  > & {
+      readonly editedAudio: ReadonlyArray<
+        { readonly __typename?: "AudioSlice" } & Pick<
+          AudioSlice,
+          | "sliceId"
+          | "index"
+          | "resourceUrl"
+          | "startTime"
+          | "endTime"
+          | "includeInEditedCollection"
+        >
       >
     }
 }
@@ -2939,6 +3004,16 @@ export type UpdateMenuMutation = { readonly __typename?: "Mutation" } & {
     }
 }
 
+export const AudioSliceFieldsFragmentDoc = gql`
+  fragment AudioSliceFields on AudioSlice {
+    sliceId
+    index
+    resourceUrl
+    startTime
+    endTime
+    includeInEditedCollection
+  }
+`
 export const DocumentFieldsFragmentDoc = gql`
   fragment DocumentFields on AnnotatedDoc {
     id
@@ -2956,9 +3031,7 @@ export const DocumentFieldsFragmentDoc = gql`
       link
     }
     editedAudio {
-      resourceUrl
-      startTime
-      endTime
+      ...AudioSliceFields
       recordedBy {
         displayName
       }
@@ -2967,9 +3040,7 @@ export const DocumentFieldsFragmentDoc = gql`
       }
     }
     userContributedAudio {
-      resourceUrl
-      startTime
-      endTime
+      ...AudioSliceFields
       recordedBy {
         displayName
       }
@@ -2996,16 +3067,6 @@ export const DocFormFieldsFragmentDoc = gql`
       month
       year
     }
-  }
-`
-export const AudioSliceFieldsFragmentDoc = gql`
-  fragment AudioSliceFields on AudioSlice {
-    sliceId
-    index
-    resourceUrl
-    startTime
-    endTime
-    includeInEditedCollection
   }
 `
 export const FormFieldsFragmentDoc = gql`
@@ -3145,6 +3206,7 @@ export const AnnotatedDocumentDocument = gql`
     }
   }
   ${DocumentFieldsFragmentDoc}
+  ${AudioSliceFieldsFragmentDoc}
 `
 
 export function useAnnotatedDocumentQuery(
@@ -3550,6 +3612,7 @@ export const CollectionChapterDocument = gql`
     }
   }
   ${DocumentFieldsFragmentDoc}
+  ${AudioSliceFieldsFragmentDoc}
 `
 
 export function useCollectionChapterQuery(
@@ -3566,6 +3629,7 @@ export const BookmarkedDocumentsDocument = gql`
     }
   }
   ${DocumentFieldsFragmentDoc}
+  ${AudioSliceFieldsFragmentDoc}
 `
 
 export function useBookmarkedDocumentsQuery(
@@ -3654,6 +3718,24 @@ export function useAttachAudioToWordMutation() {
     AttachAudioToWordMutation,
     AttachAudioToWordMutationVariables
   >(AttachAudioToWordDocument)
+}
+export const CurateDocumentAudioDocument = gql`
+  mutation CurateDocumentAudio($input: CurateDocumentAudioInput!) {
+    curateDocumentAudio(input: $input) {
+      id
+      editedAudio {
+        ...AudioSliceFields
+      }
+    }
+  }
+  ${AudioSliceFieldsFragmentDoc}
+`
+
+export function useCurateDocumentAudioMutation() {
+  return Urql.useMutation<
+    CurateDocumentAudioMutation,
+    CurateDocumentAudioMutationVariables
+  >(CurateDocumentAudioDocument)
 }
 export const CurateWordAudioDocument = gql`
   mutation CurateWordAudio($input: CurateWordAudioInput!) {
