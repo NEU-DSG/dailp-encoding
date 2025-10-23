@@ -1,6 +1,7 @@
-use crate::{user::User, Database, PersonFullName};
-use async_graphql::{SimpleObject, Union};
+use {crate::Database, crate::PersonFullName, crate::user::User};
 use serde::{Deserialize, Serialize};
+use async_graphql::{SimpleObject, Union, Context, FieldResult};
+use async_graphql::dataloader::DataLoader;
 
 /// Record for a DAILP admin
 #[derive(Clone, Debug, Serialize, Deserialize, async_graphql::SimpleObject)]
@@ -15,19 +16,14 @@ pub struct Admin {
 #[derive(Clone, Debug, Serialize, Deserialize, async_graphql::SimpleObject, PartialEq, Eq)]
 #[graphql(complex)]
 pub struct Contributor {
-    /// Full name of the contributor
+    /// UUID of the contributor
+    pub id: uuid::Uuid,
+    /// Name of the contributor (or alias if preferred)
     pub name: String,
+    /// Full name of the contributor (optional)
+    pub full_name: Option<String>,
     /// The role that defines most of their contributions to the associated item
     pub role: Option<ContributorRole>,
-}
-impl Contributor {
-    /// Create new contributor with the role "Author"
-    pub fn new_author(name: String) -> Self {
-        Self {
-            name,
-            role: Some(ContributorRole::Author),
-        }
-    }
 }
 
 #[async_graphql::ComplexObject]
@@ -103,14 +99,10 @@ pub enum ContributorRole {
     Transcriber,
     /// Translated text into another language
     Translator,
-    /// Edited the text or translation for clarity or structure
-    Editor,
     /// Added linguistic, cultural, etc. annotations
     Annotator,
     /// Provided cultural context for a document
     CulturalAdvisor,
-    /// Creator of a document
-    Author,
 }
 
 /// Draft of function for converting a string to a ContributorRole
@@ -120,9 +112,7 @@ impl std::str::FromStr for ContributorRole {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
             "annotator" => Ok(ContributorRole::Annotator),
-            "author" => Ok(ContributorRole::Author),
             "culturalAdvisior" => Ok(ContributorRole::CulturalAdvisor),
-            "editor" => Ok(ContributorRole::Editor),
             "transcriber" => Ok(ContributorRole::Transcriber),
             "translator" => Ok(ContributorRole::Translator),
             other => Err(format!("Unknown contributor role: {}", other)),
@@ -135,9 +125,7 @@ impl std::fmt::Display for ContributorRole {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let s = match self {
             ContributorRole::Annotator => "Annotator",
-            ContributorRole::Author => "Author",
             ContributorRole::CulturalAdvisor => "CulturalAdvisor",
-            ContributorRole::Editor => "Editor",
             ContributorRole::Translator => "Translator",
             ContributorRole::Transcriber => "Transcriber",
         };
@@ -161,6 +149,28 @@ impl ContributorRole {
     }
 }
 
+/// The creator of a document
+#[derive(async_graphql::SimpleObject, Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[graphql(complex)]
+pub struct Creator {
+    /// UUID of the creator
+    pub id: uuid::Uuid,
+    /// Name of the creator
+    pub name: String,
+}
+
+#[async_graphql::ComplexObject]
+impl Creator {
+    /// Creators of this document
+    async fn creators(&self, context: &async_graphql::Context<'_>) -> FieldResult<Vec<Creator>> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .load_one(crate::CreatorsForDocument(self.id))
+            .await?
+            .unwrap_or_default())
+    }
+}
+
 /// Attribution for a particular source, whether an institution or an individual.
 /// Most commonly, this will represent the details of a library or archive that
 /// houses documents used elsewhere.
@@ -169,6 +179,13 @@ pub struct SourceAttribution {
     /// Name of the source, i.e. "The Newberry Library"
     pub name: String,
     /// URL of this source's homepage, i.e. "https://www.newberry.org/"
+    pub link: String,
+}
+
+/// Source attribution used as input
+#[derive(async_graphql::InputObject, Clone, Debug, Serialize, Deserialize)]
+pub struct SourceAttributionInput {
+    pub name: String,
     pub link: String,
 }
 
