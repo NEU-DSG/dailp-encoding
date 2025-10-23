@@ -1,7 +1,7 @@
 import cx from "classnames"
 import { ReactElement, ReactNode } from "react"
 import { IconType } from "react-icons"
-import { FaMicrophone } from "react-icons/fa"
+import { FaMicrophone } from "react-icons/fa/index"
 import * as Dailp from "src/graphql/dailp"
 import { CollapsiblePanel } from "src/word-panel"
 import * as css from "../panel-layout.css"
