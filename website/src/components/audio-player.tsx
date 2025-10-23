@@ -97,10 +97,16 @@ const AudioPlayerImpl = (props: Props) => {
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column" , width: "100%" }}>
+    <div style={{ display: "flex", flexDirection: "column", width: "100%" }}>
       {props.contributor && props.recordedAt && (
         <div>
-          <span>Recorded by {props.contributor.length > 0 ? props.contributor : "Unknown Contributor"} on {props.recordedAt.toLocaleDateString()}</span>
+          <span>
+            Recorded by{" "}
+            {props.contributor.length > 0
+              ? props.contributor
+              : "Unknown Contributor"}{" "}
+            on {props.recordedAt.toLocaleDateString()}
+          </span>
         </div>
       )}
       <div className={css.audioElement} style={props.style}>

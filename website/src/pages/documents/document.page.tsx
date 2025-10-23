@@ -19,6 +19,7 @@ import {
 } from "reakit"
 import { navigate } from "vite-plugin-ssr/client/router"
 import { UserRole, useUser, useUserRole } from "src/auth"
+import { useUserId } from "src/auth"
 import { CommentStateProvider } from "src/comment-state-context"
 import { AudioPlayer, Breadcrumbs, Button, Link } from "src/components"
 import { IconTextButton } from "src/components/button"
@@ -48,7 +49,6 @@ import { mediaQueries } from "src/style/constants"
 import { BasicMorphemeSegment, LevelOfDetail } from "src/types"
 import PageImages from "../../page-image"
 import * as css from "./document.css"
-import { useUserId } from "src/auth"
 
 enum Tabs {
   ANNOTATION = "annotation-tab",
@@ -502,8 +502,12 @@ export const DocumentTitleHeader = (p: {
                   key={index}
                 >
                   <AudioPlayer
-                    contributor={audio.recordedBy?.displayName }
-                    recordedAt={audio.recordedAt?.formattedDate ? new Date(audio.recordedAt.formattedDate) : undefined}
+                    contributor={audio.recordedBy?.displayName}
+                    recordedAt={
+                      audio.recordedAt?.formattedDate
+                        ? new Date(audio.recordedAt.formattedDate)
+                        : undefined
+                    }
                     style={{ flex: 1 }}
                     audioUrl={audio.resourceUrl}
                     showProgress
@@ -519,25 +523,28 @@ export const DocumentTitleHeader = (p: {
               ))}
             </>
           )}
-          {
-            role === UserRole.Contributor && (
-              <>
-                <h3>User-contributed Audio:</h3>
-                {p.doc.userContributedAudio.map((audio, index) => (
-                  (audio.recordedBy?.id === userId) && (
+          {role === UserRole.Contributor && (
+            <>
+              <h3>User-contributed Audio:</h3>
+              {p.doc.userContributedAudio.map(
+                (audio, index) =>
+                  audio.recordedBy?.id === userId && (
                     <div key={index}>
-                      <AudioPlayer 
+                      <AudioPlayer
                         contributor={"you"}
-                        recordedAt={audio.recordedAt?.formattedDate ? new Date(audio.recordedAt.formattedDate) : undefined}
+                        recordedAt={
+                          audio.recordedAt?.formattedDate
+                            ? new Date(audio.recordedAt.formattedDate)
+                            : undefined
+                        }
                         audioUrl={audio.resourceUrl}
                         showProgress
                       />
                     </div>
                   )
-                ))}
-              </>
-            )
-          }
+              )}
+            </>
+          )}
           {role === UserRole.Editor && (
             <>
               <h3>User-contributed Audio:</h3>
@@ -550,8 +557,14 @@ export const DocumentTitleHeader = (p: {
                   {role === UserRole.Editor && (
                     <>
                       <DocumentAudioWithCurate
-                        contributor={audio.recordedBy?.displayName ?? "Unknown Contributor"}
-                        recordedAt={audio.recordedAt?.formattedDate ? new Date(audio.recordedAt.formattedDate) : undefined}
+                        contributor={
+                          audio.recordedBy?.displayName ?? "Unknown Contributor"
+                        }
+                        recordedAt={
+                          audio.recordedAt?.formattedDate
+                            ? new Date(audio.recordedAt.formattedDate)
+                            : undefined
+                        }
                         documentId={p.doc.id}
                         audio={audio}
                       />
