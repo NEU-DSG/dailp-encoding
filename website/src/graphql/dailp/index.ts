@@ -1315,7 +1315,7 @@ export type DocumentFieldsFragment = {
         | "includeInEditedCollection"
       > & {
           readonly recordedBy: Maybe<
-            { readonly __typename?: "User" } & Pick<User, "displayName">
+            { readonly __typename?: "User" } & Pick<User, "id" | "displayName">
           >
           readonly recordedAt: Maybe<
             { readonly __typename?: "Date" } & Pick<Date, "formattedDate">
@@ -1333,7 +1333,7 @@ export type DocumentFieldsFragment = {
         | "includeInEditedCollection"
       > & {
           readonly recordedBy: Maybe<
-            { readonly __typename?: "User" } & Pick<User, "displayName">
+            { readonly __typename?: "User" } & Pick<User, "id" | "displayName">
           >
           readonly recordedAt: Maybe<
             { readonly __typename?: "Date" } & Pick<Date, "formattedDate">
@@ -1353,7 +1353,7 @@ export type DocumentFieldsFragment = {
       ReadonlyArray<
         { readonly __typename?: "CollectionChapter" } & Pick<
           CollectionChapter,
-          "path"
+          "id" | "path"
         >
       >
     >
@@ -1392,7 +1392,10 @@ export type AnnotatedDocumentQuery = { readonly __typename?: "Query" } & {
             | "includeInEditedCollection"
           > & {
               readonly recordedBy: Maybe<
-                { readonly __typename?: "User" } & Pick<User, "displayName">
+                { readonly __typename?: "User" } & Pick<
+                  User,
+                  "id" | "displayName"
+                >
               >
               readonly recordedAt: Maybe<
                 { readonly __typename?: "Date" } & Pick<Date, "formattedDate">
@@ -1410,7 +1413,10 @@ export type AnnotatedDocumentQuery = { readonly __typename?: "Query" } & {
             | "includeInEditedCollection"
           > & {
               readonly recordedBy: Maybe<
-                { readonly __typename?: "User" } & Pick<User, "displayName">
+                { readonly __typename?: "User" } & Pick<
+                  User,
+                  "id" | "displayName"
+                >
               >
               readonly recordedAt: Maybe<
                 { readonly __typename?: "Date" } & Pick<Date, "formattedDate">
@@ -1430,7 +1436,7 @@ export type AnnotatedDocumentQuery = { readonly __typename?: "Query" } & {
           ReadonlyArray<
             { readonly __typename?: "CollectionChapter" } & Pick<
               CollectionChapter,
-              "path"
+              "id" | "path"
             >
           >
         >
@@ -1507,7 +1513,20 @@ export type DocumentContentsQuery = { readonly __typename?: "Query" } & {
                                   | "startTime"
                                   | "endTime"
                                   | "includeInEditedCollection"
-                                >
+                                > & {
+                                    readonly recordedBy: Maybe<
+                                      { readonly __typename?: "User" } & Pick<
+                                        User,
+                                        "id" | "displayName"
+                                      >
+                                    >
+                                    readonly recordedAt: Maybe<
+                                      { readonly __typename?: "Date" } & Pick<
+                                        Date,
+                                        "formattedDate"
+                                      >
+                                    >
+                                  }
                               >
                               readonly userContributedAudio: ReadonlyArray<
                                 { readonly __typename?: "AudioSlice" } & Pick<
@@ -1523,6 +1542,12 @@ export type DocumentContentsQuery = { readonly __typename?: "Query" } & {
                                       { readonly __typename?: "User" } & Pick<
                                         User,
                                         "id" | "displayName"
+                                      >
+                                    >
+                                    readonly recordedAt: Maybe<
+                                      { readonly __typename?: "Date" } & Pick<
+                                        Date,
+                                        "formattedDate"
                                       >
                                     >
                                   }
@@ -1594,7 +1619,20 @@ export type DocumentContentsQuery = { readonly __typename?: "Query" } & {
                   | "startTime"
                   | "endTime"
                   | "includeInEditedCollection"
-                >
+                > & {
+                    readonly recordedBy: Maybe<
+                      { readonly __typename?: "User" } & Pick<
+                        User,
+                        "id" | "displayName"
+                      >
+                    >
+                    readonly recordedAt: Maybe<
+                      { readonly __typename?: "Date" } & Pick<
+                        Date,
+                        "formattedDate"
+                      >
+                    >
+                  }
               >
               readonly userContributedAudio: ReadonlyArray<
                 { readonly __typename?: "AudioSlice" } & Pick<
@@ -1610,6 +1648,12 @@ export type DocumentContentsQuery = { readonly __typename?: "Query" } & {
                       { readonly __typename?: "User" } & Pick<
                         User,
                         "id" | "displayName"
+                      >
+                    >
+                    readonly recordedAt: Maybe<
+                      { readonly __typename?: "Date" } & Pick<
+                        Date,
+                        "formattedDate"
                       >
                     >
                   }
@@ -1693,7 +1737,20 @@ export type ParagraphFormFieldsFragment = {
                 | "startTime"
                 | "endTime"
                 | "includeInEditedCollection"
-              >
+              > & {
+                  readonly recordedBy: Maybe<
+                    { readonly __typename?: "User" } & Pick<
+                      User,
+                      "id" | "displayName"
+                    >
+                  >
+                  readonly recordedAt: Maybe<
+                    { readonly __typename?: "Date" } & Pick<
+                      Date,
+                      "formattedDate"
+                    >
+                  >
+                }
             >
             readonly userContributedAudio: ReadonlyArray<
               { readonly __typename?: "AudioSlice" } & Pick<
@@ -1709,6 +1766,12 @@ export type ParagraphFormFieldsFragment = {
                     { readonly __typename?: "User" } & Pick<
                       User,
                       "id" | "displayName"
+                    >
+                  >
+                  readonly recordedAt: Maybe<
+                    { readonly __typename?: "Date" } & Pick<
+                      Date,
+                      "formattedDate"
                     >
                   >
                 }
@@ -1776,7 +1839,14 @@ export type FormFieldsFragment = {
         | "startTime"
         | "endTime"
         | "includeInEditedCollection"
-      >
+      > & {
+          readonly recordedBy: Maybe<
+            { readonly __typename?: "User" } & Pick<User, "id" | "displayName">
+          >
+          readonly recordedAt: Maybe<
+            { readonly __typename?: "Date" } & Pick<Date, "formattedDate">
+          >
+        }
     >
     readonly userContributedAudio: ReadonlyArray<
       { readonly __typename?: "AudioSlice" } & Pick<
@@ -1790,6 +1860,9 @@ export type FormFieldsFragment = {
       > & {
           readonly recordedBy: Maybe<
             { readonly __typename?: "User" } & Pick<User, "id" | "displayName">
+          >
+          readonly recordedAt: Maybe<
+            { readonly __typename?: "Date" } & Pick<Date, "formattedDate">
           >
         }
     >
@@ -2113,7 +2186,20 @@ export type DocSliceQuery = { readonly __typename?: "Query" } & {
                   | "startTime"
                   | "endTime"
                   | "includeInEditedCollection"
-                >
+                > & {
+                    readonly recordedBy: Maybe<
+                      { readonly __typename?: "User" } & Pick<
+                        User,
+                        "id" | "displayName"
+                      >
+                    >
+                    readonly recordedAt: Maybe<
+                      { readonly __typename?: "Date" } & Pick<
+                        Date,
+                        "formattedDate"
+                      >
+                    >
+                  }
               >
               readonly userContributedAudio: ReadonlyArray<
                 { readonly __typename?: "AudioSlice" } & Pick<
@@ -2129,6 +2215,12 @@ export type DocSliceQuery = { readonly __typename?: "Query" } & {
                       { readonly __typename?: "User" } & Pick<
                         User,
                         "id" | "displayName"
+                      >
+                    >
+                    readonly recordedAt: Maybe<
+                      { readonly __typename?: "Date" } & Pick<
+                        Date,
+                        "formattedDate"
                       >
                     >
                   }
@@ -2192,7 +2284,7 @@ export type CollectionChapterQuery = { readonly __typename?: "Query" } & {
                     readonly recordedBy: Maybe<
                       { readonly __typename?: "User" } & Pick<
                         User,
-                        "displayName"
+                        "id" | "displayName"
                       >
                     >
                     readonly recordedAt: Maybe<
@@ -2216,7 +2308,7 @@ export type CollectionChapterQuery = { readonly __typename?: "Query" } & {
                     readonly recordedBy: Maybe<
                       { readonly __typename?: "User" } & Pick<
                         User,
-                        "displayName"
+                        "id" | "displayName"
                       >
                     >
                     readonly recordedAt: Maybe<
@@ -2243,7 +2335,7 @@ export type CollectionChapterQuery = { readonly __typename?: "Query" } & {
                 ReadonlyArray<
                   { readonly __typename?: "CollectionChapter" } & Pick<
                     CollectionChapter,
-                    "path"
+                    "id" | "path"
                   >
                 >
               >
@@ -2284,7 +2376,10 @@ export type BookmarkedDocumentsQuery = { readonly __typename?: "Query" } & {
             | "includeInEditedCollection"
           > & {
               readonly recordedBy: Maybe<
-                { readonly __typename?: "User" } & Pick<User, "displayName">
+                { readonly __typename?: "User" } & Pick<
+                  User,
+                  "id" | "displayName"
+                >
               >
               readonly recordedAt: Maybe<
                 { readonly __typename?: "Date" } & Pick<Date, "formattedDate">
@@ -2302,7 +2397,10 @@ export type BookmarkedDocumentsQuery = { readonly __typename?: "Query" } & {
             | "includeInEditedCollection"
           > & {
               readonly recordedBy: Maybe<
-                { readonly __typename?: "User" } & Pick<User, "displayName">
+                { readonly __typename?: "User" } & Pick<
+                  User,
+                  "id" | "displayName"
+                >
               >
               readonly recordedAt: Maybe<
                 { readonly __typename?: "Date" } & Pick<Date, "formattedDate">
@@ -2322,7 +2420,7 @@ export type BookmarkedDocumentsQuery = { readonly __typename?: "Query" } & {
           ReadonlyArray<
             { readonly __typename?: "CollectionChapter" } & Pick<
               CollectionChapter,
-              "path"
+              "id" | "path"
             >
           >
         >
@@ -2462,7 +2560,17 @@ export type UpdateWordMutation = { readonly __typename?: "Mutation" } & {
           | "startTime"
           | "endTime"
           | "includeInEditedCollection"
-        >
+        > & {
+            readonly recordedBy: Maybe<
+              { readonly __typename?: "User" } & Pick<
+                User,
+                "id" | "displayName"
+              >
+            >
+            readonly recordedAt: Maybe<
+              { readonly __typename?: "Date" } & Pick<Date, "formattedDate">
+            >
+          }
       >
       readonly userContributedAudio: ReadonlyArray<
         { readonly __typename?: "AudioSlice" } & Pick<
@@ -2479,6 +2587,9 @@ export type UpdateWordMutation = { readonly __typename?: "Mutation" } & {
                 User,
                 "id" | "displayName"
               >
+            >
+            readonly recordedAt: Maybe<
+              { readonly __typename?: "Date" } & Pick<Date, "formattedDate">
             >
           }
       >
@@ -3033,6 +3144,7 @@ export const DocumentFieldsFragmentDoc = gql`
     editedAudio {
       ...AudioSliceFields
       recordedBy {
+        id
         displayName
       }
       recordedAt {
@@ -3042,6 +3154,7 @@ export const DocumentFieldsFragmentDoc = gql`
     userContributedAudio {
       ...AudioSliceFields
       recordedBy {
+        id
         displayName
       }
       recordedAt {
@@ -3054,6 +3167,7 @@ export const DocumentFieldsFragmentDoc = gql`
       }
     }
     chapters {
+      id
       path
     }
   }
@@ -3094,12 +3208,22 @@ export const FormFieldsFragmentDoc = gql`
     }
     editedAudio {
       ...AudioSliceFields
+      recordedBy {
+        id
+        displayName
+      }
+      recordedAt {
+        formattedDate
+      }
     }
     userContributedAudio {
       ...AudioSliceFields
       recordedBy {
         id
         displayName
+      }
+      recordedAt {
+        formattedDate
       }
     }
     position {

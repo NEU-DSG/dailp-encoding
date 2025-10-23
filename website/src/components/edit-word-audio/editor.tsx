@@ -1,6 +1,6 @@
 import { FormEvent } from "react"
-import { AudioPlayer } from "../"
 import { useState } from "react"
+import { AudioPlayer } from "../"
 import * as Dailp from "../../graphql/dailp"
 
 export function EditorEditWordAudio(p: { word: Dailp.FormFieldsFragment }) {
@@ -72,10 +72,14 @@ export function WordAudioWithCurate({
 }
 
 export function DocumentAudioWithCurate({
+  contributor,
+  recordedAt,
   documentId,
   audio,
 }: {
   documentId: string
+  contributor: string | undefined
+  recordedAt: Date | undefined
   audio: Dailp.AudioSliceFieldsFragment
 }) {
   const [_res, curateDocumentAudio] = Dailp.useCurateDocumentAudioMutation()
@@ -93,9 +97,11 @@ export function DocumentAudioWithCurate({
     })
   }
   return (
-    <div style={{ display: "flex", flex:1 }}>
+    <div style={{ display: "flex", flex: 1 }}>
       <div style={{ flex: 1 }}>
         <AudioPlayer
+          contributor={contributor}
+          recordedAt={recordedAt}
           audioUrl={audio.resourceUrl}
           slices={
             audio.startTime && audio.endTime
@@ -112,11 +118,7 @@ export function DocumentAudioWithCurate({
       <div style={{ flex: 0, width: "max-content" }}>
         <label>
           Show to readers?
-          <input
-            type="checkbox"
-            checked={checked}
-            onChange={onChange}
-          />
+          <input type="checkbox" checked={checked} onChange={onChange} />
         </label>
       </div>
     </div>

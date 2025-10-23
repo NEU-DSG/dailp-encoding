@@ -33,6 +33,7 @@ fragment DocumentFields on AnnotatedDoc {
   editedAudio {
     ...AudioSliceFields
     recordedBy {
+      id
       displayName
     }
     recordedAt {
@@ -42,6 +43,7 @@ fragment DocumentFields on AnnotatedDoc {
   userContributedAudio {
     ...AudioSliceFields
     recordedBy {
+      id
       displayName
     }
     recordedAt {
@@ -54,6 +56,7 @@ fragment DocumentFields on AnnotatedDoc {
     }
   }
   chapters {
+    id
     path
   }
 }
@@ -161,12 +164,22 @@ fragment FormFields on AnnotatedForm {
   }
   editedAudio {
     ...AudioSliceFields
+    recordedBy {
+      id
+      displayName
+    }
+    recordedAt {
+      formattedDate
+    }
   }
   userContributedAudio {
     ...AudioSliceFields
     recordedBy {
       id
       displayName
+    }
+    recordedAt {
+      formattedDate
     }
   }
   position {

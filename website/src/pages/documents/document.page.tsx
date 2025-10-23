@@ -48,6 +48,7 @@ import { mediaQueries } from "src/style/constants"
 import { BasicMorphemeSegment, LevelOfDetail } from "src/types"
 import PageImages from "../../page-image"
 import * as css from "./document.css"
+import { useUserId } from "src/auth"
 
 enum Tabs {
   ANNOTATION = "annotation-tab",
@@ -449,6 +450,7 @@ export const DocumentTitleHeader = (p: {
   doc: Dailp.DocumentFieldsFragment
 }) => {
   const { user } = useUser()
+  const userId = useUserId()
   const role = useUserRole()
   return (
     <header className={css.docHeader}>
@@ -489,7 +491,8 @@ export const DocumentTitleHeader = (p: {
       </div>
       <div id="audio-and-recording-container">
         <div>
-          {p.doc.editedAudio.length > 0 && (
+          {/* only show document audio to non-editors , editors can see which ones are shown from checkmark*/}
+          {p.doc.editedAudio.length > 0 && role !== UserRole.Editor && (
             <>
               <h3>Document Audio:</h3>
               {p.doc.editedAudio.map((audio, index) => (
@@ -499,6 +502,8 @@ export const DocumentTitleHeader = (p: {
                   key={index}
                 >
                   <AudioPlayer
+                    contributor={audio.recordedBy?.displayName }
+                    recordedAt={audio.recordedAt?.formattedDate ? new Date(audio.recordedAt.formattedDate) : undefined}
                     style={{ flex: 1 }}
                     audioUrl={audio.resourceUrl}
                     showProgress
@@ -514,11 +519,26 @@ export const DocumentTitleHeader = (p: {
               ))}
             </>
           )}
-          {/* 
-            TODO: Should we be checking for a specific set of user roles? 
-            How do we do this elsewhere? 
-          */}
-          {role !== UserRole.Reader && (
+          {
+            role === UserRole.Contributor && (
+              <>
+                <h3>User-contributed Audio:</h3>
+                {p.doc.userContributedAudio.map((audio, index) => (
+                  (audio.recordedBy?.id === userId) && (
+                    <div key={index}>
+                      <AudioPlayer 
+                        contributor={"you"}
+                        recordedAt={audio.recordedAt?.formattedDate ? new Date(audio.recordedAt.formattedDate) : undefined}
+                        audioUrl={audio.resourceUrl}
+                        showProgress
+                      />
+                    </div>
+                  )
+                ))}
+              </>
+            )
+          }
+          {role === UserRole.Editor && (
             <>
               <h3>User-contributed Audio:</h3>
               {p.doc.userContributedAudio.map((audio, index) => (
@@ -529,33 +549,20 @@ export const DocumentTitleHeader = (p: {
                 >
                   {role === UserRole.Editor && (
                     <>
-                  <DocumentAudioWithCurate
-                    documentId={p.doc.id}
-                    audio={audio}
-                  />
-                  {!isMobile && (
-                    <div>
-                      <a href={audio.resourceUrl}>
-                        <Button>Download Audio</Button>
-                      </a>
-                    </div>
-                  )}
-                  </>
-                  )}
-                  {role === UserRole.Contributor && audio.includeInEditedCollection && (
-                    <>
-                    <AudioPlayer
-                      audioUrl={audio.resourceUrl}
-                      showProgress
-                    />
-                  {!isMobile && (
-                    <div>
-                      <a href={audio.resourceUrl}>
-                        <Button>Download Audio</Button>
-                      </a>
-                    </div>
-                  )}
-</>
+                      <DocumentAudioWithCurate
+                        contributor={audio.recordedBy?.displayName ?? "Unknown Contributor"}
+                        recordedAt={audio.recordedAt?.formattedDate ? new Date(audio.recordedAt.formattedDate) : undefined}
+                        documentId={p.doc.id}
+                        audio={audio}
+                      />
+                      {!isMobile && (
+                        <div>
+                          <a href={audio.resourceUrl}>
+                            <Button>Download Audio</Button>
+                          </a>
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               ))}

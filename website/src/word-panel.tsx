@@ -580,6 +580,14 @@ export const WordAudio = (p: { word: Dailp.FormFieldsFragment }) => {
     <>
       {p.word.editedAudio.map((audioTrack) => (
         <AudioPlayer
+          contributor={
+            audioTrack.recordedBy?.displayName ?? "Unknown Contributor"
+          }
+          recordedAt={
+            audioTrack.recordedAt?.formattedDate
+              ? new Date(audioTrack.recordedAt.formattedDate)
+              : new Date()
+          }
           audioUrl={audioTrack.resourceUrl}
           slices={
             audioTrack.startTime !== undefined &&
