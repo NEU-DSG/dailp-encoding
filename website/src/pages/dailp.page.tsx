@@ -1,10 +1,10 @@
 import React from "react"
+import { navigate } from "vite-plugin-ssr/client/router"
+import { UserRole, useUserRole } from "src/auth"
 import { PageContents } from "src/components/wordpress"
 import { useMenuBySlugQuery, usePageByPathQuery } from "src/graphql/dailp"
 import { edgePadded, fullWidth } from "src/style/utils.css"
 import Layout from "../layout"
-import { navigate } from "vite-plugin-ssr/client/router"
-import { useUserRole, UserRole } from "src/auth"
 
 interface DailpPageProps {
   "*": string
@@ -39,8 +39,11 @@ const Contents = (props: { path: string }) => {
     firstBlock?.__typename === "Markdown" ? firstBlock.content : null
 
   const isInMenu = (slug: string) => {
-    //console.log("menu", menu?.items?.flatMap((item) => item.items))
-    return menu?.items?.flatMap((item) => item.items).some((item) => item?.path === slug) ?? false
+    return (
+      menu?.items
+        ?.flatMap((item) => item.items)
+        .some((item) => item?.path === slug) ?? false
+    )
   }
 
   if (fetching) {
@@ -52,8 +55,6 @@ const Contents = (props: { path: string }) => {
   }
 
   if (!isInMenu(props.path)) {
-    console.log("page not in menu", props.path)
-    console.log("menu", menu?.items?.flatMap((item) => item.items))
     return <p>Page content found. Add it to the menu to view it.</p>
   }
 
@@ -63,10 +64,10 @@ const Contents = (props: { path: string }) => {
     <>
       <header>
         <h1>{page.title}</h1>
-          {/* dennis todo: should be admin in the future */}
-          {userRole===UserRole.Editor && (
-            <button onClick={() => navigate(`/edit${props.path}`)}>Edit</button>
-          )}
+        {/* dennis todo: should be admin in the future */}
+        {userRole === UserRole.Editor && (
+          <button onClick={() => navigate(`/edit${props.path}`)}>Edit</button>
+        )}
       </header>
       <PageContents content={content} />
     </>
