@@ -6,47 +6,38 @@ import { S3Uploader } from "../../utils/s3"
 
 type UploadAudioState = "ready" | "uploading" | "error"
 
-export function useAudioUpload(wordId: string) {
+export function useAudioUpload(
+  processUploadedAudio: (resourceUrl: string) => Promise<boolean>
+) {
   const [uploadAudioState, setUploadAudioState] =
     useState<UploadAudioState>("ready")
   const { user } = useUser()
-  const [_contributeAudioResult, contributeAudio] =
-    Dailp.useAttachAudioToWordMutation()
 
   /**
    * Try to upload the audio.
    *
    * Returns success boolean and updates state to ready or error
    */
-  const uploadAudio = useMemo(
-    () =>
-      async function (data: Blob) {
-        setUploadAudioState("uploading")
-        try {
-          const { resourceUrl } = await uploadContributorAudioToS3(user!, data)
-          // const resourceUrl = "https://" + prompt("url?")
-          const result = await contributeAudio({
-            input: {
-              wordId,
-              contributorAudioUrl: resourceUrl,
-            },
-          })
-          if (result.error) {
-            console.log(result.error)
-            setUploadAudioState("error")
-            return false
-          }
-        } catch (error) {
-          console.log(error)
-          setUploadAudioState("error")
-          return false
-        }
+  async function uploadAudio(data: Blob) {
+    setUploadAudioState("uploading")
+    try {
+      const { resourceUrl } = await uploadContributorAudioToS3(user!, data)
+      // const resourceUrl = "https://" + prompt("url?")
+      const success = await processUploadedAudio(resourceUrl)
+      if (!success) {
+        console.log("Failed to process uploaded audio at", resourceUrl)
+        setUploadAudioState("error")
+        return false
+      }
+    } catch (error) {
+      console.log(error)
+      setUploadAudioState("error")
+      return false
+    }
 
-        setUploadAudioState("ready")
-        return true
-      },
-    [user, contributeAudio, wordId]
-  )
+    setUploadAudioState("ready")
+    return true
+  }
 
   function clearError() {
     // only map "error" -> "ready" otherwise do nothing
