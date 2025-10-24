@@ -1,1 +1,1 @@
-export default "/edit/@name"
+export default "/edit/*"

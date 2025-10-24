@@ -13,7 +13,7 @@ const NewPage = () => {
   const [title, setTitle] = useState("")
   const [content, setContent] = useState("")
   const [error, setError] = useState<string | null>(null)
-  const [path, setPath] = useState("/" + useRouteParams()["name"])
+  const [path, setPath] = useState("/" + useRouteParams()["*"])
   const formatPath = (path: string) => {
     return path.startsWith("/")
       ? path
