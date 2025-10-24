@@ -14,7 +14,6 @@ const NewPage = () => {
   const [content, setContent] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [path, setPath] = useState("/" + useRouteParams()["name"])
-  console.log("path", path)
   const formatPath = (path: string) => {
     return path.startsWith("/")
       ? path
@@ -30,7 +29,6 @@ const NewPage = () => {
   })
   useEffect(() => {
     if (data?.pageByPath?.body?.[0]?.__typename === "Markdown") {
-      console.log("DENNIS", data?.pageByPath)
       setTitle(data?.pageByPath?.title ?? "")
       setContent(data?.pageByPath?.body?.[0]?.content ?? "")
     }
@@ -75,10 +73,10 @@ const NewPage = () => {
   const isHtml = content.charAt(0) === "<"
 
   return (
-    <Layout>
-      <main>
-        <AuthGuard requiredRole={UserRole.Editor}>
-          <p>New content page</p>
+    <AuthGuard requiredRole={UserRole.Editor}>
+      <Layout>
+        <main>
+          <h1>New content page</h1>
           {error && <p>{error}</p>}
           <form
             onSubmit={handleSubmit}
@@ -136,9 +134,9 @@ const NewPage = () => {
               Save
             </button>
           </form>
-        </AuthGuard>
-      </main>
-    </Layout>
+        </main>
+      </Layout>
+    </AuthGuard>
   )
 }
 
