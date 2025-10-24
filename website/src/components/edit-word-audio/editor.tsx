@@ -15,7 +15,16 @@ export function EditorEditWordAudio(p: { word: Dailp.FormFieldsFragment }) {
         {allAudio.length === 0
           ? "No audio available for this word."
           : allAudio.map((audio) => (
-              <WordAudioWithCurate wordId={p.word.id} audio={audio} />
+              <WordAudioWithCurate
+                wordId={p.word.id}
+                audio={audio}
+                contributor={audio.recordedBy?.displayName}
+                recordedAt={
+                  audio.recordedAt
+                    ? new Date(audio.recordedAt.formattedDate)
+                    : undefined
+                }
+              />
             ))}
       </ul>
     </div>
@@ -25,9 +34,13 @@ export function EditorEditWordAudio(p: { word: Dailp.FormFieldsFragment }) {
 export function WordAudioWithCurate({
   wordId,
   audio,
+  contributor,
+  recordedAt,
 }: {
   wordId: string
   audio: Dailp.AudioSliceFieldsFragment
+  contributor: string | undefined
+  recordedAt: Date | undefined
 }) {
   const [_res, curateWordAudio] = Dailp.useCurateWordAudioMutation()
 
@@ -46,6 +59,8 @@ export function WordAudioWithCurate({
       <div style={{ flex: 1 }}>
         <AudioPlayer
           audioUrl={audio.resourceUrl}
+          contributor={contributor}
+          recordedAt={recordedAt}
           slices={
             audio.startTime && audio.endTime
               ? {

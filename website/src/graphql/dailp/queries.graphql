@@ -107,6 +107,12 @@ fragment AudioSliceFields on AudioSlice {
   startTime
   endTime
   includeInEditedCollection
+  recordedBy {
+    displayName
+  }
+  recordedAt {
+    formattedDate
+  }
 }
 
 fragment DocFormFields on AnnotatedDoc {
