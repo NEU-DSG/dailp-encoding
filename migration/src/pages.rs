@@ -36,6 +36,17 @@ pub fn load_pages(file_path: &str) -> Result<Vec<NewPageInput>, anyhow::Error> {
     let mut reader = ReaderBuilder::new().from_reader(file);
 
     let mut pages = Vec::new();
+    for result in reader.deserialize() {
+        let row: CsvRow = result?;
+        //println!("row: {:?}", row);
+        let page: NewPageInput = NewPageInput {
+            title: row.title,
+            body: vec![row.content],
+            path: row.path,
+        };
+        //println!("result: {:?}", page);
+        pages.push(page);
+    }
     for (idx, result) in reader.deserialize::<CsvRow>().enumerate() {
         match result {
             Ok(row) => {
