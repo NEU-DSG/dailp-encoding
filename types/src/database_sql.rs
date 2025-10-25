@@ -2245,7 +2245,7 @@ pub async fn format_by_id(&self, format_id: &Uuid) -> Result<Format> {
 /// Get all keywords associated with a document
 pub async fn keywords_by_document_id(&self, document_id: &Uuid) -> Result<Vec<Keyword>> {
     let rows = query_file_as!(
-        BasicKeyword,
+        Keyword,
         "queries/get_keywords_by_document_id.sql",
         document_id
     )
@@ -2258,7 +2258,7 @@ pub async fn keywords_by_document_id(&self, document_id: &Uuid) -> Result<Vec<Ke
 /// Get all subject headings associated with a document
 pub async fn subject_headings_by_document_id(&self, document_id: &Uuid) -> Result<Vec<SubjectHeading>> {
     let rows = query_file_as!(
-        BasicSubjectHeading,
+        SubjectHeading,
         "queries/get_subject_headings_by_document_id.sql",
         document_id
     )
@@ -2271,7 +2271,7 @@ pub async fn subject_headings_by_document_id(&self, document_id: &Uuid) -> Resul
 /// Get all languages associated with a document
 pub async fn languages_by_document_id(&self, document_id: &Uuid) -> Result<Vec<Language>> {
     let rows = query_file_as!(
-        BasicLanguage,
+        Language,
         "queries/get_languages_by_document_id.sql",
         document_id
     )
@@ -2284,7 +2284,7 @@ pub async fn languages_by_document_id(&self, document_id: &Uuid) -> Result<Vec<L
 /// Get all spatial coverages associated with a document
 pub async fn spatial_coverages_by_document_id(&self, document_id: &Uuid) -> Result<Vec<SpatialCoverage>> {
     let rows = query_file_as!(
-        BasicSpatialCoverage,
+        SpatialCoverage,
         "queries/get_spatial_coverages_by_document_id.sql",
         document_id
     )

@@ -298,17 +298,17 @@ impl AnnotatedDoc {
     }
 
     /// The places mentioned in or associated with this document
-   async fn spatial_coverages_ds(&self) -> &Option<Vec<SpatialCoverage>> {
+   async fn spatial_coverage_ids(&self) -> &Option<Vec<SpatialCoverage>> {
         self.meta.spatial_coverage_ids
     }
 
-    async fn spatial_coverages(
+    async fn spatial_coverage(
         &self,
         context: &async_graphql::Context<'_>,
     ) -> FieldResult<Vec<SpatialCoverage>> {
         Ok(context
             .data::<DataLoader<Database>>()?
-            .load_one(crate::SpatialCoveragesForDocument(self.meta.id.0))
+            .load_one(crate::SpatialCoverageForDocument(self.meta.id.0))
             .await?
             .unwrap_or_default())
     }
@@ -668,10 +668,10 @@ impl DocumentMetadata {
         Ok(rows)
     }
     
-    /// Fetch all spatial coverages linked to this document
-    async fn spatial_coverages(&self, ctx: &Context<'_>) -> Result<Vec<SpatialCoverage>> {
+    /// Fetch all spatial coverage linked to this document
+    async fn spatial_coverage(&self, ctx: &Context<'_>) -> Result<Vec<SpatialCoverage>> {
         let pool = ctx.data::<PgPool>()?;
-        let rows = query_file_as!(SpatialCoverage, "queries/get_spatial_coverages_by_document_id.sql", self.id.0)
+        let rows = query_file_as!(SpatialCoverage, "queries/get_spatial_coverage_by_document_id.sql", self.id.0)
             .fetch_all(pool)
             .await?;
         Ok(rows)
