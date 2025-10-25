@@ -1,4 +1,3 @@
-use crate::GenreById;
 use crate::{
     auth::UserInfo, comment::Comment, date::DateInput, slugify, AnnotatedForm, AudioSlice,
     Database, Date, Translation, TranslationBlock,
@@ -586,7 +585,7 @@ pub struct DocumentMetadata {
     /// The creator(s) of the document
     pub creators_ids: Option<Vec<Uuid>>,
     /// The people involved in collecting, translating, annotating.
-    pub contributors: Vec<Contributor>,
+    pub contributors_ids: Option<Vec<Uuid>>,
     /// The key terms associated with this document
     pub keywords_ids: Option<Vec<Uuid>>,
     /// Terms that reflect Indigenous knowledge practices related to this document

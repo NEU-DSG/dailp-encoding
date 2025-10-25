@@ -1759,7 +1759,7 @@ impl Loader<DocumentId> for Database {
                         }),
                     }),
                     collection: None,
-                    contributors_ids: item
+                    contributors: item
                         .contributors
                         .and_then(|x| serde_json::from_value(x).ok())
                         .unwrap_or_default(),
@@ -1838,7 +1838,7 @@ impl Loader<DocumentShortName> for Database {
                         }),
                     }),
                     collection: None,
-                    contributors_ids: item
+                    contributors: item
                         .contributors
                         .and_then(|x| serde_json::from_value(x).ok())
                         .unwrap_or_default(),
@@ -2155,6 +2155,7 @@ impl Loader<ContributorsForDocument> for Database {
                     ContributorsForDocument(x.document_id),
                     Contributor {
                         id: x.id,
+                        name: x.name,
                         full_name: Some(x.full_name),
                         role: x
                             .contribution_role
@@ -2198,193 +2199,112 @@ impl Loader<PersonFullName> for Database {
     }
 }
 
-// Genre
-#[derive(Eq, PartialEq, Hash, Clone, Copy, Debug)]
-pub struct GenreById(pub Uuid);
+// Get a document genre by its ID
+pub async fn genre_by_id(&self, genre_id: &Uuid) -> Result<Genre> {
+    let row = query_file!(
+        "queries/get_genre_by_id.sql",
+        genre_id
+    )
+    .fetch_one(&self.client)
+    .await?;
 
-#[async_trait]
-impl Loader<GenreById> for Database {
-    type Value = Genre;
-    type Error = Arc<sqlx::Error>;
+    // Convert status string to enum
+    let status = row
+        .status
+        .as_ref()
+        .and_then(|s| ApprovalStatus::try_from(s.clone()).ok());
 
-    async fn load(
-        &self,
-        keys: &[GenreById],
-    ) -> Result<HashMap<GenreById, Self::Value>, Self::Error> {
-        let mut result = HashMap::new();
-
-        for key in keys {
-            let id = key.0;
-            let row = sqlx::query_file_as!(Genre, "queries/get_genre_by_id.sql", id)
-                .fetch_optional(&self.client)
-                .await?;
-
-            if let Some(x) = row {
-                // Convert status if present
-                let status = x.status
-                    .as_ref()
-                    .and_then(|s| ApprovalStatus::try_from(s.clone()).ok());
-
-                result.insert(
-                    GenreById(x.id),
-                    Genre {
-                        id: x.id,
-                        name: x.name,
-                        status,
-                    },
-                );
-            }
-            if row.is_none() {
-                return Err(Arc::new(sqlx::Error::RowNotFound));
-            }
-        }
-        Ok(result)
-    }
+    Ok(Genre {
+        id: row.id,
+        name: row.name,
+        status,
+    })
 }
 
-// Format
-#[derive(Eq, PartialEq, Hash, Clone, Copy, Debug)]
-pub struct FormatById(pub Uuid);
+// Get a document format by its ID
+pub async fn format_by_id(&self, format_id: &Uuid) -> Result<Format> {
+    let row = query_file!(
+        "queries/get_format_by_id.sql",
+        format_id
+    )
+    .fetch_one(&self.client)
+    .await?;
 
-#[async_trait]
-impl Loader<FormatById> for Database {
-    type Value = Format;
-    type Error = Arc<sqlx::Error>;
+    let status = row
+        .status
+        .as_ref()
+        .and_then(|s| ApprovalStatus::try_from(s.clone()).ok());
 
-    async fn load(
-        &self,
-        keys: &[FormatById],
-    ) -> Result<HashMap<FormatById, Self::Value>, Self::Error> {
-        let id = keys[0].0;
-        let items = sqlx::query_file_as!(Format, "queries/get_format_by_id.sql", id)
-            .fetch_all(&self.client)
-            .await?;
-        Ok(items
-            .into_iter()
-            .map(|x| (FormatById(x.id), Format { id: x.id, name: x.name, status: x.status }))
-            .collect())
-    }
+    Ok(Format {
+        id: row.id,
+        name: row.name,
+        status,
+    })
 }
 
-// Keywords
-#[derive(Eq, PartialEq, Hash, Clone, Copy, Debug)]
-pub struct KeywordsForDocument(pub Uuid);
+/// Get all keywords associated with a document
+pub async fn keywords_by_document_id(&self, document_id: &Uuid) -> Result<Vec<Keyword>> {
+    let rows = query_file_as!(
+        BasicKeyword,
+        "queries/get_keywords_by_document_id.sql",
+        document_id
+    )
+    .fetch_all(&self.client)
+    .await?;
 
-#[async_trait]
-impl Loader<KeywordsForDocument> for Database {
-    type Value = Vec<Keyword>;
-    type Error = Arc<sqlx::Error>;
-
-    async fn load(
-        &self,
-        keys: &[KeywordsForDocument],
-    ) -> Result<HashMap<KeywordsForDocument, Self::Value>, Self::Error> {
-        let keys: Vec<_> = keys.iter().map(|k| k.0).collect();
-        let items = query_file!("queries/get_keywords_by_document_id.sql", &keys)
-            .fetch_all(&self.client)
-            .await?;
-        Ok(items
-            .into_iter()
-            .map(|x| (KeywordsForDocument(x.document_id), Keyword { id: x.id, name: x.name, status: x.status }))
-            .into_group_map())
-    }
+    Ok(rows.into_iter().map(Into::into).collect())
 }
 
-// Subject Headings
-#[derive(Eq, PartialEq, Hash, Clone, Copy, Debug)]
-pub struct SubjectHeadingsForDocument(pub Uuid);
+/// Get all subject headings associated with a document
+pub async fn subject_headings_by_document_id(&self, document_id: &Uuid) -> Result<Vec<SubjectHeading>> {
+    let rows = query_file_as!(
+        BasicSubjectHeading,
+        "queries/get_subject_headings_by_document_id.sql",
+        document_id
+    )
+    .fetch_all(&self.client)
+    .await?;
 
-#[async_trait]
-impl Loader<SubjectHeadingsForDocument> for Database {
-    type Value = Vec<SubjectHeading>;
-    type Error = Arc<sqlx::Error>;
-
-    async fn load(
-        &self,
-        keys: &[SubjectHeadingsForDocument],
-    ) -> Result<HashMap<SubjectHeadingsForDocument, Self::Value>, Self::Error> {
-        let keys: Vec<_> = keys.iter().map(|k| k.0).collect();
-        let items =
-            query_file!("queries/get_subject_headings_by_document_id.sql", &keys)
-                .fetch_all(&self.client)
-                .await?;
-        Ok(items
-            .into_iter()
-            .map(|x| (SubjectHeadingsForDocument(x.document_id), SubjectHeading { id: x.id, name: x.name, status: x.status }))
-            .into_group_map())
-    }
+    Ok(rows.into_iter().map(Into::into).collect())
 }
 
-// Languages
-#[derive(Eq, PartialEq, Hash, Clone, Copy, Debug)]
-pub struct LanguagesForDocument(pub Uuid);
+/// Get all languages associated with a document
+pub async fn languages_by_document_id(&self, document_id: &Uuid) -> Result<Vec<Language>> {
+    let rows = query_file_as!(
+        BasicLanguage,
+        "queries/get_languages_by_document_id.sql",
+        document_id
+    )
+    .fetch_all(&self.client)
+    .await?;
 
-#[async_trait]
-impl Loader<LanguagesForDocument> for Database {
-    type Value = Vec<Language>;
-    type Error = Arc<sqlx::Error>;
-
-    async fn load(
-        &self,
-        keys: &[LanguagesForDocument],
-    ) -> Result<HashMap<LanguagesForDocument, Self::Value>, Self::Error> {
-        let keys: Vec<_> = keys.iter().map(|k| k.0).collect();
-        let items = query_file!("queries/get_languages_by_document_id.sql", &keys)
-            .fetch_all(&self.client)
-            .await?;
-        Ok(items
-            .into_iter()
-            .map(|x| (LanguagesForDocument(x.document_id), Language { id: x.id, name: x.name, autonym: x.autonym, status: x.status }))
-            .into_group_map())
-    }
+    Ok(rows.into_iter().map(Into::into).collect())
 }
 
-// Spatial Coverages
-#[derive(Eq, PartialEq, Hash, Clone, Copy, Debug)]
-pub struct SpatialCoveragesForDocument(pub Uuid);
+/// Get all spatial coverages associated with a document
+pub async fn spatial_coverages_by_document_id(&self, document_id: &Uuid) -> Result<Vec<SpatialCoverage>> {
+    let rows = query_file_as!(
+        BasicSpatialCoverage,
+        "queries/get_spatial_coverages_by_document_id.sql",
+        document_id
+    )
+    .fetch_all(&self.client)
+    .await?;
 
-#[async_trait]
-impl Loader<SpatialCoveragesForDocument> for Database {
-    type Value = Vec<SpatialCoverage>;
-    type Error = Arc<sqlx::Error>;
-
-    async fn load(
-        &self,
-        keys: &[SpatialCoveragesForDocument],
-    ) -> Result<HashMap<SpatialCoveragesForDocument, Self::Value>, Self::Error> {
-        let keys: Vec<_> = keys.iter().map(|k| k.0).collect();
-        let items = query_file!("queries/get_spatial_coverages_by_document_id.sql", &keys)
-            .fetch_all(&self.client)
-            .await?;
-        Ok(items
-            .into_iter()
-            .map(|x| (SpatialCoveragesForDocument(x.document_id), SpatialCoverage { id: x.id, name: x.name, status: x.status }))
-            .into_group_map())
-    }
+    Ok(rows.into_iter().map(Into::into).collect())
 }
 
-// Creators
-#[derive(Eq, PartialEq, Hash, Clone, Copy, Debug)]
-pub struct CreatorsForDocument(pub Uuid);
+/// Get all creators associated with a document
+pub async fn creators_by_document_id(&self, document_id: &Uuid) -> Result<Vec<Creator>> {
+    let rows = query_file_as!(
+        Creator,
+        "queries/get_creators_by_document_id.sql",
+        document_id
+    )
+    .fetch_all(&self.client)
+    .await?;
 
-#[async_trait]
-impl Loader<CreatorsForDocument> for Database {
-    type Value = Vec<Creator>;
-    type Error = Arc<sqlx::Error>;
-
-    async fn load(
-        &self,
-        keys: &[CreatorsForDocument],
-    ) -> Result<HashMap<CreatorsForDocument, Self::Value>, Self::Error> {
-        let keys: Vec<_> = keys.iter().map(|k| k.0).collect();
-        let items = query_file!("queries/document_creators.sql", &keys)
-            .fetch_all(&self.client)
-            .await?;
-        Ok(items
-            .into_iter()
-            .map(|x| (CreatorsForDocument(x.document_id), Creator { id: x.id, name: x.name }))
-            .into_group_map())
-    }
+    Ok(rows.into_iter().map(Into::into).collect())
 }
 
 #[async_trait]
