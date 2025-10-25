@@ -418,7 +418,7 @@ pub struct DocumentMetadataUpdate {
     /// The creators of the document
     pub creators_ids: Option<Vec<Uuid>>,
     /// The editors, translators, etc. of the document
-    pub contributors_ids: Option<Vec<Uuid>>,
+    pub contributors: Option<Vec<Contributor>>,
     /// The key terms associated with the document
     pub keywords_ids: Option<Vec<Uuid>>,
     /// Terms that reflect Indigenous knowledge practices associated with the document
@@ -585,7 +585,7 @@ pub struct DocumentMetadata {
     /// The creator(s) of the document
     pub creators_ids: Option<Vec<Uuid>>,
     /// The people involved in collecting, translating, annotating.
-    pub contributors_ids: Option<Vec<Uuid>>,
+    pub contributors: Option<Vec<Contributor>>,
     /// The key terms associated with this document
     pub keywords_ids: Option<Vec<Uuid>>,
     /// Terms that reflect Indigenous knowledge practices related to this document
