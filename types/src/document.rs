@@ -1,3 +1,4 @@
+use crate::GenreById;
 use crate::{
     auth::UserInfo, comment::Comment, date::DateInput, slugify, AnnotatedForm, AudioSlice,
     Database, Date, Translation, TranslationBlock,
@@ -119,12 +120,6 @@ impl AnnotatedDoc {
 
     /// The genre of the document, used to group similar ones
     async fn genre(&self, context: &async_graphql::Context<'_>) -> FieldResult<Option<Genre>> {
-        // Convert MaybeUndefined<Uuid> into Option<Uuid>
-        let genre_id_opt = match &self.meta.genre_id {
-            MaybeUndefined::Value(id) => Some(id),
-            _ => None,
-        };
-    
         // Only query if we have an ID
         if let Some(id) = genre_id_opt {
             let db = context.data::<DataLoader<Database>>()?;
@@ -238,11 +233,6 @@ impl AnnotatedDoc {
 
     /// The format of the original artifact
     async fn format(&self, context: &async_graphql::Context<'_>) -> FieldResult<Option<Format>> {
-        let format_id_opt = match &self.meta.format_id {
-            MaybeUndefined::Value(id) => Some(id),
-            _ => None,
-        };
-
         if let Some(id) = format_id_opt {
             let db = context.data::<DataLoader<Database>>()?;
             let format = db.load_one(crate::FormatById(**id)).await?;
@@ -253,6 +243,7 @@ impl AnnotatedDoc {
     }
     
     /// The creators of this document
+    /// CHANGE TO OPTION
     async fn creators(&self, context: &async_graphql::Context<'_>) -> FieldResult<Option<Creator>> {
         match &self.meta.creators_ids {
             MaybeUndefined::Value(id) => {
@@ -295,8 +286,8 @@ impl AnnotatedDoc {
     }
 
     /// The languages present in this document
-    fn languages_ids(&self) -> &Option<Vec<Language>> {
-        &self.meta.languages_ids
+    async fn languages_ids(&self) -> Option<Vec<Language>> {
+        self.meta.languages_ids.clone()
     }
     
     async fn languages(&self, context: &async_graphql::Context<'_>) -> FieldResult<Vec<Language>> {
@@ -308,8 +299,8 @@ impl AnnotatedDoc {
     }
 
     /// The places mentioned in or associated with this document
-   fn spatial_coverages_ds(&self) -> &Option<Vec<SpatialCoverage>> {
-        &self.meta.spatial_coverage_ids
+   async fn spatial_coverages_ds(&self) -> &Option<Vec<SpatialCoverage>> {
+        self.meta.spatial_coverage_ids
     }
 
     async fn spatial_coverages(
@@ -416,31 +407,31 @@ pub struct DocumentMetadataUpdate {
     /// The ID of the document to update
     pub id: Uuid,
     /// An updated title for this document, or nothing (if title is unchanged)
-    pub title: MaybeUndefined<String>,
+    pub title: Option<String>,
     /// The date this document was written, or nothing (if unchanged or not applicable)
     pub written_at: MaybeUndefined<DateInput>,
     /// Term that contextualizes the social practice surrounding the document
-    pub genre_id: MaybeUndefined<Uuid>,
+    pub genre_id: Option<Uuid>,
     /// Term that allows us to trace what the original artifact was
-    pub format_id: MaybeUndefined<Uuid>,
+    pub format_id: Option<Uuid>,
     /// The pages present in the document, start to end (inclusive)
-    pub pages: MaybeUndefined<String>,
+    pub pages: Option<String>,
     /// The creators of the document
-    pub creators_ids: MaybeUndefined<Vec<Uuid>>,
+    pub creators_ids: Option<Vec<Uuid>>,
     /// The editors, translators, etc. of the document
-    pub contributors_ids: MaybeUndefined<Vec<Uuid>>,
+    pub contributors_ids: Option<Vec<Uuid>>,
     /// The key terms associated with the document
-    pub keywords_ids: MaybeUndefined<Vec<Uuid>>,
+    pub keywords_ids: Option<Vec<Uuid>>,
     /// Terms that reflect Indigenous knowledge practices associated with the document
-    pub subject_headings_ids: MaybeUndefined<Vec<Uuid>>,
+    pub subject_headings_ids: Option<Vec<Uuid>>,
     /// The languages present in the document
-    pub languages_ids: MaybeUndefined<Vec<Uuid>>,
+    pub languages_ids: Option<Vec<Uuid>>,
     /// The physical locations associated with a document (e.g. where it was written, found)
-    pub spatial_coverage_ids: MaybeUndefined<Vec<Uuid>>,
+    pub spatial_coverage_ids: Option<Vec<Uuid>>,
     /// The DOI of the document, if applicable
-    pub doi: MaybeUndefined<String>,
+    pub doi: Option<String>,
     /// The source of the document
-    pub source: MaybeUndefined<SourceAttributionInput>,
+    pub source: Option<SourceAttributionInput>,
 }
 
 #[async_graphql::ComplexObject]
@@ -582,28 +573,28 @@ pub struct DocumentMetadata {
     /// Further details about this particular document.
     // pub details: String,
     /// The DOI of the document, if applicable
-    pub doi: MaybeUndefined<String>,
+    pub doi: Option<String>,
     #[serde(default)]
     /// The original source(s) of this document, the most important first.
     pub sources: Vec<SourceAttribution>,
     /// Where the source document came from, maybe the name of a collection.
     pub collection: Option<String>,
     /// Term that contextualizes the social practice surrounding the document
-    pub genre_id: MaybeUndefined<Uuid>,
+    pub genre_id: Option<Uuid>,
     /// The format of the original artifact
-    pub format_id: MaybeUndefined<Uuid>,
+    pub format_id: Option<Uuid>,
     /// The creator(s) of the document
-    pub creators_ids: MaybeUndefined<Vec<Uuid>>,
+    pub creators_ids: Option<Vec<Uuid>>,
     /// The people involved in collecting, translating, annotating.
-    pub contributors_ids: MaybeUndefined<Vec<Uuid>>,
+    pub contributors: Vec<Contributor>,
     /// The key terms associated with this document
-    pub keywords_ids: MaybeUndefined<Vec<Uuid>>,
+    pub keywords_ids: Option<Vec<Uuid>>,
     /// Terms that reflect Indigenous knowledge practices related to this document
-    pub subject_headings_ids: MaybeUndefined<Vec<Uuid>>,
+    pub subject_headings_ids: Option<Vec<Uuid>>,
     /// The languages present in this document
-    pub languages_ids: MaybeUndefined<Vec<Uuid>>,
+    pub languages_ids: Option<Vec<Uuid>>,
     /// The physical locations associated with this document
-    pub spatial_coverage_ids: MaybeUndefined<Vec<Uuid>>,
+    pub spatial_coverage_ids: Option<Vec<Uuid>>,
     /// Rough translation of the document, broken down by paragraph.
     #[serde(skip)]
     pub translation: Option<Translation>,
@@ -628,7 +619,7 @@ impl DocumentMetadata {
     /// Fetch the genre associated with this document
     async fn genre(&self, ctx: &Context<'_>) -> Result<Option<Genre>> {
         let genre_id = match self.genre_id {
-            MaybeUndefined::Value(id) => id,
+            Some(id) => id,
             _ => return Ok(None),
         };
         let pool = ctx.data::<PgPool>()?;
@@ -641,7 +632,7 @@ impl DocumentMetadata {
     /// Fetch the format associated with this document
     async fn format(&self, ctx: &Context<'_>) -> Result<Option<Format>> {
         let format_id = match self.format_id {
-            MaybeUndefined::Value(id) => id,
+            Some(id) => id,
             _ => return Ok(None),
         };
         let pool = ctx.data::<PgPool>()?;

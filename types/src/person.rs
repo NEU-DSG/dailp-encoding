@@ -18,7 +18,6 @@ pub struct Admin {
 pub struct Contributor {
     /// UUID of the contributor
     pub id: uuid::Uuid,
-    /// Name of the contributor (or alias if preferred)
     pub name: String,
     /// Full name of the contributor (optional)
     pub full_name: Option<String>,

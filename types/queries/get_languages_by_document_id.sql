@@ -1,4 +1,8 @@
-SELECT l.* 
-FROM language l
-JOIN document_language dl ON l.id = dl.language_id
-WHERE dl.document_id = $1;
+select
+    id, 
+    name, 
+    autonym,
+    status::approval_status as status
+from language l
+join document_language dl on l.id = dl.language_id
+where dl.document_id = $1;

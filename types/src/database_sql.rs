@@ -293,22 +293,23 @@ impl Database {
                     title: item.title,
                     is_reference: item.is_reference,
                     date: item.written_at.map(Date::new),
+                    doi: None.into(),
                     audio_recording: None,
                     collection: None,
                     contributors_ids: item
                         .contributors
                         .and_then(|x| serde_json::from_value(x).ok())
                         .unwrap_or_default(),
-                    creators_ids: MaybeUndefined::from(Some(Some(Vec::new()))),
+                    creators_ids: Some(Vec::new()),
                     format_id: None.into(),
                     genre_id: None.into(),
-                    keywords_ids: MaybeUndefined::from(Some(Some(Vec::new()))),
-                    languages_ids: MaybeUndefined::from(Some(Some(Vec::new()))),
+                    keywords_ids: Some(Vec::new()),
+                    languages_ids: Some(Vec::new()),
                     order_index: 0,
                     page_images: None,
                     sources: Vec::new(),
-                    spatial_coverage_ids: MaybeUndefined::from(Some(Some(Vec::new()))),
-                    subject_headings_ids: MaybeUndefined::from(Some(Some(Vec::new()))),
+                    spatial_coverage_ids: Some(Vec::new()),
+                    subject_headings_ids: Some(Vec::new()),
                     translation: None,
                 },
                 segments: None,
@@ -437,22 +438,23 @@ impl Database {
                 title: item.title,
                 is_reference: item.is_reference,
                 date: item.written_at.map(Date::new),
+                doi: None.into(),
                 audio_recording: None,
                 collection: None,
                 contributors_ids: item
                     .contributors
                     .and_then(|x| serde_json::from_value(x).ok())
                     .unwrap_or_default(),
-                creators_ids: MaybeUndefined::from(Some(Some(Vec::new()))),
+                creators_ids: Some(Vec::new()),
                 format_id: None.into(),
                 genre_id: None.into(),
-                keywords_ids: MaybeUndefined::from(Some(Some(Vec::new()))),
-                languages_ids: MaybeUndefined::from(Some(Some(Vec::new()))),
+                keywords_ids: Some(Vec::new()),
+                languages_ids: Some(Vec::new()),
                 order_index: 0,
                 page_images: None,
                 sources: Vec::new(),
-                spatial_coverage_ids: MaybeUndefined::from(Some(Some(Vec::new()))),
-                subject_headings_ids: MaybeUndefined::from(Some(Some(Vec::new()))),
+                spatial_coverage_ids: Some(Vec::new()),
+                subject_headings_ids: Some(Vec::new()),
                 translation: None,
             },
             segments: None,
@@ -782,7 +784,7 @@ impl Database {
     }
 
     pub async fn update_document_metadata(&self, document: DocumentMetadataUpdate) -> Result<Uuid> {
-        let title = document.title.into_vec();
+        let title = document.title.clone();
         let written_at: Option<Date> = document.written_at.value().map(Into::into);
     
         // Begin transaction
@@ -797,7 +799,6 @@ impl Database {
             document.genre_id,
             document.format_id,
             document.doi,
-            document.source
         )
         .execute(&mut *tx)
         .await?;
@@ -805,7 +806,7 @@ impl Database {
         // Handle join-table metadata (keywords, subject headings, languages, etc.)
 
         // Update keywords
-        if let MaybeUndefined::Value(keywords_ids) = &document.keywords_ids {
+        if let Some(keywords_ids) = &document.keywords_ids {
             query_file!("queries/delete_document_keywords.sql", document.id)
                 .execute(&mut *tx)
                 .await?;
@@ -816,7 +817,7 @@ impl Database {
         }
      
         // Update subject headings
-        if let MaybeUndefined::Value(subject_headings_ids) = &document.subject_headings_ids {
+        if let Some(subject_headings_ids) = &document.subject_headings_ids {
             query_file!("queries/delete_document_subject_headings.sql", document.id)
                 .execute(&mut *tx)
                 .await?;
@@ -831,7 +832,7 @@ impl Database {
         }
     
         // Update languages
-        if let MaybeUndefined::Value(languages_ids) = &document.languages_ids {
+        if let Some(languages_ids) = &document.languages_ids {
             query_file!("queries/delete_document_languages.sql", document.id)
                 .execute(&mut *tx)
                 .await?;
@@ -842,7 +843,7 @@ impl Database {
         }
     
         // Update spatial coverages
-        if let MaybeUndefined::Value(spatial_coverage_ids) = &document.spatial_coverage_ids {
+        if let Some(spatial_coverage_ids) = &document.spatial_coverage_ids {
             query_file!("queries/delete_document_spatial_coverage.sql", document.id)
                 .execute(&mut *tx)
                 .await?;
@@ -857,7 +858,7 @@ impl Database {
         }
     
         // Update creators
-        if let MaybeUndefined::Value(creator_ids) = &document.creators_ids {
+        if let Some(creator_ids) = &document.creators_ids {
             query_file!("queries/delete_document_creator.sql", document.id)
                 .execute(&mut *tx)
                 .await?;
@@ -1090,13 +1091,13 @@ impl Database {
 
         {
             let (name, doc, role): (Vec<_>, Vec<_>, Vec<_>) = meta
-                .contributors_ids
+                .contributors
                 .iter()
                 .map(|contributor| (&*contributor.name, document_uuid, contributor.role.as_ref()))
                 .multiunzip();
             // Convert roles to Option<String> for SQL
             let role_strings: Vec<Option<String>> =
-                role.iter().map(|r: &Option<ContributorRole>| r.map(|r| r.to_string())).collect();
+                role.iter().map(|r| r.map(|r| r.to_string())).collect();
             query_file!(
                 "queries/upsert_document_contributors.sql",
                 &*name as _,
@@ -1233,6 +1234,7 @@ impl Database {
             .await?;
 
         Ok(vec![DocumentCollection {
+            id: item.id,
             slug: item.slug,
             title: item.title,
         }])
@@ -1246,6 +1248,7 @@ impl Database {
             .into_iter()
             .sorted_by_key(|chapter| chapter.chapter_path.len())
             .map(|chapter| DocumentCollection {
+                id: Some(chapter.id),
                 slug: chapter.slug,
                 title: chapter.title,
             })
@@ -1633,6 +1636,7 @@ impl Database {
             .fetch_one(&self.client)
             .await?;
         Ok(DocumentCollection {
+            id: Some(collection.id),
             slug: collection.slug,
             title: collection.title,
         })
@@ -1723,6 +1727,7 @@ impl Loader<DocumentId> for Database {
                     title: item.title,
                     is_reference: item.is_reference,
                     date: item.written_at.map(Date::new),
+                    doi: None.into(),
                     audio_recording: item.audio_url.map(|resource_url| AudioSlice {
                         slice_id: Some(AudioSliceId(item.audio_slice_id.unwrap().to_string())),
                         resource_url,
@@ -1758,16 +1763,16 @@ impl Loader<DocumentId> for Database {
                         .contributors
                         .and_then(|x| serde_json::from_value(x).ok())
                         .unwrap_or_default(),
-                    creators_ids: MaybeUndefined::from(Some(Some(Vec::new()))),
+                    creators_ids: Some(Vec::new()),
                     format_id: None.into(),
                     genre_id: None.into(),
-                    keywords_ids: MaybeUndefined::from(Some(Some(Vec::new()))),
-                    languages_ids: MaybeUndefined::from(Some(Some(Vec::new()))),
+                    keywords_ids: Some(Vec::new()),
+                    languages_ids: Some(Vec::new()),
                     order_index: 0,
                     page_images: None,
                     sources: Vec::new(),
-                    spatial_coverage_ids: MaybeUndefined::from(Some(Some(Vec::new()))),
-                    subject_headings_ids: MaybeUndefined::from(Some(Some(Vec::new()))),
+                    spatial_coverage_ids: Some(Vec::new()),
+                    subject_headings_ids: Some(Vec::new()),
                     translation: None,
                 },
                 segments: None,
@@ -1800,6 +1805,7 @@ impl Loader<DocumentShortName> for Database {
                     title: item.title,
                     is_reference: item.is_reference,
                     date: item.written_at.map(Date::new),
+                    doi: None.into(),
                     audio_recording: item.audio_url.map(|resource_url| AudioSlice {
                         slice_id: Some(AudioSliceId(item.audio_slice_id.unwrap().to_string())),
                         resource_url,
@@ -1836,16 +1842,16 @@ impl Loader<DocumentShortName> for Database {
                         .contributors
                         .and_then(|x| serde_json::from_value(x).ok())
                         .unwrap_or_default(),
-                    creators_ids: MaybeUndefined::from(Some(Some(Vec::new()))),
+                    creators_ids: Some(Vec::new()),
                     format_id: None.into(),
                     genre_id: None.into(),
-                    keywords_ids: MaybeUndefined::from(Some(Some(Vec::new()))),
-                    languages_ids: MaybeUndefined::from(Some(Some(Vec::new()))),
+                    keywords_ids: Some(Vec::new()),
+                    languages_ids: Some(Vec::new()),
                     order_index: 0,
                     page_images: None,
                     sources: Vec::new(),
-                    spatial_coverage_ids: MaybeUndefined::from(Some(Some(Vec::new()))),
-                    subject_headings_ids: MaybeUndefined::from(Some(Some(Vec::new()))),
+                    spatial_coverage_ids: Some(Vec::new()),
+                    subject_headings_ids: Some(Vec::new()),
                     translation: None,
                 },
                 segments: None,
@@ -2149,7 +2155,7 @@ impl Loader<ContributorsForDocument> for Database {
                     ContributorsForDocument(x.document_id),
                     Contributor {
                         id: x.id,
-                        name: x.full_name,
+                        full_name: Some(x.full_name),
                         role: x
                             .contribution_role
                             .to_lowercase()
@@ -2205,14 +2211,34 @@ impl Loader<GenreById> for Database {
         &self,
         keys: &[GenreById],
     ) -> Result<HashMap<GenreById, Self::Value>, Self::Error> {
-        let id = keys[0].0;
-        let items = sqlx::query_file_as!(Genre, "queries/get_genre_by_id.sql", id)
-            .fetch_all(&self.client)
-            .await?;
-        Ok(items
-            .into_iter()
-            .map(|x| (GenreById(x.id), Genre { id: x.id, name: x.name, status: x.status }))
-            .collect())
+        let mut result = HashMap::new();
+
+        for key in keys {
+            let id = key.0;
+            let row = sqlx::query_file_as!(Genre, "queries/get_genre_by_id.sql", id)
+                .fetch_optional(&self.client)
+                .await?;
+
+            if let Some(x) = row {
+                // Convert status if present
+                let status = x.status
+                    .as_ref()
+                    .and_then(|s| ApprovalStatus::try_from(s.clone()).ok());
+
+                result.insert(
+                    GenreById(x.id),
+                    Genre {
+                        id: x.id,
+                        name: x.name,
+                        status,
+                    },
+                );
+            }
+            if row.is_none() {
+                return Err(Arc::new(sqlx::Error::RowNotFound));
+            }
+        }
+        Ok(result)
     }
 }
 

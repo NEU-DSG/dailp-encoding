@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "-- Delete all existing associations for this document\ndelete from document_spatial_coverage\nwhere document_id = $1;\n\n",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "c1d32742e6a889b74a92bbf40eb293343bfa72766c1ecbab3f765061e24dc7c2"
+}

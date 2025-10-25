@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT\n    id,\n    slug,\n    title,\n    wordpress_menu_id\nFROM\n    edited_collection\nWHERE\n    id = $1\n",
+  "query": "select \n    id, \n    name, \n    status::text as status\nfrom genre\nwhere id = $1;\n",
   "describe": {
     "columns": [
       {
@@ -10,18 +10,13 @@
       },
       {
         "ordinal": 1,
-        "name": "slug",
+        "name": "name",
         "type_info": "Text"
       },
       {
         "ordinal": 2,
-        "name": "title",
+        "name": "status",
         "type_info": "Text"
-      },
-      {
-        "ordinal": 3,
-        "name": "wordpress_menu_id",
-        "type_info": "Int8"
       }
     ],
     "parameters": {
@@ -32,9 +27,8 @@
     "nullable": [
       false,
       false,
-      false,
-      true
+      null
     ]
   },
-  "hash": "6f8b00224cf0cfe8f9c273ce515feea869d24052c99c85ab9e4699742764ceac"
+  "hash": "e5575de5689d22f19fbaf9e628bad8f40bbdf060b69e168b32c549c5c43b9acf"
 }

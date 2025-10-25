@@ -1,17 +1,14 @@
 /// Document metadata
-use async_graphql::{Enum as GqlEnum, SimpleObject};
+use async_graphql::{Enum, SimpleObject};
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
-use sqlx::Type;
-use sqlx::postgres::PgTypeInfo;
 use sqlx::decode::Decode;
 use sqlx::Postgres;
 use sqlx::postgres::PgValueRef;
 use uuid::Uuid;
 
 /// Represents the status of a suggestion made by a contributor
-#[derive(sqlx::Type, Serialize, Deserialize, async_graphql::Enum, Debug, Clone, Copy, PartialEq, Eq)]
-#[sqlx(type_name = "approval_status", rename_all = "snake_case")]
+#[derive(Serialize, Deserialize, Enum, Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ApprovalStatus {
     /// Suggestion is still waiting for or undergoing review
     Pending, 
@@ -34,6 +31,20 @@ impl<'r> Decode<'r, Postgres> for ApprovalStatus {
     }
 }
 
+/// Converts a string value ("approved", "pending", or "rejected") into an ApprovalStatus enum variant
+impl TryFrom<String> for ApprovalStatus {
+    type Error = anyhow::Error;
+
+    fn try_from(value: String) -> Result<Self, Self::Error> {
+        match value.as_str() {
+            "approved" => Ok(ApprovalStatus::Approved),
+            "pending" => Ok(ApprovalStatus::Pending),
+            "rejected" => Ok(ApprovalStatus::Rejected),
+            _ => Err(anyhow::anyhow!("Invalid approval status: {}", value)),
+        }
+    }
+}
+
 /// Stores the genre associated with a document
 #[derive(Clone, Debug, Serialize, Deserialize, FromRow, SimpleObject)]
 #[graphql(complex)]
@@ -43,14 +54,14 @@ pub struct Genre {
     /// Name of the genre
     pub name: String,
     /// Status (pending, approved, rejected) of a genre
-    pub status: ApprovalStatus,
+    pub status: Option<ApprovalStatus>,
 }
 
 /// Get all approved genres
 #[async_graphql::ComplexObject]
 impl Genre {
     async fn approved(&self) -> bool {
-        matches!(self.status, ApprovalStatus::Approved)
+        matches!(self.status, Some(ApprovalStatus::Approved))
     }
 }
 
@@ -63,14 +74,14 @@ pub struct Format {
     /// Name of the format
     pub name: String,
     /// Status (pending, approved, rejected) of a format
-    pub status: ApprovalStatus,
+    pub status: Option<ApprovalStatus>,
 }
 
 /// Get all approved formats
 #[async_graphql::ComplexObject]
 impl Format {
     async fn approved(&self) -> bool {
-        matches!(self.status, ApprovalStatus::Approved)
+        matches!(self.status, Some(ApprovalStatus::Approved))
     }
 }
 
@@ -83,14 +94,14 @@ pub struct Keyword {
     /// Name of the keyword
     pub name: String,
     /// Status (pending, approved, rejected) of a keyword
-    pub status: ApprovalStatus,
+    pub status: Option<ApprovalStatus>,
 }
 
 /// Get all approved keywords
 #[async_graphql::ComplexObject]
 impl Keyword {
     async fn approved(&self) -> bool {
-        matches!(self.status, ApprovalStatus::Approved)
+        matches!(self.status, Some(ApprovalStatus::Approved))
     }
 }
 
@@ -111,14 +122,14 @@ pub struct SubjectHeading {
     /// Name of the subject heading
     pub name: String,
     /// Status (pending, approved, rejected) of a subject heading
-    pub status: ApprovalStatus,
+    pub status: Option<ApprovalStatus>,
 }
 
 /// Get all approved subject headings
 #[async_graphql::ComplexObject]
 impl SubjectHeading {
     async fn approved(&self) -> bool {
-        matches!(self.status, ApprovalStatus::Approved)
+        matches!(self.status, Some(ApprovalStatus::Approved))
     }
 }
 
@@ -140,14 +151,14 @@ pub struct Language {
     // Name a language uses for itself
     pub autonym: Option<String>,
     /// Status (pending, approved, rejected) of a language
-    pub status: ApprovalStatus,
+    pub status: Option<ApprovalStatus>,
 }
 
 /// Get all approved languages
 #[async_graphql::ComplexObject]
 impl Language {
     async fn approved(&self) -> bool {
-        matches!(self.status, ApprovalStatus::Approved)
+        matches!(self.status, Some(ApprovalStatus::Approved))
     }
 }
 
@@ -167,14 +178,14 @@ pub struct SpatialCoverage {
     /// Name of the place
     pub name: String,
     /// Status (pending, approved, rejected) of a spatial coverage
-    pub status: ApprovalStatus,
+    pub status: Option<ApprovalStatus>,
 }
 
 /// Get all approved spatial coverages
 #[async_graphql::ComplexObject]
 impl SpatialCoverage {
     async fn approved(&self) -> bool {
-        matches!(self.status, ApprovalStatus::Approved)
+        matches!(self.status, Some(ApprovalStatus::Approved))
     }
 }
 
