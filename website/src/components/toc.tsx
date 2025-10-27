@@ -79,6 +79,13 @@ const TOC = ({ section, chapters }: TOCProps) => {
   return (
     <>
       <ol className={listStyle}>
+        {section === CollectionSection.Intro && (
+          <li className={listItemStyle}>
+            <Link href={`/${collectionSlug}/edit-toc`} className={css.link}>
+              Edit TOC
+            </Link>
+          </li>
+        )}
         {chapters.map((item) => (
           <li key={item.slug} className={listItemStyle}>
             <Link
