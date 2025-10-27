@@ -233,17 +233,19 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
                   : "Credit"
               const chapters = chaptersBySection[sectionKey]
               return (
+                <>
+                  <h5 style={{ marginTop: 0, marginBottom: 8 }}>
+                    {sectionName}
+                  </h5>
                 <div
                   key={sectionKey}
                   style={{
                     border: "1px solid #ddd",
                     padding: 8,
                     borderRadius: 4,
+                    ...(sectionKey === "body" ? { height: "50vh", overflow:"scroll" } : {}),
                   }}
                 >
-                  <h5 style={{ marginTop: 0, marginBottom: 8 }}>
-                    {sectionName}
-                  </h5>
                   <Droppable droppableId={sectionKey} direction="vertical">
                     {(provided) => (
                       <div
@@ -339,6 +341,7 @@ export const EditableToc = ({ collectionSlug }: { collectionSlug: string }) => {
                     )}
                   </Droppable>
                 </div>
+</>
               )
             })}
           </div>
