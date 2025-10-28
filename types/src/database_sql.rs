@@ -2720,7 +2720,7 @@ impl Loader<FormatById> for Database {
 
 #[async_trait]
 impl Loader<GenreById> for Database {
-    type Value = Option<Format>;
+    type Value = Option<Genre>;
     type Error = Arc<sqlx::Error>;
 
     async fn load(
