@@ -254,7 +254,7 @@ impl AnnotatedDoc {
     }
 
     // GraphQL resolver for creators
-    async fn keywords(&self, context: &async_graphql::Context<'_>) -> FieldResult<Vec<Creator>> {
+    async fn creators(&self, context: &async_graphql::Context<'_>) -> FieldResult<Vec<Creator>> {
         Ok(context
             .data::<DataLoader<Database>>()?
             .load_one(crate::CreatorsForDocument(self.meta.id.0))
@@ -727,7 +727,6 @@ impl DocumentMetadata {
     }
     
 }
-
 
 /// Database ID for one document
 #[derive(
