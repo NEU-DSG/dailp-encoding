@@ -4,7 +4,7 @@ use crate::{
 };
 
 use crate::doc_metadata::{Genre, Format, Keyword, SubjectHeading, Language, SpatialCoverage};
-use crate::person::{Contributor, Creator, SourceAttribution, SourceAttributionInput};
+use crate::person::{Contributor, ContributorRole, Creator, SourceAttribution, SourceAttributionInput};
 
 use async_graphql::{Context, dataloader::DataLoader, FieldResult, MaybeUndefined, Result};
 use serde::{Deserialize, Serialize};
@@ -117,17 +117,22 @@ impl AnnotatedDoc {
             .map(|name| DocumentCollection::from_name(name.to_owned()))
     }
 
-    /// The genre of the document, used to group similar ones
-    async fn genre(&self, context: &async_graphql::Context<'_>) -> FieldResult<Option<Genre>> {
-        // Only query if we have an ID
+    /// The genre of the document, used to group similar ones  
+    async fn genre(
+        &self,
+        context: &async_graphql::Context<'_>
+    ) -> FieldResult<Option<Genre>> {
+        // Get the genre ID from this document
+        let genre_id_opt = self.meta.genre_id.as_ref();
+    
         if let Some(id) = genre_id_opt {
             let db = context.data::<DataLoader<Database>>()?;
-            let genre = db.load_one(GenreById(id)).await?;
+            let genre = db.load_one(crate::GenreById(*id)).await?.flatten();
             Ok(genre)
         } else {
             Ok(None)
         }
-    }    
+    }
 
     /// Images of each source document page, in order
     async fn page_images(&self) -> &Option<IiifImages> {
@@ -231,31 +236,38 @@ impl AnnotatedDoc {
     }
 
     /// The format of the original artifact
-    async fn format(&self, context: &async_graphql::Context<'_>) -> FieldResult<Option<Format>> {
+    async fn format(
+        &self,
+        context: &async_graphql::Context<'_>
+    ) -> FieldResult<Option<Format>> {
+        // Get the format ID from this document
+        let format_id_opt = self.meta.format_id.as_ref();
+    
         if let Some(id) = format_id_opt {
             let db = context.data::<DataLoader<Database>>()?;
-            let format = db.load_one(crate::FormatById(**id)).await?;
+            let format = db.load_one(crate::FormatById(*id)).await?.flatten();
             Ok(format)
         } else {
             Ok(None)
         }
     }
-    
-    /// The creators of this document
-    /// CHANGE TO OPTION
-    async fn creators(&self, context: &async_graphql::Context<'_>) -> FieldResult<Option<Creator>> {
-        match &self.meta.creators_ids {
-            MaybeUndefined::Value(id) => {
-                let db = context.data::<DataLoader<Database>>()?;
-                let creator = db.load_one(CreatorById(**id)).await?;
-                Ok(creator)
-            }
-            _ => Ok(None),
-        }
+
+    /// Internal field accessor for creators
+    async fn creators_ids(&self) -> &Option<Vec<Uuid>> {
+        &self.meta.creators_ids
+    }
+
+    // GraphQL resolver for creators
+    async fn creators(&self, context: &async_graphql::Context<'_>) -> FieldResult<Vec<Creator>> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .load_one(crate::CreatorsForDocument(self.meta.id.0))
+            .await?
+            .unwrap_or_default())
     }
     
     /// Internal field accessor for keywords
-    async fn keywords_ids(&self) -> &Option<Vec<Keyword>> {
+    async fn keywords_ids(&self) -> &Option<Vec<Uuid>> {
         &self.meta.keywords_ids
     }
 
@@ -269,7 +281,7 @@ impl AnnotatedDoc {
     }
     
     /// Terms that reflect Indigenous knowledge practices related to this document
-    async fn subject_headings_ids(&self) -> &Option<Vec<SubjectHeading>> {
+    async fn subject_headings_ids(&self) -> &Option<Vec<Uuid>> {
         &self.meta.subject_headings_ids
     }
     
@@ -285,7 +297,7 @@ impl AnnotatedDoc {
     }
 
     /// The languages present in this document
-    async fn languages_ids(&self) -> Option<Vec<Language>> {
+    async fn languages_ids(&self) -> Option<Vec<Uuid>> {
         self.meta.languages_ids.clone()
     }
     
@@ -298,7 +310,7 @@ impl AnnotatedDoc {
     }
 
     /// The places mentioned in or associated with this document
-   async fn spatial_coverage_ids(&self) -> &Option<Vec<SpatialCoverage>> {
+   async fn spatial_coverage_ids(&self) -> &Option<Vec<Uuid>> {
         self.meta.spatial_coverage_ids
     }
 
@@ -571,6 +583,7 @@ pub struct DocumentMetadata {
     pub title: String,
     /// Further details about this particular document.
     // pub details: String,
+    pub description: Option<String>,
     /// The DOI of the document, if applicable
     pub doi: Option<String>,
     #[serde(default)]
@@ -687,15 +700,37 @@ impl DocumentMetadata {
     }
     
     /// Fetch all contributors linked to this document
-    async fn contributors(&self, ctx: &Context<'_>) -> Result<Vec<Contributor>> {
+    pub async fn contributors(&self, ctx: &Context<'_>) -> Result<Vec<Contributor>> {
         let pool = ctx.data::<PgPool>()?;
-        let rows = query_file_as!(Contributor, "queries/get_contributors_by_document_id.sql", self.id.0)
-            .fetch_all(pool)
-            .await?;
-        Ok(rows)
+        let rows = query_file_as!(
+            Contributor,
+            "queries/get_contributors_by_document_id.sql",
+            self.id.0
+        )
+        .fetch_all(pool)
+        .await?;
+    
+        // Map the returned rows into Contributor struct (transcriber, translator, annotator, cultural advisor)
+        let contributors = rows
+            .into_iter()
+            .map(|x| Contributor {
+                id: x.id,
+                name: x.name,
+                full_name: x.full_name,
+                role: x.role.as_ref().and_then(|r| match r.as_str() {
+                    "transcriber" => Some(ContributorRole::Transcriber),
+                    "translator" => Some(ContributorRole::Translator),
+                    "annotator" => Some(ContributorRole::Annotator),
+                    "cultural_advisor" => Some(ContributorRole::CulturalAdvisor),
+                    _ => None,
+                }),
+            })
+            .collect();
+    
+        Ok(contributors)
     }
+    
 }
-
 
 /// Database ID for one document
 #[derive(

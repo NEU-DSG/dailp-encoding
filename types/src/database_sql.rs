@@ -2514,6 +2514,248 @@ impl Loader<EditedCollectionDetails> for Database {
     }
 }
 
+#[async_trait]
+impl Loader<LanguagesForDocument> for Database {
+    type Value = Vec<Language>;
+    type Error = Arc<sqlx::Error>;
+
+    async fn load(
+        &self,
+        keys: &[LanguagesForDocument],
+    ) -> Result<HashMap<LanguagesForDocument, Self::Value>, Self::Error> {
+        let mut results = HashMap::new();
+
+        for key in keys {
+            let rows = query_file!("queries/many_languages_for_documents.sql", &document_ids)
+            .fetch_all(&self.client)
+            .await?;
+
+            let languages = rows
+                .into_iter()
+                .map(|row| Language {
+                    id: row.id,
+                    name: row.name,
+                    autonym: row.autonym,
+                    status: row.status,
+                })
+                .collect();
+
+            results.insert(*key, languages);
+        }
+
+        Ok(results)
+    }
+}
+
+#[async_trait]
+impl Loader<KeywordsForDocument> for Database {
+    type Value = Vec<Keyword>;
+    type Error = Arc<sqlx::Error>;
+
+    async fn load(
+        &self,
+        keys: &[KeywordsForDocument],
+    ) -> Result<HashMap<KeywordsForDocument, Self::Value>, Self::Error> {
+        let mut results = HashMap::new();
+        let document_ids: Vec<_> = keys.iter().map(|k| k.0).collect();
+
+        let rows = query_file!("queries/many_keywords_for_documents.sql", &document_ids)
+            .fetch_all(&self.client)
+            .await?;
+
+        for key in keys {
+            let keywords = rows
+                .iter()
+                .filter(|row| row.document_id == key.0)
+                .map(|row| Keyword {
+                    id: row.id,
+                    name: row.name.clone(),
+                    status: row.status,
+                })
+                .collect();
+            results.insert(*key, keywords);
+        }
+
+        Ok(results)
+    }
+}
+
+#[async_trait]
+impl Loader<SubjectHeadingsForDocument> for Database {
+    type Value = Vec<SubjectHeading>;
+    type Error = Arc<sqlx::Error>;
+
+    async fn load(
+        &self,
+        keys: &[SubjectHeadingsForDocument],
+    ) -> Result<HashMap<SubjectHeadingsForDocument, Self::Value>, Self::Error> {
+        let mut results = HashMap::new();
+        let document_ids: Vec<_> = keys.iter().map(|k| k.0).collect();
+
+        let rows =
+            query_file!("queries/many_subject_headings_for_documents.sql", &document_ids)
+                .fetch_all(&self.client)
+                .await?;
+
+        for key in keys {
+            let headings = rows
+                .iter()
+                .filter(|row| row.document_id == key.0)
+                .map(|row| SubjectHeading {
+                    id: row.id,
+                    name: row.name.clone(),
+                    status: row.status,
+                })
+                .collect();
+            results.insert(*key, headings);
+        }
+
+        Ok(results)
+    }
+}
+
+#[async_trait]
+impl Loader<CreatorsForDocument> for Database {
+    type Value = Vec<Creator>;
+    type Error = Arc<sqlx::Error>;
+
+    async fn load(
+        &self,
+        keys: &[CreatorsForDocument],
+    ) -> Result<HashMap<CreatorsForDocument, Self::Value>, Self::Error> {
+        let mut results = HashMap::new();
+        let document_ids: Vec<_> = keys.iter().map(|k| k.0).collect();
+
+        let rows = query_file!("queries/many_creators_for_documents.sql", &document_ids)
+            .fetch_all(&self.client)
+            .await?;
+
+        for key in keys {
+            let creators = rows
+                .iter()
+                .filter(|row| row.document_id == key.0)
+                .map(|row| Creator {
+                    id: row.id,
+                    name: row.name.clone(),
+                })
+                .collect();
+            results.insert(*key, creators);
+        }
+
+        Ok(results)
+    }
+}
+
+#[async_trait]
+impl Loader<SpatialCoveragesForDocument> for Database {
+    type Value = Vec<SpatialCoverage>;
+    type Error = Arc<sqlx::Error>;
+
+    async fn load(
+        &self,
+        keys: &[SpatialCoveragesForDocument],
+    ) -> Result<HashMap<SpatialCoveragesForDocument, Self::Value>, Self::Error> {
+        let mut results = HashMap::new();
+        let document_ids: Vec<_> = keys.iter().map(|k| k.0).collect();
+
+        let rows =
+            query_file!("queries/many_spatial_coverages_for_documents.sql", &document_ids)
+                .fetch_all(&self.client)
+                .await?;
+
+        for key in keys {
+            let coverages = rows
+                .iter()
+                .filter(|row| row.document_id == key.0)
+                .map(|row| SpatialCoverage {
+                    id: row.id,
+                    name: row.name.clone(),
+                    status: row.status,
+                })
+                .collect();
+            results.insert(*key, coverages);
+        }
+
+        Ok(results)
+    }
+}
+
+#[async_trait]
+impl Loader<FormatById> for Database {
+    type Value = Option<Format>;
+    type Error = Arc<sqlx::Error>;
+
+    async fn load(
+        &self,
+        keys: &[FormatById],
+    ) -> Result<HashMap<FormatById, Self::Value>, Self::Error> {
+        // Collect all UUIDs
+        let ids: Vec<Uuid> = keys.iter().map(|k| k.0).collect();
+
+        // Query all formats by IDs
+        let rows = query_file!("queries/get_format_by_id.sql", &ids)
+            .fetch_all(&self.client)
+            .await?;
+
+        // Map results by ID
+        let mut results = HashMap::new();
+        for key in keys {
+            if let Some(row) = rows.iter().find(|r| r.id == key.0) {
+                results.insert(
+                    *key,
+                    Some(Format {
+                        id: row.id,
+                        name: row.name.clone(),
+                        status: row.status,
+                    }),
+                );
+            } else {
+                results.insert(*key, None);
+            }
+        }
+
+        Ok(results)
+    }
+}
+
+#[async_trait]
+impl Loader<GenreById> for Database {
+    type Value = Option<Genre>;
+    type Error = Arc<sqlx::Error>;
+
+    async fn load(
+        &self,
+        keys: &[GenreById],
+    ) -> Result<HashMap<GenreById, Self::Value>, Self::Error> {
+        // Collect all UUIDs
+        let ids: Vec<Uuid> = keys.iter().map(|k| k.0).collect();
+
+        // Query all formats by IDs
+        let rows = query_file!("queries/get_genre_by_id.sql", &ids)
+            .fetch_all(&self.client)
+            .await?;
+
+        // Map results by ID
+        let mut results = HashMap::new();
+        for key in keys {
+            if let Some(row) = rows.iter().find(|r| r.id == key.0) {
+                results.insert(
+                    *key,
+                    Some(Genre {
+                        id: row.id,
+                        name: row.name.clone(),
+                        status: row.status,
+                    }),
+                );
+            } else {
+                results.insert(*key, None);
+            }
+        }
+
+        Ok(results)
+    }
+}
+
 /// A simplified comment type that is easier to pull out of the database
 struct BasicComment {
     pub id: Uuid,
@@ -2584,6 +2826,29 @@ pub struct ChaptersInCollection(pub String);
 
 #[derive(Clone, Eq, PartialEq, Hash)]
 pub struct EditedCollectionDetails(pub String);
+
+/// New metadata
+#[derive(Clone, Eq, PartialEq, Hash)]
+pub struct GenreById(pub uuid::Uuid);
+
+#[derive(Clone, Eq, PartialEq, Hash)]
+pub struct FormatById(pub uuid::Uuid);
+
+#[derive(Clone, Eq, PartialEq, Hash)]
+pub struct CreatorsForDocument(pub uuid::Uuid);
+
+#[derive(Clone, Eq, PartialEq, Hash)]
+pub struct KeywordsForDocument(pub uuid::Uuid);
+
+#[derive(Clone, Eq, PartialEq, Hash)]
+pub struct SubjectHeadingsForDocument(pub uuid::Uuid);
+
+#[derive(Clone, Eq, PartialEq, Hash)]
+pub struct LanguagesForDocument(pub uuid::Uuid);
+
+#[derive(Clone, Eq, PartialEq, Hash)]
+pub struct SpatialCoverageForDocument(pub uuid::Uuid);
+
 
 /// One particular morpheme and all the known words that contain that exact morpheme.
 #[derive(async_graphql::SimpleObject)]

@@ -54,14 +54,14 @@ pub struct Genre {
     /// Name of the genre
     pub name: String,
     /// Status (pending, approved, rejected) of a genre
-    pub status: Option<ApprovalStatus>,
+    pub status: ApprovalStatus,
 }
 
 /// Get all approved genres
 #[async_graphql::ComplexObject]
 impl Genre {
     async fn approved(&self) -> bool {
-        matches!(self.status, Some(ApprovalStatus::Approved))
+        matches!(self.status, ApprovalStatus::Approved)
     }
 }
 
@@ -74,14 +74,14 @@ pub struct Format {
     /// Name of the format
     pub name: String,
     /// Status (pending, approved, rejected) of a format
-    pub status: Option<ApprovalStatus>,
+    pub status: ApprovalStatus,
 }
 
 /// Get all approved formats
 #[async_graphql::ComplexObject]
 impl Format {
     async fn approved(&self) -> bool {
-        matches!(self.status, Some(ApprovalStatus::Approved))
+        matches!(self.status, ApprovalStatus::Approved)
     }
 }
 
@@ -94,14 +94,14 @@ pub struct Keyword {
     /// Name of the keyword
     pub name: String,
     /// Status (pending, approved, rejected) of a keyword
-    pub status: Option<ApprovalStatus>,
+    pub status: ApprovalStatus,
 }
 
 /// Get all approved keywords
 #[async_graphql::ComplexObject]
 impl Keyword {
     async fn approved(&self) -> bool {
-        matches!(self.status, Some(ApprovalStatus::Approved))
+        matches!(self.status, ApprovalStatus::Approved)
     }
 }
 
@@ -122,14 +122,14 @@ pub struct SubjectHeading {
     /// Name of the subject heading
     pub name: String,
     /// Status (pending, approved, rejected) of a subject heading
-    pub status: Option<ApprovalStatus>,
+    pub status: ApprovalStatus,
 }
 
 /// Get all approved subject headings
 #[async_graphql::ComplexObject]
 impl SubjectHeading {
     async fn approved(&self) -> bool {
-        matches!(self.status, Some(ApprovalStatus::Approved))
+        matches!(self.status, ApprovalStatus::Approved)
     }
 }
 
@@ -151,14 +151,14 @@ pub struct Language {
     // Name a language uses for itself
     pub autonym: Option<String>,
     /// Status (pending, approved, rejected) of a language
-    pub status: Option<ApprovalStatus>,
+    pub status: ApprovalStatus,
 }
 
 /// Get all approved languages
 #[async_graphql::ComplexObject]
 impl Language {
     async fn approved(&self) -> bool {
-        matches!(self.status, Some(ApprovalStatus::Approved))
+        matches!(self.status, ApprovalStatus::Approved)
     }
 }
 
@@ -178,14 +178,14 @@ pub struct SpatialCoverage {
     /// Name of the place
     pub name: String,
     /// Status (pending, approved, rejected) of a spatial coverage
-    pub status: Option<ApprovalStatus>,
+    pub status: ApprovalStatus,
 }
 
 /// Get all approved spatial coverages
 #[async_graphql::ComplexObject]
 impl SpatialCoverage {
     async fn approved(&self) -> bool {
-        matches!(self.status, Some(ApprovalStatus::Approved))
+        matches!(self.status, ApprovalStatus::Approved)
     }
 }
 
