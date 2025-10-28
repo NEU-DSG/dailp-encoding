@@ -3,16 +3,18 @@ use crate::{
     Database, Date, Translation, TranslationBlock,
 };
 
-use crate::person::{Contributor, SourceAttribution};
+use crate::doc_metadata::{Genre, Format, Keyword, SubjectHeading, Language, SpatialCoverage};
+use crate::person::{Contributor, ContributorRole, Creator, SourceAttribution, SourceAttributionInput};
 
-use async_graphql::{dataloader::DataLoader, FieldResult, MaybeUndefined};
+use async_graphql::{Context, dataloader::DataLoader, FieldResult, MaybeUndefined, Result};
 use serde::{Deserialize, Serialize};
+use sqlx::{query_file_as, PgPool};
 use uuid::Uuid;
 
 /// A document with associated metadata and content broken down into pages and further into
 /// paragraphs with an English translation. Also supports each word being broken down into
 /// component parts and having associated notes.
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, )]
 pub struct AnnotatedDoc {
     /// All non-content metadata about this document
     #[serde(flatten)]
@@ -115,9 +117,21 @@ impl AnnotatedDoc {
             .map(|name| DocumentCollection::from_name(name.to_owned()))
     }
 
-    /// The genre of the document, used to group similar ones
-    async fn genre(&self) -> &Option<String> {
-        &self.meta.genre
+    /// The genre of the document, used to group similar ones  
+    async fn genre(
+        &self,
+        context: &async_graphql::Context<'_>
+    ) -> FieldResult<Option<Genre>> {
+        // Get the genre ID from this document
+        let genre_id_opt = self.meta.genre_id.as_ref();
+    
+        if let Some(id) = genre_id_opt {
+            let db = context.data::<DataLoader<Database>>()?;
+            let genre = db.load_one(crate::GenreById(*id)).await?.flatten();
+            Ok(genre)
+        } else {
+            Ok(None)
+        }
     }
 
     /// Images of each source document page, in order
@@ -220,6 +234,96 @@ impl AnnotatedDoc {
             .chapters_by_document(self.meta.short_name.clone())
             .await?)
     }
+
+    /// The format of the original artifact
+    async fn format(
+        &self,
+        context: &async_graphql::Context<'_>
+    ) -> FieldResult<Option<Format>> {
+        // Get the format ID from this document
+        let format_id_opt = self.meta.format_id.as_ref();
+    
+        if let Some(id) = format_id_opt {
+            let db = context.data::<DataLoader<Database>>()?;
+            let format = db.load_one(crate::FormatById(*id)).await?.flatten();
+            Ok(format)
+        } else {
+            Ok(None)
+        }
+    }
+
+    /// Internal field accessor for creators
+    async fn creators_ids(&self) -> &Option<Vec<Uuid>> {
+        &self.meta.creators_ids
+    }
+
+    // GraphQL resolver for creators
+    async fn creators(&self, context: &async_graphql::Context<'_>) -> FieldResult<Vec<Creator>> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .load_one(crate::CreatorsForDocument(self.meta.id.0))
+            .await?
+            .unwrap_or_default())
+    }
+    
+    /// Internal field accessor for keywords
+    async fn keywords_ids(&self) -> &Option<Vec<Uuid>> {
+        &self.meta.keywords_ids
+    }
+
+    // GraphQL resolver for keywords
+    async fn keywords(&self, context: &async_graphql::Context<'_>) -> FieldResult<Vec<Keyword>> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .load_one(crate::KeywordsForDocument(self.meta.id.0))
+            .await?
+            .unwrap_or_default())
+    }
+    
+    /// Terms that reflect Indigenous knowledge practices related to this document
+    async fn subject_headings_ids(&self) -> &Option<Vec<Uuid>> {
+        &self.meta.subject_headings_ids
+    }
+    
+    async fn subject_headings(
+        &self,
+        context: &async_graphql::Context<'_>,
+    ) -> FieldResult<Vec<SubjectHeading>> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .load_one(crate::SubjectHeadingsForDocument(self.meta.id.0))
+            .await?
+            .unwrap_or_default())
+    }
+
+    /// The languages present in this document
+    async fn languages_ids(&self) -> Option<Vec<Uuid>> {
+        self.meta.languages_ids.clone()
+    }
+    
+    async fn languages(&self, context: &async_graphql::Context<'_>) -> FieldResult<Vec<Language>> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .load_one(crate::LanguagesForDocument(self.meta.id.0))
+            .await?
+            .unwrap_or_default())
+    }
+
+    /// The places mentioned in or associated with this document
+    async fn spatial_coverage_ids(&self) -> &Option<Vec<Uuid>> {
+        &self.meta.spatial_coverage_ids
+    }
+
+    async fn spatial_coverage(
+        &self,
+        context: &async_graphql::Context<'_>,
+    ) -> FieldResult<Vec<SpatialCoverage>> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .load_one(crate::SpatialCoverageForDocument(self.meta.id.0))
+            .await?
+            .unwrap_or_default())
+    }
 }
 
 /// Key to retrieve the pages of a document given a document ID
@@ -314,9 +418,31 @@ pub struct DocumentMetadataUpdate {
     /// The ID of the document to update
     pub id: Uuid,
     /// An updated title for this document, or nothing (if title is unchanged)
-    pub title: MaybeUndefined<String>,
+    pub title: Option<String>,
     /// The date this document was written, or nothing (if unchanged or not applicable)
     pub written_at: MaybeUndefined<DateInput>,
+    /// Term that contextualizes the social practice surrounding the document
+    pub genre_id: Option<Uuid>,
+    /// Term that allows us to trace what the original artifact was
+    pub format_id: Option<Uuid>,
+    /// The pages present in the document, start to end (inclusive)
+    pub pages: Option<String>,
+    /// The creators of the document
+    pub creators_ids: Option<Vec<Uuid>>,
+    /// The editors, translators, etc. of the document
+    pub contributors: Option<Vec<Contributor>>,
+    /// The key terms associated with the document
+    pub keywords_ids: Option<Vec<Uuid>>,
+    /// Terms that reflect Indigenous knowledge practices associated with the document
+    pub subject_headings_ids: Option<Vec<Uuid>>,
+    /// The languages present in the document
+    pub languages_ids: Option<Vec<Uuid>>,
+    /// The physical locations associated with a document (e.g. where it was written, found)
+    pub spatial_coverage_ids: Option<Vec<Uuid>>,
+    /// The DOI of the document, if applicable
+    pub doi: Option<String>,
+    /// The source of the document
+    pub source: Option<SourceAttributionInput>,
 }
 
 #[async_graphql::ComplexObject]
@@ -457,16 +583,30 @@ pub struct DocumentMetadata {
     pub title: String,
     /// Further details about this particular document.
     // pub details: String,
+    pub description: Option<String>,
+    /// The DOI of the document, if applicable
+    pub doi: Option<String>,
     #[serde(default)]
     /// The original source(s) of this document, the most important first.
     pub sources: Vec<SourceAttribution>,
     /// Where the source document came from, maybe the name of a collection.
     pub collection: Option<String>,
-    /// The genre this document is. TODO Evaluate whether we need this.
-    pub genre: Option<String>,
-    #[serde(default)]
+    /// Term that contextualizes the social practice surrounding the document
+    pub genre_id: Option<Uuid>,
+    /// The format of the original artifact
+    pub format_id: Option<Uuid>,
+    /// The creator(s) of the document
+    pub creators_ids: Option<Vec<Uuid>>,
     /// The people involved in collecting, translating, annotating.
-    pub contributors: Vec<Contributor>,
+    pub contributors: Option<Vec<Contributor>>,
+    /// The key terms associated with this document
+    pub keywords_ids: Option<Vec<Uuid>>,
+    /// Terms that reflect Indigenous knowledge practices related to this document
+    pub subject_headings_ids: Option<Vec<Uuid>>,
+    /// The languages present in this document
+    pub languages_ids: Option<Vec<Uuid>>,
+    /// The physical locations associated with this document
+    pub spatial_coverage_ids: Option<Vec<Uuid>>,
     /// Rough translation of the document, broken down by paragraph.
     #[serde(skip)]
     pub translation: Option<Translation>,
@@ -484,6 +624,112 @@ pub struct DocumentMetadata {
     /// Arbitrary number used for manually ordering documents in a collection.
     /// For collections without manual ordering, use zero here.
     pub order_index: i64,
+}
+
+#[async_graphql::Object]
+impl DocumentMetadata {
+    /// Fetch the genre associated with this document
+    async fn genre(&self, ctx: &Context<'_>) -> Result<Option<Genre>> {
+        let genre_id = match self.genre_id {
+            Some(id) => id,
+            _ => return Ok(None),
+        };
+        let pool = ctx.data::<PgPool>()?;
+        let row = query_file_as!(Genre, "queries/get_genre_by_id.sql", genre_id)
+            .fetch_optional(pool)
+            .await?;
+        Ok(row)
+    }
+
+    /// Fetch the format associated with this document
+    async fn format(&self, ctx: &Context<'_>) -> Result<Option<Format>> {
+        let format_id = match self.format_id {
+            Some(id) => id,
+            _ => return Ok(None),
+        };
+        let pool = ctx.data::<PgPool>()?;
+        let row = query_file_as!(Format, "queries/get_format_by_id.sql", format_id)
+            .fetch_optional(pool)
+            .await?;
+        Ok(row)
+    }    
+    
+    /// Fetch all keywords linked to this document
+    async fn keywords(&self, ctx: &Context<'_>) -> Result<Vec<Keyword>> {
+        let pool = ctx.data::<PgPool>()?;
+        let rows = query_file_as!(Keyword, "queries/get_keywords_by_document_id.sql", self.id.0)
+            .fetch_all(pool)
+            .await?;
+        Ok(rows)
+    }
+    
+    /// Fetch all subject headings linked to this document
+    async fn subject_headings(&self, ctx: &Context<'_>) -> Result<Vec<SubjectHeading>> {
+        let pool = ctx.data::<PgPool>()?;
+        let rows = query_file_as!(SubjectHeading, "queries/get_subject_headings_by_document_id.sql", &[self.id.0])
+            .fetch_all(pool)
+            .await?;
+        Ok(rows)
+    }
+    
+     /// Fetch all languages linked to this document
+    async fn languages(&self, ctx: &Context<'_>) -> Result<Vec<Language>> {
+        let pool = ctx.data::<PgPool>()?;
+        let rows = query_file_as!(Language, "queries/get_languages_by_document_id.sql", self.id.0)
+            .fetch_all(pool)
+            .await?;
+        Ok(rows)
+    }
+    
+    /// Fetch all spatial coverage linked to this document
+    async fn spatial_coverage(&self, ctx: &Context<'_>) -> Result<Vec<SpatialCoverage>> {
+        let pool = ctx.data::<PgPool>()?;
+        let rows = query_file_as!(SpatialCoverage, "queries/get_spatial_coverage_by_document_id.sql", self.id.0)
+            .fetch_all(pool)
+            .await?;
+        Ok(rows)
+    }
+    
+    /// Fetch all creators linked to this document
+    async fn creators(&self, ctx: &Context<'_>) -> Result<Vec<Creator>> {
+        let pool = ctx.data::<PgPool>()?;
+        let rows = query_file_as!(Creator, "queries/get_creators_by_document_id.sql", self.id.0)
+            .fetch_all(pool)
+            .await?;
+        Ok(rows)
+    }
+    
+    /// Fetch all contributors linked to this document
+    pub async fn contributors(&self, ctx: &Context<'_>) -> Result<Vec<Contributor>> {
+        let pool = ctx.data::<PgPool>()?;
+        let rows = query_file_as!(
+            Contributor,
+            "queries/get_contributors_by_document_id.sql",
+            self.id.0
+        )
+        .fetch_all(pool)
+        .await?;
+    
+        // Map the returned rows into Contributor struct (transcriber, translator, annotator, cultural advisor)
+        let contributors = rows
+            .into_iter()
+            .map(|x| Contributor {
+                id: x.id,
+                name: x.name,
+                full_name: x.full_name,
+                role: x.role.as_ref().and_then(|r| match r.as_str() {
+                    "transcriber" => Some(ContributorRole::Transcriber),
+                    "translator" => Some(ContributorRole::Translator),
+                    "annotator" => Some(ContributorRole::Annotator),
+                    "cultural_advisor" => Some(ContributorRole::CulturalAdvisor),
+                    _ => None,
+                }),
+            })
+            .collect();
+    
+        Ok(contributors)
+    }
+    
 }
 
 /// Database ID for one document

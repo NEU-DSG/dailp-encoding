@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "-- Insert the new set of contributor IDs\ninsert into document_contributor (document_id, contributor_id)\nselect $1, unnest($2::uuid[]);",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "UuidArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "f371f52eef9423d282993f632fe3f104c8d81b2041ca08c15c15c2c2e890fd37"
+}

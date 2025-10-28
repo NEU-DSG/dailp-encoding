@@ -1,0 +1,45 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select k.*\nfrom keyword k\njoin document_keyword dk on dk.keyword_id = k.id\nwhere dk.document_id = $1;",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "status",
+        "type_info": {
+          "Custom": {
+            "name": "approval_status",
+            "kind": {
+              "Enum": [
+                "pending",
+                "approved",
+                "rejected"
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "9f78955da499a6e49e272c5897fc3837dcd08bc0ff382b10d834e2d40fdb0fc7"
+}
