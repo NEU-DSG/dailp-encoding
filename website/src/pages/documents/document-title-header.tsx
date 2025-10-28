@@ -7,16 +7,15 @@
  *
  * Presentation logic only — does not query format/description since they're not in the schema yet.
  */
-
 import React, { useState } from "react"
 import { isMobile } from "react-device-detect"
 import { Helmet } from "react-helmet"
 import { useUser } from "src/auth"
-import { BookmarkButton } from "./document.page"
 import { AudioPlayer, Breadcrumbs, Button, Link } from "src/components"
-import type { NullPick } from "./document.page"
-import * as css from "./document.css"
 import * as Dailp from "src/graphql/dailp"
+import * as css from "./document.css"
+import { BookmarkButton } from "./document.page"
+import type { NullPick } from "./document.page"
 
 export const DocumentTitleHeader = ({
   rootTitle,
@@ -52,7 +51,10 @@ export const DocumentTitleHeader = ({
       <div className={css.headerLayout}>
         {doc.thumbnailUrl && (
           <img
-            src={doc.thumbnailUrl ?? "https://www.wavonline.com/a/img/no_image_available.jpeg"}
+            src={
+              doc.thumbnailUrl ??
+              "https://www.wavonline.com/a/img/no_image_available.jpeg"
+            }
             alt={`Thumbnail for ${doc.title}`}
             className={css.thumbnail}
           />
@@ -60,7 +62,10 @@ export const DocumentTitleHeader = ({
 
         <div className={css.headerText}>
           {breadcrumbs?.length ? (
-            <Breadcrumbs aria-label="Breadcrumbs" className={css.breadcrumbWrapper}>
+            <Breadcrumbs
+              aria-label="Breadcrumbs"
+              className={css.breadcrumbWrapper}
+            >
               {breadcrumbs.map((crumb) =>
                 crumb.slug ? (
                   <Link
@@ -83,7 +88,10 @@ export const DocumentTitleHeader = ({
           <div className={css.docMeta}>
             {/* TODO: Replace placeholder once genre and format are added to AnnotatedDoc schema */}
             <span>Genre not yet available.</span>
-            <span> • <i>Format not yet available</i></span>
+            <span>
+              {" "}
+              • <i>Format not yet available</i>
+            </span>
           </div>
 
           <p className={css.docDescription}>
@@ -114,7 +122,7 @@ export const DocumentTitleHeader = ({
                 isBookmarked={!!doc.bookmarkedOn?.formattedDate}
               />
             )}
-        </div>
+          </div>
           {!doc.audioRecording && !isMobile && (
             <div id="no-audio-message">
               <strong>No Audio Available</strong>
@@ -143,4 +151,3 @@ export const DocumentTitleHeader = ({
     </header>
   )
 }
-
