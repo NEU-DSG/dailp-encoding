@@ -118,22 +118,17 @@ impl AnnotatedDoc {
     }
 
     /// The genre of the document, used to group similar ones  
-
-    async fn genre(
-        &self,
-        context: &async_graphql::Context<'_>
-    ) -> FieldResult<Option<Genre>> {
-        // Get the genre ID from this document
-        let genre_id_opt = self.meta.genre_id.as_ref();
-    
-        if let Some(id) = genre_id_opt {
-            let db = context.data::<DataLoader<Database>>()?;
-            let genre = db.load_one(crate::GenreById(*id)).await?;
-            Ok(genre)
-        } else {
-            Ok(None)
-        }
-    }
+    async fn genre(&self, ctx: &Context<'_>) -> Result<Option<Genre>> {
+        let genre_id = match self.genre_id {
+            Some(id) => id,
+            _ => return Ok(None),
+        };
+        let pool = ctx.data::<PgPool>()?;
+        let row = query_file_as!(Genre, "queries/get_genre_by_id.sql", genre_id)
+            .fetch_optional(pool)
+            .await?;
+        Ok(row)
+    }    
 
     /// Images of each source document page, in order
     async fn page_images(&self) -> &Option<IiifImages> {
