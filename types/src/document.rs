@@ -119,7 +119,7 @@ impl AnnotatedDoc {
 
     /// The genre of the document, used to group similar ones  
     async fn genre(&self, ctx: &Context<'_>) -> Result<Option<Genre>> {
-        let genre_id = match self.genre_id {
+        let genre_id = match self.meta.genre_id {
             Some(id) => id,
             _ => return Ok(None),
         };
@@ -706,7 +706,7 @@ impl DocumentMetadata {
         .fetch_all(pool)
         .await?;
     
-        // Map the returned rows into Contributor struct
+        // Map the returned rows into Contributor struct (transcriber, translator, annotator, cultural advisor)
         let contributors = rows
             .into_iter()
             .map(|x| Contributor {
@@ -714,9 +714,10 @@ impl DocumentMetadata {
                 name: x.name,
                 full_name: x.full_name,
                 role: x.role.as_ref().and_then(|r| match r.as_str() {
-                    "author" => Some(ContributorRole::Author),
-                    "editor" => Some(ContributorRole::Editor),
+                    "transcriber" => Some(ContributorRole::Transcriber),
                     "translator" => Some(ContributorRole::Translator),
+                    "annotator" => Some(ContributorRole::Annotator),
+                    "cultural_advisor" => Some(ContributorRole::CulturalAdvisor),
                     _ => None,
                 }),
             })
