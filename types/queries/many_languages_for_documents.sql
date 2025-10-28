@@ -1,3 +1,4 @@
+-- Fetch all languages linked to a given set of documents
 select
     dl.document_id,
     l.id,
