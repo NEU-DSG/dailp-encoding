@@ -310,8 +310,8 @@ impl AnnotatedDoc {
     }
 
     /// The places mentioned in or associated with this document
-   async fn spatial_coverage_ids(&self) -> &Option<Vec<Uuid>> {
-        self.meta.spatial_coverage_ids
+    async fn spatial_coverage_ids(&self) -> &Option<Vec<Uuid>> {
+        &self.meta.spatial_coverage_ids
     }
 
     async fn spatial_coverage(
