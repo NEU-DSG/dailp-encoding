@@ -5,6 +5,7 @@ import { PageContents } from "src/components/wordpress"
 import { useMenuBySlugQuery, usePageByPathQuery } from "src/graphql/dailp"
 import { edgePadded, fullWidth } from "src/style/utils.css"
 import Layout from "../layout"
+import { Link } from "src/components"
 
 interface DailpPageProps {
   "*": string
@@ -66,7 +67,7 @@ const Contents = (props: { path: string }) => {
         <h1>{page.title}</h1>
         {/* dennis todo: should be admin in the future */}
         {userRole === UserRole.Editor && (
-          <button onClick={() => navigate(`/edit${props.path}`)}>Edit</button>
+          <Link href={`/edit${props.path}`}>Edit</Link>
         )}
       </header>
       <PageContents content={content} />

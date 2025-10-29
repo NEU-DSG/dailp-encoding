@@ -1,12 +1,10 @@
 use csv::ReaderBuilder;
-use dailp::page::ContentBlock;
-use dailp::page::Markdown;
 use dailp::page::NewPageInput;
-use dailp::{page::Page, Database};
+use dailp::Database;
 use serde::Deserialize;
 use std::fs::File;
 
-// CSV row structure (includes all fields even though we skip some)
+/// CSV row structure, used to load pages.csv data into a vector
 #[derive(Debug, Deserialize)]
 struct CsvRow {
     #[serde(rename = "page_id")]
@@ -70,11 +68,10 @@ pub fn load_pages(file_path: &str) -> Result<Vec<NewPageInput>, anyhow::Error> {
 }
 
 pub async fn migrate_pages(db: &Database) -> anyhow::Result<()> {
-    //println!("Migrating pages...");
-    let pages = load_pages("pages.csv")?;
-    //for page in pages {
-    //db.insert_page(NewPageInput::from(page.clone())).await?;
-    //}
+    // Resolve pages.csv relative to this crate's directory so running from target/ works
+    let csv_path = concat!(env!("CARGO_MANIFEST_DIR"), "/pages.csv");
+    let pages = load_pages(csv_path)?;
+
     for page in pages {
         db.upsert_page(NewPageInput::from(page.clone())).await?;
     }
