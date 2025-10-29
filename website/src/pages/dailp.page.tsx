@@ -1,11 +1,11 @@
 import React from "react"
 import { navigate } from "vite-plugin-ssr/client/router"
 import { UserRole, useUserRole } from "src/auth"
+import { Link } from "src/components"
 import { PageContents } from "src/components/wordpress"
 import { useMenuBySlugQuery, usePageByPathQuery } from "src/graphql/dailp"
 import { edgePadded, fullWidth } from "src/style/utils.css"
 import Layout from "../layout"
-import { Link } from "src/components"
 
 interface DailpPageProps {
   "*": string
