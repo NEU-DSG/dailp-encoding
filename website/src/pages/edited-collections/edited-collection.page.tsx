@@ -1,6 +1,7 @@
 import React from "react"
 import { Helmet } from "react-helmet"
 import { navigate } from "vite-plugin-ssr/client/router"
+import { UserRole, useUserRole } from "src/auth"
 import { Link, WordpressPage } from "src/components"
 import * as Dailp from "src/graphql/dailp"
 import { useRouteParams } from "src/renderer/PageShell"
@@ -14,6 +15,7 @@ import { useChapters, useDialog } from "./edited-collection-context"
 const EditedCollectionPage = () => {
   const { collectionSlug } = useRouteParams()
   const dialog = useDialog()
+  const userRole = useUserRole()
 
   const chapters = useChapters()
   const [{ data: dailp }] = Dailp.useEditedCollectionsQuery()
@@ -51,6 +53,24 @@ const EditedCollectionPage = () => {
     return null
   }
 
+  // Show loading state while determining user role
+  if (userRole === undefined) {
+    return (
+      <CWKWLayout>
+        <Helmet>
+          <meta name="robots" content="noindex,nofollow" />
+        </Helmet>
+        <main className={util.paddedCenterColumn}>
+          <article className={dialog.visible ? css.leftMargin : util.fullWidth}>
+            <div style={{ textAlign: "center", padding: "40px 20px" }}>
+              <p>Loading...</p>
+            </div>
+          </article>
+        </main>
+      </CWKWLayout>
+    )
+  }
+
   return (
     <CWKWLayout>
       <Helmet>
@@ -59,7 +79,16 @@ const EditedCollectionPage = () => {
       <main className={util.paddedCenterColumn}>
         <article className={dialog.visible ? css.leftMargin : util.fullWidth}>
           <header>
-            <h1>{collection.title}</h1>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: "20px",
+              }}
+            >
+              <h1>{collection.title}</h1>
+            </div>
           </header>
 
           <h3>

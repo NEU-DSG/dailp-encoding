@@ -6,6 +6,8 @@ mod contributors;
 mod early_vocab;
 mod edited_collection;
 mod lexical;
+mod menu;
+mod pages;
 mod spreadsheets;
 mod tags;
 mod translations;
@@ -29,28 +31,38 @@ async fn main() -> Result<()> {
 
     let db = Database::connect(Some(1))?;
 
-    println!("Migrating Image Sources...");
-    migrate_image_sources(&db).await?;
+    //println!("Migrating Image Sources...");
+    //migrate_image_sources(&db).await?;
 
     println!("Migrating contributors...");
     contributors::migrate_all(&db).await?;
 
-    println!("Migrating tags to database...");
-    tags::migrate_tags(&db).await?;
+    //println!("Migrating tags to database...");
+    //tags::migrate_tags(&db).await?;
 
-    println!("Migrating DF1975 and DF2003...");
-    lexical::migrate_dictionaries(&db).await?;
+    //println!("Migrating DF1975 and DF2003...");
+    //lexical::migrate_dictionaries(&db).await?;
 
-    println!("Migrating early vocabularies...");
-    early_vocab::migrate_all(&db).await?;
+    //println!("Migrating early vocabularies...");
+    //early_vocab::migrate_all(&db).await?;
 
-    migrate_data(&db).await?;
+    //migrate_data(&db).await?;
+    println!("Migrating pages...");
+    pages::migrate_pages(&db).await?;
 
-    //println!("Migrating connections...");
-    //connections::migrate_connections(&db).await?;
+    //migrate_data(&db).await?;
 
-    println!("Migrating collections...");
-    edited_collection::migrate_edited_collection(&db).await?;
+    println!("Migrating connections...");
+    connections::migrate_connections(&db).await?;
+
+    println!("Migrating menu...");
+    menu::migrate_menu(&db).await?;
+
+    //println!("Migrating collections...");
+    //edited_collection::migrate_edited_collection(&db).await?;
+
+    println!("Creating user documents collection...");
+    user_documents::create_user_documents_collection(&db).await?;
 
     println!("Creating user documents collection...");
     user_documents::create_user_documents_collection(&db).await?;

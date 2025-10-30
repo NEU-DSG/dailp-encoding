@@ -10,10 +10,11 @@ pub async fn create_user_documents_collection(db: &Database) -> anyhow::Result<(
         title: "User-Created Documents".to_string(),
         wordpress_menu_id: None,
         chapters: Vec::new(), // No chapters initially - we'll create them per document
+        description: "User-created documents".to_string(),
+        thumbnail_url: None,
     };
 
     db.upsert_collection(&user_documents_collection).await?;
 
-    println!("User documents collection created successfully!");
     Ok(())
 }

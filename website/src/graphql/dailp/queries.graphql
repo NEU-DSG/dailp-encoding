@@ -210,16 +210,20 @@ query EditedCollections {
     id
     title
     slug
+    description
     chapters {
       id
       path
     }
+    thumbnailUrl
   }
 }
 
 query EditedCollection($slug: String!) {
   editedCollection(slug: $slug) {
     id
+    title
+    slug
     chapters {
       id
       title

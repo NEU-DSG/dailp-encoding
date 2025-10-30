@@ -3,20 +3,23 @@
 use dailp::{
     auth::{AuthGuard, GroupGuard, UserGroup, UserInfo},
     comment::{CommentParent, CommentUpdate, DeleteCommentInput, PostCommentInput},
+    page::{NewPageInput, Page},
     slugify_ltree,
     user::{User, UserUpdate},
     AnnotatedForm, AnnotatedSeg, AttachAudioToWordInput, CollectionChapter, Contributor,
-    CurateWordAudioInput, Date, DeleteContributorAttribution, DocumentMetadata,
-    DocumentMetadataUpdate, DocumentParagraph, PositionInDocument, SourceAttribution,
-    TranslatedPage, TranslatedSection, UpdateContributorAttribution, Uuid,
+    ContributorRole, CreateEditedCollectionInput, CurateWordAudioInput, Date,
+    DeleteContributorAttribution, DocumentMetadata, DocumentMetadataUpdate, DocumentParagraph,
+    PositionInDocument, SourceAttribution, TranslatedPage, TranslatedSection,
+    UpdateContributorAttribution, Uuid,
 };
 use itertools::{Itertools, Position};
 
 use {
     dailp::async_graphql::{self, dataloader::DataLoader, Context, FieldResult},
     dailp::{
-        AnnotatedDoc, AnnotatedFormUpdate, CherokeeOrthography, Database, EditedCollection,
-        MorphemeId, MorphemeReference, MorphemeTag, ParagraphUpdate, WordsInDocument,
+        AbstractMorphemeTag, AnnotatedDoc, AnnotatedFormUpdate, CherokeeOrthography, Database,
+        EditedCollection, Menu, MenuUpdate, MorphemeId, MorphemeReference, MorphemeTag,
+        ParagraphUpdate, WordsInDocument,
     },
 };
 
@@ -34,6 +37,14 @@ impl Query {
             .data::<DataLoader<Database>>()?
             .loader()
             .all_edited_collections()
+            .await?)
+    }
+
+    async fn page_by_path(&self, context: &Context<'_>, path: String) -> FieldResult<Option<Page>> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .page_by_path(&path)
             .await?)
     }
 
@@ -364,6 +375,26 @@ impl Query {
             .dailp_user_by_id(&id)
             .await?)
     }
+
+    async fn abbreviation_id_from_short_name(
+        &self,
+        context: &Context<'_>,
+        short_name: String,
+    ) -> FieldResult<Uuid> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .abbreviation_id_from_short_name(&short_name)
+            .await?)
+    }
+
+    async fn menu_by_slug(&self, context: &Context<'_>, slug: String) -> FieldResult<Menu> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .loader()
+            .get_menu_by_slug(slug)
+            .await?)
+    }
 }
 
 pub struct Mutation;
@@ -685,7 +716,8 @@ impl Mutation {
             .ok_or_else(|| anyhow::format_err!("User is not signed in"))?;
         let contributor = Contributor {
             name: user.id.to_string(),
-            role: "CONTRIBUTOR".to_string(),
+            // defaulting to editor
+            role: Some(ContributorRole::Editor),
         };
         let today = dailp::chrono::Utc::now().date_naive();
         let document_date = dailp::Date::new(today);

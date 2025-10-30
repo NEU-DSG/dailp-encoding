@@ -1,5 +1,6 @@
 #![allow(missing_docs)]
 
+use anyhow::Error;
 use auth::UserGroup;
 use chrono::{NaiveDate, NaiveDateTime};
 use sqlx::postgres::types::{PgLTree, PgRange};
@@ -10,6 +11,10 @@ use user::UserUpdate;
 use crate::collection::CollectionChapter;
 use crate::collection::EditedCollection;
 use crate::comment::{Comment, CommentParentType, CommentType, CommentUpdate};
+use crate::page::ContentBlock;
+use crate::page::Markdown;
+use crate::page::NewPageInput;
+use crate::page::Page;
 use crate::user::User;
 use crate::user::UserId;
 use {
@@ -25,6 +30,8 @@ use {
     std::time::Duration,
     uuid::Uuid,
 };
+// Explicitly import types from person.rs
+use crate::person::{Contributor, ContributorDetails, ContributorRole};
 
 /// Connects to our backing database instance, providing high level functions
 /// for accessing the data therein.
@@ -567,7 +574,7 @@ impl Database {
         let simple_phonetics = word.romanized_source.into_vec();
         let commentary = word.commentary.into_vec();
         let english_gloss_owned: Vec<String> = match word.english_gloss.into_vec().pop().flatten() {
-            Some(glosses) => glosses,
+            Some(glosses) => glosses.split(',').map(|s| s.trim().to_string()).collect(),
             None => Vec::new(),
         };
         let english_gloss: Vec<&str> = english_gloss_owned.iter().map(|s| s.as_str()).collect();
@@ -980,13 +987,16 @@ impl Database {
             let (name, doc, role): (Vec<_>, Vec<_>, Vec<_>) = meta
                 .contributors
                 .iter()
-                .map(|contributor| (&*contributor.name, document_uuid, &*contributor.role))
+                .map(|contributor| (&*contributor.name, document_uuid, contributor.role.as_ref()))
                 .multiunzip();
+            // Convert roles to Option<String> for SQL
+            let role_strings: Vec<Option<String>> =
+                role.iter().map(|r| r.map(|r| r.to_string())).collect();
             query_file!(
                 "queries/upsert_document_contributors.sql",
                 &*name as _,
                 &*doc,
-                &*role as _
+                &role_strings as _
             )
             .execute(&mut *tx)
             .await?;
@@ -1089,6 +1099,23 @@ impl Database {
 
         tx.commit().await?;
         Ok(())
+    }
+
+    pub async fn insert_edited_collection(
+        &self,
+        collection: CreateEditedCollectionInput,
+    ) -> Result<Uuid> {
+        // let mut tx = self.client.begin().await?;
+        let collection_id = query_file_scalar!(
+            "queries/insert_edited_collection.sql",
+            collection.title,
+            slug::slugify(&collection.title),
+            collection.description,
+            collection.thumbnail_url,
+        )
+        .fetch_one(&self.client)
+        .await?;
+        Ok(collection_id)
     }
 
     pub async fn document_breadcrumbs(
@@ -1436,6 +1463,38 @@ impl Database {
         )
         .fetch_one(&self.client)
         .await?;
+        Ok(())
+    }
+
+    pub async fn insert_custom_abstract_tag(&self, tag: AbstractMorphemeTag) -> Result<Uuid> {
+        let abstract_id =
+            query_file_scalar!("queries/insert_custom_abstract_tag.sql", tag.id, "custom")
+                .fetch_one(&self.client)
+                .await?;
+        Ok(abstract_id)
+    }
+
+    pub async fn insert_custom_morpheme_tag(
+        &self,
+        form: MorphemeTag,
+        system_id: Uuid,
+    ) -> Result<()> {
+        query_file!(
+            "queries/insert_custom_morpheme_tag.sql",
+            system_id,
+            &form
+                .internal_tags
+                .iter()
+                .map(|id| Uuid::parse_str(id).unwrap())
+                .collect::<Vec<Uuid>>(),
+            form.tag,
+            form.title,
+            form.role_override as Option<WordSegmentRole>,
+            form.definition
+        )
+        .fetch_all(&self.client)
+        .await?;
+
         Ok(())
     }
 
@@ -2268,7 +2327,11 @@ impl Loader<ContributorsForDocument> for Database {
                     ContributorsForDocument(x.document_id),
                     Contributor {
                         name: x.full_name,
-                        role: x.contribution_role,
+                        role: x
+                            .contribution_role
+                            .to_lowercase()
+                            .parse::<ContributorRole>()
+                            .ok(),
                     },
                 )
             })
@@ -2298,6 +2361,7 @@ impl Loader<PersonFullName> for Database {
                         full_name: x.full_name,
                         alternate_name: None,
                         birth_date: None,
+                        is_visible: false,
                     },
                 )
             })
@@ -2502,7 +2566,9 @@ impl Loader<EditedCollectionDetails> for Database {
                         id: collection.id,
                         title: collection.title,
                         wordpress_menu_id: collection.wordpress_menu_id,
+                        description: collection.description,
                         slug: collection.slug,
+                        thumbnail_url: collection.thumbnail_url,
                     },
                 )
             })
