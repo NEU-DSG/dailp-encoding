@@ -19,6 +19,7 @@
   "license": "MIT",
   "private": true,
   "dependencies": {
+    "jwt-decode": "^4.0.0",
     "@fontsource/charis-sil": "^4.5.7",
     "@fontsource/quattrocento-sans": "^4.5.5",
     "@reach/dialog": "^0.16.2",

@@ -237,6 +237,18 @@ export type AudioSlice = {
   readonly startTime: Maybe<Scalars["Int"]>
 }
 
+/** Response returned after successful login */
+export type AuthResponse = {
+  readonly __typename?: "AuthResponse"
+  readonly accessToken: Scalars["String"]
+  readonly displayName: Maybe<Scalars["String"]>
+  readonly email: Scalars["String"]
+  readonly expiresIn: Scalars["Int"]
+  readonly refreshToken: Scalars["String"]
+  readonly role: Maybe<UserGroup>
+  readonly userId: Scalars["String"]
+}
+
 /**
  * One representation of Cherokee phonology.
  * There are several different writing systems for Cherokee phonology and we
@@ -616,10 +628,20 @@ export type LineBreak = {
   readonly index: Scalars["Int"]
 }
 
+export type LoginInput = {
+  readonly email: Scalars["String"]
+  readonly password: Scalars["String"]
+}
+
 /** A block of prose content, formatted with [Markdown](https://commonmark.org/). */
 export type Markdown = {
   readonly __typename?: "Markdown"
   readonly content: Scalars["String"]
+}
+
+export type MessageResponse = {
+  readonly __typename?: "MessageResponse"
+  readonly message: Scalars["String"]
 }
 
 /** One particular morpheme and all the known words that contain that exact morpheme. */
@@ -703,10 +725,22 @@ export type Mutation = {
   /** Mutation for deleting contributor attributions */
   readonly deleteContributorAttribution: Scalars["UUID"]
   readonly insertCustomMorphemeTag: Scalars["Boolean"]
+  /** Login with email and password (DAILP auth only) */
+  readonly login: AuthResponse
+  /** Logout by revoking refresh token (DAILP auth only) */
+  readonly logout: Scalars["Boolean"]
   /** Post a new comment on a given object */
   readonly postComment: CommentParent
+  /** Refresh access token using refresh token (DAILP auth only) */
+  readonly refreshToken: RefreshTokenResponse
   /** Removes a bookmark from a user's list of bookmarks */
   readonly removeBookmark: AnnotatedDoc
+  /** Request a password reset email (DAILP auth only) */
+  readonly requestPasswordReset: MessageResponse
+  /** Reset password using reset token (DAILP auth only) */
+  readonly resetPassword: MessageResponse
+  /** Sign up a new user with email and password (DAILP auth only) */
+  readonly signup: MessageResponse
   readonly updateAnnotation: Scalars["Boolean"]
   /** Update a comment */
   readonly updateComment: CommentParent
@@ -719,6 +753,8 @@ export type Mutation = {
   /** Updates a dailp_user's information */
   readonly updateUser: User
   readonly updateWord: AnnotatedForm
+  /** Verify email address using verification token (DAILP auth only) */
+  readonly verifyEmail: MessageResponse
 }
 
 export type MutationAddBookmarkArgs = {
@@ -751,12 +787,36 @@ export type MutationInsertCustomMorphemeTagArgs = {
   title: Scalars["String"]
 }
 
+export type MutationLoginArgs = {
+  input: LoginInput
+}
+
+export type MutationLogoutArgs = {
+  refreshToken: Scalars["String"]
+}
+
 export type MutationPostCommentArgs = {
   input: PostCommentInput
 }
 
+export type MutationRefreshTokenArgs = {
+  input: RefreshTokenInput
+}
+
 export type MutationRemoveBookmarkArgs = {
   documentId: Scalars["UUID"]
+}
+
+export type MutationRequestPasswordResetArgs = {
+  input: RequestPasswordResetInput
+}
+
+export type MutationResetPasswordArgs = {
+  input: ResetPasswordInput
+}
+
+export type MutationSignupArgs = {
+  input: SignupInput
 }
 
 export type MutationUpdateAnnotationArgs = {
@@ -789,6 +849,10 @@ export type MutationUpdateUserArgs = {
 
 export type MutationUpdateWordArgs = {
   word: AnnotatedFormUpdate
+}
+
+export type MutationVerifyEmailArgs = {
+  token: Scalars["String"]
 }
 
 /**
@@ -998,6 +1062,32 @@ export type QueryWordByIdArgs = {
 
 export type QueryWordSearchArgs = {
   query: Scalars["String"]
+}
+
+export type RefreshTokenInput = {
+  readonly refreshToken: Scalars["String"]
+}
+
+/** Response returned after token refresh */
+export type RefreshTokenResponse = {
+  readonly __typename?: "RefreshTokenResponse"
+  readonly accessToken: Scalars["String"]
+  readonly expiresIn: Scalars["Int"]
+}
+
+export type RequestPasswordResetInput = {
+  readonly email: Scalars["String"]
+}
+
+export type ResetPasswordInput = {
+  readonly newPassword: Scalars["String"]
+  readonly token: Scalars["String"]
+}
+
+/** GraphQL Input Types for Authentication */
+export type SignupInput = {
+  readonly email: Scalars["String"]
+  readonly password: Scalars["String"]
 }
 
 /**
@@ -2629,6 +2719,87 @@ export type InsertCustomMorphemeTagMutation = {
   readonly __typename?: "Mutation"
 } & Pick<Mutation, "insertCustomMorphemeTag">
 
+export type SignupMutationVariables = Exact<{
+  input: SignupInput
+}>
+
+export type SignupMutation = { readonly __typename?: "Mutation" } & {
+  readonly signup: { readonly __typename?: "MessageResponse" } & Pick<
+    MessageResponse,
+    "message"
+  >
+}
+
+export type LoginMutationVariables = Exact<{
+  input: LoginInput
+}>
+
+export type LoginMutation = { readonly __typename?: "Mutation" } & {
+  readonly login: { readonly __typename?: "AuthResponse" } & Pick<
+    AuthResponse,
+    | "accessToken"
+    | "refreshToken"
+    | "expiresIn"
+    | "userId"
+    | "email"
+    | "role"
+    | "displayName"
+  >
+}
+
+export type RefreshTokenMutationVariables = Exact<{
+  input: RefreshTokenInput
+}>
+
+export type RefreshTokenMutation = { readonly __typename?: "Mutation" } & {
+  readonly refreshToken: {
+    readonly __typename?: "RefreshTokenResponse"
+  } & Pick<RefreshTokenResponse, "accessToken" | "expiresIn">
+}
+
+export type LogoutMutationVariables = Exact<{
+  refreshToken: Scalars["String"]
+}>
+
+export type LogoutMutation = { readonly __typename?: "Mutation" } & Pick<
+  Mutation,
+  "logout"
+>
+
+export type RequestPasswordResetMutationVariables = Exact<{
+  input: RequestPasswordResetInput
+}>
+
+export type RequestPasswordResetMutation = {
+  readonly __typename?: "Mutation"
+} & {
+  readonly requestPasswordReset: {
+    readonly __typename?: "MessageResponse"
+  } & Pick<MessageResponse, "message">
+}
+
+export type ResetPasswordMutationVariables = Exact<{
+  input: ResetPasswordInput
+}>
+
+export type ResetPasswordMutation = { readonly __typename?: "Mutation" } & {
+  readonly resetPassword: { readonly __typename?: "MessageResponse" } & Pick<
+    MessageResponse,
+    "message"
+  >
+}
+
+export type VerifyEmailMutationVariables = Exact<{
+  token: Scalars["String"]
+}>
+
+export type VerifyEmailMutation = { readonly __typename?: "Mutation" } & {
+  readonly verifyEmail: { readonly __typename?: "MessageResponse" } & Pick<
+    MessageResponse,
+    "message"
+  >
+}
+
 export const DocFormFieldsFragmentDoc = gql`
   fragment DocFormFields on AnnotatedDoc {
     id
@@ -3718,4 +3889,100 @@ export function useInsertCustomMorphemeTagMutation() {
     InsertCustomMorphemeTagMutation,
     InsertCustomMorphemeTagMutationVariables
   >(InsertCustomMorphemeTagDocument)
+}
+export const SignupDocument = gql`
+  mutation Signup($input: SignupInput!) {
+    signup(input: $input) {
+      message
+    }
+  }
+`
+
+export function useSignupMutation() {
+  return Urql.useMutation<SignupMutation, SignupMutationVariables>(
+    SignupDocument
+  )
+}
+export const LoginDocument = gql`
+  mutation Login($input: LoginInput!) {
+    login(input: $input) {
+      accessToken
+      refreshToken
+      expiresIn
+      userId
+      email
+      role
+      displayName
+    }
+  }
+`
+
+export function useLoginMutation() {
+  return Urql.useMutation<LoginMutation, LoginMutationVariables>(LoginDocument)
+}
+export const RefreshTokenDocument = gql`
+  mutation RefreshToken($input: RefreshTokenInput!) {
+    refreshToken(input: $input) {
+      accessToken
+      expiresIn
+    }
+  }
+`
+
+export function useRefreshTokenMutation() {
+  return Urql.useMutation<RefreshTokenMutation, RefreshTokenMutationVariables>(
+    RefreshTokenDocument
+  )
+}
+export const LogoutDocument = gql`
+  mutation Logout($refreshToken: String!) {
+    logout(refreshToken: $refreshToken)
+  }
+`
+
+export function useLogoutMutation() {
+  return Urql.useMutation<LogoutMutation, LogoutMutationVariables>(
+    LogoutDocument
+  )
+}
+export const RequestPasswordResetDocument = gql`
+  mutation RequestPasswordReset($input: RequestPasswordResetInput!) {
+    requestPasswordReset(input: $input) {
+      message
+    }
+  }
+`
+
+export function useRequestPasswordResetMutation() {
+  return Urql.useMutation<
+    RequestPasswordResetMutation,
+    RequestPasswordResetMutationVariables
+  >(RequestPasswordResetDocument)
+}
+export const ResetPasswordDocument = gql`
+  mutation ResetPassword($input: ResetPasswordInput!) {
+    resetPassword(input: $input) {
+      message
+    }
+  }
+`
+
+export function useResetPasswordMutation() {
+  return Urql.useMutation<
+    ResetPasswordMutation,
+    ResetPasswordMutationVariables
+  >(ResetPasswordDocument)
+}
+export const VerifyEmailDocument = gql`
+  mutation VerifyEmail($token: String!) {
+    verifyEmail(token: $token) {
+      message
+    }
+  }
+`
+
+export function useVerifyEmailMutation() {
+  return Urql.useMutation<VerifyEmailMutation, VerifyEmailMutationVariables>(
+    VerifyEmailDocument
+  )
 }

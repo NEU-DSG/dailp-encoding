@@ -266,6 +266,19 @@ type AudioSlice {
 	endTime: Int
 }
 
+"""
+Response returned after successful login
+"""
+type AuthResponse {
+	accessToken: String!
+	refreshToken: String!
+	expiresIn: Int!
+	userId: String!
+	email: String!
+	role: UserGroup
+	displayName: String
+}
+
 
 """
 One representation of Cherokee phonology.
@@ -793,11 +806,20 @@ type LineBreak {
 	index: Int!
 }
 
+input LoginInput {
+	email: String!
+	password: String!
+}
+
 """
 A block of prose content, formatted with [Markdown](https://commonmark.org/).
 """
 type Markdown {
 	content: String!
+}
+
+type MessageResponse {
+	message: String!
 }
 
 """
@@ -938,6 +960,34 @@ type Mutation {
 	updateDocumentMetadata(document: DocumentMetadataUpdate!): UUID!
 	insertCustomMorphemeTag(tag: String!, title: String!, system: String!): Boolean!
 	createEditedCollection(input: CreateEditedCollectionInput!): String!
+	"""
+	Sign up a new user with email and password (DAILP auth only)
+	"""
+	signup(input: SignupInput!): MessageResponse!
+	"""
+	Login with email and password (DAILP auth only)
+	"""
+	login(input: LoginInput!): AuthResponse!
+	"""
+	Refresh access token using refresh token (DAILP auth only)
+	"""
+	refreshToken(input: RefreshTokenInput!): RefreshTokenResponse!
+	"""
+	Logout by revoking refresh token (DAILP auth only)
+	"""
+	logout(refreshToken: String!): Boolean!
+	"""
+	Request a password reset email (DAILP auth only)
+	"""
+	requestPasswordReset(input: RequestPasswordResetInput!): MessageResponse!
+	"""
+	Reset password using reset token (DAILP auth only)
+	"""
+	resetPassword(input: ResetPasswordInput!): MessageResponse!
+	"""
+	Verify email address using verification token (DAILP auth only)
+	"""
+	verifyEmail(token: String!): MessageResponse!
 }
 
 """
@@ -1126,6 +1176,35 @@ type Query {
 	"""
 	dailpUserById(id: UUID!): User!
 	abbreviationIdFromShortName(shortName: String!): UUID!
+}
+
+input RefreshTokenInput {
+	refreshToken: String!
+}
+
+"""
+Response returned after token refresh
+"""
+type RefreshTokenResponse {
+	accessToken: String!
+	expiresIn: Int!
+}
+
+input RequestPasswordResetInput {
+	email: String!
+}
+
+input ResetPasswordInput {
+	token: String!
+	newPassword: String!
+}
+
+"""
+GraphQL Input Types for Authentication
+"""
+input SignupInput {
+	email: String!
+	password: String!
 }
 
 """

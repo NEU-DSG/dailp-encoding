@@ -67,3 +67,28 @@ pub struct UserUpdate {
     /// Role of the user (optional)
     pub role: MaybeUndefined<UserGroup>,
 }
+
+/// A user record including password hash, for internal use only.
+#[derive(Clone, Serialize, Deserialize, Debug, async_graphql::SimpleObject)]
+#[serde(rename_all = "camelCase")]
+pub struct UserWithPassword {
+    pub id: Uuid,
+    pub email: String,
+    pub password_hash: String,
+    pub email_verified: bool,
+    pub role: Option<UserGroup>,
+    pub display_name: String,
+}
+
+/// A refresh token record including token hash, for internal use only.
+#[derive(Clone, Serialize, Deserialize, Debug, async_graphql::SimpleObject)]
+#[serde(rename_all = "camelCase")]
+pub struct RefreshTokenData {
+    pub id: Uuid,
+    pub user_id: Uuid,
+    pub token_hash: String,
+    pub expires_at: chrono::DateTime<chrono::Utc>,
+    pub email: String,
+    pub role: Option<UserGroup>,
+    pub display_name: String,
+}

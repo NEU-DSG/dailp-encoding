@@ -1,6 +1,7 @@
 use log::error;
 
 mod cognito;
+mod dailp_auth;
 mod query;
 
 use {
@@ -105,18 +106,23 @@ impl AuthedEndpoint {
 impl Endpoint<()> for AuthedEndpoint {
     async fn call(&self, req: tide::Request<()>) -> tide::Result {
         let authorization = req.header("Authorization");
+        let auth_mode = std::env::var("AUTH_MODE").unwrap_or_else(|_| "cognito".to_string());
 
         let user: Option<UserInfo> = authorization
             .and_then(|values| values.iter().next())
-            .and_then(
-                |value| match cognito::user_info_from_authorization(value.as_str()) {
+            .and_then(|value| {
+                match if auth_mode == "cognito" {
+                    cognito::user_info_from_authorization(value.as_str())
+                } else {
+                    dailp_auth::user_info_from_authorization(value.as_str())
+                } {
                     Ok(value) => Some(value),
                     Err(err) => {
-                        error!("{:?}", err);
+                        error!("JWT validation error: {:?}", err);
                         None
                     }
-                },
-            );
+                }
+            });
 
         if let Some(user_id) = user.as_ref().map(|u| u.id) {
             self.database.upsert_dailp_user(user_id).await?;

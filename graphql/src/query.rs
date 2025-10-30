@@ -1,7 +1,8 @@
 //! This piece of the project exposes a GraphQL endpoint that allows one to access DAILP data in a federated manner with specific queries.
 
 use dailp::{
-    auth::{AuthGuard, GroupGuard, UserGroup, UserInfo},
+    auth::{AuthGuard, GroupGuard, UserGroup, UserInfo, AuthResponse, LoginInput, MessageResponse, RefreshTokenInput, RefreshTokenResponse,
+    RequestPasswordResetInput, ResetPasswordInput, SignupInput},
     comment::{CommentParent, CommentUpdate, DeleteCommentInput, PostCommentInput},
     slugify_ltree,
     user::{User, UserUpdate},
@@ -745,6 +746,140 @@ impl Mutation {
             .insert_edited_collection(input)
             .await?
             .to_string())
+    }
+
+    /// Sign up a new user with email and password (DAILP auth only)
+    async fn signup(&self, context: &Context<'_>, input: SignupInput) -> FieldResult<MessageResponse> {
+        // Check auth mode
+        if std::env::var("AUTH_MODE").unwrap_or_else(|_| "cognito".to_string()) != "dailp" {
+            return Err("Local user accounts are not enabled".into());
+        }
+
+        let db = context.data::<DataLoader<Database>>()?.loader();
+        
+        // Create user account
+        let _user_id = db.create_user(input.email.clone(), input.password).await?;
+        
+        // TODO: Send verification email
+        // let verification_token = db.create_email_verification_token(user_id).await?;
+        // send_verification_email(&input.email, &verification_token).await?;
+        
+        Ok(MessageResponse {
+            message: "Account created successfully. Please check your email for verification instructions.".to_string(),
+        })
+    }
+
+    /// Login with email and password (DAILP auth only)
+    async fn login(&self, context: &Context<'_>, input: LoginInput) -> FieldResult<AuthResponse> {
+        // Check auth mode
+        if std::env::var("AUTH_MODE").unwrap_or_else(|_| "cognito".to_string()) != "dailp" {
+            return Err("Local user accounts are not enabled".into());
+        }
+
+        let db = context.data::<DataLoader<Database>>()?.loader();
+        
+        // Authenticate and get tokens (returns AuthResponse with user_id, email, role, etc.)
+        let auth_response = db.login(input.email, input.password).await?;
+        
+        Ok(auth_response)
+    }
+
+    /// Refresh access token using refresh token (DAILP auth only)
+    async fn refresh_token(
+        &self,
+        context: &Context<'_>,
+        input: RefreshTokenInput,
+    ) -> FieldResult<RefreshTokenResponse> {
+        // Check auth mode
+        if std::env::var("AUTH_MODE").unwrap_or_else(|_| "cognito".to_string()) != "dailp" {
+            return Err("Local user accounts are not enabled".into());
+        }
+
+        let db = context.data::<DataLoader<Database>>()?.loader();
+        
+        // Refresh the access token
+        let response = db.refresh_access_token(input.refresh_token).await?;
+        
+        Ok(response)
+    }
+
+    /// Logout by revoking refresh token (DAILP auth only)
+    async fn logout(&self, context: &Context<'_>, refresh_token: String) -> FieldResult<bool> {
+        // Check auth mode
+        if std::env::var("AUTH_MODE").unwrap_or_else(|_| "cognito".to_string()) != "dailp" {
+            return Err("Local user accounts are not enabled".into());
+        }
+
+        let db = context.data::<DataLoader<Database>>()?.loader();
+        
+        // Hash and revoke the refresh token
+        let token_hash = Database::hash_token(&refresh_token);
+        db.revoke_refresh_token(&token_hash).await?;
+        
+        Ok(true)
+    }
+
+    /// Request a password reset email (DAILP auth only)
+    async fn request_password_reset(
+        &self,
+        context: &Context<'_>,
+        input: RequestPasswordResetInput,
+    ) -> FieldResult<MessageResponse> {
+        // Check auth mode
+        if std::env::var("AUTH_MODE").unwrap_or_else(|_| "cognito".to_string()) != "dailp" {
+            return Err("Local user accounts are not enabled".into());
+        }
+
+        let db = context.data::<DataLoader<Database>>()?.loader();
+        
+        // Get user by email (don't reveal if user exists)
+        if let Some(user) = db.get_user_by_email(&input.email).await? {
+            // TODO: Create and send password reset token
+            // let reset_token = db.create_password_reset_token(user.id).await?;
+            // send_password_reset_email(&input.email, &reset_token).await?;
+        }
+        
+        // Always return success to prevent email enumeration
+        Ok(MessageResponse {
+            message: "If an account with that email exists, a password reset link has been sent.".to_string(),
+        })
+    }
+
+    /// Reset password using reset token (DAILP auth only)
+    async fn reset_password(
+        &self,
+        context: &Context<'_>,
+        input: ResetPasswordInput,
+    ) -> FieldResult<MessageResponse> {
+        // Check auth mode
+        if std::env::var("AUTH_MODE").unwrap_or_else(|_| "cognito".to_string()) != "dailp" {
+            return Err("Local user accounts are not enabled".into());
+        }
+
+        let db = context.data::<DataLoader<Database>>()?.loader();
+        
+        // TODO: Implement password reset flow
+        // let user_id = db.validate_and_use_password_reset_token(&input.token).await?;
+        // db.update_user_password(user_id, input.new_password).await?;
+        // db.revoke_all_user_tokens(user_id).await?;
+        
+        Err("Password reset not yet fully implemented".into())
+    }
+
+    /// Verify email address using verification token (DAILP auth only)
+    async fn verify_email(&self, context: &Context<'_>, token: String) -> FieldResult<MessageResponse> {
+        // Check auth mode
+        if std::env::var("AUTH_MODE").unwrap_or_else(|_| "cognito".to_string()) != "dailp" {
+            return Err("Local user accounts are not enabled".into());
+        }
+
+        let db = context.data::<DataLoader<Database>>()?.loader();
+        
+        // TODO: Implement email verification
+        // let user_id = db.validate_and_use_email_verification_token(&token).await?;
+        // db.set_user_email_verified(user_id).await?;
+        
+        Err("Email verification not yet fully implemented".into())
     }
 }
 
