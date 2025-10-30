@@ -88,12 +88,18 @@ const NewDocPage = () => {
         },
       })
 
+      console.log("DENNIS NEW RESULT", result)
+
       if (result.error) {
         setError(result.error.message)
       } else if (result.data?.addDocument) {
+        let res = result.data.addDocument
         // Navigate to the newly created document
         navigate(
-          `/collections/${result.data.addDocument.collectionSlug}/${result.data.addDocument.chapterSlug}`
+          `/collections/${res.collectionSlug.replace(
+            /_/g,
+            "-"
+          )}/${res.chapterSlug.replace(/_/g, "-")}`
         )
       }
     } catch (err) {
@@ -113,7 +119,6 @@ const NewDocPage = () => {
   }
 
   const [{ data: dailp }] = Dailp.useEditedCollectionsQuery()
-  console.log(dailp?.allEditedCollections)
 
   return (
     <Layout>
