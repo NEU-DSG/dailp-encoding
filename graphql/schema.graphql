@@ -1,3 +1,11 @@
+type AddDocumentPayload {
+	id: UUID!
+	title: String!
+	slug: String!
+	collectionSlug: String!
+	chapterSlug: String!
+}
+
 type AnnotatedDoc {
 	"""
 	Official short identifier for this document
@@ -482,6 +490,16 @@ enum ContributorRole {
 	AUTHOR
 }
 
+input CreateDocumentFromFormInput {
+	documentName: String!
+	rawTextLines: [[String!]!]!
+	englishTranslationLines: [[String!]!]!
+	unresolvedWords: [String!]!
+	sourceName: String!
+	sourceUrl: String!
+	collectionId: UUID!
+}
+
 """
 Input for creating an edited collection
 """
@@ -586,6 +604,10 @@ type DocumentCollection {
 	Full name of this collection
 	"""
 	name: String!
+	"""
+	Database ID for this collection
+	"""
+	id: UUID
 	"""
 	URL-ready slug for this collection, generated from the name
 	"""
@@ -823,6 +845,82 @@ type MessageResponse {
 }
 
 """
+Menu object representing the navbar menu that can be edited.
+"""
+type Menu {
+	"""
+	Id for menu.
+	"""
+	id: UUID!
+	"""
+	Name for the menu.
+	"""
+	name: String!
+	"""
+	Slug for the menu.
+	"""
+	slug: String!
+	"""
+	Menu items.
+	"""
+	items: [MenuItem!]!
+}
+
+"""
+A single item in the menu.
+"""
+type MenuItem {
+	"""
+	Display label.
+	"""
+	label: String!
+	"""
+	Destination path.
+	"""
+	path: String!
+	"""
+	Child items (dropdown), optional.
+	"""
+	items: [MenuItem!]
+}
+
+"""
+Input for a single menu item.
+"""
+input MenuItemInput {
+	"""
+	Display label.
+	"""
+	label: String!
+	"""
+	Destination path.
+	"""
+	path: String!
+	"""
+	Child items (dropdown), optional.
+	"""
+	items: [MenuItemInput!]
+}
+
+"""
+Input for updating a menu.
+"""
+input MenuUpdate {
+	"""
+	Menu id.
+	"""
+	id: UUID!
+	"""
+	New name (optional).
+	"""
+	name: String
+	"""
+	New menu items (optional).
+	"""
+	items: [MenuItemInput!]
+}
+
+"""
 One particular morpheme and all the known words that contain that exact morpheme.
 """
 type MorphemeReference {
@@ -958,6 +1056,10 @@ type Mutation {
 	"""
 	attachAudioToWord(input: AttachAudioToWordInput!): AnnotatedForm!
 	updateDocumentMetadata(document: DocumentMetadataUpdate!): UUID!
+	"""
+	Minimal mutation to add a document with only essential fields
+	"""
+	addDocument(input: CreateDocumentFromFormInput!): AddDocumentPayload!
 	insertCustomMorphemeTag(tag: String!, title: String!, system: String!): Boolean!
 	createEditedCollection(input: CreateEditedCollectionInput!): String!
 	"""
@@ -988,6 +1090,26 @@ type Mutation {
 	Verify email address using verification token (DAILP auth only)
 	"""
 	verifyEmail(token: String!): MessageResponse!
+	upsertPage(page: NewPageInput!): String!
+	updateMenu(menu: MenuUpdate!): Menu!
+}
+
+"""
+Input struct for a page.
+"""
+input NewPageInput {
+	"""
+	title of new page
+	"""
+	title: String!
+	"""
+	content for page, needs to be sanitized
+	"""
+	body: [String!]!
+	"""
+	path of new page
+	"""
+	path: String!
 }
 
 """
@@ -1091,6 +1213,7 @@ input PostCommentInput {
 
 type Query {
 	allEditedCollections: [EditedCollection!]!
+	pageByPath(path: String!): Page
 	editedCollection(slug: String!): EditedCollection
 	"""
 	Retrieves a chapter and its contents by its collection and chapter slug.
@@ -1176,6 +1299,7 @@ type Query {
 	"""
 	dailpUserById(id: UUID!): User!
 	abbreviationIdFromShortName(shortName: String!): UUID!
+	menuBySlug(slug: String!): Menu!
 }
 
 input RefreshTokenInput {
