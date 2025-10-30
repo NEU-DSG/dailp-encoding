@@ -1,4 +1,4 @@
-import React, { useEffect } from "react"
+import React from "react"
 import { Helmet } from "react-helmet"
 import { navigate } from "vite-plugin-ssr/client/router"
 import { Link, WordpressPage } from "src/components"
@@ -16,12 +16,36 @@ const EditedCollectionPage = () => {
   const dialog = useDialog()
 
   const chapters = useChapters()
-  const firstChapter = chapters ? chapters[0] : null
-
   const [{ data: dailp }] = Dailp.useEditedCollectionsQuery()
+
   let collection = dailp?.allEditedCollections.find(
     ({ slug }) => slug === collectionSlug
   )
+
+  // Backup: Try to find collection with underscore/hyphen conversion
+  if (!collection && dailp?.allEditedCollections) {
+    const alternativeSlug =
+      collectionSlug?.replace("-", "_") || collectionSlug?.replace("_", "-")
+    collection = dailp.allEditedCollections.find(
+      ({ slug }) => slug === alternativeSlug
+    )
+  }
+
+  // Use fallback chapters from EditedCollectionsQuery if EditedCollectionQuery fails
+  const fallbackChapters = collection?.chapters
+  const effectiveChapters =
+    chapters && chapters.length > 0 ? chapters : fallbackChapters
+
+  // Generate slug for fallback chapters that don't have it
+  const firstChapter =
+    effectiveChapters && effectiveChapters.length > 0
+      ? effectiveChapters[0]
+      : null
+  const firstChapterSlug = firstChapter
+    ? "slug" in firstChapter
+      ? firstChapter.slug
+      : firstChapter.path[firstChapter.path.length - 1]
+    : null
 
   if (!collection) {
     return null
@@ -46,11 +70,15 @@ const EditedCollectionPage = () => {
           <WordpressPage slug={`/${collectionSlug}`} />
 
           <h3>
-            {firstChapter ? (
-              <Link href={chapterRoute(collectionSlug!, firstChapter.slug)}>
+            {firstChapterSlug ? (
+              <Link href={chapterRoute(collectionSlug!, firstChapterSlug)}>
                 Begin reading
               </Link>
-            ) : null}
+            ) : firstChapter ? (
+              <span>First chapter found but missing slug</span>
+            ) : (
+              <span>No chapters found</span>
+            )}
           </h3>
         </article>
       </main>
