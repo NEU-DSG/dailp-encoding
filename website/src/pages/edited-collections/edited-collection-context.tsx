@@ -30,8 +30,47 @@ export const CollectionProvider = (props: { children: any }) => {
     variables: { slug: collectionSlug! },
   })
 
+  // Add fallback query for when the singular query fails
+  const [{ data: dailp }] = Dailp.useEditedCollectionsQuery()
+
   // Gets the converted nested chapters using the backend query.
   const chapters = flatToNested(data?.editedCollection?.chapters)
+
+  // Fallback logic: use chapters from EditedCollectionsQuery if singular query fails
+  let effectiveChapters = chapters
+  if (!effectiveChapters || effectiveChapters.length === 0) {
+    // Find collection in the plural query
+    let collection = dailp?.allEditedCollections.find(
+      ({ slug }) => slug === collectionSlug
+    )
+
+    // Try underscore/hyphen conversion if not found
+    if (!collection && dailp?.allEditedCollections) {
+      const alternativeSlug =
+        collectionSlug?.replace("-", "_") || collectionSlug?.replace("_", "-")
+      collection = dailp.allEditedCollections.find(
+        ({ slug }) => slug === alternativeSlug
+      )
+    }
+
+    // Convert fallback chapters to the expected Chapter format
+    if (collection?.chapters && collection.chapters.length > 0) {
+      effectiveChapters = collection.chapters
+        .map((chapter) => {
+          const slug = chapter.path[chapter.path.length - 1]
+          if (!slug) return null // Skip chapters without valid slugs
+
+          return {
+            title: `Document ${slug}`, // Generate a title
+            slug: slug, // Use last part of path as slug
+            indexInParent: 1, // Default to 1 for flat structure
+            section: Dailp.CollectionSection.Body, // Default to Body section
+            children: undefined,
+          }
+        })
+        .filter(Boolean) as Chapter[] // Remove null entries
+    }
+  }
   // Keeps track of the chapters selected SO FAR that have the same TOP parent (index of 1).
   const [selected, setSelected] = useState<Chapter[]>([])
 
@@ -42,7 +81,7 @@ export const CollectionProvider = (props: { children: any }) => {
 
   return (
     <CollectionContext.Provider
-      value={{ chapters, dialog, selected, setSelected }}
+      value={{ chapters: effectiveChapters, dialog, selected, setSelected }}
     >
       {props.children}
     </CollectionContext.Provider>
