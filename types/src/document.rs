@@ -484,8 +484,6 @@ pub struct DocumentMetadata {
     pub genre: Option<String>,
     /// Term that allows us to trace what the original artifact was
     pub format_id: Option<Uuid>,
-    /// Term that allows us to trace what the original artifact was
-    pub format_id: Option<Uuid>,
     #[serde(default)]
     /// The people involved in collecting, translating, annotating.
     pub contributors: Vec<Contributor>,
