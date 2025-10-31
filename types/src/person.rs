@@ -161,6 +161,30 @@ impl ContributorRole {
     }
 }
 
+
+
+/// The creator of a document
+#[derive(async_graphql::SimpleObject, Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[graphql(complex)]
+pub struct Creator {
+    /// UUID of the creator
+    pub id: uuid::Uuid,
+    /// Name of the creator
+    pub name: String,
+}
+
+#[async_graphql::ComplexObject]
+impl Creator {
+    /// Creators of this document
+    async fn creators(&self, context: &async_graphql::Context<'_>) -> FieldResult<Vec<Creator>> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .load_one(crate::CreatorsForDocument(self.id))
+            .await?
+            .unwrap_or_default())
+    }
+}
+
 /// Attribution for a particular source, whether an institution or an individual.
 /// Most commonly, this will represent the details of a library or archive that
 /// houses documents used elsewhere.

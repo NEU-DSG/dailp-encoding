@@ -3,7 +3,7 @@ use crate::{
     Database, Date, Translation, TranslationBlock,
 };
 
-use crate::person::{Contributor, SourceAttribution};
+use crate::person::{Contributor, Creator, SourceAttribution};
 
 use async_graphql::{dataloader::DataLoader, FieldResult, MaybeUndefined};
 use serde::{Deserialize, Serialize};
@@ -219,6 +219,20 @@ impl AnnotatedDoc {
             .loader()
             .chapters_by_document(self.meta.short_name.clone())
             .await?)
+    }
+
+    /// Internal field accessor for creators
+    async fn creators_ids(&self) -> &Option<Vec<Uuid>> {
+        &self.meta.creators_ids
+    }
+
+    // GraphQL resolver for creators
+    async fn creators(&self, context: &async_graphql::Context<'_>) -> FieldResult<Vec<Creator>> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .load_one(crate::CreatorsForDocument(self.meta.id.0))
+            .await?
+            .unwrap_or_default())
     }
 }
 

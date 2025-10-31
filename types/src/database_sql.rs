@@ -297,6 +297,7 @@ impl Database {
                         .contributors
                         .and_then(|x| serde_json::from_value(x).ok())
                         .unwrap_or_default(),
+                    //creators_ids: Some(Vec::new()),
                     genre: None,
                     order_index: 0,
                     page_images: None,
