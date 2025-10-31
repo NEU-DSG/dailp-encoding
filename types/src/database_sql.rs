@@ -15,6 +15,7 @@ use crate::page::ContentBlock;
 use crate::page::Markdown;
 use crate::page::NewPageInput;
 use crate::page::Page;
+use crate::doc_metadata::Keyword;
 use crate::user::User;
 use crate::user::UserId;
 use {
@@ -298,6 +299,7 @@ impl Database {
                         .and_then(|x| serde_json::from_value(x).ok())
                         .unwrap_or_default(),
                     genre: None,
+                    keywords_ids: Some(Vec::new()),
                     order_index: 0,
                     page_images: None,
                     sources: Vec::new(),
@@ -436,6 +438,7 @@ impl Database {
                     .and_then(|x| serde_json::from_value(x).ok())
                     .unwrap_or_default(),
                 genre: None,
+                keywords_ids: Some(Vec::new()),
                 order_index: 0,
                 page_images: None,
                 sources: Vec::new(),
@@ -779,6 +782,20 @@ impl Database {
         )
         .execute(&self.client)
         .await?;
+
+        // Update keywords
+        if let Some(keywords_ids) = &document.keywords_ids {
+            query_file!("queries/delete_document_keywords.sql", document.id)
+                .execute(&mut *tx)
+                .await?;
+    
+            query_file!("queries/insert_document_keywords.sql", document.id, keywords_ids)
+                .execute(&mut *tx)
+                .await?;
+        }
+
+        // Commit updates
+        tx.commit().await?;
 
         Ok(document.id)
     }
@@ -2041,6 +2058,7 @@ impl Loader<DocumentId> for Database {
                         .and_then(|x| serde_json::from_value(x).ok())
                         .unwrap_or_default(),
                     genre: None,
+                    keywords_ids: Some(Vec::new()),
                     order_index: 0,
                     page_images: None,
                     sources: Vec::new(),
@@ -2113,6 +2131,7 @@ impl Loader<DocumentShortName> for Database {
                         .and_then(|x| serde_json::from_value(x).ok())
                         .unwrap_or_default(),
                     genre: None,
+                    keywords_ids: Some(Vec::new()),
                     order_index: 0,
                     page_images: None,
                     sources: Vec::new(),
