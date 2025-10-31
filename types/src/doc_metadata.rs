@@ -42,6 +42,33 @@ pub struct Format {
     pub name: String,
 }
 
+/// Record to store a keyword associated with a document
+#[derive(Clone, Debug, Serialize, Deserialize, FromRow, SimpleObject)]
+#[graphql(complex)]
+pub struct Keyword {
+    /// UUID for the keyword
+    pub id: Uuid,
+    /// Name of the keyword
+    pub name: String,
+    /// Status (pending, approved, rejected) of a keyword
+    pub status: ApprovalStatus,
+}
+
+/// Get all approved keywords
+#[async_graphql::ComplexObject]
+impl Keyword {
+    async fn approved(&self) -> bool {
+        matches!(self.status, ApprovalStatus::Approved)
+    }
+}
+
+/// Converts Keyword struct to corresponding Uuid
+impl From<&Keyword> for Uuid {
+    fn from(k: &Keyword) -> Self {
+        k.id
+    }
+}
+
 /// Stores the genre associated with a document
 #[derive(Clone, SimpleObject)]
 pub struct Genre {
