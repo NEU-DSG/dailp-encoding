@@ -33,3 +33,14 @@ group by d.id,
   media_resource.id,
   dailp_user.id,
   ubd.bookmarked_on
+
+-- Creators
+  (
+    select coalesce(jsonb_agg(jsonb_build_object(
+      'id', cr.id,
+      'name', cr.name
+    )), '[]')
+    from document_creator dcr
+    join creator cr on cr.id = dcr.creator_id
+    where dcr.document_id = d.id
+  ) as creators

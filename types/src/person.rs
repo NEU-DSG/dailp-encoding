@@ -1,5 +1,5 @@
 use crate::{user::User, Database, PersonFullName};
-use async_graphql::{SimpleObject, Union};
+use async_graphql::{dataloader::DataLoader, FieldResult, SimpleObject, Union};
 use serde::{Deserialize, Serialize};
 
 /// Record for a DAILP admin
@@ -158,6 +158,30 @@ impl ContributorRole {
     /// Converts a ContributorRole into its string representation
     pub fn to_option_string(role: &Option<ContributorRole>) -> Option<String> {
         role.as_ref().map(|r| r.to_string())
+    }
+}
+
+
+
+/// The creator of a document
+#[derive(async_graphql::SimpleObject, Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[graphql(complex)]
+pub struct Creator {
+    /// UUID of the creator
+    pub id: uuid::Uuid,
+    /// Name of the creator
+    pub name: String,
+}
+
+#[async_graphql::ComplexObject]
+impl Creator {
+    /// Creators of this document
+    async fn creators(&self, context: &async_graphql::Context<'_>) -> FieldResult<Vec<Creator>> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .load_one(crate::CreatorsForDocument(self.id))
+            .await?
+            .unwrap_or_default())
     }
 }
 

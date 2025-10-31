@@ -3,7 +3,7 @@ use crate::{
     Database, Date, Translation, TranslationBlock,
 };
 
-use crate::person::{Contributor, SourceAttribution};
+use crate::person::{Contributor, Creator, SourceAttribution};
 
 use async_graphql::{dataloader::DataLoader, FieldResult, MaybeUndefined};
 use serde::{Deserialize, Serialize};
@@ -220,6 +220,20 @@ impl AnnotatedDoc {
             .chapters_by_document(self.meta.short_name.clone())
             .await?)
     }
+
+    /// Internal field accessor for creators
+    async fn creators_ids(&self) -> &Option<Vec<Uuid>> {
+        &self.meta.creators_ids
+    }
+
+    // GraphQL resolver for creators
+    async fn creators(&self, context: &async_graphql::Context<'_>) -> FieldResult<Vec<Creator>> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .load_one(crate::CreatorsForDocument(self.meta.id.0))
+            .await?
+            .unwrap_or_default())
+    }
 }
 
 /// Key to retrieve the pages of a document given a document ID
@@ -317,6 +331,8 @@ pub struct DocumentMetadataUpdate {
     pub title: MaybeUndefined<String>,
     /// The date this document was written, or nothing (if unchanged or not applicable)
     pub written_at: MaybeUndefined<DateInput>,
+    /// The creator(s) of the document
+    pub creators_ids: Option<Vec<Uuid>>,
 }
 
 #[async_graphql::ComplexObject]
@@ -465,6 +481,8 @@ pub struct DocumentMetadata {
     /// The genre this document is. TODO Evaluate whether we need this.
     pub genre: Option<String>,
     #[serde(default)]
+    /// The creator(s) of the document
+    pub creators_ids: Option<Vec<Uuid>>,
     /// The people involved in collecting, translating, annotating.
     pub contributors: Vec<Contributor>,
     /// Rough translation of the document, broken down by paragraph.
@@ -484,6 +502,7 @@ pub struct DocumentMetadata {
     /// Arbitrary number used for manually ordering documents in a collection.
     /// For collections without manual ordering, use zero here.
     pub order_index: i64,
+    pub(crate) creators_ids: Option<Vec<_>>,
 }
 
 /// Database ID for one document
