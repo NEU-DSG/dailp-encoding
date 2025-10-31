@@ -33,6 +33,9 @@ use {
 // Explicitly import types from person.rs
 use crate::person::{Contributor, ContributorDetails, ContributorRole};
 
+// Add new metadata
+use crate::doc_metadata::Format;
+
 /// Connects to our backing database instance, providing high level functions
 /// for accessing the data therein.
 pub struct Database {
@@ -297,6 +300,7 @@ impl Database {
                         .contributors
                         .and_then(|x| serde_json::from_value(x).ok())
                         .unwrap_or_default(),
+                    format_id: None.into(),
                     genre: None,
                     order_index: 0,
                     page_images: None,
@@ -435,6 +439,7 @@ impl Database {
                     .contributors
                     .and_then(|x| serde_json::from_value(x).ok())
                     .unwrap_or_default(),
+                format_id: None.into(),
                 genre: None,
                 order_index: 0,
                 page_images: None,
@@ -775,7 +780,8 @@ impl Database {
             "queries/update_document_metadata.sql",
             document.id,
             &title as _,
-            &written_at as _
+            &written_at as _,
+            document.format_id,
         )
         .execute(&self.client)
         .await?;
@@ -2040,6 +2046,7 @@ impl Loader<DocumentId> for Database {
                         .contributors
                         .and_then(|x| serde_json::from_value(x).ok())
                         .unwrap_or_default(),
+                    format_id: None.into(),
                     genre: None,
                     order_index: 0,
                     page_images: None,
@@ -2112,6 +2119,7 @@ impl Loader<DocumentShortName> for Database {
                         .contributors
                         .and_then(|x| serde_json::from_value(x).ok())
                         .unwrap_or_default(),
+                    format_id: None.into(),
                     genre: None,
                     order_index: 0,
                     page_images: None,
@@ -2471,6 +2479,44 @@ impl Loader<PageId> for Database {
     }
 }
 
+#[async_trait]
+impl Loader<FormatById> for Database {
+    type Value = Option<Format>;
+    type Error = Arc<sqlx::Error>;
+
+    async fn load(
+        &self,
+        keys: &[FormatById],
+    ) -> Result<HashMap<FormatById, Self::Value>, Self::Error> {
+        // Collect all UUIDs
+        let ids: Vec<Uuid> = keys.iter().map(|k| k.0).collect();
+
+        // Query all formats by IDs
+        let rows = query_file!("queries/get_format_by_id.sql", &ids)
+            .fetch_all(&self.client)
+            .await?;
+
+        // Map results by ID
+        let mut results = HashMap::new();
+        for key in keys {
+            if let Some(row) = rows.iter().find(|r| r.id == key.0) {
+                results.insert(
+                    *key,
+                    Some(Format {
+                        id: row.id,
+                        name: row.name.clone(),
+                        status: row.status,
+                    }),
+                );
+            } else {
+                results.insert(*key, None);
+            }
+        }
+
+        Ok(results)
+    }
+}
+
 /// A struct representing an audio slice that can be easily pulled from the database
 struct BasicAudioSlice {
     id: Uuid,
@@ -2738,6 +2784,10 @@ pub struct ChaptersInCollection(pub String);
 
 #[derive(Clone, Eq, PartialEq, Hash)]
 pub struct EditedCollectionDetails(pub String);
+
+
+#[derive(Clone, Eq, PartialEq, Hash)]
+pub struct FormatById(pub uuid::Uuid);
 
 /// One particular morpheme and all the known words that contain that exact morpheme.
 #[derive(async_graphql::SimpleObject)]

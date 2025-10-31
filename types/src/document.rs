@@ -7,6 +7,7 @@ use crate::person::{Contributor, SourceAttribution};
 
 use async_graphql::{dataloader::DataLoader, FieldResult, MaybeUndefined};
 use serde::{Deserialize, Serialize};
+use sqlx::query_file_as;
 use uuid::Uuid;
 
 /// A document with associated metadata and content broken down into pages and further into
@@ -219,6 +220,23 @@ impl AnnotatedDoc {
             .loader()
             .chapters_by_document(self.meta.short_name.clone())
             .await?)
+    }
+
+    /// The format of the original artifact
+    async fn format(
+        &self,
+        context: &async_graphql::Context<'_>
+    ) -> FieldResult<Option<Format>> {
+        // Get the format ID from this document
+        let format_id_opt = self.meta.format_id.as_ref();
+    
+        if let Some(id) = format_id_opt {
+            let db = context.data::<DataLoader<Database>>()?;
+            let format = db.load_one(crate::FormatById(*id)).await?.flatten();
+            Ok(format)
+        } else {
+            Ok(None)
+        }
     }
 }
 
@@ -464,6 +482,10 @@ pub struct DocumentMetadata {
     pub collection: Option<String>,
     /// The genre this document is. TODO Evaluate whether we need this.
     pub genre: Option<String>,
+    /// Term that allows us to trace what the original artifact was
+    pub format_id: Option<Uuid>,
+    /// Term that allows us to trace what the original artifact was
+    pub format_id: Option<Uuid>,
     #[serde(default)]
     /// The people involved in collecting, translating, annotating.
     pub contributors: Vec<Contributor>,
@@ -484,6 +506,22 @@ pub struct DocumentMetadata {
     /// Arbitrary number used for manually ordering documents in a collection.
     /// For collections without manual ordering, use zero here.
     pub order_index: i64,
+}
+
+#[async_graphql::Object]
+impl DocumentMetadata {
+    /// Fetch the format associated with this document
+    async fn format(&self, ctx: &Context<'_>) -> Result<Option<Format>> {
+        let format_id = match self.format_id {
+            Some(id) => id,
+            _ => return Ok(None),
+        };
+        let pool = ctx.data::<PgPool>()?;
+        let row = query_file_as!(Format, "queries/get_format_by_id.sql", format_id)
+            .fetch_optional(pool)
+            .await?;
+        Ok(row)
+    }    
 }
 
 /// Database ID for one document
