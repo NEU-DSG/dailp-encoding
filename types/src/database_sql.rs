@@ -437,6 +437,7 @@ impl Database {
                     .contributors
                     .and_then(|x| serde_json::from_value(x).ok())
                     .unwrap_or_default(),
+                creators_ids: Some(Vec::new()),
                 genre: None,
                 order_index: 0,
                 page_images: None,
@@ -812,6 +813,20 @@ impl Database {
         )
         .execute(&self.client)
         .await?;
+
+        // Update creators
+        if let Some(creator_ids) = &document.creators_ids {
+            query_file!("queries/delete_document_creator.sql", document.id)
+                .execute(&mut *tx)
+                .await?;
+    
+            query_file!("queries/insert_document_creator.sql", document.id, creator_ids)
+                .execute(&mut *tx)
+                .await?;
+        }
+        
+        // Commit updates
+        tx.commit().await?;
 
         Ok(comment.id)
     }
@@ -2042,6 +2057,7 @@ impl Loader<DocumentId> for Database {
                         .contributors
                         .and_then(|x| serde_json::from_value(x).ok())
                         .unwrap_or_default(),
+                    creators_ids: Some(Vec::new()),
                     genre: None,
                     order_index: 0,
                     page_images: None,
@@ -2114,6 +2130,7 @@ impl Loader<DocumentShortName> for Database {
                         .contributors
                         .and_then(|x| serde_json::from_value(x).ok())
                         .unwrap_or_default(),
+                    creators_ids: Some(Vec::new()),
                     genre: None,
                     order_index: 0,
                     page_images: None,
