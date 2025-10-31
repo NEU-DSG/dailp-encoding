@@ -778,7 +778,8 @@ impl Database {
             "queries/update_document_metadata.sql",
             document.id,
             &title as _,
-            &written_at as _
+            &written_at as _,
+            document.genre_id,
         )
         .execute(&self.client)
         .await?;
@@ -2474,6 +2475,44 @@ impl Loader<PageId> for Database {
     }
 }
 
+#[async_trait]
+impl Loader<GenreById> for Database {
+    type Value = Option<Genre>;
+    type Error = Arc<sqlx::Error>;
+
+    async fn load(
+        &self,
+        keys: &[GenreById],
+    ) -> Result<HashMap<GenreById, Self::Value>, Self::Error> {
+        // Collect all UUIDs
+        let ids: Vec<Uuid> = keys.iter().map(|k| k.0).collect();
+
+        // Query all formats by IDs
+        let rows = query_file!("queries/get_genre_by_id.sql", &ids)
+            .fetch_all(&self.client)
+            .await?;
+
+        // Map results by ID
+        let mut results = HashMap::new();
+        for key in keys {
+            if let Some(row) = rows.iter().find(|r| r.id == key.0) {
+                results.insert(
+                    *key,
+                    Some(Genre {
+                        id: row.id,
+                        name: row.name.clone(),
+                        status: row.status,
+                    }),
+                );
+            } else {
+                results.insert(*key, None);
+            }
+        }
+
+        Ok(results)
+    }
+}
+
 /// A struct representing an audio slice that can be easily pulled from the database
 struct BasicAudioSlice {
     id: Uuid,
@@ -2741,6 +2780,9 @@ pub struct ChaptersInCollection(pub String);
 
 #[derive(Clone, Eq, PartialEq, Hash)]
 pub struct EditedCollectionDetails(pub String);
+
+#[derive(Clone, Eq, PartialEq, Hash)]
+pub struct GenreById(pub uuid::Uuid);
 
 /// One particular morpheme and all the known words that contain that exact morpheme.
 #[derive(async_graphql::SimpleObject)]
