@@ -2516,6 +2516,43 @@ impl Loader<FormatById> for Database {
         Ok(results)
     }
 }
+#[async_trait]
+impl Loader<FormatById> for Database {
+    type Value = Option<Format>;
+    type Error = Arc<sqlx::Error>;
+
+    async fn load(
+        &self,
+        keys: &[FormatById],
+    ) -> Result<HashMap<FormatById, Self::Value>, Self::Error> {
+        // Collect all UUIDs
+        let ids: Vec<Uuid> = keys.iter().map(|k| k.0).collect();
+
+        // Query all formats by IDs
+        let rows = query_file!("queries/get_format_by_id.sql", &ids)
+            .fetch_all(&self.client)
+            .await?;
+
+        // Map results by ID
+        let mut results = HashMap::new();
+        for key in keys {
+            if let Some(row) = rows.iter().find(|r| r.id == key.0) {
+                results.insert(
+                    *key,
+                    Some(Format {
+                        id: row.id,
+                        name: row.name.clone(),
+                        status: row.status,
+                    }),
+                );
+            } else {
+                results.insert(*key, None);
+            }
+        }
+
+        Ok(results)
+    }
+}
 
 /// A struct representing an audio slice that can be easily pulled from the database
 struct BasicAudioSlice {
