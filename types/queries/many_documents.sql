@@ -33,3 +33,16 @@ group by d.id,
   media_resource.id,
   dailp_user.id,
   ubd.bookmarked_on
+
+-- Languages
+  (
+    select coalesce(jsonb_agg(jsonb_build_object(
+      'id', l.id,
+      'name', l.name,
+      'autonym', l.autonym,
+      'status', l.status
+    )), '[]')
+    from document_language dl
+    join language l on l.id = dl.language_id
+    where dl.document_id = d.id
+  ) as languages

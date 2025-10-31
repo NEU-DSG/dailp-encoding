@@ -4,6 +4,7 @@ use crate::{
 };
 
 use crate::person::{Contributor, SourceAttribution};
+use crate::doc_metadata::Language;
 
 use async_graphql::{dataloader::DataLoader, FieldResult, MaybeUndefined};
 use serde::{Deserialize, Serialize};
@@ -220,6 +221,19 @@ impl AnnotatedDoc {
             .chapters_by_document(self.meta.short_name.clone())
             .await?)
     }
+
+    /// The languages present in this document
+    async fn languages_ids(&self) -> Option<Vec<Uuid>> {
+        self.meta.languages_ids.clone()
+    }
+    
+    async fn languages(&self, context: &async_graphql::Context<'_>) -> FieldResult<Vec<Language>> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .load_one(crate::LanguagesForDocument(self.meta.id.0))
+            .await?
+            .unwrap_or_default())
+    }
 }
 
 /// Key to retrieve the pages of a document given a document ID
@@ -317,6 +331,8 @@ pub struct DocumentMetadataUpdate {
     pub title: MaybeUndefined<String>,
     /// The date this document was written, or nothing (if unchanged or not applicable)
     pub written_at: MaybeUndefined<DateInput>,
+    /// The languages present in the document
+    pub languages_ids: Option<Vec<Uuid>>,
 }
 
 #[async_graphql::ComplexObject]
@@ -467,6 +483,8 @@ pub struct DocumentMetadata {
     #[serde(default)]
     /// The people involved in collecting, translating, annotating.
     pub contributors: Vec<Contributor>,
+    /// The languages present in the document
+    pub languages_ids: Option<Vec<Uuid>>,
     /// Rough translation of the document, broken down by paragraph.
     #[serde(skip)]
     pub translation: Option<Translation>,
@@ -484,6 +502,17 @@ pub struct DocumentMetadata {
     /// Arbitrary number used for manually ordering documents in a collection.
     /// For collections without manual ordering, use zero here.
     pub order_index: i64,
+}
+
+impl DocumentMetadata {
+    /// Fetch all languages linked to this document
+    async fn languages(&self, ctx: &Context<'_>) -> Result<Vec<Language>> {
+        let pool = ctx.data::<PgPool>()?;
+        let rows = query_file_as!(Language, "queries/get_languages_by_document_id.sql", self.id.0)
+            .fetch_all(pool)
+            .await?;
+        Ok(rows)
+    }
 }
 
 /// Database ID for one document
