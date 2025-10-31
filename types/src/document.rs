@@ -331,6 +331,7 @@ pub struct DocumentMetadataUpdate {
     pub title: MaybeUndefined<String>,
     /// The date this document was written, or nothing (if unchanged or not applicable)
     pub written_at: MaybeUndefined<DateInput>,
+    
 }
 
 #[async_graphql::ComplexObject]
@@ -498,6 +499,7 @@ pub struct DocumentMetadata {
     /// Arbitrary number used for manually ordering documents in a collection.
     /// For collections without manual ordering, use zero here.
     pub order_index: i64,
+    pub(crate) creators_ids: Option<Vec<_>>,
 }
 
 /// Database ID for one document
