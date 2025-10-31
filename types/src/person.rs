@@ -1,5 +1,5 @@
 use crate::{user::User, Database, PersonFullName};
-use async_graphql::{SimpleObject, Union};
+use async_graphql::{dataloader::DataLoader, FieldResult, SimpleObject, Union};
 use serde::{Deserialize, Serialize};
 
 /// Record for a DAILP admin

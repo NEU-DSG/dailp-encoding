@@ -331,7 +331,8 @@ pub struct DocumentMetadataUpdate {
     pub title: MaybeUndefined<String>,
     /// The date this document was written, or nothing (if unchanged or not applicable)
     pub written_at: MaybeUndefined<DateInput>,
-    
+    /// The creator(s) of the document
+    pub creators_ids: Option<Vec<Uuid>>,
 }
 
 #[async_graphql::ComplexObject]
@@ -480,6 +481,8 @@ pub struct DocumentMetadata {
     /// The genre this document is. TODO Evaluate whether we need this.
     pub genre: Option<String>,
     #[serde(default)]
+    /// The creator(s) of the document
+    pub creators_ids: Option<Vec<Uuid>>,
     /// The people involved in collecting, translating, annotating.
     pub contributors: Vec<Contributor>,
     /// Rough translation of the document, broken down by paragraph.
