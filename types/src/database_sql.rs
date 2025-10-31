@@ -15,6 +15,7 @@ use crate::page::ContentBlock;
 use crate::page::Markdown;
 use crate::page::NewPageInput;
 use crate::page::Page;
+use crate::doc_metadata::Language;
 use crate::user::User;
 use crate::user::UserId;
 use {
@@ -298,6 +299,7 @@ impl Database {
                         .and_then(|x| serde_json::from_value(x).ok())
                         .unwrap_or_default(),
                     genre: None,
+                    languages_ids: Some(Vec::new()),
                     order_index: 0,
                     page_images: None,
                     sources: Vec::new(),
@@ -436,6 +438,7 @@ impl Database {
                     .and_then(|x| serde_json::from_value(x).ok())
                     .unwrap_or_default(),
                 genre: None,
+                languages_ids: Some(Vec::new()),
                 order_index: 0,
                 page_images: None,
                 sources: Vec::new(),
@@ -779,6 +782,20 @@ impl Database {
         )
         .execute(&self.client)
         .await?;
+
+        // Update languages
+        if let Some(languages_ids) = &document.languages_ids {
+            query_file!("queries/delete_document_languages.sql", document.id)
+                .execute(&mut *tx)
+                .await?;
+    
+            query_file!("queries/insert_document_languages.sql", document.id, languages_ids)
+                .execute(&mut *tx)
+                .await?;
+        }
+
+        // Commit updates
+        tx.commit().await?;
 
         Ok(document.id)
     }
@@ -2041,6 +2058,7 @@ impl Loader<DocumentId> for Database {
                         .and_then(|x| serde_json::from_value(x).ok())
                         .unwrap_or_default(),
                     genre: None,
+                    languages_ids: Some(Vec::new()),
                     order_index: 0,
                     page_images: None,
                     sources: Vec::new(),
@@ -2113,6 +2131,7 @@ impl Loader<DocumentShortName> for Database {
                         .and_then(|x| serde_json::from_value(x).ok())
                         .unwrap_or_default(),
                     genre: None,
+                    languages_ids: Some(Vec::new()),
                     order_index: 0,
                     page_images: None,
                     sources: Vec::new(),
@@ -2471,6 +2490,39 @@ impl Loader<PageId> for Database {
     }
 }
 
+#[async_trait]
+impl Loader<LanguagesForDocument> for Database {
+    type Value = Vec<Language>;
+    type Error = Arc<sqlx::Error>;
+
+    async fn load(
+        &self,
+        keys: &[LanguagesForDocument],
+    ) -> Result<HashMap<LanguagesForDocument, Self::Value>, Self::Error> {
+        let mut results = HashMap::new();
+
+        for key in keys {
+            let rows = query_file!("queries/many_languages_for_documents.sql", &document_ids)
+            .fetch_all(&self.client)
+            .await?;
+
+            let languages = rows
+                .into_iter()
+                .map(|row| Language {
+                    id: row.id,
+                    name: row.name,
+                    autonym: row.autonym,
+                    status: row.status,
+                })
+                .collect();
+
+            results.insert(*key, languages);
+        }
+
+        Ok(results)
+    }
+}
+
 /// A struct representing an audio slice that can be easily pulled from the database
 struct BasicAudioSlice {
     id: Uuid,
@@ -2738,6 +2790,9 @@ pub struct ChaptersInCollection(pub String);
 
 #[derive(Clone, Eq, PartialEq, Hash)]
 pub struct EditedCollectionDetails(pub String);
+
+#[derive(Clone, Eq, PartialEq, Hash)]
+pub struct LanguagesForDocument(pub uuid::Uuid);
 
 /// One particular morpheme and all the known words that contain that exact morpheme.
 #[derive(async_graphql::SimpleObject)]
