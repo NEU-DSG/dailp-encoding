@@ -479,7 +479,7 @@ pub struct DocumentMetadata {
     /// Where the source document came from, maybe the name of a collection.
     pub collection: Option<String>,
     /// Term that contextualizes the social practice surrounding the document
-    pub genre_id: Option<Uuid>
+    pub genre_id: Option<Uuid>,
     #[serde(default)]
     /// The people involved in collecting, translating, annotating.
     pub contributors: Vec<Contributor>,
