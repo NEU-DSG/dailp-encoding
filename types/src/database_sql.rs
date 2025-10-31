@@ -33,6 +33,9 @@ use {
 // Explicitly import types from person.rs
 use crate::person::{Contributor, ContributorDetails, ContributorRole};
 
+// Import new metadata
+use crate::doc_metadata::Genre;
+
 /// Connects to our backing database instance, providing high level functions
 /// for accessing the data therein.
 pub struct Database {
@@ -297,7 +300,7 @@ impl Database {
                         .contributors
                         .and_then(|x| serde_json::from_value(x).ok())
                         .unwrap_or_default(),
-                    genre: None,
+                    genre_id: None.into(),
                     order_index: 0,
                     page_images: None,
                     sources: Vec::new(),
@@ -435,7 +438,7 @@ impl Database {
                     .contributors
                     .and_then(|x| serde_json::from_value(x).ok())
                     .unwrap_or_default(),
-                genre: None,
+                genre_id: None.into(),
                 order_index: 0,
                 page_images: None,
                 sources: Vec::new(),
@@ -2040,7 +2043,7 @@ impl Loader<DocumentId> for Database {
                         .contributors
                         .and_then(|x| serde_json::from_value(x).ok())
                         .unwrap_or_default(),
-                    genre: None,
+                    genre_id: None.into(),
                     order_index: 0,
                     page_images: None,
                     sources: Vec::new(),
@@ -2112,7 +2115,7 @@ impl Loader<DocumentShortName> for Database {
                         .contributors
                         .and_then(|x| serde_json::from_value(x).ok())
                         .unwrap_or_default(),
-                    genre: None,
+                    genre_id: None.into(),
                     order_index: 0,
                     page_images: None,
                     sources: Vec::new(),

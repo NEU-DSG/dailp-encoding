@@ -4,9 +4,11 @@ use crate::{
 };
 
 use crate::person::{Contributor, SourceAttribution};
+use crate::doc_metadata::Genre;
 
 use async_graphql::{dataloader::DataLoader, FieldResult, MaybeUndefined};
 use serde::{Deserialize, Serialize};
+use sqlx::{query_file_as, PgPool};
 use uuid::Uuid;
 
 /// A document with associated metadata and content broken down into pages and further into
@@ -116,8 +118,20 @@ impl AnnotatedDoc {
     }
 
     /// The genre of the document, used to group similar ones
-    async fn genre(&self) -> &Option<String> {
-        &self.meta.genre
+    async fn genre(
+        &self,
+        context: &async_graphql::Context<'_>
+    ) -> FieldResult<Option<Genre>> {
+        // Get the genre ID from this document
+        let genre_id_opt = self.meta.genre_id.as_ref();
+    
+        if let Some(id) = genre_id_opt {
+            let db = context.data::<DataLoader<Database>>()?;
+            let genre = db.load_one(crate::GenreById(*id)).await?.flatten();
+            Ok(genre)
+        } else {
+            Ok(None)
+        }
     }
 
     /// Images of each source document page, in order
@@ -317,6 +331,8 @@ pub struct DocumentMetadataUpdate {
     pub title: MaybeUndefined<String>,
     /// The date this document was written, or nothing (if unchanged or not applicable)
     pub written_at: MaybeUndefined<DateInput>,
+    /// Term that contextualizes the social practice surrounding the document
+    pub genre_id: Option<Uuid>,
 }
 
 #[async_graphql::ComplexObject]
@@ -462,8 +478,8 @@ pub struct DocumentMetadata {
     pub sources: Vec<SourceAttribution>,
     /// Where the source document came from, maybe the name of a collection.
     pub collection: Option<String>,
-    /// The genre this document is. TODO Evaluate whether we need this.
-    pub genre: Option<String>,
+    /// Term that contextualizes the social practice surrounding the document
+    pub genre_id: Option<Uuid>
     #[serde(default)]
     /// The people involved in collecting, translating, annotating.
     pub contributors: Vec<Contributor>,
@@ -484,6 +500,22 @@ pub struct DocumentMetadata {
     /// Arbitrary number used for manually ordering documents in a collection.
     /// For collections without manual ordering, use zero here.
     pub order_index: i64,
+}
+
+#[async_graphql::Object]
+impl DocumentMetadata {
+    /// Fetch the genre associated with this document
+    async fn genre(&self, ctx: &Context<'_>) -> Result<Option<Genre>> {
+        let genre_id = match self.genre_id {
+            Some(id) => id,
+            _ => return Ok(None),
+        };
+        let pool = ctx.data::<PgPool>()?;
+        let row = query_file_as!(Genre, "queries/get_genre_by_id.sql", genre_id)
+            .fetch_optional(pool)
+            .await?;
+        Ok(row)
+    }
 }
 
 /// Database ID for one document
