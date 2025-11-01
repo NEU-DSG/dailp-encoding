@@ -3,8 +3,47 @@ use crate::{document::DocumentReference, ContributorReference};
 
 use async_graphql::{Enum, SimpleObject};
 use serde::{Deserialize, Serialize};
+use sqlx::{postgres::PgValueRef, prelude::FromRow, Decode, Postgres};
 use std::collections::HashMap;
 use uuid::Uuid;
+
+/// Represents the status of a suggestion made by a contributor
+#[derive(Serialize, Deserialize, Enum, Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ApprovalStatus {
+    /// Suggestion is still waiting for or undergoing review
+    Pending, 
+    /// Suggestion has been approved
+    Approved,
+    /// Suggestion has been rejected
+    Rejected,
+}
+
+/// Allows SQLx to convert Postgres "approval_status" enum values into the corresponding Rust "ApprovalStatus"
+impl<'r> Decode<'r, Postgres> for ApprovalStatus {
+    fn decode(value: PgValueRef<'r>) -> Result<Self, Box<dyn std::error::Error + Send + Sync>> {
+        let s: &str = <&str as Decode<'r, Postgres>>::decode(value)?;
+        match s {
+            "pending" => Ok(Self::Pending),
+            "approved" => Ok(Self::Approved),
+            "rejected" => Ok(Self::Rejected),
+            _ => Err(format!("invalid approval status: {}", s).into()),
+        }
+    }
+}
+
+/// Converts a string value ("approved", "pending", or "rejected") into an ApprovalStatus enum variant
+impl TryFrom<String> for ApprovalStatus {
+    type Error = anyhow::Error;
+
+    fn try_from(value: String) -> Result<Self, Self::Error> {
+        match value.as_str() {
+            "approved" => Ok(ApprovalStatus::Approved),
+            "pending" => Ok(ApprovalStatus::Pending),
+            "rejected" => Ok(ApprovalStatus::Rejected),
+            _ => Err(anyhow::anyhow!("Invalid approval status: {}", value)),
+        }
+    }
+}
 
 /// Represents the status of a suggestion made by a contributor
 #[derive(Deserialize, Serialize, Enum, Clone, Copy, PartialEq, Eq)]
@@ -40,6 +79,33 @@ pub struct Format {
     pub documents: Vec<DocumentReference>,
     /// Name of the format
     pub name: String,
+}
+
+/// Record to store a keyword associated with a document
+#[derive(Clone, Debug, Serialize, Deserialize, FromRow, SimpleObject)]
+#[graphql(complex)]
+pub struct Keyword {
+    /// UUID for the keyword
+    pub id: Uuid,
+    /// Name of the keyword
+    pub name: String,
+    /// Status (pending, approved, rejected) of a keyword
+    pub status: ApprovalStatus,
+}
+
+/// Get all approved keywords
+#[async_graphql::ComplexObject]
+impl Keyword {
+    async fn approved(&self) -> bool {
+        matches!(self.status, ApprovalStatus::Approved)
+    }
+}
+
+/// Converts Keyword struct to corresponding Uuid
+impl From<&Keyword> for Uuid {
+    fn from(k: &Keyword) -> Self {
+        k.id
+    }
 }
 
 /// Stores the genre associated with a document

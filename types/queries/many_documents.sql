@@ -33,3 +33,16 @@ group by d.id,
   media_resource.id,
   dailp_user.id,
   ubd.bookmarked_on
+
+
+-- Keywords
+  (
+    select coalesce(jsonb_agg(jsonb_build_object(
+      'id', k.id,
+      'name', k.name,
+      'status', k.status
+    )), '[]')
+    from document_keyword dk
+    join keyword k on k.id = dk.keyword_id
+    where dk.document_id = d.id
+  ) as keywords
