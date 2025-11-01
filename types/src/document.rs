@@ -3,10 +3,12 @@ use crate::{
     Database, Date, Translation, TranslationBlock,
 };
 
+use crate::doc_metadata::SpatialCoverage;
 use crate::person::{Contributor, SourceAttribution};
 
 use async_graphql::{dataloader::DataLoader, FieldResult, MaybeUndefined};
 use serde::{Deserialize, Serialize};
+use sqlx::{query_file_as, PgPool};
 use uuid::Uuid;
 
 /// A document with associated metadata and content broken down into pages and further into
@@ -220,6 +222,23 @@ impl AnnotatedDoc {
             .chapters_by_document(self.meta.short_name.clone())
             .await?)
     }
+
+    /// Internal field accessor for spatial coverages
+    async fn spatial_coverage_ids(&self) -> &Option<Vec<Uuid>> {
+        &self.meta.spatial_coverage_ids
+    }
+
+    /// GraphQL resolver for spatial coverages
+    async fn spatial_coverage(
+        &self,
+        context: &async_graphql::Context<'_>,
+    ) -> FieldResult<Vec<SpatialCoverage>> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .load_one(crate::SpatialCoverageForDocument(self.meta.id.0))
+            .await?
+            .unwrap_or_default())
+    }
 }
 
 /// Key to retrieve the pages of a document given a document ID
@@ -317,6 +336,8 @@ pub struct DocumentMetadataUpdate {
     pub title: MaybeUndefined<String>,
     /// The date this document was written, or nothing (if unchanged or not applicable)
     pub written_at: MaybeUndefined<DateInput>,
+    /// The physical locations associated with a document (e.g. where it was written, found)
+    pub spatial_coverage_ids: Option<Vec<Uuid>>,
 }
 
 #[async_graphql::ComplexObject]
@@ -467,6 +488,8 @@ pub struct DocumentMetadata {
     #[serde(default)]
     /// The people involved in collecting, translating, annotating.
     pub contributors: Vec<Contributor>,
+    /// The physical locations associated with a document (e.g. where it was written, found)
+    pub spatial_coverage_ids: Option<Vec<Uuid>>,
     /// Rough translation of the document, broken down by paragraph.
     #[serde(skip)]
     pub translation: Option<Translation>,
@@ -484,6 +507,18 @@ pub struct DocumentMetadata {
     /// Arbitrary number used for manually ordering documents in a collection.
     /// For collections without manual ordering, use zero here.
     pub order_index: i64,
+}
+
+#[async_graphql::Object]
+impl DocumentMetadata {
+    /// Fetch all spatial coverage linked to this document
+    async fn spatial_coverage(&self, ctx: &Context<'_>) -> Result<Vec<SpatialCoverage>> {
+        let pool = ctx.data::<PgPool>()?;
+        let rows = query_file_as!(SpatialCoverage, "queries/get_spatial_coverage_by_document_id.sql", self.id.0)
+            .fetch_all(pool)
+            .await?;
+        Ok(rows)
+    }
 }
 
 /// Database ID for one document

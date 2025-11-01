@@ -11,6 +11,7 @@ use user::UserUpdate;
 use crate::collection::CollectionChapter;
 use crate::collection::EditedCollection;
 use crate::comment::{Comment, CommentParentType, CommentType, CommentUpdate};
+use crate::doc_metadata::SpatialCoverage;
 use crate::page::ContentBlock;
 use crate::page::Markdown;
 use crate::page::NewPageInput;
@@ -301,6 +302,7 @@ impl Database {
                     order_index: 0,
                     page_images: None,
                     sources: Vec::new(),
+                    spatial_coverage_ids: Some(Vec::new()),
                     translation: None,
                 },
                 segments: None,
@@ -439,6 +441,7 @@ impl Database {
                 order_index: 0,
                 page_images: None,
                 sources: Vec::new(),
+                spatial_coverage_ids: Some(Vec::new()),
                 translation: None,
             },
             segments: None,
@@ -793,6 +796,21 @@ impl Database {
         )
         .execute(&self.client)
         .await?;
+
+        // Update spatial coverages
+        if let Some(spatial_coverage_ids) = &document.spatial_coverage_ids {
+            query_file!("queries/delete_document_spatial_coverage.sql", document.id)
+                .execute(&mut *tx)
+                .await?;
+    
+            query_file!(
+                "queries/insert_document_spatial_coverage.sql",
+                document.id,
+                spatial_coverage_ids
+            )
+            .execute(&mut *tx)
+            .await?;
+        }
 
         self.paragraph_by_id(&paragraph.id).await
     }
@@ -2044,6 +2062,7 @@ impl Loader<DocumentId> for Database {
                     order_index: 0,
                     page_images: None,
                     sources: Vec::new(),
+                    spatial_coverage_ids: Some(Vec::new()),
                     translation: None,
                 },
                 segments: None,
@@ -2116,6 +2135,7 @@ impl Loader<DocumentShortName> for Database {
                     order_index: 0,
                     page_images: None,
                     sources: Vec::new(),
+                    spatial_coverage_ids: Some(Vec::new()),
                     translation: None,
                 },
                 segments: None,
@@ -2471,6 +2491,40 @@ impl Loader<PageId> for Database {
     }
 }
 
+#[async_trait]
+impl Loader<SpatialCoverageForDocument> for Database {
+    type Value = Vec<SpatialCoverage>;
+    type Error = Arc<sqlx::Error>;
+
+    async fn load(
+        &self,
+        keys: &[SpatialCoverageForDocument],
+    ) -> Result<HashMap<SpatialCoverageForDocument, Self::Value>, Self::Error> {
+        let mut results = HashMap::new();
+        let document_ids: Vec<_> = keys.iter().map(|k| k.0).collect();
+
+        let rows =
+            query_file!("queries/many_spatial_coverages_for_documents.sql", &document_ids)
+                .fetch_all(&self.client)
+                .await?;
+
+        for key in keys {
+            let coverages = rows
+                .iter()
+                .filter(|row| row.document_id == key.0)
+                .map(|row| SpatialCoverage {
+                    id: row.id,
+                    name: row.name.clone(),
+                    status: row.status,
+                })
+                .collect();
+            results.insert(*key, coverages);
+        }
+
+        Ok(results)
+    }
+}
+
 /// A struct representing an audio slice that can be easily pulled from the database
 struct BasicAudioSlice {
     id: Uuid,
@@ -2738,6 +2792,9 @@ pub struct ChaptersInCollection(pub String);
 
 #[derive(Clone, Eq, PartialEq, Hash)]
 pub struct EditedCollectionDetails(pub String);
+
+#[derive(Clone, Eq, PartialEq, Hash)]
+pub struct SpatialCoverageForDocument(pub uuid::Uuid);
 
 /// One particular morpheme and all the known words that contain that exact morpheme.
 #[derive(async_graphql::SimpleObject)]
