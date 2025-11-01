@@ -33,3 +33,15 @@ group by d.id,
   media_resource.id,
   dailp_user.id,
   ubd.bookmarked_on
+
+-- Subject Headings
+  (
+    select coalesce(jsonb_agg(jsonb_build_object(
+      'id', sh.id,
+      'name', sh.name,
+      'status', sh.status
+    )), '[]')
+    from document_subject_heading dsh
+    join subject_heading sh on sh.id = dsh.subject_heading_id
+    where dsh.document_id = d.id
+  ) as subject_headings
