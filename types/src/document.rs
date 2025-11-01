@@ -3,10 +3,11 @@ use crate::{
     Database, Date, Translation, TranslationBlock,
 };
 
-use crate::person::{Contributor, SourceAttribution};
+use crate::person::{Contributor, ContributorRole, SourceAttribution};
 
 use async_graphql::{dataloader::DataLoader, FieldResult, MaybeUndefined};
 use serde::{Deserialize, Serialize};
+use sqlx::{query_file_as, PgPool};
 use uuid::Uuid;
 
 /// A document with associated metadata and content broken down into pages and further into
@@ -317,6 +318,8 @@ pub struct DocumentMetadataUpdate {
     pub title: MaybeUndefined<String>,
     /// The date this document was written, or nothing (if unchanged or not applicable)
     pub written_at: MaybeUndefined<DateInput>,
+    /// The editors, translators, etc. of the document
+    pub contributors: Option<Vec<Contributor>>,
 }
 
 #[async_graphql::ComplexObject]
@@ -466,7 +469,7 @@ pub struct DocumentMetadata {
     pub genre: Option<String>,
     #[serde(default)]
     /// The people involved in collecting, translating, annotating.
-    pub contributors: Vec<Contributor>,
+    pub contributors: Option<Vec<Contributor>>,
     /// Rough translation of the document, broken down by paragraph.
     #[serde(skip)]
     pub translation: Option<Translation>,
@@ -484,6 +487,39 @@ pub struct DocumentMetadata {
     /// Arbitrary number used for manually ordering documents in a collection.
     /// For collections without manual ordering, use zero here.
     pub order_index: i64,
+}
+
+#[async_graphql::Object]
+impl DocumentMetadata {
+    /// Fetch all contributors linked to this document
+    pub async fn contributors(&self, ctx: &Context<'_>) -> Result<Vec<Contributor>> {
+        let pool = ctx.data::<PgPool>()?;
+        let rows = query_file_as!(
+            Contributor,
+            "queries/get_contributors_by_document_id.sql",
+            self.id.0
+        )
+        .fetch_all(pool)
+        .await?;
+    
+        // Map the returned rows into Contributor struct (transcriber, translator, annotator, cultural advisor)
+        let contributors = rows
+            .into_iter()
+            .map(|x| Contributor {
+                id: x.id,
+                name: x.name,
+                role: x.role.as_ref().and_then(|r| match r.as_str() {
+                    "transcriber" => Some(ContributorRole::Transcriber),
+                    "translator" => Some(ContributorRole::Translator),
+                    "annotator" => Some(ContributorRole::Annotator),
+                    "cultural_advisor" => Some(ContributorRole::CulturalAdvisor),
+                    _ => None,
+                }),
+            })
+            .collect();
+    
+        Ok(contributors)
+    }
 }
 
 /// Database ID for one document
