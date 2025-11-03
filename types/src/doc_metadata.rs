@@ -11,7 +11,7 @@ use uuid::Uuid;
 #[derive(Serialize, Deserialize, Enum, Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ApprovalStatus {
     /// Suggestion is still waiting for or undergoing review
-    Pending, 
+    Pending,
     /// Suggestion has been approved
     Approved,
     /// Suggestion has been rejected

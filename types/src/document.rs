@@ -3,8 +3,8 @@ use crate::{
     Database, Date, Translation, TranslationBlock,
 };
 
-use crate::person::{Contributor, SourceAttribution};
 use crate::doc_metadata::Keyword;
+use crate::person::{Contributor, SourceAttribution};
 
 use async_graphql::{dataloader::DataLoader, FieldResult, MaybeUndefined};
 use serde::{Deserialize, Serialize};
@@ -511,9 +511,13 @@ impl DocumentMetadata {
     /// Fetch all keywords linked to this document
     async fn keywords(&self, ctx: &Context<'_>) -> Result<Vec<Keyword>> {
         let pool = ctx.data::<PgPool>()?;
-        let rows = query_file_as!(Keyword, "queries/get_keywords_by_document_id.sql", self.id.0)
-            .fetch_all(pool)
-            .await?;
+        let rows = query_file_as!(
+            Keyword,
+            "queries/get_keywords_by_document_id.sql",
+            self.id.0
+        )
+        .fetch_all(pool)
+        .await?;
         Ok(rows)
     }
 }
