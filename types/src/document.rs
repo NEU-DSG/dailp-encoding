@@ -3,8 +3,8 @@ use crate::{
     Database, Date, Translation, TranslationBlock,
 };
 
-use crate::person::{Contributor, SourceAttribution};
 use crate::doc_metadata::SubjectHeading;
+use crate::person::{Contributor, SourceAttribution};
 
 use async_graphql::{dataloader::DataLoader, FieldResult, MaybeUndefined};
 use serde::{Deserialize, Serialize};
@@ -226,7 +226,7 @@ impl AnnotatedDoc {
     async fn subject_headings_ids(&self) -> &Option<Vec<Uuid>> {
         &self.meta.subject_headings_ids
     }
-    
+
     /// GraphQL resolver for subject headings
     async fn subject_headings(
         &self,
@@ -513,9 +513,13 @@ impl DocumentMetadata {
     /// Fetch all subject headings linked to this document
     async fn subject_headings(&self, ctx: &Context<'_>) -> Result<Vec<SubjectHeading>> {
         let pool = ctx.data::<PgPool>()?;
-        let rows = query_file_as!(SubjectHeading, "queries/get_subject_headings_by_document_id.sql", &[self.id.0])
-            .fetch_all(pool)
-            .await?;
+        let rows = query_file_as!(
+            SubjectHeading,
+            "queries/get_subject_headings_by_document_id.sql",
+            &[self.id.0]
+        )
+        .fetch_all(pool)
+        .await?;
         Ok(rows)
     }
 }
