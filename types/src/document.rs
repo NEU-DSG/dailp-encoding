@@ -3,8 +3,8 @@ use crate::{
     Database, Date, Translation, TranslationBlock,
 };
 
-use crate::person::{Contributor, SourceAttribution};
 use crate::doc_metadata::Genre;
+use crate::person::{Contributor, SourceAttribution};
 
 use async_graphql::{dataloader::DataLoader, FieldResult, MaybeUndefined};
 use serde::{Deserialize, Serialize};
@@ -118,13 +118,10 @@ impl AnnotatedDoc {
     }
 
     /// The genre of the document, used to group similar ones
-    async fn genre(
-        &self,
-        context: &async_graphql::Context<'_>
-    ) -> FieldResult<Option<Genre>> {
+    async fn genre(&self, context: &async_graphql::Context<'_>) -> FieldResult<Option<Genre>> {
         // Get the genre ID from this document
         let genre_id_opt = self.meta.genre_id.as_ref();
-    
+
         if let Some(id) = genre_id_opt {
             let db = context.data::<DataLoader<Database>>()?;
             let genre = db.load_one(crate::GenreById(*id)).await?.flatten();
