@@ -607,7 +607,7 @@ impl Database {
             tx.commit().await?;
             return Ok(word.id);
         }
-        
+
         // Delete existing segments before upserting new ones
         query_file!("queries/delete_word_segments.sql", word.id)
             .execute(&mut *tx)
@@ -2473,6 +2473,42 @@ impl Loader<PageId> for Database {
     }
 }
 
+#[async_trait]
+impl Loader<SubjectHeadingsForDocument> for Database {
+    type Value = Vec<SubjectHeading>;
+    type Error = Arc<sqlx::Error>;
+
+    async fn load(
+        &self,
+        keys: &[SubjectHeadingsForDocument],
+    ) -> Result<HashMap<SubjectHeadingsForDocument, Self::Value>, Self::Error> {
+        let mut results = HashMap::new();
+        let document_ids: Vec<_> = keys.iter().map(|k| k.0).collect();
+
+        let rows = query_file!(
+            "queries/many_subject_headings_for_documents.sql",
+            &document_ids
+        )
+        .fetch_all(&self.client)
+        .await?;
+
+        for key in keys {
+            let headings = rows
+                .iter()
+                .filter(|row| row.document_id == key.0)
+                .map(|row| SubjectHeading {
+                    id: row.id,
+                    name: row.name.clone(),
+                    status: row.status,
+                })
+                .collect();
+            results.insert(*key, headings);
+        }
+
+        Ok(results)
+    }
+}
+
 /// A struct representing an audio slice that can be easily pulled from the database
 struct BasicAudioSlice {
     id: Uuid,
@@ -2740,6 +2776,9 @@ pub struct ChaptersInCollection(pub String);
 
 #[derive(Clone, Eq, PartialEq, Hash)]
 pub struct EditedCollectionDetails(pub String);
+
+#[derive(Clone, Eq, PartialEq, Hash)]
+pub struct SubjectHeadingsForDocument(pub uuid::Uuid);
 
 /// One particular morpheme and all the known words that contain that exact morpheme.
 #[derive(async_graphql::SimpleObject)]
