@@ -1,17 +1,17 @@
 /// Document metadata
 use async_graphql::{Enum, SimpleObject};
 use serde::{Deserialize, Serialize};
-use sqlx::FromRow;
 use sqlx::decode::Decode;
-use sqlx::Postgres;
 use sqlx::postgres::PgValueRef;
+use sqlx::FromRow;
+use sqlx::Postgres;
 use uuid::Uuid;
 
 /// Represents the status of a suggestion made by a contributor
 #[derive(Serialize, Deserialize, Enum, Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ApprovalStatus {
     /// Suggestion is still waiting for or undergoing review
-    Pending, 
+    Pending,
     /// Suggestion has been approved
     Approved,
     /// Suggestion has been rejected
