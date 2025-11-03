@@ -223,13 +223,10 @@ impl AnnotatedDoc {
     }
 
     /// The format of the original artifact
-    async fn format(
-        &self,
-        context: &async_graphql::Context<'_>
-    ) -> FieldResult<Option<Format>> {
+    async fn format(&self, context: &async_graphql::Context<'_>) -> FieldResult<Option<Format>> {
         // Get the format ID from this document
         let format_id_opt = self.meta.format_id.as_ref();
-    
+
         if let Some(id) = format_id_opt {
             let db = context.data::<DataLoader<Database>>()?;
             let format = db.load_one(crate::FormatById(*id)).await?.flatten();
@@ -521,7 +518,7 @@ impl DocumentMetadata {
             .fetch_optional(pool)
             .await?;
         Ok(row)
-    }    
+    }
 }
 
 /// Database ID for one document

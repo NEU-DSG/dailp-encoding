@@ -2822,7 +2822,6 @@ pub struct ChaptersInCollection(pub String);
 #[derive(Clone, Eq, PartialEq, Hash)]
 pub struct EditedCollectionDetails(pub String);
 
-
 #[derive(Clone, Eq, PartialEq, Hash)]
 pub struct FormatById(pub uuid::Uuid);
 
