@@ -12,9 +12,12 @@ import {
   UserAuthPageTemplate,
 } from "./user-auth-layout"
 import { centeredForm } from "./user-auth.css"
+import * as Dailp from "src/graphql/dailp"
 
 const SignupPage = () => {
   const { createUser } = useUser().operations
+  const [,validateTurnstileToken] = Dailp.useValidateTurnstileTokenMutation()
+  const [turnstileToken, setTurnstileToken] = useState("")
 
   const signupForm = useFormState({
     values: { email: "", password: "" },
@@ -27,9 +30,26 @@ const SignupPage = () => {
     },
     onSubmit: (values) => {
       console.log(`Submitted! email is ${values.email}`)
-      createUser(values.email, values.password)
+
+      if (!turnstileToken) {
+        throw { turnstileToken: "A turnstile token is required" }
+      }
+
+      validateTurnstileToken({
+        token: turnstileToken,
+      })
+      .then((result) => {
+        if (result.data?.validateTurnstileToken) {
+          createUser(values.email, values.password)
+        } else {
+          throw { turnstileToken: "Invalid turnstile token" }
+        }
+      })
+
     },
   })
+
+
 
   const [TurnstileClient, setTurnstileClient] =
     useState<ForwardRefExoticComponent<
@@ -41,15 +61,6 @@ const SignupPage = () => {
     import("@marsidev/react-turnstile").then((m) => {
       setTurnstileClient(m.Turnstile)
       setSiteKey(process.env["TURNSTILE_SITE_KEY"] ?? null)
-      console.log(
-        "meta.env",
-        import.meta.env,
-      )
-      console.log(
-        "process.env",
-        process.env,
-      )
-      console.log("TurnstileClient", TurnstileClient, siteKey)
     })
   }, [])
 
@@ -83,7 +94,7 @@ const SignupPage = () => {
         <FormSubmitButton form={signupForm} label="Sign Up" />
         {TurnstileClient && siteKey && (
           <div style={{ display: "flex", justifyContent: "center" }}>
-            <TurnstileClient siteKey={siteKey} />
+            <TurnstileClient siteKey={siteKey} onSuccess={(token) => setTurnstileToken(token)} />
           </div>
         )}
       </Form>
