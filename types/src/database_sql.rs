@@ -301,6 +301,7 @@ impl Database {
                     order_index: 0,
                     page_images: None,
                     sources: Vec::new(),
+                    subject_headings_ids: Some(Vec::new()),
                     translation: None,
                 },
                 segments: None,
@@ -439,6 +440,7 @@ impl Database {
                 order_index: 0,
                 page_images: None,
                 sources: Vec::new(),
+                subject_headings_ids: Some(Vec::new()),
                 translation: None,
             },
             segments: None,
@@ -780,10 +782,28 @@ impl Database {
         .execute(&self.client)
         .await?;
 
+        // Update subject headings
+        if let Some(subject_headings_ids) = &document.subject_headings_ids {
+            query_file!("queries/delete_document_subject_headings.sql", document.id)
+                .execute(&mut *tx)
+                .await?;
+
+            query_file!(
+                "queries/insert_document_subject_headings.sql",
+                document.id,
+                subject_headings_ids
+            )
+            .execute(&mut *tx)
+            .await?;
+        }
+
+        // Commit updates
+        tx.commit().await?;
+
         Ok(document.id)
     }
 
-    pub async fn update_paragraph(&self, paragraph: ParagraphUpdate) -> Result<DocumentParagraph, sqlx::Error> {
+    pub async fn update_paragraph(&self, paragraph: ParagraphUpdate) -> anyhow::Result<DocumentParagraph> {
         let translation = paragraph.translation.into_vec();
         let mut tx = self.client.begin().await?;
     
@@ -2046,6 +2066,7 @@ impl Loader<DocumentId> for Database {
                     order_index: 0,
                     page_images: None,
                     sources: Vec::new(),
+                    subject_headings_ids: Some(Vec::new()),
                     translation: None,
                 },
                 segments: None,
@@ -2118,6 +2139,7 @@ impl Loader<DocumentShortName> for Database {
                     order_index: 0,
                     page_images: None,
                     sources: Vec::new(),
+                    subject_headings_ids: Some(Vec::new()),
                     translation: None,
                 },
                 segments: None,
