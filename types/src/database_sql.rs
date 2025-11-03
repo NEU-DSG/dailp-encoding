@@ -802,7 +802,7 @@ impl Database {
             query_file!("queries/delete_document_spatial_coverage.sql", document.id)
                 .execute(&mut *tx)
                 .await?;
-    
+
             query_file!(
                 "queries/insert_document_spatial_coverage.sql",
                 document.id,
@@ -2503,10 +2503,12 @@ impl Loader<SpatialCoverageForDocument> for Database {
         let mut results = HashMap::new();
         let document_ids: Vec<_> = keys.iter().map(|k| k.0).collect();
 
-        let rows =
-            query_file!("queries/many_spatial_coverages_for_documents.sql", &document_ids)
-                .fetch_all(&self.client)
-                .await?;
+        let rows = query_file!(
+            "queries/many_spatial_coverages_for_documents.sql",
+            &document_ids
+        )
+        .fetch_all(&self.client)
+        .await?;
 
         for key in keys {
             let coverages = rows

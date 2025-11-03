@@ -514,9 +514,13 @@ impl DocumentMetadata {
     /// Fetch all spatial coverage linked to this document
     async fn spatial_coverage(&self, ctx: &Context<'_>) -> Result<Vec<SpatialCoverage>> {
         let pool = ctx.data::<PgPool>()?;
-        let rows = query_file_as!(SpatialCoverage, "queries/get_spatial_coverage_by_document_id.sql", self.id.0)
-            .fetch_all(pool)
-            .await?;
+        let rows = query_file_as!(
+            SpatialCoverage,
+            "queries/get_spatial_coverage_by_document_id.sql",
+            self.id.0
+        )
+        .fetch_all(pool)
+        .await?;
         Ok(rows)
     }
 }
