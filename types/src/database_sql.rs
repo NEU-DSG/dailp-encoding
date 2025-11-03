@@ -11,11 +11,11 @@ use user::UserUpdate;
 use crate::collection::CollectionChapter;
 use crate::collection::EditedCollection;
 use crate::comment::{Comment, CommentParentType, CommentType, CommentUpdate};
+use crate::doc_metadata::Language;
 use crate::page::ContentBlock;
 use crate::page::Markdown;
 use crate::page::NewPageInput;
 use crate::page::Page;
-use crate::doc_metadata::Language;
 use crate::user::User;
 use crate::user::UserId;
 use {
@@ -788,10 +788,14 @@ impl Database {
             query_file!("queries/delete_document_languages.sql", document.id)
                 .execute(&mut *tx)
                 .await?;
-    
-            query_file!("queries/insert_document_languages.sql", document.id, languages_ids)
-                .execute(&mut *tx)
-                .await?;
+
+            query_file!(
+                "queries/insert_document_languages.sql",
+                document.id,
+                languages_ids
+            )
+            .execute(&mut *tx)
+            .await?;
         }
 
         // Commit updates
@@ -2503,8 +2507,8 @@ impl Loader<LanguagesForDocument> for Database {
 
         for key in keys {
             let rows = query_file!("queries/many_languages_for_documents.sql", &document_ids)
-            .fetch_all(&self.client)
-            .await?;
+                .fetch_all(&self.client)
+                .await?;
 
             let languages = rows
                 .into_iter()

@@ -3,8 +3,8 @@ use crate::{
     Database, Date, Translation, TranslationBlock,
 };
 
-use crate::person::{Contributor, SourceAttribution};
 use crate::doc_metadata::Language;
+use crate::person::{Contributor, SourceAttribution};
 
 use async_graphql::{dataloader::DataLoader, FieldResult, MaybeUndefined};
 use serde::{Deserialize, Serialize};
@@ -226,7 +226,7 @@ impl AnnotatedDoc {
     async fn languages_ids(&self) -> Option<Vec<Uuid>> {
         self.meta.languages_ids.clone()
     }
-    
+
     async fn languages(&self, context: &async_graphql::Context<'_>) -> FieldResult<Vec<Language>> {
         Ok(context
             .data::<DataLoader<Database>>()?
@@ -508,9 +508,13 @@ impl DocumentMetadata {
     /// Fetch all languages linked to this document
     async fn languages(&self, ctx: &Context<'_>) -> Result<Vec<Language>> {
         let pool = ctx.data::<PgPool>()?;
-        let rows = query_file_as!(Language, "queries/get_languages_by_document_id.sql", self.id.0)
-            .fetch_all(pool)
-            .await?;
+        let rows = query_file_as!(
+            Language,
+            "queries/get_languages_by_document_id.sql",
+            self.id.0
+        )
+        .fetch_all(pool)
+        .await?;
         Ok(rows)
     }
 }
