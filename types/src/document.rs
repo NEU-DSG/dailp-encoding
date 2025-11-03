@@ -6,8 +6,9 @@ use crate::{
 use crate::doc_metadata::SubjectHeading;
 use crate::person::{Contributor, SourceAttribution};
 
-use async_graphql::{dataloader::DataLoader, FieldResult, MaybeUndefined};
+use async_graphql::{Context, dataloader::DataLoader, FieldResult, MaybeUndefined};
 use serde::{Deserialize, Serialize};
+use sqlx::{PgPool, query_file_as};
 use uuid::Uuid;
 
 /// A document with associated metadata and content broken down into pages and further into
@@ -511,7 +512,7 @@ pub struct DocumentMetadata {
 #[async_graphql::Object]
 impl DocumentMetadata {
     /// Fetch all subject headings linked to this document
-    async fn subject_headings(&self, ctx: &Context<'_>) -> Result<Vec<SubjectHeading>> {
+    async fn subject_headings(&self, ctx: &Context<'_>) -> FieldResult<Vec<SubjectHeading>> {
         let pool = ctx.data::<PgPool>()?;
         let rows = query_file_as!(
             SubjectHeading,

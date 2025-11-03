@@ -11,7 +11,6 @@ use user::UserUpdate;
 use crate::collection::CollectionChapter;
 use crate::collection::EditedCollection;
 use crate::comment::{Comment, CommentParentType, CommentType, CommentUpdate};
-use crate::doc_metadata::SubjectHeading;
 use crate::page::ContentBlock;
 use crate::page::Markdown;
 use crate::page::NewPageInput;
@@ -302,7 +301,6 @@ impl Database {
                     order_index: 0,
                     page_images: None,
                     sources: Vec::new(),
-                    subject_headings_ids: Some(Vec::new()),
                     translation: None,
                 },
                 segments: None,
@@ -441,7 +439,6 @@ impl Database {
                 order_index: 0,
                 page_images: None,
                 sources: Vec::new(),
-                subject_headings_ids: Some(Vec::new()),
                 translation: None,
             },
             segments: None,
@@ -610,7 +607,7 @@ impl Database {
             tx.commit().await?;
             return Ok(word.id);
         }
-
+        
         // Delete existing segments before upserting new ones
         query_file!("queries/delete_word_segments.sql", word.id)
             .execute(&mut *tx)
@@ -783,45 +780,29 @@ impl Database {
         .execute(&self.client)
         .await?;
 
-        // Update subject headings
-        if let Some(subject_headings_ids) = &document.subject_headings_ids {
-            query_file!("queries/delete_document_subject_headings.sql", document.id)
-                .execute(&mut *tx)
-                .await?;
-
-            query_file!(
-                "queries/insert_document_subject_headings.sql",
-                document.id,
-                subject_headings_ids
-            )
-            .execute(&mut *tx)
-            .await?;
-        }
-
-        // Commit updates
-        tx.commit().await?;
-
         Ok(document.id)
     }
 
-    pub async fn update_paragraph(&self, paragraph: ParagraphUpdate) -> Result<DocumentParagraph> {
+    pub async fn update_paragraph(&self, paragraph: ParagraphUpdate) -> Result<DocumentParagraph, sqlx::Error> {
         let translation = paragraph.translation.into_vec();
-
+        let mut tx = self.client.begin().await?;
+    
         query_file!(
             "queries/update_paragraph.sql",
             paragraph.id,
             &translation as _
         )
-        .execute(&self.client)
+        .execute(&mut *tx)
         .await?;
-
+    
+        tx.commit().await?;
         self.paragraph_by_id(&paragraph.id).await
-    }
+    }    
 
-    pub async fn update_comment(&self, comment: CommentUpdate) -> Result<Uuid> {
+    pub async fn update_comment(&self, comment: CommentUpdate) -> Result<Uuid, sqlx::Error> {
         let text_content = comment.text_content.into_vec();
         let comment_type = comment.comment_type.into_vec();
-
+    
         query_file!(
             "queries/update_comment.sql",
             comment.id,
@@ -831,9 +812,9 @@ impl Database {
         )
         .execute(&self.client)
         .await?;
-
+    
         Ok(comment.id)
-    }
+    }    
 
     pub async fn update_contributor_attribution(
         &self,
@@ -2065,7 +2046,6 @@ impl Loader<DocumentId> for Database {
                     order_index: 0,
                     page_images: None,
                     sources: Vec::new(),
-                    subject_headings_ids: Some(Vec::new()),
                     translation: None,
                 },
                 segments: None,
@@ -2138,7 +2118,6 @@ impl Loader<DocumentShortName> for Database {
                     order_index: 0,
                     page_images: None,
                     sources: Vec::new(),
-                    subject_headings_ids: Some(Vec::new()),
                     translation: None,
                 },
                 segments: None,
@@ -2494,42 +2473,6 @@ impl Loader<PageId> for Database {
     }
 }
 
-#[async_trait]
-impl Loader<SubjectHeadingsForDocument> for Database {
-    type Value = Vec<SubjectHeading>;
-    type Error = Arc<sqlx::Error>;
-
-    async fn load(
-        &self,
-        keys: &[SubjectHeadingsForDocument],
-    ) -> Result<HashMap<SubjectHeadingsForDocument, Self::Value>, Self::Error> {
-        let mut results = HashMap::new();
-        let document_ids: Vec<_> = keys.iter().map(|k| k.0).collect();
-
-        let rows = query_file!(
-            "queries/many_subject_headings_for_documents.sql",
-            &document_ids
-        )
-        .fetch_all(&self.client)
-        .await?;
-
-        for key in keys {
-            let headings = rows
-                .iter()
-                .filter(|row| row.document_id == key.0)
-                .map(|row| SubjectHeading {
-                    id: row.id,
-                    name: row.name.clone(),
-                    status: row.status,
-                })
-                .collect();
-            results.insert(*key, headings);
-        }
-
-        Ok(results)
-    }
-}
-
 /// A struct representing an audio slice that can be easily pulled from the database
 struct BasicAudioSlice {
     id: Uuid,
@@ -2797,9 +2740,6 @@ pub struct ChaptersInCollection(pub String);
 
 #[derive(Clone, Eq, PartialEq, Hash)]
 pub struct EditedCollectionDetails(pub String);
-
-#[derive(Clone, Eq, PartialEq, Hash)]
-pub struct SubjectHeadingsForDocument(pub uuid::Uuid);
 
 /// One particular morpheme and all the known words that contain that exact morpheme.
 #[derive(async_graphql::SimpleObject)]
