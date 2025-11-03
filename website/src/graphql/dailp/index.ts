@@ -790,6 +790,7 @@ export type Mutation = {
   readonly updateUser: User
   readonly updateWord: AnnotatedForm
   readonly upsertPage: Scalars["String"]
+  readonly validateTurnstileToken: Scalars["Boolean"]
 }
 
 export type MutationAddBookmarkArgs = {
@@ -872,6 +873,10 @@ export type MutationUpdateWordArgs = {
 
 export type MutationUpsertPageArgs = {
   page: NewPageInput
+}
+
+export type MutationValidateTurnstileTokenArgs = {
+  token: Scalars["String"]
 }
 
 /** Input struct for a page. */
@@ -2832,6 +2837,14 @@ export type UpdateMenuMutation = { readonly __typename?: "Mutation" } & {
     }
 }
 
+export type ValidateTurnstileTokenMutationVariables = Exact<{
+  token: Scalars["String"]
+}>
+
+export type ValidateTurnstileTokenMutation = {
+  readonly __typename?: "Mutation"
+} & Pick<Mutation, "validateTurnstileToken">
+
 export const DocFormFieldsFragmentDoc = gql`
   fragment DocFormFields on AnnotatedDoc {
     id
@@ -4039,4 +4052,16 @@ export function useUpdateMenuMutation() {
   return Urql.useMutation<UpdateMenuMutation, UpdateMenuMutationVariables>(
     UpdateMenuDocument
   )
+}
+export const ValidateTurnstileTokenDocument = gql`
+  mutation ValidateTurnstileToken($token: String!) {
+    validateTurnstileToken(token: $token)
+  }
+`
+
+export function useValidateTurnstileTokenMutation() {
+  return Urql.useMutation<
+    ValidateTurnstileTokenMutation,
+    ValidateTurnstileTokenMutationVariables
+  >(ValidateTurnstileTokenDocument)
 }

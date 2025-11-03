@@ -13,6 +13,7 @@ use dailp::{
     UpdateContributorAttribution, Uuid,
 };
 use itertools::{Itertools, Position};
+use reqwest::Client;
 
 use {
     dailp::async_graphql::{self, dataloader::DataLoader, Context, FieldResult},
@@ -395,6 +396,7 @@ impl Query {
             .get_menu_by_slug(slug)
             .await?)
     }
+
 }
 
 pub struct Mutation;
@@ -888,6 +890,22 @@ impl Mutation {
             .loader()
             .update_menu(menu)
             .await?)
+    }
+
+    async fn validate_turnstile_token(&self, context: &Context<'_>, token: String) -> FieldResult<bool> {
+        // post to https://challenges.cloudflare.com/turnstile/v0/siteverify
+        let secret = std::env::var("TURNSTILE_SECRET_KEY").unwrap();
+        let req = token;
+
+        let client = reqwest::Client::new();
+        let response = client.post("https://challenges.cloudflare.com/turnstile/v0/siteverify")
+            .form(&[("secret", secret), ("response", req)])
+            .send()
+            .await?;
+        let body = response.text().await?;
+        let body_json = serde_json::from_str::<serde_json::Value>(&body)?;
+
+        Ok(body_json["success"].as_bool().unwrap())
     }
 }
 
