@@ -1,4 +1,5 @@
-import React from "react"
+import { TurnstileInstance, TurnstileProps } from "@marsidev/react-turnstile"
+import React, { ForwardRefExoticComponent, useEffect, useState } from "react"
 import {
   unstable_Form as Form,
   unstable_useFormState as useFormState,
@@ -30,6 +31,28 @@ const SignupPage = () => {
     },
   })
 
+  const [TurnstileClient, setTurnstileClient] =
+    useState<ForwardRefExoticComponent<
+      TurnstileProps & React.RefAttributes<TurnstileInstance | undefined>
+    > | null>(null)
+  const [siteKey, setSiteKey] = useState<string | null>(null)
+
+  useEffect(() => {
+    import("@marsidev/react-turnstile").then((m) => {
+      setTurnstileClient(m.Turnstile)
+      setSiteKey(process.env["TURNSTILE_SITE_KEY"] ?? null)
+      console.log(
+        "meta.env",
+        import.meta.env,
+      )
+      console.log(
+        "process.env",
+        process.env,
+      )
+      console.log("TurnstileClient", TurnstileClient, siteKey)
+    })
+  }, [])
+
   return (
     <UserAuthPageTemplate
       header={{
@@ -58,6 +81,11 @@ const SignupPage = () => {
         <LoginLink />
 
         <FormSubmitButton form={signupForm} label="Sign Up" />
+        {TurnstileClient && siteKey && (
+          <div style={{ display: "flex", justifyContent: "center" }}>
+            <TurnstileClient siteKey={siteKey} />
+          </div>
+        )}
       </Form>
     </UserAuthPageTemplate>
   )
