@@ -161,8 +161,6 @@ impl ContributorRole {
     }
 }
 
-
-
 /// The creator of a document
 #[derive(async_graphql::SimpleObject, Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[graphql(complex)]

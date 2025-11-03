@@ -819,12 +819,16 @@ impl Database {
             query_file!("queries/delete_document_creator.sql", document.id)
                 .execute(&mut *tx)
                 .await?;
-    
-            query_file!("queries/insert_document_creator.sql", document.id, creator_ids)
-                .execute(&mut *tx)
-                .await?;
+
+            query_file!(
+                "queries/insert_document_creator.sql",
+                document.id,
+                creator_ids
+            )
+            .execute(&mut *tx)
+            .await?;
         }
-        
+
         // Commit updates
         tx.commit().await?;
 
