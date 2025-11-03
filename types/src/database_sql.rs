@@ -11,11 +11,11 @@ use user::UserUpdate;
 use crate::collection::CollectionChapter;
 use crate::collection::EditedCollection;
 use crate::comment::{Comment, CommentParentType, CommentType, CommentUpdate};
+use crate::doc_metadata::Keyword;
 use crate::page::ContentBlock;
 use crate::page::Markdown;
 use crate::page::NewPageInput;
 use crate::page::Page;
-use crate::doc_metadata::Keyword;
 use crate::user::User;
 use crate::user::UserId;
 use {
@@ -788,10 +788,14 @@ impl Database {
             query_file!("queries/delete_document_keywords.sql", document.id)
                 .execute(&mut *tx)
                 .await?;
-    
-            query_file!("queries/insert_document_keywords.sql", document.id, keywords_ids)
-                .execute(&mut *tx)
-                .await?;
+
+            query_file!(
+                "queries/insert_document_keywords.sql",
+                document.id,
+                keywords_ids
+            )
+            .execute(&mut *tx)
+            .await?;
         }
 
         // Commit updates
