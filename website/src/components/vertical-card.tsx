@@ -3,7 +3,7 @@ import { Group } from "reakit"
 import { Button, Link } from "src/components"
 import { verticalCard, verticalCardHeader, verticalCardImage, verticalCardText } from "./vertical-card.css"
 
-export const Card = (props: {
+export const VerticalCard = (props: {
     thumbnail: string
     header: { text: string; link: string | undefined }
     description: string
