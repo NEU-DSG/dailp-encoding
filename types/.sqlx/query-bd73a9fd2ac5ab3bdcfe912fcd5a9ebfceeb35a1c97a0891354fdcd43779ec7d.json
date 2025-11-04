@@ -1,0 +1,34 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select \n    id, \n    name, \n    status::text as status\nfrom subject_heading s\njoin document_subject_heading dsh on s.id = dsh.subject_heading_id\nwhere dsh.document_id = any($1);",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "status",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "UuidArray"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      null
+    ]
+  },
+  "hash": "bd73a9fd2ac5ab3bdcfe912fcd5a9ebfceeb35a1c97a0891354fdcd43779ec7d"
+}

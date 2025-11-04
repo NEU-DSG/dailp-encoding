@@ -784,6 +784,8 @@ impl Database {
 
         // Update subject headings
         if let Some(subject_headings_ids) = &document.subject_headings_ids {
+            let mut tx = self.client.begin().await?;
+            
             query_file!("queries/delete_document_subject_headings.sql", document.id)
                 .execute(&mut *tx)
                 .await?;

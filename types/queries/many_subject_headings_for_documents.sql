@@ -3,7 +3,7 @@ select
     dsh.document_id,
     sh.id,
     sh.name,
-    sh.status::text as status
+    status::approval_status as status
 from subject_heading sh
 join document_subject_heading dsh on sh.id = dsh.subject_heading_id
 where dsh.document_id = any($1);
