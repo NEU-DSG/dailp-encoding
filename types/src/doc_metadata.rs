@@ -3,11 +3,12 @@ use crate::{document::DocumentReference, ContributorReference};
 
 use async_graphql::{Enum, SimpleObject};
 use serde::{Deserialize, Serialize};
+use sqlx::FromRow;
 use std::collections::HashMap;
 use uuid::Uuid;
 
 /// Represents the status of a suggestion made by a contributor
-#[derive(Deserialize, Serialize, Enum, Clone, Copy, PartialEq, Eq)]
+#[derive(Deserialize, Serialize, Enum, Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Status {
     /// Suggestion is still waiting for or undergoing review
     Pending,
@@ -27,14 +28,14 @@ pub struct SubjectHeading {
     /// Name of the subject heading
     pub name: String,
     /// Status (pending, approved, rejected) of a subject heading
-    pub status: ApprovalStatus,
+    pub status: Status,
 }
 
 /// Get all approved subject headings
 #[async_graphql::ComplexObject]
 impl SubjectHeading {
     async fn approved(&self) -> bool {
-        matches!(self.status, ApprovalStatus::Approved)
+        matches!(self.status, Status::Approved)
     }
 }
 
