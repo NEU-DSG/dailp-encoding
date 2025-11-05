@@ -1,9 +1,9 @@
 /// Document metadata
 use crate::{document::DocumentReference, ContributorReference};
 
-use async_graphql::{Enum, SimpleObject, ComplexObject};
+use async_graphql::{ComplexObject, Enum, SimpleObject};
 use serde::{Deserialize, Serialize};
-use sqlx::{FromRow, postgres::PgValueRef, Decode, Postgres};
+use sqlx::{postgres::PgValueRef, Decode, FromRow, Postgres};
 use std::collections::HashMap;
 use uuid::Uuid;
 
