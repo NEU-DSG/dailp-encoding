@@ -63,19 +63,29 @@
             crossSystem.config = target;
           };
           cc = pkgsCross.pkgsStatic.stdenv.cc;
+          openssl = pkgsCross.pkgsStatic.openssl;
+          pkgconfig = pkgsCross.pkgsStatic.pkg-config;
         in naersk.buildPackage {
           root = ./.;
           src = packageSrc;
           doCheck = true;
           doTest = true;
 
-          nativeBuildInputs = [ cc ];
+          nativeBuildInputs = [ cc pkgconfig ];
+          buildInputs = [ openssl ];
 
           # Configures the target which will be built.
           # ref: https://doc.rust-lang.org/cargo/reference/config.html#buildtarget
           CARGO_BUILD_TARGET = target;
           TARGET_CC = "${cc}/bin/${target}-gcc";
           CARGO_BUILD_RUSTFLAGS = "-C target-feature=+crt-static";
+
+          # Help openssl-sys locate and link the correct (musl) OpenSSL
+          OPENSSL_DIR = openssl;
+          OPENSSL_LIB_DIR = "${openssl}/lib";
+          OPENSSL_INCLUDE_DIR = "${openssl.dev}/include";
+          OPENSSL_STATIC = "1";
+          PKG_CONFIG_ALL_STATIC = "1";
         };
         hostPackage = naersk.buildPackage {
           root = ./.;
