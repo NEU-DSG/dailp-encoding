@@ -15,19 +15,12 @@ pub struct Admin {
 #[derive(Clone, Debug, Serialize, Deserialize, async_graphql::SimpleObject, PartialEq, Eq)]
 #[graphql(complex)]
 pub struct Contributor {
+    /// UUID of the contributor
+    pub id: uuid::Uuid,
     /// Full name of the contributor
     pub name: String,
     /// The role that defines most of their contributions to the associated item
     pub role: Option<ContributorRole>,
-}
-impl Contributor {
-    /// Create new contributor with the role "Author"
-    pub fn new_author(name: String) -> Self {
-        Self {
-            name,
-            role: Some(ContributorRole::Author),
-        }
-    }
 }
 
 #[async_graphql::ComplexObject]
@@ -103,14 +96,10 @@ pub enum ContributorRole {
     Transcriber,
     /// Translated text into another language
     Translator,
-    /// Edited the text or translation for clarity or structure
-    Editor,
     /// Added linguistic, cultural, etc. annotations
     Annotator,
     /// Provided cultural context for a document
     CulturalAdvisor,
-    /// Creator of a document
-    Author,
 }
 
 /// Draft of function for converting a string to a ContributorRole
@@ -120,9 +109,7 @@ impl std::str::FromStr for ContributorRole {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
             "annotator" => Ok(ContributorRole::Annotator),
-            "author" => Ok(ContributorRole::Author),
             "culturalAdvisior" => Ok(ContributorRole::CulturalAdvisor),
-            "editor" => Ok(ContributorRole::Editor),
             "transcriber" => Ok(ContributorRole::Transcriber),
             "translator" => Ok(ContributorRole::Translator),
             other => Err(format!("Unknown contributor role: {}", other)),
@@ -135,9 +122,7 @@ impl std::fmt::Display for ContributorRole {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let s = match self {
             ContributorRole::Annotator => "Annotator",
-            ContributorRole::Author => "Author",
             ContributorRole::CulturalAdvisor => "CulturalAdvisor",
-            ContributorRole::Editor => "Editor",
             ContributorRole::Translator => "Translator",
             ContributorRole::Transcriber => "Transcriber",
         };
