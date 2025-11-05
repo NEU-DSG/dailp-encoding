@@ -79,14 +79,14 @@ pub struct Keyword {
     /// Name of the keyword
     pub name: String,
     /// Status (pending, approved, rejected) of a keyword
-    pub status: Status,
+    pub status: ApprovalStatus,
 }
 
 /// Get all approved keywords
 #[async_graphql::ComplexObject]
 impl Keyword {
     async fn approved(&self) -> bool {
-        matches!(self.status, Status::Approved)
+        matches!(self.status, ApprovalStatus::Approved)
     }
 }
 
