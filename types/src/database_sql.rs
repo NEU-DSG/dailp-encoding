@@ -771,10 +771,9 @@ impl Database {
 
     pub async fn update_document_metadata(&self, document: DocumentMetadataUpdate) -> Result<Uuid> {
         let mut tx = self.client.begin().await?;
-        
+
         let title = document.title.into_vec();
         let written_at: Option<Date> = document.written_at.value().map(Into::into);
-    
 
         query_file!(
             "queries/update_document_metadata.sql",
@@ -787,7 +786,6 @@ impl Database {
 
         // Update subject headings
         if let Some(subject_headings_ids) = &document.subject_headings_ids {
-            
             query_file!("queries/delete_document_subject_headings.sql", document.id)
                 .execute(&mut *tx)
                 .await?;
@@ -807,10 +805,13 @@ impl Database {
         Ok(document.id)
     }
 
-    pub async fn update_paragraph(&self, paragraph: ParagraphUpdate) -> anyhow::Result<DocumentParagraph> {
+    pub async fn update_paragraph(
+        &self,
+        paragraph: ParagraphUpdate,
+    ) -> anyhow::Result<DocumentParagraph> {
         let translation = paragraph.translation.into_vec();
         let mut tx = self.client.begin().await?;
-    
+
         query_file!(
             "queries/update_paragraph.sql",
             paragraph.id,
@@ -818,15 +819,15 @@ impl Database {
         )
         .execute(&mut *tx)
         .await?;
-    
+
         tx.commit().await?;
         self.paragraph_by_id(&paragraph.id).await
-    }    
+    }
 
     pub async fn update_comment(&self, comment: CommentUpdate) -> Result<Uuid, sqlx::Error> {
         let text_content = comment.text_content.into_vec();
         let comment_type = comment.comment_type.into_vec();
-    
+
         query_file!(
             "queries/update_comment.sql",
             comment.id,
@@ -836,9 +837,9 @@ impl Database {
         )
         .execute(&self.client)
         .await?;
-    
+
         Ok(comment.id)
-    }    
+    }
 
     pub async fn update_contributor_attribution(
         &self,

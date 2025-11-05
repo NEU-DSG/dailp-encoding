@@ -6,9 +6,9 @@ use crate::{
 use crate::doc_metadata::SubjectHeading;
 use crate::person::{Contributor, SourceAttribution};
 
-use async_graphql::{Context, dataloader::DataLoader, FieldResult, MaybeUndefined};
+use async_graphql::{dataloader::DataLoader, Context, FieldResult, MaybeUndefined};
 use serde::{Deserialize, Serialize};
-use sqlx::{PgPool, query_file_as};
+use sqlx::{query_file_as, PgPool};
 use uuid::Uuid;
 
 /// A document with associated metadata and content broken down into pages and further into
