@@ -1,5 +1,5 @@
 /// Document metadata
-use async_graphql::{Enum, SimpleObject, ComplexObject};
+use async_graphql::{ComplexObject, Enum, SimpleObject};
 use serde::{Deserialize, Serialize};
 use sqlx::{postgres::PgValueRef, Decode, FromRow, Postgres};
 use std::collections::HashMap;
