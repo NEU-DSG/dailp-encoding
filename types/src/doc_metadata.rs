@@ -1,10 +1,15 @@
 /// Document metadata
 use async_graphql::{Enum, SimpleObject};
 use serde::{Deserialize, Serialize};
+<<<<<<< HEAD
 use sqlx::decode::Decode;
 use sqlx::postgres::PgValueRef;
 use sqlx::FromRow;
 use sqlx::Postgres;
+=======
+use sqlx::{postgres::PgValueRef, Decode, Postgres};
+use std::collections::HashMap;
+>>>>>>> d30480f2cfd1cce6c251492a0141153890916cc9
 use uuid::Uuid;
 
 /// Represents the status of a suggestion made by a contributor
@@ -29,6 +34,37 @@ impl<'r> Decode<'r, Postgres> for ApprovalStatus {
             _ => Err(format!("invalid approval status: {}", s).into()),
         }
     }
+<<<<<<< HEAD
+=======
+}
+
+/// Converts a string value ("approved", "pending", or "rejected") into an ApprovalStatus enum variant
+impl TryFrom<String> for ApprovalStatus {
+    type Error = anyhow::Error;
+
+    fn try_from(value: String) -> Result<Self, Self::Error> {
+        match value.as_str() {
+            "approved" => Ok(ApprovalStatus::Approved),
+            "pending" => Ok(ApprovalStatus::Pending),
+            "rejected" => Ok(ApprovalStatus::Rejected),
+            _ => Err(anyhow::anyhow!("Invalid approval status: {}", value)),
+        }
+    }
+}
+
+/// Record to store a subject heading that reflects Indigenous knowledge
+/// practices associated with a document
+#[derive(Clone, SimpleObject)]
+pub struct SubjectHeading {
+    /// UUID for the subject heading
+    pub id: Uuid,
+    /// Documents associated with the subject heading
+    pub documents: Vec<DocumentReference>,
+    /// Name of the subject heading
+    pub name: String,
+    /// Status (pending, approved, rejected) of a subject heading
+    pub status: ApprovalStatus,
+>>>>>>> d30480f2cfd1cce6c251492a0141153890916cc9
 }
 
 /// Converts a string value ("approved", "pending", or "rejected") into an ApprovalStatus enum variant
