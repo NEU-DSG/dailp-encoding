@@ -1,4 +1,7 @@
-{ config, lib, pkgs, ... }: {
+{ config, lib, pkgs, ... }: 
+let 
+  prefixName = import ./utils.nix { stage = config.setup.stage; };
+in {
 config.resource = {
   cloudflare_turnstile_widget.main = {
     account_id = getEnv "CLOUDFLARE_ACCOUNT_ID";
@@ -7,4 +10,5 @@ config.resource = {
     mode= "managed";
     region = "world";
   }
+};
 }
