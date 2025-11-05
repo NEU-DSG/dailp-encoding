@@ -54,7 +54,7 @@ in {
 
   provider.cloudflare = {
     api_token = getEnv "CLOUDFLARE_API_TOKEN";
-  }
+  };
 
   setup = {
     # Setup the S3 bucket and DynamoDB table that store and manage Terraform state
