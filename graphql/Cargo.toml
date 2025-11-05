@@ -40,4 +40,4 @@ async-std = { version = "1", features = ["attributes", "tokio1"] }
 jsonwebtoken = "8"
 
 dailp = {path = "../types"}
-reqwest = "0.12.24"
+reqwest = "0.11"
