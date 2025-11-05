@@ -501,7 +501,7 @@ impl DocumentMetadata {
         )
         .fetch_all(pool)
         .await?;
-
+    
         // Map the returned rows into Contributor struct (transcriber, translator, annotator, cultural advisor)
         let contributors = rows
             .into_iter()
@@ -517,7 +517,7 @@ impl DocumentMetadata {
                 }),
             })
             .collect();
-
+    
         Ok(contributors)
     }
 }
