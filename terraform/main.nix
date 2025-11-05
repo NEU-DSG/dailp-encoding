@@ -39,6 +39,11 @@ in {
     version = "~> 4.30";
   };
 
+  terraform.required_providers.cloudflare = {
+    source = "cloudflare/cloudflare";
+    version = "~> 4.0";
+  };
+
   # Setup AWS credentials depending on whether we are in the development or
   # production account.
   provider.aws = {
@@ -46,6 +51,10 @@ in {
     region = "us-east-1";
     default_tags.tags = config.setup.global_tags;
   };
+
+  provider.cloudflare = {
+    api_token = getEnv "CLOUDFLARE_API_TOKEN";
+  }
 
   setup = {
     # Setup the S3 bucket and DynamoDB table that store and manage Terraform state

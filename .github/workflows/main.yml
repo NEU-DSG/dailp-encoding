@@ -35,6 +35,8 @@ jobs:
       AWS_SSH_KEY: ${{ secrets.AWS_SSH_KEY }}
       GIT_REPOSITORY_URL: https://github.com/neu-dsg/dailp-encoding
       OAUTH_TOKEN: ${{ secrets.OAUTH_TOKEN }}
+      TURNSTILE_SITE_KEY: ${{ secrets.TURNSTILE_SITE_KEY }}
+      TURNSTILE_SECRET_KEY: ${{ secrets.TURNSTILE_SECRET_KEY }}
       RUST_LOG: info
       # Stage is Development if not based on a release event, is Staging/UAT if event action is prereleased, is Production if event action is released
       TF_STAGE: ${{ github.event_name == 'release' && ( github.event.action == 'prereleased' && 'uat' || 'prod') || 'dev' }}
