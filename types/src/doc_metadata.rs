@@ -49,7 +49,7 @@ impl TryFrom<String> for ApprovalStatus {
 #[derive(Clone, Debug, Serialize, Deserialize, FromRow)]
 #[graphql(complex)]
 pub struct Genre {
-    /// UUID for the genre
+    /// UUID for the Genre
     pub id: Uuid,
     /// Name of the genre
     pub name: String,
