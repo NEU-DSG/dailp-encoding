@@ -12,7 +12,7 @@ use uuid::Uuid;
 
 /// Represents the status of a suggestion made by a contributor
 #[derive(Deserialize, Serialize, Enum, Clone, Copy, PartialEq, Eq)]
-pub enum Status {
+pub enum ApprovalStatus {
     /// Suggestion is still waiting for or undergoing review
     Pending,
     /// Suggestion has been approved
@@ -32,7 +32,7 @@ pub struct SubjectHeading {
     /// Name of the subject heading
     pub name: String,
     /// Status (pending, approved, rejected) of a subject heading
-    pub status: Status,
+    pub status: ApprovalStatus,
 }
 
 /// Stores the physical or digital medium associated with a document
