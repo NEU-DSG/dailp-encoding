@@ -3,7 +3,7 @@ use crate::{document::DocumentReference, ContributorReference};
 
 use async_graphql::{Enum, SimpleObject};
 use serde::{Deserialize, Serialize};
-use sqlx::{FromRow, postgres::PgValueRef, Decode, Postgres};
+use sqlx::{postgres::PgValueRef, Decode, FromRow, Postgres};
 use std::collections::HashMap;
 use uuid::Uuid;
 
