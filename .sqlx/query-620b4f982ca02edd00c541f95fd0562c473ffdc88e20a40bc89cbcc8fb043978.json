@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "select \n    id, \n    name, \n    status::text as status\nfrom subject_heading s\njoin document_subject_heading dsh on s.id = dsh.subject_heading_id\nwhere dsh.document_id = any($1);",
+  "query": "select id, name, slug, items from menu where slug = $1",
   "describe": {
     "columns": [
       {
@@ -15,20 +15,26 @@
       },
       {
         "ordinal": 2,
-        "name": "status",
+        "name": "slug",
         "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "items",
+        "type_info": "Jsonb"
       }
     ],
     "parameters": {
       "Left": [
-        "UuidArray"
+        "Text"
       ]
     },
     "nullable": [
       false,
       false,
-      null
+      false,
+      false
     ]
   },
-  "hash": "bd73a9fd2ac5ab3bdcfe912fcd5a9ebfceeb35a1c97a0891354fdcd43779ec7d"
+  "hash": "620b4f982ca02edd00c541f95fd0562c473ffdc88e20a40bc89cbcc8fb043978"
 }

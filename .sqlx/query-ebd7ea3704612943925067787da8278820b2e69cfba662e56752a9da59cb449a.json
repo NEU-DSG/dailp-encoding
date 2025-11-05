@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "select\n  id,\n  title,\n  base_url\nfrom iiif_source\nwhere id = any($1)\n",
+  "query": "update  menu\nset name = $2,\n    slug = $3,\n    items = $4\nwhere id = $1\nreturning *;\n",
   "describe": {
     "columns": [
       {
@@ -10,25 +10,34 @@
       },
       {
         "ordinal": 1,
-        "name": "title",
+        "name": "name",
         "type_info": "Text"
       },
       {
         "ordinal": 2,
-        "name": "base_url",
+        "name": "slug",
         "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "items",
+        "type_info": "Jsonb"
       }
     ],
     "parameters": {
       "Left": [
-        "UuidArray"
+        "Uuid",
+        "Text",
+        "Text",
+        "Jsonb"
       ]
     },
     "nullable": [
       false,
       false,
+      false,
       false
     ]
   },
-  "hash": "d8bc89c2d802ac2da071308eb27bdd1bc2bbdc31d64e8ccad71d4b861f8be12b"
+  "hash": "ebd7ea3704612943925067787da8278820b2e69cfba662e56752a9da59cb449a"
 }

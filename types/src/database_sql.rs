@@ -770,8 +770,11 @@ impl Database {
     }
 
     pub async fn update_document_metadata(&self, document: DocumentMetadataUpdate) -> Result<Uuid> {
+        let mut tx = self.client.begin().await?;
+        
         let title = document.title.into_vec();
         let written_at: Option<Date> = document.written_at.value().map(Into::into);
+    
 
         query_file!(
             "queries/update_document_metadata.sql",
@@ -784,7 +787,6 @@ impl Database {
 
         // Update subject headings
         if let Some(subject_headings_ids) = &document.subject_headings_ids {
-            let mut tx = self.client.begin().await?;
             
             query_file!("queries/delete_document_subject_headings.sql", document.id)
                 .execute(&mut *tx)
