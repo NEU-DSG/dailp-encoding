@@ -83,9 +83,11 @@
           # Help openssl-sys locate and link the correct (musl) OpenSSL
           OPENSSL_DIR = openssl;
           OPENSSL_LIB_DIR = "${openssl}/lib";
-          OPENSSL_INCLUDE_DIR = "${openssl.dev}/include";
+          OPENSSL_INCLUDE_DIR = "${openssl}/include";
           OPENSSL_STATIC = "1";
           PKG_CONFIG_ALL_STATIC = "1";
+          PKG_CONFIG_ALLOW_CROSS = "1";
+          PKG_CONFIG_PATH = "${openssl}/lib/pkgconfig";
         };
         hostPackage = naersk.buildPackage {
           root = ./.;
