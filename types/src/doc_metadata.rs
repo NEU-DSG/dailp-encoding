@@ -79,14 +79,14 @@ pub struct Genre {
     /// Name of the genre
     pub name: String,
     /// Status (pending, approved, rejected) of a genre
-    pub status: Status,
+    pub status: ApprovalStatus,
 }
 
 /// Get all approved genres
 #[async_graphql::ComplexObject]
 impl Genre {
     async fn approved(&self) -> bool {
-        matches!(self.status, Status::Approved)
+        matches!(self.status, ApprovalStatus::Approved)
     }
 }
 
