@@ -3,6 +3,10 @@ use crate::{document::DocumentReference, ContributorReference};
 
 use async_graphql::{Enum, SimpleObject};
 use serde::{Deserialize, Serialize};
+use sqlx::decode::Decode;
+use sqlx::postgres::PgValueRef;
+use sqlx::FromRow;
+use sqlx::Postgres;
 use std::collections::HashMap;
 use uuid::Uuid;
 
@@ -10,7 +14,7 @@ use uuid::Uuid;
 #[derive(Deserialize, Serialize, Enum, Clone, Copy, PartialEq, Eq)]
 pub enum Status {
     /// Suggestion is still waiting for or undergoing review
-    Pending,
+    Pending, 
     /// Suggestion has been approved
     Approved,
     /// Suggestion has been rejected
