@@ -1,6 +1,7 @@
 #![allow(missing_docs)]
 
 use anyhow::Error;
+use rand::Rng;
 use argon2::password_hash::rand_core::RngCore;
 use auth::UserGroup;
 use chrono::{Utc};
@@ -19,7 +20,7 @@ use crate::page::ContentBlock;
 use crate::page::Markdown;
 use crate::page::NewPageInput;
 use crate::page::Page;
-use crate::user::RefreshTokenData;
+use crate::user::{PasswordResetTokenData, RefreshTokenData};
 use crate::user::User;
 use crate::user::UserId;
 use crate::user::UserWithPassword;
@@ -2144,19 +2145,6 @@ impl Database {
         Ok(result)
     }
 
-    /// Revoke all refresh tokens for a user (used on password change)
-    /// Returns the number of tokens revoked
-    pub async fn revoke_all_user_tokens(&self, user_id: Uuid) -> Result<i64> {
-        let result = query_file!(
-            "queries/revoke_all_user_tokens.sql",
-            user_id
-        )
-        .fetch_all(&self.client)
-        .await?;
-        
-        Ok(result.len() as i64)
-    }
-
     /// Verify user's email
     pub async fn set_user_email_verified(&self, user_id: Uuid) -> Result<()> {
         query_file!(
@@ -2167,6 +2155,153 @@ impl Database {
         .await?;
         
         Ok(())
+    }
+
+    /// Generate a random 6-digit verification code
+    /// Returns both the plain code (to send via email) and the hashed code (to store in DB)
+    fn generate_verification_code() -> (String, String) {
+        let mut rng = rand::rng();
+        let code: u32 = rng.random_range(100000..=999999); // 6-digit code
+        let code_string = code.to_string();
+        let code_hash = Self::hash_token(&code_string);
+        (code_string, code_hash)
+    }
+
+    /// Create an email verification token for a user
+    /// Returns the plain 6 digit verification code (to be sent via email)
+    pub async fn create_email_verification_token(
+        &self,
+        user_id: Uuid,
+    ) -> Result<String> {
+        let (plain_code, code_hash) = Self::generate_verification_code();
+        let expires_at = chrono::Utc::now() + chrono::Duration::hours(24);
+        
+        let _token_id = query_file_scalar!(
+            "queries/create_email_verification_token.sql",
+            user_id,
+            code_hash,
+            expires_at
+        )
+        .fetch_one(&self.client)
+        .await?;
+        
+        // Return the plain 6 digit code to send via email
+        Ok(plain_code)
+    }
+
+    /// Creates a password reset token for a user
+    /// Returns the plain 6-digit code to be sent via email
+    pub async fn create_password_reset_token(&self, user_id: Uuid) -> Result<String> {
+        let (plain_code, code_hash) = Self::generate_verification_code();
+        let expires_at = chrono::Utc::now() + chrono::Duration::hours(1);
+
+        let _token_id = query_file_scalar!(
+            "queries/create_password_reset_token.sql",
+            user_id,
+            code_hash,
+            expires_at
+        )
+        .fetch_one(&self.client)
+        .await?;
+
+        Ok(plain_code)
+    }
+
+    /// Updates a user's password
+    pub async fn update_user_password(&self, user_id: Uuid, new_password: String) -> Result<()> {
+        let password_hash = Self::hash_password(&new_password)?;
+        
+        query_file!(
+            "queries/update_user_password.sql",
+            user_id,
+            password_hash
+        )
+        .fetch_one(&self.client)
+        .await?;
+
+        Ok(())
+    }
+
+    /// Revokes all refresh tokens for a user (used after password reset)
+    pub async fn revoke_all_user_refresh_tokens(&self, user_id: Uuid) -> Result<()> {
+        query_file!(
+            "queries/revoke_all_user_refresh_tokens.sql",
+            user_id
+        )
+        .execute(&self.client)
+        .await?;
+
+        Ok(())
+    }
+
+    /// Validates a password reset token and marks it as used
+    /// Returns the user_id if token is valid
+    pub async fn validate_and_use_password_reset_token(&self, code: &str) -> Result<Uuid> {
+        // Hash the incoming code to compare with stored hash
+        let code_hash = Self::hash_token(code);
+        
+        // Get token from database (must be unused and not expired)
+        let token_data = query_file!(
+            "queries/get_password_reset_token.sql",
+            &code_hash
+        )
+        .fetch_optional(&self.client)
+        .await?;
+        
+        match token_data {
+            None => {
+                Err(anyhow::anyhow!("Invalid or expired password reset code"))
+            }
+            Some(token) => {
+                // Mark token as used
+                query_file!(
+                    "queries/use_password_reset_token.sql",
+                    token.id
+                )
+                .fetch_one(&self.client)
+                .await?;
+                
+                Ok(token.user_id)
+            }
+        }
+    }
+
+    /// Validate and use an email verification token
+    /// Returns the user_id if successful, or error if token is invalid/expired/used
+    pub async fn validate_and_use_email_verification_token(
+        &self,
+        code: &str,
+    ) -> Result<Uuid> {
+        // Hash the incoming code to match against stored hash
+        let code_hash = Self::hash_token(code);
+        
+        // Get token from database (must be unused and not expired)
+        let token_data = query_file!(
+            "queries/get_email_verification_token.sql",
+            &code_hash
+        )
+        .fetch_optional(&self.client)
+        .await?;
+        
+        match token_data {
+            None => {
+                Err(anyhow::anyhow!("Invalid or expired verification code"))
+            }
+            Some(token) => {
+                // Mark token as used
+                query_file!(
+                    "queries/use_email_verification_token.sql",
+                    token.id
+                )
+                .fetch_one(&self.client)
+                .await?;
+                
+                // Mark user's email as verified
+                self.set_user_email_verified(token.user_id).await?;
+                
+                Ok(token.user_id)
+            }
+        }
     }
 
     /// Main login function - authenticates user and returns tokens
@@ -2186,12 +2321,9 @@ impl Database {
             .ok_or_else(|| anyhow::anyhow!("Invalid email or password"))?;
 
         // 3. Check if email is verified
-        // DISABLED FOR TESTING
-        // DISABLED FOR TESTING
-        // DISABLED FOR TESTING
-        // if !user.email_verified {
-        //     return Err(anyhow::anyhow!("Email not verified. Please check your email for verification link."));
-        // }
+        if !user.email_verified {
+            return Err(anyhow::anyhow!("Email not verified. Please check your email for verification link."));
+        }
 
         // 4. Verify password
         if !Self::verify_password(&password, &user.password_hash)? {

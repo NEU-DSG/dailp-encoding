@@ -42,7 +42,7 @@ export function useDailpAuthOperations(
       console.log('Signup successful:', response.data?.signup.message)
       alert(response.data?.signup.message || 'Account created! Please check your email to verify your account.')
       
-      await navigate("/auth/login")
+      await navigate("/auth/confirmation")
       
       // Failure
     } catch (err) {
@@ -89,17 +89,40 @@ export function useDailpAuthOperations(
   }
 
   async function resetConfirmationCode(email: string) {
-      alert("DAILP doesn't use confirmation codes")
+    alert("DAILP doesn't use confirmation codes")
   }
   
-  async function resetPassword(username: string) {
-      // TODO: Implement
-      alert("DAILP password reset not yet implemented")
+  async function resetPassword(email: string) {
+    const response = await requestPasswordResetMutation({ input: { email } })
+    if (response.error) {
+        handleDailpError(response.error)
+        return
+    }
+    // Set fake user state to trigger switching the form in the UI. Cognito implementation is similar.
+    setUser({
+        type: 'dailp',
+        userId: '',
+        email: email.toLowerCase(),
+        groups: []
+    })
+    alert(response.data?.requestPasswordReset.message || 'Password reset code sent!')
   }
   
-  async function changePassword(verificationCode: string, newPassword: string) {
-      // TODO: Implement
-      alert("DAILP change password not yet implemented")
+  async function changePassword(token: string, newPassword: string) {
+    const response = await resetPasswordMutation({ 
+        input: { 
+            token, 
+            newPassword: newPassword
+        } 
+    })
+    if (response.error) {
+        handleDailpError(response.error)
+        return
+    }
+    // Clear user state before navigating. Matching Cognito implementation.
+    setUser(null)
+    await navigate('/auth/login')
+    alert(response.data?.resetPassword.message || 'Password reset successfully!')
   }
   
   async function signOutUser() {
@@ -119,7 +142,24 @@ export function useDailpAuthOperations(
   }
   
   async function confirmUser(email: string, confirmationCode: string) {
-      alert("DAILP doesn't use confirmation codes")
+    try {
+      const response = await verifyEmailMutation({
+        token: confirmationCode
+      })
+      
+      if (response.error) {
+        handleDailpError(response.error)
+        return
+      }
+      
+      // Success
+      alert(response.data?.verifyEmail.message || 'Email verified successfully!')
+      await navigate('/auth/login')
+      
+    } catch (err) {
+      console.error('Email verification error:', err)
+      handleDailpError(err)
+    }
   }
 
   async function refreshTokenNow() {

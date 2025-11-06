@@ -9,6 +9,7 @@ name = "dailp"
 path = "src/lib.rs"
 
 [dependencies]
+rand = "0.9.2"
 argon2 = { version = "0.5", features = ["std"] }
 jsonwebtoken = "9"
 sha2 = "0.10"

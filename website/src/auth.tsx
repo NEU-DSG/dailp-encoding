@@ -120,21 +120,6 @@ export const UserProvider = (props: { children: any }) => {
     }
   }, [user])
 
-  // // Token refresh logic
-  // useEffect(() => {
-  //   if (user != null) {
-  //     if (user.type === 'cognito') {
-  //       // Cognito refresh logic
-  //       cognitoOps.setupTokenRefresh(user.user).then(() => setIsAuthLoading(false))
-  //     } else {
-  //       // DAILP refresh logic
-  //       dailpOps.setupTokenRefresh().then(() => setIsAuthLoading(false))
-  //     }
-  //   } else {
-  //     setIsAuthLoading(false)
-  //   }
-  // }, [user])
-
   function createUser(email: string, password: string) {
     ops.createUser(email, password)
   }

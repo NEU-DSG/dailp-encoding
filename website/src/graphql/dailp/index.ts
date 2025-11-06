@@ -930,12 +930,12 @@ export type MutationUpdateWordArgs = {
   word: AnnotatedFormUpdate
 }
 
-export type MutationVerifyEmailArgs = {
-  token: Scalars["String"]
-}
-
 export type MutationUpsertPageArgs = {
   page: NewPageInput
+}
+
+export type MutationVerifyEmailArgs = {
+  token: Scalars["String"]
 }
 
 /** Input struct for a page. */

@@ -840,10 +840,6 @@ type Markdown {
 	content: String!
 }
 
-type MessageResponse {
-	message: String!
-}
-
 """
 Menu object representing the navbar menu that can be edited.
 """
@@ -918,6 +914,10 @@ input MenuUpdate {
 	New menu items (optional).
 	"""
 	items: [MenuItemInput!]
+}
+
+type MessageResponse {
+	message: String!
 }
 
 """
@@ -1062,6 +1062,8 @@ type Mutation {
 	addDocument(input: CreateDocumentFromFormInput!): AddDocumentPayload!
 	insertCustomMorphemeTag(tag: String!, title: String!, system: String!): Boolean!
 	createEditedCollection(input: CreateEditedCollectionInput!): String!
+	upsertPage(page: NewPageInput!): String!
+	updateMenu(menu: MenuUpdate!): Menu!
 	"""
 	Sign up a new user with email and password (DAILP auth only)
 	"""
@@ -1090,8 +1092,6 @@ type Mutation {
 	Verify email address using verification token (DAILP auth only)
 	"""
 	verifyEmail(token: String!): MessageResponse!
-	upsertPage(page: NewPageInput!): String!
-	updateMenu(menu: MenuUpdate!): Menu!
 }
 
 """

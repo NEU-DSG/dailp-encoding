@@ -92,3 +92,26 @@ pub struct RefreshTokenData {
     pub role: Option<UserGroup>,
     pub display_name: String,
 }
+
+/// An email verification token record, for internal use only.
+#[derive(Clone, Serialize, Deserialize, Debug, async_graphql::SimpleObject)]
+#[serde(rename_all = "camelCase")]
+pub struct EmailVerificationTokenData {
+    pub id: Uuid,
+    pub user_id: Uuid,
+    pub token_hash: String,
+    pub expires_at: chrono::DateTime<chrono::Utc>,
+    pub used: bool,
+    pub email: String,
+}
+
+/// Password reset token data from database
+#[derive(Debug)]
+pub struct PasswordResetTokenData {
+    pub id: Uuid,
+    pub user_id: Uuid,
+    pub token_hash: String,
+    pub expires_at: chrono::DateTime<chrono::Utc>,
+    pub used: bool,
+    pub email: String,
+}
