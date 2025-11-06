@@ -5,6 +5,7 @@ import {
   unstable_useFormState as useFormState,
 } from "reakit"
 import { useUser } from "src/auth"
+import * as Dailp from "src/graphql/dailp"
 import {
   FormFields,
   FormSubmitButton,
@@ -12,11 +13,10 @@ import {
   UserAuthPageTemplate,
 } from "./user-auth-layout"
 import { centeredForm } from "./user-auth.css"
-import * as Dailp from "src/graphql/dailp"
 
 const SignupPage = () => {
   const { createUser } = useUser().operations
-  const [,validateTurnstileToken] = Dailp.useValidateTurnstileTokenMutation()
+  const [, validateTurnstileToken] = Dailp.useValidateTurnstileTokenMutation()
   const [turnstileToken, setTurnstileToken] = useState("")
 
   const signupForm = useFormState({
@@ -37,19 +37,15 @@ const SignupPage = () => {
 
       validateTurnstileToken({
         token: turnstileToken,
-      })
-      .then((result) => {
+      }).then((result) => {
         if (result.data?.validateTurnstileToken) {
           createUser(values.email, values.password)
         } else {
           throw { turnstileToken: "Invalid turnstile token" }
         }
       })
-
     },
   })
-
-
 
   const [TurnstileClient, setTurnstileClient] =
     useState<ForwardRefExoticComponent<
@@ -94,7 +90,10 @@ const SignupPage = () => {
         <FormSubmitButton form={signupForm} label="Sign Up" />
         {TurnstileClient && siteKey && (
           <div style={{ display: "flex", justifyContent: "center" }}>
-            <TurnstileClient siteKey={siteKey} onSuccess={(token) => setTurnstileToken(token)} />
+            <TurnstileClient
+              siteKey={siteKey}
+              onSuccess={(token) => setTurnstileToken(token)}
+            />
           </div>
         )}
       </Form>

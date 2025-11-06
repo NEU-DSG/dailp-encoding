@@ -396,7 +396,6 @@ impl Query {
             .get_menu_by_slug(slug)
             .await?)
     }
-
 }
 
 pub struct Mutation;
@@ -892,13 +891,18 @@ impl Mutation {
             .await?)
     }
 
-    async fn validate_turnstile_token(&self, context: &Context<'_>, token: String) -> FieldResult<bool> {
+    async fn validate_turnstile_token(
+        &self,
+        context: &Context<'_>,
+        token: String,
+    ) -> FieldResult<bool> {
         // post to https://challenges.cloudflare.com/turnstile/v0/siteverify
         let secret = std::env::var("TURNSTILE_SECRET_KEY").unwrap();
         let req = token;
 
         let client = reqwest::Client::new();
-        let response = client.post("https://challenges.cloudflare.com/turnstile/v0/siteverify")
+        let response = client
+            .post("https://challenges.cloudflare.com/turnstile/v0/siteverify")
             .form(&[("secret", secret), ("response", req)])
             .send()
             .await?;
