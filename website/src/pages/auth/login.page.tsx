@@ -1,10 +1,13 @@
-import React, { useEffect } from "react"
+import { TurnstileInstance } from "@marsidev/react-turnstile"
+import { TurnstileProps } from "@marsidev/react-turnstile"
+import React, { ForwardRefExoticComponent, useEffect, useState } from "react"
 import {
   unstable_Form as Form,
   unstable_useFormState as useFormState,
 } from "reakit"
 import { navigate } from "vite-plugin-ssr/client/router"
 import { UserRole, useUser, useUserRole } from "src/auth"
+import * as Dailp from "src/graphql/dailp"
 import {
   FormFields,
   FormSubmitButton,
@@ -19,6 +22,8 @@ const LoginPage = () => {
     user,
     operations: { loginUser },
   } = useUser()
+  const [, validateTurnstileToken] = Dailp.useValidateTurnstileTokenMutation()
+  const [turnstileToken, setTurnstileToken] = useState("")
 
   // If already authenticated, redirect away from the login page
   useEffect(() => {
@@ -37,11 +42,36 @@ const LoginPage = () => {
       }
     },
     onSubmit: (values) => {
-      loginUser(values.email, values.password)
+      if (!turnstileToken) {
+        throw { turnstileToken: "A turnstile token is required" }
+      }
+
+      validateTurnstileToken({
+        token: turnstileToken,
+      }).then((result) => {
+        if (result.data?.validateTurnstileToken) {
+          loginUser(values.email, values.password)
+        } else {
+          throw { turnstileToken: "Invalid turnstile token" }
+        }
+      })
     },
   })
   // Avoid flashing the login form if we're redirecting
   if (user) return null
+
+  const [TurnstileClient, setTurnstileClient] =
+    useState<ForwardRefExoticComponent<
+      TurnstileProps & React.RefAttributes<TurnstileInstance | undefined>
+    > | null>(null)
+  const [siteKey, setSiteKey] = useState<string | null>(null)
+
+  useEffect(() => {
+    import("@marsidev/react-turnstile").then((m) => {
+      setTurnstileClient(m.Turnstile)
+      setSiteKey(process.env["TURNSTILE_SITE_KEY"] ?? null)
+    })
+  }, [])
 
   return (
     <UserAuthPageTemplate
@@ -69,6 +99,14 @@ const LoginPage = () => {
         <ResetLink />
         <SignupLink />
         <FormSubmitButton form={loginForm} label="Log In" />
+        {TurnstileClient && siteKey && (
+          <div style={{ display: "flex", justifyContent: "center" }}>
+            <TurnstileClient
+              siteKey={siteKey}
+              onSuccess={(token) => setTurnstileToken(token)}
+            />
+          </div>
+        )}
       </Form>
     </UserAuthPageTemplate>
   )
