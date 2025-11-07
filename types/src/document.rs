@@ -6,7 +6,7 @@ use crate::{
 use crate::doc_metadata::Keyword;
 use crate::person::{Contributor, SourceAttribution};
 
-use async_graphql::{Context, dataloader::DataLoader, FieldResult, MaybeUndefined};
+use async_graphql::{dataloader::DataLoader, Context, FieldResult, MaybeUndefined};
 use serde::{Deserialize, Serialize};
 use sqlx::{query_file_as, PgPool};
 use uuid::Uuid;
@@ -509,7 +509,10 @@ pub struct DocumentMetadata {
 #[async_graphql::Object]
 impl DocumentMetadata {
     /// Fetch all keywords linked to this document
-    async fn keywords<'a>(&'a self, ctx: &Context<'a>) -> Result<Vec<Keyword>, async_graphql::Error> {
+    async fn keywords<'a>(
+        &'a self,
+        ctx: &Context<'a>,
+    ) -> Result<Vec<Keyword>, async_graphql::Error> {
         let pool = ctx.data::<PgPool>()?;
         let rows = query_file_as!(
             Keyword,
