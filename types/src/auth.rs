@@ -1,4 +1,4 @@
-use async_graphql::{Guard};
+use async_graphql::Guard;
 use serde::{Deserialize, Serialize};
 use serde_with::{rust::StringWithSeparator, CommaSeparator};
 use uuid::Uuid;
@@ -28,10 +28,7 @@ pub struct JWTUserInfoDef {
 
 /// A helper type for deserializing UserInfo from a Cognito JWT
 #[derive(Deserialize)]
-pub struct JWTUserInfo(
-    #[serde(with = "JWTUserInfoDef")]
-    pub UserInfo
-);
+pub struct JWTUserInfo(#[serde(with = "JWTUserInfoDef")] pub UserInfo);
 
 /// serde deserialization struct for Dailp JWT UserInfo
 #[derive(Deserialize, Debug)]

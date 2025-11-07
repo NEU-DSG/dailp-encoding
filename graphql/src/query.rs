@@ -1,7 +1,12 @@
 //! This piece of the project exposes a GraphQL endpoint that allows one to access DAILP data in a federated manner with specific queries.
 
+use crate::email;
 use dailp::{
-    auth::{AuthGuard, AuthResponse, GroupGuard, LoginInput, MessageResponse, RefreshTokenInput, RefreshTokenResponse, RequestPasswordResetInput, ResetPasswordInput, SignupInput, UserGroup, UserInfo},
+    auth::{
+        AuthGuard, AuthResponse, GroupGuard, LoginInput, MessageResponse, RefreshTokenInput,
+        RefreshTokenResponse, RequestPasswordResetInput, ResetPasswordInput, SignupInput,
+        UserGroup, UserInfo,
+    },
     comment::{CommentParent, CommentUpdate, DeleteCommentInput, PostCommentInput},
     page::{NewPageInput, Page},
     slugify_ltree,
@@ -21,7 +26,6 @@ use {
         ParagraphUpdate, WordsInDocument,
     },
 };
-use crate::email;
 
 /// Home for all read-only queries
 pub struct Query;
@@ -891,24 +895,28 @@ impl Mutation {
     }
 
     /// Sign up a new user with email and password (DAILP auth only)
-    async fn signup(&self, context: &Context<'_>, input: SignupInput) -> FieldResult<MessageResponse> {
+    async fn signup(
+        &self,
+        context: &Context<'_>,
+        input: SignupInput,
+    ) -> FieldResult<MessageResponse> {
         let auth_mode = std::env::var("AUTH_MODE").unwrap_or_else(|_| "cognito".to_string());
-        
+
         if auth_mode != "dailp" {
             return Err("Signup is only available in DAILP authentication mode".into());
         }
 
         let db = context.data::<DataLoader<Database>>()?.loader();
-        
+
         // Create user account
         let user_id = db.create_user(input.email.clone(), input.password).await?;
-        
+
         // Generate verification code
         let verification_code = db.create_email_verification_token(user_id).await?;
-        
+
         // Send verification email
         email::send_verification_email(&input.email, &verification_code).await?;
-        
+
         Ok(MessageResponse {
             message: "Account created successfully! Please check your email for your 6-digit verification code.".to_string(),
         })
@@ -922,10 +930,10 @@ impl Mutation {
         }
 
         let db = context.data::<DataLoader<Database>>()?.loader();
-        
+
         // Authenticate and get tokens (returns AuthResponse with user_id, email, role, etc.)
         let auth_response = db.login(input.email, input.password).await?;
-        
+
         Ok(auth_response)
     }
 
@@ -941,10 +949,10 @@ impl Mutation {
         }
 
         let db = context.data::<DataLoader<Database>>()?.loader();
-        
+
         // Refresh the access token
         let response = db.refresh_access_token(input.refresh_token).await?;
-        
+
         Ok(response)
     }
 
@@ -956,11 +964,11 @@ impl Mutation {
         }
 
         let db = context.data::<DataLoader<Database>>()?.loader();
-        
+
         // Hash and revoke the refresh token
         let token_hash = Database::hash_token(&refresh_token);
         db.revoke_refresh_token(&token_hash).await?;
-        
+
         Ok(true)
     }
 
@@ -976,17 +984,18 @@ impl Mutation {
         }
 
         let db = context.data::<DataLoader<Database>>()?.loader();
-        
+
         // Check if user exists (don't reveal if they don't for security)
         if let Some(user) = db.get_user_by_email(&input.email).await? {
             // Create and send password reset token
             let reset_token = db.create_password_reset_token(user.id).await?;
             email::send_password_reset_email(&input.email, &reset_token).await?;
         }
-        
+
         // Always return success to prevent email enumeration
         Ok(MessageResponse {
-            message: "If an account with that email exists, a password reset link has been sent.".to_string(),
+            message: "If an account with that email exists, a password reset link has been sent."
+                .to_string(),
         })
     }
 
@@ -1003,34 +1012,41 @@ impl Mutation {
         }
 
         let db = context.data::<DataLoader<Database>>()?.loader();
-        
+
         // Validate token and get user_id
-        let user_id = db.validate_and_use_password_reset_token(&input.token).await?;
-        
+        let user_id = db
+            .validate_and_use_password_reset_token(&input.token)
+            .await?;
+
         // Update password
         db.update_user_password(user_id, input.new_password).await?;
-        
+
         // Revoke all existing tokens for security
         db.revoke_all_user_refresh_tokens(user_id).await?;
-        
+
         Ok(MessageResponse {
-            message: "Password reset successfully! You can now log in with your new password.".to_string(),
+            message: "Password reset successfully! You can now log in with your new password."
+                .to_string(),
         })
     }
 
     /// Verify email address using verification token (DAILP auth only)
-    async fn verify_email(&self, context: &Context<'_>, token: String) -> FieldResult<MessageResponse> {
+    async fn verify_email(
+        &self,
+        context: &Context<'_>,
+        token: String,
+    ) -> FieldResult<MessageResponse> {
         let auth_mode = std::env::var("AUTH_MODE").unwrap_or_else(|_| "cognito".to_string());
-        
+
         if auth_mode != "dailp" {
             return Err("Email verification is only available in DAILP authentication mode".into());
         }
 
         let db = context.data::<DataLoader<Database>>()?.loader();
-        
+
         // Validate token and mark email as verified
         let _user_id = db.validate_and_use_email_verification_token(&token).await?;
-        
+
         Ok(MessageResponse {
             message: "Email verified successfully! You can now log in.".to_string(),
         })

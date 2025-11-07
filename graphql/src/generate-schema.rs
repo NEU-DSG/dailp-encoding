@@ -1,5 +1,5 @@
-mod query;
 mod email;
+mod query;
 
 use dailp::async_graphql::{EmptySubscription, Schema};
 use std::fs::File;
