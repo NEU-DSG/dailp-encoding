@@ -18,6 +18,13 @@ pub enum ApprovalStatus {
     Rejected,
 }
 
+/// Maps the Rust ApprovalStatus enum to PostgreSQL approval_status enum
+impl Type<Postgres> for ApprovalStatus {
+    fn type_info() -> PgTypeInfo {
+        PgTypeInfo::with_name("approval_status")
+    }
+}
+
 /// Allows SQLx to convert Postgres "approval_status" enum values into the corresponding Rust "ApprovalStatus"
 impl<'r> Decode<'r, Postgres> for ApprovalStatus {
     fn decode(value: PgValueRef<'r>) -> Result<Self, Box<dyn std::error::Error + Send + Sync>> {
