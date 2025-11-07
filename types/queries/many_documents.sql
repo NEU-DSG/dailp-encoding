@@ -14,12 +14,27 @@ select
   coalesce(
     jsonb_agg(
       jsonb_build_object(
-        'name', contributor.full_name, 'role', attr.contribution_role
+        'name', contributor.full_name,
+        'role', attr.contribution_role
       )
     ) filter (where contributor is not null),
     '[]'
-  )
-  as contributors
+  ) as contributors,
+  (
+    select coalesce(
+      jsonb_agg(
+        jsonb_build_object(
+          'id', k.id,
+          'name', k.name,
+          'status', k.status
+        )
+      ),
+      '[]'
+    )
+    from document_keyword dk
+    join keyword k on k.id = dk.keyword_id
+    where dk.document_id = d.id
+  ) as keywords
 from document as d
   left join contributor_attribution as attr on attr.document_id = d.id
   left join contributor on contributor.id = attr.contributor_id
@@ -32,16 +47,4 @@ group by d.id,
   media_slice.id,
   media_resource.id,
   dailp_user.id,
-  ubd.bookmarked_on
-
--- Keywords
-  (
-    select coalesce(jsonb_agg(jsonb_build_object(
-      'id', k.id,
-      'name', k.name,
-      'status', k.status
-    )), '[]')
-    from document_keyword dk
-    join keyword k on k.id = dk.keyword_id
-    where dk.document_id = d.id
-  ) as keywords
+  ubd.bookmarked_on;

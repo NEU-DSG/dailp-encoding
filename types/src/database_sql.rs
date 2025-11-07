@@ -773,7 +773,7 @@ impl Database {
     pub async fn update_document_metadata(&self, document: DocumentMetadataUpdate) -> Result<Uuid> {
         let title = document.title.into_vec();
         let written_at: Option<Date> = document.written_at.value().map(Into::into);
-        let mut tx = pool.begin().await?;
+        let mut tx = self.pool.begin().await?;
 
         query_file!(
             "queries/update_document_metadata.sql",
