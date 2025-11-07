@@ -34,7 +34,6 @@ group by d.id,
   dailp_user.id,
   ubd.bookmarked_on
 
-
 -- Keywords
   (
     select coalesce(jsonb_agg(jsonb_build_object(
