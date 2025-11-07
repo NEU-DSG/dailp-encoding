@@ -10,6 +10,4 @@ export async function uploadCollectionCoverToS3(user: AuthUser, data: File) {
   } else {
     return Promise.reject("S3 upload is only supported for Cognito users.")
   }
-  // const uploader = new S3Uploader(user)
-  // return uploader.uploadCollectionThumbnail(data)
 }

@@ -1,6 +1,5 @@
 #![allow(missing_docs)]
 
-use anyhow::Error;
 use rand::Rng;
 use argon2::password_hash::rand_core::RngCore;
 use auth::UserGroup;
@@ -20,7 +19,7 @@ use crate::page::ContentBlock;
 use crate::page::Markdown;
 use crate::page::NewPageInput;
 use crate::page::Page;
-use crate::user::{PasswordResetTokenData, RefreshTokenData};
+use crate::user::RefreshTokenData;
 use crate::user::User;
 use crate::user::UserId;
 use crate::user::UserWithPassword;

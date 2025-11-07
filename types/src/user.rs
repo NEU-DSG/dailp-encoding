@@ -104,14 +104,3 @@ pub struct EmailVerificationTokenData {
     pub used: bool,
     pub email: String,
 }
-
-/// Password reset token data from database
-#[derive(Debug)]
-pub struct PasswordResetTokenData {
-    pub id: Uuid,
-    pub user_id: Uuid,
-    pub token_hash: String,
-    pub expires_at: chrono::DateTime<chrono::Utc>,
-    pub used: bool,
-    pub email: String,
-}

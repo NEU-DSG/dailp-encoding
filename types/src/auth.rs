@@ -1,12 +1,7 @@
-use async_graphql::{Guard, MaybeUndefined};
+use async_graphql::{Guard};
 use serde::{Deserialize, Serialize};
 use serde_with::{rust::StringWithSeparator, CommaSeparator};
 use uuid::Uuid;
-use jsonwebtoken::{encode, decode, Header, Validation, EncodingKey, DecodingKey};
-use sha2::{Sha256, Digest};
-use chrono::{Utc, Duration};
-
-use crate::user::User;
 
 /// Auth metadata on the user making the current request.
 #[derive(PartialEq, Debug, async_graphql::SimpleObject)]
@@ -217,7 +212,6 @@ pub struct RefreshTokenResponse {
 }
 
 /// GraphQL Input Types for Authentication
-
 #[derive(async_graphql::InputObject)]
 pub struct SignupInput {
     pub email: String,
