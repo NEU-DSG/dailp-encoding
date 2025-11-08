@@ -3,12 +3,12 @@ use crate::{
     Database, Date, Translation, TranslationBlock,
 };
 
-use crate::doc_metadata::Keyword;
+use crate::doc_metadata::{ApprovalStatus, Keyword};
 use crate::person::{Contributor, SourceAttribution};
 
 use async_graphql::{dataloader::DataLoader, Context, FieldResult, MaybeUndefined};
 use serde::{Deserialize, Serialize};
-use sqlx::{query_file_as, PgPool};
+use sqlx::{query_file, query_file_as, PgPool};
 use uuid::Uuid;
 
 /// A document with associated metadata and content broken down into pages and further into
@@ -521,7 +521,15 @@ impl DocumentMetadata {
         )
         .fetch_all(pool)
         .await?;
-        Ok(rows)
+
+        Ok(rows
+            .into_iter()
+            .map(|row| Keyword {
+                id: row.id,
+                name: row.name,
+                status: ApprovalStatus::try_from(row.status).unwrap_or(ApprovalStatus::Pending),
+            })
+            .collect())
     }
 }
 

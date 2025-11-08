@@ -2518,7 +2518,8 @@ impl Loader<KeywordsForDocument> for Database {
                 .map(|row| Keyword {
                     id: row.id,
                     name: row.name.clone(),
-                    status: row.status,
+                    status: ApprovalStatus::try_from(row.status.clone())
+                        .unwrap_or(ApprovalStatus::Pending),
                 })
                 .collect();
             results.insert(*key, keywords);
