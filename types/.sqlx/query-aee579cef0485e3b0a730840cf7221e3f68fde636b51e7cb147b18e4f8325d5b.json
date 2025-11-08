@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "select \n    id, \n    name, \n    status::approval_status as status\nfrom keyword k\njoin document_keyword dk on dk.keyword_id = k.id\nwhere dk.document_id = $1;",
+  "query": "select \n    id, \n    name, \n    coalesce(status, 'pending') as status\nfrom keyword k\njoin document_keyword dk on dk.keyword_id = k.id\nwhere dk.document_id = $1;\n",
   "describe": {
     "columns": [
       {
@@ -38,8 +38,8 @@
     "nullable": [
       false,
       false,
-      true
+      null
     ]
   },
-  "hash": "9190688bc379c0b96ce950ca331207b5164ab2aa8eee2b721eca223e5cb8b665"
+  "hash": "aee579cef0485e3b0a730840cf7221e3f68fde636b51e7cb147b18e4f8325d5b"
 }
