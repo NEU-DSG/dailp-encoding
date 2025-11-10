@@ -1567,7 +1567,7 @@ export type AudioSliceFieldsFragment = {
 
 export type DocFormFieldsFragment = {
   readonly __typename?: "AnnotatedDoc"
-} & Pick<AnnotatedDoc, "id" | "title"> & {
+} & Pick<AnnotatedDoc, "id" | "title" | "keywordsIds"> & {
     readonly date: Maybe<
       { readonly __typename?: "Date" } & Pick<Date, "day" | "month" | "year">
     >
@@ -2865,6 +2865,7 @@ export const DocFormFieldsFragmentDoc = gql`
       month
       year
     }
+    keywordsIds
   }
 `
 export const AudioSliceFieldsFragmentDoc = gql`
