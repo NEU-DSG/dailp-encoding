@@ -76,6 +76,9 @@ export type AnnotatedDoc = {
    * Otherwise, it is considered a structured document with a translation.
    */
   readonly isReference: Scalars["Boolean"]
+  readonly keywords: ReadonlyArray<Keyword>
+  /** Internal field accessor for keywords */
+  readonly keywordsIds: Maybe<ReadonlyArray<Scalars["UUID"]>>
   /**
    * Arbitrary number used for manually ordering documents in a collection.
    * For collections without manual ordering, use zero here.
@@ -206,6 +209,13 @@ export type AnnotatedFormUpdate = {
 
 /** Element within a spreadsheet before being transformed into a full document. */
 export type AnnotatedSeg = AnnotatedForm | LineBreak
+
+/** Represents the status of a suggestion made by a contributor */
+export enum ApprovalStatus {
+  Approved = "APPROVED",
+  Pending = "PENDING",
+  Rejected = "REJECTED",
+}
 
 /** Request to attach user-recorded audio to a word */
 export type AttachAudioToWordInput = {
@@ -495,6 +505,8 @@ export type DocumentCollection = {
 export type DocumentMetadataUpdate = {
   /** The ID of the document to update */
   readonly id: Scalars["UUID"]
+  /** The key terms associated with the document */
+  readonly keywordsIds: InputMaybe<ReadonlyArray<Scalars["UUID"]>>
   /** An updated title for this document, or nothing (if title is unchanged) */
   readonly title: InputMaybe<Scalars["String"]>
   /** The date this document was written, or nothing (if unchanged or not applicable) */
@@ -627,6 +639,18 @@ export type ImageSource = {
   readonly __typename?: "ImageSource"
   /** Base URL for the IIIF server */
   readonly url: Scalars["String"]
+}
+
+/** Record to store a keyword associated with a document */
+export type Keyword = {
+  readonly __typename?: "Keyword"
+  readonly approved: Scalars["Boolean"]
+  /** UUID for the keyword */
+  readonly id: Scalars["UUID"]
+  /** Name of the keyword */
+  readonly name: Scalars["String"]
+  /** Status (pending, approved, rejected) of a keyword */
+  readonly status: ApprovalStatus
 }
 
 /** Start of a new line */

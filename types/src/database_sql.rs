@@ -1,6 +1,7 @@
 #![allow(missing_docs)]
 
 use anyhow::Error;
+use async_graphql::MaybeUndefined;
 use auth::UserGroup;
 use chrono::{NaiveDate, NaiveDateTime};
 use sqlx::postgres::types::{PgLTree, PgRange};
@@ -785,7 +786,7 @@ impl Database {
         .await?;
 
         // Update keywords
-        if let Some(keywords_ids) = &document.keywords_ids {
+        if let MaybeUndefined::Value(keywords_ids) = &document.keywords_ids {
             query_file!("queries/delete_document_keywords.sql", document.id)
                 .execute(&mut *tx)
                 .await?;
