@@ -57,11 +57,8 @@ export function useAudioUpload(wordId: string) {
   return [uploadAudio, uploadAudioState, clearError] as const
 }
 
-export async function uploadContributorAudioToS3(
-  user: AuthUser,
-  data: Blob
-) {
-  if (user.type === 'cognito') {
+export async function uploadContributorAudioToS3(user: AuthUser, data: Blob) {
+  if (user.type === "cognito") {
     // Use direct S3 upload with Cognito credentials
     const uploader = new S3Uploader(user.user)
     return uploader.uploadContributorAudio(data)

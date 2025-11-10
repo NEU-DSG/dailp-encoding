@@ -6,18 +6,18 @@ import {
   CognitoUserPool,
   CognitoUserSession,
 } from "amazon-cognito-identity-js"
+import { jwtDecode } from "jwt-decode"
 import React, { createContext, useContext, useEffect, useState } from "react"
 import { navigate } from "vite-plugin-ssr/client/router"
-import { UserGroup } from "./graphql/dailp"
-import { jwtDecode } from 'jwt-decode'
 import { getUserSessionAsync, useCognitoAuthOperations } from "./auth-cognito"
 import { roleToGroups, useDailpAuthOperations } from "./auth-dailp"
+import { UserGroup } from "./graphql/dailp"
 
-export type AuthUser = 
-  | { type: 'cognito', user: CognitoUser }
-  | { type: 'dailp', userId: string, email: string, groups: UserGroup[] }
+export type AuthUser =
+  | { type: "cognito"; user: CognitoUser }
+  | { type: "dailp"; userId: string; email: string; groups: UserGroup[] }
 
-const AUTH_MODE = process.env["AUTH_MODE"] || 'cognito'
+const AUTH_MODE = process.env["AUTH_MODE"] || "cognito"
 
 type UserContextType = {
   user: AuthUser | null
@@ -48,42 +48,54 @@ const LocalStorage =
 
 /** Get the currently signed in user, if there is one. */
 export function getCurrentUser(): AuthUser | null {
-  if (AUTH_MODE === 'cognito') {
+  if (AUTH_MODE === "cognito") {
     const cognitoUser = userPool.getCurrentUser()
-    return cognitoUser ? { type: 'cognito', user: cognitoUser } : null
+    return cognitoUser ? { type: "cognito", user: cognitoUser } : null
   } else {
-    const token = LocalStorage.getItem('dailp_access_token')
+    const token = LocalStorage.getItem("dailp_access_token")
     if (!token) return null
-    const decodedToken = jwtDecode<{ sub: string, email: string, role: string, exp: number }>(token)
-    return { 
-      type: 'dailp',
+    const decodedToken = jwtDecode<{
+      sub: string
+      email: string
+      role: string
+      exp: number
+    }>(token)
+    return {
+      type: "dailp",
       userId: decodedToken["sub"],
       email: decodedToken["email"],
-      groups: decodedToken["role"] ? [decodedToken["role"].toUpperCase() as UserGroup] : []
+      groups: decodedToken["role"]
+        ? [decodedToken["role"].toUpperCase() as UserGroup]
+        : [],
     }
   }
 }
 
 export const UserProvider = (props: { children: any }) => {
   const [user, setUser] = useState<AuthUser | null>(() => {
-    if (AUTH_MODE === 'cognito') {
+    if (AUTH_MODE === "cognito") {
       console.log("Initializing UserProvider in Cognito Auth mode")
       const cognitoUser = userPool.getCurrentUser()
-      return cognitoUser ? { type: 'cognito', user: cognitoUser } : null
+      return cognitoUser ? { type: "cognito", user: cognitoUser } : null
     } else {
       console.log("Initializing UserProvider in DAILP Auth mode")
-      const token = LocalStorage.getItem('dailp_access_token')
+      const token = LocalStorage.getItem("dailp_access_token")
       if (!token) return null
       try {
-        const decoded = jwtDecode<{ sub: string, email: string, role: string }>(token)
+        const decoded = jwtDecode<{ sub: string; email: string; role: string }>(
+          token
+        )
         return {
-          type: 'dailp',
+          type: "dailp",
           userId: decoded.sub,
           email: decoded.email,
-          groups: roleToGroups(decoded.role)
+          groups: roleToGroups(decoded.role),
         }
       } catch (err) {
-        console.error('Failed to decode token for UserProvider initialisation:', err)
+        console.error(
+          "Failed to decode token for UserProvider initialisation:",
+          err
+        )
         return null
       }
     }
@@ -93,20 +105,22 @@ export const UserProvider = (props: { children: any }) => {
   // Create operation handlers based on AUTH_MODE
   const cognitoOps = useCognitoAuthOperations(userPool, setUser)
   const dailpOps = useDailpAuthOperations(setUser)
-  const ops = AUTH_MODE === 'cognito' ? cognitoOps : dailpOps
+  const ops = AUTH_MODE === "cognito" ? cognitoOps : dailpOps
 
   useEffect(() => {
     if (user != null) {
       // User is logged in, set up refresh
-      if (user.type === 'cognito') {
-        cognitoOps.setupTokenRefresh(user.user).then(() => setIsAuthLoading(false))
+      if (user.type === "cognito") {
+        cognitoOps
+          .setupTokenRefresh(user.user)
+          .then(() => setIsAuthLoading(false))
       } else {
         dailpOps.setupTokenRefresh().then(() => setIsAuthLoading(false))
       }
     } else {
       // User is null, but check if expired token exists
-      if (AUTH_MODE === 'dailp') {
-        const token = LocalStorage.getItem('dailp_access_token')
+      if (AUTH_MODE === "dailp") {
+        const token = LocalStorage.getItem("dailp_access_token")
         if (token) {
           // Expired token exists, setupTokenRefresh will handle it
           dailpOps.setupTokenRefresh().then(() => setIsAuthLoading(false))
@@ -141,18 +155,18 @@ export const UserProvider = (props: { children: any }) => {
   }
 
   function changePassword(verificationCode: string, newPassword: string) {
-    if (user?.type === 'cognito') {
-        cognitoOps.changePassword(user.user, verificationCode, newPassword)
+    if (user?.type === "cognito") {
+      cognitoOps.changePassword(user.user, verificationCode, newPassword)
     } else {
-        dailpOps.changePassword(verificationCode, newPassword)
+      dailpOps.changePassword(verificationCode, newPassword)
     }
   }
 
   function signOutUser() {
-    if (user?.type === 'cognito') {
-        cognitoOps.signOutUser(user.user)
+    if (user?.type === "cognito") {
+      cognitoOps.signOutUser(user.user)
     } else {
-        dailpOps.signOutUser()
+      dailpOps.signOutUser()
     }
   }
 
@@ -190,26 +204,31 @@ export const useAuthLoading = () => {
 export const useCredentials = () => {
   const context = useContext(UserContext)
   if (!context.user) return null
-  
-  if (context.user.type === 'cognito') {
-    return context.user.user.getSignInUserSession()?.getIdToken().getJwtToken() ?? null
+
+  if (context.user.type === "cognito") {
+    return (
+      context.user.user.getSignInUserSession()?.getIdToken().getJwtToken() ??
+      null
+    )
   } else {
-    return LocalStorage.getItem('dailp_access_token')
+    return LocalStorage.getItem("dailp_access_token")
   }
 }
 
 export const useUserGroups = (): UserGroup[] => {
   const { user } = useContext(UserContext)
   if (!user) return []
-  
-  if (user.type === 'cognito') {
+
+  if (user.type === "cognito") {
     const groups: string[] =
-    user.user?.getSignInUserSession()?.getIdToken().payload["cognito:groups"] ?? []
-  return   groups
-    .map((g) => g.toUpperCase())
-    .filter((g): g is UserGroup =>
-      Object.values(UserGroup).includes(g as UserGroup)
-    )
+      user.user?.getSignInUserSession()?.getIdToken().payload[
+        "cognito:groups"
+      ] ?? []
+    return groups
+      .map((g) => g.toUpperCase())
+      .filter((g): g is UserGroup =>
+        Object.values(UserGroup).includes(g as UserGroup)
+      )
   } else {
     return user.groups
   }
@@ -236,8 +255,8 @@ export function useUserRole(): UserRole {
 export const useUserId = () => {
   const { user } = useContext(UserContext)
   if (!user) return null
-  
-  if (user.type === 'cognito') {
+
+  if (user.type === "cognito") {
     return user.user.getSignInUserSession()?.getIdToken().payload["sub"] ?? null
   } else {
     return user.userId
@@ -260,9 +279,9 @@ export async function getIdToken(): Promise<CognitoIdToken | null> {
  * Works in both Cognito and DAILP modes.
  */
 export async function getAuthToken(): Promise<string | null> {
-  if (process.env["AUTH_MODE"] === 'dailp') {
+  if (process.env["AUTH_MODE"] === "dailp") {
     // DAILP mode
-    return LocalStorage.getItem('dailp_access_token')
+    return LocalStorage.getItem("dailp_access_token")
   } else {
     // Cognito mode
     const idToken = await getIdToken()

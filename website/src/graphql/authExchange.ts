@@ -1,14 +1,14 @@
 import { authExchange } from "@urql/exchange-auth"
 import { CognitoIdToken } from "amazon-cognito-identity-js"
+import { jwtDecode } from "jwt-decode"
 import { makeOperation } from "urql"
 import { getCurrentUser, getIdToken } from "src/auth"
+import { getAuthToken } from "src/auth"
 import {
   GRAPHQL_URL_READ,
   GRAPHQL_URL_WRITE,
   WP_GRAPHQL_URL,
 } from "src/graphql"
-import { jwtDecode } from 'jwt-decode'
-import { getAuthToken } from "src/auth"
 
 function isTokenExpired(token: string): boolean {
   try {
@@ -20,15 +20,15 @@ function isTokenExpired(token: string): boolean {
 }
 
 export const createAuthExchange = () => {
-  const AUTH_MODE = process.env["AUTH_MODE"] || 'cognito'
-  
+  const AUTH_MODE = process.env["AUTH_MODE"] || "cognito"
+
   return authExchange<{ token: string }>({
     async getAuth({ authState }) {
       if (!authState || isTokenExpired(authState.token)) {
-        if (AUTH_MODE === 'cognito') {
+        if (AUTH_MODE === "cognito") {
           const cognitoToken = await getIdToken()
           if (cognitoToken) {
-            return { token: cognitoToken.getJwtToken() }  // Convert to string
+            return { token: cognitoToken.getJwtToken() } // Convert to string
           }
         } else {
           const token = await getAuthToken()

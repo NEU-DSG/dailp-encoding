@@ -16,51 +16,51 @@ export function useCognitoAuthOperations(
     let emailLowercase = email.toLowerCase()
     console.log(`requesting adding user ${emailLowercase} to Cognito User Pool`)
     let userAttributes = [{ Name: "email", Value: emailLowercase }].map(
-        (attr) => {
+      (attr) => {
         return new CognitoUserAttribute(attr)
-        }
+      }
     )
     userPool.signUp(
-        emailLowercase,
-        password,
-        userAttributes,
-        [],
-        async (err, result) => {
+      emailLowercase,
+      password,
+      userAttributes,
+      [],
+      async (err, result) => {
         if (err) {
-            resolveCognitoException(err, emailLowercase)
+          resolveCognitoException(err, emailLowercase)
         } else {
-            await navigate("/auth/confirmation")
+          await navigate("/auth/confirmation")
         }
-        }
+      }
     )
   }
-  
+
   function loginUser(username: string, password: string) {
     const user = new CognitoUser({
-        Username: username.toLowerCase(),
-        Pool: userPool,
+      Username: username.toLowerCase(),
+      Pool: userPool,
     })
 
     const authDetails = new AuthenticationDetails({
-        Username: username.toLowerCase(),
-        Password: password,
+      Username: username.toLowerCase(),
+      Password: password,
     })
 
     // logs in the user with the authentication details
     user.authenticateUser(authDetails, {
-        onSuccess: (data: CognitoUserSession) => {
-        setUser({ type: 'cognito', user })
+      onSuccess: (data: CognitoUserSession) => {
+        setUser({ type: "cognito", user })
         navigate("/dashboard")
-        },
-        onFailure: (err: Error) => {
+      },
+      onFailure: (err: Error) => {
         console.log("Login failed. Result: ", err)
         resolveCognitoException(err, user.getUsername())
-        },
-        newPasswordRequired: (data: CognitoUserSession) => {
+      },
+      newPasswordRequired: (data: CognitoUserSession) => {
         console.log("New password required. Result: ", data)
         alert("New password is required")
         navigate("auth/reset-password")
-        },
+      },
     })
   }
 
@@ -73,7 +73,7 @@ export function useCognitoAuthOperations(
 
     user.forgotPassword({
       onSuccess: (data: CognitoUserSession) => {
-        setUser({ type: 'cognito', user }) // set current user, since a reset password flow was initialized
+        setUser({ type: "cognito", user }) // set current user, since a reset password flow was initialized
         console.log("Reset password successful. Result: ", data)
         alert("Reset email successfully sent")
       },
@@ -84,25 +84,29 @@ export function useCognitoAuthOperations(
     })
   }
 
-  function changePassword(user: CognitoUser, verificationCode: string, newPassword: string) {
+  function changePassword(
+    user: CognitoUser,
+    verificationCode: string,
+    newPassword: string
+  ) {
     user?.confirmPassword(verificationCode, newPassword, {
-        async onSuccess(data: string) {
-            setUser(null) // since user successfully changed password, reset current user's state
-            await navigate("/auth/login")
+      async onSuccess(data: string) {
+        setUser(null) // since user successfully changed password, reset current user's state
+        await navigate("/auth/login")
 
-            console.log("Change password successful. Result: ", data)
-            alert("Password successfully changed")
-        },
-        onFailure(err: Error) {
-            console.log("Change password unsuccessful. Result: ", err)
-            alert(err.message)
-        },
+        console.log("Change password successful. Result: ", data)
+        alert("Password successfully changed")
+      },
+      onFailure(err: Error) {
+        console.log("Change password unsuccessful. Result: ", err)
+        alert(err.message)
+      },
     })
   }
 
   function signOutUser(user: CognitoUser) {
     user.signOut(() => {
-        setUser(null)
+      setUser(null)
     })
   }
 
@@ -124,38 +128,38 @@ export function useCognitoAuthOperations(
 
   function resetConfirmationCode(email: string) {
     let user = new CognitoUser({
-        Username: email.toLowerCase(),
-        Pool: userPool,
+      Username: email.toLowerCase(),
+      Pool: userPool,
     })
 
     user.resendConfirmationCode((err, result) => {
-        if (err) {
+      if (err) {
         resolveCognitoException(err, email)
-        } else {
+      } else {
         console.log(result)
         alert(`A new confirmation code was sent to ${user.getUsername()}`)
-        }
+      }
     })
   }
 
   async function setupTokenRefresh(user: CognitoUser): Promise<number | null> {
     return new Promise((res, rej) => {
       user.getSession(function (err: Error, result: CognitoUserSession | null) {
-      if (err) {
+        if (err) {
           rej(err)
           return
-      }
-      if (!result) {
+        }
+        if (!result) {
           res(null)
           return
-      }
-      const intervalLength =
+        }
+        const intervalLength =
           result.getAccessToken().getExpiration() * 1000 - Date.now()
-      const handle = window.setInterval(() => {
+        const handle = window.setInterval(() => {
           // Refresh token
           user.getSession(() => {})
-      }, intervalLength)
-      res(handle)
+        }, intervalLength)
+        res(handle)
       })
     })
   }
@@ -246,17 +250,17 @@ export function useCognitoAuthOperations(
     changePassword,
     signOutUser,
     confirmUser,
-    setupTokenRefresh
+    setupTokenRefresh,
   }
 }
 
 export function getUserSessionAsync(
   user: CognitoUser
-  ): Promise<CognitoUserSession | null> {
+): Promise<CognitoUserSession | null> {
   return new Promise((res, _rej) => {
-      user.getSession(function (_err: Error, result: CognitoUserSession | null) {
+    user.getSession(function (_err: Error, result: CognitoUserSession | null) {
       res(result)
-      })
+    })
   })
 }
 
