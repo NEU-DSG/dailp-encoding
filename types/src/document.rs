@@ -3,10 +3,12 @@ use crate::{
     Database, Date, Translation, TranslationBlock,
 };
 
+use crate::doc_metadata::{ApprovalStatus, Keyword};
 use crate::person::{Contributor, SourceAttribution};
 
-use async_graphql::{dataloader::DataLoader, FieldResult, MaybeUndefined};
+use async_graphql::{dataloader::DataLoader, Context, FieldResult, MaybeUndefined};
 use serde::{Deserialize, Serialize};
+use sqlx::{query_file, query_file_as, PgPool};
 use uuid::Uuid;
 
 /// A document with associated metadata and content broken down into pages and further into
@@ -220,6 +222,20 @@ impl AnnotatedDoc {
             .chapters_by_document(self.meta.short_name.clone())
             .await?)
     }
+
+    /// Internal field accessor for keywords
+    async fn keywords_ids(&self) -> &Option<Vec<Uuid>> {
+        &self.meta.keywords_ids
+    }
+
+    // GraphQL resolver for keywords
+    async fn keywords(&self, context: &async_graphql::Context<'_>) -> FieldResult<Vec<Keyword>> {
+        Ok(context
+            .data::<DataLoader<Database>>()?
+            .load_one(crate::KeywordsForDocument(self.meta.id.0))
+            .await?
+            .unwrap_or_default())
+    }
 }
 
 /// Key to retrieve the pages of a document given a document ID
@@ -317,6 +333,8 @@ pub struct DocumentMetadataUpdate {
     pub title: MaybeUndefined<String>,
     /// The date this document was written, or nothing (if unchanged or not applicable)
     pub written_at: MaybeUndefined<DateInput>,
+    /// The key terms associated with the document
+    pub keywords_ids: MaybeUndefined<Vec<Uuid>>,
 }
 
 #[async_graphql::ComplexObject]
@@ -467,6 +485,8 @@ pub struct DocumentMetadata {
     #[serde(default)]
     /// The people involved in collecting, translating, annotating.
     pub contributors: Vec<Contributor>,
+    /// The key terms associated with the document
+    pub keywords_ids: Option<Vec<Uuid>>,
     /// Rough translation of the document, broken down by paragraph.
     #[serde(skip)]
     pub translation: Option<Translation>,
@@ -484,6 +504,33 @@ pub struct DocumentMetadata {
     /// Arbitrary number used for manually ordering documents in a collection.
     /// For collections without manual ordering, use zero here.
     pub order_index: i64,
+}
+
+#[async_graphql::Object]
+impl DocumentMetadata {
+    /// Fetch all keywords linked to this document
+    async fn keywords<'a>(
+        &'a self,
+        ctx: &Context<'a>,
+    ) -> Result<Vec<Keyword>, async_graphql::Error> {
+        let pool = ctx.data::<PgPool>()?;
+        let rows = query_file_as!(
+            Keyword,
+            "queries/get_keywords_by_document_id.sql",
+            self.id.0
+        )
+        .fetch_all(pool)
+        .await?;
+
+        Ok(rows
+            .into_iter()
+            .map(|row| Keyword {
+                id: row.id,
+                name: row.name,
+                status: row.status,
+            })
+            .collect())
+    }
 }
 
 /// Database ID for one document

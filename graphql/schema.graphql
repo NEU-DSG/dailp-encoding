@@ -81,6 +81,11 @@ type AnnotatedDoc {
 	Collection chapters that contain this document.
 	"""
 	chapters: [CollectionChapter!]
+	"""
+	Internal field accessor for keywords
+	"""
+	keywordsIds: [UUID!]
+	keywords: [Keyword!]!
 }
 
 """
@@ -211,6 +216,15 @@ input AnnotatedFormUpdate {
 Element within a spreadsheet before being transformed into a full document.
 """
 union AnnotatedSeg = AnnotatedForm | LineBreak
+
+"""
+Represents the status of a suggestion made by a contributor
+"""
+enum ApprovalStatus {
+	PENDING
+	APPROVED
+	REJECTED
+}
 
 """
 Request to attach user-recorded audio to a word
@@ -625,6 +639,10 @@ input DocumentMetadataUpdate {
 	The date this document was written, or nothing (if unchanged or not applicable)
 	"""
 	writtenAt: DateInput
+	"""
+	The key terms associated with the document
+	"""
+	keywordsIds: [UUID!]
 }
 
 type DocumentPage {
@@ -803,6 +821,25 @@ type ImageSource {
 A scalar that can represent any JSON value.
 """
 scalar JSON
+
+"""
+Record to store a keyword associated with a document
+"""
+type Keyword {
+	"""
+	UUID for the keyword
+	"""
+	id: UUID!
+	"""
+	Name of the keyword
+	"""
+	name: String!
+	"""
+	Status (pending, approved, rejected) of a keyword
+	"""
+	status: ApprovalStatus!
+	approved: Boolean!
+}
 
 """
 Start of a new line
