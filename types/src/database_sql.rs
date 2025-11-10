@@ -2511,23 +2511,18 @@ impl Loader<KeywordsForDocument> for Database {
             .fetch_all(&self.client)
             .await?;
 
-            for key in keys {
-                let keywords = rows
-                    .iter()
-                    .filter(|row| row.document_id == key.0)
-                    .map(|row| Keyword {
-                        id: row.id,
-                        name: row.name.clone(),
-                        status: row
-                            .status
-                            .as_deref()
-                            .and_then(|s| ApprovalStatus::from_str(s).ok())
-                            .unwrap_or(ApprovalStatus::Pending),
-                    })
-                    .collect();
-            
-                results.insert(*key, keywords);
-            }            
+        for key in keys {
+            let keywords = rows
+                .iter()
+                .map(|row| Keyword {
+                    id: row.id,
+                    name: row.name.clone(),
+                    status: row.status.clone(),
+                })
+                .collect::<Vec<_>>();
+
+            results.insert(key.clone(), keywords);
+        }
 
         Ok(results)
     }

@@ -527,11 +527,7 @@ impl DocumentMetadata {
             .map(|row| Keyword {
                 id: row.id,
                 name: row.name,
-                status: row
-                    .status
-                    .as_deref()
-                    .and_then(|s| ApprovalStatus::from_str(s).ok())
-                    .unwrap_or(ApprovalStatus::Pending),
+                status: row.status,
             })
             .collect())
     }
