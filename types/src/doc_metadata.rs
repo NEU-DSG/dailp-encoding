@@ -5,6 +5,7 @@ use async_graphql::{Enum, SimpleObject};
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, Type};
 use std::collections::HashMap;
+use std::str::FromStr;
 use uuid::Uuid;
 
 /// Represents the status of a suggestion made by a contributor
@@ -17,6 +18,20 @@ pub enum ApprovalStatus {
     Approved,
     /// Suggestion has been rejected
     Rejected,
+}
+
+/// Convert from string to ApprovalStatus
+impl FromStr for ApprovalStatus {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "pending" => Ok(Self::Pending),
+            "approved" => Ok(Self::Approved),
+            "rejected" => Ok(Self::Rejected),
+            _ => Err(()),
+        }
+    }
 }
 
 /// Record to store a subject heading that reflects Indigenous knowledge

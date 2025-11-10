@@ -1,0 +1,40 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "-- Fetch all keywords linked to a given set of documents\nselect\n    dk.document_id,\n    k.id,\n    k.name,\n    k.status::text as status\nfrom keyword k\njoin document_keyword dk on k.id = dk.keyword_id\nwhere dk.document_id = any($1);",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "document_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "status",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "UuidArray"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      null
+    ]
+  },
+  "hash": "4e2a94b7c29e16249a08ea239b7689883ef8b86a108f588c2cde72e024fce50c"
+}
