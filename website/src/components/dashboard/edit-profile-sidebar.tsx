@@ -69,6 +69,7 @@ export const EditProfileSidebar = () => {
   const [uploadAvatar, uploadAvatarState, clearAvatarError] = useAvatarUpload()
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const user = data?.currentUser
+  const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
 
   // Handle file selection
   const handleFileSelect = (event: ChangeEvent<HTMLInputElement>) => {
@@ -83,13 +84,13 @@ export const EditProfileSidebar = () => {
       "image/gif",
       "image/webp",
     ]
-    if (!allowedTypes.includes(file.type)) {
+    if (!allowedTypes.includes(file.type.toLowerCase())) {
       alert(`Invalid file type. Supported: jpg, png, gif, webp`)
       return
     }
 
     // Validate file size (5MB)
-    if (file.size > 5 * 1024 * 1024) {
+    if (file.size > MAX_FILE_SIZE) {
       alert("File too large (max 5MB)")
       return
     }
