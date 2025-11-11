@@ -19,7 +19,7 @@ pub async fn migrate_dictionaries(db: &Database) -> Result<()> {
                 Contributor::new_author("Pulte, William".to_string()),
             ],
             date: Some(dailp::Date::from_ymd(1975, 1, 1)),
-            genre: None,
+            genre_id: None,
             translation: None,
             page_images: None,
             is_reference: true,
@@ -36,7 +36,7 @@ pub async fn migrate_dictionaries(db: &Database) -> Result<()> {
             collection: Some("Lexical Resources".to_string()),
             contributors: vec![Contributor::new_author("Feeling, Durbin".to_string())],
             date: Some(dailp::Date::from_ymd(2003, 1, 1)),
-            genre: None,
+            genre_id: None,
             translation: None,
             page_images: None,
             is_reference: true,
@@ -253,7 +253,7 @@ async fn insert_document_from_sheet(
         date: date_recorded,
         sources: Vec::new(),
         collection: Some(collection.to_owned()),
-        genre: None,
+        genre_id: None,
         contributors: authors
             .into_iter()
             .skip(1)
