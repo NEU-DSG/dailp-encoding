@@ -798,7 +798,7 @@ impl Database {
         .await?;
 
         // Update spatial coverages
-        if let Some(spatial_coverage_ids) = &document.spatial_coverage_ids {
+        if let MaybeUndefined::Value(spatial_coverage_ids) = &document.spatial_coverage_ids {
             query_file!("queries/delete_document_spatial_coverage.sql", document.id)
                 .execute(&mut *tx)
                 .await?;
@@ -2513,14 +2513,13 @@ impl Loader<SpatialCoverageForDocument> for Database {
         for key in keys {
             let coverages = rows
                 .iter()
-                .filter(|row| row.document_id == key.0)
                 .map(|row| SpatialCoverage {
                     id: row.id,
                     name: row.name.clone(),
-                    status: row.status,
+                    status: row.status.clone(),
                 })
-                .collect();
-            results.insert(*key, coverages);
+                .collect::<Vec<_>>();
+            results.insert(key.clone(), coverages);
         }
 
         Ok(results)
