@@ -81,6 +81,10 @@ type AnnotatedDoc {
 	Collection chapters that contain this document.
 	"""
 	chapters: [CollectionChapter!]
+	"""
+	The format of the original artifact
+	"""
+	format: Format
 }
 
 """
@@ -211,6 +215,15 @@ input AnnotatedFormUpdate {
 Element within a spreadsheet before being transformed into a full document.
 """
 union AnnotatedSeg = AnnotatedForm | LineBreak
+
+"""
+Represents the status of a suggestion made by a contributor
+"""
+enum ApprovalStatus {
+	PENDING
+	APPROVED
+	REJECTED
+}
 
 """
 Request to attach user-recorded audio to a word
@@ -625,6 +638,10 @@ input DocumentMetadataUpdate {
 	The date this document was written, or nothing (if unchanged or not applicable)
 	"""
 	writtenAt: DateInput
+	"""
+	The format of the original artifact
+	"""
+	formatId: UUID
 }
 
 type DocumentPage {
@@ -741,6 +758,25 @@ type EditedCollection {
 	chapters: [CollectionChapter!]
 }
 
+
+"""
+Stores the physical or digital medium associated with a document
+"""
+type Format {
+	"""
+	UUID for the format
+	"""
+	id: UUID!
+	"""
+	Name of the format
+	"""
+	name: String!
+	"""
+	Status (pending, approved, rejected) of a format
+	"""
+	status: ApprovalStatus!
+	approved: Boolean!
+}
 
 type FormsInTime {
 	start: Date
