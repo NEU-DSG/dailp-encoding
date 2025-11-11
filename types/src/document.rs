@@ -3,11 +3,12 @@ use crate::{
     Database, Date, Translation, TranslationBlock,
 };
 
-use crate::doc_metadata::Language;
+use crate::doc_metadata::{ApprovalStatus, Language};
 use crate::person::{Contributor, SourceAttribution};
 
-use async_graphql::{dataloader::DataLoader, FieldResult, MaybeUndefined};
+use async_graphql::{dataloader::DataLoader, Context, FieldResult, MaybeUndefined};
 use serde::{Deserialize, Serialize};
+use sqlx::{query_file, query_file_as, PgPool};
 use uuid::Uuid;
 
 /// A document with associated metadata and content broken down into pages and further into
@@ -332,7 +333,7 @@ pub struct DocumentMetadataUpdate {
     /// The date this document was written, or nothing (if unchanged or not applicable)
     pub written_at: MaybeUndefined<DateInput>,
     /// The languages present in the document
-    pub languages_ids: Option<Vec<Uuid>>,
+    pub languages_ids: MaybeUndefined<Vec<Uuid>>,
 }
 
 #[async_graphql::ComplexObject]
@@ -506,7 +507,10 @@ pub struct DocumentMetadata {
 
 impl DocumentMetadata {
     /// Fetch all languages linked to this document
-    async fn languages(&self, ctx: &Context<'_>) -> Result<Vec<Language>> {
+    async fn languages<'a>(
+        &'a self,
+        ctx: &Context<'a>,
+    ) -> Result<Vec<Language>, async_graphql::Error> {
         let pool = ctx.data::<PgPool>()?;
         let rows = query_file_as!(
             Language,
@@ -515,7 +519,16 @@ impl DocumentMetadata {
         )
         .fetch_all(pool)
         .await?;
-        Ok(rows)
+
+        Ok(rows
+            .into_iter()
+            .map(|row| Language {
+                id: row.id,
+                name: row.name,
+                autonym: row.autonym,
+                status: row.status,
+            })
+            .collect())
     }
 }
 

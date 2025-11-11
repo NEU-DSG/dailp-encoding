@@ -2508,7 +2508,7 @@ impl Loader<LanguagesForDocument> for Database {
         let mut results = HashMap::new();
         let document_ids: Vec<_> = keys.iter().map(|k| k.0).collect();
 
-        let rows = query_file!("queries/many_keywords_for_documents.sql", &document_ids)
+        let rows = query_file!("queries/many_languages_for_documents.sql", &document_ids)
             .fetch_all(&self.client)
             .await?;
 
@@ -2523,7 +2523,7 @@ impl Loader<LanguagesForDocument> for Database {
                 })
                 .collect::<Vec<_>>();
 
-                results.insert(key.clone(), languages);
+            results.insert(key.clone(), languages);
         }
 
         Ok(results)
