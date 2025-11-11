@@ -487,13 +487,9 @@ pub struct DocumentMetadata {
     pub genre: Option<String>,
     #[serde(default)]
     /// The people involved in collecting, translating, annotating.
-<<<<<<< HEAD
     pub contributors: Vec<Contributor>,
     /// The physical locations associated with a document (e.g. where it was written, found)
     pub spatial_coverage_ids: Option<Vec<Uuid>>,
-=======
-    pub contributors: Option<Vec<Contributor>>,
->>>>>>> origin/add-contributor-metadata
     /// Rough translation of the document, broken down by paragraph.
     #[serde(skip)]
     pub translation: Option<Translation>,

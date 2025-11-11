@@ -1,6 +1,7 @@
 #![allow(missing_docs)]
 
 use anyhow::Error;
+use async_graphql::MaybeUndefined;
 use auth::UserGroup;
 use chrono::{NaiveDate, NaiveDateTime};
 use sqlx::postgres::types::{PgLTree, PgRange};
@@ -773,26 +774,13 @@ impl Database {
     pub async fn update_document_metadata(&self, document: DocumentMetadataUpdate) -> Result<Uuid> {
         let title = document.title.into_vec();
         let written_at: Option<Date> = document.written_at.value().map(Into::into);
+        let mut tx = self.client.begin().await?;
 
         query_file!(
             "queries/update_document_metadata.sql",
             document.id,
             &title as _,
             &written_at as _
-        )
-        .execute(&self.client)
-        .await?;
-
-        Ok(document.id)
-    }
-
-    pub async fn update_paragraph(&self, paragraph: ParagraphUpdate) -> Result<DocumentParagraph> {
-        let translation = paragraph.translation.into_vec();
-
-        query_file!(
-            "queries/update_paragraph.sql",
-            paragraph.id,
-            &translation as _
         )
         .execute(&self.client)
         .await?;
@@ -811,6 +799,23 @@ impl Database {
             .execute(&mut *tx)
             .await?;
         }
+
+        // Commit updates
+        tx.commit().await?;
+
+        Ok(document.id)
+    }
+
+    pub async fn update_paragraph(&self, paragraph: ParagraphUpdate) -> Result<DocumentParagraph> {
+        let translation = paragraph.translation.into_vec();
+
+        query_file!(
+            "queries/update_paragraph.sql",
+            paragraph.id,
+            &translation as _
+        )
+        .execute(&self.client)
+        .await?;
 
         self.paragraph_by_id(&paragraph.id).await
     }

@@ -25,7 +25,7 @@ select
       jsonb_agg(
         jsonb_build_object(
           'id', sc.id,
-          'name', sc.name
+          'name', sc.name,
           'status', sc.status
         )
       ),
