@@ -2504,23 +2504,24 @@ impl Loader<LanguagesForDocument> for Database {
         keys: &[LanguagesForDocument],
     ) -> Result<HashMap<LanguagesForDocument, Self::Value>, Self::Error> {
         let mut results = HashMap::new();
+        let document_ids: Vec<_> = keys.iter().map(|k| k.0).collect();
+
+        let rows = query_file!("queries/many_keywords_for_documents.sql", &document_ids)
+            .fetch_all(&self.client)
+            .await?;
 
         for key in keys {
-            let rows = query_file!("queries/many_languages_for_documents.sql", &document_ids)
-                .fetch_all(&self.client)
-                .await?;
-
             let languages = rows
-                .into_iter()
+                .iter()
                 .map(|row| Language {
                     id: row.id,
-                    name: row.name,
-                    autonym: row.autonym,
-                    status: row.status,
+                    name: row.name.clone(),
+                    autonym: row.autonym.clone(),
+                    status: row.status.clone(),
                 })
-                .collect();
+                .collect::<Vec<_>>();
 
-            results.insert(*key, languages);
+                results.insert(key.clone(), languages);
         }
 
         Ok(results)
