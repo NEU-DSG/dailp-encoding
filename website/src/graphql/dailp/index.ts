@@ -87,6 +87,10 @@ export type AnnotatedDoc = {
   readonly slug: Scalars["String"]
   /** The original source(s) of this document, the most important first. */
   readonly sources: ReadonlyArray<SourceAttribution>
+  /** GraphQL resolver for spatial coverages */
+  readonly spatialCoverage: ReadonlyArray<SpatialCoverage>
+  /** Internal field accessor for spatial coverages */
+  readonly spatialCoverageIds: Maybe<ReadonlyArray<Scalars["UUID"]>>
   /** Full title of the document */
   readonly title: Scalars["String"]
   /** Segments of the document paired with their respective rough translations */
@@ -206,6 +210,13 @@ export type AnnotatedFormUpdate = {
 
 /** Element within a spreadsheet before being transformed into a full document. */
 export type AnnotatedSeg = AnnotatedForm | LineBreak
+
+/** Represents the status of a suggestion made by a contributor */
+export enum ApprovalStatus {
+  Approved = "APPROVED",
+  Pending = "PENDING",
+  Rejected = "REJECTED",
+}
 
 /** Request to attach user-recorded audio to a word */
 export type AttachAudioToWordInput = {
@@ -495,6 +506,8 @@ export type DocumentCollection = {
 export type DocumentMetadataUpdate = {
   /** The ID of the document to update */
   readonly id: Scalars["UUID"]
+  /** The physical locations associated with a document (e.g. where it was written, found) */
+  readonly spatialCoverageIds: InputMaybe<ReadonlyArray<Scalars["UUID"]>>
   /** An updated title for this document, or nothing (if title is unchanged) */
   readonly title: InputMaybe<Scalars["String"]>
   /** The date this document was written, or nothing (if unchanged or not applicable) */
@@ -1116,6 +1129,18 @@ export type SourceAttribution = {
   readonly name: Scalars["String"]
 }
 
+/** Stores a spatial coverage associated with a document */
+export type SpatialCoverage = {
+  readonly __typename?: "SpatialCoverage"
+  readonly approved: Scalars["Boolean"]
+  /** UUID for the place */
+  readonly id: Scalars["UUID"]
+  /** Name of the place */
+  readonly name: Scalars["String"]
+  /** Status (pending, approved, rejected) of a spatial coverage */
+  readonly status: ApprovalStatus
+}
+
 /** Update the contributor attribution for a document */
 export type UpdateContributorAttribution = {
   /** A description of what the contributor did, like "translation" or "voice" */
@@ -1543,7 +1568,7 @@ export type AudioSliceFieldsFragment = {
 
 export type DocFormFieldsFragment = {
   readonly __typename?: "AnnotatedDoc"
-} & Pick<AnnotatedDoc, "id" | "title"> & {
+} & Pick<AnnotatedDoc, "id" | "title" | "spatialCoverageIds"> & {
     readonly date: Maybe<
       { readonly __typename?: "Date" } & Pick<Date, "day" | "month" | "year">
     >
@@ -2841,6 +2866,7 @@ export const DocFormFieldsFragmentDoc = gql`
       month
       year
     }
+    spatialCoverageIds
   }
 `
 export const AudioSliceFieldsFragmentDoc = gql`

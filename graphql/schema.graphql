@@ -81,6 +81,14 @@ type AnnotatedDoc {
 	Collection chapters that contain this document.
 	"""
 	chapters: [CollectionChapter!]
+	"""
+	Internal field accessor for spatial coverages
+	"""
+	spatialCoverageIds: [UUID!]
+	"""
+	GraphQL resolver for spatial coverages
+	"""
+	spatialCoverage: [SpatialCoverage!]!
 }
 
 """
@@ -211,6 +219,15 @@ input AnnotatedFormUpdate {
 Element within a spreadsheet before being transformed into a full document.
 """
 union AnnotatedSeg = AnnotatedForm | LineBreak
+
+"""
+Represents the status of a suggestion made by a contributor
+"""
+enum ApprovalStatus {
+	PENDING
+	APPROVED
+	REJECTED
+}
 
 """
 Request to attach user-recorded audio to a word
@@ -625,6 +642,10 @@ input DocumentMetadataUpdate {
 	The date this document was written, or nothing (if unchanged or not applicable)
 	"""
 	writtenAt: DateInput
+	"""
+	The physical locations associated with a document (e.g. where it was written, found)
+	"""
+	spatialCoverageIds: [UUID!]
 }
 
 type DocumentPage {
@@ -1266,6 +1287,25 @@ type SourceAttribution {
 	URL of this source's homepage, i.e. "https://www.newberry.org/"
 	"""
 	link: String!
+}
+
+"""
+Stores a spatial coverage associated with a document
+"""
+type SpatialCoverage {
+	"""
+	UUID for the place
+	"""
+	id: UUID!
+	"""
+	Name of the place
+	"""
+	name: String!
+	"""
+	Status (pending, approved, rejected) of a spatial coverage
+	"""
+	status: ApprovalStatus!
+	approved: Boolean!
 }
 
 
