@@ -1,6 +1,7 @@
 #![allow(missing_docs)]
 
 use anyhow::Error;
+use async_graphql::MaybeUndefined;
 use auth::UserGroup;
 use chrono::{NaiveDate, NaiveDateTime};
 use sqlx::postgres::types::{PgLTree, PgRange};
@@ -776,12 +777,17 @@ impl Database {
         let title = document.title.into_vec();
         let written_at: Option<Date> = document.written_at.value().map(Into::into);
 
+        let format_id = match document.format_id {
+            MaybeUndefined::Value(id) => Some(id),
+            _ => None,
+        };
+
         query_file!(
             "queries/update_document_metadata.sql",
             document.id,
             &title as _,
             &written_at as _,
-            document.format_id,
+            format_id,
         )
         .execute(&self.client)
         .await?;
