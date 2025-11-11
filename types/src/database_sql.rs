@@ -1,6 +1,7 @@
 #![allow(missing_docs)]
 
 use anyhow::Error;
+use async_graphql::MaybeUndefined;
 use auth::UserGroup;
 use chrono::{NaiveDate, NaiveDateTime};
 use sqlx::postgres::types::{PgLTree, PgRange};
@@ -774,12 +775,17 @@ impl Database {
         let title = document.title.into_vec();
         let written_at: Option<Date> = document.written_at.value().map(Into::into);
 
+        let genre_id = match document.genre_id {
+            MaybeUndefined::Value(id) => Some(id),
+            _ => None,
+        };
+
         query_file!(
             "queries/update_document_metadata.sql",
             document.id,
             &title as _,
             &written_at as _,
-            document.genre_id,
+            genre_id,
         )
         .execute(&self.client)
         .await?;
@@ -2484,11 +2490,11 @@ impl Loader<GenreById> for Database {
         &self,
         keys: &[GenreById],
     ) -> Result<HashMap<GenreById, Self::Value>, Self::Error> {
-        // Collect all UUIDs
-        let ids: Vec<Uuid> = keys.iter().map(|k| k.0).collect();
+        // Collect UUID
+        let id: Uuid = keys.iter().next().map(|k| k.0).expect("No keys found");
 
-        // Query all formats by IDs
-        let rows = query_file!("queries/get_genre_by_id.sql", &ids)
+        // Query genre by ID
+        let rows = query_file!("queries/get_genre_by_id.sql", id)
             .fetch_all(&self.client)
             .await?;
 
@@ -2497,15 +2503,15 @@ impl Loader<GenreById> for Database {
         for key in keys {
             if let Some(row) = rows.iter().find(|r| r.id == key.0) {
                 results.insert(
-                    *key,
+                    key.clone(),
                     Some(Genre {
                         id: row.id,
                         name: row.name.clone(),
-                        status: row.status,
+                        status: row.status.clone(),
                     }),
                 );
             } else {
-                results.insert(*key, None);
+                results.insert(key.clone(), None);
             }
         }
 
