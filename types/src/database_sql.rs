@@ -2494,11 +2494,11 @@ impl Loader<FormatById> for Database {
         &self,
         keys: &[FormatById],
     ) -> Result<HashMap<FormatById, Self::Value>, Self::Error> {
-        // Collect all UUIDs
-        let ids: Vec<Uuid> = keys.iter().map(|k| k.0).collect();
+        // Collect UUID
+        let id: Uuid = keys.iter().next().map(|k| k.0).expect("No keys found");
 
         // Query all formats by IDs
-        let rows = query_file!("queries/get_format_by_id.sql", &ids)
+        let rows = query_file!("queries/get_format_by_id.sql", id)
             .fetch_all(&self.client)
             .await?;
 
@@ -2507,7 +2507,7 @@ impl Loader<FormatById> for Database {
         for key in keys {
             if let Some(row) = rows.iter().find(|r| r.id == key.0) {
                 results.insert(
-                    *key,
+                    key.clone(),
                     Some(Format {
                         id: row.id,
                         name: row.name.clone(),
@@ -2515,7 +2515,7 @@ impl Loader<FormatById> for Database {
                     }),
                 );
             } else {
-                results.insert(*key, None);
+                results.insert(key.clone(), None);
             }
         }
 

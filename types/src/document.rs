@@ -334,6 +334,7 @@ pub struct DocumentMetadataUpdate {
     /// The date this document was written, or nothing (if unchanged or not applicable)
     pub written_at: MaybeUndefined<DateInput>,
     /// The format of the original artifact
+    #[graphql(name = "formatId")]
     pub format_id: MaybeUndefined<Uuid>,
 }
 
@@ -509,10 +510,10 @@ pub struct DocumentMetadata {
 #[async_graphql::Object]
 impl DocumentMetadata {
     /// Fetch the format associated with this document
-    async fn format(&self, ctx: &Context<'_>) -> Result<Format>, async_graphql::Error> {
+    async fn format(&self, ctx: &Context<'_>) -> Result<Option<Format>, async_graphql::Error> {
         let format_id = match self.format_id {
             Some(id) => id,
-            _ => return Ok(None),
+            None => return Ok(None),
         };
         let pool = ctx.data::<PgPool>()?;
         let row = query_file_as!(Format, "queries/get_format_by_id.sql", format_id)
@@ -540,6 +541,7 @@ pub struct ImageSource {
     /// Base URL for the IIIF server
     pub url: String,
 }
+
 #[async_graphql::Object]
 impl ImageSource {
     /// Base URL for the IIIF server
