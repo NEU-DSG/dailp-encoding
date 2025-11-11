@@ -340,13 +340,8 @@ pub struct DocumentMetadataUpdate {
     pub title: MaybeUndefined<String>,
     /// The date this document was written, or nothing (if unchanged or not applicable)
     pub written_at: MaybeUndefined<DateInput>,
-<<<<<<< HEAD
     /// The physical locations associated with a document (e.g. where it was written, found)
     pub spatial_coverage_ids: Option<Vec<Uuid>>,
-=======
-    /// The editors, translators, etc. of the document
-    pub contributors: Option<Vec<Contributor>>,
->>>>>>> origin/add-contributor-metadata
 }
 
 #[async_graphql::ComplexObject]

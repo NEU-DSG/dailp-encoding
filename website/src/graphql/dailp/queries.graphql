@@ -127,6 +127,7 @@ fragment DocFormFields on AnnotatedDoc {
     month
     year
   }
+  spatialCoverageIds
 }
 
 fragment ParagraphFormFields on DocumentParagraph {
