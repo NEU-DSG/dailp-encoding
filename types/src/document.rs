@@ -3,11 +3,12 @@ use crate::{
     Database, Date, Translation, TranslationBlock,
 };
 
+use crate::doc_metadata::{ApprovalStatus, Format};
 use crate::person::{Contributor, SourceAttribution};
 
-use async_graphql::{dataloader::DataLoader, FieldResult, MaybeUndefined};
+use async_graphql::{dataloader::DataLoader, Context, FieldResult, MaybeUndefined};
 use serde::{Deserialize, Serialize};
-use sqlx::query_file_as;
+use sqlx::{query_file, query_file_as, PgPool};
 use uuid::Uuid;
 
 /// A document with associated metadata and content broken down into pages and further into
@@ -508,7 +509,7 @@ pub struct DocumentMetadata {
 #[async_graphql::Object]
 impl DocumentMetadata {
     /// Fetch the format associated with this document
-    async fn format(&self, ctx: &Context<'_>) -> Result<Option<Format>> {
+    async fn format(&self, ctx: &Context<'_>) -> Result<Format>, async_graphql::Error> {
         let format_id = match self.format_id {
             Some(id) => id,
             _ => return Ok(None),
