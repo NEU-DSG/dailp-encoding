@@ -3,14 +3,22 @@ use crate::{document::DocumentReference, ContributorReference};
 
 use async_graphql::{Enum, SimpleObject};
 use serde::{Deserialize, Serialize};
+<<<<<<< HEAD
 use sqlx::{FromRow, Type};
+=======
+use sqlx::{postgres::PgValueRef, Decode, Postgres};
+>>>>>>> parent of 4ff48a07 (Overwrite file with version from main)
 use std::collections::HashMap;
 use std::str::FromStr;
 use uuid::Uuid;
 
 /// Represents the status of a suggestion made by a contributor
+<<<<<<< HEAD
 #[derive(Serialize, Deserialize, Enum, Debug, Clone, Copy, PartialEq, Eq, Type)]
 #[sqlx(type_name = "approval_status", rename_all = "lowercase")]
+=======
+#[derive(Serialize, Deserialize, Enum, Debug, Clone, Copy, PartialEq, Eq)]
+>>>>>>> parent of 4ff48a07 (Overwrite file with version from main)
 pub enum ApprovalStatus {
     /// Suggestion is still waiting for or undergoing review
     Pending,
@@ -20,19 +28,48 @@ pub enum ApprovalStatus {
     Rejected,
 }
 
+<<<<<<< HEAD
 /// Convert from string to ApprovalStatus
 impl FromStr for ApprovalStatus {
     type Err = ();
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
+=======
+/// Allows SQLx to convert Postgres "approval_status" enum values into the corresponding Rust "ApprovalStatus"
+impl<'r> Decode<'r, Postgres> for ApprovalStatus {
+    fn decode(value: PgValueRef<'r>) -> Result<Self, Box<dyn std::error::Error + Send + Sync>> {
+        let s: &str = <&str as Decode<'r, Postgres>>::decode(value)?;
+>>>>>>> parent of 4ff48a07 (Overwrite file with version from main)
         match s {
             "pending" => Ok(Self::Pending),
             "approved" => Ok(Self::Approved),
             "rejected" => Ok(Self::Rejected),
+<<<<<<< HEAD
             _ => Err(()),
         }
     }
 }
+=======
+            _ => Err(format!("invalid approval status: {}", s).into()),
+        }
+    }
+}
+
+/// Converts a string value ("approved", "pending", or "rejected") into an ApprovalStatus enum variant
+impl TryFrom<String> for ApprovalStatus {
+    type Error = anyhow::Error;
+
+    fn try_from(value: String) -> Result<Self, Self::Error> {
+        match value.as_str() {
+            "approved" => Ok(ApprovalStatus::Approved),
+            "pending" => Ok(ApprovalStatus::Pending),
+            "rejected" => Ok(ApprovalStatus::Rejected),
+            _ => Err(anyhow::anyhow!("Invalid approval status: {}", value)),
+        }
+    }
+}
+
+>>>>>>> parent of 4ff48a07 (Overwrite file with version from main)
 /// Record to store a subject heading that reflects Indigenous knowledge
 /// practices associated with a document
 #[derive(Clone, SimpleObject)]

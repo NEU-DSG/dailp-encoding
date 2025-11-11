@@ -770,6 +770,7 @@ impl Mutation {
             sources: vec![source],
             collection: None,
             genre: None,
+            spatial_coverage_ids: None,
             contributors: vec![contributor],
             translation: None,
             page_images: None,
