@@ -1,7 +1,7 @@
 select 
-    id, 
-    name, 
-    status::approval_status as status
-from subject_heading s
-join document_subject_heading dsh on s.id = dsh.subject_heading_id
-where dsh.document_id = any($1);
+    sh.id, 
+    sh.name, 
+    sh.status as "status: ApprovalStatus"
+from subject_heading sh
+join document_subject_heading dsh on sh.id = dsh.subject_heading_id
+where dsh.document_id = $1;
