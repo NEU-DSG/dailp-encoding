@@ -54,7 +54,6 @@ export const FormProvider = (props: { children: any }) => {
               ][0]
             : {},
           formatId: values.document.format?.id ?? null,
-
         },
       })
     },
