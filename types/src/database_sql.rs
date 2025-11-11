@@ -2526,10 +2526,11 @@ impl Loader<SubjectHeadingsForDocument> for Database {
                 .map(|row| SubjectHeading {
                     id: row.id,
                     name: row.name.clone(),
-                    status: row.status,
+                    status: row.status.clone(),
                 })
-                .collect();
-            results.insert(*key, headings);
+                .collect::<Vec<_>>();
+
+            results.insert(key.clone(), headings);
         }
 
         Ok(results)

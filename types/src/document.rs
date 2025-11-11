@@ -512,16 +512,27 @@ pub struct DocumentMetadata {
 #[async_graphql::Object]
 impl DocumentMetadata {
     /// Fetch all subject headings linked to this document
-    async fn subject_headings(&self, ctx: &Context<'_>) -> FieldResult<Vec<SubjectHeading>> {
+    async fn subject_headings<'a>(
+        &'a self,
+        ctx: &Context<'a>,
+    ) -> Result<Vec<SubjectHeading>, async_graphql::Error> {
         let pool = ctx.data::<PgPool>()?;
         let rows = query_file_as!(
             SubjectHeading,
             "queries/get_subject_headings_by_document_id.sql",
-            &[self.id.0]
+            self.id.0
         )
         .fetch_all(pool)
         .await?;
-        Ok(rows)
+
+        Ok(rows
+            .into_iter()
+            .map(|row| SubjectHeading {
+                id: row.id,
+                name: row.name,
+                status: row.status,
+            })
+            .collect())
     }
 }
 
