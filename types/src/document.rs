@@ -3,16 +3,12 @@ use crate::{
     Database, Date, Translation, TranslationBlock,
 };
 
-<<<<<<< HEAD
-use crate::doc_metadata::SpatialCoverage;
+use crate::doc_metadata::{ApprovalStatus, SpatialCoverage};
 use crate::person::{Contributor, SourceAttribution};
-=======
-use crate::person::{Contributor, ContributorRole, SourceAttribution};
->>>>>>> origin/add-contributor-metadata
 
-use async_graphql::{dataloader::DataLoader, FieldResult, MaybeUndefined};
+use async_graphql::{dataloader::DataLoader, Context, FieldResult, MaybeUndefined};
 use serde::{Deserialize, Serialize};
-use sqlx::{query_file_as, PgPool};
+use sqlx::{query_file, query_file_as, PgPool};
 use uuid::Uuid;
 
 /// A document with associated metadata and content broken down into pages and further into
@@ -341,7 +337,7 @@ pub struct DocumentMetadataUpdate {
     /// The date this document was written, or nothing (if unchanged or not applicable)
     pub written_at: MaybeUndefined<DateInput>,
     /// The physical locations associated with a document (e.g. where it was written, found)
-    pub spatial_coverage_ids: Option<Vec<Uuid>>,
+    pub spatial_coverage_ids: MaybeUndefined<Vec<Uuid>>,
 }
 
 #[async_graphql::ComplexObject]
@@ -519,47 +515,28 @@ pub struct DocumentMetadata {
 
 #[async_graphql::Object]
 impl DocumentMetadata {
-<<<<<<< HEAD
-    /// Fetch all spatial coverage linked to this document
-    async fn spatial_coverage(&self, ctx: &Context<'_>) -> Result<Vec<SpatialCoverage>> {
+    /// Fetch all spatial coverages linked to this document
+    async fn spatial_coverage<'a>(
+        &'a self,
+        ctx: &Context<'a>,
+    ) -> Result<Vec<SpatialCoverage>, async_graphql::Error> {
         let pool = ctx.data::<PgPool>()?;
         let rows = query_file_as!(
             SpatialCoverage,
             "queries/get_spatial_coverage_by_document_id.sql",
-=======
-    /// Fetch all contributors linked to this document
-    pub async fn contributors(&self, ctx: &Context<'_>) -> Result<Vec<Contributor>> {
-        let pool = ctx.data::<PgPool>()?;
-        let rows = query_file_as!(
-            Contributor,
-            "queries/get_contributors_by_document_id.sql",
->>>>>>> origin/add-contributor-metadata
             self.id.0
         )
         .fetch_all(pool)
         .await?;
-<<<<<<< HEAD
-        Ok(rows)
-=======
 
-        // Map the returned rows into Contributor struct (transcriber, translator, annotator, cultural advisor)
-        let contributors = rows
+        Ok(rows
             .into_iter()
-            .map(|x| Contributor {
-                id: x.id,
-                name: x.name,
-                role: x.role.as_ref().and_then(|r| match r.as_str() {
-                    "transcriber" => Some(ContributorRole::Transcriber),
-                    "translator" => Some(ContributorRole::Translator),
-                    "annotator" => Some(ContributorRole::Annotator),
-                    "cultural_advisor" => Some(ContributorRole::CulturalAdvisor),
-                    _ => None,
-                }),
+            .map(|row| SpatialCoverage {
+                id: row.id,
+                name: row.name,
+                status: row.status,
             })
-            .collect();
-
-        Ok(contributors)
->>>>>>> origin/add-contributor-metadata
+            .collect())
     }
 }
 
