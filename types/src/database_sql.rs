@@ -1,6 +1,7 @@
 #![allow(missing_docs)]
 
 use anyhow::Error;
+use async_graphql::MaybeUndefined;
 use auth::UserGroup;
 use chrono::{NaiveDate, NaiveDateTime};
 use sqlx::postgres::types::{PgLTree, PgRange};
@@ -785,7 +786,7 @@ impl Database {
         .await?;
 
         // Update subject headings
-        if let Some(subject_headings_ids) = &document.subject_headings_ids {
+        if let MaybeUndefined::Value(subject_headings_ids) = &document.subject_headings_ids {
             query_file!("queries/delete_document_subject_headings.sql", document.id)
                 .execute(&mut *tx)
                 .await?;
@@ -2522,7 +2523,6 @@ impl Loader<SubjectHeadingsForDocument> for Database {
         for key in keys {
             let headings = rows
                 .iter()
-                .filter(|row| row.document_id == key.0)
                 .map(|row| SubjectHeading {
                     id: row.id,
                     name: row.name.clone(),

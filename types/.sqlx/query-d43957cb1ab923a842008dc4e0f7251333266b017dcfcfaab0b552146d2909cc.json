@@ -1,0 +1,45 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "-- Fetch all subject headings linked to a given set of documents\nselect\n    sh.id,\n    sh.name,\n    status as \"status: ApprovalStatus\"\nfrom subject_heading sh\njoin document_subject_heading dsh on sh.id = dsh.subject_heading_id\nwhere dsh.document_id = any($1);",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "status: ApprovalStatus",
+        "type_info": {
+          "Custom": {
+            "name": "approval_status",
+            "kind": {
+              "Enum": [
+                "pending",
+                "approved",
+                "rejected"
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "UuidArray"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "d43957cb1ab923a842008dc4e0f7251333266b017dcfcfaab0b552146d2909cc"
+}

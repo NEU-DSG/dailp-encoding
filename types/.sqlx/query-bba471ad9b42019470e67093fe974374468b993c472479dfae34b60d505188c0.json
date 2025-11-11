@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "insert into edited_collection (slug, title, wordpress_menu_id)\nvalues ($1, $2, $3)\non conflict (slug) do update\nset title = excluded.title,\nwordpress_menu_id = excluded.wordpress_menu_id\n",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "bba471ad9b42019470e67093fe974374468b993c472479dfae34b60d505188c0"
+}

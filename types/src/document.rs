@@ -3,7 +3,7 @@ use crate::{
     Database, Date, Translation, TranslationBlock,
 };
 
-use crate::doc_metadata::SubjectHeading;
+use crate::doc_metadata::{ApprovalStatus, SubjectHeading};
 use crate::person::{Contributor, SourceAttribution};
 
 use async_graphql::{dataloader::DataLoader, Context, FieldResult, MaybeUndefined};
@@ -337,7 +337,7 @@ pub struct DocumentMetadataUpdate {
     /// The date this document was written, or nothing (if unchanged or not applicable)
     pub written_at: MaybeUndefined<DateInput>,
     /// Terms that reflect Indigenous knowledge practices associated with the document
-    pub subject_headings_ids: Option<Vec<Uuid>>,
+    pub subject_headings_ids: MaybeUndefined<Vec<Uuid>>,
 }
 
 #[async_graphql::ComplexObject]
