@@ -333,7 +333,7 @@ pub struct DocumentMetadataUpdate {
     /// The date this document was written, or nothing (if unchanged or not applicable)
     pub written_at: MaybeUndefined<DateInput>,
     /// The format of the original artifact
-    pub format_id: Option<Uuid>,
+    pub format_id: MaybeUndefined<Uuid>,
 }
 
 #[async_graphql::ComplexObject]
