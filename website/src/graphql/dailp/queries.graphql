@@ -127,6 +127,7 @@ fragment DocFormFields on AnnotatedDoc {
     month
     year
   }
+  formatId
 }
 
 fragment ParagraphFormFields on DocumentParagraph {
