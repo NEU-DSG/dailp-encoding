@@ -177,4 +177,3 @@ pub fn format_to_citation_format() -> HashMap<&'static str, DocCitationFormat> {
 
     map
 }
-
