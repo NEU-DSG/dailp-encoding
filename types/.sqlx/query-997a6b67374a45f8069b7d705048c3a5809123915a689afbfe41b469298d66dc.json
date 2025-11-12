@@ -1,0 +1,102 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select\n    comment.id,\n    posted_at,\n    posted_by,\n    u_posted_by.display_name as \"posted_by_name\",\n    text_content,\n    edited,\n    comment_type as \"comment_type: _\",\n    parent_id,\n    parent_type as \"parent_type: _\"\nfrom comment\njoin dailp_user u_posted_by on u_posted_by.id = posted_by\nwhere parent_id = $1 and parent_type = $2\norder by posted_at asc",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "posted_at",
+        "type_info": "Timestamp"
+      },
+      {
+        "ordinal": 2,
+        "name": "posted_by",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 3,
+        "name": "posted_by_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "text_content",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "edited",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 6,
+        "name": "comment_type: _",
+        "type_info": {
+          "Custom": {
+            "name": "comment_type_enum",
+            "kind": {
+              "Enum": [
+                "Story",
+                "Suggestion",
+                "Question"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "parent_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 8,
+        "name": "parent_type: _",
+        "type_info": {
+          "Custom": {
+            "name": "comment_parent_type",
+            "kind": {
+              "Enum": [
+                "Word",
+                "Paragraph"
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        {
+          "Custom": {
+            "name": "comment_parent_type",
+            "kind": {
+              "Enum": [
+                "Word",
+                "Paragraph"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "997a6b67374a45f8069b7d705048c3a5809123915a689afbfe41b469298d66dc"
+}

@@ -68,7 +68,7 @@ export type AnnotatedDoc = {
    */
   readonly forms: ReadonlyArray<AnnotatedForm>
   /** The genre of the document, used to group similar ones */
-  readonly genre: Maybe<Scalars["String"]>
+  readonly genre: Maybe<Genre>
   /** Official short identifier for this document */
   readonly id: Scalars["UUID"]
   /**
@@ -206,6 +206,13 @@ export type AnnotatedFormUpdate = {
 
 /** Element within a spreadsheet before being transformed into a full document. */
 export type AnnotatedSeg = AnnotatedForm | LineBreak
+
+/** Represents the status of a suggestion made by a contributor */
+export enum ApprovalStatus {
+  Approved = "APPROVED",
+  Pending = "PENDING",
+  Rejected = "REJECTED",
+}
 
 /** Request to attach user-recorded audio to a word */
 export type AttachAudioToWordInput = {
@@ -493,6 +500,8 @@ export type DocumentCollection = {
  * All fields except id are optional.
  */
 export type DocumentMetadataUpdate = {
+  /** Term that contextualizes the social practice surrounding the document */
+  readonly genreId: InputMaybe<Scalars["UUID"]>
   /** The ID of the document to update */
   readonly id: Scalars["UUID"]
   /** An updated title for this document, or nothing (if title is unchanged) */
@@ -588,6 +597,18 @@ export type FormsInTime = {
 export type Gallery = {
   readonly __typename?: "Gallery"
   readonly mediaUrls: ReadonlyArray<Scalars["String"]>
+}
+
+/** Stores the genre associated with a document */
+export type Genre = {
+  readonly __typename?: "Genre"
+  readonly approved: Scalars["Boolean"]
+  /** UUID for the genre */
+  readonly id: Scalars["UUID"]
+  /** Name of the genre */
+  readonly name: Scalars["String"]
+  /** Status (pending, approved, rejected) of a genre */
+  readonly status: ApprovalStatus
 }
 
 /**
@@ -1543,10 +1564,11 @@ export type AudioSliceFieldsFragment = {
 
 export type DocFormFieldsFragment = {
   readonly __typename?: "AnnotatedDoc"
-} & Pick<AnnotatedDoc, "id" | "title" | "genre"> & {
+} & Pick<AnnotatedDoc, "id" | "title"> & {
     readonly date: Maybe<
       { readonly __typename?: "Date" } & Pick<Date, "day" | "month" | "year">
     >
+    readonly genre: Maybe<{ readonly __typename?: "Genre" } & Pick<Genre, "id">>
   }
 
 export type ParagraphFormFieldsFragment = {
@@ -2841,7 +2863,9 @@ export const DocFormFieldsFragmentDoc = gql`
       month
       year
     }
-    genre
+    genre {
+      id
+    }
   }
 `
 export const AudioSliceFieldsFragmentDoc = gql`
