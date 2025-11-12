@@ -31,7 +31,6 @@ fn validate_row(row: &CsvRow) -> Result<(), anyhow::Error> {
 pub fn load_pages_from_str(csv_data: &str) -> Result<Vec<NewPageInput>, anyhow::Error> {
     let mut reader = ReaderBuilder::new().from_reader(csv_data.as_bytes());
     let mut pages = Vec::new();
-
     for (idx, result) in reader.deserialize::<CsvRow>().enumerate() {
         match result {
             Ok(row) => {
