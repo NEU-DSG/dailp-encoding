@@ -329,7 +329,7 @@ pub struct DocumentMetadataUpdate {
     /// The date this document was written, or nothing (if unchanged or not applicable)
     pub written_at: MaybeUndefined<DateInput>,
     /// Term that contextualizes the social practice surrounding the document
-    pub genre_id: Option<Uuid>,
+    pub genre_id: MaybeUndefined<Uuid>,
 }
 
 #[async_graphql::ComplexObject]
