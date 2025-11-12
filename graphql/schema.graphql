@@ -34,7 +34,11 @@ type AnnotatedDoc {
 	"""
 	The genre of the document, used to group similar ones
 	"""
+<<<<<<< HEAD
 	genre: Genre
+=======
+	genre: String
+>>>>>>> origin/add-genre-metadata
 	"""
 	Images of each source document page, in order
 	"""
@@ -213,6 +217,7 @@ Element within a spreadsheet before being transformed into a full document.
 union AnnotatedSeg = AnnotatedForm | LineBreak
 
 """
+<<<<<<< HEAD
 Represents the status of a suggestion made by a contributor
 """
 enum ApprovalStatus {
@@ -222,6 +227,8 @@ enum ApprovalStatus {
 }
 
 """
+=======
+>>>>>>> origin/add-genre-metadata
 Request to attach user-recorded audio to a word
 """
 input AttachAudioToWordInput {
@@ -634,10 +641,13 @@ input DocumentMetadataUpdate {
 	The date this document was written, or nothing (if unchanged or not applicable)
 	"""
 	writtenAt: DateInput
+<<<<<<< HEAD
 	"""
 	Term that contextualizes the social practice surrounding the document
 	"""
 	genreId: UUID
+=======
+>>>>>>> origin/add-genre-metadata
 }
 
 type DocumentPage {
@@ -769,6 +779,7 @@ type Gallery {
 }
 
 """
+<<<<<<< HEAD
 Stores the genre associated with a document
 """
 type Genre {
@@ -788,6 +799,8 @@ type Genre {
 }
 
 """
+=======
+>>>>>>> origin/add-genre-metadata
 A rectangle slice of something, usually a large document image.
 
 Units are a percentage of the containing document.

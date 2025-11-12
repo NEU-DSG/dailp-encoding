@@ -35,3 +35,4 @@ serverless.manifest.json
 config.tf.json
 *.pem
 *.code-workspace
+types/.sqlx
