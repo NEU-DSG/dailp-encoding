@@ -55,8 +55,8 @@ async fn main() -> Result<()> {
     //println!("Migrating connections...");
     //connections::migrate_connections(&db).await?;
 
-    println!("Migrating menu...");
-    menu::migrate_menu(&db).await?;
+    //println!("Migrating menu...");
+    //menu::migrate_menu(&db).await?;
 
     //println!("Migrating collections...");
     //edited_collection::migrate_edited_collection(&db).await?;
