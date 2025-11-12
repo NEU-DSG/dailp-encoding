@@ -3,12 +3,12 @@ use crate::{
     Database, Date, Translation, TranslationBlock,
 };
 
-use crate::doc_metadata::Genre;
+use crate::doc_metadata::{ApprovalStatus, Genre};
 use crate::person::{Contributor, SourceAttribution};
 
-use async_graphql::{dataloader::DataLoader, FieldResult, MaybeUndefined};
+use async_graphql::{dataloader::DataLoader, Context, FieldResult, MaybeUndefined};
 use serde::{Deserialize, Serialize};
-use sqlx::{query_file_as, PgPool};
+use sqlx::{query_file, query_file_as, PgPool};
 use uuid::Uuid;
 
 /// A document with associated metadata and content broken down into pages and further into
@@ -502,10 +502,10 @@ pub struct DocumentMetadata {
 #[async_graphql::Object]
 impl DocumentMetadata {
     /// Fetch the genre associated with this document
-    async fn genre(&self, ctx: &Context<'_>) -> Result<Option<Genre>> {
+    async fn genre(&self, ctx: &Context<'_>) -> Result<Option<Genre>, async_graphql::Error> {
         let genre_id = match self.genre_id {
             Some(id) => id,
-            _ => return Ok(None),
+            None => return Ok(None),
         };
         let pool = ctx.data::<PgPool>()?;
         let row = query_file_as!(Genre, "queries/get_genre_by_id.sql", genre_id)
