@@ -3,10 +3,12 @@ use crate::{
     Database, Date, Translation, TranslationBlock,
 };
 
-use crate::person::{Contributor, Creator, SourceAttribution};
+use crate::doc_metadata::{ApprovalStatus, Keyword};
+use crate::person::{Contributor, SourceAttribution};
 
-use async_graphql::{dataloader::DataLoader, FieldResult, MaybeUndefined};
+use async_graphql::{dataloader::DataLoader, Context, FieldResult, MaybeUndefined};
 use serde::{Deserialize, Serialize};
+use sqlx::{query_file, query_file_as, PgPool};
 use uuid::Uuid;
 
 /// A document with associated metadata and content broken down into pages and further into
