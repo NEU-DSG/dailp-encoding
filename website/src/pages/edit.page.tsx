@@ -3,17 +3,26 @@ import Markdown from "react-markdown"
 import { navigate } from "vite-plugin-ssr/client/router"
 import { UserRole } from "src/auth"
 import { AuthGuard } from "src/components/auth-guard"
-import { PageContents } from "src/components/wordpress"
 import { usePageByPathQuery, useUpsertPageMutation } from "src/graphql/dailp"
 import Layout from "src/layout"
 import { useRouteParams } from "src/renderer/PageShell"
-import { DELIM, splitMarkdown } from "./page-by-name.page"
+
+const DISALLOWED_WORDS = [
+  "admin",
+  "api",
+  "edit",
+  "login",
+  "logout",
+  "dashboard",
+  // Add more disallowed words as needed
+]
 
 const NewPage = () => {
   const [title, setTitle] = useState("")
   const [content, setContent] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [path, setPath] = useState("/" + useRouteParams()["*"])
+  const [isNew, setIsNew] = useState(true)
   const formatPath = (path: string) => {
     return path.startsWith("/")
       ? path
@@ -31,20 +40,31 @@ const NewPage = () => {
     if (data?.pageByPath?.body?.[0]?.__typename === "Markdown") {
       setTitle(data?.pageByPath?.title ?? "")
       setContent(data?.pageByPath?.body?.[0]?.content ?? "")
+      setIsNew(false)
+    } else {
+      setIsNew(true)
+      setTitle("")
+      setContent("")
     }
   }, [data])
 
   const [_, upsertPage] = useUpsertPageMutation()
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
     if (content.length === 0 || title.length === 0 || path.length === 0) {
       setError("Please fill in all fields")
       return
     }
     // check if path is poorly formatted
+    const pathError = validatePath(path)
+    if (pathError) {
+      setError(pathError)
+      return
+    }
     setPath(formatPath(path))
 
     reexec({ variables: { path } })
-    if (data?.pageByPath) {
+    if (!isNew) {
       const confirm = window.confirm(
         "Page already exists. Would you like to overwrite it?"
       )
@@ -52,7 +72,6 @@ const NewPage = () => {
         return
       }
     }
-    e.preventDefault()
 
     if (error !== null) {
       alert("error: " + error)
@@ -64,10 +83,27 @@ const NewPage = () => {
           setError(res.error.message)
         } else {
           setError(null)
-          navigate(`/${path}`)
+
+          navigate(`${formatPath(path)}`)
         }
       }
     )
+  }
+
+  const validatePath = (path: string): string | null => {
+    const formatted = formatPath(path)
+    const pathSegments = formatted.split("/").filter(Boolean) // Remove empty strings
+
+    // Check if any segment contains a disallowed word
+    for (const segment of pathSegments) {
+      for (const disallowed of DISALLOWED_WORDS) {
+        if (segment === disallowed || segment.includes(disallowed)) {
+          return `Path cannot contain the word "${disallowed}"`
+        }
+      }
+    }
+
+    return null
   }
 
   const isHtml = content.charAt(0) === "<"
@@ -76,7 +112,11 @@ const NewPage = () => {
     <AuthGuard requiredRole={UserRole.Editor}>
       <Layout>
         <main>
-          <h1>New content page</h1>
+          <h1>
+            {isNew
+              ? "New content page"
+              : "Editing: " + data?.pageByPath?.title + " @ " + path}
+          </h1>
           {error && <p>{error}</p>}
           <form
             onSubmit={handleSubmit}
@@ -87,16 +127,23 @@ const NewPage = () => {
               alignItems: "center",
             }}
           >
-            <input
-              style={{ width: "50%" }}
-              type="text"
-              placeholder="path"
-              value={path}
-              onChange={(e) => {
-                setPath(e.target.value)
-              }}
-            />
+            {
+              // we only want to show path input if page is new
+              <>
+                <label htmlFor="path">Path:</label>
+                <input
+                  style={{ width: "50%" }}
+                  type="text"
+                  placeholder="path"
+                  value={path}
+                  onChange={(e) => {
+                    setPath(e.target.value)
+                  }}
+                />
+              </>
+            }
             <br />
+            <label htmlFor="title">Title:</label>
             <input
               style={{ width: "50%" }}
               type="text"
