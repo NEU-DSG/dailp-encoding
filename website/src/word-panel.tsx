@@ -1,4 +1,5 @@
 import { groupBy } from "lodash"
+import { set } from "lodash"
 import React, { ReactNode, useState } from "react"
 import {
   DragDropContext,
@@ -6,7 +7,6 @@ import {
   DropResult,
   Droppable,
 } from "react-beautiful-dnd"
-import { set } from "lodash"
 import {
   AiFillCaretDown,
   AiFillCaretUp,

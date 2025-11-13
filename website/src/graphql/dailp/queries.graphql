@@ -739,10 +739,6 @@ mutation InsertCustomMorphemeTag(
   insertCustomMorphemeTag(tag: $tag, title: $title, system: $system)
 }
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> 978a066d (Page editing backend (#502))
 mutation UpsertPage($pageInput: NewPageInput!) {
   upsertPage(page: $pageInput)
 }
@@ -761,11 +757,7 @@ query pageByPath($path: String!) {
     }
   }
 }
-<<<<<<< HEAD
-=======
->>>>>>> 171dbbaa (Admin menu editing backend (#501))
-=======
->>>>>>> 978a066d (Page editing backend (#502))
+
 query MenuBySlug($slug: String!) {
   menuBySlug(slug: $slug) {
     id
