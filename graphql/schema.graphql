@@ -81,6 +81,11 @@ type AnnotatedDoc {
 	Collection chapters that contain this document.
 	"""
 	chapters: [CollectionChapter!]
+	"""
+	Internal field accessor for creators
+	"""
+	creatorsIds: [UUID!]
+	creators: [Creator!]!
 }
 
 """
@@ -506,6 +511,24 @@ input CreateEditedCollectionInput {
 }
 
 """
+The creator of a document
+"""
+type Creator {
+	"""
+	UUID of the creator
+	"""
+	id: UUID!
+	"""
+	Name of the creator
+	"""
+	name: String!
+	"""
+	Creators of this document
+	"""
+	creators: [Creator!]!
+}
+
+"""
 Request to update if a piece of audio should be included in an edited collection
 """
 input CurateWordAudioInput {
@@ -625,6 +648,10 @@ input DocumentMetadataUpdate {
 	The date this document was written, or nothing (if unchanged or not applicable)
 	"""
 	writtenAt: DateInput
+	"""
+	The creator(s) of the document
+	"""
+	creatorsIds: [UUID!]
 }
 
 type DocumentPage {

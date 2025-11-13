@@ -996,7 +996,6 @@ impl SheetInterpretation {
             .ok_or_else(|| anyhow::anyhow!("Title missing value in column 2"))?
             .clone();
 
-        
         let creators_row: Vec<String> = values
             .next()
             .ok_or_else(|| anyhow::anyhow!("Missing creators row"))?;
