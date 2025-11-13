@@ -332,7 +332,7 @@ pub struct DocumentMetadataUpdate {
     /// The date this document was written, or nothing (if unchanged or not applicable)
     pub written_at: MaybeUndefined<DateInput>,
     /// The creator(s) of the document
-    pub creators_ids: Option<Vec<Uuid>>,
+    pub creators_ids: MaybeUndefined<Vec<Uuid>>,
 }
 
 #[async_graphql::ComplexObject]
@@ -501,8 +501,7 @@ pub struct DocumentMetadata {
     #[serde(default)]
     /// Arbitrary number used for manually ordering documents in a collection.
     /// For collections without manual ordering, use zero here.
-    pub order_index: i64,
-    pub(crate) creators_ids: Option<Vec<_>>,
+    pub order_index: i64
 }
 
 /// Database ID for one document
