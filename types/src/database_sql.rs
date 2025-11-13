@@ -2534,10 +2534,11 @@ impl Loader<CreatorsForDocument> for Database {
             let creators = rows
                 .iter()
                 .map(|row| Creator {
-                    id: row.id.clone(),
+                    id: row.id,
                     name: row.name.clone(),
                 })
                 .collect::<Vec<_>>();
+            
             results.insert(*key, creators);
         }
 
