@@ -1,10 +1,7 @@
 #![allow(missing_docs)]
 
 use anyhow::Error;
-<<<<<<< HEAD
 use async_graphql::MaybeUndefined;
-=======
->>>>>>> 978a066d (Page editing backend (#502))
 use auth::UserGroup;
 use chrono::{NaiveDate, NaiveDateTime};
 use sqlx::postgres::types::{PgLTree, PgRange};
@@ -15,10 +12,7 @@ use user::UserUpdate;
 use crate::collection::CollectionChapter;
 use crate::collection::EditedCollection;
 use crate::comment::{Comment, CommentParentType, CommentType, CommentUpdate};
-<<<<<<< HEAD
 use crate::doc_metadata::SpatialCoverage;
-=======
->>>>>>> 978a066d (Page editing backend (#502))
 use crate::page::ContentBlock;
 use crate::page::Markdown;
 use crate::page::NewPageInput;
@@ -1961,11 +1955,8 @@ impl Database {
             Ok(None)
         }
     }
-<<<<<<< HEAD
-
-=======
+    
     //Ok(page)
->>>>>>> 978a066d (Page editing backend (#502))
     pub async fn get_menu_by_slug(&self, slug: String) -> Result<Menu> {
         let menu = query_file!("queries/menu_by_slug.sql", slug)
             .fetch_one(&self.client)
