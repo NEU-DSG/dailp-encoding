@@ -224,8 +224,8 @@ impl AnnotatedDoc {
     }
 
     /// Internal field accessor for creators
-    async fn creators_ids(&self) -> &Option<Vec<Uuid>> {
-        &self.meta.creators_ids
+    async fn creators_ids(&self) -> Option<&Vec<Uuid>> {
+        self.meta.creators_ids.as_ref()
     }
 
     // GraphQL resolver for creators
@@ -515,7 +515,7 @@ impl DocumentMetadata {
     ) -> Result<Vec<Creator>, async_graphql::Error> {
         let pool = ctx.data::<PgPool>()?;
         let rows = query_file_as!(
-            Keyword,
+            Creator,
             "queries/get_creators_by_document_id.sql",
             self.id.0
         )
