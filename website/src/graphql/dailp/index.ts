@@ -62,6 +62,8 @@ export type AnnotatedDoc = {
   /** Date and time this document was written or created */
   readonly date: Maybe<Date>
   readonly formCount: Scalars["Int"]
+  /** The format of the original artifact */
+  readonly format: Maybe<Format>
   /**
    * All the words contained in this document, dropping structural formatting
    * like line and page breaks.
@@ -206,6 +208,13 @@ export type AnnotatedFormUpdate = {
 
 /** Element within a spreadsheet before being transformed into a full document. */
 export type AnnotatedSeg = AnnotatedForm | LineBreak
+
+/** Represents the status of a suggestion made by a contributor */
+export enum ApprovalStatus {
+  Approved = "APPROVED",
+  Pending = "PENDING",
+  Rejected = "REJECTED",
+}
 
 /** Request to attach user-recorded audio to a word */
 export type AttachAudioToWordInput = {
@@ -493,6 +502,8 @@ export type DocumentCollection = {
  * All fields except id are optional.
  */
 export type DocumentMetadataUpdate = {
+  /** The format of the original artifact */
+  readonly formatId: InputMaybe<Scalars["UUID"]>
   /** The ID of the document to update */
   readonly id: Scalars["UUID"]
   /** An updated title for this document, or nothing (if title is unchanged) */
@@ -575,6 +586,18 @@ export type EditedCollection = {
   readonly title: Scalars["String"]
   /** ID of WordPress menu for navigating the collection */
   readonly wordpressMenuId: Maybe<Scalars["Int"]>
+}
+
+/** Stores the physical or digital medium associated with a document */
+export type Format = {
+  readonly __typename?: "Format"
+  readonly approved: Scalars["Boolean"]
+  /** UUID for the format */
+  readonly id: Scalars["UUID"]
+  /** Name of the format */
+  readonly name: Scalars["String"]
+  /** Status (pending, approved, rejected) of a format */
+  readonly status: ApprovalStatus
 }
 
 export type FormsInTime = {
@@ -1546,6 +1569,9 @@ export type DocFormFieldsFragment = {
 } & Pick<AnnotatedDoc, "id" | "title"> & {
     readonly date: Maybe<
       { readonly __typename?: "Date" } & Pick<Date, "day" | "month" | "year">
+    >
+    readonly format: Maybe<
+      { readonly __typename?: "Format" } & Pick<Format, "id">
     >
   }
 
@@ -2840,6 +2866,9 @@ export const DocFormFieldsFragmentDoc = gql`
       day
       month
       year
+    }
+    format {
+      id
     }
   }
 `

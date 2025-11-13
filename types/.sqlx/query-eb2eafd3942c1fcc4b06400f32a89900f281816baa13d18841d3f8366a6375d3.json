@@ -1,0 +1,45 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select \n    f.id, \n    f.name, \n    f.status as \"status: ApprovalStatus\"\nfrom doc_format f\nwhere id = $1;",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "status: ApprovalStatus",
+        "type_info": {
+          "Custom": {
+            "name": "approval_status",
+            "kind": {
+              "Enum": [
+                "pending",
+                "approved",
+                "rejected"
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "eb2eafd3942c1fcc4b06400f32a89900f281816baa13d18841d3f8366a6375d3"
+}
