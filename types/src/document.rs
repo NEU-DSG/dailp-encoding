@@ -4,7 +4,7 @@ use crate::{
 };
 
 use crate::doc_metadata::ApprovalStatus;
-use crate::person::{Contributor, SourceAttribution};
+use crate::person::{Contributor, Creator, SourceAttribution};
 
 use async_graphql::{dataloader::DataLoader, Context, FieldResult, MaybeUndefined};
 use serde::{Deserialize, Serialize};
@@ -334,7 +334,6 @@ pub struct DocumentMetadataUpdate {
     /// The date this document was written, or nothing (if unchanged or not applicable)
     pub written_at: MaybeUndefined<DateInput>,
     /// The creator(s) of the document
-    #[serde(rename = "creatorsIds")]
     pub creators_ids: MaybeUndefined<Vec<Uuid>>,
 }
 

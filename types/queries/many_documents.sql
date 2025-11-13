@@ -24,9 +24,8 @@ select
     select coalesce(
       jsonb_agg(
         jsonb_build_object(
-          'id', k.id,
-          'name', k.name,
-          'status', k.status
+          'id', cr.id,
+          'name', cr.name,
         )
       ),
       '[]'
