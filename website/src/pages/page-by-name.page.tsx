@@ -4,7 +4,7 @@ import { usePageByPathQuery } from "src/graphql/dailp"
 import Layout from "src/layout"
 
 const PageByName = ({ pageName }: { pageName: string }) => {
-  const [{ data }] = usePageByPathQuery({ variables: { path: pageName } })
+  const [{ data }] = usePageByPathQuery({ variables: { path: "/pages/" + pageName } })
   const content = data?.pageByPath?.body?.map((body: any) => {
     if (body.__typename === "Markdown") {
       return body.content

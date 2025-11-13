@@ -61,7 +61,8 @@ const NewPage = () => {
       setError(pathError)
       return
     }
-    setPath(formatPath(path))
+
+    //setPath(formatPath(isNew ? "/pages" + path : path))
 
     reexec({ variables: { path } })
     if (!isNew) {
@@ -77,14 +78,13 @@ const NewPage = () => {
       alert("error: " + error)
       return
     }
-    upsertPage({ pageInput: { title, body: [content], path: path } }).then(
+    upsertPage({ pageInput: { title, body: [content], path: isNew ? "/pages" + path : path } }).then(
       (res) => {
         if (res.error) {
           setError(res.error.message)
         } else {
           setError(null)
-
-          navigate(`${formatPath(path)}`)
+          navigate(`/pages${formatPath(path)}`)
         }
       }
     )
@@ -129,18 +129,47 @@ const NewPage = () => {
           >
             {
               // we only want to show path input if page is new
-              <>
-                <label htmlFor="path">Path:</label>
-                <input
-                  style={{ width: "50%" }}
-                  type="text"
-                  placeholder="path"
-                  value={path}
-                  onChange={(e) => {
-                    setPath(e.target.value)
-                  }}
-                />
-              </>
+              isNew && (
+                <>
+                  <label htmlFor="path">Path:</label>
+                  <div
+                    style={{
+                      display: "flex",
+                      width: "50%",
+                      border: "1px solid #ccc",
+                      borderRadius: "4px",
+                      alignItems: "center",
+                    }}
+                  >
+                    <span
+                      style={{
+                        padding: "8px 12px",
+                        backgroundColor: "#f5f5f5",
+                        borderRight: "1px solid #ccc",
+                        color: "#666",
+                        userSelect: "none",
+                      }}
+                    >
+                      /pages
+                    </span>
+                    <input
+                      id="path"
+                      type="text"
+                      placeholder="your-page-name"
+                      value={path}
+                      onChange={(e) => {
+                        setPath(e.target.value)
+                      }}
+                      style={{
+                        flex: 1,
+                        border: "none",
+                        outline: "none",
+                        padding: "8px 12px",
+                      }}
+                    />
+                  </div>
+                </>
+              )
             }
             <br />
             <label htmlFor="title">Title:</label>
