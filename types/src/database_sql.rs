@@ -834,24 +834,6 @@ impl Database {
         .execute(&self.client)
         .await?;
 
-        // Update creators
-        if let Some(creator_ids) = &document.creators_ids {
-            query_file!("queries/delete_document_creator.sql", document.id)
-                .execute(&mut *tx)
-                .await?;
-
-            query_file!(
-                "queries/insert_document_creator.sql",
-                document.id,
-                creator_ids
-            )
-            .execute(&mut *tx)
-            .await?;
-        }
-
-        // Commit updates
-        tx.commit().await?;
-
         Ok(comment.id)
     }
 
@@ -2538,8 +2520,8 @@ impl Loader<CreatorsForDocument> for Database {
                     name: row.name.clone(),
                 })
                 .collect::<Vec<_>>();
-            
-            results.insert(*key, creators);
+
+            results.insert(key.clone(), creators);
         }
 
         Ok(results)

@@ -332,7 +332,7 @@ pub struct DocumentMetadataUpdate {
     /// The date this document was written, or nothing (if unchanged or not applicable)
     pub written_at: MaybeUndefined<DateInput>,
     /// The creator(s) of the document
-    
+    #[serde(rename = "creatorsIds")]
     pub creators_ids: MaybeUndefined<Vec<Uuid>>,
 }
 
@@ -502,7 +502,7 @@ pub struct DocumentMetadata {
     #[serde(default)]
     /// Arbitrary number used for manually ordering documents in a collection.
     /// For collections without manual ordering, use zero here.
-    pub order_index: i64
+    pub order_index: i64,
 }
 
 /// Database ID for one document

@@ -19,7 +19,22 @@ select
     ) filter (where contributor is not null),
     '[]'
   )
-  as contributors
+  as contributors,
+  (
+    select coalesce(
+      jsonb_agg(
+        jsonb_build_object(
+          'id', k.id,
+          'name', k.name,
+          'status', k.status
+        )
+      ),
+      '[]'
+    )
+    from document_creator dcr
+    join creator cr on cr.id = dcr.creator_id
+    where dcr.document_id = d.id
+  ) as creators
 from document as d
   left join contributor_attribution as attr on attr.document_id = d.id
   left join contributor on contributor.id = attr.contributor_id
@@ -33,14 +48,3 @@ group by d.id,
   media_resource.id,
   dailp_user.id,
   ubd.bookmarked_on
-
--- Creators
-  (
-    select coalesce(jsonb_agg(jsonb_build_object(
-      'id', cr.id,
-      'name', cr.name
-    )), '[]')
-    from document_creator dcr
-    join creator cr on cr.id = dcr.creator_id
-    where dcr.document_id = d.id
-  ) as creators

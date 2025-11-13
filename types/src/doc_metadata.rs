@@ -34,83 +34,79 @@ impl FromStr for ApprovalStatus {
     }
 }
 
-/// Stores the genre associated with a document
-#[derive(Clone, Debug, Serialize, Deserialize, FromRow)]
-#[graphql(complex)]
-pub struct Genre {
-    /// UUID for the genre
-    pub id: Uuid,
-    /// Name of the genre
-    pub name: String,
-    /// Status (pending, approved, rejected) of a genre
-    pub status: ApprovalStatus,
-}
-
-/// Stores the physical or digital medium associated with a document
-#[derive(Clone, Debug, Serialize, Deserialize, FromRow)]
-#[graphql(complex)]
-pub struct Format {
-    /// UUID for the format
-    pub id: Uuid,
-    /// Name of the format
-    pub name: String,
-    /// Status (pending, approved, rejected) of a format
-    pub status: ApprovalStatus,
-}
-/// Record to store a keyword associated with a document
-#[derive(Clone, Debug, Serialize, Deserialize, FromRow)]
-#[graphql(complex)]
-pub struct Keyword {
-    /// UUID for the keyword
-    pub id: Uuid,
-    /// Name of the keyword
-    pub name: String,
-    /// Status (pending, approved, rejected) of a keyword
-    pub status: ApprovalStatus,
-}
-
 /// Record to store a subject heading that reflects Indigenous knowledge
 /// practices associated with a document
-#[derive(Clone, Debug, Serialize, Deserialize, FromRow)]
-#[graphql(complex)]
+#[derive(Clone, SimpleObject)]
 pub struct SubjectHeading {
     /// UUID for the subject heading
     pub id: Uuid,
+    /// Documents associated with the subject heading
+    pub documents: Vec<DocumentReference>,
     /// Name of the subject heading
     pub name: String,
     /// Status (pending, approved, rejected) of a subject heading
     pub status: ApprovalStatus,
 }
 
+/// Stores the physical or digital medium associated with a document
+#[derive(Clone, SimpleObject)]
+pub struct Format {
+    /// UUID for the format
+    pub id: Uuid,
+    /// Documents associated with the format
+    pub documents: Vec<DocumentReference>,
+    /// Name of the format
+    pub name: String,
+}
+
+/// Stores the genre associated with a document
+#[derive(Clone, SimpleObject)]
+pub struct Genre {
+    /// UUID for the genre
+    pub id: Uuid,
+    /// Documents associated with the genre
+    pub documents: Vec<DocumentReference>,
+    /// Name of the genre
+    pub name: String,
+}
+
 /// Stores a language associated with a document
-#[derive(Clone, Debug, Serialize, Deserialize, FromRow)]
-#[graphql(complex)]
+#[derive(Clone, SimpleObject)]
 pub struct Language {
     /// UUID for the language
     pub id: Uuid,
+    /*
+    Tag for the language within the DAILP system
+    Could be useful for managing similar language names or extending this to
+    adding tags for language, dialect, and script combinations later on
+    */
+    pub dailp_tag: String,
+    /// Documents associated with the language
+    pub documents: Vec<DocumentReference>,
     /// Name of the language
     pub name: String,
-    // Name a language uses for itself
-    pub autonym: Option<String>,
-    /// Status (pending, approved, rejected) of a language
-    pub status: ApprovalStatus,
 }
 
 /// Stores a spatial coverage associated with a document
-#[derive(Clone, Debug, Serialize, Deserialize, FromRow)]
-#[graphql(complex)]
+#[derive(Clone, SimpleObject)]
 pub struct SpatialCoverage {
     /// UUID for the place
     pub id: Uuid,
+    /*
+    Tag for the spatial coverage within the DAILP system
+    Could be useful for managing places with similar names or places
+    with multiple names
+    */
+    pub dailpTag: String,
+    /// Documents associated with the spatial coverage
+    pub documents: Vec<DocumentReference>,
     /// Name of the place
     pub name: String,
-    /// Status (pending, approved, rejected) of a spatial coverage
-    pub status: ApprovalStatus,
 }
 
 /// Stores citation information for a document
 /// TODO: Add more fields to cover a variety of format types
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize, SimpleObject)]
 pub struct Citation {
     /// UUID for the citation
     pub id: Uuid,
