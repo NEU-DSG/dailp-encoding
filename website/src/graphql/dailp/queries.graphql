@@ -686,6 +686,8 @@ mutation AddDocument($input: CreateDocumentFromFormInput!) {
     id
     title
     slug
+    collectionSlug
+    chapterSlug
   }
 }
 

@@ -984,22 +984,28 @@ impl Database {
         .await?;
 
         {
-            let (name, doc, role): (Vec<_>, Vec<_>, Vec<_>) = meta
+            let name: Vec<String> = meta.contributors.iter().map(|c| c.clone().name).collect();
+            // Use the ID returned from inserting the document to satisfy FK constraints
+            let doc_id: Vec<Uuid> = vec![document_uuid];
+            let roles: Vec<String> = meta
                 .contributors
                 .iter()
-                .map(|contributor| (&*contributor.name, document_uuid, contributor.role.as_ref()))
-                .multiunzip();
-            // Convert roles to Option<String> for SQL
-            let role_strings: Vec<Option<String>> =
-                role.iter().map(|r| r.map(|r| r.to_string())).collect();
-            query_file!(
-                "queries/upsert_document_contributors.sql",
-                &*name as _,
-                &*doc,
-                &role_strings as _
-            )
-            .execute(&mut *tx)
-            .await?;
+                .map(|c| match c.role {
+                    Some(r) => r.to_string(),
+                    None => ContributorRole::Author.to_string(),
+                })
+                .collect();
+
+            if !name.is_empty() {
+                query_file!(
+                    "queries/upsert_document_contributors.sql",
+                    &name,
+                    &doc_id,
+                    &roles
+                )
+                .execute(&mut *tx)
+                .await?;
+            }
         }
 
         tx.commit().await?;
@@ -1739,14 +1745,13 @@ impl Database {
         // Attribute contributors to the document
         {
             let name: Vec<String> = meta.contributors.iter().map(|c| c.clone().name).collect();
-            let doc_id: Vec<Uuid> = vec![meta.id.0];
+            // Use the ID returned from inserting the document to satisfy FK constraints
+            let doc_id: Vec<Uuid> = vec![document_uuid];
             let roles: Vec<String> = meta
                 .contributors
                 .iter()
                 .map(|c| match c.role {
                     Some(r) => r.to_string(),
-                    // not sure what to default to, also not sure why contributor role is an
-                    // option
                     None => ContributorRole::Author.to_string(),
                 })
                 .collect();
