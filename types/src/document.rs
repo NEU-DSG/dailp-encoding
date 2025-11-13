@@ -334,7 +334,6 @@ pub struct DocumentMetadataUpdate {
     /// The date this document was written, or nothing (if unchanged or not applicable)
     pub written_at: MaybeUndefined<DateInput>,
     /// The creator(s) of the document
-    #[graphql(name = "creatorsIds")]
     pub creators_ids: MaybeUndefined<Vec<Uuid>>,
 }
 
@@ -507,6 +506,32 @@ pub struct DocumentMetadata {
     pub order_index: i64,
 }
 
+#[async_graphql::Object]
+impl DocumentMetadata {
+    /// Fetch all creators linked to this document
+    async fn creators<'a>(
+        &'a self,
+        ctx: &Context<'a>,
+    ) -> Result<Vec<Creator>, async_graphql::Error> {
+        let pool = ctx.data::<PgPool>()?;
+        let rows = query_file_as!(
+            Keyword,
+            "queries/get_creators_by_document_id.sql",
+            self.id.0
+        )
+        .fetch_all(pool)
+        .await?;
+
+        Ok(rows
+            .into_iter()
+            .map(|row| Creator {
+                id: row.id,
+                name: row.name,
+            })
+            .collect())
+    }
+}
+
 /// Database ID for one document
 #[derive(
     Clone, Copy, Eq, PartialEq, Hash, Serialize, Deserialize, Debug, async_graphql::NewType, Default,
@@ -525,6 +550,7 @@ pub struct ImageSource {
     /// Base URL for the IIIF server
     pub url: String,
 }
+
 #[async_graphql::Object]
 impl ImageSource {
     /// Base URL for the IIIF server
