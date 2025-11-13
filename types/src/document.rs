@@ -334,6 +334,7 @@ pub struct DocumentMetadataUpdate {
     /// The date this document was written, or nothing (if unchanged or not applicable)
     pub written_at: MaybeUndefined<DateInput>,
     /// The creator(s) of the document
+    #[graphql(name = "creatorsIds")]
     pub creators_ids: MaybeUndefined<Vec<Uuid>>,
 }
 

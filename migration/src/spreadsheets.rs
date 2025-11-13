@@ -9,6 +9,7 @@ use dailp::collection::CollectionSection::Body;
 use dailp::collection::CollectionSection::Credit;
 use dailp::collection::CollectionSection::Intro;
 use dailp::ContributorRole;
+use dailp::Uuid;
 use std::result::Result::Ok;
 
 use dailp::{
@@ -995,6 +996,16 @@ impl SheetInterpretation {
             .ok_or_else(|| anyhow::anyhow!("Title missing value in column 2"))?
             .clone();
 
+        
+        let creators_row: Vec<String> = values
+            .next()
+            .ok_or_else(|| anyhow::anyhow!("Missing creators row"))?;
+
+        let creators_ids: Vec<Uuid> = creators_row
+            .into_iter()
+            .filter_map(|s| Uuid::parse_str(s.trim()).ok())
+            .collect();
+
         Ok(DocumentMetadata {
             id: Default::default(),
             short_name,
@@ -1003,7 +1014,7 @@ impl SheetInterpretation {
             collection: source.pop().filter(|s| !s.trim().is_empty()),
             contributors: people,
             genre: genre.pop().filter(|s| !s.trim().is_empty()),
-            creators_ids,
+            creators_ids: Some(creators_ids),
             translation,
             page_images,
             date: parsed_date,
