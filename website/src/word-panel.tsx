@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import { groupBy } from "lodash"
 import React, { ReactNode, useState } from "react"
 import {
@@ -7,10 +6,7 @@ import {
   DropResult,
   Droppable,
 } from "react-beautiful-dnd"
-=======
 import { set } from "lodash"
-import React, { ReactNode } from "react"
->>>>>>> c999145a (finished editing phonetics with warning for deleting phonetics. Commented pre-commit out due to index.ts error)
 import {
   AiFillCaretDown,
   AiFillCaretUp,
@@ -92,7 +88,6 @@ export const WordPanel = (p: {
   const phoneticsContent = (
     <>
       {
-<<<<<<< HEAD
         <PanelFeatureComponent
           word={p.word}
           feature={"source"}
@@ -106,25 +101,6 @@ export const WordPanel = (p: {
           feature={"romanizedSource"}
           label="Simple Phonetics"
         />
-=======
-        /*p.word.source*/ true && (
-          <PanelFeatureComponent
-            word={p.word}
-            feature={"source"}
-            label="Syllabary Characters"
-          />
-        )
-      }
-
-      {
-        /*p.word.romanizedSource*/ true && (
-          <PanelFeatureComponent
-            word={p.word}
-            feature={"romanizedSource"}
-            label="Simple Phonetics"
-          />
-        )
->>>>>>> c999145a (finished editing phonetics with warning for deleting phonetics. Commented pre-commit out due to index.ts error)
       }
     </>
   )

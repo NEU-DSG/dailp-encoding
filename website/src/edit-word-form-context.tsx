@@ -58,18 +58,13 @@ export const FormProvider = (props: { children: ReactNode }) => {
       if (
         !values.word.romanizedSource &&
         romanizedSource !== "" &&
-<<<<<<< HEAD
         !confirmRomanizedSourceDelete
-=======
-        confirmRomanizedSourceDelete === false
->>>>>>> c999145a (finished editing phonetics with warning for deleting phonetics. Commented pre-commit out due to index.ts error)
       ) {
         const errors = {
           romanizedSource: "romanizedSource Deleted Error Thrown",
         }
         throw errors
       }
-<<<<<<< HEAD
       // Add validation check here before proceeding with submit
       if (!values || !values.word) {
         throw { values: "No word found" }
@@ -85,8 +80,6 @@ export const FormProvider = (props: { children: ReactNode }) => {
         }
       }
 
-=======
->>>>>>> c999145a (finished editing phonetics with warning for deleting phonetics. Commented pre-commit out due to index.ts error)
       if (cherokeeRepresentation === Dailp.CherokeeOrthography.Taoc) {
         setIsEditing(false)
 
@@ -110,17 +103,7 @@ export const FormProvider = (props: { children: ReactNode }) => {
         console.log("Sending complete word update:", wordUpdate)
 
         runUpdate({
-<<<<<<< HEAD
           word: wordUpdate,
-=======
-          word: {
-            id: values.word["id"],
-            source: values.word["source"],
-            romanizedSource: values.word["romanizedSource"],
-            commentary: values.word["commentary"],
-            segments: updatedSegments,
-          },
->>>>>>> c999145a (finished editing phonetics with warning for deleting phonetics. Commented pre-commit out due to index.ts error)
           morphemeSystem: cherokeeRepresentation,
         }).then(({ data, error }) => {
           if (error) {
