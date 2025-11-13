@@ -1,6 +1,7 @@
 #![allow(missing_docs)]
 
 use anyhow::Error;
+use async_graphql::MaybeUndefined;
 use auth::UserGroup;
 use chrono::{NaiveDate, NaiveDateTime};
 use sqlx::postgres::types::{PgLTree, PgRange};
@@ -773,6 +774,7 @@ impl Database {
     pub async fn update_document_metadata(&self, document: DocumentMetadataUpdate) -> Result<Uuid> {
         let title = document.title.into_vec();
         let written_at: Option<Date> = document.written_at.value().map(Into::into);
+        let mut tx = self.client.begin().await?;
 
         query_file!(
             "queries/update_document_metadata.sql",
@@ -782,6 +784,24 @@ impl Database {
         )
         .execute(&self.client)
         .await?;
+
+        // Update creators
+        if let MaybeUndefined::Value(creators_ids) = &document.creators_ids {
+            query_file!("queries/delete_document_creator.sql", document.id)
+                .execute(&mut *tx)
+                .await?;
+
+            query_file!(
+                "queries/insert_document_creator.sql",
+                document.id,
+                creators_ids
+            )
+            .execute(&mut *tx)
+            .await?;
+        }
+
+        // Commit updates
+        tx.commit().await?;
 
         Ok(document.id)
     }
@@ -2513,12 +2533,11 @@ impl Loader<CreatorsForDocument> for Database {
         for key in keys {
             let creators = rows
                 .iter()
-                .filter(|row| row.document_id == key.0)
                 .map(|row| Creator {
-                    id: row.id,
+                    id: row.id.clone(),
                     name: row.name.clone(),
                 })
-                .collect();
+                .collect::<Vec<_>>();
             results.insert(*key, creators);
         }
 
