@@ -14,18 +14,18 @@ select
   coalesce(
     jsonb_agg(
       jsonb_build_object(
-        'name', contributor.full_name, 'role', attr.contribution_role
+        'name', contributor.full_name, 
+        'role', attr.contribution_role
       )
     ) filter (where contributor is not null),
     '[]'
-  )
-  as contributors,
+  ) as contributors,
   (
     select coalesce(
       jsonb_agg(
         jsonb_build_object(
           'id', cr.id,
-          'name', cr.name,
+          'name', cr.name
         )
       ),
       '[]'
@@ -42,8 +42,9 @@ from document as d
   left join dailp_user on dailp_user.id = media_resource.recorded_by
   left join user_bookmarked_document as ubd on ubd.document_id = d.id
 where d.id = any($1)
-group by d.id,
+group by 
+  d.id,
   media_slice.id,
   media_resource.id,
   dailp_user.id,
-  ubd.bookmarked_on
+  ubd.bookmarked_on;
