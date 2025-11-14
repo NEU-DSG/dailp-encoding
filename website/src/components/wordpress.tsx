@@ -36,7 +36,7 @@ const WordpressPage = ({ slug }: Props) => {
   const wpPage = data?.page?.__typename === "Page" && data.page
 
   if (wpPage) {
-    return <PageContents content={wpPage.content} />
+    return <WordpressPageContents content={wpPage.content} />
   } else if (fetching) {
     return (
       <div>
@@ -50,7 +50,11 @@ const WordpressPage = ({ slug }: Props) => {
 
 export default WordpressPage
 
-export const PageContents = ({ content }: { content: string | null }) => {
+export const WordpressPageContents = ({
+  content,
+}: {
+  content: string | null
+}) => {
   const { "*": slug } = useRouteParams()
 
   let parsed
