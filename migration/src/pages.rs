@@ -1,9 +1,11 @@
 use csv::ReaderBuilder;
+use dailp::page::ContentBlock;
+use dailp::page::Markdown;
 use dailp::page::NewPageInput;
-use dailp::Database;
+use dailp::{page::Page, Database};
 use serde::Deserialize;
 
-/// CSV row structure, used to load pages.csv data into a vector
+// CSV row structure (includes all fields even though we skip some)
 #[derive(Debug, Deserialize)]
 struct CsvRow {
     #[serde(rename = "page_id")]
