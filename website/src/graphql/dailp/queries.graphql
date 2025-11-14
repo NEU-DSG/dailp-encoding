@@ -127,6 +127,9 @@ fragment DocFormFields on AnnotatedDoc {
     month
     year
   }
+  genre {
+    id
+  }
 }
 
 fragment ParagraphFormFields on DocumentParagraph {
