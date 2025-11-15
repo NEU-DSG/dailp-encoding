@@ -1,0 +1,45 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "-- Fetch all spatial coverages linked to a given set of documents\nselect\n    sc.id,\n    sc.name,\n    sc.status as \"status: ApprovalStatus\"\nfrom spatial_coverage sc\njoin document_spatial_coverage dsc on sc.id = dsc.spatial_coverage_id\nwhere dsc.document_id = any($1);",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "status: ApprovalStatus",
+        "type_info": {
+          "Custom": {
+            "name": "approval_status",
+            "kind": {
+              "Enum": [
+                "pending",
+                "approved",
+                "rejected"
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "UuidArray"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "bcb324272bbf942bc79f828b6a2af63ba888b5b173c03dfbf51c9eba91a97b2a"
+}
