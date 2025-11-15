@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "-- Insert the new set of subject heading IDs\ninsert into document_subject_heading (document_id, subject_heading_id)\nselect $1, unnest($2::uuid[]);",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "UuidArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "25d44690f3c33f3fe3a206607956ab24ca52b0ad6693a8b66620452011eb4fc8"
+}
