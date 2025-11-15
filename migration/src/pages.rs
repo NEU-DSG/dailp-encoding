@@ -4,7 +4,6 @@ use dailp::page::Markdown;
 use dailp::page::NewPageInput;
 use dailp::{page::Page, Database};
 use serde::Deserialize;
-use std::fs::File;
 
 // CSV row structure (includes all fields even though we skip some)
 #[derive(Debug, Deserialize)]
@@ -31,10 +30,8 @@ fn validate_row(row: &CsvRow) -> Result<(), anyhow::Error> {
     Ok(())
 }
 
-pub fn load_pages(file_path: &str) -> Result<Vec<NewPageInput>, anyhow::Error> {
-    let file = File::open(file_path)?;
-    let mut reader = ReaderBuilder::new().from_reader(file);
-
+pub fn load_pages_from_str(csv_data: &str) -> Result<Vec<NewPageInput>, anyhow::Error> {
+    let mut reader = ReaderBuilder::new().from_reader(csv_data.as_bytes());
     let mut pages = Vec::new();
     for (idx, result) in reader.deserialize::<CsvRow>().enumerate() {
         match result {
@@ -59,11 +56,9 @@ pub fn load_pages(file_path: &str) -> Result<Vec<NewPageInput>, anyhow::Error> {
 }
 
 pub async fn migrate_pages(db: &Database) -> anyhow::Result<()> {
-    //println!("Migrating pages...");
-    let pages = load_pages("pages.csv")?;
-    //for page in pages {
-    //db.insert_page(NewPageInput::from(page.clone())).await?;
-    //}
+    const PAGES_CSV: &str = include_str!("../pages.csv");
+    let pages = load_pages_from_str(PAGES_CSV)?;
+
     for page in pages {
         db.upsert_page(NewPageInput::from(page.clone())).await?;
     }
