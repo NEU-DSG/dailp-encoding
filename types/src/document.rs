@@ -320,7 +320,7 @@ pub struct DocumentMetadataUpdate {
     /// The date this document was written, or nothing (if unchanged or not applicable)
     pub written_at: MaybeUndefined<DateInput>,
     /// The editors, translators, etc. of the document
-    pub contributors: Option<Vec<Contributor>>,
+    pub contributors: MaybeUndefined<Vec<Uuid>>,
 }
 
 #[async_graphql::ComplexObject]
@@ -493,7 +493,10 @@ pub struct DocumentMetadata {
 #[async_graphql::Object]
 impl DocumentMetadata {
     /// Fetch all contributors linked to this document
-    pub async fn contributors(&self, ctx: &Context<'_>) -> Result<Vec<Contributor>> {
+    async fn contributors<'a>(
+        &'a self,
+        ctx: &Context<'a>,
+    ) -> Result<Vec<Contributor>, async_graphql::Error> {
         let pool = ctx.data::<PgPool>()?;
         let rows = query_file_as!(
             Contributor,
@@ -503,10 +506,9 @@ impl DocumentMetadata {
         .fetch_all(pool)
         .await?;
 
-        // Map the returned rows into Contributor struct (transcriber, translator, annotator, cultural advisor)
-        let contributors = rows
+        Ok(rows
             .into_iter()
-            .map(|x| Contributor {
+            .map(|row| Contributor {
                 id: x.id,
                 name: x.name,
                 role: x.role.as_ref().and_then(|r| match r.as_str() {
@@ -517,9 +519,7 @@ impl DocumentMetadata {
                     _ => None,
                 }),
             })
-            .collect();
-
-        Ok(contributors)
+            .collect())
     }
 }
 

@@ -45,7 +45,7 @@ pub struct SubjectHeading {
     /// Name of the subject heading
     pub name: String,
     /// Status (pending, approved, rejected) of a subject heading
-    pub status: Status,
+    pub status: ApprovalStatus,
 }
 
 /// Stores the physical or digital medium associated with a document
