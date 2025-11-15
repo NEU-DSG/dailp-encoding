@@ -76,6 +76,9 @@ export type AnnotatedDoc = {
    * Otherwise, it is considered a structured document with a translation.
    */
   readonly isReference: Scalars["Boolean"]
+  readonly languages: ReadonlyArray<Language>
+  /** The languages present in this document */
+  readonly languagesIds: Maybe<ReadonlyArray<Scalars["UUID"]>>
   /**
    * Arbitrary number used for manually ordering documents in a collection.
    * For collections without manual ordering, use zero here.
@@ -206,6 +209,13 @@ export type AnnotatedFormUpdate = {
 
 /** Element within a spreadsheet before being transformed into a full document. */
 export type AnnotatedSeg = AnnotatedForm | LineBreak
+
+/** Represents the status of a suggestion made by a contributor */
+export enum ApprovalStatus {
+  Approved = "APPROVED",
+  Pending = "PENDING",
+  Rejected = "REJECTED",
+}
 
 /** Request to attach user-recorded audio to a word */
 export type AttachAudioToWordInput = {
@@ -495,6 +505,8 @@ export type DocumentCollection = {
 export type DocumentMetadataUpdate = {
   /** The ID of the document to update */
   readonly id: Scalars["UUID"]
+  /** The languages present in the document */
+  readonly languagesIds: InputMaybe<ReadonlyArray<Scalars["UUID"]>>
   /** An updated title for this document, or nothing (if title is unchanged) */
   readonly title: InputMaybe<Scalars["String"]>
   /** The date this document was written, or nothing (if unchanged or not applicable) */
@@ -627,6 +639,19 @@ export type ImageSource = {
   readonly __typename?: "ImageSource"
   /** Base URL for the IIIF server */
   readonly url: Scalars["String"]
+}
+
+/** Stores a language associated with a document */
+export type Language = {
+  readonly __typename?: "Language"
+  readonly approved: Scalars["Boolean"]
+  readonly autonym: Maybe<Scalars["String"]>
+  /** UUID for the language */
+  readonly id: Scalars["UUID"]
+  /** Name of the language */
+  readonly name: Scalars["String"]
+  /** Status (pending, approved, rejected) of a language */
+  readonly status: ApprovalStatus
 }
 
 /** Start of a new line */
@@ -1543,7 +1568,7 @@ export type AudioSliceFieldsFragment = {
 
 export type DocFormFieldsFragment = {
   readonly __typename?: "AnnotatedDoc"
-} & Pick<AnnotatedDoc, "id" | "title"> & {
+} & Pick<AnnotatedDoc, "id" | "title" | "languagesIds"> & {
     readonly date: Maybe<
       { readonly __typename?: "Date" } & Pick<Date, "day" | "month" | "year">
     >
@@ -2841,6 +2866,7 @@ export const DocFormFieldsFragmentDoc = gql`
       month
       year
     }
+    languagesIds
   }
 `
 export const AudioSliceFieldsFragmentDoc = gql`

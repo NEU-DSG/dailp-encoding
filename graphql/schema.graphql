@@ -81,6 +81,11 @@ type AnnotatedDoc {
 	Collection chapters that contain this document.
 	"""
 	chapters: [CollectionChapter!]
+	"""
+	The languages present in this document
+	"""
+	languagesIds: [UUID!]
+	languages: [Language!]!
 }
 
 """
@@ -211,6 +216,15 @@ input AnnotatedFormUpdate {
 Element within a spreadsheet before being transformed into a full document.
 """
 union AnnotatedSeg = AnnotatedForm | LineBreak
+
+"""
+Represents the status of a suggestion made by a contributor
+"""
+enum ApprovalStatus {
+	PENDING
+	APPROVED
+	REJECTED
+}
 
 """
 Request to attach user-recorded audio to a word
@@ -625,6 +639,10 @@ input DocumentMetadataUpdate {
 	The date this document was written, or nothing (if unchanged or not applicable)
 	"""
 	writtenAt: DateInput
+	"""
+	The languages present in the document
+	"""
+	languagesIds: [UUID!]
 }
 
 type DocumentPage {
@@ -803,6 +821,26 @@ type ImageSource {
 A scalar that can represent any JSON value.
 """
 scalar JSON
+
+"""
+Stores a language associated with a document
+"""
+type Language {
+	"""
+	UUID for the language
+	"""
+	id: UUID!
+	"""
+	Name of the language
+	"""
+	name: String!
+	autonym: String
+	"""
+	Status (pending, approved, rejected) of a language
+	"""
+	status: ApprovalStatus!
+	approved: Boolean!
+}
 
 """
 Start of a new line
