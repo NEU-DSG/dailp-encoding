@@ -1,10 +1,11 @@
 use csv::ReaderBuilder;
+use dailp::page::ContentBlock;
+use dailp::page::Markdown;
 use dailp::page::NewPageInput;
-use dailp::Database;
+use dailp::{page::Page, Database};
 use serde::Deserialize;
-use std::fs::File;
 
-/// CSV row structure, used to load pages.csv data into a vector
+// CSV row structure (includes all fields even though we skip some)
 #[derive(Debug, Deserialize)]
 struct CsvRow {
     #[serde(rename = "page_id")]
@@ -29,22 +30,9 @@ fn validate_row(row: &CsvRow) -> Result<(), anyhow::Error> {
     Ok(())
 }
 
-pub fn load_pages(file_path: &str) -> Result<Vec<NewPageInput>, anyhow::Error> {
-    let file = File::open(file_path)?;
-    let mut reader = ReaderBuilder::new().from_reader(file);
-
+pub fn load_pages_from_str(csv_data: &str) -> Result<Vec<NewPageInput>, anyhow::Error> {
+    let mut reader = ReaderBuilder::new().from_reader(csv_data.as_bytes());
     let mut pages = Vec::new();
-    for result in reader.deserialize() {
-        let row: CsvRow = result?;
-        //println!("row: {:?}", row);
-        let page: NewPageInput = NewPageInput {
-            title: row.title,
-            body: vec![row.content],
-            path: row.path,
-        };
-        //println!("result: {:?}", page);
-        pages.push(page);
-    }
     for (idx, result) in reader.deserialize::<CsvRow>().enumerate() {
         match result {
             Ok(row) => {
@@ -68,9 +56,8 @@ pub fn load_pages(file_path: &str) -> Result<Vec<NewPageInput>, anyhow::Error> {
 }
 
 pub async fn migrate_pages(db: &Database) -> anyhow::Result<()> {
-    // Resolve pages.csv relative to this crate's directory so running from target/ works
-    let csv_path = concat!(env!("CARGO_MANIFEST_DIR"), "/pages.csv");
-    let pages = load_pages(csv_path)?;
+    const PAGES_CSV: &str = include_str!("../pages.csv");
+    let pages = load_pages_from_str(PAGES_CSV)?;
 
     for page in pages {
         db.upsert_page(NewPageInput::from(page.clone())).await?;
