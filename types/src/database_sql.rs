@@ -1,6 +1,7 @@
 #![allow(missing_docs)]
 
 use anyhow::Error;
+use async_graphql::MaybeUndefined;
 use auth::UserGroup;
 use chrono::{NaiveDate, NaiveDateTime};
 use sqlx::postgres::types::{PgLTree, PgRange};
@@ -11,6 +12,7 @@ use user::UserUpdate;
 use crate::collection::CollectionChapter;
 use crate::collection::EditedCollection;
 use crate::comment::{Comment, CommentParentType, CommentType, CommentUpdate};
+use crate::doc_metadata::SpatialCoverage;
 use crate::page::ContentBlock;
 use crate::page::Markdown;
 use crate::page::NewPageInput;
@@ -301,6 +303,7 @@ impl Database {
                     order_index: 0,
                     page_images: None,
                     sources: Vec::new(),
+                    spatial_coverage_ids: Some(Vec::new()),
                     translation: None,
                 },
                 segments: None,
@@ -439,6 +442,7 @@ impl Database {
                 order_index: 0,
                 page_images: None,
                 sources: Vec::new(),
+                spatial_coverage_ids: Some(Vec::new()),
                 translation: None,
             },
             segments: None,
@@ -770,6 +774,7 @@ impl Database {
     pub async fn update_document_metadata(&self, document: DocumentMetadataUpdate) -> Result<Uuid> {
         let title = document.title.into_vec();
         let written_at: Option<Date> = document.written_at.value().map(Into::into);
+        let mut tx = self.client.begin().await?;
 
         query_file!(
             "queries/update_document_metadata.sql",
@@ -779,6 +784,24 @@ impl Database {
         )
         .execute(&self.client)
         .await?;
+
+        // Update spatial coverages
+        if let MaybeUndefined::Value(spatial_coverage_ids) = &document.spatial_coverage_ids {
+            query_file!("queries/delete_document_spatial_coverage.sql", document.id)
+                .execute(&mut *tx)
+                .await?;
+
+            query_file!(
+                "queries/insert_document_spatial_coverage.sql",
+                document.id,
+                spatial_coverage_ids
+            )
+            .execute(&mut *tx)
+            .await?;
+        }
+
+        // Commit updates
+        tx.commit().await?;
 
         Ok(document.id)
     }
@@ -1932,6 +1955,7 @@ impl Database {
             Ok(None)
         }
     }
+
     //Ok(page)
     pub async fn get_menu_by_slug(&self, slug: String) -> Result<Menu> {
         let menu = query_file!("queries/menu_by_slug.sql", slug)
@@ -2044,6 +2068,7 @@ impl Loader<DocumentId> for Database {
                     order_index: 0,
                     page_images: None,
                     sources: Vec::new(),
+                    spatial_coverage_ids: Some(Vec::new()),
                     translation: None,
                 },
                 segments: None,
@@ -2116,6 +2141,7 @@ impl Loader<DocumentShortName> for Database {
                     order_index: 0,
                     page_images: None,
                     sources: Vec::new(),
+                    spatial_coverage_ids: Some(Vec::new()),
                     translation: None,
                 },
                 segments: None,
@@ -2471,6 +2497,41 @@ impl Loader<PageId> for Database {
     }
 }
 
+#[async_trait]
+impl Loader<SpatialCoverageForDocument> for Database {
+    type Value = Vec<SpatialCoverage>;
+    type Error = Arc<sqlx::Error>;
+
+    async fn load(
+        &self,
+        keys: &[SpatialCoverageForDocument],
+    ) -> Result<HashMap<SpatialCoverageForDocument, Self::Value>, Self::Error> {
+        let mut results = HashMap::new();
+        let document_ids: Vec<_> = keys.iter().map(|k| k.0).collect();
+
+        let rows = query_file!(
+            "queries/many_spatial_coverages_for_documents.sql",
+            &document_ids
+        )
+        .fetch_all(&self.client)
+        .await?;
+
+        for key in keys {
+            let coverages = rows
+                .iter()
+                .map(|row| SpatialCoverage {
+                    id: row.id,
+                    name: row.name.clone(),
+                    status: row.status.clone(),
+                })
+                .collect::<Vec<_>>();
+            results.insert(key.clone(), coverages);
+        }
+
+        Ok(results)
+    }
+}
+
 /// A struct representing an audio slice that can be easily pulled from the database
 struct BasicAudioSlice {
     id: Uuid,
@@ -2738,6 +2799,9 @@ pub struct ChaptersInCollection(pub String);
 
 #[derive(Clone, Eq, PartialEq, Hash)]
 pub struct EditedCollectionDetails(pub String);
+
+#[derive(Clone, Eq, PartialEq, Hash)]
+pub struct SpatialCoverageForDocument(pub uuid::Uuid);
 
 /// One particular morpheme and all the known words that contain that exact morpheme.
 #[derive(async_graphql::SimpleObject)]
