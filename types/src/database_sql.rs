@@ -1738,18 +1738,18 @@ impl Database {
 
         // Attribute contributors to the document
         {
-            let name: Vec<String> = meta.contributors.iter().map(|c| c.clone().name).collect();
+            let contributors = meta.contributors.iter().flatten();
+            let names: Vec<String> = contributors.clone().map(|c| c.name.clone()).collect();
             let doc_id: Vec<Uuid> = vec![meta.id.0];
-            let roles: Vec<String> = meta
-                .contributors
-                .iter()
+            let roles: Vec<Option<String>> = contributors
+                .clone()
                 .map(|c| c.role.map(|r| r.to_string()))
                 .collect();
 
-            if !name.is_empty() {
+            if !names.is_empty() {
                 query_file!(
                     "queries/upsert_document_contributors.sql",
-                    &name,
+                    &names,
                     &doc_id,
                     &roles
                 )
