@@ -1743,12 +1743,7 @@ impl Database {
             let roles: Vec<String> = meta
                 .contributors
                 .iter()
-                .map(|c| match c.role {
-                    Some(r) => r.to_string(),
-                    // not sure what to default to, also not sure why contributor role is an
-                    // option
-                    None => ContributorRole::Author.to_string(),
-                })
+                .map(|c| c.role.map(|r| r.to_string()))
                 .collect();
 
             if !name.is_empty() {

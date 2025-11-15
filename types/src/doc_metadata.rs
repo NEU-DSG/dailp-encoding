@@ -3,18 +3,35 @@ use crate::{document::DocumentReference, ContributorReference};
 
 use async_graphql::{Enum, SimpleObject};
 use serde::{Deserialize, Serialize};
+use sqlx::{FromRow, Type};
 use std::collections::HashMap;
+use std::str::FromStr;
 use uuid::Uuid;
 
 /// Represents the status of a suggestion made by a contributor
-#[derive(Deserialize, Serialize, Enum, Clone, Copy, PartialEq, Eq)]
-pub enum Status {
+#[derive(Serialize, Deserialize, Enum, Debug, Clone, Copy, PartialEq, Eq, Type)]
+#[sqlx(type_name = "approval_status", rename_all = "lowercase")]
+pub enum ApprovalStatus {
     /// Suggestion is still waiting for or undergoing review
     Pending,
     /// Suggestion has been approved
     Approved,
     /// Suggestion has been rejected
     Rejected,
+}
+
+/// Convert from string to ApprovalStatus
+impl FromStr for ApprovalStatus {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "pending" => Ok(Self::Pending),
+            "approved" => Ok(Self::Approved),
+            "rejected" => Ok(Self::Rejected),
+            _ => Err(()),
+        }
+    }
 }
 
 /// Record to store a subject heading that reflects Indigenous knowledge
