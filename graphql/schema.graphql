@@ -1042,6 +1042,7 @@ type Mutation {
 	createEditedCollection(input: CreateEditedCollectionInput!): String!
 	upsertPage(page: NewPageInput!): String!
 	updateMenu(menu: MenuUpdate!): Menu!
+	validateTurnstileToken(token: String!): Boolean!
 }
 
 """

@@ -787,3 +787,7 @@ mutation UpdateMenu($menu: MenuUpdate!) {
     }
   }
 }
+
+mutation ValidateTurnstileToken($token: String!) {
+  validateTurnstileToken(token: $token)
+}

@@ -120,6 +120,7 @@ const clientEnv = pick(process.env, [
   "TF_STAGE",
   "AWS_REGION",
   "CF_URL",
+  "TURNSTILE_SITE_KEY",
 ])
 
 const clientProcess = dangerouslySkipEscape(JSON.stringify({ env: clientEnv }))
