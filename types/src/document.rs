@@ -509,9 +509,9 @@ impl DocumentMetadata {
         Ok(rows
             .into_iter()
             .map(|row| Contributor {
-                id: x.id,
-                name: x.name,
-                role: x.role.as_ref().and_then(|r| match r.as_str() {
+                id: row.id,
+                name: row.name,
+                role: row.role.as_ref().and_then(|r| match r.to_option_str() {
                     "transcriber" => Some(ContributorRole::Transcriber),
                     "translator" => Some(ContributorRole::Translator),
                     "annotator" => Some(ContributorRole::Annotator),

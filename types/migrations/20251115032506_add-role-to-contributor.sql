@@ -1,3 +1,3 @@
 -- Add role column to contributor
 alter table contributor
-add column role text;
+add column role contributor_role;

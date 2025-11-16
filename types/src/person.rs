@@ -1,6 +1,9 @@
+use std::{fmt, str::FromStr};
+
 use crate::{user::User, Database, PersonFullName};
 use async_graphql::{SimpleObject, Union};
 use serde::{Deserialize, Serialize};
+use sqlx::Type;
 
 /// Record for a DAILP admin
 #[derive(Clone, Debug, Serialize, Deserialize, async_graphql::SimpleObject)]
@@ -90,7 +93,9 @@ pub enum ContributorReference {
 
 /// A contributor can have to any number of roles, which define most of their
 /// contributions to the associated item (add or revise as needed)
-#[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize, Deserialize, async_graphql::Enum)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize, Deserialize, async_graphql::Enum, Type)]
+#[sqlx(type_name = "contributor_role")] 
+#[sqlx(rename_all = "snake_case")]
 pub enum ContributorRole {
     /// Typed or transcribed handwritten materials
     Transcriber,
@@ -102,49 +107,44 @@ pub enum ContributorRole {
     CulturalAdvisor,
 }
 
-/// Draft of function for converting a string to a ContributorRole
-impl std::str::FromStr for ContributorRole {
+impl FromStr for ContributorRole {
     type Err = String;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s.to_lowercase().as_str() {
-            "annotator" => Ok(ContributorRole::Annotator),
-            "culturalAdvisior" => Ok(ContributorRole::CulturalAdvisor),
-            "transcriber" => Ok(ContributorRole::Transcriber),
-            "translator" => Ok(ContributorRole::Translator),
+        match s {
+            "Transcriber" => Ok(ContributorRole::Transcriber),
+            "Translator" => Ok(ContributorRole::Translator),
+            "Annotator" => Ok(ContributorRole::Annotator),
+            "CulturalAdvisor" => Ok(ContributorRole::CulturalAdvisor),
             other => Err(format!("Unknown contributor role: {}", other)),
         }
     }
 }
 
-// Display for ContributorRole
-impl std::fmt::Display for ContributorRole {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl fmt::Display for ContributorRole {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let s = match self {
+            ContributorRole::Transcriber => "Transcriber",
+            ContributorRole::Translator => "Translator",
             ContributorRole::Annotator => "Annotator",
             ContributorRole::CulturalAdvisor => "CulturalAdvisor",
-            ContributorRole::Translator => "Translator",
-            ContributorRole::Transcriber => "Transcriber",
         };
         write!(f, "{}", s)
     }
 }
 
-/// Provides helper method for parsing and formatting a ContributorRole
 impl ContributorRole {
-    /// Attempts to parse a string into a ContributorRole, returning 'None' if parsing fails
+    /// Attempts to parse a string into a ContributorRole, returning None if parsing fails
     pub fn from_option_str(s: &str) -> Option<Self> {
         s.parse::<ContributorRole>().ok()
     }
-}
 
-/// Provides helper method for working with optional ContributorRole values.
-impl ContributorRole {
     /// Converts a ContributorRole into its string representation
     pub fn to_option_string(role: &Option<ContributorRole>) -> Option<String> {
         role.as_ref().map(|r| r.to_string())
     }
 }
+
 
 /// Attribution for a particular source, whether an institution or an individual.
 /// Most commonly, this will represent the details of a library or archive that
