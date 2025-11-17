@@ -887,6 +887,7 @@ impl SheetInterpretation {
                     }
                 };
                 Contributor {
+                    id,
                     name,
                     role: parsed_role, // Some(role) if parsed, None if invalid/empty
                 }
