@@ -15,7 +15,7 @@ const DailpPage = (props: DailpPageProps) => (
   <Layout>
     <main className={edgePadded}>
       <article className={fullWidth}>
-        <Contents path={"/" + props["*"]} />
+        <DailpPageContents path={"/" + props["*"]} />
       </article>
     </main>
   </Layout>
@@ -23,7 +23,7 @@ const DailpPage = (props: DailpPageProps) => (
 
 export const Page = DailpPage
 
-const Contents = (props: { path: string }) => {
+export const DailpPageContents = (props: { path: string }) => {
   const [{ data, fetching }] = usePageByPathQuery({
     variables: { path: props.path },
   })
@@ -52,12 +52,34 @@ const Contents = (props: { path: string }) => {
   }
 
   if (!page || !content) {
-    return <p>Page content not found.</p>
+    return <p>Page content not found. {props.path}</p>
+  }
+  let collectionSlugs = ["cwkw", "willie-jumper-stories"]
+
+  // check if page belongs in a collection
+    const collectionSlug = props.path.split("/")[1];
+    if (collectionSlug && collectionSlugs.includes(collectionSlug)) {
+      const userRole = useUserRole()
+
+      return (
+        <>
+          <header>
+            <h1>{page.title}</h1>
+            {/* dennis todo: should be admin in the future */}
+            {userRole === UserRole.Editor && (
+              <Link href={`/edit${props.path}`}>Edit</Link>
+            )}
+          </header>
+          <PageContents content={content} />
+        </>
+      )
+  }else{
+    // otherwise check if page is in menu
+    if (!isInMenu(props.path)) {
+      return <p>Page content found. Add it to the menu to view it. {props.path}</p>
+    }
   }
 
-  if (!isInMenu(props.path)) {
-    return <p>Page content found. Add it to the menu to view it.</p>
-  }
 
   const userRole = useUserRole()
 
