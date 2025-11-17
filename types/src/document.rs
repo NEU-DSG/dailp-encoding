@@ -3,10 +3,12 @@ use crate::{
     Database, Date, Translation, TranslationBlock,
 };
 
+use crate::doc_metadata::{ApprovalStatus, Format};
 use crate::person::{Contributor, SourceAttribution};
 
-use async_graphql::{dataloader::DataLoader, FieldResult, MaybeUndefined};
+use async_graphql::{dataloader::DataLoader, Context, FieldResult, MaybeUndefined};
 use serde::{Deserialize, Serialize};
+use sqlx::{query_file, query_file_as, PgPool};
 use uuid::Uuid;
 
 /// A document with associated metadata and content broken down into pages and further into
@@ -220,6 +222,20 @@ impl AnnotatedDoc {
             .chapters_by_document(self.meta.short_name.clone())
             .await?)
     }
+
+    /// The format of the original artifact
+    async fn format(&self, context: &async_graphql::Context<'_>) -> FieldResult<Option<Format>> {
+        // Get the format ID from this document
+        let format_id_opt = self.meta.format_id.as_ref();
+
+        if let Some(id) = format_id_opt {
+            let db = context.data::<DataLoader<Database>>()?;
+            let format = db.load_one(crate::FormatById(*id)).await?.flatten();
+            Ok(format)
+        } else {
+            Ok(None)
+        }
+    }
 }
 
 /// Key to retrieve the pages of a document given a document ID
@@ -317,6 +333,9 @@ pub struct DocumentMetadataUpdate {
     pub title: MaybeUndefined<String>,
     /// The date this document was written, or nothing (if unchanged or not applicable)
     pub written_at: MaybeUndefined<DateInput>,
+    /// The format of the original artifact
+    #[graphql(name = "formatId")]
+    pub format_id: MaybeUndefined<Uuid>,
 }
 
 #[async_graphql::ComplexObject]
@@ -464,6 +483,8 @@ pub struct DocumentMetadata {
     pub collection: Option<String>,
     /// The genre this document is. TODO Evaluate whether we need this.
     pub genre: Option<String>,
+    /// Term that allows us to trace what the original artifact was
+    pub format_id: Option<Uuid>,
     #[serde(default)]
     /// The people involved in collecting, translating, annotating.
     pub contributors: Vec<Contributor>,
@@ -486,6 +507,22 @@ pub struct DocumentMetadata {
     pub order_index: i64,
 }
 
+#[async_graphql::Object]
+impl DocumentMetadata {
+    /// Fetch the format associated with this document
+    async fn format(&self, ctx: &Context<'_>) -> Result<Option<Format>, async_graphql::Error> {
+        let format_id = match self.format_id {
+            Some(id) => id,
+            None => return Ok(None),
+        };
+        let pool = ctx.data::<PgPool>()?;
+        let row = query_file_as!(Format, "queries/get_format_by_id.sql", format_id)
+            .fetch_optional(pool)
+            .await?;
+        Ok(row)
+    }
+}
+
 /// Database ID for one document
 #[derive(
     Clone, Copy, Eq, PartialEq, Hash, Serialize, Deserialize, Debug, async_graphql::NewType, Default,
@@ -504,6 +541,7 @@ pub struct ImageSource {
     /// Base URL for the IIIF server
     pub url: String,
 }
+
 #[async_graphql::Object]
 impl ImageSource {
     /// Base URL for the IIIF server
