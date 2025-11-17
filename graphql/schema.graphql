@@ -34,7 +34,7 @@ type AnnotatedDoc {
 	"""
 	The genre of the document, used to group similar ones
 	"""
-	genre: String
+	genre: Genre
 	"""
 	Images of each source document page, in order
 	"""
@@ -211,6 +211,15 @@ input AnnotatedFormUpdate {
 Element within a spreadsheet before being transformed into a full document.
 """
 union AnnotatedSeg = AnnotatedForm | LineBreak
+
+"""
+Represents the status of a suggestion made by a contributor
+"""
+enum ApprovalStatus {
+	PENDING
+	APPROVED
+	REJECTED
+}
 
 """
 Request to attach user-recorded audio to a word
@@ -625,6 +634,10 @@ input DocumentMetadataUpdate {
 	The date this document was written, or nothing (if unchanged or not applicable)
 	"""
 	writtenAt: DateInput
+	"""
+	Term that contextualizes the social practice surrounding the document
+	"""
+	genreId: UUID
 }
 
 type DocumentPage {
@@ -753,6 +766,25 @@ A gallery of images, which may be rendered as a slideshow or lightbox.
 """
 type Gallery {
 	mediaUrls: [String!]!
+}
+
+"""
+Stores the genre associated with a document
+"""
+type Genre {
+	"""
+	UUID for the genre
+	"""
+	id: UUID!
+	"""
+	Name of the genre
+	"""
+	name: String!
+	"""
+	Status (pending, approved, rejected) of a genre
+	"""
+	status: ApprovalStatus!
+	approved: Boolean!
 }
 
 """

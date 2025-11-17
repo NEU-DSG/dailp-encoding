@@ -1,0 +1,100 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select\n  d.id,\n  d.short_name,\n  d.title,\n  d.is_reference,\n  d.written_at,\n  d.genre_id,\n  d.audio_slice_id,\n  media_resource.url as \"audio_url?\",\n  media_resource.recorded_at as \"recorded_at?\",\n  dailp_user.id as \"recorded_by?\",\n  dailp_user.display_name as \"recorded_by_name?\",\n  media_slice.time_range as \"audio_slice?\",\n  ubd.bookmarked_on as \"bookmarked_on?\",\n  coalesce(\n    jsonb_agg(\n      jsonb_build_object(\n        'name', contributor.full_name, 'role', attr.contribution_role\n      )\n    ) filter (where contributor is not null),\n    '[]'\n  )\n  as contributors\nfrom document as d\n  left join contributor_attribution as attr on attr.document_id = d.id\n  left join contributor on contributor.id = attr.contributor_id\n  left join media_slice on media_slice.id = d.audio_slice_id\n  left join media_resource on media_resource.id = media_slice.resource_id\n  left join dailp_user on dailp_user.id = media_resource.recorded_by\n  left join user_bookmarked_document as ubd on ubd.document_id = d.id\nwhere d.id = any($1)\ngroup by d.id,\n  media_slice.id,\n  media_resource.id,\n  dailp_user.id,\n  ubd.bookmarked_on\n",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "short_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "title",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "is_reference",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 4,
+        "name": "written_at",
+        "type_info": "Date"
+      },
+      {
+        "ordinal": 5,
+        "name": "genre_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 6,
+        "name": "audio_slice_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 7,
+        "name": "audio_url?",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "recorded_at?",
+        "type_info": "Date"
+      },
+      {
+        "ordinal": 9,
+        "name": "recorded_by?",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 10,
+        "name": "recorded_by_name?",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 11,
+        "name": "audio_slice?",
+        "type_info": "Int8Range"
+      },
+      {
+        "ordinal": 12,
+        "name": "bookmarked_on?",
+        "type_info": "Date"
+      },
+      {
+        "ordinal": 13,
+        "name": "contributors",
+        "type_info": "Jsonb"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "UuidArray"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      false,
+      true,
+      false,
+      false,
+      true,
+      false,
+      null
+    ]
+  },
+  "hash": "231cbc4c4f6ce8823d5b01afe9abea0f16991c00c43dfdcab16bdc83cf22d0ec"
+}
