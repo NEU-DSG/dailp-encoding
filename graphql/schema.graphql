@@ -85,10 +85,6 @@ type AnnotatedDoc {
 	Internal field accessor for subject headings
 	"""
 	subjectHeadingsIds: [UUID!]
-	"""
-	GraphQL resolver for subject headings
-	"""
-	subjectHeadings: [SubjectHeading!]!
 }
 
 """
@@ -219,15 +215,6 @@ input AnnotatedFormUpdate {
 Element within a spreadsheet before being transformed into a full document.
 """
 union AnnotatedSeg = AnnotatedForm | LineBreak
-
-"""
-Represents the status of a suggestion made by a contributor
-"""
-enum ApprovalStatus {
-	PENDING
-	APPROVED
-	REJECTED
-}
 
 """
 Request to attach user-recorded audio to a word
@@ -1289,26 +1276,6 @@ type SourceAttribution {
 	link: String!
 }
 
-
-"""
-Record to store a subject heading that reflects Indigenous knowledge
-practices associated with a document
-"""
-type SubjectHeading {
-	"""
-	UUID for the subject heading
-	"""
-	id: UUID!
-	"""
-	Name of the subject heading
-	"""
-	name: String!
-	"""
-	Status (pending, approved, rejected) of a subject heading
-	"""
-	status: ApprovalStatus!
-	approved: Boolean!
-}
 
 """
 A UUID is a unique 128-bit number, stored as 16 octets. UUIDs are parsed as

@@ -223,21 +223,15 @@ impl AnnotatedDoc {
             .await?)
     }
 
-    /// Internal field accessor for subject headings
-    async fn subject_headings_ids(&self) -> &Option<Vec<Uuid>> {
-        &self.meta.subject_headings_ids
-    }
-
-    /// GraphQL resolver for subject headings
+    /// Subject headings associated with this document
     async fn subject_headings(
         &self,
         context: &async_graphql::Context<'_>,
     ) -> FieldResult<Vec<SubjectHeading>> {
-        Ok(context
-            .data::<DataLoader<Database>>()?
-            .load_one(crate::SubjectHeadingsForDocument(self.meta.id.0))
-            .await?
-            .unwrap_or_default())
+        let db = context.data::<Database>()?;
+        let headings = db.subject_headings_for_document(self.meta.id.0).await?;
+
+        Ok(headings)
     }
 }
 
