@@ -1,16 +1,18 @@
 import React, { useEffect } from "react"
 import {
+  Button,
   unstable_Form as Form,
   unstable_FormStateReturn,
   unstable_useFormState as useFormState,
 } from "reakit"
 import { useUser } from "src/auth"
+import { fonts } from "src/style/theme-contract.css"
 import {
   FormFields,
   FormSubmitButton,
   UserAuthPageTemplate,
 } from "./user-auth-layout"
-import { centeredForm } from "./user-auth.css"
+import { centeredForm, secondaryButton } from "./user-auth.css"
 
 const ResetPasswordPage = () => {
   const { user } = useUser()
@@ -90,6 +92,20 @@ const ChangePassword = (
     confirmPassword: string
   }>
 ) => {
+  const { user } = useUser()
+  const { resendPasswordResetCode } = useUser().operations
+
+  const startCodeResend = () => {
+    if (user?.type === "dailp") {
+      resendPasswordResetCode(user.email)
+    } else if (user?.type === "cognito") {
+      const email = user.user.getUsername()
+      resendPasswordResetCode(email)
+    } else {
+      alert("Please go back and re-enter your email.")
+    }
+  }
+
   return (
     <UserAuthPageTemplate
       header={{
@@ -121,6 +137,13 @@ const ChangePassword = (
           label="Confirm Password *"
           placeholder="confirm password"
         />
+
+        <span className={fonts.body}>
+          Didn't receive your code?
+          <Button onClick={startCodeResend} className={secondaryButton}>
+            Resend Code
+          </Button>
+        </span>
 
         <FormSubmitButton form={form} label="Confirm" />
       </Form>

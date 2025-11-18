@@ -142,6 +142,12 @@ export function useCognitoAuthOperations(
     })
   }
 
+  function resendPasswordResetCode(email: string) {
+    // For Cognito, resending password reset is the same as initiating it
+    // Just calling forgotPassword again will send a new code
+    resetPassword(email)
+  }
+
   async function setupTokenRefresh(user: CognitoUser): Promise<number | null> {
     return new Promise((res, rej) => {
       user.getSession(function (err: Error, result: CognitoUserSession | null) {
@@ -246,6 +252,7 @@ export function useCognitoAuthOperations(
     createUser,
     loginUser,
     resetConfirmationCode,
+    resendPasswordResetCode,
     resetPassword,
     changePassword,
     signOutUser,
@@ -257,9 +264,10 @@ export function useCognitoAuthOperations(
 export function getUserSessionAsync(
   user: CognitoUser
 ): Promise<CognitoUserSession | null> {
-  return new Promise((res, _rej) => {
-    user.getSession(function (_err: Error, result: CognitoUserSession | null) {
-      res(result)
+  return new Promise((res, rej) => {
+    user.getSession(function (err: Error, result: CognitoUserSession | null) {
+      if (err) rej(err)
+      else res(result)
     })
   })
 }

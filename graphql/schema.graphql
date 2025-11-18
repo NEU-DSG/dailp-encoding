@@ -1092,6 +1092,14 @@ type Mutation {
 	Verify email address using verification token (DAILP auth only)
 	"""
 	verifyEmail(token: String!): MessageResponse!
+	"""
+	Resend verification email to user
+	"""
+	resendVerificationEmail(email: String!): MessageResponse!
+	"""
+	Resend password reset email to user
+	"""
+	resendPasswordReset(email: String!): MessageResponse!
 }
 
 """

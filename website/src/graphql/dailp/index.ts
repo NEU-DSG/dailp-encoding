@@ -806,6 +806,10 @@ export type Mutation = {
   readonly removeBookmark: AnnotatedDoc
   /** Request a password reset email (DAILP auth only) */
   readonly requestPasswordReset: MessageResponse
+  /** Resend password reset email to user */
+  readonly resendPasswordReset: MessageResponse
+  /** Resend verification email to user */
+  readonly resendVerificationEmail: MessageResponse
   /** Reset password using reset token (DAILP auth only) */
   readonly resetPassword: MessageResponse
   /** Sign up a new user with email and password (DAILP auth only) */
@@ -884,6 +888,14 @@ export type MutationRemoveBookmarkArgs = {
 
 export type MutationRequestPasswordResetArgs = {
   input: RequestPasswordResetInput
+}
+
+export type MutationResendPasswordResetArgs = {
+  email: Scalars["String"]
+}
+
+export type MutationResendVerificationEmailArgs = {
+  email: Scalars["String"]
 }
 
 export type MutationResetPasswordArgs = {
@@ -3003,6 +3015,30 @@ export type VerifyEmailMutation = { readonly __typename?: "Mutation" } & {
   >
 }
 
+export type ResendVerificationEmailMutationVariables = Exact<{
+  email: Scalars["String"]
+}>
+
+export type ResendVerificationEmailMutation = {
+  readonly __typename?: "Mutation"
+} & {
+  readonly resendVerificationEmail: {
+    readonly __typename?: "MessageResponse"
+  } & Pick<MessageResponse, "message">
+}
+
+export type ResendPasswordResetMutationVariables = Exact<{
+  email: Scalars["String"]
+}>
+
+export type ResendPasswordResetMutation = {
+  readonly __typename?: "Mutation"
+} & {
+  readonly resendPasswordReset: {
+    readonly __typename?: "MessageResponse"
+  } & Pick<MessageResponse, "message">
+}
+
 export const DocFormFieldsFragmentDoc = gql`
   fragment DocFormFields on AnnotatedDoc {
     id
@@ -4306,4 +4342,32 @@ export function useVerifyEmailMutation() {
   return Urql.useMutation<VerifyEmailMutation, VerifyEmailMutationVariables>(
     VerifyEmailDocument
   )
+}
+export const ResendVerificationEmailDocument = gql`
+  mutation ResendVerificationEmail($email: String!) {
+    resendVerificationEmail(email: $email) {
+      message
+    }
+  }
+`
+
+export function useResendVerificationEmailMutation() {
+  return Urql.useMutation<
+    ResendVerificationEmailMutation,
+    ResendVerificationEmailMutationVariables
+  >(ResendVerificationEmailDocument)
+}
+export const ResendPasswordResetDocument = gql`
+  mutation ResendPasswordReset($email: String!) {
+    resendPasswordReset(email: $email) {
+      message
+    }
+  }
+`
+
+export function useResendPasswordResetMutation() {
+  return Urql.useMutation<
+    ResendPasswordResetMutation,
+    ResendPasswordResetMutationVariables
+  >(ResendPasswordResetDocument)
 }

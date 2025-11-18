@@ -1051,6 +1051,79 @@ impl Mutation {
             message: "Email verified successfully! You can now log in.".to_string(),
         })
     }
+
+    /// Resend verification email to user
+    async fn resend_verification_email(
+        &self,
+        context: &Context<'_>,
+        email: String,
+    ) -> FieldResult<MessageResponse> {
+        // Only available in DAILP mode
+        let auth_mode = std::env::var("AUTH_MODE").unwrap_or_else(|_| "cognito".to_string());
+        if auth_mode != "dailp" {
+            return Err("Email verification is only available in DAILP authentication mode".into());
+        }
+
+        let db = context.data::<DataLoader<Database>>()?.loader();
+
+        // Get user by email
+        let user = db
+            .get_user_by_email(&email)
+            .await?
+            .ok_or_else(|| anyhow::anyhow!("No account found with that email address"))?;
+
+        // Check if already verified
+        if user.email_verified {
+            return Err("This email address has already been verified. You can log in now.".into());
+        }
+
+        // Create new verification token (invalidates any existing tokens)
+        let verification_code = db.create_email_verification_token(user.id).await?;
+
+        // Try to send email - log errors but don't fail the mutation
+        match email::send_verification_email(&email, &verification_code).await {
+            Ok(_) => log::info!("Resent verification email to {}", email),
+            Err(e) => log::error!("Failed to resend verification email to {}: {}", email, e),
+        }
+
+        Ok(MessageResponse {
+            message: "Verification email resent! Please check your inbox.".to_string(),
+        })
+    }
+
+    /// Resend password reset email to user
+    async fn resend_password_reset(
+        &self,
+        context: &Context<'_>,
+        email: String,
+    ) -> FieldResult<MessageResponse> {
+        // Only available in DAILP mode
+        let auth_mode = std::env::var("AUTH_MODE").unwrap_or_else(|_| "cognito".to_string());
+        if auth_mode != "dailp" {
+            return Err("Password reset is only available in DAILP authentication mode".into());
+        }
+
+        let db = context.data::<DataLoader<Database>>()?.loader();
+
+        // Get user by email
+        let user = db
+            .get_user_by_email(&email)
+            .await?
+            .ok_or_else(|| anyhow::anyhow!("No account found with that email address"))?;
+
+        // Create new password reset token (invalidates any existing tokens)
+        let reset_code = db.create_password_reset_token(user.id).await?;
+
+        // Try to send email - log errors but don't fail the mutation
+        match email::send_password_reset_email(&email, &reset_code).await {
+            Ok(_) => log::info!("Resent password reset email to {}", email),
+            Err(e) => log::error!("Failed to resend password reset email to {}: {}", email, e),
+        }
+
+        Ok(MessageResponse {
+            message: "Password reset email resent! Please check your inbox.".to_string(),
+        })
+    }
 }
 
 #[derive(async_graphql::SimpleObject)]

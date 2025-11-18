@@ -1,3 +1,4 @@
+-- Insert new token
 insert into email_verification_tokens (user_id, token_hash, expires_at)
 values ($1, $2, $3)
 returning id;

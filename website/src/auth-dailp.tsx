@@ -24,6 +24,12 @@ export function useDailpAuthOperations(
     Dailp.useResetPasswordMutation()
   const [verifyEmailMutationResult, verifyEmailMutation] =
     Dailp.useVerifyEmailMutation()
+  const [
+    resendVerificationEmailMutationResult,
+    resendVerificationEmailMutation,
+  ] = Dailp.useResendVerificationEmailMutation()
+  const [resendPasswordResetMutationResult, resendPasswordResetMutation] =
+    Dailp.useResendPasswordResetMutation()
 
   async function createUser(email: string, password: string) {
     const emailLowercase = email.toLowerCase()
@@ -98,8 +104,34 @@ export function useDailpAuthOperations(
     }
   }
 
+  // Resend verification code to email and invalidates old unused ones
   async function resetConfirmationCode(email: string) {
-    alert("DAILP doesn't use confirmation codes")
+    const response = await resendVerificationEmailMutation({
+      email: email.toLowerCase(),
+    })
+    if (response.error) {
+      handleDailpError(response.error)
+      return
+    }
+    alert(
+      response.data?.resendVerificationEmail.message ||
+        "Verification email resent! Please check your inbox."
+    )
+  }
+
+  // Resend password reset code to email and invalidates old unused ones
+  async function resendPasswordResetCode(email: string) {
+    const response = await resendPasswordResetMutation({
+      email: email.toLowerCase(),
+    })
+    if (response.error) {
+      handleDailpError(response.error)
+      return
+    }
+    alert(
+      response.data?.resendPasswordReset.message ||
+        "Password reset email resent! Please check your inbox."
+    )
   }
 
   async function resetPassword(email: string) {
@@ -181,7 +213,7 @@ export function useDailpAuthOperations(
     const refreshToken = localStorage.getItem("dailp_refresh_token")
     if (!refreshToken) {
       console.error("No refresh token available")
-      signOutUser()
+      await signOutUser()
       return
     }
 
@@ -191,7 +223,7 @@ export function useDailpAuthOperations(
 
     if (response.error) {
       console.error("Token refresh failed:", response.error)
-      signOutUser()
+      await signOutUser()
       return
     }
 
@@ -253,6 +285,7 @@ export function useDailpAuthOperations(
     createUser,
     loginUser,
     resetConfirmationCode,
+    resendPasswordResetCode,
     resetPassword,
     changePassword,
     signOutUser,

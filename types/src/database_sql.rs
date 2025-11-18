@@ -7,6 +7,7 @@ use chrono::{NaiveDate, NaiveDateTime};
 use rand::Rng;
 use sha2::{Digest, Sha256};
 use sqlx::postgres::types::{PgLTree, PgRange};
+use sqlx::query;
 use std::ops::Bound;
 use std::str::FromStr;
 use user::UserUpdate;
@@ -2155,6 +2156,13 @@ impl Database {
         let (plain_code, code_hash) = Self::generate_verification_code();
         let expires_at = chrono::Utc::now() + chrono::Duration::hours(24);
 
+        query_file!(
+            "queries/delete_unused_email_verification_tokens.sql",
+            user_id
+        )
+        .execute(&self.client)
+        .await?;
+
         let _token_id = query_file_scalar!(
             "queries/create_email_verification_token.sql",
             user_id,
@@ -2173,6 +2181,10 @@ impl Database {
     pub async fn create_password_reset_token(&self, user_id: Uuid) -> Result<String> {
         let (plain_code, code_hash) = Self::generate_verification_code();
         let expires_at = chrono::Utc::now() + chrono::Duration::hours(1);
+
+        query_file!("queries/delete_unused_password_reset_tokens.sql", user_id)
+            .execute(&self.client)
+            .await?;
 
         let _token_id = query_file_scalar!(
             "queries/create_password_reset_token.sql",

@@ -25,6 +25,7 @@ type UserContextType = {
   operations: {
     createUser: (username: string, password: string) => void
     resetConfirmationCode: (email: string) => void
+    resendPasswordResetCode: (email: string) => void
     confirmUser: (email: string, confirmationCode: string) => void
     loginUser: (username: string, password: string) => void
     resetPassword: (username: string) => void
@@ -44,7 +45,7 @@ const userPool = new CognitoUserPool({
 const LocalStorage =
   typeof window !== "undefined"
     ? window.localStorage
-    : { getItem: () => null, setItem: () => {} }
+    : { getItem: () => null, setItem: () => {}, removeItem: () => {} }
 
 /** Get the currently signed in user, if there is one. */
 export function getCurrentUser(): AuthUser | null {
@@ -54,19 +55,27 @@ export function getCurrentUser(): AuthUser | null {
   } else {
     const token = LocalStorage.getItem("dailp_access_token")
     if (!token) return null
-    const decodedToken = jwtDecode<{
-      sub: string
-      email: string
-      role: string
-      exp: number
-    }>(token)
-    return {
-      type: "dailp",
-      userId: decodedToken["sub"],
-      email: decodedToken["email"],
-      groups: decodedToken["role"]
-        ? [decodedToken["role"].toUpperCase() as UserGroup]
-        : [],
+
+    try {
+      const decodedToken = jwtDecode<{
+        sub: string
+        email: string
+        role: string
+      }>(token)
+      return {
+        type: "dailp",
+        userId: decodedToken["sub"],
+        email: decodedToken["email"],
+        groups: decodedToken["role"]
+          ? [decodedToken["role"].toUpperCase() as UserGroup]
+          : [],
+      }
+    } catch (err) {
+      console.error("Failed to decode token in getCurrentUser:", err)
+      // Clear invalid token
+      LocalStorage.removeItem("dailp_access_token")
+      LocalStorage.removeItem("dailp_refresh_token")
+      return null
     }
   }
 }
@@ -142,6 +151,10 @@ export const UserProvider = (props: { children: any }) => {
     ops.resetConfirmationCode(email)
   }
 
+  function resendPasswordResetCode(email: string) {
+    ops.resendPasswordResetCode(email)
+  }
+
   function confirmUser(email: string, confirmationCode: string) {
     ops.confirmUser(email, confirmationCode)
   }
@@ -178,6 +191,7 @@ export const UserProvider = (props: { children: any }) => {
         operations: {
           createUser,
           resetConfirmationCode,
+          resendPasswordResetCode,
           confirmUser,
           loginUser,
           resetPassword,
@@ -284,7 +298,12 @@ export async function getAuthToken(): Promise<string | null> {
     return LocalStorage.getItem("dailp_access_token")
   } else {
     // Cognito mode
-    const idToken = await getIdToken()
-    return idToken?.getJwtToken() ?? null
+    try {
+      const idToken = await getIdToken()
+      return idToken?.getJwtToken() ?? null
+    } catch (err) {
+      console.error("Failed to get Cognito ID token:", err)
+      return null
+    }
   }
 }

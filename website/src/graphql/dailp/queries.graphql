@@ -834,3 +834,15 @@ mutation VerifyEmail($token: String!) {
     message
   }
 }
+
+mutation ResendVerificationEmail($email: String!) {
+  resendVerificationEmail(email: $email) {
+    message
+  }
+}
+
+mutation ResendPasswordReset($email: String!) {
+  resendPasswordReset(email: $email) {
+    message
+  }
+}
