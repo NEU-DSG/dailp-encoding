@@ -1002,7 +1002,7 @@ impl SheetInterpretation {
             title: document_title,
             sources,
             collection: source.pop().filter(|s| !s.trim().is_empty()),
-            contributors: people,
+            contributors: Some(people),
             genre: genre.pop().filter(|s| !s.trim().is_empty()),
             translation,
             page_images,

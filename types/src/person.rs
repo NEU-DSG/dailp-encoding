@@ -3,7 +3,7 @@ use std::{fmt, str::FromStr};
 use crate::{user::User, Database, PersonFullName};
 use async_graphql::{SimpleObject, Union};
 use serde::{Deserialize, Serialize};
-use sqlx::Type;
+use sqlx::{FromRow, Type};
 
 /// Record for a DAILP admin
 #[derive(Clone, Debug, Serialize, Deserialize, async_graphql::SimpleObject)]
@@ -94,7 +94,7 @@ pub enum ContributorReference {
 /// A contributor can have to any number of roles, which define most of their
 /// contributions to the associated item (add or revise as needed)
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize, Deserialize, async_graphql::Enum, Type)]
-#[sqlx(type_name = "contributor_role")] 
+#[sqlx(type_name = "contributor_role")]
 #[sqlx(rename_all = "snake_case")]
 pub enum ContributorRole {
     /// Typed or transcribed handwritten materials
@@ -144,7 +144,6 @@ impl ContributorRole {
         role.as_ref().map(|r| r.to_string())
     }
 }
-
 
 /// Attribution for a particular source, whether an institution or an individual.
 /// Most commonly, this will represent the details of a library or archive that

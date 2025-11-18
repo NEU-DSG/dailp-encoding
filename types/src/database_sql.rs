@@ -986,13 +986,19 @@ impl Database {
         {
             let contributors = meta.contributors.iter().flatten();
             let (name, doc, role): (Vec<_>, Vec<_>, Vec<_>) = contributors
-                .map(|contributor| (contributor.name.as_str(), document_uuid, contributor.role.as_ref()))
+                .map(|contributor| {
+                    (
+                        contributor.name.as_str(),
+                        document_uuid,
+                        contributor.role.as_ref(),
+                    )
+                })
                 .multiunzip();
-        
+
             // Convert roles to Option<String> for SQL
             let role_strings: Vec<Option<String>> =
                 role.iter().map(|r| r.map(|r| r.to_string())).collect();
-        
+
             query_file!(
                 "queries/upsert_document_contributors.sql",
                 &*name as _,
@@ -1744,7 +1750,11 @@ impl Database {
             let doc_id: Vec<Uuid> = vec![meta.id.0];
             let roles: Vec<String> = contributors
                 .clone()
-                .map(|c| c.role.as_ref().map_or_else(|| "".to_string(), |r| r.to_string()))
+                .map(|c| {
+                    c.role
+                        .as_ref()
+                        .map_or_else(|| "".to_string(), |r| r.to_string())
+                })
                 .collect();
 
             if !names.is_empty() {
@@ -1785,10 +1795,7 @@ impl Database {
                     .fetch_one(&mut *tx)
                     .await?;
             // Use map to handle Option<String> without fallback
-            let role = contributor
-                .role
-                .as_ref()
-                .map(|r| r.to_string());
+            let role = contributor.role.as_ref().map(|r| r.to_string());
 
             let role_str: &str = role.as_deref().unwrap_or("");
             query_file!(
