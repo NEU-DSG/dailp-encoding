@@ -2501,42 +2501,6 @@ impl Loader<PageId> for Database {
     }
 }
 
-#[async_trait]
-impl Loader<SubjectHeadingsForDocument> for Database {
-    type Value = Vec<SubjectHeading>;
-    type Error = Arc<sqlx::Error>;
-
-    async fn load(
-        &self,
-        keys: &[SubjectHeadingsForDocument],
-    ) -> Result<HashMap<SubjectHeadingsForDocument, Self::Value>, Self::Error> {
-        let mut results = HashMap::new();
-        let document_ids: Vec<_> = keys.iter().map(|k| k.0).collect();
-
-        let rows = query_file!(
-            "queries/many_subject_headings_for_documents.sql",
-            &document_ids
-        )
-        .fetch_all(&self.client)
-        .await?;
-
-        for key in keys {
-            let headings = rows
-                .iter()
-                .map(|row| SubjectHeading {
-                    id: row.id,
-                    name: row.name.clone(),
-                    status: row.status.clone(),
-                })
-                .collect::<Vec<_>>();
-
-            results.insert(key.clone(), headings);
-        }
-
-        Ok(results)
-    }
-}
-
 /// A struct representing an audio slice that can be easily pulled from the database
 struct BasicAudioSlice {
     id: Uuid,

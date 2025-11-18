@@ -50,6 +50,7 @@ pub struct SubjectHeading {
 /// Get all approved subject headings
 #[async_graphql::ComplexObject]
 impl SubjectHeading {
+    #[graphql(skip)]
     async fn approved(&self) -> bool {
         matches!(self.status, ApprovalStatus::Approved)
     }
