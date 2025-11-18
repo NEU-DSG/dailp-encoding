@@ -78,16 +78,20 @@ const NewPage = () => {
       alert("error: " + error)
       return
     }
-    upsertPage({ pageInput: { title, body: [content], path: isNew ? "/pages" + path : path } }).then(
-      (res) => {
-        if (res.error) {
-          setError(res.error.message)
-        } else {
-          setError(null)
-          navigate(`/pages${formatPath(path)}`)
-        }
+    upsertPage({
+      pageInput: {
+        title,
+        body: [content],
+        path: isNew ? "/pages" + path : path,
+      },
+    }).then((res) => {
+      if (res.error) {
+        setError(res.error.message)
+      } else {
+        setError(null)
+        navigate(`/pages${formatPath(path)}`)
       }
-    )
+    })
   }
 
   const validatePath = (path: string): string | null => {

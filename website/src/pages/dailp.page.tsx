@@ -57,29 +57,30 @@ export const DailpPageContents = (props: { path: string }) => {
   let collectionSlugs = ["cwkw", "willie-jumper-stories"]
 
   // check if page belongs in a collection
-    const collectionSlug = props.path.split("/")[1];
-    if (collectionSlug && collectionSlugs.includes(collectionSlug)) {
-      const userRole = useUserRole()
+  const collectionSlug = props.path.split("/")[1]
+  if (collectionSlug && collectionSlugs.includes(collectionSlug)) {
+    const userRole = useUserRole()
 
-      return (
-        <>
-          <header>
-            <h1>{page.title}</h1>
-            {/* dennis todo: should be admin in the future */}
-            {userRole === UserRole.Editor && (
-              <Link href={`/edit${props.path}`}>Edit</Link>
-            )}
-          </header>
-          <PageContents content={content} />
-        </>
-      )
-  }else{
+    return (
+      <>
+        <header>
+          <h1>{page.title}</h1>
+          {/* dennis todo: should be admin in the future */}
+          {userRole === UserRole.Editor && (
+            <Link href={`/edit${props.path}`}>Edit</Link>
+          )}
+        </header>
+        <PageContents content={content} />
+      </>
+    )
+  } else {
     // otherwise check if page is in menu
     if (!isInMenu(props.path)) {
-      return <p>Page content found. Add it to the menu to view it. {props.path}</p>
+      return (
+        <p>Page content found. Add it to the menu to view it. {props.path}</p>
+      )
     }
   }
-
 
   const userRole = useUserRole()
 

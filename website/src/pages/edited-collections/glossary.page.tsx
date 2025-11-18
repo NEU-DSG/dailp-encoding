@@ -4,11 +4,10 @@ import CWKWLayout from "../cwkw/cwkw-layout"
 
 // not sure how to use collectionslug yet
 const GlossaryPage = ({ collectionSlug }: { collectionSlug: string }) => {
-
   return (
     <CWKWLayout>
       <Glossary />
-</CWKWLayout>
+    </CWKWLayout>
   )
 }
 export const Page = GlossaryPage

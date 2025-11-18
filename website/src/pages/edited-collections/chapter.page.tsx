@@ -6,10 +6,10 @@ import { chapterRoute, collectionRoute } from "src/routes"
 import * as util from "src/style/utils.css"
 import CWKWLayout from "../cwkw/cwkw-layout"
 import * as css from "../cwkw/cwkw-layout.css"
+import { DailpPageContents } from "../dailp.page"
 import { DocumentTitleHeader, TabSet } from "../documents/document.page"
 import * as chapterStyle from "./chapter.css"
 import { useDialog, useSubchapters } from "./edited-collection-context"
-import { DailpPageContents } from "../dailp.page"
 
 const ChapterPage = (props: {
   collectionSlug: string
@@ -66,7 +66,12 @@ const ChapterPage = (props: {
                 </Breadcrumbs>
               </header>
               {/* dennis TODO: replace with dailp stuff after migration is done with these pages */}
-              <DailpPageContents path={`/${props.collectionSlug}/${chapter.slug.replace(/_/g, "-")}`} />
+              <DailpPageContents
+                path={`/${props.collectionSlug}/${chapter.slug.replace(
+                  /_/g,
+                  "-"
+                )}`}
+              />
             </>
           ) : null}
 
