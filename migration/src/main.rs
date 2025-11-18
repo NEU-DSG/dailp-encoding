@@ -52,11 +52,19 @@ async fn main() -> Result<()> {
 
     //migrate_data(&db).await?;
 
+<<<<<<< HEAD
     println!("Migrating connections...");
     connections::migrate_connections(&db).await?;
 
     println!("Migrating menu...");
     menu::migrate_menu(&db).await?;
+=======
+    //println!("Migrating connections...");
+    //connections::migrate_connections(&db).await?;
+
+    //println!("Migrating menu...");
+    //menu::migrate_menu(&db).await?;
+>>>>>>> 7ab373814c63ac15c2ea9d6b1310d657ce2fe51c
 
     //println!("Migrating collections...");
     //edited_collection::migrate_edited_collection(&db).await?;
