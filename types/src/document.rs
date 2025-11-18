@@ -233,6 +233,11 @@ impl AnnotatedDoc {
 
         Ok(headings)
     }
+
+    /// Internal field accessor for subject headings
+    async fn subject_headings_ids(&self) -> &Option<Vec<Uuid>> {
+        &self.meta.subject_headings_ids
+    }
 }
 
 /// Key to retrieve the pages of a document given a document ID
