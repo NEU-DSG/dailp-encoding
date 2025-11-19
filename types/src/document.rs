@@ -223,22 +223,8 @@ impl AnnotatedDoc {
             .await?)
     }
 
-    /// Subject heading IDs associated with this document
-    async fn subject_headings_ids(
-        &self,
-        context: &async_graphql::Context<'_>,
-    ) -> FieldResult<Vec<Uuid>> {
-        let db = context.data::<Database>()?;
-        let headings = db.subject_headings_for_document(self.meta.id.0).await?;
-
-        // Map to the IDs
-        let ids = headings.into_iter().map(|sh| sh.id).collect();
-
-        Ok(ids)
-    }
-
-     /// Expose full subject headings in GraphQL
-     async fn subject_headings(
+    /// Expose full subject headings in GraphQL
+    async fn subject_headings(
         &self,
         context: &async_graphql::Context<'_>,
     ) -> FieldResult<Vec<SubjectHeading>> {
@@ -344,7 +330,7 @@ pub struct DocumentMetadataUpdate {
     /// The date this document was written, or nothing (if unchanged or not applicable)
     pub written_at: MaybeUndefined<DateInput>,
     /// Terms that reflect Indigenous knowledge practices associated with the document
-    pub subject_headings_ids: MaybeUndefined<Vec<Uuid>>,
+    pub subject_headings: MaybeUndefined<Vec<SubjectHeading>>,
 }
 
 #[async_graphql::ComplexObject]
