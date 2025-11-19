@@ -239,6 +239,7 @@ impl AnnotatedDoc {
     }
 
     /// Internal field accessor for subject headings
+    #[graphql(skip)]
     async fn get_subject_headings_ids(&self) -> &Option<Vec<Uuid>> {
         &self.meta.subject_headings_ids
     }
