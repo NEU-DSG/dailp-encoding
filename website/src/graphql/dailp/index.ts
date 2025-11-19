@@ -76,9 +76,8 @@ export type AnnotatedDoc = {
    * Otherwise, it is considered a structured document with a translation.
    */
   readonly isReference: Scalars["Boolean"]
+  /** Key terms associated with a document */
   readonly keywords: ReadonlyArray<Keyword>
-  /** Internal field accessor for keywords */
-  readonly keywordsIds: Maybe<ReadonlyArray<Scalars["UUID"]>>
   /**
    * Arbitrary number used for manually ordering documents in a collection.
    * For collections without manual ordering, use zero here.
@@ -506,7 +505,7 @@ export type DocumentMetadataUpdate = {
   /** The ID of the document to update */
   readonly id: Scalars["UUID"]
   /** The key terms associated with the document */
-  readonly keywordsIds: InputMaybe<ReadonlyArray<Scalars["UUID"]>>
+  readonly keywords: InputMaybe<ReadonlyArray<KeywordUpdate>>
   /** An updated title for this document, or nothing (if title is unchanged) */
   readonly title: InputMaybe<Scalars["String"]>
   /** The date this document was written, or nothing (if unchanged or not applicable) */
@@ -644,13 +643,19 @@ export type ImageSource = {
 /** Record to store a keyword associated with a document */
 export type Keyword = {
   readonly __typename?: "Keyword"
-  readonly approved: Scalars["Boolean"]
   /** UUID for the keyword */
   readonly id: Scalars["UUID"]
   /** Name of the keyword */
   readonly name: Scalars["String"]
   /** Status (pending, approved, rejected) of a keyword */
   readonly status: ApprovalStatus
+}
+
+export type KeywordUpdate = {
+  /** UUID for the keyword */
+  readonly id: Scalars["UUID"]
+  /** Name of the keyword */
+  readonly name: Scalars["String"]
 }
 
 /** Start of a new line */
@@ -1567,9 +1572,15 @@ export type AudioSliceFieldsFragment = {
 
 export type DocFormFieldsFragment = {
   readonly __typename?: "AnnotatedDoc"
-} & Pick<AnnotatedDoc, "id" | "title" | "keywordsIds"> & {
+} & Pick<AnnotatedDoc, "id" | "title"> & {
     readonly date: Maybe<
       { readonly __typename?: "Date" } & Pick<Date, "day" | "month" | "year">
+    >
+    readonly keywords: ReadonlyArray<
+      { readonly __typename?: "Keyword" } & Pick<
+        Keyword,
+        "id" | "name" | "status"
+      >
     >
   }
 
@@ -2865,7 +2876,11 @@ export const DocFormFieldsFragmentDoc = gql`
       month
       year
     }
-    keywordsIds
+    keywords {
+      id
+      name
+      status
+    }
   }
 `
 export const AudioSliceFieldsFragmentDoc = gql`

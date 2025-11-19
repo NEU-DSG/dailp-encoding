@@ -84,6 +84,7 @@ pub struct KeywordUpdate {
 /// Get all approved keywords
 #[async_graphql::ComplexObject]
 impl Keyword {
+    #[graphql(skip)]
     async fn approved(&self) -> bool {
         matches!(self.status, ApprovalStatus::Approved)
     }

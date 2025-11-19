@@ -3,7 +3,7 @@ use crate::{
     Database, Date, Translation, TranslationBlock,
 };
 
-use crate::doc_metadata::{ApprovalStatus, Keyword};
+use crate::doc_metadata::{ApprovalStatus, Keyword, KeywordUpdate};
 use crate::person::{Contributor, SourceAttribution};
 
 use async_graphql::{dataloader::DataLoader, Context, FieldResult, MaybeUndefined};
@@ -223,18 +223,11 @@ impl AnnotatedDoc {
             .await?)
     }
 
-    /// Internal field accessor for keywords
-    async fn keywords_ids(&self) -> &Option<Vec<Uuid>> {
-        &self.meta.keywords_ids
-    }
-
-    // GraphQL resolver for keywords
+    /// Key terms associated with a document
     async fn keywords(&self, context: &async_graphql::Context<'_>) -> FieldResult<Vec<Keyword>> {
-        Ok(context
-            .data::<DataLoader<Database>>()?
-            .load_one(crate::KeywordsForDocument(self.meta.id.0))
-            .await?
-            .unwrap_or_default())
+        let db = context.data::<Database>()?;
+        let headings = db.keywords_for_document(self.meta.id.0).await?;
+        Ok(headings)
     }
 }
 
@@ -334,7 +327,7 @@ pub struct DocumentMetadataUpdate {
     /// The date this document was written, or nothing (if unchanged or not applicable)
     pub written_at: MaybeUndefined<DateInput>,
     /// The key terms associated with the document
-    pub keywords_ids: MaybeUndefined<Vec<Uuid>>,
+    pub keywords: MaybeUndefined<Vec<KeywordUpdate>>,
 }
 
 #[async_graphql::ComplexObject]

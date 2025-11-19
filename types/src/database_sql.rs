@@ -41,6 +41,14 @@ pub struct Database {
     client: sqlx::Pool<sqlx::Postgres>,
 }
 impl Database {
+    pub async fn keywords_for_document(&self, doc_id: Uuid) -> Result<Vec<Keyword>, sqlx::Error> {
+        let rows = sqlx::query_file_as!(Keyword, "queries/get_keywords_by_document_id.sql", doc_id)
+            .fetch_all(&self.client)
+            .await?;
+
+        Ok(rows)
+    }
+
     pub fn connect(num_connections: Option<u32>) -> Result<Self> {
         let db_url = std::env::var("DATABASE_URL")?;
         let conn = PgPoolOptions::new()
@@ -782,19 +790,23 @@ impl Database {
             &title as _,
             &written_at as _
         )
-        .execute(&self.client)
+        .execute(&mut *tx)
         .await?;
 
-        // Update keywords
-        if let MaybeUndefined::Value(keywords_ids) = &document.keywords_ids {
+        // Update subject headings
+        if let MaybeUndefined::Value(keywords) = &document.keywords {
             query_file!("queries/delete_document_keywords.sql", document.id)
                 .execute(&mut *tx)
                 .await?;
 
+            // Convert Vec<KeywordUpdate> to Vec<Uuid>
+            let ids: Vec<Uuid> = keywords.iter().map(|k| k.id).collect();
+
+            // Write new IDs
             query_file!(
                 "queries/insert_document_keywords.sql",
                 document.id,
-                keywords_ids
+                &ids[..]
             )
             .execute(&mut *tx)
             .await?;
@@ -2496,39 +2508,6 @@ impl Loader<PageId> for Database {
     }
 }
 
-#[async_trait]
-impl Loader<KeywordsForDocument> for Database {
-    type Value = Vec<Keyword>;
-    type Error = Arc<sqlx::Error>;
-
-    async fn load(
-        &self,
-        keys: &[KeywordsForDocument],
-    ) -> Result<HashMap<KeywordsForDocument, Self::Value>, Self::Error> {
-        let mut results = HashMap::new();
-        let document_ids: Vec<_> = keys.iter().map(|k| k.0).collect();
-
-        let rows = query_file!("queries/many_keywords_for_documents.sql", &document_ids)
-            .fetch_all(&self.client)
-            .await?;
-
-        for key in keys {
-            let keywords = rows
-                .iter()
-                .map(|row| Keyword {
-                    id: row.id,
-                    name: row.name.clone(),
-                    status: row.status.clone(),
-                })
-                .collect::<Vec<_>>();
-
-            results.insert(key.clone(), keywords);
-        }
-
-        Ok(results)
-    }
-}
-
 /// A struct representing an audio slice that can be easily pulled from the database
 struct BasicAudioSlice {
     id: Uuid,
@@ -2796,9 +2775,6 @@ pub struct ChaptersInCollection(pub String);
 
 #[derive(Clone, Eq, PartialEq, Hash)]
 pub struct EditedCollectionDetails(pub String);
-
-#[derive(Clone, Eq, PartialEq, Hash)]
-pub struct KeywordsForDocument(pub uuid::Uuid);
 
 /// One particular morpheme and all the known words that contain that exact morpheme.
 #[derive(async_graphql::SimpleObject)]

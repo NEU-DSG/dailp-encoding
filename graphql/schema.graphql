@@ -82,9 +82,8 @@ type AnnotatedDoc {
 	"""
 	chapters: [CollectionChapter!]
 	"""
-	Internal field accessor for keywords
+	Key terms associated with a document
 	"""
-	keywordsIds: [UUID!]
 	keywords: [Keyword!]!
 }
 
@@ -642,7 +641,7 @@ input DocumentMetadataUpdate {
 	"""
 	The key terms associated with the document
 	"""
-	keywordsIds: [UUID!]
+	keywords: [KeywordUpdate!]
 }
 
 type DocumentPage {
@@ -838,7 +837,17 @@ type Keyword {
 	Status (pending, approved, rejected) of a keyword
 	"""
 	status: ApprovalStatus!
-	approved: Boolean!
+}
+
+input KeywordUpdate {
+	"""
+	UUID for the keyword
+	"""
+	id: UUID!
+	"""
+	Name of the keyword
+	"""
+	name: String!
 }
 
 """
