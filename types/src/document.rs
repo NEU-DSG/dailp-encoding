@@ -237,10 +237,15 @@ impl AnnotatedDoc {
         Ok(ids)
     }
 
-    /// Internal field accessor for subject headings
+    /// Expose full subject headings in GraphQL
     #[graphql(skip)]
-    async fn get_subject_headings_ids(&self) -> &Option<Vec<Uuid>> {
-        &self.meta.subject_headings_ids
+    async fn subject_headings(
+        &self,
+        context: &async_graphql::Context<'_>,
+    ) -> FieldResult<Vec<SubjectHeading>> {
+        let db = context.data::<Database>()?;
+        let headings = db.subject_headings_for_document(self.meta.id.0).await?;
+        Ok(headings)
     }
 }
 
