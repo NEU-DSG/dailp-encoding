@@ -330,7 +330,7 @@ pub struct DocumentMetadataUpdate {
     /// The date this document was written, or nothing (if unchanged or not applicable)
     pub written_at: MaybeUndefined<DateInput>,
     /// Terms that reflect Indigenous knowledge practices associated with the document
-    pub subject_headings: MaybeUndefined<Vec<SubjectHeading>>,
+    pub subject_headings: MaybeUndefined<Vec<SSubjectHeadingUpdate>>,
 }
 
 #[async_graphql::ComplexObject]

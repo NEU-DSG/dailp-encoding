@@ -47,6 +47,15 @@ pub struct SubjectHeading {
     pub status: ApprovalStatus,
 }
 
+// For updating subject headings
+#[derive(async_graphql::InputObject)]
+pub struct SubjectHeadingUpdate {
+    /// UUID for the subject heading
+    pub id: Uuid,
+    /// Name of the subject heading
+    pub name: String,
+}
+
 /// Get all approved subject headings
 #[async_graphql::ComplexObject]
 impl SubjectHeading {
