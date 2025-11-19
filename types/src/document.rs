@@ -3,7 +3,7 @@ use crate::{
     Database, Date, Translation, TranslationBlock,
 };
 
-use crate::doc_metadata::{ApprovalStatus, Language};
+use crate::doc_metadata::{ApprovalStatus, Language, LanguageUpdate};
 use crate::person::{Contributor, SourceAttribution};
 
 use async_graphql::{dataloader::DataLoader, Context, FieldResult, MaybeUndefined};
@@ -224,16 +224,13 @@ impl AnnotatedDoc {
     }
 
     /// The languages present in this document
-    async fn languages_ids(&self) -> Option<Vec<Uuid>> {
-        self.meta.languages_ids.clone()
-    }
-
-    async fn languages(&self, context: &async_graphql::Context<'_>) -> FieldResult<Vec<Language>> {
-        Ok(context
-            .data::<DataLoader<Database>>()?
-            .load_one(crate::LanguagesForDocument(self.meta.id.0))
-            .await?
-            .unwrap_or_default())
+    async fn languages(
+        &self,
+        context: &async_graphql::Context<'_>,
+    ) -> FieldResult<Vec<Language>> {
+        let db = context.data::<Database>()?;
+        let languages = db.languages_for_document(self.meta.id.0).await?;
+        Ok(languages)
     }
 }
 
@@ -333,7 +330,7 @@ pub struct DocumentMetadataUpdate {
     /// The date this document was written, or nothing (if unchanged or not applicable)
     pub written_at: MaybeUndefined<DateInput>,
     /// The languages present in the document
-    pub languages_ids: MaybeUndefined<Vec<Uuid>>,
+    pub languages: MaybeUndefined<Vec<LanguageUpdate>>,
 }
 
 #[async_graphql::ComplexObject]

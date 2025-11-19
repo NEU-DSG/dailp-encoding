@@ -41,6 +41,21 @@ pub struct Database {
     client: sqlx::Pool<sqlx::Postgres>,
 }
 impl Database {
+    pub async fn languages_for_document(
+        &self,
+        doc_id: Uuid,
+    ) -> Result<Vec<Language>, sqlx::Error> {
+        let rows = sqlx::query_file_as!(
+            Language,
+            "queries/get_languages_by_document_id.sql",
+            doc_id
+        )
+        .fetch_all(&self.client)
+        .await?;
+
+        Ok(rows)
+    }
+
     pub fn connect(num_connections: Option<u32>) -> Result<Self> {
         let db_url = std::env::var("DATABASE_URL")?;
         let conn = PgPoolOptions::new()
@@ -782,11 +797,11 @@ impl Database {
             &title as _,
             &written_at as _
         )
-        .execute(&self.client)
+        .execute(&mut *tx)
         .await?;
 
         // Update languages
-        if let MaybeUndefined::Value(languages_ids) = &document.languages_ids {
+        if let MaybeUndefined::Value(languages) = &document.languages {
             query_file!("queries/delete_document_languages.sql", document.id)
                 .execute(&mut *tx)
                 .await?;
@@ -794,7 +809,7 @@ impl Database {
             query_file!(
                 "queries/insert_document_languages.sql",
                 document.id,
-                languages_ids
+                languages
             )
             .execute(&mut *tx)
             .await?;
@@ -2496,40 +2511,6 @@ impl Loader<PageId> for Database {
     }
 }
 
-#[async_trait]
-impl Loader<LanguagesForDocument> for Database {
-    type Value = Vec<Language>;
-    type Error = Arc<sqlx::Error>;
-
-    async fn load(
-        &self,
-        keys: &[LanguagesForDocument],
-    ) -> Result<HashMap<LanguagesForDocument, Self::Value>, Self::Error> {
-        let mut results = HashMap::new();
-        let document_ids: Vec<_> = keys.iter().map(|k| k.0).collect();
-
-        let rows = query_file!("queries/many_languages_for_documents.sql", &document_ids)
-            .fetch_all(&self.client)
-            .await?;
-
-        for key in keys {
-            let languages = rows
-                .iter()
-                .map(|row| Language {
-                    id: row.id,
-                    name: row.name.clone(),
-                    autonym: row.autonym.clone(),
-                    status: row.status.clone(),
-                })
-                .collect::<Vec<_>>();
-
-            results.insert(key.clone(), languages);
-        }
-
-        Ok(results)
-    }
-}
-
 /// A struct representing an audio slice that can be easily pulled from the database
 struct BasicAudioSlice {
     id: Uuid,
@@ -2797,9 +2778,6 @@ pub struct ChaptersInCollection(pub String);
 
 #[derive(Clone, Eq, PartialEq, Hash)]
 pub struct EditedCollectionDetails(pub String);
-
-#[derive(Clone, Eq, PartialEq, Hash)]
-pub struct LanguagesForDocument(pub uuid::Uuid);
 
 /// One particular morpheme and all the known words that contain that exact morpheme.
 #[derive(async_graphql::SimpleObject)]

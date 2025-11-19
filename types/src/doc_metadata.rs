@@ -84,6 +84,15 @@ pub struct Language {
     pub status: ApprovalStatus,
 }
 
+/// For updating languages
+#[derive(async_graphql::InputObject)]
+pub struct LanguageUpdate {
+    /// UUID for the language
+    pub id: Uuid,
+    /// Name of the language
+    pub name: String,
+}
+
 /// Get all approved languages
 #[async_graphql::ComplexObject]
 impl Language {
