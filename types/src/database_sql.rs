@@ -1,6 +1,7 @@
 #![allow(missing_docs)]
 
 use anyhow::Error;
+use async_graphql::MaybeUndefined;
 use auth::UserGroup;
 use chrono::{NaiveDate, NaiveDateTime};
 use sqlx::postgres::types::{PgLTree, PgRange};
@@ -39,6 +40,21 @@ pub struct Database {
     client: sqlx::Pool<sqlx::Postgres>,
 }
 impl Database {
+    pub async fn subject_headings_for_document(
+        &self,
+        doc_id: Uuid,
+    ) -> Result<Vec<SubjectHeading>, sqlx::Error> {
+        let rows = sqlx::query_file_as!(
+            SubjectHeading,
+            "queries/get_subject_headings_by_document_id.sql",
+            doc_id
+        )
+        .fetch_all(&self.client)
+        .await?;
+
+        Ok(rows)
+    }
+
     pub fn connect(num_connections: Option<u32>) -> Result<Self> {
         let db_url = std::env::var("DATABASE_URL")?;
         let conn = PgPoolOptions::new()
@@ -301,6 +317,7 @@ impl Database {
                     order_index: 0,
                     page_images: None,
                     sources: Vec::new(),
+                    subject_headings_ids: Some(Vec::new()),
                     translation: None,
                 },
                 segments: None,
@@ -439,6 +456,7 @@ impl Database {
                 order_index: 0,
                 page_images: None,
                 sources: Vec::new(),
+                subject_headings_ids: Some(Vec::new()),
                 translation: None,
             },
             segments: None,
@@ -768,6 +786,8 @@ impl Database {
     }
 
     pub async fn update_document_metadata(&self, document: DocumentMetadataUpdate) -> Result<Uuid> {
+        let mut tx = self.client.begin().await?;
+
         let title = document.title.into_vec();
         let written_at: Option<Date> = document.written_at.value().map(Into::into);
 
@@ -780,24 +800,47 @@ impl Database {
         .execute(&self.client)
         .await?;
 
+        // Update subject headings
+        if let MaybeUndefined::Value(subject_headings_ids) = &document.subject_headings_ids {
+            query_file!("queries/delete_document_subject_headings.sql", document.id)
+                .execute(&mut *tx)
+                .await?;
+
+            query_file!(
+                "queries/insert_document_subject_headings.sql",
+                document.id,
+                subject_headings_ids
+            )
+            .execute(&mut *tx)
+            .await?;
+        }
+
+        // Commit updates
+        tx.commit().await?;
+
         Ok(document.id)
     }
 
-    pub async fn update_paragraph(&self, paragraph: ParagraphUpdate) -> Result<DocumentParagraph> {
+    pub async fn update_paragraph(
+        &self,
+        paragraph: ParagraphUpdate,
+    ) -> anyhow::Result<DocumentParagraph> {
         let translation = paragraph.translation.into_vec();
+        let mut tx = self.client.begin().await?;
 
         query_file!(
             "queries/update_paragraph.sql",
             paragraph.id,
             &translation as _
         )
-        .execute(&self.client)
+        .execute(&mut *tx)
         .await?;
 
+        tx.commit().await?;
         self.paragraph_by_id(&paragraph.id).await
     }
 
-    pub async fn update_comment(&self, comment: CommentUpdate) -> Result<Uuid> {
+    pub async fn update_comment(&self, comment: CommentUpdate) -> Result<Uuid, sqlx::Error> {
         let text_content = comment.text_content.into_vec();
         let comment_type = comment.comment_type.into_vec();
 
@@ -2044,6 +2087,7 @@ impl Loader<DocumentId> for Database {
                     order_index: 0,
                     page_images: None,
                     sources: Vec::new(),
+                    subject_headings_ids: Some(Vec::new()),
                     translation: None,
                 },
                 segments: None,
@@ -2116,6 +2160,7 @@ impl Loader<DocumentShortName> for Database {
                     order_index: 0,
                     page_images: None,
                     sources: Vec::new(),
+                    subject_headings_ids: Some(Vec::new()),
                     translation: None,
                 },
                 segments: None,
@@ -2738,6 +2783,9 @@ pub struct ChaptersInCollection(pub String);
 
 #[derive(Clone, Eq, PartialEq, Hash)]
 pub struct EditedCollectionDetails(pub String);
+
+#[derive(Clone, Eq, PartialEq, Hash)]
+pub struct SubjectHeadingsForDocument(pub uuid::Uuid);
 
 /// One particular morpheme and all the known words that contain that exact morpheme.
 #[derive(async_graphql::SimpleObject)]

@@ -20,6 +20,7 @@ pub async fn migrate_dictionaries(db: &Database) -> Result<()> {
             ],
             date: Some(dailp::Date::from_ymd(1975, 1, 1)),
             genre: None,
+            subject_headings_ids: None,
             translation: None,
             page_images: None,
             is_reference: true,
@@ -37,6 +38,7 @@ pub async fn migrate_dictionaries(db: &Database) -> Result<()> {
             contributors: vec![Contributor::new_author("Feeling, Durbin".to_string())],
             date: Some(dailp::Date::from_ymd(2003, 1, 1)),
             genre: None,
+            subject_headings_ids: None,
             translation: None,
             page_images: None,
             is_reference: true,
@@ -254,6 +256,7 @@ async fn insert_document_from_sheet(
         sources: Vec::new(),
         collection: Some(collection.to_owned()),
         genre: None,
+        subject_headings_ids: None,
         contributors: authors
             .into_iter()
             .skip(1)

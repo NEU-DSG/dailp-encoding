@@ -3,12 +3,14 @@ use crate::{document::DocumentReference, ContributorReference};
 
 use async_graphql::{Enum, SimpleObject};
 use serde::{Deserialize, Serialize};
-use sqlx::{postgres::PgValueRef, Decode, Postgres};
+use sqlx::{FromRow, Type};
 use std::collections::HashMap;
+use std::str::FromStr;
 use uuid::Uuid;
 
 /// Represents the status of a suggestion made by a contributor
-#[derive(Serialize, Deserialize, Enum, Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Enum, Debug, Clone, Copy, PartialEq, Eq, Type)]
+#[sqlx(type_name = "approval_status", rename_all = "lowercase")]
 pub enum ApprovalStatus {
     /// Suggestion is still waiting for or undergoing review
     Pending,
@@ -18,45 +20,47 @@ pub enum ApprovalStatus {
     Rejected,
 }
 
-/// Allows SQLx to convert Postgres "approval_status" enum values into the corresponding Rust "ApprovalStatus"
-impl<'r> Decode<'r, Postgres> for ApprovalStatus {
-    fn decode(value: PgValueRef<'r>) -> Result<Self, Box<dyn std::error::Error + Send + Sync>> {
-        let s: &str = <&str as Decode<'r, Postgres>>::decode(value)?;
+/// Convert from string to ApprovalStatus
+impl FromStr for ApprovalStatus {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
             "pending" => Ok(Self::Pending),
             "approved" => Ok(Self::Approved),
             "rejected" => Ok(Self::Rejected),
-            _ => Err(format!("invalid approval status: {}", s).into()),
-        }
-    }
-}
-
-/// Converts a string value ("approved", "pending", or "rejected") into an ApprovalStatus enum variant
-impl TryFrom<String> for ApprovalStatus {
-    type Error = anyhow::Error;
-
-    fn try_from(value: String) -> Result<Self, Self::Error> {
-        match value.as_str() {
-            "approved" => Ok(ApprovalStatus::Approved),
-            "pending" => Ok(ApprovalStatus::Pending),
-            "rejected" => Ok(ApprovalStatus::Rejected),
-            _ => Err(anyhow::anyhow!("Invalid approval status: {}", value)),
+            _ => Err(()),
         }
     }
 }
 
 /// Record to store a subject heading that reflects Indigenous knowledge
 /// practices associated with a document
-#[derive(Clone, SimpleObject)]
+#[derive(Clone, Debug, Serialize, Deserialize, FromRow, SimpleObject)]
+#[graphql(complex)]
 pub struct SubjectHeading {
     /// UUID for the subject heading
     pub id: Uuid,
-    /// Documents associated with the subject heading
-    pub documents: Vec<DocumentReference>,
     /// Name of the subject heading
     pub name: String,
     /// Status (pending, approved, rejected) of a subject heading
     pub status: ApprovalStatus,
+}
+
+/// Get all approved subject headings
+#[async_graphql::ComplexObject]
+impl SubjectHeading {
+    #[graphql(skip)]
+    async fn approved(&self) -> bool {
+        matches!(self.status, ApprovalStatus::Approved)
+    }
+}
+
+/// Converts SubjectHeading struct to corresponding Uuid
+impl From<&SubjectHeading> for Uuid {
+    fn from(s: &SubjectHeading) -> Self {
+        s.id
+    }
 }
 
 /// Stores the physical or digital medium associated with a document

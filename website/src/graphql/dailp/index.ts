@@ -69,6 +69,8 @@ export type AnnotatedDoc = {
   readonly forms: ReadonlyArray<AnnotatedForm>
   /** The genre of the document, used to group similar ones */
   readonly genre: Maybe<Scalars["String"]>
+  /** Internal field accessor for subject headings */
+  readonly getSubjectHeadingsIds: Maybe<ReadonlyArray<Scalars["UUID"]>>
   /** Official short identifier for this document */
   readonly id: Scalars["UUID"]
   /**
@@ -87,6 +89,11 @@ export type AnnotatedDoc = {
   readonly slug: Scalars["String"]
   /** The original source(s) of this document, the most important first. */
   readonly sources: ReadonlyArray<SourceAttribution>
+  /**
+   * Subject heading IDs associated with this document
+   * Seems overcomplicated?
+   */
+  readonly subjectHeadingsIds: ReadonlyArray<Scalars["UUID"]>
   /** Full title of the document */
   readonly title: Scalars["String"]
   /** Segments of the document paired with their respective rough translations */
@@ -495,6 +502,8 @@ export type DocumentCollection = {
 export type DocumentMetadataUpdate = {
   /** The ID of the document to update */
   readonly id: Scalars["UUID"]
+  /** Terms that reflect Indigenous knowledge practices associated with the document */
+  readonly subjectHeadingsIds: InputMaybe<ReadonlyArray<Scalars["UUID"]>>
   /** An updated title for this document, or nothing (if title is unchanged) */
   readonly title: InputMaybe<Scalars["String"]>
   /** The date this document was written, or nothing (if unchanged or not applicable) */
@@ -1543,7 +1552,7 @@ export type AudioSliceFieldsFragment = {
 
 export type DocFormFieldsFragment = {
   readonly __typename?: "AnnotatedDoc"
-} & Pick<AnnotatedDoc, "id" | "title"> & {
+} & Pick<AnnotatedDoc, "id" | "title" | "subjectHeadingsIds"> & {
     readonly date: Maybe<
       { readonly __typename?: "Date" } & Pick<Date, "day" | "month" | "year">
     >
@@ -2841,6 +2850,7 @@ export const DocFormFieldsFragmentDoc = gql`
       month
       year
     }
+    subjectHeadingsIds
   }
 `
 export const AudioSliceFieldsFragmentDoc = gql`
