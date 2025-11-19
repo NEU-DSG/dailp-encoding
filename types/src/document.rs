@@ -223,19 +223,23 @@ impl AnnotatedDoc {
             .await?)
     }
 
-    /// Subject headings associated with this document
-    async fn subject_headings(
+    /// Subject heading IDs associated with this document
+    /// Seems overcomplicated?
+    async fn subject_headings_ids(
         &self,
         context: &async_graphql::Context<'_>,
-    ) -> FieldResult<Vec<SubjectHeading>> {
+    ) -> FieldResult<Vec<Uuid>> {
         let db = context.data::<Database>()?;
         let headings = db.subject_headings_for_document(self.meta.id.0).await?;
 
-        Ok(headings)
+        // Map to the IDs
+        let ids = headings.into_iter().map(|sh| sh.id).collect();
+
+        Ok(ids)
     }
 
     /// Internal field accessor for subject headings
-    async fn subject_headings_ids(&self) -> &Option<Vec<Uuid>> {
+    async fn get_subject_headings_ids(&self) -> &Option<Vec<Uuid>> {
         &self.meta.subject_headings_ids
     }
 }

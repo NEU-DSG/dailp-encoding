@@ -127,11 +127,7 @@ fragment DocFormFields on AnnotatedDoc {
     month
     year
   }
-  subjectHeadings {
-    id
-    name
-    status
-  }
+  subjectHeadingsIds
 }
 
 fragment ParagraphFormFields on DocumentParagraph {
