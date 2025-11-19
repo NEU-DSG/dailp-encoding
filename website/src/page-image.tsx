@@ -4,10 +4,11 @@ import { FaMinus, FaPlus } from "react-icons/fa/index"
 import { TransformComponent, TransformWrapper } from "react-zoom-pan-pinch"
 import { Button, IconButton, Link } from "src/components"
 import * as Dailp from "src/graphql/dailp"
+import { Document } from "src/pages/documents/document.page"
 import * as css from "./page-image.css"
 
 const PageImages = (p: {
-  document: Dailp.DocumentFieldsFragment
+  document: Document
   pageImages: Pick<Dailp.IiifImages, "urls">
 }) => {
   return (

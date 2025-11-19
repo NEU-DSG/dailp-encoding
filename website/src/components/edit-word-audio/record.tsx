@@ -8,12 +8,12 @@ import {
   useMediaRecorder,
 } from "../../use-media-recorder"
 import { CleanButton, IconTextButton } from "../button"
-import { contributeAudioOptions } from "../contribute-audio-section.css"
 import { SubtleButton } from "../subtle-button"
 import { subtleButton } from "../subtle-button.css"
-import { ContributeAudioPanel } from "./contribute-audio-panel"
+import { ContributeAudioPanel } from "./contributor-audio-panel"
+import { contributeAudioOptions } from "./contributor.css"
 
-export function RecordWordAudioPanel(p: { word: Dailp.FormFieldsFragment }) {
+export function RecordAudioPanel(p: { word: Dailp.FormFieldsFragment }) {
   return (
     <ContributeAudioPanel
       panelTitle="Record Audio"
@@ -24,8 +24,7 @@ export function RecordWordAudioPanel(p: { word: Dailp.FormFieldsFragment }) {
   )
 }
 
-// TODO: Should this live with ContributeAudioPanel?
-export function RecordAudioContent({
+function RecordAudioContent({
   uploadAudio,
 }: {
   uploadAudio: (data: Blob) => Promise<boolean>

@@ -4,9 +4,9 @@ import { VisuallyHidden } from "reakit"
 import * as Dailp from "src/graphql/dailp"
 import { AudioPlayer } from "../audio-player"
 import { CleanButton, IconTextButton } from "../button"
-import { contributeAudioOptions } from "../contribute-audio-section.css"
 import { subtleButton } from "../subtle-button.css"
-import { ContributeAudioPanel } from "./contribute-audio-panel"
+import { ContributeAudioPanel } from "./contributor-audio-panel"
+import { contributeAudioOptions } from "./contributor.css"
 
 export function UploadAudioPanel(p: { word: Dailp.FormFieldsFragment }) {
   return (

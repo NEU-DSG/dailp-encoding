@@ -1,14 +1,32 @@
 import cx from "classnames"
 import { ReactElement, ReactNode } from "react"
+import { IconType } from "react-icons"
 import * as Dailp from "src/graphql/dailp"
+import { CollapsiblePanel } from "src/word-panel"
+import * as css from "../../panel-layout.css"
 import {
   contributeAudioContainer,
   statusMessage,
   statusMessageError,
-} from "./contribute-audio-section.css"
-import { useAudioUpload } from "./edit-word-audio/utils"
+} from "./contributor.css"
+import { useAudioUpload } from "./utils"
 
-export type ContributeAudioComponent = (p: {
+export function ContributeAudioPanel(p: {
+  panelTitle: string
+  Icon: IconType
+  Component: ContributeAudioComponent
+  word: Dailp.FormFieldsFragment
+}) {
+  return (
+    <CollapsiblePanel
+      title={p.panelTitle}
+      content={<ContributeAudioSection word={p.word} Component={p.Component} />}
+      icon={<p.Icon size={24} className={css.wordPanelButton.colpleft} />}
+    />
+  )
+}
+
+type ContributeAudioComponent = (p: {
   uploadAudio: (blob: Blob) => Promise<boolean>
 }) => ReactElement
 
@@ -16,14 +34,11 @@ export type ContributeAudioComponent = (p: {
  * This wrapper component provides upload functionality and feedback for an
  * audio contribution component.
  */
-export function ContributeAudioSection(p: {
+function ContributeAudioSection(p: {
+  word: Dailp.FormFieldsFragment
   Component: ContributeAudioComponent
-  processUploadedAudio: (resourceUrl: string) => Promise<boolean>
 }): ReactElement {
-  // const [uploadAudio, uploadState, clearUploadError] = useAudioUpload(p.word.id)
-  const [uploadAudio, uploadState, clearUploadError] = useAudioUpload(
-    p.processUploadedAudio
-  )
+  const [uploadAudio, uploadState, clearUploadError] = useAudioUpload(p.word.id)
 
   return (
     <div className={contributeAudioContainer}>

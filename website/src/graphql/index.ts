@@ -44,7 +44,6 @@ export const sharedCache = cacheExchange({
     PositionInDocument: () => null,
     WordSegment: () => null,
     DocumentPage: () => null,
-    MenuItem: () => null,
     AnnotatedDoc: (data) => data["slug"] as string,
     AudioSlice: (data) => data["sliceId"] as string,
     DocumentCollection: (data) => data["slug"] as string,

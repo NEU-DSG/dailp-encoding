@@ -1,5 +1,5 @@
 import cx from "classnames"
-import React, { ReactNode, useEffect, useState } from "react"
+import React, { ReactNode, useState } from "react"
 import { MdVisibility, MdVisibilityOff } from "react-icons/md/index"
 import {
   unstable_FormInput as FormInput,
@@ -48,16 +48,6 @@ export const LoginHeaderButton = (props?: { className?: string }) => {
   // FIXME remove this flag when DAILP TI launches in a stable form
   if (deploymentEnvironment === Environment.Production) {
     return null
-  }
-
-  const [isClient, setIsClient] = useState(false)
-
-  useEffect(() => {
-    setIsClient(true)
-  }, [])
-
-  if (!isClient) {
-    return <div className={loginHeader}>Loading...</div> // or skeleton
   }
 
   // get the current user's auth token

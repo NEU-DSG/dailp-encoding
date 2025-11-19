@@ -188,15 +188,6 @@ export const audioContainer = style([
   bottomPadded,
 ])
 
-export const documentAudioContainer = style([
-  {
-    display: "flex",
-    flexFlow: "row nowrap",
-    alignItems: "center",
-    //justifyContent: "space-between",
-  },
-])
-
 export const hideOnPrint = style({
   "@media": {
     print: { display: "none" },

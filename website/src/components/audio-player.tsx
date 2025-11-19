@@ -27,8 +27,6 @@ interface Props {
   showProgress?: boolean
   slices?: { start: number; end: number }
   style?: any
-  contributor?: string
-  recordedAt?: Date
 }
 
 export const AudioPlayer = (props: Props) => {
@@ -97,40 +95,27 @@ const AudioPlayerImpl = (props: Props) => {
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", width: "100%" }}>
-      {props.contributor && props.recordedAt && (
-        <div>
-          <span>
-            Recorded by{" "}
-            {props.contributor.length > 0
-              ? props.contributor
-              : "Unknown Contributor"}{" "}
-            on {props.recordedAt.toLocaleDateString()}
-          </span>
-        </div>
-      )}
-      <div className={css.audioElement} style={props.style}>
-        {loadStatus ? (
-          isPlaying ? (
-            <MdPauseCircleOutline
-              size={buttonSize}
-              onClick={() => setIsPlaying(false)}
-              aria-label="Pause"
-            />
-          ) : (
-            <MdPlayCircleOutline
-              size={buttonSize}
-              onClick={() => setIsPlaying(true)}
-              aria-label="Play"
-            />
-          )
+    <div className={css.audioElement} style={props.style}>
+      {loadStatus ? (
+        isPlaying ? (
+          <MdPauseCircleOutline
+            size={buttonSize}
+            onClick={() => setIsPlaying(false)}
+            aria-label="Pause"
+          />
         ) : (
-          <FiLoader size={buttonSize} />
-        )}
-        {props.showProgress ? (
-          <ProgressBar progress={progress} bounds={{ start, end }} />
-        ) : null}
-      </div>
+          <MdPlayCircleOutline
+            size={buttonSize}
+            onClick={() => setIsPlaying(true)}
+            aria-label="Play"
+          />
+        )
+      ) : (
+        <FiLoader size={buttonSize} />
+      )}
+      {props.showProgress ? (
+        <ProgressBar progress={progress} bounds={{ start, end }} />
+      ) : null}
     </div>
   )
 }

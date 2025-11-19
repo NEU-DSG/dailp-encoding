@@ -1,7 +1,7 @@
 import { Tab, TabList, TabPanel, useDialogState } from "reakit"
 import { UserRole, useUserRole } from "src/auth"
 import {
-  DocumentFieldsFragment,
+  useAnnotatedDocumentByIdQuery,
   useBookmarkedDocumentsQuery,
 } from "src/graphql/dailp"
 import { useScrollableTabState } from "src/scrollable-tabs"
@@ -113,9 +113,9 @@ export const BookmarksTab = () => {
     <>
       {data && data.bookmarkedDocuments.length > 0 ? (
         <ul className={css.noBullets}>
-          {data.bookmarkedDocuments?.map((doc) => (
+          {data.bookmarkedDocuments?.map((doc: any) => (
             <li key={doc.id}>
-              <BookmarksTabItem doc={doc} />
+              <BookmarksTabItem documentId={doc.id} />
             </li>
           ))}
         </ul>
@@ -142,15 +142,19 @@ export const BookmarksTab = () => {
   )
 }
 
-export const BookmarksTabItem = (props: { doc: DocumentFieldsFragment }) => {
-  const docFullPath = props.doc.chapters?.[0]?.path
+export const BookmarksTabItem = (props: { documentId: string }) => {
+  const [{ data: doc }] = useAnnotatedDocumentByIdQuery({
+    variables: { id: props.documentId },
+  })
+  const docData = doc?.documentByUuid
+  const docFullPath = docData?.chapters?.[0]?.path
   let docPath = ""
   if (docFullPath?.length !== undefined && docFullPath?.length > 0) {
     docPath = docFullPath[0] + "/" + docFullPath[docFullPath.length - 1]
   }
   console.log(docPath)
   // Crops the thumbnail to 50% of the original size and then scales it to 500x500
-  const thumbnailUrl = (props.doc.translatedPages?.[0]?.image?.url +
+  const thumbnailUrl = (docData?.translatedPages?.[0]?.image?.url +
     "/pct:0,0,50,50/500,500/0/default.jpg") as unknown as string
   return (
     <>
@@ -158,10 +162,10 @@ export const BookmarksTabItem = (props: { doc: DocumentFieldsFragment }) => {
         <BookmarkCard
           thumbnail={thumbnailUrl}
           header={{
-            text: props.doc.title as unknown as string,
+            text: docData?.title as unknown as string,
             link: `/collections/${docPath}`,
           }}
-          description={props.doc.date?.year as unknown as string}
+          description={docData?.date?.year as unknown as string}
         />
       </div>
     </>

@@ -13,57 +13,67 @@ query DocumentsPages {
   }
 }
 
-# Data about a document needed to render various high level components, such as
-# a DocumentHeader. Contrast with the fields resolved on DocumentContents query.
-fragment DocumentFields on AnnotatedDoc {
-  id
-  title
-  slug
-  isReference
-  date {
-    year
-  }
-  bookmarkedOn {
-    formattedDate
-  }
-  sources {
-    name
-    link
-  }
-  editedAudio {
-    ...AudioSliceFields
-    recordedBy {
-      id
-      displayName
-    }
-    recordedAt {
-      formattedDate
-    }
-  }
-  userContributedAudio {
-    ...AudioSliceFields
-    recordedBy {
-      id
-      displayName
-    }
-    recordedAt {
-      formattedDate
-    }
-  }
-  translatedPages {
-    image {
-      url
-    }
-  }
-  chapters {
+query AnnotatedDocument($slug: String!) {
+  document(slug: $slug) {
     id
-    path
+    title
+    slug
+    isReference
+    date {
+      year
+    }
+    bookmarkedOn {
+      formattedDate
+    }
+    sources {
+      name
+      link
+    }
+    audioRecording {
+      resourceUrl
+      startTime
+      endTime
+    }
+    translatedPages {
+      image {
+        url
+      }
+    }
+    chapters {
+      path
+    }
   }
 }
 
-query AnnotatedDocument($slug: String!) {
-  document(slug: $slug) {
-    ...DocumentFields
+query AnnotatedDocumentById($id: UUID!) {
+  documentByUuid(id: $id) {
+    id
+    title
+    slug
+    isReference
+    date {
+      year
+    }
+    bookmarkedOn {
+      formattedDate
+    }
+    sources {
+      name
+      link
+    }
+    audioRecording {
+      resourceUrl
+      startTime
+      endTime
+    }
+    translatedPages {
+      image {
+        url
+      }
+    }
+    chapters {
+      path
+    }
   }
 }
 
@@ -107,12 +117,6 @@ fragment AudioSliceFields on AudioSlice {
   startTime
   endTime
   includeInEditedCollection
-  recordedBy {
-    displayName
-  }
-  recordedAt {
-    formattedDate
-  }
 }
 
 fragment DocFormFields on AnnotatedDoc {
@@ -170,22 +174,12 @@ fragment FormFields on AnnotatedForm {
   }
   editedAudio {
     ...AudioSliceFields
-    recordedBy {
-      id
-      displayName
-    }
-    recordedAt {
-      formattedDate
-    }
   }
   userContributedAudio {
     ...AudioSliceFields
     recordedBy {
       id
       displayName
-    }
-    recordedAt {
-      formattedDate
     }
   }
   position {
@@ -380,7 +374,7 @@ query DocSlice(
 ) {
   document(slug: $slug) {
     title
-    ingestedAudioTrack {
+    audioRecording {
       resourceUrl
       startTime
       endTime
@@ -403,14 +397,68 @@ query CollectionChapter($collectionSlug: String!, $chapterSlug: String!) {
       slug
     }
     document {
-      ...DocumentFields
+      id
+      title
+      slug
+      isReference
+      date {
+        year
+      }
+      bookmarkedOn {
+        formattedDate
+      }
+      sources {
+        name
+        link
+      }
+      audioRecording {
+        resourceUrl
+        startTime
+        endTime
+      }
+      translatedPages {
+        image {
+          url
+        }
+      }
+      chapters {
+        id
+        path
+      }
     }
   }
 }
 
 query BookmarkedDocuments {
   bookmarkedDocuments {
-    ...DocumentFields
+    id
+    title
+    slug
+    isReference
+    date {
+      year
+    }
+    bookmarkedOn {
+      formattedDate
+    }
+    sources {
+      name
+      link
+    }
+    audioRecording {
+      resourceUrl
+      startTime
+      endTime
+    }
+    translatedPages {
+      image {
+        url
+      }
+    }
+    chapters {
+      id
+      path
+    }
   }
 }
 
@@ -475,15 +523,6 @@ mutation AttachAudioToWord($input: AttachAudioToWordInput!) {
   }
 }
 
-mutation CurateDocumentAudio($input: CurateDocumentAudioInput!) {
-  curateDocumentAudio(input: $input) {
-    id
-    editedAudio {
-      ...AudioSliceFields
-    }
-  }
-}
-
 mutation CurateWordAudio($input: CurateWordAudioInput!) {
   curateWordAudio(input: $input) {
     # ...FormFields
@@ -498,42 +537,67 @@ mutation CurateWordAudio($input: CurateWordAudioInput!) {
   }
 }
 
-mutation AttachAudioToDocument($input: AttachAudioToDocumentInput!) {
-  attachAudioToDocument(input: $input) {
+mutation AddBookmark($documentId: UUID!) {
+  addBookmark(documentId: $documentId) {
     id
     title
     slug
-    userContributedAudio {
-      ...AudioSliceFields
-      recordedAt {
-        formattedDate
-      }
-      recordedBy {
-        id
-        displayName
+    isReference
+    date {
+      year
+    }
+    bookmarkedOn {
+      formattedDate
+    }
+    sources {
+      name
+      link
+    }
+    audioRecording {
+      resourceUrl
+      startTime
+      endTime
+    }
+    translatedPages {
+      image {
+        url
       }
     }
-  }
-}
-
-fragment BookmarkedDocument on AnnotatedDoc {
-  id
-  title
-  slug
-  bookmarkedOn {
-    formattedDate
-  }
-}
-
-mutation AddBookmark($documentId: UUID!) {
-  addBookmark(documentId: $documentId) {
-    ...BookmarkedDocument
+    chapters {
+      path
+    }
   }
 }
 
 mutation RemoveBookmark($documentId: UUID!) {
   removeBookmark(documentId: $documentId) {
-    ...BookmarkedDocument
+    id
+    title
+    slug
+    isReference
+    date {
+      year
+    }
+    bookmarkedOn {
+      formattedDate
+    }
+    sources {
+      name
+      link
+    }
+    audioRecording {
+      resourceUrl
+      startTime
+      endTime
+    }
+    translatedPages {
+      image {
+        url
+      }
+    }
+    chapters {
+      path
+    }
   }
 }
 

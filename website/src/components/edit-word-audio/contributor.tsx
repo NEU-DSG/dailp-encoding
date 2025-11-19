@@ -3,6 +3,7 @@ import { useUserId } from "src/auth"
 import { WordAudio } from "src/word-panel"
 import { AudioPlayer } from "../"
 import * as Dailp from "../../graphql/dailp"
+import { RecordAudioPanel } from "./record"
 
 function AvailableAudioSection(p: { word: Dailp.FormFieldsFragment }) {
   const userId = useUserId()
