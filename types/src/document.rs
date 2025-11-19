@@ -237,9 +237,8 @@ impl AnnotatedDoc {
         Ok(ids)
     }
 
-    /// Expose full subject headings in GraphQL
-    #[graphql(skip)]
-    async fn subject_headings(
+     /// Expose full subject headings in GraphQL
+     async fn subject_headings(
         &self,
         context: &async_graphql::Context<'_>,
     ) -> FieldResult<Vec<SubjectHeading>> {
