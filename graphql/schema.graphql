@@ -83,13 +83,8 @@ type AnnotatedDoc {
 	chapters: [CollectionChapter!]
 	"""
 	Subject heading IDs associated with this document
-	Seems overcomplicated?
 	"""
 	subjectHeadingsIds: [UUID!]!
-	"""
-	Internal field accessor for subject headings
-	"""
-	getSubjectHeadingsIds: [UUID!]
 }
 
 """

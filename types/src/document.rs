@@ -224,7 +224,6 @@ impl AnnotatedDoc {
     }
 
     /// Subject heading IDs associated with this document
-    /// Seems overcomplicated?
     async fn subject_headings_ids(
         &self,
         context: &async_graphql::Context<'_>,
