@@ -72,6 +72,15 @@ pub struct Keyword {
     pub status: ApprovalStatus,
 }
 
+// For updating keywords
+#[derive(async_graphql::InputObject)]
+pub struct KeywordUpdate {
+    /// UUID for the keyword
+    pub id: Uuid,
+    /// Name of the keyword
+    pub name: String,
+}
+
 /// Get all approved keywords
 #[async_graphql::ComplexObject]
 impl Keyword {
