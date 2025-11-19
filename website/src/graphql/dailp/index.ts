@@ -87,6 +87,8 @@ export type AnnotatedDoc = {
   readonly slug: Scalars["String"]
   /** The original source(s) of this document, the most important first. */
   readonly sources: ReadonlyArray<SourceAttribution>
+  /** Subject headings associated with this document */
+  readonly subjectHeadings: ReadonlyArray<SubjectHeading>
   /** Internal field accessor for subject headings */
   readonly subjectHeadingsIds: Maybe<ReadonlyArray<Scalars["UUID"]>>
   /** Full title of the document */
@@ -208,6 +210,13 @@ export type AnnotatedFormUpdate = {
 
 /** Element within a spreadsheet before being transformed into a full document. */
 export type AnnotatedSeg = AnnotatedForm | LineBreak
+
+/** Represents the status of a suggestion made by a contributor */
+export enum ApprovalStatus {
+  Approved = "APPROVED",
+  Pending = "PENDING",
+  Rejected = "REJECTED",
+}
 
 /** Request to attach user-recorded audio to a word */
 export type AttachAudioToWordInput = {
@@ -1120,6 +1129,20 @@ export type SourceAttribution = {
   readonly name: Scalars["String"]
 }
 
+/**
+ * Record to store a subject heading that reflects Indigenous knowledge
+ * practices associated with a document
+ */
+export type SubjectHeading = {
+  readonly __typename?: "SubjectHeading"
+  /** UUID for the subject heading */
+  readonly id: Scalars["UUID"]
+  /** Name of the subject heading */
+  readonly name: Scalars["String"]
+  /** Status (pending, approved, rejected) of a subject heading */
+  readonly status: ApprovalStatus
+}
+
 /** Update the contributor attribution for a document */
 export type UpdateContributorAttribution = {
   /** A description of what the contributor did, like "translation" or "voice" */
@@ -1547,9 +1570,15 @@ export type AudioSliceFieldsFragment = {
 
 export type DocFormFieldsFragment = {
   readonly __typename?: "AnnotatedDoc"
-} & Pick<AnnotatedDoc, "id" | "title" | "subjectHeadingsIds"> & {
+} & Pick<AnnotatedDoc, "id" | "title"> & {
     readonly date: Maybe<
       { readonly __typename?: "Date" } & Pick<Date, "day" | "month" | "year">
+    >
+    readonly subjectHeadings: ReadonlyArray<
+      { readonly __typename?: "SubjectHeading" } & Pick<
+        SubjectHeading,
+        "id" | "name" | "status"
+      >
     >
   }
 
@@ -2845,7 +2874,11 @@ export const DocFormFieldsFragmentDoc = gql`
       month
       year
     }
-    subjectHeadingsIds
+    subjectHeadings {
+      id
+      name
+      status
+    }
   }
 `
 export const AudioSliceFieldsFragmentDoc = gql`

@@ -85,6 +85,10 @@ type AnnotatedDoc {
 	Subject headings associated with this document
 	"""
 	subjectHeadings: [SubjectHeading!]!
+	"""
+	Internal field accessor for subject headings
+	"""
+	subjectHeadingsIds: [UUID!]
 }
 
 """
