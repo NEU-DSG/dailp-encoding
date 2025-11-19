@@ -801,15 +801,19 @@ impl Database {
         .await?;
 
         // Update subject headings
-        if let MaybeUndefined::Value(subject_headings_ids) = &document.subject_headings_ids {
+        if let MaybeUndefined::Value(subject_headings) = &document.subject_headings {
             query_file!("queries/delete_document_subject_headings.sql", document.id)
                 .execute(&mut *tx)
                 .await?;
 
+            // Convert Vec<SubjectHeadingUpdate> to Vec<Uuid>
+            let ids: Vec<Uuid> = subject_headings.iter().map(|sh| sh.id).collect();
+
+            // Write new IDs
             query_file!(
                 "queries/insert_document_subject_headings.sql",
                 document.id,
-                subject_headings_ids
+                &ids[..]
             )
             .execute(&mut *tx)
             .await?;

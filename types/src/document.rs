@@ -3,7 +3,7 @@ use crate::{
     Database, Date, Translation, TranslationBlock,
 };
 
-use crate::doc_metadata::{ApprovalStatus, SubjectHeading};
+use crate::doc_metadata::{ApprovalStatus, SubjectHeading, SubjectHeadingUpdate};
 use crate::person::{Contributor, SourceAttribution};
 
 use async_graphql::{dataloader::DataLoader, Context, FieldResult, MaybeUndefined};
@@ -223,7 +223,7 @@ impl AnnotatedDoc {
             .await?)
     }
 
-    /// Expose full subject headings in GraphQL
+    /// Terms that that reflects Indigenous knowledge practices associated with a document
     async fn subject_headings(
         &self,
         context: &async_graphql::Context<'_>,
@@ -330,7 +330,7 @@ pub struct DocumentMetadataUpdate {
     /// The date this document was written, or nothing (if unchanged or not applicable)
     pub written_at: MaybeUndefined<DateInput>,
     /// Terms that reflect Indigenous knowledge practices associated with the document
-    pub subject_headings: MaybeUndefined<Vec<SSubjectHeadingUpdate>>,
+    pub subject_headings: MaybeUndefined<Vec<SubjectHeadingUpdate>>,
 }
 
 #[async_graphql::ComplexObject]
